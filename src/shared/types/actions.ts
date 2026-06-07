@@ -60,6 +60,7 @@ export interface HeatmapCreateRequest {
   date: string;
   item?: Item;
   themePath?: string;
+  goalPath?: string;
   themesByPath: Map<string, ThemeDefinition>;
 }
 

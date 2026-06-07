@@ -6,6 +6,12 @@
  * 从 features/settings 移动到 core，符合依赖约束规范
  */
 export const STATISTICS_VIEW_DEFAULT_CONFIG = {
+    /** 目标中心：统计视图只按目标分组；时间与其他筛选统一由控制栏/视图筛选提供。 */
+    groupBy: 'goal' as 'goal',
+    metric: 'recordCount' as 'recordCount' | 'taskCount' | 'doneTaskCount' | 'habitCount' | 'blockerCount' | 'milestoneCount',
+    chartType: 'bar' as 'bar',
+    goalPath: '',
+    topN: 10,
     categories: [] as { name: string; color: string; alias?: string; }[],
     displayMode: 'smart' as 'linear' | 'logarithmic' | 'smart',
     minVisibleHeight: 15, // 最小可见高度百分比
@@ -36,6 +42,10 @@ export const HEATMAP_VIEW_DEFAULT_CONFIG: HeatmapViewConfig = {
  * ProgressView 默认配置（独立成长/积分视图）
  */
 export interface ProgressViewConfig {
+    /** Progress 只保留目标经验模式。 */
+    mode?: 'goal';
+    metric?: 'completionRate' | 'taskDone' | 'habitCount' | 'milestoneCount' | 'blockerCount' | 'recordCount';
+    statusFilter?: string[];
     basePoints: number;
     levelStep: number;
     includedCategories: string[];
@@ -47,6 +57,9 @@ export interface ProgressViewConfig {
 }
 
 export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
+    mode: 'goal',
+    metric: 'completionRate',
+    statusFilter: ['active', 'paused'],
     basePoints: 1,
     levelStep: 20,
     includedCategories: [],

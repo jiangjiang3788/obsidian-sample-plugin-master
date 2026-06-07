@@ -11,6 +11,7 @@ import { LayoutSettings } from '@features/settings/tabs/LayoutSettings';
 import { InputSettings } from '@features/settings/tabs/InputSettings';
 import { GeneralSettings } from '@features/settings/tabs/GeneralSettings';
 import { AiSettings } from '@features/settings/tabs/AiSettings';
+import { DataManagementSettings } from '@features/settings/tabs/DataManagementSettings';
 
 function a11yProps(index: number) {
     return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
@@ -35,15 +36,17 @@ function SettingsRoot({ app }: { app: App }) {
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={tabIndex} onChange={(_, newValue) => setTabIndex(newValue)} aria-label="settings tabs">
                         <Tab label="快速输入" {...a11yProps(0)} />
-                        <Tab label="布局" {...a11yProps(1)} />
-                        <Tab label="通用" {...a11yProps(2)} />
-                        <Tab label="AI" {...a11yProps(3)} />
+                        <Tab label="数据管理" {...a11yProps(1)} />
+                        <Tab label="布局" {...a11yProps(2)} />
+                        <Tab label="通用" {...a11yProps(3)} />
+                        <Tab label="AI" {...a11yProps(4)} />
                     </Tabs>
                 </Box>
                 <TabPanel value={tabIndex} index={0}><InputSettings /></TabPanel>
-                <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} /></TabPanel>
-                <TabPanel value={tabIndex} index={2}><GeneralSettings /></TabPanel>
-                <TabPanel value={tabIndex} index={3}><AiSettings /></TabPanel>
+                <TabPanel value={tabIndex} index={1}><DataManagementSettings /></TabPanel>
+                <TabPanel value={tabIndex} index={2}><LayoutSettings app={app} /></TabPanel>
+                <TabPanel value={tabIndex} index={3}><GeneralSettings /></TabPanel>
+                <TabPanel value={tabIndex} index={4}><AiSettings /></TabPanel>
             </Box>
         </ThemeProvider>
     );

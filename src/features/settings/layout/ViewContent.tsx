@@ -13,6 +13,35 @@ import { closeStatisticsPopover, openStatisticsPopover } from './statisticsPopov
 import { useViewRuntimeHandlers } from './useViewRuntimeHandlers';
 import { buildViewProps } from './viewPropsFactory';
 
+
+function normalizeLegacyGoalViewInstance(viewInstance: ViewInstance): ViewInstance {
+  const rawType = String((viewInstance as any).viewType || '');
+  if (rawType === 'GoalOverviewView') {
+    return {
+      ...viewInstance,
+      viewType: 'ProgressView' as any,
+      viewConfig: {
+        ...(viewInstance.viewConfig || {}),
+        ...(viewInstance.viewConfig?.goalOverview || {}),
+        mode: 'goal',
+      },
+    };
+  }
+  if (rawType === 'GoalDetailView') {
+    return {
+      ...viewInstance,
+      viewType: 'StatisticsView' as any,
+      viewConfig: {
+        ...(viewInstance.viewConfig || {}),
+        ...(viewInstance.viewConfig?.goalDetail || {}),
+        groupBy: 'goal',
+        metric: 'recordCount',
+      },
+    };
+  }
+  return viewInstance;
+}
+
 export interface ViewContentProps {
   viewInstance: ViewInstance;
   dataStore: DataStore;
@@ -56,11 +85,12 @@ export function ViewContent({
   const messageRenderPort = useMessageRenderPort();
   const categoryColors = useSelector(selectCategoryColors);
   const settings = useSelector(selectSettings);
+  const normalizedViewInstance = useMemo(() => normalizeLegacyGoalViewInstance(viewInstance), [viewInstance]);
 
   const viewItems = useViewData({
     dataStore,
     sourceItems: allItems,
-    viewInstance,
+    viewInstance: normalizedViewInstance,
     dateRange,
     keyword,
     layoutView,
@@ -76,11 +106,11 @@ export function ViewContent({
     onDataLoaded(viewItems);
   }, [viewItems, onDataLoaded]);
 
-  const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
-  if (!ViewComponent) return <div>未知视图: {viewInstance.viewType}</div>;
+  const ViewComponent = (ViewComponents as any)[normalizedViewInstance.viewType];
+  if (!ViewComponent) return <div>未知视图: {normalizedViewInstance.viewType}</div>;
 
   const renderModels = useMemo(() => buildViewRenderModels({
-    viewInstance,
+    viewInstance: normalizedViewInstance,
     items: viewItems,
     allItems,
     dateRange,
@@ -89,20 +119,20 @@ export function ViewContent({
     layoutFilters,
     selectedCategories: selectedLayoutCategories,
     goals: settings.goalSettings?.goals || [],
-    cycles: settings.goalSettings?.cycles || [],
-  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings?.goals, settings.goalSettings?.cycles, viewInstance, viewItems]);
+    goalSettings: settings.goalSettings,
+  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, viewItems]);
 
   const handlers = useViewRuntimeHandlers({
     app,
     actionService,
-    viewInstance,
+    viewInstance: normalizedViewInstance,
     dateRange,
     layoutView,
     excelAvailableFields,
   });
 
   const viewProps = buildViewProps({
-    viewInstance,
+    viewInstance: normalizedViewInstance,
     viewItems,
     dateRange,
     layoutView,

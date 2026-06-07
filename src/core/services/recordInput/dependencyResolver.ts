@@ -1,13 +1,16 @@
-import type { InputSettings, Item } from '@/core/types/schema';
-import { TemplateResolver } from '@/core/services/TemplateResolver';
+import type { InputSettings, Item, ThinkSettings } from '@/core/types/schema';
+import { GoalTemplateResolver } from '@/core/services/GoalTemplateResolver';
 import { DEFAULT_CORE_BLOCKS, buildLegacyCoreBlockMap } from '@/core/blocks';
 import type { RecordSubmitIssue, ResolveDependenciesResult } from '@/core/types/recordInput';
 
 export interface DependencyResolverInput {
-  settings: InputSettings;
+  /** Full settings are required for GoalTemplateResolver. Legacy callers may still pass InputSettings; normalize defensively. */
+  settings: ThinkSettings | InputSettings;
   blockId?: string | null;
   themeId?: string | null;
   item?: Item | null;
+  /** QuickInput draft context / normalized form data. Used to resolve Goal + Block templates during submit. */
+  context?: Record<string, unknown> | null;
 }
 
 function issue(code: string, message: string, field?: string): RecordSubmitIssue {
@@ -19,15 +22,90 @@ export function findThemeIdByPath(settings: InputSettings, path?: string | null)
   return settings.themes.find((theme) => theme.path === path)?.id ?? null;
 }
 
-export function resolveRecordDependencies(input: DependencyResolverInput): ResolveDependenciesResult {
-  const { settings, item } = input;
-  const warnings: RecordSubmitIssue[] = [];
-  const errors: RecordSubmitIssue[] = [];
+function readNestedGoalContext(context?: Record<string, unknown> | null): Record<string, unknown> {
+  const nested = context?.__goalContext;
+  return nested && typeof nested === 'object' ? nested as Record<string, unknown> : {};
+}
 
-  const requestedBlockId = input.blockId ?? null;
+function readFirstString(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    if (Array.isArray(value)) {
+      const nested = readFirstString(...value);
+      if (nested) return nested;
+      continue;
+    }
+    if (typeof value === 'object') {
+      const obj = value as Record<string, unknown>;
+      const raw = obj.value ?? obj.label ?? obj.path ?? obj.title;
+      const text = String(raw ?? '').trim();
+      if (text) return text;
+      continue;
+    }
+    const text = String(value).trim();
+    if (text) return text;
+  }
+  return null;
+}
+
+function extractGoalContext(input: DependencyResolverInput): {
+  goalId: string | null;
+  goalPath: string | null;
+  themePath: string | null;
+  templateVariantId: string | null;
+} {
+  const context = input.context || {};
+  const nested = readNestedGoalContext(context);
+  const item = input.item || null;
+  const goalId = readFirstString(
+    context.goalId,
+    context['目标ID'],
+    nested.goalId,
+    nested['目标ID'],
+    item?.goalId,
+    item?.goalIds,
+  );
+  const goalPath = readFirstString(
+    context.goalPath,
+    context['目标'],
+    context['目标路径'],
+    nested.goalPath,
+    nested['目标'],
+    nested['目标路径'],
+    item?.goalPath,
+    item?.goalPaths,
+  );
+  const themePath = readFirstString(
+    context.themePath,
+    context['主题'],
+    nested.themePath,
+    nested['主题'],
+    item?.themePath,
+    item?.theme,
+  );
+  const templateVariantId = readFirstString(
+    context.templateVariantId,
+    context.goalTemplateVariantId,
+    context['模板变体ID'],
+    nested.templateVariantId,
+    nested.goalTemplateVariantId,
+    nested['模板变体ID'],
+  );
+  return { goalId, goalPath, themePath, templateVariantId };
+}
+
+
+function normalizeDependencySettings(settings: ThinkSettings | InputSettings): ThinkSettings {
+  const maybeFull = settings as ThinkSettings;
+  if (maybeFull?.inputSettings) return maybeFull;
+  return {
+    inputSettings: settings as InputSettings,
+  } as ThinkSettings;
+}
+
+function buildEffectiveInputSettings(settings: InputSettings): InputSettings {
   const legacyBlockMap = buildLegacyCoreBlockMap(settings.blocks || []);
-  const effectiveBlockId = requestedBlockId ? (String(requestedBlockId).startsWith('core.') ? requestedBlockId : legacyBlockMap[requestedBlockId] || requestedBlockId) : null;
-  const effectiveSettings: InputSettings = {
+  return {
     ...settings,
     blocks: [
       ...(settings.blocks || []),
@@ -35,7 +113,19 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
     ],
     overrides: (settings.overrides || []).map((override) => ({ ...override, blockId: legacyBlockMap[override.blockId] || override.blockId })),
   };
-  const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, item?.theme);
+}
+
+export function resolveRecordDependencies(input: DependencyResolverInput): ResolveDependenciesResult {
+  const warnings: RecordSubmitIssue[] = [];
+  const errors: RecordSubmitIssue[] = [];
+  const fullSettings = normalizeDependencySettings(input.settings);
+  const inputSettings = fullSettings.inputSettings;
+  const requestedBlockId = input.blockId ?? null;
+  const legacyBlockMap = buildLegacyCoreBlockMap(inputSettings.blocks || []);
+  const effectiveBlockId = requestedBlockId ? (String(requestedBlockId).startsWith('core.') ? requestedBlockId : legacyBlockMap[requestedBlockId] || requestedBlockId) : null;
+  const effectiveSettings = buildEffectiveInputSettings(inputSettings);
+  const goalContext = extractGoalContext(input);
+  const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, goalContext.themePath ?? input.item?.themePath ?? input.item?.theme ?? null);
   let resolvedThemeId = inferredThemeId ?? null;
 
   if (!requestedBlockId) {
@@ -76,34 +166,36 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   }
 
   let usedFallbackTheme = false;
-  if (resolvedThemeId) {
-    const themeExists = effectiveSettings.themes.some((theme) => theme.id === resolvedThemeId);
-    if (!themeExists) {
-      warnings.push(issue('record_theme_not_found', 'Selected theme no longer exists. Falling back to base block template.', 'themeId'));
-      resolvedThemeId = null;
-      usedFallbackTheme = true;
-    }
+  if (resolvedThemeId && !effectiveSettings.themes.some((theme) => theme.id === resolvedThemeId)) {
+    warnings.push(issue('record_theme_not_found', 'Selected theme no longer exists. Continuing with goal/template metadata.', 'themeId'));
+    resolvedThemeId = null;
+    usedFallbackTheme = true;
   }
 
-  const override = resolvedThemeId
-    ? effectiveSettings.overrides.find((candidate) => candidate.blockId === effectiveBlockId && candidate.themeId === resolvedThemeId)
-    : null;
-  if (override?.disabled) {
-    warnings.push(issue('record_override_disabled', 'Theme override is disabled. Using the base block template instead.', 'themeId'));
-  }
+  const resolved = GoalTemplateResolver.resolve({
+    settings: fullSettings,
+    blockId: effectiveBlockId || requestedBlockId,
+    goalId: goalContext.goalId,
+    goalPath: goalContext.goalPath,
+    themeId: resolvedThemeId ?? undefined,
+    themePath: goalContext.themePath,
+    templateVariantId: goalContext.templateVariantId,
+  });
 
-  const resolved = TemplateResolver.resolve(effectiveSettings, effectiveBlockId || requestedBlockId, resolvedThemeId ?? undefined);
+  if (!resolved.template) {
+    errors.push(issue('record_template_missing', 'No effective Goal + Block template is available for this record.', 'blockId'));
+  }
 
   return {
-    blockId: effectiveBlockId || requestedBlockId,
-    themeId: resolved.theme ? resolved.theme.id : null,
+    blockId: resolved.effectiveBlockId || effectiveBlockId || requestedBlockId,
+    themeId: resolvedThemeId,
     template: resolved.template,
     theme: resolved.theme,
     warnings,
     errors,
     meta: {
       templateId: resolved.templateId,
-      templateSourceType: resolved.templateSourceType === 'block' && String(effectiveBlockId || '').startsWith('core.') ? 'core-block' : resolved.templateSourceType,
+      templateSourceType: resolved.templateSourceType,
       usedFallbackBlock: false,
       usedFallbackTheme,
     },

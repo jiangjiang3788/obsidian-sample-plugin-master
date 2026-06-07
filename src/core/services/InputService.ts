@@ -2,7 +2,6 @@
 import { singleton, inject } from 'tsyringe';
 import type { VaultPort } from '@core/ports/VaultPort';
 import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
-import { renderTemplate } from '@core/utils/templateUtils';
 import type { BlockTemplate, ThemeDefinition, Item } from '@core/types/schema';
 import { DataStore } from '@core/services/DataStore';
 import {
@@ -10,7 +9,7 @@ import {
   resolveTaskLineIndexForMutation,
 } from '@core/services/recordInput/mutationLocator';
 import { createRecordConflictError } from '@core/services/recordInput/mutationErrors';
-import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter';
+import { buildRecordOutputPlan } from '@core/services/recordInput/snapshot/OutputPlanner';
 
 export interface RecordWriteOptions {
   signal?: AbortSignal;
@@ -102,20 +101,16 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
   ): { renderData: Record<string, any>; outputContent: string; targetFilePath: string; header: string | null } {
     if (!template) throw new Error('传入了无效的模板对象。');
 
-    const renderData = this.buildRenderData(template, formData, theme, templateMeta);
-    const outputContent = renderTemplate(template.outputTemplate, renderData).trim();
-    const targetFilePath = renderTemplate(template.targetFile, renderData).trim();
-    const header = template.appendUnderHeader ? renderTemplate(template.appendUnderHeader, renderData) : null;
-
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta });
     return {
-      renderData,
-      outputContent,
-      targetFilePath,
-      header,
+      renderData: outputPlan.renderData,
+      outputContent: outputPlan.outputContent,
+      targetFilePath: outputPlan.targetFilePath || '',
+      header: outputPlan.targetHeader,
     };
   }
 
@@ -123,7 +118,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     const signal = options.signal;
@@ -156,7 +151,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     return this.executeTemplate(template, formData, theme, templateMeta, options);
@@ -167,7 +162,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     const signal = options.signal;
@@ -185,8 +180,8 @@ export class InputService {
     }
     this.throwIfAborted(signal);
 
-    const renderData = this.buildRenderData(template, formData, theme, templateMeta);
-    const nextText = renderTemplate(template.outputTemplate, renderData).trim();
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta });
+    const nextText = outputPlan.outputContent.trim();
     if (!nextText) throw new Error('编辑后的输出内容为空，已取消保存。');
 
     const lines = existingContent.split('\n');
@@ -243,63 +238,6 @@ export class InputService {
       this.dataStore.notifyChange();
     }
     return path;
-  }
-
-  private buildRenderData(
-    template: BlockTemplate,
-    formData: Record<string, any>,
-    theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
-  ) {
-    const normalizedData = normalizeTemplateRenderData(template, formData);
-    const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === 'object' ? normalizedData.theme as Record<string, unknown> : null;
-    const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? '').trim();
-    const themePath = explicitThemePath || theme?.path || '';
-    const themeParts = themePath.split('/').map((part) => part.trim()).filter(Boolean);
-
-    const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? '').trim();
-    const categoryParts = categoryPath.split('/').map((part) => part.trim()).filter(Boolean);
-    const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? '').trim() : String(normalizedData.goalPath ?? normalizedData['目标'] ?? '').trim();
-    const goalPath = explicitGoalPath;
-    const goalParts = goalPath.split('/').map((part) => part.trim()).filter(Boolean);
-    const goalId = String(normalizedData.goalId ?? normalizedData['目标ID'] ?? '').trim();
-    const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
-
-    return {
-      ...normalizedData,
-      block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
-      categoryKey: categoryPath,
-      categoryPath,
-      baseCategory: categoryParts[0] || '',
-      rootCategory: categoryParts[0] || '',
-      leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : '',
-      theme: {
-        ...(normalizedTheme || {}),
-        path: themePath,
-        root: themeParts[0] || '',
-        leaf: themeParts.length ? themeParts[themeParts.length - 1] : '',
-        icon: theme?.icon || String(normalizedTheme?.icon ?? ''),
-      },
-      themePath,
-      rootTheme: themeParts[0] || '',
-      leafTheme: themeParts.length ? themeParts[themeParts.length - 1] : '',
-      goal: {
-        id: goalId,
-        title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
-        path: goalPath,
-        root: goalParts[0] || '',
-        leaf: goalParts.length ? goalParts[goalParts.length - 1] : '',
-        themePath,
-      },
-      goalId,
-      goalPath,
-      goalPaths: goalPath ? [goalPath] : (normalizedData.goalPaths || []),
-      rootGoal: goalParts[0] || '',
-      leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
-      coreBlock,
-      templateId: templateMeta?.templateId || template.id,
-      templateSourceType: templateMeta?.templateSourceType || 'block',
-    };
   }
 
   private parseItemId(itemId: string): { path: string; lineNo: number } {

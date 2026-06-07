@@ -1,5 +1,6 @@
 import type { Item, ThemeDefinition } from '@/core/types/schema';
 import { readField } from '@/core/types/schema';
+import { getItemThemePath } from './heatmap';
 import { devLog } from './devLogger';
 
 /**
@@ -47,7 +48,8 @@ export function filterItemsByThemes(
         }
 
         // 多主题模式：只保留在 themesToTrack 中的主题
-        if (item.theme && themesToTrack.includes(item.theme)) {
+        const themePath = getItemThemePath(item);
+        if (themePath && themesToTrack.includes(themePath)) {
             kept.push(item);
         } else {
             skippedByReason.themeNotTracked++;
@@ -88,7 +90,7 @@ export function aggregateThemeData(
         // 确定目标主题
         const targetTheme = isDefaultMode 
             ? '__default__' 
-            : (item.theme || '__default__');
+            : (getItemThemePath(item) || '__default__');
 
         // 获取或创建目标主题的 Map
         let targetThemeMap = themeMap.get(targetTheme);

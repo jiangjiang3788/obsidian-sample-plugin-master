@@ -5,7 +5,6 @@ import type { CategoryConfig } from '@core/public';
 import { aggregateByMonth, getMonthWeeksData, isSameIsoWeek } from '@core/public';
 import { ChartBlock } from '../../../statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
-import { TopControls } from '../components/TopControls';
 
 export function MonthStatisticsView({
   items,
@@ -16,6 +15,7 @@ export function MonthStatisticsView({
   onCellClick,
   displayMode,
   minVisibleHeight,
+  bucketAccessor,
 }: {
   items: Item[];
   categories: CategoryConfig[];
@@ -25,9 +25,10 @@ export function MonthStatisticsView({
   onCellClick: StatisticsCellClickHandler;
   displayMode: 'smart' | 'linear' | 'logarithmic';
   minVisibleHeight: number;
+  bucketAccessor?: (item: Item) => string;
 }) {
-  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod);
-  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod);
+  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod, bucketAccessor);
+  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod, bucketAccessor);
 
   const monthStart = monthDate.startOf('month');
   const monthEnd = monthDate.endOf('month');
@@ -49,7 +50,6 @@ export function MonthStatisticsView({
 
   return (
     <div class="statistics-view">
-      <TopControls currentView="月" usePeriod={usePeriod} onToggleUsePeriod={onToggleUsePeriod} />
 
       <div
         class="sv-month-grid"
@@ -62,14 +62,15 @@ export function MonthStatisticsView({
             label={monthDate.format('YYYY年MM月')}
             categories={categories}
             onCellClick={onCellClick}
-            cellIdentifier={(cat: string) => ({
+            cellIdentifier={(goal: string) => ({
               type: 'month',
               month: monthDate.month() + 1,
               year: monthDate.year(),
-              category: cat,
+              goal,
             })}
             displayMode={displayMode}
             minVisibleHeight={minVisibleHeight}
+            bucketAccessor={bucketAccessor}
           />
         </div>
 
@@ -89,15 +90,16 @@ export function MonthStatisticsView({
                 label={`W${weekStart.isoWeek()}`}
                 categories={categories}
                 onCellClick={onCellClick}
-                cellIdentifier={(cat: string) => ({
+                cellIdentifier={(goal: string) => ({
                   type: 'week',
                   week: weekStart.isoWeek(),
                   year: weekStart.isoWeekYear(),
-                  category: cat,
+                  goal,
                 })}
                 isCompact={true}
                 displayMode={displayMode}
                 minVisibleHeight={minVisibleHeight}
+                bucketAccessor={bucketAccessor}
               />
             </div>
           );

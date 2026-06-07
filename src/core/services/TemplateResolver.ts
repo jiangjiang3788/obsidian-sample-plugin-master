@@ -22,12 +22,8 @@ export interface TemplateResolveResult {
  * Override 合并规则：
  * 1. 找 baseBlock（通过 blockId）
  * 2. 找 theme（通过 themeId 对应 ThemeDefinition，可能为 null）
- * 3. 如果 themeId 存在：
- *    - 找 override（blockId + themeId 组合）
- *    - override.disabled 为 true 时：不应用 override，返回 baseBlock + theme
- *    - override.disabled 为 false 时：合并 fields/outputTemplate/targetFile/appendUnderHeader
- *      （override 优先，fallback baseBlock）
- * 4. themeId 不存在时：返回 baseBlock + null theme
+ * 3. themeId 只用于解析主题 metadata；不再应用 Theme × Block override。
+ * 4. 返回 baseBlock + theme。
  */
 export class TemplateResolver {
     /**
@@ -54,27 +50,11 @@ export class TemplateResolver {
             ? settings.themes.find(t => t.id === themeId) || null 
             : null;
 
-        // Step 3: 如果有 themeId，尝试查找并应用 override
-        if (themeId) {
-            const override = settings.overrides.find(
-                o => o.blockId === blockId && o.themeId === themeId
-            );
-            
-            // 只有当 override 存在且未被禁用时才应用合并
-            if (override && !override.disabled) {
-                const effectiveTemplate: BlockTemplate = {
-                    ...baseBlock,
-                    // override 字段优先，fallback 到 baseBlock
-                    fields: override.fields ?? baseBlock.fields,
-                    outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate,
-                    targetFile: override.targetFile ?? baseBlock.targetFile,
-                    appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader,
-                };
-                return { template: effectiveTemplate, theme, templateId: override.id, templateSourceType: 'override' };
-            }
-        }
-
-        // Step 4: 没有 themeId 或 override 被禁用/不存在，返回 baseBlock
+        // MIGRATION CLOSEOUT:
+        // Theme × Block overrides have been migrated into Goal × Block presets.
+        // This legacy resolver no longer applies settings.overrides at runtime.
+        // Theme remains visible as metadata only; template fields/output come from
+        // the Block default here, or from GoalTemplateResolver in the main chain.
         return { template: baseBlock, theme, templateId: baseBlock.id, templateSourceType: 'block' };
     }
 

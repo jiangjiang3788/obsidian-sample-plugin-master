@@ -73,7 +73,7 @@ function require_Reflect() {
       var _Map = typeof Map === "function" && typeof Map.prototype.entries === "function" ? Map : CreateMapPolyfill();
       var _Set = typeof Set === "function" && typeof Set.prototype.entries === "function" ? Set : CreateSetPolyfill();
       var _WeakMap = typeof WeakMap === "function" ? WeakMap : CreateWeakMapPolyfill();
-      var registrySymbol = supportsSymbol ? /* @__PURE__ */ Symbol.for("@reflect-metadata:registry") : void 0;
+      var registrySymbol = supportsSymbol ? Symbol.for("@reflect-metadata:registry") : void 0;
       var metadataRegistry = GetOrCreateMetadataRegistry();
       var metadataProvider = CreateMetadataProvider(metadataRegistry);
       function decorate(decorators, target, propertyKey, attributes) {
@@ -212,9 +212,9 @@ function require_Reflect() {
         var hasOwn3 = OrdinaryHasOwnMetadata(MetadataKey, O2, P2);
         if (hasOwn3)
           return true;
-        var parent = OrdinaryGetPrototypeOf(O2);
-        if (!IsNull(parent))
-          return OrdinaryHasMetadata(MetadataKey, parent, P2);
+        var parent2 = OrdinaryGetPrototypeOf(O2);
+        if (!IsNull(parent2))
+          return OrdinaryHasMetadata(MetadataKey, parent2, P2);
         return false;
       }
       function OrdinaryHasOwnMetadata(MetadataKey, O2, P2) {
@@ -232,9 +232,9 @@ function require_Reflect() {
         var hasOwn3 = OrdinaryHasOwnMetadata(MetadataKey, O2, P2);
         if (hasOwn3)
           return OrdinaryGetOwnMetadata(MetadataKey, O2, P2);
-        var parent = OrdinaryGetPrototypeOf(O2);
-        if (!IsNull(parent))
-          return OrdinaryGetMetadata(MetadataKey, parent, P2);
+        var parent2 = OrdinaryGetPrototypeOf(O2);
+        if (!IsNull(parent2))
+          return OrdinaryGetMetadata(MetadataKey, parent2, P2);
         return void 0;
       }
       function OrdinaryGetOwnMetadata(MetadataKey, O2, P2) {
@@ -259,10 +259,10 @@ function require_Reflect() {
       }
       function OrdinaryMetadataKeys(O2, P2) {
         var ownKeys = OrdinaryOwnMetadataKeys(O2, P2);
-        var parent = OrdinaryGetPrototypeOf(O2);
-        if (parent === null)
+        var parent2 = OrdinaryGetPrototypeOf(O2);
+        if (parent2 === null)
           return ownKeys;
-        var parentKeys = OrdinaryMetadataKeys(parent, P2);
+        var parentKeys = OrdinaryMetadataKeys(parent2, P2);
         if (parentKeys.length <= 0)
           return ownKeys;
         if (ownKeys.length <= 0)
@@ -357,7 +357,7 @@ function require_Reflect() {
         return OrdinaryToPrimitive(input);
       }
       function OrdinaryToPrimitive(O2, hint) {
-        var valueOf, result;
+        var valueOf, result, toString_2;
         {
           var toString_1 = O2.toString;
           if (IsCallable(toString_1)) {
@@ -1611,6 +1611,229 @@ function splitGoalPath(path) {
     leafGoal: parts.length ? parts[parts.length - 1] : null
   };
 }
+function pad(value) {
+  return String(value).padStart(2, "0");
+}
+function ymd(date2) {
+  return `${date2.getFullYear()}-${pad(date2.getMonth() + 1)}-${pad(date2.getDate())}`;
+}
+function parseDate$1(value) {
+  const text2 = String(value || "").trim();
+  const parsed = text2 ? /* @__PURE__ */ new Date(`${text2.slice(0, 10)}T00:00:00`) : /* @__PURE__ */ new Date();
+  if (!Number.isFinite(parsed.getTime())) return /* @__PURE__ */ new Date();
+  return parsed;
+}
+function addDays(date2, days) {
+  const next2 = new Date(date2);
+  next2.setDate(next2.getDate() + days);
+  return next2;
+}
+function startOfISOWeek(date2) {
+  const d2 = new Date(date2);
+  const day = d2.getDay() || 7;
+  d2.setDate(d2.getDate() - day + 1);
+  return d2;
+}
+function isoWeekInfo(date2) {
+  const d2 = new Date(Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate()));
+  const day = d2.getUTCDay() || 7;
+  d2.setUTCDate(d2.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d2.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d2.getTime() - yearStart.getTime()) / 864e5 + 1) / 7);
+  return { year: d2.getUTCFullYear(), week };
+}
+function normalizePeriodGranularity(value) {
+  const text2 = String(value || "").trim().toLowerCase();
+  if (text2 === "day" || text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
+  return "day";
+}
+function resolveDerivedPeriod(dateValue, granularityValue) {
+  const granularity = normalizePeriodGranularity(granularityValue);
+  const date2 = parseDate$1(dateValue);
+  const year = date2.getFullYear();
+  if (granularity === "day") {
+    const day = ymd(date2);
+    return { id: day, label: day, granularity, startDate: day, endDate: day };
+  }
+  if (granularity === "week") {
+    const start22 = startOfISOWeek(date2);
+    const end22 = addDays(start22, 6);
+    const info = isoWeekInfo(date2);
+    const week = pad(info.week);
+    return { id: `${info.year}-W${week}`, label: `${info.year} 第 ${info.week} 周`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+  }
+  if (granularity === "month") {
+    const start22 = new Date(year, date2.getMonth(), 1);
+    const end22 = new Date(year, date2.getMonth() + 1, 0);
+    return { id: `${year}-${pad(date2.getMonth() + 1)}`, label: `${year} 年 ${date2.getMonth() + 1} 月`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+  }
+  if (granularity === "quarter") {
+    const quarter = Math.floor(date2.getMonth() / 3) + 1;
+    const start22 = new Date(year, (quarter - 1) * 3, 1);
+    const end22 = new Date(year, quarter * 3, 0);
+    return { id: `${year}-Q${quarter}`, label: `${year} Q${quarter}`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+  }
+  const start2 = new Date(year, 0, 1);
+  const end2 = new Date(year, 11, 31);
+  return { id: `${year}`, label: `${year} 年`, granularity, startDate: ymd(start2), endDate: ymd(end2) };
+}
+function nowIso$2() {
+  return (/* @__PURE__ */ new Date()).toISOString();
+}
+function normalizeVariantId(value) {
+  const text2 = String(value || "").trim();
+  return text2 || "default";
+}
+function safeIdPart(value) {
+  return String(value || "").trim().replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-") || "default";
+}
+function parseVariantIdFromLegacyId(id) {
+  const text2 = String(id || "").trim();
+  if (!text2.startsWith("goal-template.")) return "default";
+  const parts = text2.split(".");
+  if (parts.length <= 4) return "default";
+  return normalizeVariantId(parts.slice(4).join("."));
+}
+function normalizeGoalTemplateId(goalId, coreBlockId, variantId, id) {
+  const text2 = String(id || "").trim();
+  if (text2 && text2.startsWith("goal-template.")) return text2;
+  return getGoalTemplateId(goalId, coreBlockId, variantId);
+}
+function fromLegacyGoalTemplateStorage(row) {
+  const raw = row;
+  const variantId = normalizeVariantId(raw.variantId || parseVariantIdFromLegacyId(row.id));
+  return {
+    id: normalizeGoalTemplateId(row.goalId, row.coreBlockId, variantId, row.id),
+    goalId: row.goalId,
+    coreBlockId: row.coreBlockId,
+    variantId,
+    name: raw.name || raw.templateName || (variantId === "default" ? "默认模板" : variantId),
+    description: raw.description,
+    isDefault: raw.isDefault === true || variantId === "default",
+    granularity: raw.granularity,
+    sortOrder: typeof raw.sortOrder === "number" ? raw.sortOrder : void 0,
+    enabled: row.enabled !== false,
+    fields: row.fields,
+    outputTemplate: row.outputTemplate,
+    targetFile: row.targetFile,
+    appendUnderHeader: row.appendUnderHeader,
+    defaultValues: row.defaultValues || {},
+    requiredFields: row.requiredFields || [],
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt
+  };
+}
+function toLegacyGoalTemplateStorage(template, previous) {
+  const timestamp = nowIso$2();
+  const variantId = normalizeVariantId(template.variantId);
+  return {
+    ...previous || {},
+    id: normalizeGoalTemplateId(template.goalId, template.coreBlockId, variantId, template.id),
+    goalId: template.goalId,
+    coreBlockId: template.coreBlockId,
+    variantId,
+    name: template.name || (variantId === "default" ? "默认模板" : variantId),
+    description: template.description,
+    isDefault: template.isDefault === true || variantId === "default",
+    granularity: template.granularity,
+    sortOrder: template.sortOrder,
+    enabled: template.enabled !== false,
+    fields: template.fields,
+    outputTemplate: template.outputTemplate,
+    targetFile: template.targetFile,
+    appendUnderHeader: template.appendUnderHeader,
+    defaultValues: template.defaultValues || {},
+    requiredFields: template.requiredFields || [],
+    createdAt: template.createdAt || previous?.createdAt || timestamp,
+    updatedAt: template.updatedAt || timestamp
+  };
+}
+function getGoalTemplates(goalSettings) {
+  return (goalSettings?.goalBlockBindings || []).map(fromLegacyGoalTemplateStorage);
+}
+function getGoalTemplateId(goalId, coreBlockId, variantId = "default") {
+  const normalizedVariantId = normalizeVariantId(variantId);
+  const base = `goal-template.${safeIdPart(goalId)}.${safeIdPart(coreBlockId)}`;
+  return normalizedVariantId === "default" ? base : `${base}.${safeIdPart(normalizedVariantId)}`;
+}
+function pathCandidates$2(path) {
+  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
+  const result = [];
+  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
+  return result;
+}
+function getGoalTemplateCandidateGoalIds(goalSettings, goal) {
+  if (!goal) return [];
+  const goals = goalSettings?.goals || [];
+  const ids2 = [goal.id];
+  const path = splitGoalPath(goal.goalPath || goal.title).goalPath;
+  const byPath = new Map(goals.map((item) => [splitGoalPath(item.goalPath || item.title).goalPath, item]));
+  for (const parentPath of pathCandidates$2(path).slice(1)) {
+    const parentGoal = byPath.get(parentPath);
+    if (parentGoal && !ids2.includes(parentGoal.id)) ids2.push(parentGoal.id);
+  }
+  return ids2;
+}
+function getGoalTemplateVariants(goalSettings, goal, coreBlockId) {
+  const candidateGoalIds = getGoalTemplateCandidateGoalIds(goalSettings, goal);
+  if (!candidateGoalIds.length) return [];
+  const rank = new Map(candidateGoalIds.map((id, index) => [id, index]));
+  return getGoalTemplates(goalSettings).filter((template) => template.enabled !== false && candidateGoalIds.includes(template.goalId) && template.coreBlockId === coreBlockId).sort((a2, b2) => {
+    const byGoal = (rank.get(a2.goalId) ?? 999) - (rank.get(b2.goalId) ?? 999);
+    if (byGoal !== 0) return byGoal;
+    const bySortOrder = (a2.sortOrder ?? 9999) - (b2.sortOrder ?? 9999);
+    if (bySortOrder !== 0) return bySortOrder;
+    if (a2.isDefault !== b2.isDefault) return a2.isDefault ? -1 : 1;
+    return String(a2.name || a2.variantId || "").localeCompare(String(b2.name || b2.variantId || ""), "zh-CN");
+  });
+}
+function findGoalTemplate(goalSettings, goal, coreBlockId, variantId) {
+  const variants = getGoalTemplateVariants(goalSettings, goal, coreBlockId);
+  if (!variants.length) return null;
+  const normalizedVariantId = normalizeVariantId(variantId);
+  if (variantId) {
+    const exact = variants.find((template) => normalizeVariantId(template.variantId) === normalizedVariantId || template.id === variantId);
+    if (exact) return exact;
+  }
+  return variants.find((template) => template.isDefault === true) || variants.find((template) => normalizeVariantId(template.variantId) === "default") || variants[0] || null;
+}
+function upsertGoalTemplateInSettings(goalSettings, template) {
+  const previousRows = goalSettings.goalBlockBindings || [];
+  const variantId = normalizeVariantId(template.variantId);
+  const nextTemplate = { ...template, variantId, id: template.id || getGoalTemplateId(template.goalId, template.coreBlockId, variantId) };
+  const rows = previousRows.slice();
+  const index = rows.findIndex((item) => {
+    const itemVariantId = normalizeVariantId(item.variantId || parseVariantIdFromLegacyId(item.id));
+    return item.id === nextTemplate.id || item.goalId === nextTemplate.goalId && item.coreBlockId === nextTemplate.coreBlockId && itemVariantId === variantId;
+  });
+  const next2 = toLegacyGoalTemplateStorage(nextTemplate, index >= 0 ? rows[index] : null);
+  const shouldDefault = next2.isDefault === true || next2.variantId === "default";
+  const normalizedRows = rows.map((row, rowIndex) => {
+    if (rowIndex === index) return row;
+    if (!shouldDefault) return row;
+    const sameCell = row.goalId === next2.goalId && row.coreBlockId === next2.coreBlockId;
+    return sameCell ? { ...row, isDefault: false } : row;
+  });
+  if (index >= 0) normalizedRows[index] = next2;
+  else normalizedRows.push(next2);
+  return { ...goalSettings, goalBlockBindings: normalizedRows };
+}
+function removeGoalTemplateFromSettings(goalSettings, goalId, coreBlockId, variantId = "default") {
+  const normalizedVariantId = normalizeVariantId(variantId);
+  return {
+    ...goalSettings,
+    goalBlockBindings: (goalSettings.goalBlockBindings || []).filter((template) => {
+      const itemVariantId = normalizeVariantId(template.variantId || parseVariantIdFromLegacyId(template.id));
+      return !(template.goalId === goalId && template.coreBlockId === coreBlockId && itemVariantId === normalizedVariantId);
+    })
+  };
+}
+function removeGoalTemplatesForGoal(goalSettings, goalId) {
+  return {
+    ...goalSettings,
+    goalBlockBindings: (goalSettings.goalBlockBindings || []).filter((template) => template.goalId !== goalId)
+  };
+}
 function readLooseField(item, field) {
   const direct = item[field];
   if (direct !== void 0 && direct !== null && String(direct).trim?.() !== "") return direct;
@@ -1639,10 +1862,6 @@ function titleFromPath(path) {
   if (!normalized) return "未命名目标";
   return parsed.leafGoal || normalized;
 }
-function normalizeGoalPathValue(path) {
-  const normalized = splitGoalPath(path || "").goalPath || String(path ?? "").trim();
-  return normalized || null;
-}
 function makeStableGoalIdFromPath(path) {
   const normalized = splitGoalPath(path).goalPath || String(path || "").trim();
   const safe = normalized.toLowerCase().replace(/[\\/\s]+/g, "-").replace(/[^a-z0-9\-_.\u4e00-\u9fa5]/gi, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
@@ -1666,7 +1885,7 @@ function readGoalPaths(item) {
   push(readLooseField(item, "目标"));
   return Array.from(new Set(values2));
 }
-function readThemePath(item) {
+function readThemePath$1(item) {
   return String(item.themePath ?? readLooseField(item, "themePath") ?? readLooseField(item, "主题") ?? "").trim() || null;
 }
 function readCoreBlock(item) {
@@ -1680,17 +1899,8 @@ function readCoreBlock(item) {
   if (/事件|证据/.test(category)) return "evidence";
   if (/阻碍|风险/.test(category)) return "blocker";
   if (/里程碑/.test(category)) return "milestone";
-  if (/闪念|思考/.test(category)) return "thought";
+  if (/思考|闪念/.test(category)) return "thought";
   return category || "record";
-}
-function isDoneTask(item) {
-  const raw = String(item.rawSource ?? item.fullData ?? item.content ?? item.title ?? "").trim();
-  return /^-\s*\[[xX]\]/.test(raw) || /完成/.test(String(readLooseField(item, "状态") ?? ""));
-}
-function relationTypeFromCoreBlock(coreBlock) {
-  const normalized = coreBlock.replace(/^core\./, "");
-  if (["task", "plan", "review", "habit", "thought", "evidence", "blocker", "milestone", "progress", "feedback"].includes(normalized)) return normalized;
-  return "progress";
 }
 function inferGoalCandidatesFromItems(items, existingGoals = []) {
   const map = /* @__PURE__ */ new Map();
@@ -1714,7 +1924,7 @@ function inferGoalCandidatesFromItems(items, existingGoals = []) {
     const paths = readGoalPaths(item);
     if (!paths.length) continue;
     const date2 = normalizeDate(item.date ?? readLooseField(item, "日期") ?? readLooseField(item, "date"));
-    const themePath = readThemePath(item);
+    const themePath = readThemePath$1(item);
     const coreBlock = readCoreBlock(item);
     for (const path of paths) {
       const candidate = map.get(path) || {
@@ -1740,91 +1950,6 @@ function inferGoalCandidatesFromItems(items, existingGoals = []) {
     }
   }
   return Array.from(map.values()).sort((a2, b2) => b2.count - a2.count || a2.goalPath.localeCompare(b2.goalPath, "zh-CN"));
-}
-function buildGoalRelationsFromItems(items, goals) {
-  const goalsByPath = /* @__PURE__ */ new Map();
-  for (const goal of goals || []) {
-    const goalPath = splitGoalPath(goal.goalPath || goal.title).goalPath;
-    if (goalPath) goalsByPath.set(goalPath, goal);
-  }
-  const relations = [];
-  const seen = /* @__PURE__ */ new Set();
-  for (const item of items || []) {
-    for (const path of readGoalPaths(item)) {
-      const goal = goalsByPath.get(path);
-      if (!goal) continue;
-      const coreBlock = readCoreBlock(item);
-      const key = `${goal.id}::${item.id}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      relations.push({
-        id: `rel.${goal.id}.${item.id}`,
-        goalId: goal.id,
-        itemId: item.id,
-        recordId: item.id,
-        relationType: relationTypeFromCoreBlock(coreBlock),
-        weight: 1,
-        createdAt: (/* @__PURE__ */ new Date()).toISOString()
-      });
-    }
-  }
-  return relations;
-}
-function dateToEpochDay(value) {
-  if (!value) return null;
-  const time2 = (/* @__PURE__ */ new Date(`${value}T00:00:00`)).getTime();
-  return Number.isFinite(time2) ? Math.floor(time2 / 864e5) : null;
-}
-function summarizeCycle(cycle, today2 = /* @__PURE__ */ new Date()) {
-  const start2 = dateToEpochDay(cycle.startDate);
-  const end2 = dateToEpochDay(cycle.endDate);
-  const now2 = Math.floor((/* @__PURE__ */ new Date(today2.toISOString().slice(0, 10) + "T00:00:00")).getTime() / 864e5);
-  const total = start2 !== null && end2 !== null ? Math.max(1, end2 - start2 + 1) : 1;
-  const elapsed = start2 !== null ? Math.max(0, Math.min(total, now2 - start2 + 1)) : 0;
-  return {
-    id: cycle.id,
-    title: cycle.title,
-    status: cycle.status,
-    granularity: cycle.granularity,
-    startDate: cycle.startDate,
-    endDate: cycle.endDate,
-    isActive: cycle.status === "active",
-    isOverdue: end2 !== null ? now2 > end2 && cycle.status !== "closed" : false,
-    dayProgressRatio: total > 0 ? elapsed / total : 0
-  };
-}
-function metricSourceValue(metric, row) {
-  const text2 = `${metric.key} ${metric.label}`.toLowerCase();
-  if (/done|complete|完成/.test(text2)) return row.doneTaskCount;
-  if (/open|todo|待办|未完成/.test(text2)) return row.openTaskCount;
-  if (/task|任务/.test(text2)) return row.taskCount;
-  if (/habit|checkin|打卡/.test(text2)) return row.habitCount;
-  if (/evidence|event|事件|证据/.test(text2)) return row.evidenceCount;
-  if (/blocker|risk|阻碍|风险/.test(text2)) return row.blockerCount;
-  if (/milestone|里程碑/.test(text2)) return row.milestoneCount;
-  if (/review|总结|复盘/.test(text2)) return row.reviewCount;
-  if (/plan|计划/.test(text2)) return row.planCount;
-  if (/thought|思考|闪念/.test(text2)) return row.thoughtCount;
-  return row.totalCount;
-}
-function metricProgress(metric, row) {
-  const currentValue = metricSourceValue(metric, row);
-  const targetValue = typeof metric.targetValue === "number" ? metric.targetValue : void 0;
-  let progressRatio = targetValue && targetValue > 0 ? currentValue / targetValue : currentValue > 0 ? 1 : 0;
-  if (metric.direction === "decrease" && targetValue !== void 0) progressRatio = currentValue <= targetValue ? 1 : Math.max(0, targetValue / Math.max(1, currentValue));
-  if (metric.direction === "boolean") progressRatio = currentValue > 0 ? 1 : 0;
-  if (metric.direction === "maintain" && targetValue !== void 0) progressRatio = currentValue === targetValue ? 1 : Math.max(0, 1 - Math.abs(currentValue - targetValue) / Math.max(1, Math.abs(targetValue)));
-  const clamped = Math.max(0, Math.min(1, progressRatio || 0));
-  return {
-    key: metric.key,
-    label: metric.label || metric.key,
-    currentValue,
-    targetValue,
-    unit: metric.unit,
-    direction: metric.direction,
-    progressRatio: clamped,
-    status: clamped >= 1 ? "achieved" : currentValue > 0 ? "in-progress" : "not-started"
-  };
 }
 function buildGoalMarkdownBackfillPreview(items, goals = [], limit = 20) {
   const goalsByPath = /* @__PURE__ */ new Map();
@@ -1854,7 +1979,7 @@ function buildGoalMarkdownBackfillPreview(items, goals = [], limit = 20) {
         missingCoreBlockCount += 1;
       }
       if (!missingFields.length) continue;
-      const themePath = goal.themePath ?? readThemePath(item);
+      const themePath = goal.themePath ?? readThemePath$1(item);
       const patchFields = {
         "目标ID": goal.id,
         "目标": path,
@@ -1905,121 +2030,539 @@ function buildGoalMarkdownBackfillDiffPreview(items, goals = [], limit = 20) {
     })
   };
 }
-function buildGoalOverviewModel(input) {
-  const items = input.items || [];
-  const goals = input.goals || [];
-  const selectedGoalPath = normalizeGoalPathValue(input.selectedGoalPath);
-  const limit = Math.max(1, input.limit || 20);
-  const goalsByPath = /* @__PURE__ */ new Map();
-  const goalPathById = /* @__PURE__ */ new Map();
-  for (const goal of goals) {
-    const path = normalizeGoalPathValue(goal.goalPath || goal.title);
-    if (path) {
-      goalsByPath.set(path, goal);
-      goalPathById.set(goal.id, path);
+const DEFAULT_OPTIONS$1 = {
+  includeDisabled: true,
+  themeGoalMap: {},
+  // 目标迁移不能再默认把主题当目标。没有目标线索时应留给用户归类。
+  fallbackThemeAsGoal: false
+};
+function nowIso$1() {
+  return (/* @__PURE__ */ new Date()).toISOString();
+}
+function normalizeText$2(value) {
+  return String(value ?? "").trim();
+}
+function leaf$3(path) {
+  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
+  return parts[parts.length - 1] || path;
+}
+function makeGoalPathFromTheme(themePath, overrideId) {
+  const normalizedTheme = splitGoalPath(themePath).goalPath || normalizeText$2(themePath);
+  if (normalizedTheme) return normalizedTheme.startsWith("#") ? normalizedTheme : `#${normalizedTheme}`;
+  return `#旧主题/${overrideId}`;
+}
+function normalizeThemeMap(input) {
+  const result = /* @__PURE__ */ new Map();
+  for (const [key, value] of Object.entries(input || {})) {
+    const cleanKey = normalizeText$2(key);
+    const cleanValue = splitGoalPath(normalizeText$2(value)).goalPath || normalizeText$2(value);
+    if (cleanKey && cleanValue) result.set(cleanKey, cleanValue);
+  }
+  return result;
+}
+function resolveMappedGoalPath(themePath, themeId, themeGoalMap) {
+  const map = normalizeThemeMap(themeGoalMap);
+  if (map.size === 0) return null;
+  const cleanThemePath2 = normalizeText$2(themePath);
+  const cleanThemeId = normalizeText$2(themeId);
+  const candidates = [];
+  if (cleanThemePath2) {
+    const parts = cleanThemePath2.split("/").map((part) => part.trim()).filter(Boolean);
+    for (let index = parts.length; index >= 1; index -= 1) {
+      candidates.push(parts.slice(0, index).join("/"));
     }
   }
-  const activeCycleByGoalPath = /* @__PURE__ */ new Map();
-  for (const cycle of input.cycles || []) {
-    const path = goalPathById.get(cycle.goalId);
-    if (!path || cycle.status === "closed") continue;
-    const summary = summarizeCycle(cycle);
-    const current2 = activeCycleByGoalPath.get(path);
-    if (!current2 || summary.isActive && !current2.isActive || String(summary.startDate).localeCompare(String(current2.startDate), "zh-CN") > 0) {
-      activeCycleByGoalPath.set(path, summary);
+  if (cleanThemeId) candidates.push(cleanThemeId);
+  for (const candidate of candidates) {
+    const mapped = map.get(candidate);
+    if (mapped) return mapped;
+  }
+  return null;
+}
+function cleanGoalLiteral(value) {
+  const text2 = normalizeText$2(value).replace(/^['"`]+|['"`]+$/g, "").replace(/[)\]\s]+$/g, "").trim();
+  if (!text2 || text2.includes("{{") || text2.includes("}}")) return null;
+  return splitGoalPath(text2).goalPath || text2;
+}
+function extractHardcodedGoalPath(text2) {
+  const source = normalizeText$2(text2);
+  if (!source) return null;
+  const patterns = [
+    /目标\s*::\s*([^\n\r\)\]]+)/g,
+    /\(目标\s*::\s*([^\)]+)\)/g,
+    /\[目标\s*::\s*([^\]]+)\]/g
+  ];
+  for (const pattern of patterns) {
+    let match5;
+    while (match5 = pattern.exec(source)) {
+      const parsed = cleanGoalLiteral(match5[1]);
+      if (parsed) return parsed;
     }
   }
-  const rowMap = /* @__PURE__ */ new Map();
-  let orphanRecordCount = 0;
-  const ensureRow = (path, item) => {
-    const normalizedPath = normalizeGoalPathValue(path);
-    if (!normalizedPath) return null;
-    const goal = goalsByPath.get(normalizedPath);
-    const existing = rowMap.get(normalizedPath);
-    if (existing) return existing;
-    const row = {
-      goalId: goal?.id ?? null,
-      title: goal?.title || titleFromPath(normalizedPath),
-      goalPath: normalizedPath,
-      themePath: goal?.themePath ?? (item ? readThemePath(item) : null),
-      status: goal?.status,
-      totalCount: 0,
-      taskCount: 0,
-      openTaskCount: 0,
-      doneTaskCount: 0,
-      planCount: 0,
-      reviewCount: 0,
-      habitCount: 0,
-      evidenceCount: 0,
-      blockerCount: 0,
-      milestoneCount: 0,
-      thoughtCount: 0,
-      latestDate: null,
-      completionRatio: 0,
-      recentItems: [],
-      coreBlockCounts: {},
-      activeCycle: activeCycleByGoalPath.get(normalizedPath) || null,
-      metricProgress: []
-    };
-    rowMap.set(normalizedPath, row);
-    return row;
-  };
-  for (const goal of goals) {
-    const path = normalizeGoalPathValue(goal.goalPath || goal.title);
-    if (path) ensureRow(path);
+  return null;
+}
+function readLooseGoalPathFromItem(item) {
+  const values2 = [
+    item.goalPath,
+    Array.isArray(item.goalPaths) ? item.goalPaths[0] : item.goalPaths,
+    item.extra?.["目标"],
+    item.extra?.["goalPath"],
+    item.extra?.["goalPaths"]
+  ];
+  for (const value of values2) {
+    if (value === void 0 || value === null) continue;
+    const raw = Array.isArray(value) ? value[0] : value;
+    const parsed = cleanGoalLiteral(String(raw));
+    if (parsed) return parsed;
   }
-  for (const item of items) {
-    const paths = readGoalPaths(item);
-    if (!paths.length) {
-      orphanRecordCount += 1;
+  return null;
+}
+function readTemplateIdFromItem(item) {
+  const candidates = [
+    item.templateId,
+    item.extra?.["模板ID"],
+    item.extra?.["templateId"]
+  ];
+  for (const value of candidates) {
+    const text2 = normalizeText$2(value);
+    if (text2) return text2;
+  }
+  return null;
+}
+function buildRecordGoalStats(items) {
+  const stats = /* @__PURE__ */ new Map();
+  for (const item of items || []) {
+    const templateId = readTemplateIdFromItem(item);
+    if (!templateId) continue;
+    const goalPath = readLooseGoalPathFromItem(item);
+    if (!goalPath) continue;
+    if (!stats.has(templateId)) stats.set(templateId, /* @__PURE__ */ new Map());
+    const perGoal = stats.get(templateId);
+    perGoal.set(goalPath, (perGoal.get(goalPath) || 0) + 1);
+  }
+  return stats;
+}
+function bestRecordGoal(stats) {
+  if (!stats || stats.size === 0) return null;
+  let best = null;
+  for (const [goalPath, count] of stats.entries()) {
+    if (!best || count > best.count) best = { goalPath, count };
+  }
+  return best;
+}
+function rewriteTemplate(template, goalPath) {
+  let text2 = normalizeText$2(template);
+  if (!text2) return void 0;
+  text2 = text2.replace(/(模板来源\s*::\s*)override/g, "$1{{templateSourceType}}");
+  text2 = text2.replace(/(模板来源\s*::\s*)theme-fallback/g, "$1{{templateSourceType}}");
+  text2 = text2.replace(/(模板ID\s*::\s*)ovr_[^\s\)\]\n\r]+/g, "$1{{templateId}}");
+  text2 = text2.replace(/(目标ID\s*::\s*)[^\s\)\]\n\r]+/g, "$1{{goalId}}");
+  const escapedGoal = goalPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (goalPath) {
+    text2 = text2.replace(new RegExp(`(目标\\s*::\\s*)${escapedGoal}`, "g"), "$1{{goalPath}}");
+  }
+  text2 = text2.replace(/(目标\s*::\s*)(?!\{\{)[^\n\r\)\]]+/g, "$1{{goalPath}}");
+  return text2;
+}
+function inferGranularity(fields) {
+  const periodField = (fields || []).find((field) => {
+    const key = normalizeText$2(field.key || field.label);
+    return key === "周期" || key === "统计周期";
+  });
+  const values2 = [periodField?.defaultValue, ...(periodField?.options || []).map((option) => option.value || option.label)].map(normalizeText$2).join(" ");
+  if (/年|year/i.test(values2)) return "year";
+  if (/季|quarter/i.test(values2)) return "quarter";
+  if (/月|month/i.test(values2)) return "month";
+  if (/周|week/i.test(values2)) return "week";
+  return "day";
+}
+function themeDefaultValues(themePath, icon) {
+  const result = {};
+  if (themePath) {
+    result.themePath = themePath;
+    result["主题"] = themePath;
+  }
+  if (icon) {
+    result.icon = icon;
+    result["图标"] = icon;
+  }
+  return result;
+}
+function isThemePathField(field) {
+  const anyField = field;
+  const key = normalizeText$2(anyField.key || "").toLowerCase();
+  const label = normalizeText$2(anyField.label || "");
+  const semantic = normalizeText$2(anyField.semantic || anyField.semanticType || "").toLowerCase();
+  return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath");
+}
+function ensureThemePathField(fields, themePath) {
+  const normalizedThemePath = normalizeText$2(themePath);
+  const source = fields || [];
+  let found = false;
+  const next2 = source.map((field) => {
+    if (!isThemePathField(field)) return field;
+    found = true;
+    return { ...field, defaultValue: normalizedThemePath || field.defaultValue || "{{goal.themePath}}" };
+  });
+  if (!found && normalizedThemePath) {
+    next2.push({
+      id: "core.field.themePath",
+      key: "themePath",
+      label: "主题",
+      type: "hierarchicalSingleSelect",
+      semantic: "themePath",
+      semanticType: "path",
+      hierarchical: true,
+      defaultValue: normalizedThemePath
+    });
+  }
+  return next2;
+}
+function candidateName(themePath, blockName) {
+  const themeLeaf2 = leaf$3(themePath);
+  const block2 = normalizeText$2(blockName);
+  if (!themeLeaf2) return block2 || "旧主题预设";
+  if (!block2 || themeLeaf2.includes(block2) || block2.includes(themeLeaf2)) return themeLeaf2;
+  return `${themeLeaf2}${block2}`;
+}
+function buildThemeOverrideGoalMigrationPlan(settings, items = [], options = {}) {
+  const opts = { ...DEFAULT_OPTIONS$1, ...options };
+  const inputSettings = settings.inputSettings || { blocks: [], themes: [], overrides: [] };
+  const overrides = inputSettings.overrides || [];
+  const themesById = new Map((inputSettings.themes || []).map((theme2) => [theme2.id, theme2]));
+  const blocksById = new Map((inputSettings.blocks || []).map((block2) => [block2.id, block2]));
+  const recordStats = buildRecordGoalStats(items);
+  const existingGoals = new Set((settings.goalSettings?.goals || []).map((goal) => splitGoalPath(goal.goalPath || goal.title).goalPath || goal.id));
+  const newGoalPaths = /* @__PURE__ */ new Set();
+  const candidates = [];
+  const skipped = [];
+  for (const override of overrides) {
+    const disabled = override.disabled === true || override.status === "disabled";
+    if (disabled && !opts.includeDisabled) {
+      skipped.push({ overrideId: override.id, reason: "旧主题模板已禁用" });
       continue;
     }
-    const date2 = normalizeDate(item.date ?? readLooseField(item, "日期") ?? readLooseField(item, "date"));
-    const coreBlock = readCoreBlock(item).replace(/^core\./, "");
-    for (const path of paths) {
-      const row = ensureRow(path, item);
-      if (!row) continue;
-      row.totalCount += 1;
-      row.coreBlockCounts[coreBlock] = (row.coreBlockCounts[coreBlock] || 0) + 1;
-      if (!row.themePath) row.themePath = readThemePath(item);
-      if (date2 && (!row.latestDate || date2 > row.latestDate)) row.latestDate = date2;
-      if (row.recentItems.length < 20) row.recentItems.push(item);
-      if (coreBlock === "task") {
-        row.taskCount += 1;
-        if (isDoneTask(item)) row.doneTaskCount += 1;
-        else row.openTaskCount += 1;
-      } else if (coreBlock === "plan") row.planCount += 1;
-      else if (coreBlock === "review") row.reviewCount += 1;
-      else if (coreBlock === "habit") row.habitCount += 1;
-      else if (coreBlock === "evidence") row.evidenceCount += 1;
-      else if (coreBlock === "blocker") row.blockerCount += 1;
-      else if (coreBlock === "milestone") row.milestoneCount += 1;
-      else if (coreBlock === "thought") row.thoughtCount += 1;
+    const block2 = blocksById.get(override.blockId);
+    const theme2 = themesById.get(override.themeId);
+    const coreBlockId = block2?.coreBlockId || override.blockId;
+    const blockName = block2?.name || override.blockId;
+    const themePath = theme2?.path || override.themeId || "";
+    const mapped = resolveMappedGoalPath(themePath, override.themeId, opts.themeGoalMap);
+    const hardcoded = extractHardcodedGoalPath(override.outputTemplate || "");
+    const recordBest = bestRecordGoal(recordStats.get(override.id));
+    let goalPath = mapped || hardcoded || recordBest?.goalPath || "";
+    let confidence = mapped ? "mapped" : hardcoded ? "high" : recordBest ? "medium" : "fallback";
+    let reason = mapped ? "用户已把这个主题归类到目标" : hardcoded ? "模板里写死了目标" : recordBest ? `从 ${recordBest.count} 条旧记录反推出目标` : "没有目标线索，等待用户归类主题";
+    if (!goalPath && opts.fallbackThemeAsGoal) {
+      goalPath = makeGoalPathFromTheme(themePath, override.id);
+      reason = "高级兜底：使用主题路径生成目标";
+    }
+    if (!goalPath) {
+      skipped.push({ overrideId: override.id, reason: "无法识别目标" });
+      continue;
+    }
+    goalPath = splitGoalPath(goalPath).goalPath || goalPath;
+    const goalId = makeStableGoalIdFromPath(goalPath);
+    const variantId = `legacy-${override.id}`;
+    const templateId = getGoalTemplateId(goalId, coreBlockId, variantId);
+    const defaultValues = themeDefaultValues(themePath, theme2?.icon);
+    const fieldDefaults = (override.fields || []).reduce((acc, field) => {
+      const key = normalizeText$2(field.key || field.label);
+      const value = normalizeText$2(field.defaultValue);
+      if (key && value && !/\{\{.*\}\}/.test(value)) acc[key] = field.defaultValue;
+      return acc;
+    }, {});
+    Object.assign(defaultValues, fieldDefaults);
+    Object.assign(defaultValues, themeDefaultValues(themePath, theme2?.icon));
+    if (!existingGoals.has(goalPath)) newGoalPaths.add(goalPath);
+    candidates.push({
+      overrideId: override.id,
+      blockId: override.blockId,
+      coreBlockId,
+      blockName,
+      themeId: override.themeId,
+      themePath,
+      goalPath,
+      goalId,
+      templateId,
+      variantId,
+      name: candidateName(themePath, blockName),
+      disabled,
+      enabled: !disabled,
+      granularity: inferGranularity(override.fields),
+      confidence,
+      reason,
+      usedRecordCount: recordBest?.count || 0,
+      fields: override.fields,
+      outputTemplate: rewriteTemplate(override.outputTemplate, goalPath),
+      targetFile: override.targetFile,
+      appendUnderHeader: override.appendUnderHeader || "## {{goalPath}}",
+      defaultValues
+    });
+  }
+  const enabledOverrides = overrides.filter((item) => item.disabled !== true && item.status !== "disabled").length;
+  const highConfidenceCount = candidates.filter((item) => item.confidence === "high").length;
+  const mediumConfidenceCount = candidates.filter((item) => item.confidence === "medium").length;
+  const fallbackCount = candidates.filter((item) => item.confidence === "fallback").length;
+  const matchedRecordCount = candidates.reduce((sum, item) => sum + item.usedRecordCount, 0);
+  return {
+    totalOverrides: overrides.length,
+    enabledOverrides,
+    disabledOverrides: overrides.length - enabledOverrides,
+    migrateCount: candidates.length,
+    candidateCount: candidates.length,
+    skippedCount: skipped.length,
+    highConfidenceCount,
+    mediumConfidenceCount,
+    fallbackCount,
+    matchedRecordCount,
+    wouldCreateGoals: newGoalPaths.size,
+    wouldCreateTemplates: candidates.length,
+    candidates,
+    skipped
+  };
+}
+function buildGoalDefinitionFromThemeMigration(candidate, existing) {
+  const timestamp = nowIso$1();
+  const title = splitGoalPath(candidate.goalPath).leafGoal || candidate.goalPath;
+  return {
+    ...{},
+    id: candidate.goalId,
+    title,
+    goalPath: candidate.goalPath,
+    description: existing?.description,
+    status: "active",
+    parentGoalId: null,
+    themePath: null,
+    granularity: "day",
+    metrics: [],
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+}
+function buildGoalTemplateFromThemeMigration(candidate) {
+  const timestamp = nowIso$1();
+  return {
+    id: candidate.templateId,
+    goalId: candidate.goalId,
+    coreBlockId: candidate.coreBlockId,
+    variantId: candidate.variantId,
+    name: candidate.name,
+    description: `由旧主题模板迁移：${candidate.themePath || candidate.themeId}`,
+    isDefault: true,
+    granularity: candidate.granularity,
+    sortOrder: 0,
+    enabled: candidate.enabled,
+    fields: ensureThemePathField(candidate.fields, candidate.themePath),
+    outputTemplate: candidate.outputTemplate,
+    targetFile: candidate.targetFile,
+    appendUnderHeader: candidate.appendUnderHeader,
+    defaultValues: {
+      ...candidate.defaultValues,
+      legacyOverrideId: candidate.overrideId,
+      legacyThemePath: candidate.themePath
+    },
+    requiredFields: [],
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+}
+function normalizeGoalSettingsForMigration(goalSettings) {
+  return {
+    goals: [...[]],
+    cycles: [...[]],
+    goalBlockBindings: [...[]],
+    goalRecordRelations: [...[]]
+  };
+}
+function buildLegacyOverrideTemplateTargets(settings) {
+  const goalSettings = settings.goalSettings || normalizeGoalSettingsForMigration();
+  const goalsById = new Map((goalSettings.goals || []).map((goal) => [goal.id, goal]));
+  const result = {};
+  for (const template of goalSettings.goalBlockBindings || []) {
+    const defaults = template.defaultValues || {};
+    const legacyOverrideId = normalizeText$2(defaults.legacyOverrideId);
+    if (!legacyOverrideId) continue;
+    const goal = goalsById.get(template.goalId);
+    result[legacyOverrideId] = {
+      legacyOverrideId,
+      templateId: template.id,
+      goalId: template.goalId,
+      goalPath: goal?.goalPath || goal?.title || template.goalId,
+      coreBlockId: template.coreBlockId,
+      themePath: normalizeText$2(defaults.themePath || defaults["主题"] || defaults.legacyThemePath) || void 0
+    };
+  }
+  return result;
+}
+function buildThemeOverrideRecordMigrationPreview(settings, items = [], limit = 20) {
+  const targets = buildLegacyOverrideTemplateTargets(settings);
+  let legacyRecordCount = 0;
+  let rewriteableCount = 0;
+  let unresolvedCount = 0;
+  const samples = [];
+  for (const item of items || []) {
+    if (!itemHasLegacyOverrideMarker(item)) continue;
+    legacyRecordCount += 1;
+    const oldTemplateId = readTemplateIdFromItem(item) || "";
+    const target = oldTemplateId ? targets[oldTemplateId] : void 0;
+    if (target) rewriteableCount += 1;
+    else unresolvedCount += 1;
+    if (samples.length < limit) {
+      samples.push({
+        itemId: String(item.id || ""),
+        title: normalizeText$2(item.title || item.content || item.extra?.["内容"] || item.extra?.["任务内容"]) || "(无标题)",
+        oldTemplateId,
+        status: target ? "rewriteable" : "unresolved",
+        targetTemplateId: target?.templateId,
+        goalPath: target?.goalPath,
+        coreBlockId: target?.coreBlockId
+      });
     }
   }
-  const rows = Array.from(rowMap.values()).map((row) => {
-    const goal = goalsByPath.get(row.goalPath);
-    const nextRow = {
-      ...row,
-      completionRatio: row.taskCount > 0 ? row.doneTaskCount / row.taskCount : 0,
-      recentItems: row.recentItems.slice().sort((a2, b2) => String(b2.date ?? "").localeCompare(String(a2.date ?? ""), "zh-CN")).slice(0, 8)
-    };
-    nextRow.metricProgress = (goal?.metrics || []).map((metric) => metricProgress(metric, nextRow));
-    return nextRow;
-  }).sort((a2, b2) => {
-    const dateCompare = String(b2.latestDate || "").localeCompare(String(a2.latestDate || ""), "zh-CN");
-    if (dateCompare !== 0) return dateCompare;
-    return b2.totalCount - a2.totalCount || a2.goalPath.localeCompare(b2.goalPath, "zh-CN");
-  });
-  const selectedRow = selectedGoalPath ? rows.find((row) => row.goalPath === selectedGoalPath) || null : null;
   return {
-    rows: selectedRow ? [selectedRow] : rows.slice(0, limit),
-    selectedGoalPath,
-    selectedRow,
-    totalGoals: rows.length,
-    totalRecords: items.length,
-    orphanRecordCount
+    legacyRecordCount,
+    rewriteableCount,
+    unresolvedCount,
+    targetCount: Object.keys(targets).length,
+    samples
   };
+}
+function itemHasLegacyOverrideMarker(item) {
+  const source = normalizeText$2(item.templateSourceType || item.extra?.["模板来源"] || item.extra?.["templateSourceType"]);
+  const templateId = normalizeText$2(item.templateId || item.extra?.["模板ID"] || item.extra?.["templateId"]);
+  return source === "override" || /^ovr_/.test(templateId);
+}
+const UNASSIGNED_GOAL_KEY = "未归属目标";
+function firstString(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const candidate = firstString(item);
+      if (candidate) return candidate;
+    }
+    return "";
+  }
+  if (typeof value === "string") {
+    const text2 = value.trim();
+    if (!text2) return "";
+    return text2.split(",").map((part) => part.trim()).filter(Boolean)[0] || "";
+  }
+  if (value == null) return "";
+  return String(value).trim();
+}
+function normalizePath$5(value) {
+  const raw = firstString(value);
+  if (!raw) return "";
+  return splitGoalPath(raw).goalPath || raw;
+}
+function buildGoalPathById(goals = []) {
+  const map = /* @__PURE__ */ new Map();
+  for (const goal of goals || []) {
+    const path = normalizePath$5(goal.goalPath || goal.title);
+    if (goal.id && path) map.set(goal.id, path);
+  }
+  return map;
+}
+function findGoalByPath(goals = [], goalPath) {
+  const normalized = normalizePath$5(goalPath);
+  if (!normalized) return null;
+  return goals.find((goal) => normalizePath$5(goal.goalPath || goal.title) === normalized) || null;
+}
+function getItemGoalKey(item, goals = []) {
+  const directPath = normalizePath$5(item.goalPath);
+  if (directPath) return directPath;
+  const directPaths = normalizePath$5(item.goalPaths);
+  if (directPaths) return directPaths;
+  const fieldPath = normalizePath$5(readField(item, "goalPath")) || normalizePath$5(readField(item, "目标路径")) || normalizePath$5(readField(item, "目标"));
+  if (fieldPath) return fieldPath;
+  const fieldPaths = normalizePath$5(readField(item, "goalPaths"));
+  if (fieldPaths) return fieldPaths;
+  const byId = buildGoalPathById(goals);
+  const directId = firstString(item.goalId) || firstString(readField(item, "goalId")) || firstString(readField(item, "目标ID"));
+  if (directId && byId.has(directId)) return byId.get(directId) || UNASSIGNED_GOAL_KEY;
+  const directIds = firstString(item.goalIds);
+  if (directIds && byId.has(directIds)) return byId.get(directIds) || UNASSIGNED_GOAL_KEY;
+  return UNASSIGNED_GOAL_KEY;
+}
+function getItemGoalLabel(item, goals = []) {
+  const key = getItemGoalKey(item, goals);
+  if (key === UNASSIGNED_GOAL_KEY) return UNASSIGNED_GOAL_KEY;
+  const goal = findGoalByPath(goals, key);
+  return goal?.title || splitGoalPath(key).leafGoal || key;
+}
+function getItemThemeKey(item) {
+  const direct = normalizeThemePath$2(item.themePath) || normalizeThemePath$2(item.theme);
+  if (direct) return direct;
+  const fieldTheme = normalizeThemePath$2(readField(item, "themePath")) || normalizeThemePath$2(readField(item, "主题"));
+  if (fieldTheme) return fieldTheme;
+  const extra = item.extra || {};
+  const extraTheme = normalizeThemePath$2(extra.themePath) || normalizeThemePath$2(extra["主题"]) || normalizeThemePath$2(extra["主题路径"]);
+  if (extraTheme) return extraTheme;
+  return "未设置主题";
+}
+function normalizeThemePath$2(path) {
+  return String(path || "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
+}
+function themePathCandidates(path) {
+  const parts = normalizeThemePath$2(path).split("/").filter(Boolean);
+  const result = [];
+  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
+  return result;
+}
+function resolveThemeIcon(goal, themes = []) {
+  const direct = String(goal?.icon || "").trim();
+  if (direct) return direct;
+  const goalThemePath = normalizeThemePath$2(goal?.themePath);
+  if (!goalThemePath) return void 0;
+  const byPath = new Map((themes || []).map((theme2) => [normalizeThemePath$2(theme2.path), theme2]));
+  for (const candidate of themePathCandidates(goalThemePath)) {
+    const theme2 = byPath.get(candidate);
+    const icon = String(theme2?.icon || "").trim();
+    if (icon) return icon;
+  }
+  return void 0;
+}
+function stableColor(seed) {
+  const palette = ["#8b5cf6", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444", "#6366f1", "#14b8a6", "#f97316", "#a855f7", "#0ea5e9"];
+  let hash2 = 0;
+  for (const ch of seed) hash2 = (hash2 << 5) - hash2 + ch.charCodeAt(0) | 0;
+  return palette[Math.abs(hash2) % palette.length] || "#8b5cf6";
+}
+function buildGoalBuckets(items, goals = [], options = {}) {
+  const { includeUnassigned = true, includeKnownGoals = false, themes = [] } = options;
+  const map = /* @__PURE__ */ new Map();
+  const addBucket = (goalPath, sourceGoal) => {
+    const key = normalizePath$5(goalPath) || UNASSIGNED_GOAL_KEY;
+    if (!includeUnassigned && key === UNASSIGNED_GOAL_KEY) return;
+    if (map.has(key)) return;
+    const goal = sourceGoal || findGoalByPath(goals, key);
+    const label = key === UNASSIGNED_GOAL_KEY ? UNASSIGNED_GOAL_KEY : goal?.title || splitGoalPath(key).leafGoal || key;
+    const icon = key === UNASSIGNED_GOAL_KEY ? "•" : resolveThemeIcon(goal, themes);
+    map.set(key, {
+      name: key,
+      alias: icon && icon !== "•" ? `${icon} ${label}` : label,
+      color: stableColor(key),
+      files: [],
+      goalId: goal?.id || null,
+      goalPath: key === UNASSIGNED_GOAL_KEY ? void 0 : key,
+      icon,
+      isUnassigned: key === UNASSIGNED_GOAL_KEY
+    });
+  };
+  if (includeKnownGoals) {
+    for (const goal of goals || []) {
+      const path = normalizePath$5(goal.goalPath || goal.title);
+      if (path) addBucket(path, goal);
+    }
+  }
+  for (const item of items || []) {
+    addBucket(getItemGoalKey(item, goals));
+  }
+  return Array.from(map.values()).sort((a2, b2) => {
+    if (a2.isUnassigned && !b2.isUnassigned) return 1;
+    if (!a2.isUnassigned && b2.isUnassigned) return -1;
+    return (a2.alias || a2.name).localeCompare(b2.alias || b2.name, "zh-CN");
+  });
 }
 const CORE_BLOCK_IDS = {
   TASK: "core.task",
@@ -2044,7 +2587,6 @@ const themeField = {
 const dateField = { id: "core.field.date", key: "日期", label: "日期", type: "date", semantic: "date" };
 const iconField = { id: "core.field.icon", key: "icon", label: "图标", type: "text", semantic: "icon" };
 const contentField = { id: "core.field.content", key: "内容", label: "内容", type: "textarea", semantic: "body" };
-const periodField = { id: "core.field.period", key: "周期", label: "周期", type: "text", semantic: "period" };
 function block(overrides) {
   return { ...overrides, system: true, version: 1 };
 }
@@ -2062,19 +2604,19 @@ const DEFAULT_CORE_BLOCKS = [
       { id: "core.task.start", key: "时间", label: "时间", type: "time", semantic: "startTime" },
       { id: "core.task.end", key: "结束", label: "结束", type: "time", semantic: "endTime" },
       { id: "core.task.duration", key: "时长", label: "时长", type: "number", semantic: "duration" },
-      { id: "core.task.status", key: "状态", label: "状态", type: "radio", semantic: "status", options: [{ value: "- [ ]", label: "待办" }, { value: "- [x]", label: "完成" }] }
+      { id: "core.task.status", key: "状态", label: "状态", type: "singleSelect", semantic: "status", options: [{ value: "- [ ]", label: "待办" }, { value: "- [x]", label: "完成" }, { value: "🛫", label: "开始" }, { value: "📅", label: "计划" }] }
     ],
-    outputTemplate: "{{状态.value}} {{任务内容}} (目标ID::{{goalId}}) (目标::{{goalPath}}) (主题::{{themePath}}) (核心Block::task) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}",
+    outputTemplate: "{{taskStatusPrefix}} {{theme.icon}}{{任务内容}} (目标ID::{{goalId}}) (目标::{{goalPath}}) (主题::{{themePath}}) (核心Block::task) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{repeatToken}} {{taskDateToken}}",
     targetFile: "01/目标.md",
     appendUnderHeader: "## {{goalPath}}"
   }),
-  block({ id: CORE_BLOCK_IDS.PLAN, key: "plan", name: "计划", description: "目标周期计划。", categoryKey: "计划", fields: [contentField, themeField, periodField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标计划.md", appendUnderHeader: "## {{goalPath}}" }),
-  block({ id: CORE_BLOCK_IDS.REVIEW, key: "review", name: "总结", description: "目标复盘总结。", categoryKey: "总结", fields: [contentField, themeField, periodField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标总结.md", appendUnderHeader: "## {{goalPath}}" }),
-  block({ id: CORE_BLOCK_IDS.THOUGHT, key: "thought", name: "闪念/思考", description: "目标相关思考。", categoryKey: "闪念/思考", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: thought\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 闪念/思考\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标闪念.md", appendUnderHeader: "## {{goalPath}}" }),
-  block({ id: CORE_BLOCK_IDS.HABIT, key: "habit", name: "打卡", description: "目标习惯或进度打卡。", categoryKey: "打卡", fields: [contentField, themeField, dateField, { id: "core.habit.rating", key: "评分", label: "评分", type: "rating", semantic: "rating" }, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n评图:: {{评分.value}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标打卡.md", appendUnderHeader: "## {{goalPath}}" }),
-  block({ id: CORE_BLOCK_IDS.EVIDENCE, key: "evidence", name: "闪念/事件", description: "目标相关事件、证据和外部反馈。", categoryKey: "闪念/事件", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: evidence\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 闪念/事件\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标事件.md", appendUnderHeader: "## {{goalPath}}" }),
-  block({ id: CORE_BLOCK_IDS.BLOCKER, key: "blocker", name: "阻碍项", description: "目标推进过程中的阻碍和风险。", categoryKey: "阻碍项", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: blocker\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 阻碍项\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n阻碍:: {{内容}}\n<!-- end -->", targetFile: "01/目标阻碍.md", appendUnderHeader: "## {{goalPath}}" }),
-  block({ id: CORE_BLOCK_IDS.MILESTONE, key: "milestone", name: "里程碑", description: "目标阶段成果和重要节点。", categoryKey: "里程碑", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: milestone\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 里程碑\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n里程碑:: {{内容}}\n<!-- end -->", targetFile: "01/目标里程碑.md", appendUnderHeader: "## {{goalPath}}" })
+  block({ id: CORE_BLOCK_IDS.PLAN, key: "plan", name: "计划", description: "目标周期计划。", categoryKey: "计划", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标计划.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.REVIEW, key: "review", name: "总结", description: "目标复盘总结。", categoryKey: "总结", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标总结.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.THOUGHT, key: "thought", name: "思考", description: "目标相关思考。", categoryKey: "思考", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: thought\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 思考\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标思考.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.HABIT, key: "habit", name: "打卡", description: "目标习惯或进度打卡。", categoryKey: "打卡", fields: [contentField, themeField, dateField, { id: "core.habit.rating", key: "评分", label: "评分", type: "rating", semantic: "rating" }, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n评图:: {{评分.value}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标打卡.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.EVIDENCE, key: "evidence", name: "事件", description: "目标相关事件、证据和外部反馈。", categoryKey: "事件", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: evidence\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 事件\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标事件.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.BLOCKER, key: "blocker", name: "阻碍项", description: "目标推进过程中的阻碍和风险。", categoryKey: "阻碍项", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: blocker\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 阻碍项\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n阻碍:: {{内容}}\n<!-- end -->", targetFile: "01/目标阻碍.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.MILESTONE, key: "milestone", name: "里程碑", description: "目标阶段成果和重要节点。", categoryKey: "里程碑", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: milestone\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 里程碑\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n里程碑:: {{内容}}\n<!-- end -->", targetFile: "01/目标里程碑.md", appendUnderHeader: "## {{goalPath}}" })
 ];
 const DEFAULT_CORE_BLOCK_SETTINGS = {
   enabledCoreBlockIds: DEFAULT_CORE_BLOCKS.map((block2) => block2.id),
@@ -2164,7 +2706,7 @@ const DEFAULT_SETTINGS = {
   // [新增] 默认关闭（避免污染控制台）
   devConsoleStackEnabled: false
 };
-const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView", "EventTimelineView", "ProgressView", "TaskExecutionView", "GoalOverviewView", "GoalDetailView"];
+const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView", "EventTimelineView", "ProgressView", "TaskExecutionView"];
 function getAllFields(items) {
   return getAvailableFields(items).map((field) => field.key);
 }
@@ -2398,8 +2940,16 @@ const DEFAULT_VALUE_FIELD_TYPES = /* @__PURE__ */ new Set([
   "date",
   "time",
   "datetime",
+  "singleSelect",
+  "multiSelect",
+  "path",
+  "hierarchicalSingleSelect",
+  "multiPath",
+  "tag",
+  "multiTag",
   "image",
-  "file"
+  "file",
+  "rating"
 ]);
 const MULTI_VALUE_FIELD_TYPES = /* @__PURE__ */ new Set([
   "multiSelect",
@@ -2458,6 +3008,9 @@ function sanitizeTemplateField(field, index = 1) {
   };
   if (templateFieldTypeSupportsDefaultValue(type) && field.defaultValue !== void 0 && field.defaultValue !== null) {
     result.defaultValue = String(field.defaultValue);
+  }
+  if (field.required === true) {
+    result.required = true;
   }
   if (templateFieldTypeUsesOptions(type)) {
     const options = cleanOptions(field.options);
@@ -3023,8 +3576,14 @@ function createSliceMeta(sliceName, source = "service") {
     source
   };
 }
-const THEME_MATCHER_TOKEN = /* @__PURE__ */ Symbol("IThemeMatcher");
+const THEME_MATCHER_TOKEN = Symbol("IThemeMatcher");
 const STATISTICS_VIEW_DEFAULT_CONFIG = {
+  /** 目标中心：统计视图只按目标分组；时间与其他筛选统一由控制栏/视图筛选提供。 */
+  groupBy: "goal",
+  metric: "recordCount",
+  chartType: "bar",
+  goalPath: "",
+  topN: 10,
   categories: [],
   displayMode: "smart",
   minVisibleHeight: 15,
@@ -3040,6 +3599,9 @@ const HEATMAP_VIEW_DEFAULT_CONFIG = {
   allowManualEdit: true
 };
 const PROGRESS_VIEW_DEFAULT_CONFIG = {
+  mode: "goal",
+  metric: "completionRate",
+  statusFilter: ["active", "paused"],
   basePoints: 1,
   levelStep: 20,
   includedCategories: [],
@@ -3354,6 +3916,61 @@ function buildParsedRecordSnapshot(item) {
     extra: { ...item.extra || {} }
   };
 }
+function normalizePath$4(path) {
+  const normalized = String(path || "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
+  return normalized || null;
+}
+function pathCandidates$1(path) {
+  const parts = normalizePath$4(path)?.split("/") || [];
+  const result = [];
+  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
+  return result;
+}
+class ThemeMetadataResolver {
+  /**
+   * 返回给模板渲染层使用的主题对象。
+   *
+   * 主题现在只承担 metadata 角色：即使用户记录的 themePath 是更深层路径，
+   * 图标/颜色也可以从父主题回退，但渲染时仍保留原始 themePath。
+   */
+  static resolveThemeForRender(settings, themePath) {
+    const metadata = ThemeMetadataResolver.resolve(settings, themePath);
+    const renderPath = normalizePath$4(themePath) || metadata.path;
+    if (!renderPath && !metadata.theme) return null;
+    return {
+      id: metadata.theme?.id || renderPath || "theme.metadata",
+      path: renderPath || metadata.theme?.path || "",
+      icon: metadata.icon || metadata.theme?.icon || "",
+      order: metadata.theme?.order,
+      status: metadata.theme?.status
+    };
+  }
+  static resolve(settings, themePath) {
+    const normalized = normalizePath$4(themePath);
+    const themes = settings.inputSettings?.themes || [];
+    let theme2 = null;
+    let iconTheme = null;
+    if (normalized) {
+      const byPath = new Map(themes.map((item) => [normalizePath$4(item.path), item]));
+      for (const candidate of pathCandidates$1(normalized)) {
+        const matched = byPath.get(candidate);
+        if (matched && !theme2) theme2 = matched;
+        if (matched && String(matched.icon || "").trim()) {
+          iconTheme = matched;
+          break;
+        }
+      }
+    }
+    const path = normalized || theme2?.path || null;
+    const color2 = path ? settings.categoryColors?.[path] ?? settings.categoryColors?.[path.split("/")[0]] ?? null : null;
+    return {
+      path,
+      icon: String((iconTheme || theme2)?.icon || "").trim(),
+      color: color2,
+      theme: theme2
+    };
+  }
+}
 function generateId(prefix2 = "id") {
   return `${prefix2}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -3380,15 +3997,6 @@ function arrayMove$1(array2, from2, to) {
   newArray.splice(to, 0, removed);
   return newArray;
 }
-function parseCellKey(cellKey) {
-  if (!cellKey) return null;
-  const idx = cellKey.indexOf(":");
-  if (idx === -1) return null;
-  const themeId = cellKey.slice(0, idx);
-  const blockId = cellKey.slice(idx + 1);
-  if (!themeId || !blockId) return null;
-  return { themeId, blockId };
-}
 var SECONDS_A_MINUTE = 60;
 var SECONDS_A_HOUR = SECONDS_A_MINUTE * 60;
 var SECONDS_A_DAY = SECONDS_A_HOUR * 24;
@@ -3403,7 +4011,7 @@ var S$1 = "second";
 var MIN = "minute";
 var H$2 = "hour";
 var D$3 = "day";
-var W$2 = "week";
+var W$1 = "week";
 var M$2 = "month";
 var Q$2 = "quarter";
 var Y$1 = "year";
@@ -3422,10 +4030,10 @@ const en$1 = {
     return "[" + n2 + (s2[(v2 - 20) % 10] || s2[v2] || s2[0]) + "]";
   }
 };
-var padStart = function padStart2(string2, length2, pad) {
+var padStart = function padStart2(string2, length2, pad2) {
   var s2 = String(string2);
   if (!s2 || s2.length >= length2) return string2;
-  return "" + Array(length2 + 1 - s2.length).join(pad) + string2;
+  return "" + Array(length2 + 1 - s2.length).join(pad2) + string2;
 };
 var padZoneStr = function padZoneStr2(instance2) {
   var negMinutes = -instance2.utcOffset();
@@ -3449,7 +4057,7 @@ var prettyUnit = function prettyUnit2(u3) {
   var special = {
     M: M$2,
     y: Y$1,
-    w: W$2,
+    w: W$1,
     d: D$3,
     D: DATE,
     h: H$2,
@@ -3463,7 +4071,7 @@ var prettyUnit = function prettyUnit2(u3) {
 var isUndefined = function isUndefined2(s2) {
   return s2 === void 0;
 };
-const U$2 = {
+const U$1 = {
   s: padStart,
   z: padZoneStr,
   m: monthDiff,
@@ -3520,7 +4128,7 @@ var wrapper$1 = function wrapper(date2, instance2) {
     // todo: refactor; do not use this.$offset in you code
   });
 };
-var Utils = U$2;
+var Utils = U$1;
 Utils.l = parseLocale;
 Utils.i = isDayjs;
 Utils.w = wrapper$1;
@@ -3615,7 +4223,7 @@ var Dayjs = /* @__PURE__ */ (function() {
         return isStartOf ? instanceFactory(1, 0) : instanceFactory(31, 11);
       case M$2:
         return isStartOf ? instanceFactory(1, $M) : instanceFactory(0, $M + 1);
-      case W$2: {
+      case W$1: {
         var weekStart = this.$locale().weekStart || 0;
         var gap2 = ($W < weekStart ? $W + 7 : $W) - weekStart;
         return instanceFactory(isStartOf ? $D - gap2 : $D + (6 - gap2), $M);
@@ -3674,7 +4282,7 @@ var Dayjs = /* @__PURE__ */ (function() {
     if (unit === D$3) {
       return instanceFactorySet(1);
     }
-    if (unit === W$2) {
+    if (unit === W$1) {
       return instanceFactorySet(7);
     }
     var step = (_C$MIN$C$H$C$S$unit = {}, _C$MIN$C$H$C$S$unit[MIN] = MILLISECONDS_A_MINUTE, _C$MIN$C$H$C$S$unit[H$2] = MILLISECONDS_A_HOUR, _C$MIN$C$H$C$S$unit[S$1] = MILLISECONDS_A_SECOND, _C$MIN$C$H$C$S$unit)[unit] || 1;
@@ -3782,7 +4390,7 @@ var Dayjs = /* @__PURE__ */ (function() {
       case Q$2:
         result = getMonth() / 3;
         break;
-      case W$2:
+      case W$1:
         result = (diff2 - zoneDelta) / MILLISECONDS_A_WEEK;
         break;
       case D$3:
@@ -3896,14 +4504,14 @@ const weekOfYear = (function(o2, c2, d2) {
     var yearStart = this.$locale().yearStart || 1;
     if (this.month() === 11 && this.date() > 25) {
       var nextYearStartDay = d2(this).startOf(Y$1).add(1, Y$1).date(yearStart);
-      var thisEndOfWeek = d2(this).endOf(W$2);
+      var thisEndOfWeek = d2(this).endOf(W$1);
       if (nextYearStartDay.isBefore(thisEndOfWeek)) {
         return 1;
       }
     }
     var yearStartDay = d2(this).startOf(Y$1).date(yearStart);
-    var yearStartWeek = yearStartDay.startOf(W$2).subtract(1, MS$1);
-    var diffInWeek = this.diff(yearStartWeek, W$2, true);
+    var yearStartWeek = yearStartDay.startOf(W$1).subtract(1, MS$1);
+    var diffInWeek = this.diff(yearStartWeek, W$1, true);
     if (diffInWeek < 0) {
       return d2(this).startOf("week").week();
     }
@@ -4210,7 +4818,7 @@ const isoWeek = (function(o2, c2, d2) {
     }
     var nowWeekThursday = getCurrentWeekThursday(this);
     var diffWeekThursday = getYearFirstThursday(this.isoWeekYear(), this.$u);
-    return nowWeekThursday.diff(diffWeekThursday, W$2) + 1;
+    return nowWeekThursday.diff(diffWeekThursday, W$1) + 1;
   };
   proto2.isoWeekday = function(week) {
     if (!this.$utils().u(week)) {
@@ -4336,8 +4944,8 @@ function formatSecondsToHHMMSS(totalSeconds) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor(totalSeconds % 3600 / 60);
   const seconds = Math.floor(totalSeconds % 60);
-  const pad = (num) => String(num).padStart(2, "0");
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  const pad2 = (num) => String(num).padStart(2, "0");
+  return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
 }
 const timeToMinutes = (time2) => {
   if (!time2 || !/^\d{1,2}:\d{2}$/.test(time2)) return null;
@@ -4404,47 +5012,6 @@ function getPeriodCount(period, date2) {
       return void 0;
   }
 }
-const DEFAULT_LEVELS = [
-  { level: 0, requiredChecks: 0, icon: "🌱", color: "#90EE90", title: "新手" },
-  { level: 1, requiredChecks: 3, icon: "🌿", color: "#32CD32", title: "初学者" },
-  { level: 2, requiredChecks: 7, icon: "🍃", color: "#228B22", title: "努力者" },
-  { level: 3, requiredChecks: 30, icon: "🌳", color: "#006400", title: "坚持者" },
-  { level: 4, requiredChecks: 90, icon: "👑", color: "#FFD700", title: "大师" },
-  { level: 5, requiredChecks: 365, icon: "🏆", color: "#FF6B35", title: "王者" },
-  { level: 6, requiredChecks: 800, icon: "⭐", color: "#8A2BE2", title: "超神" }
-];
-function calculateLevel(totalChecks, customLevels) {
-  const levels = customLevels || DEFAULT_LEVELS;
-  const currentLevel = levels.findLast((l2) => totalChecks >= l2.requiredChecks) || levels[0];
-  const nextLevel = levels.find((l2) => l2.level > currentLevel.level);
-  let progress = 1;
-  let nextRequirement;
-  if (nextLevel) {
-    const current2 = totalChecks - currentLevel.requiredChecks;
-    const total = nextLevel.requiredChecks - currentLevel.requiredChecks;
-    progress = Math.max(0, Math.min(1, current2 / total));
-    nextRequirement = nextLevel.requiredChecks;
-  }
-  return {
-    level: currentLevel.level,
-    progress,
-    config: currentLevel,
-    nextConfig: nextLevel,
-    totalChecks,
-    nextRequirement
-  };
-}
-function getThemeLevelData(themeItems, customLevels) {
-  let totalLevelChecks = 0;
-  themeItems.forEach((item) => {
-    if (item.levelCount !== void 0) {
-      totalLevelChecks += item.levelCount;
-    } else if (item.countForLevel !== false) {
-      totalLevelChecks += item.displayCount || 1;
-    }
-  });
-  return calculateLevel(totalLevelChecks, customLevels);
-}
 function getEffectiveLevelCount(item) {
   if (item.levelCount !== void 0) {
     return item.levelCount;
@@ -4479,6 +5046,237 @@ function buildPathOption(path) {
   if (!full) return null;
   return { label: getLeafPath(full) || full, value: full };
 }
+function coerceForCompare(v2) {
+  if (v2 === null || v2 === void 0) return null;
+  if (typeof v2 === "number") return v2;
+  const s2 = String(v2).trim();
+  const isDateLike = /^\d{4}-\d{1,2}-\d{1,2}/.test(s2) || /^\d{4}\/\d{1,2}\/\d{1,2}/.test(s2);
+  if (isDateLike) {
+    const ts = Date.parse(s2.replace(/\//g, "-"));
+    if (!Number.isNaN(ts)) return ts;
+  }
+  const n2 = Number(s2);
+  if (!Number.isNaN(n2) && /\d/.test(s2) && !/[^\d.\-+eE]/.test(s2)) return n2;
+  return s2;
+}
+function cmpMixed(a2, b2) {
+  if (a2 == null && b2 == null) return 0;
+  if (a2 == null) return 1;
+  if (b2 == null) return -1;
+  const A2 = coerceForCompare(a2);
+  const B2 = coerceForCompare(b2);
+  if (typeof A2 === "number" && typeof B2 === "number") return A2 - B2;
+  return String(a2).localeCompare(String(b2), "zh");
+}
+function filterByRules(items, rules = []) {
+  if (!rules.length) return items;
+  return items.filter((item) => {
+    if (rules.length === 0) return true;
+    if (rules.length === 1) return matchRule(item, rules[0]);
+    let result = matchRule(item, rules[0]);
+    for (let i2 = 1; i2 < rules.length; i2++) {
+      const currentRule = rules[i2];
+      const previousRule = rules[i2 - 1];
+      const logic = previousRule.logic || "and";
+      if (logic === "and") {
+        result = result && matchRule(item, currentRule);
+      } else if (logic === "or") {
+        result = result || matchRule(item, currentRule);
+      }
+    }
+    return result;
+  });
+}
+function isEmptyValue(value) {
+  if (value === null || value === void 0) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  return String(value).trim() === "";
+}
+function normalizeListValue(value) {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === void 0) return [];
+  return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function normalizeBetweenValue(value) {
+  if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
+  if (value === null || value === void 0) return null;
+  const text2 = String(value).trim();
+  if (!text2) return null;
+  const parts = text2.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
+  if (parts.length < 2) return null;
+  return [parts[0], parts[1]];
+}
+function matchRule(item, rule) {
+  const canonicalField = normalizeFieldKey(rule.field);
+  let v1 = readField(item, canonicalField);
+  let v2 = rule.value;
+  if (rule.op === "empty") return isEmptyValue(v1);
+  if (rule.op === "notEmpty") return !isEmptyValue(v1);
+  if (canonicalField === "title") {
+    v1 = item.titleLower ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (canonicalField === "content") {
+    v1 = item.contentLower ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (["themePath", "rootTheme", "leafTheme", "goalPath", "rootGoal", "leafGoal"].includes(canonicalField)) {
+    v1 = String(v1 ?? "").toLowerCase();
+    if (rule.op === "in" || rule.op === "notIn") {
+      v2 = normalizeListValue(v2).map((value) => String(value ?? "").toLowerCase());
+    } else {
+      v2 = String(v2 ?? "").toLowerCase();
+    }
+  } else if (canonicalField === "fullData") {
+    v1 = item.fullDataLower ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (canonicalField === "tags" || canonicalField === "goalPaths") {
+    const listLower = canonicalField === "tags" ? item.tagsLower ?? (Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : []) : item.goalPathsLower ?? (Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : []);
+    const needle = String(v2 ?? "").toLowerCase();
+    if (rule.op === "includes" || rule.op === "=") {
+      return listLower.includes(needle);
+    }
+    if (rule.op === "!=") {
+      return !listLower.includes(needle);
+    }
+    if (rule.op === "in" || rule.op === "notIn") {
+      const needles = normalizeListValue(v2).map((x2) => String(x2).toLowerCase());
+      const matched = needles.some((needleValue) => listLower.includes(needleValue));
+      return rule.op === "in" ? matched : !matched;
+    }
+    v1 = listLower.join(",");
+    v2 = needle;
+  }
+  switch (rule.op) {
+    case "=":
+      return cmpMixed(v1, v2) === 0;
+    case "!=":
+      return cmpMixed(v1, v2) !== 0;
+    case "includes":
+      return Array.isArray(v1) ? v1.some((x2) => String(x2).includes(String(v2))) : String(v1).includes(String(v2));
+    case "regex":
+      try {
+        return new RegExp(String(v2)).test(String(v1));
+      } catch {
+        return false;
+      }
+    case ">":
+      return cmpMixed(v1, v2) > 0;
+    case "<":
+      return cmpMixed(v1, v2) < 0;
+    case "in": {
+      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
+      return values2.some((value) => cmpMixed(v1, value) === 0);
+    }
+    case "notIn": {
+      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
+      return !values2.some((value) => cmpMixed(v1, value) === 0);
+    }
+    case "between": {
+      const range = normalizeBetweenValue(v2);
+      if (!range) return false;
+      const [minValue, maxValue] = range;
+      return cmpMixed(v1, minValue) >= 0 && cmpMixed(v1, maxValue) <= 0;
+    }
+    default:
+      return false;
+  }
+}
+function sortItems(items, rules = []) {
+  if (!rules.length) return items;
+  return [...items].sort((a2, b2) => {
+    for (const r2 of rules) {
+      const canonicalField = normalizeFieldKey(r2.field);
+      const av = readField(a2, canonicalField);
+      const bv = readField(b2, canonicalField);
+      if (av == null && bv == null) continue;
+      if (av == null) return r2.dir === "asc" ? 1 : -1;
+      if (bv == null) return r2.dir === "asc" ? -1 : 1;
+      const cmp = cmpMixed(av, bv);
+      if (cmp !== 0) return r2.dir === "asc" ? cmp : -cmp;
+    }
+    return 0;
+  });
+}
+function isClosed(it) {
+  const k2 = (it.categoryKey || "").toLowerCase();
+  return /\/(done|cancelled)\b/.test(k2);
+}
+function filterByDateRange(items, startISO, endISO) {
+  if (!startISO && !endISO) return items;
+  const norm = (s2) => (s2 || "").trim().replace(/\//g, "-");
+  const isDateOnly = (s2) => /^\d{4}-\d{1,2}-\d{1,2}$/.test(s2);
+  const sMs = startISO ? Date.parse(norm(startISO)) : null;
+  const eMs = (() => {
+    if (!endISO) return null;
+    const n2 = norm(endISO);
+    const t3 = Date.parse(n2);
+    if (isNaN(t3)) return null;
+    return isDateOnly(n2) ? t3 + 24 * 60 * 60 * 1e3 - 1 : t3;
+  })();
+  return items.filter((it) => {
+    const t3 = it.dateMs ?? (it.date ? Date.parse((it.date || "").replace(/\//g, "-")) : NaN);
+    if (isNaN(t3)) {
+      return !isClosed(it);
+    }
+    if (sMs !== null && t3 < sMs) return false;
+    if (eMs !== null && t3 > eMs) return false;
+    return true;
+  });
+}
+function filterByKeyword(items, kw) {
+  if (!kw.trim()) return items;
+  const s2 = kw.trim().toLowerCase();
+  return items.filter((it) => {
+    const titleLower = it.titleLower ?? (it.title || "").toLowerCase();
+    const contentLower = it.contentLower ?? (it.content || "").toLowerCase();
+    const fullDataLower = it.fullDataLower ?? String(readField(it, "fullData") || "").toLowerCase();
+    return (titleLower + " " + contentLower + " " + fullDataLower).includes(s2);
+  });
+}
+function filterByPeriod(items, period) {
+  if (!period) {
+    return items;
+  }
+  return items.filter((item) => {
+    const itemPeriod = readField(item, "period");
+    return itemPeriod == null || itemPeriod === "" || itemPeriod === period;
+  });
+}
+function getItemThemePath(item) {
+  if (!item) return "";
+  const candidates = [
+    item.themePath,
+    item.themePathNormalized,
+    item.theme,
+    item.extra?.themePath,
+    item.extra?.["themePath"],
+    item.extra?.["主题"]
+  ];
+  for (const value of candidates) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+function collectThemePathsForHeatmap(params) {
+  const { items, dataSource, sourceBlock } = params;
+  const filteredItems = filterByRules(items, dataSource.filters || []);
+  const themeSet = /* @__PURE__ */ new Set();
+  filteredItems.forEach((item) => {
+    const itemBlock = item.coreBlock || item.templateId || item.categoryKey;
+    const sourceBlockKey = sourceBlock.coreBlockId || sourceBlock.id || sourceBlock.name || sourceBlock.categoryKey;
+    const isSourceBlock = itemBlock === sourceBlockKey || item.categoryKey === sourceBlock.categoryKey || item.categoryKey === sourceBlock.name;
+    const themePath = getItemThemePath(item);
+    if (isSourceBlock && themePath) {
+      themeSet.add(themePath);
+    }
+  });
+  return Array.from(themeSet).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+}
+const isImagePath$1 = (value) => {
+  return /\.(png|svg|jpg|jpeg|gif)$/i.test(value);
+};
+const isHexColor = (value) => {
+  return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
+};
 function discoverBaseCategories(items) {
   const categorySet = /* @__PURE__ */ new Set();
   items.forEach((item) => {
@@ -4847,214 +5645,6 @@ function formatTaskItem(item) {
   if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
   return taskLine.replace(/\s+/g, " ").trim();
 }
-function coerceForCompare(v2) {
-  if (v2 === null || v2 === void 0) return null;
-  if (typeof v2 === "number") return v2;
-  const s2 = String(v2).trim();
-  const isDateLike = /^\d{4}-\d{1,2}-\d{1,2}/.test(s2) || /^\d{4}\/\d{1,2}\/\d{1,2}/.test(s2);
-  if (isDateLike) {
-    const ts = Date.parse(s2.replace(/\//g, "-"));
-    if (!Number.isNaN(ts)) return ts;
-  }
-  const n2 = Number(s2);
-  if (!Number.isNaN(n2) && /\d/.test(s2) && !/[^\d.\-+eE]/.test(s2)) return n2;
-  return s2;
-}
-function cmpMixed(a2, b2) {
-  if (a2 == null && b2 == null) return 0;
-  if (a2 == null) return 1;
-  if (b2 == null) return -1;
-  const A2 = coerceForCompare(a2);
-  const B2 = coerceForCompare(b2);
-  if (typeof A2 === "number" && typeof B2 === "number") return A2 - B2;
-  return String(a2).localeCompare(String(b2), "zh");
-}
-function filterByRules(items, rules = []) {
-  if (!rules.length) return items;
-  return items.filter((item) => {
-    if (rules.length === 0) return true;
-    if (rules.length === 1) return matchRule(item, rules[0]);
-    let result = matchRule(item, rules[0]);
-    for (let i2 = 1; i2 < rules.length; i2++) {
-      const currentRule = rules[i2];
-      const previousRule = rules[i2 - 1];
-      const logic = previousRule.logic || "and";
-      if (logic === "and") {
-        result = result && matchRule(item, currentRule);
-      } else if (logic === "or") {
-        result = result || matchRule(item, currentRule);
-      }
-    }
-    return result;
-  });
-}
-function isEmptyValue(value) {
-  if (value === null || value === void 0) return true;
-  if (Array.isArray(value)) return value.length === 0;
-  return String(value).trim() === "";
-}
-function normalizeListValue(value) {
-  if (Array.isArray(value)) return value;
-  if (value === null || value === void 0) return [];
-  return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
-}
-function normalizeBetweenValue(value) {
-  if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
-  if (value === null || value === void 0) return null;
-  const text2 = String(value).trim();
-  if (!text2) return null;
-  const parts = text2.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
-  if (parts.length < 2) return null;
-  return [parts[0], parts[1]];
-}
-function matchRule(item, rule) {
-  const canonicalField = normalizeFieldKey(rule.field);
-  let v1 = readField(item, canonicalField);
-  let v2 = rule.value;
-  if (rule.op === "empty") return isEmptyValue(v1);
-  if (rule.op === "notEmpty") return !isEmptyValue(v1);
-  if (canonicalField === "title") {
-    v1 = item.titleLower ?? String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (canonicalField === "content") {
-    v1 = item.contentLower ?? String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (["themePath", "rootTheme", "leafTheme"].includes(canonicalField)) {
-    v1 = String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (canonicalField === "fullData") {
-    v1 = item.fullDataLower ?? String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (canonicalField === "tags" || canonicalField === "goalPaths") {
-    const listLower = canonicalField === "tags" ? item.tagsLower ?? (Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : []) : item.goalPathsLower ?? (Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : []);
-    const needle = String(v2 ?? "").toLowerCase();
-    if (rule.op === "includes" || rule.op === "=") {
-      return listLower.includes(needle);
-    }
-    if (rule.op === "!=") {
-      return !listLower.includes(needle);
-    }
-    if (rule.op === "in" || rule.op === "notIn") {
-      const needles = normalizeListValue(v2).map((x2) => String(x2).toLowerCase());
-      const matched = needles.some((needleValue) => listLower.includes(needleValue));
-      return rule.op === "in" ? matched : !matched;
-    }
-    v1 = listLower.join(",");
-    v2 = needle;
-  }
-  switch (rule.op) {
-    case "=":
-      return cmpMixed(v1, v2) === 0;
-    case "!=":
-      return cmpMixed(v1, v2) !== 0;
-    case "includes":
-      return Array.isArray(v1) ? v1.some((x2) => String(x2).includes(String(v2))) : String(v1).includes(String(v2));
-    case "regex":
-      try {
-        return new RegExp(String(v2)).test(String(v1));
-      } catch {
-        return false;
-      }
-    case ">":
-      return cmpMixed(v1, v2) > 0;
-    case "<":
-      return cmpMixed(v1, v2) < 0;
-    case "in": {
-      const values2 = normalizeListValue(v2);
-      return values2.some((value) => cmpMixed(v1, value) === 0);
-    }
-    case "notIn": {
-      const values2 = normalizeListValue(v2);
-      return !values2.some((value) => cmpMixed(v1, value) === 0);
-    }
-    case "between": {
-      const range = normalizeBetweenValue(v2);
-      if (!range) return false;
-      const [minValue, maxValue] = range;
-      return cmpMixed(v1, minValue) >= 0 && cmpMixed(v1, maxValue) <= 0;
-    }
-    default:
-      return false;
-  }
-}
-function sortItems(items, rules = []) {
-  if (!rules.length) return items;
-  return [...items].sort((a2, b2) => {
-    for (const r2 of rules) {
-      const canonicalField = normalizeFieldKey(r2.field);
-      const av = readField(a2, canonicalField);
-      const bv = readField(b2, canonicalField);
-      if (av == null && bv == null) continue;
-      if (av == null) return r2.dir === "asc" ? 1 : -1;
-      if (bv == null) return r2.dir === "asc" ? -1 : 1;
-      const cmp = cmpMixed(av, bv);
-      if (cmp !== 0) return r2.dir === "asc" ? cmp : -cmp;
-    }
-    return 0;
-  });
-}
-function isClosed(it) {
-  const k2 = (it.categoryKey || "").toLowerCase();
-  return /\/(done|cancelled)\b/.test(k2);
-}
-function filterByDateRange(items, startISO, endISO) {
-  if (!startISO && !endISO) return items;
-  const norm = (s2) => (s2 || "").trim().replace(/\//g, "-");
-  const isDateOnly = (s2) => /^\d{4}-\d{1,2}-\d{1,2}$/.test(s2);
-  const sMs = startISO ? Date.parse(norm(startISO)) : null;
-  const eMs = (() => {
-    if (!endISO) return null;
-    const n2 = norm(endISO);
-    const t3 = Date.parse(n2);
-    if (isNaN(t3)) return null;
-    return isDateOnly(n2) ? t3 + 24 * 60 * 60 * 1e3 - 1 : t3;
-  })();
-  return items.filter((it) => {
-    const t3 = it.dateMs ?? (it.date ? Date.parse((it.date || "").replace(/\//g, "-")) : NaN);
-    if (isNaN(t3)) {
-      return !isClosed(it);
-    }
-    if (sMs !== null && t3 < sMs) return false;
-    if (eMs !== null && t3 > eMs) return false;
-    return true;
-  });
-}
-function filterByKeyword(items, kw) {
-  if (!kw.trim()) return items;
-  const s2 = kw.trim().toLowerCase();
-  return items.filter((it) => {
-    const titleLower = it.titleLower ?? (it.title || "").toLowerCase();
-    const contentLower = it.contentLower ?? (it.content || "").toLowerCase();
-    const fullDataLower = it.fullDataLower ?? String(readField(it, "fullData") || "").toLowerCase();
-    return (titleLower + " " + contentLower + " " + fullDataLower).includes(s2);
-  });
-}
-function filterByPeriod(items, period) {
-  if (!period) {
-    return items;
-  }
-  return items.filter((item) => {
-    const itemPeriod = readField(item, "period");
-    return itemPeriod == null || itemPeriod === "" || itemPeriod === period;
-  });
-}
-function collectThemePathsForHeatmap(params) {
-  const { items, dataSource, sourceBlock } = params;
-  const filteredItems = filterByRules(items, dataSource.filters || []);
-  const themeSet = /* @__PURE__ */ new Set();
-  filteredItems.forEach((item) => {
-    if (item.categoryKey === sourceBlock.name && item.theme) {
-      themeSet.add(item.theme);
-    }
-  });
-  return Array.from(themeSet).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-}
-const isImagePath$1 = (value) => {
-  return /\.(png|svg|jpg|jpeg|gif)$/i.test(value);
-};
-const isHexColor = (value) => {
-  return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
-};
 function filterItemsByThemes(items, themesToTrack) {
   const kept = [];
   const skippedByReason = {
@@ -5071,7 +5661,8 @@ function filterItemsByThemes(items, themesToTrack) {
       kept.push(item);
       return;
     }
-    if (item.theme && themesToTrack.includes(item.theme)) {
+    const themePath = getItemThemePath(item);
+    if (themePath && themesToTrack.includes(themePath)) {
       kept.push(item);
     } else {
       skippedByReason.themeNotTracked++;
@@ -5090,7 +5681,7 @@ function aggregateThemeData(items, themesToTrack) {
   const isDefaultMode = effectiveThemes.length === 1 && effectiveThemes[0] === "__default__";
   items.forEach((item) => {
     if (!item.date) return;
-    const targetTheme = isDefaultMode ? "__default__" : item.theme || "__default__";
+    const targetTheme = isDefaultMode ? "__default__" : getItemThemePath(item) || "__default__";
     let targetThemeMap = themeMap.get(targetTheme);
     if (!targetThemeMap) {
       targetThemeMap = /* @__PURE__ */ new Map();
@@ -5134,22 +5725,6 @@ class TemplateResolver {
       return { template: null, theme: null, templateId: null, templateSourceType: null };
     }
     const theme2 = themeId ? settings.themes.find((t3) => t3.id === themeId) || null : null;
-    if (themeId) {
-      const override = settings.overrides.find(
-        (o2) => o2.blockId === blockId && o2.themeId === themeId
-      );
-      if (override && !override.disabled) {
-        const effectiveTemplate = {
-          ...baseBlock,
-          // override 字段优先，fallback 到 baseBlock
-          fields: override.fields ?? baseBlock.fields,
-          outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate,
-          targetFile: override.targetFile ?? baseBlock.targetFile,
-          appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader
-        };
-        return { template: effectiveTemplate, theme: theme2, templateId: override.id, templateSourceType: "override" };
-      }
-    }
     return { template: baseBlock, theme: theme2, templateId: baseBlock.id, templateSourceType: "block" };
   }
   /**
@@ -5651,7 +6226,7 @@ function decodeTaskMetadata(lineText) {
     } else if (["模板id", "templateid"].includes(key)) {
       result.templateId = value;
     } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
-      if (["block", "override", "core-block", "theme-fallback", "goal-binding", "legacy-block"].includes(value)) result.templateSourceType = value;
+      if (["block", "override", "core-block", "theme-fallback", "goal-template", "goal-binding", "legacy-block"].includes(value)) result.templateSourceType = value;
     } else if (["标签", "tag", "tags"].includes(key)) {
       result.tags.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
     } else if (["目标id", "goalid"].includes(key)) {
@@ -5753,7 +6328,7 @@ function decodeBlockContentLines(contentLines, parentFolder) {
           templateId = value.trim();
         } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
           const source = value.trim();
-          if (["block", "override", "core-block", "theme-fallback", "goal-binding", "legacy-block"].includes(source)) templateSourceType = source;
+          if (["block", "override", "core-block", "theme-fallback", "goal-template", "goal-binding", "legacy-block"].includes(source)) templateSourceType = source;
         } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) {
           theme2 = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
         } else if (["标签", "tag", "tags"].includes(key)) {
@@ -6023,26 +6598,32 @@ function buildRecordSubmitFeedbackPresentation(result, fallbackErrorMessage = "�
     shouldCloseModal: false
   };
 }
+function defaultBucketAccessor(item) {
+  return getBaseCategory(item.categoryKey);
+}
+function addItemToPeriod(data, categoryOrder, item, bucketAccessor) {
+  const bucketKey = (bucketAccessor || defaultBucketAccessor)(item);
+  if (!categoryOrder.includes(bucketKey)) return;
+  data.counts[bucketKey]++;
+  data.blocks.push(item);
+}
 function createPeriodData(categories) {
   return {
     counts: Object.fromEntries(categories.map((c2) => [c2.name, 0])),
     blocks: []
   };
 }
-function aggregateByDay(items, categories, targetDate) {
+function aggregateByDay(items, categories, targetDate, bucketAccessor) {
   const data = createPeriodData(categories);
   const categoryOrder = categories.map((c2) => c2.name);
   items.forEach((item) => {
     const itemDate = dayjs(item.date);
     if (!itemDate.isValid() || !itemDate.isSame(targetDate, "day")) return;
-    const baseCategory = getBaseCategory(item.categoryKey);
-    if (!categoryOrder.includes(baseCategory)) return;
-    data.counts[baseCategory]++;
-    data.blocks.push(item);
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
   });
   return data;
 }
-function aggregateByWeek(items, categories, targetDate, usePeriod = false) {
+function aggregateByWeek(items, categories, targetDate, usePeriod = false, bucketAccessor) {
   const data = createPeriodData(categories);
   const categoryOrder = categories.map((c2) => c2.name);
   const weekStart = targetDate.startOf("isoWeek");
@@ -6050,82 +6631,58 @@ function aggregateByWeek(items, categories, targetDate, usePeriod = false) {
   items.forEach((item) => {
     const itemDate = dayjs(item.date);
     if (!itemDate.isValid() || !itemDate.isBetween(weekStart, weekEnd, "day", "[]")) return;
-    const baseCategory = getBaseCategory(item.categoryKey);
-    if (!categoryOrder.includes(baseCategory)) return;
     if (usePeriod) {
       const itemPeriod = (readField(item, "period") || "").trim();
       const shouldIncludeInWeek = itemPeriod === "" || itemPeriod === "周";
       if (!shouldIncludeInWeek) return;
     }
-    data.counts[baseCategory]++;
-    data.blocks.push(item);
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
   });
   return data;
 }
-function aggregateByMonth(items, categories, targetDate, usePeriod = false) {
+function aggregateByMonth(items, categories, targetDate, usePeriod = false, bucketAccessor) {
   const data = createPeriodData(categories);
   const categoryOrder = categories.map((c2) => c2.name);
   items.forEach((item) => {
     const itemDate = dayjs(item.date);
     if (!itemDate.isValid() || !itemDate.isSame(targetDate, "month")) return;
-    const baseCategory = getBaseCategory(item.categoryKey);
-    if (!categoryOrder.includes(baseCategory)) return;
     if (usePeriod) {
       const itemPeriod = readField(item, "period") || "";
-      if (itemPeriod === "月") {
-        data.counts[baseCategory]++;
-        data.blocks.push(item);
-      }
-    } else {
-      data.counts[baseCategory]++;
-      data.blocks.push(item);
+      if (itemPeriod !== "月") return;
     }
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
   });
   return data;
 }
-function aggregateByQuarter(items, categories, targetDate, usePeriod = false) {
+function aggregateByQuarter(items, categories, targetDate, usePeriod = false, bucketAccessor) {
   const data = createPeriodData(categories);
   const categoryOrder = categories.map((c2) => c2.name);
   items.forEach((item) => {
     const itemDate = dayjs(item.date);
     if (!itemDate.isValid() || !itemDate.isSame(targetDate, "quarter")) return;
-    const baseCategory = getBaseCategory(item.categoryKey);
-    if (!categoryOrder.includes(baseCategory)) return;
     if (usePeriod) {
       const itemPeriod = readField(item, "period") || "";
-      if (itemPeriod === "季") {
-        data.counts[baseCategory]++;
-        data.blocks.push(item);
-      }
-    } else {
-      data.counts[baseCategory]++;
-      data.blocks.push(item);
+      if (itemPeriod !== "季") return;
     }
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
   });
   return data;
 }
-function aggregateByYear(items, categories, targetDate, usePeriod = false) {
+function aggregateByYear(items, categories, targetDate, usePeriod = false, bucketAccessor) {
   const data = createPeriodData(categories);
   const categoryOrder = categories.map((c2) => c2.name);
   items.forEach((item) => {
     const itemDate = dayjs(item.date);
     if (!itemDate.isValid() || !itemDate.isSame(targetDate, "year")) return;
-    const baseCategory = getBaseCategory(item.categoryKey);
-    if (!categoryOrder.includes(baseCategory)) return;
     if (usePeriod) {
       const itemPeriod = readField(item, "period") || "";
-      if (itemPeriod === "年") {
-        data.counts[baseCategory]++;
-        data.blocks.push(item);
-      }
-    } else {
-      data.counts[baseCategory]++;
-      data.blocks.push(item);
+      if (itemPeriod !== "年") return;
     }
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
   });
   return data;
 }
-function getMonthWeeksData(items, categories, targetMonth, usePeriod = false) {
+function getMonthWeeksData(items, categories, targetMonth, usePeriod = false, bucketAccessor) {
   const monthStart = targetMonth.startOf("month");
   const monthEnd = targetMonth.endOf("month");
   const weeksData = [];
@@ -6136,7 +6693,7 @@ function getMonthWeeksData(items, categories, targetMonth, usePeriod = false) {
       const itemDate = dayjs(item.date);
       return itemDate.isBetween(weekStart, weekEnd, "day", "[]");
     });
-    const data = aggregateByWeek(weekItems, categories, weekStart, usePeriod);
+    const data = aggregateByWeek(weekItems, categories, weekStart, usePeriod, bucketAccessor);
     weeksData.push(data);
     weekStart = weekStart.add(1, "week");
   }
@@ -6832,21 +7389,35 @@ function moveDisplayField(fields, fromIndex, toIndex, options = {}) {
 }
 const CONTENT_FIELD_KEY = "content";
 const FULL_DATA_FIELD_KEY = "fullData";
-function buildAiConfigSnapshot(input, ai) {
+function leaf$2(path) {
+  const text2 = String(path || "").trim();
+  if (!text2) return "";
+  return text2.split("/").filter(Boolean).pop() || text2;
+}
+function normalizeField(field) {
+  return {
+    key: field.key,
+    label: field.label,
+    type: field.type,
+    options: (field.options ?? []).map((o2) => ({
+      value: o2.value,
+      label: o2.label || o2.value
+    })),
+    defaultValue: field.defaultValue
+  };
+}
+function readThemePath(value) {
+  if (!value) return void 0;
+  if (typeof value === "string") return value.trim() || void 0;
+  if (typeof value === "object" && value && "value" in value) return String(value.value || "").trim() || void 0;
+  return void 0;
+}
+function buildAiConfigSnapshot(input, ai, goalSettings) {
   const enabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
   const blocks = (input?.blocks ?? []).filter((b2) => !enabledSet || enabledSet.has(b2.id)).map((b2) => {
     const effective = input ? getEffectiveTemplate(input, b2.id, void 0) : void 0;
     const sourceFields = effective?.template?.fields ?? b2.fields ?? [];
-    const fields = sourceFields.map((f2) => ({
-      key: f2.key,
-      label: f2.label,
-      type: f2.type,
-      options: (f2.options ?? []).map((o2) => ({
-        value: o2.value,
-        label: o2.label || o2.value
-      })),
-      defaultValue: f2.defaultValue
-    }));
+    const fields = sourceFields.map(normalizeField);
     return {
       id: b2.id,
       name: b2.name,
@@ -6854,12 +7425,38 @@ function buildAiConfigSnapshot(input, ai) {
       fields
     };
   });
+  const blockById = new Map((input?.blocks ?? []).map((block2) => [block2.id, block2]));
+  const blockByCoreId = new Map((input?.blocks ?? []).map((block2) => [block2.coreBlockId || block2.id, block2]));
   const themes = (input?.themes ?? []).map((t3) => ({
     id: t3.id,
     path: t3.path,
-    name: t3.path.split("/").pop() || t3.path
+    name: leaf$2(t3.path)
   }));
-  return { blocks, themes };
+  const goals = (goalSettings?.goals ?? []).filter((goal) => goal.status !== "archived").map((goal) => ({
+    id: goal.id,
+    path: goal.goalPath || goal.title,
+    title: goal.title || leaf$2(goal.goalPath)
+  }));
+  const goalPathById = new Map(goals.map((goal) => [goal.id, goal.path]));
+  const goalPresets = getGoalTemplates(goalSettings).filter((preset) => preset.enabled !== false).filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId)).map((preset) => {
+    const block2 = blockByCoreId.get(preset.coreBlockId) || blockById.get(preset.coreBlockId);
+    const fields = (preset.fields?.length ? preset.fields : block2?.fields || []).map(normalizeField);
+    const defaultThemePath = readThemePath(preset.defaultValues?.themePath) || readThemePath(preset.defaultValues?.["主题"]) || fields.map((field) => readThemePath(field.defaultValue)).find(Boolean);
+    return {
+      id: preset.id,
+      goalId: preset.goalId,
+      goalPath: goalPathById.get(preset.goalId) || preset.goalId,
+      blockId: preset.coreBlockId,
+      categoryKey: block2?.categoryKey || preset.coreBlockId,
+      variantId: preset.variantId || "default",
+      name: preset.name || preset.variantId || "默认预设",
+      isDefault: !!preset.isDefault,
+      themePath: defaultThemePath,
+      granularity: preset.granularity || "day",
+      fields
+    };
+  });
+  return { blocks, themes, goals, goalPresets };
 }
 function nowMs$3() {
   try {
@@ -6875,7 +7472,6 @@ class AiConfigCache {
   constructor(settingsProvider) {
     this.settingsProvider = settingsProvider;
   }
-  settingsProvider;
   snapshot = null;
   lastUpdated = 0;
   /**
@@ -6903,17 +7499,21 @@ class AiConfigCache {
     });
     if (!cacheHit) {
       const rebuildStart = nowMs$3();
-      const nextSnapshot = buildAiConfigSnapshot(settings.inputSettings, ai);
+      const nextSnapshot = buildAiConfigSnapshot(settings.inputSettings, ai, settings.goalSettings);
       this.snapshot = nextSnapshot;
       this.lastUpdated = now2;
       devLog(`${prefix2} buildAiConfigSnapshot 完成 (${elapsedMs$2(rebuildStart)})`, {
         blocksCount: nextSnapshot.blocks?.length ?? 0,
-        themesCount: nextSnapshot.themes?.length ?? 0
+        themesCount: nextSnapshot.themes?.length ?? 0,
+        goalsCount: nextSnapshot.goals?.length ?? 0,
+        goalPresetsCount: nextSnapshot.goalPresets?.length ?? 0
       });
       if (nowMs$3() - rebuildStart >= 50) {
         devWarn(`${prefix2} 慢步骤: buildAiConfigSnapshot (${elapsedMs$2(rebuildStart)})`, {
           blocksCount: nextSnapshot.blocks?.length ?? 0,
-          themesCount: nextSnapshot.themes?.length ?? 0
+          themesCount: nextSnapshot.themes?.length ?? 0,
+          goalsCount: nextSnapshot.goals?.length ?? 0,
+          goalPresetsCount: nextSnapshot.goalPresets?.length ?? 0
         });
       }
     }
@@ -6924,7 +7524,9 @@ class AiConfigCache {
     devLog(`${prefix2} getSnapshot 返回 (${elapsedMs$2(totalStart)})`, {
       cacheHit,
       blocksCount: snapshot.blocks?.length ?? 0,
-      themesCount: snapshot.themes?.length ?? 0
+      themesCount: snapshot.themes?.length ?? 0,
+      goalsCount: snapshot.goals?.length ?? 0,
+      goalPresetsCount: snapshot.goalPresets?.length ?? 0
     });
     return snapshot;
   }
@@ -7002,7 +7604,6 @@ class AiHttpClient {
   constructor(transport = defaultTransportFactory()) {
     this.transport = transport;
   }
-  transport;
   /**
    * 发送聊天完成请求
    * 
@@ -7175,6 +7776,17 @@ function compactSnapshotForFastMode(snapshot) {
     })),
     themes: (snapshot.themes ?? []).map((theme2) => ({
       path: theme2.path
+    })),
+    goals: (snapshot.goals ?? []).map((goal) => ({
+      path: goal.path
+    })),
+    goalPresets: (snapshot.goalPresets ?? []).map((preset) => ({
+      goalPath: preset.goalPath,
+      blockId: preset.blockId,
+      categoryKey: preset.categoryKey,
+      variantId: preset.variantId,
+      name: preset.name,
+      themePath: preset.themePath
     }))
   };
 }
@@ -7226,9 +7838,6 @@ class AiNaturalLanguageRecordParser {
     this.cache = cache;
     this.http = http;
   }
-  settingsProvider;
-  cache;
-  http;
   /**
    * 解析自然语言文本
    */
@@ -7260,6 +7869,8 @@ class AiNaturalLanguageRecordParser {
       fastMode: !!input.fastMode,
       blocksCount: snapshot.blocks?.length ?? 0,
       themesCount: snapshot.themes?.length ?? 0,
+      goalsCount: snapshot.goals?.length ?? 0,
+      goalPresetsCount: snapshot.goalPresets?.length ?? 0,
       compacted: input.fastMode ? true : false
     });
     warnSlowParserStep(traceId, "获取 AI 配置 snapshot", snapshotStart, 50);
@@ -7283,6 +7894,8 @@ class AiNaturalLanguageRecordParser {
       userChars: user.length,
       blocksJsonChars: JSON.stringify(snapshot.blocks).length,
       themesJsonChars: JSON.stringify(snapshot.themes).length,
+      goalsJsonChars: JSON.stringify(snapshot.goals || []).length,
+      goalPresetsJsonChars: JSON.stringify(snapshot.goalPresets || []).length,
       maxResults: effectiveMaxResults
     });
     warnSlowParserStep(traceId, "构建 user prompt", userPromptStart, 100, { userChars: user.length });
@@ -7369,6 +7982,8 @@ class AiNaturalLanguageRecordParser {
   buildSystemPrompt(snapshot, customPrompt) {
     const themeExamples = (snapshot.themes ?? []).slice(0, 5).map((t3) => t3.path).join(", ") || "";
     const blockExamples = (snapshot.blocks ?? []).slice(0, 5).map((b2) => `${b2.id}(${b2.name})`).join(", ") || "";
+    const goalExamples = (snapshot.goals ?? []).slice(0, 6).map((g2) => g2.path).join(", ") || "";
+    const presetExamples = (snapshot.goalPresets ?? []).slice(0, 8).map((p2) => `${p2.goalPath} × ${p2.categoryKey} → ${p2.name}${p2.themePath ? `(${p2.themePath})` : ""}`).join("；") || "";
     const basePrompt = [
       "You are a parser that converts natural language into Think plugin record commands.",
       "Return ONLY valid JSON. No markdown code blocks. No explanations. No extra text.",
@@ -7382,7 +7997,9 @@ class AiNaturalLanguageRecordParser {
       '  "target": {',
       '    "categoryKey": "category-from-snapshot",',
       '    "blockId": "optional-block-id-from-snapshot",',
-      '    "themeId": "theme-path-from-snapshot"',
+      '    "goalPath": "goal-path-from-snapshot",',
+      '    "templateVariantId": "preset-variant-from-snapshot",',
+      '    "themeId": "theme-path-from-selected-preset"',
       "  },",
       '  "fieldValues": { "fieldKey": "value" },',
       '  "meta": { "confidence": 0.9, "reason": "explanation" }',
@@ -7390,6 +8007,12 @@ class AiNaturalLanguageRecordParser {
       "",
       "=== AVAILABLE BLOCKS ===",
       `Blocks: ${blockExamples}${snapshot.blocks?.length > 5 ? "..." : ""}`,
+      "",
+      "=== AVAILABLE GOALS ===",
+      `Goal paths: ${goalExamples}${snapshot.goals?.length > 6 ? "..." : ""}`,
+      "",
+      "=== AVAILABLE GOAL PRESETS ===",
+      `Goal presets: ${presetExamples}${snapshot.goalPresets?.length > 8 ? "..." : ""}`,
       "",
       "=== AVAILABLE THEMES ===",
       `Theme paths: ${themeExamples}${snapshot.themes?.length > 5 ? "..." : ""}`
@@ -7410,26 +8033,24 @@ class AiNaturalLanguageRecordParser {
       "",
       "=== DEFAULT RULES (use when custom rules do not apply) ===",
       "",
-      "THEME SELECTION:",
-      "1. themeId is REQUIRED - you MUST always provide a theme",
-      "2. themeId must be the FULL PATH from snapshot.themes[].path",
-      "3. Theme matching strategy:",
-      "   - Look for keywords in user input that match theme path segments",
-      '   - Example: "英语" in input → find theme with "英语" in path → use full path like "学习/英语"',
-      "   - If no clear match, use the FIRST theme in the list as default",
-      "4. NEVER leave themeId empty or undefined",
+      "GOAL / PRESET SELECTION:",
+      "1. goalPath is REQUIRED when snapshot.goals is not empty. Use a FULL goal path from snapshot.goals[].path.",
+      "2. Choose block/category first, then choose the best preset from snapshot.goalPresets with the same goalPath and categoryKey/blockId.",
+      "3. If a preset clearly matches user words, return target.templateVariantId = that preset.variantId.",
+      "4. If several presets match, prefer preset.isDefault or the closest themePath/name match.",
+      "5. themeId should come from the selected preset themePath when available. Theme is only a form default/stat dimension, not the main template selector.",
       "",
       "CATEGORY AND BLOCK SELECTION:",
       "1. categoryKey is REQUIRED and must come from snapshot.blocks[].categoryKey",
       "2. Prefer choosing categoryKey first; blockId is OPTIONAL",
-      "3. Only return blockId when you are sure which specific template to use",
+      "3. Return blockId when you can match snapshot.blocks[].id or snapshot.goalPresets[].blockId",
       "4. Common patterns:",
       '   - "任务"/"要做"/"待办" → categoryKey = "任务"',
       '   - "计划" → categoryKey = "计划"',
       '   - "总结"/"复盘" → categoryKey = "总结"',
       '   - "打卡"/"记录状态" → categoryKey = "打卡"',
       '   - "闪念"/"想法"/"灵感" → categoryKey = "闪念"',
-      '   - If the field values imply a subcategory (such as 闪念/感受, 闪念/思考), put that exact value into fieldValues and still keep categoryKey = "闪念"',
+      '   - If the field values imply a subcategory (such as 闪念/感受, 思考), put that exact value into fieldValues and still keep categoryKey = "闪念"',
       "5. Do not invent a new categoryKey that does not exist in snapshot.blocks[].categoryKey",
       "",
       "FIELD VALUES:",
@@ -7441,12 +8062,12 @@ class AiNaturalLanguageRecordParser {
       "6. Use current date/time if not specified in input",
       "",
       "=== EXAMPLE ===",
-      'If user says "记录今天的一个闪念，我有点累" and themes include "健康/心情":',
+      'If user says "记录今天运动 30 分钟" and goal/preset include "#强健身体 × 打卡 → 运动打卡(健康/运动)":',
       "{",
       '  "items": [{',
-      '    "rawText": "记录今天的一个闪念，我有点累",',
-      '    "target": { "categoryKey": "闪念", "themeId": "健康/心情" },',
-      '    "fieldValues": { "思考分类": "闪念/感受", "日期": "2024-01-15", "内容": "我有点累" },',
+      '    "rawText": "记录今天运动 30 分钟",',
+      '    "target": { "categoryKey": "打卡", "blockId": "core.habit", "goalPath": "#强健身体", "templateVariantId": "legacy-xxx", "themeId": "健康/运动" },',
+      '    "fieldValues": { "日期": "2024-01-15", "内容": "运动 30 分钟" },',
       '    "meta": { "confidence": 0.95 }',
       "  }]",
       "}"
@@ -7460,9 +8081,9 @@ class AiNaturalLanguageRecordParser {
     const lines = [
       "You convert user text into Think plugin record commands.",
       "Return ONLY valid JSON. No markdown. No explanations.",
-      'Schema: {"items":[{"rawText":"...","target":{"categoryKey":"...","blockId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
-      "Use only categoryKey/themeId/fields provided by user prompt.",
-      "If uncertain, choose the first plausible theme and category.",
+      'Schema: {"items":[{"rawText":"...","target":{"categoryKey":"...","blockId":"optional","goalPath":"...","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
+      "Use only goalPath/categoryKey/blockId/templateVariantId/themeId/fields provided by user prompt.",
+      "If uncertain, choose the first plausible goal, preset/theme, and category.",
       "Dates: YYYY-MM-DD. Times: HH:mm. Use current time if needed."
     ];
     if (customPrompt) {
@@ -7478,7 +8099,13 @@ class AiNaturalLanguageRecordParser {
       `Current time: ${nowIso2}`,
       `Max results: ${maxResults}`,
       "",
-      "=== AVAILABLE THEMES (you MUST choose one) ===",
+      "=== AVAILABLE GOALS (choose one when possible) ===",
+      JSON.stringify(snapshot.goals || [], null, 2),
+      "",
+      "=== AVAILABLE GOAL PRESETS (prefer matching goalPath + Block) ===",
+      JSON.stringify(snapshot.goalPresets || [], null, 2),
+      "",
+      "=== AVAILABLE THEMES (use preset themePath or choose one) ===",
       JSON.stringify(snapshot.themes, null, 2),
       "",
       "=== AVAILABLE BLOCKS ===",
@@ -7487,7 +8114,7 @@ class AiNaturalLanguageRecordParser {
       "=== USER INPUT ===",
       text2,
       "",
-      "Return JSON with target.categoryKey and target.themeId filled:"
+      "Return JSON with target.goalPath, target.categoryKey, target.blockId/templateVariantId when possible, and target.themeId filled:"
     ].join("\n");
   }
   /**
@@ -7495,6 +8122,15 @@ class AiNaturalLanguageRecordParser {
    */
   buildFastUserPrompt(text2, nowIso2, maxResults, snapshot) {
     const themePaths = (snapshot.themes ?? []).map((theme2) => theme2.path).filter(Boolean);
+    const goalPaths = (snapshot.goals ?? []).map((goal) => goal.path).filter(Boolean);
+    const compactPresets = (snapshot.goalPresets ?? []).map((preset) => ({
+      goalPath: preset.goalPath,
+      blockId: preset.blockId,
+      categoryKey: preset.categoryKey,
+      variantId: preset.variantId,
+      name: preset.name,
+      themePath: preset.themePath
+    }));
     const compactBlocks = (snapshot.blocks ?? []).map((block2) => ({
       id: block2.id,
       name: block2.name,
@@ -7506,6 +8142,12 @@ class AiNaturalLanguageRecordParser {
       `Max results: ${maxResults}`,
       "Fast mode: prefer the simplest correct parse. Return compact JSON only.",
       "",
+      "Goals:",
+      goalPaths.join(" | "),
+      "",
+      "Goal presets:",
+      JSON.stringify(compactPresets),
+      "",
       "Themes:",
       themePaths.join(" | "),
       "",
@@ -7515,11 +8157,10 @@ class AiNaturalLanguageRecordParser {
       "User input:",
       text2,
       "",
-      'Return JSON: {"items":[{"rawText":"...","target":{"categoryKey":"...","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}'
+      'Return JSON: {"items":[{"rawText":"...","target":{"goalPath":"...","categoryKey":"...","blockId":"...","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}'
     ].join("\n");
   }
 }
-var _a$1;
 function $constructor(name, initializer2, params) {
   function init(inst, def) {
     if (!inst._zod) {
@@ -7582,8 +8223,7 @@ class $ZodEncodeError extends Error {
     this.name = "ZodEncodeError";
   }
 }
-(_a$1 = globalThis).__zod_globalConfig ?? (_a$1.__zod_globalConfig = {});
-const globalConfig = globalThis.__zod_globalConfig;
+const globalConfig = {};
 function config$1(newConfig) {
   return globalConfig;
 }
@@ -7617,14 +8257,21 @@ function cleanRegex(source) {
   return source.slice(start2, end2);
 }
 function floatSafeRemainder(val, step) {
-  const ratio = val / step;
-  const roundedRatio = Math.round(ratio);
-  const tolerance = Number.EPSILON * Math.max(Math.abs(ratio), 1);
-  if (Math.abs(ratio - roundedRatio) < tolerance)
-    return 0;
-  return ratio - roundedRatio;
+  const valDecCount = (val.toString().split(".")[1] || "").length;
+  const stepString = step.toString();
+  let stepDecCount = (stepString.split(".")[1] || "").length;
+  if (stepDecCount === 0 && /\d?e-\d?/.test(stepString)) {
+    const match5 = stepString.match(/\d?e-(\d?)/);
+    if (match5?.[1]) {
+      stepDecCount = Number.parseInt(match5[1]);
+    }
+  }
+  const decCount = valDecCount > stepDecCount ? valDecCount : stepDecCount;
+  const valInt = Number.parseInt(val.toFixed(decCount).replace(".", ""));
+  const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
+  return valInt % stepInt / 10 ** decCount;
 }
-const EVALUATING = /* @__PURE__ */ Symbol("evaluating");
+const EVALUATING = Symbol("evaluating");
 function defineLazy(object2, key, getter) {
   let value = void 0;
   Object.defineProperty(object2, key, {
@@ -7674,10 +8321,7 @@ const captureStackTrace = "captureStackTrace" in Error ? Error.captureStackTrace
 function isObject(data) {
   return typeof data === "object" && data !== null && !Array.isArray(data);
 }
-const allowsEval = /* @__PURE__ */ cached(() => {
-  if (globalConfig.jitless) {
-    return false;
-  }
+const allowsEval = cached(() => {
   if (typeof navigator !== "undefined" && navigator?.userAgent?.includes("Cloudflare")) {
     return false;
   }
@@ -7710,10 +8354,6 @@ function shallowClone(o2) {
     return { ...o2 };
   if (Array.isArray(o2))
     return [...o2];
-  if (o2 instanceof Map)
-    return new Map(o2);
-  if (o2 instanceof Set)
-    return new Set(o2);
   return o2;
 }
 const propertyKeyTypes = /* @__PURE__ */ new Set(["string", "number", "symbol"]);
@@ -7756,11 +8396,6 @@ const NUMBER_FORMAT_RANGES = {
 };
 function pick(schema, mask) {
   const currDef = schema._zod.def;
-  const checks = currDef.checks;
-  const hasChecks = checks && checks.length > 0;
-  if (hasChecks) {
-    throw new Error(".pick() cannot be used on object schemas containing refinements");
-  }
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const newShape = {};
@@ -7781,11 +8416,6 @@ function pick(schema, mask) {
 }
 function omit(schema, mask) {
   const currDef = schema._zod.def;
-  const checks = currDef.checks;
-  const hasChecks = checks && checks.length > 0;
-  if (hasChecks) {
-    throw new Error(".omit() cannot be used on object schemas containing refinements");
-  }
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const newShape = { ...schema._zod.def.shape };
@@ -7811,19 +8441,15 @@ function extend(schema, shape2) {
   const checks = schema._zod.def.checks;
   const hasChecks = checks && checks.length > 0;
   if (hasChecks) {
-    const existingShape = schema._zod.def.shape;
-    for (const key in shape2) {
-      if (Object.getOwnPropertyDescriptor(existingShape, key) !== void 0) {
-        throw new Error("Cannot overwrite keys on object schemas containing refinements. Use `.safeExtend()` instead.");
-      }
-    }
+    throw new Error("Object schemas containing refinements cannot be extended. Use `.safeExtend()` instead.");
   }
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const _shape = { ...schema._zod.def.shape, ...shape2 };
       assignProp(this, "shape", _shape);
       return _shape;
-    }
+    },
+    checks: []
   });
   return clone(schema, def);
 }
@@ -7831,19 +8457,18 @@ function safeExtend(schema, shape2) {
   if (!isPlainObject$2(shape2)) {
     throw new Error("Invalid input to safeExtend: expected a plain object");
   }
-  const def = mergeDefs(schema._zod.def, {
+  const def = {
+    ...schema._zod.def,
     get shape() {
       const _shape = { ...schema._zod.def.shape, ...shape2 };
       assignProp(this, "shape", _shape);
       return _shape;
-    }
-  });
+    },
+    checks: schema._zod.def.checks
+  };
   return clone(schema, def);
 }
 function merge$2(a2, b2) {
-  if (a2._zod.def.checks?.length) {
-    throw new Error(".merge() cannot be used on object schemas containing refinements. Use .safeExtend() instead.");
-  }
   const def = mergeDefs(a2._zod.def, {
     get shape() {
       const _shape = { ...a2._zod.def.shape, ...b2._zod.def.shape };
@@ -7853,17 +8478,12 @@ function merge$2(a2, b2) {
     get catchall() {
       return b2._zod.def.catchall;
     },
-    checks: b2._zod.def.checks ?? []
+    checks: []
+    // delete existing checks
   });
   return clone(a2, def);
 }
 function partial(Class, schema, mask) {
-  const currDef = schema._zod.def;
-  const checks = currDef.checks;
-  const hasChecks = checks && checks.length > 0;
-  if (hasChecks) {
-    throw new Error(".partial() cannot be used on object schemas containing refinements");
-  }
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const oldShape = schema._zod.def.shape;
@@ -7922,7 +8542,8 @@ function required(Class, schema, mask) {
       }
       assignProp(this, "shape", shape2);
       return shape2;
-    }
+    },
+    checks: []
   });
   return clone(schema, def);
 }
@@ -7931,16 +8552,6 @@ function aborted(x2, startIndex = 0) {
     return true;
   for (let i2 = startIndex; i2 < x2.issues.length; i2++) {
     if (x2.issues[i2]?.continue !== true) {
-      return true;
-    }
-  }
-  return false;
-}
-function explicitlyAborted(x2, startIndex = 0) {
-  if (x2.aborted === true)
-    return true;
-  for (let i2 = startIndex; i2 < x2.issues.length; i2++) {
-    if (x2.issues[i2]?.continue === false) {
       return true;
     }
   }
@@ -7958,14 +8569,17 @@ function unwrapMessage(message) {
   return typeof message === "string" ? message : message?.message;
 }
 function finalizeIssue(iss, ctx, config2) {
-  const message = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
-  const { inst: _inst, continue: _continue, input: _input, ...rest } = iss;
-  rest.path ?? (rest.path = []);
-  rest.message = message;
-  if (ctx?.reportInput) {
-    rest.input = _input;
+  const full = { ...iss, path: iss.path ?? [] };
+  if (!iss.message) {
+    const message = unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
+    full.message = message;
   }
-  return rest;
+  delete full.inst;
+  delete full.continue;
+  if (!ctx?.reportInput) {
+    delete full.input;
+  }
+  return full;
 }
 function getLengthableOrigin(input) {
   if (Array.isArray(input))
@@ -8019,33 +8633,30 @@ function flattenError(error, mapper = (issue2) => issue2.message) {
 }
 function formatError(error, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error2, path = []) => {
+  const processError = (error2) => {
     for (const issue2 of error2.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path, ...issue2.path]);
+        processError({ issues: issue2.issues });
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path, ...issue2.path]);
+        processError({ issues: issue2.issues });
+      } else if (issue2.path.length === 0) {
+        fieldErrors._errors.push(mapper(issue2));
       } else {
-        const fullpath = [...path, ...issue2.path];
-        if (fullpath.length === 0) {
-          fieldErrors._errors.push(mapper(issue2));
-        } else {
-          let curr = fieldErrors;
-          let i2 = 0;
-          while (i2 < fullpath.length) {
-            const el = fullpath[i2];
-            const terminal = i2 === fullpath.length - 1;
-            if (!terminal) {
-              curr[el] = curr[el] || { _errors: [] };
-            } else {
-              curr[el] = curr[el] || { _errors: [] };
-              curr[el]._errors.push(mapper(issue2));
-            }
-            curr = curr[el];
-            i2++;
+        let curr = fieldErrors;
+        let i2 = 0;
+        while (i2 < issue2.path.length) {
+          const el = issue2.path[i2];
+          const terminal = i2 === issue2.path.length - 1;
+          if (!terminal) {
+            curr[el] = curr[el] || { _errors: [] };
+          } else {
+            curr[el] = curr[el] || { _errors: [] };
+            curr[el]._errors.push(mapper(issue2));
           }
+          curr = curr[el];
+          i2++;
         }
       }
     }
@@ -8054,7 +8665,7 @@ function formatError(error, mapper = (issue2) => issue2.message) {
   return fieldErrors;
 }
 const _parse = (_Err) => (schema, value, _ctx, _params) => {
-  const ctx = _ctx ? { ..._ctx, async: false } : { async: false };
+  const ctx = _ctx ? Object.assign(_ctx, { async: false }) : { async: false };
   const result = schema._zod.run({ value, issues: [] }, ctx);
   if (result instanceof Promise) {
     throw new $ZodAsyncError();
@@ -8067,7 +8678,7 @@ const _parse = (_Err) => (schema, value, _ctx, _params) => {
   return result.value;
 };
 const _parseAsync = (_Err) => async (schema, value, _ctx, params) => {
-  const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
+  const ctx = _ctx ? Object.assign(_ctx, { async: true }) : { async: true };
   let result = schema._zod.run({ value, issues: [] }, ctx);
   if (result instanceof Promise)
     result = await result;
@@ -8091,7 +8702,7 @@ const _safeParse = (_Err) => (schema, value, _ctx) => {
 };
 const safeParse$1 = /* @__PURE__ */ _safeParse($ZodRealError);
 const _safeParseAsync = (_Err) => async (schema, value, _ctx) => {
-  const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
+  const ctx = _ctx ? Object.assign(_ctx, { async: true }) : { async: true };
   let result = schema._zod.run({ value, issues: [] }, ctx);
   if (result instanceof Promise)
     result = await result;
@@ -8102,34 +8713,34 @@ const _safeParseAsync = (_Err) => async (schema, value, _ctx) => {
 };
 const safeParseAsync$1 = /* @__PURE__ */ _safeParseAsync($ZodRealError);
 const _encode = (_Err) => (schema, value, _ctx) => {
-  const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
+  const ctx = _ctx ? Object.assign(_ctx, { direction: "backward" }) : { direction: "backward" };
   return _parse(_Err)(schema, value, ctx);
 };
 const _decode = (_Err) => (schema, value, _ctx) => {
   return _parse(_Err)(schema, value, _ctx);
 };
 const _encodeAsync = (_Err) => async (schema, value, _ctx) => {
-  const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
+  const ctx = _ctx ? Object.assign(_ctx, { direction: "backward" }) : { direction: "backward" };
   return _parseAsync(_Err)(schema, value, ctx);
 };
 const _decodeAsync = (_Err) => async (schema, value, _ctx) => {
   return _parseAsync(_Err)(schema, value, _ctx);
 };
 const _safeEncode = (_Err) => (schema, value, _ctx) => {
-  const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
+  const ctx = _ctx ? Object.assign(_ctx, { direction: "backward" }) : { direction: "backward" };
   return _safeParse(_Err)(schema, value, ctx);
 };
 const _safeDecode = (_Err) => (schema, value, _ctx) => {
   return _safeParse(_Err)(schema, value, _ctx);
 };
 const _safeEncodeAsync = (_Err) => async (schema, value, _ctx) => {
-  const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
+  const ctx = _ctx ? Object.assign(_ctx, { direction: "backward" }) : { direction: "backward" };
   return _safeParseAsync(_Err)(schema, value, ctx);
 };
 const _safeDecodeAsync = (_Err) => async (schema, value, _ctx) => {
   return _safeParseAsync(_Err)(schema, value, _ctx);
 };
-const cuid = /^[cC][0-9a-z]{6,}$/;
+const cuid = /^[cC][^\s-]{8,}$/;
 const cuid2 = /^[0-9a-z]+$/;
 const ulid = /^[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{26}$/;
 const xid = /^[0-9a-vA-V]{20}$/;
@@ -8153,8 +8764,7 @@ const cidrv4 = /^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-
 const cidrv6 = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::|([0-9a-fA-F]{1,4})?::([0-9a-fA-F]{1,4}:?){0,6})\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/;
 const base64 = /^$|^(?:[0-9a-zA-Z+/]{4})*(?:(?:[0-9a-zA-Z+/]{2}==)|(?:[0-9a-zA-Z+/]{3}=))?$/;
 const base64url = /^[A-Za-z0-9_-]*$/;
-const httpProtocol = /^https?$/;
-const e164 = /^\+[1-9]\d{6,14}$/;
+const e164 = /^\+(?:[0-9]){6,14}[0-9]$/;
 const dateSource = `(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))`;
 const date$1 = /* @__PURE__ */ new RegExp(`^${dateSource}$`);
 function timeSource(args) {
@@ -8180,7 +8790,7 @@ const string$1 = (params) => {
   return new RegExp(`^${regex}$`);
 };
 const integer = /^-?\d+$/;
-const number$1 = /^-?\d+(?:\.\d+)?$/;
+const number$1 = /^-?\d+(?:\.\d+)?/;
 const boolean$1 = /^(?:true|false)$/i;
 const lowercase = /^[^A-Z]*$/;
 const uppercase = /^[^a-z]*$/;
@@ -8215,7 +8825,7 @@ const $ZodCheckLessThan = /* @__PURE__ */ $constructor("$ZodCheckLessThan", (ins
     payload.issues.push({
       origin,
       code: "too_big",
-      maximum: typeof def.value === "object" ? def.value.getTime() : def.value,
+      maximum: def.value,
       input: payload.value,
       inclusive: def.inclusive,
       inst,
@@ -8243,7 +8853,7 @@ const $ZodCheckGreaterThan = /* @__PURE__ */ $constructor("$ZodCheckGreaterThan"
     payload.issues.push({
       origin,
       code: "too_small",
-      minimum: typeof def.value === "object" ? def.value.getTime() : def.value,
+      minimum: def.value,
       input: payload.value,
       inclusive: def.inclusive,
       inst,
@@ -8310,7 +8920,6 @@ const $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberForma
             note: "Integers must be within the safe integer range.",
             inst,
             origin,
-            inclusive: true,
             continue: !def.abort
           });
         } else {
@@ -8321,7 +8930,6 @@ const $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberForma
             note: "Integers must be within the safe integer range.",
             inst,
             origin,
-            inclusive: true,
             continue: !def.abort
           });
         }
@@ -8345,9 +8953,7 @@ const $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberForma
         input,
         code: "too_big",
         maximum,
-        inclusive: true,
-        inst,
-        continue: !def.abort
+        inst
       });
     }
   };
@@ -8608,8 +9214,8 @@ class Doc {
 }
 const version = {
   major: 4,
-  minor: 4,
-  patch: 3
+  minor: 2,
+  patch: 1
 };
 const $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
   var _a2;
@@ -8637,8 +9243,6 @@ const $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
       let asyncResult;
       for (const ch of checks2) {
         if (ch._zod.def.when) {
-          if (explicitlyAborted(payload))
-            continue;
           const shouldRun = ch._zod.def.when(payload);
           if (!shouldRun)
             continue;
@@ -8709,7 +9313,7 @@ const $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
       return runChecks(result, checks, ctx);
     };
   }
-  defineLazy(inst, "~standard", () => ({
+  inst["~standard"] = {
     validate: (value) => {
       try {
         const r2 = safeParse$1(inst, value);
@@ -8720,7 +9324,7 @@ const $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
     },
     vendor: "zod",
     version: 1
-  }));
+  };
 });
 const $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def) => {
   $ZodType.init(inst, def);
@@ -8779,19 +9383,6 @@ const $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
   inst._zod.check = (payload) => {
     try {
       const trimmed = payload.value.trim();
-      if (!def.normalize && def.protocol?.source === httpProtocol.source) {
-        if (!/^https?:\/\//i.test(trimmed)) {
-          payload.issues.push({
-            code: "invalid_format",
-            format: "url",
-            note: "Invalid URL format",
-            input: payload.value,
-            inst,
-            continue: !def.abort
-          });
-          return;
-        }
-      }
       const url = new URL(trimmed);
       if (def.hostname) {
         def.hostname.lastIndex = 0;
@@ -8940,8 +9531,6 @@ const $ZodCIDRv6 = /* @__PURE__ */ $constructor("$ZodCIDRv6", (inst, def) => {
 function isValidBase64(data) {
   if (data === "")
     return true;
-  if (/\s/.test(data))
-    return false;
   if (data.length % 4 !== 0)
     return false;
   try {
@@ -9132,27 +9721,12 @@ const $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def) => {
     return payload;
   };
 });
-function handlePropertyResult(result, final, key, input, isOptionalIn, isOptionalOut) {
-  const isPresent2 = key in input;
+function handlePropertyResult(result, final, key, input) {
   if (result.issues.length) {
-    if (isOptionalIn && isOptionalOut && !isPresent2) {
-      return;
-    }
     final.issues.push(...prefixIssues(key, result.issues));
   }
-  if (!isPresent2 && !isOptionalIn) {
-    if (!result.issues.length) {
-      final.issues.push({
-        code: "invalid_type",
-        expected: "nonoptional",
-        input: void 0,
-        path: [key]
-      });
-    }
-    return;
-  }
   if (result.value === void 0) {
-    if (isPresent2) {
+    if (key in input) {
       final.value[key] = void 0;
     }
   } else {
@@ -9180,11 +9754,7 @@ function handleCatchall(proms, input, payload, ctx, def, inst) {
   const keySet = def.keySet;
   const _catchall = def.catchall._zod;
   const t3 = _catchall.def.type;
-  const isOptionalIn = _catchall.optin === "optional";
-  const isOptionalOut = _catchall.optout === "optional";
   for (const key in input) {
-    if (key === "__proto__")
-      continue;
     if (keySet.has(key))
       continue;
     if (t3 === "never") {
@@ -9193,9 +9763,9 @@ function handleCatchall(proms, input, payload, ctx, def, inst) {
     }
     const r2 = _catchall.run({ value: input[key], issues: [] }, ctx);
     if (r2 instanceof Promise) {
-      proms.push(r2.then((r3) => handlePropertyResult(r3, payload, key, input, isOptionalIn, isOptionalOut)));
+      proms.push(r2.then((r3) => handlePropertyResult(r3, payload, key, input)));
     } else {
-      handlePropertyResult(r2, payload, key, input, isOptionalIn, isOptionalOut);
+      handlePropertyResult(r2, payload, key, input);
     }
   }
   if (unrecognized.length) {
@@ -9261,13 +9831,11 @@ const $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
     const shape2 = value.shape;
     for (const key of value.keys) {
       const el = shape2[key];
-      const isOptionalIn = el._zod.optin === "optional";
-      const isOptionalOut = el._zod.optout === "optional";
       const r2 = el._zod.run({ value: input[key], issues: [] }, ctx);
       if (r2 instanceof Promise) {
-        proms.push(r2.then((r3) => handlePropertyResult(r3, payload, key, input, isOptionalIn, isOptionalOut)));
+        proms.push(r2.then((r3) => handlePropertyResult(r3, payload, key, input)));
       } else {
-        handlePropertyResult(r2, payload, key, input, isOptionalIn, isOptionalOut);
+        handlePropertyResult(r2, payload, key, input);
       }
     }
     if (!catchall) {
@@ -9297,20 +9865,15 @@ const $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) 
     for (const key of normalized.keys) {
       const id = ids2[key];
       const k2 = esc(key);
-      const schema = shape2[key];
-      const isOptionalIn = schema?._zod?.optin === "optional";
-      const isOptionalOut = schema?._zod?.optout === "optional";
       doc.write(`const ${id} = ${parseStr(key)};`);
-      if (isOptionalIn && isOptionalOut) {
-        doc.write(`
+      doc.write(`
         if (${id}.issues.length) {
-          if (${k2} in input) {
-            payload.issues = payload.issues.concat(${id}.issues.map(iss => ({
-              ...iss,
-              path: iss.path ? [${k2}, ...iss.path] : [${k2}]
-            })));
-          }
+          payload.issues = payload.issues.concat(${id}.issues.map(iss => ({
+            ...iss,
+            path: iss.path ? [${k2}, ...iss.path] : [${k2}]
+          })));
         }
+        
         
         if (${id}.value === undefined) {
           if (${k2} in input) {
@@ -9321,52 +9884,6 @@ const $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) 
         }
         
       `);
-      } else if (!isOptionalIn) {
-        doc.write(`
-        const ${id}_present = ${k2} in input;
-        if (${id}.issues.length) {
-          payload.issues = payload.issues.concat(${id}.issues.map(iss => ({
-            ...iss,
-            path: iss.path ? [${k2}, ...iss.path] : [${k2}]
-          })));
-        }
-        if (!${id}_present && !${id}.issues.length) {
-          payload.issues.push({
-            code: "invalid_type",
-            expected: "nonoptional",
-            input: undefined,
-            path: [${k2}]
-          });
-        }
-
-        if (${id}_present) {
-          if (${id}.value === undefined) {
-            newResult[${k2}] = undefined;
-          } else {
-            newResult[${k2}] = ${id}.value;
-          }
-        }
-
-      `);
-      } else {
-        doc.write(`
-        if (${id}.issues.length) {
-          payload.issues = payload.issues.concat(${id}.issues.map(iss => ({
-            ...iss,
-            path: iss.path ? [${k2}, ...iss.path] : [${k2}]
-          })));
-        }
-        
-        if (${id}.value === undefined) {
-          if (${k2} in input) {
-            newResult[${k2}] = undefined;
-          }
-        } else {
-          newResult[${k2}] = ${id}.value;
-        }
-        
-      `);
-      }
     }
     doc.write(`payload.value = newResult;`);
     doc.write(`return payload;`);
@@ -9440,9 +9957,10 @@ const $ZodUnion = /* @__PURE__ */ $constructor("$ZodUnion", (inst, def) => {
     }
     return void 0;
   });
-  const first = def.options.length === 1 ? def.options[0]._zod.run : null;
+  const single = def.options.length === 1;
+  const first = def.options[0]._zod.run;
   inst._zod.parse = (payload, ctx) => {
-    if (first) {
+    if (single) {
       return first(payload, ctx);
     }
     let async = false;
@@ -9528,34 +10046,11 @@ function mergeValues(a2, b2) {
   return { valid: false, mergeErrorPath: [] };
 }
 function handleIntersectionResults(result, left2, right2) {
-  const unrecKeys = /* @__PURE__ */ new Map();
-  let unrecIssue;
-  for (const iss of left2.issues) {
-    if (iss.code === "unrecognized_keys") {
-      unrecIssue ?? (unrecIssue = iss);
-      for (const k2 of iss.keys) {
-        if (!unrecKeys.has(k2))
-          unrecKeys.set(k2, {});
-        unrecKeys.get(k2).l = true;
-      }
-    } else {
-      result.issues.push(iss);
-    }
+  if (left2.issues.length) {
+    result.issues.push(...left2.issues);
   }
-  for (const iss of right2.issues) {
-    if (iss.code === "unrecognized_keys") {
-      for (const k2 of iss.keys) {
-        if (!unrecKeys.has(k2))
-          unrecKeys.set(k2, {});
-        unrecKeys.get(k2).r = true;
-      }
-    } else {
-      result.issues.push(iss);
-    }
-  }
-  const bothKeys = [...unrecKeys].filter(([, f2]) => f2.l && f2.r).map(([k2]) => k2);
-  if (bothKeys.length && unrecIssue) {
-    result.issues.push({ ...unrecIssue, keys: bothKeys });
+  if (right2.issues.length) {
+    result.issues.push(...right2.issues);
   }
   if (aborted(result))
     return result;
@@ -9610,7 +10105,6 @@ const $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def) => {
 });
 const $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) => {
   $ZodType.init(inst, def);
-  inst._zod.optin = "optional";
   inst._zod.parse = (payload, ctx) => {
     if (ctx.direction === "backward") {
       throw new $ZodEncodeError(inst.constructor.name);
@@ -9620,7 +10114,6 @@ const $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) 
       const output = _out instanceof Promise ? _out : Promise.resolve(_out);
       return output.then((output2) => {
         payload.value = output2;
-        payload.fallback = true;
         return payload;
       });
     }
@@ -9628,12 +10121,11 @@ const $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) 
       throw new $ZodAsyncError();
     }
     payload.value = _out;
-    payload.fallback = true;
     return payload;
   };
 });
 function handleOptionalResult(result, input) {
-  if (input === void 0 && (result.issues.length || result.fallback)) {
+  if (result.issues.length && input === void 0) {
     return { issues: [], value: void 0 };
   }
   return result;
@@ -9651,23 +10143,14 @@ const $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def) =>
   });
   inst._zod.parse = (payload, ctx) => {
     if (def.innerType._zod.optin === "optional") {
-      const input = payload.value;
       const result = def.innerType._zod.run(payload, ctx);
       if (result instanceof Promise)
-        return result.then((r2) => handleOptionalResult(r2, input));
-      return handleOptionalResult(result, input);
+        return result.then((r2) => handleOptionalResult(r2, payload.value));
+      return handleOptionalResult(result, payload.value);
     }
     if (payload.value === void 0) {
       return payload;
     }
-    return def.innerType._zod.run(payload, ctx);
-  };
-});
-const $ZodExactOptional = /* @__PURE__ */ $constructor("$ZodExactOptional", (inst, def) => {
-  $ZodOptional.init(inst, def);
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
-  defineLazy(inst._zod, "pattern", () => def.innerType._zod.pattern);
-  inst._zod.parse = (payload, ctx) => {
     return def.innerType._zod.run(payload, ctx);
   };
 });
@@ -9754,7 +10237,7 @@ function handleNonOptionalResult(payload, inst) {
 }
 const $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
   $ZodType.init(inst, def);
-  inst._zod.optin = "optional";
+  defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
   defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
   defineLazy(inst._zod, "values", () => def.innerType._zod.values);
   inst._zod.parse = (payload, ctx) => {
@@ -9774,7 +10257,6 @@ const $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
             input: payload.value
           });
           payload.issues = [];
-          payload.fallback = true;
         }
         return payload;
       });
@@ -9789,7 +10271,6 @@ const $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
         input: payload.value
       });
       payload.issues = [];
-      payload.fallback = true;
     }
     return payload;
   };
@@ -9820,7 +10301,7 @@ function handlePipeResult(left2, next2, ctx) {
     left2.aborted = true;
     return left2;
   }
-  return next2._zod.run({ value: left2.value, issues: left2.issues, fallback: left2.fallback }, ctx);
+  return next2._zod.run({ value: left2.value, issues: left2.issues }, ctx);
 }
 const $ZodReadonly = /* @__PURE__ */ $constructor("$ZodReadonly", (inst, def) => {
   $ZodType.init(inst, def);
@@ -9886,6 +10367,9 @@ class $ZodRegistry {
     const meta = _meta[0];
     this._map.set(schema, meta);
     if (meta && typeof meta === "object" && "id" in meta) {
+      if (this._idmap.has(meta.id)) {
+        throw new Error(`ID ${meta.id} already exists in the registry`);
+      }
       this._idmap.set(meta.id, schema);
     }
     return this;
@@ -9922,14 +10406,12 @@ function registry$1() {
 }
 (_a = globalThis).__zod_globalRegistry ?? (_a.__zod_globalRegistry = registry$1());
 const globalRegistry = globalThis.__zod_globalRegistry;
-// @__NO_SIDE_EFFECTS__
 function _string(Class, params) {
   return new Class({
     type: "string",
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _email(Class, params) {
   return new Class({
     type: "string",
@@ -9939,7 +10421,6 @@ function _email(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _guid(Class, params) {
   return new Class({
     type: "string",
@@ -9949,7 +10430,6 @@ function _guid(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _uuid(Class, params) {
   return new Class({
     type: "string",
@@ -9959,7 +10439,6 @@ function _uuid(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _uuidv4(Class, params) {
   return new Class({
     type: "string",
@@ -9970,7 +10449,6 @@ function _uuidv4(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _uuidv6(Class, params) {
   return new Class({
     type: "string",
@@ -9981,7 +10459,6 @@ function _uuidv6(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _uuidv7(Class, params) {
   return new Class({
     type: "string",
@@ -9992,7 +10469,6 @@ function _uuidv7(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _url(Class, params) {
   return new Class({
     type: "string",
@@ -10002,7 +10478,6 @@ function _url(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _emoji(Class, params) {
   return new Class({
     type: "string",
@@ -10012,7 +10487,6 @@ function _emoji(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _nanoid(Class, params) {
   return new Class({
     type: "string",
@@ -10022,7 +10496,6 @@ function _nanoid(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _cuid(Class, params) {
   return new Class({
     type: "string",
@@ -10032,7 +10505,6 @@ function _cuid(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _cuid2(Class, params) {
   return new Class({
     type: "string",
@@ -10042,7 +10514,6 @@ function _cuid2(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _ulid(Class, params) {
   return new Class({
     type: "string",
@@ -10052,7 +10523,6 @@ function _ulid(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _xid(Class, params) {
   return new Class({
     type: "string",
@@ -10062,7 +10532,6 @@ function _xid(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _ksuid(Class, params) {
   return new Class({
     type: "string",
@@ -10072,7 +10541,6 @@ function _ksuid(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _ipv4(Class, params) {
   return new Class({
     type: "string",
@@ -10082,7 +10550,6 @@ function _ipv4(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _ipv6(Class, params) {
   return new Class({
     type: "string",
@@ -10092,7 +10559,6 @@ function _ipv6(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _cidrv4(Class, params) {
   return new Class({
     type: "string",
@@ -10102,7 +10568,6 @@ function _cidrv4(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _cidrv6(Class, params) {
   return new Class({
     type: "string",
@@ -10112,7 +10577,6 @@ function _cidrv6(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _base64(Class, params) {
   return new Class({
     type: "string",
@@ -10122,7 +10586,6 @@ function _base64(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _base64url(Class, params) {
   return new Class({
     type: "string",
@@ -10132,7 +10595,6 @@ function _base64url(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _e164(Class, params) {
   return new Class({
     type: "string",
@@ -10142,7 +10604,6 @@ function _e164(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _jwt(Class, params) {
   return new Class({
     type: "string",
@@ -10152,7 +10613,6 @@ function _jwt(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _isoDateTime(Class, params) {
   return new Class({
     type: "string",
@@ -10164,7 +10624,6 @@ function _isoDateTime(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _isoDate(Class, params) {
   return new Class({
     type: "string",
@@ -10173,7 +10632,6 @@ function _isoDate(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _isoTime(Class, params) {
   return new Class({
     type: "string",
@@ -10183,7 +10641,6 @@ function _isoTime(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _isoDuration(Class, params) {
   return new Class({
     type: "string",
@@ -10192,7 +10649,6 @@ function _isoDuration(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _number(Class, params) {
   return new Class({
     type: "number",
@@ -10200,7 +10656,6 @@ function _number(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _int(Class, params) {
   return new Class({
     type: "number",
@@ -10210,27 +10665,23 @@ function _int(Class, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _boolean(Class, params) {
   return new Class({
     type: "boolean",
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _unknown(Class) {
   return new Class({
     type: "unknown"
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _never(Class, params) {
   return new Class({
     type: "never",
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _lt(value, params) {
   return new $ZodCheckLessThan({
     check: "less_than",
@@ -10239,7 +10690,6 @@ function _lt(value, params) {
     inclusive: false
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _lte(value, params) {
   return new $ZodCheckLessThan({
     check: "less_than",
@@ -10248,7 +10698,6 @@ function _lte(value, params) {
     inclusive: true
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _gt(value, params) {
   return new $ZodCheckGreaterThan({
     check: "greater_than",
@@ -10257,7 +10706,6 @@ function _gt(value, params) {
     inclusive: false
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _gte(value, params) {
   return new $ZodCheckGreaterThan({
     check: "greater_than",
@@ -10266,7 +10714,6 @@ function _gte(value, params) {
     inclusive: true
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _multipleOf(value, params) {
   return new $ZodCheckMultipleOf({
     check: "multiple_of",
@@ -10274,7 +10721,6 @@ function _multipleOf(value, params) {
     value
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _maxLength(maximum, params) {
   const ch = new $ZodCheckMaxLength({
     check: "max_length",
@@ -10283,7 +10729,6 @@ function _maxLength(maximum, params) {
   });
   return ch;
 }
-// @__NO_SIDE_EFFECTS__
 function _minLength(minimum, params) {
   return new $ZodCheckMinLength({
     check: "min_length",
@@ -10291,7 +10736,6 @@ function _minLength(minimum, params) {
     minimum
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _length(length2, params) {
   return new $ZodCheckLengthEquals({
     check: "length_equals",
@@ -10299,7 +10743,6 @@ function _length(length2, params) {
     length: length2
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _regex(pattern, params) {
   return new $ZodCheckRegex({
     check: "string_format",
@@ -10308,7 +10751,6 @@ function _regex(pattern, params) {
     pattern
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _lowercase(params) {
   return new $ZodCheckLowerCase({
     check: "string_format",
@@ -10316,7 +10758,6 @@ function _lowercase(params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _uppercase(params) {
   return new $ZodCheckUpperCase({
     check: "string_format",
@@ -10324,7 +10765,6 @@ function _uppercase(params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _includes(includes, params) {
   return new $ZodCheckIncludes({
     check: "string_format",
@@ -10333,7 +10773,6 @@ function _includes(includes, params) {
     includes
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _startsWith(prefix2, params) {
   return new $ZodCheckStartsWith({
     check: "string_format",
@@ -10342,7 +10781,6 @@ function _startsWith(prefix2, params) {
     prefix: prefix2
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _endsWith(suffix, params) {
   return new $ZodCheckEndsWith({
     check: "string_format",
@@ -10351,34 +10789,27 @@ function _endsWith(suffix, params) {
     suffix
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _overwrite(tx) {
   return new $ZodCheckOverwrite({
     check: "overwrite",
     tx
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _normalize(form) {
-  return /* @__PURE__ */ _overwrite((input) => input.normalize(form));
+  return _overwrite((input) => input.normalize(form));
 }
-// @__NO_SIDE_EFFECTS__
 function _trim() {
-  return /* @__PURE__ */ _overwrite((input) => input.trim());
+  return _overwrite((input) => input.trim());
 }
-// @__NO_SIDE_EFFECTS__
 function _toLowerCase() {
-  return /* @__PURE__ */ _overwrite((input) => input.toLowerCase());
+  return _overwrite((input) => input.toLowerCase());
 }
-// @__NO_SIDE_EFFECTS__
 function _toUpperCase() {
-  return /* @__PURE__ */ _overwrite((input) => input.toUpperCase());
+  return _overwrite((input) => input.toUpperCase());
 }
-// @__NO_SIDE_EFFECTS__
 function _slugify() {
-  return /* @__PURE__ */ _overwrite((input) => slugify(input));
+  return _overwrite((input) => slugify(input));
 }
-// @__NO_SIDE_EFFECTS__
 function _array(Class, element, params) {
   return new Class({
     type: "array",
@@ -10389,7 +10820,6 @@ function _array(Class, element, params) {
     ...normalizeParams(params)
   });
 }
-// @__NO_SIDE_EFFECTS__
 function _refine(Class, fn3, _params) {
   const schema = new Class({
     type: "custom",
@@ -10399,9 +10829,8 @@ function _refine(Class, fn3, _params) {
   });
   return schema;
 }
-// @__NO_SIDE_EFFECTS__
-function _superRefine(fn3, params) {
-  const ch = /* @__PURE__ */ _check((payload) => {
+function _superRefine(fn3) {
+  const ch = _check((payload) => {
     payload.addIssue = (issue2) => {
       if (typeof issue2 === "string") {
         payload.issues.push(issue$3(issue2, payload.value, ch._zod.def));
@@ -10417,10 +10846,9 @@ function _superRefine(fn3, params) {
       }
     };
     return fn3(payload.value, payload);
-  }, params);
+  });
   return ch;
 }
-// @__NO_SIDE_EFFECTS__
 function _check(fn3, params) {
   const ch = new $ZodCheck({
     check: "custom",
@@ -10473,7 +10901,12 @@ function process$1(schema, ctx, _params = { path: [], schemaPath: [] }) {
       schemaPath: [..._params.schemaPath, schema],
       path: _params.path
     };
-    if (schema._zod.processJSONSchema) {
+    const parent2 = schema._zod.parent;
+    if (parent2) {
+      result.ref = parent2;
+      process$1(parent2, ctx, params);
+      ctx.seen.get(parent2).isParent = true;
+    } else if (schema._zod.processJSONSchema) {
       schema._zod.processJSONSchema(ctx, result.schema, params);
     } else {
       const _json = result.schema;
@@ -10483,13 +10916,6 @@ function process$1(schema, ctx, _params = { path: [], schemaPath: [] }) {
       }
       processor(schema, ctx, _json, params);
     }
-    const parent = schema._zod.parent;
-    if (parent) {
-      if (!result.ref)
-        result.ref = parent;
-      process$1(parent, ctx, params);
-      ctx.seen.get(parent).isParent = true;
-    }
   }
   const meta = ctx.metadataRegistry.get(schema);
   if (meta)
@@ -10498,7 +10924,7 @@ function process$1(schema, ctx, _params = { path: [], schemaPath: [] }) {
     delete result.schema.examples;
     delete result.schema.default;
   }
-  if (ctx.io === "input" && "_prefault" in result.schema)
+  if (ctx.io === "input" && result.schema._prefault)
     (_a2 = result.schema).default ?? (_a2.default = result.schema._prefault);
   delete result.schema._prefault;
   const _result = ctx.seen.get(schema);
@@ -10508,17 +10934,6 @@ function extractDefs(ctx, schema) {
   const root = ctx.seen.get(schema);
   if (!root)
     throw new Error("Unprocessed schema. This is a bug in Zod.");
-  const idToSchema = /* @__PURE__ */ new Map();
-  for (const entry of ctx.seen.entries()) {
-    const id = ctx.metadataRegistry.get(entry[0])?.id;
-    if (id) {
-      const existing = idToSchema.get(id);
-      if (existing && existing !== entry[0]) {
-        throw new Error(`Duplicate schema id "${id}" detected during JSON Schema conversion. Two different schemas cannot share the same id when converted together.`);
-      }
-      idToSchema.set(id, entry[0]);
-    }
-  }
   const makeURI = (entry) => {
     const defsSegment = ctx.target === "draft-2020-12" ? "$defs" : "definitions";
     if (ctx.external) {
@@ -10600,65 +11015,30 @@ function finalize$1(ctx, schema) {
     throw new Error("Unprocessed schema. This is a bug in Zod.");
   const flattenRef = (zodSchema) => {
     const seen = ctx.seen.get(zodSchema);
-    if (seen.ref === null)
-      return;
     const schema2 = seen.def ?? seen.schema;
     const _cached = { ...schema2 };
+    if (seen.ref === null) {
+      return;
+    }
     const ref = seen.ref;
     seen.ref = null;
     if (ref) {
       flattenRef(ref);
-      const refSeen = ctx.seen.get(ref);
-      const refSchema = refSeen.schema;
+      const refSchema = ctx.seen.get(ref).schema;
       if (refSchema.$ref && (ctx.target === "draft-07" || ctx.target === "draft-04" || ctx.target === "openapi-3.0")) {
         schema2.allOf = schema2.allOf ?? [];
         schema2.allOf.push(refSchema);
       } else {
         Object.assign(schema2, refSchema);
-      }
-      Object.assign(schema2, _cached);
-      const isParentRef = zodSchema._zod.parent === ref;
-      if (isParentRef) {
-        for (const key in schema2) {
-          if (key === "$ref" || key === "allOf")
-            continue;
-          if (!(key in _cached)) {
-            delete schema2[key];
-          }
-        }
-      }
-      if (refSchema.$ref && refSeen.def) {
-        for (const key in schema2) {
-          if (key === "$ref" || key === "allOf")
-            continue;
-          if (key in refSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(refSeen.def[key])) {
-            delete schema2[key];
-          }
-        }
+        Object.assign(schema2, _cached);
       }
     }
-    const parent = zodSchema._zod.parent;
-    if (parent && parent !== ref) {
-      flattenRef(parent);
-      const parentSeen = ctx.seen.get(parent);
-      if (parentSeen?.schema.$ref) {
-        schema2.$ref = parentSeen.schema.$ref;
-        if (parentSeen.def) {
-          for (const key in schema2) {
-            if (key === "$ref" || key === "allOf")
-              continue;
-            if (key in parentSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(parentSeen.def[key])) {
-              delete schema2[key];
-            }
-          }
-        }
-      }
-    }
-    ctx.override({
-      zodSchema,
-      jsonSchema: schema2,
-      path: seen.path ?? []
-    });
+    if (!seen.isParent)
+      ctx.override({
+        zodSchema,
+        jsonSchema: schema2,
+        path: seen.path ?? []
+      });
   };
   for (const entry of [...ctx.seen.entries()].reverse()) {
     flattenRef(entry[0]);
@@ -10679,15 +11059,10 @@ function finalize$1(ctx, schema) {
     result.$id = ctx.external.uri(id);
   }
   Object.assign(result, root.def ?? root.schema);
-  const rootMetaId = ctx.metadataRegistry.get(schema)?.id;
-  if (rootMetaId !== void 0 && result.id === rootMetaId)
-    delete result.id;
   const defs = ctx.external?.defs ?? {};
   for (const entry of ctx.seen.entries()) {
     const seen = entry[1];
     if (seen.def && seen.defId) {
-      if (seen.def.id === seen.defId)
-        delete seen.def.id;
       defs[seen.defId] = seen.def;
     }
   }
@@ -10707,8 +11082,8 @@ function finalize$1(ctx, schema) {
       value: {
         ...schema["~standard"],
         jsonSchema: {
-          input: createStandardJSONSchemaMethod(schema, "input", ctx.processors),
-          output: createStandardJSONSchemaMethod(schema, "output", ctx.processors)
+          input: createStandardJSONSchemaMethod(schema, "input"),
+          output: createStandardJSONSchemaMethod(schema, "output")
         }
       },
       enumerable: false,
@@ -10743,8 +11118,6 @@ function isTransforming(_schema, _ctx) {
     return isTransforming(def.keyType, ctx) || isTransforming(def.valueType, ctx);
   }
   if (def.type === "pipe") {
-    if (_schema._zod.traits.has("$ZodCodec"))
-      return true;
     return isTransforming(def.in, ctx) || isTransforming(def.out, ctx);
   }
   if (def.type === "object") {
@@ -10778,9 +11151,9 @@ const createToJSONSchemaMethod = (schema, processors = {}) => (params) => {
   extractDefs(ctx, schema);
   return finalize$1(ctx, schema);
 };
-const createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) => {
+const createStandardJSONSchemaMethod = (schema, io) => (params) => {
   const { libraryOptions, target } = params ?? {};
-  const ctx = initializeContext({ ...libraryOptions ?? {}, target, io, processors });
+  const ctx = initializeContext({ ...libraryOptions ?? {}, target, io, processors: {} });
   process$1(schema, ctx);
   extractDefs(ctx, schema);
   return finalize$1(ctx, schema);
@@ -10805,9 +11178,6 @@ const stringProcessor = (schema, ctx, _json, _params) => {
     json.format = formatMap[format] ?? format;
     if (json.format === "")
       delete json.format;
-    if (format === "time") {
-      delete json.format;
-    }
   }
   if (contentEncoding)
     json.contentEncoding = contentEncoding;
@@ -10832,28 +11202,39 @@ const numberProcessor = (schema, ctx, _json, _params) => {
     json.type = "integer";
   else
     json.type = "number";
-  const exMin = typeof exclusiveMinimum === "number" && exclusiveMinimum >= (minimum ?? Number.NEGATIVE_INFINITY);
-  const exMax = typeof exclusiveMaximum === "number" && exclusiveMaximum <= (maximum ?? Number.POSITIVE_INFINITY);
-  const legacy = ctx.target === "draft-04" || ctx.target === "openapi-3.0";
-  if (exMin) {
-    if (legacy) {
+  if (typeof exclusiveMinimum === "number") {
+    if (ctx.target === "draft-04" || ctx.target === "openapi-3.0") {
       json.minimum = exclusiveMinimum;
       json.exclusiveMinimum = true;
     } else {
       json.exclusiveMinimum = exclusiveMinimum;
     }
-  } else if (typeof minimum === "number") {
-    json.minimum = minimum;
   }
-  if (exMax) {
-    if (legacy) {
+  if (typeof minimum === "number") {
+    json.minimum = minimum;
+    if (typeof exclusiveMinimum === "number" && ctx.target !== "draft-04") {
+      if (exclusiveMinimum >= minimum)
+        delete json.minimum;
+      else
+        delete json.exclusiveMinimum;
+    }
+  }
+  if (typeof exclusiveMaximum === "number") {
+    if (ctx.target === "draft-04" || ctx.target === "openapi-3.0") {
       json.maximum = exclusiveMaximum;
       json.exclusiveMaximum = true;
     } else {
       json.exclusiveMaximum = exclusiveMaximum;
     }
-  } else if (typeof maximum === "number") {
+  }
+  if (typeof maximum === "number") {
     json.maximum = maximum;
+    if (typeof exclusiveMaximum === "number" && ctx.target !== "draft-04") {
+      if (exclusiveMaximum <= maximum)
+        delete json.maximum;
+      else
+        delete json.exclusiveMaximum;
+    }
   }
   if (typeof multipleOf === "number")
     json.multipleOf = multipleOf;
@@ -10933,10 +11314,7 @@ const arrayProcessor = (schema, ctx, _json, params) => {
   if (typeof maximum === "number")
     json.maxItems = maximum;
   json.type = "array";
-  json.items = process$1(def.element, ctx, {
-    ...params,
-    path: [...params.path, "items"]
-  });
+  json.items = process$1(def.element, ctx, { ...params, path: [...params.path, "items"] });
 };
 const objectProcessor = (schema, ctx, _json, params) => {
   const json = _json;
@@ -11051,8 +11429,7 @@ const catchProcessor = (schema, ctx, json, params) => {
 };
 const pipeProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
-  const inIsTransform = def.in._zod.traits.has("$ZodTransform");
-  const innerType = ctx.io === "input" ? inIsTransform ? def.out : def.in : def.out;
+  const innerType = ctx.io === "input" ? def.in._zod.def.type === "transform" ? def.out : def.in : def.out;
   process$1(innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = innerType;
@@ -11075,28 +11452,28 @@ const ZodISODateTime = /* @__PURE__ */ $constructor("ZodISODateTime", (inst, def
   ZodStringFormat.init(inst, def);
 });
 function datetime(params) {
-  return /* @__PURE__ */ _isoDateTime(ZodISODateTime, params);
+  return _isoDateTime(ZodISODateTime, params);
 }
 const ZodISODate = /* @__PURE__ */ $constructor("ZodISODate", (inst, def) => {
   $ZodISODate.init(inst, def);
   ZodStringFormat.init(inst, def);
 });
 function date(params) {
-  return /* @__PURE__ */ _isoDate(ZodISODate, params);
+  return _isoDate(ZodISODate, params);
 }
 const ZodISOTime = /* @__PURE__ */ $constructor("ZodISOTime", (inst, def) => {
   $ZodISOTime.init(inst, def);
   ZodStringFormat.init(inst, def);
 });
 function time(params) {
-  return /* @__PURE__ */ _isoTime(ZodISOTime, params);
+  return _isoTime(ZodISOTime, params);
 }
 const ZodISODuration = /* @__PURE__ */ $constructor("ZodISODuration", (inst, def) => {
   $ZodISODuration.init(inst, def);
   ZodStringFormat.init(inst, def);
 });
 function duration$1(params) {
-  return /* @__PURE__ */ _isoDuration(ZodISODuration, params);
+  return _isoDuration(ZodISODuration, params);
 }
 const initializer = (inst, issues) => {
   $ZodError.init(inst, issues);
@@ -11132,7 +11509,7 @@ const initializer = (inst, issues) => {
     }
   });
 };
-const ZodRealError = /* @__PURE__ */ $constructor("ZodError", initializer, {
+const ZodRealError = $constructor("ZodError", initializer, {
   Parent: Error
 });
 const parse$1 = /* @__PURE__ */ _parse(ZodRealError);
@@ -11147,43 +11524,6 @@ const safeEncode = /* @__PURE__ */ _safeEncode(ZodRealError);
 const safeDecode = /* @__PURE__ */ _safeDecode(ZodRealError);
 const safeEncodeAsync = /* @__PURE__ */ _safeEncodeAsync(ZodRealError);
 const safeDecodeAsync = /* @__PURE__ */ _safeDecodeAsync(ZodRealError);
-const _installedGroups = /* @__PURE__ */ new WeakMap();
-function _installLazyMethods(inst, group, methods) {
-  const proto2 = Object.getPrototypeOf(inst);
-  let installed = _installedGroups.get(proto2);
-  if (!installed) {
-    installed = /* @__PURE__ */ new Set();
-    _installedGroups.set(proto2, installed);
-  }
-  if (installed.has(group))
-    return;
-  installed.add(group);
-  for (const key in methods) {
-    const fn3 = methods[key];
-    Object.defineProperty(proto2, key, {
-      configurable: true,
-      enumerable: false,
-      get() {
-        const bound = fn3.bind(this);
-        Object.defineProperty(this, key, {
-          configurable: true,
-          writable: true,
-          enumerable: true,
-          value: bound
-        });
-        return bound;
-      },
-      set(v2) {
-        Object.defineProperty(this, key, {
-          configurable: true,
-          writable: true,
-          enumerable: true,
-          value: v2
-        });
-      }
-    });
-  }
-}
 const ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   $ZodType.init(inst, def);
   Object.assign(inst["~standard"], {
@@ -11196,6 +11536,20 @@ const ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   inst.def = def;
   inst.type = def.type;
   Object.defineProperty(inst, "_def", { value: def });
+  inst.check = (...checks) => {
+    return inst.clone(mergeDefs(def, {
+      checks: [
+        ...def.checks ?? [],
+        ...checks.map((ch) => typeof ch === "function" ? { _zod: { check: ch, def: { check: "custom" }, onattach: [] } } : ch)
+      ]
+    }));
+  };
+  inst.clone = (def2, params) => clone(inst, def2, params);
+  inst.brand = () => inst;
+  inst.register = ((reg, meta) => {
+    reg.add(inst, meta);
+    return inst;
+  });
   inst.parse = (data, params) => parse$1(inst, data, params, { callee: inst.parse });
   inst.safeParse = (data, params) => safeParse(inst, data, params);
   inst.parseAsync = async (data, params) => parseAsync(inst, data, params, { callee: inst.parseAsync });
@@ -11209,108 +11563,43 @@ const ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   inst.safeDecode = (data, params) => safeDecode(inst, data, params);
   inst.safeEncodeAsync = async (data, params) => safeEncodeAsync(inst, data, params);
   inst.safeDecodeAsync = async (data, params) => safeDecodeAsync(inst, data, params);
-  _installLazyMethods(inst, "ZodType", {
-    check(...chks) {
-      const def2 = this.def;
-      return this.clone(mergeDefs(def2, {
-        checks: [
-          ...def2.checks ?? [],
-          ...chks.map((ch) => typeof ch === "function" ? { _zod: { check: ch, def: { check: "custom" }, onattach: [] } } : ch)
-        ]
-      }), { parent: true });
-    },
-    with(...chks) {
-      return this.check(...chks);
-    },
-    clone(def2, params) {
-      return clone(this, def2, params);
-    },
-    brand() {
-      return this;
-    },
-    register(reg, meta) {
-      reg.add(this, meta);
-      return this;
-    },
-    refine(check, params) {
-      return this.check(refine(check, params));
-    },
-    superRefine(refinement, params) {
-      return this.check(superRefine(refinement, params));
-    },
-    overwrite(fn3) {
-      return this.check(/* @__PURE__ */ _overwrite(fn3));
-    },
-    optional() {
-      return optional(this);
-    },
-    exactOptional() {
-      return exactOptional(this);
-    },
-    nullable() {
-      return nullable(this);
-    },
-    nullish() {
-      return optional(nullable(this));
-    },
-    nonoptional(params) {
-      return nonoptional(this, params);
-    },
-    array() {
-      return array(this);
-    },
-    or(arg2) {
-      return union([this, arg2]);
-    },
-    and(arg2) {
-      return intersection(this, arg2);
-    },
-    transform(tx) {
-      return pipe(this, transform(tx));
-    },
-    default(d2) {
-      return _default(this, d2);
-    },
-    prefault(d2) {
-      return prefault(this, d2);
-    },
-    catch(params) {
-      return _catch(this, params);
-    },
-    pipe(target) {
-      return pipe(this, target);
-    },
-    readonly() {
-      return readonly(this);
-    },
-    describe(description) {
-      const cl = this.clone();
-      globalRegistry.add(cl, { description });
-      return cl;
-    },
-    meta(...args) {
-      if (args.length === 0)
-        return globalRegistry.get(this);
-      const cl = this.clone();
-      globalRegistry.add(cl, args[0]);
-      return cl;
-    },
-    isOptional() {
-      return this.safeParse(void 0).success;
-    },
-    isNullable() {
-      return this.safeParse(null).success;
-    },
-    apply(fn3) {
-      return fn3(this);
-    }
-  });
+  inst.refine = (check, params) => inst.check(refine(check, params));
+  inst.superRefine = (refinement) => inst.check(superRefine(refinement));
+  inst.overwrite = (fn3) => inst.check(_overwrite(fn3));
+  inst.optional = () => optional(inst);
+  inst.nullable = () => nullable(inst);
+  inst.nullish = () => optional(nullable(inst));
+  inst.nonoptional = (params) => nonoptional(inst, params);
+  inst.array = () => array(inst);
+  inst.or = (arg2) => union([inst, arg2]);
+  inst.and = (arg2) => intersection(inst, arg2);
+  inst.transform = (tx) => pipe(inst, transform(tx));
+  inst.default = (def2) => _default(inst, def2);
+  inst.prefault = (def2) => prefault(inst, def2);
+  inst.catch = (params) => _catch(inst, params);
+  inst.pipe = (target) => pipe(inst, target);
+  inst.readonly = () => readonly(inst);
+  inst.describe = (description) => {
+    const cl = inst.clone();
+    globalRegistry.add(cl, { description });
+    return cl;
+  };
   Object.defineProperty(inst, "description", {
     get() {
       return globalRegistry.get(inst)?.description;
     },
     configurable: true
   });
+  inst.meta = (...args) => {
+    if (args.length === 0) {
+      return globalRegistry.get(inst);
+    }
+    const cl = inst.clone();
+    globalRegistry.add(cl, args[0]);
+    return cl;
+  };
+  inst.isOptional = () => inst.safeParse(void 0).success;
+  inst.isNullable = () => inst.safeParse(null).success;
   return inst;
 });
 const _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def) => {
@@ -11321,87 +11610,55 @@ const _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def) => {
   inst.format = bag.format ?? null;
   inst.minLength = bag.minimum ?? null;
   inst.maxLength = bag.maximum ?? null;
-  _installLazyMethods(inst, "_ZodString", {
-    regex(...args) {
-      return this.check(/* @__PURE__ */ _regex(...args));
-    },
-    includes(...args) {
-      return this.check(/* @__PURE__ */ _includes(...args));
-    },
-    startsWith(...args) {
-      return this.check(/* @__PURE__ */ _startsWith(...args));
-    },
-    endsWith(...args) {
-      return this.check(/* @__PURE__ */ _endsWith(...args));
-    },
-    min(...args) {
-      return this.check(/* @__PURE__ */ _minLength(...args));
-    },
-    max(...args) {
-      return this.check(/* @__PURE__ */ _maxLength(...args));
-    },
-    length(...args) {
-      return this.check(/* @__PURE__ */ _length(...args));
-    },
-    nonempty(...args) {
-      return this.check(/* @__PURE__ */ _minLength(1, ...args));
-    },
-    lowercase(params) {
-      return this.check(/* @__PURE__ */ _lowercase(params));
-    },
-    uppercase(params) {
-      return this.check(/* @__PURE__ */ _uppercase(params));
-    },
-    trim() {
-      return this.check(/* @__PURE__ */ _trim());
-    },
-    normalize(...args) {
-      return this.check(/* @__PURE__ */ _normalize(...args));
-    },
-    toLowerCase() {
-      return this.check(/* @__PURE__ */ _toLowerCase());
-    },
-    toUpperCase() {
-      return this.check(/* @__PURE__ */ _toUpperCase());
-    },
-    slugify() {
-      return this.check(/* @__PURE__ */ _slugify());
-    }
-  });
+  inst.regex = (...args) => inst.check(_regex(...args));
+  inst.includes = (...args) => inst.check(_includes(...args));
+  inst.startsWith = (...args) => inst.check(_startsWith(...args));
+  inst.endsWith = (...args) => inst.check(_endsWith(...args));
+  inst.min = (...args) => inst.check(_minLength(...args));
+  inst.max = (...args) => inst.check(_maxLength(...args));
+  inst.length = (...args) => inst.check(_length(...args));
+  inst.nonempty = (...args) => inst.check(_minLength(1, ...args));
+  inst.lowercase = (params) => inst.check(_lowercase(params));
+  inst.uppercase = (params) => inst.check(_uppercase(params));
+  inst.trim = () => inst.check(_trim());
+  inst.normalize = (...args) => inst.check(_normalize(...args));
+  inst.toLowerCase = () => inst.check(_toLowerCase());
+  inst.toUpperCase = () => inst.check(_toUpperCase());
+  inst.slugify = () => inst.check(_slugify());
 });
 const ZodString = /* @__PURE__ */ $constructor("ZodString", (inst, def) => {
   $ZodString.init(inst, def);
   _ZodString.init(inst, def);
-  inst.email = (params) => inst.check(/* @__PURE__ */ _email(ZodEmail, params));
-  inst.url = (params) => inst.check(/* @__PURE__ */ _url(ZodURL, params));
-  inst.jwt = (params) => inst.check(/* @__PURE__ */ _jwt(ZodJWT, params));
-  inst.emoji = (params) => inst.check(/* @__PURE__ */ _emoji(ZodEmoji, params));
-  inst.guid = (params) => inst.check(/* @__PURE__ */ _guid(ZodGUID, params));
-  inst.uuid = (params) => inst.check(/* @__PURE__ */ _uuid(ZodUUID, params));
-  inst.uuidv4 = (params) => inst.check(/* @__PURE__ */ _uuidv4(ZodUUID, params));
-  inst.uuidv6 = (params) => inst.check(/* @__PURE__ */ _uuidv6(ZodUUID, params));
-  inst.uuidv7 = (params) => inst.check(/* @__PURE__ */ _uuidv7(ZodUUID, params));
-  inst.nanoid = (params) => inst.check(/* @__PURE__ */ _nanoid(ZodNanoID, params));
-  inst.guid = (params) => inst.check(/* @__PURE__ */ _guid(ZodGUID, params));
-  inst.cuid = (params) => inst.check(/* @__PURE__ */ _cuid(ZodCUID, params));
-  inst.cuid2 = (params) => inst.check(/* @__PURE__ */ _cuid2(ZodCUID2, params));
-  inst.ulid = (params) => inst.check(/* @__PURE__ */ _ulid(ZodULID, params));
-  inst.base64 = (params) => inst.check(/* @__PURE__ */ _base64(ZodBase64, params));
-  inst.base64url = (params) => inst.check(/* @__PURE__ */ _base64url(ZodBase64URL, params));
-  inst.xid = (params) => inst.check(/* @__PURE__ */ _xid(ZodXID, params));
-  inst.ksuid = (params) => inst.check(/* @__PURE__ */ _ksuid(ZodKSUID, params));
-  inst.ipv4 = (params) => inst.check(/* @__PURE__ */ _ipv4(ZodIPv4, params));
-  inst.ipv6 = (params) => inst.check(/* @__PURE__ */ _ipv6(ZodIPv6, params));
-  inst.cidrv4 = (params) => inst.check(/* @__PURE__ */ _cidrv4(ZodCIDRv4, params));
-  inst.cidrv6 = (params) => inst.check(/* @__PURE__ */ _cidrv6(ZodCIDRv6, params));
-  inst.e164 = (params) => inst.check(/* @__PURE__ */ _e164(ZodE164, params));
+  inst.email = (params) => inst.check(_email(ZodEmail, params));
+  inst.url = (params) => inst.check(_url(ZodURL, params));
+  inst.jwt = (params) => inst.check(_jwt(ZodJWT, params));
+  inst.emoji = (params) => inst.check(_emoji(ZodEmoji, params));
+  inst.guid = (params) => inst.check(_guid(ZodGUID, params));
+  inst.uuid = (params) => inst.check(_uuid(ZodUUID, params));
+  inst.uuidv4 = (params) => inst.check(_uuidv4(ZodUUID, params));
+  inst.uuidv6 = (params) => inst.check(_uuidv6(ZodUUID, params));
+  inst.uuidv7 = (params) => inst.check(_uuidv7(ZodUUID, params));
+  inst.nanoid = (params) => inst.check(_nanoid(ZodNanoID, params));
+  inst.guid = (params) => inst.check(_guid(ZodGUID, params));
+  inst.cuid = (params) => inst.check(_cuid(ZodCUID, params));
+  inst.cuid2 = (params) => inst.check(_cuid2(ZodCUID2, params));
+  inst.ulid = (params) => inst.check(_ulid(ZodULID, params));
+  inst.base64 = (params) => inst.check(_base64(ZodBase64, params));
+  inst.base64url = (params) => inst.check(_base64url(ZodBase64URL, params));
+  inst.xid = (params) => inst.check(_xid(ZodXID, params));
+  inst.ksuid = (params) => inst.check(_ksuid(ZodKSUID, params));
+  inst.ipv4 = (params) => inst.check(_ipv4(ZodIPv4, params));
+  inst.ipv6 = (params) => inst.check(_ipv6(ZodIPv6, params));
+  inst.cidrv4 = (params) => inst.check(_cidrv4(ZodCIDRv4, params));
+  inst.cidrv6 = (params) => inst.check(_cidrv6(ZodCIDRv6, params));
+  inst.e164 = (params) => inst.check(_e164(ZodE164, params));
   inst.datetime = (params) => inst.check(datetime(params));
   inst.date = (params) => inst.check(date(params));
   inst.time = (params) => inst.check(time(params));
   inst.duration = (params) => inst.check(duration$1(params));
 });
 function string(params) {
-  return /* @__PURE__ */ _string(ZodString, params);
+  return _string(ZodString, params);
 }
 const ZodStringFormat = /* @__PURE__ */ $constructor("ZodStringFormat", (inst, def) => {
   $ZodStringFormat.init(inst, def);
@@ -11487,53 +11744,21 @@ const ZodNumber = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
   $ZodNumber.init(inst, def);
   ZodType.init(inst, def);
   inst._zod.processJSONSchema = (ctx, json, params) => numberProcessor(inst, ctx, json);
-  _installLazyMethods(inst, "ZodNumber", {
-    gt(value, params) {
-      return this.check(/* @__PURE__ */ _gt(value, params));
-    },
-    gte(value, params) {
-      return this.check(/* @__PURE__ */ _gte(value, params));
-    },
-    min(value, params) {
-      return this.check(/* @__PURE__ */ _gte(value, params));
-    },
-    lt(value, params) {
-      return this.check(/* @__PURE__ */ _lt(value, params));
-    },
-    lte(value, params) {
-      return this.check(/* @__PURE__ */ _lte(value, params));
-    },
-    max(value, params) {
-      return this.check(/* @__PURE__ */ _lte(value, params));
-    },
-    int(params) {
-      return this.check(int(params));
-    },
-    safe(params) {
-      return this.check(int(params));
-    },
-    positive(params) {
-      return this.check(/* @__PURE__ */ _gt(0, params));
-    },
-    nonnegative(params) {
-      return this.check(/* @__PURE__ */ _gte(0, params));
-    },
-    negative(params) {
-      return this.check(/* @__PURE__ */ _lt(0, params));
-    },
-    nonpositive(params) {
-      return this.check(/* @__PURE__ */ _lte(0, params));
-    },
-    multipleOf(value, params) {
-      return this.check(/* @__PURE__ */ _multipleOf(value, params));
-    },
-    step(value, params) {
-      return this.check(/* @__PURE__ */ _multipleOf(value, params));
-    },
-    finite() {
-      return this;
-    }
-  });
+  inst.gt = (value, params) => inst.check(_gt(value, params));
+  inst.gte = (value, params) => inst.check(_gte(value, params));
+  inst.min = (value, params) => inst.check(_gte(value, params));
+  inst.lt = (value, params) => inst.check(_lt(value, params));
+  inst.lte = (value, params) => inst.check(_lte(value, params));
+  inst.max = (value, params) => inst.check(_lte(value, params));
+  inst.int = (params) => inst.check(int(params));
+  inst.safe = (params) => inst.check(int(params));
+  inst.positive = (params) => inst.check(_gt(0, params));
+  inst.nonnegative = (params) => inst.check(_gte(0, params));
+  inst.negative = (params) => inst.check(_lt(0, params));
+  inst.nonpositive = (params) => inst.check(_lte(0, params));
+  inst.multipleOf = (value, params) => inst.check(_multipleOf(value, params));
+  inst.step = (value, params) => inst.check(_multipleOf(value, params));
+  inst.finite = () => inst;
   const bag = inst._zod.bag;
   inst.minValue = Math.max(bag.minimum ?? Number.NEGATIVE_INFINITY, bag.exclusiveMinimum ?? Number.NEGATIVE_INFINITY) ?? null;
   inst.maxValue = Math.min(bag.maximum ?? Number.POSITIVE_INFINITY, bag.exclusiveMaximum ?? Number.POSITIVE_INFINITY) ?? null;
@@ -11542,14 +11767,14 @@ const ZodNumber = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
   inst.format = bag.format ?? null;
 });
 function number(params) {
-  return /* @__PURE__ */ _number(ZodNumber, params);
+  return _number(ZodNumber, params);
 }
 const ZodNumberFormat = /* @__PURE__ */ $constructor("ZodNumberFormat", (inst, def) => {
   $ZodNumberFormat.init(inst, def);
   ZodNumber.init(inst, def);
 });
 function int(params) {
-  return /* @__PURE__ */ _int(ZodNumberFormat, params);
+  return _int(ZodNumberFormat, params);
 }
 const ZodBoolean = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def) => {
   $ZodBoolean.init(inst, def);
@@ -11557,7 +11782,7 @@ const ZodBoolean = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json, params) => booleanProcessor(inst, ctx, json);
 });
 function boolean(params) {
-  return /* @__PURE__ */ _boolean(ZodBoolean, params);
+  return _boolean(ZodBoolean, params);
 }
 const ZodUnknown = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
   $ZodUnknown.init(inst, def);
@@ -11565,7 +11790,7 @@ const ZodUnknown = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json, params) => unknownProcessor();
 });
 function unknown() {
-  return /* @__PURE__ */ _unknown(ZodUnknown);
+  return _unknown(ZodUnknown);
 }
 const ZodNever = /* @__PURE__ */ $constructor("ZodNever", (inst, def) => {
   $ZodNever.init(inst, def);
@@ -11573,33 +11798,21 @@ const ZodNever = /* @__PURE__ */ $constructor("ZodNever", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json, params) => neverProcessor(inst, ctx, json);
 });
 function never(params) {
-  return /* @__PURE__ */ _never(ZodNever, params);
+  return _never(ZodNever, params);
 }
 const ZodArray = /* @__PURE__ */ $constructor("ZodArray", (inst, def) => {
   $ZodArray.init(inst, def);
   ZodType.init(inst, def);
   inst._zod.processJSONSchema = (ctx, json, params) => arrayProcessor(inst, ctx, json, params);
   inst.element = def.element;
-  _installLazyMethods(inst, "ZodArray", {
-    min(n2, params) {
-      return this.check(/* @__PURE__ */ _minLength(n2, params));
-    },
-    nonempty(params) {
-      return this.check(/* @__PURE__ */ _minLength(1, params));
-    },
-    max(n2, params) {
-      return this.check(/* @__PURE__ */ _maxLength(n2, params));
-    },
-    length(n2, params) {
-      return this.check(/* @__PURE__ */ _length(n2, params));
-    },
-    unwrap() {
-      return this.element;
-    }
-  });
+  inst.min = (minLength, params) => inst.check(_minLength(minLength, params));
+  inst.nonempty = (params) => inst.check(_minLength(1, params));
+  inst.max = (maxLength, params) => inst.check(_maxLength(maxLength, params));
+  inst.length = (len, params) => inst.check(_length(len, params));
+  inst.unwrap = () => inst.element;
 });
 function array(element, params) {
-  return /* @__PURE__ */ _array(ZodArray, element, params);
+  return _array(ZodArray, element, params);
 }
 const ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
   $ZodObjectJIT.init(inst, def);
@@ -11608,47 +11821,23 @@ const ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
   defineLazy(inst, "shape", () => {
     return def.shape;
   });
-  _installLazyMethods(inst, "ZodObject", {
-    keyof() {
-      return _enum(Object.keys(this._zod.def.shape));
-    },
-    catchall(catchall) {
-      return this.clone({ ...this._zod.def, catchall });
-    },
-    passthrough() {
-      return this.clone({ ...this._zod.def, catchall: unknown() });
-    },
-    loose() {
-      return this.clone({ ...this._zod.def, catchall: unknown() });
-    },
-    strict() {
-      return this.clone({ ...this._zod.def, catchall: never() });
-    },
-    strip() {
-      return this.clone({ ...this._zod.def, catchall: void 0 });
-    },
-    extend(incoming) {
-      return extend(this, incoming);
-    },
-    safeExtend(incoming) {
-      return safeExtend(this, incoming);
-    },
-    merge(other) {
-      return merge$2(this, other);
-    },
-    pick(mask) {
-      return pick(this, mask);
-    },
-    omit(mask) {
-      return omit(this, mask);
-    },
-    partial(...args) {
-      return partial(ZodOptional, this, args[0]);
-    },
-    required(...args) {
-      return required(ZodNonOptional, this, args[0]);
-    }
-  });
+  inst.keyof = () => _enum(Object.keys(inst._zod.def.shape));
+  inst.catchall = (catchall) => inst.clone({ ...inst._zod.def, catchall });
+  inst.passthrough = () => inst.clone({ ...inst._zod.def, catchall: unknown() });
+  inst.loose = () => inst.clone({ ...inst._zod.def, catchall: unknown() });
+  inst.strict = () => inst.clone({ ...inst._zod.def, catchall: never() });
+  inst.strip = () => inst.clone({ ...inst._zod.def, catchall: void 0 });
+  inst.extend = (incoming) => {
+    return extend(inst, incoming);
+  };
+  inst.safeExtend = (incoming) => {
+    return safeExtend(inst, incoming);
+  };
+  inst.merge = (other) => merge$2(inst, other);
+  inst.pick = (mask) => pick(inst, mask);
+  inst.omit = (mask) => omit(inst, mask);
+  inst.partial = (...args) => partial(ZodOptional, inst, args[0]);
+  inst.required = (...args) => required(ZodNonOptional, inst, args[0]);
 });
 function object(shape2, params) {
   const def = {
@@ -11775,12 +11964,10 @@ const ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def) =>
     if (output instanceof Promise) {
       return output.then((output2) => {
         payload.value = output2;
-        payload.fallback = true;
         return payload;
       });
     }
     payload.value = output;
-    payload.fallback = true;
     return payload;
   };
 });
@@ -11798,18 +11985,6 @@ const ZodOptional = /* @__PURE__ */ $constructor("ZodOptional", (inst, def) => {
 });
 function optional(innerType) {
   return new ZodOptional({
-    type: "optional",
-    innerType
-  });
-}
-const ZodExactOptional = /* @__PURE__ */ $constructor("ZodExactOptional", (inst, def) => {
-  $ZodExactOptional.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json, params) => optionalProcessor(inst, ctx, json, params);
-  inst.unwrap = () => inst._zod.def.innerType;
-});
-function exactOptional(innerType) {
-  return new ZodExactOptional({
     type: "optional",
     innerType
   });
@@ -11917,10 +12092,10 @@ const ZodCustom = /* @__PURE__ */ $constructor("ZodCustom", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json, params) => customProcessor(inst, ctx);
 });
 function refine(fn3, _params = {}) {
-  return /* @__PURE__ */ _refine(ZodCustom, fn3, _params);
+  return _refine(ZodCustom, fn3, _params);
 }
-function superRefine(fn3, params) {
-  return /* @__PURE__ */ _superRefine(fn3, params);
+function superRefine(fn3) {
+  return _superRefine(fn3);
 }
 var Lifecycle;
 (function(Lifecycle2) {
@@ -12267,8 +12442,8 @@ var Interceptors = /* @__PURE__ */ (function() {
 })();
 var typeInfo = /* @__PURE__ */ new Map();
 var InternalDependencyContainer = (function() {
-  function InternalDependencyContainer2(parent) {
-    this.parent = parent;
+  function InternalDependencyContainer2(parent2) {
+    this.parent = parent2;
     this._registry = new Registry();
     this.interceptors = new Interceptors();
     this.disposed = false;
@@ -12691,7 +12866,6 @@ let VaultFileStorage = class {
   constructor(vault) {
     this.vault = vault;
   }
-  vault;
   async readJSON(path) {
     const text2 = await this.vault.readFile(path);
     if (text2 == null) return null;
@@ -12772,8 +12946,6 @@ let ChatSessionStore = class {
     this.storage = storage;
     this.filePath = filePath;
   }
-  storage;
-  filePath;
   data = { version: 1, sessions: [] };
   listeners = /* @__PURE__ */ new Set();
   initialized = false;
@@ -14677,7 +14849,7 @@ class MiniSearch {
     }
   }
 }
-MiniSearch.wildcard = /* @__PURE__ */ Symbol("*");
+MiniSearch.wildcard = Symbol("*");
 const getOwnProperty = (object2, property) => Object.prototype.hasOwnProperty.call(object2, property) ? object2[property] : void 0;
 const combinators = {
   [OR]: (a2, b2) => {
@@ -14853,8 +15025,6 @@ class DataStoreCache {
     this.storage = storage;
     this.isActive = isActive;
   }
-  storage;
-  isActive;
   cache = null;
   saveTimer = null;
   dispose() {
@@ -14945,7 +15115,7 @@ function lineFromItemId(id) {
   const parsed = Number(String(id).slice(hashIdx + 1));
   return Number.isFinite(parsed) ? parsed : void 0;
 }
-function normalizeSearchText(value) {
+function normalizeSearchText$1(value) {
   return String(value ?? "").toLowerCase();
 }
 function normalizeRecordItem(item, context) {
@@ -14994,15 +15164,15 @@ function normalizeRecordItem(item, context) {
     item.recurrenceInfo = parseRecurrence(taskRawSource) || void 0;
   }
   item.fullData = item.rawSource || item.fullData || item.content || "";
-  item.titleLower = normalizeSearchText(item.title);
-  item.contentLower = normalizeSearchText(item.content);
-  item.fullDataLower = normalizeSearchText(item.fullData);
-  item.tagsLower = (item.tags || []).map((tag) => normalizeSearchText(tag));
-  item.goalPathsLower = (item.goalPaths || []).map((goal) => normalizeSearchText(goal));
-  item.goalIdsLower = (item.goalIds || []).map((goalId) => normalizeSearchText(goalId));
-  item.goalPathLower = normalizeSearchText(item.goalPath);
-  item.rootGoalLower = normalizeSearchText(item.rootGoal);
-  item.leafGoalLower = normalizeSearchText(item.leafGoal);
+  item.titleLower = normalizeSearchText$1(item.title);
+  item.contentLower = normalizeSearchText$1(item.content);
+  item.fullDataLower = normalizeSearchText$1(item.fullData);
+  item.tagsLower = (item.tags || []).map((tag) => normalizeSearchText$1(tag));
+  item.goalPathsLower = (item.goalPaths || []).map((goal) => normalizeSearchText$1(goal));
+  item.goalIdsLower = (item.goalIds || []).map((goalId) => normalizeSearchText$1(goalId));
+  item.goalPathLower = normalizeSearchText$1(item.goalPath);
+  item.rootGoalLower = normalizeSearchText$1(item.rootGoal);
+  item.leafGoalLower = normalizeSearchText$1(item.leafGoal);
   return item;
 }
 function normalizeFilePathInput(input) {
@@ -15029,10 +15199,6 @@ class DataStoreFileScanner {
     this.fileStat = fileStat;
     this.themeMatcher = themeMatcher;
   }
-  vault;
-  metadata;
-  fileStat;
-  themeMatcher;
   async scan(filePathOrFile) {
     const filePath = normalizeFilePathInput(filePathOrFile);
     if (!filePath) {
@@ -15201,11 +15367,6 @@ let DataStore = class {
     this.cacheStore = new DataStoreCache(this.storage, () => this._assertNotDisposed());
     this.fileScanner = new DataStoreFileScanner(this.vault, this.metadata, this.fileStat, this.themeMatcher);
   }
-  vault;
-  metadata;
-  fileStat;
-  themeMatcher;
-  storage;
   index = new DataStoreIndex();
   cacheStore;
   fileScanner;
@@ -15441,7 +15602,6 @@ let RetrievalService = class {
     this.dataStore = dataStore;
     this.initMiniSearch();
   }
-  dataStore;
   miniSearch = null;
   indexedItemIds = /* @__PURE__ */ new Set();
   indexedItemsById = /* @__PURE__ */ new Map();
@@ -15738,8 +15898,6 @@ let AiChatService = class {
     this.retrievalService = retrievalService;
     this.httpClient = new AiHttpClient();
   }
-  settingsProvider;
-  retrievalService;
   httpClient;
   // ============== 获取配置 ==============
   getAiSettings() {
@@ -15914,31 +16072,6 @@ function parsePath(path) {
     });
   });
   return result;
-}
-function normalizePath$2(path) {
-  if (!path) {
-    return "";
-  }
-  return path.trim().replace(/\/+/g, "/").replace(/^\/|\/$/g, "");
-}
-function validatePathCharacters(path) {
-  if (!path || path.trim() === "") {
-    return { valid: false, message: "路径不能为空" };
-  }
-  const invalidChars = /[<>:"|?*\\]/;
-  if (invalidChars.test(path)) {
-    return { valid: false, message: "路径包含非法字符" };
-  }
-  const segments = path.split("/");
-  for (const segment of segments) {
-    if (segment.trim() === "") {
-      return { valid: false, message: "路径段不能为空" };
-    }
-    if (segment.startsWith(".") || segment.endsWith(".")) {
-      return { valid: false, message: "路径段不能以点开始或结束" };
-    }
-  }
-  return { valid: true };
 }
 class ThemeTreeBuilder {
   /**
@@ -16280,502 +16413,11 @@ class ThemeTreeBuilder {
     return leaves;
   }
 }
-function buildThemeTree$1(themes, options) {
+function buildThemeTree(themes, options) {
   return ThemeTreeBuilder.buildTree(themes, options);
-}
-function flattenThemeTree(nodes, expandedIds) {
-  return ThemeTreeBuilder.flattenTree(nodes, expandedIds);
 }
 function searchThemeTree(nodes, searchTerm) {
   return ThemeTreeBuilder.searchTree(nodes, searchTerm);
-}
-function buildThemeTree(themes) {
-  const unifiedTree = ThemeTreeBuilder.buildTree(themes, { createVirtualNodes: false });
-  const convertNodes = (nodes) => {
-    const out = [];
-    for (const node2 of nodes) {
-      if (node2.theme) {
-        out.push({
-          theme: node2.theme,
-          children: convertNodes(node2.children)
-        });
-      } else {
-        out.push(...convertNodes(node2.children));
-      }
-    }
-    return out;
-  };
-  return convertNodes(unifiedTree);
-}
-function getDescendantIds(node2) {
-  const ids2 = [node2.theme.id];
-  node2.children.forEach((child) => {
-    ids2.push(...getDescendantIds(child));
-  });
-  return ids2;
-}
-function findNodeInTree(tree, themeId) {
-  for (const node2 of tree) {
-    if (node2.theme.id === themeId) {
-      return node2;
-    }
-    const found = findNodeInTree(node2.children, themeId);
-    if (found) {
-      return found;
-    }
-  }
-  return null;
-}
-class ThemeMatrixService {
-  getSettings;
-  constructor(config2) {
-    this.getSettings = config2.getSettings;
-  }
-  /**
-   * 获取扩展的主题信息
-   * @param themes - 基础主题列表
-   * @returns 扩展主题列表
-   */
-  getExtendedThemes(themes) {
-    const settings = this.getSettings();
-    const activeThemePaths = settings.activeThemePaths || [];
-    return themes.map((theme2) => {
-      const isActive = activeThemePaths.includes(theme2.path);
-      const source = theme2.source || "predefined";
-      return {
-        ...theme2,
-        status: isActive ? "active" : "inactive",
-        source,
-        usageCount: 0,
-        // 暂时移除 usageCount，后续如果需要可以从 DataStore 获取
-        lastUsed: void 0
-        // 暂时移除 lastUsed
-      };
-    });
-  }
-  /**
-   * 【纯计算】验证添加主题的合法性
-   * @param path - 主题路径
-   * @returns 验证结果（包含规范化后的路径）
-   */
-  validateAddTheme(path) {
-    const normalizedPath = normalizePath$2(path);
-    const validation = validatePathCharacters(normalizedPath);
-    if (!validation.valid) {
-      return { valid: false, message: validation.message };
-    }
-    const themes = this.getSettings().inputSettings.themes;
-    if (themes.some((t3) => t3.path === normalizedPath)) {
-      return { valid: false, message: "主题路径已存在" };
-    }
-    return { valid: true, normalizedPath };
-  }
-  /**
-   * 【纯计算】验证更新主题的合法性
-   * @param themeId - 主题ID
-   * @param updates - 更新内容
-   * @returns 验证结果（包含规范化后的更新）
-   */
-  validateUpdateTheme(themeId, updates) {
-    const normalizedUpdates = { ...updates };
-    if (updates.path) {
-      const normalizedPath = normalizePath$2(updates.path);
-      const validation = validatePathCharacters(normalizedPath);
-      if (!validation.valid) {
-        return { valid: false, message: validation.message };
-      }
-      const themes = this.getSettings().inputSettings.themes;
-      const hasConflict = themes.some(
-        (t3) => t3.id !== themeId && t3.path === normalizedPath
-      );
-      if (hasConflict) {
-        return { valid: false, message: "主题路径已被使用" };
-      }
-      normalizedUpdates.path = normalizedPath;
-    }
-    return { valid: true, normalizedUpdates };
-  }
-  /**
-   * 【纯计算】计算要删除的主题ID列表（含子节点）
-   * @param themeId - 主题ID
-   * @param includeChildren - 是否包含子主题
-   * @returns 要删除的主题ID列表
-   */
-  computeDeleteThemeIds(themeId, includeChildren = false) {
-    const themes = this.getSettings().inputSettings.themes;
-    const extendedThemes = this.getExtendedThemes(themes);
-    const tree = buildThemeTree(extendedThemes);
-    const node2 = findNodeInTree(tree, themeId);
-    if (!node2) {
-      return { themeIds: [], count: 0 };
-    }
-    const toDelete = [themeId];
-    if (includeChildren) {
-      const descendants = getDescendantIds(node2);
-      toDelete.push(...descendants.slice(1));
-    }
-    return { themeIds: toDelete, count: toDelete.length };
-  }
-  /**
-   * 验证主题路径
-   * @param path - 主题路径
-   * @returns 验证结果
-   */
-  validatePath(path) {
-    return validatePathCharacters(normalizePath$2(path));
-  }
-  /**
-   * 获取主题统计信息
-   * @param themes - 主题列表
-   * @returns 统计信息
-   */
-  getThemeStatistics(themes) {
-    const overrides = this.getSettings().inputSettings.overrides;
-    const overridesByTheme = /* @__PURE__ */ new Map();
-    overrides.forEach((o2) => {
-      const count = overridesByTheme.get(o2.themeId) || 0;
-      overridesByTheme.set(o2.themeId, count + 1);
-    });
-    const active = themes.filter((t3) => t3.status === "active").length;
-    const archived = themes.filter((t3) => t3.status === "inactive").length;
-    const withOverrides = Array.from(overridesByTheme.keys()).length;
-    const mostUsed = themes.reduce((max2, theme2) => {
-      if (!max2 || (theme2.usageCount || 0) > (max2.usageCount || 0)) {
-        return theme2;
-      }
-      return max2;
-    }, null);
-    return {
-      total: themes.length,
-      active,
-      archived,
-      withOverrides,
-      mostUsed
-    };
-  }
-  /**
-   * 导出主题配置
-   * @param themeIds - 要导出的主题ID列表
-   * @returns 导出的配置数据
-   */
-  exportThemeConfigurations(themeIds) {
-    const allThemes = this.getSettings().inputSettings.themes;
-    const allOverrides = this.getSettings().inputSettings.overrides;
-    const themes = allThemes.filter((t3) => themeIds.includes(t3.id));
-    const overrides = allOverrides.filter((o2) => themeIds.includes(o2.themeId));
-    return { themes, overrides };
-  }
-  /**
-   * 【纯计算】预览导入主题配置
-   * 计算哪些主题和覆盖配置可以导入，哪些会被跳过
-   * @param data - 要导入的配置数据
-   * @returns 导入预览结果，包含可导入项（由 useCases.theme 执行实际写入）
-   */
-  previewImportConfigurations(data) {
-    const existingThemes = this.getSettings().inputSettings.themes;
-    const existingPaths = new Set(existingThemes.map((t3) => t3.path));
-    const themesToAdd = [];
-    const skippedThemes = [];
-    for (const theme2 of data.themes) {
-      if (existingPaths.has(theme2.path)) {
-        skippedThemes.push(theme2.path);
-      } else {
-        themesToAdd.push({ path: theme2.path, icon: theme2.icon });
-      }
-    }
-    return {
-      themesToAdd,
-      overridesToAdd: data.overrides,
-      skippedThemes
-    };
-  }
-  /**
-   * 根据状态分组主题
-   * @param tree - 主题树
-   * @returns 分组后的主题
-   */
-  groupThemesByStatus(tree) {
-    const activeThemes = [];
-    const archivedThemes = [];
-    tree.forEach((node2) => {
-      activeThemes.push(node2);
-    });
-    return { activeThemes, archivedThemes };
-  }
-}
-function normalizeThemePath$1(theme2) {
-  return theme2.trim().replace(/[\/\\]+/g, "/").replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/");
-}
-function checkHierarchicalContainment(theme1, theme2) {
-  const normalized1 = normalizeThemePath$1(theme1);
-  const normalized2 = normalizeThemePath$1(theme2);
-  if (normalized1 === normalized2) {
-    return {
-      isContained: true,
-      container: normalized1,
-      contained: normalized2,
-      reason: "完全匹配"
-    };
-  }
-  const parts1 = normalized1.split("/");
-  const parts2 = normalized2.split("/");
-  if (normalized1.includes("/") && parts1[parts1.length - 1] === normalized2) {
-    return {
-      isContained: true,
-      container: normalized1,
-      contained: normalized2,
-      reason: `"${normalized2}"已包含在"${normalized1}"中`
-    };
-  }
-  if (normalized2.includes("/") && parts2[parts2.length - 1] === normalized1) {
-    return {
-      isContained: true,
-      container: normalized2,
-      contained: normalized1,
-      reason: `"${normalized1}"已包含在"${normalized2}"中`
-    };
-  }
-  const commonParts = parts1.filter((part) => parts2.includes(part));
-  if (commonParts.length > 0 && (parts1.length > 1 || parts2.length > 1)) {
-    const longerTheme = parts1.length > parts2.length ? normalized1 : normalized2;
-    const shorterTheme = parts1.length <= parts2.length ? normalized1 : normalized2;
-    return {
-      isContained: true,
-      container: longerTheme,
-      contained: shorterTheme,
-      reason: `主题可能存在语义重叠：共同包含"${commonParts.join('", "')}"`
-    };
-  }
-  return { isContained: false };
-}
-function isThemeDuplicate(newTheme, existingThemes) {
-  const normalizedNew = normalizeThemePath$1(newTheme);
-  if (!normalizedNew) {
-    return {
-      isDuplicate: true,
-      reason: "主题路径为空",
-      conflictWith: ""
-    };
-  }
-  for (const existing of existingThemes) {
-    const normalizedExisting = normalizeThemePath$1(existing);
-    const containment = checkHierarchicalContainment(normalizedNew, normalizedExisting);
-    if (containment.isContained) {
-      return {
-        isDuplicate: true,
-        reason: containment.reason,
-        conflictWith: existing
-      };
-    }
-  }
-  return { isDuplicate: false };
-}
-function deduplicateThemes(candidateThemes, existingThemes) {
-  const result = {
-    newThemes: [],
-    totalScanned: candidateThemes.length
-  };
-  const uniqueCandidates = Array.from(new Set(candidateThemes.map(normalizeThemePath$1))).filter((theme2) => theme2.trim() !== "");
-  for (const theme2 of uniqueCandidates) {
-    const duplicateCheck = isThemeDuplicate(theme2, existingThemes);
-    if (!duplicateCheck.isDuplicate) {
-      const internalDuplicateCheck = isThemeDuplicate(theme2, result.newThemes);
-      if (!internalDuplicateCheck.isDuplicate) {
-        result.newThemes.push(theme2);
-      }
-    }
-  }
-  return result;
-}
-class ThemeScanService {
-  getSettings;
-  dataStore;
-  constructor(config2) {
-    this.getSettings = config2.getSettings;
-    this.dataStore = config2.dataStore;
-  }
-  /**
-   * 从数据中提取主题
-   * @param items - Item数据列表
-   * @param config - 扫描配置
-   * @returns 主题使用统计Map
-   */
-  extractThemesFromItems(items, config2) {
-    const themeStats = /* @__PURE__ */ new Map();
-    for (const item of items) {
-      if (!config2.includeTasks && item.type === "task") continue;
-      if (!config2.includeBlocks && item.type === "block") continue;
-      const theme2 = item.theme;
-      if (theme2 && theme2.trim() !== "") {
-        const normalizedTheme = theme2.trim();
-        const existing = themeStats.get(normalizedTheme) || { count: 0, sources: [] };
-        existing.count++;
-        existing.sources.push(`${item.type}:${item.id}`);
-        themeStats.set(normalizedTheme, existing);
-      }
-    }
-    if (config2.minUsageCount > 1) {
-      for (const [theme2, stats] of themeStats.entries()) {
-        if (stats.count < config2.minUsageCount) {
-          themeStats.delete(theme2);
-        }
-      }
-    }
-    return themeStats;
-  }
-  /**
-   * 扫描数据中的主题
-   * @param config - 扫描配置
-   * @returns 扫描结果
-   */
-  async scanThemesFromData(config2 = {
-    includeTasks: true,
-    includeBlocks: true,
-    minUsageCount: 1
-  }) {
-    const items = this.dataStore.queryItems();
-    const themeStats = this.extractThemesFromItems(items, config2);
-    const rawThemes = Array.from(themeStats.keys());
-    const existingThemes = this.getSettings().inputSettings.themes;
-    const existingThemePaths = existingThemes.map((t3) => t3.path);
-    const deduplicationResult = deduplicateThemes(rawThemes, existingThemePaths);
-    const stats = {
-      totalItems: items.length,
-      itemsWithThemes: items.filter((item) => {
-        if (!config2.includeTasks && item.type === "task") return false;
-        if (!config2.includeBlocks && item.type === "block") return false;
-        return (item.theme || null) !== null;
-      }).length,
-      uniqueThemes: rawThemes.length,
-      newThemes: deduplicationResult.newThemes.length,
-      byType: {
-        tasks: items.filter(
-          (item) => item.type === "task" && config2.includeTasks && (item.theme || null) !== null
-        ).length,
-        blocks: items.filter(
-          (item) => item.type === "block" && config2.includeBlocks && (item.theme || null) !== null
-        ).length
-      }
-    };
-    return {
-      rawThemes,
-      deduplicationResult,
-      stats
-    };
-  }
-  /**
-   * 【纯计算】获取可导入的主题列表
-   * @param themes - 待导入的主题路径列表
-   * @returns 可以导入的主题列表（过滤已存在的）
-   */
-  getImportableThemes(themes) {
-    const existingThemes = this.getSettings().inputSettings.themes;
-    const existingPaths = new Set(existingThemes.map((t3) => t3.path));
-    return themes.filter(
-      (theme2) => theme2 && theme2.trim() !== "" && !existingPaths.has(theme2)
-    );
-  }
-  /**
-   * 获取主题使用详情
-   * @param themePath - 主题路径
-   * @returns 使用详情
-   */
-  async getThemeUsageDetails(themePath) {
-    const items = this.dataStore.queryItems();
-    const themeItems = items.filter((item) => {
-      const theme2 = item.theme || null;
-      return theme2 === themePath;
-    });
-    const byType = {
-      tasks: themeItems.filter((item) => item.type === "task").length,
-      blocks: themeItems.filter((item) => item.type === "block").length
-    };
-    const recentUsage = themeItems.sort((a2, b2) => (b2.modified || 0) - (a2.modified || 0)).slice(0, 10);
-    return {
-      items: themeItems,
-      totalCount: themeItems.length,
-      byType,
-      recentUsage
-    };
-  }
-  /**
-   * 预览导入操作
-   * @param themes - 待导入的主题列表
-   * @returns 预览结果
-   */
-  async previewImport(themes) {
-    const existingThemes = this.getSettings().inputSettings.themes;
-    const existingPaths = new Set(existingThemes.map((t3) => t3.path));
-    const willImport = [];
-    const willSkip = [];
-    for (const theme2 of themes) {
-      if (existingPaths.has(theme2)) {
-        willSkip.push({
-          theme: theme2,
-          reason: "主题已存在"
-        });
-      } else if (!theme2 || theme2.trim() === "") {
-        willSkip.push({
-          theme: theme2,
-          reason: "主题路径为空"
-        });
-      } else {
-        willImport.push(theme2);
-      }
-    }
-    const estimatedTime = willImport.length * 10;
-    return {
-      willImport,
-      willSkip,
-      estimatedTime
-    };
-  }
-  /**
-   * 【纯计算】获取要激活的主题ID列表
-   * @param themePaths - 主题路径列表
-   * @returns 主题ID列表（由 useCases.theme.batchUpdateThemeStatus 执行写入）
-   */
-  getThemeIdsForActivation(themePaths) {
-    const themes = this.getSettings().inputSettings.themes;
-    return themes.filter((t3) => themePaths.includes(t3.path)).map((t3) => t3.id);
-  }
-  /**
-   * 获取默认扫描配置
-   * @returns 默认配置
-   */
-  getDefaultScanConfig() {
-    return {
-      includeTasks: true,
-      includeBlocks: true,
-      minUsageCount: 1
-    };
-  }
-  /**
-   * 验证扫描配置
-   * @param config - 配置对象
-   * @returns 验证结果
-   */
-  validateScanConfig(config2) {
-    const errors = [];
-    const corrected = {
-      includeTasks: config2.includeTasks ?? true,
-      includeBlocks: config2.includeBlocks ?? true,
-      minUsageCount: config2.minUsageCount ?? 1
-    };
-    if (!corrected.includeTasks && !corrected.includeBlocks) {
-      errors.push("必须至少包含任务或Block中的一种类型");
-      corrected.includeTasks = true;
-    }
-    if (corrected.minUsageCount < 1) {
-      errors.push("最小使用次数必须大于等于1");
-      corrected.minUsageCount = 1;
-    }
-    return {
-      isValid: errors.length === 0,
-      errors,
-      corrected
-    };
-  }
 }
 function clampProgress(value) {
   if (!Number.isFinite(value)) return 0;
@@ -16811,7 +16453,7 @@ function computeProgression(items, options) {
     catRow.points += points;
     catRow.count += 1;
     categoryMap.set(category, catRow);
-    const theme2 = item.theme || "未设置主题";
+    const theme2 = getItemThemeKey(item);
     const themeRow = themeMap.get(theme2) || { points: 0, count: 0 };
     themeRow.points += points;
     themeRow.count += 1;
@@ -16839,7 +16481,6 @@ class RecordConflictError extends Error {
     super(message);
     this.conflictCode = conflictCode;
   }
-  conflictCode;
   name = "RecordConflictError";
 }
 function createRecordConflictError(code, message) {
@@ -16970,6 +16611,138 @@ function resolveBlockRangeForMutation(lines, item, expectedIndex) {
     "原始块位置已变化或记录已不存在。"
   );
 }
+function normalizePath$2(value) {
+  const trimmed = String(value || "").trim();
+  return trimmed || null;
+}
+function readOptionText(value) {
+  if (value && typeof value === "object") {
+    const obj = value;
+    return {
+      value: String(obj.value ?? obj.label ?? "").trim(),
+      label: String(obj.label ?? obj.value ?? "").trim()
+    };
+  }
+  const text2 = String(value ?? "").trim();
+  return { value: text2, label: text2 };
+}
+function buildTaskRenderTokens(data) {
+  const status = readOptionText(data["状态"] ?? data.status ?? data.taskStatus ?? data.taskStatusPrefix);
+  const statusText = `${status.value} ${status.label}`.trim();
+  const isDone2 = /-\s*\[x\]/i.test(status.value) || /完成|done|✅/.test(statusText);
+  const taskStatusPrefix = isDone2 ? "- [x]" : "- [ ]";
+  const taskStatusKind = isDone2 ? "done" : "todo";
+  const date2 = String(data["日期"] ?? data.date ?? "").trim();
+  const dateMarker = isDone2 ? "✅" : /🛫/.test(statusText) ? "🛫" : /⏳/.test(statusText) ? "⏳" : /➕/.test(statusText) ? "➕" : "📅";
+  const repeat = readOptionText(data["重复"] ?? data.recurrence ?? data.repeat);
+  const repeatText = repeat.value || repeat.label;
+  return {
+    taskStatusPrefix,
+    taskStatusKind,
+    taskDateToken: date2 ? `${dateMarker} ${date2}` : "",
+    repeatToken: repeatText && repeatText !== "不重复" ? repeatText : ""
+  };
+}
+function buildRenderData(template, formData, theme2, templateMeta) {
+  const normalizedData = normalizeTemplateRenderData(template, formData);
+  const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === "object" ? normalizedData.theme : null;
+  const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? "").trim();
+  const themeParts = splitThemePath(explicitThemePath || theme2?.path || null);
+  const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? "").trim();
+  const categoryParts = categoryPath.split("/").map((part) => part.trim()).filter(Boolean);
+  const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? "").trim() : String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
+  const goalPath = explicitGoalPath;
+  const goalParts = goalPath.split("/").map((part) => part.trim()).filter(Boolean);
+  const goalId = String(normalizedData.goalId ?? normalizedData["目标ID"] ?? "").trim();
+  const coreBlock = String(normalizedData.coreBlock ?? normalizedData["核心Block"] ?? template.coreBlockId ?? template.id ?? "").trim();
+  const recordDate = String(normalizedData["日期"] ?? normalizedData.date ?? "").trim();
+  const goalGranularity = String(normalizedData.goalGranularity ?? normalizedData["目标粒度"] ?? normalizedData.granularity ?? "day").trim();
+  const derivedPeriod = resolveDerivedPeriod(recordDate || void 0, goalGranularity);
+  const cycleId = String(normalizedData.cycleId ?? normalizedData["周期ID"] ?? derivedPeriod.id ?? "").trim();
+  const cycleTitle = String(normalizedData.period ?? normalizedData["周期"] ?? derivedPeriod.label ?? "").trim();
+  const taskTokens = buildTaskRenderTokens(normalizedData);
+  return {
+    ...normalizedData,
+    block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
+    categoryKey: categoryPath,
+    categoryPath,
+    baseCategory: categoryParts[0] || "",
+    rootCategory: categoryParts[0] || "",
+    leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : "",
+    theme: {
+      ...normalizedTheme || {},
+      path: themeParts.themePath,
+      root: themeParts.rootTheme,
+      leaf: themeParts.leafTheme,
+      icon: theme2?.icon || String(normalizedData.icon ?? normalizedData["图标"] ?? normalizedTheme?.icon ?? "")
+    },
+    themePath: themeParts.themePath,
+    rootTheme: themeParts.rootTheme,
+    leafTheme: themeParts.leafTheme,
+    goal: {
+      id: goalId,
+      title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
+      path: goalPath,
+      root: goalParts[0] || "",
+      leaf: goalParts.length ? goalParts[goalParts.length - 1] : "",
+      themePath: themeParts.themePath
+    },
+    goalId,
+    goalPath,
+    goalPaths: goalPath ? [goalPath] : normalizedData.goalPaths || [],
+    rootGoal: goalParts[0] || "",
+    leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
+    coreBlock,
+    period: { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label },
+    cycle: { id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label, ...derivedPeriod },
+    cycleId: cycleId || derivedPeriod.id,
+    cycleTitle: cycleTitle || derivedPeriod.label,
+    periodId: cycleId || derivedPeriod.id,
+    periodLabel: cycleTitle || derivedPeriod.label,
+    ...taskTokens,
+    templateId: templateMeta?.templateId || template.id,
+    templateSourceType: templateMeta?.templateSourceType || "block"
+  };
+}
+function buildRecordOutputPlan(input) {
+  if (!input.template) {
+    return {
+      targetFilePath: null,
+      targetHeader: null,
+      outputContent: "",
+      renderData: {},
+      themeParts: splitThemePath(null)
+    };
+  }
+  const renderData = buildRenderData(input.template, input.formData, input.theme, input.templateMeta);
+  const outputContent = renderTemplate(input.template.outputTemplate, renderData).trim();
+  const targetFilePath = normalizePath$2(renderTemplate(input.template.targetFile, renderData));
+  const targetHeader = input.template.appendUnderHeader ? normalizePath$2(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
+  return {
+    targetFilePath,
+    targetHeader,
+    outputContent,
+    renderData,
+    themeParts: splitThemePath(input.theme?.path ?? null)
+  };
+}
+function buildRecordPersistencePlan(input) {
+  const originalPath = normalizePath$2(input.originalPath);
+  const targetPath = normalizePath$2(input.outputPlan.targetFilePath);
+  if (input.mode === "create") {
+    return {
+      originalPath: null,
+      pathChanged: false,
+      writeMode: "create"
+    };
+  }
+  const pathChanged = !!originalPath && !!targetPath && originalPath !== targetPath;
+  return {
+    originalPath,
+    pathChanged,
+    writeMode: pathChanged ? "move_and_replace" : "update_in_place"
+  };
+}
 var __getOwnPropDesc$a = Object.getOwnPropertyDescriptor;
 var __decorateClass$a = (decorators, target, key, kind) => {
   var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$a(target, key) : target;
@@ -17039,19 +16812,14 @@ let InputService = class {
     this.vault = vault;
     this.dataStore = dataStore;
   }
-  vault;
-  dataStore;
   previewTemplateExecution(template, formData, theme2, templateMeta) {
     if (!template) throw new Error("传入了无效的模板对象。");
-    const renderData = this.buildRenderData(template, formData, theme2, templateMeta);
-    const outputContent = renderTemplate(template.outputTemplate, renderData).trim();
-    const targetFilePath = renderTemplate(template.targetFile, renderData).trim();
-    const header = template.appendUnderHeader ? renderTemplate(template.appendUnderHeader, renderData) : null;
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme: theme2, templateMeta });
     return {
-      renderData,
-      outputContent,
-      targetFilePath,
-      header
+      renderData: outputPlan.renderData,
+      outputContent: outputPlan.outputContent,
+      targetFilePath: outputPlan.targetFilePath || "",
+      header: outputPlan.targetHeader
     };
   }
   async executeTemplate(template, formData, theme2, templateMeta, options = {}) {
@@ -17094,8 +16862,8 @@ ${outputContent}` : outputContent;
       throw createRecordConflictError("record_path_missing", `找不到文件: ${path}`);
     }
     this.throwIfAborted(signal);
-    const renderData = this.buildRenderData(template, formData, theme2, templateMeta);
-    const nextText = renderTemplate(template.outputTemplate, renderData).trim();
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme: theme2, templateMeta });
+    const nextText = outputPlan.outputContent.trim();
     if (!nextText) throw new Error("编辑后的输出内容为空，已取消保存。");
     const lines = existingContent.split("\n");
     const nextLines = nextText.split(/\r?\n/);
@@ -17144,55 +16912,6 @@ ${outputContent}` : outputContent;
       this.dataStore.notifyChange();
     }
     return path;
-  }
-  buildRenderData(template, formData, theme2, templateMeta) {
-    const normalizedData = normalizeTemplateRenderData(template, formData);
-    const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === "object" ? normalizedData.theme : null;
-    const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? "").trim();
-    const themePath = explicitThemePath || theme2?.path || "";
-    const themeParts = themePath.split("/").map((part) => part.trim()).filter(Boolean);
-    const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? "").trim();
-    const categoryParts = categoryPath.split("/").map((part) => part.trim()).filter(Boolean);
-    const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? "").trim() : String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
-    const goalPath = explicitGoalPath;
-    const goalParts = goalPath.split("/").map((part) => part.trim()).filter(Boolean);
-    const goalId = String(normalizedData.goalId ?? normalizedData["目标ID"] ?? "").trim();
-    const coreBlock = String(normalizedData.coreBlock ?? normalizedData["核心Block"] ?? template.coreBlockId ?? template.id ?? "").trim();
-    return {
-      ...normalizedData,
-      block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
-      categoryKey: categoryPath,
-      categoryPath,
-      baseCategory: categoryParts[0] || "",
-      rootCategory: categoryParts[0] || "",
-      leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : "",
-      theme: {
-        ...normalizedTheme || {},
-        path: themePath,
-        root: themeParts[0] || "",
-        leaf: themeParts.length ? themeParts[themeParts.length - 1] : "",
-        icon: theme2?.icon || String(normalizedTheme?.icon ?? "")
-      },
-      themePath,
-      rootTheme: themeParts[0] || "",
-      leafTheme: themeParts.length ? themeParts[themeParts.length - 1] : "",
-      goal: {
-        id: goalId,
-        title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
-        path: goalPath,
-        root: goalParts[0] || "",
-        leaf: goalParts.length ? goalParts[goalParts.length - 1] : "",
-        themePath
-      },
-      goalId,
-      goalPath,
-      goalPaths: goalPath ? [goalPath] : normalizedData.goalPaths || [],
-      rootGoal: goalParts[0] || "",
-      leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
-      coreBlock,
-      templateId: templateMeta?.templateId || template.id,
-      templateSourceType: templateMeta?.templateSourceType || "block"
-    };
   }
   parseItemId(itemId) {
     const hashIndex = itemId.lastIndexOf("#");
@@ -17260,8 +16979,6 @@ let ItemService = class {
     this.dataStore = dataStore;
     this.vault = vault;
   }
-  dataStore;
-  vault;
   async getItemLine(itemId) {
     const context = await this.loadMutableTaskContext(itemId);
     return context.rawLine;
@@ -17369,7 +17086,7 @@ let ItemService = class {
   }
   /**
    * 目标中心 Markdown 回填：在定位到的记录行上补齐内联元数据。
-   * MVP6 策略：只做保守 upsert，不重排用户原文；适合任务行，也能为块记录的定位行补元数据。
+   * 保留给任务行使用：只改当前行的 `(key:: value)`，不移动正文。
    */
   async upsertItemInlineFields(itemId, fields, mutationOptions = {}) {
     const context = await this.loadMutableTaskContext(itemId);
@@ -17385,6 +17102,133 @@ let ItemService = class {
     lines[index] = line2;
     await this.writeLines(path, lines, mutationOptions);
     return { path, beforeLine: rawLine, afterLine: line2 };
+  }
+  /**
+   * 目标迁移专用写回：
+   * - task：写回当前任务行内 `(字段:: 值)`；
+   * - block：写回 `<!-- start --> ... <!-- end -->` 内的块元数据行。
+   *
+   * 这样旧记录改写不再只覆盖任务行，也能安全处理计划/总结/打卡等块记录。
+   */
+  async upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions = {}) {
+    const { path, lineNo } = this.parseItemId(itemId);
+    const content = await this.vault.readFile(path);
+    if (content == null) {
+      throw createRecordConflictError("record_path_missing", `找不到条目文件: ${path}`);
+    }
+    const lines = content.split("\n");
+    const item = this.dataStore.queryItems().find((candidate) => candidate.id === itemId);
+    const expectedIndex = lineNo - 1;
+    if (item?.type === "block") {
+      const range = resolveBlockRangeForMutation(lines, item, expectedIndex);
+      const beforeText = lines.slice(range.startIndex, range.endIndex + 1).join("\n");
+      let endIndex = range.endIndex;
+      for (const [key, value] of Object.entries(fields)) {
+        const normalizedKey = String(key || "").trim();
+        const normalizedValue = String(value ?? "").trim();
+        if (!normalizedKey || !normalizedValue) continue;
+        endIndex = this.upsertBlockMetadataLine(lines, range.startIndex, endIndex, normalizedKey, normalizedValue);
+      }
+      const afterText = lines.slice(range.startIndex, endIndex + 1).join("\n");
+      await this.writeLines(path, lines, mutationOptions);
+      return { path, beforeText, afterText, shape: "block-metadata" };
+    }
+    const context = await this.loadMutableTaskContext(itemId);
+    const mutableLines = [...context.lines];
+    let line2 = context.rawLine;
+    for (const [key, value] of Object.entries(fields)) {
+      const normalizedKey = String(key || "").trim();
+      const normalizedValue = String(value ?? "").trim();
+      if (!normalizedKey || !normalizedValue) continue;
+      line2 = this.upsertKvTag(line2, normalizedKey, normalizedValue);
+    }
+    mutableLines[context.index] = line2;
+    await this.writeLines(path, mutableLines, mutationOptions);
+    return { path, beforeText: context.rawLine, afterText: line2, shape: "task-inline" };
+  }
+  upsertBlockMetadataLine(lines, startIndex, endIndex, key, value) {
+    const keyPattern = this.blockMetaKeyPattern(key);
+    for (let index = startIndex + 1; index < endIndex; index += 1) {
+      if (keyPattern.test(lines[index])) {
+        lines[index] = `${key}:: ${value}`;
+        return endIndex;
+      }
+    }
+    let insertIndex = endIndex;
+    for (let index = startIndex + 1; index < endIndex; index += 1) {
+      const line2 = lines[index].trim();
+      if (!line2) continue;
+      if (/^内容\s*[:：]{1,2}/.test(line2)) {
+        insertIndex = index;
+        break;
+      }
+      if (!/^([^:：]{1,24})[:：]{1,2}\s*(.*)$/.test(line2)) {
+        insertIndex = index;
+        break;
+      }
+    }
+    lines.splice(insertIndex, 0, `${key}:: ${value}`);
+    return endIndex + 1;
+  }
+  escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  blockMetaKeyPattern(key) {
+    const aliases2 = {
+      "模板ID": ["模板ID", "templateId"],
+      "模板来源": ["模板来源", "templateSource", "templateSourceType"],
+      "目标ID": ["目标ID", "goalId"],
+      "目标": ["目标"],
+      "核心Block": ["核心Block", "coreBlock", "coreBlockId"],
+      "主题": ["主题", "themePath", "主题路径", "theme"]
+    };
+    const keys = aliases2[key] || [key];
+    const source = keys.map((item) => this.escapeRegExp(item)).join("|") || this.escapeRegExp(key);
+    return new RegExp(`^\\s*(?:${source})\\s*[:：]{1,2}\\s*.*$`, "i");
+  }
+  /**
+   * 目标迁移前备份。
+   * - 备份当前 settings 到 JSON
+   * - 备份 DataStore 中已索引到的 Markdown 文件
+   * - 不修改原始记录；用于用户侧“一键迁移前备份”
+   */
+  async createMigrationBackup(backupRoot, settings) {
+    const root = String(backupRoot || "").replace(/^\/+|\/+$/g, "") || `ThinkOS/Backups/goal-migration-${Date.now()}`;
+    const settingsPath = `${root}/data-settings.json`;
+    const items = this.dataStore.queryItems();
+    const markdownPaths = Array.from(new Set(
+      items.map((item) => this.safePathFromItemId(String(item.id || ""))).filter((path) => !!path)
+    )).sort((left2, right2) => left2.localeCompare(right2));
+    await this.vault.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+    await this.vault.writeFile(`${root}/markdown-paths.json`, JSON.stringify(markdownPaths, null, 2));
+    const failedPaths = [];
+    let markdownFileCount = 0;
+    for (const path of markdownPaths) {
+      try {
+        const content = await this.vault.readFile(path);
+        if (content == null) {
+          failedPaths.push(path);
+          continue;
+        }
+        await this.vault.writeFile(`${root}/markdown/${path}`, content);
+        markdownFileCount += 1;
+      } catch (_error) {
+        failedPaths.push(path);
+      }
+    }
+    await this.vault.writeFile(`${root}/manifest.json`, JSON.stringify({
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      settingsPath,
+      markdownFileCount,
+      failedPaths
+    }, null, 2));
+    return { backupRoot: root, settingsPath, markdownFileCount, failedPaths };
+  }
+  safePathFromItemId(itemId) {
+    const hashIndex = itemId.lastIndexOf("#");
+    if (hashIndex <= 0) return null;
+    const path = itemId.substring(0, hashIndex).trim();
+    return path || null;
   }
   async loadMutableTaskContext(itemId) {
     const { path, lineNo } = this.parseItemId(itemId);
@@ -17480,10 +17324,6 @@ let ActionService = class {
     this.settingsProvider = settingsProvider;
     this.inputService = inputService;
   }
-  ui;
-  dataStore;
-  settingsProvider;
-  inputService;
   findBlockByCategoryKey(categoryKey) {
     if (!categoryKey) return void 0;
     const blocks = this.settingsProvider.getSettings().inputSettings.blocks || [];
@@ -17681,7 +17521,6 @@ let TimerStateService = class {
   constructor(vault) {
     this.vault = vault;
   }
-  vault;
   async loadStateFromFile() {
     try {
       const content = await this.vault.readFile(TIMER_STATE_PATH);
@@ -17716,51 +17555,6 @@ function findGoal(goalSettings, goalId, goalPath) {
   if (!normalizedPath) return null;
   return goals.find((goal) => splitGoalPath(goal.goalPath || goal.title).goalPath === normalizedPath) || null;
 }
-function findTheme(settings, themeId, themePath) {
-  const themes = settings.inputSettings?.themes || [];
-  if (themeId) {
-    const byId = themes.find((theme2) => theme2.id === themeId);
-    if (byId) return byId;
-  }
-  const normalizedPath = String(themePath || "").trim();
-  if (!normalizedPath) return null;
-  return themes.find((theme2) => theme2.path === normalizedPath) || null;
-}
-function themePathCandidates(path) {
-  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
-  const result = [];
-  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
-  return result;
-}
-function resolveThemeFallback(settings, blockId, themeId, themePath) {
-  const tried = /* @__PURE__ */ new Set();
-  const candidateThemeIds = [];
-  const pushThemeId = (id) => {
-    if (!id || tried.has(id)) return;
-    tried.add(id);
-    candidateThemeIds.push(id);
-  };
-  pushThemeId(themeId);
-  const themesByPath = new Map((settings.inputSettings?.themes || []).map((theme2) => [theme2.path, theme2.id]));
-  for (const path of themePathCandidates(themePath)) pushThemeId(themesByPath.get(path));
-  for (const id of candidateThemeIds) {
-    const resolved = TemplateResolver.resolve(settings.inputSettings, blockId, id);
-    if (resolved.templateSourceType === "override") return resolved;
-  }
-  return TemplateResolver.resolve(settings.inputSettings, blockId, candidateThemeIds[0] || void 0);
-}
-function goalBindingCandidateIds(goalSettings, goal) {
-  if (!goal) return [];
-  const goals = goalSettings?.goals || [];
-  const ids2 = [goal.id];
-  const path = splitGoalPath(goal.goalPath || goal.title).goalPath;
-  const byPath = new Map(goals.map((item) => [splitGoalPath(item.goalPath || item.title).goalPath, item]));
-  for (const parentPath of themePathCandidates(path).slice(1)) {
-    const parentGoal = byPath.get(parentPath);
-    if (parentGoal && !ids2.includes(parentGoal.id)) ids2.push(parentGoal.id);
-  }
-  return ids2;
-}
 function mergeTemplate(base, patch) {
   const required2 = new Set(patch.requiredFields || []);
   const defaultValues = patch.defaultValues || {};
@@ -17778,7 +17572,8 @@ function mergeTemplate(base, patch) {
     fields,
     outputTemplate: patch.outputTemplate ?? base.outputTemplate,
     targetFile: patch.targetFile ?? base.targetFile,
-    appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader
+    appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
+    ...patch.granularity ? { granularity: patch.granularity } : null
   };
 }
 class GoalTemplateResolver {
@@ -17787,136 +17582,40 @@ class GoalTemplateResolver {
     const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
     const effectiveBlockId = String(blockId || "").startsWith("core.") ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
     const goal = findGoal(settings.goalSettings, input.goalId, input.goalPath);
-    const effectiveThemePath = input.themePath || goal?.themePath || null;
-    const theme2 = findTheme(settings, input.themeId, effectiveThemePath);
+    const themePathFromId = input.themeId ? settings.inputSettings?.themes?.find((candidate) => candidate.id === input.themeId)?.path ?? null : null;
+    const effectiveThemePath = input.themePath || goal?.themePath || themePathFromId || null;
+    const theme2 = ThemeMetadataResolver.resolveThemeForRender(settings, effectiveThemePath);
     const coreBlock = getCoreBlockById(settings, effectiveBlockId);
     const legacyBase = settings.inputSettings?.blocks?.find((block2) => block2.id === blockId || block2.id === effectiveBlockId) || null;
-    const legacyResolved = resolveThemeFallback(settings, legacyBase?.id || effectiveBlockId || blockId, theme2?.id || input.themeId || void 0, effectiveThemePath);
-    const baseTemplate = coreBlock || legacyResolved.template || legacyBase;
+    const baseTemplate = coreBlock || legacyBase;
     if (!baseTemplate) {
-      return { template: null, theme: theme2, goal, templateId: null, templateSourceType: null, effectiveBlockId: null };
+      return {
+        template: null,
+        theme: theme2,
+        goal,
+        templateId: null,
+        templateSourceType: null,
+        effectiveBlockId: null,
+        templateVariantId: null
+      };
     }
-    const themeTemplate = legacyResolved.template && legacyResolved.template !== legacyBase ? mergeTemplate(baseTemplate, legacyResolved.template) : baseTemplate;
-    if (goal) {
-      const bindingGoalIds = goalBindingCandidateIds(settings.goalSettings, goal);
-      const binding = (settings.goalSettings?.goalBlockBindings || []).find(
-        (item) => item.enabled !== false && bindingGoalIds.includes(item.goalId) && item.coreBlockId === effectiveBlockId
-      );
-      if (binding) {
-        return {
-          template: mergeTemplate(themeTemplate, binding),
-          theme: theme2,
-          goal,
-          templateId: binding.id,
-          templateSourceType: "goal-binding",
-          effectiveBlockId
-        };
-      }
-    }
-    if (legacyResolved.templateSourceType === "override") {
-      return { template: themeTemplate, theme: theme2, goal, templateId: legacyResolved.templateId, templateSourceType: "theme-fallback", effectiveBlockId };
+    const goalTemplate = findGoalTemplate(settings.goalSettings, goal, effectiveBlockId, input.templateVariantId);
+    if (goalTemplate) {
+      return {
+        template: mergeTemplate(baseTemplate, goalTemplate),
+        theme: theme2,
+        goal,
+        templateId: goalTemplate.id,
+        templateSourceType: "goal-template",
+        effectiveBlockId,
+        templateVariantId: goalTemplate.variantId || "default"
+      };
     }
     if (coreBlock) {
-      return { template: themeTemplate, theme: theme2, goal, templateId: coreBlock.id, templateSourceType: "core-block", effectiveBlockId };
+      return { template: baseTemplate, theme: theme2, goal, templateId: coreBlock.id, templateSourceType: "core-block", effectiveBlockId, templateVariantId: null };
     }
-    return { template: themeTemplate, theme: theme2, goal, templateId: legacyResolved.templateId || legacyBase?.id || null, templateSourceType: legacyResolved.templateSourceType || "legacy-block", effectiveBlockId };
+    return { template: baseTemplate, theme: theme2, goal, templateId: legacyBase?.id || null, templateSourceType: "legacy-block", effectiveBlockId, templateVariantId: null };
   }
-}
-function normalizePath$1(value) {
-  const trimmed = String(value || "").trim();
-  return trimmed || null;
-}
-function buildRenderData(template, formData, theme2, templateMeta) {
-  const normalizedData = normalizeTemplateRenderData(template, formData);
-  const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === "object" ? normalizedData.theme : null;
-  const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? "").trim();
-  const themeParts = splitThemePath(explicitThemePath || theme2?.path || null);
-  const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? "").trim();
-  const categoryParts = categoryPath.split("/").map((part) => part.trim()).filter(Boolean);
-  const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? "").trim() : String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
-  const goalPath = explicitGoalPath;
-  const goalParts = goalPath.split("/").map((part) => part.trim()).filter(Boolean);
-  const goalId = String(normalizedData.goalId ?? normalizedData["目标ID"] ?? "").trim();
-  const coreBlock = String(normalizedData.coreBlock ?? normalizedData["核心Block"] ?? template.coreBlockId ?? template.id ?? "").trim();
-  const cycleId = String(normalizedData.cycleId ?? normalizedData["周期ID"] ?? "").trim();
-  const cycleTitle = String(normalizedData.period ?? normalizedData["周期"] ?? "").trim();
-  return {
-    ...normalizedData,
-    block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
-    categoryKey: categoryPath,
-    categoryPath,
-    baseCategory: categoryParts[0] || "",
-    rootCategory: categoryParts[0] || "",
-    leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : "",
-    theme: {
-      ...normalizedTheme || {},
-      path: themeParts.themePath,
-      root: themeParts.rootTheme,
-      leaf: themeParts.leafTheme,
-      icon: theme2?.icon || String(normalizedTheme?.icon ?? "")
-    },
-    themePath: themeParts.themePath,
-    rootTheme: themeParts.rootTheme,
-    leafTheme: themeParts.leafTheme,
-    goal: {
-      id: goalId,
-      title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
-      path: goalPath,
-      root: goalParts[0] || "",
-      leaf: goalParts.length ? goalParts[goalParts.length - 1] : "",
-      themePath: themeParts.themePath
-    },
-    goalId,
-    goalPath,
-    goalPaths: goalPath ? [goalPath] : normalizedData.goalPaths || [],
-    rootGoal: goalParts[0] || "",
-    leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
-    coreBlock,
-    cycle: { id: cycleId, title: cycleTitle },
-    cycleId,
-    cycleTitle,
-    templateId: templateMeta?.templateId || template.id,
-    templateSourceType: templateMeta?.templateSourceType || "block"
-  };
-}
-function buildRecordOutputPlan(input) {
-  if (!input.template) {
-    return {
-      targetFilePath: null,
-      targetHeader: null,
-      outputContent: "",
-      renderData: {},
-      themeParts: splitThemePath(null)
-    };
-  }
-  const renderData = buildRenderData(input.template, input.formData, input.theme, input.templateMeta);
-  const outputContent = renderTemplate(input.template.outputTemplate, renderData).trim();
-  const targetFilePath = normalizePath$1(renderTemplate(input.template.targetFile, renderData));
-  const targetHeader = input.template.appendUnderHeader ? normalizePath$1(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
-  return {
-    targetFilePath,
-    targetHeader,
-    outputContent,
-    renderData,
-    themeParts: splitThemePath(input.theme?.path ?? null)
-  };
-}
-function buildRecordPersistencePlan(input) {
-  const originalPath = normalizePath$1(input.originalPath);
-  const targetPath = normalizePath$1(input.outputPlan.targetFilePath);
-  if (input.mode === "create") {
-    return {
-      originalPath: null,
-      pathChanged: false,
-      writeMode: "create"
-    };
-  }
-  const pathChanged = !!originalPath && !!targetPath && originalPath !== targetPath;
-  return {
-    originalPath,
-    pathChanged,
-    writeMode: pathChanged ? "move_and_replace" : "update_in_place"
-  };
 }
 function buildEditableRecordSnapshot(input) {
   const parsed = input.item ? buildParsedRecordSnapshot(input.item) : null;
@@ -17949,22 +17648,99 @@ function findThemeIdByPath(settings, path) {
   if (!path) return null;
   return settings.themes.find((theme2) => theme2.path === path)?.id ?? null;
 }
-function resolveRecordDependencies(input) {
-  const { settings, item } = input;
-  const warnings = [];
-  const errors = [];
-  const requestedBlockId = input.blockId ?? null;
+function readNestedGoalContext(context) {
+  const nested2 = context?.__goalContext;
+  return nested2 && typeof nested2 === "object" ? nested2 : {};
+}
+function readFirstString(...values2) {
+  for (const value of values2) {
+    if (value === void 0 || value === null) continue;
+    if (Array.isArray(value)) {
+      const nested2 = readFirstString(...value);
+      if (nested2) return nested2;
+      continue;
+    }
+    if (typeof value === "object") {
+      const obj = value;
+      const raw = obj.value ?? obj.label ?? obj.path ?? obj.title;
+      const text22 = String(raw ?? "").trim();
+      if (text22) return text22;
+      continue;
+    }
+    const text2 = String(value).trim();
+    if (text2) return text2;
+  }
+  return null;
+}
+function extractGoalContext(input) {
+  const context = input.context || {};
+  const nested2 = readNestedGoalContext(context);
+  const item = input.item || null;
+  const goalId = readFirstString(
+    context.goalId,
+    context["目标ID"],
+    nested2.goalId,
+    nested2["目标ID"],
+    item?.goalId,
+    item?.goalIds
+  );
+  const goalPath = readFirstString(
+    context.goalPath,
+    context["目标"],
+    context["目标路径"],
+    nested2.goalPath,
+    nested2["目标"],
+    nested2["目标路径"],
+    item?.goalPath,
+    item?.goalPaths
+  );
+  const themePath = readFirstString(
+    context.themePath,
+    context["主题"],
+    nested2.themePath,
+    nested2["主题"],
+    item?.themePath,
+    item?.theme
+  );
+  const templateVariantId = readFirstString(
+    context.templateVariantId,
+    context.goalTemplateVariantId,
+    context["模板变体ID"],
+    nested2.templateVariantId,
+    nested2.goalTemplateVariantId,
+    nested2["模板变体ID"]
+  );
+  return { goalId, goalPath, themePath, templateVariantId };
+}
+function normalizeDependencySettings(settings) {
+  const maybeFull = settings;
+  if (maybeFull?.inputSettings) return maybeFull;
+  return {
+    inputSettings: settings
+  };
+}
+function buildEffectiveInputSettings(settings) {
   const legacyBlockMap = buildLegacyCoreBlockMap(settings.blocks || []);
-  const effectiveBlockId = requestedBlockId ? String(requestedBlockId).startsWith("core.") ? requestedBlockId : legacyBlockMap[requestedBlockId] || requestedBlockId : null;
-  const effectiveSettings = {
+  return {
     ...settings,
     blocks: [
       ...settings.blocks || [],
-      ...DEFAULT_CORE_BLOCKS.filter((coreBlock) => !(settings.blocks || []).some((block22) => block22.id === coreBlock.id))
+      ...DEFAULT_CORE_BLOCKS.filter((coreBlock) => !(settings.blocks || []).some((block2) => block2.id === coreBlock.id))
     ],
-    overrides: (settings.overrides || []).map((override2) => ({ ...override2, blockId: legacyBlockMap[override2.blockId] || override2.blockId }))
+    overrides: (settings.overrides || []).map((override) => ({ ...override, blockId: legacyBlockMap[override.blockId] || override.blockId }))
   };
-  const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, item?.theme);
+}
+function resolveRecordDependencies(input) {
+  const warnings = [];
+  const errors = [];
+  const fullSettings = normalizeDependencySettings(input.settings);
+  const inputSettings = fullSettings.inputSettings;
+  const requestedBlockId = input.blockId ?? null;
+  const legacyBlockMap = buildLegacyCoreBlockMap(inputSettings.blocks || []);
+  const effectiveBlockId = requestedBlockId ? String(requestedBlockId).startsWith("core.") ? requestedBlockId : legacyBlockMap[requestedBlockId] || requestedBlockId : null;
+  const effectiveSettings = buildEffectiveInputSettings(inputSettings);
+  const goalContext = extractGoalContext(input);
+  const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, goalContext.themePath ?? input.item?.themePath ?? input.item?.theme ?? null);
   let resolvedThemeId = inferredThemeId ?? null;
   if (!requestedBlockId) {
     errors.push(issue$2("record_block_missing", "Missing blockId for record submission.", "blockId"));
@@ -18002,29 +17778,33 @@ function resolveRecordDependencies(input) {
     };
   }
   let usedFallbackTheme = false;
-  if (resolvedThemeId) {
-    const themeExists = effectiveSettings.themes.some((theme2) => theme2.id === resolvedThemeId);
-    if (!themeExists) {
-      warnings.push(issue$2("record_theme_not_found", "Selected theme no longer exists. Falling back to base block template.", "themeId"));
-      resolvedThemeId = null;
-      usedFallbackTheme = true;
-    }
+  if (resolvedThemeId && !effectiveSettings.themes.some((theme2) => theme2.id === resolvedThemeId)) {
+    warnings.push(issue$2("record_theme_not_found", "Selected theme no longer exists. Continuing with goal/template metadata.", "themeId"));
+    resolvedThemeId = null;
+    usedFallbackTheme = true;
   }
-  const override = resolvedThemeId ? effectiveSettings.overrides.find((candidate) => candidate.blockId === effectiveBlockId && candidate.themeId === resolvedThemeId) : null;
-  if (override?.disabled) {
-    warnings.push(issue$2("record_override_disabled", "Theme override is disabled. Using the base block template instead.", "themeId"));
-  }
-  const resolved = TemplateResolver.resolve(effectiveSettings, effectiveBlockId || requestedBlockId, resolvedThemeId ?? void 0);
-  return {
+  const resolved = GoalTemplateResolver.resolve({
+    settings: fullSettings,
     blockId: effectiveBlockId || requestedBlockId,
-    themeId: resolved.theme ? resolved.theme.id : null,
+    goalId: goalContext.goalId,
+    goalPath: goalContext.goalPath,
+    themeId: resolvedThemeId ?? void 0,
+    themePath: goalContext.themePath,
+    templateVariantId: goalContext.templateVariantId
+  });
+  if (!resolved.template) {
+    errors.push(issue$2("record_template_missing", "No effective Goal + Block template is available for this record.", "blockId"));
+  }
+  return {
+    blockId: resolved.effectiveBlockId || effectiveBlockId || requestedBlockId,
+    themeId: resolvedThemeId,
     template: resolved.template,
     theme: resolved.theme,
     warnings,
     errors,
     meta: {
       templateId: resolved.templateId,
-      templateSourceType: resolved.templateSourceType === "block" && String(effectiveBlockId || "").startsWith("core.") ? "core-block" : resolved.templateSourceType,
+      templateSourceType: resolved.templateSourceType,
       usedFallbackBlock: false,
       usedFallbackTheme
     }
@@ -18068,11 +17848,11 @@ function readPeriodFromLegacyCategory(field, item, snapshot) {
   for (const candidate of candidates) {
     const raw = String(candidate || "").trim();
     if (!raw) continue;
-    const leaf = raw.split("/").filter(Boolean).pop() || raw;
+    const leaf2 = raw.split("/").filter(Boolean).pop() || raw;
     const matched = options.find((opt) => {
       const optValue = String(opt.value || "").trim();
       const optLabel = String(opt.label || "").trim();
-      return optValue === raw || optLabel === raw || optValue === leaf || optLabel === leaf;
+      return optValue === raw || optLabel === raw || optValue === leaf2 || optLabel === leaf2;
     });
     if (matched) return String(matched.value || matched.label || raw);
   }
@@ -18248,6 +18028,21 @@ function findOverrideById(settings, overrideId) {
   if (!overrideId) return null;
   return (settings.overrides || []).find((candidate) => candidate.id === overrideId) ?? null;
 }
+function readCoreBlockHint(item) {
+  const extra = item.extra || {};
+  const candidates = [
+    item.coreBlock,
+    item.coreBlockId,
+    extra["核心Block"],
+    extra.coreBlock,
+    extra.coreBlockId
+  ];
+  for (const candidate of candidates) {
+    const text2 = String(candidate || "").trim();
+    if (text2) return text2.startsWith("core.") ? text2 : `core.${text2}`;
+  }
+  return null;
+}
 function resolveBlockForEdit(settings, item, preferredBlockId) {
   const blocks = settings.blocks || [];
   if (!Array.isArray(blocks) || blocks.length === 0) {
@@ -18258,6 +18053,19 @@ function resolveBlockForEdit(settings, item, preferredBlockId) {
       usedFallbackBlock: true,
       debugReason: "没有可用 block，只能使用 preferredBlockId。"
     };
+  }
+  const coreBlockHint = readCoreBlockHint(item);
+  if (coreBlockHint) {
+    const block2 = blocks.find((candidate) => candidate.id === coreBlockHint || candidate.coreBlockId === coreBlockHint);
+    if (block2) {
+      return {
+        blockId: block2.id,
+        themeIdFromTemplateHint: null,
+        resolvedBy: "exact",
+        usedFallbackBlock: false,
+        debugReason: `根据记录中的核心Block ${coreBlockHint} 精确还原 block=${block2.id}`
+      };
+    }
   }
   if (item.templateId && item.templateSourceType === "override") {
     const override = findOverrideById(settings, item.templateId);
@@ -18326,8 +18134,9 @@ function buildInitialFormData(template, item, snapshot = buildParsedRecordSnapsh
 }
 function buildEditRecordState(input) {
   const { settings, item, preferredBlockId, preferredThemeId } = input;
-  const resolvedBlock = resolveBlockForEdit(settings, item, preferredBlockId);
-  const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(settings, item.theme) ?? preferredThemeId ?? void 0;
+  const inputSettings = settings.inputSettings;
+  const resolvedBlock = resolveBlockForEdit(inputSettings, item, preferredBlockId);
+  const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(inputSettings, item.theme) ?? preferredThemeId ?? void 0;
   recordDebugLog("编辑模板解析", "任务/块模板选择", {
     itemType: item.type,
     itemTitle: item.title,
@@ -18522,11 +18331,11 @@ class RecordInputKernel {
   constructor(settings) {
     this.settings = settings;
   }
-  settings;
   prepareCreate(params) {
     const resolved = this.resolveMissingDependencies({
       blockId: params.blockId ?? null,
-      themeId: params.themeId ?? null
+      themeId: params.themeId ?? null,
+      context: params.context ?? null
     });
     const snapshot = buildEditableRecordSnapshot({
       mode: "create",
@@ -18564,7 +18373,8 @@ class RecordInputKernel {
       settings: this.settings,
       blockId: params.blockId ?? null,
       themeId: params.themeId ?? null,
-      item: params.item ?? null
+      item: params.item ?? null,
+      context: params.context ?? null
     });
   }
   normalizeRecordInput(params) {
@@ -18660,10 +18470,10 @@ async function finalizeRecordSubmitResult(dataStore, result) {
 }
 const EVENTS_PORT_TOKEN = "EventsPort";
 const MODAL_PORT_TOKEN = "ModalPort";
-const MESSAGE_RENDER_PORT_TOKEN = /* @__PURE__ */ Symbol("MessageRenderPort");
-var NOTHING = /* @__PURE__ */ Symbol.for("immer-nothing");
-var DRAFTABLE = /* @__PURE__ */ Symbol.for("immer-draftable");
-var DRAFT_STATE = /* @__PURE__ */ Symbol.for("immer-state");
+const MESSAGE_RENDER_PORT_TOKEN = Symbol("MessageRenderPort");
+var NOTHING = Symbol.for("immer-nothing");
+var DRAFTABLE = Symbol.for("immer-draftable");
+var DRAFT_STATE = Symbol.for("immer-state");
 function die(error, ...args) {
   throw new Error(
     `[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`
@@ -18984,12 +18794,12 @@ function maybeFreeze(scope, value, deep = false) {
     freeze(value, deep);
   }
 }
-function createProxyProxy(base, parent) {
+function createProxyProxy(base, parent2) {
   const isArray = Array.isArray(base);
   const state = {
     type_: isArray ? 1 : 0,
     // Track which produce call this is associated with.
-    scope_: parent ? parent.scope_ : getCurrentScope(),
+    scope_: parent2 ? parent2.scope_ : getCurrentScope(),
     // True for both shallow and deep changes.
     modified_: false,
     // Used during finalization.
@@ -18997,7 +18807,7 @@ function createProxyProxy(base, parent) {
     // Track which properties have been assigned (true) or deleted (false).
     assigned_: {},
     // The parent draft state.
-    parent_: parent,
+    parent_: parent2,
     // The base state.
     base_: base,
     // The base proxy.
@@ -19301,9 +19111,9 @@ var Immer2 = class {
     );
   }
 };
-function createProxy(value, parent) {
-  const draft = isMap(value) ? getPlugin("MapSet").proxyMap_(value, parent) : isSet(value) ? getPlugin("MapSet").proxySet_(value, parent) : createProxyProxy(value, parent);
-  const scope = parent ? parent.scope_ : getCurrentScope();
+function createProxy(value, parent2) {
+  const draft = isMap(value) ? getPlugin("MapSet").proxyMap_(value, parent2) : isSet(value) ? getPlugin("MapSet").proxySet_(value, parent2) : createProxyProxy(value, parent2);
+  const scope = parent2 ? parent2.scope_ : getCurrentScope();
   scope.drafts_.push(draft);
   return draft;
 }
@@ -19355,7 +19165,6 @@ let SettingsRepository = class {
   constructor(persistence) {
     this.persistence = persistence;
   }
-  persistence;
   currentSettings = null;
   listeners = /* @__PURE__ */ new Set();
   /**
@@ -19463,7 +19272,6 @@ let RepositorySettingsProvider = class {
   constructor(settingsRepository) {
     this.settingsRepository = settingsRepository;
   }
-  settingsRepository;
   getSettings() {
     return this.settingsRepository.getSettings();
   }
@@ -19491,106 +19299,102 @@ function setupCoreContainer(app, settings) {
   instance.registerSingleton(RepositorySettingsProvider);
   instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
 }
-var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, s$1, a$1, h$1, p$1, v$1, y$1, d$1 = {}, w$2 = [], _$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, g$2 = Array.isArray;
-function m$1(n2, l2) {
+var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, s$1, a$1, h$1, p$1 = {}, v$1 = [], y$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, w$2 = Array.isArray;
+function d$1(n2, l2) {
   for (var u3 in l2) n2[u3] = l2[u3];
   return n2;
 }
-function b$1(n2) {
+function g$2(n2) {
   n2 && n2.parentNode && n2.parentNode.removeChild(n2);
 }
-function k$2(l2, u3, t3) {
+function _$1(l2, u3, t3) {
   var i2, r2, o2, e2 = {};
   for (o2 in u3) "key" == o2 ? i2 = u3[o2] : "ref" == o2 ? r2 = u3[o2] : e2[o2] = u3[o2];
   if (arguments.length > 2 && (e2.children = arguments.length > 3 ? n.call(arguments, 2) : t3), "function" == typeof l2 && null != l2.defaultProps) for (o2 in l2.defaultProps) void 0 === e2[o2] && (e2[o2] = l2.defaultProps[o2]);
-  return x$2(l2, e2, i2, r2, null);
+  return m$1(l2, e2, i2, r2, null);
 }
-function x$2(n2, t3, i2, r2, o2) {
+function m$1(n2, t3, i2, r2, o2) {
   var e2 = { type: n2, props: t3, key: i2, ref: r2, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: null == o2 ? ++u$2 : o2, __i: -1, __u: 0 };
   return null == o2 && null != l$1.vnode && l$1.vnode(e2), e2;
 }
-function M$1() {
+function b$1() {
   return { current: null };
 }
-function S(n2) {
+function k$2(n2) {
   return n2.children;
 }
-function C$2(n2, l2) {
+function x$2(n2, l2) {
   this.props = n2, this.context = l2;
 }
-function $$1(n2, l2) {
-  if (null == l2) return n2.__ ? $$1(n2.__, n2.__i + 1) : null;
+function S(n2, l2) {
+  if (null == l2) return n2.__ ? S(n2.__, n2.__i + 1) : null;
   for (var u3; l2 < n2.__k.length; l2++) if (null != (u3 = n2.__k[l2]) && null != u3.__e) return u3.__e;
-  return "function" == typeof n2.type ? $$1(n2) : null;
+  return "function" == typeof n2.type ? S(n2) : null;
 }
-function I$1(n2) {
-  if (n2.__P && n2.__d) {
-    var u3 = n2.__v, t3 = u3.__e, i2 = [], r2 = [], o2 = m$1({}, u3);
-    o2.__v = u3.__v + 1, l$1.vnode && l$1.vnode(o2), q$2(n2.__P, o2, u3, n2.__n, n2.__P.namespaceURI, 32 & u3.__u ? [t3] : null, i2, null == t3 ? $$1(u3) : t3, !!(32 & u3.__u), r2), o2.__v = u3.__v, o2.__.__k[o2.__i] = o2, D$2(i2, o2, r2), u3.__e = u3.__ = null, o2.__e != t3 && P$2(o2);
+function C$2(n2) {
+  var l2, u3;
+  if (null != (n2 = n2.__) && null != n2.__c) {
+    for (n2.__e = n2.__c.base = null, l2 = 0; l2 < n2.__k.length; l2++) if (null != (u3 = n2.__k[l2]) && null != u3.__e) {
+      n2.__e = n2.__c.base = u3.__e;
+      break;
+    }
+    return C$2(n2);
   }
 }
-function P$2(n2) {
-  if (null != (n2 = n2.__) && null != n2.__c) return n2.__e = n2.__c.base = null, n2.__k.some(function(l2) {
-    if (null != l2 && null != l2.__e) return n2.__e = n2.__c.base = l2.__e;
-  }), P$2(n2);
+function M$1(n2) {
+  (!n2.__d && (n2.__d = true) && i$1.push(n2) && !$$1.__r++ || r$2 != l$1.debounceRendering) && ((r$2 = l$1.debounceRendering) || o$1)($$1);
 }
-function A$2(n2) {
-  (!n2.__d && (n2.__d = true) && i$1.push(n2) && !H$1.__r++ || r$2 != l$1.debounceRendering) && ((r$2 = l$1.debounceRendering) || o$1)(H$1);
+function $$1() {
+  for (var n2, u3, t3, r2, o2, f2, c2, s2 = 1; i$1.length; ) i$1.length > s2 && i$1.sort(e$1), n2 = i$1.shift(), s2 = i$1.length, n2.__d && (t3 = void 0, r2 = void 0, o2 = (r2 = (u3 = n2).__v).__e, f2 = [], c2 = [], u3.__P && ((t3 = d$1({}, r2)).__v = r2.__v + 1, l$1.vnode && l$1.vnode(t3), O$1(u3.__P, t3, r2, u3.__n, u3.__P.namespaceURI, 32 & r2.__u ? [o2] : null, f2, null == o2 ? S(r2) : o2, !!(32 & r2.__u), c2), t3.__v = r2.__v, t3.__.__k[t3.__i] = t3, N$1(f2, t3, c2), r2.__e = r2.__ = null, t3.__e != o2 && C$2(t3)));
+  $$1.__r = 0;
 }
-function H$1() {
-  try {
-    for (var n2, l2 = 1; i$1.length; ) i$1.length > l2 && i$1.sort(e$1), n2 = i$1.shift(), l2 = i$1.length, I$1(n2);
-  } finally {
-    i$1.length = H$1.__r = 0;
-  }
+function I$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, y2, w2, d2, g2, _2, m2 = t3 && t3.__k || v$1, b2 = l2.length;
+  for (f2 = P$2(u3, l2, m2, f2, b2), a2 = 0; a2 < b2; a2++) null != (y2 = u3.__k[a2]) && (h2 = -1 == y2.__i ? p$1 : m2[y2.__i] || p$1, y2.__i = a2, g2 = O$1(n2, y2, h2, i2, r2, o2, e2, f2, c2, s2), w2 = y2.__e, y2.ref && h2.ref != y2.ref && (h2.ref && B$2(h2.ref, null, y2), s2.push(y2.ref, y2.__c || w2, y2)), null == d2 && null != w2 && (d2 = w2), (_2 = !!(4 & y2.__u)) || h2.__k === y2.__k ? f2 = A$2(y2, f2, n2, _2) : "function" == typeof y2.type && void 0 !== g2 ? f2 = g2 : w2 && (f2 = w2.nextSibling), y2.__u &= -7);
+  return u3.__e = d2, f2;
 }
-function L$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
-  var a2, h2, p2, v2, y2, _2, g2, m2 = t3 && t3.__k || w$2, b2 = l2.length;
-  for (f2 = T$2(u3, l2, m2, f2, b2), a2 = 0; a2 < b2; a2++) null != (p2 = u3.__k[a2]) && (h2 = -1 != p2.__i && m2[p2.__i] || d$1, p2.__i = a2, _2 = q$2(n2, p2, h2, i2, r2, o2, e2, f2, c2, s2), v2 = p2.__e, p2.ref && h2.ref != p2.ref && (h2.ref && J$1(h2.ref, null, p2), s2.push(p2.ref, p2.__c || v2, p2)), null == y2 && null != v2 && (y2 = v2), (g2 = !!(4 & p2.__u)) || h2.__k === p2.__k ? (f2 = j$2(p2, f2, n2, g2), g2 && h2.__e && (h2.__e = null)) : "function" == typeof p2.type && void 0 !== _2 ? f2 = _2 : v2 && (f2 = v2.nextSibling), p2.__u &= -7);
-  return u3.__e = y2, f2;
-}
-function T$2(n2, l2, u3, t3, i2) {
+function P$2(n2, l2, u3, t3, i2) {
   var r2, o2, e2, f2, c2, s2 = u3.length, a2 = s2, h2 = 0;
-  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? ("string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? o2 = n2.__k[r2] = x$2(null, o2, null, null, null) : g$2(o2) ? o2 = n2.__k[r2] = x$2(S, { children: o2 }, null, null, null) : void 0 === o2.constructor && o2.__b > 0 ? o2 = n2.__k[r2] = x$2(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : n2.__k[r2] = o2, f2 = r2 + h2, o2.__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = O$1(o2, u3, f2, a2)) && (a2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > s2 ? h2-- : i2 < s2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
-  if (a2) for (r2 = 0; r2 < s2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = $$1(e2)), K$1(e2, e2));
+  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? (f2 = r2 + h2, (o2 = n2.__k[r2] = "string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? m$1(null, o2, null, null, null) : w$2(o2) ? m$1(k$2, { children: o2 }, null, null, null) : null == o2.constructor && o2.__b > 0 ? m$1(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : o2).__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = L$1(o2, u3, f2, a2)) && (a2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > s2 ? h2-- : i2 < s2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
+  if (a2) for (r2 = 0; r2 < s2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = S(e2)), D$2(e2, e2));
   return t3;
 }
-function j$2(n2, l2, u3, t3) {
+function A$2(n2, l2, u3, t3) {
   var i2, r2;
   if ("function" == typeof n2.type) {
-    for (i2 = n2.__k, r2 = 0; i2 && r2 < i2.length; r2++) i2[r2] && (i2[r2].__ = n2, l2 = j$2(i2[r2], l2, u3, t3));
+    for (i2 = n2.__k, r2 = 0; i2 && r2 < i2.length; r2++) i2[r2] && (i2[r2].__ = n2, l2 = A$2(i2[r2], l2, u3, t3));
     return l2;
   }
-  n2.__e != l2 && (t3 && (l2 && n2.type && !l2.parentNode && (l2 = $$1(n2)), u3.insertBefore(n2.__e, l2 || null)), l2 = n2.__e);
+  n2.__e != l2 && (t3 && (l2 && n2.type && !l2.parentNode && (l2 = S(n2)), u3.insertBefore(n2.__e, l2 || null)), l2 = n2.__e);
   do {
     l2 = l2 && l2.nextSibling;
   } while (null != l2 && 8 == l2.nodeType);
   return l2;
 }
-function F$2(n2, l2) {
-  return l2 = l2 || [], null == n2 || "boolean" == typeof n2 || (g$2(n2) ? n2.some(function(n3) {
-    F$2(n3, l2);
+function H$1(n2, l2) {
+  return l2 = l2 || [], null == n2 || "boolean" == typeof n2 || (w$2(n2) ? n2.some(function(n3) {
+    H$1(n3, l2);
   }) : l2.push(n2)), l2;
 }
-function O$1(n2, l2, u3, t3) {
+function L$1(n2, l2, u3, t3) {
   var i2, r2, o2, e2 = n2.key, f2 = n2.type, c2 = l2[u3], s2 = null != c2 && 0 == (2 & c2.__u);
-  if (null === c2 && null == e2 || s2 && e2 == c2.key && f2 == c2.type) return u3;
+  if (null === c2 && null == n2.key || s2 && e2 == c2.key && f2 == c2.type) return u3;
   if (t3 > (s2 ? 1 : 0)) {
     for (i2 = u3 - 1, r2 = u3 + 1; i2 >= 0 || r2 < l2.length; ) if (null != (c2 = l2[o2 = i2 >= 0 ? i2-- : r2++]) && 0 == (2 & c2.__u) && e2 == c2.key && f2 == c2.type) return o2;
   }
   return -1;
 }
-function z$2(n2, l2, u3) {
-  "-" == l2[0] ? n2.setProperty(l2, null == u3 ? "" : u3) : n2[l2] = null == u3 ? "" : "number" != typeof u3 || _$1.test(l2) ? u3 : u3 + "px";
+function T$2(n2, l2, u3) {
+  "-" == l2[0] ? n2.setProperty(l2, null == u3 ? "" : u3) : n2[l2] = null == u3 ? "" : "number" != typeof u3 || y$1.test(l2) ? u3 : u3 + "px";
 }
-function N$1(n2, l2, u3, t3, i2) {
+function j$2(n2, l2, u3, t3, i2) {
   var r2, o2;
   n: if ("style" == l2) if ("string" == typeof u3) n2.style.cssText = u3;
   else {
-    if ("string" == typeof t3 && (n2.style.cssText = t3 = ""), t3) for (l2 in t3) u3 && l2 in u3 || z$2(n2.style, l2, "");
-    if (u3) for (l2 in u3) t3 && u3[l2] == t3[l2] || z$2(n2.style, l2, u3[l2]);
+    if ("string" == typeof t3 && (n2.style.cssText = t3 = ""), t3) for (l2 in t3) u3 && l2 in u3 || T$2(n2.style, l2, "");
+    if (u3) for (l2 in u3) t3 && u3[l2] == t3[l2] || T$2(n2.style, l2, u3[l2]);
   }
-  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(a$1, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3[s$1] = t3[s$1] : (u3[s$1] = h$1, n2.addEventListener(l2, r2 ? v$1 : p$1, r2)) : n2.removeEventListener(l2, r2 ? v$1 : p$1, r2);
+  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(f$2, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3.u = t3.u : (u3.u = c$1, n2.addEventListener(l2, r2 ? a$1 : s$1, r2)) : n2.removeEventListener(l2, r2 ? a$1 : s$1, r2);
   else {
     if ("http://www.w3.org/2000/svg" == i2) l2 = l2.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
     else if ("width" != l2 && "height" != l2 && "href" != l2 && "list" != l2 && "form" != l2 && "tabIndex" != l2 && "download" != l2 && "rowSpan" != l2 && "colSpan" != l2 && "role" != l2 && "popover" != l2 && l2 in n2) try {
@@ -19601,57 +19405,60 @@ function N$1(n2, l2, u3, t3, i2) {
     "function" == typeof u3 || (null == u3 || false === u3 && "-" != l2[4] ? n2.removeAttribute(l2) : n2.setAttribute(l2, "popover" == l2 && 1 == u3 ? "" : u3));
   }
 }
-function V$1(n2) {
+function F$2(n2) {
   return function(u3) {
     if (this.l) {
       var t3 = this.l[u3.type + n2];
-      if (null == u3[c$1]) u3[c$1] = h$1++;
-      else if (u3[c$1] < t3[s$1]) return;
+      if (null == u3.t) u3.t = c$1++;
+      else if (u3.t < t3.u) return;
       return t3(l$1.event ? l$1.event(u3) : u3);
     }
   };
 }
-function q$2(n2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
-  var a2, h2, p2, v2, y2, d2, _2, k2, x2, M2, $2, I2, P2, A2, H2, T2 = u3.type;
-  if (void 0 !== u3.constructor) return null;
+function O$1(n2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, _2, m2, b2, S2, C2, M2, $2, P2, A2, H2, L2, T2, j2 = u3.type;
+  if (null != u3.constructor) return null;
   128 & t3.__u && (c2 = !!(32 & t3.__u), o2 = [f2 = u3.__e = t3.__e]), (a2 = l$1.__b) && a2(u3);
-  n: if ("function" == typeof T2) try {
-    if (k2 = u3.props, x2 = T2.prototype && T2.prototype.render, M2 = (a2 = T2.contextType) && i2[a2.__c], $2 = a2 ? M2 ? M2.props.value : a2.__ : i2, t3.__c ? _2 = (h2 = u3.__c = t3.__c).__ = h2.__E : (x2 ? u3.__c = h2 = new T2(k2, $2) : (u3.__c = h2 = new C$2(k2, $2), h2.constructor = T2, h2.render = Q$1), M2 && M2.sub(h2), h2.state || (h2.state = {}), h2.__n = i2, p2 = h2.__d = true, h2.__h = [], h2._sb = []), x2 && null == h2.__s && (h2.__s = h2.state), x2 && null != T2.getDerivedStateFromProps && (h2.__s == h2.state && (h2.__s = m$1({}, h2.__s)), m$1(h2.__s, T2.getDerivedStateFromProps(k2, h2.__s))), v2 = h2.props, y2 = h2.state, h2.__v = u3, p2) x2 && null == T2.getDerivedStateFromProps && null != h2.componentWillMount && h2.componentWillMount(), x2 && null != h2.componentDidMount && h2.__h.push(h2.componentDidMount);
+  n: if ("function" == typeof j2) try {
+    if (b2 = u3.props, S2 = "prototype" in j2 && j2.prototype.render, C2 = (a2 = j2.contextType) && i2[a2.__c], M2 = a2 ? C2 ? C2.props.value : a2.__ : i2, t3.__c ? m2 = (h2 = u3.__c = t3.__c).__ = h2.__E : (S2 ? u3.__c = h2 = new j2(b2, M2) : (u3.__c = h2 = new x$2(b2, M2), h2.constructor = j2, h2.render = E$1), C2 && C2.sub(h2), h2.props = b2, h2.state || (h2.state = {}), h2.context = M2, h2.__n = i2, p2 = h2.__d = true, h2.__h = [], h2._sb = []), S2 && null == h2.__s && (h2.__s = h2.state), S2 && null != j2.getDerivedStateFromProps && (h2.__s == h2.state && (h2.__s = d$1({}, h2.__s)), d$1(h2.__s, j2.getDerivedStateFromProps(b2, h2.__s))), v2 = h2.props, y2 = h2.state, h2.__v = u3, p2) S2 && null == j2.getDerivedStateFromProps && null != h2.componentWillMount && h2.componentWillMount(), S2 && null != h2.componentDidMount && h2.__h.push(h2.componentDidMount);
     else {
-      if (x2 && null == T2.getDerivedStateFromProps && k2 !== v2 && null != h2.componentWillReceiveProps && h2.componentWillReceiveProps(k2, $2), u3.__v == t3.__v || !h2.__e && null != h2.shouldComponentUpdate && false === h2.shouldComponentUpdate(k2, h2.__s, $2)) {
-        u3.__v != t3.__v && (h2.props = k2, h2.state = h2.__s, h2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
+      if (S2 && null == j2.getDerivedStateFromProps && b2 !== v2 && null != h2.componentWillReceiveProps && h2.componentWillReceiveProps(b2, M2), !h2.__e && null != h2.shouldComponentUpdate && false === h2.shouldComponentUpdate(b2, h2.__s, M2) || u3.__v == t3.__v) {
+        for (u3.__v != t3.__v && (h2.props = b2, h2.state = h2.__s, h2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
           n3 && (n3.__ = u3);
-        }), w$2.push.apply(h2.__h, h2._sb), h2._sb = [], h2.__h.length && e2.push(h2);
+        }), $2 = 0; $2 < h2._sb.length; $2++) h2.__h.push(h2._sb[$2]);
+        h2._sb = [], h2.__h.length && e2.push(h2);
         break n;
       }
-      null != h2.componentWillUpdate && h2.componentWillUpdate(k2, h2.__s, $2), x2 && null != h2.componentDidUpdate && h2.__h.push(function() {
-        h2.componentDidUpdate(v2, y2, d2);
+      null != h2.componentWillUpdate && h2.componentWillUpdate(b2, h2.__s, M2), S2 && null != h2.componentDidUpdate && h2.__h.push(function() {
+        h2.componentDidUpdate(v2, y2, _2);
       });
     }
-    if (h2.context = $2, h2.props = k2, h2.__P = n2, h2.__e = false, I2 = l$1.__r, P2 = 0, x2) h2.state = h2.__s, h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), w$2.push.apply(h2.__h, h2._sb), h2._sb = [];
-    else do {
-      h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), h2.state = h2.__s;
-    } while (h2.__d && ++P2 < 25);
-    h2.state = h2.__s, null != h2.getChildContext && (i2 = m$1(m$1({}, i2), h2.getChildContext())), x2 && !p2 && null != h2.getSnapshotBeforeUpdate && (d2 = h2.getSnapshotBeforeUpdate(v2, y2)), A2 = null != a2 && a2.type === S && null == a2.key ? E$1(a2.props.children) : a2, f2 = L$1(n2, g$2(A2) ? A2 : [A2], u3, t3, i2, r2, o2, e2, f2, c2, s2), h2.base = u3.__e, u3.__u &= -161, h2.__h.length && e2.push(h2), _2 && (h2.__E = h2.__ = null);
+    if (h2.context = M2, h2.props = b2, h2.__P = n2, h2.__e = false, P2 = l$1.__r, A2 = 0, S2) {
+      for (h2.state = h2.__s, h2.__d = false, P2 && P2(u3), a2 = h2.render(h2.props, h2.state, h2.context), H2 = 0; H2 < h2._sb.length; H2++) h2.__h.push(h2._sb[H2]);
+      h2._sb = [];
+    } else do {
+      h2.__d = false, P2 && P2(u3), a2 = h2.render(h2.props, h2.state, h2.context), h2.state = h2.__s;
+    } while (h2.__d && ++A2 < 25);
+    h2.state = h2.__s, null != h2.getChildContext && (i2 = d$1(d$1({}, i2), h2.getChildContext())), S2 && !p2 && null != h2.getSnapshotBeforeUpdate && (_2 = h2.getSnapshotBeforeUpdate(v2, y2)), L2 = a2, null != a2 && a2.type === k$2 && null == a2.key && (L2 = V$1(a2.props.children)), f2 = I$1(n2, w$2(L2) ? L2 : [L2], u3, t3, i2, r2, o2, e2, f2, c2, s2), h2.base = u3.__e, u3.__u &= -161, h2.__h.length && e2.push(h2), m2 && (h2.__E = h2.__ = null);
   } catch (n3) {
     if (u3.__v = null, c2 || null != o2) if (n3.then) {
       for (u3.__u |= c2 ? 160 : 128; f2 && 8 == f2.nodeType && f2.nextSibling; ) f2 = f2.nextSibling;
       o2[o2.indexOf(f2)] = null, u3.__e = f2;
     } else {
-      for (H2 = o2.length; H2--; ) b$1(o2[H2]);
-      B$2(u3);
+      for (T2 = o2.length; T2--; ) g$2(o2[T2]);
+      z$2(u3);
     }
-    else u3.__e = t3.__e, u3.__k = t3.__k, n3.then || B$2(u3);
+    else u3.__e = t3.__e, u3.__k = t3.__k, n3.then || z$2(u3);
     l$1.__e(n3, u3, t3);
   }
-  else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = G$1(t3.__e, u3, t3, i2, r2, o2, e2, c2, s2);
+  else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = q$2(t3.__e, u3, t3, i2, r2, o2, e2, c2, s2);
   return (a2 = l$1.diffed) && a2(u3), 128 & u3.__u ? void 0 : f2;
 }
-function B$2(n2) {
-  n2 && (n2.__c && (n2.__c.__e = true), n2.__k && n2.__k.some(B$2));
+function z$2(n2) {
+  n2 && n2.__c && (n2.__c.__e = true), n2 && n2.__k && n2.__k.forEach(z$2);
 }
-function D$2(n2, u3, t3) {
-  for (var i2 = 0; i2 < t3.length; i2++) J$1(t3[i2], t3[++i2], t3[++i2]);
+function N$1(n2, u3, t3) {
+  for (var i2 = 0; i2 < t3.length; i2++) B$2(t3[i2], t3[++i2], t3[++i2]);
   l$1.__c && l$1.__c(u3, n2), n2.some(function(u4) {
     try {
       n2 = u4.__h, u4.__h = [], n2.some(function(n3) {
@@ -19662,14 +19469,14 @@ function D$2(n2, u3, t3) {
     }
   });
 }
-function E$1(n2) {
-  return "object" != typeof n2 || null == n2 || n2.__b > 0 ? n2 : g$2(n2) ? n2.map(E$1) : m$1({}, n2);
+function V$1(n2) {
+  return "object" != typeof n2 || null == n2 || n2.__b && n2.__b > 0 ? n2 : w$2(n2) ? n2.map(V$1) : d$1({}, n2);
 }
-function G$1(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
-  var a2, h2, p2, v2, y2, w2, _2, m2 = i2.props || d$1, k2 = t3.props, x2 = t3.type;
+function q$2(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, v2, y2, d2, _2, m2, b2 = i2.props, k2 = t3.props, x2 = t3.type;
   if ("svg" == x2 ? o2 = "http://www.w3.org/2000/svg" : "math" == x2 ? o2 = "http://www.w3.org/1998/Math/MathML" : o2 || (o2 = "http://www.w3.org/1999/xhtml"), null != e2) {
-    for (a2 = 0; a2 < e2.length; a2++) if ((y2 = e2[a2]) && "setAttribute" in y2 == !!x2 && (x2 ? y2.localName == x2 : 3 == y2.nodeType)) {
-      u3 = y2, e2[a2] = null;
+    for (a2 = 0; a2 < e2.length; a2++) if ((d2 = e2[a2]) && "setAttribute" in d2 == !!x2 && (x2 ? d2.localName == x2 : 3 == d2.nodeType)) {
+      u3 = d2, e2[a2] = null;
       break;
     }
   }
@@ -19677,18 +19484,23 @@ function G$1(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
     if (null == x2) return document.createTextNode(k2);
     u3 = document.createElementNS(o2, x2, k2.is && k2), c2 && (l$1.__m && l$1.__m(t3, e2), c2 = false), e2 = null;
   }
-  if (null == x2) m2 === k2 || c2 && u3.data == k2 || (u3.data = k2);
+  if (null == x2) b2 === k2 || c2 && u3.data == k2 || (u3.data = k2);
   else {
-    if (e2 = e2 && n.call(u3.childNodes), !c2 && null != e2) for (m2 = {}, a2 = 0; a2 < u3.attributes.length; a2++) m2[(y2 = u3.attributes[a2]).name] = y2.value;
-    for (a2 in m2) y2 = m2[a2], "dangerouslySetInnerHTML" == a2 ? p2 = y2 : "children" == a2 || a2 in k2 || "value" == a2 && "defaultValue" in k2 || "checked" == a2 && "defaultChecked" in k2 || N$1(u3, a2, null, y2, o2);
-    for (a2 in k2) y2 = k2[a2], "children" == a2 ? v2 = y2 : "dangerouslySetInnerHTML" == a2 ? h2 = y2 : "value" == a2 ? w2 = y2 : "checked" == a2 ? _2 = y2 : c2 && "function" != typeof y2 || m2[a2] === y2 || N$1(u3, a2, y2, m2[a2], o2);
-    if (h2) c2 || p2 && (h2.__html == p2.__html || h2.__html == u3.innerHTML) || (u3.innerHTML = h2.__html), t3.__k = [];
-    else if (p2 && (u3.innerHTML = ""), L$1("template" == t3.type ? u3.content : u3, g$2(v2) ? v2 : [v2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && $$1(i2, 0), c2, s2), null != e2) for (a2 = e2.length; a2--; ) b$1(e2[a2]);
-    c2 || (a2 = "value", "progress" == x2 && null == w2 ? u3.removeAttribute("value") : null != w2 && (w2 !== u3[a2] || "progress" == x2 && !w2 || "option" == x2 && w2 != m2[a2]) && N$1(u3, a2, w2, m2[a2], o2), a2 = "checked", null != _2 && _2 != u3[a2] && N$1(u3, a2, _2, m2[a2], o2));
+    if (e2 = e2 && n.call(u3.childNodes), b2 = i2.props || p$1, !c2 && null != e2) for (b2 = {}, a2 = 0; a2 < u3.attributes.length; a2++) b2[(d2 = u3.attributes[a2]).name] = d2.value;
+    for (a2 in b2) if (d2 = b2[a2], "children" == a2) ;
+    else if ("dangerouslySetInnerHTML" == a2) v2 = d2;
+    else if (!(a2 in k2)) {
+      if ("value" == a2 && "defaultValue" in k2 || "checked" == a2 && "defaultChecked" in k2) continue;
+      j$2(u3, a2, null, d2, o2);
+    }
+    for (a2 in k2) d2 = k2[a2], "children" == a2 ? y2 = d2 : "dangerouslySetInnerHTML" == a2 ? h2 = d2 : "value" == a2 ? _2 = d2 : "checked" == a2 ? m2 = d2 : c2 && "function" != typeof d2 || b2[a2] === d2 || j$2(u3, a2, d2, b2[a2], o2);
+    if (h2) c2 || v2 && (h2.__html == v2.__html || h2.__html == u3.innerHTML) || (u3.innerHTML = h2.__html), t3.__k = [];
+    else if (v2 && (u3.innerHTML = ""), I$1("template" == t3.type ? u3.content : u3, w$2(y2) ? y2 : [y2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && S(i2, 0), c2, s2), null != e2) for (a2 = e2.length; a2--; ) g$2(e2[a2]);
+    c2 || (a2 = "value", "progress" == x2 && null == _2 ? u3.removeAttribute("value") : null != _2 && (_2 !== u3[a2] || "progress" == x2 && !_2 || "option" == x2 && _2 != b2[a2]) && j$2(u3, a2, _2, b2[a2], o2), a2 = "checked", null != m2 && m2 != u3[a2] && j$2(u3, a2, m2, b2[a2], o2));
   }
   return u3;
 }
-function J$1(n2, u3, t3) {
+function B$2(n2, u3, t3) {
   try {
     if ("function" == typeof n2) {
       var i2 = "function" == typeof n2.__u;
@@ -19698,9 +19510,9 @@ function J$1(n2, u3, t3) {
     l$1.__e(n3, t3);
   }
 }
-function K$1(n2, u3, t3) {
+function D$2(n2, u3, t3) {
   var i2, r2;
-  if (l$1.unmount && l$1.unmount(n2), (i2 = n2.ref) && (i2.current && i2.current != n2.__e || J$1(i2, null, u3)), null != (i2 = n2.__c)) {
+  if (l$1.unmount && l$1.unmount(n2), (i2 = n2.ref) && (i2.current && i2.current != n2.__e || B$2(i2, null, u3)), null != (i2 = n2.__c)) {
     if (i2.componentWillUnmount) try {
       i2.componentWillUnmount();
     } catch (n3) {
@@ -19708,25 +19520,25 @@ function K$1(n2, u3, t3) {
     }
     i2.base = i2.__P = null;
   }
-  if (i2 = n2.__k) for (r2 = 0; r2 < i2.length; r2++) i2[r2] && K$1(i2[r2], u3, t3 || "function" != typeof n2.type);
-  t3 || b$1(n2.__e), n2.__c = n2.__ = n2.__e = void 0;
+  if (i2 = n2.__k) for (r2 = 0; r2 < i2.length; r2++) i2[r2] && D$2(i2[r2], u3, t3 || "function" != typeof n2.type);
+  t3 || g$2(n2.__e), n2.__c = n2.__ = n2.__e = void 0;
 }
-function Q$1(n2, l2, u3) {
+function E$1(n2, l2, u3) {
   return this.constructor(n2, u3);
 }
-function R$1(u3, t3, i2) {
+function G$1(u3, t3, i2) {
   var r2, o2, e2, f2;
-  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], q$2(t3, u3 = (!r2 && i2 || t3).__k = k$2(S, null, [u3]), o2 || d$1, d$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), D$2(e2, u3, f2);
+  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], O$1(t3, u3 = (!r2 && i2 || t3).__k = _$1(k$2, null, [u3]), o2 || p$1, p$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), N$1(e2, u3, f2);
 }
-function U$1(n2, l2) {
-  R$1(n2, l2, U$1);
+function J$1(n2, l2) {
+  G$1(n2, l2, J$1);
 }
-function W$1(l2, u3, t3) {
-  var i2, r2, o2, e2, f2 = m$1({}, l2.props);
+function K$1(l2, u3, t3) {
+  var i2, r2, o2, e2, f2 = d$1({}, l2.props);
   for (o2 in l2.type && l2.type.defaultProps && (e2 = l2.type.defaultProps), u3) "key" == o2 ? i2 = u3[o2] : "ref" == o2 ? r2 = u3[o2] : f2[o2] = void 0 === u3[o2] && null != e2 ? e2[o2] : u3[o2];
-  return arguments.length > 2 && (f2.children = arguments.length > 3 ? n.call(arguments, 2) : t3), x$2(l2.type, f2, i2 || l2.key, r2 || l2.ref, null);
+  return arguments.length > 2 && (f2.children = arguments.length > 3 ? n.call(arguments, 2) : t3), m$1(l2.type, f2, i2 || l2.key, r2 || l2.ref, null);
 }
-function X$1(n2) {
+function Q$1(n2) {
   function l2(n3) {
     var u3, t3;
     return this.getChildContext || (u3 = /* @__PURE__ */ new Set(), (t3 = {})[l2.__c] = this, this.getChildContext = function() {
@@ -19735,7 +19547,7 @@ function X$1(n2) {
       u3 = null;
     }, this.shouldComponentUpdate = function(n4) {
       this.props.value != n4.value && u3.forEach(function(n5) {
-        n5.__e = true, A$2(n5);
+        n5.__e = true, M$1(n5);
       });
     }, this.sub = function(n4) {
       u3.add(n4);
@@ -19745,25 +19557,25 @@ function X$1(n2) {
       };
     }), n3.children;
   }
-  return l2.__c = "__cC" + y$1++, l2.__ = n2, l2.Provider = l2.__l = (l2.Consumer = function(n3, l3) {
+  return l2.__c = "__cC" + h$1++, l2.__ = n2, l2.Provider = l2.__l = (l2.Consumer = function(n3, l3) {
     return n3.children(l3);
   }).contextType = l2, l2;
 }
-n = w$2.slice, l$1 = { __e: function(n2, l2, u3, t3) {
+n = v$1.slice, l$1 = { __e: function(n2, l2, u3, t3) {
   for (var i2, r2, o2; l2 = l2.__; ) if ((i2 = l2.__c) && !i2.__) try {
     if ((r2 = i2.constructor) && null != r2.getDerivedStateFromError && (i2.setState(r2.getDerivedStateFromError(n2)), o2 = i2.__d), null != i2.componentDidCatch && (i2.componentDidCatch(n2, t3 || {}), o2 = i2.__d), o2) return i2.__E = i2;
   } catch (l3) {
     n2 = l3;
   }
   throw n2;
-} }, u$2 = 0, C$2.prototype.setState = function(n2, l2) {
+} }, u$2 = 0, x$2.prototype.setState = function(n2, l2) {
   var u3;
-  u3 = null != this.__s && this.__s != this.state ? this.__s : this.__s = m$1({}, this.state), "function" == typeof n2 && (n2 = n2(m$1({}, u3), this.props)), n2 && m$1(u3, n2), null != n2 && this.__v && (l2 && this._sb.push(l2), A$2(this));
-}, C$2.prototype.forceUpdate = function(n2) {
-  this.__v && (this.__e = true, n2 && this.__h.push(n2), A$2(this));
-}, C$2.prototype.render = S, i$1 = [], o$1 = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, e$1 = function(n2, l2) {
+  u3 = null != this.__s && this.__s != this.state ? this.__s : this.__s = d$1({}, this.state), "function" == typeof n2 && (n2 = n2(d$1({}, u3), this.props)), n2 && d$1(u3, n2), null != n2 && this.__v && (l2 && this._sb.push(l2), M$1(this));
+}, x$2.prototype.forceUpdate = function(n2) {
+  this.__v && (this.__e = true, n2 && this.__h.push(n2), M$1(this));
+}, x$2.prototype.render = k$2, i$1 = [], o$1 = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, e$1 = function(n2, l2) {
   return n2.__v.__b - l2.__v.__b;
-}, H$1.__r = 0, f$2 = Math.random().toString(8), c$1 = "__d" + f$2, s$1 = "__a" + f$2, a$1 = /(PointerCapture)$|Capture$/i, h$1 = 0, p$1 = V$1(false), v$1 = V$1(true), y$1 = 0;
+}, $$1.__r = 0, f$2 = /(PointerCapture)$|Capture$/i, c$1 = 0, s$1 = F$2(false), a$1 = F$2(true), h$1 = 0;
 var t2, r$1, u$1, i, o = 0, f$1 = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, s = c.__;
 function p(n2, t3) {
   c.__h && c.__h(r$1, n2, o || t3), o = 0;
@@ -19782,13 +19594,13 @@ function h(n2, u3, i2) {
     var f2 = function(n3, t3, r2) {
       if (!o2.__c.__H) return true;
       var u4 = o2.__c.__H.__.filter(function(n4) {
-        return n4.__c;
+        return !!n4.__c;
       });
       if (u4.every(function(n4) {
         return !n4.__N;
       })) return !c2 || c2.call(this, n3, t3, r2);
       var i3 = o2.__c.props !== n3;
-      return u4.some(function(n4) {
+      return u4.forEach(function(n4) {
         if (n4.__N) {
           var t4 = n4.__[0];
           n4.__ = n4.__N, n4.__N = void 0, t4 !== n4.__[0] && (i3 = true);
@@ -19867,13 +19679,10 @@ function g$1() {
   return n2.__;
 }
 function j$1() {
-  for (var n2; n2 = f$1.shift(); ) {
-    var t3 = n2.__H;
-    if (n2.__P && t3) try {
-      t3.__h.some(z$1), t3.__h.some(B$1), t3.__h = [];
-    } catch (r2) {
-      t3.__h = [], c.__e(r2, n2.__v);
-    }
+  for (var n2; n2 = f$1.shift(); ) if (n2.__P && n2.__H) try {
+    n2.__H.__h.forEach(z$1), n2.__H.__h.forEach(B$1), n2.__H.__h = [];
+  } catch (t3) {
+    n2.__H.__h = [], c.__e(t3, n2.__v);
   }
 }
 c.__b = function(n2) {
@@ -19883,19 +19692,19 @@ c.__b = function(n2) {
 }, c.__r = function(n2) {
   a && a(n2), t2 = 0;
   var i2 = (r$1 = n2.__c).__H;
-  i2 && (u$1 === r$1 ? (i2.__h = [], r$1.__h = [], i2.__.some(function(n3) {
+  i2 && (u$1 === r$1 ? (i2.__h = [], r$1.__h = [], i2.__.forEach(function(n3) {
     n3.__N && (n3.__ = n3.__N), n3.u = n3.__N = void 0;
-  })) : (i2.__h.some(z$1), i2.__h.some(B$1), i2.__h = [], t2 = 0)), u$1 = r$1;
+  })) : (i2.__h.forEach(z$1), i2.__h.forEach(B$1), i2.__h = [], t2 = 0)), u$1 = r$1;
 }, c.diffed = function(n2) {
   v && v(n2);
   var t3 = n2.__c;
-  t3 && t3.__H && (t3.__H.__h.length && (1 !== f$1.push(t3) && i === c.requestAnimationFrame || ((i = c.requestAnimationFrame) || w$1)(j$1)), t3.__H.__.some(function(n3) {
+  t3 && t3.__H && (t3.__H.__h.length && (1 !== f$1.push(t3) && i === c.requestAnimationFrame || ((i = c.requestAnimationFrame) || w$1)(j$1)), t3.__H.__.forEach(function(n3) {
     n3.u && (n3.__H = n3.u), n3.u = void 0;
   })), u$1 = r$1 = null;
 }, c.__c = function(n2, t3) {
   t3.some(function(n3) {
     try {
-      n3.__h.some(z$1), n3.__h = n3.__h.filter(function(n4) {
+      n3.__h.forEach(z$1), n3.__h = n3.__h.filter(function(n4) {
         return !n4.__ || B$1(n4);
       });
     } catch (r2) {
@@ -19907,7 +19716,7 @@ c.__b = function(n2) {
 }, c.unmount = function(n2) {
   m && m(n2);
   var t3, r2 = n2.__c;
-  r2 && r2.__H && (r2.__H.__.some(function(n3) {
+  r2 && r2.__H && (r2.__H.__.forEach(function(n3) {
     try {
       z$1(n3);
     } catch (n4) {
@@ -20293,15 +20102,15 @@ const errorHandler = ErrorHandler.getInstance();
 async function safeAsync(fn3, context, options) {
   return errorHandler.safeAsync(fn3, context, options);
 }
-const DEFAULT_CONFIG$2 = {
+const DEFAULT_CONFIG = {
   maxSamples: 100,
   warningThreshold: 1e3,
   errorThreshold: 5e3
 };
 const now = () => typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
-function percentile(sorted, pct2) {
+function percentile(sorted, pct) {
   if (!sorted.length) return 0;
-  const index = Math.max(0, Math.ceil(pct2 / 100 * sorted.length) - 1);
+  const index = Math.max(0, Math.ceil(pct / 100 * sorted.length) - 1);
   return sorted[index] ?? 0;
 }
 function createMetric(name) {
@@ -20351,7 +20160,7 @@ class PerformanceMonitor {
   metrics = /* @__PURE__ */ new Map();
   config;
   constructor(config2 = {}) {
-    this.config = { ...DEFAULT_CONFIG$2, ...config2 };
+    this.config = { ...DEFAULT_CONFIG, ...config2 };
   }
   static getInstance(config2) {
     if (!PerformanceMonitor.instance) {
@@ -20578,52 +20387,53 @@ function E(n2, t3) {
 function C(n2, t3) {
   var e2 = t3(), r2 = d({ t: { __: e2, u: t3 } }), u3 = r2[0].t, o2 = r2[1];
   return _(function() {
-    u3.__ = e2, u3.u = t3, R(u3) && o2({ t: u3 });
+    u3.__ = e2, u3.u = t3, x(u3) && o2({ t: u3 });
   }, [n2, e2, t3]), y(function() {
-    return R(u3) && o2({ t: u3 }), n2(function() {
-      R(u3) && o2({ t: u3 });
+    return x(u3) && o2({ t: u3 }), n2(function() {
+      x(u3) && o2({ t: u3 });
     });
   }, [n2]), e2;
 }
-function R(n2) {
+function x(n2) {
+  var t3, e2, r2 = n2.u, u3 = n2.__;
   try {
-    return !((t3 = n2.__) === (e2 = n2.u()) && (0 !== t3 || 1 / t3 == 1 / e2) || t3 != t3 && e2 != e2);
+    var o2 = r2();
+    return !((t3 = u3) === (e2 = o2) && (0 !== t3 || 1 / t3 == 1 / e2) || t3 != t3 && e2 != e2);
   } catch (n3) {
     return true;
   }
-  var t3, e2;
 }
-function x(n2) {
+function R(n2) {
   n2();
 }
 function w(n2) {
   return n2;
 }
 function k() {
-  return [false, x];
+  return [false, R];
 }
 var I = _;
-function M(n2, t3) {
+function N(n2, t3) {
   this.props = n2, this.context = t3;
 }
-function N(n2, e2) {
+function M(n2, e2) {
   function r2(n3) {
-    var t3 = this.props.ref;
-    return t3 != n3.ref && t3 && ("function" == typeof t3 ? t3(null) : t3.current = null), e2 ? !e2(this.props, n3) || t3 != n3.ref : E(this.props, n3);
+    var t3 = this.props.ref, r3 = t3 == n3.ref;
+    return !r3 && t3 && (t3.call ? t3(null) : t3.current = null), e2 ? !e2(this.props, n3) || !r3 : E(this.props, n3);
   }
   function u3(e3) {
-    return this.shouldComponentUpdate = r2, k$2(n2, e3);
+    return this.shouldComponentUpdate = r2, _$1(n2, e3);
   }
-  return u3.displayName = "Memo(" + (n2.displayName || n2.name) + ")", u3.__f = u3.prototype.isReactComponent = true, u3.type = n2, u3;
+  return u3.displayName = "Memo(" + (n2.displayName || n2.name) + ")", u3.prototype.isReactComponent = true, u3.__f = true, u3.type = n2, u3;
 }
-(M.prototype = new C$2()).isPureReactComponent = true, M.prototype.shouldComponentUpdate = function(n2, t3) {
+(N.prototype = new x$2()).isPureReactComponent = true, N.prototype.shouldComponentUpdate = function(n2, t3) {
   return E(this.props, n2) || E(this.state, t3);
 };
 var T = l$1.__b;
 l$1.__b = function(n2) {
   n2.type && n2.type.__f && n2.ref && (n2.props.ref = n2.ref, n2.ref = null), T && T(n2);
 };
-var A = "undefined" != typeof Symbol && Symbol.for && /* @__PURE__ */ Symbol.for("react.forward_ref") || 3911;
+var A = "undefined" != typeof Symbol && Symbol.for && Symbol.for("react.forward_ref") || 3911;
 function D(n2) {
   function t3(t4) {
     var e2 = g({}, t4);
@@ -20631,20 +20441,20 @@ function D(n2) {
   }
   return t3.$$typeof = A, t3.render = n2, t3.prototype.isReactComponent = t3.__f = true, t3.displayName = "ForwardRef(" + (n2.displayName || n2.name) + ")", t3;
 }
-var F = function(n2, t3) {
-  return null == n2 ? null : F$2(F$2(n2).map(t3));
-}, L = { map: F, forEach: F, count: function(n2) {
-  return n2 ? F$2(n2).length : 0;
+var L = function(n2, t3) {
+  return null == n2 ? null : H$1(H$1(n2).map(t3));
+}, O = { map: L, forEach: L, count: function(n2) {
+  return n2 ? H$1(n2).length : 0;
 }, only: function(n2) {
-  var t3 = F$2(n2);
+  var t3 = H$1(n2);
   if (1 !== t3.length) throw "Children.only";
   return t3[0];
-}, toArray: F$2 }, O = l$1.__e;
+}, toArray: H$1 }, F = l$1.__e;
 l$1.__e = function(n2, t3, e2, r2) {
   if (n2.then) {
     for (var u3, o2 = t3; o2 = o2.__; ) if ((u3 = o2.__c) && u3.__c) return null == t3.__e && (t3.__e = e2.__e, t3.__k = e2.__k), u3.__c(n2, t3);
   }
-  O(n2, t3, e2, r2);
+  F(n2, t3, e2, r2);
 };
 var U = l$1.unmount;
 function V(n2, t3, e2) {
@@ -20663,45 +20473,43 @@ function P() {
   this.__u = 0, this.o = null, this.__b = null;
 }
 function j(n2) {
-  var t3 = n2.__ && n2.__.__c;
+  var t3 = n2.__.__c;
   return t3 && t3.__a && t3.__a(n2);
 }
 function z(n2) {
-  var e2, r2, u3, o2 = null;
-  function i2(i3) {
+  var e2, r2, u3;
+  function o2(o3) {
     if (e2 || (e2 = n2()).then(function(n3) {
-      n3 && (o2 = n3.default || n3), u3 = true;
+      r2 = n3.default || n3;
     }, function(n3) {
-      r2 = n3, u3 = true;
-    }), r2) throw r2;
-    if (!u3) throw e2;
-    return o2 ? k$2(o2, i3) : null;
+      u3 = n3;
+    }), u3) throw u3;
+    if (!r2) throw e2;
+    return _$1(r2, o3);
   }
-  return i2.displayName = "Lazy", i2.__f = true, i2;
+  return o2.displayName = "Lazy", o2.__f = true, o2;
 }
 function B() {
   this.i = null, this.l = null;
 }
 l$1.unmount = function(n2) {
   var t3 = n2.__c;
-  t3 && (t3.__z = true), t3 && t3.__R && t3.__R(), t3 && 32 & n2.__u && (n2.type = null), U && U(n2);
-}, (P.prototype = new C$2()).__c = function(n2, t3) {
+  t3 && t3.__R && t3.__R(), t3 && 32 & n2.__u && (n2.type = null), U && U(n2);
+}, (P.prototype = new x$2()).__c = function(n2, t3) {
   var e2 = t3.__c, r2 = this;
   null == r2.o && (r2.o = []), r2.o.push(e2);
   var u3 = j(r2.__v), o2 = false, i2 = function() {
-    o2 || r2.__z || (o2 = true, e2.__R = null, u3 ? u3(c2) : c2());
+    o2 || (o2 = true, e2.__R = null, u3 ? u3(l2) : l2());
   };
   e2.__R = i2;
-  var l2 = e2.__P;
-  e2.__P = null;
-  var c2 = function() {
+  var l2 = function() {
     if (!--r2.__u) {
       if (r2.state.__a) {
         var n3 = r2.state.__a;
         r2.__v.__k[0] = W(n3, n3.__c.__P, n3.__c.__O);
       }
       var t4;
-      for (r2.setState({ __a: r2.__b = null }); t4 = r2.o.pop(); ) t4.__P = l2, t4.forceUpdate();
+      for (r2.setState({ __a: r2.__b = null }); t4 = r2.o.pop(); ) t4.forceUpdate();
     }
   };
   r2.__u++ || 32 & t3.__u || r2.setState({ __a: r2.__b = r2.__v.__k[0] }), n2.then(i2, i2);
@@ -20715,8 +20523,8 @@ l$1.unmount = function(n2) {
     }
     this.__b = null;
   }
-  var i2 = e2.__a && k$2(S, null, n2.fallback);
-  return i2 && (i2.__u &= -33), [k$2(S, null, e2.__a ? null : n2.children), i2];
+  var i2 = e2.__a && _$1(k$2, null, n2.fallback);
+  return i2 && (i2.__u &= -33), [_$1(k$2, null, e2.__a ? null : n2.children), i2];
 };
 var H = function(n2, t3, e2) {
   if (++e2[1] === e2[0] && n2.l.delete(t3), n2.props.revealOrder && ("t" !== n2.props.revealOrder[0] || !n2.l.size)) for (e2 = n2.i; e2; ) {
@@ -20733,24 +20541,24 @@ function Z(n2) {
 function Y(n2) {
   var e2 = this, r2 = n2.h;
   if (e2.componentWillUnmount = function() {
-    R$1(null, e2.v), e2.v = null, e2.h = null;
+    G$1(null, e2.v), e2.v = null, e2.h = null;
   }, e2.h && e2.h !== r2 && e2.componentWillUnmount(), !e2.v) {
     for (var u3 = e2.__v; null !== u3 && !u3.__m && null !== u3.__; ) u3 = u3.__;
     e2.h = r2, e2.v = { nodeType: 1, parentNode: r2, childNodes: [], __k: { __m: u3.__m }, contains: function() {
       return true;
-    }, namespaceURI: r2.namespaceURI, insertBefore: function(n3, t3) {
+    }, insertBefore: function(n3, t3) {
       this.childNodes.push(n3), e2.h.insertBefore(n3, t3);
     }, removeChild: function(n3) {
       this.childNodes.splice(this.childNodes.indexOf(n3) >>> 1, 1), e2.h.removeChild(n3);
     } };
   }
-  R$1(k$2(Z, { context: e2.context }, n2.__v), e2.v);
+  G$1(_$1(Z, { context: e2.context }, n2.__v), e2.v);
 }
 function $(n2, e2) {
-  var r2 = k$2(Y, { __v: n2, h: e2 });
+  var r2 = _$1(Y, { __v: n2, h: e2 });
   return r2.containerInfo = e2, r2;
 }
-(B.prototype = new C$2()).__a = function(n2) {
+(B.prototype = new x$2()).__a = function(n2) {
   var t3 = this, e2 = j(t3.__v), r2 = t3.l.get(n2);
   return r2[0]++, function(u3) {
     var o2 = function() {
@@ -20760,7 +20568,7 @@ function $(n2, e2) {
   };
 }, B.prototype.render = function(n2) {
   this.i = null, this.l = /* @__PURE__ */ new Map();
-  var t3 = F$2(n2.children);
+  var t3 = H$1(n2.children);
   n2.revealOrder && "b" === n2.revealOrder[0] && t3.reverse();
   for (var e2 = t3.length; e2--; ) this.l.set(t3[e2], this.i = [1, 0, this.i]);
   return n2.children;
@@ -20770,37 +20578,40 @@ function $(n2, e2) {
     H(n2, e2, t3);
   });
 };
-var q = "undefined" != typeof Symbol && Symbol.for && /* @__PURE__ */ Symbol.for("react.element") || 60103, G = /^(?:accent|alignment|arabic|baseline|cap|clip(?!PathU)|color|dominant|fill|flood|font|glyph(?!R)|horiz|image(!S)|letter|lighting|marker(?!H|W|U)|overline|paint|pointer|shape|stop|strikethrough|stroke|text(?!L)|transform|underline|unicode|units|v|vector|vert|word|writing|x(?!C))[A-Z]/, J = /^on(Ani|Tra|Tou|BeforeInp|Compo)/, K = /[A-Z0-9]/g, Q = "undefined" != typeof document, X = function(n2) {
-  return ("undefined" != typeof Symbol && "symbol" == typeof /* @__PURE__ */ Symbol() ? /fil|che|rad/ : /fil|che|ra/).test(n2);
+var q = "undefined" != typeof Symbol && Symbol.for && Symbol.for("react.element") || 60103, G = /^(?:accent|alignment|arabic|baseline|cap|clip(?!PathU)|color|dominant|fill|flood|font|glyph(?!R)|horiz|image(!S)|letter|lighting|marker(?!H|W|U)|overline|paint|pointer|shape|stop|strikethrough|stroke|text(?!L)|transform|underline|unicode|units|v|vector|vert|word|writing|x(?!C))[A-Z]/, J = /^on(Ani|Tra|Tou|BeforeInp|Compo)/, K = /[A-Z0-9]/g, Q = "undefined" != typeof document, X = function(n2) {
+  return ("undefined" != typeof Symbol && "symbol" == typeof Symbol() ? /fil|che|rad/ : /fil|che|ra/).test(n2);
 };
 function nn(n2, t3, e2) {
-  return null == t3.__k && (t3.textContent = ""), R$1(n2, t3), "function" == typeof e2 && e2(), n2 ? n2.__c : null;
+  return null == t3.__k && (t3.textContent = ""), G$1(n2, t3), "function" == typeof e2 && e2(), n2 ? n2.__c : null;
 }
 function tn(n2, t3, e2) {
-  return U$1(n2, t3), "function" == typeof e2 && e2(), n2 ? n2.__c : null;
+  return J$1(n2, t3), "function" == typeof e2 && e2(), n2 ? n2.__c : null;
 }
-C$2.prototype.isReactComponent = true, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t3) {
-  Object.defineProperty(C$2.prototype, t3, { configurable: true, get: function() {
+x$2.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t3) {
+  Object.defineProperty(x$2.prototype, t3, { configurable: true, get: function() {
     return this["UNSAFE_" + t3];
   }, set: function(n2) {
     Object.defineProperty(this, t3, { configurable: true, writable: true, value: n2 });
   } });
 });
 var en = l$1.event;
+function rn() {
+}
+function un() {
+  return this.cancelBubble;
+}
+function on() {
+  return this.defaultPrevented;
+}
 l$1.event = function(n2) {
-  return en && (n2 = en(n2)), n2.persist = function() {
-  }, n2.isPropagationStopped = function() {
-    return this.cancelBubble;
-  }, n2.isDefaultPrevented = function() {
-    return this.defaultPrevented;
-  }, n2.nativeEvent = n2;
+  return en && (n2 = en(n2)), n2.persist = rn, n2.isPropagationStopped = un, n2.isDefaultPrevented = on, n2.nativeEvent = n2;
 };
-var rn, un = { configurable: true, get: function() {
+var ln, cn = { enumerable: false, configurable: true, get: function() {
   return this.class;
-} }, on = l$1.vnode;
+} }, fn = l$1.vnode;
 l$1.vnode = function(n2) {
   "string" == typeof n2.type && (function(n3) {
-    var t3 = n3.props, e2 = n3.type, u3 = {}, o2 = -1 == e2.indexOf("-");
+    var t3 = n3.props, e2 = n3.type, u3 = {}, o2 = -1 === e2.indexOf("-");
     for (var i2 in t3) {
       var l2 = t3[i2];
       if (!("value" === i2 && "defaultValue" in t3 && null == l2 || Q && "children" === i2 && "noscript" === e2 || "class" === i2 || "className" === i2)) {
@@ -20808,88 +20619,83 @@ l$1.vnode = function(n2) {
         "defaultValue" === i2 && "value" in t3 && null == t3.value ? i2 = "value" : "download" === i2 && true === l2 ? l2 = "" : "translate" === c2 && "no" === l2 ? l2 = false : "o" === c2[0] && "n" === c2[1] ? "ondoubleclick" === c2 ? i2 = "ondblclick" : "onchange" !== c2 || "input" !== e2 && "textarea" !== e2 || X(t3.type) ? "onfocus" === c2 ? i2 = "onfocusin" : "onblur" === c2 ? i2 = "onfocusout" : J.test(i2) && (i2 = c2) : c2 = i2 = "oninput" : o2 && G.test(i2) ? i2 = i2.replace(K, "-$&").toLowerCase() : null === l2 && (l2 = void 0), "oninput" === c2 && u3[i2 = c2] && (i2 = "oninputCapture"), u3[i2] = l2;
       }
     }
-    "select" == e2 && (u3.multiple && Array.isArray(u3.value) && (u3.value = F$2(t3.children).forEach(function(n4) {
+    "select" == e2 && u3.multiple && Array.isArray(u3.value) && (u3.value = H$1(t3.children).forEach(function(n4) {
       n4.props.selected = -1 != u3.value.indexOf(n4.props.value);
-    })), null != u3.defaultValue && (u3.value = F$2(t3.children).forEach(function(n4) {
+    })), "select" == e2 && null != u3.defaultValue && (u3.value = H$1(t3.children).forEach(function(n4) {
       n4.props.selected = u3.multiple ? -1 != u3.defaultValue.indexOf(n4.props.value) : u3.defaultValue == n4.props.value;
-    }))), t3.class && !t3.className ? (u3.class = t3.class, Object.defineProperty(u3, "className", un)) : t3.className && (u3.class = u3.className = t3.className), n3.props = u3;
-  })(n2), n2.$$typeof = q, on && on(n2);
+    })), t3.class && !t3.className ? (u3.class = t3.class, Object.defineProperty(u3, "className", cn)) : (t3.className && !t3.class || t3.class && t3.className) && (u3.class = u3.className = t3.className), n3.props = u3;
+  })(n2), n2.$$typeof = q, fn && fn(n2);
 };
-var ln = l$1.__r;
+var an = l$1.__r;
 l$1.__r = function(n2) {
-  ln && ln(n2), rn = n2.__c;
+  an && an(n2), ln = n2.__c;
 };
-var cn = l$1.diffed;
+var sn = l$1.diffed;
 l$1.diffed = function(n2) {
-  cn && cn(n2);
+  sn && sn(n2);
   var t3 = n2.props, e2 = n2.__e;
-  null != e2 && "textarea" === n2.type && "value" in t3 && t3.value !== e2.value && (e2.value = null == t3.value ? "" : t3.value), rn = null;
+  null != e2 && "textarea" === n2.type && "value" in t3 && t3.value !== e2.value && (e2.value = null == t3.value ? "" : t3.value), ln = null;
 };
-var fn = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
-  return rn.__n[n2.__c].props.value;
-}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: y, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: h, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, an = "18.3.1";
-function sn(n2) {
-  return k$2.bind(null, n2);
-}
-function hn(n2) {
-  return !!n2 && n2.$$typeof === q;
-}
-function vn(n2) {
-  return hn(n2) && n2.type === S;
-}
+var hn = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
+  return ln.__n[n2.__c].props.value;
+}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: y, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: h, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, vn = "18.3.1";
 function dn(n2) {
-  return !!n2 && "string" == typeof n2.displayName && 0 == n2.displayName.indexOf("Memo(");
+  return _$1.bind(null, n2);
 }
 function mn(n2) {
-  return hn(n2) ? W$1.apply(null, arguments) : n2;
+  return !!n2 && n2.$$typeof === q;
 }
 function pn(n2) {
-  return !!n2.__k && (R$1(null, n2), true);
+  return mn(n2) && n2.type === k$2;
 }
 function yn(n2) {
+  return !!n2 && !!n2.displayName && ("string" == typeof n2.displayName || n2.displayName instanceof String) && n2.displayName.startsWith("Memo(");
+}
+function _n(n2) {
+  return mn(n2) ? K$1.apply(null, arguments) : n2;
+}
+function bn(n2) {
+  return !!n2.__k && (G$1(null, n2), true);
+}
+function Sn(n2) {
   return n2 && (n2.base || 1 === n2.nodeType && n2) || null;
 }
-var _n = function(n2, t3) {
+var gn = function(n2, t3) {
   return n2(t3);
-}, bn = function(n2, t3) {
-  var r2 = l$1.debounceRendering;
-  l$1.debounceRendering = function(n3) {
-    return n3();
-  };
-  var u3 = n2(t3);
-  return l$1.debounceRendering = r2, u3;
-}, Sn = hn, gn = { useState: d, useId: g$1, useReducer: h, useEffect: y, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: hn, isElement: Sn, isFragment: vn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn };
+}, En = function(n2, t3) {
+  return n2(t3);
+}, Cn = k$2, xn = mn, Rn = { useState: d, useId: g$1, useReducer: h, useEffect: y, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: R, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: O, render: nn, hydrate: tn, unmountComponentAtNode: bn, createPortal: $, createElement: _$1, createContext: Q$1, createFactory: dn, cloneElement: _n, createRef: b$1, Fragment: k$2, isValidElement: mn, isElement: xn, isFragment: pn, isMemo: yn, findDOMNode: Sn, Component: x$2, PureComponent: N, memo: M, forwardRef: D, flushSync: En, unstable_batchedUpdates: gn, StrictMode: Cn, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: hn };
 const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  Children: L,
-  Component: C$2,
-  Fragment: S,
-  PureComponent: M,
-  StrictMode: S,
+  Children: O,
+  Component: x$2,
+  Fragment: k$2,
+  PureComponent: N,
+  StrictMode: Cn,
   Suspense: P,
   SuspenseList: B,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn,
-  cloneElement: mn,
-  createContext: X$1,
-  createElement: k$2,
-  createFactory: sn,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: hn,
+  cloneElement: _n,
+  createContext: Q$1,
+  createElement: _$1,
+  createFactory: dn,
   createPortal: $,
-  createRef: M$1,
-  default: gn,
-  findDOMNode: yn,
-  flushSync: bn,
+  createRef: b$1,
+  default: Rn,
+  findDOMNode: Sn,
+  flushSync: En,
   forwardRef: D,
   hydrate: tn,
-  isElement: Sn,
-  isFragment: vn,
-  isMemo: dn,
-  isValidElement: hn,
+  isElement: xn,
+  isFragment: pn,
+  isMemo: yn,
+  isValidElement: mn,
   lazy: z,
-  memo: N,
+  memo: M,
   render: nn,
-  startTransition: x,
-  unmountComponentAtNode: pn,
-  unstable_batchedUpdates: _n,
+  startTransition: R,
+  unmountComponentAtNode: bn,
+  unstable_batchedUpdates: gn,
   useCallback: q$1,
   useContext: x$1,
   useDebugValue: P$1,
@@ -20906,7 +20712,7 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   useState: d,
   useSyncExternalStore: C,
   useTransition: k,
-  version: an
+  version: vn
 }, Symbol.toStringTag, { value: "Module" }));
 function sheetForTag(tag) {
   if (tag.sheet) {
@@ -21039,8 +20845,8 @@ var length = 0;
 var position = 0;
 var character = 0;
 var characters = "";
-function node(value, root, parent, type, props, children, length2) {
-  return { value, root, parent, type, props, children, line, column, length: length2, return: "" };
+function node(value, root, parent2, type, props, children, length2) {
+  return { value, root, parent: parent2, type, props, children, line, column, length: length2, return: "" };
 }
 function copy(root, props) {
   return assign(node("", null, null, "", null, null, 0), root, { length: -root.length }, props);
@@ -21170,7 +20976,7 @@ function identifier(index) {
 function compile(value) {
   return dealloc(parse("", null, null, null, [""], value = alloc(value), 0, [0], value));
 }
-function parse(value, root, parent, rule, rules, rulesets, pseudo, points, declarations) {
+function parse(value, root, parent2, rule, rules, rulesets, pseudo, points, declarations) {
   var index = 0;
   var offset2 = 0;
   var length2 = pseudo;
@@ -21217,7 +21023,7 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
         switch (peek()) {
           case 42:
           case 47:
-            append(comment(commenter(next(), caret()), root, parent), declarations);
+            append(comment(commenter(next(), caret()), root, parent2), declarations);
             break;
           default:
             characters2 += "/";
@@ -21239,14 +21045,14 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
           case 59 + offset2:
             if (ampersand == -1) characters2 = replace(characters2, /\f/g, "");
             if (property > 0 && strlen(characters2) - length2)
-              append(property > 32 ? declaration(characters2 + ";", rule, parent, length2 - 1) : declaration(replace(characters2, " ", "") + ";", rule, parent, length2 - 2), declarations);
+              append(property > 32 ? declaration(characters2 + ";", rule, parent2, length2 - 1) : declaration(replace(characters2, " ", "") + ";", rule, parent2, length2 - 2), declarations);
             break;
           // @ ;
           case 59:
             characters2 += ";";
           // { rule/at-rule
           default:
-            append(reference2 = ruleset(characters2, root, parent, index, offset2, rules, points, type, props = [], children = [], length2), rulesets);
+            append(reference2 = ruleset(characters2, root, parent2, index, offset2, rules, points, type, props = [], children = [], length2), rulesets);
             if (character2 === 123)
               if (offset2 === 0)
                 parse(characters2, root, reference2, reference2, props, rulesets, length2, points, children);
@@ -21298,7 +21104,7 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
     }
   return rulesets;
 }
-function ruleset(value, root, parent, index, offset2, rules, points, type, props, children, length2) {
+function ruleset(value, root, parent2, index, offset2, rules, points, type, props, children, length2) {
   var post = offset2 - 1;
   var rule = offset2 === 0 ? rules : [""];
   var size = sizeof(rule);
@@ -21306,13 +21112,13 @@ function ruleset(value, root, parent, index, offset2, rules, points, type, props
     for (var x2 = 0, y2 = substr(value, post + 1, post = abs(j2 = points[i2])), z2 = value; x2 < size; ++x2)
       if (z2 = trim(j2 > 0 ? rule[x2] + " " + y2 : replace(y2, /&\f/g, rule[x2])))
         props[k2++] = z2;
-  return node(value, root, parent, offset2 === 0 ? RULESET : type, props, children, length2);
+  return node(value, root, parent2, offset2 === 0 ? RULESET : type, props, children, length2);
 }
-function comment(value, root, parent) {
-  return node(value, root, parent, COMMENT, from(char()), substr(value, 2, -2), 0);
+function comment(value, root, parent2) {
+  return node(value, root, parent2, COMMENT, from(char()), substr(value, 2, -2), 0);
 }
-function declaration(value, root, parent, length2) {
-  return node(value, root, parent, DECLARATION, substr(value, 0, length2), substr(value, length2 + 1, -1), length2);
+function declaration(value, root, parent2, length2) {
+  return node(value, root, parent2, DECLARATION, substr(value, 0, length2), substr(value, length2 + 1, -1), length2);
 }
 function serialize(children, callback) {
   var output = "";
@@ -21415,13 +21221,13 @@ var compat = function compat2(element) {
     return;
   }
   var value = element.value;
-  var parent = element.parent;
-  var isImplicitRule = element.column === parent.column && element.line === parent.line;
-  while (parent.type !== "rule") {
-    parent = parent.parent;
-    if (!parent) return;
+  var parent2 = element.parent;
+  var isImplicitRule = element.column === parent2.column && element.line === parent2.line;
+  while (parent2.type !== "rule") {
+    parent2 = parent2.parent;
+    if (!parent2) return;
   }
-  if (element.props.length === 1 && value.charCodeAt(0) !== 58 && !fixedElements.get(parent)) {
+  if (element.props.length === 1 && value.charCodeAt(0) !== 58 && !fixedElements.get(parent2)) {
     return;
   }
   if (isImplicitRule) {
@@ -21430,7 +21236,7 @@ var compat = function compat2(element) {
   fixedElements.set(element, true);
   var points = [];
   var rules = getRules(value, points);
-  var parentRules = parent.props;
+  var parentRules = parent2.props;
   for (var i2 = 0, k2 = 0; i2 < rules.length; i2++) {
     for (var j2 = 0; j2 < parentRules.length; j2++, k2++) {
       element.props[k2] = points[i2] ? rules[i2].replace(/&\f/g, parentRules[j2]) : parentRules[j2] + " " + rules[i2];
@@ -21987,7 +21793,7 @@ var syncFallback = function syncFallback2(create2) {
 var useInsertionEffect = React["useInsertionEffect"] ? React["useInsertionEffect"] : false;
 var useInsertionEffectAlwaysWithSyncFallback = useInsertionEffect || syncFallback;
 var useInsertionEffectWithLayoutFallback = useInsertionEffect || _;
-var EmotionCacheContext = /* @__PURE__ */ X$1(
+var EmotionCacheContext = /* @__PURE__ */ Q$1(
   // we're doing this to avoid preconstruct's dead code elimination in this one case
   // because this module is primarily intended for the browser and node
   // but it's also required in react native and similar environments sometimes
@@ -22005,7 +21811,7 @@ var withEmotionCache = function withEmotionCache2(func) {
     return func(props, cache, ref);
   });
 };
-var ThemeContext$1 = /* @__PURE__ */ X$1({});
+var ThemeContext$1 = /* @__PURE__ */ Q$1({});
 var hasOwn = {}.hasOwnProperty;
 var typePropName = "__EMOTION_TYPE_PLEASE_DO_NOT_USE__";
 var createEmotionProps = function createEmotionProps2(type, props) {
@@ -22051,17 +21857,17 @@ var Emotion = /* @__PURE__ */ withEmotionCache(function(props, cache, ref) {
   if (ref) {
     newProps.ref = ref;
   }
-  return /* @__PURE__ */ k$2(S, null, /* @__PURE__ */ k$2(Insertion$1, {
+  return /* @__PURE__ */ _$1(k$2, null, /* @__PURE__ */ _$1(Insertion$1, {
     cache,
     serialized,
     isStringTag: typeof WrappedComponent === "string"
-  }), /* @__PURE__ */ k$2(WrappedComponent, newProps));
+  }), /* @__PURE__ */ _$1(WrappedComponent, newProps));
 });
 var Emotion$1 = Emotion;
 var jsx = function jsx2(type, props) {
   var args = arguments;
   if (props == null || !hasOwn.call(props, "css")) {
-    return k$2.apply(void 0, args);
+    return _$1.apply(void 0, args);
   }
   var argsLength = args.length;
   var createElementArgArray = new Array(argsLength);
@@ -22070,7 +21876,7 @@ var jsx = function jsx2(type, props) {
   for (var i2 = 2; i2 < argsLength; i2++) {
     createElementArgArray[i2] = args[i2];
   }
-  return k$2.apply(null, createElementArgArray);
+  return _$1.apply(null, createElementArgArray);
 };
 (function(_jsx) {
   var JSX;
@@ -22242,11 +22048,11 @@ var createStyled$1 = function createStyled(tag, options) {
       if (ref) {
         newProps.ref = ref;
       }
-      return /* @__PURE__ */ k$2(S, null, /* @__PURE__ */ k$2(Insertion2, {
+      return /* @__PURE__ */ _$1(k$2, null, /* @__PURE__ */ _$1(Insertion2, {
         cache,
         serialized,
         isStringTag: typeof FinalTag === "string"
-      }), /* @__PURE__ */ k$2(FinalTag, newProps));
+      }), /* @__PURE__ */ _$1(FinalTag, newProps));
     });
     Styled.displayName = identifierName !== void 0 ? identifierName : "Styled(" + (typeof baseTag === "string" ? baseTag : baseTag.displayName || baseTag.name || "Component") + ")";
     Styled.defaultProps = tag.defaultProps;
@@ -22451,7 +22257,7 @@ var hasRequiredReactIs_production;
 function requireReactIs_production() {
   if (hasRequiredReactIs_production) return reactIs_production;
   hasRequiredReactIs_production = 1;
-  var REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy"), REACT_VIEW_TRANSITION_TYPE = /* @__PURE__ */ Symbol.for("react.view_transition"), REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference");
+  var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
   function typeOf(object2) {
     if ("object" === typeof object2 && null !== object2) {
       var $$typeof = object2.$$typeof;
@@ -22555,7 +22361,7 @@ function isPlainObject(item) {
   return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in item) && !(Symbol.iterator in item);
 }
 function deepClone(source) {
-  if (/* @__PURE__ */ hn(source) || reactIsExports.isValidElementType(source) || !isPlainObject(source)) {
+  if (/* @__PURE__ */ mn(source) || reactIsExports.isValidElementType(source) || !isPlainObject(source)) {
     return source;
   }
   const output = {};
@@ -22572,7 +22378,7 @@ function deepmerge(target, source, options = {
   } : target;
   if (isPlainObject(target) && isPlainObject(source)) {
     Object.keys(source).forEach((key) => {
-      if (/* @__PURE__ */ hn(source[key]) || reactIsExports.isValidElementType(source[key])) {
+      if (/* @__PURE__ */ mn(source[key]) || reactIsExports.isValidElementType(source[key])) {
         output[key] = source[key];
       } else if (isPlainObject(source[key]) && // Avoid prototype pollution
       Object.prototype.hasOwnProperty.call(target, key) && isPlainObject(target[key])) {
@@ -24413,13 +24219,13 @@ function private_safeEmphasize(color2, coefficient, warning) {
     return color2;
   }
 }
-const ThemeContext = /* @__PURE__ */ X$1(null);
+const ThemeContext = /* @__PURE__ */ Q$1(null);
 function useTheme$1() {
   const theme2 = x$1(ThemeContext);
   return theme2;
 }
 const hasSymbol = typeof Symbol === "function" && Symbol.for;
-const nested = hasSymbol ? /* @__PURE__ */ Symbol.for("mui.nested") : "__THEME_NESTED__";
+const nested = hasSymbol ? Symbol.for("mui.nested") : "__THEME_NESTED__";
 function mergeOuterLocalTheme(outerTheme, localTheme) {
   if (typeof localTheme === "function") {
     const mergedTheme = localTheme(outerTheme);
@@ -24450,7 +24256,7 @@ function ThemeProvider$3(props) {
     children
   });
 }
-const RtlContext = /* @__PURE__ */ X$1();
+const RtlContext = /* @__PURE__ */ Q$1();
 function RtlProvider({
   value,
   ...props
@@ -24464,7 +24270,7 @@ const useRtl = () => {
   const value = x$1(RtlContext);
   return value ?? false;
 };
-const PropsContext = /* @__PURE__ */ X$1(void 0);
+const PropsContext = /* @__PURE__ */ Q$1(void 0);
 function DefaultPropsProvider({
   value,
   children
@@ -24670,7 +24476,7 @@ function InitColorSchemeScript(options) {
     }
     setter += `
       ${colorSchemeNode}.setAttribute('${attr}'.replace('%s', colorScheme), ${value ? `${value}.replace('%s', colorScheme)` : '""'});`;
-  } else if (attribute !== ".%s") {
+  } else {
     setter += `${colorSchemeNode}.setAttribute('${attribute}', colorScheme);`;
   }
   return /* @__PURE__ */ u2("script", {
@@ -24996,7 +24802,7 @@ function createCssVarsProvider(options) {
     },
     systemMode: void 0
   };
-  const ColorSchemeContext = /* @__PURE__ */ X$1(void 0);
+  const ColorSchemeContext = /* @__PURE__ */ Q$1(void 0);
   const useColorScheme = () => x$1(ColorSchemeContext) || defaultContext;
   const defaultColorSchemes = {};
   const defaultComponents = {};
@@ -25165,7 +24971,7 @@ function createCssVarsProvider(options) {
     if (disableStyleSheetGeneration || restThemeProp.cssVariables === false || nested2 && upperTheme?.cssVarPrefix === cssVarPrefix) {
       shouldGenerateStyleSheet = false;
     }
-    const element = /* @__PURE__ */ u2(S, {
+    const element = /* @__PURE__ */ u2(k$2, {
       children: [/* @__PURE__ */ u2(ThemeProvider$2, {
         themeId: scopedTheme ? themeId : void 0,
         theme: memoTheme2,
@@ -25490,371 +25296,12 @@ function composeClasses(slots, getUtilityClass, classes = void 0) {
   return output;
 }
 function isMuiElement(element, muiNames) {
-  return /* @__PURE__ */ hn(element) && muiNames.indexOf(
+  return /* @__PURE__ */ mn(element) && muiNames.indexOf(
     // For server components `muiName` is available in element.type._payload.value.muiName
     // relevant info - https://github.com/facebook/react/blob/2807d781a08db8e9873687fccc25c0f12b4fb3d4/packages/react/src/ReactLazy.js#L45
     // eslint-disable-next-line no-underscore-dangle
     element.type.muiName ?? element.type?._payload?.value?.muiName
   ) !== -1;
-}
-const filterBreakpointKeys = (breakpointsKeys, responsiveKeys) => breakpointsKeys.filter((key) => responsiveKeys.includes(key));
-const traverseBreakpoints = (breakpoints, responsive, iterator) => {
-  const smallestBreakpoint = breakpoints.keys[0];
-  if (Array.isArray(responsive)) {
-    responsive.forEach((breakpointValue, index) => {
-      iterator((responsiveStyles, style2) => {
-        if (index <= breakpoints.keys.length - 1) {
-          if (index === 0) {
-            Object.assign(responsiveStyles, style2);
-          } else {
-            responsiveStyles[breakpoints.up(breakpoints.keys[index])] = style2;
-          }
-        }
-      }, breakpointValue);
-    });
-  } else if (responsive && typeof responsive === "object") {
-    const keys = Object.keys(responsive).length > breakpoints.keys.length ? breakpoints.keys : filterBreakpointKeys(breakpoints.keys, Object.keys(responsive));
-    keys.forEach((key) => {
-      if (breakpoints.keys.includes(key)) {
-        const breakpointValue = responsive[key];
-        if (breakpointValue !== void 0) {
-          iterator((responsiveStyles, style2) => {
-            if (smallestBreakpoint === key) {
-              Object.assign(responsiveStyles, style2);
-            } else {
-              responsiveStyles[breakpoints.up(key)] = style2;
-            }
-          }, breakpointValue);
-        }
-      }
-    });
-  } else if (typeof responsive === "number" || typeof responsive === "string") {
-    iterator((responsiveStyles, style2) => {
-      Object.assign(responsiveStyles, style2);
-    }, responsive);
-  }
-};
-function getSelfSpacingVar(axis) {
-  return `--Grid-${axis}Spacing`;
-}
-function getParentSpacingVar(axis) {
-  return `--Grid-parent-${axis}Spacing`;
-}
-const selfColumnsVar = "--Grid-columns";
-const parentColumnsVar = "--Grid-parent-columns";
-const generateGridSizeStyles = ({
-  theme: theme2,
-  ownerState
-}) => {
-  const styles2 = {};
-  traverseBreakpoints(theme2.breakpoints, ownerState.size, (appendStyle, value) => {
-    let style2 = {};
-    if (value === "grow") {
-      style2 = {
-        flexBasis: 0,
-        flexGrow: 1,
-        maxWidth: "100%"
-      };
-    }
-    if (value === "auto") {
-      style2 = {
-        flexBasis: "auto",
-        flexGrow: 0,
-        flexShrink: 0,
-        maxWidth: "none",
-        width: "auto"
-      };
-    }
-    if (typeof value === "number") {
-      style2 = {
-        flexGrow: 0,
-        flexBasis: "auto",
-        width: `calc(100% * ${value} / var(${parentColumnsVar}) - (var(${parentColumnsVar}) - ${value}) * (var(${getParentSpacingVar("column")}) / var(${parentColumnsVar})))`
-      };
-    }
-    appendStyle(styles2, style2);
-  });
-  return styles2;
-};
-const generateGridOffsetStyles = ({
-  theme: theme2,
-  ownerState
-}) => {
-  const styles2 = {};
-  traverseBreakpoints(theme2.breakpoints, ownerState.offset, (appendStyle, value) => {
-    let style2 = {};
-    if (value === "auto") {
-      style2 = {
-        marginLeft: "auto"
-      };
-    }
-    if (typeof value === "number") {
-      style2 = {
-        marginLeft: value === 0 ? "0px" : `calc(100% * ${value} / var(${parentColumnsVar}) + var(${getParentSpacingVar("column")}) * ${value} / var(${parentColumnsVar}))`
-      };
-    }
-    appendStyle(styles2, style2);
-  });
-  return styles2;
-};
-const generateGridColumnsStyles = ({
-  theme: theme2,
-  ownerState
-}) => {
-  if (!ownerState.container) {
-    return {};
-  }
-  const styles2 = {
-    [selfColumnsVar]: 12
-  };
-  traverseBreakpoints(theme2.breakpoints, ownerState.columns, (appendStyle, value) => {
-    const columns = value ?? 12;
-    appendStyle(styles2, {
-      [selfColumnsVar]: columns,
-      "> *": {
-        [parentColumnsVar]: columns
-      }
-    });
-  });
-  return styles2;
-};
-const generateGridRowSpacingStyles = ({
-  theme: theme2,
-  ownerState
-}) => {
-  if (!ownerState.container) {
-    return {};
-  }
-  const styles2 = {};
-  traverseBreakpoints(theme2.breakpoints, ownerState.rowSpacing, (appendStyle, value) => {
-    const spacing = typeof value === "string" ? value : theme2.spacing?.(value);
-    appendStyle(styles2, {
-      [getSelfSpacingVar("row")]: spacing,
-      "> *": {
-        [getParentSpacingVar("row")]: spacing
-      }
-    });
-  });
-  return styles2;
-};
-const generateGridColumnSpacingStyles = ({
-  theme: theme2,
-  ownerState
-}) => {
-  if (!ownerState.container) {
-    return {};
-  }
-  const styles2 = {};
-  traverseBreakpoints(theme2.breakpoints, ownerState.columnSpacing, (appendStyle, value) => {
-    const spacing = typeof value === "string" ? value : theme2.spacing?.(value);
-    appendStyle(styles2, {
-      [getSelfSpacingVar("column")]: spacing,
-      "> *": {
-        [getParentSpacingVar("column")]: spacing
-      }
-    });
-  });
-  return styles2;
-};
-const generateGridDirectionStyles = ({
-  theme: theme2,
-  ownerState
-}) => {
-  if (!ownerState.container) {
-    return {};
-  }
-  const styles2 = {};
-  traverseBreakpoints(theme2.breakpoints, ownerState.direction, (appendStyle, value) => {
-    appendStyle(styles2, {
-      flexDirection: value
-    });
-  });
-  return styles2;
-};
-const generateGridStyles = ({
-  ownerState
-}) => {
-  return {
-    minWidth: 0,
-    boxSizing: "border-box",
-    ...ownerState.container && {
-      display: "flex",
-      flexWrap: "wrap",
-      ...ownerState.wrap && ownerState.wrap !== "wrap" && {
-        flexWrap: ownerState.wrap
-      },
-      gap: `var(${getSelfSpacingVar("row")}) var(${getSelfSpacingVar("column")})`
-    }
-  };
-};
-const generateSizeClassNames = (size) => {
-  const classNames = [];
-  Object.entries(size).forEach(([key, value]) => {
-    if (value !== false && value !== void 0) {
-      classNames.push(`grid-${key}-${String(value)}`);
-    }
-  });
-  return classNames;
-};
-const generateSpacingClassNames = (spacing, smallestBreakpoint = "xs") => {
-  function isValidSpacing(val) {
-    if (val === void 0) {
-      return false;
-    }
-    return typeof val === "string" && !Number.isNaN(Number(val)) || typeof val === "number" && val > 0;
-  }
-  if (isValidSpacing(spacing)) {
-    return [`spacing-${smallestBreakpoint}-${String(spacing)}`];
-  }
-  if (typeof spacing === "object" && !Array.isArray(spacing)) {
-    const classNames = [];
-    Object.entries(spacing).forEach(([key, value]) => {
-      if (isValidSpacing(value)) {
-        classNames.push(`spacing-${key}-${String(value)}`);
-      }
-    });
-    return classNames;
-  }
-  return [];
-};
-const generateDirectionClasses = (direction) => {
-  if (direction === void 0) {
-    return [];
-  }
-  if (typeof direction === "object") {
-    return Object.entries(direction).map(([key, value]) => `direction-${key}-${value}`);
-  }
-  return [`direction-xs-${String(direction)}`];
-};
-function deleteLegacyGridProps(props, breakpoints) {
-  if (props.item !== void 0) {
-    delete props.item;
-  }
-  if (props.zeroMinWidth !== void 0) {
-    delete props.zeroMinWidth;
-  }
-  breakpoints.keys.forEach((breakpoint) => {
-    if (props[breakpoint] !== void 0) {
-      delete props[breakpoint];
-    }
-  });
-}
-const defaultTheme$3 = createTheme$1();
-const defaultCreateStyledComponent$1 = styled$1("div", {
-  name: "MuiGrid",
-  slot: "Root"
-});
-function useThemePropsDefault$1(props) {
-  return useThemeProps({
-    props,
-    name: "MuiGrid",
-    defaultTheme: defaultTheme$3
-  });
-}
-function createGrid(options = {}) {
-  const {
-    // This will allow adding custom styled fn (for example for custom sx style function)
-    createStyledComponent = defaultCreateStyledComponent$1,
-    useThemeProps: useThemeProps2 = useThemePropsDefault$1,
-    useTheme: useTheme2 = useTheme$2,
-    componentName = "MuiGrid"
-  } = options;
-  const useUtilityClasses2 = (ownerState, theme2) => {
-    const {
-      container,
-      direction,
-      spacing,
-      wrap,
-      size
-    } = ownerState;
-    const slots = {
-      root: ["root", container && "container", wrap !== "wrap" && `wrap-xs-${String(wrap)}`, ...generateDirectionClasses(direction), ...generateSizeClassNames(size), ...container ? generateSpacingClassNames(spacing, theme2.breakpoints.keys[0]) : []]
-    };
-    return composeClasses(slots, (slot) => generateUtilityClass(componentName, slot), {});
-  };
-  function parseResponsiveProp(propValue, breakpoints, shouldUseValue = () => true) {
-    const parsedProp = {};
-    if (propValue === null) {
-      return parsedProp;
-    }
-    if (Array.isArray(propValue)) {
-      propValue.forEach((value, index) => {
-        if (value !== null && shouldUseValue(value) && breakpoints.keys[index]) {
-          parsedProp[breakpoints.keys[index]] = value;
-        }
-      });
-    } else if (typeof propValue === "object") {
-      Object.keys(propValue).forEach((key) => {
-        const value = propValue[key];
-        if (value !== null && value !== void 0 && shouldUseValue(value)) {
-          parsedProp[key] = value;
-        }
-      });
-    } else {
-      parsedProp[breakpoints.keys[0]] = propValue;
-    }
-    return parsedProp;
-  }
-  const GridRoot = createStyledComponent(generateGridColumnsStyles, generateGridColumnSpacingStyles, generateGridRowSpacingStyles, generateGridSizeStyles, generateGridDirectionStyles, generateGridStyles, generateGridOffsetStyles);
-  const Grid2 = /* @__PURE__ */ D(function Grid3(inProps, ref) {
-    const theme2 = useTheme2();
-    const themeProps = useThemeProps2(inProps);
-    const props = extendSxProp$1(themeProps);
-    deleteLegacyGridProps(props, theme2.breakpoints);
-    const {
-      className,
-      children,
-      columns: columnsProp = 12,
-      container = false,
-      component = "div",
-      direction = "row",
-      wrap = "wrap",
-      size: sizeProp = {},
-      offset: offsetProp = {},
-      spacing: spacingProp = 0,
-      rowSpacing: rowSpacingProp = spacingProp,
-      columnSpacing: columnSpacingProp = spacingProp,
-      unstable_level: level = 0,
-      ...other
-    } = props;
-    const size = parseResponsiveProp(sizeProp, theme2.breakpoints, (val) => val !== false);
-    const offset2 = parseResponsiveProp(offsetProp, theme2.breakpoints);
-    const columns = inProps.columns ?? (level ? void 0 : columnsProp);
-    const spacing = inProps.spacing ?? (level ? void 0 : spacingProp);
-    const rowSpacing = inProps.rowSpacing ?? inProps.spacing ?? (level ? void 0 : rowSpacingProp);
-    const columnSpacing = inProps.columnSpacing ?? inProps.spacing ?? (level ? void 0 : columnSpacingProp);
-    const ownerState = {
-      ...props,
-      level,
-      columns,
-      container,
-      direction,
-      wrap,
-      spacing,
-      rowSpacing,
-      columnSpacing,
-      size,
-      offset: offset2
-    };
-    const classes = useUtilityClasses2(ownerState, theme2);
-    return /* @__PURE__ */ u2(GridRoot, {
-      ref,
-      as: component,
-      ownerState,
-      className: clsx(classes.root, className),
-      ...other,
-      children: L.map(children, (child) => {
-        if (/* @__PURE__ */ hn(child) && isMuiElement(child, ["Grid"]) && container && child.props.container) {
-          return /* @__PURE__ */ mn(child, {
-            unstable_level: child.props?.unstable_level ?? level + 1
-          });
-        }
-        return child;
-      })
-    });
-  });
-  Grid2.muiName = "Grid";
-  return Grid2;
 }
 const defaultTheme$2 = createTheme$1();
 const defaultCreateStyledComponent = styled$1("div", {
@@ -25869,11 +25316,11 @@ function useThemePropsDefault(props) {
   });
 }
 function joinChildren(children, separator) {
-  const childrenArray = L.toArray(children).filter(Boolean);
+  const childrenArray = O.toArray(children).filter(Boolean);
   return childrenArray.reduce((output, child, index) => {
     output.push(child);
     if (index < childrenArray.length - 1) {
-      output.push(/* @__PURE__ */ mn(separator, {
+      output.push(/* @__PURE__ */ _n(separator, {
         key: `separator-${index}`
       }));
     }
@@ -25967,7 +25414,7 @@ function createStack(options = {}) {
     return composeClasses(slots, (slot) => generateUtilityClass(componentName, slot), {});
   };
   const StackRoot = createStyledComponent(style);
-  const Stack2 = /* @__PURE__ */ D(function Grid2(inProps, ref) {
+  const Stack2 = /* @__PURE__ */ D(function Grid(inProps, ref) {
     const themeProps = useThemeProps2(inProps);
     const props = extendSxProp$1(themeProps);
     const {
@@ -26959,10 +26406,10 @@ function createThemeWithVars(options = {}, ...args) {
     }
     assignNode(palette, ["Alert", "AppBar", "Avatar", "Button", "Chip", "FilledInput", "LinearProgress", "Skeleton", "Slider", "SnackbarContent", "SpeedDialAction", "StepConnector", "StepContent", "Switch", "TableCell", "Tooltip"]);
     if (palette.mode === "light") {
-      setColor(palette.Alert, "errorColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-light") : palette.error.light, 0.6));
-      setColor(palette.Alert, "infoColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-light") : palette.info.light, 0.6));
-      setColor(palette.Alert, "successColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-light") : palette.success.light, 0.6));
-      setColor(palette.Alert, "warningColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-light") : palette.warning.light, 0.6));
+      setColor(palette.Alert, "errorColor", colorMix(private_safeDarken, palette.error.light, 0.6));
+      setColor(palette.Alert, "infoColor", colorMix(private_safeDarken, palette.info.light, 0.6));
+      setColor(palette.Alert, "successColor", colorMix(private_safeDarken, palette.success.light, 0.6));
+      setColor(palette.Alert, "warningColor", colorMix(private_safeDarken, palette.warning.light, 0.6));
       setColor(palette.Alert, "errorFilledBg", setCssVarColor("palette-error-main"));
       setColor(palette.Alert, "infoFilledBg", setCssVarColor("palette-info-main"));
       setColor(palette.Alert, "successFilledBg", setCssVarColor("palette-success-main"));
@@ -26971,10 +26418,10 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.Alert, "infoFilledColor", silent(() => palette.getContrastText(palette.info.main)));
       setColor(palette.Alert, "successFilledColor", silent(() => palette.getContrastText(palette.success.main)));
       setColor(palette.Alert, "warningFilledColor", silent(() => palette.getContrastText(palette.warning.main)));
-      setColor(palette.Alert, "errorStandardBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-light") : palette.error.light, 0.9));
-      setColor(palette.Alert, "infoStandardBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-light") : palette.info.light, 0.9));
-      setColor(palette.Alert, "successStandardBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-light") : palette.success.light, 0.9));
-      setColor(palette.Alert, "warningStandardBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-light") : palette.warning.light, 0.9));
+      setColor(palette.Alert, "errorStandardBg", colorMix(private_safeLighten, palette.error.light, 0.9));
+      setColor(palette.Alert, "infoStandardBg", colorMix(private_safeLighten, palette.info.light, 0.9));
+      setColor(palette.Alert, "successStandardBg", colorMix(private_safeLighten, palette.success.light, 0.9));
+      setColor(palette.Alert, "warningStandardBg", colorMix(private_safeLighten, palette.warning.light, 0.9));
       setColor(palette.Alert, "errorIconColor", setCssVarColor("palette-error-main"));
       setColor(palette.Alert, "infoIconColor", setCssVarColor("palette-info-main"));
       setColor(palette.Alert, "successIconColor", setCssVarColor("palette-success-main"));
@@ -26989,20 +26436,20 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.FilledInput, "bg", "rgba(0, 0, 0, 0.06)");
       setColor(palette.FilledInput, "hoverBg", "rgba(0, 0, 0, 0.09)");
       setColor(palette.FilledInput, "disabledBg", "rgba(0, 0, 0, 0.12)");
-      setColor(palette.LinearProgress, "primaryBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.62));
-      setColor(palette.LinearProgress, "secondaryBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.62));
-      setColor(palette.LinearProgress, "errorBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.62));
-      setColor(palette.LinearProgress, "infoBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.62));
-      setColor(palette.LinearProgress, "successBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.62));
-      setColor(palette.LinearProgress, "warningBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-light") : palette.warning.main, 0.62));
-      setColor(palette.Skeleton, "bg", colorSpace ? colorMix(private_safeAlpha, nativeColor ? getCssVar("palette-text-primary") : palette.text.primary, 0.11) : `rgba(${setCssVarColor("palette-text-primaryChannel")} / 0.11)`);
-      setColor(palette.Slider, "primaryTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.62));
-      setColor(palette.Slider, "secondaryTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.62));
-      setColor(palette.Slider, "errorTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.62));
-      setColor(palette.Slider, "infoTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.62));
-      setColor(palette.Slider, "successTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.62));
-      setColor(palette.Slider, "warningTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-main") : palette.warning.main, 0.62));
-      const snackbarContentBackground = colorSpace ? colorMix(private_safeDarken, nativeColor ? getCssVar("palette-background-default") : palette.background.default, 0.6825) : private_safeEmphasize(palette.background.default, 0.8);
+      setColor(palette.LinearProgress, "primaryBg", colorMix(private_safeLighten, palette.primary.main, 0.62));
+      setColor(palette.LinearProgress, "secondaryBg", colorMix(private_safeLighten, palette.secondary.main, 0.62));
+      setColor(palette.LinearProgress, "errorBg", colorMix(private_safeLighten, palette.error.main, 0.62));
+      setColor(palette.LinearProgress, "infoBg", colorMix(private_safeLighten, palette.info.main, 0.62));
+      setColor(palette.LinearProgress, "successBg", colorMix(private_safeLighten, palette.success.main, 0.62));
+      setColor(palette.LinearProgress, "warningBg", colorMix(private_safeLighten, palette.warning.main, 0.62));
+      setColor(palette.Skeleton, "bg", colorSpace ? colorMix(private_safeAlpha, palette.text.primary, 0.11) : `rgba(${setCssVarColor("palette-text-primaryChannel")} / 0.11)`);
+      setColor(palette.Slider, "primaryTrack", colorMix(private_safeLighten, palette.primary.main, 0.62));
+      setColor(palette.Slider, "secondaryTrack", colorMix(private_safeLighten, palette.secondary.main, 0.62));
+      setColor(palette.Slider, "errorTrack", colorMix(private_safeLighten, palette.error.main, 0.62));
+      setColor(palette.Slider, "infoTrack", colorMix(private_safeLighten, palette.info.main, 0.62));
+      setColor(palette.Slider, "successTrack", colorMix(private_safeLighten, palette.success.main, 0.62));
+      setColor(palette.Slider, "warningTrack", colorMix(private_safeLighten, palette.warning.main, 0.62));
+      const snackbarContentBackground = colorSpace ? colorMix(private_safeDarken, palette.background.default, 0.6825) : private_safeEmphasize(palette.background.default, 0.8);
       setColor(palette.SnackbarContent, "bg", snackbarContentBackground);
       setColor(palette.SnackbarContent, "color", silent(() => colorSpace ? dark.text.primary : palette.getContrastText(snackbarContentBackground)));
       setColor(palette.SpeedDialAction, "fabHoverBg", private_safeEmphasize(palette.background.paper, 0.15));
@@ -27010,20 +26457,20 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.StepContent, "border", setCssVarColor("palette-grey-400"));
       setColor(palette.Switch, "defaultColor", setCssVarColor("palette-common-white"));
       setColor(palette.Switch, "defaultDisabledColor", setCssVarColor("palette-grey-100"));
-      setColor(palette.Switch, "primaryDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.62));
-      setColor(palette.Switch, "secondaryDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.62));
-      setColor(palette.Switch, "errorDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.62));
-      setColor(palette.Switch, "infoDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.62));
-      setColor(palette.Switch, "successDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.62));
-      setColor(palette.Switch, "warningDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-main") : palette.warning.main, 0.62));
-      setColor(palette.TableCell, "border", colorMix(private_safeLighten, private_safeAlpha(nativeColor ? getCssVar("palette-divider") : palette.divider, 1), 0.88));
-      setColor(palette.Tooltip, "bg", colorMix(private_safeAlpha, nativeColor ? getCssVar("palette-grey-700") : palette.grey[700], 0.92));
+      setColor(palette.Switch, "primaryDisabledColor", colorMix(private_safeLighten, palette.primary.main, 0.62));
+      setColor(palette.Switch, "secondaryDisabledColor", colorMix(private_safeLighten, palette.secondary.main, 0.62));
+      setColor(palette.Switch, "errorDisabledColor", colorMix(private_safeLighten, palette.error.main, 0.62));
+      setColor(palette.Switch, "infoDisabledColor", colorMix(private_safeLighten, palette.info.main, 0.62));
+      setColor(palette.Switch, "successDisabledColor", colorMix(private_safeLighten, palette.success.main, 0.62));
+      setColor(palette.Switch, "warningDisabledColor", colorMix(private_safeLighten, palette.warning.main, 0.62));
+      setColor(palette.TableCell, "border", colorMix(private_safeLighten, colorMix(private_safeAlpha, palette.divider, 1), 0.88));
+      setColor(palette.Tooltip, "bg", colorMix(private_safeAlpha, palette.grey[700], 0.92));
     }
     if (palette.mode === "dark") {
-      setColor(palette.Alert, "errorColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-light") : palette.error.light, 0.6));
-      setColor(palette.Alert, "infoColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-light") : palette.info.light, 0.6));
-      setColor(palette.Alert, "successColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-light") : palette.success.light, 0.6));
-      setColor(palette.Alert, "warningColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-light") : palette.warning.light, 0.6));
+      setColor(palette.Alert, "errorColor", colorMix(private_safeLighten, palette.error.light, 0.6));
+      setColor(palette.Alert, "infoColor", colorMix(private_safeLighten, palette.info.light, 0.6));
+      setColor(palette.Alert, "successColor", colorMix(private_safeLighten, palette.success.light, 0.6));
+      setColor(palette.Alert, "warningColor", colorMix(private_safeLighten, palette.warning.light, 0.6));
       setColor(palette.Alert, "errorFilledBg", setCssVarColor("palette-error-dark"));
       setColor(palette.Alert, "infoFilledBg", setCssVarColor("palette-info-dark"));
       setColor(palette.Alert, "successFilledBg", setCssVarColor("palette-success-dark"));
@@ -27032,10 +26479,10 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.Alert, "infoFilledColor", silent(() => palette.getContrastText(palette.info.dark)));
       setColor(palette.Alert, "successFilledColor", silent(() => palette.getContrastText(palette.success.dark)));
       setColor(palette.Alert, "warningFilledColor", silent(() => palette.getContrastText(palette.warning.dark)));
-      setColor(palette.Alert, "errorStandardBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-light") : palette.error.light, 0.9));
-      setColor(palette.Alert, "infoStandardBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-light") : palette.info.light, 0.9));
-      setColor(palette.Alert, "successStandardBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-light") : palette.success.light, 0.9));
-      setColor(palette.Alert, "warningStandardBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-light") : palette.warning.light, 0.9));
+      setColor(palette.Alert, "errorStandardBg", colorMix(private_safeDarken, palette.error.light, 0.9));
+      setColor(palette.Alert, "infoStandardBg", colorMix(private_safeDarken, palette.info.light, 0.9));
+      setColor(palette.Alert, "successStandardBg", colorMix(private_safeDarken, palette.success.light, 0.9));
+      setColor(palette.Alert, "warningStandardBg", colorMix(private_safeDarken, palette.warning.light, 0.9));
       setColor(palette.Alert, "errorIconColor", setCssVarColor("palette-error-main"));
       setColor(palette.Alert, "infoIconColor", setCssVarColor("palette-info-main"));
       setColor(palette.Alert, "successIconColor", setCssVarColor("palette-success-main"));
@@ -27052,20 +26499,20 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.FilledInput, "bg", "rgba(255, 255, 255, 0.09)");
       setColor(palette.FilledInput, "hoverBg", "rgba(255, 255, 255, 0.13)");
       setColor(palette.FilledInput, "disabledBg", "rgba(255, 255, 255, 0.12)");
-      setColor(palette.LinearProgress, "primaryBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.5));
-      setColor(palette.LinearProgress, "secondaryBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.5));
-      setColor(palette.LinearProgress, "errorBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.5));
-      setColor(palette.LinearProgress, "infoBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.5));
-      setColor(palette.LinearProgress, "successBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.5));
-      setColor(palette.LinearProgress, "warningBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-main") : palette.warning.main, 0.5));
-      setColor(palette.Skeleton, "bg", colorSpace ? colorMix(private_safeAlpha, nativeColor ? getCssVar("palette-text-primary") : palette.text.primary, 0.13) : `rgba(${setCssVarColor("palette-text-primaryChannel")} / 0.13)`);
-      setColor(palette.Slider, "primaryTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.5));
-      setColor(palette.Slider, "secondaryTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.5));
-      setColor(palette.Slider, "errorTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.5));
-      setColor(palette.Slider, "infoTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.5));
-      setColor(palette.Slider, "successTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.5));
-      setColor(palette.Slider, "warningTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-light") : palette.warning.main, 0.5));
-      const snackbarContentBackground = colorSpace ? colorMix(private_safeLighten, nativeColor ? getCssVar("palette-background-default") : palette.background.default, 0.985) : private_safeEmphasize(palette.background.default, 0.98);
+      setColor(palette.LinearProgress, "primaryBg", colorMix(private_safeDarken, palette.primary.main, 0.5));
+      setColor(palette.LinearProgress, "secondaryBg", colorMix(private_safeDarken, palette.secondary.main, 0.5));
+      setColor(palette.LinearProgress, "errorBg", colorMix(private_safeDarken, palette.error.main, 0.5));
+      setColor(palette.LinearProgress, "infoBg", colorMix(private_safeDarken, palette.info.main, 0.5));
+      setColor(palette.LinearProgress, "successBg", colorMix(private_safeDarken, palette.success.main, 0.5));
+      setColor(palette.LinearProgress, "warningBg", colorMix(private_safeDarken, palette.warning.main, 0.5));
+      setColor(palette.Skeleton, "bg", colorSpace ? colorMix(private_safeAlpha, palette.text.primary, 0.13) : `rgba(${setCssVarColor("palette-text-primaryChannel")} / 0.13)`);
+      setColor(palette.Slider, "primaryTrack", colorMix(private_safeDarken, palette.primary.main, 0.5));
+      setColor(palette.Slider, "secondaryTrack", colorMix(private_safeDarken, palette.secondary.main, 0.5));
+      setColor(palette.Slider, "errorTrack", colorMix(private_safeDarken, palette.error.main, 0.5));
+      setColor(palette.Slider, "infoTrack", colorMix(private_safeDarken, palette.info.main, 0.5));
+      setColor(palette.Slider, "successTrack", colorMix(private_safeDarken, palette.success.main, 0.5));
+      setColor(palette.Slider, "warningTrack", colorMix(private_safeDarken, palette.warning.main, 0.5));
+      const snackbarContentBackground = colorSpace ? colorMix(private_safeLighten, palette.background.default, 0.985) : private_safeEmphasize(palette.background.default, 0.98);
       setColor(palette.SnackbarContent, "bg", snackbarContentBackground);
       setColor(palette.SnackbarContent, "color", silent(() => colorSpace ? light.text.primary : palette.getContrastText(snackbarContentBackground)));
       setColor(palette.SpeedDialAction, "fabHoverBg", private_safeEmphasize(palette.background.paper, 0.15));
@@ -27073,25 +26520,23 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.StepContent, "border", setCssVarColor("palette-grey-600"));
       setColor(palette.Switch, "defaultColor", setCssVarColor("palette-grey-300"));
       setColor(palette.Switch, "defaultDisabledColor", setCssVarColor("palette-grey-600"));
-      setColor(palette.Switch, "primaryDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.55));
-      setColor(palette.Switch, "secondaryDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.55));
-      setColor(palette.Switch, "errorDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.55));
-      setColor(palette.Switch, "infoDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.55));
-      setColor(palette.Switch, "successDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.55));
-      setColor(palette.Switch, "warningDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-light") : palette.warning.main, 0.55));
-      setColor(palette.TableCell, "border", colorMix(private_safeDarken, private_safeAlpha(nativeColor ? getCssVar("palette-divider") : palette.divider, 1), 0.68));
-      setColor(palette.Tooltip, "bg", colorMix(private_safeAlpha, nativeColor ? getCssVar("palette-grey-700") : palette.grey[700], 0.92));
+      setColor(palette.Switch, "primaryDisabledColor", colorMix(private_safeDarken, palette.primary.main, 0.55));
+      setColor(palette.Switch, "secondaryDisabledColor", colorMix(private_safeDarken, palette.secondary.main, 0.55));
+      setColor(palette.Switch, "errorDisabledColor", colorMix(private_safeDarken, palette.error.main, 0.55));
+      setColor(palette.Switch, "infoDisabledColor", colorMix(private_safeDarken, palette.info.main, 0.55));
+      setColor(palette.Switch, "successDisabledColor", colorMix(private_safeDarken, palette.success.main, 0.55));
+      setColor(palette.Switch, "warningDisabledColor", colorMix(private_safeDarken, palette.warning.main, 0.55));
+      setColor(palette.TableCell, "border", colorMix(private_safeDarken, colorMix(private_safeAlpha, palette.divider, 1), 0.68));
+      setColor(palette.Tooltip, "bg", colorMix(private_safeAlpha, palette.grey[700], 0.92));
     }
-    if (!nativeColor) {
-      setColorChannel(palette.background, "default");
-      setColorChannel(palette.background, "paper");
-      setColorChannel(palette.common, "background");
-      setColorChannel(palette.common, "onBackground");
-      setColorChannel(palette, "divider");
-    }
+    setColorChannel(palette.background, "default");
+    setColorChannel(palette.background, "paper");
+    setColorChannel(palette.common, "background");
+    setColorChannel(palette.common, "onBackground");
+    setColorChannel(palette, "divider");
     Object.keys(palette).forEach((color2) => {
       const colors = palette[color2];
-      if (color2 !== "tonalOffset" && !nativeColor && colors && typeof colors === "object") {
+      if (color2 !== "tonalOffset" && colors && typeof colors === "object") {
         if (colors.main) {
           setColor(palette[color2], "mainChannel", private_safeColorChannel(toRgb(colors.main)));
         }
@@ -27658,7 +27103,7 @@ function getSvgIconUtilityClass(slot) {
   return generateUtilityClass("MuiSvgIcon", slot);
 }
 generateUtilityClasses("MuiSvgIcon", ["root", "colorPrimary", "colorSecondary", "colorAction", "colorError", "colorDisabled", "fontSizeInherit", "fontSizeSmall", "fontSizeMedium", "fontSizeLarge"]);
-const useUtilityClasses$_ = (ownerState) => {
+const useUtilityClasses$X = (ownerState) => {
   const {
     color: color2,
     fontSize,
@@ -27782,7 +27227,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
     viewBox = "0 0 24 24",
     ...other
   } = props;
-  const hasSvgAsChild = /* @__PURE__ */ hn(children) && children.type === "svg";
+  const hasSvgAsChild = /* @__PURE__ */ mn(children) && children.type === "svg";
   const ownerState = {
     ...props,
     color: color2,
@@ -27797,7 +27242,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
   if (!inheritViewBox) {
     more.viewBox = viewBox;
   }
-  const classes = useUtilityClasses$_(ownerState);
+  const classes = useUtilityClasses$X(ownerState);
   return /* @__PURE__ */ u2(SvgIconRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -27826,7 +27271,7 @@ function createSvgIcon(path, displayName) {
     });
   }
   Component.muiName = SvgIcon.muiName;
-  return /* @__PURE__ */ N(/* @__PURE__ */ D(Component));
+  return /* @__PURE__ */ M(/* @__PURE__ */ D(Component));
 }
 function debounce$1(func, wait2 = 166) {
   let timeout;
@@ -28012,7 +27457,7 @@ function _inheritsLoose(t3, o2) {
 const config = {
   disabled: false
 };
-const TransitionGroupContext = gn.createContext(null);
+const TransitionGroupContext = Rn.createContext(null);
 var forceReflow = function forceReflow2(node2) {
   return node2.scrollTop;
 };
@@ -28105,7 +27550,7 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
       this.cancelNextCallback();
       if (nextStatus === ENTERING) {
         if (this.props.unmountOnExit || this.props.mountOnEnter) {
-          var node2 = this.props.nodeRef ? this.props.nodeRef.current : gn.findDOMNode(this);
+          var node2 = this.props.nodeRef ? this.props.nodeRef.current : Rn.findDOMNode(this);
           if (node2) forceReflow(node2);
         }
         this.performEnter(mounting);
@@ -28122,7 +27567,7 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
     var _this2 = this;
     var enter = this.props.enter;
     var appearing = this.context ? this.context.isMounting : mounting;
-    var _ref2 = this.props.nodeRef ? [appearing] : [gn.findDOMNode(this), appearing], maybeNode = _ref2[0], maybeAppearing = _ref2[1];
+    var _ref2 = this.props.nodeRef ? [appearing] : [Rn.findDOMNode(this), appearing], maybeNode = _ref2[0], maybeAppearing = _ref2[1];
     var timeouts = this.getTimeouts();
     var enterTimeout = appearing ? timeouts.appear : timeouts.enter;
     if (!mounting && !enter || config.disabled) {
@@ -28151,7 +27596,7 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
     var _this3 = this;
     var exit = this.props.exit;
     var timeouts = this.getTimeouts();
-    var maybeNode = this.props.nodeRef ? void 0 : gn.findDOMNode(this);
+    var maybeNode = this.props.nodeRef ? void 0 : Rn.findDOMNode(this);
     if (!exit || config.disabled) {
       this.safeSetState({
         status: EXITED
@@ -28201,7 +27646,7 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
   };
   _proto.onTransitionEnd = function onTransitionEnd(timeout, handler) {
     this.setNextCallback(handler);
-    var node2 = this.props.nodeRef ? this.props.nodeRef.current : gn.findDOMNode(this);
+    var node2 = this.props.nodeRef ? this.props.nodeRef.current : Rn.findDOMNode(this);
     var doesNotHaveTimeoutOrListener = timeout == null && !this.props.addEndListener;
     if (!node2 || doesNotHaveTimeoutOrListener) {
       setTimeout(this.nextCallback, 0);
@@ -28239,13 +27684,13 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
     var childProps = _objectWithoutPropertiesLoose(_this$props, ["children", "in", "mountOnEnter", "unmountOnExit", "appear", "enter", "exit", "timeout", "addEndListener", "onEnter", "onEntering", "onEntered", "onExit", "onExiting", "onExited", "nodeRef"]);
     return (
       // allows for nested Transitions
-      /* @__PURE__ */ gn.createElement(TransitionGroupContext.Provider, {
+      /* @__PURE__ */ Rn.createElement(TransitionGroupContext.Provider, {
         value: null
-      }, typeof children === "function" ? children(status, childProps) : gn.cloneElement(gn.Children.only(children), childProps))
+      }, typeof children === "function" ? children(status, childProps) : Rn.cloneElement(Rn.Children.only(children), childProps))
     );
   };
   return Transition2;
-})(gn.Component);
+})(Rn.Component);
 Transition.contextType = TransitionGroupContext;
 Transition.propTypes = {};
 function noop$2() {
@@ -28275,10 +27720,10 @@ function _assertThisInitialized(e2) {
 }
 function getChildMapping(children, mapFn) {
   var mapper = function mapper2(child) {
-    return mapFn && hn(child) ? mapFn(child) : child;
+    return mapFn && mn(child) ? mapFn(child) : child;
   };
   var result = /* @__PURE__ */ Object.create(null);
-  if (children) L.map(children, function(c2) {
+  if (children) O.map(children, function(c2) {
     return c2;
   }).forEach(function(child) {
     result[child.key] = mapper(child);
@@ -28324,7 +27769,7 @@ function getProp(child, prop, props) {
 }
 function getInitialChildMapping(props, onExited) {
   return getChildMapping(props.children, function(child) {
-    return mn(child, {
+    return _n(child, {
       onExited: onExited.bind(null, child),
       in: true,
       appear: getProp(child, "appear", props),
@@ -28338,24 +27783,24 @@ function getNextChildMapping(nextProps, prevChildMapping, onExited) {
   var children = mergeChildMappings(prevChildMapping, nextChildMapping);
   Object.keys(children).forEach(function(key) {
     var child = children[key];
-    if (!hn(child)) return;
+    if (!mn(child)) return;
     var hasPrev = key in prevChildMapping;
     var hasNext = key in nextChildMapping;
     var prevChild = prevChildMapping[key];
-    var isLeaving = hn(prevChild) && !prevChild.props.in;
+    var isLeaving = mn(prevChild) && !prevChild.props.in;
     if (hasNext && (!hasPrev || isLeaving)) {
-      children[key] = mn(child, {
+      children[key] = _n(child, {
         onExited: onExited.bind(null, child),
         in: true,
         exit: getProp(child, "exit", nextProps),
         enter: getProp(child, "enter", nextProps)
       });
     } else if (!hasNext && hasPrev && !isLeaving) {
-      children[key] = mn(child, {
+      children[key] = _n(child, {
         in: false
       });
-    } else if (hasNext && hasPrev && hn(prevChild)) {
-      children[key] = mn(child, {
+    } else if (hasNext && hasPrev && mn(prevChild)) {
+      children[key] = _n(child, {
         onExited: onExited.bind(null, child),
         in: prevChild.props.in,
         exit: getProp(child, "exit", nextProps),
@@ -28434,16 +27879,16 @@ var TransitionGroup = /* @__PURE__ */ (function(_React$Component) {
     delete props.enter;
     delete props.exit;
     if (Component === null) {
-      return /* @__PURE__ */ gn.createElement(TransitionGroupContext.Provider, {
+      return /* @__PURE__ */ Rn.createElement(TransitionGroupContext.Provider, {
         value: contextValue
       }, children);
     }
-    return /* @__PURE__ */ gn.createElement(TransitionGroupContext.Provider, {
+    return /* @__PURE__ */ Rn.createElement(TransitionGroupContext.Provider, {
       value: contextValue
-    }, /* @__PURE__ */ gn.createElement(Component, props, children));
+    }, /* @__PURE__ */ Rn.createElement(Component, props, children));
   };
   return TransitionGroup2;
-})(gn.Component);
+})(Rn.Component);
 TransitionGroup.propTypes = {};
 TransitionGroup.defaultProps = defaultProps;
 const UNINITIALIZED = {};
@@ -28489,26 +27934,6 @@ function useTimeout() {
   return timeout;
 }
 const reflow = (node2) => node2.scrollTop;
-function normalizedTransitionCallback(nodeRef, callback) {
-  return (maybeIsAppearing) => {
-    if (callback) {
-      const node2 = nodeRef.current;
-      if (maybeIsAppearing === void 0) {
-        callback(node2);
-      } else {
-        callback(node2, maybeIsAppearing);
-      }
-    }
-  };
-}
-function getTransitionChildStyle(state, inProp, baseStyles, hiddenStyles2, styleProp, childStyle) {
-  const base = state === "exited" && !inProp ? hiddenStyles2 : baseStyles[state] || baseStyles.exited;
-  return styleProp || childStyle ? {
-    ...base,
-    ...styleProp,
-    ...childStyle
-  } : base;
-}
 function getTransitionProps(props, options) {
   const {
     timeout,
@@ -28678,17 +28103,17 @@ function getCollapseUtilityClass(slot) {
   return generateUtilityClass("MuiCollapse", slot);
 }
 generateUtilityClasses("MuiCollapse", ["root", "horizontal", "vertical", "entered", "hidden", "wrapper", "wrapperInner"]);
-const useUtilityClasses$Z = (ownerState) => {
+const useUtilityClasses$W = (ownerState) => {
   const {
     orientation,
     classes
   } = ownerState;
   const slots = {
-    root: ["root", orientation],
+    root: ["root", `${orientation}`],
     entered: ["entered"],
     hidden: ["hidden"],
-    wrapper: ["wrapper", orientation],
-    wrapperInner: ["wrapperInner", orientation]
+    wrapper: ["wrapper", `${orientation}`],
+    wrapperInner: ["wrapperInner", `${orientation}`]
   };
   return composeClasses(slots, getCollapseUtilityClass, classes);
 };
@@ -28806,7 +28231,7 @@ const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
     orientation,
     collapsedSize: collapsedSizeProp
   };
-  const classes = useUtilityClasses$Z(ownerState);
+  const classes = useUtilityClasses$W(ownerState);
   const theme2 = useTheme();
   const timer = useTimeout();
   const wrapperRef = A$1(null);
@@ -28816,8 +28241,18 @@ const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
   const size = isHorizontal ? "width" : "height";
   const nodeRef = A$1(null);
   const handleRef = useForkRef(ref, nodeRef);
+  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
+    if (callback) {
+      const node2 = nodeRef.current;
+      if (maybeIsAppearing === void 0) {
+        callback(node2);
+      } else {
+        callback(node2, maybeIsAppearing);
+      }
+    }
+  };
   const getWrapperSize = () => wrapperRef.current ? wrapperRef.current[isHorizontal ? "clientWidth" : "clientHeight"] : 0;
-  const handleEnter = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
+  const handleEnter = normalizedTransitionCallback((node2, isAppearing) => {
     if (wrapperRef.current && isHorizontal) {
       wrapperRef.current.style.position = "absolute";
     }
@@ -28826,7 +28261,7 @@ const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
       onEnter(node2, isAppearing);
     }
   });
-  const handleEntering = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
+  const handleEntering = normalizedTransitionCallback((node2, isAppearing) => {
     const wrapperSize = getWrapperSize();
     if (wrapperRef.current && isHorizontal) {
       wrapperRef.current.style.position = "";
@@ -28854,20 +28289,20 @@ const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
       onEntering(node2, isAppearing);
     }
   });
-  const handleEntered = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
+  const handleEntered = normalizedTransitionCallback((node2, isAppearing) => {
     node2.style[size] = "auto";
     if (onEntered) {
       onEntered(node2, isAppearing);
     }
   });
-  const handleExit = normalizedTransitionCallback(nodeRef, (node2) => {
+  const handleExit = normalizedTransitionCallback((node2) => {
     node2.style[size] = `${getWrapperSize()}px`;
     if (onExit) {
       onExit(node2);
     }
   });
-  const handleExited = normalizedTransitionCallback(nodeRef, onExited);
-  const handleExiting = normalizedTransitionCallback(nodeRef, (node2) => {
+  const handleExited = normalizedTransitionCallback(onExited);
+  const handleExiting = normalizedTransitionCallback((node2) => {
     const wrapperSize = getWrapperSize();
     const {
       duration: transitionDuration,
@@ -28979,7 +28414,7 @@ function getPaperUtilityClass(slot) {
   return generateUtilityClass("MuiPaper", slot);
 }
 generateUtilityClasses("MuiPaper", ["root", "rounded", "outlined", "elevation", "elevation0", "elevation1", "elevation2", "elevation3", "elevation4", "elevation5", "elevation6", "elevation7", "elevation8", "elevation9", "elevation10", "elevation11", "elevation12", "elevation13", "elevation14", "elevation15", "elevation16", "elevation17", "elevation18", "elevation19", "elevation20", "elevation21", "elevation22", "elevation23", "elevation24"]);
-const useUtilityClasses$Y = (ownerState) => {
+const useUtilityClasses$V = (ownerState) => {
   const {
     square,
     elevation,
@@ -29051,7 +28486,7 @@ const Paper$1 = /* @__PURE__ */ D(function Paper(inProps, ref) {
     square,
     variant
   };
-  const classes = useUtilityClasses$Y(ownerState);
+  const classes = useUtilityClasses$V(ownerState);
   return /* @__PURE__ */ u2(PaperRoot, {
     as: component,
     ownerState,
@@ -29072,12 +28507,12 @@ const Paper$1 = /* @__PURE__ */ D(function Paper(inProps, ref) {
     }
   });
 });
-const AccordionContext = /* @__PURE__ */ X$1({});
+const AccordionContext = /* @__PURE__ */ Q$1({});
 function getAccordionUtilityClass(slot) {
   return generateUtilityClass("MuiAccordion", slot);
 }
 const accordionClasses = generateUtilityClasses("MuiAccordion", ["root", "heading", "rounded", "expanded", "disabled", "gutters", "region"]);
-const useUtilityClasses$X = (ownerState) => {
+const useUtilityClasses$U = (ownerState) => {
   const {
     classes,
     square,
@@ -29203,6 +28638,7 @@ const Accordion$1 = /* @__PURE__ */ D(function Accordion(inProps, ref) {
     disableGutters = false,
     expanded: expandedProp,
     onChange,
+    square = false,
     slots = {},
     slotProps = {},
     TransitionComponent: TransitionComponentProp,
@@ -29221,7 +28657,7 @@ const Accordion$1 = /* @__PURE__ */ D(function Accordion(inProps, ref) {
       onChange(event, !expanded);
     }
   }, [expanded, onChange, setExpandedState]);
-  const [summary, ...children] = L.toArray(childrenProp);
+  const [summary, ...children] = O.toArray(childrenProp);
   const contextValue = T$1(() => ({
     expanded,
     disabled,
@@ -29230,11 +28666,12 @@ const Accordion$1 = /* @__PURE__ */ D(function Accordion(inProps, ref) {
   }), [expanded, disabled, disableGutters, handleChange]);
   const ownerState = {
     ...props,
+    square,
     disabled,
     disableGutters,
     expanded
   };
-  const classes = useUtilityClasses$X(ownerState);
+  const classes = useUtilityClasses$U(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     ...slots
@@ -29256,7 +28693,10 @@ const Accordion$1 = /* @__PURE__ */ D(function Accordion(inProps, ref) {
     className: clsx(classes.root, className),
     shouldForwardComponentProp: true,
     ownerState,
-    ref
+    ref,
+    additionalProps: {
+      square
+    }
   });
   const [AccordionHeadingSlot, accordionProps] = useSlot("heading", {
     elementType: AccordionHeading,
@@ -29303,7 +28743,7 @@ function getAccordionDetailsUtilityClass(slot) {
   return generateUtilityClass("MuiAccordionDetails", slot);
 }
 generateUtilityClasses("MuiAccordionDetails", ["root"]);
-const useUtilityClasses$W = (ownerState) => {
+const useUtilityClasses$T = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -29330,7 +28770,7 @@ const AccordionDetails$1 = /* @__PURE__ */ D(function AccordionDetails(inProps, 
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$W(ownerState);
+  const classes = useUtilityClasses$T(ownerState);
   return /* @__PURE__ */ u2(AccordionDetailsRoot, {
     className: clsx(classes.root, className),
     ref,
@@ -29726,7 +29166,7 @@ function getButtonBaseUtilityClass(slot) {
   return generateUtilityClass("MuiButtonBase", slot);
 }
 const buttonBaseClasses = generateUtilityClasses("MuiButtonBase", ["root", "disabled", "focusVisible"]);
-const useUtilityClasses$V = (ownerState) => {
+const useUtilityClasses$S = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -29880,13 +29320,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
   });
   const isNonNativeButton = () => {
     const button = buttonRef.current;
-    if (!button) {
-      return component && component !== "button";
-    }
-    if (button.tagName === "BUTTON") {
-      return false;
-    }
-    return !(button.tagName === "A" && button.href);
+    return component && component !== "button" && !(button.tagName === "A" && button.href);
   };
   const handleKeyDown = useEventCallback((event) => {
     if (focusRipple && !event.repeat && focusVisible && event.key === " ") {
@@ -29916,7 +29350,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     if (onKeyUp) {
       onKeyUp(event);
     }
-    if (onClick && event.target === event.currentTarget && isNonNativeButton() && event.key === " " && !event.defaultPrevented && !disabled) {
+    if (onClick && event.target === event.currentTarget && isNonNativeButton() && event.key === " " && !event.defaultPrevented) {
       onClick(event);
     }
   });
@@ -29926,8 +29360,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
   }
   const buttonProps = {};
   if (ComponentProp === "button") {
-    const hasFormAttributes = !!other.formAction;
-    buttonProps.type = type === void 0 && !hasFormAttributes ? "button" : type;
+    buttonProps.type = type === void 0 ? "button" : type;
     buttonProps.disabled = disabled;
   } else {
     if (!other.href && !other.to) {
@@ -29949,7 +29382,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     tabIndex,
     focusVisible
   };
-  const classes = useUtilityClasses$V(ownerState);
+  const classes = useUtilityClasses$S(ownerState);
   return /* @__PURE__ */ u2(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -29994,7 +29427,7 @@ function getAccordionSummaryUtilityClass(slot) {
   return generateUtilityClass("MuiAccordionSummary", slot);
 }
 const accordionSummaryClasses = generateUtilityClasses("MuiAccordionSummary", ["root", "expanded", "focusVisible", "disabled", "gutters", "contentGutters", "content", "expandIconWrapper"]);
-const useUtilityClasses$U = (ownerState) => {
+const useUtilityClasses$R = (ownerState) => {
   const {
     classes,
     expanded,
@@ -30116,7 +29549,7 @@ const AccordionSummary$1 = /* @__PURE__ */ D(function AccordionSummary(inProps, 
     disabled,
     disableGutters
   };
-  const classes = useUtilityClasses$U(ownerState);
+  const classes = useUtilityClasses$R(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps
@@ -30226,7 +29659,7 @@ const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
 const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
         animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
       ` : null;
-const useUtilityClasses$T = (ownerState) => {
+const useUtilityClasses$Q = (ownerState) => {
   const {
     classes,
     variant,
@@ -30360,7 +29793,7 @@ const CircularProgress$1 = /* @__PURE__ */ D(function CircularProgress(inProps, 
     variant,
     enableTrackSlot
   };
-  const classes = useUtilityClasses$T(ownerState);
+  const classes = useUtilityClasses$Q(ownerState);
   const circleStyle = {};
   const rootStyle = {};
   const rootProps = {};
@@ -30414,7 +29847,7 @@ function getIconButtonUtilityClass(slot) {
   return generateUtilityClass("MuiIconButton", slot);
 }
 const iconButtonClasses = generateUtilityClasses("MuiIconButton", ["root", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorError", "colorInfo", "colorSuccess", "colorWarning", "edgeStart", "edgeEnd", "sizeSmall", "sizeMedium", "sizeLarge", "loading", "loadingIndicator", "loadingWrapper"]);
-const useUtilityClasses$S = (ownerState) => {
+const useUtilityClasses$P = (ownerState) => {
   const {
     classes,
     disabled,
@@ -30599,7 +30032,7 @@ const IconButton$1 = /* @__PURE__ */ D(function IconButton(inProps, ref) {
     loadingIndicator,
     size
   };
-  const classes = useUtilityClasses$S(ownerState);
+  const classes = useUtilityClasses$P(ownerState);
   return /* @__PURE__ */ u2(IconButtonRoot, {
     id: loading ? loadingId : idProp,
     className: clsx(classes.root, className),
@@ -30638,7 +30071,7 @@ const InfoOutlinedIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
 const ClearIcon$1 = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }));
-const useUtilityClasses$R = (ownerState) => {
+const useUtilityClasses$O = (ownerState) => {
   const {
     variant,
     color: color2,
@@ -30790,7 +30223,7 @@ const Alert$1 = /* @__PURE__ */ D(function Alert(inProps, ref) {
     variant,
     colorSeverity: color2 || severity
   };
-  const classes = useUtilityClasses$R(ownerState);
+  const classes = useUtilityClasses$O(ownerState);
   const externalForwardedProps = {
     slots: {
       closeButton: components.CloseButton,
@@ -30889,7 +30322,7 @@ const v6Colors = {
   textDisabled: true
 };
 const extendSxProp = internal_createExtendSxProp();
-const useUtilityClasses$Q = (ownerState) => {
+const useUtilityClasses$N = (ownerState) => {
   const {
     align,
     gutterBottom,
@@ -31029,7 +30462,7 @@ const Typography$1 = /* @__PURE__ */ D(function Typography(inProps, ref) {
     variantMapping
   };
   const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$Q(ownerState);
+  const classes = useUtilityClasses$N(ownerState);
   return /* @__PURE__ */ u2(TypographyRoot, {
     as: Component,
     ref,
@@ -31044,31 +30477,6 @@ const Typography$1 = /* @__PURE__ */ D(function Typography(inProps, ref) {
     }
   });
 });
-function useForcedRerendering() {
-  const [, setState] = d({});
-  return q$1(() => {
-    setState({});
-  }, []);
-}
-function contains$1(parent, child) {
-  if (!parent || !child) {
-    return false;
-  }
-  if (parent.contains(child)) {
-    return true;
-  }
-  const rootNode = child.getRootNode?.();
-  if (rootNode && rootNode instanceof ShadowRoot) {
-    let next2 = child;
-    while (next2) {
-      if (parent === next2) {
-        return true;
-      }
-      next2 = next2.parentNode ?? next2.host ?? null;
-    }
-  }
-  return false;
-}
 function usePreviousProps(value) {
   const ref = A$1({});
   y(() => {
@@ -31121,8 +30529,7 @@ function createFilterOptions(config2 = {}) {
 }
 const defaultFilterOptions = createFilterOptions();
 const pageSize = 5;
-const defaultIsActiveElementInListbox = (listboxRef) => listboxRef.current !== null && contains$1(listboxRef.current.parentElement, document.activeElement);
-const defaultIsOptionEqualToValue = (option, value) => option === value;
+const defaultIsActiveElementInListbox = (listboxRef) => listboxRef.current !== null && listboxRef.current.parentElement?.contains(document.activeElement);
 const MULTIPLE_DEFAULT_VALUE = [];
 function getInputValue(value, multiple, getOptionLabel, renderValue) {
   if (multiple || value == null || renderValue) {
@@ -31161,7 +30568,7 @@ function useAutocomplete(props) {
     id: idProp,
     includeInputInList = false,
     inputValue: inputValueProp,
-    isOptionEqualToValue = defaultIsOptionEqualToValue,
+    isOptionEqualToValue = (option, value2) => option === value2,
     multiple = false,
     onChange,
     onClose,
@@ -31189,14 +30596,10 @@ function useAutocomplete(props) {
   const firstFocus = A$1(true);
   const inputRef = A$1(null);
   const listboxRef = A$1(null);
-  const windowLostFocus = A$1(false);
   const [anchorEl, setAnchorEl] = d(null);
   const [focusedItem, setFocusedItem] = d(-1);
   const defaultHighlighted = autoHighlight ? 0 : -1;
   const highlightedIndexRef = A$1(defaultHighlighted);
-  const highlightReasonRef = A$1(null);
-  const touchScrolledRef = A$1(false);
-  const isTouchRef = A$1(false);
   const initialInputValue = A$1(getInputValue(defaultValue2 ?? valueProp, multiple, getOptionLabel)).current;
   const [value, setValueState] = useControlled({
     controlled: valueProp,
@@ -31211,8 +30614,8 @@ function useAutocomplete(props) {
   });
   const [focused, setFocused] = d(false);
   const resetInputValue = q$1((event, newValue, reason) => {
-    const isOptionSelected2 = multiple ? value.length < newValue.length : newValue !== null;
-    if (!isOptionSelected2 && !clearOnBlur) {
+    const isOptionSelected = multiple ? value.length < newValue.length : newValue !== null;
+    if (!isOptionSelected && !clearOnBlur) {
       return;
     }
     const newInputValue = getInputValue(newValue, multiple, getOptionLabel, renderValue);
@@ -31233,30 +30636,9 @@ function useAutocomplete(props) {
   const [inputPristine, setInputPristine] = d(true);
   const inputValueIsSelectedValue = !multiple && value != null && inputValue === getOptionLabel(value);
   const popupOpen = open && !readOnly;
-  const selectedValues = T$1(() => {
-    if (multiple) {
-      return value;
-    }
-    if (value != null) {
-      return [value];
-    }
-    return [];
-  }, [multiple, value]);
-  const selectedValuesSet = T$1(() => {
-    if (isOptionEqualToValue !== defaultIsOptionEqualToValue || selectedValues.length === 0) {
-      return null;
-    }
-    return new Set(selectedValues);
-  }, [isOptionEqualToValue, selectedValues]);
-  const isOptionSelected = q$1((option) => {
-    if (selectedValuesSet) {
-      return selectedValuesSet.has(option);
-    }
-    return selectedValues.some((value2) => value2 != null && isOptionEqualToValue(option, value2));
-  }, [isOptionEqualToValue, selectedValues, selectedValuesSet]);
   const filteredOptions = popupOpen ? filterOptions(
     options.filter((option) => {
-      if (filterSelectedOptions && isOptionSelected(option)) {
+      if (filterSelectedOptions && (multiple ? value : [value]).some((value2) => value2 !== null && isOptionEqualToValue(option, value2))) {
         return false;
       }
       return true;
@@ -31319,15 +30701,19 @@ function useAutocomplete(props) {
       }
     }
   }
-  const syncHighlightedIndexToDOM = useEventCallback(({
+  const setHighlightedIndex = useEventCallback(({
+    event,
     index,
-    reason,
-    preserveScroll = false
+    reason
   }) => {
+    highlightedIndexRef.current = index;
     if (index === -1) {
       inputRef.current.removeAttribute("aria-activedescendant");
     } else {
       inputRef.current.setAttribute("aria-activedescendant", `${id}-option-${index}`);
+    }
+    if (onHighlightChange && ["mouse", "keyboard", "touch"].includes(reason)) {
+      onHighlightChange(event, index === -1 ? null : filteredOptions[index], reason);
     }
     if (!listboxRef.current) {
       return;
@@ -31345,9 +30731,7 @@ function useAutocomplete(props) {
       return;
     }
     if (index === -1) {
-      if (!preserveScroll) {
-        listboxNode.scrollTop = 0;
-      }
+      listboxNode.scrollTop = 0;
       return;
     }
     const option = listboxRef.current.querySelector(`[data-option-index="${index}"]`);
@@ -31369,45 +30753,14 @@ function useAutocomplete(props) {
       }
     }
   });
-  const setHighlightedIndex = useEventCallback(({
-    event,
-    index,
-    reason,
-    preserveScroll = false
-  }) => {
-    highlightedIndexRef.current = index;
-    highlightReasonRef.current = reason ?? null;
-    if (onHighlightChange && ["mouse", "keyboard", "touch"].includes(reason)) {
-      onHighlightChange(event, index === -1 ? null : filteredOptions[index], reason);
-    }
-    syncHighlightedIndexToDOM({
-      index,
-      reason,
-      preserveScroll
-    });
-  });
-  const setHighlightedIndexFromSync = useEventCallback(({
-    index
-  }) => {
-    highlightedIndexRef.current = index;
-    syncHighlightedIndexToDOM({
-      index,
-      reason: highlightReasonRef.current
-    });
-  });
   const changeHighlightedIndex = useEventCallback(({
     event,
     diff,
     direction = "next",
-    reason,
-    preserveScroll
+    reason
   }) => {
     if (!popupOpen) {
       return;
-    }
-    if (reason === "keyboard") {
-      touchScrolledRef.current = false;
-      isTouchRef.current = false;
     }
     const getNextIndex = () => {
       const maxIndex = filteredOptions.length - 1;
@@ -31445,8 +30798,7 @@ function useAutocomplete(props) {
     setHighlightedIndex({
       index: nextIndex,
       reason,
-      event,
-      preserveScroll
+      event
     });
     if (autoComplete && diff !== "reset") {
       if (nextIndex === -1) {
@@ -31492,17 +30844,13 @@ function useAutocomplete(props) {
     }
     const previousHighlightedOptionIndex = getPreviousHighlightedOptionIndex();
     if (previousHighlightedOptionIndex !== -1) {
-      setHighlightedIndexFromSync({
-        index: previousHighlightedOptionIndex
-      });
+      highlightedIndexRef.current = previousHighlightedOptionIndex;
       return;
     }
     const valueItem = multiple ? value[0] : value;
     if (filteredOptions.length === 0 || valueItem == null) {
-      const isAppendOnly = filteredOptionsChanged && previousProps.inputValue === inputValue && previousProps.filteredOptions?.length > 0 && filteredOptions.length > previousProps.filteredOptions.length && previousProps.filteredOptions.every((option, index) => getOptionLabel(option) === getOptionLabel(filteredOptions[index]));
       changeHighlightedIndex({
-        diff: "reset",
-        preserveScroll: isAppendOnly
+        diff: "reset"
       });
       return;
     }
@@ -31511,10 +30859,7 @@ function useAutocomplete(props) {
     }
     if (valueItem != null) {
       const currentOption = filteredOptions[highlightedIndexRef.current];
-      if (multiple && currentOption && value.findIndex((val) => isOptionEqualToValue(currentOption, val)) !== -1 && previousProps.filteredOptions?.length > 0) {
-        setHighlightedIndexFromSync({
-          index: highlightedIndexRef.current
-        });
+      if (multiple && currentOption && value.findIndex((val) => isOptionEqualToValue(currentOption, val)) !== -1) {
         return;
       }
       const itemIndex = filteredOptions.findIndex((optionItem) => isOptionEqualToValue(optionItem, valueItem));
@@ -31544,9 +30889,9 @@ function useAutocomplete(props) {
     // Don't sync the highlighted index with the value when multiple
     // eslint-disable-next-line react-hooks/exhaustive-deps
     multiple ? false : value,
+    filterSelectedOptions,
     changeHighlightedIndex,
     setHighlightedIndex,
-    setHighlightedIndexFromSync,
     popupOpen,
     inputValue,
     multiple
@@ -31559,29 +30904,16 @@ function useAutocomplete(props) {
     syncHighlightedIndex();
   });
   y(() => {
-    if (filteredOptionsChanged || popupOpen && !disableCloseOnSelect) {
+    if (filteredOptionsChanged || popupOpen) {
       syncHighlightedIndex();
     }
-  }, [syncHighlightedIndex, filteredOptionsChanged, popupOpen, disableCloseOnSelect]);
-  y(() => {
-    if (typeof window === "undefined") {
-      return void 0;
-    }
-    const handleWindowBlur = () => {
-      windowLostFocus.current = true;
-    };
-    window.addEventListener("blur", handleWindowBlur);
-    return () => {
-      window.removeEventListener("blur", handleWindowBlur);
-    };
-  }, []);
+  }, [syncHighlightedIndex, filteredOptionsChanged, popupOpen]);
   const handleOpen = (event) => {
     if (open) {
       return;
     }
     setOpenState(true);
     setInputPristine(true);
-    isTouchRef.current = false;
     if (onOpen) {
       onOpen(event);
     }
@@ -31591,8 +30923,6 @@ function useAutocomplete(props) {
       return;
     }
     setOpenState(false);
-    touchScrolledRef.current = false;
-    highlightReasonRef.current = null;
     if (onClose) {
       onClose(event, reason);
     }
@@ -31610,6 +30940,7 @@ function useAutocomplete(props) {
     }
     setValueState(newValue);
   };
+  const isTouch = A$1(false);
   const selectNewValue = (event, option, reasonProp = "selectOption", origin = "options") => {
     let reason = reasonProp;
     let newValue = option;
@@ -31630,7 +30961,7 @@ function useAutocomplete(props) {
     if (!disableCloseOnSelect && (!event || !event.ctrlKey && !event.metaKey)) {
       handleClose(event, reason);
     }
-    if (blurOnSelect === true || blurOnSelect === "touch" && isTouchRef.current || blurOnSelect === "mouse" && !isTouchRef.current) {
+    if (blurOnSelect === true || blurOnSelect === "touch" && isTouch.current || blurOnSelect === "mouse" && !isTouch.current) {
       inputRef.current.blur();
     }
   };
@@ -31660,13 +30991,9 @@ function useAutocomplete(props) {
       handleClose(event, "toggleInput");
     }
     let nextItem2 = focusedItem;
-    if (focusedItem === -1 && direction === "previous") {
-      nextItem2 = value.length - 1;
-      if (freeSolo && inputValue !== "") {
-        setInputValueState("");
-        if (onInputChange) {
-          onInputChange(event, "", "reset");
-        }
+    if (focusedItem === -1) {
+      if (inputValue === "" && direction === "previous") {
+        nextItem2 = value.length - 1;
       }
     } else {
       nextItem2 += direction === "next" ? 1 : -1;
@@ -31764,39 +31091,22 @@ function useAutocomplete(props) {
           });
           handleOpen(event);
           break;
-        case "ArrowLeft": {
-          const input = inputRef.current;
-          const caretAtStart = input && input.selectionStart === 0 && input.selectionEnd === 0;
-          if (!caretAtStart) {
-            return;
-          }
-          if (!multiple && renderValue && value != null) {
-            if (freeSolo && inputValue !== "") {
-              setInputValueState("");
-              if (onInputChange) {
-                onInputChange(event, "", "reset");
-              }
-            }
-            setFocusedItem(0);
+        case "ArrowLeft":
+          if (!multiple && renderValue) {
             focusItem(0);
           } else {
             handleFocusItem(event, "previous");
           }
           break;
-        }
         case "ArrowRight":
           if (!multiple && renderValue) {
-            setFocusedItem(-1);
             focusItem(-1);
           } else {
             handleFocusItem(event, "next");
           }
           break;
-        case "Enter": {
-          const shouldSelectHighlighted = !freeSolo || inputPristine || highlightReasonRef.current !== null;
-          if (highlightedIndexRef.current !== -1 && popupOpen && shouldSelectHighlighted && // After a touch-scroll the highlight is stale (the user scrolled
-          // past it), so skip selection until the next deliberate interaction.
-          !touchScrolledRef.current) {
+        case "Enter":
+          if (highlightedIndexRef.current !== -1 && popupOpen) {
             const option = filteredOptions[highlightedIndexRef.current];
             const disabled = getOptionDisabled ? getOptionDisabled(option) : false;
             event.preventDefault();
@@ -31812,12 +31122,8 @@ function useAutocomplete(props) {
               event.preventDefault();
             }
             selectNewValue(event, inputValue, "createOption", "freeSolo");
-          } else if (popupOpen && touchScrolledRef.current) {
-            event.preventDefault();
-            handleClose(event, "escape");
           }
           break;
-        }
         case "Escape":
           if (popupOpen) {
             event.preventDefault();
@@ -31838,10 +31144,9 @@ function useAutocomplete(props) {
               option: value[index]
             });
           }
-          if (!multiple && renderValue && !readOnly && inputValue === "") {
-            handleValue(event, null, "removeOption", {
-              option: value
-            });
+          if (!multiple && renderValue && !readOnly) {
+            setValueState(null);
+            focusItem(-1);
           }
           break;
         case "Delete":
@@ -31853,10 +31158,9 @@ function useAutocomplete(props) {
               option: value[index]
             });
           }
-          if (!multiple && renderValue && !readOnly && inputValue === "") {
-            handleValue(event, null, "removeOption", {
-              option: value
-            });
+          if (!multiple && renderValue && !readOnly) {
+            setValueState(null);
+            focusItem(-1);
           }
           break;
       }
@@ -31864,14 +31168,6 @@ function useAutocomplete(props) {
   };
   const handleFocus = (event) => {
     setFocused(true);
-    if (focusedItem !== -1) {
-      setFocusedItem(-1);
-      focusItem(-1);
-    }
-    if (windowLostFocus.current) {
-      windowLostFocus.current = false;
-      return;
-    }
     if (openOnFocus && !ignoreFocus.current) {
       handleOpen(event);
     }
@@ -31884,7 +31180,7 @@ function useAutocomplete(props) {
     setFocused(false);
     firstFocus.current = true;
     ignoreFocus.current = false;
-    if (autoSelect && highlightedIndexRef.current !== -1 && popupOpen && highlightReasonRef.current !== "mouse" && highlightReasonRef.current !== "touch") {
+    if (autoSelect && highlightedIndexRef.current !== -1 && popupOpen) {
       selectNewValue(event, filteredOptions[highlightedIndexRef.current], "blur");
     } else if (autoSelect && freeSolo && inputValue !== "") {
       selectNewValue(event, inputValue, "blur", "freeSolo");
@@ -31895,23 +31191,19 @@ function useAutocomplete(props) {
   };
   const handleInputChange = (event) => {
     const newValue = event.target.value;
-    const valueChanged = inputValue !== newValue;
-    if (valueChanged) {
+    if (inputValue !== newValue) {
       setInputValueState(newValue);
-      touchScrolledRef.current = false;
+      setInputPristine(false);
       if (onInputChange) {
         onInputChange(event, newValue, "input");
       }
     }
     if (newValue === "") {
-      if (!disableClearable && !multiple && !renderValue) {
+      if (!disableClearable && !multiple) {
         handleValue(event, null, "clear");
       }
     } else {
       handleOpen(event);
-    }
-    if (valueChanged) {
-      setInputPristine(false);
     }
   };
   const handleOptionMouseMove = (event) => {
@@ -31922,26 +31214,20 @@ function useAutocomplete(props) {
         index,
         reason: "mouse"
       });
-    } else {
-      highlightReasonRef.current = "mouse";
-    }
-    if (!isTouchRef.current) {
-      touchScrolledRef.current = false;
     }
   };
   const handleOptionTouchStart = (event) => {
-    touchScrolledRef.current = false;
     setHighlightedIndex({
       event,
       index: Number(event.currentTarget.getAttribute("data-option-index")),
       reason: "touch"
     });
-    isTouchRef.current = true;
+    isTouch.current = true;
   };
   const handleOptionClick = (event) => {
     const index = Number(event.currentTarget.getAttribute("data-option-index"));
     selectNewValue(event, filteredOptions[index], "selectOption");
-    isTouchRef.current = false;
+    isTouch.current = false;
   };
   const handleItemDelete = (index) => (event) => {
     const newValue = value.slice();
@@ -31963,10 +31249,7 @@ function useAutocomplete(props) {
     }
   };
   const handleMouseDown = (event) => {
-    if (!contains$1(event.currentTarget, event.target)) {
-      return;
-    }
-    if (anchorEl && !contains$1(anchorEl, event.target)) {
+    if (!event.currentTarget.contains(event.target)) {
       return;
     }
     if (event.target.getAttribute("id") !== id) {
@@ -31974,10 +31257,7 @@ function useAutocomplete(props) {
     }
   };
   const handleClick = (event) => {
-    if (!contains$1(event.currentTarget, event.target)) {
-      return;
-    }
-    if (anchorEl && !contains$1(anchorEl, event.target)) {
+    if (!event.currentTarget.contains(event.target)) {
       return;
     }
     inputRef.current.focus();
@@ -32087,22 +31367,16 @@ function useAutocomplete(props) {
       role: "listbox",
       id: `${id}-listbox`,
       "aria-labelledby": `${id}-label`,
-      "aria-multiselectable": multiple || void 0,
       ref: handleListboxRef,
       onMouseDown: (event) => {
         event.preventDefault();
-      },
-      onScroll: () => {
-        if (isTouchRef.current) {
-          touchScrolledRef.current = true;
-        }
       }
     }),
     getOptionProps: ({
       index,
       option
     }) => {
-      const selected = isOptionSelected(option);
+      const selected = (multiple ? value : [value]).some((value2) => value2 != null && isOptionEqualToValue(option, value2));
       const disabled = getOptionDisabled ? getOptionDisabled(option) : false;
       return {
         key: getOptionKey?.(option) ?? getOptionLabel(option),
@@ -32320,14 +31594,14 @@ function getLayoutRect(element) {
     height: height2
   };
 }
-function contains(parent, child) {
+function contains(parent2, child) {
   var rootNode = child.getRootNode && child.getRootNode();
-  if (parent.contains(child)) {
+  if (parent2.contains(child)) {
     return true;
   } else if (rootNode && isShadowRoot(rootNode)) {
     var next2 = child;
     do {
-      if (next2 && parent.isSameNode(next2)) {
+      if (next2 && parent2.isSameNode(next2)) {
         return true;
       }
       next2 = next2.parentNode || next2.host;
@@ -33502,7 +32776,7 @@ function useSlotProps(parameters) {
   return props;
 }
 function getReactElementRef(element) {
-  if (parseInt(an, 10) >= 19) {
+  if (parseInt(vn, 10) >= 19) {
     return element?.props?.ref || null;
   }
   return element?.ref || null;
@@ -33517,7 +32791,7 @@ const Portal = /* @__PURE__ */ D(function Portal2(props, forwardedRef) {
     disablePortal = false
   } = props;
   const [mountNode, setMountNode] = d(null);
-  const handleRef = useForkRef(/* @__PURE__ */ hn(children) ? getReactElementRef(children) : null, forwardedRef);
+  const handleRef = useForkRef(/* @__PURE__ */ mn(children) ? getReactElementRef(children) : null, forwardedRef);
   useEnhancedEffect(() => {
     if (!disablePortal) {
       setMountNode(getContainer$1(container) || document.body);
@@ -33533,11 +32807,11 @@ const Portal = /* @__PURE__ */ D(function Portal2(props, forwardedRef) {
     return void 0;
   }, [forwardedRef, mountNode, disablePortal]);
   if (disablePortal) {
-    if (/* @__PURE__ */ hn(children)) {
+    if (/* @__PURE__ */ mn(children)) {
       const newProps = {
         ref: handleRef
       };
-      return /* @__PURE__ */ mn(children, newProps);
+      return /* @__PURE__ */ _n(children, newProps);
     }
     return children;
   }
@@ -33570,7 +32844,7 @@ function resolveAnchorEl$1(anchorEl) {
 function isHTMLElement$1(element) {
   return element.nodeType !== void 0;
 }
-const useUtilityClasses$P = (ownerState) => {
+const useUtilityClasses$M = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -33660,24 +32934,8 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
       modifiers: popperModifiers
     });
     handlePopperRefRef.current(popper2);
-    const popperElement = tooltipRef.current;
     return () => {
-      if (popperElement) {
-        const {
-          style: style2
-        } = popperElement;
-        const position2 = style2.position;
-        const top2 = style2.top;
-        const left2 = style2.left;
-        const transform2 = style2.transform;
-        popper2.destroy();
-        style2.position = position2;
-        style2.top = top2;
-        style2.left = left2;
-        style2.transform = transform2;
-      } else {
-        popper2.destroy();
-      }
+      popper2.destroy();
       handlePopperRefRef.current(null);
     };
   }, [resolvedAnchorElement, disablePortal, modifiers, open, popperOptions, rtlPlacement]);
@@ -33687,7 +32945,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
   if (TransitionProps !== null) {
     childProps.TransitionProps = TransitionProps;
   }
-  const classes = useUtilityClasses$P(props);
+  const classes = useUtilityClasses$M(props);
   const Root = slots.root ?? "div";
   const rootProps = useSlotProps({
     elementType: Root,
@@ -33834,7 +33092,7 @@ function getListSubheaderUtilityClass(slot) {
   return generateUtilityClass("MuiListSubheader", slot);
 }
 generateUtilityClasses("MuiListSubheader", ["root", "colorPrimary", "colorInherit", "gutters", "inset", "sticky"]);
-const useUtilityClasses$O = (ownerState) => {
+const useUtilityClasses$L = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -33929,7 +33187,7 @@ const ListSubheader = /* @__PURE__ */ D(function ListSubheader2(inProps, ref) {
     disableSticky,
     inset
   };
-  const classes = useUtilityClasses$O(ownerState);
+  const classes = useUtilityClasses$L(ownerState);
   return /* @__PURE__ */ u2(ListSubheaderRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -33948,7 +33206,7 @@ function getChipUtilityClass(slot) {
   return generateUtilityClass("MuiChip", slot);
 }
 const chipClasses = generateUtilityClasses("MuiChip", ["root", "sizeSmall", "sizeMedium", "colorDefault", "colorError", "colorInfo", "colorPrimary", "colorSecondary", "colorSuccess", "colorWarning", "disabled", "clickable", "clickableColorPrimary", "clickableColorSecondary", "deletable", "deletableColorPrimary", "deletableColorSecondary", "outlined", "filled", "outlinedPrimary", "outlinedSecondary", "filledPrimary", "filledSecondary", "avatar", "avatarSmall", "avatarMedium", "avatarColorPrimary", "avatarColorSecondary", "icon", "iconSmall", "iconMedium", "iconColorPrimary", "iconColorSecondary", "label", "labelSmall", "labelMedium", "deleteIcon", "deleteIconSmall", "deleteIconMedium", "deleteIconColorPrimary", "deleteIconColorSecondary", "deleteIconOutlinedColorPrimary", "deleteIconOutlinedColorSecondary", "deleteIconFilledColorPrimary", "deleteIconFilledColorSecondary", "focusVisible"]);
-const useUtilityClasses$N = (ownerState) => {
+const useUtilityClasses$K = (ownerState) => {
   const {
     classes,
     disabled,
@@ -34003,7 +33261,7 @@ const ChipRoot = styled("div", {
       [`& .${chipClasses.deleteIcon}`]: styles2[`deleteIconColor${capitalize(color2)}`]
     }, {
       [`& .${chipClasses.deleteIcon}`]: styles2[`deleteIcon${capitalize(variant)}Color${capitalize(color2)}`]
-    }, styles2.root, styles2[`size${capitalize(size)}`], styles2[`color${capitalize(color2)}`], clickable && styles2.clickable, clickable && color2 !== "default" && styles2[`clickableColor${capitalize(color2)}`], onDelete && styles2.deletable, onDelete && color2 !== "default" && styles2[`deletableColor${capitalize(color2)}`], styles2[variant], styles2[`${variant}${capitalize(color2)}`]];
+    }, styles2.root, styles2[`size${capitalize(size)}`], styles2[`color${capitalize(color2)}`], clickable && styles2.clickable, clickable && color2 !== "default" && styles2[`clickableColor${capitalize(color2)})`], onDelete && styles2.deletable, onDelete && color2 !== "default" && styles2[`deletableColor${capitalize(color2)}`], styles2[variant], styles2[`${variant}${capitalize(color2)}`]];
   }
 })(memoTheme(({
   theme: theme2
@@ -34307,7 +33565,9 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
   const handleRef = useForkRef(chipRef, ref);
   const handleDeleteIconClick = (event) => {
     event.stopPropagation();
-    onDelete(event);
+    if (onDelete) {
+      onDelete(event);
+    }
   };
   const handleKeyDown = (event) => {
     if (event.currentTarget === event.target && isDeleteKeyboardEvent(event)) {
@@ -34335,12 +33595,12 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
     disabled,
     size,
     color: color2,
-    iconColor: /* @__PURE__ */ hn(iconProp) ? iconProp.props.color || color2 : color2,
+    iconColor: /* @__PURE__ */ mn(iconProp) ? iconProp.props.color || color2 : color2,
     onDelete: !!onDelete,
     clickable,
     variant
   };
-  const classes = useUtilityClasses$N(ownerState);
+  const classes = useUtilityClasses$K(ownerState);
   const moreProps = component === ButtonBase ? {
     component: ComponentProp || "div",
     focusVisibleClassName: classes.focusVisible,
@@ -34350,7 +33610,7 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
   } : {};
   let deleteIcon = null;
   if (onDelete) {
-    deleteIcon = deleteIconProp && /* @__PURE__ */ hn(deleteIconProp) ? /* @__PURE__ */ mn(deleteIconProp, {
+    deleteIcon = deleteIconProp && /* @__PURE__ */ mn(deleteIconProp) ? /* @__PURE__ */ _n(deleteIconProp, {
       className: clsx(deleteIconProp.props.className, classes.deleteIcon),
       onClick: handleDeleteIconClick
     }) : /* @__PURE__ */ u2(CancelIcon$1, {
@@ -34359,14 +33619,14 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
     });
   }
   let avatar = null;
-  if (avatarProp && /* @__PURE__ */ hn(avatarProp)) {
-    avatar = /* @__PURE__ */ mn(avatarProp, {
+  if (avatarProp && /* @__PURE__ */ mn(avatarProp)) {
+    avatar = /* @__PURE__ */ _n(avatarProp, {
       className: clsx(classes.avatar, avatarProp.props.className)
     });
   }
   let icon = null;
-  if (iconProp && /* @__PURE__ */ hn(iconProp)) {
-    icon = /* @__PURE__ */ mn(iconProp, {
+  if (iconProp && /* @__PURE__ */ mn(iconProp)) {
+    icon = /* @__PURE__ */ _n(iconProp, {
       className: clsx(classes.icon, iconProp.props.className)
     });
   }
@@ -34576,7 +33836,7 @@ const TextareaAutosize = /* @__PURE__ */ D(function TextareaAutosize2(props, for
       onChange(event);
     }
   };
-  return /* @__PURE__ */ u2(S, {
+  return /* @__PURE__ */ u2(k$2, {
     children: [/* @__PURE__ */ u2("textarea", {
       value,
       onChange: handleChange,
@@ -34614,16 +33874,9 @@ function formControlState({
     return acc;
   }, {});
 }
-const FormControlContext = /* @__PURE__ */ X$1(void 0);
+const FormControlContext = /* @__PURE__ */ Q$1(void 0);
 function useFormControl() {
   return x$1(FormControlContext);
-}
-function activeElement(doc) {
-  let element = doc.activeElement;
-  while (element?.shadowRoot?.activeElement != null) {
-    element = element.shadowRoot.activeElement;
-  }
-  return element;
 }
 function hasValue(value) {
   return value != null && !(Array.isArray(value) && value.length === 0);
@@ -34639,8 +33892,6 @@ function getInputBaseUtilityClass(slot) {
 }
 const inputBaseClasses = generateUtilityClasses("MuiInputBase", ["root", "formControl", "focused", "disabled", "adornedStart", "adornedEnd", "error", "sizeSmall", "multiline", "colorSecondary", "fullWidth", "hiddenLabel", "readOnly", "input", "inputSizeSmall", "inputMultiline", "inputTypeSearch", "inputAdornedStart", "inputAdornedEnd", "inputHiddenLabel"]);
 var _InputGlobalStyles;
-const MUI_AUTO_FILL = "mui-auto-fill";
-const MUI_AUTO_FILL_CANCEL = "mui-auto-fill-cancel";
 const rootOverridesResolver = (props, styles2) => {
   const {
     ownerState
@@ -34653,7 +33904,7 @@ const inputOverridesResolver = (props, styles2) => {
   } = props;
   return [styles2.input, ownerState.size === "small" && styles2.inputSizeSmall, ownerState.multiline && styles2.inputMultiline, ownerState.type === "search" && styles2.inputTypeSearch, ownerState.startAdornment && styles2.inputAdornedStart, ownerState.endAdornment && styles2.inputAdornedEnd, ownerState.hiddenLabel && styles2.inputHiddenLabel];
 };
-const useUtilityClasses$M = (ownerState) => {
+const useUtilityClasses$J = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -34805,11 +34056,11 @@ const InputBaseInput = styled("input", {
         ownerState
       }) => !ownerState.disableInjectingGlobalStyles,
       style: {
-        animationName: MUI_AUTO_FILL_CANCEL,
+        animationName: "mui-auto-fill-cancel",
         animationDuration: "10ms",
         "&:-webkit-autofill": {
           animationDuration: "5000s",
-          animationName: MUI_AUTO_FILL
+          animationName: "mui-auto-fill"
         }
       }
     }, {
@@ -34841,16 +34092,14 @@ const InputBaseInput = styled("input", {
   };
 }));
 const InputGlobalStyles = globalCss({
-  // Keep keyframes non-empty for Emotion production builds. Animation properties are ignored
-  // inside keyframes, avoiding the visible display animation triggered by Chrome 117+.
-  [`@keyframes ${MUI_AUTO_FILL}`]: {
+  "@keyframes mui-auto-fill": {
     from: {
-      animationName: MUI_AUTO_FILL
+      display: "block"
     }
   },
-  [`@keyframes ${MUI_AUTO_FILL_CANCEL}`]: {
+  "@keyframes mui-auto-fill-cancel": {
     from: {
-      animationName: MUI_AUTO_FILL_CANCEL
+      display: "block"
     }
   }
 });
@@ -34942,27 +34191,6 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
       });
     }
   }, [value, checkDirty, isControlled]);
-  useEnhancedEffect(() => {
-    if (!autoFocus) {
-      return;
-    }
-    const input = inputRef.current;
-    if (!input) {
-      return;
-    }
-    const doc = ownerDocument(input);
-    const activeElement$1 = activeElement(doc);
-    const noElementFocused = activeElement$1 == null || activeElement$1 === doc.body || activeElement$1 === doc.documentElement;
-    if (input === activeElement$1) {
-      if (muiFormControl && muiFormControl.onFocus) {
-        muiFormControl.onFocus();
-      } else {
-        setFocused(true);
-      }
-    } else if (noElementFocused) {
-      input.focus();
-    }
-  }, [autoFocus]);
   const handleFocus = (event) => {
     if (onFocus) {
       onFocus(event);
@@ -35038,7 +34266,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     InputComponent = TextareaAutosize;
   }
   const handleAutoFill = (event) => {
-    checkDirty(event.animationName === MUI_AUTO_FILL_CANCEL ? inputRef.current : {
+    checkDirty(event.animationName === "mui-auto-fill-cancel" ? inputRef.current : {
       value: "x"
     });
   };
@@ -35062,7 +34290,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     startAdornment,
     type
   };
-  const classes = useUtilityClasses$M(ownerState);
+  const classes = useUtilityClasses$J(ownerState);
   const Root = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input3 = slots.input || components.Input || InputBaseInput;
@@ -35070,7 +34298,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     ...inputProps,
     ...slotProps.input ?? componentsProps.input
   };
-  return /* @__PURE__ */ u2(S, {
+  return /* @__PURE__ */ u2(k$2, {
     children: [!disableInjectingGlobalStyles && typeof InputGlobalStyles === "function" && // For Emotion/Styled-components, InputGlobalStyles will be a function
     // For Pigment CSS, this has no effect because the InputGlobalStyles will be null.
     (_InputGlobalStyles || (_InputGlobalStyles = /* @__PURE__ */ u2(InputGlobalStyles, {}))), /* @__PURE__ */ u2(Root, {
@@ -35155,7 +34383,7 @@ function getAutocompleteUtilityClass(slot) {
 }
 const autocompleteClasses = generateUtilityClasses("MuiAutocomplete", ["root", "expanded", "fullWidth", "focused", "focusVisible", "tag", "tagSizeSmall", "tagSizeMedium", "hasPopupIcon", "hasClearIcon", "inputRoot", "input", "inputFocused", "endAdornment", "clearIndicator", "popupIndicator", "popupIndicatorOpen", "popper", "popperDisablePortal", "paper", "listbox", "loading", "noOptions", "option", "groupLabel", "groupUl"]);
 var _ClearIcon, _ArrowDropDownIcon;
-const useUtilityClasses$L = (ownerState) => {
+const useUtilityClasses$I = (ownerState) => {
   const {
     classes,
     disablePortal,
@@ -35620,36 +34848,6 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
     ...props,
     componentName: "Autocomplete"
   });
-  const forceRenderOnResize = useForcedRerendering();
-  y(() => {
-    if (!popupOpen || !anchorEl || typeof ResizeObserver === "undefined") {
-      return void 0;
-    }
-    let lastWidth = anchorEl.clientWidth;
-    const observer = new ResizeObserver(() => {
-      const newWidth = anchorEl.clientWidth;
-      if (lastWidth !== newWidth) {
-        lastWidth = newWidth;
-        forceRenderOnResize();
-      }
-    });
-    observer.observe(anchorEl);
-    return () => {
-      observer.disconnect();
-    };
-  }, [popupOpen, anchorEl, forceRenderOnResize]);
-  const previousGroupedOptionsRef = A$1([]);
-  const prevPopupOpenRef = A$1(false);
-  const renderedOptions = popupOpen ? groupedOptions : previousGroupedOptionsRef.current;
-  useEnhancedEffect(() => {
-    if (popupOpen && !prevPopupOpenRef.current) {
-      previousGroupedOptionsRef.current = [];
-    }
-    prevPopupOpenRef.current = popupOpen;
-    if (popupOpen && groupedOptions.length > 0) {
-      previousGroupedOptionsRef.current = groupedOptions;
-    }
-  }, [popupOpen, groupedOptions]);
   const hasClearIcon = !disableClearable && !disabled && dirty && !readOnly;
   const hasPopupIcon = (!freeSolo || forcePopupIcon === true) && forcePopupIcon !== false;
   const {
@@ -35674,7 +34872,7 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
     popupOpen,
     size
   };
-  const classes = useUtilityClasses$L(ownerState);
+  const classes = useUtilityClasses$I(ownerState);
   const externalForwardedProps = {
     slots: {
       paper: PaperComponentProp,
@@ -35688,17 +34886,6 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
       ...slotProps
     }
   };
-  const [RootSlot, rootProps] = useSlot("root", {
-    ref,
-    className: [classes.root, className],
-    elementType: AutocompleteRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    getSlotProps: getRootProps,
-    ownerState
-  });
   const [ListboxSlot, listboxProps] = useSlot("listbox", {
     elementType: AutocompleteListbox,
     externalForwardedProps,
@@ -35721,41 +34908,11 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
     additionalProps: {
       disablePortal,
       style: {
-        width: anchorEl ? anchorEl.clientWidth : null,
-        // Prevent interaction with stale cached options during exit transitions.
-        // The hook's filteredOptions is [] when popupOpen=false, so clicks on stale
-        // rendered options would pass undefined to selectNewValue.
-        pointerEvents: popupOpen ? void 0 : "none"
+        width: anchorEl ? anchorEl.clientWidth : null
       },
       role: "presentation",
       anchorEl,
       open: popupOpen
-    }
-  });
-  const hasPopupContent = renderedOptions.length > 0 || loading || !freeSolo || popperProps.keepMounted === true;
-  const [ClearIndicatorSlot, clearIndicatorProps] = useSlot("clearIndicator", {
-    elementType: AutocompleteClearIndicator,
-    externalForwardedProps,
-    ownerState,
-    className: classes.clearIndicator,
-    shouldForwardComponentProp: true,
-    additionalProps: {
-      ...getClearProps(),
-      "aria-label": clearText,
-      title: clearText
-    }
-  });
-  const [PopupIndicatorSlot, popupIndicatorProps] = useSlot("popupIndicator", {
-    elementType: AutocompletePopupIndicator,
-    externalForwardedProps,
-    ownerState,
-    className: classes.popupIndicator,
-    shouldForwardComponentProp: true,
-    additionalProps: {
-      ...getPopupIndicatorProps(),
-      disabled,
-      "aria-label": popupOpen ? closeText : openText,
-      title: popupOpen ? closeText : openText
     }
   });
   let startAdornment;
@@ -35838,13 +34995,18 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
       inputValue
     }, ownerState);
   };
-  return /* @__PURE__ */ u2(S, {
-    children: [/* @__PURE__ */ u2(RootSlot, {
-      ...rootProps,
+  const clearIndicatorSlotProps = externalForwardedProps.slotProps.clearIndicator;
+  const popupIndicatorSlotProps = externalForwardedProps.slotProps.popupIndicator;
+  return /* @__PURE__ */ u2(k$2, {
+    children: [/* @__PURE__ */ u2(AutocompleteRoot, {
+      ref,
+      className: clsx(classes.root, className),
+      ownerState,
+      ...getRootProps(other),
       children: renderInput({
         id,
         disabled,
-        fullWidth: props.fullWidth ?? true,
+        fullWidth: true,
         size: size === "small" ? "small" : void 0,
         InputLabelProps: getInputLabelProps(),
         InputProps: {
@@ -35860,11 +35022,22 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
             endAdornment: /* @__PURE__ */ u2(AutocompleteEndAdornment, {
               className: classes.endAdornment,
               ownerState,
-              children: [hasClearIcon ? /* @__PURE__ */ u2(ClearIndicatorSlot, {
-                ...clearIndicatorProps,
+              children: [hasClearIcon ? /* @__PURE__ */ u2(AutocompleteClearIndicator, {
+                ...getClearProps(),
+                "aria-label": clearText,
+                title: clearText,
+                ownerState,
+                ...clearIndicatorSlotProps,
+                className: clsx(classes.clearIndicator, clearIndicatorSlotProps?.className),
                 children: clearIcon
-              }) : null, hasPopupIcon ? /* @__PURE__ */ u2(PopupIndicatorSlot, {
-                ...popupIndicatorProps,
+              }) : null, hasPopupIcon ? /* @__PURE__ */ u2(AutocompletePopupIndicator, {
+                ...getPopupIndicatorProps(),
+                disabled,
+                "aria-label": popupOpen ? closeText : openText,
+                title: popupOpen ? closeText : openText,
+                ownerState,
+                ...popupIndicatorSlotProps,
+                className: clsx(classes.popupIndicator, popupIndicatorSlotProps?.className),
                 children: popupIcon
               }) : null]
             })
@@ -35877,17 +35050,17 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
           ...getInputProps()
         }
       })
-    }), anchorEl && hasPopupContent ? /* @__PURE__ */ u2(AutocompletePopper, {
+    }), anchorEl ? /* @__PURE__ */ u2(AutocompletePopper, {
       as: PopperSlot,
       ...popperProps,
       children: /* @__PURE__ */ u2(AutocompletePaper, {
         as: PaperSlot,
         ...paperProps,
-        children: [loading && renderedOptions.length === 0 ? /* @__PURE__ */ u2(AutocompleteLoading, {
+        children: [loading && groupedOptions.length === 0 ? /* @__PURE__ */ u2(AutocompleteLoading, {
           className: classes.loading,
           ownerState,
           children: loadingText
-        }) : null, renderedOptions.length === 0 && !freeSolo && !loading ? /* @__PURE__ */ u2(AutocompleteNoOptions, {
+        }) : null, groupedOptions.length === 0 && !freeSolo && !loading ? /* @__PURE__ */ u2(AutocompleteNoOptions, {
           className: classes.noOptions,
           ownerState,
           role: "presentation",
@@ -35895,9 +35068,10 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
             event.preventDefault();
           },
           children: noOptionsText
-        }) : null, renderedOptions.length > 0 ? /* @__PURE__ */ u2(ListboxSlot, {
+        }) : null, groupedOptions.length > 0 ? /* @__PURE__ */ u2(ListboxSlot, {
+          as: ListboxComponentProp,
           ...listboxProps,
-          children: renderedOptions.map((option, index) => {
+          children: groupedOptions.map((option, index) => {
             if (groupBy) {
               return renderGroup({
                 key: option.key,
@@ -35918,17 +35092,7 @@ const styles$3 = {
   },
   entered: {
     opacity: 1
-  },
-  exiting: {
-    opacity: 0
-  },
-  exited: {
-    opacity: 0
   }
-};
-const hiddenStyles$2 = {
-  opacity: 0,
-  visibility: "hidden"
 };
 const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
   const theme2 = useTheme();
@@ -35950,12 +35114,24 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
     onExiting,
     style: style2,
     timeout = defaultTimeout,
+    // eslint-disable-next-line react/prop-types
+    TransitionComponent = Transition,
     ...other
   } = props;
   const nodeRef = A$1(null);
   const handleRef = useForkRef(nodeRef, getReactElementRef(children), ref);
-  const handleEntering = normalizedTransitionCallback(nodeRef, onEntering);
-  const handleEnter = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
+  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
+    if (callback) {
+      const node2 = nodeRef.current;
+      if (maybeIsAppearing === void 0) {
+        callback(node2);
+      } else {
+        callback(node2, maybeIsAppearing);
+      }
+    }
+  };
+  const handleEntering = normalizedTransitionCallback(onEntering);
+  const handleEnter = normalizedTransitionCallback((node2, isAppearing) => {
     reflow(node2);
     const transitionProps = getTransitionProps({
       style: style2,
@@ -35964,14 +35140,15 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
     }, {
       mode: "enter"
     });
+    node2.style.webkitTransition = theme2.transitions.create("opacity", transitionProps);
     node2.style.transition = theme2.transitions.create("opacity", transitionProps);
     if (onEnter) {
       onEnter(node2, isAppearing);
     }
   });
-  const handleEntered = normalizedTransitionCallback(nodeRef, onEntered);
-  const handleExiting = normalizedTransitionCallback(nodeRef, onExiting);
-  const handleExit = normalizedTransitionCallback(nodeRef, (node2) => {
+  const handleEntered = normalizedTransitionCallback(onEntered);
+  const handleExiting = normalizedTransitionCallback(onExiting);
+  const handleExit = normalizedTransitionCallback((node2) => {
     const transitionProps = getTransitionProps({
       style: style2,
       timeout,
@@ -35979,23 +35156,19 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
     }, {
       mode: "exit"
     });
+    node2.style.webkitTransition = theme2.transitions.create("opacity", transitionProps);
     node2.style.transition = theme2.transitions.create("opacity", transitionProps);
     if (onExit) {
       onExit(node2);
     }
   });
-  const handleExited = normalizedTransitionCallback(nodeRef, (node2) => {
-    node2.style.transition = "";
-    if (onExited) {
-      onExited(node2);
-    }
-  });
+  const handleExited = normalizedTransitionCallback(onExited);
   const handleAddEndListener = (next2) => {
     if (addEndListener) {
       addEndListener(nodeRef.current, next2);
     }
   };
-  return /* @__PURE__ */ u2(Transition, {
+  return /* @__PURE__ */ u2(TransitionComponent, {
     appear,
     in: inProp,
     nodeRef,
@@ -36012,9 +35185,14 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
       ownerState,
       ...restChildProps
     }) => {
-      const childStyle = getTransitionChildStyle(state, inProp, styles$3, hiddenStyles$2, style2, children.props.style);
-      return /* @__PURE__ */ mn(children, {
-        style: childStyle,
+      return /* @__PURE__ */ _n(children, {
+        style: {
+          opacity: 0,
+          visibility: state === "exited" && !inProp ? "hidden" : void 0,
+          ...styles$3[state],
+          ...style2,
+          ...children.props.style
+        },
         ref: handleRef,
         ...restChildProps
       });
@@ -36025,7 +35203,7 @@ function getBackdropUtilityClass(slot) {
   return generateUtilityClass("MuiBackdrop", slot);
 }
 generateUtilityClasses("MuiBackdrop", ["root", "invisible"]);
-const useUtilityClasses$K = (ownerState) => {
+const useUtilityClasses$H = (ownerState) => {
   const {
     classes,
     invisible
@@ -36088,7 +35266,7 @@ const Backdrop = /* @__PURE__ */ D(function Backdrop2(inProps, ref) {
     component,
     invisible
   };
-  const classes = useUtilityClasses$K(ownerState);
+  const classes = useUtilityClasses$H(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     root: components.Root,
@@ -36122,6 +35300,7 @@ const Backdrop = /* @__PURE__ */ D(function Backdrop2(inProps, ref) {
     children: /* @__PURE__ */ u2(RootSlot, {
       "aria-hidden": true,
       ...rootProps,
+      classes,
       ref,
       children
     })
@@ -36139,9 +35318,9 @@ function getButtonUtilityClass(slot) {
   return generateUtilityClass("MuiButton", slot);
 }
 const buttonClasses = generateUtilityClasses("MuiButton", ["root", "text", "textInherit", "textPrimary", "textSecondary", "textSuccess", "textError", "textInfo", "textWarning", "outlined", "outlinedInherit", "outlinedPrimary", "outlinedSecondary", "outlinedSuccess", "outlinedError", "outlinedInfo", "outlinedWarning", "contained", "containedInherit", "containedPrimary", "containedSecondary", "containedSuccess", "containedError", "containedInfo", "containedWarning", "disableElevation", "focusVisible", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorSuccess", "colorError", "colorInfo", "colorWarning", "textSizeSmall", "textSizeMedium", "textSizeLarge", "outlinedSizeSmall", "outlinedSizeMedium", "outlinedSizeLarge", "containedSizeSmall", "containedSizeMedium", "containedSizeLarge", "sizeMedium", "sizeSmall", "sizeLarge", "fullWidth", "startIcon", "endIcon", "icon", "iconSizeSmall", "iconSizeMedium", "iconSizeLarge", "loading", "loadingWrapper", "loadingIconPlaceholder", "loadingIndicator", "loadingPositionCenter", "loadingPositionStart", "loadingPositionEnd"]);
-const ButtonGroupContext = /* @__PURE__ */ X$1({});
-const ButtonGroupButtonContext = /* @__PURE__ */ X$1(void 0);
-const useUtilityClasses$J = (ownerState) => {
+const ButtonGroupContext = /* @__PURE__ */ Q$1({});
+const ButtonGroupButtonContext = /* @__PURE__ */ Q$1(void 0);
+const useUtilityClasses$G = (ownerState) => {
   const {
     color: color2,
     disableElevation,
@@ -36225,17 +35404,6 @@ const ButtonRoot = styled(ButtonBase, {
       color: (theme2.vars || theme2).palette.action.disabled
     },
     variants: [{
-      props: ({
-        ownerState
-      }) => ownerState.startIcon || ownerState.loading && ownerState.loadingPosition === "start",
-      style: {
-        "&::before": {
-          content: '"\\200b"',
-          width: 0,
-          overflow: "hidden"
-        }
-      }
-    }, {
       props: {
         variant: "contained"
       },
@@ -36652,7 +35820,7 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
     type,
     variant
   };
-  const classes = useUtilityClasses$J(ownerState);
+  const classes = useUtilityClasses$G(ownerState);
   const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ u2(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -36684,10 +35852,6 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
       })
     })
   ) : null;
-  const {
-    root,
-    ...forwardedClasses
-  } = classes;
   return /* @__PURE__ */ u2(ButtonRoot, {
     ownerState,
     className: clsx(contextProps.className, classes.root, className, positionClassName),
@@ -36699,102 +35863,15 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
     type,
     id: loading ? loadingId : idProp,
     ...other,
-    classes: forwardedClasses,
+    classes,
     children: [startIcon, loadingPosition !== "end" && loader, children, loadingPosition === "end" && loader, endIcon]
-  });
-});
-function getCardUtilityClass(slot) {
-  return generateUtilityClass("MuiCard", slot);
-}
-generateUtilityClasses("MuiCard", ["root"]);
-const useUtilityClasses$I = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getCardUtilityClass, classes);
-};
-const CardRoot = styled(Paper$1, {
-  name: "MuiCard",
-  slot: "Root"
-})({
-  overflow: "hidden"
-});
-const Card$2 = /* @__PURE__ */ D(function Card(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiCard"
-  });
-  const {
-    className,
-    raised = false,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    raised
-  };
-  const classes = useUtilityClasses$I(ownerState);
-  return /* @__PURE__ */ u2(CardRoot, {
-    className: clsx(classes.root, className),
-    elevation: raised ? 8 : void 0,
-    ref,
-    ownerState,
-    ...other
-  });
-});
-function getCardContentUtilityClass(slot) {
-  return generateUtilityClass("MuiCardContent", slot);
-}
-generateUtilityClasses("MuiCardContent", ["root"]);
-const useUtilityClasses$H = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getCardContentUtilityClass, classes);
-};
-const CardContentRoot = styled("div", {
-  name: "MuiCardContent",
-  slot: "Root"
-})({
-  padding: 16,
-  "&:last-child": {
-    paddingBottom: 24
-  }
-});
-const CardContent$1 = /* @__PURE__ */ D(function CardContent(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiCardContent"
-  });
-  const {
-    className,
-    component = "div",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    component
-  };
-  const classes = useUtilityClasses$H(ownerState);
-  return /* @__PURE__ */ u2(CardContentRoot, {
-    as: component,
-    className: clsx(classes.root, className),
-    ownerState,
-    ref,
-    ...other
   });
 });
 function getSwitchBaseUtilityClass(slot) {
   return generateUtilityClass("PrivateSwitchBase", slot);
 }
 generateUtilityClasses("PrivateSwitchBase", ["root", "checked", "disabled", "input", "edgeStart", "edgeEnd"]);
-const useUtilityClasses$G = (ownerState) => {
+const useUtilityClasses$F = (ownerState) => {
   const {
     classes,
     checked,
@@ -36911,7 +35988,7 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     }
   };
   const handleInputChange = (event) => {
-    if (event.nativeEvent.defaultPrevented || readOnly) {
+    if (event.nativeEvent.defaultPrevented) {
       return;
     }
     const newChecked = event.target.checked;
@@ -36934,7 +36011,7 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     disableFocusRipple,
     edge
   };
-  const classes = useUtilityClasses$G(ownerState);
+  const classes = useUtilityClasses$F(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -36967,6 +36044,7 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     additionalProps: {
       centerRipple: true,
       focusRipple: !disableFocusRipple,
+      disabled,
       role: void 0,
       tabIndex: null
     }
@@ -37020,7 +36098,7 @@ function getCheckboxUtilityClass(slot) {
   return generateUtilityClass("MuiCheckbox", slot);
 }
 const checkboxClasses = generateUtilityClasses("MuiCheckbox", ["root", "checked", "disabled", "indeterminate", "colorPrimary", "colorSecondary", "sizeSmall", "sizeMedium"]);
-const useUtilityClasses$F = (ownerState) => {
+const useUtilityClasses$E = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -37129,7 +36207,7 @@ const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
     indeterminate,
     size
   };
-  const classes = useUtilityClasses$F(ownerState);
+  const classes = useUtilityClasses$E(ownerState);
   const externalInputProps = slotProps.input ?? inputProps;
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
@@ -37144,18 +36222,17 @@ const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
     ownerState,
     additionalProps: {
       type: "checkbox",
-      icon: /* @__PURE__ */ mn(icon, {
+      icon: /* @__PURE__ */ _n(icon, {
         fontSize: icon.props.fontSize ?? size
       }),
-      checkedIcon: /* @__PURE__ */ mn(indeterminateIcon, {
+      checkedIcon: /* @__PURE__ */ _n(indeterminateIcon, {
         fontSize: indeterminateIcon.props.fontSize ?? size
       }),
       disableRipple,
       slots,
       slotProps: {
         input: mergeSlotProps$1(typeof externalInputProps === "function" ? externalInputProps(ownerState) : externalInputProps, {
-          "data-indeterminate": indeterminate,
-          "aria-checked": indeterminate ? "mixed" : void 0
+          "data-indeterminate": indeterminate
         })
       }
     }
@@ -37207,7 +36284,13 @@ function ClickAwayListener$1(props) {
     if (event.composedPath) {
       insideDOM = event.composedPath().includes(nodeRef.current);
     } else {
-      insideDOM = !contains$1(doc.documentElement, event.target) || contains$1(nodeRef.current, event.target);
+      insideDOM = !doc.documentElement.contains(
+        // @ts-expect-error returns `false` as intended when not dispatched from a Node
+        event.target
+      ) || nodeRef.current.contains(
+        // @ts-expect-error returns `false` as intended when not dispatched from a Node
+        event.target
+      );
     }
     if (!insideDOM && (disableReactTree || !insideReactTree)) {
       onClickAway(event);
@@ -37256,7 +36339,7 @@ function ClickAwayListener$1(props) {
     }
     return void 0;
   }, [handleClickAway, mouseEvent]);
-  return /* @__PURE__ */ mn(children, childrenProps);
+  return /* @__PURE__ */ _n(children, childrenProps);
 }
 const isDynamicSupport = typeof globalCss({}) === "function";
 const html = (theme2, enableColorScheme) => ({
@@ -37371,7 +36454,7 @@ function CssBaseline$1(inProps) {
     children,
     enableColorScheme = false
   } = props;
-  return /* @__PURE__ */ u2(S, {
+  return /* @__PURE__ */ u2(k$2, {
     children: [isDynamicSupport && /* @__PURE__ */ u2(GlobalStyles, {
       enableColorScheme
     }), !isDynamicSupport && !enableColorScheme && /* @__PURE__ */ u2("span", {
@@ -37401,7 +36484,7 @@ function ariaHidden(element, hide2) {
   }
 }
 function getPaddingRight(element) {
-  return parseFloat(ownerWindow(element).getComputedStyle(element).paddingRight) || 0;
+  return parseInt(ownerWindow(element).getComputedStyle(element).paddingRight, 10) || 0;
 }
 function isAriaHiddenForbiddenOnElement(element) {
   const forbiddenTagNames = ["TEMPLATE", "SCRIPT", "STYLE", "LINK", "MAP", "META", "NOSCRIPT", "PICTURE", "COL", "COLGROUP", "PARAM", "SLOT", "SOURCE", "TRACK"];
@@ -37456,9 +36539,9 @@ function handleContainer(containerInfo, props) {
     if (container.parentNode instanceof DocumentFragment) {
       scrollContainer = ownerDocument(container).body;
     } else {
-      const parent = container.parentElement;
+      const parent2 = container.parentElement;
       const containerWindow = ownerWindow(container);
-      scrollContainer = parent?.nodeName === "HTML" && containerWindow.getComputedStyle(parent).overflowY === "scroll" ? parent : container;
+      scrollContainer = parent2?.nodeName === "HTML" && containerWindow.getComputedStyle(parent2).overflowY === "scroll" ? parent2 : container;
     }
     restoreStyle.push({
       value: scrollContainer.style.overflow,
@@ -37566,13 +36649,6 @@ class ModalManager {
     return this.modals.length > 0 && this.modals[this.modals.length - 1] === modal;
   }
 }
-const FOCUSABLE_ATTRIBUTE = "data-mui-focusable";
-function getFocusTarget(rootElement) {
-  if (!rootElement) {
-    return null;
-  }
-  return rootElement.hasAttribute(FOCUSABLE_ATTRIBUTE) ? rootElement : rootElement.querySelector(`[${FOCUSABLE_ATTRIBUTE}]`);
-}
 const candidatesSelector = ["input", "select", "textarea", "a[href]", "button", "[tabindex]", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])'].join(",");
 function getTabIndex(node2) {
   const tabindexAttr = parseInt(node2.getAttribute("tabindex") || "", 10);
@@ -37653,19 +36729,16 @@ function FocusTrap(props) {
     activated.current = !disableAutoFocus;
   }, [disableAutoFocus, open]);
   y(() => {
-    ignoreNextEnforceFocus.current = false;
     if (!open || !rootRef.current) {
       return;
     }
     const doc = ownerDocument(rootRef.current);
-    const activeElement$1 = activeElement(doc);
-    const focusTarget = getFocusTarget(rootRef.current) ?? rootRef.current;
-    if (!contains$1(rootRef.current, activeElement$1)) {
-      if (!focusTarget.hasAttribute("tabIndex")) {
-        focusTarget.setAttribute("tabIndex", "-1");
+    if (!rootRef.current.contains(doc.activeElement)) {
+      if (!rootRef.current.hasAttribute("tabIndex")) {
+        rootRef.current.setAttribute("tabIndex", "-1");
       }
       if (activated.current) {
-        focusTarget.focus();
+        rootRef.current.focus();
       }
     }
     return () => {
@@ -37688,8 +36761,7 @@ function FocusTrap(props) {
       if (disableEnforceFocus || !isEnabled() || nativeEvent.key !== "Tab") {
         return;
       }
-      const activeElement$1 = activeElement(doc);
-      if (activeElement$1 === rootRef.current && nativeEvent.shiftKey) {
+      if (doc.activeElement === rootRef.current && nativeEvent.shiftKey) {
         ignoreNextEnforceFocus.current = true;
         if (sentinelEnd.current) {
           sentinelEnd.current.focus();
@@ -37701,18 +36773,17 @@ function FocusTrap(props) {
       if (rootElement === null) {
         return;
       }
-      const activeEl = activeElement(doc);
       if (!doc.hasFocus() || !isEnabled() || ignoreNextEnforceFocus.current) {
         ignoreNextEnforceFocus.current = false;
         return;
       }
-      if (contains$1(rootElement, activeEl)) {
+      if (rootElement.contains(doc.activeElement)) {
         return;
       }
-      if (disableEnforceFocus && activeEl !== sentinelStart.current && activeEl !== sentinelEnd.current) {
+      if (disableEnforceFocus && doc.activeElement !== sentinelStart.current && doc.activeElement !== sentinelEnd.current) {
         return;
       }
-      if (activeEl !== reactFocusEventTarget.current) {
+      if (doc.activeElement !== reactFocusEventTarget.current) {
         reactFocusEventTarget.current = null;
       } else if (reactFocusEventTarget.current !== null) {
         return;
@@ -37721,7 +36792,7 @@ function FocusTrap(props) {
         return;
       }
       let tabbable = [];
-      if (activeEl === sentinelStart.current || activeEl === sentinelEnd.current) {
+      if (doc.activeElement === sentinelStart.current || doc.activeElement === sentinelEnd.current) {
         tabbable = getTabbable(rootRef.current);
       }
       if (tabbable.length > 0) {
@@ -37742,8 +36813,7 @@ function FocusTrap(props) {
     doc.addEventListener("focusin", contain);
     doc.addEventListener("keydown", loopFocus, true);
     const interval = setInterval(() => {
-      const activeEl = activeElement(doc);
-      if (activeEl && activeEl.tagName === "BODY") {
+      if (doc.activeElement && doc.activeElement.tagName === "BODY") {
         contain();
       }
     }, 50);
@@ -37770,13 +36840,13 @@ function FocusTrap(props) {
     }
     activated.current = true;
   };
-  return /* @__PURE__ */ u2(S, {
+  return /* @__PURE__ */ u2(k$2, {
     children: [/* @__PURE__ */ u2("div", {
       tabIndex: open ? 0 : -1,
       onFocus: handleFocusSentinel,
       ref: sentinelStart,
       "data-testid": "sentinelStart"
-    }), /* @__PURE__ */ mn(children, {
+    }), /* @__PURE__ */ _n(children, {
       ref: handleRef,
       onFocus
     }), /* @__PURE__ */ u2("div", {
@@ -37955,7 +37025,7 @@ function getModalUtilityClass(slot) {
   return generateUtilityClass("MuiModal", slot);
 }
 generateUtilityClasses("MuiModal", ["root", "hidden", "backdrop"]);
-const useUtilityClasses$E = (ownerState) => {
+const useUtilityClasses$D = (ownerState) => {
   const {
     open,
     exited,
@@ -38062,7 +37132,7 @@ const Modal = /* @__PURE__ */ D(function Modal2(inProps, ref) {
     ...propsWithDefaults,
     exited
   };
-  const classes = useUtilityClasses$E(ownerState);
+  const classes = useUtilityClasses$D(ownerState);
   const childProps = {};
   if (children.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -38134,7 +37204,7 @@ const Modal = /* @__PURE__ */ D(function Modal2(inProps, ref) {
         disableRestoreFocus,
         isEnabled: isTopModal,
         open,
-        children: /* @__PURE__ */ mn(children, childProps)
+        children: /* @__PURE__ */ _n(children, childProps)
       })]
     })
   });
@@ -38142,16 +37212,17 @@ const Modal = /* @__PURE__ */ D(function Modal2(inProps, ref) {
 function getDialogUtilityClass(slot) {
   return generateUtilityClass("MuiDialog", slot);
 }
-const dialogClasses = generateUtilityClasses("MuiDialog", ["root", "backdrop", "scrollPaper", "scrollBody", "container", "paper", "paperScrollPaper", "paperScrollBody", "paperWidthFalse", "paperWidthXs", "paperWidthSm", "paperWidthMd", "paperWidthLg", "paperWidthXl", "paperFullWidth", "paperFullScreen"]);
-const DialogContext = /* @__PURE__ */ X$1({});
+const dialogClasses = generateUtilityClasses("MuiDialog", ["root", "scrollPaper", "scrollBody", "container", "paper", "paperScrollPaper", "paperScrollBody", "paperWidthFalse", "paperWidthXs", "paperWidthSm", "paperWidthMd", "paperWidthLg", "paperWidthXl", "paperFullWidth", "paperFullScreen"]);
+const DialogContext = /* @__PURE__ */ Q$1({});
 const DialogBackdrop = styled(Backdrop, {
   name: "MuiDialog",
-  slot: "Backdrop"
+  slot: "Backdrop",
+  overrides: (props, styles2) => styles2.backdrop
 })({
   // Improve scrollable dialog support.
   zIndex: -1
 });
-const useUtilityClasses$D = (ownerState) => {
+const useUtilityClasses$C = (ownerState) => {
   const {
     classes,
     scroll,
@@ -38161,7 +37232,6 @@ const useUtilityClasses$D = (ownerState) => {
   } = ownerState;
   const slots = {
     root: ["root"],
-    backdrop: ["backdrop"],
     container: ["container", `scroll${capitalize(scroll)}`],
     paper: ["paper", `paperScroll${capitalize(scroll)}`, `paperWidth${capitalize(String(maxWidth2))}`, fullWidth && "paperFullWidth", fullScreen && "paperFullScreen"]
   };
@@ -38339,7 +37409,6 @@ const Dialog$1 = /* @__PURE__ */ D(function Dialog(inProps, ref) {
     open,
     PaperComponent = Paper$1,
     PaperProps = {},
-    role = "dialog",
     scroll = "paper",
     slots = {},
     slotProps = {},
@@ -38356,7 +37425,7 @@ const Dialog$1 = /* @__PURE__ */ D(function Dialog(inProps, ref) {
     maxWidth: maxWidth2,
     scroll
   };
-  const classes = useUtilityClasses$D(ownerState);
+  const classes = useUtilityClasses$C(ownerState);
   const backdropClick = A$1();
   const handleMouseDown = (event) => {
     backdropClick.current = event.target === event.currentTarget;
@@ -38405,24 +37474,14 @@ const Dialog$1 = /* @__PURE__ */ D(function Dialog(inProps, ref) {
     elementType: DialogBackdrop,
     shouldForwardComponentProp: true,
     externalForwardedProps,
-    ownerState,
-    className: classes.backdrop
+    ownerState
   });
   const [PaperSlot, paperSlotProps] = useSlot("paper", {
     elementType: DialogPaper,
     shouldForwardComponentProp: true,
     externalForwardedProps,
     ownerState,
-    className: classes.paper,
-    additionalProps: {
-      elevation: 24,
-      role,
-      "aria-describedby": ariaDescribedby,
-      "aria-labelledby": ariaLabelledby,
-      "aria-modal": ariaModal,
-      tabIndex: -1,
-      [FOCUSABLE_ATTRIBUTE]: ""
-    }
+    className: clsx(classes.paper, PaperProps.className)
   });
   const [ContainerSlot, containerSlotProps] = useSlot("container", {
     elementType: DialogContainer,
@@ -38466,6 +37525,11 @@ const Dialog$1 = /* @__PURE__ */ D(function Dialog(inProps, ref) {
         ...containerSlotProps,
         children: /* @__PURE__ */ u2(PaperSlot, {
           as: PaperComponent,
+          elevation: 24,
+          role: "dialog",
+          "aria-describedby": ariaDescribedby,
+          "aria-labelledby": ariaLabelledby,
+          "aria-modal": ariaModal,
           ...paperSlotProps,
           children: /* @__PURE__ */ u2(DialogContext.Provider, {
             value: dialogContextValue,
@@ -38480,7 +37544,7 @@ function getDialogActionsUtilityClass(slot) {
   return generateUtilityClass("MuiDialogActions", slot);
 }
 generateUtilityClasses("MuiDialogActions", ["root", "spacing"]);
-const useUtilityClasses$C = (ownerState) => {
+const useUtilityClasses$B = (ownerState) => {
   const {
     classes,
     disableSpacing
@@ -38530,7 +37594,7 @@ const DialogActions$1 = /* @__PURE__ */ D(function DialogActions(inProps, ref) {
     ...props,
     disableSpacing
   };
-  const classes = useUtilityClasses$C(ownerState);
+  const classes = useUtilityClasses$B(ownerState);
   return /* @__PURE__ */ u2(DialogActionsRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -38546,7 +37610,7 @@ function getDialogTitleUtilityClass(slot) {
   return generateUtilityClass("MuiDialogTitle", slot);
 }
 const dialogTitleClasses = generateUtilityClasses("MuiDialogTitle", ["root"]);
-const useUtilityClasses$B = (ownerState) => {
+const useUtilityClasses$A = (ownerState) => {
   const {
     classes,
     dividers
@@ -38607,7 +37671,7 @@ const DialogContent$1 = /* @__PURE__ */ D(function DialogContent(inProps, ref) {
     ...props,
     dividers
   };
-  const classes = useUtilityClasses$B(ownerState);
+  const classes = useUtilityClasses$A(ownerState);
   return /* @__PURE__ */ u2(DialogContentRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -38615,7 +37679,7 @@ const DialogContent$1 = /* @__PURE__ */ D(function DialogContent(inProps, ref) {
     ...other
   });
 });
-const useUtilityClasses$A = (ownerState) => {
+const useUtilityClasses$z = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -38642,7 +37706,7 @@ const DialogTitle$1 = /* @__PURE__ */ D(function DialogTitle(inProps, ref) {
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$A(ownerState);
+  const classes = useUtilityClasses$z(ownerState);
   const {
     titleId = idProp
   } = x$1(DialogContext);
@@ -38660,7 +37724,7 @@ function getDividerUtilityClass(slot) {
   return generateUtilityClass("MuiDivider", slot);
 }
 const dividerClasses = generateUtilityClasses("MuiDivider", ["root", "absolute", "fullWidth", "inset", "middle", "flexItem", "light", "vertical", "withChildren", "withChildrenVertical", "textAlignRight", "textAlignLeft", "wrapper", "wrapperVertical"]);
-const useUtilityClasses$z = (ownerState) => {
+const useUtilityClasses$y = (ownerState) => {
   const {
     absolute,
     children,
@@ -38874,7 +37938,7 @@ const Divider$1 = /* @__PURE__ */ D(function Divider(inProps, ref) {
     textAlign,
     variant
   };
-  const classes = useUtilityClasses$z(ownerState);
+  const classes = useUtilityClasses$y(ownerState);
   return /* @__PURE__ */ u2(DividerRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -38893,7 +37957,7 @@ const Divider$1 = /* @__PURE__ */ D(function Divider(inProps, ref) {
 if (Divider$1) {
   Divider$1.muiSkipListHighlight = true;
 }
-const useUtilityClasses$y = (ownerState) => {
+const useUtilityClasses$x = (ownerState) => {
   const {
     classes,
     disableUnderline,
@@ -38987,7 +38051,7 @@ const FilledInputRoot = styled(InputBaseRoot, {
           borderBottom: `1px solid ${theme2.vars ? theme2.alpha(theme2.vars.palette.common.onBackground, theme2.vars.opacity.inputUnderline) : bottomLineColor}`,
           left: 0,
           bottom: 0,
-          content: '""',
+          content: '"\\00a0"',
           position: "absolute",
           right: 0,
           transition: theme2.transitions.create("border-bottom-color", {
@@ -39172,7 +38236,7 @@ const FilledInput = /* @__PURE__ */ D(function FilledInput2(inProps, ref) {
     multiline,
     type
   };
-  const classes = useUtilityClasses$y(props);
+  const classes = useUtilityClasses$x(props);
   const filledInputComponentsProps = {
     root: {
       ownerState
@@ -39204,7 +38268,7 @@ function getFormControlUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControl", slot);
 }
 generateUtilityClasses("MuiFormControl", ["root", "marginNone", "marginNormal", "marginDense", "fullWidth", "disabled"]);
-const useUtilityClasses$x = (ownerState) => {
+const useUtilityClasses$w = (ownerState) => {
   const {
     classes,
     margin: margin2,
@@ -39294,11 +38358,11 @@ const FormControl$1 = /* @__PURE__ */ D(function FormControl(inProps, ref) {
     size,
     variant
   };
-  const classes = useUtilityClasses$x(ownerState);
+  const classes = useUtilityClasses$w(ownerState);
   const [adornedStart, setAdornedStart] = d(() => {
     let initialAdornedStart = false;
     if (children) {
-      L.forEach(children, (child) => {
+      O.forEach(children, (child) => {
         if (!isMuiElement(child, ["Input", "Select"])) {
           return;
         }
@@ -39313,7 +38377,7 @@ const FormControl$1 = /* @__PURE__ */ D(function FormControl(inProps, ref) {
   const [filled, setFilled] = d(() => {
     let initialFilled = false;
     if (children) {
-      L.forEach(children, (child) => {
+      O.forEach(children, (child) => {
         if (!isMuiElement(child, ["Input", "Select"])) {
           return;
         }
@@ -39378,7 +38442,7 @@ function getFormControlLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControlLabel", slot);
 }
 const formControlLabelClasses = generateUtilityClasses("MuiFormControlLabel", ["root", "labelPlacementStart", "labelPlacementTop", "labelPlacementBottom", "disabled", "label", "error", "required", "asterisk"]);
-const useUtilityClasses$w = (ownerState) => {
+const useUtilityClasses$v = (ownerState) => {
   const {
     classes,
     disabled,
@@ -39513,7 +38577,7 @@ const FormControlLabel$1 = /* @__PURE__ */ D(function FormControlLabel(inProps, 
     required: required2,
     error: fcs.error
   };
-  const classes = useUtilityClasses$w(ownerState);
+  const classes = useUtilityClasses$v(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -39540,7 +38604,7 @@ const FormControlLabel$1 = /* @__PURE__ */ D(function FormControlLabel(inProps, 
     ownerState,
     ref,
     ...other,
-    children: [/* @__PURE__ */ mn(control, controlProps), required2 ? /* @__PURE__ */ u2("div", {
+    children: [/* @__PURE__ */ _n(control, controlProps), required2 ? /* @__PURE__ */ u2("div", {
       children: [label, /* @__PURE__ */ u2(AsteriskComponent$1, {
         ownerState,
         "aria-hidden": true,
@@ -39554,7 +38618,7 @@ function getFormGroupUtilityClass(slot) {
   return generateUtilityClass("MuiFormGroup", slot);
 }
 generateUtilityClasses("MuiFormGroup", ["root", "row", "error"]);
-const useUtilityClasses$v = (ownerState) => {
+const useUtilityClasses$u = (ownerState) => {
   const {
     classes,
     row,
@@ -39608,7 +38672,7 @@ const FormGroup$1 = /* @__PURE__ */ D(function FormGroup(inProps, ref) {
     row,
     error: fcs.error
   };
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$u(ownerState);
   return /* @__PURE__ */ u2(FormGroupRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -39621,7 +38685,7 @@ function getFormHelperTextUtilityClasses(slot) {
 }
 const formHelperTextClasses = generateUtilityClasses("MuiFormHelperText", ["root", "error", "disabled", "sizeSmall", "sizeMedium", "contained", "focused", "filled", "required"]);
 var _span$3;
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$t = (ownerState) => {
   const {
     classes,
     contained,
@@ -39716,7 +38780,7 @@ const FormHelperText = /* @__PURE__ */ D(function FormHelperText2(inProps, ref) 
     required: fcs.required
   };
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$t(ownerState);
   return /* @__PURE__ */ u2(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -39737,7 +38801,7 @@ function getFormLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormLabel", slot);
 }
 const formLabelClasses = generateUtilityClasses("MuiFormLabel", ["root", "colorSecondary", "focused", "disabled", "error", "filled", "required", "asterisk"]);
-const useUtilityClasses$t = (ownerState) => {
+const useUtilityClasses$s = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -39834,7 +38898,7 @@ const FormLabel$1 = /* @__PURE__ */ D(function FormLabel(inProps, ref) {
     focused: fcs.focused,
     required: fcs.required
   };
-  const classes = useUtilityClasses$t(ownerState);
+  const classes = useUtilityClasses$s(ownerState);
   return /* @__PURE__ */ u2(FormLabelRoot, {
     as: component,
     ownerState,
@@ -39849,24 +38913,6 @@ const FormLabel$1 = /* @__PURE__ */ D(function FormLabel(inProps, ref) {
     })]
   });
 });
-const Grid$1 = createGrid({
-  createStyledComponent: styled("div", {
-    name: "MuiGrid",
-    slot: "Root",
-    overridesResolver: (props, styles2) => {
-      const {
-        ownerState
-      } = props;
-      return [styles2.root, ownerState.container && styles2.container];
-    }
-  }),
-  componentName: "MuiGrid",
-  useThemeProps: (inProps) => useDefaultProps({
-    props: inProps,
-    name: "MuiGrid"
-  }),
-  useTheme
-});
 function getScale(value) {
   return `scale(${value}, ${value ** 2})`;
 }
@@ -39878,21 +38924,9 @@ const styles$1 = {
   entered: {
     opacity: 1,
     transform: "none"
-  },
-  exiting: {
-    opacity: 0,
-    transform: getScale(0.75)
-  },
-  exited: {
-    opacity: 0,
-    transform: getScale(0.75)
   }
 };
-const hiddenStyles$1 = {
-  opacity: 0,
-  transform: getScale(0.75),
-  visibility: "hidden"
-};
+const isWebKit154 = typeof navigator !== "undefined" && /^((?!chrome|android).)*(safari|mobile)/i.test(navigator.userAgent) && /(os |version\/)15(.|_)4/i.test(navigator.userAgent);
 const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
   const {
     addEndListener,
@@ -39908,6 +38942,8 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
     onExiting,
     style: style2,
     timeout = "auto",
+    // eslint-disable-next-line react/prop-types
+    TransitionComponent = Transition,
     ...other
   } = props;
   const timer = useTimeout();
@@ -39915,8 +38951,18 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
   const theme2 = useTheme();
   const nodeRef = A$1(null);
   const handleRef = useForkRef(nodeRef, getReactElementRef(children), ref);
-  const handleEntering = normalizedTransitionCallback(nodeRef, onEntering);
-  const handleEnter = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
+  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
+    if (callback) {
+      const node2 = nodeRef.current;
+      if (maybeIsAppearing === void 0) {
+        callback(node2);
+      } else {
+        callback(node2, maybeIsAppearing);
+      }
+    }
+  };
+  const handleEntering = normalizedTransitionCallback(onEntering);
+  const handleEnter = normalizedTransitionCallback((node2, isAppearing) => {
     reflow(node2);
     const {
       duration: transitionDuration,
@@ -39940,7 +38986,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       duration: duration2,
       delay
     }), theme2.transitions.create("transform", {
-      duration: duration2 * 0.666,
+      duration: isWebKit154 ? duration2 : duration2 * 0.666,
       delay,
       easing: transitionTimingFunction
     })].join(",");
@@ -39948,9 +38994,9 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       onEnter(node2, isAppearing);
     }
   });
-  const handleEntered = normalizedTransitionCallback(nodeRef, onEntered);
-  const handleExiting = normalizedTransitionCallback(nodeRef, onExiting);
-  const handleExit = normalizedTransitionCallback(nodeRef, (node2) => {
+  const handleEntered = normalizedTransitionCallback(onEntered);
+  const handleExiting = normalizedTransitionCallback(onExiting);
+  const handleExit = normalizedTransitionCallback((node2) => {
     const {
       duration: transitionDuration,
       delay,
@@ -39973,8 +39019,8 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       duration: duration2,
       delay
     }), theme2.transitions.create("transform", {
-      duration: duration2 * 0.666,
-      delay: delay || duration2 * 0.333,
+      duration: isWebKit154 ? duration2 : duration2 * 0.666,
+      delay: isWebKit154 ? delay : delay || duration2 * 0.333,
       easing: transitionTimingFunction
     })].join(",");
     node2.style.opacity = 0;
@@ -39983,12 +39029,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       onExit(node2);
     }
   });
-  const handleExited = normalizedTransitionCallback(nodeRef, (node2) => {
-    node2.style.transition = "";
-    if (onExited) {
-      onExited(node2);
-    }
-  });
+  const handleExited = normalizedTransitionCallback(onExited);
   const handleAddEndListener = (next2) => {
     if (timeout === "auto") {
       timer.start(autoTimeout.current || 0, next2);
@@ -39997,7 +39038,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       addEndListener(nodeRef.current, next2);
     }
   };
-  return /* @__PURE__ */ u2(Transition, {
+  return /* @__PURE__ */ u2(TransitionComponent, {
     appear,
     in: inProp,
     nodeRef,
@@ -40014,9 +39055,15 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       ownerState,
       ...restChildProps
     }) => {
-      const childStyle = getTransitionChildStyle(state, inProp, styles$1, hiddenStyles$1, style2, children.props.style);
-      return /* @__PURE__ */ mn(children, {
-        style: childStyle,
+      return /* @__PURE__ */ _n(children, {
+        style: {
+          opacity: 0,
+          transform: getScale(0.75),
+          visibility: state === "exited" && !inProp ? "hidden" : void 0,
+          ...styles$1[state],
+          ...style2,
+          ...children.props.style
+        },
         ref: handleRef,
         ...restChildProps
       });
@@ -40026,7 +39073,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
 if (Grow) {
   Grow.muiSupportAuto = true;
 }
-const useUtilityClasses$s = (ownerState) => {
+const useUtilityClasses$r = (ownerState) => {
   const {
     classes,
     disableUnderline
@@ -40104,7 +39151,7 @@ const InputRoot = styled(InputBaseRoot, {
           borderBottom: `1px solid ${bottomLineColor}`,
           left: 0,
           bottom: 0,
-          content: '""',
+          content: '"\\00a0"',
           position: "absolute",
           right: 0,
           transition: theme2.transitions.create("border-bottom-color", {
@@ -40159,7 +39206,7 @@ const Input = /* @__PURE__ */ D(function Input2(inProps, ref) {
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$s(props);
+  const classes = useUtilityClasses$r(props);
   const ownerState = {
     disableUnderline
   };
@@ -40198,7 +39245,7 @@ const overridesResolver$2 = (props, styles2) => {
   } = props;
   return [styles2.root, styles2[`position${capitalize(ownerState.position)}`], ownerState.disablePointerEvents === true && styles2.disablePointerEvents, styles2[ownerState.variant]];
 };
-const useUtilityClasses$r = (ownerState) => {
+const useUtilityClasses$q = (ownerState) => {
   const {
     classes,
     disablePointerEvents,
@@ -40285,7 +39332,7 @@ const InputAdornment$1 = /* @__PURE__ */ D(function InputAdornment(inProps, ref)
     position: position2,
     variant
   };
-  const classes = useUtilityClasses$r(ownerState);
+  const classes = useUtilityClasses$q(ownerState);
   return /* @__PURE__ */ u2(FormControlContext.Provider, {
     value: null,
     children: /* @__PURE__ */ u2(InputAdornmentRoot, {
@@ -40297,7 +39344,7 @@ const InputAdornment$1 = /* @__PURE__ */ D(function InputAdornment(inProps, ref)
       children: typeof children === "string" && !disableTypography ? /* @__PURE__ */ u2(Typography$1, {
         color: "textSecondary",
         children
-      }) : /* @__PURE__ */ u2(S, {
+      }) : /* @__PURE__ */ u2(k$2, {
         children: [position2 === "start" ? (
           /* notranslate needed while Google Translate will not fix zero-width space issue */
           _span$2 || (_span$2 = /* @__PURE__ */ u2("span", {
@@ -40314,7 +39361,7 @@ function getInputLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiInputLabel", slot);
 }
 generateUtilityClasses("MuiInputLabel", ["root", "focused", "disabled", "error", "required", "asterisk", "formControl", "sizeSmall", "shrink", "animated", "standard", "filled", "outlined"]);
-const useUtilityClasses$q = (ownerState) => {
+const useUtilityClasses$p = (ownerState) => {
   const {
     classes,
     formControl,
@@ -40503,7 +39550,7 @@ const InputLabel$1 = /* @__PURE__ */ D(function InputLabel(inProps, ref) {
     required: fcs.required,
     focused: fcs.focused
   };
-  const classes = useUtilityClasses$q(ownerState);
+  const classes = useUtilityClasses$p(ownerState);
   return /* @__PURE__ */ u2(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
@@ -40513,393 +39560,7 @@ const InputLabel$1 = /* @__PURE__ */ D(function InputLabel(inProps, ref) {
     classes
   });
 });
-function getLinearProgressUtilityClass(slot) {
-  return generateUtilityClass("MuiLinearProgress", slot);
-}
-generateUtilityClasses("MuiLinearProgress", ["root", "colorPrimary", "colorSecondary", "determinate", "indeterminate", "buffer", "query", "dashed", "dashedColorPrimary", "dashedColorSecondary", "bar", "bar1", "bar2", "barColorPrimary", "barColorSecondary", "bar1Indeterminate", "bar1Determinate", "bar1Buffer", "bar2Indeterminate", "bar2Buffer"]);
-const TRANSITION_DURATION = 4;
-const indeterminate1Keyframe = keyframes`
-  0% {
-    left: -35%;
-    right: 100%;
-  }
-
-  60% {
-    left: 100%;
-    right: -90%;
-  }
-
-  100% {
-    left: 100%;
-    right: -90%;
-  }
-`;
-const indeterminate1Animation = typeof indeterminate1Keyframe !== "string" ? css`
-        animation: ${indeterminate1Keyframe} 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
-      ` : null;
-const indeterminate2Keyframe = keyframes`
-  0% {
-    left: -200%;
-    right: 100%;
-  }
-
-  60% {
-    left: 107%;
-    right: -8%;
-  }
-
-  100% {
-    left: 107%;
-    right: -8%;
-  }
-`;
-const indeterminate2Animation = typeof indeterminate2Keyframe !== "string" ? css`
-        animation: ${indeterminate2Keyframe} 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) 1.15s infinite;
-      ` : null;
-const bufferKeyframe = keyframes`
-  0% {
-    opacity: 1;
-    background-position: 0 -23px;
-  }
-
-  60% {
-    opacity: 0;
-    background-position: 0 -23px;
-  }
-
-  100% {
-    opacity: 1;
-    background-position: -200px -23px;
-  }
-`;
-const bufferAnimation = typeof bufferKeyframe !== "string" ? css`
-        animation: ${bufferKeyframe} 3s infinite linear;
-      ` : null;
-const useUtilityClasses$p = (ownerState) => {
-  const {
-    classes,
-    variant,
-    color: color2
-  } = ownerState;
-  const slots = {
-    root: ["root", `color${capitalize(color2)}`, variant],
-    dashed: ["dashed", `dashedColor${capitalize(color2)}`],
-    bar1: ["bar", "bar1", `barColor${capitalize(color2)}`, (variant === "indeterminate" || variant === "query") && "bar1Indeterminate", variant === "determinate" && "bar1Determinate", variant === "buffer" && "bar1Buffer"],
-    bar2: ["bar", "bar2", variant !== "buffer" && `barColor${capitalize(color2)}`, variant === "buffer" && `color${capitalize(color2)}`, (variant === "indeterminate" || variant === "query") && "bar2Indeterminate", variant === "buffer" && "bar2Buffer"]
-  };
-  return composeClasses(slots, getLinearProgressUtilityClass, classes);
-};
-const getColorShade = (theme2, color2) => {
-  if (theme2.vars) {
-    return theme2.vars.palette.LinearProgress[`${color2}Bg`];
-  }
-  return theme2.palette.mode === "light" ? theme2.lighten(theme2.palette[color2].main, 0.62) : theme2.darken(theme2.palette[color2].main, 0.5);
-};
-const LinearProgressRoot = styled("span", {
-  name: "MuiLinearProgress",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, styles2[`color${capitalize(ownerState.color)}`], styles2[ownerState.variant]];
-  }
-})(memoTheme(({
-  theme: theme2
-}) => ({
-  position: "relative",
-  overflow: "hidden",
-  display: "block",
-  height: 4,
-  // Fix Safari's bug during composition of different paint.
-  zIndex: 0,
-  "@media print": {
-    colorAdjust: "exact"
-  },
-  variants: [...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
-    props: {
-      color: color2
-    },
-    style: {
-      backgroundColor: getColorShade(theme2, color2)
-    }
-  })), {
-    props: ({
-      ownerState
-    }) => ownerState.color === "inherit" && ownerState.variant !== "buffer",
-    style: {
-      "&::before": {
-        content: '""',
-        position: "absolute",
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "currentColor",
-        opacity: 0.3
-      }
-    }
-  }, {
-    props: {
-      variant: "buffer"
-    },
-    style: {
-      backgroundColor: "transparent"
-    }
-  }, {
-    props: {
-      variant: "query"
-    },
-    style: {
-      transform: "rotate(180deg)"
-    }
-  }]
-})));
-const LinearProgressDashed = styled("span", {
-  name: "MuiLinearProgress",
-  slot: "Dashed",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.dashed, styles2[`dashedColor${capitalize(ownerState.color)}`]];
-  }
-})(memoTheme(({
-  theme: theme2
-}) => ({
-  position: "absolute",
-  marginTop: 0,
-  height: "100%",
-  width: "100%",
-  backgroundSize: "10px 10px",
-  backgroundPosition: "0 -23px",
-  variants: [{
-    props: {
-      color: "inherit"
-    },
-    style: {
-      opacity: 0.3,
-      backgroundImage: `radial-gradient(currentColor 0%, currentColor 16%, transparent 42%)`
-    }
-  }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => {
-    const backgroundColor2 = getColorShade(theme2, color2);
-    return {
-      props: {
-        color: color2
-      },
-      style: {
-        backgroundImage: `radial-gradient(${backgroundColor2} 0%, ${backgroundColor2} 16%, transparent 42%)`
-      }
-    };
-  })]
-})), bufferAnimation || {
-  // At runtime for Pigment CSS, `bufferAnimation` will be null and the generated keyframe will be used.
-  animation: `${bufferKeyframe} 3s infinite linear`
-});
-const LinearProgressBar1 = styled("span", {
-  name: "MuiLinearProgress",
-  slot: "Bar1",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.bar, styles2.bar1, styles2[`barColor${capitalize(ownerState.color)}`], (ownerState.variant === "indeterminate" || ownerState.variant === "query") && styles2.bar1Indeterminate, ownerState.variant === "determinate" && styles2.bar1Determinate, ownerState.variant === "buffer" && styles2.bar1Buffer];
-  }
-})(memoTheme(({
-  theme: theme2
-}) => ({
-  width: "100%",
-  position: "absolute",
-  left: 0,
-  bottom: 0,
-  top: 0,
-  transition: "transform 0.2s linear",
-  transformOrigin: "left",
-  variants: [{
-    props: {
-      color: "inherit"
-    },
-    style: {
-      backgroundColor: "currentColor"
-    }
-  }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
-    props: {
-      color: color2
-    },
-    style: {
-      backgroundColor: (theme2.vars || theme2).palette[color2].main
-    }
-  })), {
-    props: {
-      variant: "determinate"
-    },
-    style: {
-      transition: `transform .${TRANSITION_DURATION}s linear`
-    }
-  }, {
-    props: {
-      variant: "buffer"
-    },
-    style: {
-      zIndex: 1,
-      transition: `transform .${TRANSITION_DURATION}s linear`
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.variant === "indeterminate" || ownerState.variant === "query",
-    style: {
-      width: "auto"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.variant === "indeterminate" || ownerState.variant === "query",
-    style: indeterminate1Animation || {
-      animation: `${indeterminate1Keyframe} 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite`
-    }
-  }]
-})));
-const LinearProgressBar2 = styled("span", {
-  name: "MuiLinearProgress",
-  slot: "Bar2",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.bar, styles2.bar2, styles2[`barColor${capitalize(ownerState.color)}`], (ownerState.variant === "indeterminate" || ownerState.variant === "query") && styles2.bar2Indeterminate, ownerState.variant === "buffer" && styles2.bar2Buffer];
-  }
-})(memoTheme(({
-  theme: theme2
-}) => ({
-  width: "100%",
-  position: "absolute",
-  left: 0,
-  bottom: 0,
-  top: 0,
-  transition: "transform 0.2s linear",
-  transformOrigin: "left",
-  variants: [...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
-    props: {
-      color: color2
-    },
-    style: {
-      "--LinearProgressBar2-barColor": (theme2.vars || theme2).palette[color2].main
-    }
-  })), {
-    props: ({
-      ownerState
-    }) => ownerState.variant !== "buffer" && ownerState.color !== "inherit",
-    style: {
-      backgroundColor: "var(--LinearProgressBar2-barColor, currentColor)"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.variant !== "buffer" && ownerState.color === "inherit",
-    style: {
-      backgroundColor: "currentColor"
-    }
-  }, {
-    props: {
-      color: "inherit"
-    },
-    style: {
-      opacity: 0.3
-    }
-  }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
-    props: {
-      color: color2,
-      variant: "buffer"
-    },
-    style: {
-      backgroundColor: getColorShade(theme2, color2),
-      transition: `transform .${TRANSITION_DURATION}s linear`
-    }
-  })), {
-    props: ({
-      ownerState
-    }) => ownerState.variant === "indeterminate" || ownerState.variant === "query",
-    style: {
-      width: "auto"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.variant === "indeterminate" || ownerState.variant === "query",
-    style: indeterminate2Animation || {
-      animation: `${indeterminate2Keyframe} 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) 1.15s infinite`
-    }
-  }]
-})));
-const LinearProgress$1 = /* @__PURE__ */ D(function LinearProgress(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiLinearProgress"
-  });
-  const {
-    className,
-    color: color2 = "primary",
-    value,
-    valueBuffer,
-    variant = "indeterminate",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    color: color2,
-    variant
-  };
-  const classes = useUtilityClasses$p(ownerState);
-  const isRtl = useRtl();
-  const rootProps = {};
-  const inlineStyles = {
-    bar1: {},
-    bar2: {}
-  };
-  if (variant === "determinate" || variant === "buffer") {
-    if (value !== void 0) {
-      rootProps["aria-valuenow"] = Math.round(value);
-      rootProps["aria-valuemin"] = 0;
-      rootProps["aria-valuemax"] = 100;
-      let transform2 = value - 100;
-      if (isRtl) {
-        transform2 = -transform2;
-      }
-      inlineStyles.bar1.transform = `translateX(${transform2}%)`;
-    }
-  }
-  if (variant === "buffer") {
-    if (valueBuffer !== void 0) {
-      let transform2 = (valueBuffer || 0) - 100;
-      if (isRtl) {
-        transform2 = -transform2;
-      }
-      inlineStyles.bar2.transform = `translateX(${transform2}%)`;
-    }
-  }
-  return /* @__PURE__ */ u2(LinearProgressRoot, {
-    className: clsx(classes.root, className),
-    ownerState,
-    role: "progressbar",
-    ...rootProps,
-    ref,
-    ...other,
-    children: [variant === "buffer" ? /* @__PURE__ */ u2(LinearProgressDashed, {
-      className: classes.dashed,
-      ownerState
-    }) : null, /* @__PURE__ */ u2(LinearProgressBar1, {
-      className: classes.bar1,
-      ownerState,
-      style: inlineStyles.bar1
-    }), variant === "determinate" ? null : /* @__PURE__ */ u2(LinearProgressBar2, {
-      className: classes.bar2,
-      ownerState,
-      style: inlineStyles.bar2
-    })]
-  });
-});
-const ListContext = /* @__PURE__ */ X$1({});
+const ListContext = /* @__PURE__ */ Q$1({});
 function getListUtilityClass(slot) {
   return generateUtilityClass("MuiList", slot);
 }
@@ -41135,10 +39796,6 @@ const ListItemButton$1 = /* @__PURE__ */ D(function ListItemButton(inProps, ref)
     selected
   };
   const classes = useUtilityClasses$n(ownerState);
-  const {
-    root,
-    ...forwardedClasses
-  } = classes;
   const handleRef = useForkRef(listItemRef, ref);
   return /* @__PURE__ */ u2(ListContext.Provider, {
     value: childContext,
@@ -41150,7 +39807,7 @@ const ListItemButton$1 = /* @__PURE__ */ D(function ListItemButton(inProps, ref)
       ownerState,
       className: clsx(classes.root, className),
       ...other,
-      classes: forwardedClasses,
+      classes,
       children
     })
   });
@@ -41253,7 +39910,6 @@ const ListItemTextRoot = styled("div", {
   minWidth: 0,
   marginTop: 4,
   marginBottom: 4,
-  // Combine this and the below selector once https://github.com/emotion-js/emotion/issues/3366 is solved
   [`.${typographyClasses.root}:where(& .${listItemTextClasses.primary})`]: {
     display: "block"
   },
@@ -41465,7 +40121,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
       }
       return;
     }
-    const currentFocus = activeElement(ownerDocument(list));
+    const currentFocus = ownerDocument(list).activeElement;
     if (key === "ArrowDown") {
       event.preventDefault();
       moveFocus$1(list, currentFocus, disableListWrap, disabledItemsFocusable, nextItem$1);
@@ -41506,8 +40162,8 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
   };
   const handleRef = useForkRef(listRef, ref);
   let activeItemIndex = -1;
-  L.forEach(children, (child, index) => {
-    if (!/* @__PURE__ */ hn(child)) {
+  O.forEach(children, (child, index) => {
+    if (!/* @__PURE__ */ mn(child)) {
       if (activeItemIndex === index) {
         activeItemIndex += 1;
         if (activeItemIndex >= children.length) {
@@ -41530,7 +40186,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
       }
     }
   });
-  const items = L.map(children, (child, index) => {
+  const items = O.map(children, (child, index) => {
     if (index === activeItemIndex) {
       const newChildProps = {};
       if (autoFocusItem) {
@@ -41539,7 +40195,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
       if (child.props.tabIndex === void 0 && variant === "selectedMenu") {
         newChildProps.tabIndex = 0;
       }
-      return /* @__PURE__ */ mn(child, newChildProps);
+      return /* @__PURE__ */ _n(child, newChildProps);
     }
     return child;
   });
@@ -41978,8 +40634,8 @@ const Menu$1 = /* @__PURE__ */ D(function Menu(inProps, ref) {
     }
   };
   let activeItemIndex = -1;
-  L.map(children, (child, index) => {
-    if (!/* @__PURE__ */ hn(child)) {
+  O.map(children, (child, index) => {
+    if (!/* @__PURE__ */ mn(child)) {
       return;
     }
     if (!child.props.disabled) {
@@ -42075,11 +40731,196 @@ function getMenuItemUtilityClass(slot) {
   return generateUtilityClass("MuiMenuItem", slot);
 }
 const menuItemClasses = generateUtilityClasses("MuiMenuItem", ["root", "focusVisible", "dense", "disabled", "divider", "gutters", "selected"]);
+const overridesResolver = (props, styles2) => {
+  const {
+    ownerState
+  } = props;
+  return [styles2.root, ownerState.dense && styles2.dense, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
+};
+const useUtilityClasses$i = (ownerState) => {
+  const {
+    disabled,
+    dense,
+    divider,
+    disableGutters,
+    selected,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", dense && "dense", disabled && "disabled", !disableGutters && "gutters", divider && "divider", selected && "selected"]
+  };
+  const composedClasses = composeClasses(slots, getMenuItemUtilityClass, classes);
+  return {
+    ...classes,
+    ...composedClasses
+  };
+};
+const MenuItemRoot = styled(ButtonBase, {
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
+  name: "MuiMenuItem",
+  slot: "Root",
+  overridesResolver
+})(memoTheme(({
+  theme: theme2
+}) => ({
+  ...theme2.typography.body1,
+  display: "flex",
+  justifyContent: "flex-start",
+  alignItems: "center",
+  position: "relative",
+  textDecoration: "none",
+  minHeight: 48,
+  paddingTop: 6,
+  paddingBottom: 6,
+  boxSizing: "border-box",
+  whiteSpace: "nowrap",
+  "&:hover": {
+    textDecoration: "none",
+    backgroundColor: (theme2.vars || theme2).palette.action.hover,
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: "transparent"
+    }
+  },
+  [`&.${menuItemClasses.selected}`]: {
+    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity),
+    [`&.${menuItemClasses.focusVisible}`]: {
+      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
+    }
+  },
+  [`&.${menuItemClasses.selected}:hover`]: {
+    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`),
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity)
+    }
+  },
+  [`&.${menuItemClasses.focusVisible}`]: {
+    backgroundColor: (theme2.vars || theme2).palette.action.focus
+  },
+  [`&.${menuItemClasses.disabled}`]: {
+    opacity: (theme2.vars || theme2).palette.action.disabledOpacity
+  },
+  [`& + .${dividerClasses.root}`]: {
+    marginTop: theme2.spacing(1),
+    marginBottom: theme2.spacing(1)
+  },
+  [`& + .${dividerClasses.inset}`]: {
+    marginLeft: 52
+  },
+  [`& .${listItemTextClasses.root}`]: {
+    marginTop: 0,
+    marginBottom: 0
+  },
+  [`& .${listItemTextClasses.inset}`]: {
+    paddingLeft: 36
+  },
+  [`& .${listItemIconClasses.root}`]: {
+    minWidth: 36
+  },
+  variants: [{
+    props: ({
+      ownerState
+    }) => !ownerState.disableGutters,
+    style: {
+      paddingLeft: 16,
+      paddingRight: 16
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.divider,
+    style: {
+      borderBottom: `1px solid ${(theme2.vars || theme2).palette.divider}`,
+      backgroundClip: "padding-box"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => !ownerState.dense,
+    style: {
+      [theme2.breakpoints.up("sm")]: {
+        minHeight: "auto"
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.dense,
+    style: {
+      minHeight: 32,
+      // https://m2.material.io/components/menus#specs > Dense
+      paddingTop: 4,
+      paddingBottom: 4,
+      ...theme2.typography.body2,
+      [`& .${listItemIconClasses.root} svg`]: {
+        fontSize: "1.25rem"
+      }
+    }
+  }]
+})));
+const MenuItem$1 = /* @__PURE__ */ D(function MenuItem(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiMenuItem"
+  });
+  const {
+    autoFocus = false,
+    component = "li",
+    dense = false,
+    divider = false,
+    disableGutters = false,
+    focusVisibleClassName,
+    role = "menuitem",
+    tabIndex: tabIndexProp,
+    className,
+    ...other
+  } = props;
+  const context = x$1(ListContext);
+  const childContext = T$1(() => ({
+    dense: dense || context.dense || false,
+    disableGutters
+  }), [context.dense, dense, disableGutters]);
+  const menuItemRef = A$1(null);
+  useEnhancedEffect(() => {
+    if (autoFocus) {
+      if (menuItemRef.current) {
+        menuItemRef.current.focus();
+      }
+    }
+  }, [autoFocus]);
+  const ownerState = {
+    ...props,
+    dense: childContext.dense,
+    divider,
+    disableGutters
+  };
+  const classes = useUtilityClasses$i(props);
+  const handleRef = useForkRef(menuItemRef, ref);
+  let tabIndex;
+  if (!props.disabled) {
+    tabIndex = tabIndexProp !== void 0 ? tabIndexProp : -1;
+  }
+  return /* @__PURE__ */ u2(ListContext.Provider, {
+    value: childContext,
+    children: /* @__PURE__ */ u2(MenuItemRoot, {
+      ref: handleRef,
+      role,
+      tabIndex,
+      component,
+      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
+      className: clsx(classes.root, className),
+      ...other,
+      ownerState,
+      classes
+    })
+  });
+});
 function getNativeSelectUtilityClasses(slot) {
   return generateUtilityClass("MuiNativeSelect", slot);
 }
 const nativeSelectClasses = generateUtilityClasses("MuiNativeSelect", ["root", "select", "multiple", "filled", "outlined", "standard", "disabled", "icon", "iconOpen", "iconFilled", "iconOutlined", "iconStandard", "nativeInput", "error"]);
-const useUtilityClasses$i = (ownerState) => {
+const useUtilityClasses$h = (ownerState) => {
   const {
     classes,
     variant,
@@ -42238,8 +41079,8 @@ const NativeSelectInput = /* @__PURE__ */ D(function NativeSelectInput2(props, r
     variant,
     error
   };
-  const classes = useUtilityClasses$i(ownerState);
-  return /* @__PURE__ */ u2(S, {
+  const classes = useUtilityClasses$h(ownerState);
+  return /* @__PURE__ */ u2(k$2, {
     children: [/* @__PURE__ */ u2(NativeSelectSelect, {
       ownerState,
       className: clsx(classes.select, className),
@@ -42253,523 +41094,7 @@ const NativeSelectInput = /* @__PURE__ */ D(function NativeSelectInput2(props, r
     })]
   });
 });
-function getSelectUtilityClasses(slot) {
-  return generateUtilityClass("MuiSelect", slot);
-}
-const selectClasses = generateUtilityClasses("MuiSelect", ["root", "select", "multiple", "filled", "outlined", "standard", "disabled", "focused", "icon", "iconOpen", "iconFilled", "iconOutlined", "iconStandard", "nativeInput", "error"]);
-function getOpenInteractionType(event) {
-  if (!event) {
-    return null;
-  }
-  if (event.type === "mousedown" || event.type === "pointerdown" || event.type === "touchstart") {
-    return "pointer";
-  }
-  if (event.type === "keydown" || event.type === "click" && event.detail === 0) {
-    return "keyboard";
-  }
-  return null;
-}
-function isEmpty(display) {
-  return display == null || typeof display === "string" && !display.trim();
-}
-function areEqualValues$1(a2, b2) {
-  if (typeof b2 === "object" && b2 !== null) {
-    return a2 === b2;
-  }
-  return String(a2) === String(b2);
-}
-const SelectFocusSourceContext = /* @__PURE__ */ X$1(null);
-function useSelectFocusSource() {
-  const context = x$1(SelectFocusSourceContext);
-  return context;
-}
-const SelectFocusSourceProvider = SelectFocusSourceContext.Provider;
 var _span$1;
-const SelectSelect = styled(StyledSelectSelect, {
-  name: "MuiSelect",
-  slot: "Select",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [
-      // Win specificity over the input base
-      {
-        [`&.${selectClasses.select}`]: styles2.select
-      },
-      {
-        [`&.${selectClasses.select}`]: styles2[ownerState.variant]
-      },
-      {
-        [`&.${selectClasses.error}`]: styles2.error
-      },
-      {
-        [`&.${selectClasses.multiple}`]: styles2.multiple
-      }
-    ];
-  }
-})({
-  // Win specificity over the input base
-  [`&.${selectClasses.select}`]: {
-    height: "auto",
-    // Resets for multiple select with chips
-    minHeight: "1.4375em",
-    // Required for select\text-field height consistency
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    overflow: "hidden"
-  }
-});
-const SelectIcon = styled(StyledSelectIcon, {
-  name: "MuiSelect",
-  slot: "Icon",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.icon, ownerState.variant && styles2[`icon${capitalize(ownerState.variant)}`], ownerState.open && styles2.iconOpen];
-  }
-})({});
-const SelectNativeInput = styled("input", {
-  shouldForwardProp: (prop) => slotShouldForwardProp(prop) && prop !== "classes",
-  name: "MuiSelect",
-  slot: "NativeInput"
-})({
-  bottom: 0,
-  left: 0,
-  position: "absolute",
-  opacity: 0,
-  pointerEvents: "none",
-  width: "100%",
-  boxSizing: "border-box"
-});
-const useUtilityClasses$h = (ownerState) => {
-  const {
-    classes,
-    variant,
-    disabled,
-    multiple,
-    open,
-    error
-  } = ownerState;
-  const slots = {
-    select: ["select", variant, disabled && "disabled", multiple && "multiple", error && "error"],
-    icon: ["icon", `icon${capitalize(variant)}`, open && "iconOpen", disabled && "disabled"],
-    nativeInput: ["nativeInput"]
-  };
-  return composeClasses(slots, getSelectUtilityClasses, classes);
-};
-const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
-  const {
-    "aria-describedby": ariaDescribedby,
-    "aria-label": ariaLabel,
-    autoFocus,
-    autoWidth,
-    children,
-    className,
-    defaultOpen,
-    defaultValue: defaultValue2,
-    disabled,
-    displayEmpty,
-    error = false,
-    IconComponent,
-    inputRef: inputRefProp,
-    labelId,
-    MenuProps = {},
-    multiple,
-    name,
-    onBlur,
-    onChange,
-    onClose,
-    onFocus,
-    // eslint-disable-next-line react/prop-types
-    onKeyDown,
-    // eslint-disable-next-line react/prop-types
-    onMouseDown,
-    onOpen,
-    open: openProp,
-    readOnly,
-    renderValue,
-    required: required2,
-    SelectDisplayProps = {},
-    tabIndex: tabIndexProp,
-    // catching `type` from Input which makes no sense for SelectInput
-    type,
-    value: valueProp,
-    variant = "standard",
-    ...other
-  } = props;
-  const [value, setValueState] = useControlled({
-    controlled: valueProp,
-    default: defaultValue2,
-    name: "Select"
-  });
-  const [openState, setOpenState] = useControlled({
-    controlled: openProp,
-    default: defaultOpen,
-    name: "Select"
-  });
-  const inputRef = A$1(null);
-  const displayRef = A$1(null);
-  const [displayNode, setDisplayNode] = d(null);
-  const {
-    current: isOpenControlled
-  } = A$1(openProp != null);
-  const [menuMinWidthState, setMenuMinWidthState] = d();
-  const [openInteractionType, setOpenInteractionType] = d(null);
-  const handleRef = useForkRef(ref, inputRefProp);
-  const handleDisplayRef = q$1((node2) => {
-    displayRef.current = node2;
-    if (node2) {
-      setDisplayNode(node2);
-    }
-  }, []);
-  const anchorElement = displayNode?.parentNode;
-  F$1(handleRef, () => ({
-    focus: () => {
-      displayRef.current.focus();
-    },
-    node: inputRef.current,
-    value
-  }), [value]);
-  const open = displayNode !== null && openState;
-  y(() => {
-    if (!open || !anchorElement || autoWidth) {
-      return void 0;
-    }
-    if (typeof ResizeObserver === "undefined") {
-      return void 0;
-    }
-    const observer = new ResizeObserver(() => {
-      setMenuMinWidthState(anchorElement.clientWidth);
-    });
-    observer.observe(anchorElement);
-    return () => {
-      observer.disconnect();
-    };
-  }, [open, anchorElement, autoWidth]);
-  y(() => {
-    if (defaultOpen && openState && displayNode && !isOpenControlled) {
-      setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
-      displayRef.current.focus();
-    }
-  }, [displayNode, autoWidth]);
-  y(() => {
-    if (autoFocus) {
-      displayRef.current.focus();
-    }
-  }, [autoFocus]);
-  y(() => {
-    if (!labelId) {
-      return void 0;
-    }
-    const label = ownerDocument(displayRef.current).getElementById(labelId);
-    if (label) {
-      const handler = () => {
-        if (getSelection().isCollapsed) {
-          displayRef.current.focus();
-        }
-      };
-      label.addEventListener("click", handler);
-      return () => {
-        label.removeEventListener("click", handler);
-      };
-    }
-    return void 0;
-  }, [labelId]);
-  const update = (openParam, event) => {
-    if (openParam) {
-      setOpenInteractionType(getOpenInteractionType(event));
-      if (onOpen) {
-        onOpen(event);
-      }
-    } else {
-      setOpenInteractionType(null);
-      if (onClose) {
-        onClose(event);
-      }
-    }
-    if (!isOpenControlled) {
-      setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
-      setOpenState(openParam);
-    }
-  };
-  const handleMouseDown = (event) => {
-    onMouseDown?.(event);
-    if (event.button !== 0) {
-      return;
-    }
-    event.preventDefault();
-    displayRef.current.focus();
-    update(true, event);
-  };
-  const handleClose = (event) => {
-    update(false, event);
-  };
-  const childrenArray = L.toArray(children);
-  const handleChange = (event) => {
-    const child = childrenArray.find((childItem) => childItem.props.value === event.target.value);
-    if (child === void 0) {
-      return;
-    }
-    setValueState(child.props.value);
-    if (onChange) {
-      onChange(event, child);
-    }
-  };
-  const handleItemClick = (child) => (event) => {
-    let newValue;
-    if (!event.currentTarget.hasAttribute("tabindex")) {
-      return;
-    }
-    if (multiple) {
-      newValue = Array.isArray(value) ? value.slice() : [];
-      const itemIndex = value.indexOf(child.props.value);
-      if (itemIndex === -1) {
-        newValue.push(child.props.value);
-      } else {
-        newValue.splice(itemIndex, 1);
-      }
-    } else {
-      newValue = child.props.value;
-    }
-    if (child.props.onClick) {
-      child.props.onClick(event);
-    }
-    if (value !== newValue) {
-      setValueState(newValue);
-      if (onChange) {
-        const nativeEvent = event.nativeEvent || event;
-        const clonedEvent = new nativeEvent.constructor(nativeEvent.type, nativeEvent);
-        Object.defineProperty(clonedEvent, "target", {
-          writable: true,
-          value: {
-            value: newValue,
-            name
-          }
-        });
-        onChange(clonedEvent, child);
-      }
-    }
-    if (!multiple) {
-      update(false, event);
-    }
-  };
-  const handleKeyDown = (event) => {
-    if (!readOnly) {
-      const validKeys = [
-        " ",
-        "ArrowUp",
-        "ArrowDown",
-        // The native select doesn't respond to enter on macOS, but it's recommended by
-        // https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/
-        "Enter"
-      ];
-      if (validKeys.includes(event.key)) {
-        event.preventDefault();
-        update(true, event);
-      }
-      onKeyDown?.(event);
-    }
-  };
-  const handleBlur = (event) => {
-    if (!open && onBlur) {
-      Object.defineProperty(event, "target", {
-        writable: true,
-        value: {
-          value,
-          name
-        }
-      });
-      onBlur(event);
-    }
-  };
-  delete other["aria-invalid"];
-  let display;
-  let displaySingle;
-  const displayMultiple = [];
-  let computeDisplay = false;
-  if (isFilled({
-    value
-  }) || displayEmpty) {
-    if (renderValue) {
-      display = renderValue(value);
-    } else {
-      computeDisplay = true;
-    }
-  }
-  const items = childrenArray.map((child) => {
-    if (!/* @__PURE__ */ hn(child)) {
-      return null;
-    }
-    let selected;
-    if (multiple) {
-      if (!Array.isArray(value)) {
-        throw new Error(formatMuiErrorMessage(2));
-      }
-      selected = value.some((v2) => areEqualValues$1(v2, child.props.value));
-      if (selected && computeDisplay) {
-        displayMultiple.push(child.props.children);
-      }
-    } else {
-      selected = areEqualValues$1(value, child.props.value);
-      if (selected && computeDisplay) {
-        displaySingle = child.props.children;
-      }
-    }
-    return /* @__PURE__ */ mn(child, {
-      "aria-selected": selected ? "true" : "false",
-      onClick: handleItemClick(child),
-      onKeyUp: (event) => {
-        if (event.key === " ") {
-          event.preventDefault();
-        }
-        if (child.props.onKeyUp) {
-          child.props.onKeyUp(event);
-        }
-      },
-      role: "option",
-      selected,
-      value: void 0,
-      // The value is most likely not a valid HTML attribute.
-      "data-value": child.props.value
-      // Instead, we provide it as a data attribute.
-    });
-  });
-  if (computeDisplay) {
-    if (multiple) {
-      if (displayMultiple.length === 0) {
-        display = null;
-      } else {
-        display = displayMultiple.reduce((output, child, index) => {
-          output.push(child);
-          if (index < displayMultiple.length - 1) {
-            output.push(", ");
-          }
-          return output;
-        }, []);
-      }
-    } else {
-      display = displaySingle;
-    }
-  }
-  let menuMinWidth = menuMinWidthState;
-  if (!autoWidth && isOpenControlled && displayNode) {
-    menuMinWidth = anchorElement.clientWidth;
-  }
-  let tabIndex;
-  if (typeof tabIndexProp !== "undefined") {
-    tabIndex = tabIndexProp;
-  } else {
-    tabIndex = disabled ? null : 0;
-  }
-  const buttonId = SelectDisplayProps.id || (name ? `mui-component-select-${name}` : void 0);
-  const ownerState = {
-    ...props,
-    variant,
-    value,
-    open,
-    error
-  };
-  const classes = useUtilityClasses$h(ownerState);
-  const paperProps = {
-    ...MenuProps.PaperProps,
-    ...typeof MenuProps.slotProps?.paper === "function" ? MenuProps.slotProps.paper(ownerState) : MenuProps.slotProps?.paper
-  };
-  const listProps = {
-    ...MenuProps.MenuListProps,
-    ...typeof MenuProps.slotProps?.list === "function" ? MenuProps.slotProps.list(ownerState) : MenuProps.slotProps?.list
-  };
-  const listboxId = useId();
-  return /* @__PURE__ */ u2(S, {
-    children: [/* @__PURE__ */ u2(SelectSelect, {
-      as: "div",
-      ref: handleDisplayRef,
-      tabIndex,
-      role: "combobox",
-      "aria-controls": open ? listboxId : void 0,
-      "aria-disabled": disabled ? "true" : void 0,
-      "aria-expanded": open ? "true" : "false",
-      "aria-haspopup": "listbox",
-      "aria-label": ariaLabel,
-      "aria-labelledby": [labelId, buttonId].filter(Boolean).join(" ") || void 0,
-      "aria-describedby": ariaDescribedby,
-      "aria-required": required2 ? "true" : void 0,
-      "aria-invalid": error ? "true" : void 0,
-      onKeyDown: handleKeyDown,
-      onMouseDown: disabled || readOnly ? null : handleMouseDown,
-      onBlur: handleBlur,
-      onFocus,
-      ...SelectDisplayProps,
-      ownerState,
-      className: clsx(SelectDisplayProps.className, classes.select, className),
-      id: buttonId,
-      children: isEmpty(display) ? (
-        // notranslate needed while Google Translate will not fix zero-width space issue
-        _span$1 || (_span$1 = /* @__PURE__ */ u2("span", {
-          className: "notranslate",
-          "aria-hidden": true,
-          children: "​"
-        }))
-      ) : display
-    }), /* @__PURE__ */ u2(SelectNativeInput, {
-      "aria-invalid": error,
-      value: Array.isArray(value) ? value.join(",") : value,
-      name,
-      ref: inputRef,
-      "aria-hidden": true,
-      onChange: handleChange,
-      tabIndex: -1,
-      disabled,
-      className: classes.nativeInput,
-      autoFocus,
-      required: required2,
-      ...other,
-      ownerState
-    }), /* @__PURE__ */ u2(SelectIcon, {
-      as: IconComponent,
-      className: classes.icon,
-      ownerState
-    }), /* @__PURE__ */ u2(SelectFocusSourceProvider, {
-      value: openInteractionType,
-      children: /* @__PURE__ */ u2(Menu$1, {
-        id: `menu-${name || ""}`,
-        anchorEl: anchorElement,
-        open,
-        onClose: handleClose,
-        anchorOrigin: {
-          vertical: "bottom",
-          horizontal: "center"
-        },
-        transformOrigin: {
-          vertical: "top",
-          horizontal: "center"
-        },
-        ...MenuProps,
-        slotProps: {
-          ...MenuProps.slotProps,
-          list: {
-            "aria-labelledby": labelId,
-            role: "listbox",
-            "aria-multiselectable": multiple ? "true" : void 0,
-            disableListWrap: true,
-            id: listboxId,
-            ...listProps
-          },
-          paper: {
-            ...paperProps,
-            style: {
-              minWidth: menuMinWidth,
-              ...paperProps != null ? paperProps.style : null
-            }
-          }
-        },
-        children: items
-      })
-    })]
-  });
-});
-var _span;
 const NotchedOutlineRoot$1 = styled("fieldset", {
   name: "MuiNotchedOutlined",
   shouldForwardProp: rootShouldForwardProp
@@ -42880,7 +41205,7 @@ function NotchedOutline(props) {
         children: label
       }) : (
         // notranslate needed while Google Translate will not fix zero-width space issue
-        _span || (_span = /* @__PURE__ */ u2("span", {
+        _span$1 || (_span$1 = /* @__PURE__ */ u2("span", {
           className: "notranslate",
           "aria-hidden": true,
           children: "​"
@@ -43099,7 +41424,7 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
       slotProps
     },
     additionalProps: {
-      label: label != null && label !== "" && fcs.required ? /* @__PURE__ */ u2(S, {
+      label: label != null && label !== "" && fcs.required ? /* @__PURE__ */ u2(k$2, {
         children: [label, " ", "*"]
       }) : label
     }
@@ -43127,338 +41452,6 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
   });
 });
 OutlinedInput.muiName = "Input";
-const useUtilityClasses$f = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  const composedClasses = composeClasses(slots, getSelectUtilityClasses, classes);
-  return {
-    ...classes,
-    ...composedClasses
-  };
-};
-const styledRootConfig = {
-  name: "MuiSelect",
-  slot: "Root",
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) && prop !== "variant"
-};
-const StyledInput = styled(Input, styledRootConfig)("");
-const StyledOutlinedInput = styled(OutlinedInput, styledRootConfig)("");
-const StyledFilledInput = styled(FilledInput, styledRootConfig)("");
-const Select$1 = /* @__PURE__ */ D(function Select(inProps, ref) {
-  const props = useDefaultProps({
-    name: "MuiSelect",
-    props: inProps
-  });
-  const {
-    autoWidth = false,
-    children,
-    classes: classesProp = {},
-    className,
-    defaultOpen = false,
-    displayEmpty = false,
-    IconComponent = ArrowDropDownIcon$1,
-    id,
-    input,
-    inputProps,
-    label,
-    labelId,
-    MenuProps,
-    multiple = false,
-    native = false,
-    onClose,
-    onOpen,
-    open,
-    renderValue,
-    SelectDisplayProps,
-    variant: variantProp = "outlined",
-    ...other
-  } = props;
-  const inputComponent = native ? NativeSelectInput : SelectInput;
-  const muiFormControl = useFormControl();
-  const fcs = formControlState({
-    props,
-    muiFormControl,
-    states: ["variant", "error"]
-  });
-  const variant = fcs.variant || variantProp;
-  const ownerState = {
-    ...props,
-    variant,
-    classes: classesProp
-  };
-  const classes = useUtilityClasses$f(ownerState);
-  const {
-    root,
-    ...restOfClasses
-  } = classes;
-  const InputComponent = input || {
-    standard: /* @__PURE__ */ u2(StyledInput, {
-      ownerState
-    }),
-    outlined: /* @__PURE__ */ u2(StyledOutlinedInput, {
-      label,
-      ownerState
-    }),
-    filled: /* @__PURE__ */ u2(StyledFilledInput, {
-      ownerState
-    })
-  }[variant];
-  const inputComponentRef = useForkRef(ref, getReactElementRef(InputComponent));
-  return /* @__PURE__ */ u2(S, {
-    children: /* @__PURE__ */ mn(InputComponent, {
-      // Most of the logic is implemented in `SelectInput`.
-      // The `Select` component is a simple API wrapper to expose something better to play with.
-      inputComponent,
-      inputProps: {
-        children,
-        error: fcs.error,
-        IconComponent,
-        variant,
-        type: void 0,
-        // We render a select. We can ignore the type provided by the `Input`.
-        multiple,
-        ...native ? {
-          id
-        } : {
-          autoWidth,
-          defaultOpen,
-          displayEmpty,
-          labelId,
-          MenuProps,
-          onClose,
-          onOpen,
-          open,
-          renderValue,
-          SelectDisplayProps: {
-            id,
-            ...SelectDisplayProps
-          }
-        },
-        ...inputProps,
-        classes: inputProps ? deepmerge(restOfClasses, inputProps.classes) : restOfClasses,
-        ...input ? input.props.inputProps : {}
-      },
-      ...(multiple && native || displayEmpty) && variant === "outlined" ? {
-        notched: true
-      } : {},
-      ref: inputComponentRef,
-      className: clsx(InputComponent.props.className, className, classes.root),
-      // If a custom input is provided via 'input' prop, do not allow 'variant' to be propagated to it's root element. See https://github.com/mui/material-ui/issues/33894.
-      ...!input && {
-        variant
-      },
-      ...other
-    })
-  });
-});
-Select$1.muiName = "Select";
-function focusWithVisible(element, focusSource) {
-  if (focusSource == null) {
-    element.focus();
-    return;
-  }
-  try {
-    element.focus({
-      focusVisible: focusSource === "keyboard"
-    });
-  } catch (error) {
-    element.focus();
-  }
-}
-const overridesResolver = (props, styles2) => {
-  const {
-    ownerState
-  } = props;
-  return [styles2.root, ownerState.dense && styles2.dense, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
-};
-const useUtilityClasses$e = (ownerState) => {
-  const {
-    disabled,
-    dense,
-    divider,
-    disableGutters,
-    selected,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", dense && "dense", disabled && "disabled", !disableGutters && "gutters", divider && "divider", selected && "selected"]
-  };
-  const composedClasses = composeClasses(slots, getMenuItemUtilityClass, classes);
-  return {
-    ...classes,
-    ...composedClasses
-  };
-};
-const MenuItemRoot = styled(ButtonBase, {
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
-  name: "MuiMenuItem",
-  slot: "Root",
-  overridesResolver
-})(memoTheme(({
-  theme: theme2
-}) => ({
-  ...theme2.typography.body1,
-  display: "flex",
-  justifyContent: "flex-start",
-  alignItems: "center",
-  position: "relative",
-  textDecoration: "none",
-  minHeight: 48,
-  paddingTop: 6,
-  paddingBottom: 6,
-  boxSizing: "border-box",
-  whiteSpace: "nowrap",
-  "&:hover": {
-    textDecoration: "none",
-    backgroundColor: (theme2.vars || theme2).palette.action.hover,
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: "transparent"
-    }
-  },
-  [`&.${menuItemClasses.selected}`]: {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity),
-    [`&.${menuItemClasses.focusVisible}`]: {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
-    }
-  },
-  [`&.${menuItemClasses.selected}:hover`]: {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`),
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity)
-    }
-  },
-  [`&.${menuItemClasses.focusVisible}`]: {
-    backgroundColor: (theme2.vars || theme2).palette.action.focus
-  },
-  [`&.${menuItemClasses.disabled}`]: {
-    opacity: (theme2.vars || theme2).palette.action.disabledOpacity
-  },
-  [`& + .${dividerClasses.root}`]: {
-    marginTop: theme2.spacing(1),
-    marginBottom: theme2.spacing(1)
-  },
-  [`& + .${dividerClasses.inset}`]: {
-    marginLeft: 52
-  },
-  [`& .${listItemTextClasses.root}`]: {
-    marginTop: 0,
-    marginBottom: 0
-  },
-  [`& .${listItemTextClasses.inset}`]: {
-    paddingLeft: 36
-  },
-  [`& .${listItemIconClasses.root}`]: {
-    minWidth: 36
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.disableGutters,
-    style: {
-      paddingLeft: 16,
-      paddingRight: 16
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.divider,
-    style: {
-      borderBottom: `1px solid ${(theme2.vars || theme2).palette.divider}`,
-      backgroundClip: "padding-box"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.dense,
-    style: {
-      [theme2.breakpoints.up("sm")]: {
-        minHeight: "auto"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.dense,
-    style: {
-      minHeight: 32,
-      // https://m2.material.io/components/menus#specs > Dense
-      paddingTop: 4,
-      paddingBottom: 4,
-      ...theme2.typography.body2,
-      [`& .${listItemIconClasses.root} svg`]: {
-        fontSize: "1.25rem"
-      }
-    }
-  }]
-})));
-const MenuItem$1 = /* @__PURE__ */ D(function MenuItem(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiMenuItem"
-  });
-  const {
-    autoFocus = false,
-    component = "li",
-    dense = false,
-    divider = false,
-    disableGutters = false,
-    focusVisibleClassName,
-    role = "menuitem",
-    tabIndex: tabIndexProp,
-    className,
-    ...other
-  } = props;
-  const focusSource = useSelectFocusSource();
-  const context = x$1(ListContext);
-  const childContext = T$1(() => ({
-    dense: dense || context.dense || false,
-    disableGutters
-  }), [context.dense, dense, disableGutters]);
-  const menuItemRef = A$1(null);
-  useEnhancedEffect(() => {
-    if (autoFocus) {
-      if (menuItemRef.current) {
-        focusWithVisible(menuItemRef.current, focusSource);
-      }
-    }
-  }, [autoFocus]);
-  const ownerState = {
-    ...props,
-    dense: childContext.dense,
-    divider,
-    disableGutters
-  };
-  const classes = useUtilityClasses$e(props);
-  const handleRef = useForkRef(menuItemRef, ref);
-  const {
-    root,
-    ...forwardedClasses
-  } = classes;
-  let tabIndex;
-  if (!props.disabled) {
-    tabIndex = tabIndexProp !== void 0 ? tabIndexProp : -1;
-  }
-  return /* @__PURE__ */ u2(ListContext.Provider, {
-    value: childContext,
-    children: /* @__PURE__ */ u2(MenuItemRoot, {
-      ref: handleRef,
-      role,
-      tabIndex,
-      component,
-      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
-      className: clsx(classes.root, className),
-      ...other,
-      ownerState,
-      classes: forwardedClasses
-    })
-  });
-});
 const RadioButtonUncheckedIcon$1 = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
 }));
@@ -43527,7 +41520,7 @@ function RadioButtonIcon(props) {
     })]
   });
 }
-const RadioGroupContext = /* @__PURE__ */ X$1(void 0);
+const RadioGroupContext = /* @__PURE__ */ Q$1(void 0);
 function useRadioGroup() {
   return x$1(RadioGroupContext);
 }
@@ -43535,7 +41528,7 @@ function getRadioUtilityClass(slot) {
   return generateUtilityClass("MuiRadio", slot);
 }
 const radioClasses = generateUtilityClasses("MuiRadio", ["root", "checked", "disabled", "colorPrimary", "colorSecondary", "sizeSmall"]);
-const useUtilityClasses$d = (ownerState) => {
+const useUtilityClasses$f = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -43613,7 +41606,7 @@ const RadioRoot = styled(SwitchBase, {
     }
   }]
 })));
-function areEqualValues(a2, b2) {
+function areEqualValues$1(a2, b2) {
   if (typeof b2 === "object" && b2 !== null) {
     return a2 === b2;
   }
@@ -43659,14 +41652,14 @@ const Radio$1 = /* @__PURE__ */ D(function Radio(inProps, ref) {
     color: color2,
     size
   };
-  const classes = useUtilityClasses$d(ownerState);
+  const classes = useUtilityClasses$f(ownerState);
   const radioGroup = useRadioGroup();
   let checked = checkedProp;
   const onChange = createChainedFunction(onChangeProp, radioGroup && radioGroup.onChange);
   let name = nameProp;
   if (radioGroup) {
     if (typeof checked === "undefined") {
-      checked = areEqualValues(radioGroup.value, props.value);
+      checked = areEqualValues$1(radioGroup.value, props.value);
     }
     if (typeof name === "undefined") {
       name = radioGroup.name;
@@ -43693,10 +41686,10 @@ const Radio$1 = /* @__PURE__ */ D(function Radio(inProps, ref) {
     ownerState,
     additionalProps: {
       type: "radio",
-      icon: /* @__PURE__ */ mn(icon, {
+      icon: /* @__PURE__ */ _n(icon, {
         fontSize: icon.props.fontSize ?? size
       }),
-      checkedIcon: /* @__PURE__ */ mn(checkedIcon, {
+      checkedIcon: /* @__PURE__ */ _n(checkedIcon, {
         fontSize: checkedIcon.props.fontSize ?? size
       }),
       disabled,
@@ -43718,7 +41711,7 @@ function getRadioGroupUtilityClass(slot) {
   return generateUtilityClass("MuiRadioGroup", slot);
 }
 generateUtilityClasses("MuiRadioGroup", ["root", "row", "error"]);
-const useUtilityClasses$c = (props) => {
+const useUtilityClasses$e = (props) => {
   const {
     classes,
     row,
@@ -43743,7 +41736,7 @@ const RadioGroup$1 = /* @__PURE__ */ D(function RadioGroup(props, ref) {
     ...other
   } = props;
   const rootRef = A$1(null);
-  const classes = useUtilityClasses$c(props);
+  const classes = useUtilityClasses$e(props);
   const [value, setValueState] = useControlled({
     controlled: valueProp,
     default: defaultValue2,
@@ -43794,6 +41787,604 @@ const visuallyHidden = {
   whiteSpace: "nowrap",
   width: "1px"
 };
+function getSelectUtilityClasses(slot) {
+  return generateUtilityClass("MuiSelect", slot);
+}
+const selectClasses = generateUtilityClasses("MuiSelect", ["root", "select", "multiple", "filled", "outlined", "standard", "disabled", "focused", "icon", "iconOpen", "iconFilled", "iconOutlined", "iconStandard", "nativeInput", "error"]);
+var _span;
+const SelectSelect = styled(StyledSelectSelect, {
+  name: "MuiSelect",
+  slot: "Select",
+  overridesResolver: (props, styles2) => {
+    const {
+      ownerState
+    } = props;
+    return [
+      // Win specificity over the input base
+      {
+        [`&.${selectClasses.select}`]: styles2.select
+      },
+      {
+        [`&.${selectClasses.select}`]: styles2[ownerState.variant]
+      },
+      {
+        [`&.${selectClasses.error}`]: styles2.error
+      },
+      {
+        [`&.${selectClasses.multiple}`]: styles2.multiple
+      }
+    ];
+  }
+})({
+  // Win specificity over the input base
+  [`&.${selectClasses.select}`]: {
+    height: "auto",
+    // Resets for multiple select with chips
+    minHeight: "1.4375em",
+    // Required for select\text-field height consistency
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    overflow: "hidden"
+  }
+});
+const SelectIcon = styled(StyledSelectIcon, {
+  name: "MuiSelect",
+  slot: "Icon",
+  overridesResolver: (props, styles2) => {
+    const {
+      ownerState
+    } = props;
+    return [styles2.icon, ownerState.variant && styles2[`icon${capitalize(ownerState.variant)}`], ownerState.open && styles2.iconOpen];
+  }
+})({});
+const SelectNativeInput = styled("input", {
+  shouldForwardProp: (prop) => slotShouldForwardProp(prop) && prop !== "classes",
+  name: "MuiSelect",
+  slot: "NativeInput"
+})({
+  bottom: 0,
+  left: 0,
+  position: "absolute",
+  opacity: 0,
+  pointerEvents: "none",
+  width: "100%",
+  boxSizing: "border-box"
+});
+function areEqualValues(a2, b2) {
+  if (typeof b2 === "object" && b2 !== null) {
+    return a2 === b2;
+  }
+  return String(a2) === String(b2);
+}
+function isEmpty(display) {
+  return display == null || typeof display === "string" && !display.trim();
+}
+const useUtilityClasses$d = (ownerState) => {
+  const {
+    classes,
+    variant,
+    disabled,
+    multiple,
+    open,
+    error
+  } = ownerState;
+  const slots = {
+    select: ["select", variant, disabled && "disabled", multiple && "multiple", error && "error"],
+    icon: ["icon", `icon${capitalize(variant)}`, open && "iconOpen", disabled && "disabled"],
+    nativeInput: ["nativeInput"]
+  };
+  return composeClasses(slots, getSelectUtilityClasses, classes);
+};
+const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
+  const {
+    "aria-describedby": ariaDescribedby,
+    "aria-label": ariaLabel,
+    autoFocus,
+    autoWidth,
+    children,
+    className,
+    defaultOpen,
+    defaultValue: defaultValue2,
+    disabled,
+    displayEmpty,
+    error = false,
+    IconComponent,
+    inputRef: inputRefProp,
+    labelId,
+    MenuProps = {},
+    multiple,
+    name,
+    onBlur,
+    onChange,
+    onClose,
+    onFocus,
+    onOpen,
+    open: openProp,
+    readOnly,
+    renderValue,
+    required: required2,
+    SelectDisplayProps = {},
+    tabIndex: tabIndexProp,
+    // catching `type` from Input which makes no sense for SelectInput
+    type,
+    value: valueProp,
+    variant = "standard",
+    ...other
+  } = props;
+  const [value, setValueState] = useControlled({
+    controlled: valueProp,
+    default: defaultValue2,
+    name: "Select"
+  });
+  const [openState, setOpenState] = useControlled({
+    controlled: openProp,
+    default: defaultOpen,
+    name: "Select"
+  });
+  const inputRef = A$1(null);
+  const displayRef = A$1(null);
+  const [displayNode, setDisplayNode] = d(null);
+  const {
+    current: isOpenControlled
+  } = A$1(openProp != null);
+  const [menuMinWidthState, setMenuMinWidthState] = d();
+  const handleRef = useForkRef(ref, inputRefProp);
+  const handleDisplayRef = q$1((node2) => {
+    displayRef.current = node2;
+    if (node2) {
+      setDisplayNode(node2);
+    }
+  }, []);
+  const anchorElement = displayNode?.parentNode;
+  F$1(handleRef, () => ({
+    focus: () => {
+      displayRef.current.focus();
+    },
+    node: inputRef.current,
+    value
+  }), [value]);
+  y(() => {
+    if (defaultOpen && openState && displayNode && !isOpenControlled) {
+      setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
+      displayRef.current.focus();
+    }
+  }, [displayNode, autoWidth]);
+  y(() => {
+    if (autoFocus) {
+      displayRef.current.focus();
+    }
+  }, [autoFocus]);
+  y(() => {
+    if (!labelId) {
+      return void 0;
+    }
+    const label = ownerDocument(displayRef.current).getElementById(labelId);
+    if (label) {
+      const handler = () => {
+        if (getSelection().isCollapsed) {
+          displayRef.current.focus();
+        }
+      };
+      label.addEventListener("click", handler);
+      return () => {
+        label.removeEventListener("click", handler);
+      };
+    }
+    return void 0;
+  }, [labelId]);
+  const update = (open2, event) => {
+    if (open2) {
+      if (onOpen) {
+        onOpen(event);
+      }
+    } else if (onClose) {
+      onClose(event);
+    }
+    if (!isOpenControlled) {
+      setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
+      setOpenState(open2);
+    }
+  };
+  const handleMouseDown = (event) => {
+    if (event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    displayRef.current.focus();
+    update(true, event);
+  };
+  const handleClose = (event) => {
+    update(false, event);
+  };
+  const childrenArray = O.toArray(children);
+  const handleChange = (event) => {
+    const child = childrenArray.find((childItem) => childItem.props.value === event.target.value);
+    if (child === void 0) {
+      return;
+    }
+    setValueState(child.props.value);
+    if (onChange) {
+      onChange(event, child);
+    }
+  };
+  const handleItemClick = (child) => (event) => {
+    let newValue;
+    if (!event.currentTarget.hasAttribute("tabindex")) {
+      return;
+    }
+    if (multiple) {
+      newValue = Array.isArray(value) ? value.slice() : [];
+      const itemIndex = value.indexOf(child.props.value);
+      if (itemIndex === -1) {
+        newValue.push(child.props.value);
+      } else {
+        newValue.splice(itemIndex, 1);
+      }
+    } else {
+      newValue = child.props.value;
+    }
+    if (child.props.onClick) {
+      child.props.onClick(event);
+    }
+    if (value !== newValue) {
+      setValueState(newValue);
+      if (onChange) {
+        const nativeEvent = event.nativeEvent || event;
+        const clonedEvent = new nativeEvent.constructor(nativeEvent.type, nativeEvent);
+        Object.defineProperty(clonedEvent, "target", {
+          writable: true,
+          value: {
+            value: newValue,
+            name
+          }
+        });
+        onChange(clonedEvent, child);
+      }
+    }
+    if (!multiple) {
+      update(false, event);
+    }
+  };
+  const handleKeyDown = (event) => {
+    if (!readOnly) {
+      const validKeys = [
+        " ",
+        "ArrowUp",
+        "ArrowDown",
+        // The native select doesn't respond to enter on macOS, but it's recommended by
+        // https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/
+        "Enter"
+      ];
+      if (validKeys.includes(event.key)) {
+        event.preventDefault();
+        update(true, event);
+      }
+    }
+  };
+  const open = displayNode !== null && openState;
+  const handleBlur = (event) => {
+    if (!open && onBlur) {
+      Object.defineProperty(event, "target", {
+        writable: true,
+        value: {
+          value,
+          name
+        }
+      });
+      onBlur(event);
+    }
+  };
+  delete other["aria-invalid"];
+  let display;
+  let displaySingle;
+  const displayMultiple = [];
+  let computeDisplay = false;
+  if (isFilled({
+    value
+  }) || displayEmpty) {
+    if (renderValue) {
+      display = renderValue(value);
+    } else {
+      computeDisplay = true;
+    }
+  }
+  const items = childrenArray.map((child) => {
+    if (!/* @__PURE__ */ mn(child)) {
+      return null;
+    }
+    let selected;
+    if (multiple) {
+      if (!Array.isArray(value)) {
+        throw new Error(formatMuiErrorMessage(2));
+      }
+      selected = value.some((v2) => areEqualValues(v2, child.props.value));
+      if (selected && computeDisplay) {
+        displayMultiple.push(child.props.children);
+      }
+    } else {
+      selected = areEqualValues(value, child.props.value);
+      if (selected && computeDisplay) {
+        displaySingle = child.props.children;
+      }
+    }
+    return /* @__PURE__ */ _n(child, {
+      "aria-selected": selected ? "true" : "false",
+      onClick: handleItemClick(child),
+      onKeyUp: (event) => {
+        if (event.key === " ") {
+          event.preventDefault();
+        }
+        if (child.props.onKeyUp) {
+          child.props.onKeyUp(event);
+        }
+      },
+      role: "option",
+      selected,
+      value: void 0,
+      // The value is most likely not a valid HTML attribute.
+      "data-value": child.props.value
+      // Instead, we provide it as a data attribute.
+    });
+  });
+  if (computeDisplay) {
+    if (multiple) {
+      if (displayMultiple.length === 0) {
+        display = null;
+      } else {
+        display = displayMultiple.reduce((output, child, index) => {
+          output.push(child);
+          if (index < displayMultiple.length - 1) {
+            output.push(", ");
+          }
+          return output;
+        }, []);
+      }
+    } else {
+      display = displaySingle;
+    }
+  }
+  let menuMinWidth = menuMinWidthState;
+  if (!autoWidth && isOpenControlled && displayNode) {
+    menuMinWidth = anchorElement.clientWidth;
+  }
+  let tabIndex;
+  if (typeof tabIndexProp !== "undefined") {
+    tabIndex = tabIndexProp;
+  } else {
+    tabIndex = disabled ? null : 0;
+  }
+  const buttonId = SelectDisplayProps.id || (name ? `mui-component-select-${name}` : void 0);
+  const ownerState = {
+    ...props,
+    variant,
+    value,
+    open,
+    error
+  };
+  const classes = useUtilityClasses$d(ownerState);
+  const paperProps = {
+    ...MenuProps.PaperProps,
+    ...typeof MenuProps.slotProps?.paper === "function" ? MenuProps.slotProps.paper(ownerState) : MenuProps.slotProps?.paper
+  };
+  const listProps = {
+    ...MenuProps.MenuListProps,
+    ...typeof MenuProps.slotProps?.list === "function" ? MenuProps.slotProps.list(ownerState) : MenuProps.slotProps?.list
+  };
+  const listboxId = useId();
+  return /* @__PURE__ */ u2(k$2, {
+    children: [/* @__PURE__ */ u2(SelectSelect, {
+      as: "div",
+      ref: handleDisplayRef,
+      tabIndex,
+      role: "combobox",
+      "aria-controls": open ? listboxId : void 0,
+      "aria-disabled": disabled ? "true" : void 0,
+      "aria-expanded": open ? "true" : "false",
+      "aria-haspopup": "listbox",
+      "aria-label": ariaLabel,
+      "aria-labelledby": [labelId, buttonId].filter(Boolean).join(" ") || void 0,
+      "aria-describedby": ariaDescribedby,
+      "aria-required": required2 ? "true" : void 0,
+      "aria-invalid": error ? "true" : void 0,
+      onKeyDown: handleKeyDown,
+      onMouseDown: disabled || readOnly ? null : handleMouseDown,
+      onBlur: handleBlur,
+      onFocus,
+      ...SelectDisplayProps,
+      ownerState,
+      className: clsx(SelectDisplayProps.className, classes.select, className),
+      id: buttonId,
+      children: isEmpty(display) ? (
+        // notranslate needed while Google Translate will not fix zero-width space issue
+        _span || (_span = /* @__PURE__ */ u2("span", {
+          className: "notranslate",
+          "aria-hidden": true,
+          children: "​"
+        }))
+      ) : display
+    }), /* @__PURE__ */ u2(SelectNativeInput, {
+      "aria-invalid": error,
+      value: Array.isArray(value) ? value.join(",") : value,
+      name,
+      ref: inputRef,
+      "aria-hidden": true,
+      onChange: handleChange,
+      tabIndex: -1,
+      disabled,
+      className: classes.nativeInput,
+      autoFocus,
+      required: required2,
+      ...other,
+      ownerState
+    }), /* @__PURE__ */ u2(SelectIcon, {
+      as: IconComponent,
+      className: classes.icon,
+      ownerState
+    }), /* @__PURE__ */ u2(Menu$1, {
+      id: `menu-${name || ""}`,
+      anchorEl: anchorElement,
+      open,
+      onClose: handleClose,
+      anchorOrigin: {
+        vertical: "bottom",
+        horizontal: "center"
+      },
+      transformOrigin: {
+        vertical: "top",
+        horizontal: "center"
+      },
+      ...MenuProps,
+      slotProps: {
+        ...MenuProps.slotProps,
+        list: {
+          "aria-labelledby": labelId,
+          role: "listbox",
+          "aria-multiselectable": multiple ? "true" : void 0,
+          disableListWrap: true,
+          id: listboxId,
+          ...listProps
+        },
+        paper: {
+          ...paperProps,
+          style: {
+            minWidth: menuMinWidth,
+            ...paperProps != null ? paperProps.style : null
+          }
+        }
+      },
+      children: items
+    })]
+  });
+});
+const useUtilityClasses$c = (ownerState) => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root"]
+  };
+  const composedClasses = composeClasses(slots, getSelectUtilityClasses, classes);
+  return {
+    ...classes,
+    ...composedClasses
+  };
+};
+const styledRootConfig = {
+  name: "MuiSelect",
+  slot: "Root",
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) && prop !== "variant"
+};
+const StyledInput = styled(Input, styledRootConfig)("");
+const StyledOutlinedInput = styled(OutlinedInput, styledRootConfig)("");
+const StyledFilledInput = styled(FilledInput, styledRootConfig)("");
+const Select$1 = /* @__PURE__ */ D(function Select(inProps, ref) {
+  const props = useDefaultProps({
+    name: "MuiSelect",
+    props: inProps
+  });
+  const {
+    autoWidth = false,
+    children,
+    classes: classesProp = {},
+    className,
+    defaultOpen = false,
+    displayEmpty = false,
+    IconComponent = ArrowDropDownIcon$1,
+    id,
+    input,
+    inputProps,
+    label,
+    labelId,
+    MenuProps,
+    multiple = false,
+    native = false,
+    onClose,
+    onOpen,
+    open,
+    renderValue,
+    SelectDisplayProps,
+    variant: variantProp = "outlined",
+    ...other
+  } = props;
+  const inputComponent = native ? NativeSelectInput : SelectInput;
+  const muiFormControl = useFormControl();
+  const fcs = formControlState({
+    props,
+    muiFormControl,
+    states: ["variant", "error"]
+  });
+  const variant = fcs.variant || variantProp;
+  const ownerState = {
+    ...props,
+    variant,
+    classes: classesProp
+  };
+  const classes = useUtilityClasses$c(ownerState);
+  const {
+    root,
+    ...restOfClasses
+  } = classes;
+  const InputComponent = input || {
+    standard: /* @__PURE__ */ u2(StyledInput, {
+      ownerState
+    }),
+    outlined: /* @__PURE__ */ u2(StyledOutlinedInput, {
+      label,
+      ownerState
+    }),
+    filled: /* @__PURE__ */ u2(StyledFilledInput, {
+      ownerState
+    })
+  }[variant];
+  const inputComponentRef = useForkRef(ref, getReactElementRef(InputComponent));
+  return /* @__PURE__ */ u2(k$2, {
+    children: /* @__PURE__ */ _n(InputComponent, {
+      // Most of the logic is implemented in `SelectInput`.
+      // The `Select` component is a simple API wrapper to expose something better to play with.
+      inputComponent,
+      inputProps: {
+        children,
+        error: fcs.error,
+        IconComponent,
+        variant,
+        type: void 0,
+        // We render a select. We can ignore the type provided by the `Input`.
+        multiple,
+        ...native ? {
+          id
+        } : {
+          autoWidth,
+          defaultOpen,
+          displayEmpty,
+          labelId,
+          MenuProps,
+          onClose,
+          onOpen,
+          open,
+          renderValue,
+          SelectDisplayProps: {
+            id,
+            ...SelectDisplayProps
+          }
+        },
+        ...inputProps,
+        classes: inputProps ? deepmerge(restOfClasses, inputProps.classes) : restOfClasses,
+        ...input ? input.props.inputProps : {}
+      },
+      ...(multiple && native || displayEmpty) && variant === "outlined" ? {
+        notched: true
+      } : {},
+      ref: inputComponentRef,
+      className: clsx(InputComponent.props.className, className, classes.root),
+      // If a custom input is provided via 'input' prop, do not allow 'variant' to be propagated to it's root element. See https://github.com/mui/material-ui/issues/33894.
+      ...!input && {
+        variant
+      },
+      ...other
+    })
+  });
+});
+Select$1.muiName = "Select";
 function areArraysEqual(array1, array2, itemComparer = (a2, b2) => a2 === b2) {
   return array1.length === array2.length && array1.every((value, index) => itemComparer(value, array2[index]));
 }
@@ -43871,8 +42462,8 @@ function focusThumb({
   activeIndex,
   setActive
 }) {
-  const activeElement$1 = activeElement(ownerDocument(sliderRef.current));
-  if (!contains$1(sliderRef.current, activeElement$1) || Number(activeElement$1?.getAttribute("data-index")) !== activeIndex) {
+  const doc = ownerDocument(sliderRef.current);
+  if (!sliderRef.current?.contains(doc.activeElement) || Number(doc?.activeElement?.getAttribute("data-index")) !== activeIndex) {
     sliderRef.current?.querySelector(`[type="range"][data-index="${activeIndex}"]`).focus();
   }
   if (setActive) {
@@ -44100,8 +42691,7 @@ function useSlider(parameters) {
     otherHandlers?.onKeyDown?.(event);
   };
   useEnhancedEffect(() => {
-    const activeElement$1 = activeElement(ownerDocument(sliderRef.current));
-    if (disabled && contains$1(sliderRef.current, activeElement$1)) {
+    if (disabled && sliderRef.current.contains(document.activeElement)) {
       document.activeElement?.blur();
     }
   }, [disabled]);
@@ -44459,9 +43049,9 @@ function SliderValueLabel$1(props) {
   if (!children) {
     return null;
   }
-  return /* @__PURE__ */ mn(children, {
+  return /* @__PURE__ */ _n(children, {
     className: children.props.className
-  }, /* @__PURE__ */ u2(S, {
+  }, /* @__PURE__ */ u2(k$2, {
     children: [children.props.children, /* @__PURE__ */ u2("span", {
       className: clsx(classes.offset, className),
       "aria-hidden": true,
@@ -45169,7 +43759,7 @@ const Slider$1 = /* @__PURE__ */ D(function Slider(inputProps, ref) {
       } else {
         markActive = track === "normal" && (range ? mark.value >= values2[0] && mark.value <= values2[values2.length - 1] : mark.value <= values2[0]) || track === "inverted" && (range ? mark.value <= values2[0] || mark.value >= values2[values2.length - 1] : mark.value >= values2[0]);
       }
-      return /* @__PURE__ */ u2(S, {
+      return /* @__PURE__ */ u2(k$2, {
         children: [/* @__PURE__ */ u2(MarkSlot, {
           "data-index": index,
           ...markProps,
@@ -45556,7 +44146,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
     TransitionProps,
     ...other
   } = props;
-  const children = /* @__PURE__ */ hn(childrenProp) ? childrenProp : /* @__PURE__ */ u2("span", {
+  const children = /* @__PURE__ */ mn(childrenProp) ? childrenProp : /* @__PURE__ */ u2("span", {
     children: childrenProp
   });
   const theme2 = useTheme();
@@ -45636,19 +44226,9 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
   };
   const [, setChildIsFocusVisible] = d(false);
   const handleBlur = (event) => {
-    const target = event?.target ?? childNode;
-    if (!target || !isFocusVisible(target)) {
+    if (!isFocusVisible(event.target)) {
       setChildIsFocusVisible(false);
-      const closeEvent = event ?? new Event("blur");
-      if (!event && target) {
-        Object.defineProperty(closeEvent, "target", {
-          value: target
-        });
-        Object.defineProperty(closeEvent, "currentTarget", {
-          value: target
-        });
-      }
-      handleMouseLeave(closeEvent);
+      handleMouseLeave(event);
     }
   };
   const handleFocus = (event) => {
@@ -45840,8 +44420,8 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
     ownerState,
     ref: setArrowRef
   });
-  return /* @__PURE__ */ u2(S, {
-    children: [/* @__PURE__ */ mn(children, childrenProps), /* @__PURE__ */ u2(PopperSlot, {
+  return /* @__PURE__ */ u2(k$2, {
+    children: [/* @__PURE__ */ _n(children, childrenProps), /* @__PURE__ */ u2(PopperSlot, {
       as: PopperComponentProp ?? Popper$1,
       placement,
       anchorEl: followCursor ? {
@@ -46055,8 +44635,6 @@ const SwitchTrack = styled("span", {
   height: "100%",
   width: "100%",
   borderRadius: 14 / 2,
-  boxSizing: "border-box",
-  border: "1px solid transparent",
   zIndex: -1,
   transition: theme2.transitions.create(["opacity", "background-color"], {
     duration: theme2.transitions.duration.shortest
@@ -46072,8 +44650,6 @@ const SwitchThumb = styled("span", {
 }) => ({
   boxShadow: (theme2.vars || theme2).shadows[1],
   backgroundColor: "currentColor",
-  boxSizing: "border-box",
-  border: "1px solid transparent",
   width: 20,
   height: 20,
   borderRadius: "50%"
@@ -46100,7 +44676,6 @@ const Switch$1 = /* @__PURE__ */ D(function Switch(inProps, ref) {
     size
   };
   const classes = useUtilityClasses$9(ownerState);
-  const externalInputProps = slotProps.input;
   const externalForwardedProps = {
     slots,
     slotProps
@@ -46154,9 +44729,12 @@ const Switch$1 = /* @__PURE__ */ D(function Switch(inProps, ref) {
         ...slotProps.switchBase && {
           root: typeof slotProps.switchBase === "function" ? slotProps.switchBase(ownerState) : slotProps.switchBase
         },
-        input: mergeSlotProps$1(typeof externalInputProps === "function" ? externalInputProps(ownerState) : externalInputProps, {
+        input: {
           role: "switch"
-        })
+        },
+        ...slotProps.input && {
+          input: typeof slotProps.input === "function" ? slotProps.input(ownerState) : slotProps.input
+        }
       }
     }), /* @__PURE__ */ u2(TrackSlot, {
       ...trackSlotProps
@@ -46376,7 +44954,7 @@ const Tab$1 = /* @__PURE__ */ D(function Tab(inProps, ref) {
     wrapped
   };
   const classes = useUtilityClasses$8(ownerState);
-  const icon = iconProp && label && /* @__PURE__ */ hn(iconProp) ? /* @__PURE__ */ mn(iconProp, {
+  const icon = iconProp && label && /* @__PURE__ */ mn(iconProp) ? /* @__PURE__ */ _n(iconProp, {
     className: clsx(classes.icon, iconProp.props.className)
   }) : iconProp;
   const handleClick = (event) => {
@@ -46407,14 +44985,14 @@ const Tab$1 = /* @__PURE__ */ D(function Tab(inProps, ref) {
     ownerState,
     tabIndex: selected ? 0 : -1,
     ...other,
-    children: [iconPosition === "top" || iconPosition === "start" ? /* @__PURE__ */ u2(S, {
+    children: [iconPosition === "top" || iconPosition === "start" ? /* @__PURE__ */ u2(k$2, {
       children: [icon, label]
-    }) : /* @__PURE__ */ u2(S, {
+    }) : /* @__PURE__ */ u2(k$2, {
       children: [label, icon]
     }), indicator]
   });
 });
-const TableContext = /* @__PURE__ */ X$1();
+const TableContext = /* @__PURE__ */ Q$1();
 function getTableUtilityClass(slot) {
   return generateUtilityClass("MuiTable", slot);
 }
@@ -46500,7 +45078,7 @@ const Table$1 = /* @__PURE__ */ D(function Table(inProps, ref) {
     })
   });
 });
-const Tablelvl2Context = /* @__PURE__ */ X$1();
+const Tablelvl2Context = /* @__PURE__ */ Q$1();
 function getTableBodyUtilityClass(slot) {
   return generateUtilityClass("MuiTableBody", slot);
 }
@@ -47381,7 +45959,7 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
     slots,
     slotProps: {
       indicator: TabIndicatorProps,
-      scrollButtons: TabScrollButtonProps,
+      scrollButton: TabScrollButtonProps,
       ...slotProps
     }
   };
@@ -47664,15 +46242,15 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
     ...indicatorSlotProps
   });
   let childIndex = 0;
-  const children = L.map(childrenProp, (child) => {
-    if (!/* @__PURE__ */ hn(child)) {
+  const children = O.map(childrenProp, (child) => {
+    if (!/* @__PURE__ */ mn(child)) {
       return null;
     }
     const childValue = child.props.value === void 0 ? childIndex : child.props.value;
     valueToIndex.set(childValue, childIndex);
     const selected = childValue === value;
     childIndex += 1;
-    return /* @__PURE__ */ mn(child, {
+    return /* @__PURE__ */ _n(child, {
       fullWidth: variant === "fullWidth",
       indicator: selected && !mounted && indicator,
       selected,
@@ -47690,8 +46268,8 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
       return;
     }
     const list = tabListRef.current;
-    const currentFocus = activeElement(ownerDocument(list));
-    const role = currentFocus?.getAttribute("role");
+    const currentFocus = ownerDocument(list).activeElement;
+    const role = currentFocus.getAttribute("role");
     if (role !== "tab") {
       return;
     }
@@ -48020,10 +46598,6 @@ const Menu2 = Menu$1;
 const TableRow2 = TableRow$1;
 const TableCell2 = TableCell$1;
 const Slider2 = Slider$1;
-const LinearProgress2 = LinearProgress$1;
-const Grid = Grid$1;
-const Card$1 = Card$2;
-const CardContent2 = CardContent$1;
 const TableHead2 = TableHead$1;
 const TableBody2 = TableBody$1;
 const Table2 = Table$1;
@@ -48173,7 +46747,6 @@ const DeleteForeverIcon = makeIcon("🗑", "delete");
 const DeleteForeverOutlinedIcon = makeIcon("🗑", "delete");
 const DeleteIcon = makeIcon("−", "delete");
 const DeleteOutlineIcon = makeIcon("🗑", "delete");
-const DownloadIcon = makeIcon("⇩", "download");
 const DragIndicatorIcon = makeIcon("⋮⋮", "drag");
 const EditIcon = makeIcon("✎", "edit");
 const ExpandLessIcon = makeIcon("⌃", "collapse");
@@ -48184,17 +46757,15 @@ const IosShareIcon = makeIcon("⇧", "share");
 const PauseIcon = makeIcon("Ⅱ", "pause");
 const PlayArrowIcon = makeIcon("▶", "play");
 const RadioButtonUncheckedIcon = makeIcon("○", "unchecked");
-const RefreshIcon = makeIcon("↻", "refresh");
 const RemoveCircleOutlineIcon = makeIcon("−", "remove");
 const RestartAltIcon = makeIcon("↺", "reset");
-const ScannerIcon = makeIcon("▣", "scan");
 const SearchIcon = makeIcon("⌕", "search");
 const SendIcon = makeIcon("➤", "send");
 const SettingsIcon = makeIcon("⚙", "settings");
 const SmartToyIcon = makeIcon("🤖", "ai");
 const StopIcon = makeIcon("■", "stop");
 const TaskAltIcon = makeIcon("✓", "done");
-const VisibilityIcon = makeIcon("◉", "preview");
+const WarningIcon = makeIcon("!", "warning");
 function FilterPopover({
   label,
   popoverTitle,
@@ -48671,7 +47242,7 @@ function renderModalContent(containerEl, children) {
 }
 function unmountModalContent(containerEl) {
   try {
-    pn(containerEl);
+    bn(containerEl);
   } catch (error) {
   }
 }
@@ -48723,7 +47294,6 @@ class NamePromptModal extends obsidian.Modal {
     super(app);
     this.options = options;
   }
-  options;
   resolvePromise = null;
   openAndGetValue() {
     return new Promise((resolve) => {
@@ -48860,8 +47430,8 @@ function HeatmapCell({
   highlightToday = true,
   emptyLabel
 }) {
-  const today2 = dayjs().format("YYYY-MM-DD");
-  const isToday = highlightToday && date2 === today2;
+  const today = dayjs().format("YYYY-MM-DD");
+  const isToday = highlightToday && date2 === today;
   let cellContent = "";
   let cellStyle = {};
   const displayCount = items ? items.reduce((sum, i2) => sum + getEffectiveDisplayCount(i2), 0) : 0;
@@ -49937,8 +48507,8 @@ function EventTimelineView(props) {
 function getThemeLeafLabel(themePath) {
   if (!themePath || themePath === "__default__") return "未分类";
   const segments = parsePath(themePath);
-  const leaf = segments[segments.length - 1];
-  return leaf?.name || themePath;
+  const leaf2 = segments[segments.length - 1];
+  return leaf2?.name || themePath;
 }
 function getThemeGroupTitle(themePath) {
   if (!themePath || themePath === "__default__") return "未分类";
@@ -49955,6 +48525,7 @@ function HeatmapView({
   injectedThemesByPath,
   injectedThemesToTrack,
   injectedDataByThemeAndDate,
+  injectedGoalHeatmapGroups,
   onOpenHeatmapCreate,
   onOpenCheckinManager,
   onNotice
@@ -49963,6 +48534,8 @@ function HeatmapView({
     () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module2.viewConfig }),
     [module2.viewConfig]
   );
+  const normalizedCurrentView = currentView === "日" || currentView === "day" ? "天" : currentView;
+  const isDayView = normalizedCurrentView === "天";
   const themesByPath = T$1(() => {
     return injectedThemesByPath ?? buildThemesByPathMap(inputSettings.themes);
   }, [injectedThemesByPath, inputSettings.themes]);
@@ -49978,8 +48551,9 @@ function HeatmapView({
     if (injectedThemesToTrack) return [];
     const set2 = /* @__PURE__ */ new Set();
     for (const it of items) {
-      if (it?.theme && typeof it.theme === "string" && it.theme.trim().length > 0) {
-        set2.add(it.theme);
+      const themePath = getItemThemePath(it);
+      if (themePath) {
+        set2.add(themePath);
       }
     }
     return Array.from(set2);
@@ -49990,11 +48564,31 @@ function HeatmapView({
   const dataByThemeAndDate = T$1(() => {
     return injectedDataByThemeAndDate ?? buildThemeDataMap(items, themesToTrack);
   }, [injectedDataByThemeAndDate, items, themesToTrack]);
+  const goalGroupsToDisplay = T$1(() => {
+    return (injectedGoalHeatmapGroups || []).filter((group) => group && Array.isArray(group.entries) && group.entries.length > 0);
+  }, [injectedGoalHeatmapGroups]);
+  const normalizeHeatmapBlockId = (candidate) => {
+    const value = String(candidate || "").trim();
+    if (!value) return "";
+    const byId = inputSettings.blocks.find((block2) => block2.id === value);
+    if (byId) return byId.id;
+    const byCore = inputSettings.blocks.find((block2) => block2.coreBlockId === value);
+    if (byCore) return byCore.id;
+    const byCategory = inputSettings.blocks.find((block2) => block2.categoryKey === value || block2.name === value);
+    if (byCategory) return byCategory.id;
+    if (config2.sourceBlockId && value === config2.sourceBlockId) {
+      const habit = inputSettings.blocks.find((block2) => block2.coreBlockId === "core.habit" || block2.categoryKey === "打卡" || block2.name === "打卡");
+      if (habit) return habit.id;
+    }
+    return value;
+  };
+  const heatmapSourceBlockId = normalizeHeatmapBlockId(config2.sourceBlockId);
   const inferredBlockIdByTheme = T$1(() => {
     const result = /* @__PURE__ */ new Map();
     const counts = /* @__PURE__ */ new Map();
     for (const it of items) {
-      const themeKey = typeof it?.theme === "string" && it.theme.trim().length > 0 ? it.theme : "__default__";
+      const themePath = getItemThemePath(it);
+      const themeKey = themePath || "__default__";
       const blockId = typeof it?.templateId === "string" && it.templateId.trim().length > 0 ? it.templateId : typeof it?.categoryKey === "string" && it.categoryKey.trim().length > 0 ? it.categoryKey : "";
       if (!blockId) continue;
       if (!counts.has(themeKey)) counts.set(themeKey, /* @__PURE__ */ new Map());
@@ -50015,9 +48609,10 @@ function HeatmapView({
     return result;
   }, [items]);
   const resolveCreateBlockId = (themePath, item) => {
-    return config2.sourceBlockId || (item?.templateId || item?.categoryKey) || (themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || inferredBlockIdByTheme.get("__default__") || "";
+    const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
+    return normalizeHeatmapBlockId(heatmapSourceBlockId) || normalizeHeatmapBlockId(itemBlock) || normalizeHeatmapBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeHeatmapBlockId(inferredBlockIdByTheme.get("__default__")) || "";
   };
-  const openQuickCreate = (date2, item, themePath) => {
+  const openQuickCreate = (date2, item, themePath, goalPath) => {
     if (!onOpenHeatmapCreate) {
       onNotice?.("未提供创建处理器，无法创建记录");
       return;
@@ -50027,17 +48622,18 @@ function HeatmapView({
       date: date2,
       item,
       themePath,
+      goalPath,
       themesByPath
     });
   };
-  const handleCellClick = (date2, dayItems, themePath) => {
+  const handleCellClick = (date2, dayItems, themePath, goalPath) => {
     const itemsForDay = dayItems || [];
     if (itemsForDay.length === 0) {
-      openQuickCreate(date2, void 0, themePath);
+      openQuickCreate(date2, void 0, themePath, goalPath);
       return;
     }
     if (itemsForDay.length === 1) {
-      openQuickCreate(date2, itemsForDay[0], themePath);
+      openQuickCreate(date2, itemsForDay[0], themePath, goalPath);
       return;
     }
     if (!onOpenCheckinManager) {
@@ -50047,16 +48643,16 @@ function HeatmapView({
     onOpenCheckinManager({
       date: date2,
       items: itemsForDay,
-      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath)
+      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath, goalPath)
     });
   };
-  const renderMonthGrid = (monthDate, dataForMonth, themePath) => {
+  const renderMonthGrid = (monthDate, dataForMonth, themePath, goalPath) => {
     const startOfMonth = monthDate.startOf("month");
     const endOfMonth = monthDate.endOf("month");
     const firstWeekday = startOfMonth.isoWeekday();
     const themeRatingMapping = ratingMappingsCache.get(
       inputSettings,
-      config2.sourceBlockId || "",
+      heatmapSourceBlockId || "",
       themePath,
       themesByPath
     );
@@ -50076,7 +48672,7 @@ function HeatmapView({
             config: config2,
             ratingMapping: themeRatingMapping,
             resolveResourcePath,
-            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
+            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)
           },
           dateStr
         )
@@ -50087,17 +48683,19 @@ function HeatmapView({
       /* @__PURE__ */ u2("div", { class: "heatmap-row calendar", children: days })
     ] }, monthDate.format("YYYY-MM"));
   };
-  const renderHeaderCells = (currentView2, themePath, dataForTheme) => {
+  const renderHeaderCells = (currentView2, themePath, dataForTheme, goalPath) => {
     const start2 = dayjs(dateRange[0]);
     const end2 = dayjs(dateRange[1]);
     const themeRatingMapping = ratingMappingsCache.get(
       inputSettings,
-      config2.sourceBlockId || "",
+      heatmapSourceBlockId || "",
       themePath,
       themesByPath
     );
     switch (currentView2) {
-      case "天": {
+      case "天":
+      case "日":
+      case "day": {
         const dateStr = start2.format("YYYY-MM-DD");
         const dayItems = dataForTheme.get(dateStr);
         return [
@@ -50109,7 +48707,7 @@ function HeatmapView({
               config: config2,
               ratingMapping: themeRatingMapping,
               resolveResourcePath,
-              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
+              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)
             },
             dateStr
           )
@@ -50131,7 +48729,7 @@ function HeatmapView({
                 config: config2,
                 ratingMapping: themeRatingMapping,
                 resolveResourcePath,
-                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
+                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)
               },
               `${themePath}-${dateStr}`
             )
@@ -50156,7 +48754,7 @@ function HeatmapView({
                 config: config2,
                 ratingMapping: themeRatingMapping,
                 resolveResourcePath,
-                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
+                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)
               },
               dateStr
             )
@@ -50170,7 +48768,7 @@ function HeatmapView({
         const months = [];
         let currentMonth = start2.clone().startOf("month");
         while (currentMonth.isSameOrBefore(end2, "month")) {
-          months.push(renderMonthGrid(currentMonth, dataForTheme, themePath));
+          months.push(renderMonthGrid(currentMonth, dataForTheme, themePath, goalPath));
           currentMonth = currentMonth.add(1, "month");
         }
         return months;
@@ -50192,10 +48790,10 @@ function HeatmapView({
   };
   const checkLayout = (theme2, headerElement) => {
     if (!headerElement || theme2 === "__default__") return;
-    const isGridLayout = ["年", "季"].includes(currentView);
-    if (isGridLayout || currentView === "周") return;
+    const isGridLayout = ["年", "季"].includes(normalizedCurrentView);
+    if (isGridLayout || normalizedCurrentView === "周") return;
     const containerWidth = headerElement.clientWidth;
-    const threshold = currentView === "天" ? 320 : 600;
+    const threshold = isDayView ? 320 : 600;
     const needsVertical = containerWidth < threshold;
     setVerticalLayouts((prev2) => {
       const newSet = new Set(prev2);
@@ -50224,7 +48822,7 @@ function HeatmapView({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [themesToTrack, currentView]);
+  }, [themesToTrack, normalizedCurrentView]);
   const buildDayThemeGroups = () => {
     const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
     const groups = [];
@@ -50253,13 +48851,48 @@ function HeatmapView({
   };
   const renderDayContent = () => {
     const dayDateStr = dayjs(dateRange[0]).format("YYYY-MM-DD");
+    if (goalGroupsToDisplay.length > 0) {
+      return /* @__PURE__ */ u2("div", { class: "heatmap-goal-day-view", children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section heatmap-day-section", children: [
+        /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
+          /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: goalGroup.label }),
+          /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
+            goalGroup.entries.length,
+            " 个打卡 · ",
+            goalGroup.count,
+            " 条记录"
+          ] })
+        ] }),
+        /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: goalGroup.entries.map((entry) => {
+          const themeRatingMapping = ratingMappingsCache.get(
+            inputSettings,
+            heatmapSourceBlockId || "",
+            entry.themePath,
+            themesByPath
+          );
+          const dayItems = entry.dataForTheme.get(dayDateStr);
+          return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", title: `${goalGroup.label} · ${entry.label} · ${entry.themePath}`, children: /* @__PURE__ */ u2(
+            HeatmapCell,
+            {
+              date: dayDateStr,
+              items: dayItems,
+              config: config2,
+              ratingMapping: themeRatingMapping,
+              resolveResourcePath,
+              highlightToday: false,
+              emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
+              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath)
+            }
+          ) }, `${goalGroup.goalPath}:${entry.presetKey || entry.themePath}`);
+        }) })
+      ] }, goalGroup.goalPath)) });
+    }
     const dayGroups = buildDayThemeGroups();
     return /* @__PURE__ */ u2("div", { class: "heatmap-day-view", children: dayGroups.map((group) => /* @__PURE__ */ u2("section", { class: "heatmap-day-section", children: [
       /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: group.title }),
       /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: group.entries.map((entry) => {
         const themeRatingMapping = ratingMappingsCache.get(
           inputSettings,
-          config2.sourceBlockId || "",
+          heatmapSourceBlockId || "",
           entry.themePath,
           themesByPath
         );
@@ -50280,46 +48913,73 @@ function HeatmapView({
       }) })
     ] }, group.title)) });
   };
+  const renderThemeGroup = (params) => {
+    const { theme: theme2, dataForTheme, goalPath, keyPrefix = "", entryKey, label } = params;
+    const rowKey = `${keyPrefix}${entryKey || theme2}`;
+    const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
+    const isVertical = normalizedCurrentView === "周" ? false : verticalLayouts.has(rowKey);
+    const isCollapsed = normalizedCurrentView === "年" && collapsedThemes.has(rowKey);
+    const leafLabel2 = label || getThemeLeafLabel(theme2);
+    return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${normalizedCurrentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
+      "div",
+      {
+        class: `heatmap-theme-header ${normalizedCurrentView === "周" ? "week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
+        "data-theme": rowKey,
+        ref: (el) => {
+          if (el && theme2 !== "__default__") {
+            headerRefs.current.set(rowKey, el);
+          }
+        },
+        children: [
+          theme2 !== "__default__" && /* @__PURE__ */ u2(
+            "div",
+            {
+              class: `heatmap-header-info ${normalizedCurrentView === "年" ? "is-clickable" : ""}`,
+              onClick: () => {
+                if (normalizedCurrentView === "年") toggleThemeCollapsed(rowKey);
+              },
+              children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
+                normalizedCurrentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
+                /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel2 })
+              ] })
+            }
+          ),
+          !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells(normalizedCurrentView, theme2, dataForTheme, goalPath) })
+        ]
+      }
+    ) }, rowKey);
+  };
   const renderContent = () => {
-    if (currentView === "天") {
+    if (isDayView) {
       return renderDayContent();
     }
-    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-    const isRowLayout = ["周", "月"].includes(currentView);
+    const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
     const wrapperClass = isRowLayout ? "layout-row" : "layout-grid";
+    if (goalGroupsToDisplay.length > 0) {
+      return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper heatmap-goal-view-wrapper ${wrapperClass}`, children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section", children: [
+        /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
+          /* @__PURE__ */ u2("h3", { class: "heatmap-goal-title", children: goalGroup.label }),
+          /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
+            goalGroup.entries.length,
+            " 个打卡 · ",
+            goalGroup.count,
+            " 条记录"
+          ] })
+        ] }),
+        /* @__PURE__ */ u2("div", { class: "heatmap-goal-theme-list", children: goalGroup.entries.map((entry) => renderThemeGroup({
+          theme: entry.themePath,
+          dataForTheme: entry.dataForTheme,
+          goalPath: goalGroup.goalPath,
+          keyPrefix: `${goalGroup.goalPath}\0`,
+          entryKey: entry.presetKey || entry.themePath,
+          label: entry.label
+        })) })
+      ] }, goalGroup.goalPath)) });
+    }
+    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
     return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme2) => {
       const dataForTheme = dataByThemeAndDate.get(theme2) || /* @__PURE__ */ new Map();
-      const isVertical = currentView === "周" ? false : verticalLayouts.has(theme2);
-      const isCollapsed = currentView === "年" && collapsedThemes.has(theme2);
-      const leafLabel2 = getThemeLeafLabel(theme2);
-      return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${currentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
-        "div",
-        {
-          class: `heatmap-theme-header ${currentView === "周" ? "week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
-          "data-theme": theme2,
-          ref: (el) => {
-            if (el && theme2 !== "__default__") {
-              headerRefs.current.set(theme2, el);
-            }
-          },
-          children: [
-            theme2 !== "__default__" && /* @__PURE__ */ u2(
-              "div",
-              {
-                class: `heatmap-header-info ${currentView === "年" ? "is-clickable" : ""}`,
-                onClick: () => {
-                  if (currentView === "年") toggleThemeCollapsed(theme2);
-                },
-                children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
-                  currentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
-                  /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel2 })
-                ] })
-              }
-            ),
-            !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells(currentView, theme2, dataForTheme) })
-          ]
-        }
-      ) }, theme2);
+      return renderThemeGroup({ theme: theme2, dataForTheme });
     }) });
   };
   return /* @__PURE__ */ u2("div", { class: "heatmap-container", children: renderContent() });
@@ -50344,7 +49004,8 @@ function ChartBlock({
   isCompact = false,
   isNarrow = false,
   displayMode = "smart",
-  minVisibleHeight = 15
+  minVisibleHeight = 15,
+  bucketAccessor = (item) => getBasePath(item.categoryKey)
 }) {
   const counts = data.counts;
   const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
@@ -50381,13 +49042,13 @@ function ChartBlock({
               "div",
               {
                 class: "sv-vbar-wrapper",
-                title: `${name}: ${count}`,
+                title: `${displayName}: ${count}`,
                 onClick: (e2) => {
                   e2.stopPropagation();
                   onCellClick(
                     cellIdentifier(name),
                     e2.currentTarget,
-                    data.blocks.filter((b2) => getBasePath(b2.categoryKey) === name),
+                    data.blocks.filter((b2) => bucketAccessor(b2) === name),
                     `${label} · ${displayName}`
                   );
                 },
@@ -50411,7 +49072,7 @@ function ChartBlock({
               "div",
               {
                 class: "sv-chart-category",
-                title: `${name}${alias ? ` (${name})` : ""}`,
+                title: `${displayName}${alias ? ` (${name})` : ""}`,
                 children: displayName
               },
               `cat-${name}`
@@ -50428,9 +49089,10 @@ function DayStatisticsView({
   selectedDate,
   onCellClick,
   displayMode,
-  minVisibleHeight
+  minVisibleHeight,
+  bucketAccessor
 }) {
-  const data = aggregateByDay(items, categories, selectedDate);
+  const data = aggregateByDay(items, categories, selectedDate, bucketAccessor);
   return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
     ChartBlock,
     {
@@ -50438,9 +49100,10 @@ function DayStatisticsView({
       label: selectedDate.format("YYYY年MM月DD日 dddd"),
       categories,
       onCellClick,
-      cellIdentifier: (cat) => ({ type: "day", date: selectedDate.format("YYYY-MM-DD"), category: cat }),
+      cellIdentifier: (goal) => ({ type: "day", date: selectedDate.format("YYYY-MM-DD"), goal }),
       displayMode,
-      minVisibleHeight
+      minVisibleHeight,
+      bucketAccessor
     }
   ) }) }) });
 }
@@ -50450,11 +49113,12 @@ function WeekStatisticsView({
   weekDate,
   onCellClick,
   displayMode,
-  minVisibleHeight
+  minVisibleHeight,
+  bucketAccessor
 }) {
   const weekStart = weekDate.startOf("isoWeek");
   const weekEnd = weekDate.endOf("isoWeek");
-  const data = aggregateByWeek(items, categories, weekStart);
+  const data = aggregateByWeek(items, categories, weekStart, false, bucketAccessor);
   return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
     ChartBlock,
     {
@@ -50462,43 +49126,17 @@ function WeekStatisticsView({
       label: `${weekStart.format("YYYY年MM月DD日")} ~ ${weekEnd.format("MM月DD日")} (第${weekStart.isoWeek()}周)`,
       categories,
       onCellClick,
-      cellIdentifier: (cat) => ({
+      cellIdentifier: (goal) => ({
         type: "week",
         week: weekStart.isoWeek(),
         year: weekStart.isoWeekYear(),
-        category: cat
+        goal
       }),
       displayMode,
-      minVisibleHeight
+      minVisibleHeight,
+      bucketAccessor
     }
   ) }) }) });
-}
-function TopControls({
-  currentView,
-  usePeriod,
-  onToggleUsePeriod
-}) {
-  if (!(currentView === "年" || currentView === "季" || currentView === "月")) {
-    return null;
-  }
-  return /* @__PURE__ */ u2("div", { class: "sv-top-controls", children: /* @__PURE__ */ u2(
-    "label",
-    {
-      class: "sv-period-toggle",
-      title: "勾选后：年/季/月只统计对应周期字段；周统计包含 period=周 和未设置 period 的条目",
-      children: [
-        /* @__PURE__ */ u2(
-          "input",
-          {
-            type: "checkbox",
-            checked: usePeriod,
-            onChange: (e2) => onToggleUsePeriod(e2.target.checked)
-          }
-        ),
-        /* @__PURE__ */ u2("span", { children: "使用周期字段" })
-      ]
-    }
-  ) });
 }
 function MonthStatisticsView({
   items,
@@ -50508,10 +49146,11 @@ function MonthStatisticsView({
   onToggleUsePeriod,
   onCellClick,
   displayMode,
-  minVisibleHeight
+  minVisibleHeight,
+  bucketAccessor
 }) {
-  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod);
-  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod);
+  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod, bucketAccessor);
+  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod, bucketAccessor);
   const monthStart = monthDate.startOf("month");
   const monthEnd = monthDate.endOf("month");
   const weeksMeta = [];
@@ -50526,66 +49165,65 @@ function MonthStatisticsView({
     weekCursor = weekCursor.add(1, "week");
   }
   const weekCount = monthWeeksData.length;
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: [
-    /* @__PURE__ */ u2(TopControls, { currentView: "月", usePeriod, onToggleUsePeriod }),
-    /* @__PURE__ */ u2(
-      "div",
-      {
-        class: "sv-month-grid",
-        style: { gridTemplateColumns: `repeat(${weekCount}, 1fr)` },
-        children: [
-          /* @__PURE__ */ u2("div", { class: "sv-month-grid-summary", children: /* @__PURE__ */ u2(
-            ChartBlock,
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "sv-month-grid",
+      style: { gridTemplateColumns: `repeat(${weekCount}, 1fr)` },
+      children: [
+        /* @__PURE__ */ u2("div", { class: "sv-month-grid-summary", children: /* @__PURE__ */ u2(
+          ChartBlock,
+          {
+            data: monthData,
+            label: monthDate.format("YYYY年MM月"),
+            categories,
+            onCellClick,
+            cellIdentifier: (goal) => ({
+              type: "month",
+              month: monthDate.month() + 1,
+              year: monthDate.year(),
+              goal
+            }),
+            displayMode,
+            minVisibleHeight,
+            bucketAccessor
+          }
+        ) }),
+        monthWeeksData.map((data, index) => {
+          const meta = weeksMeta[index];
+          if (!meta) return null;
+          const { weekStart } = meta;
+          return /* @__PURE__ */ u2(
+            "div",
             {
-              data: monthData,
-              label: monthDate.format("YYYY年MM月"),
-              categories,
-              onCellClick,
-              cellIdentifier: (cat) => ({
-                type: "month",
-                month: monthDate.month() + 1,
-                year: monthDate.year(),
-                category: cat
-              }),
-              displayMode,
-              minVisibleHeight
-            }
-          ) }),
-          monthWeeksData.map((data, index) => {
-            const meta = weeksMeta[index];
-            if (!meta) return null;
-            const { weekStart } = meta;
-            return /* @__PURE__ */ u2(
-              "div",
-              {
-                class: "sv-month-grid-week",
-                style: { gridColumn: `${index + 1}` },
-                children: /* @__PURE__ */ u2(
-                  ChartBlock,
-                  {
-                    data,
-                    label: `W${weekStart.isoWeek()}`,
-                    categories,
-                    onCellClick,
-                    cellIdentifier: (cat) => ({
-                      type: "week",
-                      week: weekStart.isoWeek(),
-                      year: weekStart.isoWeekYear(),
-                      category: cat
-                    }),
-                    isCompact: true,
-                    displayMode,
-                    minVisibleHeight
-                  }
-                )
-              },
-              weekStart.format("YYYY-MM-DD")
-            );
-          })
-        ]
-      }
-    )
-  ] });
+              class: "sv-month-grid-week",
+              style: { gridColumn: `${index + 1}` },
+              children: /* @__PURE__ */ u2(
+                ChartBlock,
+                {
+                  data,
+                  label: `W${weekStart.isoWeek()}`,
+                  categories,
+                  onCellClick,
+                  cellIdentifier: (goal) => ({
+                    type: "week",
+                    week: weekStart.isoWeek(),
+                    year: weekStart.isoWeekYear(),
+                    goal
+                  }),
+                  isCompact: true,
+                  displayMode,
+                  minVisibleHeight,
+                  bucketAccessor
+                }
+              )
+            },
+            weekStart.format("YYYY-MM-DD")
+          );
+        })
+      ]
+    }
+  ) });
 }
 function QuarterStatisticsView({
   items,
@@ -50595,14 +49233,15 @@ function QuarterStatisticsView({
   onToggleUsePeriod,
   onCellClick,
   displayMode,
-  minVisibleHeight
+  minVisibleHeight,
+  bucketAccessor
 }) {
   const quarterStart = quarterDate.startOf("quarter");
-  const quarterData = aggregateByQuarter(items, categories, quarterDate, usePeriod);
+  const quarterData = aggregateByQuarter(items, categories, quarterDate, usePeriod, bucketAccessor);
   const monthsInfo = Array.from({ length: 3 }, (_2, i2) => {
     const month = quarterStart.add(i2, "month");
-    const monthData = aggregateByMonth(items, categories, month, usePeriod);
-    const weeksData = getMonthWeeksData(items, categories, month, usePeriod);
+    const monthData = aggregateByMonth(items, categories, month, usePeriod, bucketAccessor);
+    const weeksData = getMonthWeeksData(items, categories, month, usePeriod, bucketAccessor);
     const monthStart = month.startOf("month");
     const monthEnd = month.endOf("month");
     const weeksMeta = [];
@@ -50614,88 +49253,88 @@ function QuarterStatisticsView({
     return { month, data: monthData, weeksData, weeksMeta };
   });
   const maxWeeks = Math.max(...monthsInfo.map((m2) => m2.weeksData.length), 1);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: [
-    /* @__PURE__ */ u2(TopControls, { currentView: "季", usePeriod, onToggleUsePeriod }),
-    /* @__PURE__ */ u2("div", { class: "sv-quarter-grid", children: [
-      /* @__PURE__ */ u2("div", { class: "sv-quarter-grid-summary", children: /* @__PURE__ */ u2(
-        ChartBlock,
-        {
-          data: quarterData,
-          label: `${quarterDate.format("YYYY年")} 第${quarterDate.quarter()}季度`,
-          categories,
-          onCellClick,
-          cellIdentifier: (cat) => ({
-            type: "quarter",
-            quarter: quarterDate.quarter(),
-            year: quarterDate.year(),
-            category: cat
-          }),
-          displayMode,
-          minVisibleHeight
-        }
-      ) }),
-      monthsInfo.map(({ month, data }, i2) => /* @__PURE__ */ u2(
-        "div",
-        {
-          class: "sv-quarter-grid-month",
-          style: { gridColumn: `${i2 + 1}` },
-          children: /* @__PURE__ */ u2(
-            ChartBlock,
-            {
-              data,
-              label: month.format("MM月"),
-              categories,
-              onCellClick,
-              cellIdentifier: (cat) => ({
-                type: "month",
-                month: month.month() + 1,
-                year: month.year(),
-                category: cat
-              }),
-              displayMode,
-              minVisibleHeight
-            }
-          )
-        },
-        month.format("YYYY-MM")
-      )),
-      monthsInfo.map(({ month, weeksData, weeksMeta }, i2) => /* @__PURE__ */ u2(
-        "div",
-        {
-          class: "sv-quarter-grid-week-col",
-          style: { gridColumn: `${i2 + 1}` },
-          children: [
-            weeksData.map((data, index) => {
-              const meta = weeksMeta[index];
-              if (!meta) return null;
-              const { weekStart } = meta;
-              return /* @__PURE__ */ u2(
-                ChartBlock,
-                {
-                  data,
-                  label: `W${weekStart.isoWeek()}`,
-                  categories,
-                  onCellClick,
-                  cellIdentifier: (cat) => ({
-                    type: "week",
-                    week: weekStart.isoWeek(),
-                    year: weekStart.isoWeekYear(),
-                    category: cat
-                  }),
-                  isCompact: true,
-                  displayMode,
-                  minVisibleHeight
-                },
-                weekStart.format("YYYY-MM-DD")
-              );
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-quarter-grid", children: [
+    /* @__PURE__ */ u2("div", { class: "sv-quarter-grid-summary", children: /* @__PURE__ */ u2(
+      ChartBlock,
+      {
+        data: quarterData,
+        label: `${quarterDate.format("YYYY年")} 第${quarterDate.quarter()}季度`,
+        categories,
+        onCellClick,
+        cellIdentifier: (goal) => ({
+          type: "quarter",
+          quarter: quarterDate.quarter(),
+          year: quarterDate.year(),
+          goal
+        }),
+        displayMode,
+        minVisibleHeight,
+        bucketAccessor
+      }
+    ) }),
+    monthsInfo.map(({ month, data }, i2) => /* @__PURE__ */ u2(
+      "div",
+      {
+        class: "sv-quarter-grid-month",
+        style: { gridColumn: `${i2 + 1}` },
+        children: /* @__PURE__ */ u2(
+          ChartBlock,
+          {
+            data,
+            label: month.format("MM月"),
+            categories,
+            onCellClick,
+            cellIdentifier: (goal) => ({
+              type: "month",
+              month: month.month() + 1,
+              year: month.year(),
+              goal
             }),
-            Array.from({ length: maxWeeks - weeksData.length }, (_2, j2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${j2}`))
-          ]
-        },
-        `w-col-${month.format("YYYY-MM")}`
-      ))
-    ] })
-  ] });
+            displayMode,
+            minVisibleHeight,
+            bucketAccessor
+          }
+        )
+      },
+      month.format("YYYY-MM")
+    )),
+    monthsInfo.map(({ month, weeksData, weeksMeta }, i2) => /* @__PURE__ */ u2(
+      "div",
+      {
+        class: "sv-quarter-grid-week-col",
+        style: { gridColumn: `${i2 + 1}` },
+        children: [
+          weeksData.map((data, index) => {
+            const meta = weeksMeta[index];
+            if (!meta) return null;
+            const { weekStart } = meta;
+            return /* @__PURE__ */ u2(
+              ChartBlock,
+              {
+                data,
+                label: `W${weekStart.isoWeek()}`,
+                categories,
+                onCellClick,
+                cellIdentifier: (goal) => ({
+                  type: "week",
+                  week: weekStart.isoWeek(),
+                  year: weekStart.isoWeekYear(),
+                  goal
+                }),
+                isCompact: true,
+                displayMode,
+                minVisibleHeight,
+                bucketAccessor
+              },
+              weekStart.format("YYYY-MM-DD")
+            );
+          }),
+          Array.from({ length: maxWeeks - weeksData.length }, (_2, j2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${j2}`))
+        ]
+      },
+      `w-col-${month.format("YYYY-MM")}`
+    ))
+  ] }) });
 }
 function YearStatisticsView({
   year,
@@ -50706,102 +49345,113 @@ function YearStatisticsView({
   onToggleUsePeriod,
   onCellClick,
   displayMode,
-  minVisibleHeight
+  minVisibleHeight,
+  bucketAccessor
 }) {
   const maxWeeksInMonth = Math.max(
     ...yearlyWeekStructure.map(({ weeks }) => weeks.length),
     1
   );
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: [
-    /* @__PURE__ */ u2(TopControls, { currentView: "年", usePeriod, onToggleUsePeriod }),
-    /* @__PURE__ */ u2("div", { class: "sv-year-grid", children: [
-      /* @__PURE__ */ u2("div", { class: "sv-year-grid-year", children: /* @__PURE__ */ u2(
-        ChartBlock,
-        {
-          data: processedData.yearData,
-          label: `${year}年`,
-          categories,
-          onCellClick,
-          cellIdentifier: (cat) => ({ type: "year", year, category: cat }),
-          displayMode,
-          minVisibleHeight
-        }
-      ) }),
-      processedData.quartersData.map((data, i2) => /* @__PURE__ */ u2(
-        "div",
-        {
-          class: "sv-year-grid-quarter",
-          style: { gridColumn: `${i2 * 3 + 1} / ${i2 * 3 + 4}` },
-          children: /* @__PURE__ */ u2(
-            ChartBlock,
-            {
-              data,
-              label: `Q${i2 + 1}`,
-              categories,
-              onCellClick,
-              cellIdentifier: (cat) => ({ type: "quarter", year, quarter: i2 + 1, category: cat }),
-              displayMode,
-              minVisibleHeight
-            }
-          )
-        },
-        `q${i2}`
-      )),
-      processedData.monthsData.map((data, i2) => /* @__PURE__ */ u2(
-        "div",
-        {
-          class: `sv-year-grid-month${i2 % 3 === 2 && i2 < 11 ? " sv-quarter-end" : ""}`,
-          style: { gridColumn: `${i2 + 1}` },
-          children: /* @__PURE__ */ u2(
-            ChartBlock,
-            {
-              data,
-              label: `${i2 + 1}月`,
-              categories,
-              onCellClick,
-              cellIdentifier: (cat) => ({ type: "month", year, month: i2 + 1, category: cat }),
-              displayMode,
-              minVisibleHeight
-            }
-          )
-        },
-        `m${i2}`
-      )),
-      yearlyWeekStructure.map(({ month, weeks }) => {
-        const gridCol = month;
-        const isQuarterEnd = month % 3 === 0 && month < 12;
-        return /* @__PURE__ */ u2(
-          "div",
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-year-grid", children: [
+    /* @__PURE__ */ u2("div", { class: "sv-year-grid-year", children: /* @__PURE__ */ u2(
+      ChartBlock,
+      {
+        data: processedData.yearData,
+        label: `${year}年`,
+        categories,
+        onCellClick,
+        cellIdentifier: (goal) => ({ type: "year", year, goal }),
+        displayMode,
+        minVisibleHeight,
+        bucketAccessor
+      }
+    ) }),
+    processedData.quartersData.map((data, i2) => /* @__PURE__ */ u2(
+      "div",
+      {
+        class: "sv-year-grid-quarter",
+        style: { gridColumn: `${i2 * 3 + 1} / ${i2 * 3 + 4}` },
+        children: /* @__PURE__ */ u2(
+          ChartBlock,
           {
-            class: `sv-year-grid-week-col${isQuarterEnd ? " sv-quarter-end" : ""}`,
-            style: { gridColumn: `${gridCol}` },
-            children: [
-              weeks.map((week) => {
-                const weekIndex = week - 1;
-                const weekData = processedData.weeksData[weekIndex] || createPeriodData(categories);
-                return /* @__PURE__ */ u2(
-                  ChartBlock,
-                  {
-                    data: weekData,
-                    label: `${week}W`,
-                    categories,
-                    onCellClick,
-                    cellIdentifier: (cat) => ({ type: "week", year, week, category: cat }),
-                    isCompact: true,
-                    displayMode,
-                    minVisibleHeight
-                  },
-                  week
-                );
-              }),
-              Array.from({ length: maxWeeksInMonth - weeks.length }, (_2, i2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${i2}`))
-            ]
-          },
-          `w-col-${month}`
-        );
-      })
-    ] })
-  ] });
+            data,
+            label: `Q${i2 + 1}`,
+            categories,
+            onCellClick,
+            cellIdentifier: (goal) => ({ type: "quarter", year, quarter: i2 + 1, goal }),
+            displayMode,
+            minVisibleHeight,
+            bucketAccessor
+          }
+        )
+      },
+      `q${i2}`
+    )),
+    processedData.monthsData.map((data, i2) => /* @__PURE__ */ u2(
+      "div",
+      {
+        class: `sv-year-grid-month${i2 % 3 === 2 && i2 < 11 ? " sv-quarter-end" : ""}`,
+        style: { gridColumn: `${i2 + 1}` },
+        children: /* @__PURE__ */ u2(
+          ChartBlock,
+          {
+            data,
+            label: `${i2 + 1}月`,
+            categories,
+            onCellClick,
+            cellIdentifier: (goal) => ({ type: "month", year, month: i2 + 1, goal }),
+            displayMode,
+            minVisibleHeight,
+            bucketAccessor
+          }
+        )
+      },
+      `m${i2}`
+    )),
+    yearlyWeekStructure.map(({ month, weeks }) => {
+      const gridCol = month;
+      const isQuarterEnd = month % 3 === 0 && month < 12;
+      return /* @__PURE__ */ u2(
+        "div",
+        {
+          class: `sv-year-grid-week-col${isQuarterEnd ? " sv-quarter-end" : ""}`,
+          style: { gridColumn: `${gridCol}` },
+          children: [
+            weeks.map((week) => {
+              const weekIndex = week - 1;
+              const weekData = processedData.weeksData[weekIndex] || createPeriodData(categories);
+              return /* @__PURE__ */ u2(
+                ChartBlock,
+                {
+                  data: weekData,
+                  label: `${week}W`,
+                  categories,
+                  onCellClick,
+                  cellIdentifier: (goal) => ({ type: "week", year, week, goal }),
+                  isCompact: true,
+                  displayMode,
+                  minVisibleHeight,
+                  bucketAccessor
+                },
+                week
+              );
+            }),
+            Array.from({ length: maxWeeksInMonth - weeks.length }, (_2, i2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${i2}`))
+          ]
+        },
+        `w-col-${month}`
+      );
+    })
+  ] }) });
+}
+function GoalThemeSummaryStrip({ summaries }) {
+  const visible = (summaries || []).filter((row) => row.themes.length > 0).slice(0, 6);
+  if (visible.length === 0) return null;
+  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }, children: visible.map((row) => /* @__PURE__ */ u2("div", { style: { border: "1px solid var(--background-modifier-border)", borderRadius: "999px", padding: "5px 9px", fontSize: "12px", color: "var(--text-muted)" }, title: `${row.goalPath}: ${row.themes.map((theme2) => `${theme2.themePath} ${theme2.count}`).join(" / ")}`, children: [
+    /* @__PURE__ */ u2("span", { style: { color: "var(--text-normal)", fontWeight: 600 }, children: row.goalPath.split("/").filter(Boolean).pop() || row.goalPath }),
+    /* @__PURE__ */ u2("span", { children: " · " }),
+    /* @__PURE__ */ u2("span", { children: row.themes.map((theme2) => `${theme2.label}${theme2.count}`).join(" / ") })
+  ] }, row.goalPath)) });
 }
 function StatisticsViewView({
   items,
@@ -50815,80 +49465,103 @@ function StatisticsViewView({
   minVisibleHeight,
   year,
   yearlyWeekStructure,
-  processedData
+  processedData,
+  bucketAccessor,
+  goalThemeSummaries = []
 }) {
   if (!categories || categories.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder", children: "请先在视图设置中配置您想统计的分类。" });
+    return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder", children: "暂无目标统计数据。" });
   }
+  const themeStrip = /* @__PURE__ */ u2(GoalThemeSummaryStrip, { summaries: goalThemeSummaries });
   switch (currentView) {
     case "天":
-      return /* @__PURE__ */ u2(
-        DayStatisticsView,
-        {
-          items,
-          categories,
-          selectedDate: startDate,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
+      return /* @__PURE__ */ u2(k$2, { children: [
+        themeStrip,
+        /* @__PURE__ */ u2(
+          DayStatisticsView,
+          {
+            items,
+            categories,
+            selectedDate: startDate,
+            onCellClick,
+            displayMode,
+            minVisibleHeight,
+            bucketAccessor
+          }
+        )
+      ] });
     case "周":
-      return /* @__PURE__ */ u2(
-        WeekStatisticsView,
-        {
-          items,
-          categories,
-          weekDate: startDate,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
+      return /* @__PURE__ */ u2(k$2, { children: [
+        themeStrip,
+        /* @__PURE__ */ u2(
+          WeekStatisticsView,
+          {
+            items,
+            categories,
+            weekDate: startDate,
+            onCellClick,
+            displayMode,
+            minVisibleHeight,
+            bucketAccessor
+          }
+        )
+      ] });
     case "月":
-      return /* @__PURE__ */ u2(
-        MonthStatisticsView,
-        {
-          items,
-          categories,
-          monthDate: startDate,
-          usePeriod,
-          onToggleUsePeriod,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
+      return /* @__PURE__ */ u2(k$2, { children: [
+        themeStrip,
+        /* @__PURE__ */ u2(
+          MonthStatisticsView,
+          {
+            items,
+            categories,
+            monthDate: startDate,
+            usePeriod,
+            onToggleUsePeriod,
+            onCellClick,
+            displayMode,
+            minVisibleHeight,
+            bucketAccessor
+          }
+        )
+      ] });
     case "季":
-      return /* @__PURE__ */ u2(
-        QuarterStatisticsView,
-        {
-          items,
-          categories,
-          quarterDate: startDate,
-          usePeriod,
-          onToggleUsePeriod,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
+      return /* @__PURE__ */ u2(k$2, { children: [
+        themeStrip,
+        /* @__PURE__ */ u2(
+          QuarterStatisticsView,
+          {
+            items,
+            categories,
+            quarterDate: startDate,
+            usePeriod,
+            onToggleUsePeriod,
+            onCellClick,
+            displayMode,
+            minVisibleHeight,
+            bucketAccessor
+          }
+        )
+      ] });
     case "年":
     default:
-      return /* @__PURE__ */ u2(
-        YearStatisticsView,
-        {
-          year,
-          categories,
-          processedData,
-          yearlyWeekStructure,
-          usePeriod,
-          onToggleUsePeriod,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
+      return /* @__PURE__ */ u2(k$2, { children: [
+        themeStrip,
+        /* @__PURE__ */ u2(
+          YearStatisticsView,
+          {
+            year,
+            categories,
+            processedData,
+            yearlyWeekStructure,
+            usePeriod,
+            onToggleUsePeriod,
+            onCellClick,
+            displayMode,
+            minVisibleHeight,
+            bucketAccessor
+          }
+        )
+      ] });
   }
 }
 function useStatisticsCategoryConfigs({
@@ -50948,9 +49621,7 @@ function useStatisticsCategoryConfigs({
     }));
   }, [configuredCategories, items, categoryColors]);
   return T$1(() => {
-    if (injectedFilteredCategories) return injectedFilteredCategories;
-    if (!selectedCategories || selectedCategories.length === 0) return categoryConfigs;
-    return categoryConfigs.filter((category) => selectedCategories.includes(category.name));
+    return categoryConfigs;
   }, [categoryConfigs, injectedFilteredCategories, selectedCategories]);
 }
 function StatisticsView({
@@ -50959,13 +49630,13 @@ function StatisticsView({
   dateRange,
   module: module2,
   currentView,
-  onQuickCreate,
+  onQuickCreate: _onQuickCreate,
   onNotice,
   onOpenStatisticsPopover,
   onCloseStatisticsPopover,
   categoryColors = {},
   onCategoryColorsChange,
-  selectedCategories,
+  selectedCategories: _selectedCategories,
   timerService,
   timers,
   allThemes,
@@ -50975,19 +49646,21 @@ function StatisticsView({
   onOpenRecordOrigin
 }) {
   const viewConfig = statisticsModel?.viewConfig ?? { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...module2.viewConfig };
-  const { categories = [], displayMode = "smart", minVisibleHeight = 15, usePeriodField = false } = viewConfig;
-  const filteredCategories = useStatisticsCategoryConfigs({
+  const { displayMode = "smart", minVisibleHeight = 15 } = viewConfig;
+  const fallbackCategories = useStatisticsCategoryConfigs({
     items,
-    configuredCategories: categories,
-    selectedCategories,
+    configuredCategories: [],
+    selectedCategories: void 0,
     categoryColors,
     onCategoryColorsChange,
-    injectedFilteredCategories: statisticsModel?.filteredCategories
+    injectedFilteredCategories: void 0
   });
+  const filteredCategories = Array.isArray(statisticsModel?.filteredCategories) ? statisticsModel.filteredCategories : fallbackCategories;
+  const bucketAccessor = statisticsModel?.bucketAccessor || getItemGoalKey;
   const [selectedCell, setSelectedCell] = d(null);
   const [popover, setPopover] = d(null);
   const openLockRef = A$1(false);
-  const [usePeriod, setUsePeriod] = d(Boolean(usePeriodField));
+  const [usePeriod, setUsePeriod] = d(Boolean(viewConfig.usePeriodField));
   const startDate = T$1(() => statisticsModel?.startDate ?? dayjs(dateRange[0]), [statisticsModel, dateRange]);
   const isYearView = statisticsModel?.isYearView ?? currentView === "年";
   const year = statisticsModel?.year ?? startDate.year();
@@ -51006,15 +49679,15 @@ function StatisticsView({
     if (!isYearView) return { yearData: createPeriodData(filteredCategories), quartersData: [], monthsData: [], weeksData: [] };
     const totalWeeks = getWeeksInYear(year);
     const targetDate = dayjs().year(year);
-    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod);
+    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod, bucketAccessor);
     const quartersData = [];
-    for (let q2 = 1; q2 <= 4; q2++) quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q2), usePeriod));
+    for (let q2 = 1; q2 <= 4; q2++) quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q2), usePeriod, bucketAccessor));
     const monthsData = [];
-    for (let m2 = 0; m2 < 12; m2++) monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m2), usePeriod));
+    for (let m2 = 0; m2 < 12; m2++) monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m2), usePeriod, bucketAccessor));
     const weeksData = [];
-    for (let w2 = 1; w2 <= totalWeeks; w2++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w2), usePeriod));
+    for (let w2 = 1; w2 <= totalWeeks; w2++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w2), usePeriod, bucketAccessor));
     return { yearData, quartersData, monthsData, weeksData };
-  }, [isYearView, items, year, filteredCategories, usePeriod]);
+  }, [isYearView, items, year, filteredCategories, usePeriod, bucketAccessor]);
   const handleCellClick = (cellIdentifier, _target, blocks, title) => {
     devLog("点击单元格:", { cellIdentifier, title, blocksCount: blocks.length, blocks });
     if (openLockRef.current) return;
@@ -51044,14 +49717,7 @@ function StatisticsView({
       navigator.clipboard.writeText(markdownContent);
       onNotice?.(`"${title}" 的内容已复制到剪贴板！`);
     };
-    const handleQuickCreate = () => {
-      onQuickCreate?.({
-        cellIdentifier,
-        blocks,
-        title
-      });
-    };
-    const canQuickCreate = !!cellIdentifier?.category && cellIdentifier.category !== "全部";
+    const canQuickCreate = false;
     onOpenStatisticsPopover?.({
       widgetId,
       title,
@@ -51066,7 +49732,7 @@ function StatisticsView({
       resolveResourcePath,
       onClose: handleClose,
       onExport: handleExport,
-      onQuickCreate: onQuickCreate ? handleQuickCreate : void 0,
+      onQuickCreate: void 0,
       canQuickCreate
     });
     openLockRef.current = true;
@@ -51082,13 +49748,15 @@ function StatisticsView({
       categories: filteredCategories,
       startDate,
       usePeriod,
-      onToggleUsePeriod: (next2) => setUsePeriod(next2),
+      onToggleUsePeriod: setUsePeriod,
       onCellClick: handleCellClick,
       displayMode,
       minVisibleHeight,
       year,
       yearlyWeekStructure,
-      processedData
+      processedData,
+      bucketAccessor,
+      goalThemeSummaries: statisticsModel?.goalThemeSummaries || []
     }
   );
 }
@@ -51121,125 +49789,175 @@ function PopoverContent({
     }
   ) });
 }
-function ProgressBar$1({ ratio, color: color2 = "var(--interactive-accent)", height: height2 = "10px" }) {
+const BLOCK_LABELS = {
+  task: "任务",
+  plan: "计划",
+  review: "总结",
+  habit: "打卡",
+  blocker: "阻碍项",
+  milestone: "里程碑",
+  thought: "思考",
+  evidence: "事件",
+  unknown: "未分类"
+};
+function ratioPercent(value) {
+  return `${Math.round(Math.max(0, Math.min(1, value || 0)) * 100)}%`;
+}
+function ProgressBar({ ratio, height: height2 = "10px" }) {
   const width2 = `${Math.max(0, Math.min(100, Math.round((ratio || 0) * 100)))}%`;
-  return /* @__PURE__ */ u2("div", { style: { height: height2, borderRadius: "999px", background: "var(--background-modifier-border)", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: width2, height: "100%", borderRadius: "999px", background: color2, transition: "width 0.25s ease" } }) });
+  return /* @__PURE__ */ u2("div", { style: { height: height2, borderRadius: "999px", background: "var(--background-modifier-border)", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: width2, height: "100%", borderRadius: "999px", background: "var(--interactive-accent)", transition: "width 0.25s ease" } }) });
 }
-function BreakdownList({ title, rows }) {
-  return /* @__PURE__ */ u2("div", { style: { minWidth: 0 }, children: [
-    /* @__PURE__ */ u2("div", { style: { fontWeight: 600, marginBottom: "8px" }, children: title }),
-    rows.length === 0 ? /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "暂无数据" }) : rows.map((row) => /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", padding: "6px 0", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: [
-      /* @__PURE__ */ u2("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: row.key }),
-      /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)", flexShrink: 0 }, children: [
-        row.points,
-        " 分 · ",
-        row.count,
-        " 条"
-      ] })
-    ] }, row.key))
-  ] });
+function leafLabel$1(path) {
+  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
+  return parts[parts.length - 1] || path || "未设置主题";
 }
-function ThemeGrowthSection({ items, config: config2 }) {
-  const rows = T$1(() => {
-    const allowed = new Set((config2?.includedCategories || []).filter(Boolean));
-    const themeMap = /* @__PURE__ */ new Map();
-    for (const item of items || []) {
-      const category = (item.categoryKey || "").split("/")[0] || item.categoryKey || "未分类";
-      if (allowed.size > 0 && !allowed.has(category)) continue;
-      const theme2 = item.theme || "未设置主题";
-      const bucket = themeMap.get(theme2) || [];
-      bucket.push(item);
-      themeMap.set(theme2, bucket);
-    }
-    return Array.from(themeMap.entries()).map(([theme2, themeItems]) => ({
-      theme: theme2,
-      itemCount: themeItems.length,
-      levelData: getThemeLevelData(themeItems)
-    })).sort((a2, b2) => {
-      const checkDiff = b2.levelData.totalChecks - a2.levelData.totalChecks;
-      if (checkDiff !== 0) return checkDiff;
-      const itemDiff = b2.itemCount - a2.itemCount;
-      if (itemDiff !== 0) return itemDiff;
-      return a2.theme.localeCompare(b2.theme, "zh-CN");
-    }).slice(0, Math.max(1, config2?.topN || 5));
-  }, [items, config2]);
-  if (rows.length === 0) return null;
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "10px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { fontWeight: 600 }, children: "主题经验" }),
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }, children: rows.map(({ theme: theme2, itemCount, levelData }) => {
-      const remain = levelData.nextRequirement ? Math.max(0, levelData.nextRequirement - levelData.totalChecks) : 0;
-      return /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px", display: "grid", gap: "10px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" }, children: [
+function ThemeBreakdownList({ rows }) {
+  const visible = (rows || []).filter((row) => row.count > 0).slice(0, 8);
+  if (visible.length === 0) return /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "暂无主题细分" });
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "6px" }, children: visible.map((row) => /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "center", gap: "8px", fontSize: "12px" }, title: row.key, children: [
+    /* @__PURE__ */ u2("span", { style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: leafLabel$1(row.key) }),
+    /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)" }, children: [
+      row.count,
+      " 条 · ",
+      row.points,
+      " 经验"
+    ] })
+  ] }, row.key)) });
+}
+function BlockCountGrid({ counts }) {
+  const rows = ["task", "plan", "review", "habit", "blocker", "milestone", "thought", "evidence"].map((key) => ({ key, label: BLOCK_LABELS[key] || key, count: Number(counts?.[key] || 0) })).filter((row) => row.count > 0);
+  if (rows.length === 0) return /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "暂无 Block 统计" });
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(86px, 1fr))", gap: "8px" }, children: rows.map((row) => /* @__PURE__ */ u2("div", { style: { border: "1px solid var(--background-modifier-border)", borderRadius: "10px", padding: "8px" }, children: [
+    /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "11px" }, children: row.label }),
+    /* @__PURE__ */ u2("div", { style: { fontWeight: 700, marginTop: "2px" }, children: row.count })
+  ] }, row.key)) });
+}
+function GoalProgressCard({ card, expanded, onToggle }) {
+  const remain = Math.max(0, Number(card.levelStep || 0) - Number(card.currentLevelPoints || 0));
+  const title = card.title || card.goalPath || "未命名目标";
+  return /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px", display: "grid", gap: "10px" }, children: [
+    /* @__PURE__ */ u2(
+      "button",
+      {
+        type: "button",
+        onClick: onToggle,
+        style: { display: "grid", gridTemplateColumns: "1fr auto", gap: "12px", alignItems: "center", padding: 0, border: "none", background: "transparent", color: "inherit", textAlign: "left", cursor: "pointer" },
+        "aria-expanded": expanded,
+        children: [
           /* @__PURE__ */ u2("div", { style: { minWidth: 0 }, children: [
             /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }, children: [
-              /* @__PURE__ */ u2("span", { style: { fontSize: "18px", lineHeight: 1 }, children: levelData.config.icon }),
-              /* @__PURE__ */ u2("span", { style: { fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: theme2 })
+              /* @__PURE__ */ u2("span", { style: { fontSize: "18px", lineHeight: 1 }, children: card.icon || "🎯" }),
+              /* @__PURE__ */ u2("strong", { style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: title })
             ] }),
-            /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px" }, children: [
-              "Lv.",
-              levelData.level,
-              " · ",
-              levelData.config.title
-            ] })
+            /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: card.goalPath })
           ] }),
-          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", flexShrink: 0, textAlign: "right" }, children: [
-            levelData.totalChecks,
-            " 经验"
+          /* @__PURE__ */ u2("div", { style: { textAlign: "right", flexShrink: 0 }, children: [
+            /* @__PURE__ */ u2("div", { style: { fontWeight: 700 }, children: [
+              "Lv.",
+              card.level
+            ] }),
+            /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: expanded ? "收起" : "展开" })
+          ] })
+        ]
+      }
+    ),
+    /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "6px" }, children: [
+      /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", color: "var(--text-muted)", fontSize: "12px" }, children: [
+        /* @__PURE__ */ u2("span", { children: [
+          card.totalPoints,
+          " 经验 · ",
+          card.itemCount,
+          " 条记录"
+        ] }),
+        /* @__PURE__ */ u2("span", { children: ratioPercent(card.progressRatio) })
+      ] }),
+      /* @__PURE__ */ u2(ProgressBar, { ratio: card.progressRatio, height: "8px" })
+    ] }),
+    !expanded && /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px", color: "var(--text-muted)", fontSize: "12px" }, children: [
+      /* @__PURE__ */ u2("span", { children: [
+        "任务 ",
+        card.blockCounts.task || 0
+      ] }),
+      /* @__PURE__ */ u2("span", { children: [
+        "打卡 ",
+        card.blockCounts.habit || 0
+      ] }),
+      /* @__PURE__ */ u2("span", { children: [
+        "阻碍 ",
+        card.blockCounts.blocker || 0
+      ] }),
+      /* @__PURE__ */ u2("span", { children: [
+        "里程碑 ",
+        card.blockCounts.milestone || 0
+      ] }),
+      /* @__PURE__ */ u2("span", { children: [
+        "最近 ",
+        card.latestDate || "暂无"
+      ] })
+    ] }),
+    expanded && /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "12px" }, children: [
+      /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "8px" }, children: [
+        /* @__PURE__ */ u2("div", { children: [
+          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "总经验" }),
+          /* @__PURE__ */ u2("strong", { children: card.totalPoints })
+        ] }),
+        /* @__PURE__ */ u2("div", { children: [
+          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "当前等级" }),
+          /* @__PURE__ */ u2("strong", { children: [
+            "Lv.",
+            card.level
           ] })
         ] }),
-        /* @__PURE__ */ u2(ProgressBar$1, { ratio: levelData.progress, color: levelData.config.color, height: "8px" }),
-        /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", color: "var(--text-muted)", fontSize: "12px" }, children: [
-          /* @__PURE__ */ u2("span", { children: [
-            itemCount,
-            " 条记录"
-          ] }),
-          /* @__PURE__ */ u2("span", { children: levelData.nextConfig ? `再 ${remain} 次到 ${levelData.nextConfig.icon} ${levelData.nextConfig.title}` : "已满级" })
+        /* @__PURE__ */ u2("div", { children: [
+          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "距下一级" }),
+          /* @__PURE__ */ u2("strong", { children: remain })
+        ] }),
+        /* @__PURE__ */ u2("div", { children: [
+          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "最近更新" }),
+          /* @__PURE__ */ u2("strong", { children: card.latestDate || "暂无" })
         ] })
-      ] }, theme2);
-    }) })
+      ] }),
+      /* @__PURE__ */ u2(BlockCountGrid, { counts: card.blockCounts || {} }),
+      /* @__PURE__ */ u2("div", { style: { borderTop: "1px solid var(--background-modifier-border)", paddingTop: "10px", display: "grid", gap: "6px" }, children: [
+        /* @__PURE__ */ u2("div", { style: { fontWeight: 600, fontSize: "13px" }, children: "主题细分" }),
+        /* @__PURE__ */ u2(ThemeBreakdownList, { rows: card.themeBreakdown })
+      ] })
+    ] })
   ] });
 }
-function ProgressView({ items = [], progressModel }) {
-  const result = progressModel?.result;
-  const config2 = progressModel?.config;
-  if (!result || !config2) return /* @__PURE__ */ u2("div", { children: "暂无积分数据" });
+function ProgressView({ progressModel }) {
+  const cards = progressModel?.goalCards || [];
+  const [expandedKeys, setExpandedKeys] = d({});
+  if (cards.length === 0) return /* @__PURE__ */ u2("div", { children: "暂无目标进度数据" });
+  const summary = progressModel?.summary || {
+    goalCount: cards.length,
+    totalPoints: cards.reduce((sum, card) => sum + card.totalPoints, 0),
+    totalItems: cards.reduce((sum, card) => sum + card.itemCount, 0)
+  };
   return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "16px" }, children: [
     /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px" }, children: [
       /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "总积分" }),
-        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: result.totalPoints })
+        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "目标数" }),
+        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: summary.goalCount })
       ] }),
       /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "当前等级" }),
-        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: [
-          "Lv.",
-          result.level
-        ] })
+        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "目标经验" }),
+        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: summary.totalPoints })
       ] }),
       /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "计分记录" }),
-        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: result.matchedCount })
+        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "目标记录" }),
+        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: summary.totalItems })
       ] })
     ] }),
-    /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-      /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", marginBottom: "8px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { fontWeight: 600 }, children: "升级进度" }),
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: [
-          result.currentLevelPoints,
-          "/",
-          Math.max(1, config2.levelStep),
-          " · 下一级 ",
-          result.nextLevelPoints,
-          " 分"
-        ] })
-      ] }),
-      /* @__PURE__ */ u2(ProgressBar$1, { ratio: result.progressRatio })
-    ] }),
-    config2.showThemeBreakdown !== false && /* @__PURE__ */ u2(ThemeGrowthSection, { items, config: config2 }),
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }, children: [
-      config2.showCategoryBreakdown !== false && /* @__PURE__ */ u2(BreakdownList, { title: "分类积分", rows: result.categoryBreakdown }),
-      config2.showThemeBreakdown !== false && /* @__PURE__ */ u2(BreakdownList, { title: "主题积分", rows: result.themeBreakdown })
-    ] })
+    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: "12px" }, children: cards.map((card) => /* @__PURE__ */ u2(
+      GoalProgressCard,
+      {
+        card,
+        expanded: !!expandedKeys[card.key],
+        onToggle: () => setExpandedKeys((prev2) => ({ ...prev2, [card.key]: !prev2[card.key] }))
+      },
+      card.key
+    )) })
   ] });
 }
 function getChipToneClass(recurrenceLabel) {
@@ -51349,192 +50067,6 @@ function TaskExecutionView({ currentView, taskExecutionModel, onMarkDone, onOpen
         );
       }) : /* @__PURE__ */ u2("div", { class: "task-execution-context-empty", children: "暂无记录" }) })
     ] })
-  ] });
-}
-function pct(value) {
-  return `${Math.round(Math.max(0, Math.min(1, value || 0)) * 100)}%`;
-}
-function formatMetricValue(value, unit) {
-  return `${Math.round(value * 100) / 100}${unit || ""}`;
-}
-function ProgressBar({ ratio }) {
-  const width2 = Math.round(Math.max(0, Math.min(1, ratio || 0)) * 100);
-  return /* @__PURE__ */ u2("div", { style: { height: "6px", borderRadius: "999px", background: "var(--background-modifier-border)", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: `${width2}%`, height: "100%", background: "var(--interactive-accent)" } }) });
-}
-function StatCard({ label, value, hint }) {
-  return /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "12px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px", minWidth: 0 }, children: [
-    /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: label }),
-    /* @__PURE__ */ u2("div", { style: { fontSize: "22px", fontWeight: 700, marginTop: "4px" }, children: value }),
-    hint && /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px" }, children: hint })
-  ] });
-}
-function CoreBlockBadge({ label, count }) {
-  if (!count) return null;
-  return /* @__PURE__ */ u2("span", { style: { display: "inline-flex", gap: "4px", alignItems: "center", padding: "3px 8px", border: "1px solid var(--background-modifier-border)", borderRadius: "999px", fontSize: "12px", color: "var(--text-muted)" }, children: [
-    /* @__PURE__ */ u2("strong", { style: { color: "var(--text-normal)" }, children: label }),
-    count
-  ] });
-}
-function RecentItem({ item, onOpenRecord, onOpenRecordOrigin }) {
-  const title = item.title || item.content || String(readField(item, "内容") ?? "未命名记录");
-  const date2 = item.date || String(readField(item, "日期") ?? "");
-  return /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "10px", alignItems: "flex-start", padding: "8px 0", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: [
-    /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", minWidth: "76px" }, children: date2 || "无日期" }),
-    /* @__PURE__ */ u2(
-      "button",
-      {
-        type: "button",
-        class: "clickable-icon",
-        style: { textAlign: "left", flex: 1, height: "auto", justifyContent: "flex-start", color: "var(--text-normal)" },
-        onClick: () => {
-          if (onOpenRecord) onOpenRecord(item);
-          else if (onOpenRecordOrigin) onOpenRecordOrigin(item);
-        },
-        children: title
-      }
-    )
-  ] });
-}
-function GoalRow({ row, onOpenRecord, onOpenRecordOrigin, onQuickCreate }) {
-  if (!row) return null;
-  const safeTitle = row.title || row.goalPath || "未命名目标";
-  const safeGoalPath = row.goalPath || safeTitle;
-  return /* @__PURE__ */ u2("div", { class: "think-card goal-overview-row", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "14px", display: "grid", gap: "12px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" }, children: [
-      /* @__PURE__ */ u2("div", { style: { minWidth: 0 }, children: [
-        /* @__PURE__ */ u2("div", { style: { fontSize: "16px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: safeTitle }),
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px" }, children: safeGoalPath }),
-        row.themePath && /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "2px" }, children: [
-          "主题：",
-          row.themePath
-        ] }),
-        row.activeCycle && /* @__PURE__ */ u2("div", { style: { color: row.activeCycle.isOverdue ? "var(--text-error)" : "var(--text-muted)", fontSize: "12px", marginTop: "2px" }, children: [
-          "周期：",
-          row.activeCycle.title,
-          " · ",
-          row.activeCycle.startDate,
-          " → ",
-          row.activeCycle.endDate,
-          " · ",
-          pct(row.activeCycle.dayProgressRatio)
-        ] })
-      ] }),
-      /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", flexShrink: 0 }, children: row.latestDate ? `最近：${row.latestDate}` : "暂无日期" })
-    ] }),
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "8px" }, children: [
-      /* @__PURE__ */ u2(StatCard, { label: "记录", value: row.totalCount }),
-      /* @__PURE__ */ u2(StatCard, { label: "任务", value: `${row.doneTaskCount}/${row.taskCount}`, hint: `完成率 ${pct(row.completionRatio)}` }),
-      /* @__PURE__ */ u2(StatCard, { label: "阻碍", value: row.blockerCount }),
-      /* @__PURE__ */ u2(StatCard, { label: "里程碑", value: row.milestoneCount })
-    ] }),
-    /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "6px" }, children: [
-      /* @__PURE__ */ u2(CoreBlockBadge, { label: "计划", count: row.planCount }),
-      /* @__PURE__ */ u2(CoreBlockBadge, { label: "总结", count: row.reviewCount }),
-      /* @__PURE__ */ u2(CoreBlockBadge, { label: "打卡", count: row.habitCount }),
-      /* @__PURE__ */ u2(CoreBlockBadge, { label: "事件", count: row.evidenceCount }),
-      /* @__PURE__ */ u2(CoreBlockBadge, { label: "思考", count: row.thoughtCount })
-    ] }),
-    row.metricProgress && row.metricProgress.length > 0 && /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "8px" }, children: [
-      /* @__PURE__ */ u2("div", { style: { fontWeight: 600 }, children: "目标指标" }),
-      /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "8px" }, children: row.metricProgress.slice(0, 4).map((metric) => /* @__PURE__ */ u2("div", { style: { border: "1px solid var(--background-modifier-border)", borderRadius: "10px", padding: "8px", display: "grid", gap: "6px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "8px", fontSize: "12px" }, children: [
-          /* @__PURE__ */ u2("strong", { children: metric.label }),
-          /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)" }, children: [
-            formatMetricValue(metric.currentValue, metric.unit),
-            metric.targetValue !== void 0 ? ` / ${formatMetricValue(metric.targetValue, metric.unit)}` : ""
-          ] })
-        ] }),
-        /* @__PURE__ */ u2(ProgressBar, { ratio: metric.progressRatio })
-      ] }, metric.key)) })
-    ] }),
-    onQuickCreate && /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: [
-      { label: "新任务", category: "任务", block: "core.task" },
-      { label: "新计划", category: "计划", block: "core.plan" },
-      { label: "新打卡", category: "打卡", block: "core.habit" },
-      { label: "新事件", category: "事件", block: "core.evidence" },
-      { label: "新阻碍", category: "阻碍项", block: "core.blocker" },
-      { label: "新里程碑", category: "里程碑", block: "core.milestone" }
-    ].map((action) => /* @__PURE__ */ u2(
-      "button",
-      {
-        type: "button",
-        class: "mod-cta",
-        style: { fontSize: "12px", padding: "4px 10px" },
-        onClick: () => onQuickCreate({
-          preferredBlockId: action.block,
-          title: `${action.label} · ${safeTitle}`,
-          cellIdentifier: { category: action.category },
-          context: {
-            goalId: row.goalId || "",
-            "目标ID": row.goalId || "",
-            goalPath: safeGoalPath,
-            "目标": safeGoalPath,
-            themePath: row.themePath || "",
-            "主题": row.themePath || "",
-            coreBlock: action.block.replace(/^core\./, ""),
-            "核心Block": action.block.replace(/^core\./, ""),
-            cycleId: row.activeCycle?.id || "",
-            "周期ID": row.activeCycle?.id || "",
-            "周期": row.activeCycle?.title || "",
-            __goalContext: { goalId: row.goalId || null, goalPath: safeGoalPath, themePath: row.themePath || null, cycleId: row.activeCycle?.id || null, cycleTitle: row.activeCycle?.title || null }
-          }
-        }),
-        children: action.label
-      },
-      action.block
-    )) }),
-    row.recentItems.length > 0 && /* @__PURE__ */ u2("div", { children: [
-      /* @__PURE__ */ u2("div", { style: { fontWeight: 600, marginBottom: "4px" }, children: "最近记录" }),
-      row.recentItems.slice(0, 5).map((item) => /* @__PURE__ */ u2(RecentItem, { item, onOpenRecord, onOpenRecordOrigin }, item.id))
-    ] })
-  ] });
-}
-function GoalOverviewView({ goalOverviewModel, onOpenRecord, onOpenRecordOrigin, onQuickCreate }) {
-  const model = goalOverviewModel;
-  const [query, setQuery] = d("");
-  const [statusFilter, setStatusFilter] = d("all");
-  const filteredRows = T$1(() => {
-    const text2 = query.trim().toLowerCase();
-    return (model?.rows || []).filter(Boolean).filter((row) => {
-      const statusOk = statusFilter === "all" || String(row.status || "active") === statusFilter;
-      if (!statusOk) return false;
-      if (!text2) return true;
-      return `${row.title || ""} ${row.goalPath || ""} ${row.themePath || ""}`.toLowerCase().includes(text2);
-    });
-  }, [model?.rows, query, statusFilter]);
-  if (!model) return /* @__PURE__ */ u2("div", { children: "暂无目标总览数据" });
-  return /* @__PURE__ */ u2("div", { class: "goal-overview-view", style: { display: "grid", gap: "14px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }, children: [
-      /* @__PURE__ */ u2(StatCard, { label: "目标数", value: model.totalGoals }),
-      /* @__PURE__ */ u2(StatCard, { label: "记录数", value: model.totalRecords }),
-      /* @__PURE__ */ u2(StatCard, { label: "未挂目标记录", value: model.orphanRecordCount, hint: "建议后续迁移/补齐" }),
-      /* @__PURE__ */ u2(StatCard, { label: "当前显示", value: filteredRows.length })
-    ] }),
-    model.rows.length > 1 && /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "minmax(180px, 1fr) 160px", gap: "8px", alignItems: "center" }, children: [
-      /* @__PURE__ */ u2("input", { class: "think-native-input", value: query, placeholder: "搜索目标/主题", onInput: (event) => setQuery(event.target.value) }),
-      /* @__PURE__ */ u2("select", { class: "think-native-input", value: statusFilter, onInput: (event) => setStatusFilter(event.target.value), children: [
-        /* @__PURE__ */ u2("option", { value: "all", children: "全部状态" }),
-        /* @__PURE__ */ u2("option", { value: "active", children: "活跃" }),
-        /* @__PURE__ */ u2("option", { value: "paused", children: "暂停" }),
-        /* @__PURE__ */ u2("option", { value: "completed", children: "完成" }),
-        /* @__PURE__ */ u2("option", { value: "archived", children: "归档" })
-      ] })
-    ] }),
-    filteredRows.length === 0 ? /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)" }, children: "没有匹配的目标记录。可以调整搜索条件，或先从旧 `目标::` 字段生成目标候选。" }) : /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "12px" }, children: filteredRows.map((row) => /* @__PURE__ */ u2(GoalRow, { row, onOpenRecord, onOpenRecordOrigin, onQuickCreate }, row.goalPath)) })
-  ] });
-}
-function GoalDetailView({ goalDetailModel, goalOverviewModel, onOpenRecord, onOpenRecordOrigin, onQuickCreate }) {
-  const model = goalDetailModel || goalOverviewModel;
-  if (!model) return /* @__PURE__ */ u2("div", { children: "暂无目标详情数据" });
-  if (!model.selectedRow && model.rows.length !== 1) {
-    return /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)" }, children: "请在视图配置中填写固定目标路径，以展示单目标详情。" });
-  }
-  return /* @__PURE__ */ u2("div", { class: "goal-detail-view", style: { display: "grid", gap: "12px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { border: "1px solid var(--background-modifier-border)", borderRadius: "12px", padding: "12px", background: "var(--background-secondary)" }, children: [
-      /* @__PURE__ */ u2("div", { style: { fontSize: "16px", fontWeight: 700 }, children: "目标详情" }),
-      /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px" }, children: "单目标执行视图：显示当前目标的周期、指标、快捷创建和最近记录。" })
-    ] }),
-    /* @__PURE__ */ u2(GoalOverviewView, { goalOverviewModel: model, onOpenRecord, onOpenRecordOrigin, onQuickCreate })
   ] });
 }
 function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], onOpenRecord }) {
@@ -53024,7 +51556,7 @@ function ThemeTreeNodeItem({
       }
     }
   };
-  return /* @__PURE__ */ u2(S, { children: [
+  return /* @__PURE__ */ u2(k$2, { children: [
     /* @__PURE__ */ u2(
       ListItemButton2,
       {
@@ -53129,7 +51661,7 @@ function ThemeTreeSelectPanel({
 }) {
   const [searchTerm, setSearchTerm] = d("");
   const [expandedIds, setExpandedIds] = d(() => new Set(defaultExpandedIds));
-  const themeTree = T$1(() => (buildThemeTree$1(themes || []) || []).filter(Boolean), [themes]);
+  const themeTree = T$1(() => (buildThemeTree(themes || []) || []).filter(Boolean), [themes]);
   y(() => {
     if (!expandToSelected) return;
     const pathsToExpand = [];
@@ -53509,7 +52041,7 @@ function ViewToolbar({
         children: "＝"
       }
     ),
-    filterSlot || /* @__PURE__ */ u2(S, { children: [
+    filterSlot || /* @__PURE__ */ u2(k$2, { children: [
       onThemeSelectionChange && /* @__PURE__ */ u2(
         ThemeFilter,
         {
@@ -53604,12 +52136,12 @@ const createStoreImpl = (createState) => {
 const createStore = ((createState) => createState ? createStoreImpl(createState) : createStoreImpl);
 const identity = (arg2) => arg2;
 function useStore(api, selector = identity) {
-  const slice2 = gn.useSyncExternalStore(
+  const slice2 = Rn.useSyncExternalStore(
     api.subscribe,
-    gn.useCallback(() => selector(api.getState()), [api, selector]),
-    gn.useCallback(() => selector(api.getInitialState()), [api, selector])
+    Rn.useCallback(() => selector(api.getState()), [api, selector]),
+    Rn.useCallback(() => selector(api.getInitialState()), [api, selector])
   );
-  gn.useDebugValue(slice2);
+  Rn.useDebugValue(slice2);
   return slice2;
 }
 const createImpl = (createState) => {
@@ -53641,7 +52173,7 @@ function validateServices(services, source = "validateServices") {
     );
   }
 }
-const ZustandStoreContext = X$1(null);
+const ZustandStoreContext = Q$1(null);
 function useZustandAppStore(selector, equalityFn) {
   const store = x$1(ZustandStoreContext);
   if (!store) {
@@ -53651,7 +52183,7 @@ function useZustandAppStore(selector, equalityFn) {
   }
   return useStore(store, selector);
 }
-const DataStoreContext = X$1(null);
+const DataStoreContext = Q$1(null);
 function useDataStore() {
   const store = x$1(DataStoreContext);
   if (!store) {
@@ -53661,11 +52193,11 @@ function useDataStore() {
   }
   return store;
 }
-const InputServiceContext = X$1(null);
-const UseCasesContext = X$1(null);
-const UiPortContext = X$1(null);
-const ModalPortContext = X$1(null);
-const MessageRenderPortContext = X$1(null);
+const InputServiceContext = Q$1(null);
+const UseCasesContext = Q$1(null);
+const UiPortContext = Q$1(null);
+const ModalPortContext = Q$1(null);
+const MessageRenderPortContext = Q$1(null);
 function useUseCases() {
   const useCases = x$1(UseCasesContext);
   if (!useCases) {
@@ -53724,13 +52256,13 @@ const subscribeWithSelectorImpl = (fn3) => (set2, get, api) => {
   return initialState;
 };
 const subscribeWithSelector = subscribeWithSelectorImpl;
-function normalizeThemePath(path) {
+function normalizeThemePath$1(path) {
   return path.split("/").map((part) => part.trim()).filter(Boolean).join("/");
 }
 function getNearestParentPath(path, themes) {
-  const parts = normalizeThemePath(path).split("/");
+  const parts = normalizeThemePath$1(path).split("/");
   if (parts.length <= 1) return null;
-  const themePaths = new Set(themes.map((t3) => normalizeThemePath(t3.path)));
+  const themePaths = new Set(themes.map((t3) => normalizeThemePath$1(t3.path)));
   for (let i2 = parts.length - 1; i2 >= 1; i2--) {
     const candidate = parts.slice(0, i2).join("/");
     if (themePaths.has(candidate)) return candidate;
@@ -53738,7 +52270,7 @@ function getNearestParentPath(path, themes) {
   return null;
 }
 function getSiblingOrderForNewTheme(path, themes) {
-  const normalizedPath = normalizeThemePath(path);
+  const normalizedPath = normalizeThemePath$1(path);
   const parentPath = getNearestParentPath(normalizedPath, themes);
   const siblingOrders = themes.filter((t3) => getNearestParentPath(t3.path, themes) === parentPath).map((t3) => typeof t3.order === "number" && Number.isFinite(t3.order) ? t3.order : -1);
   const maxOrder = siblingOrders.length > 0 ? Math.max(...siblingOrders) : -1;
@@ -53767,7 +52299,7 @@ function createThemeSlice(settingsRepository) {
       }
       set2({ themeLoading: true, themeError: null });
       try {
-        const normalizedPath = normalizeThemePath(path);
+        const normalizedPath = normalizeThemePath$1(path);
         const newTheme = {
           id: generateId("thm"),
           path: normalizedPath,
@@ -54903,7 +53435,7 @@ function createAppStore(settingsRepository) {
     }))
   );
 }
-const STORE_TOKEN = /* @__PURE__ */ Symbol("STORE_TOKEN");
+const STORE_TOKEN = Symbol("STORE_TOKEN");
 function getZustandState(store, selector) {
   return selector(store.getState());
 }
@@ -55824,8 +54356,6 @@ class TimerUseCase {
     this.store = store;
     this.timerStateService = timerStateService;
   }
-  store;
-  timerStateService;
   getTimers() {
     return this.store.getState().timer.timers;
   }
@@ -56116,7 +54646,8 @@ function prepareTemplateSubmit(params) {
   const resolved = params.kernel.resolveMissingDependencies({
     blockId: params.blockId,
     themeId: params.themeId ?? null,
-    item: params.item
+    item: params.item,
+    context: { ...params.context || {}, ...params.formData }
   });
   if (resolved.errors.length > 0 || !resolved.template || !resolved.blockId) {
     return {
@@ -56242,8 +54773,6 @@ class RecordInputUseCase {
     this.store = store;
     this.deps = deps;
   }
-  store;
-  deps;
   prepareCreateRecord(params) {
     return this.getKernel().prepareCreate(params);
   }
@@ -56506,7 +55035,7 @@ class RecordInputUseCase {
     });
   }
   getKernel() {
-    return new RecordInputKernel(this.store.getState().settings.inputSettings);
+    return new RecordInputKernel(this.store.getState().settings);
   }
 }
 function createRecordInputUseCase(store, deps) {
@@ -56535,6 +55064,7 @@ function normalizeGoalInput(input) {
     status: input.status || "active",
     parentGoalId: null,
     themePath: input.themePath ?? null,
+    granularity: input.granularity || "day",
     metrics: [],
     createdAt: timestamp,
     updatedAt: timestamp
@@ -56549,9 +55079,6 @@ class GoalUseCase {
     this.dataStore = dataStore;
     this.itemService = itemService;
   }
-  store;
-  dataStore;
-  itemService;
   async addGoal(input) {
     try {
       const state = this.store.getState();
@@ -56609,7 +55136,7 @@ class GoalUseCase {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
         draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => goal.id !== id);
         draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => cycle.goalId !== id);
-        draft.goalSettings.goalBlockBindings = draft.goalSettings.goalBlockBindings.filter((binding) => binding.goalId !== id);
+        draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, id);
         draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => relation.goalId !== id);
       });
     } catch (error) {
@@ -56683,53 +55210,249 @@ class GoalUseCase {
       throw error;
     }
   }
-  async upsertGoalBlockBinding(binding) {
+  async upsertGoalTemplate(template) {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const index = draft.goalSettings.goalBlockBindings.findIndex((item) => item.id === binding.id || item.goalId === binding.goalId && item.coreBlockId === binding.coreBlockId);
         const next2 = {
-          ...binding,
-          id: binding.id || `binding.${binding.goalId}.${binding.coreBlockId}`,
+          ...template,
+          id: template.id || getGoalTemplateId(template.goalId, template.coreBlockId, template.variantId || "default"),
           updatedAt: nowIso(),
-          createdAt: binding.createdAt || nowIso()
+          createdAt: template.createdAt || nowIso()
         };
-        if (index >= 0) draft.goalSettings.goalBlockBindings[index] = { ...draft.goalSettings.goalBlockBindings[index], ...next2 };
-        else draft.goalSettings.goalBlockBindings.push(next2);
+        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, next2);
       });
     } catch (error) {
-      devError("[GoalUseCase] upsertGoalBlockBinding failed:", error);
+      devError("[GoalUseCase] upsertGoalTemplate failed:", error);
       throw error;
     }
   }
-  async upsertGoalBlockBindingDraft(input) {
+  async upsertGoalTemplateDraft(input) {
     const timestamp = nowIso();
-    await this.upsertGoalBlockBinding({
-      id: `binding.${input.goalId}.${input.coreBlockId}`,
+    await this.upsertGoalTemplate({
+      id: getGoalTemplateId(input.goalId, input.coreBlockId, input.templateVariantId || "default"),
       goalId: input.goalId,
       coreBlockId: input.coreBlockId,
+      variantId: input.templateVariantId || "default",
+      name: input.templateName || (input.templateVariantId === "default" || !input.templateVariantId ? "默认模板" : input.templateVariantId),
+      description: input.description,
+      isDefault: input.isDefault !== false && (!input.templateVariantId || input.templateVariantId === "default" || input.isDefault === true),
+      sortOrder: input.sortOrder,
       enabled: input.enabled !== false,
       targetFile: input.targetFile?.trim() || void 0,
       appendUnderHeader: input.appendUnderHeader?.trim() || void 0,
       outputTemplate: input.outputTemplate?.trim() || void 0,
+      fields: input.fields,
       defaultValues: input.defaultValues || {},
       requiredFields: input.requiredFields || [],
       createdAt: timestamp,
       updatedAt: timestamp
     });
   }
-  async deleteGoalBlockBinding(goalId, coreBlockId) {
+  async deleteGoalTemplate(goalId, coreBlockId, templateVariantId = "default") {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        draft.goalSettings.goalBlockBindings = draft.goalSettings.goalBlockBindings.filter((binding) => !(binding.goalId === goalId && binding.coreBlockId === coreBlockId));
+        draft.goalSettings = removeGoalTemplateFromSettings(draft.goalSettings, goalId, coreBlockId, templateVariantId);
       });
     } catch (error) {
-      devError("[GoalUseCase] deleteGoalBlockBinding failed:", error);
+      devError("[GoalUseCase] deleteGoalTemplate failed:", error);
+      throw error;
+    }
+  }
+  /** @deprecated Use upsertGoalTemplate. Kept for old UI/plugin data compatibility. */
+  async upsertGoalBlockBinding(binding) {
+    return this.upsertGoalTemplate(binding);
+  }
+  /** @deprecated Use upsertGoalTemplateDraft. Kept for old UI/plugin data compatibility. */
+  async upsertGoalBlockBindingDraft(input) {
+    return this.upsertGoalTemplateDraft(input);
+  }
+  /** @deprecated Use deleteGoalTemplate. Kept for old UI/plugin data compatibility. */
+  async deleteGoalBlockBinding(goalId, coreBlockId, templateVariantId = "default") {
+    return this.deleteGoalTemplate(goalId, coreBlockId, templateVariantId);
+  }
+  async createGoalMigrationBackup() {
+    try {
+      if (!this.itemService) {
+        throw new Error("ItemService 不可用，无法创建迁移备份。");
+      }
+      const state = this.store.getState();
+      if (!state.isInitialized) {
+        return { backupRoot: "", settingsPath: "", markdownFileCount: 0, failedPaths: [] };
+      }
+      const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+      const backupRoot = `ThinkOS/Backups/goal-migration-${stamp}`;
+      return await this.itemService.createMigrationBackup(backupRoot, state.settings);
+    } catch (error) {
+      devError("[GoalUseCase] createGoalMigrationBackup failed:", error);
+      throw error;
+    }
+  }
+  previewThemeOverrideGoalMigration(options = {}) {
+    const state = this.store.getState();
+    return buildThemeOverrideGoalMigrationPlan(state.settings, this.dataStore.queryItems(), {
+      includeDisabled: options.includeDisabled !== false,
+      themeGoalMap: options.themeGoalMap || {},
+      fallbackThemeAsGoal: false
+    });
+  }
+  async applyThemeOverrideGoalMigration(options = {}) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) return { createdGoals: 0, createdTemplates: 0, clearedLegacyOverrides: 0 };
+      const includeDisabled = options.includeDisabled !== false;
+      const clearLegacyOverrides = options.clearLegacyOverrides !== false;
+      const plan = buildThemeOverrideGoalMigrationPlan(state.settings, this.dataStore.queryItems(), {
+        includeDisabled,
+        themeGoalMap: options.themeGoalMap || {},
+        fallbackThemeAsGoal: false
+      });
+      let createdGoals = 0;
+      let createdTemplates = 0;
+      let clearedLegacyOverrides = 0;
+      await state.updateSettings((draft) => {
+        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
+        const goalsByPath = new Map(draft.goalSettings.goals.map((goal) => [splitGoalPath(goal.goalPath || goal.title).goalPath || goal.id, goal]));
+        const existingTemplateIds = new Set((draft.goalSettings.goalBlockBindings || []).map((template) => template.id));
+        const cellCounts = /* @__PURE__ */ new Map();
+        const cellHasDefault = /* @__PURE__ */ new Set();
+        for (const candidate of plan.candidates) {
+          const existingGoal = goalsByPath.get(candidate.goalPath);
+          if (!existingGoal) {
+            const goal = buildGoalDefinitionFromThemeMigration(candidate, null);
+            draft.goalSettings.goals.push(goal);
+            goalsByPath.set(candidate.goalPath, goal);
+            createdGoals += 1;
+          }
+          const cellKey = `${candidate.goalId}::${candidate.coreBlockId}`;
+          const cellIndex = cellCounts.get(cellKey) || 0;
+          cellCounts.set(cellKey, cellIndex + 1);
+          const shouldBeDefault = candidate.enabled && !cellHasDefault.has(cellKey);
+          if (shouldBeDefault) cellHasDefault.add(cellKey);
+          const template = {
+            ...buildGoalTemplateFromThemeMigration(candidate),
+            isDefault: shouldBeDefault,
+            sortOrder: cellIndex * 10
+          };
+          if (!existingTemplateIds.has(template.id)) createdTemplates += 1;
+          draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, template);
+          existingTemplateIds.add(template.id);
+        }
+        if (clearLegacyOverrides && draft.inputSettings?.overrides) {
+          const migratedOverrideIds = new Set(plan.candidates.map((candidate) => candidate.overrideId));
+          const before = draft.inputSettings.overrides.length;
+          draft.inputSettings.overrides = draft.inputSettings.overrides.filter((override) => !migratedOverrideIds.has(override.id));
+          clearedLegacyOverrides = before - draft.inputSettings.overrides.length;
+        } else if (draft.inputSettings?.overrides) {
+          const migratedOverrideIds = new Set(plan.candidates.map((candidate) => candidate.overrideId));
+          draft.inputSettings.overrides = draft.inputSettings.overrides.map((override) => migratedOverrideIds.has(override.id) ? { ...override, disabled: true } : override);
+        }
+      });
+      return { createdGoals, createdTemplates, clearedLegacyOverrides };
+    } catch (error) {
+      devError("[GoalUseCase] applyThemeOverrideGoalMigration failed:", error);
+      throw error;
+    }
+  }
+  previewThemeOverrideRecordMigration(limit = 20) {
+    const state = this.store.getState();
+    return buildThemeOverrideRecordMigrationPreview(state.settings, this.dataStore.queryItems(), limit);
+  }
+  async applyThemeOverrideRecordMigration(_limit = 500) {
+    const emptyResult = {
+      updated: 0,
+      failed: 0,
+      skipped: 0,
+      taskInlineUpdated: 0,
+      blockMetadataUpdated: 0,
+      unresolved: 0
+    };
+    try {
+      if (!this.itemService) return emptyResult;
+      const state = this.store.getState();
+      if (!state.isInitialized) return emptyResult;
+      const byOverrideId = new Map(Object.entries(buildLegacyOverrideTemplateTargets(state.settings)));
+      const plan = buildThemeOverrideGoalMigrationPlan(state.settings, this.dataStore.queryItems(), {
+        includeDisabled: true,
+        fallbackThemeAsGoal: false
+      });
+      for (const candidate of plan.candidates) {
+        if (!byOverrideId.has(candidate.overrideId)) byOverrideId.set(candidate.overrideId, candidate);
+      }
+      const legacyItems = this.dataStore.queryItems().filter((item) => {
+        const source = String(item.templateSourceType || item.extra?.["模板来源"] || "").trim();
+        const templateId = String(item.templateId || item.extra?.["模板ID"] || "").trim();
+        return source === "override" || /^ovr_/.test(templateId);
+      });
+      const items = legacyItems.filter((item) => {
+        const templateId = String(item.templateId || item.extra?.["模板ID"] || "").trim();
+        return templateId && byOverrideId.has(templateId);
+      }).slice(0, Math.max(1, _limit));
+      let updated = 0;
+      let failed = 0;
+      let skipped = Math.max(0, legacyItems.length - items.length);
+      let taskInlineUpdated = 0;
+      let blockMetadataUpdated = 0;
+      const unresolved = legacyItems.filter((item) => {
+        const templateId = String(item.templateId || item.extra?.["模板ID"] || "").trim();
+        return !templateId || !byOverrideId.has(templateId);
+      }).length;
+      for (const item of items) {
+        const oldTemplateId = String(item.templateId || item.extra?.["模板ID"] || "").trim();
+        const candidate = byOverrideId.get(oldTemplateId);
+        if (!candidate) {
+          skipped += 1;
+          continue;
+        }
+        try {
+          const fields = {
+            "模板来源": "goal-template",
+            "模板ID": candidate.templateId,
+            "目标ID": candidate.goalId,
+            "目标": candidate.goalPath,
+            "核心Block": candidate.coreBlockId
+          };
+          if (candidate.themePath) fields["主题"] = candidate.themePath;
+          const result = await this.itemService.upsertItemGoalTemplateMigrationFields(item.id, fields, { autoRefresh: false });
+          if (result.shape === "block-metadata") blockMetadataUpdated += 1;
+          else taskInlineUpdated += 1;
+          updated += 1;
+        } catch (error) {
+          failed += 1;
+          devError("[GoalUseCase] applyThemeOverrideRecordMigration item failed:", error);
+        }
+      }
+      if (updated > 0) {
+        await this.dataStore.clearCacheAndRescan("warm");
+      }
+      return { updated, failed, skipped, taskInlineUpdated, blockMetadataUpdated, unresolved };
+    } catch (error) {
+      devError("[GoalUseCase] applyThemeOverrideRecordMigration failed:", error);
+      throw error;
+    }
+  }
+  async cleanupLegacyThemeOverrides() {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) return { removedOverrides: 0, remainingThemes: 0 };
+      let removedOverrides = 0;
+      let remainingThemes = 0;
+      await state.updateSettings((draft) => {
+        const overrides = draft.inputSettings?.overrides || [];
+        removedOverrides = overrides.length;
+        if (draft.inputSettings) {
+          draft.inputSettings.overrides = [];
+          remainingThemes = draft.inputSettings.themes?.length || 0;
+        }
+      });
+      return { removedOverrides, remainingThemes };
+    } catch (error) {
+      devError("[GoalUseCase] cleanupLegacyThemeOverrides failed:", error);
       throw error;
     }
   }
@@ -56746,28 +55469,8 @@ class GoalUseCase {
     const state = this.store.getState();
     return buildGoalMarkdownBackfillDiffPreview(this.dataStore.queryItems(), state.settings.goalSettings?.goals || [], limit);
   }
-  async applyMarkdownGoalBackfill(limit = 200) {
-    if (!this.itemService) return { updated: 0, failed: 0, paths: [] };
-    const state = this.store.getState();
-    const preview = buildGoalMarkdownBackfillPreview(this.dataStore.queryItems(), state.settings.goalSettings?.goals || [], limit);
-    let updated = 0;
-    let failed = 0;
-    const paths = /* @__PURE__ */ new Set();
-    for (const item of preview.items) {
-      try {
-        const result = await this.itemService.upsertItemInlineFields(item.itemId, item.patchFields, { autoRefresh: false });
-        paths.add(result.path);
-        updated += 1;
-      } catch (error) {
-        failed += 1;
-        devError("[GoalUseCase] applyMarkdownGoalBackfill item failed:", item.itemId, error);
-      }
-    }
-    for (const path of paths) {
-      await this.dataStore.scanFileByPath(path, { bumpVersion: false });
-    }
-    if (paths.size > 0) this.dataStore.notifyChange();
-    return { updated, failed, paths: Array.from(paths) };
+  async applyMarkdownGoalBackfill(_limit = 200) {
+    return { updated: 0, failed: 0, paths: [] };
   }
   async applyLegacyGoalMigration(candidates) {
     try {
@@ -56776,7 +55479,6 @@ class GoalUseCase {
       const sourceItems = this.dataStore.queryItems();
       const preview = candidates || inferGoalCandidatesFromItems(sourceItems, state.settings.goalSettings?.goals || []);
       let createdGoals = 0;
-      let relationCount = 0;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
         const goalsByPath = new Map(draft.goalSettings.goals.map((goal) => [splitGoalPath(goal.goalPath || goal.title).goalPath, goal]));
@@ -56790,7 +55492,8 @@ class GoalUseCase {
             goalPath: path,
             status: "active",
             parentGoalId: null,
-            themePath: candidate.themePath ?? null,
+            themePath: null,
+            granularity: "day",
             metrics: [],
             createdAt: timestamp,
             updatedAt: timestamp
@@ -56799,17 +55502,8 @@ class GoalUseCase {
           goalsByPath.set(path, goal);
           createdGoals += 1;
         }
-        const existingRelations = new Set(draft.goalSettings.goalRecordRelations.map((relation) => `${relation.goalId}::${relation.recordId}`));
-        const relations = buildGoalRelationsFromItems(sourceItems, draft.goalSettings.goals);
-        for (const relation of relations) {
-          const key = `${relation.goalId}::${relation.recordId}`;
-          if (existingRelations.has(key)) continue;
-          draft.goalSettings.goalRecordRelations.push(relation);
-          existingRelations.add(key);
-          relationCount += 1;
-        }
       });
-      return { createdGoals, relationCount };
+      return { createdGoals, relationCount: 0 };
     } catch (error) {
       devError("[GoalUseCase] applyLegacyGoalMigration failed:", error);
       throw error;
@@ -56899,7 +55593,7 @@ function mountWithServices(containerEl, children, services) {
     services: finalServices,
     unmount: () => {
       try {
-        pn(containerEl);
+        bn(containerEl);
       } catch (e2) {
       }
     }
@@ -56907,11 +55601,11 @@ function mountWithServices(containerEl, children, services) {
 }
 function unmountPreact(containerEl) {
   try {
-    pn(containerEl);
+    bn(containerEl);
   } catch (e2) {
   }
 }
-const MODULE_HEADER_CREATE_ALLOWLIST = ["TimelineView", "HeatmapView", "StatisticsView"];
+const MODULE_HEADER_CREATE_ALLOWLIST = ["TimelineView", "HeatmapView"];
 function openCreateModal(app, config2, source = "view_quick_create") {
   if (!config2?.blockId) return false;
   new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, false, {
@@ -56975,8 +55669,9 @@ function resolveHeatmapThemeId(themesByPath, themePath, item) {
   if (themePath && themePath !== "__default__") {
     return themesByPath.get(themePath)?.id;
   }
-  if (item?.theme) {
-    return themesByPath.get(item.theme)?.id;
+  const itemThemePath = getItemThemePath(item);
+  if (itemThemePath) {
+    return themesByPath.get(itemThemePath)?.id;
   }
   return void 0;
 }
@@ -56984,18 +55679,24 @@ function buildHeatmapCreateConfig(params) {
   const resolvedBlockId = params.sourceBlockId || params.item?.templateId || params.item?.categoryKey;
   if (!resolvedBlockId) return null;
   const themeId = resolveHeatmapThemeId(params.themesByPath, params.themePath, params.item);
-  const themePath = params.themePath && params.themePath !== "__default__" ? params.themePath : params.item?.theme;
+  const themePath = params.themePath && params.themePath !== "__default__" ? params.themePath : getItemThemePath(params.item);
   const context = {
     日期: params.date,
     __recordUiContext: {
       kind: "heatmap_create",
       timeContext: { date: params.date },
-      themeContext: themePath ? { themePath } : null
+      themeContext: themePath ? { themePath } : null,
+      goalContext: params.goalPath ? { goalPath: params.goalPath } : null
     },
     ...params.item ? { 内容: params.item.content || "", 评分: params.item.rating ?? 0 } : {}
   };
   if (themePath) {
     context["主题"] = themePath;
+    context.themePath = themePath;
+  }
+  if (params.goalPath) {
+    context["目标"] = params.goalPath;
+    context.goalPath = params.goalPath;
   }
   return {
     blockId: resolvedBlockId,
@@ -57494,11 +56195,11 @@ function QuickInputOptionPillGroup({
     }
   );
 }
-function normalizePath(value) {
+function normalizePath$1(value) {
   return String(value || "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
 }
 function leafLabel(path) {
-  const parts = normalizePath(path).split("/").filter(Boolean);
+  const parts = normalizePath$1(path).split("/").filter(Boolean);
   return parts[parts.length - 1] || path;
 }
 function getOrder(option) {
@@ -57513,7 +56214,7 @@ function buildTree(options) {
   const byValue = /* @__PURE__ */ new Map();
   const childrenByParent = /* @__PURE__ */ new Map();
   for (const raw of options || []) {
-    const value = normalizePath(raw.value);
+    const value = normalizePath$1(raw.value);
     if (!value) continue;
     byValue.set(value, { ...raw, value, label: raw.label || leafLabel(value) });
   }
@@ -57536,10 +56237,10 @@ function buildTree(options) {
   for (const option of all) {
     const parts = option.value.split("/").filter(Boolean);
     if (parts.length < 2) continue;
-    const parent = parts.slice(0, -1).join("/");
-    const list = childrenByParent.get(parent) || [];
+    const parent2 = parts.slice(0, -1).join("/");
+    const list = childrenByParent.get(parent2) || [];
     list.push(option);
-    childrenByParent.set(parent, list);
+    childrenByParent.set(parent2, list);
   }
   childrenByParent.forEach((list, key) => childrenByParent.set(key, list.sort(compareOption)));
   return { roots, childrenByParent, byValue };
@@ -57556,7 +56257,7 @@ function HierarchySingleSelect({
   searchable = true
 }) {
   const [search, setSearch] = d("");
-  const normalizedSelected = normalizePath(selectedValue);
+  const normalizedSelected = normalizePath$1(selectedValue);
   const { roots, childrenByParent, byValue } = T$1(() => buildTree(options), [options]);
   const selected = normalizedSelected ? byValue.get(normalizedSelected) || null : null;
   const activeParentPath = normalizedSelected ? normalizedSelected.includes("/") ? normalizedSelected.slice(0, normalizedSelected.lastIndexOf("/")) : normalizedSelected : roots[0]?.value || null;
@@ -57592,7 +56293,7 @@ function HierarchySingleSelect({
     filtered.length > 0 ? /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: "搜索结果" }),
       /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: filtered.map((option) => renderPill(option, normalizedSelected === option.value)) })
-    ] }) : /* @__PURE__ */ u2(S, { children: [
+    ] }) : /* @__PURE__ */ u2(k$2, { children: [
       /* @__PURE__ */ u2(Box, { children: [
         /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: parentLabel }),
         /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: [
@@ -57606,6 +56307,32 @@ function HierarchySingleSelect({
       ] })
     ] })
   ] });
+}
+const SYSTEM_CONTEXT_FIELD_KEYS = /* @__PURE__ */ new Set([
+  "goalId",
+  "目标ID",
+  "goalPath",
+  "目标",
+  "rootGoal",
+  "leafGoal",
+  "coreBlock",
+  "coreBlockId",
+  "核心Block",
+  "cycleId",
+  "周期ID",
+  "周期",
+  "periodId",
+  "period",
+  "goalGranularity",
+  "themeId",
+  "rootTheme",
+  "leafTheme"
+]);
+function isSystemContextField(field) {
+  const key = String(field.key || "").trim();
+  const label = String(field.label || "").trim();
+  const semantic = String(getTemplateFieldSemantic(field) || "").trim();
+  return SYSTEM_CONTEXT_FIELD_KEYS.has(key) || SYSTEM_CONTEXT_FIELD_KEYS.has(label) || ["goalId", "goalPath", "goalPaths", "goals", "coreBlock", "cycleId", "period"].includes(semantic);
 }
 function toArrayValue(value) {
   if (Array.isArray(value)) return value.map((v2) => String(typeof v2 === "object" && v2 !== null ? v2.value ?? v2.label ?? "" : v2)).filter(Boolean);
@@ -58043,6 +56770,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, fieldValu
     const timeFields = [];
     const dateFields = [];
     template.fields.forEach((field) => {
+      if (isSystemContextField(field)) return;
       const semantic = getTemplateFieldSemantic(field);
       if (semantic === "date") {
         dateFields.push(field);
@@ -58109,7 +56837,7 @@ function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense =
         onSelect: (option) => onSelect(option),
         parentLabel: "父目标",
         childLabel: "子目标",
-        emptyLabel: "还没有目标。可以在下方直接新建，或从已有记录的目标字段自动生成候选。",
+        emptyLabel: "还没有目标。请到目标管理中新建或导入目标。",
         dense,
         allowClear: true,
         searchable: true
@@ -58171,26 +56899,29 @@ function SnapshotSummary({
   currentThemePath,
   currentGoalPath,
   templateSourceType,
-  fieldSourceSummary
+  fieldSourceSummary,
+  currentPeriodLabel
 }) {
   const chips = [];
   if (currentGoalPath) chips.push({ label: "目标", value: currentGoalPath });
   if (currentThemePath) chips.push({ label: "主题", value: currentThemePath });
+  if (currentPeriodLabel) chips.push({ label: "周期", value: currentPeriodLabel });
   if (templateSourceType) {
     const sourceLabelMap = {
       override: "主题覆盖",
       block: "Block 默认",
       "core-block": "核心Block",
-      "theme-fallback": "主题回退",
-      "goal-binding": "目标绑定",
+      "theme-fallback": "旧主题兼容",
+      "goal-template": "目标记录预设",
+      "goal-binding": "旧目标记录预设",
       "legacy-block": "旧Block"
     };
-    chips.push({ label: "模板来源", value: sourceLabelMap[templateSourceType] || templateSourceType });
+    chips.push({ label: "记录方式", value: sourceLabelMap[templateSourceType] || templateSourceType });
   }
   if (fieldSourceSummary) {
     if (fieldSourceSummary.user > 0) chips.push({ label: "手填", value: String(fieldSourceSummary.user) });
     if (fieldSourceSummary.context > 0) chips.push({ label: "回填", value: String(fieldSourceSummary.context) });
-    if (fieldSourceSummary.template_default > 0) chips.push({ label: "模板默认", value: String(fieldSourceSummary.template_default) });
+    if (fieldSourceSummary.template_default > 0) chips.push({ label: "预设默认", value: String(fieldSourceSummary.template_default) });
     if (fieldSourceSummary.system_auto > 0) chips.push({ label: "自动", value: String(fieldSourceSummary.system_auto) });
   }
   if (!chips.length) return null;
@@ -58239,6 +56970,9 @@ function QuickInputEditorView({
   selectedGoalTitle,
   onSelectGoal,
   onCreateGoal,
+  templateVariants = [],
+  selectedTemplateVariantId = null,
+  onSelectTemplateVariant,
   cycles = [],
   selectedCycleId = null,
   onSelectCycle,
@@ -58254,11 +56988,12 @@ function QuickInputEditorView({
   isMobileLike = false,
   showTimeDirectionControl = false,
   currentThemePath = null,
+  currentPeriodLabel = null,
   templateSourceType = null,
   fieldSourceSummary
 }) {
   if (!template) {
-    return /* @__PURE__ */ u2("div", { children: "错误：找不到当前 Block 的模板配置。" });
+    return /* @__PURE__ */ u2("div", { children: "错误：找不到当前记录类型的默认配置。" });
   }
   return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: dense ? 1.75 : 2 }, children: [
     /* @__PURE__ */ u2(Box, { children: [
@@ -58278,27 +57013,6 @@ function QuickInputEditorView({
         selectedGoalTitle
       ] })
     ] }),
-    cycles.length > 0 && /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(SectionTitle, { title: "周期", compact: true }),
-      /* @__PURE__ */ u2(
-        "select",
-        {
-          className: "think-native-input",
-          value: selectedCycleId || "",
-          onChange: (event) => onSelectCycle?.(event.currentTarget.value || null),
-          children: [
-            /* @__PURE__ */ u2("option", { value: "", children: "不绑定周期" }),
-            cycles.map((cycle) => /* @__PURE__ */ u2("option", { value: cycle.id, children: [
-              cycle.title,
-              " · ",
-              cycle.startDate,
-              " → ",
-              cycle.endDate
-            ] }, cycle.id))
-          ]
-        }
-      )
-    ] }),
     allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(SectionTitle, { title: "记录类型", compact: true }),
       /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: blocks.map((block2) => /* @__PURE__ */ u2(
@@ -58312,6 +57026,22 @@ function QuickInputEditorView({
         block2.id
       )) }) })
     ] }),
+    templateVariants.length > 1 && /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(SectionTitle, { title: "记录预设", compact: true }),
+      /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: templateVariants.map((variant) => /* @__PURE__ */ u2(
+        SelectablePill,
+        {
+          selected: (selectedTemplateVariantId || "default") === variant.value,
+          onClick: () => onSelectTemplateVariant?.(variant.value),
+          title: variant.isDefault ? `${variant.label}（默认）` : variant.label,
+          children: [
+            variant.label,
+            variant.isDefault ? " · 默认" : ""
+          ]
+        },
+        variant.value
+      )) }) })
+    ] }),
     showDivider && /* @__PURE__ */ u2(Divider2, { sx: { my: dense ? 0.1 : 0.2, opacity: 0.55 } }),
     /* @__PURE__ */ u2(
       SnapshotSummary,
@@ -58319,7 +57049,8 @@ function QuickInputEditorView({
         currentThemePath,
         currentGoalPath: selectedGoalPath,
         templateSourceType,
-        fieldSourceSummary
+        fieldSourceSummary,
+        currentPeriodLabel
       }
     ),
     /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(
@@ -58436,11 +57167,12 @@ function QuickInputEditor({
   const fullSettings = useSelector(selectSettings);
   const settings = fullSettings.inputSettings;
   const dataStore = useDataStore();
-  const useCases = useUseCases();
+  useUseCases();
   const [currentBlockId, setCurrentBlockId] = d(initialBlockId);
   const [selectedThemeId, setSelectedThemeId] = d(initialThemeId);
   const [selectedGoalId, setSelectedGoalId] = d(() => String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null);
   const [selectedGoalPath, setSelectedGoalPath] = d(() => splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")).goalPath);
+  const [selectedTemplateVariantId, setSelectedTemplateVariantId] = d(() => String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.__goalContext?.templateVariantId ?? "").trim() || null);
   const [selectedCycleId, setSelectedCycleId] = d(() => String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null);
   const [formData, setFormData] = d(() => initialFormData ?? EMPTY_FORM_DATA);
   const [fieldSources, setFieldSources] = d(() => buildInitialFieldSources(initialFormData));
@@ -58453,6 +57185,7 @@ function QuickInputEditor({
     setTimeDirection(initialFormData?.__timeDirection === "backward" ? "backward" : "forward");
     setSelectedGoalId(String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null);
     setSelectedGoalPath(splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")).goalPath);
+    setSelectedTemplateVariantId(String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.__goalContext?.templateVariantId ?? "").trim() || null);
     setSelectedCycleId(String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null);
   }, [initialBlockId, initialThemeId, context]);
   const blocks = T$1(() => {
@@ -58476,28 +57209,38 @@ function QuickInputEditor({
     const goals = fullSettings.goalSettings?.goals || [];
     return (selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) : null) || (selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) : null) || null;
   }, [fullSettings.goalSettings?.goals, selectedGoalId, selectedGoalPath]);
-  const cycleOptions = T$1(() => {
-    const goalId = selectedGoal?.id || selectedGoalId;
-    const cycles = fullSettings.goalSettings?.cycles || [];
-    return cycles.filter((cycle) => !goalId || cycle.goalId === goalId).filter((cycle) => cycle.status !== "closed").sort((a2, b2) => String(b2.startDate || "").localeCompare(String(a2.startDate || ""), "zh-CN"));
-  }, [fullSettings.goalSettings?.cycles, selectedGoal?.id, selectedGoalId]);
-  const selectedCycle = T$1(() => {
-    if (!selectedCycleId) return null;
-    return cycleOptions.find((cycle) => cycle.id === selectedCycleId) || null;
-  }, [cycleOptions, selectedCycleId]);
-  const { template: rawTemplate, theme: theme2, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId } = T$1(() => GoalTemplateResolver.resolve({
+  const currentEffectiveBlockIdForTemplates = String(currentBlockId || "").startsWith("core.") ? currentBlockId : currentBlockId;
+  const goalTemplateVariants = T$1(() => {
+    const goal = selectedGoal || null;
+    if (!goal || !currentEffectiveBlockIdForTemplates) return [];
+    return getGoalTemplateVariants(fullSettings.goalSettings, goal, currentEffectiveBlockIdForTemplates);
+  }, [fullSettings.goalSettings, selectedGoal, currentEffectiveBlockIdForTemplates]);
+  y(() => {
+    if (!goalTemplateVariants.length) {
+      if (selectedTemplateVariantId) setSelectedTemplateVariantId(null);
+      return;
+    }
+    const exists = selectedTemplateVariantId && goalTemplateVariants.some((template2) => template2.variantId === selectedTemplateVariantId || template2.id === selectedTemplateVariantId);
+    if (!exists) {
+      const next2 = goalTemplateVariants.find((template2) => template2.isDefault) || goalTemplateVariants[0];
+      setSelectedTemplateVariantId(next2?.variantId || "default");
+    }
+  }, [goalTemplateVariants, selectedTemplateVariantId]);
+  const { template: rawTemplate, theme: theme2, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = T$1(() => GoalTemplateResolver.resolve({
     settings: fullSettings,
     blockId: currentBlockId,
     goalId: selectedGoal?.id || selectedGoalId,
     goalPath: selectedGoalPath,
-    themeId: selectedThemeId || void 0
+    themeId: selectedThemeId || void 0,
+    templateVariantId: selectedTemplateVariantId || void 0
   }), [
     fullSettings,
     currentBlockId,
     selectedGoal?.id,
     selectedGoalId,
     selectedGoalPath,
-    selectedThemeId
+    selectedThemeId,
+    selectedTemplateVariantId
   ]);
   const generatedGoalOptions = T$1(() => {
     const counts = /* @__PURE__ */ new Map();
@@ -58530,6 +57273,9 @@ function QuickInputEditor({
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
   const currentGoalTitle = selectedGoal?.title || resolvedGoal?.title || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
   const currentGoalParts = splitPathParts(currentGoalPath);
+  const currentRecordDate = String(formData["日期"] ?? formData.date ?? dayjs().format("YYYY-MM-DD")).trim();
+  const effectiveGranularity = String(rawTemplate?.granularity || "day");
+  const currentPeriod = resolveDerivedPeriod(currentRecordDate || dayjs().format("YYYY-MM-DD"), effectiveGranularity);
   const template = T$1(() => {
     if (!rawTemplate?.fields?.length) return rawTemplate;
     const themeFieldOptions = themeOptions(availableThemes);
@@ -58570,8 +57316,12 @@ function QuickInputEditor({
       goal: { id: selectedGoal?.id || selectedGoalId || "", title: currentGoalTitle || "", path: currentGoalPath || "", themePath: selectedGoal?.themePath || theme2?.path || "" },
       goalId: selectedGoal?.id || selectedGoalId || "",
       goalPath: currentGoalPath || "",
-      cycle: selectedCycle ? { id: selectedCycle.id, title: selectedCycle.title, startDate: selectedCycle.startDate, endDate: selectedCycle.endDate } : null,
-      cycleId: selectedCycle?.id || selectedCycleId || "",
+      period: currentPeriod,
+      cycle: { id: currentPeriod.id, title: currentPeriod.label, startDate: currentPeriod.startDate, endDate: currentPeriod.endDate },
+      cycleId: currentPeriod.id,
+      periodId: currentPeriod.id,
+      periodLabel: currentPeriod.label,
+      goalGranularity: effectiveGranularity,
       theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : { path: selectedGoal?.themePath || "", icon: "" }
     };
     setFormData((current2) => {
@@ -58597,7 +57347,7 @@ function QuickInputEditor({
         const contextValue = context?.[field.key] ?? context?.[field.label];
         if (contextValue !== void 0) {
           if (!hasMeaningfulExisting || existingSource !== "user") {
-            if (["select", "radio", "rating"].includes(field.type)) {
+            if (["select", "singleSelect", "radio", "rating"].includes(field.type)) {
               const rawString = contextValue !== null && contextValue !== void 0 ? String(contextValue) : "";
               const leafString = getLeafPath(rawString) || rawString;
               const matched = (field.options || []).find((opt) => {
@@ -58613,7 +57363,7 @@ function QuickInputEditor({
           return;
         }
         if (!canRefresh) return;
-        const isSelectable = ["select", "radio", "rating"].includes(field.type);
+        const isSelectable = ["select", "singleSelect", "radio", "rating"].includes(field.type);
         if (field.defaultValue) {
           if (isSelectable) {
             const findOption = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
@@ -58647,7 +57397,13 @@ function QuickInputEditor({
       setFieldSources(nextSources);
       return next2;
     });
-  }, [template, theme2, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, selectedCycle?.id, selectedCycle?.title, selectedCycleId, currentGoalPath, currentGoalTitle]);
+  }, [template, theme2, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, effectiveGranularity, selectedGoalId, currentPeriod.id, currentPeriod.label, currentGoalPath, currentGoalTitle]);
+  y(() => {
+    const presetThemePath = String(formData.themePath ?? formData["主题"] ?? "").trim();
+    if (!presetThemePath) return;
+    const nextThemeId = pathToIdMap.get(presetThemePath) ?? null;
+    if (nextThemeId && nextThemeId !== selectedThemeId) setSelectedThemeId(nextThemeId);
+  }, [formData.themePath, formData["主题"], pathToIdMap, selectedThemeId]);
   y(() => {
     const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? theme2 ?? null : theme2 ?? null;
     const effectiveThemePath = String(formData.themePath ?? formData["主题"] ?? currentTheme?.path ?? selectedGoal?.themePath ?? "").trim();
@@ -58660,19 +57416,20 @@ function QuickInputEditor({
       goalTitle: currentGoalTitle,
       rootGoal: currentGoalParts.root,
       leafGoal: currentGoalParts.leaf,
-      cycleId: selectedCycle?.id || selectedCycleId,
+      cycleId: currentPeriod.id,
       themeId: selectedThemeId,
-      formData: { ...formData, __timeDirection: timeDirection },
+      formData: { ...formData, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, cycleId: currentPeriod.id, "周期ID": currentPeriod.id, "周期": currentPeriod.label, goalGranularity: effectiveGranularity, __timeDirection: timeDirection },
       meta: { timeDirection },
       template,
       theme: currentTheme,
       templateId,
+      templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId,
       templateSourceType,
       fieldSources,
       ...themeParts,
       fieldSourceSummary: buildFieldSourceSummary(fieldSources)
     });
-  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, selectedCycle?.id, selectedCycleId, formData, timeDirection, template, templateId, templateSourceType, fieldSources, theme2, selectedCycle?.id, selectedCycleId]);
+  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, selectedCycleId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme2]);
   const emitDraftState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => {
     const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? theme2 ?? null : theme2 ?? null;
     const effectiveThemePath = String(draftFormData.themePath ?? draftFormData["主题"] ?? currentTheme?.path ?? selectedGoal?.themePath ?? "").trim();
@@ -58685,13 +57442,14 @@ function QuickInputEditor({
       goalTitle: currentGoalTitle,
       rootGoal: currentGoalParts.root,
       leafGoal: currentGoalParts.leaf,
-      cycleId: selectedCycle?.id || selectedCycleId,
+      cycleId: currentPeriod.id,
       themeId: selectedThemeId,
-      formData: { ...draftFormData, __timeDirection: directionOverride },
+      formData: { ...draftFormData, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, cycleId: currentPeriod.id, "周期ID": currentPeriod.id, "周期": currentPeriod.label, goalGranularity: effectiveGranularity, __timeDirection: directionOverride },
       meta: { timeDirection: directionOverride },
       template,
       theme: currentTheme,
       templateId,
+      templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId,
       templateSourceType,
       fieldSources: sourceOverride,
       ...themeParts,
@@ -58751,6 +57509,7 @@ function QuickInputEditor({
       if (formData[k2] !== void 0) preserved[k2] = formData[k2];
       if (fieldSources[k2]) preservedSources[k2] = fieldSources[k2];
     });
+    setSelectedTemplateVariantId(null);
     setCurrentBlockId(newBlockId);
     setFormData(preserved);
     setFieldSources(preservedSources);
@@ -58769,50 +57528,11 @@ function QuickInputEditor({
     }
     setSelectedThemeId(themeId);
   };
-  const handleSelectCycle = (cycleId) => {
-    const cycle = cycleId ? cycleOptions.find((item) => item.id === cycleId) || null : null;
-    setSelectedCycleId(cycle?.id || null);
-    setFormData((cur) => {
-      const next2 = { ...cur };
-      const nextSources = { ...fieldSources };
-      const assign2 = (key, value, source = "goal_context") => {
-        const currentSource = nextSources[key];
-        const hasUserValue = currentSource === "user" && isMeaningfulValue(next2[key]);
-        if (hasUserValue) return;
-        if (value === void 0 || value === null || value === "") {
-          delete next2[key];
-          delete nextSources[key];
-          return;
-        }
-        next2[key] = value;
-        nextSources[key] = source;
-      };
-      assign2("cycleId", cycle?.id || "");
-      assign2("周期ID", cycle?.id || "");
-      assign2("周期", cycle?.title || "");
-      setFieldSources(nextSources);
-      return next2;
-    });
-  };
-  const handleCreateGoal = async (goalPath) => {
-    const normalized = splitGoalPath(goalPath).goalPath;
-    if (!normalized) return;
-    const title = normalized.split("/").filter(Boolean).pop() || normalized;
-    const effectiveThemePath = String(formData.themePath ?? formData["主题"] ?? theme2?.path ?? selectedGoal?.themePath ?? "").trim() || null;
-    const goal = await useCases.goal.addGoal({ title, goalPath: normalized, themePath: effectiveThemePath });
-    if (!goal) return;
-    handleSelectGoal({
-      id: goal.id,
-      value: goal.goalPath || normalized,
-      label: goal.title,
-      goal,
-      themePath: goal.themePath || null
-    });
-  };
   const handleSelectGoal = (option) => {
     if (!option || !option.value) {
       setSelectedGoalId(null);
       setSelectedGoalPath(null);
+      setSelectedTemplateVariantId(null);
       return;
     }
     const goal = option.goal || null;
@@ -58821,6 +57541,7 @@ function QuickInputEditor({
     const themePath = goal?.themePath || option.themePath || null;
     setSelectedGoalId(goalId);
     setSelectedGoalPath(goalPath || option.value);
+    setSelectedTemplateVariantId(null);
     if (themePath) setSelectedThemeId(pathToIdMap.get(themePath) ?? null);
     setFormData((cur) => {
       const next2 = { ...cur };
@@ -58844,21 +57565,12 @@ function QuickInputEditor({
         assign2("themePath", themePath, "goal_context");
         assign2("主题", themePath, "goal_context");
       }
-      const nextCycle = (fullSettings.goalSettings?.cycles || []).find((cycle) => cycle.goalId === goalId && cycle.status === "active") || null;
-      if (nextCycle) {
-        assign2("cycleId", nextCycle.id, "goal_context");
-        assign2("周期ID", nextCycle.id, "goal_context");
-        assign2("周期", nextCycle.title, "goal_context");
-        setSelectedCycleId(nextCycle.id);
-      } else if (nextSources.cycleId !== "user" && nextSources["周期ID"] !== "user" && nextSources["周期"] !== "user") {
-        delete next2.cycleId;
-        delete next2["周期ID"];
-        delete next2["周期"];
-        delete nextSources.cycleId;
-        delete nextSources["周期ID"];
-        delete nextSources["周期"];
-        setSelectedCycleId(null);
-      }
+      const period = resolveDerivedPeriod(String(next2["日期"] ?? next2.date ?? dayjs().format("YYYY-MM-DD")).trim() || dayjs().format("YYYY-MM-DD"), goal?.granularity || "day");
+      assign2("cycleId", period.id, "system_auto");
+      assign2("周期ID", period.id, "system_auto");
+      assign2("周期", period.label, "system_auto");
+      assign2("goalGranularity", goal?.granularity || "day", "goal_context");
+      setSelectedCycleId(period.id);
       setFieldSources(nextSources);
       return next2;
     });
@@ -58878,13 +57590,16 @@ function QuickInputEditor({
       selectedGoalPath: currentGoalPath,
       selectedGoalTitle: currentGoalTitle,
       onSelectGoal: handleSelectGoal,
-      onCreateGoal: handleCreateGoal,
-      cycles: cycleOptions,
-      selectedCycleId: selectedCycle?.id || selectedCycleId,
-      onSelectCycle: handleSelectCycle,
+      onCreateGoal: void 0,
+      templateVariants: goalTemplateVariants.map((template2) => ({ value: template2.variantId || "default", label: template2.name || template2.variantId || "默认模板", isDefault: !!template2.isDefault })),
+      selectedTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId,
+      onSelectTemplateVariant: setSelectedTemplateVariantId,
+      cycles: [],
+      selectedCycleId: currentPeriod.id,
+      onSelectCycle: void 0,
       template,
       formData,
-      fieldValueOptionsByKey: { themePath: themeOptions(availableThemes), "主题": themeOptions(availableThemes), cycleId: cycleOptions.map((cycle) => ({ value: cycle.id, label: cycle.title })), "周期ID": cycleOptions.map((cycle) => ({ value: cycle.id, label: cycle.title })), "周期": cycleOptions.map((cycle) => ({ value: cycle.title, label: cycle.title })) },
+      fieldValueOptionsByKey: { themePath: themeOptions(availableThemes), "主题": themeOptions(availableThemes), cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }], "周期ID": [{ value: currentPeriod.id, label: currentPeriod.label }], "周期": [{ value: currentPeriod.label, label: currentPeriod.label }] },
       timeDirection,
       dense,
       showDivider,
@@ -58894,6 +57609,7 @@ function QuickInputEditor({
       isMobileLike,
       showTimeDirectionControl,
       currentThemePath: String(formData.themePath ?? formData["主题"] ?? theme2?.path ?? selectedGoal?.themePath ?? "") || null,
+      currentPeriodLabel: currentPeriod.label,
       templateSourceType,
       fieldSourceSummary: buildFieldSourceSummary(fieldSources)
     }
@@ -58921,8 +57637,8 @@ function setupQuickInputKeyboardDetection(host) {
     setCssPx(modalEl, "--keyboard-accessory-inset", height2);
   };
   const hasActiveKeyboardInput = () => {
-    const activeElement2 = document.activeElement;
-    return !!activeElement2 && contentEl.contains(activeElement2) && isKeyboardInput(activeElement2);
+    const activeElement = document.activeElement;
+    return !!activeElement && contentEl.contains(activeElement) && isKeyboardInput(activeElement);
   };
   const getBodyContainer = () => contentEl.querySelector(".think-modal__body");
   const ensureTargetVisible = (target) => {
@@ -59526,12 +58242,6 @@ class QuickInputModal extends obsidian.Modal {
     this.options = options;
     this.services = createServices();
   }
-  blockId;
-  context;
-  themeId;
-  onSave;
-  allowBlockSwitch;
-  options;
   static activeModal = null;
   services;
   cleanupKeyboardDetection = null;
@@ -59949,13 +58659,50 @@ function normalizeAiFormData(template, formData) {
   });
   return next2;
 }
+function resolveGoalForAiTarget(goalSettings, target) {
+  const goals = goalSettings?.goals || [];
+  if (!goals.length) return null;
+  const targetGoalId = String(target.goalId || "").trim();
+  if (targetGoalId) {
+    const byId = goals.find((goal) => goal.id === targetGoalId);
+    if (byId) return byId;
+  }
+  const targetGoalPath = splitGoalPath(String(target.goalPath || "")).goalPath;
+  if (targetGoalPath) {
+    const byPath = goals.find((goal) => splitGoalPath(String(goal.goalPath || goal.title || "")).goalPath === targetGoalPath);
+    if (byPath) return byPath;
+  }
+  return null;
+}
+function resolvePresetForAiTarget(goalSettings, goal, blockId, target) {
+  if (!goal || !blockId) return null;
+  const variants = getGoalTemplateVariants(goalSettings, goal, blockId) || [];
+  if (!variants.length) return null;
+  const exact = String(target.goalTemplateId || "").trim();
+  if (exact) {
+    const matched = variants.find((preset) => preset.id === exact);
+    if (matched) return matched;
+  }
+  const variantId = String(target.templateVariantId || "").trim();
+  if (variantId) {
+    const matched = variants.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.name === variantId);
+    if (matched) return matched;
+  }
+  return variants.find((preset) => preset.isDefault) || variants[0] || null;
+}
+function readPresetThemePath(preset) {
+  const raw = preset?.defaultValues?.themePath ?? preset?.defaultValues?.["主题"];
+  if (!raw) return void 0;
+  if (typeof raw === "string") return raw.trim() || void 0;
+  if (typeof raw === "object" && raw && "value" in raw) return String(raw.value || "").trim() || void 0;
+  return void 0;
+}
 class AiBatchConfirmModal extends obsidian.Modal {
   constructor(app, args) {
     super(app);
     this.args = args;
     this.services = createServices();
   }
-  args;
   services;
   cleanupBackdropCloseGuard = null;
   resolvePromise = null;
@@ -60015,7 +58762,9 @@ function AiBatchConfirmForm({
   closeModal,
   onComplete
 }) {
-  const settings = useSelector((state) => state.settings.inputSettings);
+  const fullSettings = useSelector(selectSettings);
+  const settings = fullSettings.inputSettings;
+  const goalSettings = fullSettings.goalSettings;
   const useCases = useUseCases();
   const blocks = settings.blocks || [];
   const themes = settings.themes || [];
@@ -60026,19 +58775,34 @@ function AiBatchConfirmForm({
         block2 = blocks.find((b2) => b2.categoryKey === cmd.target.categoryKey);
       }
       if (!block2 && blocks.length > 0) block2 = blocks[0];
+      const goal = resolveGoalForAiTarget(goalSettings, cmd.target);
+      const goalPath = goal ? splitGoalPath(String(goal.goalPath || goal.title || "")).goalPath : splitGoalPath(String(cmd.target.goalPath || "")).goalPath;
+      const goalId = goal?.id || String(cmd.target.goalId || "").trim() || void 0;
+      const preset = block2 ? resolvePresetForAiTarget(goalSettings, goal, block2.id, cmd.target) : null;
+      const presetThemePath = readPresetThemePath(preset);
       let themeId;
-      if (cmd.target.themeId) {
-        const theme2 = themes.find((t3) => t3.id === cmd.target.themeId || t3.path === cmd.target.themeId);
+      const preferredTheme = presetThemePath || cmd.target.themeId;
+      if (preferredTheme) {
+        const theme2 = themes.find((t3) => t3.id === preferredTheme || t3.path === preferredTheme);
         if (theme2) themeId = theme2.id;
       }
       if (!themeId && themes.length > 0) themeId = themes[0].id;
-      const initialTemplate = block2 ? getEffectiveTemplate(settings, block2.id, themeId).template : void 0;
+      const selectedTheme = themeId ? themes.find((t3) => t3.id === themeId) : void 0;
+      const themePath = presetThemePath || selectedTheme?.path || cmd.target.themeId && themes.find((t3) => t3.id === cmd.target.themeId || t3.path === cmd.target.themeId)?.path || void 0;
+      const initialTemplate = preset || (block2 ? getEffectiveTemplate(settings, block2.id, themeId).template : void 0);
+      const initialFormData = {
+        ...cmd.fieldValues || {},
+        ...goalId ? { goalId, "目标ID": goalId } : {},
+        ...goalPath ? { goalPath, "目标": goalPath } : {},
+        ...preset ? { templateVariantId: preset.variantId || "default", goalTemplateVariantId: preset.variantId || "default" } : {},
+        ...themePath ? { themePath, "主题": themePath } : {}
+      };
       return {
         id: `record-${index}`,
         cmd,
         blockId: block2?.id || "",
         themeId,
-        formData: normalizeAiFormData(initialTemplate ?? void 0, { ...cmd.fieldValues || {} }),
+        formData: normalizeAiFormData(initialTemplate ?? void 0, initialFormData),
         saved: false,
         skipped: false
       };
@@ -60664,7 +59428,7 @@ function FloatingPanel({
           }
         ),
         /* @__PURE__ */ u2("div", { style: bodyMergedStyle, children }),
-        resizable && !mobile && !inline && /* @__PURE__ */ u2(S, { children: [
+        resizable && !mobile && !inline && /* @__PURE__ */ u2(k$2, { children: [
           /* @__PURE__ */ u2(
             "div",
             {
@@ -60804,8 +59568,6 @@ function useSelector(selector, equalityFn) {
 const selectSettings = (s2) => s2.settings;
 const selectInputSettings = (s2) => s2.settings.inputSettings;
 const selectInputBlocks = (s2) => s2.settings.inputSettings?.blocks ?? [];
-const selectInputThemes = (s2) => s2.settings.inputSettings?.themes ?? [];
-const selectInputOverrides = (s2) => s2.settings.inputSettings?.overrides ?? [];
 const selectAiSettings = (s2) => s2.settings.aiSettings;
 const selectLayouts = (s2) => s2.settings.layouts;
 const selectViewInstances = (s2) => s2.settings.viewInstances;
@@ -61320,7 +60082,7 @@ class FloatingTimerWidget {
     }
     this.widget = new FloatingWidget(
       "floating-timer-widget",
-      () => k$2(TimerView, {
+      () => _$1(TimerView, {
         app: this.plugin.app,
         actionService: this.plugin.actionService,
         timerService: this.plugin.timerService,
@@ -62008,100 +60770,60 @@ function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
     ] })
   ] });
 }
-function StatisticsViewEditor({ value, onChange, dataStore }) {
+function StatisticsViewEditor({ value, onChange }) {
   const config2 = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...value };
-  const [localCategories, setLocalCategories] = d(config2.categories);
-  const discoveredCategories = T$1(() => {
-    if (!dataStore) return [];
-    const allItems = dataStore.queryItems();
-    return discoverBaseCategories(allItems);
-  }, [dataStore]);
-  y(() => {
-    const existingNames = new Set(config2.categories.map((c2) => c2.name));
-    const newCategories = [...config2.categories];
-    let changed = false;
-    discoveredCategories.forEach((name) => {
-      if (!existingNames.has(name)) {
-        newCategories.push({ name, color: getCategoryColor(name) });
-        changed = true;
-      }
-    });
-    if (changed) {
-      setLocalCategories(newCategories);
-      onChange({ categories: newCategories });
-    } else {
-      setLocalCategories(config2.categories);
-    }
-  }, [discoveredCategories, config2.categories]);
-  const handleMove = (index, direction) => {
-    const newCategories = [...localCategories];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newCategories.length) return;
-    [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
-    setLocalCategories(newCategories);
-    onChange({ categories: newCategories });
-  };
-  const handleAliasChange = (index, alias) => {
-    const newCategories = [...localCategories];
-    newCategories[index].alias = alias;
-    setLocalCategories(newCategories);
-    onChange({ categories: newCategories });
-  };
   return /* @__PURE__ */ u2("div", { class: "statistics-editor-container", children: [
     /* @__PURE__ */ u2("div", { class: "statistics-section", children: [
-      /* @__PURE__ */ u2("div", { class: "categories-section-title", children: "分类配置" }),
-      /* @__PURE__ */ u2("div", { class: "categories-description", children: "调整分类的显示顺序和别名。颜色由「通用设置 → 分类颜色」统一管理。" })
+      /* @__PURE__ */ u2("div", { class: "categories-section-title", children: "目标统计视图" }),
+      /* @__PURE__ */ u2("div", { class: "categories-description", children: "StatisticsView 只按目标分组。时间范围使用上方控制栏，目标 / Block / 主题等条件使用视图筛选控制；“按照周期显示”只控制年/季/月视图内是否按 period 字段显示对应粒度。" }),
+      /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8, marginTop: 8 }, children: [
+        /* @__PURE__ */ u2("label", { children: [
+          /* @__PURE__ */ u2("div", { children: "显示目标数量" }),
+          /* @__PURE__ */ u2(
+            "input",
+            {
+              type: "number",
+              min: 1,
+              value: config2.topN || 10,
+              onChange: (e2) => onChange({ groupBy: "goal", topN: Number(e2.target.value) || 10 })
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2("label", { children: [
+          /* @__PURE__ */ u2("div", { children: "柱状高度模式" }),
+          /* @__PURE__ */ u2("select", { value: config2.displayMode || "smart", onChange: (e2) => onChange({ groupBy: "goal", displayMode: e2.target.value }), children: [
+            /* @__PURE__ */ u2("option", { value: "smart", children: "智能" }),
+            /* @__PURE__ */ u2("option", { value: "linear", children: "线性" }),
+            /* @__PURE__ */ u2("option", { value: "logarithmic", children: "对数" })
+          ] })
+        ] }),
+        /* @__PURE__ */ u2("label", { children: [
+          /* @__PURE__ */ u2("div", { children: "最小可见高度" }),
+          /* @__PURE__ */ u2(
+            "input",
+            {
+              type: "number",
+              min: 1,
+              max: 100,
+              value: config2.minVisibleHeight || 15,
+              onChange: (e2) => onChange({ groupBy: "goal", minVisibleHeight: Number(e2.target.value) || 15 })
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2("label", { style: { display: "flex", alignItems: "center", gap: 6, marginTop: 18 }, children: [
+          /* @__PURE__ */ u2(
+            "input",
+            {
+              type: "checkbox",
+              checked: !!config2.usePeriodField,
+              onChange: (e2) => onChange({ groupBy: "goal", usePeriodField: e2.target.checked })
+            }
+          ),
+          /* @__PURE__ */ u2("span", { children: "默认按照周期显示" })
+        ] })
+      ] })
     ] }),
-    /* @__PURE__ */ u2("div", { children: localCategories.map((cat, index) => /* @__PURE__ */ u2("div", { class: "category-item", children: [
-      /* @__PURE__ */ u2("div", { class: "move-buttons-container", children: [
-        /* @__PURE__ */ u2(
-          "button",
-          {
-            class: "move-button",
-            title: "上移",
-            disabled: index === 0,
-            onClick: () => handleMove(index, "up"),
-            children: "↑"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          "button",
-          {
-            class: "move-button",
-            title: "下移",
-            disabled: index === localCategories.length - 1,
-            onClick: () => handleMove(index, "down"),
-            children: "↓"
-          }
-        )
-      ] }),
-      /* @__PURE__ */ u2(
-        "div",
-        {
-          class: "color-preview",
-          style: {
-            width: 24,
-            height: 24,
-            borderRadius: 4,
-            backgroundColor: getCategoryColor(cat.name),
-            border: "1px solid var(--text-muted)",
-            flexShrink: 0
-          },
-          title: `颜色来自通用设置: ${getCategoryColor(cat.name)}`
-        }
-      ),
-      /* @__PURE__ */ u2("div", { class: "category-name", children: cat.name }),
-      /* @__PURE__ */ u2(
-        "input",
-        {
-          class: "alias-input",
-          type: "text",
-          placeholder: "别名",
-          value: cat.alias || "",
-          onChange: (e2) => handleAliasChange(index, e2.target.value)
-        }
-      )
-    ] }, cat.name)) })
+    /* @__PURE__ */ u2("div", { class: "statistics-section", children: /* @__PURE__ */ u2("div", { class: "categories-description", children: "该视图不再维护分类配置；分类可继续作为视图筛选条件，但不会作为 Statistics 的主柱状维度。" }) })
   ] });
 }
 function normalizeHeatmapConfig(value) {
@@ -62187,88 +60909,29 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
 function ProgressViewEditor({ value, onChange }) {
   const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...value };
   return /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "ProgressView 是独立的积分/成长视图：只读取记录，不改写打卡数据。" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "ProgressView 只按目标展示经验卡片；每个目标一张卡片，可折叠。时间和筛选统一走控制栏与视图筛选。" }),
     /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "基础积分", value: config2.basePoints, onChange: (e2) => onChange({ basePoints: Number(e2.target.value) || 1 }) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "每级积分", value: config2.levelStep, onChange: (e2) => onChange({ levelStep: Number(e2.target.value) || 20 }) })
-    ] }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "评分加分阈值", value: config2.ratingBonusThreshold, onChange: (e2) => onChange({ ratingBonusThreshold: Number(e2.target.value) || 4 }) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "评分额外积分", value: config2.ratingBonusPoints, onChange: (e2) => onChange({ ratingBonusPoints: Number(e2.target.value) || 0 }) })
-    ] }),
-    /* @__PURE__ */ u2("div", { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { mb: 1 }, children: "参与积分的基础分类（留空 = 全部）" }),
-      /* @__PURE__ */ u2(ListEditor, { value: config2.includedCategories || [], onChange: (val) => onChange({ includedCategories: val }), placeholder: "例如：闪念、任务、打卡" })
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "显示目标数量", value: config2.topN, onChange: (e2) => onChange({ mode: "goal", topN: Number(e2.target.value) || 20 }) }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "基础积分", value: config2.basePoints, onChange: (e2) => onChange({ mode: "goal", basePoints: Number(e2.target.value) || 1 }) }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "每级积分", value: config2.levelStep, onChange: (e2) => onChange({ mode: "goal", levelStep: Number(e2.target.value) || 20 }) })
     ] }),
     /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
-      /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { checked: config2.showCategoryBreakdown !== false, onChange: (e2) => onChange({ showCategoryBreakdown: e2.target.checked }) }), label: "显示分类积分" }),
-      /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { checked: config2.showThemeBreakdown !== false, onChange: (e2) => onChange({ showThemeBreakdown: e2.target.checked }) }), label: "显示主题积分" })
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "评分加分阈值", value: config2.ratingBonusThreshold, onChange: (e2) => onChange({ mode: "goal", ratingBonusThreshold: Number(e2.target.value) || 4 }) }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "评分额外积分", value: config2.ratingBonusPoints, onChange: (e2) => onChange({ mode: "goal", ratingBonusPoints: Number(e2.target.value) || 0 }) })
     ] }),
-    /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "榜单数量", value: config2.topN, onChange: (e2) => onChange({ topN: Number(e2.target.value) || 5 }) })
+    /* @__PURE__ */ u2(
+      FormControlLabel2,
+      {
+        control: /* @__PURE__ */ u2(Checkbox2, { checked: config2.showCategoryBreakdown !== false, onChange: (e2) => onChange({ mode: "goal", showCategoryBreakdown: e2.target.checked }) }),
+        label: "展开卡片时显示 Block 统计"
+      }
+    )
   ] });
 }
 function TaskExecutionViewEditor(_props) {
   return /* @__PURE__ */ u2(Stack, { spacing: 1, children: [
     /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "任务执行视图：按主题两级分组展示带 🔁 的未完成任务。" }),
     /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "左键记录一次，右键查看当前时间范围内的完成记录，并可跳转到原位置。" })
-  ] });
-}
-const DEFAULT_CONFIG$1 = {
-  goalOverview: {
-    goalPath: "",
-    limit: 20
-  }
-};
-function GoalOverviewViewEditor({ value, onChange }) {
-  const config2 = value?.goalOverview || DEFAULT_CONFIG$1.goalOverview;
-  const patch = (next2) => onChange({ goalOverview: { ...config2, ...next2 } });
-  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1.5 }, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标总览视图会按目标聚合任务、计划、总结、打卡、事件、阻碍项和里程碑。目标为空时显示最近活跃目标。" }),
-    /* @__PURE__ */ u2(
-      TextField2,
-      {
-        label: "固定目标路径（可选）",
-        value: config2.goalPath || "",
-        onChange: (event) => patch({ goalPath: event.target.value }),
-        size: "small",
-        fullWidth: true,
-        placeholder: "例如：产品化/插件/目标中心"
-      }
-    ),
-    /* @__PURE__ */ u2(
-      TextField2,
-      {
-        label: "最多显示目标数",
-        type: "number",
-        value: config2.limit || 20,
-        onChange: (event) => patch({ limit: Number(event.target.value) || 20 }),
-        size: "small",
-        fullWidth: true
-      }
-    )
-  ] });
-}
-const DEFAULT_CONFIG = {
-  goalDetail: {
-    goalPath: ""
-  }
-};
-function GoalDetailViewEditor({ value, onChange }) {
-  const config2 = value?.goalDetail || DEFAULT_CONFIG.goalDetail;
-  const patch = (next2) => onChange({ goalDetail: { ...config2, ...next2 } });
-  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1.5 }, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标详情视图固定展示一个目标，适合放在单目标仪表盘中。" }),
-    /* @__PURE__ */ u2(
-      TextField2,
-      {
-        label: "目标路径",
-        value: config2.goalPath || "",
-        onChange: (event) => patch({ goalPath: event.target.value }),
-        size: "small",
-        fullWidth: true,
-        placeholder: "例如：产品化/插件/目标中心"
-      }
-    )
   ] });
 }
 const VIEW_INFO_REGISTRY = {
@@ -62280,9 +60943,7 @@ const VIEW_INFO_REGISTRY = {
   StatisticsView: { component: StatisticsViewEditor, defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG },
   HeatmapView: { component: HeatmapViewEditor, defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG },
   ProgressView: { component: ProgressViewEditor, defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG },
-  TaskExecutionView: { component: TaskExecutionViewEditor, defaultConfig: TASK_EXECUTION_VIEW_DEFAULT_CONFIG },
-  GoalOverviewView: { component: GoalOverviewViewEditor, defaultConfig: DEFAULT_CONFIG$1 },
-  GoalDetailView: { component: GoalDetailViewEditor, defaultConfig: DEFAULT_CONFIG }
+  TaskExecutionView: { component: TaskExecutionViewEditor, defaultConfig: TASK_EXECUTION_VIEW_DEFAULT_CONFIG }
 };
 const VIEW_EDITORS = Object.fromEntries(
   Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.component])
@@ -62543,7 +61204,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
         },
         children: [
           renderFieldInput(rule.field, (field) => updateRow(index, { field })),
-          isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+          isFilterMode ? /* @__PURE__ */ u2(k$2, { children: [
             /* @__PURE__ */ u2(
               SimpleSelect,
               {
@@ -62631,7 +61292,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
           },
           children: [
             renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
-            isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+            isFilterMode ? /* @__PURE__ */ u2(k$2, { children: [
               /* @__PURE__ */ u2(
                 SimpleSelect,
                 {
@@ -62663,7 +61324,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
       existingRules,
       /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "4px", alignItems: "center" }, children: [
         renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
-        isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+        isFilterMode ? /* @__PURE__ */ u2(k$2, { children: [
           /* @__PURE__ */ u2(
             SimpleSelect,
             {
@@ -62850,7 +61511,7 @@ function CommonFilterPanel({
                     options: valueOptions[config2.field] || [],
                     value: values2,
                     onChange: (_2, newValue) => onChange(upsertQuickRule(filters, config2.field, newValue)),
-                    renderTags: (tagValue, getTagProps) => tagValue.map((option, index) => /* @__PURE__ */ k$2(Chip2, { ...getTagProps({ index }), key: `${config2.field}-${option}`, label: option, size: "small" })),
+                    renderTags: (tagValue, getTagProps) => tagValue.map((option, index) => /* @__PURE__ */ _$1(Chip2, { ...getTagProps({ index }), key: `${config2.field}-${option}`, label: option, size: "small" })),
                     renderInput: (params) => /* @__PURE__ */ u2(
                       TextField2,
                       {
@@ -63793,2407 +62454,6 @@ function useExpandedViewRendering({
     handleToggle
   };
 }
-function readNativeControlValue(event) {
-  return (event.target || event.currentTarget).value;
-}
-function stopEditorEvent$1(event) {
-  event.stopPropagation();
-}
-function useObsidianInputGuard({
-  scope,
-  controlName,
-  onInput,
-  onBlur,
-  onFocus
-}) {
-  const log = q$1((event, payload) => {
-    logInputEvent(scope, event, payload);
-  }, [scope]);
-  return {
-    onPointerDown: q$1((event) => {
-      log(event, { handler: `${controlName} onPointerDown` });
-    }, [controlName, log]),
-    onMouseDown: q$1((event) => {
-      log(event, { handler: `${controlName} onMouseDown before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onClick: q$1((event) => {
-      log(event, { handler: `${controlName} onClick before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onDblClick: q$1((event) => {
-      log(event, { handler: `${controlName} onDblClick before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onKeyDown: q$1((event) => {
-      log(event, { handler: `${controlName} onKeyDown before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onKeyUp: q$1((event) => {
-      log(event, { handler: `${controlName} onKeyUp before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onBeforeInput: q$1((event) => {
-      log(event, { handler: `${controlName} onBeforeInput` });
-    }, [controlName, log]),
-    onInput: q$1((event) => {
-      const nextValue = readNativeControlValue(event);
-      log(event, {
-        handler: `${controlName} onInput before local update`,
-        nextValue
-      });
-      onInput(nextValue);
-    }, [controlName, log, onInput]),
-    onChange: q$1((event) => {
-      log(event, { handler: `${controlName} onChange` });
-    }, [controlName, log]),
-    onBlur: q$1((event) => {
-      log(event, { handler: `${controlName} onBlur before commit` });
-      onBlur?.();
-    }, [controlName, log, onBlur]),
-    onFocus: q$1((event) => {
-      log(event, { handler: `${controlName} onFocus` });
-      onFocus?.();
-    }, [controlName, log, onFocus])
-  };
-}
-const nativeControlBaseStyle$1 = {
-  width: "100%",
-  minWidth: 0,
-  boxSizing: "border-box",
-  border: "1px solid var(--background-modifier-border)",
-  borderRadius: 6,
-  background: "var(--background-primary)",
-  color: "var(--text-normal)",
-  padding: "8px 10px",
-  font: "inherit",
-  lineHeight: 1.4,
-  userSelect: "text",
-  WebkitUserSelect: "text",
-  pointerEvents: "auto"
-};
-const nativeLabelStyle$1 = {
-  display: "block",
-  marginBottom: 4,
-  fontSize: "0.75rem",
-  color: "var(--text-muted)"
-};
-function NativeTextInput$1({
-  label,
-  value,
-  onInput,
-  onBlur,
-  onFocus,
-  disabled = false,
-  placeholder,
-  type = "text",
-  title,
-  style: style2
-}) {
-  const inputGuard = useObsidianInputGuard({
-    scope: `FieldsEditor/${label}`,
-    controlName: "control",
-    onInput,
-    onBlur,
-    onFocus
-  });
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, title, children: [
-    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
-    /* @__PURE__ */ u2(
-      "input",
-      {
-        type,
-        value,
-        disabled,
-        placeholder,
-        "data-think-diag-control": label,
-        ...inputGuard,
-        style: {
-          ...nativeControlBaseStyle$1,
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text"
-        }
-      }
-    )
-  ] });
-}
-function NativeTextarea$1({
-  label,
-  value,
-  onInput,
-  onBlur,
-  disabled = false,
-  placeholder,
-  rows = 3,
-  style: style2
-}) {
-  const textareaGuard = useObsidianInputGuard({
-    scope: `FieldsEditor/${label}`,
-    controlName: "textarea",
-    onInput,
-    onBlur
-  });
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, children: [
-    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
-    /* @__PURE__ */ u2(
-      "textarea",
-      {
-        value,
-        disabled,
-        rows,
-        placeholder,
-        "data-think-diag-control": label,
-        ...textareaGuard,
-        style: {
-          ...nativeControlBaseStyle$1,
-          resize: "vertical",
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text"
-        }
-      }
-    )
-  ] });
-}
-function OptionRow({
-  option,
-  onChange,
-  onRemove,
-  fieldType,
-  disabled = false
-}) {
-  const [localOption, setLocalOption] = d(option);
-  const renderCountRef = A$1(0);
-  const previousOptionRef = A$1(null);
-  renderCountRef.current += 1;
-  y(() => {
-    logRenderDiagnostic("FieldsEditor/OptionRow", {
-      renderCount: renderCountRef.current,
-      fieldType,
-      disabled,
-      optionRefChanged: previousOptionRef.current !== null && previousOptionRef.current !== option,
-      option,
-      localOption
-    });
-    previousOptionRef.current = option;
-  });
-  y(() => {
-    setLocalOption(option);
-  }, [option]);
-  const commitOption = (nextOption, reason) => {
-    if ((nextOption.label || "") === (option.label || "") && nextOption.value === option.value)
-      return;
-    logRenderDiagnostic("FieldsEditor/OptionRow/commit", {
-      reason,
-      fieldType,
-      option: nextOption
-    });
-    onChange(nextOption);
-  };
-  const updateLocalOption = (updates, reason) => {
-    setLocalOption((previous) => {
-      const next2 = { ...previous, ...updates };
-      logRenderDiagnostic("FieldsEditor/OptionRow/input", {
-        reason,
-        updates,
-        nextOption: next2
-      });
-      return next2;
-    });
-  };
-  const handleBlur = () => {
-    commitOption(localOption, "选项输入框失焦，提交到字段草稿");
-  };
-  const isRating = fieldType === "rating";
-  const labelLabel = isRating ? "评分数值" : "选项标签";
-  const valueLabel = isRating ? "显示内容 (Emoji/图片路径)" : "选项值";
-  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 1.5, children: [
-    /* @__PURE__ */ u2(
-      NativeTextInput$1,
-      {
-        label: labelLabel,
-        value: localOption.label || "",
-        onInput: (value) => {
-          const nextOption = { ...localOption, label: value };
-          updateLocalOption({ label: value }, "编辑选项标签 native onInput");
-          onChange(nextOption);
-        },
-        onBlur: handleBlur,
-        disabled,
-        style: { flex: 1 }
-      }
-    ),
-    /* @__PURE__ */ u2(
-      NativeTextInput$1,
-      {
-        label: valueLabel,
-        value: localOption.value,
-        onInput: (value) => {
-          const nextOption = { ...localOption, value };
-          updateLocalOption({ value }, "编辑选项值 native onInput");
-          onChange(nextOption);
-        },
-        onBlur: handleBlur,
-        disabled,
-        style: { flex: 1 }
-      }
-    ),
-    /* @__PURE__ */ u2(Box, { sx: { pt: 2.5 }, children: /* @__PURE__ */ u2(
-      IconAction,
-      {
-        label: "删除此选项",
-        disabled,
-        onClick: onRemove,
-        icon: /* @__PURE__ */ u2(RemoveCircleOutlineIcon, { fontSize: "small" })
-      }
-    ) })
-  ] });
-}
-const fieldTypeOptions = getUserTemplateFieldTypeOptions();
-const fieldRowGridTemplateColumns$1 = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 72px 40px";
-const emptyControlMinHeight = 40;
-function defaultInputType(uiType) {
-  if (uiType === "number") return "number";
-  if (uiType === "date") return "date";
-  if (uiType === "time") return "time";
-  if (uiType === "datetime") return "datetime-local";
-  return "text";
-}
-function FieldRow({
-  field,
-  disabled = false,
-  isDragging = false,
-  onUpdate,
-  onRemove
-}) {
-  const [localName, setLocalName] = d(field.label || field.key);
-  const [localDefaultValue, setLocalDefaultValue] = d(field.defaultValue || "");
-  const [isEditing, setIsEditing] = d(false);
-  const [detailsOpen, setDetailsOpen] = d(false);
-  const renderCountRef = A$1(0);
-  const previousFieldRef = A$1(null);
-  renderCountRef.current += 1;
-  y(() => {
-    logRenderDiagnostic("FieldsEditor/FieldRow", {
-      renderCount: renderCountRef.current,
-      fieldId: field.id,
-      fieldKey: field.key,
-      fieldType: field.type,
-      disabled,
-      isEditing,
-      isDragging,
-      fieldRefChanged: previousFieldRef.current !== null && previousFieldRef.current !== field,
-      localName,
-      localDefaultValue,
-      incomingDefaultValue: field.defaultValue
-    });
-    previousFieldRef.current = field;
-  });
-  y(() => {
-    if (!isEditing) setLocalName(field.label || field.key);
-  }, [field.label, field.key, isEditing]);
-  y(() => {
-    setLocalDefaultValue(field.defaultValue || "");
-  }, [field.defaultValue, field.id]);
-  const handleNameBlur = () => {
-    const trimmedName = localName.trim();
-    if (trimmedName && trimmedName !== (field.label || field.key)) {
-      onUpdate({ key: trimmedName, label: trimmedName });
-    } else {
-      setLocalName(field.label || field.key);
-    }
-    setIsEditing(false);
-  };
-  const handleOptionChange = (optIndex, newOption) => {
-    const newOptions = [...field.options || []];
-    newOptions[optIndex] = newOption;
-    onUpdate({ options: newOptions });
-  };
-  const addOption = () => {
-    const newOptions = [...field.options || []];
-    newOptions.push({ value: "新选项", label: String(newOptions.length + 1) });
-    onUpdate({ options: newOptions });
-    setDetailsOpen(true);
-  };
-  const removeOption = (optIndex) => {
-    const nextOptions = (field.options || []).filter((_2, i2) => i2 !== optIndex);
-    onUpdate({ options: nextOptions });
-  };
-  const uiType = normalizeTemplateFieldType(field.type);
-  const customFieldNameWarning = getCustomFieldNameWarning(localName);
-  const showOptionsEditor = templateFieldTypeUsesOptions(uiType);
-  const showDefaultValueEditor = templateFieldTypeSupportsDefaultValue(uiType);
-  const showInlineDefaultValue = showDefaultValueEditor && uiType !== "textarea";
-  const showDetails = showOptionsEditor || uiType === "textarea" || uiType === "number";
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        py: 0.75,
-        px: 0.5,
-        borderRadius: 1,
-        bgcolor: isDragging ? "action.hover" : "transparent"
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          Box,
-          {
-            sx: {
-              display: "grid",
-              gridTemplateColumns: fieldRowGridTemplateColumns$1,
-              columnGap: 0.75,
-              alignItems: "center"
-            },
-            children: [
-              /* @__PURE__ */ u2(
-                Box,
-                {
-                  title: "拖动排序",
-                  sx: {
-                    width: 28,
-                    minHeight: emptyControlMinHeight,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "text.secondary",
-                    cursor: disabled ? "default" : "grab"
-                  },
-                  children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1.25rem" } })
-                }
-              ),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
-                NativeTextInput$1,
-                {
-                  label: "",
-                  placeholder: "字段名称",
-                  value: localName,
-                  onInput: (value) => setLocalName(value),
-                  onBlur: handleNameBlur,
-                  onFocus: () => setIsEditing(true),
-                  disabled,
-                  style: { width: "100%" },
-                  title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
-                }
-              ) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
-                SimpleSelect,
-                {
-                  value: uiType,
-                  options: fieldTypeOptions,
-                  onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
-                  disabled,
-                  sx: { width: "100%" }
-                }
-              ) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: showInlineDefaultValue ? /* @__PURE__ */ u2(
-                NativeTextInput$1,
-                {
-                  label: "",
-                  value: localDefaultValue,
-                  type: defaultInputType(uiType),
-                  onInput: (value) => {
-                    setLocalDefaultValue(value);
-                    onUpdate({ defaultValue: value });
-                  },
-                  onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
-                  disabled,
-                  placeholder: "可留空",
-                  style: { width: "100%" }
-                }
-              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center" }, children: showDetails ? /* @__PURE__ */ u2(
-                Button2,
-                {
-                  size: "small",
-                  variant: "text",
-                  disabled: disabled && !showOptionsEditor,
-                  onClick: () => setDetailsOpen((open) => !open),
-                  endIcon: detailsOpen ? /* @__PURE__ */ u2(ExpandLessIcon, {}) : /* @__PURE__ */ u2(ExpandMoreIcon, {}),
-                  sx: { width: "100%", minWidth: 0, px: 0.75, whiteSpace: "nowrap", "& .MuiButton-endIcon": { ml: 0.25, mr: 0 } },
-                  children: detailsOpen ? "收起" : "详情"
-                }
-              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
-              /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ u2(
-                IconAction,
-                {
-                  label: "删除此字段",
-                  disabled,
-                  onClick: onRemove,
-                  color: "error",
-                  icon: /* @__PURE__ */ u2(DeleteIcon, {})
-                }
-              ) })
-            ]
-          }
-        ),
-        customFieldNameWarning && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4.5 }, children: customFieldNameWarning }),
-        /* @__PURE__ */ u2(Collapse2, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box, { sx: { mt: 1.25, ml: 4.5, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
-          uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
-            NativeTextarea$1,
-            {
-              label: "默认值",
-              value: localDefaultValue,
-              rows: 3,
-              onInput: (value) => {
-                setLocalDefaultValue(value);
-                onUpdate({ defaultValue: value });
-              },
-              onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
-              disabled,
-              placeholder: "可留空",
-              style: { width: "100%" }
-            }
-          ),
-          uiType === "number" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mb: showOptionsEditor ? 1.5 : 0 }, children: [
-            /* @__PURE__ */ u2(
-              NativeTextInput$1,
-              {
-                label: "最小值",
-                type: "number",
-                value: field.min ?? "",
-                onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }),
-                disabled,
-                style: { width: 120 }
-              }
-            ),
-            /* @__PURE__ */ u2(
-              NativeTextInput$1,
-              {
-                label: "最大值",
-                type: "number",
-                value: field.max ?? "",
-                onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }),
-                disabled,
-                style: { width: 120 }
-              }
-            )
-          ] }),
-          showOptionsEditor && /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Stack, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider2, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
-              OptionRow,
-              {
-                option,
-                onChange: (newOpt) => handleOptionChange(optIndex, newOpt),
-                onRemove: () => removeOption(optIndex),
-                fieldType: uiType,
-                disabled
-              },
-              optIndex
-            )) }),
-            /* @__PURE__ */ u2(
-              Button2,
-              {
-                onClick: addOption,
-                disabled,
-                startIcon: /* @__PURE__ */ u2(AddIcon, {}),
-                size: "small",
-                sx: { mt: 1.25 },
-                children: "添加选项"
-              }
-            )
-          ] })
-        ] }) })
-      ]
-    }
-  );
-}
-const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 72px 40px";
-function createEmptyField(index) {
-  return createCustomTemplateField(index);
-}
-function reorderFields(fields, fromIndex, toIndex) {
-  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= fields.length || toIndex >= fields.length) {
-    return fields;
-  }
-  const next2 = [...fields];
-  const [moved] = next2.splice(fromIndex, 1);
-  next2.splice(toIndex, 0, moved);
-  return next2;
-}
-function FieldsEditor({
-  fields = [],
-  disabled = false,
-  onChange
-}) {
-  const renderCountRef = A$1(0);
-  const previousFieldsRef = A$1(null);
-  const [draggingIndex, setDraggingIndex] = d(null);
-  renderCountRef.current += 1;
-  y(() => {
-    logRenderDiagnostic("FieldsEditor", {
-      renderCount: renderCountRef.current,
-      disabled,
-      fieldsRefChanged: previousFieldsRef.current !== null && previousFieldsRef.current !== fields,
-      fieldsCount: fields.length,
-      fieldIds: fields.map((field) => field.id)
-    });
-    previousFieldsRef.current = fields;
-  });
-  const emitFields = (nextFields) => {
-    onChange(sanitizeTemplateFields(nextFields));
-  };
-  const handleUpdate = (index, updates) => {
-    const newFields = sanitizeTemplateFields(fields || []);
-    newFields[index] = sanitizeTemplateField({ ...newFields[index], ...updates }, index + 1);
-    emitFields(newFields);
-  };
-  const addField = () => emitFields([...fields || [], createEmptyField((fields || []).length + 1)]);
-  const removeField = (index) => {
-    emitFields((fields || []).filter((_2, i2) => i2 !== index));
-  };
-  const handleDropOn = (targetIndex) => {
-    if (draggingIndex === null || disabled) return;
-    emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
-    setDraggingIndex(null);
-  };
-  return /* @__PURE__ */ u2(Stack, { spacing: 1.25, sx: { width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }, children: [
-    /* @__PURE__ */ u2(
-      Box,
-      {
-        sx: {
-          px: 0.5,
-          display: "grid",
-          gridTemplateColumns: fieldRowGridTemplateColumns,
-          columnGap: 0.75,
-          alignItems: "center"
-        },
-        children: [
-          /* @__PURE__ */ u2(Box, {}),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段名称" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段类型" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "默认值" }),
-          /* @__PURE__ */ u2(Box, {}),
-          /* @__PURE__ */ u2(Box, {})
-        ]
-      }
-    ),
-    /* @__PURE__ */ u2(Stack, { spacing: 0, divider: /* @__PURE__ */ u2(Divider2, { sx: { my: 0.75 } }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
-      Box,
-      {
-        draggable: !disabled,
-        onDragStart: (event) => {
-          if (disabled) return;
-          setDraggingIndex(index);
-          event.dataTransfer?.setData("text/plain", String(index));
-          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
-        },
-        onDragOver: (event) => {
-          if (disabled || draggingIndex === null) return;
-          event.preventDefault();
-          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-        },
-        onDrop: (event) => {
-          event.preventDefault();
-          handleDropOn(index);
-        },
-        onDragEnd: () => setDraggingIndex(null),
-        sx: {
-          opacity: draggingIndex === index ? 0.55 : 1,
-          borderRadius: 1
-        },
-        children: /* @__PURE__ */ u2(
-          FieldRow,
-          {
-            field,
-            disabled,
-            isDragging: draggingIndex === index,
-            onUpdate: (updates) => handleUpdate(index, updates),
-            onRemove: () => removeField(index)
-          }
-        )
-      },
-      field.id
-    )) }),
-    /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(Button2, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) })
-  ] });
-}
-function TemplateVariableCopier({ block: block2 }) {
-  const ui = useUiPort();
-  const variableOptions = T$1(() => {
-    const options = [
-      { value: "{{block}}", label: "block" },
-      { value: "{{theme}}", label: "theme" },
-      { value: "{{icon}}", label: "icon" },
-      { value: "{{moment:YYYY-MM-DD}}", label: "moment:YYYY-MM-DD" },
-      { value: "{{templateId}}", label: "templateId" },
-      { value: "{{templateSourceType}}", label: "templateSourceType" },
-      { value: "模板ID:: {{templateId}}", label: "模板ID:: {{templateId}}" },
-      { value: "模板来源:: {{templateSourceType}}", label: "模板来源:: {{templateSourceType}}" }
-    ];
-    (block2?.fields || []).forEach((field) => {
-      const fieldKey = field.key || "untitled";
-      const fieldType = field.type || "text";
-      options.push({ value: `{{${fieldKey}}}`, label: `${fieldKey}` });
-      if ([
-        "select",
-        "radio",
-        "singleSelect",
-        "multiSelect",
-        "path",
-        "multiPath",
-        "tag",
-        "multiTag",
-        "rating"
-      ].includes(fieldType)) {
-        options.push({ value: `{{${fieldKey}.value}}`, label: `${fieldKey}.value` });
-        options.push({ value: `{{${fieldKey}.label}}`, label: `${fieldKey}.label` });
-      }
-      if (fieldType === "image" || fieldType === "multiImage") {
-        options.push({ value: `{{${fieldKey}.src}}`, label: `${fieldKey}.src` });
-      }
-      const markdownKey = field.key;
-      if (markdownKey) {
-        options.push({ value: `${markdownKey}:: {{${fieldKey}}}`, label: `${markdownKey}:: {{${fieldKey}}}` });
-      }
-    });
-    return options;
-  }, [block2]);
-  const handleCopy = (variable) => {
-    if (!variable) return;
-    navigator.clipboard.writeText(variable);
-    ui.notice(`已复制: ${variable}`);
-  };
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 220 }, children: /* @__PURE__ */ u2(
-    SimpleSelect,
-    {
-      value: "",
-      options: variableOptions,
-      onChange: handleCopy,
-      placeholder: "-- 复制变量 --"
-    }
-  ) });
-}
-function cloneValue(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-function readInputValue(event) {
-  return (event.target || event.currentTarget).value;
-}
-function stopEditorEvent(event) {
-  event.stopPropagation();
-}
-const nativeControlBaseStyle = {
-  width: "100%",
-  minWidth: 0,
-  boxSizing: "border-box",
-  border: "1px solid var(--background-modifier-border)",
-  borderRadius: 6,
-  background: "var(--background-primary)",
-  color: "var(--text-normal)",
-  padding: "8px 10px",
-  font: "inherit",
-  lineHeight: 1.4,
-  userSelect: "text",
-  WebkitUserSelect: "text",
-  pointerEvents: "auto"
-};
-const nativeLabelStyle = {
-  display: "block",
-  marginBottom: 4,
-  fontSize: "0.75rem",
-  color: "var(--text-muted)"
-};
-function logTemplateEditor(scope, payload) {
-  logRenderDiagnostic(`主题模板编辑器/${scope}`, payload);
-}
-function NativeTextInput({
-  label,
-  value,
-  onInput,
-  disabled = false,
-  placeholder,
-  onMouseDownLog,
-  onFocusLog
-}) {
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0 }, children: [
-    /* @__PURE__ */ u2("span", { style: nativeLabelStyle, children: label }),
-    /* @__PURE__ */ u2(
-      "input",
-      {
-        value,
-        disabled,
-        placeholder,
-        onMouseDown: (event) => {
-          stopEditorEvent(event);
-          onMouseDownLog?.();
-        },
-        onClick: stopEditorEvent,
-        onDblClick: stopEditorEvent,
-        onKeyDown: stopEditorEvent,
-        onKeyUp: stopEditorEvent,
-        onFocus: onFocusLog,
-        onInput: (event) => onInput(readInputValue(event)),
-        style: {
-          ...nativeControlBaseStyle,
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text"
-        }
-      }
-    )
-  ] });
-}
-function NativeTextarea({
-  label,
-  value,
-  onInput,
-  disabled = false,
-  rows = 8
-}) {
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0 }, children: [
-    label ? /* @__PURE__ */ u2("span", { style: nativeLabelStyle, children: label }) : null,
-    /* @__PURE__ */ u2(
-      "textarea",
-      {
-        value,
-        disabled,
-        rows,
-        onMouseDown: stopEditorEvent,
-        onClick: stopEditorEvent,
-        onDblClick: stopEditorEvent,
-        onKeyDown: stopEditorEvent,
-        onKeyUp: stopEditorEvent,
-        onInput: (event) => onInput(readInputValue(event)),
-        style: {
-          ...nativeControlBaseStyle,
-          fontFamily: "monospace",
-          fontSize: "13px",
-          resize: "vertical",
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text"
-        }
-      }
-    )
-  ] });
-}
-function TemplateEditorModal({ isOpen, onClose, block: block2, theme: theme2, existingOverride, useCases }) {
-  const ui = useUiPort();
-  const [mode, setMode] = d("inherit");
-  const [localOverride, setLocalOverride] = d({});
-  const localOverrideRef = A$1({});
-  y(() => {
-    if (!isOpen) return;
-    if (existingOverride) {
-      const nextMode = existingOverride.disabled ? "disabled" : "override";
-      const clonedOverride = cloneValue(existingOverride);
-      logTemplateEditor("初始化", {
-        themeId: theme2.id,
-        themePath: theme2.path,
-        blockId: block2.id,
-        blockName: block2.name,
-        hasExistingOverride: true,
-        nextMode,
-        initialOverride: clonedOverride
-      });
-      setMode(nextMode);
-      localOverrideRef.current = clonedOverride;
-      setLocalOverride(clonedOverride);
-    } else {
-      const initialOverride = {
-        fields: cloneValue(block2.fields),
-        outputTemplate: block2.outputTemplate,
-        targetFile: block2.targetFile,
-        appendUnderHeader: block2.appendUnderHeader
-      };
-      logTemplateEditor("初始化", {
-        themeId: theme2.id,
-        themePath: theme2.path,
-        blockId: block2.id,
-        blockName: block2.name,
-        hasExistingOverride: false,
-        nextMode: "inherit",
-        initialOverride
-      });
-      setMode("inherit");
-      localOverrideRef.current = initialOverride;
-      setLocalOverride(initialOverride);
-    }
-  }, [isOpen, existingOverride, block2, theme2.id, theme2.path]);
-  const effectiveBlockForCopier = T$1(() => {
-    return {
-      ...block2,
-      ...localOverride,
-      fields: localOverride.fields || block2.fields
-    };
-  }, [block2, localOverride]);
-  const isFormDisabled = mode !== "override";
-  y(() => {
-    if (!isOpen) return;
-    logTemplateEditor("渲染状态", {
-      当前模式: mode,
-      表单是否禁用: isFormDisabled,
-      说明: isFormDisabled ? "当前不是 override 模式，表单禁用是预期行为。" : "当前是 override 模式，表单必须可以点击、聚焦、输入。",
-      草稿: localOverride
-    });
-  }, [isOpen, mode, isFormDisabled, localOverride]);
-  const handleModeChange = (_event, value) => {
-    const nextMode = value;
-    logTemplateEditor("模式切换", {
-      旧模式: mode,
-      新模式: nextMode,
-      切换后表单是否应禁用: nextMode !== "override"
-    });
-    setMode(nextMode);
-  };
-  const updateLocalOverride = (updates, reason) => {
-    setLocalOverride((previous) => {
-      const next2 = { ...previous, ...updates };
-      localOverrideRef.current = next2;
-      logTemplateEditor("草稿更新", {
-        原因: reason,
-        更新内容: updates,
-        更新后草稿: next2
-      });
-      return next2;
-    });
-  };
-  const handleSave = async () => {
-    const activeElement2 = document.activeElement;
-    if (activeElement2 && typeof activeElement2.blur === "function") activeElement2.blur();
-    await new Promise((resolve) => window.setTimeout(resolve, 0));
-    const draft = localOverrideRef.current;
-    logTemplateEditor("保存/开始", {
-      mode,
-      draft,
-      hasExistingOverride: Boolean(existingOverride)
-    });
-    try {
-      if (mode === "inherit") {
-        if (existingOverride) {
-          logTemplateEditor("保存/删除覆写", { blockId: block2.id, themeId: theme2.id });
-          await useCases.theme.deleteOverride(block2.id, theme2.id);
-        } else {
-          logTemplateEditor("保存/继承无需变更", { blockId: block2.id, themeId: theme2.id });
-        }
-        ui.notice(`已设为继承 "${block2.name}" 的基础配置`);
-      } else {
-        const dataToSave = {
-          blockId: block2.id,
-          themeId: theme2.id,
-          disabled: mode === "disabled",
-          fields: mode === "override" ? draft.fields : void 0,
-          outputTemplate: mode === "override" ? draft.outputTemplate : void 0,
-          targetFile: mode === "override" ? draft.targetFile : void 0,
-          appendUnderHeader: mode === "override" ? draft.appendUnderHeader : void 0
-        };
-        logTemplateEditor("保存/写入覆写", { dataToSave });
-        const result = await useCases.theme.upsertOverride(dataToSave);
-        logTemplateEditor("保存/写入完成", { result });
-        if (!result) {
-          throw new Error("useCases.theme.upsertOverride 返回 null，通常表示设置仓库尚未初始化或保存层拒绝写入。");
-        }
-        ui.notice(`已保存 "${theme2.path}" 对 "${block2.name}" 的配置`);
-      }
-      onClose();
-    } catch (error) {
-      diagnosticError("[主题模板编辑器][保存] 保存失败:", error);
-      ui.notice("保存主题模板配置失败，请查看控制台日志");
-    }
-  };
-  if (!isOpen) return null;
-  return /* @__PURE__ */ u2(
-    FloatingPanel,
-    {
-      id: `theme-template-editor-${theme2.id}-${block2.id}`,
-      title: /* @__PURE__ */ u2(Typography2, { children: [
-        "配置: ",
-        /* @__PURE__ */ u2("strong", { children: theme2.path }),
-        " / ",
-        /* @__PURE__ */ u2("span", { style: { color: "var(--color-accent)" }, children: block2.name })
-      ] }),
-      onClose,
-      portal: false,
-      placement: "inline",
-      closeOnOutsideClick: false,
-      width: "100%",
-      minWidth: 0,
-      maxWidth: "100%",
-      minHeight: 360,
-      maxHeight: "calc(100vh - 120px)",
-      height: "min(720px, calc(100vh - 160px))",
-      resizable: false,
-      bodyPadding: 0,
-      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      children: /* @__PURE__ */ u2(Box, { sx: { p: 2, flex: 1, minHeight: 0, overflowY: "auto", boxSizing: "border-box" }, children: /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
-        /* @__PURE__ */ u2(FormControl2, { component: "fieldset", children: [
-          /* @__PURE__ */ u2(FormLabel2, { component: "legend", children: "配置模式" }),
-          /* @__PURE__ */ u2(RadioGroup2, { row: true, value: mode, onChange: handleModeChange, children: [
-            /* @__PURE__ */ u2(FormControlLabel2, { value: "inherit", control: /* @__PURE__ */ u2(Radio2, {}), label: "继承" }),
-            /* @__PURE__ */ u2(FormControlLabel2, { value: "override", control: /* @__PURE__ */ u2(Radio2, {}), label: "覆写" }),
-            /* @__PURE__ */ u2(FormControlLabel2, { value: "disabled", control: /* @__PURE__ */ u2(Radio2, {}), label: "禁用" })
-          ] })
-        ] }),
-        /* @__PURE__ */ u2(Box, { sx: { opacity: isFormDisabled ? 0.6 : 1 }, children: /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
-          /* @__PURE__ */ u2(Divider2, {}),
-          /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
-            /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-              /* @__PURE__ */ u2(
-                NativeTextInput,
-                {
-                  label: "目标文件路径",
-                  value: localOverride.targetFile || "",
-                  onInput: (value) => updateLocalOverride({ targetFile: value }, "输入目标文件路径 native onInput"),
-                  disabled: isFormDisabled,
-                  onMouseDownLog: () => logTemplateEditor("输出目标/鼠标按下", { field: "targetFile" }),
-                  onFocusLog: () => logTemplateEditor("输出目标/获得焦点", { field: "targetFile" })
-                }
-              ),
-              /* @__PURE__ */ u2(
-                NativeTextInput,
-                {
-                  label: "追加到标题下 (可选)",
-                  value: localOverride.appendUnderHeader || "",
-                  onInput: (value) => updateLocalOverride({ appendUnderHeader: value }, "输入追加标题 native onInput"),
-                  disabled: isFormDisabled,
-                  onMouseDownLog: () => logTemplateEditor("输出目标/鼠标按下", { field: "appendUnderHeader" }),
-                  onFocusLog: () => logTemplateEditor("输出目标/获得焦点", { field: "appendUnderHeader" })
-                }
-              )
-            ] })
-          ] }),
-          /* @__PURE__ */ u2(Divider2, {}),
-          /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
-            /* @__PURE__ */ u2(
-              FieldsEditor,
-              {
-                fields: localOverride.fields || [],
-                disabled: isFormDisabled,
-                onChange: (newFields) => updateLocalOverride({ fields: newFields }, "字段编辑器返回新字段列表")
-              }
-            )
-          ] }),
-          /* @__PURE__ */ u2(Divider2, {}),
-          /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
-              /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
-              /* @__PURE__ */ u2(TemplateVariableCopier, { block: effectiveBlockForCopier })
-            ] }),
-            /* @__PURE__ */ u2(
-              NativeTextarea,
-              {
-                value: localOverride.outputTemplate || "",
-                rows: 8,
-                onInput: (value) => updateLocalOverride({ outputTemplate: value }, "输入输出模板 native onInput"),
-                disabled: isFormDisabled
-              }
-            )
-          ] })
-        ] }) }),
-        /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "flex-end", spacing: 1, children: [
-          /* @__PURE__ */ u2(Button2, { onClick: onClose, children: "取消" }),
-          /* @__PURE__ */ u2(Button2, { onClick: handleSave, variant: "contained", children: "保存配置" })
-        ] })
-      ] }) })
-    }
-  );
-}
-function ThemeToolbar({
-  mode,
-  onToggleEditMode
-}) {
-  const isEditMode = mode === "edit";
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        display: "flex",
-        justifyContent: "flex-end",
-        mb: 2
-      },
-      children: /* @__PURE__ */ u2(
-        Button2,
-        {
-          variant: "outlined",
-          onClick: onToggleEditMode,
-          startIcon: isEditMode ? /* @__PURE__ */ u2(VisibilityIcon, {}) : /* @__PURE__ */ u2(EditIcon, {}),
-          sx: {
-            minWidth: 160,
-            borderRadius: 1.5,
-            px: 2,
-            py: 1,
-            fontWeight: 600,
-            boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
-            backgroundColor: "background.paper"
-          },
-          children: isEditMode ? "退出编辑模式" : "进入编辑模式"
-        }
-      )
-    }
-  );
-}
-function ContextualToolbar({ editorState, onAction, onClearSelection }) {
-  const { selectionType, selectedThemes, selectedCells } = editorState;
-  if (selectionType === "none") {
-    return null;
-  }
-  const count = selectionType === "theme" ? selectedThemes.size : selectedCells.size;
-  const typeLabel = selectionType === "theme" ? "个主题" : "个配置";
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        position: "sticky",
-        top: 0,
-        zIndex: 10,
-        backgroundColor: "background.paper",
-        padding: 1,
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 1,
-        mb: 2,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between"
-      },
-      children: [
-        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, alignItems: "center", children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", sx: { fontWeight: "bold" }, children: [
-            "已选择 ",
-            count,
-            " ",
-            typeLabel
-          ] }),
-          /* @__PURE__ */ u2(Divider2, { orientation: "vertical", flexItem: true }),
-          selectionType === "theme" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, children: [
-            /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onAction("activate"), children: "激活" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onAction("inactive"), children: "归档" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onAction("setIcon"), children: "设置图标" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", color: "error", onClick: () => onAction("delete"), children: "删除" })
-          ] }),
-          selectionType === "block" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, children: [
-            /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onAction("setInherit"), children: "设为继承" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onAction("setOverride"), children: "设为覆盖" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onAction("setDisabled"), children: "设为禁用" })
-          ] })
-        ] }),
-        /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: onClearSelection, children: "取消选择" })
-      ]
-    }
-  );
-}
-function InlineEditor({ value, onSave }) {
-  const [current2, setCurrent] = d(value);
-  const handleBlur = () => {
-    if (current2.trim() !== value) {
-      onSave(current2.trim());
-    }
-  };
-  const handleKeyDown = (e2) => {
-    if (e2.key === "Enter") {
-      e2.target.blur();
-    }
-    if (e2.key === "Escape") {
-      setCurrent(value);
-      e2.target.blur();
-    }
-  };
-  return /* @__PURE__ */ u2(
-    TextField2,
-    {
-      autoFocus: true,
-      fullWidth: true,
-      variant: "standard",
-      value: current2,
-      onChange: (e2) => setCurrent(e2.target.value),
-      onBlur: handleBlur,
-      onKeyDown: handleKeyDown,
-      sx: { "& .MuiInput-input": { py: "4px" } }
-    }
-  );
-}
-const AnyTableRow$1 = TableRow2;
-const AnyTableCell$1 = TableCell2;
-const AnyTooltip = Tooltip2;
-const AnyTypography$1 = Typography2;
-const AnyChip = Chip2;
-const AnyBox = Box;
-const PATH_COL_WIDTH$1 = 250;
-const STATUS_COL_WIDTH$1 = 78;
-const BLOCK_COL_WIDTH$1 = 58;
-const SEGMENT_HEIGHT = 40;
-const SEGMENT_RADIUS = 8;
-function getBlockKind(themeId, blockId, overridesMap) {
-  const override = overridesMap.get(`${themeId}:${blockId}`);
-  if (!override) return "inherit";
-  return override.disabled ? "disabled" : "override";
-}
-function getSurfaceForKind(kind) {
-  switch (kind) {
-    case "override":
-      return { bg: "rgba(137, 99, 255, 0.16)", color: "#7b4ce2" };
-    case "disabled":
-      return { bg: "rgba(220, 76, 76, 0.14)", color: "#c83b3b" };
-    case "active":
-      return { bg: "rgba(88, 160, 103, 0.14)", color: "#2d8a43" };
-    case "archived":
-      return { bg: "rgba(120, 120, 120, 0.12)", color: "text.secondary" };
-    default:
-      return { bg: "rgba(96, 160, 96, 0.12)", color: "#2d8a43" };
-  }
-}
-function getSegmentRadius(prevSame, nextSame) {
-  if (prevSame && nextSame) return "0";
-  if (prevSame && !nextSame) return `0 0 ${SEGMENT_RADIUS}px ${SEGMENT_RADIUS}px`;
-  if (!prevSame && nextSame) return `${SEGMENT_RADIUS}px ${SEGMENT_RADIUS}px 0 0`;
-  return `${SEGMENT_RADIUS}px`;
-}
-function ThemeTreeNodeRow({
-  node: node2,
-  blocks,
-  overridesMap,
-  onCellClick,
-  useCases,
-  onToggleExpand,
-  editorState,
-  onSelectionChange,
-  groupNodes,
-  rowIndexInGroup,
-  dragEnabled = true,
-  isDragging = false,
-  isDropTarget = false,
-  dropPosition = null,
-  onDragStartTheme,
-  onDragOverTheme,
-  onDropTheme,
-  onDragEndTheme,
-  editingCell,
-  onStartEdit,
-  onFinishEdit
-}) {
-  const theme2 = node2.theme;
-  if (!theme2) return null;
-  const children = node2.children ?? [];
-  const expanded = !!node2.expanded;
-  const level = node2.depth;
-  const prevNode = rowIndexInGroup > 0 ? groupNodes[rowIndexInGroup - 1] : null;
-  const nextNode = rowIndexInGroup < groupNodes.length - 1 ? groupNodes[rowIndexInGroup + 1] : null;
-  const isRoot = level === 0;
-  const isEditingIcon = editingCell?.themeId === theme2.id && editingCell?.field === "icon";
-  const isEditingPath = editingCell?.themeId === theme2.id && editingCell?.field === "path";
-  const isEditMode = editorState.mode === "edit";
-  const isThemeSelected = editorState.selectedThemes.has(theme2.id);
-  const themeCellBg = isRoot ? "rgba(122, 94, 230, 0.22)" : "rgba(122, 94, 230, 0.07)";
-  const stateKind = theme2.status === "active" ? "active" : "archived";
-  const prevStateKind = prevNode?.theme ? prevNode.theme.status === "active" ? "active" : "archived" : null;
-  const nextStateKind = nextNode?.theme ? nextNode.theme.status === "active" ? "active" : "archived" : null;
-  const renderSegment = (kind, prevSame, nextSame, content, onClick) => {
-    const surface = getSurfaceForKind(kind);
-    return /* @__PURE__ */ u2(
-      AnyBox,
-      {
-        onClick,
-        sx: {
-          height: `${SEGMENT_HEIGHT}px`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: surface.bg,
-          color: surface.color,
-          borderRadius: getSegmentRadius(prevSame, nextSame),
-          cursor: onClick ? "pointer" : "default",
-          userSelect: "none",
-          mx: "2px"
-        },
-        children: content
-      }
-    );
-  };
-  return /* @__PURE__ */ u2(
-    AnyTableRow$1,
-    {
-      onDragOver: (e2) => onDragOverTheme?.(node2, e2),
-      onDrop: () => onDropTheme?.(node2),
-      onDragEnd: () => onDragEndTheme?.(),
-      sx: {
-        opacity: isDragging ? 0.45 : theme2.status === "inactive" ? 0.6 : 1,
-        backgroundColor: isThemeSelected ? "action.selected" : "transparent",
-        position: "relative",
-        outline: isDropTarget ? "1px dashed rgba(122, 94, 230, 0.7)" : "none",
-        boxShadow: isDropTarget && dropPosition === "before" ? "inset 0 3px 0 rgba(122, 94, 230, 0.95)" : isDropTarget && dropPosition === "after" ? "inset 0 -3px 0 rgba(122, 94, 230, 0.95)" : "none"
-      },
-      children: [
-        /* @__PURE__ */ u2(AnyTableCell$1, { sx: { width: PATH_COL_WIDTH$1, px: 0.5, py: 0.25 }, children: /* @__PURE__ */ u2(
-          AnyBox,
-          {
-            sx: {
-              minHeight: `${SEGMENT_HEIGHT}px`,
-              display: "flex",
-              alignItems: "center",
-              borderRadius: 2,
-              backgroundColor: themeCellBg,
-              px: isRoot ? 1 : 0.75
-            },
-            children: /* @__PURE__ */ u2(
-              ThemeTreeNodeLabel,
-              {
-                depth: level,
-                hasChildren: children.length > 0,
-                expanded,
-                onToggleExpand: () => onToggleExpand(theme2.id),
-                basePadding: 0,
-                indentUnit: 1.5,
-                placeholderWidthPx: 22,
-                children: /* @__PURE__ */ u2(AnyBox, { sx: { flex: 1, display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }, children: [
-                  /* @__PURE__ */ u2(
-                    "span",
-                    {
-                      draggable: dragEnabled,
-                      title: dragEnabled ? "拖拽调整同级主题顺序" : "编辑模式下暂不拖拽排序",
-                      onDragStart: (e2) => {
-                        if (!dragEnabled) return;
-                        e2.stopPropagation();
-                        e2.dataTransfer?.setData("text/plain", theme2.id);
-                        if (e2.dataTransfer) e2.dataTransfer.effectAllowed = "move";
-                        onDragStartTheme?.(node2);
-                      },
-                      onDragEnd: () => onDragEndTheme?.(),
-                      style: {
-                        cursor: dragEnabled ? "grab" : "not-allowed",
-                        color: "var(--text-muted)",
-                        fontSize: "14px",
-                        lineHeight: 1,
-                        userSelect: "none",
-                        opacity: dragEnabled ? 0.85 : 0.35,
-                        padding: "0 2px",
-                        flexShrink: 0
-                      },
-                      children: "⋮⋮"
-                    }
-                  ),
-                  isEditingIcon ? /* @__PURE__ */ u2(
-                    InlineEditor,
-                    {
-                      value: theme2.icon || "",
-                      onSave: (newIcon) => {
-                        useCases.theme.updateTheme(theme2.id, { icon: newIcon });
-                        onFinishEdit?.();
-                      }
-                    }
-                  ) : /* @__PURE__ */ u2(
-                    AnyTypography$1,
-                    {
-                      sx: { cursor: "text", width: "20px", textAlign: "center", flexShrink: 0 },
-                      onClick: () => onStartEdit?.(theme2.id, "icon"),
-                      children: theme2.icon || " "
-                    }
-                  ),
-                  isEditingPath ? /* @__PURE__ */ u2(
-                    InlineEditor,
-                    {
-                      value: theme2.path,
-                      onSave: (newPath) => {
-                        useCases.theme.updateTheme(theme2.id, { path: newPath });
-                        onFinishEdit?.();
-                      }
-                    }
-                  ) : /* @__PURE__ */ u2(
-                    AnyTypography$1,
-                    {
-                      onDoubleClick: () => onStartEdit?.(theme2.id, "path"),
-                      sx: {
-                        cursor: "text",
-                        fontWeight: isRoot ? 700 : 500,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap"
-                      },
-                      children: theme2.path.split("/").pop()
-                    }
-                  )
-                ] })
-              }
-            )
-          }
-        ) }),
-        /* @__PURE__ */ u2(AnyTableCell$1, { align: "center", sx: { width: STATUS_COL_WIDTH$1, px: 0.25, py: 0 }, children: isEditMode ? /* @__PURE__ */ u2(
-          "input",
-          {
-            type: "checkbox",
-            checked: isThemeSelected,
-            onChange: (e2) => onSelectionChange("theme", theme2.id, e2.target.checked),
-            style: { margin: 0, cursor: "pointer", transform: "scale(1.1)" }
-          }
-        ) : renderSegment(
-          stateKind,
-          prevStateKind === stateKind,
-          nextStateKind === stateKind,
-          /* @__PURE__ */ u2(
-            AnyChip,
-            {
-              label: theme2.status === "active" ? "激活" : "归档",
-              size: "small",
-              sx: {
-                fontWeight: 700,
-                backgroundColor: "transparent",
-                color: "inherit",
-                height: "24px",
-                "& .MuiChip-label": { px: 0 }
-              }
-            }
-          )
-        ) }),
-        blocks.map((block2) => {
-          const cellId = `${theme2.id}:${block2.id}`;
-          const isCellSelected = editorState.selectedCells.has(cellId);
-          const kind = getBlockKind(theme2.id, block2.id, overridesMap);
-          const prevKind = prevNode?.theme ? getBlockKind(prevNode.theme.id, block2.id, overridesMap) : null;
-          const nextKind = nextNode?.theme ? getBlockKind(nextNode.theme.id, block2.id, overridesMap) : null;
-          if (isEditMode) {
-            return /* @__PURE__ */ u2(AnyTableCell$1, { align: "center", sx: { p: 0, width: BLOCK_COL_WIDTH$1 }, children: /* @__PURE__ */ u2(
-              "input",
-              {
-                type: "checkbox",
-                checked: isCellSelected,
-                onChange: (e2) => onSelectionChange("block", cellId, e2.target.checked),
-                style: { margin: 0, cursor: "pointer", transform: "scale(1.1)" }
-              }
-            ) }, block2.id);
-          }
-          let cellIcon;
-          let cellTitle = "继承";
-          if (kind === "disabled") {
-            cellIcon = /* @__PURE__ */ u2(CancelIcon, { sx: { fontSize: "1rem", color: "inherit" } });
-            cellTitle = "已禁用";
-          } else if (kind === "override") {
-            cellIcon = /* @__PURE__ */ u2(EditIcon, { sx: { fontSize: "1rem", color: "inherit" } });
-            cellTitle = "已覆写";
-          } else {
-            cellIcon = /* @__PURE__ */ u2(TaskAltIcon, { sx: { fontSize: "1rem", color: "inherit" } });
-          }
-          return /* @__PURE__ */ u2(AnyTableCell$1, { align: "center", sx: { width: BLOCK_COL_WIDTH$1, px: 0.25, py: 0 }, children: /* @__PURE__ */ u2(AnyTooltip, { title: cellTitle, children: renderSegment(
-            kind,
-            prevKind === kind,
-            nextKind === kind,
-            /* @__PURE__ */ u2("span", { style: { display: "flex", alignItems: "center", justifyContent: "center" }, children: cellIcon }),
-            () => onCellClick(block2, theme2)
-          ) }) }, block2.id);
-        })
-      ]
-    }
-  );
-}
-const AnyTable = Table2;
-const AnyTableHead = TableHead2;
-const AnyTableRow = TableRow2;
-const AnyTableCell = TableCell2;
-const AnyTableBody = TableBody2;
-const AnyTypography = Typography2;
-const PATH_COL_WIDTH = 250;
-const STATUS_COL_WIDTH = 78;
-const BLOCK_COL_WIDTH = 58;
-function splitByRoot(nodes) {
-  const groups = [];
-  let current2 = [];
-  nodes.forEach((node2) => {
-    if (node2.depth === 0) {
-      if (current2.length > 0) groups.push(current2);
-      current2 = [node2];
-    } else if (current2.length > 0) {
-      current2.push(node2);
-    } else {
-      current2 = [node2];
-    }
-  });
-  if (current2.length > 0) groups.push(current2);
-  return groups;
-}
-function getNodeParentKey(node2) {
-  return node2.parentId ?? "__root__";
-}
-function canDropOnNode(dragged, target) {
-  if (!dragged || !dragged.themeId || !target.themeId) return false;
-  if (dragged.themeId === target.themeId) return false;
-  return dragged.depth === target.depth && getNodeParentKey(dragged) === getNodeParentKey(target);
-}
-function reorderIds(ids2, draggedId, targetId, position2) {
-  const withoutDragged = ids2.filter((id) => id !== draggedId);
-  const targetIndex = withoutDragged.indexOf(targetId);
-  if (targetIndex < 0) return ids2;
-  const insertIndex = position2 === "after" ? targetIndex + 1 : targetIndex;
-  const next2 = [...withoutDragged];
-  next2.splice(insertIndex, 0, draggedId);
-  return next2;
-}
-function ThemeTable({
-  blocks,
-  activeThemes,
-  archivedThemes,
-  showArchived,
-  overridesMap,
-  editorState,
-  useCases,
-  onCellClick,
-  onToggleExpand,
-  onSelectionChange,
-  onSelectAllThemes,
-  onSelectBlockColumn,
-  onReorderThemeSiblings
-}) {
-  const isEditMode = editorState.mode === "edit";
-  const isThemeSelection = editorState.selectionType === "theme";
-  const isBlockSelection = editorState.selectionType === "block";
-  const [draggedNode, setDraggedNode] = d(null);
-  const [dropTarget, setDropTarget] = d(null);
-  const draggedNodeRef = A$1(null);
-  const dropTargetRef = A$1(null);
-  const [editingCell, setEditingCell] = d(null);
-  const allVisibleThemes = showArchived ? [...activeThemes, ...archivedThemes] : activeThemes;
-  const allVisibleThemeIds = allVisibleThemes.map((node2) => node2.themeId).filter((id) => typeof id === "string" && id.length > 0);
-  const selectedVisibleThemeCount = allVisibleThemeIds.filter((id) => editorState.selectedThemes.has(id)).length;
-  const totalVisibleThemeCount = allVisibleThemeIds.length;
-  const areAllThemesSelected = totalVisibleThemeCount > 0 && selectedVisibleThemeCount === totalVisibleThemeCount;
-  const areSomeThemesSelected = selectedVisibleThemeCount > 0 && selectedVisibleThemeCount < totalVisibleThemeCount;
-  const activeGroups = splitByRoot(activeThemes);
-  const clearDragState = () => {
-    draggedNodeRef.current = null;
-    dropTargetRef.current = null;
-    setDraggedNode(null);
-    setDropTarget(null);
-  };
-  const handleDragStart = (node2) => {
-    if (!node2.themeId) return;
-    draggedNodeRef.current = node2;
-    dropTargetRef.current = null;
-    setDraggedNode(node2);
-    setDropTarget(null);
-  };
-  const handleDragOverRow = (node2, event) => {
-    const currentDragged = draggedNodeRef.current;
-    if (!canDropOnNode(currentDragged, node2)) {
-      if (dropTargetRef.current !== null) {
-        dropTargetRef.current = null;
-        setDropTarget(null);
-      }
-      return;
-    }
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-    const row = event.currentTarget;
-    const rect = row?.getBoundingClientRect();
-    const position2 = rect && event.clientY > rect.top + rect.height / 2 ? "after" : "before";
-    const nextTarget = { themeId: node2.themeId, position: position2 };
-    const prevTarget = dropTargetRef.current;
-    if (!prevTarget || prevTarget.themeId !== nextTarget.themeId || prevTarget.position !== nextTarget.position) {
-      dropTargetRef.current = nextTarget;
-      setDropTarget(nextTarget);
-    }
-  };
-  const handleDropRow = async (node2) => {
-    const currentDragged = draggedNodeRef.current;
-    const currentDropTarget = dropTargetRef.current;
-    if (!currentDragged?.themeId || !node2.themeId || !currentDropTarget || currentDropTarget.themeId !== node2.themeId) {
-      clearDragState();
-      return;
-    }
-    if (!canDropOnNode(currentDragged, node2)) {
-      clearDragState();
-      return;
-    }
-    const parentKey = getNodeParentKey(node2);
-    const siblings = allVisibleThemes.filter(
-      (candidate) => candidate.themeId && candidate.depth === node2.depth && getNodeParentKey(candidate) === parentKey
-    );
-    const siblingIds = siblings.map((candidate) => candidate.themeId).filter((id) => !!id);
-    const orderedIds = reorderIds(siblingIds, currentDragged.themeId, node2.themeId, currentDropTarget.position);
-    clearDragState();
-    if (orderedIds.join("|") !== siblingIds.join("|")) {
-      await onReorderThemeSiblings(orderedIds, parentKey);
-    }
-  };
-  const handleDragEnd = () => {
-    clearDragState();
-  };
-  const renderGroupRows = (group, groupIndex) => {
-    const rows = [];
-    if (groupIndex > 0) {
-      rows.push(
-        /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(
-          AnyTableCell,
-          {
-            colSpan: blocks.length + 2,
-            sx: {
-              border: 0,
-              p: 0,
-              height: 10,
-              background: "transparent"
-            }
-          }
-        ) }, `spacer-${groupIndex}`)
-      );
-    }
-    group.forEach((node2, index) => {
-      const isDropTarget = !!dropTarget && dropTarget.themeId === node2.themeId;
-      rows.push(
-        /* @__PURE__ */ u2(
-          ThemeTreeNodeRow,
-          {
-            node: node2,
-            blocks,
-            overridesMap,
-            onCellClick,
-            useCases,
-            onToggleExpand,
-            editorState,
-            onSelectionChange,
-            groupNodes: group,
-            rowIndexInGroup: index,
-            dragEnabled: !isEditMode,
-            isDragging: !!draggedNode?.themeId && draggedNode.themeId === node2.themeId,
-            isDropTarget,
-            dropPosition: isDropTarget ? dropTarget.position : null,
-            onDragStartTheme: handleDragStart,
-            onDragOverTheme: handleDragOverRow,
-            onDropTheme: handleDropRow,
-            onDragEndTheme: handleDragEnd,
-            editingCell,
-            onStartEdit: (themeId, field) => setEditingCell({ themeId, field }),
-            onFinishEdit: () => setEditingCell(null)
-          },
-          node2.id
-        )
-      );
-    });
-    return rows;
-  };
-  return /* @__PURE__ */ u2(
-    AnyTable,
-    {
-      size: "small",
-      sx: {
-        tableLayout: "fixed",
-        width: "max-content",
-        minWidth: "100%",
-        borderCollapse: "separate",
-        borderSpacing: "0 0",
-        "& th": {
-          whiteSpace: "nowrap",
-          py: 0.5,
-          px: 0.75,
-          borderBottom: "1px solid",
-          borderColor: "divider"
-        },
-        "& td": {
-          whiteSpace: "nowrap",
-          py: 0,
-          px: 0.5,
-          borderBottom: "none"
-        }
-      },
-      children: [
-        /* @__PURE__ */ u2(AnyTableHead, { children: /* @__PURE__ */ u2(AnyTableRow, { children: [
-          /* @__PURE__ */ u2(AnyTableCell, { sx: { fontWeight: "bold", width: PATH_COL_WIDTH }, children: "主题路径" }),
-          /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { fontWeight: "bold", width: STATUS_COL_WIDTH }, children: /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }, children: [
-            isEditMode && /* @__PURE__ */ u2(
-              "input",
-              {
-                type: "checkbox",
-                disabled: isBlockSelection,
-                ref: (el) => {
-                  if (el) el.indeterminate = areSomeThemesSelected;
-                },
-                checked: areAllThemesSelected,
-                onChange: (e2) => onSelectAllThemes(e2.target.checked),
-                style: {
-                  margin: 0,
-                  cursor: isBlockSelection ? "not-allowed" : "pointer",
-                  transform: "scale(1.1)",
-                  opacity: isBlockSelection ? 0.5 : 1
-                }
-              }
-            ),
-            "状态"
-          ] }) }),
-          blocks.map((b2) => {
-            const allCellIdsForBlock = allVisibleThemeIds.map((themeId) => `${themeId}:${b2.id}`);
-            const selectedCellCountForBlock = allCellIdsForBlock.filter(
-              (cellId) => editorState.selectedCells.has(cellId)
-            ).length;
-            const totalCellCountForBlock = allVisibleThemeIds.length;
-            const areAllWindowsBlockSelected = totalCellCountForBlock > 0 && selectedCellCountForBlock === totalCellCountForBlock;
-            const areSomeWindowsBlockSelected = selectedCellCountForBlock > 0 && selectedCellCountForBlock < totalCellCountForBlock;
-            return /* @__PURE__ */ u2(
-              AnyTableCell,
-              {
-                align: "center",
-                sx: { fontWeight: "bold", width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH },
-                children: [
-                  isEditMode && /* @__PURE__ */ u2(
-                    "input",
-                    {
-                      type: "checkbox",
-                      disabled: isThemeSelection,
-                      ref: (el) => {
-                        if (el) el.indeterminate = areSomeWindowsBlockSelected;
-                      },
-                      checked: areAllWindowsBlockSelected,
-                      onChange: (e2) => onSelectBlockColumn(b2.id, e2.target.checked),
-                      style: {
-                        margin: "0 4px 0 0",
-                        cursor: isThemeSelection ? "not-allowed" : "pointer",
-                        transform: "scale(1.1)",
-                        opacity: isThemeSelection ? 0.5 : 1
-                      }
-                    }
-                  ),
-                  b2.name
-                ]
-              },
-              b2.id
-            );
-          })
-        ] }) }),
-        /* @__PURE__ */ u2(AnyTableBody, { children: activeGroups.length > 0 ? activeGroups.flatMap(renderGroupRows) : /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: blocks.length + 2, sx: { py: 2 }, children: /* @__PURE__ */ u2(AnyTypography, { variant: "body2", color: "text.secondary", children: "暂无主题" }) }) }) })
-      ]
-    }
-  );
-}
-function ThemeScanDialog({
-  open,
-  onClose,
-  onScan,
-  onImport,
-  initialConfig = {}
-}) {
-  const isMountedRef = useIsMounted();
-  const scanTakeLatestRef = A$1(createTakeLatest("theme-scan"));
-  const importTakeLatestRef = A$1(createTakeLatest("theme-import"));
-  const [state, setState] = d("config");
-  const [scanConfig, setScanConfig] = d({
-    includeTasks: true,
-    includeBlocks: true,
-    minUsageCount: 1,
-    ...initialConfig
-  });
-  const [scanResult, setScanResult] = d(null);
-  const [selectedThemes, setSelectedThemes] = d(/* @__PURE__ */ new Set());
-  const [importResult, setImportResult] = d(null);
-  const [error, setError] = d(null);
-  const resetDialog = () => {
-    setState("config");
-    setScanResult(null);
-    setSelectedThemes(/* @__PURE__ */ new Set());
-    setImportResult(null);
-    setError(null);
-  };
-  y(() => {
-    if (!open) {
-      scanTakeLatestRef.current.cancel();
-      importTakeLatestRef.current.cancel();
-      resetDialog();
-    }
-  }, [open]);
-  y(() => {
-    return () => {
-      scanTakeLatestRef.current.dispose();
-      importTakeLatestRef.current.dispose();
-    };
-  }, []);
-  y(() => {
-    if (scanResult) {
-      setSelectedThemes(new Set(scanResult.deduplicationResult.newThemes));
-    }
-  }, [scanResult]);
-  const handleScan = async () => {
-    try {
-      if (isMountedRef.current) {
-        setState("scanning");
-        setError(null);
-      }
-      const result = await scanTakeLatestRef.current.run((signal) => {
-        void signal;
-        return onScan(scanConfig);
-      });
-      if (isMountedRef.current) {
-        setScanResult(result);
-        setState("results");
-      }
-    } catch (err) {
-      if (err instanceof CancelledError) return;
-      if (isMountedRef.current) {
-        setError(`扫描失败: ${err}`);
-        setState("config");
-      }
-    }
-  };
-  const handleImport = async () => {
-    if (!scanResult || selectedThemes.size === 0) return;
-    try {
-      if (isMountedRef.current) {
-        setState("importing");
-        setError(null);
-      }
-      const result = await importTakeLatestRef.current.run((signal) => {
-        void signal;
-        return onImport(Array.from(selectedThemes));
-      });
-      if (isMountedRef.current) {
-        setImportResult(result);
-        setState("completed");
-      }
-    } catch (err) {
-      if (err instanceof CancelledError) return;
-      if (isMountedRef.current) {
-        setError(`导入失败: ${err}`);
-        setState("results");
-      }
-    }
-  };
-  const toggleThemeSelection = (theme2) => {
-    const newSelected = new Set(selectedThemes);
-    if (newSelected.has(theme2)) {
-      newSelected.delete(theme2);
-    } else {
-      newSelected.add(theme2);
-    }
-    setSelectedThemes(newSelected);
-  };
-  const handleSelectAll = (checked) => {
-    if (!scanResult) return;
-    if (checked) {
-      setSelectedThemes(new Set(scanResult.deduplicationResult.newThemes));
-    } else {
-      setSelectedThemes(/* @__PURE__ */ new Set());
-    }
-  };
-  const selectionStats = T$1(() => {
-    if (!scanResult) return { selected: 0, total: 0 };
-    return {
-      selected: selectedThemes.size,
-      total: scanResult.deduplicationResult.newThemes.length
-    };
-  }, [selectedThemes, scanResult]);
-  const renderConfigStep = () => /* @__PURE__ */ u2(Box, { children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "扫描配置" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "配置扫描参数，决定从哪些数据源提取主题信息。" }),
-    /* @__PURE__ */ u2(FormGroup2, { sx: { mb: 2 }, children: [
-      /* @__PURE__ */ u2("label", { style: { display: "flex", alignItems: "center", marginBottom: "8px" }, children: [
-        /* @__PURE__ */ u2(
-          "input",
-          {
-            type: "checkbox",
-            checked: scanConfig.includeTasks,
-            onChange: (e2) => setScanConfig((prev2) => ({
-              ...prev2,
-              includeTasks: e2.target.checked
-            })),
-            style: { marginRight: "8px" }
-          }
-        ),
-        "包含任务主题"
-      ] }),
-      /* @__PURE__ */ u2("label", { style: { display: "flex", alignItems: "center", marginBottom: "8px" }, children: [
-        /* @__PURE__ */ u2(
-          "input",
-          {
-            type: "checkbox",
-            checked: scanConfig.includeBlocks,
-            onChange: (e2) => setScanConfig((prev2) => ({
-              ...prev2,
-              includeBlocks: e2.target.checked
-            })),
-            style: { marginRight: "8px" }
-          }
-        ),
-        "包含Block主题"
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(Box, { sx: { mb: 2 }, children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", gutterBottom: true, children: [
-        "最小使用次数: ",
-        scanConfig.minUsageCount
-      ] }),
-      /* @__PURE__ */ u2(
-        "input",
-        {
-          type: "range",
-          min: "1",
-          max: "10",
-          value: scanConfig.minUsageCount,
-          onChange: (e2) => setScanConfig((prev2) => ({
-            ...prev2,
-            minUsageCount: parseInt(e2.target.value)
-          })),
-          style: { width: "100%" }
-        }
-      ),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "只扫描使用次数不少于此值的主题" })
-    ] }),
-    !scanConfig.includeTasks && !scanConfig.includeBlocks && /* @__PURE__ */ u2(Alert2, { severity: "warning", sx: { mt: 2 }, children: "必须至少选择一种数据源类型" })
-  ] });
-  const renderScanStats = (stats) => {
-    const AnyGrid = Grid;
-    const AnyCard = Card$1;
-    const AnyCardContent = CardContent2;
-    return /* @__PURE__ */ u2(AnyGrid, { container: true, spacing: 2, sx: { mb: 2 }, children: [
-      /* @__PURE__ */ u2(AnyGrid, { item: true, xs: 6, sm: 3, children: /* @__PURE__ */ u2(AnyCard, { variant: "outlined", children: /* @__PURE__ */ u2(AnyCardContent, { sx: { textAlign: "center", py: 1 }, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "primary", children: stats.totalItems }),
-        /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "总数据项" })
-      ] }) }) }),
-      /* @__PURE__ */ u2(AnyGrid, { item: true, xs: 6, sm: 3, children: /* @__PURE__ */ u2(AnyCard, { variant: "outlined", children: /* @__PURE__ */ u2(AnyCardContent, { sx: { textAlign: "center", py: 1 }, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "primary", children: stats.uniqueThemes }),
-        /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "发现主题" })
-      ] }) }) }),
-      /* @__PURE__ */ u2(AnyGrid, { item: true, xs: 6, sm: 3, children: /* @__PURE__ */ u2(AnyCard, { variant: "outlined", children: /* @__PURE__ */ u2(AnyCardContent, { sx: { textAlign: "center", py: 1 }, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "success.main", children: stats.newThemes }),
-        /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "新主题" })
-      ] }) }) })
-    ] });
-  };
-  const renderResultsStep = () => {
-    if (!scanResult) return null;
-    return /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "扫描结果" }),
-      renderScanStats(scanResult.stats),
-      scanResult.deduplicationResult.newThemes.length > 0 && /* @__PURE__ */ u2(Box, { sx: { mb: 2 }, children: [
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: [
-            "新发现的主题 (",
-            selectionStats.selected,
-            "/",
-            selectionStats.total,
-            ")"
-          ] }),
-          /* @__PURE__ */ u2("label", { style: { display: "flex", alignItems: "center" }, children: [
-            /* @__PURE__ */ u2(
-              "input",
-              {
-                type: "checkbox",
-                checked: selectionStats.selected === selectionStats.total && selectionStats.total > 0,
-                ref: (el) => {
-                  if (el) {
-                    el.indeterminate = selectionStats.selected > 0 && selectionStats.selected < selectionStats.total;
-                  }
-                },
-                onChange: (e2) => handleSelectAll(e2.target.checked),
-                style: { marginRight: "8px" }
-              }
-            ),
-            "全选"
-          ] })
-        ] }),
-        /* @__PURE__ */ u2("div", { style: { marginLeft: "16px" }, children: scanResult.deduplicationResult.newThemes.map((theme2) => /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", padding: "8px 0" }, children: [
-          /* @__PURE__ */ u2(
-            "input",
-            {
-              type: "checkbox",
-              checked: selectedThemes.has(theme2),
-              onChange: () => toggleThemeSelection(theme2),
-              style: { marginRight: "12px" }
-            }
-          ),
-          /* @__PURE__ */ u2("span", { style: { fontSize: "14px" }, children: theme2 })
-        ] }, theme2)) })
-      ] }),
-      scanResult.deduplicationResult.newThemes.length === 0 && /* @__PURE__ */ u2(Alert2, { severity: "info", children: "没有发现新的主题。所有扫描到的主题都已存在于系统中。" })
-    ] });
-  };
-  const renderCompletedStep = () => {
-    if (!importResult) return null;
-    return /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "导入完成" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 2, mb: 2 }, children: [
-        /* @__PURE__ */ u2(Box, { sx: { flex: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "success.main", children: importResult.imported }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "成功导入" })
-        ] }),
-        /* @__PURE__ */ u2(Box, { sx: { flex: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "warning.main", children: importResult.skipped }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "跳过" })
-        ] }),
-        /* @__PURE__ */ u2(Box, { sx: { flex: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "error.main", children: importResult.failed }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "失败" })
-        ] })
-      ] }),
-      importResult.errors.length > 0 && /* @__PURE__ */ u2(Alert2, { severity: "error", sx: { mb: 2 }, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", gutterBottom: true, children: "导入错误:" }),
-        /* @__PURE__ */ u2("ul", { style: { margin: 0, paddingLeft: "20px" }, children: importResult.errors.map((error2, index) => /* @__PURE__ */ u2("li", { children: error2 }, index)) })
-      ] }),
-      importResult.imported > 0 && /* @__PURE__ */ u2(Alert2, { severity: "success", children: [
-        "成功导入 ",
-        importResult.imported,
-        " 个新主题！它们现在可以在主题配置矩阵中使用。"
-      ] })
-    ] });
-  };
-  const renderActions = () => {
-    switch (state) {
-      case "config":
-        return /* @__PURE__ */ u2(S, { children: [
-          /* @__PURE__ */ u2(Button2, { onClick: onClose, startIcon: /* @__PURE__ */ u2(CloseIcon, {}), children: "取消" }),
-          /* @__PURE__ */ u2(
-            Button2,
-            {
-              onClick: handleScan,
-              variant: "contained",
-              startIcon: /* @__PURE__ */ u2(RefreshIcon, {}),
-              disabled: !scanConfig.includeTasks && !scanConfig.includeBlocks,
-              children: "开始扫描"
-            }
-          )
-        ] });
-      case "scanning":
-        return /* @__PURE__ */ u2(Button2, { disabled: true, children: "扫描中..." });
-      case "results":
-        return /* @__PURE__ */ u2(S, { children: [
-          /* @__PURE__ */ u2(Button2, { onClick: () => setState("config"), startIcon: /* @__PURE__ */ u2(RefreshIcon, {}), children: "重新扫描" }),
-          /* @__PURE__ */ u2(Button2, { onClick: onClose, children: "取消" }),
-          /* @__PURE__ */ u2(
-            Button2,
-            {
-              onClick: handleImport,
-              variant: "contained",
-              startIcon: /* @__PURE__ */ u2(DownloadIcon, {}),
-              disabled: selectedThemes.size === 0,
-              children: [
-                "导入选中主题 (",
-                selectedThemes.size,
-                ")"
-              ]
-            }
-          )
-        ] });
-      case "importing":
-        return /* @__PURE__ */ u2(Button2, { disabled: true, children: "导入中..." });
-      case "completed":
-        return /* @__PURE__ */ u2(S, { children: [
-          /* @__PURE__ */ u2(Button2, { onClick: () => setState("config"), startIcon: /* @__PURE__ */ u2(RefreshIcon, {}), children: "再次扫描" }),
-          /* @__PURE__ */ u2(Button2, { onClick: onClose, variant: "contained", startIcon: /* @__PURE__ */ u2(CheckCircleIcon, {}), children: "完成" })
-        ] });
-      default:
-        return null;
-    }
-  };
-  return /* @__PURE__ */ u2(
-    Dialog2,
-    {
-      open,
-      onClose,
-      maxWidth: "md",
-      fullWidth: true,
-      PaperProps: {
-        sx: { minHeight: "400px" }
-      },
-      children: [
-        /* @__PURE__ */ u2(DialogTitle2, { children: [
-          "扫描数据主题",
-          state === "scanning" && /* @__PURE__ */ u2(LinearProgress2, { sx: { mt: 1 } }),
-          state === "importing" && /* @__PURE__ */ u2(LinearProgress2, { sx: { mt: 1 } })
-        ] }),
-        /* @__PURE__ */ u2(DialogContent2, { children: [
-          error && /* @__PURE__ */ u2(Alert2, { severity: "error", sx: { mb: 2 }, children: error }),
-          state === "config" && renderConfigStep(),
-          state === "scanning" && /* @__PURE__ */ u2(Box, { sx: { textAlign: "center", py: 4 }, children: /* @__PURE__ */ u2(Typography2, { children: "正在扫描数据中的主题..." }) }),
-          state === "results" && renderResultsStep(),
-          state === "importing" && /* @__PURE__ */ u2(Box, { sx: { textAlign: "center", py: 4 }, children: /* @__PURE__ */ u2(Typography2, { children: "正在导入选中的主题..." }) }),
-          state === "completed" && renderCompletedStep()
-        ] }),
-        /* @__PURE__ */ u2(DialogActions2, { children: renderActions() })
-      ]
-    }
-  );
-}
-function ThemeImportButton({
-  onScan,
-  onImport,
-  disabled = false,
-  children = "扫描数据主题",
-  tooltip = "从数据中扫描并导入新主题"
-}) {
-  const [dialogOpen, setDialogOpen] = d(false);
-  const handleClick = () => {
-    setDialogOpen(true);
-  };
-  const handleClose = () => {
-    setDialogOpen(false);
-  };
-  return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(Tooltip2, { title: tooltip, children: /* @__PURE__ */ u2(
-      Button2,
-      {
-        onClick: handleClick,
-        disabled,
-        variant: "outlined",
-        size: "small",
-        startIcon: /* @__PURE__ */ u2(ScannerIcon, {}),
-        children
-      }
-    ) }),
-    /* @__PURE__ */ u2(
-      ThemeScanDialog,
-      {
-        open: dialogOpen,
-        onClose: handleClose,
-        onScan,
-        onImport
-      }
-    )
-  ] });
-}
-const INITIAL_STATE = {
-  mode: "view",
-  selectionType: "none",
-  selectedThemes: /* @__PURE__ */ new Set(),
-  selectedCells: /* @__PURE__ */ new Set()
-};
-function useThemeMatrixEditor() {
-  const [editorState, setEditorState] = d(INITIAL_STATE);
-  const toggleEditMode = q$1(() => {
-    setEditorState((prev2) => ({
-      ...INITIAL_STATE,
-      // 切换模式时重置所有状态
-      mode: prev2.mode === "view" ? "edit" : "view"
-    }));
-  }, []);
-  const clearSelection = q$1(() => {
-    setEditorState((prev2) => ({
-      ...prev2,
-      selectionType: "none",
-      selectedThemes: /* @__PURE__ */ new Set(),
-      selectedCells: /* @__PURE__ */ new Set()
-    }));
-  }, []);
-  const handleSelectionChange = q$1((type, id, isSelected) => {
-    setEditorState((prev2) => {
-      let currentSelectedThemes = prev2.selectedThemes;
-      let currentSelectedCells = prev2.selectedCells;
-      if (prev2.selectionType !== type && prev2.selectionType !== "none") {
-        currentSelectedThemes = /* @__PURE__ */ new Set();
-        currentSelectedCells = /* @__PURE__ */ new Set();
-      }
-      const newSelectedThemes = new Set(currentSelectedThemes);
-      const newSelectedCells = new Set(currentSelectedCells);
-      if (type === "theme") {
-        isSelected ? newSelectedThemes.add(id) : newSelectedThemes.delete(id);
-      } else {
-        isSelected ? newSelectedCells.add(id) : newSelectedCells.delete(id);
-      }
-      const newSelectionType = newSelectedThemes.size > 0 ? "theme" : newSelectedCells.size > 0 ? "block" : "none";
-      return {
-        ...prev2,
-        selectedThemes: newSelectedThemes,
-        selectedCells: newSelectedCells,
-        selectionType: newSelectionType
-      };
-    });
-  }, []);
-  const handleSelectAll = q$1((allThemeIds, isSelected) => {
-    setEditorState((prev2) => {
-      const newSelectedThemes = isSelected ? new Set(allThemeIds) : /* @__PURE__ */ new Set();
-      return {
-        ...prev2,
-        selectedThemes: newSelectedThemes,
-        selectionType: newSelectedThemes.size > 0 ? "theme" : "none",
-        selectedCells: /* @__PURE__ */ new Set()
-        // 清除单元格选择
-      };
-    });
-  }, []);
-  const handleSelectBlockColumn = q$1((blockId, allThemeIds, isSelected) => {
-    setEditorState((prev2) => {
-      const allCellIdsForBlock = allThemeIds.map((themeId) => `${themeId}:${blockId}`);
-      const newSelectedCells = new Set(prev2.selectedCells);
-      if (isSelected) {
-        allCellIdsForBlock.forEach((cellId) => newSelectedCells.add(cellId));
-      } else {
-        allCellIdsForBlock.forEach((cellId) => newSelectedCells.delete(cellId));
-      }
-      return {
-        ...prev2,
-        selectedCells: newSelectedCells,
-        selectionType: newSelectedCells.size > 0 ? "block" : "none",
-        selectedThemes: /* @__PURE__ */ new Set()
-        // 清除主题选择
-      };
-    });
-  }, []);
-  const getSelectionStats = q$1(() => {
-    const { selectionType, selectedThemes, selectedCells } = editorState;
-    if (selectionType === "theme") {
-      return { count: selectedThemes.size, type: "theme" };
-    }
-    if (selectionType === "block") {
-      return { count: selectedCells.size, type: "block" };
-    }
-    return { count: 0, type: "none" };
-  }, [editorState]);
-  return {
-    editorState,
-    toggleEditMode,
-    handleSelectionChange,
-    handleSelectAll,
-    handleSelectBlockColumn,
-    clearSelection,
-    getSelectionStats
-  };
-}
-function useBatchOperations({
-  onOperationComplete
-} = {}) {
-  const useCases = useUseCases();
-  const [isProcessing, setIsProcessing] = d(false);
-  const executeBatchOperation = q$1(async (params) => {
-    if (isProcessing) return;
-    setIsProcessing(true);
-    try {
-      const { operation, themeIds, cellIds } = params;
-      if (themeIds && themeIds.length > 0) {
-        switch (operation) {
-          case "activate":
-            await useCases.theme.batchUpdateThemeStatus(themeIds, "active");
-            break;
-          case "inactive":
-            await useCases.theme.batchUpdateThemeStatus(themeIds, "inactive");
-            break;
-          case "delete":
-            if (confirm(`确定要删除 ${themeIds.length} 个主题吗？`)) {
-              await useCases.theme.batchDeleteThemes(themeIds);
-            }
-            break;
-          case "setIcon":
-            const icon = prompt("请输入新的图标:", "📁");
-            if (icon !== null) {
-              await useCases.theme.batchUpdateThemeIcon(themeIds, icon);
-            }
-            break;
-        }
-      }
-      if (cellIds && cellIds.length > 0) {
-        const cells = cellIds.map((id) => parseCellKey(id)).filter((cell) => cell !== null);
-        switch (operation) {
-          case "setInherit":
-            await useCases.theme.batchDeleteOverrides(cells);
-            break;
-          case "setDisabled":
-            await useCases.theme.batchSetOverrideStatus(cells, "disabled");
-            break;
-          case "setOverride":
-            devWarn("批量覆盖操作需要 UI 支持");
-            break;
-        }
-      }
-      onOperationComplete?.();
-    } catch (error) {
-      devError("批量操作失败:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [useCases, isProcessing, onOperationComplete]);
-  return {
-    isProcessing,
-    executeBatchOperation
-  };
-}
-function ThemeMatrixView({ blocks, themes, overrides, settings, useCases, dataStore }) {
-  const [newThemePath, setNewThemePath] = d("");
-  const [modalOpen, setModalOpen] = d(false);
-  const [modalData, setModalData] = d(null);
-  const [expandedNodes, setExpandedNodes] = d(/* @__PURE__ */ new Set());
-  const [showArchived, setShowArchived] = d(false);
-  const {
-    editorState,
-    toggleEditMode,
-    handleSelectionChange,
-    clearSelection,
-    handleSelectAll,
-    handleSelectBlockColumn
-  } = useThemeMatrixEditor();
-  const { executeBatchOperation } = useBatchOperations({
-    onOperationComplete: clearSelection
-  });
-  const themeService = T$1(() => new ThemeMatrixService({
-    getSettings: () => settings
-  }), [settings]);
-  const themeScanService = T$1(() => new ThemeScanService({
-    getSettings: () => settings,
-    dataStore
-  }), [settings, dataStore]);
-  const extendedThemes = T$1(() => {
-    return themeService.getExtendedThemes(themes);
-  }, [themes, themeService]);
-  const allThemeIds = T$1(() => extendedThemes.map((t3) => t3.id), [extendedThemes]);
-  const themeTreeRoots = T$1(() => {
-    return buildThemeTree$1(extendedThemes, { createVirtualNodes: false, sortBy: "order" });
-  }, [extendedThemes]);
-  const expandedPathIds = T$1(() => {
-    const set2 = /* @__PURE__ */ new Set();
-    const walk = (nodes) => {
-      for (const n2 of nodes) {
-        if (n2.themeId && expandedNodes.has(n2.themeId)) {
-          set2.add(n2.id);
-        }
-        if (n2.children && n2.children.length > 0) {
-          walk(n2.children);
-        }
-      }
-    };
-    walk(themeTreeRoots);
-    return set2;
-  }, [themeTreeRoots, expandedNodes]);
-  const flatVisibleNodes = T$1(() => {
-    return flattenThemeTree(themeTreeRoots, expandedPathIds).filter((n2) => n2.visible);
-  }, [themeTreeRoots, expandedPathIds]);
-  const { activeThemes, archivedThemes } = T$1(() => {
-    return { activeThemes: flatVisibleNodes, archivedThemes: [] };
-  }, [flatVisibleNodes]);
-  const overridesMap = T$1(() => {
-    const map = /* @__PURE__ */ new Map();
-    overrides.forEach((o2) => map.set(`${o2.themeId}:${o2.blockId}`, o2));
-    return map;
-  }, [overrides]);
-  const handleToggleExpand = (themeId) => {
-    const newExpanded = new Set(expandedNodes);
-    if (newExpanded.has(themeId)) {
-      newExpanded.delete(themeId);
-    } else {
-      newExpanded.add(themeId);
-    }
-    setExpandedNodes(newExpanded);
-  };
-  const handleAddTheme = () => {
-    const path = newThemePath.trim();
-    if (path && !themes.some((t3) => t3.path === path)) {
-      useCases.theme.addTheme(path);
-      setNewThemePath("");
-    }
-  };
-  const handleCellClick = (block2, theme2) => {
-    if (editorState.mode === "edit") {
-      const cellId = `${theme2.id}:${block2.id}`;
-      const isSelected = editorState.selectedCells.has(cellId);
-      handleSelectionChange("block", cellId, !isSelected);
-      return;
-    }
-    const override = overridesMap.get(`${theme2.id}:${block2.id}`) || null;
-    setModalData({ block: block2, theme: theme2, override });
-    setModalOpen(true);
-  };
-  const handleReorderThemeSiblings = async (orderedThemeIds, parentKey) => {
-    if (!orderedThemeIds || orderedThemeIds.length === 0) return;
-    await useCases.theme.reorderThemeSiblings(orderedThemeIds, parentKey);
-  };
-  const handleBatchAction = (operation) => {
-    const { selectionType, selectedThemes, selectedCells } = editorState;
-    if (selectionType === "theme") {
-      executeBatchOperation({
-        operation,
-        themeIds: Array.from(selectedThemes)
-      });
-    } else if (selectionType === "block") {
-      executeBatchOperation({
-        operation,
-        cellIds: Array.from(selectedCells)
-      });
-    }
-  };
-  const handleThemeScan = async (config2) => {
-    return await themeScanService.scanThemesFromData(config2);
-  };
-  const handleThemeImport = async (themePaths) => {
-    const importableThemes = themeScanService.getImportableThemes(themePaths);
-    let imported = 0;
-    let skipped = themePaths.length - importableThemes.length;
-    const errors = [];
-    for (const path of importableThemes) {
-      try {
-        await useCases.theme.addTheme(path);
-        imported++;
-      } catch (error) {
-        errors.push(`导入主题 "${path}" 失败: ${error}`);
-      }
-    }
-    return { imported, skipped, failed: errors.length, errors };
-  };
-  return /* @__PURE__ */ u2(Box, { sx: { width: "100%", maxWidth: "100%", mx: 0, px: 1, py: 1 }, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "h5", gutterBottom: true, sx: { mb: 1 }, children: "主题配置矩阵" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1.25 }, children: "管理不同主题对各类Block的配置。进入编辑模式以进行批量操作。" }),
-    /* @__PURE__ */ u2(
-      ThemeToolbar,
-      {
-        mode: editorState.mode,
-        onToggleEditMode: toggleEditMode
-      }
-    ),
-    /* @__PURE__ */ u2(
-      ContextualToolbar,
-      {
-        editorState,
-        onAction: handleBatchAction,
-        onClearSelection: clearSelection
-      }
-    ),
-    /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", width: "100%" }, children: /* @__PURE__ */ u2(
-      ThemeTable,
-      {
-        blocks,
-        activeThemes,
-        archivedThemes,
-        showArchived,
-        overridesMap,
-        editorState,
-        onCellClick: handleCellClick,
-        onToggleExpand: handleToggleExpand,
-        onSelectionChange: handleSelectionChange,
-        onSelectAllThemes: (isSelected) => handleSelectAll(allThemeIds, isSelected),
-        onSelectBlockColumn: (blockId, isSelected) => handleSelectBlockColumn(blockId, allThemeIds, isSelected),
-        onReorderThemeSiblings: handleReorderThemeSiblings,
-        useCases
-      }
-    ) }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, alignItems: "center", sx: { mt: 1.25 }, children: [
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
-          placeholder: "新主题路径 (如: 个人/习惯)",
-          value: newThemePath,
-          onChange: (e2) => setNewThemePath(e2.target.value),
-          onKeyDown: (e2) => e2.key === "Enter" && handleAddTheme(),
-          size: "small",
-          variant: "outlined",
-          sx: { flexGrow: 1, maxWidth: "320px" }
-        }
-      ),
-      /* @__PURE__ */ u2(Button2, { onClick: handleAddTheme, variant: "outlined", size: "small", startIcon: /* @__PURE__ */ u2(AddIcon, {}), children: "添加主题" }),
-      /* @__PURE__ */ u2(
-        ThemeImportButton,
-        {
-          onScan: handleThemeScan,
-          onImport: handleThemeImport
-        }
-      )
-    ] }),
-    modalData && /* @__PURE__ */ u2(
-      TemplateEditorModal,
-      {
-        isOpen: modalOpen,
-        onClose: () => setModalOpen(false),
-        block: modalData.block,
-        theme: modalData.theme,
-        existingOverride: modalData.override,
-        useCases
-      }
-    )
-  ] });
-}
-function ThemeMatrix() {
-  const blocks = useSelector(selectInputBlocks);
-  const themes = useSelector(selectInputThemes);
-  const overrides = useSelector(selectInputOverrides);
-  const settings = useSelector(selectSettings);
-  const useCases = useUseCases();
-  const dataStore = useDataStore();
-  return /* @__PURE__ */ u2(
-    ThemeMatrixView,
-    {
-      blocks,
-      themes,
-      overrides,
-      settings,
-      useCases,
-      dataStore
-    }
-  );
-}
 function useCombinedRefs() {
   for (var _len = arguments.length, refs = new Array(_len), _key = 0; _key < _len; _key++) {
     refs[_key] = arguments[_key];
@@ -66475,7 +62735,7 @@ function HiddenText(_ref) {
     id,
     value
   } = _ref;
-  return gn.createElement("div", {
+  return Rn.createElement("div", {
     id,
     style: hiddenStyles
   }, value);
@@ -66500,7 +62760,7 @@ function LiveRegion(_ref) {
     clipPath: "inset(100%)",
     whiteSpace: "nowrap"
   };
-  return gn.createElement("div", {
+  return Rn.createElement("div", {
     id,
     style: visuallyHidden2,
     role: "status",
@@ -66520,7 +62780,7 @@ function useAnnouncement() {
     announcement
   };
 }
-const DndMonitorContext = /* @__PURE__ */ X$1(null);
+const DndMonitorContext = /* @__PURE__ */ Q$1(null);
 function useDndMonitor(listener) {
   const registerListener = x$1(DndMonitorContext);
   y(() => {
@@ -66657,10 +62917,10 @@ function Accessibility(_ref) {
   if (!mounted) {
     return null;
   }
-  const markup = gn.createElement(gn.Fragment, null, gn.createElement(HiddenText, {
+  const markup = Rn.createElement(Rn.Fragment, null, Rn.createElement(HiddenText, {
     id: hiddenTextDescribedById,
     value: screenReaderInstructions.draggable
-  }), gn.createElement(LiveRegion, {
+  }), Rn.createElement(LiveRegion, {
     id: liveRegionId,
     announcement
   }));
@@ -68552,8 +64812,8 @@ const defaultInternalContext = {
   over: null,
   measureDroppableContainers: noop
 };
-const InternalContext = /* @__PURE__ */ X$1(defaultInternalContext);
-const PublicContext = /* @__PURE__ */ X$1(defaultPublicContext);
+const InternalContext = /* @__PURE__ */ Q$1(defaultInternalContext);
+const PublicContext = /* @__PURE__ */ Q$1(defaultPublicContext);
 function getInitialState() {
   return {
     draggable: {
@@ -68808,7 +65068,7 @@ function useLayoutShiftScrollCompensation(_ref) {
     }
   }, [activeNode, x2, y2, initialRect, measure]);
 }
-const ActiveDraggableContext = /* @__PURE__ */ X$1({
+const ActiveDraggableContext = /* @__PURE__ */ Q$1({
   ...defaultCoordinates,
   scaleX: 1,
   scaleY: 1
@@ -68819,7 +65079,7 @@ var Status;
   Status2[Status2["Initializing"] = 1] = "Initializing";
   Status2[Status2["Initialized"] = 2] = "Initialized";
 })(Status || (Status = {}));
-const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
+const DndContext = /* @__PURE__ */ M(function DndContext2(_ref) {
   var _sensorContext$curren, _dragOverlay$nodeRef$, _dragOverlay$rect, _over$rect;
   let {
     id,
@@ -69030,7 +65290,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
               rect: activeRects
             }
           };
-          _n(() => {
+          gn(() => {
             onDragStart == null ? void 0 : onDragStart(event2);
             setStatus(Status.Initializing);
             dispatch({
@@ -69084,7 +65344,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
             }
           }
           activeRef.current = null;
-          _n(() => {
+          gn(() => {
             dispatch({
               type
             });
@@ -69165,7 +65425,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
         },
         over: over2
       };
-      _n(() => {
+      gn(() => {
         onDragMove == null ? void 0 : onDragMove(event);
         dispatchMonitorEvent({
           type: "onDragMove",
@@ -69208,7 +65468,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
         },
         over: over2
       };
-      _n(() => {
+      gn(() => {
         setOver(over2);
         onDragOver == null ? void 0 : onDragOver(event);
         dispatchMonitorEvent({
@@ -69287,17 +65547,17 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
     };
     return context;
   }, [activatorEvent, activators, active, activeNodeRect, dispatch, draggableDescribedById, draggableNodes, over, measureDroppableContainers]);
-  return gn.createElement(DndMonitorContext.Provider, {
+  return Rn.createElement(DndMonitorContext.Provider, {
     value: registerMonitorListener
-  }, gn.createElement(InternalContext.Provider, {
+  }, Rn.createElement(InternalContext.Provider, {
     value: internalContext
-  }, gn.createElement(PublicContext.Provider, {
+  }, Rn.createElement(PublicContext.Provider, {
     value: publicContext
-  }, gn.createElement(ActiveDraggableContext.Provider, {
+  }, Rn.createElement(ActiveDraggableContext.Provider, {
     value: transform2
-  }, children)), gn.createElement(RestoreFocus, {
+  }, children)), Rn.createElement(RestoreFocus, {
     disabled: (accessibility == null ? void 0 : accessibility.restoreFocus) === false
-  })), gn.createElement(Accessibility, {
+  })), Rn.createElement(Accessibility, {
     ...accessibility,
     hiddenTextDescribedById: draggableDescribedById
   }));
@@ -69316,7 +65576,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
     };
   }
 });
-const NullContext = /* @__PURE__ */ X$1(null);
+const NullContext = /* @__PURE__ */ Q$1(null);
 const defaultRole = "button";
 const ID_PREFIX$1 = "Draggable";
 function useDraggable(_ref) {
@@ -69631,7 +65891,7 @@ function getItemGap$1(clientRects, index, activeIndex) {
   return nextRect ? nextRect.top - (currentRect.top + currentRect.height) : previousRect ? currentRect.top - (previousRect.top + previousRect.height) : 0;
 }
 const ID_PREFIX = "Sortable";
-const Context = /* @__PURE__ */ gn.createContext({
+const Context = /* @__PURE__ */ Rn.createContext({
   activeIndex: -1,
   containerId: ID_PREFIX,
   disableTransforms: false,
@@ -69693,7 +65953,7 @@ function SortableContext(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [activeIndex, containerId, disabled.draggable, disabled.droppable, disableTransforms, items, overIndex, droppableRects, useDragOverlay, strategy]
   );
-  return gn.createElement(Context.Provider, {
+  return Rn.createElement(Context.Provider, {
     value: contextValue
   }, children);
 }
@@ -70264,6 +66524,688 @@ function LayoutSettings({ app }) {
     layouts.length === 0 && /* @__PURE__ */ u2(Typography2, { color: "text.secondary", sx: { textAlign: "center", py: 4 }, children: '暂无布局，点击"添加布局"创建第一个' })
   ] });
 }
+function readNativeControlValue(event) {
+  return (event.target || event.currentTarget).value;
+}
+function stopEditorEvent$1(event) {
+  event.stopPropagation();
+}
+function useObsidianInputGuard({
+  scope,
+  controlName,
+  onInput,
+  onBlur,
+  onFocus
+}) {
+  const log = q$1((event, payload) => {
+    logInputEvent(scope, event, payload);
+  }, [scope]);
+  return {
+    onPointerDown: q$1((event) => {
+      log(event, { handler: `${controlName} onPointerDown` });
+    }, [controlName, log]),
+    onMouseDown: q$1((event) => {
+      log(event, { handler: `${controlName} onMouseDown before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onClick: q$1((event) => {
+      log(event, { handler: `${controlName} onClick before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onDblClick: q$1((event) => {
+      log(event, { handler: `${controlName} onDblClick before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onKeyDown: q$1((event) => {
+      log(event, { handler: `${controlName} onKeyDown before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onKeyUp: q$1((event) => {
+      log(event, { handler: `${controlName} onKeyUp before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onBeforeInput: q$1((event) => {
+      log(event, { handler: `${controlName} onBeforeInput` });
+    }, [controlName, log]),
+    onInput: q$1((event) => {
+      const nextValue = readNativeControlValue(event);
+      log(event, {
+        handler: `${controlName} onInput before local update`,
+        nextValue
+      });
+      onInput(nextValue);
+    }, [controlName, log, onInput]),
+    onChange: q$1((event) => {
+      log(event, { handler: `${controlName} onChange` });
+    }, [controlName, log]),
+    onBlur: q$1((event) => {
+      log(event, { handler: `${controlName} onBlur before commit` });
+      onBlur?.();
+    }, [controlName, log, onBlur]),
+    onFocus: q$1((event) => {
+      log(event, { handler: `${controlName} onFocus` });
+      onFocus?.();
+    }, [controlName, log, onFocus])
+  };
+}
+const nativeControlBaseStyle$1 = {
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
+  border: "1px solid var(--background-modifier-border)",
+  borderRadius: 6,
+  background: "var(--background-primary)",
+  color: "var(--text-normal)",
+  padding: "8px 10px",
+  font: "inherit",
+  lineHeight: 1.4,
+  userSelect: "text",
+  WebkitUserSelect: "text",
+  pointerEvents: "auto"
+};
+const nativeLabelStyle$1 = {
+  display: "block",
+  marginBottom: 4,
+  fontSize: "0.75rem",
+  color: "var(--text-muted)"
+};
+function NativeTextInput$1({
+  label,
+  value,
+  onInput,
+  onBlur,
+  onFocus,
+  disabled = false,
+  placeholder,
+  type = "text",
+  title,
+  style: style2
+}) {
+  const inputGuard = useObsidianInputGuard({
+    scope: `FieldsEditor/${label}`,
+    controlName: "control",
+    onInput,
+    onBlur,
+    onFocus
+  });
+  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, title, children: [
+    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
+    /* @__PURE__ */ u2(
+      "input",
+      {
+        type,
+        value,
+        disabled,
+        placeholder,
+        "data-think-diag-control": label,
+        ...inputGuard,
+        style: {
+          ...nativeControlBaseStyle$1,
+          opacity: disabled ? 0.6 : 1,
+          cursor: disabled ? "not-allowed" : "text"
+        }
+      }
+    )
+  ] });
+}
+function NativeTextarea$1({
+  label,
+  value,
+  onInput,
+  onBlur,
+  disabled = false,
+  placeholder,
+  rows = 3,
+  style: style2
+}) {
+  const textareaGuard = useObsidianInputGuard({
+    scope: `FieldsEditor/${label}`,
+    controlName: "textarea",
+    onInput,
+    onBlur
+  });
+  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, children: [
+    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
+    /* @__PURE__ */ u2(
+      "textarea",
+      {
+        value,
+        disabled,
+        rows,
+        placeholder,
+        "data-think-diag-control": label,
+        ...textareaGuard,
+        style: {
+          ...nativeControlBaseStyle$1,
+          resize: "vertical",
+          opacity: disabled ? 0.6 : 1,
+          cursor: disabled ? "not-allowed" : "text"
+        }
+      }
+    )
+  ] });
+}
+function OptionRow({
+  option,
+  onChange,
+  onRemove,
+  fieldType,
+  disabled = false
+}) {
+  const [localOption, setLocalOption] = d(option);
+  const renderCountRef = A$1(0);
+  const previousOptionRef = A$1(null);
+  renderCountRef.current += 1;
+  y(() => {
+    logRenderDiagnostic("FieldsEditor/OptionRow", {
+      renderCount: renderCountRef.current,
+      fieldType,
+      disabled,
+      optionRefChanged: previousOptionRef.current !== null && previousOptionRef.current !== option,
+      option,
+      localOption
+    });
+    previousOptionRef.current = option;
+  });
+  y(() => {
+    setLocalOption(option);
+  }, [option]);
+  const commitOption = (nextOption, reason) => {
+    if ((nextOption.label || "") === (option.label || "") && nextOption.value === option.value)
+      return;
+    logRenderDiagnostic("FieldsEditor/OptionRow/commit", {
+      reason,
+      fieldType,
+      option: nextOption
+    });
+    onChange(nextOption);
+  };
+  const updateLocalOption = (updates, reason) => {
+    setLocalOption((previous) => {
+      const next2 = { ...previous, ...updates };
+      logRenderDiagnostic("FieldsEditor/OptionRow/input", {
+        reason,
+        updates,
+        nextOption: next2
+      });
+      return next2;
+    });
+  };
+  const handleBlur = () => {
+    commitOption(localOption, "选项输入框失焦，提交到字段草稿");
+  };
+  const isRating = fieldType === "rating";
+  const labelLabel = isRating ? "评分数值" : "选项标签";
+  const valueLabel = isRating ? "显示内容 (Emoji/图片路径)" : "选项值";
+  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 1.5, children: [
+    /* @__PURE__ */ u2(
+      NativeTextInput$1,
+      {
+        label: labelLabel,
+        value: localOption.label || "",
+        onInput: (value) => {
+          const nextOption = { ...localOption, label: value };
+          updateLocalOption({ label: value }, "编辑选项标签 native onInput");
+          onChange(nextOption);
+        },
+        onBlur: handleBlur,
+        disabled,
+        style: { flex: 1 }
+      }
+    ),
+    /* @__PURE__ */ u2(
+      NativeTextInput$1,
+      {
+        label: valueLabel,
+        value: localOption.value,
+        onInput: (value) => {
+          const nextOption = { ...localOption, value };
+          updateLocalOption({ value }, "编辑选项值 native onInput");
+          onChange(nextOption);
+        },
+        onBlur: handleBlur,
+        disabled,
+        style: { flex: 1 }
+      }
+    ),
+    /* @__PURE__ */ u2(Box, { sx: { pt: 2.5 }, children: /* @__PURE__ */ u2(
+      IconAction,
+      {
+        label: "删除此选项",
+        disabled,
+        onClick: onRemove,
+        icon: /* @__PURE__ */ u2(RemoveCircleOutlineIcon, { fontSize: "small" })
+      }
+    ) })
+  ] });
+}
+const fieldTypeOptions = getUserTemplateFieldTypeOptions();
+const fieldRowGridTemplateColumns$1 = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 64px 72px 40px";
+const emptyControlMinHeight = 40;
+function defaultInputType(uiType) {
+  if (uiType === "number") return "number";
+  if (uiType === "date") return "date";
+  if (uiType === "time") return "time";
+  if (uiType === "datetime") return "datetime-local";
+  return "text";
+}
+function FieldRow({
+  field,
+  disabled = false,
+  isDragging = false,
+  onUpdate,
+  onRemove
+}) {
+  const [localName, setLocalName] = d(field.label || field.key);
+  const [localDefaultValue, setLocalDefaultValue] = d(field.defaultValue || "");
+  const [isEditing, setIsEditing] = d(false);
+  const [detailsOpen, setDetailsOpen] = d(false);
+  const renderCountRef = A$1(0);
+  const previousFieldRef = A$1(null);
+  renderCountRef.current += 1;
+  y(() => {
+    logRenderDiagnostic("FieldsEditor/FieldRow", {
+      renderCount: renderCountRef.current,
+      fieldId: field.id,
+      fieldKey: field.key,
+      fieldType: field.type,
+      disabled,
+      isEditing,
+      isDragging,
+      fieldRefChanged: previousFieldRef.current !== null && previousFieldRef.current !== field,
+      localName,
+      localDefaultValue,
+      incomingDefaultValue: field.defaultValue
+    });
+    previousFieldRef.current = field;
+  });
+  y(() => {
+    if (!isEditing) setLocalName(field.label || field.key);
+  }, [field.label, field.key, isEditing]);
+  y(() => {
+    setLocalDefaultValue(field.defaultValue || "");
+  }, [field.defaultValue, field.id]);
+  const handleNameBlur = () => {
+    const trimmedName = localName.trim();
+    if (trimmedName && trimmedName !== (field.label || field.key)) {
+      onUpdate({ key: trimmedName, label: trimmedName });
+    } else {
+      setLocalName(field.label || field.key);
+    }
+    setIsEditing(false);
+  };
+  const handleOptionChange = (optIndex, newOption) => {
+    const newOptions = [...field.options || []];
+    newOptions[optIndex] = newOption;
+    onUpdate({ options: newOptions });
+  };
+  const addOption = () => {
+    const newOptions = [...field.options || []];
+    newOptions.push({ value: "新选项", label: String(newOptions.length + 1) });
+    onUpdate({ options: newOptions });
+    setDetailsOpen(true);
+  };
+  const removeOption = (optIndex) => {
+    const nextOptions = (field.options || []).filter((_2, i2) => i2 !== optIndex);
+    onUpdate({ options: nextOptions });
+  };
+  const uiType = normalizeTemplateFieldType(field.type);
+  const customFieldNameWarning = getCustomFieldNameWarning(localName);
+  const showOptionsEditor = templateFieldTypeUsesOptions(uiType);
+  const showDefaultValueEditor = templateFieldTypeSupportsDefaultValue(uiType);
+  const showInlineDefaultValue = showDefaultValueEditor && uiType !== "textarea";
+  const showDetails = showOptionsEditor || uiType === "textarea" || uiType === "number";
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      sx: {
+        py: 0.75,
+        px: 0.5,
+        borderRadius: 1,
+        bgcolor: isDragging ? "action.hover" : "transparent"
+      },
+      children: [
+        /* @__PURE__ */ u2(
+          Box,
+          {
+            sx: {
+              display: "grid",
+              gridTemplateColumns: fieldRowGridTemplateColumns$1,
+              columnGap: 0.75,
+              alignItems: "center"
+            },
+            children: [
+              /* @__PURE__ */ u2(
+                Box,
+                {
+                  title: "拖动排序",
+                  sx: {
+                    width: 28,
+                    minHeight: emptyControlMinHeight,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "text.secondary",
+                    cursor: disabled ? "default" : "grab"
+                  },
+                  children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1.25rem" } })
+                }
+              ),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
+                NativeTextInput$1,
+                {
+                  label: "",
+                  placeholder: "字段名称",
+                  value: localName,
+                  onInput: (value) => setLocalName(value),
+                  onBlur: handleNameBlur,
+                  onFocus: () => setIsEditing(true),
+                  disabled,
+                  style: { width: "100%" },
+                  title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
+                }
+              ) }),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
+                SimpleSelect,
+                {
+                  value: uiType,
+                  options: fieldTypeOptions,
+                  onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
+                  disabled,
+                  sx: { width: "100%" }
+                }
+              ) }),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: showInlineDefaultValue ? /* @__PURE__ */ u2(
+                NativeTextInput$1,
+                {
+                  label: "",
+                  value: localDefaultValue,
+                  type: defaultInputType(uiType),
+                  onInput: (value) => {
+                    setLocalDefaultValue(value);
+                    onUpdate({ defaultValue: value });
+                  },
+                  onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
+                  disabled,
+                  placeholder: "可留空",
+                  style: { width: "100%" }
+                }
+              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center", alignItems: "center", minHeight: emptyControlMinHeight }, children: /* @__PURE__ */ u2("label", { style: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: "var(--text-muted)" }, title: "提交时此字段不能为空", children: [
+                /* @__PURE__ */ u2(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: field.required === true,
+                    disabled,
+                    onChange: (event) => onUpdate({ required: !!event.target.checked })
+                  }
+                ),
+                "必填"
+              ] }) }),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center" }, children: showDetails ? /* @__PURE__ */ u2(
+                Button2,
+                {
+                  size: "small",
+                  variant: "text",
+                  disabled: disabled && !showOptionsEditor,
+                  onClick: () => setDetailsOpen((open) => !open),
+                  endIcon: detailsOpen ? /* @__PURE__ */ u2(ExpandLessIcon, {}) : /* @__PURE__ */ u2(ExpandMoreIcon, {}),
+                  sx: { width: "100%", minWidth: 0, px: 0.75, whiteSpace: "nowrap", "& .MuiButton-endIcon": { ml: 0.25, mr: 0 } },
+                  children: detailsOpen ? "收起" : "详情"
+                }
+              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
+              /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ u2(
+                IconAction,
+                {
+                  label: "删除此字段",
+                  disabled,
+                  onClick: onRemove,
+                  color: "error",
+                  icon: /* @__PURE__ */ u2(DeleteIcon, {})
+                }
+              ) })
+            ]
+          }
+        ),
+        customFieldNameWarning && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4.5 }, children: customFieldNameWarning }),
+        /* @__PURE__ */ u2(Collapse2, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box, { sx: { mt: 1.25, ml: 4.5, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
+          uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
+            NativeTextarea$1,
+            {
+              label: "默认值",
+              value: localDefaultValue,
+              rows: 3,
+              onInput: (value) => {
+                setLocalDefaultValue(value);
+                onUpdate({ defaultValue: value });
+              },
+              onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
+              disabled,
+              placeholder: "可留空",
+              style: { width: "100%" }
+            }
+          ),
+          uiType === "number" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mb: showOptionsEditor ? 1.5 : 0 }, children: [
+            /* @__PURE__ */ u2(
+              NativeTextInput$1,
+              {
+                label: "最小值",
+                type: "number",
+                value: field.min ?? "",
+                onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }),
+                disabled,
+                style: { width: 120 }
+              }
+            ),
+            /* @__PURE__ */ u2(
+              NativeTextInput$1,
+              {
+                label: "最大值",
+                type: "number",
+                value: field.max ?? "",
+                onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }),
+                disabled,
+                style: { width: 120 }
+              }
+            )
+          ] }),
+          showOptionsEditor && /* @__PURE__ */ u2(Box, { children: [
+            /* @__PURE__ */ u2(Stack, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider2, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
+              OptionRow,
+              {
+                option,
+                onChange: (newOpt) => handleOptionChange(optIndex, newOpt),
+                onRemove: () => removeOption(optIndex),
+                fieldType: uiType,
+                disabled
+              },
+              optIndex
+            )) }),
+            /* @__PURE__ */ u2(
+              Button2,
+              {
+                onClick: addOption,
+                disabled,
+                startIcon: /* @__PURE__ */ u2(AddIcon, {}),
+                size: "small",
+                sx: { mt: 1.25 },
+                children: "添加选项"
+              }
+            )
+          ] })
+        ] }) })
+      ]
+    }
+  );
+}
+const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 64px 72px 40px";
+function createEmptyField(index) {
+  return createCustomTemplateField(index);
+}
+function reorderFields(fields, fromIndex, toIndex) {
+  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= fields.length || toIndex >= fields.length) {
+    return fields;
+  }
+  const next2 = [...fields];
+  const [moved] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved);
+  return next2;
+}
+function FieldsEditor({
+  fields = [],
+  disabled = false,
+  onChange
+}) {
+  const renderCountRef = A$1(0);
+  const previousFieldsRef = A$1(null);
+  const [draggingIndex, setDraggingIndex] = d(null);
+  renderCountRef.current += 1;
+  y(() => {
+    logRenderDiagnostic("FieldsEditor", {
+      renderCount: renderCountRef.current,
+      disabled,
+      fieldsRefChanged: previousFieldsRef.current !== null && previousFieldsRef.current !== fields,
+      fieldsCount: fields.length,
+      fieldIds: fields.map((field) => field.id)
+    });
+    previousFieldsRef.current = fields;
+  });
+  const emitFields = (nextFields) => {
+    onChange(sanitizeTemplateFields(nextFields));
+  };
+  const handleUpdate = (index, updates) => {
+    const newFields = sanitizeTemplateFields(fields || []);
+    newFields[index] = sanitizeTemplateField({ ...newFields[index], ...updates }, index + 1);
+    emitFields(newFields);
+  };
+  const addField = () => emitFields([...fields || [], createEmptyField((fields || []).length + 1)]);
+  const removeField = (index) => {
+    emitFields((fields || []).filter((_2, i2) => i2 !== index));
+  };
+  const handleDropOn = (targetIndex) => {
+    if (draggingIndex === null || disabled) return;
+    emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
+    setDraggingIndex(null);
+  };
+  return /* @__PURE__ */ u2(Stack, { spacing: 1.25, sx: { width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }, children: [
+    /* @__PURE__ */ u2(
+      Box,
+      {
+        sx: {
+          px: 0.5,
+          display: "grid",
+          gridTemplateColumns: fieldRowGridTemplateColumns,
+          columnGap: 0.75,
+          alignItems: "center"
+        },
+        children: [
+          /* @__PURE__ */ u2(Box, {}),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段名称" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段类型" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "默认值" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", textAlign: "center" }, children: "必填" }),
+          /* @__PURE__ */ u2(Box, {}),
+          /* @__PURE__ */ u2(Box, {})
+        ]
+      }
+    ),
+    /* @__PURE__ */ u2(Stack, { spacing: 0, divider: /* @__PURE__ */ u2(Divider2, { sx: { my: 0.75 } }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
+      Box,
+      {
+        draggable: !disabled,
+        onDragStart: (event) => {
+          if (disabled) return;
+          setDraggingIndex(index);
+          event.dataTransfer?.setData("text/plain", String(index));
+          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+        },
+        onDragOver: (event) => {
+          if (disabled || draggingIndex === null) return;
+          event.preventDefault();
+          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        },
+        onDrop: (event) => {
+          event.preventDefault();
+          handleDropOn(index);
+        },
+        onDragEnd: () => setDraggingIndex(null),
+        sx: {
+          opacity: draggingIndex === index ? 0.55 : 1,
+          borderRadius: 1
+        },
+        children: /* @__PURE__ */ u2(
+          FieldRow,
+          {
+            field,
+            disabled,
+            isDragging: draggingIndex === index,
+            onUpdate: (updates) => handleUpdate(index, updates),
+            onRemove: () => removeField(index)
+          }
+        )
+      },
+      field.id
+    )) }),
+    /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(Button2, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) })
+  ] });
+}
+function TemplateVariableCopier({ block: block2 }) {
+  const ui = useUiPort();
+  const variableOptions = T$1(() => {
+    const options = [
+      { value: "{{block}}", label: "block" },
+      { value: "{{theme}}", label: "theme" },
+      { value: "{{icon}}", label: "icon" },
+      { value: "{{moment:YYYY-MM-DD}}", label: "moment:YYYY-MM-DD" },
+      { value: "{{templateId}}", label: "templateId" },
+      { value: "{{templateSourceType}}", label: "templateSourceType" },
+      { value: "模板ID:: {{templateId}}", label: "模板ID:: {{templateId}}" },
+      { value: "模板来源:: {{templateSourceType}}", label: "模板来源:: {{templateSourceType}}" }
+    ];
+    (block2?.fields || []).forEach((field) => {
+      const fieldKey = field.key || "untitled";
+      const fieldType = field.type || "text";
+      options.push({ value: `{{${fieldKey}}}`, label: `${fieldKey}` });
+      if ([
+        "select",
+        "radio",
+        "singleSelect",
+        "multiSelect",
+        "path",
+        "multiPath",
+        "tag",
+        "multiTag",
+        "rating"
+      ].includes(fieldType)) {
+        options.push({ value: `{{${fieldKey}.value}}`, label: `${fieldKey}.value` });
+        options.push({ value: `{{${fieldKey}.label}}`, label: `${fieldKey}.label` });
+      }
+      if (fieldType === "image" || fieldType === "multiImage") {
+        options.push({ value: `{{${fieldKey}.src}}`, label: `${fieldKey}.src` });
+      }
+      const markdownKey = field.key;
+      if (markdownKey) {
+        options.push({ value: `${markdownKey}:: {{${fieldKey}}}`, label: `${markdownKey}:: {{${fieldKey}}}` });
+      }
+    });
+    return options;
+  }, [block2]);
+  const handleCopy = (variable) => {
+    if (!variable) return;
+    navigator.clipboard.writeText(variable);
+    ui.notice(`已复制: ${variable}`);
+  };
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 220 }, children: /* @__PURE__ */ u2(
+    SimpleSelect,
+    {
+      value: "",
+      options: variableOptions,
+      onChange: handleCopy,
+      placeholder: "-- 复制变量 --"
+    }
+  ) });
+}
 function SortableBlockItem({ block: block2, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block2.id });
   const style2 = { transform: CSS$1.Transform.toString(transform2), transition };
@@ -70315,7 +67257,7 @@ function BlockEditor({ block: block2, useCases }) {
           value: localBlock.categoryKey || "",
           onChange: (e2) => setLocalBlock((b2) => ({ ...b2, categoryKey: e2.target.value })),
           onBlur: () => handleBlur("categoryKey"),
-          placeholder: "例如：闪念/思考、计划、总结、打卡",
+          placeholder: "例如：思考、计划、总结、打卡",
           helperText: "默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。",
           variant: "outlined",
           size: "small",
@@ -70392,412 +67334,11 @@ function BlockManager() {
     )) }) }) })
   ] });
 }
-const cycleGranularityOptions = [
-  { value: "week", label: "周" },
-  { value: "month", label: "月" },
-  { value: "quarter", label: "季度" },
-  { value: "year", label: "年" },
-  { value: "custom", label: "自定义" }
-];
-const metricDirectionOptions = [
-  { value: "increase", label: "增加到目标值" },
-  { value: "decrease", label: "降低到目标值" },
-  { value: "maintain", label: "维持目标值" },
-  { value: "boolean", label: "是否达成" }
-];
-function today() {
-  return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-}
-function addDays(base, days) {
-  const date2 = new Date(base || today());
-  date2.setDate(date2.getDate() + days);
-  return date2.toISOString().slice(0, 10);
-}
-function Card2({ children }) {
-  return /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1.5, display: "grid", gap: 1 }, children });
-}
-function pathLeaf(path) {
-  return String(path || "").split("/").filter(Boolean).pop() || path;
-}
-function metricPresetKey(label) {
-  const text2 = label.toLowerCase();
-  if (/完成|done|complete/.test(text2)) return "task.done";
-  if (/任务|task/.test(text2)) return "task.total";
-  if (/打卡|habit|check/.test(text2)) return "habit.count";
-  if (/事件|证据|event|evidence/.test(text2)) return "evidence.count";
-  if (/阻碍|风险|blocker|risk/.test(text2)) return "blocker.count";
-  if (/里程碑|milestone/.test(text2)) return "milestone.count";
-  if (/总结|复盘|review/.test(text2)) return "review.count";
-  if (/计划|plan/.test(text2)) return "plan.count";
-  return label.trim() || "goal.metric";
-}
-function GoalManager() {
-  const settings = useSelector(selectSettings);
-  const dataStore = useDataStore();
-  const useCases = useUseCases();
-  const [goalPath, setGoalPath] = d("");
-  const [themePath, setThemePath] = d("");
-  const [message, setMessage] = d("");
-  const goals = settings.goalSettings?.goals || [];
-  const cycles = settings.goalSettings?.cycles || [];
-  const bindings = settings.goalSettings?.goalBlockBindings || [];
-  const coreBlocks = T$1(() => getEffectiveCoreBlocks(settings), [settings]);
-  const goalOptions = goals.map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title || goal.id }));
-  const activeGoalOptions = goals.filter((goal) => goal.status !== "archived").map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title || goal.id }));
-  const blockOptions = coreBlocks.map((block2) => ({ value: block2.id, label: block2.name }));
-  const candidates = T$1(
-    () => inferGoalCandidatesFromItems(dataStore.queryItems(), goals).filter((item) => item.source !== "existing-goal"),
-    [dataStore, goals]
-  );
-  const topCandidates = candidates.slice(0, 8);
-  const markdownBackfillDiff = T$1(
-    () => buildGoalMarkdownBackfillDiffPreview(dataStore.queryItems(), goals, 12),
-    [dataStore, goals]
-  );
-  const [cycleGoalId, setCycleGoalId] = d(activeGoalOptions[0]?.value || "");
-  const [cycleTitle, setCycleTitle] = d("本周推进");
-  const [cycleGranularity, setCycleGranularity] = d("week");
-  const [cycleStartDate, setCycleStartDate] = d(today());
-  const [cycleEndDate, setCycleEndDate] = d(addDays(today(), 6));
-  const [bindingGoalId, setBindingGoalId] = d(activeGoalOptions[0]?.value || "");
-  const [bindingBlockId, setBindingBlockId] = d(blockOptions[0]?.value || "core.task");
-  const currentBinding = bindings.find((binding) => binding.goalId === bindingGoalId && binding.coreBlockId === bindingBlockId) || null;
-  const selectedBindingBlock = coreBlocks.find((block2) => block2.id === bindingBlockId) || null;
-  const selectedBindingFields = selectedBindingBlock?.fields || [];
-  const [bindingEnabled, setBindingEnabled] = d(true);
-  const [bindingTargetFile, setBindingTargetFile] = d("");
-  const [bindingHeader, setBindingHeader] = d("## {{goalPath}}");
-  const [bindingTemplate, setBindingTemplate] = d("");
-  const [bindingRequiredFields, setBindingRequiredFields] = d([]);
-  const [bindingDefaultValuesText, setBindingDefaultValuesText] = d("");
-  const [metricGoalId, setMetricGoalId] = d(activeGoalOptions[0]?.value || "");
-  const selectedMetricGoal = goals.find((goal) => goal.id === metricGoalId) || null;
-  const selectedMetrics = selectedMetricGoal?.metrics || [];
-  const [metricKey, setMetricKey] = d("task.done");
-  const [metricLabel, setMetricLabel] = d("完成任务");
-  const [metricDirection, setMetricDirection] = d("increase");
-  const [metricTargetValue, setMetricTargetValue] = d("10");
-  const [metricUnit, setMetricUnit] = d("个");
-  const syncMetricDraft = (goalId) => {
-    const goal = goals.find((item) => item.id === goalId) || null;
-    const first = goal?.metrics?.[0];
-    setMetricGoalId(goalId);
-    if (first) {
-      setMetricKey(first.key);
-      setMetricLabel(first.label);
-      setMetricDirection(first.direction);
-      setMetricTargetValue(first.targetValue === void 0 ? "" : String(first.targetValue));
-      setMetricUnit(first.unit || "");
-    }
-  };
-  const loadMetricDraft = (metric) => {
-    setMetricKey(metric.key);
-    setMetricLabel(metric.label);
-    setMetricDirection(metric.direction);
-    setMetricTargetValue(metric.targetValue === void 0 ? "" : String(metric.targetValue));
-    setMetricUnit(metric.unit || "");
-  };
-  const syncBindingDraft = (goalId, blockId) => {
-    const found = bindings.find((binding) => binding.goalId === goalId && binding.coreBlockId === blockId) || null;
-    setBindingEnabled(found?.enabled !== false);
-    setBindingTargetFile(found?.targetFile || "");
-    setBindingHeader(found?.appendUnderHeader || "## {{goalPath}}");
-    setBindingTemplate(found?.outputTemplate || "");
-    setBindingRequiredFields(found?.requiredFields || []);
-    setBindingDefaultValuesText(found?.defaultValues ? JSON.stringify(found.defaultValues, null, 2) : "");
-  };
-  const handleAddGoal = async () => {
-    const path = goalPath.trim();
-    if (!path) return;
-    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: themePath.trim() || null });
-    setMessage(goal ? `已添加目标：${goal.goalPath || goal.title}` : "目标未添加");
-    if (goal) {
-      setGoalPath("");
-      setThemePath("");
-      if (!cycleGoalId) setCycleGoalId(goal.id);
-      if (!bindingGoalId) setBindingGoalId(goal.id);
-      if (!metricGoalId) syncMetricDraft(goal.id);
-    }
-  };
-  const handleMigrate = async () => {
-    const result = await useCases.goal.applyLegacyGoalMigration(candidates);
-    setMessage(`迁移完成：新增 ${result.createdGoals} 个目标，建立 ${result.relationCount} 条记录关系。`);
-  };
-  const handleApplyBackfill = async () => {
-    if (markdownBackfillDiff.total <= 0) return;
-    const ok = typeof window === "undefined" ? true : window.confirm(`确认写回 ${markdownBackfillDiff.total} 条记录的目标字段？建议先备份笔记。`);
-    if (!ok) return;
-    const result = await useCases.goal.applyMarkdownGoalBackfill(500);
-    setMessage(`回填完成：更新 ${result.updated} 条，失败 ${result.failed} 条，涉及 ${result.paths.length} 个文件。`);
-  };
-  const handleAddCycle = async () => {
-    if (!cycleGoalId || !cycleTitle.trim()) return;
-    const cycle = await useCases.goal.addCycle({
-      goalId: cycleGoalId,
-      title: cycleTitle,
-      granularity: cycleGranularity,
-      startDate: cycleStartDate,
-      endDate: cycleEndDate,
-      status: "active"
-    });
-    setMessage(cycle ? `已添加周期：${cycle.title}` : "周期未添加");
-  };
-  const parseBindingDefaultValues = () => {
-    const text2 = bindingDefaultValuesText.trim();
-    if (!text2) return {};
-    try {
-      const parsed = JSON.parse(text2);
-      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
-    } catch {
-      setMessage("字段默认值 JSON 格式不正确，已跳过保存默认值。");
-      return {};
-    }
-  };
-  const toggleRequiredField = (key) => {
-    setBindingRequiredFields((current2) => current2.includes(key) ? current2.filter((item) => item !== key) : [...current2, key]);
-  };
-  const handleSaveBinding = async () => {
-    if (!bindingGoalId || !bindingBlockId) return;
-    await useCases.goal.upsertGoalBlockBindingDraft({
-      goalId: bindingGoalId,
-      coreBlockId: bindingBlockId,
-      enabled: bindingEnabled,
-      targetFile: bindingTargetFile,
-      appendUnderHeader: bindingHeader,
-      outputTemplate: bindingTemplate,
-      defaultValues: parseBindingDefaultValues(),
-      requiredFields: bindingRequiredFields
-    });
-    setMessage("目标专属模板绑定已保存。");
-  };
-  const handleSaveMetric = async () => {
-    if (!metricGoalId) return;
-    const key = metricKey.trim() || metricPresetKey(metricLabel);
-    const label = metricLabel.trim() || key;
-    const metric = {
-      key,
-      label,
-      direction: metricDirection,
-      targetValue: metricTargetValue.trim() === "" ? void 0 : Number(metricTargetValue),
-      unit: metricUnit.trim() || void 0
-    };
-    const nextMetrics = [...selectedMetrics.filter((item) => item.key !== key), metric];
-    await useCases.goal.updateGoalMetrics(metricGoalId, nextMetrics);
-    setMessage(`目标指标已保存：${label}`);
-  };
-  const handleRemoveMetric = async (key) => {
-    if (!metricGoalId) return;
-    await useCases.goal.updateGoalMetrics(metricGoalId, selectedMetrics.filter((metric) => metric.key !== key));
-    setMessage("目标指标已删除。");
-  };
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", display: "grid", gap: 2 }, children: [
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "目标中心" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标是快捷输入的主上下文；主题降级为表单里的层级单选字段；目标绑定可以覆盖核心 Block 的输出路径、标题位置和模板。" })
-    ] }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 1 }, children: [
-      /* @__PURE__ */ u2(Chip2, { label: `已定义目标 ${goals.length}`, size: "small" }),
-      /* @__PURE__ */ u2(Chip2, { label: `周期 ${cycles.length}`, size: "small" }),
-      /* @__PURE__ */ u2(Chip2, { label: `目标模板绑定 ${bindings.length}`, size: "small" }),
-      /* @__PURE__ */ u2(Chip2, { label: `旧记录候选 ${candidates.length}`, size: "small", color: candidates.length > 0 ? "primary" : "default" }),
-      /* @__PURE__ */ u2(Chip2, { label: `可回填 ${markdownBackfillDiff.total}`, size: "small", color: markdownBackfillDiff.total > 0 ? "primary" : "default" })
-    ] }),
-    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
-    /* @__PURE__ */ u2(Card2, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "1. 目标实体" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(180px, 1fr) minmax(160px, 1fr) auto", gap: 1, alignItems: "center" }, children: [
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标路径", value: goalPath, onChange: (event) => setGoalPath(event.target.value), placeholder: "例如：产品化/插件/目标中心" }),
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "默认主题路径", value: themePath, onChange: (event) => setThemePath(event.target.value), placeholder: "例如：电脑/记录系统" }),
-        /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "添加目标" })
-      ] }),
-      goals.length > 0 && /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 0.75 }, children: goals.slice(0, 12).map((goal) => /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "1fr auto auto", gap: 1, alignItems: "center", borderTop: "1px solid var(--background-modifier-border-hover)", pt: 0.75 }, children: [
-        /* @__PURE__ */ u2("span", { children: goal.goalPath || goal.title }),
-        /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)" }, children: [
-          goal.themePath || "未绑定主题",
-          " · ",
-          goal.status
-        ] }),
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, justifyContent: "flex-end", flexWrap: "wrap" }, children: [
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => goal.status === "paused" ? useCases.goal.restoreGoal(goal.id) : useCases.goal.pauseGoal(goal.id), children: goal.status === "paused" ? "恢复" : "暂停" }),
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => useCases.goal.completeGoal(goal.id), children: "完成" }),
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => goal.status === "archived" ? useCases.goal.restoreGoal(goal.id) : useCases.goal.archiveGoal(goal.id), children: goal.status === "archived" ? "恢复" : "归档" })
-        ] })
-      ] }, goal.id)) })
-    ] }),
-    /* @__PURE__ */ u2(Card2, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "2. 旧目标字段迁移预览" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "从已有记录的 `目标::` / `goalPaths` 推断目标实体，不会自动改写 Markdown。" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center" }, children: [
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: topCandidates.length > 0 ? topCandidates.map((candidate) => /* @__PURE__ */ u2(Chip2, { size: "small", label: `${candidate.goalPath} · ${candidate.count}条` }, candidate.goalPath)) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "没有发现需要迁移的旧目标字段。" }) }),
-        /* @__PURE__ */ u2(Button2, { variant: "outlined", onClick: handleMigrate, disabled: candidates.length === 0, children: "生成目标实体" })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(Card2, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "3. Markdown 目标字段回填 Diff" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "先预览 before/after，再手动确认写回。写回只补 `目标ID`、`目标`、`核心Block` 和必要主题。" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: [
-        /* @__PURE__ */ u2(Chip2, { size: "small", label: `缺目标ID ${markdownBackfillDiff.missingGoalIdCount}` }),
-        /* @__PURE__ */ u2(Chip2, { size: "small", label: `缺核心Block ${markdownBackfillDiff.missingCoreBlockCount}` }),
-        /* @__PURE__ */ u2(Chip2, { size: "small", label: `预览 ${markdownBackfillDiff.items.length}/${markdownBackfillDiff.total}` })
-      ] }),
-      markdownBackfillDiff.items.length > 0 ? /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 0.75 }, children: [
-        markdownBackfillDiff.items.map((item) => /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 0.35, borderTop: "1px solid var(--background-modifier-border-hover)", pt: 0.75 }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
-            item.itemId,
-            " · 缺少：",
-            item.missingFields.join("、")
-          ] }),
-          /* @__PURE__ */ u2("code", { style: { whiteSpace: "pre-wrap", overflowWrap: "anywhere", color: "var(--text-muted)" }, children: [
-            "- ",
-            item.beforeSnippet
-          ] }),
-          /* @__PURE__ */ u2("code", { style: { whiteSpace: "pre-wrap", overflowWrap: "anywhere" }, children: [
-            "+ ",
-            item.afterSnippet
-          ] })
-        ] }, `${item.itemId}-${item.goalId}`)),
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "flex-end" }, children: /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleApplyBackfill, children: "确认写回预览项" }) })
-      ] }) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂未发现需要回填的目标字段。" })
-    ] }),
-    /* @__PURE__ */ u2(Card2, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "4. 目标周期" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(160px, 1fr) minmax(120px, 1fr) 110px 130px 130px auto", gap: 1, alignItems: "center" }, children: [
-        /* @__PURE__ */ u2(SimpleSelect, { value: cycleGoalId, options: activeGoalOptions, onChange: setCycleGoalId, placeholder: "选择目标", fullWidth: true }),
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "周期标题", value: cycleTitle, onChange: (event) => setCycleTitle(event.target.value) }),
-        /* @__PURE__ */ u2(SimpleSelect, { value: cycleGranularity, options: cycleGranularityOptions, onChange: (value) => setCycleGranularity(value), fullWidth: true }),
-        /* @__PURE__ */ u2("input", { className: "think-native-input", type: "date", value: cycleStartDate, onInput: (event) => setCycleStartDate(event.target.value) }),
-        /* @__PURE__ */ u2("input", { className: "think-native-input", type: "date", value: cycleEndDate, onInput: (event) => setCycleEndDate(event.target.value) }),
-        /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleAddCycle, disabled: !cycleGoalId || !cycleTitle.trim(), children: "添加周期" })
-      ] }),
-      cycles.length > 0 && /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 0.5 }, children: cycles.slice(0, 12).map((cycle) => /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "1fr auto auto", gap: 1, alignItems: "center", color: "text.secondary" }, children: [
-        /* @__PURE__ */ u2("span", { children: [
-          cycle.title,
-          " · ",
-          goalOptions.find((goal) => goal.value === cycle.goalId)?.label || cycle.goalId
-        ] }),
-        /* @__PURE__ */ u2("span", { children: [
-          cycle.startDate,
-          " → ",
-          cycle.endDate,
-          " · ",
-          cycle.status
-        ] }),
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, justifyContent: "flex-end", flexWrap: "wrap" }, children: [
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => useCases.goal.reopenCycle(cycle.id), children: "激活" }),
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => useCases.goal.markCycleReviewing(cycle.id), children: "复盘" }),
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => useCases.goal.closeCycle(cycle.id), children: "关闭" }),
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => useCases.goal.deleteCycle(cycle.id), children: "删除" })
-        ] })
-      ] }, cycle.id)) })
-    ] }),
-    /* @__PURE__ */ u2(Card2, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "5. 目标指标（表单化）" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "不再必须写 JSON。key/label 会自动映射任务、完成任务、打卡、事件、阻碍等统计。" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(180px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)", gap: 1, alignItems: "center" }, children: [
-        /* @__PURE__ */ u2(SimpleSelect, { value: metricGoalId, options: activeGoalOptions, onChange: (value) => syncMetricDraft(value), placeholder: "选择目标", fullWidth: true }),
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标名称", value: metricLabel, onChange: (event) => {
-          setMetricLabel(event.target.value);
-          if (!metricKey.trim()) setMetricKey(metricPresetKey(event.target.value));
-        } }),
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标 Key", value: metricKey, onChange: (event) => setMetricKey(event.target.value), placeholder: "task.done" })
-      ] }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(160px, 1fr) 120px 90px auto", gap: 1, alignItems: "center" }, children: [
-        /* @__PURE__ */ u2(SimpleSelect, { value: metricDirection, options: metricDirectionOptions, onChange: (value) => setMetricDirection(value), fullWidth: true }),
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标值", type: "number", value: metricTargetValue, onChange: (event) => setMetricTargetValue(event.target.value) }),
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "单位", value: metricUnit, onChange: (event) => setMetricUnit(event.target.value) }),
-        /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleSaveMetric, disabled: !metricGoalId || !metricLabel.trim(), children: "保存/更新指标" })
-      ] }),
-      selectedMetricGoal && /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
-        "当前目标：",
-        selectedMetricGoal.goalPath || selectedMetricGoal.title
-      ] }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: selectedMetrics.length > 0 ? selectedMetrics.map((metric) => /* @__PURE__ */ u2(
-        Chip2,
-        {
-          size: "small",
-          label: `${metric.label} · ${metric.targetValue ?? "无目标值"}${metric.unit || ""}`,
-          onClick: () => loadMetricDraft(metric),
-          onDelete: () => handleRemoveMetric(metric.key)
-        },
-        metric.key
-      )) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "当前目标还没有指标。" }) })
-    ] }),
-    /* @__PURE__ */ u2(Card2, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "6. 目标专属核心 Block 绑定" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "用于让某个目标下的任务/计划/总结等写到不同文件、标题或使用不同模板。空字段表示继承核心 Block / 主题模板。" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(180px, 1fr) minmax(140px, 1fr) auto", gap: 1, alignItems: "center" }, children: [
-        /* @__PURE__ */ u2(SimpleSelect, { value: bindingGoalId, options: activeGoalOptions, onChange: (value) => {
-          setBindingGoalId(value);
-          syncBindingDraft(value, bindingBlockId);
-        }, placeholder: "选择目标", fullWidth: true }),
-        /* @__PURE__ */ u2(SimpleSelect, { value: bindingBlockId, options: blockOptions, onChange: (value) => {
-          setBindingBlockId(value);
-          syncBindingDraft(bindingGoalId, value);
-        }, placeholder: "选择核心 Block", fullWidth: true }),
-        /* @__PURE__ */ u2("label", { style: { display: "inline-flex", gap: "6px", alignItems: "center" }, children: [
-          /* @__PURE__ */ u2("input", { type: "checkbox", checked: bindingEnabled, onChange: (event) => setBindingEnabled(!!event.target.checked) }),
-          "启用"
-        ] })
-      ] }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(160px, 1fr) minmax(160px, 1fr)", gap: 1 }, children: [
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标文件覆盖", value: bindingTargetFile, onChange: (event) => setBindingTargetFile(event.target.value), placeholder: "例如：01/项目目标.md" }),
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "标题位置覆盖", value: bindingHeader, onChange: (event) => setBindingHeader(event.target.value), placeholder: "例如：## {{goalPath}}" })
-      ] }),
-      /* @__PURE__ */ u2(
-        "textarea",
-        {
-          className: "think-native-input think-native-input--textarea",
-          rows: 5,
-          value: bindingTemplate,
-          onInput: (event) => setBindingTemplate(event.target.value),
-          placeholder: "可选：目标专属 outputTemplate。留空则继承主题/核心Block模板。"
-        }
-      ),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(220px, 1fr) minmax(220px, 1fr)", gap: 1 }, children: [
-        /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1, p: 1 }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { fontWeight: 700, mb: 0.75 }, children: "必填字段覆盖" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "勾选后，目标专属模板会把这些字段标记为 required。" }),
-          /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1 }, children: selectedBindingFields.length > 0 ? selectedBindingFields.map((field) => {
-            const key = field.key || field.label;
-            return /* @__PURE__ */ u2("label", { style: { display: "inline-flex", gap: "6px", alignItems: "center", border: "1px solid var(--background-modifier-border)", borderRadius: "999px", padding: "4px 8px" }, children: [
-              /* @__PURE__ */ u2("input", { type: "checkbox", checked: bindingRequiredFields.includes(key), onChange: () => toggleRequiredField(key) }),
-              field.label || field.key
-            ] }, key);
-          }) : /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "当前核心 Block 没有字段。" }) })
-        ] }),
-        /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1, p: 1 }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { fontWeight: 700, mb: 0.75 }, children: "字段默认值 JSON" }),
-          /* @__PURE__ */ u2(
-            "textarea",
-            {
-              className: "think-native-input think-native-input--textarea",
-              rows: 5,
-              value: bindingDefaultValuesText,
-              onInput: (event) => setBindingDefaultValuesText(event.target.value),
-              placeholder: '例如：{\n  "优先级": "高",\n  "周期": "本周"\n}'
-            }
-          )
-        ] })
-      ] }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 1, justifyContent: "flex-end" }, children: [
-        /* @__PURE__ */ u2(Button2, { variant: "text", disabled: !currentBinding, onClick: async () => {
-          await useCases.goal.deleteGoalBlockBinding(bindingGoalId, bindingBlockId);
-          setMessage("目标专属模板绑定已删除。");
-          syncBindingDraft(bindingGoalId, bindingBlockId);
-        }, children: "删除绑定" }),
-        /* @__PURE__ */ u2(Button2, { variant: "contained", disabled: !bindingGoalId || !bindingBlockId, onClick: handleSaveBinding, children: "保存绑定" })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(Divider2, {})
-  ] });
-}
 function InputSettings() {
-  return /* @__PURE__ */ u2(Box, { children: [
-    /* @__PURE__ */ u2(GoalManager, {}),
-    /* @__PURE__ */ u2(Divider2, { sx: { my: 4, mx: "auto", maxWidth: 900 } }),
-    /* @__PURE__ */ u2(BlockManager, {}),
-    /* @__PURE__ */ u2(Divider2, { sx: { my: 4, mx: "auto", maxWidth: 900 } }),
-    /* @__PURE__ */ u2(ThemeMatrix, {})
+  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 2 }, children: [
+    /* @__PURE__ */ u2(Alert2, { severity: "info", children: "快速输入现在只负责“选择目标 → 选择固定 Block → 填写用户字段”。目标管理、记录预设和主题图标请到“数据管理”页维护。" }),
+    /* @__PURE__ */ u2(Box, { sx: { mx: "auto", maxWidth: 900 }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "Block 是固定动作类型：任务、计划、总结、打卡、阻碍项、里程碑、思考、事件。主题不再决定模板。" }) }),
+    /* @__PURE__ */ u2(BlockManager, {})
   ] });
 }
 function GeneralSettings() {
@@ -70942,7 +67483,7 @@ function GeneralSettings() {
   ] }) });
 }
 function AiAdvancedSettingsSection({ settings, onUpdate }) {
-  return /* @__PURE__ */ u2(S, { children: [
+  return /* @__PURE__ */ u2(k$2, { children: [
     /* @__PURE__ */ u2(Accordion2, { children: [
       /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "多结果设置" }) }),
       /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
@@ -71180,7 +67721,7 @@ function AiScopeSection({
   onInitAllBlocks,
   onToggleBlock
 }) {
-  return /* @__PURE__ */ u2(S, { children: [
+  return /* @__PURE__ */ u2(k$2, { children: [
     /* @__PURE__ */ u2(Accordion2, { children: [
       /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "Block 参与范围" }) }),
       /* @__PURE__ */ u2(AccordionDetails2, { children: [
@@ -71444,6 +67985,1507 @@ function AiSettings(_props) {
     )
   ] });
 }
+const metricDirectionOptions = [
+  { value: "increase", label: "增加到目标值" },
+  { value: "decrease", label: "降低到目标值" },
+  { value: "maintain", label: "维持目标值" },
+  { value: "boolean", label: "是否达成" }
+];
+function SectionCard({ children }) {
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      sx: {
+        border: "1px solid var(--background-modifier-border)",
+        borderRadius: 2,
+        p: 1.5,
+        display: "grid",
+        gap: 1.25,
+        background: "var(--background-primary)"
+      },
+      children
+    }
+  );
+}
+function pathLeaf(path) {
+  return String(path || "").split("/").filter(Boolean).pop() || path;
+}
+function metricPresetKey(label) {
+  const text2 = label.toLowerCase();
+  if (/完成|done|complete/.test(text2)) return "task.done";
+  if (/任务|task/.test(text2)) return "task.total";
+  if (/打卡|habit|check/.test(text2)) return "habit.count";
+  if (/事件|证据|event|evidence/.test(text2)) return "evidence.count";
+  if (/阻碍|风险|blocker|risk/.test(text2)) return "blocker.count";
+  if (/里程碑|milestone/.test(text2)) return "milestone.count";
+  if (/总结|复盘|review/.test(text2)) return "review.count";
+  if (/计划|plan/.test(text2)) return "plan.count";
+  return label.trim() || "goal.metric";
+}
+function goalStatusLabel(status) {
+  switch (status) {
+    case "paused":
+      return "已暂停";
+    case "completed":
+      return "已完成";
+    case "archived":
+      return "已归档";
+    case "active":
+    default:
+      return "进行中";
+  }
+}
+function topBlocks(coreBlockCounts = {}) {
+  return Object.entries(coreBlockCounts).sort((left2, right2) => right2[1] - left2[1]).slice(0, 3).map(([name, count]) => `${name.replace(/^core\./, "")} ${count}`).join(" · ");
+}
+function GoalEntitySection() {
+  const settings = useSelector(selectSettings);
+  const dataStore = useDataStore();
+  const useCases = useUseCases();
+  const goals = settings.goalSettings?.goals || [];
+  const [goalPath, setGoalPath] = d("");
+  const [query, setQuery] = d("");
+  const [message, setMessage] = d("");
+  const candidates = T$1(
+    () => inferGoalCandidatesFromItems(dataStore.queryItems(), goals).filter((item) => item.source !== "existing-goal"),
+    [dataStore, goals]
+  );
+  const visibleGoals = T$1(() => {
+    const q2 = query.trim().toLowerCase();
+    const sorted = [...goals].sort((left2, right2) => {
+      const statusRank = (value) => value === "active" ? 0 : value === "paused" ? 1 : value === "completed" ? 2 : 3;
+      const byStatus = statusRank(left2.status) - statusRank(right2.status);
+      if (byStatus !== 0) return byStatus;
+      return String(left2.goalPath || left2.title || "").localeCompare(String(right2.goalPath || right2.title || ""), "zh-CN");
+    });
+    if (!q2) return sorted;
+    return sorted.filter((goal) => `${goal.title || ""} ${goal.goalPath || ""} ${goal.themePath || ""}`.toLowerCase().includes(q2));
+  }, [goals, query]);
+  const handleAddGoal = async () => {
+    const path = goalPath.trim();
+    if (!path) return;
+    const alreadyExists = goals.some((goal2) => String(goal2.goalPath || goal2.title || "").trim() === path);
+    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: null, granularity: "day" });
+    setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加目标：${goal.goalPath || goal.title}` : "目标未添加");
+    if (goal && !alreadyExists) {
+      setGoalPath("");
+    }
+  };
+  const handleImportOne = async (candidate) => {
+    const result = await useCases.goal.applyLegacyGoalMigration([candidate]);
+    setMessage(result.createdGoals > 0 ? `已导入已有目标：${candidate.goalPath}` : `目标已在目标库中：${candidate.goalPath}`);
+  };
+  const handleImportAll = async () => {
+    const result = await useCases.goal.applyLegacyGoalMigration(candidates);
+    setMessage(`已从旧记录导入 ${result.createdGoals} 个目标。`);
+  };
+  const handleDeleteGoal = async (goal) => {
+    const label = goal.goalPath || goal.title || goal.id;
+    if (!window.confirm(`删除目标「${label}」？
+
+这会删除目标实体、目标记录关系和该目标下的记录预设；不会删除已有 Markdown 文件。`)) return;
+    await useCases.goal.deleteGoal(goal.id);
+    setMessage(`已删除目标：${label}`);
+  };
+  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 2 }, children: [
+    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
+    /* @__PURE__ */ u2(SectionCard, { children: /* @__PURE__ */ u2("details", { children: [
+      /* @__PURE__ */ u2("summary", { style: { cursor: "pointer", fontWeight: 800 }, children: [
+        "从已有记录导入目标",
+        candidates.length > 0 ? ` · ${candidates.length} 个可导入` : " · 无待导入"
+      ] }),
+      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1, mt: 1 }, children: [
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "flex-start", flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "扫描旧记录里的“目标:: / 目标路径 / goalPaths”字段，把它们变成目标库里的目标；不会改写 Markdown 内容。" }),
+          /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleImportAll, disabled: candidates.length === 0, children: [
+            "导入全部 ",
+            candidates.length
+          ] })
+        ] }),
+        candidates.length > 0 ? /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 1 }, children: candidates.slice(0, 12).map((candidate) => /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1, display: "grid", gap: 0.75, background: "var(--background-secondary)" }, children: [
+          /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "flex-start" }, children: [
+            /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
+              /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: candidate.goalPath }),
+              /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
+                candidate.count,
+                " 条记录",
+                candidate.lastDate ? ` · 最近 ${candidate.lastDate}` : ""
+              ] })
+            ] }),
+            /* @__PURE__ */ u2(Chip2, { size: "small", label: candidate.source === "mixed" ? "部分存在" : "可导入", color: candidate.source === "mixed" ? "warning" : "primary" })
+          ] }),
+          topBlocks(candidate.coreBlockCounts) && /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
+            "记录类型：",
+            topBlocks(candidate.coreBlockCounts)
+          ] }),
+          /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "flex-end" }, children: /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: () => handleImportOne(candidate), children: "导入这个目标" }) })
+        ] }, candidate.goalPath)) }) : /* @__PURE__ */ u2(Alert2, { severity: "success", children: "没有待导入的旧目标。目标库已经和现有记录保持一致。" })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ u2(SectionCard, { children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "新建目标" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "只需要填目标路径。目标只回答“我要追踪什么”；主题和统计周期都不在目标库绑定。周期请在对应的目标 × Block 预设表单里设置。" }),
+      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(240px, 1fr) auto", gap: 1, alignItems: "center" }, children: [
+        /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标路径", value: goalPath, onChange: (event) => setGoalPath(event.target.value), placeholder: "例如：产品化/插件/目标中心" }),
+        /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "新建目标" })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(SectionCard, { children: [
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ u2(Box, { children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "目标库" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标库只管理目标本身：新建、暂停、完成、归档、删除。统计周期属于记录表单，请到“目标 × Block 预设表”的单元格里设置。" })
+        ] }),
+        /* @__PURE__ */ u2(TextField2, { size: "small", label: "搜索目标", value: query, onChange: (event) => setQuery(event.target.value), sx: { minWidth: 220 } })
+      ] }),
+      visibleGoals.length > 0 ? /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 0.75 }, children: visibleGoals.slice(0, 40).map((goal) => /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(220px, 1fr) auto", gap: 1, alignItems: "center", border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1, background: goal.status === "archived" ? "var(--background-secondary)" : "var(--background-primary)" }, children: [
+        /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 0.75, minWidth: 0, flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: goal.goalPath || goal.title }),
+          /* @__PURE__ */ u2(Chip2, { size: "small", label: goalStatusLabel(goal.status), color: goal.status === "active" ? "primary" : "default" })
+        ] }) }),
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, justifyContent: "flex-end", flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => goal.status === "paused" ? useCases.goal.restoreGoal(goal.id) : useCases.goal.pauseGoal(goal.id), children: goal.status === "paused" ? "恢复" : "暂停" }),
+          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => useCases.goal.completeGoal(goal.id), children: "完成" }),
+          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => goal.status === "archived" ? useCases.goal.restoreGoal(goal.id) : useCases.goal.archiveGoal(goal.id), children: goal.status === "archived" ? "恢复" : "归档" }),
+          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => handleDeleteGoal(goal), children: "删除" })
+        ] })
+      ] }, goal.id)) }) : /* @__PURE__ */ u2(Alert2, { severity: "info", children: "目标库还是空的。可以展开“从已有记录导入目标”，或在上方新建一个目标。" })
+    ] })
+  ] });
+}
+function GoalMetricSection() {
+  const settings = useSelector(selectSettings);
+  const useCases = useUseCases();
+  const goals = settings.goalSettings?.goals || [];
+  const activeGoalOptions = goals.filter((goal) => goal.status !== "archived").map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title || goal.id }));
+  const [message, setMessage] = d("");
+  const [metricGoalId, setMetricGoalId] = d(activeGoalOptions[0]?.value || "");
+  const selectedMetricGoal = goals.find((goal) => goal.id === metricGoalId) || null;
+  const selectedMetrics = selectedMetricGoal?.metrics || [];
+  const [metricKey, setMetricKey] = d("task.done");
+  const [metricLabel, setMetricLabel] = d("完成任务");
+  const [metricDirection, setMetricDirection] = d("increase");
+  const [metricTargetValue, setMetricTargetValue] = d("10");
+  const [metricUnit, setMetricUnit] = d("个");
+  const syncMetricDraft = (goalId) => {
+    const goal = goals.find((item) => item.id === goalId) || null;
+    const first = goal?.metrics?.[0];
+    setMetricGoalId(goalId);
+    if (first) {
+      setMetricKey(first.key);
+      setMetricLabel(first.label);
+      setMetricDirection(first.direction);
+      setMetricTargetValue(first.targetValue === void 0 ? "" : String(first.targetValue));
+      setMetricUnit(first.unit || "");
+    }
+  };
+  const loadMetricDraft = (metric) => {
+    setMetricKey(metric.key);
+    setMetricLabel(metric.label);
+    setMetricDirection(metric.direction);
+    setMetricTargetValue(metric.targetValue === void 0 ? "" : String(metric.targetValue));
+    setMetricUnit(metric.unit || "");
+  };
+  const handleSaveMetric = async () => {
+    if (!metricGoalId) return;
+    const key = metricKey.trim() || metricPresetKey(metricLabel);
+    const label = metricLabel.trim() || key;
+    const metric = {
+      key,
+      label,
+      direction: metricDirection,
+      targetValue: metricTargetValue.trim() === "" ? void 0 : Number(metricTargetValue),
+      unit: metricUnit.trim() || void 0
+    };
+    const nextMetrics = [...selectedMetrics.filter((item) => item.key !== key), metric];
+    await useCases.goal.updateGoalMetrics(metricGoalId, nextMetrics);
+    setMessage(`目标指标已保存：${label}`);
+  };
+  const handleRemoveMetric = async (key) => {
+    if (!metricGoalId) return;
+    await useCases.goal.updateGoalMetrics(metricGoalId, selectedMetrics.filter((metric) => metric.key !== key));
+    setMessage("目标指标已删除。");
+  };
+  return /* @__PURE__ */ u2(SectionCard, { children: [
+    /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "目标指标" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "指标只属于目标；视图根据记录里的 Block、状态和日期运行时统计。" }),
+    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(180px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)", gap: 1, alignItems: "center" }, children: [
+      /* @__PURE__ */ u2(SimpleSelect, { value: metricGoalId, options: activeGoalOptions, onChange: (value) => syncMetricDraft(value), placeholder: "选择目标", fullWidth: true }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标名称", value: metricLabel, onChange: (event) => {
+        setMetricLabel(event.target.value);
+        if (!metricKey.trim()) setMetricKey(metricPresetKey(event.target.value));
+      } }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标 Key", value: metricKey, onChange: (event) => setMetricKey(event.target.value), placeholder: "task.done" })
+    ] }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(160px, 1fr) 120px 90px auto", gap: 1, alignItems: "center" }, children: [
+      /* @__PURE__ */ u2(SimpleSelect, { value: metricDirection, options: metricDirectionOptions, onChange: (value) => setMetricDirection(value), fullWidth: true }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标值", type: "number", value: metricTargetValue, onChange: (event) => setMetricTargetValue(event.target.value) }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "单位", value: metricUnit, onChange: (event) => setMetricUnit(event.target.value) }),
+      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleSaveMetric, disabled: !metricGoalId || !metricLabel.trim(), children: "保存/更新指标" })
+    ] }),
+    selectedMetricGoal && /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
+      "当前目标：",
+      selectedMetricGoal.goalPath || selectedMetricGoal.title
+    ] }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: selectedMetrics.length > 0 ? selectedMetrics.map((metric) => /* @__PURE__ */ u2(
+      Chip2,
+      {
+        size: "small",
+        label: `${metric.label} · ${metric.targetValue ?? "无目标值"}${metric.unit || ""}`,
+        onClick: () => loadMetricDraft(metric),
+        onDelete: () => handleRemoveMetric(metric.key)
+      },
+      metric.key
+    )) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "当前目标还没有指标。" }) })
+  ] });
+}
+function cloneValue(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+function readInputValue(event) {
+  return (event.target || event.currentTarget).value;
+}
+function stopEditorEvent(event) {
+  event.stopPropagation();
+}
+const nativeControlBaseStyle = {
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
+  border: "1px solid var(--background-modifier-border)",
+  borderRadius: 6,
+  background: "var(--background-primary)",
+  color: "var(--text-normal)",
+  padding: "8px 10px",
+  font: "inherit",
+  lineHeight: 1.4,
+  userSelect: "text",
+  WebkitUserSelect: "text",
+  pointerEvents: "auto"
+};
+const nativeLabelStyle = {
+  display: "block",
+  marginBottom: 4,
+  fontSize: "0.75rem",
+  color: "var(--text-muted)"
+};
+const presetGranularityOptions = [
+  { value: "day", label: "日" },
+  { value: "week", label: "周" },
+  { value: "month", label: "月" },
+  { value: "quarter", label: "季度" },
+  { value: "year", label: "年" }
+];
+const granularityLabelMap = {
+  day: "日",
+  week: "周",
+  month: "月",
+  quarter: "季度",
+  year: "年"
+};
+function normalizeThemePath(value) {
+  const text2 = String(value ?? "").trim();
+  if (!text2 || text2 === "{{goal.themePath}}") return "";
+  return text2;
+}
+function isThemeField(field) {
+  const anyField = field;
+  const key = String(anyField.key || "").toLowerCase();
+  const label = String(anyField.label || "");
+  const semantic = String(anyField.semantic || anyField.semanticType || "").toLowerCase();
+  return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath");
+}
+function readThemePathFromFields(fields) {
+  for (const field of fields || []) {
+    if (!isThemeField(field)) continue;
+    const value = normalizeThemePath(field.defaultValue);
+    if (value) return value;
+  }
+  return "";
+}
+function readThemePathFromTemplate(template) {
+  const values2 = template?.defaultValues || {};
+  return normalizeThemePath(values2.themePath) || normalizeThemePath(values2["主题"]) || readThemePathFromFields(template?.fields);
+}
+function ensureThemeField(fields, themePath) {
+  const normalizedTheme = normalizeThemePath(themePath);
+  let found = false;
+  const next2 = (fields || []).map((field) => {
+    if (!isThemeField(field)) return field;
+    found = true;
+    return { ...field, defaultValue: normalizedTheme || field.defaultValue || "{{goal.themePath}}" };
+  });
+  if (!found && normalizedTheme) {
+    next2.push({
+      id: "core.field.themePath",
+      key: "themePath",
+      label: "主题",
+      type: "hierarchicalSingleSelect",
+      semantic: "themePath",
+      semanticType: "path",
+      hierarchical: true,
+      defaultValue: normalizedTheme
+    });
+  }
+  return next2;
+}
+function mergeDefaultValues(draft, themeIcon) {
+  const values2 = { ...draft.defaultValues || {}, ...deriveDefaultValues(draft.fields || []) };
+  const themePath = normalizeThemePath(draft.themePath) || normalizeThemePath(values2.themePath) || normalizeThemePath(values2["主题"]);
+  if (themePath) {
+    values2.themePath = themePath;
+    values2["主题"] = themePath;
+  }
+  if (themeIcon) {
+    values2.icon = themeIcon;
+    values2["图标"] = themeIcon;
+  }
+  return values2;
+}
+function shortText(value, fallback = "—", max2 = 24) {
+  const text2 = String(value ?? "").trim();
+  if (!text2) return fallback;
+  return text2.length > max2 ? `${text2.slice(0, max2 - 1)}…` : text2;
+}
+function leafPath(value) {
+  const text2 = String(value ?? "").trim();
+  return text2.split("/").filter(Boolean).pop() || text2;
+}
+function presetName$1(template) {
+  const name = String(template.name || "").trim();
+  if (name) return name;
+  const variantId = String(template.variantId || "").trim();
+  if (variantId) return variantId.replace(/^legacy-/, "");
+  return "默认预设";
+}
+function NativeTextInput({
+  label,
+  value,
+  onInput,
+  disabled = false,
+  placeholder
+}) {
+  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0 }, children: [
+    /* @__PURE__ */ u2("span", { style: nativeLabelStyle, children: label }),
+    /* @__PURE__ */ u2(
+      "input",
+      {
+        value,
+        disabled,
+        placeholder,
+        onMouseDown: stopEditorEvent,
+        onClick: stopEditorEvent,
+        onDblClick: stopEditorEvent,
+        onKeyDown: stopEditorEvent,
+        onKeyUp: stopEditorEvent,
+        onInput: (event) => onInput(readInputValue(event)),
+        style: { ...nativeControlBaseStyle, opacity: disabled ? 0.6 : 1, cursor: disabled ? "not-allowed" : "text" }
+      }
+    )
+  ] });
+}
+function CompactCellInput({
+  value,
+  onInput,
+  disabled = false,
+  placeholder,
+  type = "text"
+}) {
+  return /* @__PURE__ */ u2(
+    "input",
+    {
+      value,
+      type,
+      disabled,
+      placeholder,
+      onMouseDown: stopEditorEvent,
+      onClick: stopEditorEvent,
+      onDblClick: stopEditorEvent,
+      onKeyDown: stopEditorEvent,
+      onKeyUp: stopEditorEvent,
+      onInput: (event) => onInput(readInputValue(event)),
+      style: {
+        ...nativeControlBaseStyle,
+        padding: "5px 7px",
+        minHeight: 30,
+        fontSize: 13,
+        opacity: disabled ? 0.6 : 1,
+        cursor: disabled ? "not-allowed" : "text"
+      }
+    }
+  );
+}
+function CompactCellSelect({
+  value,
+  options,
+  onChange,
+  disabled = false
+}) {
+  return /* @__PURE__ */ u2(
+    "select",
+    {
+      value,
+      disabled,
+      onMouseDown: stopEditorEvent,
+      onClick: stopEditorEvent,
+      onDblClick: stopEditorEvent,
+      onKeyDown: stopEditorEvent,
+      onKeyUp: stopEditorEvent,
+      onChange: (event) => onChange((event.target || event.currentTarget).value),
+      style: {
+        ...nativeControlBaseStyle,
+        padding: "5px 7px",
+        minHeight: 30,
+        fontSize: 13,
+        opacity: disabled ? 0.6 : 1
+      },
+      children: options.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
+    }
+  );
+}
+function NativeTextarea({
+  label,
+  value,
+  onInput,
+  disabled = false,
+  rows = 8
+}) {
+  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0 }, children: [
+    label ? /* @__PURE__ */ u2("span", { style: nativeLabelStyle, children: label }) : null,
+    /* @__PURE__ */ u2(
+      "textarea",
+      {
+        value,
+        disabled,
+        rows,
+        onMouseDown: stopEditorEvent,
+        onClick: stopEditorEvent,
+        onDblClick: stopEditorEvent,
+        onKeyDown: stopEditorEvent,
+        onKeyUp: stopEditorEvent,
+        onInput: (event) => onInput(readInputValue(event)),
+        style: {
+          ...nativeControlBaseStyle,
+          fontFamily: "monospace",
+          fontSize: "13px",
+          resize: "vertical",
+          opacity: disabled ? 0.6 : 1,
+          cursor: disabled ? "not-allowed" : "text"
+        }
+      }
+    )
+  ] });
+}
+function makeVariantId(label) {
+  const text2 = String(label || "").trim();
+  if (!text2) return `variant-${Date.now()}`;
+  return text2.replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-").replace(/^-+|-+$/g, "") || `variant-${Date.now()}`;
+}
+function makeDraftFromTemplate(template, block2, variants) {
+  const variantId = template?.variantId || "default";
+  const index = Math.max(0, variants.findIndex((item) => (item.variantId || "default") === variantId));
+  const themePath = readThemePathFromTemplate(template) || readThemePathFromFields(block2?.fields);
+  const fields = ensureThemeField(cloneValue(template?.fields || block2?.fields || []), themePath);
+  return {
+    variantId,
+    name: template?.name || (variantId === "default" ? "默认预设" : variantId),
+    description: template?.description || "",
+    isDefault: template?.isDefault !== void 0 ? !!template.isDefault : variantId === "default",
+    granularity: template?.granularity || "day",
+    sortOrder: template?.sortOrder ?? index * 10,
+    fields,
+    outputTemplate: template?.outputTemplate || block2?.outputTemplate || "",
+    targetFile: template?.targetFile || block2?.targetFile || "",
+    appendUnderHeader: template?.appendUnderHeader || block2?.appendUnderHeader || "## {{goalPath}}",
+    requiredFields: cloneValue(template?.requiredFields || []),
+    defaultValues: cloneValue(template?.defaultValues || {}),
+    themePath
+  };
+}
+function deriveRequiredFields(fields) {
+  return (fields || []).filter((field) => field?.required === true).map((field) => String(field.key || field.label || "").trim()).filter(Boolean);
+}
+function deriveDefaultValues(fields) {
+  const result = {};
+  for (const field of fields || []) {
+    const key = String(field.key || field.label || "").trim();
+    if (!key) continue;
+    const value = field.defaultValue;
+    if (value !== void 0 && value !== null && String(value).trim() !== "") result[key] = value;
+  }
+  return result;
+}
+function nextCopyVariantId(existing, sourceVariantId) {
+  const base = `${sourceVariantId}-copy`;
+  const used = new Set(existing.map((item) => String(item.variantId || "default")));
+  if (!used.has(base)) return base;
+  let index = 2;
+  while (used.has(`${base}-${index}`)) index += 1;
+  return `${base}-${index}`;
+}
+function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variants, useCases }) {
+  const ui = useUiPort();
+  const settings = useSelector(selectSettings);
+  const themes = settings.inputSettings?.themes || [];
+  const themeOptions2 = [{ value: "", label: "不指定主题" }, ...themes.map((theme2) => ({ value: theme2.path, label: `${theme2.icon ? `${theme2.icon} ` : ""}${theme2.path}` }))];
+  const themeByPath = new Map(themes.map((theme2) => [String(theme2.path || ""), theme2]));
+  const sortedVariants = T$1(() => [...variants].sort((left2, right2) => {
+    const bySort = (left2.sortOrder ?? 9999) - (right2.sortOrder ?? 9999);
+    if (bySort !== 0) return bySort;
+    if (!!left2.isDefault !== !!right2.isDefault) return left2.isDefault ? -1 : 1;
+    return String(left2.name || left2.variantId || "").localeCompare(String(right2.name || right2.variantId || ""), "zh-CN");
+  }), [variants]);
+  const [mode, setMode] = d("inherit");
+  const [selectedVariantId, setSelectedVariantId] = d("default");
+  const [draft, setDraft] = d(() => makeDraftFromTemplate(null, block2, sortedVariants));
+  const draftRef = A$1(draft);
+  const selectedTemplate = T$1(() => sortedVariants.find((template) => (template.variantId || "default") === selectedVariantId) || null, [sortedVariants, selectedVariantId]);
+  const tableVariants = T$1(() => {
+    const rows = [...sortedVariants];
+    const draftVariantId = draft.variantId || selectedVariantId || "default";
+    const draftExists = rows.some((template) => (template.variantId || "default") === draftVariantId);
+    if (mode === "override" && !draftExists) {
+      rows.push({
+        id: goal && block2 ? getGoalTemplateId(goal.id, block2.id, draftVariantId) : draftVariantId,
+        goalId: goal?.id || "",
+        coreBlockId: block2?.id || "",
+        variantId: draftVariantId,
+        name: draft.name,
+        description: draft.description,
+        isDefault: draft.isDefault,
+        granularity: draft.granularity,
+        sortOrder: draft.sortOrder,
+        enabled: true,
+        fields: draft.fields,
+        outputTemplate: draft.outputTemplate,
+        targetFile: draft.targetFile,
+        appendUnderHeader: draft.appendUnderHeader,
+        defaultValues: draft.defaultValues,
+        requiredFields: draft.requiredFields
+      });
+    }
+    return rows.sort((left2, right2) => {
+      const bySort = (left2.sortOrder ?? 9999) - (right2.sortOrder ?? 9999);
+      if (bySort !== 0) return bySort;
+      if (!!left2.isDefault !== !!right2.isDefault) return left2.isDefault ? -1 : 1;
+      return String(left2.name || left2.variantId || "").localeCompare(String(right2.name || right2.variantId || ""), "zh-CN");
+    });
+  }, [sortedVariants, draft, selectedVariantId, mode, goal?.id, block2?.id]);
+  y(() => {
+    if (!isOpen) return;
+    const firstEnabled = sortedVariants.find((template) => template.enabled !== false);
+    const first = firstEnabled || sortedVariants[0] || null;
+    const nextMode = sortedVariants.length === 0 ? "inherit" : firstEnabled ? "override" : "disabled";
+    const nextVariantId = first?.variantId || "default";
+    setMode(nextMode);
+    setSelectedVariantId(nextVariantId);
+    const nextDraft = makeDraftFromTemplate(first, block2, sortedVariants);
+    draftRef.current = nextDraft;
+    setDraft(nextDraft);
+  }, [isOpen, goal?.id, block2?.id]);
+  y(() => {
+    draftRef.current = draft;
+  }, [draft]);
+  const updateDraft = (updates) => {
+    setDraft((previous) => {
+      const next2 = { ...previous, ...updates };
+      draftRef.current = next2;
+      return next2;
+    });
+  };
+  const updateThemePath = (themePath) => {
+    setDraft((previous) => {
+      const theme2 = themeByPath.get(String(themePath || ""));
+      const next2 = {
+        ...previous,
+        themePath: normalizeThemePath(themePath),
+        fields: ensureThemeField(previous.fields || [], themePath),
+        defaultValues: mergeDefaultValues({ ...previous, themePath: normalizeThemePath(themePath), fields: ensureThemeField(previous.fields || [], themePath) }, theme2?.icon)
+      };
+      draftRef.current = next2;
+      return next2;
+    });
+  };
+  const currentTheme = themeByPath.get(String(draft.themePath || ""));
+  const isFormDisabled = mode !== "override";
+  const effectiveBlockForCopier = T$1(() => {
+    if (!block2) return null;
+    return { ...block2, fields: draft.fields || block2.fields, outputTemplate: draft.outputTemplate || block2.outputTemplate };
+  }, [block2, draft.fields, draft.outputTemplate]);
+  const handleSelectVariant = (variantId) => {
+    const template = sortedVariants.find((item) => (item.variantId || "default") === variantId) || null;
+    setSelectedVariantId(variantId || "default");
+    const nextDraft = makeDraftFromTemplate(template, block2, sortedVariants);
+    draftRef.current = nextDraft;
+    setDraft(nextDraft);
+    setMode(template?.enabled === false ? "disabled" : "override");
+  };
+  const handleNewVariant = () => {
+    const base = makeDraftFromTemplate(null, block2, sortedVariants);
+    const variantId = makeVariantId(`preset-${sortedVariants.length + 1}`);
+    const next2 = { ...base, variantId, name: `预设 ${sortedVariants.length + 1}`, isDefault: sortedVariants.length === 0, sortOrder: sortedVariants.length * 10 };
+    setMode("override");
+    setSelectedVariantId(variantId);
+    draftRef.current = next2;
+    setDraft(next2);
+  };
+  const handleMoveVariant = async (direction) => {
+    if (!goal || !block2 || !selectedTemplate) return;
+    const index = sortedVariants.findIndex((template) => (template.variantId || "default") === (selectedTemplate.variantId || "default"));
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= sortedVariants.length) return;
+    const reordered = [...sortedVariants];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(targetIndex, 0, moved);
+    await Promise.all(reordered.map((template, order2) => useCases.goal.upsertGoalTemplate({ ...template, sortOrder: order2 * 10 })));
+    setSelectedVariantId(moved.variantId || "default");
+  };
+  const handleCopyVariant = async () => {
+    if (!goal || !block2) return;
+    const currentDraft = draftRef.current;
+    const sourceVariantId = currentDraft.variantId || selectedTemplate?.variantId || "default";
+    const variantId = nextCopyVariantId(sortedVariants, sourceVariantId);
+    const nextDraft = {
+      ...currentDraft,
+      variantId,
+      name: `${currentDraft.name || selectedTemplate?.name || sourceVariantId} 副本`,
+      isDefault: false,
+      sortOrder: sortedVariants.length * 10
+    };
+    await useCases.goal.upsertGoalTemplate({
+      id: getGoalTemplateId(goal.id, block2.id, variantId),
+      goalId: goal.id,
+      coreBlockId: block2.id,
+      variantId,
+      name: nextDraft.name,
+      description: nextDraft.description || void 0,
+      isDefault: false,
+      granularity: nextDraft.granularity,
+      sortOrder: nextDraft.sortOrder,
+      enabled: true,
+      fields: ensureThemeField(nextDraft.fields, nextDraft.themePath),
+      outputTemplate: nextDraft.outputTemplate || void 0,
+      targetFile: nextDraft.targetFile || void 0,
+      appendUnderHeader: nextDraft.appendUnderHeader || void 0,
+      requiredFields: deriveRequiredFields(nextDraft.fields),
+      defaultValues: mergeDefaultValues(nextDraft, themeByPath.get(String(nextDraft.themePath || ""))?.icon),
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    setMode("override");
+    setSelectedVariantId(variantId);
+    draftRef.current = nextDraft;
+    setDraft(nextDraft);
+    ui.notice("已复制记录预设");
+  };
+  const handleDeleteCurrentVariant = async () => {
+    if (!goal || !block2) return;
+    const variantId = selectedVariantId || draft.variantId || "default";
+    await useCases.goal.deleteGoalTemplate(goal.id, block2.id, variantId);
+    const next2 = sortedVariants.find((template) => (template.variantId || "default") !== variantId) || null;
+    if (next2) handleSelectVariant(next2.variantId || "default");
+    else handleNewVariant();
+    ui.notice("已删除当前记录预设");
+  };
+  const handleSetCurrentDefault = async () => {
+    if (!goal || !block2) return;
+    const currentDraft = draftRef.current;
+    await useCases.goal.upsertGoalTemplate({
+      id: getGoalTemplateId(goal.id, block2.id, currentDraft.variantId || "default"),
+      goalId: goal.id,
+      coreBlockId: block2.id,
+      variantId: currentDraft.variantId || "default",
+      name: currentDraft.name || "默认预设",
+      description: currentDraft.description || void 0,
+      isDefault: true,
+      granularity: currentDraft.granularity,
+      sortOrder: Number.isFinite(currentDraft.sortOrder) ? currentDraft.sortOrder : 0,
+      enabled: true,
+      fields: ensureThemeField(currentDraft.fields, currentDraft.themePath),
+      outputTemplate: currentDraft.outputTemplate || void 0,
+      targetFile: currentDraft.targetFile || void 0,
+      appendUnderHeader: currentDraft.appendUnderHeader || void 0,
+      requiredFields: deriveRequiredFields(currentDraft.fields),
+      defaultValues: mergeDefaultValues(currentDraft, themeByPath.get(String(currentDraft.themePath || ""))?.icon),
+      createdAt: selectedTemplate?.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    updateDraft({ isDefault: true });
+    ui.notice("已设为默认预设");
+  };
+  const deleteCellTemplates = async () => {
+    if (!goal || !block2) return;
+    await Promise.all(sortedVariants.map((template) => useCases.goal.deleteGoalTemplate(goal.id, block2.id, template.variantId || "default")));
+  };
+  const handleSave = async () => {
+    if (!goal || !block2) return;
+    const activeElement = document.activeElement;
+    if (activeElement && typeof activeElement.blur === "function") activeElement.blur();
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    const currentDraft = draftRef.current;
+    try {
+      if (mode === "inherit") {
+        await deleteCellTemplates();
+        ui.notice(`已设为继承 ${block2.name} 的默认记录方式`);
+        onClose();
+        return;
+      }
+      if (mode === "disabled") {
+        await deleteCellTemplates();
+        await useCases.goal.upsertGoalTemplate({
+          id: getGoalTemplateId(goal.id, block2.id, "default"),
+          goalId: goal.id,
+          coreBlockId: block2.id,
+          variantId: "default",
+          name: "隐藏",
+          description: "该目标下隐藏此 Block",
+          isDefault: true,
+          sortOrder: 0,
+          enabled: false,
+          createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+          updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+        });
+        ui.notice(`已隐藏 ${goal.goalPath || goal.title} / ${block2.name}`);
+        onClose();
+        return;
+      }
+      const variantId = currentDraft.variantId || "default";
+      await useCases.goal.upsertGoalTemplate({
+        id: getGoalTemplateId(goal.id, block2.id, variantId),
+        goalId: goal.id,
+        coreBlockId: block2.id,
+        variantId,
+        name: currentDraft.name || (variantId === "default" ? "默认预设" : variantId),
+        description: currentDraft.description || void 0,
+        isDefault: !!currentDraft.isDefault,
+        granularity: currentDraft.granularity,
+        sortOrder: Number.isFinite(currentDraft.sortOrder) ? currentDraft.sortOrder : 0,
+        enabled: true,
+        fields: ensureThemeField(currentDraft.fields, currentDraft.themePath),
+        outputTemplate: currentDraft.outputTemplate || void 0,
+        targetFile: currentDraft.targetFile || void 0,
+        appendUnderHeader: currentDraft.appendUnderHeader || void 0,
+        requiredFields: deriveRequiredFields(currentDraft.fields),
+        defaultValues: mergeDefaultValues(currentDraft, themeByPath.get(String(currentDraft.themePath || ""))?.icon),
+        createdAt: selectedTemplate?.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      });
+      ui.notice(`已保存预设单元格：${goal.goalPath || goal.title} / ${block2.name}`);
+      onClose();
+    } catch (error) {
+      diagnosticError("[GoalTemplateEditorModal] save failed", error);
+      ui.notice("保存记录预设失败，请查看控制台日志");
+    }
+  };
+  if (!isOpen || !goal || !block2) return null;
+  return /* @__PURE__ */ u2(
+    FloatingPanel,
+    {
+      id: `goal-template-editor-${goal.id}-${block2.id}`,
+      title: /* @__PURE__ */ u2(Typography2, { children: [
+        "预设单元格：",
+        /* @__PURE__ */ u2("strong", { children: goal.goalPath || goal.title }),
+        " / ",
+        /* @__PURE__ */ u2("span", { style: { color: "var(--color-accent)" }, children: block2.name })
+      ] }),
+      onClose,
+      portal: false,
+      placement: "inline",
+      closeOnOutsideClick: false,
+      width: "100%",
+      minWidth: 0,
+      maxWidth: "100%",
+      minHeight: 420,
+      maxHeight: "calc(100vh - 120px)",
+      height: "min(780px, calc(100vh - 160px))",
+      resizable: false,
+      bodyPadding: 0,
+      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
+      children: /* @__PURE__ */ u2(Box, { sx: { p: 2, flex: 1, minHeight: 0, overflowY: "auto", boxSizing: "border-box" }, children: /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
+        /* @__PURE__ */ u2(FormControl2, { component: "fieldset", children: [
+          /* @__PURE__ */ u2(FormLabel2, { component: "legend", children: "配置模式" }),
+          /* @__PURE__ */ u2(RadioGroup2, { row: true, value: mode, onChange: (_event, value) => setMode(value), children: [
+            /* @__PURE__ */ u2(FormControlLabel2, { value: "inherit", control: /* @__PURE__ */ u2(Radio2, {}), label: "继承默认记录方式" }),
+            /* @__PURE__ */ u2(FormControlLabel2, { value: "override", control: /* @__PURE__ */ u2(Radio2, {}), label: "使用本单元格预设" }),
+            /* @__PURE__ */ u2(FormControlLabel2, { value: "disabled", control: /* @__PURE__ */ u2(Radio2, {}), label: "隐藏这种记录类型" })
+          ] })
+        ] }),
+        /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1, p: 1, display: "grid", gap: 1 }, children: [
+          /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
+            /* @__PURE__ */ u2(Box, { children: [
+              /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "记录预设" }),
+              /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "同一个目标下可以为这种记录类型准备多个记录预设，例如运动打卡、饮水打卡、睡眠打卡。统计周期在这里设置，而不是在目标库设置。" })
+            ] }),
+            /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: handleNewVariant, disabled: mode !== "override", children: "新建记录预设" })
+          ] }),
+          /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", border: "1px solid var(--background-modifier-border)", borderRadius: 1 }, children: /* @__PURE__ */ u2("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "13px" }, children: [
+            /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { style: { background: "var(--background-secondary)" }, children: [
+              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "150px" }, children: "名字" }),
+              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "120px" }, children: "主题" }),
+              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "70px" }, children: "周期" }),
+              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "160px" }, children: "保存文件" }),
+              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "140px" }, children: "标题" }),
+              /* @__PURE__ */ u2("th", { style: { textAlign: "center", padding: "8px", width: "64px" }, children: "默认" }),
+              /* @__PURE__ */ u2("th", { style: { textAlign: "center", padding: "8px", width: "64px" }, children: "顺序" })
+            ] }) }),
+            /* @__PURE__ */ u2("tbody", { children: tableVariants.length > 0 ? tableVariants.map((template) => {
+              const variantId = template.variantId || "default";
+              const selectedRow = selectedVariantId === variantId;
+              const rowThemePath = selectedRow ? draft.themePath : readThemePathFromTemplate(template);
+              const rowGranularity = selectedRow ? draft.granularity : template.granularity || "day";
+              const rowTargetFile = selectedRow ? draft.targetFile : String(template.targetFile || "");
+              const rowHeader = selectedRow ? draft.appendUnderHeader : String(template.appendUnderHeader || "");
+              const rowName = selectedRow ? draft.name : presetName$1(template);
+              const rowSortOrder = selectedRow ? draft.sortOrder : template.sortOrder ?? 0;
+              const rowIsDefault = selectedRow ? draft.isDefault : !!template.isDefault;
+              return /* @__PURE__ */ u2(
+                "tr",
+                {
+                  onClick: () => handleSelectVariant(variantId),
+                  style: {
+                    cursor: "pointer",
+                    background: selectedRow ? "rgba(137, 99, 255, 0.12)" : "transparent",
+                    borderTop: "1px solid var(--background-modifier-border)"
+                  },
+                  children: [
+                    /* @__PURE__ */ u2("td", { style: { padding: "6px", fontWeight: selectedRow ? 700 : 500 }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: rowName, onInput: (value) => updateDraft({ name: value }), disabled: isFormDisabled, placeholder: "例如：睡眠任务" }) : rowName }),
+                    /* @__PURE__ */ u2("td", { style: { padding: "6px", color: rowThemePath ? "var(--text-normal)" : "var(--text-muted)" }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellSelect, { value: rowThemePath || "", options: themeOptions2, onChange: (value) => updateThemePath(String(value || "")), disabled: isFormDisabled }) : rowThemePath ? leafPath(rowThemePath) : "不指定" }),
+                    /* @__PURE__ */ u2("td", { style: { padding: "6px" }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellSelect, { value: rowGranularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: isFormDisabled }) : granularityLabelMap[rowGranularity] || "日" }),
+                    /* @__PURE__ */ u2("td", { style: { padding: "6px", color: "var(--text-muted)" }, title: rowTargetFile, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: rowTargetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: isFormDisabled, placeholder: "例如：01/目标.md" }) : shortText(rowTargetFile) }),
+                    /* @__PURE__ */ u2("td", { style: { padding: "6px", color: "var(--text-muted)" }, title: rowHeader, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: rowHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: isFormDisabled, placeholder: "## {{goalPath}}" }) : shortText(rowHeader) }),
+                    /* @__PURE__ */ u2("td", { style: { padding: "6px", textAlign: "center" }, children: selectedRow ? /* @__PURE__ */ u2("input", { type: "checkbox", checked: rowIsDefault, disabled: isFormDisabled, onClick: stopEditorEvent, onChange: (event) => updateDraft({ isDefault: !!event.target.checked }) }) : rowIsDefault ? "是" : "" }),
+                    /* @__PURE__ */ u2("td", { style: { padding: "6px", textAlign: "center" }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: String(rowSortOrder), onInput: (value) => updateDraft({ sortOrder: Number(value) || 0 }), disabled: isFormDisabled, type: "number" }) : rowSortOrder })
+                  ]
+                },
+                variantId
+              );
+            }) : /* @__PURE__ */ u2("tr", { children: /* @__PURE__ */ u2("td", { colSpan: 7, style: { padding: "12px", color: "var(--text-muted)" }, children: "当前单元还没有记录预设。切换到“使用本单元格预设”后可保存第一个预设。" }) }) })
+          ] }) }),
+          /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 1, flexWrap: "wrap" }, children: [
+            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", disabled: mode !== "override" || !selectedTemplate, onClick: () => handleMoveVariant(-1), children: "上移" }),
+            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", disabled: mode !== "override" || !selectedTemplate, onClick: () => handleMoveVariant(1), children: "下移" }),
+            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", disabled: mode !== "override", onClick: handleCopyVariant, children: "复制当前预设" }),
+            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", disabled: mode !== "override", onClick: handleSetCurrentDefault, children: "设为默认" }),
+            /* @__PURE__ */ u2(Button2, { size: "small", color: "error", variant: "text", disabled: mode !== "override" || !selectedTemplate, onClick: handleDeleteCurrentVariant, children: "删除当前预设" })
+          ] }),
+          draft.themePath ? /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
+            "主题只作为这个预设的表单默认值与统计维度，不再决定目标归属。当前主题：",
+            currentTheme?.icon ? `${currentTheme.icon} ` : "",
+            draft.themePath
+          ] }) : /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "主题不是必填项。旧主题表单迁移过来的预设会保留主题，纯目标记录可以不指定主题。" }),
+          /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: isFormDisabled, placeholder: "可选：说明这个预设适合的记录场景" })
+        ] }),
+        /* @__PURE__ */ u2(Box, { sx: { opacity: isFormDisabled ? 0.6 : 1 }, children: /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
+          /* @__PURE__ */ u2(Divider2, {}),
+          /* @__PURE__ */ u2(Box, { children: [
+            /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 0.5 }, children: "表单字段" }),
+            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mb: 1.5 }, children: "字段名称、类型、默认值、必填、选项、数字范围会随记录预设保存，并在 快速输入选择预设后刷新。" }),
+            /* @__PURE__ */ u2(FieldsEditor, { fields: draft.fields || [], disabled: isFormDisabled, onChange: (fields) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath }) })
+          ] }),
+          /* @__PURE__ */ u2(Divider2, {}),
+          /* @__PURE__ */ u2(Box, { children: [
+            /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
+              /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出格式" }),
+              effectiveBlockForCopier ? /* @__PURE__ */ u2(TemplateVariableCopier, { block: effectiveBlockForCopier }) : null
+            ] }),
+            /* @__PURE__ */ u2(NativeTextarea, { value: draft.outputTemplate, rows: 8, onInput: (value) => updateDraft({ outputTemplate: value }), disabled: isFormDisabled })
+          ] })
+        ] }) }),
+        /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", spacing: 1, children: [
+          /* @__PURE__ */ u2(Button2, { onClick: onClose, children: "取消" }),
+          /* @__PURE__ */ u2(Button2, { onClick: handleSave, variant: "contained", children: "保存单元格" })
+        ] })
+      ] }) })
+    }
+  );
+}
+function normalizePath(value) {
+  return String(value || "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
+}
+function getGoalDisplayPath(goal) {
+  return normalizePath(goal.goalPath || goal.title || goal.id) || goal.id;
+}
+function getGoalDepth(goal) {
+  const path = getGoalDisplayPath(goal);
+  const parts = path.split("/").filter(Boolean);
+  return Math.max(0, parts.length - 1);
+}
+function goalHasChildren(goal, goals) {
+  const path = getGoalDisplayPath(goal);
+  return goals.some((item) => getGoalDisplayPath(item).startsWith(`${path}/`));
+}
+function isGoalVisibleByExpandedState(goal, expandedPaths) {
+  const parts = getGoalDisplayPath(goal).split("/").filter(Boolean);
+  if (parts.length <= 1) return true;
+  for (let index = 1; index < parts.length; index += 1) {
+    const parentPath = parts.slice(0, index).join("/");
+    if (!expandedPaths.has(parentPath)) return false;
+  }
+  return true;
+}
+function sortGoalsForMatrix(goals) {
+  return [...goals].sort((left2, right2) => getGoalDisplayPath(left2).localeCompare(getGoalDisplayPath(right2), "zh-CN"));
+}
+function buildGoalTemplateCell(goal, block2, templates) {
+  const cellTemplates = templates.filter((template) => template.goalId === goal.id && template.coreBlockId === block2.id);
+  const enabledTemplates = cellTemplates.filter((template) => template.enabled !== false);
+  const defaultCount = enabledTemplates.filter((template) => template.isDefault).length;
+  let status = "inherit";
+  let label = "默认";
+  let description = "继承 Block 默认记录方式";
+  if (cellTemplates.length > 0 && enabledTemplates.length === 0) {
+    status = "disabled";
+    label = "隐藏";
+    description = "该目标下隐藏此 Block";
+  } else if (defaultCount > 1 || enabledTemplates.length > 1 && defaultCount === 0) {
+    status = "warning";
+    label = "异常";
+    description = defaultCount > 1 ? "存在多个默认预设" : "多个显示预设但没有默认预设";
+  } else if (enabledTemplates.length > 1) {
+    status = "multi";
+    label = `多预设 ${enabledTemplates.length}`;
+    description = "该目标下有多个记录预设";
+  } else if (enabledTemplates.length === 1) {
+    status = "override";
+    label = "有预设";
+    description = enabledTemplates[0].name || enabledTemplates[0].variantId || "目标专属预设";
+  }
+  return { goal, block: block2, templates: cellTemplates, enabledTemplates, defaultCount, status, label, description };
+}
+const AnyTable = Table2;
+const AnyTableHead = TableHead2;
+const AnyTableRow = TableRow2;
+const AnyTableCell = TableCell2;
+const AnyTableBody = TableBody2;
+const AnyTooltip = Tooltip2;
+const AnyTypography = Typography2;
+const AnyChip = Chip2;
+const AnyBox = Box;
+const PATH_COL_WIDTH = 250;
+const STATUS_COL_WIDTH = 78;
+const BLOCK_COL_WIDTH = 58;
+const SEGMENT_HEIGHT = 40;
+const SEGMENT_RADIUS = 8;
+function leaf$1(path) {
+  return String(path || "").split("/").filter(Boolean).pop() || path;
+}
+function normalizeSearchText(value) {
+  return String(value || "").toLowerCase().trim();
+}
+function presetName(template) {
+  return String(template.name || template.variantId || "未命名预设").trim() || "未命名预设";
+}
+function sortPresets(items) {
+  return [...items].sort((left2, right2) => {
+    if (!!left2.isDefault !== !!right2.isDefault) return left2.isDefault ? -1 : 1;
+    const bySort = (left2.sortOrder ?? 9999) - (right2.sortOrder ?? 9999);
+    if (bySort !== 0) return bySort;
+    return presetName(left2).localeCompare(presetName(right2), "zh-CN");
+  });
+}
+function getSurfaceForKind(kind) {
+  switch (kind) {
+    case "override":
+    case "multi":
+      return { bg: "rgba(137, 99, 255, 0.16)", color: "#7b4ce2" };
+    case "disabled":
+      return { bg: "rgba(220, 76, 76, 0.14)", color: "#c83b3b" };
+    case "warning":
+      return { bg: "rgba(230, 155, 45, 0.16)", color: "#b66a00" };
+    case "active":
+      return { bg: "rgba(88, 160, 103, 0.14)", color: "#2d8a43" };
+    case "archived":
+      return { bg: "rgba(120, 120, 120, 0.12)", color: "var(--text-muted)" };
+    case "inherit":
+    default:
+      return { bg: "rgba(96, 160, 96, 0.12)", color: "#2d8a43" };
+  }
+}
+function getSegmentRadius(prevSame, nextSame) {
+  if (prevSame && nextSame) return "0";
+  if (prevSame && !nextSame) return `0 0 ${SEGMENT_RADIUS}px ${SEGMENT_RADIUS}px`;
+  if (!prevSame && nextSame) return `${SEGMENT_RADIUS}px ${SEGMENT_RADIUS}px 0 0`;
+  return `${SEGMENT_RADIUS}px`;
+}
+function renderSegment(kind, prevSame, nextSame, content, onClick) {
+  const surface = getSurfaceForKind(kind);
+  return /* @__PURE__ */ u2(
+    AnyBox,
+    {
+      onClick,
+      sx: {
+        height: `${SEGMENT_HEIGHT}px`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: surface.bg,
+        color: surface.color,
+        borderRadius: getSegmentRadius(prevSame, nextSame),
+        cursor: onClick ? "pointer" : "default",
+        userSelect: "none",
+        mx: "2px"
+      },
+      children: content
+    }
+  );
+}
+function cellKind(goal, block2, templates) {
+  const cell = buildGoalTemplateCell(goal, block2, templates);
+  return cell.status;
+}
+function cellTitle(goal, block2, templates) {
+  const cell = buildGoalTemplateCell(goal, block2, templates);
+  const sorted = sortPresets(cell.enabledTemplates);
+  if (cell.status === "inherit") return "继承 Block 默认记录方式，点击添加预设";
+  if (cell.status === "disabled") return "该目标下隐藏此 Block，点击管理";
+  if (cell.status === "warning") return cell.description || "预设异常，点击处理";
+  if (sorted.length === 1) return `${presetName(sorted[0])}，点击管理`;
+  return `${sorted.map(presetName).join(" / ")}，点击管理`;
+}
+function cellIcon(goal, block2, templates) {
+  const cell = buildGoalTemplateCell(goal, block2, templates);
+  if (cell.status === "disabled") return /* @__PURE__ */ u2(CancelIcon, { sx: { fontSize: "1rem", color: "inherit" } });
+  if (cell.status === "warning") return /* @__PURE__ */ u2(WarningIcon, { sx: { fontSize: "1rem", color: "inherit" } });
+  if (cell.status === "multi") return /* @__PURE__ */ u2(AnyChip, { label: String(cell.enabledTemplates.length), size: "small", sx: { fontWeight: 800, backgroundColor: "transparent", color: "inherit", height: "24px", "& .MuiChip-label": { px: 0 } } });
+  if (cell.status === "override") return /* @__PURE__ */ u2(EditIcon, { sx: { fontSize: "1rem", color: "inherit" } });
+  return /* @__PURE__ */ u2(TaskAltIcon, { sx: { fontSize: "1rem", color: "inherit" } });
+}
+function splitByRoot(goals) {
+  const groups = [];
+  let current2 = [];
+  goals.forEach((goal) => {
+    if (getGoalDepth(goal) === 0) {
+      if (current2.length > 0) groups.push(current2);
+      current2 = [goal];
+    } else if (current2.length > 0) {
+      current2.push(goal);
+    } else {
+      current2 = [goal];
+    }
+  });
+  if (current2.length > 0) groups.push(current2);
+  return groups;
+}
+function GoalTemplateMatrix() {
+  const settings = useSelector(selectSettings);
+  const useCases = useUseCases();
+  const goals = T$1(() => sortGoalsForMatrix((settings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived")), [settings.goalSettings?.goals]);
+  const templates = T$1(() => getGoalTemplates(settings.goalSettings), [settings.goalSettings]);
+  const coreBlocks = T$1(() => getEffectiveCoreBlocks(settings), [settings]);
+  const allGoalPaths = T$1(() => new Set(goals.map(getGoalDisplayPath)), [goals]);
+  const [expandedPaths, setExpandedPaths] = d(() => new Set(Array.from(allGoalPaths)));
+  const [query, setQuery] = d("");
+  const [selected, setSelected] = d(null);
+  const visibleGoals = T$1(() => {
+    const q2 = normalizeSearchText(query);
+    return goals.filter((goal) => {
+      if (!isGoalVisibleByExpandedState(goal, expandedPaths)) return false;
+      if (!q2) return true;
+      const text2 = `${goal.title || ""} ${goal.goalPath || ""} ${goal.themePath || ""}`.toLowerCase();
+      return text2.includes(q2);
+    });
+  }, [goals, expandedPaths, query]);
+  const matrixStats = T$1(() => {
+    let inherit = 0;
+    let override = 0;
+    let multi = 0;
+    let disabled = 0;
+    let warning = 0;
+    for (const goal of goals) {
+      for (const block2 of coreBlocks) {
+        const cell = buildGoalTemplateCell(goal, block2, templates);
+        if (cell.status === "inherit") inherit += 1;
+        if (cell.status === "override") override += 1;
+        if (cell.status === "multi") multi += 1;
+        if (cell.status === "disabled") disabled += 1;
+        if (cell.status === "warning") warning += 1;
+      }
+    }
+    return { inherit, override, multi, disabled, warning, total: goals.length * coreBlocks.length };
+  }, [goals, coreBlocks, templates]);
+  const toggleGoalPath = (path) => {
+    setExpandedPaths((previous) => {
+      const next2 = new Set(previous);
+      if (next2.has(path)) next2.delete(path);
+      else next2.add(path);
+      return next2;
+    });
+  };
+  const expandAll = () => setExpandedPaths(new Set(Array.from(allGoalPaths)));
+  const collapseAll = () => setExpandedPaths(new Set(goals.filter((goal) => getGoalDepth(goal) === 0).map(getGoalDisplayPath)));
+  const selectedVariants = selected ? templates.filter((template) => template.goalId === selected.goal.id && template.coreBlockId === selected.block.id) : [];
+  const renderGroupRows = (group, groupIndex) => {
+    const rows = [];
+    if (groupIndex > 0) {
+      rows.push(
+        /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: coreBlocks.length + 2, sx: { border: 0, p: 0, height: 10, background: "transparent" } }) }, `spacer-${groupIndex}`)
+      );
+    }
+    group.forEach((goal, index) => {
+      const path = getGoalDisplayPath(goal);
+      const depth = getGoalDepth(goal);
+      const hasChildren = goalHasChildren(goal, goals);
+      const expanded = expandedPaths.has(path);
+      const prevGoal = index > 0 ? group[index - 1] : null;
+      const nextGoal = index < group.length - 1 ? group[index + 1] : null;
+      const stateKind = goal.status === "active" ? "active" : "archived";
+      const prevStateKind = prevGoal ? prevGoal.status === "active" ? "active" : "archived" : null;
+      const nextStateKind = nextGoal ? nextGoal.status === "active" ? "active" : "archived" : null;
+      const isRoot = depth === 0;
+      const goalCellBg = isRoot ? "rgba(122, 94, 230, 0.22)" : "rgba(122, 94, 230, 0.07)";
+      rows.push(
+        /* @__PURE__ */ u2(AnyTableRow, { children: [
+          /* @__PURE__ */ u2(AnyTableCell, { sx: { width: PATH_COL_WIDTH, px: 0.5, py: 0.25 }, children: /* @__PURE__ */ u2(AnyBox, { sx: { minHeight: `${SEGMENT_HEIGHT}px`, display: "flex", alignItems: "center", borderRadius: 2, backgroundColor: goalCellBg, px: isRoot ? 1 : 0.75 }, children: /* @__PURE__ */ u2(AnyBox, { sx: { display: "flex", alignItems: "center", gap: 0.75, minWidth: 0, width: "100%" }, children: [
+            /* @__PURE__ */ u2("span", { style: { display: "inline-block", width: depth * 18, flexShrink: 0 } }),
+            hasChildren ? /* @__PURE__ */ u2(
+              "button",
+              {
+                type: "button",
+                onClick: () => toggleGoalPath(path),
+                title: expanded ? "折叠" : "展开",
+                style: { border: "none", background: "transparent", color: "var(--text-muted)", cursor: "pointer", padding: "2px 4px", width: 22 },
+                children: expanded ? "▾" : "▸"
+              }
+            ) : /* @__PURE__ */ u2("span", { style: { display: "inline-block", width: 22, flexShrink: 0 } }),
+            /* @__PURE__ */ u2(AnyBox, { sx: { minWidth: 0 }, children: [
+              /* @__PURE__ */ u2(AnyTypography, { sx: { fontWeight: isRoot ? 700 : 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: leaf$1(path) }),
+              /* @__PURE__ */ u2(AnyTypography, { variant: "caption", color: "text.secondary", sx: { display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: path })
+            ] })
+          ] }) }) }),
+          /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { width: STATUS_COL_WIDTH, px: 0.25, py: 0 }, children: renderSegment(
+            stateKind,
+            prevStateKind === stateKind,
+            nextStateKind === stateKind,
+            /* @__PURE__ */ u2(AnyChip, { label: goal.status === "active" ? "激活" : goal.status === "paused" ? "暂停" : goal.status === "completed" ? "完成" : "归档", size: "small", sx: { fontWeight: 700, backgroundColor: "transparent", color: "inherit", height: "24px", "& .MuiChip-label": { px: 0 } } })
+          ) }),
+          coreBlocks.map((block2) => {
+            const kind = cellKind(goal, block2, templates);
+            const prevKind = prevGoal ? cellKind(prevGoal, block2, templates) : null;
+            const nextKind = nextGoal ? cellKind(nextGoal, block2, templates) : null;
+            return /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { width: BLOCK_COL_WIDTH, px: 0.25, py: 0 }, children: /* @__PURE__ */ u2(AnyTooltip, { title: cellTitle(goal, block2, templates), children: renderSegment(
+              kind,
+              prevKind === kind,
+              nextKind === kind,
+              /* @__PURE__ */ u2("span", { style: { display: "flex", alignItems: "center", justifyContent: "center" }, children: cellIcon(goal, block2, templates) }),
+              () => setSelected({ goal, block: block2 })
+            ) }) }, block2.id);
+          })
+        ] }, goal.id)
+      );
+    });
+    return rows;
+  };
+  const activeGroups = splitByRoot(visibleGoals);
+  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1.25 }, children: [
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: [
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: [
+        /* @__PURE__ */ u2(Chip2, { size: "small", label: `组合 ${matrixStats.total}` }),
+        /* @__PURE__ */ u2(Chip2, { size: "small", label: `继承 ${matrixStats.inherit}` }),
+        /* @__PURE__ */ u2(Chip2, { size: "small", color: "primary", label: `预设 ${matrixStats.override + matrixStats.multi}` }),
+        /* @__PURE__ */ u2(Chip2, { size: "small", label: `多预设 ${matrixStats.multi}` }),
+        /* @__PURE__ */ u2(Chip2, { size: "small", color: matrixStats.warning ? "error" : "default", label: `异常 ${matrixStats.warning}` })
+      ] }),
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, alignItems: "center", flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ u2(TextField2, { size: "small", label: "搜索目标", value: query, onChange: (event) => setQuery(event.target.value), sx: { minWidth: 220 } }),
+        /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: expandAll, children: "展开" }),
+        /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: collapseAll, children: "折叠" })
+      ] })
+    ] }),
+    matrixStats.warning > 0 && /* @__PURE__ */ u2(Alert2, { severity: "warning", children: [
+      "有 ",
+      matrixStats.warning,
+      " 个单元格存在预设异常，例如多个默认预设或多个显示预设但无默认预设。点击异常单元格处理。"
+    ] }),
+    goals.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有目标。请先到“目标”导入已有目标或新建目标，然后在表格单元格里配置预设。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有启用的 Block。请先在快速输入设置里启用固定 Block。" }) : /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", width: "100%" }, children: /* @__PURE__ */ u2(
+      AnyTable,
+      {
+        size: "small",
+        sx: {
+          tableLayout: "fixed",
+          width: "max-content",
+          minWidth: "100%",
+          borderCollapse: "separate",
+          borderSpacing: "0 0",
+          "& th": { whiteSpace: "nowrap", py: 0.5, px: 0.75, borderBottom: "1px solid", borderColor: "divider" },
+          "& td": { whiteSpace: "nowrap", py: 0, px: 0.5, borderBottom: "none" }
+        },
+        children: [
+          /* @__PURE__ */ u2(AnyTableHead, { children: /* @__PURE__ */ u2(AnyTableRow, { children: [
+            /* @__PURE__ */ u2(AnyTableCell, { sx: { fontWeight: "bold", width: PATH_COL_WIDTH }, children: "目标路径" }),
+            /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { fontWeight: "bold", width: STATUS_COL_WIDTH }, children: "状态" }),
+            coreBlocks.map((block2) => /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { fontWeight: "bold", width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH }, children: block2.name }, block2.id))
+          ] }) }),
+          /* @__PURE__ */ u2(AnyTableBody, { children: activeGroups.length > 0 ? activeGroups.flatMap(renderGroupRows) : /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: coreBlocks.length + 2, sx: { py: 2 }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无目标" }) }) }) })
+        ]
+      }
+    ) }),
+    /* @__PURE__ */ u2(
+      GoalTemplateEditorModal,
+      {
+        isOpen: !!selected,
+        onClose: () => setSelected(null),
+        goal: selected?.goal || null,
+        block: selected?.block || null,
+        variants: selectedVariants,
+        useCases
+      }
+    )
+  ] });
+}
+function GoalTemplateSection() {
+  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1.25 }, children: [
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "目标 × Block 预设表" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "行是目标，列是 Block；单元格里显示这个组合的预设。点击单元格即可管理多个预设。" })
+    ] }),
+    /* @__PURE__ */ u2(GoalTemplateMatrix, {})
+  ] });
+}
+const sections = [
+  { key: "goals", title: "目标", description: "导入、新建和整理目标。" },
+  { key: "presets", title: "预设表", description: "用表格管理目标 × Block，每个单元格可有多个预设。" },
+  { key: "metrics", title: "指标", description: "给目标设置完成标准。" }
+];
+function GoalManager() {
+  const settings = useSelector(selectSettings);
+  const dataStore = useDataStore();
+  const [section, setSection] = d("goals");
+  const goals = settings.goalSettings?.goals || [];
+  const activeGoals = goals.filter((goal) => goal.status !== "archived");
+  const goalTemplates = getGoalTemplates(settings.goalSettings);
+  const candidates = T$1(
+    () => inferGoalCandidatesFromItems(dataStore.queryItems(), goals).filter((item) => item.source !== "existing-goal"),
+    [dataStore, goals]
+  );
+  const backfillPreview = T$1(
+    () => buildGoalMarkdownBackfillPreview(dataStore.queryItems(), goals, 12),
+    [dataStore, goals]
+  );
+  const currentSection = sections.find((item) => item.key === section) || sections[0];
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", display: "grid", gap: 2 }, children: [
+    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1 }, children: [
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1.5, alignItems: "flex-start", flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ u2(Box, { sx: { minWidth: 260 }, children: [
+          /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 800 }, children: "目标中心" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标只管理“我要追踪什么”；预设在“目标 × Block 预设表”的单元格里直接管理，不再另开独立预设页。" })
+        ] }),
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }, children: [
+          /* @__PURE__ */ u2(Chip2, { label: `目标 ${activeGoals.length}`, size: "small", color: activeGoals.length > 0 ? "primary" : "default" }),
+          /* @__PURE__ */ u2(Chip2, { label: `可导入 ${candidates.length}`, size: "small", color: candidates.length > 0 ? "warning" : "default" }),
+          /* @__PURE__ */ u2(Chip2, { label: `预设 ${goalTemplates.length}`, size: "small" }),
+          /* @__PURE__ */ u2(Chip2, { label: `待整理 ${backfillPreview.total}`, size: "small", color: backfillPreview.total > 0 ? "warning" : "default" })
+        ] })
+      ] }),
+      candidates.length > 0 && section !== "goals" && /* @__PURE__ */ u2(Alert2, { severity: "info", action: /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => setSection("goals"), children: "去导入" }), children: [
+        "发现 ",
+        candidates.length,
+        " 个旧记录里的目标还没有进入目标库。先导入目标，再到“预设表”的对应单元格里创建预设。"
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(
+      Box,
+      {
+        sx: {
+          display: "inline-flex",
+          gap: 0.5,
+          p: 0.5,
+          border: "1px solid var(--background-modifier-border)",
+          borderRadius: 999,
+          background: "var(--background-secondary)",
+          width: "fit-content",
+          maxWidth: "100%",
+          flexWrap: "wrap"
+        },
+        children: sections.map((item) => /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            variant: section === item.key ? "contained" : "text",
+            onClick: () => setSection(item.key),
+            sx: { borderRadius: 999 },
+            children: item.title
+          },
+          item.key
+        ))
+      }
+    ),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: currentSection.title }),
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: currentSection.description })
+    ] }),
+    section === "goals" && /* @__PURE__ */ u2(GoalEntitySection, {}),
+    section === "presets" && /* @__PURE__ */ u2(GoalTemplateSection, {}),
+    section === "metrics" && /* @__PURE__ */ u2(GoalMetricSection, {}),
+    /* @__PURE__ */ u2(Divider2, {})
+  ] });
+}
+const statusOptions = [
+  { value: "active", label: "启用" },
+  { value: "inactive", label: "停用" }
+];
+function leaf(path) {
+  return String(path || "").split("/").filter(Boolean).pop() || path;
+}
+function parent(path) {
+  const parts = String(path || "").split("/").filter(Boolean);
+  parts.pop();
+  return parts.join("/");
+}
+function pathCandidates(path) {
+  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
+  const result = [];
+  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
+  return result;
+}
+function inheritedIconInfo(themes, path) {
+  const byPath = new Map(themes.map((theme2) => [String(theme2.path || ""), theme2]));
+  for (const candidate of pathCandidates(path)) {
+    const matched = byPath.get(candidate);
+    if (matched && String(matched.icon || "").trim()) {
+      return { icon: String(matched.icon || "").trim(), sourcePath: matched.path };
+    }
+  }
+  return { icon: "", sourcePath: "" };
+}
+function ThemeCard({ children }) {
+  return /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1.5, display: "grid", gap: 1 }, children });
+}
+function ThemeMetadataManager() {
+  const settings = useSelector(selectSettings);
+  const useCases = useUseCases();
+  const themes = settings.inputSettings?.themes || [];
+  const legacyOverrides = settings.inputSettings?.overrides || [];
+  const [path, setPath] = d("");
+  const [icon, setIcon] = d("");
+  const [message, setMessage] = d("");
+  const [query, setQuery] = d("");
+  const sortedThemes = T$1(() => {
+    const q2 = query.trim().toLowerCase();
+    return [...themes].filter((theme2) => !q2 || theme2.path.toLowerCase().includes(q2) || String(theme2.icon || "").includes(q2)).sort((a2, b2) => (a2.path || "").localeCompare(b2.path || "", "zh-Hans-CN"));
+  }, [themes, query]);
+  const previewThemePath = path.trim() || sortedThemes[0]?.path || "";
+  const previewMetadata = T$1(() => ThemeMetadataResolver.resolve(settings, previewThemePath), [settings, previewThemePath]);
+  const previewIconInfo = T$1(() => inheritedIconInfo(themes, previewThemePath), [themes, previewThemePath]);
+  const handleAddTheme = async () => {
+    const normalizedPath = path.trim().replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/");
+    if (!normalizedPath) return;
+    const existing = themes.find((theme2) => theme2.path === normalizedPath);
+    if (existing) {
+      await useCases.theme.updateTheme(existing.id, { icon: icon.trim() || existing.icon, status: existing.status || "active" });
+      setMessage(`已更新主题元数据：${normalizedPath}`);
+    } else {
+      const created = await useCases.theme.addTheme(normalizedPath);
+      if (created && icon.trim()) await useCases.theme.updateTheme(created.id, { icon: icon.trim(), status: "active" });
+      setMessage(created ? `已添加主题：${normalizedPath}` : "主题未添加");
+    }
+    setPath("");
+    setIcon("");
+  };
+  const updateThemePath = async (id, nextPath) => {
+    const normalizedPath = nextPath.trim().replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/");
+    if (!normalizedPath) return;
+    await useCases.theme.updateTheme(id, { path: normalizedPath });
+    setMessage(`已更新主题路径：${normalizedPath}`);
+  };
+  const updateThemeIcon = async (id, nextIcon) => {
+    await useCases.theme.updateTheme(id, { icon: nextIcon.trim() || void 0 });
+    setMessage("已更新主题图标。");
+  };
+  const updateThemeStatus = async (id, status) => {
+    await useCases.theme.updateTheme(id, { status });
+    setMessage(status === "active" ? "主题已启用。" : "主题已停用。");
+  };
+  const handleDelete = async (id) => {
+    await useCases.theme.deleteTheme(id);
+    setMessage("主题已删除；关联的旧主题 override 也会按旧逻辑移除。");
+  };
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", display: "grid", gap: 2 }, children: [
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "主题管理" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "主题已从快速输入模板主轴降级为数据元信息：只管理路径、图标和启停状态。目标通过 themePath 引用主题，模板仍由“目标 × Block”决定。" })
+    ] }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 1 }, children: [
+      /* @__PURE__ */ u2(Chip2, { size: "small", label: `主题 ${themes.length}` }),
+      /* @__PURE__ */ u2(Chip2, { size: "small", label: `旧主题模板 ${legacyOverrides.length}`, color: legacyOverrides.length ? "warning" : "default" }),
+      /* @__PURE__ */ u2(Chip2, { size: "small", label: "模板主链：目标 × Block", color: "primary" })
+    ] }),
+    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
+    /* @__PURE__ */ u2(ThemeCard, { children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "主题图标继承预览" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标绑定更深层主题时，图标会从当前主题或最近的父主题继承；模板仍然保留原始 themePath。" }),
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: [
+        /* @__PURE__ */ u2(Chip2, { size: "small", label: `预览路径：${previewThemePath || "未选择"}` }),
+        /* @__PURE__ */ u2(Chip2, { size: "small", label: `渲染图标：${previewMetadata.icon || previewIconInfo.icon || "🎯"}`, color: previewMetadata.icon || previewIconInfo.icon ? "primary" : "default" }),
+        /* @__PURE__ */ u2(Chip2, { size: "small", label: `图标来源：${previewIconInfo.sourcePath || "默认"}` })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(ThemeCard, { children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "新增 / 更新主题元数据" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "如果路径已存在，会更新图标；不会创建或修改任何主题模板 override。" }),
+      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(220px, 1fr) 110px auto", gap: 1, alignItems: "center" }, children: [
+        /* @__PURE__ */ u2(TextField2, { size: "small", label: "主题路径", value: path, onChange: (event) => setPath(event.target.value), placeholder: "例如：电脑/记录系统" }),
+        /* @__PURE__ */ u2(TextField2, { size: "small", label: "图标", value: icon, onChange: (event) => setIcon(event.target.value), placeholder: "🎯" }),
+        /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleAddTheme, disabled: !path.trim(), children: "保存主题" })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(ThemeCard, { children: [
+      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "1fr minmax(180px, 280px)", gap: 1, alignItems: "center" }, children: [
+        /* @__PURE__ */ u2(Box, { children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "主题列表" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "在这里维护图标和路径。需要修改目标专属写法时请到“数据管理 → 目标中心 → 记录预设”。" })
+        ] }),
+        /* @__PURE__ */ u2(TextField2, { size: "small", label: "搜索主题", value: query, onChange: (event) => setQuery(event.target.value) })
+      ] }),
+      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 0.75 }, children: sortedThemes.length ? sortedThemes.map((theme2) => /* @__PURE__ */ u2(
+        Box,
+        {
+          sx: {
+            display: "grid",
+            gridTemplateColumns: "56px minmax(220px, 1fr) 110px minmax(150px, 1fr) 120px auto",
+            gap: 1,
+            alignItems: "center",
+            borderTop: "1px solid var(--background-modifier-border-hover)",
+            pt: 0.75
+          },
+          children: [
+            /* @__PURE__ */ u2(TextField2, { size: "small", label: "图标", value: theme2.icon || "", onChange: (event) => updateThemeIcon(theme2.id, event.target.value) }),
+            /* @__PURE__ */ u2(TextField2, { size: "small", label: parent(theme2.path) ? `父级：${parent(theme2.path)}` : "根主题", value: theme2.path || "", onChange: (event) => updateThemePath(theme2.id, event.target.value) }),
+            /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: leaf(theme2.path) }),
+            (() => {
+              const info = inheritedIconInfo(themes, theme2.path);
+              const inherited = info.sourcePath && info.sourcePath !== theme2.path;
+              return /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
+                info.icon || "🎯",
+                " ",
+                inherited ? `继承自 ${info.sourcePath}` : "本主题图标"
+              ] });
+            })(),
+            /* @__PURE__ */ u2(SimpleSelect, { value: theme2.status || "active", options: statusOptions, onChange: (value) => updateThemeStatus(theme2.id, value), fullWidth: true }),
+            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => handleDelete(theme2.id), children: "删除" })
+          ]
+        },
+        theme2.id
+      )) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无主题。" }) })
+    ] }),
+    /* @__PURE__ */ u2(Divider2, {})
+  ] });
+}
+function DataManagementSettings() {
+  const [section, setSection] = d("goals");
+  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 2 }, children: [
+    /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", width: "100%", display: "grid", gap: 1 }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h5", sx: { fontWeight: 800 }, children: "数据管理" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "数据管理只维护目标和主题元数据。快速输入只负责写记录；默认记录方式来自 Block；目标只在需要多种写法时添加记录预设。主题只提供图标、颜色和领域路径。" }),
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 1, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ u2(Button2, { variant: section === "goals" ? "contained" : "outlined", size: "small", onClick: () => setSection("goals"), children: "目标中心" }),
+        /* @__PURE__ */ u2(Button2, { variant: section === "themes" ? "contained" : "outlined", size: "small", onClick: () => setSection("themes"), children: "主题管理" })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(Divider2, { sx: { mx: "auto", maxWidth: 1040, width: "100%" } }),
+    section === "goals" ? /* @__PURE__ */ u2(GoalManager, {}) : /* @__PURE__ */ u2(ThemeMetadataManager, {})
+  ] });
+}
 function a11yProps(index) {
   return { id: `settings-tab-${index}`, "aria-controls": `settings-tabpanel-${index}` };
 }
@@ -71458,14 +69500,16 @@ function SettingsRoot({ app }) {
     /* @__PURE__ */ u2(Box, { sx: { width: "100%" }, class: "think-setting-root", children: [
       /* @__PURE__ */ u2(Box, { sx: { borderBottom: 1, borderColor: "divider" }, children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", children: [
         /* @__PURE__ */ u2(Tab2, { label: "快速输入", ...a11yProps(0) }),
-        /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(1) }),
-        /* @__PURE__ */ u2(Tab2, { label: "通用", ...a11yProps(2) }),
-        /* @__PURE__ */ u2(Tab2, { label: "AI", ...a11yProps(3) })
+        /* @__PURE__ */ u2(Tab2, { label: "数据管理", ...a11yProps(1) }),
+        /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(2) }),
+        /* @__PURE__ */ u2(Tab2, { label: "通用", ...a11yProps(3) }),
+        /* @__PURE__ */ u2(Tab2, { label: "AI", ...a11yProps(4) })
       ] }) }),
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(InputSettings, {}) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, {}) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(AiSettings, {}) })
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(DataManagementSettings, {}) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(GeneralSettings, {}) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 4, children: /* @__PURE__ */ u2(AiSettings, {}) })
     ] })
   ] });
 }
@@ -71477,8 +69521,6 @@ class SettingsTab extends obsidian.PluginSettingTab {
     this.id = plugin.manifest.id;
     this.services = createServices();
   }
-  app;
-  plugin;
   id;
   services;
   display() {
@@ -71573,10 +69615,6 @@ class CodeblockEmbedder {
     this.uiPort = services.uiPort;
     this.registerProcessor();
   }
-  plugin;
-  dataStore;
-  rendererService;
-  actionService;
   // P0-3: store 从 DI 获取
   store;
   uiPort;
@@ -71591,7 +69629,7 @@ class CodeblockEmbedder {
       CODEBLOCK_LANG,
       (source, el) => {
         try {
-          R$1(null, el);
+          G$1(null, el);
         } catch {
         }
         el.empty();
@@ -71654,9 +69692,7 @@ const VIEW_REGISTRY = {
   StatisticsView,
   HeatmapView,
   ProgressView,
-  TaskExecutionView,
-  GoalOverviewView,
-  GoalDetailView
+  TaskExecutionView
 };
 const DashboardViewComponents = VIEW_REGISTRY;
 function useViewData({
@@ -71766,22 +69802,169 @@ function buildEventTimelineViewModel(params) {
     groupedTree
   };
 }
+function themeLeaf(path) {
+  const value = String(path || "").trim();
+  if (!value || value === "__default__") return "未设置主题";
+  const parts = value.split("/").map((part) => part.trim()).filter(Boolean);
+  return parts[parts.length - 1] || value;
+}
+function firstText(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const text2 = firstText(item);
+      if (text2) return text2;
+    }
+    return "";
+  }
+  if (value == null) return "";
+  return String(value).trim();
+}
+function readExtraText(item, key) {
+  return firstText(item?.extra?.[key]);
+}
+function itemTemplateId(item) {
+  return firstText(item.templateId) || readExtraText(item, "模板ID") || readExtraText(item, "templateId");
+}
+function itemTemplateVariantId(item) {
+  return firstText(item.templateVariantId) || firstText(item.goalTemplateVariantId) || readExtraText(item, "templateVariantId") || readExtraText(item, "goalTemplateVariantId") || readExtraText(item, "预设ID");
+}
+function itemCoreBlock(item) {
+  const raw = firstText(item.coreBlock) || readExtraText(item, "核心Block") || firstText(item.categoryKey) || "";
+  if (raw === "habit" || raw === "打卡") return "core.habit";
+  if (raw === "task" || raw === "任务") return "core.task";
+  if (raw.startsWith("core.")) return raw;
+  return raw;
+}
+function buildPresetLookups(goalSettings, goals) {
+  const goalPathById = /* @__PURE__ */ new Map();
+  const goalLabelById = /* @__PURE__ */ new Map();
+  for (const goal of goals || []) {
+    const normalized = splitGoalPath(goal.goalPath || goal.title || goal.id).goalPath || goal.goalPath || goal.title || goal.id;
+    goalPathById.set(goal.id, normalized);
+    goalLabelById.set(goal.id, goal.title || splitGoalPath(normalized).leafGoal || normalized);
+  }
+  const byTemplateId = /* @__PURE__ */ new Map();
+  const byLegacyOverrideId = /* @__PURE__ */ new Map();
+  const byGoalBlockVariant = /* @__PURE__ */ new Map();
+  const allPresets = [];
+  for (const raw of goalSettings?.goalBlockBindings || []) {
+    const template = raw || {};
+    const id = firstText(template.id);
+    const goalId = firstText(template.goalId);
+    const coreBlockId = firstText(template.coreBlockId) || firstText(template.blockId);
+    const variantId = firstText(template.variantId) || "default";
+    const defaults = template.defaultValues || {};
+    const goalPath = goalPathById.get(goalId) || firstText(defaults.goalPath) || firstText(defaults["目标"]) || goalId;
+    const goalLabel = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
+    const rawThemePath = firstText(defaults.themePath);
+    const themePath = rawThemePath && !rawThemePath.includes("{{") ? rawThemePath : firstText(defaults["主题"]) || firstText(defaults.legacyThemePath);
+    const label = firstText(template.name) || firstText(template.templateName) || themeLeaf(themePath) || variantId;
+    const key = id || `${goalId}:${coreBlockId}:${variantId}`;
+    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath };
+    allPresets.push(meta);
+    if (id) byTemplateId.set(id, meta);
+    const legacyOverrideId = firstText(defaults.legacyOverrideId);
+    if (legacyOverrideId) byLegacyOverrideId.set(legacyOverrideId, meta);
+    if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\0${coreBlockId}\0${variantId}`, meta);
+  }
+  return { byTemplateId, byLegacyOverrideId, byGoalBlockVariant, goalPathById, goalLabelById, allPresets };
+}
+function dateKeyOf(item) {
+  return String(item?.date || "").trim();
+}
 function buildHeatmapViewModel(params) {
-  const { items, module: module2, inputSettings } = params;
+  const { items, module: module2, inputSettings, goals = [], goalSettings } = params;
   const config2 = module2.viewConfig || {};
   const themesByPath = buildThemesByPathMap(inputSettings.themes);
   const inferredThemePaths = (() => {
     const set2 = /* @__PURE__ */ new Set();
     for (const it of items) {
-      if (it?.theme && typeof it.theme === "string" && it.theme.trim().length > 0) {
-        set2.add(it.theme);
+      const themePath = getItemThemePath(it);
+      if (themePath) {
+        set2.add(themePath);
       }
     }
     return Array.from(set2);
   })();
   const themesToTrack = Array.isArray(config2.themePaths) && config2.themePaths.length > 0 ? config2.themePaths : inferredThemePaths;
   const dataByThemeAndDate = buildThemeDataMap(items, themesToTrack);
-  return { themesByPath, themesToTrack, dataByThemeAndDate };
+  const trackedThemeSet = new Set(themesToTrack || []);
+  const filterByTheme = trackedThemeSet.size > 0;
+  const goalMap = /* @__PURE__ */ new Map();
+  const lookups = buildPresetLookups(goalSettings, goals);
+  function ensureGoalGroup(goalPath, label) {
+    const normalizedGoalPath = goalPath || UNASSIGNED_GOAL_KEY;
+    let goalGroup = goalMap.get(normalizedGoalPath);
+    if (!goalGroup) {
+      goalGroup = { goalPath: normalizedGoalPath, label: label || normalizedGoalPath, count: 0, entries: [] };
+      goalMap.set(normalizedGoalPath, goalGroup);
+    }
+    return goalGroup;
+  }
+  function ensurePresetEntry(goalGroup, meta) {
+    let entry = goalGroup.entries.find((candidate) => candidate.presetKey === meta.presetKey);
+    if (!entry) {
+      entry = {
+        presetKey: meta.presetKey,
+        themePath: meta.themePath || "__default__",
+        label: meta.label || themeLeaf(meta.themePath),
+        count: 0,
+        dataForTheme: /* @__PURE__ */ new Map()
+      };
+      goalGroup.entries.push(entry);
+    }
+    return entry;
+  }
+  for (const preset of lookups.allPresets) {
+    if (preset.coreBlockId !== "core.habit") continue;
+    const goalGroup = ensureGoalGroup(preset.goalPath, preset.goalLabel);
+    ensurePresetEntry(goalGroup, {
+      presetKey: preset.key,
+      themePath: preset.themePath || "__default__",
+      label: preset.label || themeLeaf(preset.themePath)
+    });
+  }
+  function resolvePresetMeta(item) {
+    const templateId = itemTemplateId(item);
+    if (templateId) {
+      const direct = lookups.byTemplateId.get(templateId) || lookups.byLegacyOverrideId.get(templateId);
+      if (direct) return direct;
+    }
+    const goalId = firstText(item.goalId) || readExtraText(item, "目标ID");
+    const coreBlockId = itemCoreBlock(item);
+    const variantId = itemTemplateVariantId(item) || "default";
+    if (goalId && coreBlockId) {
+      return lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0${variantId}`) || lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0default`) || null;
+    }
+    return null;
+  }
+  for (const item of items || []) {
+    const date2 = dateKeyOf(item);
+    if (!date2) continue;
+    const preset = resolvePresetMeta(item);
+    const themePath = preset?.themePath || getItemThemePath(item) || "__default__";
+    if (!preset && filterByTheme && themePath !== "__default__" && !trackedThemeSet.has(themePath)) continue;
+    const explicitGoalPath = getItemGoalKey(item, goals);
+    const goalPath = explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : preset?.goalPath || UNASSIGNED_GOAL_KEY;
+    const goalLabel = goalPath === preset?.goalPath ? preset.goalLabel : getItemGoalLabel(item, goals) || preset?.goalLabel || goalPath;
+    const goalGroup = ensureGoalGroup(goalPath, goalLabel);
+    goalGroup.count += 1;
+    const presetKey = preset?.key || `${goalPath}\0${themePath}\0${itemCoreBlock(item) || "habit"}`;
+    const label = preset?.label || themeLeaf(themePath);
+    const entry = ensurePresetEntry(goalGroup, { presetKey, themePath, label });
+    entry.count += 1;
+    const dayItems = entry.dataForTheme.get(date2) || [];
+    entry.dataForTheme.set(date2, [...dayItems, item]);
+  }
+  const goalGroups = Array.from(goalMap.values()).map((group) => ({
+    ...group,
+    entries: group.entries.sort((a2, b2) => b2.count - a2.count || a2.label.localeCompare(b2.label, "zh-CN"))
+  })).sort((a2, b2) => {
+    if (a2.goalPath === UNASSIGNED_GOAL_KEY && b2.goalPath !== UNASSIGNED_GOAL_KEY) return 1;
+    if (a2.goalPath !== UNASSIGNED_GOAL_KEY && b2.goalPath === UNASSIGNED_GOAL_KEY) return -1;
+    return b2.count - a2.count || a2.label.localeCompare(b2.label, "zh-CN");
+  });
+  return { themesByPath, themesToTrack, dataByThemeAndDate, goalGroups };
 }
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
@@ -71824,14 +70007,34 @@ function buildTimelineViewModel(args) {
   };
 }
 function buildStatisticsViewModel(args) {
-  const { items, dateRange, module: module2, currentView, selectedCategories } = args;
-  const viewConfig = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {} };
-  const categoryConfigs = viewConfig.categories || [];
-  const categoryOrder = categoryConfigs.map((c2) => c2.name);
-  const filteredCategories = (() => {
-    if (!selectedCategories || selectedCategories.length === 0) return categoryConfigs;
-    return categoryConfigs.filter((c2) => selectedCategories.includes(c2.name));
-  })();
+  const { items, dateRange, module: module2, currentView, goals = [], themes = [] } = args;
+  const viewConfig = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {}, groupBy: "goal" };
+  const goalBuckets = buildGoalBuckets(items, goals, { includeUnassigned: true, includeKnownGoals: false, themes });
+  const bucketAccessor = (item) => getItemGoalKey(item, goals);
+  const topN = Math.max(0, Number(viewConfig.topN) || 0);
+  const countByGoal = /* @__PURE__ */ new Map();
+  for (const item of items || []) {
+    const key = bucketAccessor(item);
+    countByGoal.set(key, (countByGoal.get(key) || 0) + 1);
+  }
+  const themeCountByGoal = /* @__PURE__ */ new Map();
+  for (const item of items || []) {
+    const goalKey = bucketAccessor(item);
+    const themeKey = getItemThemeKey(item);
+    const inner = themeCountByGoal.get(goalKey) || /* @__PURE__ */ new Map();
+    inner.set(themeKey, (inner.get(themeKey) || 0) + 1);
+    themeCountByGoal.set(goalKey, inner);
+  }
+  const filteredCategories = [...goalBuckets].sort((a2, b2) => (countByGoal.get(b2.name) || 0) - (countByGoal.get(a2.name) || 0) || (a2.alias || a2.name).localeCompare(b2.alias || b2.name, "zh-CN")).slice(0, topN || void 0);
+  const categoryOrder = filteredCategories.map((bucket) => bucket.name);
+  const goalThemeSummaries = filteredCategories.map((bucket) => {
+    const inner = themeCountByGoal.get(bucket.name) || /* @__PURE__ */ new Map();
+    const themes2 = Array.from(inner.entries()).map(([themePath, count]) => {
+      const parts = String(themePath || "").split("/").filter(Boolean);
+      return { themePath, label: parts[parts.length - 1] || themePath || "未设置主题", count };
+    }).sort((a2, b2) => b2.count - a2.count || a2.themePath.localeCompare(b2.themePath, "zh-CN")).slice(0, 3);
+    return { goalPath: bucket.name, themes: themes2 };
+  });
   const startDate = dayjs(dateRange[0]);
   const endDate = dayjs(dateRange[1]);
   const isYearView = currentView === "年";
@@ -71857,18 +70060,18 @@ function buildStatisticsViewModel(args) {
     const totalWeeks = getWeeksInYear(year);
     const targetDate = dayjs().year(year);
     const usePeriod = Boolean(viewConfig.usePeriodField);
-    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod);
+    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod, bucketAccessor);
     const quartersData = [];
     for (let q2 = 1; q2 <= 4; q2++) {
-      quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q2), usePeriod));
+      quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q2), usePeriod, bucketAccessor));
     }
     const monthsData = [];
     for (let m2 = 0; m2 < 12; m2++) {
-      monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m2), usePeriod));
+      monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m2), usePeriod, bucketAccessor));
     }
     const weeksData = [];
     for (let w2 = 1; w2 <= totalWeeks; w2++) {
-      weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w2), usePeriod));
+      weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w2), usePeriod, bucketAccessor));
     }
     return { yearData, quartersData, monthsData, weeksData };
   })();
@@ -71881,21 +70084,83 @@ function buildStatisticsViewModel(args) {
     categoryOrder,
     yearlyWeekStructure,
     processedData,
-    viewConfig
+    viewConfig,
+    bucketAccessor,
+    goalThemeSummaries
   };
 }
+function normalizeBlockKey(item) {
+  const raw = String(item.coreBlock || item.categoryKey || item.type || "").replace(/^core\./, "").trim();
+  if (!raw) return "unknown";
+  const map = {
+    "任务": "task",
+    "计划": "plan",
+    "总结": "review",
+    "打卡": "habit",
+    "阻碍项": "blocker",
+    "里程碑": "milestone",
+    "思考": "thought",
+    "事件": "evidence"
+  };
+  return map[raw] || raw.split("/")[0] || raw;
+}
+function itemDateValue(item) {
+  return String(item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || "");
+}
 function buildProgressViewModel(args) {
-  const { items, module: module2 } = args;
-  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {} };
-  const result = computeProgression(items, {
-    basePoints: config2.basePoints,
-    levelStep: config2.levelStep,
-    includedCategories: config2.includedCategories,
-    ratingBonusThreshold: config2.ratingBonusThreshold,
-    ratingBonusPoints: config2.ratingBonusPoints,
-    topN: config2.topN
-  });
-  return { config: config2, result };
+  const { items, module: module2, goals = [], themes = [] } = args;
+  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {}, mode: "goal" };
+  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
+  const levelStep = Math.max(1, Number(config2.levelStep) || 20);
+  const cards = buckets.map((bucket) => {
+    const goalItems = (items || []).filter((item) => getItemGoalKey(item, goals) === bucket.name);
+    const progression = computeProgression(goalItems, {
+      basePoints: config2.basePoints,
+      levelStep,
+      includedCategories: config2.includedCategories,
+      ratingBonusThreshold: config2.ratingBonusThreshold,
+      ratingBonusPoints: config2.ratingBonusPoints,
+      topN: config2.topN
+    });
+    const blockCounts = {};
+    for (const item of goalItems) {
+      const key = normalizeBlockKey(item);
+      blockCounts[key] = (blockCounts[key] || 0) + 1;
+    }
+    const sortedDates = goalItems.map(itemDateValue).filter(Boolean).sort();
+    const latestDate = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : null;
+    return {
+      key: bucket.name,
+      title: bucket.alias || bucket.name,
+      goalPath: bucket.goalPath || bucket.name,
+      icon: bucket.icon || null,
+      itemCount: goalItems.length,
+      totalPoints: progression.totalPoints,
+      level: progression.level,
+      currentLevelPoints: progression.currentLevelPoints,
+      nextLevelPoints: progression.nextLevelPoints,
+      levelStep,
+      progressRatio: progression.progressRatio,
+      matchedCount: progression.matchedCount,
+      latestDate,
+      blockCounts,
+      categoryBreakdown: progression.categoryBreakdown,
+      themeBreakdown: progression.themeBreakdown
+    };
+  }).sort((a2, b2) => b2.totalPoints - a2.totalPoints || b2.itemCount - a2.itemCount || a2.title.localeCompare(b2.title, "zh-CN"));
+  const topN = Math.max(0, Number(config2.topN) || 0);
+  const visibleCards = topN > 0 ? cards.slice(0, topN) : cards;
+  return {
+    config: config2,
+    mode: "goal",
+    goalCards: visibleCards,
+    summary: {
+      goalCount: visibleCards.length,
+      totalPoints: visibleCards.reduce((sum, card) => sum + card.totalPoints, 0),
+      totalItems: visibleCards.reduce((sum, card) => sum + card.itemCount, 0)
+    },
+    result: null
+  };
 }
 function getIdentityTitle(item) {
   const raw = String(item.content || item.title || "").trim();
@@ -71973,11 +70238,11 @@ function buildTaskExecutionViewModel(params) {
       item
     });
   }
-  const sections = Array.from(sectionMap.entries()).map(([parent, childMap]) => ({
-    key: parent,
-    title: parent,
+  const sections2 = Array.from(sectionMap.entries()).map(([parent2, childMap]) => ({
+    key: parent2,
+    title: parent2,
     groups: Array.from(childMap.entries()).map(([child, tasks]) => ({
-      key: `${parent}/${child}`,
+      key: `${parent2}/${child}`,
       title: child,
       tasks: tasks.sort((a2, b2) => a2.title.localeCompare(b2.title, "zh-CN"))
     })).sort((a2, b2) => {
@@ -71986,27 +70251,7 @@ function buildTaskExecutionViewModel(params) {
       return a2.title.localeCompare(b2.title, "zh-CN");
     })
   })).sort((a2, b2) => a2.title.localeCompare(b2.title, "zh-CN"));
-  return { sections };
-}
-function buildGoalOverviewViewModel({ items, module: module2, goals = [], cycles = [] }) {
-  const config2 = module2.viewConfig?.goalOverview || module2.viewConfig || {};
-  return buildGoalOverviewModel({
-    items,
-    goals,
-    cycles,
-    selectedGoalPath: config2.goalPath || null,
-    limit: config2.limit || 20
-  });
-}
-function buildGoalDetailViewModel({ items, module: module2, goals = [], cycles = [] }) {
-  const config2 = module2.viewConfig?.goalDetail || module2.viewConfig?.goalOverview || module2.viewConfig || {};
-  return buildGoalOverviewModel({
-    items,
-    goals,
-    cycles,
-    selectedGoalPath: config2.goalPath || null,
-    limit: 1
-  });
+  return { sections: sections2 };
 }
 const viewModelBuilders = {
   BlockView: ({ items, viewInstance }) => {
@@ -72031,16 +70276,19 @@ const viewModelBuilders = {
       groupedTree: model.groupedTree
     };
   },
-  HeatmapView: ({ items, viewInstance, inputSettings }) => {
+  HeatmapView: ({ items, viewInstance, inputSettings, goals, goalSettings }) => {
     const model = buildHeatmapViewModel({
       items,
       module: viewInstance,
-      inputSettings
+      inputSettings,
+      goals: goals || [],
+      goalSettings
     });
     return {
       injectedThemesByPath: model.themesByPath,
       injectedThemesToTrack: model.themesToTrack,
-      injectedDataByThemeAndDate: model.dataByThemeAndDate
+      injectedDataByThemeAndDate: model.dataByThemeAndDate,
+      injectedGoalHeatmapGroups: model.goalGroups
     };
   },
   TimelineView: ({ items, viewInstance, dateRange, currentView }) => ({
@@ -72051,19 +70299,22 @@ const viewModelBuilders = {
       currentView
     })
   }),
-  StatisticsView: ({ items, viewInstance, dateRange, currentView, selectedCategories }) => ({
+  StatisticsView: ({ items, viewInstance, dateRange, currentView, goals, inputSettings }) => ({
     statisticsModel: buildStatisticsViewModel({
       items,
       dateRange,
       module: viewInstance,
       currentView,
-      selectedCategories
+      goals: goals || [],
+      themes: inputSettings?.themes || []
     })
   }),
-  ProgressView: ({ items, viewInstance }) => ({
+  ProgressView: ({ items, viewInstance, goals, inputSettings }) => ({
     progressModel: buildProgressViewModel({
       items,
-      module: viewInstance
+      module: viewInstance,
+      goals: goals || [],
+      themes: inputSettings?.themes || []
     })
   }),
   TaskExecutionView: ({ allItems, viewInstance, dateRange, currentView, layoutFilters }) => ({
@@ -72073,22 +70324,6 @@ const viewModelBuilders = {
       viewInstance,
       keyword: "",
       layoutFilters
-    })
-  }),
-  GoalOverviewView: ({ items, viewInstance, goals, cycles }) => ({
-    goalOverviewModel: buildGoalOverviewViewModel({
-      items,
-      module: viewInstance,
-      goals: goals || [],
-      cycles: cycles || []
-    })
-  }),
-  GoalDetailView: ({ items, viewInstance, goals, cycles }) => ({
-    goalDetailModel: buildGoalDetailViewModel({
-      items,
-      module: viewInstance,
-      goals: goals || [],
-      cycles: cycles || []
     })
   })
 };
@@ -72228,6 +70463,7 @@ function useViewRuntimeHandlers({
       date: request.date,
       item: request.item,
       themePath: request.themePath,
+      goalPath: request.goalPath,
       themesByPath: request.themesByPath,
       notice: (message) => ui.notice(message)
     });
@@ -72309,7 +70545,8 @@ function buildViewProps({
     onExcelConfigChange: viewType === "ExcelView" ? handlers.onExcelConfigChange : void 0,
     onMarkDone,
     onUpdateTaskTime: handlers.onUpdateTaskTime,
-    onQuickCreate: viewType === "StatisticsView" || viewType === "GoalOverviewView" || viewType === "GoalDetailView" ? handlers.onQuickCreate : void 0,
+    // Statistics / Progress 只负责展示；新增数据统一走 QuickInput 主入口，不从视图 popover 创建。
+    onQuickCreate: void 0,
     onOpenStatisticsPopover: viewType === "StatisticsView" ? onOpenStatisticsPopover : void 0,
     onCloseStatisticsPopover: viewType === "StatisticsView" ? onCloseStatisticsPopover : void 0,
     categoryColors: viewType === "StatisticsView" ? categoryColors : void 0,
@@ -72330,6 +70567,33 @@ function buildViewProps({
     messageRenderPort,
     ...renderModels
   };
+}
+function normalizeLegacyGoalViewInstance(viewInstance) {
+  const rawType = String(viewInstance.viewType || "");
+  if (rawType === "GoalOverviewView") {
+    return {
+      ...viewInstance,
+      viewType: "ProgressView",
+      viewConfig: {
+        ...viewInstance.viewConfig || {},
+        ...viewInstance.viewConfig?.goalOverview || {},
+        mode: "goal"
+      }
+    };
+  }
+  if (rawType === "GoalDetailView") {
+    return {
+      ...viewInstance,
+      viewType: "StatisticsView",
+      viewConfig: {
+        ...viewInstance.viewConfig || {},
+        ...viewInstance.viewConfig?.goalDetail || {},
+        groupBy: "goal",
+        metric: "recordCount"
+      }
+    };
+  }
+  return viewInstance;
 }
 function ViewContent({
   viewInstance,
@@ -72353,10 +70617,11 @@ function ViewContent({
   const messageRenderPort = useMessageRenderPort();
   const categoryColors = useSelector(selectCategoryColors);
   const settings = useSelector(selectSettings);
+  const normalizedViewInstance = T$1(() => normalizeLegacyGoalViewInstance(viewInstance), [viewInstance]);
   const viewItems = useViewData({
     dataStore,
     sourceItems: allItems,
-    viewInstance,
+    viewInstance: normalizedViewInstance,
     dateRange,
     keyword,
     layoutView,
@@ -72369,13 +70634,13 @@ function ViewContent({
   y(() => {
     onDataLoaded(viewItems);
   }, [viewItems, onDataLoaded]);
-  const ViewComponent = DashboardViewComponents[viewInstance.viewType];
+  const ViewComponent = DashboardViewComponents[normalizedViewInstance.viewType];
   if (!ViewComponent) return /* @__PURE__ */ u2("div", { children: [
     "未知视图: ",
-    viewInstance.viewType
+    normalizedViewInstance.viewType
   ] });
   const renderModels = T$1(() => buildViewRenderModels({
-    viewInstance,
+    viewInstance: normalizedViewInstance,
     items: viewItems,
     allItems,
     dateRange,
@@ -72384,18 +70649,18 @@ function ViewContent({
     layoutFilters,
     selectedCategories: selectedLayoutCategories,
     goals: settings.goalSettings?.goals || [],
-    cycles: settings.goalSettings?.cycles || []
-  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings?.goals, settings.goalSettings?.cycles, viewInstance, viewItems]);
+    goalSettings: settings.goalSettings
+  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, viewItems]);
   const handlers = useViewRuntimeHandlers({
     app,
     actionService,
-    viewInstance,
+    viewInstance: normalizedViewInstance,
     dateRange,
     layoutView,
     excelAvailableFields
   });
   const viewProps = buildViewProps({
-    viewInstance,
+    viewInstance: normalizedViewInstance,
     viewItems,
     dateRange,
     layoutView,
@@ -72653,16 +70918,6 @@ class RendererService {
     this.setupZustandSubscription();
     this.isInitialized = true;
   }
-  app;
-  dataStore;
-  actionService;
-  itemService;
-  inputService;
-  timerService;
-  useCases;
-  uiPort;
-  modalPort;
-  messageRenderPort;
   isInitialized = false;
   activeLayouts = [];
   // 缓存的 Services 对象，用于 ServicesProvider
@@ -72719,10 +70974,10 @@ class RendererService {
    */
   register(container, layout) {
     this.unregister(container);
-    R$1(
-      k$2(ServicesProvider, {
+    G$1(
+      _$1(ServicesProvider, {
         services: this.services,
-        children: k$2(LayoutRenderer, {
+        children: _$1(LayoutRenderer, {
           layout,
           dataStore: this.dataStore,
           app: this.app,
@@ -72739,7 +70994,7 @@ class RendererService {
     const index = this.activeLayouts.findIndex((l2) => l2.container === container);
     if (index > -1) {
       try {
-        R$1(null, container);
+        G$1(null, container);
       } catch (e2) {
       }
       container.empty();
@@ -72757,10 +71012,10 @@ class RendererService {
       const { container, layoutName } = activeLayout;
       const newLayoutConfig = latestSettings.layouts.find((l2) => l2.name === layoutName);
       if (newLayoutConfig) {
-        R$1(
-          k$2(ServicesProvider, {
+        G$1(
+          _$1(ServicesProvider, {
             services: this.services,
-            children: k$2(LayoutRenderer, {
+            children: _$1(LayoutRenderer, {
               layout: newLayoutConfig,
               dataStore: this.dataStore,
               app: this.app,
@@ -72800,9 +71055,6 @@ class TimerService {
     this.dataStore = dataStore;
     this.ui = ui;
   }
-  useCases;
-  dataStore;
-  ui;
   async startOrResume(taskId) {
     const timers = this.useCases.timer.getTimers();
     for (const timer of timers) {
@@ -73864,7 +72116,6 @@ let ObsidianVaultPort = class {
   constructor(app) {
     this.app = app;
   }
-  app;
   listMarkdownFilePaths() {
     return this.app.vault.getMarkdownFiles().map((f2) => f2.path);
   }
@@ -74725,10 +72976,6 @@ class CheckinManagerModal extends obsidian.Modal {
     this.onSave = onSave;
     this.onAddRecord = onAddRecord;
   }
-  date;
-  items;
-  onSave;
-  onAddRecord;
   onOpen() {
     this.contentEl.empty();
     this.modalEl.addClass("checkin-manager-modal-container");
@@ -74779,10 +73026,6 @@ let ObsidianModalPort = class {
     this.retrievalService = retrievalService;
     this.sessionStore = sessionStore;
   }
-  app;
-  chatService;
-  retrievalService;
-  sessionStore;
   openAiTextPrompt() {
     const modal = new AiTextPromptModal(this.app);
     return modal.openAndGetValue();
@@ -74906,7 +73149,6 @@ class ObsidianMessageRenderPort {
   constructor(app) {
     this.app = app;
   }
-  app;
   clear(containerEl) {
     containerEl.empty();
   }
@@ -74957,7 +73199,6 @@ let ObsidianMetadataPort = class {
   constructor(app) {
     this.app = app;
   }
-  app;
   async getHeadings(path) {
     const af = this.app.vault.getAbstractFileByPath(path);
     if (!(af instanceof obsidian.TFile)) return [];
@@ -74986,7 +73227,6 @@ let ObsidianFileStatPort = class {
   constructor(app) {
     this.app = app;
   }
-  app;
   async stat(path) {
     const af = this.app.vault.getAbstractFileByPath(path);
     if (!(af instanceof obsidian.TFile)) return null;

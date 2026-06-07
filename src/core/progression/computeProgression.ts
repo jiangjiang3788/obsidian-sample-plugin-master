@@ -1,4 +1,5 @@
 import type { Item } from '../types';
+import { getItemThemeKey } from '../goal/itemGoalGrouping';
 import type { ProgressResult, ProgressBreakdownRow } from './types';
 
 export interface ProgressComputationOptions {
@@ -56,7 +57,7 @@ export function computeProgression(items: Item[], options: ProgressComputationOp
     catRow.count += 1;
     categoryMap.set(category, catRow);
 
-    const theme = item.theme || '未设置主题';
+    const theme = getItemThemeKey(item);
     const themeRow = themeMap.get(theme) || { points: 0, count: 0 };
     themeRow.points += points;
     themeRow.count += 1;

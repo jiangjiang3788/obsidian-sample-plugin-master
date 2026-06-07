@@ -1,4 +1,4 @@
-import type { InputSettings, Item } from '@/core/types/schema';
+import type { InputSettings, Item, ThinkSettings } from '@/core/types/schema';
 import type { PreparedEditRecord } from '@/core/types/recordInput';
 import type { ParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 import { buildEditableRecordSnapshot } from '@/core/services/recordInput/snapshot/EditSnapshotFactory';
@@ -10,7 +10,7 @@ import { findThemeIdByPath, resolveRecordDependencies } from './dependencyResolv
 import { buildInitialEditFormData } from './EditBackfillMapper';
 
 export interface BuildEditStateInput {
-  settings: InputSettings;
+  settings: ThinkSettings;
   item: Item;
   preferredBlockId?: string | null;
   preferredThemeId?: string | null;
@@ -175,6 +175,22 @@ function findOverrideById(settings: InputSettings, overrideId?: string | null) {
   return (settings.overrides || []).find((candidate: any) => candidate.id === overrideId) ?? null;
 }
 
+function readCoreBlockHint(item: Item): string | null {
+  const extra = item.extra || {};
+  const candidates = [
+    (item as any).coreBlock,
+    (item as any).coreBlockId,
+    extra['核心Block'],
+    extra.coreBlock,
+    extra.coreBlockId,
+  ];
+  for (const candidate of candidates) {
+    const text = String(candidate || '').trim();
+    if (text) return text.startsWith('core.') ? text : `core.${text}`;
+  }
+  return null;
+}
+
 function resolveBlockForEdit(settings: InputSettings, item: Item, preferredBlockId?: string | null) {
   const blocks = settings.blocks || [];
   if (!Array.isArray(blocks) || blocks.length === 0) {
@@ -185,6 +201,20 @@ function resolveBlockForEdit(settings: InputSettings, item: Item, preferredBlock
       usedFallbackBlock: true,
       debugReason: '没有可用 block，只能使用 preferredBlockId。',
     };
+  }
+
+  const coreBlockHint = readCoreBlockHint(item);
+  if (coreBlockHint) {
+    const block = blocks.find((candidate) => candidate.id === coreBlockHint || candidate.coreBlockId === coreBlockHint);
+    if (block) {
+      return {
+        blockId: block.id,
+        themeIdFromTemplateHint: null as string | null,
+        resolvedBy: 'exact' as const,
+        usedFallbackBlock: false,
+        debugReason: `根据记录中的核心Block ${coreBlockHint} 精确还原 block=${block.id}`,
+      };
+    }
   }
 
   // SNAPSHOT-MIGRATION / SAFETY-FIX:
@@ -339,8 +369,9 @@ function buildInitialFormData(template: any, item: Item, snapshot: ParsedRecordS
 
 export function buildEditRecordState(input: BuildEditStateInput): PreparedEditRecord {
   const { settings, item, preferredBlockId, preferredThemeId } = input;
-  const resolvedBlock = resolveBlockForEdit(settings, item, preferredBlockId);
-  const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(settings, item.theme) ?? preferredThemeId ?? undefined;
+  const inputSettings = settings.inputSettings;
+  const resolvedBlock = resolveBlockForEdit(inputSettings, item, preferredBlockId);
+  const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(inputSettings, item.theme) ?? preferredThemeId ?? undefined;
   recordDebugLog('编辑模板解析', '任务/块模板选择', {
     itemType: item.type,
     itemTitle: item.title,

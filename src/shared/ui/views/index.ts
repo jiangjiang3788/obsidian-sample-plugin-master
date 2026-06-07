@@ -9,8 +9,6 @@ export { HeatmapView } from './HeatmapView';
 export { StatisticsView, PopoverContent } from './StatisticsView/index';
 export { ProgressView } from './ProgressView';
 export { TaskExecutionView } from './TaskExecutionView';
-export { GoalOverviewView } from './GoalOverviewView';
-export { GoalDetailView } from './GoalDetailView';
 export { TableView } from './TableView';
 export { ExcelView } from './ExcelView';
 

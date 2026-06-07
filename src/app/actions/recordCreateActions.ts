@@ -1,8 +1,8 @@
 import { QuickInputModal } from '@/app/public';
 import type { ActionService, Item, TaskBlock, ThemeDefinition, UiPort, ViewInstance } from '@core/public';
-import { dayjs, minutesToTime, type Dayjs, type ThemeDefinition as ThemeDefinitionType, type QuickInputConfig, type RecordInputSource } from '@core/public';
+import { dayjs, getItemThemePath, minutesToTime, type Dayjs, type ThemeDefinition as ThemeDefinitionType, type QuickInputConfig, type RecordInputSource } from '@core/public';
 
-export const MODULE_HEADER_CREATE_ALLOWLIST = ['TimelineView', 'HeatmapView', 'StatisticsView'] as const;
+export const MODULE_HEADER_CREATE_ALLOWLIST = ['TimelineView', 'HeatmapView'] as const;
 
 type ModuleHeaderCreateAllowedView = typeof MODULE_HEADER_CREATE_ALLOWLIST[number];
 
@@ -44,6 +44,7 @@ export interface HeatmapCreateParams {
   date: string;
   item?: Item;
   themePath?: string;
+  goalPath?: string;
   themesByPath?: Map<string, ThemeDefinition>;
   notice?: (message: string) => void;
 }
@@ -139,8 +140,9 @@ function resolveHeatmapThemeId(themesByPath: Map<string, ThemeDefinitionType> | 
   if (themePath && themePath !== '__default__') {
     return themesByPath.get(themePath)?.id;
   }
-  if (item?.theme) {
-    return themesByPath.get(item.theme)?.id;
+  const itemThemePath = getItemThemePath(item);
+  if (itemThemePath) {
+    return themesByPath.get(itemThemePath)?.id;
   }
   return undefined;
 }
@@ -152,7 +154,7 @@ function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig
   const themeId = resolveHeatmapThemeId(params.themesByPath, params.themePath, params.item);
   const themePath = params.themePath && params.themePath !== '__default__'
     ? params.themePath
-    : params.item?.theme;
+    : getItemThemePath(params.item);
 
   const context: Record<string, any> = {
     日期: params.date,
@@ -160,12 +162,19 @@ function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig
       kind: 'heatmap_create',
       timeContext: { date: params.date },
       themeContext: themePath ? { themePath } : null,
+      goalContext: params.goalPath ? { goalPath: params.goalPath } : null,
     },
     ...(params.item ? { 内容: params.item.content || '', 评分: params.item.rating ?? 0 } : {}),
   };
 
   if (themePath) {
     context['主题'] = themePath;
+    context.themePath = themePath;
+  }
+
+  if (params.goalPath) {
+    context['目标'] = params.goalPath;
+    context.goalPath = params.goalPath;
   }
 
   return {

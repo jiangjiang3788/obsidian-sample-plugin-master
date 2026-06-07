@@ -13,6 +13,7 @@ export function DayStatisticsView({
   onCellClick,
   displayMode,
   minVisibleHeight,
+  bucketAccessor,
 }: {
   items: Item[];
   categories: CategoryConfig[];
@@ -20,9 +21,10 @@ export function DayStatisticsView({
   onCellClick: StatisticsCellClickHandler;
   displayMode: 'smart' | 'linear' | 'logarithmic';
   minVisibleHeight: number;
+  bucketAccessor?: (item: Item) => string;
 }) {
   // 天视图：显示选定日期的统计数据
-  const data = aggregateByDay(items, categories, selectedDate);
+  const data = aggregateByDay(items, categories, selectedDate, bucketAccessor);
 
   return (
     <div class="statistics-view">
@@ -33,9 +35,10 @@ export function DayStatisticsView({
             label={selectedDate.format('YYYY年MM月DD日 dddd')}
             categories={categories}
             onCellClick={onCellClick}
-            cellIdentifier={(cat: string) => ({ type: 'day', date: selectedDate.format('YYYY-MM-DD'), category: cat })}
+            cellIdentifier={(goal: string) => ({ type: 'day', date: selectedDate.format('YYYY-MM-DD'), goal })}
             displayMode={displayMode}
             minVisibleHeight={minVisibleHeight}
+            bucketAccessor={bucketAccessor}
           />
         </div>
       </div>

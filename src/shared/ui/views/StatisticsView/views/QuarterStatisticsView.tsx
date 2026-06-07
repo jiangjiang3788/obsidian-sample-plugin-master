@@ -5,7 +5,6 @@ import type { CategoryConfig } from '@core/public';
 import { aggregateByQuarter, aggregateByMonth, getMonthWeeksData, isSameIsoWeek, createPeriodData } from '@core/public';
 import { ChartBlock } from '../../../statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
-import { TopControls } from '../components/TopControls';
 
 export function QuarterStatisticsView({
   items,
@@ -16,6 +15,7 @@ export function QuarterStatisticsView({
   onCellClick,
   displayMode,
   minVisibleHeight,
+  bucketAccessor,
 }: {
   items: Item[];
   categories: CategoryConfig[];
@@ -25,15 +25,16 @@ export function QuarterStatisticsView({
   onCellClick: StatisticsCellClickHandler;
   displayMode: 'smart' | 'linear' | 'logarithmic';
   minVisibleHeight: number;
+  bucketAccessor?: (item: Item) => string;
 }) {
   const quarterStart = quarterDate.startOf('quarter');
-  const quarterData = aggregateByQuarter(items, categories, quarterDate, usePeriod);
+  const quarterData = aggregateByQuarter(items, categories, quarterDate, usePeriod, bucketAccessor);
 
   // 准备3个月的数据和周数据
   const monthsInfo = Array.from({ length: 3 }, (_, i) => {
     const month = quarterStart.add(i, 'month');
-    const monthData = aggregateByMonth(items, categories, month, usePeriod);
-    const weeksData = getMonthWeeksData(items, categories, month, usePeriod);
+    const monthData = aggregateByMonth(items, categories, month, usePeriod, bucketAccessor);
+    const weeksData = getMonthWeeksData(items, categories, month, usePeriod, bucketAccessor);
 
     const monthStart = month.startOf('month');
     const monthEnd = month.endOf('month');
@@ -53,7 +54,6 @@ export function QuarterStatisticsView({
 
   return (
     <div class="statistics-view">
-      <TopControls currentView="季" usePeriod={usePeriod} onToggleUsePeriod={onToggleUsePeriod} />
 
       <div class="sv-quarter-grid">
         {/* 第1行：季度汇总 - 跨全部3列 */}
@@ -63,14 +63,15 @@ export function QuarterStatisticsView({
             label={`${quarterDate.format('YYYY年')} 第${quarterDate.quarter()}季度`}
             categories={categories}
             onCellClick={onCellClick}
-            cellIdentifier={(cat: string) => ({
+            cellIdentifier={(goal: string) => ({
               type: 'quarter',
               quarter: quarterDate.quarter(),
               year: quarterDate.year(),
-              category: cat,
+              goal,
             })}
             displayMode={displayMode}
             minVisibleHeight={minVisibleHeight}
+            bucketAccessor={bucketAccessor}
           />
         </div>
 
@@ -86,14 +87,15 @@ export function QuarterStatisticsView({
               label={month.format('MM月')}
               categories={categories}
               onCellClick={onCellClick}
-              cellIdentifier={(cat: string) => ({
+              cellIdentifier={(goal: string) => ({
                 type: 'month',
                 month: month.month() + 1,
                 year: month.year(),
-                category: cat,
+                goal,
               })}
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
+              bucketAccessor={bucketAccessor}
             />
           </div>
         ))}
@@ -116,15 +118,16 @@ export function QuarterStatisticsView({
                   label={`W${weekStart.isoWeek()}`}
                   categories={categories}
                   onCellClick={onCellClick}
-                  cellIdentifier={(cat: string) => ({
+                  cellIdentifier={(goal: string) => ({
                     type: 'week',
                     week: weekStart.isoWeek(),
                     year: weekStart.isoWeekYear(),
-                    category: cat,
+                    goal,
                   })}
                   isCompact={true}
                   displayMode={displayMode}
                   minVisibleHeight={minVisibleHeight}
+                  bucketAccessor={bucketAccessor}
                 />
               );
             })}

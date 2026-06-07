@@ -25,6 +25,9 @@ export interface QuickInputEditorViewProps {
   selectedGoalTitle?: string | null;
   onSelectGoal: (goal: GoalSelectorOption | null) => void;
   onCreateGoal?: (goalPath: string) => Promise<void> | void;
+  templateVariants?: Array<{ value: string; label: string; isDefault?: boolean }>;
+  selectedTemplateVariantId?: string | null;
+  onSelectTemplateVariant?: (variantId: string | null) => void;
   cycles?: CycleDefinition[];
   selectedCycleId?: string | null;
   onSelectCycle?: (cycleId: string | null) => void;
@@ -42,8 +45,9 @@ export interface QuickInputEditorViewProps {
   showTimeDirectionControl?: boolean;
   currentThemePath?: string | null;
   currentGoalPath?: string | null;
-  templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null;
+  templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null;
   fieldSourceSummary?: Record<string, number>;
+  currentPeriodLabel?: string | null;
 }
 
 
@@ -75,30 +79,34 @@ function SnapshotSummary({
   currentGoalPath,
   templateSourceType,
   fieldSourceSummary,
+  currentPeriodLabel,
 }: {
   currentThemePath?: string | null;
   currentGoalPath?: string | null;
-  templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null;
+  templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null;
   fieldSourceSummary?: Record<string, number>;
+  currentPeriodLabel?: string | null;
 }) {
   const chips: Array<{ label: string; value: string }> = [];
   if (currentGoalPath) chips.push({ label: '目标', value: currentGoalPath });
   if (currentThemePath) chips.push({ label: '主题', value: currentThemePath });
+  if (currentPeriodLabel) chips.push({ label: '周期', value: currentPeriodLabel });
   if (templateSourceType) {
     const sourceLabelMap: Record<string, string> = {
       override: '主题覆盖',
       block: 'Block 默认',
       'core-block': '核心Block',
-      'theme-fallback': '主题回退',
-      'goal-binding': '目标绑定',
+      'theme-fallback': '旧主题兼容',
+      'goal-template': '目标记录预设',
+      'goal-binding': '旧目标记录预设',
       'legacy-block': '旧Block',
     };
-    chips.push({ label: '模板来源', value: sourceLabelMap[templateSourceType] || templateSourceType });
+    chips.push({ label: '记录方式', value: sourceLabelMap[templateSourceType] || templateSourceType });
   }
   if (fieldSourceSummary) {
     if (fieldSourceSummary.user > 0) chips.push({ label: '手填', value: String(fieldSourceSummary.user) });
     if (fieldSourceSummary.context > 0) chips.push({ label: '回填', value: String(fieldSourceSummary.context) });
-    if (fieldSourceSummary.template_default > 0) chips.push({ label: '模板默认', value: String(fieldSourceSummary.template_default) });
+    if (fieldSourceSummary.template_default > 0) chips.push({ label: '预设默认', value: String(fieldSourceSummary.template_default) });
     if (fieldSourceSummary.system_auto > 0) chips.push({ label: '自动', value: String(fieldSourceSummary.system_auto) });
   }
   if (!chips.length) return null;
@@ -152,6 +160,9 @@ export function QuickInputEditorView({
   selectedGoalTitle,
   onSelectGoal,
   onCreateGoal,
+  templateVariants = [],
+  selectedTemplateVariantId = null,
+  onSelectTemplateVariant,
   cycles = [],
   selectedCycleId = null,
   onSelectCycle,
@@ -167,11 +178,12 @@ export function QuickInputEditorView({
   isMobileLike = false,
   showTimeDirectionControl = false,
   currentThemePath = null,
+  currentPeriodLabel = null,
   templateSourceType = null,
   fieldSourceSummary,
 }: QuickInputEditorViewProps) {
   if (!template) {
-    return <div>错误：找不到当前 Block 的模板配置。</div>;
+    return <div>错误：找不到当前记录类型的默认配置。</div>;
   }
 
   return (
@@ -191,22 +203,6 @@ export function QuickInputEditorView({
           </Typography>
         )}
       </Box>
-
-      {cycles.length > 0 && (
-        <Box>
-          <SectionTitle title="周期" compact />
-          <select
-            className="think-native-input"
-            value={selectedCycleId || ''}
-            onChange={(event: any) => onSelectCycle?.(event.currentTarget.value || null)}
-          >
-            <option value="">不绑定周期</option>
-            {cycles.map((cycle) => (
-              <option key={cycle.id} value={cycle.id}>{cycle.title} · {cycle.startDate} → {cycle.endDate}</option>
-            ))}
-          </select>
-        </Box>
-      )}
 
       {allowBlockSwitch && blocks.length > 1 && (
         <Box>
@@ -228,6 +224,26 @@ export function QuickInputEditorView({
         </Box>
       )}
 
+      {templateVariants.length > 1 && (
+        <Box>
+          <SectionTitle title="记录预设" compact />
+          <FormControl fullWidth>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {templateVariants.map((variant) => (
+                <SelectablePill
+                  key={variant.value}
+                  selected={(selectedTemplateVariantId || 'default') === variant.value}
+                  onClick={() => onSelectTemplateVariant?.(variant.value)}
+                  title={variant.isDefault ? `${variant.label}（默认）` : variant.label}
+                >
+                  {variant.label}{variant.isDefault ? ' · 默认' : ''}
+                </SelectablePill>
+              ))}
+            </div>
+          </FormControl>
+        </Box>
+      )}
+
       {showDivider && <Divider sx={{ my: dense ? 0.1 : 0.2, opacity: 0.55 }} />}
 
       <SnapshotSummary
@@ -235,6 +251,7 @@ export function QuickInputEditorView({
         currentGoalPath={selectedGoalPath}
         templateSourceType={templateSourceType}
         fieldSourceSummary={fieldSourceSummary}
+        currentPeriodLabel={currentPeriodLabel}
       />
 
       <Box>

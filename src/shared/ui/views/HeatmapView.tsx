@@ -5,7 +5,7 @@ import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, parsePath } from '@core/public';
 import { dayjs } from '@core/public';
 import type { OpenCheckinManagerHandler, OpenHeatmapCreateHandler, ResolveResourcePathHandler } from '../../types/actions';
-import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
+import { HEATMAP_VIEW_DEFAULT_CONFIG, getItemThemePath } from '@core/public';
 import { HeatmapCell } from '../heatmap/HeatmapCell';
 import { buildThemeDataMap, buildThemesByPathMap } from '@core/public';
 import { RatingMappingCache } from '@core/public';
@@ -16,13 +16,14 @@ interface HeatmapViewProps {
     resolveResourcePath?: ResolveResourcePathHandler;
     dateRange: [Date, Date];
     module: ViewInstance;
-    currentView: '年' | '季' | '月' | '周' | '天';
+    currentView: '年' | '季' | '月' | '周' | '天' | '日' | string;
     inputSettings: InputSettings;
 
     // Phase2: shared/ui 纯化试点（可注入 renderModel）
     injectedThemesByPath?: Map<string, ThemeDefinition>;
     injectedThemesToTrack?: string[];
     injectedDataByThemeAndDate?: Map<string, Map<string, Item[]>>;
+    injectedGoalHeatmapGroups?: GoalHeatmapGroup[];
     onOpenHeatmapCreate?: OpenHeatmapCreateHandler;
     onOpenCheckinManager?: OpenCheckinManagerHandler;
     onNotice?: (message: string) => void;
@@ -37,6 +38,21 @@ interface DayThemeEntry {
 interface DayThemeGroup {
     title: string;
     entries: DayThemeEntry[];
+}
+
+interface GoalHeatmapThemeEntry {
+    presetKey?: string;
+    themePath: string;
+    label: string;
+    count: number;
+    dataForTheme: Map<string, Item[]>;
+}
+
+interface GoalHeatmapGroup {
+    goalPath: string;
+    label: string;
+    count: number;
+    entries: GoalHeatmapThemeEntry[];
 }
 
 function getThemeLeafLabel(themePath: string) {
@@ -63,6 +79,7 @@ export function HeatmapView({
     injectedThemesByPath,
     injectedThemesToTrack,
     injectedDataByThemeAndDate,
+    injectedGoalHeatmapGroups,
     onOpenHeatmapCreate,
     onOpenCheckinManager,
     onNotice,
@@ -72,6 +89,9 @@ export function HeatmapView({
         () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }),
         [module.viewConfig]
     );
+
+    const normalizedCurrentView = currentView === '日' || currentView === 'day' ? '天' : currentView;
+    const isDayView = normalizedCurrentView === '天';
 
     const themesByPath = useMemo(() => {
         return injectedThemesByPath ?? buildThemesByPathMap(inputSettings.themes);
@@ -94,8 +114,9 @@ export function HeatmapView({
         if (injectedThemesToTrack) return [];
         const set = new Set<string>();
         for (const it of items) {
-            if (it?.theme && typeof it.theme === 'string' && it.theme.trim().length > 0) {
-                set.add(it.theme);
+            const themePath = getItemThemePath(it);
+            if (themePath) {
+                set.add(themePath);
             }
         }
         return Array.from(set);
@@ -113,12 +134,36 @@ export function HeatmapView({
         return injectedDataByThemeAndDate ?? buildThemeDataMap(items, themesToTrack);
     }, [injectedDataByThemeAndDate, items, themesToTrack]);
 
+    const goalGroupsToDisplay = useMemo(() => {
+        return (injectedGoalHeatmapGroups || []).filter((group) => group && Array.isArray(group.entries) && group.entries.length > 0);
+    }, [injectedGoalHeatmapGroups]);
+
+    const normalizeHeatmapBlockId = (candidate?: string | null): string => {
+        const value = String(candidate || '').trim();
+        if (!value) return '';
+        const byId = inputSettings.blocks.find((block) => block.id === value);
+        if (byId) return byId.id;
+        const byCore = inputSettings.blocks.find((block) => block.coreBlockId === value);
+        if (byCore) return byCore.id;
+        const byCategory = inputSettings.blocks.find((block) => block.categoryKey === value || block.name === value);
+        if (byCategory) return byCategory.id;
+        // 旧数据里常见 sourceBlockId 已经不存在；打卡视图优先回退到 core.habit。
+        if (config.sourceBlockId && value === config.sourceBlockId) {
+            const habit = inputSettings.blocks.find((block) => block.coreBlockId === 'core.habit' || block.categoryKey === '打卡' || block.name === '打卡');
+            if (habit) return habit.id;
+        }
+        return value;
+    };
+
+    const heatmapSourceBlockId = normalizeHeatmapBlockId(config.sourceBlockId);
+
     const inferredBlockIdByTheme = useMemo(() => {
         const result = new Map<string, string>();
         const counts = new Map<string, Map<string, number>>();
 
         for (const it of items) {
-            const themeKey = typeof it?.theme === 'string' && it.theme.trim().length > 0 ? it.theme : '__default__';
+            const themePath = getItemThemePath(it);
+            const themeKey = themePath || '__default__';
             const blockId = (typeof it?.templateId === 'string' && it.templateId.trim().length > 0)
                 ? it.templateId
                 : (typeof it?.categoryKey === 'string' && it.categoryKey.trim().length > 0 ? it.categoryKey : '');
@@ -144,14 +189,15 @@ export function HeatmapView({
     }, [items]);
 
     const resolveCreateBlockId = (themePath?: string, item?: Item) => {
-        return config.sourceBlockId
-            || (item?.templateId || item?.categoryKey)
-            || (themePath ? inferredBlockIdByTheme.get(themePath) : undefined)
-            || inferredBlockIdByTheme.get('__default__')
+        const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
+        return normalizeHeatmapBlockId(heatmapSourceBlockId)
+            || normalizeHeatmapBlockId(itemBlock)
+            || normalizeHeatmapBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : undefined)
+            || normalizeHeatmapBlockId(inferredBlockIdByTheme.get('__default__'))
             || '';
     };
 
-    const openQuickCreate = (date: string, item?: Item, themePath?: string) => {
+    const openQuickCreate = (date: string, item?: Item, themePath?: string, goalPath?: string) => {
         if (!onOpenHeatmapCreate) {
             onNotice?.('未提供创建处理器，无法创建记录');
             return;
@@ -162,6 +208,7 @@ export function HeatmapView({
             date,
             item,
             themePath,
+            goalPath,
             themesByPath,
         });
     };
@@ -170,16 +217,16 @@ export function HeatmapView({
     // - 无记录：直接新增
     // - 1 条记录：按当前日期/主题继续新增一条（保留 create with context 语义）
     // - 多条记录：打开管理窗口，已有记录走查看，新增仍走 create with context
-    const handleCellClick = (date: string, dayItems?: Item[], themePath?: string) => {
+    const handleCellClick = (date: string, dayItems?: Item[], themePath?: string, goalPath?: string) => {
         const itemsForDay = dayItems || [];
 
         if (itemsForDay.length === 0) {
-            openQuickCreate(date, undefined, themePath);
+            openQuickCreate(date, undefined, themePath, goalPath);
             return;
         }
 
         if (itemsForDay.length === 1) {
-            openQuickCreate(date, itemsForDay[0], themePath);
+            openQuickCreate(date, itemsForDay[0], themePath, goalPath);
             return;
         }
 
@@ -191,14 +238,15 @@ export function HeatmapView({
         onOpenCheckinManager({
             date,
             items: itemsForDay,
-            onAddRecord: () => openQuickCreate(date, itemsForDay[itemsForDay.length - 1], themePath),
+            onAddRecord: () => openQuickCreate(date, itemsForDay[itemsForDay.length - 1], themePath, goalPath),
         });
     };
 
     const renderMonthGrid = (
         monthDate: dayjs.Dayjs,
         dataForMonth: Map<string, Item[]>,
-        themePath: string
+        themePath: string,
+        goalPath?: string
     ) => {
         const startOfMonth = monthDate.startOf('month');
         const endOfMonth = monthDate.endOf('month');
@@ -206,7 +254,7 @@ export function HeatmapView({
 
         const themeRatingMapping = ratingMappingsCache.get(
             inputSettings,
-            config.sourceBlockId || '',
+            heatmapSourceBlockId || '',
             themePath,
             themesByPath
         );
@@ -227,7 +275,7 @@ export function HeatmapView({
                     config={config}
                     ratingMapping={themeRatingMapping}
                     resolveResourcePath={resolveResourcePath}
-                    onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
+                    onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)}
                 />
             );
         }
@@ -243,20 +291,23 @@ export function HeatmapView({
     const renderHeaderCells = (
         currentView: string,
         themePath: string,
-        dataForTheme: Map<string, Item[]>
+        dataForTheme: Map<string, Item[]>,
+        goalPath?: string
     ) => {
         const start = dayjs(dateRange[0]);
         const end = dayjs(dateRange[1]);
 
         const themeRatingMapping = ratingMappingsCache.get(
             inputSettings,
-            config.sourceBlockId || '',
+            heatmapSourceBlockId || '',
             themePath,
             themesByPath
         );
 
         switch (currentView) {
-            case '天': {
+            case '天':
+            case '日':
+            case 'day': {
                 const dateStr = start.format('YYYY-MM-DD');
                 const dayItems = dataForTheme.get(dateStr);
                 return [
@@ -267,7 +318,7 @@ export function HeatmapView({
                         config={config}
                         ratingMapping={themeRatingMapping}
                         resolveResourcePath={resolveResourcePath}
-                        onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
+                        onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)}
                     />,
                 ];
             }
@@ -289,7 +340,7 @@ export function HeatmapView({
                             config={config}
                             ratingMapping={themeRatingMapping}
                             resolveResourcePath={resolveResourcePath}
-                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
+                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)}
                         />
                     );
 
@@ -316,7 +367,7 @@ export function HeatmapView({
                             config={config}
                             ratingMapping={themeRatingMapping}
                             resolveResourcePath={resolveResourcePath}
-                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
+                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)}
                         />
                     );
 
@@ -332,7 +383,7 @@ export function HeatmapView({
                 let currentMonth = start.clone().startOf('month');
 
                 while (currentMonth.isSameOrBefore(end, 'month')) {
-                    months.push(renderMonthGrid(currentMonth, dataForTheme, themePath));
+                    months.push(renderMonthGrid(currentMonth, dataForTheme, themePath, goalPath));
                     currentMonth = currentMonth.add(1, 'month');
                 }
 
@@ -361,11 +412,11 @@ export function HeatmapView({
     const checkLayout = (theme: string, headerElement: HTMLElement) => {
         if (!headerElement || theme === '__default__') return;
 
-        const isGridLayout = ['年', '季'].includes(currentView);
-        if (isGridLayout || currentView === '周') return;
+        const isGridLayout = ['年', '季'].includes(normalizedCurrentView);
+        if (isGridLayout || normalizedCurrentView === '周') return;
 
         const containerWidth = headerElement.clientWidth;
-        const threshold = currentView === '天' ? 320 : 600;
+        const threshold = isDayView ? 320 : 600;
         const needsVertical = containerWidth < threshold;
 
         setVerticalLayouts((prev) => {
@@ -398,7 +449,7 @@ export function HeatmapView({
         return () => {
             resizeObserver.disconnect();
         };
-    }, [themesToTrack, currentView]);
+    }, [themesToTrack, normalizedCurrentView]);
 
     const buildDayThemeGroups = (): DayThemeGroup[] => {
         const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ['__default__'];
@@ -433,11 +484,52 @@ export function HeatmapView({
     };
 
     // 天视图：
-    // - 按一级主题分组
-    // - 未打卡时，在 cell 内显示子主题
-    // - 已打卡时，不显示主题文字
+    // - 目标为第一层
+    // - 主题为目标下的多个打卡表单/预设来源
     const renderDayContent = () => {
         const dayDateStr = dayjs(dateRange[0]).format('YYYY-MM-DD');
+
+        if (goalGroupsToDisplay.length > 0) {
+            return (
+                <div class="heatmap-goal-day-view">
+                    {goalGroupsToDisplay.map((goalGroup) => (
+                        <section class="heatmap-goal-section heatmap-day-section" key={goalGroup.goalPath}>
+                            <div class="heatmap-goal-title-row">
+                                <h3 class="heatmap-day-section-title">{goalGroup.label}</h3>
+                                <span class="heatmap-goal-meta">{goalGroup.entries.length} 个打卡 · {goalGroup.count} 条记录</span>
+                            </div>
+                            <div class="heatmap-day-section-grid">
+                                {goalGroup.entries.map((entry) => {
+                                    const themeRatingMapping = ratingMappingsCache.get(
+                                        inputSettings,
+                                        heatmapSourceBlockId || '',
+                                        entry.themePath,
+                                        themesByPath
+                                    );
+                                    const dayItems = entry.dataForTheme.get(dayDateStr);
+
+                                    return (
+                                        <div class="heatmap-day-item" key={`${goalGroup.goalPath}:${entry.presetKey || entry.themePath}`} title={`${goalGroup.label} · ${entry.label} · ${entry.themePath}`}>
+                                            <HeatmapCell
+                                                date={dayDateStr}
+                                                items={dayItems}
+                                                config={config}
+                                                ratingMapping={themeRatingMapping}
+                                                resolveResourcePath={resolveResourcePath}
+                                                highlightToday={false}
+                                                emptyLabel={!dayItems || dayItems.length === 0 ? entry.label : undefined}
+                                                onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath)}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    ))}
+                </div>
+            );
+        }
+
         const dayGroups = buildDayThemeGroups();
 
         return (
@@ -449,7 +541,7 @@ export function HeatmapView({
                             {group.entries.map((entry) => {
                                 const themeRatingMapping = ratingMappingsCache.get(
                                     inputSettings,
-                                    config.sourceBlockId || '',
+                                    heatmapSourceBlockId || '',
                                     entry.themePath,
                                     themesByPath
                                 );
@@ -477,56 +569,96 @@ export function HeatmapView({
         );
     };
 
+    const renderThemeGroup = (params: {
+        theme: string;
+        dataForTheme: Map<string, Item[]>;
+        goalPath?: string;
+        keyPrefix?: string;
+        entryKey?: string;
+        label?: string;
+    }) => {
+        const { theme, dataForTheme, goalPath, keyPrefix = '', entryKey, label } = params;
+        const rowKey = `${keyPrefix}${entryKey || theme}`;
+        const isRowLayout = ['周', '月'].includes(normalizedCurrentView);
+        const isVertical = normalizedCurrentView === '周' ? false : verticalLayouts.has(rowKey);
+        const isCollapsed = normalizedCurrentView === '年' && collapsedThemes.has(rowKey);
+        const leafLabel = label || getThemeLeafLabel(theme);
+
+        return (
+            <div class={`heatmap-theme-group ${normalizedCurrentView === '年' ? 'is-collapsible' : ''}`} key={rowKey}>
+                <div
+                    class={`heatmap-theme-header ${normalizedCurrentView === '周' ? 'week-inline-layout' : ''} ${isVertical ? 'vertical-layout' : ''} ${isCollapsed ? 'is-collapsed' : ''}`}
+                    data-theme={rowKey}
+                    ref={(el) => {
+                        if (el && theme !== '__default__') {
+                            headerRefs.current.set(rowKey, el);
+                        }
+                    }}
+                >
+                    {theme !== '__default__' && (
+                        <div
+                            class={`heatmap-header-info ${normalizedCurrentView === '年' ? 'is-clickable' : ''}`}
+                            onClick={() => {
+                                if (normalizedCurrentView === '年') toggleThemeCollapsed(rowKey);
+                            }}
+                        >
+                            <div class="heatmap-header-info-left">
+                                {normalizedCurrentView === '年' && <span class={`heatmap-collapse-arrow ${isCollapsed ? 'is-collapsed' : ''}`}>▾</span>}
+                                <span class="theme-name">{leafLabel}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {!isCollapsed && (
+                        <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
+                            {renderHeaderCells(normalizedCurrentView, theme, dataForTheme, goalPath)}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     const renderContent = () => {
-        if (currentView === '天') {
+        if (isDayView) {
             return renderDayContent();
         }
 
-        const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ['__default__'];
-        const isRowLayout = ['周', '月'].includes(currentView);
+        const isRowLayout = ['周', '月'].includes(normalizedCurrentView);
         const wrapperClass = isRowLayout ? 'layout-row' : 'layout-grid';
+
+        if (goalGroupsToDisplay.length > 0) {
+            return (
+                <div class={`heatmap-view-wrapper heatmap-goal-view-wrapper ${wrapperClass}`}>
+                    {goalGroupsToDisplay.map((goalGroup) => (
+                        <section class="heatmap-goal-section" key={goalGroup.goalPath}>
+                            <div class="heatmap-goal-title-row">
+                                <h3 class="heatmap-goal-title">{goalGroup.label}</h3>
+                                <span class="heatmap-goal-meta">{goalGroup.entries.length} 个打卡 · {goalGroup.count} 条记录</span>
+                            </div>
+                            <div class="heatmap-goal-theme-list">
+                                {goalGroup.entries.map((entry) => renderThemeGroup({
+                                    theme: entry.themePath,
+                                    dataForTheme: entry.dataForTheme,
+                                    goalPath: goalGroup.goalPath,
+                                    keyPrefix: `${goalGroup.goalPath}\u0000`,
+                                    entryKey: entry.presetKey || entry.themePath,
+                                    label: entry.label,
+                                }))}
+                            </div>
+                        </section>
+                    ))}
+                </div>
+            );
+        }
+
+        const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ['__default__'];
 
         return (
             <div class={`heatmap-view-wrapper ${wrapperClass}`}>
                 {themesToDisplay.map((theme) => {
                     const dataForTheme = dataByThemeAndDate.get(theme) || new Map();
-                    const isVertical = currentView === '周' ? false : verticalLayouts.has(theme);
-                    const isCollapsed = currentView === '年' && collapsedThemes.has(theme);
-                    const leafLabel = getThemeLeafLabel(theme);
-
-                    return (
-                        <div class={`heatmap-theme-group ${currentView === '年' ? 'is-collapsible' : ''}`} key={theme}>
-                            <div
-                                class={`heatmap-theme-header ${currentView === '周' ? 'week-inline-layout' : ''} ${isVertical ? 'vertical-layout' : ''} ${isCollapsed ? 'is-collapsed' : ''}`}
-                                data-theme={theme}
-                                ref={(el) => {
-                                    if (el && theme !== '__default__') {
-                                        headerRefs.current.set(theme, el);
-                                    }
-                                }}
-                            >
-                                {theme !== '__default__' && (
-                                    <div
-                                        class={`heatmap-header-info ${currentView === '年' ? 'is-clickable' : ''}`}
-                                        onClick={() => {
-                                            if (currentView === '年') toggleThemeCollapsed(theme);
-                                        }}
-                                    >
-                                        <div class="heatmap-header-info-left">
-                                            {currentView === '年' && <span class={`heatmap-collapse-arrow ${isCollapsed ? 'is-collapsed' : ''}`}>▾</span>}
-                                            <span class="theme-name">{leafLabel}</span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {!isCollapsed && (
-                                    <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
-                                        {renderHeaderCells(currentView, theme, dataForTheme)}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    );
+                    return renderThemeGroup({ theme, dataForTheme });
                 })}
             </div>
         );

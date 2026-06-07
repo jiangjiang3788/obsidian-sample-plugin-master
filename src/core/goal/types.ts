@@ -45,11 +45,17 @@ export interface GoalDefinition {
   parentGoalId?: GoalId | null;
   /** 与现有主题系统的轻绑定，不要求一开始做迁移。 */
   themePath?: string | null;
+  /** 周期由记录日期和该粒度运行时推导，不手动维护 Cycle。 */
+  granularity?: Exclude<CycleGranularity, 'custom'>;
   metrics?: GoalMetricContract[];
   createdAt: string;
   updatedAt: string;
 }
 
+/**
+ * @deprecated 新主链不再手动维护周期；周期由记录日期 + Goal.granularity 运行时推导。
+ * 该类型只用于读取旧 data.json 和历史 UI 兼容。
+ */
 export interface CycleDefinition {
   id: CycleId;
   goalId: GoalId;
@@ -64,6 +70,10 @@ export interface CycleDefinition {
 
 export type GoalRecordRelationType = 'evidence' | 'progress' | 'review' | 'feedback' | 'blocker' | 'milestone' | 'task' | 'plan' | 'habit' | 'thought';
 
+/**
+ * @deprecated 新主链不再持久化目标-记录关系；视图运行时从记录字段推导。
+ * 该类型只用于读取旧 data.json 和历史迁移结果。
+ */
 export interface GoalRecordRelation {
   id: string;
   goalId: GoalId;
@@ -111,10 +121,22 @@ export interface GoalRelationHint {
   sourceBlockId?: string | null;
 }
 
+/**
+ * @deprecated 存储字段保留为 goalBlockBindings；新代码请使用 GoalTemplate 命名。
+ */
 export interface GoalBlockBinding {
   id: string;
   goalId: GoalId;
   coreBlockId: string;
+  /** 一个 Goal + Block 下的模板变体 ID。默认模板使用 default。 */
+  variantId?: string;
+  /** 面向 UI 显示的模板名称。 */
+  name?: string;
+  description?: string;
+  /** 多个变体中是否作为默认模板。 */
+  isDefault?: boolean;
+  /** 同一个 Goal + Block 下的模板变体排序。 */
+  sortOrder?: number;
   enabled: boolean;
   /** 目标专属字段覆盖。为空时继承核心 block / 主题模板。 */
   fields?: import('@/core/types/schema').TemplateField[];
@@ -129,8 +151,11 @@ export interface GoalBlockBinding {
 
 export interface GoalSettings {
   goals: GoalDefinition[];
+  /** @deprecated legacy only; new periods are derived at runtime. */
   cycles: CycleDefinition[];
+  /** legacy storage name for GoalTemplate[]. */
   goalBlockBindings: GoalBlockBinding[];
+  /** @deprecated legacy only; relations are derived at runtime. */
   goalRecordRelations: GoalRecordRelation[];
 }
 

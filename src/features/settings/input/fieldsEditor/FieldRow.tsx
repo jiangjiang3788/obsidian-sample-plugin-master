@@ -10,7 +10,7 @@ import { OptionRow } from "./OptionRow";
 
 const fieldTypeOptions = getUserTemplateFieldTypeOptions();
 
-const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 72px 40px";
+const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 64px 72px 40px";
 const emptyControlMinHeight = 40;
 
 function defaultInputType(uiType: string) {
@@ -177,6 +177,18 @@ export function FieldRow({
           ) : (
             <Box sx={{ minHeight: emptyControlMinHeight }} />
           )}
+        </Box>
+
+        <Box sx={{ minWidth: 0, display: "flex", justifyContent: "center", alignItems: "center", minHeight: emptyControlMinHeight }}>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: "var(--text-muted)" }} title="提交时此字段不能为空">
+            <input
+              type="checkbox"
+              checked={field.required === true}
+              disabled={disabled}
+              onChange={(event: any) => onUpdate({ required: !!event.target.checked })}
+            />
+            必填
+          </label>
         </Box>
 
         <Box sx={{ minWidth: 0, display: "flex", justifyContent: "center" }}>

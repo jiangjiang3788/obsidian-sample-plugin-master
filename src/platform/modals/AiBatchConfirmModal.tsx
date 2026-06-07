@@ -10,9 +10,9 @@ import type { App } from 'obsidian';
 import { Modal, Notice } from 'obsidian';
 import { useState } from 'preact/hooks';
 
-import { type Services, createServices, mountWithServices, unmountPreact, useUseCases, useSelector, resolveVaultResourcePath } from '@/app/public';
+import { type Services, createServices, mountWithServices, unmountPreact, useUseCases, useSelector, selectSettings, resolveVaultResourcePath } from '@/app/public';
 import type { NaturalRecordCommand, RecordSubmitResult, TemplateField } from '@core/public';
-import { getEffectiveTemplate, readRecordSubmitMessage } from '@core/public';
+import { getEffectiveTemplate, getGoalTemplateVariants, splitGoalPath, readRecordSubmitMessage } from '@core/public';
 
 import {
   Box,
@@ -67,6 +67,53 @@ function normalizeAiFormData(template: { fields?: TemplateField[] } | undefined,
   });
 
   return next;
+}
+
+
+function resolveGoalForAiTarget(goalSettings: any, target: NaturalRecordCommand['target']): any | null {
+  const goals = goalSettings?.goals || [];
+  if (!goals.length) return null;
+  const targetGoalId = String(target.goalId || '').trim();
+  if (targetGoalId) {
+    const byId = goals.find((goal: any) => goal.id === targetGoalId);
+    if (byId) return byId;
+  }
+
+  const targetGoalPath = splitGoalPath(String(target.goalPath || '')).goalPath;
+  if (targetGoalPath) {
+    const byPath = goals.find((goal: any) => splitGoalPath(String(goal.goalPath || goal.title || '')).goalPath === targetGoalPath);
+    if (byPath) return byPath;
+  }
+
+  return null;
+}
+
+function resolvePresetForAiTarget(goalSettings: any, goal: any | null, blockId: string, target: NaturalRecordCommand['target']): any | null {
+  if (!goal || !blockId) return null;
+  const variants = getGoalTemplateVariants(goalSettings, goal, blockId) || [];
+  if (!variants.length) return null;
+
+  const exact = String(target.goalTemplateId || '').trim();
+  if (exact) {
+    const matched = variants.find((preset: any) => preset.id === exact);
+    if (matched) return matched;
+  }
+
+  const variantId = String(target.templateVariantId || '').trim();
+  if (variantId) {
+    const matched = variants.find((preset: any) => preset.variantId === variantId || preset.id === variantId || preset.name === variantId);
+    if (matched) return matched;
+  }
+
+  return variants.find((preset: any) => preset.isDefault) || variants[0] || null;
+}
+
+function readPresetThemePath(preset: any | null): string | undefined {
+  const raw = preset?.defaultValues?.themePath ?? preset?.defaultValues?.['主题'];
+  if (!raw) return undefined;
+  if (typeof raw === 'string') return raw.trim() || undefined;
+  if (typeof raw === 'object' && raw && 'value' in raw) return String(raw.value || '').trim() || undefined;
+  return undefined;
 }
 
 interface RecordItem {
@@ -163,7 +210,9 @@ function AiBatchConfirmForm({
   closeModal: () => void;
   onComplete?: () => void;
 }) {
-  const settings = useSelector((state) => state.settings.inputSettings);
+  const fullSettings = useSelector(selectSettings);
+  const settings = fullSettings.inputSettings;
+  const goalSettings = fullSettings.goalSettings;
   const useCases = useUseCases();
 
   const blocks = settings.blocks || [];
@@ -177,22 +226,38 @@ function AiBatchConfirmForm({
       }
       if (!block && blocks.length > 0) block = blocks[0];
 
-      // theme
+      const goal = resolveGoalForAiTarget(goalSettings, cmd.target);
+      const goalPath = goal ? splitGoalPath(String(goal.goalPath || goal.title || '')).goalPath : splitGoalPath(String(cmd.target.goalPath || '')).goalPath;
+      const goalId = goal?.id || String(cmd.target.goalId || '').trim() || undefined;
+      const preset = block ? resolvePresetForAiTarget(goalSettings, goal, block.id, cmd.target) : null;
+      const presetThemePath = readPresetThemePath(preset);
+
+      // theme：目标预设默认主题 > AI 返回主题 > 主题库第一个。
       let themeId: string | undefined;
-      if (cmd.target.themeId) {
-        const theme = themes.find((t) => t.id === cmd.target.themeId || t.path === cmd.target.themeId);
+      const preferredTheme = presetThemePath || cmd.target.themeId;
+      if (preferredTheme) {
+        const theme = themes.find((t) => t.id === preferredTheme || t.path === preferredTheme);
         if (theme) themeId = theme.id;
       }
       if (!themeId && themes.length > 0) themeId = themes[0].id;
+      const selectedTheme = themeId ? themes.find((t) => t.id === themeId) : undefined;
+      const themePath = presetThemePath || selectedTheme?.path || (cmd.target.themeId && themes.find((t) => t.id === cmd.target.themeId || t.path === cmd.target.themeId)?.path) || undefined;
 
-      const initialTemplate = block ? getEffectiveTemplate(settings, block.id, themeId).template : undefined;
+      const initialTemplate = preset || (block ? getEffectiveTemplate(settings, block.id, themeId).template : undefined);
+      const initialFormData = {
+        ...(cmd.fieldValues || {}),
+        ...(goalId ? { goalId, '目标ID': goalId } : {}),
+        ...(goalPath ? { goalPath, '目标': goalPath } : {}),
+        ...(preset ? { templateVariantId: preset.variantId || 'default', goalTemplateVariantId: preset.variantId || 'default' } : {}),
+        ...(themePath ? { themePath, '主题': themePath } : {}),
+      };
 
       return {
         id: `record-${index}`,
         cmd,
         blockId: block?.id || '',
         themeId,
-        formData: normalizeAiFormData(initialTemplate ?? undefined, { ...(cmd.fieldValues || {}) }),
+        formData: normalizeAiFormData(initialTemplate ?? undefined, initialFormData),
         saved: false,
         skipped: false,
       };

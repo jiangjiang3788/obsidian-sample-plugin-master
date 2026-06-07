@@ -1,163 +1,207 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useMemo } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import type { Item } from '@core/public';
-import { getThemeLevelData } from '@core/public';
+
+interface GoalProgressCardModel {
+  key: string;
+  title: string;
+  goalPath: string;
+  icon?: string | null;
+  itemCount: number;
+  totalPoints: number;
+  level: number;
+  currentLevelPoints: number;
+  nextLevelPoints: number;
+  levelStep: number;
+  progressRatio: number;
+  matchedCount: number;
+  latestDate?: string | null;
+  blockCounts: Record<string, number>;
+  categoryBreakdown?: Array<{ key: string; points: number; count: number }>;
+  themeBreakdown?: Array<{ key: string; points: number; count: number }>;
+}
 
 interface ProgressViewProps {
   module: any;
   items?: Item[];
   progressModel?: {
     config: any;
-    result: {
-      totalPoints: number;
-      level: number;
-      currentLevelPoints: number;
-      nextLevelPoints: number;
-      progressRatio: number;
-      matchedCount: number;
-      categoryBreakdown: Array<{ key: string; points: number; count: number }>;
-      themeBreakdown: Array<{ key: string; points: number; count: number }>;
-    };
+    mode?: 'goal' | 'legacy';
+    goalCards?: GoalProgressCardModel[];
+    summary?: { goalCount: number; totalPoints: number; totalItems: number };
+    result?: any;
   };
 }
 
-function ProgressBar({ ratio, color = 'var(--interactive-accent)', height = '10px' }: { ratio: number; color?: string; height?: string }) {
+const BLOCK_LABELS: Record<string, string> = {
+  task: '任务',
+  plan: '计划',
+  review: '总结',
+  habit: '打卡',
+  blocker: '阻碍项',
+  milestone: '里程碑',
+  thought: '思考',
+  evidence: '事件',
+  unknown: '未分类',
+};
+
+function ratioPercent(value: number): string {
+  return `${Math.round(Math.max(0, Math.min(1, value || 0)) * 100)}%`;
+}
+
+function ProgressBar({ ratio, height = '10px' }: { ratio: number; height?: string }) {
   const width = `${Math.max(0, Math.min(100, Math.round((ratio || 0) * 100)))}%`;
   return (
     <div style={{ height, borderRadius: '999px', background: 'var(--background-modifier-border)', overflow: 'hidden' }}>
-      <div style={{ width, height: '100%', borderRadius: '999px', background: color, transition: 'width 0.25s ease' }} />
+      <div style={{ width, height: '100%', borderRadius: '999px', background: 'var(--interactive-accent)', transition: 'width 0.25s ease' }} />
     </div>
   );
 }
 
-function BreakdownList({ title, rows }: { title: string; rows: Array<{ key: string; points: number; count: number }> }) {
+
+function leafLabel(path: string): string {
+  const parts = String(path || '').split('/').map((part) => part.trim()).filter(Boolean);
+  return parts[parts.length - 1] || path || '未设置主题';
+}
+
+function ThemeBreakdownList({ rows }: { rows?: Array<{ key: string; points: number; count: number }> }) {
+  const visible = (rows || []).filter((row) => row.count > 0).slice(0, 8);
+  if (visible.length === 0) return <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>暂无主题细分</div>;
+
   return (
-    <div style={{ minWidth: 0 }}>
-      <div style={{ fontWeight: 600, marginBottom: '8px' }}>{title}</div>
-      {rows.length === 0 ? (
-        <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>暂无数据</div>
-      ) : rows.map(row => (
-        <div key={row.key} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '6px 0', borderBottom: '1px solid var(--background-modifier-border-hover)' }}>
-          <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.key}</span>
-          <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>{row.points} 分 · {row.count} 条</span>
+    <div style={{ display: 'grid', gap: '6px' }}>
+      {visible.map((row) => (
+        <div key={row.key} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: '8px', fontSize: '12px' }} title={row.key}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{leafLabel(row.key)}</span>
+          <span style={{ color: 'var(--text-muted)' }}>{row.count} 条 · {row.points} 经验</span>
         </div>
       ))}
     </div>
   );
 }
 
-function ThemeGrowthSection({ items, config }: { items: Item[]; config: any }) {
-  const rows = useMemo(() => {
-    const allowed = new Set((config?.includedCategories || []).filter(Boolean));
-    const themeMap = new Map<string, Item[]>();
+function BlockCountGrid({ counts }: { counts: Record<string, number> }) {
+  const rows = ['task', 'plan', 'review', 'habit', 'blocker', 'milestone', 'thought', 'evidence']
+    .map((key) => ({ key, label: BLOCK_LABELS[key] || key, count: Number(counts?.[key] || 0) }))
+    .filter((row) => row.count > 0);
 
-    for (const item of items || []) {
-      const category = (item.categoryKey || '').split('/')[0] || item.categoryKey || '未分类';
-      if (allowed.size > 0 && !allowed.has(category)) continue;
-
-      const theme = item.theme || '未设置主题';
-      const bucket = themeMap.get(theme) || [];
-      bucket.push(item);
-      themeMap.set(theme, bucket);
-    }
-
-    return Array.from(themeMap.entries())
-      .map(([theme, themeItems]) => ({
-        theme,
-        itemCount: themeItems.length,
-        levelData: getThemeLevelData(themeItems),
-      }))
-      .sort((a, b) => {
-        const checkDiff = b.levelData.totalChecks - a.levelData.totalChecks;
-        if (checkDiff !== 0) return checkDiff;
-        const itemDiff = b.itemCount - a.itemCount;
-        if (itemDiff !== 0) return itemDiff;
-        return a.theme.localeCompare(b.theme, 'zh-CN');
-      })
-      .slice(0, Math.max(1, config?.topN || 5));
-  }, [items, config]);
-
-  if (rows.length === 0) return null;
+  if (rows.length === 0) return <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>暂无 Block 统计</div>;
 
   return (
-    <div style={{ display: 'grid', gap: '10px' }}>
-      <div style={{ fontWeight: 600 }}>主题经验</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-        {rows.map(({ theme, itemCount, levelData }) => {
-          const remain = levelData.nextRequirement ? Math.max(0, levelData.nextRequirement - levelData.totalChecks) : 0;
-          return (
-            <div key={theme} class="think-card" style={{ padding: '14px', border: '1px solid var(--background-modifier-border)', borderRadius: '12px', display: 'grid', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start' }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                    <span style={{ fontSize: '18px', lineHeight: 1 }}>{levelData.config.icon}</span>
-                    <span style={{ fontWeight: 600, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theme}</span>
-                  </div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px' }}>
-                    Lv.{levelData.level} · {levelData.config.title}
-                  </div>
-                </div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0, textAlign: 'right' }}>
-                  {levelData.totalChecks} 经验
-                </div>
-              </div>
-
-              <ProgressBar ratio={levelData.progress} color={levelData.config.color} height="8px" />
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', color: 'var(--text-muted)', fontSize: '12px' }}>
-                <span>{itemCount} 条记录</span>
-                <span>
-                  {levelData.nextConfig
-                    ? `再 ${remain} 次到 ${levelData.nextConfig.icon} ${levelData.nextConfig.title}`
-                    : '已满级'}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(86px, 1fr))', gap: '8px' }}>
+      {rows.map((row) => (
+        <div key={row.key} style={{ border: '1px solid var(--background-modifier-border)', borderRadius: '10px', padding: '8px' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{row.label}</div>
+          <div style={{ fontWeight: 700, marginTop: '2px' }}>{row.count}</div>
+        </div>
+      ))}
     </div>
   );
 }
 
-export function ProgressView({ items = [], progressModel }: ProgressViewProps) {
-  const result = progressModel?.result;
-  const config = progressModel?.config;
-  if (!result || !config) return <div>暂无积分数据</div>;
+function GoalProgressCard({ card, expanded, onToggle }: { card: GoalProgressCardModel; expanded: boolean; onToggle: () => void }) {
+  const remain = Math.max(0, Number(card.levelStep || 0) - Number(card.currentLevelPoints || 0));
+  const title = card.title || card.goalPath || '未命名目标';
+
+  return (
+    <div class="think-card" style={{ padding: '14px', border: '1px solid var(--background-modifier-border)', borderRadius: '12px', display: 'grid', gap: '10px' }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center', padding: 0, border: 'none', background: 'transparent', color: 'inherit', textAlign: 'left', cursor: 'pointer' }}
+        aria-expanded={expanded}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <span style={{ fontSize: '18px', lineHeight: 1 }}>{card.icon || '🎯'}</span>
+            <strong style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</strong>
+          </div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {card.goalPath}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontWeight: 700 }}>Lv.{card.level}</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{expanded ? '收起' : '展开'}</div>
+        </div>
+      </button>
+
+      <div style={{ display: 'grid', gap: '6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '12px' }}>
+          <span>{card.totalPoints} 经验 · {card.itemCount} 条记录</span>
+          <span>{ratioPercent(card.progressRatio)}</span>
+        </div>
+        <ProgressBar ratio={card.progressRatio} height="8px" />
+      </div>
+
+      {!expanded && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', color: 'var(--text-muted)', fontSize: '12px' }}>
+          <span>任务 {card.blockCounts.task || 0}</span>
+          <span>打卡 {card.blockCounts.habit || 0}</span>
+          <span>阻碍 {card.blockCounts.blocker || 0}</span>
+          <span>里程碑 {card.blockCounts.milestone || 0}</span>
+          <span>最近 {card.latestDate || '暂无'}</span>
+        </div>
+      )}
+
+      {expanded && (
+        <div style={{ display: 'grid', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+            <div><div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>总经验</div><strong>{card.totalPoints}</strong></div>
+            <div><div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>当前等级</div><strong>Lv.{card.level}</strong></div>
+            <div><div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>距下一级</div><strong>{remain}</strong></div>
+            <div><div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>最近更新</div><strong>{card.latestDate || '暂无'}</strong></div>
+          </div>
+          <BlockCountGrid counts={card.blockCounts || {}} />
+          <div style={{ borderTop: '1px solid var(--background-modifier-border)', paddingTop: '10px', display: 'grid', gap: '6px' }}>
+            <div style={{ fontWeight: 600, fontSize: '13px' }}>主题细分</div>
+            <ThemeBreakdownList rows={card.themeBreakdown} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function ProgressView({ progressModel }: ProgressViewProps) {
+  const cards = progressModel?.goalCards || [];
+  const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
+
+  if (cards.length === 0) return <div>暂无目标进度数据</div>;
+
+  const summary = progressModel?.summary || {
+    goalCount: cards.length,
+    totalPoints: cards.reduce((sum, card) => sum + card.totalPoints, 0),
+    totalItems: cards.reduce((sum, card) => sum + card.itemCount, 0),
+  };
 
   return (
     <div style={{ display: 'grid', gap: '16px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
         <div class="think-card" style={{ padding: '14px', border: '1px solid var(--background-modifier-border)', borderRadius: '12px' }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>总积分</div>
-          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '4px' }}>{result.totalPoints}</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>目标数</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '4px' }}>{summary.goalCount}</div>
         </div>
         <div class="think-card" style={{ padding: '14px', border: '1px solid var(--background-modifier-border)', borderRadius: '12px' }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>当前等级</div>
-          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '4px' }}>Lv.{result.level}</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>目标经验</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '4px' }}>{summary.totalPoints}</div>
         </div>
         <div class="think-card" style={{ padding: '14px', border: '1px solid var(--background-modifier-border)', borderRadius: '12px' }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>计分记录</div>
-          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '4px' }}>{result.matchedCount}</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>目标记录</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '4px' }}>{summary.totalItems}</div>
         </div>
       </div>
 
-      <div class="think-card" style={{ padding: '14px', border: '1px solid var(--background-modifier-border)', borderRadius: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
-          <div style={{ fontWeight: 600 }}>升级进度</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
-            {result.currentLevelPoints}/{Math.max(1, config.levelStep)} · 下一级 {result.nextLevelPoints} 分
-          </div>
-        </div>
-        <ProgressBar ratio={result.progressRatio} />
-      </div>
-
-      {config.showThemeBreakdown !== false && <ThemeGrowthSection items={items} config={config} />}
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-        {config.showCategoryBreakdown !== false && <BreakdownList title="分类积分" rows={result.categoryBreakdown} />}
-        {config.showThemeBreakdown !== false && <BreakdownList title="主题积分" rows={result.themeBreakdown} />}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '12px' }}>
+        {cards.map((card) => (
+          <GoalProgressCard
+            key={card.key}
+            card={card}
+            expanded={!!expandedKeys[card.key]}
+            onToggle={() => setExpandedKeys((prev) => ({ ...prev, [card.key]: !prev[card.key] }))}
+          />
+        ))}
       </div>
     </div>
   );

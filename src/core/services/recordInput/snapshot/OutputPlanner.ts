@@ -3,17 +3,61 @@ import type { RecordOutputPlan, RecordPersistencePlan } from '@/core/types/recor
 import { splitThemePath } from '@/core/types/recordSnapshot';
 import { renderTemplate } from '@/core/utils/templateUtils';
 import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter';
+import { resolveDerivedPeriod } from '@/core/goal';
 
 function normalizePath(value: string | null | undefined): string | null {
   const trimmed = String(value || '').trim();
   return trimmed || null;
 }
 
+function readOptionText(value: unknown): { value: string; label: string } {
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    return {
+      value: String(obj.value ?? obj.label ?? '').trim(),
+      label: String(obj.label ?? obj.value ?? '').trim(),
+    };
+  }
+  const text = String(value ?? '').trim();
+  return { value: text, label: text };
+}
+
+function buildTaskRenderTokens(data: Record<string, unknown>): {
+  taskStatusPrefix: string;
+  taskStatusKind: 'todo' | 'done';
+  taskDateToken: string;
+  repeatToken: string;
+} {
+  const status = readOptionText(data['状态'] ?? data.status ?? data.taskStatus ?? data.taskStatusPrefix);
+  const statusText = `${status.value} ${status.label}`.trim();
+  const isDone = /-\s*\[x\]/i.test(status.value) || /完成|done|✅/.test(statusText);
+  const taskStatusPrefix = isDone ? '- [x]' : '- [ ]';
+  const taskStatusKind = isDone ? 'done' : 'todo';
+  const date = String(data['日期'] ?? data.date ?? '').trim();
+  const dateMarker = isDone
+    ? '✅'
+    : /🛫/.test(statusText)
+      ? '🛫'
+      : /⏳/.test(statusText)
+        ? '⏳'
+        : /➕/.test(statusText)
+          ? '➕'
+          : '📅';
+  const repeat = readOptionText(data['重复'] ?? data.recurrence ?? data.repeat);
+  const repeatText = repeat.value || repeat.label;
+  return {
+    taskStatusPrefix,
+    taskStatusKind,
+    taskDateToken: date ? `${dateMarker} ${date}` : '',
+    repeatToken: repeatText && repeatText !== '不重复' ? repeatText : '',
+  };
+}
+
 function buildRenderData(
   template: BlockTemplate,
   formData: Record<string, unknown>,
   theme?: ThemeDefinition | null,
-  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
+  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
 ): Record<string, unknown> {
   const normalizedData = normalizeTemplateRenderData(template, formData);
   const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === 'object' ? normalizedData.theme as Record<string, unknown> : null;
@@ -26,8 +70,12 @@ function buildRenderData(
   const goalParts = goalPath.split('/').map((part) => part.trim()).filter(Boolean);
   const goalId = String(normalizedData.goalId ?? normalizedData['目标ID'] ?? '').trim();
   const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
-  const cycleId = String(normalizedData.cycleId ?? normalizedData['周期ID'] ?? '').trim();
-  const cycleTitle = String(normalizedData.period ?? normalizedData['周期'] ?? '').trim();
+  const recordDate = String(normalizedData['日期'] ?? normalizedData.date ?? '').trim();
+  const goalGranularity = String(normalizedData.goalGranularity ?? normalizedData['目标粒度'] ?? normalizedData.granularity ?? 'day').trim();
+  const derivedPeriod = resolveDerivedPeriod(recordDate || undefined, goalGranularity);
+  const cycleId = String(normalizedData.cycleId ?? normalizedData['周期ID'] ?? derivedPeriod.id ?? '').trim();
+  const cycleTitle = String(normalizedData.period ?? normalizedData['周期'] ?? derivedPeriod.label ?? '').trim();
+  const taskTokens = buildTaskRenderTokens(normalizedData);
 
   return {
     ...normalizedData,
@@ -42,7 +90,7 @@ function buildRenderData(
       path: themeParts.themePath,
       root: themeParts.rootTheme,
       leaf: themeParts.leafTheme,
-      icon: theme?.icon || String(normalizedTheme?.icon ?? ''),
+      icon: theme?.icon || String(normalizedData.icon ?? normalizedData['图标'] ?? normalizedTheme?.icon ?? ''),
     },
     themePath: themeParts.themePath,
     rootTheme: themeParts.rootTheme,
@@ -61,9 +109,13 @@ function buildRenderData(
     rootGoal: goalParts[0] || '',
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
     coreBlock,
-    cycle: { id: cycleId, title: cycleTitle },
-    cycleId,
-    cycleTitle,
+    period: { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label },
+    cycle: { id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label, ...derivedPeriod },
+    cycleId: cycleId || derivedPeriod.id,
+    cycleTitle: cycleTitle || derivedPeriod.label,
+    periodId: cycleId || derivedPeriod.id,
+    periodLabel: cycleTitle || derivedPeriod.label,
+    ...taskTokens,
     templateId: templateMeta?.templateId || template.id,
     templateSourceType: templateMeta?.templateSourceType || 'block',
   };
@@ -81,7 +133,7 @@ export function buildRecordOutputPlan(input: {
   template: BlockTemplate | null;
   formData: Record<string, unknown>;
   theme?: ThemeDefinition | null;
-  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null };
+  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null };
 }): RecordOutputPlan {
   if (!input.template) {
     return {

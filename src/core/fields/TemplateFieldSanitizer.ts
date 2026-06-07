@@ -71,8 +71,16 @@ const DEFAULT_VALUE_FIELD_TYPES = new Set<FieldInputType>([
   'date',
   'time',
   'datetime',
+  'singleSelect',
+  'multiSelect',
+  'path',
+  'hierarchicalSingleSelect',
+  'multiPath',
+  'tag',
+  'multiTag',
   'image',
   'file',
+  'rating',
 ]);
 
 const MULTI_VALUE_FIELD_TYPES = new Set<FieldInputType>([
@@ -157,6 +165,10 @@ export function sanitizeTemplateField(field: Partial<TemplateField>, index = 1):
 
   if (templateFieldTypeSupportsDefaultValue(type) && field.defaultValue !== undefined && field.defaultValue !== null) {
     result.defaultValue = String(field.defaultValue);
+  }
+
+  if (field.required === true) {
+    result.required = true;
   }
 
   if (templateFieldTypeUsesOptions(type)) {

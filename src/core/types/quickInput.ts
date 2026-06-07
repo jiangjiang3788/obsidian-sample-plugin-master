@@ -24,5 +24,5 @@ export interface QuickInputSaveData {
     template?: BlockTemplate;
     theme?: ThemeDefinition;
     templateId?: string | null;
-    templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null;
+    templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null;
 }

@@ -15,7 +15,9 @@ interface ChartBlockProps {
     isNarrow?: boolean;
     displayMode?: 'smart' | 'linear' | 'logarithmic';
     minVisibleHeight?: number;
+    bucketAccessor?: (item: Item) => string;
 }
+
 
 /**
  * 高度计算：按数量线性比例
@@ -56,7 +58,8 @@ export function ChartBlock({
     isCompact = false, 
     isNarrow = false,
     displayMode = 'smart', 
-    minVisibleHeight = 15 
+    minVisibleHeight = 15,
+    bucketAccessor = (item: Item) => getBasePath(item.categoryKey)
 }: ChartBlockProps) {
     const counts = data.counts as Record<string, number>;
     const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
@@ -104,13 +107,13 @@ export function ChartBlock({
                             <div 
                                 key={name} 
                                 class="sv-vbar-wrapper" 
-                                title={`${name}: ${count}`}
+                                title={`${displayName}: ${count}`}
                                 onClick={(e) => { 
                                     e.stopPropagation(); 
                                     onCellClick(
                                         cellIdentifier(name), 
                                         e.currentTarget as HTMLElement, 
-                                        data.blocks.filter((b: Item) => getBasePath(b.categoryKey) === name), 
+                                        data.blocks.filter((b: Item) => bucketAccessor(b) === name), 
                                         `${label} · ${displayName}`
                                     ); 
                                 }}
@@ -133,7 +136,7 @@ export function ChartBlock({
                             <div 
                                 key={`cat-${name}`} 
                                 class="sv-chart-category" 
-                                title={`${name}${alias ? ` (${name})` : ''}`}
+                                title={`${displayName}${alias ? ` (${name})` : ''}`}
                             >
                                 {displayName}
                             </div>

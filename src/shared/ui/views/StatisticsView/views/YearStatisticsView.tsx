@@ -1,10 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { CategoryConfig, PeriodData } from '@core/public';
+import type { CategoryConfig, Item, PeriodData } from '@core/public';
 import { createPeriodData } from '@core/public';
 import { ChartBlock } from '../../../statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
-import { TopControls } from '../components/TopControls';
 
 export function YearStatisticsView({
   year,
@@ -16,6 +15,7 @@ export function YearStatisticsView({
   onCellClick,
   displayMode,
   minVisibleHeight,
+  bucketAccessor,
 }: {
   year: number;
   categories: CategoryConfig[];
@@ -31,6 +31,7 @@ export function YearStatisticsView({
   onCellClick: StatisticsCellClickHandler;
   displayMode: 'smart' | 'linear' | 'logarithmic';
   minVisibleHeight: number;
+  bucketAccessor?: (item: Item) => string;
 }) {
   // 计算最大周数（用于统一周行的行数）
   const maxWeeksInMonth = Math.max(
@@ -40,7 +41,6 @@ export function YearStatisticsView({
 
   return (
     <div class="statistics-view">
-      <TopControls currentView="年" usePeriod={usePeriod} onToggleUsePeriod={onToggleUsePeriod} />
 
       <div class="sv-year-grid">
         {/* 第1行：年度汇总 - 跨全部12列 */}
@@ -50,9 +50,10 @@ export function YearStatisticsView({
             label={`${year}年`}
             categories={categories}
             onCellClick={onCellClick}
-            cellIdentifier={(cat: string) => ({ type: 'year', year, category: cat })}
+            cellIdentifier={(goal: string) => ({ type: 'year', year, goal })}
             displayMode={displayMode}
             minVisibleHeight={minVisibleHeight}
+            bucketAccessor={bucketAccessor}
           />
         </div>
 
@@ -68,9 +69,10 @@ export function YearStatisticsView({
               label={`Q${i + 1}`}
               categories={categories}
               onCellClick={onCellClick}
-              cellIdentifier={(cat: string) => ({ type: 'quarter', year, quarter: i + 1, category: cat })}
+              cellIdentifier={(goal: string) => ({ type: 'quarter', year, quarter: i + 1, goal })}
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
+              bucketAccessor={bucketAccessor}
             />
           </div>
         ))}
@@ -87,9 +89,10 @@ export function YearStatisticsView({
               label={`${i + 1}月`}
               categories={categories}
               onCellClick={onCellClick}
-              cellIdentifier={(cat: string) => ({ type: 'month', year, month: i + 1, category: cat })}
+              cellIdentifier={(goal: string) => ({ type: 'month', year, month: i + 1, goal })}
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
+              bucketAccessor={bucketAccessor}
             />
           </div>
         ))}
@@ -116,10 +119,11 @@ export function YearStatisticsView({
                     label={`${week}W`}
                     categories={categories}
                     onCellClick={onCellClick}
-                    cellIdentifier={(cat: string) => ({ type: 'week', year, week, category: cat })}
+                    cellIdentifier={(goal: string) => ({ type: 'week', year, week, goal })}
                     isCompact={true}
                     displayMode={displayMode}
                     minVisibleHeight={minVisibleHeight}
+                    bucketAccessor={bucketAccessor}
                   />
                 );
               })}

@@ -143,7 +143,7 @@ export interface InputSettings {
 // ----- 视图与布局定义 (保持不变) ----- //
 
 // [MODIFIED] 添加 HeatmapView 和 EventTimelineView
-export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView', 'EventTimelineView', 'ProgressView', 'TaskExecutionView', 'GoalOverviewView', 'GoalDetailView'] as const;
+export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView', 'EventTimelineView', 'ProgressView', 'TaskExecutionView'] as const;
 export type ViewName = typeof VIEW_OPTIONS[number];
 
 // [修改] 实现 Groupable 接口，整合数据源功能
@@ -221,7 +221,7 @@ export interface SortRule {
 export interface Item {
     id: string;
     templateId?: string;
-    templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block';
+    templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block';
     title: string;
     content: string;
     /** 编辑态使用的正文真源：尽量保留用户原始表达，但去掉任务前缀/内联元数据噪音。 */

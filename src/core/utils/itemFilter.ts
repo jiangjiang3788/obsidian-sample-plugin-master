@@ -110,10 +110,14 @@ function matchRule(item: Item, rule: FilterRule): boolean {
   } else if (canonicalField === 'content') {
     v1 = (item as any).contentLower ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
-  } else if (['themePath', 'rootTheme', 'leafTheme'].includes(canonicalField)) {
-    // 视图设置使用主题三分法时，统一走 readField，保持大小写无关比较。
+  } else if (['themePath', 'rootTheme', 'leafTheme', 'goalPath', 'rootGoal', 'leafGoal'].includes(canonicalField)) {
+    // 目标/主题是迁移后的两条主维度：统一大小写，并支持 in/notIn 多值筛选。
     v1 = String(v1 ?? '').toLowerCase();
-    v2 = String(v2 ?? '').toLowerCase();
+    if (rule.op === 'in' || rule.op === 'notIn') {
+      v2 = normalizeListValue(v2).map(value => String(value ?? '').toLowerCase());
+    } else {
+      v2 = String(v2 ?? '').toLowerCase();
+    }
   } else if (canonicalField === 'fullData') {
     v1 = (item as any).fullDataLower ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
@@ -150,11 +154,11 @@ function matchRule(item: Item, rule: FilterRule): boolean {
     case '>'   : return cmpMixed(v1, v2) > 0;
     case '<'   : return cmpMixed(v1, v2) < 0;
     case 'in': {
-      const values = normalizeListValue(v2);
+      const values = Array.isArray(v2) ? v2 : normalizeListValue(v2);
       return values.some(value => cmpMixed(v1, value) === 0);
     }
     case 'notIn': {
-      const values = normalizeListValue(v2);
+      const values = Array.isArray(v2) ? v2 : normalizeListValue(v2);
       return !values.some(value => cmpMixed(v1, value) === 0);
     }
     case 'between': {

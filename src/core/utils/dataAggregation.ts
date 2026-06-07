@@ -5,6 +5,7 @@ import { Item } from '@/core/types/schema';
 import { dayjs } from './date';
 import { getEffectiveDisplayCount, getEffectiveLevelCount } from './levelingSystem';
 import { getBasePath } from './pathSemantic';
+import { getItemThemePath } from './heatmap';
 
 /** 从 items 中抽取所有一级分类（categoryKey 的第一段）并排序 */
 export function discoverBaseCategories(items: Item[]): string[] {
@@ -93,9 +94,10 @@ export function aggregateItems(items: Item[], options: {
     }
     
     if (themes) {
-        filteredItems = filteredItems.filter(item => 
-            item.theme && themes.includes(item.theme)
-        );
+        filteredItems = filteredItems.filter(item => {
+            const themePath = getItemThemePath(item);
+            return themePath && themes.includes(themePath);
+        });
     }
     
     // 初始化聚合数据
@@ -107,7 +109,7 @@ export function aggregateItems(items: Item[], options: {
     filteredItems.forEach(item => {
         const date = item.date || '';
         const baseCategory = getBasePath(item.categoryKey);
-        const theme = item.theme || '__default__';
+        const theme = getItemThemePath(item) || '__default__';
         
         const displayCount = getEffectiveDisplayCount(item);
         const levelCount = getEffectiveLevelCount(item);

@@ -20,6 +20,23 @@ import { SelectablePill } from './SelectablePill';
 import { normalizeQuickInputChoices } from './quickInputOptionSelection';
 import { HierarchySingleSelect, type HierarchySingleSelectOption } from './HierarchySingleSelect';
 
+
+const SYSTEM_CONTEXT_FIELD_KEYS = new Set([
+  'goalId', '目标ID', 'goalPath', '目标', 'rootGoal', 'leafGoal',
+  'coreBlock', 'coreBlockId', '核心Block',
+  'cycleId', '周期ID', '周期', 'periodId', 'period', 'goalGranularity',
+  'themeId', 'rootTheme', 'leafTheme',
+]);
+
+function isSystemContextField(field: TemplateField): boolean {
+  const key = String(field.key || '').trim();
+  const label = String(field.label || '').trim();
+  const semantic = String(getTemplateFieldSemantic(field) || '').trim();
+  return SYSTEM_CONTEXT_FIELD_KEYS.has(key)
+    || SYSTEM_CONTEXT_FIELD_KEYS.has(label)
+    || ['goalId', 'goalPath', 'goalPaths', 'goals', 'coreBlock', 'cycleId', 'period'].includes(semantic);
+}
+
 export interface QuickInputEditorFieldsProps {
   getResourcePath: (path: string) => string;
   template: any;
@@ -514,6 +531,7 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
     const dateFields: any[] = [];
 
     template.fields.forEach((field: any) => {
+      if (isSystemContextField(field)) return;
       const semantic = getTemplateFieldSemantic(field);
       if (semantic === 'date') {
         dateFields.push(field);

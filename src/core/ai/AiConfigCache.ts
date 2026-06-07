@@ -58,17 +58,21 @@ export class AiConfigCache {
         // 检查缓存是否过期
         if (!cacheHit) {
             const rebuildStart = nowMs();
-            const nextSnapshot = buildAiConfigSnapshot(settings.inputSettings, ai);
+            const nextSnapshot = buildAiConfigSnapshot(settings.inputSettings, ai, settings.goalSettings);
             this.snapshot = nextSnapshot;
             this.lastUpdated = now;
             devLog(`${prefix} buildAiConfigSnapshot 完成 (${elapsedMs(rebuildStart)})`, {
                 blocksCount: nextSnapshot.blocks?.length ?? 0,
                 themesCount: nextSnapshot.themes?.length ?? 0,
+                goalsCount: nextSnapshot.goals?.length ?? 0,
+                goalPresetsCount: nextSnapshot.goalPresets?.length ?? 0,
             });
             if (nowMs() - rebuildStart >= 50) {
                 devWarn(`${prefix} 慢步骤: buildAiConfigSnapshot (${elapsedMs(rebuildStart)})`, {
                     blocksCount: nextSnapshot.blocks?.length ?? 0,
                     themesCount: nextSnapshot.themes?.length ?? 0,
+                goalsCount: nextSnapshot.goals?.length ?? 0,
+                goalPresetsCount: nextSnapshot.goalPresets?.length ?? 0,
                 });
             }
         }
@@ -81,6 +85,8 @@ export class AiConfigCache {
             cacheHit,
             blocksCount: snapshot.blocks?.length ?? 0,
             themesCount: snapshot.themes?.length ?? 0,
+            goalsCount: snapshot.goals?.length ?? 0,
+            goalPresetsCount: snapshot.goalPresets?.length ?? 0,
         });
         return snapshot;
     }

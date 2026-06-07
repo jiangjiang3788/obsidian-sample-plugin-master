@@ -9,6 +9,24 @@ import { MonthStatisticsView } from './views/MonthStatisticsView';
 import { QuarterStatisticsView } from './views/QuarterStatisticsView';
 import { YearStatisticsView } from './views/YearStatisticsView';
 
+
+function GoalThemeSummaryStrip({ summaries }: { summaries: Array<{ goalPath: string; themes: Array<{ themePath: string; label: string; count: number }> }> }) {
+  const visible = (summaries || []).filter((row) => row.themes.length > 0).slice(0, 6);
+  if (visible.length === 0) return null;
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+      {visible.map((row) => (
+        <div key={row.goalPath} style={{ border: '1px solid var(--background-modifier-border)', borderRadius: '999px', padding: '5px 9px', fontSize: '12px', color: 'var(--text-muted)' }} title={`${row.goalPath}: ${row.themes.map((theme) => `${theme.themePath} ${theme.count}`).join(' / ')}`}>
+          <span style={{ color: 'var(--text-normal)', fontWeight: 600 }}>{row.goalPath.split('/').filter(Boolean).pop() || row.goalPath}</span>
+          <span> · </span>
+          <span>{row.themes.map((theme) => `${theme.label}${theme.count}`).join(' / ')}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function StatisticsViewView({
   items,
   currentView,
@@ -22,6 +40,8 @@ export function StatisticsViewView({
   year,
   yearlyWeekStructure,
   processedData,
+  bucketAccessor,
+  goalThemeSummaries = [],
 }: {
   items: Item[];
   currentView: StatisticsCurrentView;
@@ -42,39 +62,53 @@ export function StatisticsViewView({
     monthsData: PeriodData[];
     weeksData: PeriodData[];
   };
+  bucketAccessor?: (item: Item) => string;
+  goalThemeSummaries?: Array<{ goalPath: string; themes: Array<{ themePath: string; label: string; count: number }> }>;
 }) {
   if (!categories || categories.length === 0) {
-    return <div class="statistics-view-placeholder">请先在视图设置中配置您想统计的分类。</div>;
+    return <div class="statistics-view-placeholder">暂无目标统计数据。</div>;
   }
+
+  const themeStrip = <GoalThemeSummaryStrip summaries={goalThemeSummaries} />;
 
   switch (currentView) {
     case '天':
       return (
-        <DayStatisticsView
+        <>
+          {themeStrip}
+          <DayStatisticsView
           items={items}
           categories={categories}
           selectedDate={startDate}
           onCellClick={onCellClick}
           displayMode={displayMode}
           minVisibleHeight={minVisibleHeight}
+          bucketAccessor={bucketAccessor}
         />
+        </>
       );
 
     case '周':
       return (
-        <WeekStatisticsView
+        <>
+          {themeStrip}
+          <WeekStatisticsView
           items={items}
           categories={categories}
           weekDate={startDate}
           onCellClick={onCellClick}
           displayMode={displayMode}
           minVisibleHeight={minVisibleHeight}
+          bucketAccessor={bucketAccessor}
         />
+        </>
       );
 
     case '月':
       return (
-        <MonthStatisticsView
+        <>
+          {themeStrip}
+          <MonthStatisticsView
           items={items}
           categories={categories}
           monthDate={startDate}
@@ -83,12 +117,16 @@ export function StatisticsViewView({
           onCellClick={onCellClick}
           displayMode={displayMode}
           minVisibleHeight={minVisibleHeight}
+          bucketAccessor={bucketAccessor}
         />
+        </>
       );
 
     case '季':
       return (
-        <QuarterStatisticsView
+        <>
+          {themeStrip}
+          <QuarterStatisticsView
           items={items}
           categories={categories}
           quarterDate={startDate}
@@ -97,13 +135,17 @@ export function StatisticsViewView({
           onCellClick={onCellClick}
           displayMode={displayMode}
           minVisibleHeight={minVisibleHeight}
+          bucketAccessor={bucketAccessor}
         />
+        </>
       );
 
     case '年':
     default:
       return (
-        <YearStatisticsView
+        <>
+          {themeStrip}
+          <YearStatisticsView
           year={year}
           categories={categories}
           processedData={processedData}
@@ -113,7 +155,9 @@ export function StatisticsViewView({
           onCellClick={onCellClick}
           displayMode={displayMode}
           minVisibleHeight={minVisibleHeight}
+          bucketAccessor={bucketAccessor}
         />
+        </>
       );
   }
 }

@@ -6,8 +6,6 @@ import { buildTimelineViewModel } from './timelineViewModel';
 import { buildStatisticsViewModel } from './statisticsViewModel';
 import { buildProgressViewModel } from './progressViewModel';
 import { buildTaskExecutionViewModel } from './taskExecutionViewModel';
-import { buildGoalOverviewViewModel } from './goalOverviewViewModel';
-import { buildGoalDetailViewModel } from './goalDetailViewModel';
 
 export type LayoutViewGranularity = '年' | '季' | '月' | '周' | '天' | string;
 
@@ -21,7 +19,8 @@ export interface ViewRenderModelContext {
   layoutFilters: FilterRule[];
   selectedCategories: string[];
   goals?: import('@core/public').GoalDefinition[];
-  cycles?: import('@core/public').CycleDefinition[];
+  goalSettings?: import('@core/public').GoalSettings;
+  themes?: import('@core/public').ThemeDefinition[];
 }
 
 export interface ViewRenderModels {
@@ -33,11 +32,10 @@ export interface ViewRenderModels {
   statisticsModel?: unknown;
   progressModel?: unknown;
   taskExecutionModel?: unknown;
-  goalOverviewModel?: unknown;
-  goalDetailModel?: unknown;
   injectedThemesByPath?: unknown;
   injectedThemesToTrack?: string[];
   injectedDataByThemeAndDate?: unknown;
+  injectedGoalHeatmapGroups?: unknown;
 }
 
 type ViewModelBuilder = (context: ViewRenderModelContext) => Partial<ViewRenderModels>;
@@ -69,17 +67,20 @@ const viewModelBuilders: Record<string, ViewModelBuilder> = {
     };
   },
 
-  HeatmapView: ({ items, viewInstance, inputSettings }) => {
+  HeatmapView: ({ items, viewInstance, inputSettings, goals, goalSettings }) => {
     const model = buildHeatmapViewModel({
       items,
       module: viewInstance,
       inputSettings,
+      goals: goals || [],
+      goalSettings,
     });
 
     return {
       injectedThemesByPath: model.themesByPath,
       injectedThemesToTrack: model.themesToTrack,
       injectedDataByThemeAndDate: model.dataByThemeAndDate,
+      injectedGoalHeatmapGroups: model.goalGroups,
     };
   },
 
@@ -92,20 +93,23 @@ const viewModelBuilders: Record<string, ViewModelBuilder> = {
     }),
   }),
 
-  StatisticsView: ({ items, viewInstance, dateRange, currentView, selectedCategories }) => ({
+  StatisticsView: ({ items, viewInstance, dateRange, currentView, goals, inputSettings }) => ({
     statisticsModel: buildStatisticsViewModel({
       items,
       dateRange,
       module: viewInstance,
       currentView: currentView as any,
-      selectedCategories,
+      goals: goals || [],
+      themes: inputSettings?.themes || [],
     }),
   }),
 
-  ProgressView: ({ items, viewInstance }) => ({
+  ProgressView: ({ items, viewInstance, goals, inputSettings }) => ({
     progressModel: buildProgressViewModel({
       items,
       module: viewInstance,
+      goals: goals || [],
+      themes: inputSettings?.themes || [],
     }),
   }),
 
@@ -118,26 +122,6 @@ const viewModelBuilders: Record<string, ViewModelBuilder> = {
       layoutFilters,
     }),
   }),
-
-  GoalOverviewView: ({ items, viewInstance, goals, cycles }) => ({
-    goalOverviewModel: buildGoalOverviewViewModel({
-      items,
-      module: viewInstance,
-      goals: goals || [],
-      cycles: cycles || [],
-    }),
-  }),
-
-
-  GoalDetailView: ({ items, viewInstance, goals, cycles }) => ({
-    goalDetailModel: buildGoalDetailViewModel({
-      items,
-      module: viewInstance,
-      goals: goals || [],
-      cycles: cycles || [],
-    }),
-  }),
-
 };
 
 export function buildViewRenderModels(context: ViewRenderModelContext): ViewRenderModels {

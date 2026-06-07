@@ -15,8 +15,9 @@ import {
   aggregateByYear,
   createPeriodData,
   devLog,
+  getItemGoalKey,
 } from '@core/public';
-import type { CategoryColorMap, CloseStatisticsPopoverHandler, NoticeHandler, OpenQuickCreateHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenStatisticsPopoverHandler, ResolveResourcePathHandler, StatisticsQuickCreatePayload, TimerController, UpdateCategoryColorsHandler } from '../../../types/actions';
+import type { CategoryColorMap, CloseStatisticsPopoverHandler, NoticeHandler, OpenQuickCreateHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenStatisticsPopoverHandler, ResolveResourcePathHandler, TimerController, UpdateCategoryColorsHandler } from '../../../types/actions';
 import { StatisticsViewView } from './StatisticsViewView';
 import { useStatisticsCategoryConfigs } from './useStatisticsCategoryConfigs';
 
@@ -57,13 +58,13 @@ export function StatisticsView({
   dateRange,
   module,
   currentView,
-  onQuickCreate,
+  onQuickCreate: _onQuickCreate,
   onNotice,
   onOpenStatisticsPopover,
   onCloseStatisticsPopover,
   categoryColors = {},
   onCategoryColorsChange,
-  selectedCategories,
+  selectedCategories: _selectedCategories,
   timerService,
   timers,
   allThemes,
@@ -73,23 +74,33 @@ export function StatisticsView({
   onOpenRecordOrigin,
 }: StatisticsViewProps) {
   const viewConfig = statisticsModel?.viewConfig ?? ({ ...DEFAULT_CONFIG, ...module.viewConfig } as any);
-  const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = viewConfig;
+  const { displayMode = 'smart', minVisibleHeight = 15 } = viewConfig;
 
-  const filteredCategories = useStatisticsCategoryConfigs({
+  // MVP12.3: Statistics 的主维度严格固定为目标。
+  // 正常路径由 feature 层的 statisticsModel 注入 goalBuckets；fallback 仅用于旧包/旧调用，
+  // 且不再接收 selectedCategories，避免外部分类选择误裁剪目标柱。
+  const fallbackCategories = useStatisticsCategoryConfigs({
     items,
-    configuredCategories: categories,
-    selectedCategories,
+    configuredCategories: [],
+    selectedCategories: undefined,
     categoryColors,
     onCategoryColorsChange,
-    injectedFilteredCategories: statisticsModel?.filteredCategories,
+    injectedFilteredCategories: undefined,
   });
+  const filteredCategories = Array.isArray(statisticsModel?.filteredCategories)
+    ? statisticsModel.filteredCategories
+    : fallbackCategories;
+
+  const bucketAccessor = statisticsModel?.bucketAccessor || getItemGoalKey;
 
   const [selectedCell, setSelectedCell] = useState<any>(null);
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const openLockRef = useRef(false);
 
-  // 周期字段使用状态（用户可切换）
-  const [usePeriod, setUsePeriod] = useState(Boolean(usePeriodField));
+  // 时间范围仍由外部控制栏和视图筛选统一控制；
+  // 这里的 usePeriod 只保留原 Statistics 的“按照周期字段显示”开关，
+  // 用于年/季/月视图内部按 period 字段筛选对应粒度记录，不再承担全局时间控制职责。
+  const [usePeriod, setUsePeriod] = useState<boolean>(Boolean(viewConfig.usePeriodField));
 
   const startDate = useMemo(() => statisticsModel?.startDate ?? dayjs(dateRange[0]), [statisticsModel, dateRange]);
 
@@ -112,26 +123,27 @@ export function StatisticsView({
   }, [statisticsModel, isYearView, year]);
 
   const processedData = useMemo(() => {
-    // 不使用 statisticsModel.processedData 的预计算结果，
-    // 始终在本地基于 usePeriod 状态重新计算，确保勾选"使用周期字段"时数据能正确响应。
+    // 仅保留原 Year/Quarter/Month/Week 周期结构；时间范围和周期由外部控制栏统一决定。
+    // 这里重新计算是为了让 shared/ui 在旧调用缺少 statisticsModel 时仍可渲染，
+    // 统计维度仍固定为目标 bucketAccessor。
     if (!isYearView) return { yearData: createPeriodData(filteredCategories), quartersData: [], monthsData: [], weeksData: [] };
 
     const totalWeeks = getWeeksInYear(year);
     const targetDate = dayjs().year(year);
 
-    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod);
+    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod, bucketAccessor);
 
     const quartersData: PeriodData[] = [];
-    for (let q = 1; q <= 4; q++) quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q), usePeriod));
+    for (let q = 1; q <= 4; q++) quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q), usePeriod, bucketAccessor));
 
     const monthsData: PeriodData[] = [];
-    for (let m = 0; m < 12; m++) monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m), usePeriod));
+    for (let m = 0; m < 12; m++) monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m), usePeriod, bucketAccessor));
 
     const weeksData: PeriodData[] = [];
-    for (let w = 1; w <= totalWeeks; w++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w), usePeriod));
+    for (let w = 1; w <= totalWeeks; w++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w), usePeriod, bucketAccessor));
 
     return { yearData, quartersData, monthsData, weeksData };
-  }, [isYearView, items, year, filteredCategories, usePeriod]);
+  }, [isYearView, items, year, filteredCategories, usePeriod, bucketAccessor]);
 
   const handleCellClick = (cellIdentifier: any, _target: HTMLElement, blocks: Item[], title: string) => {
     devLog('点击单元格:', { cellIdentifier, title, blocksCount: blocks.length, blocks });
@@ -173,15 +185,8 @@ export function StatisticsView({
       onNotice?.(`"${title}" 的内容已复制到剪贴板！`);
     };
 
-    const handleQuickCreate = () => {
-      onQuickCreate?.({
-        cellIdentifier,
-        blocks,
-        title,
-      } as StatisticsQuickCreatePayload);
-    };
-
-    const canQuickCreate = !!cellIdentifier?.category && cellIdentifier.category !== '全部';
+    // 视图只负责展示；新增数据统一走快捷输入面板，不在 Statistics popover 内创建。
+    const canQuickCreate = false;
 
     onOpenStatisticsPopover?.({
       widgetId,
@@ -197,7 +202,7 @@ export function StatisticsView({
       resolveResourcePath,
       onClose: handleClose,
       onExport: handleExport,
-      onQuickCreate: onQuickCreate ? handleQuickCreate : undefined,
+      onQuickCreate: undefined,
       canQuickCreate,
     });
 
@@ -215,13 +220,15 @@ export function StatisticsView({
       categories={filteredCategories}
       startDate={startDate}
       usePeriod={usePeriod}
-      onToggleUsePeriod={(next) => setUsePeriod(next)}
+      onToggleUsePeriod={setUsePeriod}
       onCellClick={handleCellClick}
       displayMode={displayMode}
       minVisibleHeight={minVisibleHeight}
       year={year}
       yearlyWeekStructure={yearlyWeekStructure}
       processedData={processedData}
+      bucketAccessor={bucketAccessor}
+      goalThemeSummaries={statisticsModel?.goalThemeSummaries || []}
     />
   );
 }

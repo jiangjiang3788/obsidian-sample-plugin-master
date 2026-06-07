@@ -1,3 +1,4 @@
+/** DEPRECATED: GoalOverview / GoalDetail are legacy compatibility files. New views must use ProgressView / StatisticsView. */
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Box, TextField, Typography } from '@shared/public';

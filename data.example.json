@@ -23,5 +23,8 @@
   "activeThemePaths": [],
   "devConsoleStackEnabled": false,
   "dataSources": [],
-  "categoryColors": {}
+  "categoryColors": {},
+  "goalCoreMvpVersion": 14,
+  "goalCoreP5TemplateVariantVersion": 1,
+  "goalCoreP6TemplateVariantPolishVersion": 1
 }

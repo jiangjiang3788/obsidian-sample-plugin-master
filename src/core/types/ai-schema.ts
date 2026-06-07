@@ -94,11 +94,20 @@ export const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
 export interface NaturalRecordCommand {
   /** 原始输入文本 */
   rawText: string;
-  /** 目标 Block 和 Theme */
+  /** 目标 Block / Goal / Theme / Preset。AI 主链：目标 → Block → 预设；主题仅作为表单默认值和统计维度。 */
   target: {
     categoryKey: string;
     blockId?: string;
+    /** 主题路径或主题 ID。保留用于表单默认主题，不再决定模板。 */
     themeId?: string;
+    /** 目标路径，例如 #照顾好自己 或 照顾好自己/睡眠。 */
+    goalPath?: string;
+    /** 目标 ID；通常由应用根据 goalPath 兜底，不要求模型必须返回。 */
+    goalId?: string;
+    /** 目标 × Block 下的预设变体 ID。 */
+    templateVariantId?: string;
+    /** 目标预设 ID。 */
+    goalTemplateId?: string;
   };
   /** 字段值，key 为字段的 key */
   fieldValues: Record<string, any>;

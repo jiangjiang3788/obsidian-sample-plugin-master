@@ -1,6 +1,7 @@
 import type { Item } from '@/core/types/schema';
-import type { CycleDefinition, GoalDefinition, GoalMetricContract, GoalRecordRelation, GoalRecordRelationType } from './types';
+import type { CycleGranularity, GoalDefinition, GoalMetricContract, GoalRecordRelation, GoalRecordRelationType } from './types';
 import { splitGoalPath } from './path';
+import { resolveDerivedPeriod } from './period';
 
 export interface GoalMigrationCandidate {
   id: string;
@@ -29,8 +30,8 @@ export interface GoalOverviewMetricProgress {
 export interface GoalOverviewCycleSummary {
   id: string;
   title: string;
-  status: CycleDefinition['status'];
-  granularity: CycleDefinition['granularity'];
+  status: 'active';
+  granularity: Exclude<CycleGranularity, 'custom'>;
   startDate: string;
   endDate: string;
   isActive: boolean;
@@ -59,6 +60,7 @@ export interface GoalOverviewRow {
   completionRatio: number;
   recentItems: Item[];
   coreBlockCounts: Record<string, number>;
+  icon?: string | null;
   activeCycle?: GoalOverviewCycleSummary | null;
   metricProgress?: GoalOverviewMetricProgress[];
 }
@@ -189,7 +191,7 @@ function readCoreBlock(item: Item): string {
   if (/事件|证据/.test(category)) return 'evidence';
   if (/阻碍|风险/.test(category)) return 'blocker';
   if (/里程碑/.test(category)) return 'milestone';
-  if (/闪念|思考/.test(category)) return 'thought';
+  if (/思考|闪念/.test(category)) return 'thought';
   return category || 'record';
 }
 
@@ -294,25 +296,6 @@ function dateToEpochDay(value: string | null | undefined): number | null {
   if (!value) return null;
   const time = new Date(`${value}T00:00:00`).getTime();
   return Number.isFinite(time) ? Math.floor(time / 86400000) : null;
-}
-
-function summarizeCycle(cycle: CycleDefinition, today = new Date()): GoalOverviewCycleSummary {
-  const start = dateToEpochDay(cycle.startDate);
-  const end = dateToEpochDay(cycle.endDate);
-  const now = Math.floor(new Date(today.toISOString().slice(0, 10) + 'T00:00:00').getTime() / 86400000);
-  const total = start !== null && end !== null ? Math.max(1, end - start + 1) : 1;
-  const elapsed = start !== null ? Math.max(0, Math.min(total, now - start + 1)) : 0;
-  return {
-    id: cycle.id,
-    title: cycle.title,
-    status: cycle.status,
-    granularity: cycle.granularity,
-    startDate: cycle.startDate,
-    endDate: cycle.endDate,
-    isActive: cycle.status === 'active',
-    isOverdue: end !== null ? now > end && cycle.status !== 'closed' : false,
-    dayProgressRatio: total > 0 ? elapsed / total : 0,
-  };
 }
 
 function metricSourceValue(metric: GoalMetricContract, row: GoalOverviewRow): number {
@@ -438,7 +421,6 @@ export function buildGoalMarkdownBackfillDiffPreview(items: Item[], goals: GoalD
 export function buildGoalOverviewModel(input: {
   items: Item[];
   goals?: GoalDefinition[];
-  cycles?: CycleDefinition[];
   selectedGoalPath?: string | null;
   limit?: number;
 }): GoalOverviewModel {
@@ -456,14 +438,27 @@ export function buildGoalOverviewModel(input: {
     }
   }
   const activeCycleByGoalPath = new Map<string, GoalOverviewCycleSummary>();
-  for (const cycle of input.cycles || []) {
-    const path = goalPathById.get(cycle.goalId);
-    if (!path || cycle.status === 'closed') continue;
-    const summary = summarizeCycle(cycle);
-    const current = activeCycleByGoalPath.get(path);
-    if (!current || (summary.isActive && !current.isActive) || String(summary.startDate).localeCompare(String(current.startDate), 'zh-CN') > 0) {
-      activeCycleByGoalPath.set(path, summary);
-    }
+  const todayText = new Date().toISOString().slice(0, 10);
+  for (const goal of goals || []) {
+    const path = normalizeGoalPathValue(goal.goalPath || goal.title);
+    if (!path) continue;
+    const period = resolveDerivedPeriod(todayText, goal.granularity || 'day');
+    activeCycleByGoalPath.set(path, {
+      id: period.id,
+      title: period.label,
+      status: 'active',
+      granularity: period.granularity,
+      startDate: period.startDate,
+      endDate: period.endDate,
+      isActive: true,
+      isOverdue: false,
+      dayProgressRatio: (() => {
+        const start = dateToEpochDay(period.startDate) ?? 0;
+        const end = dateToEpochDay(period.endDate) ?? start;
+        const now = dateToEpochDay(todayText) ?? start;
+        return Math.max(0, Math.min(1, (now - start + 1) / Math.max(1, end - start + 1)));
+      })(),
+    });
   }
 
   const rowMap = new Map<string, GoalOverviewRow>();
@@ -480,6 +475,7 @@ export function buildGoalOverviewModel(input: {
       title: goal?.title || titleFromPath(normalizedPath),
       goalPath: normalizedPath,
       themePath: goal?.themePath ?? (item ? readThemePath(item) : null),
+      icon: String((goal as any)?.icon ?? (item ? readLooseField(item, '图标') ?? readLooseField(item, 'icon') ?? '' : '')).trim() || null,
       status: goal?.status,
       totalCount: 0,
       taskCount: 0,

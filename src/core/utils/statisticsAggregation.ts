@@ -10,6 +10,19 @@ export interface PeriodData {
     blocks: Item[];
 }
 
+export type StatisticsBucketAccessor = (item: Item) => string;
+
+function defaultBucketAccessor(item: Item): string {
+    return getBaseCategory(item.categoryKey);
+}
+
+function addItemToPeriod(data: PeriodData, categoryOrder: string[], item: Item, bucketAccessor?: StatisticsBucketAccessor) {
+    const bucketKey = (bucketAccessor || defaultBucketAccessor)(item);
+    if (!categoryOrder.includes(bucketKey)) return;
+    data.counts[bucketKey]++;
+    data.blocks.push(item);
+}
+
 /**
  * 创建空的周期数据
  */
@@ -24,24 +37,20 @@ export function createPeriodData(categories: CategoryConfig[]): PeriodData {
  * 按天聚合数据
  */
 export function aggregateByDay(
-    items: Item[], 
-    categories: CategoryConfig[], 
-    targetDate: dayjs.Dayjs
+    items: Item[],
+    categories: CategoryConfig[],
+    targetDate: dayjs.Dayjs,
+    bucketAccessor?: StatisticsBucketAccessor
 ): PeriodData {
     const data = createPeriodData(categories);
     const categoryOrder = categories.map(c => c.name);
-    
+
     items.forEach(item => {
         const itemDate = dayjs(item.date);
         if (!itemDate.isValid() || !itemDate.isSame(targetDate, 'day')) return;
-        
-        const baseCategory = getBaseCategory(item.categoryKey);
-        if (!categoryOrder.includes(baseCategory)) return;
-        
-        data.counts[baseCategory]++;
-        data.blocks.push(item);
+        addItemToPeriod(data, categoryOrder, item, bucketAccessor);
     });
-    
+
     return data;
 }
 
@@ -49,33 +58,30 @@ export function aggregateByDay(
  * 按周聚合数据
  */
 export function aggregateByWeek(
-    items: Item[], 
-    categories: CategoryConfig[], 
+    items: Item[],
+    categories: CategoryConfig[],
     targetDate: dayjs.Dayjs,
-    usePeriod = false
+    usePeriod = false,
+    bucketAccessor?: StatisticsBucketAccessor
 ): PeriodData {
     const data = createPeriodData(categories);
     const categoryOrder = categories.map(c => c.name);
     const weekStart = targetDate.startOf('isoWeek');
     const weekEnd = targetDate.endOf('isoWeek');
-    
+
     items.forEach(item => {
         const itemDate = dayjs(item.date);
         if (!itemDate.isValid() || !itemDate.isBetween(weekStart, weekEnd, 'day', '[]')) return;
-        
-        const baseCategory = getBaseCategory(item.categoryKey);
-        if (!categoryOrder.includes(baseCategory)) return;
 
         if (usePeriod) {
             const itemPeriod = (readField(item, 'period') || '').trim();
             const shouldIncludeInWeek = itemPeriod === '' || itemPeriod === '周';
             if (!shouldIncludeInWeek) return;
         }
-        
-        data.counts[baseCategory]++;
-        data.blocks.push(item);
+
+        addItemToPeriod(data, categoryOrder, item, bucketAccessor);
     });
-    
+
     return data;
 }
 
@@ -83,33 +89,27 @@ export function aggregateByWeek(
  * 按月聚合数据
  */
 export function aggregateByMonth(
-    items: Item[], 
-    categories: CategoryConfig[], 
+    items: Item[],
+    categories: CategoryConfig[],
     targetDate: dayjs.Dayjs,
-    usePeriod = false
+    usePeriod = false,
+    bucketAccessor?: StatisticsBucketAccessor
 ): PeriodData {
     const data = createPeriodData(categories);
     const categoryOrder = categories.map(c => c.name);
-    
+
     items.forEach(item => {
         const itemDate = dayjs(item.date);
         if (!itemDate.isValid() || !itemDate.isSame(targetDate, 'month')) return;
-        
-        const baseCategory = getBaseCategory(item.categoryKey);
-        if (!categoryOrder.includes(baseCategory)) return;
-        
+
         if (usePeriod) {
             const itemPeriod = readField(item, 'period') || '';
-            if (itemPeriod === '月') {
-                data.counts[baseCategory]++;
-                data.blocks.push(item);
-            }
-        } else {
-            data.counts[baseCategory]++;
-            data.blocks.push(item);
+            if (itemPeriod !== '月') return;
         }
+
+        addItemToPeriod(data, categoryOrder, item, bucketAccessor);
     });
-    
+
     return data;
 }
 
@@ -117,33 +117,27 @@ export function aggregateByMonth(
  * 按季度聚合数据
  */
 export function aggregateByQuarter(
-    items: Item[], 
-    categories: CategoryConfig[], 
+    items: Item[],
+    categories: CategoryConfig[],
     targetDate: dayjs.Dayjs,
-    usePeriod = false
+    usePeriod = false,
+    bucketAccessor?: StatisticsBucketAccessor
 ): PeriodData {
     const data = createPeriodData(categories);
     const categoryOrder = categories.map(c => c.name);
-    
+
     items.forEach(item => {
         const itemDate = dayjs(item.date);
         if (!itemDate.isValid() || !itemDate.isSame(targetDate, 'quarter')) return;
-        
-        const baseCategory = getBaseCategory(item.categoryKey);
-        if (!categoryOrder.includes(baseCategory)) return;
-        
+
         if (usePeriod) {
             const itemPeriod = readField(item, 'period') || '';
-            if (itemPeriod === '季') {
-                data.counts[baseCategory]++;
-                data.blocks.push(item);
-            }
-        } else {
-            data.counts[baseCategory]++;
-            data.blocks.push(item);
+            if (itemPeriod !== '季') return;
         }
+
+        addItemToPeriod(data, categoryOrder, item, bucketAccessor);
     });
-    
+
     return data;
 }
 
@@ -151,33 +145,27 @@ export function aggregateByQuarter(
  * 按年聚合数据
  */
 export function aggregateByYear(
-    items: Item[], 
-    categories: CategoryConfig[], 
+    items: Item[],
+    categories: CategoryConfig[],
     targetDate: dayjs.Dayjs,
-    usePeriod = false
+    usePeriod = false,
+    bucketAccessor?: StatisticsBucketAccessor
 ): PeriodData {
     const data = createPeriodData(categories);
     const categoryOrder = categories.map(c => c.name);
-    
+
     items.forEach(item => {
         const itemDate = dayjs(item.date);
         if (!itemDate.isValid() || !itemDate.isSame(targetDate, 'year')) return;
-        
-        const baseCategory = getBaseCategory(item.categoryKey);
-        if (!categoryOrder.includes(baseCategory)) return;
-        
+
         if (usePeriod) {
             const itemPeriod = readField(item, 'period') || '';
-            if (itemPeriod === '年') {
-                data.counts[baseCategory]++;
-                data.blocks.push(item);
-            }
-        } else {
-            data.counts[baseCategory]++;
-            data.blocks.push(item);
+            if (itemPeriod !== '年') return;
         }
+
+        addItemToPeriod(data, categoryOrder, item, bucketAccessor);
     });
-    
+
     return data;
 }
 
@@ -185,15 +173,16 @@ export function aggregateByYear(
  * 获取月份的周数据
  */
 export function getMonthWeeksData(
-    items: Item[], 
-    categories: CategoryConfig[], 
+    items: Item[],
+    categories: CategoryConfig[],
     targetMonth: dayjs.Dayjs,
-    usePeriod = false
+    usePeriod = false,
+    bucketAccessor?: StatisticsBucketAccessor
 ): PeriodData[] {
     const monthStart = targetMonth.startOf('month');
     const monthEnd = targetMonth.endOf('month');
     const weeksData = [];
-    
+
     let weekStart = monthStart.startOf('isoWeek');
     while (weekStart.isBefore(monthEnd) || isSameIsoWeek(weekStart, monthEnd)) {
         const weekEnd = weekStart.endOf('isoWeek');
@@ -201,12 +190,12 @@ export function getMonthWeeksData(
             const itemDate = dayjs(item.date);
             return itemDate.isBetween(weekStart, weekEnd, 'day', '[]');
         });
-        
-        const data = aggregateByWeek(weekItems, categories, weekStart, usePeriod);
-        
+
+        const data = aggregateByWeek(weekItems, categories, weekStart, usePeriod, bucketAccessor);
+
         weeksData.push(data);
         weekStart = weekStart.add(1, 'week');
     }
-    
+
     return weeksData;
 }

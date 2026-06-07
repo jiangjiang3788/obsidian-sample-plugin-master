@@ -90,7 +90,7 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
                     value={localBlock.categoryKey || ''}
                     onChange={e => setLocalBlock(b => ({ ...b, categoryKey: (e.target as HTMLInputElement).value }))}
                     onBlur={() => handleBlur('categoryKey')}
-                    placeholder="例如：闪念/思考、计划、总结、打卡"
+                    placeholder="例如：思考、计划、总结、打卡"
                     helperText="默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。"
                     variant="outlined"
                     size="small"

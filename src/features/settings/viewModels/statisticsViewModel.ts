@@ -1,5 +1,7 @@
 import {
-  Item,
+  type GoalDefinition,
+  type ThemeDefinition,
+  type Item,
   dayjs,
   getWeeksInYear,
   aggregateByDay,
@@ -8,6 +10,9 @@ import {
   aggregateByQuarter,
   aggregateByYear,
   createPeriodData,
+  buildGoalBuckets,
+  getItemGoalKey,
+  getItemThemeKey,
   STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG,
 } from '@core/public';
 
@@ -28,10 +33,13 @@ export interface StatisticsViewModel {
     weeksData: any[];
   };
   viewConfig: any;
+  bucketAccessor: (item: Item) => string;
+  goalThemeSummaries: Array<{ goalPath: string; themes: Array<{ themePath: string; label: string; count: number }> }>;
 }
 
 /**
- * Phase2 shared/ui 纯化：把 StatisticsView 的“过滤分类/年结构/聚合数据生成”上移到 feature 层。
+ * Statistics 严格沿用原 Day / Week / Month / Quarter / Year 结构，
+ * 但统计维度从“分类”收敛为“目标”。时间周期仍由外部控制栏传入。
  */
 export function buildStatisticsViewModel(args: {
   items: Item[];
@@ -39,24 +47,51 @@ export function buildStatisticsViewModel(args: {
   module: any;
   currentView: StatisticsCurrentView;
   selectedCategories?: string[];
+  goals?: GoalDefinition[];
+  themes?: ThemeDefinition[];
 }): StatisticsViewModel {
-  const { items, dateRange, module, currentView, selectedCategories } = args;
+  const { items, dateRange, module, currentView, goals = [], themes = [] } = args;
 
-  const viewConfig = { ...DEFAULT_CONFIG, ...(module?.viewConfig || {}) };
-  const categoryConfigs = (viewConfig.categories || []) as any[];
-  const categoryOrder = categoryConfigs.map((c: any) => c.name);
+  const viewConfig = { ...DEFAULT_CONFIG, ...(module?.viewConfig || {}), groupBy: 'goal' };
+  const goalBuckets = buildGoalBuckets(items, goals, { includeUnassigned: true, includeKnownGoals: false, themes });
+  const bucketAccessor = (item: Item) => getItemGoalKey(item, goals);
+  const topN = Math.max(0, Number(viewConfig.topN) || 0);
+  const countByGoal = new Map<string, number>();
+  for (const item of items || []) {
+    const key = bucketAccessor(item);
+    countByGoal.set(key, (countByGoal.get(key) || 0) + 1);
+  }
+  const themeCountByGoal = new Map<string, Map<string, number>>();
+  for (const item of items || []) {
+    const goalKey = bucketAccessor(item);
+    const themeKey = getItemThemeKey(item);
+    const inner = themeCountByGoal.get(goalKey) || new Map<string, number>();
+    inner.set(themeKey, (inner.get(themeKey) || 0) + 1);
+    themeCountByGoal.set(goalKey, inner);
+  }
 
-  const filteredCategories = (() => {
-    if (!selectedCategories || selectedCategories.length === 0) return categoryConfigs;
-    return categoryConfigs.filter((c: any) => selectedCategories.includes(c.name));
-  })();
+  const filteredCategories = [...goalBuckets]
+    .sort((a: any, b: any) => (countByGoal.get(b.name) || 0) - (countByGoal.get(a.name) || 0) || (a.alias || a.name).localeCompare(b.alias || b.name, 'zh-CN'))
+    .slice(0, topN || undefined);
+  const categoryOrder = filteredCategories.map((bucket: any) => bucket.name);
+  const goalThemeSummaries = filteredCategories.map((bucket: any) => {
+    const inner = themeCountByGoal.get(bucket.name) || new Map<string, number>();
+    const themes = Array.from(inner.entries())
+      .map(([themePath, count]) => {
+        const parts = String(themePath || '').split('/').filter(Boolean);
+        return { themePath, label: parts[parts.length - 1] || themePath || '未设置主题', count };
+      })
+      .sort((a, b) => b.count - a.count || a.themePath.localeCompare(b.themePath, 'zh-CN'))
+      .slice(0, 3);
+    return { goalPath: bucket.name, themes };
+  });
+
 
   const startDate = dayjs(dateRange[0]);
   const endDate = dayjs(dateRange[1]);
 
   const isYearView = currentView === '年';
   const year = startDate.year();
-
   const yearlyWeekStructure = (() => {
     if (!isYearView) return [];
     const months: { month: number; weeks: number[] }[] = Array.from({ length: 12 }, (_, i) => ({
@@ -81,32 +116,27 @@ export function buildStatisticsViewModel(args: {
     const targetDate = dayjs().year(year);
     const usePeriod = Boolean(viewConfig.usePeriodField);
 
-    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod);
+    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod, bucketAccessor);
 
     const quartersData: any[] = [];
     for (let q = 1; q <= 4; q++) {
-      quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q), usePeriod));
+      quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q), usePeriod, bucketAccessor));
     }
 
     const monthsData: any[] = [];
     for (let m = 0; m < 12; m++) {
-      monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m), usePeriod));
+      monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m), usePeriod, bucketAccessor));
     }
 
     const weeksData: any[] = [];
     for (let w = 1; w <= totalWeeks; w++) {
-      weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w), usePeriod));
+      weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w), usePeriod, bucketAccessor));
     }
 
     return { yearData, quartersData, monthsData, weeksData };
   })();
 
-  // 非年视图的聚合仍由 shared/ui 按当前逻辑渲染（后续可继续 viewModel 化）
-  // 这里只负责把“年视图最重的一块”先上移。
   void aggregateByDay;
-  void aggregateByWeek;
-  void aggregateByMonth;
-  void aggregateByQuarter;
 
   return {
     startDate,
@@ -118,5 +148,7 @@ export function buildStatisticsViewModel(args: {
     yearlyWeekStructure,
     processedData,
     viewConfig,
+    bucketAccessor,
+    goalThemeSummaries,
   };
 }

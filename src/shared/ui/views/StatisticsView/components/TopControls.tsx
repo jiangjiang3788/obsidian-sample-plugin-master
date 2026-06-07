@@ -20,14 +20,14 @@ export function TopControls({
     <div class="sv-top-controls">
       <label
         class="sv-period-toggle"
-        title="勾选后：年/季/月只统计对应周期字段；周统计包含 period=周 和未设置 period 的条目"
+        title="勾选后：年/季/月只统计对应周期字段；周统计包含 period=周 和未设置 period 的条目。时间范围仍由外部控制栏控制。"
       >
         <input
           type="checkbox"
           checked={usePeriod}
           onChange={(e) => onToggleUsePeriod((e.target as HTMLInputElement).checked)}
         />
-        <span>使用周期字段</span>
+        <span>按照周期显示</span>
       </label>
     </div>
   );

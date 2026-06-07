@@ -1,8 +1,10 @@
 // src/core/ai/AiConfigSnapshot.ts
-// AI 配置快照 - 把 inputSettings + aiSettings 转成模型可读的最小快照
+// AI 配置快照 - 把 settings + aiSettings 转成模型可读的最小快照
 
 import type { InputSettings } from '@/core/types/schema';
 import type { AiSettings } from '@/core/types/ai-schema';
+import type { GoalSettings } from '@/core/goal';
+import { getGoalTemplates } from '@/core/goal';
 import { getEffectiveTemplate } from '@/core/utils/inputTemplateUtils';
 
 /**
@@ -27,7 +29,7 @@ export interface AiBlockConfig {
 }
 
 /**
- * AI 主题配置
+ * AI 主题配置。主题不再决定模板，只用于表单默认值、图标和统计维度。
  */
 export interface AiThemeConfig {
     id: string;
@@ -37,42 +39,88 @@ export interface AiThemeConfig {
 }
 
 /**
+ * AI 目标配置。
+ */
+export interface AiGoalConfig {
+    id: string;
+    path: string;
+    title: string;
+}
+
+/**
+ * AI 目标预设配置：目标 × Block 下的表单预设。
+ */
+export interface AiGoalPresetConfig {
+    id: string;
+    goalId: string;
+    goalPath: string;
+    blockId: string;
+    categoryKey: string;
+    variantId: string;
+    name: string;
+    isDefault: boolean;
+    themePath?: string;
+    granularity?: string;
+    fields: AiBlockConfigField[];
+}
+
+/**
  * AI 配置快照
- * 只保留给模型看的最小子集，避免 prompt 过大
+ * 只保留给模型看的最小子集，避免 prompt 过大。
  */
 export interface AiConfigSnapshot {
     blocks: AiBlockConfig[];
     themes: AiThemeConfig[];
+    goals: AiGoalConfig[];
+    goalPresets: AiGoalPresetConfig[];
+}
+
+function leaf(path?: string | null): string {
+    const text = String(path || '').trim();
+    if (!text) return '';
+    return text.split('/').filter(Boolean).pop() || text;
+}
+
+function normalizeField(field: any): AiBlockConfigField {
+    return {
+        key: field.key,
+        label: field.label,
+        type: field.type,
+        options: (field.options ?? []).map((o: any) => ({
+            value: o.value,
+            label: o.label || o.value,
+        })),
+        defaultValue: field.defaultValue,
+    };
+}
+
+function readThemePath(value: unknown): string | undefined {
+    if (!value) return undefined;
+    if (typeof value === 'string') return value.trim() || undefined;
+    if (typeof value === 'object' && value && 'value' in value) return String((value as any).value || '').trim() || undefined;
+    return undefined;
 }
 
 /**
  * 构建 AI 配置快照
- * 
+ *
  * @param input InputSettings 配置
  * @param ai AiSettings 配置
+ * @param goalSettings 目标中心配置
  * @returns AI 配置快照
  */
-export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSettings): AiConfigSnapshot {
+export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSettings, goalSettings?: GoalSettings): AiConfigSnapshot {
     // 如果指定了 enabledBlockIds，则只保留这些 block
     const enabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
 
     const blocks = (input?.blocks ?? [])
         .filter(b => !enabledSet || enabledSet.has(b.id))
         .map(b => {
-            // 用 getEffectiveTemplate 来获取字段（最贴合实际 override）
+            // 新主链不再用 ThemeOverride 决定模板；这里仍使用 block 默认字段作为 AI 兜底字段。
             const effective = input ? getEffectiveTemplate(input, b.id, undefined) : undefined;
             const sourceFields = effective?.template?.fields ?? b.fields ?? [];
-            
-            const fields: AiBlockConfigField[] = sourceFields.map(f => ({
-                key: f.key,
-                label: f.label,
-                type: f.type,
-                options: (f.options ?? []).map(o => ({
-                    value: o.value,
-                    label: o.label || o.value,
-                })),
-                defaultValue: f.defaultValue,
-            }));
+
+            const fields: AiBlockConfigField[] = sourceFields.map(normalizeField);
 
             return {
                 id: b.id,
@@ -82,11 +130,47 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
             };
         });
 
+    const blockById = new Map((input?.blocks ?? []).map((block) => [block.id, block]));
+    const blockByCoreId = new Map((input?.blocks ?? []).map((block: any) => [block.coreBlockId || block.id, block]));
+
     const themes = (input?.themes ?? []).map(t => ({
         id: t.id,
         path: t.path,
-        name: t.path.split('/').pop() || t.path,
+        name: leaf(t.path),
     }));
 
-    return { blocks, themes };
+    const goals = (goalSettings?.goals ?? [])
+        .filter((goal: any) => goal.status !== 'archived')
+        .map((goal: any) => ({
+            id: goal.id,
+            path: goal.goalPath || goal.title,
+            title: goal.title || leaf(goal.goalPath),
+        }));
+    const goalPathById = new Map(goals.map((goal) => [goal.id, goal.path]));
+
+    const goalPresets = getGoalTemplates(goalSettings)
+        .filter((preset) => preset.enabled !== false)
+        .filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId))
+        .map((preset) => {
+            const block = blockByCoreId.get(preset.coreBlockId) || blockById.get(preset.coreBlockId);
+            const fields = (preset.fields?.length ? preset.fields : block?.fields || []).map(normalizeField);
+            const defaultThemePath = readThemePath(preset.defaultValues?.themePath)
+                || readThemePath(preset.defaultValues?.['主题'])
+                || fields.map((field) => readThemePath(field.defaultValue)).find(Boolean);
+            return {
+                id: preset.id,
+                goalId: preset.goalId,
+                goalPath: goalPathById.get(preset.goalId) || preset.goalId,
+                blockId: preset.coreBlockId,
+                categoryKey: block?.categoryKey || preset.coreBlockId,
+                variantId: preset.variantId || 'default',
+                name: preset.name || preset.variantId || '默认预设',
+                isDefault: !!preset.isDefault,
+                themePath: defaultThemePath,
+                granularity: preset.granularity || 'day',
+                fields,
+            };
+        });
+
+    return { blocks, themes, goals, goalPresets };
 }

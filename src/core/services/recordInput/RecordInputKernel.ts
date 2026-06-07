@@ -9,7 +9,7 @@ import type {
   ResolveDependenciesResult,
   ValidateRecordInputParams,
 } from '@/core/types/recordInput';
-import type { InputSettings } from '@/core/types/schema';
+import type { ThinkSettings } from '@/core/types/schema';
 import { buildEditRecordState } from './editStateResolver';
 import { buildEditableRecordSnapshot } from './snapshot/EditSnapshotFactory';
 import { normalizeRecordInput as normalizeRecordInputImpl } from './normalization';
@@ -17,12 +17,13 @@ import { resolveRecordDependencies } from './dependencyResolver';
 import { validateRecordInput as validateRecordInputImpl } from './validation';
 
 export class RecordInputKernel {
-  constructor(private settings: InputSettings) {}
+  constructor(private settings: ThinkSettings) {}
 
   prepareCreate(params: PrepareCreateRecordParams): PreparedCreateRecord {
     const resolved = this.resolveMissingDependencies({
       blockId: params.blockId ?? null,
       themeId: params.themeId ?? null,
+      context: params.context ?? null,
     });
 
     const snapshot = buildEditableRecordSnapshot({
@@ -59,12 +60,18 @@ export class RecordInputKernel {
     });
   }
 
-  resolveMissingDependencies(params: { blockId?: string | null; themeId?: string | null; item?: PrepareEditRecordParams['item'] | null }): ResolveDependenciesResult {
+  resolveMissingDependencies(params: {
+    blockId?: string | null;
+    themeId?: string | null;
+    item?: PrepareEditRecordParams['item'] | null;
+    context?: Record<string, unknown> | null;
+  }): ResolveDependenciesResult {
     return resolveRecordDependencies({
       settings: this.settings,
       blockId: params.blockId ?? null,
       themeId: params.themeId ?? null,
       item: params.item ?? null,
+      context: params.context ?? null,
     });
   }
 

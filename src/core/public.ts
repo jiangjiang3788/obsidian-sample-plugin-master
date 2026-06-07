@@ -44,11 +44,13 @@ export type {
     PlanTaskRelation,
     GoalReviewSnapshot,
     GoalRelationHint,
-    GoalBlockBinding,
     GoalSettings,
 } from './goal';
-export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath, inferGoalCandidatesFromItems, buildGoalRelationsFromItems, buildGoalOverviewModel, buildGoalMarkdownBackfillPreview, buildGoalMarkdownBackfillDiffPreview, makeStableGoalIdFromPath } from './goal';
-export type { GoalPathParts, GoalMigrationCandidate, GoalOverviewModel, GoalOverviewRow, GoalOverviewMetricProgress, GoalOverviewCycleSummary, GoalMarkdownBackfillPreview, GoalMarkdownBackfillPreviewItem, GoalMarkdownBackfillDiffPreview, GoalMarkdownBackfillDiffItem } from './goal';
+export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath, inferGoalCandidatesFromItems, buildGoalRelationsFromItems, buildGoalOverviewModel, buildGoalMarkdownBackfillPreview, buildGoalMarkdownBackfillDiffPreview, makeStableGoalIdFromPath, buildThemeOverrideGoalMigrationPlan, buildGoalDefinitionFromThemeMigration, buildGoalTemplateFromThemeMigration, normalizeGoalSettingsForMigration, validateThemeOverrideGoalMigration, buildLegacyOverrideTemplateTargets, buildThemeOverrideRecordMigrationPreview, buildThemeOverrideMigrationAudit, buildThemeOverrideRecordDeepScan, buildThemeOverrideMigrationRegressionReport, buildThemeOverrideMigrationSummaryReport, resolveDerivedPeriod, normalizePeriodGranularity, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, fromLegacyGoalTemplateStorage, toLegacyGoalTemplateStorage, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, getItemThemeKey, getItemThemeLabel, buildGoalThemeBreakdown, buildGoalBuckets } from './goal';
+export type { GoalPathParts, GoalMigrationCandidate, GoalOverviewModel, GoalOverviewRow, GoalOverviewMetricProgress, GoalOverviewCycleSummary, GoalMarkdownBackfillPreview, GoalMarkdownBackfillPreviewItem, GoalMarkdownBackfillDiffPreview, GoalMarkdownBackfillDiffItem, DerivedPeriod, GoalTemplate, ThemeOverrideGoalMigrationCandidate, ThemeOverrideGoalMigrationPlan, BuildThemeOverrideGoalMigrationPlanOptions, ThemeOverrideGoalMigrationValidationIssue, ThemeOverrideGoalMigrationValidationReport, LegacyOverrideRecordTarget, ThemeOverrideRecordMigrationPreview, ThemeOverrideRecordMigrationPreviewItem, ThemeOverrideMigrationAudit, ThemeOverrideMigrationAuditRow, ThemeOverrideMigrationAuditThemeRow, ThemeOverrideMigrationAuditBlockRow, ThemeOverrideRecordDeepScanReport, ThemeOverrideRecordDeepScanSample, ThemeOverrideRecordDeepScanOverrideRow, ThemeOverrideRecordShape, ThemeOverrideMigrationRegressionReport, ThemeOverrideMigrationBlockRegressionRow, ThemeOverrideMigrationRegressionStatus, GoalBucket, GoalThemeBreakdownRow } from './goal';
+
+export { ThemeMetadataResolver } from './themeMetadata';
+export type { ThemeMetadata } from './themeMetadata';
 
 //
 // -------------------- Utils（可复用纯能力） --------------------

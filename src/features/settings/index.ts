@@ -9,7 +9,7 @@
 /* ========================================================================== */
 
 export { ThemeManager } from './theme/ThemeManager';
-export { ThemeMatrix } from './theme/ThemeMatrix';
+// ThemeMatrix is legacy/internal after goal-center convergence; do not re-export as a settings public entry.
 
 
 /* ========================================================================== */
@@ -26,13 +26,13 @@ import { HeatmapViewEditor } from './viewEditors/HeatmapViewEditor';
 import { StatisticsViewEditor } from './viewEditors/StatisticsViewEditor';
 import { ProgressViewEditor } from './viewEditors/ProgressViewEditor';
 import { TaskExecutionViewEditor } from './viewEditors/TaskExecutionViewEditor';
-import { GoalOverviewViewEditor } from './viewEditors/GoalOverviewViewEditor';
 import { TableViewEditor } from './viewEditors/TableViewEditor';
 import { TimelineViewEditor } from './viewEditors/TimelineViewEditor';
 
 // 设置页里的多个子设置组件
 export { LayoutSettings } from './tabs/LayoutSettings';
 export { InputSettings } from './tabs/InputSettings';
+export { DataManagementSettings } from './tabs/DataManagementSettings';
 export { GeneralSettings } from './tabs/GeneralSettings';
 
 /**
@@ -47,7 +47,6 @@ export const SettingsViewComponents = {
   Statistics: StatisticsViewEditor,
   Progress: ProgressViewEditor,
   TaskExecution: TaskExecutionViewEditor,
-  GoalOverview: GoalOverviewViewEditor,
   Table: TableViewEditor,
   Timeline: TimelineViewEditor,
 };
@@ -129,8 +128,6 @@ import {
   HeatmapView,
   ProgressView,
   TaskExecutionView,
-  GoalOverviewView,
-  GoalDetailView,
 } from '@shared/public';
 import type { ComponentType } from 'preact';
 
@@ -151,8 +148,6 @@ export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
   HeatmapView,
   ProgressView,
   TaskExecutionView,
-  GoalOverviewView,
-  GoalDetailView,
 } as const;
 
 /**

@@ -17,7 +17,7 @@ import { getBeforeMaxLine } from './paths';
 
 export interface TemplateExecutionMeta {
   templateId: string;
-  templateSourceType: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block';
+  templateSourceType: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block';
 }
 
 export type ResolvedTemplateDependencies = ResolveDependenciesResult & {
@@ -50,6 +50,7 @@ export function prepareTemplateSubmit(params: {
     blockId: params.blockId,
     themeId: params.themeId ?? null,
     item: params.item,
+    context: { ...(params.context || {}), ...params.formData },
   });
 
   if (resolved.errors.length > 0 || !resolved.template || !resolved.blockId) {

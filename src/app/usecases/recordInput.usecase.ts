@@ -334,7 +334,7 @@ export class RecordInputUseCase {
   }
 
   private getKernel(): RecordInputKernel {
-    return new RecordInputKernel(this.store.getState().settings.inputSettings);
+    return new RecordInputKernel(this.store.getState().settings);
   }
 }
 
