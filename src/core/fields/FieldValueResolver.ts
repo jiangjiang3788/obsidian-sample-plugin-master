@@ -6,6 +6,7 @@ import type { FieldSource } from './FieldTypes';
 import { normalizeImageValue } from './imageSemantics';
 import { parseTagList } from './tagSemantics';
 import { splitHierarchyPath } from './pathSemantics';
+import { getTaskStatus } from '@/core/utils/taskStatus';
 
 export type FieldValueSource = FieldSource | 'unknown';
 
@@ -86,6 +87,24 @@ function readCanonicalField(item: Item, canonicalField: string): unknown {
   }
   if (canonicalField === 'leafTheme') {
     return readExplicitThemeParts(item as any).leafTheme ?? undefined;
+  }
+
+  if (canonicalField === 'taskStatus') {
+    return getTaskStatus(item);
+  }
+
+  if (canonicalField === 'period.id') {
+    return (item as any).cycleId || (item as any).periodId || undefined;
+  }
+  if (canonicalField === 'period.label') {
+    return (item as any).period || (item as any).周期 || undefined;
+  }
+  if (canonicalField === 'period.granularity') {
+    return (item as any).periodGranularity || (item as any).goalGranularity || undefined;
+  }
+
+  if (canonicalField === 'repeatToken') {
+    return item.recurrence;
   }
 
   if (canonicalField === 'tags') {

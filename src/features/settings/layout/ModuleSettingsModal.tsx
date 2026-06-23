@@ -8,7 +8,7 @@
 
 import { useMemo } from 'preact/hooks';
 import { FormControlLabel, Checkbox, Button, Box, Accordion, AccordionSummary, AccordionDetails, Typography, Chip } from '@shared/public';
-import { VIEW_OPTIONS, ViewName, getAllFields, getFieldLabel, getFieldCategoryLabel } from '@core/public';
+import { VIEW_OPTIONS, ViewName, getAllFields, getFieldLabel, getFieldCategoryLabel, normalizeDisplayFields, normalizeViewFilters, normalizeViewGroupFields, normalizeViewSort } from '@core/public';
 import type { FilterRule, ViewInstance } from '@core/public';
 import { VIEW_EDITORS } from '@features/settings/viewEditors/registry';
 import { useSelector, makeSelectViewInstanceById, useDataStore, useUseCases } from '@/app/public';
@@ -50,19 +50,19 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
         []
     );
 
-    const commonFilterFields = useMemo(() => ['goalPath', 'goalPaths', 'goalId', 'coreBlock', 'themePath', 'baseCategory', 'type', 'priority', 'period'], []);
+    const commonFilterFields = useMemo(() => ['goalPath', 'goalPaths', 'goalId', 'coreBlock', 'themePath', 'taskStatus', 'type', 'priority', 'period.label'], []);
     const hasAdvancedFilters = useMemo(() => (currentVi.filters || []).some((rule: any) => (
         rule.op !== 'in' || !commonFilterFields.includes(rule.field)
     )), [currentVi.filters, commonFilterFields]);
 
     // 字段更新处理 - 显示字段
     const handleFieldsChange = (fields: string[]) => {
-        handleUpdate({ fields });
+        handleUpdate({ fields: normalizeDisplayFields(fields, { includeUnknown: true }) });
     };
 
     // 字段更新处理 - 分组字段（多字段层级分组）
     const handleGroupFieldsChange = (groupFields: string[]) => {
-        handleUpdate({ groupFields });
+        handleUpdate({ groupFields: normalizeViewGroupFields(groupFields) });
     };
 
     return (
@@ -155,7 +155,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                             dataStore={dataStore}
                             filters={currentVi.filters || []}
                             fieldOptions={fieldOptions}
-                            onChange={(rows: FilterRule[]) => handleUpdate({ filters: rows })}
+                            onChange={(rows: FilterRule[]) => handleUpdate({ filters: normalizeViewFilters(rows) })}
                             compact
                         />
 
@@ -181,7 +181,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                                     mode="filter"
                                     rows={currentVi.filters || []}
                                     fieldOptions={fieldOptions}
-                                    onChange={(rows: any) => handleUpdate({ filters: rows })}
+                                    onChange={(rows: any) => handleUpdate({ filters: normalizeViewFilters(rows) })}
                                     dataStore={dataStore}
                                     variant="panel"
                                 />
@@ -199,7 +199,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                         mode="sort" 
                         rows={currentVi.sort || []} 
                         fieldOptions={fieldOptions} 
-                        onChange={(rows: any) => handleUpdate({ sort: rows })} 
+                        onChange={(rows: any) => handleUpdate({ sort: normalizeViewSort(rows) })} 
                         dataStore={dataStore}
                     />
                 </FormField>

@@ -3,7 +3,7 @@ import type { RecordOutputPlan, RecordPersistencePlan } from '@/core/types/recor
 import { splitThemePath } from '@/core/types/recordSnapshot';
 import { renderTemplate } from '@/core/utils/templateUtils';
 import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter';
-import { resolveDerivedPeriod } from '@/core/goal';
+import { resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@/core/goal';
 
 function normalizePath(value: string | null | undefined): string | null {
   const trimmed = String(value || '').trim();
@@ -71,10 +71,10 @@ function buildRenderData(
   const goalId = String(normalizedData.goalId ?? normalizedData['目标ID'] ?? '').trim();
   const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
   const recordDate = String(normalizedData['日期'] ?? normalizedData.date ?? '').trim();
-  const goalGranularity = String(normalizedData.goalGranularity ?? normalizedData['目标粒度'] ?? normalizedData.granularity ?? 'day').trim();
-  const derivedPeriod = resolveDerivedPeriod(recordDate || undefined, goalGranularity);
-  const cycleId = String(normalizedData.cycleId ?? normalizedData['周期ID'] ?? derivedPeriod.id ?? '').trim();
-  const cycleTitle = String(normalizedData.period ?? normalizedData['周期'] ?? derivedPeriod.label ?? '').trim();
+  const periodPolicy = resolveTemplatePeriodPolicy(template as any);
+  const derivedPeriod = periodPolicy ? resolveDerivedPeriod(recordDate || undefined, periodPolicy.granularity) : null;
+  const cycleId = derivedPeriod ? String(normalizedData.cycleId ?? normalizedData['周期ID'] ?? derivedPeriod.id ?? '').trim() : '';
+  const cycleTitle = derivedPeriod ? String(normalizedData.period ?? normalizedData['周期'] ?? derivedPeriod.label ?? '').trim() : '';
   const taskTokens = buildTaskRenderTokens(normalizedData);
 
   return {
@@ -109,12 +109,15 @@ function buildRenderData(
     rootGoal: goalParts[0] || '',
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
     coreBlock,
-    period: { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label },
-    cycle: { id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label, ...derivedPeriod },
-    cycleId: cycleId || derivedPeriod.id,
-    cycleTitle: cycleTitle || derivedPeriod.label,
-    periodId: cycleId || derivedPeriod.id,
-    periodLabel: cycleTitle || derivedPeriod.label,
+    period: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label } : null,
+    cycle: derivedPeriod ? { id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label, ...derivedPeriod } : null,
+    cycleId: derivedPeriod ? cycleId || derivedPeriod.id : '',
+    cycleTitle: derivedPeriod ? cycleTitle || derivedPeriod.label : '',
+    periodId: derivedPeriod ? cycleId || derivedPeriod.id : '',
+    periodLabel: derivedPeriod ? cycleTitle || derivedPeriod.label : '',
+    '周期粒度': derivedPeriod ? derivedPeriod.granularity : '',
+    '周期ID': derivedPeriod ? cycleId || derivedPeriod.id : '',
+    '周期': derivedPeriod ? cycleTitle || derivedPeriod.label : '',
     ...taskTokens,
     templateId: templateMeta?.templateId || template.id,
     templateSourceType: templateMeta?.templateSourceType || 'block',

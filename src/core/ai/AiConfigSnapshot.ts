@@ -4,7 +4,7 @@
 import type { InputSettings } from '@/core/types/schema';
 import type { AiSettings } from '@/core/types/ai-schema';
 import type { GoalSettings } from '@/core/goal';
-import { getGoalTemplates } from '@/core/goal';
+import { getGoalTemplates, isSystemRecordContextField } from '@/core/goal';
 import { getEffectiveTemplate } from '@/core/utils/inputTemplateUtils';
 
 /**
@@ -45,22 +45,27 @@ export interface AiGoalConfig {
     id: string;
     path: string;
     title: string;
+    /** 目标默认主题。主题只是上下文字段，不决定模板。 */
+    themePath?: string | null;
 }
 
 /**
  * AI 目标预设配置：目标 × Block 下的表单预设。
  */
 export interface AiGoalPresetConfig {
+    /** GoalTemplate id，提交时可作为稳定预设标识。 */
     id: string;
     goalId: string;
     goalPath: string;
     blockId: string;
     categoryKey: string;
     variantId: string;
+    /** 与 id 同义，给 prompt 显示为目标预设 ID。 */
+    goalTemplateId: string;
     name: string;
     isDefault: boolean;
     themePath?: string;
-    granularity?: string;
+    periodPolicy?: { enabled: boolean; granularity: 'week' | 'month' | 'quarter' | 'year' };
     fields: AiBlockConfigField[];
 }
 
@@ -79,6 +84,10 @@ function leaf(path?: string | null): string {
     const text = String(path || '').trim();
     if (!text) return '';
     return text.split('/').filter(Boolean).pop() || text;
+}
+
+function isAiVisibleField(field: any): boolean {
+    return !isSystemRecordContextField(field?.key, field?.label, field?.semantic || field?.semanticType);
 }
 
 function normalizeField(field: any): AiBlockConfigField {
@@ -110,17 +119,21 @@ function readThemePath(value: unknown): string | undefined {
  * @returns AI 配置快照
  */
 export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSettings, goalSettings?: GoalSettings): AiConfigSnapshot {
-    // 如果指定了 enabledBlockIds，则只保留这些 block
-    const enabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
+    // 如果指定了 enabledBlockIds，则只保留这些 block。
+    // 若 data 里仍是旧 blk_* ID，且已经无法匹配任何 CoreBlock，则忽略该过滤，避免 AI 快照为空。
+    const rawEnabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
+    const inputBlocks = input?.blocks ?? [];
+    const hasEnabledBlockMatch = !!rawEnabledSet && inputBlocks.some((b: any) => rawEnabledSet.has(b.id) || rawEnabledSet.has(b.coreBlockId || ''));
+    const enabledSet = hasEnabledBlockMatch ? rawEnabledSet : null;
 
-    const blocks = (input?.blocks ?? [])
-        .filter(b => !enabledSet || enabledSet.has(b.id))
+    const blocks = inputBlocks
+        .filter(b => !enabledSet || enabledSet.has(b.id) || enabledSet.has((b as any).coreBlockId || ''))
         .map(b => {
             // 新主链不再用 ThemeOverride 决定模板；这里仍使用 block 默认字段作为 AI 兜底字段。
             const effective = input ? getEffectiveTemplate(input, b.id, undefined) : undefined;
             const sourceFields = effective?.template?.fields ?? b.fields ?? [];
 
-            const fields: AiBlockConfigField[] = sourceFields.map(normalizeField);
+            const fields: AiBlockConfigField[] = sourceFields.filter(isAiVisibleField).map(normalizeField);
 
             return {
                 id: b.id,
@@ -130,8 +143,8 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
             };
         });
 
-    const blockById = new Map((input?.blocks ?? []).map((block) => [block.id, block]));
-    const blockByCoreId = new Map((input?.blocks ?? []).map((block: any) => [block.coreBlockId || block.id, block]));
+    const blockById = new Map(inputBlocks.map((block) => [block.id, block]));
+    const blockByCoreId = new Map(inputBlocks.map((block: any) => [block.coreBlockId || block.id, block]));
 
     const themes = (input?.themes ?? []).map(t => ({
         id: t.id,
@@ -145,6 +158,7 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
             id: goal.id,
             path: goal.goalPath || goal.title,
             title: goal.title || leaf(goal.goalPath),
+            themePath: goal.themePath || null,
         }));
     const goalPathById = new Map(goals.map((goal) => [goal.id, goal.path]));
 
@@ -153,7 +167,7 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
         .filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId))
         .map((preset) => {
             const block = blockByCoreId.get(preset.coreBlockId) || blockById.get(preset.coreBlockId);
-            const fields = (preset.fields?.length ? preset.fields : block?.fields || []).map(normalizeField);
+            const fields = (preset.fields?.length ? preset.fields : block?.fields || []).filter(isAiVisibleField).map(normalizeField);
             const defaultThemePath = readThemePath(preset.defaultValues?.themePath)
                 || readThemePath(preset.defaultValues?.['主题'])
                 || fields.map((field) => readThemePath(field.defaultValue)).find(Boolean);
@@ -164,10 +178,11 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
                 blockId: preset.coreBlockId,
                 categoryKey: block?.categoryKey || preset.coreBlockId,
                 variantId: preset.variantId || 'default',
+                goalTemplateId: preset.id,
                 name: preset.name || preset.variantId || '默认预设',
                 isDefault: !!preset.isDefault,
                 themePath: defaultThemePath,
-                granularity: preset.granularity || 'day',
+                periodPolicy: preset.periodPolicy,
                 fields,
             };
         });

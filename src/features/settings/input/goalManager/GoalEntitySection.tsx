@@ -2,8 +2,7 @@
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { Alert, Box, Button, Chip, TextField, Typography } from '@shared/public';
-import { selectSettings, useDataStore, useSelector, useUseCases } from '@/app/public';
-import { inferGoalCandidatesFromItems } from '@core/public';
+import { selectSettings, useSelector, useUseCases } from '@/app/public';
 import { pathLeaf, SectionCard } from './shared';
 
 function goalStatusLabel(status?: string): string {
@@ -16,27 +15,14 @@ function goalStatusLabel(status?: string): string {
   }
 }
 
-function topBlocks(coreBlockCounts: Record<string, number> = {}): string {
-  return Object.entries(coreBlockCounts)
-    .sort((left, right) => right[1] - left[1])
-    .slice(0, 3)
-    .map(([name, count]) => `${name.replace(/^core\./, '')} ${count}`)
-    .join(' · ');
-}
-
 export function GoalEntitySection() {
   const settings = useSelector(selectSettings);
-  const dataStore = useDataStore();
   const useCases = useUseCases();
   const goals = settings.goalSettings?.goals || [];
   const [goalPath, setGoalPath] = useState('');
+  const [goalThemePath, setGoalThemePath] = useState('');
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState('');
-
-  const candidates = useMemo(
-    () => inferGoalCandidatesFromItems(dataStore.queryItems(), goals).filter((item) => item.source !== 'existing-goal'),
-    [dataStore, goals]
-  );
 
   const visibleGoals = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -54,22 +40,14 @@ export function GoalEntitySection() {
     const path = goalPath.trim();
     if (!path) return;
     const alreadyExists = goals.some((goal) => String(goal.goalPath || goal.title || '').trim() === path);
-    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: null, granularity: 'day' as any });
+    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: goalThemePath.trim() || null });
     setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加目标：${goal.goalPath || goal.title}` : '目标未添加');
     if (goal && !alreadyExists) {
       setGoalPath('');
+      setGoalThemePath('');
     }
   };
 
-  const handleImportOne = async (candidate: any) => {
-    const result = await useCases.goal.applyLegacyGoalMigration([candidate]);
-    setMessage(result.createdGoals > 0 ? `已导入已有目标：${candidate.goalPath}` : `目标已在目标库中：${candidate.goalPath}`);
-  };
-
-  const handleImportAll = async () => {
-    const result = await useCases.goal.applyLegacyGoalMigration(candidates);
-    setMessage(`已从旧记录导入 ${result.createdGoals} 个目标。`);
-  };
 
   const handleDeleteGoal = async (goal: any) => {
     const label = goal.goalPath || goal.title || goal.id;
@@ -83,50 +61,11 @@ export function GoalEntitySection() {
       {message && <Alert severity="info" onClose={() => setMessage('')}>{message}</Alert>}
 
       <SectionCard>
-        <details>
-          <summary style={{ cursor: 'pointer', fontWeight: 800 }}>
-            从已有记录导入目标{candidates.length > 0 ? ` · ${candidates.length} 个可导入` : ' · 无待导入'}
-          </summary>
-          <Box sx={{ display: 'grid', gap: 1, mt: 1 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <Typography variant="body2" color="text.secondary">
-                扫描旧记录里的“目标:: / 目标路径 / goalPaths”字段，把它们变成目标库里的目标；不会改写 Markdown 内容。
-              </Typography>
-              <Button variant="contained" onClick={handleImportAll} disabled={candidates.length === 0}>导入全部 {candidates.length}</Button>
-            </Box>
-
-            {candidates.length > 0 ? (
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 1 }}>
-                {candidates.slice(0, 12).map((candidate) => (
-                  <Box key={candidate.goalPath} sx={{ border: '1px solid var(--background-modifier-border)', borderRadius: 2, p: 1, display: 'grid', gap: 0.75, background: 'var(--background-secondary)' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'flex-start' }}>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography sx={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{candidate.goalPath}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {candidate.count} 条记录{candidate.lastDate ? ` · 最近 ${candidate.lastDate}` : ''}
-                        </Typography>
-                      </Box>
-                      <Chip size="small" label={candidate.source === 'mixed' ? '部分存在' : '可导入'} color={candidate.source === 'mixed' ? 'warning' : 'primary'} />
-                    </Box>
-                    {topBlocks(candidate.coreBlockCounts) && <Typography variant="caption" color="text.secondary">记录类型：{topBlocks(candidate.coreBlockCounts)}</Typography>}
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button size="small" variant="outlined" onClick={() => handleImportOne(candidate)}>导入这个目标</Button>
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
-            ) : (
-              <Alert severity="success">没有待导入的旧目标。目标库已经和现有记录保持一致。</Alert>
-            )}
-          </Box>
-        </details>
-      </SectionCard>
-
-      <SectionCard>
         <Typography sx={{ fontWeight: 800 }}>新建目标</Typography>
-        <Typography variant="body2" color="text.secondary">只需要填目标路径。目标只回答“我要追踪什么”；主题和统计周期都不在目标库绑定。周期请在对应的目标 × Block 预设表单里设置。</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 1fr) auto', gap: 1, alignItems: 'center' }}>
+        <Typography variant="body2" color="text.secondary">目标回答“我要追踪什么”。默认主题只是快捷输入的上下文字段，不决定模板；周期请在计划/总结预设里设置。</Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(240px, 1fr) minmax(180px, 0.65fr) auto' }, gap: 1, alignItems: 'center' }}>
           <TextField size="small" label="目标路径" value={goalPath} onChange={(event: any) => setGoalPath(event.target.value)} placeholder="例如：产品化/插件/目标中心" />
+          <TextField size="small" label="默认主题（可选）" value={goalThemePath} onChange={(event: any) => setGoalThemePath(event.target.value)} placeholder="例如：电脑/记录系统" />
           <Button variant="contained" onClick={handleAddGoal} disabled={!goalPath.trim()}>新建目标</Button>
         </Box>
       </SectionCard>
@@ -148,9 +87,11 @@ export function GoalEntitySection() {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0, flexWrap: 'wrap' }}>
                     <Typography sx={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{goal.goalPath || goal.title}</Typography>
                     <Chip size="small" label={goalStatusLabel(goal.status)} color={goal.status === 'active' ? 'primary' : 'default'} />
+                    {goal.themePath ? <Chip size="small" label={`主题 ${goal.themePath}`} /> : <Chip size="small" label="无默认主题" variant="outlined" />}
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  <Button size="small" variant="text" onClick={() => handleEditGoalTheme(goal)}>主题</Button>
                   <Button size="small" variant="text" onClick={() => goal.status === 'paused' ? useCases.goal.restoreGoal(goal.id) : useCases.goal.pauseGoal(goal.id)}>{goal.status === 'paused' ? '恢复' : '暂停'}</Button>
                   <Button size="small" variant="text" onClick={() => useCases.goal.completeGoal(goal.id)}>完成</Button>
                   <Button size="small" variant="text" onClick={() => goal.status === 'archived' ? useCases.goal.restoreGoal(goal.id) : useCases.goal.archiveGoal(goal.id)}>
@@ -162,7 +103,7 @@ export function GoalEntitySection() {
             ))}
           </Box>
         ) : (
-          <Alert severity="info">目标库还是空的。可以展开“从已有记录导入目标”，或在上方新建一个目标。</Alert>
+          <Alert severity="info">目标库还是空的。请在上方新建一个目标。</Alert>
         )}
       </SectionCard>
     </Box>

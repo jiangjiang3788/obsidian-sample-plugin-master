@@ -1,6 +1,6 @@
 import type { BlockTemplate, ThemeDefinition, ThinkSettings } from '@/core/types/schema';
 import type { GoalDefinition, GoalSettings } from '@/core/goal';
-import { findGoalTemplate, splitGoalPath } from '@/core/goal';
+import { findGoalTemplate, resolveTemplatePeriodPolicy, splitGoalPath } from '@/core/goal';
 import { getCoreBlockById, normalizeCoreBlockSettings } from '@/core/blocks';
 import { ThemeMetadataResolver } from '@/core/themeMetadata';
 
@@ -50,14 +50,22 @@ function mergeTemplate(base: BlockTemplate, patch: Partial<BlockTemplate> & { de
       ...(required.has(key) || required.has(field.label || '') ? { required: true } : null),
     } as any;
   });
-  return {
+  const merged = {
     ...base,
     fields,
     outputTemplate: patch.outputTemplate ?? base.outputTemplate,
     targetFile: patch.targetFile ?? base.targetFile,
     appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
-    ...((patch as any).granularity ? { granularity: (patch as any).granularity } : null),
+    periodPolicy: (patch as any).periodPolicy ?? (base as any).periodPolicy,
   } as any;
+  const policy = resolveTemplatePeriodPolicy(merged);
+  if (policy) {
+    merged.periodPolicy = policy;
+  } else {
+    delete merged.periodPolicy;
+    delete merged.granularity;
+  }
+  return merged;
 }
 
 export class GoalTemplateResolver {
@@ -109,7 +117,9 @@ export class GoalTemplateResolver {
     }
 
     if (coreBlock) {
-      return { template: baseTemplate, theme, goal, templateId: coreBlock.id, templateSourceType: 'core-block', effectiveBlockId, templateVariantId: null };
+      const policy = resolveTemplatePeriodPolicy(baseTemplate as any);
+      const template = policy ? { ...(baseTemplate as any), periodPolicy: policy } : { ...(baseTemplate as any), periodPolicy: undefined, granularity: undefined };
+      return { template, theme, goal, templateId: coreBlock.id, templateSourceType: 'core-block', effectiveBlockId, templateVariantId: null };
     }
 
     return { template: baseTemplate, theme, goal, templateId: legacyBase?.id || null, templateSourceType: 'legacy-block', effectiveBlockId, templateVariantId: null };

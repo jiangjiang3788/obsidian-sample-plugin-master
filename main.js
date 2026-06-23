@@ -1282,11 +1282,16 @@ const FIELD_REGISTRY = {
   rootGoal: text({ key: "rootGoal", label: "根目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
   leafGoal: text({ key: "leafGoal", label: "叶目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
   cycleId: text({ key: "cycleId", label: "周期ID", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
+  "period.id": text({ key: "period.id", label: "周期ID", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
+  "period.label": text({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
+  "period.granularity": text({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
   coreBlock: text({ key: "coreBlock", label: "核心Block", category: "core", source: "item", semantic: "coreBlock", inputType: "text", aliases: ["核心Block", "coreBlock"] }),
+  taskStatus: text({ key: "taskStatus", label: "任务状态", category: "core", source: "derived", semantic: "status", inputType: "singleSelect", aliases: ["任务状态", "taskStatus"], description: "由任务勾选框、完成日期和旧分类推导：open/done/cancelled。" }),
   date: { key: "date", label: "日期", type: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
   priority: text({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
   icon: { key: "icon", label: "图标", type: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
   recurrence: text({ key: "recurrence", label: "重复规则", category: "core", source: "item", semantic: "recurrence" }),
+  repeatToken: text({ key: "repeatToken", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", hiddenByDefault: true, aliases: ["重复", "repeat"] }),
   period: text({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
   startTime: { key: "startTime", label: "开始时间", type: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
   endTime: { key: "endTime", label: "结束时间", type: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
@@ -1474,6 +1479,36 @@ function parseTagList(value) {
   const tags2 = rawValues.map(normalizeTag).filter((tag) => !!tag);
   return Array.from(new Set(tags2));
 }
+function normalizeCategoryKey(categoryKey) {
+  return String(categoryKey || "").trim().toLowerCase();
+}
+function isTaskCompletedByCategory(categoryKey) {
+  const key = normalizeCategoryKey(categoryKey);
+  return key === "完成任务" || key.endsWith("/done") || key.endsWith("/cancelled");
+}
+function getTaskStatus(item) {
+  if (!item || item.type !== "task") return "unknown";
+  if (item.cancelledDate) return "cancelled";
+  if (item.doneDate) return "done";
+  const categoryKey = normalizeCategoryKey(item.categoryKey);
+  if (categoryKey === "完成任务") return "done";
+  if (categoryKey === "未完成任务") return "open";
+  if (categoryKey.endsWith("/cancelled")) return "cancelled";
+  if (categoryKey.endsWith("/done")) return "done";
+  if (categoryKey.endsWith("/todo")) return "open";
+  const content = String(item.content || "").trim();
+  if (/^-\s*\[x\]/i.test(content)) return "done";
+  if (/^-\s*\[-\]/.test(content)) return "cancelled";
+  if (/^-\s*\[ \]/.test(content)) return "open";
+  return "unknown";
+}
+function isTaskCompleted(item) {
+  const status = getTaskStatus(item);
+  return status === "done" || status === "cancelled";
+}
+function isTaskOpen(item) {
+  return getTaskStatus(item) === "open";
+}
 function normalizeFieldKey(field) {
   return getCanonicalFieldKey(field);
 }
@@ -1524,6 +1559,21 @@ function readCanonicalField(item, canonicalField) {
   }
   if (canonicalField === "leafTheme") {
     return readExplicitThemeParts(item).leafTheme ?? void 0;
+  }
+  if (canonicalField === "taskStatus") {
+    return getTaskStatus(item);
+  }
+  if (canonicalField === "period.id") {
+    return item.cycleId || item.periodId || void 0;
+  }
+  if (canonicalField === "period.label") {
+    return item.period || item.周期 || void 0;
+  }
+  if (canonicalField === "period.granularity") {
+    return item.periodGranularity || item.goalGranularity || void 0;
+  }
+  if (canonicalField === "repeatToken") {
+    return item.recurrence;
   }
   if (canonicalField === "tags") {
     return parseTagList(item.tags || []);
@@ -1587,10 +1637,11 @@ const DEFAULT_AI_SETTINGS = {
   customPrompt: ""
 };
 const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
-1. 当我说"心情"、"开心"、"难过"等情绪词时，使用"打卡"Block，字段"心情"填写情绪，"评分"填写1-5分
-2. 当我说"写文章"、"写作"时，使用"任务"Block，主题选择"电脑/写作"
-3. 当我说"学习了xxx"时，使用"学习记录"Block
-4. 默认情况下，如果不确定，使用"闪念"Block`;
+1. 优先选择已有目标，再选择记录类型，最后选择目标 × Block 下最匹配的记录预设。
+2. 当我说"心情"、"开心"、"难过"等情绪词时，优先匹配目标下的"情绪/心情"打卡预设。
+3. 当我说"写文章"、"写作"时，使用任务记录类型，并优先匹配电脑/写作相关预设。
+4. 不要把目标、主题、模板ID、周期ID写进 fieldValues；这些属于 target 或应用自动推导。
+5. 计划/总结的周期由应用根据预设 periodPolicy 和日期自动生成。`;
 const DEFAULT_GOAL_SETTINGS = {
   goals: [],
   cycles: [],
@@ -1610,6 +1661,29 @@ function splitGoalPath(path) {
     rootGoal: parts[0] || null,
     leafGoal: parts.length ? parts[parts.length - 1] : null
   };
+}
+function isPeriodAwareCoreBlock(coreBlockId) {
+  const id = String(coreBlockId || "").trim();
+  return id === "core.plan" || id === "core.review" || id === "plan" || id === "review";
+}
+function normalizePeriodPolicyGranularity(value) {
+  const text2 = String(value || "").trim().toLowerCase();
+  if (text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
+  return "week";
+}
+function resolveTemplatePeriodPolicy(template) {
+  if (!template) return null;
+  const coreBlockId = template.coreBlockId || template.id || "";
+  if (!isPeriodAwareCoreBlock(coreBlockId)) return null;
+  const explicitPolicy = template.periodPolicy;
+  if (explicitPolicy && explicitPolicy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(explicitPolicy.granularity) };
+  }
+  const legacyGranularity = String(template.granularity || "").trim();
+  if (legacyGranularity && legacyGranularity !== "day" && legacyGranularity !== "custom") {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(legacyGranularity) };
+  }
+  return { enabled: true, granularity: "week" };
 }
 function pad(value) {
   return String(value).padStart(2, "0");
@@ -1677,27 +1751,96 @@ function resolveDerivedPeriod(dateValue, granularityValue) {
   const end2 = new Date(year, 11, 31);
   return { id: `${year}`, label: `${year} 年`, granularity, startDate: ymd(start2), endDate: ymd(end2) };
 }
-function nowIso$2() {
+const DEFAULT_TEMPLATE_VARIANT_ID = "default";
+const SYSTEM_RECORD_CONTEXT_FIELD_KEYS = [
+  "goalId",
+  "目标ID",
+  "goalPath",
+  "目标",
+  "目标路径",
+  "rootGoal",
+  "leafGoal",
+  "coreBlock",
+  "coreBlockId",
+  "核心Block",
+  "templateId",
+  "模板ID",
+  "templateSourceType",
+  "模板来源",
+  "templateVariantId",
+  "goalTemplateVariantId",
+  "变体ID",
+  "记录预设",
+  "cycleId",
+  "周期ID",
+  "periodId",
+  "period",
+  "周期",
+  "周期粒度",
+  "goalGranularity",
+  "themeId",
+  "themePath",
+  "主题",
+  "rootTheme",
+  "leafTheme"
+];
+const SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET = new Set(SYSTEM_RECORD_CONTEXT_FIELD_KEYS);
+const SYSTEM_RECORD_CONTEXT_SEMANTICS = /* @__PURE__ */ new Set([
+  "goalId",
+  "goalPath",
+  "goalPaths",
+  "goals",
+  "coreBlock",
+  "templateId",
+  "templateSourceType",
+  "templateVariantId",
+  "cycleId",
+  "period",
+  "themeId",
+  "themePath"
+]);
+function isSystemRecordContextField(key, label, semantic) {
+  const normalizedKey = String(key || "").trim();
+  const normalizedLabel = String(label || "").trim();
+  const normalizedSemantic = String(semantic || "").trim();
+  return SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedKey) || SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedLabel) || SYSTEM_RECORD_CONTEXT_SEMANTICS.has(normalizedSemantic);
+}
+function normalizeTemplateVariantId(value) {
+  const normalized = String(value || "").trim();
+  return normalized || DEFAULT_TEMPLATE_VARIANT_ID;
+}
+function nowIso$1() {
   return (/* @__PURE__ */ new Date()).toISOString();
 }
 function normalizeVariantId(value) {
-  const text2 = String(value || "").trim();
-  return text2 || "default";
+  return normalizeTemplateVariantId(value);
 }
 function safeIdPart(value) {
   return String(value || "").trim().replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-") || "default";
 }
 function parseVariantIdFromLegacyId(id) {
   const text2 = String(id || "").trim();
-  if (!text2.startsWith("goal-template.")) return "default";
+  if (!text2.startsWith("goal-template.")) return DEFAULT_TEMPLATE_VARIANT_ID;
   const parts = text2.split(".");
-  if (parts.length <= 4) return "default";
+  if (parts.length <= 4) return DEFAULT_TEMPLATE_VARIANT_ID;
   return normalizeVariantId(parts.slice(4).join("."));
 }
 function normalizeGoalTemplateId(goalId, coreBlockId, variantId, id) {
   const text2 = String(id || "").trim();
   if (text2 && text2.startsWith("goal-template.")) return text2;
   return getGoalTemplateId(goalId, coreBlockId, variantId);
+}
+function normalizeTemplatePeriodPolicy(coreBlockId, raw) {
+  if (!isPeriodAwareCoreBlock(coreBlockId)) return void 0;
+  const policy = raw?.periodPolicy;
+  if (policy && policy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
+  }
+  const legacy = String(raw?.granularity || "").trim();
+  if (legacy && legacy !== "day" && legacy !== "custom") {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(legacy) };
+  }
+  return { enabled: true, granularity: "week" };
 }
 function fromLegacyGoalTemplateStorage(row) {
   const raw = row;
@@ -1707,10 +1850,10 @@ function fromLegacyGoalTemplateStorage(row) {
     goalId: row.goalId,
     coreBlockId: row.coreBlockId,
     variantId,
-    name: raw.name || raw.templateName || (variantId === "default" ? "默认模板" : variantId),
+    name: raw.name || raw.templateName || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "默认模板" : variantId),
     description: raw.description,
-    isDefault: raw.isDefault === true || variantId === "default",
-    granularity: raw.granularity,
+    isDefault: raw.isDefault === true || variantId === DEFAULT_TEMPLATE_VARIANT_ID,
+    periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, raw),
     sortOrder: typeof raw.sortOrder === "number" ? raw.sortOrder : void 0,
     enabled: row.enabled !== false,
     fields: row.fields,
@@ -1724,7 +1867,7 @@ function fromLegacyGoalTemplateStorage(row) {
   };
 }
 function toLegacyGoalTemplateStorage(template, previous) {
-  const timestamp = nowIso$2();
+  const timestamp = nowIso$1();
   const variantId = normalizeVariantId(template.variantId);
   return {
     ...previous || {},
@@ -1732,18 +1875,19 @@ function toLegacyGoalTemplateStorage(template, previous) {
     goalId: template.goalId,
     coreBlockId: template.coreBlockId,
     variantId,
-    name: template.name || (variantId === "default" ? "默认模板" : variantId),
+    name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "默认模板" : variantId),
     description: template.description,
-    isDefault: template.isDefault === true || variantId === "default",
-    granularity: template.granularity,
+    isDefault: template.isDefault === true || variantId === DEFAULT_TEMPLATE_VARIANT_ID,
+    periodPolicy: normalizeTemplatePeriodPolicy(template.coreBlockId, template),
+    granularity: void 0,
     sortOrder: template.sortOrder,
     enabled: template.enabled !== false,
-    fields: template.fields,
-    outputTemplate: template.outputTemplate,
-    targetFile: template.targetFile,
-    appendUnderHeader: template.appendUnderHeader,
-    defaultValues: template.defaultValues || {},
-    requiredFields: template.requiredFields || [],
+    fields: template.fields?.length ? template.fields : void 0,
+    outputTemplate: template.outputTemplate || void 0,
+    targetFile: template.targetFile || void 0,
+    appendUnderHeader: template.appendUnderHeader || void 0,
+    defaultValues: template.defaultValues && Object.keys(template.defaultValues).length ? template.defaultValues : void 0,
+    requiredFields: template.requiredFields?.length ? template.requiredFields : void 0,
     createdAt: template.createdAt || previous?.createdAt || timestamp,
     updatedAt: template.updatedAt || timestamp
   };
@@ -1754,7 +1898,7 @@ function getGoalTemplates(goalSettings) {
 function getGoalTemplateId(goalId, coreBlockId, variantId = "default") {
   const normalizedVariantId = normalizeVariantId(variantId);
   const base = `goal-template.${safeIdPart(goalId)}.${safeIdPart(coreBlockId)}`;
-  return normalizedVariantId === "default" ? base : `${base}.${safeIdPart(normalizedVariantId)}`;
+  return normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID ? base : `${base}.${safeIdPart(normalizedVariantId)}`;
 }
 function pathCandidates$2(path) {
   const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
@@ -1795,7 +1939,7 @@ function findGoalTemplate(goalSettings, goal, coreBlockId, variantId) {
     const exact = variants.find((template) => normalizeVariantId(template.variantId) === normalizedVariantId || template.id === variantId);
     if (exact) return exact;
   }
-  return variants.find((template) => template.isDefault === true) || variants.find((template) => normalizeVariantId(template.variantId) === "default") || variants[0] || null;
+  return variants.find((template) => template.isDefault === true) || variants.find((template) => normalizeVariantId(template.variantId) === DEFAULT_TEMPLATE_VARIANT_ID) || variants[0] || null;
 }
 function upsertGoalTemplateInSettings(goalSettings, template) {
   const previousRows = goalSettings.goalBlockBindings || [];
@@ -1807,7 +1951,7 @@ function upsertGoalTemplateInSettings(goalSettings, template) {
     return item.id === nextTemplate.id || item.goalId === nextTemplate.goalId && item.coreBlockId === nextTemplate.coreBlockId && itemVariantId === variantId;
   });
   const next2 = toLegacyGoalTemplateStorage(nextTemplate, index >= 0 ? rows[index] : null);
-  const shouldDefault = next2.isDefault === true || next2.variantId === "default";
+  const shouldDefault = next2.isDefault === true || next2.variantId === DEFAULT_TEMPLATE_VARIANT_ID;
   const normalizedRows = rows.map((row, rowIndex) => {
     if (rowIndex === index) return row;
     if (!shouldDefault) return row;
@@ -1834,604 +1978,149 @@ function removeGoalTemplatesForGoal(goalSettings, goalId) {
     goalBlockBindings: (goalSettings.goalBlockBindings || []).filter((template) => template.goalId !== goalId)
   };
 }
-function readLooseField(item, field) {
-  const direct = item[field];
-  if (direct !== void 0 && direct !== null && String(direct).trim?.() !== "") return direct;
-  const extra = item.extra || {};
-  if (extra[field] !== void 0) return extra[field];
-  const aliases2 = {
-    goalPath: ["目标", "目标路径"],
-    goalPaths: ["目标", "目标路径"],
-    themePath: ["主题", "主题路径"],
-    coreBlock: ["核心Block"],
-    date: ["日期"]
+const ALLOWED_SYSTEM_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
+const FORBIDDEN_DEFAULT_KEYS = /* @__PURE__ */ new Set([
+  "legacyOverrideId",
+  "legacyThemePath",
+  "goalId",
+  "目标ID",
+  "goalPath",
+  "目标",
+  "templateId",
+  "模板ID",
+  "templateSourceType",
+  "模板来源",
+  "templateVariantId",
+  "goalTemplateVariantId",
+  "变体ID",
+  "记录预设",
+  "period",
+  "periodId",
+  "cycleId",
+  "周期",
+  "周期ID",
+  "周期粒度",
+  "goalGranularity"
+]);
+function compactText$1(value) {
+  return String(value ?? "").trim();
+}
+function stableJson$1(value) {
+  const seen = /* @__PURE__ */ new WeakSet();
+  const normalize = (input) => {
+    if (input === void 0) return void 0;
+    if (input === null || typeof input !== "object") return input;
+    if (seen.has(input)) return "[Circular]";
+    seen.add(input);
+    if (Array.isArray(input)) return input.map(normalize);
+    const out = {};
+    Object.keys(input).sort().forEach((key) => {
+      const value2 = normalize(input[key]);
+      if (value2 !== void 0) out[key] = value2;
+    });
+    return out;
   };
-  for (const alias of aliases2[field] || []) {
-    if (extra[alias] !== void 0) return extra[alias];
-    if (item[alias] !== void 0) return item[alias];
+  return JSON.stringify(normalize(value));
+}
+function compactFieldForStructureCompare$1(field) {
+  const source = field;
+  const out = {};
+  Object.keys(source || {}).sort().forEach((key) => {
+    if (key === "id" || key === "defaultValue" || key === "required") return;
+    const value = source[key];
+    if (value === void 0 || value === null || value === "") return;
+    out[key] = value;
+  });
+  return out;
+}
+function fieldsHaveSameStructure$1(left2, right2) {
+  const normalize = (fields) => (fields || []).map(compactFieldForStructureCompare$1);
+  return stableJson$1(normalize(left2)) === stableJson$1(normalize(right2));
+}
+function deriveRequiredFields$1(fields) {
+  return (fields || []).filter((field) => field?.required === true).map((field) => compactText$1(field.key || field.label)).filter(Boolean);
+}
+function equalStringSet$1(left2, right2) {
+  const a2 = new Set((left2 || []).map(compactText$1).filter(Boolean));
+  const b2 = new Set((right2 || []).map(compactText$1).filter(Boolean));
+  if (a2.size !== b2.size) return false;
+  for (const value of a2) if (!b2.has(value)) return false;
+  return true;
+}
+function getFieldDefaultMap$1(fields) {
+  const result = {};
+  for (const field of fields || []) {
+    const key = compactText$1(field.key || field.label);
+    if (!key) continue;
+    const value = field.defaultValue;
+    if (value !== void 0 && value !== null && compactText$1(value) !== "") result[key] = compactText$1(value);
+  }
+  return result;
+}
+function compactDefaultValues(values2, baseFields, goal) {
+  const baseDefaults = getFieldDefaultMap$1(baseFields);
+  const goalThemePath = compactText$1(goal?.themePath);
+  const result = {};
+  Object.entries(values2 || {}).forEach(([key, raw]) => {
+    if (FORBIDDEN_DEFAULT_KEYS.has(key)) return;
+    const value = compactText$1(raw);
+    if (!value) return;
+    if (isSystemRecordContextField(key) && !ALLOWED_SYSTEM_DEFAULT_KEYS.has(key)) return;
+    if ((key === "themePath" || key === "主题") && (value === goalThemePath || value === "{{goal.themePath}}")) return;
+    if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
+    result[key] = raw;
+  });
+  return Object.keys(result).length ? result : void 0;
+}
+function normalizePeriodPolicyForTemplate(template) {
+  if (!isPeriodAwareCoreBlock(template.coreBlockId)) return void 0;
+  const policy = template.periodPolicy;
+  if (policy && policy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
   }
   return void 0;
 }
-function normalizeDate(value) {
-  const text2 = String(value ?? "").trim();
-  return text2 || null;
+function compactGoalTemplateForStorage(template, options = {}) {
+  const coreBlock = options.coreBlock || null;
+  const baseFields = coreBlock?.fields;
+  const next2 = {
+    ...template,
+    granularity: void 0
+  };
+  if (!isPeriodAwareCoreBlock(template.coreBlockId)) {
+    next2.periodPolicy = void 0;
+  } else {
+    next2.periodPolicy = normalizePeriodPolicyForTemplate(template);
+  }
+  if (coreBlock) {
+    if (fieldsHaveSameStructure$1(template.fields, baseFields)) next2.fields = void 0;
+    if (compactText$1(template.outputTemplate) === compactText$1(coreBlock.outputTemplate)) next2.outputTemplate = void 0;
+    if (compactText$1(template.targetFile) === compactText$1(coreBlock.targetFile)) next2.targetFile = void 0;
+    if (compactText$1(template.appendUnderHeader) === compactText$1(coreBlock.appendUnderHeader)) next2.appendUnderHeader = void 0;
+    const explicitRequired = template.requiredFields && template.requiredFields.length ? template.requiredFields : deriveRequiredFields$1(template.fields);
+    const baseRequired = deriveRequiredFields$1(baseFields);
+    next2.requiredFields = equalStringSet$1(explicitRequired || [], baseRequired) ? void 0 : (explicitRequired || []).filter(Boolean);
+  } else if (next2.requiredFields && !next2.requiredFields.length) {
+    next2.requiredFields = void 0;
+  }
+  next2.defaultValues = compactDefaultValues(template.defaultValues, baseFields, options.goal);
+  return next2;
 }
-function titleFromPath(path) {
-  const parsed = splitGoalPath(path || "");
-  const normalized = parsed.goalPath || String(path ?? "").trim();
-  if (!normalized) return "未命名目标";
-  return parsed.leafGoal || normalized;
+function describeGoalTemplateStorageDiff(template) {
+  const parts = [];
+  if (template.fields?.length) parts.push("字段覆盖");
+  if (template.defaultValues && Object.keys(template.defaultValues).length) parts.push(`默认值 ${Object.keys(template.defaultValues).length}`);
+  if (template.outputTemplate) parts.push("输出覆盖");
+  if (template.targetFile) parts.push("文件覆盖");
+  if (template.appendUnderHeader) parts.push("标题覆盖");
+  if (template.requiredFields?.length) parts.push("必填覆盖");
+  if (template.periodPolicy) parts.push(`周期 ${template.periodPolicy.granularity}`);
+  return parts;
 }
 function makeStableGoalIdFromPath(path) {
   const normalized = splitGoalPath(path).goalPath || String(path || "").trim();
   const safe = normalized.toLowerCase().replace(/[\\/\s]+/g, "-").replace(/[^a-z0-9\-_.\u4e00-\u9fa5]/gi, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
   return `goal.${safe || "untitled"}`;
-}
-function readGoalPaths(item) {
-  const values2 = [];
-  const push = (value) => {
-    if (value === null || value === void 0) return;
-    if (Array.isArray(value)) {
-      value.forEach(push);
-      return;
-    }
-    const raw = typeof value === "object" ? value.value ?? value.label : value;
-    String(raw ?? "").split(/[,，\n]/).map((part) => splitGoalPath(part).goalPath).filter(Boolean).forEach((part) => values2.push(part));
-  };
-  push(item.goalPath);
-  push(item.goalPaths);
-  push(readLooseField(item, "goalPath"));
-  push(readLooseField(item, "goalPaths"));
-  push(readLooseField(item, "目标"));
-  return Array.from(new Set(values2));
-}
-function readThemePath$1(item) {
-  return String(item.themePath ?? readLooseField(item, "themePath") ?? readLooseField(item, "主题") ?? "").trim() || null;
-}
-function readCoreBlock(item) {
-  const raw = String(item.coreBlock ?? readLooseField(item, "coreBlock") ?? readLooseField(item, "核心Block") ?? "").trim();
-  if (raw) return raw;
-  const category = String(item.categoryKey ?? "").trim();
-  if (/任务/.test(category) || item.type === "task") return "task";
-  if (/计划/.test(category)) return "plan";
-  if (/总结|复盘/.test(category)) return "review";
-  if (/打卡/.test(category)) return "habit";
-  if (/事件|证据/.test(category)) return "evidence";
-  if (/阻碍|风险/.test(category)) return "blocker";
-  if (/里程碑/.test(category)) return "milestone";
-  if (/思考|闪念/.test(category)) return "thought";
-  return category || "record";
-}
-function inferGoalCandidatesFromItems(items, existingGoals = []) {
-  const map = /* @__PURE__ */ new Map();
-  for (const goal of existingGoals || []) {
-    const goalPath = splitGoalPath(goal.goalPath || goal.title).goalPath;
-    if (!goalPath) continue;
-    map.set(goalPath, {
-      id: goal.id || makeStableGoalIdFromPath(goalPath),
-      title: goal.title || titleFromPath(goalPath),
-      goalPath,
-      themePath: goal.themePath ?? null,
-      count: 0,
-      firstDate: null,
-      lastDate: null,
-      source: "existing-goal",
-      sampleItemIds: [],
-      coreBlockCounts: {}
-    });
-  }
-  for (const item of items || []) {
-    const paths = readGoalPaths(item);
-    if (!paths.length) continue;
-    const date2 = normalizeDate(item.date ?? readLooseField(item, "日期") ?? readLooseField(item, "date"));
-    const themePath = readThemePath$1(item);
-    const coreBlock = readCoreBlock(item);
-    for (const path of paths) {
-      const candidate = map.get(path) || {
-        id: makeStableGoalIdFromPath(path),
-        title: titleFromPath(path),
-        goalPath: path,
-        themePath,
-        count: 0,
-        firstDate: null,
-        lastDate: null,
-        source: "legacy-record",
-        sampleItemIds: [],
-        coreBlockCounts: {}
-      };
-      candidate.count += 1;
-      if (!candidate.themePath && themePath) candidate.themePath = themePath;
-      if (date2 && (!candidate.firstDate || date2 < candidate.firstDate)) candidate.firstDate = date2;
-      if (date2 && (!candidate.lastDate || date2 > candidate.lastDate)) candidate.lastDate = date2;
-      if (candidate.sampleItemIds.length < 5) candidate.sampleItemIds.push(item.id);
-      candidate.coreBlockCounts[coreBlock] = (candidate.coreBlockCounts[coreBlock] || 0) + 1;
-      if (candidate.source === "existing-goal") candidate.source = "mixed";
-      map.set(path, candidate);
-    }
-  }
-  return Array.from(map.values()).sort((a2, b2) => b2.count - a2.count || a2.goalPath.localeCompare(b2.goalPath, "zh-CN"));
-}
-function buildGoalMarkdownBackfillPreview(items, goals = [], limit = 20) {
-  const goalsByPath = /* @__PURE__ */ new Map();
-  for (const goal of goals || []) {
-    const path = splitGoalPath(goal.goalPath || goal.title).goalPath;
-    if (path) goalsByPath.set(path, goal);
-  }
-  const preview = [];
-  let missingGoalIdCount = 0;
-  let missingCoreBlockCount = 0;
-  for (const item of items || []) {
-    const paths = readGoalPaths(item);
-    if (!paths.length) continue;
-    const existingGoalId = String(item.goalId ?? readLooseField(item, "目标ID") ?? "").trim();
-    const existingCoreBlock = String(item.coreBlock ?? readLooseField(item, "核心Block") ?? "").trim();
-    for (const path of paths) {
-      const goal = goalsByPath.get(path);
-      if (!goal) continue;
-      const coreBlock = readCoreBlock(item).replace(/^core\./, "");
-      const missingFields = [];
-      if (!existingGoalId) {
-        missingFields.push("目标ID");
-        missingGoalIdCount += 1;
-      }
-      if (!existingCoreBlock) {
-        missingFields.push("核心Block");
-        missingCoreBlockCount += 1;
-      }
-      if (!missingFields.length) continue;
-      const themePath = goal.themePath ?? readThemePath$1(item);
-      const patchFields = {
-        "目标ID": goal.id,
-        "目标": path,
-        "核心Block": coreBlock
-      };
-      if (themePath) patchFields["主题"] = themePath;
-      preview.push({
-        itemId: item.id,
-        goalPath: path,
-        goalId: goal.id,
-        themePath,
-        coreBlock,
-        missingFields,
-        patchFields,
-        previewInline: Object.entries(patchFields).map(([key, value]) => `(${key}::${value})`).join(" ")
-      });
-      break;
-    }
-  }
-  return { total: preview.length, items: preview.slice(0, limit), missingGoalIdCount, missingCoreBlockCount };
-}
-function upsertPreviewInlineFields(line2, fields) {
-  let next2 = String(line2 || "").trim();
-  for (const [key, value] of Object.entries(fields || {})) {
-    const normalizedKey = String(key || "").trim();
-    const normalizedValue = String(value ?? "").trim();
-    if (!normalizedKey || !normalizedValue) continue;
-    const escapedKey = normalizedKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = new RegExp(`([\\(\\[]\\s*${escapedKey}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
-    if (pattern.test(next2)) next2 = next2.replace(pattern, `$1${normalizedValue}$2`);
-    else next2 = `${next2} (${normalizedKey}::${normalizedValue})`;
-  }
-  return next2;
-}
-function buildGoalMarkdownBackfillDiffPreview(items, goals = [], limit = 20) {
-  const preview = buildGoalMarkdownBackfillPreview(items, goals, limit);
-  const itemsById = new Map((items || []).map((item) => [item.id, item]));
-  return {
-    ...preview,
-    items: preview.items.map((entry) => {
-      const item = itemsById.get(entry.itemId);
-      const beforeSnippet = String(item?.rawSource ?? item?.fullData ?? item?.content ?? item?.title ?? entry.itemId).split("\n")[0] || entry.itemId;
-      return {
-        ...entry,
-        beforeSnippet,
-        afterSnippet: upsertPreviewInlineFields(beforeSnippet, entry.patchFields)
-      };
-    })
-  };
-}
-const DEFAULT_OPTIONS$1 = {
-  includeDisabled: true,
-  themeGoalMap: {},
-  // 目标迁移不能再默认把主题当目标。没有目标线索时应留给用户归类。
-  fallbackThemeAsGoal: false
-};
-function nowIso$1() {
-  return (/* @__PURE__ */ new Date()).toISOString();
-}
-function normalizeText$2(value) {
-  return String(value ?? "").trim();
-}
-function leaf$2(path) {
-  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
-  return parts[parts.length - 1] || path;
-}
-function makeGoalPathFromTheme(themePath, overrideId) {
-  const normalizedTheme = splitGoalPath(themePath).goalPath || normalizeText$2(themePath);
-  if (normalizedTheme) return normalizedTheme.startsWith("#") ? normalizedTheme : `#${normalizedTheme}`;
-  return `#旧主题/${overrideId}`;
-}
-function normalizeThemeMap(input) {
-  const result = /* @__PURE__ */ new Map();
-  for (const [key, value] of Object.entries(input || {})) {
-    const cleanKey = normalizeText$2(key);
-    const cleanValue = splitGoalPath(normalizeText$2(value)).goalPath || normalizeText$2(value);
-    if (cleanKey && cleanValue) result.set(cleanKey, cleanValue);
-  }
-  return result;
-}
-function resolveMappedGoalPath(themePath, themeId, themeGoalMap) {
-  const map = normalizeThemeMap(themeGoalMap);
-  if (map.size === 0) return null;
-  const cleanThemePath2 = normalizeText$2(themePath);
-  const cleanThemeId = normalizeText$2(themeId);
-  const candidates = [];
-  if (cleanThemePath2) {
-    const parts = cleanThemePath2.split("/").map((part) => part.trim()).filter(Boolean);
-    for (let index = parts.length; index >= 1; index -= 1) {
-      candidates.push(parts.slice(0, index).join("/"));
-    }
-  }
-  if (cleanThemeId) candidates.push(cleanThemeId);
-  for (const candidate of candidates) {
-    const mapped = map.get(candidate);
-    if (mapped) return mapped;
-  }
-  return null;
-}
-function cleanGoalLiteral(value) {
-  const text2 = normalizeText$2(value).replace(/^['"`]+|['"`]+$/g, "").replace(/[)\]\s]+$/g, "").trim();
-  if (!text2 || text2.includes("{{") || text2.includes("}}")) return null;
-  return splitGoalPath(text2).goalPath || text2;
-}
-function extractHardcodedGoalPath(text2) {
-  const source = normalizeText$2(text2);
-  if (!source) return null;
-  const patterns = [
-    /目标\s*::\s*([^\n\r\)\]]+)/g,
-    /\(目标\s*::\s*([^\)]+)\)/g,
-    /\[目标\s*::\s*([^\]]+)\]/g
-  ];
-  for (const pattern of patterns) {
-    let match5;
-    while (match5 = pattern.exec(source)) {
-      const parsed = cleanGoalLiteral(match5[1]);
-      if (parsed) return parsed;
-    }
-  }
-  return null;
-}
-function readLooseGoalPathFromItem(item) {
-  const values2 = [
-    item.goalPath,
-    Array.isArray(item.goalPaths) ? item.goalPaths[0] : item.goalPaths,
-    item.extra?.["目标"],
-    item.extra?.["goalPath"],
-    item.extra?.["goalPaths"]
-  ];
-  for (const value of values2) {
-    if (value === void 0 || value === null) continue;
-    const raw = Array.isArray(value) ? value[0] : value;
-    const parsed = cleanGoalLiteral(String(raw));
-    if (parsed) return parsed;
-  }
-  return null;
-}
-function readTemplateIdFromItem(item) {
-  const candidates = [
-    item.templateId,
-    item.extra?.["模板ID"],
-    item.extra?.["templateId"]
-  ];
-  for (const value of candidates) {
-    const text2 = normalizeText$2(value);
-    if (text2) return text2;
-  }
-  return null;
-}
-function buildRecordGoalStats(items) {
-  const stats = /* @__PURE__ */ new Map();
-  for (const item of items || []) {
-    const templateId = readTemplateIdFromItem(item);
-    if (!templateId) continue;
-    const goalPath = readLooseGoalPathFromItem(item);
-    if (!goalPath) continue;
-    if (!stats.has(templateId)) stats.set(templateId, /* @__PURE__ */ new Map());
-    const perGoal = stats.get(templateId);
-    perGoal.set(goalPath, (perGoal.get(goalPath) || 0) + 1);
-  }
-  return stats;
-}
-function bestRecordGoal(stats) {
-  if (!stats || stats.size === 0) return null;
-  let best = null;
-  for (const [goalPath, count] of stats.entries()) {
-    if (!best || count > best.count) best = { goalPath, count };
-  }
-  return best;
-}
-function rewriteTemplate(template, goalPath) {
-  let text2 = normalizeText$2(template);
-  if (!text2) return void 0;
-  text2 = text2.replace(/(模板来源\s*::\s*)override/g, "$1{{templateSourceType}}");
-  text2 = text2.replace(/(模板来源\s*::\s*)theme-fallback/g, "$1{{templateSourceType}}");
-  text2 = text2.replace(/(模板ID\s*::\s*)ovr_[^\s\)\]\n\r]+/g, "$1{{templateId}}");
-  text2 = text2.replace(/(目标ID\s*::\s*)[^\s\)\]\n\r]+/g, "$1{{goalId}}");
-  const escapedGoal = goalPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  if (goalPath) {
-    text2 = text2.replace(new RegExp(`(目标\\s*::\\s*)${escapedGoal}`, "g"), "$1{{goalPath}}");
-  }
-  text2 = text2.replace(/(目标\s*::\s*)(?!\{\{)[^\n\r\)\]]+/g, "$1{{goalPath}}");
-  return text2;
-}
-function inferGranularity(fields) {
-  const periodField = (fields || []).find((field) => {
-    const key = normalizeText$2(field.key || field.label);
-    return key === "周期" || key === "统计周期";
-  });
-  const values2 = [periodField?.defaultValue, ...(periodField?.options || []).map((option) => option.value || option.label)].map(normalizeText$2).join(" ");
-  if (/年|year/i.test(values2)) return "year";
-  if (/季|quarter/i.test(values2)) return "quarter";
-  if (/月|month/i.test(values2)) return "month";
-  if (/周|week/i.test(values2)) return "week";
-  return "day";
-}
-function themeDefaultValues(themePath, icon) {
-  const result = {};
-  if (themePath) {
-    result.themePath = themePath;
-    result["主题"] = themePath;
-  }
-  if (icon) {
-    result.icon = icon;
-    result["图标"] = icon;
-  }
-  return result;
-}
-function isThemePathField(field) {
-  const anyField = field;
-  const key = normalizeText$2(anyField.key || "").toLowerCase();
-  const label = normalizeText$2(anyField.label || "");
-  const semantic = normalizeText$2(anyField.semantic || anyField.semanticType || "").toLowerCase();
-  return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath");
-}
-function ensureThemePathField(fields, themePath) {
-  const normalizedThemePath = normalizeText$2(themePath);
-  const source = fields || [];
-  let found = false;
-  const next2 = source.map((field) => {
-    if (!isThemePathField(field)) return field;
-    found = true;
-    return { ...field, defaultValue: normalizedThemePath || field.defaultValue || "{{goal.themePath}}" };
-  });
-  if (!found && normalizedThemePath) {
-    next2.push({
-      id: "core.field.themePath",
-      key: "themePath",
-      label: "主题",
-      type: "hierarchicalSingleSelect",
-      semantic: "themePath",
-      semanticType: "path",
-      hierarchical: true,
-      defaultValue: normalizedThemePath
-    });
-  }
-  return next2;
-}
-function candidateName(themePath, blockName) {
-  const themeLeaf2 = leaf$2(themePath);
-  const block2 = normalizeText$2(blockName);
-  if (!themeLeaf2) return block2 || "旧主题预设";
-  if (!block2 || themeLeaf2.includes(block2) || block2.includes(themeLeaf2)) return themeLeaf2;
-  return `${themeLeaf2}${block2}`;
-}
-function buildThemeOverrideGoalMigrationPlan(settings, items = [], options = {}) {
-  const opts = { ...DEFAULT_OPTIONS$1, ...options };
-  const inputSettings = settings.inputSettings || { blocks: [], themes: [], overrides: [] };
-  const overrides = inputSettings.overrides || [];
-  const themesById = new Map((inputSettings.themes || []).map((theme2) => [theme2.id, theme2]));
-  const blocksById = new Map((inputSettings.blocks || []).map((block2) => [block2.id, block2]));
-  const recordStats = buildRecordGoalStats(items);
-  const existingGoals = new Set((settings.goalSettings?.goals || []).map((goal) => splitGoalPath(goal.goalPath || goal.title).goalPath || goal.id));
-  const newGoalPaths = /* @__PURE__ */ new Set();
-  const candidates = [];
-  const skipped = [];
-  for (const override of overrides) {
-    const disabled = override.disabled === true || override.status === "disabled";
-    if (disabled && !opts.includeDisabled) {
-      skipped.push({ overrideId: override.id, reason: "旧主题模板已禁用" });
-      continue;
-    }
-    const block2 = blocksById.get(override.blockId);
-    const theme2 = themesById.get(override.themeId);
-    const coreBlockId = block2?.coreBlockId || override.blockId;
-    const blockName = block2?.name || override.blockId;
-    const themePath = theme2?.path || override.themeId || "";
-    const mapped = resolveMappedGoalPath(themePath, override.themeId, opts.themeGoalMap);
-    const hardcoded = extractHardcodedGoalPath(override.outputTemplate || "");
-    const recordBest = bestRecordGoal(recordStats.get(override.id));
-    let goalPath = mapped || hardcoded || recordBest?.goalPath || "";
-    let confidence = mapped ? "mapped" : hardcoded ? "high" : recordBest ? "medium" : "fallback";
-    let reason = mapped ? "用户已把这个主题归类到目标" : hardcoded ? "模板里写死了目标" : recordBest ? `从 ${recordBest.count} 条旧记录反推出目标` : "没有目标线索，等待用户归类主题";
-    if (!goalPath && opts.fallbackThemeAsGoal) {
-      goalPath = makeGoalPathFromTheme(themePath, override.id);
-      reason = "高级兜底：使用主题路径生成目标";
-    }
-    if (!goalPath) {
-      skipped.push({ overrideId: override.id, reason: "无法识别目标" });
-      continue;
-    }
-    goalPath = splitGoalPath(goalPath).goalPath || goalPath;
-    const goalId = makeStableGoalIdFromPath(goalPath);
-    const variantId = `legacy-${override.id}`;
-    const templateId = getGoalTemplateId(goalId, coreBlockId, variantId);
-    const defaultValues = themeDefaultValues(themePath, theme2?.icon);
-    const fieldDefaults = (override.fields || []).reduce((acc, field) => {
-      const key = normalizeText$2(field.key || field.label);
-      const value = normalizeText$2(field.defaultValue);
-      if (key && value && !/\{\{.*\}\}/.test(value)) acc[key] = field.defaultValue;
-      return acc;
-    }, {});
-    Object.assign(defaultValues, fieldDefaults);
-    Object.assign(defaultValues, themeDefaultValues(themePath, theme2?.icon));
-    if (!existingGoals.has(goalPath)) newGoalPaths.add(goalPath);
-    candidates.push({
-      overrideId: override.id,
-      blockId: override.blockId,
-      coreBlockId,
-      blockName,
-      themeId: override.themeId,
-      themePath,
-      goalPath,
-      goalId,
-      templateId,
-      variantId,
-      name: candidateName(themePath, blockName),
-      disabled,
-      enabled: !disabled,
-      granularity: inferGranularity(override.fields),
-      confidence,
-      reason,
-      usedRecordCount: recordBest?.count || 0,
-      fields: override.fields,
-      outputTemplate: rewriteTemplate(override.outputTemplate, goalPath),
-      targetFile: override.targetFile,
-      appendUnderHeader: override.appendUnderHeader || "## {{goalPath}}",
-      defaultValues
-    });
-  }
-  const enabledOverrides = overrides.filter((item) => item.disabled !== true && item.status !== "disabled").length;
-  const highConfidenceCount = candidates.filter((item) => item.confidence === "high").length;
-  const mediumConfidenceCount = candidates.filter((item) => item.confidence === "medium").length;
-  const fallbackCount = candidates.filter((item) => item.confidence === "fallback").length;
-  const matchedRecordCount = candidates.reduce((sum, item) => sum + item.usedRecordCount, 0);
-  return {
-    totalOverrides: overrides.length,
-    enabledOverrides,
-    disabledOverrides: overrides.length - enabledOverrides,
-    migrateCount: candidates.length,
-    candidateCount: candidates.length,
-    skippedCount: skipped.length,
-    highConfidenceCount,
-    mediumConfidenceCount,
-    fallbackCount,
-    matchedRecordCount,
-    wouldCreateGoals: newGoalPaths.size,
-    wouldCreateTemplates: candidates.length,
-    candidates,
-    skipped
-  };
-}
-function buildGoalDefinitionFromThemeMigration(candidate, existing) {
-  const timestamp = nowIso$1();
-  const title = splitGoalPath(candidate.goalPath).leafGoal || candidate.goalPath;
-  return {
-    ...{},
-    id: candidate.goalId,
-    title,
-    goalPath: candidate.goalPath,
-    description: existing?.description,
-    status: "active",
-    parentGoalId: null,
-    themePath: null,
-    granularity: "day",
-    metrics: [],
-    createdAt: timestamp,
-    updatedAt: timestamp
-  };
-}
-function buildGoalTemplateFromThemeMigration(candidate) {
-  const timestamp = nowIso$1();
-  return {
-    id: candidate.templateId,
-    goalId: candidate.goalId,
-    coreBlockId: candidate.coreBlockId,
-    variantId: candidate.variantId,
-    name: candidate.name,
-    description: `由旧主题模板迁移：${candidate.themePath || candidate.themeId}`,
-    isDefault: true,
-    granularity: candidate.granularity,
-    sortOrder: 0,
-    enabled: candidate.enabled,
-    fields: ensureThemePathField(candidate.fields, candidate.themePath),
-    outputTemplate: candidate.outputTemplate,
-    targetFile: candidate.targetFile,
-    appendUnderHeader: candidate.appendUnderHeader,
-    defaultValues: {
-      ...candidate.defaultValues,
-      legacyOverrideId: candidate.overrideId,
-      legacyThemePath: candidate.themePath
-    },
-    requiredFields: [],
-    createdAt: timestamp,
-    updatedAt: timestamp
-  };
-}
-function normalizeGoalSettingsForMigration(goalSettings) {
-  return {
-    goals: [...[]],
-    cycles: [...[]],
-    goalBlockBindings: [...[]],
-    goalRecordRelations: [...[]]
-  };
-}
-function buildLegacyOverrideTemplateTargets(settings) {
-  const goalSettings = settings.goalSettings || normalizeGoalSettingsForMigration();
-  const goalsById = new Map((goalSettings.goals || []).map((goal) => [goal.id, goal]));
-  const result = {};
-  for (const template of goalSettings.goalBlockBindings || []) {
-    const defaults = template.defaultValues || {};
-    const legacyOverrideId = normalizeText$2(defaults.legacyOverrideId);
-    if (!legacyOverrideId) continue;
-    const goal = goalsById.get(template.goalId);
-    result[legacyOverrideId] = {
-      legacyOverrideId,
-      templateId: template.id,
-      goalId: template.goalId,
-      goalPath: goal?.goalPath || goal?.title || template.goalId,
-      coreBlockId: template.coreBlockId,
-      themePath: normalizeText$2(defaults.themePath || defaults["主题"] || defaults.legacyThemePath) || void 0
-    };
-  }
-  return result;
-}
-function buildThemeOverrideRecordMigrationPreview(settings, items = [], limit = 20) {
-  const targets = buildLegacyOverrideTemplateTargets(settings);
-  let legacyRecordCount = 0;
-  let rewriteableCount = 0;
-  let unresolvedCount = 0;
-  const samples = [];
-  for (const item of items || []) {
-    if (!itemHasLegacyOverrideMarker(item)) continue;
-    legacyRecordCount += 1;
-    const oldTemplateId = readTemplateIdFromItem(item) || "";
-    const target = oldTemplateId ? targets[oldTemplateId] : void 0;
-    if (target) rewriteableCount += 1;
-    else unresolvedCount += 1;
-    if (samples.length < limit) {
-      samples.push({
-        itemId: String(item.id || ""),
-        title: normalizeText$2(item.title || item.content || item.extra?.["内容"] || item.extra?.["任务内容"]) || "(无标题)",
-        oldTemplateId,
-        status: target ? "rewriteable" : "unresolved",
-        targetTemplateId: target?.templateId,
-        goalPath: target?.goalPath,
-        coreBlockId: target?.coreBlockId
-      });
-    }
-  }
-  return {
-    legacyRecordCount,
-    rewriteableCount,
-    unresolvedCount,
-    targetCount: Object.keys(targets).length,
-    samples
-  };
-}
-function itemHasLegacyOverrideMarker(item) {
-  const source = normalizeText$2(item.templateSourceType || item.extra?.["模板来源"] || item.extra?.["templateSourceType"]);
-  const templateId = normalizeText$2(item.templateId || item.extra?.["模板ID"] || item.extra?.["templateId"]);
-  return source === "override" || /^ovr_/.test(templateId);
 }
 const UNASSIGNED_GOAL_KEY = "未归属目标";
 function firstString(value) {
@@ -2610,8 +2299,8 @@ const DEFAULT_CORE_BLOCKS = [
     targetFile: "01/目标.md",
     appendUnderHeader: "## {{goalPath}}"
   }),
-  block({ id: CORE_BLOCK_IDS.PLAN, key: "plan", name: "计划", description: "目标周期计划。", categoryKey: "计划", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标计划.md", appendUnderHeader: "## {{goalPath}}" }),
-  block({ id: CORE_BLOCK_IDS.REVIEW, key: "review", name: "总结", description: "目标复盘总结。", categoryKey: "总结", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标总结.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.PLAN, key: "plan", name: "计划", description: "目标周期计划。", categoryKey: "计划", periodPolicy: { enabled: true, granularity: "week" }, fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 计划\n周期粒度:: {{period.granularity}}\n周期ID:: {{period.id}}\n周期:: {{period.label}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标计划.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.REVIEW, key: "review", name: "总结", description: "目标复盘总结。", categoryKey: "总结", periodPolicy: { enabled: true, granularity: "week" }, fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 总结\n周期粒度:: {{period.granularity}}\n周期ID:: {{period.id}}\n周期:: {{period.label}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标总结.md", appendUnderHeader: "## {{goalPath}}" }),
   block({ id: CORE_BLOCK_IDS.THOUGHT, key: "thought", name: "思考", description: "目标相关思考。", categoryKey: "思考", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: thought\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 思考\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标思考.md", appendUnderHeader: "## {{goalPath}}" }),
   block({ id: CORE_BLOCK_IDS.HABIT, key: "habit", name: "打卡", description: "目标习惯或进度打卡。", categoryKey: "打卡", fields: [contentField, themeField, dateField, { id: "core.habit.rating", key: "评分", label: "评分", type: "rating", semantic: "rating" }, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n评图:: {{评分.value}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标打卡.md", appendUnderHeader: "## {{goalPath}}" }),
   block({ id: CORE_BLOCK_IDS.EVIDENCE, key: "evidence", name: "事件", description: "目标相关事件、证据和外部反馈。", categoryKey: "事件", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: evidence\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 事件\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标事件.md", appendUnderHeader: "## {{goalPath}}" }),
@@ -5466,36 +5155,6 @@ function logSettingsWrite(meta, before, after) {
   emit$1("log", ["before:", safeStringify(before)], "settings");
   emit$1("log", ["after :", safeStringify(after)], "settings");
 }
-function normalizeCategoryKey(categoryKey) {
-  return String(categoryKey || "").trim().toLowerCase();
-}
-function isTaskCompletedByCategory(categoryKey) {
-  const key = normalizeCategoryKey(categoryKey);
-  return key === "完成任务" || key.endsWith("/done") || key.endsWith("/cancelled");
-}
-function getTaskStatus(item) {
-  if (!item || item.type !== "task") return "unknown";
-  if (item.cancelledDate) return "cancelled";
-  if (item.doneDate) return "done";
-  const categoryKey = normalizeCategoryKey(item.categoryKey);
-  if (categoryKey === "完成任务") return "done";
-  if (categoryKey === "未完成任务") return "open";
-  if (categoryKey.endsWith("/cancelled")) return "cancelled";
-  if (categoryKey.endsWith("/done")) return "done";
-  if (categoryKey.endsWith("/todo")) return "open";
-  const content = String(item.content || "").trim();
-  if (/^-\s*\[x\]/i.test(content)) return "done";
-  if (/^-\s*\[-\]/.test(content)) return "cancelled";
-  if (/^-\s*\[ \]/.test(content)) return "open";
-  return "unknown";
-}
-function isTaskCompleted(item) {
-  const status = getTaskStatus(item);
-  return status === "done" || status === "cancelled";
-}
-function isTaskOpen(item) {
-  return getTaskStatus(item) === "open";
-}
 function getExportConfigByViewType(viewType) {
   const configMap = {
     "BlockView": BLOCK_EXPORT_DEFAULT_CONFIG,
@@ -7337,8 +6996,152 @@ function getFieldEditPolicy(field, sampleValue) {
     reason: void 0
   };
 }
+const VIEW_LEGACY_FIELD_ALIASES = {
+  category: "coreBlock",
+  categoryPath: "coreBlock",
+  categoryKey: "coreBlock",
+  baseCategory: "coreBlock",
+  leafCategory: "coreBlock",
+  block: "coreBlock",
+  blockId: "coreBlock",
+  coreBlockId: "coreBlock",
+  cycleId: "period.id",
+  周期ID: "period.id",
+  periodId: "period.id",
+  period: "period.label",
+  周期: "period.label",
+  granularity: "period.granularity",
+  周期粒度: "period.granularity",
+  recurrence: "repeatToken",
+  repeat: "repeatToken",
+  重复: "repeatToken",
+  templateSourceType: "templateSource",
+  模板来源: "templateSource",
+  模板ID: "templateId",
+  目标: "goalPath",
+  目标ID: "goalId",
+  主题: "themePath",
+  核心Block: "coreBlock"
+};
+const TEMPLATE_SOURCE_FIELDS = /* @__PURE__ */ new Set(["templateSource", "templateSourceType"]);
+const VIEW_NOISY_DISPLAY_FIELDS = /* @__PURE__ */ new Set([
+  "templateSource",
+  "templateSourceType",
+  "templateId",
+  "period.id",
+  "period.label",
+  "period.granularity",
+  "repeatToken"
+]);
+function normalizeViewFieldKey(field) {
+  const raw = String(field || "").trim();
+  if (!raw) return "";
+  return VIEW_LEGACY_FIELD_ALIASES[raw] || raw;
+}
+function isNoisyViewDisplayField(field) {
+  return VIEW_NOISY_DISPLAY_FIELDS.has(normalizeViewFieldKey(field));
+}
+function isTemplateSourceViewField(field) {
+  return TEMPLATE_SOURCE_FIELDS.has(normalizeViewFieldKey(field));
+}
+function normalizeMultiValue$2(value) {
+  const rawValues = Array.isArray(value) ? value : [value];
+  return rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
+}
+function readLegacyTaskStatusValue(value) {
+  const values2 = normalizeMultiValue$2(value);
+  if (values2.some((text2) => text2 === "完成任务" || text2.endsWith("/done"))) return "done";
+  if (values2.some((text2) => text2.endsWith("/cancelled"))) return "cancelled";
+  if (values2.some((text2) => text2 === "未完成任务" || text2.endsWith("/todo"))) return "open";
+  return null;
+}
+function isLegacyCategoryRuleField(field) {
+  return ["category", "categoryKey", "categoryPath", "baseCategory", "leafCategory", "分类", "类别", "分类路径"].includes(String(field || "").trim());
+}
+function normalizeRuleValue(field, value) {
+  const normalizedField = normalizeViewFieldKey(field);
+  if (normalizedField !== "coreBlock") return value;
+  const mapOne = (item) => {
+    const text2 = String(item ?? "").trim();
+    if (text2 === "打卡") return "habit";
+    if (text2 === "任务" || text2 === "未完成任务" || text2 === "完成任务") return "task";
+    if (text2 === "计划") return "plan";
+    if (text2 === "总结") return "review";
+    if (text2 === "思考" || text2 === "闪念") return "thought";
+    if (text2 === "事件") return "evidence";
+    if (text2 === "阻碍项") return "blocker";
+    if (text2 === "里程碑") return "milestone";
+    if (text2.startsWith("core.")) return text2.slice("core.".length);
+    return item;
+  };
+  return Array.isArray(value) ? value.map(mapOne) : mapOne(value);
+}
+function normalizeViewFilters(filters) {
+  const result = [];
+  for (const rule of filters || []) {
+    const rawField = String(rule.field || "").trim();
+    const field = normalizeViewFieldKey(rawField);
+    if (!field || isTemplateSourceViewField(field)) continue;
+    const legacyTaskStatus = isLegacyCategoryRuleField(rawField) ? readLegacyTaskStatusValue(rule.value) : null;
+    if (legacyTaskStatus) {
+      result.push({ ...rule, field: "coreBlock", value: "task" });
+      result.push({ field: "taskStatus", op: rule.op, value: legacyTaskStatus });
+      continue;
+    }
+    result.push({ ...rule, field, value: normalizeRuleValue(field, rule.value) });
+  }
+  return result.map((rule, index) => {
+    const next2 = { ...rule };
+    if (index === result.length - 1) delete next2.logic;
+    else if (!next2.logic) next2.logic = "and";
+    return next2;
+  });
+}
+function normalizeViewSort(sort) {
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const rule of sort || []) {
+    const field = normalizeViewFieldKey(rule.field);
+    if (!field || isTemplateSourceViewField(field) || seen.has(field)) continue;
+    seen.add(field);
+    result.push({ ...rule, field });
+  }
+  return result;
+}
+function normalizeViewGroupFields(groupFields) {
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const field of groupFields || []) {
+    const key = normalizeViewFieldKey(field);
+    if (!key || isTemplateSourceViewField(key) || isNoisyViewDisplayField(key) || seen.has(key)) continue;
+    seen.add(key);
+    result.push(key);
+  }
+  return result;
+}
+function normalizeViewConfigDomain(viewConfig) {
+  if (!viewConfig) return viewConfig;
+  const next2 = { ...viewConfig };
+  for (const key of ["rowField", "colField", "valueField", "dateField", "groupField"]) {
+    if (next2[key]) next2[key] = normalizeViewFieldKey(next2[key]);
+  }
+  if (next2.groupBy === "category" || next2.groupBy === "categoryKey") next2.groupBy = "coreBlock";
+  if (Array.isArray(next2.categories) && next2.categories.length === 0) delete next2.categories;
+  if (Array.isArray(next2.themePaths) && next2.themePaths.length === 0) delete next2.themePaths;
+  return next2;
+}
+function normalizeViewInstanceDomain(view) {
+  return {
+    ...view,
+    group: view.group ? normalizeViewFieldKey(view.group) : view.group,
+    viewConfig: normalizeViewConfigDomain(view.viewConfig),
+    groupFields: normalizeViewGroupFields(view.groupFields || []),
+    filters: normalizeViewFilters(view.filters || []),
+    sort: normalizeViewSort(view.sort || [])
+  };
+}
 function normalizeDisplayFieldKey(field) {
-  return normalizeEditableFieldKey(field);
+  return normalizeEditableFieldKey(normalizeViewFieldKey(field));
 }
 function toNormalizedSet(fields) {
   if (!fields) return null;
@@ -7346,12 +7149,14 @@ function toNormalizedSet(fields) {
 }
 function normalizeDisplayFields(fields, options = {}) {
   const includeUnknown = options.includeUnknown !== false;
+  const includeNoisySystemFields = options.includeNoisySystemFields === true;
   const availableSet = toNormalizedSet(options.availableFields);
   const seen = /* @__PURE__ */ new Set();
   const result = [];
   for (const field of fields || []) {
     const key = normalizeDisplayFieldKey(field);
     if (!key || seen.has(key)) continue;
+    if (!includeNoisySystemFields && isNoisyViewDisplayField(key)) continue;
     if (availableSet && !availableSet.has(key) && !includeUnknown) continue;
     seen.add(key);
     result.push(key);
@@ -7394,6 +7199,9 @@ function leaf$1(path) {
   if (!text2) return "";
   return text2.split("/").filter(Boolean).pop() || text2;
 }
+function isAiVisibleField(field) {
+  return !isSystemRecordContextField(field?.key, field?.label, field?.semantic || field?.semanticType);
+}
 function normalizeField(field) {
   return {
     key: field.key,
@@ -7413,11 +7221,14 @@ function readThemePath(value) {
   return void 0;
 }
 function buildAiConfigSnapshot(input, ai, goalSettings) {
-  const enabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
-  const blocks = (input?.blocks ?? []).filter((b2) => !enabledSet || enabledSet.has(b2.id)).map((b2) => {
+  const rawEnabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
+  const inputBlocks = input?.blocks ?? [];
+  const hasEnabledBlockMatch = !!rawEnabledSet && inputBlocks.some((b2) => rawEnabledSet.has(b2.id) || rawEnabledSet.has(b2.coreBlockId || ""));
+  const enabledSet = hasEnabledBlockMatch ? rawEnabledSet : null;
+  const blocks = inputBlocks.filter((b2) => !enabledSet || enabledSet.has(b2.id) || enabledSet.has(b2.coreBlockId || "")).map((b2) => {
     const effective = input ? getEffectiveTemplate(input, b2.id, void 0) : void 0;
     const sourceFields = effective?.template?.fields ?? b2.fields ?? [];
-    const fields = sourceFields.map(normalizeField);
+    const fields = sourceFields.filter(isAiVisibleField).map(normalizeField);
     return {
       id: b2.id,
       name: b2.name,
@@ -7425,8 +7236,8 @@ function buildAiConfigSnapshot(input, ai, goalSettings) {
       fields
     };
   });
-  const blockById = new Map((input?.blocks ?? []).map((block2) => [block2.id, block2]));
-  const blockByCoreId = new Map((input?.blocks ?? []).map((block2) => [block2.coreBlockId || block2.id, block2]));
+  const blockById = new Map(inputBlocks.map((block2) => [block2.id, block2]));
+  const blockByCoreId = new Map(inputBlocks.map((block2) => [block2.coreBlockId || block2.id, block2]));
   const themes = (input?.themes ?? []).map((t3) => ({
     id: t3.id,
     path: t3.path,
@@ -7435,12 +7246,13 @@ function buildAiConfigSnapshot(input, ai, goalSettings) {
   const goals = (goalSettings?.goals ?? []).filter((goal) => goal.status !== "archived").map((goal) => ({
     id: goal.id,
     path: goal.goalPath || goal.title,
-    title: goal.title || leaf$1(goal.goalPath)
+    title: goal.title || leaf$1(goal.goalPath),
+    themePath: goal.themePath || null
   }));
   const goalPathById = new Map(goals.map((goal) => [goal.id, goal.path]));
   const goalPresets = getGoalTemplates(goalSettings).filter((preset) => preset.enabled !== false).filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId)).map((preset) => {
     const block2 = blockByCoreId.get(preset.coreBlockId) || blockById.get(preset.coreBlockId);
-    const fields = (preset.fields?.length ? preset.fields : block2?.fields || []).map(normalizeField);
+    const fields = (preset.fields?.length ? preset.fields : block2?.fields || []).filter(isAiVisibleField).map(normalizeField);
     const defaultThemePath = readThemePath(preset.defaultValues?.themePath) || readThemePath(preset.defaultValues?.["主题"]) || fields.map((field) => readThemePath(field.defaultValue)).find(Boolean);
     return {
       id: preset.id,
@@ -7449,10 +7261,11 @@ function buildAiConfigSnapshot(input, ai, goalSettings) {
       blockId: preset.coreBlockId,
       categoryKey: block2?.categoryKey || preset.coreBlockId,
       variantId: preset.variantId || "default",
+      goalTemplateId: preset.id,
       name: preset.name || preset.variantId || "默认预设",
       isDefault: !!preset.isDefault,
       themePath: defaultThemePath,
-      granularity: preset.granularity || "day",
+      periodPolicy: preset.periodPolicy,
       fields
     };
   });
@@ -7764,6 +7577,88 @@ function warnSlowParserStep(traceId, step, startedAt, thresholdMs, extra) {
     devWarn(`[AiInput][${traceId}][Parser] 慢步骤: ${step} (${duration2.toFixed(2)}ms, threshold=${thresholdMs}ms)`, extra ?? "");
   }
 }
+function ensureCommandTarget(item) {
+  if (!item.target || typeof item.target !== "object") item.target = {};
+  return item.target;
+}
+function cleanAiFieldValues(values2) {
+  const result = {};
+  if (!values2 || typeof values2 !== "object") return result;
+  for (const [key, value] of Object.entries(values2)) {
+    if (isSystemRecordContextField(key)) continue;
+    result[key] = value;
+  }
+  return result;
+}
+function findBlockByTarget(snapshot, target) {
+  const blocks = snapshot.blocks ?? [];
+  const blockId = String(target.blockId || "").trim();
+  const categoryKey = String(target.categoryKey || "").trim();
+  return blocks.find((block2) => block2.id === blockId) || blocks.find((block2) => block2.categoryKey === categoryKey || block2.name === categoryKey) || null;
+}
+function findGoalByTarget(snapshot, target) {
+  const goals = snapshot.goals ?? [];
+  const goalPath = String(target.goalPath || "").trim();
+  const goalId = String(target.goalId || "").trim();
+  return goals.find((goal) => goal.id === goalId) || goals.find((goal) => goal.path === goalPath || goal.title === goalPath) || null;
+}
+function findPresetByTarget(snapshot, target) {
+  const presets = snapshot.goalPresets ?? [];
+  const explicitId = String(target.goalTemplateId || target.templateId || "").trim();
+  const variantId = String(target.templateVariantId || target.goalTemplateVariantId || "").trim();
+  const goalPath = String(target.goalPath || "").trim();
+  const goalId = String(target.goalId || "").trim();
+  const blockId = String(target.blockId || "").trim();
+  const categoryKey = String(target.categoryKey || "").trim();
+  if (explicitId) {
+    const exact = presets.find((preset) => preset.id === explicitId || preset.goalTemplateId === explicitId);
+    if (exact) return exact;
+  }
+  const candidates = presets.filter((preset) => {
+    const goalMatches = !goalPath && !goalId ? true : preset.goalPath === goalPath || preset.goalId === goalId;
+    const blockMatches = !blockId && !categoryKey ? true : preset.blockId === blockId || preset.categoryKey === categoryKey;
+    return goalMatches && blockMatches;
+  });
+  if (variantId) {
+    const exactVariant = candidates.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.goalTemplateId === variantId);
+    if (exactVariant) return exactVariant;
+  }
+  return candidates.find((preset) => preset.isDefault) || candidates[0] || null;
+}
+function normalizeParsedBatch(batch, snapshot, rawText, defaultThemeId) {
+  if (!batch.items) batch.items = [];
+  batch.items.forEach((item) => {
+    if (!item.rawText) item.rawText = rawText;
+    const target = ensureCommandTarget(item);
+    item.fieldValues = cleanAiFieldValues(item.fieldValues);
+    const preset = findPresetByTarget(snapshot, target);
+    if (preset) {
+      target.goalTemplateId = preset.goalTemplateId || preset.id;
+      target.templateVariantId = preset.variantId;
+      target.goalId = preset.goalId;
+      target.goalPath = preset.goalPath;
+      target.blockId = preset.blockId;
+      target.categoryKey = preset.categoryKey;
+      if (!target.themeId && preset.themePath) target.themeId = preset.themePath;
+    }
+    const block2 = findBlockByTarget(snapshot, target);
+    if (block2) {
+      target.blockId = target.blockId || block2.id;
+      target.categoryKey = target.categoryKey || block2.categoryKey;
+    } else if (!target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
+      target.categoryKey = snapshot.blocks[0].categoryKey;
+      target.blockId = snapshot.blocks[0].id;
+    }
+    const goal = findGoalByTarget(snapshot, target);
+    if (goal) {
+      target.goalId = target.goalId || goal.id;
+      target.goalPath = target.goalPath || goal.path;
+      if (!target.themeId && goal.themePath) target.themeId = goal.themePath;
+    }
+    if (!target.themeId && defaultThemeId) target.themeId = defaultThemeId;
+  });
+  return batch;
+}
 function compactSnapshotForFastMode(snapshot) {
   return {
     blocks: (snapshot.blocks ?? []).map((block2) => ({
@@ -7787,6 +7682,7 @@ function compactSnapshotForFastMode(snapshot) {
       blockId: preset.blockId,
       categoryKey: preset.categoryKey,
       variantId: preset.variantId,
+      goalTemplateId: preset.goalTemplateId || preset.id,
       name: preset.name,
       themePath: preset.themePath
     }))
@@ -7941,30 +7837,16 @@ class AiNaturalLanguageRecordParser {
     });
     warnSlowParserStep(traceId, "解析 AI JSON", jsonParseStart, 100, { rawLength: raw.length });
     const normalizeStart = nowMs$1();
-    if (!batch.items) {
-      batch.items = [];
-    }
+    normalizeParsedBatch(batch, snapshot, input.text, ai.defaultThemeId);
     if (!ai.allowMultipleResults && batch.items.length > 1) {
       batch.items = batch.items.slice(0, 1);
     }
     if (effectiveMaxResults && batch.items.length > effectiveMaxResults) {
       batch.items = batch.items.slice(0, effectiveMaxResults);
     }
-    const defaultThemeId = ai.defaultThemeId;
-    batch.items.forEach((item) => {
-      if (!item.rawText) {
-        item.rawText = input.text;
-      }
-      if (!item.target.themeId && defaultThemeId) {
-        item.target.themeId = defaultThemeId;
-      }
-      if (!item.target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
-        item.target.categoryKey = snapshot.blocks[0].categoryKey;
-      }
-    });
     logParserStep(traceId, "结果兜底/规范化完成", normalizeStart, {
       itemsCount: batch.items.length,
-      defaultThemeIdApplied: !!defaultThemeId
+      defaultThemeIdApplied: !!ai.defaultThemeId
     });
     devLog(`[AiInput][${traceId}][Parser] parse completed (${formatMs$1(totalStart)})`, {
       itemsCount: batch.items.length,
@@ -7988,7 +7870,7 @@ class AiNaturalLanguageRecordParser {
     const themeExamples = (snapshot.themes ?? []).slice(0, 5).map((t3) => t3.path).join(", ") || "";
     const blockExamples = (snapshot.blocks ?? []).slice(0, 5).map((b2) => `${b2.id}(${b2.name})`).join(", ") || "";
     const goalExamples = (snapshot.goals ?? []).slice(0, 6).map((g2) => g2.path).join(", ") || "";
-    const presetExamples = (snapshot.goalPresets ?? []).slice(0, 8).map((p2) => `${p2.goalPath} × ${p2.categoryKey} → ${p2.name}${p2.themePath ? `(${p2.themePath})` : ""}`).join("；") || "";
+    const presetExamples = (snapshot.goalPresets ?? []).slice(0, 8).map((p2) => `${p2.goalPath} × ${p2.blockId || p2.categoryKey} → ${p2.name}${p2.themePath ? `(${p2.themePath})` : ""}`).join("；") || "";
     const basePrompt = [
       "You are a parser that converts natural language into Think plugin record commands.",
       "Return ONLY valid JSON. No markdown code blocks. No explanations. No extra text.",
@@ -8000,8 +7882,8 @@ class AiNaturalLanguageRecordParser {
       "{",
       '  "rawText": "original input text",',
       '  "target": {',
-      '    "categoryKey": "category-from-snapshot",',
-      '    "blockId": "optional-block-id-from-snapshot",',
+      '    "blockId": "core-block-id-from-snapshot",',
+      '    "categoryKey": "optional-legacy-category-label-from-snapshot",',
       '    "goalPath": "goal-path-from-snapshot",',
       '    "templateVariantId": "preset-variant-from-snapshot",',
       '    "themeId": "theme-path-from-selected-preset"',
@@ -8040,38 +7922,39 @@ class AiNaturalLanguageRecordParser {
       "",
       "GOAL / PRESET SELECTION:",
       "1. goalPath is REQUIRED when snapshot.goals is not empty. Use a FULL goal path from snapshot.goals[].path.",
-      "2. Choose block/category first, then choose the best preset from snapshot.goalPresets with the same goalPath and categoryKey/blockId.",
-      "3. If a preset clearly matches user words, return target.templateVariantId = that preset.variantId.",
+      "2. Choose blockId first, then choose the best preset from snapshot.goalPresets with the same goalPath and blockId. categoryKey is only a legacy helper.",
+      "3. If a preset clearly matches user words, return target.goalTemplateId = preset.goalTemplateId/id and target.templateVariantId = preset.variantId.",
       "4. If several presets match, prefer preset.isDefault or the closest themePath/name match.",
-      "5. themeId should come from the selected preset themePath when available. Theme is only a form default/stat dimension, not the main template selector.",
+      "5. themeId should come from the selected preset themePath or selected goal themePath. Theme is only a form default/stat dimension, not the main template selector.",
+      "6. Never output legacy templateSourceType values such as override, theme-fallback or goal-binding.",
       "",
-      "CATEGORY AND BLOCK SELECTION:",
-      "1. categoryKey is REQUIRED and must come from snapshot.blocks[].categoryKey",
-      "2. Prefer choosing categoryKey first; blockId is OPTIONAL",
-      "3. Return blockId when you can match snapshot.blocks[].id or snapshot.goalPresets[].blockId",
-      "4. Common patterns:",
-      '   - "任务"/"要做"/"待办" → categoryKey = "任务"',
-      '   - "计划" → categoryKey = "计划"',
-      '   - "总结"/"复盘" → categoryKey = "总结"',
-      '   - "打卡"/"记录状态" → categoryKey = "打卡"',
-      '   - "闪念"/"想法"/"灵感" → categoryKey = "闪念"',
-      '   - If the field values imply a subcategory (such as 闪念/感受, 思考), put that exact value into fieldValues and still keep categoryKey = "闪念"',
-      "5. Do not invent a new categoryKey that does not exist in snapshot.blocks[].categoryKey",
+      "BLOCK SELECTION:",
+      "1. blockId is REQUIRED and must come from snapshot.blocks[].id or snapshot.goalPresets[].blockId, e.g. core.task/core.habit/core.plan.",
+      "2. categoryKey is optional legacy display text. Return it only when it helps compatibility, and it must come from snapshot.blocks[].categoryKey.",
+      "3. Common patterns:",
+      '   - "任务"/"要做"/"待办" → blockId = "core.task"',
+      '   - "计划" → blockId = "core.plan"',
+      '   - "总结"/"复盘" → blockId = "core.review"',
+      '   - "打卡"/"记录状态" → blockId = "core.habit"',
+      '   - "闪念"/"想法"/"灵感" → blockId = "core.thought"',
+      "4. Do not invent blockId or categoryKey that does not exist in the snapshot.",
       "",
       "FIELD VALUES:",
-      "1. Keys MUST be from snapshot.blocks[].fields[].key",
+      "1. Keys MUST be from the selected preset.fields[].key when preset is selected; otherwise use snapshot.blocks[].fields[].key",
       "2. Date format: YYYY-MM-DD",
       "3. Time format: HH:mm",
       "4. Select/radio/rating: return the exact option.value or option.label from snapshot; the app will map it back to the configured option object",
       "5. Rating: use numeric value (1-5)",
       "6. Use current date/time if not specified in input",
+      "7. Do NOT put system context fields into fieldValues: goalId, goalPath, themePath, templateId, templateSourceType, templateVariantId, 周期, 周期ID, 周期粒度. Put goal/preset/theme information under target only.",
+      "8. For 计划/总结, do not invent 周期 fields. The app derives period from the selected preset periodPolicy and 日期.",
       "",
       "=== EXAMPLE ===",
-      'If user says "记录今天运动 30 分钟" and goal/preset include "#强健身体 × 打卡 → 运动打卡(健康/运动)":',
+      'If user says "记录今天运动 30 分钟" and goal/preset include "#强健身体 × core.habit → 运动打卡(健康/运动)":',
       "{",
       '  "items": [{',
       '    "rawText": "记录今天运动 30 分钟",',
-      '    "target": { "categoryKey": "打卡", "blockId": "core.habit", "goalPath": "#强健身体", "templateVariantId": "legacy-xxx", "themeId": "健康/运动" },',
+      '    "target": { "blockId": "core.habit", "categoryKey": "打卡", "goalPath": "#强健身体", "goalTemplateId": "goal-template.goal.health.core.habit.running", "templateVariantId": "running", "themeId": "健康/运动" },',
       '    "fieldValues": { "日期": "2024-01-15", "内容": "运动 30 分钟" },',
       '    "meta": { "confidence": 0.95 }',
       "  }]",
@@ -8086,10 +7969,10 @@ class AiNaturalLanguageRecordParser {
     const lines = [
       "You convert user text into Think plugin record commands.",
       "Return ONLY valid JSON. No markdown. No explanations.",
-      'Schema: {"items":[{"rawText":"...","target":{"categoryKey":"...","blockId":"optional","goalPath":"...","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
-      "Use only goalPath/categoryKey/blockId/templateVariantId/themeId/fields provided by user prompt.",
-      "If uncertain, choose the first plausible goal, preset/theme, and category.",
-      "Dates: YYYY-MM-DD. Times: HH:mm. Use current time if needed."
+      'Schema: {"items":[{"rawText":"...","target":{"blockId":"core.task","categoryKey":"optional legacy label","goalPath":"...","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
+      "Use only goalPath/blockId/categoryKey/goalTemplateId/templateVariantId/themeId/fields provided by user prompt.",
+      "If uncertain, choose the first plausible goal, preset/theme, and blockId.",
+      "Dates: YYYY-MM-DD. Times: HH:mm. Never put goal/theme/template/period system fields into fieldValues."
     ];
     if (customPrompt) {
       lines.push("", "User custom rules, highest priority:", customPrompt);
@@ -8119,7 +8002,7 @@ class AiNaturalLanguageRecordParser {
       "=== USER INPUT ===",
       text2,
       "",
-      "Return JSON with target.goalPath, target.categoryKey, target.blockId/templateVariantId when possible, and target.themeId filled:"
+      "Return JSON with target.goalPath, target.blockId, optional target.categoryKey, target.goalTemplateId/templateVariantId when possible, and target.themeId filled. Put only user-editable fields in fieldValues:"
     ].join("\n");
   }
   /**
@@ -8133,6 +8016,7 @@ class AiNaturalLanguageRecordParser {
       blockId: preset.blockId,
       categoryKey: preset.categoryKey,
       variantId: preset.variantId,
+      goalTemplateId: preset.goalTemplateId || preset.id,
       name: preset.name,
       themePath: preset.themePath
     }));
@@ -8162,7 +8046,7 @@ class AiNaturalLanguageRecordParser {
       "User input:",
       text2,
       "",
-      'Return JSON: {"items":[{"rawText":"...","target":{"goalPath":"...","categoryKey":"...","blockId":"...","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}'
+      'Return JSON: {"items":[{"rawText":"...","target":{"goalPath":"...","blockId":"...","categoryKey":"optional","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}'
     ].join("\n");
   }
 }
@@ -17146,10 +17030,10 @@ function buildRenderData(template, formData, theme2, templateMeta) {
   const goalId = String(normalizedData.goalId ?? normalizedData["目标ID"] ?? "").trim();
   const coreBlock = String(normalizedData.coreBlock ?? normalizedData["核心Block"] ?? template.coreBlockId ?? template.id ?? "").trim();
   const recordDate = String(normalizedData["日期"] ?? normalizedData.date ?? "").trim();
-  const goalGranularity = String(normalizedData.goalGranularity ?? normalizedData["目标粒度"] ?? normalizedData.granularity ?? "day").trim();
-  const derivedPeriod = resolveDerivedPeriod(recordDate || void 0, goalGranularity);
-  const cycleId = String(normalizedData.cycleId ?? normalizedData["周期ID"] ?? derivedPeriod.id ?? "").trim();
-  const cycleTitle = String(normalizedData.period ?? normalizedData["周期"] ?? derivedPeriod.label ?? "").trim();
+  const periodPolicy = resolveTemplatePeriodPolicy(template);
+  const derivedPeriod = periodPolicy ? resolveDerivedPeriod(recordDate || void 0, periodPolicy.granularity) : null;
+  const cycleId = derivedPeriod ? String(normalizedData.cycleId ?? normalizedData["周期ID"] ?? derivedPeriod.id ?? "").trim() : "";
+  const cycleTitle = derivedPeriod ? String(normalizedData.period ?? normalizedData["周期"] ?? derivedPeriod.label ?? "").trim() : "";
   const taskTokens = buildTaskRenderTokens(normalizedData);
   return {
     ...normalizedData,
@@ -17183,12 +17067,15 @@ function buildRenderData(template, formData, theme2, templateMeta) {
     rootGoal: goalParts[0] || "",
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
     coreBlock,
-    period: { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label },
-    cycle: { id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label, ...derivedPeriod },
-    cycleId: cycleId || derivedPeriod.id,
-    cycleTitle: cycleTitle || derivedPeriod.label,
-    periodId: cycleId || derivedPeriod.id,
-    periodLabel: cycleTitle || derivedPeriod.label,
+    period: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label } : null,
+    cycle: derivedPeriod ? { id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label, ...derivedPeriod } : null,
+    cycleId: derivedPeriod ? cycleId || derivedPeriod.id : "",
+    cycleTitle: derivedPeriod ? cycleTitle || derivedPeriod.label : "",
+    periodId: derivedPeriod ? cycleId || derivedPeriod.id : "",
+    periodLabel: derivedPeriod ? cycleTitle || derivedPeriod.label : "",
+    "周期粒度": derivedPeriod ? derivedPeriod.granularity : "",
+    "周期ID": derivedPeriod ? cycleId || derivedPeriod.id : "",
+    "周期": derivedPeriod ? cycleTitle || derivedPeriod.label : "",
     ...taskTokens,
     templateId: templateMeta?.templateId || template.id,
     templateSourceType: templateMeta?.templateSourceType || "block"
@@ -18066,14 +17953,22 @@ function mergeTemplate(base, patch) {
       ...required2.has(key) || required2.has(field.label || "") ? { required: true } : null
     };
   });
-  return {
+  const merged = {
     ...base,
     fields,
     outputTemplate: patch.outputTemplate ?? base.outputTemplate,
     targetFile: patch.targetFile ?? base.targetFile,
     appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
-    ...patch.granularity ? { granularity: patch.granularity } : null
+    periodPolicy: patch.periodPolicy ?? base.periodPolicy
   };
+  const policy = resolveTemplatePeriodPolicy(merged);
+  if (policy) {
+    merged.periodPolicy = policy;
+  } else {
+    delete merged.periodPolicy;
+    delete merged.granularity;
+  }
+  return merged;
 }
 class GoalTemplateResolver {
   static resolve(input) {
@@ -18111,7 +18006,9 @@ class GoalTemplateResolver {
       };
     }
     if (coreBlock) {
-      return { template: baseTemplate, theme: theme2, goal, templateId: coreBlock.id, templateSourceType: "core-block", effectiveBlockId, templateVariantId: null };
+      const policy = resolveTemplatePeriodPolicy(baseTemplate);
+      const template = policy ? { ...baseTemplate, periodPolicy: policy } : { ...baseTemplate, periodPolicy: void 0, granularity: void 0 };
+      return { template, theme: theme2, goal, templateId: coreBlock.id, templateSourceType: "core-block", effectiveBlockId, templateVariantId: null };
     }
     return { template: baseTemplate, theme: theme2, goal, templateId: legacyBase?.id || null, templateSourceType: "legacy-block", effectiveBlockId, templateVariantId: null };
   }
@@ -18204,9 +18101,17 @@ function extractGoalContext(input) {
   const templateVariantId = readFirstString(
     context.templateVariantId,
     context.goalTemplateVariantId,
+    context.goalTemplateId,
+    context.templateId,
+    context["模板ID"],
+    context["记录预设"],
     context["模板变体ID"],
     nested2.templateVariantId,
     nested2.goalTemplateVariantId,
+    nested2.goalTemplateId,
+    nested2.templateId,
+    nested2["模板ID"],
+    nested2["记录预设"],
     nested2["模板变体ID"]
   );
   return { goalId, goalPath, themePath, templateVariantId };
@@ -55107,7 +55012,22 @@ class ViewInstanceUseCase {
       await state.updateSettings((draft) => {
         if (!draft.viewInstances) return;
         const vi = draft.viewInstances.find((v2) => v2.id === id);
-        if (vi) Object.assign(vi, updates);
+        if (vi) {
+          const normalizedUpdates = { ...updates };
+          if (updates.fields) {
+            normalizedUpdates.fields = normalizeDisplayFields(updates.fields, { includeUnknown: true });
+          }
+          if (updates.groupFields) {
+            normalizedUpdates.groupFields = normalizeViewGroupFields(updates.groupFields);
+          }
+          if (updates.filters) {
+            normalizedUpdates.filters = normalizeViewFilters(updates.filters);
+          }
+          if (updates.sort) {
+            normalizedUpdates.sort = normalizeViewSort(updates.sort);
+          }
+          Object.assign(vi, normalizeViewInstanceDomain({ ...vi, ...normalizedUpdates }));
+        }
       });
     } catch (error) {
       devError("[ViewInstanceUseCase] updateView 失败:", error);
@@ -55197,7 +55117,7 @@ class ViewInstanceUseCase {
         if (!draft.viewInstances) return;
         const vi = draft.viewInstances.find((v2) => v2.id === id);
         if (!vi) return;
-        vi.fields = updater(vi.fields || []);
+        vi.fields = normalizeDisplayFields(updater(vi.fields || []), { includeUnknown: true });
       });
     } catch (error) {
       devError("[ViewInstanceUseCase] updateDisplayFields 失败:", error);
@@ -55948,7 +55868,6 @@ function normalizeGoalInput(input) {
     status: input.status || "active",
     parentGoalId: null,
     themePath: input.themePath ?? null,
-    granularity: input.granularity || "day",
     metrics: [],
     createdAt: timestamp,
     updatedAt: timestamp
@@ -55958,14 +55877,10 @@ function safeCycleId(input) {
   return `cycle.${input.goalId}.${input.startDate}.${input.endDate}`.replace(/[^a-z0-9_.-]/gi, "-");
 }
 class GoalUseCase {
-  constructor(store, dataStore, itemService) {
+  constructor(store) {
     this.store = store;
-    this.dataStore = dataStore;
-    this.itemService = itemService;
   }
   store;
-  dataStore;
-  itemService;
   async addGoal(input) {
     try {
       const state = this.store.getState();
@@ -55986,12 +55901,14 @@ class GoalUseCase {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return;
+      const safePatch = { ...patch };
+      delete safePatch.granularity;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
         const target = draft.goalSettings.goals.find((goal) => goal.id === id);
         if (!target) return;
-        Object.assign(target, patch, { updatedAt: nowIso() });
-        if (patch.goalPath || patch.title) {
+        Object.assign(target, safePatch, { updatedAt: nowIso() });
+        if (safePatch.goalPath || safePatch.title) {
           target.goalPath = splitGoalPath(target.goalPath || target.title).goalPath || target.goalPath;
         }
       });
@@ -56109,7 +56026,9 @@ class GoalUseCase {
           updatedAt: nowIso(),
           createdAt: template.createdAt || nowIso()
         };
-        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, next2);
+        const goal = draft.goalSettings.goals.find((item) => item.id === next2.goalId) || null;
+        const coreBlock = getCoreBlockById(draft, next2.coreBlockId);
+        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, compactGoalTemplateForStorage(next2, { coreBlock, goal }));
       });
     } catch (error) {
       devError("[GoalUseCase] upsertGoalTemplate failed:", error);
@@ -56134,6 +56053,7 @@ class GoalUseCase {
       fields: input.fields,
       defaultValues: input.defaultValues || {},
       requiredFields: input.requiredFields || [],
+      periodPolicy: input.periodPolicy,
       createdAt: timestamp,
       updatedAt: timestamp
     });
@@ -56163,242 +56083,9 @@ class GoalUseCase {
   async deleteGoalBlockBinding(goalId, coreBlockId, templateVariantId = "default") {
     return this.deleteGoalTemplate(goalId, coreBlockId, templateVariantId);
   }
-  async createGoalMigrationBackup() {
-    try {
-      if (!this.itemService) {
-        throw new Error("ItemService 不可用，无法创建迁移备份。");
-      }
-      const state = this.store.getState();
-      if (!state.isInitialized) {
-        return { backupRoot: "", settingsPath: "", markdownFileCount: 0, failedPaths: [] };
-      }
-      const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
-      const backupRoot = `ThinkOS/Backups/goal-migration-${stamp}`;
-      return await this.itemService.createMigrationBackup(backupRoot, state.settings);
-    } catch (error) {
-      devError("[GoalUseCase] createGoalMigrationBackup failed:", error);
-      throw error;
-    }
-  }
-  previewThemeOverrideGoalMigration(options = {}) {
-    const state = this.store.getState();
-    return buildThemeOverrideGoalMigrationPlan(state.settings, this.dataStore.queryItems(), {
-      includeDisabled: options.includeDisabled !== false,
-      themeGoalMap: options.themeGoalMap || {},
-      fallbackThemeAsGoal: false
-    });
-  }
-  async applyThemeOverrideGoalMigration(options = {}) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return { createdGoals: 0, createdTemplates: 0, clearedLegacyOverrides: 0 };
-      const includeDisabled = options.includeDisabled !== false;
-      const clearLegacyOverrides = options.clearLegacyOverrides !== false;
-      const plan = buildThemeOverrideGoalMigrationPlan(state.settings, this.dataStore.queryItems(), {
-        includeDisabled,
-        themeGoalMap: options.themeGoalMap || {},
-        fallbackThemeAsGoal: false
-      });
-      let createdGoals = 0;
-      let createdTemplates = 0;
-      let clearedLegacyOverrides = 0;
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const goalsByPath = new Map(draft.goalSettings.goals.map((goal) => [splitGoalPath(goal.goalPath || goal.title).goalPath || goal.id, goal]));
-        const existingTemplateIds = new Set((draft.goalSettings.goalBlockBindings || []).map((template) => template.id));
-        const cellCounts = /* @__PURE__ */ new Map();
-        const cellHasDefault = /* @__PURE__ */ new Set();
-        for (const candidate of plan.candidates) {
-          const existingGoal = goalsByPath.get(candidate.goalPath);
-          if (!existingGoal) {
-            const goal = buildGoalDefinitionFromThemeMigration(candidate, null);
-            draft.goalSettings.goals.push(goal);
-            goalsByPath.set(candidate.goalPath, goal);
-            createdGoals += 1;
-          }
-          const cellKey = `${candidate.goalId}::${candidate.coreBlockId}`;
-          const cellIndex = cellCounts.get(cellKey) || 0;
-          cellCounts.set(cellKey, cellIndex + 1);
-          const shouldBeDefault = candidate.enabled && !cellHasDefault.has(cellKey);
-          if (shouldBeDefault) cellHasDefault.add(cellKey);
-          const template = {
-            ...buildGoalTemplateFromThemeMigration(candidate),
-            isDefault: shouldBeDefault,
-            sortOrder: cellIndex * 10
-          };
-          if (!existingTemplateIds.has(template.id)) createdTemplates += 1;
-          draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, template);
-          existingTemplateIds.add(template.id);
-        }
-        if (clearLegacyOverrides && draft.inputSettings?.overrides) {
-          const migratedOverrideIds = new Set(plan.candidates.map((candidate) => candidate.overrideId));
-          const before = draft.inputSettings.overrides.length;
-          draft.inputSettings.overrides = draft.inputSettings.overrides.filter((override) => !migratedOverrideIds.has(override.id));
-          clearedLegacyOverrides = before - draft.inputSettings.overrides.length;
-        } else if (draft.inputSettings?.overrides) {
-          const migratedOverrideIds = new Set(plan.candidates.map((candidate) => candidate.overrideId));
-          draft.inputSettings.overrides = draft.inputSettings.overrides.map((override) => migratedOverrideIds.has(override.id) ? { ...override, disabled: true } : override);
-        }
-      });
-      return { createdGoals, createdTemplates, clearedLegacyOverrides };
-    } catch (error) {
-      devError("[GoalUseCase] applyThemeOverrideGoalMigration failed:", error);
-      throw error;
-    }
-  }
-  previewThemeOverrideRecordMigration(limit = 20) {
-    const state = this.store.getState();
-    return buildThemeOverrideRecordMigrationPreview(state.settings, this.dataStore.queryItems(), limit);
-  }
-  async applyThemeOverrideRecordMigration(_limit = 500) {
-    const emptyResult = {
-      updated: 0,
-      failed: 0,
-      skipped: 0,
-      taskInlineUpdated: 0,
-      blockMetadataUpdated: 0,
-      unresolved: 0
-    };
-    try {
-      if (!this.itemService) return emptyResult;
-      const state = this.store.getState();
-      if (!state.isInitialized) return emptyResult;
-      const byOverrideId = new Map(Object.entries(buildLegacyOverrideTemplateTargets(state.settings)));
-      const plan = buildThemeOverrideGoalMigrationPlan(state.settings, this.dataStore.queryItems(), {
-        includeDisabled: true,
-        fallbackThemeAsGoal: false
-      });
-      for (const candidate of plan.candidates) {
-        if (!byOverrideId.has(candidate.overrideId)) byOverrideId.set(candidate.overrideId, candidate);
-      }
-      const legacyItems = this.dataStore.queryItems().filter((item) => {
-        const source = String(item.templateSourceType || item.extra?.["模板来源"] || "").trim();
-        const templateId = String(item.templateId || item.extra?.["模板ID"] || "").trim();
-        return source === "override" || /^ovr_/.test(templateId);
-      });
-      const items = legacyItems.filter((item) => {
-        const templateId = String(item.templateId || item.extra?.["模板ID"] || "").trim();
-        return templateId && byOverrideId.has(templateId);
-      }).slice(0, Math.max(1, _limit));
-      let updated = 0;
-      let failed = 0;
-      let skipped = Math.max(0, legacyItems.length - items.length);
-      let taskInlineUpdated = 0;
-      let blockMetadataUpdated = 0;
-      const unresolved = legacyItems.filter((item) => {
-        const templateId = String(item.templateId || item.extra?.["模板ID"] || "").trim();
-        return !templateId || !byOverrideId.has(templateId);
-      }).length;
-      for (const item of items) {
-        const oldTemplateId = String(item.templateId || item.extra?.["模板ID"] || "").trim();
-        const candidate = byOverrideId.get(oldTemplateId);
-        if (!candidate) {
-          skipped += 1;
-          continue;
-        }
-        try {
-          const fields = {
-            "模板来源": "goal-template",
-            "模板ID": candidate.templateId,
-            "目标ID": candidate.goalId,
-            "目标": candidate.goalPath,
-            "核心Block": candidate.coreBlockId
-          };
-          if (candidate.themePath) fields["主题"] = candidate.themePath;
-          const result = await this.itemService.upsertItemGoalTemplateMigrationFields(item.id, fields, { autoRefresh: false });
-          if (result.shape === "block-metadata") blockMetadataUpdated += 1;
-          else taskInlineUpdated += 1;
-          updated += 1;
-        } catch (error) {
-          failed += 1;
-          devError("[GoalUseCase] applyThemeOverrideRecordMigration item failed:", error);
-        }
-      }
-      if (updated > 0) {
-        await this.dataStore.clearCacheAndRescan("warm");
-      }
-      return { updated, failed, skipped, taskInlineUpdated, blockMetadataUpdated, unresolved };
-    } catch (error) {
-      devError("[GoalUseCase] applyThemeOverrideRecordMigration failed:", error);
-      throw error;
-    }
-  }
-  async cleanupLegacyThemeOverrides() {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return { removedOverrides: 0, remainingThemes: 0 };
-      let removedOverrides = 0;
-      let remainingThemes = 0;
-      await state.updateSettings((draft) => {
-        const overrides = draft.inputSettings?.overrides || [];
-        removedOverrides = overrides.length;
-        if (draft.inputSettings) {
-          draft.inputSettings.overrides = [];
-          remainingThemes = draft.inputSettings.themes?.length || 0;
-        }
-      });
-      return { removedOverrides, remainingThemes };
-    } catch (error) {
-      devError("[GoalUseCase] cleanupLegacyThemeOverrides failed:", error);
-      throw error;
-    }
-  }
-  previewLegacyGoalMigration() {
-    const state = this.store.getState();
-    const goals = state.settings.goalSettings?.goals || [];
-    return inferGoalCandidatesFromItems(this.dataStore.queryItems(), goals);
-  }
-  previewMarkdownGoalBackfill(limit = 20) {
-    const state = this.store.getState();
-    return buildGoalMarkdownBackfillPreview(this.dataStore.queryItems(), state.settings.goalSettings?.goals || [], limit);
-  }
-  previewMarkdownGoalBackfillDiff(limit = 20) {
-    const state = this.store.getState();
-    return buildGoalMarkdownBackfillDiffPreview(this.dataStore.queryItems(), state.settings.goalSettings?.goals || [], limit);
-  }
-  async applyMarkdownGoalBackfill(_limit = 200) {
-    return { updated: 0, failed: 0, paths: [] };
-  }
-  async applyLegacyGoalMigration(candidates) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return { createdGoals: 0, relationCount: 0 };
-      const sourceItems = this.dataStore.queryItems();
-      const preview = candidates || inferGoalCandidatesFromItems(sourceItems, state.settings.goalSettings?.goals || []);
-      let createdGoals = 0;
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const goalsByPath = new Map(draft.goalSettings.goals.map((goal) => [splitGoalPath(goal.goalPath || goal.title).goalPath, goal]));
-        for (const candidate of preview) {
-          const path = splitGoalPath(candidate.goalPath).goalPath;
-          if (!path || goalsByPath.has(path)) continue;
-          const timestamp = nowIso();
-          const goal = {
-            id: candidate.id || makeStableGoalIdFromPath(path),
-            title: candidate.title || path.split("/").filter(Boolean).pop() || path,
-            goalPath: path,
-            status: "active",
-            parentGoalId: null,
-            themePath: null,
-            granularity: "day",
-            metrics: [],
-            createdAt: timestamp,
-            updatedAt: timestamp
-          };
-          draft.goalSettings.goals.push(goal);
-          goalsByPath.set(path, goal);
-          createdGoals += 1;
-        }
-      });
-      return { createdGoals, relationCount: 0 };
-    } catch (error) {
-      devError("[GoalUseCase] applyLegacyGoalMigration failed:", error);
-      throw error;
-    }
-  }
 }
-function createGoalUseCase(store, deps) {
-  return new GoalUseCase(store, deps.dataStore, deps.itemService);
+function createGoalUseCase(store) {
+  return new GoalUseCase(store);
 }
 const USECASES_TOKEN = "UseCases";
 function createUseCases(store, deps) {
@@ -56414,7 +56101,7 @@ function createUseCases(store, deps) {
       itemService: deps.itemService,
       dataStore: deps.dataStore
     }),
-    goal: createGoalUseCase(store, { dataStore: deps.dataStore, itemService: deps.itemService })
+    goal: createGoalUseCase(store)
   };
 }
 const runtimeCache = /* @__PURE__ */ new Map();
@@ -57195,31 +56882,8 @@ function HierarchySingleSelect({
     ] })
   ] });
 }
-const SYSTEM_CONTEXT_FIELD_KEYS = /* @__PURE__ */ new Set([
-  "goalId",
-  "目标ID",
-  "goalPath",
-  "目标",
-  "rootGoal",
-  "leafGoal",
-  "coreBlock",
-  "coreBlockId",
-  "核心Block",
-  "cycleId",
-  "周期ID",
-  "周期",
-  "periodId",
-  "period",
-  "goalGranularity",
-  "themeId",
-  "rootTheme",
-  "leafTheme"
-]);
 function isSystemContextField(field) {
-  const key = String(field.key || "").trim();
-  const label = String(field.label || "").trim();
-  const semantic = String(getTemplateFieldSemantic(field) || "").trim();
-  return SYSTEM_CONTEXT_FIELD_KEYS.has(key) || SYSTEM_CONTEXT_FIELD_KEYS.has(label) || ["goalId", "goalPath", "goalPaths", "goals", "coreBlock", "cycleId", "period"].includes(semantic);
+  return isSystemRecordContextField(field.key, field.label, String(getTemplateFieldSemantic(field) || ""));
 }
 function toArrayValue(value) {
   if (Array.isArray(value)) return value.map((v2) => String(typeof v2 === "object" && v2 !== null ? v2.value ?? v2.label ?? "" : v2)).filter(Boolean);
@@ -57795,13 +57459,9 @@ function SnapshotSummary({
   if (currentPeriodLabel) chips.push({ label: "周期", value: currentPeriodLabel });
   if (templateSourceType) {
     const sourceLabelMap = {
-      override: "主题覆盖",
-      block: "Block 默认",
       "core-block": "核心Block",
-      "theme-fallback": "旧主题兼容",
       "goal-template": "目标记录预设",
-      "goal-binding": "旧目标记录预设",
-      "legacy-block": "旧Block"
+      "legacy-block": "自定义Block"
     };
     chips.push({ label: "记录方式", value: sourceLabelMap[templateSourceType] || templateSourceType });
   }
@@ -57913,21 +57573,26 @@ function QuickInputEditorView({
         block2.id
       )) }) })
     ] }),
-    templateVariants.length > 1 && /* @__PURE__ */ u2(Box, { children: [
+    templateVariants.length > 0 && /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(SectionTitle, { title: "记录预设", compact: true }),
-      /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: templateVariants.map((variant) => /* @__PURE__ */ u2(
-        SelectablePill,
-        {
-          selected: (selectedTemplateVariantId || "default") === variant.value,
-          onClick: () => onSelectTemplateVariant?.(variant.value),
-          title: variant.isDefault ? `${variant.label}（默认）` : variant.label,
-          children: [
-            variant.label,
-            variant.isDefault ? " · 默认" : ""
-          ]
-        },
-        variant.value
-      )) }) })
+      /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: templateVariants.map((variant) => {
+        const isSelected = (selectedTemplateVariantId || "default") === variant.value;
+        return /* @__PURE__ */ u2(
+          SelectablePill,
+          {
+            selected: isSelected,
+            disabled: templateVariants.length <= 1,
+            onClick: () => templateVariants.length > 1 ? onSelectTemplateVariant?.(variant.value) : void 0,
+            title: variant.isDefault ? `${variant.label}（默认）` : variant.label,
+            children: [
+              variant.label,
+              variant.isDefault ? " · 默认" : ""
+            ]
+          },
+          variant.value
+        );
+      }) }) }),
+      templateVariants.length === 1 && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mt: 0.6 }, children: "当前目标和记录类型只有一个预设，已自动选择。" })
     ] }),
     showDivider && /* @__PURE__ */ u2(Divider2, { sx: { my: dense ? 0.1 : 0.2, opacity: 0.55 } }),
     /* @__PURE__ */ u2(
@@ -58059,7 +57724,7 @@ function QuickInputEditor({
   const [selectedThemeId, setSelectedThemeId] = d(initialThemeId);
   const [selectedGoalId, setSelectedGoalId] = d(() => String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null);
   const [selectedGoalPath, setSelectedGoalPath] = d(() => splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")).goalPath);
-  const [selectedTemplateVariantId, setSelectedTemplateVariantId] = d(() => String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.__goalContext?.templateVariantId ?? "").trim() || null);
+  const [selectedTemplateVariantId, setSelectedTemplateVariantId] = d(() => String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? "").trim() || null);
   const [selectedCycleId, setSelectedCycleId] = d(() => String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null);
   const [formData, setFormData] = d(() => initialFormData ?? EMPTY_FORM_DATA);
   const [fieldSources, setFieldSources] = d(() => buildInitialFieldSources(initialFormData));
@@ -58072,7 +57737,7 @@ function QuickInputEditor({
     setTimeDirection(initialFormData?.__timeDirection === "backward" ? "backward" : "forward");
     setSelectedGoalId(String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null);
     setSelectedGoalPath(splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")).goalPath);
-    setSelectedTemplateVariantId(String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.__goalContext?.templateVariantId ?? "").trim() || null);
+    setSelectedTemplateVariantId(String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? "").trim() || null);
     setSelectedCycleId(String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null);
   }, [initialBlockId, initialThemeId, context]);
   const blocks = T$1(() => {
@@ -58081,17 +57746,12 @@ function QuickInputEditor({
   }, [fullSettings, settings.blocks]);
   const themes = T$1(() => settings.themes || [], [settings.themes]);
   const { availableThemes, themeIdMap, pathToIdMap } = T$1(() => {
-    const disabledThemeIds = /* @__PURE__ */ new Set();
-    (settings.overrides || []).forEach((override) => {
-      if (override.blockId === currentBlockId && override.disabled) disabledThemeIds.add(override.themeId);
-    });
-    const availableThemes2 = (themes || []).filter((t3) => !disabledThemeIds.has(t3.id));
     return {
-      availableThemes: availableThemes2,
+      availableThemes: themes || [],
       themeIdMap: new Map((themes || []).map((t3) => [t3.id, t3])),
       pathToIdMap: new Map((themes || []).map((t3) => [t3.path, t3.id]))
     };
-  }, [settings, themes, currentBlockId]);
+  }, [themes]);
   const selectedGoal = T$1(() => {
     const goals = fullSettings.goalSettings?.goals || [];
     return (selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) : null) || (selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) : null) || null;
@@ -58161,8 +57821,10 @@ function QuickInputEditor({
   const currentGoalTitle = selectedGoal?.title || resolvedGoal?.title || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData["日期"] ?? formData.date ?? dayjs().format("YYYY-MM-DD")).trim();
-  const effectiveGranularity = String(rawTemplate?.granularity || "day");
-  const currentPeriod = resolveDerivedPeriod(currentRecordDate || dayjs().format("YYYY-MM-DD"), effectiveGranularity);
+  const periodPolicy = resolveTemplatePeriodPolicy(rawTemplate);
+  const currentPeriod = periodPolicy ? resolveDerivedPeriod(currentRecordDate || dayjs().format("YYYY-MM-DD"), periodPolicy.granularity) : null;
+  const currentPeriodFields = currentPeriod ? { cycleId: currentPeriod.id, periodId: currentPeriod.id, periodLabel: currentPeriod.label, "周期ID": currentPeriod.id, "周期": currentPeriod.label, "周期粒度": currentPeriod.granularity } : {};
+  const currentPeriodOptions = currentPeriod ? { cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }], "周期ID": [{ value: currentPeriod.id, label: currentPeriod.label }], "周期": [{ value: currentPeriod.label, label: currentPeriod.label }] } : {};
   const template = T$1(() => {
     if (!rawTemplate?.fields?.length) return rawTemplate;
     const themeFieldOptions = themeOptions(availableThemes);
@@ -58203,12 +57865,13 @@ function QuickInputEditor({
       goal: { id: selectedGoal?.id || selectedGoalId || "", title: currentGoalTitle || "", path: currentGoalPath || "", themePath: selectedGoal?.themePath || theme2?.path || "" },
       goalId: selectedGoal?.id || selectedGoalId || "",
       goalPath: currentGoalPath || "",
-      period: currentPeriod,
-      cycle: { id: currentPeriod.id, title: currentPeriod.label, startDate: currentPeriod.startDate, endDate: currentPeriod.endDate },
-      cycleId: currentPeriod.id,
-      periodId: currentPeriod.id,
-      periodLabel: currentPeriod.label,
-      goalGranularity: effectiveGranularity,
+      ...currentPeriod ? {
+        period: currentPeriod,
+        cycle: { id: currentPeriod.id, title: currentPeriod.label, startDate: currentPeriod.startDate, endDate: currentPeriod.endDate },
+        cycleId: currentPeriod.id,
+        periodId: currentPeriod.id,
+        periodLabel: currentPeriod.label
+      } : {},
       theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : { path: selectedGoal?.themePath || "", icon: "" }
     };
     setFormData((current2) => {
@@ -58284,7 +57947,7 @@ function QuickInputEditor({
       setFieldSources(nextSources);
       return next2;
     });
-  }, [template, theme2, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, effectiveGranularity, selectedGoalId, currentPeriod.id, currentPeriod.label, currentGoalPath, currentGoalTitle]);
+  }, [template, theme2, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle]);
   y(() => {
     const presetThemePath = String(formData.themePath ?? formData["主题"] ?? "").trim();
     if (!presetThemePath) return;
@@ -58303,9 +57966,9 @@ function QuickInputEditor({
       goalTitle: currentGoalTitle,
       rootGoal: currentGoalParts.root,
       leafGoal: currentGoalParts.leaf,
-      cycleId: currentPeriod.id,
+      cycleId: currentPeriod?.id || null,
       themeId: selectedThemeId,
-      formData: { ...formData, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, cycleId: currentPeriod.id, "周期ID": currentPeriod.id, "周期": currentPeriod.label, goalGranularity: effectiveGranularity, __timeDirection: timeDirection },
+      formData: { ...formData, templateId: templateId || void 0, goalTemplateId: templateId || void 0, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, ...currentPeriodFields, __timeDirection: timeDirection },
       meta: { timeDirection },
       template,
       theme: currentTheme,
@@ -58329,9 +57992,9 @@ function QuickInputEditor({
       goalTitle: currentGoalTitle,
       rootGoal: currentGoalParts.root,
       leafGoal: currentGoalParts.leaf,
-      cycleId: currentPeriod.id,
+      cycleId: currentPeriod?.id || null,
       themeId: selectedThemeId,
-      formData: { ...draftFormData, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, cycleId: currentPeriod.id, "周期ID": currentPeriod.id, "周期": currentPeriod.label, goalGranularity: effectiveGranularity, __timeDirection: directionOverride },
+      formData: { ...draftFormData, templateId: templateId || void 0, goalTemplateId: templateId || void 0, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, ...currentPeriodFields, __timeDirection: directionOverride },
       meta: { timeDirection: directionOverride },
       template,
       theme: currentTheme,
@@ -58392,7 +58055,7 @@ function QuickInputEditor({
     if (newBlockId === currentBlockId) return;
     const preserved = {};
     const preservedSources = {};
-    ["内容", "content", "日期", "date", "时间", "time", "备注", "note", "description", "目标", "目标ID", "goalId", "goalPath", "cycleId", "周期ID", "周期", "themePath", "主题"].forEach((k2) => {
+    ["内容", "content", "日期", "date", "时间", "time", "备注", "note", "description", "目标", "目标ID", "goalId", "goalPath", "themePath", "主题"].forEach((k2) => {
       if (formData[k2] !== void 0) preserved[k2] = formData[k2];
       if (fieldSources[k2]) preservedSources[k2] = fieldSources[k2];
     });
@@ -58452,12 +58115,7 @@ function QuickInputEditor({
         assign2("themePath", themePath, "goal_context");
         assign2("主题", themePath, "goal_context");
       }
-      const period = resolveDerivedPeriod(String(next2["日期"] ?? next2.date ?? dayjs().format("YYYY-MM-DD")).trim() || dayjs().format("YYYY-MM-DD"), goal?.granularity || "day");
-      assign2("cycleId", period.id, "system_auto");
-      assign2("周期ID", period.id, "system_auto");
-      assign2("周期", period.label, "system_auto");
-      assign2("goalGranularity", goal?.granularity || "day", "goal_context");
-      setSelectedCycleId(period.id);
+      setSelectedCycleId(null);
       setFieldSources(nextSources);
       return next2;
     });
@@ -58482,11 +58140,11 @@ function QuickInputEditor({
       selectedTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId,
       onSelectTemplateVariant: setSelectedTemplateVariantId,
       cycles: [],
-      selectedCycleId: currentPeriod.id,
+      selectedCycleId: currentPeriod?.id || null,
       onSelectCycle: void 0,
       template,
       formData,
-      fieldValueOptionsByKey: { themePath: themeOptions(availableThemes), "主题": themeOptions(availableThemes), cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }], "周期ID": [{ value: currentPeriod.id, label: currentPeriod.label }], "周期": [{ value: currentPeriod.label, label: currentPeriod.label }] },
+      fieldValueOptionsByKey: { themePath: themeOptions(availableThemes), "主题": themeOptions(availableThemes), ...currentPeriodOptions },
       timeDirection,
       dense,
       showDivider,
@@ -58496,7 +58154,7 @@ function QuickInputEditor({
       isMobileLike,
       showTimeDirectionControl,
       currentThemePath: String(formData.themePath ?? formData["主题"] ?? theme2?.path ?? selectedGoal?.themePath ?? "") || null,
-      currentPeriodLabel: currentPeriod.label,
+      currentPeriodLabel: currentPeriod?.label || null,
       templateSourceType,
       fieldSourceSummary: buildFieldSourceSummary(fieldSources)
     }
@@ -59590,6 +59248,20 @@ function readPresetThemePath(preset) {
   if (typeof raw === "object" && raw && "value" in raw) return String(raw.value || "").trim() || void 0;
   return void 0;
 }
+function shortDisplay(value, fallback = "—", max2 = 32) {
+  const text2 = String(value ?? "").trim();
+  if (!text2) return fallback;
+  return text2.length > max2 ? `${text2.slice(0, max2 - 1)}…` : text2;
+}
+function presetDisplayName(preset) {
+  if (!preset) return "CoreBlock 默认";
+  return String(preset.name || preset.variantId || "默认预设").trim() || "默认预设";
+}
+function goalDisplayName(goal, goalPath) {
+  if (goal?.title) return String(goal.title);
+  const normalized = splitGoalPath(String(goal?.goalPath || goalPath || "")).leafGoal;
+  return normalized || String(goalPath || "未匹配目标");
+}
 class AiBatchConfirmModal extends obsidian.Modal {
   constructor(app, args) {
     super(app);
@@ -59696,6 +59368,9 @@ function AiBatchConfirmForm({
         cmd,
         blockId: block2?.id || "",
         themeId,
+        goalLabel: goalDisplayName(goal, goalPath),
+        presetLabel: presetDisplayName(preset),
+        themePath,
         formData: normalizeAiFormData(initialTemplate ?? void 0, initialFormData),
         saved: false,
         skipped: false
@@ -59862,7 +59537,14 @@ function AiBatchConfirmForm({
                     ListItemText2,
                     {
                       primary: /* @__PURE__ */ u2(Typography2, { variant: "body2", noWrap: true, sx: { fontWeight: isActive ? 600 : 400 }, children: block2?.name || "未知类型" }),
-                      secondary: /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
+                      secondary: /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
+                        /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", sx: { display: "block" }, children: [
+                          shortDisplay(record.goalLabel, "未匹配目标", 18),
+                          " · ",
+                          shortDisplay(record.presetLabel, "默认预设", 18)
+                        ] }),
+                        /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", sx: { display: "block" }, children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
+                      ] })
                     }
                   )
                 ]
@@ -59891,7 +59573,12 @@ function AiBatchConfirmForm({
               " 条记录"
             ] }),
             currentRecord.saved && /* @__PURE__ */ u2(Chip2, { label: "已保存", color: "success", size: "small", sx: { ml: 1 } }),
-            currentRecord.skipped && /* @__PURE__ */ u2(Chip2, { label: "已跳过", color: "default", size: "small", sx: { ml: 1 } })
+            currentRecord.skipped && /* @__PURE__ */ u2(Chip2, { label: "已跳过", color: "default", size: "small", sx: { ml: 1 } }),
+            /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1 }, children: [
+              /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `目标：${shortDisplay(currentRecord.goalLabel, "未匹配")}` }),
+              /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `预设：${shortDisplay(currentRecord.presetLabel, "CoreBlock 默认")}` }),
+              /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `主题：${shortDisplay(currentRecord.themePath, "未指定")}` })
+            ] })
           ] }),
           onClose: closeModal
         }
@@ -62247,12 +61934,12 @@ const DEFAULT_QUICK_FILTER_FIELDS = [
   { field: "goalPath", label: "目标", help: "目标中心主筛选字段，优先用目标路径聚合任务/计划/总结/打卡。", placeholder: "选择目标" },
   { field: "goalPaths", label: "目标列表", placeholder: "选择目标" },
   { field: "goalId", label: "目标ID", help: "稳定目标 ID，适合目标实体化后的精确筛选。", placeholder: "输入目标ID" },
-  { field: "coreBlock", label: "核心Block", help: "按 task/plan/review/thought/habit/evidence/blocker/milestone 分组筛选。", placeholder: "选择核心Block" },
+  { field: "coreBlock", label: "记录类型", help: "Goal × Block 主链字段，按 task/plan/review/thought/habit/evidence/blocker/milestone 筛选。旧分类筛选会自动归一到 coreBlock。", placeholder: "选择记录类型" },
   { field: "themePath", label: "主题", help: "主题已降级为表单层级单选字段，但仍可用于上下文筛选。", placeholder: "选择主题" },
-  { field: "baseCategory", label: "分类", help: "不同字段之间默认表示“且”：目标匹配后还要分类匹配。", placeholder: "选择分类" },
+  { field: "taskStatus", label: "任务状态", help: "由任务勾选框 / 完成日期推导，代替旧的“完成任务 / 未完成任务”分类。", placeholder: "选择任务状态" },
   { field: "type", label: "类型", placeholder: "选择记录类型" },
   { field: "priority", label: "优先级", placeholder: "选择优先级" },
-  { field: "period", label: "时间粒度", placeholder: "选择粒度" }
+  { field: "period.label", label: "周期", help: "仅计划 / 总结类记录有周期。", placeholder: "选择周期" }
 ];
 function normalizeMultiValue(value) {
   const rawValues = Array.isArray(value) ? value : [value];
@@ -62261,9 +61948,10 @@ function normalizeMultiValue(value) {
 }
 function collectFieldValues(items, fields) {
   const valueMap = {};
-  fields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
+  fields.forEach((field) => valueMap[normalizeViewFieldKey(field)] = /* @__PURE__ */ new Set());
   for (const item of items) {
-    for (const field of fields) {
+    for (const rawField of fields) {
+      const field = normalizeViewFieldKey(rawField);
       const value = readField(item, field);
       if (value === null || value === void 0 || String(value).trim() === "") continue;
       const values2 = Array.isArray(value) ? value : [value];
@@ -62274,7 +61962,8 @@ function collectFieldValues(items, fields) {
     }
   }
   const result = {};
-  fields.forEach((field) => {
+  fields.forEach((rawField) => {
+    const field = normalizeViewFieldKey(rawField);
     result[field] = Array.from(valueMap[field] || []).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
   });
   return result;
@@ -62291,30 +61980,32 @@ function cleanupRuleLinks(rules) {
   });
 }
 function getQuickRule(filters, field) {
-  return filters.find((rule) => rule.field === field && rule.op === "in");
+  const normalizedField = normalizeViewFieldKey(field);
+  return filters.find((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
 }
 function upsertQuickRule(filters, field, values2) {
   const cleanValues = normalizeMultiValue(values2);
-  const existingIndex = filters.findIndex((rule) => rule.field === field && rule.op === "in");
+  const normalizedField = normalizeViewFieldKey(field);
+  const existingIndex = filters.findIndex((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
   if (cleanValues.length === 0) {
     if (existingIndex < 0) return cleanupRuleLinks(filters);
     return cleanupRuleLinks(filters.filter((_2, index) => index !== existingIndex));
   }
   if (existingIndex >= 0) {
-    return cleanupRuleLinks(filters.map((rule, index) => index === existingIndex ? { ...rule, value: cleanValues } : { ...rule }));
+    return cleanupRuleLinks(filters.map((rule, index) => index === existingIndex ? { ...rule, field: normalizedField, value: cleanValues } : { ...rule }));
   }
   return cleanupRuleLinks([
     ...filters.map((rule) => ({ ...rule })),
-    { field, op: "in", value: cleanValues }
+    { field: normalizedField, op: "in", value: cleanValues }
   ]);
 }
 function hasAnyQuickFilter(filters, fields) {
-  const fieldSet = new Set(fields.map((f2) => f2.field));
-  return filters.some((rule) => fieldSet.has(rule.field) && rule.op === "in" && normalizeMultiValue(rule.value).length > 0);
+  const fieldSet = new Set(fields.map((f2) => normalizeViewFieldKey(f2.field)));
+  return filters.some((rule) => fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in" && normalizeMultiValue(rule.value).length > 0);
 }
 function clearQuickFilters(filters, fields) {
-  const fieldSet = new Set(fields.map((f2) => f2.field));
-  return cleanupRuleLinks(filters.filter((rule) => !(fieldSet.has(rule.field) && rule.op === "in")));
+  const fieldSet = new Set(fields.map((f2) => normalizeViewFieldKey(f2.field)));
+  return cleanupRuleLinks(filters.filter((rule) => !(fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in")));
 }
 function describeQuickSummary(filters, fields) {
   const parts = fields.map((config2) => {
@@ -62338,9 +62029,9 @@ function CommonFilterPanel({
   compact = false
 }) {
   const sourceItems = T$1(() => items ?? dataStore.queryItems(), [items, dataStore]);
-  const availableFields = T$1(() => new Set(fieldOptions ?? getAllFields(sourceItems)), [fieldOptions, sourceItems]);
+  const availableFields = T$1(() => new Set((fieldOptions ?? getAllFields(sourceItems)).map(normalizeViewFieldKey)), [fieldOptions, sourceItems]);
   const quickFields = T$1(
-    () => fields.filter((config2) => availableFields.has(config2.field)),
+    () => fields.map((config2) => ({ ...config2, field: normalizeViewFieldKey(config2.field) })).filter((config2, index, array2) => config2.field && availableFields.has(config2.field) && array2.findIndex((item) => item.field === config2.field) === index),
     [fields, availableFields]
   );
   const valueOptions = T$1(
@@ -62402,7 +62093,7 @@ function CommonFilterPanel({
                     fullWidth: true,
                     size: "small",
                     disablePortal: true,
-                    options: valueOptions[config2.field] || [],
+                    options: valueOptions[normalizeViewFieldKey(config2.field)] || [],
                     value: values2,
                     onChange: (_2, newValue) => onChange(upsertQuickRule(filters, config2.field, newValue)),
                     renderTags: (tagValue, getTagProps) => tagValue.map((option, index) => /* @__PURE__ */ k$2(Chip2, { ...getTagProps({ index }), key: `${config2.field}-${option}`, label: option, size: "small" })),
@@ -62444,13 +62135,13 @@ function ViewInstanceEditor({ vi }) {
     () => VIEW_OPTIONS.map((v2) => ({ value: v2, label: v2.replace("View", "") })),
     []
   );
-  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "baseCategory", "type", "priority", "period"], []);
+  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "taskStatus", "type", "priority", "period.label"], []);
   const hasAdvancedFilters = T$1(() => (currentVi.filters || []).some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [currentVi.filters, commonFilterFields]);
   const handleFieldsChange = (fields) => {
-    handleUpdate({ fields });
+    handleUpdate({ fields: normalizeDisplayFields(fields, { includeUnknown: true }) });
   };
   const handleGroupFieldsChange = (groupFields) => {
-    handleUpdate({ groupFields });
+    handleUpdate({ groupFields: normalizeViewGroupFields(groupFields) });
   };
   return /* @__PURE__ */ u2("div", { children: [
     /* @__PURE__ */ u2("div", { style: { marginBottom: "2rem" }, children: [
@@ -62547,7 +62238,7 @@ function ViewInstanceEditor({ vi }) {
                 dataStore,
                 filters: currentVi.filters || [],
                 fieldOptions,
-                onChange: (rows) => handleUpdate({ filters: rows }),
+                onChange: (rows) => handleUpdate({ filters: normalizeViewFilters(rows) }),
                 compact: true
               }
             ),
@@ -62574,7 +62265,7 @@ function ViewInstanceEditor({ vi }) {
                       mode: "filter",
                       rows: currentVi.filters || [],
                       fieldOptions,
-                      onChange: (rows) => handleUpdate({ filters: rows }),
+                      onChange: (rows) => handleUpdate({ filters: normalizeViewFilters(rows) }),
                       dataStore,
                       variant: "panel"
                     }
@@ -62597,7 +62288,7 @@ function ViewInstanceEditor({ vi }) {
               mode: "sort",
               rows: currentVi.sort || [],
               fieldOptions,
-              onChange: (rows) => handleUpdate({ sort: rows }),
+              onChange: (rows) => handleUpdate({ sort: normalizeViewSort(rows) }),
               dataStore
             }
           )
@@ -68612,22 +68303,32 @@ function AiScopeSection({
   blocks,
   themes,
   onUpdate,
+  staleEnabledBlockIds = [],
   onInitAllBlocks,
+  onClearStaleBlockIds,
   onToggleBlock
 }) {
   return /* @__PURE__ */ u2(S, { children: [
     /* @__PURE__ */ u2(Accordion2, { children: [
       /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "Block 参与范围" }) }),
       /* @__PURE__ */ u2(AccordionDetails2, { children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "选择哪些 Block 模板参与 AI 识别。留空表示全部参与。" }),
-        /* @__PURE__ */ u2(Button2, { variant: "outlined", size: "small", onClick: onInitAllBlocks, sx: { mb: 2 }, children: "初始化为全部 Block" }),
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "选择哪些记录类型参与 AI 识别。留空表示全部参与；AI 会先选目标，再选记录类型，最后选目标 × Block 记录预设。" }),
+        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mb: 2 }, useFlexGap: true, flexWrap: "wrap", children: [
+          /* @__PURE__ */ u2(Button2, { variant: "outlined", size: "small", onClick: onInitAllBlocks, children: "初始化为全部记录类型" }),
+          staleEnabledBlockIds.length > 0 && onClearStaleBlockIds && /* @__PURE__ */ u2(Button2, { variant: "outlined", size: "small", color: "warning", onClick: onClearStaleBlockIds, children: "清理旧 Block ID" })
+        ] }),
+        staleEnabledBlockIds.length > 0 && /* @__PURE__ */ u2(Alert2, { severity: "warning", sx: { mb: 2 }, children: [
+          "当前 AI 范围里还有 ",
+          staleEnabledBlockIds.length,
+          " 个旧 Block ID，可能来自旧 data。建议清理，否则会影响 AI 快照。"
+        ] }),
         /* @__PURE__ */ u2(FormGroup2, { children: blocks.map((block2) => /* @__PURE__ */ u2(
           FormControlLabel2,
           {
             control: /* @__PURE__ */ u2(
               Checkbox2,
               {
-                checked: (settings.enabledBlockIds ?? []).includes(block2.id),
+                checked: (settings.enabledBlockIds ?? []).length === 0 || (settings.enabledBlockIds ?? []).includes(block2.id),
                 onChange: () => onToggleBlock(block2.id)
               }
             ),
@@ -68641,7 +68342,7 @@ function AiScopeSection({
     /* @__PURE__ */ u2(Accordion2, { children: [
       /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "默认主题设置" }) }),
       /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "当 AI 无法从用户输入中识别出主题时，将使用此默认主题。建议设置一个常用的主题作为默认值。" }),
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "当目标和记录预设都没有提供主题时，才使用此默认主题。主题只是上下文字段，不再决定模板。" }),
         /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: [
           /* @__PURE__ */ u2(InputLabel2, { children: "默认主题" }),
           /* @__PURE__ */ u2(
@@ -68658,7 +68359,7 @@ function AiScopeSection({
           )
         ] }),
         themes.length === 0 && /* @__PURE__ */ u2(Alert2, { severity: "info", children: '暂无主题，请先在"快速输入"设置中创建主题。' }),
-        /* @__PURE__ */ u2(Alert2, { severity: "info", children: '提示：AI 会尝试从您的输入中识别主题关键词（如"英语"、"工作"等），并匹配到相应的主题路径。如果无法识别，则使用此默认主题。' })
+        /* @__PURE__ */ u2(Alert2, { severity: "info", children: "提示：AI 优先使用目标 × Block 记录预设里的主题；没有匹配时再使用目标默认主题，最后才使用这里的默认主题。" })
       ] }) })
     ] })
   ] });
@@ -68760,6 +68461,8 @@ function AiSettings(_props) {
       }
     }
   };
+  const validBlockIds = T$1(() => new Set(blocks.map((block2) => block2.id)), [blocks]);
+  const staleEnabledBlockIds = T$1(() => (localSettings.enabledBlockIds || []).filter((id) => !validBlockIds.has(id)), [localSettings.enabledBlockIds, validBlockIds]);
   const readiness = T$1(() => getAiSettingsReadiness(localSettings), [localSettings]);
   const apiKeyPersistenceMessage = T$1(() => getApiKeyPersistenceMessage(localSettings), [localSettings]);
   const handleTestConnection = async () => {
@@ -68803,11 +68506,19 @@ function AiSettings(_props) {
   const handleInitAllBlocks = () => {
     updateLocal({ enabledBlockIds: blocks.map((b2) => b2.id) });
   };
+  const handleClearStaleBlockIds = () => {
+    const stale = new Set(staleEnabledBlockIds);
+    updateLocal({ enabledBlockIds: (localSettings.enabledBlockIds || []).filter((id) => !stale.has(id)) });
+  };
   const toggleBlock = (blockId) => {
+    const allIds = blocks.map((block2) => block2.id);
     const current2 = localSettings.enabledBlockIds ?? [];
-    updateLocal({
-      enabledBlockIds: current2.includes(blockId) ? current2.filter((id) => id !== blockId) : [...current2, blockId]
-    });
+    if (current2.length === 0) {
+      updateLocal({ enabledBlockIds: allIds.filter((id) => id !== blockId) });
+      return;
+    }
+    const next2 = current2.includes(blockId) ? current2.filter((id) => id !== blockId) : [...current2, blockId];
+    updateLocal({ enabledBlockIds: next2.length === allIds.length ? [] : next2 });
   };
   const handleInsertExample = () => {
     updateLocal({ customPrompt: CUSTOM_PROMPT_EXAMPLES });
@@ -68861,7 +68572,9 @@ function AiSettings(_props) {
         onUpdate: updateLocal,
         blocks,
         themes,
+        staleEnabledBlockIds,
         onInitAllBlocks: handleInitAllBlocks,
+        onClearStaleBlockIds: handleClearStaleBlockIds,
         onToggleBlock: toggleBlock
       }
     ),
@@ -68929,21 +68642,14 @@ function goalStatusLabel(status) {
       return "进行中";
   }
 }
-function topBlocks(coreBlockCounts = {}) {
-  return Object.entries(coreBlockCounts).sort((left2, right2) => right2[1] - left2[1]).slice(0, 3).map(([name, count]) => `${name.replace(/^core\./, "")} ${count}`).join(" · ");
-}
 function GoalEntitySection() {
   const settings = useSelector(selectSettings);
-  const dataStore = useDataStore();
   const useCases = useUseCases();
   const goals = settings.goalSettings?.goals || [];
   const [goalPath, setGoalPath] = d("");
+  const [goalThemePath, setGoalThemePath] = d("");
   const [query, setQuery] = d("");
   const [message, setMessage] = d("");
-  const candidates = T$1(
-    () => inferGoalCandidatesFromItems(dataStore.queryItems(), goals).filter((item) => item.source !== "existing-goal"),
-    [dataStore, goals]
-  );
   const visibleGoals = T$1(() => {
     const q2 = query.trim().toLowerCase();
     const sorted = [...goals].sort((left2, right2) => {
@@ -68959,19 +68665,12 @@ function GoalEntitySection() {
     const path = goalPath.trim();
     if (!path) return;
     const alreadyExists = goals.some((goal2) => String(goal2.goalPath || goal2.title || "").trim() === path);
-    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: null, granularity: "day" });
+    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: goalThemePath.trim() || null });
     setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加目标：${goal.goalPath || goal.title}` : "目标未添加");
     if (goal && !alreadyExists) {
       setGoalPath("");
+      setGoalThemePath("");
     }
-  };
-  const handleImportOne = async (candidate) => {
-    const result = await useCases.goal.applyLegacyGoalMigration([candidate]);
-    setMessage(result.createdGoals > 0 ? `已导入已有目标：${candidate.goalPath}` : `目标已在目标库中：${candidate.goalPath}`);
-  };
-  const handleImportAll = async () => {
-    const result = await useCases.goal.applyLegacyGoalMigration(candidates);
-    setMessage(`已从旧记录导入 ${result.createdGoals} 个目标。`);
   };
   const handleDeleteGoal = async (goal) => {
     const label = goal.goalPath || goal.title || goal.id;
@@ -68983,44 +68682,12 @@ function GoalEntitySection() {
   };
   return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 2 }, children: [
     message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
-    /* @__PURE__ */ u2(SectionCard, { children: /* @__PURE__ */ u2("details", { children: [
-      /* @__PURE__ */ u2("summary", { style: { cursor: "pointer", fontWeight: 800 }, children: [
-        "从已有记录导入目标",
-        candidates.length > 0 ? ` · ${candidates.length} 个可导入` : " · 无待导入"
-      ] }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1, mt: 1 }, children: [
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "flex-start", flexWrap: "wrap" }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "扫描旧记录里的“目标:: / 目标路径 / goalPaths”字段，把它们变成目标库里的目标；不会改写 Markdown 内容。" }),
-          /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleImportAll, disabled: candidates.length === 0, children: [
-            "导入全部 ",
-            candidates.length
-          ] })
-        ] }),
-        candidates.length > 0 ? /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 1 }, children: candidates.slice(0, 12).map((candidate) => /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1, display: "grid", gap: 0.75, background: "var(--background-secondary)" }, children: [
-          /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "flex-start" }, children: [
-            /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
-              /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: candidate.goalPath }),
-              /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
-                candidate.count,
-                " 条记录",
-                candidate.lastDate ? ` · 最近 ${candidate.lastDate}` : ""
-              ] })
-            ] }),
-            /* @__PURE__ */ u2(Chip2, { size: "small", label: candidate.source === "mixed" ? "部分存在" : "可导入", color: candidate.source === "mixed" ? "warning" : "primary" })
-          ] }),
-          topBlocks(candidate.coreBlockCounts) && /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
-            "记录类型：",
-            topBlocks(candidate.coreBlockCounts)
-          ] }),
-          /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "flex-end" }, children: /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: () => handleImportOne(candidate), children: "导入这个目标" }) })
-        ] }, candidate.goalPath)) }) : /* @__PURE__ */ u2(Alert2, { severity: "success", children: "没有待导入的旧目标。目标库已经和现有记录保持一致。" })
-      ] })
-    ] }) }),
     /* @__PURE__ */ u2(SectionCard, { children: [
       /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "新建目标" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "只需要填目标路径。目标只回答“我要追踪什么”；主题和统计周期都不在目标库绑定。周期请在对应的目标 × Block 预设表单里设置。" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(240px, 1fr) auto", gap: 1, alignItems: "center" }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标回答“我要追踪什么”。默认主题只是快捷输入的上下文字段，不决定模板；周期请在计划/总结预设里设置。" }),
+      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(240px, 1fr) minmax(180px, 0.65fr) auto" }, gap: 1, alignItems: "center" }, children: [
         /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标路径", value: goalPath, onChange: (event) => setGoalPath(event.target.value), placeholder: "例如：产品化/插件/目标中心" }),
+        /* @__PURE__ */ u2(TextField2, { size: "small", label: "默认主题（可选）", value: goalThemePath, onChange: (event) => setGoalThemePath(event.target.value), placeholder: "例如：电脑/记录系统" }),
         /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "新建目标" })
       ] })
     ] }),
@@ -69035,15 +68702,17 @@ function GoalEntitySection() {
       visibleGoals.length > 0 ? /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 0.75 }, children: visibleGoals.slice(0, 40).map((goal) => /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(220px, 1fr) auto", gap: 1, alignItems: "center", border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1, background: goal.status === "archived" ? "var(--background-secondary)" : "var(--background-primary)" }, children: [
         /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 0.75, minWidth: 0, flexWrap: "wrap" }, children: [
           /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: goal.goalPath || goal.title }),
-          /* @__PURE__ */ u2(Chip2, { size: "small", label: goalStatusLabel(goal.status), color: goal.status === "active" ? "primary" : "default" })
+          /* @__PURE__ */ u2(Chip2, { size: "small", label: goalStatusLabel(goal.status), color: goal.status === "active" ? "primary" : "default" }),
+          goal.themePath ? /* @__PURE__ */ u2(Chip2, { size: "small", label: `主题 ${goal.themePath}` }) : /* @__PURE__ */ u2(Chip2, { size: "small", label: "无默认主题", variant: "outlined" })
         ] }) }),
         /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, justifyContent: "flex-end", flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => handleEditGoalTheme(goal), children: "主题" }),
           /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => goal.status === "paused" ? useCases.goal.restoreGoal(goal.id) : useCases.goal.pauseGoal(goal.id), children: goal.status === "paused" ? "恢复" : "暂停" }),
           /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => useCases.goal.completeGoal(goal.id), children: "完成" }),
           /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => goal.status === "archived" ? useCases.goal.restoreGoal(goal.id) : useCases.goal.archiveGoal(goal.id), children: goal.status === "archived" ? "恢复" : "归档" }),
           /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => handleDeleteGoal(goal), children: "删除" })
         ] })
-      ] }, goal.id)) }) : /* @__PURE__ */ u2(Alert2, { severity: "info", children: "目标库还是空的。可以展开“从已有记录导入目标”，或在上方新建一个目标。" })
+      ] }, goal.id)) }) : /* @__PURE__ */ u2(Alert2, { severity: "info", children: "目标库还是空的。请在上方新建一个目标。" })
     ] })
   ] });
 }
@@ -69165,14 +68834,12 @@ const nativeLabelStyle = {
   color: "var(--text-muted)"
 };
 const presetGranularityOptions = [
-  { value: "day", label: "日" },
   { value: "week", label: "周" },
   { value: "month", label: "月" },
   { value: "quarter", label: "季度" },
   { value: "year", label: "年" }
 ];
 const granularityLabelMap = {
-  day: "日",
   week: "周",
   month: "月",
   quarter: "季度",
@@ -69201,6 +68868,14 @@ function readThemePathFromFields(fields) {
 function readThemePathFromTemplate(template) {
   const values2 = template?.defaultValues || {};
   return normalizeThemePath(values2.themePath) || normalizeThemePath(values2["主题"]) || readThemePathFromFields(template?.fields);
+}
+function readPeriodGranularity(template, block2) {
+  const rawPolicy = template?.periodPolicy || block2?.periodPolicy;
+  const rawGranularity = rawPolicy?.granularity || template?.granularity || block2?.granularity;
+  return normalizePeriodPolicyGranularity(rawGranularity);
+}
+function buildDraftPeriodPolicy(block2, draft) {
+  return block2 && isPeriodAwareCoreBlock(block2.id) ? { enabled: true, granularity: draft.granularity } : void 0;
 }
 function ensureThemeField(fields, themePath) {
   const normalizedTheme = normalizeThemePath(themePath);
@@ -69386,7 +69061,7 @@ function makeDraftFromTemplate(template, block2, variants) {
     name: template?.name || (variantId === "default" ? "默认预设" : variantId),
     description: template?.description || "",
     isDefault: template?.isDefault !== void 0 ? !!template.isDefault : variantId === "default",
-    granularity: template?.granularity || "day",
+    granularity: readPeriodGranularity(template, block2),
     sortOrder: template?.sortOrder ?? index * 10,
     fields,
     outputTemplate: template?.outputTemplate || block2?.outputTemplate || "",
@@ -69409,6 +69084,131 @@ function deriveDefaultValues(fields) {
     if (value !== void 0 && value !== null && String(value).trim() !== "") result[key] = value;
   }
   return result;
+}
+function stableJson(value) {
+  const seen = /* @__PURE__ */ new WeakSet();
+  const normalize = (input) => {
+    if (input === void 0) return void 0;
+    if (input === null || typeof input !== "object") return input;
+    if (seen.has(input)) return "[Circular]";
+    seen.add(input);
+    if (Array.isArray(input)) return input.map(normalize);
+    const out = {};
+    Object.keys(input).sort().forEach((key) => {
+      const value2 = normalize(input[key]);
+      if (value2 !== void 0) out[key] = value2;
+    });
+    return out;
+  };
+  return JSON.stringify(normalize(value));
+}
+function compactFieldForStructureCompare(field) {
+  const source = field;
+  const out = {};
+  Object.keys(source || {}).sort().forEach((key) => {
+    if (key === "id" || key === "defaultValue" || key === "required") return;
+    const value = source[key];
+    if (value === void 0 || value === null || value === "") return;
+    out[key] = value;
+  });
+  return out;
+}
+function fieldsHaveSameStructure(left2, right2) {
+  const normalize = (fields) => (fields || []).map(compactFieldForStructureCompare);
+  return stableJson(normalize(left2)) === stableJson(normalize(right2));
+}
+function setOf(values2) {
+  return new Set(values2.map((value) => String(value || "").trim()).filter(Boolean));
+}
+function equalStringSet(left2, right2) {
+  const a2 = setOf(left2);
+  const b2 = setOf(right2);
+  if (a2.size !== b2.size) return false;
+  for (const value of a2) if (!b2.has(value)) return false;
+  return true;
+}
+function compactText(value) {
+  return String(value ?? "").trim();
+}
+function getFieldDefaultMap(fields) {
+  const result = {};
+  for (const field of fields || []) {
+    const key = compactText(field.key || field.label);
+    if (!key) continue;
+    const value = field.defaultValue;
+    if (value !== void 0 && value !== null && compactText(value) !== "") result[key] = compactText(value);
+  }
+  return result;
+}
+function cleanDefaultValuesOverride(draft, block2, goal, themeIcon) {
+  const merged = mergeDefaultValues(draft, themeIcon);
+  const baseDefaults = getFieldDefaultMap(block2?.fields);
+  const result = {};
+  const allowSystemDefault = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
+  const forbiddenKeys = /* @__PURE__ */ new Set(["legacyOverrideId", "legacyThemePath", "goalId", "目标ID", "goalPath", "目标", "templateId", "模板ID", "templateSourceType", "模板来源", "templateVariantId", "goalTemplateVariantId", "变体ID", "记录预设", "period", "periodId", "cycleId", "周期", "周期ID", "周期粒度", "goalGranularity"]);
+  const goalThemePath = normalizeThemePath(goal?.themePath);
+  Object.entries(merged).forEach(([key, raw]) => {
+    if (forbiddenKeys.has(key)) return;
+    const value = compactText(raw);
+    if (!value) return;
+    if (isSystemRecordContextField(key) && !allowSystemDefault.has(key)) return;
+    if ((key === "themePath" || key === "主题") && value === goalThemePath) return;
+    if ((key === "themePath" || key === "主题") && value === "{{goal.themePath}}") return;
+    if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
+    result[key] = value;
+  });
+  if (draft.themePath && draft.themePath !== goalThemePath) {
+    result.themePath = draft.themePath;
+    result["主题"] = draft.themePath;
+  }
+  if (themeIcon && draft.themePath && draft.themePath !== goalThemePath) {
+    result.icon = themeIcon;
+    result["图标"] = themeIcon;
+  }
+  return Object.keys(result).length ? result : void 0;
+}
+function buildDraftDiffSummary(goal, block2, draft, themeIcon) {
+  if (!block2 || !goal) return [];
+  const patch = buildTemplatePatchFromDraft({ goal, block: block2, draft, selectedTemplate: null, themeIcon });
+  return describeGoalTemplateStorageDiff(patch);
+}
+function buildTemplatePatchFromDraft(params) {
+  const { goal, block: block2, draft, selectedTemplate, themeIcon } = params;
+  const variantId = draft.variantId || "default";
+  const draftFields = ensureThemeField(draft.fields || [], draft.themePath);
+  const baseFields = block2.fields;
+  const requiredFields = deriveRequiredFields(draftFields);
+  const baseRequiredFields = deriveRequiredFields(baseFields || []);
+  const defaultValues = cleanDefaultValuesOverride(draft, block2, goal, themeIcon);
+  const sameFields = fieldsHaveSameStructure(draftFields, baseFields);
+  const sameRequired = equalStringSet(requiredFields, baseRequiredFields);
+  const outputTemplate = compactText(draft.outputTemplate);
+  const targetFile = compactText(draft.targetFile);
+  const appendUnderHeader = compactText(draft.appendUnderHeader);
+  const baseOutputTemplate = compactText(block2.outputTemplate);
+  const baseTargetFile = compactText(block2.targetFile);
+  const baseAppendUnderHeader = compactText(block2.appendUnderHeader);
+  const rawPatch = {
+    id: getGoalTemplateId(goal.id, block2.id, variantId),
+    goalId: goal.id,
+    coreBlockId: block2.id,
+    variantId,
+    name: draft.name || (variantId === "default" ? "默认预设" : variantId),
+    description: draft.description || void 0,
+    isDefault: !!draft.isDefault,
+    periodPolicy: buildDraftPeriodPolicy(block2, draft),
+    sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
+    enabled: true,
+    fields: sameFields ? void 0 : draftFields,
+    outputTemplate: outputTemplate && outputTemplate !== baseOutputTemplate ? outputTemplate : void 0,
+    targetFile: targetFile && targetFile !== baseTargetFile ? targetFile : void 0,
+    appendUnderHeader: appendUnderHeader && appendUnderHeader !== baseAppendUnderHeader ? appendUnderHeader : void 0,
+    requiredFields: sameRequired ? void 0 : requiredFields,
+    defaultValues,
+    createdAt: selectedTemplate?.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  return compactGoalTemplateForStorage(rawPatch, { coreBlock: block2, goal });
 }
 function nextCopyVariantId(existing, sourceVariantId) {
   const base = `${sourceVariantId}-copy`;
@@ -69448,7 +69248,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
         name: draft.name,
         description: draft.description,
         isDefault: draft.isDefault,
-        granularity: draft.granularity,
+        periodPolicy: buildDraftPeriodPolicy(block2, draft),
         sortOrder: draft.sortOrder,
         enabled: true,
         fields: draft.fields,
@@ -69502,6 +69302,8 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
     });
   };
   const currentTheme = themeByPath.get(String(draft.themePath || ""));
+  const diffSummary = T$1(() => buildDraftDiffSummary(goal, block2, draft, currentTheme?.icon), [goal, block2, draft, currentTheme?.icon]);
+  const supportsPeriod = !!block2 && isPeriodAwareCoreBlock(block2.id);
   const isFormDisabled = mode !== "override";
   const effectiveBlockForCopier = T$1(() => {
     if (!block2) return null;
@@ -69548,22 +69350,15 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
       sortOrder: sortedVariants.length * 10
     };
     await useCases.goal.upsertGoalTemplate({
-      id: getGoalTemplateId(goal.id, block2.id, variantId),
-      goalId: goal.id,
-      coreBlockId: block2.id,
-      variantId,
-      name: nextDraft.name,
-      description: nextDraft.description || void 0,
+      ...buildTemplatePatchFromDraft({
+        goal,
+        block: block2,
+        draft: nextDraft,
+        selectedTemplate: null,
+        themeIcon: themeByPath.get(String(nextDraft.themePath || ""))?.icon
+      }),
       isDefault: false,
-      granularity: nextDraft.granularity,
       sortOrder: nextDraft.sortOrder,
-      enabled: true,
-      fields: ensureThemeField(nextDraft.fields, nextDraft.themePath),
-      outputTemplate: nextDraft.outputTemplate || void 0,
-      targetFile: nextDraft.targetFile || void 0,
-      appendUnderHeader: nextDraft.appendUnderHeader || void 0,
-      requiredFields: deriveRequiredFields(nextDraft.fields),
-      defaultValues: mergeDefaultValues(nextDraft, themeByPath.get(String(nextDraft.themePath || ""))?.icon),
       createdAt: (/* @__PURE__ */ new Date()).toISOString(),
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
     });
@@ -69586,24 +69381,14 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
     if (!goal || !block2) return;
     const currentDraft = draftRef.current;
     await useCases.goal.upsertGoalTemplate({
-      id: getGoalTemplateId(goal.id, block2.id, currentDraft.variantId || "default"),
-      goalId: goal.id,
-      coreBlockId: block2.id,
-      variantId: currentDraft.variantId || "default",
-      name: currentDraft.name || "默认预设",
-      description: currentDraft.description || void 0,
-      isDefault: true,
-      granularity: currentDraft.granularity,
-      sortOrder: Number.isFinite(currentDraft.sortOrder) ? currentDraft.sortOrder : 0,
-      enabled: true,
-      fields: ensureThemeField(currentDraft.fields, currentDraft.themePath),
-      outputTemplate: currentDraft.outputTemplate || void 0,
-      targetFile: currentDraft.targetFile || void 0,
-      appendUnderHeader: currentDraft.appendUnderHeader || void 0,
-      requiredFields: deriveRequiredFields(currentDraft.fields),
-      defaultValues: mergeDefaultValues(currentDraft, themeByPath.get(String(currentDraft.themePath || ""))?.icon),
-      createdAt: selectedTemplate?.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
-      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      ...buildTemplatePatchFromDraft({
+        goal,
+        block: block2,
+        draft: currentDraft,
+        selectedTemplate,
+        themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon
+      }),
+      isDefault: true
     });
     updateDraft({ isDefault: true });
     ui.notice("已设为默认预设");
@@ -69645,26 +69430,13 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
         return;
       }
       const variantId = currentDraft.variantId || "default";
-      await useCases.goal.upsertGoalTemplate({
-        id: getGoalTemplateId(goal.id, block2.id, variantId),
-        goalId: goal.id,
-        coreBlockId: block2.id,
-        variantId,
-        name: currentDraft.name || (variantId === "default" ? "默认预设" : variantId),
-        description: currentDraft.description || void 0,
-        isDefault: !!currentDraft.isDefault,
-        granularity: currentDraft.granularity,
-        sortOrder: Number.isFinite(currentDraft.sortOrder) ? currentDraft.sortOrder : 0,
-        enabled: true,
-        fields: ensureThemeField(currentDraft.fields, currentDraft.themePath),
-        outputTemplate: currentDraft.outputTemplate || void 0,
-        targetFile: currentDraft.targetFile || void 0,
-        appendUnderHeader: currentDraft.appendUnderHeader || void 0,
-        requiredFields: deriveRequiredFields(currentDraft.fields),
-        defaultValues: mergeDefaultValues(currentDraft, themeByPath.get(String(currentDraft.themePath || ""))?.icon),
-        createdAt: selectedTemplate?.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
-        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-      });
+      await useCases.goal.upsertGoalTemplate(buildTemplatePatchFromDraft({
+        goal,
+        block: block2,
+        draft: currentDraft,
+        selectedTemplate,
+        themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon
+      }));
       ui.notice(`已保存预设单元格：${goal.goalPath || goal.title} / ${block2.name}`);
       onClose();
     } catch (error) {
@@ -69709,7 +69481,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
           /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
             /* @__PURE__ */ u2(Box, { children: [
               /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "记录预设" }),
-              /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "同一个目标下可以为这种记录类型准备多个记录预设，例如运动打卡、饮水打卡、睡眠打卡。统计周期在这里设置，而不是在目标库设置。" })
+              /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "同一个目标下可以为这种记录类型准备多个记录预设。周期只对计划 / 总结生效；任务、打卡、思考、事件不再默认日周期。" })
             ] }),
             /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: handleNewVariant, disabled: mode !== "override", children: "新建记录预设" })
           ] }),
@@ -69727,7 +69499,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
               const variantId = template.variantId || "default";
               const selectedRow = selectedVariantId === variantId;
               const rowThemePath = selectedRow ? draft.themePath : readThemePathFromTemplate(template);
-              const rowGranularity = selectedRow ? draft.granularity : template.granularity || "day";
+              const rowGranularity = selectedRow ? draft.granularity : readPeriodGranularity(template, block2);
               const rowTargetFile = selectedRow ? draft.targetFile : String(template.targetFile || "");
               const rowHeader = selectedRow ? draft.appendUnderHeader : String(template.appendUnderHeader || "");
               const rowName = selectedRow ? draft.name : presetName(template);
@@ -69745,7 +69517,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
                   children: [
                     /* @__PURE__ */ u2("td", { style: { padding: "6px", fontWeight: selectedRow ? 700 : 500 }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: rowName, onInput: (value) => updateDraft({ name: value }), disabled: isFormDisabled, placeholder: "例如：睡眠任务" }) : rowName }),
                     /* @__PURE__ */ u2("td", { style: { padding: "6px", color: rowThemePath ? "var(--text-normal)" : "var(--text-muted)" }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellSelect, { value: rowThemePath || "", options: themeOptions2, onChange: (value) => updateThemePath(String(value || "")), disabled: isFormDisabled }) : rowThemePath ? leafPath$1(rowThemePath) : "不指定" }),
-                    /* @__PURE__ */ u2("td", { style: { padding: "6px" }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellSelect, { value: rowGranularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: isFormDisabled }) : granularityLabelMap[rowGranularity] || "日" }),
+                    /* @__PURE__ */ u2("td", { style: { padding: "6px" }, children: selectedRow ? supportsPeriod ? /* @__PURE__ */ u2(CompactCellSelect, { value: rowGranularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: isFormDisabled }) : /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)" }, children: "不适用" }) : supportsPeriod ? granularityLabelMap[rowGranularity] || "周" : "不适用" }),
                     /* @__PURE__ */ u2("td", { style: { padding: "6px", color: "var(--text-muted)" }, title: rowTargetFile, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: rowTargetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: isFormDisabled, placeholder: "例如：01/目标.md" }) : shortText(rowTargetFile) }),
                     /* @__PURE__ */ u2("td", { style: { padding: "6px", color: "var(--text-muted)" }, title: rowHeader, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: rowHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: isFormDisabled, placeholder: "## {{goalPath}}" }) : shortText(rowHeader) }),
                     /* @__PURE__ */ u2("td", { style: { padding: "6px", textAlign: "center" }, children: selectedRow ? /* @__PURE__ */ u2("input", { type: "checkbox", checked: rowIsDefault, disabled: isFormDisabled, onClick: stopEditorEvent, onChange: (event) => updateDraft({ isDefault: !!event.target.checked }) }) : rowIsDefault ? "是" : "" }),
@@ -69768,19 +69540,26 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
             currentTheme?.icon ? `${currentTheme.icon} ` : "",
             draft.themePath
           ] }) : /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "主题不是必填项。旧主题表单迁移过来的预设会保留主题，纯目标记录可以不指定主题。" }),
-          /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: isFormDisabled, placeholder: "可选：说明这个预设适合的记录场景" })
+          /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: isFormDisabled, placeholder: "可选：说明这个预设适合的记录场景" }),
+          /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, flexWrap: "wrap", alignItems: "center" }, children: [
+            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "保存策略：" }),
+            diffSummary.length ? diffSummary.map((item) => /* @__PURE__ */ u2("span", { style: { fontSize: 12, padding: "2px 8px", borderRadius: 999, border: "1px solid var(--background-modifier-border)", color: "var(--text-muted)" }, children: item }, item)) : /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "完全继承 CoreBlock，只保存名称 / 默认状态 / 顺序等元信息。" })
+          ] })
         ] }),
         /* @__PURE__ */ u2(Box, { sx: { opacity: isFormDisabled ? 0.6 : 1 }, children: /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
           /* @__PURE__ */ u2(Divider2, {}),
           /* @__PURE__ */ u2(Box, { children: [
             /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 0.5 }, children: "表单字段" }),
-            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mb: 1.5 }, children: "字段名称、类型、默认值、必填、选项、数字范围会随记录预设保存，并在 快速输入选择预设后刷新。" }),
+            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mb: 1.5 }, children: "字段名称、类型、默认值、必填、选项、数字范围会随记录预设保存。若与 CoreBlock 完全一致，只保存默认值差异，避免每个预设复制完整字段。" }),
             /* @__PURE__ */ u2(FieldsEditor, { fields: draft.fields || [], disabled: isFormDisabled, onChange: (fields) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath }) })
           ] }),
           /* @__PURE__ */ u2(Divider2, {}),
           /* @__PURE__ */ u2(Box, { children: [
             /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
-              /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出格式" }),
+              /* @__PURE__ */ u2(Box, { children: [
+                /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出格式" }),
+                /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "与 CoreBlock 相同则不单独保存；只在确实需要覆盖时保存差异。" })
+              ] }),
               effectiveBlockForCopier ? /* @__PURE__ */ u2(TemplateVariableCopier, { block: effectiveBlockForCopier }) : null
             ] }),
             /* @__PURE__ */ u2(NativeTextarea, { value: draft.outputTemplate, rows: 8, onInput: (value) => updateDraft({ outputTemplate: value }), disabled: isFormDisabled })
@@ -69930,7 +69709,7 @@ function buildRetargetedGoalTemplate(input) {
     name,
     description: reason === "move" ? `由「${sourceGoal.goalPath || sourceGoal.title} / ${sourceBlock.name}」移动到「${targetGoal.goalPath || targetGoal.title} / ${targetBlock.name}」` : `由「${sourceBlock.name}」预设复制到「${targetBlock.name}」`,
     isDefault: !sameCellEnabled,
-    granularity: sourceTemplate.granularity || targetGoal.granularity || "day",
+    periodPolicy: isPeriodAwareCoreBlock(targetBlock.id) ? { enabled: true, granularity: normalizePeriodPolicyGranularity(sourceTemplate.periodPolicy?.granularity || sourceTemplate.granularity || targetBlock.periodPolicy?.granularity) } : void 0,
     sortOrder: templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id).length * 10,
     enabled: sourceTemplate.enabled !== false,
     fields,
@@ -70795,7 +70574,7 @@ function GoalTemplateMatrix() {
       /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: expandAll, children: "展开" }),
       /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: collapseAll, children: "折叠" })
     ] }) }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.5 }, children: coreBlocks.map((block2) => /* @__PURE__ */ u2(
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }, children: coreBlocks.map((block2) => /* @__PURE__ */ u2(
       Chip2,
       {
         size: "small",
@@ -70806,12 +70585,19 @@ function GoalTemplateMatrix() {
       },
       block2.id
     )) }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.5 }, children: [
+      /* @__PURE__ */ u2(Chip2, { size: "small", label: `目标 ${goals.length}` }),
+      /* @__PURE__ */ u2(Chip2, { size: "small", label: `Block ${coreBlocks.length}` }),
+      /* @__PURE__ */ u2(Chip2, { size: "small", color: "primary", label: `有预设 ${matrixStats.override + matrixStats.multi}` }),
+      /* @__PURE__ */ u2(Chip2, { size: "small", label: `多预设 ${matrixStats.multi}` }),
+      /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `继承默认 ${matrixStats.inherit}` })
+    ] }),
     matrixStats.warning > 0 && /* @__PURE__ */ u2(Alert2, { severity: "warning", children: [
       "有 ",
       matrixStats.warning,
       " 个单元格存在预设异常，例如多个默认预设。点击异常单元格处理。"
     ] }),
-    goals.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有目标。请先到“目标”导入已有目标或新建目标，然后在表格单元格里配置预设。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有启用的 Block。请先在快速输入设置里启用固定 Block。" }) : /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", width: "100%" }, children: /* @__PURE__ */ u2(
+    goals.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有目标。请先到“目标”新建目标，然后在表格单元格里配置记录预设。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有启用的 Block。请先在快速输入设置里启用固定 Block。" }) : /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", width: "100%" }, children: /* @__PURE__ */ u2(
       AnyTable,
       {
         size: "small",
@@ -70885,46 +70671,28 @@ function GoalTemplateSection() {
   ] });
 }
 const sections = [
-  { key: "goals", title: "目标", description: "导入、新建和整理目标。" },
+  { key: "goals", title: "目标", description: "新建和整理目标。" },
   { key: "presets", title: "预设表", description: "用表格管理目标 × Block，每个单元格可有多个预设。" },
   { key: "metrics", title: "指标", description: "给目标设置完成标准。" }
 ];
 function GoalManager() {
   const settings = useSelector(selectSettings);
-  const dataStore = useDataStore();
   const [section, setSection] = d("goals");
   const goals = settings.goalSettings?.goals || [];
   const activeGoals = goals.filter((goal) => goal.status !== "archived");
   const goalTemplates = getGoalTemplates(settings.goalSettings);
-  const candidates = T$1(
-    () => inferGoalCandidatesFromItems(dataStore.queryItems(), goals).filter((item) => item.source !== "existing-goal"),
-    [dataStore, goals]
-  );
-  const backfillPreview = T$1(
-    () => buildGoalMarkdownBackfillPreview(dataStore.queryItems(), goals, 12),
-    [dataStore, goals]
-  );
   const currentSection = sections.find((item) => item.key === section) || sections[0];
   return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", display: "grid", gap: 2 }, children: [
-    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1 }, children: [
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1.5, alignItems: "flex-start", flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ u2(Box, { sx: { minWidth: 260 }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 800 }, children: "目标中心" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标只管理“我要追踪什么”；预设在“目标 × Block 预设表”的单元格里直接管理，不再另开独立预设页。" })
-        ] }),
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }, children: [
-          /* @__PURE__ */ u2(Chip2, { label: `目标 ${activeGoals.length}`, size: "small", color: activeGoals.length > 0 ? "primary" : "default" }),
-          /* @__PURE__ */ u2(Chip2, { label: `可导入 ${candidates.length}`, size: "small", color: candidates.length > 0 ? "warning" : "default" }),
-          /* @__PURE__ */ u2(Chip2, { label: `预设 ${goalTemplates.length}`, size: "small" }),
-          /* @__PURE__ */ u2(Chip2, { label: `待整理 ${backfillPreview.total}`, size: "small", color: backfillPreview.total > 0 ? "warning" : "default" })
-        ] })
+    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1 }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1.5, alignItems: "flex-start", flexWrap: "wrap" }, children: [
+      /* @__PURE__ */ u2(Box, { sx: { minWidth: 260 }, children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 800 }, children: "目标中心" }),
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标只管理“我要追踪什么”；预设在“目标 × Block 预设表”的单元格里直接管理，不再另开独立预设页。" })
       ] }),
-      candidates.length > 0 && section !== "goals" && /* @__PURE__ */ u2(Alert2, { severity: "info", action: /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => setSection("goals"), children: "去导入" }), children: [
-        "发现 ",
-        candidates.length,
-        " 个旧记录里的目标还没有进入目标库。先导入目标，再到“预设表”的对应单元格里创建预设。"
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }, children: [
+        /* @__PURE__ */ u2(Chip2, { label: `目标 ${activeGoals.length}`, size: "small", color: activeGoals.length > 0 ? "primary" : "default" }),
+        /* @__PURE__ */ u2(Chip2, { label: `预设 ${goalTemplates.length}`, size: "small" })
       ] })
-    ] }),
+    ] }) }),
     /* @__PURE__ */ u2(
       Box,
       {
@@ -71135,12 +70903,12 @@ function TabPanel(props) {
   const { children, value, index, ...other } = props;
   return /* @__PURE__ */ u2("div", { role: "tabpanel", hidden: value !== index, id: `settings-tabpanel-${index}`, ...other, children: value === index && /* @__PURE__ */ u2(Box, { sx: { p: 2, pt: 3 }, children }) });
 }
-function SettingsRoot({ app }) {
+function SettingsRoot({ app, variant = "workspace" }) {
   const [tabIndex, setTabIndex] = useLocalStorage(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
   return /* @__PURE__ */ u2(ThemeProvider, { theme, children: [
     /* @__PURE__ */ u2(CssBaseline, {}),
-    /* @__PURE__ */ u2(Box, { sx: { width: "100%" }, class: "think-setting-root", children: [
-      /* @__PURE__ */ u2(Box, { sx: { borderBottom: 1, borderColor: "divider" }, children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", children: [
+    /* @__PURE__ */ u2(Box, { sx: { width: "100%", maxWidth: variant === "workspace" ? 1320 : "none", mx: variant === "workspace" ? "auto" : 0 }, class: `think-setting-root think-setting-root--${variant}`, children: [
+      /* @__PURE__ */ u2(Box, { sx: { borderBottom: 1, borderColor: "divider", position: "sticky", top: 0, zIndex: 2, backgroundColor: "var(--background-primary)" }, children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", variant: "scrollable", scrollButtons: "auto", children: [
         /* @__PURE__ */ u2(Tab2, { label: "快速输入", ...a11yProps(0) }),
         /* @__PURE__ */ u2(Tab2, { label: "数据管理", ...a11yProps(1) }),
         /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(2) }),
@@ -71152,6 +70920,58 @@ function SettingsRoot({ app }) {
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(GeneralSettings, {}) }),
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 4, children: /* @__PURE__ */ u2(AiSettings, {}) })
+    ] })
+  ] });
+}
+const THINK_SETTINGS_VIEW_TYPE = "think-os-settings-view";
+class ThinkSettingsView extends obsidian.ItemView {
+  constructor(leaf2, plugin) {
+    super(leaf2);
+    this.plugin = plugin;
+    this.services = createServices();
+  }
+  plugin;
+  services;
+  getViewType() {
+    return THINK_SETTINGS_VIEW_TYPE;
+  }
+  getDisplayText() {
+    return "Think OS 控制台";
+  }
+  getIcon() {
+    return "layout-dashboard";
+  }
+  async onOpen() {
+    this.contentEl.empty();
+    this.contentEl.addClass("think-settings-workspace-view");
+    mountWithServices(this.contentEl, /* @__PURE__ */ u2(SettingsRoot, { app: this.plugin.app, variant: "workspace" }), this.services);
+  }
+  async onClose() {
+    unmountPreact(this.contentEl);
+    this.contentEl.empty();
+  }
+}
+function registerThinkSettingsWorkspaceView(plugin) {
+  plugin.registerView(
+    THINK_SETTINGS_VIEW_TYPE,
+    (leaf2) => new ThinkSettingsView(leaf2, plugin)
+  );
+}
+async function openThinkSettingsWorkspaceView(plugin) {
+  const workspace = plugin.app.workspace;
+  const existingLeaf = workspace.getLeavesOfType(THINK_SETTINGS_VIEW_TYPE)[0];
+  const leaf2 = existingLeaf || workspace.getLeaf("tab");
+  await leaf2.setViewState({ type: THINK_SETTINGS_VIEW_TYPE, active: true });
+  workspace.revealLeaf(leaf2);
+}
+function SettingsLauncher({ onOpenWorkspace }) {
+  return /* @__PURE__ */ u2(ThemeProvider, { theme, children: [
+    /* @__PURE__ */ u2(CssBaseline, {}),
+    /* @__PURE__ */ u2(Box, { class: "think-setting-root think-setting-root--launcher", sx: { p: 2, maxWidth: 760 }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 800, mb: 1 }, children: "Think OS 控制台" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { color: "text.secondary", mb: 2, lineHeight: 1.7 }, children: "完整设置已经收敛到 Obsidian 工作区标签页，那里空间更适合管理目标、记录预设、布局和 AI。 原生插件设置页只保留这个入口，避免继续塞入大型表单。" }),
+      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: onOpenWorkspace, children: "打开 Think OS 控制台" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { display: "block", mt: 1.5, color: "text.secondary" }, children: "也可以通过命令面板执行：打开 Think OS 控制台（标签页）。" })
     ] })
   ] });
 }
@@ -71170,7 +70990,20 @@ class SettingsTab extends obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    mountWithServices(containerEl, /* @__PURE__ */ u2(SettingsRoot, { app: this.app }), this.services);
+    mountWithServices(
+      containerEl,
+      /* @__PURE__ */ u2(
+        SettingsLauncher,
+        {
+          onOpenWorkspace: () => {
+            void openThinkSettingsWorkspaceView(this.plugin).catch((error) => {
+              new obsidian.Notice(`打开 Think OS 控制台失败：${error instanceof Error ? error.message : String(error)}`);
+            });
+          }
+        }
+      ),
+      this.services
+    );
   }
   hide() {
     unmountPreact(this.containerEl);
@@ -71319,6 +71152,14 @@ class CodeblockEmbedder {
 }
 function setupSettings(deps) {
   deps.plugin.addSettingTab(new SettingsTab(deps.app, deps.plugin));
+  registerThinkSettingsWorkspaceView(deps.plugin);
+  deps.plugin.addCommand({
+    id: "think-open-control-center",
+    name: "打开 Think OS 控制台（标签页）",
+    callback: () => {
+      void openThinkSettingsWorkspaceView(deps.plugin);
+    }
+  });
 }
 function setupDashboard(deps) {
   const { plugin, eventsPort, dataStore, rendererService, actionService } = deps;
@@ -75159,6 +75000,14 @@ class ThinkPlugin extends obsidian.Plugin {
     merged.coreBlockSettings = normalizeCoreBlockSettings(merged.coreBlockSettings, merged.inputSettings.blocks);
     merged.groups = merged.groups || [];
     return merged;
+  }
+  sanitizeSettingsForPersistence(settings) {
+    const cloned = JSON.parse(JSON.stringify(settings ?? {}));
+    const aiSettings = cloned.aiSettings;
+    if (aiSettings && typeof aiSettings === "object" && aiSettings.persistApiKey !== true) {
+      aiSettings.apiKey = "";
+    }
+    return cloned;
   }
   async saveSettings() {
     if (isDisposed()) return;

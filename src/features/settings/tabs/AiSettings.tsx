@@ -93,6 +93,9 @@ export function AiSettings(_props: AiSettingsProps) {
         }
     };
 
+    const validBlockIds = useMemo(() => new Set(blocks.map((block: any) => block.id)), [blocks]);
+    const staleEnabledBlockIds = useMemo(() => (localSettings.enabledBlockIds || []).filter((id) => !validBlockIds.has(id)), [localSettings.enabledBlockIds, validBlockIds]);
+
     const readiness = useMemo(() => getAiSettingsReadiness(localSettings), [localSettings]);
     const apiKeyPersistenceMessage = useMemo(() => getApiKeyPersistenceMessage(localSettings), [localSettings]);
 
@@ -141,13 +144,22 @@ export function AiSettings(_props: AiSettingsProps) {
         updateLocal({ enabledBlockIds: blocks.map(b => b.id) });
     };
 
+    const handleClearStaleBlockIds = () => {
+        const stale = new Set(staleEnabledBlockIds);
+        updateLocal({ enabledBlockIds: (localSettings.enabledBlockIds || []).filter((id) => !stale.has(id)) });
+    };
+
     const toggleBlock = (blockId: string) => {
+        const allIds = blocks.map((block: any) => block.id);
         const current = localSettings.enabledBlockIds ?? [];
-        updateLocal({
-            enabledBlockIds: current.includes(blockId)
-                ? current.filter(id => id !== blockId)
-                : [...current, blockId],
-        });
+        if (current.length === 0) {
+            updateLocal({ enabledBlockIds: allIds.filter(id => id !== blockId) });
+            return;
+        }
+        const next = current.includes(blockId)
+            ? current.filter(id => id !== blockId)
+            : [...current, blockId];
+        updateLocal({ enabledBlockIds: next.length === allIds.length ? [] : next });
     };
 
     const handleInsertExample = () => {
@@ -201,7 +213,9 @@ export function AiSettings(_props: AiSettingsProps) {
                 onUpdate={updateLocal}
                 blocks={blocks}
                 themes={themes}
+                staleEnabledBlockIds={staleEnabledBlockIds}
                 onInitAllBlocks={handleInitAllBlocks}
+                onClearStaleBlockIds={handleClearStaleBlockIds}
                 onToggleBlock={toggleBlock}
             />
             <AiAdvancedSettingsSection settings={localSettings} onUpdate={updateLocal} />

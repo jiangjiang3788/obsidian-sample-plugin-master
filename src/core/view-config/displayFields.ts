@@ -1,16 +1,19 @@
 import { normalizeEditableFieldKey } from '../fields/FieldEditPolicy';
+import { isNoisyViewDisplayField, normalizeViewFieldKey } from './domainFields';
 
 export interface NormalizeDisplayFieldsOptions {
   /** 当前可选择字段。传入后，可用于阻止添加不存在的新字段。 */
   availableFields?: readonly string[];
   /** 是否保留已经存在但暂时不在 availableFields 里的字段。默认 true，避免筛选后误删配置。 */
   includeUnknown?: boolean;
+  /** 是否保留模板来源、周期ID、重复 token 等低价值系统字段。默认 false。 */
+  includeNoisySystemFields?: boolean;
   /** 归一化后为空时使用的兜底字段。 */
   fallbackFields?: readonly string[];
 }
 
 function normalizeDisplayFieldKey(field: string): string {
-  return normalizeEditableFieldKey(field);
+  return normalizeEditableFieldKey(normalizeViewFieldKey(field));
 }
 
 function toNormalizedSet(fields?: readonly string[]): Set<string> | null {
@@ -29,6 +32,7 @@ export function normalizeDisplayFields(
   options: NormalizeDisplayFieldsOptions = {},
 ): string[] {
   const includeUnknown = options.includeUnknown !== false;
+  const includeNoisySystemFields = options.includeNoisySystemFields === true;
   const availableSet = toNormalizedSet(options.availableFields);
   const seen = new Set<string>();
   const result: string[] = [];
@@ -36,6 +40,7 @@ export function normalizeDisplayFields(
   for (const field of fields || []) {
     const key = normalizeDisplayFieldKey(field);
     if (!key || seen.has(key)) continue;
+    if (!includeNoisySystemFields && isNoisyViewDisplayField(key)) continue;
     if (availableSet && !availableSet.has(key) && !includeUnknown) continue;
     seen.add(key);
     result.push(key);

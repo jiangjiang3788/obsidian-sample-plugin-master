@@ -18,6 +18,12 @@ export type ReviewId = string;
 export type GoalStatus = 'active' | 'paused' | 'completed' | 'archived';
 export type CycleStatus = 'planned' | 'active' | 'reviewing' | 'closed';
 export type CycleGranularity = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
+export type PeriodGranularity = 'week' | 'month' | 'quarter' | 'year';
+
+export interface PeriodPolicy {
+  enabled: boolean;
+  granularity: PeriodGranularity;
+}
 
 export type GoalMetricDirection = 'increase' | 'decrease' | 'maintain' | 'boolean';
 
@@ -45,7 +51,7 @@ export interface GoalDefinition {
   parentGoalId?: GoalId | null;
   /** 与现有主题系统的轻绑定，不要求一开始做迁移。 */
   themePath?: string | null;
-  /** 周期由记录日期和该粒度运行时推导，不手动维护 Cycle。 */
+  /** @deprecated 目标不再绑定周期。周期只属于计划 / 总结类 Template Variant。 */
   granularity?: Exclude<CycleGranularity, 'custom'>;
   metrics?: GoalMetricContract[];
   createdAt: string;
@@ -53,7 +59,7 @@ export interface GoalDefinition {
 }
 
 /**
- * @deprecated 新主链不再手动维护周期；周期由记录日期 + Goal.granularity 运行时推导。
+ * @deprecated 新主链不再手动维护周期表；周期由计划 / 总结记录预设的 periodPolicy + 记录日期运行时推导。
  * 该类型只用于读取旧 data.json 和历史 UI 兼容。
  */
 export interface CycleDefinition {
@@ -138,6 +144,10 @@ export interface GoalBlockBinding {
   /** 同一个 Goal + Block 下的模板变体排序。 */
   sortOrder?: number;
   enabled: boolean;
+  /** 只有计划 / 总结类记录预设才启用周期。 */
+  periodPolicy?: PeriodPolicy;
+  /** @deprecated 旧周期字段。读取时会迁移为 periodPolicy；非计划/总结不再使用。 */
+  granularity?: Exclude<CycleGranularity, 'custom'>;
   /** 目标专属字段覆盖。为空时继承核心 block / 主题模板。 */
   fields?: import('@/core/types/schema').TemplateField[];
   outputTemplate?: string;

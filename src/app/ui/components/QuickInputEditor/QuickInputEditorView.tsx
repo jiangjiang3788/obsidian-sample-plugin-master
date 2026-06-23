@@ -45,7 +45,7 @@ export interface QuickInputEditorViewProps {
   showTimeDirectionControl?: boolean;
   currentThemePath?: string | null;
   currentGoalPath?: string | null;
-  templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null;
+  templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null;
   fieldSourceSummary?: Record<string, number>;
   currentPeriodLabel?: string | null;
 }
@@ -83,7 +83,7 @@ function SnapshotSummary({
 }: {
   currentThemePath?: string | null;
   currentGoalPath?: string | null;
-  templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null;
+  templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null;
   fieldSourceSummary?: Record<string, number>;
   currentPeriodLabel?: string | null;
 }) {
@@ -93,13 +93,9 @@ function SnapshotSummary({
   if (currentPeriodLabel) chips.push({ label: '周期', value: currentPeriodLabel });
   if (templateSourceType) {
     const sourceLabelMap: Record<string, string> = {
-      override: '主题覆盖',
-      block: 'Block 默认',
       'core-block': '核心Block',
-      'theme-fallback': '旧主题兼容',
       'goal-template': '目标记录预设',
-      'goal-binding': '旧目标记录预设',
-      'legacy-block': '旧Block',
+      'legacy-block': '自定义Block',
     };
     chips.push({ label: '记录方式', value: sourceLabelMap[templateSourceType] || templateSourceType });
   }
@@ -224,23 +220,32 @@ export function QuickInputEditorView({
         </Box>
       )}
 
-      {templateVariants.length > 1 && (
+      {templateVariants.length > 0 && (
         <Box>
           <SectionTitle title="记录预设" compact />
           <FormControl fullWidth>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {templateVariants.map((variant) => (
-                <SelectablePill
-                  key={variant.value}
-                  selected={(selectedTemplateVariantId || 'default') === variant.value}
-                  onClick={() => onSelectTemplateVariant?.(variant.value)}
-                  title={variant.isDefault ? `${variant.label}（默认）` : variant.label}
-                >
-                  {variant.label}{variant.isDefault ? ' · 默认' : ''}
-                </SelectablePill>
-              ))}
+              {templateVariants.map((variant) => {
+                const isSelected = (selectedTemplateVariantId || 'default') === variant.value;
+                return (
+                  <SelectablePill
+                    key={variant.value}
+                    selected={isSelected}
+                    disabled={templateVariants.length <= 1}
+                    onClick={() => templateVariants.length > 1 ? onSelectTemplateVariant?.(variant.value) : undefined}
+                    title={variant.isDefault ? `${variant.label}（默认）` : variant.label}
+                  >
+                    {variant.label}{variant.isDefault ? ' · 默认' : ''}
+                  </SelectablePill>
+                );
+              })}
             </div>
           </FormControl>
+          {templateVariants.length === 1 && (
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.6 }}>
+              当前目标和记录类型只有一个预设，已自动选择。
+            </Typography>
+          )}
         </Box>
       )}
 

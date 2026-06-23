@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 
 import { selectSettings, useDataStore, useSelector, useUseCases } from '@/app/public';
 import type { GoalDefinition, RecordInputMeta, ThemeDefinition } from '@core/public';
-import { GoalTemplateResolver, dayjs, getEffectiveCoreBlocks, getGoalTemplateVariants, resolveDerivedPeriod, getLeafPath, getTemplateFieldSemantic, readField, renderTemplate, splitGoalPath } from '@core/public';
+import { GoalTemplateResolver, dayjs, getEffectiveCoreBlocks, getGoalTemplateVariants, resolveDerivedPeriod, resolveTemplatePeriodPolicy, getLeafPath, getTemplateFieldSemantic, readField, renderTemplate, splitGoalPath } from '@core/public';
 import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/public';
 
 import { QuickInputEditorView } from './QuickInputEditorView';
@@ -53,7 +53,7 @@ export interface QuickInputEditorState {
   theme: ThemeDefinition | null;
   templateId: string | null;
   templateVariantId?: string | null;
-  templateSourceType: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null;
+  templateSourceType: 'core-block' | 'goal-template' | 'legacy-block' | null;
   fieldSources?: QuickInputFieldSourceMap;
   meta?: RecordInputMeta;
   /** 完整路径主题，例如：学习/英语/听力。 */
@@ -206,7 +206,7 @@ export function QuickInputEditor({
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(initialThemeId);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(() => String(initialFormData?.goalId ?? initialFormData?.['目标ID'] ?? context?.goalId ?? context?.['目标ID'] ?? context?.__goalContext?.goalId ?? '').trim() || null);
   const [selectedGoalPath, setSelectedGoalPath] = useState<string | null>(() => splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.['目标'] ?? context?.goalPath ?? context?.['目标'] ?? context?.__goalContext?.goalPath ?? '')).goalPath);
-  const [selectedTemplateVariantId, setSelectedTemplateVariantId] = useState<string | null>(() => String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.__goalContext?.templateVariantId ?? '').trim() || null);
+  const [selectedTemplateVariantId, setSelectedTemplateVariantId] = useState<string | null>(() => String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? '').trim() || null);
   const [selectedCycleId, setSelectedCycleId] = useState<string | null>(() => String(initialFormData?.cycleId ?? initialFormData?.['周期ID'] ?? context?.cycleId ?? context?.['周期ID'] ?? context?.__goalContext?.cycleId ?? '').trim() || null);
   const [formData, setFormData] = useState<Record<string, any>>(() => initialFormData ?? EMPTY_FORM_DATA);
   const [fieldSources, setFieldSources] = useState<QuickInputFieldSourceMap>(() => buildInitialFieldSources(initialFormData));
@@ -221,7 +221,7 @@ export function QuickInputEditor({
     setTimeDirection(initialFormData?.__timeDirection === 'backward' ? 'backward' : 'forward');
     setSelectedGoalId(String(initialFormData?.goalId ?? initialFormData?.['目标ID'] ?? context?.goalId ?? context?.['目标ID'] ?? context?.__goalContext?.goalId ?? '').trim() || null);
     setSelectedGoalPath(splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.['目标'] ?? context?.goalPath ?? context?.['目标'] ?? context?.__goalContext?.goalPath ?? '')).goalPath);
-    setSelectedTemplateVariantId(String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.__goalContext?.templateVariantId ?? '').trim() || null);
+    setSelectedTemplateVariantId(String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? '').trim() || null);
     setSelectedCycleId(String(initialFormData?.cycleId ?? initialFormData?.['周期ID'] ?? context?.cycleId ?? context?.['周期ID'] ?? context?.__goalContext?.cycleId ?? '').trim() || null);
   }, [initialBlockId, initialThemeId, context]);
 
@@ -232,18 +232,13 @@ export function QuickInputEditor({
   const themes = useMemo(() => settings.themes || [], [settings.themes]);
 
   const { availableThemes, themeIdMap, pathToIdMap } = useMemo(() => {
-    const disabledThemeIds = new Set<string>();
-    (settings.overrides || []).forEach((override: any) => {
-      if (override.blockId === currentBlockId && override.disabled) disabledThemeIds.add(override.themeId);
-    });
-
-    const availableThemes = (themes || []).filter((t: any) => !disabledThemeIds.has(t.id));
+    // Theme 已降级为目标 / 预设的上下文字段，不再通过 Theme × Block override 禁用主题。
     return {
-      availableThemes,
+      availableThemes: themes || [],
       themeIdMap: new Map<string, ThemeDefinition>((themes || []).map((t: any) => [t.id, t])),
       pathToIdMap: new Map<string, string>((themes || []).map((t: any) => [t.path, t.id])),
     };
-  }, [settings, themes, currentBlockId]);
+  }, [themes]);
 
   const selectedGoal = useMemo(() => {
     const goals = fullSettings.goalSettings?.goals || [];
@@ -332,8 +327,10 @@ export function QuickInputEditor({
   const currentGoalTitle = selectedGoal?.title || resolvedGoal?.title || (currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null);
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData['日期'] ?? formData.date ?? dayjs().format('YYYY-MM-DD')).trim();
-  const effectiveGranularity = String((rawTemplate as any)?.granularity || 'day');
-  const currentPeriod = resolveDerivedPeriod(currentRecordDate || dayjs().format('YYYY-MM-DD'), effectiveGranularity);
+  const periodPolicy = resolveTemplatePeriodPolicy(rawTemplate as any);
+  const currentPeriod = periodPolicy ? resolveDerivedPeriod(currentRecordDate || dayjs().format('YYYY-MM-DD'), periodPolicy.granularity) : null;
+  const currentPeriodFields = currentPeriod ? { cycleId: currentPeriod.id, periodId: currentPeriod.id, periodLabel: currentPeriod.label, '周期ID': currentPeriod.id, '周期': currentPeriod.label, '周期粒度': currentPeriod.granularity } : {};
+  const currentPeriodOptions = currentPeriod ? { cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }], '周期ID': [{ value: currentPeriod.id, label: currentPeriod.label }], '周期': [{ value: currentPeriod.label, label: currentPeriod.label }] } : {};
 
   const template = useMemo(() => {
     if (!rawTemplate?.fields?.length) return rawTemplate;
@@ -380,12 +377,13 @@ export function QuickInputEditor({
       goal: { id: selectedGoal?.id || selectedGoalId || '', title: currentGoalTitle || '', path: currentGoalPath || '', themePath: selectedGoal?.themePath || theme?.path || '' },
       goalId: selectedGoal?.id || selectedGoalId || '',
       goalPath: currentGoalPath || '',
-      period: currentPeriod,
-      cycle: { id: currentPeriod.id, title: currentPeriod.label, startDate: currentPeriod.startDate, endDate: currentPeriod.endDate },
-      cycleId: currentPeriod.id,
-      periodId: currentPeriod.id,
-      periodLabel: currentPeriod.label,
-      goalGranularity: effectiveGranularity,
+      ...(currentPeriod ? {
+        period: currentPeriod,
+        cycle: { id: currentPeriod.id, title: currentPeriod.label, startDate: currentPeriod.startDate, endDate: currentPeriod.endDate },
+        cycleId: currentPeriod.id,
+        periodId: currentPeriod.id,
+        periodLabel: currentPeriod.label,
+      } : {}),
       theme: theme ? { path: theme.path, icon: theme.icon || '' } : { path: selectedGoal?.themePath || '', icon: '' },
     };
 
@@ -470,7 +468,7 @@ export function QuickInputEditor({
       setFieldSources(nextSources);
       return next;
     });
-  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, effectiveGranularity, selectedGoalId, currentPeriod.id, currentPeriod.label, currentGoalPath, currentGoalTitle]);
+  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle]);
 
   useEffect(() => {
     const presetThemePath = String(formData.themePath ?? formData['主题'] ?? '').trim();
@@ -491,9 +489,9 @@ export function QuickInputEditor({
       goalTitle: currentGoalTitle,
       rootGoal: currentGoalParts.root,
       leafGoal: currentGoalParts.leaf,
-      cycleId: currentPeriod.id,
+      cycleId: currentPeriod?.id || null,
       themeId: selectedThemeId,
-      formData: { ...formData, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || undefined, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || undefined, cycleId: currentPeriod.id, '周期ID': currentPeriod.id, '周期': currentPeriod.label, goalGranularity: effectiveGranularity, __timeDirection: timeDirection },
+      formData: { ...formData, templateId: templateId || undefined, goalTemplateId: templateId || undefined, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || undefined, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || undefined, ...currentPeriodFields, __timeDirection: timeDirection },
       meta: { timeDirection },
       template,
       theme: currentTheme,
@@ -518,9 +516,9 @@ export function QuickInputEditor({
       goalTitle: currentGoalTitle,
       rootGoal: currentGoalParts.root,
       leafGoal: currentGoalParts.leaf,
-      cycleId: currentPeriod.id,
+      cycleId: currentPeriod?.id || null,
       themeId: selectedThemeId,
-      formData: { ...draftFormData, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || undefined, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || undefined, cycleId: currentPeriod.id, '周期ID': currentPeriod.id, '周期': currentPeriod.label, goalGranularity: effectiveGranularity, __timeDirection: directionOverride },
+      formData: { ...draftFormData, templateId: templateId || undefined, goalTemplateId: templateId || undefined, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || undefined, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || undefined, ...currentPeriodFields, __timeDirection: directionOverride },
       meta: { timeDirection: directionOverride },
       template,
       theme: currentTheme,
@@ -584,7 +582,7 @@ export function QuickInputEditor({
     if (newBlockId === currentBlockId) return;
     const preserved: Record<string, any> = {};
     const preservedSources: QuickInputFieldSourceMap = {};
-    ['内容', 'content', '日期', 'date', '时间', 'time', '备注', 'note', 'description', '目标', '目标ID', 'goalId', 'goalPath', 'cycleId', '周期ID', '周期', 'themePath', '主题'].forEach((k) => {
+    ['内容', 'content', '日期', 'date', '时间', 'time', '备注', 'note', 'description', '目标', '目标ID', 'goalId', 'goalPath', 'themePath', '主题'].forEach((k) => {
       if (formData[k] !== undefined) preserved[k] = formData[k];
       if (fieldSources[k]) preservedSources[k] = fieldSources[k];
     });
@@ -668,12 +666,7 @@ export function QuickInputEditor({
         assign('themePath', themePath, 'goal_context');
         assign('主题', themePath, 'goal_context');
       }
-      const period = resolveDerivedPeriod(String(next['日期'] ?? next.date ?? dayjs().format('YYYY-MM-DD')).trim() || dayjs().format('YYYY-MM-DD'), goal?.granularity || 'day');
-      assign('cycleId', period.id, 'system_auto');
-      assign('周期ID', period.id, 'system_auto');
-      assign('周期', period.label, 'system_auto');
-      assign('goalGranularity', goal?.granularity || 'day', 'goal_context');
-      setSelectedCycleId(period.id);
+      setSelectedCycleId(null);
       setFieldSources(nextSources);
       return next;
     });
@@ -698,11 +691,11 @@ export function QuickInputEditor({
       selectedTemplateVariantId={resolvedTemplateVariantId || selectedTemplateVariantId}
       onSelectTemplateVariant={setSelectedTemplateVariantId}
       cycles={[]}
-      selectedCycleId={currentPeriod.id}
+      selectedCycleId={currentPeriod?.id || null}
       onSelectCycle={undefined}
       template={template}
       formData={formData}
-      fieldValueOptionsByKey={{ themePath: themeOptions(availableThemes), '主题': themeOptions(availableThemes), cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }], '周期ID': [{ value: currentPeriod.id, label: currentPeriod.label }], '周期': [{ value: currentPeriod.label, label: currentPeriod.label }] }}
+      fieldValueOptionsByKey={{ themePath: themeOptions(availableThemes), '主题': themeOptions(availableThemes), ...currentPeriodOptions }}
       timeDirection={timeDirection}
       dense={dense}
       showDivider={showDivider}
@@ -712,7 +705,7 @@ export function QuickInputEditor({
       isMobileLike={isMobileLike}
       showTimeDirectionControl={showTimeDirectionControl}
       currentThemePath={String(formData.themePath ?? formData['主题'] ?? theme?.path ?? selectedGoal?.themePath ?? '') || null}
-      currentPeriodLabel={currentPeriod.label}
+      currentPeriodLabel={currentPeriod?.label || null}
       templateSourceType={templateSourceType}
       fieldSourceSummary={buildFieldSourceSummary(fieldSources)}
     />

@@ -1,4 +1,4 @@
-import type { CycleGranularity } from './types';
+import type { CycleGranularity, PeriodGranularity, PeriodPolicy } from './types';
 
 export interface DerivedPeriod {
   id: string;
@@ -6,6 +6,34 @@ export interface DerivedPeriod {
   granularity: Exclude<CycleGranularity, 'custom'>;
   startDate: string;
   endDate: string;
+}
+
+
+export function isPeriodAwareCoreBlock(coreBlockId?: string | null): boolean {
+  const id = String(coreBlockId || '').trim();
+  return id === 'core.plan' || id === 'core.review' || id === 'plan' || id === 'review';
+}
+
+export function normalizePeriodPolicyGranularity(value?: string | null): PeriodGranularity {
+  const text = String(value || '').trim().toLowerCase();
+  if (text === 'week' || text === 'month' || text === 'quarter' || text === 'year') return text;
+  return 'week';
+}
+
+export function resolveTemplatePeriodPolicy(template?: { coreBlockId?: string; id?: string; periodPolicy?: PeriodPolicy | null; granularity?: string | null } | null): PeriodPolicy | null {
+  if (!template) return null;
+  const coreBlockId = template.coreBlockId || template.id || '';
+  if (!isPeriodAwareCoreBlock(coreBlockId)) return null;
+  const explicitPolicy = template.periodPolicy;
+  if (explicitPolicy && explicitPolicy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(explicitPolicy.granularity) };
+  }
+  const legacyGranularity = String(template.granularity || '').trim();
+  if (legacyGranularity && legacyGranularity !== 'day' && legacyGranularity !== 'custom') {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(legacyGranularity) };
+  }
+  // MVP 默认：只有计划/总结具备周期，默认按周。不要再把 day 作为全局兜底。
+  return { enabled: true, granularity: 'week' };
 }
 
 function pad(value: number): string { return String(value).padStart(2, '0'); }

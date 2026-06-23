@@ -442,7 +442,7 @@ export function buildGoalOverviewModel(input: {
   for (const goal of goals || []) {
     const path = normalizeGoalPathValue(goal.goalPath || goal.title);
     if (!path) continue;
-    const period = resolveDerivedPeriod(todayText, goal.granularity || 'day');
+    const period = resolveDerivedPeriod(todayText, 'week');
     activeCycleByGoalPath.set(path, {
       id: period.id,
       title: period.label,

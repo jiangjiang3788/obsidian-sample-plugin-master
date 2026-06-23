@@ -1,5 +1,5 @@
 import type { CoreBlockDefinition, GoalDefinition, GoalTemplate, TemplateField } from '@core/public';
-import { getGoalTemplateId } from '@core/public';
+import { getGoalTemplateId, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from '@core/public';
 
 export const GOAL_TEMPLATE_BLOCK_ORDER = ['打卡', '任务', '事件', '思考', '总结', '计划', '阻碍项', '里程碑'];
 const GOAL_TEMPLATE_BLOCK_ID_ORDER = ['core.habit', 'core.task', 'core.evidence', 'core.thought', 'core.review', 'core.plan', 'core.blocker', 'core.milestone'];
@@ -182,7 +182,7 @@ export function buildRetargetedGoalTemplate(input: {
       ? `由「${sourceGoal.goalPath || sourceGoal.title} / ${sourceBlock.name}」移动到「${targetGoal.goalPath || targetGoal.title} / ${targetBlock.name}」`
       : `由「${sourceBlock.name}」预设复制到「${targetBlock.name}」`,
     isDefault: !sameCellEnabled,
-    granularity: sourceTemplate.granularity || targetGoal.granularity || 'day',
+    periodPolicy: isPeriodAwareCoreBlock(targetBlock.id) ? { enabled: true, granularity: normalizePeriodPolicyGranularity((sourceTemplate as any).periodPolicy?.granularity || sourceTemplate.granularity || (targetBlock as any).periodPolicy?.granularity) } : undefined,
     sortOrder: templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id).length * 10,
     enabled: sourceTemplate.enabled !== false,
     fields,

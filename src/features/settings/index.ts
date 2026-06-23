@@ -17,7 +17,7 @@ export { ThemeManager } from './theme/ThemeManager';
 /* ========================================================================== */
 
 import type ThinkPlugin from '@main';
-import { SettingsTab } from './SettingsTab';
+import { SettingsTab, registerThinkSettingsWorkspaceView, openThinkSettingsWorkspaceView } from './SettingsTab';
 import { DataStore } from '@core/public';
 
 import { BlockViewEditor } from './viewEditors/BlockViewEditor';
@@ -71,6 +71,12 @@ export interface SettingsDependencies {
 export function setupSettings(deps: SettingsDependencies): void {
   // SettingsTab 通过 plugin 实例获取所有依赖
   deps.plugin.addSettingTab(new SettingsTab(deps.app, deps.plugin));
+  registerThinkSettingsWorkspaceView(deps.plugin);
+  deps.plugin.addCommand({
+    id: 'think-open-control-center',
+    name: '打开 Think OS 控制台（标签页）',
+    callback: () => { void openThinkSettingsWorkspaceView(deps.plugin); },
+  });
 }
 
 /* ========================================================================== */

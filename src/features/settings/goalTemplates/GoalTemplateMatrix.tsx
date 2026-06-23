@@ -731,7 +731,7 @@ export function GoalTemplateMatrix() {
         </Box>
       </Box>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
         {coreBlocks.map((block) => (
           <Chip
             key={block.id}
@@ -744,6 +744,14 @@ export function GoalTemplateMatrix() {
         ))}
       </Box>
 
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+        <Chip size="small" label={`目标 ${goals.length}`} />
+        <Chip size="small" label={`Block ${coreBlocks.length}`} />
+        <Chip size="small" color="primary" label={`有预设 ${matrixStats.override + matrixStats.multi}`} />
+        <Chip size="small" label={`多预设 ${matrixStats.multi}`} />
+        <Chip size="small" variant="outlined" label={`继承默认 ${matrixStats.inherit}`} />
+      </Box>
+
       {matrixStats.warning > 0 && (
         <Alert severity="warning">
           有 {matrixStats.warning} 个单元格存在预设异常，例如多个默认预设。点击异常单元格处理。
@@ -751,7 +759,7 @@ export function GoalTemplateMatrix() {
       )}
 
       {goals.length === 0 ? (
-        <Alert severity="info">还没有目标。请先到“目标”导入已有目标或新建目标，然后在表格单元格里配置预设。</Alert>
+        <Alert severity="info">还没有目标。请先到“目标”新建目标，然后在表格单元格里配置记录预设。</Alert>
       ) : coreBlocks.length === 0 ? (
         <Alert severity="info">还没有启用的 Block。请先在快速输入设置里启用固定 Block。</Alert>
       ) : (

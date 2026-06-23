@@ -109,7 +109,7 @@ function buildPeriodDistribution(items: Item[], selectedGoalPath: string | null,
   for (const item of items || []) {
     if (!readGoalPaths(item).includes(selectedGoalPath)) continue;
     const date = readDate(item);
-    const period = resolveDerivedPeriod(date || undefined, selectedGoal?.granularity || 'day');
+    const period = resolveDerivedPeriod(date || undefined, 'week');
     const current = map.get(period.id) || { periodId: period.id, label: period.label, count: 0 };
     current.count += 1;
     map.set(period.id, current);

@@ -194,8 +194,20 @@ export default class ThinkPlugin extends Plugin {
         }));
         merged.goalSettings = { ...DEFAULT_GOAL_SETTINGS, ...(merged.goalSettings || {}) };
         merged.coreBlockSettings = normalizeCoreBlockSettings(merged.coreBlockSettings, merged.inputSettings.blocks);
+        // MVP5: 插件运行时不再执行任何数据迁移或自动写回。
+        // data.json / Markdown 的一次性整理由用户交给助手离线改文件，插件只读取当前数据。
         merged.groups = merged.groups || [];
         return merged as ThinkSettings;
+    }
+
+
+    private sanitizeSettingsForPersistence(settings: ThinkSettings): ThinkSettings {
+        const cloned = JSON.parse(JSON.stringify(settings ?? {})) as ThinkSettings;
+        const aiSettings = (cloned as any).aiSettings;
+        if (aiSettings && typeof aiSettings === 'object' && aiSettings.persistApiKey !== true) {
+            aiSettings.apiKey = '';
+        }
+        return cloned;
     }
 
     async saveSettings() {

@@ -103,6 +103,10 @@ export interface TemplateField {
     min?: number;
     max?: number;
 }
+export interface PeriodPolicy {
+    enabled: boolean;
+    granularity: 'week' | 'month' | 'quarter' | 'year';
+}
 export interface BlockTemplate {
     id: string;
     name: string;
@@ -112,6 +116,10 @@ export interface BlockTemplate {
     targetFile: string;
     /** 目标中心迁移：旧 block 可映射到稳定核心 block，例如 core.task。 */
     coreBlockId?: string;
+    /** 只有计划 / 总结这类记录动作才启用周期；任务、打卡、思考、事件默认没有周期。 */
+    periodPolicy?: PeriodPolicy;
+    /** @deprecated 旧字段。第一版 MVP 只在读取旧数据时迁移为 periodPolicy，不再作为默认 day 来源。 */
+    granularity?: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
     appendUnderHeader?: string;
 }
 export interface ThemeDefinition {

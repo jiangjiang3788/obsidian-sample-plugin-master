@@ -6,7 +6,7 @@ import type { JSX } from 'preact';
 import { FloatingPanel, selectSettings, useSelector, useUiPort, type UseCases } from '@/app/public';
 import type { CoreBlockDefinition } from '@core/public';
 import type { GoalDefinition, GoalTemplate, TemplateField } from '@core/public';
-import { getGoalTemplateId } from '@core/public';
+import { getGoalTemplateId, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, isSystemRecordContextField, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff } from '@core/public';
 import { FieldsEditor } from '../input/FieldsEditor';
 import { TemplateVariableCopier } from '../input/TemplateVariableCopier';
 
@@ -26,7 +26,7 @@ interface DraftState {
   name: string;
   description: string;
   isDefault: boolean;
-  granularity: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  granularity: 'week' | 'month' | 'quarter' | 'year';
   sortOrder: number;
   fields: TemplateField[];
   outputTemplate: string;
@@ -74,7 +74,6 @@ const nativeLabelStyle: JSX.CSSProperties = {
 
 
 const presetGranularityOptions = [
-  { value: 'day', label: '日' },
   { value: 'week', label: '周' },
   { value: 'month', label: '月' },
   { value: 'quarter', label: '季度' },
@@ -82,7 +81,6 @@ const presetGranularityOptions = [
 ];
 
 const granularityLabelMap: Record<DraftState['granularity'], string> = {
-  day: '日',
   week: '周',
   month: '月',
   quarter: '季度',
@@ -115,6 +113,16 @@ function readThemePathFromFields(fields: TemplateField[] | undefined): string {
 function readThemePathFromTemplate(template: GoalTemplate | null | undefined): string {
   const values = (template?.defaultValues || {}) as Record<string, unknown>;
   return normalizeThemePath(values.themePath) || normalizeThemePath(values['主题']) || readThemePathFromFields(template?.fields as TemplateField[] | undefined);
+}
+
+function readPeriodGranularity(template: GoalTemplate | null | undefined, block: CoreBlockDefinition | null): DraftState['granularity'] {
+  const rawPolicy = (template as any)?.periodPolicy || (block as any)?.periodPolicy;
+  const rawGranularity = rawPolicy?.granularity || (template as any)?.granularity || (block as any)?.granularity;
+  return normalizePeriodPolicyGranularity(rawGranularity) as DraftState['granularity'];
+}
+
+function buildDraftPeriodPolicy(block: CoreBlockDefinition | null, draft: Pick<DraftState, 'granularity'>) {
+  return block && isPeriodAwareCoreBlock(block.id) ? { enabled: true, granularity: draft.granularity } : undefined;
 }
 
 function ensureThemeField(fields: TemplateField[], themePath: string): TemplateField[] {
@@ -331,7 +339,7 @@ function makeDraftFromTemplate(template: GoalTemplate | null, block: CoreBlockDe
     name: template?.name || (variantId === 'default' ? '默认预设' : variantId),
     description: template?.description || '',
     isDefault: template?.isDefault !== undefined ? !!template.isDefault : variantId === 'default',
-    granularity: ((template as any)?.granularity || 'day') as DraftState['granularity'],
+    granularity: readPeriodGranularity(template, block),
     sortOrder: template?.sortOrder ?? index * 10,
     fields,
     outputTemplate: template?.outputTemplate || block?.outputTemplate || '',
@@ -359,6 +367,153 @@ function deriveDefaultValues(fields: TemplateField[]): Record<string, unknown> {
     if (value !== undefined && value !== null && String(value).trim() !== '') result[key] = value;
   }
   return result;
+}
+
+
+function stableJson(value: unknown): string {
+  const seen = new WeakSet<object>();
+  const normalize = (input: any): any => {
+    if (input === undefined) return undefined;
+    if (input === null || typeof input !== 'object') return input;
+    if (seen.has(input)) return '[Circular]';
+    seen.add(input);
+    if (Array.isArray(input)) return input.map(normalize);
+    const out: Record<string, unknown> = {};
+    Object.keys(input).sort().forEach((key) => {
+      const value = normalize(input[key]);
+      if (value !== undefined) out[key] = value;
+    });
+    return out;
+  };
+  return JSON.stringify(normalize(value));
+}
+
+function compactFieldForStructureCompare(field: TemplateField): Record<string, unknown> {
+  const source = field as any;
+  const out: Record<string, unknown> = {};
+  Object.keys(source || {}).sort().forEach((key) => {
+    if (key === 'id' || key === 'defaultValue' || key === 'required') return;
+    const value = source[key];
+    if (value === undefined || value === null || value === '') return;
+    out[key] = value;
+  });
+  return out;
+}
+
+function fieldsHaveSameStructure(left: TemplateField[] | undefined, right: TemplateField[] | undefined): boolean {
+  const normalize = (fields: TemplateField[] | undefined) => (fields || []).map(compactFieldForStructureCompare);
+  return stableJson(normalize(left)) === stableJson(normalize(right));
+}
+
+function setOf(values: string[]): Set<string> {
+  return new Set(values.map((value) => String(value || '').trim()).filter(Boolean));
+}
+
+function equalStringSet(left: string[], right: string[]): boolean {
+  const a = setOf(left);
+  const b = setOf(right);
+  if (a.size !== b.size) return false;
+  for (const value of a) if (!b.has(value)) return false;
+  return true;
+}
+
+function compactText(value: unknown): string {
+  return String(value ?? '').trim();
+}
+
+function getFieldDefaultMap(fields: TemplateField[] | undefined): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const field of fields || []) {
+    const key = compactText((field as any).key || (field as any).label);
+    if (!key) continue;
+    const value = (field as any).defaultValue;
+    if (value !== undefined && value !== null && compactText(value) !== '') result[key] = compactText(value);
+  }
+  return result;
+}
+
+function cleanDefaultValuesOverride(draft: DraftState, block: CoreBlockDefinition | null, goal: GoalDefinition | null, themeIcon?: string): Record<string, unknown> | undefined {
+  const merged = mergeDefaultValues(draft, themeIcon);
+  const baseDefaults = getFieldDefaultMap(block?.fields as TemplateField[] | undefined);
+  const result: Record<string, unknown> = {};
+  const allowSystemDefault = new Set(['themePath', '主题', 'icon', '图标']);
+  const forbiddenKeys = new Set(['legacyOverrideId', 'legacyThemePath', 'goalId', '目标ID', 'goalPath', '目标', 'templateId', '模板ID', 'templateSourceType', '模板来源', 'templateVariantId', 'goalTemplateVariantId', '变体ID', '记录预设', 'period', 'periodId', 'cycleId', '周期', '周期ID', '周期粒度', 'goalGranularity']);
+  const goalThemePath = normalizeThemePath(goal?.themePath);
+
+  Object.entries(merged).forEach(([key, raw]) => {
+    if (forbiddenKeys.has(key)) return;
+    const value = compactText(raw);
+    if (!value) return;
+    if (isSystemRecordContextField(key) && !allowSystemDefault.has(key)) return;
+    if ((key === 'themePath' || key === '主题') && value === goalThemePath) return;
+    if ((key === 'themePath' || key === '主题') && value === '{{goal.themePath}}') return;
+    if (baseDefaults[key] !== undefined && baseDefaults[key] === value) return;
+    result[key] = value;
+  });
+
+  if (draft.themePath && draft.themePath !== goalThemePath) {
+    result.themePath = draft.themePath;
+    result['主题'] = draft.themePath;
+  }
+  if (themeIcon && draft.themePath && draft.themePath !== goalThemePath) {
+    result.icon = themeIcon;
+    result['图标'] = themeIcon;
+  }
+
+  return Object.keys(result).length ? result : undefined;
+}
+
+
+function buildDraftDiffSummary(goal: GoalDefinition | null, block: CoreBlockDefinition | null, draft: DraftState, themeIcon?: string): string[] {
+  if (!block || !goal) return [];
+  const patch = buildTemplatePatchFromDraft({ goal, block, draft, selectedTemplate: null, themeIcon });
+  return describeGoalTemplateStorageDiff(patch);
+}
+
+function buildTemplatePatchFromDraft(params: {
+  goal: GoalDefinition;
+  block: CoreBlockDefinition;
+  draft: DraftState;
+  selectedTemplate: GoalTemplate | null;
+  themeIcon?: string;
+}): GoalTemplate {
+  const { goal, block, draft, selectedTemplate, themeIcon } = params;
+  const variantId = draft.variantId || 'default';
+  const draftFields = ensureThemeField(draft.fields || [], draft.themePath);
+  const baseFields = block.fields as TemplateField[] | undefined;
+  const requiredFields = deriveRequiredFields(draftFields);
+  const baseRequiredFields = deriveRequiredFields(baseFields || []);
+  const defaultValues = cleanDefaultValuesOverride(draft, block, goal, themeIcon);
+  const sameFields = fieldsHaveSameStructure(draftFields, baseFields);
+  const sameRequired = equalStringSet(requiredFields, baseRequiredFields);
+  const outputTemplate = compactText(draft.outputTemplate);
+  const targetFile = compactText(draft.targetFile);
+  const appendUnderHeader = compactText(draft.appendUnderHeader);
+  const baseOutputTemplate = compactText(block.outputTemplate);
+  const baseTargetFile = compactText(block.targetFile);
+  const baseAppendUnderHeader = compactText(block.appendUnderHeader);
+
+  const rawPatch: GoalTemplate = {
+    id: getGoalTemplateId(goal.id, block.id, variantId),
+    goalId: goal.id,
+    coreBlockId: block.id,
+    variantId,
+    name: draft.name || (variantId === 'default' ? '默认预设' : variantId),
+    description: draft.description || undefined,
+    isDefault: !!draft.isDefault,
+    periodPolicy: buildDraftPeriodPolicy(block, draft),
+    sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
+    enabled: true,
+    fields: sameFields ? undefined : draftFields,
+    outputTemplate: outputTemplate && outputTemplate !== baseOutputTemplate ? outputTemplate : undefined,
+    targetFile: targetFile && targetFile !== baseTargetFile ? targetFile : undefined,
+    appendUnderHeader: appendUnderHeader && appendUnderHeader !== baseAppendUnderHeader ? appendUnderHeader : undefined,
+    requiredFields: sameRequired ? undefined : requiredFields,
+    defaultValues: defaultValues,
+    createdAt: selectedTemplate?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  return compactGoalTemplateForStorage(rawPatch, { coreBlock: block, goal });
 }
 
 function nextCopyVariantId(existing: GoalTemplate[], sourceVariantId: string): string {
@@ -402,7 +557,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
         name: draft.name,
         description: draft.description,
         isDefault: draft.isDefault,
-        granularity: draft.granularity,
+        periodPolicy: buildDraftPeriodPolicy(block, draft),
         sortOrder: draft.sortOrder,
         enabled: true,
         fields: draft.fields,
@@ -459,6 +614,8 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
   };
 
   const currentTheme = themeByPath.get(String(draft.themePath || '')) as any;
+  const diffSummary = useMemo(() => buildDraftDiffSummary(goal, block, draft, currentTheme?.icon), [goal, block, draft, currentTheme?.icon]);
+  const supportsPeriod = !!block && isPeriodAwareCoreBlock(block.id);
 
   const isFormDisabled = mode !== 'override';
   const effectiveBlockForCopier = useMemo(() => {
@@ -510,22 +667,15 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
       sortOrder: sortedVariants.length * 10,
     };
     await useCases.goal.upsertGoalTemplate({
-      id: getGoalTemplateId(goal.id, block.id, variantId),
-      goalId: goal.id,
-      coreBlockId: block.id,
-      variantId,
-      name: nextDraft.name,
-      description: nextDraft.description || undefined,
+      ...buildTemplatePatchFromDraft({
+        goal,
+        block,
+        draft: nextDraft,
+        selectedTemplate: null,
+        themeIcon: (themeByPath.get(String(nextDraft.themePath || '')) as any)?.icon,
+      }),
       isDefault: false,
-      granularity: nextDraft.granularity,
       sortOrder: nextDraft.sortOrder,
-      enabled: true,
-      fields: ensureThemeField(nextDraft.fields, nextDraft.themePath),
-      outputTemplate: nextDraft.outputTemplate || undefined,
-      targetFile: nextDraft.targetFile || undefined,
-      appendUnderHeader: nextDraft.appendUnderHeader || undefined,
-      requiredFields: deriveRequiredFields(nextDraft.fields),
-      defaultValues: mergeDefaultValues(nextDraft, (themeByPath.get(String(nextDraft.themePath || '')) as any)?.icon),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -550,24 +700,14 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
     if (!goal || !block) return;
     const currentDraft = draftRef.current;
     await useCases.goal.upsertGoalTemplate({
-      id: getGoalTemplateId(goal.id, block.id, currentDraft.variantId || 'default'),
-      goalId: goal.id,
-      coreBlockId: block.id,
-      variantId: currentDraft.variantId || 'default',
-      name: currentDraft.name || '默认预设',
-      description: currentDraft.description || undefined,
+      ...buildTemplatePatchFromDraft({
+        goal,
+        block,
+        draft: currentDraft,
+        selectedTemplate,
+        themeIcon: (themeByPath.get(String(currentDraft.themePath || '')) as any)?.icon,
+      }),
       isDefault: true,
-      granularity: currentDraft.granularity,
-      sortOrder: Number.isFinite(currentDraft.sortOrder) ? currentDraft.sortOrder : 0,
-      enabled: true,
-      fields: ensureThemeField(currentDraft.fields, currentDraft.themePath),
-      outputTemplate: currentDraft.outputTemplate || undefined,
-      targetFile: currentDraft.targetFile || undefined,
-      appendUnderHeader: currentDraft.appendUnderHeader || undefined,
-      requiredFields: deriveRequiredFields(currentDraft.fields),
-      defaultValues: mergeDefaultValues(currentDraft, (themeByPath.get(String(currentDraft.themePath || '')) as any)?.icon),
-      createdAt: selectedTemplate?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     });
     updateDraft({ isDefault: true });
     ui.notice('已设为默认预设');
@@ -613,26 +753,13 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
       }
 
       const variantId = currentDraft.variantId || 'default';
-      await useCases.goal.upsertGoalTemplate({
-        id: getGoalTemplateId(goal.id, block.id, variantId),
-        goalId: goal.id,
-        coreBlockId: block.id,
-        variantId,
-        name: currentDraft.name || (variantId === 'default' ? '默认预设' : variantId),
-        description: currentDraft.description || undefined,
-        isDefault: !!currentDraft.isDefault,
-        granularity: currentDraft.granularity,
-        sortOrder: Number.isFinite(currentDraft.sortOrder) ? currentDraft.sortOrder : 0,
-        enabled: true,
-        fields: ensureThemeField(currentDraft.fields, currentDraft.themePath),
-        outputTemplate: currentDraft.outputTemplate || undefined,
-        targetFile: currentDraft.targetFile || undefined,
-        appendUnderHeader: currentDraft.appendUnderHeader || undefined,
-        requiredFields: deriveRequiredFields(currentDraft.fields),
-        defaultValues: mergeDefaultValues(currentDraft, (themeByPath.get(String(currentDraft.themePath || '')) as any)?.icon),
-        createdAt: selectedTemplate?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      await useCases.goal.upsertGoalTemplate(buildTemplatePatchFromDraft({
+        goal,
+        block,
+        draft: currentDraft,
+        selectedTemplate,
+        themeIcon: (themeByPath.get(String(currentDraft.themePath || '')) as any)?.icon,
+      }));
       ui.notice(`已保存预设单元格：${goal.goalPath || goal.title} / ${block.name}`);
       onClose();
     } catch (error) {
@@ -676,7 +803,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
             <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               <Box>
                 <Typography sx={{ fontWeight: 700 }}>记录预设</Typography>
-                <Typography variant="caption" color="text.secondary">同一个目标下可以为这种记录类型准备多个记录预设，例如运动打卡、饮水打卡、睡眠打卡。统计周期在这里设置，而不是在目标库设置。</Typography>
+                <Typography variant="caption" color="text.secondary">同一个目标下可以为这种记录类型准备多个记录预设。周期只对计划 / 总结生效；任务、打卡、思考、事件不再默认日周期。</Typography>
               </Box>
               <Button size="small" variant="outlined" onClick={handleNewVariant} disabled={mode !== 'override'}>新建记录预设</Button>
             </Box>
@@ -698,7 +825,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
                     const variantId = template.variantId || 'default';
                     const selectedRow = selectedVariantId === variantId;
                     const rowThemePath = selectedRow ? draft.themePath : readThemePathFromTemplate(template);
-                    const rowGranularity = selectedRow ? draft.granularity : (((template as any).granularity || 'day') as DraftState['granularity']);
+                    const rowGranularity = selectedRow ? draft.granularity : readPeriodGranularity(template, block);
                     const rowTargetFile = selectedRow ? draft.targetFile : String(template.targetFile || '');
                     const rowHeader = selectedRow ? draft.appendUnderHeader : String(template.appendUnderHeader || '');
                     const rowName = selectedRow ? draft.name : presetName(template);
@@ -726,8 +853,8 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
                         </td>
                         <td style={{ padding: '6px' }}>
                           {selectedRow ? (
-                            <CompactCellSelect value={rowGranularity} options={presetGranularityOptions} onChange={(value) => updateDraft({ granularity: value as DraftState['granularity'] })} disabled={isFormDisabled} />
-                          ) : (granularityLabelMap[rowGranularity] || '日')}
+                            supportsPeriod ? <CompactCellSelect value={rowGranularity} options={presetGranularityOptions} onChange={(value) => updateDraft({ granularity: value as DraftState['granularity'] })} disabled={isFormDisabled} /> : <span style={{ color: 'var(--text-muted)' }}>不适用</span>
+                          ) : (supportsPeriod ? (granularityLabelMap[rowGranularity] || '周') : '不适用')}
                         </td>
                         <td style={{ padding: '6px', color: 'var(--text-muted)' }} title={rowTargetFile}>
                           {selectedRow ? (
@@ -772,6 +899,12 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
               <Typography variant="caption" color="text.secondary">主题不是必填项。旧主题表单迁移过来的预设会保留主题，纯目标记录可以不指定主题。</Typography>
             )}
             <NativeTextInput label="说明" value={draft.description} onInput={(value) => updateDraft({ description: value })} disabled={isFormDisabled} placeholder="可选：说明这个预设适合的记录场景" />
+            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Typography variant="caption" color="text.secondary">保存策略：</Typography>
+              {diffSummary.length ? diffSummary.map(item => (
+                <span key={item} style={{ fontSize: 12, padding: '2px 8px', borderRadius: 999, border: '1px solid var(--background-modifier-border)', color: 'var(--text-muted)' }}>{item}</span>
+              )) : <Typography variant="caption" color="text.secondary">完全继承 CoreBlock，只保存名称 / 默认状态 / 顺序等元信息。</Typography>}
+            </Box>
           </Box>
 
           <Box sx={{ opacity: isFormDisabled ? 0.6 : 1 }}>
@@ -779,13 +912,13 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
               <Divider />
               <Box>
                 <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 0.5 }}>表单字段</Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>字段名称、类型、默认值、必填、选项、数字范围会随记录预设保存，并在 快速输入选择预设后刷新。</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>字段名称、类型、默认值、必填、选项、数字范围会随记录预设保存。若与 CoreBlock 完全一致，只保存默认值差异，避免每个预设复制完整字段。</Typography>
                 <FieldsEditor fields={draft.fields || []} disabled={isFormDisabled} onChange={(fields: TemplateField[]) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath })} />
               </Box>
               <Divider />
               <Box>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                  <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出格式</Typography>
+                  <Box><Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出格式</Typography><Typography variant="caption" color="text.secondary">与 CoreBlock 相同则不单独保存；只在确实需要覆盖时保存差异。</Typography></Box>
                   {effectiveBlockForCopier ? <TemplateVariableCopier block={effectiveBlockForCopier} /> : null}
                 </Stack>
                 <NativeTextarea value={draft.outputTemplate} rows={8} onInput={(value) => updateDraft({ outputTemplate: value })} disabled={isFormDisabled} />

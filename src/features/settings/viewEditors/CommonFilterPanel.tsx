@@ -11,7 +11,7 @@ import {
 } from '@shared/public';
 import { RestartAltIcon } from '@shared/public';
 import type { DataStore, FilterRule, Item } from '@core/public';
-import { getAllFields, getFieldLabel, readField } from '@core/public';
+import { getAllFields, getFieldLabel, normalizeViewFilters, normalizeViewFieldKey, readField } from '@core/public';
 
 interface QuickFilterField {
   field: string;
@@ -36,12 +36,12 @@ const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
   { field: 'goalPath', label: '目标', help: '目标中心主筛选字段，优先用目标路径聚合任务/计划/总结/打卡。', placeholder: '选择目标' },
   { field: 'goalPaths', label: '目标列表', placeholder: '选择目标' },
   { field: 'goalId', label: '目标ID', help: '稳定目标 ID，适合目标实体化后的精确筛选。', placeholder: '输入目标ID' },
-  { field: 'coreBlock', label: '核心Block', help: '按 task/plan/review/thought/habit/evidence/blocker/milestone 分组筛选。', placeholder: '选择核心Block' },
+  { field: 'coreBlock', label: '记录类型', help: 'Goal × Block 主链字段，按 task/plan/review/thought/habit/evidence/blocker/milestone 筛选。旧分类筛选会自动归一到 coreBlock。', placeholder: '选择记录类型' },
   { field: 'themePath', label: '主题', help: '主题已降级为表单层级单选字段，但仍可用于上下文筛选。', placeholder: '选择主题' },
-  { field: 'baseCategory', label: '分类', help: '不同字段之间默认表示“且”：目标匹配后还要分类匹配。', placeholder: '选择分类' },
+  { field: 'taskStatus', label: '任务状态', help: '由任务勾选框 / 完成日期推导，代替旧的“完成任务 / 未完成任务”分类。', placeholder: '选择任务状态' },
   { field: 'type', label: '类型', placeholder: '选择记录类型' },
   { field: 'priority', label: '优先级', placeholder: '选择优先级' },
-  { field: 'period', label: '时间粒度', placeholder: '选择粒度' },
+  { field: 'period.label', label: '周期', help: '仅计划 / 总结类记录有周期。', placeholder: '选择周期' },
 ];
 
 function normalizeMultiValue(value: any): string[] {
@@ -55,10 +55,11 @@ function normalizeMultiValue(value: any): string[] {
 
 function collectFieldValues(items: Item[], fields: string[]): Record<string, string[]> {
   const valueMap: Record<string, Set<string>> = {};
-  fields.forEach(field => valueMap[field] = new Set<string>());
+  fields.forEach(field => valueMap[normalizeViewFieldKey(field)] = new Set<string>());
 
   for (const item of items) {
-    for (const field of fields) {
+    for (const rawField of fields) {
+      const field = normalizeViewFieldKey(rawField);
       const value = readField(item, field);
       if (value === null || value === undefined || String(value).trim() === '') continue;
       const values = Array.isArray(value) ? value : [value];
@@ -70,7 +71,8 @@ function collectFieldValues(items: Item[], fields: string[]): Record<string, str
   }
 
   const result: Record<string, string[]> = {};
-  fields.forEach(field => {
+  fields.forEach(rawField => {
+    const field = normalizeViewFieldKey(rawField);
     result[field] = Array.from(valueMap[field] || []).sort((a, b) => a.localeCompare(b, 'zh-CN'));
   });
   return result;
@@ -89,12 +91,14 @@ function cleanupRuleLinks(rules: FilterRule[]): FilterRule[] {
 }
 
 function getQuickRule(filters: FilterRule[], field: string): FilterRule | undefined {
-  return filters.find(rule => rule.field === field && rule.op === 'in');
+  const normalizedField = normalizeViewFieldKey(field);
+  return filters.find(rule => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === 'in');
 }
 
 function upsertQuickRule(filters: FilterRule[], field: string, values: string[]): FilterRule[] {
   const cleanValues = normalizeMultiValue(values);
-  const existingIndex = filters.findIndex(rule => rule.field === field && rule.op === 'in');
+  const normalizedField = normalizeViewFieldKey(field);
+  const existingIndex = filters.findIndex(rule => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === 'in');
 
   if (cleanValues.length === 0) {
     if (existingIndex < 0) return cleanupRuleLinks(filters);
@@ -103,24 +107,24 @@ function upsertQuickRule(filters: FilterRule[], field: string, values: string[])
 
   if (existingIndex >= 0) {
     return cleanupRuleLinks(filters.map((rule, index) => (
-      index === existingIndex ? { ...rule, value: cleanValues } : { ...rule }
+      index === existingIndex ? { ...rule, field: normalizedField, value: cleanValues } : { ...rule }
     )));
   }
 
   return cleanupRuleLinks([
     ...filters.map(rule => ({ ...rule })),
-    { field, op: 'in', value: cleanValues },
+    { field: normalizedField, op: 'in', value: cleanValues },
   ]);
 }
 
 function hasAnyQuickFilter(filters: FilterRule[], fields: QuickFilterField[]): boolean {
-  const fieldSet = new Set(fields.map(f => f.field));
-  return filters.some(rule => fieldSet.has(rule.field) && rule.op === 'in' && normalizeMultiValue(rule.value).length > 0);
+  const fieldSet = new Set(fields.map(f => normalizeViewFieldKey(f.field)));
+  return filters.some(rule => fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === 'in' && normalizeMultiValue(rule.value).length > 0);
 }
 
 function clearQuickFilters(filters: FilterRule[], fields: QuickFilterField[]): FilterRule[] {
-  const fieldSet = new Set(fields.map(f => f.field));
-  return cleanupRuleLinks(filters.filter(rule => !(fieldSet.has(rule.field) && rule.op === 'in')));
+  const fieldSet = new Set(fields.map(f => normalizeViewFieldKey(f.field)));
+  return cleanupRuleLinks(filters.filter(rule => !(fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === 'in')));
 }
 
 function describeQuickSummary(filters: FilterRule[], fields: QuickFilterField[]): string {
@@ -149,9 +153,11 @@ export function CommonFilterPanel({
   compact = false,
 }: CommonFilterPanelProps) {
   const sourceItems = useMemo(() => items ?? dataStore.queryItems(), [items, dataStore]);
-  const availableFields = useMemo(() => new Set(fieldOptions ?? getAllFields(sourceItems)), [fieldOptions, sourceItems]);
+  const availableFields = useMemo(() => new Set((fieldOptions ?? getAllFields(sourceItems)).map(normalizeViewFieldKey)), [fieldOptions, sourceItems]);
   const quickFields = useMemo(
-    () => fields.filter(config => availableFields.has(config.field)),
+    () => fields
+      .map(config => ({ ...config, field: normalizeViewFieldKey(config.field) }))
+      .filter((config, index, array) => config.field && availableFields.has(config.field) && array.findIndex(item => item.field === config.field) === index),
     [fields, availableFields]
   );
   const valueOptions = useMemo(
@@ -212,7 +218,7 @@ export function CommonFilterPanel({
                 fullWidth
                 size="small"
                 disablePortal
-                options={valueOptions[config.field] || []}
+                options={valueOptions[normalizeViewFieldKey(config.field)] || []}
                 value={values}
                 onChange={(_, newValue: string[]) => onChange(upsertQuickRule(filters, config.field, newValue))}
                 renderTags={(tagValue: string[], getTagProps: any) =>

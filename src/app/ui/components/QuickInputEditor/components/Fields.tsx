@@ -11,6 +11,7 @@ import {
   isTemplatePathField,
   isTemplateTagField,
   normalizeImageValue,
+  isSystemRecordContextField,
 } from '@core/public';
 
 import { Box, Button, Stack, Typography } from '@shared/public';
@@ -21,20 +22,8 @@ import { normalizeQuickInputChoices } from './quickInputOptionSelection';
 import { HierarchySingleSelect, type HierarchySingleSelectOption } from './HierarchySingleSelect';
 
 
-const SYSTEM_CONTEXT_FIELD_KEYS = new Set([
-  'goalId', '目标ID', 'goalPath', '目标', 'rootGoal', 'leafGoal',
-  'coreBlock', 'coreBlockId', '核心Block',
-  'cycleId', '周期ID', '周期', 'periodId', 'period', 'goalGranularity',
-  'themeId', 'rootTheme', 'leafTheme',
-]);
-
 function isSystemContextField(field: TemplateField): boolean {
-  const key = String(field.key || '').trim();
-  const label = String(field.label || '').trim();
-  const semantic = String(getTemplateFieldSemantic(field) || '').trim();
-  return SYSTEM_CONTEXT_FIELD_KEYS.has(key)
-    || SYSTEM_CONTEXT_FIELD_KEYS.has(label)
-    || ['goalId', 'goalPath', 'goalPaths', 'goals', 'coreBlock', 'cycleId', 'period'].includes(semantic);
+  return isSystemRecordContextField(field.key, field.label, String(getTemplateFieldSemantic(field) || ''));
 }
 
 export interface QuickInputEditorFieldsProps {

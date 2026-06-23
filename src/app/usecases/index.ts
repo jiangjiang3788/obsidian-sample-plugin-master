@@ -93,7 +93,7 @@ export function createUseCases(store: AppStoreApi, deps: UseCaseDeps): UseCases 
             itemService: deps.itemService,
             dataStore: deps.dataStore,
         }),
-        goal: createGoalUseCase(store, { dataStore: deps.dataStore, itemService: deps.itemService }),
+        goal: createGoalUseCase(store),
     };
 }
 

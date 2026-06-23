@@ -1,6 +1,8 @@
 import type { TemplateField } from '@/core/types/schema';
-import type { CycleGranularity, GoalBlockBinding, GoalDefinition, GoalId, GoalSettings } from './types';
+import type { CycleGranularity, GoalBlockBinding, GoalDefinition, GoalId, GoalSettings, PeriodPolicy } from './types';
 import { splitGoalPath } from './path';
+import { isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from './period';
+import { DEFAULT_TEMPLATE_VARIANT_ID, normalizeTemplateVariantId } from './templateVariant';
 
 /**
  * GoalTemplate 是新主链正式业务接口：某个目标 + 某个固定 Block 的模板策略。
@@ -21,7 +23,9 @@ export interface GoalTemplate {
   description?: string;
   /** 多个变体中，QuickInput 默认选择的模板。 */
   isDefault?: boolean;
-  /** 该目标 × Block 预设的统计周期；不在目标库绑定。未设置时默认日。 */
+  /** 只有计划 / 总结类记录预设才启用周期；非周期 Block 必须为空。 */
+  periodPolicy?: PeriodPolicy;
+  /** @deprecated 旧周期字段。MVP 读取时迁移到 periodPolicy，不再默认 day。 */
   granularity?: Exclude<CycleGranularity, 'custom'>;
   /** 同一个 Goal + Block 下的模板变体排序。数值越小越靠前。 */
   sortOrder?: number;
@@ -41,8 +45,7 @@ function nowIso(): string {
 }
 
 function normalizeVariantId(value?: string | null): string {
-  const text = String(value || '').trim();
-  return text || 'default';
+  return normalizeTemplateVariantId(value);
 }
 
 function safeIdPart(value: string): string {
@@ -54,11 +57,11 @@ function safeIdPart(value: string): string {
 
 function parseVariantIdFromLegacyId(id?: string | null): string {
   const text = String(id || '').trim();
-  if (!text.startsWith('goal-template.')) return 'default';
+  if (!text.startsWith('goal-template.')) return DEFAULT_TEMPLATE_VARIANT_ID;
   const parts = text.split('.');
   // old id: goal-template.<goalId>.<coreBlockId>
   // new id: goal-template.<goalId>.<coreBlockId>.<variantId>
-  if (parts.length <= 4) return 'default';
+  if (parts.length <= 4) return DEFAULT_TEMPLATE_VARIANT_ID;
   return normalizeVariantId(parts.slice(4).join('.'));
 }
 
@@ -66,6 +69,19 @@ function normalizeGoalTemplateId(goalId: string, coreBlockId: string, variantId?
   const text = String(id || '').trim();
   if (text && text.startsWith('goal-template.')) return text;
   return getGoalTemplateId(goalId, coreBlockId, variantId);
+}
+
+function normalizeTemplatePeriodPolicy(coreBlockId: string, raw: any): PeriodPolicy | undefined {
+  if (!isPeriodAwareCoreBlock(coreBlockId)) return undefined;
+  const policy = raw?.periodPolicy;
+  if (policy && policy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
+  }
+  const legacy = String(raw?.granularity || '').trim();
+  if (legacy && legacy !== 'day' && legacy !== 'custom') {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(legacy) };
+  }
+  return { enabled: true, granularity: 'week' };
 }
 
 /** Convert legacy storage rows into the formal GoalTemplate interface. */
@@ -77,10 +93,10 @@ export function fromLegacyGoalTemplateStorage(row: GoalBlockBinding): GoalTempla
     goalId: row.goalId,
     coreBlockId: row.coreBlockId,
     variantId,
-    name: raw.name || raw.templateName || (variantId === 'default' ? '默认模板' : variantId),
+    name: raw.name || raw.templateName || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? '默认模板' : variantId),
     description: raw.description,
-    isDefault: raw.isDefault === true || variantId === 'default',
-    granularity: raw.granularity,
+    isDefault: raw.isDefault === true || variantId === DEFAULT_TEMPLATE_VARIANT_ID,
+    periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, raw),
     sortOrder: typeof raw.sortOrder === 'number' ? raw.sortOrder : undefined,
     enabled: row.enabled !== false,
     fields: row.fields,
@@ -104,18 +120,19 @@ export function toLegacyGoalTemplateStorage(template: GoalTemplate, previous?: G
     goalId: template.goalId,
     coreBlockId: template.coreBlockId,
     variantId,
-    name: template.name || (variantId === 'default' ? '默认模板' : variantId),
+    name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? '默认模板' : variantId),
     description: template.description,
-    isDefault: template.isDefault === true || variantId === 'default',
-    granularity: template.granularity,
+    isDefault: template.isDefault === true || variantId === DEFAULT_TEMPLATE_VARIANT_ID,
+    periodPolicy: normalizeTemplatePeriodPolicy(template.coreBlockId, template),
+    granularity: undefined,
     sortOrder: template.sortOrder,
     enabled: template.enabled !== false,
-    fields: template.fields,
-    outputTemplate: template.outputTemplate,
-    targetFile: template.targetFile,
-    appendUnderHeader: template.appendUnderHeader,
-    defaultValues: template.defaultValues || {},
-    requiredFields: template.requiredFields || [],
+    fields: template.fields?.length ? template.fields : undefined,
+    outputTemplate: template.outputTemplate || undefined,
+    targetFile: template.targetFile || undefined,
+    appendUnderHeader: template.appendUnderHeader || undefined,
+    defaultValues: template.defaultValues && Object.keys(template.defaultValues).length ? template.defaultValues : undefined,
+    requiredFields: template.requiredFields?.length ? template.requiredFields : undefined,
     createdAt: template.createdAt || previous?.createdAt || timestamp,
     updatedAt: template.updatedAt || timestamp,
   } as any;
@@ -128,7 +145,7 @@ export function getGoalTemplates(goalSettings?: Pick<GoalSettings, 'goalBlockBin
 export function getGoalTemplateId(goalId: string, coreBlockId: string, variantId: string = 'default'): string {
   const normalizedVariantId = normalizeVariantId(variantId);
   const base = `goal-template.${safeIdPart(goalId)}.${safeIdPart(coreBlockId)}`;
-  return normalizedVariantId === 'default' ? base : `${base}.${safeIdPart(normalizedVariantId)}`;
+  return normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID ? base : `${base}.${safeIdPart(normalizedVariantId)}`;
 }
 
 function pathCandidates(path?: string | null): string[] {
@@ -176,7 +193,7 @@ export function findGoalTemplate(goalSettings: GoalSettings | undefined, goal: G
     if (exact) return exact;
   }
   return variants.find((template) => template.isDefault === true)
-    || variants.find((template) => normalizeVariantId(template.variantId) === 'default')
+    || variants.find((template) => normalizeVariantId(template.variantId) === DEFAULT_TEMPLATE_VARIANT_ID)
     || variants[0]
     || null;
 }
@@ -194,7 +211,7 @@ export function upsertGoalTemplateInSettings(goalSettings: GoalSettings, templat
   const next = toLegacyGoalTemplateStorage(nextTemplate, index >= 0 ? rows[index] : null);
 
   // One default per Goal + Block. If the saved template is default, demote siblings.
-  const shouldDefault = (next as any).isDefault === true || (next as any).variantId === 'default';
+  const shouldDefault = (next as any).isDefault === true || (next as any).variantId === DEFAULT_TEMPLATE_VARIANT_ID;
   const normalizedRows = rows.map((row: any, rowIndex) => {
     if (rowIndex === index) return row;
     if (!shouldDefault) return row;

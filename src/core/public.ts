@@ -46,8 +46,8 @@ export type {
     GoalRelationHint,
     GoalSettings,
 } from './goal';
-export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath, inferGoalCandidatesFromItems, buildGoalRelationsFromItems, buildGoalOverviewModel, buildGoalMarkdownBackfillPreview, buildGoalMarkdownBackfillDiffPreview, makeStableGoalIdFromPath, buildThemeOverrideGoalMigrationPlan, buildGoalDefinitionFromThemeMigration, buildGoalTemplateFromThemeMigration, normalizeGoalSettingsForMigration, validateThemeOverrideGoalMigration, buildLegacyOverrideTemplateTargets, buildThemeOverrideRecordMigrationPreview, buildThemeOverrideMigrationAudit, buildThemeOverrideRecordDeepScan, buildThemeOverrideMigrationRegressionReport, buildThemeOverrideMigrationSummaryReport, resolveDerivedPeriod, normalizePeriodGranularity, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, fromLegacyGoalTemplateStorage, toLegacyGoalTemplateStorage, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, getItemThemeKey, getItemThemeLabel, buildGoalThemeBreakdown, buildGoalBuckets } from './goal';
-export type { GoalPathParts, GoalMigrationCandidate, GoalOverviewModel, GoalOverviewRow, GoalOverviewMetricProgress, GoalOverviewCycleSummary, GoalMarkdownBackfillPreview, GoalMarkdownBackfillPreviewItem, GoalMarkdownBackfillDiffPreview, GoalMarkdownBackfillDiffItem, DerivedPeriod, GoalTemplate, ThemeOverrideGoalMigrationCandidate, ThemeOverrideGoalMigrationPlan, BuildThemeOverrideGoalMigrationPlanOptions, ThemeOverrideGoalMigrationValidationIssue, ThemeOverrideGoalMigrationValidationReport, LegacyOverrideRecordTarget, ThemeOverrideRecordMigrationPreview, ThemeOverrideRecordMigrationPreviewItem, ThemeOverrideMigrationAudit, ThemeOverrideMigrationAuditRow, ThemeOverrideMigrationAuditThemeRow, ThemeOverrideMigrationAuditBlockRow, ThemeOverrideRecordDeepScanReport, ThemeOverrideRecordDeepScanSample, ThemeOverrideRecordDeepScanOverrideRow, ThemeOverrideRecordShape, ThemeOverrideMigrationRegressionReport, ThemeOverrideMigrationBlockRegressionRow, ThemeOverrideMigrationRegressionStatus, GoalBucket, GoalThemeBreakdownRow } from './goal';
+export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath, buildGoalOverviewModel, makeStableGoalIdFromPath, resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy, DEFAULT_TEMPLATE_VARIANT_ID, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, normalizeTemplateVariantId, isDefaultTemplateVariant, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, fromLegacyGoalTemplateStorage, toLegacyGoalTemplateStorage, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, getItemThemeKey, getItemThemeLabel, buildGoalThemeBreakdown, buildGoalBuckets } from './goal';
+export type { GoalPathParts, GoalOverviewModel, GoalOverviewRow, GoalOverviewMetricProgress, GoalOverviewCycleSummary, DerivedPeriod, TemplateVariantId, TemplateVariantIdentity, GoalTemplate, PeriodGranularity, PeriodPolicy, GoalBucket, GoalThemeBreakdownRow, CompactGoalTemplateOptions } from './goal';
 
 export { ThemeMetadataResolver } from './themeMetadata';
 export type { ThemeMetadata } from './themeMetadata';
@@ -73,6 +73,20 @@ export {
     replaceDisplayField,
 } from './view-config/displayFields';
 export type { NormalizeDisplayFieldsOptions } from './view-config/displayFields';
+export {
+    VIEW_PRIMARY_FIELD_KEYS,
+    VIEW_LEGACY_FIELD_ALIASES,
+    VIEW_NOISY_DISPLAY_FIELDS,
+    isNoisyViewDisplayField,
+    isPeriodViewField,
+    isTemplateSourceViewField,
+    normalizeViewFieldKey,
+    normalizeViewFilters,
+    normalizeViewGroupFields,
+    normalizeViewConfigDomain,
+    normalizeViewInstanceDomain,
+    normalizeViewSort,
+} from './view-config/domainFields';
 export {
     FIELD_CATEGORY_LABELS,
     FIELD_REGISTRY,

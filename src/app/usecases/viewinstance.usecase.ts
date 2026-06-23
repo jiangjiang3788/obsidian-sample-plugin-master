@@ -7,6 +7,10 @@ import {
     generateId,
     moveDisplayField,
     normalizeDisplayFields,
+    normalizeViewFilters,
+    normalizeViewGroupFields,
+    normalizeViewInstanceDomain,
+    normalizeViewSort,
     removeDisplayField,
 } from '@core/public';
 
@@ -68,7 +72,22 @@ export class ViewInstanceUseCase {
             await state.updateSettings(draft => {
                 if (!draft.viewInstances) return;
                 const vi = draft.viewInstances.find(v => v.id === id);
-                if (vi) Object.assign(vi, updates);
+                if (vi) {
+                    const normalizedUpdates: Partial<ViewInstance> = { ...updates };
+                    if (updates.fields) {
+                        normalizedUpdates.fields = normalizeDisplayFields(updates.fields, { includeUnknown: true });
+                    }
+                    if (updates.groupFields) {
+                        normalizedUpdates.groupFields = normalizeViewGroupFields(updates.groupFields);
+                    }
+                    if (updates.filters) {
+                        normalizedUpdates.filters = normalizeViewFilters(updates.filters);
+                    }
+                    if (updates.sort) {
+                        normalizedUpdates.sort = normalizeViewSort(updates.sort);
+                    }
+                    Object.assign(vi, normalizeViewInstanceDomain({ ...vi, ...normalizedUpdates } as ViewInstance));
+                }
             });
         } catch (error) {
             devError('[ViewInstanceUseCase] updateView 失败:', error);
@@ -168,7 +187,7 @@ export class ViewInstanceUseCase {
                 if (!draft.viewInstances) return;
                 const vi = draft.viewInstances.find(v => v.id === id);
                 if (!vi) return;
-                vi.fields = updater(vi.fields || []);
+                vi.fields = normalizeDisplayFields(updater(vi.fields || []), { includeUnknown: true });
             });
         } catch (error) {
             devError('[ViewInstanceUseCase] updateDisplayFields 失败:', error);

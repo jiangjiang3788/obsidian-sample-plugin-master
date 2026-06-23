@@ -127,6 +127,7 @@ export class SettingsUseCase {
         }
     }
 
+
     /**
      * 更新全局分类颜色配置
      * @param colors categoryKey 基础类别 → 颜色 映射

@@ -5,12 +5,14 @@ import { Box, Button, Divider, Typography } from '@shared/public';
 import { GoalManager } from '@features/settings/input/GoalManager';
 import { ThemeMetadataManager } from '@features/settings/data/ThemeMetadataManager';
 
+type DataSection = 'goals' | 'themes';
+
 /**
  * 数据管理页：管理目标和主题元数据。
- * 快速输入页不再承载主题模板矩阵；记录预设在这里配置，主题只管理图标/路径。
+ * 插件内不再提供数据迁移入口；data.json / Markdown 迁移由离线文件处理完成。
  */
 export function DataManagementSettings() {
-  const [section, setSection] = useState<'goals' | 'themes'>('goals');
+  const [section, setSection] = useState<DataSection>('goals');
   return (
     <Box sx={{ display: 'grid', gap: 2 }}>
       <Box sx={{ maxWidth: 1040, mx: 'auto', width: '100%', display: 'grid', gap: 1 }}>

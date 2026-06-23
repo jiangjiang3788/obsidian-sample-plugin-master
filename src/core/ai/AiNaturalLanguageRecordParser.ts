@@ -3,6 +3,7 @@
 
 import type { INaturalLanguageRecordParser, ParseInput } from './INaturalLanguageRecordParser';
 import type { NaturalRecordBatch } from '@/core/types/ai-schema';
+import { isSystemRecordContextField } from '@/core/goal';
 import type { ISettingsProvider } from '@/core/services/types';
 import { AiConfigCache } from './AiConfigCache';
 import { AiHttpClient } from './AiHttpClient';
@@ -39,6 +40,103 @@ function warnSlowParserStep(traceId: string, step: string, startedAt: number, th
     }
 }
 
+
+function ensureCommandTarget(item: any): Record<string, any> {
+    if (!item.target || typeof item.target !== 'object') item.target = {};
+    return item.target;
+}
+
+export function cleanAiFieldValues(values: any): Record<string, any> {
+    const result: Record<string, any> = {};
+    if (!values || typeof values !== 'object') return result;
+    for (const [key, value] of Object.entries(values)) {
+        if (isSystemRecordContextField(key)) continue;
+        result[key] = value;
+    }
+    return result;
+}
+
+function findBlockByTarget(snapshot: any, target: Record<string, any>): any | null {
+    const blocks = snapshot.blocks ?? [];
+    const blockId = String(target.blockId || '').trim();
+    const categoryKey = String(target.categoryKey || '').trim();
+    return blocks.find((block: any) => block.id === blockId)
+        || blocks.find((block: any) => block.categoryKey === categoryKey || block.name === categoryKey)
+        || null;
+}
+
+function findGoalByTarget(snapshot: any, target: Record<string, any>): any | null {
+    const goals = snapshot.goals ?? [];
+    const goalPath = String(target.goalPath || '').trim();
+    const goalId = String(target.goalId || '').trim();
+    return goals.find((goal: any) => goal.id === goalId)
+        || goals.find((goal: any) => goal.path === goalPath || goal.title === goalPath)
+        || null;
+}
+
+function findPresetByTarget(snapshot: any, target: Record<string, any>): any | null {
+    const presets = snapshot.goalPresets ?? [];
+    const explicitId = String(target.goalTemplateId || target.templateId || '').trim();
+    const variantId = String(target.templateVariantId || target.goalTemplateVariantId || '').trim();
+    const goalPath = String(target.goalPath || '').trim();
+    const goalId = String(target.goalId || '').trim();
+    const blockId = String(target.blockId || '').trim();
+    const categoryKey = String(target.categoryKey || '').trim();
+    if (explicitId) {
+        const exact = presets.find((preset: any) => preset.id === explicitId || preset.goalTemplateId === explicitId);
+        if (exact) return exact;
+    }
+    const candidates = presets.filter((preset: any) => {
+        const goalMatches = !goalPath && !goalId ? true : preset.goalPath === goalPath || preset.goalId === goalId;
+        const blockMatches = !blockId && !categoryKey ? true : preset.blockId === blockId || preset.categoryKey === categoryKey;
+        return goalMatches && blockMatches;
+    });
+    if (variantId) {
+        const exactVariant = candidates.find((preset: any) => preset.variantId === variantId || preset.id === variantId || preset.goalTemplateId === variantId);
+        if (exactVariant) return exactVariant;
+    }
+    return candidates.find((preset: any) => preset.isDefault) || candidates[0] || null;
+}
+
+export function normalizeParsedBatch(batch: NaturalRecordBatch, snapshot: any, rawText: string, defaultThemeId?: string): NaturalRecordBatch {
+    if (!batch.items) batch.items = [];
+    batch.items.forEach((item: any) => {
+        if (!item.rawText) item.rawText = rawText;
+        const target = ensureCommandTarget(item);
+        item.fieldValues = cleanAiFieldValues(item.fieldValues);
+
+        const preset = findPresetByTarget(snapshot, target);
+        if (preset) {
+            target.goalTemplateId = preset.goalTemplateId || preset.id;
+            target.templateVariantId = preset.variantId;
+            target.goalId = preset.goalId;
+            target.goalPath = preset.goalPath;
+            target.blockId = preset.blockId;
+            target.categoryKey = preset.categoryKey;
+            if (!target.themeId && preset.themePath) target.themeId = preset.themePath;
+        }
+
+        const block = findBlockByTarget(snapshot, target);
+        if (block) {
+            target.blockId = target.blockId || block.id;
+            target.categoryKey = target.categoryKey || block.categoryKey;
+        } else if (!target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
+            target.categoryKey = snapshot.blocks[0].categoryKey;
+            target.blockId = snapshot.blocks[0].id;
+        }
+
+        const goal = findGoalByTarget(snapshot, target);
+        if (goal) {
+            target.goalId = target.goalId || goal.id;
+            target.goalPath = target.goalPath || goal.path;
+            if (!target.themeId && goal.themePath) target.themeId = goal.themePath;
+        }
+
+        if (!target.themeId && defaultThemeId) target.themeId = defaultThemeId;
+    });
+    return batch;
+}
+
 function compactSnapshotForFastMode(snapshot: any): any {
     return {
         blocks: (snapshot.blocks ?? []).map((block: any) => ({
@@ -62,6 +160,7 @@ function compactSnapshotForFastMode(snapshot: any): any {
             blockId: preset.blockId,
             categoryKey: preset.categoryKey,
             variantId: preset.variantId,
+            goalTemplateId: preset.goalTemplateId || preset.id,
             name: preset.name,
             themePath: preset.themePath,
         })),
@@ -252,10 +351,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         warnSlowParserStep(traceId, '解析 AI JSON', jsonParseStart, 100, { rawLength: raw.length });
 
         const normalizeStart = nowMs();
-        // 确保 items 存在
-        if (!batch.items) {
-            batch.items = [];
-        }
+        normalizeParsedBatch(batch, snapshot, input.text, ai.defaultThemeId);
 
         // 兜底：若不允许多结果，截断为 1
         if (!ai.allowMultipleResults && batch.items.length > 1) {
@@ -267,23 +363,9 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             batch.items = batch.items.slice(0, effectiveMaxResults);
         }
 
-        // 为每个 item 添加 rawText，并应用默认主题
-        const defaultThemeId = ai.defaultThemeId;
-        batch.items.forEach(item => {
-            if (!item.rawText) {
-                item.rawText = input.text;
-            }
-            // 如果 AI 没有返回 themeId，使用默认主题
-            if (!item.target.themeId && defaultThemeId) {
-                item.target.themeId = defaultThemeId;
-            }
-            if (!item.target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
-                item.target.categoryKey = snapshot.blocks[0].categoryKey;
-            }
-        });
         logParserStep(traceId, '结果兜底/规范化完成', normalizeStart, {
             itemsCount: batch.items.length,
-            defaultThemeIdApplied: !!defaultThemeId,
+            defaultThemeIdApplied: !!ai.defaultThemeId,
         });
 
         devLog(`[AiInput][${traceId}][Parser] parse completed (${formatMs(totalStart)})`, {
@@ -313,7 +395,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         // 提取 Block 列表用于示例
         const blockExamples = (snapshot.blocks ?? []).slice(0, 5).map((b: any) => `${b.id}(${b.name})`).join(', ') || '';
         const goalExamples = (snapshot.goals ?? []).slice(0, 6).map((g: any) => g.path).join(', ') || '';
-        const presetExamples = (snapshot.goalPresets ?? []).slice(0, 8).map((p: any) => `${p.goalPath} × ${p.categoryKey} → ${p.name}${p.themePath ? `(${p.themePath})` : ''}`).join('；') || '';
+        const presetExamples = (snapshot.goalPresets ?? []).slice(0, 8).map((p: any) => `${p.goalPath} × ${p.blockId || p.categoryKey} → ${p.name}${p.themePath ? `(${p.themePath})` : ''}`).join('；') || '';
         
         const basePrompt = [
             'You are a parser that converts natural language into Think plugin record commands.',
@@ -326,8 +408,8 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '{',
             '  "rawText": "original input text",',
             '  "target": {',
-            '    "categoryKey": "category-from-snapshot",',
-            '    "blockId": "optional-block-id-from-snapshot",',
+            '    "blockId": "core-block-id-from-snapshot",',
+            '    "categoryKey": "optional-legacy-category-label-from-snapshot",',
             '    "goalPath": "goal-path-from-snapshot",',
             '    "templateVariantId": "preset-variant-from-snapshot",',
             '    "themeId": "theme-path-from-selected-preset"',
@@ -370,38 +452,39 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '',
             'GOAL / PRESET SELECTION:',
             '1. goalPath is REQUIRED when snapshot.goals is not empty. Use a FULL goal path from snapshot.goals[].path.',
-            '2. Choose block/category first, then choose the best preset from snapshot.goalPresets with the same goalPath and categoryKey/blockId.',
-            '3. If a preset clearly matches user words, return target.templateVariantId = that preset.variantId.',
+            '2. Choose blockId first, then choose the best preset from snapshot.goalPresets with the same goalPath and blockId. categoryKey is only a legacy helper.',
+            '3. If a preset clearly matches user words, return target.goalTemplateId = preset.goalTemplateId/id and target.templateVariantId = preset.variantId.',
             '4. If several presets match, prefer preset.isDefault or the closest themePath/name match.',
-            '5. themeId should come from the selected preset themePath when available. Theme is only a form default/stat dimension, not the main template selector.',
+            '5. themeId should come from the selected preset themePath or selected goal themePath. Theme is only a form default/stat dimension, not the main template selector.',
+            '6. Never output legacy templateSourceType values such as override, theme-fallback or goal-binding.',
             '',
-            'CATEGORY AND BLOCK SELECTION:',
-            '1. categoryKey is REQUIRED and must come from snapshot.blocks[].categoryKey',
-            '2. Prefer choosing categoryKey first; blockId is OPTIONAL',
-            '3. Return blockId when you can match snapshot.blocks[].id or snapshot.goalPresets[].blockId',
-            '4. Common patterns:',
-            '   - "任务"/"要做"/"待办" → categoryKey = "任务"',
-            '   - "计划" → categoryKey = "计划"',
-            '   - "总结"/"复盘" → categoryKey = "总结"',
-            '   - "打卡"/"记录状态" → categoryKey = "打卡"',
-            '   - "闪念"/"想法"/"灵感" → categoryKey = "闪念"',
-            '   - If the field values imply a subcategory (such as 闪念/感受, 思考), put that exact value into fieldValues and still keep categoryKey = "闪念"',
-            '5. Do not invent a new categoryKey that does not exist in snapshot.blocks[].categoryKey',
+            'BLOCK SELECTION:',
+            '1. blockId is REQUIRED and must come from snapshot.blocks[].id or snapshot.goalPresets[].blockId, e.g. core.task/core.habit/core.plan.',
+            '2. categoryKey is optional legacy display text. Return it only when it helps compatibility, and it must come from snapshot.blocks[].categoryKey.',
+            '3. Common patterns:',
+            '   - "任务"/"要做"/"待办" → blockId = "core.task"',
+            '   - "计划" → blockId = "core.plan"',
+            '   - "总结"/"复盘" → blockId = "core.review"',
+            '   - "打卡"/"记录状态" → blockId = "core.habit"',
+            '   - "闪念"/"想法"/"灵感" → blockId = "core.thought"',
+            '4. Do not invent blockId or categoryKey that does not exist in the snapshot.',
             '',
             'FIELD VALUES:',
-            '1. Keys MUST be from snapshot.blocks[].fields[].key',
+            '1. Keys MUST be from the selected preset.fields[].key when preset is selected; otherwise use snapshot.blocks[].fields[].key',
             '2. Date format: YYYY-MM-DD',
             '3. Time format: HH:mm',
             '4. Select/radio/rating: return the exact option.value or option.label from snapshot; the app will map it back to the configured option object',
             '5. Rating: use numeric value (1-5)',
             '6. Use current date/time if not specified in input',
+            '7. Do NOT put system context fields into fieldValues: goalId, goalPath, themePath, templateId, templateSourceType, templateVariantId, 周期, 周期ID, 周期粒度. Put goal/preset/theme information under target only.',
+            '8. For 计划/总结, do not invent 周期 fields. The app derives period from the selected preset periodPolicy and 日期.',
             '',
             '=== EXAMPLE ===',
-            'If user says "记录今天运动 30 分钟" and goal/preset include "#强健身体 × 打卡 → 运动打卡(健康/运动)":',
+            'If user says "记录今天运动 30 分钟" and goal/preset include "#强健身体 × core.habit → 运动打卡(健康/运动)":',
             '{',
             '  "items": [{',
             '    "rawText": "记录今天运动 30 分钟",',
-            '    "target": { "categoryKey": "打卡", "blockId": "core.habit", "goalPath": "#强健身体", "templateVariantId": "legacy-xxx", "themeId": "健康/运动" },',
+            '    "target": { "blockId": "core.habit", "categoryKey": "打卡", "goalPath": "#强健身体", "goalTemplateId": "goal-template.goal.health.core.habit.running", "templateVariantId": "running", "themeId": "健康/运动" },',
             '    "fieldValues": { "日期": "2024-01-15", "内容": "运动 30 分钟" },',
             '    "meta": { "confidence": 0.95 }',
             '  }]',
@@ -418,10 +501,10 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         const lines = [
             'You convert user text into Think plugin record commands.',
             'Return ONLY valid JSON. No markdown. No explanations.',
-            'Schema: {"items":[{"rawText":"...","target":{"categoryKey":"...","blockId":"optional","goalPath":"...","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
-            'Use only goalPath/categoryKey/blockId/templateVariantId/themeId/fields provided by user prompt.',
-            'If uncertain, choose the first plausible goal, preset/theme, and category.',
-            'Dates: YYYY-MM-DD. Times: HH:mm. Use current time if needed.',
+            'Schema: {"items":[{"rawText":"...","target":{"blockId":"core.task","categoryKey":"optional legacy label","goalPath":"...","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
+            'Use only goalPath/blockId/categoryKey/goalTemplateId/templateVariantId/themeId/fields provided by user prompt.',
+            'If uncertain, choose the first plausible goal, preset/theme, and blockId.',
+            'Dates: YYYY-MM-DD. Times: HH:mm. Never put goal/theme/template/period system fields into fieldValues.',
         ];
 
         if (customPrompt) {
@@ -454,7 +537,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '=== USER INPUT ===',
             text,
             '',
-            'Return JSON with target.goalPath, target.categoryKey, target.blockId/templateVariantId when possible, and target.themeId filled:',
+            'Return JSON with target.goalPath, target.blockId, optional target.categoryKey, target.goalTemplateId/templateVariantId when possible, and target.themeId filled. Put only user-editable fields in fieldValues:',
         ].join('\n');
     }
 
@@ -469,6 +552,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             blockId: preset.blockId,
             categoryKey: preset.categoryKey,
             variantId: preset.variantId,
+            goalTemplateId: preset.goalTemplateId || preset.id,
             name: preset.name,
             themePath: preset.themePath,
         }));
@@ -499,7 +583,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             'User input:',
             text,
             '',
-            'Return JSON: {"items":[{"rawText":"...","target":{"goalPath":"...","categoryKey":"...","blockId":"...","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
+            'Return JSON: {"items":[{"rawText":"...","target":{"goalPath":"...","blockId":"...","categoryKey":"optional","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
         ].join('\n');
     }
 }

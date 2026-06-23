@@ -29,10 +29,10 @@ export interface AiSettings {
   /** 请求超时时间（毫秒） */
   requestTimeoutMs: number;
 
-  // block/theme 选择策略
-  /** 启用的 Block ID 列表，为空表示全部参与 */
+  // Goal × Block × Template Variant 选择策略
+  /** 启用的 CoreBlock ID 列表，为空表示全部参与。旧 blk_* ID 会在 AI 快照中被忽略，避免空配置。 */
   enabledBlockIds?: string[];
-  /** 默认主题 ID */
+  /** 默认主题路径 / ID。主题只是目标或预设的上下文字段，不再决定模板。 */
   defaultThemeId?: string;
 
   // 多结果与确认策略
@@ -83,10 +83,11 @@ export const DEFAULT_AI_SETTINGS: AiSettings = {
  * 自定义提示词模板示例
  */
 export const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
-1. 当我说"心情"、"开心"、"难过"等情绪词时，使用"打卡"Block，字段"心情"填写情绪，"评分"填写1-5分
-2. 当我说"写文章"、"写作"时，使用"任务"Block，主题选择"电脑/写作"
-3. 当我说"学习了xxx"时，使用"学习记录"Block
-4. 默认情况下，如果不确定，使用"闪念"Block`;
+1. 优先选择已有目标，再选择记录类型，最后选择目标 × Block 下最匹配的记录预设。
+2. 当我说"心情"、"开心"、"难过"等情绪词时，优先匹配目标下的"情绪/心情"打卡预设。
+3. 当我说"写文章"、"写作"时，使用任务记录类型，并优先匹配电脑/写作相关预设。
+4. 不要把目标、主题、模板ID、周期ID写进 fieldValues；这些属于 target 或应用自动推导。
+5. 计划/总结的周期由应用根据预设 periodPolicy 和日期自动生成。`;
 
 /**
  * 自然语言记录命令
@@ -96,8 +97,10 @@ export interface NaturalRecordCommand {
   rawText: string;
   /** 目标 Block / Goal / Theme / Preset。AI 主链：目标 → Block → 预设；主题仅作为表单默认值和统计维度。 */
   target: {
-    categoryKey: string;
-    blockId?: string;
+    /** CoreBlock ID，例如 core.task / core.habit。新模型下 blockId 是首选主轴。 */
+    blockId: string;
+    /** @deprecated 旧分类名，例如 任务 / 打卡。仅用于兼容 AI 旧输出和用户习惯，不作为模板主轴。 */
+    categoryKey?: string;
     /** 主题路径或主题 ID。保留用于表单默认主题，不再决定模板。 */
     themeId?: string;
     /** 目标路径，例如 #照顾好自己 或 照顾好自己/睡眠。 */

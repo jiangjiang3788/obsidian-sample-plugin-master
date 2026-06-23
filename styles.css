@@ -2123,6 +2123,21 @@ body.theme-dark .module-action-plus:hover {
   border-color: var(--interactive-accent);
 }
 
+/* ===== Think OS workspace settings view ===== */
+
+.think-settings-workspace-view {
+  overflow: auto;
+  padding: 12px 16px 32px;
+}
+
+.think-setting-root--workspace {
+  min-height: calc(100vh - 96px);
+}
+
+.think-setting-root--workspace .MuiTabs-scroller {
+  overflow-x: auto !important;
+}
+
 /*
  * ===================================================================
  * Timer Styles

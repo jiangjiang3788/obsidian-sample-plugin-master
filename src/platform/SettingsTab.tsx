@@ -1,52 +1,26 @@
-// src/platform/SettingsTab.tsx
 /** @jsxImportSource preact */
 
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
-import { PluginSettingTab, App } from 'obsidian';
+import { PluginSettingTab, App, Notice } from 'obsidian';
 import type ThinkPlugin from '@main';
-import { Box, CssBaseline, Tab, Tabs, ThemeProvider, theme as baseTheme, useLocalStorage } from '@shared/public';
-import { LOCAL_STORAGE_KEYS } from '@core/public';
+import { Box, Button, CssBaseline, ThemeProvider, Typography, theme as baseTheme } from '@shared/public';
+import { SettingsRoot } from './SettingsRoot';
+import { openThinkSettingsWorkspaceView } from './ThinkSettingsView';
 
-import { LayoutSettings } from '@features/settings/tabs/LayoutSettings';
-import { InputSettings } from '@features/settings/tabs/InputSettings';
-import { GeneralSettings } from '@features/settings/tabs/GeneralSettings';
-import { AiSettings } from '@features/settings/tabs/AiSettings';
-import { DataManagementSettings } from '@features/settings/tabs/DataManagementSettings';
-
-function a11yProps(index: number) {
-    return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
-}
-
-function TabPanel(props: { children?: any; value: number; index: number; }) {
-    const { children, value, index, ...other } = props;
-    return (
-        <div role="tabpanel" hidden={value !== index} id={`settings-tabpanel-${index}`} {...other}>
-            {value === index && <Box sx={{ p: 2, pt: 3 }}>{children}</Box>}
-        </div>
-    );
-}
-
-function SettingsRoot({ app }: { app: App }) {
-    const [tabIndex, setTabIndex] = useLocalStorage(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
-
+function SettingsLauncher({ onOpenWorkspace }: { onOpenWorkspace: () => void }) {
     return (
         <ThemeProvider theme={baseTheme}>
             <CssBaseline />
-            <Box sx={{ width: '100%' }} class="think-setting-root">
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <Tabs value={tabIndex} onChange={(_, newValue) => setTabIndex(newValue)} aria-label="settings tabs">
-                        <Tab label="快速输入" {...a11yProps(0)} />
-                        <Tab label="数据管理" {...a11yProps(1)} />
-                        <Tab label="布局" {...a11yProps(2)} />
-                        <Tab label="通用" {...a11yProps(3)} />
-                        <Tab label="AI" {...a11yProps(4)} />
-                    </Tabs>
-                </Box>
-                <TabPanel value={tabIndex} index={0}><InputSettings /></TabPanel>
-                <TabPanel value={tabIndex} index={1}><DataManagementSettings /></TabPanel>
-                <TabPanel value={tabIndex} index={2}><LayoutSettings app={app} /></TabPanel>
-                <TabPanel value={tabIndex} index={3}><GeneralSettings /></TabPanel>
-                <TabPanel value={tabIndex} index={4}><AiSettings /></TabPanel>
+            <Box class="think-setting-root think-setting-root--launcher" sx={{ p: 2, maxWidth: 760 }}>
+                <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>Think OS 控制台</Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2, lineHeight: 1.7 }}>
+                    完整设置已经收敛到 Obsidian 工作区标签页，那里空间更适合管理目标、记录预设、布局和 AI。
+                    原生插件设置页只保留这个入口，避免继续塞入大型表单。
+                </Typography>
+                <Button variant="contained" onClick={onOpenWorkspace}>打开 Think OS 控制台</Button>
+                <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: 'text.secondary' }}>
+                    也可以通过命令面板执行：打开 Think OS 控制台（标签页）。
+                </Typography>
             </Box>
         </ThemeProvider>
     );
@@ -59,18 +33,28 @@ export class SettingsTab extends PluginSettingTab {
     constructor(public app: App, private plugin: ThinkPlugin) {
         super(app, plugin);
         this.id = plugin.manifest.id;
-        // Phase 4.3: 禁止在 features 层 import tsyringe container
-        // - Services 只能通过 app/public 的 createServices() 获取
         this.services = createServices();
     }
 
     display(): void {
         const { containerEl } = this;
         containerEl.empty();
-        mountWithServices(containerEl, <SettingsRoot app={this.app} />, this.services);
+        mountWithServices(
+            containerEl,
+            <SettingsLauncher
+                onOpenWorkspace={() => {
+                    void openThinkSettingsWorkspaceView(this.plugin).catch((error) => {
+                        new Notice(`打开 Think OS 控制台失败：${error instanceof Error ? error.message : String(error)}`);
+                    });
+                }}
+            />,
+            this.services,
+        );
     }
 
     hide(): void {
         unmountPreact(this.containerEl);
     }
 }
+
+export { SettingsRoot };

@@ -2,36 +2,28 @@
  * GoalUseCase - 目标中心相关用例
  *
  * 目标：把 GoalSettings 的写操作收敛到 UseCase 层，避免 UI 直接改 settings。
- * MVP3 覆盖：目标 CRUD、周期 CRUD、目标-核心Block 绑定、旧 goalPaths 预览/应用迁移。
+ * MVP5 覆盖：目标 CRUD、周期 CRUD、目标 × Block 记录预设；不再在插件内提供迁移/写回能力。
  */
 
 import type {
   CycleDefinition,
   CycleGranularity,
-  DataStore,
-  ItemService,
   GoalDefinition,
   GoalMetricContract,
-  GoalMigrationCandidate,
   GoalSettings,
   GoalTemplate,
+  PeriodPolicy,
   TemplateField,
 } from '@core/public';
 import {
   DEFAULT_GOAL_SETTINGS,
-  buildGoalDefinitionFromThemeMigration,
-  buildGoalTemplateFromThemeMigration,
-  buildThemeOverrideGoalMigrationPlan,
-  buildLegacyOverrideTemplateTargets,
-  buildThemeOverrideRecordMigrationPreview,
   getGoalTemplateId,
   upsertGoalTemplateInSettings,
   removeGoalTemplateFromSettings,
   removeGoalTemplatesForGoal,
-  buildGoalMarkdownBackfillPreview,
-  buildGoalMarkdownBackfillDiffPreview,
+  compactGoalTemplateForStorage,
+  getCoreBlockById,
   devError,
-  inferGoalCandidatesFromItems,
   makeStableGoalIdFromPath,
   splitGoalPath,
 } from '@core/public';
@@ -43,6 +35,7 @@ export interface AddGoalInput {
   description?: string;
   themePath?: string | null;
   status?: GoalDefinition['status'];
+  /** @deprecated 目标不再绑定周期；保留入参只为兼容旧调用，创建时会忽略。 */
   granularity?: GoalDefinition['granularity'];
 }
 
@@ -70,7 +63,9 @@ export interface UpsertGoalTemplateInput {
   fields?: TemplateField[];
   defaultValues?: Record<string, unknown>;
   requiredFields?: string[];
+  periodPolicy?: PeriodPolicy;
 }
+
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -97,7 +92,6 @@ function normalizeGoalInput(input: AddGoalInput): GoalDefinition {
     status: input.status || 'active',
     parentGoalId: null,
     themePath: input.themePath ?? null,
-    granularity: input.granularity || 'day',
     metrics: [],
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -109,42 +103,9 @@ function safeCycleId(input: AddCycleInput): string {
 }
 
 
-export interface ApplyThemeOverrideGoalMigrationOptions {
-  includeDisabled?: boolean;
-  clearLegacyOverrides?: boolean;
-  /** 迁移 UI 中的主题 -> 目标归类。key 支持完整主题路径、父级主题路径或 themeId。 */
-  themeGoalMap?: Record<string, string>;
-}
-
-export interface ApplyThemeOverrideGoalMigrationResult {
-  createdGoals: number;
-  createdTemplates: number;
-  clearedLegacyOverrides: number;
-}
-
-export interface ApplyThemeOverrideRecordMigrationResult {
-  updated: number;
-  failed: number;
-  skipped: number;
-  taskInlineUpdated: number;
-  blockMetadataUpdated: number;
-  unresolved: number;
-}
-
-export interface CreateGoalMigrationBackupResult {
-  backupRoot: string;
-  settingsPath: string;
-  markdownFileCount: number;
-  failedPaths: string[];
-}
-
-export interface CleanupLegacyThemeOverridesResult {
-  removedOverrides: number;
-  remainingThemes: number;
-}
 
 export class GoalUseCase {
-  constructor(private store: AppStoreApi, private dataStore: DataStore, private itemService?: ItemService) {}
+  constructor(private store: AppStoreApi) {}
 
   async addGoal(input: AddGoalInput): Promise<GoalDefinition | null> {
     try {
@@ -167,12 +128,15 @@ export class GoalUseCase {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return;
+      const safePatch = { ...patch } as Partial<GoalDefinition> & { granularity?: unknown };
+      // Goal 本身不再拥有周期粒度；周期只属于 plan/review Template Variant 的 periodPolicy。
+      delete safePatch.granularity;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
         const target = draft.goalSettings.goals.find((goal) => goal.id === id);
         if (!target) return;
-        Object.assign(target, patch, { updatedAt: nowIso() });
-        if (patch.goalPath || patch.title) {
+        Object.assign(target, safePatch, { updatedAt: nowIso() });
+        if (safePatch.goalPath || safePatch.title) {
           target.goalPath = splitGoalPath(target.goalPath || target.title).goalPath || target.goalPath;
         }
       });
@@ -303,7 +267,9 @@ export class GoalUseCase {
           updatedAt: nowIso(),
           createdAt: template.createdAt || nowIso(),
         };
-        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, next);
+        const goal = draft.goalSettings.goals.find((item) => item.id === next.goalId) || null;
+        const coreBlock = getCoreBlockById(draft as any, next.coreBlockId);
+        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, compactGoalTemplateForStorage(next, { coreBlock, goal }));
       });
     } catch (error) {
       devError('[GoalUseCase] upsertGoalTemplate failed:', error);
@@ -329,6 +295,7 @@ export class GoalUseCase {
       fields: input.fields,
       defaultValues: input.defaultValues || {},
       requiredFields: input.requiredFields || [],
+      periodPolicy: input.periodPolicy,
       createdAt: timestamp,
       updatedAt: timestamp,
     });
@@ -366,260 +333,8 @@ export class GoalUseCase {
 
 
 
-  async createGoalMigrationBackup(): Promise<CreateGoalMigrationBackupResult> {
-    try {
-      if (!this.itemService) {
-        throw new Error('ItemService 不可用，无法创建迁移备份。');
-      }
-      const state = this.store.getState();
-      if (!state.isInitialized) {
-        return { backupRoot: '', settingsPath: '', markdownFileCount: 0, failedPaths: [] };
-      }
-      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const backupRoot = `ThinkOS/Backups/goal-migration-${stamp}`;
-      return await this.itemService.createMigrationBackup(backupRoot, state.settings);
-    } catch (error) {
-      devError('[GoalUseCase] createGoalMigrationBackup failed:', error);
-      throw error;
-    }
-  }
-
-  previewThemeOverrideGoalMigration(options: ApplyThemeOverrideGoalMigrationOptions = {}) {
-    const state = this.store.getState();
-    return buildThemeOverrideGoalMigrationPlan(state.settings, this.dataStore.queryItems(), {
-      includeDisabled: options.includeDisabled !== false,
-      themeGoalMap: options.themeGoalMap || {},
-      fallbackThemeAsGoal: false,
-    });
-  }
-
-  async applyThemeOverrideGoalMigration(options: ApplyThemeOverrideGoalMigrationOptions = {}): Promise<ApplyThemeOverrideGoalMigrationResult> {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return { createdGoals: 0, createdTemplates: 0, clearedLegacyOverrides: 0 };
-      const includeDisabled = options.includeDisabled !== false;
-      const clearLegacyOverrides = options.clearLegacyOverrides !== false;
-      const plan = buildThemeOverrideGoalMigrationPlan(state.settings, this.dataStore.queryItems(), {
-        includeDisabled,
-        themeGoalMap: options.themeGoalMap || {},
-        fallbackThemeAsGoal: false,
-      });
-      let createdGoals = 0;
-      let createdTemplates = 0;
-      let clearedLegacyOverrides = 0;
-
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const goalsByPath = new Map(draft.goalSettings.goals.map((goal) => [splitGoalPath(goal.goalPath || goal.title).goalPath || goal.id, goal]));
-        const existingTemplateIds = new Set((draft.goalSettings.goalBlockBindings || []).map((template) => template.id));
-
-        const cellCounts = new Map<string, number>();
-        const cellHasDefault = new Set<string>();
-        for (const candidate of plan.candidates) {
-          const existingGoal = goalsByPath.get(candidate.goalPath);
-          if (!existingGoal) {
-            const goal = buildGoalDefinitionFromThemeMigration(candidate, null);
-            draft.goalSettings.goals.push(goal);
-            goalsByPath.set(candidate.goalPath, goal);
-            createdGoals += 1;
-          }
-          const cellKey = `${candidate.goalId}::${candidate.coreBlockId}`;
-          const cellIndex = cellCounts.get(cellKey) || 0;
-          cellCounts.set(cellKey, cellIndex + 1);
-          const shouldBeDefault = candidate.enabled && !cellHasDefault.has(cellKey);
-          if (shouldBeDefault) cellHasDefault.add(cellKey);
-          const template = {
-            ...buildGoalTemplateFromThemeMigration(candidate),
-            isDefault: shouldBeDefault,
-            sortOrder: cellIndex * 10,
-          };
-          if (!existingTemplateIds.has(template.id)) createdTemplates += 1;
-          draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, template);
-          existingTemplateIds.add(template.id);
-        }
-
-        if (clearLegacyOverrides && draft.inputSettings?.overrides) {
-          const migratedOverrideIds = new Set(plan.candidates.map((candidate) => candidate.overrideId));
-          const before = draft.inputSettings.overrides.length;
-          draft.inputSettings.overrides = draft.inputSettings.overrides.filter((override) => !migratedOverrideIds.has(override.id));
-          clearedLegacyOverrides = before - draft.inputSettings.overrides.length;
-        } else if (draft.inputSettings?.overrides) {
-          const migratedOverrideIds = new Set(plan.candidates.map((candidate) => candidate.overrideId));
-          draft.inputSettings.overrides = draft.inputSettings.overrides.map((override) => migratedOverrideIds.has(override.id) ? { ...override, disabled: true } : override);
-        }
-      });
-
-      return { createdGoals, createdTemplates, clearedLegacyOverrides };
-    } catch (error) {
-      devError('[GoalUseCase] applyThemeOverrideGoalMigration failed:', error);
-      throw error;
-    }
-  }
-
-  previewThemeOverrideRecordMigration(limit = 20) {
-    const state = this.store.getState();
-    return buildThemeOverrideRecordMigrationPreview(state.settings, this.dataStore.queryItems(), limit);
-  }
-
-  async applyThemeOverrideRecordMigration(_limit = 500): Promise<ApplyThemeOverrideRecordMigrationResult> {
-    const emptyResult: ApplyThemeOverrideRecordMigrationResult = {
-      updated: 0,
-      failed: 0,
-      skipped: 0,
-      taskInlineUpdated: 0,
-      blockMetadataUpdated: 0,
-      unresolved: 0,
-    };
-    try {
-      if (!this.itemService) return emptyResult;
-      const state = this.store.getState();
-      if (!state.isInitialized) return emptyResult;
-      const byOverrideId = new Map<string, any>(Object.entries(buildLegacyOverrideTemplateTargets(state.settings)));
-      // 如果用户还没清理旧 overrides，也允许从当前迁移计划中补充映射。
-      const plan = buildThemeOverrideGoalMigrationPlan(state.settings, this.dataStore.queryItems(), {
-        includeDisabled: true,
-        fallbackThemeAsGoal: false,
-      });
-      for (const candidate of plan.candidates) {
-        if (!byOverrideId.has(candidate.overrideId)) byOverrideId.set(candidate.overrideId, candidate);
-      }
-      const legacyItems = this.dataStore.queryItems().filter((item: any) => {
-        const source = String(item.templateSourceType || item.extra?.['模板来源'] || '').trim();
-        const templateId = String(item.templateId || item.extra?.['模板ID'] || '').trim();
-        return source === 'override' || /^ovr_/.test(templateId);
-      });
-      const items = legacyItems.filter((item: any) => {
-        const templateId = String(item.templateId || item.extra?.['模板ID'] || '').trim();
-        return templateId && byOverrideId.has(templateId);
-      }).slice(0, Math.max(1, _limit));
-      let updated = 0;
-      let failed = 0;
-      let skipped = Math.max(0, legacyItems.length - items.length);
-      let taskInlineUpdated = 0;
-      let blockMetadataUpdated = 0;
-      const unresolved = legacyItems.filter((item: any) => {
-        const templateId = String(item.templateId || item.extra?.['模板ID'] || '').trim();
-        return !templateId || !byOverrideId.has(templateId);
-      }).length;
-      for (const item of items as any[]) {
-        const oldTemplateId = String(item.templateId || item.extra?.['模板ID'] || '').trim();
-        const candidate = byOverrideId.get(oldTemplateId);
-        if (!candidate) {
-          skipped += 1;
-          continue;
-        }
-        try {
-          const fields: Record<string, string> = {
-            '模板来源': 'goal-template',
-            '模板ID': candidate.templateId,
-            '目标ID': candidate.goalId,
-            '目标': candidate.goalPath,
-            '核心Block': candidate.coreBlockId,
-          };
-          if (candidate.themePath) fields['主题'] = candidate.themePath;
-          const result = await this.itemService.upsertItemGoalTemplateMigrationFields(item.id, fields, { autoRefresh: false });
-          if (result.shape === 'block-metadata') blockMetadataUpdated += 1;
-          else taskInlineUpdated += 1;
-          updated += 1;
-        } catch (error) {
-          failed += 1;
-          devError('[GoalUseCase] applyThemeOverrideRecordMigration item failed:', error);
-        }
-      }
-      if (updated > 0) {
-        await this.dataStore.clearCacheAndRescan('warm');
-      }
-      return { updated, failed, skipped, taskInlineUpdated, blockMetadataUpdated, unresolved };
-    } catch (error) {
-      devError('[GoalUseCase] applyThemeOverrideRecordMigration failed:', error);
-      throw error;
-    }
-  }
-
-  async cleanupLegacyThemeOverrides(): Promise<CleanupLegacyThemeOverridesResult> {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return { removedOverrides: 0, remainingThemes: 0 };
-      let removedOverrides = 0;
-      let remainingThemes = 0;
-      await state.updateSettings((draft) => {
-        const overrides = draft.inputSettings?.overrides || [];
-        removedOverrides = overrides.length;
-        if (draft.inputSettings) {
-          draft.inputSettings.overrides = [];
-          remainingThemes = draft.inputSettings.themes?.length || 0;
-        }
-      });
-      return { removedOverrides, remainingThemes };
-    } catch (error) {
-      devError('[GoalUseCase] cleanupLegacyThemeOverrides failed:', error);
-      throw error;
-    }
-  }
-
-  previewLegacyGoalMigration(): GoalMigrationCandidate[] {
-    const state = this.store.getState();
-    const goals = state.settings.goalSettings?.goals || [];
-    return inferGoalCandidatesFromItems(this.dataStore.queryItems(), goals);
-  }
-
-  previewMarkdownGoalBackfill(limit = 20) {
-    const state = this.store.getState();
-    return buildGoalMarkdownBackfillPreview(this.dataStore.queryItems(), state.settings.goalSettings?.goals || [], limit);
-  }
-
-  previewMarkdownGoalBackfillDiff(limit = 20) {
-    const state = this.store.getState();
-    return buildGoalMarkdownBackfillDiffPreview(this.dataStore.queryItems(), state.settings.goalSettings?.goals || [], limit);
-  }
-
-  async applyMarkdownGoalBackfill(_limit = 200): Promise<{ updated: number; failed: number; paths: string[] }> {
-    // MVP8 收敛：Markdown 迁移只做候选/补齐建议，不再提供批量写回，避免数据安全风险。
-    return { updated: 0, failed: 0, paths: [] };
-  }
-
-  async applyLegacyGoalMigration(candidates?: GoalMigrationCandidate[]): Promise<{ createdGoals: number; relationCount: number }> {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return { createdGoals: 0, relationCount: 0 };
-      const sourceItems = this.dataStore.queryItems();
-      const preview = candidates || inferGoalCandidatesFromItems(sourceItems, state.settings.goalSettings?.goals || []);
-      let createdGoals = 0;
-
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const goalsByPath = new Map(draft.goalSettings.goals.map((goal) => [splitGoalPath(goal.goalPath || goal.title).goalPath, goal]));
-        for (const candidate of preview) {
-          const path = splitGoalPath(candidate.goalPath).goalPath;
-          if (!path || goalsByPath.has(path)) continue;
-          const timestamp = nowIso();
-          const goal: GoalDefinition = {
-            id: candidate.id || makeStableGoalIdFromPath(path),
-            title: candidate.title || path.split('/').filter(Boolean).pop() || path,
-            goalPath: path,
-            status: 'active',
-            parentGoalId: null,
-            themePath: null,
-            granularity: 'day',
-            metrics: [],
-            createdAt: timestamp,
-            updatedAt: timestamp,
-          };
-          draft.goalSettings.goals.push(goal);
-          goalsByPath.set(path, goal);
-          createdGoals += 1;
-        }
-      });
-
-      // MVP8 收敛：目标-记录关系不再持久化；视图运行时从记录字段推导。
-      return { createdGoals, relationCount: 0 };
-    } catch (error) {
-      devError('[GoalUseCase] applyLegacyGoalMigration failed:', error);
-      throw error;
-    }
-  }
 }
 
-export function createGoalUseCase(store: AppStoreApi, deps: { dataStore: DataStore; itemService?: ItemService }): GoalUseCase {
-  return new GoalUseCase(store, deps.dataStore, deps.itemService);
+export function createGoalUseCase(store: AppStoreApi): GoalUseCase {
+  return new GoalUseCase(store);
 }

@@ -24,7 +24,9 @@ export interface AiPromptRulesSectionProps extends AiSettingsSectionProps {
 export interface AiScopeSectionProps extends AiSettingsSectionProps {
   blocks: BlockTemplate[];
   themes: ThemeDefinition[];
+  staleEnabledBlockIds?: string[];
   onInitAllBlocks: () => void;
+  onClearStaleBlockIds?: () => void;
   onToggleBlock: (blockId: string) => void;
 }
 

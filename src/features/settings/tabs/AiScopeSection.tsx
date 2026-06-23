@@ -24,7 +24,9 @@ export function AiScopeSection({
   blocks,
   themes,
   onUpdate,
+  staleEnabledBlockIds = [],
   onInitAllBlocks,
+  onClearStaleBlockIds,
   onToggleBlock,
 }: AiScopeSectionProps) {
   return (
@@ -35,18 +37,30 @@ export function AiScopeSection({
         </AccordionSummary>
         <AccordionDetails>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            选择哪些 Block 模板参与 AI 识别。留空表示全部参与。
+            选择哪些记录类型参与 AI 识别。留空表示全部参与；AI 会先选目标，再选记录类型，最后选目标 × Block 记录预设。
           </Typography>
-          <Button variant="outlined" size="small" onClick={onInitAllBlocks} sx={{ mb: 2 }}>
-            初始化为全部 Block
-          </Button>
+          <Stack direction="row" spacing={1} sx={{ mb: 2 }} useFlexGap flexWrap="wrap">
+            <Button variant="outlined" size="small" onClick={onInitAllBlocks}>
+              初始化为全部记录类型
+            </Button>
+            {staleEnabledBlockIds.length > 0 && onClearStaleBlockIds && (
+              <Button variant="outlined" size="small" color="warning" onClick={onClearStaleBlockIds}>
+                清理旧 Block ID
+              </Button>
+            )}
+          </Stack>
+          {staleEnabledBlockIds.length > 0 && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              当前 AI 范围里还有 {staleEnabledBlockIds.length} 个旧 Block ID，可能来自旧 data。建议清理，否则会影响 AI 快照。
+            </Alert>
+          )}
           <FormGroup>
             {blocks.map(block => (
               <FormControlLabel
                 key={block.id}
                 control={
                   <Checkbox
-                    checked={(settings.enabledBlockIds ?? []).includes(block.id)}
+                    checked={(settings.enabledBlockIds ?? []).length === 0 || (settings.enabledBlockIds ?? []).includes(block.id)}
                     onChange={() => onToggleBlock(block.id)}
                   />
                 }
@@ -69,7 +83,7 @@ export function AiScopeSection({
         <AccordionDetails>
           <Stack spacing={2}>
             <Typography variant="body2" color="text.secondary">
-              当 AI 无法从用户输入中识别出主题时，将使用此默认主题。建议设置一个常用的主题作为默认值。
+              当目标和记录预设都没有提供主题时，才使用此默认主题。主题只是上下文字段，不再决定模板。
             </Typography>
             <FormControl fullWidth>
               <InputLabel>默认主题</InputLabel>
@@ -94,7 +108,7 @@ export function AiScopeSection({
               </Alert>
             )}
             <Alert severity="info">
-              提示：AI 会尝试从您的输入中识别主题关键词（如"英语"、"工作"等），并匹配到相应的主题路径。如果无法识别，则使用此默认主题。
+              提示：AI 优先使用目标 × Block 记录预设里的主题；没有匹配时再使用目标默认主题，最后才使用这里的默认主题。
             </Alert>
           </Stack>
         </AccordionDetails>

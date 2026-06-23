@@ -3,10 +3,9 @@ import { h } from 'preact';
 import { Box } from '@shared/public';
 import type { CycleGranularity } from '@core/public';
 
-export type GoalGranularity = Exclude<CycleGranularity, 'custom'>;
+export type GoalGranularity = Exclude<CycleGranularity, 'day' | 'custom'>;
 
 export const goalGranularityOptions: Array<{ value: GoalGranularity; label: string }> = [
-  { value: 'day', label: '日' },
   { value: 'week', label: '周' },
   { value: 'month', label: '月' },
   { value: 'quarter', label: '季度' },

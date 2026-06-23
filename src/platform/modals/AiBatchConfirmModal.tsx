@@ -116,11 +116,31 @@ function readPresetThemePath(preset: any | null): string | undefined {
   return undefined;
 }
 
+function shortDisplay(value: unknown, fallback = '—', max = 32): string {
+  const text = String(value ?? '').trim();
+  if (!text) return fallback;
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+function presetDisplayName(preset: any | null): string {
+  if (!preset) return 'CoreBlock 默认';
+  return String(preset.name || preset.variantId || '默认预设').trim() || '默认预设';
+}
+
+function goalDisplayName(goal: any | null, goalPath?: string): string {
+  if (goal?.title) return String(goal.title);
+  const normalized = splitGoalPath(String(goal?.goalPath || goalPath || '')).leafGoal;
+  return normalized || String(goalPath || '未匹配目标');
+}
+
 interface RecordItem {
   id: string;
   cmd: NaturalRecordCommand;
   blockId: string;
   themeId?: string;
+  goalLabel: string;
+  presetLabel: string;
+  themePath?: string;
   formData: Record<string, any>;
   saved: boolean;
   skipped: boolean;
@@ -257,6 +277,9 @@ function AiBatchConfirmForm({
         cmd,
         blockId: block?.id || '',
         themeId,
+        goalLabel: goalDisplayName(goal, goalPath),
+        presetLabel: presetDisplayName(preset),
+        themePath,
         formData: normalizeAiFormData(initialTemplate ?? undefined, initialFormData),
         saved: false,
         skipped: false,
@@ -458,9 +481,14 @@ function AiBatchConfirmForm({
                     </Typography>
                   }
                   secondary={
-                    <Typography variant="caption" noWrap color="text.secondary">
-                      {record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}`}
-                    </Typography>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="caption" noWrap color="text.secondary" sx={{ display: 'block' }}>
+                        {shortDisplay(record.goalLabel, '未匹配目标', 18)} · {shortDisplay(record.presetLabel, '默认预设', 18)}
+                      </Typography>
+                      <Typography variant="caption" noWrap color="text.secondary" sx={{ display: 'block' }}>
+                        {record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}`}
+                      </Typography>
+                    </Box>
                   }
                 />
               </ListItemButton>
@@ -486,6 +514,11 @@ function AiBatchConfirmForm({
               </Typography>
               {currentRecord.saved && <Chip label="已保存" color="success" size="small" sx={{ ml: 1 }} />}
               {currentRecord.skipped && <Chip label="已跳过" color="default" size="small" sx={{ ml: 1 }} />}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1 }}>
+                <Chip size="small" variant="outlined" label={`目标：${shortDisplay(currentRecord.goalLabel, '未匹配')}`} />
+                <Chip size="small" variant="outlined" label={`预设：${shortDisplay(currentRecord.presetLabel, 'CoreBlock 默认')}`} />
+                <Chip size="small" variant="outlined" label={`主题：${shortDisplay(currentRecord.themePath, '未指定')}`} />
+              </Box>
             </Box>
           }
           onClose={closeModal}

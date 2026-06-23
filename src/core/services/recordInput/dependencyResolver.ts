@@ -86,9 +86,17 @@ function extractGoalContext(input: DependencyResolverInput): {
   const templateVariantId = readFirstString(
     context.templateVariantId,
     context.goalTemplateVariantId,
+    context.goalTemplateId,
+    context.templateId,
+    context['模板ID'],
+    context['记录预设'],
     context['模板变体ID'],
     nested.templateVariantId,
     nested.goalTemplateVariantId,
+    nested.goalTemplateId,
+    nested.templateId,
+    nested['模板ID'],
+    nested['记录预设'],
     nested['模板变体ID'],
   );
   return { goalId, goalPath, themePath, templateVariantId };

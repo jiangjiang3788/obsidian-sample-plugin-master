@@ -1,9 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
-import { Alert, Box, Button, Chip, Divider, Typography } from '@shared/public';
-import { selectSettings, useDataStore, useSelector } from '@/app/public';
-import { buildGoalMarkdownBackfillPreview, getGoalTemplates, inferGoalCandidatesFromItems } from '@core/public';
+import { useState } from 'preact/hooks';
+import { Box, Button, Chip, Divider, Typography } from '@shared/public';
+import { selectSettings, useSelector } from '@/app/public';
+import { getGoalTemplates } from '@core/public';
 import { GoalEntitySection } from './goalManager/GoalEntitySection';
 import { GoalMetricSection } from './goalManager/GoalMetricSection';
 import { GoalTemplateSection } from './goalManager/GoalTemplateSection';
@@ -11,7 +11,7 @@ import { GoalTemplateSection } from './goalManager/GoalTemplateSection';
 type GoalCenterSection = 'goals' | 'presets' | 'metrics';
 
 const sections: Array<{ key: GoalCenterSection; title: string; description: string }> = [
-  { key: 'goals', title: '目标', description: '导入、新建和整理目标。' },
+  { key: 'goals', title: '目标', description: '新建和整理目标。' },
   { key: 'presets', title: '预设表', description: '用表格管理目标 × Block，每个单元格可有多个预设。' },
   { key: 'metrics', title: '指标', description: '给目标设置完成标准。' },
 ];
@@ -22,20 +22,11 @@ const sections: Array<{ key: GoalCenterSection; title: string; description: stri
  */
 export function GoalManager() {
   const settings = useSelector(selectSettings);
-  const dataStore = useDataStore();
   const [section, setSection] = useState<GoalCenterSection>('goals');
 
   const goals = settings.goalSettings?.goals || [];
   const activeGoals = goals.filter((goal) => goal.status !== 'archived');
   const goalTemplates = getGoalTemplates(settings.goalSettings);
-  const candidates = useMemo(
-    () => inferGoalCandidatesFromItems(dataStore.queryItems(), goals).filter((item) => item.source !== 'existing-goal'),
-    [dataStore, goals]
-  );
-  const backfillPreview = useMemo(
-    () => buildGoalMarkdownBackfillPreview(dataStore.queryItems(), goals, 12),
-    [dataStore, goals]
-  );
 
   const currentSection = sections.find((item) => item.key === section) || sections[0];
 
@@ -51,17 +42,9 @@ export function GoalManager() {
           </Box>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, justifyContent: 'flex-end' }}>
             <Chip label={`目标 ${activeGoals.length}`} size="small" color={activeGoals.length > 0 ? 'primary' : 'default'} />
-            <Chip label={`可导入 ${candidates.length}`} size="small" color={candidates.length > 0 ? 'warning' : 'default'} />
             <Chip label={`预设 ${goalTemplates.length}`} size="small" />
-            <Chip label={`待整理 ${backfillPreview.total}`} size="small" color={backfillPreview.total > 0 ? 'warning' : 'default'} />
           </Box>
         </Box>
-
-        {candidates.length > 0 && section !== 'goals' && (
-          <Alert severity="info" action={<Button size="small" onClick={() => setSection('goals')}>去导入</Button>}>
-            发现 {candidates.length} 个旧记录里的目标还没有进入目标库。先导入目标，再到“预设表”的对应单元格里创建预设。
-          </Alert>
-        )}
       </Box>
 
       <Box

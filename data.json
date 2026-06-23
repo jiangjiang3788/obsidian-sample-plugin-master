@@ -8,13 +8,7 @@
     "temperature": 0.7,
     "maxTokens": 4096,
     "requestTimeoutMs": 3000000,
-    "enabledBlockIds": [
-      "blk_meic1my6m62iu",
-      "blk_mejsg1dc46fj9",
-      "blk_mejsdvflptluo",
-      "blk_mejsfuehqj4s0",
-      "blk_mejsg76atopau"
-    ],
+    "enabledBlockIds": [],
     "allowMultipleResults": true,
     "maxResults": 520,
     "confirmMode": "batch",
@@ -88,7 +82,6 @@
         "goalPath",
         "themePath",
         "coreBlock",
-        "cycleId",
         "date",
         "content"
       ],
@@ -101,7 +94,6 @@
         "metric": "recordCount",
         "chartType": "bar",
         "topN": 10,
-        "categories": [],
         "usePeriodField": false
       },
       "filters": [],
@@ -173,14 +165,14 @@
         "topN": 50
       },
       "fields": [
-        "categoryKey",
+        "coreBlock",
         "content"
       ],
       "groupFields": [],
       "filters": [],
       "sort": [
         {
-          "field": "recurrence",
+          "field": "repeatToken",
           "dir": "asc"
         }
       ],
@@ -239,7 +231,6 @@
       "fields": [
         "goalPath",
         "themePath",
-        "templateId",
         "coreBlock",
         "date",
         "content"
@@ -247,9 +238,9 @@
       "groupFields": [],
       "filters": [
         {
-          "field": "categoryKey",
+          "field": "coreBlock",
           "op": "=",
-          "value": "打卡"
+          "value": "habit"
         }
       ],
       "sort": [],
@@ -291,8 +282,8 @@
             "color": "#e5bf8a"
           }
         ],
-        "rowField": "recurrence",
-        "colField": "file.path"
+        "rowField": "coreBlock",
+        "colField": "themePath"
       },
       "fields": [
         "themePath",
@@ -301,7 +292,7 @@
         "content"
       ],
       "groupFields": [
-        "categoryKey",
+        "coreBlock",
         "leafTheme"
       ],
       "filters": [
@@ -355,8 +346,8 @@
             "color": "#e5bf8a"
           }
         ],
-        "rowField": "recurrence",
-        "colField": "file.path"
+        "rowField": "taskStatus",
+        "colField": "goalPath"
       },
       "fields": [
         "title"
@@ -364,9 +355,15 @@
       "groupFields": [],
       "filters": [
         {
-          "field": "categoryKey",
+          "field": "coreBlock",
           "op": "=",
-          "value": "未完成任务",
+          "value": "task",
+          "logic": "and"
+        },
+        {
+          "field": "taskStatus",
+          "op": "=",
+          "value": "open",
           "logic": "and"
         },
         {
@@ -376,7 +373,7 @@
           "logic": "and"
         },
         {
-          "field": "recurrence",
+          "field": "repeatToken",
           "op": "=",
           "value": "none"
         }
@@ -390,7 +387,6 @@
       "title": "目标统计",
       "viewType": "StatisticsView",
       "viewConfig": {
-        "categories": [],
         "groupBy": "goal",
         "metric": "recordCount",
         "chartType": "bar",
@@ -465,9 +461,15 @@
       "groupFields": [],
       "filters": [
         {
-          "field": "categoryKey",
+          "field": "coreBlock",
           "op": "=",
-          "value": "完成任务"
+          "value": "task",
+          "logic": "and"
+        },
+        {
+          "field": "taskStatus",
+          "op": "=",
+          "value": "done"
         }
       ],
       "sort": [],
@@ -505,16 +507,22 @@
             "color": "#e5bf8a"
           }
         ],
-        "colField": "file.path",
-        "rowField": "type"
+        "colField": "goalPath",
+        "rowField": "taskStatus"
       },
       "fields": [],
       "groupFields": [],
       "filters": [
         {
-          "field": "categoryKey",
+          "field": "coreBlock",
           "op": "=",
-          "value": "完成任务"
+          "value": "task",
+          "logic": "and"
+        },
+        {
+          "field": "taskStatus",
+          "op": "=",
+          "value": "done"
         }
       ],
       "sort": [],
@@ -562,7 +570,7 @@
         }
       },
       "fields": [
-        "categoryKey",
+        "coreBlock",
         "themePath",
         "content",
         "extra.目标",
@@ -573,7 +581,7 @@
       "filters": [],
       "sort": [
         {
-          "field": "baseCategory",
+          "field": "coreBlock",
           "dir": "asc"
         },
         {
@@ -1403,7 +1411,6 @@
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
-        "granularity": "day",
         "metrics": [],
         "createdAt": "2026-06-19T02:47:02.748Z",
         "updatedAt": "2026-06-19T02:48:07.339Z",
@@ -1417,7 +1424,6 @@
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
-        "granularity": "day",
         "metrics": [],
         "createdAt": "2026-06-07T09:11:18.850Z",
         "updatedAt": "2026-06-07T09:11:18.850Z",
@@ -1431,7 +1437,6 @@
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
-        "granularity": "day",
         "metrics": [],
         "createdAt": "2026-06-07T09:11:18.850Z",
         "updatedAt": "2026-06-07T09:11:18.850Z",
@@ -1445,7 +1450,6 @@
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
-        "granularity": "day",
         "metrics": [],
         "createdAt": "2026-06-07T09:11:18.850Z",
         "updatedAt": "2026-06-07T09:11:18.850Z",
@@ -1459,7 +1463,6 @@
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
-        "granularity": "day",
         "metrics": [],
         "createdAt": "2026-06-19T02:47:36.144Z",
         "updatedAt": "2026-06-19T02:47:36.144Z",
@@ -1473,7 +1476,6 @@
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
-        "granularity": "day",
         "metrics": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-07T09:28:22.587Z",
@@ -1487,7 +1489,6 @@
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
-        "granularity": "day",
         "metrics": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-07T09:28:22.587Z",
@@ -1501,7 +1502,6 @@
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
-        "granularity": "day",
         "metrics": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-07T09:28:22.587Z",
@@ -1515,7 +1515,6 @@
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
-        "granularity": "day",
         "metrics": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-07T09:28:22.587Z",
@@ -1526,41 +1525,16 @@
     "cycles": [],
     "goalBlockBindings": [
       {
-        "id": "goal-template.goal.增强能力.core.plan.legacy-ovr_mewjglesfv52m",
+        "id": "goal-template.goal.增强能力.core.plan.其他",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mewjglesfv52m",
+        "variantId": "其他",
         "name": "其他",
-        "description": "由旧主题模板迁移：工作/其他",
-        "isDefault": false,
-        "granularity": "quarter",
+        "description": "由主题收敛为记录预设：工作/其他",
+        "isDefault": true,
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -1602,60 +1576,31 @@
             "defaultValue": "📋"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "工作/其他",
           "主题": "工作/其他",
           "icon": "📋",
-          "图标": "📋",
-          "legacyOverrideId": "ovr_mewjglesfv52m",
-          "legacyThemePath": "工作/其他",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-07T09:28:22.587Z"
+        "updatedAt": "2026-06-07T09:28:22.587Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "quarter"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.plan.legacy-ovr_mewjgo2zvjjun",
+        "id": "goal-template.goal.增强能力.core.plan.手续-对账",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mewjgo2zvjjun",
+        "variantId": "手续-对账",
         "name": "手续、对账",
-        "description": "由旧主题模板迁移：工作/手续、对账",
+        "description": "由主题收敛为记录预设：工作/手续、对账",
         "isDefault": false,
-        "granularity": "quarter",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -1697,60 +1642,31 @@
             "defaultValue": "📋"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "工作/手续、对账",
           "主题": "工作/手续、对账",
           "icon": "📋",
-          "图标": "📋",
-          "legacyOverrideId": "ovr_mewjgo2zvjjun",
-          "legacyThemePath": "工作/手续、对账",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-07T09:28:22.587Z"
+        "updatedAt": "2026-06-07T09:28:22.587Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "quarter"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.plan.legacy-ovr_mewjgqfrsqo3o",
+        "id": "goal-template.goal.增强能力.core.plan.投标",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mewjgqfrsqo3o",
+        "variantId": "投标",
         "name": "投标",
-        "description": "由旧主题模板迁移：工作/投标",
+        "description": "由主题收敛为记录预设：工作/投标",
         "isDefault": false,
-        "granularity": "quarter",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -1792,60 +1708,31 @@
             "defaultValue": "🎟"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "工作/投标",
           "主题": "工作/投标",
           "icon": "🎟",
-          "图标": "🎟",
-          "legacyOverrideId": "ovr_mewjgqfrsqo3o",
-          "legacyThemePath": "工作/投标",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🎟"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-07T09:28:22.587Z"
+        "updatedAt": "2026-06-07T09:28:22.587Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "quarter"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.plan.legacy-ovr_mewjgt3wigagy",
+        "id": "goal-template.goal.增强能力.core.plan.设计",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mewjgt3wigagy",
+        "variantId": "设计",
         "name": "设计",
-        "description": "由旧主题模板迁移：工作/设计",
+        "description": "由主题收敛为记录预设：工作/设计",
         "isDefault": false,
-        "granularity": "quarter",
         "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -1887,33 +1774,28 @@
             "defaultValue": "🖥"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "工作/设计",
           "主题": "工作/设计",
           "icon": "🖥",
-          "图标": "🖥",
-          "legacyOverrideId": "ovr_mewjgt3wigagy",
-          "legacyThemePath": "工作/设计",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🖥"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-07T09:28:22.587Z"
+        "updatedAt": "2026-06-07T09:28:22.587Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "quarter"
+        }
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.habit.legacy-ovr_mewkgzmuepj0c",
+        "id": "goal-template.goal.仪容仪表.core.habit.卫生",
         "goalId": "goal.仪容仪表",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewkgzmuepj0c",
+        "variantId": "卫生",
         "name": "卫生",
-        "description": "由旧主题模板迁移：健康/卫生",
+        "description": "由主题收敛为记录预设：健康/卫生",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
@@ -1973,32 +1855,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/卫生",
           "主题": "健康/卫生",
           "icon": "🛁",
-          "图标": "🛁",
-          "legacyOverrideId": "ovr_mewkgzmuepj0c",
-          "legacyThemePath": "健康/卫生",
-          "goalId": "goal.仪容仪表",
-          "goalPath": "#仪容仪表",
-          "目标": "#仪容仪表"
+          "图标": "🛁"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-22T07:13:09.089Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.legacy-ovr_mewkhgw62rpkd",
+        "id": "goal-template.goal.照顾好自己.core.habit.早餐",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewkhgw62rpkd",
+        "variantId": "早餐",
         "name": "早餐",
-        "description": "由旧主题模板迁移：健康/早餐",
+        "description": "由主题收敛为记录预设：健康/早餐",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 50,
         "enabled": true,
         "fields": [
@@ -2058,32 +1931,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/早餐",
           "主题": "健康/早餐",
           "icon": "🥚",
-          "图标": "🥚",
-          "legacyOverrideId": "ovr_mewkhgw62rpkd",
-          "legacyThemePath": "健康/早餐",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "🥚"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.legacy-ovr_mewkhkefs1v1a",
+        "id": "goal-template.goal.照顾好自己.core.habit.午餐",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewkhkefs1v1a",
+        "variantId": "午餐",
         "name": "午餐",
-        "description": "由旧主题模板迁移：健康/午餐",
+        "description": "由主题收敛为记录预设：健康/午餐",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 60,
         "enabled": true,
         "fields": [
@@ -2143,32 +2007,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/午餐",
           "主题": "健康/午餐",
           "icon": "🍱",
-          "图标": "🍱",
-          "legacyOverrideId": "ovr_mewkhkefs1v1a",
-          "legacyThemePath": "健康/午餐",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "🍱"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.legacy-ovr_mewkhndzru7rd",
+        "id": "goal-template.goal.照顾好自己.core.habit.晚餐",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewkhndzru7rd",
+        "variantId": "晚餐",
         "name": "晚餐",
-        "description": "由旧主题模板迁移：健康/晚餐",
+        "description": "由主题收敛为记录预设：健康/晚餐",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 70,
         "enabled": true,
         "fields": [
@@ -2228,32 +2083,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/晚餐",
           "主题": "健康/晚餐",
           "icon": "🥣",
-          "图标": "🥣",
-          "legacyOverrideId": "ovr_mewkhndzru7rd",
-          "legacyThemePath": "健康/晚餐",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "🥣"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.thought.legacy-ovr_mewknrja09tfp",
+        "id": "goal-template.goal.增强能力.core.thought.设计",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.thought",
-        "variantId": "legacy-ovr_mewknrja09tfp",
+        "variantId": "设计",
         "name": "设计",
-        "description": "由旧主题模板迁移：工作/设计",
+        "description": "由主题收敛为记录预设：工作/设计",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 0,
         "enabled": true,
         "fields": [
@@ -2314,31 +2160,23 @@
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: thought\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/设计",
           "主题": "工作/设计",
           "icon": "🖥",
-          "图标": "🖥",
-          "legacyOverrideId": "ovr_mewknrja09tfp",
-          "legacyThemePath": "工作/设计",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🖥"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.evidence.legacy-ovr_mewknrja09tfp_evidence",
+        "id": "goal-template.goal.增强能力.core.evidence.设计",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.evidence",
-        "variantId": "legacy-ovr_mewknrja09tfp_evidence",
+        "variantId": "设计",
         "name": "设计",
-        "description": "由旧主题模板迁移：工作/设计",
+        "description": "由主题收敛为记录预设：工作/设计",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 0,
         "enabled": true,
         "fields": [
@@ -2399,31 +2237,23 @@
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: evidence\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/设计",
           "主题": "工作/设计",
           "icon": "🖥",
-          "图标": "🖥",
-          "legacyOverrideId": "ovr_mewknrja09tfp_evidence",
-          "legacyThemePath": "工作/设计",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🖥"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.thought.legacy-ovr_mewknu08d7g5g",
+        "id": "goal-template.goal.增强能力.core.thought.投标",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.thought",
-        "variantId": "legacy-ovr_mewknu08d7g5g",
+        "variantId": "投标",
         "name": "投标",
-        "description": "由旧主题模板迁移：工作/投标",
+        "description": "由主题收敛为记录预设：工作/投标",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -2484,31 +2314,23 @@
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: thought\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/投标",
           "主题": "工作/投标",
           "icon": "🎟",
-          "图标": "🎟",
-          "legacyOverrideId": "ovr_mewknu08d7g5g",
-          "legacyThemePath": "工作/投标",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🎟"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.evidence.legacy-ovr_mewknu08d7g5g_evidence",
+        "id": "goal-template.goal.增强能力.core.evidence.投标",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.evidence",
-        "variantId": "legacy-ovr_mewknu08d7g5g_evidence",
+        "variantId": "投标",
         "name": "投标",
-        "description": "由旧主题模板迁移：工作/投标",
+        "description": "由主题收敛为记录预设：工作/投标",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -2569,31 +2391,23 @@
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: evidence\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/投标",
           "主题": "工作/投标",
           "icon": "🎟",
-          "图标": "🎟",
-          "legacyOverrideId": "ovr_mewknu08d7g5g_evidence",
-          "legacyThemePath": "工作/投标",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🎟"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.thought.legacy-ovr_mewknw7zsehbp",
+        "id": "goal-template.goal.增强能力.core.thought.手续-对账",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.thought",
-        "variantId": "legacy-ovr_mewknw7zsehbp",
+        "variantId": "手续-对账",
         "name": "手续、对账",
-        "description": "由旧主题模板迁移：工作/手续、对账",
+        "description": "由主题收敛为记录预设：工作/手续、对账",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -2654,31 +2468,23 @@
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: thought\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/手续、对账",
           "主题": "工作/手续、对账",
           "icon": "📋",
-          "图标": "📋",
-          "legacyOverrideId": "ovr_mewknw7zsehbp",
-          "legacyThemePath": "工作/手续、对账",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.evidence.legacy-ovr_mewknw7zsehbp_evidence",
+        "id": "goal-template.goal.增强能力.core.evidence.手续-对账",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.evidence",
-        "variantId": "legacy-ovr_mewknw7zsehbp_evidence",
+        "variantId": "手续-对账",
         "name": "手续、对账",
-        "description": "由旧主题模板迁移：工作/手续、对账",
+        "description": "由主题收敛为记录预设：工作/手续、对账",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -2739,31 +2545,23 @@
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: evidence\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/手续、对账",
           "主题": "工作/手续、对账",
           "icon": "📋",
-          "图标": "📋",
-          "legacyOverrideId": "ovr_mewknw7zsehbp_evidence",
-          "legacyThemePath": "工作/手续、对账",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.thought.legacy-ovr_mewknz111blrb",
+        "id": "goal-template.goal.增强能力.core.thought.其他",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.thought",
-        "variantId": "legacy-ovr_mewknz111blrb",
+        "variantId": "其他",
         "name": "其他",
-        "description": "由旧主题模板迁移：工作/其他",
+        "description": "由主题收敛为记录预设：工作/其他",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
@@ -2824,31 +2622,23 @@
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: thought\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/其他",
           "主题": "工作/其他",
           "icon": "📋",
-          "图标": "📋",
-          "legacyOverrideId": "ovr_mewknz111blrb",
-          "legacyThemePath": "工作/其他",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.evidence.legacy-ovr_mewko1fackv5o_evidence",
+        "id": "goal-template.goal.增强能力.core.evidence.老板任务",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.evidence",
-        "variantId": "legacy-ovr_mewko1fackv5o_evidence",
+        "variantId": "老板任务",
         "name": "老板任务",
-        "description": "由旧主题模板迁移：工作/老板任务",
+        "description": "由主题收敛为记录预设：工作/老板任务",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 40,
         "enabled": true,
         "fields": [
@@ -2909,59 +2699,27 @@
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: evidence\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/老板任务",
           "主题": "工作/老板任务",
           "icon": "💥",
-          "图标": "💥",
-          "legacyOverrideId": "ovr_mewko1fackv5o_evidence",
-          "legacyThemePath": "工作/老板任务",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "💥"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.plan.legacy-ovr_mewkpvpjgu387",
+        "id": "goal-template.goal.增强能力.core.plan.ob基础",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mewkpvpjgu387",
+        "variantId": "ob基础",
         "name": "ob基础",
-        "description": "由旧主题模板迁移：电脑/ob基础",
+        "description": "由主题收敛为记录预设：电脑/ob基础",
         "isDefault": false,
-        "granularity": "quarter",
         "sortOrder": 50,
         "enabled": true,
         "fields": [
           {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
-          {
             "id": "core.field.goalPath",
             "key": "目标",
             "label": "目标",
@@ -3002,61 +2760,32 @@
             "defaultValue": "🎚"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "电脑/ob基础",
           "主题": "电脑/ob基础",
           "icon": "🎚",
-          "图标": "🎚",
-          "legacyOverrideId": "ovr_mewkpvpjgu387",
-          "legacyThemePath": "电脑/ob基础",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🎚"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "quarter"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.plan.legacy-ovr_mewkpy47r1cly",
+        "id": "goal-template.goal.增强能力.core.plan.笔记系统",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mewkpy47r1cly",
+        "variantId": "笔记系统",
         "name": "笔记系统",
-        "description": "由旧主题模板迁移：电脑/笔记系统",
+        "description": "由主题收敛为记录预设：电脑/笔记系统",
         "isDefault": false,
-        "granularity": "quarter",
         "sortOrder": 60,
         "enabled": true,
         "fields": [
           {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
-          {
             "id": "core.field.goalPath",
             "key": "目标",
             "label": "目标",
@@ -3097,61 +2826,32 @@
             "defaultValue": "📕"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "电脑/笔记系统",
           "主题": "电脑/笔记系统",
           "icon": "📕",
-          "图标": "📕",
-          "legacyOverrideId": "ovr_mewkpy47r1cly",
-          "legacyThemePath": "电脑/笔记系统",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📕"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "quarter"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.plan.legacy-ovr_mewkq1yrjs2rp",
+        "id": "goal-template.goal.增强能力.core.plan.记录系统",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mewkq1yrjs2rp",
+        "variantId": "记录系统",
         "name": "记录系统",
-        "description": "由旧主题模板迁移：电脑/记录系统",
+        "description": "由主题收敛为记录预设：电脑/记录系统",
         "isDefault": false,
-        "granularity": "quarter",
         "sortOrder": 70,
         "enabled": true,
         "fields": [
           {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
-          {
             "id": "core.field.goalPath",
             "key": "目标",
             "label": "目标",
@@ -3192,61 +2892,32 @@
             "defaultValue": "🎴"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "电脑/记录系统",
           "主题": "电脑/记录系统",
           "icon": "🎴",
-          "图标": "🎴",
-          "legacyOverrideId": "ovr_mewkq1yrjs2rp",
-          "legacyThemePath": "电脑/记录系统",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🎴"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "quarter"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.plan.legacy-ovr_mewkq8q5sgr0m",
+        "id": "goal-template.goal.增强能力.core.plan.整理",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mewkq8q5sgr0m",
+        "variantId": "整理",
         "name": "整理",
-        "description": "由旧主题模板迁移：电脑/整理",
+        "description": "由主题收敛为记录预设：电脑/整理",
         "isDefault": false,
-        "granularity": "quarter",
         "sortOrder": 80,
         "enabled": true,
         "fields": [
           {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
-          {
             "id": "core.field.goalPath",
             "key": "目标",
             "label": "目标",
@@ -3287,64 +2958,31 @@
             "defaultValue": "✒"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n分类:: 计划\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "电脑/整理",
           "主题": "电脑/整理",
           "icon": "✒",
-          "图标": "✒",
-          "legacyOverrideId": "ovr_mewkq8q5sgr0m",
-          "legacyThemePath": "电脑/整理",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "✒"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "quarter"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.review.legacy-ovr_mewkquimfqr7m",
+        "id": "goal-template.goal.增强能力.core.review.整理",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.review",
-        "variantId": "legacy-ovr_mewkquimfqr7m",
+        "variantId": "整理",
         "name": "整理",
-        "description": "由旧主题模板迁移：电脑/整理",
+        "description": "由主题收敛为记录预设：电脑/整理",
         "isDefault": true,
-        "granularity": "year",
         "sortOrder": 0,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -3386,64 +3024,31 @@
             "defaultValue": "✒"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "电脑/整理",
           "主题": "电脑/整理",
           "icon": "✒",
-          "图标": "✒",
-          "legacyOverrideId": "ovr_mewkquimfqr7m",
-          "legacyThemePath": "电脑/整理",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "✒"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "year"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.review.legacy-ovr_mewkqwza9qhga",
+        "id": "goal-template.goal.增强能力.core.review.记录系统",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.review",
-        "variantId": "legacy-ovr_mewkqwza9qhga",
+        "variantId": "记录系统",
         "name": "记录系统",
-        "description": "由旧主题模板迁移：电脑/记录系统",
+        "description": "由主题收敛为记录预设：电脑/记录系统",
         "isDefault": false,
-        "granularity": "year",
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -3485,64 +3090,31 @@
             "defaultValue": "🎴"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "电脑/记录系统",
           "主题": "电脑/记录系统",
           "icon": "🎴",
-          "图标": "🎴",
-          "legacyOverrideId": "ovr_mewkqwza9qhga",
-          "legacyThemePath": "电脑/记录系统",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🎴"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "year"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.review.legacy-ovr_mewkqzaf5btbz",
+        "id": "goal-template.goal.增强能力.core.review.笔记系统",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.review",
-        "variantId": "legacy-ovr_mewkqzaf5btbz",
+        "variantId": "笔记系统",
         "name": "笔记系统",
-        "description": "由旧主题模板迁移：电脑/笔记系统",
+        "description": "由主题收敛为记录预设：电脑/笔记系统",
         "isDefault": false,
-        "granularity": "year",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -3584,64 +3156,31 @@
             "defaultValue": "📕"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "电脑/笔记系统",
           "主题": "电脑/笔记系统",
           "icon": "📕",
-          "图标": "📕",
-          "legacyOverrideId": "ovr_mewkqzaf5btbz",
-          "legacyThemePath": "电脑/笔记系统",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📕"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "year"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.review.legacy-ovr_mewkr1h7zenjp",
+        "id": "goal-template.goal.增强能力.core.review.ob基础",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.review",
-        "variantId": "legacy-ovr_mewkr1h7zenjp",
+        "variantId": "ob基础",
         "name": "ob基础",
-        "description": "由旧主题模板迁移：电脑/ob基础",
+        "description": "由主题收敛为记录预设：电脑/ob基础",
         "isDefault": false,
-        "granularity": "year",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -3683,64 +3222,31 @@
             "defaultValue": "🎚"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "电脑/ob基础",
           "主题": "电脑/ob基础",
           "icon": "🎚",
-          "图标": "🎚",
-          "legacyOverrideId": "ovr_mewkr1h7zenjp",
-          "legacyThemePath": "电脑/ob基础",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🎚"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "year"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.review.legacy-ovr_mewkr5co3rrce",
+        "id": "goal-template.goal.增强能力.core.review.设计",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.review",
-        "variantId": "legacy-ovr_mewkr5co3rrce",
+        "variantId": "设计",
         "name": "设计",
-        "description": "由旧主题模板迁移：工作/设计",
+        "description": "由主题收敛为记录预设：工作/设计",
         "isDefault": false,
-        "granularity": "year",
         "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -3782,64 +3288,31 @@
             "defaultValue": "🖥"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "工作/设计",
           "主题": "工作/设计",
           "icon": "🖥",
-          "图标": "🖥",
-          "legacyOverrideId": "ovr_mewkr5co3rrce",
-          "legacyThemePath": "工作/设计",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🖥"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "year"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.review.legacy-ovr_mewkr7v2soxgh",
+        "id": "goal-template.goal.增强能力.core.review.投标",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.review",
-        "variantId": "legacy-ovr_mewkr7v2soxgh",
+        "variantId": "投标",
         "name": "投标",
-        "description": "由旧主题模板迁移：工作/投标",
+        "description": "由主题收敛为记录预设：工作/投标",
         "isDefault": false,
-        "granularity": "year",
         "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -3881,64 +3354,31 @@
             "defaultValue": "🎟"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "工作/投标",
           "主题": "工作/投标",
           "icon": "🎟",
-          "图标": "🎟",
-          "legacyOverrideId": "ovr_mewkr7v2soxgh",
-          "legacyThemePath": "工作/投标",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🎟"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "year"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.review.legacy-ovr_mewkra8td5oh3",
+        "id": "goal-template.goal.增强能力.core.review.手续-对账",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.review",
-        "variantId": "legacy-ovr_mewkra8td5oh3",
+        "variantId": "手续-对账",
         "name": "手续、对账",
-        "description": "由旧主题模板迁移：工作/手续、对账",
+        "description": "由主题收敛为记录预设：工作/手续、对账",
         "isDefault": false,
-        "granularity": "year",
         "sortOrder": 60,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -3980,64 +3420,31 @@
             "defaultValue": "📋"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "工作/手续、对账",
           "主题": "工作/手续、对账",
           "icon": "📋",
-          "图标": "📋",
-          "legacyOverrideId": "ovr_mewkra8td5oh3",
-          "legacyThemePath": "工作/手续、对账",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "year"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.review.legacy-ovr_mewkrcl4o5fqn",
+        "id": "goal-template.goal.增强能力.core.review.其他",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.review",
-        "variantId": "legacy-ovr_mewkrcl4o5fqn",
+        "variantId": "其他",
         "name": "其他",
-        "description": "由旧主题模板迁移：工作/其他",
+        "description": "由主题收敛为记录预设：工作/其他",
         "isDefault": false,
-        "granularity": "year",
         "sortOrder": 70,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -4079,33 +3486,28 @@
             "defaultValue": "📋"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "工作/其他",
           "主题": "工作/其他",
           "icon": "📋",
-          "图标": "📋",
-          "legacyOverrideId": "ovr_mewkrcl4o5fqn",
-          "legacyThemePath": "工作/其他",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        "updatedAt": "2026-06-07T09:28:22.588Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "year"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.habit.legacy-ovr_mewt2b7za29ik",
+        "id": "goal-template.goal.武装大脑.core.habit.读书",
         "goalId": "goal.武装大脑",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewt2b7za29ik",
+        "variantId": "读书",
         "name": "读书",
-        "description": "由旧主题模板迁移：思考/读书",
+        "description": "由主题收敛为记录预设：思考/读书",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -4165,32 +3567,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/读书",
           "主题": "思考/读书",
           "icon": "📚",
-          "图标": "📚",
-          "legacyOverrideId": "ovr_mewt2b7za29ik",
-          "legacyThemePath": "思考/读书",
-          "goalId": "goal.武装大脑",
-          "goalPath": "#武装大脑",
-          "目标": "#武装大脑"
+          "图标": "📚"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.habit.legacy-ovr_mewt595cv52ow",
+        "id": "goal-template.goal.我若安好便是晴天.core.habit.车车",
         "goalId": "goal.我若安好便是晴天",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewt595cv52ow",
+        "variantId": "车车",
         "name": "车车",
-        "description": "由旧主题模板迁移：生活/车车",
+        "description": "由主题收敛为记录预设：生活/车车",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -4254,32 +3647,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "生活/车车",
           "主题": "生活/车车",
           "icon": "🚗",
-          "图标": "🚗",
-          "legacyOverrideId": "ovr_mewt595cv52ow",
-          "legacyThemePath": "生活/车车",
-          "goalId": "goal.我若安好便是晴天",
-          "goalPath": "#我若安好便是晴天",
-          "目标": "#我若安好便是晴天"
+          "图标": "🚗"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.身体健康.core.habit.legacy-ovr_mewt6b67umn67",
+        "id": "goal-template.goal.照顾好自己.core.habit.粑粑",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewt6b67umn67",
+        "variantId": "粑粑",
         "name": "粑粑",
-        "description": "由旧主题模板迁移：健康/粑粑",
-        "isDefault": true,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：健康/粑粑",
+        "isDefault": false,
         "sortOrder": 90,
         "enabled": true,
         "fields": [
@@ -4351,32 +3735,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n目标::{{goalPath}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/粑粑",
           "主题": "健康/粑粑",
           "icon": "💩",
-          "图标": "💩",
-          "legacyOverrideId": "ovr_mewt6b67umn67",
-          "legacyThemePath": "健康/粑粑",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "💩"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.legacy-ovr_mewte5hhuod5g",
+        "id": "goal-template.goal.照顾好自己.core.habit.睡眠",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewte5hhuod5g",
+        "variantId": "睡眠",
         "name": "睡眠",
-        "description": "由旧主题模板迁移：健康/睡眠",
-        "isDefault": true,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：健康/睡眠",
+        "isDefault": false,
         "sortOrder": 40,
         "enabled": true,
         "fields": [
@@ -4464,32 +3839,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/睡眠",
           "主题": "健康/睡眠",
           "icon": "💤",
-          "图标": "💤",
-          "legacyOverrideId": "ovr_mewte5hhuod5g",
-          "legacyThemePath": "健康/睡眠",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "💤"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.legacy-ovr_mewtfg1txm8nf",
+        "id": "goal-template.goal.照顾好自己.core.habit.身体",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewtfg1txm8nf",
+        "variantId": "身体",
         "name": "身体",
-        "description": "由旧主题模板迁移：健康/身体",
+        "description": "由主题收敛为记录预设：健康/身体",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -4565,32 +3931,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/身体",
           "主题": "健康/身体",
           "icon": "🔋",
-          "图标": "🔋",
-          "legacyOverrideId": "ovr_mewtfg1txm8nf",
-          "legacyThemePath": "健康/身体",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "🔋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.legacy-ovr_mewzk79xrolwo",
+        "id": "goal-template.goal.照顾好自己.core.habit.心情",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewzk79xrolwo",
+        "variantId": "心情",
         "name": "心情",
-        "description": "由旧主题模板迁移：健康/心情",
-        "isDefault": false,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：健康/心情",
+        "isDefault": true,
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -4678,32 +4035,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n目标::{{goalPath}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/心情",
           "主题": "健康/心情",
           "icon": "😄",
-          "图标": "😄",
-          "legacyOverrideId": "ovr_mewzk79xrolwo",
-          "legacyThemePath": "健康/心情",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "😄"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
       },
       {
-        "id": "goal-template.goal.强健身体.core.habit.legacy-ovr_mewzwad0lzntf",
+        "id": "goal-template.goal.照顾好自己.core.habit.运动",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mewzwad0lzntf",
+        "variantId": "运动",
         "name": "运动",
-        "description": "由旧主题模板迁移：健康/运动",
-        "isDefault": true,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：健康/运动",
+        "isDefault": false,
         "sortOrder": 100,
         "enabled": true,
         "fields": [
@@ -4769,32 +4117,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n目标::{{goalPath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/运动",
           "主题": "健康/运动",
           "icon": "💪",
-          "图标": "💪",
-          "legacyOverrideId": "ovr_mewzwad0lzntf",
-          "legacyThemePath": "健康/运动",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "💪"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.task.legacy-ovr_mex00lg6stu8d",
+        "id": "goal-template.goal.仪容仪表.core.task.剪指甲",
         "goalId": "goal.仪容仪表",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mex00lg6stu8d",
+        "variantId": "剪指甲",
         "name": "剪指甲",
-        "description": "由旧主题模板迁移：健康/剪指甲",
-        "isDefault": false,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：健康/剪指甲",
+        "isDefault": true,
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -4898,31 +4237,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "03/01.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/剪指甲",
           "主题": "健康/剪指甲",
           "icon": "✋",
-          "图标": "✋",
-          "legacyOverrideId": "ovr_mex00lg6stu8d",
-          "legacyThemePath": "健康/剪指甲",
-          "goalId": "goal.仪容仪表",
-          "goalPath": "#仪容仪表",
-          "目标": "#仪容仪表"
+          "图标": "✋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:03.481Z"
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.task.legacy-ovr_mex00r9ptivwf",
+        "id": "goal-template.goal.仪容仪表.core.task.剪头发",
         "goalId": "goal.仪容仪表",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mex00r9ptivwf",
+        "variantId": "剪头发",
         "name": "剪头发",
-        "description": "由旧主题模板迁移：健康/剪头发",
+        "description": "由主题收敛为记录预设：健康/剪头发",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -5026,31 +4357,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "03/01.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/剪头发",
           "主题": "健康/剪头发",
           "icon": "✂",
-          "图标": "✂",
-          "legacyOverrideId": "ovr_mex00r9ptivwf",
-          "legacyThemePath": "健康/剪头发",
-          "goalId": "goal.仪容仪表",
-          "goalPath": "#仪容仪表",
-          "目标": "#仪容仪表"
+          "图标": "✂"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:03.481Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.legacy-ovr_mex01d52zda53",
+        "id": "goal-template.goal.照顾好自己.core.habit.姨妈",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mex01d52zda53",
+        "variantId": "姨妈",
         "name": "姨妈",
-        "description": "由旧主题模板迁移：健康/姨妈",
+        "description": "由主题收敛为记录预设：健康/姨妈",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 80,
         "enabled": true,
         "fields": [
@@ -5110,32 +4433,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/姨妈",
           "主题": "健康/姨妈",
           "icon": "🩸",
-          "图标": "🩸",
-          "legacyOverrideId": "ovr_mex01d52zda53",
-          "legacyThemePath": "健康/姨妈",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "🩸"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.habit.legacy-ovr_mex01qcs1209t",
+        "id": "goal-template.goal.仪容仪表.core.habit.剪指甲",
         "goalId": "goal.仪容仪表",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mex01qcs1209t",
+        "variantId": "剪指甲",
         "name": "剪指甲",
-        "description": "由旧主题模板迁移：健康/剪指甲",
+        "description": "由主题收敛为记录预设：健康/剪指甲",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -5199,32 +4513,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/剪指甲",
           "主题": "健康/剪指甲",
           "icon": "✋",
-          "图标": "✋",
-          "legacyOverrideId": "ovr_mex01qcs1209t",
-          "legacyThemePath": "健康/剪指甲",
-          "goalId": "goal.仪容仪表",
-          "goalPath": "#仪容仪表",
-          "目标": "#仪容仪表"
+          "图标": "✋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:13:09.089Z"
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.habit.legacy-ovr_mex0206ywz716",
+        "id": "goal-template.goal.仪容仪表.core.habit.剪头发",
         "goalId": "goal.仪容仪表",
         "coreBlockId": "core.habit",
-        "variantId": "legacy-ovr_mex0206ywz716",
+        "variantId": "剪头发",
         "name": "剪头发",
-        "description": "由旧主题模板迁移：健康/剪头发",
+        "description": "由主题收敛为记录预设：健康/剪头发",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -5284,32 +4589,23 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/剪头发",
           "主题": "健康/剪头发",
           "icon": "✂",
-          "图标": "✂",
-          "legacyOverrideId": "ovr_mex0206ywz716",
-          "legacyThemePath": "健康/剪头发",
-          "goalId": "goal.仪容仪表",
-          "goalPath": "#仪容仪表",
-          "目标": "#仪容仪表"
+          "图标": "✂"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:13:09.089Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzvma56b66q",
+        "id": "goal-template.goal.增强能力.core.task.老板任务",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzvma56b66q",
+        "variantId": "老板任务",
         "name": "老板任务",
-        "description": "由旧主题模板迁移：工作/老板任务",
+        "description": "由主题收敛为记录预设：工作/老板任务",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 0,
         "enabled": true,
         "fields": [
@@ -5419,31 +4715,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/老板任务",
           "主题": "工作/老板任务",
           "icon": "💥",
-          "图标": "💥",
-          "legacyOverrideId": "ovr_mfhzvma56b66q",
-          "legacyThemePath": "工作/老板任务",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "💥"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzvs9f409yg",
+        "id": "goal-template.goal.增强能力.core.task.其他",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzvs9f409yg",
+        "variantId": "其他",
         "name": "其他",
-        "description": "由旧主题模板迁移：工作/其他",
+        "description": "由主题收敛为记录预设：工作/其他",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -5553,31 +4841,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/其他",
           "主题": "工作/其他",
           "icon": "📋",
-          "图标": "📋",
-          "legacyOverrideId": "ovr_mfhzvs9f409yg",
-          "legacyThemePath": "工作/其他",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzvxrer2sya",
+        "id": "goal-template.goal.增强能力.core.task.手续-对账",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzvxrer2sya",
+        "variantId": "手续-对账",
         "name": "手续、对账",
-        "description": "由旧主题模板迁移：工作/手续、对账",
+        "description": "由主题收敛为记录预设：工作/手续、对账",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -5687,31 +4967,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/手续、对账",
           "主题": "工作/手续、对账",
           "icon": "📋",
-          "图标": "📋",
-          "legacyOverrideId": "ovr_mfhzvxrer2sya",
-          "legacyThemePath": "工作/手续、对账",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "📋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzw3yrvedoi",
+        "id": "goal-template.goal.增强能力.core.task.投标",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzw3yrvedoi",
+        "variantId": "投标",
         "name": "投标",
-        "description": "由旧主题模板迁移：工作/投标",
+        "description": "由主题收敛为记录预设：工作/投标",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
@@ -5821,31 +5093,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/投标",
           "主题": "工作/投标",
           "icon": "🎟",
-          "图标": "🎟",
-          "legacyOverrideId": "ovr_mfhzw3yrvedoi",
-          "legacyThemePath": "工作/投标",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🎟"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzw9d975by6",
+        "id": "goal-template.goal.增强能力.core.task.设计",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzw9d975by6",
+        "variantId": "设计",
         "name": "设计",
-        "description": "由旧主题模板迁移：工作/设计",
+        "description": "由主题收敛为记录预设：工作/设计",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 40,
         "enabled": true,
         "fields": [
@@ -5956,32 +5220,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/设计",
           "主题": "工作/设计",
           "icon": "🖥",
           "图标": "🖥",
-          "任务内容": "设计",
-          "legacyOverrideId": "ovr_mfhzw9d975by6",
-          "legacyThemePath": "工作/设计",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "任务内容": "设计"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzwdwyp8ewj",
+        "id": "goal-template.goal.增强能力.core.task.工作",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzwdwyp8ewj",
+        "variantId": "工作",
         "name": "工作",
-        "description": "由旧主题模板迁移：工作",
+        "description": "由主题收敛为记录预设：工作",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 50,
         "enabled": true,
         "fields": [
@@ -6091,31 +5347,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作",
           "主题": "工作",
           "icon": "🖥",
-          "图标": "🖥",
-          "legacyOverrideId": "ovr_mfhzwdwyp8ewj",
-          "legacyThemePath": "工作",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🖥"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.legacy-ovr_mfhzwkwivqho3",
+        "id": "goal-template.goal.武装大脑.core.task.思路整理",
         "goalId": "goal.武装大脑",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzwkwivqho3",
+        "variantId": "思路整理",
         "name": "思路整理",
-        "description": "由旧主题模板迁移：思考/思路整理",
+        "description": "由主题收敛为记录预设：思考/思路整理",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -6226,32 +5474,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/思路整理",
           "主题": "思考/思路整理",
           "icon": "🧠",
           "图标": "🧠",
-          "任务内容": "思路整理",
-          "legacyOverrideId": "ovr_mfhzwkwivqho3",
-          "legacyThemePath": "思考/思路整理",
-          "goalId": "goal.武装大脑",
-          "goalPath": "#武装大脑",
-          "目标": "#武装大脑"
+          "任务内容": "思路整理"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:29:54.146Z"
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.legacy-ovr_mfhzwoqz4223c",
+        "id": "goal-template.goal.武装大脑.core.task.复盘整理",
         "goalId": "goal.武装大脑",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzwoqz4223c",
+        "variantId": "复盘整理",
         "name": "复盘整理",
-        "description": "由旧主题模板迁移：思考/复盘整理",
+        "description": "由主题收敛为记录预设：思考/复盘整理",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -6362,32 +5602,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/复盘整理",
           "主题": "思考/复盘整理",
           "icon": "🧠",
           "图标": "🧠",
-          "任务内容": "复盘整理",
-          "legacyOverrideId": "ovr_mfhzwoqz4223c",
-          "legacyThemePath": "思考/复盘整理",
-          "goalId": "goal.武装大脑",
-          "goalPath": "#武装大脑",
-          "目标": "#武装大脑"
+          "任务内容": "复盘整理"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:29:54.146Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzwx24q1kpc",
+        "id": "goal-template.goal.增强能力.core.task.电脑",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzwx24q1kpc",
+        "variantId": "电脑",
         "name": "电脑",
-        "description": "由旧主题模板迁移：电脑",
+        "description": "由主题收敛为记录预设：电脑",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 60,
         "enabled": true,
         "fields": [
@@ -6496,32 +5728,23 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "电脑",
           "主题": "电脑",
           "icon": "🖥",
-          "图标": "🖥",
-          "legacyOverrideId": "ovr_mfhzwx24q1kpc",
-          "legacyThemePath": "电脑",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🖥"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzx4hvl9s27",
+        "id": "goal-template.goal.增强能力.core.task.ob基础",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzx4hvl9s27",
+        "variantId": "ob基础",
         "name": "ob基础",
-        "description": "由旧主题模板迁移：电脑/ob基础",
+        "description": "由主题收敛为记录预设：电脑/ob基础",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 70,
         "enabled": true,
         "fields": [
@@ -6631,33 +5854,24 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "电脑/ob基础",
           "主题": "电脑/ob基础",
           "icon": "🎚",
           "图标": "🎚",
-          "任务内容": "ob",
-          "legacyOverrideId": "ovr_mfhzx4hvl9s27",
-          "legacyThemePath": "电脑/ob基础",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "任务内容": "ob"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzxac3hz906",
+        "id": "goal-template.goal.增强能力.core.task.笔记系统",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzxac3hz906",
+        "variantId": "笔记系统",
         "name": "笔记系统",
-        "description": "由旧主题模板迁移：电脑/笔记系统",
+        "description": "由主题收敛为记录预设：电脑/笔记系统",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 80,
         "enabled": true,
         "fields": [
@@ -6767,33 +5981,24 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "电脑/笔记系统",
           "主题": "电脑/笔记系统",
           "icon": "📕",
           "图标": "📕",
-          "任务内容": "笔记系统",
-          "legacyOverrideId": "ovr_mfhzxac3hz906",
-          "legacyThemePath": "电脑/笔记系统",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "任务内容": "笔记系统"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzxf5uox0gu",
+        "id": "goal-template.goal.增强能力.core.task.记录系统",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzxf5uox0gu",
+        "variantId": "记录系统",
         "name": "记录系统",
-        "description": "由旧主题模板迁移：电脑/记录系统",
+        "description": "由主题收敛为记录预设：电脑/记录系统",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 90,
         "enabled": true,
         "fields": [
@@ -6903,33 +6108,24 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "电脑/记录系统",
           "主题": "电脑/记录系统",
           "icon": "🎴",
           "图标": "🎴",
-          "任务内容": "插件",
-          "legacyOverrideId": "ovr_mfhzxf5uox0gu",
-          "legacyThemePath": "电脑/记录系统",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "任务内容": "插件"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfhzxlc4yemiz",
+        "id": "goal-template.goal.增强能力.core.task.整理",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzxlc4yemiz",
+        "variantId": "整理",
         "name": "整理",
-        "description": "由旧主题模板迁移：电脑/整理",
+        "description": "由主题收敛为记录预设：电脑/整理",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 100,
         "enabled": true,
         "fields": [
@@ -7038,32 +6234,23 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "电脑/整理",
           "主题": "电脑/整理",
           "icon": "✒",
-          "图标": "✒",
-          "legacyOverrideId": "ovr_mfhzxlc4yemiz",
-          "legacyThemePath": "电脑/整理",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "✒"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.legacy-ovr_mfhzxpuhe0flz",
+        "id": "goal-template.goal.了解世界.core.task.时间整理",
         "goalId": "goal.了解世界",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzxpuhe0flz",
+        "variantId": "时间整理",
         "name": "时间整理",
-        "description": "由旧主题模板迁移：思考/时间整理",
+        "description": "由主题收敛为记录预设：思考/时间整理",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -7174,32 +6361,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/时间整理",
           "主题": "思考/时间整理",
           "icon": "🧠",
           "图标": "🧠",
-          "任务内容": "时间整理",
-          "legacyOverrideId": "ovr_mfhzxpuhe0flz",
-          "legacyThemePath": "思考/时间整理",
-          "goalId": "goal.了解世界",
-          "goalPath": "#了解世界",
-          "目标": "#了解世界"
+          "任务内容": "时间整理"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:29:59.450Z"
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.legacy-ovr_mfhzy0ykf8a08",
+        "id": "goal-template.goal.我若安好便是晴天.core.task.生活",
         "goalId": "goal.我若安好便是晴天",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzy0ykf8a08",
+        "variantId": "生活",
         "name": "生活",
-        "description": "由旧主题模板迁移：生活",
+        "description": "由主题收敛为记录预设：生活",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -7309,31 +6488,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "生活",
           "主题": "生活",
           "icon": "✨",
-          "图标": "✨",
-          "legacyOverrideId": "ovr_mfhzy0ykf8a08",
-          "legacyThemePath": "生活",
-          "goalId": "goal.我若安好便是晴天",
-          "goalPath": "#我若安好便是晴天",
-          "目标": "#我若安好便是晴天"
+          "图标": "✨"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T03:36:14.255Z"
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.legacy-ovr_mfhzz4r56gn7k",
+        "id": "goal-template.goal.我若安好便是晴天.core.task.娱乐",
         "goalId": "goal.我若安好便是晴天",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzz4r56gn7k",
+        "variantId": "娱乐",
         "name": "娱乐",
-        "description": "由旧主题模板迁移：生活/娱乐",
+        "description": "由主题收敛为记录预设：生活/娱乐",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -7444,32 +6615,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "生活/娱乐",
           "主题": "生活/娱乐",
           "icon": "📺",
           "图标": "📺",
-          "任务内容": "玩手机",
-          "legacyOverrideId": "ovr_mfhzz4r56gn7k",
-          "legacyThemePath": "生活/娱乐",
-          "goalId": "goal.我若安好便是晴天",
-          "goalPath": "#我若安好便是晴天",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "玩手机"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T03:36:14.255Z"
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.legacy-ovr_mfhzzaeanezaa",
+        "id": "goal-template.goal.我若安好便是晴天.core.task.车车",
         "goalId": "goal.我若安好便是晴天",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzzaeanezaa",
+        "variantId": "车车",
         "name": "车车",
-        "description": "由旧主题模板迁移：生活/车车",
+        "description": "由主题收敛为记录预设：生活/车车",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
@@ -7580,32 +6743,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "生活/车车",
           "主题": "生活/车车",
           "icon": "🚗",
           "图标": "🚗",
-          "任务内容": "听小说",
-          "legacyOverrideId": "ovr_mfhzzaeanezaa",
-          "legacyThemePath": "生活/车车",
-          "goalId": "goal.我若安好便是晴天",
-          "goalPath": "#我若安好便是晴天",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "听小说"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T03:36:14.255Z"
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.legacy-ovr_mfhzzedvyx5e3",
+        "id": "goal-template.goal.了解世界.core.task.垚垚",
         "goalId": "goal.了解世界",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzzedvyx5e3",
+        "variantId": "垚垚",
         "name": "垚垚",
-        "description": "由旧主题模板迁移：生活/垚垚",
+        "description": "由主题收敛为记录预设：生活/垚垚",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -7716,32 +6871,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "生活/垚垚",
           "主题": "生活/垚垚",
           "icon": "👶",
           "图标": "👶",
-          "任务内容": "和垚垚玩",
-          "legacyOverrideId": "ovr_mfhzzedvyx5e3",
-          "legacyThemePath": "生活/垚垚",
-          "goalId": "goal.了解世界",
-          "goalPath": "#了解世界",
-          "目标": "#了解世界"
+          "任务内容": "和垚垚玩"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:29:59.450Z"
       },
       {
-        "id": "goal-template.goal.丰富生活.core.task.legacy-ovr_mfhzzih02q1gy",
+        "id": "goal-template.goal.我若安好便是晴天.core.task.家务",
         "goalId": "goal.我若安好便是晴天",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzzih02q1gy",
+        "variantId": "家务",
         "name": "家务",
-        "description": "由旧主题模板迁移：生活/家务",
-        "isDefault": true,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：生活/家务",
+        "isDefault": false,
         "sortOrder": 60,
         "enabled": true,
         "fields": [
@@ -7852,32 +6999,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "生活/家务",
           "主题": "生活/家务",
           "icon": "🧹",
           "图标": "🧹",
-          "任务内容": "打扫卫生",
-          "legacyOverrideId": "ovr_mfhzzih02q1gy",
-          "legacyThemePath": "生活/家务",
-          "goalId": "goal.我若安好便是晴天",
-          "goalPath": "#我若安好便是晴天",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "打扫卫生"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T03:36:14.255Z"
       },
       {
-        "id": "goal-template.goal.丰富生活.core.task.legacy-ovr_mfhzzn3vwjnxg",
+        "id": "goal-template.goal.我若安好便是晴天.core.task.整理",
         "goalId": "goal.我若安好便是晴天",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfhzzn3vwjnxg",
+        "variantId": "整理",
         "name": "整理",
-        "description": "由旧主题模板迁移：生活/整理",
+        "description": "由主题收敛为记录预设：生活/整理",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 70,
         "enabled": true,
         "fields": [
@@ -7988,32 +7127,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "生活/整理",
           "主题": "生活/整理",
           "icon": "📦",
           "图标": "📦",
-          "任务内容": "整理家",
-          "legacyOverrideId": "ovr_mfhzzn3vwjnxg",
-          "legacyThemePath": "生活/整理",
-          "goalId": "goal.我若安好便是晴天",
-          "goalPath": "#我若安好便是晴天",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "整理家"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T03:36:14.255Z"
       },
       {
-        "id": "goal-template.goal.身体健康.core.task.legacy-ovr_mfi00ahn87zal",
+        "id": "goal-template.goal.照顾好自己.core.task.健康",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfi00ahn87zal",
+        "variantId": "健康",
         "name": "健康",
-        "description": "由旧主题模板迁移：健康",
-        "isDefault": true,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：健康",
+        "isDefault": false,
         "sortOrder": 70,
         "enabled": true,
         "fields": [
@@ -8123,31 +7254,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康",
           "主题": "健康",
           "icon": "💤",
-          "图标": "💤",
-          "legacyOverrideId": "ovr_mfi00ahn87zal",
-          "legacyThemePath": "健康",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "💤"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
-        "id": "goal-template.goal.身体健康.core.task.legacy-ovr_mfi00peyoa7fx",
+        "id": "goal-template.goal.照顾好自己.core.task.粑粑",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfi00peyoa7fx",
+        "variantId": "粑粑",
         "name": "粑粑",
-        "description": "由旧主题模板迁移：健康/粑粑",
+        "description": "由主题收敛为记录预设：健康/粑粑",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 80,
         "enabled": true,
         "fields": [
@@ -8258,32 +7381,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/粑粑",
           "主题": "健康/粑粑",
           "icon": "💩",
           "图标": "💩",
-          "任务内容": "拉粑粑",
-          "legacyOverrideId": "ovr_mfi00peyoa7fx",
-          "legacyThemePath": "健康/粑粑",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "任务内容": "拉粑粑"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
-        "id": "goal-template.goal.强健身体.core.task.legacy-ovr_mfi00txo5ux1g",
+        "id": "goal-template.goal.照顾好自己.core.task.运动",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfi00txo5ux1g",
+        "variantId": "运动",
         "name": "运动",
-        "description": "由旧主题模板迁移：健康/运动",
-        "isDefault": true,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：健康/运动",
+        "isDefault": false,
         "sortOrder": 90,
         "enabled": true,
         "fields": [
@@ -8394,32 +7509,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/运动",
           "主题": "健康/运动",
           "icon": "💪",
           "图标": "💪",
-          "任务内容": "八段锦",
-          "legacyOverrideId": "ovr_mfi00txo5ux1g",
-          "legacyThemePath": "健康/运动",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "任务内容": "八段锦"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.legacy-ovr_mfi011sly54z0",
+        "id": "goal-template.goal.照顾好自己.core.task.身体",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfi011sly54z0",
+        "variantId": "身体",
         "name": "身体",
-        "description": "由旧主题模板迁移：健康/身体",
-        "isDefault": false,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：健康/身体",
+        "isDefault": true,
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -8453,31 +7560,23 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/身体",
           "主题": "健康/身体",
           "icon": "🔋",
-          "图标": "🔋",
-          "legacyOverrideId": "ovr_mfi011sly54z0",
-          "legacyThemePath": "健康/身体",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "🔋"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.legacy-ovr_mfi015kb2hw7a",
+        "id": "goal-template.goal.照顾好自己.core.task.睡眠",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfi015kb2hw7a",
+        "variantId": "睡眠",
         "name": "睡眠",
-        "description": "由旧主题模板迁移：健康/睡眠",
-        "isDefault": true,
-        "granularity": "day",
+        "description": "由主题收敛为记录预设：健康/睡眠",
+        "isDefault": false,
         "sortOrder": 30,
         "enabled": true,
         "fields": [
@@ -8588,32 +7687,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/睡眠",
           "主题": "健康/睡眠",
           "icon": "💤",
           "图标": "💤",
-          "任务内容": "睡觉",
-          "legacyOverrideId": "ovr_mfi015kb2hw7a",
-          "legacyThemePath": "健康/睡眠",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "任务内容": "睡觉"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.task.legacy-ovr_mfi019n9qc5c0",
+        "id": "goal-template.goal.仪容仪表.core.task.卫生",
         "goalId": "goal.仪容仪表",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfi019n9qc5c0",
+        "variantId": "卫生",
         "name": "卫生",
-        "description": "由旧主题模板迁移：健康/卫生",
+        "description": "由主题收敛为记录预设：健康/卫生",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
@@ -8724,32 +7815,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/卫生",
           "主题": "健康/卫生",
           "icon": "🛁",
           "图标": "🛁",
-          "任务内容": "洗漱",
-          "legacyOverrideId": "ovr_mfi019n9qc5c0",
-          "legacyThemePath": "健康/卫生",
-          "goalId": "goal.仪容仪表",
-          "goalPath": "#仪容仪表",
-          "目标": "#仪容仪表"
+          "任务内容": "洗漱"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:03.481Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.legacy-ovr_mfi01w2yaf99z",
+        "id": "goal-template.goal.照顾好自己.core.task.早餐",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfi01w2yaf99z",
+        "variantId": "早餐",
         "name": "早餐",
-        "description": "由旧主题模板迁移：健康/早餐",
+        "description": "由主题收敛为记录预设：健康/早餐",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 40,
         "enabled": true,
         "fields": [
@@ -8860,32 +7943,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/早餐",
           "主题": "健康/早餐",
           "icon": "🥚",
           "图标": "🥚",
-          "任务内容": "早餐",
-          "legacyOverrideId": "ovr_mfi01w2yaf99z",
-          "legacyThemePath": "健康/早餐",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "任务内容": "早餐"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.legacy-ovr_mfi020mjezkyy",
+        "id": "goal-template.goal.照顾好自己.core.task.午餐",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfi020mjezkyy",
+        "variantId": "午餐",
         "name": "午餐",
-        "description": "由旧主题模板迁移：健康/午餐",
+        "description": "由主题收敛为记录预设：健康/午餐",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 50,
         "enabled": true,
         "fields": [
@@ -8996,32 +8071,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/午餐",
           "主题": "健康/午餐",
           "icon": "🍱",
           "图标": "🍱",
-          "任务内容": "午餐",
-          "legacyOverrideId": "ovr_mfi020mjezkyy",
-          "legacyThemePath": "健康/午餐",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "任务内容": "午餐"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.legacy-ovr_mfi025rhepqgs",
+        "id": "goal-template.goal.照顾好自己.core.task.晚餐",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfi025rhepqgs",
+        "variantId": "晚餐",
         "name": "晚餐",
-        "description": "由旧主题模板迁移：健康/晚餐",
+        "description": "由主题收敛为记录预设：健康/晚餐",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 60,
         "enabled": true,
         "fields": [
@@ -9132,32 +8199,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "健康/晚餐",
           "主题": "健康/晚餐",
           "icon": "🥣",
           "图标": "🥣",
-          "任务内容": "晚餐",
-          "legacyOverrideId": "ovr_mfi025rhepqgs",
-          "legacyThemePath": "健康/晚餐",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "任务内容": "晚餐"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mfj18fupymfx4",
+        "id": "goal-template.goal.增强能力.core.task.通勤",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mfj18fupymfx4",
+        "variantId": "通勤",
         "name": "通勤",
-        "description": "由旧主题模板迁移：工作/通勤",
+        "description": "由主题收敛为记录预设：工作/通勤",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 110,
         "enabled": true,
         "fields": [
@@ -9269,33 +8328,25 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/通勤",
           "主题": "工作/通勤",
           "icon": "🛵",
           "图标": "🛵",
           "任务内容": "通勤",
-          "时长": "15",
-          "legacyOverrideId": "ovr_mfj18fupymfx4",
-          "legacyThemePath": "工作/通勤",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "时长": "15"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-07T09:28:22.589Z"
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.legacy-ovr_mg1mbjvbx9yzq",
+        "id": "goal-template.goal.武装大脑.core.task.读书",
         "goalId": "goal.武装大脑",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mg1mbjvbx9yzq",
+        "variantId": "读书",
         "name": "读书",
-        "description": "由旧主题模板迁移：思考/读书",
+        "description": "由主题收敛为记录预设：思考/读书",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
@@ -9405,31 +8456,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/读书",
           "主题": "思考/读书",
           "icon": "📚",
-          "图标": "📚",
-          "legacyOverrideId": "ovr_mg1mbjvbx9yzq",
-          "legacyThemePath": "思考/读书",
-          "goalId": "goal.武装大脑",
-          "goalPath": "#武装大脑",
-          "目标": "#武装大脑"
+          "图标": "📚"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:29:54.146Z"
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.legacy-ovr_mg1yvqf11f4co",
+        "id": "goal-template.goal.我若安好便是晴天.core.task.高级生活",
         "goalId": "goal.我若安好便是晴天",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mg1yvqf11f4co",
+        "variantId": "高级生活",
         "name": "高级生活",
-        "description": "由旧主题模板迁移：生活/高级生活",
+        "description": "由主题收敛为记录预设：生活/高级生活",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 40,
         "enabled": true,
         "fields": [
@@ -9539,31 +8582,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "生活/高级生活",
           "主题": "生活/高级生活",
           "icon": "🔆",
-          "图标": "🔆",
-          "legacyOverrideId": "ovr_mg1yvqf11f4co",
-          "legacyThemePath": "生活/高级生活",
-          "goalId": "goal.我若安好便是晴天",
-          "goalPath": "#我若安好便是晴天",
-          "目标": "#我若安好便是晴天"
+          "图标": "🔆"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T03:36:14.255Z"
       },
       {
-        "id": "goal-template.goal.增强能力.core.plan.legacy-ovr_mh1slj07y3wzt",
+        "id": "goal-template.goal.增强能力.core.plan.通勤",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mh1slj07y3wzt",
+        "variantId": "通勤",
         "name": "通勤",
-        "description": "由旧主题模板迁移：工作/通勤",
+        "description": "由主题收敛为记录预设：工作/通勤",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 90,
         "enabled": true,
         "fields": [
@@ -9596,31 +8631,28 @@
             "defaultValue": "🛵"
           }
         ],
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/通勤",
           "主题": "工作/通勤",
           "icon": "🛵",
-          "图标": "🛵",
-          "legacyOverrideId": "ovr_mh1slj07y3wzt",
-          "legacyThemePath": "工作/通勤",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🛵"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-07T09:28:22.589Z"
+        "updatedAt": "2026-06-07T09:28:22.589Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "week"
+        },
+        "outputTemplate": null
       },
       {
-        "id": "goal-template.goal.增强能力.core.review.legacy-ovr_mh1slj07kqdml",
+        "id": "goal-template.goal.增强能力.core.review.通勤",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.review",
-        "variantId": "legacy-ovr_mh1slj07kqdml",
+        "variantId": "通勤",
         "name": "通勤",
-        "description": "由旧主题模板迁移：工作/通勤",
+        "description": "由主题收敛为记录预设：工作/通勤",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 90,
         "enabled": true,
         "fields": [
@@ -9653,31 +8685,28 @@
             "defaultValue": "🛵"
           }
         ],
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/通勤",
           "主题": "工作/通勤",
           "icon": "🛵",
-          "图标": "🛵",
-          "legacyOverrideId": "ovr_mh1slj07kqdml",
-          "legacyThemePath": "工作/通勤",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🛵"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-07T09:28:22.589Z"
+        "updatedAt": "2026-06-07T09:28:22.589Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "week"
+        },
+        "outputTemplate": null
       },
       {
-        "id": "goal-template.goal.增强能力.core.thought.legacy-ovr_mh1smyhxqo3gk",
+        "id": "goal-template.goal.增强能力.core.thought.通勤",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.thought",
-        "variantId": "legacy-ovr_mh1smyhxqo3gk",
+        "variantId": "通勤",
         "name": "通勤",
-        "description": "由旧主题模板迁移：工作/通勤",
+        "description": "由主题收敛为记录预设：工作/通勤",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 50,
         "enabled": true,
         "fields": [
@@ -9710,31 +8739,24 @@
             "defaultValue": "🛵"
           }
         ],
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "工作/通勤",
           "主题": "工作/通勤",
           "icon": "🛵",
-          "图标": "🛵",
-          "legacyOverrideId": "ovr_mh1smyhxqo3gk",
-          "legacyThemePath": "工作/通勤",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🛵"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-07T09:28:22.589Z"
+        "updatedAt": "2026-06-07T09:28:22.589Z",
+        "outputTemplate": null
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.legacy-ovr_mo29s584mizcdy5",
+        "id": "goal-template.goal.我若安好便是晴天.core.task.小手机",
         "goalId": "goal.我若安好便是晴天",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mo29s584mizcdy5",
+        "variantId": "小手机",
         "name": "小手机",
-        "description": "由旧主题模板迁移：生活/小手机",
+        "description": "由主题收敛为记录预设：生活/小手机",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 50,
         "enabled": true,
         "fields": [
@@ -9845,32 +8867,24 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "生活/小手机",
           "主题": "生活/小手机",
           "icon": "🍓",
           "图标": "🍓",
-          "任务内容": "小手机",
-          "legacyOverrideId": "ovr_mo29s584mizcdy5",
-          "legacyThemePath": "生活/小手机",
-          "goalId": "goal.我若安好便是晴天",
-          "goalPath": "#我若安好便是晴天",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "小手机"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T03:36:14.255Z"
       },
       {
-        "id": "goal-template.goal.了解自我.core.task.legacy-ovr_mpi1p8y880upyzs",
+        "id": "goal-template.goal.了解自我.core.task.自我",
         "goalId": "goal.了解自我",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mpi1p8y880upyzs",
+        "variantId": "自我",
         "name": "自我",
-        "description": "由旧主题模板迁移：思考/自我",
+        "description": "由主题收敛为记录预设：思考/自我",
         "isDefault": true,
-        "granularity": "day",
         "sortOrder": 0,
         "enabled": true,
         "fields": [
@@ -9980,31 +8994,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/自我",
           "主题": "思考/自我",
           "icon": "🐈",
-          "图标": "🐈",
-          "legacyOverrideId": "ovr_mpi1p8y880upyzs",
-          "legacyThemePath": "思考/自我",
-          "goalId": "goal.了解自我",
-          "goalPath": "#了解自我",
-          "目标": "#了解自我"
+          "图标": "🐈"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-07T09:28:22.589Z"
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.legacy-ovr_mpi1qg5dax8vgj9",
+        "id": "goal-template.goal.武装大脑.core.task.思考",
         "goalId": "goal.武装大脑",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mpi1qg5dax8vgj9",
+        "variantId": "思考",
         "name": "思考",
-        "description": "由旧主题模板迁移：思考",
+        "description": "由主题收敛为记录预设：思考",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 40,
         "enabled": true,
         "fields": [
@@ -10114,31 +9120,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考",
           "主题": "思考",
           "icon": "🧠",
-          "图标": "🧠",
-          "legacyOverrideId": "ovr_mpi1qg5dax8vgj9",
-          "legacyThemePath": "思考",
-          "goalId": "goal.武装大脑",
-          "goalPath": "#武装大脑",
-          "目标": "#武装大脑"
+          "图标": "🧠"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:29:54.146Z"
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.legacy-ovr_mpi1r6wyuxyk4ru",
+        "id": "goal-template.goal.了解世界.core.task.阳阳",
         "goalId": "goal.了解世界",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mpi1r6wyuxyk4ru",
+        "variantId": "阳阳",
         "name": "阳阳",
-        "description": "由旧主题模板迁移：思考/阳阳",
+        "description": "由主题收敛为记录预设：思考/阳阳",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
@@ -10248,31 +9246,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/阳阳",
           "主题": "思考/阳阳",
           "icon": "👨",
-          "图标": "👨",
-          "legacyOverrideId": "ovr_mpi1r6wyuxyk4ru",
-          "legacyThemePath": "思考/阳阳",
-          "goalId": "goal.了解世界",
-          "goalPath": "#了解世界",
-          "目标": "#了解世界"
+          "图标": "👨"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:29:59.450Z"
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.legacy-ovr_mpi1rexihv2fek1",
+        "id": "goal-template.goal.了解世界.core.task.婆婆",
         "goalId": "goal.了解世界",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mpi1rexihv2fek1",
+        "variantId": "婆婆",
         "name": "婆婆",
-        "description": "由旧主题模板迁移：思考/婆婆",
+        "description": "由主题收敛为记录预设：思考/婆婆",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 40,
         "enabled": true,
         "fields": [
@@ -10382,31 +9372,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/婆婆",
           "主题": "思考/婆婆",
           "icon": "🧓",
-          "图标": "🧓",
-          "legacyOverrideId": "ovr_mpi1rexihv2fek1",
-          "legacyThemePath": "思考/婆婆",
-          "goalId": "goal.了解世界",
-          "goalPath": "#了解世界",
-          "目标": "#了解世界"
+          "图标": "🧓"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:29:59.450Z"
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.legacy-ovr_mpi1roqcobkk9cn",
+        "id": "goal-template.goal.了解世界.core.task.家庭",
         "goalId": "goal.了解世界",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mpi1roqcobkk9cn",
+        "variantId": "家庭",
         "name": "家庭",
-        "description": "由旧主题模板迁移：思考/家庭",
+        "description": "由主题收敛为记录预设：思考/家庭",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 50,
         "enabled": true,
         "fields": [
@@ -10516,31 +9498,23 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/家庭",
           "主题": "思考/家庭",
           "icon": "👪",
-          "图标": "👪",
-          "legacyOverrideId": "ovr_mpi1roqcobkk9cn",
-          "legacyThemePath": "思考/家庭",
-          "goalId": "goal.了解世界",
-          "goalPath": "#了解世界",
-          "目标": "#了解世界"
+          "图标": "👪"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:29:59.450Z"
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.legacy-ovr_mpi1scgk94czsop",
+        "id": "goal-template.goal.照顾好自己.core.task.专注",
         "goalId": "goal.照顾好自己",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mpi1scgk94czsop",
+        "variantId": "专注",
         "name": "专注",
-        "description": "由旧主题模板迁移：思考/专注",
+        "description": "由主题收敛为记录预设：思考/专注",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -10650,232 +9624,54 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/专注",
           "主题": "思考/专注",
           "icon": "⏰",
-          "图标": "⏰",
-          "legacyOverrideId": "ovr_mpi1scgk94czsop",
-          "legacyThemePath": "思考/专注",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "⏰"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
-        "id": "goal-template.goal.武装大脑.core.plan.legacy-ovr_mewkqh4dz6vk3",
+        "id": "goal-template.goal.武装大脑.core.plan.思路整理",
         "goalId": "goal.武装大脑",
         "coreBlockId": "core.plan",
-        "variantId": "legacy-ovr_mewkqh4dz6vk3",
+        "variantId": "思路整理",
         "name": "思路整理",
         "description": "由旧记录补充迁移：思考/思路整理",
         "isDefault": true,
-        "granularity": "quarter",
         "sortOrder": 999,
         "enabled": true,
-        "fields": [
-          {
-            "id": "field_mer94wbx",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/思路整理"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#武装大脑"
-          },
-          {
-            "id": "field_mer95h6l",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧠"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 计划\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{theme.icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/思路整理",
           "主题": "思考/思路整理",
           "icon": "🧠",
-          "图标": "🧠",
-          "legacyOverrideId": "ovr_mewkqh4dz6vk3",
-          "legacyThemePath": "思考/思路整理",
-          "goalId": "goal.武装大脑",
-          "goalPath": "#武装大脑",
-          "目标": "#武装大脑"
+          "图标": "🧠"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T12:30:00.000Z",
-        "updatedAt": "2026-06-07T12:30:00.000Z"
+        "updatedAt": "2026-06-07T12:30:00.000Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "quarter"
+        }
       },
       {
-        "id": "goal-template.goal.增强能力.core.task.legacy-ovr_mmv8i7kqnu0yra6",
+        "id": "goal-template.goal.增强能力.core.task.AI",
         "goalId": "goal.增强能力",
         "coreBlockId": "core.task",
-        "variantId": "legacy-ovr_mmv8i7kqnu0yra6",
+        "variantId": "AI",
         "name": "AI",
         "description": "由旧记录补充迁移：电脑/AI",
         "isDefault": false,
-        "granularity": "week",
         "sortOrder": 999,
         "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [ ]",
-                "label": "待办"
-              },
-              {
-                "value": "- [x]",
-                "label": "完成"
-              },
-              {
-                "value": "🛫",
-                "label": "开始"
-              },
-              {
-                "value": "📅",
-                "label": "计划"
-              }
-            ],
-            "semantic": "status"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#增强能力"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/AI"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "不重复",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every week",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every month",
-                "label": "每月"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每年"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🤖"
-          }
-        ],
-        "outputTemplate": "{{taskStatusPrefix}} {{theme.icon}}{{任务内容}} (目标ID::{{goalId}}) (目标::{{goalPath}}) (主题::{{themePath}}) (核心Block::task) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{repeatToken}} {{taskDateToken}}",
-        "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "电脑/AI",
           "主题": "电脑/AI",
           "icon": "🤖",
-          "图标": "🤖",
-          "legacyOverrideId": "ovr_mmv8i7kqnu0yra6",
-          "legacyThemePath": "电脑/AI",
-          "goalId": "goal.增强能力",
-          "goalPath": "#增强能力",
-          "目标": "#增强能力"
+          "图标": "🤖"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-07T12:30:00.000Z",
         "updatedAt": "2026-06-07T12:30:00.000Z"
       },
@@ -10886,25 +9682,18 @@
         "variantId": "manual-mqovqqya-bzy6",
         "name": "自我",
         "description": "手动新增",
-        "isDefault": false,
-        "granularity": "day",
+        "isDefault": true,
         "sortOrder": 10,
         "enabled": true,
-        "fields": [],
         "outputTemplate": "{内容} (目标::{goalPath}) (主题::{themePath}) (核心Block::blocker)",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {goalPath}",
         "defaultValues": {
-          "goalId": "goal.了解自我",
-          "goalPath": "#了解自我",
-          "目标": "#了解自我",
           "themePath": "思考/自我",
           "主题": "思考/自我",
-          "legacyThemePath": "思考/自我",
           "icon": "🐈",
           "图标": "🐈"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-22T07:14:15.154Z",
         "updatedAt": "2026-06-22T07:14:15.154Z"
       },
@@ -10915,25 +9704,17 @@
         "variantId": "manual-mqovrwef-91b7",
         "name": "自我",
         "description": "手动新增",
-        "isDefault": false,
-        "granularity": "day",
+        "isDefault": true,
         "sortOrder": 10,
         "enabled": true,
-        "fields": [],
         "outputTemplate": "{内容} (目标::{goalPath}) (主题::{themePath}) (核心Block::milestone)",
-        "targetFile": "01/里程碑.md",
         "appendUnderHeader": "## {goalPath}",
         "defaultValues": {
-          "goalId": "goal.了解自我",
-          "goalPath": "#了解自我",
-          "目标": "#了解自我",
           "themePath": "思考/自我",
           "主题": "思考/自我",
-          "legacyThemePath": "思考/自我",
           "icon": "🐈",
           "图标": "🐈"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-22T07:15:08.871Z",
         "updatedAt": "2026-06-22T07:15:08.871Z"
       },
@@ -10944,39 +9725,10 @@
         "variantId": "manual-mqovsmg2-6mei",
         "name": "自我",
         "description": "手动新增",
-        "isDefault": false,
-        "granularity": "year",
+        "isDefault": true,
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
           {
             "id": "core.field.goalPath",
             "key": "目标",
@@ -11018,23 +9770,19 @@
             "defaultValue": "🐈"
           }
         ],
-        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}",
+        "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n分类:: 总结\n周期:: {{period.label}}\n周期ID:: {{period.id}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
         "defaultValues": {
           "themePath": "思考/自我",
           "主题": "思考/自我",
           "icon": "🐈",
-          "图标": "🐈",
-          "legacyOverrideId": "ovr_mewkquimfqr7m",
-          "legacyThemePath": "思考/自我",
-          "goalId": "goal.了解自我",
-          "goalPath": "#了解自我",
-          "目标": "#了解自我"
+          "图标": "🐈"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-22T07:15:42.626Z",
-        "updatedAt": "2026-06-22T07:15:42.626Z"
+        "updatedAt": "2026-06-22T07:15:42.626Z",
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "year"
+        }
       },
       {
         "id": "goal-template.goal.照顾好自己.core.habit.manual-mqowbbeg-h9wm",
@@ -11042,9 +9790,8 @@
         "coreBlockId": "core.habit",
         "variantId": "manual-mqowbbeg-h9wm",
         "name": "专注",
-        "description": "由旧主题模板迁移：思考/专注",
+        "description": "由主题收敛为记录预设：思考/专注",
         "isDefault": false,
-        "granularity": "day",
         "sortOrder": 30,
         "enabled": true,
         "fields": [
@@ -11104,20 +9851,12 @@
           }
         ],
         "outputTemplate": "<!-- start -->\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}",
         "defaultValues": {
           "themePath": "思考/专注",
           "主题": "思考/专注",
           "icon": "⏰",
-          "图标": "⏰",
-          "legacyOverrideId": "ovr_mewkhgw62rpkd",
-          "legacyThemePath": "思考/专注",
-          "goalId": "goal.照顾好自己",
-          "goalPath": "#照顾好自己",
-          "目标": "#照顾好自己"
+          "图标": "⏰"
         },
-        "requiredFields": [],
         "createdAt": "2026-06-22T07:30:14.776Z",
         "updatedAt": "2026-06-22T07:30:33.724Z",
         "categoryKey": "打卡"
@@ -11272,7 +10011,7 @@
     "生活": "#8cd4ee",
     "01": "#a8e184"
   },
-  "goalCoreMvpVersion": 14,
+  "goalCoreMvpVersion": "mvp9-view-domain-fields",
   "goalCoreP0FixVersion": 1,
   "goalCoreP1DataManagementVersion": 1,
   "goalCoreP2DataManagementVersion": 1,
