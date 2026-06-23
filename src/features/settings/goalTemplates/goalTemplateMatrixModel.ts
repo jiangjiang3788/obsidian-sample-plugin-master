@@ -14,12 +14,30 @@ export interface GoalTemplateCellModel {
   description: string;
 }
 
+function cleanPathSegment(value: string): string {
+  return value.trim().replace(/^[#＃]+\s*/, '').trim();
+}
+
 function normalizePath(value?: string | null): string {
-  return String(value || '').split('/').map((part) => part.trim()).filter(Boolean).join('/');
+  return String(value || '')
+    .split('/')
+    .map(cleanPathSegment)
+    .filter(Boolean)
+    .join('/');
 }
 
 export function getGoalDisplayPath(goal: GoalDefinition): string {
-  return normalizePath(goal.goalPath || goal.title || goal.id) || goal.id;
+  return normalizePath(goal.goalPath || goal.title || goal.id) || cleanPathSegment(goal.id);
+}
+
+export function getGoalDisplayName(goal: GoalDefinition): string {
+  const path = getGoalDisplayPath(goal);
+  return cleanPathSegment(path.split('/').filter(Boolean).pop() || goal.title || goal.id);
+}
+
+export function getGoalParentPath(goal: GoalDefinition): string {
+  const parts = getGoalDisplayPath(goal).split('/').filter(Boolean);
+  return parts.slice(0, -1).join('/');
 }
 
 export function getGoalDepth(goal: GoalDefinition): number {
@@ -43,8 +61,37 @@ export function isGoalVisibleByExpandedState(goal: GoalDefinition, expandedPaths
   return true;
 }
 
+function goalSortOrder(goal: GoalDefinition): number {
+  const value = Number((goal as any).sortOrder);
+  return Number.isFinite(value) ? value : 999999;
+}
+
+function getGoalByPath(goals: GoalDefinition[], path: string): GoalDefinition | null {
+  return goals.find((goal) => getGoalDisplayPath(goal) === path) || null;
+}
+
 export function sortGoalsForMatrix(goals: GoalDefinition[]): GoalDefinition[] {
-  return [...goals].sort((left, right) => getGoalDisplayPath(left).localeCompare(getGoalDisplayPath(right), 'zh-CN'));
+  return [...goals].sort((left, right) => {
+    const leftParts = getGoalDisplayPath(left).split('/').filter(Boolean);
+    const rightParts = getGoalDisplayPath(right).split('/').filter(Boolean);
+    const max = Math.min(leftParts.length, rightParts.length);
+    for (let index = 0; index < max; index += 1) {
+      if (leftParts[index] === rightParts[index]) continue;
+      const parentPath = leftParts.slice(0, index).join('/');
+      const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join('/');
+      const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join('/');
+      const leftSiblingGoal = getGoalByPath(goals, leftSiblingPath);
+      const rightSiblingGoal = getGoalByPath(goals, rightSiblingPath);
+      const leftOrder = leftSiblingGoal ? goalSortOrder(leftSiblingGoal) : 999999;
+      const rightOrder = rightSiblingGoal ? goalSortOrder(rightSiblingGoal) : 999999;
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      return leftParts[index].localeCompare(rightParts[index], 'zh-CN');
+    }
+    if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
+    const byOrder = goalSortOrder(left) - goalSortOrder(right);
+    if (byOrder !== 0) return byOrder;
+    return getGoalDisplayPath(left).localeCompare(getGoalDisplayPath(right), 'zh-CN');
+  });
 }
 
 export function buildGoalTemplateCell(goal: GoalDefinition, block: CoreBlockDefinition, templates: GoalTemplate[]): GoalTemplateCellModel {
@@ -52,21 +99,21 @@ export function buildGoalTemplateCell(goal: GoalDefinition, block: CoreBlockDefi
   const enabledTemplates = cellTemplates.filter((template) => template.enabled !== false);
   const defaultCount = enabledTemplates.filter((template) => template.isDefault).length;
   let status: GoalTemplateCellStatus = 'inherit';
-  let label = '默认';
-  let description = '继承 Block 默认记录方式';
+  let label = '添加';
+  let description = '点击添加此目标的 Block 预设';
 
   if (cellTemplates.length > 0 && enabledTemplates.length === 0) {
     status = 'disabled';
     label = '隐藏';
     description = '该目标下隐藏此 Block';
-  } else if (defaultCount > 1 || (enabledTemplates.length > 1 && defaultCount === 0)) {
+  } else if (defaultCount > 1) {
     status = 'warning';
     label = '异常';
-    description = defaultCount > 1 ? '存在多个默认预设' : '多个显示预设但没有默认预设';
+    description = '存在多个默认预设';
   } else if (enabledTemplates.length > 1) {
     status = 'multi';
-    label = `多预设 ${enabledTemplates.length}`;
-    description = '该目标下有多个记录预设';
+    label = `选项 ${enabledTemplates.length}`;
+    description = '该目标下有多个记录预设选项';
   } else if (enabledTemplates.length === 1) {
     status = 'override';
     label = '有预设';
