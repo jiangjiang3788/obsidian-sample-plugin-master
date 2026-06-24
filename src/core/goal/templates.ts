@@ -16,12 +16,12 @@ export interface GoalTemplate {
   id: string;
   goalId: GoalId;
   coreBlockId: string;
-  /** 一个 Goal + Block 下的模板变体 ID。默认模板使用 default。 */
+  /** 一个 Goal + Block 下的模板变体 ID；旧 default ID 仅作为稳定标识。 */
   variantId?: string;
   /** 面向 UI 显示的模板名称，例如：运动打卡、饮水打卡。 */
   name?: string;
   description?: string;
-  /** 多个变体中，QuickInput 默认选择的模板。 */
+  /** @deprecated 不再参与 QuickInput 选择；旧数据只做兼容读取。 */
   isDefault?: boolean;
   /** 只有计划 / 总结类记录预设才启用周期；非周期 Block 必须为空。 */
   periodPolicy?: PeriodPolicy;
@@ -67,8 +67,15 @@ function parseVariantIdFromLegacyId(id?: string | null): string {
 
 function normalizeGoalTemplateId(goalId: string, coreBlockId: string, variantId?: string | null, id?: string | null): string {
   const text = String(id || '').trim();
-  if (text && text.startsWith('goal-template.')) return text;
-  return getGoalTemplateId(goalId, coreBlockId, variantId);
+  const normalizedVariantId = normalizeVariantId(variantId);
+  if (text && text.startsWith('goal-template.')) {
+    const idVariantId = parseVariantIdFromLegacyId(text);
+    // 旧数据里可能同时存在 base id + 非 default variantId。此时必须重建 id，
+    // 避免不同预设在 UI / 拖拽 / 删除时共享同一个 key。
+    if (idVariantId === normalizedVariantId) return text;
+    if (normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID && idVariantId === DEFAULT_TEMPLATE_VARIANT_ID) return text;
+  }
+  return getGoalTemplateId(goalId, coreBlockId, normalizedVariantId);
 }
 
 function normalizeTemplatePeriodPolicy(coreBlockId: string, raw: any): PeriodPolicy | undefined {
@@ -93,9 +100,9 @@ export function fromLegacyGoalTemplateStorage(row: GoalBlockBinding): GoalTempla
     goalId: row.goalId,
     coreBlockId: row.coreBlockId,
     variantId,
-    name: raw.name || raw.templateName || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? '默认模板' : variantId),
+    name: raw.name || raw.templateName || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? '记录预设' : variantId),
     description: raw.description,
-    isDefault: raw.isDefault === true || variantId === DEFAULT_TEMPLATE_VARIANT_ID,
+    isDefault: undefined,
     periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, raw),
     sortOrder: typeof raw.sortOrder === 'number' ? raw.sortOrder : undefined,
     enabled: row.enabled !== false,
@@ -120,9 +127,9 @@ export function toLegacyGoalTemplateStorage(template: GoalTemplate, previous?: G
     goalId: template.goalId,
     coreBlockId: template.coreBlockId,
     variantId,
-    name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? '默认模板' : variantId),
+    name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? '记录预设' : variantId),
     description: template.description,
-    isDefault: template.isDefault === true || variantId === DEFAULT_TEMPLATE_VARIANT_ID,
+    isDefault: undefined,
     periodPolicy: normalizeTemplatePeriodPolicy(template.coreBlockId, template),
     granularity: undefined,
     sortOrder: template.sortOrder,
@@ -138,8 +145,27 @@ export function toLegacyGoalTemplateStorage(template: GoalTemplate, previous?: G
   } as any;
 }
 
+function goalTemplateIdentityKey(template: Pick<GoalTemplate, 'goalId' | 'coreBlockId' | 'variantId'>): string {
+  return `${template.goalId}::${template.coreBlockId}::${normalizeVariantId(template.variantId)}`;
+}
+
 export function getGoalTemplates(goalSettings?: Pick<GoalSettings, 'goalBlockBindings'> | null): GoalTemplate[] {
-  return (goalSettings?.goalBlockBindings || []).map(fromLegacyGoalTemplateStorage);
+  const result: GoalTemplate[] = [];
+  const indexByKey = new Map<string, number>();
+  for (const row of goalSettings?.goalBlockBindings || []) {
+    const template = fromLegacyGoalTemplateStorage(row);
+    const key = goalTemplateIdentityKey(template);
+    const existingIndex = indexByKey.get(key);
+    if (existingIndex === undefined) {
+      indexByKey.set(key, result.length);
+      result.push(template);
+    } else {
+      // 兼容旧重复行：同一个 Goal × 记录类型 × variant 只保留最后一次存储结果，
+      // 但保留首次出现的位置，避免旧数据清理导致 UI 顺序跳变。
+      result[existingIndex] = template;
+    }
+  }
+  return result;
 }
 
 export function getGoalTemplateId(goalId: string, coreBlockId: string, variantId: string = 'default'): string {
@@ -173,15 +199,16 @@ export function getGoalTemplateVariants(goalSettings: GoalSettings | undefined, 
   if (!candidateGoalIds.length) return [];
   const rank = new Map(candidateGoalIds.map((id, index) => [id, index]));
   return getGoalTemplates(goalSettings)
-    .filter((template) => template.enabled !== false && candidateGoalIds.includes(template.goalId) && template.coreBlockId === coreBlockId)
+    .map((template, storageIndex) => ({ template, storageIndex }))
+    .filter(({ template }) => template.enabled !== false && candidateGoalIds.includes(template.goalId) && template.coreBlockId === coreBlockId)
     .sort((a, b) => {
-      const byGoal = (rank.get(a.goalId) ?? 999) - (rank.get(b.goalId) ?? 999);
+      const byGoal = (rank.get(a.template.goalId) ?? 999) - (rank.get(b.template.goalId) ?? 999);
       if (byGoal !== 0) return byGoal;
-      const bySortOrder = (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999);
+      const bySortOrder = (a.template.sortOrder ?? 9999) - (b.template.sortOrder ?? 9999);
       if (bySortOrder !== 0) return bySortOrder;
-      if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
-      return String(a.name || a.variantId || '').localeCompare(String(b.name || b.variantId || ''), 'zh-CN');
-    });
+      return a.storageIndex - b.storageIndex;
+    })
+    .map(({ template }) => template);
 }
 
 export function findGoalTemplate(goalSettings: GoalSettings | undefined, goal: GoalDefinition | null, coreBlockId: string, variantId?: string | null): GoalTemplate | null {
@@ -192,10 +219,7 @@ export function findGoalTemplate(goalSettings: GoalSettings | undefined, goal: G
     const exact = variants.find((template) => normalizeVariantId(template.variantId) === normalizedVariantId || template.id === variantId);
     if (exact) return exact;
   }
-  return variants.find((template) => template.isDefault === true)
-    || variants.find((template) => normalizeVariantId(template.variantId) === DEFAULT_TEMPLATE_VARIANT_ID)
-    || variants[0]
-    || null;
+  return variants[0] || null;
 }
 
 /** Storage helper: hides the legacy goalBlockBindings storage field from application code. */
@@ -210,14 +234,7 @@ export function upsertGoalTemplateInSettings(goalSettings: GoalSettings, templat
   });
   const next = toLegacyGoalTemplateStorage(nextTemplate, index >= 0 ? rows[index] : null);
 
-  // One default per Goal + Block. If the saved template is default, demote siblings.
-  const shouldDefault = (next as any).isDefault === true || (next as any).variantId === DEFAULT_TEMPLATE_VARIANT_ID;
-  const normalizedRows = rows.map((row: any, rowIndex) => {
-    if (rowIndex === index) return row;
-    if (!shouldDefault) return row;
-    const sameCell = row.goalId === next.goalId && row.coreBlockId === next.coreBlockId;
-    return sameCell ? { ...row, isDefault: false } : row;
-  });
+  const normalizedRows = rows.slice();
   if (index >= 0) normalizedRows[index] = next;
   else normalizedRows.push(next);
   return { ...goalSettings, goalBlockBindings: normalizedRows };
@@ -239,5 +256,38 @@ export function removeGoalTemplatesForGoal(goalSettings: GoalSettings, goalId: s
   return {
     ...goalSettings,
     goalBlockBindings: (goalSettings.goalBlockBindings || []).filter((template) => template.goalId !== goalId),
+  };
+}
+
+export interface GoalTemplateStorageCleanupSummary {
+  beforeCount: number;
+  afterCount: number;
+  removedDuplicateCount: number;
+  changed: boolean;
+}
+
+/**
+ * Normalize old GoalTemplate storage rows without changing the business source of truth.
+ *
+ * Effects:
+ * - dedupe legacy duplicate rows by Goal × 记录类型 × variant;
+ * - rebuild ids from normalized variantId;
+ * - remove deprecated fields such as isDefault / granularity from persisted rows;
+ * - keep the first storage position for each identity and the latest row content.
+ */
+export function cleanupGoalTemplateStorage(goalSettings: GoalSettings): { goalSettings: GoalSettings; summary: GoalTemplateStorageCleanupSummary } {
+  const beforeRows = goalSettings.goalBlockBindings || [];
+  const templates = getGoalTemplates(goalSettings);
+  const afterRows = templates.map((template) => toLegacyGoalTemplateStorage(template));
+  const beforeJson = JSON.stringify(beforeRows);
+  const afterJson = JSON.stringify(afterRows);
+  return {
+    goalSettings: { ...goalSettings, goalBlockBindings: afterRows },
+    summary: {
+      beforeCount: beforeRows.length,
+      afterCount: afterRows.length,
+      removedDuplicateCount: Math.max(0, beforeRows.length - afterRows.length),
+      changed: beforeJson !== afterJson,
+    },
   };
 }

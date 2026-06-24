@@ -50,7 +50,7 @@ function ThemeCard({ children }: { children: any }) {
 
 /**
  * 目标中心 P1：主题从“快速输入模板矩阵”降级为数据管理里的 metadata。
- * 主题只负责 path/icon/status；模板主链只走 Goal + Block。
+ * 主题只负责 path/icon/status；模板主链只走 Goal + 记录类型。
  */
 export function ThemeMetadataManager() {
   const settings = useSelector(selectSettings);
@@ -116,14 +116,14 @@ export function ThemeMetadataManager() {
       <Box>
         <Typography variant="h6">主题管理</Typography>
         <Typography variant="body2" color="text.secondary">
-          主题已从快速输入模板主轴降级为数据元信息：只管理路径、图标和启停状态。目标通过 themePath 引用主题，模板仍由“目标 × Block”决定。
+          主题已从快速输入模板主轴降级为数据元信息：只管理路径、图标和启停状态。目标通过 themePath 引用主题，模板仍由“目标 × 记录类型”决定。
         </Typography>
       </Box>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         <Chip size="small" label={`主题 ${themes.length}`} />
         <Chip size="small" label={`旧主题模板 ${legacyOverrides.length}`} color={legacyOverrides.length ? 'warning' : 'default'} />
-        <Chip size="small" label="模板主链：目标 × Block" color="primary" />
+        <Chip size="small" label="模板主链：目标 × 记录类型" color="primary" />
       </Box>
 
       {message && <Alert severity="info" onClose={() => setMessage('')}>{message}</Alert>}
@@ -154,7 +154,7 @@ export function ThemeMetadataManager() {
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr minmax(180px, 280px)', gap: 1, alignItems: 'center' }}>
           <Box>
             <Typography sx={{ fontWeight: 700 }}>主题列表</Typography>
-            <Typography variant="body2" color="text.secondary">在这里维护图标和路径。需要修改目标专属写法时请到“数据管理 → 目标中心 → 记录预设”。</Typography>
+            <Typography variant="body2" color="text.secondary">在这里维护图标和路径。需要修改目标专属写法时请到“数据管理 → 目标 → 记录预设”。</Typography>
           </Box>
           <TextField size="small" label="搜索主题" value={query} onChange={(event: any) => setQuery(event.target.value)} />
         </Box>

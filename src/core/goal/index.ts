@@ -28,7 +28,7 @@ export { normalizeGoalPath, splitGoalPath } from './path';
 export type { GoalPathParts } from './path';
 export { resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy } from './period';
 export { DEFAULT_TEMPLATE_VARIANT_ID, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, normalizeTemplateVariantId, isDefaultTemplateVariant } from './templateVariant';
-export { getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, fromLegacyGoalTemplateStorage, toLegacyGoalTemplateStorage, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal } from './templates';
+export { getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, fromLegacyGoalTemplateStorage, toLegacyGoalTemplateStorage, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage } from './templates';
 export type { GoalTemplate } from './templates';
 export type { DerivedPeriod } from './period';
 export type { TemplateVariantId, TemplateVariantIdentity } from './templateVariant';

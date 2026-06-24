@@ -16,7 +16,7 @@ export interface QuickInputEditorThemeSelectorProps {
 
 function getThemeLabel(theme: ThemeDefinition): string {
   const raw = theme.path?.split('/').filter(Boolean).pop() || '';
-  return raw || theme.path || '';
+  return String(raw || theme.path || '').replace(/^[#＃]+\s*/, '').trim();
 }
 
 function getThemeOrder(t: ThemeDefinition): number {

@@ -39,6 +39,8 @@ const getEventCoords = (e: MouseEvent | TouchEvent) => {
 type PanelSize = { width?: number; height?: number };
 type ResizeDirection = 'right' | 'bottom' | 'corner';
 
+const passiveListenerOptions = { passive: true } as AddEventListenerOptions;
+
 const toCssSize = (value?: number | string) => (typeof value === 'number' ? `${value}px` : value);
 
 const getNumericConstraint = (value: number | string | undefined, fallback?: number) => {
@@ -267,7 +269,7 @@ export function FloatingPanel({
 
         const bindTimer = window.setTimeout(() => {
             document.addEventListener('mousedown', handler as any);
-            document.addEventListener('touchstart', handler as any);
+            document.addEventListener('touchstart', handler as any, passiveListenerOptions);
         }, 0);
         const clearIgnoreTimer = window.setTimeout(() => {
             ignoreFirstClick.current = false;
@@ -303,7 +305,7 @@ export function FloatingPanel({
     }, [size, resizable, setStoredSize]);
 
     const onDragMove = useCallback((e: MouseEvent | TouchEvent) => {
-        e.preventDefault();
+        if (!(e as TouchEvent).touches) e.preventDefault();
         const coords = getEventCoords(e);
         if (!coords) return;
         const dx = coords.x - dragRef.current.startX;
@@ -326,12 +328,12 @@ export function FloatingPanel({
         dragRef.current = { startX: coords.x, startY: coords.y, panelX: position.x, panelY: position.y };
         window.addEventListener('mousemove', onDragMove as any);
         window.addEventListener('mouseup', onDragEnd as any);
-        window.addEventListener('touchmove', onDragMove as any, { passive: false } as any);
-        window.addEventListener('touchend', onDragEnd as any);
+        window.addEventListener('touchmove', onDragMove as any, passiveListenerOptions);
+        window.addEventListener('touchend', onDragEnd as any, passiveListenerOptions);
     }, [inline, id, focus, position, onDragMove, onDragEnd]);
 
     const onResizeMove = useCallback((e: MouseEvent | TouchEvent) => {
-        e.preventDefault();
+        if (!(e as TouchEvent).touches) e.preventDefault();
         const coords = getEventCoords(e);
         if (!coords) return;
 
@@ -373,8 +375,8 @@ export function FloatingPanel({
         };
         window.addEventListener('mousemove', onResizeMove as any);
         window.addEventListener('mouseup', onResizeEnd as any);
-        window.addEventListener('touchmove', onResizeMove as any, { passive: false } as any);
-        window.addEventListener('touchend', onResizeEnd as any);
+        window.addEventListener('touchmove', onResizeMove as any, passiveListenerOptions);
+        window.addEventListener('touchend', onResizeEnd as any, passiveListenerOptions);
     }, [resizable, focus, id, onResizeMove, onResizeEnd, getEffectiveWidth, getEffectiveHeight]);
 
     const onPanelPointerDown = useCallback(() => {
@@ -468,6 +470,7 @@ export function FloatingPanel({
                                 alignItems: 'center',
                                 gap: 8,
                                 cursor: inline ? 'default' : 'move',
+                                touchAction: inline ? 'auto' : 'none',
                                 userSelect: 'none',
                                 flex: 1,
                                 minWidth: 0,
@@ -534,6 +537,7 @@ export function FloatingPanel({
                                 width: '10px',
                                 height: '100%',
                                 cursor: 'ew-resize',
+                                touchAction: 'none',
                             }}
                         />
                         <div
@@ -546,6 +550,7 @@ export function FloatingPanel({
                                 width: '100%',
                                 height: '10px',
                                 cursor: 'ns-resize',
+                                touchAction: 'none',
                             }}
                         />
                         <div
@@ -558,6 +563,7 @@ export function FloatingPanel({
                                 width: '18px',
                                 height: '18px',
                                 cursor: 'nwse-resize',
+                                touchAction: 'none',
                                 background: 'linear-gradient(135deg, transparent 0 45%, var(--text-faint) 45% 55%, transparent 55% 100%)',
                             }}
                         />
@@ -574,6 +580,7 @@ export function FloatingPanel({
                             width: '100%',
                             height: '24px',
                             cursor: 'ns-resize',
+                                touchAction: 'none',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',

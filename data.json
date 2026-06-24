@@ -3855,7 +3855,7 @@
         "variantId": "身体",
         "name": "身体",
         "description": "由主题收敛为记录预设：健康/身体",
-        "isDefault": false,
+        "isDefault": true,
         "sortOrder": 20,
         "enabled": true,
         "fields": [
@@ -3938,7 +3938,7 @@
           "图标": "🔋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        "updatedAt": "2026-06-24T01:30:30.169Z"
       },
       {
         "id": "goal-template.goal.照顾好自己.core.habit.心情",
@@ -3947,7 +3947,7 @@
         "variantId": "心情",
         "name": "心情",
         "description": "由主题收敛为记录预设：健康/心情",
-        "isDefault": true,
+        "isDefault": false,
         "sortOrder": 10,
         "enabled": true,
         "fields": [
@@ -4042,7 +4042,7 @@
           "图标": "😄"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        "updatedAt": "2026-06-24T01:30:21.974Z"
       },
       {
         "id": "goal-template.goal.照顾好自己.core.habit.运动",
@@ -7138,566 +7138,6 @@
         "updatedAt": "2026-06-22T03:36:14.255Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.健康",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "健康",
-        "name": "健康",
-        "description": "由主题收敛为记录预设：健康",
-        "isDefault": false,
-        "sortOrder": 70,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-1健康.md",
-        "defaultValues": {
-          "themePath": "健康",
-          "主题": "健康",
-          "icon": "💤",
-          "图标": "💤"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-22T07:30:12.545Z"
-      },
-      {
-        "id": "goal-template.goal.照顾好自己.core.task.粑粑",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "粑粑",
-        "name": "粑粑",
-        "description": "由主题收敛为记录预设：健康/粑粑",
-        "isDefault": false,
-        "sortOrder": 80,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/粑粑"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "拉粑粑"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💩"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-1健康.md",
-        "defaultValues": {
-          "themePath": "健康/粑粑",
-          "主题": "健康/粑粑",
-          "icon": "💩",
-          "图标": "💩",
-          "任务内容": "拉粑粑"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-22T07:30:12.545Z"
-      },
-      {
-        "id": "goal-template.goal.照顾好自己.core.task.运动",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "运动",
-        "name": "运动",
-        "description": "由主题收敛为记录预设：健康/运动",
-        "isDefault": false,
-        "sortOrder": 90,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/运动"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "八段锦"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💪"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-1健康.md",
-        "defaultValues": {
-          "themePath": "健康/运动",
-          "主题": "健康/运动",
-          "icon": "💪",
-          "图标": "💪",
-          "任务内容": "八段锦"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-22T07:30:12.545Z"
-      },
-      {
-        "id": "goal-template.goal.照顾好自己.core.task.身体",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "身体",
-        "name": "身体",
-        "description": "由主题收敛为记录预设：健康/身体",
-        "isDefault": true,
-        "sortOrder": 10,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/身体"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🔋"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "defaultValues": {
-          "themePath": "健康/身体",
-          "主题": "健康/身体",
-          "icon": "🔋",
-          "图标": "🔋"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-22T07:30:12.545Z"
-      },
-      {
-        "id": "goal-template.goal.照顾好自己.core.task.睡眠",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "睡眠",
-        "name": "睡眠",
-        "description": "由主题收敛为记录预设：健康/睡眠",
-        "isDefault": false,
-        "sortOrder": 30,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/睡眠"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "睡觉"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-1健康.md",
-        "defaultValues": {
-          "themePath": "健康/睡眠",
-          "主题": "健康/睡眠",
-          "icon": "💤",
-          "图标": "💤",
-          "任务内容": "睡觉"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-22T07:30:12.545Z"
-      },
-      {
         "id": "goal-template.goal.仪容仪表.core.task.卫生",
         "goalId": "goal.仪容仪表",
         "coreBlockId": "core.task",
@@ -7824,390 +7264,6 @@
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-22T07:30:03.481Z"
-      },
-      {
-        "id": "goal-template.goal.照顾好自己.core.task.早餐",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "早餐",
-        "name": "早餐",
-        "description": "由主题收敛为记录预设：健康/早餐",
-        "isDefault": false,
-        "sortOrder": 40,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/早餐"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "早餐"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🥚"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-2三餐.md",
-        "defaultValues": {
-          "themePath": "健康/早餐",
-          "主题": "健康/早餐",
-          "icon": "🥚",
-          "图标": "🥚",
-          "任务内容": "早餐"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-22T07:30:12.545Z"
-      },
-      {
-        "id": "goal-template.goal.照顾好自己.core.task.午餐",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "午餐",
-        "name": "午餐",
-        "description": "由主题收敛为记录预设：健康/午餐",
-        "isDefault": false,
-        "sortOrder": 50,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/午餐"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "午餐"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🍱"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-2三餐.md",
-        "defaultValues": {
-          "themePath": "健康/午餐",
-          "主题": "健康/午餐",
-          "icon": "🍱",
-          "图标": "🍱",
-          "任务内容": "午餐"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-22T07:30:12.545Z"
-      },
-      {
-        "id": "goal-template.goal.照顾好自己.core.task.晚餐",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "晚餐",
-        "name": "晚餐",
-        "description": "由主题收敛为记录预设：健康/晚餐",
-        "isDefault": false,
-        "sortOrder": 60,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/晚餐"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "晚餐"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🥣"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-2三餐.md",
-        "defaultValues": {
-          "themePath": "健康/晚餐",
-          "主题": "健康/晚餐",
-          "icon": "🥣",
-          "图标": "🥣",
-          "任务内容": "晚餐"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-22T07:30:12.545Z"
       },
       {
         "id": "goal-template.goal.增强能力.core.task.通勤",
@@ -9508,132 +8564,6 @@
         "updatedAt": "2026-06-22T07:29:59.450Z"
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.专注",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "专注",
-        "name": "专注",
-        "description": "由主题收敛为记录预设：思考/专注",
-        "isDefault": false,
-        "sortOrder": 20,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/专注"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "⏰"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-4思考.md",
-        "defaultValues": {
-          "themePath": "思考/专注",
-          "主题": "思考/专注",
-          "icon": "⏰",
-          "图标": "⏰"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-22T07:30:12.545Z"
-      },
-      {
         "id": "goal-template.goal.武装大脑.core.plan.思路整理",
         "goalId": "goal.武装大脑",
         "coreBlockId": "core.plan",
@@ -9860,6 +8790,383 @@
         "createdAt": "2026-06-22T07:30:14.776Z",
         "updatedAt": "2026-06-22T07:30:33.724Z",
         "categoryKey": "打卡"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.evidence.心情",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.evidence",
+        "variantId": "心情",
+        "name": "心情",
+        "description": "由「打卡」预设复制到「事件」",
+        "isDefault": true,
+        "sortOrder": 0,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/心情",
+          "主题": "健康/心情",
+          "icon": "😄",
+          "图标": "😄"
+        },
+        "createdAt": "2026-06-24T01:29:25.103Z",
+        "updatedAt": "2026-06-24T01:29:25.103Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.thought.心情",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.thought",
+        "variantId": "心情",
+        "name": "心情",
+        "description": "由「打卡」预设复制到「思考」",
+        "isDefault": true,
+        "sortOrder": 0,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/心情",
+          "主题": "健康/心情",
+          "icon": "😄",
+          "图标": "😄"
+        },
+        "createdAt": "2026-06-24T01:29:25.190Z",
+        "updatedAt": "2026-06-24T01:29:25.190Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.review.心情",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.review",
+        "variantId": "心情",
+        "name": "心情",
+        "description": "由「打卡」预设复制到「总结」",
+        "isDefault": true,
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "week"
+        },
+        "sortOrder": 0,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/心情",
+          "主题": "健康/心情",
+          "icon": "😄",
+          "图标": "😄"
+        },
+        "createdAt": "2026-06-24T01:29:25.237Z",
+        "updatedAt": "2026-06-24T01:29:25.237Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.plan.心情",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.plan",
+        "variantId": "心情",
+        "name": "心情",
+        "description": "由「打卡」预设复制到「计划」",
+        "isDefault": true,
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "week"
+        },
+        "sortOrder": 0,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/心情",
+          "主题": "健康/心情",
+          "icon": "😄",
+          "图标": "😄"
+        },
+        "createdAt": "2026-06-24T01:29:25.280Z",
+        "updatedAt": "2026-06-24T01:29:25.280Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.blocker.心情",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.blocker",
+        "variantId": "心情",
+        "name": "心情",
+        "description": "由「打卡」预设复制到「阻碍项」",
+        "isDefault": true,
+        "sortOrder": 0,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/心情",
+          "主题": "健康/心情",
+          "icon": "😄",
+          "图标": "😄"
+        },
+        "createdAt": "2026-06-24T01:29:25.350Z",
+        "updatedAt": "2026-06-24T01:29:25.351Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.milestone.心情",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.milestone",
+        "variantId": "心情",
+        "name": "心情",
+        "description": "由「打卡」预设复制到「里程碑」",
+        "isDefault": true,
+        "sortOrder": 0,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/心情",
+          "主题": "健康/心情",
+          "icon": "😄",
+          "图标": "😄"
+        },
+        "createdAt": "2026-06-24T01:29:25.395Z",
+        "updatedAt": "2026-06-24T01:29:25.395Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.evidence.身体",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.evidence",
+        "variantId": "身体",
+        "name": "身体",
+        "description": "由「打卡」预设复制到「事件」",
+        "isDefault": false,
+        "sortOrder": 10,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/身体",
+          "主题": "健康/身体",
+          "icon": "🔋",
+          "图标": "🔋"
+        },
+        "createdAt": "2026-06-24T01:29:28.690Z",
+        "updatedAt": "2026-06-24T01:29:28.690Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.thought.身体",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.thought",
+        "variantId": "身体",
+        "name": "身体",
+        "description": "由「打卡」预设复制到「思考」",
+        "isDefault": false,
+        "sortOrder": 10,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/身体",
+          "主题": "健康/身体",
+          "icon": "🔋",
+          "图标": "🔋"
+        },
+        "createdAt": "2026-06-24T01:29:28.731Z",
+        "updatedAt": "2026-06-24T01:29:28.732Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.review.身体",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.review",
+        "variantId": "身体",
+        "name": "身体",
+        "description": "由「打卡」预设复制到「总结」",
+        "isDefault": false,
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "week"
+        },
+        "sortOrder": 10,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/身体",
+          "主题": "健康/身体",
+          "icon": "🔋",
+          "图标": "🔋"
+        },
+        "createdAt": "2026-06-24T01:29:28.777Z",
+        "updatedAt": "2026-06-24T01:29:28.778Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.plan.身体",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.plan",
+        "variantId": "身体",
+        "name": "身体",
+        "description": "由「打卡」预设复制到「计划」",
+        "isDefault": false,
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "week"
+        },
+        "sortOrder": 10,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/身体",
+          "主题": "健康/身体",
+          "icon": "🔋",
+          "图标": "🔋"
+        },
+        "createdAt": "2026-06-24T01:29:28.819Z",
+        "updatedAt": "2026-06-24T01:29:28.819Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.blocker.身体",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.blocker",
+        "variantId": "身体",
+        "name": "身体",
+        "description": "由「打卡」预设复制到「阻碍项」",
+        "isDefault": false,
+        "sortOrder": 10,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/身体",
+          "主题": "健康/身体",
+          "icon": "🔋",
+          "图标": "🔋"
+        },
+        "createdAt": "2026-06-24T01:29:28.863Z",
+        "updatedAt": "2026-06-24T01:29:28.863Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.milestone.身体",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.milestone",
+        "variantId": "身体",
+        "name": "身体",
+        "description": "由「打卡」预设复制到「里程碑」",
+        "isDefault": false,
+        "sortOrder": 10,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "健康/身体",
+          "主题": "健康/身体",
+          "icon": "🔋",
+          "图标": "🔋"
+        },
+        "createdAt": "2026-06-24T01:29:28.955Z",
+        "updatedAt": "2026-06-24T01:29:28.955Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.evidence.专注",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.evidence",
+        "variantId": "专注",
+        "name": "专注",
+        "description": "由「打卡」预设复制到「事件」",
+        "isDefault": false,
+        "sortOrder": 20,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "思考/专注",
+          "主题": "思考/专注",
+          "icon": "⏰",
+          "图标": "⏰"
+        },
+        "createdAt": "2026-06-24T01:29:30.804Z",
+        "updatedAt": "2026-06-24T01:29:30.804Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.thought.专注",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.thought",
+        "variantId": "专注",
+        "name": "专注",
+        "description": "由「打卡」预设复制到「思考」",
+        "isDefault": false,
+        "sortOrder": 20,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "思考/专注",
+          "主题": "思考/专注",
+          "icon": "⏰",
+          "图标": "⏰"
+        },
+        "createdAt": "2026-06-24T01:29:30.891Z",
+        "updatedAt": "2026-06-24T01:29:30.891Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.review.专注",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.review",
+        "variantId": "专注",
+        "name": "专注",
+        "description": "由「打卡」预设复制到「总结」",
+        "isDefault": false,
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "week"
+        },
+        "sortOrder": 20,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "思考/专注",
+          "主题": "思考/专注",
+          "icon": "⏰",
+          "图标": "⏰"
+        },
+        "createdAt": "2026-06-24T01:29:30.933Z",
+        "updatedAt": "2026-06-24T01:29:30.934Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.plan.专注",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.plan",
+        "variantId": "专注",
+        "name": "专注",
+        "description": "由「打卡」预设复制到「计划」",
+        "isDefault": false,
+        "periodPolicy": {
+          "enabled": true,
+          "granularity": "week"
+        },
+        "sortOrder": 20,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "思考/专注",
+          "主题": "思考/专注",
+          "icon": "⏰",
+          "图标": "⏰"
+        },
+        "createdAt": "2026-06-24T01:29:30.977Z",
+        "updatedAt": "2026-06-24T01:29:30.977Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.blocker.专注",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.blocker",
+        "variantId": "专注",
+        "name": "专注",
+        "description": "由「打卡」预设复制到「阻碍项」",
+        "isDefault": false,
+        "sortOrder": 20,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "思考/专注",
+          "主题": "思考/专注",
+          "icon": "⏰",
+          "图标": "⏰"
+        },
+        "createdAt": "2026-06-24T01:29:31.022Z",
+        "updatedAt": "2026-06-24T01:29:31.022Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.milestone.专注",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.milestone",
+        "variantId": "专注",
+        "name": "专注",
+        "description": "由「打卡」预设复制到「里程碑」",
+        "isDefault": false,
+        "sortOrder": 20,
+        "enabled": true,
+        "defaultValues": {
+          "themePath": "思考/专注",
+          "主题": "思考/专注",
+          "icon": "⏰",
+          "图标": "⏰"
+        },
+        "createdAt": "2026-06-24T01:29:31.065Z",
+        "updatedAt": "2026-06-24T01:29:31.065Z"
+      },
+      {
+        "id": "goal-template.goal.照顾好自己.core.evidence.preset-4",
+        "goalId": "goal.照顾好自己",
+        "coreBlockId": "core.evidence",
+        "variantId": "preset-4",
+        "name": "预设 4",
+        "sortOrder": 30,
+        "enabled": true,
+        "createdAt": "2026-06-24T02:54:52.611Z",
+        "updatedAt": "2026-06-24T02:54:52.612Z"
       }
     ],
     "goalRecordRelations": []
@@ -9877,12 +9184,12 @@
     ],
     "patches": [],
     "legacyBlockMap": {
-      "core.task": "core.task",
-      "core.plan": "core.plan",
-      "core.review": "core.review",
-      "core.thought": "core.thought",
       "core.habit": "core.habit",
+      "core.task": "core.task",
       "core.evidence": "core.evidence",
+      "core.thought": "core.thought",
+      "core.review": "core.review",
+      "core.plan": "core.plan",
       "core.blocker": "core.blocker",
       "core.milestone": "core.milestone",
       "blk_meic1my6m62iu": "core.task",

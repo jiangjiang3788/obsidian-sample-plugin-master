@@ -1,6 +1,6 @@
 // src/features/settings/ui/BlockManager.tsx
 /**
- * BlockManager - Block 管理组件
+ * BlockManager - 记录类型管理组件
  * 
  * ⚠️ P0 止血改造：
  * - 禁止直接调用 appStore['_updateSettingsAndPersist']
@@ -26,8 +26,8 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
     block: BlockTemplate;
     openId: string | null;
     setOpenId: (id: string | null) => void;
-    handleDelete: (id: string, name: string) => void;
-    handleDuplicate: (id: string) => void;
+    handleDelete: (id: string, name: string) => void | Promise<void>;
+    handleDuplicate: (id: string) => void | Promise<void>;
     useCases: UseCases;
 }) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
@@ -47,7 +47,7 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
                             <Typography fontWeight={500}>{block.name}</Typography>
                         </Stack>
                         <Stack direction="row" alignItems="center" spacing={0.5}>
-                            {/* P1: 通过 UseCase 层复制 Block */}
+                            {/* P1: 通过 UseCase 层复制记录类型 */}
                             <IconAction label="复制" icon={<ContentCopyIcon fontSize="small" />} onClick={() => handleDuplicate(block.id)} />
                             <IconAction label="删除" icon={<DeleteForeverOutlinedIcon />} onClick={() => handleDelete(block.id, block.name)} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }} />
                         </Stack>
@@ -73,13 +73,13 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
     };
     return (
         <Stack spacing={3}>
-            <TextField label="Block 名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" sx={{ maxWidth: 400 }} />
+            <TextField label="记录类型名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" sx={{ maxWidth: 400 }} />
             <Divider />
             <Box>
                 <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>核心元数据</Typography>
                 <Box sx={{ p: 1.5, mb: 1.5, border: '1px solid rgba(0,0,0,0.12)', borderRadius: 1, bgcolor: 'background.default' }}>
                     <Typography variant="body2" color="text.secondary">
-                        Block 是一类记录模板；分类、主题、标签是插件核心字段。分类由当前 Block 或表单字段写入，主题来自快速输入选择的主题，标签可作为表单字段输入。它们不会再作为普通 extra 字段处理。
+                        记录类型是一类记录模板；分类、主题、标签是核心字段。
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75, fontFamily: 'monospace' }}>
                         推荐模板行：分类:: {'{{categoryKey}}'} ｜ 主题:: {'{{themePath}}'} ｜ 标签:: {'{{tags}}'}
@@ -99,7 +99,7 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
             </Box>
             <Divider />
             <Box>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>输出目标</Typography>
+                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>保存位置</Typography>
                 <Stack spacing={2}>
                     <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{themePath}}/{{标题.value}}.md" variant="outlined" size="small" />
                     <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader || ''} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{themePath}}" variant="outlined" size="small" />
@@ -116,7 +116,7 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
                     <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出模板</Typography>
                     <TemplateVariableCopier block={localBlock} />
                 </Stack>
-                <TextField label="Output Template" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }} />
+                <TextField label="输出模板" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }} />
             </Box>
         </Stack>
     );
@@ -138,7 +138,7 @@ export function BlockManager() {
     
     // P1: 通过 UseCase 层添加 Block
     const handleAdd = async () => {
-        const newName = `新Block ${blocks.length + 1}`;
+        const newName = `新记录类型 ${blocks.length + 1}`;
         const newBlock = await useCases.blocks.addBlock(newName);
         if (newBlock) {
             setOpenId(newBlock.id);
@@ -147,12 +147,12 @@ export function BlockManager() {
 
     // P1: 通过 UseCase 层删除 Block
     const handleDelete = async (id: string, name: string) => {
-        if (confirm(`确认删除Block "${name}" 吗？\n所有与此Block相关的主题覆写配置都将被一并删除。`)) {
+        if (confirm(`确认删除记录类型 "${name}" 吗？\n所有与此记录类型相关的预设会一起删除。`)) {
             await useCases.blocks.deleteBlock(id);
         }
     };
 
-    // P1: 通过 UseCase 层复制 Block
+    // P1: 通过 UseCase 层复制记录类型
     const handleDuplicate = async (id: string) => {
         await useCases.blocks.duplicateBlock(id);
     };
@@ -174,10 +174,10 @@ export function BlockManager() {
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                <Typography variant="h6">1. 管理 Block</Typography>
-                <IconAction label="新增Block类型" onClick={handleAdd} color="success" icon={<AddCircleOutlineIcon />} />
+                <Typography variant="h6">记录类型</Typography>
+                <IconAction label="新增记录类型" onClick={handleAdd} color="success" icon={<AddCircleOutlineIcon />} />
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{mb: 1.5}}>在这里定义所有快速输入的基础模板，例如任务、打卡、总结等。可拖动排序。</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{mb: 1.5}}>定义快速输入可选择的记录类型，例如任务、打卡、总结。可拖动排序。</Typography>
             
             <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>

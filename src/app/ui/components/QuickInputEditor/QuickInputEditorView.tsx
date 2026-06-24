@@ -22,7 +22,6 @@ export interface QuickInputEditorViewProps {
   onSelectTheme: (themeId: string | null, path: string | null) => void;
   goals: GoalSelectorOption[];
   selectedGoalPath: string | null;
-  selectedGoalTitle?: string | null;
   onSelectGoal: (goal: GoalSelectorOption | null) => void;
   onCreateGoal?: (goalPath: string) => Promise<void> | void;
   templateVariants?: Array<{ value: string; label: string; isDefault?: boolean }>;
@@ -51,81 +50,6 @@ export interface QuickInputEditorViewProps {
 }
 
 
-function MetaChip({ label, value }: { label: string; value: string }) {
-  return (
-    <Box
-      sx={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 0.5,
-        px: 1,
-        py: 0.4,
-        borderRadius: 999,
-        backgroundColor: 'var(--background-secondary)',
-        border: '1px solid var(--background-modifier-border)',
-        fontSize: 12,
-        lineHeight: 1.2,
-        color: 'text.secondary',
-      }}
-    >
-      <strong style={{ fontWeight: 600 }}>{label}</strong>
-      <span>{value}</span>
-    </Box>
-  );
-}
-
-function SnapshotSummary({
-  currentThemePath,
-  currentGoalPath,
-  templateSourceType,
-  fieldSourceSummary,
-  currentPeriodLabel,
-}: {
-  currentThemePath?: string | null;
-  currentGoalPath?: string | null;
-  templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null;
-  fieldSourceSummary?: Record<string, number>;
-  currentPeriodLabel?: string | null;
-}) {
-  const chips: Array<{ label: string; value: string }> = [];
-  if (currentGoalPath) chips.push({ label: '目标', value: currentGoalPath });
-  if (currentThemePath) chips.push({ label: '主题', value: currentThemePath });
-  if (currentPeriodLabel) chips.push({ label: '周期', value: currentPeriodLabel });
-  if (templateSourceType) {
-    const sourceLabelMap: Record<string, string> = {
-      'core-block': '核心Block',
-      'goal-template': '目标记录预设',
-      'legacy-block': '自定义Block',
-    };
-    chips.push({ label: '记录方式', value: sourceLabelMap[templateSourceType] || templateSourceType });
-  }
-  if (fieldSourceSummary) {
-    if (fieldSourceSummary.user > 0) chips.push({ label: '手填', value: String(fieldSourceSummary.user) });
-    if (fieldSourceSummary.context > 0) chips.push({ label: '回填', value: String(fieldSourceSummary.context) });
-    if (fieldSourceSummary.template_default > 0) chips.push({ label: '预设默认', value: String(fieldSourceSummary.template_default) });
-    if (fieldSourceSummary.system_auto > 0) chips.push({ label: '自动', value: String(fieldSourceSummary.system_auto) });
-  }
-  if (!chips.length) return null;
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 0.75,
-        p: 1.1,
-        borderRadius: 1.2,
-        backgroundColor: 'var(--background-primary-alt)',
-        border: '1px solid var(--background-modifier-border)',
-      }}
-    >
-      {chips.map((chip) => (
-        <MetaChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} />
-      ))}
-    </Box>
-  );
-}
-
 function SectionTitle({ title, compact = false }: { title: string; compact?: boolean }) {
   return (
     <Typography
@@ -153,7 +77,6 @@ export function QuickInputEditorView({
   onSelectTheme,
   goals,
   selectedGoalPath,
-  selectedGoalTitle,
   onSelectGoal,
   onCreateGoal,
   templateVariants = [],
@@ -173,10 +96,6 @@ export function QuickInputEditorView({
   onRequestSubmit,
   isMobileLike = false,
   showTimeDirectionControl = false,
-  currentThemePath = null,
-  currentPeriodLabel = null,
-  templateSourceType = null,
-  fieldSourceSummary,
 }: QuickInputEditorViewProps) {
   if (!template) {
     return <div>错误：找不到当前记录类型的默认配置。</div>;
@@ -193,11 +112,6 @@ export function QuickInputEditorView({
           onCreateGoal={onCreateGoal}
           dense={dense}
         />
-        {selectedGoalTitle && selectedGoalTitle !== selectedGoalPath && (
-          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.7 }}>
-            当前目标：{selectedGoalTitle}
-          </Typography>
-        )}
       </Box>
 
       {allowBlockSwitch && blocks.length > 1 && (
@@ -241,23 +155,10 @@ export function QuickInputEditorView({
               })}
             </div>
           </FormControl>
-          {templateVariants.length === 1 && (
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.6 }}>
-              当前目标和记录类型只有一个预设，已自动选择。
-            </Typography>
-          )}
         </Box>
       )}
 
       {showDivider && <Divider sx={{ my: dense ? 0.1 : 0.2, opacity: 0.55 }} />}
-
-      <SnapshotSummary
-        currentThemePath={currentThemePath}
-        currentGoalPath={selectedGoalPath}
-        templateSourceType={templateSourceType}
-        fieldSourceSummary={fieldSourceSummary}
-        currentPeriodLabel={currentPeriodLabel}
-      />
 
       <Box>
         <QuickInputEditorFields

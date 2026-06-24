@@ -49,11 +49,26 @@ export function GoalEntitySection() {
   };
 
 
+  const handleEditGoalTheme = async (goal: any) => {
+    const current = String(goal.themePath || '');
+    const next = window.prompt('默认主题（留空表示无）', current);
+    if (next === null) return;
+    await useCases.goal.updateGoal(goal.id, { themePath: next.trim() || null });
+    setMessage(`已更新主题：${goal.goalPath || goal.title || goal.id}`);
+  };
+
   const handleDeleteGoal = async (goal: any) => {
     const label = goal.goalPath || goal.title || goal.id;
-    if (!window.confirm(`删除目标「${label}」？\n\n这会删除目标实体、目标记录关系和该目标下的记录预设；不会删除已有 Markdown 文件。`)) return;
-    await useCases.goal.deleteGoal(goal.id);
-    setMessage(`已删除目标：${label}`);
+    const path = String(goal.goalPath || goal.title || '').trim();
+    const descendantCount = path
+      ? goals.filter((item: any) => item.id !== goal.id && String(item.goalPath || item.title || '').trim().startsWith(`${path}/`)).length
+      : 0;
+    const suffix = descendantCount > 0 ? `\n同时删除 ${descendantCount} 个子目标。` : '';
+    if (!window.confirm(`删除目标「${label}」？${suffix}\n\n这会删除目标实体、子目标、目标记录关系和该目标下的记录预设；不会删除已有 Markdown 文件。`)) return;
+    const count = typeof (useCases.goal as any).deleteGoalCascade === 'function'
+      ? await (useCases.goal as any).deleteGoalCascade(goal.id)
+      : (await useCases.goal.deleteGoal(goal.id), 1);
+    setMessage(count > 1 ? `已删除目标及子目标：${count} 个` : `已删除目标：${label}`);
   };
 
   return (
@@ -74,7 +89,7 @@ export function GoalEntitySection() {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
           <Box>
             <Typography sx={{ fontWeight: 800 }}>目标库</Typography>
-            <Typography variant="body2" color="text.secondary">目标库只管理目标本身：新建、暂停、完成、归档、删除。统计周期属于记录表单，请到“目标 × Block 预设表”的单元格里设置。</Typography>
+            <Typography variant="body2" color="text.secondary">目标库只管理目标本身：新建、暂停、完成、归档、删除。统计周期属于记录表单，请到“目标 × 记录类型 预设表”的单元格里设置。</Typography>
           </Box>
           <TextField size="small" label="搜索目标" value={query} onChange={(event: any) => setQuery(event.target.value)} sx={{ minWidth: 220 }} />
         </Box>

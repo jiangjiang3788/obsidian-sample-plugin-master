@@ -61,36 +61,38 @@ export function isGoalVisibleByExpandedState(goal: GoalDefinition, expandedPaths
   return true;
 }
 
-function goalSortOrder(goal: GoalDefinition): number {
-  const value = Number((goal as any).sortOrder);
-  return Number.isFinite(value) ? value : 999999;
-}
-
 function getGoalByPath(goals: GoalDefinition[], path: string): GoalDefinition | null {
   return goals.find((goal) => getGoalDisplayPath(goal) === path) || null;
 }
 
 export function sortGoalsForMatrix(goals: GoalDefinition[]): GoalDefinition[] {
+  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
+  const goalSortOrder = (goal: GoalDefinition | null): number => {
+    if (!goal) return Number.MAX_SAFE_INTEGER;
+    const value = Number((goal as any).sortOrder);
+    if (Number.isFinite(value)) return value;
+    return originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
+  };
+
   return [...goals].sort((left, right) => {
     const leftParts = getGoalDisplayPath(left).split('/').filter(Boolean);
     const rightParts = getGoalDisplayPath(right).split('/').filter(Boolean);
     const max = Math.min(leftParts.length, rightParts.length);
     for (let index = 0; index < max; index += 1) {
       if (leftParts[index] === rightParts[index]) continue;
-      const parentPath = leftParts.slice(0, index).join('/');
       const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join('/');
       const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join('/');
       const leftSiblingGoal = getGoalByPath(goals, leftSiblingPath);
       const rightSiblingGoal = getGoalByPath(goals, rightSiblingPath);
-      const leftOrder = leftSiblingGoal ? goalSortOrder(leftSiblingGoal) : 999999;
-      const rightOrder = rightSiblingGoal ? goalSortOrder(rightSiblingGoal) : 999999;
+      const leftOrder = goalSortOrder(leftSiblingGoal);
+      const rightOrder = goalSortOrder(rightSiblingGoal);
       if (leftOrder !== rightOrder) return leftOrder - rightOrder;
       return leftParts[index].localeCompare(rightParts[index], 'zh-CN');
     }
     if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
     const byOrder = goalSortOrder(left) - goalSortOrder(right);
     if (byOrder !== 0) return byOrder;
-    return getGoalDisplayPath(left).localeCompare(getGoalDisplayPath(right), 'zh-CN');
+    return (originalIndex.get(left.id) ?? 0) - (originalIndex.get(right.id) ?? 0);
   });
 }
 

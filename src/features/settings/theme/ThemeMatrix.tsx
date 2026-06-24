@@ -28,7 +28,7 @@ export function ThemeMatrix() {
     return (
         <Box sx={{ display: 'grid', gap: 1.5 }}>
             <Alert severity="warning">
-                ThemeMatrix 已降级为 legacy 兼容入口。新记录预设请到“数据管理 → 目标中心 → 记录预设”配置；主题现在只管理图标、颜色和领域路径。
+                ThemeMatrix 已降级为 legacy 兼容入口。新记录预设请到“数据管理 → 目标 → 记录预设”配置；主题现在只管理图标、颜色和领域路径。
             </Alert>
             <ThemeMatrixView
                 blocks={blocks}

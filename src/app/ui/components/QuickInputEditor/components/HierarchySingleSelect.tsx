@@ -31,9 +31,13 @@ function normalizePath(value?: string | null): string {
   return String(value || '').split('/').map((part) => part.trim()).filter(Boolean).join('/');
 }
 
+function cleanLabel(value: string): string {
+  return String(value || '').replace(/^[#＃]+\s*/, '').trim();
+}
+
 function leafLabel(path: string): string {
   const parts = normalizePath(path).split('/').filter(Boolean);
-  return parts[parts.length - 1] || path;
+  return cleanLabel(parts[parts.length - 1] || path);
 }
 
 function getOrder(option: HierarchySingleSelectOption): number {
@@ -125,10 +129,10 @@ export function HierarchySingleSelect({
       key={option.id || option.value}
       selected={active}
       title={option.value}
-      onClick={() => onSelect(option)}
+      onClick={() => option.value ? onSelect(option) : onSelect(null)}
     >
       {option.icon ? `${option.icon} ` : ''}
-      {option.label || leafLabel(option.value)}
+      {cleanLabel(option.label || leafLabel(option.value))}
     </SelectablePill>
   );
 
@@ -164,20 +168,16 @@ export function HierarchySingleSelect({
             </div>
           </Box>
 
-          <Box>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontWeight: 600 }}>
-              {activeParent ? `${activeParent.label || leafLabel(activeParent.value)} · ${childLabel}` : childLabel}
-            </Typography>
-            {children.length > 0 ? (
+          {children.length > 0 && (
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontWeight: 600 }}>
+                {activeParent ? `${cleanLabel(activeParent.label || leafLabel(activeParent.value))} · ${childLabel}` : childLabel}
+              </Typography>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {children.map((option) => renderPill(option, normalizedSelected === option.value))}
               </div>
-            ) : (
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
-                {activeParent ? '这个父级下还没有子项。' : '先选择一个父级。'}
-              </Typography>
-            )}
-          </Box>
+            </Box>
+          )}
         </>
       )}
     </Box>

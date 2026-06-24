@@ -7,7 +7,7 @@ import type { TemplateField } from "@core/public";
 import { createCustomTemplateField, sanitizeTemplateField, sanitizeTemplateFields } from "@core/public";
 import { FieldRow } from "./fieldsEditor/FieldRow";
 
-const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 64px 72px 40px";
+const fieldRowGridTemplateColumns = "20px minmax(0, 1.15fr) minmax(112px, 145px) minmax(0, 1fr) 54px 46px 30px";
 
 function createEmptyField(index: number): TemplateField {
   return createCustomTemplateField(index);
@@ -87,7 +87,7 @@ export function FieldsEditor({
         <Typography variant="caption" sx={{ color: "text.secondary" }}>字段类型</Typography>
         <Typography variant="caption" sx={{ color: "text.secondary" }}>默认值</Typography>
         <Typography variant="caption" sx={{ color: "text.secondary", textAlign: "center" }}>必填</Typography>
-        <Box />
+        <Typography variant="caption" sx={{ color: "text.secondary", textAlign: "center" }}>详情</Typography>
         <Box />
       </Box>
 

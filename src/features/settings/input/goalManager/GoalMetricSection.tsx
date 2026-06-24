@@ -70,7 +70,7 @@ export function GoalMetricSection() {
   return (
     <SectionCard>
       <Typography sx={{ fontWeight: 700 }}>目标指标</Typography>
-      <Typography variant="body2" color="text.secondary">指标只属于目标；视图根据记录里的 Block、状态和日期运行时统计。</Typography>
+      <Typography variant="body2" color="text.secondary">指标只属于目标；视图根据记录里的 记录类型、状态和日期运行时统计。</Typography>
       {message && <Alert severity="info" onClose={() => setMessage('')}>{message}</Alert>}
       <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(180px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)', gap: 1, alignItems: 'center' }}>
         <SimpleSelect value={metricGoalId} options={activeGoalOptions} onChange={(value) => syncMetricDraft(value)} placeholder="选择目标" fullWidth />

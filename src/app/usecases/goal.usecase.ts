@@ -22,6 +22,7 @@ import {
   removeGoalTemplateFromSettings,
   removeGoalTemplatesForGoal,
   compactGoalTemplateForStorage,
+  cleanupGoalTemplateStorage,
   getCoreBlockById,
   devError,
   makeStableGoalIdFromPath,
@@ -54,6 +55,7 @@ export interface UpsertGoalTemplateInput {
   templateVariantId?: string;
   templateName?: string;
   description?: string;
+  /** @deprecated 不再使用默认预设语义；保留入参只为兼容旧调用。 */
   isDefault?: boolean;
   sortOrder?: number;
   enabled?: boolean;
@@ -100,6 +102,23 @@ function normalizeGoalInput(input: AddGoalInput): GoalDefinition {
 
 function safeCycleId(input: AddCycleInput): string {
   return `cycle.${input.goalId}.${input.startDate}.${input.endDate}`.replace(/[^a-z0-9_.-]/gi, '-');
+}
+
+function normalizeStoredGoalPath(goal: Pick<GoalDefinition, 'goalPath' | 'title'>): string {
+  return splitGoalPath(goal.goalPath || goal.title).goalPath || String(goal.goalPath || goal.title || '').trim();
+}
+
+function collectGoalCascadeIds(goals: GoalDefinition[], id: string): string[] {
+  const target = goals.find((goal) => goal.id === id);
+  if (!target) return [];
+  const targetPath = normalizeStoredGoalPath(target);
+  return goals
+    .filter((goal) => {
+      if (goal.id === id) return true;
+      const path = normalizeStoredGoalPath(goal);
+      return !!targetPath && path.startsWith(`${targetPath}/`);
+    })
+    .map((goal) => goal.id);
 }
 
 
@@ -166,19 +185,92 @@ export class GoalUseCase {
     await this.updateGoal(id, { status: 'completed' });
   }
 
+  private async deleteGoalsByIds(ids: string[]): Promise<void> {
+    const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+    if (!uniqueIds.length) return;
+    const targetIds = new Set(uniqueIds);
+    const state = this.store.getState();
+    if (!state.isInitialized) return;
+    await state.updateSettings((draft) => {
+      draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
+      draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => !targetIds.has(goal.id));
+      draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => !targetIds.has(cycle.goalId));
+      for (const targetId of targetIds) {
+        draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, targetId);
+      }
+      draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => !targetIds.has(relation.goalId));
+    });
+  }
+
   async deleteGoal(id: string): Promise<void> {
     try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => goal.id !== id);
-        draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => cycle.goalId !== id);
-        draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, id);
-        draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => relation.goalId !== id);
-      });
+      await this.deleteGoalsByIds([id]);
     } catch (error) {
       devError('[GoalUseCase] deleteGoal failed:', error);
+      throw error;
+    }
+  }
+
+  async deleteGoalCascade(id: string): Promise<number> {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) return 0;
+      const goalSettings = ensureGoalSettings(state.settings.goalSettings || DEFAULT_GOAL_SETTINGS);
+      const ids = collectGoalCascadeIds(goalSettings.goals, id);
+      await this.deleteGoalsByIds(ids);
+      return ids.length;
+    } catch (error) {
+      devError('[GoalUseCase] deleteGoalCascade failed:', error);
+      throw error;
+    }
+  }
+
+  async cleanupGoalSettingsStorage(): Promise<{
+    beforeTemplateCount: number;
+    afterTemplateCount: number;
+    removedDuplicateTemplates: number;
+    removedDanglingCycles: number;
+    removedDanglingRelations: number;
+    changed: boolean;
+  }> {
+    try {
+      const state = this.store.getState();
+      const fallback = {
+        beforeTemplateCount: 0,
+        afterTemplateCount: 0,
+        removedDuplicateTemplates: 0,
+        removedDanglingCycles: 0,
+        removedDanglingRelations: 0,
+        changed: false,
+      };
+      if (!state.isInitialized) return fallback;
+
+      let summary = fallback;
+      await state.updateSettings((draft) => {
+        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
+        const beforeCycles = draft.goalSettings.cycles.length;
+        const beforeRelations = draft.goalSettings.goalRecordRelations.length;
+        const liveGoalIds = new Set(draft.goalSettings.goals.map((goal) => goal.id));
+
+        const cleaned = cleanupGoalTemplateStorage(draft.goalSettings);
+        draft.goalSettings = cleaned.goalSettings;
+        draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => liveGoalIds.has(cycle.goalId));
+        draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => liveGoalIds.has(relation.goalId));
+
+        const removedDanglingCycles = beforeCycles - draft.goalSettings.cycles.length;
+        const removedDanglingRelations = beforeRelations - draft.goalSettings.goalRecordRelations.length;
+        summary = {
+          beforeTemplateCount: cleaned.summary.beforeCount,
+          afterTemplateCount: cleaned.summary.afterCount,
+          removedDuplicateTemplates: cleaned.summary.removedDuplicateCount,
+          removedDanglingCycles,
+          removedDanglingRelations,
+          changed: cleaned.summary.changed || removedDanglingCycles > 0 || removedDanglingRelations > 0,
+        };
+      });
+      return summary;
+    } catch (error) {
+      devError('[GoalUseCase] cleanupGoalSettingsStorage failed:', error);
       throw error;
     }
   }
@@ -284,9 +376,9 @@ export class GoalUseCase {
       goalId: input.goalId,
       coreBlockId: input.coreBlockId,
       variantId: input.templateVariantId || 'default',
-      name: input.templateName || (input.templateVariantId === 'default' || !input.templateVariantId ? '默认模板' : input.templateVariantId),
+      name: input.templateName || (input.templateVariantId === 'default' || !input.templateVariantId ? '记录预设' : input.templateVariantId),
       description: input.description,
-      isDefault: input.isDefault !== false && (!input.templateVariantId || input.templateVariantId === 'default' || input.isDefault === true),
+      isDefault: undefined,
       sortOrder: input.sortOrder,
       enabled: input.enabled !== false,
       targetFile: input.targetFile?.trim() || undefined,

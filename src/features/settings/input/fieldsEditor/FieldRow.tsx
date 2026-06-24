@@ -10,7 +10,7 @@ import { OptionRow } from "./OptionRow";
 
 const fieldTypeOptions = getUserTemplateFieldTypeOptions();
 
-const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 64px 72px 40px";
+const fieldRowGridTemplateColumns = "20px minmax(0, 1.15fr) minmax(112px, 145px) minmax(0, 1fr) 54px 46px 30px";
 const emptyControlMinHeight = 40;
 
 function defaultInputType(uiType: string) {
@@ -193,29 +193,51 @@ export function FieldRow({
 
         <Box sx={{ minWidth: 0, display: "flex", justifyContent: "center" }}>
           {showDetails ? (
-            <Button
-              size="small"
-              variant="text"
+            <button
+              type="button"
               disabled={disabled && !showOptionsEditor}
               onClick={() => setDetailsOpen((open) => !open)}
-              endIcon={detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              sx={{ width: "100%", minWidth: 0, px: 0.75, whiteSpace: "nowrap", "& .MuiButton-endIcon": { ml: 0.25, mr: 0 } }}
+              style={{
+                width: '100%',
+                minWidth: 0,
+                padding: '4px 2px',
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--text-muted)',
+                cursor: disabled && !showOptionsEditor ? 'default' : 'pointer',
+                font: 'inherit',
+                fontSize: '12px',
+                whiteSpace: 'nowrap',
+              }}
             >
-              {detailsOpen ? "收起" : "详情"}
-            </Button>
+              {detailsOpen ? '收起' : '详情'}
+            </button>
           ) : (
             <Box sx={{ minHeight: emptyControlMinHeight }} />
           )}
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "center" }}>
-          <IconAction
-            label="删除此字段"
+          <button
+            type="button"
+            title="删除此字段"
             disabled={disabled}
             onClick={onRemove}
-            color="error"
-            icon={<DeleteIcon />}
-          />
+            style={{
+              width: 26,
+              height: 26,
+              border: 'none',
+              borderRadius: 6,
+              background: 'transparent',
+              color: 'var(--text-muted)',
+              cursor: disabled ? 'default' : 'pointer',
+              font: 'inherit',
+              fontSize: '18px',
+              lineHeight: 1,
+            }}
+          >
+            −
+          </button>
         </Box>
       </Box>
 

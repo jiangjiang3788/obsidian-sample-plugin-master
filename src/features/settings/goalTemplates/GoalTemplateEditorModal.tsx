@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Box, Button, Divider, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, Stack, Typography, diagnosticError } from '@shared/public';
+import { Alert, Box, Button, Divider, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, Stack, Typography, diagnosticError } from '@shared/public';
 import type { JSX } from 'preact';
 import { FloatingPanel, selectSettings, useSelector, useUiPort, type UseCases } from '@/app/public';
 import type { CoreBlockDefinition } from '@core/public';
@@ -18,6 +18,7 @@ interface GoalTemplateEditorModalProps {
   goal: GoalDefinition | null;
   block: CoreBlockDefinition | null;
   variants: GoalTemplate[];
+  initialVariantId?: string | null;
   useCases: UseCases;
 }
 
@@ -25,7 +26,6 @@ interface DraftState {
   variantId: string;
   name: string;
   description: string;
-  isDefault: boolean;
   granularity: 'week' | 'month' | 'quarter' | 'year';
   sortOrder: number;
   fields: TemplateField[];
@@ -91,6 +91,10 @@ function normalizeThemePath(value: unknown): string {
   const text = String(value ?? '').trim();
   if (!text || text === '{{goal.themePath}}') return '';
   return text;
+}
+
+function cleanDisplayThemePath(value: unknown): string {
+  return String(value ?? '').split('/').map((part) => part.trim().replace(/^[#＃]+\s*/, '').trim()).filter(Boolean).join('/');
 }
 
 function isThemeField(field: TemplateField): boolean {
@@ -173,12 +177,32 @@ function leafPath(value: unknown): string {
   return text.split('/').filter(Boolean).pop() || text;
 }
 
+function isGeneratedPresetName(value: unknown): boolean {
+  const text = String(value ?? '').trim();
+  return !text || /^预设\s*\d+$/i.test(text) || /^preset[-_\s]*\d+$/i.test(text) || text === '记录预设' || text === '未命名预设';
+}
+
+function themeLeafLabel(themePath: unknown, fallback = ''): string {
+  const clean = cleanDisplayThemePath(themePath);
+  return leafPath(clean) || fallback;
+}
+
+function inferTemplateDisplayName(template: GoalTemplate | null | undefined, themePath?: string, fallback = '记录预设'): string {
+  const name = String(template?.name || '').trim();
+  if (name && !isGeneratedPresetName(name)) return name;
+  const themeLabel = themeLeafLabel(themePath || readThemePathFromTemplate(template));
+  if (themeLabel) return themeLabel;
+  const variantId = String(template?.variantId || '').trim();
+  if (variantId && variantId !== 'default' && !isGeneratedPresetName(variantId)) return variantId.replace(/^legacy-/, '');
+  return fallback;
+}
+
 function presetName(template: { name?: string; variantId?: string }): string {
   const name = String(template.name || '').trim();
-  if (name) return name;
+  if (name && !isGeneratedPresetName(name)) return name;
   const variantId = String(template.variantId || '').trim();
-  if (variantId) return variantId.replace(/^legacy-/, '');
-  return '默认预设';
+  if (variantId && !isGeneratedPresetName(variantId)) return variantId.replace(/^legacy-/, '');
+  return '记录预设';
 }
 
 function NativeTextInput({
@@ -284,6 +308,39 @@ function CompactCellSelect({
   );
 }
 
+function NativeSelectInput({
+  label,
+  value,
+  options,
+  onChange,
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  options: Array<{ value: string; label: string }>;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <label style={{ display: 'block', minWidth: 0 }}>
+      <span style={nativeLabelStyle}>{label}</span>
+      <select
+        value={value}
+        disabled={disabled}
+        onMouseDown={stopEditorEvent as any}
+        onClick={stopEditorEvent as any}
+        onDblClick={stopEditorEvent as any}
+        onKeyDown={stopEditorEvent as any}
+        onKeyUp={stopEditorEvent as any}
+        onChange={(event) => onChange(((event.target || event.currentTarget) as HTMLSelectElement).value)}
+        style={{ ...nativeControlBaseStyle, opacity: disabled ? 0.6 : 1 }}
+      >
+        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  );
+}
+
 function NativeTextarea({
   label,
   value,
@@ -336,9 +393,8 @@ function makeDraftFromTemplate(template: GoalTemplate | null, block: CoreBlockDe
   const fields = ensureThemeField(cloneValue(template?.fields || block?.fields || []), themePath);
   return {
     variantId,
-    name: template?.name || (variantId === 'default' ? '默认预设' : variantId),
+    name: inferTemplateDisplayName(template, themePath),
     description: template?.description || '',
-    isDefault: template?.isDefault !== undefined ? !!template.isDefault : variantId === 'default',
     granularity: readPeriodGranularity(template, block),
     sortOrder: template?.sortOrder ?? index * 10,
     fields,
@@ -348,6 +404,32 @@ function makeDraftFromTemplate(template: GoalTemplate | null, block: CoreBlockDe
     requiredFields: cloneValue(template?.requiredFields || []),
     defaultValues: cloneValue(template?.defaultValues || {}),
     themePath,
+  };
+}
+
+function makeNewDraft(goal: GoalDefinition | null, block: CoreBlockDefinition | null, variants: GoalTemplate[], themes: any[]): DraftState {
+  const base = makeDraftFromTemplate(null, block, variants);
+  const usedVariantIds = new Set(variants.map((item) => String(item.variantId || 'default')));
+  const usedThemePaths = new Set(variants.map((item) => normalizeThemePath(readThemePathFromTemplate(item))).filter(Boolean));
+  const preferredTheme = normalizeThemePath((goal as any)?.themePath) || normalizeThemePath(base.themePath);
+  const firstUnusedTheme = themes.map((theme: any) => normalizeThemePath(theme?.path)).find((path: string) => path && !usedThemePaths.has(path));
+  const themePath = preferredTheme && !usedThemePaths.has(preferredTheme) ? preferredTheme : (firstUnusedTheme || preferredTheme || '');
+  const label = themeLeafLabel(themePath, block?.name || '记录预设');
+  let variantId = makeVariantId(label || `preset-${variants.length + 1}`);
+  if (usedVariantIds.has(variantId)) {
+    let index = 2;
+    while (usedVariantIds.has(`${variantId}-${index}`)) index += 1;
+    variantId = `${variantId}-${index}`;
+  }
+  const fields = ensureThemeField(base.fields || [], themePath);
+  return {
+    ...base,
+    variantId,
+    name: label || '记录预设',
+    sortOrder: variants.length * 10,
+    themePath,
+    fields,
+    defaultValues: mergeDefaultValues({ ...base, themePath, fields, name: label || '记录预设', variantId } as DraftState, themes.find((theme: any) => normalizeThemePath(theme?.path) === themePath)?.icon),
   };
 }
 
@@ -464,6 +546,67 @@ function cleanDefaultValuesOverride(draft: DraftState, block: CoreBlockDefinitio
 }
 
 
+function buildInheritedDraft(previous: DraftState, block: CoreBlockDefinition | null): DraftState {
+  const baseFields = ensureThemeField(cloneValue(block?.fields || []), previous.themePath);
+  const requiredFields = deriveRequiredFields(baseFields);
+  const next: DraftState = {
+    ...previous,
+    fields: baseFields,
+    outputTemplate: block?.outputTemplate || '',
+    targetFile: block?.targetFile || '',
+    appendUnderHeader: block?.appendUnderHeader || '## {{goalPath}}',
+    requiredFields,
+    defaultValues: mergeDefaultValues({ ...previous, fields: baseFields } as DraftState),
+  };
+  return next;
+}
+
+function templateHasCustomOverrides(template: GoalTemplate | null | undefined, block: CoreBlockDefinition | null, goal: GoalDefinition | null): boolean {
+  if (!template || !block || template.enabled === false) return false;
+  const patch = compactGoalTemplateForStorage(template, { coreBlock: block, goal });
+  if (patch.fields?.length) return true;
+  if (compactText(patch.outputTemplate)) return true;
+  if (compactText(patch.targetFile)) return true;
+  if (compactText(patch.appendUnderHeader)) return true;
+  if (patch.requiredFields?.length) return true;
+  const values = patch.defaultValues || {};
+  const customDefaultKeys = Object.keys(values).filter((key) => !['themePath', '主题', 'icon', '图标'].includes(key));
+  return customDefaultKeys.length > 0;
+}
+
+function inferTemplateEditMode(template: GoalTemplate | null | undefined, block: CoreBlockDefinition | null, goal: GoalDefinition | null): EditMode {
+  if (template?.enabled === false) return 'disabled';
+  return templateHasCustomOverrides(template, block, goal) ? 'override' : 'inherit';
+}
+
+function buildInheritedTemplatePatchFromDraft(params: {
+  goal: GoalDefinition;
+  block: CoreBlockDefinition;
+  draft: DraftState;
+  selectedTemplate: GoalTemplate | null;
+  themeIcon?: string;
+}): GoalTemplate {
+  const { goal, block, draft, selectedTemplate, themeIcon } = params;
+  const variantId = draft.variantId || 'default';
+  const defaultValues = cleanDefaultValuesOverride({ ...draft, fields: [] }, block, goal, themeIcon);
+  const rawPatch: GoalTemplate = {
+    id: getGoalTemplateId(goal.id, block.id, variantId),
+    goalId: goal.id,
+    coreBlockId: block.id,
+    variantId,
+    name: draft.name || (variantId === 'default' ? '记录预设' : variantId),
+    description: draft.description || undefined,
+    periodPolicy: buildDraftPeriodPolicy(block, draft),
+    sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
+    enabled: true,
+    defaultValues,
+    createdAt: selectedTemplate?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  return compactGoalTemplateForStorage(rawPatch, { coreBlock: block, goal });
+}
+
+
 function buildDraftDiffSummary(goal: GoalDefinition | null, block: CoreBlockDefinition | null, draft: DraftState, themeIcon?: string): string[] {
   if (!block || !goal) return [];
   const patch = buildTemplatePatchFromDraft({ goal, block, draft, selectedTemplate: null, themeIcon });
@@ -498,9 +641,8 @@ function buildTemplatePatchFromDraft(params: {
     goalId: goal.id,
     coreBlockId: block.id,
     variantId,
-    name: draft.name || (variantId === 'default' ? '默认预设' : variantId),
+    name: draft.name || (variantId === 'default' ? '记录预设' : variantId),
     description: draft.description || undefined,
-    isDefault: !!draft.isDefault,
     periodPolicy: buildDraftPeriodPolicy(block, draft),
     sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
     enabled: true,
@@ -525,18 +667,20 @@ function nextCopyVariantId(existing: GoalTemplate[], sourceVariantId: string): s
   return `${base}-${index}`;
 }
 
-export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, useCases }: GoalTemplateEditorModalProps) {
+export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initialVariantId = null, useCases }: GoalTemplateEditorModalProps) {
   const ui = useUiPort();
   const settings = useSelector(selectSettings);
   const themes = settings.inputSettings?.themes || [];
-  const themeOptions = [{ value: '', label: '不指定主题' }, ...themes.map((theme: any) => ({ value: theme.path, label: `${theme.icon ? `${theme.icon} ` : ''}${theme.path}` }))];
+  const themeOptions = [{ value: '', label: '不指定主题' }, ...themes.map((theme: any) => ({ value: theme.path, label: `${theme.icon ? `${theme.icon} ` : ''}${cleanDisplayThemePath(theme.path)}` }))];
   const themeByPath = new Map(themes.map((theme: any) => [String(theme.path || ''), theme]));
-  const sortedVariants = useMemo(() => [...variants].sort((left, right) => {
-    const bySort = (left.sortOrder ?? 9999) - (right.sortOrder ?? 9999);
-    if (bySort !== 0) return bySort;
-    if (!!left.isDefault !== !!right.isDefault) return left.isDefault ? -1 : 1;
-    return String(left.name || left.variantId || '').localeCompare(String(right.name || right.variantId || ''), 'zh-CN');
-  }), [variants]);
+  const sortedVariants = useMemo(() => variants
+    .map((template, index) => ({ template, index }))
+    .sort((left, right) => {
+      const bySort = (left.template.sortOrder ?? 9999) - (right.template.sortOrder ?? 9999);
+      if (bySort !== 0) return bySort;
+      return left.index - right.index;
+    })
+    .map(({ template }) => template), [variants]);
 
   const [mode, setMode] = useState<EditMode>('inherit');
   const [selectedVariantId, setSelectedVariantId] = useState('default');
@@ -556,8 +700,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
         variantId: draftVariantId,
         name: draft.name,
         description: draft.description,
-        isDefault: draft.isDefault,
-        periodPolicy: buildDraftPeriodPolicy(block, draft),
+            periodPolicy: buildDraftPeriodPolicy(block, draft),
         sortOrder: draft.sortOrder,
         enabled: true,
         fields: draft.fields,
@@ -568,26 +711,40 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
         requiredFields: draft.requiredFields,
       } as GoalTemplate);
     }
-    return rows.sort((left, right) => {
-      const bySort = (left.sortOrder ?? 9999) - (right.sortOrder ?? 9999);
-      if (bySort !== 0) return bySort;
-      if (!!left.isDefault !== !!right.isDefault) return left.isDefault ? -1 : 1;
-      return String(left.name || left.variantId || '').localeCompare(String(right.name || right.variantId || ''), 'zh-CN');
-    });
+    return rows
+      .map((template, index) => ({ template, index }))
+      .sort((left, right) => {
+        const bySort = (left.template.sortOrder ?? 9999) - (right.template.sortOrder ?? 9999);
+        if (bySort !== 0) return bySort;
+        return left.index - right.index;
+      })
+      .map(({ template }) => template);
   }, [sortedVariants, draft, selectedVariantId, mode, goal?.id, block?.id]);
 
   useEffect(() => {
     if (!isOpen) return;
-    const firstEnabled = sortedVariants.find((template) => template.enabled !== false);
-    const first = firstEnabled || sortedVariants[0] || null;
-    const nextMode: EditMode = sortedVariants.length === 0 ? 'inherit' : (firstEnabled ? 'override' : 'disabled');
-    const nextVariantId = first?.variantId || 'default';
-    setMode(nextMode);
-    setSelectedVariantId(nextVariantId);
-    const nextDraft = makeDraftFromTemplate(first, block, sortedVariants);
+    const initial = initialVariantId
+      ? sortedVariants.find((template) => (template.variantId || 'default') === initialVariantId || template.id === initialVariantId) || null
+      : null;
+
+    if (initial) {
+      const nextVariantId = initial.variantId || 'default';
+      const nextMode = inferTemplateEditMode(initial, block, goal);
+      setMode(nextMode);
+      setSelectedVariantId(nextVariantId);
+      const baseDraft = makeDraftFromTemplate(initial, block, sortedVariants);
+      const nextDraft = nextMode === 'inherit' ? buildInheritedDraft(baseDraft, block) : baseDraft;
+      draftRef.current = nextDraft;
+      setDraft(nextDraft);
+      return;
+    }
+
+    const nextDraft = buildInheritedDraft(makeNewDraft(goal, block, sortedVariants, themes), block);
+    setMode('inherit');
+    setSelectedVariantId(nextDraft.variantId);
     draftRef.current = nextDraft;
     setDraft(nextDraft);
-  }, [isOpen, goal?.id, block?.id]);
+  }, [isOpen, goal?.id, goal?.themePath, block?.id, initialVariantId, sortedVariants.length, themes.length]);
 
   useEffect(() => { draftRef.current = draft; }, [draft]);
 
@@ -614,6 +771,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
   };
 
   const currentTheme = themeByPath.get(String(draft.themePath || '')) as any;
+  const isExistingTemplate = !!selectedTemplate;
   const diffSummary = useMemo(() => buildDraftDiffSummary(goal, block, draft, currentTheme?.icon), [goal, block, draft, currentTheme?.icon]);
   const supportsPeriod = !!block && isPeriodAwareCoreBlock(block.id);
 
@@ -626,20 +784,46 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
   const handleSelectVariant = (variantId: string) => {
     const template = sortedVariants.find((item) => (item.variantId || 'default') === variantId) || null;
     setSelectedVariantId(variantId || 'default');
-    const nextDraft = makeDraftFromTemplate(template, block, sortedVariants);
+    const nextMode = inferTemplateEditMode(template, block, goal);
+    const baseDraft = makeDraftFromTemplate(template, block, sortedVariants);
+    const nextDraft = nextMode === 'inherit' ? buildInheritedDraft(baseDraft, block) : baseDraft;
     draftRef.current = nextDraft;
     setDraft(nextDraft);
-    setMode(template?.enabled === false ? 'disabled' : 'override');
+    setMode(nextMode);
   };
 
   const handleNewVariant = () => {
-    const base = makeDraftFromTemplate(null, block, sortedVariants);
-    const variantId = makeVariantId(`preset-${sortedVariants.length + 1}`);
-    const next = { ...base, variantId, name: `预设 ${sortedVariants.length + 1}`, isDefault: sortedVariants.length === 0, sortOrder: sortedVariants.length * 10 };
-    setMode('override');
-    setSelectedVariantId(variantId);
+    const next = buildInheritedDraft(makeNewDraft(goal, block, sortedVariants, themes), block);
+    setMode('inherit');
+    setSelectedVariantId(next.variantId);
     draftRef.current = next;
     setDraft(next);
+  };
+
+  const switchToInherit = () => {
+    setMode('inherit');
+    setDraft((previous) => {
+      const next = buildInheritedDraft(previous, block);
+      draftRef.current = next;
+      return next;
+    });
+  };
+
+  const switchToOverride = () => {
+    setMode('override');
+    setDraft((previous) => {
+      const base = buildInheritedDraft(previous, block);
+      const next: DraftState = {
+        ...previous,
+        fields: previous.fields?.length ? previous.fields : base.fields,
+        outputTemplate: previous.outputTemplate || base.outputTemplate,
+        targetFile: previous.targetFile || base.targetFile,
+        appendUnderHeader: previous.appendUnderHeader || base.appendUnderHeader,
+        requiredFields: previous.requiredFields?.length ? previous.requiredFields : base.requiredFields,
+      };
+      draftRef.current = next;
+      return next;
+    });
   };
 
   const handleMoveVariant = async (direction: -1 | 1) => {
@@ -663,8 +847,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
       ...currentDraft,
       variantId,
       name: `${currentDraft.name || selectedTemplate?.name || sourceVariantId} 副本`,
-      isDefault: false,
-      sortOrder: sortedVariants.length * 10,
+        sortOrder: sortedVariants.length * 10,
     };
     await useCases.goal.upsertGoalTemplate({
       ...buildTemplatePatchFromDraft({
@@ -674,13 +857,12 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
         selectedTemplate: null,
         themeIcon: (themeByPath.get(String(nextDraft.themePath || '')) as any)?.icon,
       }),
-      isDefault: false,
-      sortOrder: nextDraft.sortOrder,
+        sortOrder: nextDraft.sortOrder,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
     setMode('override');
-    setSelectedVariantId(variantId);
+    setSelectedVariantId(nextDraft.variantId);
     draftRef.current = nextDraft;
     setDraft(nextDraft);
     ui.notice('已复制记录预设');
@@ -689,29 +871,13 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
   const handleDeleteCurrentVariant = async () => {
     if (!goal || !block) return;
     const variantId = selectedVariantId || draft.variantId || 'default';
+    const ok = window.confirm(`删除当前记录预设「${draft.name || variantId}」？`);
+    if (!ok) return;
     await useCases.goal.deleteGoalTemplate(goal.id, block.id, variantId);
-    const next = sortedVariants.find((template) => (template.variantId || 'default') !== variantId) || null;
-    if (next) handleSelectVariant(next.variantId || 'default');
-    else handleNewVariant();
     ui.notice('已删除当前记录预设');
+    onClose();
   };
 
-  const handleSetCurrentDefault = async () => {
-    if (!goal || !block) return;
-    const currentDraft = draftRef.current;
-    await useCases.goal.upsertGoalTemplate({
-      ...buildTemplatePatchFromDraft({
-        goal,
-        block,
-        draft: currentDraft,
-        selectedTemplate,
-        themeIcon: (themeByPath.get(String(currentDraft.themePath || '')) as any)?.icon,
-      }),
-      isDefault: true,
-    });
-    updateDraft({ isDefault: true });
-    ui.notice('已设为默认预设');
-  };
 
   const deleteCellTemplates = async () => {
     if (!goal || !block) return;
@@ -726,8 +892,14 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
     const currentDraft = draftRef.current;
     try {
       if (mode === 'inherit') {
-        await deleteCellTemplates();
-        ui.notice(`已设为继承 ${block.name} 的默认记录方式`);
+        await useCases.goal.upsertGoalTemplate(buildInheritedTemplatePatchFromDraft({
+          goal,
+          block,
+          draft: currentDraft,
+          selectedTemplate,
+          themeIcon: (themeByPath.get(String(currentDraft.themePath || '')) as any)?.icon,
+        }));
+        ui.notice(`已保存继承预设：${currentDraft.name || block.name}`);
         onClose();
         return;
       }
@@ -740,9 +912,8 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
           coreBlockId: block.id,
           variantId: 'default',
           name: '隐藏',
-          description: '该目标下隐藏此 Block',
-          isDefault: true,
-          sortOrder: 0,
+          description: '该目标下隐藏此记录类型',
+                sortOrder: 0,
           enabled: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -760,7 +931,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
         selectedTemplate,
         themeIcon: (themeByPath.get(String(currentDraft.themePath || '')) as any)?.icon,
       }));
-      ui.notice(`已保存预设单元格：${goal.goalPath || goal.title} / ${block.name}`);
+      ui.notice(`已保存记录预设：${goal.goalPath || goal.title} / ${block.name}`);
       onClose();
     } catch (error) {
       diagnosticError('[GoalTemplateEditorModal] save failed', error);
@@ -770,165 +941,147 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
 
   if (!isOpen || !goal || !block) return null;
 
+  const titleTheme = draft.themePath ? cleanDisplayThemePath(draft.themePath) : '新预设';
+  const currentPresetTitle = draft.name || titleTheme || '记录预设';
+  const metadataDisabled = mode === 'disabled';
+  const inheritedMode = mode === 'inherit';
+  const fieldEditDisabled = mode !== 'override';
+
   return (
     <FloatingPanel
       id={`goal-template-editor-${goal.id}-${block.id}`}
-      title={<Typography>预设单元格：<strong>{goal.goalPath || goal.title}</strong> / <span style={{ color: 'var(--color-accent)' }}>{block.name}</span></Typography>}
+      title={<Typography>字段预设：<strong>{currentPresetTitle}</strong></Typography>}
       onClose={onClose}
+      defaultPosition={{ x: Math.max(24, window.innerWidth / 2 - 380), y: 72 }}
       portal={false}
-      placement="inline"
+      placement="floating"
       closeOnOutsideClick={false}
-      width="100%"
-      minWidth={0}
-      maxWidth="100%"
-      minHeight={420}
-      maxHeight="calc(100vh - 120px)"
-      height="min(780px, calc(100vh - 160px))"
-      resizable={false}
+      width={760}
+      height={680}
+      minWidth={560}
+      minHeight={430}
+      maxWidth="96vw"
+      maxHeight="92vh"
+      resizable
       bodyPadding={0}
       bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
     >
-      <Box sx={{ p: 2, flex: 1, minHeight: 0, overflowY: 'auto', boxSizing: 'border-box' }}>
-        <Stack spacing={3}>
-          <FormControl component="fieldset">
-            <FormLabel component="legend">配置模式</FormLabel>
-            <RadioGroup row value={mode} onChange={(_event: unknown, value: string) => setMode(value as EditMode)}>
-              <FormControlLabel value="inherit" control={<Radio />} label="继承默认记录方式" />
-              <FormControlLabel value="override" control={<Radio />} label="使用本单元格预设" />
-              <FormControlLabel value="disabled" control={<Radio />} label="隐藏这种记录类型" />
-            </RadioGroup>
-          </FormControl>
-
-          <Box sx={{ border: '1px solid var(--background-modifier-border)', borderRadius: 1, p: 1, display: 'grid', gap: 1 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Box>
-                <Typography sx={{ fontWeight: 700 }}>记录预设</Typography>
-                <Typography variant="caption" color="text.secondary">同一个目标下可以为这种记录类型准备多个记录预设。周期只对计划 / 总结生效；任务、打卡、思考、事件不再默认日周期。</Typography>
-              </Box>
-              <Button size="small" variant="outlined" onClick={handleNewVariant} disabled={mode !== 'override'}>新建记录预设</Button>
+      <Box sx={{ p: 1.5, flex: 1, minHeight: 0, overflowY: 'auto', boxSizing: 'border-box' }}>
+        <Stack spacing={1.5}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 800, lineHeight: 1.2 }}>{currentTheme?.icon ? `${currentTheme.icon} ` : ''}{titleTheme}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {goal.goalPath || goal.title} / {block.name}
+              </Typography>
             </Box>
-            <Box sx={{ overflowX: 'auto', border: '1px solid var(--background-modifier-border)', borderRadius: 1 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ background: 'var(--background-secondary)' }}>
-                    <th style={{ textAlign: 'left', padding: '8px', minWidth: '150px' }}>名字</th>
-                    <th style={{ textAlign: 'left', padding: '8px', minWidth: '120px' }}>主题</th>
-                    <th style={{ textAlign: 'left', padding: '8px', minWidth: '70px' }}>周期</th>
-                    <th style={{ textAlign: 'left', padding: '8px', minWidth: '160px' }}>保存文件</th>
-                    <th style={{ textAlign: 'left', padding: '8px', minWidth: '140px' }}>标题</th>
-                    <th style={{ textAlign: 'center', padding: '8px', width: '64px' }}>默认</th>
-                    <th style={{ textAlign: 'center', padding: '8px', width: '64px' }}>顺序</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableVariants.length > 0 ? tableVariants.map((template) => {
-                    const variantId = template.variantId || 'default';
-                    const selectedRow = selectedVariantId === variantId;
-                    const rowThemePath = selectedRow ? draft.themePath : readThemePathFromTemplate(template);
-                    const rowGranularity = selectedRow ? draft.granularity : readPeriodGranularity(template, block);
-                    const rowTargetFile = selectedRow ? draft.targetFile : String(template.targetFile || '');
-                    const rowHeader = selectedRow ? draft.appendUnderHeader : String(template.appendUnderHeader || '');
-                    const rowName = selectedRow ? draft.name : presetName(template);
-                    const rowSortOrder = selectedRow ? draft.sortOrder : (template.sortOrder ?? 0);
-                    const rowIsDefault = selectedRow ? draft.isDefault : !!template.isDefault;
-                    return (
-                      <tr
-                        key={variantId}
-                        onClick={() => handleSelectVariant(variantId)}
-                        style={{
-                          cursor: 'pointer',
-                          background: selectedRow ? 'rgba(137, 99, 255, 0.12)' : 'transparent',
-                          borderTop: '1px solid var(--background-modifier-border)',
-                        }}
-                      >
-                        <td style={{ padding: '6px', fontWeight: selectedRow ? 700 : 500 }}>
-                          {selectedRow ? (
-                            <CompactCellInput value={rowName} onInput={(value) => updateDraft({ name: value })} disabled={isFormDisabled} placeholder="例如：睡眠任务" />
-                          ) : rowName}
-                        </td>
-                        <td style={{ padding: '6px', color: rowThemePath ? 'var(--text-normal)' : 'var(--text-muted)' }}>
-                          {selectedRow ? (
-                            <CompactCellSelect value={rowThemePath || ''} options={themeOptions} onChange={(value) => updateThemePath(String(value || ''))} disabled={isFormDisabled} />
-                          ) : (rowThemePath ? leafPath(rowThemePath) : '不指定')}
-                        </td>
-                        <td style={{ padding: '6px' }}>
-                          {selectedRow ? (
-                            supportsPeriod ? <CompactCellSelect value={rowGranularity} options={presetGranularityOptions} onChange={(value) => updateDraft({ granularity: value as DraftState['granularity'] })} disabled={isFormDisabled} /> : <span style={{ color: 'var(--text-muted)' }}>不适用</span>
-                          ) : (supportsPeriod ? (granularityLabelMap[rowGranularity] || '周') : '不适用')}
-                        </td>
-                        <td style={{ padding: '6px', color: 'var(--text-muted)' }} title={rowTargetFile}>
-                          {selectedRow ? (
-                            <CompactCellInput value={rowTargetFile} onInput={(value) => updateDraft({ targetFile: value })} disabled={isFormDisabled} placeholder="例如：01/目标.md" />
-                          ) : shortText(rowTargetFile)}
-                        </td>
-                        <td style={{ padding: '6px', color: 'var(--text-muted)' }} title={rowHeader}>
-                          {selectedRow ? (
-                            <CompactCellInput value={rowHeader} onInput={(value) => updateDraft({ appendUnderHeader: value })} disabled={isFormDisabled} placeholder="## {{goalPath}}" />
-                          ) : shortText(rowHeader)}
-                        </td>
-                        <td style={{ padding: '6px', textAlign: 'center' }}>
-                          {selectedRow ? (
-                            <input type="checkbox" checked={rowIsDefault} disabled={isFormDisabled} onClick={stopEditorEvent as any} onChange={(event: any) => updateDraft({ isDefault: !!event.target.checked })} />
-                          ) : (rowIsDefault ? '是' : '')}
-                        </td>
-                        <td style={{ padding: '6px', textAlign: 'center' }}>
-                          {selectedRow ? (
-                            <CompactCellInput value={String(rowSortOrder)} onInput={(value) => updateDraft({ sortOrder: Number(value) || 0 })} disabled={isFormDisabled} type="number" />
-                          ) : rowSortOrder}
-                        </td>
-                      </tr>
-                    );
-                  }) : (
-                    <tr>
-                      <td colSpan={7} style={{ padding: '12px', color: 'var(--text-muted)' }}>当前单元还没有记录预设。切换到“使用本单元格预设”后可保存第一个预设。</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Button size="small" variant="text" disabled={mode !== 'override' || !selectedTemplate} onClick={() => handleMoveVariant(-1)}>上移</Button>
-              <Button size="small" variant="text" disabled={mode !== 'override' || !selectedTemplate} onClick={() => handleMoveVariant(1)}>下移</Button>
-              <Button size="small" variant="text" disabled={mode !== 'override'} onClick={handleCopyVariant}>复制当前预设</Button>
-              <Button size="small" variant="text" disabled={mode !== 'override'} onClick={handleSetCurrentDefault}>设为默认</Button>
-              <Button size="small" color="error" variant="text" disabled={mode !== 'override' || !selectedTemplate} onClick={handleDeleteCurrentVariant}>删除当前预设</Button>
-            </Box>
-            {draft.themePath ? (
-              <Typography variant="caption" color="text.secondary">主题只作为这个预设的表单默认值与统计维度，不再决定目标归属。当前主题：{currentTheme?.icon ? `${currentTheme.icon} ` : ''}{draft.themePath}</Typography>
-            ) : (
-              <Typography variant="caption" color="text.secondary">主题不是必填项。旧主题表单迁移过来的预设会保留主题，纯目标记录可以不指定主题。</Typography>
-            )}
-            <NativeTextInput label="说明" value={draft.description} onInput={(value) => updateDraft({ description: value })} disabled={isFormDisabled} placeholder="可选：说明这个预设适合的记录场景" />
-            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary">保存策略：</Typography>
-              {diffSummary.length ? diffSummary.map(item => (
-                <span key={item} style={{ fontSize: 12, padding: '2px 8px', borderRadius: 999, border: '1px solid var(--background-modifier-border)', color: 'var(--text-muted)' }}>{item}</span>
-              )) : <Typography variant="caption" color="text.secondary">完全继承 CoreBlock，只保存名称 / 默认状态 / 顺序等元信息。</Typography>}
+            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+              <Button size="small" variant="outlined" disabled={!selectedTemplate || metadataDisabled} onClick={handleCopyVariant}>复制为新预设</Button>
             </Box>
           </Box>
 
-          <Box sx={{ opacity: isFormDisabled ? 0.6 : 1 }}>
-            <Stack spacing={3}>
-              <Divider />
+          {mode === 'disabled' ? (
+            <Alert severity="warning">这个目标下已经隐藏「{block.name}」。保存前请先改为普通记录预设，或删除这条隐藏规则。</Alert>
+          ) : null}
+
+          <Box sx={{ border: '1px solid var(--background-modifier-border)', borderRadius: 1.25, p: 1, display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontSize: '0.9rem', fontWeight: 800 }}>预设模式</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {inheritedMode ? `继承 ${block.name} 的基础字段和输出格式` : '当前主题使用独立字段和输出格式'}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 0.5, p: 0.25, border: '1px solid var(--background-modifier-border)', borderRadius: 999, background: 'var(--background-secondary)' }}>
+              <button
+                type="button"
+                disabled={metadataDisabled}
+                onClick={switchToInherit}
+                style={{
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '5px 12px',
+                  cursor: metadataDisabled ? 'not-allowed' : 'pointer',
+                  background: inheritedMode ? 'var(--interactive-accent)' : 'transparent',
+                  color: inheritedMode ? 'var(--text-on-accent)' : 'var(--text-muted)',
+                  font: 'inherit',
+                  fontWeight: 700,
+                }}
+              >继承</button>
+              <button
+                type="button"
+                disabled={metadataDisabled}
+                onClick={switchToOverride}
+                style={{
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '5px 12px',
+                  cursor: metadataDisabled ? 'not-allowed' : 'pointer',
+                  background: !inheritedMode && mode === 'override' ? 'var(--interactive-accent)' : 'transparent',
+                  color: !inheritedMode && mode === 'override' ? 'var(--text-on-accent)' : 'var(--text-muted)',
+                  font: 'inherit',
+                  fontWeight: 700,
+                }}
+              >覆盖</button>
+            </Box>
+          </Box>
+
+          <Box sx={{ border: '1px solid var(--background-modifier-border)', borderRadius: 1.25, p: 1.25, display: 'grid', gap: 1 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: supportsPeriod ? '1.2fr 1.2fr 0.75fr' : '1.2fr 1.2fr' }, gap: 1 }}>
+              <NativeTextInput label="名字" value={draft.name} onInput={(value) => updateDraft({ name: value })} disabled={metadataDisabled} placeholder="例如：心情" />
+              {isExistingTemplate ? (
+                <NativeTextInput label="主题" value={currentTheme?.icon ? `${currentTheme.icon} ${cleanDisplayThemePath(draft.themePath)}` : cleanDisplayThemePath(draft.themePath) || '未指定主题'} onInput={() => undefined} disabled />
+              ) : (
+                <NativeSelectInput label="主题" value={draft.themePath || ''} options={themeOptions} onChange={(value) => {
+                  const themePath = String(value || '');
+                  updateThemePath(themePath);
+                  const label = themeLeafLabel(themePath);
+                  if (label && isGeneratedPresetName(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
+                }} disabled={metadataDisabled} />
+              )}
+              {supportsPeriod ? <NativeSelectInput label="周期" value={draft.granularity} options={presetGranularityOptions} onChange={(value) => updateDraft({ granularity: value as DraftState['granularity'] })} disabled={metadataDisabled} /> : null}
+            </Box>
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 1 }}>
+              <NativeTextInput label="保存文件" value={draft.targetFile} onInput={(value) => updateDraft({ targetFile: value })} disabled={fieldEditDisabled} placeholder="例如：01/目标打卡.md" />
+              <NativeTextInput label="标题" value={draft.appendUnderHeader} onInput={(value) => updateDraft({ appendUnderHeader: value })} disabled={fieldEditDisabled} placeholder="## {{goalPath}}" />
+            </Box>
+
+            <NativeTextInput label="说明" value={draft.description} onInput={(value) => updateDraft({ description: value })} disabled={metadataDisabled} placeholder="可选" />
+
+            {diffSummary.length ? (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                {diffSummary.map(item => (
+                  <span key={item} style={{ fontSize: 12, padding: '2px 8px', borderRadius: 999, border: '1px solid var(--background-modifier-border)', color: 'var(--text-muted)' }}>{item}</span>
+                ))}
+              </Box>
+            ) : null}
+          </Box>
+
+          <Box sx={{ opacity: fieldEditDisabled ? 0.72 : 1 }}>
+            <Stack spacing={1.5}>
               <Box>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 0.5 }}>表单字段</Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>字段名称、类型、默认值、必填、选项、数字范围会随记录预设保存。若与 CoreBlock 完全一致，只保存默认值差异，避免每个预设复制完整字段。</Typography>
-                <FieldsEditor fields={draft.fields || []} disabled={isFormDisabled} onChange={(fields: TemplateField[]) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath })} />
+                <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, mb: 0.75 }}>表单字段</Typography>
+                {inheritedMode ? (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.75 }}>
+                    当前为继承模式，下面只读展示记录类型基础字段。切到“覆盖”后可单独修改这个主题预设。
+                  </Typography>
+                ) : null}
+                <FieldsEditor fields={draft.fields || []} disabled={fieldEditDisabled} onChange={(fields: TemplateField[]) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath })} />
               </Box>
               <Divider />
               <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                  <Box><Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出格式</Typography><Typography variant="caption" color="text.secondary">与 CoreBlock 相同则不单独保存；只在确实需要覆盖时保存差异。</Typography></Box>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
+                  <Typography sx={{ fontSize: '0.95rem', fontWeight: 700 }}>输出格式</Typography>
                   {effectiveBlockForCopier ? <TemplateVariableCopier block={effectiveBlockForCopier} /> : null}
                 </Stack>
-                <NativeTextarea value={draft.outputTemplate} rows={8} onInput={(value) => updateDraft({ outputTemplate: value })} disabled={isFormDisabled} />
+                <NativeTextarea value={draft.outputTemplate} rows={7} onInput={(value) => updateDraft({ outputTemplate: value })} disabled={fieldEditDisabled} />
               </Box>
             </Stack>
           </Box>
 
-          <Stack direction="row" justifyContent="space-between" spacing={1}>
+          <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ position: 'sticky', bottom: -12, py: 1, background: 'var(--background-primary)', borderTop: '1px solid var(--background-modifier-border)' }}>
             <Button onClick={onClose}>取消</Button>
-            <Button onClick={handleSave} variant="contained">保存单元格</Button>
+            <Button onClick={handleSave} variant="contained" disabled={metadataDisabled}>保存</Button>
           </Stack>
         </Stack>
       </Box>

@@ -45,16 +45,13 @@ const AnyTableRow = TableRow as any;
 const AnyTableCell = TableCell as any;
 const AnyTableBody = TableBody as any;
 const AnyTypography = Typography as any;
-const AnyChip = Chip as any;
 const AnyBox = Box as any;
 
 const PATH_COL_WIDTH = 250;
-const STATUS_COL_WIDTH = 74;
-const BLOCK_COL_WIDTH = 170;
-const SEGMENT_HEIGHT = 40;
-const SEGMENT_RADIUS = 8;
+const BLOCK_COL_WIDTH = 136;
+const SEGMENT_HEIGHT = 36;
 const ADD_BUTTON_HEIGHT = SEGMENT_HEIGHT;
-const PRESET_CARD_HEIGHT = 34;
+const PRESET_CARD_HEIGHT = 30;
 
 type ContextMenuState = {
   x: number;
@@ -64,12 +61,11 @@ type ContextMenuState = {
   template: GoalTemplate;
 };
 
-type CellKind = 'inherit' | 'override' | 'multi' | 'disabled' | 'warning' | 'active' | 'archived';
 type DropPosition = 'before' | 'after';
 
 type GoalDropState = { goalId: string; position: DropPosition } | null;
-type PresetDragState = { goalId: string; blockId: string; templateKey: string } | null;
-type PresetDropCellState = { goalId: string; blockId: string } | null;
+type PresetDragState = { goalId: string; blockId: string; templateKey: string };
+type PresetDropCellState = { goalId: string; blockId: string };
 
 function normalizeSearchText(value: string): string {
   return String(value || '').toLowerCase().trim();
@@ -77,6 +73,22 @@ function normalizeSearchText(value: string): string {
 
 function cleanDisplayText(value: unknown): string {
   return String(value ?? '').replace(/^[#＃]+\s*/, '').trim();
+}
+
+function leafPath(value: unknown): string {
+  const text = String(value ?? '').trim();
+  return text.split('/').filter(Boolean).pop() || text;
+}
+
+function isGeneratedPresetName(value: unknown): boolean {
+  const text = String(value ?? '').trim();
+  return !text || /^预设\s*\d+$/i.test(text) || /^preset[-_\s]*\d+$/i.test(text) || text === '记录预设' || text === '未命名预设';
+}
+
+function getPresetCardName(template: GoalTemplate, goal: GoalDefinition): string {
+  const raw = getGoalTemplateDisplayName(template);
+  if (!isGeneratedPresetName(raw)) return raw;
+  return cleanDisplayText(leafPath(readGoalTemplateThemePath(template, goal))) || raw;
 }
 
 function goalTemplateKey(template: GoalTemplate): string {
@@ -87,65 +99,15 @@ function goalTemplateVariantId(template: GoalTemplate): string {
   return String(template.variantId || 'default').trim() || 'default';
 }
 
-function sortPresets<T extends { sortOrder?: number; name?: string; variantId?: string }>(items: T[]): T[] {
-  return [...items].sort((left, right) => {
-    const bySort = (left.sortOrder ?? 9999) - (right.sortOrder ?? 9999);
-    if (bySort !== 0) return bySort;
-    return getGoalTemplateDisplayName(left as any).localeCompare(getGoalTemplateDisplayName(right as any), 'zh-CN');
-  });
-}
-
-function getSurfaceForKind(kind: CellKind) {
-  switch (kind) {
-    case 'active':
-      return { bg: 'rgba(88, 160, 103, 0.14)', color: '#2d8a43' };
-    case 'archived':
-      return { bg: 'rgba(120, 120, 120, 0.12)', color: 'var(--text-muted)' };
-    case 'warning':
-      return { bg: 'rgba(230, 155, 45, 0.10)', color: '#b66a00' };
-    case 'disabled':
-      return { bg: 'transparent', color: '#c83b3b' };
-    case 'multi':
-    case 'override':
-    case 'inherit':
-    default:
-      return { bg: 'transparent', color: '#2d8a43' };
-  }
-}
-
-function getSegmentRadius(prevSame: boolean, nextSame: boolean) {
-  if (prevSame && nextSame) return '0';
-  if (prevSame && !nextSame) return `0 0 ${SEGMENT_RADIUS}px ${SEGMENT_RADIUS}px`;
-  if (!prevSame && nextSame) return `${SEGMENT_RADIUS}px ${SEGMENT_RADIUS}px 0 0`;
-  return `${SEGMENT_RADIUS}px`;
-}
-
-function renderStatusSegment(kind: CellKind, prevSame: boolean, nextSame: boolean, content: h.JSX.Element) {
-  const surface = getSurfaceForKind(kind);
-  return (
-    <AnyBox
-      sx={{
-        height: `${SEGMENT_HEIGHT}px`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: surface.bg,
-        color: surface.color,
-        borderRadius: getSegmentRadius(prevSame, nextSame),
-        userSelect: 'none',
-        mx: '2px',
-      }}
-    >
-      {content}
-    </AnyBox>
-  );
-}
-
-function statusLabel(goal: GoalDefinition): string {
-  if (goal.status === 'active') return '激活';
-  if (goal.status === 'paused') return '暂停';
-  if (goal.status === 'completed') return '完成';
-  return '归档';
+function sortPresets<T extends GoalTemplate>(items: T[]): T[] {
+  return items
+    .map((template, index) => ({ template, index }))
+    .sort((left, right) => {
+      const bySort = (left.template.sortOrder ?? 9999) - (right.template.sortOrder ?? 9999);
+      if (bySort !== 0) return bySort;
+      return left.index - right.index;
+    })
+    .map(({ template }) => template);
 }
 
 function buildThemeIconMap(settings: any): Map<string, string> {
@@ -184,12 +146,12 @@ export function GoalTemplateMatrix() {
   const [collapsedGoalIds, setCollapsedGoalIds] = useState<Set<string>>(() => new Set());
   const [query, setQuery] = useState('');
   const [activeBlockIds, setActiveBlockIds] = useState<Set<string>>(() => new Set(coreBlocks.map((block) => block.id)));
-  const [selected, setSelected] = useState<{ goal: GoalDefinition; block: CoreBlockDefinition } | null>(null);
+  const [selected, setSelected] = useState<{ goal: GoalDefinition; block: CoreBlockDefinition; variantId?: string | null } | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [draggingGoalId, setDraggingGoalId] = useState<string | null>(null);
   const [goalDrop, setGoalDrop] = useState<GoalDropState>(null);
-  const [draggingPreset, setDraggingPreset] = useState<PresetDragState>(null);
-  const [presetDropCell, setPresetDropCell] = useState<PresetDropCellState>(null);
+  const [draggingPreset, setDraggingPreset] = useState<PresetDragState | null>(null);
+  const [presetDropCell, setPresetDropCell] = useState<PresetDropCellState | null>(null);
 
   useEffect(() => {
     if (!coreBlocks.length) return;
@@ -221,24 +183,6 @@ export function GoalTemplateMatrix() {
     });
   }, [goals, expandedPaths, query, templates]);
 
-  const matrixStats = useMemo(() => {
-    let inherit = 0;
-    let override = 0;
-    let multi = 0;
-    let disabled = 0;
-    let warning = 0;
-    for (const goal of goals) {
-      for (const block of coreBlocks) {
-        const cell = buildGoalTemplateCell(goal, block, templates);
-        if (cell.status === 'inherit') inherit += 1;
-        if (cell.status === 'override') override += 1;
-        if (cell.status === 'multi') multi += 1;
-        if (cell.status === 'disabled') disabled += 1;
-        if (cell.status === 'warning') warning += 1;
-      }
-    }
-    return { inherit, override, multi, disabled, warning, total: goals.length * coreBlocks.length };
-  }, [goals, coreBlocks, templates]);
 
   const toggleTreePath = (path: string) => {
     setExpandedPaths((previous) => {
@@ -280,7 +224,7 @@ export function GoalTemplateMatrix() {
     ? templates.filter((template) => template.goalId === selected.goal.id && template.coreBlockId === selected.block.id)
     : [];
 
-  const openEditor = (goal: GoalDefinition, block: CoreBlockDefinition) => setSelected({ goal, block });
+  const openEditor = (goal: GoalDefinition, block: CoreBlockDefinition, template?: GoalTemplate | null) => setSelected({ goal, block, variantId: template ? goalTemplateVariantId(template) : null });
 
   const openPresetContextMenu = (event: MouseEvent, goal: GoalDefinition, block: CoreBlockDefinition, template: GoalTemplate) => {
     event.preventDefault();
@@ -288,11 +232,22 @@ export function GoalTemplateMatrix() {
     setContextMenu({ x: event.clientX, y: event.clientY, goal, block, template });
   };
 
+
+  const deletePresetTemplate = async (goal: GoalDefinition, block: CoreBlockDefinition, template: GoalTemplate) => {
+    const name = getPresetCardName(template, goal);
+    const ok = window.confirm(`删除记录预设「${name}」？
+
+只删除 ${cleanDisplayText(goal.goalPath || goal.title)} / ${block.name} 下的这个主题预设，不会删除已经写入的 Markdown 记录。`);
+    if (!ok) return;
+    await useCases.goal.deleteGoalTemplate(goal.id, block.id, goalTemplateVariantId(template));
+    ui.notice(`已删除记录预设：${name}`);
+  };
+
   const copyContextTemplateToBlock = async (targetBlock: CoreBlockDefinition) => {
     if (!contextMenu) return;
     const existing = findExistingTemplateForTheme(templates, contextMenu.goal, targetBlock, contextMenu.template);
     if (existing) {
-      openEditor(contextMenu.goal, targetBlock);
+      openEditor(contextMenu.goal, targetBlock, existing);
       ui.notice(`已存在 ${targetBlock.name} 预设，已打开编辑`);
       return;
     }
@@ -306,7 +261,7 @@ export function GoalTemplateMatrix() {
       themeIcon: themeIconByPath.get(themePath),
     });
     await useCases.goal.upsertGoalTemplate(copied);
-    ui.notice(`已创建：${targetBlock.name} / ${getGoalTemplateDisplayName(copied)}`);
+    ui.notice(`已创建：${targetBlock.name} / ${getPresetCardName(copied, contextMenu.goal)}`);
   };
 
   const copyContextTemplateToMissingBlocks = async () => {
@@ -431,6 +386,21 @@ export function GoalTemplateMatrix() {
     setPresetDropCell(null);
   };
 
+  const handleDeleteGoal = async (event: MouseEvent, goal: GoalDefinition) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const path = getGoalDisplayPath(goal);
+    const descendants = goals.filter((item) => item.id !== goal.id && getGoalDisplayPath(item).startsWith(`${path}/`));
+    const targets = [goal, ...descendants];
+    const suffix = descendants.length > 0 ? `\n同时删除 ${descendants.length} 个子目标。` : '';
+    const ok = window.confirm(`删除目标「${cleanDisplayText(path)}」？${suffix}\n\n会删除目标配置、该目标下的记录预设和旧目标关系；不会删除已经写入的 Markdown 记录。`);
+    if (!ok) return;
+    const count = typeof (useCases.goal as any).deleteGoalCascade === 'function'
+      ? await (useCases.goal as any).deleteGoalCascade(goal.id)
+      : (await Promise.all(targets.map((target) => useCases.goal.deleteGoal(target.id))), targets.length);
+    ui.notice(descendants.length > 0 ? `已删除目标及子目标：${count} 个` : `已删除目标：${cleanDisplayText(path)}`);
+  };
+
   const renderAddPresetButton = (goal: GoalDefinition, block: CoreBlockDefinition) => (
     <button
       type="button"
@@ -465,7 +435,7 @@ export function GoalTemplateMatrix() {
   const renderPresetCard = (goal: GoalDefinition, block: CoreBlockDefinition, template: GoalTemplate) => {
     const themePath = readGoalTemplateThemePath(template, goal);
     const icon = readGoalTemplateIcon(template, themeIconByPath.get(themePath));
-    const name = getGoalTemplateDisplayName(template);
+    const name = getPresetCardName(template, goal);
     const key = goalTemplateKey(template);
     const isDragging = draggingPreset?.templateKey === key;
     return (
@@ -474,15 +444,15 @@ export function GoalTemplateMatrix() {
         data-goal-template-key={key}
         role="button"
         tabIndex={0}
-        title={`${name}${themePath ? ` · ${themePath}` : ''}\n左键：编辑；右键/⋯：复制到其它 Block；拖动 ☰：排序或移动到其它目标/Block`}
-        onClick={() => openEditor(goal, block)}
+        title={`${name}${themePath ? ` · ${themePath}` : ''}\n左键：编辑；右键：复制/删除；拖动 ☰：排序或移动到其它目标/记录类型`}
+        onClick={() => openEditor(goal, block, template)}
         onContextMenu={(event: any) => openPresetContextMenu(event, goal, block, template)}
         style={{
           width: '100%',
           display: 'grid',
-          gridTemplateColumns: '16px 20px minmax(0, 1fr) 18px',
+          gridTemplateColumns: '14px 18px minmax(0, 1fr)',
           alignItems: 'center',
-          gap: 5,
+          gap: 4,
           border: '1px solid var(--background-modifier-border)',
           borderRadius: 8,
           background: 'var(--background-primary)',
@@ -519,36 +489,6 @@ export function GoalTemplateMatrix() {
         </span>
         <span style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>{icon || '◇'}</span>
         <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 700, lineHeight: 1.2 }}>{name}</span>
-        <button
-          type="button"
-          title="打开复制菜单"
-          onMouseDown={(event: any) => {
-            event.preventDefault();
-            event.stopPropagation();
-            setContextMenu({ x: event.clientX, y: event.clientY, goal, block, template });
-          }}
-          onClick={(event: any) => {
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-          style={{
-            all: 'unset',
-            width: 18,
-            height: 18,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            fontWeight: 700,
-            lineHeight: '18px',
-            borderRadius: 4,
-            textAlign: 'center',
-            userSelect: 'none',
-          }}
-        >
-          ⋯
-        </button>
       </div>
     );
   };
@@ -559,7 +499,7 @@ export function GoalTemplateMatrix() {
     const isDropCell = presetDropCell?.goalId === goal.id && presetDropCell.blockId === block.id;
     return (
       <div
-        title="顶部 ＋ 添加预设；卡片左键编辑；右键/⋯ 复制；拖动 ☰ 排序或移动到其它目标/Block"
+        title="＋ 添加；左键编辑；右键复制；拖动排序或移动"
         onDragEnter={(event: any) => {
           if (!draggingPreset) return;
           event.preventDefault();
@@ -576,12 +516,12 @@ export function GoalTemplateMatrix() {
           gridAutoRows: 'min-content',
           alignContent: 'start',
           justifyItems: 'stretch',
-          gap: 5,
+          gap: 4,
           minHeight: ADD_BUTTON_HEIGHT + 8,
-          padding: 4,
+          padding: '0 4px 4px',
           borderRadius: 10,
           background: 'transparent',
-          outline: isDropCell ? '2px dashed #7c3cff' : cell.status === 'warning' ? '1px solid rgba(230, 155, 45, .45)' : 'none',
+          outline: isDropCell ? '2px dashed #7c3cff' : 'none',
           outlineOffset: isDropCell ? -2 : 0,
         }}
       >
@@ -596,7 +536,7 @@ export function GoalTemplateMatrix() {
     if (groupIndex > 0) {
       rows.push(
         <AnyTableRow key={`spacer-${groupIndex}`}>
-          <AnyTableCell colSpan={visibleBlocks.length + 2} sx={{ border: 0, p: 0, height: 10, background: 'transparent' }} />
+          <AnyTableCell colSpan={visibleBlocks.length + 1} sx={{ border: 0, p: 0, height: 10, background: 'transparent' }} />
         </AnyTableRow>
       );
     }
@@ -607,11 +547,6 @@ export function GoalTemplateMatrix() {
       const hasChildren = goalHasChildren(goal, goals);
       const expanded = expandedPaths.has(path);
       const collapsed = collapsedGoalIds.has(goal.id);
-      const prevGoal = index > 0 ? group[index - 1] : null;
-      const nextGoal = index < group.length - 1 ? group[index + 1] : null;
-      const stateKind: CellKind = goal.status === 'active' ? 'active' : 'archived';
-      const prevStateKind: CellKind | null = prevGoal ? (prevGoal.status === 'active' ? 'active' : 'archived') : null;
-      const nextStateKind: CellKind | null = nextGoal ? (nextGoal.status === 'active' ? 'active' : 'archived') : null;
       const isRoot = depth === 0;
       const goalCellBg = isRoot ? 'rgba(122, 94, 230, 0.18)' : 'rgba(122, 94, 230, 0.06)';
       const dropActive = goalDrop?.goalId === goal.id;
@@ -692,20 +627,35 @@ export function GoalTemplateMatrix() {
                   </button>
                 ) : <span style={{ display: 'inline-block', width: 18, flexShrink: 0 }} />}
                 <span style={{ color: collapsed ? 'var(--text-muted)' : 'var(--text-faint)', width: 16, textAlign: 'center', flexShrink: 0 }}>{collapsed ? '▸' : '▾'}</span>
-                <AnyBox sx={{ minWidth: 0 }}>
+                <AnyBox sx={{ minWidth: 0, flex: 1 }}>
                   <AnyTypography sx={{ fontWeight: isRoot ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanDisplayText(getGoalDisplayName(goal))}</AnyTypography>
                 </AnyBox>
+                <button
+                  type="button"
+                  title="删除目标"
+                  onClick={(event: any) => handleDeleteGoal(event, goal)}
+                  onMouseDown={(event: any) => event.stopPropagation()}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    width: 22,
+                    height: 22,
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: 1,
+                    flexShrink: 0,
+                    padding: 0,
+                    margin: 0,
+                  }}
+                >
+                  ×
+                </button>
               </AnyBox>
             </AnyBox>
-          </AnyTableCell>
-
-          <AnyTableCell align="center" sx={{ width: STATUS_COL_WIDTH, px: 0.25, py: 0.35, verticalAlign: 'top' }}>
-            {renderStatusSegment(
-              stateKind,
-              prevStateKind === stateKind,
-              nextStateKind === stateKind,
-              <AnyChip label={statusLabel(goal)} size="small" sx={{ fontWeight: 700, backgroundColor: 'transparent', color: 'inherit', height: '24px', '& .MuiChip-label': { px: 0 } }} />
-            )}
           </AnyTableCell>
 
           {visibleBlocks.map((block) => (
@@ -725,7 +675,7 @@ export function GoalTemplateMatrix() {
     <Box sx={{ display: 'grid', gap: 1.25 }}>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center', flexWrap: 'wrap' }}>
-          <TextField size="small" label="搜索目标 / 主题 / 预设" value={query} onChange={(event: any) => setQuery(event.target.value)} sx={{ minWidth: 260 }} />
+          <TextField size="small" placeholder="搜索" value={query} onChange={(event: any) => setQuery(event.target.value)} sx={{ minWidth: 220 }} />
           <Button size="small" variant="outlined" onClick={expandAll}>展开</Button>
           <Button size="small" variant="outlined" onClick={collapseAll}>折叠</Button>
         </Box>
@@ -744,24 +694,10 @@ export function GoalTemplateMatrix() {
         ))}
       </Box>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-        <Chip size="small" label={`目标 ${goals.length}`} />
-        <Chip size="small" label={`Block ${coreBlocks.length}`} />
-        <Chip size="small" color="primary" label={`有预设 ${matrixStats.override + matrixStats.multi}`} />
-        <Chip size="small" label={`多预设 ${matrixStats.multi}`} />
-        <Chip size="small" variant="outlined" label={`继承默认 ${matrixStats.inherit}`} />
-      </Box>
-
-      {matrixStats.warning > 0 && (
-        <Alert severity="warning">
-          有 {matrixStats.warning} 个单元格存在预设异常，例如多个默认预设。点击异常单元格处理。
-        </Alert>
-      )}
-
       {goals.length === 0 ? (
         <Alert severity="info">还没有目标。请先到“目标”新建目标，然后在表格单元格里配置记录预设。</Alert>
       ) : coreBlocks.length === 0 ? (
-        <Alert severity="info">还没有启用的 Block。请先在快速输入设置里启用固定 Block。</Alert>
+        <Alert severity="info">还没有启用的记录类型。请先在“数据管理 / 记录类型”里启用。</Alert>
       ) : (
         <Box sx={{ overflowX: 'auto', width: '100%' }}>
           <AnyTable
@@ -779,7 +715,6 @@ export function GoalTemplateMatrix() {
             <AnyTableHead>
               <AnyTableRow>
                 <AnyTableCell sx={{ fontWeight: 'bold', width: PATH_COL_WIDTH, position: 'sticky', left: 0, zIndex: 3, backgroundColor: 'rgba(124, 60, 255, .18)' }}>目标</AnyTableCell>
-                <AnyTableCell align="center" sx={{ fontWeight: 'bold', width: STATUS_COL_WIDTH }}>状态</AnyTableCell>
                 {visibleBlocks.map((block) => (
                   <AnyTableCell key={block.id} align="center" sx={{ fontWeight: 'bold', width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH }}>
                     {block.name}
@@ -790,7 +725,7 @@ export function GoalTemplateMatrix() {
             <AnyTableBody>
               {activeGroups.length > 0 ? activeGroups.flatMap(renderGroupRows) : (
                 <AnyTableRow>
-                  <AnyTableCell colSpan={visibleBlocks.length + 2} sx={{ py: 2 }}>
+                  <AnyTableCell colSpan={visibleBlocks.length + 1} sx={{ py: 2 }}>
                     <Typography variant="body2" color="text.secondary">暂无匹配目标</Typography>
                   </AnyTableCell>
                 </AnyTableRow>
@@ -808,6 +743,7 @@ export function GoalTemplateMatrix() {
         onOpenBlock={openEditor}
         onCopyToBlock={copyContextTemplateToBlock}
         onCopyMissingBlocks={copyContextTemplateToMissingBlocks}
+        onDeleteTemplate={deletePresetTemplate}
       />
 
       <GoalTemplateEditorModal
@@ -816,6 +752,7 @@ export function GoalTemplateMatrix() {
         goal={selected?.goal || null}
         block={selected?.block || null}
         variants={selectedVariants}
+        initialVariantId={selected?.variantId || null}
         useCases={useCases}
       />
     </Box>

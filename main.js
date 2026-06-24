@@ -1827,8 +1827,13 @@ function parseVariantIdFromLegacyId(id) {
 }
 function normalizeGoalTemplateId(goalId, coreBlockId, variantId, id) {
   const text2 = String(id || "").trim();
-  if (text2 && text2.startsWith("goal-template.")) return text2;
-  return getGoalTemplateId(goalId, coreBlockId, variantId);
+  const normalizedVariantId = normalizeVariantId(variantId);
+  if (text2 && text2.startsWith("goal-template.")) {
+    const idVariantId = parseVariantIdFromLegacyId(text2);
+    if (idVariantId === normalizedVariantId) return text2;
+    if (normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID && idVariantId === DEFAULT_TEMPLATE_VARIANT_ID) return text2;
+  }
+  return getGoalTemplateId(goalId, coreBlockId, normalizedVariantId);
 }
 function normalizeTemplatePeriodPolicy(coreBlockId, raw) {
   if (!isPeriodAwareCoreBlock(coreBlockId)) return void 0;
@@ -1850,9 +1855,9 @@ function fromLegacyGoalTemplateStorage(row) {
     goalId: row.goalId,
     coreBlockId: row.coreBlockId,
     variantId,
-    name: raw.name || raw.templateName || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "默认模板" : variantId),
+    name: raw.name || raw.templateName || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
     description: raw.description,
-    isDefault: raw.isDefault === true || variantId === DEFAULT_TEMPLATE_VARIANT_ID,
+    isDefault: void 0,
     periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, raw),
     sortOrder: typeof raw.sortOrder === "number" ? raw.sortOrder : void 0,
     enabled: row.enabled !== false,
@@ -1875,9 +1880,9 @@ function toLegacyGoalTemplateStorage(template, previous) {
     goalId: template.goalId,
     coreBlockId: template.coreBlockId,
     variantId,
-    name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "默认模板" : variantId),
+    name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
     description: template.description,
-    isDefault: template.isDefault === true || variantId === DEFAULT_TEMPLATE_VARIANT_ID,
+    isDefault: void 0,
     periodPolicy: normalizeTemplatePeriodPolicy(template.coreBlockId, template),
     granularity: void 0,
     sortOrder: template.sortOrder,
@@ -1892,8 +1897,24 @@ function toLegacyGoalTemplateStorage(template, previous) {
     updatedAt: template.updatedAt || timestamp
   };
 }
+function goalTemplateIdentityKey(template) {
+  return `${template.goalId}::${template.coreBlockId}::${normalizeVariantId(template.variantId)}`;
+}
 function getGoalTemplates(goalSettings) {
-  return (goalSettings?.goalBlockBindings || []).map(fromLegacyGoalTemplateStorage);
+  const result = [];
+  const indexByKey = /* @__PURE__ */ new Map();
+  for (const row of goalSettings?.goalBlockBindings || []) {
+    const template = fromLegacyGoalTemplateStorage(row);
+    const key = goalTemplateIdentityKey(template);
+    const existingIndex = indexByKey.get(key);
+    if (existingIndex === void 0) {
+      indexByKey.set(key, result.length);
+      result.push(template);
+    } else {
+      result[existingIndex] = template;
+    }
+  }
+  return result;
 }
 function getGoalTemplateId(goalId, coreBlockId, variantId = "default") {
   const normalizedVariantId = normalizeVariantId(variantId);
@@ -1922,14 +1943,13 @@ function getGoalTemplateVariants(goalSettings, goal, coreBlockId) {
   const candidateGoalIds = getGoalTemplateCandidateGoalIds(goalSettings, goal);
   if (!candidateGoalIds.length) return [];
   const rank = new Map(candidateGoalIds.map((id, index) => [id, index]));
-  return getGoalTemplates(goalSettings).filter((template) => template.enabled !== false && candidateGoalIds.includes(template.goalId) && template.coreBlockId === coreBlockId).sort((a2, b2) => {
-    const byGoal = (rank.get(a2.goalId) ?? 999) - (rank.get(b2.goalId) ?? 999);
+  return getGoalTemplates(goalSettings).map((template, storageIndex) => ({ template, storageIndex })).filter(({ template }) => template.enabled !== false && candidateGoalIds.includes(template.goalId) && template.coreBlockId === coreBlockId).sort((a2, b2) => {
+    const byGoal = (rank.get(a2.template.goalId) ?? 999) - (rank.get(b2.template.goalId) ?? 999);
     if (byGoal !== 0) return byGoal;
-    const bySortOrder = (a2.sortOrder ?? 9999) - (b2.sortOrder ?? 9999);
+    const bySortOrder = (a2.template.sortOrder ?? 9999) - (b2.template.sortOrder ?? 9999);
     if (bySortOrder !== 0) return bySortOrder;
-    if (a2.isDefault !== b2.isDefault) return a2.isDefault ? -1 : 1;
-    return String(a2.name || a2.variantId || "").localeCompare(String(b2.name || b2.variantId || ""), "zh-CN");
-  });
+    return a2.storageIndex - b2.storageIndex;
+  }).map(({ template }) => template);
 }
 function findGoalTemplate(goalSettings, goal, coreBlockId, variantId) {
   const variants = getGoalTemplateVariants(goalSettings, goal, coreBlockId);
@@ -1939,7 +1959,7 @@ function findGoalTemplate(goalSettings, goal, coreBlockId, variantId) {
     const exact = variants.find((template) => normalizeVariantId(template.variantId) === normalizedVariantId || template.id === variantId);
     if (exact) return exact;
   }
-  return variants.find((template) => template.isDefault === true) || variants.find((template) => normalizeVariantId(template.variantId) === DEFAULT_TEMPLATE_VARIANT_ID) || variants[0] || null;
+  return variants[0] || null;
 }
 function upsertGoalTemplateInSettings(goalSettings, template) {
   const previousRows = goalSettings.goalBlockBindings || [];
@@ -1951,13 +1971,7 @@ function upsertGoalTemplateInSettings(goalSettings, template) {
     return item.id === nextTemplate.id || item.goalId === nextTemplate.goalId && item.coreBlockId === nextTemplate.coreBlockId && itemVariantId === variantId;
   });
   const next2 = toLegacyGoalTemplateStorage(nextTemplate, index >= 0 ? rows[index] : null);
-  const shouldDefault = next2.isDefault === true || next2.variantId === DEFAULT_TEMPLATE_VARIANT_ID;
-  const normalizedRows = rows.map((row, rowIndex) => {
-    if (rowIndex === index) return row;
-    if (!shouldDefault) return row;
-    const sameCell = row.goalId === next2.goalId && row.coreBlockId === next2.coreBlockId;
-    return sameCell ? { ...row, isDefault: false } : row;
-  });
+  const normalizedRows = rows.slice();
   if (index >= 0) normalizedRows[index] = next2;
   else normalizedRows.push(next2);
   return { ...goalSettings, goalBlockBindings: normalizedRows };
@@ -1976,6 +1990,22 @@ function removeGoalTemplatesForGoal(goalSettings, goalId) {
   return {
     ...goalSettings,
     goalBlockBindings: (goalSettings.goalBlockBindings || []).filter((template) => template.goalId !== goalId)
+  };
+}
+function cleanupGoalTemplateStorage(goalSettings) {
+  const beforeRows = goalSettings.goalBlockBindings || [];
+  const templates = getGoalTemplates(goalSettings);
+  const afterRows = templates.map((template) => toLegacyGoalTemplateStorage(template));
+  const beforeJson = JSON.stringify(beforeRows);
+  const afterJson = JSON.stringify(afterRows);
+  return {
+    goalSettings: { ...goalSettings, goalBlockBindings: afterRows },
+    summary: {
+      beforeCount: beforeRows.length,
+      afterCount: afterRows.length,
+      removedDuplicateCount: Math.max(0, beforeRows.length - afterRows.length),
+      changed: beforeJson !== afterJson
+    }
   };
 }
 const ALLOWED_SYSTEM_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
@@ -39570,7 +39600,7 @@ const AsteriskComponent = styled("span", {
     color: (theme2.vars || theme2).palette.error.main
   }
 })));
-const FormLabel$1 = /* @__PURE__ */ D(function FormLabel(inProps, ref) {
+const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiFormLabel"
@@ -40086,7 +40116,7 @@ const useUtilityClasses$p = (ownerState) => {
     ...composedClasses
   };
 };
-const InputLabelRoot = styled(FormLabel$1, {
+const InputLabelRoot = styled(FormLabel, {
   shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
   name: "MuiInputLabel",
   slot: "Root",
@@ -41587,7 +41617,7 @@ const NativeSelectIcon = styled(StyledSelectIcon, {
     return [styles2.icon, ownerState.variant && styles2[`icon${capitalize(ownerState.variant)}`], ownerState.open && styles2.iconOpen];
   }
 })({});
-const NativeSelectInput = /* @__PURE__ */ D(function NativeSelectInput2(props, ref) {
+const NativeSelectInput$1 = /* @__PURE__ */ D(function NativeSelectInput(props, ref) {
   const {
     className,
     disabled,
@@ -42542,7 +42572,7 @@ const Select$1 = /* @__PURE__ */ D(function Select(inProps, ref) {
     variant: variantProp = "outlined",
     ...other
   } = props;
-  const inputComponent = native ? NativeSelectInput : SelectInput;
+  const inputComponent = native ? NativeSelectInput$1 : SelectInput;
   const muiFormControl = useFormControl();
   const fcs = formControlState({
     props,
@@ -47379,7 +47409,6 @@ const AccordionDetails2 = AccordionDetails$1;
 const Alert2 = Alert$1;
 const Radio2 = Radio$1;
 const RadioGroup2 = RadioGroup$1;
-const FormLabel2 = FormLabel$1;
 const Autocomplete2 = Autocomplete$1;
 const Menu2 = Menu$1;
 const TableRow2 = TableRow$1;
@@ -55876,6 +55905,19 @@ function normalizeGoalInput(input) {
 function safeCycleId(input) {
   return `cycle.${input.goalId}.${input.startDate}.${input.endDate}`.replace(/[^a-z0-9_.-]/gi, "-");
 }
+function normalizeStoredGoalPath(goal) {
+  return splitGoalPath(goal.goalPath || goal.title).goalPath || String(goal.goalPath || goal.title || "").trim();
+}
+function collectGoalCascadeIds(goals, id) {
+  const target = goals.find((goal) => goal.id === id);
+  if (!target) return [];
+  const targetPath = normalizeStoredGoalPath(target);
+  return goals.filter((goal) => {
+    if (goal.id === id) return true;
+    const path = normalizeStoredGoalPath(goal);
+    return !!targetPath && path.startsWith(`${targetPath}/`);
+  }).map((goal) => goal.id);
+}
 class GoalUseCase {
   constructor(store) {
     this.store = store;
@@ -55932,19 +55974,79 @@ class GoalUseCase {
   async completeGoal(id) {
     await this.updateGoal(id, { status: "completed" });
   }
+  async deleteGoalsByIds(ids2) {
+    const uniqueIds = Array.from(new Set(ids2.filter(Boolean)));
+    if (!uniqueIds.length) return;
+    const targetIds = new Set(uniqueIds);
+    const state = this.store.getState();
+    if (!state.isInitialized) return;
+    await state.updateSettings((draft) => {
+      draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
+      draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => !targetIds.has(goal.id));
+      draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => !targetIds.has(cycle.goalId));
+      for (const targetId of targetIds) {
+        draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, targetId);
+      }
+      draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => !targetIds.has(relation.goalId));
+    });
+  }
   async deleteGoal(id) {
     try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => goal.id !== id);
-        draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => cycle.goalId !== id);
-        draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, id);
-        draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => relation.goalId !== id);
-      });
+      await this.deleteGoalsByIds([id]);
     } catch (error) {
       devError("[GoalUseCase] deleteGoal failed:", error);
+      throw error;
+    }
+  }
+  async deleteGoalCascade(id) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) return 0;
+      const goalSettings = ensureGoalSettings(state.settings.goalSettings || DEFAULT_GOAL_SETTINGS);
+      const ids2 = collectGoalCascadeIds(goalSettings.goals, id);
+      await this.deleteGoalsByIds(ids2);
+      return ids2.length;
+    } catch (error) {
+      devError("[GoalUseCase] deleteGoalCascade failed:", error);
+      throw error;
+    }
+  }
+  async cleanupGoalSettingsStorage() {
+    try {
+      const state = this.store.getState();
+      const fallback = {
+        beforeTemplateCount: 0,
+        afterTemplateCount: 0,
+        removedDuplicateTemplates: 0,
+        removedDanglingCycles: 0,
+        removedDanglingRelations: 0,
+        changed: false
+      };
+      if (!state.isInitialized) return fallback;
+      let summary = fallback;
+      await state.updateSettings((draft) => {
+        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
+        const beforeCycles = draft.goalSettings.cycles.length;
+        const beforeRelations = draft.goalSettings.goalRecordRelations.length;
+        const liveGoalIds = new Set(draft.goalSettings.goals.map((goal) => goal.id));
+        const cleaned = cleanupGoalTemplateStorage(draft.goalSettings);
+        draft.goalSettings = cleaned.goalSettings;
+        draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => liveGoalIds.has(cycle.goalId));
+        draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => liveGoalIds.has(relation.goalId));
+        const removedDanglingCycles = beforeCycles - draft.goalSettings.cycles.length;
+        const removedDanglingRelations = beforeRelations - draft.goalSettings.goalRecordRelations.length;
+        summary = {
+          beforeTemplateCount: cleaned.summary.beforeCount,
+          afterTemplateCount: cleaned.summary.afterCount,
+          removedDuplicateTemplates: cleaned.summary.removedDuplicateCount,
+          removedDanglingCycles,
+          removedDanglingRelations,
+          changed: cleaned.summary.changed || removedDanglingCycles > 0 || removedDanglingRelations > 0
+        };
+      });
+      return summary;
+    } catch (error) {
+      devError("[GoalUseCase] cleanupGoalSettingsStorage failed:", error);
       throw error;
     }
   }
@@ -56042,9 +56144,9 @@ class GoalUseCase {
       goalId: input.goalId,
       coreBlockId: input.coreBlockId,
       variantId: input.templateVariantId || "default",
-      name: input.templateName || (input.templateVariantId === "default" || !input.templateVariantId ? "默认模板" : input.templateVariantId),
+      name: input.templateName || (input.templateVariantId === "default" || !input.templateVariantId ? "记录预设" : input.templateVariantId),
       description: input.description,
-      isDefault: input.isDefault !== false && (!input.templateVariantId || input.templateVariantId === "default" || input.isDefault === true),
+      isDefault: void 0,
       sortOrder: input.sortOrder,
       enabled: input.enabled !== false,
       targetFile: input.targetFile?.trim() || void 0,
@@ -56772,9 +56874,12 @@ function QuickInputOptionPillGroup({
 function normalizePath$2(value) {
   return String(value || "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
 }
+function cleanLabel(value) {
+  return String(value || "").replace(/^[#＃]+\s*/, "").trim();
+}
 function leafLabel(path) {
   const parts = normalizePath$2(path).split("/").filter(Boolean);
-  return parts[parts.length - 1] || path;
+  return cleanLabel(parts[parts.length - 1] || path);
 }
 function getOrder(option) {
   return typeof option.order === "number" && Number.isFinite(option.order) ? option.order : Number.MAX_SAFE_INTEGER;
@@ -56846,10 +56951,10 @@ function HierarchySingleSelect({
     {
       selected: active,
       title: option.value,
-      onClick: () => onSelect(option),
+      onClick: () => option.value ? onSelect(option) : onSelect(null),
       children: [
         option.icon ? `${option.icon} ` : "",
-        option.label || leafLabel(option.value)
+        cleanLabel(option.label || leafLabel(option.value))
       ]
     },
     option.id || option.value
@@ -56875,9 +56980,9 @@ function HierarchySingleSelect({
           allowClear && selected && renderPill({ id: "__clear__", value: "", label: "清空" }, false)
         ] })
       ] }),
-      /* @__PURE__ */ u2(Box, { children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: activeParent ? `${activeParent.label || leafLabel(activeParent.value)} · ${childLabel}` : childLabel }),
-        children.length > 0 ? /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: children.map((option) => renderPill(option, normalizedSelected === option.value)) }) : /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { color: "text.secondary", fontSize: "0.9rem" }, children: activeParent ? "这个父级下还没有子项。" : "先选择一个父级。" })
+      children.length > 0 && /* @__PURE__ */ u2(Box, { children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: activeParent ? `${cleanLabel(activeParent.label || leafLabel(activeParent.value))} · ${childLabel}` : childLabel }),
+        /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: children.map((option) => renderPill(option, normalizedSelected === option.value)) })
       ] })
     ] })
   ] });
@@ -57372,7 +57477,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, fieldValu
   return /* @__PURE__ */ u2(Stack, { spacing: dense ? 1.7 : 1.9, children: renderFields() });
 }
 function normalizeGoalPath(value) {
-  return String(value || "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
+  return String(value || "").split("/").map((part) => part.trim().replace(/^[#＃]+\s*/, "").trim()).filter(Boolean).join("/");
 }
 function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense = false }) {
   const [draftGoalPath, setDraftGoalPath] = d("");
@@ -57422,72 +57527,6 @@ function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense =
     normalizedDraft && existing.has(normalizedDraft) && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "这个目标已经存在，可以直接在上方选择。" })
   ] });
 }
-function MetaChip({ label, value }) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 0.5,
-        px: 1,
-        py: 0.4,
-        borderRadius: 999,
-        backgroundColor: "var(--background-secondary)",
-        border: "1px solid var(--background-modifier-border)",
-        fontSize: 12,
-        lineHeight: 1.2,
-        color: "text.secondary"
-      },
-      children: [
-        /* @__PURE__ */ u2("strong", { style: { fontWeight: 600 }, children: label }),
-        /* @__PURE__ */ u2("span", { children: value })
-      ]
-    }
-  );
-}
-function SnapshotSummary({
-  currentThemePath,
-  currentGoalPath,
-  templateSourceType,
-  fieldSourceSummary,
-  currentPeriodLabel
-}) {
-  const chips = [];
-  if (currentGoalPath) chips.push({ label: "目标", value: currentGoalPath });
-  if (currentThemePath) chips.push({ label: "主题", value: currentThemePath });
-  if (currentPeriodLabel) chips.push({ label: "周期", value: currentPeriodLabel });
-  if (templateSourceType) {
-    const sourceLabelMap = {
-      "core-block": "核心Block",
-      "goal-template": "目标记录预设",
-      "legacy-block": "自定义Block"
-    };
-    chips.push({ label: "记录方式", value: sourceLabelMap[templateSourceType] || templateSourceType });
-  }
-  if (fieldSourceSummary) {
-    if (fieldSourceSummary.user > 0) chips.push({ label: "手填", value: String(fieldSourceSummary.user) });
-    if (fieldSourceSummary.context > 0) chips.push({ label: "回填", value: String(fieldSourceSummary.context) });
-    if (fieldSourceSummary.template_default > 0) chips.push({ label: "预设默认", value: String(fieldSourceSummary.template_default) });
-    if (fieldSourceSummary.system_auto > 0) chips.push({ label: "自动", value: String(fieldSourceSummary.system_auto) });
-  }
-  if (!chips.length) return null;
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 0.75,
-        p: 1.1,
-        borderRadius: 1.2,
-        backgroundColor: "var(--background-primary-alt)",
-        border: "1px solid var(--background-modifier-border)"
-      },
-      children: chips.map((chip) => /* @__PURE__ */ u2(MetaChip, { label: chip.label, value: chip.value }, `${chip.label}-${chip.value}`))
-    }
-  );
-}
 function SectionTitle({ title, compact = false }) {
   return /* @__PURE__ */ u2(
     Typography2,
@@ -57514,7 +57553,6 @@ function QuickInputEditorView({
   onSelectTheme,
   goals,
   selectedGoalPath,
-  selectedGoalTitle,
   onSelectGoal,
   onCreateGoal,
   templateVariants = [],
@@ -57533,11 +57571,7 @@ function QuickInputEditorView({
   onTimeDirectionChange,
   onRequestSubmit,
   isMobileLike = false,
-  showTimeDirectionControl = false,
-  currentThemePath = null,
-  currentPeriodLabel = null,
-  templateSourceType = null,
-  fieldSourceSummary
+  showTimeDirectionControl = false
 }) {
   if (!template) {
     return /* @__PURE__ */ u2("div", { children: "错误：找不到当前记录类型的默认配置。" });
@@ -57554,11 +57588,7 @@ function QuickInputEditorView({
           onCreateGoal,
           dense
         }
-      ),
-      selectedGoalTitle && selectedGoalTitle !== selectedGoalPath && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mt: 0.7 }, children: [
-        "当前目标：",
-        selectedGoalTitle
-      ] })
+      )
     ] }),
     allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(SectionTitle, { title: "记录类型", compact: true }),
@@ -57591,20 +57621,9 @@ function QuickInputEditorView({
           },
           variant.value
         );
-      }) }) }),
-      templateVariants.length === 1 && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mt: 0.6 }, children: "当前目标和记录类型只有一个预设，已自动选择。" })
+      }) }) })
     ] }),
     showDivider && /* @__PURE__ */ u2(Divider2, { sx: { my: dense ? 0.1 : 0.2, opacity: 0.55 } }),
-    /* @__PURE__ */ u2(
-      SnapshotSummary,
-      {
-        currentThemePath,
-        currentGoalPath: selectedGoalPath,
-        templateSourceType,
-        fieldSourceSummary,
-        currentPeriodLabel
-      }
-    ),
     /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(
       QuickInputEditorFields,
       {
@@ -57647,6 +57666,54 @@ const buildInitialFieldSources = (initialData) => {
   });
   return next2;
 };
+function cleanDisplaySegment(value) {
+  return String(value ?? "").replace(/^[#＃]+\s*/, "").trim();
+}
+function cleanDisplayPath(value) {
+  const normalized = splitGoalPath(value).goalPath;
+  if (!normalized) return null;
+  const parts = normalized.split("/").map(cleanDisplaySegment).filter(Boolean);
+  return parts.length ? parts.join("/") : null;
+}
+function getOrderedGoalIndex(goal, originalIndex) {
+  if (!goal) return Number.MAX_SAFE_INTEGER;
+  const order2 = Number(goal.sortOrder);
+  return Number.isFinite(order2) ? order2 : originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
+}
+function getGoalByDisplayPath(goals, path) {
+  return goals.find((goal) => getGoalPath(goal) === path) || null;
+}
+function sortGoalsLikePresetMatrix(goals) {
+  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
+  return [...goals].sort((left2, right2) => {
+    const leftParts = (getGoalPath(left2) || "").split("/").filter(Boolean);
+    const rightParts = (getGoalPath(right2) || "").split("/").filter(Boolean);
+    const max2 = Math.min(leftParts.length, rightParts.length);
+    for (let index = 0; index < max2; index += 1) {
+      if (leftParts[index] === rightParts[index]) continue;
+      const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join("/");
+      const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join("/");
+      const leftSiblingGoal = getGoalByDisplayPath(goals, leftSiblingPath);
+      const rightSiblingGoal = getGoalByDisplayPath(goals, rightSiblingPath);
+      const leftOrder = getOrderedGoalIndex(leftSiblingGoal, originalIndex);
+      const rightOrder = getOrderedGoalIndex(rightSiblingGoal, originalIndex);
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      return leftParts[index].localeCompare(rightParts[index], "zh-CN");
+    }
+    if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
+    const byOrder = getOrderedGoalIndex(left2, originalIndex) - getOrderedGoalIndex(right2, originalIndex);
+    if (byOrder !== 0) return byOrder;
+    return (originalIndex.get(left2.id) ?? 0) - (originalIndex.get(right2.id) ?? 0);
+  });
+}
+function resolveQuickInputCoreBlockId(fullSettings, blockId) {
+  const coreSettings = normalizeCoreBlockSettings(fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks || []);
+  return String(blockId || "").startsWith("core.") ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
+}
+function goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId) {
+  if (!goal?.id || !coreBlockId) return false;
+  return getGoalTemplates(fullSettings.goalSettings).some((template) => template.enabled !== false && template.goalId === goal.id && template.coreBlockId === coreBlockId);
+}
 const splitThemePathParts = (path) => {
   const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
   return {
@@ -57661,13 +57728,13 @@ const splitPathParts = (path) => {
 };
 function getGoalPath(goal) {
   if (!goal) return null;
-  return splitGoalPath(goal.goalPath || goal.title).goalPath;
+  return cleanDisplayPath(goal.goalPath || goal.title);
 }
 function makeGoalIdFromPath(path) {
   return `goal:${path}`;
 }
 function themeOptions(themes) {
-  return (themes || []).map((theme2) => ({ value: theme2.path, label: theme2.path.split("/").filter(Boolean).pop() || theme2.path, icon: theme2.icon }));
+  return (themes || []).map((theme2) => ({ value: theme2.path, label: cleanDisplaySegment(theme2.path.split("/").filter(Boolean).pop() || theme2.path), icon: theme2.icon }));
 }
 const buildFieldSourceSummary = (sources) => ({
   user: Object.values(sources).filter((v2) => v2 === "user").length,
@@ -57679,30 +57746,6 @@ const buildFieldSourceSummary = (sources) => ({
   template_default: Object.values(sources).filter((v2) => v2 === "template_default").length,
   system_auto: Object.values(sources).filter((v2) => v2 === "system_auto").length
 });
-function normalizeOptionValue(value) {
-  if (value === void 0 || value === null) return null;
-  if (typeof value === "object") {
-    const obj = value;
-    const raw = obj.value ?? obj.label;
-    const normalized2 = String(raw ?? "").trim();
-    return normalized2 || null;
-  }
-  const normalized = String(value).trim();
-  return normalized || null;
-}
-function mergeGoalOptions(manualOptions, generatedOptions) {
-  const seen = /* @__PURE__ */ new Set();
-  const result = [];
-  const add2 = (value, label) => {
-    const normalized = normalizeOptionValue(value);
-    if (!normalized || seen.has(normalized)) return;
-    seen.add(normalized);
-    result.push({ value: normalized, label: String(label ?? normalized).trim() || normalized });
-  };
-  (manualOptions || []).forEach((option) => add2(option?.value ?? option, option?.label));
-  generatedOptions.forEach((option) => add2(option.value, option.label));
-  return result;
-}
 function QuickInputEditor({
   getResourcePath,
   initialBlockId,
@@ -57718,12 +57761,11 @@ function QuickInputEditor({
 }) {
   const fullSettings = useSelector(selectSettings);
   const settings = fullSettings.inputSettings;
-  const dataStore = useDataStore();
   useUseCases();
   const [currentBlockId, setCurrentBlockId] = d(initialBlockId);
   const [selectedThemeId, setSelectedThemeId] = d(initialThemeId);
   const [selectedGoalId, setSelectedGoalId] = d(() => String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null);
-  const [selectedGoalPath, setSelectedGoalPath] = d(() => splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")).goalPath);
+  const [selectedGoalPath, setSelectedGoalPath] = d(() => cleanDisplayPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")));
   const [selectedTemplateVariantId, setSelectedTemplateVariantId] = d(() => String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? "").trim() || null);
   const [selectedCycleId, setSelectedCycleId] = d(() => String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null);
   const [formData, setFormData] = d(() => initialFormData ?? EMPTY_FORM_DATA);
@@ -57736,7 +57778,7 @@ function QuickInputEditor({
     setFieldSources(buildInitialFieldSources(initialFormData));
     setTimeDirection(initialFormData?.__timeDirection === "backward" ? "backward" : "forward");
     setSelectedGoalId(String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null);
-    setSelectedGoalPath(splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")).goalPath);
+    setSelectedGoalPath(cleanDisplayPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")));
     setSelectedTemplateVariantId(String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? "").trim() || null);
     setSelectedCycleId(String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null);
   }, [initialBlockId, initialThemeId, context]);
@@ -57756,7 +57798,10 @@ function QuickInputEditor({
     const goals = fullSettings.goalSettings?.goals || [];
     return (selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) : null) || (selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) : null) || null;
   }, [fullSettings.goalSettings?.goals, selectedGoalId, selectedGoalPath]);
-  const currentEffectiveBlockIdForTemplates = String(currentBlockId || "").startsWith("core.") ? currentBlockId : currentBlockId;
+  const currentEffectiveBlockIdForTemplates = T$1(
+    () => resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
+    [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId]
+  );
   const goalTemplateVariants = T$1(() => {
     const goal = selectedGoal || null;
     if (!goal || !currentEffectiveBlockIdForTemplates) return [];
@@ -57789,36 +57834,49 @@ function QuickInputEditor({
     selectedThemeId,
     selectedTemplateVariantId
   ]);
-  const generatedGoalOptions = T$1(() => {
-    const counts = /* @__PURE__ */ new Map();
-    for (const item of dataStore.queryItems()) {
-      const rawGoals = readField(item, "goalPaths");
-      const values2 = Array.isArray(rawGoals) ? rawGoals : String(rawGoals ?? "").split(/[,，\n]/);
-      values2.map((value) => String(value).trim()).filter(Boolean).forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
-    }
-    return Array.from(counts.entries()).sort((left2, right2) => right2[1] - left2[1] || left2[0].localeCompare(right2[0], "zh-CN")).slice(0, 30).map(([value]) => ({ value, label: value }));
-  }, [dataStore]);
   const goalOptions = T$1(() => {
     const seen = /* @__PURE__ */ new Set();
+    const sourceGoals = sortGoalsLikePresetMatrix([...fullSettings.goalSettings?.goals || []]).filter((goal) => goal.status !== "archived").filter((goal) => goalHasDirectEnabledPreset(fullSettings, goal, currentEffectiveBlockIdForTemplates));
     const result = [];
-    const add2 = (path, label, goal, themePath, id) => {
-      const normalized = splitGoalPath(path || "").goalPath;
-      if (!normalized || seen.has(normalized)) return;
+    for (const [index, goal] of sourceGoals.entries()) {
+      const normalized = cleanDisplayPath(goal.goalPath || goal.title);
+      if (!normalized || seen.has(normalized)) continue;
       seen.add(normalized);
+      const leaf2 = normalized.split("/").filter(Boolean).pop() || normalized;
       result.push({
-        id: id || goal?.id || makeGoalIdFromPath(normalized),
+        id: goal.id || makeGoalIdFromPath(normalized),
         value: normalized,
-        label: label || normalized.split("/").filter(Boolean).pop() || normalized,
-        goal: goal || null,
-        themePath: themePath ?? goal?.themePath ?? null
+        label: cleanDisplaySegment(goal.title) || leaf2,
+        order: index,
+        goal,
+        themePath: goal.themePath ?? null
       });
-    };
-    (fullSettings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived").forEach((goal) => add2(goal.goalPath || goal.title, goal.title, goal, goal.themePath, goal.id));
-    generatedGoalOptions.forEach((option) => add2(option.value, option.label, null, null));
+    }
     return result;
-  }, [fullSettings.goalSettings?.goals, generatedGoalOptions]);
+  }, [fullSettings.goalSettings, currentEffectiveBlockIdForTemplates]);
+  const goalFieldOptions = T$1(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label })), [goalOptions]);
+  y(() => {
+    const selectedPath = cleanDisplayPath(selectedGoal?.goalPath || selectedGoalPath || null);
+    if (!selectedPath) return;
+    const stillVisible = goalOptions.some((option) => cleanDisplayPath(option.value) === selectedPath);
+    if (stillVisible) return;
+    setSelectedGoalId(null);
+    setSelectedGoalPath(null);
+    setSelectedTemplateVariantId(null);
+    setSelectedCycleId(null);
+    setFormData((current2) => {
+      const next2 = { ...current2 };
+      ["goalId", "目标ID", "goalPath", "目标", "rootGoal", "leafGoal", "cycleId", "周期ID", "周期", "周期粒度", "templateId", "goalTemplateId", "templateVariantId", "goalTemplateVariantId"].forEach((key) => delete next2[key]);
+      return next2;
+    });
+    setFieldSources((current2) => {
+      const next2 = { ...current2 };
+      ["goalId", "目标ID", "goalPath", "目标", "rootGoal", "leafGoal", "cycleId", "周期ID", "周期", "周期粒度", "templateId", "goalTemplateId", "templateVariantId", "goalTemplateVariantId"].forEach((key) => delete next2[key]);
+      return next2;
+    });
+  }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
-  const currentGoalTitle = selectedGoal?.title || resolvedGoal?.title || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
+  const currentGoalTitle = cleanDisplaySegment(selectedGoal?.title || resolvedGoal?.title || "") || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData["日期"] ?? formData.date ?? dayjs().format("YYYY-MM-DD")).trim();
   const periodPolicy = resolveTemplatePeriodPolicy(rawTemplate);
@@ -57833,12 +57891,12 @@ function QuickInputEditor({
       coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
       fields: rawTemplate.fields.map((field) => {
         const semantic = getTemplateFieldSemantic(field);
-        if (semantic === "goals") return { ...field, options: mergeGoalOptions(field.options, generatedGoalOptions) };
+        if (semantic === "goals") return { ...field, options: goalFieldOptions };
         if (semantic === "themePath") return { ...field, type: field.type === "path" ? "hierarchicalSingleSelect" : field.type, options: themeFieldOptions };
         return field;
       })
     };
-  }, [rawTemplate, availableThemes, effectiveBlockId, generatedGoalOptions]);
+  }, [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions]);
   const showTimeDirectionControl = T$1(() => {
     if (!template?.fields) return false;
     const keys = new Set((template.fields || []).map((f2) => f2.key || f2.label));
@@ -58013,7 +58071,7 @@ function QuickInputEditor({
       setSelectedThemeId(nextPath ? pathToIdMap.get(nextPath) ?? null : null);
     }
     if (key === "goalPath" || key === "目标" || key === "目标路径") {
-      const nextGoalPath = splitGoalPath(String(rawValue ?? "")).goalPath;
+      const nextGoalPath = cleanDisplayPath(String(rawValue ?? ""));
       setSelectedGoalPath(nextGoalPath);
       setSelectedGoalId(nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null);
     }
@@ -58086,7 +58144,7 @@ function QuickInputEditor({
       return;
     }
     const goal = option.goal || null;
-    const goalPath = splitGoalPath(goal?.goalPath || option.value).goalPath;
+    const goalPath = cleanDisplayPath(goal?.goalPath || option.value);
     const goalId = goal?.id || (option.id && !String(option.id).startsWith("goal:") ? option.id : makeGoalIdFromPath(goalPath || option.value));
     const themePath = goal?.themePath || option.themePath || null;
     setSelectedGoalId(goalId);
@@ -58108,7 +58166,7 @@ function QuickInputEditor({
       assign2("目标ID", goalId);
       assign2("goalPath", goalPath || option.value);
       assign2("目标", goalPath || option.value);
-      const parts = splitGoalPath(goalPath || option.value);
+      const parts = splitGoalPath(cleanDisplayPath(goalPath || option.value) || "");
       assign2("rootGoal", parts.rootGoal || "", "goal_context");
       assign2("leafGoal", parts.leafGoal || "", "goal_context");
       if (themePath) {
@@ -58133,7 +58191,6 @@ function QuickInputEditor({
       onSelectTheme: handleSelectTheme,
       goals: goalOptions,
       selectedGoalPath: currentGoalPath,
-      selectedGoalTitle: currentGoalTitle,
       onSelectGoal: handleSelectGoal,
       onCreateGoal: void 0,
       templateVariants: goalTemplateVariants.map((template2) => ({ value: template2.variantId || "default", label: template2.name || template2.variantId || "默认模板", isDefault: !!template2.isDefault })),
@@ -59631,6 +59688,7 @@ const getEventCoords = (e2) => {
   }
   return null;
 };
+const passiveListenerOptions = { passive: true };
 const toCssSize = (value) => typeof value === "number" ? `${value}px` : value;
 const getNumericConstraint = (value, fallback) => {
   if (typeof value === "number") return value;
@@ -59774,7 +59832,7 @@ function FloatingPanel({
     };
     const bindTimer = window.setTimeout(() => {
       document.addEventListener("mousedown", handler);
-      document.addEventListener("touchstart", handler);
+      document.addEventListener("touchstart", handler, passiveListenerOptions);
     }, 0);
     const clearIgnoreTimer = window.setTimeout(() => {
       ignoreFirstClick.current = false;
@@ -59804,7 +59862,7 @@ function FloatingPanel({
     setStoredSize(size);
   }, [size, resizable, setStoredSize]);
   const onDragMove = q$1((e2) => {
-    e2.preventDefault();
+    if (!e2.touches) e2.preventDefault();
     const coords = getEventCoords(e2);
     if (!coords) return;
     const dx = coords.x - dragRef.current.startX;
@@ -59825,11 +59883,11 @@ function FloatingPanel({
     dragRef.current = { startX: coords.x, startY: coords.y, panelX: position2.x, panelY: position2.y };
     window.addEventListener("mousemove", onDragMove);
     window.addEventListener("mouseup", onDragEnd);
-    window.addEventListener("touchmove", onDragMove, { passive: false });
-    window.addEventListener("touchend", onDragEnd);
+    window.addEventListener("touchmove", onDragMove, passiveListenerOptions);
+    window.addEventListener("touchend", onDragEnd, passiveListenerOptions);
   }, [inline, id, focus, position2, onDragMove, onDragEnd]);
   const onResizeMove = q$1((e2) => {
-    e2.preventDefault();
+    if (!e2.touches) e2.preventDefault();
     const coords = getEventCoords(e2);
     if (!coords) return;
     const dx = coords.x - resizeRef.current.startX;
@@ -59866,8 +59924,8 @@ function FloatingPanel({
     };
     window.addEventListener("mousemove", onResizeMove);
     window.addEventListener("mouseup", onResizeEnd);
-    window.addEventListener("touchmove", onResizeMove, { passive: false });
-    window.addEventListener("touchend", onResizeEnd);
+    window.addEventListener("touchmove", onResizeMove, passiveListenerOptions);
+    window.addEventListener("touchend", onResizeEnd, passiveListenerOptions);
   }, [resizable, focus, id, onResizeMove, onResizeEnd, getEffectiveWidth, getEffectiveHeight]);
   const onPanelPointerDown = q$1(() => {
     focus(id);
@@ -59957,6 +60015,7 @@ function FloatingPanel({
                     alignItems: "center",
                     gap: 8,
                     cursor: inline ? "default" : "move",
+                    touchAction: inline ? "auto" : "none",
                     userSelect: "none",
                     flex: 1,
                     minWidth: 0,
@@ -60021,7 +60080,8 @@ function FloatingPanel({
                 right: 0,
                 width: "10px",
                 height: "100%",
-                cursor: "ew-resize"
+                cursor: "ew-resize",
+                touchAction: "none"
               }
             }
           ),
@@ -60036,7 +60096,8 @@ function FloatingPanel({
                 bottom: 0,
                 width: "100%",
                 height: "10px",
-                cursor: "ns-resize"
+                cursor: "ns-resize",
+                touchAction: "none"
               }
             }
           ),
@@ -60052,6 +60113,7 @@ function FloatingPanel({
                 width: "18px",
                 height: "18px",
                 cursor: "nwse-resize",
+                touchAction: "none",
                 background: "linear-gradient(135deg, transparent 0 45%, var(--text-faint) 45% 55%, transparent 55% 100%)"
               }
             }
@@ -60069,6 +60131,7 @@ function FloatingPanel({
               width: "100%",
               height: "24px",
               cursor: "ns-resize",
+              touchAction: "none",
               display: "flex",
               alignItems: "center",
               justifyContent: "center"
@@ -67109,823 +67172,6 @@ function LayoutSettings({ app }) {
     layouts.length === 0 && /* @__PURE__ */ u2(Typography2, { color: "text.secondary", sx: { textAlign: "center", py: 4 }, children: '暂无布局，点击"添加布局"创建第一个' })
   ] });
 }
-function readNativeControlValue(event) {
-  return (event.target || event.currentTarget).value;
-}
-function stopEditorEvent$1(event) {
-  event.stopPropagation();
-}
-function useObsidianInputGuard({
-  scope,
-  controlName,
-  onInput,
-  onBlur,
-  onFocus
-}) {
-  const log = q$1((event, payload) => {
-    logInputEvent(scope, event, payload);
-  }, [scope]);
-  return {
-    onPointerDown: q$1((event) => {
-      log(event, { handler: `${controlName} onPointerDown` });
-    }, [controlName, log]),
-    onMouseDown: q$1((event) => {
-      log(event, { handler: `${controlName} onMouseDown before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onClick: q$1((event) => {
-      log(event, { handler: `${controlName} onClick before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onDblClick: q$1((event) => {
-      log(event, { handler: `${controlName} onDblClick before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onKeyDown: q$1((event) => {
-      log(event, { handler: `${controlName} onKeyDown before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onKeyUp: q$1((event) => {
-      log(event, { handler: `${controlName} onKeyUp before stopPropagation` });
-      stopEditorEvent$1(event);
-    }, [controlName, log]),
-    onBeforeInput: q$1((event) => {
-      log(event, { handler: `${controlName} onBeforeInput` });
-    }, [controlName, log]),
-    onInput: q$1((event) => {
-      const nextValue = readNativeControlValue(event);
-      log(event, {
-        handler: `${controlName} onInput before local update`,
-        nextValue
-      });
-      onInput(nextValue);
-    }, [controlName, log, onInput]),
-    onChange: q$1((event) => {
-      log(event, { handler: `${controlName} onChange` });
-    }, [controlName, log]),
-    onBlur: q$1((event) => {
-      log(event, { handler: `${controlName} onBlur before commit` });
-      onBlur?.();
-    }, [controlName, log, onBlur]),
-    onFocus: q$1((event) => {
-      log(event, { handler: `${controlName} onFocus` });
-      onFocus?.();
-    }, [controlName, log, onFocus])
-  };
-}
-const nativeControlBaseStyle$1 = {
-  width: "100%",
-  minWidth: 0,
-  boxSizing: "border-box",
-  border: "1px solid var(--background-modifier-border)",
-  borderRadius: 6,
-  background: "var(--background-primary)",
-  color: "var(--text-normal)",
-  padding: "8px 10px",
-  font: "inherit",
-  lineHeight: 1.4,
-  userSelect: "text",
-  WebkitUserSelect: "text",
-  pointerEvents: "auto"
-};
-const nativeLabelStyle$1 = {
-  display: "block",
-  marginBottom: 4,
-  fontSize: "0.75rem",
-  color: "var(--text-muted)"
-};
-function NativeTextInput$1({
-  label,
-  value,
-  onInput,
-  onBlur,
-  onFocus,
-  disabled = false,
-  placeholder,
-  type = "text",
-  title,
-  style: style2
-}) {
-  const inputGuard = useObsidianInputGuard({
-    scope: `FieldsEditor/${label}`,
-    controlName: "control",
-    onInput,
-    onBlur,
-    onFocus
-  });
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, title, children: [
-    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
-    /* @__PURE__ */ u2(
-      "input",
-      {
-        type,
-        value,
-        disabled,
-        placeholder,
-        "data-think-diag-control": label,
-        ...inputGuard,
-        style: {
-          ...nativeControlBaseStyle$1,
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text"
-        }
-      }
-    )
-  ] });
-}
-function NativeTextarea$1({
-  label,
-  value,
-  onInput,
-  onBlur,
-  disabled = false,
-  placeholder,
-  rows = 3,
-  style: style2
-}) {
-  const textareaGuard = useObsidianInputGuard({
-    scope: `FieldsEditor/${label}`,
-    controlName: "textarea",
-    onInput,
-    onBlur
-  });
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, children: [
-    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
-    /* @__PURE__ */ u2(
-      "textarea",
-      {
-        value,
-        disabled,
-        rows,
-        placeholder,
-        "data-think-diag-control": label,
-        ...textareaGuard,
-        style: {
-          ...nativeControlBaseStyle$1,
-          resize: "vertical",
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text"
-        }
-      }
-    )
-  ] });
-}
-function OptionRow({
-  option,
-  onChange,
-  onRemove,
-  fieldType,
-  disabled = false
-}) {
-  const [localOption, setLocalOption] = d(option);
-  const renderCountRef = A$1(0);
-  const previousOptionRef = A$1(null);
-  renderCountRef.current += 1;
-  y(() => {
-    logRenderDiagnostic("FieldsEditor/OptionRow", {
-      renderCount: renderCountRef.current,
-      fieldType,
-      disabled,
-      optionRefChanged: previousOptionRef.current !== null && previousOptionRef.current !== option,
-      option,
-      localOption
-    });
-    previousOptionRef.current = option;
-  });
-  y(() => {
-    setLocalOption(option);
-  }, [option]);
-  const commitOption = (nextOption, reason) => {
-    if ((nextOption.label || "") === (option.label || "") && nextOption.value === option.value)
-      return;
-    logRenderDiagnostic("FieldsEditor/OptionRow/commit", {
-      reason,
-      fieldType,
-      option: nextOption
-    });
-    onChange(nextOption);
-  };
-  const updateLocalOption = (updates, reason) => {
-    setLocalOption((previous) => {
-      const next2 = { ...previous, ...updates };
-      logRenderDiagnostic("FieldsEditor/OptionRow/input", {
-        reason,
-        updates,
-        nextOption: next2
-      });
-      return next2;
-    });
-  };
-  const handleBlur = () => {
-    commitOption(localOption, "选项输入框失焦，提交到字段草稿");
-  };
-  const isRating = fieldType === "rating";
-  const labelLabel = isRating ? "评分数值" : "选项标签";
-  const valueLabel = isRating ? "显示内容 (Emoji/图片路径)" : "选项值";
-  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 1.5, children: [
-    /* @__PURE__ */ u2(
-      NativeTextInput$1,
-      {
-        label: labelLabel,
-        value: localOption.label || "",
-        onInput: (value) => {
-          const nextOption = { ...localOption, label: value };
-          updateLocalOption({ label: value }, "编辑选项标签 native onInput");
-          onChange(nextOption);
-        },
-        onBlur: handleBlur,
-        disabled,
-        style: { flex: 1 }
-      }
-    ),
-    /* @__PURE__ */ u2(
-      NativeTextInput$1,
-      {
-        label: valueLabel,
-        value: localOption.value,
-        onInput: (value) => {
-          const nextOption = { ...localOption, value };
-          updateLocalOption({ value }, "编辑选项值 native onInput");
-          onChange(nextOption);
-        },
-        onBlur: handleBlur,
-        disabled,
-        style: { flex: 1 }
-      }
-    ),
-    /* @__PURE__ */ u2(Box, { sx: { pt: 2.5 }, children: /* @__PURE__ */ u2(
-      IconAction,
-      {
-        label: "删除此选项",
-        disabled,
-        onClick: onRemove,
-        icon: /* @__PURE__ */ u2(RemoveCircleOutlineIcon, { fontSize: "small" })
-      }
-    ) })
-  ] });
-}
-const fieldTypeOptions = getUserTemplateFieldTypeOptions();
-const fieldRowGridTemplateColumns$1 = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 64px 72px 40px";
-const emptyControlMinHeight = 40;
-function defaultInputType(uiType) {
-  if (uiType === "number") return "number";
-  if (uiType === "date") return "date";
-  if (uiType === "time") return "time";
-  if (uiType === "datetime") return "datetime-local";
-  return "text";
-}
-function FieldRow({
-  field,
-  disabled = false,
-  isDragging = false,
-  onUpdate,
-  onRemove
-}) {
-  const [localName, setLocalName] = d(field.label || field.key);
-  const [localDefaultValue, setLocalDefaultValue] = d(field.defaultValue || "");
-  const [isEditing, setIsEditing] = d(false);
-  const [detailsOpen, setDetailsOpen] = d(false);
-  const renderCountRef = A$1(0);
-  const previousFieldRef = A$1(null);
-  renderCountRef.current += 1;
-  y(() => {
-    logRenderDiagnostic("FieldsEditor/FieldRow", {
-      renderCount: renderCountRef.current,
-      fieldId: field.id,
-      fieldKey: field.key,
-      fieldType: field.type,
-      disabled,
-      isEditing,
-      isDragging,
-      fieldRefChanged: previousFieldRef.current !== null && previousFieldRef.current !== field,
-      localName,
-      localDefaultValue,
-      incomingDefaultValue: field.defaultValue
-    });
-    previousFieldRef.current = field;
-  });
-  y(() => {
-    if (!isEditing) setLocalName(field.label || field.key);
-  }, [field.label, field.key, isEditing]);
-  y(() => {
-    setLocalDefaultValue(field.defaultValue || "");
-  }, [field.defaultValue, field.id]);
-  const handleNameBlur = () => {
-    const trimmedName = localName.trim();
-    if (trimmedName && trimmedName !== (field.label || field.key)) {
-      onUpdate({ key: trimmedName, label: trimmedName });
-    } else {
-      setLocalName(field.label || field.key);
-    }
-    setIsEditing(false);
-  };
-  const handleOptionChange = (optIndex, newOption) => {
-    const newOptions = [...field.options || []];
-    newOptions[optIndex] = newOption;
-    onUpdate({ options: newOptions });
-  };
-  const addOption = () => {
-    const newOptions = [...field.options || []];
-    newOptions.push({ value: "新选项", label: String(newOptions.length + 1) });
-    onUpdate({ options: newOptions });
-    setDetailsOpen(true);
-  };
-  const removeOption = (optIndex) => {
-    const nextOptions = (field.options || []).filter((_2, i2) => i2 !== optIndex);
-    onUpdate({ options: nextOptions });
-  };
-  const uiType = normalizeTemplateFieldType(field.type);
-  const customFieldNameWarning = getCustomFieldNameWarning(localName);
-  const showOptionsEditor = templateFieldTypeUsesOptions(uiType);
-  const showDefaultValueEditor = templateFieldTypeSupportsDefaultValue(uiType);
-  const showInlineDefaultValue = showDefaultValueEditor && uiType !== "textarea";
-  const showDetails = showOptionsEditor || uiType === "textarea" || uiType === "number";
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        py: 0.75,
-        px: 0.5,
-        borderRadius: 1,
-        bgcolor: isDragging ? "action.hover" : "transparent"
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          Box,
-          {
-            sx: {
-              display: "grid",
-              gridTemplateColumns: fieldRowGridTemplateColumns$1,
-              columnGap: 0.75,
-              alignItems: "center"
-            },
-            children: [
-              /* @__PURE__ */ u2(
-                Box,
-                {
-                  title: "拖动排序",
-                  sx: {
-                    width: 28,
-                    minHeight: emptyControlMinHeight,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "text.secondary",
-                    cursor: disabled ? "default" : "grab"
-                  },
-                  children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1.25rem" } })
-                }
-              ),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
-                NativeTextInput$1,
-                {
-                  label: "",
-                  placeholder: "字段名称",
-                  value: localName,
-                  onInput: (value) => setLocalName(value),
-                  onBlur: handleNameBlur,
-                  onFocus: () => setIsEditing(true),
-                  disabled,
-                  style: { width: "100%" },
-                  title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
-                }
-              ) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
-                SimpleSelect,
-                {
-                  value: uiType,
-                  options: fieldTypeOptions,
-                  onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
-                  disabled,
-                  sx: { width: "100%" }
-                }
-              ) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: showInlineDefaultValue ? /* @__PURE__ */ u2(
-                NativeTextInput$1,
-                {
-                  label: "",
-                  value: localDefaultValue,
-                  type: defaultInputType(uiType),
-                  onInput: (value) => {
-                    setLocalDefaultValue(value);
-                    onUpdate({ defaultValue: value });
-                  },
-                  onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
-                  disabled,
-                  placeholder: "可留空",
-                  style: { width: "100%" }
-                }
-              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center", alignItems: "center", minHeight: emptyControlMinHeight }, children: /* @__PURE__ */ u2("label", { style: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: "var(--text-muted)" }, title: "提交时此字段不能为空", children: [
-                /* @__PURE__ */ u2(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: field.required === true,
-                    disabled,
-                    onChange: (event) => onUpdate({ required: !!event.target.checked })
-                  }
-                ),
-                "必填"
-              ] }) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center" }, children: showDetails ? /* @__PURE__ */ u2(
-                Button2,
-                {
-                  size: "small",
-                  variant: "text",
-                  disabled: disabled && !showOptionsEditor,
-                  onClick: () => setDetailsOpen((open) => !open),
-                  endIcon: detailsOpen ? /* @__PURE__ */ u2(ExpandLessIcon, {}) : /* @__PURE__ */ u2(ExpandMoreIcon, {}),
-                  sx: { width: "100%", minWidth: 0, px: 0.75, whiteSpace: "nowrap", "& .MuiButton-endIcon": { ml: 0.25, mr: 0 } },
-                  children: detailsOpen ? "收起" : "详情"
-                }
-              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
-              /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ u2(
-                IconAction,
-                {
-                  label: "删除此字段",
-                  disabled,
-                  onClick: onRemove,
-                  color: "error",
-                  icon: /* @__PURE__ */ u2(DeleteIcon, {})
-                }
-              ) })
-            ]
-          }
-        ),
-        customFieldNameWarning && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4.5 }, children: customFieldNameWarning }),
-        /* @__PURE__ */ u2(Collapse2, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box, { sx: { mt: 1.25, ml: 4.5, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
-          uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
-            NativeTextarea$1,
-            {
-              label: "默认值",
-              value: localDefaultValue,
-              rows: 3,
-              onInput: (value) => {
-                setLocalDefaultValue(value);
-                onUpdate({ defaultValue: value });
-              },
-              onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
-              disabled,
-              placeholder: "可留空",
-              style: { width: "100%" }
-            }
-          ),
-          uiType === "number" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mb: showOptionsEditor ? 1.5 : 0 }, children: [
-            /* @__PURE__ */ u2(
-              NativeTextInput$1,
-              {
-                label: "最小值",
-                type: "number",
-                value: field.min ?? "",
-                onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }),
-                disabled,
-                style: { width: 120 }
-              }
-            ),
-            /* @__PURE__ */ u2(
-              NativeTextInput$1,
-              {
-                label: "最大值",
-                type: "number",
-                value: field.max ?? "",
-                onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }),
-                disabled,
-                style: { width: 120 }
-              }
-            )
-          ] }),
-          showOptionsEditor && /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Stack, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider2, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
-              OptionRow,
-              {
-                option,
-                onChange: (newOpt) => handleOptionChange(optIndex, newOpt),
-                onRemove: () => removeOption(optIndex),
-                fieldType: uiType,
-                disabled
-              },
-              optIndex
-            )) }),
-            /* @__PURE__ */ u2(
-              Button2,
-              {
-                onClick: addOption,
-                disabled,
-                startIcon: /* @__PURE__ */ u2(AddIcon, {}),
-                size: "small",
-                sx: { mt: 1.25 },
-                children: "添加选项"
-              }
-            )
-          ] })
-        ] }) })
-      ]
-    }
-  );
-}
-const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 64px 72px 40px";
-function createEmptyField(index) {
-  return createCustomTemplateField(index);
-}
-function reorderFields(fields, fromIndex, toIndex) {
-  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= fields.length || toIndex >= fields.length) {
-    return fields;
-  }
-  const next2 = [...fields];
-  const [moved] = next2.splice(fromIndex, 1);
-  next2.splice(toIndex, 0, moved);
-  return next2;
-}
-function FieldsEditor({
-  fields = [],
-  disabled = false,
-  onChange
-}) {
-  const renderCountRef = A$1(0);
-  const previousFieldsRef = A$1(null);
-  const [draggingIndex, setDraggingIndex] = d(null);
-  renderCountRef.current += 1;
-  y(() => {
-    logRenderDiagnostic("FieldsEditor", {
-      renderCount: renderCountRef.current,
-      disabled,
-      fieldsRefChanged: previousFieldsRef.current !== null && previousFieldsRef.current !== fields,
-      fieldsCount: fields.length,
-      fieldIds: fields.map((field) => field.id)
-    });
-    previousFieldsRef.current = fields;
-  });
-  const emitFields = (nextFields) => {
-    onChange(sanitizeTemplateFields(nextFields));
-  };
-  const handleUpdate = (index, updates) => {
-    const newFields = sanitizeTemplateFields(fields || []);
-    newFields[index] = sanitizeTemplateField({ ...newFields[index], ...updates }, index + 1);
-    emitFields(newFields);
-  };
-  const addField = () => emitFields([...fields || [], createEmptyField((fields || []).length + 1)]);
-  const removeField = (index) => {
-    emitFields((fields || []).filter((_2, i2) => i2 !== index));
-  };
-  const handleDropOn = (targetIndex) => {
-    if (draggingIndex === null || disabled) return;
-    emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
-    setDraggingIndex(null);
-  };
-  return /* @__PURE__ */ u2(Stack, { spacing: 1.25, sx: { width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }, children: [
-    /* @__PURE__ */ u2(
-      Box,
-      {
-        sx: {
-          px: 0.5,
-          display: "grid",
-          gridTemplateColumns: fieldRowGridTemplateColumns,
-          columnGap: 0.75,
-          alignItems: "center"
-        },
-        children: [
-          /* @__PURE__ */ u2(Box, {}),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段名称" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段类型" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "默认值" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", textAlign: "center" }, children: "必填" }),
-          /* @__PURE__ */ u2(Box, {}),
-          /* @__PURE__ */ u2(Box, {})
-        ]
-      }
-    ),
-    /* @__PURE__ */ u2(Stack, { spacing: 0, divider: /* @__PURE__ */ u2(Divider2, { sx: { my: 0.75 } }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
-      Box,
-      {
-        draggable: !disabled,
-        onDragStart: (event) => {
-          if (disabled) return;
-          setDraggingIndex(index);
-          event.dataTransfer?.setData("text/plain", String(index));
-          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
-        },
-        onDragOver: (event) => {
-          if (disabled || draggingIndex === null) return;
-          event.preventDefault();
-          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-        },
-        onDrop: (event) => {
-          event.preventDefault();
-          handleDropOn(index);
-        },
-        onDragEnd: () => setDraggingIndex(null),
-        sx: {
-          opacity: draggingIndex === index ? 0.55 : 1,
-          borderRadius: 1
-        },
-        children: /* @__PURE__ */ u2(
-          FieldRow,
-          {
-            field,
-            disabled,
-            isDragging: draggingIndex === index,
-            onUpdate: (updates) => handleUpdate(index, updates),
-            onRemove: () => removeField(index)
-          }
-        )
-      },
-      field.id
-    )) }),
-    /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(Button2, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) })
-  ] });
-}
-function TemplateVariableCopier({ block: block2 }) {
-  const ui = useUiPort();
-  const variableOptions = T$1(() => {
-    const options = [
-      { value: "{{block}}", label: "block" },
-      { value: "{{theme}}", label: "theme" },
-      { value: "{{icon}}", label: "icon" },
-      { value: "{{moment:YYYY-MM-DD}}", label: "moment:YYYY-MM-DD" },
-      { value: "{{templateId}}", label: "templateId" },
-      { value: "{{templateSourceType}}", label: "templateSourceType" },
-      { value: "模板ID:: {{templateId}}", label: "模板ID:: {{templateId}}" },
-      { value: "模板来源:: {{templateSourceType}}", label: "模板来源:: {{templateSourceType}}" }
-    ];
-    (block2?.fields || []).forEach((field) => {
-      const fieldKey = field.key || "untitled";
-      const fieldType = field.type || "text";
-      options.push({ value: `{{${fieldKey}}}`, label: `${fieldKey}` });
-      if ([
-        "select",
-        "radio",
-        "singleSelect",
-        "multiSelect",
-        "path",
-        "multiPath",
-        "tag",
-        "multiTag",
-        "rating"
-      ].includes(fieldType)) {
-        options.push({ value: `{{${fieldKey}.value}}`, label: `${fieldKey}.value` });
-        options.push({ value: `{{${fieldKey}.label}}`, label: `${fieldKey}.label` });
-      }
-      if (fieldType === "image" || fieldType === "multiImage") {
-        options.push({ value: `{{${fieldKey}.src}}`, label: `${fieldKey}.src` });
-      }
-      const markdownKey = field.key;
-      if (markdownKey) {
-        options.push({ value: `${markdownKey}:: {{${fieldKey}}}`, label: `${markdownKey}:: {{${fieldKey}}}` });
-      }
-    });
-    return options;
-  }, [block2]);
-  const handleCopy = (variable) => {
-    if (!variable) return;
-    navigator.clipboard.writeText(variable);
-    ui.notice(`已复制: ${variable}`);
-  };
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 220 }, children: /* @__PURE__ */ u2(
-    SimpleSelect,
-    {
-      value: "",
-      options: variableOptions,
-      onChange: handleCopy,
-      placeholder: "-- 复制变量 --"
-    }
-  ) });
-}
-function SortableBlockItem({ block: block2, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
-  const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block2.id });
-  const style2 = { transform: CSS$1.Transform.toString(transform2), transition };
-  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u2(Accordion2, { expanded: openId === block2.id, onChange: () => setOpenId(openId === block2.id ? null : block2.id), disableGutters: true, elevation: 1, sx: { "&:before": { display: "none" } }, children: [
-    /* @__PURE__ */ u2(AccordionSummary2, { children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }, children: [
-      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
-        /* @__PURE__ */ u2(Tooltip2, { title: "拖动排序", children: /* @__PURE__ */ u2(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }),
-        /* @__PURE__ */ u2(Typography2, { fontWeight: 500, children: block2.name })
-      ] }),
-      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
-        /* @__PURE__ */ u2(IconAction, { label: "复制", icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }), onClick: () => handleDuplicate(block2.id) }),
-        /* @__PURE__ */ u2(IconAction, { label: "删除", icon: /* @__PURE__ */ u2(DeleteForeverOutlinedIcon, {}), onClick: () => handleDelete(block2.id, block2.name), sx: { color: "text.secondary", "&:hover": { color: "error.main" } } })
-      ] })
-    ] }) }),
-    /* @__PURE__ */ u2(AccordionDetails2, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u2(BlockEditor, { block: block2, useCases }) })
-  ] }) });
-}
-function BlockEditor({ block: block2, useCases }) {
-  const [localBlock, setLocalBlock] = d(block2);
-  y(() => {
-    setLocalBlock(block2);
-  }, [block2]);
-  const handleUpdate = (updates) => {
-    useCases.blocks.updateBlock(block2.id, updates);
-  };
-  const handleBlur = (key) => {
-    if (localBlock[key] !== block2[key]) handleUpdate({ [key]: localBlock[key] });
-  };
-  return /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
-    /* @__PURE__ */ u2(TextField2, { label: "Block 名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", sx: { maxWidth: 400 } }),
-    /* @__PURE__ */ u2(Divider2, {}),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "核心元数据" }),
-      /* @__PURE__ */ u2(Box, { sx: { p: 1.5, mb: 1.5, border: "1px solid rgba(0,0,0,0.12)", borderRadius: 1, bgcolor: "background.default" }, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "Block 是一类记录模板；分类、主题、标签是插件核心字段。分类由当前 Block 或表单字段写入，主题来自快速输入选择的主题，标签可作为表单字段输入。它们不会再作为普通 extra 字段处理。" }),
-        /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.75, fontFamily: "monospace" }, children: [
-          "推荐模板行：分类:: ",
-          "{{categoryKey}}",
-          " ｜ 主题:: ",
-          "{{themePath}}",
-          " ｜ 标签:: ",
-          "{{tags}}"
-        ] })
-      ] }),
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
-          label: "默认分类",
-          value: localBlock.categoryKey || "",
-          onChange: (e2) => setLocalBlock((b2) => ({ ...b2, categoryKey: e2.target.value })),
-          onBlur: () => handleBlur("categoryKey"),
-          placeholder: "例如：思考、计划、总结、打卡",
-          helperText: "默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。",
-          variant: "outlined",
-          size: "small",
-          sx: { maxWidth: 520 }
-        }
-      )
-    ] }),
-    /* @__PURE__ */ u2(Divider2, {}),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
-      /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-        /* @__PURE__ */ u2(TextField2, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{themePath}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
-        /* @__PURE__ */ u2(TextField2, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{themePath}}", variant: "outlined", size: "small" })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(Divider2, {}),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
-      /* @__PURE__ */ u2(FieldsEditor, { fields: localBlock.fields, onChange: (newFields) => handleUpdate({ fields: newFields }) })
-    ] }),
-    /* @__PURE__ */ u2(Divider2, {}),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
-        /* @__PURE__ */ u2(TemplateVariableCopier, { block: localBlock })
-      ] }),
-      /* @__PURE__ */ u2(TextField2, { label: "Output Template", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", sx: { fontFamily: "monospace", "& textarea": { fontSize: "13px" } } })
-    ] })
-  ] });
-}
-function BlockManager() {
-  const blocks = useSelector(selectInputBlocks);
-  const [openId, setOpenId] = d(null);
-  const useCases = useUseCases();
-  const handleAdd = async () => {
-    const newName = `新Block ${blocks.length + 1}`;
-    const newBlock = await useCases.blocks.addBlock(newName);
-    if (newBlock) {
-      setOpenId(newBlock.id);
-    }
-  };
-  const handleDelete = async (id, name) => {
-    if (confirm(`确认删除Block "${name}" 吗？
-所有与此Block相关的主题覆写配置都将被一并删除。`)) {
-      await useCases.blocks.deleteBlock(id);
-    }
-  };
-  const handleDuplicate = async (id) => {
-    await useCases.blocks.duplicateBlock(id);
-  };
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      useCases.blocks.reorderBlocks(active.id, over.id);
-    }
-  };
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "1. 管理 Block" }),
-      /* @__PURE__ */ u2(IconAction, { label: "新增Block类型", onClick: handleAdd, color: "success", icon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}) })
-    ] }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "在这里定义所有快速输入的基础模板，例如任务、打卡、总结等。可拖动排序。" }),
-    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2(Stack, { spacing: 1, children: blocks.map((block2) => /* @__PURE__ */ u2(
-      SortableBlockItem,
-      {
-        block: block2,
-        openId,
-        setOpenId,
-        handleDelete,
-        handleDuplicate,
-        useCases
-      },
-      block2.id
-    )) }) }) })
-  ] });
-}
-function InputSettings() {
-  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 2 }, children: [
-    /* @__PURE__ */ u2(Alert2, { severity: "info", children: "快速输入现在只负责“选择目标 → 选择固定 Block → 填写用户字段”。目标管理、记录预设和主题图标请到“数据管理”页维护。" }),
-    /* @__PURE__ */ u2(Box, { sx: { mx: "auto", maxWidth: 900 }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "Block 是固定动作类型：任务、计划、总结、打卡、阻碍项、里程碑、思考、事件。主题不再决定模板。" }) }),
-    /* @__PURE__ */ u2(BlockManager, {})
-  ] });
-}
 function GeneralSettings() {
   const floatingTimerEnabled = useSelector(selectFloatingTimerEnabled);
   const devConsoleStackEnabled = useSelector(selectDevConsoleStackEnabled);
@@ -68592,215 +67838,835 @@ function AiSettings(_props) {
     )
   ] });
 }
-const metricDirectionOptions = [
-  { value: "increase", label: "增加到目标值" },
-  { value: "decrease", label: "降低到目标值" },
-  { value: "maintain", label: "维持目标值" },
-  { value: "boolean", label: "是否达成" }
-];
-function SectionCard({ children }) {
+function readNativeControlValue(event) {
+  return (event.target || event.currentTarget).value;
+}
+function stopEditorEvent$1(event) {
+  event.stopPropagation();
+}
+function useObsidianInputGuard({
+  scope,
+  controlName,
+  onInput,
+  onBlur,
+  onFocus
+}) {
+  const log = q$1((event, payload) => {
+    logInputEvent(scope, event, payload);
+  }, [scope]);
+  return {
+    onPointerDown: q$1((event) => {
+      log(event, { handler: `${controlName} onPointerDown` });
+    }, [controlName, log]),
+    onMouseDown: q$1((event) => {
+      log(event, { handler: `${controlName} onMouseDown before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onClick: q$1((event) => {
+      log(event, { handler: `${controlName} onClick before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onDblClick: q$1((event) => {
+      log(event, { handler: `${controlName} onDblClick before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onKeyDown: q$1((event) => {
+      log(event, { handler: `${controlName} onKeyDown before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onKeyUp: q$1((event) => {
+      log(event, { handler: `${controlName} onKeyUp before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onBeforeInput: q$1((event) => {
+      log(event, { handler: `${controlName} onBeforeInput` });
+    }, [controlName, log]),
+    onInput: q$1((event) => {
+      const nextValue = readNativeControlValue(event);
+      log(event, {
+        handler: `${controlName} onInput before local update`,
+        nextValue
+      });
+      onInput(nextValue);
+    }, [controlName, log, onInput]),
+    onChange: q$1((event) => {
+      log(event, { handler: `${controlName} onChange` });
+    }, [controlName, log]),
+    onBlur: q$1((event) => {
+      log(event, { handler: `${controlName} onBlur before commit` });
+      onBlur?.();
+    }, [controlName, log, onBlur]),
+    onFocus: q$1((event) => {
+      log(event, { handler: `${controlName} onFocus` });
+      onFocus?.();
+    }, [controlName, log, onFocus])
+  };
+}
+const nativeControlBaseStyle$1 = {
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
+  border: "1px solid var(--background-modifier-border)",
+  borderRadius: 6,
+  background: "var(--background-primary)",
+  color: "var(--text-normal)",
+  padding: "8px 10px",
+  font: "inherit",
+  lineHeight: 1.4,
+  userSelect: "text",
+  WebkitUserSelect: "text",
+  pointerEvents: "auto"
+};
+const nativeLabelStyle$1 = {
+  display: "block",
+  marginBottom: 4,
+  fontSize: "0.75rem",
+  color: "var(--text-muted)"
+};
+function NativeTextInput$1({
+  label,
+  value,
+  onInput,
+  onBlur,
+  onFocus,
+  disabled = false,
+  placeholder,
+  type = "text",
+  title,
+  style: style2
+}) {
+  const inputGuard = useObsidianInputGuard({
+    scope: `FieldsEditor/${label}`,
+    controlName: "control",
+    onInput,
+    onBlur,
+    onFocus
+  });
+  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, title, children: [
+    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
+    /* @__PURE__ */ u2(
+      "input",
+      {
+        type,
+        value,
+        disabled,
+        placeholder,
+        "data-think-diag-control": label,
+        ...inputGuard,
+        style: {
+          ...nativeControlBaseStyle$1,
+          opacity: disabled ? 0.6 : 1,
+          cursor: disabled ? "not-allowed" : "text"
+        }
+      }
+    )
+  ] });
+}
+function NativeTextarea$1({
+  label,
+  value,
+  onInput,
+  onBlur,
+  disabled = false,
+  placeholder,
+  rows = 3,
+  style: style2
+}) {
+  const textareaGuard = useObsidianInputGuard({
+    scope: `FieldsEditor/${label}`,
+    controlName: "textarea",
+    onInput,
+    onBlur
+  });
+  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, children: [
+    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
+    /* @__PURE__ */ u2(
+      "textarea",
+      {
+        value,
+        disabled,
+        rows,
+        placeholder,
+        "data-think-diag-control": label,
+        ...textareaGuard,
+        style: {
+          ...nativeControlBaseStyle$1,
+          resize: "vertical",
+          opacity: disabled ? 0.6 : 1,
+          cursor: disabled ? "not-allowed" : "text"
+        }
+      }
+    )
+  ] });
+}
+function OptionRow({
+  option,
+  onChange,
+  onRemove,
+  fieldType,
+  disabled = false
+}) {
+  const [localOption, setLocalOption] = d(option);
+  const renderCountRef = A$1(0);
+  const previousOptionRef = A$1(null);
+  renderCountRef.current += 1;
+  y(() => {
+    logRenderDiagnostic("FieldsEditor/OptionRow", {
+      renderCount: renderCountRef.current,
+      fieldType,
+      disabled,
+      optionRefChanged: previousOptionRef.current !== null && previousOptionRef.current !== option,
+      option,
+      localOption
+    });
+    previousOptionRef.current = option;
+  });
+  y(() => {
+    setLocalOption(option);
+  }, [option]);
+  const commitOption = (nextOption, reason) => {
+    if ((nextOption.label || "") === (option.label || "") && nextOption.value === option.value)
+      return;
+    logRenderDiagnostic("FieldsEditor/OptionRow/commit", {
+      reason,
+      fieldType,
+      option: nextOption
+    });
+    onChange(nextOption);
+  };
+  const updateLocalOption = (updates, reason) => {
+    setLocalOption((previous) => {
+      const next2 = { ...previous, ...updates };
+      logRenderDiagnostic("FieldsEditor/OptionRow/input", {
+        reason,
+        updates,
+        nextOption: next2
+      });
+      return next2;
+    });
+  };
+  const handleBlur = () => {
+    commitOption(localOption, "选项输入框失焦，提交到字段草稿");
+  };
+  const isRating = fieldType === "rating";
+  const labelLabel = isRating ? "评分数值" : "选项标签";
+  const valueLabel = isRating ? "显示内容 (Emoji/图片路径)" : "选项值";
+  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 1.5, children: [
+    /* @__PURE__ */ u2(
+      NativeTextInput$1,
+      {
+        label: labelLabel,
+        value: localOption.label || "",
+        onInput: (value) => {
+          const nextOption = { ...localOption, label: value };
+          updateLocalOption({ label: value }, "编辑选项标签 native onInput");
+          onChange(nextOption);
+        },
+        onBlur: handleBlur,
+        disabled,
+        style: { flex: 1 }
+      }
+    ),
+    /* @__PURE__ */ u2(
+      NativeTextInput$1,
+      {
+        label: valueLabel,
+        value: localOption.value,
+        onInput: (value) => {
+          const nextOption = { ...localOption, value };
+          updateLocalOption({ value }, "编辑选项值 native onInput");
+          onChange(nextOption);
+        },
+        onBlur: handleBlur,
+        disabled,
+        style: { flex: 1 }
+      }
+    ),
+    /* @__PURE__ */ u2(Box, { sx: { pt: 2.5 }, children: /* @__PURE__ */ u2(
+      IconAction,
+      {
+        label: "删除此选项",
+        disabled,
+        onClick: onRemove,
+        icon: /* @__PURE__ */ u2(RemoveCircleOutlineIcon, { fontSize: "small" })
+      }
+    ) })
+  ] });
+}
+const fieldTypeOptions = getUserTemplateFieldTypeOptions();
+const fieldRowGridTemplateColumns$1 = "20px minmax(0, 1.15fr) minmax(112px, 145px) minmax(0, 1fr) 54px 46px 30px";
+const emptyControlMinHeight = 40;
+function defaultInputType(uiType) {
+  if (uiType === "number") return "number";
+  if (uiType === "date") return "date";
+  if (uiType === "time") return "time";
+  if (uiType === "datetime") return "datetime-local";
+  return "text";
+}
+function FieldRow({
+  field,
+  disabled = false,
+  isDragging = false,
+  onUpdate,
+  onRemove
+}) {
+  const [localName, setLocalName] = d(field.label || field.key);
+  const [localDefaultValue, setLocalDefaultValue] = d(field.defaultValue || "");
+  const [isEditing, setIsEditing] = d(false);
+  const [detailsOpen, setDetailsOpen] = d(false);
+  const renderCountRef = A$1(0);
+  const previousFieldRef = A$1(null);
+  renderCountRef.current += 1;
+  y(() => {
+    logRenderDiagnostic("FieldsEditor/FieldRow", {
+      renderCount: renderCountRef.current,
+      fieldId: field.id,
+      fieldKey: field.key,
+      fieldType: field.type,
+      disabled,
+      isEditing,
+      isDragging,
+      fieldRefChanged: previousFieldRef.current !== null && previousFieldRef.current !== field,
+      localName,
+      localDefaultValue,
+      incomingDefaultValue: field.defaultValue
+    });
+    previousFieldRef.current = field;
+  });
+  y(() => {
+    if (!isEditing) setLocalName(field.label || field.key);
+  }, [field.label, field.key, isEditing]);
+  y(() => {
+    setLocalDefaultValue(field.defaultValue || "");
+  }, [field.defaultValue, field.id]);
+  const handleNameBlur = () => {
+    const trimmedName = localName.trim();
+    if (trimmedName && trimmedName !== (field.label || field.key)) {
+      onUpdate({ key: trimmedName, label: trimmedName });
+    } else {
+      setLocalName(field.label || field.key);
+    }
+    setIsEditing(false);
+  };
+  const handleOptionChange = (optIndex, newOption) => {
+    const newOptions = [...field.options || []];
+    newOptions[optIndex] = newOption;
+    onUpdate({ options: newOptions });
+  };
+  const addOption = () => {
+    const newOptions = [...field.options || []];
+    newOptions.push({ value: "新选项", label: String(newOptions.length + 1) });
+    onUpdate({ options: newOptions });
+    setDetailsOpen(true);
+  };
+  const removeOption = (optIndex) => {
+    const nextOptions = (field.options || []).filter((_2, i2) => i2 !== optIndex);
+    onUpdate({ options: nextOptions });
+  };
+  const uiType = normalizeTemplateFieldType(field.type);
+  const customFieldNameWarning = getCustomFieldNameWarning(localName);
+  const showOptionsEditor = templateFieldTypeUsesOptions(uiType);
+  const showDefaultValueEditor = templateFieldTypeSupportsDefaultValue(uiType);
+  const showInlineDefaultValue = showDefaultValueEditor && uiType !== "textarea";
+  const showDetails = showOptionsEditor || uiType === "textarea" || uiType === "number";
   return /* @__PURE__ */ u2(
     Box,
     {
       sx: {
-        border: "1px solid var(--background-modifier-border)",
-        borderRadius: 2,
-        p: 1.5,
-        display: "grid",
-        gap: 1.25,
-        background: "var(--background-primary)"
+        py: 0.75,
+        px: 0.5,
+        borderRadius: 1,
+        bgcolor: isDragging ? "action.hover" : "transparent"
       },
-      children
+      children: [
+        /* @__PURE__ */ u2(
+          Box,
+          {
+            sx: {
+              display: "grid",
+              gridTemplateColumns: fieldRowGridTemplateColumns$1,
+              columnGap: 0.75,
+              alignItems: "center"
+            },
+            children: [
+              /* @__PURE__ */ u2(
+                Box,
+                {
+                  title: "拖动排序",
+                  sx: {
+                    width: 28,
+                    minHeight: emptyControlMinHeight,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "text.secondary",
+                    cursor: disabled ? "default" : "grab"
+                  },
+                  children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1.25rem" } })
+                }
+              ),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
+                NativeTextInput$1,
+                {
+                  label: "",
+                  placeholder: "字段名称",
+                  value: localName,
+                  onInput: (value) => setLocalName(value),
+                  onBlur: handleNameBlur,
+                  onFocus: () => setIsEditing(true),
+                  disabled,
+                  style: { width: "100%" },
+                  title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
+                }
+              ) }),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
+                SimpleSelect,
+                {
+                  value: uiType,
+                  options: fieldTypeOptions,
+                  onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
+                  disabled,
+                  sx: { width: "100%" }
+                }
+              ) }),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: showInlineDefaultValue ? /* @__PURE__ */ u2(
+                NativeTextInput$1,
+                {
+                  label: "",
+                  value: localDefaultValue,
+                  type: defaultInputType(uiType),
+                  onInput: (value) => {
+                    setLocalDefaultValue(value);
+                    onUpdate({ defaultValue: value });
+                  },
+                  onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
+                  disabled,
+                  placeholder: "可留空",
+                  style: { width: "100%" }
+                }
+              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center", alignItems: "center", minHeight: emptyControlMinHeight }, children: /* @__PURE__ */ u2("label", { style: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: "var(--text-muted)" }, title: "提交时此字段不能为空", children: [
+                /* @__PURE__ */ u2(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: field.required === true,
+                    disabled,
+                    onChange: (event) => onUpdate({ required: !!event.target.checked })
+                  }
+                ),
+                "必填"
+              ] }) }),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center" }, children: showDetails ? /* @__PURE__ */ u2(
+                "button",
+                {
+                  type: "button",
+                  disabled: disabled && !showOptionsEditor,
+                  onClick: () => setDetailsOpen((open) => !open),
+                  style: {
+                    width: "100%",
+                    minWidth: 0,
+                    padding: "4px 2px",
+                    border: "none",
+                    background: "transparent",
+                    color: "var(--text-muted)",
+                    cursor: disabled && !showOptionsEditor ? "default" : "pointer",
+                    font: "inherit",
+                    fontSize: "12px",
+                    whiteSpace: "nowrap"
+                  },
+                  children: detailsOpen ? "收起" : "详情"
+                }
+              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
+              /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ u2(
+                "button",
+                {
+                  type: "button",
+                  title: "删除此字段",
+                  disabled,
+                  onClick: onRemove,
+                  style: {
+                    width: 26,
+                    height: 26,
+                    border: "none",
+                    borderRadius: 6,
+                    background: "transparent",
+                    color: "var(--text-muted)",
+                    cursor: disabled ? "default" : "pointer",
+                    font: "inherit",
+                    fontSize: "18px",
+                    lineHeight: 1
+                  },
+                  children: "−"
+                }
+              ) })
+            ]
+          }
+        ),
+        customFieldNameWarning && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4.5 }, children: customFieldNameWarning }),
+        /* @__PURE__ */ u2(Collapse2, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box, { sx: { mt: 1.25, ml: 4.5, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
+          uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
+            NativeTextarea$1,
+            {
+              label: "默认值",
+              value: localDefaultValue,
+              rows: 3,
+              onInput: (value) => {
+                setLocalDefaultValue(value);
+                onUpdate({ defaultValue: value });
+              },
+              onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
+              disabled,
+              placeholder: "可留空",
+              style: { width: "100%" }
+            }
+          ),
+          uiType === "number" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mb: showOptionsEditor ? 1.5 : 0 }, children: [
+            /* @__PURE__ */ u2(
+              NativeTextInput$1,
+              {
+                label: "最小值",
+                type: "number",
+                value: field.min ?? "",
+                onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }),
+                disabled,
+                style: { width: 120 }
+              }
+            ),
+            /* @__PURE__ */ u2(
+              NativeTextInput$1,
+              {
+                label: "最大值",
+                type: "number",
+                value: field.max ?? "",
+                onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }),
+                disabled,
+                style: { width: 120 }
+              }
+            )
+          ] }),
+          showOptionsEditor && /* @__PURE__ */ u2(Box, { children: [
+            /* @__PURE__ */ u2(Stack, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider2, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
+              OptionRow,
+              {
+                option,
+                onChange: (newOpt) => handleOptionChange(optIndex, newOpt),
+                onRemove: () => removeOption(optIndex),
+                fieldType: uiType,
+                disabled
+              },
+              optIndex
+            )) }),
+            /* @__PURE__ */ u2(
+              Button2,
+              {
+                onClick: addOption,
+                disabled,
+                startIcon: /* @__PURE__ */ u2(AddIcon, {}),
+                size: "small",
+                sx: { mt: 1.25 },
+                children: "添加选项"
+              }
+            )
+          ] })
+        ] }) })
+      ]
     }
   );
 }
-function pathLeaf(path) {
-  return String(path || "").split("/").filter(Boolean).pop() || path;
+const fieldRowGridTemplateColumns = "20px minmax(0, 1.15fr) minmax(112px, 145px) minmax(0, 1fr) 54px 46px 30px";
+function createEmptyField(index) {
+  return createCustomTemplateField(index);
 }
-function metricPresetKey(label) {
-  const text2 = label.toLowerCase();
-  if (/完成|done|complete/.test(text2)) return "task.done";
-  if (/任务|task/.test(text2)) return "task.total";
-  if (/打卡|habit|check/.test(text2)) return "habit.count";
-  if (/事件|证据|event|evidence/.test(text2)) return "evidence.count";
-  if (/阻碍|风险|blocker|risk/.test(text2)) return "blocker.count";
-  if (/里程碑|milestone/.test(text2)) return "milestone.count";
-  if (/总结|复盘|review/.test(text2)) return "review.count";
-  if (/计划|plan/.test(text2)) return "plan.count";
-  return label.trim() || "goal.metric";
-}
-function goalStatusLabel(status) {
-  switch (status) {
-    case "paused":
-      return "已暂停";
-    case "completed":
-      return "已完成";
-    case "archived":
-      return "已归档";
-    case "active":
-    default:
-      return "进行中";
+function reorderFields(fields, fromIndex, toIndex) {
+  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= fields.length || toIndex >= fields.length) {
+    return fields;
   }
+  const next2 = [...fields];
+  const [moved] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved);
+  return next2;
 }
-function GoalEntitySection() {
-  const settings = useSelector(selectSettings);
-  const useCases = useUseCases();
-  const goals = settings.goalSettings?.goals || [];
-  const [goalPath, setGoalPath] = d("");
-  const [goalThemePath, setGoalThemePath] = d("");
-  const [query, setQuery] = d("");
-  const [message, setMessage] = d("");
-  const visibleGoals = T$1(() => {
-    const q2 = query.trim().toLowerCase();
-    const sorted = [...goals].sort((left2, right2) => {
-      const statusRank = (value) => value === "active" ? 0 : value === "paused" ? 1 : value === "completed" ? 2 : 3;
-      const byStatus = statusRank(left2.status) - statusRank(right2.status);
-      if (byStatus !== 0) return byStatus;
-      return String(left2.goalPath || left2.title || "").localeCompare(String(right2.goalPath || right2.title || ""), "zh-CN");
+function FieldsEditor({
+  fields = [],
+  disabled = false,
+  onChange
+}) {
+  const renderCountRef = A$1(0);
+  const previousFieldsRef = A$1(null);
+  const [draggingIndex, setDraggingIndex] = d(null);
+  renderCountRef.current += 1;
+  y(() => {
+    logRenderDiagnostic("FieldsEditor", {
+      renderCount: renderCountRef.current,
+      disabled,
+      fieldsRefChanged: previousFieldsRef.current !== null && previousFieldsRef.current !== fields,
+      fieldsCount: fields.length,
+      fieldIds: fields.map((field) => field.id)
     });
-    if (!q2) return sorted;
-    return sorted.filter((goal) => `${goal.title || ""} ${goal.goalPath || ""} ${goal.themePath || ""}`.toLowerCase().includes(q2));
-  }, [goals, query]);
-  const handleAddGoal = async () => {
-    const path = goalPath.trim();
-    if (!path) return;
-    const alreadyExists = goals.some((goal2) => String(goal2.goalPath || goal2.title || "").trim() === path);
-    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: goalThemePath.trim() || null });
-    setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加目标：${goal.goalPath || goal.title}` : "目标未添加");
-    if (goal && !alreadyExists) {
-      setGoalPath("");
-      setGoalThemePath("");
+    previousFieldsRef.current = fields;
+  });
+  const emitFields = (nextFields) => {
+    onChange(sanitizeTemplateFields(nextFields));
+  };
+  const handleUpdate = (index, updates) => {
+    const newFields = sanitizeTemplateFields(fields || []);
+    newFields[index] = sanitizeTemplateField({ ...newFields[index], ...updates }, index + 1);
+    emitFields(newFields);
+  };
+  const addField = () => emitFields([...fields || [], createEmptyField((fields || []).length + 1)]);
+  const removeField = (index) => {
+    emitFields((fields || []).filter((_2, i2) => i2 !== index));
+  };
+  const handleDropOn = (targetIndex) => {
+    if (draggingIndex === null || disabled) return;
+    emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
+    setDraggingIndex(null);
+  };
+  return /* @__PURE__ */ u2(Stack, { spacing: 1.25, sx: { width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }, children: [
+    /* @__PURE__ */ u2(
+      Box,
+      {
+        sx: {
+          px: 0.5,
+          display: "grid",
+          gridTemplateColumns: fieldRowGridTemplateColumns,
+          columnGap: 0.75,
+          alignItems: "center"
+        },
+        children: [
+          /* @__PURE__ */ u2(Box, {}),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段名称" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段类型" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "默认值" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", textAlign: "center" }, children: "必填" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", textAlign: "center" }, children: "详情" }),
+          /* @__PURE__ */ u2(Box, {})
+        ]
+      }
+    ),
+    /* @__PURE__ */ u2(Stack, { spacing: 0, divider: /* @__PURE__ */ u2(Divider2, { sx: { my: 0.75 } }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
+      Box,
+      {
+        draggable: !disabled,
+        onDragStart: (event) => {
+          if (disabled) return;
+          setDraggingIndex(index);
+          event.dataTransfer?.setData("text/plain", String(index));
+          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+        },
+        onDragOver: (event) => {
+          if (disabled || draggingIndex === null) return;
+          event.preventDefault();
+          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        },
+        onDrop: (event) => {
+          event.preventDefault();
+          handleDropOn(index);
+        },
+        onDragEnd: () => setDraggingIndex(null),
+        sx: {
+          opacity: draggingIndex === index ? 0.55 : 1,
+          borderRadius: 1
+        },
+        children: /* @__PURE__ */ u2(
+          FieldRow,
+          {
+            field,
+            disabled,
+            isDragging: draggingIndex === index,
+            onUpdate: (updates) => handleUpdate(index, updates),
+            onRemove: () => removeField(index)
+          }
+        )
+      },
+      field.id
+    )) }),
+    /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(Button2, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) })
+  ] });
+}
+function TemplateVariableCopier({ block: block2 }) {
+  const ui = useUiPort();
+  const variableOptions = T$1(() => {
+    const options = [
+      { value: "{{block}}", label: "block" },
+      { value: "{{theme}}", label: "theme" },
+      { value: "{{icon}}", label: "icon" },
+      { value: "{{moment:YYYY-MM-DD}}", label: "moment:YYYY-MM-DD" },
+      { value: "{{templateId}}", label: "templateId" },
+      { value: "{{templateSourceType}}", label: "templateSourceType" },
+      { value: "模板ID:: {{templateId}}", label: "模板ID:: {{templateId}}" },
+      { value: "模板来源:: {{templateSourceType}}", label: "模板来源:: {{templateSourceType}}" }
+    ];
+    (block2?.fields || []).forEach((field) => {
+      const fieldKey = field.key || "untitled";
+      const fieldType = field.type || "text";
+      options.push({ value: `{{${fieldKey}}}`, label: `${fieldKey}` });
+      if ([
+        "select",
+        "radio",
+        "singleSelect",
+        "multiSelect",
+        "path",
+        "multiPath",
+        "tag",
+        "multiTag",
+        "rating"
+      ].includes(fieldType)) {
+        options.push({ value: `{{${fieldKey}.value}}`, label: `${fieldKey}.value` });
+        options.push({ value: `{{${fieldKey}.label}}`, label: `${fieldKey}.label` });
+      }
+      if (fieldType === "image" || fieldType === "multiImage") {
+        options.push({ value: `{{${fieldKey}.src}}`, label: `${fieldKey}.src` });
+      }
+      const markdownKey = field.key;
+      if (markdownKey) {
+        options.push({ value: `${markdownKey}:: {{${fieldKey}}}`, label: `${markdownKey}:: {{${fieldKey}}}` });
+      }
+    });
+    return options;
+  }, [block2]);
+  const handleCopy = (variable) => {
+    if (!variable) return;
+    navigator.clipboard.writeText(variable);
+    ui.notice(`已复制: ${variable}`);
+  };
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 220 }, children: /* @__PURE__ */ u2(
+    SimpleSelect,
+    {
+      value: "",
+      options: variableOptions,
+      onChange: handleCopy,
+      placeholder: "-- 复制变量 --"
     }
+  ) });
+}
+function SortableBlockItem({ block: block2, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
+  const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block2.id });
+  const style2 = { transform: CSS$1.Transform.toString(transform2), transition };
+  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u2(Accordion2, { expanded: openId === block2.id, onChange: () => setOpenId(openId === block2.id ? null : block2.id), disableGutters: true, elevation: 1, sx: { "&:before": { display: "none" } }, children: [
+    /* @__PURE__ */ u2(AccordionSummary2, { children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }, children: [
+      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
+        /* @__PURE__ */ u2(Tooltip2, { title: "拖动排序", children: /* @__PURE__ */ u2(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }),
+        /* @__PURE__ */ u2(Typography2, { fontWeight: 500, children: block2.name })
+      ] }),
+      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
+        /* @__PURE__ */ u2(IconAction, { label: "复制", icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }), onClick: () => handleDuplicate(block2.id) }),
+        /* @__PURE__ */ u2(IconAction, { label: "删除", icon: /* @__PURE__ */ u2(DeleteForeverOutlinedIcon, {}), onClick: () => handleDelete(block2.id, block2.name), sx: { color: "text.secondary", "&:hover": { color: "error.main" } } })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ u2(AccordionDetails2, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u2(BlockEditor, { block: block2, useCases }) })
+  ] }) });
+}
+function BlockEditor({ block: block2, useCases }) {
+  const [localBlock, setLocalBlock] = d(block2);
+  y(() => {
+    setLocalBlock(block2);
+  }, [block2]);
+  const handleUpdate = (updates) => {
+    useCases.blocks.updateBlock(block2.id, updates);
   };
-  const handleDeleteGoal = async (goal) => {
-    const label = goal.goalPath || goal.title || goal.id;
-    if (!window.confirm(`删除目标「${label}」？
-
-这会删除目标实体、目标记录关系和该目标下的记录预设；不会删除已有 Markdown 文件。`)) return;
-    await useCases.goal.deleteGoal(goal.id);
-    setMessage(`已删除目标：${label}`);
+  const handleBlur = (key) => {
+    if (localBlock[key] !== block2[key]) handleUpdate({ [key]: localBlock[key] });
   };
-  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 2 }, children: [
-    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
-    /* @__PURE__ */ u2(SectionCard, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "新建目标" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标回答“我要追踪什么”。默认主题只是快捷输入的上下文字段，不决定模板；周期请在计划/总结预设里设置。" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(240px, 1fr) minmax(180px, 0.65fr) auto" }, gap: 1, alignItems: "center" }, children: [
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标路径", value: goalPath, onChange: (event) => setGoalPath(event.target.value), placeholder: "例如：产品化/插件/目标中心" }),
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "默认主题（可选）", value: goalThemePath, onChange: (event) => setGoalThemePath(event.target.value), placeholder: "例如：电脑/记录系统" }),
-        /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "新建目标" })
+  return /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
+    /* @__PURE__ */ u2(TextField2, { label: "记录类型名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", sx: { maxWidth: 400 } }),
+    /* @__PURE__ */ u2(Divider2, {}),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "核心元数据" }),
+      /* @__PURE__ */ u2(Box, { sx: { p: 1.5, mb: 1.5, border: "1px solid rgba(0,0,0,0.12)", borderRadius: 1, bgcolor: "background.default" }, children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "记录类型是一类记录模板；分类、主题、标签是核心字段。" }),
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.75, fontFamily: "monospace" }, children: [
+          "推荐模板行：分类:: ",
+          "{{categoryKey}}",
+          " ｜ 主题:: ",
+          "{{themePath}}",
+          " ｜ 标签:: ",
+          "{{tags}}"
+        ] })
+      ] }),
+      /* @__PURE__ */ u2(
+        TextField2,
+        {
+          label: "默认分类",
+          value: localBlock.categoryKey || "",
+          onChange: (e2) => setLocalBlock((b2) => ({ ...b2, categoryKey: e2.target.value })),
+          onBlur: () => handleBlur("categoryKey"),
+          placeholder: "例如：思考、计划、总结、打卡",
+          helperText: "默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。",
+          variant: "outlined",
+          size: "small",
+          sx: { maxWidth: 520 }
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2(Divider2, {}),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "保存位置" }),
+      /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
+        /* @__PURE__ */ u2(TextField2, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{themePath}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
+        /* @__PURE__ */ u2(TextField2, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{themePath}}", variant: "outlined", size: "small" })
       ] })
     ] }),
-    /* @__PURE__ */ u2(SectionCard, { children: [
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ u2(Box, { children: [
-          /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "目标库" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标库只管理目标本身：新建、暂停、完成、归档、删除。统计周期属于记录表单，请到“目标 × Block 预设表”的单元格里设置。" })
-        ] }),
-        /* @__PURE__ */ u2(TextField2, { size: "small", label: "搜索目标", value: query, onChange: (event) => setQuery(event.target.value), sx: { minWidth: 220 } })
+    /* @__PURE__ */ u2(Divider2, {}),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
+      /* @__PURE__ */ u2(FieldsEditor, { fields: localBlock.fields, onChange: (newFields) => handleUpdate({ fields: newFields }) })
+    ] }),
+    /* @__PURE__ */ u2(Divider2, {}),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
+        /* @__PURE__ */ u2(TemplateVariableCopier, { block: localBlock })
       ] }),
-      visibleGoals.length > 0 ? /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 0.75 }, children: visibleGoals.slice(0, 40).map((goal) => /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(220px, 1fr) auto", gap: 1, alignItems: "center", border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1, background: goal.status === "archived" ? "var(--background-secondary)" : "var(--background-primary)" }, children: [
-        /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 0.75, minWidth: 0, flexWrap: "wrap" }, children: [
-          /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: goal.goalPath || goal.title }),
-          /* @__PURE__ */ u2(Chip2, { size: "small", label: goalStatusLabel(goal.status), color: goal.status === "active" ? "primary" : "default" }),
-          goal.themePath ? /* @__PURE__ */ u2(Chip2, { size: "small", label: `主题 ${goal.themePath}` }) : /* @__PURE__ */ u2(Chip2, { size: "small", label: "无默认主题", variant: "outlined" })
-        ] }) }),
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, justifyContent: "flex-end", flexWrap: "wrap" }, children: [
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => handleEditGoalTheme(goal), children: "主题" }),
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => goal.status === "paused" ? useCases.goal.restoreGoal(goal.id) : useCases.goal.pauseGoal(goal.id), children: goal.status === "paused" ? "恢复" : "暂停" }),
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => useCases.goal.completeGoal(goal.id), children: "完成" }),
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => goal.status === "archived" ? useCases.goal.restoreGoal(goal.id) : useCases.goal.archiveGoal(goal.id), children: goal.status === "archived" ? "恢复" : "归档" }),
-          /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => handleDeleteGoal(goal), children: "删除" })
-        ] })
-      ] }, goal.id)) }) : /* @__PURE__ */ u2(Alert2, { severity: "info", children: "目标库还是空的。请在上方新建一个目标。" })
+      /* @__PURE__ */ u2(TextField2, { label: "输出模板", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", sx: { fontFamily: "monospace", "& textarea": { fontSize: "13px" } } })
     ] })
   ] });
 }
-function GoalMetricSection() {
-  const settings = useSelector(selectSettings);
+function BlockManager() {
+  const blocks = useSelector(selectInputBlocks);
+  const [openId, setOpenId] = d(null);
   const useCases = useUseCases();
-  const goals = settings.goalSettings?.goals || [];
-  const activeGoalOptions = goals.filter((goal) => goal.status !== "archived").map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title || goal.id }));
-  const [message, setMessage] = d("");
-  const [metricGoalId, setMetricGoalId] = d(activeGoalOptions[0]?.value || "");
-  const selectedMetricGoal = goals.find((goal) => goal.id === metricGoalId) || null;
-  const selectedMetrics = selectedMetricGoal?.metrics || [];
-  const [metricKey, setMetricKey] = d("task.done");
-  const [metricLabel, setMetricLabel] = d("完成任务");
-  const [metricDirection, setMetricDirection] = d("increase");
-  const [metricTargetValue, setMetricTargetValue] = d("10");
-  const [metricUnit, setMetricUnit] = d("个");
-  const syncMetricDraft = (goalId) => {
-    const goal = goals.find((item) => item.id === goalId) || null;
-    const first = goal?.metrics?.[0];
-    setMetricGoalId(goalId);
-    if (first) {
-      setMetricKey(first.key);
-      setMetricLabel(first.label);
-      setMetricDirection(first.direction);
-      setMetricTargetValue(first.targetValue === void 0 ? "" : String(first.targetValue));
-      setMetricUnit(first.unit || "");
+  const handleAdd = async () => {
+    const newName = `新记录类型 ${blocks.length + 1}`;
+    const newBlock = await useCases.blocks.addBlock(newName);
+    if (newBlock) {
+      setOpenId(newBlock.id);
     }
   };
-  const loadMetricDraft = (metric) => {
-    setMetricKey(metric.key);
-    setMetricLabel(metric.label);
-    setMetricDirection(metric.direction);
-    setMetricTargetValue(metric.targetValue === void 0 ? "" : String(metric.targetValue));
-    setMetricUnit(metric.unit || "");
+  const handleDelete = async (id, name) => {
+    if (confirm(`确认删除记录类型 "${name}" 吗？
+所有与此记录类型相关的预设会一起删除。`)) {
+      await useCases.blocks.deleteBlock(id);
+    }
   };
-  const handleSaveMetric = async () => {
-    if (!metricGoalId) return;
-    const key = metricKey.trim() || metricPresetKey(metricLabel);
-    const label = metricLabel.trim() || key;
-    const metric = {
-      key,
-      label,
-      direction: metricDirection,
-      targetValue: metricTargetValue.trim() === "" ? void 0 : Number(metricTargetValue),
-      unit: metricUnit.trim() || void 0
-    };
-    const nextMetrics = [...selectedMetrics.filter((item) => item.key !== key), metric];
-    await useCases.goal.updateGoalMetrics(metricGoalId, nextMetrics);
-    setMessage(`目标指标已保存：${label}`);
+  const handleDuplicate = async (id) => {
+    await useCases.blocks.duplicateBlock(id);
   };
-  const handleRemoveMetric = async (key) => {
-    if (!metricGoalId) return;
-    await useCases.goal.updateGoalMetrics(metricGoalId, selectedMetrics.filter((metric) => metric.key !== key));
-    setMessage("目标指标已删除。");
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active && over && active.id !== over.id) {
+      useCases.blocks.reorderBlocks(active.id, over.id);
+    }
   };
-  return /* @__PURE__ */ u2(SectionCard, { children: [
-    /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "目标指标" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "指标只属于目标；视图根据记录里的 Block、状态和日期运行时统计。" }),
-    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(180px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)", gap: 1, alignItems: "center" }, children: [
-      /* @__PURE__ */ u2(SimpleSelect, { value: metricGoalId, options: activeGoalOptions, onChange: (value) => syncMetricDraft(value), placeholder: "选择目标", fullWidth: true }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标名称", value: metricLabel, onChange: (event) => {
-        setMetricLabel(event.target.value);
-        if (!metricKey.trim()) setMetricKey(metricPresetKey(event.target.value));
-      } }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标 Key", value: metricKey, onChange: (event) => setMetricKey(event.target.value), placeholder: "task.done" })
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "记录类型" }),
+      /* @__PURE__ */ u2(IconAction, { label: "新增记录类型", onClick: handleAdd, color: "success", icon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}) })
     ] }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(160px, 1fr) 120px 90px auto", gap: 1, alignItems: "center" }, children: [
-      /* @__PURE__ */ u2(SimpleSelect, { value: metricDirection, options: metricDirectionOptions, onChange: (value) => setMetricDirection(value), fullWidth: true }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标值", type: "number", value: metricTargetValue, onChange: (event) => setMetricTargetValue(event.target.value) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "单位", value: metricUnit, onChange: (event) => setMetricUnit(event.target.value) }),
-      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleSaveMetric, disabled: !metricGoalId || !metricLabel.trim(), children: "保存/更新指标" })
-    ] }),
-    selectedMetricGoal && /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
-      "当前目标：",
-      selectedMetricGoal.goalPath || selectedMetricGoal.title
-    ] }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: selectedMetrics.length > 0 ? selectedMetrics.map((metric) => /* @__PURE__ */ u2(
-      Chip2,
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "定义快速输入可选择的记录类型，例如任务、打卡、总结。可拖动排序。" }),
+    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2(Stack, { spacing: 1, children: blocks.map((block2) => /* @__PURE__ */ u2(
+      SortableBlockItem,
       {
-        size: "small",
-        label: `${metric.label} · ${metric.targetValue ?? "无目标值"}${metric.unit || ""}`,
-        onClick: () => loadMetricDraft(metric),
-        onDelete: () => handleRemoveMetric(metric.key)
+        block: block2,
+        openId,
+        setOpenId,
+        handleDelete,
+        handleDuplicate,
+        useCases
       },
-      metric.key
-    )) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "当前目标还没有指标。" }) })
+      block2.id
+    )) }) }) })
   ] });
 }
 function cloneValue$1(value) {
@@ -68839,16 +68705,13 @@ const presetGranularityOptions = [
   { value: "quarter", label: "季度" },
   { value: "year", label: "年" }
 ];
-const granularityLabelMap = {
-  week: "周",
-  month: "月",
-  quarter: "季度",
-  year: "年"
-};
 function normalizeThemePath(value) {
   const text2 = String(value ?? "").trim();
   if (!text2 || text2 === "{{goal.themePath}}") return "";
   return text2;
+}
+function cleanDisplayThemePath(value) {
+  return String(value ?? "").split("/").map((part) => part.trim().replace(/^[#＃]+\s*/, "").trim()).filter(Boolean).join("/");
 }
 function isThemeField$1(field) {
   const anyField = field;
@@ -68912,21 +68775,26 @@ function mergeDefaultValues(draft, themeIcon) {
   }
   return values2;
 }
-function shortText(value, fallback = "—", max2 = 24) {
-  const text2 = String(value ?? "").trim();
-  if (!text2) return fallback;
-  return text2.length > max2 ? `${text2.slice(0, max2 - 1)}…` : text2;
-}
-function leafPath$1(value) {
+function leafPath$3(value) {
   const text2 = String(value ?? "").trim();
   return text2.split("/").filter(Boolean).pop() || text2;
 }
-function presetName(template) {
-  const name = String(template.name || "").trim();
-  if (name) return name;
-  const variantId = String(template.variantId || "").trim();
-  if (variantId) return variantId.replace(/^legacy-/, "");
-  return "默认预设";
+function isGeneratedPresetName$2(value) {
+  const text2 = String(value ?? "").trim();
+  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "未命名预设";
+}
+function themeLeafLabel(themePath, fallback = "") {
+  const clean = cleanDisplayThemePath(themePath);
+  return leafPath$3(clean) || fallback;
+}
+function inferTemplateDisplayName(template, themePath, fallback = "记录预设") {
+  const name = String(template?.name || "").trim();
+  if (name && !isGeneratedPresetName$2(name)) return name;
+  const themeLabel = themeLeafLabel(themePath || readThemePathFromTemplate(template));
+  if (themeLabel) return themeLabel;
+  const variantId = String(template?.variantId || "").trim();
+  if (variantId && variantId !== "default" && !isGeneratedPresetName$2(variantId)) return variantId.replace(/^legacy-/, "");
+  return fallback;
 }
 function NativeTextInput({
   label,
@@ -68954,64 +68822,31 @@ function NativeTextInput({
     )
   ] });
 }
-function CompactCellInput({
-  value,
-  onInput,
-  disabled = false,
-  placeholder,
-  type = "text"
-}) {
-  return /* @__PURE__ */ u2(
-    "input",
-    {
-      value,
-      type,
-      disabled,
-      placeholder,
-      onMouseDown: stopEditorEvent,
-      onClick: stopEditorEvent,
-      onDblClick: stopEditorEvent,
-      onKeyDown: stopEditorEvent,
-      onKeyUp: stopEditorEvent,
-      onInput: (event) => onInput(readInputValue(event)),
-      style: {
-        ...nativeControlBaseStyle,
-        padding: "5px 7px",
-        minHeight: 30,
-        fontSize: 13,
-        opacity: disabled ? 0.6 : 1,
-        cursor: disabled ? "not-allowed" : "text"
-      }
-    }
-  );
-}
-function CompactCellSelect({
+function NativeSelectInput2({
+  label,
   value,
   options,
   onChange,
   disabled = false
 }) {
-  return /* @__PURE__ */ u2(
-    "select",
-    {
-      value,
-      disabled,
-      onMouseDown: stopEditorEvent,
-      onClick: stopEditorEvent,
-      onDblClick: stopEditorEvent,
-      onKeyDown: stopEditorEvent,
-      onKeyUp: stopEditorEvent,
-      onChange: (event) => onChange((event.target || event.currentTarget).value),
-      style: {
-        ...nativeControlBaseStyle,
-        padding: "5px 7px",
-        minHeight: 30,
-        fontSize: 13,
-        opacity: disabled ? 0.6 : 1
-      },
-      children: options.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
-    }
-  );
+  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0 }, children: [
+    /* @__PURE__ */ u2("span", { style: nativeLabelStyle, children: label }),
+    /* @__PURE__ */ u2(
+      "select",
+      {
+        value,
+        disabled,
+        onMouseDown: stopEditorEvent,
+        onClick: stopEditorEvent,
+        onDblClick: stopEditorEvent,
+        onKeyDown: stopEditorEvent,
+        onKeyUp: stopEditorEvent,
+        onChange: (event) => onChange((event.target || event.currentTarget).value),
+        style: { ...nativeControlBaseStyle, opacity: disabled ? 0.6 : 1 },
+        children: options.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
+      }
+    )
+  ] });
 }
 function NativeTextarea({
   label,
@@ -69058,9 +68893,8 @@ function makeDraftFromTemplate(template, block2, variants) {
   const fields = ensureThemeField(cloneValue$1(template?.fields || block2?.fields || []), themePath);
   return {
     variantId,
-    name: template?.name || (variantId === "default" ? "默认预设" : variantId),
+    name: inferTemplateDisplayName(template, themePath),
     description: template?.description || "",
-    isDefault: template?.isDefault !== void 0 ? !!template.isDefault : variantId === "default",
     granularity: readPeriodGranularity(template, block2),
     sortOrder: template?.sortOrder ?? index * 10,
     fields,
@@ -69070,6 +68904,31 @@ function makeDraftFromTemplate(template, block2, variants) {
     requiredFields: cloneValue$1(template?.requiredFields || []),
     defaultValues: cloneValue$1(template?.defaultValues || {}),
     themePath
+  };
+}
+function makeNewDraft(goal, block2, variants, themes) {
+  const base = makeDraftFromTemplate(null, block2, variants);
+  const usedVariantIds = new Set(variants.map((item) => String(item.variantId || "default")));
+  const usedThemePaths = new Set(variants.map((item) => normalizeThemePath(readThemePathFromTemplate(item))).filter(Boolean));
+  const preferredTheme = normalizeThemePath(goal?.themePath) || normalizeThemePath(base.themePath);
+  const firstUnusedTheme = themes.map((theme2) => normalizeThemePath(theme2?.path)).find((path) => path && !usedThemePaths.has(path));
+  const themePath = preferredTheme && !usedThemePaths.has(preferredTheme) ? preferredTheme : firstUnusedTheme || preferredTheme || "";
+  const label = themeLeafLabel(themePath, block2?.name || "记录预设");
+  let variantId = makeVariantId(label || `preset-${variants.length + 1}`);
+  if (usedVariantIds.has(variantId)) {
+    let index = 2;
+    while (usedVariantIds.has(`${variantId}-${index}`)) index += 1;
+    variantId = `${variantId}-${index}`;
+  }
+  const fields = ensureThemeField(base.fields || [], themePath);
+  return {
+    ...base,
+    variantId,
+    name: label || "记录预设",
+    sortOrder: variants.length * 10,
+    themePath,
+    fields,
+    defaultValues: mergeDefaultValues({ ...base, themePath, fields }, themes.find((theme2) => normalizeThemePath(theme2?.path) === themePath)?.icon)
   };
 }
 function deriveRequiredFields(fields) {
@@ -69167,6 +69026,56 @@ function cleanDefaultValuesOverride(draft, block2, goal, themeIcon) {
   }
   return Object.keys(result).length ? result : void 0;
 }
+function buildInheritedDraft(previous, block2) {
+  const baseFields = ensureThemeField(cloneValue$1(block2?.fields || []), previous.themePath);
+  const requiredFields = deriveRequiredFields(baseFields);
+  const next2 = {
+    ...previous,
+    fields: baseFields,
+    outputTemplate: block2?.outputTemplate || "",
+    targetFile: block2?.targetFile || "",
+    appendUnderHeader: block2?.appendUnderHeader || "## {{goalPath}}",
+    requiredFields,
+    defaultValues: mergeDefaultValues({ ...previous, fields: baseFields })
+  };
+  return next2;
+}
+function templateHasCustomOverrides(template, block2, goal) {
+  if (!template || !block2 || template.enabled === false) return false;
+  const patch = compactGoalTemplateForStorage(template, { coreBlock: block2, goal });
+  if (patch.fields?.length) return true;
+  if (compactText(patch.outputTemplate)) return true;
+  if (compactText(patch.targetFile)) return true;
+  if (compactText(patch.appendUnderHeader)) return true;
+  if (patch.requiredFields?.length) return true;
+  const values2 = patch.defaultValues || {};
+  const customDefaultKeys = Object.keys(values2).filter((key) => !["themePath", "主题", "icon", "图标"].includes(key));
+  return customDefaultKeys.length > 0;
+}
+function inferTemplateEditMode(template, block2, goal) {
+  if (template?.enabled === false) return "disabled";
+  return templateHasCustomOverrides(template, block2, goal) ? "override" : "inherit";
+}
+function buildInheritedTemplatePatchFromDraft(params) {
+  const { goal, block: block2, draft, selectedTemplate, themeIcon } = params;
+  const variantId = draft.variantId || "default";
+  const defaultValues = cleanDefaultValuesOverride({ ...draft, fields: [] }, block2, goal, themeIcon);
+  const rawPatch = {
+    id: getGoalTemplateId(goal.id, block2.id, variantId),
+    goalId: goal.id,
+    coreBlockId: block2.id,
+    variantId,
+    name: draft.name || (variantId === "default" ? "记录预设" : variantId),
+    description: draft.description || void 0,
+    periodPolicy: buildDraftPeriodPolicy(block2, draft),
+    sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
+    enabled: true,
+    defaultValues,
+    createdAt: selectedTemplate?.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  return compactGoalTemplateForStorage(rawPatch, { coreBlock: block2, goal });
+}
 function buildDraftDiffSummary(goal, block2, draft, themeIcon) {
   if (!block2 || !goal) return [];
   const patch = buildTemplatePatchFromDraft({ goal, block: block2, draft, selectedTemplate: null, themeIcon });
@@ -69193,9 +69102,8 @@ function buildTemplatePatchFromDraft(params) {
     goalId: goal.id,
     coreBlockId: block2.id,
     variantId,
-    name: draft.name || (variantId === "default" ? "默认预设" : variantId),
+    name: draft.name || (variantId === "default" ? "记录预设" : variantId),
     description: draft.description || void 0,
-    isDefault: !!draft.isDefault,
     periodPolicy: buildDraftPeriodPolicy(block2, draft),
     sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
     enabled: true,
@@ -69218,24 +69126,23 @@ function nextCopyVariantId(existing, sourceVariantId) {
   while (used.has(`${base}-${index}`)) index += 1;
   return `${base}-${index}`;
 }
-function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variants, useCases }) {
+function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variants, initialVariantId = null, useCases }) {
   const ui = useUiPort();
   const settings = useSelector(selectSettings);
   const themes = settings.inputSettings?.themes || [];
-  const themeOptions2 = [{ value: "", label: "不指定主题" }, ...themes.map((theme2) => ({ value: theme2.path, label: `${theme2.icon ? `${theme2.icon} ` : ""}${theme2.path}` }))];
+  const themeOptions2 = [{ value: "", label: "不指定主题" }, ...themes.map((theme2) => ({ value: theme2.path, label: `${theme2.icon ? `${theme2.icon} ` : ""}${cleanDisplayThemePath(theme2.path)}` }))];
   const themeByPath = new Map(themes.map((theme2) => [String(theme2.path || ""), theme2]));
-  const sortedVariants = T$1(() => [...variants].sort((left2, right2) => {
-    const bySort = (left2.sortOrder ?? 9999) - (right2.sortOrder ?? 9999);
+  const sortedVariants = T$1(() => variants.map((template, index) => ({ template, index })).sort((left2, right2) => {
+    const bySort = (left2.template.sortOrder ?? 9999) - (right2.template.sortOrder ?? 9999);
     if (bySort !== 0) return bySort;
-    if (!!left2.isDefault !== !!right2.isDefault) return left2.isDefault ? -1 : 1;
-    return String(left2.name || left2.variantId || "").localeCompare(String(right2.name || right2.variantId || ""), "zh-CN");
-  }), [variants]);
+    return left2.index - right2.index;
+  }).map(({ template }) => template), [variants]);
   const [mode, setMode] = d("inherit");
   const [selectedVariantId, setSelectedVariantId] = d("default");
   const [draft, setDraft] = d(() => makeDraftFromTemplate(null, block2, sortedVariants));
   const draftRef = A$1(draft);
   const selectedTemplate = T$1(() => sortedVariants.find((template) => (template.variantId || "default") === selectedVariantId) || null, [sortedVariants, selectedVariantId]);
-  const tableVariants = T$1(() => {
+  T$1(() => {
     const rows = [...sortedVariants];
     const draftVariantId = draft.variantId || selectedVariantId || "default";
     const draftExists = rows.some((template) => (template.variantId || "default") === draftVariantId);
@@ -69247,7 +69154,6 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
         variantId: draftVariantId,
         name: draft.name,
         description: draft.description,
-        isDefault: draft.isDefault,
         periodPolicy: buildDraftPeriodPolicy(block2, draft),
         sortOrder: draft.sortOrder,
         enabled: true,
@@ -69259,25 +69165,32 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
         requiredFields: draft.requiredFields
       });
     }
-    return rows.sort((left2, right2) => {
-      const bySort = (left2.sortOrder ?? 9999) - (right2.sortOrder ?? 9999);
+    return rows.map((template, index) => ({ template, index })).sort((left2, right2) => {
+      const bySort = (left2.template.sortOrder ?? 9999) - (right2.template.sortOrder ?? 9999);
       if (bySort !== 0) return bySort;
-      if (!!left2.isDefault !== !!right2.isDefault) return left2.isDefault ? -1 : 1;
-      return String(left2.name || left2.variantId || "").localeCompare(String(right2.name || right2.variantId || ""), "zh-CN");
-    });
+      return left2.index - right2.index;
+    }).map(({ template }) => template);
   }, [sortedVariants, draft, selectedVariantId, mode, goal?.id, block2?.id]);
   y(() => {
     if (!isOpen) return;
-    const firstEnabled = sortedVariants.find((template) => template.enabled !== false);
-    const first = firstEnabled || sortedVariants[0] || null;
-    const nextMode = sortedVariants.length === 0 ? "inherit" : firstEnabled ? "override" : "disabled";
-    const nextVariantId2 = first?.variantId || "default";
-    setMode(nextMode);
-    setSelectedVariantId(nextVariantId2);
-    const nextDraft = makeDraftFromTemplate(first, block2, sortedVariants);
+    const initial = initialVariantId ? sortedVariants.find((template) => (template.variantId || "default") === initialVariantId || template.id === initialVariantId) || null : null;
+    if (initial) {
+      const nextVariantId2 = initial.variantId || "default";
+      const nextMode = inferTemplateEditMode(initial, block2, goal);
+      setMode(nextMode);
+      setSelectedVariantId(nextVariantId2);
+      const baseDraft = makeDraftFromTemplate(initial, block2, sortedVariants);
+      const nextDraft2 = nextMode === "inherit" ? buildInheritedDraft(baseDraft, block2) : baseDraft;
+      draftRef.current = nextDraft2;
+      setDraft(nextDraft2);
+      return;
+    }
+    const nextDraft = buildInheritedDraft(makeNewDraft(goal, block2, sortedVariants, themes), block2);
+    setMode("inherit");
+    setSelectedVariantId(nextDraft.variantId);
     draftRef.current = nextDraft;
     setDraft(nextDraft);
-  }, [isOpen, goal?.id, block2?.id]);
+  }, [isOpen, goal?.id, goal?.themePath, block2?.id, initialVariantId, sortedVariants.length, themes.length]);
   y(() => {
     draftRef.current = draft;
   }, [draft]);
@@ -69302,40 +69215,36 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
     });
   };
   const currentTheme = themeByPath.get(String(draft.themePath || ""));
+  const isExistingTemplate = !!selectedTemplate;
   const diffSummary = T$1(() => buildDraftDiffSummary(goal, block2, draft, currentTheme?.icon), [goal, block2, draft, currentTheme?.icon]);
   const supportsPeriod = !!block2 && isPeriodAwareCoreBlock(block2.id);
-  const isFormDisabled = mode !== "override";
   const effectiveBlockForCopier = T$1(() => {
     if (!block2) return null;
     return { ...block2, fields: draft.fields || block2.fields, outputTemplate: draft.outputTemplate || block2.outputTemplate };
   }, [block2, draft.fields, draft.outputTemplate]);
-  const handleSelectVariant = (variantId) => {
-    const template = sortedVariants.find((item) => (item.variantId || "default") === variantId) || null;
-    setSelectedVariantId(variantId || "default");
-    const nextDraft = makeDraftFromTemplate(template, block2, sortedVariants);
-    draftRef.current = nextDraft;
-    setDraft(nextDraft);
-    setMode(template?.enabled === false ? "disabled" : "override");
+  const switchToInherit = () => {
+    setMode("inherit");
+    setDraft((previous) => {
+      const next2 = buildInheritedDraft(previous, block2);
+      draftRef.current = next2;
+      return next2;
+    });
   };
-  const handleNewVariant = () => {
-    const base = makeDraftFromTemplate(null, block2, sortedVariants);
-    const variantId = makeVariantId(`preset-${sortedVariants.length + 1}`);
-    const next2 = { ...base, variantId, name: `预设 ${sortedVariants.length + 1}`, isDefault: sortedVariants.length === 0, sortOrder: sortedVariants.length * 10 };
+  const switchToOverride = () => {
     setMode("override");
-    setSelectedVariantId(variantId);
-    draftRef.current = next2;
-    setDraft(next2);
-  };
-  const handleMoveVariant = async (direction) => {
-    if (!goal || !block2 || !selectedTemplate) return;
-    const index = sortedVariants.findIndex((template) => (template.variantId || "default") === (selectedTemplate.variantId || "default"));
-    const targetIndex = index + direction;
-    if (index < 0 || targetIndex < 0 || targetIndex >= sortedVariants.length) return;
-    const reordered = [...sortedVariants];
-    const [moved] = reordered.splice(index, 1);
-    reordered.splice(targetIndex, 0, moved);
-    await Promise.all(reordered.map((template, order2) => useCases.goal.upsertGoalTemplate({ ...template, sortOrder: order2 * 10 })));
-    setSelectedVariantId(moved.variantId || "default");
+    setDraft((previous) => {
+      const base = buildInheritedDraft(previous, block2);
+      const next2 = {
+        ...previous,
+        fields: previous.fields?.length ? previous.fields : base.fields,
+        outputTemplate: previous.outputTemplate || base.outputTemplate,
+        targetFile: previous.targetFile || base.targetFile,
+        appendUnderHeader: previous.appendUnderHeader || base.appendUnderHeader,
+        requiredFields: previous.requiredFields?.length ? previous.requiredFields : base.requiredFields
+      };
+      draftRef.current = next2;
+      return next2;
+    });
   };
   const handleCopyVariant = async () => {
     if (!goal || !block2) return;
@@ -69346,7 +69255,6 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
       ...currentDraft,
       variantId,
       name: `${currentDraft.name || selectedTemplate?.name || sourceVariantId} 副本`,
-      isDefault: false,
       sortOrder: sortedVariants.length * 10
     };
     await useCases.goal.upsertGoalTemplate({
@@ -69357,41 +69265,15 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
         selectedTemplate: null,
         themeIcon: themeByPath.get(String(nextDraft.themePath || ""))?.icon
       }),
-      isDefault: false,
       sortOrder: nextDraft.sortOrder,
       createdAt: (/* @__PURE__ */ new Date()).toISOString(),
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
     });
     setMode("override");
-    setSelectedVariantId(variantId);
+    setSelectedVariantId(nextDraft.variantId);
     draftRef.current = nextDraft;
     setDraft(nextDraft);
     ui.notice("已复制记录预设");
-  };
-  const handleDeleteCurrentVariant = async () => {
-    if (!goal || !block2) return;
-    const variantId = selectedVariantId || draft.variantId || "default";
-    await useCases.goal.deleteGoalTemplate(goal.id, block2.id, variantId);
-    const next2 = sortedVariants.find((template) => (template.variantId || "default") !== variantId) || null;
-    if (next2) handleSelectVariant(next2.variantId || "default");
-    else handleNewVariant();
-    ui.notice("已删除当前记录预设");
-  };
-  const handleSetCurrentDefault = async () => {
-    if (!goal || !block2) return;
-    const currentDraft = draftRef.current;
-    await useCases.goal.upsertGoalTemplate({
-      ...buildTemplatePatchFromDraft({
-        goal,
-        block: block2,
-        draft: currentDraft,
-        selectedTemplate,
-        themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon
-      }),
-      isDefault: true
-    });
-    updateDraft({ isDefault: true });
-    ui.notice("已设为默认预设");
   };
   const deleteCellTemplates = async () => {
     if (!goal || !block2) return;
@@ -69405,8 +69287,14 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
     const currentDraft = draftRef.current;
     try {
       if (mode === "inherit") {
-        await deleteCellTemplates();
-        ui.notice(`已设为继承 ${block2.name} 的默认记录方式`);
+        await useCases.goal.upsertGoalTemplate(buildInheritedTemplatePatchFromDraft({
+          goal,
+          block: block2,
+          draft: currentDraft,
+          selectedTemplate,
+          themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon
+        }));
+        ui.notice(`已保存继承预设：${currentDraft.name || block2.name}`);
         onClose();
         return;
       }
@@ -69418,8 +69306,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
           coreBlockId: block2.id,
           variantId: "default",
           name: "隐藏",
-          description: "该目标下隐藏此 Block",
-          isDefault: true,
+          description: "该目标下隐藏此记录类型",
           sortOrder: 0,
           enabled: false,
           createdAt: (/* @__PURE__ */ new Date()).toISOString(),
@@ -69437,7 +69324,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
         selectedTemplate,
         themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon
       }));
-      ui.notice(`已保存预设单元格：${goal.goalPath || goal.title} / ${block2.name}`);
+      ui.notice(`已保存记录预设：${goal.goalPath || goal.title} / ${block2.name}`);
       onClose();
     } catch (error) {
       diagnosticError("[GoalTemplateEditorModal] save failed", error);
@@ -69445,129 +69332,135 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
     }
   };
   if (!isOpen || !goal || !block2) return null;
+  const titleTheme = draft.themePath ? cleanDisplayThemePath(draft.themePath) : "新预设";
+  const currentPresetTitle = draft.name || titleTheme || "记录预设";
+  const metadataDisabled = mode === "disabled";
+  const inheritedMode = mode === "inherit";
+  const fieldEditDisabled = mode !== "override";
   return /* @__PURE__ */ u2(
     FloatingPanel,
     {
       id: `goal-template-editor-${goal.id}-${block2.id}`,
       title: /* @__PURE__ */ u2(Typography2, { children: [
-        "预设单元格：",
-        /* @__PURE__ */ u2("strong", { children: goal.goalPath || goal.title }),
-        " / ",
-        /* @__PURE__ */ u2("span", { style: { color: "var(--color-accent)" }, children: block2.name })
+        "字段预设：",
+        /* @__PURE__ */ u2("strong", { children: currentPresetTitle })
       ] }),
       onClose,
+      defaultPosition: { x: Math.max(24, window.innerWidth / 2 - 380), y: 72 },
       portal: false,
-      placement: "inline",
+      placement: "floating",
       closeOnOutsideClick: false,
-      width: "100%",
-      minWidth: 0,
-      maxWidth: "100%",
-      minHeight: 420,
-      maxHeight: "calc(100vh - 120px)",
-      height: "min(780px, calc(100vh - 160px))",
-      resizable: false,
+      width: 760,
+      height: 680,
+      minWidth: 560,
+      minHeight: 430,
+      maxWidth: "96vw",
+      maxHeight: "92vh",
+      resizable: true,
       bodyPadding: 0,
       bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      children: /* @__PURE__ */ u2(Box, { sx: { p: 2, flex: 1, minHeight: 0, overflowY: "auto", boxSizing: "border-box" }, children: /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
-        /* @__PURE__ */ u2(FormControl2, { component: "fieldset", children: [
-          /* @__PURE__ */ u2(FormLabel2, { component: "legend", children: "配置模式" }),
-          /* @__PURE__ */ u2(RadioGroup2, { row: true, value: mode, onChange: (_event, value) => setMode(value), children: [
-            /* @__PURE__ */ u2(FormControlLabel2, { value: "inherit", control: /* @__PURE__ */ u2(Radio2, {}), label: "继承默认记录方式" }),
-            /* @__PURE__ */ u2(FormControlLabel2, { value: "override", control: /* @__PURE__ */ u2(Radio2, {}), label: "使用本单元格预设" }),
-            /* @__PURE__ */ u2(FormControlLabel2, { value: "disabled", control: /* @__PURE__ */ u2(Radio2, {}), label: "隐藏这种记录类型" })
-          ] })
-        ] }),
-        /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1, p: 1, display: "grid", gap: 1 }, children: [
-          /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
-            /* @__PURE__ */ u2(Box, { children: [
-              /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "记录预设" }),
-              /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "同一个目标下可以为这种记录类型准备多个记录预设。周期只对计划 / 总结生效；任务、打卡、思考、事件不再默认日周期。" })
+      children: /* @__PURE__ */ u2(Box, { sx: { p: 1.5, flex: 1, minHeight: 0, overflowY: "auto", boxSizing: "border-box" }, children: /* @__PURE__ */ u2(Stack, { spacing: 1.5, children: [
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
+            /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800, lineHeight: 1.2 }, children: [
+              currentTheme?.icon ? `${currentTheme.icon} ` : "",
+              titleTheme
             ] }),
-            /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: handleNewVariant, disabled: mode !== "override", children: "新建记录预设" })
+            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
+              goal.goalPath || goal.title,
+              " / ",
+              block2.name
+            ] })
           ] }),
-          /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", border: "1px solid var(--background-modifier-border)", borderRadius: 1 }, children: /* @__PURE__ */ u2("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "13px" }, children: [
-            /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { style: { background: "var(--background-secondary)" }, children: [
-              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "150px" }, children: "名字" }),
-              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "120px" }, children: "主题" }),
-              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "70px" }, children: "周期" }),
-              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "160px" }, children: "保存文件" }),
-              /* @__PURE__ */ u2("th", { style: { textAlign: "left", padding: "8px", minWidth: "140px" }, children: "标题" }),
-              /* @__PURE__ */ u2("th", { style: { textAlign: "center", padding: "8px", width: "64px" }, children: "默认" }),
-              /* @__PURE__ */ u2("th", { style: { textAlign: "center", padding: "8px", width: "64px" }, children: "顺序" })
-            ] }) }),
-            /* @__PURE__ */ u2("tbody", { children: tableVariants.length > 0 ? tableVariants.map((template) => {
-              const variantId = template.variantId || "default";
-              const selectedRow = selectedVariantId === variantId;
-              const rowThemePath = selectedRow ? draft.themePath : readThemePathFromTemplate(template);
-              const rowGranularity = selectedRow ? draft.granularity : readPeriodGranularity(template, block2);
-              const rowTargetFile = selectedRow ? draft.targetFile : String(template.targetFile || "");
-              const rowHeader = selectedRow ? draft.appendUnderHeader : String(template.appendUnderHeader || "");
-              const rowName = selectedRow ? draft.name : presetName(template);
-              const rowSortOrder = selectedRow ? draft.sortOrder : template.sortOrder ?? 0;
-              const rowIsDefault = selectedRow ? draft.isDefault : !!template.isDefault;
-              return /* @__PURE__ */ u2(
-                "tr",
-                {
-                  onClick: () => handleSelectVariant(variantId),
-                  style: {
-                    cursor: "pointer",
-                    background: selectedRow ? "rgba(137, 99, 255, 0.12)" : "transparent",
-                    borderTop: "1px solid var(--background-modifier-border)"
-                  },
-                  children: [
-                    /* @__PURE__ */ u2("td", { style: { padding: "6px", fontWeight: selectedRow ? 700 : 500 }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: rowName, onInput: (value) => updateDraft({ name: value }), disabled: isFormDisabled, placeholder: "例如：睡眠任务" }) : rowName }),
-                    /* @__PURE__ */ u2("td", { style: { padding: "6px", color: rowThemePath ? "var(--text-normal)" : "var(--text-muted)" }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellSelect, { value: rowThemePath || "", options: themeOptions2, onChange: (value) => updateThemePath(String(value || "")), disabled: isFormDisabled }) : rowThemePath ? leafPath$1(rowThemePath) : "不指定" }),
-                    /* @__PURE__ */ u2("td", { style: { padding: "6px" }, children: selectedRow ? supportsPeriod ? /* @__PURE__ */ u2(CompactCellSelect, { value: rowGranularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: isFormDisabled }) : /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)" }, children: "不适用" }) : supportsPeriod ? granularityLabelMap[rowGranularity] || "周" : "不适用" }),
-                    /* @__PURE__ */ u2("td", { style: { padding: "6px", color: "var(--text-muted)" }, title: rowTargetFile, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: rowTargetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: isFormDisabled, placeholder: "例如：01/目标.md" }) : shortText(rowTargetFile) }),
-                    /* @__PURE__ */ u2("td", { style: { padding: "6px", color: "var(--text-muted)" }, title: rowHeader, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: rowHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: isFormDisabled, placeholder: "## {{goalPath}}" }) : shortText(rowHeader) }),
-                    /* @__PURE__ */ u2("td", { style: { padding: "6px", textAlign: "center" }, children: selectedRow ? /* @__PURE__ */ u2("input", { type: "checkbox", checked: rowIsDefault, disabled: isFormDisabled, onClick: stopEditorEvent, onChange: (event) => updateDraft({ isDefault: !!event.target.checked }) }) : rowIsDefault ? "是" : "" }),
-                    /* @__PURE__ */ u2("td", { style: { padding: "6px", textAlign: "center" }, children: selectedRow ? /* @__PURE__ */ u2(CompactCellInput, { value: String(rowSortOrder), onInput: (value) => updateDraft({ sortOrder: Number(value) || 0 }), disabled: isFormDisabled, type: "number" }) : rowSortOrder })
-                  ]
+          /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, flexWrap: "wrap" }, children: /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", disabled: !selectedTemplate || metadataDisabled, onClick: handleCopyVariant, children: "复制为新预设" }) })
+        ] }),
+        mode === "disabled" ? /* @__PURE__ */ u2(Alert2, { severity: "warning", children: [
+          "这个目标下已经隐藏「",
+          block2.name,
+          "」。保存前请先改为普通记录预设，或删除这条隐藏规则。"
+        ] }) : null,
+        /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1.25, p: 1, display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
+            /* @__PURE__ */ u2(Typography2, { sx: { fontSize: "0.9rem", fontWeight: 800 }, children: "预设模式" }),
+            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: inheritedMode ? `继承 ${block2.name} 的基础字段和输出格式` : "当前主题使用独立字段和输出格式" })
+          ] }),
+          /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, p: 0.25, border: "1px solid var(--background-modifier-border)", borderRadius: 999, background: "var(--background-secondary)" }, children: [
+            /* @__PURE__ */ u2(
+              "button",
+              {
+                type: "button",
+                disabled: metadataDisabled,
+                onClick: switchToInherit,
+                style: {
+                  border: "none",
+                  borderRadius: 999,
+                  padding: "5px 12px",
+                  cursor: metadataDisabled ? "not-allowed" : "pointer",
+                  background: inheritedMode ? "var(--interactive-accent)" : "transparent",
+                  color: inheritedMode ? "var(--text-on-accent)" : "var(--text-muted)",
+                  font: "inherit",
+                  fontWeight: 700
                 },
-                variantId
-              );
-            }) : /* @__PURE__ */ u2("tr", { children: /* @__PURE__ */ u2("td", { colSpan: 7, style: { padding: "12px", color: "var(--text-muted)" }, children: "当前单元还没有记录预设。切换到“使用本单元格预设”后可保存第一个预设。" }) }) })
-          ] }) }),
-          /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 1, flexWrap: "wrap" }, children: [
-            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", disabled: mode !== "override" || !selectedTemplate, onClick: () => handleMoveVariant(-1), children: "上移" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", disabled: mode !== "override" || !selectedTemplate, onClick: () => handleMoveVariant(1), children: "下移" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", disabled: mode !== "override", onClick: handleCopyVariant, children: "复制当前预设" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", disabled: mode !== "override", onClick: handleSetCurrentDefault, children: "设为默认" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", color: "error", variant: "text", disabled: mode !== "override" || !selectedTemplate, onClick: handleDeleteCurrentVariant, children: "删除当前预设" })
-          ] }),
-          draft.themePath ? /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
-            "主题只作为这个预设的表单默认值与统计维度，不再决定目标归属。当前主题：",
-            currentTheme?.icon ? `${currentTheme.icon} ` : "",
-            draft.themePath
-          ] }) : /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "主题不是必填项。旧主题表单迁移过来的预设会保留主题，纯目标记录可以不指定主题。" }),
-          /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: isFormDisabled, placeholder: "可选：说明这个预设适合的记录场景" }),
-          /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, flexWrap: "wrap", alignItems: "center" }, children: [
-            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "保存策略：" }),
-            diffSummary.length ? diffSummary.map((item) => /* @__PURE__ */ u2("span", { style: { fontSize: 12, padding: "2px 8px", borderRadius: 999, border: "1px solid var(--background-modifier-border)", color: "var(--text-muted)" }, children: item }, item)) : /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "完全继承 CoreBlock，只保存名称 / 默认状态 / 顺序等元信息。" })
+                children: "继承"
+              }
+            ),
+            /* @__PURE__ */ u2(
+              "button",
+              {
+                type: "button",
+                disabled: metadataDisabled,
+                onClick: switchToOverride,
+                style: {
+                  border: "none",
+                  borderRadius: 999,
+                  padding: "5px 12px",
+                  cursor: metadataDisabled ? "not-allowed" : "pointer",
+                  background: !inheritedMode && mode === "override" ? "var(--interactive-accent)" : "transparent",
+                  color: !inheritedMode && mode === "override" ? "var(--text-on-accent)" : "var(--text-muted)",
+                  font: "inherit",
+                  fontWeight: 700
+                },
+                children: "覆盖"
+              }
+            )
           ] })
         ] }),
-        /* @__PURE__ */ u2(Box, { sx: { opacity: isFormDisabled ? 0.6 : 1 }, children: /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
-          /* @__PURE__ */ u2(Divider2, {}),
+        /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1.25, p: 1.25, display: "grid", gap: 1 }, children: [
+          /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: supportsPeriod ? "1.2fr 1.2fr 0.75fr" : "1.2fr 1.2fr" }, gap: 1 }, children: [
+            /* @__PURE__ */ u2(NativeTextInput, { label: "名字", value: draft.name, onInput: (value) => updateDraft({ name: value }), disabled: metadataDisabled, placeholder: "例如：心情" }),
+            isExistingTemplate ? /* @__PURE__ */ u2(NativeTextInput, { label: "主题", value: currentTheme?.icon ? `${currentTheme.icon} ${cleanDisplayThemePath(draft.themePath)}` : cleanDisplayThemePath(draft.themePath) || "未指定主题", onInput: () => void 0, disabled: true }) : /* @__PURE__ */ u2(NativeSelectInput2, { label: "主题", value: draft.themePath || "", options: themeOptions2, onChange: (value) => {
+              const themePath = String(value || "");
+              updateThemePath(themePath);
+              const label = themeLeafLabel(themePath);
+              if (label && isGeneratedPresetName$2(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
+            }, disabled: metadataDisabled }),
+            supportsPeriod ? /* @__PURE__ */ u2(NativeSelectInput2, { label: "周期", value: draft.granularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: metadataDisabled }) : null
+          ] }),
+          /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1 }, children: [
+            /* @__PURE__ */ u2(NativeTextInput, { label: "保存文件", value: draft.targetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: fieldEditDisabled, placeholder: "例如：01/目标打卡.md" }),
+            /* @__PURE__ */ u2(NativeTextInput, { label: "标题", value: draft.appendUnderHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: fieldEditDisabled, placeholder: "## {{goalPath}}" })
+          ] }),
+          /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: metadataDisabled, placeholder: "可选" }),
+          diffSummary.length ? /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, flexWrap: "wrap", alignItems: "center" }, children: diffSummary.map((item) => /* @__PURE__ */ u2("span", { style: { fontSize: 12, padding: "2px 8px", borderRadius: 999, border: "1px solid var(--background-modifier-border)", color: "var(--text-muted)" }, children: item }, item)) }) : null
+        ] }),
+        /* @__PURE__ */ u2(Box, { sx: { opacity: fieldEditDisabled ? 0.72 : 1 }, children: /* @__PURE__ */ u2(Stack, { spacing: 1.5, children: [
           /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 0.5 }, children: "表单字段" }),
-            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mb: 1.5 }, children: "字段名称、类型、默认值、必填、选项、数字范围会随记录预设保存。若与 CoreBlock 完全一致，只保存默认值差异，避免每个预设复制完整字段。" }),
-            /* @__PURE__ */ u2(FieldsEditor, { fields: draft.fields || [], disabled: isFormDisabled, onChange: (fields) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath }) })
+            /* @__PURE__ */ u2(Typography2, { sx: { fontSize: "0.95rem", fontWeight: 700, mb: 0.75 }, children: "表单字段" }),
+            inheritedMode ? /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mb: 0.75 }, children: "当前为继承模式，下面只读展示记录类型基础字段。切到“覆盖”后可单独修改这个主题预设。" }) : null,
+            /* @__PURE__ */ u2(FieldsEditor, { fields: draft.fields || [], disabled: fieldEditDisabled, onChange: (fields) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath }) })
           ] }),
           /* @__PURE__ */ u2(Divider2, {}),
           /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
-              /* @__PURE__ */ u2(Box, { children: [
-                /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出格式" }),
-                /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "与 CoreBlock 相同则不单独保存；只在确实需要覆盖时保存差异。" })
-              ] }),
+            /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 0.75 }, children: [
+              /* @__PURE__ */ u2(Typography2, { sx: { fontSize: "0.95rem", fontWeight: 700 }, children: "输出格式" }),
               effectiveBlockForCopier ? /* @__PURE__ */ u2(TemplateVariableCopier, { block: effectiveBlockForCopier }) : null
             ] }),
-            /* @__PURE__ */ u2(NativeTextarea, { value: draft.outputTemplate, rows: 8, onInput: (value) => updateDraft({ outputTemplate: value }), disabled: isFormDisabled })
+            /* @__PURE__ */ u2(NativeTextarea, { value: draft.outputTemplate, rows: 7, onInput: (value) => updateDraft({ outputTemplate: value }), disabled: fieldEditDisabled })
           ] })
         ] }) }),
-        /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", spacing: 1, children: [
+        /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", spacing: 1, sx: { position: "sticky", bottom: -12, py: 1, background: "var(--background-primary)", borderTop: "1px solid var(--background-modifier-border)" }, children: [
           /* @__PURE__ */ u2(Button2, { onClick: onClose, children: "取消" }),
-          /* @__PURE__ */ u2(Button2, { onClick: handleSave, variant: "contained", children: "保存单元格" })
+          /* @__PURE__ */ u2(Button2, { onClick: handleSave, variant: "contained", disabled: metadataDisabled, children: "保存" })
         ] })
       ] }) })
     }
@@ -69590,7 +69483,7 @@ function safeVariantPart(value) {
   const text2 = String(value ?? "").trim() || "preset";
   return text2.replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "preset";
 }
-function leafPath(value) {
+function leafPath$2(value) {
   const text2 = String(value ?? "").trim();
   return text2.split("/").filter(Boolean).pop() || text2;
 }
@@ -69684,7 +69577,7 @@ function buildRetargetedGoalTemplate(input) {
   const themePath = readGoalTemplateThemePath(sourceTemplate, sourceGoal);
   const icon = readGoalTemplateIcon(sourceTemplate, themeIcon);
   const name = getGoalTemplateDisplayName(sourceTemplate);
-  const label = themePath ? leafPath(themePath) : name;
+  const label = themePath ? leafPath$2(themePath) : name;
   const variantId = nextVariantId(targetGoal, targetBlock, templates, label || name || targetBlock.name);
   const sameCellEnabled = templates.some((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id && template.enabled !== false);
   const goalPath = targetGoal.goalPath || targetGoal.title || targetGoal.id;
@@ -69772,7 +69665,23 @@ const mutedStyle = {
   fontSize: "11px",
   whiteSpace: "nowrap"
 };
-function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks }) {
+function leafPath$1(value) {
+  const text2 = String(value ?? "").trim();
+  return text2.split("/").filter(Boolean).pop() || text2;
+}
+function isGeneratedPresetName$1(value) {
+  const text2 = String(value ?? "").trim();
+  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "未命名预设";
+}
+function cleanDisplayText$1(value) {
+  return String(value ?? "").replace(/^[#＃]+\s*/, "").trim();
+}
+function displayPresetName(template, themePath) {
+  const raw = getGoalTemplateDisplayName(template);
+  if (!isGeneratedPresetName$1(raw)) return raw;
+  return cleanDisplayText$1(leafPath$1(themePath)) || raw;
+}
+function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks, onDeleteTemplate }) {
   y(() => {
     if (!state) return void 0;
     const onKey = (event) => {
@@ -69782,8 +69691,8 @@ function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBloc
     return () => window.removeEventListener("keydown", onKey);
   }, [state, onClose]);
   if (!state || typeof document === "undefined") return null;
-  const title = getGoalTemplateDisplayName(state.template);
   const themePath = readGoalTemplateThemePath(state.template, state.goal);
+  const title = displayPresetName(state.template, themePath);
   const missingCount = blocks.filter((block2) => block2.id !== state.block.id && !findExistingTemplateForTheme(templates, state.goal, block2, state.template)).length;
   const left2 = Math.min(state.x, Math.max(12, window.innerWidth - 340));
   const top2 = Math.min(state.y, Math.max(12, window.innerHeight - 420));
@@ -69802,15 +69711,30 @@ function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBloc
         children: [
           /* @__PURE__ */ u2("div", { style: { padding: "4px 6px 8px", borderBottom: "1px solid var(--background-modifier-border)" }, children: [
             /* @__PURE__ */ u2("div", { style: { fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: [
-              "复制主题预设：",
+              "记录预设：",
               title
             ] }),
             /* @__PURE__ */ u2("div", { style: { ...mutedStyle, marginTop: 2, whiteSpace: "normal" }, children: [
               themePath || "未设置主题",
-              " · 当前 Block：",
+              " · 当前记录类型：",
               state.block.name
             ] })
           ] }),
+          /* @__PURE__ */ u2(
+            "button",
+            {
+              type: "button",
+              style: { ...itemStyle, marginTop: 6 },
+              onClick: () => {
+                onOpenBlock(state.goal, state.block, state.template);
+                onClose();
+              },
+              children: [
+                /* @__PURE__ */ u2("span", { children: "编辑字段预设" }),
+                /* @__PURE__ */ u2("span", { style: mutedStyle, children: "当前" })
+              ]
+            }
+          ),
           /* @__PURE__ */ u2(
             "button",
             {
@@ -69822,11 +69746,27 @@ function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBloc
               },
               disabled: missingCount <= 0,
               children: [
-                /* @__PURE__ */ u2("span", { children: "补齐全部缺失 Block" }),
+                /* @__PURE__ */ u2("span", { children: "补齐全部缺失记录类型" }),
                 /* @__PURE__ */ u2("span", { style: mutedStyle, children: missingCount > 0 ? `创建 ${missingCount}` : "已补齐" })
               ]
             }
           ),
+          /* @__PURE__ */ u2("div", { style: { margin: "7px 0", height: 1, background: "var(--background-modifier-border)" } }),
+          onDeleteTemplate ? /* @__PURE__ */ u2(
+            "button",
+            {
+              type: "button",
+              style: { ...itemStyle, color: "var(--text-error, #d14)" },
+              onClick: () => {
+                onDeleteTemplate(state.goal, state.block, state.template);
+                onClose();
+              },
+              children: [
+                /* @__PURE__ */ u2("span", { children: "删除当前预设" }),
+                /* @__PURE__ */ u2("span", { style: mutedStyle, children: "仅此主题" })
+              ]
+            }
+          ) : null,
           /* @__PURE__ */ u2("div", { style: { margin: "7px 0", height: 1, background: "var(--background-modifier-border)" } }),
           blocks.map((block2) => {
             const isCurrent = block2.id === state.block.id;
@@ -69837,7 +69777,8 @@ function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBloc
                 type: "button",
                 style: { ...itemStyle, opacity: isCurrent ? 0.72 : 1 },
                 onClick: () => {
-                  if (isCurrent || existing) onOpenBlock(state.goal, block2);
+                  if (isCurrent) onOpenBlock(state.goal, block2, state.template);
+                  else if (existing) onOpenBlock(state.goal, block2, existing);
                   else onCopyToBlock(block2);
                   onClose();
                 },
@@ -69890,34 +69831,36 @@ function isGoalVisibleByExpandedState(goal, expandedPaths) {
   }
   return true;
 }
-function goalSortOrder(goal) {
-  const value = Number(goal.sortOrder);
-  return Number.isFinite(value) ? value : 999999;
-}
 function getGoalByPath(goals, path) {
   return goals.find((goal) => getGoalDisplayPath(goal) === path) || null;
 }
 function sortGoalsForMatrix(goals) {
+  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
+  const goalSortOrder = (goal) => {
+    if (!goal) return Number.MAX_SAFE_INTEGER;
+    const value = Number(goal.sortOrder);
+    if (Number.isFinite(value)) return value;
+    return originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
+  };
   return [...goals].sort((left2, right2) => {
     const leftParts = getGoalDisplayPath(left2).split("/").filter(Boolean);
     const rightParts = getGoalDisplayPath(right2).split("/").filter(Boolean);
     const max2 = Math.min(leftParts.length, rightParts.length);
     for (let index = 0; index < max2; index += 1) {
       if (leftParts[index] === rightParts[index]) continue;
-      leftParts.slice(0, index).join("/");
       const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join("/");
       const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join("/");
       const leftSiblingGoal = getGoalByPath(goals, leftSiblingPath);
       const rightSiblingGoal = getGoalByPath(goals, rightSiblingPath);
-      const leftOrder = leftSiblingGoal ? goalSortOrder(leftSiblingGoal) : 999999;
-      const rightOrder = rightSiblingGoal ? goalSortOrder(rightSiblingGoal) : 999999;
+      const leftOrder = goalSortOrder(leftSiblingGoal);
+      const rightOrder = goalSortOrder(rightSiblingGoal);
       if (leftOrder !== rightOrder) return leftOrder - rightOrder;
       return leftParts[index].localeCompare(rightParts[index], "zh-CN");
     }
     if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
     const byOrder = goalSortOrder(left2) - goalSortOrder(right2);
     if (byOrder !== 0) return byOrder;
-    return getGoalDisplayPath(left2).localeCompare(getGoalDisplayPath(right2), "zh-CN");
+    return (originalIndex.get(left2.id) ?? 0) - (originalIndex.get(right2.id) ?? 0);
   });
 }
 function buildGoalTemplateCell(goal, block2, templates) {
@@ -69952,20 +69895,30 @@ const AnyTableRow = TableRow2;
 const AnyTableCell = TableCell2;
 const AnyTableBody = TableBody2;
 const AnyTypography = Typography2;
-const AnyChip = Chip2;
 const AnyBox = Box;
 const PATH_COL_WIDTH = 250;
-const STATUS_COL_WIDTH = 74;
-const BLOCK_COL_WIDTH = 170;
-const SEGMENT_HEIGHT = 40;
-const SEGMENT_RADIUS = 8;
+const BLOCK_COL_WIDTH = 136;
+const SEGMENT_HEIGHT = 36;
 const ADD_BUTTON_HEIGHT = SEGMENT_HEIGHT;
-const PRESET_CARD_HEIGHT = 34;
+const PRESET_CARD_HEIGHT = 30;
 function normalizeSearchText(value) {
   return String(value || "").toLowerCase().trim();
 }
 function cleanDisplayText(value) {
   return String(value ?? "").replace(/^[#＃]+\s*/, "").trim();
+}
+function leafPath(value) {
+  const text2 = String(value ?? "").trim();
+  return text2.split("/").filter(Boolean).pop() || text2;
+}
+function isGeneratedPresetName(value) {
+  const text2 = String(value ?? "").trim();
+  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "未命名预设";
+}
+function getPresetCardName(template, goal) {
+  const raw = getGoalTemplateDisplayName(template);
+  if (!isGeneratedPresetName(raw)) return raw;
+  return cleanDisplayText(leafPath(readGoalTemplateThemePath(template, goal))) || raw;
 }
 function goalTemplateKey(template) {
   return template.id || `${template.goalId}:${template.coreBlockId}:${template.variantId || "default"}`;
@@ -69974,60 +69927,11 @@ function goalTemplateVariantId(template) {
   return String(template.variantId || "default").trim() || "default";
 }
 function sortPresets(items) {
-  return [...items].sort((left2, right2) => {
-    const bySort = (left2.sortOrder ?? 9999) - (right2.sortOrder ?? 9999);
+  return items.map((template, index) => ({ template, index })).sort((left2, right2) => {
+    const bySort = (left2.template.sortOrder ?? 9999) - (right2.template.sortOrder ?? 9999);
     if (bySort !== 0) return bySort;
-    return getGoalTemplateDisplayName(left2).localeCompare(getGoalTemplateDisplayName(right2), "zh-CN");
-  });
-}
-function getSurfaceForKind(kind) {
-  switch (kind) {
-    case "active":
-      return { bg: "rgba(88, 160, 103, 0.14)", color: "#2d8a43" };
-    case "archived":
-      return { bg: "rgba(120, 120, 120, 0.12)", color: "var(--text-muted)" };
-    case "warning":
-      return { bg: "rgba(230, 155, 45, 0.10)", color: "#b66a00" };
-    case "disabled":
-      return { bg: "transparent", color: "#c83b3b" };
-    case "multi":
-    case "override":
-    case "inherit":
-    default:
-      return { bg: "transparent", color: "#2d8a43" };
-  }
-}
-function getSegmentRadius(prevSame, nextSame) {
-  if (prevSame && nextSame) return "0";
-  if (prevSame && !nextSame) return `0 0 ${SEGMENT_RADIUS}px ${SEGMENT_RADIUS}px`;
-  if (!prevSame && nextSame) return `${SEGMENT_RADIUS}px ${SEGMENT_RADIUS}px 0 0`;
-  return `${SEGMENT_RADIUS}px`;
-}
-function renderStatusSegment(kind, prevSame, nextSame, content) {
-  const surface = getSurfaceForKind(kind);
-  return /* @__PURE__ */ u2(
-    AnyBox,
-    {
-      sx: {
-        height: `${SEGMENT_HEIGHT}px`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: surface.bg,
-        color: surface.color,
-        borderRadius: getSegmentRadius(prevSame, nextSame),
-        userSelect: "none",
-        mx: "2px"
-      },
-      children: content
-    }
-  );
-}
-function statusLabel(goal) {
-  if (goal.status === "active") return "激活";
-  if (goal.status === "paused") return "暂停";
-  if (goal.status === "completed") return "完成";
-  return "归档";
+    return left2.index - right2.index;
+  }).map(({ template }) => template);
 }
 function buildThemeIconMap(settings) {
   const map = /* @__PURE__ */ new Map();
@@ -70093,24 +69997,6 @@ function GoalTemplateMatrix() {
       return templates.some((template) => template.goalId === goal.id && presetSearchText(template, goal).includes(q2));
     });
   }, [goals, expandedPaths, query, templates]);
-  const matrixStats = T$1(() => {
-    let inherit = 0;
-    let override = 0;
-    let multi = 0;
-    let disabled = 0;
-    let warning = 0;
-    for (const goal of goals) {
-      for (const block2 of coreBlocks) {
-        const cell = buildGoalTemplateCell(goal, block2, templates);
-        if (cell.status === "inherit") inherit += 1;
-        if (cell.status === "override") override += 1;
-        if (cell.status === "multi") multi += 1;
-        if (cell.status === "disabled") disabled += 1;
-        if (cell.status === "warning") warning += 1;
-      }
-    }
-    return { inherit, override, multi, disabled, warning, total: goals.length * coreBlocks.length };
-  }, [goals, coreBlocks, templates]);
   const toggleTreePath = (path) => {
     setExpandedPaths((previous) => {
       const next2 = new Set(previous);
@@ -70144,17 +70030,26 @@ function GoalTemplateMatrix() {
     setCollapsedGoalIds(new Set(goals.map((goal) => goal.id)));
   };
   const selectedVariants = selected ? templates.filter((template) => template.goalId === selected.goal.id && template.coreBlockId === selected.block.id) : [];
-  const openEditor = (goal, block2) => setSelected({ goal, block: block2 });
+  const openEditor = (goal, block2, template) => setSelected({ goal, block: block2, variantId: template ? goalTemplateVariantId(template) : null });
   const openPresetContextMenu = (event, goal, block2, template) => {
     event.preventDefault();
     event.stopPropagation();
     setContextMenu({ x: event.clientX, y: event.clientY, goal, block: block2, template });
   };
+  const deletePresetTemplate = async (goal, block2, template) => {
+    const name = getPresetCardName(template, goal);
+    const ok = window.confirm(`删除记录预设「${name}」？
+
+只删除 ${cleanDisplayText(goal.goalPath || goal.title)} / ${block2.name} 下的这个主题预设，不会删除已经写入的 Markdown 记录。`);
+    if (!ok) return;
+    await useCases.goal.deleteGoalTemplate(goal.id, block2.id, goalTemplateVariantId(template));
+    ui.notice(`已删除记录预设：${name}`);
+  };
   const copyContextTemplateToBlock = async (targetBlock) => {
     if (!contextMenu) return;
     const existing = findExistingTemplateForTheme(templates, contextMenu.goal, targetBlock, contextMenu.template);
     if (existing) {
-      openEditor(contextMenu.goal, targetBlock);
+      openEditor(contextMenu.goal, targetBlock, existing);
       ui.notice(`已存在 ${targetBlock.name} 预设，已打开编辑`);
       return;
     }
@@ -70168,7 +70063,7 @@ function GoalTemplateMatrix() {
       themeIcon: themeIconByPath.get(themePath)
     });
     await useCases.goal.upsertGoalTemplate(copied);
-    ui.notice(`已创建：${targetBlock.name} / ${getGoalTemplateDisplayName(copied)}`);
+    ui.notice(`已创建：${targetBlock.name} / ${getPresetCardName(copied, contextMenu.goal)}`);
   };
   const copyContextTemplateToMissingBlocks = async () => {
     if (!contextMenu) return;
@@ -70282,6 +70177,21 @@ function GoalTemplateMatrix() {
     setDraggingPreset(null);
     setPresetDropCell(null);
   };
+  const handleDeleteGoal = async (event, goal) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const path = getGoalDisplayPath(goal);
+    const descendants = goals.filter((item) => item.id !== goal.id && getGoalDisplayPath(item).startsWith(`${path}/`));
+    const targets = [goal, ...descendants];
+    const suffix = descendants.length > 0 ? `
+同时删除 ${descendants.length} 个子目标。` : "";
+    const ok = window.confirm(`删除目标「${cleanDisplayText(path)}」？${suffix}
+
+会删除目标配置、该目标下的记录预设和旧目标关系；不会删除已经写入的 Markdown 记录。`);
+    if (!ok) return;
+    const count = typeof useCases.goal.deleteGoalCascade === "function" ? await useCases.goal.deleteGoalCascade(goal.id) : (await Promise.all(targets.map((target) => useCases.goal.deleteGoal(target.id))), targets.length);
+    ui.notice(descendants.length > 0 ? `已删除目标及子目标：${count} 个` : `已删除目标：${cleanDisplayText(path)}`);
+  };
   const renderAddPresetButton = (goal, block2) => /* @__PURE__ */ u2(
     "button",
     {
@@ -70315,7 +70225,7 @@ function GoalTemplateMatrix() {
   const renderPresetCard = (goal, block2, template) => {
     const themePath = readGoalTemplateThemePath(template, goal);
     const icon = readGoalTemplateIcon(template, themeIconByPath.get(themePath));
-    const name = getGoalTemplateDisplayName(template);
+    const name = getPresetCardName(template, goal);
     const key = goalTemplateKey(template);
     const isDragging = draggingPreset?.templateKey === key;
     return /* @__PURE__ */ u2(
@@ -70325,15 +70235,15 @@ function GoalTemplateMatrix() {
         role: "button",
         tabIndex: 0,
         title: `${name}${themePath ? ` · ${themePath}` : ""}
-左键：编辑；右键/⋯：复制到其它 Block；拖动 ☰：排序或移动到其它目标/Block`,
-        onClick: () => openEditor(goal, block2),
+左键：编辑；右键：复制/删除；拖动 ☰：排序或移动到其它目标/记录类型`,
+        onClick: () => openEditor(goal, block2, template),
         onContextMenu: (event) => openPresetContextMenu(event, goal, block2, template),
         style: {
           width: "100%",
           display: "grid",
-          gridTemplateColumns: "16px 20px minmax(0, 1fr) 18px",
+          gridTemplateColumns: "14px 18px minmax(0, 1fr)",
           alignItems: "center",
-          gap: 5,
+          gap: 4,
           border: "1px solid var(--background-modifier-border)",
           borderRadius: 8,
           background: "var(--background-primary)",
@@ -70371,39 +70281,7 @@ function GoalTemplateMatrix() {
             }
           ),
           /* @__PURE__ */ u2("span", { style: { textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }, children: icon || "◇" }),
-          /* @__PURE__ */ u2("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", fontWeight: 700, lineHeight: 1.2 }, children: name }),
-          /* @__PURE__ */ u2(
-            "button",
-            {
-              type: "button",
-              title: "打开复制菜单",
-              onMouseDown: (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setContextMenu({ x: event.clientX, y: event.clientY, goal, block: block2, template });
-              },
-              onClick: (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-              },
-              style: {
-                all: "unset",
-                width: 18,
-                height: 18,
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--text-muted)",
-                cursor: "pointer",
-                fontWeight: 700,
-                lineHeight: "18px",
-                borderRadius: 4,
-                textAlign: "center",
-                userSelect: "none"
-              },
-              children: "⋯"
-            }
-          )
+          /* @__PURE__ */ u2("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", fontWeight: 700, lineHeight: 1.2 }, children: name })
         ]
       },
       key
@@ -70416,7 +70294,7 @@ function GoalTemplateMatrix() {
     return /* @__PURE__ */ u2(
       "div",
       {
-        title: "顶部 ＋ 添加预设；卡片左键编辑；右键/⋯ 复制；拖动 ☰ 排序或移动到其它目标/Block",
+        title: "＋ 添加；左键编辑；右键复制；拖动排序或移动",
         onDragEnter: (event) => {
           if (!draggingPreset) return;
           event.preventDefault();
@@ -70433,12 +70311,12 @@ function GoalTemplateMatrix() {
           gridAutoRows: "min-content",
           alignContent: "start",
           justifyItems: "stretch",
-          gap: 5,
+          gap: 4,
           minHeight: ADD_BUTTON_HEIGHT + 8,
-          padding: 4,
+          padding: "0 4px 4px",
           borderRadius: 10,
           background: "transparent",
-          outline: isDropCell ? "2px dashed #7c3cff" : cell.status === "warning" ? "1px solid rgba(230, 155, 45, .45)" : "none",
+          outline: isDropCell ? "2px dashed #7c3cff" : "none",
           outlineOffset: isDropCell ? -2 : 0
         },
         children: [
@@ -70452,7 +70330,7 @@ function GoalTemplateMatrix() {
     const rows = [];
     if (groupIndex > 0) {
       rows.push(
-        /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: visibleBlocks.length + 2, sx: { border: 0, p: 0, height: 10, background: "transparent" } }) }, `spacer-${groupIndex}`)
+        /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: visibleBlocks.length + 1, sx: { border: 0, p: 0, height: 10, background: "transparent" } }) }, `spacer-${groupIndex}`)
       );
     }
     group.forEach((goal, index) => {
@@ -70461,11 +70339,6 @@ function GoalTemplateMatrix() {
       const hasChildren = goalHasChildren(goal, goals);
       const expanded = expandedPaths.has(path);
       const collapsed = collapsedGoalIds.has(goal.id);
-      const prevGoal = index > 0 ? group[index - 1] : null;
-      const nextGoal = index < group.length - 1 ? group[index + 1] : null;
-      const stateKind = goal.status === "active" ? "active" : "archived";
-      const prevStateKind = prevGoal ? prevGoal.status === "active" ? "active" : "archived" : null;
-      const nextStateKind = nextGoal ? nextGoal.status === "active" ? "active" : "archived" : null;
       const isRoot = depth === 0;
       const goalCellBg = isRoot ? "rgba(122, 94, 230, 0.18)" : "rgba(122, 94, 230, 0.06)";
       const dropActive = goalDrop?.goalId === goal.id;
@@ -70548,15 +70421,35 @@ function GoalTemplateMatrix() {
                       }
                     ) : /* @__PURE__ */ u2("span", { style: { display: "inline-block", width: 18, flexShrink: 0 } }),
                     /* @__PURE__ */ u2("span", { style: { color: collapsed ? "var(--text-muted)" : "var(--text-faint)", width: 16, textAlign: "center", flexShrink: 0 }, children: collapsed ? "▸" : "▾" }),
-                    /* @__PURE__ */ u2(AnyBox, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(AnyTypography, { sx: { fontWeight: isRoot ? 700 : 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: cleanDisplayText(getGoalDisplayName(goal)) }) })
+                    /* @__PURE__ */ u2(AnyBox, { sx: { minWidth: 0, flex: 1 }, children: /* @__PURE__ */ u2(AnyTypography, { sx: { fontWeight: isRoot ? 700 : 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: cleanDisplayText(getGoalDisplayName(goal)) }) }),
+                    /* @__PURE__ */ u2(
+                      "button",
+                      {
+                        type: "button",
+                        title: "删除目标",
+                        onClick: (event) => handleDeleteGoal(event, goal),
+                        onMouseDown: (event) => event.stopPropagation(),
+                        style: {
+                          border: "none",
+                          background: "transparent",
+                          color: "var(--text-muted)",
+                          cursor: "pointer",
+                          width: 22,
+                          height: 22,
+                          borderRadius: 6,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          lineHeight: 1,
+                          flexShrink: 0,
+                          padding: 0,
+                          margin: 0
+                        },
+                        children: "×"
+                      }
+                    )
                   ] })
                 }
-              ) }),
-              /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { width: STATUS_COL_WIDTH, px: 0.25, py: 0.35, verticalAlign: "top" }, children: renderStatusSegment(
-                stateKind,
-                prevStateKind === stateKind,
-                nextStateKind === stateKind,
-                /* @__PURE__ */ u2(AnyChip, { label: statusLabel(goal), size: "small", sx: { fontWeight: 700, backgroundColor: "transparent", color: "inherit", height: "24px", "& .MuiChip-label": { px: 0 } } })
               ) }),
               visibleBlocks.map((block2) => /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH, px: 0.35, py: 0.35, verticalAlign: "top" }, children: renderBlockCell(goal, block2, collapsed) }, block2.id))
             ]
@@ -70570,7 +70463,7 @@ function GoalTemplateMatrix() {
   const activeGroups = splitByRoot(visibleGoals);
   return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1.25 }, children: [
     /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, alignItems: "center", flexWrap: "wrap" }, children: [
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "搜索目标 / 主题 / 预设", value: query, onChange: (event) => setQuery(event.target.value), sx: { minWidth: 260 } }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", placeholder: "搜索", value: query, onChange: (event) => setQuery(event.target.value), sx: { minWidth: 220 } }),
       /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: expandAll, children: "展开" }),
       /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: collapseAll, children: "折叠" })
     ] }) }),
@@ -70585,19 +70478,7 @@ function GoalTemplateMatrix() {
       },
       block2.id
     )) }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.5 }, children: [
-      /* @__PURE__ */ u2(Chip2, { size: "small", label: `目标 ${goals.length}` }),
-      /* @__PURE__ */ u2(Chip2, { size: "small", label: `Block ${coreBlocks.length}` }),
-      /* @__PURE__ */ u2(Chip2, { size: "small", color: "primary", label: `有预设 ${matrixStats.override + matrixStats.multi}` }),
-      /* @__PURE__ */ u2(Chip2, { size: "small", label: `多预设 ${matrixStats.multi}` }),
-      /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `继承默认 ${matrixStats.inherit}` })
-    ] }),
-    matrixStats.warning > 0 && /* @__PURE__ */ u2(Alert2, { severity: "warning", children: [
-      "有 ",
-      matrixStats.warning,
-      " 个单元格存在预设异常，例如多个默认预设。点击异常单元格处理。"
-    ] }),
-    goals.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有目标。请先到“目标”新建目标，然后在表格单元格里配置记录预设。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有启用的 Block。请先在快速输入设置里启用固定 Block。" }) : /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", width: "100%" }, children: /* @__PURE__ */ u2(
+    goals.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有目标。请先到“目标”新建目标，然后在表格单元格里配置记录预设。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有启用的记录类型。请先在“数据管理 / 记录类型”里启用。" }) : /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", width: "100%" }, children: /* @__PURE__ */ u2(
       AnyTable,
       {
         size: "small",
@@ -70613,10 +70494,9 @@ function GoalTemplateMatrix() {
         children: [
           /* @__PURE__ */ u2(AnyTableHead, { children: /* @__PURE__ */ u2(AnyTableRow, { children: [
             /* @__PURE__ */ u2(AnyTableCell, { sx: { fontWeight: "bold", width: PATH_COL_WIDTH, position: "sticky", left: 0, zIndex: 3, backgroundColor: "rgba(124, 60, 255, .18)" }, children: "目标" }),
-            /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { fontWeight: "bold", width: STATUS_COL_WIDTH }, children: "状态" }),
             visibleBlocks.map((block2) => /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { fontWeight: "bold", width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH }, children: block2.name }, block2.id))
           ] }) }),
-          /* @__PURE__ */ u2(AnyTableBody, { children: activeGroups.length > 0 ? activeGroups.flatMap(renderGroupRows) : /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: visibleBlocks.length + 2, sx: { py: 2 }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无匹配目标" }) }) }) })
+          /* @__PURE__ */ u2(AnyTableBody, { children: activeGroups.length > 0 ? activeGroups.flatMap(renderGroupRows) : /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: visibleBlocks.length + 1, sx: { py: 2 }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无匹配目标" }) }) }) })
         ]
       }
     ) }),
@@ -70629,7 +70509,8 @@ function GoalTemplateMatrix() {
         onClose: () => setContextMenu(null),
         onOpenBlock: openEditor,
         onCopyToBlock: copyContextTemplateToBlock,
-        onCopyMissingBlocks: copyContextTemplateToMissingBlocks
+        onCopyMissingBlocks: copyContextTemplateToMissingBlocks,
+        onDeleteTemplate: deletePresetTemplate
       }
     ),
     /* @__PURE__ */ u2(
@@ -70640,6 +70521,7 @@ function GoalTemplateMatrix() {
         goal: selected?.goal || null,
         block: selected?.block || null,
         variants: selectedVariants,
+        initialVariantId: selected?.variantId || null,
         useCases
       }
     )
@@ -70661,73 +70543,187 @@ function splitByRoot(goals) {
   if (current2.length > 0) groups.push(current2);
   return groups;
 }
-function GoalTemplateSection() {
-  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1.25 }, children: [
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "目标 × Block 预设表" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "行是目标，列是 Block；单元格里显示这个组合的预设。点击单元格即可管理多个预设。" })
-    ] }),
-    /* @__PURE__ */ u2(GoalTemplateMatrix, {})
-  ] });
-}
-const sections = [
-  { key: "goals", title: "目标", description: "新建和整理目标。" },
-  { key: "presets", title: "预设表", description: "用表格管理目标 × Block，每个单元格可有多个预设。" },
-  { key: "metrics", title: "指标", description: "给目标设置完成标准。" }
+const metricDirectionOptions = [
+  { value: "increase", label: "增加到目标值" },
+  { value: "decrease", label: "降低到目标值" },
+  { value: "maintain", label: "维持目标值" },
+  { value: "boolean", label: "是否达成" }
 ];
+function SectionCard({ children }) {
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      sx: {
+        border: "1px solid var(--background-modifier-border)",
+        borderRadius: 2,
+        p: 1.5,
+        display: "grid",
+        gap: 1.25,
+        background: "var(--background-primary)"
+      },
+      children
+    }
+  );
+}
+function pathLeaf(path) {
+  return String(path || "").split("/").filter(Boolean).pop() || path;
+}
+function metricPresetKey(label) {
+  const text2 = label.toLowerCase();
+  if (/完成|done|complete/.test(text2)) return "task.done";
+  if (/任务|task/.test(text2)) return "task.total";
+  if (/打卡|habit|check/.test(text2)) return "habit.count";
+  if (/事件|证据|event|evidence/.test(text2)) return "evidence.count";
+  if (/阻碍|风险|blocker|risk/.test(text2)) return "blocker.count";
+  if (/里程碑|milestone/.test(text2)) return "milestone.count";
+  if (/总结|复盘|review/.test(text2)) return "review.count";
+  if (/计划|plan/.test(text2)) return "plan.count";
+  return label.trim() || "goal.metric";
+}
 function GoalManager() {
   const settings = useSelector(selectSettings);
-  const [section, setSection] = d("goals");
+  const useCases = useUseCases();
   const goals = settings.goalSettings?.goals || [];
-  const activeGoals = goals.filter((goal) => goal.status !== "archived");
-  const goalTemplates = getGoalTemplates(settings.goalSettings);
-  const currentSection = sections.find((item) => item.key === section) || sections[0];
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", display: "grid", gap: 2 }, children: [
-    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1 }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1.5, alignItems: "flex-start", flexWrap: "wrap" }, children: [
-      /* @__PURE__ */ u2(Box, { sx: { minWidth: 260 }, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 800 }, children: "目标中心" }),
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标只管理“我要追踪什么”；预设在“目标 × Block 预设表”的单元格里直接管理，不再另开独立预设页。" })
-      ] }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }, children: [
-        /* @__PURE__ */ u2(Chip2, { label: `目标 ${activeGoals.length}`, size: "small", color: activeGoals.length > 0 ? "primary" : "default" }),
-        /* @__PURE__ */ u2(Chip2, { label: `预设 ${goalTemplates.length}`, size: "small" })
-      ] })
-    ] }) }),
-    /* @__PURE__ */ u2(
-      Box,
-      {
-        sx: {
-          display: "inline-flex",
-          gap: 0.5,
-          p: 0.5,
-          border: "1px solid var(--background-modifier-border)",
-          borderRadius: 999,
-          background: "var(--background-secondary)",
-          width: "fit-content",
-          maxWidth: "100%",
-          flexWrap: "wrap"
-        },
-        children: sections.map((item) => /* @__PURE__ */ u2(
-          Button2,
-          {
-            size: "small",
-            variant: section === item.key ? "contained" : "text",
-            onClick: () => setSection(item.key),
-            sx: { borderRadius: 999 },
-            children: item.title
-          },
-          item.key
-        ))
+  const [goalPath, setGoalPath] = d("");
+  const [goalThemePath, setGoalThemePath] = d("");
+  const [message, setMessage] = d("");
+  const [cleaning, setCleaning] = d(false);
+  const handleAddGoal = async () => {
+    const path = goalPath.trim();
+    if (!path) return;
+    const alreadyExists = goals.some((goal2) => String(goal2.goalPath || goal2.title || "").trim() === path);
+    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: goalThemePath.trim() || null });
+    setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加目标：${goal.goalPath || goal.title}` : "目标未添加");
+    if (goal && !alreadyExists) {
+      setGoalPath("");
+      setGoalThemePath("");
+    }
+  };
+  const handleCleanup = async () => {
+    if (cleaning) return;
+    setCleaning(true);
+    try {
+      const goalUseCase = useCases.goal;
+      if (typeof goalUseCase.cleanupGoalSettingsStorage !== "function") {
+        setMessage("当前版本还没有整理旧数据能力");
+        return;
       }
-    ),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: currentSection.title }),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: currentSection.description })
+      const result = await goalUseCase.cleanupGoalSettingsStorage();
+      const parts = [
+        `预设 ${result.beforeTemplateCount} → ${result.afterTemplateCount}`,
+        result.removedDuplicateTemplates ? `去重 ${result.removedDuplicateTemplates}` : "",
+        result.removedDanglingCycles ? `清理周期 ${result.removedDanglingCycles}` : "",
+        result.removedDanglingRelations ? `清理关系 ${result.removedDanglingRelations}` : ""
+      ].filter(Boolean);
+      setMessage(result.changed ? `已整理：${parts.join("，")}` : "预设数据已经是干净状态");
+    } finally {
+      setCleaning(false);
+    }
+  };
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1240, mx: "auto", width: "100%", display: "grid", gap: 1.25 }, children: [
+    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(260px, 1fr) minmax(180px, 0.55fr) auto" }, gap: 1, alignItems: "center" }, children: [
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "添加目标", value: goalPath, onChange: (event) => setGoalPath(event.target.value), placeholder: "例如：了解自我/情绪" }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标主题", value: goalThemePath, onChange: (event) => setGoalThemePath(event.target.value), placeholder: "可选" }),
+      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "添加" })
     ] }),
-    section === "goals" && /* @__PURE__ */ u2(GoalEntitySection, {}),
-    section === "presets" && /* @__PURE__ */ u2(GoalTemplateSection, {}),
-    section === "metrics" && /* @__PURE__ */ u2(GoalMetricSection, {}),
-    /* @__PURE__ */ u2(Divider2, {})
+    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1, border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1 }, children: [
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ u2(Box, { children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "记录预设" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "点击某个目标主题预设卡片后，字段编辑页会以悬浮窗打开。" })
+        ] }),
+        /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: handleCleanup, disabled: cleaning, children: cleaning ? "整理中…" : "整理旧数据" })
+      ] }),
+      /* @__PURE__ */ u2(GoalTemplateMatrix, {})
+    ] })
+  ] });
+}
+function GoalMetricSection() {
+  const settings = useSelector(selectSettings);
+  const useCases = useUseCases();
+  const goals = settings.goalSettings?.goals || [];
+  const activeGoalOptions = goals.filter((goal) => goal.status !== "archived").map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title || goal.id }));
+  const [message, setMessage] = d("");
+  const [metricGoalId, setMetricGoalId] = d(activeGoalOptions[0]?.value || "");
+  const selectedMetricGoal = goals.find((goal) => goal.id === metricGoalId) || null;
+  const selectedMetrics = selectedMetricGoal?.metrics || [];
+  const [metricKey, setMetricKey] = d("task.done");
+  const [metricLabel, setMetricLabel] = d("完成任务");
+  const [metricDirection, setMetricDirection] = d("increase");
+  const [metricTargetValue, setMetricTargetValue] = d("10");
+  const [metricUnit, setMetricUnit] = d("个");
+  const syncMetricDraft = (goalId) => {
+    const goal = goals.find((item) => item.id === goalId) || null;
+    const first = goal?.metrics?.[0];
+    setMetricGoalId(goalId);
+    if (first) {
+      setMetricKey(first.key);
+      setMetricLabel(first.label);
+      setMetricDirection(first.direction);
+      setMetricTargetValue(first.targetValue === void 0 ? "" : String(first.targetValue));
+      setMetricUnit(first.unit || "");
+    }
+  };
+  const loadMetricDraft = (metric) => {
+    setMetricKey(metric.key);
+    setMetricLabel(metric.label);
+    setMetricDirection(metric.direction);
+    setMetricTargetValue(metric.targetValue === void 0 ? "" : String(metric.targetValue));
+    setMetricUnit(metric.unit || "");
+  };
+  const handleSaveMetric = async () => {
+    if (!metricGoalId) return;
+    const key = metricKey.trim() || metricPresetKey(metricLabel);
+    const label = metricLabel.trim() || key;
+    const metric = {
+      key,
+      label,
+      direction: metricDirection,
+      targetValue: metricTargetValue.trim() === "" ? void 0 : Number(metricTargetValue),
+      unit: metricUnit.trim() || void 0
+    };
+    const nextMetrics = [...selectedMetrics.filter((item) => item.key !== key), metric];
+    await useCases.goal.updateGoalMetrics(metricGoalId, nextMetrics);
+    setMessage(`目标指标已保存：${label}`);
+  };
+  const handleRemoveMetric = async (key) => {
+    if (!metricGoalId) return;
+    await useCases.goal.updateGoalMetrics(metricGoalId, selectedMetrics.filter((metric) => metric.key !== key));
+    setMessage("目标指标已删除。");
+  };
+  return /* @__PURE__ */ u2(SectionCard, { children: [
+    /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "目标指标" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "指标只属于目标；视图根据记录里的 记录类型、状态和日期运行时统计。" }),
+    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(180px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)", gap: 1, alignItems: "center" }, children: [
+      /* @__PURE__ */ u2(SimpleSelect, { value: metricGoalId, options: activeGoalOptions, onChange: (value) => syncMetricDraft(value), placeholder: "选择目标", fullWidth: true }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标名称", value: metricLabel, onChange: (event) => {
+        setMetricLabel(event.target.value);
+        if (!metricKey.trim()) setMetricKey(metricPresetKey(event.target.value));
+      } }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标 Key", value: metricKey, onChange: (event) => setMetricKey(event.target.value), placeholder: "task.done" })
+    ] }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(160px, 1fr) 120px 90px auto", gap: 1, alignItems: "center" }, children: [
+      /* @__PURE__ */ u2(SimpleSelect, { value: metricDirection, options: metricDirectionOptions, onChange: (value) => setMetricDirection(value), fullWidth: true }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标值", type: "number", value: metricTargetValue, onChange: (event) => setMetricTargetValue(event.target.value) }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", label: "单位", value: metricUnit, onChange: (event) => setMetricUnit(event.target.value) }),
+      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleSaveMetric, disabled: !metricGoalId || !metricLabel.trim(), children: "保存/更新指标" })
+    ] }),
+    selectedMetricGoal && /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
+      "当前目标：",
+      selectedMetricGoal.goalPath || selectedMetricGoal.title
+    ] }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: selectedMetrics.length > 0 ? selectedMetrics.map((metric) => /* @__PURE__ */ u2(
+      Chip2,
+      {
+        size: "small",
+        label: `${metric.label} · ${metric.targetValue ?? "无目标值"}${metric.unit || ""}`,
+        onClick: () => loadMetricDraft(metric),
+        onDelete: () => handleRemoveMetric(metric.key)
+      },
+      metric.key
+    )) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "当前目标还没有指标。" }) })
   ] });
 }
 const statusOptions = [
@@ -70813,12 +70809,12 @@ function ThemeMetadataManager() {
   return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", display: "grid", gap: 2 }, children: [
     /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "主题管理" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "主题已从快速输入模板主轴降级为数据元信息：只管理路径、图标和启停状态。目标通过 themePath 引用主题，模板仍由“目标 × Block”决定。" })
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "主题已从快速输入模板主轴降级为数据元信息：只管理路径、图标和启停状态。目标通过 themePath 引用主题，模板仍由“目标 × 记录类型”决定。" })
     ] }),
     /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 1 }, children: [
       /* @__PURE__ */ u2(Chip2, { size: "small", label: `主题 ${themes.length}` }),
       /* @__PURE__ */ u2(Chip2, { size: "small", label: `旧主题模板 ${legacyOverrides.length}`, color: legacyOverrides.length ? "warning" : "default" }),
-      /* @__PURE__ */ u2(Chip2, { size: "small", label: "模板主链：目标 × Block", color: "primary" })
+      /* @__PURE__ */ u2(Chip2, { size: "small", label: "模板主链：目标 × 记录类型", color: "primary" })
     ] }),
     message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
     /* @__PURE__ */ u2(ThemeCard, { children: [
@@ -70843,7 +70839,7 @@ function ThemeMetadataManager() {
       /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "1fr minmax(180px, 280px)", gap: 1, alignItems: "center" }, children: [
         /* @__PURE__ */ u2(Box, { children: [
           /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "主题列表" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "在这里维护图标和路径。需要修改目标专属写法时请到“数据管理 → 目标中心 → 记录预设”。" })
+          /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "在这里维护图标和路径。需要修改目标专属写法时请到“数据管理 → 目标 → 记录预设”。" })
         ] }),
         /* @__PURE__ */ u2(TextField2, { size: "small", label: "搜索主题", value: query, onChange: (event) => setQuery(event.target.value) })
       ] }),
@@ -70881,19 +70877,34 @@ function ThemeMetadataManager() {
     /* @__PURE__ */ u2(Divider2, {})
   ] });
 }
+const sections = [
+  { key: "recordTypes", title: "记录类型" },
+  { key: "goals", title: "目标" },
+  { key: "themes", title: "主题" },
+  { key: "metrics", title: "指标" }
+];
 function DataManagementSettings() {
   const [section, setSection] = d("goals");
   return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 2 }, children: [
     /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", width: "100%", display: "grid", gap: 1 }, children: [
       /* @__PURE__ */ u2(Typography2, { variant: "h5", sx: { fontWeight: 800 }, children: "数据管理" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "数据管理只维护目标和主题元数据。快速输入只负责写记录；默认记录方式来自 Block；目标只在需要多种写法时添加记录预设。主题只提供图标、颜色和领域路径。" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 1, flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ u2(Button2, { variant: section === "goals" ? "contained" : "outlined", size: "small", onClick: () => setSection("goals"), children: "目标中心" }),
-        /* @__PURE__ */ u2(Button2, { variant: section === "themes" ? "contained" : "outlined", size: "small", onClick: () => setSection("themes"), children: "主题管理" })
-      ] })
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, flexWrap: "wrap" }, children: sections.map((item) => /* @__PURE__ */ u2(
+        Button2,
+        {
+          variant: section === item.key ? "contained" : "outlined",
+          size: "small",
+          onClick: () => setSection(item.key),
+          sx: { borderRadius: 999 },
+          children: item.title
+        },
+        item.key
+      )) })
     ] }),
     /* @__PURE__ */ u2(Divider2, { sx: { mx: "auto", maxWidth: 1040, width: "100%" } }),
-    section === "goals" ? /* @__PURE__ */ u2(GoalManager, {}) : /* @__PURE__ */ u2(ThemeMetadataManager, {})
+    section === "recordTypes" && /* @__PURE__ */ u2(BlockManager, {}),
+    section === "goals" && /* @__PURE__ */ u2(GoalManager, {}),
+    section === "themes" && /* @__PURE__ */ u2(ThemeMetadataManager, {}),
+    section === "metrics" && /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", width: "100%" }, children: /* @__PURE__ */ u2(GoalMetricSection, {}) })
   ] });
 }
 function a11yProps(index) {
@@ -70903,23 +70914,29 @@ function TabPanel(props) {
   const { children, value, index, ...other } = props;
   return /* @__PURE__ */ u2("div", { role: "tabpanel", hidden: value !== index, id: `settings-tabpanel-${index}`, ...other, children: value === index && /* @__PURE__ */ u2(Box, { sx: { p: 2, pt: 3 }, children }) });
 }
+const SETTINGS_TABS_NO_QUICK_INPUT_KEY = `${LOCAL_STORAGE_KEYS.SETTINGS_TABS}:data-v2`;
+const SETTINGS_TAB_COUNT = 4;
+function clampTabIndex(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.min(Math.max(0, Math.floor(numeric)), SETTINGS_TAB_COUNT - 1);
+}
 function SettingsRoot({ app, variant = "workspace" }) {
-  const [tabIndex, setTabIndex] = useLocalStorage(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
+  const [storedTabIndex, setStoredTabIndex] = useLocalStorage(SETTINGS_TABS_NO_QUICK_INPUT_KEY, 0);
+  const tabIndex = clampTabIndex(storedTabIndex);
   return /* @__PURE__ */ u2(ThemeProvider, { theme, children: [
     /* @__PURE__ */ u2(CssBaseline, {}),
     /* @__PURE__ */ u2(Box, { sx: { width: "100%", maxWidth: variant === "workspace" ? 1320 : "none", mx: variant === "workspace" ? "auto" : 0 }, class: `think-setting-root think-setting-root--${variant}`, children: [
-      /* @__PURE__ */ u2(Box, { sx: { borderBottom: 1, borderColor: "divider", position: "sticky", top: 0, zIndex: 2, backgroundColor: "var(--background-primary)" }, children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", variant: "scrollable", scrollButtons: "auto", children: [
-        /* @__PURE__ */ u2(Tab2, { label: "快速输入", ...a11yProps(0) }),
-        /* @__PURE__ */ u2(Tab2, { label: "数据管理", ...a11yProps(1) }),
-        /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(2) }),
-        /* @__PURE__ */ u2(Tab2, { label: "通用", ...a11yProps(3) }),
-        /* @__PURE__ */ u2(Tab2, { label: "AI", ...a11yProps(4) })
+      /* @__PURE__ */ u2(Box, { sx: { borderBottom: 1, borderColor: "divider", position: "sticky", top: 0, zIndex: 2, backgroundColor: "var(--background-primary)" }, children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setStoredTabIndex(clampTabIndex(newValue)), "aria-label": "settings tabs", variant: "scrollable", scrollButtons: "auto", children: [
+        /* @__PURE__ */ u2(Tab2, { label: "数据管理", ...a11yProps(0) }),
+        /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(1) }),
+        /* @__PURE__ */ u2(Tab2, { label: "通用", ...a11yProps(2) }),
+        /* @__PURE__ */ u2(Tab2, { label: "AI", ...a11yProps(3) })
       ] }) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(InputSettings, {}) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(DataManagementSettings, {}) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(GeneralSettings, {}) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 4, children: /* @__PURE__ */ u2(AiSettings, {}) })
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(DataManagementSettings, {}) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, {}) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(AiSettings, {}) })
     ] })
   ] });
 }

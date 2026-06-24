@@ -19,9 +19,10 @@ interface GoalTemplateContextMenuProps {
   blocks: CoreBlockDefinition[];
   templates: GoalTemplate[];
   onClose: () => void;
-  onOpenBlock: (goal: GoalDefinition, block: CoreBlockDefinition) => void;
+  onOpenBlock: (goal: GoalDefinition, block: CoreBlockDefinition, template?: GoalTemplate | null) => void;
   onCopyToBlock: (targetBlock: CoreBlockDefinition) => void;
   onCopyMissingBlocks: () => void;
+  onDeleteTemplate?: (goal: GoalDefinition, block: CoreBlockDefinition, template: GoalTemplate) => void;
 }
 
 const backdropStyle: JSX.CSSProperties = {
@@ -66,7 +67,28 @@ const mutedStyle: JSX.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-export function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks }: GoalTemplateContextMenuProps) {
+
+function leafPath(value: unknown): string {
+  const text = String(value ?? '').trim();
+  return text.split('/').filter(Boolean).pop() || text;
+}
+
+function isGeneratedPresetName(value: unknown): boolean {
+  const text = String(value ?? '').trim();
+  return !text || /^预设\s*\d+$/i.test(text) || /^preset[-_\s]*\d+$/i.test(text) || text === '记录预设' || text === '未命名预设';
+}
+
+function cleanDisplayText(value: unknown): string {
+  return String(value ?? '').replace(/^[#＃]+\s*/, '').trim();
+}
+
+function displayPresetName(template: GoalTemplate, themePath: string): string {
+  const raw = getGoalTemplateDisplayName(template);
+  if (!isGeneratedPresetName(raw)) return raw;
+  return cleanDisplayText(leafPath(themePath)) || raw;
+}
+
+export function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks, onDeleteTemplate }: GoalTemplateContextMenuProps) {
   useEffect(() => {
     if (!state) return undefined;
     const onKey = (event: KeyboardEvent) => {
@@ -77,8 +99,8 @@ export function GoalTemplateContextMenu({ state, blocks, templates, onClose, onO
   }, [state, onClose]);
 
   if (!state || typeof document === 'undefined') return null;
-  const title = getGoalTemplateDisplayName(state.template);
   const themePath = readGoalTemplateThemePath(state.template, state.goal);
+  const title = displayPresetName(state.template, themePath);
   const missingCount = blocks.filter((block) => block.id !== state.block.id && !findExistingTemplateForTheme(templates, state.goal, block, state.template)).length;
   const left = Math.min(state.x, Math.max(12, window.innerWidth - 340));
   const top = Math.min(state.y, Math.max(12, window.innerHeight - 420));
@@ -93,9 +115,21 @@ export function GoalTemplateContextMenu({ state, blocks, templates, onClose, onO
         onContextMenu={(event: any) => event.preventDefault()}
       >
         <div style={{ padding: '4px 6px 8px', borderBottom: '1px solid var(--background-modifier-border)' }}>
-          <div style={{ fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>复制主题预设：{title}</div>
-          <div style={{ ...mutedStyle, marginTop: 2, whiteSpace: 'normal' }}>{themePath || '未设置主题'} · 当前 Block：{state.block.name}</div>
+          <div style={{ fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>记录预设：{title}</div>
+          <div style={{ ...mutedStyle, marginTop: 2, whiteSpace: 'normal' }}>{themePath || '未设置主题'} · 当前记录类型：{state.block.name}</div>
         </div>
+
+        <button
+          type="button"
+          style={{ ...itemStyle, marginTop: 6 }}
+          onClick={() => {
+            onOpenBlock(state.goal, state.block, state.template);
+            onClose();
+          }}
+        >
+          <span>编辑字段预设</span>
+          <span style={mutedStyle}>当前</span>
+        </button>
 
         <button
           type="button"
@@ -106,9 +140,25 @@ export function GoalTemplateContextMenu({ state, blocks, templates, onClose, onO
           }}
           disabled={missingCount <= 0}
         >
-          <span>补齐全部缺失 Block</span>
+          <span>补齐全部缺失记录类型</span>
           <span style={mutedStyle}>{missingCount > 0 ? `创建 ${missingCount}` : '已补齐'}</span>
         </button>
+
+        <div style={{ margin: '7px 0', height: 1, background: 'var(--background-modifier-border)' }} />
+
+        {onDeleteTemplate ? (
+          <button
+            type="button"
+            style={{ ...itemStyle, color: 'var(--text-error, #d14)' }}
+            onClick={() => {
+              onDeleteTemplate(state.goal, state.block, state.template);
+              onClose();
+            }}
+          >
+            <span>删除当前预设</span>
+            <span style={mutedStyle}>仅此主题</span>
+          </button>
+        ) : null}
 
         <div style={{ margin: '7px 0', height: 1, background: 'var(--background-modifier-border)' }} />
 
@@ -121,7 +171,8 @@ export function GoalTemplateContextMenu({ state, blocks, templates, onClose, onO
               type="button"
               style={{ ...itemStyle, opacity: isCurrent ? 0.72 : 1 }}
               onClick={() => {
-                if (isCurrent || existing) onOpenBlock(state.goal, block);
+                if (isCurrent) onOpenBlock(state.goal, block, state.template);
+                else if (existing) onOpenBlock(state.goal, block, existing);
                 else onCopyToBlock(block);
                 onClose();
               }}

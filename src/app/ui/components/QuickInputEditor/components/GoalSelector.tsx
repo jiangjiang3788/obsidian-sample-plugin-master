@@ -21,7 +21,7 @@ export interface GoalSelectorProps {
 }
 
 function normalizeGoalPath(value: string): string {
-  return String(value || '').split('/').map((part) => part.trim()).filter(Boolean).join('/');
+  return String(value || '').split('/').map((part) => part.trim().replace(/^[#＃]+\s*/, '').trim()).filter(Boolean).join('/');
 }
 
 export function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense = false }: GoalSelectorProps) {

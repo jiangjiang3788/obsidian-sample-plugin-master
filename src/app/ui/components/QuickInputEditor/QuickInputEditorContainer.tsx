@@ -2,9 +2,9 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 
-import { selectSettings, useDataStore, useSelector, useUseCases } from '@/app/public';
+import { selectSettings, useSelector, useUseCases } from '@/app/public';
 import type { GoalDefinition, RecordInputMeta, ThemeDefinition } from '@core/public';
-import { GoalTemplateResolver, dayjs, getEffectiveCoreBlocks, getGoalTemplateVariants, resolveDerivedPeriod, resolveTemplatePeriodPolicy, getLeafPath, getTemplateFieldSemantic, readField, renderTemplate, splitGoalPath } from '@core/public';
+import { GoalTemplateResolver, dayjs, getEffectiveCoreBlocks, getGoalTemplateVariants, getGoalTemplates, normalizeCoreBlockSettings, resolveDerivedPeriod, resolveTemplatePeriodPolicy, getLeafPath, getTemplateFieldSemantic, renderTemplate, splitGoalPath } from '@core/public';
 import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/public';
 
 import { QuickInputEditorView } from './QuickInputEditorView';
@@ -108,6 +108,63 @@ const buildInitialFieldSources = (initialData?: Record<string, any>): QuickInput
   return next;
 };
 
+
+function cleanDisplaySegment(value: unknown): string {
+  return String(value ?? '').replace(/^[#＃]+\s*/, '').trim();
+}
+
+function cleanDisplayPath(value?: string | null): string | null {
+  const normalized = splitGoalPath(value).goalPath;
+  if (!normalized) return null;
+  const parts = normalized.split('/').map(cleanDisplaySegment).filter(Boolean);
+  return parts.length ? parts.join('/') : null;
+}
+
+function getOrderedGoalIndex(goal: GoalDefinition | null, originalIndex: Map<string, number>): number {
+  if (!goal) return Number.MAX_SAFE_INTEGER;
+  const order = Number((goal as any).sortOrder);
+  return Number.isFinite(order) ? order : originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
+}
+
+function getGoalByDisplayPath(goals: GoalDefinition[], path: string): GoalDefinition | null {
+  return goals.find((goal) => getGoalPath(goal) === path) || null;
+}
+
+function sortGoalsLikePresetMatrix(goals: GoalDefinition[]): GoalDefinition[] {
+  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
+  return [...goals].sort((left, right) => {
+    const leftParts = (getGoalPath(left) || '').split('/').filter(Boolean);
+    const rightParts = (getGoalPath(right) || '').split('/').filter(Boolean);
+    const max = Math.min(leftParts.length, rightParts.length);
+    for (let index = 0; index < max; index += 1) {
+      if (leftParts[index] === rightParts[index]) continue;
+      const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join('/');
+      const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join('/');
+      const leftSiblingGoal = getGoalByDisplayPath(goals, leftSiblingPath);
+      const rightSiblingGoal = getGoalByDisplayPath(goals, rightSiblingPath);
+      const leftOrder = getOrderedGoalIndex(leftSiblingGoal, originalIndex);
+      const rightOrder = getOrderedGoalIndex(rightSiblingGoal, originalIndex);
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      return leftParts[index].localeCompare(rightParts[index], 'zh-CN');
+    }
+    if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
+    const byOrder = getOrderedGoalIndex(left, originalIndex) - getOrderedGoalIndex(right, originalIndex);
+    if (byOrder !== 0) return byOrder;
+    return (originalIndex.get(left.id) ?? 0) - (originalIndex.get(right.id) ?? 0);
+  });
+}
+
+function resolveQuickInputCoreBlockId(fullSettings: any, blockId: string): string {
+  const coreSettings = normalizeCoreBlockSettings(fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks || []);
+  return String(blockId || '').startsWith('core.') ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
+}
+
+function goalHasDirectEnabledPreset(fullSettings: any, goal: GoalDefinition, coreBlockId: string): boolean {
+  if (!goal?.id || !coreBlockId) return false;
+  return getGoalTemplates(fullSettings.goalSettings)
+    .some((template) => template.enabled !== false && template.goalId === goal.id && template.coreBlockId === coreBlockId);
+}
+
 const splitThemePathParts = (path?: string | null) => {
   const parts = String(path || '')
     .split('/')
@@ -131,7 +188,7 @@ const splitPathParts = (path?: string | null) => {
 
 function getGoalPath(goal?: GoalDefinition | null): string | null {
   if (!goal) return null;
-  return splitGoalPath(goal.goalPath || goal.title).goalPath;
+  return cleanDisplayPath(goal.goalPath || goal.title);
 }
 
 function makeGoalIdFromPath(path: string): string {
@@ -139,7 +196,7 @@ function makeGoalIdFromPath(path: string): string {
 }
 
 function themeOptions(themes: ThemeDefinition[]) {
-  return (themes || []).map((theme) => ({ value: theme.path, label: theme.path.split('/').filter(Boolean).pop() || theme.path, icon: theme.icon }));
+  return (themes || []).map((theme) => ({ value: theme.path, label: cleanDisplaySegment(theme.path.split('/').filter(Boolean).pop() || theme.path), icon: theme.icon }));
 }
 
 const buildFieldSourceSummary = (sources: QuickInputFieldSourceMap): Record<QuickInputFieldSource, number> => ({
@@ -152,32 +209,6 @@ const buildFieldSourceSummary = (sources: QuickInputFieldSourceMap): Record<Quic
   template_default: Object.values(sources).filter((v) => v === 'template_default').length,
   system_auto: Object.values(sources).filter((v) => v === 'system_auto').length,
 });
-
-function normalizeOptionValue(value: unknown): string | null {
-  if (value === undefined || value === null) return null;
-  if (typeof value === 'object') {
-    const obj = value as any;
-    const raw = obj.value ?? obj.label;
-    const normalized = String(raw ?? '').trim();
-    return normalized || null;
-  }
-  const normalized = String(value).trim();
-  return normalized || null;
-}
-
-function mergeGoalOptions(manualOptions: unknown[] | undefined, generatedOptions: Array<{ value: string; label: string }>): Array<{ value: string; label: string }> {
-  const seen = new Set<string>();
-  const result: Array<{ value: string; label: string }> = [];
-  const add = (value: unknown, label?: unknown) => {
-    const normalized = normalizeOptionValue(value);
-    if (!normalized || seen.has(normalized)) return;
-    seen.add(normalized);
-    result.push({ value: normalized, label: String(label ?? normalized).trim() || normalized });
-  };
-  (manualOptions || []).forEach((option: any) => add(option?.value ?? option, option?.label));
-  generatedOptions.forEach(option => add(option.value, option.label));
-  return result;
-}
 
 /**
  * QuickInputEditor（Container）
@@ -199,13 +230,12 @@ export function QuickInputEditor({
 }: QuickInputEditorProps) {
   const fullSettings = useSelector(selectSettings);
   const settings = fullSettings.inputSettings;
-  const dataStore = useDataStore();
   const useCases = useUseCases();
 
   const [currentBlockId, setCurrentBlockId] = useState(initialBlockId);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(initialThemeId);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(() => String(initialFormData?.goalId ?? initialFormData?.['目标ID'] ?? context?.goalId ?? context?.['目标ID'] ?? context?.__goalContext?.goalId ?? '').trim() || null);
-  const [selectedGoalPath, setSelectedGoalPath] = useState<string | null>(() => splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.['目标'] ?? context?.goalPath ?? context?.['目标'] ?? context?.__goalContext?.goalPath ?? '')).goalPath);
+  const [selectedGoalPath, setSelectedGoalPath] = useState<string | null>(() => cleanDisplayPath(String(initialFormData?.goalPath ?? initialFormData?.['目标'] ?? context?.goalPath ?? context?.['目标'] ?? context?.__goalContext?.goalPath ?? '')));
   const [selectedTemplateVariantId, setSelectedTemplateVariantId] = useState<string | null>(() => String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? '').trim() || null);
   const [selectedCycleId, setSelectedCycleId] = useState<string | null>(() => String(initialFormData?.cycleId ?? initialFormData?.['周期ID'] ?? context?.cycleId ?? context?.['周期ID'] ?? context?.__goalContext?.cycleId ?? '').trim() || null);
   const [formData, setFormData] = useState<Record<string, any>>(() => initialFormData ?? EMPTY_FORM_DATA);
@@ -220,7 +250,7 @@ export function QuickInputEditor({
     setFieldSources(buildInitialFieldSources(initialFormData));
     setTimeDirection(initialFormData?.__timeDirection === 'backward' ? 'backward' : 'forward');
     setSelectedGoalId(String(initialFormData?.goalId ?? initialFormData?.['目标ID'] ?? context?.goalId ?? context?.['目标ID'] ?? context?.__goalContext?.goalId ?? '').trim() || null);
-    setSelectedGoalPath(splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.['目标'] ?? context?.goalPath ?? context?.['目标'] ?? context?.__goalContext?.goalPath ?? '')).goalPath);
+    setSelectedGoalPath(cleanDisplayPath(String(initialFormData?.goalPath ?? initialFormData?.['目标'] ?? context?.goalPath ?? context?.['目标'] ?? context?.__goalContext?.goalPath ?? '')));
     setSelectedTemplateVariantId(String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? '').trim() || null);
     setSelectedCycleId(String(initialFormData?.cycleId ?? initialFormData?.['周期ID'] ?? context?.cycleId ?? context?.['周期ID'] ?? context?.__goalContext?.cycleId ?? '').trim() || null);
   }, [initialBlockId, initialThemeId, context]);
@@ -248,7 +278,10 @@ export function QuickInputEditor({
   }, [fullSettings.goalSettings?.goals, selectedGoalId, selectedGoalPath]);
 
 
-  const currentEffectiveBlockIdForTemplates = String(currentBlockId || '').startsWith('core.') ? currentBlockId : currentBlockId;
+  const currentEffectiveBlockIdForTemplates = useMemo(
+    () => resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
+    [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId]
+  );
 
   const goalTemplateVariants = useMemo(() => {
     const goal = selectedGoal || null;
@@ -285,46 +318,55 @@ export function QuickInputEditor({
     selectedTemplateVariantId,
   ]);
 
-  const generatedGoalOptions = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const item of dataStore.queryItems()) {
-      const rawGoals = readField(item, 'goalPaths');
-      const values = Array.isArray(rawGoals) ? rawGoals : String(rawGoals ?? '').split(/[,，\n]/);
-      values
-        .map(value => String(value).trim())
-        .filter(Boolean)
-        .forEach(value => counts.set(value, (counts.get(value) || 0) + 1));
-    }
-    return Array.from(counts.entries())
-      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], 'zh-CN'))
-      .slice(0, 30)
-      .map(([value]) => ({ value, label: value }));
-  }, [dataStore]);
-
   const goalOptions = useMemo<GoalSelectorOption[]>(() => {
     const seen = new Set<string>();
-    const result: GoalSelectorOption[] = [];
-    const add = (path: string | null | undefined, label?: string, goal?: GoalDefinition | null, themePath?: string | null, id?: string) => {
-      const normalized = splitGoalPath(path || '').goalPath;
-      if (!normalized || seen.has(normalized)) return;
-      seen.add(normalized);
-      result.push({
-        id: id || goal?.id || makeGoalIdFromPath(normalized),
-        value: normalized,
-        label: label || normalized.split('/').filter(Boolean).pop() || normalized,
-        goal: goal || null,
-        themePath: themePath ?? goal?.themePath ?? null,
-      });
-    };
-    (fullSettings.goalSettings?.goals || [])
+    const sourceGoals = sortGoalsLikePresetMatrix([...(fullSettings.goalSettings?.goals || [])])
       .filter((goal) => goal.status !== 'archived')
-      .forEach((goal) => add(goal.goalPath || goal.title, goal.title, goal, goal.themePath, goal.id));
-    generatedGoalOptions.forEach((option) => add(option.value, option.label, null, null));
+      .filter((goal) => goalHasDirectEnabledPreset(fullSettings, goal, currentEffectiveBlockIdForTemplates));
+
+    const result: GoalSelectorOption[] = [];
+    for (const [index, goal] of sourceGoals.entries()) {
+      const normalized = cleanDisplayPath(goal.goalPath || goal.title);
+      if (!normalized || seen.has(normalized)) continue;
+      seen.add(normalized);
+      const leaf = normalized.split('/').filter(Boolean).pop() || normalized;
+      result.push({
+        id: goal.id || makeGoalIdFromPath(normalized),
+        value: normalized,
+        label: cleanDisplaySegment(goal.title) || leaf,
+        order: index,
+        goal,
+        themePath: goal.themePath ?? null,
+      });
+    }
     return result;
-  }, [fullSettings.goalSettings?.goals, generatedGoalOptions]);
+  }, [fullSettings.goalSettings, currentEffectiveBlockIdForTemplates]);
+
+  const goalFieldOptions = useMemo(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label })), [goalOptions]);
+
+  useEffect(() => {
+    const selectedPath = cleanDisplayPath(selectedGoal?.goalPath || selectedGoalPath || null);
+    if (!selectedPath) return;
+    const stillVisible = goalOptions.some((option) => cleanDisplayPath(option.value) === selectedPath);
+    if (stillVisible) return;
+    setSelectedGoalId(null);
+    setSelectedGoalPath(null);
+    setSelectedTemplateVariantId(null);
+    setSelectedCycleId(null);
+    setFormData((current) => {
+      const next = { ...current };
+      ['goalId', '目标ID', 'goalPath', '目标', 'rootGoal', 'leafGoal', 'cycleId', '周期ID', '周期', '周期粒度', 'templateId', 'goalTemplateId', 'templateVariantId', 'goalTemplateVariantId'].forEach((key) => delete next[key]);
+      return next;
+    });
+    setFieldSources((current) => {
+      const next = { ...current };
+      ['goalId', '目标ID', 'goalPath', '目标', 'rootGoal', 'leafGoal', 'cycleId', '周期ID', '周期', '周期粒度', 'templateId', 'goalTemplateId', 'templateVariantId', 'goalTemplateVariantId'].forEach((key) => delete next[key]);
+      return next;
+    });
+  }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
 
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
-  const currentGoalTitle = selectedGoal?.title || resolvedGoal?.title || (currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null);
+  const currentGoalTitle = cleanDisplaySegment(selectedGoal?.title || resolvedGoal?.title || '') || (currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null);
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData['日期'] ?? formData.date ?? dayjs().format('YYYY-MM-DD')).trim();
   const periodPolicy = resolveTemplatePeriodPolicy(rawTemplate as any);
@@ -340,12 +382,12 @@ export function QuickInputEditor({
       coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
       fields: rawTemplate.fields.map((field: any) => {
         const semantic = getTemplateFieldSemantic(field);
-        if (semantic === 'goals') return { ...field, options: mergeGoalOptions(field.options, generatedGoalOptions) };
+        if (semantic === 'goals') return { ...field, options: goalFieldOptions };
         if (semantic === 'themePath') return { ...field, type: field.type === 'path' ? 'hierarchicalSingleSelect' : field.type, options: themeFieldOptions };
         return field;
       }),
     };
-  }, [rawTemplate, availableThemes, effectiveBlockId, generatedGoalOptions]);
+  }, [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions]);
 
   const showTimeDirectionControl = useMemo(() => {
     if (!template?.fields) return false;
@@ -538,7 +580,7 @@ export function QuickInputEditor({
       setSelectedThemeId(nextPath ? pathToIdMap.get(nextPath) ?? null : null);
     }
     if (key === 'goalPath' || key === '目标' || key === '目标路径') {
-      const nextGoalPath = splitGoalPath(String(rawValue ?? '')).goalPath;
+      const nextGoalPath = cleanDisplayPath(String(rawValue ?? ''));
       setSelectedGoalPath(nextGoalPath);
       setSelectedGoalId(nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null);
     }
@@ -613,7 +655,7 @@ export function QuickInputEditor({
 
 
   const handleCreateGoal = async (goalPath: string) => {
-    const normalized = splitGoalPath(goalPath).goalPath;
+    const normalized = cleanDisplayPath(goalPath);
     if (!normalized) return;
     const title = normalized.split('/').filter(Boolean).pop() || normalized;
     const effectiveThemePath = String(formData.themePath ?? formData['主题'] ?? theme?.path ?? selectedGoal?.themePath ?? '').trim() || null;
@@ -636,7 +678,7 @@ export function QuickInputEditor({
       return;
     }
     const goal = option.goal || null;
-    const goalPath = splitGoalPath(goal?.goalPath || option.value).goalPath;
+    const goalPath = cleanDisplayPath(goal?.goalPath || option.value);
     const goalId = goal?.id || (option.id && !String(option.id).startsWith('goal:') ? option.id : makeGoalIdFromPath(goalPath || option.value));
     const themePath = goal?.themePath || option.themePath || null;
     setSelectedGoalId(goalId);
@@ -659,7 +701,7 @@ export function QuickInputEditor({
       assign('目标ID', goalId);
       assign('goalPath', goalPath || option.value);
       assign('目标', goalPath || option.value);
-      const parts = splitGoalPath(goalPath || option.value);
+      const parts = splitGoalPath(cleanDisplayPath(goalPath || option.value) || '');
       assign('rootGoal', parts.rootGoal || '', 'goal_context');
       assign('leafGoal', parts.leafGoal || '', 'goal_context');
       if (themePath) {
@@ -684,7 +726,6 @@ export function QuickInputEditor({
       onSelectTheme={handleSelectTheme}
       goals={goalOptions}
       selectedGoalPath={currentGoalPath}
-      selectedGoalTitle={currentGoalTitle}
       onSelectGoal={handleSelectGoal}
       onCreateGoal={undefined}
       templateVariants={goalTemplateVariants.map((template) => ({ value: template.variantId || 'default', label: template.name || template.variantId || '默认模板', isDefault: !!template.isDefault }))}

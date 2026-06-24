@@ -1,88 +1,78 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { Box, Button, Chip, Divider, Typography } from '@shared/public';
-import { selectSettings, useSelector } from '@/app/public';
-import { getGoalTemplates } from '@core/public';
-import { GoalEntitySection } from './goalManager/GoalEntitySection';
-import { GoalMetricSection } from './goalManager/GoalMetricSection';
-import { GoalTemplateSection } from './goalManager/GoalTemplateSection';
-
-type GoalCenterSection = 'goals' | 'presets' | 'metrics';
-
-const sections: Array<{ key: GoalCenterSection; title: string; description: string }> = [
-  { key: 'goals', title: '目标', description: '新建和整理目标。' },
-  { key: 'presets', title: '预设表', description: '用表格管理目标 × Block，每个单元格可有多个预设。' },
-  { key: 'metrics', title: '指标', description: '给目标设置完成标准。' },
-];
+import { Alert, Box, Button, TextField, Typography } from '@shared/public';
+import { selectSettings, useSelector, useUseCases } from '@/app/public';
+import { GoalTemplateMatrix } from '@features/settings/goalTemplates';
+import { pathLeaf } from './goalManager/shared';
 
 /**
- * 数据管理里的目标中心外壳。
- * P9 减法重构：目标中心先服务用户任务；Goal x Block x Template 只是底层能力。
+ * 目标：把“目标管理”和“预设管理”合并成一个工作区。
+ * 上方只保留新建目标；下方直接在目标 × 记录类型矩阵里管理预设。
  */
 export function GoalManager() {
   const settings = useSelector(selectSettings);
-  const [section, setSection] = useState<GoalCenterSection>('goals');
-
+  const useCases = useUseCases();
   const goals = settings.goalSettings?.goals || [];
-  const activeGoals = goals.filter((goal) => goal.status !== 'archived');
-  const goalTemplates = getGoalTemplates(settings.goalSettings);
+  const [goalPath, setGoalPath] = useState('');
+  const [goalThemePath, setGoalThemePath] = useState('');
+  const [message, setMessage] = useState('');
+  const [cleaning, setCleaning] = useState(false);
 
-  const currentSection = sections.find((item) => item.key === section) || sections[0];
+  const handleAddGoal = async () => {
+    const path = goalPath.trim();
+    if (!path) return;
+    const alreadyExists = goals.some((goal) => String(goal.goalPath || goal.title || '').trim() === path);
+    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: goalThemePath.trim() || null });
+    setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加目标：${goal.goalPath || goal.title}` : '目标未添加');
+    if (goal && !alreadyExists) {
+      setGoalPath('');
+      setGoalThemePath('');
+    }
+  };
+
+  const handleCleanup = async () => {
+    if (cleaning) return;
+    setCleaning(true);
+    try {
+      const goalUseCase = useCases.goal as any;
+      if (typeof goalUseCase.cleanupGoalSettingsStorage !== 'function') {
+        setMessage('当前版本还没有整理旧数据能力');
+        return;
+      }
+      const result = await goalUseCase.cleanupGoalSettingsStorage();
+      const parts = [
+        `预设 ${result.beforeTemplateCount} → ${result.afterTemplateCount}`,
+        result.removedDuplicateTemplates ? `去重 ${result.removedDuplicateTemplates}` : '',
+        result.removedDanglingCycles ? `清理周期 ${result.removedDanglingCycles}` : '',
+        result.removedDanglingRelations ? `清理关系 ${result.removedDanglingRelations}` : '',
+      ].filter(Boolean);
+      setMessage(result.changed ? `已整理：${parts.join('，')}` : '预设数据已经是干净状态');
+    } finally {
+      setCleaning(false);
+    }
+  };
 
   return (
-    <Box sx={{ maxWidth: 1040, mx: 'auto', display: 'grid', gap: 2 }}>
-      <Box sx={{ display: 'grid', gap: 1 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.5, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          <Box sx={{ minWidth: 260 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>目标中心</Typography>
-            <Typography variant="body2" color="text.secondary">
-              目标只管理“我要追踪什么”；预设在“目标 × Block 预设表”的单元格里直接管理，不再另开独立预设页。
-            </Typography>
+    <Box sx={{ maxWidth: 1240, mx: 'auto', width: '100%', display: 'grid', gap: 1.25 }}>
+      {message && <Alert severity="info" onClose={() => setMessage('')}>{message}</Alert>}
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(260px, 1fr) minmax(180px, 0.55fr) auto' }, gap: 1, alignItems: 'center' }}>
+        <TextField size="small" label="添加目标" value={goalPath} onChange={(event: any) => setGoalPath(event.target.value)} placeholder="例如：了解自我/情绪" />
+        <TextField size="small" label="目标主题" value={goalThemePath} onChange={(event: any) => setGoalThemePath(event.target.value)} placeholder="可选" />
+        <Button variant="contained" onClick={handleAddGoal} disabled={!goalPath.trim()}>添加</Button>
+      </Box>
+
+      <Box sx={{ display: 'grid', gap: 1, border: '1px solid var(--background-modifier-border)', borderRadius: 2, p: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Box>
+            <Typography sx={{ fontWeight: 800 }}>记录预设</Typography>
+            <Typography variant="caption" color="text.secondary">点击某个目标主题预设卡片后，字段编辑页会以悬浮窗打开。</Typography>
           </Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, justifyContent: 'flex-end' }}>
-            <Chip label={`目标 ${activeGoals.length}`} size="small" color={activeGoals.length > 0 ? 'primary' : 'default'} />
-            <Chip label={`预设 ${goalTemplates.length}`} size="small" />
-          </Box>
+          <Button size="small" variant="outlined" onClick={handleCleanup} disabled={cleaning}>{cleaning ? '整理中…' : '整理旧数据'}</Button>
         </Box>
+        <GoalTemplateMatrix />
       </Box>
-
-      <Box
-        sx={{
-          display: 'inline-flex',
-          gap: 0.5,
-          p: 0.5,
-          border: '1px solid var(--background-modifier-border)',
-          borderRadius: 999,
-          background: 'var(--background-secondary)',
-          width: 'fit-content',
-          maxWidth: '100%',
-          flexWrap: 'wrap',
-        }}
-      >
-        {sections.map((item) => (
-          <Button
-            key={item.key}
-            size="small"
-            variant={section === item.key ? 'contained' : 'text'}
-            onClick={() => setSection(item.key)}
-            sx={{ borderRadius: 999 }}
-          >
-            {item.title}
-          </Button>
-        ))}
-      </Box>
-
-      <Box>
-        <Typography sx={{ fontWeight: 800 }}>{currentSection.title}</Typography>
-        <Typography variant="caption" color="text.secondary">{currentSection.description}</Typography>
-      </Box>
-
-      {section === 'goals' && <GoalEntitySection />}
-      {section === 'presets' && <GoalTemplateSection />}
-      {section === 'metrics' && <GoalMetricSection />}
-
-      <Divider />
     </Box>
   );
 }
