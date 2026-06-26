@@ -127,6 +127,9 @@ export function useViewRuntimeHandlers({
       item: request.item,
       themePath: request.themePath,
       goalPath: request.goalPath,
+      goalId: request.goalId,
+      templateId: request.templateId,
+      templateVariantId: request.templateVariantId,
       themesByPath: request.themesByPath,
       notice: (message) => ui.notice(message),
     });

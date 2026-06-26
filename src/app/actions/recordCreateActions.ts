@@ -45,6 +45,9 @@ export interface HeatmapCreateParams {
   item?: Item;
   themePath?: string;
   goalPath?: string;
+  goalId?: string;
+  templateId?: string;
+  templateVariantId?: string;
   themesByPath?: Map<string, ThemeDefinition>;
   notice?: (message: string) => void;
 }
@@ -147,6 +150,35 @@ function resolveHeatmapThemeId(themesByPath: Map<string, ThemeDefinitionType> | 
   return undefined;
 }
 
+
+function firstNonEmptyText(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      const option = value as Record<string, unknown>;
+      const nested = firstNonEmptyText(option.value, option.label, option.path, option.title);
+      if (nested) return nested;
+      continue;
+    }
+    const text = String(value).trim();
+    if (text) return text;
+  }
+  return undefined;
+}
+
+function buildHeatmapRatingContext(item?: Item): Record<string, unknown> {
+  if (!item) return {};
+  const score = firstNonEmptyText(item.rating, (item as any).extra?.['评分'], (item as any).extra?.rating);
+  const visual = firstNonEmptyText(item.pintu, item.image, (item as any).extra?.['图片'], (item as any).extra?.['评图'], (item as any).extra?.pintu, (item as any).extra?.image);
+  if (!score && !visual) return {};
+  return {
+    评分: {
+      value: visual || score || '',
+      label: score || visual || '',
+    },
+  };
+}
+
 function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig | null {
   const resolvedBlockId = params.sourceBlockId || params.item?.templateId || params.item?.categoryKey;
   if (!resolvedBlockId) return null;
@@ -156,15 +188,25 @@ function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig
     ? params.themePath
     : getItemThemePath(params.item);
 
+  const goalContext = (params.goalPath || params.goalId || params.templateId || params.templateVariantId)
+    ? {
+        ...(params.goalPath ? { goalPath: params.goalPath } : {}),
+        ...(params.goalId ? { goalId: params.goalId } : {}),
+        ...(params.templateId ? { templateId: params.templateId, goalTemplateId: params.templateId } : {}),
+        ...(params.templateVariantId ? { templateVariantId: params.templateVariantId, goalTemplateVariantId: params.templateVariantId } : {}),
+      }
+    : null;
+
   const context: Record<string, any> = {
     日期: params.date,
     __recordUiContext: {
       kind: 'heatmap_create',
       timeContext: { date: params.date },
       themeContext: themePath ? { themePath } : null,
-      goalContext: params.goalPath ? { goalPath: params.goalPath } : null,
+      goalContext,
     },
-    ...(params.item ? { 内容: params.item.content || '', 评分: params.item.rating ?? 0 } : {}),
+    ...(params.item ? { 内容: params.item.content || '' } : {}),
+    ...buildHeatmapRatingContext(params.item),
   };
 
   if (themePath) {
@@ -175,6 +217,22 @@ function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig
   if (params.goalPath) {
     context['目标'] = params.goalPath;
     context.goalPath = params.goalPath;
+  }
+
+  if (params.goalId) {
+    context['目标ID'] = params.goalId;
+    context.goalId = params.goalId;
+  }
+
+  if (params.templateId) {
+    context['模板ID'] = params.templateId;
+    context.templateId = params.templateId;
+    context.goalTemplateId = params.templateId;
+  }
+
+  if (params.templateVariantId) {
+    context.templateVariantId = params.templateVariantId;
+    context.goalTemplateVariantId = params.templateVariantId;
   }
 
   return {

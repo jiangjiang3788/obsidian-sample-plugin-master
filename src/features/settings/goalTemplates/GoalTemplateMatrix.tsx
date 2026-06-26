@@ -19,6 +19,7 @@ import type { CoreBlockDefinition, GoalDefinition, GoalTemplate } from '@core/pu
 import { selectSettings, useSelector, useUiPort, useUseCases } from '@/app/public';
 import { GoalTemplateEditorModal } from './GoalTemplateEditorModal';
 import { GoalTemplateContextMenu } from './GoalTemplateContextMenu';
+import { GoalPresetCard } from './GoalPresetCard';
 import {
   buildCopiedGoalTemplate,
   buildRetargetedGoalTemplate,
@@ -51,7 +52,6 @@ const PATH_COL_WIDTH = 250;
 const BLOCK_COL_WIDTH = 136;
 const SEGMENT_HEIGHT = 36;
 const ADD_BUTTON_HEIGHT = SEGMENT_HEIGHT;
-const PRESET_CARD_HEIGHT = 30;
 
 type ContextMenuState = {
   x: number;
@@ -119,7 +119,7 @@ function buildThemeIconMap(settings: any): Map<string, string> {
 }
 
 function presetSearchText(template: GoalTemplate, goal: GoalDefinition): string {
-  return `${getGoalTemplateDisplayName(template)} ${readGoalTemplateThemePath(template, goal)} ${readGoalTemplateIcon(template)}`.toLowerCase();
+  return `${getPresetCardName(template, goal)} ${readGoalTemplateThemePath(template, goal)} ${readGoalTemplateIcon(template)}`.toLowerCase();
 }
 
 function getEventDropPosition(event: DragEvent, target?: HTMLElement | null): DropPosition {
@@ -437,59 +437,31 @@ export function GoalTemplateMatrix() {
     const icon = readGoalTemplateIcon(template, themeIconByPath.get(themePath));
     const name = getPresetCardName(template, goal);
     const key = goalTemplateKey(template);
-    const isDragging = draggingPreset?.templateKey === key;
     return (
-      <div
-        key={key}
-        data-goal-template-key={key}
-        role="button"
-        tabIndex={0}
-        title={`${name}${themePath ? ` · ${themePath}` : ''}\n左键：编辑；右键：复制/删除；拖动 ☰：排序或移动到其它目标/记录类型`}
-        onClick={() => openEditor(goal, block, template)}
-        onContextMenu={(event: any) => openPresetContextMenu(event, goal, block, template)}
-        style={{
-          width: '100%',
-          display: 'grid',
-          gridTemplateColumns: '14px 18px minmax(0, 1fr)',
-          alignItems: 'center',
-          gap: 4,
-          border: '1px solid var(--background-modifier-border)',
-          borderRadius: 8,
-          background: 'var(--background-primary)',
-          color: 'var(--text-normal)',
-          minHeight: PRESET_CARD_HEIGHT,
-          height: PRESET_CARD_HEIGHT,
-          padding: '0 6px',
-          cursor: 'pointer',
-          font: 'inherit',
-          textAlign: 'left',
-          opacity: isDragging ? 0.48 : 1,
-          boxShadow: 'none',
-          userSelect: 'none',
-        }}
-      >
-        <span
-          draggable
-          onMouseDown={(event: any) => event.stopPropagation()}
-          onClick={(event: any) => event.stopPropagation()}
-          onDragStart={(event: any) => {
-            event.stopPropagation();
+      <GoalPresetCard
+        goal={goal}
+        block={block}
+        template={template}
+        templateKey={key}
+        name={name}
+        icon={icon}
+        themePath={themePath}
+        isDragging={draggingPreset?.templateKey === key}
+        onOpen={() => openEditor(goal, block, template)}
+        onContextMenu={(event) => openPresetContextMenu(event, goal, block, template)}
+        onDragStart={(event) => {
+          event.stopPropagation();
+          if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', key);
-            setDraggingPreset({ goalId: goal.id, blockId: block.id, templateKey: key });
-          }}
-          onDragEnd={() => {
-            setDraggingPreset(null);
-            setPresetDropCell(null);
-          }}
-          title="拖动预设排序或移动"
-          style={{ color: 'var(--text-muted)', cursor: 'grab', userSelect: 'none', textAlign: 'center', lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
-        >
-          ☰
-        </span>
-        <span style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>{icon || '◇'}</span>
-        <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 700, lineHeight: 1.2 }}>{name}</span>
-      </div>
+          }
+          setDraggingPreset({ goalId: goal.id, blockId: block.id, templateKey: key });
+        }}
+        onDragEnd={() => {
+          setDraggingPreset(null);
+          setPresetDropCell(null);
+        }}
+      />
     );
   };
 

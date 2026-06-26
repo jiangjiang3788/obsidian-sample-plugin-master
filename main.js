@@ -2008,6 +2008,84 @@ function cleanupGoalTemplateStorage(goalSettings) {
     }
   };
 }
+function compactText$3(value) {
+  return String(value ?? "").trim();
+}
+function cleanPathSegment$1(value) {
+  return compactText$3(value).replace(/^[#＃]+\s*/, "").trim();
+}
+function normalizePath$7(value) {
+  return compactText$3(value).split("/").map(cleanPathSegment$1).filter(Boolean).join("/");
+}
+function readOptionText$1(value) {
+  if (value === void 0 || value === null) return "";
+  if (typeof value === "object" && value && "value" in value) return compactText$3(value.value);
+  return compactText$3(value);
+}
+function leafPath$3(value) {
+  const text2 = normalizePath$7(value);
+  return text2.split("/").filter(Boolean).pop() || text2;
+}
+function isGeneratedGoalTemplateName(value) {
+  const text2 = compactText$3(value);
+  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "默认预设" || text2 === "默认模板" || text2 === "未命名预设";
+}
+function isThemeField$2(field) {
+  const anyField = field;
+  const key = compactText$3(anyField.key).toLowerCase();
+  const label = compactText$3(anyField.label);
+  const semantic = compactText$3(anyField.semantic || anyField.semanticType).toLowerCase();
+  return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath");
+}
+function isIconField$1(field) {
+  const anyField = field;
+  const key = compactText$3(anyField.key).toLowerCase();
+  const label = compactText$3(anyField.label);
+  const semantic = compactText$3(anyField.semantic || anyField.semanticType).toLowerCase();
+  return key === "icon" || key === "图标" || label === "图标" || semantic === "icon";
+}
+function readFieldDefault$1(fields, predicate) {
+  for (const field of fields || []) {
+    if (!predicate(field)) continue;
+    const value = readOptionText$1(field.defaultValue);
+    if (value && value !== "{{goal.themePath}}") return value;
+  }
+  return "";
+}
+function readGoalTemplateThemePath$1(template, goal) {
+  const values2 = template?.defaultValues || {};
+  return normalizePath$7(
+    readOptionText$1(values2.themePath) || readOptionText$1(values2["主题"]) || readFieldDefault$1(template?.fields, isThemeField$2) || readOptionText$1(goal?.themePath)
+  );
+}
+function readGoalTemplateIcon$1(template, fallbackIcon) {
+  const values2 = template?.defaultValues || {};
+  return compactText$3(
+    readOptionText$1(values2.icon) || readOptionText$1(values2["图标"]) || readOptionText$1(values2["theme.icon"]) || readFieldDefault$1(template?.fields, isIconField$1) || fallbackIcon
+  );
+}
+function getGoalTemplateDisplayName$1(template, goal, fallback = "记录预设") {
+  const rawName = compactText$3(template?.name);
+  if (rawName && !isGeneratedGoalTemplateName(rawName)) return rawName;
+  const themeLabel = leafPath$3(readGoalTemplateThemePath$1(template, goal));
+  if (themeLabel) return themeLabel;
+  const variantId = normalizeTemplateVariantId(compactText$3(template?.variantId));
+  const variantText = variantId.replace(/^legacy-/, "");
+  if (variantText && variantText !== DEFAULT_TEMPLATE_VARIANT_ID && !isGeneratedGoalTemplateName(variantText)) return variantText;
+  return fallback;
+}
+function getGoalTemplateDisplayInfo(template, goal, fallbackIcon) {
+  const rawName = compactText$3(template?.name);
+  const themePath = readGoalTemplateThemePath$1(template, goal);
+  const name = getGoalTemplateDisplayName$1(template, goal);
+  return {
+    name,
+    themePath,
+    icon: readGoalTemplateIcon$1(template, fallbackIcon),
+    variantId: normalizeTemplateVariantId(template?.variantId),
+    isGeneratedName: !rawName || isGeneratedGoalTemplateName(rawName)
+  };
+}
 const ALLOWED_SYSTEM_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
 const FORBIDDEN_DEFAULT_KEYS = /* @__PURE__ */ new Set([
   "legacyOverrideId",
@@ -2032,7 +2110,7 @@ const FORBIDDEN_DEFAULT_KEYS = /* @__PURE__ */ new Set([
   "周期粒度",
   "goalGranularity"
 ]);
-function compactText$1(value) {
+function compactText$2(value) {
   return String(value ?? "").trim();
 }
 function stableJson$1(value) {
@@ -2068,11 +2146,11 @@ function fieldsHaveSameStructure$1(left2, right2) {
   return stableJson$1(normalize(left2)) === stableJson$1(normalize(right2));
 }
 function deriveRequiredFields$1(fields) {
-  return (fields || []).filter((field) => field?.required === true).map((field) => compactText$1(field.key || field.label)).filter(Boolean);
+  return (fields || []).filter((field) => field?.required === true).map((field) => compactText$2(field.key || field.label)).filter(Boolean);
 }
 function equalStringSet$1(left2, right2) {
-  const a2 = new Set((left2 || []).map(compactText$1).filter(Boolean));
-  const b2 = new Set((right2 || []).map(compactText$1).filter(Boolean));
+  const a2 = new Set((left2 || []).map(compactText$2).filter(Boolean));
+  const b2 = new Set((right2 || []).map(compactText$2).filter(Boolean));
   if (a2.size !== b2.size) return false;
   for (const value of a2) if (!b2.has(value)) return false;
   return true;
@@ -2080,20 +2158,20 @@ function equalStringSet$1(left2, right2) {
 function getFieldDefaultMap$1(fields) {
   const result = {};
   for (const field of fields || []) {
-    const key = compactText$1(field.key || field.label);
+    const key = compactText$2(field.key || field.label);
     if (!key) continue;
     const value = field.defaultValue;
-    if (value !== void 0 && value !== null && compactText$1(value) !== "") result[key] = compactText$1(value);
+    if (value !== void 0 && value !== null && compactText$2(value) !== "") result[key] = compactText$2(value);
   }
   return result;
 }
 function compactDefaultValues(values2, baseFields, goal) {
   const baseDefaults = getFieldDefaultMap$1(baseFields);
-  const goalThemePath = compactText$1(goal?.themePath);
+  const goalThemePath = compactText$2(goal?.themePath);
   const result = {};
   Object.entries(values2 || {}).forEach(([key, raw]) => {
     if (FORBIDDEN_DEFAULT_KEYS.has(key)) return;
-    const value = compactText$1(raw);
+    const value = compactText$2(raw);
     if (!value) return;
     if (isSystemRecordContextField(key) && !ALLOWED_SYSTEM_DEFAULT_KEYS.has(key)) return;
     if ((key === "themePath" || key === "主题") && (value === goalThemePath || value === "{{goal.themePath}}")) return;
@@ -2124,9 +2202,9 @@ function compactGoalTemplateForStorage(template, options = {}) {
   }
   if (coreBlock) {
     if (fieldsHaveSameStructure$1(template.fields, baseFields)) next2.fields = void 0;
-    if (compactText$1(template.outputTemplate) === compactText$1(coreBlock.outputTemplate)) next2.outputTemplate = void 0;
-    if (compactText$1(template.targetFile) === compactText$1(coreBlock.targetFile)) next2.targetFile = void 0;
-    if (compactText$1(template.appendUnderHeader) === compactText$1(coreBlock.appendUnderHeader)) next2.appendUnderHeader = void 0;
+    if (compactText$2(template.outputTemplate) === compactText$2(coreBlock.outputTemplate)) next2.outputTemplate = void 0;
+    if (compactText$2(template.targetFile) === compactText$2(coreBlock.targetFile)) next2.targetFile = void 0;
+    if (compactText$2(template.appendUnderHeader) === compactText$2(coreBlock.appendUnderHeader)) next2.appendUnderHeader = void 0;
     const explicitRequired = template.requiredFields && template.requiredFields.length ? template.requiredFields : deriveRequiredFields$1(template.fields);
     const baseRequired = deriveRequiredFields$1(baseFields);
     next2.requiredFields = equalStringSet$1(explicitRequired || [], baseRequired) ? void 0 : (explicitRequired || []).filter(Boolean);
@@ -2146,6 +2224,25 @@ function describeGoalTemplateStorageDiff(template) {
   if (template.requiredFields?.length) parts.push("必填覆盖");
   if (template.periodPolicy) parts.push(`周期 ${template.periodPolicy.granularity}`);
   return parts;
+}
+function compactText$1(value) {
+  return String(value ?? "").trim();
+}
+const SYSTEM_DISPLAY_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
+function goalTemplateHasCustomOverrides(template, coreBlock, goal) {
+  if (!template || !coreBlock || template.enabled === false) return false;
+  const patch = compactGoalTemplateForStorage(template, { coreBlock, goal });
+  if (patch.fields?.length) return true;
+  if (compactText$1(patch.outputTemplate)) return true;
+  if (compactText$1(patch.targetFile)) return true;
+  if (compactText$1(patch.appendUnderHeader)) return true;
+  if (patch.requiredFields?.length) return true;
+  const customDefaultKeys = Object.keys(patch.defaultValues || {}).filter((key) => !SYSTEM_DISPLAY_DEFAULT_KEYS.has(key));
+  return customDefaultKeys.length > 0;
+}
+function inferGoalTemplateEditMode(template, coreBlock, goal) {
+  if (template?.enabled === false) return "disabled";
+  return goalTemplateHasCustomOverrides(template, coreBlock, goal) ? "override" : "inherit";
 }
 function makeStableGoalIdFromPath(path) {
   const normalized = splitGoalPath(path).goalPath || String(path || "").trim();
@@ -6035,7 +6132,17 @@ function decodeBlockContentLines(contentLines, parentFolder) {
         } else if (["周期", "period"].includes(key)) {
           period = decodeMarkdownString(value);
         } else if (["评分", "rating"].includes(key)) {
-          rating = decodeMarkdownNumber(value);
+          const decodedRating = decodeMarkdownNumber(value);
+          if (decodedRating !== void 0) {
+            rating = decodedRating;
+          } else {
+            const visualRating = String(value || "").trim();
+            if (visualRating) {
+              extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
+              if (!pintu) pintu = visualRating;
+              if (!image) image = visualRating;
+            }
+          }
         } else if (["图标", "icon"].includes(key)) {
           icon = value.trim();
         } else if (["评图", "pintu", "图片", "image"].includes(key)) {
@@ -48222,17 +48329,19 @@ function generateCellTooltip(date2, items, displayCount = 0, levelCount = 0, was
     "💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增"
   ].filter(Boolean).join("\n");
 }
+function readItemVisualValue(item, ratingMapping) {
+  if (!item) return null;
+  const extra = item.extra || {};
+  const directVisual = item.pintu || item.image || extra["图片"] || extra["评图"] || extra.pintu || extra.image;
+  if (directVisual !== void 0 && directVisual !== null && String(directVisual).trim()) return String(directVisual).trim();
+  const ratingValue = item.rating !== void 0 && item.rating !== null ? String(item.rating) : extra["评分"] !== void 0 && extra["评分"] !== null ? String(extra["评分"]).trim() : "";
+  if (!ratingValue) return null;
+  return ratingMapping.get(ratingValue) || ratingValue;
+}
 function getVisualValue(items, ratingMapping) {
   if (!items || items.length === 0) return null;
-  const latestItemWithValue = [...items].reverse().find((i2) => i2.pintu || i2.rating !== void 0);
-  if (!latestItemWithValue) return null;
-  if (latestItemWithValue.pintu) {
-    return latestItemWithValue.pintu;
-  }
-  if (latestItemWithValue.rating !== void 0) {
-    return ratingMapping.get(String(latestItemWithValue.rating)) || null;
-  }
-  return null;
+  const latestItemWithValue = [...items].reverse().find((i2) => readItemVisualValue(i2, ratingMapping));
+  return readItemVisualValue(latestItemWithValue, ratingMapping);
 }
 function HeatmapCell({
   date: date2,
@@ -49422,32 +49531,36 @@ function HeatmapView({
     });
     return result;
   }, [items]);
-  const resolveCreateBlockId = (themePath, item) => {
+  const resolveCreateBlockId = (themePath, item, sourceBlockId) => {
+    const rowBlock = normalizeHeatmapBlockId(sourceBlockId);
     const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
-    return normalizeHeatmapBlockId(heatmapSourceBlockId) || normalizeHeatmapBlockId(itemBlock) || normalizeHeatmapBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeHeatmapBlockId(inferredBlockIdByTheme.get("__default__")) || "";
+    return rowBlock || normalizeHeatmapBlockId(heatmapSourceBlockId) || normalizeHeatmapBlockId(itemBlock) || normalizeHeatmapBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeHeatmapBlockId(inferredBlockIdByTheme.get("__default__")) || "";
   };
-  const openQuickCreate = (date2, item, themePath, goalPath) => {
+  const openQuickCreate = (date2, item, themePath, goalPath, presetContext) => {
     if (!onOpenHeatmapCreate) {
       onNotice?.("未提供创建处理器，无法创建记录");
       return;
     }
     onOpenHeatmapCreate({
-      sourceBlockId: resolveCreateBlockId(themePath, item),
+      sourceBlockId: resolveCreateBlockId(themePath, item, presetContext?.sourceBlockId),
       date: date2,
       item,
       themePath,
       goalPath,
+      goalId: presetContext?.goalId,
+      templateId: presetContext?.templateId,
+      templateVariantId: presetContext?.templateVariantId,
       themesByPath
     });
   };
-  const handleCellClick = (date2, dayItems, themePath, goalPath) => {
+  const handleCellClick = (date2, dayItems, themePath, goalPath, presetContext) => {
     const itemsForDay = dayItems || [];
     if (itemsForDay.length === 0) {
-      openQuickCreate(date2, void 0, themePath, goalPath);
+      openQuickCreate(date2, void 0, themePath, goalPath, presetContext);
       return;
     }
     if (itemsForDay.length === 1) {
-      openQuickCreate(date2, itemsForDay[0], themePath, goalPath);
+      openQuickCreate(date2, itemsForDay[0], themePath, goalPath, presetContext);
       return;
     }
     if (!onOpenCheckinManager) {
@@ -49457,10 +49570,10 @@ function HeatmapView({
     onOpenCheckinManager({
       date: date2,
       items: itemsForDay,
-      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath, goalPath)
+      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath, goalPath, presetContext)
     });
   };
-  const renderMonthGrid = (monthDate, dataForMonth, themePath, goalPath) => {
+  const renderMonthGrid = (monthDate, dataForMonth, themePath, goalPath, presetContext) => {
     const startOfMonth = monthDate.startOf("month");
     const endOfMonth = monthDate.endOf("month");
     const firstWeekday = startOfMonth.isoWeekday();
@@ -49486,7 +49599,7 @@ function HeatmapView({
             config: config2,
             ratingMapping: themeRatingMapping,
             resolveResourcePath,
-            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)
+            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)
           },
           dateStr
         )
@@ -49497,7 +49610,7 @@ function HeatmapView({
       /* @__PURE__ */ u2("div", { class: "heatmap-row calendar", children: days })
     ] }, monthDate.format("YYYY-MM"));
   };
-  const renderHeaderCells = (currentView2, themePath, dataForTheme, goalPath) => {
+  const renderHeaderCells = (currentView2, themePath, dataForTheme, goalPath, presetContext) => {
     const start2 = dayjs(dateRange[0]);
     const end2 = dayjs(dateRange[1]);
     const themeRatingMapping = ratingMappingsCache.get(
@@ -49521,7 +49634,7 @@ function HeatmapView({
               config: config2,
               ratingMapping: themeRatingMapping,
               resolveResourcePath,
-              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)
+              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)
             },
             dateStr
           )
@@ -49543,7 +49656,7 @@ function HeatmapView({
                 config: config2,
                 ratingMapping: themeRatingMapping,
                 resolveResourcePath,
-                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)
+                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)
               },
               `${themePath}-${dateStr}`
             )
@@ -49568,7 +49681,7 @@ function HeatmapView({
                 config: config2,
                 ratingMapping: themeRatingMapping,
                 resolveResourcePath,
-                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)
+                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)
               },
               dateStr
             )
@@ -49582,7 +49695,7 @@ function HeatmapView({
         const months = [];
         let currentMonth = start2.clone().startOf("month");
         while (currentMonth.isSameOrBefore(end2, "month")) {
-          months.push(renderMonthGrid(currentMonth, dataForTheme, themePath, goalPath));
+          months.push(renderMonthGrid(currentMonth, dataForTheme, themePath, goalPath, presetContext));
           currentMonth = currentMonth.add(1, "month");
         }
         return months;
@@ -49694,7 +49807,7 @@ function HeatmapView({
               resolveResourcePath,
               highlightToday: false,
               emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
-              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath)
+              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId })
             }
           ) }, `${goalGroup.goalPath}:${entry.presetKey || entry.themePath}`);
         }) })
@@ -49728,7 +49841,7 @@ function HeatmapView({
     ] }, group.title)) });
   };
   const renderThemeGroup = (params) => {
-    const { theme: theme2, dataForTheme, goalPath, keyPrefix = "", entryKey, label } = params;
+    const { theme: theme2, dataForTheme, goalPath, keyPrefix = "", entryKey, label, presetContext } = params;
     const rowKey = `${keyPrefix}${entryKey || theme2}`;
     const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
     const isVertical = normalizedCurrentView === "周" ? false : verticalLayouts.has(rowKey);
@@ -49758,7 +49871,7 @@ function HeatmapView({
               ] })
             }
           ),
-          !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells(normalizedCurrentView, theme2, dataForTheme, goalPath) })
+          !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells(normalizedCurrentView, theme2, dataForTheme, goalPath, presetContext) })
         ]
       }
     ) }, rowKey);
@@ -49786,7 +49899,8 @@ function HeatmapView({
           goalPath: goalGroup.goalPath,
           keyPrefix: `${goalGroup.goalPath}\0`,
           entryKey: entry.presetKey || entry.themePath,
-          label: entry.label
+          label: entry.label,
+          presetContext: { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId }
         })) })
       ] }, goalGroup.goalPath)) });
     }
@@ -56351,20 +56465,53 @@ function resolveHeatmapThemeId(themesByPath, themePath, item) {
   }
   return void 0;
 }
+function firstNonEmptyText(...values2) {
+  for (const value of values2) {
+    if (value === void 0 || value === null) continue;
+    if (typeof value === "object" && !Array.isArray(value)) {
+      const option = value;
+      const nested2 = firstNonEmptyText(option.value, option.label, option.path, option.title);
+      if (nested2) return nested2;
+      continue;
+    }
+    const text2 = String(value).trim();
+    if (text2) return text2;
+  }
+  return void 0;
+}
+function buildHeatmapRatingContext(item) {
+  if (!item) return {};
+  const score = firstNonEmptyText(item.rating, item.extra?.["评分"], item.extra?.rating);
+  const visual = firstNonEmptyText(item.pintu, item.image, item.extra?.["图片"], item.extra?.["评图"], item.extra?.pintu, item.extra?.image);
+  if (!score && !visual) return {};
+  return {
+    评分: {
+      value: visual || score || "",
+      label: score || visual || ""
+    }
+  };
+}
 function buildHeatmapCreateConfig(params) {
   const resolvedBlockId = params.sourceBlockId || params.item?.templateId || params.item?.categoryKey;
   if (!resolvedBlockId) return null;
   const themeId = resolveHeatmapThemeId(params.themesByPath, params.themePath, params.item);
   const themePath = params.themePath && params.themePath !== "__default__" ? params.themePath : getItemThemePath(params.item);
+  const goalContext = params.goalPath || params.goalId || params.templateId || params.templateVariantId ? {
+    ...params.goalPath ? { goalPath: params.goalPath } : {},
+    ...params.goalId ? { goalId: params.goalId } : {},
+    ...params.templateId ? { templateId: params.templateId, goalTemplateId: params.templateId } : {},
+    ...params.templateVariantId ? { templateVariantId: params.templateVariantId, goalTemplateVariantId: params.templateVariantId } : {}
+  } : null;
   const context = {
     日期: params.date,
     __recordUiContext: {
       kind: "heatmap_create",
       timeContext: { date: params.date },
       themeContext: themePath ? { themePath } : null,
-      goalContext: params.goalPath ? { goalPath: params.goalPath } : null
+      goalContext
     },
-    ...params.item ? { 内容: params.item.content || "", 评分: params.item.rating ?? 0 } : {}
+    ...params.item ? { 内容: params.item.content || "" } : {},
+    ...buildHeatmapRatingContext(params.item)
   };
   if (themePath) {
     context["主题"] = themePath;
@@ -56373,6 +56520,19 @@ function buildHeatmapCreateConfig(params) {
   if (params.goalPath) {
     context["目标"] = params.goalPath;
     context.goalPath = params.goalPath;
+  }
+  if (params.goalId) {
+    context["目标ID"] = params.goalId;
+    context.goalId = params.goalId;
+  }
+  if (params.templateId) {
+    context["模板ID"] = params.templateId;
+    context.templateId = params.templateId;
+    context.goalTemplateId = params.templateId;
+  }
+  if (params.templateVariantId) {
+    context.templateVariantId = params.templateVariantId;
+    context.goalTemplateVariantId = params.templateVariantId;
   }
   return {
     blockId: resolvedBlockId,
@@ -57956,14 +58116,25 @@ function QuickInputEditor({
         if (contextValue !== void 0) {
           if (!hasMeaningfulExisting || existingSource !== "user") {
             if (["select", "singleSelect", "radio", "rating"].includes(field.type)) {
-              const rawString = contextValue !== null && contextValue !== void 0 ? String(contextValue) : "";
-              const leafString = getLeafPath(rawString) || rawString;
-              const matched = (field.options || []).find((opt) => {
-                const optLabel = String(opt.label || opt.value || "");
-                const optValue = String(opt.value || "");
-                return optValue === rawString || optLabel === rawString || optLabel === leafString || String(optLabel) === String(rawString);
-              });
-              assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : contextValue, "context");
+              if (isOptionLike(contextValue)) {
+                const rawValue = String(contextValue.value ?? "");
+                const rawLabel = String(contextValue.label ?? "");
+                const matched = (field.options || []).find((opt) => {
+                  const optLabel = String(opt.label || opt.value || "");
+                  const optValue = String(opt.value || "");
+                  return optValue === rawValue || optLabel === rawLabel || optValue === rawLabel || optLabel === rawValue;
+                });
+                assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : { value: contextValue.value, label: contextValue.label || contextValue.value }, "context");
+              } else {
+                const rawString = contextValue !== null && contextValue !== void 0 ? String(contextValue) : "";
+                const leafString = getLeafPath(rawString) || rawString;
+                const matched = (field.options || []).find((opt) => {
+                  const optLabel = String(opt.label || opt.value || "");
+                  const optValue = String(opt.value || "");
+                  return optValue === rawString || optLabel === rawString || optLabel === leafString || String(optLabel) === String(rawString);
+                });
+                assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : contextValue, "context");
+              }
             } else {
               assignValue(key, contextValue, "context");
             }
@@ -68669,6 +68840,32 @@ function BlockManager() {
     )) }) }) })
   ] });
 }
+function modeButtonStyle(active, disabled) {
+  return {
+    border: "none",
+    borderRadius: 999,
+    padding: "5px 12px",
+    cursor: disabled ? "not-allowed" : "pointer",
+    background: active ? "var(--interactive-accent)" : "transparent",
+    color: active ? "var(--text-on-accent)" : "var(--text-muted)",
+    font: "inherit",
+    fontWeight: 700
+  };
+}
+function GoalTemplateModeSwitch({ mode, blockName, disabled = false, onInherit, onOverride }) {
+  const inherited = mode === "inherit";
+  const override = mode === "override";
+  return /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1.25, p: 1, display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
+    /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { fontSize: "0.9rem", fontWeight: 800 }, children: "预设模式" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: inherited ? `继承 ${blockName} 的基础字段和输出格式` : "当前主题使用独立字段和输出格式" })
+    ] }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, p: 0.25, border: "1px solid var(--background-modifier-border)", borderRadius: 999, background: "var(--background-secondary)" }, children: [
+      /* @__PURE__ */ u2("button", { type: "button", disabled, onClick: onInherit, style: modeButtonStyle(inherited, disabled), children: "继承" }),
+      /* @__PURE__ */ u2("button", { type: "button", disabled, onClick: onOverride, style: modeButtonStyle(override, disabled), children: "覆盖" })
+    ] })
+  ] });
+}
 function cloneValue$1(value) {
   return JSON.parse(JSON.stringify(value));
 }
@@ -68775,26 +68972,22 @@ function mergeDefaultValues(draft, themeIcon) {
   }
   return values2;
 }
-function leafPath$3(value) {
+function leafPath$2(value) {
   const text2 = String(value ?? "").trim();
   return text2.split("/").filter(Boolean).pop() || text2;
 }
-function isGeneratedPresetName$2(value) {
+function isGeneratedPresetName$1(value) {
   const text2 = String(value ?? "").trim();
   return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "未命名预设";
 }
 function themeLeafLabel(themePath, fallback = "") {
   const clean = cleanDisplayThemePath(themePath);
-  return leafPath$3(clean) || fallback;
+  return leafPath$2(clean) || fallback;
 }
 function inferTemplateDisplayName(template, themePath, fallback = "记录预设") {
-  const name = String(template?.name || "").trim();
-  if (name && !isGeneratedPresetName$2(name)) return name;
-  const themeLabel = themeLeafLabel(themePath || readThemePathFromTemplate(template));
-  if (themeLabel) return themeLabel;
-  const variantId = String(template?.variantId || "").trim();
-  if (variantId && variantId !== "default" && !isGeneratedPresetName$2(variantId)) return variantId.replace(/^legacy-/, "");
-  return fallback;
+  const resolvedThemePath = normalizeThemePath(themePath || readThemePathFromTemplate(template));
+  const displayTemplate = resolvedThemePath ? { ...template || {}, defaultValues: { ...template?.defaultValues || {}, themePath: resolvedThemePath, "主题": resolvedThemePath } } : template;
+  return getGoalTemplateDisplayName$1(displayTemplate, null, fallback);
 }
 function NativeTextInput({
   label,
@@ -69040,21 +69233,8 @@ function buildInheritedDraft(previous, block2) {
   };
   return next2;
 }
-function templateHasCustomOverrides(template, block2, goal) {
-  if (!template || !block2 || template.enabled === false) return false;
-  const patch = compactGoalTemplateForStorage(template, { coreBlock: block2, goal });
-  if (patch.fields?.length) return true;
-  if (compactText(patch.outputTemplate)) return true;
-  if (compactText(patch.targetFile)) return true;
-  if (compactText(patch.appendUnderHeader)) return true;
-  if (patch.requiredFields?.length) return true;
-  const values2 = patch.defaultValues || {};
-  const customDefaultKeys = Object.keys(values2).filter((key) => !["themePath", "主题", "icon", "图标"].includes(key));
-  return customDefaultKeys.length > 0;
-}
 function inferTemplateEditMode(template, block2, goal) {
-  if (template?.enabled === false) return "disabled";
-  return templateHasCustomOverrides(template, block2, goal) ? "override" : "inherit";
+  return inferGoalTemplateEditMode(template, block2, goal);
 }
 function buildInheritedTemplatePatchFromDraft(params) {
   const { goal, block: block2, draft, selectedTemplate, themeIcon } = params;
@@ -69142,35 +69322,6 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
   const [draft, setDraft] = d(() => makeDraftFromTemplate(null, block2, sortedVariants));
   const draftRef = A$1(draft);
   const selectedTemplate = T$1(() => sortedVariants.find((template) => (template.variantId || "default") === selectedVariantId) || null, [sortedVariants, selectedVariantId]);
-  T$1(() => {
-    const rows = [...sortedVariants];
-    const draftVariantId = draft.variantId || selectedVariantId || "default";
-    const draftExists = rows.some((template) => (template.variantId || "default") === draftVariantId);
-    if (mode === "override" && !draftExists) {
-      rows.push({
-        id: goal && block2 ? getGoalTemplateId(goal.id, block2.id, draftVariantId) : draftVariantId,
-        goalId: goal?.id || "",
-        coreBlockId: block2?.id || "",
-        variantId: draftVariantId,
-        name: draft.name,
-        description: draft.description,
-        periodPolicy: buildDraftPeriodPolicy(block2, draft),
-        sortOrder: draft.sortOrder,
-        enabled: true,
-        fields: draft.fields,
-        outputTemplate: draft.outputTemplate,
-        targetFile: draft.targetFile,
-        appendUnderHeader: draft.appendUnderHeader,
-        defaultValues: draft.defaultValues,
-        requiredFields: draft.requiredFields
-      });
-    }
-    return rows.map((template, index) => ({ template, index })).sort((left2, right2) => {
-      const bySort = (left2.template.sortOrder ?? 9999) - (right2.template.sortOrder ?? 9999);
-      if (bySort !== 0) return bySort;
-      return left2.index - right2.index;
-    }).map(({ template }) => template);
-  }, [sortedVariants, draft, selectedVariantId, mode, goal?.id, block2?.id]);
   y(() => {
     if (!isOpen) return;
     const initial = initialVariantId ? sortedVariants.find((template) => (template.variantId || "default") === initialVariantId || template.id === initialVariantId) || null : null;
@@ -69379,52 +69530,16 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
           block2.name,
           "」。保存前请先改为普通记录预设，或删除这条隐藏规则。"
         ] }) : null,
-        /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1.25, p: 1, display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
-          /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
-            /* @__PURE__ */ u2(Typography2, { sx: { fontSize: "0.9rem", fontWeight: 800 }, children: "预设模式" }),
-            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: inheritedMode ? `继承 ${block2.name} 的基础字段和输出格式` : "当前主题使用独立字段和输出格式" })
-          ] }),
-          /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, p: 0.25, border: "1px solid var(--background-modifier-border)", borderRadius: 999, background: "var(--background-secondary)" }, children: [
-            /* @__PURE__ */ u2(
-              "button",
-              {
-                type: "button",
-                disabled: metadataDisabled,
-                onClick: switchToInherit,
-                style: {
-                  border: "none",
-                  borderRadius: 999,
-                  padding: "5px 12px",
-                  cursor: metadataDisabled ? "not-allowed" : "pointer",
-                  background: inheritedMode ? "var(--interactive-accent)" : "transparent",
-                  color: inheritedMode ? "var(--text-on-accent)" : "var(--text-muted)",
-                  font: "inherit",
-                  fontWeight: 700
-                },
-                children: "继承"
-              }
-            ),
-            /* @__PURE__ */ u2(
-              "button",
-              {
-                type: "button",
-                disabled: metadataDisabled,
-                onClick: switchToOverride,
-                style: {
-                  border: "none",
-                  borderRadius: 999,
-                  padding: "5px 12px",
-                  cursor: metadataDisabled ? "not-allowed" : "pointer",
-                  background: !inheritedMode && mode === "override" ? "var(--interactive-accent)" : "transparent",
-                  color: !inheritedMode && mode === "override" ? "var(--text-on-accent)" : "var(--text-muted)",
-                  font: "inherit",
-                  fontWeight: 700
-                },
-                children: "覆盖"
-              }
-            )
-          ] })
-        ] }),
+        /* @__PURE__ */ u2(
+          GoalTemplateModeSwitch,
+          {
+            mode,
+            blockName: block2.name,
+            disabled: metadataDisabled,
+            onInherit: switchToInherit,
+            onOverride: switchToOverride
+          }
+        ),
         /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1.25, p: 1.25, display: "grid", gap: 1 }, children: [
           /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: supportsPeriod ? "1.2fr 1.2fr 0.75fr" : "1.2fr 1.2fr" }, gap: 1 }, children: [
             /* @__PURE__ */ u2(NativeTextInput, { label: "名字", value: draft.name, onInput: (value) => updateDraft({ name: value }), disabled: metadataDisabled, placeholder: "例如：心情" }),
@@ -69432,7 +69547,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
               const themePath = String(value || "");
               updateThemePath(themePath);
               const label = themeLeafLabel(themePath);
-              if (label && isGeneratedPresetName$2(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
+              if (label && isGeneratedPresetName$1(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
             }, disabled: metadataDisabled }),
             supportsPeriod ? /* @__PURE__ */ u2(NativeSelectInput2, { label: "周期", value: draft.granularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: metadataDisabled }) : null
           ] }),
@@ -69483,7 +69598,7 @@ function safeVariantPart(value) {
   const text2 = String(value ?? "").trim() || "preset";
   return text2.replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "preset";
 }
-function leafPath$2(value) {
+function leafPath$1(value) {
   const text2 = String(value ?? "").trim();
   return text2.split("/").filter(Boolean).pop() || text2;
 }
@@ -69577,7 +69692,7 @@ function buildRetargetedGoalTemplate(input) {
   const themePath = readGoalTemplateThemePath(sourceTemplate, sourceGoal);
   const icon = readGoalTemplateIcon(sourceTemplate, themeIcon);
   const name = getGoalTemplateDisplayName(sourceTemplate);
-  const label = themePath ? leafPath$2(themePath) : name;
+  const label = themePath ? leafPath$1(themePath) : name;
   const variantId = nextVariantId(targetGoal, targetBlock, templates, label || name || targetBlock.name);
   const sameCellEnabled = templates.some((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id && template.enabled !== false);
   const goalPath = targetGoal.goalPath || targetGoal.title || targetGoal.id;
@@ -69665,22 +69780,6 @@ const mutedStyle = {
   fontSize: "11px",
   whiteSpace: "nowrap"
 };
-function leafPath$1(value) {
-  const text2 = String(value ?? "").trim();
-  return text2.split("/").filter(Boolean).pop() || text2;
-}
-function isGeneratedPresetName$1(value) {
-  const text2 = String(value ?? "").trim();
-  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "未命名预设";
-}
-function cleanDisplayText$1(value) {
-  return String(value ?? "").replace(/^[#＃]+\s*/, "").trim();
-}
-function displayPresetName(template, themePath) {
-  const raw = getGoalTemplateDisplayName(template);
-  if (!isGeneratedPresetName$1(raw)) return raw;
-  return cleanDisplayText$1(leafPath$1(themePath)) || raw;
-}
 function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks, onDeleteTemplate }) {
   y(() => {
     if (!state) return void 0;
@@ -69691,8 +69790,9 @@ function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBloc
     return () => window.removeEventListener("keydown", onKey);
   }, [state, onClose]);
   if (!state || typeof document === "undefined") return null;
-  const themePath = readGoalTemplateThemePath(state.template, state.goal);
-  const title = displayPresetName(state.template, themePath);
+  const display = getGoalTemplateDisplayInfo(state.template, state.goal);
+  const themePath = display.themePath || readGoalTemplateThemePath(state.template, state.goal);
+  const title = display.name;
   const missingCount = blocks.filter((block2) => block2.id !== state.block.id && !findExistingTemplateForTheme(templates, state.goal, block2, state.template)).length;
   const left2 = Math.min(state.x, Math.max(12, window.innerWidth - 340));
   const top2 = Math.min(state.y, Math.max(12, window.innerHeight - 420));
@@ -69795,6 +69895,69 @@ function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBloc
     )
   ] });
   return $(menu, document.body);
+}
+const PRESET_CARD_HEIGHT = 30;
+function GoalPresetCard({
+  templateKey,
+  name,
+  icon,
+  themePath,
+  isDragging = false,
+  onOpen,
+  onContextMenu,
+  onDragStart,
+  onDragEnd
+}) {
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      "data-goal-template-key": templateKey,
+      role: "button",
+      tabIndex: 0,
+      title: `${name}${themePath ? ` · ${themePath}` : ""}
+左键：编辑；右键：复制/删除；拖动 ☰：排序或移动到其它目标/记录类型`,
+      onClick: onOpen,
+      onContextMenu,
+      style: {
+        width: "100%",
+        display: "grid",
+        gridTemplateColumns: "14px 18px minmax(0, 1fr)",
+        alignItems: "center",
+        gap: 4,
+        border: "1px solid var(--background-modifier-border)",
+        borderRadius: 8,
+        background: "var(--background-primary)",
+        color: "var(--text-normal)",
+        minHeight: PRESET_CARD_HEIGHT,
+        height: PRESET_CARD_HEIGHT,
+        padding: "0 6px",
+        cursor: "pointer",
+        font: "inherit",
+        textAlign: "left",
+        opacity: isDragging ? 0.48 : 1,
+        boxShadow: "none",
+        userSelect: "none"
+      },
+      children: [
+        /* @__PURE__ */ u2(
+          "span",
+          {
+            draggable: true,
+            onMouseDown: (event) => event.stopPropagation(),
+            onClick: (event) => event.stopPropagation(),
+            onDragStart,
+            onDragEnd,
+            title: "拖动预设排序或移动",
+            style: { color: "var(--text-muted)", cursor: "grab", userSelect: "none", textAlign: "center", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", height: "100%" },
+            children: "☰"
+          }
+        ),
+        /* @__PURE__ */ u2("span", { style: { textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }, children: icon || "◇" }),
+        /* @__PURE__ */ u2("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", fontWeight: 700, lineHeight: 1.2 }, children: name })
+      ]
+    },
+    templateKey
+  );
 }
 function cleanPathSegment(value) {
   return value.trim().replace(/^[#＃]+\s*/, "").trim();
@@ -69900,7 +70063,6 @@ const PATH_COL_WIDTH = 250;
 const BLOCK_COL_WIDTH = 136;
 const SEGMENT_HEIGHT = 36;
 const ADD_BUTTON_HEIGHT = SEGMENT_HEIGHT;
-const PRESET_CARD_HEIGHT = 30;
 function normalizeSearchText(value) {
   return String(value || "").toLowerCase().trim();
 }
@@ -69941,7 +70103,7 @@ function buildThemeIconMap(settings) {
   return map;
 }
 function presetSearchText(template, goal) {
-  return `${getGoalTemplateDisplayName(template)} ${readGoalTemplateThemePath(template, goal)} ${readGoalTemplateIcon(template)}`.toLowerCase();
+  return `${getPresetCardName(template, goal)} ${readGoalTemplateThemePath(template, goal)} ${readGoalTemplateIcon(template)}`.toLowerCase();
 }
 function getEventDropPosition(event, target) {
   const element = target || event.currentTarget;
@@ -70227,64 +70389,32 @@ function GoalTemplateMatrix() {
     const icon = readGoalTemplateIcon(template, themeIconByPath.get(themePath));
     const name = getPresetCardName(template, goal);
     const key = goalTemplateKey(template);
-    const isDragging = draggingPreset?.templateKey === key;
     return /* @__PURE__ */ u2(
-      "div",
+      GoalPresetCard,
       {
-        "data-goal-template-key": key,
-        role: "button",
-        tabIndex: 0,
-        title: `${name}${themePath ? ` · ${themePath}` : ""}
-左键：编辑；右键：复制/删除；拖动 ☰：排序或移动到其它目标/记录类型`,
-        onClick: () => openEditor(goal, block2, template),
+        goal,
+        block: block2,
+        template,
+        templateKey: key,
+        name,
+        icon,
+        themePath,
+        isDragging: draggingPreset?.templateKey === key,
+        onOpen: () => openEditor(goal, block2, template),
         onContextMenu: (event) => openPresetContextMenu(event, goal, block2, template),
-        style: {
-          width: "100%",
-          display: "grid",
-          gridTemplateColumns: "14px 18px minmax(0, 1fr)",
-          alignItems: "center",
-          gap: 4,
-          border: "1px solid var(--background-modifier-border)",
-          borderRadius: 8,
-          background: "var(--background-primary)",
-          color: "var(--text-normal)",
-          minHeight: PRESET_CARD_HEIGHT,
-          height: PRESET_CARD_HEIGHT,
-          padding: "0 6px",
-          cursor: "pointer",
-          font: "inherit",
-          textAlign: "left",
-          opacity: isDragging ? 0.48 : 1,
-          boxShadow: "none",
-          userSelect: "none"
+        onDragStart: (event) => {
+          event.stopPropagation();
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", key);
+          }
+          setDraggingPreset({ goalId: goal.id, blockId: block2.id, templateKey: key });
         },
-        children: [
-          /* @__PURE__ */ u2(
-            "span",
-            {
-              draggable: true,
-              onMouseDown: (event) => event.stopPropagation(),
-              onClick: (event) => event.stopPropagation(),
-              onDragStart: (event) => {
-                event.stopPropagation();
-                event.dataTransfer.effectAllowed = "move";
-                event.dataTransfer.setData("text/plain", key);
-                setDraggingPreset({ goalId: goal.id, blockId: block2.id, templateKey: key });
-              },
-              onDragEnd: () => {
-                setDraggingPreset(null);
-                setPresetDropCell(null);
-              },
-              title: "拖动预设排序或移动",
-              style: { color: "var(--text-muted)", cursor: "grab", userSelect: "none", textAlign: "center", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", height: "100%" },
-              children: "☰"
-            }
-          ),
-          /* @__PURE__ */ u2("span", { style: { textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }, children: icon || "◇" }),
-          /* @__PURE__ */ u2("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", fontWeight: 700, lineHeight: 1.2 }, children: name })
-        ]
-      },
-      key
+        onDragEnd: () => {
+          setDraggingPreset(null);
+          setPresetDropCell(null);
+        }
+      }
     );
   };
   const renderBlockCell = (goal, block2, collapsed) => {
@@ -71352,6 +71482,7 @@ function buildPresetLookups(goalSettings, goals) {
   const byTemplateId = /* @__PURE__ */ new Map();
   const byLegacyOverrideId = /* @__PURE__ */ new Map();
   const byGoalBlockVariant = /* @__PURE__ */ new Map();
+  const byGoalBlockTheme = /* @__PURE__ */ new Map();
   const allPresets = [];
   for (const raw of goalSettings?.goalBlockBindings || []) {
     const template = raw || {};
@@ -71372,8 +71503,9 @@ function buildPresetLookups(goalSettings, goals) {
     const legacyOverrideId = firstText(defaults.legacyOverrideId);
     if (legacyOverrideId) byLegacyOverrideId.set(legacyOverrideId, meta);
     if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\0${coreBlockId}\0${variantId}`, meta);
+    if (goalId && coreBlockId && themePath) byGoalBlockTheme.set(`${goalId}\0${coreBlockId}\0${themePath}`, meta);
   }
-  return { byTemplateId, byLegacyOverrideId, byGoalBlockVariant, goalPathById, goalLabelById, allPresets };
+  return { byTemplateId, byLegacyOverrideId, byGoalBlockVariant, byGoalBlockTheme, goalPathById, goalLabelById, allPresets };
 }
 function dateKeyOf(item) {
   return String(item?.date || "").trim();
@@ -71412,6 +71544,10 @@ function buildHeatmapViewModel(params) {
     if (!entry) {
       entry = {
         presetKey: meta.presetKey,
+        templateId: meta.templateId,
+        templateVariantId: meta.templateVariantId,
+        sourceBlockId: meta.sourceBlockId,
+        goalId: meta.goalId,
         themePath: meta.themePath || "__default__",
         label: meta.label || themeLeaf(meta.themePath),
         count: 0,
@@ -71426,6 +71562,10 @@ function buildHeatmapViewModel(params) {
     const goalGroup = ensureGoalGroup(preset.goalPath, preset.goalLabel);
     ensurePresetEntry(goalGroup, {
       presetKey: preset.key,
+      templateId: preset.id,
+      templateVariantId: preset.variantId,
+      sourceBlockId: preset.coreBlockId,
+      goalId: preset.goalId,
       themePath: preset.themePath || "__default__",
       label: preset.label || themeLeaf(preset.themePath)
     });
@@ -71439,8 +71579,9 @@ function buildHeatmapViewModel(params) {
     const goalId = firstText(item.goalId) || readExtraText(item, "目标ID");
     const coreBlockId = itemCoreBlock(item);
     const variantId = itemTemplateVariantId(item) || "default";
+    const themePath = getItemThemePath(item);
     if (goalId && coreBlockId) {
-      return lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0${variantId}`) || lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0default`) || null;
+      return lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0${variantId}`) || (themePath ? lookups.byGoalBlockTheme.get(`${goalId}\0${coreBlockId}\0${themePath}`) : null) || lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0default`) || null;
     }
     return null;
   }
@@ -71457,7 +71598,15 @@ function buildHeatmapViewModel(params) {
     goalGroup.count += 1;
     const presetKey = preset?.key || `${goalPath}\0${themePath}\0${itemCoreBlock(item) || "habit"}`;
     const label = preset?.label || themeLeaf(themePath);
-    const entry = ensurePresetEntry(goalGroup, { presetKey, themePath, label });
+    const entry = ensurePresetEntry(goalGroup, {
+      presetKey,
+      templateId: preset?.id,
+      templateVariantId: preset?.variantId,
+      sourceBlockId: preset?.coreBlockId,
+      goalId: preset?.goalId,
+      themePath,
+      label
+    });
     entry.count += 1;
     const dayItems = entry.dataForTheme.get(date2) || [];
     entry.dataForTheme.set(date2, [...dayItems, item]);
@@ -71970,6 +72119,9 @@ function useViewRuntimeHandlers({
       item: request.item,
       themePath: request.themePath,
       goalPath: request.goalPath,
+      goalId: request.goalId,
+      templateId: request.templateId,
+      templateVariantId: request.templateVariantId,
       themesByPath: request.themesByPath,
       notice: (message) => ui.notice(message)
     });

@@ -11,6 +11,11 @@ import { buildThemeDataMap, buildThemesByPathMap, getItemThemePath, getItemGoalK
 export interface HeatmapGoalThemeEntry {
     /** 分组实际依据：优先为目标预设/模板，其次才回退到主题。 */
     presetKey: string;
+    /** 点击该行空单元格时，必须把具体预设带回 QuickInput。 */
+    templateId?: string;
+    templateVariantId?: string;
+    sourceBlockId?: string;
+    goalId?: string;
     /** 仍然保留主题，用于图标、默认主题和统计二级维度。 */
     themePath: string;
     /** 行标题：优先预设名，例如 睡眠任务/运动打卡；没有预设时用主题叶子。 */
@@ -90,6 +95,7 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalD
     byTemplateId: Map<string, PresetMeta>;
     byLegacyOverrideId: Map<string, PresetMeta>;
     byGoalBlockVariant: Map<string, PresetMeta>;
+    byGoalBlockTheme: Map<string, PresetMeta>;
     goalPathById: Map<string, string>;
     goalLabelById: Map<string, string>;
     allPresets: PresetMeta[];
@@ -105,6 +111,7 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalD
     const byTemplateId = new Map<string, PresetMeta>();
     const byLegacyOverrideId = new Map<string, PresetMeta>();
     const byGoalBlockVariant = new Map<string, PresetMeta>();
+    const byGoalBlockTheme = new Map<string, PresetMeta>();
     const allPresets: PresetMeta[] = [];
 
     for (const raw of goalSettings?.goalBlockBindings || []) {
@@ -128,9 +135,10 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalD
         const legacyOverrideId = firstText(defaults.legacyOverrideId);
         if (legacyOverrideId) byLegacyOverrideId.set(legacyOverrideId, meta);
         if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\u0000${coreBlockId}\u0000${variantId}`, meta);
+        if (goalId && coreBlockId && themePath) byGoalBlockTheme.set(`${goalId}\u0000${coreBlockId}\u0000${themePath}`, meta);
     }
 
-    return { byTemplateId, byLegacyOverrideId, byGoalBlockVariant, goalPathById, goalLabelById, allPresets };
+    return { byTemplateId, byLegacyOverrideId, byGoalBlockVariant, byGoalBlockTheme, goalPathById, goalLabelById, allPresets };
 }
 
 function dateKeyOf(item: Item): string {
@@ -188,11 +196,15 @@ export function buildHeatmapViewModel(params: {
         return goalGroup;
     }
 
-    function ensurePresetEntry(goalGroup: HeatmapGoalGroup, meta: { presetKey: string; themePath: string; label: string }): HeatmapGoalThemeEntry {
+    function ensurePresetEntry(goalGroup: HeatmapGoalGroup, meta: { presetKey: string; themePath: string; label: string; templateId?: string; templateVariantId?: string; sourceBlockId?: string; goalId?: string }): HeatmapGoalThemeEntry {
         let entry = goalGroup.entries.find((candidate) => candidate.presetKey === meta.presetKey);
         if (!entry) {
             entry = {
                 presetKey: meta.presetKey,
+                templateId: meta.templateId,
+                templateVariantId: meta.templateVariantId,
+                sourceBlockId: meta.sourceBlockId,
+                goalId: meta.goalId,
                 themePath: meta.themePath || '__default__',
                 label: meta.label || themeLeaf(meta.themePath),
                 count: 0,
@@ -211,6 +223,10 @@ export function buildHeatmapViewModel(params: {
         const goalGroup = ensureGoalGroup(preset.goalPath, preset.goalLabel);
         ensurePresetEntry(goalGroup, {
             presetKey: preset.key,
+            templateId: preset.id,
+            templateVariantId: preset.variantId,
+            sourceBlockId: preset.coreBlockId,
+            goalId: preset.goalId,
             themePath: preset.themePath || '__default__',
             label: preset.label || themeLeaf(preset.themePath),
         });
@@ -226,8 +242,10 @@ export function buildHeatmapViewModel(params: {
         const goalId = firstText((item as any).goalId) || readExtraText(item, '目标ID');
         const coreBlockId = itemCoreBlock(item);
         const variantId = itemTemplateVariantId(item) || 'default';
+        const themePath = getItemThemePath(item);
         if (goalId && coreBlockId) {
             return lookups.byGoalBlockVariant.get(`${goalId}\u0000${coreBlockId}\u0000${variantId}`)
+                || (themePath ? lookups.byGoalBlockTheme.get(`${goalId}\u0000${coreBlockId}\u0000${themePath}`) : null)
                 || lookups.byGoalBlockVariant.get(`${goalId}\u0000${coreBlockId}\u0000default`)
                 || null;
         }
@@ -253,7 +271,15 @@ export function buildHeatmapViewModel(params: {
 
         const presetKey = preset?.key || `${goalPath}\u0000${themePath}\u0000${itemCoreBlock(item) || 'habit'}`;
         const label = preset?.label || themeLeaf(themePath);
-        const entry = ensurePresetEntry(goalGroup, { presetKey, themePath, label });
+        const entry = ensurePresetEntry(goalGroup, {
+            presetKey,
+            templateId: preset?.id,
+            templateVariantId: preset?.variantId,
+            sourceBlockId: preset?.coreBlockId,
+            goalId: preset?.goalId,
+            themePath,
+            label,
+        });
         entry.count += 1;
 
         const dayItems = entry.dataForTheme.get(date) || [];

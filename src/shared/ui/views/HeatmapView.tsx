@@ -42,6 +42,10 @@ interface DayThemeGroup {
 
 interface GoalHeatmapThemeEntry {
     presetKey?: string;
+    templateId?: string;
+    templateVariantId?: string;
+    sourceBlockId?: string;
+    goalId?: string;
     themePath: string;
     label: string;
     count: number;
@@ -188,27 +192,32 @@ export function HeatmapView({
         return result;
     }, [items]);
 
-    const resolveCreateBlockId = (themePath?: string, item?: Item) => {
+    const resolveCreateBlockId = (themePath?: string, item?: Item, sourceBlockId?: string) => {
+        const rowBlock = normalizeHeatmapBlockId(sourceBlockId);
         const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
-        return normalizeHeatmapBlockId(heatmapSourceBlockId)
+        return rowBlock
+            || normalizeHeatmapBlockId(heatmapSourceBlockId)
             || normalizeHeatmapBlockId(itemBlock)
             || normalizeHeatmapBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : undefined)
             || normalizeHeatmapBlockId(inferredBlockIdByTheme.get('__default__'))
             || '';
     };
 
-    const openQuickCreate = (date: string, item?: Item, themePath?: string, goalPath?: string) => {
+    const openQuickCreate = (date: string, item?: Item, themePath?: string, goalPath?: string, presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string }) => {
         if (!onOpenHeatmapCreate) {
             onNotice?.('未提供创建处理器，无法创建记录');
             return;
         }
 
         onOpenHeatmapCreate({
-            sourceBlockId: resolveCreateBlockId(themePath, item),
+            sourceBlockId: resolveCreateBlockId(themePath, item, presetContext?.sourceBlockId),
             date,
             item,
             themePath,
             goalPath,
+            goalId: presetContext?.goalId,
+            templateId: presetContext?.templateId,
+            templateVariantId: presetContext?.templateVariantId,
             themesByPath,
         });
     };
@@ -217,16 +226,16 @@ export function HeatmapView({
     // - 无记录：直接新增
     // - 1 条记录：按当前日期/主题继续新增一条（保留 create with context 语义）
     // - 多条记录：打开管理窗口，已有记录走查看，新增仍走 create with context
-    const handleCellClick = (date: string, dayItems?: Item[], themePath?: string, goalPath?: string) => {
+    const handleCellClick = (date: string, dayItems?: Item[], themePath?: string, goalPath?: string, presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string }) => {
         const itemsForDay = dayItems || [];
 
         if (itemsForDay.length === 0) {
-            openQuickCreate(date, undefined, themePath, goalPath);
+            openQuickCreate(date, undefined, themePath, goalPath, presetContext);
             return;
         }
 
         if (itemsForDay.length === 1) {
-            openQuickCreate(date, itemsForDay[0], themePath, goalPath);
+            openQuickCreate(date, itemsForDay[0], themePath, goalPath, presetContext);
             return;
         }
 
@@ -238,7 +247,7 @@ export function HeatmapView({
         onOpenCheckinManager({
             date,
             items: itemsForDay,
-            onAddRecord: () => openQuickCreate(date, itemsForDay[itemsForDay.length - 1], themePath, goalPath),
+            onAddRecord: () => openQuickCreate(date, itemsForDay[itemsForDay.length - 1], themePath, goalPath, presetContext),
         });
     };
 
@@ -246,7 +255,8 @@ export function HeatmapView({
         monthDate: dayjs.Dayjs,
         dataForMonth: Map<string, Item[]>,
         themePath: string,
-        goalPath?: string
+        goalPath?: string,
+        presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string }
     ) => {
         const startOfMonth = monthDate.startOf('month');
         const endOfMonth = monthDate.endOf('month');
@@ -275,7 +285,7 @@ export function HeatmapView({
                     config={config}
                     ratingMapping={themeRatingMapping}
                     resolveResourcePath={resolveResourcePath}
-                    onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)}
+                    onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)}
                 />
             );
         }
@@ -292,7 +302,8 @@ export function HeatmapView({
         currentView: string,
         themePath: string,
         dataForTheme: Map<string, Item[]>,
-        goalPath?: string
+        goalPath?: string,
+        presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string }
     ) => {
         const start = dayjs(dateRange[0]);
         const end = dayjs(dateRange[1]);
@@ -318,7 +329,7 @@ export function HeatmapView({
                         config={config}
                         ratingMapping={themeRatingMapping}
                         resolveResourcePath={resolveResourcePath}
-                        onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)}
+                        onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)}
                     />,
                 ];
             }
@@ -340,7 +351,7 @@ export function HeatmapView({
                             config={config}
                             ratingMapping={themeRatingMapping}
                             resolveResourcePath={resolveResourcePath}
-                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)}
+                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)}
                         />
                     );
 
@@ -367,7 +378,7 @@ export function HeatmapView({
                             config={config}
                             ratingMapping={themeRatingMapping}
                             resolveResourcePath={resolveResourcePath}
-                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath)}
+                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)}
                         />
                     );
 
@@ -383,7 +394,7 @@ export function HeatmapView({
                 let currentMonth = start.clone().startOf('month');
 
                 while (currentMonth.isSameOrBefore(end, 'month')) {
-                    months.push(renderMonthGrid(currentMonth, dataForTheme, themePath, goalPath));
+                    months.push(renderMonthGrid(currentMonth, dataForTheme, themePath, goalPath, presetContext));
                     currentMonth = currentMonth.add(1, 'month');
                 }
 
@@ -518,7 +529,7 @@ export function HeatmapView({
                                                 resolveResourcePath={resolveResourcePath}
                                                 highlightToday={false}
                                                 emptyLabel={!dayItems || dayItems.length === 0 ? entry.label : undefined}
-                                                onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath)}
+                                                onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId })}
                                             />
                                         </div>
                                     );
@@ -576,8 +587,9 @@ export function HeatmapView({
         keyPrefix?: string;
         entryKey?: string;
         label?: string;
+        presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string };
     }) => {
-        const { theme, dataForTheme, goalPath, keyPrefix = '', entryKey, label } = params;
+        const { theme, dataForTheme, goalPath, keyPrefix = '', entryKey, label, presetContext } = params;
         const rowKey = `${keyPrefix}${entryKey || theme}`;
         const isRowLayout = ['周', '月'].includes(normalizedCurrentView);
         const isVertical = normalizedCurrentView === '周' ? false : verticalLayouts.has(rowKey);
@@ -611,7 +623,7 @@ export function HeatmapView({
 
                     {!isCollapsed && (
                         <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
-                            {renderHeaderCells(normalizedCurrentView, theme, dataForTheme, goalPath)}
+                            {renderHeaderCells(normalizedCurrentView, theme, dataForTheme, goalPath, presetContext)}
                         </div>
                     )}
                 </div>
@@ -644,6 +656,7 @@ export function HeatmapView({
                                     keyPrefix: `${goalGroup.goalPath}\u0000`,
                                     entryKey: entry.presetKey || entry.themePath,
                                     label: entry.label,
+                                    presetContext: { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId },
                                 }))}
                             </div>
                         </section>

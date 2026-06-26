@@ -1,14 +1,15 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Alert, Box, Button, Divider, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, Stack, Typography, diagnosticError } from '@shared/public';
+import { Alert, Box, Button, Divider, Stack, Typography, diagnosticError } from '@shared/public';
 import type { JSX } from 'preact';
 import { FloatingPanel, selectSettings, useSelector, useUiPort, type UseCases } from '@/app/public';
 import type { CoreBlockDefinition } from '@core/public';
 import type { GoalDefinition, GoalTemplate, TemplateField } from '@core/public';
-import { getGoalTemplateId, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, isSystemRecordContextField, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff } from '@core/public';
+import { getGoalTemplateId, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, isSystemRecordContextField, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, getGoalTemplateDisplayName as getCoreGoalTemplateDisplayName, inferGoalTemplateEditMode } from '@core/public';
 import { FieldsEditor } from '../input/FieldsEditor';
 import { TemplateVariableCopier } from '../input/TemplateVariableCopier';
+import { GoalTemplateModeSwitch } from './GoalTemplateModeSwitch';
 
 type EditMode = 'inherit' | 'override' | 'disabled';
 
@@ -79,13 +80,6 @@ const presetGranularityOptions = [
   { value: 'quarter', label: '季度' },
   { value: 'year', label: '年' },
 ];
-
-const granularityLabelMap: Record<DraftState['granularity'], string> = {
-  week: '周',
-  month: '月',
-  quarter: '季度',
-  year: '年',
-};
 
 function normalizeThemePath(value: unknown): string {
   const text = String(value ?? '').trim();
@@ -166,12 +160,6 @@ function mergeDefaultValues(draft: DraftState, themeIcon?: string): Record<strin
   return values;
 }
 
-function shortText(value: unknown, fallback = '—', max = 24): string {
-  const text = String(value ?? '').trim();
-  if (!text) return fallback;
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
-}
-
 function leafPath(value: unknown): string {
   const text = String(value ?? '').trim();
   return text.split('/').filter(Boolean).pop() || text;
@@ -188,21 +176,11 @@ function themeLeafLabel(themePath: unknown, fallback = ''): string {
 }
 
 function inferTemplateDisplayName(template: GoalTemplate | null | undefined, themePath?: string, fallback = '记录预设'): string {
-  const name = String(template?.name || '').trim();
-  if (name && !isGeneratedPresetName(name)) return name;
-  const themeLabel = themeLeafLabel(themePath || readThemePathFromTemplate(template));
-  if (themeLabel) return themeLabel;
-  const variantId = String(template?.variantId || '').trim();
-  if (variantId && variantId !== 'default' && !isGeneratedPresetName(variantId)) return variantId.replace(/^legacy-/, '');
-  return fallback;
-}
-
-function presetName(template: { name?: string; variantId?: string }): string {
-  const name = String(template.name || '').trim();
-  if (name && !isGeneratedPresetName(name)) return name;
-  const variantId = String(template.variantId || '').trim();
-  if (variantId && !isGeneratedPresetName(variantId)) return variantId.replace(/^legacy-/, '');
-  return '记录预设';
+  const resolvedThemePath = normalizeThemePath(themePath || readThemePathFromTemplate(template));
+  const displayTemplate = resolvedThemePath
+    ? { ...(template || {}), defaultValues: { ...((template?.defaultValues || {}) as Record<string, unknown>), themePath: resolvedThemePath, '主题': resolvedThemePath } }
+    : template;
+  return getCoreGoalTemplateDisplayName(displayTemplate as GoalTemplate | null | undefined, null, fallback);
 }
 
 function NativeTextInput({
@@ -234,77 +212,6 @@ function NativeTextInput({
         style={{ ...nativeControlBaseStyle, opacity: disabled ? 0.6 : 1, cursor: disabled ? 'not-allowed' : 'text' }}
       />
     </label>
-  );
-}
-
-function CompactCellInput({
-  value,
-  onInput,
-  disabled = false,
-  placeholder,
-  type = 'text',
-}: {
-  value: string;
-  onInput: (value: string) => void;
-  disabled?: boolean;
-  placeholder?: string;
-  type?: string;
-}) {
-  return (
-    <input
-      value={value}
-      type={type as any}
-      disabled={disabled}
-      placeholder={placeholder}
-      onMouseDown={stopEditorEvent as any}
-      onClick={stopEditorEvent as any}
-      onDblClick={stopEditorEvent as any}
-      onKeyDown={stopEditorEvent as any}
-      onKeyUp={stopEditorEvent as any}
-      onInput={(event) => onInput(readInputValue(event as any))}
-      style={{
-        ...nativeControlBaseStyle,
-        padding: '5px 7px',
-        minHeight: 30,
-        fontSize: 13,
-        opacity: disabled ? 0.6 : 1,
-        cursor: disabled ? 'not-allowed' : 'text',
-      }}
-    />
-  );
-}
-
-function CompactCellSelect({
-  value,
-  options,
-  onChange,
-  disabled = false,
-}: {
-  value: string;
-  options: Array<{ value: string; label: string }>;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <select
-      value={value}
-      disabled={disabled}
-      onMouseDown={stopEditorEvent as any}
-      onClick={stopEditorEvent as any}
-      onDblClick={stopEditorEvent as any}
-      onKeyDown={stopEditorEvent as any}
-      onKeyUp={stopEditorEvent as any}
-      onChange={(event) => onChange(((event.target || event.currentTarget) as HTMLSelectElement).value)}
-      style={{
-        ...nativeControlBaseStyle,
-        padding: '5px 7px',
-        minHeight: 30,
-        fontSize: 13,
-        opacity: disabled ? 0.6 : 1,
-      }}
-    >
-      {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-    </select>
   );
 }
 
@@ -561,22 +468,8 @@ function buildInheritedDraft(previous: DraftState, block: CoreBlockDefinition | 
   return next;
 }
 
-function templateHasCustomOverrides(template: GoalTemplate | null | undefined, block: CoreBlockDefinition | null, goal: GoalDefinition | null): boolean {
-  if (!template || !block || template.enabled === false) return false;
-  const patch = compactGoalTemplateForStorage(template, { coreBlock: block, goal });
-  if (patch.fields?.length) return true;
-  if (compactText(patch.outputTemplate)) return true;
-  if (compactText(patch.targetFile)) return true;
-  if (compactText(patch.appendUnderHeader)) return true;
-  if (patch.requiredFields?.length) return true;
-  const values = patch.defaultValues || {};
-  const customDefaultKeys = Object.keys(values).filter((key) => !['themePath', '主题', 'icon', '图标'].includes(key));
-  return customDefaultKeys.length > 0;
-}
-
 function inferTemplateEditMode(template: GoalTemplate | null | undefined, block: CoreBlockDefinition | null, goal: GoalDefinition | null): EditMode {
-  if (template?.enabled === false) return 'disabled';
-  return templateHasCustomOverrides(template, block, goal) ? 'override' : 'inherit';
+  return inferGoalTemplateEditMode(template, block, goal) as EditMode;
 }
 
 function buildInheritedTemplatePatchFromDraft(params: {
@@ -688,39 +581,6 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
   const draftRef = useRef<DraftState>(draft);
 
   const selectedTemplate = useMemo(() => sortedVariants.find((template) => (template.variantId || 'default') === selectedVariantId) || null, [sortedVariants, selectedVariantId]);
-  const tableVariants = useMemo(() => {
-    const rows = [...sortedVariants];
-    const draftVariantId = draft.variantId || selectedVariantId || 'default';
-    const draftExists = rows.some((template) => (template.variantId || 'default') === draftVariantId);
-    if (mode === 'override' && !draftExists) {
-      rows.push({
-        id: goal && block ? getGoalTemplateId(goal.id, block.id, draftVariantId) : draftVariantId,
-        goalId: goal?.id || '',
-        coreBlockId: block?.id || '',
-        variantId: draftVariantId,
-        name: draft.name,
-        description: draft.description,
-            periodPolicy: buildDraftPeriodPolicy(block, draft),
-        sortOrder: draft.sortOrder,
-        enabled: true,
-        fields: draft.fields,
-        outputTemplate: draft.outputTemplate,
-        targetFile: draft.targetFile,
-        appendUnderHeader: draft.appendUnderHeader,
-        defaultValues: draft.defaultValues,
-        requiredFields: draft.requiredFields,
-      } as GoalTemplate);
-    }
-    return rows
-      .map((template, index) => ({ template, index }))
-      .sort((left, right) => {
-        const bySort = (left.template.sortOrder ?? 9999) - (right.template.sortOrder ?? 9999);
-        if (bySort !== 0) return bySort;
-        return left.index - right.index;
-      })
-      .map(({ template }) => template);
-  }, [sortedVariants, draft, selectedVariantId, mode, goal?.id, block?.id]);
-
   useEffect(() => {
     if (!isOpen) return;
     const initial = initialVariantId
@@ -781,25 +641,6 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
     return { ...block, fields: draft.fields || block.fields, outputTemplate: draft.outputTemplate || block.outputTemplate };
   }, [block, draft.fields, draft.outputTemplate]);
 
-  const handleSelectVariant = (variantId: string) => {
-    const template = sortedVariants.find((item) => (item.variantId || 'default') === variantId) || null;
-    setSelectedVariantId(variantId || 'default');
-    const nextMode = inferTemplateEditMode(template, block, goal);
-    const baseDraft = makeDraftFromTemplate(template, block, sortedVariants);
-    const nextDraft = nextMode === 'inherit' ? buildInheritedDraft(baseDraft, block) : baseDraft;
-    draftRef.current = nextDraft;
-    setDraft(nextDraft);
-    setMode(nextMode);
-  };
-
-  const handleNewVariant = () => {
-    const next = buildInheritedDraft(makeNewDraft(goal, block, sortedVariants, themes), block);
-    setMode('inherit');
-    setSelectedVariantId(next.variantId);
-    draftRef.current = next;
-    setDraft(next);
-  };
-
   const switchToInherit = () => {
     setMode('inherit');
     setDraft((previous) => {
@@ -824,18 +665,6 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
       draftRef.current = next;
       return next;
     });
-  };
-
-  const handleMoveVariant = async (direction: -1 | 1) => {
-    if (!goal || !block || !selectedTemplate) return;
-    const index = sortedVariants.findIndex((template) => (template.variantId || 'default') === (selectedTemplate.variantId || 'default'));
-    const targetIndex = index + direction;
-    if (index < 0 || targetIndex < 0 || targetIndex >= sortedVariants.length) return;
-    const reordered = [...sortedVariants];
-    const [moved] = reordered.splice(index, 1);
-    reordered.splice(targetIndex, 0, moved);
-    await Promise.all(reordered.map((template, order) => useCases.goal.upsertGoalTemplate({ ...template, sortOrder: order * 10 })));
-    setSelectedVariantId(moved.variantId || 'default');
   };
 
   const handleCopyVariant = async () => {
@@ -867,17 +696,6 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
     setDraft(nextDraft);
     ui.notice('已复制记录预设');
   };
-
-  const handleDeleteCurrentVariant = async () => {
-    if (!goal || !block) return;
-    const variantId = selectedVariantId || draft.variantId || 'default';
-    const ok = window.confirm(`删除当前记录预设「${draft.name || variantId}」？`);
-    if (!ok) return;
-    await useCases.goal.deleteGoalTemplate(goal.id, block.id, variantId);
-    ui.notice('已删除当前记录预设');
-    onClose();
-  };
-
 
   const deleteCellTemplates = async () => {
     if (!goal || !block) return;
@@ -984,46 +802,13 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
             <Alert severity="warning">这个目标下已经隐藏「{block.name}」。保存前请先改为普通记录预设，或删除这条隐藏规则。</Alert>
           ) : null}
 
-          <Box sx={{ border: '1px solid var(--background-modifier-border)', borderRadius: 1.25, p: 1, display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontSize: '0.9rem', fontWeight: 800 }}>预设模式</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {inheritedMode ? `继承 ${block.name} 的基础字段和输出格式` : '当前主题使用独立字段和输出格式'}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 0.5, p: 0.25, border: '1px solid var(--background-modifier-border)', borderRadius: 999, background: 'var(--background-secondary)' }}>
-              <button
-                type="button"
-                disabled={metadataDisabled}
-                onClick={switchToInherit}
-                style={{
-                  border: 'none',
-                  borderRadius: 999,
-                  padding: '5px 12px',
-                  cursor: metadataDisabled ? 'not-allowed' : 'pointer',
-                  background: inheritedMode ? 'var(--interactive-accent)' : 'transparent',
-                  color: inheritedMode ? 'var(--text-on-accent)' : 'var(--text-muted)',
-                  font: 'inherit',
-                  fontWeight: 700,
-                }}
-              >继承</button>
-              <button
-                type="button"
-                disabled={metadataDisabled}
-                onClick={switchToOverride}
-                style={{
-                  border: 'none',
-                  borderRadius: 999,
-                  padding: '5px 12px',
-                  cursor: metadataDisabled ? 'not-allowed' : 'pointer',
-                  background: !inheritedMode && mode === 'override' ? 'var(--interactive-accent)' : 'transparent',
-                  color: !inheritedMode && mode === 'override' ? 'var(--text-on-accent)' : 'var(--text-muted)',
-                  font: 'inherit',
-                  fontWeight: 700,
-                }}
-              >覆盖</button>
-            </Box>
-          </Box>
+          <GoalTemplateModeSwitch
+            mode={mode}
+            blockName={block.name}
+            disabled={metadataDisabled}
+            onInherit={switchToInherit}
+            onOverride={switchToOverride}
+          />
 
           <Box sx={{ border: '1px solid var(--background-modifier-border)', borderRadius: 1.25, p: 1.25, display: 'grid', gap: 1 }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: supportsPeriod ? '1.2fr 1.2fr 0.75fr' : '1.2fr 1.2fr' }, gap: 1 }}>

@@ -61,6 +61,9 @@ export interface HeatmapCreateRequest {
   item?: Item;
   themePath?: string;
   goalPath?: string;
+  goalId?: string;
+  templateId?: string;
+  templateVariantId?: string;
   themesByPath: Map<string, ThemeDefinition>;
 }
 

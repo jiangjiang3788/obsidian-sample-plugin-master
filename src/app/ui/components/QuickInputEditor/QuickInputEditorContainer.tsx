@@ -456,14 +456,25 @@ export function QuickInputEditor({
         if (contextValue !== undefined) {
           if (!hasMeaningfulExisting || existingSource !== 'user') {
             if (['select', 'singleSelect', 'radio', 'rating'].includes(field.type)) {
-              const rawString = contextValue !== null && contextValue !== undefined ? String(contextValue) : '';
-              const leafString = getLeafPath(rawString) || rawString;
-              const matched = (field.options || []).find((opt: any) => {
-                const optLabel = String(opt.label || opt.value || '');
-                const optValue = String(opt.value || '');
-                return optValue === rawString || optLabel === rawString || optLabel === leafString || String(optLabel) === String(rawString);
-              });
-              assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : contextValue, 'context');
+              if (isOptionLike(contextValue)) {
+                const rawValue = String(contextValue.value ?? '');
+                const rawLabel = String(contextValue.label ?? '');
+                const matched = (field.options || []).find((opt: any) => {
+                  const optLabel = String(opt.label || opt.value || '');
+                  const optValue = String(opt.value || '');
+                  return optValue === rawValue || optLabel === rawLabel || optValue === rawLabel || optLabel === rawValue;
+                });
+                assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : { value: contextValue.value, label: contextValue.label || contextValue.value }, 'context');
+              } else {
+                const rawString = contextValue !== null && contextValue !== undefined ? String(contextValue) : '';
+                const leafString = getLeafPath(rawString) || rawString;
+                const matched = (field.options || []).find((opt: any) => {
+                  const optLabel = String(opt.label || opt.value || '');
+                  const optValue = String(opt.value || '');
+                  return optValue === rawString || optLabel === rawString || optLabel === leafString || String(optLabel) === String(rawString);
+                });
+                assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : contextValue, 'context');
+              }
             } else {
               assignValue(key, contextValue, 'context');
             }

@@ -116,7 +116,19 @@ export function decodeBlockContentLines(contentLines: string[], parentFolder: st
         } else if (['周期', 'period'].includes(key)) {
           period = decodeMarkdownString(value);
         } else if (['评分', 'rating'].includes(key)) {
-          rating = decodeMarkdownNumber(value);
+          const decodedRating = decodeMarkdownNumber(value);
+          if (decodedRating !== undefined) {
+            rating = decodedRating;
+          } else {
+            const visualRating = String(value || '').trim();
+            if (visualRating) {
+              extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
+              // 允许 Emoji / 图片路径直接作为评分视觉值。这样历史记录 `评分:: ✅`
+              // 不会在解析阶段丢失，热力图和快捷面板都能继续显示。
+              if (!pintu) pintu = visualRating;
+              if (!image) image = visualRating;
+            }
+          }
         } else if (['图标', 'icon'].includes(key)) {
           icon = value.trim();
         } else if (['评图', 'pintu', '图片', 'image'].includes(key)) {

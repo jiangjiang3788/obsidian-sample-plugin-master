@@ -42,22 +42,25 @@ export function generateCellTooltip(date: string, items?: Item[], displayCount =
 /**
  * 获取可视化内容（图片、颜色或评分文本）
  */
+function readItemVisualValue(item: Item | undefined, ratingMapping: Map<string, string>): string | null {
+    if (!item) return null;
+    const extra: any = (item as any).extra || {};
+    const directVisual = item.pintu || item.image || extra['图片'] || extra['评图'] || extra.pintu || extra.image;
+    if (directVisual !== undefined && directVisual !== null && String(directVisual).trim()) return String(directVisual).trim();
+
+    const ratingValue = item.rating !== undefined && item.rating !== null
+        ? String(item.rating)
+        : (extra['评分'] !== undefined && extra['评分'] !== null ? String(extra['评分']).trim() : '');
+    if (!ratingValue) return null;
+    return ratingMapping.get(ratingValue) || ratingValue;
+}
+
 export function getVisualValue(items: Item[], ratingMapping: Map<string, string>): string | null {
     if (!items || items.length === 0) return null;
     
-    // 优先显示最新的评分/图片系统
-    const latestItemWithValue = [...items].reverse().find(i => i.pintu || i.rating !== undefined);
-    if (!latestItemWithValue) return null;
-    
-    if (latestItemWithValue.pintu) {
-        return latestItemWithValue.pintu;
-    } 
-    
-    if (latestItemWithValue.rating !== undefined) {
-        return ratingMapping.get(String(latestItemWithValue.rating)) || null;
-    }
-    
-    return null;
+    // 优先显示最新的评分/图片系统；兼容 `评分:: ✅` 这类 Emoji 评分。
+    const latestItemWithValue = [...items].reverse().find(i => readItemVisualValue(i, ratingMapping));
+    return readItemVisualValue(latestItemWithValue, ratingMapping);
 }
 
 export function HeatmapCell({ 

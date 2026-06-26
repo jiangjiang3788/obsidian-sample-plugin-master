@@ -4,7 +4,8 @@ import type { JSX } from 'preact';
 import { createPortal } from 'preact/compat';
 import { useEffect } from 'preact/hooks';
 import type { CoreBlockDefinition, GoalDefinition, GoalTemplate } from '@core/public';
-import { findExistingTemplateForTheme, getGoalTemplateDisplayName, readGoalTemplateThemePath } from './goalTemplateCopy';
+import { getGoalTemplateDisplayInfo } from '@core/public';
+import { findExistingTemplateForTheme, readGoalTemplateThemePath } from './goalTemplateCopy';
 
 interface GoalTemplateContextMenuState {
   x: number;
@@ -68,25 +69,6 @@ const mutedStyle: JSX.CSSProperties = {
 };
 
 
-function leafPath(value: unknown): string {
-  const text = String(value ?? '').trim();
-  return text.split('/').filter(Boolean).pop() || text;
-}
-
-function isGeneratedPresetName(value: unknown): boolean {
-  const text = String(value ?? '').trim();
-  return !text || /^预设\s*\d+$/i.test(text) || /^preset[-_\s]*\d+$/i.test(text) || text === '记录预设' || text === '未命名预设';
-}
-
-function cleanDisplayText(value: unknown): string {
-  return String(value ?? '').replace(/^[#＃]+\s*/, '').trim();
-}
-
-function displayPresetName(template: GoalTemplate, themePath: string): string {
-  const raw = getGoalTemplateDisplayName(template);
-  if (!isGeneratedPresetName(raw)) return raw;
-  return cleanDisplayText(leafPath(themePath)) || raw;
-}
 
 export function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks, onDeleteTemplate }: GoalTemplateContextMenuProps) {
   useEffect(() => {
@@ -99,8 +81,9 @@ export function GoalTemplateContextMenu({ state, blocks, templates, onClose, onO
   }, [state, onClose]);
 
   if (!state || typeof document === 'undefined') return null;
-  const themePath = readGoalTemplateThemePath(state.template, state.goal);
-  const title = displayPresetName(state.template, themePath);
+  const display = getGoalTemplateDisplayInfo(state.template, state.goal);
+  const themePath = display.themePath || readGoalTemplateThemePath(state.template, state.goal);
+  const title = display.name;
   const missingCount = blocks.filter((block) => block.id !== state.block.id && !findExistingTemplateForTheme(templates, state.goal, block, state.template)).length;
   const left = Math.min(state.x, Math.max(12, window.innerWidth - 340));
   const top = Math.min(state.y, Math.max(12, window.innerHeight - 420));
