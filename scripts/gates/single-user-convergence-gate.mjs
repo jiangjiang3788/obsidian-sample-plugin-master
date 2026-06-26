@@ -93,7 +93,7 @@ if (!exists('src/app/ui/components/QuickInputEditor/QuickInputEditorModel.ts')) 
 }
 const quickInputContainer = read('src/app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx');
 const quickInputContainerLines = quickInputContainer.split(/\r?\n/).length;
-if (quickInputContainerLines > 400) failures.push(`QuickInputEditorContainer.tsx should stay <= 400 lines after MVP5 extraction; current ${quickInputContainerLines}.`);
+if (quickInputContainerLines > 350) failures.push(`QuickInputEditorContainer.tsx should stay <= 350 lines after MVP6 action extraction; current ${quickInputContainerLines}.`);
 
 const quickInputModel = read('src/app/ui/components/QuickInputEditor/QuickInputEditorModel.ts');
 for (const requiredHelper of [
@@ -102,8 +102,34 @@ for (const requiredHelper of [
   'applyQuickInputGoalSelection',
   'preserveQuickInputBlockSwitchState',
   'buildQuickInputDisplayTemplate',
+  'applyQuickInputFieldUpdate',
+  'applyQuickInputTimeDirectionChange',
 ]) {
-  if (!quickInputModel.includes(requiredHelper)) failures.push(`QuickInputEditorModel.ts must keep ${requiredHelper} after MVP5 extraction.`);
+  if (!quickInputModel.includes(requiredHelper)) failures.push(`QuickInputEditorModel.ts must keep ${requiredHelper} after MVP6 extraction.`);
+}
+
+
+
+if (!exists('src/features/settings/goalTemplates/GoalTemplateNativeControls.tsx')) {
+  failures.push('GoalTemplateNativeControls.tsx must exist after MVP6 modal control extraction.');
+}
+if (!exists('src/features/settings/goalTemplates/GoalTemplateEditorModel.ts')) {
+  failures.push('GoalTemplateEditorModel.ts must exist after MVP7 modal model extraction.');
+}
+const goalTemplateEditorModal = read('src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx');
+const goalTemplateEditorModalLines = goalTemplateEditorModal.split(/\r?\n/).length;
+if (goalTemplateEditorModalLines > 360) failures.push(`GoalTemplateEditorModal.tsx should stay <= 360 lines after MVP7 model extraction; current ${goalTemplateEditorModalLines}.`);
+const goalTemplateEditorModel = read('src/features/settings/goalTemplates/GoalTemplateEditorModel.ts');
+for (const requiredHelper of [
+  'makeDraftFromTemplate',
+  'makeNewDraft',
+  'buildTemplatePatchFromDraft',
+  'buildInheritedTemplatePatchFromDraft',
+  'applyThemePathToDraft',
+  'switchDraftToOverride',
+  'createCopiedDraft',
+]) {
+  if (!goalTemplateEditorModel.includes(requiredHelper)) failures.push(`GoalTemplateEditorModel.ts must keep ${requiredHelper} after MVP7 extraction.`);
 }
 
 const schema = read('src/core/types/schema.ts');
