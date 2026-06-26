@@ -88,6 +88,13 @@ if (!publicApi.includes("./theme/themePathParser")) failures.push('core/public.t
 const viewContent = read('src/features/settings/layout/ViewContent.tsx');
 if (viewContent.includes('normalizeLegacyGoalViewInstance')) failures.push('ViewContent must not normalize legacy goal view types at runtime.');
 
+if (!exists('src/app/ui/components/QuickInputEditor/QuickInputEditorModel.ts')) {
+  failures.push('QuickInputEditor pure model helper must exist after MVP4 extraction.');
+}
+const quickInputContainer = read('src/app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx');
+const quickInputContainerLines = quickInputContainer.split(/\r?\n/).length;
+if (quickInputContainerLines > 520) failures.push(`QuickInputEditorContainer.tsx should stay <= 520 lines after MVP4 extraction; current ${quickInputContainerLines}.`);
+
 const schema = read('src/core/types/schema.ts');
 if (/interface\s+ThemeOverride\b/.test(schema)) failures.push('schema must not define ThemeOverride in single-user mode.');
 if (/inputSettings:\s*\{[^}]*overrides/s.test(schema)) failures.push('DEFAULT_SETTINGS.inputSettings must not contain overrides.');

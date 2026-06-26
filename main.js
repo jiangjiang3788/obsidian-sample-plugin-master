@@ -2536,45 +2536,8 @@ const DEFAULT_CORE_BLOCKS = [
 ];
 const DEFAULT_CORE_BLOCK_SETTINGS = {
   enabledCoreBlockIds: DEFAULT_CORE_BLOCKS.map((block2) => block2.id),
-  patches: [],
-  legacyBlockMap: {}
+  patches: []
 };
-const NAME_TO_CORE_BLOCK_ID = {
-  任务: CORE_BLOCK_IDS.TASK,
-  Task: CORE_BLOCK_IDS.TASK,
-  task: CORE_BLOCK_IDS.TASK,
-  计划: CORE_BLOCK_IDS.PLAN,
-  Plan: CORE_BLOCK_IDS.PLAN,
-  plan: CORE_BLOCK_IDS.PLAN,
-  总结: CORE_BLOCK_IDS.REVIEW,
-  Review: CORE_BLOCK_IDS.REVIEW,
-  review: CORE_BLOCK_IDS.REVIEW,
-  打卡: CORE_BLOCK_IDS.HABIT,
-  Habit: CORE_BLOCK_IDS.HABIT,
-  habit: CORE_BLOCK_IDS.HABIT,
-  闪念: CORE_BLOCK_IDS.THOUGHT,
-  思考: CORE_BLOCK_IDS.THOUGHT,
-  "闪念/思考": CORE_BLOCK_IDS.THOUGHT,
-  evidence: CORE_BLOCK_IDS.EVIDENCE,
-  事件: CORE_BLOCK_IDS.EVIDENCE,
-  "闪念/事件": CORE_BLOCK_IDS.EVIDENCE,
-  阻碍项: CORE_BLOCK_IDS.BLOCKER,
-  blocker: CORE_BLOCK_IDS.BLOCKER,
-  里程碑: CORE_BLOCK_IDS.MILESTONE,
-  milestone: CORE_BLOCK_IDS.MILESTONE
-};
-function inferCoreBlockIdFromLegacyBlock(block2) {
-  if (String(block2.id || "").startsWith("core.")) return block2.id;
-  return NAME_TO_CORE_BLOCK_ID[block2.name] || NAME_TO_CORE_BLOCK_ID[block2.categoryKey] || null;
-}
-function buildLegacyCoreBlockMap(blocks) {
-  const map = {};
-  for (const block2 of blocks || []) {
-    const coreId = inferCoreBlockIdFromLegacyBlock(block2);
-    if (coreId) map[block2.id] = coreId;
-  }
-  return map;
-}
 function applyPatch(block2, patch) {
   if (!patch) return block2;
   return {
@@ -2587,12 +2550,10 @@ function applyPatch(block2, patch) {
     appendUnderHeader: patch.appendUnderHeader ?? block2.appendUnderHeader
   };
 }
-function normalizeCoreBlockSettings(settings, legacyBlocks = []) {
-  const legacyBlockMap = { ...buildLegacyCoreBlockMap(legacyBlocks), ...settings?.legacyBlockMap || {} };
+function normalizeCoreBlockSettings(settings, _legacyBlocks = []) {
   return {
     enabledCoreBlockIds: settings?.enabledCoreBlockIds?.length ? settings.enabledCoreBlockIds : DEFAULT_CORE_BLOCK_SETTINGS.enabledCoreBlockIds,
-    patches: settings?.patches || [],
-    legacyBlockMap
+    patches: settings?.patches || []
   };
 }
 function getEffectiveCoreBlocks(settings) {
@@ -2602,15 +2563,13 @@ function getEffectiveCoreBlocks(settings) {
   return DEFAULT_CORE_BLOCKS.filter((block2) => enabled2.has(block2.id) && !patchesById.get(block2.id)?.hidden).map((block2) => applyPatch(block2, patchesById.get(block2.id)));
 }
 function getCoreBlockById(settings, blockId) {
-  const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
-  const resolvedId = String(blockId || "").startsWith("core.") ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
-  return getEffectiveCoreBlocks(settings).find((block2) => block2.id === resolvedId) || null;
+  return getEffectiveCoreBlocks(settings).find((block2) => block2.id === blockId) || null;
 }
 const DEFAULT_SETTINGS = {
   groups: [],
   viewInstances: [],
   layouts: [],
-  inputSettings: { blocks: [], themes: [], overrides: [] },
+  inputSettings: { blocks: [], themes: [] },
   goalSettings: DEFAULT_GOAL_SETTINGS,
   coreBlockSettings: DEFAULT_CORE_BLOCK_SETTINGS,
   // [新增] 悬浮计时器默认启用
@@ -5596,40 +5555,11 @@ function buildThemesByPathMap(themes) {
   themes.forEach((t3) => map.set(t3.path, t3));
   return map;
 }
-class TemplateResolver {
-  /**
-   * 解析有效的模板配置
-   * 
-   * @param settings InputSettings 配置
-   * @param blockId Block 模板 ID
-   * @param themeId 可选的主题 ID
-   * @returns 包含 template 和 theme 的对象
-   */
-  static resolve(settings, blockId, themeId) {
-    const baseBlock = settings.blocks.find((b2) => b2.id === blockId);
-    if (!baseBlock) {
-      return { template: null, theme: null, templateId: null, templateSourceType: null };
-    }
-    const theme2 = themeId ? settings.themes.find((t3) => t3.id === themeId) || null : null;
-    return { template: baseBlock, theme: theme2, templateId: baseBlock.id, templateSourceType: "block" };
-  }
-  /**
-   * 便捷方法：仅返回模板，不返回主题
-   * 
-   * @param settings InputSettings 配置
-   * @param blockId Block 模板 ID
-   * @param themeId 可选的主题 ID
-   * @returns BlockTemplate 或 null
-   */
-  static resolveTemplateOnly(settings, blockId, themeId) {
-    return TemplateResolver.resolve(settings, blockId, themeId).template;
-  }
-}
 function getEffectiveHeatmapTemplate(settings, blockId, themeId) {
-  return TemplateResolver.resolveTemplateOnly(settings, blockId, themeId);
+  return settings.blocks.find((block2) => block2.id === blockId) ?? null;
 }
 function buildRatingMapping(inputSettings, blockId, themeId) {
-  const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, blockId, themeId);
+  const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, blockId);
   const ratingField = effectiveTemplate?.fields.find((f2) => f2.type === "rating");
   return new Map(
     ratingField?.options?.filter((opt) => opt.value).map((opt) => [opt.label || "", opt.value]) || []
@@ -5641,12 +5571,12 @@ class RatingMappingCache {
     this.cache.clear();
   }
   get(inputSettings, blockId, themePath, themesByPath) {
-    const themeId = themePath && themePath !== "__default__" && themesByPath ? themesByPath.get(themePath)?.id : void 0;
+    themePath && themePath !== "__default__" && themesByPath ? themesByPath.get(themePath)?.id : void 0;
     const cacheKey = `${blockId}:${themePath || "default"}`;
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey);
     }
-    const mapping = buildRatingMapping(inputSettings, blockId, themeId);
+    const mapping = buildRatingMapping(inputSettings, blockId);
     this.cache.set(cacheKey, mapping);
     return mapping;
   }
@@ -5717,7 +5647,15 @@ function getLatestHeatmapVisualValue(items, ratingMapping) {
   return getHeatmapItemVisualValue(latestItemWithValue, ratingMapping);
 }
 function getEffectiveTemplate(settings, blockId, themeId) {
-  return TemplateResolver.resolve(settings, blockId, themeId);
+  const templates = [...settings.blocks || [], ...DEFAULT_CORE_BLOCKS.filter((block2) => !(settings.blocks || []).some((existing) => existing.id === block2.id))];
+  const template = templates.find((block2) => block2.id === blockId) ?? null;
+  const theme2 = themeId ? settings.themes.find((candidate) => candidate.id === themeId) ?? null : null;
+  return {
+    template,
+    theme: theme2,
+    templateId: template?.id ?? null,
+    templateSourceType: template ? "core-block" : null
+  };
 }
 function isGoalOrderField(field) {
   const canonical = getCanonicalFieldKey(String(field || "").trim());
@@ -6266,7 +6204,7 @@ function decodeTaskMetadata(lineText) {
     } else if (["模板id", "templateid"].includes(key)) {
       result.templateId = value;
     } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
-      if (["block", "override", "core-block", "theme-fallback", "goal-template", "goal-binding", "legacy-block"].includes(value)) result.templateSourceType = value;
+      if (["core-block", "goal-template"].includes(value)) result.templateSourceType = value;
     } else if (["标签", "tag", "tags"].includes(key)) {
       result.tags.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
     } else if (["目标id", "goalid"].includes(key)) {
@@ -6368,7 +6306,7 @@ function decodeBlockContentLines(contentLines, parentFolder) {
           templateId = value.trim();
         } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
           const source = value.trim();
-          if (["block", "override", "core-block", "theme-fallback", "goal-template", "goal-binding", "legacy-block"].includes(source)) templateSourceType = source;
+          if (["core-block", "goal-template"].includes(source)) templateSourceType = source;
         } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) {
           theme2 = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
         } else if (["标签", "tag", "tags"].includes(key)) {
@@ -8317,7 +8255,7 @@ class AiNaturalLanguageRecordParser {
       "3. If a preset clearly matches user words, return target.goalTemplateId = preset.goalTemplateId/id and target.templateVariantId = preset.variantId.",
       "4. If several presets match, prefer preset.isDefault or the closest themePath/name match.",
       "5. themeId should come from the selected preset themePath or selected goal themePath. Theme is only a form default/stat dimension, not the main template selector.",
-      "6. Never output legacy templateSourceType values such as override, theme-fallback or goal-binding.",
+      "6. Never output legacy templateSourceType values such as deprecated template source values.",
       "",
       "BLOCK SELECTION:",
       "1. blockId is REQUIRED and must come from snapshot.blocks[].id or snapshot.goalPresets[].blockId, e.g. core.task/core.habit/core.plan.",
@@ -17469,7 +17407,7 @@ function buildRenderData(template, formData, theme2, templateMeta) {
     "周期": derivedPeriod ? cycleTitle || derivedPeriod.label : "",
     ...taskTokens,
     templateId: templateMeta?.templateId || template.id,
-    templateSourceType: templateMeta?.templateSourceType || "block"
+    templateSourceType: templateMeta?.templateSourceType || "core-block"
   };
 }
 function buildRecordOutputPlan(input) {
@@ -18100,9 +18038,13 @@ let ActionService = class {
   dataStore;
   settingsProvider;
   inputService;
+  getRuntimeBlocks() {
+    const settings = this.settingsProvider.getSettings();
+    return getEffectiveCoreBlocks(settings);
+  }
   findBlockByCategoryKey(categoryKey) {
     if (!categoryKey) return void 0;
-    const blocks = this.settingsProvider.getSettings().inputSettings.blocks || [];
+    const blocks = this.getRuntimeBlocks();
     if (categoryKey === "完成任务" || categoryKey === "未完成任务") {
       return blocks.find((b2) => b2.categoryKey === "任务");
     }
@@ -18265,7 +18207,7 @@ let ActionService = class {
     };
   }
   getQuickInputConfigForNewTimer() {
-    const blocks = this.settingsProvider.getSettings().inputSettings.blocks;
+    const blocks = this.getRuntimeBlocks();
     if (!blocks || blocks.length === 0) {
       this.ui.notice("没有可用的Block模板，请先在设置中创建一个。");
       return null;
@@ -18364,15 +18306,13 @@ function mergeTemplate(base, patch) {
 class GoalTemplateResolver {
   static resolve(input) {
     const { settings, blockId } = input;
-    const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
-    const effectiveBlockId = String(blockId || "").startsWith("core.") ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
+    const effectiveBlockId = blockId;
     const goal = findGoal(settings.goalSettings, input.goalId, input.goalPath);
     const themePathFromId = input.themeId ? settings.inputSettings?.themes?.find((candidate) => candidate.id === input.themeId)?.path ?? null : null;
     const effectiveThemePath = input.themePath || goal?.themePath || themePathFromId || null;
     const theme2 = ThemeMetadataResolver.resolveThemeForRender(settings, effectiveThemePath);
     const coreBlock = getCoreBlockById(settings, effectiveBlockId);
-    const legacyBase = settings.inputSettings?.blocks?.find((block2) => block2.id === blockId || block2.id === effectiveBlockId) || null;
-    const baseTemplate = coreBlock || legacyBase;
+    const baseTemplate = coreBlock;
     if (!baseTemplate) {
       return {
         template: null,
@@ -18396,12 +18336,9 @@ class GoalTemplateResolver {
         templateVariantId: goalTemplate.variantId || "default"
       };
     }
-    if (coreBlock) {
-      const policy = resolveTemplatePeriodPolicy(baseTemplate);
-      const template = policy ? { ...baseTemplate, periodPolicy: policy } : { ...baseTemplate, periodPolicy: void 0, granularity: void 0 };
-      return { template, theme: theme2, goal, templateId: coreBlock.id, templateSourceType: "core-block", effectiveBlockId, templateVariantId: null };
-    }
-    return { template: baseTemplate, theme: theme2, goal, templateId: legacyBase?.id || null, templateSourceType: "legacy-block", effectiveBlockId, templateVariantId: null };
+    const policy = resolveTemplatePeriodPolicy(baseTemplate);
+    const template = policy ? { ...baseTemplate, periodPolicy: policy } : { ...baseTemplate, periodPolicy: void 0, granularity: void 0 };
+    return { template, theme: theme2, goal, templateId: baseTemplate.id, templateSourceType: "core-block", effectiveBlockId, templateVariantId: null };
   }
 }
 function buildEditableRecordSnapshot(input) {
@@ -18515,14 +18452,12 @@ function normalizeDependencySettings(settings) {
   };
 }
 function buildEffectiveInputSettings(settings) {
-  const legacyBlockMap = buildLegacyCoreBlockMap(settings.blocks || []);
   return {
     ...settings,
     blocks: [
       ...settings.blocks || [],
       ...DEFAULT_CORE_BLOCKS.filter((coreBlock) => !(settings.blocks || []).some((block2) => block2.id === coreBlock.id))
-    ],
-    overrides: (settings.overrides || []).map((override) => ({ ...override, blockId: legacyBlockMap[override.blockId] || override.blockId }))
+    ]
   };
 }
 function resolveRecordDependencies(input) {
@@ -18531,8 +18466,7 @@ function resolveRecordDependencies(input) {
   const fullSettings = normalizeDependencySettings(input.settings);
   const inputSettings = fullSettings.inputSettings;
   const requestedBlockId = input.blockId ?? null;
-  const legacyBlockMap = buildLegacyCoreBlockMap(inputSettings.blocks || []);
-  const effectiveBlockId = requestedBlockId ? String(requestedBlockId).startsWith("core.") ? requestedBlockId : legacyBlockMap[requestedBlockId] || requestedBlockId : null;
+  const effectiveBlockId = requestedBlockId ? String(requestedBlockId) : null;
   const effectiveSettings = buildEffectiveInputSettings(inputSettings);
   const goalContext = extractGoalContext(input);
   const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, goalContext.themePath ?? input.item?.themePath ?? input.item?.theme ?? null);
@@ -18819,10 +18753,6 @@ function looksLikeTaskTemplate(block2) {
 function looksLikeBlockTemplate(block2) {
   return /<!--\s*start\s*-->/i.test(String(block2?.outputTemplate || "")) || /内容\s*[:：]/.test(String(block2?.outputTemplate || ""));
 }
-function findOverrideById(settings, overrideId) {
-  if (!overrideId) return null;
-  return (settings.overrides || []).find((candidate) => candidate.id === overrideId) ?? null;
-}
 function readCoreBlockHint(item) {
   const extra = item.extra || {};
   const candidates = [
@@ -18838,8 +18768,7 @@ function readCoreBlockHint(item) {
   }
   return null;
 }
-function resolveBlockForEdit(settings, item, preferredBlockId) {
-  const blocks = settings.blocks || [];
+function resolveBlockForEdit(blocks, item, preferredBlockId) {
   if (!Array.isArray(blocks) || blocks.length === 0) {
     return {
       blockId: preferredBlockId ?? null,
@@ -18862,22 +18791,7 @@ function resolveBlockForEdit(settings, item, preferredBlockId) {
       };
     }
   }
-  if (item.templateId && item.templateSourceType === "override") {
-    const override = findOverrideById(settings, item.templateId);
-    if (override?.blockId) {
-      const block2 = blocks.find((candidate) => candidate.id === override.blockId);
-      if (block2) {
-        return {
-          blockId: block2.id,
-          themeIdFromTemplateHint: override.themeId ?? null,
-          resolvedBy: "exact",
-          usedFallbackBlock: false,
-          debugReason: `根据 override 模板ID ${item.templateId} 精确还原 block=${block2.id} theme=${override.themeId || ""}`
-        };
-      }
-    }
-  }
-  if (item.templateId && item.templateSourceType !== "override") {
+  if (item.templateId) {
     const exact = blocks.find((block2) => block2.id === item.templateId);
     if (exact) {
       return {
@@ -18930,7 +18844,8 @@ function buildInitialFormData(template, item, snapshot = buildParsedRecordSnapsh
 function buildEditRecordState(input) {
   const { settings, item, preferredBlockId, preferredThemeId } = input;
   const inputSettings = settings.inputSettings;
-  const resolvedBlock = resolveBlockForEdit(inputSettings, item, preferredBlockId);
+  const runtimeBlocks = getEffectiveCoreBlocks(settings);
+  const resolvedBlock = resolveBlockForEdit(runtimeBlocks, item, preferredBlockId);
   const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(inputSettings, item.theme) ?? preferredThemeId ?? void 0;
   recordDebugLog("编辑模板解析", "任务/块模板选择", {
     itemType: item.type,
@@ -18966,7 +18881,7 @@ function buildEditRecordState(input) {
     theme: resolvedDependencies.theme,
     templateMeta: {
       templateId: resolvedDependencies.meta.templateId ?? resolvedDependencies.template?.id ?? null,
-      templateSourceType: resolvedDependencies.meta.templateSourceType ?? "block"
+      templateSourceType: resolvedDependencies.meta.templateSourceType ?? "core-block"
     }
   });
   const warnings = [...resolvedDependencies.warnings];
@@ -19142,7 +19057,7 @@ class RecordInputKernel {
       theme: resolved.theme,
       templateMeta: {
         templateId: resolved.meta.templateId ?? resolved.template?.id ?? null,
-        templateSourceType: resolved.meta.templateSourceType ?? "block"
+        templateSourceType: resolved.meta.templateSourceType ?? "core-block"
       }
     });
     return {
@@ -49710,7 +49625,7 @@ function HeatmapView({
   const ratingMappingsCache = A$1(new RatingMappingCache()).current;
   y(() => {
     ratingMappingsCache.clear();
-  }, [inputSettings.themes, inputSettings.blocks, inputSettings.overrides]);
+  }, [inputSettings.themes, inputSettings.blocks]);
   y(() => {
     devLog(`🔄 [数据更新] 检测到items数据变化，项目数量: ${items.length}`);
     ratingMappingsCache.clear();
@@ -53523,7 +53438,6 @@ function createThemeSlice(settingsRepository) {
       try {
         await settingsRepository.update((draft) => {
           draft.inputSettings.themes = draft.inputSettings.themes?.filter((t3) => t3.id !== id) || [];
-          draft.inputSettings.overrides = draft.inputSettings.overrides?.filter((o2) => o2.themeId !== id) || [];
         }, createSliceMeta("theme.deleteTheme"));
         set2({ themeLoading: false });
       } catch (error) {
@@ -53585,7 +53499,6 @@ function createThemeSlice(settingsRepository) {
         const themeIdSet = new Set(themeIds);
         await settingsRepository.update((draft) => {
           draft.inputSettings.themes = draft.inputSettings.themes?.filter((t3) => !themeIdSet.has(t3.id)) || [];
-          draft.inputSettings.overrides = draft.inputSettings.overrides?.filter((o2) => !themeIdSet.has(o2.themeId)) || [];
         }, createSliceMeta("theme.batchDeleteThemes"));
         set2({ themeLoading: false });
       } catch (error) {
@@ -53638,151 +53551,6 @@ function createThemeSlice(settingsRepository) {
         set2({ themeError: error.message || "批量更新主题图标失败", themeLoading: false });
       }
     },
-    // ============== Override 操作 ==============
-    upsertOverride: async (overrideData) => {
-      const state = get();
-      if (!state.isInitialized) return null;
-      set2({ themeLoading: true, themeError: null });
-      try {
-        let resultOverride = null;
-        await settingsRepository.update((draft) => {
-          const existingIndex = draft.inputSettings.overrides?.findIndex(
-            (o2) => o2.blockId === overrideData.blockId && o2.themeId === overrideData.themeId
-          ) ?? -1;
-          if (!draft.inputSettings.overrides) {
-            draft.inputSettings.overrides = [];
-          }
-          if (existingIndex > -1) {
-            const updatedOverride = {
-              ...draft.inputSettings.overrides[existingIndex],
-              ...overrideData
-            };
-            draft.inputSettings.overrides[existingIndex] = updatedOverride;
-            resultOverride = JSON.parse(JSON.stringify(updatedOverride));
-          } else {
-            const newOverride = {
-              ...overrideData,
-              id: generateId("ovr")
-            };
-            draft.inputSettings.overrides.push(newOverride);
-            resultOverride = JSON.parse(JSON.stringify(newOverride));
-          }
-        }, createSliceMeta("theme.upsertOverride"));
-        set2({ themeLoading: false });
-        return resultOverride;
-      } catch (error) {
-        devError("[ThemeSlice] upsertOverride 失败:", error);
-        set2({ themeError: error.message || "更新覆盖配置失败", themeLoading: false });
-        return null;
-      }
-    },
-    deleteOverride: async (blockId, themeId) => {
-      const state = get();
-      if (!state.isInitialized) return;
-      set2({ themeLoading: true, themeError: null });
-      try {
-        await settingsRepository.update((draft) => {
-          draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
-            (o2) => !(o2.blockId === blockId && o2.themeId === themeId)
-          ) || [];
-        }, createSliceMeta("theme.deleteOverride"));
-        set2({ themeLoading: false });
-      } catch (error) {
-        devError("[ThemeSlice] deleteOverride 失败:", error);
-        set2({ themeError: error.message || "删除覆盖配置失败", themeLoading: false });
-      }
-    },
-    batchUpsertOverrides: async (overrides) => {
-      const state = get();
-      if (!state.isInitialized) return;
-      set2({ themeLoading: true, themeError: null });
-      try {
-        await settingsRepository.update((draft) => {
-          for (const overrideData of overrides) {
-            const existingIndex = draft.inputSettings.overrides?.findIndex(
-              (o2) => o2.blockId === overrideData.blockId && o2.themeId === overrideData.themeId
-            ) ?? -1;
-            if (existingIndex > -1) {
-              Object.assign(draft.inputSettings.overrides[existingIndex], overrideData);
-            } else {
-              if (!draft.inputSettings.overrides) {
-                draft.inputSettings.overrides = [];
-              }
-              draft.inputSettings.overrides.push({
-                ...overrideData,
-                id: generateId("ovr")
-              });
-            }
-          }
-        }, createSliceMeta("theme.batchUpsertOverrides"));
-        set2({ themeLoading: false });
-      } catch (error) {
-        devError("[ThemeSlice] batchUpsertOverrides 失败:", error);
-        set2({ themeError: error.message || "批量更新覆盖配置失败", themeLoading: false });
-      }
-    },
-    batchDeleteOverrides: async (selections) => {
-      const state = get();
-      if (!state.isInitialized) return;
-      set2({ themeLoading: true, themeError: null });
-      try {
-        const selectionSet = new Set(selections.map((s2) => `${s2.blockId}:${s2.themeId}`));
-        await settingsRepository.update((draft) => {
-          draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
-            (o2) => !selectionSet.has(`${o2.blockId}:${o2.themeId}`)
-          ) || [];
-        }, createSliceMeta("theme.batchDeleteOverrides"));
-        set2({ themeLoading: false });
-      } catch (error) {
-        devError("[ThemeSlice] batchDeleteOverrides 失败:", error);
-        set2({ themeError: error.message || "批量删除覆盖配置失败", themeLoading: false });
-      }
-    },
-    batchSetOverrideStatus: async (cells, status) => {
-      const state = get();
-      if (!state.isInitialized) return;
-      set2({ themeLoading: true, themeError: null });
-      try {
-        await settingsRepository.update((draft) => {
-          if (status === "inherit") {
-            const cellKeys = new Set(cells.map((c2) => `${c2.themeId}:${c2.blockId}`));
-            draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
-              (o2) => !cellKeys.has(`${o2.themeId}:${o2.blockId}`)
-            ) || [];
-          } else {
-            cells.forEach((cell) => {
-              const existingIndex = draft.inputSettings.overrides?.findIndex(
-                (o2) => o2.blockId === cell.blockId && o2.themeId === cell.themeId
-              ) ?? -1;
-              if (existingIndex > -1) {
-                if (status === "disabled") {
-                  draft.inputSettings.overrides[existingIndex].disabled = true;
-                } else {
-                  delete draft.inputSettings.overrides[existingIndex].disabled;
-                }
-              } else {
-                if (!draft.inputSettings.overrides) {
-                  draft.inputSettings.overrides = [];
-                }
-                const newOverride = {
-                  id: generateId("ovr"),
-                  themeId: cell.themeId,
-                  blockId: cell.blockId
-                };
-                if (status === "disabled") {
-                  newOverride.disabled = true;
-                }
-                draft.inputSettings.overrides.push(newOverride);
-              }
-            });
-          }
-        }, createSliceMeta("theme.batchSetOverrideStatus"));
-        set2({ themeLoading: false });
-      } catch (error) {
-        devError("[ThemeSlice] batchSetOverrideStatus 失败:", error);
-        set2({ themeError: error.message || "批量设置覆盖状态失败", themeLoading: false });
-      }
-    },
     // ============== 查询方法 ==============
     getThemes: () => {
       const state = get();
@@ -53791,16 +53559,6 @@ function createThemeSlice(settingsRepository) {
     getTheme: (id) => {
       const state = get();
       return state.settings.inputSettings?.themes?.find((t3) => t3.id === id);
-    },
-    getOverrides: () => {
-      const state = get();
-      return state.settings.inputSettings?.overrides || [];
-    },
-    getOverride: (blockId, themeId) => {
-      const state = get();
-      return state.settings.inputSettings?.overrides?.find(
-        (o2) => o2.blockId === blockId && o2.themeId === themeId
-      );
     },
     // ============== 状态管理 ==============
     setThemeError: (error) => {
@@ -54282,7 +54040,7 @@ function createBlocksSlice(settingsRepository) {
         };
         await settingsRepository.update((draft) => {
           if (!draft.inputSettings) {
-            draft.inputSettings = { blocks: [], themes: [], overrides: [] };
+            draft.inputSettings = { blocks: [], themes: [] };
           }
           if (!draft.inputSettings.blocks) {
             draft.inputSettings.blocks = [];
@@ -54337,11 +54095,6 @@ function createBlocksSlice(settingsRepository) {
           const index = blocks.findIndex((b2) => b2.id === id);
           if (index !== -1) {
             blocks.splice(index, 1);
-          }
-          if (draft.inputSettings?.overrides) {
-            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
-              (o2) => o2.blockId !== id
-            );
           }
         });
         set2({ isLoading: false });
@@ -54977,80 +54730,6 @@ class ThemeUseCase {
       throw error;
     }
   }
-  // ============== Override 操作 ==============
-  /**
-   * 更新或插入覆盖配置
-   * @param overrideData 覆盖配置数据（不含 id）
-   * @returns 创建/更新后的覆盖配置
-   */
-  async upsertOverride(overrideData) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return null;
-      return await state.upsertOverride(overrideData);
-    } catch (error) {
-      devError("[ThemeUseCase] upsertOverride 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 删除覆盖配置
-   * @param blockId Block ID
-   * @param themeId 主题 ID
-   */
-  async deleteOverride(blockId, themeId) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.deleteOverride(blockId, themeId);
-    } catch (error) {
-      devError("[ThemeUseCase] deleteOverride 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 批量更新覆盖配置
-   * @param overrides 覆盖配置列表
-   */
-  async batchUpsertOverrides(overrides) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.batchUpsertOverrides(overrides);
-    } catch (error) {
-      devError("[ThemeUseCase] batchUpsertOverrides 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 批量删除覆盖配置
-   * @param selections 选择列表
-   */
-  async batchDeleteOverrides(selections) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.batchDeleteOverrides(selections);
-    } catch (error) {
-      devError("[ThemeUseCase] batchDeleteOverrides 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 批量设置覆盖状态
-   * @param cells 单元格列表
-   * @param status 目标状态
-   */
-  async batchSetOverrideStatus(cells, status) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.batchSetOverrideStatus(cells, status);
-    } catch (error) {
-      devError("[ThemeUseCase] batchSetOverrideStatus 失败:", error);
-      throw error;
-    }
-  }
   // ============== 查询方法 ==============
   // 注意：查询方法不涉及写操作，UI 可以直接使用 Zustand selector 读取
   // 这里提供的查询方法是为了保持 API 一致性
@@ -55078,34 +54757,6 @@ class ThemeUseCase {
       return state.getTheme(id);
     } catch (error) {
       devError("[ThemeUseCase] getTheme 失败:", error);
-      return void 0;
-    }
-  }
-  /**
-   * 获取所有覆盖配置
-   * @returns 覆盖配置列表
-   */
-  getOverrides() {
-    try {
-      const state = this.store.getState();
-      return state.getOverrides();
-    } catch (error) {
-      devError("[ThemeUseCase] getOverrides 失败:", error);
-      return [];
-    }
-  }
-  /**
-   * 获取特定覆盖配置
-   * @param blockId Block ID
-   * @param themeId 主题 ID
-   * @returns 覆盖配置
-   */
-  getOverride(blockId, themeId) {
-    try {
-      const state = this.store.getState();
-      return state.getOverride(blockId, themeId);
-    } catch (error) {
-      devError("[ThemeUseCase] getOverride 失败:", error);
       return void 0;
     }
   }
@@ -55873,7 +55524,7 @@ function prepareTemplateSubmit(params) {
 function getTemplateExecutionMeta(resolved, template) {
   return {
     templateId: resolved.meta.templateId ?? template.id,
-    templateSourceType: resolved.meta.templateSourceType ?? "block"
+    templateSourceType: resolved.meta.templateSourceType ?? "core-block"
   };
 }
 function buildCreatedRecordLocatorContext(params) {
@@ -58104,9 +57755,8 @@ function sortGoalsLikePresetMatrix(goals) {
     return (originalIndex.get(left2.id) ?? 0) - (originalIndex.get(right2.id) ?? 0);
   });
 }
-function resolveQuickInputCoreBlockId(fullSettings, blockId) {
-  const coreSettings = normalizeCoreBlockSettings(fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks || []);
-  return String(blockId || "").startsWith("core.") ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
+function resolveQuickInputCoreBlockId(_fullSettings, blockId) {
+  return String(blockId || "");
 }
 function goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId) {
   if (!goal?.id || !coreBlockId) return false;
@@ -71092,7 +70742,6 @@ function ThemeMetadataManager() {
   const settings = useSelector(selectSettings);
   const useCases = useUseCases();
   const themes = settings.inputSettings?.themes || [];
-  const legacyOverrides = settings.inputSettings?.overrides || [];
   const [path, setPath] = d("");
   const [icon, setIcon] = d("");
   const [message, setMessage] = d("");
@@ -71135,7 +70784,7 @@ function ThemeMetadataManager() {
   };
   const handleDelete = async (id) => {
     await useCases.theme.deleteTheme(id);
-    setMessage("主题已删除；关联的旧主题 override 也会按旧逻辑移除。");
+    setMessage("主题已删除。");
   };
   return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", display: "grid", gap: 2 }, children: [
     /* @__PURE__ */ u2(Box, { children: [
@@ -71144,7 +70793,6 @@ function ThemeMetadataManager() {
     ] }),
     /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 1 }, children: [
       /* @__PURE__ */ u2(Chip2, { size: "small", label: `主题 ${themes.length}` }),
-      /* @__PURE__ */ u2(Chip2, { size: "small", label: `旧主题模板 ${legacyOverrides.length}`, color: legacyOverrides.length ? "warning" : "default" }),
       /* @__PURE__ */ u2(Chip2, { size: "small", label: "模板主链：目标 × 记录类型", color: "primary" })
     ] }),
     message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
@@ -75408,7 +75056,7 @@ class ThinkPlugin extends obsidian.Plugin {
     const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
     merged.viewInstances = merged.viewInstances || [];
     merged.layouts = merged.layouts || [];
-    merged.inputSettings = merged.inputSettings || { blocks: [], themes: [], overrides: [] };
+    merged.inputSettings = merged.inputSettings || { blocks: [], themes: [] };
     merged.inputSettings.blocks = (merged.inputSettings.blocks || []).map((block2) => ({
       ...block2,
       categoryKey: block2?.categoryKey || block2?.name || ""
