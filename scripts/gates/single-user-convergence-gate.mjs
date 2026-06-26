@@ -136,9 +136,24 @@ for (const requiredHelper of [
 if (!exists('src/features/settings/goalTemplates/GoalTemplateMatrixTable.tsx')) {
   failures.push('GoalTemplateMatrixTable.tsx must exist after MVP8 table extraction.');
 }
+if (!exists('src/features/settings/goalTemplates/GoalTemplateMatrixRow.tsx')) {
+  failures.push('GoalTemplateMatrixRow.tsx must exist after MVP9 row extraction.');
+}
+if (!exists('src/features/settings/goalTemplates/GoalTemplateMatrixCell.tsx')) {
+  failures.push('GoalTemplateMatrixCell.tsx must exist after MVP9 cell extraction.');
+}
 const goalTemplateMatrix = read('src/features/settings/goalTemplates/GoalTemplateMatrix.tsx');
 const goalTemplateMatrixLines = goalTemplateMatrix.split(/\r?\n/).length;
 if (goalTemplateMatrixLines > 360) failures.push(`GoalTemplateMatrix.tsx should stay <= 360 lines after MVP8 table extraction; current ${goalTemplateMatrixLines}.`);
+const goalTemplateMatrixTable = read('src/features/settings/goalTemplates/GoalTemplateMatrixTable.tsx');
+const goalTemplateMatrixTableLines = goalTemplateMatrixTable.split(/\r?\n/).length;
+if (goalTemplateMatrixTableLines > 140) failures.push(`GoalTemplateMatrixTable.tsx should stay <= 140 lines after MVP9 row/cell extraction; current ${goalTemplateMatrixTableLines}.`);
+const goalTemplateMatrixRow = read('src/features/settings/goalTemplates/GoalTemplateMatrixRow.tsx');
+const goalTemplateMatrixRowLines = goalTemplateMatrixRow.split(/\r?\n/).length;
+if (goalTemplateMatrixRowLines > 280) failures.push(`GoalTemplateMatrixRow.tsx should stay <= 280 lines after MVP9 extraction; current ${goalTemplateMatrixRowLines}.`);
+const goalTemplateMatrixCell = read('src/features/settings/goalTemplates/GoalTemplateMatrixCell.tsx');
+const goalTemplateMatrixCellLines = goalTemplateMatrixCell.split(/\r?\n/).length;
+if (goalTemplateMatrixCellLines > 220) failures.push(`GoalTemplateMatrixCell.tsx should stay <= 220 lines after MVP9 extraction; current ${goalTemplateMatrixCellLines}.`);
 const goalTemplateMatrixModel = read('src/features/settings/goalTemplates/goalTemplateMatrixModel.ts');
 for (const requiredHelper of [
   'filterVisibleGoalTemplateMatrixGoals',
