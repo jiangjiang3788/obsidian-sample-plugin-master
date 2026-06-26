@@ -1,4 +1,4 @@
-import type { Item, FieldCommitMode, FieldEditDangerLevel, FieldEditPolicy, FieldEditorKind, MessageRenderPort } from '@core/public';
+import type { Item, FieldCommitMode, FieldEditDangerLevel, FieldEditPolicy, FieldEditorKind, MessageRenderPort, GoalDefinition } from '@core/public';
 
 export type ExcelCellCommitReason = 'inline-edit' | 'fill-drag' | 'paste';
 export type ExcelCellSaveState = 'idle' | 'pending' | 'saved' | 'error';
@@ -68,6 +68,7 @@ export interface ExcelCellModel {
 
 export interface ExcelViewProps {
   items: Item[];
+  goals?: GoalDefinition[];
   fields?: string[];
   availableFields?: string[];
   onFieldsChange?: ExcelDisplayFieldsChangeHandler;

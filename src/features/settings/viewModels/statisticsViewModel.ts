@@ -56,11 +56,6 @@ export function buildStatisticsViewModel(args: {
   const goalBuckets = buildGoalBuckets(items, goals, { includeUnassigned: true, includeKnownGoals: false, themes });
   const bucketAccessor = (item: Item) => getItemGoalKey(item, goals);
   const topN = Math.max(0, Number(viewConfig.topN) || 0);
-  const countByGoal = new Map<string, number>();
-  for (const item of items || []) {
-    const key = bucketAccessor(item);
-    countByGoal.set(key, (countByGoal.get(key) || 0) + 1);
-  }
   const themeCountByGoal = new Map<string, Map<string, number>>();
   for (const item of items || []) {
     const goalKey = bucketAccessor(item);
@@ -70,8 +65,9 @@ export function buildStatisticsViewModel(args: {
     themeCountByGoal.set(goalKey, inner);
   }
 
+  // 目标顺序由 settings.goalSettings.goals 决定，buildGoalBuckets 已统一排序。
+  // 视图只能裁剪 topN，不能再按记录数量重排。
   const filteredCategories = [...goalBuckets]
-    .sort((a: any, b: any) => (countByGoal.get(b.name) || 0) - (countByGoal.get(a.name) || 0) || (a.alias || a.name).localeCompare(b.alias || b.name, 'zh-CN'))
     .slice(0, topN || undefined);
   const categoryOrder = filteredCategories.map((bucket: any) => bucket.name);
   const goalThemeSummaries = filteredCategories.map((bucket: any) => {

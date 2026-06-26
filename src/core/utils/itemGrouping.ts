@@ -3,6 +3,129 @@ import type { Item } from '@/core/types/schema';
 import { readField } from '@/core/types/schema';
 import { EMPTY_LABEL } from '@/core/types/constants';
 import { getBasePath } from './pathSemantic';
+import { getCanonicalFieldKey } from '@/core/fields/FieldRegistry';
+import { splitGoalPath } from '@/core/goal/path';
+import { createGoalOrderIndex } from '@/core/goal/order';
+import type { GoalDefinition } from '@/core/goal/types';
+
+export interface ViewFieldOrderContext {
+    goals?: GoalDefinition[];
+}
+
+/**
+ * 目标字段识别的统一入口。
+ *
+ * 设计约束：视图自己的“内容排序”只负责同一目标内部的记录顺序；
+ * 只要一个视图把目标字段用作分组 / 表格行列 / Excel 展示列，目标之间的顺序就必须来自目标设置。
+ */
+export function isGoalOrderField(field?: string | null): boolean {
+    const canonical = getCanonicalFieldKey(String(field || '').trim());
+    return ['goalPath', 'goalPaths', 'rootGoal', 'leafGoal', 'goalId', 'goalIds'].includes(canonical);
+}
+
+function normalizeText(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    return String(value).trim();
+}
+
+function firstText(value: unknown): string {
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            const candidate = firstText(item);
+            if (candidate) return candidate;
+        }
+        return '';
+    }
+    const text = normalizeText(value);
+    if (!text) return '';
+    return text.split(/[,，\n]/).map(part => part.trim()).filter(Boolean)[0] || '';
+}
+
+function normalizeGoalComparable(value: unknown): string {
+    const text = firstText(value);
+    if (!text) return '';
+    return splitGoalPath(text).goalPath || text.replace(/^#+/, '').trim();
+}
+
+function buildGoalPathById(goals: GoalDefinition[] = []): Map<string, string> {
+    const result = new Map<string, string>();
+    for (const goal of goals || []) {
+        const path = normalizeGoalComparable(goal.goalPath || goal.title || goal.id);
+        if (goal.id && path) result.set(goal.id, path);
+    }
+    return result;
+}
+
+function resolveGoalFieldComparable(field: string, rawValue: unknown, context?: ViewFieldOrderContext): string {
+    const canonical = getCanonicalFieldKey(String(field || '').trim());
+    const goals = context?.goals || [];
+
+    if (canonical === 'goalId' || canonical === 'goalIds') {
+        const id = firstText(rawValue);
+        return buildGoalPathById(goals).get(id) || id || '';
+    }
+
+    return normalizeGoalComparable(rawValue);
+}
+
+/**
+ * 按字段语义比较两个字段值。
+ * 目前核心是目标顺序；普通字段仍保持原有字典序，避免改变内容排序语义。
+ */
+export function compareFieldValuesByViewOrder(field: string, left: unknown, right: unknown, context?: ViewFieldOrderContext): number {
+    if (isGoalOrderField(field)) {
+        const goalOrder = createGoalOrderIndex(context?.goals || []);
+        const leftGoal = resolveGoalFieldComparable(field, left, context);
+        const rightGoal = resolveGoalFieldComparable(field, right, context);
+        const byGoal = goalOrder.compareGoalPaths(leftGoal, rightGoal);
+        if (byGoal !== 0) return byGoal;
+        return leftGoal.localeCompare(rightGoal, 'zh-CN');
+    }
+    return String(left ?? '').localeCompare(String(right ?? ''), 'zh-CN');
+}
+
+function readOrderedFieldValue(item: Item, field: string, context?: ViewFieldOrderContext): unknown {
+    const canonical = getCanonicalFieldKey(String(field || '').trim());
+    if (isGoalOrderField(canonical)) {
+        if (canonical === 'goalId' || canonical === 'goalIds') {
+            return firstText((item as any)[canonical]) || readField(item, canonical);
+        }
+        return (item as any).goalPath || (item as any).goalPaths || readField(item, canonical) || readField(item, 'goalPath') || readField(item, '目标');
+    }
+    return readField(item, canonical);
+}
+
+function findFirstGoalOrderField(fields: string[] = []): string | null {
+    for (const field of fields || []) {
+        if (isGoalOrderField(field)) return getCanonicalFieldKey(field);
+    }
+    return null;
+}
+
+/**
+ * Excel / 列表类视图的稳定记录排序：
+ * - 只有当显示字段里包含“目标”时才介入；
+ * - 只重排目标之间的顺序；
+ * - 同一目标内部保留原 items 顺序，让内容排序、时间排序、用户排序继续生效。
+ */
+export function orderItemsByDisplayedGoalField<T extends Item>(items: T[] = [], displayFields: string[] = [], context?: ViewFieldOrderContext): T[] {
+    const goalField = findFirstGoalOrderField(displayFields);
+    if (!goalField) return items;
+
+    const originalIndex = new Map<T, number>();
+    items.forEach((item, index) => originalIndex.set(item, index));
+
+    return [...items].sort((left, right) => {
+        const byGoal = compareFieldValuesByViewOrder(
+            goalField,
+            readOrderedFieldValue(left, goalField, context),
+            readOrderedFieldValue(right, goalField, context),
+            context,
+        );
+        if (byGoal !== 0) return byGoal;
+        return (originalIndex.get(left) ?? 0) - (originalIndex.get(right) ?? 0);
+    });
+}
 
 /**
  * 按单个字段对 items 进行分组
@@ -33,8 +156,12 @@ export function groupItemsByField(items: Item[], groupField: string, defaultLabe
 /**
  * 获取分组后的排序键值列表
  */
-export function getSortedGroupKeys(grouped: Record<string, Item[]>): string[] {
-    return Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+export function getSortedGroupKeys(grouped: Record<string, Item[]>, field?: string, context?: ViewFieldOrderContext): string[] {
+    const keys = Object.keys(grouped);
+    if (field && isGoalOrderField(field)) {
+        return keys.sort((a, b) => compareFieldValuesByViewOrder(field, a, b, context));
+    }
+    return keys.sort((a, b) => a.localeCompare(b, 'zh-CN'));
 }
 
 /**
@@ -52,7 +179,7 @@ export interface GroupNode {
  *  例如 ['A','B','C'] => A 层 -> B 层 -> C 层 -> items
  * 每一层复用 groupItemsByField + getSortedGroupKeys 的逻辑。
  */
-export function groupItemsByFields(items: Item[], fields: string[]): GroupNode[] {
+export function groupItemsByFields(items: Item[], fields: string[], context?: ViewFieldOrderContext): GroupNode[] {
     if (!fields || fields.length === 0) {
         // 不分组时，返回一个虚拟根节点，方便视图统一处理
         return [{
@@ -67,7 +194,7 @@ export function groupItemsByFields(items: Item[], fields: string[]): GroupNode[]
 
         // 复用单字段分组逻辑（包括 defaultLabel 行为）
         const grouped = groupItemsByField(levelItems, field);
-        const keys = getSortedGroupKeys(grouped);
+        const keys = getSortedGroupKeys(grouped, field, context);
 
         return keys.map(key => {
             const bucket = grouped[key];
@@ -101,7 +228,7 @@ export interface TableMatrix {
     sortedCols: string[];
 }
 
-export function buildTableMatrix(items: Item[], rowField: string, colField: string): TableMatrix {
+export function buildTableMatrix(items: Item[], rowField: string, colField: string, context?: ViewFieldOrderContext): TableMatrix {
     const rowVals: Set<string> = new Set();
     const colVals: Set<string> = new Set();
     const matrix: Record<string, Record<string, Item[]>> = {};
@@ -120,8 +247,8 @@ export function buildTableMatrix(items: Item[], rowField: string, colField: stri
         });
     });
 
-    const sortedRows = Array.from(rowVals).sort((a, b) => a.localeCompare(b, 'zh-CN'));
-    const sortedCols = Array.from(colVals).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+    const sortedRows = Array.from(rowVals).sort((a, b) => compareFieldValuesByViewOrder(rowField, a, b, context));
+    const sortedCols = Array.from(colVals).sort((a, b) => compareFieldValuesByViewOrder(colField, a, b, context));
 
     return { matrix, sortedRows, sortedCols };
 }

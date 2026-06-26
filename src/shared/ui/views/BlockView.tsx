@@ -3,6 +3,7 @@
 import { h } from 'preact';
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { Item, ThemeDefinition, groupItemsByFields, type GroupNode, devLog } from '@core/public';
+import type { GoalDefinition } from '@core/public';
 import { TaskRow } from '../items/TaskRow';
 import { BlockItem } from '../items/BlockItem';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
@@ -30,6 +31,7 @@ interface BlockViewProps {
     timerService: TimerController;
     timers: any[];
     allThemes: ThemeDefinition[];
+    goals?: GoalDefinition[];
     onOpenRecord?: OpenRecordHandler;
 }
 
@@ -48,6 +50,7 @@ export function BlockView(props: BlockViewProps) {
         timerService,
         timers,
         allThemes,
+        goals = [],
         onOpenRecord,
     } = props;
     const containerRef = useRef<HTMLDivElement>(null);
@@ -123,7 +126,7 @@ export function BlockView(props: BlockViewProps) {
 
     // 使用多字段分组工具构建分组树
     // Phase2 渐进：优先使用上层注入（避免 shared/ui 内部做业务计算）
-    const groupTree: GroupNode[] = (injectedGroupTree ?? groupItemsByFields(items, effectiveGroupFields)) as GroupNode[];
+    const groupTree: GroupNode[] = (injectedGroupTree ?? groupItemsByFields(items, effectiveGroupFields, { goals })) as GroupNode[];
 
     devLog('[BlockView] 生成的分组树 (groupTree):', JSON.parse(JSON.stringify(groupTree))); // 使用 JSON 深拷贝打印，避免控制台显示Proxy对象
 

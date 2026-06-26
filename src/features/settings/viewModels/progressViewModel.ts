@@ -87,7 +87,7 @@ export function buildProgressViewModel(args: { items: Item[]; module: any; goals
       categoryBreakdown: progression.categoryBreakdown,
       themeBreakdown: progression.themeBreakdown,
     };
-  }).sort((a, b) => b.totalPoints - a.totalPoints || b.itemCount - a.itemCount || a.title.localeCompare(b.title, 'zh-CN'));
+  });
 
   const topN = Math.max(0, Number(config.topN) || 0);
   const visibleCards = topN > 0 ? cards.slice(0, topN) : cards;

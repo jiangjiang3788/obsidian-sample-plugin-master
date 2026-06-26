@@ -9,7 +9,7 @@
  */
 
 import { dayjs, readField, groupItemsByFields, normalizeDisplayFields } from '@core/public';
-import type { Item, ViewInstance, GroupNode } from '@core/public';
+import type { Item, ViewInstance, GroupNode, GoalDefinition } from '@core/public';
 
 export interface EventTimelineViewModel {
   displayFields: string[];
@@ -26,8 +26,9 @@ export function buildEventTimelineViewModel(params: {
   items: Item[];
   module: ViewInstance;
   dateRange: [Date, Date];
+  goals?: GoalDefinition[];
 }): EventTimelineViewModel {
-  const { items, module, dateRange } = params;
+  const { items, module, dateRange, goals = [] } = params;
 
   const displayFields = normalizeDisplayFields(module.fields || ['title', 'date'], { fallbackFields: ['title', 'date'] });
   const groupFields: string[] = normalizeDisplayFields(module.groupFields || []);
@@ -69,7 +70,7 @@ export function buildEventTimelineViewModel(params: {
   })();
 
   const groupedTree: GroupNode[] | null = groupFields.length
-    ? groupItemsByFields(filteredItems, groupFields)
+    ? groupItemsByFields(filteredItems, groupFields, { goals })
     : null;
 
   return {

@@ -2,7 +2,7 @@
 // src/features/views/EventTimelineView.tsx
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
+import type { Item, ViewInstance, MessageRenderPort, GoalDefinition } from '@core/public';
 import { normalizeDisplayFields, readField } from '@core/public';
 import { dayjs } from '@core/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../../types/actions';
@@ -33,6 +33,7 @@ interface EventTimelineViewProps {
   timerService: TimerController;
   timers: any[];
   allThemes: any[];
+  goals?: GoalDefinition[];
   messageRenderPort?: MessageRenderPort;
   onOpenRecord?: OpenRecordHandler;
 }
@@ -56,6 +57,7 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     timerService,
     timers,
     allThemes,
+    goals = [],
     messageRenderPort,
     onOpenRecord,
   } = props;
@@ -109,7 +111,7 @@ export function EventTimelineView(props: EventTimelineViewProps) {
   const groupedTree: GroupNode[] | null = useMemo(() => {
     if (injectedGroupedTree !== undefined) return injectedGroupedTree;
     if (!groupFields || groupFields.length === 0) return null;
-    return groupItemsByFields(filteredItems, groupFields);
+    return groupItemsByFields(filteredItems, groupFields, { goals });
   }, [filteredItems, groupFields, injectedGroupedTree]);
 
   return (

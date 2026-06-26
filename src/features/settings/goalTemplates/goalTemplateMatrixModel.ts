@@ -1,4 +1,5 @@
 import type { GoalDefinition, GoalTemplate } from '@core/public';
+import { getGoalOrderPath, getGoalOrderLabel, sortGoalsBySettingsOrder } from '@core/public';
 import type { CoreBlockDefinition } from '@core/public';
 
 export type GoalTemplateCellStatus = 'inherit' | 'override' | 'multi' | 'disabled' | 'warning';
@@ -27,12 +28,11 @@ function normalizePath(value?: string | null): string {
 }
 
 export function getGoalDisplayPath(goal: GoalDefinition): string {
-  return normalizePath(goal.goalPath || goal.title || goal.id) || cleanPathSegment(goal.id);
+  return getGoalOrderPath(goal) || cleanPathSegment(goal.id);
 }
 
 export function getGoalDisplayName(goal: GoalDefinition): string {
-  const path = getGoalDisplayPath(goal);
-  return cleanPathSegment(path.split('/').filter(Boolean).pop() || goal.title || goal.id);
+  return getGoalOrderLabel(goal) || cleanPathSegment(goal.title || goal.id);
 }
 
 export function getGoalParentPath(goal: GoalDefinition): string {
@@ -61,39 +61,8 @@ export function isGoalVisibleByExpandedState(goal: GoalDefinition, expandedPaths
   return true;
 }
 
-function getGoalByPath(goals: GoalDefinition[], path: string): GoalDefinition | null {
-  return goals.find((goal) => getGoalDisplayPath(goal) === path) || null;
-}
-
 export function sortGoalsForMatrix(goals: GoalDefinition[]): GoalDefinition[] {
-  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
-  const goalSortOrder = (goal: GoalDefinition | null): number => {
-    if (!goal) return Number.MAX_SAFE_INTEGER;
-    const value = Number((goal as any).sortOrder);
-    if (Number.isFinite(value)) return value;
-    return originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
-  };
-
-  return [...goals].sort((left, right) => {
-    const leftParts = getGoalDisplayPath(left).split('/').filter(Boolean);
-    const rightParts = getGoalDisplayPath(right).split('/').filter(Boolean);
-    const max = Math.min(leftParts.length, rightParts.length);
-    for (let index = 0; index < max; index += 1) {
-      if (leftParts[index] === rightParts[index]) continue;
-      const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join('/');
-      const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join('/');
-      const leftSiblingGoal = getGoalByPath(goals, leftSiblingPath);
-      const rightSiblingGoal = getGoalByPath(goals, rightSiblingPath);
-      const leftOrder = goalSortOrder(leftSiblingGoal);
-      const rightOrder = goalSortOrder(rightSiblingGoal);
-      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
-      return leftParts[index].localeCompare(rightParts[index], 'zh-CN');
-    }
-    if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
-    const byOrder = goalSortOrder(left) - goalSortOrder(right);
-    if (byOrder !== 0) return byOrder;
-    return (originalIndex.get(left.id) ?? 0) - (originalIndex.get(right.id) ?? 0);
-  });
+  return sortGoalsBySettingsOrder(goals);
 }
 
 export function buildGoalTemplateCell(goal: GoalDefinition, block: CoreBlockDefinition, templates: GoalTemplate[]): GoalTemplateCellModel {

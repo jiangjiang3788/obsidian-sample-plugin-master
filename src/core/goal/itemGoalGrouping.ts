@@ -3,6 +3,7 @@ import { readField } from '@/core/types/schema';
 import type { CategoryConfig } from '@/core/config/viewConfigs';
 import type { GoalDefinition } from './types';
 import { splitGoalPath } from './path';
+import { createGoalOrderIndex } from './order';
 
 export const UNASSIGNED_GOAL_KEY = '未归属目标';
 
@@ -119,7 +120,12 @@ export function buildGoalThemeBreakdown(items: Item[], goals: GoalDefinition[] =
     current.count += 1;
     map.set(key, current);
   }
-  return Array.from(map.values()).sort((a, b) => b.count - a.count || a.goalPath.localeCompare(b.goalPath, 'zh-CN') || a.themePath.localeCompare(b.themePath, 'zh-CN'));
+  const order = createGoalOrderIndex(goals);
+  return Array.from(map.values()).sort((a, b) => {
+    const byGoal = order.compareGoalPaths(a.goalPath, b.goalPath);
+    if (byGoal !== 0) return byGoal;
+    return a.themePath.localeCompare(b.themePath, 'zh-CN');
+  });
 }
 
 
@@ -189,9 +195,12 @@ export function buildGoalBuckets(items: Item[], goals: GoalDefinition[] = [], op
     addBucket(getItemGoalKey(item, goals));
   }
 
+  const order = createGoalOrderIndex(goals);
   return Array.from(map.values()).sort((a, b) => {
     if (a.isUnassigned && !b.isUnassigned) return 1;
     if (!a.isUnassigned && b.isUnassigned) return -1;
+    const byGoal = order.compareGoalPaths(a.goalPath || a.name, b.goalPath || b.name);
+    if (byGoal !== 0) return byGoal;
     return (a.alias || a.name).localeCompare(b.alias || b.name, 'zh-CN');
   });
 }

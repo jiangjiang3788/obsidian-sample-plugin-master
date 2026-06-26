@@ -2,7 +2,7 @@
 
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Item } from '@core/public';
+import { Item, type GoalDefinition } from '@core/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
 import { buildTableMatrix } from '@core/public';
 import { TaskRow } from '../items/TaskRow';
@@ -18,15 +18,16 @@ interface TableViewProps {
     timerService: TimerController;
     timers: any[];
     allThemes?: any[]; // 为了兼容 TaskRow 组件
+    goals?: GoalDefinition[];
     onOpenRecord?: OpenRecordHandler;
 }
 
-export function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], onOpenRecord }: TableViewProps) {
+export function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], goals = [], onOpenRecord }: TableViewProps) {
     if (!rowField || !colField) {
         return <div>（表格视图需要配置"行字段"和"列字段"）</div>;
     }
 
-    const { matrix, sortedRows, sortedCols } = buildTableMatrix(items, rowField, colField);
+    const { matrix, sortedRows, sortedCols } = buildTableMatrix(items, rowField, colField, { goals });
 
     function renderCellItem(item: Item) {
         if (item.type === 'task') {

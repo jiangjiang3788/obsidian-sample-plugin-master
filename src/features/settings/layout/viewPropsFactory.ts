@@ -18,6 +18,7 @@ export interface BuildViewPropsParams {
   timers: any[];
   allThemes: any[];
   inputSettings: any;
+  goals?: any[];
   selectedLayoutCategories: string[];
   categoryColors: Record<string, string>;
   messageRenderPort?: MessageRenderPort;
@@ -39,6 +40,7 @@ export function buildViewProps({
   timers,
   allThemes,
   inputSettings,
+  goals = [],
   selectedLayoutCategories,
   categoryColors,
   messageRenderPort,
@@ -80,6 +82,7 @@ export function buildViewProps({
     timers,
     allThemes,
     inputSettings,
+    goals,
     selectedCategories: selectedLayoutCategories,
     messageRenderPort,
     ...renderModels,

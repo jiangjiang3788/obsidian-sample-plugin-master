@@ -1665,6 +1665,100 @@ function splitGoalPath(path) {
     leafGoal: parts.length ? parts[parts.length - 1] : null
   };
 }
+const UNKNOWN_GOAL_RANK = Number.MAX_SAFE_INTEGER - 1e3;
+const UNASSIGNED_GOAL_RANK = Number.MAX_SAFE_INTEGER;
+function finiteNumber(value, fallback) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+function normalizeOrderPath(value) {
+  return splitGoalPath(String(value ?? "")).goalPath || String(value ?? "").trim();
+}
+function leafGoalLabel(value) {
+  const parsed = splitGoalPath(String(value ?? ""));
+  return parsed.leafGoal || parsed.goalPath || String(value ?? "").trim();
+}
+function getGoalOrderPath(goal) {
+  if (!goal) return "";
+  return normalizeOrderPath(goal.goalPath || goal.title || goal.id);
+}
+function getGoalOrderLabel(goal) {
+  if (!goal) return "";
+  return leafGoalLabel(goal.title || goal.goalPath || goal.id);
+}
+function createGoalOrderIndex(goals = []) {
+  const descriptors = (goals || []).map((goal, originalIndex) => {
+    const path = getGoalOrderPath(goal);
+    return {
+      id: goal.id,
+      path,
+      order: finiteNumber(goal?.sortOrder, originalIndex),
+      originalIndex
+    };
+  }).filter((entry) => Boolean(entry.path));
+  descriptors.sort((left2, right2) => {
+    if (left2.order !== right2.order) return left2.order - right2.order;
+    return left2.originalIndex - right2.originalIndex;
+  });
+  const byPath = /* @__PURE__ */ new Map();
+  const byId = /* @__PURE__ */ new Map();
+  const originalIndexByPath = /* @__PURE__ */ new Map();
+  const orderedPaths = [];
+  descriptors.forEach((entry, index) => {
+    if (!byPath.has(entry.path)) {
+      byPath.set(entry.path, index);
+      originalIndexByPath.set(entry.path, entry.originalIndex);
+      orderedPaths.push(entry.path);
+    }
+    if (entry.id && !byId.has(entry.id)) byId.set(entry.id, index);
+  });
+  const rankOfPath = (path) => {
+    const normalized = normalizeOrderPath(path || "");
+    if (!normalized || normalized === "未归属目标") return UNASSIGNED_GOAL_RANK;
+    const known = byPath.get(normalized);
+    return known === void 0 ? UNKNOWN_GOAL_RANK : known;
+  };
+  const compareGoalPaths = (left2, right2) => {
+    const leftPath = normalizeOrderPath(left2 || "");
+    const rightPath = normalizeOrderPath(right2 || "");
+    const leftRank = rankOfPath(leftPath);
+    const rightRank = rankOfPath(rightPath);
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    return leftPath.localeCompare(rightPath, "zh-CN");
+  };
+  const compareGoals = (left2, right2) => {
+    const byPathOrder = compareGoalPaths(getGoalOrderPath(left2), getGoalOrderPath(right2));
+    if (byPathOrder !== 0) return byPathOrder;
+    const leftIndex = left2.id && byId.has(left2.id) ? byId.get(left2.id) : UNKNOWN_GOAL_RANK;
+    const rightIndex = right2.id && byId.has(right2.id) ? byId.get(right2.id) : UNKNOWN_GOAL_RANK;
+    if (leftIndex !== rightIndex) return leftIndex - rightIndex;
+    return String(left2.id || "").localeCompare(String(right2.id || ""), "zh-CN");
+  };
+  return { byPath, byId, originalIndexByPath, orderedPaths, rankOfPath, compareGoalPaths, compareGoals };
+}
+function sortGoalsBySettingsOrder(goals = []) {
+  const order2 = createGoalOrderIndex(goals);
+  return [...goals].sort(order2.compareGoals);
+}
+function templateSortValue(template, fallback) {
+  return finiteNumber(template?.sortOrder, fallback);
+}
+function sortGoalTemplatesBySettingsOrder(templates = [], goals = []) {
+  const goalOrder = createGoalOrderIndex(goals);
+  const originalIndex = /* @__PURE__ */ new Map();
+  templates.forEach((template, index) => originalIndex.set(template, index));
+  return [...templates].sort((left2, right2) => {
+    const leftGoalPath = goals.find((goal) => goal.id === left2.goalId)?.goalPath || left2.goalId;
+    const rightGoalPath = goals.find((goal) => goal.id === right2.goalId)?.goalPath || right2.goalId;
+    const byGoal = goalOrder.compareGoalPaths(leftGoalPath, rightGoalPath);
+    if (byGoal !== 0) return byGoal;
+    const byBlock = String(left2.coreBlockId || "").localeCompare(String(right2.coreBlockId || ""), "zh-CN");
+    if (byBlock !== 0) return byBlock;
+    const byTemplateOrder = templateSortValue(left2, originalIndex.get(left2) ?? 0) - templateSortValue(right2, originalIndex.get(right2) ?? 0);
+    if (byTemplateOrder !== 0) return byTemplateOrder;
+    return (originalIndex.get(left2) ?? 0) - (originalIndex.get(right2) ?? 0);
+  });
+}
 function isPeriodAwareCoreBlock(coreBlockId) {
   const id = String(coreBlockId || "").trim();
   return id === "core.plan" || id === "core.review" || id === "plan" || id === "review";
@@ -2017,7 +2111,7 @@ function compactText$3(value) {
 function cleanPathSegment$1(value) {
   return compactText$3(value).replace(/^[#＃]+\s*/, "").trim();
 }
-function normalizePath$7(value) {
+function normalizePath$6(value) {
   return compactText$3(value).split("/").map(cleanPathSegment$1).filter(Boolean).join("/");
 }
 function readOptionText$1(value) {
@@ -2026,7 +2120,7 @@ function readOptionText$1(value) {
   return compactText$3(value);
 }
 function leafPath$3(value) {
-  const text2 = normalizePath$7(value);
+  const text2 = normalizePath$6(value);
   return text2.split("/").filter(Boolean).pop() || text2;
 }
 function isGeneratedGoalTemplateName(value) {
@@ -2057,7 +2151,7 @@ function readFieldDefault$1(fields, predicate) {
 }
 function readGoalTemplateThemePath$1(template, goal) {
   const values2 = template?.defaultValues || {};
-  return normalizePath$7(
+  return normalizePath$6(
     readOptionText$1(values2.themePath) || readOptionText$1(values2["主题"]) || readFieldDefault$1(template?.fields, isThemeField$2) || readOptionText$1(goal?.themePath)
   );
 }
@@ -2269,34 +2363,34 @@ function firstString(value) {
   if (value == null) return "";
   return String(value).trim();
 }
-function normalizePath$6(value) {
+function normalizePath$5(value) {
   const raw = firstString(value);
   if (!raw) return "";
   return splitGoalPath(raw).goalPath || raw;
 }
-function buildGoalPathById(goals = []) {
+function buildGoalPathById$1(goals = []) {
   const map = /* @__PURE__ */ new Map();
   for (const goal of goals || []) {
-    const path = normalizePath$6(goal.goalPath || goal.title);
+    const path = normalizePath$5(goal.goalPath || goal.title);
     if (goal.id && path) map.set(goal.id, path);
   }
   return map;
 }
 function findGoalByPath(goals = [], goalPath) {
-  const normalized = normalizePath$6(goalPath);
+  const normalized = normalizePath$5(goalPath);
   if (!normalized) return null;
-  return goals.find((goal) => normalizePath$6(goal.goalPath || goal.title) === normalized) || null;
+  return goals.find((goal) => normalizePath$5(goal.goalPath || goal.title) === normalized) || null;
 }
 function getItemGoalKey(item, goals = []) {
-  const directPath = normalizePath$6(item.goalPath);
+  const directPath = normalizePath$5(item.goalPath);
   if (directPath) return directPath;
-  const directPaths = normalizePath$6(item.goalPaths);
+  const directPaths = normalizePath$5(item.goalPaths);
   if (directPaths) return directPaths;
-  const fieldPath = normalizePath$6(readField(item, "goalPath")) || normalizePath$6(readField(item, "目标路径")) || normalizePath$6(readField(item, "目标"));
+  const fieldPath = normalizePath$5(readField(item, "goalPath")) || normalizePath$5(readField(item, "目标路径")) || normalizePath$5(readField(item, "目标"));
   if (fieldPath) return fieldPath;
-  const fieldPaths = normalizePath$6(readField(item, "goalPaths"));
+  const fieldPaths = normalizePath$5(readField(item, "goalPaths"));
   if (fieldPaths) return fieldPaths;
-  const byId = buildGoalPathById(goals);
+  const byId = buildGoalPathById$1(goals);
   const directId = firstString(item.goalId) || firstString(readField(item, "goalId")) || firstString(readField(item, "目标ID"));
   if (directId && byId.has(directId)) return byId.get(directId) || UNASSIGNED_GOAL_KEY;
   const directIds = firstString(item.goalIds);
@@ -2351,7 +2445,7 @@ function buildGoalBuckets(items, goals = [], options = {}) {
   const { includeUnassigned = true, includeKnownGoals = false, themes = [] } = options;
   const map = /* @__PURE__ */ new Map();
   const addBucket = (goalPath, sourceGoal) => {
-    const key = normalizePath$6(goalPath) || UNASSIGNED_GOAL_KEY;
+    const key = normalizePath$5(goalPath) || UNASSIGNED_GOAL_KEY;
     if (!includeUnassigned && key === UNASSIGNED_GOAL_KEY) return;
     if (map.has(key)) return;
     const goal = sourceGoal || findGoalByPath(goals, key);
@@ -2370,16 +2464,19 @@ function buildGoalBuckets(items, goals = [], options = {}) {
   };
   if (includeKnownGoals) {
     for (const goal of goals || []) {
-      const path = normalizePath$6(goal.goalPath || goal.title);
+      const path = normalizePath$5(goal.goalPath || goal.title);
       if (path) addBucket(path, goal);
     }
   }
   for (const item of items || []) {
     addBucket(getItemGoalKey(item, goals));
   }
+  const order2 = createGoalOrderIndex(goals);
   return Array.from(map.values()).sort((a2, b2) => {
     if (a2.isUnassigned && !b2.isUnassigned) return 1;
     if (!a2.isUnassigned && b2.isUnassigned) return -1;
+    const byGoal = order2.compareGoalPaths(a2.goalPath || a2.name, b2.goalPath || b2.name);
+    if (byGoal !== 0) return byGoal;
     return (a2.alias || a2.name).localeCompare(b2.alias || b2.name, "zh-CN");
   });
 }
@@ -3735,12 +3832,12 @@ function buildParsedRecordSnapshot(item) {
     extra: { ...item.extra || {} }
   };
 }
-function normalizePath$5(path) {
+function normalizePath$4(path) {
   const normalized = String(path || "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
   return normalized || null;
 }
 function pathCandidates$1(path) {
-  const parts = normalizePath$5(path)?.split("/") || [];
+  const parts = normalizePath$4(path)?.split("/") || [];
   const result = [];
   for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
   return result;
@@ -3754,7 +3851,7 @@ class ThemeMetadataResolver {
    */
   static resolveThemeForRender(settings, themePath) {
     const metadata = ThemeMetadataResolver.resolve(settings, themePath);
-    const renderPath = normalizePath$5(themePath) || metadata.path;
+    const renderPath = normalizePath$4(themePath) || metadata.path;
     if (!renderPath && !metadata.theme) return null;
     return {
       id: metadata.theme?.id || renderPath || "theme.metadata",
@@ -3765,12 +3862,12 @@ class ThemeMetadataResolver {
     };
   }
   static resolve(settings, themePath) {
-    const normalized = normalizePath$5(themePath);
+    const normalized = normalizePath$4(themePath);
     const themes = settings.inputSettings?.themes || [];
     let theme2 = null;
     let iconTheme = null;
     if (normalized) {
-      const byPath = new Map(themes.map((item) => [normalizePath$5(item.path), item]));
+      const byPath = new Map(themes.map((item) => [normalizePath$4(item.path), item]));
       for (const candidate of pathCandidates$1(normalized)) {
         const matched = byPath.get(candidate);
         if (matched && !theme2) theme2 = matched;
@@ -4843,15 +4940,15 @@ function getEffectiveLevelCount(item) {
 function getEffectiveDisplayCount(item) {
   return item.displayCount || 1;
 }
-function normalizePath$4(path) {
+function normalizePath$3(path) {
   return String(path || "").split("/").map((s2) => s2.trim()).filter(Boolean).join("/");
 }
 function splitPath(path) {
-  const normalized = normalizePath$4(path);
+  const normalized = normalizePath$3(path);
   return normalized ? normalized.split("/") : [];
 }
 function getFullPath(path) {
-  return normalizePath$4(path);
+  return normalizePath$3(path);
 }
 function getBasePath(path) {
   return splitPath(path)[0] || "";
@@ -5622,6 +5719,91 @@ function getLatestHeatmapVisualValue(items, ratingMapping) {
 function getEffectiveTemplate(settings, blockId, themeId) {
   return TemplateResolver.resolve(settings, blockId, themeId);
 }
+function isGoalOrderField(field) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  return ["goalPath", "goalPaths", "rootGoal", "leafGoal", "goalId", "goalIds"].includes(canonical);
+}
+function normalizeText$2(value) {
+  if (value === null || value === void 0) return "";
+  return String(value).trim();
+}
+function firstText$1(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const candidate = firstText$1(item);
+      if (candidate) return candidate;
+    }
+    return "";
+  }
+  const text2 = normalizeText$2(value);
+  if (!text2) return "";
+  return text2.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean)[0] || "";
+}
+function normalizeGoalComparable(value) {
+  const text2 = firstText$1(value);
+  if (!text2) return "";
+  return splitGoalPath(text2).goalPath || text2.replace(/^#+/, "").trim();
+}
+function buildGoalPathById(goals = []) {
+  const result = /* @__PURE__ */ new Map();
+  for (const goal of goals || []) {
+    const path = normalizeGoalComparable(goal.goalPath || goal.title || goal.id);
+    if (goal.id && path) result.set(goal.id, path);
+  }
+  return result;
+}
+function resolveGoalFieldComparable(field, rawValue, context) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  const goals = context?.goals || [];
+  if (canonical === "goalId" || canonical === "goalIds") {
+    const id = firstText$1(rawValue);
+    return buildGoalPathById(goals).get(id) || id || "";
+  }
+  return normalizeGoalComparable(rawValue);
+}
+function compareFieldValuesByViewOrder(field, left2, right2, context) {
+  if (isGoalOrderField(field)) {
+    const goalOrder = createGoalOrderIndex(context?.goals || []);
+    const leftGoal = resolveGoalFieldComparable(field, left2, context);
+    const rightGoal = resolveGoalFieldComparable(field, right2, context);
+    const byGoal = goalOrder.compareGoalPaths(leftGoal, rightGoal);
+    if (byGoal !== 0) return byGoal;
+    return leftGoal.localeCompare(rightGoal, "zh-CN");
+  }
+  return String(left2 ?? "").localeCompare(String(right2 ?? ""), "zh-CN");
+}
+function readOrderedFieldValue(item, field, context) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  if (isGoalOrderField(canonical)) {
+    if (canonical === "goalId" || canonical === "goalIds") {
+      return firstText$1(item[canonical]) || readField(item, canonical);
+    }
+    return item.goalPath || item.goalPaths || readField(item, canonical) || readField(item, "goalPath") || readField(item, "目标");
+  }
+  return readField(item, canonical);
+}
+function findFirstGoalOrderField(fields = []) {
+  for (const field of fields || []) {
+    if (isGoalOrderField(field)) return getCanonicalFieldKey(field);
+  }
+  return null;
+}
+function orderItemsByDisplayedGoalField(items = [], displayFields = [], context) {
+  const goalField = findFirstGoalOrderField(displayFields);
+  if (!goalField) return items;
+  const originalIndex = /* @__PURE__ */ new Map();
+  items.forEach((item, index) => originalIndex.set(item, index));
+  return [...items].sort((left2, right2) => {
+    const byGoal = compareFieldValuesByViewOrder(
+      goalField,
+      readOrderedFieldValue(left2, goalField),
+      readOrderedFieldValue(right2, goalField),
+      context
+    );
+    if (byGoal !== 0) return byGoal;
+    return (originalIndex.get(left2) ?? 0) - (originalIndex.get(right2) ?? 0);
+  });
+}
 function normalizeGroupKeys(value, defaultLabel) {
   if (Array.isArray(value)) {
     const keys = value.map((v2) => String(v2 ?? "").trim()).filter(Boolean);
@@ -5641,10 +5823,14 @@ function groupItemsByField(items, groupField, defaultLabel = "(未分类)") {
   }
   return grouped;
 }
-function getSortedGroupKeys(grouped) {
-  return Object.keys(grouped).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+function getSortedGroupKeys(grouped, field, context) {
+  const keys = Object.keys(grouped);
+  if (field && isGoalOrderField(field)) {
+    return keys.sort((a2, b2) => compareFieldValuesByViewOrder(field, a2, b2, context));
+  }
+  return keys.sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
 }
-function groupItemsByFields(items, fields) {
+function groupItemsByFields(items, fields, context) {
   if (!fields || fields.length === 0) {
     return [{
       key: "__all__",
@@ -5655,7 +5841,7 @@ function groupItemsByFields(items, fields) {
   const groupLevel = (levelItems, level) => {
     const field = fields[level];
     const grouped = groupItemsByField(levelItems, field);
-    const keys = getSortedGroupKeys(grouped);
+    const keys = getSortedGroupKeys(grouped, field, context);
     return keys.map((key) => {
       const bucket = grouped[key];
       if (level === fields.length - 1) {
@@ -5675,7 +5861,7 @@ function groupItemsByFields(items, fields) {
   };
   return groupLevel(items, 0);
 }
-function buildTableMatrix(items, rowField, colField) {
+function buildTableMatrix(items, rowField, colField, context) {
   const rowVals = /* @__PURE__ */ new Set();
   const colVals = /* @__PURE__ */ new Set();
   const matrix = {};
@@ -5692,8 +5878,8 @@ function buildTableMatrix(items, rowField, colField) {
       });
     });
   });
-  const sortedRows = Array.from(rowVals).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-  const sortedCols = Array.from(colVals).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+  const sortedRows = Array.from(rowVals).sort((a2, b2) => compareFieldValuesByViewOrder(rowField, a2, b2, context));
+  const sortedCols = Array.from(colVals).sort((a2, b2) => compareFieldValuesByViewOrder(colField, a2, b2, context));
   return { matrix, sortedRows, sortedCols };
 }
 function getBaseCategory(categoryKey) {
@@ -17190,7 +17376,7 @@ function resolveBlockRangeForMutation(lines, item, expectedIndex) {
     "原始块位置已变化或记录已不存在。"
   );
 }
-function normalizePath$3(value) {
+function normalizePath$2(value) {
   const trimmed = String(value || "").trim();
   return trimmed || null;
 }
@@ -17298,8 +17484,8 @@ function buildRecordOutputPlan(input) {
   }
   const renderData = buildRenderData(input.template, input.formData, input.theme, input.templateMeta);
   const outputContent = renderTemplate(input.template.outputTemplate, renderData).trim();
-  const targetFilePath = normalizePath$3(renderTemplate(input.template.targetFile, renderData));
-  const targetHeader = input.template.appendUnderHeader ? normalizePath$3(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
+  const targetFilePath = normalizePath$2(renderTemplate(input.template.targetFile, renderData));
+  const targetHeader = input.template.appendUnderHeader ? normalizePath$2(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
   return {
     targetFilePath,
     targetHeader,
@@ -17309,8 +17495,8 @@ function buildRecordOutputPlan(input) {
   };
 }
 function buildRecordPersistencePlan(input) {
-  const originalPath = normalizePath$3(input.originalPath);
-  const targetPath = normalizePath$3(input.outputPlan.targetFilePath);
+  const originalPath = normalizePath$2(input.originalPath);
+  const targetPath = normalizePath$2(input.outputPlan.targetFilePath);
   if (input.mode === "create") {
     return {
       originalPath: null,
@@ -48938,6 +49124,7 @@ function BlockView(props) {
     timerService,
     timers,
     allThemes,
+    goals = [],
     onOpenRecord
   } = props;
   const containerRef = A$1(null);
@@ -48994,7 +49181,7 @@ function BlockView(props) {
   }
   devLog("[BlockView] 接收到的 Props:", props);
   devLog(`[BlockView] 生效的分组字段 (effectiveGroupFields):`, effectiveGroupFields);
-  const groupTree = injectedGroupTree ?? groupItemsByFields(items, effectiveGroupFields);
+  const groupTree = injectedGroupTree ?? groupItemsByFields(items, effectiveGroupFields, { goals });
   devLog("[BlockView] 生成的分组树 (groupTree):", JSON.parse(JSON.stringify(groupTree)));
   return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: /* @__PURE__ */ u2(
     GroupedContainer,
@@ -49422,6 +49609,7 @@ function EventTimelineView(props) {
     timerService,
     timers,
     allThemes,
+    goals = [],
     messageRenderPort,
     onOpenRecord
   } = props;
@@ -49461,7 +49649,7 @@ function EventTimelineView(props) {
   const groupedTree = T$1(() => {
     if (injectedGroupedTree !== void 0) return injectedGroupedTree;
     if (!groupFields || groupFields.length === 0) return null;
-    return groupItemsByFields(filteredItems, groupFields);
+    return groupItemsByFields(filteredItems, groupFields, { goals });
   }, [filteredItems, groupFields, injectedGroupedTree]);
   return /* @__PURE__ */ u2(
     EventTimelineViewView,
@@ -51045,11 +51233,11 @@ function TaskExecutionView({ currentView, taskExecutionModel, onMarkDone, onOpen
     ] })
   ] });
 }
-function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], onOpenRecord }) {
+function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], goals = [], onOpenRecord }) {
   if (!rowField || !colField) {
     return /* @__PURE__ */ u2("div", { children: '（表格视图需要配置"行字段"和"列字段"）' });
   }
-  const { matrix, sortedRows, sortedCols } = buildTableMatrix(items, rowField, colField);
+  const { matrix, sortedRows, sortedCols } = buildTableMatrix(items, rowField, colField, { goals });
   function renderCellItem(item) {
     if (item.type === "task") {
       const timer = timers.find((t3) => t3.taskId === item.id);
@@ -52192,6 +52380,7 @@ function getNextContentDisplayMode(mode) {
 }
 function ExcelView({
   items,
+  goals = [],
   fields,
   availableFields,
   excelConfig,
@@ -52215,7 +52404,8 @@ function ExcelView({
     }
   ), [fields, normalizedAvailableFields]);
   const columns = T$1(() => buildExcelColumns(displayFields), [displayFields]);
-  const itemSignature = T$1(() => items.map((item) => `${item.id}:${item.modified ?? ""}`).join("|"), [items]);
+  const orderedItems = T$1(() => orderItemsByDisplayedGoalField(items, displayFields, { goals }), [items, displayFields, goals]);
+  const itemSignature = T$1(() => orderedItems.map((item) => `${item.id}:${item.modified ?? ""}`).join("|"), [orderedItems]);
   const persistedColumnWidths = T$1(() => normalizeColumnWidths(excelConfig?.columnWidths), [excelConfig?.columnWidths]);
   const persistedContentDisplayMode = T$1(
     () => normalizeContentDisplayMode(excelConfig?.contentDisplayMode),
@@ -52352,7 +52542,7 @@ function ExcelView({
         /* @__PURE__ */ u2(
           ExcelGrid,
           {
-            items,
+            items: orderedItems,
             columns,
             selectedCellKey: editing.selectedCellKey,
             editingCellKey: editing.editingCellKey,
@@ -57079,14 +57269,14 @@ function QuickInputOptionPillGroup({
     }
   );
 }
-function normalizePath$2(value) {
+function normalizePath$1(value) {
   return String(value || "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
 }
 function cleanLabel(value) {
   return String(value || "").replace(/^[#＃]+\s*/, "").trim();
 }
 function leafLabel(path) {
-  const parts = normalizePath$2(path).split("/").filter(Boolean);
+  const parts = normalizePath$1(path).split("/").filter(Boolean);
   return cleanLabel(parts[parts.length - 1] || path);
 }
 function getOrder(option) {
@@ -57101,7 +57291,7 @@ function buildTree(options) {
   const byValue = /* @__PURE__ */ new Map();
   const childrenByParent = /* @__PURE__ */ new Map();
   for (const raw of options || []) {
-    const value = normalizePath$2(raw.value);
+    const value = normalizePath$1(raw.value);
     if (!value) continue;
     byValue.set(value, { ...raw, value, label: raw.label || leafLabel(value) });
   }
@@ -57144,7 +57334,7 @@ function HierarchySingleSelect({
   searchable = true
 }) {
   const [search, setSearch] = d("");
-  const normalizedSelected = normalizePath$2(selectedValue);
+  const normalizedSelected = normalizePath$1(selectedValue);
   const { roots, childrenByParent, byValue } = T$1(() => buildTree(options), [options]);
   const selected = normalizedSelected ? byValue.get(normalizedSelected) || null : null;
   const activeParentPath = normalizedSelected ? normalizedSelected.includes("/") ? normalizedSelected.slice(0, normalizedSelected.lastIndexOf("/")) : normalizedSelected : roots[0]?.value || null;
@@ -69634,7 +69824,7 @@ const GOAL_TEMPLATE_BLOCK_ID_ORDER = ["core.habit", "core.task", "core.evidence"
 function cloneValue(value) {
   return JSON.parse(JSON.stringify(value));
 }
-function normalizePath$1(value) {
+function normalizePath(value) {
   return String(value ?? "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
 }
 function normalizeDefault(value) {
@@ -69699,7 +69889,7 @@ function getGoalTemplateDisplayName(template) {
 }
 function readGoalTemplateThemePath(template, goal) {
   const values2 = template?.defaultValues || {};
-  return normalizePath$1(normalizeDefault(values2.themePath) || normalizeDefault(values2["主题"]) || readFieldDefault(template?.fields, isThemeField) || normalizeDefault(goal?.themePath));
+  return normalizePath(normalizeDefault(values2.themePath) || normalizeDefault(values2["主题"]) || readFieldDefault(template?.fields, isThemeField) || normalizeDefault(goal?.themePath));
 }
 function readGoalTemplateIcon(template, themeIcon) {
   const values2 = template?.defaultValues || {};
@@ -70010,15 +70200,11 @@ function GoalPresetCard({
 function cleanPathSegment(value) {
   return value.trim().replace(/^[#＃]+\s*/, "").trim();
 }
-function normalizePath(value) {
-  return String(value || "").split("/").map(cleanPathSegment).filter(Boolean).join("/");
-}
 function getGoalDisplayPath(goal) {
-  return normalizePath(goal.goalPath || goal.title || goal.id) || cleanPathSegment(goal.id);
+  return getGoalOrderPath(goal) || cleanPathSegment(goal.id);
 }
 function getGoalDisplayName(goal) {
-  const path = getGoalDisplayPath(goal);
-  return cleanPathSegment(path.split("/").filter(Boolean).pop() || goal.title || goal.id);
+  return getGoalOrderLabel(goal) || cleanPathSegment(goal.title || goal.id);
 }
 function getGoalParentPath(goal) {
   const parts = getGoalDisplayPath(goal).split("/").filter(Boolean);
@@ -70042,37 +70228,8 @@ function isGoalVisibleByExpandedState(goal, expandedPaths) {
   }
   return true;
 }
-function getGoalByPath(goals, path) {
-  return goals.find((goal) => getGoalDisplayPath(goal) === path) || null;
-}
 function sortGoalsForMatrix(goals) {
-  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
-  const goalSortOrder = (goal) => {
-    if (!goal) return Number.MAX_SAFE_INTEGER;
-    const value = Number(goal.sortOrder);
-    if (Number.isFinite(value)) return value;
-    return originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
-  };
-  return [...goals].sort((left2, right2) => {
-    const leftParts = getGoalDisplayPath(left2).split("/").filter(Boolean);
-    const rightParts = getGoalDisplayPath(right2).split("/").filter(Boolean);
-    const max2 = Math.min(leftParts.length, rightParts.length);
-    for (let index = 0; index < max2; index += 1) {
-      if (leftParts[index] === rightParts[index]) continue;
-      const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join("/");
-      const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join("/");
-      const leftSiblingGoal = getGoalByPath(goals, leftSiblingPath);
-      const rightSiblingGoal = getGoalByPath(goals, rightSiblingPath);
-      const leftOrder = goalSortOrder(leftSiblingGoal);
-      const rightOrder = goalSortOrder(rightSiblingGoal);
-      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
-      return leftParts[index].localeCompare(rightParts[index], "zh-CN");
-    }
-    if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
-    const byOrder = goalSortOrder(left2) - goalSortOrder(right2);
-    if (byOrder !== 0) return byOrder;
-    return (originalIndex.get(left2.id) ?? 0) - (originalIndex.get(right2.id) ?? 0);
-  });
+  return sortGoalsBySettingsOrder(goals);
 }
 function buildGoalTemplateCell(goal, block2, templates) {
   const cellTemplates = templates.filter((template) => template.goalId === goal.id && template.coreBlockId === block2.id);
@@ -70136,12 +70293,8 @@ function goalTemplateKey(template) {
 function goalTemplateVariantId(template) {
   return String(template.variantId || "default").trim() || "default";
 }
-function sortPresets(items) {
-  return items.map((template, index) => ({ template, index })).sort((left2, right2) => {
-    const bySort = (left2.template.sortOrder ?? 9999) - (right2.template.sortOrder ?? 9999);
-    if (bySort !== 0) return bySort;
-    return left2.index - right2.index;
-  }).map(({ template }) => template);
+function sortPresets(items, goals = []) {
+  return sortGoalTemplatesBySettingsOrder(items, goals);
 }
 function buildThemeIconMap(settings) {
   const map = /* @__PURE__ */ new Map();
@@ -70322,7 +70475,7 @@ function GoalTemplateMatrix() {
     ui.notice("目标排序已保存");
   };
   const reorderPresetsInCell = async (drag, targetTemplateKey, position2) => {
-    const cellTemplates = sortPresets(templates.filter((template) => template.goalId === drag.goalId && template.coreBlockId === drag.blockId && template.enabled !== false));
+    const cellTemplates = sortPresets(templates.filter((template) => template.goalId === drag.goalId && template.coreBlockId === drag.blockId && template.enabled !== false), goals);
     const dragged = cellTemplates.find((template) => goalTemplateKey(template) === drag.templateKey);
     if (!dragged) return;
     const next2 = cellTemplates.filter((template) => goalTemplateKey(template) !== drag.templateKey);
@@ -70361,7 +70514,7 @@ function GoalTemplateMatrix() {
       themeIcon: themeIconByPath.get(sourceThemePath),
       reason: "move"
     });
-    const targetTemplates = sortPresets(templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id && template.enabled !== false));
+    const targetTemplates = sortPresets(templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id && template.enabled !== false), goals);
     const reorderedTarget = targetTemplates.slice();
     if (targetTemplateKey) {
       const targetIndex = reorderedTarget.findIndex((template) => goalTemplateKey(template) === targetTemplateKey);
@@ -70467,7 +70620,7 @@ function GoalTemplateMatrix() {
   };
   const renderBlockCell = (goal, block2, collapsed) => {
     const cell = buildGoalTemplateCell(goal, block2, templates);
-    const presets = sortPresets(cell.enabledTemplates);
+    const presets = sortPresets(cell.enabledTemplates, goals);
     const isDropCell = presetDropCell?.goalId === goal.id && presetDropCell.blockId === block2.id;
     return /* @__PURE__ */ u2(
       "div",
@@ -71437,11 +71590,11 @@ function buildBlockViewModel(params) {
   }
   return {
     effectiveGroupFields,
-    groupTree: groupItemsByFields(params.items, effectiveGroupFields)
+    groupTree: groupItemsByFields(params.items, effectiveGroupFields, { goals: params.goals || [] })
   };
 }
 function buildEventTimelineViewModel(params) {
-  const { items, module: module2, dateRange } = params;
+  const { items, module: module2, dateRange, goals = [] } = params;
   const displayFields = normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
   const groupFields = normalizeDisplayFields(module2.groupFields || []);
   const viewConfig = module2.viewConfig || {};
@@ -71474,7 +71627,7 @@ function buildEventTimelineViewModel(params) {
       return ta.valueOf() - tb.valueOf();
     });
   })();
-  const groupedTree = groupFields.length ? groupItemsByFields(filteredItems, groupFields) : null;
+  const groupedTree = groupFields.length ? groupItemsByFields(filteredItems, groupFields, { goals }) : null;
   return {
     displayFields,
     groupFields,
@@ -71537,7 +71690,7 @@ function buildPresetLookups(goalSettings, goals) {
   const byGoalBlockVariant = /* @__PURE__ */ new Map();
   const byGoalBlockTheme = /* @__PURE__ */ new Map();
   const allPresets = [];
-  for (const raw of goalSettings?.goalBlockBindings || []) {
+  for (const [presetOriginalIndex, raw] of (goalSettings?.goalBlockBindings || []).entries()) {
     const template = raw || {};
     const id = firstText(template.id);
     const goalId = firstText(template.goalId);
@@ -71551,7 +71704,8 @@ function buildPresetLookups(goalSettings, goals) {
     const label = firstText(template.name) || firstText(template.templateName) || themeLeaf(themePath) || variantId;
     const key = id || `${goalId}:${coreBlockId}:${variantId}`;
     const ratingOptions = extractRatingOptions(template);
-    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions };
+    const presetSortOrder = Number.isFinite(Number(template.sortOrder)) ? Number(template.sortOrder) : presetOriginalIndex;
+    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
     allPresets.push(meta);
     if (id) byTemplateId.set(id, meta);
     const legacyOverrideId = firstText(defaults.legacyOverrideId);
@@ -71584,6 +71738,7 @@ function buildHeatmapViewModel(params) {
   const filterByTheme = trackedThemeSet.size > 0;
   const goalMap = /* @__PURE__ */ new Map();
   const lookups = buildPresetLookups(goalSettings, goals);
+  const goalOrder = createGoalOrderIndex(goals);
   function ensureGoalGroup(goalPath, label) {
     const normalizedGoalPath = goalPath || UNASSIGNED_GOAL_KEY;
     let goalGroup = goalMap.get(normalizedGoalPath);
@@ -71605,6 +71760,8 @@ function buildHeatmapViewModel(params) {
         ratingOptions: meta.ratingOptions || [],
         themePath: meta.themePath || "__default__",
         label: meta.label || themeLeaf(meta.themePath),
+        presetSortOrder: meta.presetSortOrder,
+        presetOriginalIndex: meta.presetOriginalIndex,
         count: 0,
         dataForTheme: /* @__PURE__ */ new Map()
       };
@@ -71615,6 +71772,8 @@ function buildHeatmapViewModel(params) {
     if (meta.sourceBlockId && !entry.sourceBlockId) entry.sourceBlockId = meta.sourceBlockId;
     if (meta.goalId && !entry.goalId) entry.goalId = meta.goalId;
     if (meta.ratingOptions?.length && (!entry.ratingOptions || entry.ratingOptions.length === 0)) entry.ratingOptions = meta.ratingOptions;
+    if (meta.presetSortOrder !== void 0 && entry.presetSortOrder === void 0) entry.presetSortOrder = meta.presetSortOrder;
+    if (meta.presetOriginalIndex !== void 0 && entry.presetOriginalIndex === void 0) entry.presetOriginalIndex = meta.presetOriginalIndex;
     return entry;
   }
   for (const preset of lookups.allPresets) {
@@ -71627,6 +71786,8 @@ function buildHeatmapViewModel(params) {
       sourceBlockId: preset.coreBlockId,
       goalId: preset.goalId,
       ratingOptions: preset.ratingOptions,
+      presetSortOrder: preset.presetSortOrder,
+      presetOriginalIndex: preset.presetOriginalIndex,
       themePath: preset.themePath || "__default__",
       label: preset.label || themeLeaf(preset.themePath)
     });
@@ -71666,6 +71827,8 @@ function buildHeatmapViewModel(params) {
       sourceBlockId: preset?.coreBlockId,
       goalId: preset?.goalId,
       ratingOptions: preset?.ratingOptions,
+      presetSortOrder: preset?.presetSortOrder,
+      presetOriginalIndex: preset?.presetOriginalIndex,
       themePath,
       label
     });
@@ -71673,14 +71836,20 @@ function buildHeatmapViewModel(params) {
     const dayItems = entry.dataForTheme.get(date2) || [];
     entry.dataForTheme.set(date2, [...dayItems, item]);
   }
+  const compareEntriesByPresetOrder = (a2, b2) => {
+    const aHasPresetOrder = a2.presetSortOrder !== void 0 || a2.presetOriginalIndex !== void 0 || Boolean(a2.templateId);
+    const bHasPresetOrder = b2.presetSortOrder !== void 0 || b2.presetOriginalIndex !== void 0 || Boolean(b2.templateId);
+    if (aHasPresetOrder !== bHasPresetOrder) return aHasPresetOrder ? -1 : 1;
+    const byPresetSort = (a2.presetSortOrder ?? Number.MAX_SAFE_INTEGER) - (b2.presetSortOrder ?? Number.MAX_SAFE_INTEGER);
+    if (byPresetSort !== 0) return byPresetSort;
+    const byOriginal = (a2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER) - (b2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER);
+    if (byOriginal !== 0) return byOriginal;
+    return a2.label.localeCompare(b2.label, "zh-CN");
+  };
   const goalGroups = Array.from(goalMap.values()).map((group) => ({
     ...group,
-    entries: group.entries.sort((a2, b2) => b2.count - a2.count || a2.label.localeCompare(b2.label, "zh-CN"))
-  })).sort((a2, b2) => {
-    if (a2.goalPath === UNASSIGNED_GOAL_KEY && b2.goalPath !== UNASSIGNED_GOAL_KEY) return 1;
-    if (a2.goalPath !== UNASSIGNED_GOAL_KEY && b2.goalPath === UNASSIGNED_GOAL_KEY) return -1;
-    return b2.count - a2.count || a2.label.localeCompare(b2.label, "zh-CN");
-  });
+    entries: group.entries.sort(compareEntriesByPresetOrder)
+  })).sort((a2, b2) => goalOrder.compareGoalPaths(a2.goalPath, b2.goalPath));
   return { themesByPath, themesToTrack, dataByThemeAndDate, goalGroups };
 }
 dayjs.extend(weekOfYear);
@@ -71729,11 +71898,6 @@ function buildStatisticsViewModel(args) {
   const goalBuckets = buildGoalBuckets(items, goals, { includeUnassigned: true, includeKnownGoals: false, themes });
   const bucketAccessor = (item) => getItemGoalKey(item, goals);
   const topN = Math.max(0, Number(viewConfig.topN) || 0);
-  const countByGoal = /* @__PURE__ */ new Map();
-  for (const item of items || []) {
-    const key = bucketAccessor(item);
-    countByGoal.set(key, (countByGoal.get(key) || 0) + 1);
-  }
   const themeCountByGoal = /* @__PURE__ */ new Map();
   for (const item of items || []) {
     const goalKey = bucketAccessor(item);
@@ -71742,7 +71906,7 @@ function buildStatisticsViewModel(args) {
     inner.set(themeKey, (inner.get(themeKey) || 0) + 1);
     themeCountByGoal.set(goalKey, inner);
   }
-  const filteredCategories = [...goalBuckets].sort((a2, b2) => (countByGoal.get(b2.name) || 0) - (countByGoal.get(a2.name) || 0) || (a2.alias || a2.name).localeCompare(b2.alias || b2.name, "zh-CN")).slice(0, topN || void 0);
+  const filteredCategories = [...goalBuckets].slice(0, topN || void 0);
   const categoryOrder = filteredCategories.map((bucket) => bucket.name);
   const goalThemeSummaries = filteredCategories.map((bucket) => {
     const inner = themeCountByGoal.get(bucket.name) || /* @__PURE__ */ new Map();
@@ -71864,7 +72028,7 @@ function buildProgressViewModel(args) {
       categoryBreakdown: progression.categoryBreakdown,
       themeBreakdown: progression.themeBreakdown
     };
-  }).sort((a2, b2) => b2.totalPoints - a2.totalPoints || b2.itemCount - a2.itemCount || a2.title.localeCompare(b2.title, "zh-CN"));
+  });
   const topN = Math.max(0, Number(config2.topN) || 0);
   const visibleCards = topN > 0 ? cards.slice(0, topN) : cards;
   return {
@@ -71971,22 +72135,24 @@ function buildTaskExecutionViewModel(params) {
   return { sections: sections2 };
 }
 const viewModelBuilders = {
-  BlockView: ({ items, viewInstance }) => {
+  BlockView: ({ items, viewInstance, goals }) => {
     const model = buildBlockViewModel({
       items,
       groupField: viewInstance.group,
-      groupFields: viewInstance.groupFields
+      groupFields: viewInstance.groupFields,
+      goals: goals || []
     });
     return {
       effectiveGroupFields: model.effectiveGroupFields,
       groupTree: model.groupTree
     };
   },
-  EventTimelineView: ({ items, viewInstance, dateRange }) => {
+  EventTimelineView: ({ items, viewInstance, dateRange, goals }) => {
     const model = buildEventTimelineViewModel({
       items,
       module: viewInstance,
-      dateRange
+      dateRange,
+      goals: goals || []
     });
     return {
       filteredItems: model.filteredItems,
@@ -72255,6 +72421,7 @@ function buildViewProps({
   timers,
   allThemes,
   inputSettings,
+  goals = [],
   selectedLayoutCategories,
   categoryColors,
   messageRenderPort,
@@ -72295,6 +72462,7 @@ function buildViewProps({
     timers,
     allThemes,
     inputSettings,
+    goals,
     selectedCategories: selectedLayoutCategories,
     messageRenderPort,
     ...renderModels
@@ -72406,6 +72574,7 @@ function ViewContent({
     timers,
     allThemes,
     inputSettings,
+    goals: settings.goalSettings?.goals || [],
     selectedLayoutCategories,
     categoryColors,
     messageRenderPort,

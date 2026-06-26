@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import { diagnosticError } from '../../../utils/diagnosticConsole';
-import { getAllFields, getFieldCategoryLabel, getFieldLabel, normalizeDisplayFields } from '@core/public';
+import { getAllFields, getFieldCategoryLabel, getFieldLabel, normalizeDisplayFields, orderItemsByDisplayedGoalField } from '@core/public';
 import { ExcelColumnToolbar } from './ExcelColumnToolbar';
 import { ExcelGrid } from './ExcelGrid';
 import { buildExcelColumns } from './value';
@@ -35,6 +35,7 @@ function getNextContentDisplayMode(mode: ExcelContentDisplayMode): ExcelContentD
 
 export function ExcelView({
   items,
+  goals = [],
   fields,
   availableFields,
   excelConfig,
@@ -60,7 +61,8 @@ export function ExcelView({
   ), [fields, normalizedAvailableFields]);
 
   const columns = useMemo(() => buildExcelColumns(displayFields), [displayFields]);
-  const itemSignature = useMemo(() => items.map(item => `${item.id}:${item.modified ?? ''}`).join('|'), [items]);
+  const orderedItems = useMemo(() => orderItemsByDisplayedGoalField(items, displayFields, { goals }), [items, displayFields, goals]);
+  const itemSignature = useMemo(() => orderedItems.map(item => `${item.id}:${item.modified ?? ''}`).join('|'), [orderedItems]);
   const persistedColumnWidths = useMemo(() => normalizeColumnWidths(excelConfig?.columnWidths), [excelConfig?.columnWidths]);
   const persistedContentDisplayMode = useMemo(
     () => normalizeContentDisplayMode(excelConfig?.contentDisplayMode),
@@ -199,7 +201,7 @@ export function ExcelView({
         onFieldsChange={handleFieldsChange}
       />
       <ExcelGrid
-        items={items}
+        items={orderedItems}
         columns={columns}
         selectedCellKey={editing.selectedCellKey}
         editingCellKey={editing.editingCellKey}

@@ -10,7 +10,7 @@
  * 这是一个纯函数（无副作用），便于单测与复用。
  */
 
-import type { Item, GroupNode } from '@core/public';
+import type { Item, GroupNode, GoalDefinition } from '@core/public';
 import { groupItemsByFields } from '@core/public';
 
 export interface BlockViewModel {
@@ -38,6 +38,7 @@ export function buildBlockViewModel(params: {
   items: Item[];
   groupField?: string;
   groupFields?: string[];
+  goals?: GoalDefinition[];
 }): BlockViewModel {
   const effectiveGroupFields = resolveGroupFields(params.groupField, params.groupFields);
   if (!effectiveGroupFields.length) {
@@ -46,6 +47,6 @@ export function buildBlockViewModel(params: {
 
   return {
     effectiveGroupFields,
-    groupTree: groupItemsByFields(params.items, effectiveGroupFields),
+    groupTree: groupItemsByFields(params.items, effectiveGroupFields, { goals: params.goals || [] }),
   };
 }

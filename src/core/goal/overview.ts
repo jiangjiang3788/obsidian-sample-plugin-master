@@ -1,6 +1,7 @@
 import type { Item } from '@/core/types/schema';
 import type { CycleGranularity, GoalDefinition, GoalMetricContract, GoalRecordRelation, GoalRecordRelationType } from './types';
 import { splitGoalPath } from './path';
+import { createGoalOrderIndex } from './order';
 import { resolveDerivedPeriod } from './period';
 
 export interface GoalMigrationCandidate {
@@ -257,7 +258,12 @@ export function inferGoalCandidatesFromItems(items: Item[], existingGoals: GoalD
     }
   }
 
-  return Array.from(map.values()).sort((a, b) => b.count - a.count || a.goalPath.localeCompare(b.goalPath, 'zh-CN'));
+  const order = createGoalOrderIndex(existingGoals);
+  return Array.from(map.values()).sort((a, b) => {
+    const byGoal = order.compareGoalPaths(a.goalPath, b.goalPath);
+    if (byGoal !== 0) return byGoal;
+    return b.count - a.count || a.goalPath.localeCompare(b.goalPath, 'zh-CN');
+  });
 }
 
 export function buildGoalRelationsFromItems(items: Item[], goals: GoalDefinition[]): GoalRecordRelation[] {
@@ -535,6 +541,7 @@ export function buildGoalOverviewModel(input: {
     }
   }
 
+  const goalOrder = createGoalOrderIndex(goals);
   const rows = Array.from(rowMap.values()).map((row) => {
     const goal = goalsByPath.get(row.goalPath);
     const nextRow: GoalOverviewRow = {
@@ -548,9 +555,9 @@ export function buildGoalOverviewModel(input: {
     nextRow.metricProgress = (goal?.metrics || []).map((metric) => metricProgress(metric, nextRow));
     return nextRow;
   }).sort((a, b) => {
-    const dateCompare = String(b.latestDate || '').localeCompare(String(a.latestDate || ''), 'zh-CN');
-    if (dateCompare !== 0) return dateCompare;
-    return b.totalCount - a.totalCount || a.goalPath.localeCompare(b.goalPath, 'zh-CN');
+    const byGoal = goalOrder.compareGoalPaths(a.goalPath, b.goalPath);
+    if (byGoal !== 0) return byGoal;
+    return a.goalPath.localeCompare(b.goalPath, 'zh-CN');
   });
 
   const selectedRow = selectedGoalPath ? rows.find((row) => row.goalPath === selectedGoalPath) || null : null;

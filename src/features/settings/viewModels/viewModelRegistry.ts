@@ -41,11 +41,12 @@ export interface ViewRenderModels {
 type ViewModelBuilder = (context: ViewRenderModelContext) => Partial<ViewRenderModels>;
 
 const viewModelBuilders: Record<string, ViewModelBuilder> = {
-  BlockView: ({ items, viewInstance }) => {
+  BlockView: ({ items, viewInstance, goals }) => {
     const model = buildBlockViewModel({
       items,
       groupField: viewInstance.group,
       groupFields: viewInstance.groupFields,
+      goals: goals || [],
     });
 
     return {
@@ -54,11 +55,12 @@ const viewModelBuilders: Record<string, ViewModelBuilder> = {
     };
   },
 
-  EventTimelineView: ({ items, viewInstance, dateRange }) => {
+  EventTimelineView: ({ items, viewInstance, dateRange, goals }) => {
     const model = buildEventTimelineViewModel({
       items,
       module: viewInstance,
       dateRange,
+      goals: goals || [],
     });
 
     return {

@@ -14,7 +14,7 @@ import {
   TextField,
   Typography,
 } from '@shared/public';
-import { getEffectiveCoreBlocks, getGoalTemplates } from '@core/public';
+import { getEffectiveCoreBlocks, getGoalTemplates, sortGoalTemplatesBySettingsOrder } from '@core/public';
 import type { CoreBlockDefinition, GoalDefinition, GoalTemplate } from '@core/public';
 import { selectSettings, useSelector, useUiPort, useUseCases } from '@/app/public';
 import { GoalTemplateEditorModal } from './GoalTemplateEditorModal';
@@ -99,15 +99,8 @@ function goalTemplateVariantId(template: GoalTemplate): string {
   return String(template.variantId || 'default').trim() || 'default';
 }
 
-function sortPresets<T extends GoalTemplate>(items: T[]): T[] {
-  return items
-    .map((template, index) => ({ template, index }))
-    .sort((left, right) => {
-      const bySort = (left.template.sortOrder ?? 9999) - (right.template.sortOrder ?? 9999);
-      if (bySort !== 0) return bySort;
-      return left.index - right.index;
-    })
-    .map(({ template }) => template);
+function sortPresets<T extends GoalTemplate>(items: T[], goals: GoalDefinition[] = []): T[] {
+  return sortGoalTemplatesBySettingsOrder(items, goals);
 }
 
 function buildThemeIconMap(settings: any): Map<string, string> {
@@ -313,7 +306,7 @@ export function GoalTemplateMatrix() {
   };
 
   const reorderPresetsInCell = async (drag: PresetDragState, targetTemplateKey: string | null, position: DropPosition) => {
-    const cellTemplates = sortPresets(templates.filter((template) => template.goalId === drag.goalId && template.coreBlockId === drag.blockId && template.enabled !== false));
+    const cellTemplates = sortPresets(templates.filter((template) => template.goalId === drag.goalId && template.coreBlockId === drag.blockId && template.enabled !== false), goals);
     const dragged = cellTemplates.find((template) => goalTemplateKey(template) === drag.templateKey);
     if (!dragged) return;
     const next = cellTemplates.filter((template) => goalTemplateKey(template) !== drag.templateKey);
@@ -357,7 +350,7 @@ export function GoalTemplateMatrix() {
       reason: 'move',
     });
 
-    const targetTemplates = sortPresets(templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id && template.enabled !== false));
+    const targetTemplates = sortPresets(templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id && template.enabled !== false), goals);
     const reorderedTarget = targetTemplates.slice();
     if (targetTemplateKey) {
       const targetIndex = reorderedTarget.findIndex((template) => goalTemplateKey(template) === targetTemplateKey);
@@ -467,7 +460,7 @@ export function GoalTemplateMatrix() {
 
   const renderBlockCell = (goal: GoalDefinition, block: CoreBlockDefinition, collapsed: boolean) => {
     const cell = buildGoalTemplateCell(goal, block, templates);
-    const presets = sortPresets(cell.enabledTemplates);
+    const presets = sortPresets(cell.enabledTemplates, goals);
     const isDropCell = presetDropCell?.goalId === goal.id && presetDropCell.blockId === block.id;
     return (
       <div

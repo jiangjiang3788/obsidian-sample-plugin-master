@@ -1,7 +1,7 @@
 // src/features/settings/viewModels/heatmapViewModel.ts
 
 import type { Item, ViewInstance, InputSettings, GoalDefinition, GoalSettings, HeatmapRatingOptionLike } from '@core/public';
-import { buildThemeDataMap, buildThemesByPathMap, getItemThemePath, getItemGoalKey, getItemGoalLabel, UNASSIGNED_GOAL_KEY, splitGoalPath } from '@core/public';
+import { buildThemeDataMap, buildThemesByPathMap, getItemThemePath, getItemGoalKey, getItemGoalLabel, UNASSIGNED_GOAL_KEY, splitGoalPath, createGoalOrderIndex } from '@core/public';
 
 /**
  * Phase2: shared/ui 纯化试点（HeatmapView）
@@ -18,6 +18,10 @@ export interface HeatmapGoalThemeEntry {
     goalId?: string;
     /** 当前目标预设的评分选项，用于所有视图统一把 `评分:: 1` 映射为 `图片/评图` 视觉值。 */
     ratingOptions?: HeatmapRatingOptionLike[];
+    /** 当前预设在设置里的排序。 */
+    presetSortOrder?: number;
+    /** 当前预设在 data.goalBlockBindings 里的原始顺序，用作稳定兜底。 */
+    presetOriginalIndex?: number;
     /** 仍然保留主题，用于图标、默认主题和统计二级维度。 */
     themePath: string;
     /** 行标题：优先预设名，例如 睡眠任务/运动打卡；没有预设时用主题叶子。 */
@@ -101,6 +105,8 @@ interface PresetMeta {
     label: string;
     themePath: string;
     ratingOptions?: HeatmapRatingOptionLike[];
+    presetSortOrder: number;
+    presetOriginalIndex: number;
 }
 
 function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalDefinition[]): {
@@ -126,7 +132,7 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalD
     const byGoalBlockTheme = new Map<string, PresetMeta>();
     const allPresets: PresetMeta[] = [];
 
-    for (const raw of goalSettings?.goalBlockBindings || []) {
+    for (const [presetOriginalIndex, raw] of (goalSettings?.goalBlockBindings || []).entries()) {
         const template: any = raw || {};
         const id = firstText(template.id);
         const goalId = firstText(template.goalId);
@@ -142,7 +148,8 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalD
         const label = firstText(template.name) || firstText(template.templateName) || themeLeaf(themePath) || variantId || '默认打卡';
         const key = id || `${goalId}:${coreBlockId}:${variantId}`;
         const ratingOptions = extractRatingOptions(template);
-        const meta: PresetMeta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions };
+        const presetSortOrder = Number.isFinite(Number(template.sortOrder)) ? Number(template.sortOrder) : presetOriginalIndex;
+        const meta: PresetMeta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
         allPresets.push(meta);
         if (id) byTemplateId.set(id, meta);
         const legacyOverrideId = firstText(defaults.legacyOverrideId);
@@ -198,6 +205,7 @@ export function buildHeatmapViewModel(params: {
     const filterByTheme = trackedThemeSet.size > 0;
     const goalMap = new Map<string, HeatmapGoalGroup>();
     const lookups = buildPresetLookups(goalSettings, goals);
+    const goalOrder = createGoalOrderIndex(goals);
 
     function ensureGoalGroup(goalPath: string, label: string): HeatmapGoalGroup {
         const normalizedGoalPath = goalPath || UNASSIGNED_GOAL_KEY;
@@ -209,7 +217,7 @@ export function buildHeatmapViewModel(params: {
         return goalGroup;
     }
 
-    function ensurePresetEntry(goalGroup: HeatmapGoalGroup, meta: { presetKey: string; themePath: string; label: string; templateId?: string; templateVariantId?: string; sourceBlockId?: string; goalId?: string; ratingOptions?: HeatmapRatingOptionLike[] }): HeatmapGoalThemeEntry {
+    function ensurePresetEntry(goalGroup: HeatmapGoalGroup, meta: { presetKey: string; themePath: string; label: string; templateId?: string; templateVariantId?: string; sourceBlockId?: string; goalId?: string; ratingOptions?: HeatmapRatingOptionLike[]; presetSortOrder?: number; presetOriginalIndex?: number }): HeatmapGoalThemeEntry {
         let entry = goalGroup.entries.find((candidate) => candidate.presetKey === meta.presetKey);
         if (!entry) {
             entry = {
@@ -221,6 +229,8 @@ export function buildHeatmapViewModel(params: {
                 ratingOptions: meta.ratingOptions || [],
                 themePath: meta.themePath || '__default__',
                 label: meta.label || themeLeaf(meta.themePath),
+                presetSortOrder: meta.presetSortOrder,
+                presetOriginalIndex: meta.presetOriginalIndex,
                 count: 0,
                 dataForTheme: new Map(),
             };
@@ -231,6 +241,8 @@ export function buildHeatmapViewModel(params: {
         if (meta.sourceBlockId && !entry.sourceBlockId) entry.sourceBlockId = meta.sourceBlockId;
         if (meta.goalId && !entry.goalId) entry.goalId = meta.goalId;
         if (meta.ratingOptions?.length && (!entry.ratingOptions || entry.ratingOptions.length === 0)) entry.ratingOptions = meta.ratingOptions;
+        if (meta.presetSortOrder !== undefined && entry.presetSortOrder === undefined) entry.presetSortOrder = meta.presetSortOrder;
+        if (meta.presetOriginalIndex !== undefined && entry.presetOriginalIndex === undefined) entry.presetOriginalIndex = meta.presetOriginalIndex;
         return entry;
     }
 
@@ -247,6 +259,8 @@ export function buildHeatmapViewModel(params: {
             sourceBlockId: preset.coreBlockId,
             goalId: preset.goalId,
             ratingOptions: preset.ratingOptions,
+            presetSortOrder: preset.presetSortOrder,
+            presetOriginalIndex: preset.presetOriginalIndex,
             themePath: preset.themePath || '__default__',
             label: preset.label || themeLeaf(preset.themePath),
         });
@@ -300,6 +314,8 @@ export function buildHeatmapViewModel(params: {
             sourceBlockId: preset?.coreBlockId,
             goalId: preset?.goalId,
             ratingOptions: preset?.ratingOptions,
+            presetSortOrder: preset?.presetSortOrder,
+            presetOriginalIndex: preset?.presetOriginalIndex,
             themePath,
             label,
         });
@@ -309,14 +325,21 @@ export function buildHeatmapViewModel(params: {
         entry.dataForTheme.set(date, [...dayItems, item]);
     }
 
+    const compareEntriesByPresetOrder = (a: HeatmapGoalThemeEntry, b: HeatmapGoalThemeEntry): number => {
+        const aHasPresetOrder = a.presetSortOrder !== undefined || a.presetOriginalIndex !== undefined || Boolean(a.templateId);
+        const bHasPresetOrder = b.presetSortOrder !== undefined || b.presetOriginalIndex !== undefined || Boolean(b.templateId);
+        if (aHasPresetOrder !== bHasPresetOrder) return aHasPresetOrder ? -1 : 1;
+        const byPresetSort = (a.presetSortOrder ?? Number.MAX_SAFE_INTEGER) - (b.presetSortOrder ?? Number.MAX_SAFE_INTEGER);
+        if (byPresetSort !== 0) return byPresetSort;
+        const byOriginal = (a.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER) - (b.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER);
+        if (byOriginal !== 0) return byOriginal;
+        return a.label.localeCompare(b.label, 'zh-CN');
+    };
+
     const goalGroups = Array.from(goalMap.values()).map((group) => ({
         ...group,
-        entries: group.entries.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'zh-CN')),
-    })).sort((a, b) => {
-        if (a.goalPath === UNASSIGNED_GOAL_KEY && b.goalPath !== UNASSIGNED_GOAL_KEY) return 1;
-        if (a.goalPath !== UNASSIGNED_GOAL_KEY && b.goalPath === UNASSIGNED_GOAL_KEY) return -1;
-        return b.count - a.count || a.label.localeCompare(b.label, 'zh-CN');
-    });
+        entries: group.entries.sort(compareEntriesByPresetOrder),
+    })).sort((a, b) => goalOrder.compareGoalPaths(a.goalPath, b.goalPath));
 
     return { themesByPath, themesToTrack, dataByThemeAndDate, goalGroups };
 }

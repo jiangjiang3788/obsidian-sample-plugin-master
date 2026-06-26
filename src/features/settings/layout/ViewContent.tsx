@@ -146,6 +146,7 @@ export function ViewContent({
     timers,
     allThemes,
     inputSettings,
+    goals: settings.goalSettings?.goals || [],
     selectedLayoutCategories,
     categoryColors,
     messageRenderPort,
