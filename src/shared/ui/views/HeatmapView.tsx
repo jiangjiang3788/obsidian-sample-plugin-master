@@ -2,7 +2,7 @@
 
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
-import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, parsePath } from '@core/public';
+import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, parsePath, buildHeatmapRatingMapping } from '@core/public';
 import { dayjs } from '@core/public';
 import type { OpenCheckinManagerHandler, OpenHeatmapCreateHandler, ResolveResourcePathHandler } from '../../types/actions';
 import { HEATMAP_VIEW_DEFAULT_CONFIG, getItemThemePath } from '@core/public';
@@ -40,12 +40,21 @@ interface DayThemeGroup {
     entries: DayThemeEntry[];
 }
 
+interface HeatmapPresetContext {
+    sourceBlockId?: string;
+    goalId?: string;
+    templateId?: string;
+    templateVariantId?: string;
+    ratingOptions?: Array<{ value?: unknown; label?: unknown }>;
+}
+
 interface GoalHeatmapThemeEntry {
     presetKey?: string;
     templateId?: string;
     templateVariantId?: string;
     sourceBlockId?: string;
     goalId?: string;
+    ratingOptions?: Array<{ value?: unknown; label?: unknown }>;
     themePath: string;
     label: string;
     count: number;
@@ -161,6 +170,18 @@ export function HeatmapView({
 
     const heatmapSourceBlockId = normalizeHeatmapBlockId(config.sourceBlockId);
 
+    const resolveCellRatingMapping = (themePath: string, presetContext?: HeatmapPresetContext): Map<string, string> => {
+        if (presetContext?.ratingOptions?.length) {
+            return buildHeatmapRatingMapping(presetContext.ratingOptions);
+        }
+        return ratingMappingsCache.get(
+            inputSettings,
+            heatmapSourceBlockId || '',
+            themePath,
+            themesByPath
+        );
+    };
+
     const inferredBlockIdByTheme = useMemo(() => {
         const result = new Map<string, string>();
         const counts = new Map<string, Map<string, number>>();
@@ -203,7 +224,7 @@ export function HeatmapView({
             || '';
     };
 
-    const openQuickCreate = (date: string, item?: Item, themePath?: string, goalPath?: string, presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string }) => {
+    const openQuickCreate = (date: string, item?: Item, themePath?: string, goalPath?: string, presetContext?: HeatmapPresetContext) => {
         if (!onOpenHeatmapCreate) {
             onNotice?.('未提供创建处理器，无法创建记录');
             return;
@@ -222,23 +243,7 @@ export function HeatmapView({
         });
     };
 
-    // 点击行为：
-    // - 无记录：直接新增
-    // - 1 条记录：按当前日期/主题继续新增一条（保留 create with context 语义）
-    // - 多条记录：打开管理窗口，已有记录走查看，新增仍走 create with context
-    const handleCellClick = (date: string, dayItems?: Item[], themePath?: string, goalPath?: string, presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string }) => {
-        const itemsForDay = dayItems || [];
-
-        if (itemsForDay.length === 0) {
-            openQuickCreate(date, undefined, themePath, goalPath, presetContext);
-            return;
-        }
-
-        if (itemsForDay.length === 1) {
-            openQuickCreate(date, itemsForDay[0], themePath, goalPath, presetContext);
-            return;
-        }
-
+    const openCellRecordManager = (date: string, itemsForDay: Item[], themePath?: string, goalPath?: string, presetContext?: HeatmapPresetContext) => {
         if (!onOpenCheckinManager) {
             onNotice?.('未提供记录管理处理器，无法打开记录列表');
             return;
@@ -251,23 +256,33 @@ export function HeatmapView({
         });
     };
 
+    // 单元格点击行为是所有视图共用的唯一交互真源：
+    // - 0 条记录：直接进入该日期/主题/目标/预设上下文的创建面板。
+    // - >=1 条记录：进入记录管理器，由管理器统一承担选择、打开、删除、新增。
+    // 这样天/周/月/季/年不会再出现“一条直接创建、多条才选择”的分叉。
+    const handleCellClick = (date: string, dayItems?: Item[], themePath?: string, goalPath?: string, presetContext?: HeatmapPresetContext) => {
+        const itemsForDay = dayItems || [];
+
+        if (itemsForDay.length === 0) {
+            openQuickCreate(date, undefined, themePath, goalPath, presetContext);
+            return;
+        }
+
+        openCellRecordManager(date, itemsForDay, themePath, goalPath, presetContext);
+    };
+
     const renderMonthGrid = (
         monthDate: dayjs.Dayjs,
         dataForMonth: Map<string, Item[]>,
         themePath: string,
         goalPath?: string,
-        presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string }
+        presetContext?: HeatmapPresetContext
     ) => {
         const startOfMonth = monthDate.startOf('month');
         const endOfMonth = monthDate.endOf('month');
         const firstWeekday = startOfMonth.isoWeekday();
 
-        const themeRatingMapping = ratingMappingsCache.get(
-            inputSettings,
-            heatmapSourceBlockId || '',
-            themePath,
-            themesByPath
-        );
+        const themeRatingMapping = resolveCellRatingMapping(themePath, presetContext);
 
         const days = [];
         for (let i = 1; i < firstWeekday; i++) {
@@ -303,17 +318,12 @@ export function HeatmapView({
         themePath: string,
         dataForTheme: Map<string, Item[]>,
         goalPath?: string,
-        presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string }
+        presetContext?: HeatmapPresetContext
     ) => {
         const start = dayjs(dateRange[0]);
         const end = dayjs(dateRange[1]);
 
-        const themeRatingMapping = ratingMappingsCache.get(
-            inputSettings,
-            heatmapSourceBlockId || '',
-            themePath,
-            themesByPath
-        );
+        const themeRatingMapping = resolveCellRatingMapping(themePath, presetContext);
 
         switch (currentView) {
             case '天':
@@ -511,12 +521,8 @@ export function HeatmapView({
                             </div>
                             <div class="heatmap-day-section-grid">
                                 {goalGroup.entries.map((entry) => {
-                                    const themeRatingMapping = ratingMappingsCache.get(
-                                        inputSettings,
-                                        heatmapSourceBlockId || '',
-                                        entry.themePath,
-                                        themesByPath
-                                    );
+                                    const presetContext: HeatmapPresetContext = { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId, ratingOptions: entry.ratingOptions };
+                                    const themeRatingMapping = resolveCellRatingMapping(entry.themePath, presetContext);
                                     const dayItems = entry.dataForTheme.get(dayDateStr);
 
                                     return (
@@ -529,7 +535,7 @@ export function HeatmapView({
                                                 resolveResourcePath={resolveResourcePath}
                                                 highlightToday={false}
                                                 emptyLabel={!dayItems || dayItems.length === 0 ? entry.label : undefined}
-                                                onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId })}
+                                                onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, presetContext)}
                                             />
                                         </div>
                                     );
@@ -550,12 +556,7 @@ export function HeatmapView({
                         <h3 class="heatmap-day-section-title">{group.title}</h3>
                         <div class="heatmap-day-section-grid">
                             {group.entries.map((entry) => {
-                                const themeRatingMapping = ratingMappingsCache.get(
-                                    inputSettings,
-                                    heatmapSourceBlockId || '',
-                                    entry.themePath,
-                                    themesByPath
-                                );
+                                const themeRatingMapping = resolveCellRatingMapping(entry.themePath);
                                 const dayItems = entry.dataForTheme.get(dayDateStr);
 
                                 return (
@@ -587,7 +588,7 @@ export function HeatmapView({
         keyPrefix?: string;
         entryKey?: string;
         label?: string;
-        presetContext?: { sourceBlockId?: string; goalId?: string; templateId?: string; templateVariantId?: string };
+        presetContext?: HeatmapPresetContext;
     }) => {
         const { theme, dataForTheme, goalPath, keyPrefix = '', entryKey, label, presetContext } = params;
         const rowKey = `${keyPrefix}${entryKey || theme}`;
@@ -599,7 +600,7 @@ export function HeatmapView({
         return (
             <div class={`heatmap-theme-group ${normalizedCurrentView === '年' ? 'is-collapsible' : ''}`} key={rowKey}>
                 <div
-                    class={`heatmap-theme-header ${normalizedCurrentView === '周' ? 'week-inline-layout' : ''} ${isVertical ? 'vertical-layout' : ''} ${isCollapsed ? 'is-collapsed' : ''}`}
+                    class={`heatmap-theme-header ${isRowLayout ? 'row-inline-layout week-inline-layout' : ''} ${isVertical ? 'vertical-layout' : ''} ${isCollapsed ? 'is-collapsed' : ''}`}
                     data-theme={rowKey}
                     ref={(el) => {
                         if (el && theme !== '__default__') {
@@ -656,7 +657,7 @@ export function HeatmapView({
                                     keyPrefix: `${goalGroup.goalPath}\u0000`,
                                     entryKey: entry.presetKey || entry.themePath,
                                     label: entry.label,
-                                    presetContext: { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId },
+                                    presetContext: { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId, ratingOptions: entry.ratingOptions },
                                 }))}
                             </div>
                         </section>

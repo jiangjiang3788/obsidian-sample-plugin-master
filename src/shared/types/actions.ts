@@ -73,6 +73,7 @@ export interface OpenCheckinManagerRequest {
   date: string;
   items: Item[];
   onAddRecord: () => void;
+  onDeleteRecord?: (item: Item) => Promise<boolean> | boolean | void;
 }
 
 export type OpenCheckinManagerHandler = (request: OpenCheckinManagerRequest) => void;

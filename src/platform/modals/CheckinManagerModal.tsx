@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useMemo } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import { App, Modal, Notice } from 'obsidian';
 import { Item, dayjs } from '@core/public';
 import { openEditFromItem, openRecordOrigin } from '@/app/public';
@@ -20,10 +20,12 @@ interface CheckinManagerModalProps {
     onSave: (data: CheckinManagerData) => Promise<void>;
     onClose: () => void;
     onAddRecord?: () => void;
+    onDeleteRecord?: (item: Item) => Promise<boolean> | boolean | void;
 }
 
-function CheckinManagerForm({ app, date, items, onClose, onAddRecord }: CheckinManagerModalProps) {
-    const sortedItems = useMemo(() => [...items].sort((a, b) => (a.created || 0) - (b.created || 0)), [items]);
+function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRecord }: CheckinManagerModalProps) {
+    const [managedItems, setManagedItems] = useState<Item[]>(() => items || []);
+    const sortedItems = useMemo(() => [...managedItems].sort((a, b) => (a.created || 0) - (b.created || 0)), [managedItems]);
 
     const handleOpenRecord = (item: Item) => {
         if (!item.file?.path) return;
@@ -32,6 +34,21 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord }: CheckinM
             onClose();
         } catch (error: any) {
             new Notice(`打开记录失败: ${error?.message || String(error)}`);
+        }
+    };
+
+
+    const handleDeleteRecord = async (event: MouseEvent, item: Item) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!onDeleteRecord) return;
+        try {
+            const result = await onDeleteRecord(item);
+            if (result !== false) {
+                setManagedItems((prev) => prev.filter((candidate) => candidate.id !== item.id));
+            }
+        } catch (error: any) {
+            new Notice(`删除记录失败: ${error?.message || String(error)}`);
         }
     };
 
@@ -70,9 +87,22 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord }: CheckinM
                                 onDblClick={gesture.onDblClick as any}
                                 onTouchEnd={gesture.onTouchEnd as any}
                             >
-                                <div class="checkin-item-content">{item.content || item.title || '无内容'}</div>
-                                <div class="checkin-item-meta">
-                                    {`${dayjs(item.created).format('HH:mm:ss')} · ${item.file?.path || '未知位置'}`}
+                                <div class="checkin-item-main">
+                                    <div class="checkin-item-content">{item.content || item.title || '无内容'}</div>
+                                    <div class="checkin-item-meta">
+                                        {`${dayjs(item.created).format('HH:mm:ss')} · ${item.file?.path || '未知位置'}`}
+                                    </div>
+                                </div>
+                                <div class="checkin-item-actions">
+                                    {onDeleteRecord && (
+                                        <button
+                                            class="checkin-item-delete"
+                                            title="删除这条记录"
+                                            onClick={(event) => handleDeleteRecord(event as MouseEvent, item)}
+                                        >
+                                            删除
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         );})}
@@ -93,7 +123,8 @@ export class CheckinManagerModal extends Modal {
         private date: string,
         private items: Item[],
         private onSave: (data: CheckinManagerData) => Promise<void>,
-        private onAddRecord?: () => void
+        private onAddRecord?: () => void,
+        private onDeleteRecord?: (item: Item) => Promise<boolean> | boolean | void
     ) {
         super(app);
     }
@@ -111,6 +142,7 @@ export class CheckinManagerModal extends Modal {
                 onSave={this.onSave}
                 onClose={() => this.close()}
                 onAddRecord={this.onAddRecord}
+                onDeleteRecord={this.onDeleteRecord}
             />
         );
 
@@ -120,11 +152,14 @@ export class CheckinManagerModal extends Modal {
             .modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--background-modifier-border); }
             .modal-content { padding: 16px; flex-grow: 1; }
             .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--background-modifier-border); }
-            .checkin-details-item { padding: 10px 0; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; transition: background-color 0.2s ease; }
+            .checkin-details-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; transition: background-color 0.2s ease; }
             .checkin-details-item:hover { background-color: var(--background-modifier-hover); }
             .checkin-details-item:last-child { border-bottom: none; }
-            .checkin-item-content { font-weight: 500; }
-            .checkin-item-meta { font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 4px; }
+            .checkin-item-main { min-width: 0; flex: 1 1 auto; }
+            .checkin-item-content { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .checkin-item-meta { font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .checkin-item-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+            .checkin-item-delete { color: var(--text-error); }
         `;
     }
 

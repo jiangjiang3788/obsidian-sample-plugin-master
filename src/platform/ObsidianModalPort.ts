@@ -84,6 +84,7 @@ export class ObsidianModalPort implements ModalPort {
       args?.items ?? emptyItems,
       noop,
       args?.onAddRecord ?? noop,
+      args?.onDeleteRecord,
     ).open();
   }
 }

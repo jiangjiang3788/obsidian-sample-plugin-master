@@ -1,6 +1,6 @@
 import { useCallback } from 'preact/hooks';
 import type { ActionService, Item, ViewInstance } from '@core/public';
-import { dayjs } from '@core/public';
+import { dayjs, buildRecordSubmitFeedbackPresentation } from '@core/public';
 import { useModalPort, useUiPort, useUseCases } from '@/app/public';
 import {
   commitExcelCellFromView,
@@ -71,7 +71,7 @@ export function useViewRuntimeHandlers({
           endTime: updates.endTime,
           duration: updates.duration,
         },
-        source: 'layout_renderer',
+        source: 'unknown',
       });
 
       if (!ok) throw new Error('更新任务时间失败');
@@ -140,8 +140,20 @@ export function useViewRuntimeHandlers({
       date: request.date,
       items: request.items,
       onAddRecord: request.onAddRecord,
+      onDeleteRecord: async (item: Item) => {
+        if (!window.confirm('确认删除这条打卡记录吗？')) return false;
+        const result = await useCases.recordInput.submitDeleteRecord({
+          item,
+          source: 'unknown',
+        });
+        const presentation = buildRecordSubmitFeedbackPresentation(result, '删除失败');
+        if (presentation.message) {
+          ui.notice(presentation.message);
+        }
+        return result.status === 'success' || result.status === 'partial_success';
+      },
     });
-  }, [modal]);
+  }, [modal, ui, useCases]);
 
   const onExcelCellCommit = useCallback(async (request: any) => {
     return await commitExcelCellFromView({

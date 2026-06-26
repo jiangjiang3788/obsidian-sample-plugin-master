@@ -4,10 +4,17 @@ export interface GoalPathParts {
   leafGoal: string | null;
 }
 
+function normalizeGoalPathSegment(segment: string): string {
+  return String(segment || '')
+    .trim()
+    .replace(/^[#＃]+\s*/, '')
+    .trim();
+}
+
 export function normalizeGoalPath(path?: string | null): string | null {
   const parts = String(path || '')
     .split('/')
-    .map((part) => part.trim())
+    .map(normalizeGoalPathSegment)
     .filter(Boolean);
   return parts.length ? parts.join('/') : null;
 }

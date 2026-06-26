@@ -111,6 +111,7 @@ export {
     getTemplateFieldSemantic,
     isImageFieldDefinition,
     isTemplateImageField,
+    isImageLikeValue,
     isTemplateMultiValueField,
     isTemplatePathField,
     isTemplateTagField,

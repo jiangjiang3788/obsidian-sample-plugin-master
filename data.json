@@ -3075,31 +3075,23 @@
             "type": "rating",
             "options": [
               {
-                "value": "📚",
+                "value": "💧",
                 "label": "1"
               }
-            ],
-            "semanticType": "ratingPair",
-            "auxKey": "image"
+            ]
           },
           {
             "id": "core.field.goalPath",
             "key": "目标",
             "label": "目标",
             "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
             "defaultValue": "#照顾好自己"
           },
           {
             "id": "core.field.themePath",
-            "key": "themePath",
+            "key": "主题",
             "label": "主题",
             "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
             "defaultValue": "健康/喝水"
           },
           {
@@ -3116,10 +3108,9 @@
           },
           {
             "id": "core.field.icon",
-            "key": "icon",
+            "key": "图标",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
             "defaultValue": "💧"
           }
         ],
@@ -3131,7 +3122,7 @@
           "图标": "💧"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        "updatedAt": "2026-06-26T01:46:24.467Z"
       },
       {
         "id": "goal-template.goal.照顾好自己.core.task.身体",

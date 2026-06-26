@@ -1,6 +1,6 @@
 // src/features/settings/viewModels/heatmapViewModel.ts
 
-import type { Item, ViewInstance, InputSettings, GoalDefinition, GoalSettings } from '@core/public';
+import type { Item, ViewInstance, InputSettings, GoalDefinition, GoalSettings, HeatmapRatingOptionLike } from '@core/public';
 import { buildThemeDataMap, buildThemesByPathMap, getItemThemePath, getItemGoalKey, getItemGoalLabel, UNASSIGNED_GOAL_KEY, splitGoalPath } from '@core/public';
 
 /**
@@ -16,6 +16,8 @@ export interface HeatmapGoalThemeEntry {
     templateVariantId?: string;
     sourceBlockId?: string;
     goalId?: string;
+    /** 当前目标预设的评分选项，用于所有视图统一把 `评分:: 1` 映射为 `图片/评图` 视觉值。 */
+    ratingOptions?: HeatmapRatingOptionLike[];
     /** 仍然保留主题，用于图标、默认主题和统计二级维度。 */
     themePath: string;
     /** 行标题：优先预设名，例如 睡眠任务/运动打卡；没有预设时用主题叶子。 */
@@ -79,6 +81,15 @@ function itemCoreBlock(item: Item): string {
     return raw;
 }
 
+
+function extractRatingOptions(template: any): HeatmapRatingOptionLike[] {
+    const fields = Array.isArray(template?.fields) ? template.fields : [];
+    const ratingField = fields.find((field: any) => field?.type === 'rating' || field?.semantic === 'rating' || field?.key === '评分' || field?.label === '评分');
+    return Array.isArray(ratingField?.options)
+        ? ratingField.options.map((option: any) => ({ value: option?.value, label: option?.label })).filter((option: HeatmapRatingOptionLike) => option.value !== undefined || option.label !== undefined)
+        : [];
+}
+
 interface PresetMeta {
     key: string;
     id: string;
@@ -89,6 +100,7 @@ interface PresetMeta {
     variantId: string;
     label: string;
     themePath: string;
+    ratingOptions?: HeatmapRatingOptionLike[];
 }
 
 function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalDefinition[]): {
@@ -129,7 +141,8 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalD
             : (firstText(defaults['主题']) || firstText(defaults.legacyThemePath));
         const label = firstText(template.name) || firstText(template.templateName) || themeLeaf(themePath) || variantId || '默认打卡';
         const key = id || `${goalId}:${coreBlockId}:${variantId}`;
-        const meta: PresetMeta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath };
+        const ratingOptions = extractRatingOptions(template);
+        const meta: PresetMeta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions };
         allPresets.push(meta);
         if (id) byTemplateId.set(id, meta);
         const legacyOverrideId = firstText(defaults.legacyOverrideId);
@@ -196,7 +209,7 @@ export function buildHeatmapViewModel(params: {
         return goalGroup;
     }
 
-    function ensurePresetEntry(goalGroup: HeatmapGoalGroup, meta: { presetKey: string; themePath: string; label: string; templateId?: string; templateVariantId?: string; sourceBlockId?: string; goalId?: string }): HeatmapGoalThemeEntry {
+    function ensurePresetEntry(goalGroup: HeatmapGoalGroup, meta: { presetKey: string; themePath: string; label: string; templateId?: string; templateVariantId?: string; sourceBlockId?: string; goalId?: string; ratingOptions?: HeatmapRatingOptionLike[] }): HeatmapGoalThemeEntry {
         let entry = goalGroup.entries.find((candidate) => candidate.presetKey === meta.presetKey);
         if (!entry) {
             entry = {
@@ -205,6 +218,7 @@ export function buildHeatmapViewModel(params: {
                 templateVariantId: meta.templateVariantId,
                 sourceBlockId: meta.sourceBlockId,
                 goalId: meta.goalId,
+                ratingOptions: meta.ratingOptions || [],
                 themePath: meta.themePath || '__default__',
                 label: meta.label || themeLeaf(meta.themePath),
                 count: 0,
@@ -212,6 +226,11 @@ export function buildHeatmapViewModel(params: {
             };
             goalGroup.entries.push(entry);
         }
+        if (meta.templateId && !entry.templateId) entry.templateId = meta.templateId;
+        if (meta.templateVariantId && !entry.templateVariantId) entry.templateVariantId = meta.templateVariantId;
+        if (meta.sourceBlockId && !entry.sourceBlockId) entry.sourceBlockId = meta.sourceBlockId;
+        if (meta.goalId && !entry.goalId) entry.goalId = meta.goalId;
+        if (meta.ratingOptions?.length && (!entry.ratingOptions || entry.ratingOptions.length === 0)) entry.ratingOptions = meta.ratingOptions;
         return entry;
     }
 
@@ -227,6 +246,7 @@ export function buildHeatmapViewModel(params: {
             templateVariantId: preset.variantId,
             sourceBlockId: preset.coreBlockId,
             goalId: preset.goalId,
+            ratingOptions: preset.ratingOptions,
             themePath: preset.themePath || '__default__',
             label: preset.label || themeLeaf(preset.themePath),
         });
@@ -263,8 +283,10 @@ export function buildHeatmapViewModel(params: {
         if (!preset && filterByTheme && themePath !== '__default__' && !trackedThemeSet.has(themePath)) continue;
 
         const explicitGoalPath = getItemGoalKey(item, goals);
-        const goalPath = explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : (preset?.goalPath || UNASSIGNED_GOAL_KEY);
-        const goalLabel = goalPath === preset?.goalPath ? preset.goalLabel : (getItemGoalLabel(item, goals) || preset?.goalLabel || goalPath);
+        // 结构规则：能匹配到目标预设时，预设身份是主索引；历史记录里 `目标:: #X` / `目标:: X`
+        // 甚至空 `目标ID` 都不能把同一个预设拆成两个目标组。
+        const goalPath = preset?.goalPath || (explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : UNASSIGNED_GOAL_KEY);
+        const goalLabel = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
 
         const goalGroup = ensureGoalGroup(goalPath, goalLabel);
         goalGroup.count += 1;
@@ -277,6 +299,7 @@ export function buildHeatmapViewModel(params: {
             templateVariantId: preset?.variantId,
             sourceBlockId: preset?.coreBlockId,
             goalId: preset?.goalId,
+            ratingOptions: preset?.ratingOptions,
             themePath,
             label,
         });

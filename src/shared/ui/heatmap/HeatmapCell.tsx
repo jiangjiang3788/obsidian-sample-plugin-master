@@ -3,7 +3,7 @@ import { h } from 'preact';
 import type { Item } from '@core/public';
 import type { ResolveResourcePathHandler } from '../../types/actions';
 import { dayjs } from '@core/public';
-import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@core/public';
+import { getEffectiveDisplayCount, getEffectiveLevelCount, getLatestHeatmapVisualValue } from '@core/public';
 import { isImagePath, isHexColor } from '@core/public';
 
 interface HeatmapCellProps {
@@ -41,26 +41,12 @@ export function generateCellTooltip(date: string, items?: Item[], displayCount =
 
 /**
  * 获取可视化内容（图片、颜色或评分文本）
+ *
+ * 结构说明：打卡记录可能有 `评分:: 1` + `图片:: ♨️`，也可能只有 `评分:: 1`。
+ * 具体评分如何显示由目标预设的 rating options 决定，统一收敛到 core/utils/heatmapVisual。
  */
-function readItemVisualValue(item: Item | undefined, ratingMapping: Map<string, string>): string | null {
-    if (!item) return null;
-    const extra: any = (item as any).extra || {};
-    const directVisual = item.pintu || item.image || extra['图片'] || extra['评图'] || extra.pintu || extra.image;
-    if (directVisual !== undefined && directVisual !== null && String(directVisual).trim()) return String(directVisual).trim();
-
-    const ratingValue = item.rating !== undefined && item.rating !== null
-        ? String(item.rating)
-        : (extra['评分'] !== undefined && extra['评分'] !== null ? String(extra['评分']).trim() : '');
-    if (!ratingValue) return null;
-    return ratingMapping.get(ratingValue) || ratingValue;
-}
-
 export function getVisualValue(items: Item[], ratingMapping: Map<string, string>): string | null {
-    if (!items || items.length === 0) return null;
-    
-    // 优先显示最新的评分/图片系统；兼容 `评分:: ✅` 这类 Emoji 评分。
-    const latestItemWithValue = [...items].reverse().find(i => readItemVisualValue(i, ratingMapping));
-    return readItemVisualValue(latestItemWithValue, ratingMapping);
+    return getLatestHeatmapVisualValue(items, ratingMapping);
 }
 
 export function HeatmapCell({ 

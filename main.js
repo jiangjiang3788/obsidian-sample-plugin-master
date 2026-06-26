@@ -1648,8 +1648,11 @@ const DEFAULT_GOAL_SETTINGS = {
   goalBlockBindings: [],
   goalRecordRelations: []
 };
+function normalizeGoalPathSegment(segment) {
+  return String(segment || "").trim().replace(/^[#＃]+\s*/, "").trim();
+}
 function normalizeGoalPath$1(path) {
-  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
+  const parts = String(path || "").split("/").map(normalizeGoalPathSegment).filter(Boolean);
   return parts.length ? parts.join("/") : null;
 }
 function splitGoalPath(path) {
@@ -5087,7 +5090,7 @@ function collectThemePathsForHeatmap(params) {
   });
   return Array.from(themeSet).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
 }
-const isImagePath$1 = (value) => {
+const isImagePath = (value) => {
   return /\.(png|svg|jpg|jpeg|gif)$/i.test(value);
 };
 const isHexColor = (value) => {
@@ -5550,6 +5553,71 @@ class RatingMappingCache {
     this.cache.set(cacheKey, mapping);
     return mapping;
   }
+}
+function firstNonEmptyText$1(...values2) {
+  for (const value of values2) {
+    if (Array.isArray(value)) {
+      const nested2 = firstNonEmptyText$1(...value);
+      if (nested2) return nested2;
+      continue;
+    }
+    if (value && typeof value === "object") {
+      const objectValue = value;
+      const nested2 = firstNonEmptyText$1(objectValue.value, objectValue.label, objectValue.src, objectValue.path, objectValue.title);
+      if (nested2) return nested2;
+      continue;
+    }
+    if (value === void 0 || value === null) continue;
+    const text2 = String(value).trim();
+    if (text2) return text2;
+  }
+  return "";
+}
+function readExtra(item, key) {
+  return item?.extra?.[key];
+}
+function buildHeatmapRatingMapping(options) {
+  const mapping = /* @__PURE__ */ new Map();
+  for (const option of options || []) {
+    const value = firstNonEmptyText$1(option?.value, option);
+    const label = firstNonEmptyText$1(option?.label, option?.value, option);
+    if (!value && !label) continue;
+    if (label) mapping.set(label, value || label);
+    if (value) mapping.set(value, value);
+  }
+  return mapping;
+}
+function readHeatmapRatingText(item) {
+  if (!item) return "";
+  return firstNonEmptyText$1(
+    item.rating,
+    readExtra(item, "评分"),
+    readExtra(item, "rating")
+  );
+}
+function readHeatmapVisualText(item) {
+  if (!item) return "";
+  return firstNonEmptyText$1(
+    item.pintu,
+    item.image,
+    readExtra(item, "图片"),
+    readExtra(item, "评图"),
+    readExtra(item, "pintu"),
+    readExtra(item, "image")
+  );
+}
+function getHeatmapItemVisualValue(item, ratingMapping) {
+  if (!item) return null;
+  const directVisual = readHeatmapVisualText(item);
+  if (directVisual) return directVisual;
+  const rating = readHeatmapRatingText(item);
+  if (!rating) return null;
+  return ratingMapping?.get(rating) || rating;
+}
+function getLatestHeatmapVisualValue(items, ratingMapping) {
+  if (!items || !items.length) return null;
+  const latestItemWithValue = [...items].reverse().find((item) => !!getHeatmapItemVisualValue(item, ratingMapping));
+  return getHeatmapItemVisualValue(latestItemWithValue, ratingMapping);
 }
 function getEffectiveTemplate(settings, blockId, themeId) {
   return TemplateResolver.resolve(settings, blockId, themeId);
@@ -48329,19 +48397,8 @@ function generateCellTooltip(date2, items, displayCount = 0, levelCount = 0, was
     "💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增"
   ].filter(Boolean).join("\n");
 }
-function readItemVisualValue(item, ratingMapping) {
-  if (!item) return null;
-  const extra = item.extra || {};
-  const directVisual = item.pintu || item.image || extra["图片"] || extra["评图"] || extra.pintu || extra.image;
-  if (directVisual !== void 0 && directVisual !== null && String(directVisual).trim()) return String(directVisual).trim();
-  const ratingValue = item.rating !== void 0 && item.rating !== null ? String(item.rating) : extra["评分"] !== void 0 && extra["评分"] !== null ? String(extra["评分"]).trim() : "";
-  if (!ratingValue) return null;
-  return ratingMapping.get(ratingValue) || ratingValue;
-}
 function getVisualValue(items, ratingMapping) {
-  if (!items || items.length === 0) return null;
-  const latestItemWithValue = [...items].reverse().find((i2) => readItemVisualValue(i2, ratingMapping));
-  return readItemVisualValue(latestItemWithValue, ratingMapping);
+  return getLatestHeatmapVisualValue(items, ratingMapping);
 }
 function HeatmapCell({
   date: date2,
@@ -48365,7 +48422,7 @@ function HeatmapCell({
   if (visualValue) {
     if (isHexColor(visualValue)) {
       cellStyle.backgroundColor = visualValue;
-    } else if (isImagePath$1(visualValue)) {
+    } else if (isImagePath(visualValue)) {
       const imageUrl = resolveResourcePath?.(visualValue) || visualValue;
       cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-image", children: /* @__PURE__ */ u2("img", { src: imageUrl, alt: "", class: "w-full h-full object-cover" }) });
     } else {
@@ -49506,6 +49563,17 @@ function HeatmapView({
     return value;
   };
   const heatmapSourceBlockId = normalizeHeatmapBlockId(config2.sourceBlockId);
+  const resolveCellRatingMapping = (themePath, presetContext) => {
+    if (presetContext?.ratingOptions?.length) {
+      return buildHeatmapRatingMapping(presetContext.ratingOptions);
+    }
+    return ratingMappingsCache.get(
+      inputSettings,
+      heatmapSourceBlockId || "",
+      themePath,
+      themesByPath
+    );
+  };
   const inferredBlockIdByTheme = T$1(() => {
     const result = /* @__PURE__ */ new Map();
     const counts = /* @__PURE__ */ new Map();
@@ -49553,16 +49621,7 @@ function HeatmapView({
       themesByPath
     });
   };
-  const handleCellClick = (date2, dayItems, themePath, goalPath, presetContext) => {
-    const itemsForDay = dayItems || [];
-    if (itemsForDay.length === 0) {
-      openQuickCreate(date2, void 0, themePath, goalPath, presetContext);
-      return;
-    }
-    if (itemsForDay.length === 1) {
-      openQuickCreate(date2, itemsForDay[0], themePath, goalPath, presetContext);
-      return;
-    }
+  const openCellRecordManager = (date2, itemsForDay, themePath, goalPath, presetContext) => {
     if (!onOpenCheckinManager) {
       onNotice?.("未提供记录管理处理器，无法打开记录列表");
       return;
@@ -49573,16 +49632,19 @@ function HeatmapView({
       onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath, goalPath, presetContext)
     });
   };
+  const handleCellClick = (date2, dayItems, themePath, goalPath, presetContext) => {
+    const itemsForDay = dayItems || [];
+    if (itemsForDay.length === 0) {
+      openQuickCreate(date2, void 0, themePath, goalPath, presetContext);
+      return;
+    }
+    openCellRecordManager(date2, itemsForDay, themePath, goalPath, presetContext);
+  };
   const renderMonthGrid = (monthDate, dataForMonth, themePath, goalPath, presetContext) => {
     const startOfMonth = monthDate.startOf("month");
     const endOfMonth = monthDate.endOf("month");
     const firstWeekday = startOfMonth.isoWeekday();
-    const themeRatingMapping = ratingMappingsCache.get(
-      inputSettings,
-      heatmapSourceBlockId || "",
-      themePath,
-      themesByPath
-    );
+    const themeRatingMapping = resolveCellRatingMapping(themePath, presetContext);
     const days = [];
     for (let i2 = 1; i2 < firstWeekday; i2++) {
       days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
@@ -49613,12 +49675,7 @@ function HeatmapView({
   const renderHeaderCells = (currentView2, themePath, dataForTheme, goalPath, presetContext) => {
     const start2 = dayjs(dateRange[0]);
     const end2 = dayjs(dateRange[1]);
-    const themeRatingMapping = ratingMappingsCache.get(
-      inputSettings,
-      heatmapSourceBlockId || "",
-      themePath,
-      themesByPath
-    );
+    const themeRatingMapping = resolveCellRatingMapping(themePath, presetContext);
     switch (currentView2) {
       case "天":
       case "日":
@@ -49790,12 +49847,8 @@ function HeatmapView({
           ] })
         ] }),
         /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: goalGroup.entries.map((entry) => {
-          const themeRatingMapping = ratingMappingsCache.get(
-            inputSettings,
-            heatmapSourceBlockId || "",
-            entry.themePath,
-            themesByPath
-          );
+          const presetContext = { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId, ratingOptions: entry.ratingOptions };
+          const themeRatingMapping = resolveCellRatingMapping(entry.themePath, presetContext);
           const dayItems = entry.dataForTheme.get(dayDateStr);
           return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", title: `${goalGroup.label} · ${entry.label} · ${entry.themePath}`, children: /* @__PURE__ */ u2(
             HeatmapCell,
@@ -49807,7 +49860,7 @@ function HeatmapView({
               resolveResourcePath,
               highlightToday: false,
               emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
-              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId })
+              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, presetContext)
             }
           ) }, `${goalGroup.goalPath}:${entry.presetKey || entry.themePath}`);
         }) })
@@ -49817,12 +49870,7 @@ function HeatmapView({
     return /* @__PURE__ */ u2("div", { class: "heatmap-day-view", children: dayGroups.map((group) => /* @__PURE__ */ u2("section", { class: "heatmap-day-section", children: [
       /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: group.title }),
       /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: group.entries.map((entry) => {
-        const themeRatingMapping = ratingMappingsCache.get(
-          inputSettings,
-          heatmapSourceBlockId || "",
-          entry.themePath,
-          themesByPath
-        );
+        const themeRatingMapping = resolveCellRatingMapping(entry.themePath);
         const dayItems = entry.dataForTheme.get(dayDateStr);
         return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", children: /* @__PURE__ */ u2(
           HeatmapCell,
@@ -49850,7 +49898,7 @@ function HeatmapView({
     return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${normalizedCurrentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
       "div",
       {
-        class: `heatmap-theme-header ${normalizedCurrentView === "周" ? "week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
+        class: `heatmap-theme-header ${isRowLayout ? "row-inline-layout week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
         "data-theme": rowKey,
         ref: (el) => {
           if (el && theme2 !== "__default__") {
@@ -49900,7 +49948,7 @@ function HeatmapView({
           keyPrefix: `${goalGroup.goalPath}\0`,
           entryKey: entry.presetKey || entry.themePath,
           label: entry.label,
-          presetContext: { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId }
+          presetContext: { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId, ratingOptions: entry.ratingOptions }
         })) })
       ] }, goalGroup.goalPath)) });
     }
@@ -57155,8 +57203,8 @@ function toArrayValue(value) {
   if (value && typeof value === "object") return [String(value.value ?? value.label ?? "")].filter(Boolean);
   return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
 }
-function isImagePath(value) {
-  return !!normalizeImageValue(value);
+function isRenderableImagePath(value) {
+  return isImageLikeValue(value);
 }
 function QuickInputEditorFields({ getResourcePath, template, formData, fieldValueOptionsByKey, dense = false, onUpdateField, timeDirection = "forward", onTimeDirectionChange, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }) {
   const [tagDrafts, setTagDrafts] = d({});
@@ -57476,7 +57524,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, fieldValu
           label,
           /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 0.9, sx: { mt: 0.1, flexWrap: "wrap" }, children: (field.options || []).map((opt) => {
             const isSelected = isComplex && formData[field.key]?.label === opt.label && formData[field.key]?.value === opt.value;
-            const imageValue = isImagePath(opt.value) ? normalizeImageValue(opt.value) : void 0;
+            const imageValue = isRenderableImagePath(opt.value) ? normalizeImageValue(opt.value) : void 0;
             const displayContent = imageValue ? /* @__PURE__ */ u2(
               "img",
               {
@@ -71471,6 +71519,11 @@ function itemCoreBlock(item) {
   if (raw.startsWith("core.")) return raw;
   return raw;
 }
+function extractRatingOptions(template) {
+  const fields = Array.isArray(template?.fields) ? template.fields : [];
+  const ratingField = fields.find((field) => field?.type === "rating" || field?.semantic === "rating" || field?.key === "评分" || field?.label === "评分");
+  return Array.isArray(ratingField?.options) ? ratingField.options.map((option) => ({ value: option?.value, label: option?.label })).filter((option) => option.value !== void 0 || option.label !== void 0) : [];
+}
 function buildPresetLookups(goalSettings, goals) {
   const goalPathById = /* @__PURE__ */ new Map();
   const goalLabelById = /* @__PURE__ */ new Map();
@@ -71497,7 +71550,8 @@ function buildPresetLookups(goalSettings, goals) {
     const themePath = rawThemePath && !rawThemePath.includes("{{") ? rawThemePath : firstText(defaults["主题"]) || firstText(defaults.legacyThemePath);
     const label = firstText(template.name) || firstText(template.templateName) || themeLeaf(themePath) || variantId;
     const key = id || `${goalId}:${coreBlockId}:${variantId}`;
-    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath };
+    const ratingOptions = extractRatingOptions(template);
+    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions };
     allPresets.push(meta);
     if (id) byTemplateId.set(id, meta);
     const legacyOverrideId = firstText(defaults.legacyOverrideId);
@@ -71548,6 +71602,7 @@ function buildHeatmapViewModel(params) {
         templateVariantId: meta.templateVariantId,
         sourceBlockId: meta.sourceBlockId,
         goalId: meta.goalId,
+        ratingOptions: meta.ratingOptions || [],
         themePath: meta.themePath || "__default__",
         label: meta.label || themeLeaf(meta.themePath),
         count: 0,
@@ -71555,6 +71610,11 @@ function buildHeatmapViewModel(params) {
       };
       goalGroup.entries.push(entry);
     }
+    if (meta.templateId && !entry.templateId) entry.templateId = meta.templateId;
+    if (meta.templateVariantId && !entry.templateVariantId) entry.templateVariantId = meta.templateVariantId;
+    if (meta.sourceBlockId && !entry.sourceBlockId) entry.sourceBlockId = meta.sourceBlockId;
+    if (meta.goalId && !entry.goalId) entry.goalId = meta.goalId;
+    if (meta.ratingOptions?.length && (!entry.ratingOptions || entry.ratingOptions.length === 0)) entry.ratingOptions = meta.ratingOptions;
     return entry;
   }
   for (const preset of lookups.allPresets) {
@@ -71566,6 +71626,7 @@ function buildHeatmapViewModel(params) {
       templateVariantId: preset.variantId,
       sourceBlockId: preset.coreBlockId,
       goalId: preset.goalId,
+      ratingOptions: preset.ratingOptions,
       themePath: preset.themePath || "__default__",
       label: preset.label || themeLeaf(preset.themePath)
     });
@@ -71592,8 +71653,8 @@ function buildHeatmapViewModel(params) {
     const themePath = preset?.themePath || getItemThemePath(item) || "__default__";
     if (!preset && filterByTheme && themePath !== "__default__" && !trackedThemeSet.has(themePath)) continue;
     const explicitGoalPath = getItemGoalKey(item, goals);
-    const goalPath = explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : preset?.goalPath || UNASSIGNED_GOAL_KEY;
-    const goalLabel = goalPath === preset?.goalPath ? preset.goalLabel : getItemGoalLabel(item, goals) || preset?.goalLabel || goalPath;
+    const goalPath = preset?.goalPath || (explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : UNASSIGNED_GOAL_KEY);
+    const goalLabel = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
     const goalGroup = ensureGoalGroup(goalPath, goalLabel);
     goalGroup.count += 1;
     const presetKey = preset?.key || `${goalPath}\0${themePath}\0${itemCoreBlock(item) || "habit"}`;
@@ -71604,6 +71665,7 @@ function buildHeatmapViewModel(params) {
       templateVariantId: preset?.variantId,
       sourceBlockId: preset?.coreBlockId,
       goalId: preset?.goalId,
+      ratingOptions: preset?.ratingOptions,
       themePath,
       label
     });
@@ -72071,7 +72133,7 @@ function useViewRuntimeHandlers({
           endTime: updates.endTime,
           duration: updates.duration
         },
-        source: "layout_renderer"
+        source: "unknown"
       });
       if (!ok) throw new Error("更新任务时间失败");
     },
@@ -72130,9 +72192,21 @@ function useViewRuntimeHandlers({
     modal.openCheckinManager({
       date: request.date,
       items: request.items,
-      onAddRecord: request.onAddRecord
+      onAddRecord: request.onAddRecord,
+      onDeleteRecord: async (item) => {
+        if (!window.confirm("确认删除这条打卡记录吗？")) return false;
+        const result = await useCases.recordInput.submitDeleteRecord({
+          item,
+          source: "unknown"
+        });
+        const presentation = buildRecordSubmitFeedbackPresentation(result, "删除失败");
+        if (presentation.message) {
+          ui.notice(presentation.message);
+        }
+        return result.status === "success" || result.status === "partial_success";
+      }
     });
-  }, [modal]);
+  }, [modal, ui, useCases]);
   const onExcelCellCommit = q$1(async (request) => {
     return await commitExcelCellFromView({
       uiPort: ui,
@@ -74597,8 +74671,9 @@ class AiChatModal extends obsidian.Modal {
     unmountPreact(this.contentEl);
   }
 }
-function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord }) {
-  const sortedItems = T$1(() => [...items].sort((a2, b2) => (a2.created || 0) - (b2.created || 0)), [items]);
+function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onDeleteRecord }) {
+  const [managedItems, setManagedItems] = d(() => items || []);
+  const sortedItems = T$1(() => [...managedItems].sort((a2, b2) => (a2.created || 0) - (b2.created || 0)), [managedItems]);
   const handleOpenRecord = (item) => {
     if (!item.file?.path) return;
     try {
@@ -74606,6 +74681,19 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord }) {
       onClose();
     } catch (error) {
       new obsidian.Notice(`打开记录失败: ${error?.message || String(error)}`);
+    }
+  };
+  const handleDeleteRecord = async (event, item) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!onDeleteRecord) return;
+    try {
+      const result = await onDeleteRecord(item);
+      if (result !== false) {
+        setManagedItems((prev2) => prev2.filter((candidate) => candidate.id !== item.id));
+      }
+    } catch (error) {
+      new obsidian.Notice(`删除记录失败: ${error?.message || String(error)}`);
     }
   };
   return /* @__PURE__ */ u2("div", { class: "checkin-manager-modal", children: [
@@ -74630,8 +74718,19 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord }) {
           onDblClick: gesture.onDblClick,
           onTouchEnd: gesture.onTouchEnd,
           children: [
-            /* @__PURE__ */ u2("div", { class: "checkin-item-content", children: item.content || item.title || "无内容" }),
-            /* @__PURE__ */ u2("div", { class: "checkin-item-meta", children: `${dayjs(item.created).format("HH:mm:ss")} · ${item.file?.path || "未知位置"}` })
+            /* @__PURE__ */ u2("div", { class: "checkin-item-main", children: [
+              /* @__PURE__ */ u2("div", { class: "checkin-item-content", children: item.content || item.title || "无内容" }),
+              /* @__PURE__ */ u2("div", { class: "checkin-item-meta", children: `${dayjs(item.created).format("HH:mm:ss")} · ${item.file?.path || "未知位置"}` })
+            ] }),
+            /* @__PURE__ */ u2("div", { class: "checkin-item-actions", children: onDeleteRecord && /* @__PURE__ */ u2(
+              "button",
+              {
+                class: "checkin-item-delete",
+                title: "删除这条记录",
+                onClick: (event) => handleDeleteRecord(event, item),
+                children: "删除"
+              }
+            ) })
           ]
         },
         item.id
@@ -74641,17 +74740,19 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord }) {
   ] });
 }
 class CheckinManagerModal extends obsidian.Modal {
-  constructor(app, date2, items, onSave, onAddRecord) {
+  constructor(app, date2, items, onSave, onAddRecord, onDeleteRecord) {
     super(app);
     this.date = date2;
     this.items = items;
     this.onSave = onSave;
     this.onAddRecord = onAddRecord;
+    this.onDeleteRecord = onDeleteRecord;
   }
   date;
   items;
   onSave;
   onAddRecord;
+  onDeleteRecord;
   onOpen() {
     this.contentEl.empty();
     this.modalEl.addClass("checkin-manager-modal-container");
@@ -74665,7 +74766,8 @@ class CheckinManagerModal extends obsidian.Modal {
           items: this.items,
           onSave: this.onSave,
           onClose: () => this.close(),
-          onAddRecord: this.onAddRecord
+          onAddRecord: this.onAddRecord,
+          onDeleteRecord: this.onDeleteRecord
         }
       )
     );
@@ -74675,11 +74777,14 @@ class CheckinManagerModal extends obsidian.Modal {
             .modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--background-modifier-border); }
             .modal-content { padding: 16px; flex-grow: 1; }
             .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--background-modifier-border); }
-            .checkin-details-item { padding: 10px 0; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; transition: background-color 0.2s ease; }
+            .checkin-details-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; transition: background-color 0.2s ease; }
             .checkin-details-item:hover { background-color: var(--background-modifier-hover); }
             .checkin-details-item:last-child { border-bottom: none; }
-            .checkin-item-content { font-weight: 500; }
-            .checkin-item-meta { font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 4px; }
+            .checkin-item-main { min-width: 0; flex: 1 1 auto; }
+            .checkin-item-content { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .checkin-item-meta { font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .checkin-item-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+            .checkin-item-delete { color: var(--text-error); }
         `;
   }
   onClose() {
@@ -74744,7 +74849,8 @@ let ObsidianModalPort = class {
       args?.date ?? todayISO(),
       args?.items ?? emptyItems,
       noop2,
-      args?.onAddRecord ?? noop2
+      args?.onAddRecord ?? noop2,
+      args?.onDeleteRecord
     ).open();
   }
 };

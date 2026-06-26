@@ -20,6 +20,7 @@ export * from './exportUtils';
 export * from './heatmap';
 export * from './heatmapAggregation';
 export * from './heatmapTemplate';
+export * from './heatmapVisual';
 export * from './inputTemplateUtils';
 export * from './itemFilter';
 export * from './itemGrouping';

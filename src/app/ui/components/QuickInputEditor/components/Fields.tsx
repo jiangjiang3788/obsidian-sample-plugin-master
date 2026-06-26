@@ -11,6 +11,7 @@ import {
   isTemplatePathField,
   isTemplateTagField,
   normalizeImageValue,
+  isImageLikeValue,
   isSystemRecordContextField,
 } from '@core/public';
 
@@ -49,8 +50,10 @@ function toArrayValue(value: unknown): string[] {
     .filter(Boolean);
 }
 
-function isImagePath(value: unknown): boolean {
-  return !!normalizeImageValue(value);
+function isRenderableImagePath(value: unknown): boolean {
+  // normalizeImageValue 会把任意非空字符串包装成 unknown 图片；这里必须先判断是否真像图片。
+  // 否则 Emoji 评分值（如 ♨️）会被当成图片 src，导致快捷输入面板按钮空白。
+  return isImageLikeValue(value);
 }
 
 export function QuickInputEditorFields({ getResourcePath, template, formData, fieldValueOptionsByKey, dense = false, onUpdateField, timeDirection = 'forward', onTimeDirectionChange, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }: QuickInputEditorFieldsProps) {
@@ -393,7 +396,7 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
           <Stack direction="row" spacing={0.9} sx={{ mt: 0.1, flexWrap: 'wrap' }}>
             {(field.options || []).map((opt: any) => {
               const isSelected = isComplex && formData[field.key]?.label === opt.label && formData[field.key]?.value === opt.value;
-              const imageValue = isImagePath(opt.value) ? normalizeImageValue(opt.value) : undefined;
+              const imageValue = isRenderableImagePath(opt.value) ? normalizeImageValue(opt.value) : undefined;
 
               const displayContent = imageValue ? (
                 <img
