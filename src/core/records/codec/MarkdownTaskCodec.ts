@@ -21,7 +21,7 @@ export interface ParsedTaskMetadata {
   image?: string;
   pintu?: string;
   templateId?: string;
-  templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block';
+  templateSourceType?: 'core-block' | 'goal-template';
   startTime?: string;
   endTime?: string;
   duration?: number;
@@ -79,7 +79,7 @@ export function decodeTaskMetadata(lineText: string): ParsedTaskMetadata {
     } else if (['模板id', 'templateid'].includes(key)) {
       result.templateId = value;
     } else if (['模板来源', 'templatesource', 'templatesourcetype'].includes(key)) {
-      if (['core-block', 'goal-template', 'legacy-block'].includes(value)) result.templateSourceType = value as any;
+      if (['core-block', 'goal-template'].includes(value)) result.templateSourceType = value as any;
     } else if (['标签', 'tag', 'tags'].includes(key)) {
       result.tags.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags) as string[]));
     } else if (['目标id', 'goalid'].includes(key)) {

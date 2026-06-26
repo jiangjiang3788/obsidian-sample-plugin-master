@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Block Statistics 统一与跳转修复｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">维护发布 / MIGRATED DOC</div>
+        <h1>Block Statistics 统一与跳转修复</h1>
+        <p class="lead">`LayoutRenderer -&gt; StatisticsViewContainer -&gt; PopoverContent -&gt; BlockView -&gt; BlockItem -&gt; MarkdownContent -&gt; ObsidianMessageRenderPort`</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>维护发布</td></tr><tr><td>旧路径</td><td><code>docs/本次改动-block-statistics-md统一与跳转修复.md</code></td></tr><tr><td>原始标题</td><td>本次改动：Block / Statistics Markdown 统一与跳转修复</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>本次改动：Block / Statistics Markdown 统一与跳转修复</h1>
+<h2>目标</h2>
+<ul>
+<li>BlockView 和 StatisticsView 的块内容统一走同一套 Markdown 渲染链路。</li>
+<li>BlockView 点击 content 时恢复“跳到文档具体行”。</li>
+<li>BlockView 的 Markdown 换行行为尽量贴近 Obsidian 默认表现。</li>
+</ul>
+<h2>本次修改</h2>
+<h3>1. Statistics 弹层补齐 Markdown 渲染能力</h3>
+<ul>
+<li>文件：<code>src/shared/ui/views/StatisticsView/StatisticsViewContainer.tsx</code></li>
+<li>文件：<code>src/shared/ui/views/StatisticsView/components/PopoverContent.tsx</code></li>
+<li>改动：把 <code>messageRenderPort</code> 从 Statistics 容器继续传给 <code>BlockView</code>，让统计弹层里的 block 内容也能复用 <code>MarkdownContent</code> + <code>ObsidianMessageRenderPort</code>。</li>
+</ul>
+<h3>2. BlockView 的 Markdown 换行改回更接近 Obsidian</h3>
+<ul>
+<li>文件：<code>src/shared/styles/block-view.css</code></li>
+<li>改动：去掉对 <code>.message-render-markdown</code> / <code>p</code> / <code>li</code> / <code>blockquote</code> 的 <code>white-space: pre-wrap</code>。</li>
+<li>结果：Markdown 里的普通换行不再被额外强制渲染成多行；列表、加粗、链接仍由 Obsidian 的 MarkdownRenderer 负责。</li>
+</ul>
+<h3>3. Block content 点击恢复跳具体行</h3>
+<ul>
+<li>文件：<code>src/shared/ui/items/BlockItem.tsx</code></li>
+<li>改动：点击内容时优先走 <code>makeObsUri(item, vaultName)</code> 生成的 advanced-uri（包含 <code>line</code>），再以 <code>openFile/openLinkText</code> 作为兜底。</li>
+<li>说明：<ul>
+<li><code>advanced-uri</code> 在浮窗、统计弹层、不同 leaf 场景里更稳定。</li>
+<li>兜底分支把行号按 0-based 传给 <code>openFile/openLinkText</code>，避免跳到偏移行。</li>
+<li>Markdown 内部真实链接（<code>&lt;a&gt;</code>）保持原本行为，不会被外层点击劫持。</li>
+</ul>
+</li>
+</ul>
+<h2>当前共用链路</h2>
+<p><code>LayoutRenderer -&gt; StatisticsViewContainer -&gt; PopoverContent -&gt; BlockView -&gt; BlockItem -&gt; MarkdownContent -&gt; ObsidianMessageRenderPort</code></p>
+<h2>这次没有做</h2>
+<ul>
+<li>没有做大规模目录重构。</li>
+<li>没有新增第二套 Markdown 渲染逻辑。</li>
+<li>没有继续增加工程抽象层。</li>
+</ul>
+<h2>后续建议</h2>
+<ul>
+<li>先观察 1~2 轮真实使用，再决定是否把“内容展示”彻底收敛成统一的 <code>ContentDisplay</code> 组件。</li>
+<li>如果后面还有其他视图要显示块内容，也优先复用 <code>MarkdownContent</code>，不要再写各自的渲染逻辑。</li>
+</ul>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

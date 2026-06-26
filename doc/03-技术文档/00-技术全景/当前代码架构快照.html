@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>当前代码架构快照｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">Think OS 插件文档系统</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>当前代码架构快照</h1>
+        <p class="lead">长期技术事实页：描述当前代码分层、模块边界、验证状态和文档维护触发条件，不承载短期实施步骤。</p>
+        <div class="meta-row"><span class="badge good">状态：当前有效</span><span class="badge">最后更新：2026-05-14</span><span class="badge">格式：HTML</span><span class="badge">生命周期：长期</span><span class="badge">重要度：P0</span></div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>当前分层事实</h2><div class="table-wrap"><table><thead><tr><th>层级</th><th>职责</th><th>当前状态</th></tr></thead><tbody>
+<tr><td><code>src/main.ts</code></td><td>Obsidian 插件入口、生命周期挂载、ServiceManager 启动。</td><td>稳定。</td></tr>
+<tr><td><code>src/app</code></td><td>应用编排、usecase、capability、bootstrap、store 适配。</td><td>稳定化完成，recordInput 已轻拆。</td></tr>
+<tr><td><code>src/core</code></td><td>领域类型、解析、主题、Goal/Cycle/Record 契约、AI 配置、port 定义。</td><td>无 Obsidian 直接依赖。</td></tr>
+<tr><td><code>src/platform</code></td><td>Obsidian API、Modal、Vault、SettingsTab 等平台适配。</td><td>平台边界已收口。</td></tr>
+<tr><td><code>src/features</code></td><td>settings、timer、quickinput、aiinput 等功能入口。</td><td>settings 已做轻度归类。</td></tr>
+<tr><td><code>src/shared</code></td><td>共享 UI、hooks、utils、通用组件。</td><td>public 入口受 gate 约束。</td></tr>
+<tr><td><code>scripts</code></td><td>gates/audit/docs/build/maintenance/lib 工程脚本。</td><td>Phase B 已整理。</td></tr>
+</tbody></table></div></article>
+<article class="card full"><h2>当前验证基线</h2><ul><li><code>npm run typecheck:src</code>：已作为稳定化基线。</li><li><code>npm run gate</code>：分层、feature、public API、Modal、settings 持久化等 gate。</li><li><code>npm run test:unit</code> / <code>npm run test:integration</code>：当前测试安全网。</li><li><code>npm run verify</code> / <code>npm run ci</code>：Phase C 后的统一验证入口。</li></ul></article>
+<article class="card full"><h2>文档更新触发条件</h2><div class="table-wrap"><table><thead><tr><th>修改类型</th><th>必须更新</th></tr></thead><tbody><tr><td>目录结构变化</td><td>本页、文件地图、模块职责。</td></tr><tr><td>分层边界或 public API 变化</td><td>本页、模块职责、相关 gate 说明。</td></tr><tr><td>验证命令或 CI 变化</td><td>当前测试基线、发布流程。</td></tr><tr><td>新增领域模型</td><td>Goal/Cycle/Record 或对应领域模型文档。</td></tr></tbody></table></div></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。当前文档治理原则：当前事实优先，长期技术事实和短期实施记录分离。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

@@ -26,7 +26,7 @@ export interface ParsedBlockMetadata {
   pintu?: string;
   theme?: string;
   templateId?: string;
-  templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block';
+  templateSourceType?: 'core-block' | 'goal-template';
 }
 
 function decodeMarkdownString(value: unknown, preset: FieldCodecDefinition = FIELD_CODEC_PRESETS.text): string | undefined {
@@ -80,7 +80,7 @@ export function decodeBlockContentLines(contentLines: string[], parentFolder: st
   let goalId: string | undefined;
   let cycleId: string | undefined;
   let coreBlock: string | undefined;
-  let templateSourceType: 'core-block' | 'goal-template' | 'legacy-block' | undefined;
+  let templateSourceType: 'core-block' | 'goal-template' | undefined;
 
   for (const rawLine of contentLines) {
     const line = rawLine.trim();
@@ -98,7 +98,7 @@ export function decodeBlockContentLines(contentLines: string[], parentFolder: st
           templateId = value.trim();
         } else if (['模板来源', 'templatesource', 'templatesourcetype'].includes(key)) {
           const source = value.trim();
-          if (['core-block', 'goal-template', 'legacy-block'].includes(source)) templateSourceType = source as any;
+          if (['core-block', 'goal-template'].includes(source)) templateSourceType = source as any;
         } else if (['主题', 'theme', '主题路径', 'themepath'].includes(key)) {
           theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
         } else if (['标签', 'tag', 'tags'].includes(key)) {

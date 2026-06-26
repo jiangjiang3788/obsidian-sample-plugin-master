@@ -1,6 +1,6 @@
 import type { InputSettings, Item, ThinkSettings } from '@/core/types/schema';
 import { GoalTemplateResolver } from '@/core/services/GoalTemplateResolver';
-import { DEFAULT_CORE_BLOCKS, buildLegacyCoreBlockMap } from '@/core/blocks';
+import { DEFAULT_CORE_BLOCKS } from '@/core/blocks';
 import type { RecordSubmitIssue, ResolveDependenciesResult } from '@/core/types/recordInput';
 
 export interface DependencyResolverInput {
@@ -127,8 +127,7 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   const fullSettings = normalizeDependencySettings(input.settings);
   const inputSettings = fullSettings.inputSettings;
   const requestedBlockId = input.blockId ?? null;
-  const legacyBlockMap = buildLegacyCoreBlockMap(inputSettings.blocks || []);
-  const effectiveBlockId = requestedBlockId ? (String(requestedBlockId).startsWith('core.') ? requestedBlockId : legacyBlockMap[requestedBlockId] || requestedBlockId) : null;
+  const effectiveBlockId = requestedBlockId ? String(requestedBlockId) : null;
   const effectiveSettings = buildEffectiveInputSettings(inputSettings);
   const goalContext = extractGoalContext(input);
   const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, goalContext.themePath ?? input.item?.themePath ?? input.item?.theme ?? null);

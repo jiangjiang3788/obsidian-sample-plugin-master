@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>交互流程｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS PRODUCT DESIGN</div>
+        <h1>交互流程</h1>
+        <p class="lead">主流程从目标开始，到计划、任务、执行记录、总结复盘和统计反馈，再回到调整。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：重定位草案</span>
+          <span class="badge">最后更新：2026-05-13</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>主流程</h2><ol><li>创建目标：用户定义想推进的方向、周期、主题和衡量方式。</li><li>制定周期计划：系统围绕目标生成或承接本周期计划。</li><li>生成/关联任务：计划被拆成任务，任务保留目标和周期上下文。</li><li>执行并记录：用户执行任务，留下时间、状态、阻塞和产出记录。</li><li>总结复盘：系统汇总执行记录，用户写下结论和调整建议。</li><li>查看反馈：Statistics 以目标和周期为中心展示反馈，而不是孤立数字。</li><li>调整下一步：用户根据反馈调整目标、计划或任务优先级。</li></ol></article>
+<article class="card full"><h2>入口关系</h2><div class="table-wrap"><table><thead><tr><th>入口</th><th>角色</th><th>边界</th></tr></thead><tbody><tr><td>目标入口</td><td>确定闭环对象</td><td>没有目标上下文的计划和统计只作为临时记录。</td></tr><tr><td>计划 Block</td><td>承接周期计划</td><td>不能只保存文字，应能关联目标和任务。</td></tr><tr><td>任务入口</td><td>推动执行</td><td>任务不是孤立待办，应能追溯来源计划。</td></tr><tr><td>QuickInput</td><td>快速补充记录</td><td>作为输入通道，不再单独定义产品主线。</td></tr><tr><td>Statistics View</td><td>提供反馈</td><td>优先回答目标推进情况，再展示数量和时间。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>流程文档规则</h2><p>后续新增流程必须写清：服务哪个目标闭环环节、产生什么数据、如何进入复盘、如何影响下一次计划。只增加一个新记录类型或新视图，不算完成闭环。</p></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

@@ -31,5 +31,4 @@ export interface CoreBlockPatch {
 export interface CoreBlockSettings {
   enabledCoreBlockIds: string[];
   patches: CoreBlockPatch[];
-  legacyBlockMap?: Record<string, string>;
 }

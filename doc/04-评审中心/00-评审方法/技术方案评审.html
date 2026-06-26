@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>技术方案评审｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>技术方案评审</h1>
+        <p class="lead">判断技术方案是否合理、复杂度是否可控、有没有更简单方案。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：建议模板</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>技术方案评审维度</h2><div class="table-wrap"><table><thead><tr><th>维度</th><th>判断问题</th></tr></thead><tbody><tr><td>可行性</td><td>现有架构是否支持？需要新增依赖吗？</td></tr><tr><td>复杂度</td><td>是否过度设计？能否分阶段完成？</td></tr><tr><td>边界</td><td>代码应该放在哪一层？是否破坏 core/platform/features 边界？</td></tr><tr><td>数据</td><td>是否涉及迁移、缓存、写入风险？</td></tr><tr><td>性能</td><td>是否会频繁扫描 Vault 或触发大量渲染？</td></tr><tr><td>测试</td><td>核心逻辑是否可测试？</td></tr></tbody></table></div></article>
+<article class="card full"><h2>方案记录模板</h2><pre class="mono">方案目标：
+涉及模块：
+主方案：
+备选方案：
+复杂度：低 / 中 / 高
+风险：
+验证方式：
+评审结论：</pre></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

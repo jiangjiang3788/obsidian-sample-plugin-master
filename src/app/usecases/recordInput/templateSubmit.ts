@@ -17,7 +17,7 @@ import { getBeforeMaxLine } from './paths';
 
 export interface TemplateExecutionMeta {
   templateId: string;
-  templateSourceType: 'core-block' | 'goal-template' | 'legacy-block';
+  templateSourceType: 'core-block' | 'goal-template';
 }
 
 export type ResolvedTemplateDependencies = ResolveDependenciesResult & {
@@ -100,7 +100,7 @@ export function getTemplateExecutionMeta(
 ): TemplateExecutionMeta {
   return {
     templateId: resolved.meta.templateId ?? template.id,
-    templateSourceType: resolved.meta.templateSourceType ?? 'legacy-block',
+    templateSourceType: resolved.meta.templateSourceType ?? 'core-block',
   };
 }
 

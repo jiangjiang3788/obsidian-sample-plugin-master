@@ -2,6 +2,7 @@
 import { singleton, inject } from 'tsyringe';
 import { dayjs } from '@core/utils/date';
 import type { Item, ViewInstance, BlockTemplate } from '@/core/types/schema';
+import { getEffectiveCoreBlocks } from '@/core/blocks';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
@@ -21,9 +22,14 @@ export class ActionService {
         @inject(InputService) private inputService: InputService
     ) {}
 
+    private getRuntimeBlocks(): BlockTemplate[] {
+        const settings = this.settingsProvider.getSettings();
+        return getEffectiveCoreBlocks(settings);
+    }
+
     private findBlockByCategoryKey(categoryKey: string | undefined): BlockTemplate | undefined {
         if (!categoryKey) return undefined;
-        const blocks = this.settingsProvider.getSettings().inputSettings.blocks || [];
+        const blocks = this.getRuntimeBlocks();
 
         if (categoryKey === '完成任务' || categoryKey === '未完成任务') {
             return blocks.find((b) => b.categoryKey === '任务');
@@ -226,7 +232,7 @@ export class ActionService {
     }
 
     public getQuickInputConfigForNewTimer(): QuickInputConfig | null {
-        const blocks = this.settingsProvider.getSettings().inputSettings.blocks;
+        const blocks = this.getRuntimeBlocks();
         if (!blocks || blocks.length === 0) {
             this.ui.notice('没有可用的Block模板，请先在设置中创建一个。');
             return null;

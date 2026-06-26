@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-05 全局数据筛选与架构分层计划｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">Think OS 插件文档系统</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：数据筛选、toolbar、RuleBuilder、ViewQueryPipeline、架构分层..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">IMPLEMENTATION PLAN</div>
+        <h1>2026-05 全局数据筛选与架构分层计划</h1>
+        <p class="lead">本计划从 <code>tp-toolbar</code> 全字段筛选需求切入，把已有视图筛选能力收束为 Layout 级全局筛选、ViewInstance 局部筛选和统一数据筛选管线。</p>
+        <div class="meta-row"><span class="badge warn">状态：代码完成，待依赖完整环境复验</span><span class="badge">最后更新：2026-05-20</span><span class="badge">格式：HTML</span><span class="badge">生命周期：短期实施</span><span class="badge">优先级：P0</span></div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>本轮目标</h2><p>把 toolbar 中写死的主题筛选和分类筛选，升级为一个可处理所有字段的数据筛选面板；同时把筛选状态、筛选规则、筛选执行和视图展示的职责分层，避免以后每增加一个筛选条件都要修改多个视图。</p></article>
+<article class="card full"><h2>文档阅读顺序</h2><ol><li><a href="00-实施计划目录.html">实施计划目录</a>：先看本轮计划在项目治理中的位置和总体表。</li><li><strong>本页</strong>：确认阶段拆分、涉及文件、风险、MVP 和验收标准。</li><li><a href="../../../02-功能设计/02-ViewUI与移动端/全局数据筛选面板设计.html">全局数据筛选面板设计</a>：确认用户入口、交互和字段能力。</li><li><a href="../../../03-技术文档/04-运行机制/视图数据筛选管线.html">视图数据筛选管线</a>：确认 Layout / ViewInstance / useViewData / viewModel 的数据流。</li><li><a href="../../../04-评审中心/02-专题评审/全局数据筛选架构评审.html">全局数据筛选架构评审</a>：实施前后按风险清单和验收口径做检查。</li></ol></article>
+<article class="card full"><h2>完整计划表格</h2><div class="table-wrap"><table><thead><tr><th>序号</th><th>修改项</th><th>修改性质</th><th>性价比</th><th>进度</th><th>修改原因</th><th>涉及文件</th><th>用时</th><th>危险性</th><th>验收标准</th><th>最小 MVP 标准</th></tr></thead><tbody>
+<tr><td>01</td><td>确定全局筛选真源</td><td>数据模型 / 兼容性</td><td>高</td><td>已完成 MVP</td><td>当前 <code>selectedThemes</code>、<code>selectedCategories</code> 是 Layout 上的专用字段，无法表达全部字段筛选。</td><td><code>src/core/types/schema.ts</code></td><td>0.5 天</td><td>中</td><td><code>Layout.globalFilters?: FilterRule[]</code> 存在；旧字段仍可读取；旧布局不丢筛选。</td><td>新增 <code>globalFilters</code>，不删除旧字段。</td></tr>
+<tr><td>02</td><td>抽出统一筛选管线</td><td>架构分层 / 纯函数</td><td>高</td><td>已完成 MVP</td><td><code>useViewData</code>、TaskExecution、Timeline 等位置重复执行筛选，后续扩展容易漏。</td><td><code>src/core/utils/viewQueryPipeline.ts</code>、<code>src/core/public.ts</code>、<code>src/features/settings/useViewData.ts</code></td><td>1 天</td><td>中</td><td>layout filters、view filters、keyword、date/period、sort 的顺序被单一函数描述；单测覆盖顺序。</td><td><code>useViewData</code> 改为调用 pipeline，但现有行为保持不变。</td></tr>
+<tr><td>03</td><td>封装全局数据筛选面板</td><td>功能新增 / UI 复用</td><td>高</td><td>已完成 MVP + 宽面板增强 + 规则直接编辑</td><td>视图设置中已有 <code>RuleBuilder</code>，toolbar 不应再单独维护主题/分类筛选 UI；字段较多时小弹层不够用，需要升级为可搜索、宽面板规则编辑区，并支持已有规则直接修改。</td><td><code>src/features/settings/layout/DataFilterPanel.tsx</code>、<code>src/features/settings/viewEditors/RuleBuilder.tsx</code></td><td>1 天</td><td>中</td><td>toolbar 能打开面板；可选择 FIELD_REGISTRY 和动态 extra 字段；规则能写回 layout。</td><td>支持标题、内容、类别、标签、完整主题、根主题、叶主题、日期、评分、extra 字段。</td></tr>
+<tr><td>04</td><td>改造 <code>ViewToolbar</code> 入参</td><td>UI 边界收口</td><td>高</td><td>已完成 MVP</td><td><code>ViewToolbar</code> 现在直接知道 ThemeFilter 和 CategoryFilter，职责偏业务。</td><td><code>src/shared/ui/views/ViewToolbar.tsx</code>、<code>src/shared/ui/views/index.ts</code></td><td>0.5 天</td><td>中</td><td>toolbar 只负责视图切换、日期导航、筛选入口、布局设置入口；不直接处理主题/分类业务。</td><td>先保留 legacy 快捷筛选或用面板替代，界面可正常渲染。</td></tr>
+<tr><td>05</td><td>接入 LayoutRenderer 持久化</td><td>状态管理 / 持久化</td><td>高</td><td>已完成 MVP</td><td>全局筛选属于 layout 级状态，需要随布局保存，不应只留在组件 state。</td><td><code>src/features/settings/layout/LayoutRenderer.tsx</code>、<code>src/features/settings/LayoutRenderer.tsx</code>、layout update usecase</td><td>1 天</td><td>高</td><td>修改筛选后刷新仍保留；不同 layout 的筛选互不污染；旧字段兼容。</td><td>当前 layout 的 <code>globalFilters</code> 可保存和恢复。</td></tr>
+<tr><td>06</td><td>扩展筛选操作符</td><td>领域能力增强</td><td>中</td><td>已完成 MVP</td><td>“所有字段都可以处理”会遇到空值、多选、区间等场景，现有操作符偏少。</td><td><code>src/core/types/schema.ts</code>、<code>src/core/utils/itemFilter.ts</code>、<code>src/core/types/fields.ts</code></td><td>1 天</td><td>中</td><td><code>in</code>、<code>notIn</code>、<code>between</code>、<code>empty</code>、<code>notEmpty</code> 有测试；旧规则继续可用。</td><td>先支持现有操作符 + 空值判断；区间和多选可放 Phase 2。</td></tr>
+<tr><td>07</td><td>收束特殊视图重复筛选</td><td>内聚提升 / 技术债</td><td>中</td><td>已完成 MVP</td><td>TaskExecution、Timeline、Statistics 中有重复筛选逻辑，会和全局筛选产生重复或遗漏；本轮已明确 TaskExecution 只复用 base filters，Timeline 不重复 view filters，Statistics 只从 layoutFilters 提取类别收窄。</td><td><code>src/features/settings/viewModels/taskExecutionViewModel.ts</code>、<code>timelineViewModel.ts</code>、<code>statisticsViewModel.ts</code>、对应 shared container</td><td>1.5 天</td><td>高</td><td>普通视图输入 items 已经通过统一管线过滤；TaskExecution 使用 allItems + base filters，避免循环任务被日期范围误删；Timeline 不再二次 filterByRules；Statistics 的类别收窄来自 layoutFilters。</td><td>先确保全局筛选对主要视图生效；特殊视图重复逻辑列入后续清理。</td></tr>
+<tr><td>08</td><td>处理 RuleBuilder 重复文件</td><td>目录治理 / 去重</td><td>中</td><td>已完成 MVP</td><td><code>features/settings/RuleBuilder.tsx</code> 与 <code>viewEditors/RuleBuilder.tsx</code> 重复，容易改一处漏一处。</td><td><code>src/features/settings/RuleBuilder.tsx</code>、<code>src/features/settings/viewEditors/RuleBuilder.tsx</code></td><td>0.5 天</td><td>低</td><td>只有一个真实实现；旧路径如需保留则改成 re-export。</td><td>新增面板只引用 <code>viewEditors/RuleBuilder</code>。</td></tr>
+<tr><td>09</td><td>补测试和文档验收</td><td>验证 / 回归保护</td><td>高</td><td>最终验收包已补，等待依赖完整环境验证</td><td>筛选影响所有视图，必须用测试锁定数据管线顺序和兼容性。</td><td><code>test/unit/core/utils/itemFilter.test.ts</code>、<code>test/unit/core/utils/viewQueryPipeline.test.ts</code>、<code>文档/05-维护发布/00-测试验收/当前测试基线.html</code></td><td>1 天</td><td>低</td><td><code>npm run typecheck:src</code>、相关 unit test、<code>npm run verify:fast</code> 在依赖完整环境通过；本轮已记录受限环境验证结果。</td><td>至少新增 pipeline 单测和 itemFilter 关键用例。</td></tr>
+</tbody></table></div></article>
+<article class="card full"><h2>阶段拆分</h2><div class="table-wrap"><table><thead><tr><th>阶段</th><th>目标</th><th>进入条件</th><th>退出条件</th></tr></thead><tbody><tr><td>Phase 0</td><td>只建模不改交互</td><td>确认本计划。</td><td><code>globalFilters</code>、pipeline 草图和测试骨架准备好。</td></tr><tr><td>Phase 1</td><td>MVP：toolbar 全字段筛选可用</td><td>pipeline 可复用现有 <code>filterByRules</code>。</td><td>用户能在 toolbar 设置任意字段规则并影响当前 layout 视图。</td></tr><tr><td>Phase 2</td><td>体验增强：字段类型、快捷筛选、操作符</td><td>MVP 稳定。</td><td>日期/数字/标签/空值等字段有合理输入控件和操作符。</td></tr><tr><td>Phase 3</td><td>架构收口：特殊视图与重复文件清理</td><td>主要视图行为已锁定。</td><td>重复筛选路径减少，RuleBuilder 单实现，legacy 字段进入迁移策略。</td></tr></tbody></table></div></article>
+
+<article class="card full"><h2>当前实施记录</h2><ul><li>Step 1：已落地 <code>Layout.globalFilters</code>、<code>DataFilterPanel</code>、<code>ViewToolbar.filterSlot</code> 和基础筛选管线。</li><li>Step 2：已补 <code>layoutFilterAdapter</code>、<code>applyViewBaseFilters</code>，并开始收束 TaskExecution / Timeline 重复筛选。</li><li>Step 3：已将根目录旧布局入口改成兼容 re-export，真实实现收束到 <code>src/features/settings/layout</code>。</li><li>Step 4：已把 toolbar 的数据筛选从小弹层升级为宽 Dialog 面板，并让 <code>RuleBuilder</code> 支持 <code>panel</code> 模式与字段搜索，解决字段过多时难以浏览的问题。</li><li>Step 5：已让 <code>RuleBuilder</code> 的 panel 模式支持已有规则直接编辑，并补充 <code>itemFilter</code> 扩展操作符测试用例。</li><li>Step 6：已完成 legacy 旧主题/分类字段收尾：旧数据只读兼容进入 <code>globalFilters</code> 适配层，toolbar 不再继续暴露旧筛选入口；面板显示旧版提示，并提供“转为新版规则”操作。</li><li>Step 7：已完成特殊视图收口检查：TaskExecution 移除重复 legacy theme/category 过滤并补专项单测；Timeline 明确不再重复 view filters；Statistics 通过 layoutFilters 派生类别收窄，不再依赖旧 toolbar 分类状态。</li><li>Step 8：已补最终验收包、测试基线记录和依赖受限环境验证记录；当前代码计划进入本地依赖完整环境复验。</li><li>尚未完成：在可安装完整 <code>node_modules</code> 的本地环境执行 <code>typecheck:src</code>、相关 unit test、<code>verify:fast</code> 并记录通过结果。</li></ul></article>
+
+<article class="card full"><h2>最终验收清单</h2><div class="table-wrap"><table><thead><tr><th>检查项</th><th>状态</th><th>说明</th></tr></thead><tbody><tr><td>功能链路</td><td>代码完成，待本地复验</td><td>toolbar 入口、宽面板、规则编辑、旧筛选迁移、layout 持久化均已按计划接入。</td></tr><tr><td>架构链路</td><td>代码完成，待本地复验</td><td>Layout.globalFilters、ViewInstance.filters、applyViewQueryPipeline、layoutFilterAdapter 已成为主路径。</td></tr><tr><td>特殊视图</td><td>代码完成，待本地复验</td><td>TaskExecution、Timeline、Statistics 已完成重复筛选收口。</td></tr><tr><td>测试文件</td><td>已补充</td><td>已增加 itemFilter、viewQueryPipeline、layoutFilterAdapter、taskExecutionViewModel 相关测试。</td></tr><tr><td>自动验证</td><td>环境受限未通过</td><td>当前容器缺完整 node_modules；<code>npm ci</code> 超时，无法在此环境给出真实通过结论。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>最小 MVP 标准</h2><ul><li>toolbar 有一个“数据筛选”入口，点击后能配置 <code>FilterRule[]</code>。</li><li>筛选字段来自 <code>FIELD_REGISTRY</code> 和动态 <code>extra.*</code> 字段，不只限主题和分类。</li><li>规则保存到当前 layout 的 <code>globalFilters</code>，刷新后仍然存在。</li><li><code>useViewData</code> 同时应用 layout 全局筛选和 viewInstance 局部筛选。</li><li>旧的主题/分类筛选数据不丢；未显式迁移前通过适配层继续生效，迁移后写入 <code>globalFilters</code> 并清空旧字段。</li></ul></article>
+<article class="card full"><h2>不在 MVP 中做</h2><ul><li>不从数据模型中一次性删除 <code>selectedThemes</code> 和 <code>selectedCategories</code>，但 toolbar 不再把它们作为新的交互入口。</li><li>不一次性清理所有 shared view container 的重复逻辑。</li><li>不把 RuleBuilder 做成复杂查询语言；先保持现有规则模型可理解。</li><li>不把筛选面板做成每个视图自己的设置入口；本轮只做 Layout 全局入口。</li></ul></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。当前文档治理原则：当前事实优先，长期技术事实和短期实施记录分离。</footer>
+    </main>
+  </div>
+  <script src="../../../_资源/搜索索引.js"></script>
+  <script src="../../../_资源/文档脚本.js"></script>
+</body>
+</html>

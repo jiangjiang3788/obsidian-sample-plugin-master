@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>异常状态｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>异常状态</h1>
+        <p class="lead">提前设计失败、空数据、权限、配置错误等状态。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：建议模板</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>异常状态清单</h2><div class="table-wrap"><table><thead><tr><th>场景</th><th>可能异常</th><th>用户应该看到什么</th></tr></thead><tbody><tr><td>快速输入</td><td>模板缺失、字段配置错误、写入失败</td><td>明确提示失败原因，保留用户输入。</td></tr><tr><td>AI 功能</td><td>API 配置缺失、网络失败、解析失败</td><td>提示配置或网络问题，不静默失败。</td></tr><tr><td>Timer</td><td>没有活动计时器、任务 ID 不存在、写回失败</td><td>提示当前状态和下一步操作。</td></tr><tr><td>索引/扫描</td><td>缓存不一致、文件读取失败</td><td>提供重建索引或诊断日志入口。</td></tr><tr><td>主题迁移</td><td>没有 Markdown 文件、迁移失败</td><td>显示扫描数量、失败原因和样例。</td></tr><tr><td>设置页</td><td>非法配置、旧配置迁移失败</td><td>回退默认值并提示用户。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>异常设计原则</h2><ul><li>不能只在 console 里报错。</li><li>用户可恢复的错误，要给恢复动作。</li><li>迁移和批量操作要显示影响范围。</li><li>AI 相关失败要区分配置问题、网络问题和解析问题。</li></ul></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

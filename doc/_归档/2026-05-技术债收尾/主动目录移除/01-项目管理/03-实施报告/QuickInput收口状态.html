@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickInput 收口状态｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">项目管理 / MIGRATED DOC</div>
+        <h1>QuickInput 收口状态</h1>
+        <p class="lead">本轮修改已经进入收口阶段。主链路不建议继续大改。如果本轮手测稳定，下一轮可以考虑：1. 自动迁移保存增加确认弹窗2. 任务 token 级 patch serializer3. block 编辑也完全切到 snapshot4. 删除 legacy 主路径</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>项目管理</td></tr><tr><td>旧路径</td><td><code>docs/quickinput-closeout-state.md</code></td></tr><tr><td>原始标题</td><td>QuickInput 收口状态</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>QuickInput 收口状态</h1>
+<h2>当前状态</h2>
+<p>本轮修改已经进入收口阶段。主链路不建议继续大改。</p>
+<h2>已收口项目</h2>
+<ul>
+<li>任务正文读取</li>
+<li>task 模板识别 guard</li>
+<li>时间默认值联动计算</li>
+<li>主题三分法</li>
+<li>任务写回保真 MVP</li>
+<li>路径变化迁移保存</li>
+<li>partial_success 反馈</li>
+<li>保存位置实时预览</li>
+<li>预览与实际提交一致性校验</li>
+</ul>
+<h2>仍需手测确认</h2>
+<ul>
+<li>带双空格任务内容</li>
+<li>带 override 模板 ID 的任务</li>
+<li>时间 + 时长计算结束</li>
+<li>修改主题后迁移保存</li>
+<li>删除旧记录失败时的 partial_success</li>
+<li>视图设置中的 rootTheme / leafTheme / themePath</li>
+</ul>
+<h2>暂不继续做</h2>
+<ul>
+<li>自动迁移失败后的自动回滚</li>
+<li>大规模删除 legacy resolver</li>
+<li>所有 block 类型完全 snapshot 化</li>
+<li>更复杂的任务 token parser/serializer</li>
+</ul>
+<h2>下一轮再做</h2>
+<p>如果本轮手测稳定，下一轮可以考虑：</p>
+<ol>
+<li>自动迁移保存增加确认弹窗</li>
+<li>任务 token 级 patch serializer</li>
+<li>block 编辑也完全切到 snapshot</li>
+<li>删除 legacy 主路径</li>
+</ol>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

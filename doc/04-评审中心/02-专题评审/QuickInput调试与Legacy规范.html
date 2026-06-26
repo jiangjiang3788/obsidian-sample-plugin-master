@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickInput 调试与 Legacy 规范｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">评审中心 / MIGRATED DOC</div>
+        <h1>QuickInput 调试与 Legacy 规范</h1>
+        <p class="lead">任务读取和时间计算相关调试统一通过：关闭：新增日志必须满足：如果保留旧链路 fallback，必须写清楚：禁止没有退出条件的长期双轨。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>评审中心</td></tr><tr><td>旧路径</td><td><code>docs/quickinput-debug-and-legacy-notes.md</code></td></tr><tr><td>原始标题</td><td>QuickInput 调试与 Legacy 注释规范</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>QuickInput 调试与 Legacy 注释规范</h1>
+<h2>调试开关</h2>
+<p>任务读取和时间计算相关调试统一通过：</p>
+<pre><code class="language-js">window.__THINK_RECORD_DEBUG__ = true
+</code></pre>
+<p>关闭：</p>
+<pre><code class="language-js">window.__THINK_RECORD_DEBUG__ = false
+</code></pre>
+<h2>调试日志要求</h2>
+<p>新增日志必须满足：</p>
+<ul>
+<li>中文说明。</li>
+<li>说明当前阶段，例如：任务读取、模板解析、时间计算、写回。</li>
+<li>不输出大段文件全文。</li>
+<li>不在用户未开启 debug 时输出。</li>
+</ul>
+<h2>Legacy 注释要求</h2>
+<p>如果保留旧链路 fallback，必须写清楚：</p>
+<pre><code class="language-ts">// LEGACY-FALLBACK:
+// 仅当 snapshot 无法提供字段时使用。
+// 退出条件：prepareEdit 完整切到 EditableRecordSnapshot 后删除。
+</code></pre>
+<p>禁止没有退出条件的长期双轨。</p>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

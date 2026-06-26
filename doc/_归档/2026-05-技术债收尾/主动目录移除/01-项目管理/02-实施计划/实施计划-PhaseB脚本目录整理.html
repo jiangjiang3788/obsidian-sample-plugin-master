@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>实施计划：Phase B 脚本目录整理｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">实施计划 / Phase B / scripts</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：scripts、gates、audit、docs:index..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">IMPLEMENTATION PLAN / PHASE B</div>
+        <h1>实施计划：Phase B 脚本目录整理</h1>
+        <p class="lead">本轮目标是整理 <code>scripts/</code> 目录结构，而不是继续改业务逻辑。脚本按 gate、audit、docs、build、lib 分区，package scripts 保持原命令名不变。</p>
+        <div class="meta-row"><span class="badge good">状态：本轮完成</span><span class="badge">优先级：P1</span><span class="badge">最后更新：2026-05-14</span></div>
+      </section>
+
+      <section class="grid">
+        <article class="card full">
+          <h2>修改目标</h2>
+          <ul>
+            <li>让 <code>scripts/</code> 不再把所有 gate、audit、docs、build 工具堆在根目录。</li>
+            <li>保留 <code>npm run gate</code>、<code>npm run build</code>、<code>npm run docs:index</code> 等外部命令名，避免使用成本变化。</li>
+            <li>把 gate 共享格式化工具抽到 <code>scripts/lib/</code>。</li>
+            <li>更新 allowlist 路径和文档引用，避免脚本迁移后提示信息误导。</li>
+          </ul>
+        </article>
+
+        <article class="card full">
+          <h2>实施顺序</h2>
+          <div class="table-wrap"><table><thead><tr><th>顺序</th><th>事项</th><th>修改性质</th><th>性价比</th><th>进度</th><th>涉及文件</th><th>危险性</th><th>验收标准</th><th>最小 MVP 标准</th></tr></thead><tbody>
+            <tr><td>1</td><td>建立 scripts 子目录</td><td>文件夹整理</td><td>高</td><td>已完成</td><td><code>scripts/gates</code>、<code>scripts/audit</code>、<code>scripts/docs</code>、<code>scripts/build</code>、<code>scripts/lib</code></td><td>低</td><td>目录职责清晰</td><td>不再把新脚本直接放 scripts 根目录</td></tr>
+            <tr><td>2</td><td>迁移 gate 脚本</td><td>质量门禁归类</td><td>极高</td><td>已完成</td><td><code>scripts/gates/*</code></td><td>中</td><td><code>npm run gate</code> 仍可运行</td><td>所有 <code>*gate*</code> 脚本进入 <code>scripts/gates</code></td></tr>
+            <tr><td>3</td><td>迁移 audit/report 脚本</td><td>维护工具归类</td><td>高</td><td>已完成</td><td><code>scripts/audit/*</code></td><td>低</td><td><code>npm run arch:audit</code>、<code>npm run selectors:coverage</code> 引用新路径</td><td>审计脚本不再混在 gate 根目录</td></tr>
+            <tr><td>4</td><td>迁移 docs/build 脚本</td><td>构建工具归类</td><td>高</td><td>已完成</td><td><code>scripts/docs/generate-doc-index.mjs</code>、<code>scripts/build/fix-sourcemap.mjs</code></td><td>中</td><td><code>npm run docs:index</code>、<code>npm run build</code> 仍可运行</td><td>文档索引和 sourcemap 修复脚本有明确归属</td></tr>
+            <tr><td>5</td><td>更新 package scripts</td><td>命令入口维护</td><td>极高</td><td>已完成</td><td><code>package.json</code></td><td>中</td><td>package script 中引用的脚本文件全部存在</td><td>命令名不变，只更新内部路径</td></tr>
+            <tr><td>6</td><td>更新脚本内部相对路径</td><td>迁移修复</td><td>极高</td><td>已完成</td><td><code>arch-gate</code>、<code>feature-gate</code>、<code>arch-audit</code>、<code>generate-doc-index</code>、allowlist gate</td><td>中</td><td>脚本能从新目录解析仓库根目录和 allowlist</td><td>不改变 gate 规则，只改路径</td></tr>
+            <tr><td>7</td><td>更新技术文档和索引</td><td>文档同步</td><td>高</td><td>已完成</td><td><code>当前代码架构快照</code>、<code>技术总览</code>、<code>文件地图</code>、<code>开发规范迁移</code>、文档索引</td><td>低</td><td>文档入口不再指向旧 scripts 根路径</td><td>新增 ABC 总计划和 Phase B 计划页</td></tr>
+          </tbody></table></div>
+        </article>
+
+        <article class="card full">
+          <h2>迁移后目录</h2>
+          <pre><code>scripts/
+  gates/        架构、分层、DI、platform、public API、UI 规范等门禁
+  audit/        非阻断审计、指标、覆盖报告、边界检查
+  docs/         文档索引生成
+  build/        构建后处理，如 sourcemap 修复
+  lib/          gate/audit 共享工具
+  tsconfig.json ts-node 脚本配置</code></pre>
+        </article>
+
+        <article class="card full">
+          <h2>本地验证命令</h2>
+          <pre><code>npm run docs:index
+npm run typecheck:src
+npm run gate
+npm run test:unit
+npm run test:integration
+npm run build</code></pre>
+          <p>Phase B 只改脚本组织方式，所以核心验收是：命令名不变、路径不坏、gate 和 build 仍通过。</p>
+        </article>
+      </section>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script><script src="../../_资源/页面内容索引.js"></script><script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

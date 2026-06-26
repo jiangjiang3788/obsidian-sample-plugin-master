@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>版本路线图｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS GOVERNANCE</div>
+        <h1>版本路线图</h1>
+        <p class="lead">路线图管理的是插件产品和开发阶段，不等同于用户目标；每个阶段都要带计划时间和完成口径。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：重定位草案</span>
+          <span class="badge">最后更新：2026-05-13</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>前置条件：架构快照与实施计划分离</h2><p>进入本页路线图或开发批次前，先阅读 <a href="../../03-技术文档/00-技术全景/当前代码架构快照.html">当前代码架构快照</a> 确认代码事实，再按 <a href="开发计划/01-2026-05-工程稳定化ABC总计划.html">工程稳定化 ABC 实施计划</a> 推进 A/B/C 稳定化。架构快照只描述当前状态，实施计划负责顺序、进度和验收。</p></article>
+<article class="card full"><h2>路线图原则</h2><p>路线图不是用户目标列表，而是控制插件建设复杂度的阶段顺序。当前不继续围绕 QuickInput、Timer、Statistics 各自扩张，而是让它们回到目标闭环中承担输入、执行和反馈职责。</p><div class="callout"><strong>时间口径：</strong>计划时间用于安排开发节奏，实际时间用于复盘偏差。未来阶段可调整，但不能没有时间数据。</div></article>
+<article class="card full"><h2>阶段规划</h2><div class="table-wrap"><table><thead><tr><th>阶段</th><th>目标</th><th>主要范围</th><th>状态</th><th>计划开始</th><th>计划结束</th><th>实际开始</th><th>实际结束</th><th>完成标准</th></tr></thead><tbody><tr><td>V0 重定位</td><td>把 Think OS 定义为 Obsidian 内本地优先个人管理系统</td><td>基础入口、项目管理、功能设计、评审中心</td><td>已完成</td><td>2026-05-13</td><td>2026-05-13</td><td>2026-05-13</td><td>2026-05-13</td><td>打开首页能理解新定位、目标闭环和旧资料降级策略。</td></tr><tr><td>V0.1 治理校准</td><td>区分项目管理和用户目标管理，补齐计划时间数据</td><td>需求池、版本路线图、开发计划、数据源</td><td>进行中</td><td>2026-05-13</td><td>2026-05-13</td><td>2026-05-13</td><td>-</td><td>项目管理区清楚表达开发治理用途，每条新计划都有时间字段。</td></tr><tr><td>V1 目标闭环模型</td><td>定义目标、周期、计划、任务、执行记录、总结复盘、统计反馈的最小关系</td><td>产品模型、字段草案、功能边界</td><td>待启动</td><td>2026-05-14</td><td>2026-05-16</td><td>-</td><td>-</td><td>后续设计和实现能围绕统一关系模型展开。</td></tr><tr><td>V1.1 目标闭环 MVP 方案</td><td>设计目标 &rarr; 计划 &rarr; 任务 &rarr; 执行记录 &rarr; 总结复盘的最短路径</td><td>目标管理、周期计划、任务执行、总结 Block、验收标准</td><td>待启动</td><td>2026-05-17</td><td>2026-05-20</td><td>-</td><td>-</td><td>一个目标能完成完整闭环方案，不依赖手工拼接碎片。</td></tr><tr><td>V1.2 目标闭环 MVP 实现</td><td>实现最小可用目标闭环</td><td>核心数据、页面入口、写入与读取链路</td><td>待开发</td><td>2026-05-21</td><td>2026-05-31</td><td>-</td><td>-</td><td>一个真实目标能从创建推进到复盘。</td></tr><tr><td>V2 统计反馈</td><td>把 Statistics 校准为目标和周期反馈</td><td>Statistics View、记录聚合、反馈视图</td><td>待启动</td><td>2026-06-01</td><td>2026-06-07</td><td>-</td><td>-</td><td>统计能解释目标推进情况，并支持下一周期调整。</td></tr><tr><td>V3 AI 辅助</td><td>在闭环稳定后辅助拆解、计划和复盘</td><td>AI Input、AI Chat、复盘摘要</td><td>暂缓</td><td>2026-06-08</td><td>待定</td><td>-</td><td>-</td><td>AI 输出可追溯到目标闭环数据，不制造新的孤立记录。</td></tr><tr><td>V4 自动化</td><td>降低维护和执行成本</td><td>自动生成计划、自动汇总、自动同步文档索引</td><td>暂缓</td><td>待定</td><td>待定</td><td>-</td><td>-</td><td>重复性整理工作减少，核心数据模型仍保持可解释。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>近期优先级</h2><ol><li>2026-05-13：完成项目治理区时间化，明确它不是用户目标管理。</li><li>2026-05-14 至 2026-05-16：定义目标、周期、计划、任务、执行记录、总结、统计反馈之间的最小关系。</li><li>2026-05-17 至 2026-05-20：设计 V1 目标闭环 MVP 的页面、入口和验收标准。</li><li>2026-05-21 至 2026-05-31：进入 MVP 实现，把旧 QuickInput、Statistics、字段资料作为实现参考接入新主线。</li></ol></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

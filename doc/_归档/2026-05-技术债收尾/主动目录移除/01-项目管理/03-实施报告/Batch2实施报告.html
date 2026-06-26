@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Batch2 实施报告｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">项目管理 / MIGRATED DOC</div>
+        <h1>Batch2 实施报告</h1>
+        <p class="lead">严格按要求执行：本批目标：把剩余 record 动作统一收口到 `recordInput.usecase`。覆盖的旧链：1. `AiBatchConfirmModal -&gt; InputService.executeTemplate`2. `TimerService.createNewTaskAndStart -&gt; In</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>项目管理</td></tr><tr><td>旧路径</td><td><code>docs/BATCH2_IMPLEMENTATION_REPORT.md</code></td></tr><tr><td>原始标题</td><td>统一输入改造 Batch 2 实施报告</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>统一输入改造 Batch 2 实施报告</h1>
+<h2>1. 本批范围</h2>
+<p>严格按要求执行：</p>
+<ul>
+<li><strong>只做 record 域</strong></li>
+<li><strong>不扩到 settings / theme / layout / view 配置域</strong></li>
+<li><strong>不先全量纯化 service 内副作用</strong></li>
+<li><strong>不回退 Batch 1 已完成的 QuickInput create/edit 主链</strong></li>
+</ul>
+<p>本批目标：把剩余 record 动作统一收口到 <code>recordInput.usecase</code>。</p>
+<p>覆盖的旧链：</p>
+<ol>
+<li><code>AiBatchConfirmModal -&gt; InputService.executeTemplate</code></li>
+<li><code>TimerService.createNewTaskAndStart -&gt; InputService.executeTemplate</code></li>
+<li><code>LayoutRenderer -&gt; ItemService.completeItem</code></li>
+<li><code>LayoutRenderer -&gt; ItemService.updateItemTime</code></li>
+<li><code>TimerService.stopAndApply -&gt; ItemService.completeItem / updateItemTime</code></li>
+<li><code>submitDeleteRecord</code> 预留实现 -&gt; <strong>真实底层实现</strong></li>
+</ol>
+<hr/>
+<h2>2. 本批文件改动清单</h2>
+<h3>新增文件</h3>
+<p>本批 <strong>无新增文件</strong>。</p>
+<h3>修改文件</h3>
+<ol>
+<li><code>app/usecases/recordInput.usecase.ts</code></li>
+<li><code>app/usecases/index.ts</code></li>
+<li><code>app/bootstrap/initializeCore.ts</code></li>
+<li><code>app/bootstrap/loadTimerServices.ts</code></li>
+<li><code>core/services/InputService.ts</code></li>
+<li><code>core/types/recordInput.ts</code></li>
+<li><code>core/types/quickInput.ts</code></li>
+<li><code>features/settings/layout/LayoutRenderer.tsx</code></li>
+<li><code>features/timer/TimerService.ts</code></li>
+<li><code>platform/modals/AiBatchConfirmModal.tsx</code></li>
+<li><code>platform/modals/QuickInputModal.tsx</code></li>
+</ol>
+<hr/>
+<h2>3. 这批实际落地的动作接口签名</h2>
+<h2>3.1 <code>recordInput.usecase</code> 对外接口</h2>
+<pre><code class="language-ts">prepareCreateRecord(params: PrepareCreateRecordParams): PreparedCreateRecord
+prepareEditRecord(params: PrepareEditRecordParams): PreparedEditRecord
+
+submitCreateRecord(params: SubmitCreateRecordParams): Promise&lt;RecordSubmitResult&gt;
+submitUpdateRecord(params: SubmitUpdateRecordParams): Promise&lt;RecordSubmitResult&gt;
+submitDeleteRecord(params: SubmitDeleteRecordParams): Promise&lt;RecordSubmitResult&gt;
+submitCompleteRecord(params: SubmitCompleteRecordParams): Promise&lt;RecordSubmitResult&gt;
+submitUpdateRecordTime(params: SubmitUpdateRecordTimeParams): Promise&lt;RecordSubmitResult&gt;
+</code></pre>
+<h2>3.2 本批贴仓调整后的关键参数签名</h2>
+<h3><code>SubmitCreateRecordParams</code></h3>
+<pre><code class="language-ts">interface SubmitCreateRecordParams {
+  blockId: string;
+  themeId?: string | null;
+  formData: Record&lt;string, unknown&gt;;
+  context?: Record&lt;string, unknown&gt;;
+  signal?: AbortSignal;
+  source?: 'quickinput' | 'ai_batch' | 'timer' | 'unknown' | 'view_quick_create';
+}
+</code></pre>
+<h3><code>SubmitCompleteRecordParams</code></h3>
+<blockquote>
+<p>为了让 <code>TimerService.stopAndApply</code> 不再绕过 usecase，实际落地时增加了 <code>options</code>。</p>
+</blockquote>
+<pre><code class="language-ts">interface SubmitCompleteRecordParams {
+  itemId: string;
+  options?: {
+    duration?: number;
+    startTime?: string | null;
+    endTime?: string | null;
+  };
+  signal?: AbortSignal;
+  source?: 'timer' | 'layout_renderer' | 'unknown';
+}
+</code></pre>
+<h3><code>SubmitUpdateRecordTimeParams</code></h3>
+<blockquote>
+<p>为了和现有 timeline / edit-task UI 的真实 payload 对齐，实际落地时兼容了 <code>time/endTime</code> 与 <code>start/end</code> 两套键名。</p>
+</blockquote>
+<pre><code class="language-ts">interface SubmitUpdateRecordTimeParams {
+  itemId: string;
+  updates: {
+    time?: string | null;
+    start?: string | null;
+    endTime?: string | null;
+    end?: string | null;
+    duration?: number | string | null;
+    date?: string | null;
+  };
+  signal?: AbortSignal;
+  source?: 'timer' | 'layout_renderer' | 'unknown';
+}
+</code></pre>
+<h3><code>QuickInputSaveData</code></h3>
+<blockquote>
+<p>Batch 2 中，保留 <code>QuickInputModal -&gt; TimerService</code> 兼容回调形态，但把 payload 改成<strong>record-oriented</strong>，不再要求 TimerService 依赖 template/theme 对象直接落盘。</p>
+</blockquote>
+<pre><code class="language-ts">interface QuickInputSaveData {
+  blockId?: string;
+  themeId?: string | null;
+  context?: Record&lt;string, any&gt;;
+  formData: Record&lt;string, any&gt;;
+  source?: 'timer' | 'quickinput' | 'unknown';
+
+  // 兼容保留字段
+  template?: BlockTemplate;
+  theme?: ThemeDefinition;
+  templateId?: string | null;
+  templateSourceType?: 'block' | 'override' | null;
+}
+</code></pre>
+<hr/>
+<h2>4. 每个动作的实际落地方式</h2>
+<h2>4.1 <code>submitCreateRecord(...)</code></h2>
+<h3>已完成的能力</h3>
+<ul>
+<li>统一走 <code>RecordInputKernel.resolve/normalize/validate</code></li>
+<li>通过 <code>InputService.previewTemplateExecution(...)</code> 预计算目标文件与输出文本</li>
+<li>写入后扫描目标文件</li>
+<li>返回统一 <code>RecordSubmitResult</code></li>
+<li>尝试定位新建记录，回填：<ul>
+<li><code>affectedPath</code></li>
+<li><code>affectedRecordId</code></li>
+<li><code>followUp.startTimerForRecordId</code>（仅当定位到 task 时）</li>
+</ul>
+</li>
+</ul>
+<h3>本批新增的关键点</h3>
+<p>为了满足 <code>Timer create</code> 不再靠“猜最新 item”，本批新增了：</p>
+<ul>
+<li><code>InputService.previewTemplateExecution(...)</code></li>
+<li><code>RecordInputUseCase.locateCreatedRecord(...)</code></li>
+</ul>
+<p>定位策略不是“取扫描结果最后一条”，而是：</p>
+<ol>
+<li>先取目标文件写入前的旧 items 快照</li>
+<li>写入并扫描目标文件</li>
+<li>用<strong>签名差异 + 模板/内容/字段评分</strong>定位新建记录</li>
+<li>成功时返回 <code>affectedRecordId</code>，若是 task 再返回 <code>followUp.startTimerForRecordId</code></li>
+</ol>
+<hr/>
+<h2>4.2 <code>submitDeleteRecord(...)</code></h2>
+<h3>已完成的能力</h3>
+<ul>
+<li>不再是 placeholder</li>
+<li>真正调用底层删除实现</li>
+<li>返回统一 <code>RecordSubmitResult</code></li>
+</ul>
+<h3>底层实现</h3>
+<ul>
+<li>在 <code>InputService</code> 中新增 <code>deleteExistingRecord(item, signal?)</code></li>
+<li>task：删除单行</li>
+<li>block：删除从起始行到 <code>&lt;!-- end --&gt;</code> 的整段</li>
+<li>删除后沿用现有 service 内部 <code>scan + notify</code></li>
+</ul>
+<h3>当前状态</h3>
+<ul>
+<li><strong>底层动作已接好</strong></li>
+<li><strong>本批未把所有删除 UI 接进来</strong></li>
+<li>满足你的要求：先把底层动作和结果模型接实，再逐步迁 UI</li>
+</ul>
+<hr/>
+<h2>4.3 <code>submitCompleteRecord(...)</code></h2>
+<h3>已完成的能力</h3>
+<ul>
+<li>不再是 placeholder</li>
+<li>调用 <code>ItemService.completeItem(...)</code></li>
+<li>支持两种调用语义：<ul>
+<li>普通完成（LayoutRenderer 勾选）</li>
+<li>带 duration/start/end 的计时完成（Timer finish）</li>
+</ul>
+</li>
+<li>返回统一 <code>RecordSubmitResult</code></li>
+</ul>
+<h3>当前调用方</h3>
+<ul>
+<li><code>LayoutRenderer.handleMarkItemDone</code></li>
+<li><code>TimerService.stopAndApply</code>（open task 分支）</li>
+</ul>
+<hr/>
+<h2>4.4 <code>submitUpdateRecordTime(...)</code></h2>
+<h3>已完成的能力</h3>
+<ul>
+<li>不再是 placeholder</li>
+<li>调用 <code>ItemService.updateItemTime(...)</code></li>
+<li>兼容 timeline / modal 现有 <code>time/endTime/duration</code> payload</li>
+<li>对 <code>duration</code> 做统一数值化校验</li>
+<li>返回统一 <code>RecordSubmitResult</code></li>
+</ul>
+<h3>当前调用方</h3>
+<ul>
+<li><code>LayoutRenderer -&gt; onUpdateTaskTime</code></li>
+<li><code>TimerService.stopAndApply</code>（非 open task 分支）</li>
+</ul>
+<hr/>
+<h2>5. Batch 2 调用侧迁移结果</h2>
+<h2>5.1 AI batch</h2>
+<h3>旧链</h3>
+<p><code>AiBatchConfirmModal -&gt; InputService.executeTemplate</code></p>
+<h3>新链</h3>
+<p><code>AiBatchConfirmModal -&gt; useCases.recordInput.submitCreateRecord(...)</code></p>
+<h3>实际改动</h3>
+<ul>
+<li>单条保存：改为读取 <code>RecordSubmitResult</code></li>
+<li>全部保存：循环调用 <code>submitCreateRecord(...)</code></li>
+<li>在 modal 内新增了一个<strong>批量汇总结果</strong>逻辑：<ul>
+<li>全成功 -&gt; <code>success</code></li>
+<li>全失败 -&gt; <code>error</code></li>
+<li>部分成功 -&gt; <code>partial_success</code></li>
+</ul>
+</li>
+</ul>
+<h3>保留的旧交互</h3>
+<ul>
+<li>左侧逐条切换</li>
+<li>当前条编辑</li>
+<li>当前条保存 / 跳过</li>
+<li>保存全部</li>
+<li>最终完成统计</li>
+</ul>
+<hr/>
+<h2>5.2 Timer create</h2>
+<h3>旧链</h3>
+<p><code>QuickInputModal(onSave) -&gt; TimerService.createNewTaskAndStart -&gt; InputService.executeTemplate</code></p>
+<h3>新链</h3>
+<p><code>QuickInputModal(onSave) -&gt; TimerService.createNewTaskAndStart -&gt; useCases.recordInput.submitCreateRecord(...)</code></p>
+<h3>实际改动</h3>
+<ul>
+<li><code>QuickInputModal</code> 的 timer 回调 payload 改为 record-oriented：<code>blockId/themeId/formData/context</code></li>
+<li><code>TimerService.createNewTaskAndStart</code> 改为统一调用 <code>submitCreateRecord(...)</code></li>
+<li><code>TimerService</code> 只在 usecase 返回 <code>followUp.startTimerForRecordId</code> 时启动计时</li>
+<li>不再通过“扫描后猜最后一个 item”来开始计时</li>
+</ul>
+<h3>结果</h3>
+<ul>
+<li>满足“Timer 后续 startOrResume(...) 不再靠猜最新 item”</li>
+<li>QuickInput create/edit 主链没有回退</li>
+</ul>
+<hr/>
+<h2>5.3 LayoutRenderer complete / time_update</h2>
+<h3>旧链</h3>
+<ul>
+<li><code>LayoutRenderer -&gt; ItemService.completeItem</code></li>
+<li><code>LayoutRenderer -&gt; ItemService.updateItemTime</code></li>
+</ul>
+<h3>新链</h3>
+<ul>
+<li><code>LayoutRenderer -&gt; useCases.recordInput.submitCompleteRecord(...)</code></li>
+<li><code>LayoutRenderer -&gt; useCases.recordInput.submitUpdateRecordTime(...)</code></li>
+</ul>
+<h3>实际改动</h3>
+<ul>
+<li><code>onUpdateTaskTime</code> 改成调用 <code>recordInput.submitUpdateRecordTime(...)</code></li>
+<li><code>handleMarkItemDone</code> 改成调用 <code>recordInput.submitCompleteRecord(...)</code></li>
+<li>shared/ui 仍只拿 handler，不知道底层 service</li>
+</ul>
+<h3>现状说明</h3>
+<ul>
+<li><code>LayoutRenderer</code> 仍保留 <code>itemService</code> prop 透传形态，以减少本批改动面</li>
+<li>但<strong>record mutation 已不再从 LayoutRenderer 直连 ItemService</strong></li>
+</ul>
+<hr/>
+<h2>5.4 Timer finish</h2>
+<h3>旧链</h3>
+<p><code>TimerService.stopAndApply -&gt; ItemService.completeItem / updateItemTime</code></p>
+<h3>新链</h3>
+<p><code>TimerService.stopAndApply -&gt; useCases.recordInput.submitCompleteRecord / submitUpdateRecordTime</code></p>
+<h3>实际改动</h3>
+<ul>
+<li>仍由 TimerService 负责计算：<ul>
+<li><code>totalMinutes</code></li>
+<li><code>startTime</code></li>
+<li><code>endTime</code></li>
+</ul>
+</li>
+<li>但真正的 record mutation 已统一交给 usecase</li>
+<li>TimerService 只负责：<ul>
+<li>选择 complete 还是 time_update</li>
+<li>读取 <code>RecordSubmitResult</code></li>
+<li>通知 UI</li>
+<li>清理 timer state</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h2>6. 哪些旧直连已经断开</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>旧直连</th>
+<th>当前状态</th>
+<th>新落点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AiBatchConfirmModal -&gt; InputService.executeTemplate</code></td>
+<td><strong>已断开</strong></td>
+<td><code>useCases.recordInput.submitCreateRecord(...)</code></td>
+</tr>
+<tr>
+<td><code>TimerService.createNewTaskAndStart -&gt; InputService.executeTemplate</code></td>
+<td><strong>已断开</strong></td>
+<td><code>useCases.recordInput.submitCreateRecord(...)</code></td>
+</tr>
+<tr>
+<td><code>LayoutRenderer -&gt; ItemService.completeItem</code></td>
+<td><strong>已断开</strong></td>
+<td><code>useCases.recordInput.submitCompleteRecord(...)</code></td>
+</tr>
+<tr>
+<td><code>LayoutRenderer -&gt; ItemService.updateItemTime</code></td>
+<td><strong>已断开</strong></td>
+<td><code>useCases.recordInput.submitUpdateRecordTime(...)</code></td>
+</tr>
+<tr>
+<td><code>TimerService.stopAndApply -&gt; ItemService.completeItem</code></td>
+<td><strong>已断开</strong></td>
+<td><code>useCases.recordInput.submitCompleteRecord(...)</code></td>
+</tr>
+<tr>
+<td><code>TimerService.stopAndApply -&gt; ItemService.updateItemTime</code></td>
+<td><strong>已断开</strong></td>
+<td><code>useCases.recordInput.submitUpdateRecordTime(...)</code></td>
+</tr>
+<tr>
+<td><code>QuickInputModal(create/edit) -&gt; InputService</code></td>
+<td><strong>保持 Batch 1 已断开</strong></td>
+<td><code>useCases.recordInput.submitCreateRecord/submitUpdateRecord(...)</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3>核对结果</h3>
+<p>本批满足：</p>
+<ul>
+<li><strong>没有新增任何新的 UI -&gt; InputService 直连</strong></li>
+<li><strong>没有新增任何新的 UI/feature -&gt; ItemService 直连</strong></li>
+<li><strong>QuickInput Batch 1 主链未回退</strong></li>
+</ul>
+<hr/>
+<h2>7. 兼容策略</h2>
+<h2>7.1 QuickInput timer 兼容口保留</h2>
+<p>本批没有直接删除 <code>QuickInputModal.onSave</code> 兼容口，而是把它改成：</p>
+<ul>
+<li>仍保留 <code>QuickInputModal -&gt; TimerService</code> 这条 UI 协调关系</li>
+<li>但 payload 不再偏向模板执行，而改成 <strong>record 提交参数</strong></li>
+</ul>
+<p>这样做的好处：</p>
+<ul>
+<li>不需要在本批把 Timer UI 和 QuickInput UI 一次性重构掉</li>
+<li>能保持小步迁移</li>
+<li>又能让真正的写动作收口到 usecase</li>
+</ul>
+<h2>7.2 <code>QuickInputSaveData</code> 向后兼容</h2>
+<ul>
+<li>新增 <code>blockId/themeId/context/source</code></li>
+<li>旧的 <code>template/theme/templateId/templateSourceType</code> 先保留为 optional</li>
+<li>避免其它潜在调用点被立刻打断</li>
+</ul>
+<h2>7.3 service 内副作用不先抽干</h2>
+<p>严格按约束执行：</p>
+<ul>
+<li><code>submitCreateRecord</code> 仍在 usecase 做 <code>scan + notify</code></li>
+<li><code>InputService.updateExistingRecord/deleteExistingRecord</code> 仍保留内部 <code>scan + notify</code></li>
+<li><code>ItemService.completeItem/updateItemTime</code> 仍保留内部 <code>scan + notify</code></li>
+</ul>
+<p>本批只保证：<strong>新增动作链收口到 usecase</strong>，不做全量副作用纯化。</p>
+<h2>7.4 LayoutRenderer 最小改动</h2>
+<ul>
+<li><code>itemService</code> prop 还保留</li>
+<li>但 mutation handler 已切到 <code>recordInput.usecase</code></li>
+<li>这样既断开旧直连，又避免 Renderer/Module 层级大面积连锁改动</li>
+</ul>
+<hr/>
+<h2>8. 风险点</h2>
+<h2>8.1 新建记录定位是“稳健启发式”，不是强事务 ID</h2>
+<p>为了让 Timer create 不再猜“最新 item”，本批新增了定位逻辑；
+但当前底层并没有“create 返回稳定 recordId”的事务能力，所以现在仍是：</p>
+<ul>
+<li>旧快照 vs 新扫描差异</li>
+<li>配合模板/内容/字段评分定位</li>
+</ul>
+<h3>风险</h3>
+<p>如果出现“<strong>同文件同 header 下创建一条与已有记录几乎完全相同的记录</strong>”，定位可能仍有歧义。</p>
+<h3>现状判断</h3>
+<p>这已经明显优于“直接猜最后一条”，但还不是最终态。</p>
+<hr/>
+<h2>8.2 create 的 abort 仍是 best-effort</h2>
+<p>本批虽然在 <code>submitCreateRecord(...)</code> 中保留了 <code>AbortSignal</code> 检查，但：</p>
+<ul>
+<li><code>InputService.executeTemplate(...)</code> 仍不接 <code>signal</code></li>
+<li>所以 create 无法像 edit 一样做到 service 级中断</li>
+</ul>
+<h3>现状</h3>
+<ul>
+<li>提交前 / 提交后仍会检查 abort</li>
+<li>但写盘动作开始后不能中断</li>
+</ul>
+<hr/>
+<h2>8.3 副作用仍分散在 usecase / InputService / ItemService</h2>
+<p>这批是刻意接受的技术债，不是漏改。</p>
+<h3>当前分布</h3>
+<ul>
+<li>create：usecase 负责 scan/notify</li>
+<li>update/delete：<code>InputService</code> 内负责 scan/notify</li>
+<li>complete/time_update：<code>ItemService</code> 内负责 scan/notify</li>
+</ul>
+<h3>含义</h3>
+<ul>
+<li>动作入口已统一</li>
+<li>但副作用归属还没有完全统一</li>
+</ul>
+<p>这符合你给的硬约束：<strong>本批先收动作，不先抽干副作用</strong>。</p>
+<hr/>
+<h2>8.4 AI batch 保存全部仍是逐条 scan/notify</h2>
+<p>本批没有引入“批量事务 / 批量延迟刷新”。</p>
+<h3>影响</h3>
+<ul>
+<li>保存全部时会一条条调用 <code>submitCreateRecord(...)</code></li>
+<li>每条记录仍可能触发自己的 scan/notify</li>
+</ul>
+<h3>这是有意保留</h3>
+<p>因为你明确要求：本批不要顺手重构 DataStore / VaultWatcher / service side effects。</p>
+<hr/>
+<h2>8.5 Timer create 仍是“提交后立即关闭 modal”</h2>
+<p><code>QuickInputModal</code> 的 onSave 兼容口保留，所以 timer quick-create 仍是：</p>
+<ol>
+<li>modal 提交</li>
+<li>立即关闭</li>
+<li>TimerService 异步调用 usecase</li>
+<li>成功或失败后再弹 Notice</li>
+</ol>
+<h3>风险</h3>
+<ul>
+<li>失败时不会把 modal 保持在原地</li>
+<li>交互上仍是“close-first”</li>
+</ul>
+<h3>这也是本批有意保留</h3>
+<p>因为本批目标是<strong>动作收口</strong>，不是重做 timer quick-create UX。</p>
+<hr/>
+<h2>9. Batch 2 验收表</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>验收项</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AiBatchConfirmModal</code> 不再直调 <code>InputService</code></td>
+<td><strong>通过</strong></td>
+<td>已切到 <code>useCases.recordInput.submitCreateRecord(...)</code></td>
+</tr>
+<tr>
+<td><code>TimerService.createNewTaskAndStart</code> 不再直调 <code>InputService</code></td>
+<td><strong>通过</strong></td>
+<td>已切到 <code>submitCreateRecord(...)</code></td>
+</tr>
+<tr>
+<td><code>LayoutRenderer</code> 不再直调 <code>ItemService.completeItem/updateItemTime</code></td>
+<td><strong>通过</strong></td>
+<td>已切到 <code>submitCompleteRecord(...) / submitUpdateRecordTime(...)</code></td>
+</tr>
+<tr>
+<td><code>TimerService.stopAndApply</code> 不再直调 <code>ItemService.completeItem/updateItemTime</code></td>
+<td><strong>通过</strong></td>
+<td>已切到统一动作</td>
+</tr>
+<tr>
+<td><code>submitDeleteRecord</code> 已接真实底层动作</td>
+<td><strong>通过</strong></td>
+<td>已接 <code>InputService.deleteExistingRecord(...)</code></td>
+</tr>
+<tr>
+<td><code>submitCompleteRecord</code> 已接真实底层动作</td>
+<td><strong>通过</strong></td>
+<td>已接 <code>ItemService.completeItem(...)</code></td>
+</tr>
+<tr>
+<td><code>submitUpdateRecordTime</code> 已接真实底层动作</td>
+<td><strong>通过</strong></td>
+<td>已接 <code>ItemService.updateItemTime(...)</code></td>
+</tr>
+<tr>
+<td>QuickInput Batch 1 主链未回退</td>
+<td><strong>通过</strong></td>
+<td>create/edit 仍走 <code>recordInput.usecase</code></td>
+</tr>
+<tr>
+<td>未顺手扩到 settings / layout / view 配置域</td>
+<td><strong>通过</strong></td>
+<td>未迁配置域写链</td>
+</tr>
+<tr>
+<td>未顺手重构整个 DataStore / VaultWatcher</td>
+<td><strong>通过</strong></td>
+<td>本批未碰</td>
+</tr>
+<tr>
+<td>未一次性抽干 service 内 scan/notify</td>
+<td><strong>通过</strong></td>
+<td>保持现状，仅动作收口</td>
+</tr>
+</tbody>
+</table></div>
+<hr/>
+<h2>10. 建议的 Batch 3 前置核对</h2>
+<p>这不是重开总方案，只是基于当前代码状态的下一步建议：</p>
+<ol>
+<li>把 <code>delete</code> 的实际 UI 入口逐步接到 <code>submitDeleteRecord(...)</code></li>
+<li>评估是否给 create/update/delete/complete/time_update 建立统一副作用归属</li>
+<li>评估是否给 create 引入真正稳定的 <code>createdRecordLocator</code> / transaction id</li>
+<li>修正 <code>TimerRow</code> 那类“按钮文案是编辑，实际不一定是 edit mode”的入口语义</li>
+</ol>
+<hr/>
+<h2>11. 本批一句话结论</h2>
+<p><strong>Batch 2 已完成“剩余 record 动作收口”的第一版落地。</strong></p>
+<p>现在 record 域的 create / update / delete / complete / time_update 都已经有统一的 usecase 落点；
+AI batch、Timer create、LayoutRenderer、Timer finish 这几条旧直连都已断开；
+同时仍遵守了“小步迁移、不扩配置域、不先抽干副作用”的约束。</p>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

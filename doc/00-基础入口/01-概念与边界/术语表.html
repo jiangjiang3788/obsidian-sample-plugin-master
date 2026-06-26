@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>术语表｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>术语表</h1>
+        <p class="lead">固定个人管理系统和目标闭环里的核心术语，避免旧模块名继续主导产品理解。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：重定位主线</span>
+          <span class="badge">最后更新：2026-05-13</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>目标闭环术语</h2><div class="table-wrap"><table><thead><tr><th>术语</th><th>中文理解</th><th>项目里的意义</th></tr></thead><tbody><tr><td>Goal</td><td>目标</td><td>个人管理系统的方向源头，回答“我要推进什么”。</td></tr><tr><td>Cycle</td><td>周期</td><td>目标被推进的时间容器，例如周、月、季度。</td></tr><tr><td>Plan</td><td>计划</td><td>用户对某个周期的承诺，回答“这一周期打算做什么”。</td></tr><tr><td>Task</td><td>任务</td><td>可执行动作，回答“今天或现在要做什么”。</td></tr><tr><td>Execution Record</td><td>执行记录</td><td>任务完成、计时、结果、次数等实际发生的证据。</td></tr><tr><td>Review</td><td>总结复盘</td><td>关闭一个周期，解释完成、偏差、原因和下一步调整。</td></tr><tr><td>Statistics Feedback</td><td>统计反馈</td><td>用数据回答目标推进情况，而不是只展示分类报表。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>现有实现术语的新解释</h2><div class="table-wrap"><table><thead><tr><th>术语</th><th>中文理解</th><th>新定位下的意义</th></tr></thead><tbody><tr><td>Theme</td><td>主题</td><td>分类维度，不等同于目标；例如“学习/英语”是主题，“本季度雅思听力提升”才是目标。</td></tr><tr><td>Block</td><td>记录模板/记录块</td><td>承载计划、总结、笔记等记录形态；需要通过 recordRole 挂入闭环。</td></tr><tr><td>View</td><td>视图</td><td>观察和操作闭环数据的窗口，不应反向决定产品模型。</td></tr><tr><td>QuickInput</td><td>快速输入</td><td>快速创建目标、计划、任务、复盘等记录的入口。</td></tr><tr><td>Timer</td><td>计时器</td><td>执行记录来源，用于证明任务投入。</td></tr><tr><td>Statistics</td><td>统计视图</td><td>目标复盘的证据层，优先服务目标和周期解释。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>Obsidian 与架构术语</h2><div class="table-wrap"><table><thead><tr><th>术语</th><th>中文理解</th><th>在本项目中的用法</th></tr></thead><tbody><tr><td>Vault</td><td>库</td><td>Obsidian 的本地文件集合，插件读取和写入 Markdown 的主要空间。</td></tr><tr><td>Command</td><td>命令</td><td>用户可通过命令面板触发的动作。</td></tr><tr><td>Core</td><td>核心层</td><td>放业务服务、类型、工具、纯逻辑，原则上不直接依赖 Obsidian UI。</td></tr><tr><td>Platform</td><td>平台适配层</td><td>封装 Obsidian API，降低核心层对宿主环境的直接依赖。</td></tr><tr><td>Feature</td><td>功能层</td><td>按用户能力组织 UI、命令注册、功能接入。</td></tr><tr><td>Gate</td><td>质量门禁</td><td>脚本级检查，防止架构边界被破坏。</td></tr></tbody></table></div></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

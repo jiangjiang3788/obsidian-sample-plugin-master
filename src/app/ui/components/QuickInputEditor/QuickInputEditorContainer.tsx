@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 
 import { selectSettings, useSelector, useUseCases } from '@/app/public';
 import type { GoalDefinition, RecordInputMeta, ThemeDefinition } from '@core/public';
-import { GoalTemplateResolver, dayjs, getEffectiveCoreBlocks, getGoalTemplateVariants, getGoalTemplates, normalizeCoreBlockSettings, resolveDerivedPeriod, resolveTemplatePeriodPolicy, getLeafPath, getTemplateFieldSemantic, renderTemplate, splitGoalPath } from '@core/public';
+import { GoalTemplateResolver, dayjs, getEffectiveCoreBlocks, getGoalTemplateVariants, getGoalTemplates, resolveDerivedPeriod, resolveTemplatePeriodPolicy, getLeafPath, getTemplateFieldSemantic, renderTemplate, splitGoalPath } from '@core/public';
 import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/public';
 
 import { QuickInputEditorView } from './QuickInputEditorView';
@@ -53,7 +53,7 @@ export interface QuickInputEditorState {
   theme: ThemeDefinition | null;
   templateId: string | null;
   templateVariantId?: string | null;
-  templateSourceType: 'core-block' | 'goal-template' | 'legacy-block' | null;
+  templateSourceType: 'core-block' | 'goal-template' | null;
   fieldSources?: QuickInputFieldSourceMap;
   meta?: RecordInputMeta;
   /** 完整路径主题，例如：学习/英语/听力。 */
@@ -154,9 +154,8 @@ function sortGoalsLikePresetMatrix(goals: GoalDefinition[]): GoalDefinition[] {
   });
 }
 
-function resolveQuickInputCoreBlockId(fullSettings: any, blockId: string): string {
-  const coreSettings = normalizeCoreBlockSettings(fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks || []);
-  return String(blockId || '').startsWith('core.') ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
+function resolveQuickInputCoreBlockId(_fullSettings: any, blockId: string): string {
+  return String(blockId || '');
 }
 
 function goalHasDirectEnabledPreset(fullSettings: any, goal: GoalDefinition, coreBlockId: string): boolean {

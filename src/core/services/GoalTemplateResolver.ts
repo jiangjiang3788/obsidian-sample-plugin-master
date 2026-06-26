@@ -1,10 +1,10 @@
 import type { BlockTemplate, ThemeDefinition, ThinkSettings } from '@/core/types/schema';
 import type { GoalDefinition, GoalSettings } from '@/core/goal';
 import { findGoalTemplate, resolveTemplatePeriodPolicy, splitGoalPath } from '@/core/goal';
-import { getCoreBlockById, normalizeCoreBlockSettings } from '@/core/blocks';
+import { getCoreBlockById } from '@/core/blocks';
 import { ThemeMetadataResolver } from '@/core/themeMetadata';
 
-export type GoalTemplateSourceType = 'core-block' | 'goal-template' | 'legacy-block' | null;
+export type GoalTemplateSourceType = 'core-block' | 'goal-template' | null;
 
 export interface GoalTemplateResolveInput {
   settings: ThinkSettings;
@@ -71,8 +71,7 @@ function mergeTemplate(base: BlockTemplate, patch: Partial<BlockTemplate> & { de
 export class GoalTemplateResolver {
   static resolve(input: GoalTemplateResolveInput): GoalTemplateResolveResult {
     const { settings, blockId } = input;
-    const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
-    const effectiveBlockId = String(blockId || '').startsWith('core.') ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
+    const effectiveBlockId = blockId;
     const goal = findGoal(settings.goalSettings, input.goalId, input.goalPath);
     const themePathFromId = input.themeId
       ? settings.inputSettings?.themes?.find((candidate) => candidate.id === input.themeId)?.path ?? null
@@ -81,17 +80,12 @@ export class GoalTemplateResolver {
     const theme = ThemeMetadataResolver.resolveThemeForRender(settings, effectiveThemePath);
 
     const coreBlock = getCoreBlockById(settings, effectiveBlockId);
-    const legacyBase = settings.inputSettings?.blocks?.find((block) => block.id === blockId || block.id === effectiveBlockId) || null;
 
-    // New main chain: Goal + Block. Theme is metadata only (icon/color/path), not a template selector.
-    const baseTemplate = coreBlock || legacyBase;
+    // Single-user main chain: Goal + CoreBlock. Theme is metadata only (icon/color/path), not a template selector.
+    const baseTemplate = coreBlock;
     if (!baseTemplate) {
-      // MIGRATION CLOSEOUT:
-      // Runtime no longer falls back to Theme × Block override resolution.
-      // After theme forms are migrated, the only allowed chain is:
-      // GoalTemplate -> CoreBlock -> legacy base block. If even the base block
-      // cannot be found, return an explicit empty result instead of silently
-      // reviving removed theme-template overrides.
+      // 单人版收敛：运行时不再从旧 Block / ThemeOverride 回退。
+      // 找不到 CoreBlock 时直接返回空结果，由调用方提示配置错误。
       return {
         template: null,
         theme,
@@ -116,12 +110,8 @@ export class GoalTemplateResolver {
       };
     }
 
-    if (coreBlock) {
-      const policy = resolveTemplatePeriodPolicy(baseTemplate as any);
-      const template = policy ? { ...(baseTemplate as any), periodPolicy: policy } : { ...(baseTemplate as any), periodPolicy: undefined, granularity: undefined };
-      return { template, theme, goal, templateId: coreBlock.id, templateSourceType: 'core-block', effectiveBlockId, templateVariantId: null };
-    }
-
-    return { template: baseTemplate, theme, goal, templateId: legacyBase?.id || null, templateSourceType: 'legacy-block', effectiveBlockId, templateVariantId: null };
+    const policy = resolveTemplatePeriodPolicy(baseTemplate as any);
+    const template = policy ? { ...(baseTemplate as any), periodPolicy: policy } : { ...(baseTemplate as any), periodPolicy: undefined, granularity: undefined };
+    return { template, theme, goal, templateId: baseTemplate.id, templateSourceType: 'core-block', effectiveBlockId, templateVariantId: null };
   }
 }

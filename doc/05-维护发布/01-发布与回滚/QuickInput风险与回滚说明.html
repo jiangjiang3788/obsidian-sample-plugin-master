@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickInput 风险与回滚说明｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">维护发布 / MIGRATED DOC</div>
+        <h1>QuickInput 风险与回滚说明</h1>
+        <p class="lead">当前策略是：1. 先写入新位置2. 再删除旧记录3. 删除失败则返回 partial_success风险：回滚方式：风险：回滚方式：风险：回滚方式：风险：处理原则：如果线上出现严重问题，按这个顺序回滚：1. 关闭迁移保存，恢复为路径变化阻止2. 保留任务读取修复</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>维护发布</td></tr><tr><td>旧路径</td><td><code>docs/quickinput-risk-and-rollback.md</code></td></tr><tr><td>原始标题</td><td>QuickInput 风险与回滚说明</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>QuickInput 风险与回滚说明</h1>
+<h2>高风险点</h2>
+<h3>1. 路径变化迁移保存</h3>
+<p>当前策略是：</p>
+<ol>
+<li>先写入新位置</li>
+<li>再删除旧记录</li>
+<li>删除失败则返回 partial_success</li>
+</ol>
+<p>风险：</p>
+<ul>
+<li>删除旧记录失败会产生一新一旧两条记录</li>
+<li>这是有意保守设计，优先避免数据丢失</li>
+</ul>
+<p>回滚方式：</p>
+<ul>
+<li>将 <code>move_and_replace</code> 行为改回阻止保存</li>
+<li>保留 OutputPlan 预览和一致性校验</li>
+</ul>
+<h3>2. 任务写回保真</h3>
+<p>风险：</p>
+<ul>
+<li>旧任务行里有非常规格式时，保留逻辑可能追加不完全</li>
+<li>新模板如果也输出同类字段，需要防重复</li>
+</ul>
+<p>回滚方式：</p>
+<ul>
+<li>保留原始任务行备份</li>
+<li>如果发现重复字段，优先修去重规则，不要回退到整行盲替换</li>
+</ul>
+<h3>3. 时间联动</h3>
+<p>风险：</p>
+<ul>
+<li>默认值注入和用户手动修改的优先级可能冲突</li>
+</ul>
+<p>回滚方式：</p>
+<ul>
+<li>只在初始化默认值阶段触发联动</li>
+<li>用户手动修改阶段保留现有交互计算</li>
+</ul>
+<h3>4. Legacy fallback</h3>
+<p>风险：</p>
+<ul>
+<li>旧 <code>editStateResolver</code> 仍存在 fallback</li>
+<li>如果 snapshot 信息缺失，可能退回旧推断逻辑</li>
+</ul>
+<p>处理原则：</p>
+<ul>
+<li>fallback 只允许兜底，不允许新增业务依赖</li>
+<li>相关代码必须保留 <code>LEGACY-FALLBACK</code> 或 <code>CLOSEOUT-GUARD</code> 注释</li>
+</ul>
+<h2>推荐回滚顺序</h2>
+<p>如果线上出现严重问题，按这个顺序回滚：</p>
+<ol>
+<li>关闭迁移保存，恢复为路径变化阻止</li>
+<li>保留任务读取修复</li>
+<li>保留模板识别 guard</li>
+<li>保留保存位置预览，但不执行 move_and_replace</li>
+<li>最后再考虑回退时间联动</li>
+</ol>
+<p>不要优先回退任务内容读取，因为它修复的是核心问题。</p>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

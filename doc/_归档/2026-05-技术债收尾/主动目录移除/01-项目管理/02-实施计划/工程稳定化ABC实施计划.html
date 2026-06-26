@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>工程稳定化 ABC 实施计划｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">实施计划 / A-B-C / 工程稳定化</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：Phase A、Phase B、Phase C、CI、scripts..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">IMPLEMENTATION PLAN / ENGINEERING STABILIZATION</div>
+        <h1>工程稳定化 ABC 实施计划</h1>
+        <p class="lead">本计划是当前工程化整理的总入口。架构快照只描述“现在是什么”，本页描述“接下来按什么顺序做”。完成 A/B/C 后，再进入 Goal/Cycle/Record 路线图功能开发。</p>
+        <div class="meta-row"><span class="badge good">状态：Phase B 执行中</span><span class="badge">最后更新：2026-05-14</span><span class="badge">位置：01-项目管理 / 02-实施计划</span></div>
+      </section>
+
+      <section class="grid">
+        <article class="card full">
+          <h2>总体原则</h2>
+          <ul>
+            <li><strong>架构快照</strong>只放当前事实：分层、模块、验证状态、边界约束。</li>
+            <li><strong>实施计划</strong>独立成文：有顺序、有验收、有风险、有状态。</li>
+            <li>每个 Phase 只解决一个稳定化主题，避免“边整理边加功能”。</li>
+            <li>每个 Phase 完成后必须更新文档索引，并跑 <code>typecheck / gate / test / build</code> 中相应验证。</li>
+          </ul>
+        </article>
+
+        <article class="card full">
+          <h2>ABC 总览</h2>
+          <div class="table-wrap"><table><thead><tr><th>Phase</th><th>主题</th><th>目标</th><th>状态</th><th>主要产物</th><th>验收标准</th><th>下一步</th></tr></thead><tbody>
+            <tr><td>A</td><td>类型收尾</td><td>清空 <code>npm run typecheck:src</code> 暴露的类型债</td><td>已完成</td><td><a href="实施计划-PhaseA类型收尾.html">Phase A 类型收尾计划</a></td><td><code>typecheck:src</code>、gate、unit、integration、build 全绿</td><td>冻结为稳定基线</td></tr>
+            <tr><td>B</td><td>脚本目录整理</td><td>把 scripts 根目录按 gates/audit/docs/build/lib 分区，降低维护成本</td><td>本轮完成</td><td><a href="实施计划-PhaseB脚本目录整理.html">Phase B 脚本目录整理计划</a></td><td><code>npm run gate</code>、<code>npm run docs:index</code>、<code>npm run build</code> 仍可运行</td><td>本地完整验证后进入 Phase C</td></tr>
+            <tr><td>C</td><td>CI 与长期维护线</td><td>把已经全绿的本地命令固化为自动化验证</td><td>未开始</td><td>待建 <code>.github/workflows/ci.yml</code> 或本地等价脚本</td><td>PR/提交前能自动跑 typecheck、gate、unit、integration、build</td><td>完成后再进入路线图功能开发</td></tr>
+          </tbody></table></div>
+        </article>
+
+        <article class="card full">
+          <h2>执行顺序</h2>
+          <ol>
+            <li><strong>先做 A：</strong>类型系统全绿，确认工程本身没有类型层面的未收口接口。</li>
+            <li><strong>再做 B：</strong>整理工具脚本目录，减少 gate/audit/docs/build 全堆在根目录的维护噪音。</li>
+            <li><strong>最后做 C：</strong>用 CI 或等价本地脚本把稳定化成果固化，避免后续功能开发重新打破边界。</li>
+          </ol>
+          <div class="callout"><strong>进入路线图的最低门槛：</strong><code>npm run typecheck:src</code>、<code>npm run gate</code>、<code>npm run test:unit</code>、<code>npm run test:integration</code>、<code>npm run build</code> 全绿。</div>
+        </article>
+
+        <article class="card full">
+          <h2>和架构快照的关系</h2>
+          <p><a href="../00-计划与路线/当前代码架构快照.html">当前代码架构快照</a> 是事实页，不再承担执行计划功能。本页及各 Phase 页面承担实施顺序、进度和验收记录。</p>
+        </article>
+      </section>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script><script src="../../_资源/页面内容索引.js"></script><script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

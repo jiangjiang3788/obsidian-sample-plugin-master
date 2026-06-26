@@ -62,5 +62,4 @@ export const DEFAULT_CORE_BLOCKS: CoreBlockDefinition[] = [
 export const DEFAULT_CORE_BLOCK_SETTINGS: CoreBlockSettings = {
   enabledCoreBlockIds: DEFAULT_CORE_BLOCKS.map((block) => block.id),
   patches: [],
-  legacyBlockMap: {},
 };

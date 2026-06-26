@@ -44,7 +44,7 @@ export interface QuickInputEditorViewProps {
   showTimeDirectionControl?: boolean;
   currentThemePath?: string | null;
   currentGoalPath?: string | null;
-  templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null;
+  templateSourceType?: 'core-block' | 'goal-template' | null;
   fieldSourceSummary?: Record<string, number>;
   currentPeriodLabel?: string | null;
 }

@@ -69,7 +69,7 @@ export interface ParsedRecordSnapshot {
   };
   templateHint: {
     templateId: string | null;
-    templateSourceType: 'core-block' | 'goal-template' | 'legacy-block' | null;
+    templateSourceType: 'core-block' | 'goal-template' | null;
   };
   extra: Record<string, unknown>;
 }

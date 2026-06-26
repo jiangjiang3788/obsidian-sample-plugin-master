@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>视图数据筛选管线｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">Think OS 插件文档系统</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：useViewData、FilterRule、globalFilters、viewModel、pipeline..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">TECHNICAL FLOW</div>
+        <h1>视图数据筛选管线</h1>
+        <p class="lead">本页定义全局数据筛选的技术分层：Layout 保存全局规则，ViewInstance 保存局部规则，core 提供纯筛选管线，视图只消费处理后的 items。</p>
+        <div class="meta-row"><span class="badge warn">状态：实施中，特殊视图收口已落地</span><span class="badge">最后更新：2026-05-20</span><span class="badge">格式：HTML</span><span class="badge">生命周期：长期技术事实候选</span></div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>目标数据流</h2><pre class="mono">LayoutRenderer
+  -> ViewToolbar
+     -> DataFilterPanel
+        -> RuleBuilder
+        -> layout.globalFilters
+  -> ViewContent
+     -> useViewData
+        -> applyViewQueryPipeline
+           -> layout global filters
+           -> viewInstance filters
+           -> keyword
+           -> date / period
+           -> sort
+     -> ViewContainer / viewModel</pre></article>
+<article class="card full"><h2>状态真源</h2><div class="table-wrap"><table><thead><tr><th>状态</th><th>位置</th><th>生命周期</th><th>职责</th><th>不负责</th></tr></thead><tbody><tr><td><code>Layout.globalFilters</code></td><td><code>src/core/types/schema.ts</code></td><td>持久化</td><td>toolbar 全局数据筛选。</td><td>不保存单个视图私有筛选。</td></tr><tr><td><code>ViewInstance.filters</code></td><td><code>src/core/types/schema.ts</code></td><td>持久化</td><td>某个视图模块自己的局部筛选。</td><td>不承担整个 layout 的筛选。</td></tr><tr><td><code>keyword</code></td><td>运行态 / 视图入参</td><td>临时</td><td>搜索关键词。</td><td>不写回 layout。</td></tr><tr><td><code>selectedThemes</code> / <code>selectedCategories</code></td><td>旧 Layout 字段</td><td>兼容期</td><td>读取旧数据、转换为规则。</td><td>不继续扩展新能力。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>核心边界</h2><div class="table-wrap"><table><thead><tr><th>层级</th><th>可以做</th><th>不应该做</th><th>相关文件</th></tr></thead><tbody><tr><td>core</td><td>定义 <code>FilterRule</code>、字段读取、操作符、纯筛选管线。</td><td>不 import Preact、MUI、Obsidian UI。</td><td><code>schema.ts</code>、<code>fields.ts</code>、<code>itemFilter.ts</code>、<code>viewQueryPipeline.ts</code></td></tr><tr><td>features/settings/layout</td><td>组合 layout 渲染、面板、持久化更新。</td><td>不复制筛选算法。</td><td><code>LayoutRenderer.tsx</code>、<code>DataFilterPanel.tsx</code></td></tr><tr><td>features/settings/viewEditors</td><td>提供规则编辑器。</td><td>不决定规则保存到哪个状态源。</td><td><code>RuleBuilder.tsx</code></td></tr><tr><td>shared/ui/views</td><td>显示通用 toolbar 和视图容器。</td><td>不直接依赖 DataStore/useCases，不持久化设置。</td><td><code>ViewToolbar.tsx</code>、legacy filter 组件</td></tr><tr><td>viewModels</td><td>做分组、统计、展示模型。</td><td>不重复执行 layout 级全局筛选。</td><td><code>taskExecutionViewModel.ts</code>、<code>timelineViewModel.ts</code>、<code>statisticsViewModel.ts</code></td></tr></tbody></table></div></article>
+<article class="card full"><h2>建议接口草案</h2><pre class="mono">export interface ViewQueryInput {
+  items: Item[];
+  layoutFilters?: FilterRule[];
+  viewFilters?: FilterRule[];
+  keyword?: string;
+  dateRange?: [Date, Date];
+  layoutView?: string;
+  isOverviewMode?: boolean;
+  useFieldGranularity?: boolean;
+  sort?: SortRule[];
+}
+
+export function applyViewQueryPipeline(input: ViewQueryInput): Item[];</pre></article>
+<article class="card full"><h2>执行顺序原则</h2><ol><li>先应用 Layout 全局筛选：代表用户当前看这个 dashboard 的总体条件。</li><li>再应用 ViewInstance 局部筛选：代表某个模块自己的数据源约束。</li><li>再应用 keyword：减少 UI 搜索输入对持久化规则的污染。</li><li>再做日期/period/overview 逻辑：保持当前时间视图行为。</li><li>最后排序：排序不改变筛选集合，只改变展示顺序。</li></ol></article>
+<article class="card full"><h2>兼容策略</h2><p>旧字段不在第一阶段从数据模型删除，但 toolbar 不再继续把它们作为新交互入口。<code>layoutFilterAdapter</code> 负责判断当前 layout 是否显式拥有 <code>globalFilters</code>：如果有，即使是空数组也以新版为准；如果没有，则把旧 <code>selectedThemes</code> / <code>selectedCategories</code> 只读转换为规则。用户编辑、清空或点击迁移后，持久化写入 <code>globalFilters</code> 并清空旧字段。</p><pre class="mono">没有 globalFilters 字段 -> selectedThemes / selectedCategories 只读适配
+存在 globalFilters 字段 -> globalFilters 是唯一真源
+迁移动作              -> globalFilters + 清空 selectedThemes / selectedCategories</pre></article>
+<article class="card full"><h2>特殊视图收口规则</h2><ul><li><strong>普通视图</strong>：统一使用 <code>useViewData → applyViewQueryPipeline</code>，按 layout filters、view filters、keyword、date/period、sort 顺序处理。</li><li><strong>TaskExecutionView</strong>：使用 <code>allItems + applyViewBaseFilters</code>，只应用 layout/view/keyword 基础筛选；open recurring task 不按当前日期裁剪，completed records 再按 <code>doneDate</code> 限制到当前周期。</li><li><strong>TimelineView</strong>：输入 items 已由管线处理，viewModel 只做任务解析、日列构建和汇总，不再二次 <code>filterByRules(module.filters)</code>。</li><li><strong>StatisticsView</strong>：输入 items 已由管线处理；如果 layout filters 中存在明确类别规则，仅用这些类别收窄统计配置展示，不再读取旧 toolbar 分类状态。</li></ul></article>
+<article class="card full"><h2>测试切面</h2><ul><li><code>filterByRules</code>：字段读取、tags、themePath、extra、空值和数字比较。</li><li><code>applyViewQueryPipeline</code>：layout filters + view filters + keyword + date + sort 的顺序。</li><li>兼容测试：旧 selectedThemes / selectedCategories 仍能生效；显式迁移后旧字段清空，空 globalFilters 不回退旧字段。</li><li>特殊视图测试：TaskExecution 保留跨日期 open task 且只统计本期 completed records；Timeline 不重复 view filters；Statistics 类别收窄来自 layoutFilters。</li></ul></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。技术页记录长期结构和边界，实施进度以开发计划为准。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

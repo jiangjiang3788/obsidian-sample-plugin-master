@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>样式系统｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>样式系统</h1>
+        <p class="lead">说明插件样式从哪里来，如何避免样式散乱和互相污染。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：建议模板</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>样式入口</h2><div class="table-wrap"><table><thead><tr><th>路径</th><th>作用</th></tr></thead><tbody><tr><td><code>src/styles/main.css</code></td><td>插件运行样式入口。</td></tr><tr><td><code>src/shared/styles/*.css</code></td><td>共享样式模块：base、layout、modals、settings、timeline、timer 等。</td></tr><tr><td><code>styles.css</code></td><td>构建输出给 Obsidian 使用的样式文件。</td></tr><tr><td><code>文档/_资源/文档样式.css</code></td><td>文档系统自己的样式，不影响插件运行 UI。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>样式规则</h2><ul><li>文档 UI 和插件运行 UI 分离。</li><li>新增功能样式先判断是否是功能专属还是共享样式。</li><li>类名要有语义，避免只按颜色或布局命名。</li><li>不要为了文档页面改插件样式。</li></ul></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

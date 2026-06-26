@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickInput Legacy 调试收口｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / MIGRATED DOC</div>
+        <h1>QuickInput Legacy 调试收口</h1>
+        <p class="lead">本次不删除大块旧逻辑，避免引入新风险；重点是把主路径继续向 snapshot 收拢，并把调试入口统一。新增：统一使用：开启方式：这样 parser、编辑回填、保存前时间计算不再各自散落 `console.log` 判断。`editStateResolver.ts` 中，`buildInitialFormData()` </p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>技术文档</td></tr><tr><td>旧路径</td><td><code>docs/quickinput-legacy-closeout-and-debug.md</code></td></tr><tr><td>原始标题</td><td>QuickInput 主线收口：Legacy 与调试入口整理</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>QuickInput 主线收口：Legacy 与调试入口整理</h1>
+<h2>本次收口目标</h2>
+<p>本次不删除大块旧逻辑，避免引入新风险；重点是把主路径继续向 snapshot 收拢，并把调试入口统一。</p>
+<h2>已做修改</h2>
+<h3>1. 统一中文调试入口</h3>
+<p>新增：</p>
+<ul>
+<li><code>src/core/utils/recordDebug.ts</code></li>
+</ul>
+<p>统一使用：</p>
+<pre><code class="language-ts">recordDebugLog(scope, message, payload)
+recordDebugWarn(scope, message, payload)
+</code></pre>
+<p>开启方式：</p>
+<pre><code class="language-js">window.__THINK_RECORD_DEBUG__ = true
+</code></pre>
+<p>这样 parser、编辑回填、保存前时间计算不再各自散落 <code>console.log</code> 判断。</p>
+<h3>2. 编辑初始值优先读取 ParsedRecordSnapshot</h3>
+<p><code>editStateResolver.ts</code> 中，<code>buildInitialFormData()</code> 现在优先读取：</p>
+<ul>
+<li><code>snapshot.semantic.editableText</code></li>
+<li><code>snapshot.semantic.startTime</code></li>
+<li><code>snapshot.semantic.endTime</code></li>
+<li><code>snapshot.semantic.duration</code></li>
+<li><code>snapshot.semantic.themePath</code></li>
+<li><code>snapshot.semantic.rootTheme</code></li>
+<li><code>snapshot.semantic.leafTheme</code></li>
+</ul>
+<p>legacy 的 <code>item.extra / item.title / item.content / item.categoryKey</code> 只作为 fallback。</p>
+<h3>3. 修正一个关键顺序问题</h3>
+<p>之前即使 parser 已经提取出正确正文，如果 <code>item.extra['内容']</code> 或历史缓存里有旧值，编辑回填仍可能先读 extra，导致正文再次被截断。</p>
+<p>现在内容字段、时间字段、主题字段会先读 snapshot semantic，再读 extra fallback。</p>
+<h2>当前仍保留的 legacy</h2>
+<p><code>editStateResolver.ts</code> 仍然保留：</p>
+<ul>
+<li>模板打分推断</li>
+<li>path-like fallback</li>
+<li>extra alias fallback</li>
+</ul>
+<p>这些暂时保留是为了兼容历史记录和非任务记录。</p>
+<h2>后续退出条件</h2>
+<p>当以下条件满足后，可以进一步删除/缩小 legacy：</p>
+<ol>
+<li><code>prepareEditRecord</code> 主路径完全基于 <code>ParsedRecordSnapshot -&gt; EditableRecordSnapshot</code>。</li>
+<li>任务、块、AI 输入三类入口都能稳定产出 snapshot。</li>
+<li>至少完成一轮手测验收清单。</li>
+</ol>
+<h2>本轮验收重点</h2>
+<p>请重点测：</p>
+<ol>
+<li>带双空格任务正文是否完整读取。</li>
+<li>旧记录里 <code>extra['内容']</code> 为旧截断值时，是否不再覆盖新正文。</li>
+<li>时间字段默认值保存前是否仍然计算。</li>
+<li>开启 <code>window.__THINK_RECORD_DEBUG__ = true</code> 后，日志是否能看到：<ul>
+<li><code>[记录调试][任务读取]</code></li>
+<li><code>[记录调试][编辑模板解析]</code></li>
+<li><code>[记录调试][编辑初始值]</code></li>
+<li><code>[记录调试][时间计算]</code></li>
+</ul>
+</li>
+</ol>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

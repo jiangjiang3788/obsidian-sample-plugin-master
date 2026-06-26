@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>决策记录｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS GOVERNANCE</div>
+        <h1>决策记录</h1>
+        <p class="lead">记录产品重定位和文档降级策略，避免后续又回到松散功能堆叠。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：重定位草案</span>
+          <span class="badge">最后更新：2026-05-13</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>当前决策</h2><div class="table-wrap"><table><thead><tr><th>编号</th><th>决策</th><th>原因</th><th>影响</th></tr></thead><tbody><tr><td>ADR-001</td><td>正式文档入口使用 <code>文档/index.html</code></td><td>保留现有静态 HTML 框架，降低迁移成本</td><td>本轮不重建文档系统。</td></tr><tr><td>ADR-002</td><td>Think OS 定位为 Obsidian 内本地优先个人管理系统</td><td>原有仪表盘/效率工具定位不足以解释目标、计划、任务、统计的关系</td><td>首页、项目总览、插件定位和功能地图统一改口径。</td></tr><tr><td>ADR-003</td><td>目标闭环作为功能组织主轴</td><td>目标、计划、任务、记录、总结和统计此前松散，缺少推进逻辑</td><td>后续需求和功能必须说明服务哪个闭环环节。</td></tr><tr><td>ADR-004</td><td>旧 QuickInput / Statistics / 字段迁移文档保留但降级</td><td>旧资料仍有实现参考价值，但不能继续主导产品叙事</td><td>旧页面可访问，核心路径不再把它们描述为主线。</td></tr><tr><td>ADR-005</td><td>本批只调整信息架构和页面职责</td><td>先定方向和边界，再进入实现阶段</td><td>不改插件代码，不展开 Goal/Cycle/Record 技术方案。</td></tr><tr><td>ADR-006</td><td>项目管理区用于插件开发治理，不等同于用户目标管理</td><td>项目管理里的需求、路线和开发计划容易被误读成用户自己的目标计划</td><td>需求池、路线图、开发计划必须带时间字段；用户目标管理放到功能设计和产品模型里。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>决策模板</h2><pre class="mono">决策编号：ADR-xxx
+背景：
+选择：
+备选方案：
+为什么选择它：
+影响的闭环环节：
+风险：
+后续影响：
+复审时间：</pre></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

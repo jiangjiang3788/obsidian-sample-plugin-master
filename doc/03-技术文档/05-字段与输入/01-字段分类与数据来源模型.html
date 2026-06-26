@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>字段分类与数据来源模型｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">字段系统 / 输入 / 数据来源 / 筛选搜索 / 迁移验收</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：字段、来源、extra、themePath、图片字段、迁移..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / 字段与输入 / ORIGIN MODEL</div>
+        <h1>字段分类与数据来源模型</h1>
+        <p class="lead">本页回答“每个字段的数据都是哪里来的”。字段先按角色分类，再用 FieldOrigin 记录来源，避免核心字段、文件字段、派生字段、extra 字段继续混在一起。</p>
+        <div class="meta-row"><span class="badge good">状态：当前有效</span><span class="badge">最后更新：2026-05-21</span><span class="badge">格式：HTML</span></div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>字段分类定义</h2><div class="table-wrap"><table><thead><tr><th>分类</th><th>代表字段</th><th>来源</th><th>规则</th></tr></thead><tbody><tr><td>核心字段 Core</td><td><code>id</code>、<code>type</code>、<code>title</code>、<code>content</code>、<code>editableText</code>、<code>rawSource</code></td><td>parser / normalizer</td><td>记录成立所必需，不能由用户任意删除。</td></tr><tr><td>文件字段 File</td><td><code>file.path</code>、<code>file.name</code>、<code>folder</code>、<code>header</code>、<code>created</code>、<code>modified</code></td><td>Obsidian file metadata / heading cache</td><td>表示记录所在文件与位置，不参与业务语义推导。</td></tr><tr><td>语义字段 Semantic</td><td><code>themePath</code>、<code>categoryPath</code>、<code>tags</code>、<code>status</code>、<code>date</code>、<code>rating</code>、<code>image</code></td><td>显式字段或字段语义映射</td><td>用户真正关心的业务维度，名称可变，语义不可猜。</td></tr><tr><td>派生字段 Derived</td><td><code>rootTheme</code>、<code>leafTheme</code>、<code>dateMs</code>、<code>periodCount</code></td><td>从显式字段计算</td><td>只读，不写回 Markdown；必须记录 derived-from。</td></tr><tr><td>自定义字段 Extra</td><td><code>extra.地点</code>、<code>extra.项目</code></td><td>显式未知 KV</td><td>没有 schema 时先进入 extra，但必须有 origin；不允许 parser 自动生成内容 alias。</td></tr><tr><td>历史字段 Legacy</td><td><code>theme</code>、旧 <code>pintu</code>、旧正文 alias</td><td>旧数据兼容</td><td>可读可迁移，默认隐藏，不作为新数据写入标准。</td></tr></tbody></table></div></article><article class="card full"><h2>字段来源枚举</h2><div class="table-wrap"><table><thead><tr><th>来源类型</th><th>含义</th><th>例子</th></tr></thead><tbody><tr><td><code>markdown_task_kv</code></td><td>任务行中的 <code>(key::value)</code>。</td><td><code>(主题::工作/设计)</code>、<code>(地点::办公室)</code>。</td></tr><tr><td><code>markdown_block_kv</code></td><td>block 内部的 <code>key:: value</code>。</td><td><code>标签:: a, b</code>、<code>图片:: ![[x.png]]</code>。</td></tr><tr><td><code>markdown_tag</code></td><td>正文中的 Obsidian tag。</td><td><code>#工作/设计</code>。</td></tr><tr><td><code>markdown_heading</code></td><td>记录所在标题。</td><td><code>## 今日计划</code>，只进入 <code>header</code>。</td></tr><tr><td><code>file_path</code></td><td>文件路径或文件名。</td><td><code>folder</code>、<code>file.path</code>。</td></tr><tr><td><code>file_stat</code></td><td>文件 ctime/mtime。</td><td><code>created</code>、<code>modified</code>。</td></tr><tr><td><code>template_default</code></td><td>模板默认值。</td><td>表单默认日期、默认状态。</td></tr><tr><td><code>derived</code></td><td>从其他字段计算。</td><td><code>rootTheme</code> from <code>themePath</code>。</td></tr><tr><td><code>cache</code></td><td>缓存字段恢复。</td><td>读取 cache 时必须标注 cache version。</td></tr><tr><td><code>legacy_fallback</code></td><td>旧版本兼容值。</td><td>只允许读，不允许作为新写入路径。</td></tr></tbody></table></div></article><article class="card full"><h2>字段来源数据结构</h2><pre><code class="language-ts">export type FieldOriginKind =
+  | &#x27;user_input&#x27;
+  | &#x27;template_default&#x27;
+  | &#x27;markdown_task_kv&#x27;
+  | &#x27;markdown_block_kv&#x27;
+  | &#x27;markdown_tag&#x27;
+  | &#x27;markdown_heading&#x27;
+  | &#x27;file_path&#x27;
+  | &#x27;file_stat&#x27;
+  | &#x27;derived&#x27;
+  | &#x27;cache&#x27;
+  | &#x27;legacy_fallback&#x27;;
+
+export interface FieldOrigin {
+  fieldKey: string;
+  rawKey?: string;
+  value: unknown;
+  origin: FieldOriginKind;
+  sourcePath?: string;
+  sourceLine?: number;
+  derivedFrom?: string[];
+  confidence: &#x27;explicit&#x27; | &#x27;derived&#x27; | &#x27;legacy&#x27;;
+}</code></pre></article><article class="card full"><h2>字段值来源矩阵</h2><div class="table-wrap"><table><thead><tr><th>字段</th><th>标准来源</th><th>禁止来源</th><th>备注</th></tr></thead><tbody><tr><td><code>themePath</code></td><td>显式主题语义字段：task <code>(主题::)</code>、block <code>主题::</code>、或 semantic=themePath 的字段。</td><td><code>header</code>、文件夹、标题推断。</td><td>筛选中的“主题”默认就是它。</td></tr><tr><td><code>rootTheme</code> / <code>leafTheme</code></td><td>从 <code>themePath</code> split 派生。</td><td>从 <code>header</code> split。</td><td>只读派生字段。</td></tr><tr><td><code>header</code></td><td>Obsidian heading cache。</td><td>任何业务字段 fallback。</td><td>只表示位置。</td></tr><tr><td><code>tags</code></td><td><code>#tag</code>、标签字段、多标签字段。</td><td>从 theme/category 自动拆。</td><td>多值层级字段。</td></tr><tr><td><code>extra.*</code></td><td>显式未知 KV。</td><td>parser 自动正文 alias、硬编码 extra registry。</td><td>必须有 origin。</td></tr><tr><td><code>image</code></td><td>image/multiImage 字段、旧 pintu 迁移。</td><td>字段 key 等于 pintu 才显示图片。</td><td>图片是字段类型，不是 key 特例。</td></tr></tbody></table></div></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。字段系统改造原则：字段名称自由、字段类型固定、字段语义显式、字段来源可追踪。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

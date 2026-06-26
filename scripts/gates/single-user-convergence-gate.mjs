@@ -16,6 +16,7 @@ const removedPaths = [
   'release/obsidian-sample-plugin-release.zip',
   'src/core/theme-matrix',
   'src/core/services/TemplateResolver.ts',
+  'src/core/blocks/legacyBlockAdapter.ts',
   'src/features/settings/theme/ThemeMatrix.tsx',
   'src/features/settings/theme/ThemeMatrixView.tsx',
   'src/features/settings/theme/ThemeTable.tsx',
@@ -66,6 +67,10 @@ const forbiddenRuntimePatterns = [
   { re: /\bGoalOverviewView\b/, label: 'uses removed legacy GoalOverviewView' },
   { re: /\bGoalDetailView\b/, label: 'uses removed legacy GoalDetailView' },
   { re: /from ['\"][^'\"]*services\/TemplateResolver['\"]/, label: 'imports removed TemplateResolver service' },
+  { re: /\blegacy-block\b/, label: 'uses removed legacy-block template source' },
+  { re: /\blegacyBlockMap\b/, label: 'uses removed legacy block map' },
+  { re: /\bbuildLegacyCoreBlockMap\b/, label: 'uses removed legacy block adapter' },
+  { re: /\binferCoreBlockIdFromLegacyBlock\b/, label: 'uses removed legacy block adapter' },
 ];
 
 for (const file of sourceFiles) {
@@ -87,6 +92,20 @@ const schema = read('src/core/types/schema.ts');
 if (/interface\s+ThemeOverride\b/.test(schema)) failures.push('schema must not define ThemeOverride in single-user mode.');
 if (/inputSettings:\s*\{[^}]*overrides/s.test(schema)) failures.push('DEFAULT_SETTINGS.inputSettings must not contain overrides.');
 if (/overrides:\s*ThemeOverride\[\]/.test(schema)) failures.push('InputSettings must not expose overrides.');
+
+
+const encodedDocNames = [];
+function walkNames(relativeDir) {
+  const fullDir = path.join(root, relativeDir);
+  if (!fs.existsSync(fullDir)) return;
+  for (const entry of fs.readdirSync(fullDir, { withFileTypes: true })) {
+    const rel = path.join(relativeDir, entry.name).replaceAll('\\', '/');
+    if (/#U[0-9A-Fa-f]{4}/.test(entry.name)) encodedDocNames.push(rel);
+    if (entry.isDirectory()) walkNames(rel);
+  }
+}
+for (const docRoot of ['doc', 'docs', 'reports']) walkNames(docRoot);
+for (const encoded of encodedDocNames) failures.push(`${encoded}: document filename still contains #U escaped Chinese characters.`);
 
 const themeUseCase = read('src/app/usecases/theme.usecase.ts');
 for (const removedAction of ['upsertOverride', 'deleteOverride', 'batchUpsertOverrides', 'batchDeleteOverrides', 'batchSetOverrideStatus']) {

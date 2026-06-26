@@ -15,7 +15,7 @@ export function buildEditableRecordSnapshot(input: {
   fields: Record<string, unknown>;
   template: any;
   theme: any;
-  templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null };
+  templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null };
 }): EditableRecordSnapshot {
   const parsed = input.item ? buildParsedRecordSnapshot(input.item) : null;
   const outputPlan = buildRecordOutputPlan({

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>当前代码架构快照｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="_资源/文档样式.css">
+</head>
+<body data-doc-root="">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">ROUTE PRELUDE / ARCHITECTURE SNAPSHOT</div>
+        <h1>当前代码架构快照</h1>
+        <p class="lead">本页作为版本路线图和目标闭环开发前置：先确认当前分层、模块内聚、文档、测试与 gate 状态，再进入 Goal / Cycle / Record 路线图修改。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：路线图前置</span>
+          <span class="badge">最后更新：2026-05-13</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card full">
+          <h2>结论</h2>
+          <p>当前项目的分层方向是正确的：<code>main / app / core / platform / features / shared</code> 已经成型，适合继续承载目标闭环路线图。路线图开发前最划算的前置动作不是大重构，而是先让架构门禁全绿、清理敏感配置、固定当前代码事实，再进入版本功能修改。</p>
+          <div class="callout"><strong>本轮已完成：</strong><code>npm run gate</code> 已通过；敏感 <code>data.json</code> 已脱敏并加入 <code>.gitignore</code>；本页作为原路线图前置入口。</div>
+        </article>
+
+        <article class="card full">
+          <h2>当前分层判断</h2>
+          <div class="table-wrap"><table><thead><tr><th>层级</th><th>职责</th><th>当前状态</th><th>整理原则</th></tr></thead><tbody>
+            <tr><td><code>src/main.ts</code></td><td>Obsidian 插件入口、生命周期、命令注册</td><td>职责清楚</td><td>继续保持薄入口</td></tr>
+            <tr><td><code>src/app</code></td><td>组合根、usecases、capabilities、store、runtime</td><td>方向正确，原有 action/usecase 出口已收口</td><td>features/shared 只从 <code>app/public.ts</code> 或 capabilities 取能力</td></tr>
+            <tr><td><code>src/core</code></td><td>领域类型、解析、服务、AI、主题、时间规则、纯计算</td><td>核心服务完整；已移除 core 依赖 shared 和 core 内部依赖 public 的问题</td><td>core 内部不 import <code>@core/public</code>，外层只 import <code>@core/public</code></td></tr>
+            <tr><td><code>src/platform</code></td><td>Obsidian API 适配、modal、events、ports 实现</td><td>边界基本稳定</td><td>凡是 Obsidian 味重的代码优先收进 platform</td></tr>
+            <tr><td><code>src/features</code></td><td>settings、timer、quickinput、aiinput、aichat 等用户功能</td><td>功能齐全，settings 偏大</td><td>短期只做 gate 指向的移动，不做全量大搬家</td></tr>
+            <tr><td><code>src/shared</code></td><td>共享 UI、hook、工具、样式、通用组件</td><td>已有 public 出口；recordOrigin 已从 public 暴露</td><td>上层禁止 deep import shared，统一走 <code>@shared/public</code></td></tr>
+          </tbody></table></div>
+        </article>
+
+        <article class="card full">
+          <h2>模块内聚判断</h2>
+          <div class="table-wrap"><table><thead><tr><th>模块</th><th>内聚度</th><th>判断</th><th>下一步</th></tr></thead><tbody>
+            <tr><td><code>core/services/recordInput</code></td><td>中高</td><td>kernel、planner、refresh、error、normalization 已拆开，适合继续作为输入主链</td><td>先补测试，再轻拆 app usecase</td></tr>
+            <tr><td><code>app/usecases/recordInput.usecase.ts</code></td><td>中</td><td>仍偏大，承担编排、校验、提交、刷新</td><td>gate 稳定后再抽 planGuard / submitFlow</td></tr>
+            <tr><td><code>features/settings</code></td><td>中低</td><td>文件多，承担布局、字段、主题、AI、视图配置</td><td>只做小范围归类，不做一次性重排</td></tr>
+            <tr><td><code>shared/ui/views/HeatmapView.tsx</code></td><td>中</td><td>渲染、创建入口、管理弹窗仍在同一组件附近</td><td>下一轮可通过 modal port 继续减轻依赖</td></tr>
+            <tr><td><code>features/progression</code></td><td>已调整</td><td>纯计算已移动到 core/progression，feature 保留兼容 re-export</td><td>后续统计反馈可从 core 直接复用</td></tr>
+          </tbody></table></div>
+        </article>
+
+        <article class="card full">
+          <h2>文档与测试判断</h2>
+          <div class="table-wrap"><table><thead><tr><th>维度</th><th>当前状态</th><th>问题</th><th>建议</th></tr></thead><tbody>
+            <tr><td>文档</td><td>文档系统较完整，已重定位到个人管理系统与目标闭环</td><td>代码事实和路线图之间缺一个当前快照入口</td><td>本页作为路线图前置，后续只追加验收结果，不扩写大文档</td></tr>
+            <tr><td>测试</td><td>已有 unit / integration / e2e 结构</td><td>当前压缩包未包含 <code>node_modules</code>，未能直接运行 typecheck/test</td><td>本地先 <code>npm ci</code>，再跑 <code>npm run typecheck:src</code> 与 <code>npm run test:unit</code></td></tr>
+            <tr><td>架构 gate</td><td><code>npm run gate</code> 已通过</td><td>gate 只能证明边界，不证明业务行为</td><td>进入路线图前给 recordUiActions / recordInput 增加最小回归测试</td></tr>
+            <tr><td>设计符合度</td><td>代码仍偏 Item / Block / View / QuickInput，文档已转向 Goal / Cycle / Record</td><td>领域对象还未成为代码真源</td><td>下一步先建立最小领域契约，不急着做大 UI</td></tr>
+          </tbody></table></div>
+        </article>
+
+        <article class="card full">
+          <h2>前置整理计划表</h2>
+          <p>以下计划按性价比排序。已完成项作为本轮整理结果保留，未完成项作为进入版本路线图前后的下一步。</p>
+          <div class="table-wrap"><table><thead><tr><th>排序</th><th>修改项</th><th>修改性质</th><th>性价比</th><th>进度</th><th>修改原因</th><th>涉及文件</th><th>用时</th><th>危险性</th><th>验收标准</th><th>最小 MVP 标准</th></tr></thead><tbody>
+            <tr><td>1</td><td>清理敏感配置和发布物卫生</td><td>安全 / 工程卫生</td><td>极高</td><td>已完成</td><td>避免真实 API key 进入仓库或分发包</td><td><code>data.json</code>、<code>data.example.json</code>、<code>.gitignore</code></td><td>0.5h</td><td>低</td><td>无 <code>sk-</code> key 模式；<code>data.json</code> 被忽略</td><td>脱敏并写入忽略规则</td></tr>
+            <tr><td>2</td><td>修复 recordUiActions 越层入口</td><td>架构 gate 修复</td><td>极高</td><td>已完成</td><td>features/shared 不能直接 import app 内部 action</td><td><code>src/app/public.ts</code>、多处 view/item/timer 调用方</td><td>1.5h</td><td>中</td><td><code>arch:gate</code> Rule3 清零</td><td>公开必要 action，调用方走 <code>@/app/public</code></td></tr>
+            <tr><td>3</td><td>收口 recordInput usecase 对 core 的 deep import</td><td>架构 gate 修复</td><td>极高</td><td>已完成</td><td>app 访问 core 必须通过 <code>@core/public</code></td><td><code>src/core/public.ts</code>、<code>src/app/usecases/recordInput.usecase.ts</code></td><td>1h</td><td>中</td><td><code>arch:gate</code> Rule3b 清零</td><td>把稳定核心构件从 core/public 暴露</td></tr>
+            <tr><td>4</td><td>移除 core → shared 反向依赖</td><td>架构纯化</td><td>极高</td><td>已完成</td><td>core 不能依赖 shared 类型</td><td><code>src/core/types/theme.ts</code>、<code>src/core/theme/sortThemes.ts</code>、<code>src/shared/types/Theme.ts</code></td><td>0.5h</td><td>低</td><td><code>core-&gt;shared=0</code>，<code>arch:gate</code> 通过</td><td>Theme 类型进 core，shared 兼容 re-export</td></tr>
+            <tr><td>5</td><td>修复 HeatmapView 的 Obsidian API 泄漏</td><td>平台边界修复</td><td>极高</td><td>已完成</td><td>shared/ui 不应直接 import <code>obsidian</code></td><td><code>src/shared/ui/views/HeatmapView.tsx</code></td><td>1h</td><td>中</td><td><code>obsidian-leak:gate</code> 通过</td><td>通知改走 <code>UiPort</code></td></tr>
+            <tr><td>6</td><td>修复 core 内部 import <code>@core/public</code></td><td>架构自洽</td><td>很高</td><td>已完成</td><td>public 门面只供外层使用</td><td><code>src/core/services/recordInput/normalization.ts</code></td><td>0.5h</td><td>低</td><td><code>core-public:gate</code> 通过</td><td>改成 core 内部具体路径 import</td></tr>
+            <tr><td>7</td><td>修复 shared deep import</td><td>架构 gate 修复</td><td>很高</td><td>已完成</td><td>上层不应深导入 shared 内部工具</td><td><code>src/shared/public.ts</code>、<code>TimerRow.tsx</code>、<code>CheckinManagerModal.tsx</code></td><td>0.5h</td><td>低</td><td><code>shared-public:gate</code> 通过</td><td><code>recordOrigin</code> 从 <code>@shared/public</code> 暴露</td></tr>
+            <tr><td>8</td><td>移动 progression 纯计算逻辑</td><td>模块内聚 / feature gate</td><td>很高</td><td>已完成</td><td>settings 不应跨 feature 依赖 progression</td><td><code>src/core/progression/*</code>、<code>src/features/progression/*</code>、<code>progressViewModel.ts</code></td><td>1h</td><td>低～中</td><td><code>feature:gate</code> 通过</td><td>纯计算进入 core，feature 保留兼容出口</td></tr>
+            <tr><td>9</td><td>收口 initializeCore 的散落 DI resolve</td><td>DI 治理</td><td>高</td><td>已完成</td><td>container.resolve 只应留在组合根</td><td><code>src/app/bootstrap/buildRuntime.ts</code>、<code>initializeCore.ts</code></td><td>1h</td><td>中</td><td><code>di-resolve:gate</code> 通过</td><td>依赖从 bootstrap 下发</td></tr>
+            <tr><td>10</td><td>替换旧 Tooltip + IconButton</td><td>UI 规范 gate</td><td>高</td><td>已完成</td><td>统一 IconAction 模式</td><td><code>src/features/settings/components/LayoutEditorPanel.tsx</code></td><td>0.5h</td><td>低</td><td><code>iconaction:gate</code> 通过</td><td>只替换前移/后移按钮</td></tr>
+            <tr><td>11</td><td>建立可运行测试基线</td><td>测试 / CI</td><td>高</td><td>待执行</td><td>gate 通过不等于类型和业务测试通过</td><td><code>package.json</code>、<code>test/configs</code></td><td>1h</td><td>低</td><td><code>npm ci && npm run typecheck:src && npm run test:unit</code></td><td>至少本地能跑 unit + typecheck</td></tr>
+            <tr><td>12</td><td>给 recordUiActions 补最小回归测试</td><td>测试保护</td><td>中高</td><td>待执行</td><td>它是多个 view 的 UI 动作中枢</td><td><code>src/app/actions/recordUiActions.ts</code>、新增测试</td><td>1.5h</td><td>中</td><td>open/edit/complete/update time 核心分支有测试</td><td>先测纯参数与失败反馈</td></tr>
+            <tr><td>13</td><td>轻拆 recordInput.usecase.ts</td><td>内聚优化</td><td>中高</td><td>待执行</td><td>文件偏大，后续路线图会继续增加压力</td><td><code>src/app/usecases/recordInput.usecase.ts</code></td><td>2～4h</td><td>中高</td><td>文件职责下降，测试通过</td><td>只抽 planGuard / submitFlow，不改外部接口</td></tr>
+            <tr><td>14</td><td>轻拆 FieldsEditor.tsx</td><td>UI 内聚优化</td><td>中</td><td>待执行</td><td>设置字段编辑器最大且复杂</td><td><code>src/features/settings/FieldsEditor.tsx</code></td><td>3～5h</td><td>中高</td><td>字段保存行为不变</td><td>只抽纯 UI 子组件</td></tr>
+            <tr><td>15</td><td>建立 Goal/Cycle/Record 最小领域契约</td><td>路线图准备</td><td>中</td><td>待执行</td><td>文档路线已转向目标闭环，代码还没有真源类型</td><td>新建 <code>src/core/goal/*</code> 或 <code>src/core/domain/*</code></td><td>2～3h</td><td>中</td><td>有最小类型，不破坏现有 Item/Block</td><td>只建 types + mapping note，不做 UI</td></tr>
+            <tr><td>16</td><td>settings feature 小范围归类</td><td>文件夹轻整理</td><td>中低</td><td>待执行</td><td>settings 文件多，查找成本高</td><td><code>src/features/settings/*</code></td><td>2～4h</td><td>中</td><td>gate/test 通过</td><td>只移动 5～8 个明显归属文件</td></tr>
+          </tbody></table></div>
+        </article>
+
+        <article class="card full">
+          <h2>进入版本路线图前的最小 MVP 标准</h2>
+          <ol>
+            <li><code>data.json</code> 不再含真实 key，并已加入 <code>.gitignore</code>。</li>
+            <li><code>npm run gate</code> 全绿。</li>
+            <li>本地安装依赖后跑 <code>npm run typecheck:src</code> 与 <code>npm run test:unit</code>。</li>
+            <li>新增路线图功能不得再新增 features/shared 到 app/core/shared 的越层 import。</li>
+            <li>先定义 Goal / Cycle / Record 最小领域契约，再做复杂 UI。</li>
+          </ol>
+        </article>
+
+        <article class="card full">
+          <h2>本页与原计划的关系</h2>
+          <p>原来的 <a href="01-项目管理/00-计划与路线/版本路线图.html">版本路线图</a> 和 <a href="01-项目管理/00-计划与路线/开发计划.html">开发计划</a> 继续保留；本页插在它们之前，作为代码状态确认、整理验收和路线图启动门槛。</p>
+        </article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。当前主线：先整理现有代码，再进入目标闭环路线图。</footer>
+    </main>
+  </div>
+  <script src="_资源/搜索索引.js"></script>
+  <script src="_资源/文档脚本.js"></script>
+</body>
+</html>

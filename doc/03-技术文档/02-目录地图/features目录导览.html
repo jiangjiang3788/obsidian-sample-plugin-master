@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>features 目录导览｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / MIGRATED DOC</div>
+        <h1>features 目录导览</h1>
+        <p class="lead">代码架构图：左流程右说明继续把 features/ 看懂：它像店里顾客真正接触到的服务区这次只讲features/。如果说core是后仓，app是店长办公室，那features就是顾客真正会走进去、会点击、会使用的那些服务区。你以后整理文件夹时，最关键的问题就是：</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>技术文档</td></tr><tr><td>旧路径</td><td><code>html/features.html</code></td></tr><tr><td>原始标题</td><td>继续把 features/ 看懂：它像店里顾客真正接触到的服务区</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc">
+<section>
+<div>
+<h3>features/ 总体</h3>
+<span>src/features/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店里的前台服务区总览。</span></li>
+<li><span>一句话</span><span>这里放的是顾客真正能看到、能点击、能直接使用的功能。</span></li>
+<li><span>它在哪层</span><span>比 <span>core</span> 更靠前、最接近顾客，属于前台功能层。</span></li>
+<li><span>主要干什么</span><span>把聊天、输入、设置、计时、进度这些具体服务区组织起来。</span></li>
+<li><span>和 core 的区别</span><span><span>features</span> 是顾客正在使用的区，<span>core</span> 是后面默默支撑它们的基础支持区。</span></li>
+<li><span>你怎么记</span><span>看到 features，就想成“顾客眼前的服务区”。</span></li>
+</ul>
+<div>你整理目录时，先问自己：<span>这个东西是不是顾客直接接触的服务？</span> 是的话，大概率归 features。</div>
+</section>
+<section>
+<div>
+<h3>aichat/</h3>
+<span>src/features/aichat/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像 AI 咨询台。</span></li>
+<li><span>一句话</span><span>顾客真正看到并操作的聊天界面、消息区、AI 互动体验在这里。</span></li>
+<li><span>它在哪层</span><span>属于前台功能层，是 AI 能力面向顾客的展示区。</span></li>
+<li><span>主要干什么</span><span>显示聊天窗口、消息列表、输入互动、聊天相关 UI 流程。</span></li>
+<li><span>和 core/ai 的区别</span><span><span>aichat</span> 管“顾客看到的聊天体验”，<span>core/ai</span> 管“AI 能力本身怎么工作”。</span></li>
+<li><span>你怎么记</span><span>看到 aichat，就想成“AI 咨询台本身”。</span></li>
+</ul>
+<div>一句话记忆：<span>AI 的脑子在 core，AI 的窗口在 features/aichat。</span></div>
+</section>
+<section>
+<div>
+<h3>aiinput/</h3>
+<span>src/features/aiinput/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像智能填单台。</span></li>
+<li><span>一句话</span><span>顾客输入一点内容，后面由 AI 帮忙理解、补全、处理。</span></li>
+<li><span>它在哪层</span><span>属于前台功能层，但更偏“输入交互”而不是完整聊天体验。</span></li>
+<li><span>主要干什么</span><span>处理输入框、命令式输入、AI 帮助输入、自动补全类体验。</span></li>
+<li><span>和 aichat 的区别</span><span><span>aiinput</span> 更像“输入时有 AI 帮你”，<span>aichat</span> 更像“你专门打开一个 AI 聊天区去聊”。</span></li>
+<li><span>你怎么记</span><span>看到 aiinput，就想成“输入台后面站着个 AI 帮手”。</span></li>
+</ul>
+<div>它和 aichat 容易混，但你记住：<span>一个偏输入过程，一个偏完整聊天场景。</span></div>
+</section>
+<section>
+<div>
+<h3>quickinput/</h3>
+<span>src/features/quickinput/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像快速登记台。</span></li>
+<li><span>一句话</span><span>它追求的是少点几步、马上录入，不一定有很复杂的 AI 参与。</span></li>
+<li><span>它在哪层</span><span>属于前台功能层，偏高频、快速、轻量操作。</span></li>
+<li><span>主要干什么</span><span>快速记录、快速创建、快速填写、尽量缩短操作路径。</span></li>
+<li><span>和 aiinput 的区别</span><span><span>quickinput</span> 强调“快”，<span>aiinput</span> 强调“AI 帮你处理输入”。</span></li>
+<li><span>你怎么记</span><span>看到 quickinput，就想成“赶时间时用的快速登记台”。</span></li>
+</ul>
+<div>如果一个功能重点是“少步骤”，不是“更智能”，那它更像 quickinput。</div>
+</section>
+<section>
+<div>
+<h3>settings/</h3>
+<span>src/features/settings/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店里的总设置柜台。</span></li>
+<li><span>一句话</span><span>凡是顾客或管理员需要改规则、改显示、改行为的入口，通常都在这里。</span></li>
+<li><span>它在哪层</span><span>属于前台功能层，但往往体量最大，容易长成一个子系统。</span></li>
+<li><span>主要干什么</span><span>处理主题设置、布局设置、显示规则、编辑器设置、系统行为配置等。</span></li>
+<li><span>和 core/config 的区别</span><span><span>settings</span> 是“前台给人调的设置入口”，<span>core/config</span> 是“系统底层默认配置和规则”。</span></li>
+<li><span>你怎么记</span><span>看到 settings，就想成“顾客和管理员都可能会来的设置柜台”。</span></li>
+</ul>
+<div>这通常是最该优先整理的目录。因为它很容易什么都收，最后变成一个大杂烩。</div>
+</section>
+<section>
+<div>
+<h3>timer/</h3>
+<span>src/features/timer/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像计时服务区。</span></li>
+<li><span>一句话</span><span>和时间流逝、计时展示、时间相关操作有关的顾客功能都在这里。</span></li>
+<li><span>它在哪层</span><span>属于前台功能层，是把时间能力包装成顾客能用的功能区。</span></li>
+<li><span>主要干什么</span><span>显示计时器、控制开始暂停、展示时间状态、处理时间相关交互。</span></li>
+<li><span>和 core 里的时间服务区别</span><span><span>timer</span> 是顾客操作的计时界面，底层真正记时间、存状态的能力可能在 <span>core/services</span>。</span></li>
+<li><span>你怎么记</span><span>看到 timer，就想成“顾客看的秒表区”。</span></li>
+</ul>
+<div>你可以继续沿着这个思路理解：<span>前台展示在 features，后面的持续能力在 core。</span></div>
+</section>
+<section>
+<div>
+<h3>progression/</h3>
+<span>src/features/progression/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像进度看板区。</span></li>
+<li><span>一句话</span><span>它负责让顾客看到：现在推进到哪、完成了多少、下一步大概是什么。</span></li>
+<li><span>它在哪层</span><span>属于前台功能层，偏展示和反馈类功能区。</span></li>
+<li><span>主要干什么</span><span>展示进度、状态趋势、完成情况、推进反馈等界面内容。</span></li>
+<li><span>和 timer 的区别</span><span><span>progression</span> 更关心“做到哪了”，<span>timer</span> 更关心“时间过了多久”。</span></li>
+<li><span>你怎么记</span><span>看到 progression，就想成“墙上的进度看板”。</span></li>
+</ul>
+<div>如果一个功能强调的是“进展反馈”，不是“设置”也不是“输入”，那它更像 progression。</div>
+</section>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>字段系统重构测试验收清单｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">字段系统 / 输入 / 数据来源 / 筛选搜索 / 迁移验收</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：字段、来源、extra、themePath、图片字段、迁移..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">维护发布 / 测试验收 / FIELD QA</div>
+        <h1>字段系统重构测试验收清单</h1>
+        <p class="lead">本页定义字段系统高质量完成线的测试与验收口径，确保 header/theme、themePath、extra、图片、多值层级字段不会在后续修改中回归。</p>
+        <div class="meta-row"><span class="badge good">状态：当前有效</span><span class="badge">最后更新：2026-05-21</span><span class="badge">格式：HTML</span></div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>自动化测试清单</h2><div class="table-wrap"><table><thead><tr><th>测试文件建议</th><th>覆盖内容</th></tr></thead><tbody><tr><td><code>test/unit/themeSemantics.test.ts</code></td><td>显式主题解析、themePath/rootTheme/leafTheme 派生、禁止 header fallback。</td></tr><tr><td><code>test/unit/fieldOrigin.test.ts</code></td><td>FieldOriginCollector 来源记录。</td></tr><tr><td><code>test/unit/parser.extra.test.ts</code></td><td>未知 KV 进入 extra；正文 alias 不进 extra。</td></tr><tr><td><code>test/unit/fieldRegistry.test.ts</code></td><td>字段分类、hiddenByDefault、legacy、deprecated。</td></tr><tr><td><code>test/unit/fieldValueResolver.test.ts</code></td><td>core/file/semantic/derived/extra/legacy 字段读取。</td></tr><tr><td><code>test/unit/imageField.test.ts</code></td><td>vault path、wikilink、URL、多图解析。</td></tr><tr><td><code>test/integration/recordInput.roundtrip.test.ts</code></td><td>Record -> FormData -> Markdown -> Record 回环。</td></tr><tr><td><code>test/integration/filter.fieldSemantics.test.ts</code></td><td>themePath、多标签、extra、图片字段筛选。</td></tr></tbody></table></div></article><article class="card full"><h2>手动验收场景</h2><div class="table-wrap"><table><thead><tr><th>场景</th><th>步骤</th><th>期望</th></tr></thead><tbody><tr><td>themePath 与 header 分离</td><td>在 <code>## 工作/设计</code> 下创建无主题记录。</td><td>记录有 header，但 themePath 为空；主题筛选不会命中。</td></tr><tr><td>显式主题正常</td><td>创建 <code>(主题::工作/设计)</code>。</td><td>themePath=工作/设计；rootTheme=工作；leafTheme=设计。</td></tr><tr><td>extra 不污染</td><td>创建普通任务正文。</td><td>字段选择器不出现 extra.正文、extra.内容。</td></tr><tr><td>显式 extra 可解释</td><td>创建 <code>(地点::办公室)</code>。</td><td>出现自定义字段 地点；来源显示 markdown_task_kv、rawKey=地点、行号。</td></tr><tr><td>图片字段</td><td>创建 image 字段并输入 <code>![[a.png]]</code>。</td><td>列表和详情能预览；搜索不会把图片二进制内容当正文。</td></tr><tr><td>多标签层级</td><td>输入 <code>#工作/设计 #项目/A</code>。</td><td>multiTag 筛选 any/all 可用，层级展示正常。</td></tr><tr><td>旧数据兼容</td><td>打开旧 <code>theme</code>、<code>pintu</code> 数据。</td><td>能读能显示，但字段设置中标记 legacy，保存后写新字段。</td></tr></tbody></table></div></article><article class="card full"><h2>验证命令</h2><pre><code class="language-text">npm run typecheck:src
+npm run test:unit
+npm run test:integration
+npm run verify:fast
+npm run gate
+npm run build</code></pre></article><article class="card full"><h2>验收出口</h2><ul>
+<li>所有自动化测试通过。</li>
+<li>手动验收场景通过并截图/记录。</li>
+<li>cache schema 升级后旧缓存不会恢复 header/theme 污染。</li>
+<li>字段来源调试导出可用于解释至少 10 条真实记录。</li>
+<li>字段选择器默认分组正确，legacy 与污染 alias 默认隐藏。</li>
+</ul></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。字段系统改造原则：字段名称自由、字段类型固定、字段语义显式、字段来源可追踪。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

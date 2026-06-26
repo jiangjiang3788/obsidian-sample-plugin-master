@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>文件地图｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">Think OS 插件文档系统</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>文件地图</h1>
+        <p class="lead">当前代码与工程目录的长期地图，用于快速判断文件应该放在哪里、哪些目录是稳定边界。</p>
+        <div class="meta-row"><span class="badge good">状态：当前有效</span><span class="badge">最后更新：2026-05-14</span><span class="badge">格式：HTML</span><span class="badge">生命周期：长期</span></div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>顶层目录</h2><div class="table-wrap"><table><thead><tr><th>目录</th><th>用途</th><th>维护规则</th></tr></thead><tbody><tr><td><code>src/app</code></td><td>应用编排、usecase、runtime、bootstrap、capability。</td><td>不得直接承载 Obsidian API；不得越过 core public 入口深度依赖 core 内部。</td></tr><tr><td><code>src/core</code></td><td>领域类型、服务、port、解析、AI 配置、Goal/Cycle/Record 契约。</td><td>保持平台无关，core 内部不 import <code>@core/public</code>。</td></tr><tr><td><code>src/platform</code></td><td>Obsidian API、Modal、Vault、SettingTab 等适配。</td><td>平台依赖集中于此。</td></tr><tr><td><code>src/features</code></td><td>settings、timer、quickinput、aiinput 等功能入口。</td><td>禁止跨 feature 直接引用。</td></tr><tr><td><code>src/shared</code></td><td>共享 UI、hooks、utils。</td><td>外部优先走 <code>@shared/public</code>。</td></tr><tr><td><code>scripts</code></td><td>gates/audit/docs/build/maintenance/lib。</td><td>新增脚本先判断是否阻断式 gate。</td></tr><tr><td><code>文档</code></td><td>项目状态系统。</td><td>短期计划不写进长期技术页。</td></tr></tbody></table></div></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。当前文档治理原则：当前事实优先，长期技术事实和短期实施记录分离。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

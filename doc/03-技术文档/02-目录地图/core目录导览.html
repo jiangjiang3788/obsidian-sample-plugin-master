@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>core 目录导览｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / MIGRATED DOC</div>
+        <h1>core 目录导览</h1>
+        <p class="lead">代码架构图：左流程右说明先把 app/ 看懂：它像店长办公室这次不再讲整个项目，而是只讲app/。因为你现在最需要搞懂的，不是全部目录，而是app 到底管什么、和 core 有什么区别、里面每个子目录分别干嘛。你可以把 app 理解成：店已经开了，店长办公室开始安排今天怎么运转</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>技术文档</td></tr><tr><td>旧路径</td><td><code>html/core.html</code></td></tr><tr><td>原始标题</td><td>先把 app/ 看懂：它像店长办公室</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc">
+<section>
+<div>
+<h3>app/ 总体</h3>
+<span>src/app/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店长办公室。</span></li>
+<li><span>一句话</span><span>它不直接卖东西，它负责安排整家店怎么运转。</span></li>
+<li><span>它在哪层</span><span>它在 <span>main</span> 下面、<span>features</span> 上面，属于“调度层”。</span></li>
+<li><span>主要干什么</span><span>把 <span>core</span> 里的基础能力接起来，再按规则交给前面的功能区使用。</span></li>
+<li><span>和 core 的区别</span><span><span>app</span> 是安排怎么用，<span>core</span> 是提供能用的东西。</span></li>
+<li><span>你怎么记</span><span>看到 app，就想成“店长办公室，不亲自接客，但决定大家怎么干活”。</span></li>
+</ul>
+<div>你后面只要看到“启动、状态、写操作入口、全局装配”这些词，大概率就在 app/ 里。</div>
+</section>
+<section>
+<div>
+<h3>bootstrap/</h3>
+<span>src/app/bootstrap/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像开店流程单。</span></li>
+<li><span>一句话</span><span>它决定：店一开门，第一步、第二步、第三步分别做什么。</span></li>
+<li><span>它在哪层</span><span>属于 app 里面最靠前的部分，因为它负责开场顺序。</span></li>
+<li><span>主要干什么</span><span>初始化核心对象、拼装运行时、注册功能、完成启动流程。</span></li>
+<li><span>和 runtime 的区别</span><span><span>bootstrap</span> 管“开店前后的启动顺序”，<span>runtime</span> 管“店开着以后怎么维持现场”。</span></li>
+<li><span>你怎么记</span><span>看到 bootstrap，就想成“开店流程单”。</span></li>
+</ul>
+<div>如果你看到 <span>initialize</span>、<span>buildRuntime</span>、<span>register</span> 这类文件名，基本就是在写“先后顺序”。</div>
+</section>
+<section>
+<div>
+<h3>store/</h3>
+<span>src/app/store/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店里的总记录本。</span></li>
+<li><span>一句话</span><span>它负责记住：现在店里是什么状态。</span></li>
+<li><span>它在哪层</span><span>属于 app 内部的状态中心，是很多功能都会读到的一层。</span></li>
+<li><span>主要干什么</span><span>保存全局状态，比如当前设置、界面状态、主题数据、运行中的状态等。</span></li>
+<li><span>和 usecases 的区别</span><span><span>store</span> 负责“存现在是什么样”，<span>usecases</span> 负责“要把它改成什么样”。</span></li>
+<li><span>你怎么记</span><span>看到 store，就想成“账本 / 记录本”。</span></li>
+</ul>
+<div>你可以把它理解成“结果放哪”。用户点完东西后，很多变化最后都会落到这里。</div>
+</section>
+<section>
+<div>
+<h3>usecases/</h3>
+<span>src/app/usecases/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店员操作手册。</span></li>
+<li><span>一句话</span><span>想做一件事时，不是乱来，而是按这里定义的动作去做。</span></li>
+<li><span>它在哪层</span><span>在 features 和 store 中间，是“动作入口层”。</span></li>
+<li><span>主要干什么</span><span>把“修改设置、更新主题、触发某个业务动作”这些事情包装成统一入口。</span></li>
+<li><span>和 features 的区别</span><span><span>features</span> 是顾客看到的按钮和界面，<span>usecases</span> 是按钮背后真正执行动作的标准流程。</span></li>
+<li><span>你怎么记</span><span>看到 usecases，就想成“操作手册：做事要按流程来”。</span></li>
+</ul>
+<div>这就是为什么项目里强调：<span>features 不要直接改 slices，要走 usecases</span>。因为 usecases 是统一动作入口。</div>
+</section>
+<section>
+<div>
+<h3>ui/</h3>
+<span>src/app/ui/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店长办公室对外的小窗口。</span></li>
+<li><span>一句话</span><span>这里不是顾客主要逛的服务区，而是管理层需要露出来的一些界面。</span></li>
+<li><span>它在哪层</span><span>属于 app 的外露部分，是 app 少数“要显示出来”的地方。</span></li>
+<li><span>主要干什么</span><span>放应用级别的 UI、挂载点、公共模态窗、上下文提供层之类的东西。</span></li>
+<li><span>和 features 的区别</span><span><span>ui</span> 更像系统级界面，<span>features</span> 更像具体功能区界面。</span></li>
+<li><span>你怎么记</span><span>看到 ui，就想成“办公室需要露出来的那扇窗”。</span></li>
+</ul>
+<div>如果一个界面是“整个系统都共用的管理外壳”，更可能在 app/ui；如果是某个具体功能自己的界面，更可能在 features 里。</div>
+</section>
+<section>
+<div>
+<h3>runtime/</h3>
+<span>src/app/runtime/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像今天营业时的现场安排。</span></li>
+<li><span>一句话</span><span>店开起来以后，哪些对象要一直活着、哪些资源要一直维护，就在这里管。</span></li>
+<li><span>它在哪层</span><span>属于 app 里面偏“持续运行”的那部分。</span></li>
+<li><span>主要干什么</span><span>管理运行期对象、生命周期、可释放资源、当前会话环境之类的内容。</span></li>
+<li><span>和 bootstrap 的区别</span><span><span>bootstrap</span> 负责启动那一瞬间，<span>runtime</span> 负责启动之后的持续状态。</span></li>
+<li><span>你怎么记</span><span>看到 runtime，就想成“营业现场一直在运转的安排”。</span></li>
+</ul>
+<div>理解 runtime 最简单的办法就是：它不是“怎么开店”，而是“店开着的时候怎么一直维持”。</div>
+</section>
+<section>
+<div>
+<h3>capabilities/</h3>
+<span>src/app/capabilities/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店里的可用服务清单。</span></li>
+<li><span>一句话</span><span>它负责回答：这家店现在到底能提供哪些能力。</span></li>
+<li><span>它在哪层</span><span>属于 app 里的“能力组织层”，比具体功能更靠抽象一些。</span></li>
+<li><span>主要干什么</span><span>把系统当前可提供的功能、支持的能力、注册关系整理出来，便于上层使用。</span></li>
+<li><span>和 features 的区别</span><span><span>capabilities</span> 更像“这家店能做什么”的清单，<span>features</span> 更像“顾客实际看到的服务区”。</span></li>
+<li><span>你怎么记</span><span>看到 capabilities，就想成“服务菜单”。</span></li>
+</ul>
+<div>如果你看到某个地方在整理“系统支持什么”，而不是“顾客点哪个按钮”，那它更像 capabilities。</div>
+</section>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

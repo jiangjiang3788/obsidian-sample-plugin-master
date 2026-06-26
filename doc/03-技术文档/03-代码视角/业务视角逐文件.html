@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>业务视角逐文件｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / MIGRATED DOC</div>
+        <h1>业务视角逐文件</h1>
+        <p class="lead">看用户入口和闭环</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>技术文档</td></tr><tr><td>旧路径</td><td><code>html/thinkos-章节化文档框架/chapter-07-业务视角逐文件.js</code></td></tr><tr><td>原始标题</td><td>七、业务视角（逐文件）</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><div class="table-wrap"><table><thead><tr><th>文件 / 目录</th><th>业务角色</th><th>用户得到的能力</th><th>最容易出问题的点</th></tr></thead><tbody>
+<tr><td><span class="code">src/features/quickinput/registerCommands.ts</span></td><td>快速记录入口注册</td><td>用户能直接打开指定块的记录弹窗</td><td>入口多了后的命名与可发现性</td></tr>
+<tr><td><span class="code">src/features/quickinput/QuickInputModal.tsx</span></td><td>快速记录弹窗</td><td>承载“我现在就要记一条”的主要交互</td><td>输入效率、焦点、保存反馈</td></tr>
+<tr><td><span class="code">src/platform/modals/AiBatchConfirmModal.tsx</span></td><td>人工智能确认界面</td><td>用户保存前可检查和修正人工智能结果</td><td>草案质量、字段映射、状态对象化</td></tr>
+<tr><td><span class="code">src/features/timer/FloatingTimerWidget.ts</span></td><td>悬浮计时器界面</td><td>用户持续看到并控制计时状态</td><td>部件生命周期、刷新、清理</td></tr>
+<tr><td><span class="code">src/features/settings/SettingsTab.tsx</span></td><td>系统配置入口</td><td>用户配置块、主题、模板、视图和布局</td><td>配置复杂度、可理解性、预览能力</td></tr>
+</tbody></table></div></div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

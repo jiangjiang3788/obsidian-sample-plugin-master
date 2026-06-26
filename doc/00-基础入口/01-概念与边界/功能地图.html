@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>功能地图｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>功能地图</h1>
+        <p class="lead">按目标闭环重排功能，而不是按 QuickInput、Timer、Statistics 等实现模块排列。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：重定位主线</span>
+          <span class="badge">最后更新：2026-05-13</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>目标闭环功能地图</h2><div class="table-wrap"><table><thead><tr><th>闭环节点</th><th>用户要完成什么</th><th>现有能力关系</th><th>优先级</th></tr></thead><tbody><tr><td>目标管理</td><td>明确要推进的长期/项目/周期目标</td><td>当前缺少一等公民模型，需从主题/Block 松散关系中独立出来</td><td>P0</td></tr><tr><td>周期计划</td><td>把目标落到周/月等周期承诺</td><td>现有计划 block 可作为输入形式，但必须挂回目标和周期</td><td>P0</td></tr><tr><td>任务执行</td><td>把计划拆成今天能做的任务</td><td>现有任务、QuickInput、视图和勾选能力作为执行层基础</td><td>P0</td></tr><tr><td>时间/结果记录</td><td>记录实际投入、完成结果和偏差</td><td>Timer、任务写回、字段系统作为执行证据来源</td><td>P0</td></tr><tr><td>总结复盘</td><td>关闭一个周期，解释完成和未完成原因</td><td>现有总结 block 需要从普通记录升级为周期复盘角色</td><td>P0</td></tr><tr><td>统计反馈</td><td>回答目标推进得怎么样</td><td>Statistics、Heatmap、Timeline 降级为目标反馈证据层</td><td>P1</td></tr><tr><td>AI 辅助</td><td>辅助整理输入、生成复盘、解释偏差</td><td>AI Input / AI Chat 是增强层，不作为核心闭环依赖</td><td>P2</td></tr></tbody></table></div></article>
+<article class="card full"><h2>旧模块的新位置</h2><div class="table-wrap"><table><thead><tr><th>旧模块</th><th>新定位</th><th>说明</th></tr></thead><tbody><tr><td>QuickInput</td><td>输入入口</td><td>负责把目标、计划、任务、复盘记录快速写入系统。</td></tr><tr><td>Timer</td><td>执行证据</td><td>负责把任务执行时间写回闭环，而不是独立计时工具。</td></tr><tr><td>Statistics</td><td>反馈解释器</td><td>优先按目标和周期解释进度，不再只是分类报表。</td></tr><tr><td>Block</td><td>记录形态</td><td>计划 block、总结 block 等需要有 recordRole 和上游目标。</td></tr><tr><td>View</td><td>观察窗口</td><td>视图服务于闭环节点，不能反过来决定产品结构。</td></tr><tr><td>Theme</td><td>分类维度</td><td>主题是分类，不等同于目标。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>后续补充方式</h2><p>新增功能时，不要只写“我要做 XX”。必须说明它服务闭环中的哪一段、读写哪些记录角色、如何影响目标推进、如何验收。</p></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

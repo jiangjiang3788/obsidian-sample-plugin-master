@@ -1,0 +1,82 @@
+[
+  {
+    "stage": "V0",
+    "goal": "重定位",
+    "summary": "把 Think OS 定义为 Obsidian 内本地优先个人管理系统，明确目标闭环和旧资料降级策略。",
+    "status": "已完成",
+    "plannedStart": "2026-05-13",
+    "plannedEnd": "2026-05-13",
+    "actualStart": "2026-05-13",
+    "actualEnd": "2026-05-13"
+  },
+  {
+    "stage": "V0.1",
+    "goal": "治理校准",
+    "summary": "区分项目管理和用户目标管理，给需求、路线和开发计划补齐时间字段。",
+    "status": "进行中",
+    "plannedStart": "2026-05-13",
+    "plannedEnd": "2026-05-13",
+    "actualStart": "2026-05-13",
+    "actualEnd": null
+  },
+  {
+    "stage": "V1",
+    "goal": "目标闭环模型",
+    "summary": "定义目标、周期计划、任务、执行记录、总结复盘和统计反馈的最小关系。",
+    "status": "待启动",
+    "plannedStart": "2026-05-14",
+    "plannedEnd": "2026-05-16",
+    "actualStart": null,
+    "actualEnd": null
+  },
+  {
+    "stage": "V1.1",
+    "goal": "目标闭环 MVP 方案",
+    "summary": "设计目标、周期计划、任务、执行记录、总结复盘的最短路径和验收标准。",
+    "status": "待启动",
+    "plannedStart": "2026-05-17",
+    "plannedEnd": "2026-05-20",
+    "actualStart": null,
+    "actualEnd": null
+  },
+  {
+    "stage": "V1.2",
+    "goal": "目标闭环 MVP 实现",
+    "summary": "实现一个真实目标从创建、计划、执行到复盘的最小可用链路。",
+    "status": "待开发",
+    "plannedStart": "2026-05-21",
+    "plannedEnd": "2026-05-31",
+    "actualStart": null,
+    "actualEnd": null
+  },
+  {
+    "stage": "V2",
+    "goal": "统计反馈",
+    "summary": "把 Statistics 从孤立视图校准为目标和周期反馈。",
+    "status": "待启动",
+    "plannedStart": "2026-06-01",
+    "plannedEnd": "2026-06-07",
+    "actualStart": null,
+    "actualEnd": null
+  },
+  {
+    "stage": "V3",
+    "goal": "AI 辅助",
+    "summary": "在目标闭环稳定后，辅助拆目标、生成计划和整理复盘。",
+    "status": "暂缓",
+    "plannedStart": "2026-06-08",
+    "plannedEnd": null,
+    "actualStart": null,
+    "actualEnd": null
+  },
+  {
+    "stage": "V4",
+    "goal": "自动化",
+    "summary": "自动汇总、自动同步和自动生成部分维护资料，降低重复管理成本。",
+    "status": "暂缓",
+    "plannedStart": null,
+    "plannedEnd": null,
+    "actualStart": null,
+    "actualEnd": null
+  }
+]

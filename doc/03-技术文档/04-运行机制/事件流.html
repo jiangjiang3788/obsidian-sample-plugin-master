@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>事件流｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>事件流</h1>
+        <p class="lead">记录 Obsidian 事件、用户事件和内部事件如何进入系统。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：建议模板</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>事件来源</h2><div class="table-wrap"><table><thead><tr><th>事件来源</th><th>代表模块</th><th>作用</th></tr></thead><tbody><tr><td>Obsidian Vault 事件</td><td><code>platform/events/VaultWatcher.ts</code>、<code>ObsidianEventsPort.ts</code></td><td>监听文件变化、刷新索引或状态。</td></tr><tr><td>用户命令</td><td><code>src/main.ts</code></td><td>命令面板触发业务动作。</td></tr><tr><td>UI 事件</td><td>features 中的组件</td><td>按钮点击、表单修改、拖拽排序。</td></tr><tr><td>Timer 事件</td><td><code>TimerService</code> / <code>TimerStateService</code></td><td>开始、暂停、停止、写回。</td></tr><tr><td>诊断事件</td><td>shared/debug、performanceMonitor</td><td>收集日志和性能信息。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>事件设计原则</h2><ul><li>事件监听必须可释放。</li><li>不要让 UI 组件直接承担复杂事件编排。</li><li>Vault 事件要防抖或控制重扫范围。</li><li>事件触发的写入需要错误提示和回滚思路。</li></ul></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

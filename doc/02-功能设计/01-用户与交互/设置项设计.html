@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>设置项设计｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>设置项设计</h1>
+        <p class="lead">整理用户能配置什么、默认值是什么、设置会影响哪些模块。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：建议模板</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>设置入口</h2><p>设置系统主要由 <code>features/settings</code> 与 <code>platform/SettingsTab.tsx</code> 承载。设置相关内容包括通用设置、输入设置、AI 设置、布局设置、视图编辑器、主题管理等。</p></article>
+<article class="card full"><h2>设置模块地图</h2><div class="table-wrap"><table><thead><tr><th>设置模块</th><th>代表文件</th><th>作用</th></tr></thead><tbody><tr><td>通用设置</td><td><code>GeneralSettings.tsx</code></td><td>基础开关、行为偏好。</td></tr><tr><td>输入设置</td><td><code>InputSettings.tsx</code>、<code>FieldsEditor.tsx</code></td><td>配置字段、输入块、模板。</td></tr><tr><td>AI 设置</td><td><code>AiSettings.tsx</code></td><td>配置 AI 能力和参数。</td></tr><tr><td>布局设置</td><td><code>LayoutSettings.tsx</code>、<code>LayoutRenderer.tsx</code></td><td>配置模块和视图布局。</td></tr><tr><td>视图编辑器</td><td><code>*ViewEditor.tsx</code></td><td>配置 Timeline、Heatmap、Statistics、Table 等视图。</td></tr><tr><td>主题管理</td><td><code>ThemeManager.ts</code>、<code>ThemeMatrix.tsx</code></td><td>管理主题树和批量操作。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>设置项模板</h2><pre class="mono">设置名：
+默认值：
+用户可见说明：
+影响模块：
+保存位置：
+是否需要迁移：
+异常值处理：</pre></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

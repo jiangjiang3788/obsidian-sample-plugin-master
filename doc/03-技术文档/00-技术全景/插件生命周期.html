@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>插件生命周期｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>插件生命周期</h1>
+        <p class="lead">解释插件从加载到卸载发生了什么。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：建议模板</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>onload 流程</h2><ol><li>安装可见诊断和注册诊断命令。</li><li>启动性能测量。</li><li>加载设置并合并默认值。</li><li>初始化 core DI 容器。</li><li>注册 platform ports：Vault、UI、Modal、Events、MessageRender、Metadata、FileStat。</li><li>创建并启动 ServiceManager。</li><li>构建 runtime，创建 capabilities。</li><li>注册用户命令。</li><li>输出加载完成日志。</li></ol></article>
+<article class="card full"><h2>onunload 流程</h2><ol><li>调用 <code>serviceManager.cleanup()</code>。</li><li>清理 DI container 实例。</li><li>释放插件相关资源。</li></ol></article>
+<article class="card full"><h2>生命周期风险</h2><div class="table-wrap"><table><thead><tr><th>风险</th><th>表现</th><th>防护</th></tr></thead><tbody><tr><td>启动失败</td><td>插件加载后功能不可用</td><td>safeAsync、Notice、诊断日志。</td></tr><tr><td>服务未注册</td><td>capability/usecase 调用失败</td><td>bootstrap 顺序要稳定。</td></tr><tr><td>卸载残留</td><td>事件监听、timer、modal 未清理</td><td>统一 cleanup 和 disposables。</td></tr><tr><td>设置缺失</td><td>旧数据结构导致 undefined</td><td>loadSettings 合并默认值和迁移。</td></tr></tbody></table></div></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

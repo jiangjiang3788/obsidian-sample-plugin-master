@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>目标闭环开发拆解｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS GOVERNANCE</div>
+        <h1>目标闭环开发拆解</h1>
+        <p class="lead">把目标闭环重构拆成可执行开发批次，明确每批计划时间、输入、输出、完成标准和不做事项。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：重定位草案</span>
+          <span class="badge">最后更新：2026-05-13</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>开发策略</h2><p>目标闭环重构不要从大规模目录整理开始，而要从一条可运行的纵向切片开始。先让一个目标能串起计划、任务、记录、复盘和反馈，再决定哪些目录和旧模块需要调整。</p><div class="callout"><strong>关键顺序：</strong>模型文档 &rarr; MVP 方案 &rarr; 技术关系模型 &rarr; 垂直切片实现 &rarr; Statistics 接入。</div></article>
+<article class="card full"><h2>开发批次</h2><div class="table-wrap"><table><thead><tr><th>批次</th><th>时间</th><th>状态</th><th>输入</th><th>输出</th><th>完成标准</th></tr></thead><tbody><tr><td>Batch 1 模型冻结</td><td>2026-05-14 至 2026-05-16</td><td>待启动</td><td>目标闭环模型、术语表、功能地图</td><td>Goal/Cycle/Plan/Task/Record/Review/Feedback 关系草案</td><td>能明确每个对象、关系、字段和旧概念映射。</td></tr><tr><td>Batch 2 MVP 交互方案</td><td>2026-05-17 至 2026-05-20</td><td>待启动</td><td>模型草案、用户场景、交互流程</td><td>MVP 页面入口、用户流程、验收清单</td><td>一个真实目标的完整闭环能被文档演示。</td></tr><tr><td>Batch 3 关系索引层</td><td>2026-05-21 至 2026-05-24</td><td>待开发</td><td>Goal/Cycle/Record 关系模型</td><td>读取目标、周期、计划、任务、记录关系的最小索引层</td><td>不破坏旧 Markdown，能识别和补齐关键关系。</td></tr><tr><td>Batch 4 写入与入口</td><td>2026-05-25 至 2026-05-28</td><td>待开发</td><td>索引层、现有 QuickInput/任务写回能力</td><td>目标创建、周期计划、任务关联、记录写入入口</td><td>用户能创建目标并完成一次任务记录。</td></tr><tr><td>Batch 5 复盘与反馈</td><td>2026-05-29 至 2026-05-31</td><td>待开发</td><td>任务与记录数据</td><td>周期复盘入口和基础反馈视图</td><td>目标详情能展示计划、任务、记录、复盘和基础反馈。</td></tr><tr><td>Batch 6 Statistics 校准</td><td>2026-06-01 至 2026-06-07</td><td>待启动</td><td>MVP 运行数据、Statistics 现有实现</td><td>按目标和周期解释推进情况的统计视图</td><td>Statistics 不再只是孤立报表，而能支持下一周期调整。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>第一刀开发范围</h2><div class="table-wrap"><table><thead><tr><th>要做</th><th>说明</th></tr></thead><tbody><tr><td>目标最小模型</td><td>能创建、读取、更新状态，能关联当前周期。</td></tr><tr><td>周期计划最小模型</td><td>能为目标创建本周期计划，保留 Markdown 可读性。</td></tr><tr><td>任务上下文</td><td>任务能带 <code>goalId</code>、<code>cycleId</code>、<code>planId</code> 中的关键关系。</td></tr><tr><td>执行记录</td><td>Timer 或 QuickInput 产生的记录能挂到任务或目标。</td></tr><tr><td>复盘入口</td><td>总结 Block 能读取本周期任务和记录。</td></tr><tr><td>基础反馈</td><td>展示完成数、投入时间、阻塞数、复盘结论和下一步调整。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>暂不做</h2><ul><li>不先做大规模目录重构。</li><li>不一次性替换所有旧字段和旧 Block。</li><li>不做团队协作、权限、审批、复杂看板。</li><li>不把 AI 放进 MVP 必需路径。</li><li>不让 Statistics 先行定义数据模型。</li></ul></article>
+<article class="card full"><h2>任务拆分模板</h2><pre class="mono">任务：
+对应批次：
+服务的闭环环节：
+计划开始：
+计划结束：
+实际开始：
+实际结束：
+状态：
+输入：
+输出：
+涉及页面或模块：
+旧能力复用：
+预计风险：
+验收方式：
+关联需求：</pre></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

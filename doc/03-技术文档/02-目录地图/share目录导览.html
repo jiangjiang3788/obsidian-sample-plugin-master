@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>share 目录导览｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / MIGRATED DOC</div>
+        <h1>share 目录导览</h1>
+        <p class="lead">代码架构图：左流程右说明继续把 shared/ 看懂：它像店里的公共工具柜这次只讲shared/。这是你以后整理文件夹时特别容易纠结的一层，因为很多项目最后都会把 shared 用成“杂物间”。你可以把它理解成：店里多个区域都会来借东西的公共工具柜</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>技术文档</td></tr><tr><td>旧路径</td><td><code>html/share.html</code></td></tr><tr><td>原始标题</td><td>继续把 shared/ 看懂：它像店里的公共工具柜</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc">
+<section>
+<div>
+<h3>shared/ 总体</h3>
+<span>src/shared/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店里的公共工具柜。</span></li>
+<li><span>一句话</span><span>这里放的是多个区域都会来借用的公共工具和零件，不属于某一个单独服务区。</span></li>
+<li><span>它在哪层</span><span>它不是前台服务区，也不是后仓核心区，而是横向支撑层。</span></li>
+<li><span>主要干什么</span><span>减少重复，把多个地方都要用的组件、hooks、通用小工具集中起来。</span></li>
+<li><span>和 core 的区别</span><span><span>core</span> 是基础能力区，负责撑住系统；<span>shared</span> 是公共复用区，负责减少重复。</span></li>
+<li><span>你怎么记</span><span>看到 shared，就想成“大家都能来借，但不是谁的私人物品”。</span></li>
+</ul>
+<div>你以后整理时最关键的一问是：<span>这个东西是不是至少两个区域都会长期用？</span> 如果不是，就要小心它不该进 shared。</div>
+</section>
+<section>
+<div>
+<h3>components/</h3>
+<span>src/shared/components/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像公共零件盒。</span></li>
+<li><span>一句话</span><span>这里放的是多个地方都能复用的界面小零件，不只服务一个功能区。</span></li>
+<li><span>它在哪层</span><span>属于 shared 里最常见的一层，因为很多复用都会先体现在 UI 组件上。</span></li>
+<li><span>主要干什么</span><span>提供通用按钮、选择器、列表块、树形选择等能在多个功能区重复使用的界面零件。</span></li>
+<li><span>和 features 里的组件区别</span><span><span>shared/components</span> 是多个服务区共用的，<span>features</span> 里的组件通常只服务某一个具体功能区。</span></li>
+<li><span>你怎么记</span><span>看到 shared/components，就想成“公共零件盒，谁需要就拿”。</span></li>
+</ul>
+<div>如果一个组件看起来很通用，但实际上只有 settings 自己在用，那它更应该留在 settings，而不是提前放进 shared。</div>
+</section>
+<section>
+<div>
+<h3>hooks/</h3>
+<span>src/shared/hooks/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像常用操作小技巧卡。</span></li>
+<li><span>一句话</span><span>把多个地方都会重复写的界面逻辑，整理成可重复使用的小套路。</span></li>
+<li><span>它在哪层</span><span>属于 shared 里的逻辑复用层，比 components 更偏行为，不只是长相。</span></li>
+<li><span>主要干什么</span><span>封装状态读取、事件处理、界面交互、重复性的前端逻辑。</span></li>
+<li><span>和 app/store 的区别</span><span><span>hooks</span> 更像“拿来就用的小套路”，<span>app/store</span> 是系统真正的状态中心。</span></li>
+<li><span>你怎么记</span><span>看到 shared/hooks，就想成“多个店员都会抄的小技巧卡片”。</span></li>
+</ul>
+<div>如果一个 hook 强烈依赖某个 feature 的业务语义，那就别急着放 shared，它可能属于那个 feature 自己。</div>
+</section>
+<section>
+<div>
+<h3>utils/</h3>
+<span>src/shared/utils/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像公共小工具抽屉。</span></li>
+<li><span>一句话</span><span>这里放的是很多地方都可能顺手要用到的小工具，不属于某个单独功能区。</span></li>
+<li><span>它在哪层</span><span>属于 shared 里的轻量辅助层，偏短小、通用、可随手复用。</span></li>
+<li><span>主要干什么</span><span>做轻量转换、拼接、辅助判断、简单格式化这类公共小动作。</span></li>
+<li><span>和 core/utils 的区别</span><span><span>core/utils</span> 更偏系统底层常用工具，<span>shared/utils</span> 更偏前台多个区域都会顺手用的公共小工具。</span></li>
+<li><span>你怎么记</span><span>看到 shared/utils，就想成“公共抽屉里的剪刀、胶带、小尺子”。</span></li>
+</ul>
+<div>如果一个工具已经明显带着系统底层语义，就别放 shared/utils，可能更适合放 core/utils。</div>
+</section>
+<section>
+<div>
+<h3>ThemeTreeSelect 这类内容</h3>
+<span>shared/components/...（示意）</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像公共展示支架。</span></li>
+<li><span>一句话</span><span>它看起来有点业务味，但如果多个地方都会复用，它仍然可以放在 shared。</span></li>
+<li><span>它在哪层</span><span>属于 shared 里比较“专用但可复用”的那类公共件。</span></li>
+<li><span>主要干什么</span><span>给多个区域提供相同的树形选择、展示、交互支架，而不是只给一个单独页面用。</span></li>
+<li><span>最容易误判的点</span><span>很多人看到“主题树”就以为只能属于 settings，但如果别的地方也要选树，它就可以是公共件。</span></li>
+<li><span>你怎么记</span><span>看到这种内容，就问自己：它是“某个柜台专属”，还是“多个柜台都会摆的公共支架”？</span></li>
+</ul>
+<div>这类内容正好说明：shared 不是完全没有业务味，而是要看它是不是“跨多个区域复用”。</div>
+</section>
+<section>
+<div>
+<h3>shared 的放置规则</h3>
+<span>整理时最重要的一页</span>
+</div>
+<ul>
+<li><span>能放进 shared 的</span><span>至少两个区域都会长期用，而且不强依赖某个单独 feature 的内容。</span></li>
+<li><span>不要放进 shared 的</span><span>暂时不知道放哪的代码、只服务一个功能区的私有组件、带很强业务名词的专属逻辑。</span></li>
+<li><span>整理时先问</span><span>这是“公共工具”，还是“某个服务区的私人物品”？</span></li>
+<li><span>最常见错误</span><span>为了看起来整洁，把大量 feature 私有内容提前抽到 shared，结果 shared 反而最乱。</span></li>
+<li><span>你该怎么做</span><span>先保守一点：宁可先留在 feature 内，等确认真的复用多次，再抽进 shared。</span></li>
+<li><span>一句话总原则</span><span><span>shared 解决“重复使用”，不是解决“我现在懒得想该放哪”。</span></span></li>
+</ul>
+<div>如果你现在准备整理文件夹，我建议你把 shared 当成“最后再抽公共件”的地方，而不是一开始就往里塞。</div>
+</section>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import type { InputSettings, Item, ThinkSettings } from '@/core/types/schema';
+import type { BlockTemplate, InputSettings, Item, ThinkSettings } from '@/core/types/schema';
 import type { PreparedEditRecord } from '@/core/types/recordInput';
 import type { ParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 import { buildEditableRecordSnapshot } from '@/core/services/recordInput/snapshot/EditSnapshotFactory';
@@ -8,6 +8,7 @@ import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSe
 import { formatTagsForField } from '@/core/utils/tagUtils';
 import { findThemeIdByPath, resolveRecordDependencies } from './dependencyResolver';
 import { buildInitialEditFormData } from './EditBackfillMapper';
+import { getEffectiveCoreBlocks } from '@/core/blocks';
 
 export interface BuildEditStateInput {
   settings: ThinkSettings;
@@ -186,8 +187,7 @@ function readCoreBlockHint(item: Item): string | null {
   return null;
 }
 
-function resolveBlockForEdit(settings: InputSettings, item: Item, preferredBlockId?: string | null) {
-  const blocks = settings.blocks || [];
+function resolveBlockForEdit(blocks: BlockTemplate[], item: Item, preferredBlockId?: string | null) {
   if (!Array.isArray(blocks) || blocks.length === 0) {
     return {
       blockId: preferredBlockId ?? null,
@@ -200,7 +200,7 @@ function resolveBlockForEdit(settings: InputSettings, item: Item, preferredBlock
 
   const coreBlockHint = readCoreBlockHint(item);
   if (coreBlockHint) {
-    const block = blocks.find((candidate) => candidate.id === coreBlockHint || candidate.coreBlockId === coreBlockHint);
+    const block = blocks.find((candidate) => candidate.id === coreBlockHint || (candidate as any).coreBlockId === coreBlockHint);
     if (block) {
       return {
         blockId: block.id,
@@ -346,7 +346,8 @@ function buildInitialFormData(template: any, item: Item, snapshot: ParsedRecordS
 export function buildEditRecordState(input: BuildEditStateInput): PreparedEditRecord {
   const { settings, item, preferredBlockId, preferredThemeId } = input;
   const inputSettings = settings.inputSettings;
-  const resolvedBlock = resolveBlockForEdit(inputSettings, item, preferredBlockId);
+  const runtimeBlocks = getEffectiveCoreBlocks(settings);
+  const resolvedBlock = resolveBlockForEdit(runtimeBlocks, item, preferredBlockId);
   const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(inputSettings, item.theme) ?? preferredThemeId ?? undefined;
   recordDebugLog('编辑模板解析', '任务/块模板选择', {
     itemType: item.type,
@@ -383,7 +384,7 @@ export function buildEditRecordState(input: BuildEditStateInput): PreparedEditRe
     theme: resolvedDependencies.theme,
     templateMeta: {
       templateId: resolvedDependencies.meta.templateId ?? resolvedDependencies.template?.id ?? null,
-      templateSourceType: resolvedDependencies.meta.templateSourceType ?? 'legacy-block',
+      templateSourceType: resolvedDependencies.meta.templateSourceType ?? 'core-block',
     },
   });
 

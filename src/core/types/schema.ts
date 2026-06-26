@@ -218,7 +218,7 @@ export interface SortRule {
 export interface Item {
     id: string;
     templateId?: string;
-    templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block';
+    templateSourceType?: 'core-block' | 'goal-template';
     title: string;
     content: string;
     /** 编辑态使用的正文真源：尽量保留用户原始表达，但去掉任务前缀/内联元数据噪音。 */

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-05 字段系统高质量完成线改造计划｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">字段系统 / 输入 / 数据来源 / 筛选搜索 / 迁移验收</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：字段、来源、extra、themePath、图片字段、迁移..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">项目管理 / 实施计划 / FIELD SYSTEM</div>
+        <h1>2026-05 字段系统高质量完成线改造计划</h1>
+        <p class="lead">本计划把字段系统重构拆成可执行阶段：先彻底修正 header/theme、themePath 筛选、extra 污染，再进入字段分类、类型语义分离、图片与多值层级字段、迁移验收。</p>
+        <div class="meta-row"><span class="badge good">状态：当前有效</span><span class="badge">最后更新：2026-05-21</span><span class="badge">格式：HTML</span></div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>一句话目标</h2><p>把“字段”从散落的配置项、解析别名、UI if/else、搜索派生字段中抽出来，升级为 Think OS 的一级架构对象。完成后，每个字段都必须能回答四个问题：它是什么类型、承担什么语义、存在哪里、值从哪里来。</p>
+<div class="callout"><strong>本轮硬约束：</strong><code>header</code> 永远不参与 <code>theme</code>；筛选里的主题统一指 <code>themePath</code>；<code>extra</code> 只接收显式未知 KV，且来源可解释。</div></article><article class="card full"><h2>高质量完成线</h2><div class="table-wrap"><table><thead><tr><th>维度</th><th>完成标准</th><th>不可接受情况</th></tr></thead><tbody><tr><td>字段模型</td><td>存在统一 <code>FieldDefinition</code>、<code>FieldType</code>、<code>FieldSemantic</code>、<code>FieldOrigin</code>，核心字段、文件字段、派生字段、extra 字段有清晰分类。</td><td>继续靠字段名猜语义，例如字段名叫“主题”才被当主题，字段名叫“标签”才被当标签。</td></tr><tr><td>来源追踪</td><td>任意记录字段都能说明来自 Markdown task KV、block KV、tag、heading、file stat、template default、derived、cache 或 legacy。</td><td>用户看到一个字段，但不知道它是设置生成、历史遗留、解析器自动写入还是从文件属性推导。</td></tr><tr><td>读写对称</td><td>Markdown -> Record -> FormData -> Markdown 走统一 codec，编辑不丢字段、不重复字段、不把历史 fallback 写回新数据。</td><td>解析逻辑、编辑回填、模板渲染各写一套规则。</td></tr><tr><td>筛选搜索</td><td>筛选、排序、搜索统一通过字段解析器和索引定义，不绕过字段语义。主题筛选默认使用 <code>themePath</code>。</td><td>视图筛选直接读 <code>item.theme || item.header</code> 或在 UI 层拼派生值。</td></tr><tr><td>图片与多值</td><td>图片、多图、多选、层级路径、多标签成为基础字段能力，而不是 <code>pintu</code> 或 <code>rating</code> 特例。</td><td>图片只能靠字段 key 名判断，或只能在某一个业务字段上预览。</td></tr><tr><td>测试验收</td><td>有单元、集成、迁移、回归、手动 Obsidian 场景清单；cache schema 升级有测试。</td><td>只靠手动试用，无法防止 header/theme、extra 污染回归。</td></tr></tbody></table></div></article><article class="card full"><h2>分阶段实施计划</h2><div class="table-wrap"><table><thead><tr><th>阶段</th><th>模块</th><th>目标</th><th>主要文件</th><th>验收</th></tr></thead><tbody><tr><td>Phase 0 止血基线</td><td><code>core/theme</code>、<code>DataStore</code>、<code>schema</code>、筛选面板</td><td>冻结错误语义：header 不再参与 theme；默认主题筛选改为 themePath；extra 去污染。</td><td><code>src/core/theme/themeSemantics.ts</code><br><code>src/core/services/DataStore.ts</code><br><code>src/core/types/schema.ts</code><br><code>src/core/utils/parser.ts</code><br><code>src/features/settings/*FilterPanel*</code></td><td>grep 无 <code>item.theme || item.header</code>；新增 themePath 单测；extra.正文/内容 不再自动出现。</td></tr><tr><td>Phase 1 字段盘点与来源追踪</td><td><code>core/types</code>、<code>core/fields</code></td><td>让每个字段的数据来源可解释，先不大改 UI。</td><td><code>FieldOrigin.ts</code><br><code>FieldOriginCollector.ts</code><br><code>FieldDebugSnapshot.ts</code></td><td>任意 Item 可导出字段来源报告；来源覆盖 task、block、tag、heading、file、derived、legacy。</td></tr><tr><td>Phase 2 字段分类注册表</td><td><code>core/fields</code></td><td>建立核心字段、文件字段、语义字段、派生字段、extra 字段、legacy 字段分类。</td><td><code>FieldDefinition.ts</code><br><code>FieldRegistry.ts</code><br><code>FieldCategory.ts</code></td><td>字段选择器可按分类显示；legacy 默认隐藏；extra 只显示显式来源。</td></tr><tr><td>Phase 3 类型与语义分离</td><td><code>core/fields</code>、settings 字段编辑器</td><td>把“单选/多选/文本/图片”与“主题/标签/分类/状态”解耦。</td><td><code>FieldTypes.ts</code><br><code>FieldSemantics.ts</code><br><code>FieldsEditor.tsx</code></td><td>同一个语义可改 label/key；同一种类型可承载不同语义；不再靠中文 key 判断核心语义。</td></tr><tr><td>Phase 4 统一 Codec</td><td>parser、InputService、OutputPlanner、editStateResolver</td><td>读写对称，减少散落规则。</td><td><code>MarkdownTaskCodec.ts</code><br><code>MarkdownBlockCodec.ts</code><br><code>RecordNormalizer.ts</code><br><code>FieldValueCodec.ts</code></td><td>task/block 解析、编辑、保存走同一规则；旧字段只作为 legacy alias 输入，不写回污染字段。</td></tr><tr><td>Phase 5 视图与搜索接入</td><td>shared views、settings filters、RetrievalService</td><td>筛选、排序、搜索、AI 检索走字段解析器。</td><td><code>FieldValueResolver.ts</code><br><code>RuleBuilder.tsx</code><br><code>CommonFilterPanel.tsx</code><br><code>RetrievalService.ts</code></td><td>主题筛选显示 themePath；多值标签支持 contains/any/all；图片字段不进入全文噪声。</td></tr><tr><td>Phase 6 图片与多值层级字段</td><td>QuickInput、FieldPill、TagsRenderer</td><td>图片、多图、多选、层级路径、多标签作为基础能力。</td><td><code>ImageFieldInput.tsx</code><br><code>FieldPill.tsx</code><br><code>TagsRenderer.tsx</code><br><code>pathSemantics.ts</code></td><td>图片可输入、预览、编辑、搜索忽略或按资源名搜索；标签可多值层级筛选。</td></tr><tr><td>Phase 7 迁移与质量门禁</td><td>cache、tests、scripts</td><td>旧数据平滑迁移，防止回归。</td><td><code>cache.ts</code><br><code>FieldMigration.ts</code><br><code>test/unit/*field*</code><br><code>test/integration/*</code></td><td>cache schema 升级；迁移报告；verify/test/typecheck/gate 全部通过。</td></tr></tbody></table></div></article><article class="card full"><h2>分模块落地顺序</h2><div class="table-wrap"><table><thead><tr><th>顺序</th><th>代码模块</th><th>为什么先做</th><th>产物</th></tr></thead><tbody><tr><td>1</td><td><code>src/core/types</code></td><td>先定合同，避免 UI 和 parser 继续各自发明字段。</td><td>FieldDefinition、FieldOrigin、FieldCategory、RecordFieldValue 类型。</td></tr><tr><td>2</td><td><code>src/core/fields</code></td><td>集中字段注册、解析、默认显示、过滤能力。</td><td>FieldRegistry、FieldValueResolver、FieldOriginCollector。</td></tr><tr><td>3</td><td><code>src/core/utils/parser.ts</code> 与 codec</td><td>控制字段进入系统的入口，解决 extra 污染。</td><td>Task/Block codec、known key mapping、legacy alias mapping。</td></tr><tr><td>4</td><td><code>src/core/services/DataStore.ts</code></td><td>扫描和缓存是数据真源，先确保 Item 干净。</td><td>字段来源注入、cache version、派生字段统一。</td></tr><tr><td>5</td><td><code>recordInput</code> 与 <code>InputService</code></td><td>编辑回填和写入必须与解析对称。</td><td>FormData mapper、OutputPlanner 接字段定义。</td></tr><tr><td>6</td><td>settings / filters / viewEditors</td><td>让用户看到的新字段体系可配置、可筛选。</td><td>字段分类 UI、themePath 筛选、extra 来源提示。</td></tr><tr><td>7</td><td>shared ui / QuickInput</td><td>最后替换显示和输入控件，风险较低且可逐步迁移。</td><td>通用 FieldRenderer、ImageField、MultiTagField。</td></tr></tbody></table></div></article><article class="card full"><h2>退出条件</h2><ul>
+<li>用户可以在字段选择器中清楚看到：核心字段、文件字段、语义字段、派生字段、自定义字段、历史兼容字段。</li>
+<li>点击任意字段可以看到来源说明，至少包含来源类型、原始 key、文件路径、行号、显式/派生/历史置信度。</li>
+<li>新建字段时先选字段类型，再选可选语义；字段 label/key 可以自由命名。</li>
+<li>主题、分类、标签都作为“层级路径 / 多值标签”能力存在，不绑定固定字段名。</li>
+<li>图片字段可作为任意字段定义使用，不再依赖 <code>pintu</code> 特例。</li>
+<li>旧数据能继续搜索显示，但 legacy 字段默认隐藏，不再污染新数据。</li>
+</ul></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。字段系统改造原则：字段名称自由、字段类型固定、字段语义显式、字段来源可追踪。</footer>
+    </main>
+  </div>
+  <script src="../../../_资源/搜索索引.js"></script>
+  <script src="../../../_资源/文档脚本.js"></script>
+</body>
+</html>

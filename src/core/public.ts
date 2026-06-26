@@ -215,8 +215,6 @@ export {
     CORE_BLOCK_IDS,
     DEFAULT_CORE_BLOCKS,
     DEFAULT_CORE_BLOCK_SETTINGS,
-    buildLegacyCoreBlockMap,
-    inferCoreBlockIdFromLegacyBlock,
     getCoreBlockById,
     getEffectiveCoreBlocks,
     normalizeCoreBlockSettings,

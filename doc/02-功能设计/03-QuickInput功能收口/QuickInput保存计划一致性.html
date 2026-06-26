@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickInput 保存计划一致性｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">功能设计 / MIGRATED DOC</div>
+        <h1>QuickInput 保存计划一致性</h1>
+        <p class="lead">上一阶段已经在编辑面板里做了“保存位置实时预览”，但实际保存时 usecase 仍会重新计算一次 OutputPlan / PersistencePlan。如果两边计算结果漂移，就可能出现：这类问题比普通失败更危险，所以本次加入提交前一致性校验。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>功能设计</td></tr><tr><td>旧路径</td><td><code>docs/quickinput-output-plan-submit-consistency.md</code></td></tr><tr><td>原始标题</td><td>QuickInput 保存计划一致性收口</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>QuickInput 保存计划一致性收口</h1>
+<h2>本次目的</h2>
+<p>上一阶段已经在编辑面板里做了“保存位置实时预览”，但实际保存时 usecase 仍会重新计算一次 OutputPlan / PersistencePlan。
+如果两边计算结果漂移，就可能出现：</p>
+<ul>
+<li>UI 显示会保存到 A 文件；</li>
+<li>点击保存后实际写到 B 文件；</li>
+<li>或 UI 显示原地更新，实际执行迁移保存。</li>
+</ul>
+<p>这类问题比普通失败更危险，所以本次加入提交前一致性校验。</p>
+<h2>做法</h2>
+<p><code>QuickInputModal</code> 在提交编辑记录时，把当前 UI 实时预览到的：</p>
+<ul>
+<li><code>expectedOutputPlan</code></li>
+<li><code>expectedPersistencePlan</code></li>
+</ul>
+<p>一起传给 <code>submitUpdateRecord()</code>。</p>
+<p><code>recordInput.usecase.ts</code> 在真正写入前会重新计算实际计划，并对比：</p>
+<ul>
+<li>目标文件路径；</li>
+<li>目标标题；</li>
+<li>原始路径；</li>
+<li>是否路径变化；</li>
+<li>写入策略：<code>update_in_place</code> / <code>move_and_replace</code>。</li>
+</ul>
+<p>如果不一致，直接返回 validation error，阻止保存。</p>
+<h2>为什么不是自动相信 UI 预览</h2>
+<p>UI 预览只能用于展示，不应该直接作为写入依据。
+真正写入仍然必须由 usecase 根据最新模板、主题、字段重新计算。
+这次校验的作用是：</p>
+<blockquote>
+<p>UI 预览和实际写入必须一致；不一致就宁可不保存。</p>
+</blockquote>
+<h2>验收标准</h2>
+<ol>
+<li>普通原地保存不受影响。</li>
+<li>路径变化迁移保存不受影响。</li>
+<li>如果 UI 预览与实际保存计划不一致，保存被阻止。</li>
+<li>阻止时提示中文原因。</li>
+<li>不产生新记录，也不删除旧记录。</li>
+</ol>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

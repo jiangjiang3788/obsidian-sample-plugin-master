@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>回滚方案｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>回滚方案</h1>
+        <p class="lead">当发布或迁移出问题时，明确怎么恢复。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：建议模板</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>回滚场景</h2><div class="table-wrap"><table><thead><tr><th>场景</th><th>回滚方式</th></tr></thead><tbody><tr><td>文档替换出问题</td><td>恢复原 <code>文档/</code> 文件夹备份。</td></tr><tr><td>构建产物出问题</td><td>恢复上一版 <code>main.js</code> 和 <code>styles.css</code>。</td></tr><tr><td>设置数据出问题</td><td>恢复 Obsidian 插件数据备份。</td></tr><tr><td>Vault 数据迁移出问题</td><td>从用户文件备份恢复，或使用迁移前副本。</td></tr><tr><td>新功能引起崩溃</td><td>禁用对应功能入口或回退上一版本。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>回滚前必须记录</h2><ul><li>出问题版本。</li><li>影响范围。</li><li>用户数据是否受影响。</li><li>回滚文件清单。</li><li>回滚后验证步骤。</li></ul></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

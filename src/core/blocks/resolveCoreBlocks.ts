@@ -1,7 +1,6 @@
 import type { BlockTemplate, ThinkSettings } from '@/core/types/schema';
 import { DEFAULT_CORE_BLOCKS, DEFAULT_CORE_BLOCK_SETTINGS } from './defaultCoreBlocks';
 import type { CoreBlockDefinition, CoreBlockPatch, CoreBlockSettings } from './types';
-import { buildLegacyCoreBlockMap } from './legacyBlockAdapter';
 
 function applyPatch(block: CoreBlockDefinition, patch?: CoreBlockPatch): CoreBlockDefinition {
   if (!patch) return block;
@@ -16,12 +15,10 @@ function applyPatch(block: CoreBlockDefinition, patch?: CoreBlockPatch): CoreBlo
   };
 }
 
-export function normalizeCoreBlockSettings(settings?: Partial<CoreBlockSettings> | null, legacyBlocks: BlockTemplate[] = []): CoreBlockSettings {
-  const legacyBlockMap = { ...buildLegacyCoreBlockMap(legacyBlocks), ...(settings?.legacyBlockMap || {}) };
+export function normalizeCoreBlockSettings(settings?: Partial<CoreBlockSettings> | null, _legacyBlocks: BlockTemplate[] = []): CoreBlockSettings {
   return {
     enabledCoreBlockIds: settings?.enabledCoreBlockIds?.length ? settings.enabledCoreBlockIds : DEFAULT_CORE_BLOCK_SETTINGS.enabledCoreBlockIds,
     patches: settings?.patches || [],
-    legacyBlockMap,
   };
 }
 
@@ -35,7 +32,5 @@ export function getEffectiveCoreBlocks(settings: Pick<ThinkSettings, 'coreBlockS
 }
 
 export function getCoreBlockById(settings: Pick<ThinkSettings, 'coreBlockSettings' | 'inputSettings'>, blockId: string): CoreBlockDefinition | null {
-  const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
-  const resolvedId = String(blockId || '').startsWith('core.') ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
-  return getEffectiveCoreBlocks(settings).find((block) => block.id === resolvedId) || null;
+  return getEffectiveCoreBlocks(settings).find((block) => block.id === blockId) || null;
 }

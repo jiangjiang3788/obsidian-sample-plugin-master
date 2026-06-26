@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>兼容性记录｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>兼容性记录</h1>
+        <p class="lead">记录插件对 Obsidian、桌面端/移动端、依赖版本的兼容情况。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：建议模板</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>兼容性维度</h2><div class="table-wrap"><table><thead><tr><th>维度</th><th>当前信息</th><th>待验证</th></tr></thead><tbody><tr><td>Obsidian 最低版本</td><td><code>manifest.json</code> 中 <code>minAppVersion: 0.15.0</code></td><td>是否真实支持这么低的版本。</td></tr><tr><td>桌面端</td><td>主要开发和验证环境</td><td>设置页、弹窗、Timer、AI。</td></tr><tr><td>移动端</td><td>未明确验证</td><td>布局、弹窗、拖拽、MUI 组件适配。</td></tr><tr><td>依赖版本</td><td>Preact、MUI、dnd-kit、Zustand、tsyringe 等</td><td>升级时需要回归设置和视图。</td></tr><tr><td>本地文件系统</td><td>依赖 Obsidian Vault API</td><td>批量扫描、写入、迁移安全。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>兼容性记录模板</h2><pre class="mono">环境：
+Obsidian 版本：
+系统：
+验证功能：
+结果：通过 / 失败
+问题：
+备注：</pre></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

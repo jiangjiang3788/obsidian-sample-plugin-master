@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>构建流程｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
+        <h1>构建流程</h1>
+        <p class="lead">说明从源码到 Obsidian 可加载文件之间的构建和检查链路。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：建议模板</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>核心脚本</h2><div class="table-wrap"><table><thead><tr><th>脚本</th><th>作用</th></tr></thead><tbody><tr><td><code>npm run dev</code></td><td>启动 Vite 开发构建。</td></tr><tr><td><code>npm run build</code></td><td>执行 Vite build，修 sourcemap，并复制 dist 到根目录。</td></tr><tr><td><code>npm run check</code></td><td>运行 lint、typecheck 和 gate。</td></tr><tr><td><code>npm run gate</code></td><td>运行全部架构门禁。</td></tr><tr><td><code>npm run test</code></td><td>运行 Jest 测试。</td></tr><tr><td><code>npm run ci</code></td><td>check + gate + build。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>构建产物</h2><div class="table-wrap"><table><thead><tr><th>文件</th><th>来源</th><th>用途</th></tr></thead><tbody><tr><td><code>main.js</code></td><td><code>dist/main.js</code> 复制而来</td><td>Obsidian 插件主脚本。</td></tr><tr><td><code>styles.css</code></td><td><code>dist/styles.css</code> 复制而来</td><td>Obsidian 插件样式。</td></tr><tr><td><code>manifest.json</code></td><td>根目录维护</td><td>插件元信息。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>发布前最低检查</h2><ol><li><code>npm run check</code></li><li><code>npm run test</code></li><li><code>npm run build</code></li><li>手动打开 Obsidian 验证关键命令和设置页。</li></ol></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>
