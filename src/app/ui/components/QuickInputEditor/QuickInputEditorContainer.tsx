@@ -2,13 +2,14 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 
-import { selectSettings, useSelector, useUseCases } from '@/app/public';
+import { selectSettings, useSelector } from '@/app/public';
 import { GoalTemplateResolver, dayjs, getEffectiveCoreBlocks, getGoalTemplateVariants, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/public';
 import { QuickInputEditorView } from './QuickInputEditorView';
 import type { GoalSelectorOption } from './components/GoalSelector';
 import {
   EMPTY_FORM_DATA,
-  applyQuickInputLinkedTimeChanges,
+  applyQuickInputFieldUpdate,
+  applyQuickInputTimeDirectionChange,
   applyQuickInputGoalSelection,
   buildQuickInputEditorState,
   buildInitialFieldSources,
@@ -21,7 +22,6 @@ import {
   deriveQuickInputInitialSelection,
   getGoalPath,
   hydrateQuickInputTemplateDefaults,
-  makeGoalIdFromPath,
   preserveQuickInputBlockSwitchState,
   resolveQuickInputThemeSelectionOnClick,
   resolveQuickInputCoreBlockId,
@@ -29,7 +29,7 @@ import {
   splitPathParts,
   themeOptions,
 } from './QuickInputEditorModel';
-import type { QuickInputEditorProps, QuickInputFieldSource, QuickInputFieldSourceMap, TimeDirection } from './QuickInputEditorModel';
+import type { QuickInputEditorProps, QuickInputFieldSourceMap, TimeDirection } from './QuickInputEditorModel';
 export { finalizeQuickInputFormData } from './QuickInputEditorModel';
 export type { QuickInputEditorProps, QuickInputEditorState } from './QuickInputEditorModel';
 
@@ -53,8 +53,6 @@ export function QuickInputEditor({
 }: QuickInputEditorProps) {
   const fullSettings = useSelector(selectSettings);
   const settings = fullSettings.inputSettings;
-  const useCases = useUseCases();
-
   const [currentBlockId, setCurrentBlockId] = useState(initialBlockId);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(initialThemeId);
   const initialSelection = deriveQuickInputInitialSelection(initialFormData, context);
@@ -243,50 +241,23 @@ export function QuickInputEditor({
   };
 
   const handleUpdateField = (key: string, value: any, isOptionObject = false) => {
-    const rawValue = isOptionObject ? value?.value : value;
-    if (key === 'themePath' || key === '主题') {
-      const nextPath = String(rawValue ?? '').trim();
-      setSelectedThemeId(nextPath ? pathToIdMap.get(nextPath) ?? null : null);
+    const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject, timeDirection });
+    if (updated.nextThemePath !== undefined) setSelectedThemeId(updated.nextThemePath ? pathToIdMap.get(updated.nextThemePath) ?? null : null);
+    if (updated.nextGoalPath !== undefined) {
+      setSelectedGoalPath(updated.nextGoalPath);
+      setSelectedGoalId(updated.nextGoalId ?? null);
     }
-    if (key === 'goalPath' || key === '目标' || key === '目标路径') {
-      const nextGoalPath = cleanDisplayPath(String(rawValue ?? ''));
-      setSelectedGoalPath(nextGoalPath);
-      setSelectedGoalId(nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null);
-    }
-    setFormData((cur) => {
-      const draft = { ...cur, [key]: isOptionObject ? { value: value.value, label: value.label } : value, lastChanged: key };
-      const linked = applyQuickInputLinkedTimeChanges(draft, timeDirection);
-      setFieldSources((prev) => {
-        const nextSources = { ...prev, [key]: 'user' as QuickInputFieldSource };
-        linked.autoKeys.forEach((autoKey) => {
-          if (autoKey !== key) nextSources[autoKey] = 'system_auto';
-        });
-        emitDraftState(linked.formData, timeDirection, nextSources);
-        return nextSources;
-      });
-      return linked.formData;
-    });
+    setFormData(updated.formData);
+    setFieldSources(updated.fieldSources);
+    emitDraftState(updated.formData, timeDirection, updated.fieldSources);
   };
 
   const handleTimeDirectionChange = (nextDirection: TimeDirection) => {
-    setTimeDirection(nextDirection);
-    setFormData((cur) => {
-      const draft = { ...cur };
-      if (nextDirection === 'backward' && !draft['结束']) {
-        draft['结束'] = dayjs().format('HH:mm');
-      }
-      const linked = applyQuickInputLinkedTimeChanges(draft, nextDirection);
-      setFieldSources((prev) => {
-        const nextSources = { ...prev };
-        if (nextDirection === 'backward' && !prev['结束'] && draft['结束']) nextSources['结束'] = 'system_auto';
-        linked.autoKeys.forEach((autoKey) => {
-          nextSources[autoKey] = 'system_auto';
-        });
-        emitDraftState(linked.formData, nextDirection, nextSources);
-        return nextSources;
-      });
-      return linked.formData;
-    });
+    const updated = applyQuickInputTimeDirectionChange({ formData, fieldSources, nextDirection });
+    setTimeDirection(updated.timeDirection);
+    setFormData(updated.formData);
+    setFieldSources(updated.fieldSources);
+    emitDraftState(updated.formData, updated.timeDirection, updated.fieldSources);
   };
 
   const handleBlockChange = (newBlockId: string) => {
@@ -301,23 +272,6 @@ export function QuickInputEditor({
 
   const handleSelectTheme = (themeId: string | null, path: string | null) => {
     setSelectedThemeId(resolveQuickInputThemeSelectionOnClick({ selectedThemeId, themeId, path, pathToIdMap }));
-  };
-
-
-  const handleCreateGoal = async (goalPath: string) => {
-    const normalized = cleanDisplayPath(goalPath);
-    if (!normalized) return;
-    const title = normalized.split('/').filter(Boolean).pop() || normalized;
-    const effectiveThemePath = String(formData.themePath ?? formData['主题'] ?? theme?.path ?? selectedGoal?.themePath ?? '').trim() || null;
-    const goal = await useCases.goal.addGoal({ title, goalPath: normalized, themePath: effectiveThemePath });
-    if (!goal) return;
-    handleSelectGoal({
-      id: goal.id,
-      value: goal.goalPath || normalized,
-      label: goal.title,
-      goal,
-      themePath: goal.themePath || null,
-    });
   };
 
   const handleSelectGoal = (option: GoalSelectorOption | null) => {

@@ -2119,7 +2119,7 @@ function readOptionText$1(value) {
   if (typeof value === "object" && value && "value" in value) return compactText$3(value.value);
   return compactText$3(value);
 }
-function leafPath$3(value) {
+function leafPath$2(value) {
   const text2 = normalizePath$6(value);
   return text2.split("/").filter(Boolean).pop() || text2;
 }
@@ -2127,7 +2127,7 @@ function isGeneratedGoalTemplateName(value) {
   const text2 = compactText$3(value);
   return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "默认预设" || text2 === "默认模板" || text2 === "未命名预设";
 }
-function isThemeField$2(field) {
+function isThemeField$1(field) {
   const anyField = field;
   const key = compactText$3(anyField.key).toLowerCase();
   const label = compactText$3(anyField.label);
@@ -2152,7 +2152,7 @@ function readFieldDefault$1(fields, predicate) {
 function readGoalTemplateThemePath$1(template, goal) {
   const values2 = template?.defaultValues || {};
   return normalizePath$6(
-    readOptionText$1(values2.themePath) || readOptionText$1(values2["主题"]) || readFieldDefault$1(template?.fields, isThemeField$2) || readOptionText$1(goal?.themePath)
+    readOptionText$1(values2.themePath) || readOptionText$1(values2["主题"]) || readFieldDefault$1(template?.fields, isThemeField$1) || readOptionText$1(goal?.themePath)
   );
 }
 function readGoalTemplateIcon$1(template, fallbackIcon) {
@@ -2164,7 +2164,7 @@ function readGoalTemplateIcon$1(template, fallbackIcon) {
 function getGoalTemplateDisplayName$1(template, goal, fallback = "记录预设") {
   const rawName = compactText$3(template?.name);
   if (rawName && !isGeneratedGoalTemplateName(rawName)) return rawName;
-  const themeLabel = leafPath$3(readGoalTemplateThemePath$1(template, goal));
+  const themeLabel = leafPath$2(readGoalTemplateThemePath$1(template, goal));
   if (themeLabel) return themeLabel;
   const variantId = normalizeTemplateVariantId(compactText$3(template?.variantId));
   const variantText = variantId.replace(/^legacy-/, "");
@@ -57724,44 +57724,6 @@ function cleanDisplayPath(value) {
   const parts = normalized.split("/").map(cleanDisplaySegment).filter(Boolean);
   return parts.length ? parts.join("/") : null;
 }
-function getOrderedGoalIndex(goal, originalIndex) {
-  if (!goal) return Number.MAX_SAFE_INTEGER;
-  const order2 = Number(goal.sortOrder);
-  return Number.isFinite(order2) ? order2 : originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
-}
-function getGoalByDisplayPath(goals, path) {
-  return goals.find((goal) => getGoalPath(goal) === path) || null;
-}
-function sortGoalsLikePresetMatrix(goals) {
-  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
-  return [...goals].sort((left2, right2) => {
-    const leftParts = (getGoalPath(left2) || "").split("/").filter(Boolean);
-    const rightParts = (getGoalPath(right2) || "").split("/").filter(Boolean);
-    const max2 = Math.min(leftParts.length, rightParts.length);
-    for (let index = 0; index < max2; index += 1) {
-      if (leftParts[index] === rightParts[index]) continue;
-      const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join("/");
-      const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join("/");
-      const leftSiblingGoal = getGoalByDisplayPath(goals, leftSiblingPath);
-      const rightSiblingGoal = getGoalByDisplayPath(goals, rightSiblingPath);
-      const leftOrder = getOrderedGoalIndex(leftSiblingGoal, originalIndex);
-      const rightOrder = getOrderedGoalIndex(rightSiblingGoal, originalIndex);
-      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
-      return leftParts[index].localeCompare(rightParts[index], "zh-CN");
-    }
-    if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
-    const byOrder = getOrderedGoalIndex(left2, originalIndex) - getOrderedGoalIndex(right2, originalIndex);
-    if (byOrder !== 0) return byOrder;
-    return (originalIndex.get(left2.id) ?? 0) - (originalIndex.get(right2.id) ?? 0);
-  });
-}
-function resolveQuickInputCoreBlockId(_fullSettings, blockId) {
-  return String(blockId || "");
-}
-function goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId) {
-  if (!goal?.id || !coreBlockId) return false;
-  return getGoalTemplates(fullSettings.goalSettings).some((template) => template.enabled !== false && template.goalId === goal.id && template.coreBlockId === coreBlockId);
-}
 const splitThemePathParts = (path) => {
   const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
   return {
@@ -57794,6 +57756,380 @@ const buildFieldSourceSummary = (sources) => ({
   template_default: Object.values(sources).filter((v2) => v2 === "template_default").length,
   system_auto: Object.values(sources).filter((v2) => v2 === "system_auto").length
 });
+function getOrderedGoalIndex(goal, originalIndex) {
+  if (!goal) return Number.MAX_SAFE_INTEGER;
+  const order2 = Number(goal.sortOrder);
+  return Number.isFinite(order2) ? order2 : originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
+}
+function getGoalByDisplayPath(goals, path) {
+  return goals.find((goal) => getGoalPath(goal) === path) || null;
+}
+function sortGoalsLikePresetMatrix(goals) {
+  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
+  return [...goals].sort((left2, right2) => {
+    const leftParts = (getGoalPath(left2) || "").split("/").filter(Boolean);
+    const rightParts = (getGoalPath(right2) || "").split("/").filter(Boolean);
+    const max2 = Math.min(leftParts.length, rightParts.length);
+    for (let index = 0; index < max2; index += 1) {
+      if (leftParts[index] === rightParts[index]) continue;
+      const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join("/");
+      const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join("/");
+      const leftSiblingGoal = getGoalByDisplayPath(goals, leftSiblingPath);
+      const rightSiblingGoal = getGoalByDisplayPath(goals, rightSiblingPath);
+      const leftOrder = getOrderedGoalIndex(leftSiblingGoal, originalIndex);
+      const rightOrder = getOrderedGoalIndex(rightSiblingGoal, originalIndex);
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      return leftParts[index].localeCompare(rightParts[index], "zh-CN");
+    }
+    if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
+    const byOrder = getOrderedGoalIndex(left2, originalIndex) - getOrderedGoalIndex(right2, originalIndex);
+    if (byOrder !== 0) return byOrder;
+    return (originalIndex.get(left2.id) ?? 0) - (originalIndex.get(right2.id) ?? 0);
+  });
+}
+function goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId) {
+  if (!goal?.id || !coreBlockId) return false;
+  return getGoalTemplates(fullSettings.goalSettings).some((template) => template.enabled !== false && template.goalId === goal.id && template.coreBlockId === coreBlockId);
+}
+function buildQuickInputGoalOptions(fullSettings, coreBlockId) {
+  const seen = /* @__PURE__ */ new Set();
+  const sourceGoals = sortGoalsLikePresetMatrix([...fullSettings.goalSettings?.goals || []]).filter((goal) => goal.status !== "archived").filter((goal) => goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId));
+  const result = [];
+  for (const [index, goal] of sourceGoals.entries()) {
+    const normalized = cleanDisplayPath(goal.goalPath || goal.title);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    const leaf2 = normalized.split("/").filter(Boolean).pop() || normalized;
+    result.push({
+      id: goal.id || makeGoalIdFromPath(normalized),
+      value: normalized,
+      label: cleanDisplaySegment(goal.title) || leaf2,
+      order: index,
+      goal,
+      themePath: goal.themePath ?? null
+    });
+  }
+  return result;
+}
+function resolveQuickInputCoreBlockId(_fullSettings, blockId) {
+  return String(blockId || "");
+}
+function applyQuickInputLinkedTimeChanges(draft, direction) {
+  const changes = computeLinkedTimeChanges(draft, { startKey: "时间", endKey: "结束", durationKey: "时长" }, draft.lastChanged, {
+    durationOutput: "number",
+    direction
+  });
+  if (!Object.keys(changes).length) {
+    const cleaned = { ...draft };
+    if ("lastChanged" in cleaned) delete cleaned.lastChanged;
+    return { formData: cleaned, autoKeys: [] };
+  }
+  const merged = { ...draft, ...changes };
+  if ("lastChanged" in merged) delete merged.lastChanged;
+  return { formData: merged, autoKeys: Object.keys(changes) };
+}
+function applyQuickInputFieldUpdate(input) {
+  const { formData, fieldSources, key, value, isOptionObject: isOptionObject2 = false, timeDirection } = input;
+  const rawValue = isOptionObject2 ? value?.value : value;
+  const fieldValue = isOptionObject2 ? { value: value?.value, label: value?.label } : value;
+  const draft = { ...formData, [key]: fieldValue, lastChanged: key };
+  const linked = applyQuickInputLinkedTimeChanges(draft, timeDirection);
+  const nextSources = { ...fieldSources, [key]: "user" };
+  linked.autoKeys.forEach((autoKey) => {
+    if (autoKey !== key) nextSources[autoKey] = "system_auto";
+  });
+  const nextThemePath = key === "themePath" || key === "主题" ? String(rawValue ?? "").trim() || null : void 0;
+  const nextGoalPath = key === "goalPath" || key === "目标" || key === "目标路径" ? cleanDisplayPath(String(rawValue ?? "")) : void 0;
+  return {
+    formData: linked.formData,
+    fieldSources: nextSources,
+    nextThemePath,
+    nextGoalPath,
+    nextGoalId: nextGoalPath === void 0 ? void 0 : nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null
+  };
+}
+function applyQuickInputTimeDirectionChange(input) {
+  const { formData, fieldSources, nextDirection } = input;
+  const draft = { ...formData };
+  let usedDefaultEnd = false;
+  if (nextDirection === "backward" && !draft["结束"]) {
+    draft["结束"] = input.defaultEndTime || dayjs().format("HH:mm");
+    usedDefaultEnd = true;
+  }
+  const linked = applyQuickInputLinkedTimeChanges(draft, nextDirection);
+  const nextSources = { ...fieldSources };
+  if (usedDefaultEnd && !fieldSources["结束"]) nextSources["结束"] = "system_auto";
+  linked.autoKeys.forEach((autoKey) => {
+    nextSources[autoKey] = "system_auto";
+  });
+  return { formData: linked.formData, fieldSources: nextSources, timeDirection: nextDirection };
+}
+function hydrateQuickInputTemplateDefaults({
+  template,
+  context,
+  current: current2,
+  fieldSources,
+  selectedGoal,
+  selectedGoalId,
+  currentGoalPath,
+  currentGoalTitle,
+  theme: theme2,
+  currentPeriod,
+  timeDirection
+}) {
+  if (!template) return { changed: false, formData: current2, fieldSources };
+  const dataForParsing = {
+    ...context,
+    goal: { id: selectedGoal?.id || selectedGoalId || "", title: currentGoalTitle || "", path: currentGoalPath || "", themePath: selectedGoal?.themePath || theme2?.path || "" },
+    goalId: selectedGoal?.id || selectedGoalId || "",
+    goalPath: currentGoalPath || "",
+    ...currentPeriod ? {
+      period: currentPeriod,
+      cycle: { id: currentPeriod.id, title: currentPeriod.label, startDate: currentPeriod.startDate, endDate: currentPeriod.endDate },
+      cycleId: currentPeriod.id,
+      periodId: currentPeriod.id,
+      periodLabel: currentPeriod.label
+    } : {},
+    theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : { path: selectedGoal?.themePath || "", icon: "" }
+  };
+  let changed = false;
+  const next2 = { ...current2 };
+  const nextSources = { ...fieldSources };
+  const assignValue = (key, value, source) => {
+    if (!isSameValue(next2[key], value)) {
+      next2[key] = value;
+      changed = true;
+    }
+    if (nextSources[key] !== source) {
+      nextSources[key] = source;
+      changed = true;
+    }
+  };
+  template.fields.forEach((field) => {
+    const key = field.key;
+    const existingValue = next2[key];
+    const existingSource = nextSources[key];
+    const hasMeaningfulExisting = isMeaningfulValue(existingValue);
+    const canRefresh = !hasMeaningfulExisting || isRefreshableSource(existingSource);
+    const contextValue = context?.[field.key] ?? context?.[field.label];
+    if (contextValue !== void 0) {
+      if (!hasMeaningfulExisting || existingSource !== "user") {
+        if (["select", "singleSelect", "radio", "rating"].includes(field.type)) {
+          if (isOptionLike(contextValue)) {
+            const rawValue = String(contextValue.value ?? "");
+            const rawLabel = String(contextValue.label ?? "");
+            const matched = (field.options || []).find((opt) => {
+              const optLabel = String(opt.label || opt.value || "");
+              const optValue = String(opt.value || "");
+              return optValue === rawValue || optLabel === rawLabel || optValue === rawLabel || optLabel === rawValue;
+            });
+            assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : { value: contextValue.value, label: contextValue.label || contextValue.value }, "context");
+          } else {
+            const rawString = contextValue !== null && contextValue !== void 0 ? String(contextValue) : "";
+            const leafString = getLeafPath(rawString) || rawString;
+            const matched = (field.options || []).find((opt) => {
+              const optLabel = String(opt.label || opt.value || "");
+              const optValue = String(opt.value || "");
+              return optValue === rawString || optLabel === rawString || optLabel === leafString || String(optLabel) === String(rawString);
+            });
+            assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : contextValue, "context");
+          }
+        } else {
+          assignValue(key, contextValue, "context");
+        }
+      }
+      return;
+    }
+    if (!canRefresh) return;
+    const isSelectable = ["select", "singleSelect", "radio", "rating"].includes(field.type);
+    if (field.defaultValue) {
+      if (isSelectable) {
+        const findOption = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
+        let opt = findOption(field.defaultValue);
+        if (!opt && field.options?.length) opt = field.options[0];
+        if (opt) assignValue(key, { value: opt.value, label: opt.label || opt.value }, "template_default");
+      } else {
+        let v2 = field.defaultValue || "";
+        if (typeof v2 === "string") v2 = renderTemplate(v2, dataForParsing);
+        assignValue(key, v2, "template_default");
+      }
+    } else if (!hasMeaningfulExisting || existingSource === void 0 || existingSource === "system_auto") {
+      if (field.type === "date") assignValue(key, dayjs().format("YYYY-MM-DD"), "system_auto");
+      else if (field.type === "time") assignValue(key, dayjs().format("HH:mm"), "system_auto");
+      else if (isSelectable && field.options?.length) {
+        const first = field.options[0];
+        assignValue(key, { value: first.value, label: first.label || first.value }, "system_auto");
+      }
+    }
+  });
+  if (!changed) return { changed: false, formData: current2, fieldSources };
+  const finalized = finalizeLinkedTimeFields(next2, { startKey: "时间", endKey: "结束", durationKey: "时长" }, { durationOutput: "number", direction: timeDirection });
+  const autoComputedKeys = [];
+  if (finalized["时间"] !== next2["时间"]) autoComputedKeys.push("时间");
+  if (finalized["结束"] !== next2["结束"]) autoComputedKeys.push("结束");
+  if (finalized["时长"] !== next2["时长"]) autoComputedKeys.push("时长");
+  autoComputedKeys.forEach((key) => {
+    next2[key] = finalized[key];
+    nextSources[key] = "system_auto";
+  });
+  return { changed: true, formData: next2, fieldSources: nextSources };
+}
+function deriveQuickInputInitialSelection(initialFormData, context) {
+  return {
+    selectedGoalId: String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null,
+    selectedGoalPath: cleanDisplayPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")),
+    selectedTemplateVariantId: String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? "").trim() || null,
+    selectedCycleId: String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null,
+    timeDirection: initialFormData?.__timeDirection === "backward" ? "backward" : "forward"
+  };
+}
+const QUICK_INPUT_GOAL_CONTEXT_KEYS = [
+  "goalId",
+  "目标ID",
+  "goalPath",
+  "目标",
+  "rootGoal",
+  "leafGoal",
+  "cycleId",
+  "周期ID",
+  "周期",
+  "周期粒度",
+  "templateId",
+  "goalTemplateId",
+  "templateVariantId",
+  "goalTemplateVariantId"
+];
+const QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
+  "内容",
+  "content",
+  "日期",
+  "date",
+  "时间",
+  "time",
+  "备注",
+  "note",
+  "description",
+  "目标",
+  "目标ID",
+  "goalId",
+  "goalPath",
+  "themePath",
+  "主题"
+];
+function clearQuickInputGoalContext(formData, fieldSources) {
+  const nextFormData = { ...formData };
+  const nextFieldSources = { ...fieldSources };
+  QUICK_INPUT_GOAL_CONTEXT_KEYS.forEach((key) => {
+    delete nextFormData[key];
+    delete nextFieldSources[key];
+  });
+  return { formData: nextFormData, fieldSources: nextFieldSources };
+}
+function preserveQuickInputBlockSwitchState(formData, fieldSources) {
+  const preservedFormData = {};
+  const preservedFieldSources = {};
+  QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS.forEach((key) => {
+    if (formData[key] !== void 0) preservedFormData[key] = formData[key];
+    if (fieldSources[key]) preservedFieldSources[key] = fieldSources[key];
+  });
+  return { formData: preservedFormData, fieldSources: preservedFieldSources };
+}
+function resolveQuickInputThemeSelectionOnClick(params) {
+  const { selectedThemeId, themeId, path, pathToIdMap } = params;
+  if (!themeId || !path) return null;
+  if (selectedThemeId !== themeId) return themeId;
+  const parentPath = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
+  return parentPath ? pathToIdMap.get(parentPath) ?? null : null;
+}
+function applyQuickInputGoalSelection(params) {
+  const { formData, fieldSources, option } = params;
+  const goal = option.goal || null;
+  const goalPath = cleanDisplayPath(goal?.goalPath || option.value) || option.value;
+  const goalId = goal?.id || (option.id && !String(option.id).startsWith("goal:") ? option.id : makeGoalIdFromPath(goalPath));
+  const themePath = goal?.themePath || option.themePath || null;
+  const nextFormData = { ...formData };
+  const nextFieldSources = { ...fieldSources };
+  const assign2 = (key, value, source = "goal_context") => {
+    if (value === void 0 || value === null || value === "") return;
+    const currentSource = nextFieldSources[key];
+    const hasUserValue = currentSource === "user" && isMeaningfulValue(nextFormData[key]);
+    if (hasUserValue) return;
+    nextFormData[key] = value;
+    nextFieldSources[key] = source;
+  };
+  assign2("goalId", goalId);
+  assign2("目标ID", goalId);
+  assign2("goalPath", goalPath);
+  assign2("目标", goalPath);
+  const parts = splitGoalPath(cleanDisplayPath(goalPath) || "");
+  assign2("rootGoal", parts.rootGoal || "", "goal_context");
+  assign2("leafGoal", parts.leafGoal || "", "goal_context");
+  if (themePath) {
+    assign2("themePath", themePath, "goal_context");
+    assign2("主题", themePath, "goal_context");
+  }
+  return { goal, goalId, goalPath, themePath, formData: nextFormData, fieldSources: nextFieldSources };
+}
+function buildQuickInputEditorState(input) {
+  const currentTheme = input.selectedThemeId ? input.themeIdMap.get(input.selectedThemeId) ?? input.theme ?? null : input.theme ?? null;
+  const effectiveThemePath = String(input.formData.themePath ?? input.formData["主题"] ?? currentTheme?.path ?? input.selectedGoal?.themePath ?? "").trim();
+  const themeParts = splitThemePathParts(effectiveThemePath || null);
+  const templateVariantId = input.resolvedTemplateVariantId || input.selectedTemplateVariantId || null;
+  return {
+    blockId: input.blockId,
+    coreBlockId: input.effectiveBlockId,
+    goalId: input.selectedGoal?.id || input.selectedGoalId,
+    goalPath: input.currentGoalPath,
+    goalTitle: input.currentGoalTitle,
+    rootGoal: input.currentGoalParts.root,
+    leafGoal: input.currentGoalParts.leaf,
+    cycleId: input.currentPeriod?.id || null,
+    themeId: input.selectedThemeId,
+    formData: {
+      ...input.formData,
+      templateId: input.templateId || void 0,
+      goalTemplateId: input.templateId || void 0,
+      templateVariantId: templateVariantId || void 0,
+      goalTemplateVariantId: templateVariantId || void 0,
+      ...input.currentPeriodFields,
+      __timeDirection: input.timeDirection
+    },
+    meta: { timeDirection: input.timeDirection },
+    template: input.template,
+    theme: currentTheme,
+    templateId: input.templateId,
+    templateVariantId,
+    templateSourceType: input.templateSourceType,
+    fieldSources: input.fieldSources,
+    ...themeParts,
+    fieldSourceSummary: buildFieldSourceSummary(input.fieldSources)
+  };
+}
+function buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions) {
+  if (!rawTemplate?.fields?.length) return rawTemplate;
+  const themeFieldOptions = themeOptions(availableThemes);
+  return {
+    ...rawTemplate,
+    coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
+    fields: rawTemplate.fields.map((field) => {
+      const semantic = getTemplateFieldSemantic(field);
+      if (semantic === "goals") return { ...field, options: goalFieldOptions };
+      if (semantic === "themePath") return { ...field, type: field.type === "path" ? "hierarchicalSingleSelect" : field.type, options: themeFieldOptions };
+      return field;
+    })
+  };
+}
+function shouldShowQuickInputTimeDirectionControl(template) {
+  if (!template?.fields) return false;
+  const keys = new Set((template.fields || []).map((field) => field.key || field.label));
+  return keys.has("时间") && keys.has("结束") && keys.has("时长");
+}
+function buildQuickInputPeriodUi(currentPeriod) {
+  return {
+    fields: currentPeriod ? { cycleId: currentPeriod.id, periodId: currentPeriod.id, periodLabel: currentPeriod.label, "周期ID": currentPeriod.id, "周期": currentPeriod.label, "周期粒度": currentPeriod.granularity } : {},
+    options: currentPeriod ? { cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }], "周期ID": [{ value: currentPeriod.id, label: currentPeriod.label }], "周期": [{ value: currentPeriod.label, label: currentPeriod.label }] } : {}
+  };
+}
 function QuickInputEditor({
   getResourcePath,
   initialBlockId,
@@ -57809,26 +58145,27 @@ function QuickInputEditor({
 }) {
   const fullSettings = useSelector(selectSettings);
   const settings = fullSettings.inputSettings;
-  useUseCases();
   const [currentBlockId, setCurrentBlockId] = d(initialBlockId);
   const [selectedThemeId, setSelectedThemeId] = d(initialThemeId);
-  const [selectedGoalId, setSelectedGoalId] = d(() => String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null);
-  const [selectedGoalPath, setSelectedGoalPath] = d(() => cleanDisplayPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")));
-  const [selectedTemplateVariantId, setSelectedTemplateVariantId] = d(() => String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? "").trim() || null);
-  const [selectedCycleId, setSelectedCycleId] = d(() => String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null);
+  const initialSelection = deriveQuickInputInitialSelection(initialFormData, context);
+  const [selectedGoalId, setSelectedGoalId] = d(() => initialSelection.selectedGoalId);
+  const [selectedGoalPath, setSelectedGoalPath] = d(() => initialSelection.selectedGoalPath);
+  const [selectedTemplateVariantId, setSelectedTemplateVariantId] = d(() => initialSelection.selectedTemplateVariantId);
+  const [selectedCycleId, setSelectedCycleId] = d(() => initialSelection.selectedCycleId);
   const [formData, setFormData] = d(() => initialFormData ?? EMPTY_FORM_DATA);
   const [fieldSources, setFieldSources] = d(() => buildInitialFieldSources(initialFormData));
-  const [timeDirection, setTimeDirection] = d(() => initialFormData?.__timeDirection === "backward" ? "backward" : "forward");
+  const [timeDirection, setTimeDirection] = d(() => initialSelection.timeDirection);
   y(() => setCurrentBlockId(initialBlockId), [initialBlockId]);
   y(() => setSelectedThemeId(initialThemeId ?? null), [initialThemeId]);
   y(() => {
+    const nextSelection = deriveQuickInputInitialSelection(initialFormData, context);
     setFormData(initialFormData ?? EMPTY_FORM_DATA);
     setFieldSources(buildInitialFieldSources(initialFormData));
-    setTimeDirection(initialFormData?.__timeDirection === "backward" ? "backward" : "forward");
-    setSelectedGoalId(String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null);
-    setSelectedGoalPath(cleanDisplayPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")));
-    setSelectedTemplateVariantId(String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? "").trim() || null);
-    setSelectedCycleId(String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null);
+    setTimeDirection(nextSelection.timeDirection);
+    setSelectedGoalId(nextSelection.selectedGoalId);
+    setSelectedGoalPath(nextSelection.selectedGoalPath);
+    setSelectedTemplateVariantId(nextSelection.selectedTemplateVariantId);
+    setSelectedCycleId(nextSelection.selectedCycleId);
   }, [initialBlockId, initialThemeId, context]);
   const blocks = T$1(() => {
     const coreBlocks = getEffectiveCoreBlocks(fullSettings);
@@ -57882,26 +58219,10 @@ function QuickInputEditor({
     selectedThemeId,
     selectedTemplateVariantId
   ]);
-  const goalOptions = T$1(() => {
-    const seen = /* @__PURE__ */ new Set();
-    const sourceGoals = sortGoalsLikePresetMatrix([...fullSettings.goalSettings?.goals || []]).filter((goal) => goal.status !== "archived").filter((goal) => goalHasDirectEnabledPreset(fullSettings, goal, currentEffectiveBlockIdForTemplates));
-    const result = [];
-    for (const [index, goal] of sourceGoals.entries()) {
-      const normalized = cleanDisplayPath(goal.goalPath || goal.title);
-      if (!normalized || seen.has(normalized)) continue;
-      seen.add(normalized);
-      const leaf2 = normalized.split("/").filter(Boolean).pop() || normalized;
-      result.push({
-        id: goal.id || makeGoalIdFromPath(normalized),
-        value: normalized,
-        label: cleanDisplaySegment(goal.title) || leaf2,
-        order: index,
-        goal,
-        themePath: goal.themePath ?? null
-      });
-    }
-    return result;
-  }, [fullSettings.goalSettings, currentEffectiveBlockIdForTemplates]);
+  const goalOptions = T$1(
+    () => buildQuickInputGoalOptions(fullSettings, currentEffectiveBlockIdForTemplates),
+    [fullSettings, currentEffectiveBlockIdForTemplates]
+  );
   const goalFieldOptions = T$1(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label })), [goalOptions]);
   y(() => {
     const selectedPath = cleanDisplayPath(selectedGoal?.goalPath || selectedGoalPath || null);
@@ -57912,16 +58233,8 @@ function QuickInputEditor({
     setSelectedGoalPath(null);
     setSelectedTemplateVariantId(null);
     setSelectedCycleId(null);
-    setFormData((current2) => {
-      const next2 = { ...current2 };
-      ["goalId", "目标ID", "goalPath", "目标", "rootGoal", "leafGoal", "cycleId", "周期ID", "周期", "周期粒度", "templateId", "goalTemplateId", "templateVariantId", "goalTemplateVariantId"].forEach((key) => delete next2[key]);
-      return next2;
-    });
-    setFieldSources((current2) => {
-      const next2 = { ...current2 };
-      ["goalId", "目标ID", "goalPath", "目标", "rootGoal", "leafGoal", "cycleId", "周期ID", "周期", "周期粒度", "templateId", "goalTemplateId", "templateVariantId", "goalTemplateVariantId"].forEach((key) => delete next2[key]);
-      return next2;
-    });
+    setFormData((current2) => clearQuickInputGoalContext(current2, fieldSources).formData);
+    setFieldSources((current2) => clearQuickInputGoalContext(formData, current2).fieldSources);
   }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
   const currentGoalTitle = cleanDisplaySegment(selectedGoal?.title || resolvedGoal?.title || "") || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
@@ -57929,140 +58242,33 @@ function QuickInputEditor({
   const currentRecordDate = String(formData["日期"] ?? formData.date ?? dayjs().format("YYYY-MM-DD")).trim();
   const periodPolicy = resolveTemplatePeriodPolicy(rawTemplate);
   const currentPeriod = periodPolicy ? resolveDerivedPeriod(currentRecordDate || dayjs().format("YYYY-MM-DD"), periodPolicy.granularity) : null;
-  const currentPeriodFields = currentPeriod ? { cycleId: currentPeriod.id, periodId: currentPeriod.id, periodLabel: currentPeriod.label, "周期ID": currentPeriod.id, "周期": currentPeriod.label, "周期粒度": currentPeriod.granularity } : {};
-  const currentPeriodOptions = currentPeriod ? { cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }], "周期ID": [{ value: currentPeriod.id, label: currentPeriod.label }], "周期": [{ value: currentPeriod.label, label: currentPeriod.label }] } : {};
-  const template = T$1(() => {
-    if (!rawTemplate?.fields?.length) return rawTemplate;
-    const themeFieldOptions = themeOptions(availableThemes);
-    return {
-      ...rawTemplate,
-      coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
-      fields: rawTemplate.fields.map((field) => {
-        const semantic = getTemplateFieldSemantic(field);
-        if (semantic === "goals") return { ...field, options: goalFieldOptions };
-        if (semantic === "themePath") return { ...field, type: field.type === "path" ? "hierarchicalSingleSelect" : field.type, options: themeFieldOptions };
-        return field;
-      })
-    };
-  }, [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions]);
-  const showTimeDirectionControl = T$1(() => {
-    if (!template?.fields) return false;
-    const keys = new Set((template.fields || []).map((f2) => f2.key || f2.label));
-    return keys.has("时间") && keys.has("结束") && keys.has("时长");
-  }, [template]);
-  const applyLinkedDraftChanges = (draft, direction = timeDirection) => {
-    const changes = computeLinkedTimeChanges(draft, { startKey: "时间", endKey: "结束", durationKey: "时长" }, draft.lastChanged, {
-      durationOutput: "number",
-      direction
-    });
-    if (!Object.keys(changes).length) {
-      const cleaned = { ...draft };
-      if ("lastChanged" in cleaned) delete cleaned.lastChanged;
-      return { formData: cleaned, autoKeys: [] };
-    }
-    const merged = { ...draft, ...changes };
-    if ("lastChanged" in merged) delete merged.lastChanged;
-    return { formData: merged, autoKeys: Object.keys(changes) };
-  };
+  const currentPeriodUi = T$1(() => buildQuickInputPeriodUi(currentPeriod), [currentPeriod?.id, currentPeriod?.label, currentPeriod?.granularity]);
+  const currentPeriodFields = currentPeriodUi.fields;
+  const currentPeriodOptions = currentPeriodUi.options;
+  const template = T$1(
+    () => buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions),
+    [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions]
+  );
+  const showTimeDirectionControl = T$1(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
   y(() => {
     if (!template) return;
-    const dataForParsing = {
-      ...context,
-      goal: { id: selectedGoal?.id || selectedGoalId || "", title: currentGoalTitle || "", path: currentGoalPath || "", themePath: selectedGoal?.themePath || theme2?.path || "" },
-      goalId: selectedGoal?.id || selectedGoalId || "",
-      goalPath: currentGoalPath || "",
-      ...currentPeriod ? {
-        period: currentPeriod,
-        cycle: { id: currentPeriod.id, title: currentPeriod.label, startDate: currentPeriod.startDate, endDate: currentPeriod.endDate },
-        cycleId: currentPeriod.id,
-        periodId: currentPeriod.id,
-        periodLabel: currentPeriod.label
-      } : {},
-      theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : { path: selectedGoal?.themePath || "", icon: "" }
-    };
     setFormData((current2) => {
-      let changed = false;
-      const next2 = { ...current2 };
-      const nextSources = { ...fieldSources };
-      const assignValue = (key, value, source) => {
-        if (!isSameValue(next2[key], value)) {
-          next2[key] = value;
-          changed = true;
-        }
-        if (nextSources[key] !== source) {
-          nextSources[key] = source;
-          changed = true;
-        }
-      };
-      template.fields.forEach((field) => {
-        const key = field.key;
-        const existingValue = next2[key];
-        const existingSource = nextSources[key];
-        const hasMeaningfulExisting = isMeaningfulValue(existingValue);
-        const canRefresh = !hasMeaningfulExisting || isRefreshableSource(existingSource);
-        const contextValue = context?.[field.key] ?? context?.[field.label];
-        if (contextValue !== void 0) {
-          if (!hasMeaningfulExisting || existingSource !== "user") {
-            if (["select", "singleSelect", "radio", "rating"].includes(field.type)) {
-              if (isOptionLike(contextValue)) {
-                const rawValue = String(contextValue.value ?? "");
-                const rawLabel = String(contextValue.label ?? "");
-                const matched = (field.options || []).find((opt) => {
-                  const optLabel = String(opt.label || opt.value || "");
-                  const optValue = String(opt.value || "");
-                  return optValue === rawValue || optLabel === rawLabel || optValue === rawLabel || optLabel === rawValue;
-                });
-                assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : { value: contextValue.value, label: contextValue.label || contextValue.value }, "context");
-              } else {
-                const rawString = contextValue !== null && contextValue !== void 0 ? String(contextValue) : "";
-                const leafString = getLeafPath(rawString) || rawString;
-                const matched = (field.options || []).find((opt) => {
-                  const optLabel = String(opt.label || opt.value || "");
-                  const optValue = String(opt.value || "");
-                  return optValue === rawString || optLabel === rawString || optLabel === leafString || String(optLabel) === String(rawString);
-                });
-                assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : contextValue, "context");
-              }
-            } else {
-              assignValue(key, contextValue, "context");
-            }
-          }
-          return;
-        }
-        if (!canRefresh) return;
-        const isSelectable = ["select", "singleSelect", "radio", "rating"].includes(field.type);
-        if (field.defaultValue) {
-          if (isSelectable) {
-            const findOption = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
-            let opt = findOption(field.defaultValue);
-            if (!opt && field.options?.length) opt = field.options[0];
-            if (opt) assignValue(key, { value: opt.value, label: opt.label || opt.value }, "template_default");
-          } else {
-            let v2 = field.defaultValue || "";
-            if (typeof v2 === "string") v2 = renderTemplate(v2, dataForParsing);
-            assignValue(key, v2, "template_default");
-          }
-        } else if (!hasMeaningfulExisting || existingSource === void 0 || existingSource === "system_auto") {
-          if (field.type === "date") assignValue(key, dayjs().format("YYYY-MM-DD"), "system_auto");
-          else if (field.type === "time") assignValue(key, dayjs().format("HH:mm"), "system_auto");
-          else if (isSelectable && field.options?.length) {
-            const first = field.options[0];
-            assignValue(key, { value: first.value, label: first.label || first.value }, "system_auto");
-          }
-        }
+      const hydrated = hydrateQuickInputTemplateDefaults({
+        template,
+        context,
+        current: current2,
+        fieldSources,
+        selectedGoal,
+        selectedGoalId,
+        currentGoalPath,
+        currentGoalTitle,
+        theme: theme2,
+        currentPeriod,
+        timeDirection
       });
-      if (!changed) return current2;
-      const finalized = finalizeLinkedTimeFields(next2, { startKey: "时间", endKey: "结束", durationKey: "时长" }, { durationOutput: "number", direction: timeDirection });
-      const autoComputedKeys = [];
-      if (finalized["时间"] !== next2["时间"]) autoComputedKeys.push("时间");
-      if (finalized["结束"] !== next2["结束"]) autoComputedKeys.push("结束");
-      if (finalized["时长"] !== next2["时长"]) autoComputedKeys.push("时长");
-      autoComputedKeys.forEach((key) => {
-        next2[key] = finalized[key];
-        nextSources[key] = "system_auto";
-      });
-      setFieldSources(nextSources);
-      return next2;
+      if (!hydrated.changed) return current2;
+      setFieldSources(hydrated.fieldSources);
+      return hydrated.formData;
     });
   }, [template, theme2, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle]);
   y(() => {
@@ -58071,129 +58277,63 @@ function QuickInputEditor({
     const nextThemeId = pathToIdMap.get(presetThemePath) ?? null;
     if (nextThemeId && nextThemeId !== selectedThemeId) setSelectedThemeId(nextThemeId);
   }, [formData.themePath, formData["主题"], pathToIdMap, selectedThemeId]);
+  const makeEditorState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => buildQuickInputEditorState({
+    blockId: currentBlockId,
+    effectiveBlockId,
+    selectedGoal,
+    selectedGoalId,
+    currentGoalPath,
+    currentGoalTitle,
+    currentGoalParts,
+    currentPeriod,
+    selectedThemeId,
+    themeIdMap,
+    theme: theme2,
+    formData: draftFormData,
+    currentPeriodFields,
+    timeDirection: directionOverride,
+    template,
+    templateId,
+    resolvedTemplateVariantId,
+    selectedTemplateVariantId,
+    templateSourceType,
+    fieldSources: sourceOverride
+  });
   y(() => {
-    const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? theme2 ?? null : theme2 ?? null;
-    const effectiveThemePath = String(formData.themePath ?? formData["主题"] ?? currentTheme?.path ?? selectedGoal?.themePath ?? "").trim();
-    const themeParts = splitThemePathParts(effectiveThemePath || null);
-    onStateChange?.({
-      blockId: currentBlockId,
-      coreBlockId: effectiveBlockId,
-      goalId: selectedGoal?.id || selectedGoalId,
-      goalPath: currentGoalPath,
-      goalTitle: currentGoalTitle,
-      rootGoal: currentGoalParts.root,
-      leafGoal: currentGoalParts.leaf,
-      cycleId: currentPeriod?.id || null,
-      themeId: selectedThemeId,
-      formData: { ...formData, templateId: templateId || void 0, goalTemplateId: templateId || void 0, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, ...currentPeriodFields, __timeDirection: timeDirection },
-      meta: { timeDirection },
-      template,
-      theme: currentTheme,
-      templateId,
-      templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId,
-      templateSourceType,
-      fieldSources,
-      ...themeParts,
-      fieldSourceSummary: buildFieldSourceSummary(fieldSources)
-    });
+    onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
   }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, selectedCycleId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme2]);
   const emitDraftState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => {
-    const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? theme2 ?? null : theme2 ?? null;
-    const effectiveThemePath = String(draftFormData.themePath ?? draftFormData["主题"] ?? currentTheme?.path ?? selectedGoal?.themePath ?? "").trim();
-    const themeParts = splitThemePathParts(effectiveThemePath || null);
-    onStateChange?.({
-      blockId: currentBlockId,
-      coreBlockId: effectiveBlockId,
-      goalId: selectedGoal?.id || selectedGoalId,
-      goalPath: currentGoalPath,
-      goalTitle: currentGoalTitle,
-      rootGoal: currentGoalParts.root,
-      leafGoal: currentGoalParts.leaf,
-      cycleId: currentPeriod?.id || null,
-      themeId: selectedThemeId,
-      formData: { ...draftFormData, templateId: templateId || void 0, goalTemplateId: templateId || void 0, templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, goalTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId || void 0, ...currentPeriodFields, __timeDirection: directionOverride },
-      meta: { timeDirection: directionOverride },
-      template,
-      theme: currentTheme,
-      templateId,
-      templateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId,
-      templateSourceType,
-      fieldSources: sourceOverride,
-      ...themeParts,
-      fieldSourceSummary: buildFieldSourceSummary(sourceOverride)
-    });
+    onStateChange?.(makeEditorState(draftFormData, directionOverride, sourceOverride));
   };
   const handleUpdateField = (key, value, isOptionObject2 = false) => {
-    const rawValue = isOptionObject2 ? value?.value : value;
-    if (key === "themePath" || key === "主题") {
-      const nextPath = String(rawValue ?? "").trim();
-      setSelectedThemeId(nextPath ? pathToIdMap.get(nextPath) ?? null : null);
+    const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject: isOptionObject2, timeDirection });
+    if (updated.nextThemePath !== void 0) setSelectedThemeId(updated.nextThemePath ? pathToIdMap.get(updated.nextThemePath) ?? null : null);
+    if (updated.nextGoalPath !== void 0) {
+      setSelectedGoalPath(updated.nextGoalPath);
+      setSelectedGoalId(updated.nextGoalId ?? null);
     }
-    if (key === "goalPath" || key === "目标" || key === "目标路径") {
-      const nextGoalPath = cleanDisplayPath(String(rawValue ?? ""));
-      setSelectedGoalPath(nextGoalPath);
-      setSelectedGoalId(nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null);
-    }
-    setFormData((cur) => {
-      const draft = { ...cur, [key]: isOptionObject2 ? { value: value.value, label: value.label } : value, lastChanged: key };
-      const linked = applyLinkedDraftChanges(draft, timeDirection);
-      setFieldSources((prev2) => {
-        const nextSources = { ...prev2, [key]: "user" };
-        linked.autoKeys.forEach((autoKey) => {
-          if (autoKey !== key) nextSources[autoKey] = "system_auto";
-        });
-        emitDraftState(linked.formData, timeDirection, nextSources);
-        return nextSources;
-      });
-      return linked.formData;
-    });
+    setFormData(updated.formData);
+    setFieldSources(updated.fieldSources);
+    emitDraftState(updated.formData, timeDirection, updated.fieldSources);
   };
   const handleTimeDirectionChange = (nextDirection) => {
-    setTimeDirection(nextDirection);
-    setFormData((cur) => {
-      const draft = { ...cur };
-      if (nextDirection === "backward" && !draft["结束"]) {
-        draft["结束"] = dayjs().format("HH:mm");
-      }
-      const linked = applyLinkedDraftChanges(draft, nextDirection);
-      setFieldSources((prev2) => {
-        const nextSources = { ...prev2 };
-        if (nextDirection === "backward" && !prev2["结束"] && draft["结束"]) nextSources["结束"] = "system_auto";
-        linked.autoKeys.forEach((autoKey) => {
-          nextSources[autoKey] = "system_auto";
-        });
-        emitDraftState(linked.formData, nextDirection, nextSources);
-        return nextSources;
-      });
-      return linked.formData;
-    });
+    const updated = applyQuickInputTimeDirectionChange({ formData, fieldSources, nextDirection });
+    setTimeDirection(updated.timeDirection);
+    setFormData(updated.formData);
+    setFieldSources(updated.fieldSources);
+    emitDraftState(updated.formData, updated.timeDirection, updated.fieldSources);
   };
   const handleBlockChange = (newBlockId) => {
     if (newBlockId === currentBlockId) return;
-    const preserved = {};
-    const preservedSources = {};
-    ["内容", "content", "日期", "date", "时间", "time", "备注", "note", "description", "目标", "目标ID", "goalId", "goalPath", "themePath", "主题"].forEach((k2) => {
-      if (formData[k2] !== void 0) preserved[k2] = formData[k2];
-      if (fieldSources[k2]) preservedSources[k2] = fieldSources[k2];
-    });
+    const preserved = preserveQuickInputBlockSwitchState(formData, fieldSources);
     setSelectedTemplateVariantId(null);
     setCurrentBlockId(newBlockId);
-    setFormData(preserved);
-    setFieldSources(preservedSources);
+    setFormData(preserved.formData);
+    setFieldSources(preserved.fieldSources);
     setTimeDirection("forward");
   };
   const handleSelectTheme = (themeId, path) => {
-    if (!themeId || !path) {
-      setSelectedThemeId(null);
-      return;
-    }
-    if (selectedThemeId === themeId) {
-      const parentPath = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
-      const parentThemeId = parentPath ? pathToIdMap.get(parentPath) ?? null : null;
-      setSelectedThemeId(parentThemeId);
-      return;
-    }
-    setSelectedThemeId(themeId);
+    setSelectedThemeId(resolveQuickInputThemeSelectionOnClick({ selectedThemeId, themeId, path, pathToIdMap }));
   };
   const handleSelectGoal = (option) => {
     if (!option || !option.value) {
@@ -58202,40 +58342,14 @@ function QuickInputEditor({
       setSelectedTemplateVariantId(null);
       return;
     }
-    const goal = option.goal || null;
-    const goalPath = cleanDisplayPath(goal?.goalPath || option.value);
-    const goalId = goal?.id || (option.id && !String(option.id).startsWith("goal:") ? option.id : makeGoalIdFromPath(goalPath || option.value));
-    const themePath = goal?.themePath || option.themePath || null;
-    setSelectedGoalId(goalId);
-    setSelectedGoalPath(goalPath || option.value);
+    const nextSelection = applyQuickInputGoalSelection({ formData, fieldSources, option });
+    setSelectedGoalId(nextSelection.goalId);
+    setSelectedGoalPath(nextSelection.goalPath);
     setSelectedTemplateVariantId(null);
-    if (themePath) setSelectedThemeId(pathToIdMap.get(themePath) ?? null);
-    setFormData((cur) => {
-      const next2 = { ...cur };
-      const nextSources = { ...fieldSources };
-      const assign2 = (key, value, source = "goal_context") => {
-        if (value === void 0 || value === null || value === "") return;
-        const currentSource = nextSources[key];
-        const hasUserValue = currentSource === "user" && isMeaningfulValue(next2[key]);
-        if (hasUserValue) return;
-        next2[key] = value;
-        nextSources[key] = source;
-      };
-      assign2("goalId", goalId);
-      assign2("目标ID", goalId);
-      assign2("goalPath", goalPath || option.value);
-      assign2("目标", goalPath || option.value);
-      const parts = splitGoalPath(cleanDisplayPath(goalPath || option.value) || "");
-      assign2("rootGoal", parts.rootGoal || "", "goal_context");
-      assign2("leafGoal", parts.leafGoal || "", "goal_context");
-      if (themePath) {
-        assign2("themePath", themePath, "goal_context");
-        assign2("主题", themePath, "goal_context");
-      }
-      setSelectedCycleId(null);
-      setFieldSources(nextSources);
-      return next2;
-    });
+    if (nextSelection.themePath) setSelectedThemeId(pathToIdMap.get(nextSelection.themePath) ?? null);
+    setSelectedCycleId(null);
+    setFormData(nextSelection.formData);
+    setFieldSources(nextSelection.fieldSources);
   };
   return /* @__PURE__ */ u2(
     QuickInputEditorView,
@@ -58272,7 +58386,7 @@ function QuickInputEditor({
       currentThemePath: String(formData.themePath ?? formData["主题"] ?? theme2?.path ?? selectedGoal?.themePath ?? "") || null,
       currentPeriodLabel: currentPeriod?.label || null,
       templateSourceType,
-      fieldSourceSummary: buildFieldSourceSummary(fieldSources)
+      fieldSourceSummary: makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary
     }
   );
 }
@@ -68754,9 +68868,6 @@ function GoalTemplateModeSwitch({ mode, blockName, disabled = false, onInherit, 
     ] })
   ] });
 }
-function cloneValue$1(value) {
-  return JSON.parse(JSON.stringify(value));
-}
 function readInputValue(event) {
   return (event.target || event.currentTarget).value;
 }
@@ -68784,99 +68895,6 @@ const nativeLabelStyle = {
   fontSize: "0.75rem",
   color: "var(--text-muted)"
 };
-const presetGranularityOptions = [
-  { value: "week", label: "周" },
-  { value: "month", label: "月" },
-  { value: "quarter", label: "季度" },
-  { value: "year", label: "年" }
-];
-function normalizeThemePath(value) {
-  const text2 = String(value ?? "").trim();
-  if (!text2 || text2 === "{{goal.themePath}}") return "";
-  return text2;
-}
-function cleanDisplayThemePath(value) {
-  return String(value ?? "").split("/").map((part) => part.trim().replace(/^[#＃]+\s*/, "").trim()).filter(Boolean).join("/");
-}
-function isThemeField$1(field) {
-  const anyField = field;
-  const key = String(anyField.key || "").toLowerCase();
-  const label = String(anyField.label || "");
-  const semantic = String(anyField.semantic || anyField.semanticType || "").toLowerCase();
-  return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath");
-}
-function readThemePathFromFields(fields) {
-  for (const field of fields || []) {
-    if (!isThemeField$1(field)) continue;
-    const value = normalizeThemePath(field.defaultValue);
-    if (value) return value;
-  }
-  return "";
-}
-function readThemePathFromTemplate(template) {
-  const values2 = template?.defaultValues || {};
-  return normalizeThemePath(values2.themePath) || normalizeThemePath(values2["主题"]) || readThemePathFromFields(template?.fields);
-}
-function readPeriodGranularity(template, block2) {
-  const rawPolicy = template?.periodPolicy || block2?.periodPolicy;
-  const rawGranularity = rawPolicy?.granularity || template?.granularity || block2?.granularity;
-  return normalizePeriodPolicyGranularity(rawGranularity);
-}
-function buildDraftPeriodPolicy(block2, draft) {
-  return block2 && isPeriodAwareCoreBlock(block2.id) ? { enabled: true, granularity: draft.granularity } : void 0;
-}
-function ensureThemeField(fields, themePath) {
-  const normalizedTheme = normalizeThemePath(themePath);
-  let found = false;
-  const next2 = (fields || []).map((field) => {
-    if (!isThemeField$1(field)) return field;
-    found = true;
-    return { ...field, defaultValue: normalizedTheme || field.defaultValue || "{{goal.themePath}}" };
-  });
-  if (!found && normalizedTheme) {
-    next2.push({
-      id: "core.field.themePath",
-      key: "themePath",
-      label: "主题",
-      type: "hierarchicalSingleSelect",
-      semantic: "themePath",
-      semanticType: "path",
-      hierarchical: true,
-      defaultValue: normalizedTheme
-    });
-  }
-  return next2;
-}
-function mergeDefaultValues(draft, themeIcon) {
-  const values2 = { ...draft.defaultValues || {}, ...deriveDefaultValues(draft.fields || []) };
-  const themePath = normalizeThemePath(draft.themePath) || normalizeThemePath(values2.themePath) || normalizeThemePath(values2["主题"]);
-  if (themePath) {
-    values2.themePath = themePath;
-    values2["主题"] = themePath;
-  }
-  if (themeIcon) {
-    values2.icon = themeIcon;
-    values2["图标"] = themeIcon;
-  }
-  return values2;
-}
-function leafPath$2(value) {
-  const text2 = String(value ?? "").trim();
-  return text2.split("/").filter(Boolean).pop() || text2;
-}
-function isGeneratedPresetName$1(value) {
-  const text2 = String(value ?? "").trim();
-  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "未命名预设";
-}
-function themeLeafLabel(themePath, fallback = "") {
-  const clean = cleanDisplayThemePath(themePath);
-  return leafPath$2(clean) || fallback;
-}
-function inferTemplateDisplayName(template, themePath, fallback = "记录预设") {
-  const resolvedThemePath = normalizeThemePath(themePath || readThemePathFromTemplate(template));
-  const displayTemplate = resolvedThemePath ? { ...template || {}, defaultValues: { ...template?.defaultValues || {}, themePath: resolvedThemePath, "主题": resolvedThemePath } } : template;
-  return getGoalTemplateDisplayName$1(displayTemplate, null, fallback);
-}
 function NativeTextInput({
   label,
   value,
@@ -68962,6 +68980,9 @@ function NativeTextarea({
     )
   ] });
 }
+function cloneValue$1(value) {
+  return JSON.parse(JSON.stringify(value));
+}
 function makeVariantId(label) {
   const text2 = String(label || "").trim();
   if (!text2) return `variant-${Date.now()}`;
@@ -69009,21 +69030,11 @@ function makeNewDraft(goal, block2, variants, themes) {
     sortOrder: variants.length * 10,
     themePath,
     fields,
-    defaultValues: mergeDefaultValues({ ...base, themePath, fields }, themes.find((theme2) => normalizeThemePath(theme2?.path) === themePath)?.icon)
+    defaultValues: mergeDefaultValues({ ...base, themePath, fields, name: label || "记录预设", variantId }, themes.find((theme2) => normalizeThemePath(theme2?.path) === themePath)?.icon)
   };
 }
 function deriveRequiredFields(fields) {
   return (fields || []).filter((field) => field?.required === true).map((field) => String(field.key || field.label || "").trim()).filter(Boolean);
-}
-function deriveDefaultValues(fields) {
-  const result = {};
-  for (const field of fields || []) {
-    const key = String(field.key || field.label || "").trim();
-    if (!key) continue;
-    const value = field.defaultValue;
-    if (value !== void 0 && value !== null && String(value).trim() !== "") result[key] = value;
-  }
-  return result;
 }
 function stableJson(value) {
   const seen = /* @__PURE__ */ new WeakSet();
@@ -69435,7 +69446,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
               const themePath = String(value || "");
               updateThemePath(themePath);
               const label = themeLeafLabel(themePath);
-              if (label && isGeneratedPresetName$1(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
+              if (label && isGeneratedPresetName(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
             }, disabled: metadataDisabled }),
             supportsPeriod ? /* @__PURE__ */ u2(NativeSelectInput2, { label: "周期", value: draft.granularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: metadataDisabled }) : null
           ] }),
@@ -69928,13 +69939,13 @@ function leafPath(value) {
   const text2 = String(value ?? "").trim();
   return text2.split("/").filter(Boolean).pop() || text2;
 }
-function isGeneratedPresetName(value) {
+function isGeneratedPresetName$1(value) {
   const text2 = String(value ?? "").trim();
   return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "未命名预设";
 }
 function getPresetCardName(template, goal) {
   const raw = getGoalTemplateDisplayName(template);
-  if (!isGeneratedPresetName(raw)) return raw;
+  if (!isGeneratedPresetName$1(raw)) return raw;
   return cleanDisplayText(leafPath(readGoalTemplateThemePath(template, goal))) || raw;
 }
 function goalTemplateKey(template) {

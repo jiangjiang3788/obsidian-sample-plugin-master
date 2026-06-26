@@ -237,6 +237,67 @@ export function applyQuickInputLinkedTimeChanges(draft: Record<string, any>, dir
 }
 
 
+export interface ApplyQuickInputFieldUpdateInput {
+  formData: Record<string, any>;
+  fieldSources: QuickInputFieldSourceMap;
+  key: string;
+  value: any;
+  isOptionObject?: boolean;
+  timeDirection: TimeDirection;
+}
+
+export function applyQuickInputFieldUpdate(input: ApplyQuickInputFieldUpdateInput) {
+  const { formData, fieldSources, key, value, isOptionObject = false, timeDirection } = input;
+  const rawValue = isOptionObject ? value?.value : value;
+  const fieldValue = isOptionObject ? { value: value?.value, label: value?.label } : value;
+  const draft = { ...formData, [key]: fieldValue, lastChanged: key };
+  const linked = applyQuickInputLinkedTimeChanges(draft, timeDirection);
+  const nextSources: QuickInputFieldSourceMap = { ...fieldSources, [key]: 'user' };
+  linked.autoKeys.forEach((autoKey) => {
+    if (autoKey !== key) nextSources[autoKey] = 'system_auto';
+  });
+
+  const nextThemePath = key === 'themePath' || key === '主题'
+    ? String(rawValue ?? '').trim() || null
+    : undefined;
+  const nextGoalPath = key === 'goalPath' || key === '目标' || key === '目标路径'
+    ? cleanDisplayPath(String(rawValue ?? ''))
+    : undefined;
+
+  return {
+    formData: linked.formData,
+    fieldSources: nextSources,
+    nextThemePath,
+    nextGoalPath,
+    nextGoalId: nextGoalPath === undefined ? undefined : nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null,
+  };
+}
+
+export interface ApplyQuickInputTimeDirectionChangeInput {
+  formData: Record<string, any>;
+  fieldSources: QuickInputFieldSourceMap;
+  nextDirection: TimeDirection;
+  defaultEndTime?: string;
+}
+
+export function applyQuickInputTimeDirectionChange(input: ApplyQuickInputTimeDirectionChangeInput) {
+  const { formData, fieldSources, nextDirection } = input;
+  const draft = { ...formData };
+  let usedDefaultEnd = false;
+  if (nextDirection === 'backward' && !draft['结束']) {
+    draft['结束'] = input.defaultEndTime || dayjs().format('HH:mm');
+    usedDefaultEnd = true;
+  }
+  const linked = applyQuickInputLinkedTimeChanges(draft, nextDirection);
+  const nextSources: QuickInputFieldSourceMap = { ...fieldSources };
+  if (usedDefaultEnd && !fieldSources['结束']) nextSources['结束'] = 'system_auto';
+  linked.autoKeys.forEach((autoKey) => {
+    nextSources[autoKey] = 'system_auto';
+  });
+  return { formData: linked.formData, fieldSources: nextSources, timeDirection: nextDirection };
+}
+
+
 export interface HydrateQuickInputTemplateDefaultsInput {
   template: any;
   context?: Record<string, any>;
