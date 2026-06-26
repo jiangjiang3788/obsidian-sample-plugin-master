@@ -93,7 +93,18 @@ if (!exists('src/app/ui/components/QuickInputEditor/QuickInputEditorModel.ts')) 
 }
 const quickInputContainer = read('src/app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx');
 const quickInputContainerLines = quickInputContainer.split(/\r?\n/).length;
-if (quickInputContainerLines > 520) failures.push(`QuickInputEditorContainer.tsx should stay <= 520 lines after MVP4 extraction; current ${quickInputContainerLines}.`);
+if (quickInputContainerLines > 400) failures.push(`QuickInputEditorContainer.tsx should stay <= 400 lines after MVP5 extraction; current ${quickInputContainerLines}.`);
+
+const quickInputModel = read('src/app/ui/components/QuickInputEditor/QuickInputEditorModel.ts');
+for (const requiredHelper of [
+  'deriveQuickInputInitialSelection',
+  'buildQuickInputEditorState',
+  'applyQuickInputGoalSelection',
+  'preserveQuickInputBlockSwitchState',
+  'buildQuickInputDisplayTemplate',
+]) {
+  if (!quickInputModel.includes(requiredHelper)) failures.push(`QuickInputEditorModel.ts must keep ${requiredHelper} after MVP5 extraction.`);
+}
 
 const schema = read('src/core/types/schema.ts');
 if (/interface\s+ThemeOverride\b/.test(schema)) failures.push('schema must not define ThemeOverride in single-user mode.');

@@ -1,10 +1,30 @@
 import {
+  applyQuickInputGoalSelection,
   applyQuickInputLinkedTimeChanges,
   buildInitialFieldSources,
+  buildQuickInputEditorState,
+  buildQuickInputPeriodUi,
+  deriveQuickInputInitialSelection,
   hydrateQuickInputTemplateDefaults,
+  preserveQuickInputBlockSwitchState,
 } from '@/app/ui/components/QuickInputEditor/QuickInputEditorModel';
 
 describe('QuickInputEditorModel', () => {
+
+
+  it('derives initial goal/template selection from form data before invocation context', () => {
+    const selection = deriveQuickInputInitialSelection(
+      { goalId: 'goal-form', goalPath: '学习/英语', templateVariantId: 'preset-a', __timeDirection: 'backward' },
+      { goalId: 'goal-context', goalPath: '工作' },
+    );
+    expect(selection).toMatchObject({
+      selectedGoalId: 'goal-form',
+      selectedGoalPath: '学习/英语',
+      selectedTemplateVariantId: 'preset-a',
+      timeDirection: 'backward',
+    });
+  });
+
   it('marks meaningful initial fields as context sources and skips editor meta fields', () => {
     expect(buildInitialFieldSources({ 内容: '记录', 空值: '', __timeDirection: 'forward', lastChanged: '时间' })).toEqual({ 内容: 'context' });
   });
@@ -35,5 +55,55 @@ describe('QuickInputEditorModel', () => {
   it('keeps linked time draft cleanup inside the model layer', () => {
     const linked = applyQuickInputLinkedTimeChanges({ 时间: '09:00', 时长: 30, lastChanged: '时间' }, 'forward');
     expect(linked.formData.lastChanged).toBeUndefined();
+  });
+
+
+  it('preserves only stable fields when switching block', () => {
+    const preserved = preserveQuickInputBlockSwitchState(
+      { 内容: '继续保留', 自定义: '删除', goalId: 'goal-1', themePath: '学习' },
+      { 内容: 'user', 自定义: 'user', goalId: 'goal_context', themePath: 'goal_context' } as any,
+    );
+    expect(preserved.formData).toEqual({ 内容: '继续保留', goalId: 'goal-1', themePath: '学习' });
+    expect(preserved.fieldSources).toEqual({ 内容: 'user', goalId: 'goal_context', themePath: 'goal_context' });
+  });
+
+  it('applies goal selection without overwriting user-owned fields', () => {
+    const selected = applyQuickInputGoalSelection({
+      formData: { 目标: '用户选择', 内容: '记录' },
+      fieldSources: { 目标: 'user', 内容: 'user' } as any,
+      option: { id: 'goal-1', value: '学习/英语', label: '英语', goal: { id: 'goal-1', title: '英语', goalPath: '学习/英语', themePath: '学习' } as any, themePath: '学习' },
+    });
+    expect(selected.goalId).toBe('goal-1');
+    expect(selected.formData.目标).toBe('用户选择');
+    expect(selected.formData.goalPath).toBe('学习/英语');
+    expect(selected.formData.themePath).toBe('学习');
+  });
+
+  it('builds QuickInput state with theme path summary and period fields', () => {
+    const periodUi = buildQuickInputPeriodUi({ id: '2026-W01', label: '2026 第 1 周', granularity: 'week' });
+    const state = buildQuickInputEditorState({
+      blockId: 'event',
+      effectiveBlockId: 'event',
+      selectedGoal: { id: 'goal-1', title: '英语', goalPath: '学习/英语', themePath: '学习/英语' } as any,
+      currentGoalPath: '学习/英语',
+      currentGoalTitle: '英语',
+      currentGoalParts: { root: '学习', leaf: '英语' },
+      currentPeriod: { id: '2026-W01', label: '2026 第 1 周' },
+      selectedThemeId: 'theme-1',
+      themeIdMap: new Map([['theme-1', { id: 'theme-1', path: '学习/英语', icon: '📘' } as any]]),
+      formData: { 内容: '听力' },
+      currentPeriodFields: periodUi.fields,
+      timeDirection: 'forward',
+      template: { fields: [] },
+      templateId: 'tpl-1',
+      resolvedTemplateVariantId: 'preset-1',
+      templateSourceType: 'goal-template',
+      fieldSources: { 内容: 'user' } as any,
+    });
+    expect(state.formData.goalTemplateId).toBe('tpl-1');
+    expect(state.formData['周期']).toBe('2026 第 1 周');
+    expect(state.rootTheme).toBe('学习');
+    expect(state.leafTheme).toBe('英语');
+    expect(state.fieldSourceSummary?.user).toBe(1);
   });
 });

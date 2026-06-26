@@ -1,5 +1,5 @@
 import type { GoalDefinition, RecordInputMeta, ThemeDefinition } from '@core/public';
-import { dayjs, getGoalTemplates, getLeafPath, renderTemplate, splitGoalPath } from '@core/public';
+import { dayjs, getGoalTemplates, getLeafPath, getTemplateFieldSemantic, renderTemplate, splitGoalPath } from '@core/public';
 import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/public';
 
 import type { GoalSelectorOption } from './components/GoalSelector';
@@ -370,4 +370,212 @@ export function hydrateQuickInputTemplateDefaults({
   });
 
   return { changed: true, formData: next, fieldSources: nextSources };
+}
+
+export interface QuickInputInitialSelection {
+  selectedGoalId: string | null;
+  selectedGoalPath: string | null;
+  selectedTemplateVariantId: string | null;
+  selectedCycleId: string | null;
+  timeDirection: TimeDirection;
+}
+
+export function deriveQuickInputInitialSelection(initialFormData?: Record<string, any>, context?: Record<string, any>): QuickInputInitialSelection {
+  return {
+    selectedGoalId: String(initialFormData?.goalId ?? initialFormData?.['目标ID'] ?? context?.goalId ?? context?.['目标ID'] ?? context?.__goalContext?.goalId ?? '').trim() || null,
+    selectedGoalPath: cleanDisplayPath(String(initialFormData?.goalPath ?? initialFormData?.['目标'] ?? context?.goalPath ?? context?.['目标'] ?? context?.__goalContext?.goalPath ?? '')),
+    selectedTemplateVariantId: String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? '').trim() || null,
+    selectedCycleId: String(initialFormData?.cycleId ?? initialFormData?.['周期ID'] ?? context?.cycleId ?? context?.['周期ID'] ?? context?.__goalContext?.cycleId ?? '').trim() || null,
+    timeDirection: initialFormData?.__timeDirection === 'backward' ? 'backward' : 'forward',
+  };
+}
+
+const QUICK_INPUT_GOAL_CONTEXT_KEYS = [
+  'goalId',
+  '目标ID',
+  'goalPath',
+  '目标',
+  'rootGoal',
+  'leafGoal',
+  'cycleId',
+  '周期ID',
+  '周期',
+  '周期粒度',
+  'templateId',
+  'goalTemplateId',
+  'templateVariantId',
+  'goalTemplateVariantId',
+];
+
+const QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
+  '内容',
+  'content',
+  '日期',
+  'date',
+  '时间',
+  'time',
+  '备注',
+  'note',
+  'description',
+  '目标',
+  '目标ID',
+  'goalId',
+  'goalPath',
+  'themePath',
+  '主题',
+];
+
+export function clearQuickInputGoalContext(formData: Record<string, any>, fieldSources: QuickInputFieldSourceMap) {
+  const nextFormData = { ...formData };
+  const nextFieldSources = { ...fieldSources };
+  QUICK_INPUT_GOAL_CONTEXT_KEYS.forEach((key) => {
+    delete nextFormData[key];
+    delete nextFieldSources[key];
+  });
+  return { formData: nextFormData, fieldSources: nextFieldSources };
+}
+
+export function preserveQuickInputBlockSwitchState(formData: Record<string, any>, fieldSources: QuickInputFieldSourceMap) {
+  const preservedFormData: Record<string, any> = {};
+  const preservedFieldSources: QuickInputFieldSourceMap = {};
+  QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS.forEach((key) => {
+    if (formData[key] !== undefined) preservedFormData[key] = formData[key];
+    if (fieldSources[key]) preservedFieldSources[key] = fieldSources[key];
+  });
+  return { formData: preservedFormData, fieldSources: preservedFieldSources };
+}
+
+export function resolveQuickInputThemeSelectionOnClick(params: { selectedThemeId: string | null; themeId: string | null; path: string | null; pathToIdMap: Map<string, string> }) {
+  const { selectedThemeId, themeId, path, pathToIdMap } = params;
+  if (!themeId || !path) return null;
+  if (selectedThemeId !== themeId) return themeId;
+  const parentPath = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+  return parentPath ? pathToIdMap.get(parentPath) ?? null : null;
+}
+
+export function applyQuickInputGoalSelection(params: {
+  formData: Record<string, any>;
+  fieldSources: QuickInputFieldSourceMap;
+  option: GoalSelectorOption;
+}) {
+  const { formData, fieldSources, option } = params;
+  const goal = option.goal || null;
+  const goalPath = cleanDisplayPath(goal?.goalPath || option.value) || option.value;
+  const goalId = goal?.id || (option.id && !String(option.id).startsWith('goal:') ? option.id : makeGoalIdFromPath(goalPath));
+  const themePath = goal?.themePath || option.themePath || null;
+  const nextFormData = { ...formData };
+  const nextFieldSources: QuickInputFieldSourceMap = { ...fieldSources };
+  const assign = (key: string, value: unknown, source: QuickInputFieldSource = 'goal_context') => {
+    if (value === undefined || value === null || value === '') return;
+    const currentSource = nextFieldSources[key];
+    const hasUserValue = currentSource === 'user' && isMeaningfulValue(nextFormData[key]);
+    if (hasUserValue) return;
+    nextFormData[key] = value;
+    nextFieldSources[key] = source;
+  };
+
+  assign('goalId', goalId);
+  assign('目标ID', goalId);
+  assign('goalPath', goalPath);
+  assign('目标', goalPath);
+  const parts = splitGoalPath(cleanDisplayPath(goalPath) || '');
+  assign('rootGoal', parts.rootGoal || '', 'goal_context');
+  assign('leafGoal', parts.leafGoal || '', 'goal_context');
+  if (themePath) {
+    assign('themePath', themePath, 'goal_context');
+    assign('主题', themePath, 'goal_context');
+  }
+
+  return { goal, goalId, goalPath, themePath, formData: nextFormData, fieldSources: nextFieldSources };
+}
+
+export interface BuildQuickInputEditorStateInput {
+  blockId: string;
+  effectiveBlockId?: string | null;
+  selectedGoal?: GoalDefinition | null;
+  selectedGoalId?: string | null;
+  currentGoalPath?: string | null;
+  currentGoalTitle?: string | null;
+  currentGoalParts: { root?: string | null; leaf?: string | null };
+  currentPeriod?: any | null;
+  selectedThemeId: string | null;
+  themeIdMap: Map<string, ThemeDefinition>;
+  theme?: ThemeDefinition | null;
+  formData: Record<string, any>;
+  currentPeriodFields: Record<string, any>;
+  timeDirection: TimeDirection;
+  template: any;
+  templateId: string | null;
+  resolvedTemplateVariantId?: string | null;
+  selectedTemplateVariantId?: string | null;
+  templateSourceType: 'core-block' | 'goal-template' | null;
+  fieldSources: QuickInputFieldSourceMap;
+}
+
+export function buildQuickInputEditorState(input: BuildQuickInputEditorStateInput): QuickInputEditorState {
+  const currentTheme = input.selectedThemeId ? input.themeIdMap.get(input.selectedThemeId) ?? input.theme ?? null : input.theme ?? null;
+  const effectiveThemePath = String(input.formData.themePath ?? input.formData['主题'] ?? currentTheme?.path ?? input.selectedGoal?.themePath ?? '').trim();
+  const themeParts = splitThemePathParts(effectiveThemePath || null);
+  const templateVariantId = input.resolvedTemplateVariantId || input.selectedTemplateVariantId || null;
+  return {
+    blockId: input.blockId,
+    coreBlockId: input.effectiveBlockId,
+    goalId: input.selectedGoal?.id || input.selectedGoalId,
+    goalPath: input.currentGoalPath,
+    goalTitle: input.currentGoalTitle,
+    rootGoal: input.currentGoalParts.root,
+    leafGoal: input.currentGoalParts.leaf,
+    cycleId: input.currentPeriod?.id || null,
+    themeId: input.selectedThemeId,
+    formData: {
+      ...input.formData,
+      templateId: input.templateId || undefined,
+      goalTemplateId: input.templateId || undefined,
+      templateVariantId: templateVariantId || undefined,
+      goalTemplateVariantId: templateVariantId || undefined,
+      ...input.currentPeriodFields,
+      __timeDirection: input.timeDirection,
+    },
+    meta: { timeDirection: input.timeDirection },
+    template: input.template,
+    theme: currentTheme,
+    templateId: input.templateId,
+    templateVariantId,
+    templateSourceType: input.templateSourceType,
+    fieldSources: input.fieldSources,
+    ...themeParts,
+    fieldSourceSummary: buildFieldSourceSummary(input.fieldSources),
+  };
+}
+
+export function buildQuickInputDisplayTemplate(rawTemplate: any, effectiveBlockId: string | null | undefined, availableThemes: ThemeDefinition[], goalFieldOptions: Array<{ value: string; label: string }>) {
+  if (!rawTemplate?.fields?.length) return rawTemplate;
+  const themeFieldOptions = themeOptions(availableThemes);
+  return {
+    ...rawTemplate,
+    coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
+    fields: rawTemplate.fields.map((field: any) => {
+      const semantic = getTemplateFieldSemantic(field);
+      if (semantic === 'goals') return { ...field, options: goalFieldOptions };
+      if (semantic === 'themePath') return { ...field, type: field.type === 'path' ? 'hierarchicalSingleSelect' : field.type, options: themeFieldOptions };
+      return field;
+    }),
+  };
+}
+
+export function shouldShowQuickInputTimeDirectionControl(template: any): boolean {
+  if (!template?.fields) return false;
+  const keys = new Set((template.fields || []).map((field: any) => field.key || field.label));
+  return keys.has('时间') && keys.has('结束') && keys.has('时长');
+}
+
+export function buildQuickInputPeriodUi(currentPeriod: any | null) {
+  return {
+    fields: currentPeriod
+      ? { cycleId: currentPeriod.id, periodId: currentPeriod.id, periodLabel: currentPeriod.label, '周期ID': currentPeriod.id, '周期': currentPeriod.label, '周期粒度': currentPeriod.granularity }
+      : {},
+    options: currentPeriod
+      ? { cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }], '周期ID': [{ value: currentPeriod.id, label: currentPeriod.label }], '周期': [{ value: currentPeriod.label, label: currentPeriod.label }] }
+      : {},
+  };
 }
