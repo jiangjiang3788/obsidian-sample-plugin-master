@@ -1,11 +1,13 @@
 // src/platform/modals/AiBatchConfirmModel.ts
-import type { NaturalRecordCommand, RecordSubmitResult, SubmitCreateRecordParams } from '@core/public';
+import type { BlockTemplate, GoalDefinition, GoalSettings, GoalTemplate, InputSettings, NaturalRecordCommand, RecordSubmitResult, SubmitCreateRecordParams, ThemeDefinition } from '@core/public';
 import {
+  asUnknownRecord,
   buildBatchCreateRecordSubmitResult,
   buildRecordDraftContext,
   getEffectiveTemplate,
   getGoalTemplateVariants,
   normalizeRecordInputFormDataForTemplate,
+  readFirstString,
   splitGoalPath,
 } from '@core/public';
 
@@ -17,17 +19,17 @@ export interface AiBatchConfirmRecordItem {
   goalLabel: string;
   presetLabel: string;
   themePath?: string;
-  formData: Record<string, any>;
+  formData: Record<string, unknown>;
   saved: boolean;
   skipped: boolean;
 }
 
 export interface BuildAiBatchConfirmRecordItemsInput {
   items: NaturalRecordCommand[];
-  blocks: any[];
-  themes: any[];
-  goalSettings: any;
-  inputSettings: any;
+  blocks: BlockTemplate[];
+  themes: ThemeDefinition[];
+  goalSettings?: GoalSettings;
+  inputSettings: InputSettings;
 }
 
 export interface AiBatchConfirmRecordSummary {
@@ -36,51 +38,51 @@ export interface AiBatchConfirmRecordSummary {
   pendingCount: number;
 }
 
-export function resolveGoalForAiTarget(goalSettings: any, target: NaturalRecordCommand['target']): any | null {
+export function resolveGoalForAiTarget(goalSettings: GoalSettings | undefined, target: NaturalRecordCommand['target']): GoalDefinition | null {
   const goals = goalSettings?.goals || [];
   if (!goals.length) return null;
 
   const targetGoalId = String(target.goalId || '').trim();
   if (targetGoalId) {
-    const byId = goals.find((goal: any) => goal.id === targetGoalId);
+    const byId = goals.find((goal) => goal.id === targetGoalId);
     if (byId) return byId;
   }
 
   const targetGoalPath = splitGoalPath(String(target.goalPath || '')).goalPath;
   if (targetGoalPath) {
-    const byPath = goals.find((goal: any) => splitGoalPath(String(goal.goalPath || goal.title || '')).goalPath === targetGoalPath);
+    const byPath = goals.find((goal) => splitGoalPath(String(goal.goalPath || goal.title || '')).goalPath === targetGoalPath);
     if (byPath) return byPath;
   }
 
   return null;
 }
 
-export function resolvePresetForAiTarget(goalSettings: any, goal: any | null, blockId: string, target: NaturalRecordCommand['target']): any | null {
+export function resolvePresetForAiTarget(goalSettings: GoalSettings | undefined, goal: GoalDefinition | null, blockId: string, target: NaturalRecordCommand['target']): GoalTemplate | null {
   if (!goal || !blockId) return null;
   const variants = getGoalTemplateVariants(goalSettings, goal, blockId) || [];
   if (!variants.length) return null;
 
   const exact = String(target.goalTemplateId || '').trim();
   if (exact) {
-    const matched = variants.find((preset: any) => preset.id === exact);
+    const matched = variants.find((preset) => preset.id === exact);
     if (matched) return matched;
   }
 
   const variantId = String(target.templateVariantId || '').trim();
   if (variantId) {
-    const matched = variants.find((preset: any) => preset.variantId === variantId || preset.id === variantId || preset.name === variantId);
+    const matched = variants.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.name === variantId);
     if (matched) return matched;
   }
 
-  return variants.find((preset: any) => preset.isDefault) || variants[0] || null;
+  return variants.find((preset) => preset.isDefault) || variants[0] || null;
 }
 
-export function readPresetThemePath(preset: any | null): string | undefined {
-  const raw = preset?.defaultValues?.themePath ?? preset?.defaultValues?.['主题'];
-  if (!raw) return undefined;
-  if (typeof raw === 'string') return raw.trim() || undefined;
-  if (typeof raw === 'object' && raw && 'value' in raw) return String(raw.value || '').trim() || undefined;
-  return undefined;
+export function readPresetThemePath(preset: GoalTemplate | null): string | undefined {
+  const values = asUnknownRecord(preset?.defaultValues);
+  const direct = readFirstString(values, ['themePath', '主题']);
+  if (direct) return direct;
+  const wrapped = asUnknownRecord(values?.themePath) ?? asUnknownRecord(values?.['主题']);
+  return readFirstString(wrapped, ['value', 'label']);
 }
 
 export function shortDisplay(value: unknown, fallback = '—', max = 32): string {
@@ -89,12 +91,12 @@ export function shortDisplay(value: unknown, fallback = '—', max = 32): string
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
-export function presetDisplayName(preset: any | null): string {
+export function presetDisplayName(preset: GoalTemplate | null): string {
   if (!preset) return 'CoreBlock 默认';
   return String(preset.name || preset.variantId || '默认预设').trim() || '默认预设';
 }
 
-export function goalDisplayName(goal: any | null, goalPath?: string): string {
+export function goalDisplayName(goal: GoalDefinition | null, goalPath?: string): string {
   if (goal?.title) return String(goal.title);
   const normalized = splitGoalPath(String(goal?.goalPath || goalPath || '')).leafGoal;
   return normalized || String(goalPath || '未匹配目标');
@@ -177,7 +179,7 @@ export function summarizeAiBatchConfirmRecords(records: AiBatchConfirmRecordItem
   };
 }
 
-export function buildAiBatchConfirmRecordContext(record: AiBatchConfirmRecordItem): Record<string, any> {
+export function buildAiBatchConfirmRecordContext(record: AiBatchConfirmRecordItem): Record<string, unknown> {
   return buildRecordDraftContext(record.cmd.fieldValues, record.formData);
 }
 

@@ -1,4 +1,4 @@
-import type { CoreBlockDefinition, GoalDefinition, GoalTemplate, TemplateField } from '@core/public';
+import type { CoreBlockDefinition, GoalDefinition, GoalTemplate, TemplateField, ThemeDefinition, UnknownRecord } from '@core/public';
 import {
   compactGoalTemplateForStorage,
   describeGoalTemplateStorageDiff,
@@ -10,6 +10,10 @@ import {
   isSystemRecordContextField,
   normalizePeriodPolicyGranularity,
   readGoalTemplateThemePath,
+  asUnknownRecord,
+  isUnknownRecord,
+  readFirstString,
+  readString,
 } from '@core/public';
 
 export type GoalTemplateEditMode = 'inherit' | 'override' | 'disabled';
@@ -51,7 +55,8 @@ export function cloneValue<T>(value: T): T {
 
 function readOptionText(value: unknown): string {
   if (value === undefined || value === null) return '';
-  if (typeof value === 'object' && value && 'value' in (value as any)) return compactText((value as any).value);
+  const record = asUnknownRecord(value);
+  if (record && 'value' in record) return compactText(record.value);
   return compactText(value);
 }
 
@@ -76,26 +81,28 @@ export function themeLeafLabel(path?: unknown, fallback = ''): string {
   return normalized.split('/').filter(Boolean).pop() || fallback;
 }
 
+function getFieldSemantic(field: TemplateField): string {
+  return compactText(field.semantic || field.semanticType).toLowerCase();
+}
+
 function isThemeField(field: TemplateField): boolean {
-  const anyField = field as any;
-  const key = compactText(anyField.key).toLowerCase();
-  const label = compactText(anyField.label);
-  const semantic = compactText(anyField.semantic || anyField.semanticType).toLowerCase();
+  const key = compactText(field.key).toLowerCase();
+  const label = compactText(field.label);
+  const semantic = getFieldSemantic(field);
   return key === 'themepath' || key === '主题' || label === '主题' || semantic.includes('themepath') || semantic === 'theme';
 }
 
 function isIconField(field: TemplateField): boolean {
-  const anyField = field as any;
-  const key = compactText(anyField.key).toLowerCase();
-  const label = compactText(anyField.label);
-  const semantic = compactText(anyField.semantic || anyField.semanticType).toLowerCase();
+  const key = compactText(field.key).toLowerCase();
+  const label = compactText(field.label);
+  const semantic = getFieldSemantic(field);
   return key === 'icon' || key === '图标' || label === '图标' || semantic === 'icon';
 }
 
 export function readThemePathFromFields(fields: TemplateField[] | undefined): string {
   for (const field of fields || []) {
     if (!isThemeField(field)) continue;
-    const value = readOptionText((field as any).defaultValue);
+    const value = readOptionText(field.defaultValue);
     if (value && value !== '{{goal.themePath}}') return normalizeThemePath(value);
   }
   return '';
@@ -111,14 +118,14 @@ export function ensureThemeField(fields: TemplateField[], themePath: string): Te
   const next = (fields || []).map((field) => {
     if (!isThemeField(field)) return field;
     touched = true;
-    return { ...field, defaultValue: normalizedThemePath || (field as any).defaultValue || '{{goal.themePath}}' } as TemplateField;
+    return { ...field, defaultValue: normalizedThemePath || field.defaultValue || '{{goal.themePath}}' };
   });
   if (!touched && normalizedThemePath) {
     next.push({
       id: 'themePath',
       key: 'themePath',
       label: '主题',
-      type: 'path' as any,
+      type: 'path',
       semanticType: 'themePath',
       defaultValue: normalizedThemePath,
     });
@@ -144,7 +151,7 @@ export function mergeDefaultValues(draft: Pick<GoalTemplateDraftState, 'defaultV
 function readIconFromFields(fields: TemplateField[] | undefined): string {
   for (const field of fields || []) {
     if (!isIconField(field)) continue;
-    const value = readOptionText((field as any).defaultValue);
+    const value = readOptionText(field.defaultValue);
     if (value && value !== '{{theme.icon}}') return value;
   }
   return '';
@@ -168,9 +175,9 @@ export function inferTemplateDisplayName(template: GoalTemplate | null | undefin
 
 export function readPeriodGranularity(template: GoalTemplate | null | undefined, block: CoreBlockDefinition | null | undefined): GoalTemplateDraftState['granularity'] {
   return normalizePeriodPolicyGranularity(
-    (template as any)?.periodPolicy?.granularity
-    || (template as any)?.granularity
-    || (block as any)?.periodPolicy?.granularity
+    template?.periodPolicy?.granularity
+    || template?.granularity
+    || block?.periodPolicy?.granularity
     || 'week',
   );
 }
@@ -201,12 +208,12 @@ export function makeDraftFromTemplate(template: GoalTemplate | null, block: Core
   };
 }
 
-export function makeNewDraft(goal: GoalDefinition | null, block: CoreBlockDefinition | null, variants: GoalTemplate[], themes: any[]): GoalTemplateDraftState {
+export function makeNewDraft(goal: GoalDefinition | null, block: CoreBlockDefinition | null, variants: GoalTemplate[], themes: ThemeDefinition[]): GoalTemplateDraftState {
   const base = makeDraftFromTemplate(null, block, variants);
   const usedVariantIds = new Set(variants.map((item) => String(item.variantId || 'default')));
   const usedThemePaths = new Set(variants.map((item) => normalizeThemePath(readThemePathFromTemplate(item))).filter(Boolean));
-  const preferredTheme = normalizeThemePath((goal as any)?.themePath) || normalizeThemePath(base.themePath);
-  const firstUnusedTheme = themes.map((theme: any) => normalizeThemePath(theme?.path)).find((path: string) => path && !usedThemePaths.has(path));
+  const preferredTheme = normalizeThemePath(goal?.themePath) || normalizeThemePath(base.themePath);
+  const firstUnusedTheme = themes.map((theme) => normalizeThemePath(theme.path)).find((path) => path && !usedThemePaths.has(path));
   const themePath = preferredTheme && !usedThemePaths.has(preferredTheme) ? preferredTheme : (firstUnusedTheme || preferredTheme || '');
   const label = themeLeafLabel(themePath, block?.name || '记录预设');
   let variantId = makeVariantId(label || `preset-${variants.length + 1}`);
@@ -223,26 +230,31 @@ export function makeNewDraft(goal: GoalDefinition | null, block: CoreBlockDefini
     sortOrder: variants.length * 10,
     themePath,
     fields,
-    defaultValues: mergeDefaultValues({ ...base, themePath, fields, name: label || '记录预设', variantId } as GoalTemplateDraftState, themes.find((theme: any) => normalizeThemePath(theme?.path) === themePath)?.icon),
+    defaultValues: mergeDefaultValues({ ...base, themePath, fields, name: label || '记录预设', variantId } as GoalTemplateDraftState, themes.find((theme) => normalizeThemePath(theme.path) === themePath)?.icon),
   };
 }
 
 function deriveRequiredFields(fields: TemplateField[]): string[] {
   return (fields || [])
-    .filter((field: any) => field?.required === true)
-    .map((field: any) => compactText(field.key || field.label))
+    .filter((field) => field.required === true)
+    .map((field) => compactText(field.key || field.label))
     .filter(Boolean);
 }
 
+type StableJsonValue = string | number | boolean | null | StableJsonValue[] | { [key: string]: StableJsonValue };
+
 function stableJson(value: unknown): string {
   const seen = new WeakSet<object>();
-  const normalize = (input: any): any => {
+  const normalize = (input: unknown): StableJsonValue | undefined => {
     if (input === undefined) return undefined;
-    if (input === null || typeof input !== 'object') return input;
+    if (input === null) return null;
+    if (typeof input === 'string' || typeof input === 'number' || typeof input === 'boolean') return input;
+    if (typeof input !== 'object') return compactText(input);
     if (seen.has(input)) return '[Circular]';
     seen.add(input);
-    if (Array.isArray(input)) return input.map(normalize);
-    const out: Record<string, unknown> = {};
+    if (Array.isArray(input)) return input.map(normalize).filter((item): item is StableJsonValue => item !== undefined);
+    if (!isUnknownRecord(input)) return compactText(input);
+    const out: Record<string, StableJsonValue> = {};
     Object.keys(input).sort().forEach((key) => {
       const value = normalize(input[key]);
       if (value !== undefined) out[key] = value;
@@ -253,9 +265,9 @@ function stableJson(value: unknown): string {
 }
 
 function compactFieldForStructureCompare(field: TemplateField): Record<string, unknown> {
-  const source = field as any;
+  const source = field as unknown as UnknownRecord;
   const out: Record<string, unknown> = {};
-  Object.keys(source || {}).sort().forEach((key) => {
+  Object.keys(source).sort().forEach((key) => {
     if (key === 'id' || key === 'defaultValue' || key === 'required') return;
     const value = source[key];
     if (value === undefined || value === null || value === '') return;
@@ -280,9 +292,9 @@ function equalStringSet(left: string[], right: string[]): boolean {
 function getFieldDefaultMap(fields: TemplateField[] | undefined): Record<string, string> {
   const result: Record<string, string> = {};
   for (const field of fields || []) {
-    const key = compactText((field as any).key || (field as any).label);
+    const key = compactText(field.key || field.label);
     if (!key) continue;
-    const value = (field as any).defaultValue;
+    const value = field.defaultValue;
     if (value !== undefined && value !== null && compactText(value) !== '') result[key] = compactText(value);
   }
   return result;
@@ -435,18 +447,18 @@ export function sortGoalTemplateVariants(variants: GoalTemplate[]): GoalTemplate
     .map(({ template }) => template);
 }
 
-export function buildThemeOptions(themes: any[]): GoalTemplateThemeOption[] {
+export function buildThemeOptions(themes: ThemeDefinition[]): GoalTemplateThemeOption[] {
   return [
     { value: '', label: '不指定主题' },
-    ...(themes || []).map((theme: any) => ({
+    ...(themes || []).map((theme) => ({
       value: theme.path,
       label: `${theme.icon ? `${theme.icon} ` : ''}${cleanDisplayThemePath(theme.path)}`,
     })),
   ];
 }
 
-export function buildThemeByPath(themes: any[]): Map<string, any> {
-  return new Map((themes || []).map((theme: any) => [String(theme.path || ''), theme]));
+export function buildThemeByPath(themes: ThemeDefinition[]): Map<string, ThemeDefinition> {
+  return new Map((themes || []).map((theme) => [String(theme.path || ''), theme]));
 }
 
 export function applyThemePathToDraft(draft: GoalTemplateDraftState, themePath: string, themeIcon?: string): GoalTemplateDraftState {

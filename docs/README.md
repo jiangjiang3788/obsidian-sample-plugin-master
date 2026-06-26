@@ -2,13 +2,14 @@
 
 ## 文档治理
 
-MVP24 起，`docs/` 根目录不再保留旧阶段的临时过程报告；MVP25 起，最终封版说明作为当前维护入口之一。当前根目录只保留：
+MVP24 起，`docs/` 根目录不再保留旧阶段的临时过程报告；MVP25 起，最终封版说明作为当前维护入口之一；MVP26 起，类型治理计划作为后续维护入口之一；MVP27 起，any 预算开始实际下降；MVP28 起，AI 动态输入边界完成第一轮显式 any 清理；MVP29 起，目标预设模型、字段解析和筛选核心完成第一轮显式 any 清理。当前根目录只保留：
 
 - `README.md`：本文档入口。
 - `MVP_ACCEPTANCE.md`：最小发布验收清单。
 - `INITIAL_PLAN_PROGRESS.md`：原始工程计划进度摘要。
-- `单人版收敛总览.md`：MVP1-MVP25 的收敛主线索引。
+- `单人版收敛总览.md`：MVP1-MVP29 的收敛主线索引。
 - `最终封版说明.md`：MVP25 最终质量入口、封版边界和交付建议。
+- `类型治理计划.md`：MVP26 起的 `any` 预算、MVP27-MVP29 下降结果、动态输入边界和后续类型治理路线。
 - `单人版收敛-MVP*.md`：每轮中文收敛记录。
 - `Git提交备注-MVP*.md`：每轮中文 Git 提交备注。
 - `文档治理.md`：文档保留、删除和防过度文档化规则。
@@ -20,6 +21,7 @@ MVP24 起，`docs/` 根目录不再保留旧阶段的临时过程报告；MVP25 
 ```bash
 npm run docs-governance:gate
 npm run final-convergence:gate
+npm run any-budget:gate
 ```
 
 ### 当前建议阅读顺序
@@ -27,8 +29,9 @@ npm run final-convergence:gate
 1. `docs/单人版收敛总览.md`
 2. `docs/最终封版说明.md`
 3. `docs/文档治理.md`
-4. `docs/MVP_ACCEPTANCE.md`
-5. `docs/INITIAL_PLAN_PROGRESS.md`
+4. `docs/类型治理计划.md`
+5. `docs/MVP_ACCEPTANCE.md`
+6. `docs/INITIAL_PLAN_PROGRESS.md`
 6. 需要追溯单轮时，再看 `docs/单人版收敛-MVP*.md` 和 `docs/Git提交备注-MVP*.md`
 
 
@@ -69,6 +72,7 @@ Obsidian 第三方插件的最小发布物是：
 ```bash
 npm ci
 npm run gate
+npm run any-budget:gate
 npm run manifest:gate
 npm run mvp:gate
 npm run bundle:gate  # 需要先 npm run build:release 生成 release/think-os/main.js

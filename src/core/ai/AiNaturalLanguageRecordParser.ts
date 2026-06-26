@@ -2,12 +2,14 @@
 // 自然语言记录解析器实现 - 核心 Prompt + JSON 解析
 
 import type { INaturalLanguageRecordParser, ParseInput } from './INaturalLanguageRecordParser';
-import type { NaturalRecordBatch } from '@/core/types/ai-schema';
+import type { NaturalRecordBatch, NaturalRecordCommand } from '@/core/types/ai-schema';
 import { isSystemRecordContextField } from '@/core/goal';
 import type { ISettingsProvider } from '@/core/services/types';
 import { AiConfigCache } from './AiConfigCache';
 import { AiHttpClient } from './AiHttpClient';
 import { devLog, devWarn } from '../utils/devLogger';
+import { asUnknownRecord, isUnknownRecord, readRecordArray, readTrimmedString } from '../utils/unknownRecord';
+import type { UnknownRecord } from '../utils/unknownRecord';
 
 function nowMs(): number {
     try {
@@ -41,69 +43,146 @@ function warnSlowParserStep(traceId: string, step: string, startedAt: number, th
 }
 
 
-function ensureCommandTarget(item: any): Record<string, any> {
-    if (!item.target || typeof item.target !== 'object') item.target = {};
-    return item.target;
+type AiCommandTarget = NaturalRecordCommand['target'] & UnknownRecord;
+type AiParsedCommand = NaturalRecordCommand & {
+    target: AiCommandTarget;
+    fieldValues: Record<string, unknown>;
+};
+
+interface AiSnapshotField {
+    key?: string;
+    label?: string;
+    type?: string;
 }
 
-export function cleanAiFieldValues(values: any): Record<string, any> {
-    const result: Record<string, any> = {};
-    if (!values || typeof values !== 'object') return result;
-    for (const [key, value] of Object.entries(values)) {
+interface AiSnapshotBlock {
+    id?: string;
+    name?: string;
+    categoryKey?: string;
+    fields?: AiSnapshotField[];
+}
+
+interface AiSnapshotTheme {
+    id?: string;
+    path?: string;
+}
+
+interface AiSnapshotGoal {
+    id?: string;
+    path?: string;
+    title?: string;
+    goalPath?: string;
+    themePath?: string;
+}
+
+interface AiSnapshotPreset {
+    id?: string;
+    goalTemplateId?: string;
+    variantId?: string;
+    goalId?: string;
+    goalPath?: string;
+    blockId?: string;
+    categoryKey?: string;
+    name?: string;
+    themePath?: string;
+    isDefault?: boolean;
+}
+
+interface AiParserSnapshot {
+    blocks?: AiSnapshotBlock[];
+    themes?: AiSnapshotTheme[];
+    goals?: AiSnapshotGoal[];
+    goalPresets?: AiSnapshotPreset[];
+}
+
+interface CompactAiParserSnapshot {
+    blocks: Array<{ id?: string; name?: string; categoryKey?: string; fields: AiSnapshotField[] }>;
+    themes: Array<{ path?: string }>;
+    goals: Array<{ path?: string }>;
+    goalPresets: Array<{
+        goalPath?: string;
+        blockId?: string;
+        categoryKey?: string;
+        variantId?: string;
+        goalTemplateId?: string;
+        name?: string;
+        themePath?: string;
+    }>;
+}
+
+function ensureCommandTarget(item: Partial<NaturalRecordCommand> & { target?: unknown }): AiCommandTarget {
+    if (!isUnknownRecord(item.target)) {
+        item.target = { blockId: '' };
+    }
+    const target = item.target as AiCommandTarget;
+    if (typeof target.blockId !== 'string') target.blockId = '';
+    return target;
+}
+
+export function cleanAiFieldValues(values: unknown): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+    const record = asUnknownRecord(values);
+    if (!record) return result;
+    for (const [key, value] of Object.entries(record)) {
         if (isSystemRecordContextField(key)) continue;
         result[key] = value;
     }
     return result;
 }
 
-function findBlockByTarget(snapshot: any, target: Record<string, any>): any | null {
+function targetString(target: UnknownRecord, key: string): string {
+    return readTrimmedString(target, key) ?? '';
+}
+
+function findBlockByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotBlock | null {
     const blocks = snapshot.blocks ?? [];
-    const blockId = String(target.blockId || '').trim();
-    const categoryKey = String(target.categoryKey || '').trim();
-    return blocks.find((block: any) => block.id === blockId)
-        || blocks.find((block: any) => block.categoryKey === categoryKey || block.name === categoryKey)
+    const blockId = targetString(target, 'blockId');
+    const categoryKey = targetString(target, 'categoryKey');
+    return blocks.find((block) => block.id === blockId)
+        || blocks.find((block) => block.categoryKey === categoryKey || block.name === categoryKey)
         || null;
 }
 
-function findGoalByTarget(snapshot: any, target: Record<string, any>): any | null {
+function findGoalByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotGoal | null {
     const goals = snapshot.goals ?? [];
-    const goalPath = String(target.goalPath || '').trim();
-    const goalId = String(target.goalId || '').trim();
-    return goals.find((goal: any) => goal.id === goalId)
-        || goals.find((goal: any) => goal.path === goalPath || goal.title === goalPath)
+    const goalPath = targetString(target, 'goalPath');
+    const goalId = targetString(target, 'goalId');
+    return goals.find((goal) => goal.id === goalId)
+        || goals.find((goal) => goal.path === goalPath || goal.title === goalPath)
         || null;
 }
 
-function findPresetByTarget(snapshot: any, target: Record<string, any>): any | null {
+function findPresetByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotPreset | null {
     const presets = snapshot.goalPresets ?? [];
-    const explicitId = String(target.goalTemplateId || target.templateId || '').trim();
-    const variantId = String(target.templateVariantId || target.goalTemplateVariantId || '').trim();
-    const goalPath = String(target.goalPath || '').trim();
-    const goalId = String(target.goalId || '').trim();
-    const blockId = String(target.blockId || '').trim();
-    const categoryKey = String(target.categoryKey || '').trim();
+    const explicitId = targetString(target, 'goalTemplateId') || targetString(target, 'templateId');
+    const variantId = targetString(target, 'templateVariantId') || targetString(target, 'goalTemplateVariantId');
+    const goalPath = targetString(target, 'goalPath');
+    const goalId = targetString(target, 'goalId');
+    const blockId = targetString(target, 'blockId');
+    const categoryKey = targetString(target, 'categoryKey');
     if (explicitId) {
-        const exact = presets.find((preset: any) => preset.id === explicitId || preset.goalTemplateId === explicitId);
+        const exact = presets.find((preset) => preset.id === explicitId || preset.goalTemplateId === explicitId);
         if (exact) return exact;
     }
-    const candidates = presets.filter((preset: any) => {
+    const candidates = presets.filter((preset) => {
         const goalMatches = !goalPath && !goalId ? true : preset.goalPath === goalPath || preset.goalId === goalId;
         const blockMatches = !blockId && !categoryKey ? true : preset.blockId === blockId || preset.categoryKey === categoryKey;
         return goalMatches && blockMatches;
     });
     if (variantId) {
-        const exactVariant = candidates.find((preset: any) => preset.variantId === variantId || preset.id === variantId || preset.goalTemplateId === variantId);
+        const exactVariant = candidates.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.goalTemplateId === variantId);
         if (exactVariant) return exactVariant;
     }
-    return candidates.find((preset: any) => preset.isDefault) || candidates[0] || null;
+    return candidates.find((preset) => preset.isDefault) || candidates[0] || null;
 }
 
-export function normalizeParsedBatch(batch: NaturalRecordBatch, snapshot: any, rawText: string, defaultThemeId?: string): NaturalRecordBatch {
+export function normalizeParsedBatch(batch: NaturalRecordBatch, snapshot: AiParserSnapshot, rawText: string, defaultThemeId?: string): NaturalRecordBatch {
     if (!batch.items) batch.items = [];
-    batch.items.forEach((item: any) => {
-        if (!item.rawText) item.rawText = rawText;
-        const target = ensureCommandTarget(item);
-        item.fieldValues = cleanAiFieldValues(item.fieldValues);
+    batch.items.forEach((item) => {
+        const parsedItem = item as AiParsedCommand;
+        if (!parsedItem.rawText) parsedItem.rawText = rawText;
+        const target = ensureCommandTarget(parsedItem);
+        parsedItem.fieldValues = cleanAiFieldValues(parsedItem.fieldValues);
 
         const preset = findPresetByTarget(snapshot, target);
         if (preset) {
@@ -111,18 +190,18 @@ export function normalizeParsedBatch(batch: NaturalRecordBatch, snapshot: any, r
             target.templateVariantId = preset.variantId;
             target.goalId = preset.goalId;
             target.goalPath = preset.goalPath;
-            target.blockId = preset.blockId;
+            target.blockId = preset.blockId || target.blockId;
             target.categoryKey = preset.categoryKey;
             if (!target.themeId && preset.themePath) target.themeId = preset.themePath;
         }
 
         const block = findBlockByTarget(snapshot, target);
         if (block) {
-            target.blockId = target.blockId || block.id;
+            target.blockId = target.blockId || block.id || '';
             target.categoryKey = target.categoryKey || block.categoryKey;
         } else if (!target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
             target.categoryKey = snapshot.blocks[0].categoryKey;
-            target.blockId = snapshot.blocks[0].id;
+            target.blockId = snapshot.blocks[0].id || '';
         }
 
         const goal = findGoalByTarget(snapshot, target);
@@ -137,25 +216,25 @@ export function normalizeParsedBatch(batch: NaturalRecordBatch, snapshot: any, r
     return batch;
 }
 
-function compactSnapshotForFastMode(snapshot: any): any {
+function compactSnapshotForFastMode(snapshot: AiParserSnapshot): CompactAiParserSnapshot {
     return {
-        blocks: (snapshot.blocks ?? []).map((block: any) => ({
+        blocks: (snapshot.blocks ?? []).map((block) => ({
             id: block.id,
             name: block.name,
             categoryKey: block.categoryKey,
-            fields: (block.fields ?? []).map((field: any) => ({
+            fields: (block.fields ?? []).map((field) => ({
                 key: field.key,
                 label: field.label,
                 type: field.type,
             })),
         })),
-        themes: (snapshot.themes ?? []).map((theme: any) => ({
+        themes: (snapshot.themes ?? []).map((theme) => ({
             path: theme.path,
         })),
-        goals: (snapshot.goals ?? []).map((goal: any) => ({
+        goals: (snapshot.goals ?? []).map((goal) => ({
             path: goal.path,
         })),
-        goalPresets: (snapshot.goalPresets ?? []).map((preset: any) => ({
+        goalPresets: (snapshot.goalPresets ?? []).map((preset) => ({
             goalPath: preset.goalPath,
             blockId: preset.blockId,
             categoryKey: preset.categoryKey,
@@ -167,6 +246,16 @@ function compactSnapshotForFastMode(snapshot: any): any {
     };
 }
 
+function coerceNaturalRecordBatch(value: unknown): NaturalRecordBatch {
+    if (Array.isArray(value)) {
+        return { items: value as NaturalRecordCommand[] };
+    }
+    const record = asUnknownRecord(value);
+    const items = readRecordArray(record, 'items') as NaturalRecordCommand[];
+    return { items };
+}
+
+
 /**
  * 安全解析 JSON 批次
  * 尝试直接解析，失败则截取第一个 { 到最后一个 } 再解析
@@ -176,9 +265,9 @@ function safeJsonParseBatch(raw: string, traceId?: string): NaturalRecordBatch {
 
     // 先尝试直接解析
     try {
-        const parsed = JSON.parse(raw);
+        const parsed: unknown = JSON.parse(raw);
         if (traceId) logParserStep(traceId, 'JSON 直接解析完成', parseStart, { rawLength: raw.length });
-        return parsed;
+        return coerceNaturalRecordBatch(parsed);
     } catch {
         if (traceId) devWarn(`[AiInput][${traceId}][Parser] JSON 直接解析失败，尝试截取对象/数组`, { rawLength: raw.length });
 
@@ -192,9 +281,9 @@ function safeJsonParseBatch(raw: string, traceId?: string): NaturalRecordBatch {
             const sliced = raw.slice(start, end + 1);
             const objectParseStart = nowMs();
             try {
-                const parsed = JSON.parse(sliced);
+                const parsed: unknown = JSON.parse(sliced);
                 if (traceId) logParserStep(traceId, '截取对象 JSON 解析完成', objectParseStart, { slicedLength: sliced.length });
-                return parsed;
+                return coerceNaturalRecordBatch(parsed);
             } catch {
                 if (traceId) devWarn(`[AiInput][${traceId}][Parser] 截取对象 JSON 解析失败`, { slicedLength: sliced.length });
                 // 继续尝试
@@ -211,9 +300,9 @@ function safeJsonParseBatch(raw: string, traceId?: string): NaturalRecordBatch {
             const sliced = raw.slice(arrayStart, arrayEnd + 1);
             const arrayParseStart = nowMs();
             try {
-                const items = JSON.parse(sliced);
+                const items: unknown = JSON.parse(sliced);
                 if (traceId) logParserStep(traceId, '截取数组 JSON 解析完成', arrayParseStart, { slicedLength: sliced.length });
-                return { items };
+                return coerceNaturalRecordBatch(items);
             } catch {
                 if (traceId) devWarn(`[AiInput][${traceId}][Parser] 截取数组 JSON 解析失败`, { slicedLength: sliced.length });
                 // 继续
@@ -388,14 +477,14 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
     /**
      * 构建系统提示 - 增强主题选择指导，支持自定义提示词
      */
-    private buildSystemPrompt(snapshot: any, customPrompt: string): string {
+    private buildSystemPrompt(snapshot: AiParserSnapshot, customPrompt: string): string {
         // 提取主题列表用于示例
-        const themeExamples = (snapshot.themes ?? []).slice(0, 5).map((t: any) => t.path).join(', ') || '';
+        const themeExamples = (snapshot.themes ?? []).slice(0, 5).map((t) => t.path).join(', ') || '';
         
         // 提取 Block 列表用于示例
-        const blockExamples = (snapshot.blocks ?? []).slice(0, 5).map((b: any) => `${b.id}(${b.name})`).join(', ') || '';
-        const goalExamples = (snapshot.goals ?? []).slice(0, 6).map((g: any) => g.path).join(', ') || '';
-        const presetExamples = (snapshot.goalPresets ?? []).slice(0, 8).map((p: any) => `${p.goalPath} × ${p.blockId || p.categoryKey} → ${p.name}${p.themePath ? `(${p.themePath})` : ''}`).join('；') || '';
+        const blockExamples = (snapshot.blocks ?? []).slice(0, 5).map((b) => `${b.id}(${b.name})`).join(', ') || '';
+        const goalExamples = (snapshot.goals ?? []).slice(0, 6).map((g) => g.path).join(', ') || '';
+        const presetExamples = (snapshot.goalPresets ?? []).slice(0, 8).map((p) => `${p.goalPath} × ${p.blockId || p.categoryKey} → ${p.name}${p.themePath ? `(${p.themePath})` : ''}`).join('；') || '';
         
         const basePrompt = [
             'You are a parser that converts natural language into Think plugin record commands.',
@@ -517,7 +606,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
     /**
      * 构建用户提示
      */
-    private buildUserPrompt(text: string, nowIso: string, maxResults: number, snapshot: any): string {
+    private buildUserPrompt(text: string, nowIso: string, maxResults: number, snapshot: AiParserSnapshot): string {
         return [
             `Current time: ${nowIso}`,
             `Max results: ${maxResults}`,
@@ -544,10 +633,10 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
     /**
      * 快速模式用户提示：只保留必要字段，减少请求体积和模型推理负担。
      */
-    private buildFastUserPrompt(text: string, nowIso: string, maxResults: number, snapshot: any): string {
-        const themePaths = (snapshot.themes ?? []).map((theme: any) => theme.path).filter(Boolean);
-        const goalPaths = (snapshot.goals ?? []).map((goal: any) => goal.path).filter(Boolean);
-        const compactPresets = (snapshot.goalPresets ?? []).map((preset: any) => ({
+    private buildFastUserPrompt(text: string, nowIso: string, maxResults: number, snapshot: AiParserSnapshot): string {
+        const themePaths = (snapshot.themes ?? []).map((theme) => theme.path).filter(Boolean);
+        const goalPaths = (snapshot.goals ?? []).map((goal) => goal.path).filter(Boolean);
+        const compactPresets = (snapshot.goalPresets ?? []).map((preset) => ({
             goalPath: preset.goalPath,
             blockId: preset.blockId,
             categoryKey: preset.categoryKey,
@@ -556,11 +645,11 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             name: preset.name,
             themePath: preset.themePath,
         }));
-        const compactBlocks = (snapshot.blocks ?? []).map((block: any) => ({
+        const compactBlocks = (snapshot.blocks ?? []).map((block) => ({
             id: block.id,
             name: block.name,
             categoryKey: block.categoryKey,
-            fields: (block.fields ?? []).map((field: any) => field.key || field.label).filter(Boolean),
+            fields: (block.fields ?? []).map((field) => field.key || field.label).filter(Boolean),
         }));
 
         return [

@@ -7,6 +7,7 @@ import { normalizeImageValue } from './imageSemantics';
 import { parseTagList } from './tagSemantics';
 import { splitHierarchyPath } from './pathSemantics';
 import { getTaskStatus } from '@/core/utils/taskStatus';
+import { asUnknownRecord, readFirstString, readString, readStringArray, readUnknown } from '@/core/utils/unknownRecord';
 
 export type FieldValueSource = FieldSource | 'unknown';
 
@@ -30,32 +31,33 @@ export function normalizeFieldKey(field: string): string {
 }
 
 function readFileField(item: Item, field: string): unknown {
-  const file = (item as any).file || {};
+  const file = item.file;
+  const fileRecord = asUnknownRecord(file);
   const key = field.slice('file.'.length);
 
   if (key === 'name' || key === 'basename') {
-    return file.basename ?? item.fileName ?? item.filename;
+    return file?.basename ?? item.fileName ?? item.filename;
   }
   if (key === 'folder') {
-    return file.folder ?? item.folder;
+    return file?.folder ?? item.folder;
   }
-  return file[key];
+  return readUnknown(fileRecord, key);
 }
 
 function readCategoryPath(item: Item): string | undefined {
-  return splitHierarchyPath((item as any).categoryPath ?? item.categoryKey).path;
+  return splitHierarchyPath(readString(asUnknownRecord(item), 'categoryPath') ?? item.categoryKey).path;
 }
 
 function readRootCategory(item: Item): string | undefined {
-  return splitHierarchyPath((item as any).categoryPath ?? item.categoryKey).root;
+  return splitHierarchyPath(readString(asUnknownRecord(item), 'categoryPath') ?? item.categoryKey).root;
 }
 
 function readLeafCategory(item: Item): string | undefined {
-  return splitHierarchyPath((item as any).categoryPath ?? item.categoryKey).leaf;
+  return splitHierarchyPath(readString(asUnknownRecord(item), 'categoryPath') ?? item.categoryKey).leaf;
 }
 
 function readImageField(item: Item): unknown {
-  return normalizeImageValue((item as any).image ?? item.pintu ?? item.extra?.['图片'] ?? item.extra?.['image'] ?? item.extra?.['评图'] ?? item.extra?.['pintu']);
+  return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.['图片'] ?? item.extra?.['image'] ?? item.extra?.['评图'] ?? item.extra?.['pintu']);
 }
 
 function readCanonicalField(item: Item, canonicalField: string): unknown {
@@ -80,13 +82,13 @@ function readCanonicalField(item: Item, canonicalField: string): unknown {
   // Theme view fields are derived from explicit theme data only.
   // header/heading is intentionally excluded from this resolver.
   if (canonicalField === 'themePath') {
-    return readExplicitThemeParts(item as any).themePath ?? undefined;
+    return readExplicitThemeParts(item).themePath ?? undefined;
   }
   if (canonicalField === 'rootTheme') {
-    return readExplicitThemeParts(item as any).rootTheme ?? undefined;
+    return readExplicitThemeParts(item).rootTheme ?? undefined;
   }
   if (canonicalField === 'leafTheme') {
-    return readExplicitThemeParts(item as any).leafTheme ?? undefined;
+    return readExplicitThemeParts(item).leafTheme ?? undefined;
   }
 
   if (canonicalField === 'taskStatus') {
@@ -94,13 +96,13 @@ function readCanonicalField(item: Item, canonicalField: string): unknown {
   }
 
   if (canonicalField === 'period.id') {
-    return (item as any).cycleId || (item as any).periodId || undefined;
+    return readFirstString(asUnknownRecord(item), ['cycleId', 'periodId']);
   }
   if (canonicalField === 'period.label') {
-    return (item as any).period || (item as any).周期 || undefined;
+    return readFirstString(asUnknownRecord(item), ['period', '周期']);
   }
   if (canonicalField === 'period.granularity') {
-    return (item as any).periodGranularity || (item as any).goalGranularity || undefined;
+    return readFirstString(asUnknownRecord(item), ['periodGranularity', 'goalGranularity']);
   }
 
   if (canonicalField === 'repeatToken') {
@@ -112,7 +114,7 @@ function readCanonicalField(item: Item, canonicalField: string): unknown {
   }
 
   if (canonicalField === 'goalPaths') {
-    return parseTagList((item as any).goalPaths || []);
+    return parseTagList(item.goalPaths?.length ? item.goalPaths : readStringArray(asUnknownRecord(item), 'goalPaths'));
   }
 
   if (canonicalField === 'fullData') {
@@ -133,7 +135,7 @@ function readCanonicalField(item: Item, canonicalField: string): unknown {
     return item.pintu;
   }
 
-  return (item as any)[canonicalField];
+  return readUnknown(asUnknownRecord(item), canonicalField);
 }
 
 export function resolveFieldValue(item: Item, field: string): FieldValueResolution {

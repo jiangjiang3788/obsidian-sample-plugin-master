@@ -48,3 +48,4 @@ export * from './timelineInteraction';
 export * from './timelineRange';
 export * from './timing';
 export * from './viewQueryPipeline';
+export * from './unknownRecord';

@@ -21,6 +21,8 @@ import { DataStore } from '@/core/services/DataStore';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
 import { LEGACY_EXTRA_ALIAS_KEYS } from '@/core/fields/FieldLegacy';
 import { devLog, devWarn, devError } from '../utils/devLogger';
+import { asUnknownRecord, readNumber, readString, readUnknown } from '../utils/unknownRecord';
+import type { UnknownRecord } from '../utils/unknownRecord';
 
 // ============== Types ==============
 
@@ -125,10 +127,13 @@ function normalizeText(value: unknown): string {
     if (value == null) return '';
     if (Array.isArray(value)) return value.map(normalizeText).filter(Boolean).join(' ');
     if (typeof value === 'object') {
-        const anyValue = value as any;
-        if (typeof anyValue.src === 'string') return anyValue.src;
-        if (Array.isArray(anyValue.values)) return normalizeText(anyValue.values);
-        return Object.values(anyValue).map(normalizeText).filter(Boolean).join(' ');
+        const record = asUnknownRecord(value);
+        if (!record) return '';
+        const src = readString(record, 'src');
+        if (src) return src;
+        const values = readUnknown(record, 'values');
+        if (Array.isArray(values)) return normalizeText(values);
+        return Object.values(record).map(normalizeText).filter(Boolean).join(' ');
     }
     return String(value).trim();
 }
@@ -142,8 +147,20 @@ function collectSearchableExtraText(item: Item): string {
         .join(' ');
 }
 
+function getSearchResultRecord(sr: SearchResult): UnknownRecord | undefined {
+    return asUnknownRecord(sr);
+}
+
 function getResultId(sr: SearchResult): string {
-    return String((sr as any).id ?? '');
+    return String(readUnknown(getSearchResultRecord(sr), 'id') ?? '');
+}
+
+function readSearchResultText(sr: SearchResult, key: string): string {
+    return normalizeText(readUnknown(getSearchResultRecord(sr), key));
+}
+
+function readSearchResultNumber(sr: SearchResult, key: string): number | undefined {
+    return readNumber(getSearchResultRecord(sr), key);
 }
 
 // ============== RetrievalService ==============
@@ -170,7 +187,7 @@ export class RetrievalService {
             storeFields: STORE_FIELDS as string[],
             // 自定义字段提取
             extractField: (document: SearchIndexDocument, fieldName: string) => {
-                return normalizeText((document as any)[fieldName]);
+                return normalizeText(document[fieldName as keyof SearchIndexDocument]);
             },
             // 搜索选项
             searchOptions: {
@@ -378,7 +395,7 @@ export class RetrievalService {
 
             // themePath 过滤：只读显式主题派生出的 themePath，绝不读 header 或 legacy theme。
             if (filters.themePaths && filters.themePaths.length > 0) {
-                const itemThemePath = normalizeText(item ? readFieldValue(item, 'themePath') : (sr as any).themePath);
+                const itemThemePath = normalizeText(item ? readFieldValue(item, 'themePath') : readSearchResultText(sr, 'themePath'));
                 if (!itemThemePath) return false;
                 // 检查是否匹配任意一个 themePath（支持前缀匹配）
                 const matched = filters.themePaths.some(tp =>
@@ -389,7 +406,7 @@ export class RetrievalService {
 
             // type 过滤
             if (filters.types && filters.types.length > 0) {
-                const itemType = (item?.type || (sr as any).type) as 'task' | 'block' | undefined;
+                const itemType = (item?.type || readSearchResultText(sr, 'type')) as 'task' | 'block' | undefined;
                 if (!itemType || !filters.types.includes(itemType)) {
                     return false;
                 }
@@ -397,7 +414,7 @@ export class RetrievalService {
 
             // Block 模板 ID 过滤
             if (filters.blockTemplateIds && filters.blockTemplateIds.length > 0) {
-                const templateId = normalizeText(item?.templateId ?? (sr as any).templateId);
+                const templateId = normalizeText(item?.templateId ?? readSearchResultText(sr, 'templateId'));
                 if (!templateId || !filters.blockTemplateIds.includes(templateId)) {
                     return false;
                 }
@@ -406,7 +423,7 @@ export class RetrievalService {
             // Block 模板名称过滤（通过 categoryKey/root category 匹配）
             // categoryKey 格式通常是 "模板名称" 或 "模板名称/子类别"
             if (filters.blockTemplateNames && filters.blockTemplateNames.length > 0) {
-                const categoryKey = normalizeText(item ? readFieldValue(item, 'categoryKey') : (sr as any).categoryKey);
+                const categoryKey = normalizeText(item ? readFieldValue(item, 'categoryKey') : readSearchResultText(sr, 'categoryKey'));
                 if (!categoryKey) return false;
                 const categoryBase = categoryKey.split('/')[0];
                 if (!filters.blockTemplateNames.includes(categoryBase)) {
@@ -427,23 +444,24 @@ export class RetrievalService {
         if (indexedItem) return indexedItem;
 
         // MiniSearch 的 storeFields 会保存这些字段；这里只做兜底。
+        const fullData = readSearchResultText(sr, 'fullData');
         return {
             id,
-            title: (sr as any).title ?? '',
-            content: (sr as any).content ?? '',
-            editableText: (sr as any).editableText ?? '',
-            fullData: (sr as any).fullData ?? '',
-            rawSource: (sr as any).fullData || undefined,
-            type: (sr as any).type ?? 'task',
-            themePath: (sr as any).themePath || undefined,
-            rootTheme: (sr as any).rootTheme || undefined,
-            leafTheme: (sr as any).leafTheme || undefined,
-            tags: normalizeText((sr as any).tags).split(/\s+/).filter(Boolean),
-            categoryKey: (sr as any).categoryKey ?? '',
-            templateId: (sr as any).templateId || undefined,
-            dateMs: (sr as any).dateMs,
-            created: (sr as any).created ?? 0,
-            modified: (sr as any).modified ?? 0,
+            title: readSearchResultText(sr, 'title'),
+            content: readSearchResultText(sr, 'content'),
+            editableText: readSearchResultText(sr, 'editableText'),
+            fullData,
+            rawSource: fullData || undefined,
+            type: readSearchResultText(sr, 'type') || 'task',
+            themePath: readSearchResultText(sr, 'themePath') || undefined,
+            rootTheme: readSearchResultText(sr, 'rootTheme') || undefined,
+            leafTheme: readSearchResultText(sr, 'leafTheme') || undefined,
+            tags: readSearchResultText(sr, 'tags').split(/\s+/).filter(Boolean),
+            categoryKey: readSearchResultText(sr, 'categoryKey'),
+            templateId: readSearchResultText(sr, 'templateId') || undefined,
+            dateMs: readSearchResultNumber(sr, 'dateMs'),
+            created: readSearchResultNumber(sr, 'created') ?? 0,
+            modified: readSearchResultNumber(sr, 'modified') ?? 0,
             recurrence: 'none',
             extra: {},
         } as Item;

@@ -89,3 +89,14 @@ Then install the generated plugin folder in a clean Obsidian vault and walk thro
 - `npm run docs-governance:gate` blocks old process reports and encoded `#Uxxxx` filenames from returning to `docs/`.
 - `npm run final-convergence:gate` checks the final handoff docs and gate chain wiring.
 - Small, clear components should not be split only for symmetry; extraction requires visible calculation, repeated rules, state derivation, or test value.
+
+
+## Type governance acceptance
+
+- `npm run any-budget:gate` must stay in the standard gate chain.
+- Explicit `any` is not banned at MVP26, but the current budget must be visible and must not regress.
+- New dynamic input boundaries should prefer `unknown` plus `UnknownRecord` readers over spreading `as any` into model/usecase code.
+- Future type-governance passes should reduce the `src` budget before they claim completion.
+- MVP27 lowered the source budget from 1090 to 1020 and keeps QuickInput/editor-state model files out of the explicit-any top list.
+- MVP28 lowered the source budget to 935 and keeps AI parser / AI batch confirm / RetrievalService out of the explicit-any top list.
+- MVP29 lowered the source budget to 875 and keeps GoalTemplateEditorModel / itemFilter / FieldValueResolver out of the explicit-any top list.

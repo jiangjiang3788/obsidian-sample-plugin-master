@@ -49,10 +49,19 @@ const requiredDocs = [
   'docs/单人版收敛-MVP25.md',
   'docs/Git提交备注-MVP25.md',
   'docs/最终封版说明.md',
+  'docs/类型治理计划.md',
+  'docs/单人版收敛-MVP26.md',
+  'docs/Git提交备注-MVP26.md',
+  'docs/单人版收敛-MVP27.md',
+  'docs/Git提交备注-MVP27.md',
+  'docs/单人版收敛-MVP28.md',
+  'docs/Git提交备注-MVP28.md',
+  'docs/单人版收敛-MVP29.md',
+  'docs/Git提交备注-MVP29.md',
 ];
 
 for (const doc of requiredDocs) {
-  if (!exists(doc)) failures.push(`${doc} must exist after MVP25 final governance.`);
+  if (!exists(doc)) failures.push(`${doc} must exist after MVP29 type governance.`);
 }
 
 const forbiddenRootDocPatterns = [
@@ -77,20 +86,20 @@ for (const file of allDocsFiles) {
 const rootMarkdownCount = fs.existsSync(docsDir)
   ? fs.readdirSync(docsDir, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith('.md')).length
   : 0;
-if (rootMarkdownCount > 60) {
-  failures.push(`docs/ root should stay <= 60 markdown files after MVP25 final governance; current ${rootMarkdownCount}.`);
+if (rootMarkdownCount > 66) {
+  failures.push(`docs/ root should stay <= 64 markdown files after MVP29 type governance; current ${rootMarkdownCount}.`);
 }
 
 if (exists('docs/README.md')) {
   const readme = read('docs/README.md');
-  for (const requiredText of ['文档治理', '单人版收敛总览', '不再保留的历史过程文档']) {
+  for (const requiredText of ['文档治理', '单人版收敛总览', '类型治理计划', '不再保留的历史过程文档']) {
     if (!readme.includes(requiredText)) failures.push(`docs/README.md must mention ${requiredText}.`);
   }
 }
 
 if (exists('docs/文档治理.md')) {
   const governance = read('docs/文档治理.md');
-  for (const requiredText of ['保留', '删除', '防过度文档化', 'docs-governance:gate']) {
+  for (const requiredText of ['保留', '删除', '防过度文档化', 'docs-governance:gate', 'any-budget:gate']) {
     if (!governance.includes(requiredText)) failures.push(`docs/文档治理.md must mention ${requiredText}.`);
   }
 }
@@ -98,6 +107,7 @@ if (exists('docs/文档治理.md')) {
 if (exists('package.json')) {
   const pkg = read('package.json');
   if (!pkg.includes('docs-governance:gate')) failures.push('package.json must expose docs-governance:gate.');
+  if (!pkg.includes('any-budget:gate')) failures.push('package.json must expose any-budget:gate after MVP26.');
 }
 
 if (failures.length > 0) {
@@ -106,4 +116,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('[docs-governance-gate] ok: docs root is governed and legacy reports are removed');
+console.log('[docs-governance-gate] ok: docs root is governed and MVP29 type-governance docs are present');

@@ -62,16 +62,25 @@ const requiredFinalDocs = [
   ['docs/文档治理.md', 'document governance boundary'],
   ['docs/单人版收敛总览.md', 'convergence overview'],
   ['docs/最终封版说明.md', 'final handoff summary'],
+  ['docs/类型治理计划.md', 'MVP26 type governance plan'],
   ['docs/单人版收敛-MVP25.md', 'MVP25 final record'],
   ['docs/Git提交备注-MVP25.md', 'MVP25 reusable commit note'],
+  ['docs/单人版收敛-MVP26.md', 'MVP26 type governance record'],
+  ['docs/Git提交备注-MVP26.md', 'MVP26 reusable commit note'],
+  ['docs/单人版收敛-MVP27.md', 'MVP27 type governance record'],
+  ['docs/Git提交备注-MVP27.md', 'MVP27 reusable commit note'],
+  ['docs/单人版收敛-MVP28.md', 'MVP28 type governance record'],
+  ['docs/Git提交备注-MVP28.md', 'MVP28 reusable commit note'],
+  ['docs/单人版收敛-MVP29.md', 'MVP29 type governance record'],
+  ['docs/Git提交备注-MVP29.md', 'MVP29 reusable commit note'],
 ];
 
 for (const [relativePath, reason] of requiredFinalDocs) assertExists(relativePath, reason);
 
-assertIncludes('docs/README.md', ['最终封版说明', 'MVP25', 'docs-governance:gate'], 'final docs entrypoint should point to handoff and gates');
-assertIncludes('docs/单人版收敛总览.md', ['MVP25', '最终封版', '不再继续拆'], 'overview should describe final convergence boundary');
+assertIncludes('docs/README.md', ['最终封版说明', 'MVP25', 'MVP29', '类型治理计划', 'docs-governance:gate', 'any-budget:gate'], 'final docs entrypoint should point to handoff, type governance and gates');
+assertIncludes('docs/单人版收敛总览.md', ['MVP25', '最终封版', 'MVP26', 'MVP29', '类型治理', '不再继续拆'], 'overview should describe final convergence and type governance boundary');
 assertIncludes('docs/最终封版说明.md', ['最终质量入口', '不再强拆', '完整本地验证'], 'final handoff should be actionable');
-assertIncludes('docs/MVP_ACCEPTANCE.md', ['single-user convergence', 'final-convergence:gate', 'docs-governance:gate'], 'acceptance should include convergence gates');
+assertIncludes('docs/MVP_ACCEPTANCE.md', ['single-user convergence', 'final-convergence:gate', 'docs-governance:gate', 'any-budget:gate'], 'acceptance should include convergence and type governance gates');
 
 const allProjectFiles = listFiles('.');
 for (const file of allProjectFiles) {
@@ -81,7 +90,7 @@ for (const file of allProjectFiles) {
 const docsRootMarkdownCount = fs.existsSync(full('docs'))
   ? fs.readdirSync(full('docs'), { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith('.md')).length
   : 0;
-if (docsRootMarkdownCount > 58) failures.push(`docs/ root should stay <= 58 markdown files in the final package; current ${docsRootMarkdownCount}.`);
+if (docsRootMarkdownCount > 66) failures.push(`docs/ root should stay <= 66 markdown files in the final package; current ${docsRootMarkdownCount}.`);
 
 const requiredGateScripts = [
   ['single-user:gate', 'single-user convergence gate'],
@@ -89,6 +98,7 @@ const requiredGateScripts = [
   ['non-shared-view-convergence:gate', 'non-shared view convergence gate'],
   ['docs-governance:gate', 'docs governance gate'],
   ['final-convergence:gate', 'final convergence handoff gate'],
+  ['any-budget:gate', 'MVP29 explicit any budget gate'],
 ];
 
 if (exists('package.json')) {
@@ -105,6 +115,7 @@ const requiredGateFiles = [
   'scripts/gates/non-shared-view-convergence-gate.mjs',
   'scripts/gates/docs-governance-gate.mjs',
   'scripts/gates/final-convergence-gate.mjs',
+  'scripts/gates/any-budget-gate.mjs',
 ];
 for (const file of requiredGateFiles) assertExists(file, 'final gate chain must be present');
 
@@ -114,4 +125,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('[final-convergence-gate] ok: MVP25 final handoff docs and gates are wired.');
+console.log('[final-convergence-gate] ok: final handoff and MVP29 type-governance gates are wired.');

@@ -1509,28 +1509,70 @@ function isTaskCompleted(item) {
 function isTaskOpen(item) {
   return getTaskStatus(item) === "open";
 }
+function isUnknownRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function asUnknownRecord(value) {
+  return isUnknownRecord(value) ? value : void 0;
+}
+function readUnknown(record, key) {
+  return record?.[key];
+}
+function readString(record, key) {
+  const value = readUnknown(record, key);
+  return typeof value === "string" ? value : void 0;
+}
+function readTrimmedString(record, key) {
+  const value = readString(record, key)?.trim();
+  return value ? value : void 0;
+}
+function readNumber(record, key) {
+  const value = readUnknown(record, key);
+  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+}
+function readStringArray(record, key) {
+  const value = readUnknown(record, key);
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => typeof item === "string");
+}
+function readRecord(record, key) {
+  return asUnknownRecord(readUnknown(record, key));
+}
+function readRecordArray(record, key) {
+  const value = readUnknown(record, key);
+  if (!Array.isArray(value)) return [];
+  return value.filter(isUnknownRecord);
+}
+function readFirstString$1(record, keys) {
+  for (const key of keys) {
+    const value = readTrimmedString(record, key);
+    if (value) return value;
+  }
+  return void 0;
+}
 function normalizeFieldKey(field) {
   return getCanonicalFieldKey(field);
 }
 function readFileField(item, field) {
-  const file = item.file || {};
+  const file = item.file;
+  const fileRecord = asUnknownRecord(file);
   const key = field.slice("file.".length);
   if (key === "name" || key === "basename") {
-    return file.basename ?? item.fileName ?? item.filename;
+    return file?.basename ?? item.fileName ?? item.filename;
   }
   if (key === "folder") {
-    return file.folder ?? item.folder;
+    return file?.folder ?? item.folder;
   }
-  return file[key];
+  return readUnknown(fileRecord, key);
 }
 function readCategoryPath(item) {
-  return splitHierarchyPath(item.categoryPath ?? item.categoryKey).path;
+  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).path;
 }
 function readRootCategory(item) {
-  return splitHierarchyPath(item.categoryPath ?? item.categoryKey).root;
+  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).root;
 }
 function readLeafCategory(item) {
-  return splitHierarchyPath(item.categoryPath ?? item.categoryKey).leaf;
+  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).leaf;
 }
 function readImageField(item) {
   return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? item.extra?.["评图"] ?? item.extra?.["pintu"]);
@@ -1564,13 +1606,13 @@ function readCanonicalField(item, canonicalField) {
     return getTaskStatus(item);
   }
   if (canonicalField === "period.id") {
-    return item.cycleId || item.periodId || void 0;
+    return readFirstString$1(asUnknownRecord(item), ["cycleId", "periodId"]);
   }
   if (canonicalField === "period.label") {
-    return item.period || item.周期 || void 0;
+    return readFirstString$1(asUnknownRecord(item), ["period", "周期"]);
   }
   if (canonicalField === "period.granularity") {
-    return item.periodGranularity || item.goalGranularity || void 0;
+    return readFirstString$1(asUnknownRecord(item), ["periodGranularity", "goalGranularity"]);
   }
   if (canonicalField === "repeatToken") {
     return item.recurrence;
@@ -1579,7 +1621,7 @@ function readCanonicalField(item, canonicalField) {
     return parseTagList(item.tags || []);
   }
   if (canonicalField === "goalPaths") {
-    return parseTagList(item.goalPaths || []);
+    return parseTagList(item.goalPaths?.length ? item.goalPaths : readStringArray(asUnknownRecord(item), "goalPaths"));
   }
   if (canonicalField === "fullData") {
     return item.rawSource || item.fullData || item.content || "";
@@ -1596,7 +1638,7 @@ function readCanonicalField(item, canonicalField) {
   if (canonicalField === "pintu") {
     return item.pintu;
   }
-  return item[canonicalField];
+  return readUnknown(asUnknownRecord(item), canonicalField);
 }
 function resolveFieldValue(item, field) {
   const canonicalField = normalizeFieldKey(field);
@@ -4983,15 +5025,16 @@ function normalizeBetweenValue(value) {
 }
 function matchRule(item, rule) {
   const canonicalField = normalizeFieldKey(rule.field);
+  const itemRecord = asUnknownRecord(item);
   let v1 = readField(item, canonicalField);
   let v2 = rule.value;
   if (rule.op === "empty") return isEmptyValue(v1);
   if (rule.op === "notEmpty") return !isEmptyValue(v1);
   if (canonicalField === "title") {
-    v1 = item.titleLower ?? String(v1 ?? "").toLowerCase();
+    v1 = readString(itemRecord, "titleLower") ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
   } else if (canonicalField === "content") {
-    v1 = item.contentLower ?? String(v1 ?? "").toLowerCase();
+    v1 = readString(itemRecord, "contentLower") ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
   } else if (["themePath", "rootTheme", "leafTheme", "goalPath", "rootGoal", "leafGoal"].includes(canonicalField)) {
     v1 = String(v1 ?? "").toLowerCase();
@@ -5001,10 +5044,10 @@ function matchRule(item, rule) {
       v2 = String(v2 ?? "").toLowerCase();
     }
   } else if (canonicalField === "fullData") {
-    v1 = item.fullDataLower ?? String(v1 ?? "").toLowerCase();
+    v1 = readString(itemRecord, "fullDataLower") ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
   } else if (canonicalField === "tags" || canonicalField === "goalPaths") {
-    const listLower = canonicalField === "tags" ? item.tagsLower ?? (Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : []) : item.goalPathsLower ?? (Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : []);
+    const listLower = canonicalField === "tags" ? readStringArray(itemRecord, "tagsLower").length ? readStringArray(itemRecord, "tagsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [] : readStringArray(itemRecord, "goalPathsLower").length ? readStringArray(itemRecord, "goalPathsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [];
     const needle = String(v2 ?? "").toLowerCase();
     if (rule.op === "includes" || rule.op === "=") {
       return listLower.includes(needle);
@@ -5101,9 +5144,10 @@ function filterByKeyword(items, kw) {
   if (!kw.trim()) return items;
   const s2 = kw.trim().toLowerCase();
   return items.filter((it) => {
-    const titleLower = it.titleLower ?? (it.title || "").toLowerCase();
-    const contentLower = it.contentLower ?? (it.content || "").toLowerCase();
-    const fullDataLower = it.fullDataLower ?? String(readField(it, "fullData") || "").toLowerCase();
+    const itemRecord = asUnknownRecord(it);
+    const titleLower = readString(itemRecord, "titleLower") ?? (it.title || "").toLowerCase();
+    const contentLower = readString(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
+    const fullDataLower = readString(itemRecord, "fullDataLower") ?? String(readField(it, "fullData") || "").toLowerCase();
     return (titleLower + " " + contentLower + " " + fullDataLower).includes(s2);
   });
 }
@@ -7907,38 +7951,46 @@ function warnSlowParserStep(traceId, step, startedAt, thresholdMs, extra) {
   }
 }
 function ensureCommandTarget(item) {
-  if (!item.target || typeof item.target !== "object") item.target = {};
-  return item.target;
+  if (!isUnknownRecord(item.target)) {
+    item.target = { blockId: "" };
+  }
+  const target = item.target;
+  if (typeof target.blockId !== "string") target.blockId = "";
+  return target;
 }
 function cleanAiFieldValues(values2) {
   const result = {};
-  if (!values2 || typeof values2 !== "object") return result;
-  for (const [key, value] of Object.entries(values2)) {
+  const record = asUnknownRecord(values2);
+  if (!record) return result;
+  for (const [key, value] of Object.entries(record)) {
     if (isSystemRecordContextField(key)) continue;
     result[key] = value;
   }
   return result;
 }
+function targetString(target, key) {
+  return readTrimmedString(target, key) ?? "";
+}
 function findBlockByTarget(snapshot, target) {
   const blocks = snapshot.blocks ?? [];
-  const blockId = String(target.blockId || "").trim();
-  const categoryKey = String(target.categoryKey || "").trim();
+  const blockId = targetString(target, "blockId");
+  const categoryKey = targetString(target, "categoryKey");
   return blocks.find((block2) => block2.id === blockId) || blocks.find((block2) => block2.categoryKey === categoryKey || block2.name === categoryKey) || null;
 }
 function findGoalByTarget(snapshot, target) {
   const goals = snapshot.goals ?? [];
-  const goalPath = String(target.goalPath || "").trim();
-  const goalId = String(target.goalId || "").trim();
+  const goalPath = targetString(target, "goalPath");
+  const goalId = targetString(target, "goalId");
   return goals.find((goal) => goal.id === goalId) || goals.find((goal) => goal.path === goalPath || goal.title === goalPath) || null;
 }
 function findPresetByTarget(snapshot, target) {
   const presets = snapshot.goalPresets ?? [];
-  const explicitId = String(target.goalTemplateId || target.templateId || "").trim();
-  const variantId = String(target.templateVariantId || target.goalTemplateVariantId || "").trim();
-  const goalPath = String(target.goalPath || "").trim();
-  const goalId = String(target.goalId || "").trim();
-  const blockId = String(target.blockId || "").trim();
-  const categoryKey = String(target.categoryKey || "").trim();
+  const explicitId = targetString(target, "goalTemplateId") || targetString(target, "templateId");
+  const variantId = targetString(target, "templateVariantId") || targetString(target, "goalTemplateVariantId");
+  const goalPath = targetString(target, "goalPath");
+  const goalId = targetString(target, "goalId");
+  const blockId = targetString(target, "blockId");
+  const categoryKey = targetString(target, "categoryKey");
   if (explicitId) {
     const exact = presets.find((preset) => preset.id === explicitId || preset.goalTemplateId === explicitId);
     if (exact) return exact;
@@ -7957,26 +8009,27 @@ function findPresetByTarget(snapshot, target) {
 function normalizeParsedBatch(batch, snapshot, rawText, defaultThemeId) {
   if (!batch.items) batch.items = [];
   batch.items.forEach((item) => {
-    if (!item.rawText) item.rawText = rawText;
-    const target = ensureCommandTarget(item);
-    item.fieldValues = cleanAiFieldValues(item.fieldValues);
+    const parsedItem = item;
+    if (!parsedItem.rawText) parsedItem.rawText = rawText;
+    const target = ensureCommandTarget(parsedItem);
+    parsedItem.fieldValues = cleanAiFieldValues(parsedItem.fieldValues);
     const preset = findPresetByTarget(snapshot, target);
     if (preset) {
       target.goalTemplateId = preset.goalTemplateId || preset.id;
       target.templateVariantId = preset.variantId;
       target.goalId = preset.goalId;
       target.goalPath = preset.goalPath;
-      target.blockId = preset.blockId;
+      target.blockId = preset.blockId || target.blockId;
       target.categoryKey = preset.categoryKey;
       if (!target.themeId && preset.themePath) target.themeId = preset.themePath;
     }
     const block2 = findBlockByTarget(snapshot, target);
     if (block2) {
-      target.blockId = target.blockId || block2.id;
+      target.blockId = target.blockId || block2.id || "";
       target.categoryKey = target.categoryKey || block2.categoryKey;
     } else if (!target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
       target.categoryKey = snapshot.blocks[0].categoryKey;
-      target.blockId = snapshot.blocks[0].id;
+      target.blockId = snapshot.blocks[0].id || "";
     }
     const goal = findGoalByTarget(snapshot, target);
     if (goal) {
@@ -8017,12 +8070,20 @@ function compactSnapshotForFastMode(snapshot) {
     }))
   };
 }
+function coerceNaturalRecordBatch(value) {
+  if (Array.isArray(value)) {
+    return { items: value };
+  }
+  const record = asUnknownRecord(value);
+  const items = readRecordArray(record, "items");
+  return { items };
+}
 function safeJsonParseBatch(raw, traceId) {
   const parseStart = nowMs$1();
   try {
     const parsed = JSON.parse(raw);
     if (traceId) logParserStep(traceId, "JSON 直接解析完成", parseStart, { rawLength: raw.length });
-    return parsed;
+    return coerceNaturalRecordBatch(parsed);
   } catch {
     if (traceId) devWarn(`[AiInput][${traceId}][Parser] JSON 直接解析失败，尝试截取对象/数组`, { rawLength: raw.length });
     const objectSliceStart = nowMs$1();
@@ -8035,7 +8096,7 @@ function safeJsonParseBatch(raw, traceId) {
       try {
         const parsed = JSON.parse(sliced);
         if (traceId) logParserStep(traceId, "截取对象 JSON 解析完成", objectParseStart, { slicedLength: sliced.length });
-        return parsed;
+        return coerceNaturalRecordBatch(parsed);
       } catch {
         if (traceId) devWarn(`[AiInput][${traceId}][Parser] 截取对象 JSON 解析失败`, { slicedLength: sliced.length });
       }
@@ -8050,7 +8111,7 @@ function safeJsonParseBatch(raw, traceId) {
       try {
         const items = JSON.parse(sliced);
         if (traceId) logParserStep(traceId, "截取数组 JSON 解析完成", arrayParseStart, { slicedLength: sliced.length });
-        return { items };
+        return coerceNaturalRecordBatch(items);
       } catch {
         if (traceId) devWarn(`[AiInput][${traceId}][Parser] 截取数组 JSON 解析失败`, { slicedLength: sliced.length });
       }
@@ -16282,10 +16343,13 @@ function normalizeText$1(value) {
   if (value == null) return "";
   if (Array.isArray(value)) return value.map(normalizeText$1).filter(Boolean).join(" ");
   if (typeof value === "object") {
-    const anyValue = value;
-    if (typeof anyValue.src === "string") return anyValue.src;
-    if (Array.isArray(anyValue.values)) return normalizeText$1(anyValue.values);
-    return Object.values(anyValue).map(normalizeText$1).filter(Boolean).join(" ");
+    const record = asUnknownRecord(value);
+    if (!record) return "";
+    const src = readString(record, "src");
+    if (src) return src;
+    const values2 = readUnknown(record, "values");
+    if (Array.isArray(values2)) return normalizeText$1(values2);
+    return Object.values(record).map(normalizeText$1).filter(Boolean).join(" ");
   }
   return String(value).trim();
 }
@@ -16293,8 +16357,17 @@ function collectSearchableExtraText(item) {
   const extra = item.extra || {};
   return Object.entries(extra).filter(([key]) => !LEGACY_EXTRA_ALIAS_SET.has(key)).map(([key, value]) => `${key} ${normalizeText$1(value)}`.trim()).filter(Boolean).join(" ");
 }
+function getSearchResultRecord(sr) {
+  return asUnknownRecord(sr);
+}
 function getResultId(sr) {
-  return String(sr.id ?? "");
+  return String(readUnknown(getSearchResultRecord(sr), "id") ?? "");
+}
+function readSearchResultText(sr, key) {
+  return normalizeText$1(readUnknown(getSearchResultRecord(sr), key));
+}
+function readSearchResultNumber(sr, key) {
+  return readNumber(getSearchResultRecord(sr), key);
 }
 let RetrievalService = class {
   constructor(dataStore) {
@@ -16479,7 +16552,7 @@ let RetrievalService = class {
     return results.filter((sr) => {
       const item = this.indexedItemsById.get(getResultId(sr));
       if (filters.themePaths && filters.themePaths.length > 0) {
-        const itemThemePath = normalizeText$1(item ? readFieldValue(item, "themePath") : sr.themePath);
+        const itemThemePath = normalizeText$1(item ? readFieldValue(item, "themePath") : readSearchResultText(sr, "themePath"));
         if (!itemThemePath) return false;
         const matched = filters.themePaths.some(
           (tp) => itemThemePath === tp || itemThemePath.startsWith(tp + "/")
@@ -16487,19 +16560,19 @@ let RetrievalService = class {
         if (!matched) return false;
       }
       if (filters.types && filters.types.length > 0) {
-        const itemType = item?.type || sr.type;
+        const itemType = item?.type || readSearchResultText(sr, "type");
         if (!itemType || !filters.types.includes(itemType)) {
           return false;
         }
       }
       if (filters.blockTemplateIds && filters.blockTemplateIds.length > 0) {
-        const templateId = normalizeText$1(item?.templateId ?? sr.templateId);
+        const templateId = normalizeText$1(item?.templateId ?? readSearchResultText(sr, "templateId"));
         if (!templateId || !filters.blockTemplateIds.includes(templateId)) {
           return false;
         }
       }
       if (filters.blockTemplateNames && filters.blockTemplateNames.length > 0) {
-        const categoryKey = normalizeText$1(item ? readFieldValue(item, "categoryKey") : sr.categoryKey);
+        const categoryKey = normalizeText$1(item ? readFieldValue(item, "categoryKey") : readSearchResultText(sr, "categoryKey"));
         if (!categoryKey) return false;
         const categoryBase = categoryKey.split("/")[0];
         if (!filters.blockTemplateNames.includes(categoryBase)) {
@@ -16516,23 +16589,24 @@ let RetrievalService = class {
     const id = getResultId(sr);
     const indexedItem = this.indexedItemsById.get(id);
     if (indexedItem) return indexedItem;
+    const fullData = readSearchResultText(sr, "fullData");
     return {
       id,
-      title: sr.title ?? "",
-      content: sr.content ?? "",
-      editableText: sr.editableText ?? "",
-      fullData: sr.fullData ?? "",
-      rawSource: sr.fullData || void 0,
-      type: sr.type ?? "task",
-      themePath: sr.themePath || void 0,
-      rootTheme: sr.rootTheme || void 0,
-      leafTheme: sr.leafTheme || void 0,
-      tags: normalizeText$1(sr.tags).split(/\s+/).filter(Boolean),
-      categoryKey: sr.categoryKey ?? "",
-      templateId: sr.templateId || void 0,
-      dateMs: sr.dateMs,
-      created: sr.created ?? 0,
-      modified: sr.modified ?? 0,
+      title: readSearchResultText(sr, "title"),
+      content: readSearchResultText(sr, "content"),
+      editableText: readSearchResultText(sr, "editableText"),
+      fullData,
+      rawSource: fullData || void 0,
+      type: readSearchResultText(sr, "type") || "task",
+      themePath: readSearchResultText(sr, "themePath") || void 0,
+      rootTheme: readSearchResultText(sr, "rootTheme") || void 0,
+      leafTheme: readSearchResultText(sr, "leafTheme") || void 0,
+      tags: readSearchResultText(sr, "tags").split(/\s+/).filter(Boolean),
+      categoryKey: readSearchResultText(sr, "categoryKey"),
+      templateId: readSearchResultText(sr, "templateId") || void 0,
+      dateMs: readSearchResultNumber(sr, "dateMs"),
+      created: readSearchResultNumber(sr, "created") ?? 0,
+      modified: readSearchResultNumber(sr, "modified") ?? 0,
       recurrence: "none",
       extra: {}
     };
@@ -18727,7 +18801,8 @@ function scoreTemplateForItem(block2, item) {
   const blockId = normalizeToken(block2?.id);
   const blockName = normalizeToken(block2?.name);
   const blockCategory = normalizeToken(block2?.categoryKey);
-  if (item.templateId && normalizeToken(item.templateId) === blockId) score += 100;
+  if (item.templateId && normalizeToken(item.templateId) === blockId)
+    score += 100;
   if (categoryKey && categoryKey === blockCategory) score += 30;
   if (categoryKey && categoryKey === blockName) score += 20;
   if (item.type === "task") {
@@ -18742,8 +18817,10 @@ function scoreTemplateForItem(block2, item) {
     const label = normalizeToken(field?.label);
     if (semanticTokens.has(key)) score += 8;
     if (label && semanticTokens.has(label)) score += 6;
-    if (item.type === "task" && ["title", "标题", "content", "内容"].includes(field?.key)) score += 4;
-    if (item.type === "block" && ["content", "内容"].includes(field?.key)) score += 4;
+    if (item.type === "task" && ["title", "标题", "content", "内容"].includes(field?.key))
+      score += 4;
+    if (item.type === "block" && ["content", "内容"].includes(field?.key))
+      score += 4;
   }
   return score;
 }
@@ -18754,19 +18831,13 @@ function looksLikeBlockTemplate(block2) {
   return /<!--\s*start\s*-->/i.test(String(block2?.outputTemplate || "")) || /内容\s*[:：]/.test(String(block2?.outputTemplate || ""));
 }
 function readCoreBlockHint(item) {
-  const extra = item.extra || {};
-  const candidates = [
-    item.coreBlock,
-    item.coreBlockId,
-    extra["核心Block"],
-    extra.coreBlock,
-    extra.coreBlockId
-  ];
-  for (const candidate of candidates) {
-    const text2 = String(candidate || "").trim();
-    if (text2) return text2.startsWith("core.") ? text2 : `core.${text2}`;
-  }
-  return null;
+  const text2 = readFirstString$1(asUnknownRecord(item), ["coreBlock", "coreBlockId"]) ?? readFirstString$1(asUnknownRecord(item.extra || {}), [
+    "核心Block",
+    "coreBlock",
+    "coreBlockId"
+  ]);
+  if (!text2) return null;
+  return text2.startsWith("core.") ? text2 : `core.${text2}`;
 }
 function resolveBlockForEdit(blocks, item, preferredBlockId) {
   if (!Array.isArray(blocks) || blocks.length === 0) {
@@ -18780,7 +18851,9 @@ function resolveBlockForEdit(blocks, item, preferredBlockId) {
   }
   const coreBlockHint = readCoreBlockHint(item);
   if (coreBlockHint) {
-    const block2 = blocks.find((candidate) => candidate.id === coreBlockHint || candidate.coreBlockId === coreBlockHint);
+    const block2 = blocks.find(
+      (candidate) => candidate.id === coreBlockHint || candidate.coreBlockId === coreBlockHint
+    );
     if (block2) {
       return {
         blockId: block2.id,
@@ -18845,7 +18918,11 @@ function buildEditRecordState(input) {
   const { settings, item, preferredBlockId, preferredThemeId } = input;
   const inputSettings = settings.inputSettings;
   const runtimeBlocks = getEffectiveCoreBlocks(settings);
-  const resolvedBlock = resolveBlockForEdit(runtimeBlocks, item, preferredBlockId);
+  const resolvedBlock = resolveBlockForEdit(
+    runtimeBlocks,
+    item,
+    preferredBlockId
+  );
   const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(inputSettings, item.theme) ?? preferredThemeId ?? void 0;
   recordDebugLog("编辑模板解析", "任务/块模板选择", {
     itemType: item.type,
@@ -18867,10 +18944,14 @@ function buildEditRecordState(input) {
   });
   const parsedSnapshot = buildParsedRecordSnapshot(item);
   const initialFormData = resolvedDependencies.template ? buildInitialFormData(resolvedDependencies.template, item, parsedSnapshot) : {};
-  recordDebugLog("编辑初始值", "ParsedRecordSnapshot 到 initialFormData 的回填结果", {
-    parsedSemantic: parsedSnapshot.semantic,
-    initialFormData
-  });
+  recordDebugLog(
+    "编辑初始值",
+    "ParsedRecordSnapshot 到 initialFormData 的回填结果",
+    {
+      parsedSemantic: parsedSnapshot.semantic,
+      initialFormData
+    }
+  );
   const snapshot = buildEditableRecordSnapshot({
     mode: "edit",
     item,
@@ -58663,7 +58744,11 @@ const splitThemePathParts = (path) => {
 };
 const splitPathParts = (path) => {
   const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
-  return { path: parts.length ? parts.join("/") : null, root: parts[0] || null, leaf: parts.length ? parts[parts.length - 1] : null };
+  return {
+    path: parts.length ? parts.join("/") : null,
+    root: parts[0] || null,
+    leaf: parts.length ? parts[parts.length - 1] : null
+  };
 };
 function getGoalPath(goal) {
   if (!goal) return null;
@@ -58673,21 +58758,31 @@ function makeGoalIdFromPath(path) {
   return `goal:${path}`;
 }
 function themeOptions(themes) {
-  return (themes || []).map((theme2) => ({ value: theme2.path, label: cleanDisplaySegment(theme2.path.split("/").filter(Boolean).pop() || theme2.path), icon: theme2.icon }));
+  return (themes || []).map((theme2) => ({
+    value: theme2.path,
+    label: cleanDisplaySegment(
+      theme2.path.split("/").filter(Boolean).pop() || theme2.path
+    ),
+    icon: theme2.icon
+  }));
 }
 const buildFieldSourceSummary = (sources) => ({
   user: Object.values(sources).filter((v2) => v2 === "user").length,
   context: Object.values(sources).filter((v2) => v2 === "context").length,
   edit_backfill: Object.values(sources).filter((v2) => v2 === "edit_backfill").length,
-  invocation_context: Object.values(sources).filter((v2) => v2 === "invocation_context").length,
+  invocation_context: Object.values(sources).filter(
+    (v2) => v2 === "invocation_context"
+  ).length,
   goal_context: Object.values(sources).filter((v2) => v2 === "goal_context").length,
   theme_context: Object.values(sources).filter((v2) => v2 === "theme_context").length,
-  template_default: Object.values(sources).filter((v2) => v2 === "template_default").length,
+  template_default: Object.values(sources).filter(
+    (v2) => v2 === "template_default"
+  ).length,
   system_auto: Object.values(sources).filter((v2) => v2 === "system_auto").length
 });
 function getOrderedGoalIndex(goal, originalIndex) {
   if (!goal) return Number.MAX_SAFE_INTEGER;
-  const order2 = Number(goal.sortOrder);
+  const order2 = readNumber(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
   return Number.isFinite(order2) ? order2 : originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
 }
 function getGoalByDisplayPath(goals, path) {
@@ -58701,8 +58796,14 @@ function sortGoalsLikePresetMatrix(goals) {
     const max2 = Math.min(leftParts.length, rightParts.length);
     for (let index = 0; index < max2; index += 1) {
       if (leftParts[index] === rightParts[index]) continue;
-      const leftSiblingPath = [...leftParts.slice(0, index), leftParts[index]].join("/");
-      const rightSiblingPath = [...rightParts.slice(0, index), rightParts[index]].join("/");
+      const leftSiblingPath = [
+        ...leftParts.slice(0, index),
+        leftParts[index]
+      ].join("/");
+      const rightSiblingPath = [
+        ...rightParts.slice(0, index),
+        rightParts[index]
+      ].join("/");
       const leftSiblingGoal = getGoalByDisplayPath(goals, leftSiblingPath);
       const rightSiblingGoal = getGoalByDisplayPath(goals, rightSiblingPath);
       const leftOrder = getOrderedGoalIndex(leftSiblingGoal, originalIndex);
@@ -58710,7 +58811,8 @@ function sortGoalsLikePresetMatrix(goals) {
       if (leftOrder !== rightOrder) return leftOrder - rightOrder;
       return leftParts[index].localeCompare(rightParts[index], "zh-CN");
     }
-    if (leftParts.length !== rightParts.length) return leftParts.length - rightParts.length;
+    if (leftParts.length !== rightParts.length)
+      return leftParts.length - rightParts.length;
     const byOrder = getOrderedGoalIndex(left2, originalIndex) - getOrderedGoalIndex(right2, originalIndex);
     if (byOrder !== 0) return byOrder;
     return (originalIndex.get(left2.id) ?? 0) - (originalIndex.get(right2.id) ?? 0);
@@ -58718,11 +58820,17 @@ function sortGoalsLikePresetMatrix(goals) {
 }
 function goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId) {
   if (!goal?.id || !coreBlockId) return false;
-  return getGoalTemplates(fullSettings.goalSettings).some((template) => template.enabled !== false && template.goalId === goal.id && template.coreBlockId === coreBlockId);
+  return getGoalTemplates(fullSettings.goalSettings).some(
+    (template) => template.enabled !== false && template.goalId === goal.id && template.coreBlockId === coreBlockId
+  );
 }
 function buildQuickInputGoalOptions(fullSettings, coreBlockId) {
   const seen = /* @__PURE__ */ new Set();
-  const sourceGoals = sortGoalsLikePresetMatrix([...fullSettings.goalSettings?.goals || []]).filter((goal) => goal.status !== "archived").filter((goal) => goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId));
+  const sourceGoals = sortGoalsLikePresetMatrix([
+    ...fullSettings.goalSettings?.goals || []
+  ]).filter((goal) => goal.status !== "archived").filter(
+    (goal) => goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId)
+  );
   const result = [];
   for (const [index, goal] of sourceGoals.entries()) {
     const normalized = cleanDisplayPath(goal.goalPath || goal.title);
@@ -58744,10 +58852,15 @@ function resolveQuickInputCoreBlockId(_fullSettings, blockId) {
   return String(blockId || "");
 }
 function applyQuickInputLinkedTimeChanges(draft, direction) {
-  const changes = computeLinkedTimeChanges(draft, { startKey: "时间", endKey: "结束", durationKey: "时长" }, draft.lastChanged, {
-    durationOutput: "number",
-    direction
-  });
+  const changes = computeLinkedTimeChanges(
+    draft,
+    { startKey: "时间", endKey: "结束", durationKey: "时长" },
+    draft.lastChanged,
+    {
+      durationOutput: "number",
+      direction
+    }
+  );
   if (!Object.keys(changes).length) {
     const cleaned = { ...draft };
     if ("lastChanged" in cleaned) delete cleaned.lastChanged;
@@ -58758,12 +58871,22 @@ function applyQuickInputLinkedTimeChanges(draft, direction) {
   return { formData: merged, autoKeys: Object.keys(changes) };
 }
 function applyQuickInputFieldUpdate(input) {
-  const { formData, fieldSources, key, value, isOptionObject: isOptionObject2 = false, timeDirection } = input;
+  const {
+    formData,
+    fieldSources,
+    key,
+    value,
+    isOptionObject: isOptionObject2 = false,
+    timeDirection
+  } = input;
   const rawValue = isOptionObject2 ? value?.value : value;
   const fieldValue = isOptionObject2 ? { value: value?.value, label: value?.label } : value;
   const draft = { ...formData, [key]: fieldValue, lastChanged: key };
   const linked = applyQuickInputLinkedTimeChanges(draft, timeDirection);
-  const nextSources = { ...fieldSources, [key]: "user" };
+  const nextSources = {
+    ...fieldSources,
+    [key]: "user"
+  };
   linked.autoKeys.forEach((autoKey) => {
     if (autoKey !== key) nextSources[autoKey] = "system_auto";
   });
@@ -58787,11 +58910,16 @@ function applyQuickInputTimeDirectionChange(input) {
   }
   const linked = applyQuickInputLinkedTimeChanges(draft, nextDirection);
   const nextSources = { ...fieldSources };
-  if (usedDefaultEnd && !fieldSources["结束"]) nextSources["结束"] = "system_auto";
+  if (usedDefaultEnd && !fieldSources["结束"])
+    nextSources["结束"] = "system_auto";
   linked.autoKeys.forEach((autoKey) => {
     nextSources[autoKey] = "system_auto";
   });
-  return { formData: linked.formData, fieldSources: nextSources, timeDirection: nextDirection };
+  return {
+    formData: linked.formData,
+    fieldSources: nextSources,
+    timeDirection: nextDirection
+  };
 }
 function hydrateQuickInputTemplateDefaults({
   template,
@@ -58809,12 +58937,22 @@ function hydrateQuickInputTemplateDefaults({
   if (!template) return { changed: false, formData: current2, fieldSources };
   const dataForParsing = {
     ...context,
-    goal: { id: selectedGoal?.id || selectedGoalId || "", title: currentGoalTitle || "", path: currentGoalPath || "", themePath: selectedGoal?.themePath || theme2?.path || "" },
+    goal: {
+      id: selectedGoal?.id || selectedGoalId || "",
+      title: currentGoalTitle || "",
+      path: currentGoalPath || "",
+      themePath: selectedGoal?.themePath || theme2?.path || ""
+    },
     goalId: selectedGoal?.id || selectedGoalId || "",
     goalPath: currentGoalPath || "",
     ...currentPeriod ? {
       period: currentPeriod,
-      cycle: { id: currentPeriod.id, title: currentPeriod.label, startDate: currentPeriod.startDate, endDate: currentPeriod.endDate },
+      cycle: {
+        id: currentPeriod.id,
+        title: currentPeriod.label,
+        startDate: currentPeriod.startDate,
+        endDate: currentPeriod.endDate
+      },
       cycleId: currentPeriod.id,
       periodId: currentPeriod.id,
       periodLabel: currentPeriod.label
@@ -58852,7 +58990,17 @@ function hydrateQuickInputTemplateDefaults({
               const optValue = String(opt.value || "");
               return optValue === rawValue || optLabel === rawLabel || optValue === rawLabel || optLabel === rawValue;
             });
-            assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : { value: contextValue.value, label: contextValue.label || contextValue.value }, "context");
+            assignValue(
+              key,
+              matched ? {
+                value: matched.value,
+                label: matched.label || matched.value
+              } : {
+                value: contextValue.value,
+                label: contextValue.label || contextValue.value
+              },
+              "context"
+            );
           } else {
             const rawString = contextValue !== null && contextValue !== void 0 ? String(contextValue) : "";
             const leafString = getLeafPath(rawString) || rawString;
@@ -58861,7 +59009,14 @@ function hydrateQuickInputTemplateDefaults({
               const optValue = String(opt.value || "");
               return optValue === rawString || optLabel === rawString || optLabel === leafString || String(optLabel) === String(rawString);
             });
-            assignValue(key, matched ? { value: matched.value, label: matched.label || matched.value } : contextValue, "context");
+            assignValue(
+              key,
+              matched ? {
+                value: matched.value,
+                label: matched.label || matched.value
+              } : contextValue,
+              "context"
+            );
           }
         } else {
           assignValue(key, contextValue, "context");
@@ -58870,29 +59025,46 @@ function hydrateQuickInputTemplateDefaults({
       return;
     }
     if (!canRefresh) return;
-    const isSelectable = ["select", "singleSelect", "radio", "rating"].includes(field.type);
+    const isSelectable = ["select", "singleSelect", "radio", "rating"].includes(
+      field.type
+    );
     if (field.defaultValue) {
       if (isSelectable) {
         const findOption = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
         let opt = findOption(field.defaultValue);
         if (!opt && field.options?.length) opt = field.options[0];
-        if (opt) assignValue(key, { value: opt.value, label: opt.label || opt.value }, "template_default");
+        if (opt)
+          assignValue(
+            key,
+            { value: opt.value, label: opt.label || opt.value },
+            "template_default"
+          );
       } else {
         let v2 = field.defaultValue || "";
         if (typeof v2 === "string") v2 = renderTemplate(v2, dataForParsing);
         assignValue(key, v2, "template_default");
       }
     } else if (!hasMeaningfulExisting || existingSource === void 0 || existingSource === "system_auto") {
-      if (field.type === "date") assignValue(key, dayjs().format("YYYY-MM-DD"), "system_auto");
-      else if (field.type === "time") assignValue(key, dayjs().format("HH:mm"), "system_auto");
+      if (field.type === "date")
+        assignValue(key, dayjs().format("YYYY-MM-DD"), "system_auto");
+      else if (field.type === "time")
+        assignValue(key, dayjs().format("HH:mm"), "system_auto");
       else if (isSelectable && field.options?.length) {
         const first = field.options[0];
-        assignValue(key, { value: first.value, label: first.label || first.value }, "system_auto");
+        assignValue(
+          key,
+          { value: first.value, label: first.label || first.value },
+          "system_auto"
+        );
       }
     }
   });
   if (!changed) return { changed: false, formData: current2, fieldSources };
-  const finalized = finalizeLinkedTimeFields(next2, { startKey: "时间", endKey: "结束", durationKey: "时长" }, { durationOutput: "number", direction: timeDirection });
+  const finalized = finalizeLinkedTimeFields(
+    next2,
+    { startKey: "时间", endKey: "结束", durationKey: "时长" },
+    { durationOutput: "number", direction: timeDirection }
+  );
   const autoComputedKeys = [];
   if (finalized["时间"] !== next2["时间"]) autoComputedKeys.push("时间");
   if (finalized["结束"] !== next2["结束"]) autoComputedKeys.push("结束");
@@ -58904,11 +59076,28 @@ function hydrateQuickInputTemplateDefaults({
   return { changed: true, formData: next2, fieldSources: nextSources };
 }
 function deriveQuickInputInitialSelection(initialFormData, context) {
+  const goalContext = readRecord(context, "__goalContext");
   return {
-    selectedGoalId: String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? context?.goalId ?? context?.["目标ID"] ?? context?.__goalContext?.goalId ?? "").trim() || null,
-    selectedGoalPath: cleanDisplayPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? context?.goalPath ?? context?.["目标"] ?? context?.__goalContext?.goalPath ?? "")),
-    selectedTemplateVariantId: String(initialFormData?.templateVariantId ?? initialFormData?.goalTemplateVariantId ?? initialFormData?.goalTemplateId ?? initialFormData?.templateId ?? context?.templateVariantId ?? context?.goalTemplateVariantId ?? context?.goalTemplateId ?? context?.templateId ?? context?.__goalContext?.templateVariantId ?? context?.__goalContext?.goalTemplateId ?? context?.__goalContext?.templateId ?? "").trim() || null,
-    selectedCycleId: String(initialFormData?.cycleId ?? initialFormData?.["周期ID"] ?? context?.cycleId ?? context?.["周期ID"] ?? context?.__goalContext?.cycleId ?? "").trim() || null,
+    selectedGoalId: readFirstString$1(initialFormData, ["goalId", "目标ID"]) ?? readFirstString$1(context, ["goalId", "目标ID"]) ?? readFirstString$1(goalContext, ["goalId"]) ?? null,
+    selectedGoalPath: cleanDisplayPath(
+      readFirstString$1(initialFormData, ["goalPath", "目标"]) ?? readFirstString$1(context, ["goalPath", "目标"]) ?? readFirstString$1(goalContext, ["goalPath"]) ?? ""
+    ),
+    selectedTemplateVariantId: readFirstString$1(initialFormData, [
+      "templateVariantId",
+      "goalTemplateVariantId",
+      "goalTemplateId",
+      "templateId"
+    ]) ?? readFirstString$1(context, [
+      "templateVariantId",
+      "goalTemplateVariantId",
+      "goalTemplateId",
+      "templateId"
+    ]) ?? readFirstString$1(goalContext, [
+      "templateVariantId",
+      "goalTemplateId",
+      "templateId"
+    ]) ?? null,
+    selectedCycleId: readFirstString$1(initialFormData, ["cycleId", "周期ID"]) ?? readFirstString$1(context, ["cycleId", "周期ID"]) ?? readFirstString$1(goalContext, ["cycleId"]) ?? null,
     timeDirection: initialFormData?.__timeDirection === "backward" ? "backward" : "forward"
   };
 }
@@ -58997,11 +59186,20 @@ function applyQuickInputGoalSelection(params) {
     assign2("themePath", themePath, "goal_context");
     assign2("主题", themePath, "goal_context");
   }
-  return { goal, goalId, goalPath, themePath, formData: nextFormData, fieldSources: nextFieldSources };
+  return {
+    goal,
+    goalId,
+    goalPath,
+    themePath,
+    formData: nextFormData,
+    fieldSources: nextFieldSources
+  };
 }
 function buildQuickInputEditorState(input) {
   const currentTheme = input.selectedThemeId ? input.themeIdMap.get(input.selectedThemeId) ?? input.theme ?? null : input.theme ?? null;
-  const effectiveThemePath = String(input.formData.themePath ?? input.formData["主题"] ?? currentTheme?.path ?? input.selectedGoal?.themePath ?? "").trim();
+  const effectiveThemePath = String(
+    input.formData.themePath ?? input.formData["主题"] ?? currentTheme?.path ?? input.selectedGoal?.themePath ?? ""
+  ).trim();
   const themeParts = splitThemePathParts(effectiveThemePath || null);
   const templateVariantId = input.resolvedTemplateVariantId || input.selectedTemplateVariantId || null;
   return {
@@ -59043,20 +59241,40 @@ function buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, available
     fields: rawTemplate.fields.map((field) => {
       const semantic = getTemplateFieldSemantic(field);
       if (semantic === "goals") return { ...field, options: goalFieldOptions };
-      if (semantic === "themePath") return { ...field, type: field.type === "path" ? "hierarchicalSingleSelect" : field.type, options: themeFieldOptions };
+      if (semantic === "themePath")
+        return {
+          ...field,
+          type: field.type === "path" ? "hierarchicalSingleSelect" : field.type,
+          options: themeFieldOptions
+        };
       return field;
     })
   };
 }
 function shouldShowQuickInputTimeDirectionControl(template) {
   if (!template?.fields) return false;
-  const keys = new Set((template.fields || []).map((field) => field.key || field.label));
+  const keys = new Set(
+    (template.fields || []).map(
+      (field) => field.key || field.label
+    )
+  );
   return keys.has("时间") && keys.has("结束") && keys.has("时长");
 }
 function buildQuickInputPeriodUi(currentPeriod) {
   return {
-    fields: currentPeriod ? { cycleId: currentPeriod.id, periodId: currentPeriod.id, periodLabel: currentPeriod.label, "周期ID": currentPeriod.id, "周期": currentPeriod.label, "周期粒度": currentPeriod.granularity } : {},
-    options: currentPeriod ? { cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }], "周期ID": [{ value: currentPeriod.id, label: currentPeriod.label }], "周期": [{ value: currentPeriod.label, label: currentPeriod.label }] } : {}
+    fields: currentPeriod ? {
+      cycleId: currentPeriod.id,
+      periodId: currentPeriod.id,
+      periodLabel: currentPeriod.label,
+      周期ID: currentPeriod.id,
+      周期: currentPeriod.label,
+      周期粒度: currentPeriod.granularity
+    } : {},
+    options: currentPeriod ? {
+      cycleId: [{ value: currentPeriod.id, label: currentPeriod.label }],
+      周期ID: [{ value: currentPeriod.id, label: currentPeriod.label }],
+      周期: [{ value: currentPeriod.label, label: currentPeriod.label }]
+    } : {}
   };
 }
 function QuickInputEditor({
@@ -60367,11 +60585,11 @@ function resolvePresetForAiTarget(goalSettings, goal, blockId, target) {
   return variants.find((preset) => preset.isDefault) || variants[0] || null;
 }
 function readPresetThemePath(preset) {
-  const raw = preset?.defaultValues?.themePath ?? preset?.defaultValues?.["主题"];
-  if (!raw) return void 0;
-  if (typeof raw === "string") return raw.trim() || void 0;
-  if (typeof raw === "object" && raw && "value" in raw) return String(raw.value || "").trim() || void 0;
-  return void 0;
+  const values2 = asUnknownRecord(preset?.defaultValues);
+  const direct = readFirstString$1(values2, ["themePath", "主题"]);
+  if (direct) return direct;
+  const wrapped = asUnknownRecord(values2?.themePath) ?? asUnknownRecord(values2?.["主题"]);
+  return readFirstString$1(wrapped, ["value", "label"]);
 }
 function shortDisplay(value, fallback = "—", max2 = 32) {
   const text2 = String(value ?? "").trim();
@@ -69908,7 +70126,8 @@ function cloneValue$1(value) {
 }
 function readOptionText(value) {
   if (value === void 0 || value === null) return "";
-  if (typeof value === "object" && value && "value" in value) return compactText(value.value);
+  const record = asUnknownRecord(value);
+  if (record && "value" in record) return compactText(record.value);
   return compactText(value);
 }
 function cleanPathSegment$1(value) {
@@ -69924,18 +70143,19 @@ function themeLeafLabel(path, fallback = "") {
   const normalized = normalizeThemePath(path);
   return normalized.split("/").filter(Boolean).pop() || fallback;
 }
+function getFieldSemantic(field) {
+  return compactText(field.semantic || field.semanticType).toLowerCase();
+}
 function isThemeField$1(field) {
-  const anyField = field;
-  const key = compactText(anyField.key).toLowerCase();
-  const label = compactText(anyField.label);
-  const semantic = compactText(anyField.semantic || anyField.semanticType).toLowerCase();
+  const key = compactText(field.key).toLowerCase();
+  const label = compactText(field.label);
+  const semantic = getFieldSemantic(field);
   return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath") || semantic === "theme";
 }
 function isIconField$1(field) {
-  const anyField = field;
-  const key = compactText(anyField.key).toLowerCase();
-  const label = compactText(anyField.label);
-  const semantic = compactText(anyField.semantic || anyField.semanticType).toLowerCase();
+  const key = compactText(field.key).toLowerCase();
+  const label = compactText(field.label);
+  const semantic = getFieldSemantic(field);
   return key === "icon" || key === "图标" || label === "图标" || semantic === "icon";
 }
 function readThemePathFromFields(fields) {
@@ -70038,7 +70258,7 @@ function makeNewDraft(goal, block2, variants, themes) {
   const usedVariantIds = new Set(variants.map((item) => String(item.variantId || "default")));
   const usedThemePaths = new Set(variants.map((item) => normalizeThemePath(readThemePathFromTemplate(item))).filter(Boolean));
   const preferredTheme = normalizeThemePath(goal?.themePath) || normalizeThemePath(base.themePath);
-  const firstUnusedTheme = themes.map((theme2) => normalizeThemePath(theme2?.path)).find((path) => path && !usedThemePaths.has(path));
+  const firstUnusedTheme = themes.map((theme2) => normalizeThemePath(theme2.path)).find((path) => path && !usedThemePaths.has(path));
   const themePath = preferredTheme && !usedThemePaths.has(preferredTheme) ? preferredTheme : firstUnusedTheme || preferredTheme || "";
   const label = themeLeafLabel(themePath, block2?.name || "记录预设");
   let variantId = makeVariantId(label || `preset-${variants.length + 1}`);
@@ -70055,20 +70275,23 @@ function makeNewDraft(goal, block2, variants, themes) {
     sortOrder: variants.length * 10,
     themePath,
     fields,
-    defaultValues: mergeDefaultValues({ ...base, themePath, fields }, themes.find((theme2) => normalizeThemePath(theme2?.path) === themePath)?.icon)
+    defaultValues: mergeDefaultValues({ ...base, themePath, fields }, themes.find((theme2) => normalizeThemePath(theme2.path) === themePath)?.icon)
   };
 }
 function deriveRequiredFields(fields) {
-  return (fields || []).filter((field) => field?.required === true).map((field) => compactText(field.key || field.label)).filter(Boolean);
+  return (fields || []).filter((field) => field.required === true).map((field) => compactText(field.key || field.label)).filter(Boolean);
 }
 function stableJson(value) {
   const seen = /* @__PURE__ */ new WeakSet();
   const normalize = (input) => {
     if (input === void 0) return void 0;
-    if (input === null || typeof input !== "object") return input;
+    if (input === null) return null;
+    if (typeof input === "string" || typeof input === "number" || typeof input === "boolean") return input;
+    if (typeof input !== "object") return compactText(input);
     if (seen.has(input)) return "[Circular]";
     seen.add(input);
-    if (Array.isArray(input)) return input.map(normalize);
+    if (Array.isArray(input)) return input.map(normalize).filter((item) => item !== void 0);
+    if (!isUnknownRecord(input)) return compactText(input);
     const out = {};
     Object.keys(input).sort().forEach((key) => {
       const value2 = normalize(input[key]);
@@ -70081,7 +70304,7 @@ function stableJson(value) {
 function compactFieldForStructureCompare(field) {
   const source = field;
   const out = {};
-  Object.keys(source || {}).sort().forEach((key) => {
+  Object.keys(source).sort().forEach((key) => {
     if (key === "id" || key === "defaultValue" || key === "required") return;
     const value = source[key];
     if (value === void 0 || value === null || value === "") return;

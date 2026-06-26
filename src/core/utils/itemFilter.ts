@@ -4,9 +4,10 @@
 // —— 修正数字/日期的比较与排序（避免把数值/日期按字符串字典序比较）
 import { Item, FilterRule, SortRule, readField } from '@/core/types/schema';
 import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
+import { asUnknownRecord, readString, readStringArray } from './unknownRecord';
 
 /* ---------- 通用比较：数字/日期优先，其次回退字符串 ---------- */
-function coerceForCompare(v: any): number | string | null {
+function coerceForCompare(v: unknown): number | string | null {
   if (v === null || v === undefined) return null;
   if (typeof v === 'number') return v;
 
@@ -26,7 +27,7 @@ function coerceForCompare(v: any): number | string | null {
   return s;
 }
 
-function cmpMixed(a: any, b: any): number {
+function cmpMixed(a: unknown, b: unknown): number {
   if (a == null && b == null) return 0;
   if (a == null) return 1;   // 让空值在后（升序）
   if (b == null) return -1;
@@ -69,13 +70,13 @@ export function filterByRules(items: Item[], rules: FilterRule[] = []) {
   });
 }
 
-function isEmptyValue(value: any): boolean {
+function isEmptyValue(value: unknown): boolean {
   if (value === null || value === undefined) return true;
   if (Array.isArray(value)) return value.length === 0;
   return String(value).trim() === '';
 }
 
-function normalizeListValue(value: any): any[] {
+function normalizeListValue(value: unknown): unknown[] {
   if (Array.isArray(value)) return value;
   if (value === null || value === undefined) return [];
   return String(value)
@@ -84,7 +85,7 @@ function normalizeListValue(value: any): any[] {
     .filter(Boolean);
 }
 
-function normalizeBetweenValue(value: any): [any, any] | null {
+function normalizeBetweenValue(value: unknown): [unknown, unknown] | null {
   if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
   if (value === null || value === undefined) return null;
 
@@ -97,18 +98,19 @@ function normalizeBetweenValue(value: any): [any, any] | null {
 
 function matchRule(item: Item, rule: FilterRule): boolean {
   const canonicalField = normalizeFieldKey(rule.field);
-  let v1: any = readField(item, canonicalField);
-  let v2: any = rule.value;
+  const itemRecord = asUnknownRecord(item);
+  let v1: unknown = readField(item, canonicalField);
+  let v2: unknown = rule.value;
 
   if (rule.op === 'empty') return isEmptyValue(v1);
   if (rule.op === 'notEmpty') return !isEmptyValue(v1);
 
   // 优先使用预处理字段进行大小写无关的比较
   if (canonicalField === 'title') {
-    v1 = (item as any).titleLower ?? String(v1 ?? '').toLowerCase();
+    v1 = readString(itemRecord, 'titleLower') ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
   } else if (canonicalField === 'content') {
-    v1 = (item as any).contentLower ?? String(v1 ?? '').toLowerCase();
+    v1 = readString(itemRecord, 'contentLower') ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
   } else if (['themePath', 'rootTheme', 'leafTheme', 'goalPath', 'rootGoal', 'leafGoal'].includes(canonicalField)) {
     // 目标/主题是迁移后的两条主维度：统一大小写，并支持 in/notIn 多值筛选。
@@ -119,12 +121,12 @@ function matchRule(item: Item, rule: FilterRule): boolean {
       v2 = String(v2 ?? '').toLowerCase();
     }
   } else if (canonicalField === 'fullData') {
-    v1 = (item as any).fullDataLower ?? String(v1 ?? '').toLowerCase();
+    v1 = readString(itemRecord, 'fullDataLower') ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
   } else if (canonicalField === 'tags' || canonicalField === 'goalPaths') {
     const listLower: string[] = canonicalField === 'tags'
-      ? ((item as any).tagsLower ?? (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []))
-      : ((item as any).goalPathsLower ?? (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []));
+      ? (readStringArray(itemRecord, 'tagsLower').length ? readStringArray(itemRecord, 'tagsLower') : (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []))
+      : (readStringArray(itemRecord, 'goalPathsLower').length ? readStringArray(itemRecord, 'goalPathsLower') : (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []));
     const needle = String(v2 ?? '').toLowerCase();
     if (rule.op === 'includes' || rule.op === '=') {
       return listLower.includes(needle);
@@ -235,9 +237,10 @@ export function filterByKeyword(items: Item[], kw: string) {
   if (!kw.trim()) return items;
   const s = kw.trim().toLowerCase();
   return items.filter(it => {
-    const titleLower = (it as any).titleLower ?? (it.title || '').toLowerCase();
-    const contentLower = (it as any).contentLower ?? (it.content || '').toLowerCase();
-    const fullDataLower = (it as any).fullDataLower ?? String(readField(it, 'fullData') || '').toLowerCase();
+    const itemRecord = asUnknownRecord(it);
+    const titleLower = readString(itemRecord, 'titleLower') ?? (it.title || '').toLowerCase();
+    const contentLower = readString(itemRecord, 'contentLower') ?? (it.content || '').toLowerCase();
+    const fullDataLower = readString(itemRecord, 'fullDataLower') ?? String(readField(it, 'fullData') || '').toLowerCase();
     return (titleLower + ' ' + contentLower + ' ' + fullDataLower).includes(s);
   });
 }
