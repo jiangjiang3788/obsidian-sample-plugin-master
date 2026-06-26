@@ -1,0 +1,9 @@
+{
+  "aiSettings": {
+    "enabled": false,
+    "apiEndpoint": "",
+    "apiKey": "",
+    "model": "",
+    "persistApiKey": false
+  }
+}

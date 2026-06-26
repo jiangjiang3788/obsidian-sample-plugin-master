@@ -17,8 +17,7 @@
  * - ❌ 禁止把 “export-star from 某个深层实现文件” 当捷径（除非它本身就是模块级 public barrel）
  *
  * 命名约定：
- * - ThemeMatrix 模块的 buildThemeTree / ThemeTreeNode 对外统一前缀：
- *   buildThemeMatrixTree / ThemeMatrixTreeNode，避免与主题路径树 API 冲突。
+ * - ThemeMatrix 运行时模块已移除；主题树 API 只保留 ThemePathTree 前缀。
  */
 
 //
@@ -179,32 +178,9 @@ export type {
 //
 export * from './ai';
 
-//
-// -------------------- ThemeMatrix（避免命名冲突，统一前缀） --------------------
-//
-export { ThemeMatrixService } from './theme-matrix/ThemeMatrixService';
-export type {
-    ThemeMatrixServiceConfig,
-    AddThemeValidation,
-    UpdateThemeValidation,
-    DeleteThemeComputation,
-} from './theme-matrix/ThemeMatrixService';
-
-export { ThemeScanService } from './theme-matrix/ThemeScanService';
-export type {
-    ScanConfig,
-    ScanResult,
-    ScanStats,
-    ImportPreview,
-    ThemeScanServiceConfig,
-} from './theme-matrix/ThemeScanService';
-
-export { buildThemeTree as buildThemeMatrixTree } from './theme-matrix/themeTreeBuilder';
-export type { ThemeTreeNode as ThemeMatrixTreeNode, ExtendedTheme, ThemeOverrideKey } from './theme-matrix/theme.types';
-
 // -------------------- Theme Tree (Unified) --------------------
 // 说明：这是“主题路径树/选择器”用的统一实现（core/theme）。
-// 为避免与 ThemeMatrix 的同名符号冲突，对外统一使用 ThemePathTree* 前缀。
+// ThemeMatrix 运行时模块已在单人版收敛中移除，主题只保留为路径/图标/颜色元数据。
 export {
     ThemeTreeBuilder as ThemePathTreeBuilder,
     buildThemeTree as buildThemePathTree,
@@ -216,7 +192,7 @@ export type {
     FlatThemeTreeNode as ThemePathTreeFlatNode,
 } from './theme/ThemeTreeBuilder';
 
-export { parsePath, getRelativePath } from './theme-matrix/themePathParser';
+export { parsePath, getRelativePath } from './theme/themePathParser';
 
 //
 

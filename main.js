@@ -16821,22 +16821,6 @@ AiChatService = __decorateClass$b([
   __decorateParam$a(0, inject(SettingsProviderToken)),
   __decorateParam$a(1, inject(RetrievalService))
 ], AiChatService);
-function parsePath(path) {
-  if (!path || path.trim() === "") {
-    return [];
-  }
-  const segments = path.split("/").filter((s2) => s2.length > 0);
-  const result = [];
-  segments.forEach((segment, index) => {
-    const fullPath = segments.slice(0, index + 1).join("/");
-    result.push({
-      name: segment,
-      fullPath,
-      depth: index
-    });
-  });
-  return result;
-}
 class ThemeTreeBuilder {
   /**
    * 构建主题树
@@ -17182,6 +17166,22 @@ function buildThemeTree(themes, options) {
 }
 function searchThemeTree(nodes, searchTerm) {
   return ThemeTreeBuilder.searchTree(nodes, searchTerm);
+}
+function parsePath(path) {
+  if (!path || path.trim() === "") {
+    return [];
+  }
+  const segments = path.split("/").filter((s2) => s2.length > 0);
+  const result = [];
+  segments.forEach((segment, index) => {
+    const fullPath = segments.slice(0, index + 1).join("/");
+    result.push({
+      name: segment,
+      fullPath,
+      depth: index
+    });
+  });
+  return result;
 }
 function clampProgress(value) {
   if (!Number.isFinite(value)) return 0;
@@ -72468,33 +72468,6 @@ function buildViewProps({
     ...renderModels
   };
 }
-function normalizeLegacyGoalViewInstance(viewInstance) {
-  const rawType = String(viewInstance.viewType || "");
-  if (rawType === "GoalOverviewView") {
-    return {
-      ...viewInstance,
-      viewType: "ProgressView",
-      viewConfig: {
-        ...viewInstance.viewConfig || {},
-        ...viewInstance.viewConfig?.goalOverview || {},
-        mode: "goal"
-      }
-    };
-  }
-  if (rawType === "GoalDetailView") {
-    return {
-      ...viewInstance,
-      viewType: "StatisticsView",
-      viewConfig: {
-        ...viewInstance.viewConfig || {},
-        ...viewInstance.viewConfig?.goalDetail || {},
-        groupBy: "goal",
-        metric: "recordCount"
-      }
-    };
-  }
-  return viewInstance;
-}
 function ViewContent({
   viewInstance,
   dataStore,
@@ -72517,7 +72490,7 @@ function ViewContent({
   const messageRenderPort = useMessageRenderPort();
   const categoryColors = useSelector(selectCategoryColors);
   const settings = useSelector(selectSettings);
-  const normalizedViewInstance = T$1(() => normalizeLegacyGoalViewInstance(viewInstance), [viewInstance]);
+  const normalizedViewInstance = viewInstance;
   const viewItems = useViewData({
     dataStore,
     sourceItems: allItems,

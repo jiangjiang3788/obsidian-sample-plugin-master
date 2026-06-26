@@ -1,7 +1,7 @@
 // src/core/services/TemplateResolver.ts
-// 统一的模板解析器 - 单一真源实现
+// Legacy block-template resolver - block default only
 
-import type { InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
+import type { InputSettings, BlockTemplate, ThemeDefinition } from '@/core/types/schema';
 
 /**
  * 模板解析结果
@@ -10,7 +10,7 @@ export interface TemplateResolveResult {
     template: BlockTemplate | null;
     theme: ThemeDefinition | null;
     templateId: string | null;
-    templateSourceType: 'block' | 'override' | null;
+    templateSourceType: 'block' | null;
 }
 
 /**

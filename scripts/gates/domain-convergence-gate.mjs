@@ -77,9 +77,11 @@ assert(!mainEntry.includes('convergence.settings'), 'main.ts must return loaded 
 const dataManagement = read('src/features/settings/tabs/DataManagementSettings.tsx');
 assert(!dataManagement.includes('立即收敛'), 'DataManagementSettings must not expose a manual convergence button.');
 assert(!dataManagement.includes('applyDomainConvergenceMigration'), 'DataManagementSettings must not call manual convergence use cases.');
-const goalEntity = read('src/features/settings/input/goalManager/GoalEntitySection.tsx');
-assert(!goalEntity.includes('从已有记录导入目标'), 'GoalEntitySection must not expose legacy import UI.');
-assert(!goalEntity.includes('applyLegacyGoalMigration'), 'GoalEntitySection must not call legacy goal migration.');
+if (exists('src/features/settings/input/goalManager/GoalEntitySection.tsx')) {
+  const goalEntity = read('src/features/settings/input/goalManager/GoalEntitySection.tsx');
+  assert(!goalEntity.includes('从已有记录导入目标'), 'GoalEntitySection must not expose legacy import UI.');
+  assert(!goalEntity.includes('applyLegacyGoalMigration'), 'GoalEntitySection must not call legacy goal migration.');
+}
 const settingsUseCase = read('src/app/usecases/settings.usecase.ts');
 assert(!settingsUseCase.includes('applyDomainConvergenceMigration'), 'SettingsUseCase must not expose manual convergence migration.');
 const goalUseCase = read('src/app/usecases/goal.usecase.ts');

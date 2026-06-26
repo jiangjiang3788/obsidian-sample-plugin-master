@@ -1,0 +1,90 @@
+#!/usr/bin/env node
+/**
+ * single-user-convergence-gate
+ *
+ * This plugin is maintained for one user and does not need legacy data
+ * compatibility. The gate keeps removed dual systems from returning.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+const root = process.cwd();
+const failures = [];
+
+const removedPaths = [
+  'release/obsidian-sample-plugin',
+  'release/obsidian-sample-plugin-release.zip',
+  'src/core/theme-matrix',
+  'src/features/settings/theme/ThemeMatrix.tsx',
+  'src/features/settings/theme/ThemeMatrixView.tsx',
+  'src/features/settings/theme/ThemeTable.tsx',
+  'src/features/settings/theme/ThemeTreeNodeRow.tsx',
+  'src/features/settings/theme/useThemeMatrixEditor.ts',
+  'src/features/settings/input/TemplateEditorModal.tsx',
+  'src/features/settings/input/goalManager/GoalEntitySection.tsx',
+  'src/features/settings/input/goalManager/GoalTemplateSection.tsx',
+  'src/features/settings/viewEditors/GoalOverviewViewEditor.tsx',
+  'src/features/settings/viewEditors/GoalDetailViewEditor.tsx',
+  'src/features/settings/viewModels/goalOverviewViewModel.ts',
+  'src/features/settings/viewModels/goalDetailViewModel.ts',
+  'src/shared/ui/views/GoalOverviewView.tsx',
+  'src/shared/ui/views/GoalDetailView.tsx',
+];
+
+function exists(relativePath) {
+  return fs.existsSync(path.join(root, relativePath));
+}
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), 'utf8');
+}
+
+for (const removedPath of removedPaths) {
+  if (exists(removedPath)) failures.push(`${removedPath} should stay removed in single-user convergence mode.`);
+}
+
+const sourceFiles = [];
+function walk(relativeDir) {
+  const fullDir = path.join(root, relativeDir);
+  if (!fs.existsSync(fullDir)) return;
+  for (const entry of fs.readdirSync(fullDir, { withFileTypes: true })) {
+    const rel = path.join(relativeDir, entry.name).replaceAll('\\', '/');
+    if (entry.isDirectory()) walk(rel);
+    else if (/\.(ts|tsx|js|mjs)$/.test(entry.name)) sourceFiles.push(rel);
+  }
+}
+walk('src');
+walk('scripts');
+
+const forbiddenRuntimePatterns = [
+  { re: /from ['"](?:@\/core\/theme-matrix|@core\/theme-matrix|\.\.?\/.*theme-matrix)/, label: 'imports removed core/theme-matrix module' },
+  { re: /\bThemeMatrixService\b/, label: 'uses removed ThemeMatrixService' },
+  { re: /\bThemeScanService\b/, label: 'uses removed ThemeScanService' },
+  { re: /\bgetAvailableThemesForBlock\b/, label: 'uses removed ThemeOverride availability helper' },
+  { re: /\bisThemeDisabledForBlock\b/, label: 'uses removed ThemeOverride disabled helper' },
+  { re: /\bGoalOverviewView\b/, label: 'uses removed legacy GoalOverviewView' },
+  { re: /\bGoalDetailView\b/, label: 'uses removed legacy GoalDetailView' },
+];
+
+for (const file of sourceFiles) {
+  if (file === 'scripts/gates/single-user-convergence-gate.mjs') continue;
+  const text = read(file);
+  for (const { re, label } of forbiddenRuntimePatterns) {
+    if (re.test(text)) failures.push(`${file}: ${label}`);
+  }
+}
+
+const publicApi = read('src/core/public.ts');
+if (publicApi.includes("./theme-matrix")) failures.push('core/public.ts must not export from ./theme-matrix.');
+if (!publicApi.includes("./theme/themePathParser")) failures.push('core/public.ts must export parsePath/getRelativePath from ./theme/themePathParser.');
+
+const viewContent = read('src/features/settings/layout/ViewContent.tsx');
+if (viewContent.includes('normalizeLegacyGoalViewInstance')) failures.push('ViewContent must not normalize legacy goal view types at runtime.');
+
+if (failures.length) {
+  console.error('[single-user-convergence-gate] failed:');
+  for (const failure of failures) console.error(`- ${failure}`);
+  process.exit(1);
+}
+
+console.log('[single-user-convergence-gate] ok: removed dual systems are absent.');

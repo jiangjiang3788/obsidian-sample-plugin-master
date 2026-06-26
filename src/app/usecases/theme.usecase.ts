@@ -6,7 +6,7 @@
  * 
  * 【S6 架构约束 - 强制性规范】
  * 
- * ⚠️ ThemeMatrix 的写操作只能走 useCases.theme.*
+ * 主题写操作只能走 useCases.theme.*；ThemeMatrix 运行时已移除
  * ⚠️ UI 不得直接 import slice actions / SettingsRepository
  * ⚠️ group / layout 的约束不在此处处理（只管 theme）
  * ⛔ 禁止使用全局单例（禁止 getAppStoreInstance）
@@ -17,7 +17,7 @@
  * - UI 临时态应由组件 state 或 UI slice 管理
  * 
  * 【调用链】
- * UI (ThemeMatrix.tsx) 
+ * UI 
  *   → useCases.theme.* (本文件)
  *     → Zustand Store actions (theme.slice.ts)
  *       → SettingsRepository.update()
@@ -28,7 +28,7 @@
  * - 封装主题相关的业务意图
  * - 调用 Zustand Store 的 actions
  * - 统一错误处理
- * - 作为 ThemeMatrix UI 的唯一写入口
+ * - 作为主题设置 UI 的唯一写入口
  * 
  * Don't:
  * - 直接操作 SettingsRepository

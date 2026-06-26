@@ -4,7 +4,7 @@
  *
  * 目的：
  * - 复用“缩进 + 展开/折叠按钮 + 占位对齐”逻辑
- * - 供 ThemeTreeSelect（列表树）与 ThemeMatrix（表格树）共用，减少重复实现
+ * - 供 ThemeTreeSelect 等主题路径选择器共用，减少重复实现
  *
  * 约束：
  * - 纯 UI（props 驱动），不读 store、不触 ports

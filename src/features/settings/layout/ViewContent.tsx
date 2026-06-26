@@ -14,34 +14,6 @@ import { useViewRuntimeHandlers } from './useViewRuntimeHandlers';
 import { buildViewProps } from './viewPropsFactory';
 
 
-function normalizeLegacyGoalViewInstance(viewInstance: ViewInstance): ViewInstance {
-  const rawType = String((viewInstance as any).viewType || '');
-  if (rawType === 'GoalOverviewView') {
-    return {
-      ...viewInstance,
-      viewType: 'ProgressView' as any,
-      viewConfig: {
-        ...(viewInstance.viewConfig || {}),
-        ...(viewInstance.viewConfig?.goalOverview || {}),
-        mode: 'goal',
-      },
-    };
-  }
-  if (rawType === 'GoalDetailView') {
-    return {
-      ...viewInstance,
-      viewType: 'StatisticsView' as any,
-      viewConfig: {
-        ...(viewInstance.viewConfig || {}),
-        ...(viewInstance.viewConfig?.goalDetail || {}),
-        groupBy: 'goal',
-        metric: 'recordCount',
-      },
-    };
-  }
-  return viewInstance;
-}
-
 export interface ViewContentProps {
   viewInstance: ViewInstance;
   dataStore: DataStore;
@@ -85,7 +57,7 @@ export function ViewContent({
   const messageRenderPort = useMessageRenderPort();
   const categoryColors = useSelector(selectCategoryColors);
   const settings = useSelector(selectSettings);
-  const normalizedViewInstance = useMemo(() => normalizeLegacyGoalViewInstance(viewInstance), [viewInstance]);
+  const normalizedViewInstance = viewInstance;
 
   const viewItems = useViewData({
     dataStore,

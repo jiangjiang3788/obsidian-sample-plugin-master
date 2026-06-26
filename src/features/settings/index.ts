@@ -9,7 +9,7 @@
 /* ========================================================================== */
 
 export { ThemeManager } from './theme/ThemeManager';
-// ThemeMatrix is legacy/internal after goal-center convergence; do not re-export as a settings public entry.
+// ThemeMatrix runtime UI removed in single-user convergence; theme remains metadata only.
 
 
 /* ========================================================================== */

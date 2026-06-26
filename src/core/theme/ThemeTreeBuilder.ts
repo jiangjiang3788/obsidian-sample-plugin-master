@@ -1,7 +1,7 @@
 /**
  * 统一主题树构建器 - 单一真源
  * 
- * 用于构建主题树结构，供 QuickInput、ThemeMatrix、AI Chat 等模块共用
+ * 用于构建主题树结构，供 QuickInput、AI Chat、主题选择器等模块共用
  */
 import type { ThemeDefinition } from '@/core/types/schema';
 
