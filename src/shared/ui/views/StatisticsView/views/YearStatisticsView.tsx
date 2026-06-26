@@ -1,9 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { CategoryConfig, Item, PeriodData } from '@core/public';
-import { createPeriodData } from '@core/public';
 import { ChartBlock } from '../../../statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
+import { buildYearStatisticsRenderModel } from './YearStatisticsViewModel';
 
 export function YearStatisticsView({
   year,
@@ -33,43 +33,32 @@ export function YearStatisticsView({
   minVisibleHeight: number;
   bucketAccessor?: (item: Item) => string;
 }) {
-  // 计算最大周数（用于统一周行的行数）
-  const maxWeeksInMonth = Math.max(
-    ...yearlyWeekStructure.map(({ weeks }) => weeks.length),
-    1
-  );
+  const model = buildYearStatisticsRenderModel({ year, categories, processedData, yearlyWeekStructure });
 
   return (
     <div class="statistics-view">
-
       <div class="sv-year-grid">
-        {/* 第1行：年度汇总 - 跨全部12列 */}
         <div class="sv-year-grid-year">
           <ChartBlock
             data={processedData.yearData}
-            label={`${year}年`}
+            label={model.yearLabel}
             categories={categories}
             onCellClick={onCellClick}
-            cellIdentifier={(goal: string) => ({ type: 'year', year, goal })}
+            cellIdentifier={model.yearIdentifier}
             displayMode={displayMode}
             minVisibleHeight={minVisibleHeight}
             bucketAccessor={bucketAccessor}
           />
         </div>
 
-        {/* 第2行：4个季度 - 每个跨3列 */}
-        {processedData.quartersData.map((data, i) => (
-          <div
-            key={`q${i}`}
-            class="sv-year-grid-quarter"
-            style={{ gridColumn: `${i * 3 + 1} / ${i * 3 + 4}` }}
-          >
+        {model.quarters.map((quarter) => (
+          <div key={quarter.key} class="sv-year-grid-quarter" style={{ gridColumn: quarter.gridColumn }}>
             <ChartBlock
-              data={data}
-              label={`Q${i + 1}`}
+              data={quarter.data}
+              label={quarter.label}
               categories={categories}
               onCellClick={onCellClick}
-              cellIdentifier={(goal: string) => ({ type: 'quarter', year, quarter: i + 1, goal })}
+              cellIdentifier={quarter.identifier}
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
               bucketAccessor={bucketAccessor}
@@ -77,19 +66,14 @@ export function YearStatisticsView({
           </div>
         ))}
 
-        {/* 第3行：12个月 - 每个占1列 */}
-        {processedData.monthsData.map((data, i) => (
-          <div
-            key={`m${i}`}
-            class={`sv-year-grid-month${(i % 3 === 2 && i < 11) ? ' sv-quarter-end' : ''}`}
-            style={{ gridColumn: `${i + 1}` }}
-          >
+        {model.months.map((month) => (
+          <div key={month.key} class={month.className} style={{ gridColumn: month.gridColumn }}>
             <ChartBlock
-              data={data}
-              label={`${i + 1}月`}
+              data={month.data}
+              label={month.label}
               categories={categories}
               onCellClick={onCellClick}
-              cellIdentifier={(goal: string) => ({ type: 'month', year, month: i + 1, goal })}
+              cellIdentifier={month.identifier}
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
               bucketAccessor={bucketAccessor}
@@ -97,43 +81,27 @@ export function YearStatisticsView({
           </div>
         ))}
 
-        {/* 第4+行：每月的周 - 每月占1列，周在列内竖排 */}
-        {yearlyWeekStructure.map(({ month, weeks }) => {
-          const gridCol = month; // month is 1-based (1=Jan), grid columns are 1-12
-          const isQuarterEnd = (month % 3 === 0) && month < 12;
-
-          return (
-            <div
-              key={`w-col-${month}`}
-              class={`sv-year-grid-week-col${isQuarterEnd ? ' sv-quarter-end' : ''}`}
-              style={{ gridColumn: `${gridCol}` }}
-            >
-              {weeks.map((week) => {
-                const weekIndex = week - 1;
-                const weekData = processedData.weeksData[weekIndex] || createPeriodData(categories);
-
-                return (
-                  <ChartBlock
-                    key={week}
-                    data={weekData}
-                    label={`${week}W`}
-                    categories={categories}
-                    onCellClick={onCellClick}
-                    cellIdentifier={(goal: string) => ({ type: 'week', year, week, goal })}
-                    isCompact={true}
-                    displayMode={displayMode}
-                    minVisibleHeight={minVisibleHeight}
-                    bucketAccessor={bucketAccessor}
-                  />
-                );
-              })}
-              {/* 用空白占位，确保每列高度一致 */}
-              {Array.from({ length: maxWeeksInMonth - weeks.length }, (_, i) => (
-                <div key={`pad-${i}`} class="sv-week-placeholder" />
-              ))}
-            </div>
-          );
-        })}
+        {model.weekColumns.map((column) => (
+          <div key={column.key} class={column.className} style={{ gridColumn: column.gridColumn }}>
+            {column.weeks.map((week) => (
+              <ChartBlock
+                key={week.key}
+                data={week.data}
+                label={week.label}
+                categories={categories}
+                onCellClick={onCellClick}
+                cellIdentifier={week.identifier}
+                isCompact={true}
+                displayMode={displayMode}
+                minVisibleHeight={minVisibleHeight}
+                bucketAccessor={bucketAccessor}
+              />
+            ))}
+            {Array.from({ length: column.placeholderCount }, (_, index) => (
+              <div key={`pad-${index}`} class="sv-week-placeholder" />
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );

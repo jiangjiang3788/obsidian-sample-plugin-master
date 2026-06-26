@@ -1,5 +1,37 @@
 # Think OS (Obsidian Plugin)
 
+## 文档治理
+
+MVP24 起，`docs/` 根目录不再保留旧阶段的临时过程报告；MVP25 起，最终封版说明作为当前维护入口之一。当前根目录只保留：
+
+- `README.md`：本文档入口。
+- `MVP_ACCEPTANCE.md`：最小发布验收清单。
+- `INITIAL_PLAN_PROGRESS.md`：原始工程计划进度摘要。
+- `单人版收敛总览.md`：MVP1-MVP25 的收敛主线索引。
+- `最终封版说明.md`：MVP25 最终质量入口、封版边界和交付建议。
+- `单人版收敛-MVP*.md`：每轮中文收敛记录。
+- `Git提交备注-MVP*.md`：每轮中文 Git 提交备注。
+- `文档治理.md`：文档保留、删除和防过度文档化规则。
+
+不再保留的历史过程文档包括 `DATA_REVIEW_MVP*.md`、`*_PASS_CHANGES.md`、`GOAL_CENTER_*.md`、`GOAL_CORE_*.md`、`THINK_OS_*.md`、`MVP*_PROGRESS.md`、`MVP_PROGRESS.md` 和 `RELEASE_READINESS_MVP*.md`。这些内容已由中文收敛记录、验收文档和 gate 取代。
+
+新增门禁：
+
+```bash
+npm run docs-governance:gate
+npm run final-convergence:gate
+```
+
+### 当前建议阅读顺序
+
+1. `docs/单人版收敛总览.md`
+2. `docs/最终封版说明.md`
+3. `docs/文档治理.md`
+4. `docs/MVP_ACCEPTANCE.md`
+5. `docs/INITIAL_PLAN_PROGRESS.md`
+6. 需要追溯单轮时，再看 `docs/单人版收敛-MVP*.md` 和 `docs/Git提交备注-MVP*.md`
+
+
 一个基于 Preact 的 Obsidian 仪表盘/效率工具插件（插件 id: `think-os`）。
 
 ## 功能概览

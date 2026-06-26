@@ -11,140 +11,26 @@ import { Modal, Notice } from 'obsidian';
 import { useState } from 'preact/hooks';
 
 import { type Services, createServices, mountWithServices, unmountPreact, useUseCases, useSelector, selectSettings, resolveVaultResourcePath } from '@/app/public';
-import type { NaturalRecordCommand, RecordSubmitResult, TemplateField } from '@core/public';
-import { getEffectiveTemplate, getGoalTemplateVariants, splitGoalPath, readRecordSubmitMessage } from '@core/public';
+import type { NaturalRecordCommand, RecordSubmitResult } from '@core/public';
+import { readRecordSubmitMessage } from '@core/public';
 
-import {
-  Box,
-  Button,
-  CheckCircleIcon,
-  Chip,
-  DeleteIcon,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  ModalHeader,
-  RadioButtonUncheckedIcon,
-  Typography,
-} from '@shared/public';
-import { installBackdropCloseGuard } from './modalBackdropGuard';
-
+import { Box } from '@shared/public';
 import { QuickInputEditor } from '@/app/public';
 
-
-function normalizeAiFieldValue(field: TemplateField, value: any): any {
-  if (value === undefined || value === null || value === '') return value;
-
-  const isSelectable = ['select', 'radio', 'rating'].includes(field.type);
-  if (!isSelectable) return value;
-
-  if (typeof value === 'object' && 'value' in value && 'label' in value) {
-    return value;
-  }
-
-  const options = field.options || [];
-
-  if (Array.isArray(value)) {
-    return value.map((entry) => {
-      if (entry && typeof entry === 'object' && 'value' in entry && 'label' in entry) return entry;
-      const matched = options.find((option) => option.value === entry || option.label === entry);
-      return matched ? { value: matched.value, label: matched.label || matched.value } : entry;
-    });
-  }
-
-  const matched = options.find((option) => option.value === value || option.label === value);
-  return matched ? { value: matched.value, label: matched.label || matched.value } : value;
-}
-
-function normalizeAiFormData(template: { fields?: TemplateField[] } | undefined, formData: Record<string, any>): Record<string, any> {
-  if (!template?.fields?.length) return { ...formData };
-
-  const next = { ...formData };
-  template.fields.forEach((field) => {
-    if (!(field.key in next)) return;
-    next[field.key] = normalizeAiFieldValue(field, next[field.key]);
-  });
-
-  return next;
-}
-
-
-function resolveGoalForAiTarget(goalSettings: any, target: NaturalRecordCommand['target']): any | null {
-  const goals = goalSettings?.goals || [];
-  if (!goals.length) return null;
-  const targetGoalId = String(target.goalId || '').trim();
-  if (targetGoalId) {
-    const byId = goals.find((goal: any) => goal.id === targetGoalId);
-    if (byId) return byId;
-  }
-
-  const targetGoalPath = splitGoalPath(String(target.goalPath || '')).goalPath;
-  if (targetGoalPath) {
-    const byPath = goals.find((goal: any) => splitGoalPath(String(goal.goalPath || goal.title || '')).goalPath === targetGoalPath);
-    if (byPath) return byPath;
-  }
-
-  return null;
-}
-
-function resolvePresetForAiTarget(goalSettings: any, goal: any | null, blockId: string, target: NaturalRecordCommand['target']): any | null {
-  if (!goal || !blockId) return null;
-  const variants = getGoalTemplateVariants(goalSettings, goal, blockId) || [];
-  if (!variants.length) return null;
-
-  const exact = String(target.goalTemplateId || '').trim();
-  if (exact) {
-    const matched = variants.find((preset: any) => preset.id === exact);
-    if (matched) return matched;
-  }
-
-  const variantId = String(target.templateVariantId || '').trim();
-  if (variantId) {
-    const matched = variants.find((preset: any) => preset.variantId === variantId || preset.id === variantId || preset.name === variantId);
-    if (matched) return matched;
-  }
-
-  return variants.find((preset: any) => preset.isDefault) || variants[0] || null;
-}
-
-function readPresetThemePath(preset: any | null): string | undefined {
-  const raw = preset?.defaultValues?.themePath ?? preset?.defaultValues?.['主题'];
-  if (!raw) return undefined;
-  if (typeof raw === 'string') return raw.trim() || undefined;
-  if (typeof raw === 'object' && raw && 'value' in raw) return String(raw.value || '').trim() || undefined;
-  return undefined;
-}
-
-function shortDisplay(value: unknown, fallback = '—', max = 32): string {
-  const text = String(value ?? '').trim();
-  if (!text) return fallback;
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
-}
-
-function presetDisplayName(preset: any | null): string {
-  if (!preset) return 'CoreBlock 默认';
-  return String(preset.name || preset.variantId || '默认预设').trim() || '默认预设';
-}
-
-function goalDisplayName(goal: any | null, goalPath?: string): string {
-  if (goal?.title) return String(goal.title);
-  const normalized = splitGoalPath(String(goal?.goalPath || goalPath || '')).leafGoal;
-  return normalized || String(goalPath || '未匹配目标');
-}
-
-interface RecordItem {
-  id: string;
-  cmd: NaturalRecordCommand;
-  blockId: string;
-  themeId?: string;
-  goalLabel: string;
-  presetLabel: string;
-  themePath?: string;
-  formData: Record<string, any>;
-  saved: boolean;
-  skipped: boolean;
-}
+import { AiBatchConfirmFooter } from './AiBatchConfirmFooter';
+import {
+  type AiBatchConfirmRecordItem,
+  buildAiBatchConfirmBatchSummary,
+  buildAiBatchConfirmCreateSubmitParams,
+  buildAiBatchConfirmRecordContext,
+  buildAiBatchConfirmRecordItems,
+  findNextPendingAiBatchConfirmIndex,
+  patchAiBatchConfirmRecordAtIndex,
+  summarizeAiBatchConfirmRecords,
+} from './AiBatchConfirmModel';
+import { AiBatchConfirmRecordHeader } from './AiBatchConfirmRecordHeader';
+import { AiBatchConfirmSidebar } from './AiBatchConfirmSidebar';
+import { installBackdropCloseGuard } from './modalBackdropGuard';
 
 export class AiBatchConfirmModal extends Modal {
   private services: Services;
@@ -201,7 +87,6 @@ export class AiBatchConfirmModal extends Modal {
     );
   }
 
-
   onClose() {
     this.cleanupBackdropCloseGuard?.();
     this.cleanupBackdropCloseGuard = null;
@@ -213,11 +98,10 @@ export class AiBatchConfirmModal extends Modal {
     unmountPreact(this.contentEl);
   }
 }
+
 function AiBatchConfirmForm({
   resolveResourcePath,
   title,
-  confirmText,
-  cancelText,
   items: initialItems,
   closeModal,
   onComplete,
@@ -234,68 +118,26 @@ function AiBatchConfirmForm({
   const settings = fullSettings.inputSettings;
   const goalSettings = fullSettings.goalSettings;
   const useCases = useUseCases();
-
   const blocks = settings.blocks || [];
-  const themes = settings.themes || [];
-  const [records, setRecords] = useState<RecordItem[]>(() =>
-    initialItems.map((cmd, index) => {
-      // block
-      let block = cmd.target.blockId ? blocks.find((b) => b.id === cmd.target.blockId) : undefined;
-      if (!block && cmd.target.categoryKey) {
-        block = blocks.find((b) => b.categoryKey === cmd.target.categoryKey);
-      }
-      if (!block && blocks.length > 0) block = blocks[0];
-
-      const goal = resolveGoalForAiTarget(goalSettings, cmd.target);
-      const goalPath = goal ? splitGoalPath(String(goal.goalPath || goal.title || '')).goalPath : splitGoalPath(String(cmd.target.goalPath || '')).goalPath;
-      const goalId = goal?.id || String(cmd.target.goalId || '').trim() || undefined;
-      const preset = block ? resolvePresetForAiTarget(goalSettings, goal, block.id, cmd.target) : null;
-      const presetThemePath = readPresetThemePath(preset);
-
-      // theme：目标预设默认主题 > AI 返回主题 > 主题库第一个。
-      let themeId: string | undefined;
-      const preferredTheme = presetThemePath || cmd.target.themeId;
-      if (preferredTheme) {
-        const theme = themes.find((t) => t.id === preferredTheme || t.path === preferredTheme);
-        if (theme) themeId = theme.id;
-      }
-      if (!themeId && themes.length > 0) themeId = themes[0].id;
-      const selectedTheme = themeId ? themes.find((t) => t.id === themeId) : undefined;
-      const themePath = presetThemePath || selectedTheme?.path || (cmd.target.themeId && themes.find((t) => t.id === cmd.target.themeId || t.path === cmd.target.themeId)?.path) || undefined;
-
-      const initialTemplate = preset || (block ? getEffectiveTemplate(settings, block.id, themeId).template : undefined);
-      const initialFormData = {
-        ...(cmd.fieldValues || {}),
-        ...(goalId ? { goalId, '目标ID': goalId } : {}),
-        ...(goalPath ? { goalPath, '目标': goalPath } : {}),
-        ...(preset ? { templateVariantId: preset.variantId || 'default', goalTemplateVariantId: preset.variantId || 'default' } : {}),
-        ...(themePath ? { themePath, '主题': themePath } : {}),
-      };
-
-      return {
-        id: `record-${index}`,
-        cmd,
-        blockId: block?.id || '',
-        themeId,
-        goalLabel: goalDisplayName(goal, goalPath),
-        presetLabel: presetDisplayName(preset),
-        themePath,
-        formData: normalizeAiFormData(initialTemplate ?? undefined, initialFormData),
-        saved: false,
-        skipped: false,
-      };
+  const [records, setRecords] = useState<AiBatchConfirmRecordItem[]>(() =>
+    buildAiBatchConfirmRecordItems({
+      items: initialItems,
+      blocks,
+      themes: settings.themes || [],
+      goalSettings,
+      inputSettings: settings,
     })
   );
-
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentRecord = records[currentIndex];
+  const summary = summarizeAiBatchConfirmRecords(records);
 
-  const updateCurrentRecord = (updates: Partial<RecordItem>) => {
-    setRecords((prev) => prev.map((r, i) => (i === currentIndex ? { ...r, ...updates } : r)));
+  const updateCurrentRecord = (updates: Partial<AiBatchConfirmRecordItem>) => {
+    setRecords((prev) => patchAiBatchConfirmRecordAtIndex(prev, currentIndex, updates));
   };
 
-  const jumpToNextPending = () => {
-    const nextPending = records.findIndex((r, i) => i > currentIndex && !r.saved && !r.skipped);
+  const jumpToNextPending = (nextRecords = records) => {
+    const nextPending = findNextPendingAiBatchConfirmIndex(nextRecords, currentIndex);
     if (nextPending >= 0) setCurrentIndex(nextPending);
   };
 
@@ -303,88 +145,28 @@ function AiBatchConfirmForm({
     return readRecordSubmitMessage(result, fallback);
   };
 
-  const buildBatchCreateResult = (results: RecordSubmitResult[]): RecordSubmitResult => {
-    const succeeded = results.filter((result) => result.status === 'success');
-    const failed = results.filter((result) => result.status !== 'success' && result.status !== 'cancelled');
-    const scanPaths = Array.from(new Set(results.flatMap((result) => result.refresh.scanPaths || [])));
-    const warnings = results.flatMap((result) => result.warnings || []);
-    const errors = results.flatMap((result) => result.errors || []);
-
-    if (failed.length === 0) {
-      return {
-        status: 'success',
-        operation: 'create',
-        refresh: {
-          scanPaths,
-          notify: results.some((result) => result.refresh.notify),
-        },
-        feedback: {
-          notice: `✅ 批量保存完成：成功 ${succeeded.length} 条`,
-        },
-        warnings,
-      };
-    }
-
-    if (succeeded.length === 0) {
-      return {
-        status: 'error',
-        operation: 'create',
-        refresh: {
-          scanPaths,
-          notify: results.some((result) => result.refresh.notify),
-        },
-        feedback: {
-          notice: `❌ 批量保存失败：0/${results.length} 成功`,
-        },
-        warnings,
-        errors,
-      };
-    }
-
-    return {
-      status: 'partial_success',
-      operation: 'create',
-      refresh: {
-        scanPaths,
-        notify: results.some((result) => result.refresh.notify),
-      },
-      feedback: {
-        notice: `⚠️ 批量保存完成：成功 ${succeeded.length} 条，失败 ${failed.length} 条`,
-      },
-      warnings,
-      errors,
-    };
-  };
-
   const handleSaveCurrent = async () => {
     if (!currentRecord) return;
 
-    const result = await useCases.recordInput.submitCreateRecord({
-      blockId: currentRecord.blockId,
-      themeId: currentRecord.themeId ?? null,
-      formData: currentRecord.formData,
-      context: { ...(currentRecord.cmd.fieldValues || {}), ...(currentRecord.formData || {}) },
-      source: 'ai_batch',
-    });
+    const result = await useCases.recordInput.submitCreateRecord(buildAiBatchConfirmCreateSubmitParams(currentRecord));
 
     if (result.status === 'success') {
-      updateCurrentRecord({ saved: true });
+      const nextRecords = patchAiBatchConfirmRecordAtIndex(records, currentIndex, { saved: true });
+      setRecords(nextRecords);
       new Notice(`✅ 第 ${currentIndex + 1} 条已保存`);
-      jumpToNextPending();
+      jumpToNextPending(nextRecords);
       return;
     }
 
-    if (result.status === 'cancelled') {
-      return;
-    }
-
+    if (result.status === 'cancelled') return;
     new Notice(`❌ 保存失败: ${readFailureMessage(result, '保存失败')}`, 10000);
   };
 
   const handleSkipCurrent = () => {
     if (!currentRecord) return;
-    updateCurrentRecord({ skipped: true });
-    jumpToNextPending();
+    const nextRecords = patchAiBatchConfirmRecordAtIndex(records, currentIndex, { skipped: true });
+    setRecords(nextRecords);
+    jumpToNextPending(nextRecords);
   };
 
   const handleSaveAll = async () => {
@@ -395,136 +177,44 @@ function AiBatchConfirmForm({
       if (record.saved || record.skipped) continue;
 
       setCurrentIndex(i);
-
-      const result = await useCases.recordInput.submitCreateRecord({
-        blockId: record.blockId,
-        themeId: record.themeId ?? null,
-        formData: record.formData,
-        context: { ...(record.cmd.fieldValues || {}), ...(record.formData || {}) },
-        source: 'ai_batch',
-      });
+      const result = await useCases.recordInput.submitCreateRecord(buildAiBatchConfirmCreateSubmitParams(record));
       results.push(result);
 
       if (result.status === 'success') {
-        setRecords((prev) => prev.map((r, idx) => (idx === i ? { ...r, saved: true } : r)));
+        setRecords((prev) => patchAiBatchConfirmRecordAtIndex(prev, i, { saved: true }));
       } else if (result.status !== 'cancelled') {
         new Notice(`❌ 第 ${i + 1} 条保存失败: ${readFailureMessage(result, '保存失败')}`);
       }
     }
 
-    const summary = buildBatchCreateResult(results);
-    if (summary.feedback?.notice) {
-      new Notice(summary.feedback.notice);
-    }
+    const batchSummary = buildAiBatchConfirmBatchSummary(results);
+    if (batchSummary.feedback?.notice) new Notice(batchSummary.feedback.notice);
   };
 
   const handleComplete = () => {
-    const savedCount = records.filter((r) => r.saved).length;
-    const skippedCount = records.filter((r) => r.skipped).length;
-    new Notice(`完成：已保存 ${savedCount} 条，跳过 ${skippedCount} 条`);
+    const latestSummary = summarizeAiBatchConfirmRecords(records);
+    new Notice(`完成：已保存 ${latestSummary.savedCount} 条，跳过 ${latestSummary.skippedCount} 条`);
     onComplete?.();
     closeModal();
   };
 
-  const savedCount = records.filter((r) => r.saved).length;
-  const skippedCount = records.filter((r) => r.skipped).length;
-  const pendingCount = records.length - savedCount - skippedCount;
-
-  if (!currentRecord) {
-    return <div>没有可处理的记录</div>;
-  }
+  if (!currentRecord) return <div>没有可处理的记录</div>;
 
   return (
     <Box sx={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
-      {/* 左侧：记录列表 */}
-      <Box
-        sx={{
-          width: '200px',
-          borderRight: '1px solid var(--background-modifier-border)',
-          display: 'flex',
-          flexDirection: 'column',
-          flexShrink: 0,
-        }}
-      >
-        <Box sx={{ p: 1.5, borderBottom: '1px solid var(--background-modifier-border)' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-            AI 识别结果
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            共 {records.length} 条 · 已保存 {savedCount}
-          </Typography>
-        </Box>
-        <List sx={{ flex: 1, overflow: 'auto', py: 0 }}>
-          {records.map((record, index) => {
-            const block = blocks.find((b) => b.id === record.blockId);
-            const isActive = index === currentIndex;
-            return (
-              <ListItemButton
-                key={record.id}
-                selected={isActive}
-                onClick={() => setCurrentIndex(index)}
-                sx={{ py: 1, opacity: record.skipped ? 0.5 : 1, bgcolor: isActive ? 'action.selected' : 'transparent' }}
-              >
-                <ListItemIcon sx={{ minWidth: 32 }}>
-                  {record.saved ? (
-                    <CheckCircleIcon color="success" fontSize="small" />
-                  ) : record.skipped ? (
-                    <DeleteIcon color="disabled" fontSize="small" />
-                  ) : (
-                    <RadioButtonUncheckedIcon color="action" fontSize="small" />
-                  )}
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Typography variant="body2" noWrap sx={{ fontWeight: isActive ? 600 : 400 }}>
-                      {block?.name || '未知类型'}
-                    </Typography>
-                  }
-                  secondary={
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="caption" noWrap color="text.secondary" sx={{ display: 'block' }}>
-                        {shortDisplay(record.goalLabel, '未匹配目标', 18)} · {shortDisplay(record.presetLabel, '默认预设', 18)}
-                      </Typography>
-                      <Typography variant="caption" noWrap color="text.secondary" sx={{ display: 'block' }}>
-                        {record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}`}
-                      </Typography>
-                    </Box>
-                  }
-                />
-              </ListItemButton>
-            );
-          })}
-        </List>
-        <Box sx={{ p: 1.5, borderTop: '1px solid var(--background-modifier-border)' }}>
-          <Button fullWidth variant="outlined" size="small" onClick={handleSaveAll} disabled={pendingCount === 0}>
-            保存全部 ({pendingCount})
-          </Button>
-        </Box>
-      </Box>
+      <AiBatchConfirmSidebar
+        records={records}
+        blocks={blocks}
+        currentIndex={currentIndex}
+        savedCount={summary.savedCount}
+        pendingCount={summary.pendingCount}
+        onSelect={setCurrentIndex}
+        onSaveAll={handleSaveAll}
+      />
 
-      {/* 右侧：编辑区域 */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* 头部 */}
-        <ModalHeader
-          padding={2}
-          left={
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {title} · 编辑第 {currentIndex + 1} 条记录
-              </Typography>
-              {currentRecord.saved && <Chip label="已保存" color="success" size="small" sx={{ ml: 1 }} />}
-              {currentRecord.skipped && <Chip label="已跳过" color="default" size="small" sx={{ ml: 1 }} />}
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1 }}>
-                <Chip size="small" variant="outlined" label={`目标：${shortDisplay(currentRecord.goalLabel, '未匹配')}`} />
-                <Chip size="small" variant="outlined" label={`预设：${shortDisplay(currentRecord.presetLabel, 'CoreBlock 默认')}`} />
-                <Chip size="small" variant="outlined" label={`主题：${shortDisplay(currentRecord.themePath, '未指定')}`} />
-              </Box>
-            </Box>
-          }
-          onClose={closeModal}
-        />
+        <AiBatchConfirmRecordHeader title={title} currentIndex={currentIndex} record={currentRecord} onClose={closeModal} />
 
-        {/* 内容区域：复用 QuickInputEditor */}
         <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
           <QuickInputEditor
             key={currentRecord.id}
@@ -532,7 +222,7 @@ function AiBatchConfirmForm({
             initialBlockId={currentRecord.blockId}
             initialThemeId={currentRecord.themeId || null}
             initialFormData={currentRecord.formData}
-            context={{ ...(currentRecord.cmd.fieldValues || {}), ...(currentRecord.formData || {}) }}
+            context={buildAiBatchConfirmRecordContext(currentRecord)}
             allowBlockSwitch={true}
             dense={true}
             onStateChange={(state) =>
@@ -545,28 +235,13 @@ function AiBatchConfirmForm({
           />
         </Box>
 
-        {/* 底部操作栏 */}
-        <Box
-          sx={{
-            p: 2,
-            borderTop: '1px solid var(--background-modifier-border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <Button variant="text" color="inherit" onClick={handleSkipCurrent} disabled={currentRecord.saved || currentRecord.skipped}>
-            跳过此条
-          </Button>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button variant="contained" onClick={handleSaveCurrent} disabled={currentRecord.saved}>
-              {currentRecord.saved ? '已保存' : '保存此条'}
-            </Button>
-            <Button variant="outlined" onClick={handleComplete}>
-              完成
-            </Button>
-          </Box>
-        </Box>
+        <AiBatchConfirmFooter
+          saved={currentRecord.saved}
+          skipped={currentRecord.skipped}
+          onSkip={handleSkipCurrent}
+          onSave={handleSaveCurrent}
+          onComplete={handleComplete}
+        />
       </Box>
     </Box>
   );

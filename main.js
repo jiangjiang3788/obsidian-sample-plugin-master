@@ -19095,6 +19095,155 @@ class RecordInputKernel {
     return validateRecordInput(params);
   }
 }
+function hasRecordInputRequiredValue(value) {
+  if (value === null || value === void 0) return false;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") {
+    const raw = value.value ?? value.label;
+    return raw !== void 0 && raw !== null && String(raw).trim() !== "";
+  }
+  return String(value).trim() !== "";
+}
+function findMissingRecordInputRequiredFields(state) {
+  const fields = state.template?.fields || [];
+  const formData = state.formData || {};
+  return fields.filter((field) => field?.required).filter((field) => !hasRecordInputRequiredValue(formData[field.key] ?? formData[field.label])).map((field) => field.label || field.key).filter(Boolean);
+}
+function assertRecordInputRequiredFields(state) {
+  const missingRequired = findMissingRecordInputRequiredFields(state);
+  if (missingRequired.length > 0) {
+    throw new Error(`请补充必填字段：${missingRequired.join("、")}`);
+  }
+}
+function buildRecordCreateDraftFromEditorState({
+  state,
+  context,
+  source
+}) {
+  return {
+    blockId: state.blockId || void 0,
+    themeId: state.themeId ?? null,
+    formData: { ...state.formData || {} },
+    context,
+    meta: state.meta,
+    source: source ?? "quickinput"
+  };
+}
+function buildCreateRecordSubmitParamsFromEditorState({
+  state,
+  context,
+  source,
+  signal
+}) {
+  return {
+    blockId: String(state.blockId || ""),
+    themeId: state.themeId ?? null,
+    formData: { ...state.formData || {} },
+    context,
+    meta: state.meta,
+    signal,
+    source: source ?? "quickinput"
+  };
+}
+function buildUpdateRecordSubmitParamsFromEditorState({
+  state,
+  item,
+  expectedOutputPlan,
+  expectedPersistencePlan,
+  source,
+  signal
+}) {
+  return {
+    item,
+    blockId: String(state.blockId || ""),
+    themeId: state.themeId ?? null,
+    formData: { ...state.formData || {} },
+    meta: state.meta,
+    expectedOutputPlan: expectedOutputPlan ?? null,
+    expectedPersistencePlan: expectedPersistencePlan ?? null,
+    signal,
+    source: source ?? "quickinput"
+  };
+}
+function buildRecordDraftContext(...parts) {
+  return Object.assign({}, ...parts.filter(Boolean));
+}
+function normalizeRecordInputFieldValueForTemplate(field, value) {
+  if (value === void 0 || value === null || value === "") return value;
+  const isSelectable = ["select", "radio", "rating"].includes(field.type);
+  if (!isSelectable) return value;
+  if (value && typeof value === "object" && "value" in value && "label" in value) {
+    return value;
+  }
+  const options = field.options || [];
+  if (Array.isArray(value)) {
+    return value.map((entry) => {
+      if (entry && typeof entry === "object" && "value" in entry && "label" in entry) return entry;
+      const matched2 = options.find((option) => option.value === entry || option.label === entry);
+      return matched2 ? { value: matched2.value, label: matched2.label || matched2.value } : entry;
+    });
+  }
+  const matched = options.find((option) => option.value === value || option.label === value);
+  return matched ? { value: matched.value, label: matched.label || matched.value } : value;
+}
+function normalizeRecordInputFormDataForTemplate(template, formData) {
+  if (!template?.fields?.length) return { ...formData };
+  const next2 = { ...formData };
+  template.fields.forEach((field) => {
+    if (!(field.key in next2)) return;
+    next2[field.key] = normalizeRecordInputFieldValueForTemplate(field, next2[field.key]);
+  });
+  return next2;
+}
+function buildBatchCreateRecordSubmitResult(results) {
+  const succeeded = results.filter((result) => result.status === "success");
+  const failed = results.filter((result) => result.status !== "success" && result.status !== "cancelled");
+  const scanPaths = Array.from(new Set(results.flatMap((result) => result.refresh.scanPaths || [])));
+  const warnings = results.flatMap((result) => result.warnings || []);
+  const errors = results.flatMap((result) => result.errors || []);
+  if (failed.length === 0) {
+    return {
+      status: "success",
+      operation: "create",
+      refresh: {
+        scanPaths,
+        notify: results.some((result) => result.refresh.notify)
+      },
+      feedback: {
+        notice: `✅ 批量保存完成：成功 ${succeeded.length} 条`
+      },
+      warnings
+    };
+  }
+  if (succeeded.length === 0) {
+    return {
+      status: "error",
+      operation: "create",
+      refresh: {
+        scanPaths,
+        notify: results.some((result) => result.refresh.notify)
+      },
+      feedback: {
+        notice: `❌ 批量保存失败：0/${results.length} 成功`
+      },
+      warnings,
+      errors
+    };
+  }
+  return {
+    status: "partial_success",
+    operation: "create",
+    refresh: {
+      scanPaths,
+      notify: results.some((result) => result.refresh.notify)
+    },
+    feedback: {
+      notice: `⚠️ 批量保存完成：成功 ${succeeded.length} 条，失败 ${failed.length} 条`
+    },
+    warnings,
+    errors
+  };
+}
 function buildSuccessResult(operation, overrides = {}) {
   return {
     status: "success",
@@ -49024,6 +49173,83 @@ function DayColumnBody({
     }
   );
 }
+function resolveBlockViewGroupFields(input) {
+  if (input.effectiveGroupFields) return input.effectiveGroupFields;
+  if (input.groupFields && input.groupFields.length > 0) return input.groupFields;
+  if (input.groupField) return [input.groupField];
+  return [];
+}
+function buildBlockViewRenderModel(input) {
+  const effectiveGroupFields = resolveBlockViewGroupFields(input);
+  const isGrouped = effectiveGroupFields.length > 0;
+  const groupTree = isGrouped ? input.groupTree ?? groupItemsByFields(input.items, effectiveGroupFields, { goals: input.goals ?? [] }) : [];
+  return {
+    effectiveGroupFields,
+    groupTree,
+    isGrouped
+  };
+}
+function findBlockViewTimer(timers, itemId) {
+  return (timers ?? []).find((timer) => timer?.taskId === itemId);
+}
+function buildBlockViewGroupClassNames() {
+  return {
+    root: "",
+    group: "bv-group bv-group--level-0",
+    title: "bv-group-title",
+    content: "bv-group-content",
+    toggleIcon: "bv-group-toggle-icon",
+    label: "bv-group-label"
+  };
+}
+function BlockViewItemList(props) {
+  const {
+    items,
+    fields,
+    isNarrow,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  } = props;
+  return /* @__PURE__ */ u2(S, { children: items.map((item) => {
+    if (item.type === "task") {
+      return /* @__PURE__ */ u2(
+        TaskRow,
+        {
+          item,
+          onMarkDone,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          timerService,
+          timer: findBlockViewTimer(timers, item.id),
+          allThemes,
+          onOpenRecord,
+          showFields: []
+        },
+        item.id
+      );
+    }
+    return /* @__PURE__ */ u2(
+      BlockItem,
+      {
+        item,
+        fields,
+        isNarrow,
+        resolveResourcePath,
+        onOpenRecordOrigin,
+        messageRenderPort,
+        allThemes,
+        onOpenRecord
+      },
+      item.id
+    );
+  }) });
+}
 function BlockView(props) {
   const {
     items,
@@ -49051,69 +49277,228 @@ function BlockView(props) {
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
-  const renderItem = (item) => {
-    if (item.type === "task") {
-      const timer = timers.find((t3) => t3.taskId === item.id);
-      return /* @__PURE__ */ u2(
-        TaskRow,
-        {
-          item,
-          onMarkDone,
-          resolveResourcePath,
-          onOpenRecordOrigin,
-          timerService,
-          timer,
-          allThemes,
-          onOpenRecord,
-          showFields: []
-        },
-        item.id
-      );
-    } else {
-      return /* @__PURE__ */ u2(
-        BlockItem,
-        {
-          item,
-          fields,
-          isNarrow,
-          resolveResourcePath,
-          onOpenRecordOrigin,
-          messageRenderPort,
-          allThemes,
-          onOpenRecord
-        },
-        item.id
-      );
-    }
+  const renderModel = T$1(() => buildBlockViewRenderModel({
+    items,
+    groupField,
+    groupFields,
+    groupTree: injectedGroupTree,
+    effectiveGroupFields: injectedGroupFields,
+    goals
+  }), [items, groupField, groupFields, injectedGroupTree, injectedGroupFields, goals]);
+  const itemListProps = {
+    fields,
+    isNarrow,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
   };
-  const effectiveGroupFields = injectedGroupFields ?? (() => {
-    if (groupFields && groupFields.length > 0) return groupFields;
-    if (groupField) return [groupField];
-    return [];
-  })();
-  if (!effectiveGroupFields.length) {
-    return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: items.map(renderItem) });
+  if (!renderModel.isGrouped) {
+    return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: /* @__PURE__ */ u2(BlockViewItemList, { items, ...itemListProps }) });
   }
-  devLog("[BlockView] 接收到的 Props:", props);
-  devLog(`[BlockView] 生效的分组字段 (effectiveGroupFields):`, effectiveGroupFields);
-  const groupTree = injectedGroupTree ?? groupItemsByFields(items, effectiveGroupFields, { goals });
-  devLog("[BlockView] 生成的分组树 (groupTree):", JSON.parse(JSON.stringify(groupTree)));
   return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: /* @__PURE__ */ u2(
     GroupedContainer,
     {
-      nodes: groupTree,
-      classNames: {
-        root: "",
-        group: "bv-group bv-group--level-0",
-        // level 细分由缩进控制，这里保留原有 bv-group class
-        title: "bv-group-title",
-        content: "bv-group-content",
-        toggleIcon: "bv-group-toggle-icon",
-        label: "bv-group-label"
-      },
-      renderLeaf: (leafItems) => leafItems.map(renderItem)
+      nodes: renderModel.groupTree,
+      classNames: buildBlockViewGroupClassNames(),
+      renderLeaf: (leafItems) => /* @__PURE__ */ u2(BlockViewItemList, { items: leafItems, ...itemListProps })
     }
   ) });
+}
+function TimelineSummaryTable({
+  summaryData,
+  colorMap,
+  progressOrder,
+  untrackedLabel
+}) {
+  if (!summaryData || summaryData.length === 0) {
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "此时间范围内无数据可供总结。" });
+  }
+  return /* @__PURE__ */ u2("table", { class: "timeline-summary-table", children: [
+    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("th", { children: "月份" }),
+      /* @__PURE__ */ u2("th", { children: "月度总结" }),
+      /* @__PURE__ */ u2("th", { children: "W1" }),
+      /* @__PURE__ */ u2("th", { children: "W2" }),
+      /* @__PURE__ */ u2("th", { children: "W3" }),
+      /* @__PURE__ */ u2("th", { children: "W4" }),
+      /* @__PURE__ */ u2("th", { children: "W5" })
+    ] }) }),
+    /* @__PURE__ */ u2("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: monthData.month }) }),
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2(
+        ProgressBlock,
+        {
+          categoryHours: monthData.monthlySummary,
+          order: progressOrder,
+          totalHours: monthData.totalMonthHours,
+          colorMap,
+          untrackedLabel
+        }
+      ) }),
+      monthData.weeklySummaries.map((weekData, index) => /* @__PURE__ */ u2("td", { children: weekData ? /* @__PURE__ */ u2(
+        ProgressBlock,
+        {
+          categoryHours: weekData.summary,
+          order: progressOrder,
+          totalHours: weekData.totalHours,
+          colorMap,
+          untrackedLabel
+        }
+      ) : null }, index))
+    ] }, monthData.month)) })
+  ] });
+}
+function buildTimelineDayColumns(dailyViewData) {
+  return dailyViewData.dateRangeDays.map((day) => {
+    const dayStr = day.format("YYYY-MM-DD");
+    return {
+      day: dayStr,
+      blocks: dailyViewData.blocksByDay[dayStr] || []
+    };
+  });
+}
+function buildTimelineTimeAxisRows(maxHours, hourHeight) {
+  return Array.from({ length: Math.max(0, maxHours) + 1 }, (_2, hour) => ({
+    hour,
+    label: hour > 0 && hour % 2 === 0 ? `${hour}:00` : "",
+    height: `${hourHeight}px`
+  }));
+}
+function TimelineDailyView({
+  zoomHandlers,
+  timeAxisWidth,
+  summaryCategoryHours,
+  totalSummaryHours,
+  dailyViewData,
+  categoriesConfig,
+  hourHeight,
+  maxHours,
+  colorMap,
+  progressOrder,
+  untrackedLabel,
+  onOpenRecordOrigin,
+  onUpdateTaskTime,
+  onOpenRecord,
+  onNotice,
+  onColumnClick
+}) {
+  const dayColumns = buildTimelineDayColumns(dailyViewData);
+  const timeAxisRows = buildTimelineTimeAxisRows(maxHours, hourHeight);
+  return /* @__PURE__ */ u2("div", { class: "timeline-view-wrapper", ...zoomHandlers, children: [
+    /* @__PURE__ */ u2("div", { class: "timeline-sticky-header", children: [
+      /* @__PURE__ */ u2("div", { class: "summary-progress-container", style: { flex: `0 0 ${timeAxisWidth}px` }, children: [
+        /* @__PURE__ */ u2("div", { class: "summary-title", children: "总结" }),
+        /* @__PURE__ */ u2("div", { class: "summary-content", children: totalSummaryHours > 0 && /* @__PURE__ */ u2(
+          ProgressBlock,
+          {
+            categoryHours: summaryCategoryHours,
+            order: progressOrder,
+            totalHours: totalSummaryHours,
+            colorMap,
+            untrackedLabel
+          }
+        ) })
+      ] }),
+      dayColumns.map(({ day, blocks }) => /* @__PURE__ */ u2(
+        DayColumnHeader,
+        {
+          day,
+          blocks,
+          categoriesConfig,
+          colorMap,
+          untrackedLabel,
+          progressOrder
+        },
+        day
+      ))
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "timeline-scrollable-body", children: [
+      /* @__PURE__ */ u2("div", { class: "time-axis", style: { flex: `0 0 ${timeAxisWidth}px` }, children: timeAxisRows.map((row) => /* @__PURE__ */ u2("div", { class: "time-axis-hour", style: { height: row.height }, children: row.label }, row.hour)) }),
+      dayColumns.map(({ day, blocks }) => /* @__PURE__ */ u2(
+        DayColumnBody,
+        {
+          onOpenRecordOrigin,
+          day,
+          blocks,
+          hourHeight,
+          categoriesConfig,
+          colorMap,
+          maxHours,
+          onUpdateTaskTime,
+          onOpenRecord,
+          onNotice,
+          onColumnClick
+        },
+        day
+      ))
+    ] })
+  ] });
+}
+function TimelineViewView(props) {
+  const {
+    timelineTasksCount,
+    isSummaryView,
+    summaryData,
+    colorMap,
+    progressOrder,
+    untrackedLabel,
+    zoomHandlers,
+    timeAxisWidth,
+    summaryCategoryHours,
+    totalSummaryHours,
+    dailyViewData,
+    categoriesConfig,
+    hourHeight,
+    maxHours,
+    onOpenRecordOrigin,
+    onUpdateTaskTime,
+    onOpenRecord,
+    onNotice,
+    onColumnClick
+  } = props;
+  if (timelineTasksCount === 0) {
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
+  }
+  if (isSummaryView) {
+    return /* @__PURE__ */ u2(
+      TimelineSummaryTable,
+      {
+        summaryData,
+        colorMap,
+        progressOrder,
+        untrackedLabel
+      }
+    );
+  }
+  if (!dailyViewData) {
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
+  }
+  return /* @__PURE__ */ u2(
+    TimelineDailyView,
+    {
+      zoomHandlers,
+      timeAxisWidth,
+      summaryCategoryHours,
+      totalSummaryHours,
+      dailyViewData,
+      categoriesConfig,
+      hourHeight,
+      maxHours,
+      colorMap,
+      progressOrder,
+      untrackedLabel,
+      onOpenRecordOrigin,
+      onUpdateTaskTime,
+      onOpenRecord,
+      onNotice,
+      onColumnClick
+    }
+  );
 }
 const DATE_FORMAT = "YYYY-MM-DD";
 function parseAllTimes(item) {
@@ -49178,150 +49563,86 @@ function processItemsToTimelineTasks(items) {
   }
   return timelineTasks;
 }
-function TimelineSummaryTable({
-  summaryData,
-  colorMap,
-  progressOrder,
-  untrackedLabel
-}) {
-  if (!summaryData || summaryData.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "此时间范围内无数据可供总结。" });
-  }
-  return /* @__PURE__ */ u2("table", { class: "timeline-summary-table", children: [
-    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("th", { children: "月份" }),
-      /* @__PURE__ */ u2("th", { children: "月度总结" }),
-      /* @__PURE__ */ u2("th", { children: "W1" }),
-      /* @__PURE__ */ u2("th", { children: "W2" }),
-      /* @__PURE__ */ u2("th", { children: "W3" }),
-      /* @__PURE__ */ u2("th", { children: "W4" }),
-      /* @__PURE__ */ u2("th", { children: "W5" })
-    ] }) }),
-    /* @__PURE__ */ u2("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: monthData.month }) }),
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2(
-        ProgressBlock,
-        {
-          categoryHours: monthData.monthlySummary,
-          order: progressOrder,
-          totalHours: monthData.totalMonthHours,
-          colorMap,
-          untrackedLabel
-        }
-      ) }),
-      monthData.weeklySummaries.map((weekData, index) => /* @__PURE__ */ u2("td", { children: weekData ? /* @__PURE__ */ u2(
-        ProgressBlock,
-        {
-          categoryHours: weekData.summary,
-          order: progressOrder,
-          totalHours: weekData.totalHours,
-          colorMap,
-          untrackedLabel
-        }
-      ) : null }, index))
-    ] }, monthData.month)) })
-  ] });
-}
-function TimelineViewView(props) {
-  const {
-    timelineTasksCount,
-    isSummaryView,
-    summaryData,
-    colorMap,
-    progressOrder,
-    untrackedLabel,
-    zoomHandlers,
-    timeAxisWidth,
-    summaryCategoryHours,
-    totalSummaryHours,
-    dailyViewData,
-    categoriesConfig,
-    hourHeight,
-    maxHours,
-    onOpenRecordOrigin,
-    onUpdateTaskTime,
-    onOpenRecord,
-    onNotice,
-    onColumnClick
-  } = props;
-  if (timelineTasksCount === 0) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
-  }
-  if (isSummaryView) {
-    return /* @__PURE__ */ u2(
-      TimelineSummaryTable,
-      {
-        summaryData,
-        colorMap,
-        progressOrder,
-        untrackedLabel
-      }
-    );
-  }
-  if (!dailyViewData) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
-  }
-  return /* @__PURE__ */ u2("div", { class: "timeline-view-wrapper", ...zoomHandlers, children: [
-    /* @__PURE__ */ u2("div", { class: "timeline-sticky-header", children: [
-      /* @__PURE__ */ u2("div", { class: "summary-progress-container", style: { flex: `0 0 ${timeAxisWidth}px` }, children: [
-        /* @__PURE__ */ u2("div", { class: "summary-title", children: "总结" }),
-        /* @__PURE__ */ u2("div", { class: "summary-content", children: totalSummaryHours > 0 && /* @__PURE__ */ u2(
-          ProgressBlock,
-          {
-            categoryHours: summaryCategoryHours,
-            order: progressOrder,
-            totalHours: totalSummaryHours,
-            colorMap,
-            untrackedLabel
-          }
-        ) })
-      ] }),
-      dailyViewData.dateRangeDays.map((day) => {
-        const dayStr = day.format("YYYY-MM-DD");
-        const blocks = dailyViewData.blocksByDay[dayStr] || [];
-        return /* @__PURE__ */ u2(
-          DayColumnHeader,
-          {
-            day: dayStr,
-            blocks,
-            categoriesConfig,
-            colorMap,
-            untrackedLabel,
-            progressOrder
-          },
-          dayStr
-        );
-      })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "timeline-scrollable-body", children: [
-      /* @__PURE__ */ u2("div", { class: "time-axis", style: { flex: `0 0 ${timeAxisWidth}px` }, children: Array.from({ length: maxHours + 1 }, (_2, i2) => /* @__PURE__ */ u2("div", { class: "time-axis-hour", style: { height: `${hourHeight}px` }, children: i2 > 0 && i2 % 2 === 0 ? `${i2}:00` : "" }, i2)) }),
-      dailyViewData.dateRangeDays.map((day) => {
-        const dayStr = day.format("YYYY-MM-DD");
-        const blocks = dailyViewData.blocksByDay[dayStr] || [];
-        return /* @__PURE__ */ u2(
-          DayColumnBody,
-          {
-            onOpenRecordOrigin,
-            day: dayStr,
-            blocks,
-            hourHeight,
-            categoriesConfig,
-            colorMap,
-            maxHours,
-            onUpdateTaskTime,
-            onOpenRecord,
-            onNotice,
-            onColumnClick
-          },
-          dayStr
-        );
-      })
-    ] })
-  ] });
-}
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
 dayjs.extend(isBetween);
+function resolveTimelineConfig(module2, injectedModel) {
+  if (injectedModel?.config) return injectedModel.config;
+  const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
+  const userConfig = module2?.viewConfig || {};
+  return {
+    ...defaults,
+    ...userConfig,
+    categories: userConfig.categories || defaults.categories
+  };
+}
+function buildTimelineColorMap(config2, injectedModel) {
+  if (injectedModel?.colorMap) return injectedModel.colorMap;
+  const colorMap = {};
+  const categoriesConfig = config2?.categories || {};
+  for (const categoryName in categoriesConfig) {
+    colorMap[categoryName] = categoriesConfig[categoryName].color;
+  }
+  colorMap[config2.UNTRACKED_LABEL] = "#9ca3af";
+  return colorMap;
+}
+function resolveTimelineTasks(args) {
+  const { items, module: module2, injectedModel } = args;
+  if (injectedModel?.timelineTasks) return injectedModel.timelineTasks;
+  const filteredItems = module2?.filters ? filterByRules(items, module2.filters) : items;
+  return processItemsToTimelineTasks(filteredItems);
+}
+function isTimelineSummaryView(currentView, injectedModel) {
+  return injectedModel?.isSummaryView ?? (currentView === "年" || currentView === "季");
+}
+function buildTimelineSummaryData(args) {
+  const { timelineTasks, dateRange, config: config2, isSummaryView, injectedModel } = args;
+  if (injectedModel?.summaryData) return injectedModel.summaryData;
+  if (!isSummaryView) return [];
+  const viewStart = dayjs(dateRange[0]);
+  const viewEnd = dayjs(dateRange[1]);
+  const tasksInRange = timelineTasks.filter((task) => {
+    const taskDate = dayjs(task.doneDate);
+    return taskDate.isBetween(viewStart, viewEnd, "day", "[]");
+  });
+  return buildMonthlyAndWeeklySummary(tasksInRange, config2);
+}
+function buildTimelineSummaryCategoryHours(args) {
+  const { timelineTasks, dateRange, config: config2, isSummaryView, injectedModel } = args;
+  if (injectedModel?.summaryCategoryHours) return injectedModel.summaryCategoryHours;
+  if (isSummaryView) return {};
+  return buildSummaryCategoryHours(timelineTasks, dateRange, config2) || {};
+}
+function buildTimelineDailyViewData(args) {
+  const { timelineTasks, dateRange, isSummaryView, injectedModel } = args;
+  if (injectedModel?.dailyViewData) return injectedModel.dailyViewData;
+  if (isSummaryView) return null;
+  return buildDailyViewData(timelineTasks, dateRange);
+}
+function sumTimelineSummaryHours(summaryCategoryHours, injectedModel) {
+  return injectedModel?.totalSummaryHours ?? Object.values(summaryCategoryHours || {}).reduce((sum, hours) => sum + Number(hours || 0), 0);
+}
+function buildTimelineRenderModel(args) {
+  const { items, module: module2, dateRange, currentView, injectedModel } = args;
+  const config2 = resolveTimelineConfig(module2, injectedModel);
+  const timelineTasks = resolveTimelineTasks({ items, module: module2, injectedModel });
+  const colorMap = buildTimelineColorMap(config2, injectedModel);
+  const isSummaryView = isTimelineSummaryView(currentView, injectedModel);
+  const summaryData = buildTimelineSummaryData({ timelineTasks, dateRange, config: config2, isSummaryView, injectedModel });
+  const summaryCategoryHours = buildTimelineSummaryCategoryHours({ timelineTasks, dateRange, config: config2, isSummaryView, injectedModel });
+  const dailyViewData = buildTimelineDailyViewData({ timelineTasks, dateRange, isSummaryView, injectedModel });
+  return {
+    config: config2,
+    colorMap,
+    timelineTasks,
+    dailyViewData,
+    isSummaryView,
+    summaryData,
+    summaryCategoryHours,
+    totalSummaryHours: sumTimelineSummaryHours(summaryCategoryHours, injectedModel)
+  };
+}
+const TIME_AXIS_WIDTH = 90;
 function TimelineView({
   items,
   dateRange,
@@ -49336,56 +49657,13 @@ function TimelineView({
   timelineModel
 }) {
   const inputBlocks = inputSettings?.blocks || [];
-  const config2 = T$1(() => {
-    if (timelineModel?.config) return timelineModel.config;
-    const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
-    const userConfig = module2.viewConfig || {};
-    return {
-      ...defaults,
-      ...userConfig,
-      categories: userConfig.categories || defaults.categories
-    };
-  }, [timelineModel, module2.viewConfig]);
+  const renderModel = T$1(
+    () => buildTimelineRenderModel({ items, dateRange, module: module2, currentView, injectedModel: timelineModel }),
+    [items, dateRange, module2, currentView, timelineModel]
+  );
   const { hourHeight, zoomHandlers } = useTimelineZoom({
-    defaultHeight: config2.defaultHourHeight
+    defaultHeight: renderModel.config.defaultHourHeight
   });
-  const timelineTasks = T$1(() => {
-    if (timelineModel?.timelineTasks) return timelineModel.timelineTasks;
-    const filteredItems = module2.filters ? filterByRules(items, module2.filters) : items;
-    return processItemsToTimelineTasks(filteredItems);
-  }, [timelineModel, items, module2.filters]);
-  const colorMap = T$1(() => {
-    if (timelineModel?.colorMap) return timelineModel.colorMap;
-    const finalColorMap = {};
-    const categoriesConfig = config2.categories || {};
-    for (const categoryName in categoriesConfig) {
-      finalColorMap[categoryName] = categoriesConfig[categoryName].color;
-    }
-    finalColorMap[config2.UNTRACKED_LABEL] = "#9ca3af";
-    return finalColorMap;
-  }, [timelineModel, config2.categories, config2.UNTRACKED_LABEL]);
-  const isSummaryView = timelineModel?.isSummaryView ?? (currentView === "年" || currentView === "季");
-  const summaryData = T$1(() => {
-    if (timelineModel?.summaryData) return timelineModel.summaryData;
-    if (!isSummaryView) return [];
-    const viewStart = dayjs(dateRange[0]);
-    const viewEnd = dayjs(dateRange[1]);
-    const tasksInRange = timelineTasks.filter((task) => {
-      const taskDate = dayjs(task.doneDate);
-      return taskDate.isBetween(viewStart, viewEnd, "day", "[]");
-    });
-    return buildMonthlyAndWeeklySummary(tasksInRange, config2);
-  }, [timelineModel, isSummaryView, timelineTasks, dateRange, config2]);
-  const summaryCategoryHours = T$1(() => {
-    if (timelineModel?.summaryCategoryHours) return timelineModel.summaryCategoryHours;
-    if (isSummaryView) return {};
-    return buildSummaryCategoryHours(timelineTasks, dateRange, config2);
-  }, [timelineModel, isSummaryView, timelineTasks, dateRange, config2]);
-  const dailyViewData = T$1(() => {
-    if (timelineModel?.dailyViewData) return timelineModel.dailyViewData;
-    if (isSummaryView) return null;
-    return buildDailyViewData(timelineTasks, dateRange);
-  }, [timelineModel, isSummaryView, timelineTasks, dateRange]);
   const handleColumnClick = q$1(
     (day, e2) => {
       onCreateFromTimeline?.({
@@ -49393,30 +49671,28 @@ function TimelineView({
         event: e2,
         inputBlocks,
         hourHeight,
-        dayBlocks: dailyViewData?.blocksByDay[day] || []
+        dayBlocks: renderModel.dailyViewData?.blocksByDay[day] || []
       });
     },
-    [onCreateFromTimeline, inputBlocks, hourHeight, dailyViewData]
+    [onCreateFromTimeline, inputBlocks, hourHeight, renderModel.dailyViewData]
   );
-  const totalSummaryHours = timelineModel?.totalSummaryHours ?? Object.values(summaryCategoryHours || {}).reduce((s2, h2) => s2 + h2, 0);
-  const TIME_AXIS_WIDTH = 90;
   return /* @__PURE__ */ u2(
     TimelineViewView,
     {
-      timelineTasksCount: timelineTasks.length,
-      isSummaryView,
-      summaryData,
-      colorMap,
-      progressOrder: config2.progressOrder,
-      untrackedLabel: config2.UNTRACKED_LABEL,
+      timelineTasksCount: renderModel.timelineTasks.length,
+      isSummaryView: renderModel.isSummaryView,
+      summaryData: renderModel.summaryData,
+      colorMap: renderModel.colorMap,
+      progressOrder: renderModel.config.progressOrder,
+      untrackedLabel: renderModel.config.UNTRACKED_LABEL,
       zoomHandlers,
       timeAxisWidth: TIME_AXIS_WIDTH,
-      summaryCategoryHours,
-      totalSummaryHours,
-      dailyViewData,
-      categoriesConfig: config2.categories,
+      summaryCategoryHours: renderModel.summaryCategoryHours,
+      totalSummaryHours: renderModel.totalSummaryHours,
+      dailyViewData: renderModel.dailyViewData,
+      categoriesConfig: renderModel.config.categories,
       hourHeight,
-      maxHours: config2.MAX_HOURS_PER_DAY,
+      maxHours: renderModel.config.MAX_HOURS_PER_DAY,
       onOpenRecordOrigin,
       onUpdateTaskTime,
       onOpenRecord,
@@ -49424,6 +49700,143 @@ function TimelineView({
       onColumnClick: handleColumnClick
     }
   );
+}
+function buildEventTimelineDisplayFields(module2) {
+  return normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
+}
+function buildEventTimelineGroupFields(module2) {
+  return normalizeDisplayFields(module2.groupFields || []);
+}
+function buildEventTimelineViewConfig(module2) {
+  const viewConfig = module2.viewConfig || {};
+  return {
+    timeField: viewConfig.timeField || "date",
+    titleField: viewConfig.titleField || "title",
+    contentField: viewConfig.contentField || "content",
+    maxContentLength: Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160
+  };
+}
+function getEventTimelineItemTime(item, timeField) {
+  const raw = readField(item, timeField);
+  if (!raw) return null;
+  try {
+    return dayjs(raw);
+  } catch {
+    return null;
+  }
+}
+function filterEventTimelineItemsByDateRange(args) {
+  const { items, dateRange, timeField, injectedFilteredItems } = args;
+  if (injectedFilteredItems !== void 0) return injectedFilteredItems;
+  const start2 = dayjs(dateRange[0]);
+  const end2 = dayjs(dateRange[1]);
+  const result = [];
+  for (const item of items) {
+    const t3 = getEventTimelineItemTime(item, timeField);
+    if (!t3) continue;
+    if (!t3.isBetween(start2, end2, "minute", "[]")) continue;
+    result.push(item);
+  }
+  return result.sort((a2, b2) => {
+    const ta = getEventTimelineItemTime(a2, timeField);
+    const tb = getEventTimelineItemTime(b2, timeField);
+    return ta.valueOf() - tb.valueOf();
+  });
+}
+function buildEventTimelineGroupedTree(args) {
+  const { filteredItems, groupFields, injectedGroupedTree, goals = [] } = args;
+  if (injectedGroupedTree !== void 0) return injectedGroupedTree;
+  if (!groupFields.length) return null;
+  return groupItemsByFields(filteredItems, groupFields, { goals });
+}
+function cleanEventTimelineDisplayText(value, maxContentLength) {
+  const text2 = String(value ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+  if (!text2) return "";
+  const compact = text2.replace(/\s+/g, " ").trim();
+  if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
+  return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
+}
+function getEventTimelineTaskDisplayTitle(args) {
+  const { item, titleField, contentField: contentField2, maxContentLength } = args;
+  const fromContent = cleanEventTimelineDisplayText(readField(item, contentField2), maxContentLength);
+  if (fromContent) return fromContent;
+  return cleanEventTimelineDisplayText(readField(item, "content"), maxContentLength) || cleanEventTimelineDisplayText(readField(item, titleField), maxContentLength) || item.title || "";
+}
+function buildEventTimelineRenderModel(args) {
+  const { items, dateRange, module: module2, injectedFilteredItems, injectedGroupedTree, goals = [] } = args;
+  const displayFields = buildEventTimelineDisplayFields(module2);
+  const groupFields = buildEventTimelineGroupFields(module2);
+  const viewConfig = buildEventTimelineViewConfig(module2);
+  const filteredItems = filterEventTimelineItemsByDateRange({
+    items,
+    dateRange,
+    timeField: viewConfig.timeField,
+    injectedFilteredItems
+  });
+  const groupedTree = buildEventTimelineGroupedTree({ filteredItems, groupFields, injectedGroupedTree, goals });
+  return { displayFields, groupFields, viewConfig, filteredItems, groupedTree };
+}
+function EventTimelineEventList(props) {
+  const {
+    items,
+    displayFields,
+    getItemTime,
+    titleField,
+    contentField: contentField2,
+    maxContentLength,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  } = props;
+  let lastDate = "";
+  return /* @__PURE__ */ u2(S, { children: items.map((item, index) => {
+    const t3 = getItemTime(item);
+    const dateLabel = t3 ? t3.format("YYYY-MM-DD") : "";
+    const timeLabel = t3 ? t3.format("HH:mm") : "";
+    const showDate = dateLabel !== lastDate;
+    if (showDate) lastDate = dateLabel;
+    const titleForKey = readField(item, titleField) || readField(item, "title") || "";
+    const taskDisplayTitle = item.type === "task" ? getEventTimelineTaskDisplayTitle({ item, titleField, contentField: contentField2, maxContentLength }) : "";
+    return /* @__PURE__ */ u2("div", { class: "et-event", children: [
+      /* @__PURE__ */ u2("div", { class: "et-event-date", children: [
+        showDate && t3 && /* @__PURE__ */ u2("div", { class: "et-date-label", children: dateLabel }),
+        item.type === "task" && /* @__PURE__ */ u2("div", { class: "et-time-label", children: timeLabel })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "et-line", children: /* @__PURE__ */ u2("div", { class: "et-dot" }) }),
+      /* @__PURE__ */ u2("div", { class: "et-event-card", children: item.type === "task" ? /* @__PURE__ */ u2(
+        TaskRow,
+        {
+          item,
+          onMarkDone: (id) => onMarkDone?.(id),
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          timerService,
+          timer: timers.find((timer) => timer.taskId === item.id),
+          allThemes,
+          displayTitle: taskDisplayTitle,
+          showFields: [],
+          onOpenRecord
+        }
+      ) : /* @__PURE__ */ u2(
+        BlockItem,
+        {
+          item,
+          fields: displayFields,
+          isNarrow: false,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          messageRenderPort,
+          allThemes,
+          onOpenRecord
+        }
+      ) })
+    ] }, `${dateLabel}-${timeLabel}-${titleForKey}-${index}`);
+  }) });
 }
 function EventTimelineViewView(props) {
   const {
@@ -49443,55 +49856,28 @@ function EventTimelineViewView(props) {
     allThemes,
     onOpenRecord
   } = props;
-  const cleanDisplayText2 = (value) => {
-    const text2 = String(value ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-    if (!text2) return "";
-    const compact = text2.replace(/\s+/g, " ").trim();
-    if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
-    return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
-  };
-  const getTaskDisplayTitle = (item) => {
-    const fromContent = cleanDisplayText2(readField(item, contentField2));
-    if (fromContent) return fromContent;
-    return cleanDisplayText2(readField(item, "content")) || cleanDisplayText2(readField(item, titleField)) || item.title || "";
-  };
+  const renderEventList = (items) => /* @__PURE__ */ u2(
+    EventTimelineEventList,
+    {
+      items,
+      displayFields,
+      getItemTime,
+      titleField,
+      contentField: contentField2,
+      maxContentLength,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      messageRenderPort,
+      onMarkDone,
+      timerService,
+      timers,
+      allThemes,
+      onOpenRecord
+    }
+  );
   if (filteredItems.length === 0) {
     return /* @__PURE__ */ u2("div", { class: "event-timeline-empty", children: "当前时间范围内没有事件记录。" });
   }
-  const renderEventList = (items) => {
-    let lastDate = "";
-    return items.map((item, index) => {
-      const t3 = getItemTime(item);
-      const dateLabel = t3 ? t3.format("YYYY-MM-DD") : "";
-      const timeLabel = t3 ? t3.format("HH:mm") : "";
-      const showDate = dateLabel !== lastDate;
-      if (showDate) lastDate = dateLabel;
-      const titleForKey = readField(item, titleField) || readField(item, "title") || "";
-      const taskDisplayTitle = item.type === "task" ? getTaskDisplayTitle(item) : "";
-      return /* @__PURE__ */ u2("div", { class: "et-event", children: [
-        /* @__PURE__ */ u2("div", { class: "et-event-date", children: [
-          showDate && t3 && /* @__PURE__ */ u2("div", { class: "et-date-label", children: dateLabel }),
-          item.type === "task" && /* @__PURE__ */ u2("div", { class: "et-time-label", children: timeLabel })
-        ] }),
-        /* @__PURE__ */ u2("div", { class: "et-line", children: /* @__PURE__ */ u2("div", { class: "et-dot" }) }),
-        /* @__PURE__ */ u2("div", { class: "et-event-card", children: item.type === "task" ? /* @__PURE__ */ u2(
-          TaskRow,
-          {
-            item,
-            onMarkDone: (id) => onMarkDone?.(id),
-            resolveResourcePath,
-            onOpenRecordOrigin,
-            timerService,
-            timer: timers.find((t22) => t22.taskId === item.id),
-            allThemes,
-            displayTitle: taskDisplayTitle,
-            showFields: [],
-            onOpenRecord
-          }
-        ) : /* @__PURE__ */ u2(BlockItem, { item, fields: displayFields, isNarrow: false, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }) })
-      ] }, `${dateLabel}-${timeLabel}-${titleForKey}-${index}`);
-    });
-  };
   if (!groupedTree) {
     return /* @__PURE__ */ u2("div", { class: "event-timeline-view", children: /* @__PURE__ */ u2("div", { class: "et-ungrouped", children: renderEventList(filteredItems) }) });
   }
@@ -49528,56 +49914,33 @@ function EventTimelineView(props) {
     messageRenderPort,
     onOpenRecord
   } = props;
-  const displayFields = normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
-  const groupFields = normalizeDisplayFields(module2.groupFields || []);
-  const viewConfig = module2.viewConfig || {};
-  const timeField = viewConfig.timeField || "date";
-  const titleField = viewConfig.titleField || "title";
-  const contentField2 = viewConfig.contentField || "content";
-  const maxContentLength = Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160;
-  const start2 = T$1(() => dayjs(dateRange[0]), [dateRange]);
-  const end2 = T$1(() => dayjs(dateRange[1]), [dateRange]);
-  function getItemTime(item) {
-    const raw = readField(item, timeField);
-    if (!raw) return null;
-    try {
-      return dayjs(raw);
-    } catch {
-      return null;
-    }
-  }
-  const filteredItems = T$1(() => {
-    if (injectedFilteredItems !== void 0) return injectedFilteredItems;
-    const result = [];
-    for (const item of items) {
-      const t3 = getItemTime(item);
-      if (!t3) continue;
-      if (!t3.isBetween(start2, end2, "minute", "[]")) continue;
-      result.push(item);
-    }
-    return result.sort((a2, b2) => {
-      const ta = getItemTime(a2);
-      const tb = getItemTime(b2);
-      return ta.valueOf() - tb.valueOf();
-    });
-  }, [items, start2, end2, timeField, injectedFilteredItems]);
-  const groupedTree = T$1(() => {
-    if (injectedGroupedTree !== void 0) return injectedGroupedTree;
-    if (!groupFields || groupFields.length === 0) return null;
-    return groupItemsByFields(filteredItems, groupFields, { goals });
-  }, [filteredItems, groupFields, injectedGroupedTree]);
+  const renderModel = T$1(
+    () => buildEventTimelineRenderModel({
+      items,
+      dateRange,
+      module: module2,
+      injectedFilteredItems,
+      injectedGroupedTree,
+      goals
+    }),
+    [items, dateRange, module2, injectedFilteredItems, injectedGroupedTree, goals]
+  );
+  const readItemTime = T$1(
+    () => (item) => getEventTimelineItemTime(item, renderModel.viewConfig.timeField),
+    [renderModel.viewConfig.timeField]
+  );
   return /* @__PURE__ */ u2(
     EventTimelineViewView,
     {
-      filteredItems,
-      groupedTree,
+      filteredItems: renderModel.filteredItems,
+      groupedTree: renderModel.groupedTree,
       resolveResourcePath,
       onOpenRecordOrigin,
-      displayFields,
-      getItemTime,
-      titleField,
-      contentField: contentField2,
-      maxContentLength,
+      displayFields: renderModel.displayFields,
+      getItemTime: readItemTime,
+      titleField: renderModel.viewConfig.titleField,
+      contentField: renderModel.viewConfig.contentField,
+      maxContentLength: renderModel.viewConfig.maxContentLength,
       messageRenderPort,
       onMarkDone,
       timerService,
@@ -49597,6 +49960,416 @@ function getThemeGroupTitle(themePath) {
   if (!themePath || themePath === "__default__") return "未分类";
   const segments = parsePath(themePath);
   return segments[0]?.name || themePath;
+}
+function inferHeatmapThemePaths(items) {
+  const set2 = /* @__PURE__ */ new Set();
+  for (const item of items) {
+    const themePath = getItemThemePath(item);
+    if (themePath) set2.add(themePath);
+  }
+  return Array.from(set2);
+}
+function selectHeatmapThemesToTrack(params) {
+  const { injectedThemesToTrack, configuredThemePaths, inferredThemePaths } = params;
+  if (injectedThemesToTrack) return injectedThemesToTrack;
+  return configuredThemePaths && configuredThemePaths.length > 0 ? configuredThemePaths : inferredThemePaths;
+}
+function filterGoalHeatmapGroups(groups) {
+  return (groups || []).filter((group) => group && Array.isArray(group.entries) && group.entries.length > 0);
+}
+function normalizeHeatmapBlockId(params) {
+  const { candidate, inputSettings, configuredSourceBlockId } = params;
+  const value = String(candidate || "").trim();
+  if (!value) return "";
+  const byId = inputSettings.blocks.find((block2) => block2.id === value);
+  if (byId) return byId.id;
+  const byCore = inputSettings.blocks.find((block2) => block2.coreBlockId === value);
+  if (byCore) return byCore.id;
+  const byCategory = inputSettings.blocks.find((block2) => block2.categoryKey === value || block2.name === value);
+  if (byCategory) return byCategory.id;
+  if (configuredSourceBlockId && value === configuredSourceBlockId) {
+    const habit = inputSettings.blocks.find((block2) => block2.coreBlockId === "core.habit" || block2.categoryKey === "打卡" || block2.name === "打卡");
+    if (habit) return habit.id;
+  }
+  return value;
+}
+function inferHeatmapBlockIdByTheme(items) {
+  const result = /* @__PURE__ */ new Map();
+  const counts = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    const themePath = getItemThemePath(item);
+    const themeKey = themePath || "__default__";
+    const blockId = typeof item?.templateId === "string" && item.templateId.trim().length > 0 ? item.templateId : typeof item?.categoryKey === "string" && item.categoryKey.trim().length > 0 ? item.categoryKey : "";
+    if (!blockId) continue;
+    if (!counts.has(themeKey)) counts.set(themeKey, /* @__PURE__ */ new Map());
+    const themeCounts = counts.get(themeKey);
+    themeCounts.set(blockId, (themeCounts.get(blockId) || 0) + 1);
+  }
+  counts.forEach((themeCounts, themeKey) => {
+    let bestBlockId = "";
+    let bestCount = -1;
+    themeCounts.forEach((count, blockId) => {
+      if (count > bestCount) {
+        bestCount = count;
+        bestBlockId = blockId;
+      }
+    });
+    if (bestBlockId) result.set(themeKey, bestBlockId);
+  });
+  return result;
+}
+function resolveHeatmapCreateBlockId(params) {
+  const { themePath, item, sourceBlockId, heatmapSourceBlockId, inferredBlockIdByTheme, normalizeBlockId } = params;
+  const rowBlock = normalizeBlockId(sourceBlockId);
+  const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
+  return rowBlock || normalizeBlockId(heatmapSourceBlockId) || normalizeBlockId(itemBlock) || normalizeBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeBlockId(inferredBlockIdByTheme.get("__default__")) || "";
+}
+function buildDayThemeGroups(params) {
+  const { themesToTrack, dataByThemeAndDate } = params;
+  const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
+  const groups = [];
+  const groupMap = /* @__PURE__ */ new Map();
+  themesToDisplay.forEach((themePath) => {
+    const title = getThemeGroupTitle(themePath);
+    const label = getThemeLeafLabel(themePath);
+    const entry = {
+      themePath,
+      label,
+      dataForTheme: dataByThemeAndDate.get(themePath) || /* @__PURE__ */ new Map()
+    };
+    const existingGroup = groupMap.get(title);
+    if (existingGroup) {
+      existingGroup.entries.push(entry);
+      return;
+    }
+    const newGroup = { title, entries: [entry] };
+    groupMap.set(title, newGroup);
+    groups.push(newGroup);
+  });
+  return groups;
+}
+function createHeatmapPresetContext(entry) {
+  return {
+    sourceBlockId: entry.sourceBlockId,
+    goalId: entry.goalId,
+    templateId: entry.templateId,
+    templateVariantId: entry.templateVariantId,
+    ratingOptions: entry.ratingOptions
+  };
+}
+function HeatmapDayView({
+  dayDateStr,
+  goalGroupsToDisplay,
+  themesToTrack,
+  dataByThemeAndDate,
+  config: config2,
+  resolveResourcePath,
+  onCellClick,
+  resolveCellRatingMapping
+}) {
+  if (goalGroupsToDisplay.length > 0) {
+    return /* @__PURE__ */ u2("div", { class: "heatmap-goal-day-view", children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section heatmap-day-section", children: [
+      /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
+        /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: goalGroup.label }),
+        /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
+          goalGroup.entries.length,
+          " 个打卡 · ",
+          goalGroup.count,
+          " 条记录"
+        ] })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: goalGroup.entries.map((entry) => {
+        const presetContext = createHeatmapPresetContext(entry);
+        const themeRatingMapping = resolveCellRatingMapping(entry.themePath, presetContext);
+        const dayItems = entry.dataForTheme.get(dayDateStr);
+        return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", title: `${goalGroup.label} · ${entry.label} · ${entry.themePath}`, children: /* @__PURE__ */ u2(
+          HeatmapCell,
+          {
+            date: dayDateStr,
+            items: dayItems,
+            config: config2,
+            ratingMapping: themeRatingMapping,
+            resolveResourcePath,
+            highlightToday: false,
+            emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
+            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, presetContext)
+          }
+        ) }, `${goalGroup.goalPath}:${entry.presetKey || entry.themePath}`);
+      }) })
+    ] }, goalGroup.goalPath)) });
+  }
+  const dayGroups = buildDayThemeGroups({ themesToTrack, dataByThemeAndDate });
+  return /* @__PURE__ */ u2("div", { class: "heatmap-day-view", children: dayGroups.map((group) => /* @__PURE__ */ u2("section", { class: "heatmap-day-section", children: [
+    /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: group.title }),
+    /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: group.entries.map((entry) => {
+      const themeRatingMapping = resolveCellRatingMapping(entry.themePath);
+      const dayItems = entry.dataForTheme.get(dayDateStr);
+      return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", children: /* @__PURE__ */ u2(
+        HeatmapCell,
+        {
+          date: dayDateStr,
+          items: dayItems,
+          config: config2,
+          ratingMapping: themeRatingMapping,
+          resolveResourcePath,
+          highlightToday: false,
+          emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
+          onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath)
+        }
+      ) }, entry.themePath);
+    }) })
+  ] }, group.title)) });
+}
+function HeatmapThemeGroup({
+  normalizedCurrentView,
+  theme: theme2,
+  dataForTheme,
+  dateRange,
+  config: config2,
+  resolveResourcePath,
+  verticalLayouts,
+  collapsedThemes,
+  headerRefs,
+  goalPath,
+  keyPrefix = "",
+  entryKey,
+  label,
+  presetContext,
+  onToggleThemeCollapsed,
+  onCellClick,
+  resolveCellRatingMapping
+}) {
+  const rowKey = `${keyPrefix}${entryKey || theme2}`;
+  const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
+  const isVertical = normalizedCurrentView === "周" ? false : verticalLayouts.has(rowKey);
+  const isCollapsed = normalizedCurrentView === "年" && collapsedThemes.has(rowKey);
+  const leafLabel2 = label || getThemeLeafLabel(theme2);
+  const renderMonthGrid = (monthDate) => {
+    const startOfMonth = monthDate.startOf("month");
+    const endOfMonth = monthDate.endOf("month");
+    const firstWeekday = startOfMonth.isoWeekday();
+    const themeRatingMapping = resolveCellRatingMapping(theme2, presetContext);
+    const days = [];
+    for (let i2 = 1; i2 < firstWeekday; i2++) {
+      days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
+    }
+    for (let i2 = 1; i2 <= endOfMonth.date(); i2++) {
+      const dateStr = startOfMonth.clone().date(i2).format("YYYY-MM-DD");
+      const dayItems = dataForTheme.get(dateStr);
+      days.push(
+        /* @__PURE__ */ u2(
+          HeatmapCell,
+          {
+            date: dateStr,
+            items: dayItems,
+            config: config2,
+            ratingMapping: themeRatingMapping,
+            resolveResourcePath,
+            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme2, goalPath, presetContext)
+          },
+          dateStr
+        )
+      );
+    }
+    return /* @__PURE__ */ u2("div", { class: "month-section", children: [
+      /* @__PURE__ */ u2("div", { class: "month-label", children: monthDate.format("M月") }),
+      /* @__PURE__ */ u2("div", { class: "heatmap-row calendar", children: days })
+    ] }, monthDate.format("YYYY-MM"));
+  };
+  const renderHeaderCells = () => {
+    const start2 = dayjs(dateRange[0]);
+    const end2 = dayjs(dateRange[1]);
+    const themeRatingMapping = resolveCellRatingMapping(theme2, presetContext);
+    switch (normalizedCurrentView) {
+      case "天":
+      case "日":
+      case "day": {
+        const dateStr = start2.format("YYYY-MM-DD");
+        const dayItems = dataForTheme.get(dateStr);
+        return [
+          /* @__PURE__ */ u2(
+            HeatmapCell,
+            {
+              date: dateStr,
+              items: dayItems,
+              config: config2,
+              ratingMapping: themeRatingMapping,
+              resolveResourcePath,
+              onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme2, goalPath, presetContext)
+            },
+            dateStr
+          )
+        ];
+      }
+      case "周":
+      case "月": {
+        const cells = [];
+        let currentDate = normalizedCurrentView === "周" ? start2.startOf("isoWeek") : start2.startOf("month");
+        const endDate = normalizedCurrentView === "周" ? start2.endOf("isoWeek") : start2.endOf("month");
+        while (currentDate.isSameOrBefore(endDate, "day")) {
+          const dateStr = currentDate.format("YYYY-MM-DD");
+          const dayItems = dataForTheme.get(dateStr);
+          cells.push(
+            /* @__PURE__ */ u2(
+              HeatmapCell,
+              {
+                date: dateStr,
+                items: dayItems,
+                config: config2,
+                ratingMapping: themeRatingMapping,
+                resolveResourcePath,
+                onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme2, goalPath, presetContext)
+              },
+              `${theme2}-${dateStr}`
+            )
+          );
+          currentDate = currentDate.add(1, "day");
+        }
+        return cells;
+      }
+      case "年":
+      case "季": {
+        const months = [];
+        let currentMonth = start2.clone().startOf("month");
+        while (currentMonth.isSameOrBefore(end2, "month")) {
+          months.push(renderMonthGrid(currentMonth));
+          currentMonth = currentMonth.add(1, "month");
+        }
+        return months;
+      }
+      default:
+        return [];
+    }
+  };
+  return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${normalizedCurrentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
+    "div",
+    {
+      class: `heatmap-theme-header ${isRowLayout ? "row-inline-layout week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
+      "data-theme": rowKey,
+      ref: (el) => {
+        if (el && theme2 !== "__default__") {
+          headerRefs.current.set(rowKey, el);
+        }
+      },
+      children: [
+        theme2 !== "__default__" && /* @__PURE__ */ u2(
+          "div",
+          {
+            class: `heatmap-header-info ${normalizedCurrentView === "年" ? "is-clickable" : ""}`,
+            onClick: () => {
+              if (normalizedCurrentView === "年") onToggleThemeCollapsed(rowKey);
+            },
+            children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
+              normalizedCurrentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
+              /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel2 })
+            ] })
+          }
+        ),
+        !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells() })
+      ]
+    }
+  ) }, rowKey);
+}
+function HeatmapViewContent({
+  isDayView,
+  normalizedCurrentView,
+  dateRangeStart,
+  dateRange,
+  config: config2,
+  resolveResourcePath,
+  goalGroupsToDisplay,
+  themesToTrack,
+  dataByThemeAndDate,
+  verticalLayouts,
+  collapsedThemes,
+  headerRefs,
+  onToggleThemeCollapsed,
+  onCellClick,
+  resolveCellRatingMapping
+}) {
+  const renderThemeGroup = (params) => /* @__PURE__ */ u2(
+    HeatmapThemeGroup,
+    {
+      ...params,
+      normalizedCurrentView,
+      dateRange,
+      config: config2,
+      resolveResourcePath,
+      verticalLayouts,
+      collapsedThemes,
+      headerRefs,
+      onToggleThemeCollapsed,
+      onCellClick,
+      resolveCellRatingMapping
+    }
+  );
+  if (isDayView) {
+    return /* @__PURE__ */ u2(
+      HeatmapDayView,
+      {
+        dayDateStr: dateRangeStart,
+        goalGroupsToDisplay,
+        themesToTrack,
+        dataByThemeAndDate,
+        config: config2,
+        resolveResourcePath,
+        onCellClick,
+        resolveCellRatingMapping
+      }
+    );
+  }
+  const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
+  const wrapperClass = isRowLayout ? "layout-row" : "layout-grid";
+  if (goalGroupsToDisplay.length > 0) {
+    return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper heatmap-goal-view-wrapper ${wrapperClass}`, children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section", children: [
+      /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
+        /* @__PURE__ */ u2("h3", { class: "heatmap-goal-title", children: goalGroup.label }),
+        /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
+          goalGroup.entries.length,
+          " 个打卡 · ",
+          goalGroup.count,
+          " 条记录"
+        ] })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "heatmap-goal-theme-list", children: goalGroup.entries.map((entry) => renderThemeGroup({
+        theme: entry.themePath,
+        dataForTheme: entry.dataForTheme,
+        goalPath: goalGroup.goalPath,
+        keyPrefix: `${goalGroup.goalPath}\0`,
+        entryKey: entry.presetKey || entry.themePath,
+        label: entry.label,
+        presetContext: createHeatmapPresetContext(entry)
+      })) })
+    ] }, goalGroup.goalPath)) });
+  }
+  const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
+  return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme2) => renderThemeGroup({
+    theme: theme2,
+    dataForTheme: dataByThemeAndDate.get(theme2) || /* @__PURE__ */ new Map()
+  })) });
+}
+function shouldSkipHeatmapVerticalLayout(theme2, normalizedCurrentView) {
+  if (!theme2 || theme2 === "__default__") return true;
+  if (["年", "季"].includes(normalizedCurrentView)) return true;
+  return normalizedCurrentView === "周";
+}
+function resolveHeatmapVerticalLayout(args) {
+  const { theme: theme2, normalizedCurrentView, isDayView, containerWidth } = args;
+  if (shouldSkipHeatmapVerticalLayout(theme2, normalizedCurrentView)) return null;
+  const threshold = isDayView ? 320 : 600;
+  return containerWidth < threshold;
+}
+function applyHeatmapVerticalLayout(prev2, theme2, needsVertical) {
+  const next2 = new Set(prev2);
+  if (needsVertical) next2.add(theme2);
+  else next2.delete(theme2);
+  return next2;
+}
+function toggleHeatmapCollapsedTheme(prev2, theme2) {
+  const next2 = new Set(prev2);
+  if (next2.has(theme2)) next2.delete(theme2);
+  else next2.add(theme2);
+  return next2;
 }
 function HeatmapView({
   items,
@@ -49631,41 +50404,27 @@ function HeatmapView({
     ratingMappingsCache.clear();
   }, [items]);
   const inferredThemePaths = T$1(() => {
-    if (injectedThemesToTrack) return [];
-    const set2 = /* @__PURE__ */ new Set();
-    for (const it of items) {
-      const themePath = getItemThemePath(it);
-      if (themePath) {
-        set2.add(themePath);
-      }
-    }
-    return Array.from(set2);
+    return injectedThemesToTrack ? [] : inferHeatmapThemePaths(items);
   }, [items, injectedThemesToTrack]);
   const themesToTrack = T$1(() => {
-    return injectedThemesToTrack ?? (config2.themePaths && config2.themePaths.length > 0 ? config2.themePaths : inferredThemePaths);
+    return selectHeatmapThemesToTrack({
+      injectedThemesToTrack,
+      configuredThemePaths: config2.themePaths,
+      inferredThemePaths
+    });
   }, [injectedThemesToTrack, config2.themePaths, inferredThemePaths]);
   const dataByThemeAndDate = T$1(() => {
     return injectedDataByThemeAndDate ?? buildThemeDataMap(items, themesToTrack);
   }, [injectedDataByThemeAndDate, items, themesToTrack]);
   const goalGroupsToDisplay = T$1(() => {
-    return (injectedGoalHeatmapGroups || []).filter((group) => group && Array.isArray(group.entries) && group.entries.length > 0);
+    return filterGoalHeatmapGroups(injectedGoalHeatmapGroups);
   }, [injectedGoalHeatmapGroups]);
-  const normalizeHeatmapBlockId = (candidate) => {
-    const value = String(candidate || "").trim();
-    if (!value) return "";
-    const byId = inputSettings.blocks.find((block2) => block2.id === value);
-    if (byId) return byId.id;
-    const byCore = inputSettings.blocks.find((block2) => block2.coreBlockId === value);
-    if (byCore) return byCore.id;
-    const byCategory = inputSettings.blocks.find((block2) => block2.categoryKey === value || block2.name === value);
-    if (byCategory) return byCategory.id;
-    if (config2.sourceBlockId && value === config2.sourceBlockId) {
-      const habit = inputSettings.blocks.find((block2) => block2.coreBlockId === "core.habit" || block2.categoryKey === "打卡" || block2.name === "打卡");
-      if (habit) return habit.id;
-    }
-    return value;
-  };
-  const heatmapSourceBlockId = normalizeHeatmapBlockId(config2.sourceBlockId);
+  const resolveBlockId = (candidate) => normalizeHeatmapBlockId({
+    candidate,
+    inputSettings,
+    configuredSourceBlockId: config2.sourceBlockId
+  });
+  const heatmapSourceBlockId = resolveBlockId(config2.sourceBlockId);
   const resolveCellRatingMapping = (themePath, presetContext) => {
     if (presetContext?.ratingOptions?.length) {
       return buildHeatmapRatingMapping(presetContext.ratingOptions);
@@ -49677,35 +50436,16 @@ function HeatmapView({
       themesByPath
     );
   };
-  const inferredBlockIdByTheme = T$1(() => {
-    const result = /* @__PURE__ */ new Map();
-    const counts = /* @__PURE__ */ new Map();
-    for (const it of items) {
-      const themePath = getItemThemePath(it);
-      const themeKey = themePath || "__default__";
-      const blockId = typeof it?.templateId === "string" && it.templateId.trim().length > 0 ? it.templateId : typeof it?.categoryKey === "string" && it.categoryKey.trim().length > 0 ? it.categoryKey : "";
-      if (!blockId) continue;
-      if (!counts.has(themeKey)) counts.set(themeKey, /* @__PURE__ */ new Map());
-      const themeCounts = counts.get(themeKey);
-      themeCounts.set(blockId, (themeCounts.get(blockId) || 0) + 1);
-    }
-    counts.forEach((themeCounts, themeKey) => {
-      let bestBlockId = "";
-      let bestCount = -1;
-      themeCounts.forEach((count, blockId) => {
-        if (count > bestCount) {
-          bestCount = count;
-          bestBlockId = blockId;
-        }
-      });
-      if (bestBlockId) result.set(themeKey, bestBlockId);
-    });
-    return result;
-  }, [items]);
+  const inferredBlockIdByTheme = T$1(() => inferHeatmapBlockIdByTheme(items), [items]);
   const resolveCreateBlockId = (themePath, item, sourceBlockId) => {
-    const rowBlock = normalizeHeatmapBlockId(sourceBlockId);
-    const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
-    return rowBlock || normalizeHeatmapBlockId(heatmapSourceBlockId) || normalizeHeatmapBlockId(itemBlock) || normalizeHeatmapBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeHeatmapBlockId(inferredBlockIdByTheme.get("__default__")) || "";
+    return resolveHeatmapCreateBlockId({
+      themePath,
+      item,
+      sourceBlockId,
+      heatmapSourceBlockId,
+      inferredBlockIdByTheme,
+      normalizeBlockId: resolveBlockId
+    });
   };
   const openQuickCreate = (date2, item, themePath, goalPath, presetContext) => {
     if (!onOpenHeatmapCreate) {
@@ -49743,154 +50483,21 @@ function HeatmapView({
     }
     openCellRecordManager(date2, itemsForDay, themePath, goalPath, presetContext);
   };
-  const renderMonthGrid = (monthDate, dataForMonth, themePath, goalPath, presetContext) => {
-    const startOfMonth = monthDate.startOf("month");
-    const endOfMonth = monthDate.endOf("month");
-    const firstWeekday = startOfMonth.isoWeekday();
-    const themeRatingMapping = resolveCellRatingMapping(themePath, presetContext);
-    const days = [];
-    for (let i2 = 1; i2 < firstWeekday; i2++) {
-      days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
-    }
-    for (let i2 = 1; i2 <= endOfMonth.date(); i2++) {
-      const dateStr = startOfMonth.clone().date(i2).format("YYYY-MM-DD");
-      const dayItems = dataForMonth.get(dateStr);
-      days.push(
-        /* @__PURE__ */ u2(
-          HeatmapCell,
-          {
-            date: dateStr,
-            items: dayItems,
-            config: config2,
-            ratingMapping: themeRatingMapping,
-            resolveResourcePath,
-            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)
-          },
-          dateStr
-        )
-      );
-    }
-    return /* @__PURE__ */ u2("div", { class: "month-section", children: [
-      /* @__PURE__ */ u2("div", { class: "month-label", children: monthDate.format("M月") }),
-      /* @__PURE__ */ u2("div", { class: "heatmap-row calendar", children: days })
-    ] }, monthDate.format("YYYY-MM"));
-  };
-  const renderHeaderCells = (currentView2, themePath, dataForTheme, goalPath, presetContext) => {
-    const start2 = dayjs(dateRange[0]);
-    const end2 = dayjs(dateRange[1]);
-    const themeRatingMapping = resolveCellRatingMapping(themePath, presetContext);
-    switch (currentView2) {
-      case "天":
-      case "日":
-      case "day": {
-        const dateStr = start2.format("YYYY-MM-DD");
-        const dayItems = dataForTheme.get(dateStr);
-        return [
-          /* @__PURE__ */ u2(
-            HeatmapCell,
-            {
-              date: dateStr,
-              items: dayItems,
-              config: config2,
-              ratingMapping: themeRatingMapping,
-              resolveResourcePath,
-              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)
-            },
-            dateStr
-          )
-        ];
-      }
-      case "周": {
-        const cells = [];
-        let currentDate = start2.startOf("isoWeek");
-        const endDate = start2.endOf("isoWeek");
-        while (currentDate.isSameOrBefore(endDate, "day")) {
-          const dateStr = currentDate.format("YYYY-MM-DD");
-          const dayItems = dataForTheme.get(dateStr);
-          cells.push(
-            /* @__PURE__ */ u2(
-              HeatmapCell,
-              {
-                date: dateStr,
-                items: dayItems,
-                config: config2,
-                ratingMapping: themeRatingMapping,
-                resolveResourcePath,
-                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)
-              },
-              `${themePath}-${dateStr}`
-            )
-          );
-          currentDate = currentDate.add(1, "day");
-        }
-        return cells;
-      }
-      case "月": {
-        const cells = [];
-        let currentDate = start2.startOf("month");
-        const endDate = start2.endOf("month");
-        while (currentDate.isSameOrBefore(endDate, "day")) {
-          const dateStr = currentDate.format("YYYY-MM-DD");
-          const dayItems = dataForTheme.get(dateStr);
-          cells.push(
-            /* @__PURE__ */ u2(
-              HeatmapCell,
-              {
-                date: dateStr,
-                items: dayItems,
-                config: config2,
-                ratingMapping: themeRatingMapping,
-                resolveResourcePath,
-                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath, goalPath, presetContext)
-              },
-              dateStr
-            )
-          );
-          currentDate = currentDate.add(1, "day");
-        }
-        return cells;
-      }
-      case "年":
-      case "季": {
-        const months = [];
-        let currentMonth = start2.clone().startOf("month");
-        while (currentMonth.isSameOrBefore(end2, "month")) {
-          months.push(renderMonthGrid(currentMonth, dataForTheme, themePath, goalPath, presetContext));
-          currentMonth = currentMonth.add(1, "month");
-        }
-        return months;
-      }
-      default:
-        return [];
-    }
-  };
   const [verticalLayouts, setVerticalLayouts] = d(/* @__PURE__ */ new Set());
   const [collapsedThemes, setCollapsedThemes] = d(/* @__PURE__ */ new Set());
   const headerRefs = A$1(/* @__PURE__ */ new Map());
   const toggleThemeCollapsed = (theme2) => {
-    setCollapsedThemes((prev2) => {
-      const next2 = new Set(prev2);
-      if (next2.has(theme2)) next2.delete(theme2);
-      else next2.add(theme2);
-      return next2;
-    });
+    setCollapsedThemes((prev2) => toggleHeatmapCollapsedTheme(prev2, theme2));
   };
   const checkLayout = (theme2, headerElement) => {
-    if (!headerElement || theme2 === "__default__") return;
-    const isGridLayout = ["年", "季"].includes(normalizedCurrentView);
-    if (isGridLayout || normalizedCurrentView === "周") return;
-    const containerWidth = headerElement.clientWidth;
-    const threshold = isDayView ? 320 : 600;
-    const needsVertical = containerWidth < threshold;
-    setVerticalLayouts((prev2) => {
-      const newSet = new Set(prev2);
-      if (needsVertical) {
-        newSet.add(theme2);
-      } else {
-        newSet.delete(theme2);
-      }
-      return newSet;
+    const needsVertical = resolveHeatmapVerticalLayout({
+      theme: theme2,
+      normalizedCurrentView,
+      isDayView,
+      containerWidth: headerElement?.clientWidth ?? 0
     });
+    if (needsVertical === null) return;
+    setVerticalLayouts((prev2) => applyHeatmapVerticalLayout(prev2, theme2, needsVertical));
   };
   y(() => {
     const resizeObserver = new ResizeObserver((entries) => {
@@ -49910,158 +50517,62 @@ function HeatmapView({
       resizeObserver.disconnect();
     };
   }, [themesToTrack, normalizedCurrentView]);
-  const buildDayThemeGroups = () => {
-    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-    const groups = [];
-    const groupMap = /* @__PURE__ */ new Map();
-    themesToDisplay.forEach((themePath) => {
-      const title = getThemeGroupTitle(themePath);
-      const label = getThemeLeafLabel(themePath);
-      const entry = {
-        themePath,
-        label,
-        dataForTheme: dataByThemeAndDate.get(themePath) || /* @__PURE__ */ new Map()
-      };
-      const existingGroup = groupMap.get(title);
-      if (existingGroup) {
-        existingGroup.entries.push(entry);
-        return;
-      }
-      const newGroup = {
-        title,
-        entries: [entry]
-      };
-      groupMap.set(title, newGroup);
-      groups.push(newGroup);
-    });
-    return groups;
-  };
-  const renderDayContent = () => {
-    const dayDateStr = dayjs(dateRange[0]).format("YYYY-MM-DD");
-    if (goalGroupsToDisplay.length > 0) {
-      return /* @__PURE__ */ u2("div", { class: "heatmap-goal-day-view", children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section heatmap-day-section", children: [
-        /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
-          /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: goalGroup.label }),
-          /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
-            goalGroup.entries.length,
-            " 个打卡 · ",
-            goalGroup.count,
-            " 条记录"
-          ] })
-        ] }),
-        /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: goalGroup.entries.map((entry) => {
-          const presetContext = { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId, ratingOptions: entry.ratingOptions };
-          const themeRatingMapping = resolveCellRatingMapping(entry.themePath, presetContext);
-          const dayItems = entry.dataForTheme.get(dayDateStr);
-          return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", title: `${goalGroup.label} · ${entry.label} · ${entry.themePath}`, children: /* @__PURE__ */ u2(
-            HeatmapCell,
-            {
-              date: dayDateStr,
-              items: dayItems,
-              config: config2,
-              ratingMapping: themeRatingMapping,
-              resolveResourcePath,
-              highlightToday: false,
-              emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
-              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, presetContext)
-            }
-          ) }, `${goalGroup.goalPath}:${entry.presetKey || entry.themePath}`);
-        }) })
-      ] }, goalGroup.goalPath)) });
+  const dateRangeStart = T$1(() => dayjs(dateRange[0]).format("YYYY-MM-DD"), [dateRange]);
+  return /* @__PURE__ */ u2("div", { class: "heatmap-container", children: /* @__PURE__ */ u2(
+    HeatmapViewContent,
+    {
+      isDayView,
+      normalizedCurrentView,
+      dateRangeStart,
+      dateRange,
+      config: config2,
+      resolveResourcePath,
+      goalGroupsToDisplay,
+      themesToTrack,
+      dataByThemeAndDate,
+      verticalLayouts,
+      collapsedThemes,
+      headerRefs,
+      onToggleThemeCollapsed: toggleThemeCollapsed,
+      onCellClick: handleCellClick,
+      resolveCellRatingMapping
     }
-    const dayGroups = buildDayThemeGroups();
-    return /* @__PURE__ */ u2("div", { class: "heatmap-day-view", children: dayGroups.map((group) => /* @__PURE__ */ u2("section", { class: "heatmap-day-section", children: [
-      /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: group.title }),
-      /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: group.entries.map((entry) => {
-        const themeRatingMapping = resolveCellRatingMapping(entry.themePath);
-        const dayItems = entry.dataForTheme.get(dayDateStr);
-        return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", children: /* @__PURE__ */ u2(
-          HeatmapCell,
-          {
-            date: dayDateStr,
-            items: dayItems,
-            config: config2,
-            ratingMapping: themeRatingMapping,
-            resolveResourcePath,
-            highlightToday: false,
-            emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
-            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath)
-          }
-        ) }, entry.themePath);
-      }) })
-    ] }, group.title)) });
-  };
-  const renderThemeGroup = (params) => {
-    const { theme: theme2, dataForTheme, goalPath, keyPrefix = "", entryKey, label, presetContext } = params;
-    const rowKey = `${keyPrefix}${entryKey || theme2}`;
-    const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
-    const isVertical = normalizedCurrentView === "周" ? false : verticalLayouts.has(rowKey);
-    const isCollapsed = normalizedCurrentView === "年" && collapsedThemes.has(rowKey);
-    const leafLabel2 = label || getThemeLeafLabel(theme2);
-    return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${normalizedCurrentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
-      "div",
-      {
-        class: `heatmap-theme-header ${isRowLayout ? "row-inline-layout week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
-        "data-theme": rowKey,
-        ref: (el) => {
-          if (el && theme2 !== "__default__") {
-            headerRefs.current.set(rowKey, el);
-          }
-        },
-        children: [
-          theme2 !== "__default__" && /* @__PURE__ */ u2(
-            "div",
-            {
-              class: `heatmap-header-info ${normalizedCurrentView === "年" ? "is-clickable" : ""}`,
-              onClick: () => {
-                if (normalizedCurrentView === "年") toggleThemeCollapsed(rowKey);
-              },
-              children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
-                normalizedCurrentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
-                /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel2 })
-              ] })
-            }
-          ),
-          !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells(normalizedCurrentView, theme2, dataForTheme, goalPath, presetContext) })
-        ]
-      }
-    ) }, rowKey);
-  };
-  const renderContent = () => {
-    if (isDayView) {
-      return renderDayContent();
-    }
-    const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
-    const wrapperClass = isRowLayout ? "layout-row" : "layout-grid";
-    if (goalGroupsToDisplay.length > 0) {
-      return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper heatmap-goal-view-wrapper ${wrapperClass}`, children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section", children: [
-        /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
-          /* @__PURE__ */ u2("h3", { class: "heatmap-goal-title", children: goalGroup.label }),
-          /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
-            goalGroup.entries.length,
-            " 个打卡 · ",
-            goalGroup.count,
-            " 条记录"
-          ] })
-        ] }),
-        /* @__PURE__ */ u2("div", { class: "heatmap-goal-theme-list", children: goalGroup.entries.map((entry) => renderThemeGroup({
-          theme: entry.themePath,
-          dataForTheme: entry.dataForTheme,
-          goalPath: goalGroup.goalPath,
-          keyPrefix: `${goalGroup.goalPath}\0`,
-          entryKey: entry.presetKey || entry.themePath,
-          label: entry.label,
-          presetContext: { sourceBlockId: entry.sourceBlockId, goalId: entry.goalId, templateId: entry.templateId, templateVariantId: entry.templateVariantId, ratingOptions: entry.ratingOptions }
-        })) })
-      ] }, goalGroup.goalPath)) });
-    }
-    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-    return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme2) => {
-      const dataForTheme = dataByThemeAndDate.get(theme2) || /* @__PURE__ */ new Map();
-      return renderThemeGroup({ theme: theme2, dataForTheme });
-    }) });
-  };
-  return /* @__PURE__ */ u2("div", { class: "heatmap-container", children: renderContent() });
+  ) });
+}
+function getStatisticsGoalThemeSummaryRows(summaries, limit = 6) {
+  return (summaries || []).filter((row) => row.themes.length > 0).slice(0, limit);
+}
+function getStatisticsGoalThemeSummaryLabel(goalPath) {
+  return goalPath.split("/").filter(Boolean).pop() || goalPath;
+}
+function getStatisticsGoalThemeSummaryTitle(row) {
+  return `${row.goalPath}: ${row.themes.map((theme2) => `${theme2.themePath} ${theme2.count}`).join(" / ")}`;
+}
+function getStatisticsGoalThemeSummaryText(row) {
+  return row.themes.map((theme2) => `${theme2.label}${theme2.count}`).join(" / ");
+}
+function StatisticsGoalThemeSummaryStrip({ summaries }) {
+  const visible = getStatisticsGoalThemeSummaryRows(summaries);
+  if (visible.length === 0) return null;
+  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }, children: visible.map((row) => /* @__PURE__ */ u2(
+    "div",
+    {
+      style: {
+        border: "1px solid var(--background-modifier-border)",
+        borderRadius: "999px",
+        padding: "5px 9px",
+        fontSize: "12px",
+        color: "var(--text-muted)"
+      },
+      title: getStatisticsGoalThemeSummaryTitle(row),
+      children: [
+        /* @__PURE__ */ u2("span", { style: { color: "var(--text-normal)", fontWeight: 600 }, children: getStatisticsGoalThemeSummaryLabel(row.goalPath) }),
+        /* @__PURE__ */ u2("span", { children: " · " }),
+        /* @__PURE__ */ u2("span", { children: getStatisticsGoalThemeSummaryText(row) })
+      ]
+    },
+    row.goalPath
+  )) });
 }
 function calculateSmartHeight(count, allCounts, _displayMode, minVisibleHeight) {
   if (count === 0) return 0;
@@ -50217,19 +50728,7 @@ function WeekStatisticsView({
     }
   ) }) }) });
 }
-function MonthStatisticsView({
-  items,
-  categories,
-  monthDate,
-  usePeriod,
-  onToggleUsePeriod,
-  onCellClick,
-  displayMode,
-  minVisibleHeight,
-  bucketAccessor
-}) {
-  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod, bucketAccessor);
-  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod, bucketAccessor);
+function buildMonthWeekMeta(monthDate) {
   const monthStart = monthDate.startOf("month");
   const monthEnd = monthDate.endOf("month");
   const weeksMeta = [];
@@ -50243,66 +50742,149 @@ function MonthStatisticsView({
     });
     weekCursor = weekCursor.add(1, "week");
   }
-  const weekCount = monthWeeksData.length;
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "sv-month-grid",
-      style: { gridTemplateColumns: `repeat(${weekCount}, 1fr)` },
-      children: [
-        /* @__PURE__ */ u2("div", { class: "sv-month-grid-summary", children: /* @__PURE__ */ u2(
-          ChartBlock,
-          {
-            data: monthData,
-            label: monthDate.format("YYYY年MM月"),
-            categories,
-            onCellClick,
-            cellIdentifier: (goal) => ({
-              type: "month",
-              month: monthDate.month() + 1,
-              year: monthDate.year(),
-              goal
-            }),
-            displayMode,
-            minVisibleHeight,
-            bucketAccessor
-          }
-        ) }),
-        monthWeeksData.map((data, index) => {
-          const meta = weeksMeta[index];
-          if (!meta) return null;
-          const { weekStart } = meta;
-          return /* @__PURE__ */ u2(
-            "div",
-            {
-              class: "sv-month-grid-week",
-              style: { gridColumn: `${index + 1}` },
-              children: /* @__PURE__ */ u2(
-                ChartBlock,
-                {
-                  data,
-                  label: `W${weekStart.isoWeek()}`,
-                  categories,
-                  onCellClick,
-                  cellIdentifier: (goal) => ({
-                    type: "week",
-                    week: weekStart.isoWeek(),
-                    year: weekStart.isoWeekYear(),
-                    goal
-                  }),
-                  isCompact: true,
-                  displayMode,
-                  minVisibleHeight,
-                  bucketAccessor
-                }
-              )
-            },
-            weekStart.format("YYYY-MM-DD")
-          );
-        })
-      ]
-    }
-  ) });
+  return weeksMeta;
+}
+function buildMonthStatisticsRenderModel(input) {
+  const { items, categories, monthDate, usePeriod, bucketAccessor } = input;
+  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod, bucketAccessor);
+  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod, bucketAccessor);
+  const weeksMeta = buildMonthWeekMeta(monthDate);
+  const weeks = monthWeeksData.flatMap((data, index) => {
+    const meta = weeksMeta[index];
+    if (!meta) return [];
+    const { weekStart } = meta;
+    return [{
+      key: weekStart.format("YYYY-MM-DD"),
+      gridColumn: `${index + 1}`,
+      label: `W${weekStart.isoWeek()}`,
+      data,
+      identifier: (goal) => ({
+        type: "week",
+        week: weekStart.isoWeek(),
+        year: weekStart.isoWeekYear(),
+        goal
+      })
+    }];
+  });
+  return {
+    monthData,
+    monthLabel: monthDate.format("YYYY年MM月"),
+    monthIdentifier: (goal) => ({
+      type: "month",
+      month: monthDate.month() + 1,
+      year: monthDate.year(),
+      goal
+    }),
+    gridTemplateColumns: `repeat(${monthWeeksData.length}, 1fr)`,
+    weeks
+  };
+}
+function MonthStatisticsView({
+  items,
+  categories,
+  monthDate,
+  usePeriod,
+  onToggleUsePeriod,
+  onCellClick,
+  displayMode,
+  minVisibleHeight,
+  bucketAccessor
+}) {
+  const model = buildMonthStatisticsRenderModel({ items, categories, monthDate, usePeriod, bucketAccessor });
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-month-grid", style: { gridTemplateColumns: model.gridTemplateColumns }, children: [
+    /* @__PURE__ */ u2("div", { class: "sv-month-grid-summary", children: /* @__PURE__ */ u2(
+      ChartBlock,
+      {
+        data: model.monthData,
+        label: model.monthLabel,
+        categories,
+        onCellClick,
+        cellIdentifier: model.monthIdentifier,
+        displayMode,
+        minVisibleHeight,
+        bucketAccessor
+      }
+    ) }),
+    model.weeks.map((week) => /* @__PURE__ */ u2("div", { class: "sv-month-grid-week", style: { gridColumn: week.gridColumn }, children: /* @__PURE__ */ u2(
+      ChartBlock,
+      {
+        data: week.data,
+        label: week.label,
+        categories,
+        onCellClick,
+        cellIdentifier: week.identifier,
+        isCompact: true,
+        displayMode,
+        minVisibleHeight,
+        bucketAccessor
+      }
+    ) }, week.key))
+  ] }) });
+}
+function buildQuarterMonthWeekStarts(month) {
+  const monthStart = month.startOf("month");
+  const monthEnd = month.endOf("month");
+  const weeksMeta = [];
+  let weekCursor = monthStart.startOf("isoWeek");
+  while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
+    weeksMeta.push(weekCursor);
+    weekCursor = weekCursor.add(1, "week");
+  }
+  return weeksMeta;
+}
+function buildQuarterStatisticsRenderModel(input) {
+  const { items, categories, quarterDate, usePeriod, bucketAccessor } = input;
+  const quarterStart = quarterDate.startOf("quarter");
+  const rawMonths = Array.from({ length: 3 }, (_2, index) => {
+    const month = quarterStart.add(index, "month");
+    const weeksData = getMonthWeeksData(items, categories, month, usePeriod, bucketAccessor);
+    const weekStarts = buildQuarterMonthWeekStarts(month);
+    return {
+      month,
+      data: aggregateByMonth(items, categories, month, usePeriod, bucketAccessor),
+      weeksData,
+      weekStarts
+    };
+  });
+  const maxWeeks = Math.max(...rawMonths.map((month) => month.weeksData.length), 1);
+  return {
+    quarterData: aggregateByQuarter(items, categories, quarterDate, usePeriod, bucketAccessor),
+    quarterLabel: `${quarterDate.format("YYYY年")} 第${quarterDate.quarter()}季度`,
+    quarterIdentifier: (goal) => ({
+      type: "quarter",
+      quarter: quarterDate.quarter(),
+      year: quarterDate.year(),
+      goal
+    }),
+    months: rawMonths.map(({ month, data, weeksData, weekStarts }, index) => ({
+      key: month.format("YYYY-MM"),
+      gridColumn: `${index + 1}`,
+      label: month.format("MM月"),
+      data,
+      identifier: (goal) => ({
+        type: "month",
+        month: month.month() + 1,
+        year: month.year(),
+        goal
+      }),
+      weeks: weeksData.flatMap((weekData, weekIndex) => {
+        const weekStart = weekStarts[weekIndex];
+        if (!weekStart) return [];
+        return [{
+          key: weekStart.format("YYYY-MM-DD"),
+          label: `W${weekStart.isoWeek()}`,
+          data: weekData,
+          identifier: (goal) => ({
+            type: "week",
+            week: weekStart.isoWeek(),
+            year: weekStart.isoWeekYear(),
+            goal
+          })
+        }];
+      }),
+      placeholderCount: Math.max(maxWeeks - weeksData.length, 0)
+    }))
+  };
 }
 function QuarterStatisticsView({
   items,
@@ -50315,105 +50897,98 @@ function QuarterStatisticsView({
   minVisibleHeight,
   bucketAccessor
 }) {
-  const quarterStart = quarterDate.startOf("quarter");
-  const quarterData = aggregateByQuarter(items, categories, quarterDate, usePeriod, bucketAccessor);
-  const monthsInfo = Array.from({ length: 3 }, (_2, i2) => {
-    const month = quarterStart.add(i2, "month");
-    const monthData = aggregateByMonth(items, categories, month, usePeriod, bucketAccessor);
-    const weeksData = getMonthWeeksData(items, categories, month, usePeriod, bucketAccessor);
-    const monthStart = month.startOf("month");
-    const monthEnd = month.endOf("month");
-    const weeksMeta = [];
-    let weekCursor = monthStart.startOf("isoWeek");
-    while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
-      weeksMeta.push({ weekStart: weekCursor });
-      weekCursor = weekCursor.add(1, "week");
-    }
-    return { month, data: monthData, weeksData, weeksMeta };
-  });
-  const maxWeeks = Math.max(...monthsInfo.map((m2) => m2.weeksData.length), 1);
+  const model = buildQuarterStatisticsRenderModel({ items, categories, quarterDate, usePeriod, bucketAccessor });
   return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-quarter-grid", children: [
     /* @__PURE__ */ u2("div", { class: "sv-quarter-grid-summary", children: /* @__PURE__ */ u2(
       ChartBlock,
       {
-        data: quarterData,
-        label: `${quarterDate.format("YYYY年")} 第${quarterDate.quarter()}季度`,
+        data: model.quarterData,
+        label: model.quarterLabel,
         categories,
         onCellClick,
-        cellIdentifier: (goal) => ({
-          type: "quarter",
-          quarter: quarterDate.quarter(),
-          year: quarterDate.year(),
-          goal
-        }),
+        cellIdentifier: model.quarterIdentifier,
         displayMode,
         minVisibleHeight,
         bucketAccessor
       }
     ) }),
-    monthsInfo.map(({ month, data }, i2) => /* @__PURE__ */ u2(
-      "div",
+    model.months.map((month) => /* @__PURE__ */ u2("div", { class: "sv-quarter-grid-month", style: { gridColumn: month.gridColumn }, children: /* @__PURE__ */ u2(
+      ChartBlock,
       {
-        class: "sv-quarter-grid-month",
-        style: { gridColumn: `${i2 + 1}` },
-        children: /* @__PURE__ */ u2(
-          ChartBlock,
-          {
-            data,
-            label: month.format("MM月"),
-            categories,
-            onCellClick,
-            cellIdentifier: (goal) => ({
-              type: "month",
-              month: month.month() + 1,
-              year: month.year(),
-              goal
-            }),
-            displayMode,
-            minVisibleHeight,
-            bucketAccessor
-          }
-        )
-      },
-      month.format("YYYY-MM")
-    )),
-    monthsInfo.map(({ month, weeksData, weeksMeta }, i2) => /* @__PURE__ */ u2(
-      "div",
-      {
-        class: "sv-quarter-grid-week-col",
-        style: { gridColumn: `${i2 + 1}` },
-        children: [
-          weeksData.map((data, index) => {
-            const meta = weeksMeta[index];
-            if (!meta) return null;
-            const { weekStart } = meta;
-            return /* @__PURE__ */ u2(
-              ChartBlock,
-              {
-                data,
-                label: `W${weekStart.isoWeek()}`,
-                categories,
-                onCellClick,
-                cellIdentifier: (goal) => ({
-                  type: "week",
-                  week: weekStart.isoWeek(),
-                  year: weekStart.isoWeekYear(),
-                  goal
-                }),
-                isCompact: true,
-                displayMode,
-                minVisibleHeight,
-                bucketAccessor
-              },
-              weekStart.format("YYYY-MM-DD")
-            );
-          }),
-          Array.from({ length: maxWeeks - weeksData.length }, (_2, j2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${j2}`))
-        ]
-      },
-      `w-col-${month.format("YYYY-MM")}`
-    ))
+        data: month.data,
+        label: month.label,
+        categories,
+        onCellClick,
+        cellIdentifier: month.identifier,
+        displayMode,
+        minVisibleHeight,
+        bucketAccessor
+      }
+    ) }, month.key)),
+    model.months.map((month) => /* @__PURE__ */ u2("div", { class: "sv-quarter-grid-week-col", style: { gridColumn: month.gridColumn }, children: [
+      month.weeks.map((week) => /* @__PURE__ */ u2(
+        ChartBlock,
+        {
+          data: week.data,
+          label: week.label,
+          categories,
+          onCellClick,
+          cellIdentifier: week.identifier,
+          isCompact: true,
+          displayMode,
+          minVisibleHeight,
+          bucketAccessor
+        },
+        week.key
+      )),
+      Array.from({ length: month.placeholderCount }, (_2, index) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${index}`))
+    ] }, `w-col-${month.key}`))
   ] }) });
+}
+function getYearStatisticsMaxWeeksInMonth(yearlyWeekStructure) {
+  return Math.max(...yearlyWeekStructure.map(({ weeks }) => weeks.length), 1);
+}
+function buildYearStatisticsRenderModel(input) {
+  const { year, categories, processedData, yearlyWeekStructure } = input;
+  const maxWeeksInMonth = getYearStatisticsMaxWeeksInMonth(yearlyWeekStructure);
+  return {
+    yearLabel: `${year}年`,
+    yearIdentifier: (goal) => ({ type: "year", year, goal }),
+    quarters: processedData.quartersData.map((data, index) => ({
+      key: `q${index}`,
+      gridColumn: `${index * 3 + 1} / ${index * 3 + 4}`,
+      label: `Q${index + 1}`,
+      data,
+      identifier: (goal) => ({ type: "quarter", year, quarter: index + 1, goal })
+    })),
+    months: processedData.monthsData.map((data, index) => ({
+      key: `m${index}`,
+      className: `sv-year-grid-month${index % 3 === 2 && index < 11 ? " sv-quarter-end" : ""}`,
+      gridColumn: `${index + 1}`,
+      label: `${index + 1}月`,
+      data,
+      identifier: (goal) => ({ type: "month", year, month: index + 1, goal })
+    })),
+    weekColumns: yearlyWeekStructure.map(({ month, weeks }) => {
+      const isQuarterEnd = month % 3 === 0 && month < 12;
+      return {
+        key: `w-col-${month}`,
+        className: `sv-year-grid-week-col${isQuarterEnd ? " sv-quarter-end" : ""}`,
+        gridColumn: `${month}`,
+        weeks: weeks.map((week) => {
+          const weekIndex = week - 1;
+          const data = processedData.weeksData[weekIndex] || createPeriodData(categories);
+          return {
+            key: `${week}`,
+            label: `${week}W`,
+            data,
+            identifier: (goal) => ({ type: "week", year, week, goal })
+          };
+        }),
+        placeholderCount: Math.max(maxWeeksInMonth - weeks.length, 0)
+      };
+    })
+  };
 }
 function YearStatisticsView({
   year,
@@ -50427,110 +51002,66 @@ function YearStatisticsView({
   minVisibleHeight,
   bucketAccessor
 }) {
-  const maxWeeksInMonth = Math.max(
-    ...yearlyWeekStructure.map(({ weeks }) => weeks.length),
-    1
-  );
+  const model = buildYearStatisticsRenderModel({ year, categories, processedData, yearlyWeekStructure });
   return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-year-grid", children: [
     /* @__PURE__ */ u2("div", { class: "sv-year-grid-year", children: /* @__PURE__ */ u2(
       ChartBlock,
       {
         data: processedData.yearData,
-        label: `${year}年`,
+        label: model.yearLabel,
         categories,
         onCellClick,
-        cellIdentifier: (goal) => ({ type: "year", year, goal }),
+        cellIdentifier: model.yearIdentifier,
         displayMode,
         minVisibleHeight,
         bucketAccessor
       }
     ) }),
-    processedData.quartersData.map((data, i2) => /* @__PURE__ */ u2(
-      "div",
+    model.quarters.map((quarter) => /* @__PURE__ */ u2("div", { class: "sv-year-grid-quarter", style: { gridColumn: quarter.gridColumn }, children: /* @__PURE__ */ u2(
+      ChartBlock,
       {
-        class: "sv-year-grid-quarter",
-        style: { gridColumn: `${i2 * 3 + 1} / ${i2 * 3 + 4}` },
-        children: /* @__PURE__ */ u2(
-          ChartBlock,
-          {
-            data,
-            label: `Q${i2 + 1}`,
-            categories,
-            onCellClick,
-            cellIdentifier: (goal) => ({ type: "quarter", year, quarter: i2 + 1, goal }),
-            displayMode,
-            minVisibleHeight,
-            bucketAccessor
-          }
-        )
-      },
-      `q${i2}`
-    )),
-    processedData.monthsData.map((data, i2) => /* @__PURE__ */ u2(
-      "div",
+        data: quarter.data,
+        label: quarter.label,
+        categories,
+        onCellClick,
+        cellIdentifier: quarter.identifier,
+        displayMode,
+        minVisibleHeight,
+        bucketAccessor
+      }
+    ) }, quarter.key)),
+    model.months.map((month) => /* @__PURE__ */ u2("div", { class: month.className, style: { gridColumn: month.gridColumn }, children: /* @__PURE__ */ u2(
+      ChartBlock,
       {
-        class: `sv-year-grid-month${i2 % 3 === 2 && i2 < 11 ? " sv-quarter-end" : ""}`,
-        style: { gridColumn: `${i2 + 1}` },
-        children: /* @__PURE__ */ u2(
-          ChartBlock,
-          {
-            data,
-            label: `${i2 + 1}月`,
-            categories,
-            onCellClick,
-            cellIdentifier: (goal) => ({ type: "month", year, month: i2 + 1, goal }),
-            displayMode,
-            minVisibleHeight,
-            bucketAccessor
-          }
-        )
-      },
-      `m${i2}`
-    )),
-    yearlyWeekStructure.map(({ month, weeks }) => {
-      const gridCol = month;
-      const isQuarterEnd = month % 3 === 0 && month < 12;
-      return /* @__PURE__ */ u2(
-        "div",
+        data: month.data,
+        label: month.label,
+        categories,
+        onCellClick,
+        cellIdentifier: month.identifier,
+        displayMode,
+        minVisibleHeight,
+        bucketAccessor
+      }
+    ) }, month.key)),
+    model.weekColumns.map((column2) => /* @__PURE__ */ u2("div", { class: column2.className, style: { gridColumn: column2.gridColumn }, children: [
+      column2.weeks.map((week) => /* @__PURE__ */ u2(
+        ChartBlock,
         {
-          class: `sv-year-grid-week-col${isQuarterEnd ? " sv-quarter-end" : ""}`,
-          style: { gridColumn: `${gridCol}` },
-          children: [
-            weeks.map((week) => {
-              const weekIndex = week - 1;
-              const weekData = processedData.weeksData[weekIndex] || createPeriodData(categories);
-              return /* @__PURE__ */ u2(
-                ChartBlock,
-                {
-                  data: weekData,
-                  label: `${week}W`,
-                  categories,
-                  onCellClick,
-                  cellIdentifier: (goal) => ({ type: "week", year, week, goal }),
-                  isCompact: true,
-                  displayMode,
-                  minVisibleHeight,
-                  bucketAccessor
-                },
-                week
-              );
-            }),
-            Array.from({ length: maxWeeksInMonth - weeks.length }, (_2, i2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${i2}`))
-          ]
+          data: week.data,
+          label: week.label,
+          categories,
+          onCellClick,
+          cellIdentifier: week.identifier,
+          isCompact: true,
+          displayMode,
+          minVisibleHeight,
+          bucketAccessor
         },
-        `w-col-${month}`
-      );
-    })
+        week.key
+      )),
+      Array.from({ length: column2.placeholderCount }, (_2, index) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${index}`))
+    ] }, column2.key))
   ] }) });
-}
-function GoalThemeSummaryStrip({ summaries }) {
-  const visible = (summaries || []).filter((row) => row.themes.length > 0).slice(0, 6);
-  if (visible.length === 0) return null;
-  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }, children: visible.map((row) => /* @__PURE__ */ u2("div", { style: { border: "1px solid var(--background-modifier-border)", borderRadius: "999px", padding: "5px 9px", fontSize: "12px", color: "var(--text-muted)" }, title: `${row.goalPath}: ${row.themes.map((theme2) => `${theme2.themePath} ${theme2.count}`).join(" / ")}`, children: [
-    /* @__PURE__ */ u2("span", { style: { color: "var(--text-normal)", fontWeight: 600 }, children: row.goalPath.split("/").filter(Boolean).pop() || row.goalPath }),
-    /* @__PURE__ */ u2("span", { children: " · " }),
-    /* @__PURE__ */ u2("span", { children: row.themes.map((theme2) => `${theme2.label}${theme2.count}`).join(" / ") })
-  ] }, row.goalPath)) });
 }
 function StatisticsViewView({
   items,
@@ -50551,75 +51082,28 @@ function StatisticsViewView({
   if (!categories || categories.length === 0) {
     return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder", children: "暂无目标统计数据。" });
   }
-  const themeStrip = /* @__PURE__ */ u2(GoalThemeSummaryStrip, { summaries: goalThemeSummaries });
+  const themeStrip = /* @__PURE__ */ u2(StatisticsGoalThemeSummaryStrip, { summaries: goalThemeSummaries });
+  const sharedProps = { categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor };
   switch (currentView) {
     case "天":
       return /* @__PURE__ */ u2(S, { children: [
         themeStrip,
-        /* @__PURE__ */ u2(
-          DayStatisticsView,
-          {
-            items,
-            categories,
-            selectedDate: startDate,
-            onCellClick,
-            displayMode,
-            minVisibleHeight,
-            bucketAccessor
-          }
-        )
+        /* @__PURE__ */ u2(DayStatisticsView, { items, selectedDate: startDate, ...sharedProps })
       ] });
     case "周":
       return /* @__PURE__ */ u2(S, { children: [
         themeStrip,
-        /* @__PURE__ */ u2(
-          WeekStatisticsView,
-          {
-            items,
-            categories,
-            weekDate: startDate,
-            onCellClick,
-            displayMode,
-            minVisibleHeight,
-            bucketAccessor
-          }
-        )
+        /* @__PURE__ */ u2(WeekStatisticsView, { items, weekDate: startDate, ...sharedProps })
       ] });
     case "月":
       return /* @__PURE__ */ u2(S, { children: [
         themeStrip,
-        /* @__PURE__ */ u2(
-          MonthStatisticsView,
-          {
-            items,
-            categories,
-            monthDate: startDate,
-            usePeriod,
-            onToggleUsePeriod,
-            onCellClick,
-            displayMode,
-            minVisibleHeight,
-            bucketAccessor
-          }
-        )
+        /* @__PURE__ */ u2(MonthStatisticsView, { items, monthDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps })
       ] });
     case "季":
       return /* @__PURE__ */ u2(S, { children: [
         themeStrip,
-        /* @__PURE__ */ u2(
-          QuarterStatisticsView,
-          {
-            items,
-            categories,
-            quarterDate: startDate,
-            usePeriod,
-            onToggleUsePeriod,
-            onCellClick,
-            displayMode,
-            minVisibleHeight,
-            bucketAccessor
-          }
-        )
+        /* @__PURE__ */ u2(QuarterStatisticsView, { items, quarterDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps })
       ] });
     case "年":
     default:
@@ -50629,15 +51113,11 @@ function StatisticsViewView({
           YearStatisticsView,
           {
             year,
-            categories,
             processedData,
             yearlyWeekStructure,
             usePeriod,
             onToggleUsePeriod,
-            onCellClick,
-            displayMode,
-            minVisibleHeight,
-            bucketAccessor
+            ...sharedProps
           }
         )
       ] });
@@ -50703,6 +51183,68 @@ function useStatisticsCategoryConfigs({
     return categoryConfigs;
   }, [categoryConfigs, injectedFilteredCategories, selectedCategories]);
 }
+function buildStatisticsViewConfig(module2, statisticsModel) {
+  return statisticsModel?.viewConfig ?? { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...module2.viewConfig };
+}
+function resolveStatisticsStartDate(dateRange, statisticsModel) {
+  return statisticsModel?.startDate ?? dayjs(dateRange[0]);
+}
+function isStatisticsYearView(currentView, statisticsModel) {
+  return statisticsModel?.isYearView ?? currentView === "年";
+}
+function resolveStatisticsYear(startDate, statisticsModel) {
+  return statisticsModel?.year ?? startDate.year();
+}
+function resolveStatisticsBucketAccessor(statisticsModel) {
+  return statisticsModel?.bucketAccessor || getItemGoalKey;
+}
+function buildYearlyWeekStructure(year, enabled2 = true) {
+  if (!enabled2) return [];
+  const months = Array.from({ length: 12 }, (_2, i2) => ({ month: i2 + 1, weeks: [] }));
+  const totalWeeks = getWeeksInYear(year);
+  for (let week = 1; week <= totalWeeks; week++) {
+    const thursdayOfWeek = dayjs().year(year).isoWeek(week).day(4);
+    months[thursdayOfWeek.month()]?.weeks.push(week);
+  }
+  return months;
+}
+function resolveYearlyWeekStructure(input) {
+  if (input.statisticsModel?.yearlyWeekStructure) return input.statisticsModel.yearlyWeekStructure;
+  return buildYearlyWeekStructure(input.year, input.isYearView);
+}
+function buildStatisticsProcessedData(input) {
+  const bucketAccessor = input.bucketAccessor || getItemGoalKey;
+  if (!input.isYearView) {
+    return {
+      yearData: createPeriodData(input.filteredCategories),
+      quartersData: [],
+      monthsData: [],
+      weeksData: []
+    };
+  }
+  const totalWeeks = getWeeksInYear(input.year);
+  const targetDate = dayjs().year(input.year);
+  const yearData = aggregateByYear(input.items, input.filteredCategories, targetDate, input.usePeriod, bucketAccessor);
+  const quartersData = [];
+  for (let q2 = 1; q2 <= 4; q2++) {
+    quartersData.push(aggregateByQuarter(input.items, input.filteredCategories, targetDate.quarter(q2), input.usePeriod, bucketAccessor));
+  }
+  const monthsData = [];
+  for (let m2 = 0; m2 < 12; m2++) {
+    monthsData.push(aggregateByMonth(input.items, input.filteredCategories, targetDate.month(m2), input.usePeriod, bucketAccessor));
+  }
+  const weeksData = [];
+  for (let w2 = 1; w2 <= totalWeeks; w2++) {
+    weeksData.push(aggregateByWeek(input.items, input.filteredCategories, targetDate.isoWeek(w2), input.usePeriod, bucketAccessor));
+  }
+  return { yearData, quartersData, monthsData, weeksData };
+}
+function getStatisticsPopoverWidgetId(moduleId) {
+  return `stats-popover-${moduleId}`;
+}
+function isSameStatisticsCell(left2, right2) {
+  return JSON.stringify(left2) === JSON.stringify(right2);
+}
 function StatisticsView({
   items,
   resolveResourcePath,
@@ -50724,7 +51266,7 @@ function StatisticsView({
   onOpenRecord,
   onOpenRecordOrigin
 }) {
-  const viewConfig = statisticsModel?.viewConfig ?? { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...module2.viewConfig };
+  const viewConfig = buildStatisticsViewConfig(module2, statisticsModel);
   const { displayMode = "smart", minVisibleHeight = 15 } = viewConfig;
   const fallbackCategories = useStatisticsCategoryConfigs({
     items,
@@ -50735,44 +51277,28 @@ function StatisticsView({
     injectedFilteredCategories: void 0
   });
   const filteredCategories = Array.isArray(statisticsModel?.filteredCategories) ? statisticsModel.filteredCategories : fallbackCategories;
-  const bucketAccessor = statisticsModel?.bucketAccessor || getItemGoalKey;
+  const bucketAccessor = resolveStatisticsBucketAccessor(statisticsModel);
   const [selectedCell, setSelectedCell] = d(null);
   const [popover, setPopover] = d(null);
   const openLockRef = A$1(false);
   const [usePeriod, setUsePeriod] = d(Boolean(viewConfig.usePeriodField));
-  const startDate = T$1(() => statisticsModel?.startDate ?? dayjs(dateRange[0]), [statisticsModel, dateRange]);
-  const isYearView = statisticsModel?.isYearView ?? currentView === "年";
-  const year = statisticsModel?.year ?? startDate.year();
-  const yearlyWeekStructure = T$1(() => {
-    if (statisticsModel?.yearlyWeekStructure) return statisticsModel.yearlyWeekStructure;
-    if (!isYearView) return [];
-    const months = Array.from({ length: 12 }, (_2, i2) => ({ month: i2 + 1, weeks: [] }));
-    const totalWeeks = getWeeksInYear(year);
-    for (let week = 1; week <= totalWeeks; week++) {
-      const thursdayOfWeek = dayjs().year(year).isoWeek(week).day(4);
-      months[thursdayOfWeek.month()]?.weeks.push(week);
-    }
-    return months;
-  }, [statisticsModel, isYearView, year]);
-  const processedData = T$1(() => {
-    if (!isYearView) return { yearData: createPeriodData(filteredCategories), quartersData: [], monthsData: [], weeksData: [] };
-    const totalWeeks = getWeeksInYear(year);
-    const targetDate = dayjs().year(year);
-    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod, bucketAccessor);
-    const quartersData = [];
-    for (let q2 = 1; q2 <= 4; q2++) quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q2), usePeriod, bucketAccessor));
-    const monthsData = [];
-    for (let m2 = 0; m2 < 12; m2++) monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m2), usePeriod, bucketAccessor));
-    const weeksData = [];
-    for (let w2 = 1; w2 <= totalWeeks; w2++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w2), usePeriod, bucketAccessor));
-    return { yearData, quartersData, monthsData, weeksData };
-  }, [isYearView, items, year, filteredCategories, usePeriod, bucketAccessor]);
+  const startDate = T$1(() => resolveStatisticsStartDate(dateRange, statisticsModel), [dateRange, statisticsModel]);
+  const isYearView = isStatisticsYearView(currentView, statisticsModel);
+  const year = resolveStatisticsYear(startDate, statisticsModel);
+  const yearlyWeekStructure = T$1(() => resolveYearlyWeekStructure({ year, isYearView, statisticsModel }), [isYearView, statisticsModel, year]);
+  const processedData = T$1(() => buildStatisticsProcessedData({
+    isYearView,
+    items,
+    year,
+    filteredCategories,
+    usePeriod,
+    bucketAccessor
+  }), [bucketAccessor, filteredCategories, isYearView, items, usePeriod, year]);
   const handleCellClick = (cellIdentifier, _target, blocks, title) => {
     devLog("点击单元格:", { cellIdentifier, title, blocksCount: blocks.length, blocks });
     if (openLockRef.current) return;
-    const widgetId = `stats-popover-${module2.id}`;
-    const currentKey = JSON.stringify(cellIdentifier);
-    if (popover && JSON.stringify(selectedCell) === currentKey) {
+    const widgetId = getStatisticsPopoverWidgetId(module2.id);
+    if (popover && isSameStatisticsCell(selectedCell, cellIdentifier)) {
       onCloseStatisticsPopover?.(widgetId);
       setPopover(null);
       setSelectedCell(null);
@@ -50792,11 +51318,9 @@ function StatisticsView({
         return;
       }
       const exportConfig = getExportConfigByViewType("StatisticsView");
-      const markdownContent = exportItemsToMarkdown(blocks, exportConfig);
-      navigator.clipboard.writeText(markdownContent);
+      navigator.clipboard.writeText(exportItemsToMarkdown(blocks, exportConfig));
       onNotice?.(`"${title}" 的内容已复制到剪贴板！`);
     };
-    const canQuickCreate = false;
     onOpenStatisticsPopover?.({
       widgetId,
       title,
@@ -50812,7 +51336,7 @@ function StatisticsView({
       onClose: handleClose,
       onExport: handleExport,
       onQuickCreate: void 0,
-      canQuickCreate
+      canQuickCreate: false
     });
     openLockRef.current = true;
     setTimeout(() => {
@@ -50868,7 +51392,7 @@ function PopoverContent({
     }
   ) });
 }
-const BLOCK_LABELS = {
+const PROGRESS_BLOCK_LABELS = {
   task: "任务",
   plan: "计划",
   review: "总结",
@@ -50879,22 +51403,60 @@ const BLOCK_LABELS = {
   evidence: "事件",
   unknown: "未分类"
 };
+const DEFAULT_COLLAPSED_BLOCKS = ["task", "habit", "blocker", "milestone"];
+const EXPANDED_BLOCK_ORDER = ["task", "plan", "review", "habit", "blocker", "milestone", "thought", "evidence"];
+function clampProgressRatio(value) {
+  return Math.max(0, Math.min(1, Number(value) || 0));
+}
 function ratioPercent(value) {
-  return `${Math.round(Math.max(0, Math.min(1, value || 0)) * 100)}%`;
+  return `${Math.round(clampProgressRatio(value) * 100)}%`;
 }
-function ProgressBar({ ratio, height: height2 = "10px" }) {
-  const width2 = `${Math.max(0, Math.min(100, Math.round((ratio || 0) * 100)))}%`;
-  return /* @__PURE__ */ u2("div", { style: { height: height2, borderRadius: "999px", background: "var(--background-modifier-border)", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: width2, height: "100%", borderRadius: "999px", background: "var(--interactive-accent)", transition: "width 0.25s ease" } }) });
+function progressBarWidth(value) {
+  return `${Math.round(clampProgressRatio(value) * 100)}%`;
 }
-function leafLabel$1(path) {
+function getProgressLeafLabel(path) {
   const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
   return parts[parts.length - 1] || path || "未设置主题";
 }
+function getGoalProgressTitle(card) {
+  return card.title || card.goalPath || "未命名目标";
+}
+function getGoalProgressRemainingPoints(card) {
+  return Math.max(0, Number(card.levelStep || 0) - Number(card.currentLevelPoints || 0));
+}
+function getVisibleProgressThemeBreakdown(rows) {
+  return (rows || []).filter((row) => row.count > 0).slice(0, 8);
+}
+function buildProgressBlockCountRows(counts) {
+  return EXPANDED_BLOCK_ORDER.map((key) => ({ key, label: PROGRESS_BLOCK_LABELS[key] || key, count: Number(counts?.[key] || 0) })).filter((row) => row.count > 0);
+}
+function buildProgressCollapsedFacts(card) {
+  const blockFacts = DEFAULT_COLLAPSED_BLOCKS.map((key) => ({
+    key,
+    label: PROGRESS_BLOCK_LABELS[key] || key,
+    value: Number(card.blockCounts?.[key] || 0)
+  }));
+  return [
+    ...blockFacts,
+    { key: "latestDate", label: "最近", value: card.latestDate || "暂无" }
+  ];
+}
+function buildProgressSummary(cards, injectedSummary) {
+  if (injectedSummary) return injectedSummary;
+  return {
+    goalCount: cards.length,
+    totalPoints: cards.reduce((sum, card) => sum + Number(card.totalPoints || 0), 0),
+    totalItems: cards.reduce((sum, card) => sum + Number(card.itemCount || 0), 0)
+  };
+}
+function ProgressBar({ ratio, height: height2 = "10px" }) {
+  return /* @__PURE__ */ u2("div", { style: { height: height2, borderRadius: "999px", background: "var(--background-modifier-border)", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: progressBarWidth(ratio), height: "100%", borderRadius: "999px", background: "var(--interactive-accent)", transition: "width 0.25s ease" } }) });
+}
 function ThemeBreakdownList({ rows }) {
-  const visible = (rows || []).filter((row) => row.count > 0).slice(0, 8);
+  const visible = getVisibleProgressThemeBreakdown(rows);
   if (visible.length === 0) return /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "暂无主题细分" });
   return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "6px" }, children: visible.map((row) => /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "center", gap: "8px", fontSize: "12px" }, title: row.key, children: [
-    /* @__PURE__ */ u2("span", { style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: leafLabel$1(row.key) }),
+    /* @__PURE__ */ u2("span", { style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: getProgressLeafLabel(row.key) }),
     /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)" }, children: [
       row.count,
       " 条 · ",
@@ -50904,16 +51466,23 @@ function ThemeBreakdownList({ rows }) {
   ] }, row.key)) });
 }
 function BlockCountGrid({ counts }) {
-  const rows = ["task", "plan", "review", "habit", "blocker", "milestone", "thought", "evidence"].map((key) => ({ key, label: BLOCK_LABELS[key] || key, count: Number(counts?.[key] || 0) })).filter((row) => row.count > 0);
+  const rows = buildProgressBlockCountRows(counts);
   if (rows.length === 0) return /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "暂无 Block 统计" });
   return /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(86px, 1fr))", gap: "8px" }, children: rows.map((row) => /* @__PURE__ */ u2("div", { style: { border: "1px solid var(--background-modifier-border)", borderRadius: "10px", padding: "8px" }, children: [
     /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "11px" }, children: row.label }),
     /* @__PURE__ */ u2("div", { style: { fontWeight: 700, marginTop: "2px" }, children: row.count })
   ] }, row.key)) });
 }
+function CollapsedProgressFacts({ card }) {
+  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px", color: "var(--text-muted)", fontSize: "12px" }, children: buildProgressCollapsedFacts(card).map((fact) => /* @__PURE__ */ u2("span", { children: [
+    fact.label,
+    " ",
+    fact.value
+  ] }, fact.key)) });
+}
 function GoalProgressCard({ card, expanded, onToggle }) {
-  const remain = Math.max(0, Number(card.levelStep || 0) - Number(card.currentLevelPoints || 0));
-  const title = card.title || card.goalPath || "未命名目标";
+  const remain = getGoalProgressRemainingPoints(card);
+  const title = getGoalProgressTitle(card);
   return /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px", display: "grid", gap: "10px" }, children: [
     /* @__PURE__ */ u2(
       "button",
@@ -50952,28 +51521,7 @@ function GoalProgressCard({ card, expanded, onToggle }) {
       ] }),
       /* @__PURE__ */ u2(ProgressBar, { ratio: card.progressRatio, height: "8px" })
     ] }),
-    !expanded && /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px", color: "var(--text-muted)", fontSize: "12px" }, children: [
-      /* @__PURE__ */ u2("span", { children: [
-        "任务 ",
-        card.blockCounts.task || 0
-      ] }),
-      /* @__PURE__ */ u2("span", { children: [
-        "打卡 ",
-        card.blockCounts.habit || 0
-      ] }),
-      /* @__PURE__ */ u2("span", { children: [
-        "阻碍 ",
-        card.blockCounts.blocker || 0
-      ] }),
-      /* @__PURE__ */ u2("span", { children: [
-        "里程碑 ",
-        card.blockCounts.milestone || 0
-      ] }),
-      /* @__PURE__ */ u2("span", { children: [
-        "最近 ",
-        card.latestDate || "暂无"
-      ] })
-    ] }),
+    !expanded && /* @__PURE__ */ u2(CollapsedProgressFacts, { card }),
     expanded && /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "12px" }, children: [
       /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "8px" }, children: [
         /* @__PURE__ */ u2("div", { children: [
@@ -51004,30 +51552,25 @@ function GoalProgressCard({ card, expanded, onToggle }) {
     ] })
   ] });
 }
+function SummaryCard({ label, value }) {
+  return /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
+    /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: label }),
+    /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: value })
+  ] });
+}
+function ProgressSummaryCards({ summary }) {
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px" }, children: [
+    /* @__PURE__ */ u2(SummaryCard, { label: "目标数", value: summary.goalCount }),
+    /* @__PURE__ */ u2(SummaryCard, { label: "目标经验", value: summary.totalPoints }),
+    /* @__PURE__ */ u2(SummaryCard, { label: "目标记录", value: summary.totalItems })
+  ] });
+}
 function ProgressView({ progressModel }) {
   const cards = progressModel?.goalCards || [];
   const [expandedKeys, setExpandedKeys] = d({});
   if (cards.length === 0) return /* @__PURE__ */ u2("div", { children: "暂无目标进度数据" });
-  const summary = progressModel?.summary || {
-    goalCount: cards.length,
-    totalPoints: cards.reduce((sum, card) => sum + card.totalPoints, 0),
-    totalItems: cards.reduce((sum, card) => sum + card.itemCount, 0)
-  };
   return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "16px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px" }, children: [
-      /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "目标数" }),
-        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: summary.goalCount })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "目标经验" }),
-        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: summary.totalPoints })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "目标记录" }),
-        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: summary.totalItems })
-      ] })
-    ] }),
+    /* @__PURE__ */ u2(ProgressSummaryCards, { summary: buildProgressSummary(cards, progressModel?.summary) }),
     /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: "12px" }, children: cards.map((card) => /* @__PURE__ */ u2(
       GoalProgressCard,
       {
@@ -51039,7 +51582,7 @@ function ProgressView({ progressModel }) {
     )) })
   ] });
 }
-function getChipToneClass(recurrenceLabel) {
+function getTaskExecutionChipToneClass(recurrenceLabel) {
   const recurrence = String(recurrenceLabel || "").trim().toLowerCase();
   if (!recurrence) return "task-execution-chip--tone-0";
   if (recurrence.includes("day")) return "task-execution-chip--tone-1";
@@ -51048,18 +51591,94 @@ function getChipToneClass(recurrenceLabel) {
   if (recurrence.includes("year")) return "task-execution-chip--tone-4";
   return "task-execution-chip--tone-0";
 }
+function buildTaskExecutionTaskMap(model) {
+  const map = /* @__PURE__ */ new Map();
+  for (const section of model?.sections || []) {
+    for (const group of section.groups || []) {
+      for (const task of group.tasks || []) map.set(task.key, task);
+    }
+  }
+  return map;
+}
+function getTaskExecutionSelectedTask(args) {
+  const { menu, taskMap } = args;
+  return menu ? taskMap.get(menu.taskKey) || null : null;
+}
+function buildTaskExecutionCountLabel(currentView, count) {
+  return `${currentView}内完成 ${count} 次`;
+}
+function getTaskExecutionRecordLabel(record) {
+  return record.timeLabel || record.doneDate || "查看记录";
+}
+function TaskExecutionChipGrid({ sections: sections2, onMarkDone, onOpenMenu }) {
+  return /* @__PURE__ */ u2(S, { children: sections2.map((section) => /* @__PURE__ */ u2("section", { class: "task-execution-section", children: [
+    /* @__PURE__ */ u2("div", { class: "task-execution-section-header", children: /* @__PURE__ */ u2("h2", { class: "task-execution-section-title", children: section.title }) }),
+    /* @__PURE__ */ u2("div", { class: "task-execution-section-body", children: (section.groups || []).map((group) => /* @__PURE__ */ u2("div", { class: "task-execution-subsection", children: /* @__PURE__ */ u2("div", { class: "task-execution-subsection-body", children: [
+      /* @__PURE__ */ u2("div", { class: "task-execution-subsection-title", children: group.title }),
+      /* @__PURE__ */ u2("div", { class: "task-execution-chip-grid", children: (group.tasks || []).map((task) => /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: `task-execution-chip ${getTaskExecutionChipToneClass(task.recurrenceLabel)}`,
+          title: task.recurrenceLabel || task.title,
+          onClick: () => onMarkDone?.(task.itemId),
+          onContextMenu: (event) => onOpenMenu(event, task.key),
+          children: [
+            /* @__PURE__ */ u2("span", { class: "task-execution-chip-label", children: task.title }),
+            task.count > 0 && /* @__PURE__ */ u2("span", { class: "task-execution-chip-count", children: [
+              "·",
+              task.count
+            ] })
+          ]
+        },
+        task.key
+      )) })
+    ] }) }, group.key)) })
+  ] }, section.key)) });
+}
+function TaskExecutionContextMenu(props) {
+  const { menu, selectedTask, currentView, menuRef, onOpenRecord, onOpenRecordOrigin, onClose } = props;
+  return /* @__PURE__ */ u2("div", { class: "task-execution-context-menu", ref: menuRef, style: { left: `${menu.x}px`, top: `${menu.y}px` }, children: [
+    /* @__PURE__ */ u2("div", { class: "task-execution-context-title", children: selectedTask.title }),
+    /* @__PURE__ */ u2("div", { class: "task-execution-context-meta", children: buildTaskExecutionCountLabel(currentView, selectedTask.count) }),
+    /* @__PURE__ */ u2("div", { class: "task-execution-context-rule", children: selectedTask.recurrenceLabel }),
+    /* @__PURE__ */ u2("div", { class: "task-execution-context-list", children: selectedTask.records.length > 0 ? selectedTask.records.map((record) => {
+      const gesture = createRecordGestureHandlers({
+        item: record.item,
+        onOpenOrigin: onOpenRecordOrigin,
+        onPrimary: () => {
+          void onOpenRecord?.(record.item);
+          onClose();
+        }
+      });
+      return /* @__PURE__ */ u2(
+        "a",
+        {
+          class: "task-execution-context-link",
+          href: "#",
+          onClick: (event) => {
+            gesture.onClick(event);
+            onClose();
+          },
+          onDblClick: (event) => {
+            gesture.onDblClick(event);
+            onClose();
+          },
+          onTouchEnd: (event) => {
+            gesture.onTouchEnd(event);
+          },
+          children: getTaskExecutionRecordLabel(record)
+        },
+        record.id
+      );
+    }) : /* @__PURE__ */ u2("div", { class: "task-execution-context-empty", children: "暂无记录" }) })
+  ] });
+}
 function TaskExecutionView({ currentView, taskExecutionModel, onMarkDone, onOpenRecord, onOpenRecordOrigin }) {
   const [menu, setMenu] = d(null);
   const menuRef = A$1(null);
-  const taskMap = T$1(() => {
-    const map = /* @__PURE__ */ new Map();
-    for (const section of taskExecutionModel?.sections || []) {
-      for (const group of section.groups || []) {
-        for (const task of group.tasks || []) map.set(task.key, task);
-      }
-    }
-    return map;
-  }, [taskExecutionModel]);
+  const taskMap = T$1(() => buildTaskExecutionTaskMap(taskExecutionModel), [taskExecutionModel]);
+  const selectedTask = T$1(() => getTaskExecutionSelectedTask({ menu, taskMap }), [menu, taskMap]);
   y(() => {
     const onDown = (event) => {
       if (!menuRef.current) return;
@@ -51080,282 +51699,112 @@ function TaskExecutionView({ currentView, taskExecutionModel, onMarkDone, onOpen
     event.preventDefault();
     setMenu({ x: event.clientX, y: event.clientY, taskKey });
   };
-  const selectedTask = menu ? taskMap.get(menu.taskKey) : null;
   return /* @__PURE__ */ u2("div", { class: "task-execution-view", children: [
-    (taskExecutionModel?.sections || []).map((section) => /* @__PURE__ */ u2("section", { class: "task-execution-section", children: [
-      /* @__PURE__ */ u2("div", { class: "task-execution-section-header", children: /* @__PURE__ */ u2("h2", { class: "task-execution-section-title", children: section.title }) }),
-      /* @__PURE__ */ u2("div", { class: "task-execution-section-body", children: (section.groups || []).map((group) => /* @__PURE__ */ u2("div", { class: "task-execution-subsection", children: /* @__PURE__ */ u2("div", { class: "task-execution-subsection-body", children: [
-        /* @__PURE__ */ u2("div", { class: "task-execution-subsection-title", children: group.title }),
-        /* @__PURE__ */ u2("div", { class: "task-execution-chip-grid", children: (group.tasks || []).map((task) => /* @__PURE__ */ u2(
-          "button",
-          {
-            type: "button",
-            class: `task-execution-chip ${getChipToneClass(task.recurrenceLabel)}`,
-            title: task.recurrenceLabel || task.title,
-            onClick: () => onMarkDone?.(task.itemId),
-            onContextMenu: (event) => openMenu(event, task.key),
-            children: [
-              /* @__PURE__ */ u2("span", { class: "task-execution-chip-label", children: task.title }),
-              task.count > 0 && /* @__PURE__ */ u2("span", { class: "task-execution-chip-count", children: [
-                "·",
-                task.count
-              ] })
-            ]
-          },
-          task.key
-        )) })
-      ] }) }, group.key)) })
-    ] }, section.key)),
-    menu && selectedTask && /* @__PURE__ */ u2("div", { class: "task-execution-context-menu", ref: menuRef, style: { left: `${menu.x}px`, top: `${menu.y}px` }, children: [
-      /* @__PURE__ */ u2("div", { class: "task-execution-context-title", children: selectedTask.title }),
-      /* @__PURE__ */ u2("div", { class: "task-execution-context-meta", children: [
+    /* @__PURE__ */ u2(
+      TaskExecutionChipGrid,
+      {
+        sections: taskExecutionModel?.sections || [],
+        onMarkDone,
+        onOpenMenu: openMenu
+      }
+    ),
+    menu && selectedTask && /* @__PURE__ */ u2(
+      TaskExecutionContextMenu,
+      {
+        menu,
+        selectedTask,
         currentView,
-        "内完成 ",
-        selectedTask.count,
-        " 次"
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "task-execution-context-rule", children: selectedTask.recurrenceLabel }),
-      /* @__PURE__ */ u2("div", { class: "task-execution-context-list", children: selectedTask.records.length > 0 ? selectedTask.records.map((record) => {
-        const gesture = createRecordGestureHandlers({
-          item: record.item,
-          onOpenOrigin: onOpenRecordOrigin,
-          onPrimary: () => {
-            void onOpenRecord?.(record.item);
-            setMenu(null);
-          }
-        });
-        return /* @__PURE__ */ u2(
-          "a",
-          {
-            class: "task-execution-context-link",
-            href: "#",
-            onClick: (e2) => {
-              gesture.onClick(e2);
-              setMenu(null);
-            },
-            onDblClick: (e2) => {
-              gesture.onDblClick(e2);
-              setMenu(null);
-            },
-            onTouchEnd: (e2) => {
-              gesture.onTouchEnd(e2);
-            },
-            children: record.timeLabel || record.doneDate || "查看记录"
-          },
-          record.id
-        );
-      }) : /* @__PURE__ */ u2("div", { class: "task-execution-context-empty", children: "暂无记录" }) })
-    ] })
+        menuRef,
+        onOpenRecord,
+        onOpenRecordOrigin,
+        onClose: () => setMenu(null)
+      }
+    )
   ] });
 }
-function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], goals = [], onOpenRecord }) {
-  if (!rowField || !colField) {
-    return /* @__PURE__ */ u2("div", { children: '（表格视图需要配置"行字段"和"列字段"）' });
+function isTableViewConfigured(rowField, colField) {
+  return Boolean(rowField && colField);
+}
+function getTableViewEmptyMessage() {
+  return '（表格视图需要配置"行字段"和"列字段"）';
+}
+function buildTableViewRenderModel(input) {
+  if (!isTableViewConfigured(input.rowField, input.colField)) {
+    return {
+      isConfigured: false,
+      emptyMessage: getTableViewEmptyMessage(),
+      matrix: {},
+      sortedRows: [],
+      sortedCols: []
+    };
   }
-  const { matrix, sortedRows, sortedCols } = buildTableMatrix(items, rowField, colField, { goals });
-  function renderCellItem(item) {
-    if (item.type === "task") {
-      const timer = timers.find((t3) => t3.taskId === item.id);
-      return /* @__PURE__ */ u2(
-        TaskRow,
-        {
-          item,
-          onMarkDone,
-          resolveResourcePath,
-          onOpenRecordOrigin,
-          timerService,
-          timer,
-          allThemes,
-          compact: true,
-          onOpenRecord
-        }
-      );
+  const { matrix, sortedRows, sortedCols } = buildTableMatrix(input.items, input.rowField, input.colField, { goals: input.goals ?? [] });
+  return {
+    isConfigured: true,
+    emptyMessage: "",
+    matrix,
+    sortedRows,
+    sortedCols
+  };
+}
+function findTableViewTimer(timers, itemId) {
+  return (timers ?? []).find((timer) => timer?.taskId === itemId);
+}
+function TableViewCell(props) {
+  const {
+    items,
+    onMarkDone,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  } = props;
+  if (!items.length) return /* @__PURE__ */ u2("td", { class: "empty" });
+  return /* @__PURE__ */ u2("td", { children: items.map((item) => /* @__PURE__ */ u2("div", { class: "table-view-cell-item", children: item.type === "task" ? /* @__PURE__ */ u2(
+    TaskRow,
+    {
+      item,
+      onMarkDone,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      timerService,
+      timer: findTableViewTimer(timers, item.id),
+      allThemes,
+      compact: true,
+      onOpenRecord
     }
-    return /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin });
+  ) : /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin }) }, item.id)) });
+}
+function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], goals = [], onOpenRecord }) {
+  const renderModel = buildTableViewRenderModel({ items, rowField, colField, goals });
+  if (!renderModel.isConfigured) {
+    return /* @__PURE__ */ u2("div", { children: renderModel.emptyMessage });
   }
   return /* @__PURE__ */ u2("table", { class: "think-table", children: [
     /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
       /* @__PURE__ */ u2("th", { children: rowField }),
-      sortedCols.map((c2) => /* @__PURE__ */ u2("th", { children: c2 }, c2))
+      renderModel.sortedCols.map((col) => /* @__PURE__ */ u2("th", { children: col }, col))
     ] }) }),
-    /* @__PURE__ */ u2("tbody", { children: sortedRows.map((r2) => /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: r2 }) }),
-      sortedCols.map((c2) => {
-        const cellItems = matrix[r2]?.[c2] || [];
-        return !cellItems.length ? /* @__PURE__ */ u2("td", { class: "empty" }, c2) : /* @__PURE__ */ u2("td", { children: cellItems.map((it) => /* @__PURE__ */ u2("div", { class: "table-view-cell-item", children: renderCellItem(it) }, it.id)) }, c2);
-      })
-    ] }, r2)) })
+    /* @__PURE__ */ u2("tbody", { children: renderModel.sortedRows.map((row) => /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: row }) }),
+      renderModel.sortedCols.map((col) => /* @__PURE__ */ u2(
+        TableViewCell,
+        {
+          items: renderModel.matrix[row]?.[col] || [],
+          onMarkDone,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          timerService,
+          timers,
+          allThemes,
+          onOpenRecord
+        },
+        col
+      ))
+    ] }, row)) })
   ] });
-}
-function moveItem(fields, fromIndex, toIndex) {
-  if (fromIndex === toIndex) return fields;
-  if (fromIndex < 0 || fromIndex >= fields.length) return fields;
-  if (toIndex < 0 || toIndex >= fields.length) return fields;
-  const next2 = [...fields];
-  const [moved] = next2.splice(fromIndex, 1);
-  next2.splice(toIndex, 0, moved);
-  return next2;
-}
-function ExcelColumnToolbar({
-  fields,
-  availableFields,
-  disabled = false,
-  saving = false,
-  error,
-  getFieldLabel: getFieldLabel2 = (field) => field,
-  getFieldGroupLabel,
-  onFieldsChange
-}) {
-  const [draggedField, setDraggedField] = d(null);
-  const [menu, setMenu] = d(null);
-  const canEdit = !!onFieldsChange && !disabled;
-  const busy = saving || disabled;
-  const availableOptions = T$1(() => {
-    const selected = new Set(fields);
-    return availableFields.filter((field) => !selected.has(field)).map((field) => ({
-      value: field,
-      label: getFieldLabel2(field),
-      group: getFieldGroupLabel?.(field)
-    }));
-  }, [availableFields, fields, getFieldGroupLabel, getFieldLabel2]);
-  const emit2 = (nextFields) => {
-    if (!canEdit || busy) return;
-    onFieldsChange?.(nextFields);
-  };
-  const closeMenu = () => setMenu(null);
-  const addField = (field) => {
-    if (!field || fields.includes(field)) return;
-    emit2([...fields, field]);
-  };
-  const removeField = (field) => {
-    if (fields.length <= 1) return;
-    emit2(fields.filter((item) => item !== field));
-    closeMenu();
-  };
-  const moveFieldToStart = (field) => {
-    const index = fields.indexOf(field);
-    if (index <= 0) return closeMenu();
-    emit2(moveItem(fields, index, 0));
-    closeMenu();
-  };
-  const moveFieldToEnd = (field) => {
-    const index = fields.indexOf(field);
-    if (index < 0 || index === fields.length - 1) return closeMenu();
-    emit2(moveItem(fields, index, fields.length - 1));
-    closeMenu();
-  };
-  const dropField = (targetField) => {
-    const sourceField = draggedField;
-    setDraggedField(null);
-    if (!sourceField || sourceField === targetField) return;
-    emit2(moveItem(fields, fields.indexOf(sourceField), fields.indexOf(targetField)));
-  };
-  const openMenu = (event, field) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setMenu({ field, x: event.clientX, y: event.clientY });
-  };
-  const menuField = menu?.field;
-  const menuLabel = menuField ? getFieldLabel2(menuField) : "";
-  const menuGroup = menuField ? getFieldGroupLabel?.(menuField) : void 0;
-  const canRemoveMenuField = !!menuField && canEdit && !busy && fields.length > 1;
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "excel-column-toolbar",
-      "data-editable": canEdit ? "true" : "false",
-      "aria-label": "Excel 显示字段编辑",
-      onClick: () => menu ? closeMenu() : void 0,
-      children: [
-        /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-title", children: "显示字段" }),
-        /* @__PURE__ */ u2("div", { class: "excel-column-chip-list", role: "list", "aria-label": "当前显示字段顺序", children: fields.map((field) => {
-          const label = getFieldLabel2(field);
-          const canRemove = canEdit && !busy && fields.length > 1;
-          return /* @__PURE__ */ u2(
-            "span",
-            {
-              class: `excel-column-chip ${draggedField === field ? "is-dragging" : ""}`,
-              role: "listitem",
-              draggable: canEdit && !busy,
-              title: canEdit ? canRemove ? "拖动调整列顺序；双击隐藏该列；右键更多操作" : "至少保留一个显示字段" : "当前字段配置不可直接编辑",
-              onContextMenu: (event) => openMenu(event, field),
-              onDblClick: (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                if (canRemove) removeField(field);
-              },
-              onDragStart: (event) => {
-                if (!canEdit || busy) return;
-                setDraggedField(field);
-                event.dataTransfer?.setData("text/plain", field);
-                if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
-              },
-              onDragEnd: () => setDraggedField(null),
-              onDragOver: (event) => {
-                if (!canEdit || busy || !draggedField) return;
-                event.preventDefault();
-                if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-              },
-              onDrop: (event) => {
-                event.preventDefault();
-                if (!canEdit || busy) return;
-                dropField(field);
-              },
-              children: [
-                /* @__PURE__ */ u2("span", { class: "excel-column-chip-handle", "aria-hidden": "true", children: "⋮⋮" }),
-                /* @__PURE__ */ u2("span", { class: "excel-column-chip-label", children: label })
-              ]
-            },
-            field
-          );
-        }) }),
-        canEdit ? /* @__PURE__ */ u2("div", { class: "excel-column-add-field", children: /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: "",
-            options: availableOptions,
-            placeholder: availableOptions.length ? "+ 添加字段" : "所有字段已显示",
-            disabled: busy || !availableOptions.length,
-            onChange: addField,
-            sx: { minWidth: "150px" }
-          }
-        ) }) : /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-readonly", children: "字段配置只读" }),
-        saving ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-status", children: "保存字段设置中…" }) : null,
-        error ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-error", title: error, children: error }) : null,
-        menu && menuField ? /* @__PURE__ */ u2(
-          "div",
-          {
-            class: "excel-column-context-menu",
-            style: { left: `${menu.x}px`, top: `${menu.y}px` },
-            role: "menu",
-            onMouseDown: (event) => event.stopPropagation(),
-            onClick: (event) => event.stopPropagation(),
-            children: [
-              /* @__PURE__ */ u2("div", { class: "excel-column-context-menu-title", children: menuLabel }),
-              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canRemoveMenuField, onClick: () => removeField(menuField), children: "隐藏此列" }),
-              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canEdit || busy || fields.indexOf(menuField) <= 0, onClick: () => moveFieldToStart(menuField), children: "移到最前" }),
-              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canEdit || busy || fields.indexOf(menuField) === fields.length - 1, onClick: () => moveFieldToEnd(menuField), children: "移到最后" }),
-              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", onClick: () => setMenu((prev2) => prev2 ? { ...prev2, showInfo: !prev2.showInfo } : prev2), children: "查看字段说明" }),
-              menu.showInfo ? /* @__PURE__ */ u2("div", { class: "excel-column-context-info", children: [
-                /* @__PURE__ */ u2("div", { children: [
-                  /* @__PURE__ */ u2("span", { children: "名称" }),
-                  /* @__PURE__ */ u2("strong", { children: menuLabel })
-                ] }),
-                menuGroup ? /* @__PURE__ */ u2("div", { children: [
-                  /* @__PURE__ */ u2("span", { children: "分组" }),
-                  /* @__PURE__ */ u2("strong", { children: menuGroup })
-                ] }) : null,
-                /* @__PURE__ */ u2("div", { children: [
-                  /* @__PURE__ */ u2("span", { children: "字段键" }),
-                  /* @__PURE__ */ u2("code", { children: menuField })
-                ] })
-              ] }) : null
-            ]
-          }
-        ) : null
-      ]
-    }
-  );
 }
 function isOptionLikeValue(value) {
   return !!value && typeof value === "object" && ("value" in value || "label" in value);
@@ -51514,6 +51963,33 @@ function parseExcelEditorValue(cell, editorValue) {
 function areExcelCellValuesEqual(left2, right2) {
   return formatExcelCellValue(left2) === formatExcelCellValue(right2);
 }
+function ExcelCellContent({
+  cell,
+  contentText,
+  showFullMarkdownContent,
+  messageRenderPort,
+  onMarkdownClick,
+  onMarkdownDoubleClick
+}) {
+  if (showFullMarkdownContent) {
+    return /* @__PURE__ */ u2(
+      MarkdownContent,
+      {
+        renderPort: messageRenderPort,
+        content: contentText,
+        contentType: "markdown",
+        sourcePath: cell.item.file?.path || "",
+        className: "excel-view-cell-md",
+        onClick: onMarkdownClick,
+        onDblClick: onMarkdownDoubleClick
+      }
+    );
+  }
+  if (cell.canonicalField === "content" && contentText) {
+    return /* @__PURE__ */ u2("span", { class: "excel-view-content-link", children: truncateExcelCellText(contentText) });
+  }
+  return /* @__PURE__ */ u2("span", { class: "excel-view-cell-value", children: cell.displayValue });
+}
 function getExcelCellKey(itemId, field) {
   return `${itemId}::${field}`;
 }
@@ -51532,21 +52008,179 @@ function getExcelEditorDescriptor(kind) {
   if (kind === "tags") return { tag: "input", type: "text", hint: "标签编辑器：逗号/换行分隔，# 会保留" };
   return { tag: "input", type: "text", hint: "Enter 保存 · Esc 取消" };
 }
-function readKeyboardValue(event) {
+function readExcelKeyboardValue(event) {
   const target = event.currentTarget;
   return target.value;
 }
-function getReadonlyTitle(policyReason) {
+function getExcelReadonlyTitle(policyReason) {
   return policyReason || "该字段不可在 Excel 单元格中直接编辑";
 }
-function getTypedInputProps(kind) {
+function getExcelTypedInputProps(kind) {
   if (kind === "number") return { step: "any" };
   if (kind === "rating") return { step: 1, min: 0, max: 5 };
   return {};
 }
-function isMarkdownInteractiveTarget(target) {
+function isExcelMarkdownInteractiveTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
   return !!target.closest("a, button, input, textarea, select, .internal-link, .external-link, .tag");
+}
+function buildExcelCellTitle(params) {
+  const { error, editable, policyReason } = params;
+  if (error) return error;
+  return editable ? "双击/F2/Enter 编辑；方向键/Tab 移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getExcelReadonlyTitle(policyReason)}；Ctrl/⌘ 点击可打开完整编辑`;
+}
+function buildExcelCellClassName(params) {
+  const {
+    editable,
+    policyEditable,
+    dangerLevel,
+    isContentCell,
+    showFullMarkdownContent,
+    selected,
+    editing,
+    pending,
+    saved,
+    error,
+    fillSource,
+    fillTarget
+  } = params;
+  return [
+    "excel-view-cell",
+    editable ? "is-inline-editable" : "is-readonly",
+    policyEditable ? "is-policy-editable" : "is-policy-readonly",
+    dangerLevel === "medium" ? "is-medium-risk" : "",
+    dangerLevel === "high" ? "is-high-risk" : "",
+    isContentCell ? "is-content-cell" : "",
+    showFullMarkdownContent ? "is-content-expanded" : "",
+    selected ? "is-selected" : "",
+    editing ? "is-editing" : "",
+    pending ? "is-pending" : "",
+    saved && !pending && !error ? "is-saved" : "",
+    error ? "has-error" : "",
+    fillSource ? "is-fill-source" : "",
+    fillTarget ? "is-fill-target" : ""
+  ].filter(Boolean).join(" ");
+}
+function getExcelCellSaveState(params) {
+  if (params.pending) return "pending";
+  if (params.error) return "error";
+  if (params.saved) return "saved";
+  return "idle";
+}
+function buildExcelCellUiState(params) {
+  const {
+    cell,
+    selected = false,
+    editing = false,
+    pending = false,
+    saved = false,
+    error,
+    canCommit = false,
+    fillSource = false,
+    fillTarget = false,
+    contentDisplayMode = "previewText"
+  } = params;
+  const editable = canInlineEditExcelCell(cell, canCommit);
+  const descriptor = getExcelEditorDescriptor(cell.policy.editorKind);
+  const isContentCell = cell.canonicalField === "content";
+  const contentText = typeof cell.value === "string" ? cell.value : "";
+  const showFullMarkdownContent = isContentCell && contentDisplayMode === "fullMarkdown" && !!contentText.trim();
+  const title = buildExcelCellTitle({ error, editable, policyReason: cell.policy.reason });
+  return {
+    editable,
+    readonly: !editable,
+    descriptor,
+    editorOptions: getExcelEditorOptions(cell),
+    cellKey: getExcelCellKey(cell.itemId, cell.canonicalField),
+    isContentCell,
+    contentText,
+    showFullMarkdownContent,
+    title,
+    className: buildExcelCellClassName({
+      editable,
+      policyEditable: cell.policy.editable,
+      dangerLevel: cell.policy.dangerLevel,
+      isContentCell,
+      showFullMarkdownContent,
+      selected,
+      editing,
+      pending,
+      saved,
+      error,
+      fillSource,
+      fillTarget
+    }),
+    saveState: getExcelCellSaveState({ pending, saved, error })
+  };
+}
+function resolveExcelCellEditorKeyAction(params) {
+  if (params.key === "Escape") return "cancel-edit";
+  if (params.key === "Enter" && !(params.descriptorTag === "textarea" && params.shiftKey)) return "commit-edit";
+  return "none";
+}
+function resolveExcelCellKeyAction(params) {
+  const { key, shiftKey, editing, editable, fillDragging } = params;
+  if (key === "Escape" && fillDragging) return { type: "cancel-fill-drag" };
+  if (editing) return { type: "none" };
+  if (key === "ArrowUp") return { type: "navigate", direction: "up" };
+  if (key === "ArrowDown") return { type: "navigate", direction: "down" };
+  if (key === "ArrowLeft") return { type: "navigate", direction: "left" };
+  if (key === "ArrowRight") return { type: "navigate", direction: "right" };
+  if (key === "Tab") return { type: "navigate", direction: shiftKey ? "previous" : "next" };
+  if ((key === "Enter" || key === "F2") && editable) return { type: "start-edit" };
+  return { type: "none" };
+}
+function ExcelCellEditor({
+  descriptor,
+  editorOptions,
+  editorKind,
+  draft,
+  pending,
+  inputRef,
+  onDraftChange,
+  onKeyDown,
+  onBlur
+}) {
+  return /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-wrap", children: [
+    descriptor.tag === "textarea" ? /* @__PURE__ */ u2(
+      "textarea",
+      {
+        ref: inputRef,
+        class: "excel-view-cell-editor excel-view-cell-editor-textarea",
+        value: draft,
+        disabled: pending,
+        onInput: (event) => onDraftChange(event.currentTarget.value),
+        onKeyDown,
+        onBlur
+      }
+    ) : descriptor.tag === "select" ? /* @__PURE__ */ u2(
+      "select",
+      {
+        ref: inputRef,
+        class: "excel-view-cell-editor excel-view-cell-editor-select",
+        value: draft,
+        disabled: pending,
+        onChange: (event) => onDraftChange(event.currentTarget.value),
+        onKeyDown,
+        onBlur,
+        children: editorOptions.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
+      }
+    ) : /* @__PURE__ */ u2(
+      "input",
+      {
+        ref: inputRef,
+        class: "excel-view-cell-editor",
+        type: descriptor.type || "text",
+        value: draft,
+        disabled: pending,
+        ...getExcelTypedInputProps(editorKind),
+        onInput: (event) => onDraftChange(event.currentTarget.value),
+        onKeyDown,
+        onBlur
+      }
+    ),
+    /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-hint", children: descriptor.hint })
+  ] });
 }
 function ExcelCell({
   cell,
@@ -51574,26 +52208,18 @@ function ExcelCell({
   onCancelFillDrag,
   onOpenRecord
 }) {
-  const { item, field, value, displayValue, editorValue, policy } = cell;
+  const { item, field, editorValue, policy } = cell;
   const [draft, setDraft] = d(editorValue);
   const inputRef = A$1(null);
-  const editable = canInlineEditExcelCell(cell, canCommit);
-  const readonly2 = !editable;
-  const descriptor = getExcelEditorDescriptor(policy.editorKind);
-  const editorOptions = getExcelEditorOptions(cell);
-  const cellKey = getExcelCellKey(cell.itemId, cell.canonicalField);
-  const isContentCell = cell.canonicalField === "content";
-  const contentText = typeof value === "string" ? value : "";
-  const showFullMarkdownContent = isContentCell && contentDisplayMode === "fullMarkdown" && !!contentText.trim();
+  const ui = buildExcelCellUiState({ cell, selected, editing, pending, saved, error, canCommit, fillSource, fillTarget, contentDisplayMode });
   y(() => {
     if (editing) setDraft(editorValue);
   }, [editing, editorValue]);
   y(() => {
     if (!editing) return;
     const input = inputRef.current;
-    if (!input) return;
-    input.focus();
-    input.select?.();
+    input?.focus?.();
+    input?.select?.();
   }, [editing]);
   const commit = (nextValue = draft) => {
     if (!editing || pending) return;
@@ -51601,69 +52227,42 @@ function ExcelCell({
   };
   const handleCellClick = (event) => {
     if (fillDragging) return;
-    if (event.metaKey || event.ctrlKey) {
-      onOpenRecord?.(item);
-      return;
-    }
+    if (event.metaKey || event.ctrlKey) return onOpenRecord?.(item);
     onSelect?.(cell);
   };
   const handleDoubleClick = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    if (editable) onStartEdit?.(cell);
+    if (ui.editable) onStartEdit?.(cell);
     else onSelect?.(cell);
   };
   const handleMarkdownClick = (event) => {
-    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
+    if (isExcelMarkdownInteractiveTarget(event.target)) event.stopPropagation();
   };
   const handleMarkdownDoubleClick = (event) => {
-    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
+    if (isExcelMarkdownInteractiveTarget(event.target)) event.stopPropagation();
   };
   const handleFillMouseDown = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    if (!editable || pending || editing) return;
+    if (!ui.editable || pending || editing) return;
     onStartFillDrag?.(cell);
   };
-  const handleMouseEnter = () => {
-    if (fillDragging) onMoveFillDrag?.(cell);
-  };
-  const handleMouseUp = () => {
-    if (fillDragging) onFinishFillDrag?.(cell);
-  };
-  const navigate = (event, direction) => {
-    event.preventDefault();
-    event.stopPropagation();
-    onNavigate?.(cell, direction);
-  };
   const handleEditorKeyDown = (event) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      onCancelEdit?.();
-      return;
-    }
-    if (event.key === "Enter" && !(descriptor.tag === "textarea" && event.shiftKey)) {
-      event.preventDefault();
-      commit(readKeyboardValue(event));
-    }
+    const action = resolveExcelCellEditorKeyAction({ key: event.key, shiftKey: event.shiftKey, descriptorTag: ui.descriptor.tag });
+    if (action === "none") return;
+    event.preventDefault();
+    if (action === "cancel-edit") return onCancelEdit?.();
+    commit(readExcelKeyboardValue(event));
   };
   const handleCellKeyDown = (event) => {
-    if (event.key === "Escape" && fillDragging) {
-      event.preventDefault();
-      onCancelFillDrag?.();
-      return;
-    }
-    if (editing) return;
-    if (event.key === "ArrowUp") return navigate(event, "up");
-    if (event.key === "ArrowDown") return navigate(event, "down");
-    if (event.key === "ArrowLeft") return navigate(event, "left");
-    if (event.key === "ArrowRight") return navigate(event, "right");
-    if (event.key === "Tab") return navigate(event, event.shiftKey ? "previous" : "next");
-    if ((event.key === "Enter" || event.key === "F2") && editable) {
-      event.preventDefault();
-      onStartEdit?.(cell);
-      return;
-    }
+    const action = resolveExcelCellKeyAction({ key: event.key, shiftKey: event.shiftKey, editing, editable: ui.editable, fillDragging });
+    if (action.type === "none") return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (action.type === "cancel-fill-drag") return onCancelFillDrag?.();
+    if (action.type === "start-edit") return onStartEdit?.(cell);
+    onNavigate?.(cell, action.direction);
   };
   const handlePaste = (event) => {
     if (editing) return;
@@ -51673,109 +52272,57 @@ function ExcelCell({
     event.stopPropagation();
     onPasteText?.(cell, text2);
   };
-  const title = error || (editable ? "双击/F2/Enter 编辑；方向键/Tab 移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getReadonlyTitle(policy.reason)}；Ctrl/⌘ 点击可打开完整编辑`);
-  const className = [
-    "excel-view-cell",
-    editable ? "is-inline-editable" : "is-readonly",
-    policy.editable ? "is-policy-editable" : "is-policy-readonly",
-    policy.dangerLevel === "medium" ? "is-medium-risk" : "",
-    policy.dangerLevel === "high" ? "is-high-risk" : "",
-    isContentCell ? "is-content-cell" : "",
-    showFullMarkdownContent ? "is-content-expanded" : "",
-    selected ? "is-selected" : "",
-    editing ? "is-editing" : "",
-    pending ? "is-pending" : "",
-    saved && !pending && !error ? "is-saved" : "",
-    error ? "has-error" : "",
-    fillSource ? "is-fill-source" : "",
-    fillTarget ? "is-fill-target" : ""
-  ].filter(Boolean).join(" ");
   return /* @__PURE__ */ u2(
     "td",
     {
-      "data-excel-cell-key": cellKey,
+      "data-excel-cell-key": ui.cellKey,
       "data-field": field,
       "data-canonical-field": policy.canonicalField,
-      "data-editable": editable ? "true" : "false",
+      "data-editable": ui.editable ? "true" : "false",
       "data-policy-editable": policy.editable ? "true" : "false",
       "data-editor-kind": policy.editorKind,
       "data-danger-level": policy.dangerLevel,
-      "data-content-display-mode": isContentCell ? contentDisplayMode : void 0,
-      "data-save-state": pending ? "pending" : error ? "error" : saved ? "saved" : "idle",
-      class: className,
+      "data-content-display-mode": ui.isContentCell ? contentDisplayMode : void 0,
+      "data-save-state": ui.saveState,
+      class: ui.className,
       style: style2,
-      title,
+      title: ui.title,
       tabIndex: 0,
-      "aria-readonly": readonly2 ? "true" : "false",
+      "aria-readonly": ui.readonly ? "true" : "false",
       "aria-invalid": error ? "true" : "false",
       onClick: handleCellClick,
       onDblClick: handleDoubleClick,
-      onMouseEnter: handleMouseEnter,
-      onMouseUp: handleMouseUp,
+      onMouseEnter: () => fillDragging && onMoveFillDrag?.(cell),
+      onMouseUp: () => fillDragging && onFinishFillDrag?.(cell),
       onKeyDown: handleCellKeyDown,
       onPaste: handlePaste,
       children: [
-        editing ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-wrap", children: [
-          descriptor.tag === "textarea" ? /* @__PURE__ */ u2(
-            "textarea",
-            {
-              ref: inputRef,
-              class: "excel-view-cell-editor excel-view-cell-editor-textarea",
-              value: draft,
-              disabled: pending,
-              onInput: (event) => setDraft(event.currentTarget.value),
-              onKeyDown: handleEditorKeyDown,
-              onBlur: () => commit()
-            }
-          ) : descriptor.tag === "select" ? /* @__PURE__ */ u2(
-            "select",
-            {
-              ref: inputRef,
-              class: "excel-view-cell-editor excel-view-cell-editor-select",
-              value: draft,
-              disabled: pending,
-              onChange: (event) => setDraft(event.currentTarget.value),
-              onKeyDown: handleEditorKeyDown,
-              onBlur: () => commit(),
-              children: editorOptions.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
-            }
-          ) : /* @__PURE__ */ u2(
-            "input",
-            {
-              ref: inputRef,
-              class: "excel-view-cell-editor",
-              type: descriptor.type || "text",
-              value: draft,
-              disabled: pending,
-              ...getTypedInputProps(policy.editorKind),
-              onInput: (event) => setDraft(event.currentTarget.value),
-              onKeyDown: handleEditorKeyDown,
-              onBlur: () => commit()
-            }
-          ),
-          /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-hint", children: descriptor.hint })
-        ] }) : showFullMarkdownContent ? /* @__PURE__ */ u2(
-          MarkdownContent,
+        editing ? /* @__PURE__ */ u2(
+          ExcelCellEditor,
           {
-            renderPort: messageRenderPort,
-            content: contentText,
-            contentType: "markdown",
-            sourcePath: item.file?.path || "",
-            className: "excel-view-cell-md",
-            onClick: handleMarkdownClick,
-            onDblClick: handleMarkdownDoubleClick
+            descriptor: ui.descriptor,
+            editorOptions: ui.editorOptions,
+            editorKind: policy.editorKind,
+            draft,
+            pending,
+            inputRef,
+            onDraftChange: setDraft,
+            onKeyDown: handleEditorKeyDown,
+            onBlur: () => commit()
           }
-        ) : isContentCell && contentText ? /* @__PURE__ */ u2("span", { class: "excel-view-content-link", children: truncateExcelCellText(contentText) }) : /* @__PURE__ */ u2("span", { class: "excel-view-cell-value", children: displayValue }),
-        !editing && selected ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-affordance", "aria-hidden": "true", children: editable ? "✎" : "🔒" }) : null,
-        selected && editable && !editing && !pending ? /* @__PURE__ */ u2(
-          "span",
+        ) : /* @__PURE__ */ u2(
+          ExcelCellContent,
           {
-            class: "excel-view-fill-handle",
-            "aria-label": "拖动覆盖同列",
-            title: "拖动覆盖同列单元格",
-            onMouseDown: handleFillMouseDown
+            cell,
+            contentText: ui.contentText,
+            showFullMarkdownContent: ui.showFullMarkdownContent,
+            messageRenderPort,
+            onMarkdownClick: handleMarkdownClick,
+            onMarkdownDoubleClick: handleMarkdownDoubleClick
           }
-        ) : null,
+        ),
+        !editing && selected ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-affordance", "aria-hidden": "true", children: ui.editable ? "✎" : "🔒" }) : null,
+        selected && ui.editable && !editing && !pending ? /* @__PURE__ */ u2("span", { class: "excel-view-fill-handle", "aria-label": "拖动覆盖同列", title: "拖动覆盖同列单元格", onMouseDown: handleFillMouseDown }) : null,
         pending ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status", "aria-label": "保存中", children: "…" }) : null,
         saved && !pending && !error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status is-saved", "aria-label": "已保存", children: "✓" }) : null,
         error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-error", "aria-label": error, children: "!" }) : null
@@ -51783,21 +52330,21 @@ function ExcelCell({
     }
   );
 }
-function getCellKey(cell) {
+function getExcelGridCellKey(cell) {
   return getExcelCellKey(cell.itemId, cell.canonicalField);
 }
-function getColumnBadge(column2, canCommitCells) {
+function getExcelColumnBadge(column2, canCommitCells) {
   if (!column2.editable || !canCommitCells) return "只读";
   if (column2.dangerLevel === "medium") return "谨慎";
   return "可编辑";
 }
-function getColumnTitle(column2, canCommitCells) {
+function getExcelColumnTitle(column2, canCommitCells) {
   if (!canCommitCells) return "当前视图未配置保存处理器，所有字段暂不可编辑";
   if (!column2.editable) return column2.readonlyReason || "该字段不可在 Excel 单元格内直接编辑";
   if (column2.dangerLevel === "medium") return "可编辑字段，但会影响时间、标签等结构化内容，请谨慎修改";
   return "可编辑字段：双击单元格可编辑；拖动表头右侧边缘可调整列宽";
 }
-function getColumnWidth(column2, width2) {
+function getExcelColumnWidth(column2, width2) {
   if (Number.isFinite(width2) && width2) return Math.max(80, Math.min(640, Math.round(width2)));
   if (column2.canonicalField === "content") return 240;
   if (column2.canonicalField === "title") return 180;
@@ -51805,22 +52352,92 @@ function getColumnWidth(column2, width2) {
   if (column2.editorKind === "number" || column2.editorKind === "rating") return 104;
   return 150;
 }
-function normalizeClipboardText(text2) {
+function buildExcelColumnWidthStyle(width2) {
+  const text2 = `${width2}px`;
+  return { width: text2, minWidth: text2, maxWidth: text2 };
+}
+function normalizeExcelClipboardText(text2) {
   return String(text2 || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
-function parseClipboardMatrix(text2) {
-  const normalized = normalizeClipboardText(text2);
+function parseExcelClipboardMatrix(text2) {
+  const normalized = normalizeExcelClipboardText(text2);
   const withoutFinalNewline = normalized.endsWith("\n") ? normalized.slice(0, -1) : normalized;
   if (!withoutFinalNewline) return [[""]];
   return withoutFinalNewline.split("\n").map((row) => row.split("	"));
 }
-function focusCellElement(table, cellKey) {
+function focusExcelCellElement(table, cellKey) {
   if (!table || !cellKey) return;
   const escaped = cellKey.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   window.requestAnimationFrame(() => {
     const element = table.querySelector(`[data-excel-cell-key="${escaped}"]`);
     element?.focus?.();
   });
+}
+function buildExcelGridCell(item, columnKey, valueOverrides) {
+  const optimisticKey = getExcelCellKey(item.id, columnKey);
+  const cell = buildExcelCellModel(item, columnKey, valueOverrides?.[optimisticKey]);
+  const canonicalKey = getExcelCellKey(cell.itemId, cell.canonicalField);
+  if (valueOverrides?.[canonicalKey] !== void 0 && canonicalKey !== optimisticKey) {
+    return buildExcelCellModel(item, columnKey, valueOverrides[canonicalKey]);
+  }
+  return cell;
+}
+function findExcelGridCellPosition(items, columns, cell) {
+  return {
+    rowIndex: items.findIndex((item) => item.id === cell.itemId),
+    colIndex: columns.findIndex((column2) => column2.canonicalField === cell.canonicalField)
+  };
+}
+function resolveExcelNavigationPosition(position2, direction, rowCount, columnCount) {
+  const { rowIndex, colIndex } = position2;
+  if (rowIndex < 0 || colIndex < 0 || rowCount <= 0 || columnCount <= 0) return null;
+  if (direction === "up") return { rowIndex: rowIndex - 1, colIndex };
+  if (direction === "down") return { rowIndex: rowIndex + 1, colIndex };
+  if (direction === "left") return { rowIndex, colIndex: colIndex - 1 };
+  if (direction === "right") return { rowIndex, colIndex: colIndex + 1 };
+  const linearIndex = rowIndex * columnCount + colIndex + (direction === "previous" ? -1 : 1);
+  const bounded = Math.max(0, Math.min(rowCount * columnCount - 1, linearIndex));
+  return { rowIndex: Math.floor(bounded / columnCount), colIndex: bounded % columnCount };
+}
+function selectExcelCellByPosition(params) {
+  const { items, columns, valueOverrides } = params;
+  if (!items.length || !columns.length) return null;
+  const rowIndex = Math.max(0, Math.min(items.length - 1, params.rowIndex));
+  const colIndex = Math.max(0, Math.min(columns.length - 1, params.colIndex));
+  const cell = buildExcelGridCell(items[rowIndex], columns[colIndex].key, valueOverrides);
+  return { cell, cellKey: getExcelGridCellKey(cell) };
+}
+function buildExcelFillRange(params) {
+  const { items, source, target, valueOverrides } = params;
+  if (!source) return [];
+  if (source.canonicalField !== target.canonicalField) return [];
+  if (!canInlineEditExcelCell(source) || !canInlineEditExcelCell(target)) return [];
+  const sourceIndex = items.findIndex((item) => item.id === source.itemId);
+  const targetIndex = items.findIndex((item) => item.id === target.itemId);
+  if (sourceIndex < 0 || targetIndex < 0) return [];
+  const from2 = Math.min(sourceIndex, targetIndex);
+  const to = Math.max(sourceIndex, targetIndex);
+  return items.slice(from2, to + 1).map((item) => buildExcelGridCell(item, source.field, valueOverrides));
+}
+function buildExcelPastePlan(params) {
+  const { items, columns, startCell, text: text2, canCommitCells, valueOverrides } = params;
+  const { rowIndex, colIndex } = findExcelGridCellPosition(items, columns, startCell);
+  if (rowIndex < 0 || colIndex < 0) return { edits: [], lastCell: null };
+  const matrix = parseExcelClipboardMatrix(text2);
+  const edits = [];
+  let lastCell = null;
+  for (let rowOffset = 0; rowOffset < matrix.length; rowOffset += 1) {
+    for (let colOffset = 0; colOffset < matrix[rowOffset].length; colOffset += 1) {
+      const targetRow = rowIndex + rowOffset;
+      const targetCol = colIndex + colOffset;
+      if (targetRow >= items.length || targetCol >= columns.length) continue;
+      const targetCell = buildExcelGridCell(items[targetRow], columns[targetCol].key, valueOverrides);
+      lastCell = targetCell;
+      if (!canInlineEditExcelCell(targetCell, canCommitCells)) continue;
+      edits.push({ cell: targetCell, editorValue: matrix[rowOffset][colOffset] });
+    }
+  }
+  return { edits, lastCell };
 }
 function ExcelGrid({
   items,
@@ -51851,94 +52468,45 @@ function ExcelGrid({
   onOpenRecord
 }) {
   const tableRef = A$1(null);
-  const makeCell = (item, columnKey) => {
-    const optimisticKey = getExcelCellKey(item.id, columnKey);
-    const cell = buildExcelCellModel(item, columnKey, valueOverrides?.[optimisticKey]);
-    const canonicalKey = getExcelCellKey(cell.itemId, cell.canonicalField);
-    if (valueOverrides?.[canonicalKey] !== void 0 && canonicalKey !== optimisticKey) {
-      return buildExcelCellModel(item, columnKey, valueOverrides[canonicalKey]);
-    }
-    return cell;
-  };
-  const buildFillRange = (target) => {
-    const source = fillDragSourceCell;
-    if (!source) return [];
-    if (source.canonicalField !== target.canonicalField) return [];
-    if (!canInlineEditExcelCell(source) || !canInlineEditExcelCell(target)) return [];
-    const sourceIndex = items.findIndex((item) => item.id === source.itemId);
-    const targetIndex = items.findIndex((item) => item.id === target.itemId);
-    if (sourceIndex < 0 || targetIndex < 0) return [];
-    const from2 = Math.min(sourceIndex, targetIndex);
-    const to = Math.max(sourceIndex, targetIndex);
-    const columnKey = source.field;
-    return items.slice(from2, to + 1).map((item) => makeCell(item, columnKey));
-  };
-  const finishFillDrag = (target) => {
-    onFinishFillDrag?.(buildFillRange(target));
-  };
-  const findCellPosition = (cell) => ({
-    rowIndex: items.findIndex((item) => item.id === cell.itemId),
-    colIndex: columns.findIndex((column2) => column2.canonicalField === cell.canonicalField)
-  });
+  const makeCell = (item, columnKey) => buildExcelGridCell(item, columnKey, valueOverrides);
   const selectByPosition = (rowIndex, colIndex) => {
-    if (!items.length || !columns.length) return;
-    const boundedRow = Math.max(0, Math.min(items.length - 1, rowIndex));
-    const boundedCol = Math.max(0, Math.min(columns.length - 1, colIndex));
-    const nextCell = makeCell(items[boundedRow], columns[boundedCol].key);
-    onSelectCell?.(nextCell);
-    focusCellElement(tableRef.current, getCellKey(nextCell));
+    const selection = selectExcelCellByPosition({ items, columns, rowIndex, colIndex, valueOverrides });
+    if (!selection) return;
+    onSelectCell?.(selection.cell);
+    focusExcelCellElement(tableRef.current, selection.cellKey);
   };
   const navigateCell = (cell, direction) => {
-    const { rowIndex, colIndex } = findCellPosition(cell);
-    if (rowIndex < 0 || colIndex < 0) return;
-    if (direction === "up") return selectByPosition(rowIndex - 1, colIndex);
-    if (direction === "down") return selectByPosition(rowIndex + 1, colIndex);
-    if (direction === "left") return selectByPosition(rowIndex, colIndex - 1);
-    if (direction === "right") return selectByPosition(rowIndex, colIndex + 1);
-    const linearIndex = rowIndex * columns.length + colIndex + (direction === "previous" ? -1 : 1);
-    const bounded = Math.max(0, Math.min(items.length * columns.length - 1, linearIndex));
-    selectByPosition(Math.floor(bounded / columns.length), bounded % columns.length);
+    const position2 = findExcelGridCellPosition(items, columns, cell);
+    const nextPosition = resolveExcelNavigationPosition(position2, direction, items.length, columns.length);
+    if (!nextPosition) return;
+    selectByPosition(nextPosition.rowIndex, nextPosition.colIndex);
   };
   const pasteFromCell = (startCell, text2) => {
     if (!onCommitBatchEdits || !canCommitCells) return;
-    const { rowIndex, colIndex } = findCellPosition(startCell);
-    if (rowIndex < 0 || colIndex < 0) return;
-    const matrix = parseClipboardMatrix(text2);
-    const edits = [];
-    let lastCell = null;
-    for (let rowOffset = 0; rowOffset < matrix.length; rowOffset += 1) {
-      for (let colOffset = 0; colOffset < matrix[rowOffset].length; colOffset += 1) {
-        const targetRow = rowIndex + rowOffset;
-        const targetCol = colIndex + colOffset;
-        if (targetRow >= items.length || targetCol >= columns.length) continue;
-        const targetCell = makeCell(items[targetRow], columns[targetCol].key);
-        lastCell = targetCell;
-        if (!canInlineEditExcelCell(targetCell, canCommitCells)) continue;
-        edits.push({ cell: targetCell, editorValue: matrix[rowOffset][colOffset] });
-      }
+    const plan = buildExcelPastePlan({ items, columns, startCell, text: text2, canCommitCells, valueOverrides });
+    if (plan.lastCell) {
+      onSelectCell?.(plan.lastCell);
+      focusExcelCellElement(tableRef.current, getExcelGridCellKey(plan.lastCell));
     }
-    if (lastCell) {
-      onSelectCell?.(lastCell);
-      focusCellElement(tableRef.current, getCellKey(lastCell));
-    }
-    if (edits.length) onCommitBatchEdits(edits, "paste");
+    if (plan.edits.length) onCommitBatchEdits(plan.edits, "paste");
+  };
+  const finishFillDrag = (target) => {
+    onFinishFillDrag?.(buildExcelFillRange({ items, source: fillDragSourceCell, target, valueOverrides }));
   };
   const startColumnResize = (event, column2) => {
     event.preventDefault();
     event.stopPropagation();
     const th = event.currentTarget.closest("th");
     const startX = event.clientX;
-    const startWidth = getColumnWidth(column2, columnWidths?.[column2.key]) || th?.offsetWidth || 150;
+    const startWidth = getExcelColumnWidth(column2, columnWidths?.[column2.key]) || th?.offsetWidth || 150;
     const move = (moveEvent) => {
-      const nextWidth = startWidth + (moveEvent.clientX - startX);
-      onColumnWidthDraftChange?.(column2.key, nextWidth);
+      onColumnWidthDraftChange?.(column2.key, startWidth + (moveEvent.clientX - startX));
     };
     const up = (upEvent) => {
-      const nextWidth = startWidth + (upEvent.clientX - startX);
       window.removeEventListener("mousemove", move, true);
       window.removeEventListener("mouseup", up, true);
       document.body.classList.remove("excel-view-is-resizing-column");
-      onColumnWidthCommit?.(column2.key, nextWidth);
+      onColumnWidthCommit?.(column2.key, startWidth + (upEvent.clientX - startX));
     };
     document.body.classList.add("excel-view-is-resizing-column");
     window.addEventListener("mousemove", move, true);
@@ -51946,12 +52514,12 @@ function ExcelGrid({
   };
   return /* @__PURE__ */ u2("table", { ref: tableRef, class: "think-table excel-view-table", children: [
     /* @__PURE__ */ u2("colgroup", { children: columns.map((column2) => {
-      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
+      const width2 = getExcelColumnWidth(column2, columnWidths?.[column2.key]);
       return /* @__PURE__ */ u2("col", { "data-field": column2.key, style: { width: `${width2}px` } }, column2.key);
     }) }),
     /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: columns.map((column2) => {
+      const width2 = getExcelColumnWidth(column2, columnWidths?.[column2.key]);
       const columnEditable = column2.editable && canCommitCells;
-      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
       return /* @__PURE__ */ u2(
         "th",
         {
@@ -51960,12 +52528,12 @@ function ExcelGrid({
           "data-editable": columnEditable ? "true" : "false",
           "data-editor-kind": column2.editorKind,
           "data-danger-level": column2.dangerLevel,
-          title: getColumnTitle(column2, canCommitCells),
-          style: { width: `${width2}px`, minWidth: `${width2}px`, maxWidth: `${width2}px` },
+          title: getExcelColumnTitle(column2, canCommitCells),
+          style: buildExcelColumnWidthStyle(width2),
           children: [
             /* @__PURE__ */ u2("span", { class: "excel-view-header-stack", children: [
               /* @__PURE__ */ u2("span", { class: "excel-view-header-label", children: column2.label }),
-              /* @__PURE__ */ u2("span", { class: "excel-view-header-badge", children: getColumnBadge(column2, canCommitCells) })
+              /* @__PURE__ */ u2("span", { class: "excel-view-header-badge", children: getExcelColumnBadge(column2, canCommitCells) })
             ] }),
             /* @__PURE__ */ u2(
               "span",
@@ -51984,22 +52552,21 @@ function ExcelGrid({
     }) }) }),
     /* @__PURE__ */ u2("tbody", { children: items.map((item) => /* @__PURE__ */ u2("tr", { "data-item-id": item.id, children: columns.map((column2) => {
       const cell = makeCell(item, column2.key);
-      const canonicalCellKey = getCellKey(cell);
-      const fillDragging = !!fillDragSourceCell;
-      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
+      const cellKey = getExcelGridCellKey(cell);
+      const width2 = getExcelColumnWidth(column2, columnWidths?.[column2.key]);
       return /* @__PURE__ */ u2(
         ExcelCell,
         {
           cell,
-          selected: selectedCellKey === canonicalCellKey,
-          editing: editingCellKey === canonicalCellKey,
-          pending: pendingCellKeys?.has(canonicalCellKey),
-          saved: savedCellKeys?.has(canonicalCellKey),
-          error: cellErrors?.[canonicalCellKey],
+          selected: selectedCellKey === cellKey,
+          editing: editingCellKey === cellKey,
+          pending: pendingCellKeys?.has(cellKey),
+          saved: savedCellKeys?.has(cellKey),
+          error: cellErrors?.[cellKey],
           canCommit: canCommitCells,
-          fillDragging,
-          fillSource: fillDragSourceCell ? getCellKey(fillDragSourceCell) === canonicalCellKey : false,
-          fillTarget: fillDragTargetCellKey === canonicalCellKey && fillDragSourceCell?.canonicalField === cell.canonicalField,
+          fillDragging: !!fillDragSourceCell,
+          fillSource: fillDragSourceCell ? getExcelGridCellKey(fillDragSourceCell) === cellKey : false,
+          fillTarget: fillDragTargetCellKey === cellKey && fillDragSourceCell?.canonicalField === cell.canonicalField,
           contentDisplayMode,
           messageRenderPort,
           onSelect: onSelectCell,
@@ -52013,45 +52580,102 @@ function ExcelGrid({
           onFinishFillDrag: finishFillDrag,
           onCancelFillDrag,
           onOpenRecord,
-          style: { width: `${width2}px`, minWidth: `${width2}px`, maxWidth: `${width2}px` }
+          style: buildExcelColumnWidthStyle(width2)
         },
         column2.key
       );
     }) }, item.id)) })
   ] });
 }
-function addPendingKey(source, key) {
+function addExcelSetValue(source, key) {
   const next2 = new Set(source);
   next2.add(key);
   return next2;
 }
-function addPendingKeys(source, keys) {
+function addExcelSetValues(source, keys) {
   const next2 = new Set(source);
   for (const key of keys) next2.add(key);
   return next2;
 }
-function removePendingKey(source, key) {
+function removeExcelSetValue(source, key) {
   const next2 = new Set(source);
   next2.delete(key);
   return next2;
 }
-function removePendingKeys(source, keys) {
+function removeExcelSetValues(source, keys) {
   const next2 = new Set(source);
   for (const key of keys) next2.delete(key);
   return next2;
 }
-function addSavedKey(source, key) {
-  const next2 = new Set(source);
-  next2.add(key);
-  return next2;
-}
-function removeSavedKey(source, key) {
-  const next2 = new Set(source);
-  next2.delete(key);
-  return next2;
-}
-function uniqueKeys(keys) {
+function uniqueExcelKeys(keys) {
   return Array.from(new Set(keys));
+}
+function getExcelCellCommitFailureMessage(resultMessage) {
+  return resultMessage || "保存失败";
+}
+function getExcelCellCommitExceptionMessage(error) {
+  return error instanceof Error ? error.message : "保存失败";
+}
+function getExcelCellNoCommitHandlerMessage() {
+  return "当前视图没有配置保存处理器";
+}
+function getExcelCellReadonlyMessage(cell) {
+  return cell.policy.reason || "该字段不可内联编辑";
+}
+function buildExcelSingleCellEditPlan(cell, nextEditorValue) {
+  const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+  const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
+  return {
+    key,
+    validationMessage,
+    nextValue: validationMessage ? void 0 : parseExcelEditorValue(cell, nextEditorValue)
+  };
+}
+function prepareExcelCellBatchEdit(edit) {
+  const key = getExcelCellKey(edit.cell.itemId, edit.cell.canonicalField);
+  const validationMessage = validateExcelEditorValue(edit.cell, edit.editorValue);
+  return {
+    ...edit,
+    key,
+    validationMessage,
+    editable: canInlineEditExcelCell(edit.cell),
+    nextValue: validationMessage ? void 0 : parseExcelEditorValue(edit.cell, edit.editorValue)
+  };
+}
+function buildExcelCellCommitPlan(edits, reason) {
+  const prepared = edits.map(prepareExcelCellBatchEdit);
+  const invalid = prepared.filter((edit) => edit.validationMessage);
+  const valid = prepared.filter((edit) => !edit.validationMessage && edit.editable);
+  return {
+    prepared,
+    invalid,
+    valid,
+    keys: uniqueExcelKeys(valid.map((edit) => edit.key)),
+    reason
+  };
+}
+function buildExcelCellValidationErrors(current2, invalid) {
+  const next2 = { ...current2 };
+  for (const edit of invalid) next2[edit.key] = edit.validationMessage || "字段值无效";
+  return next2;
+}
+function clearExcelCellErrors(current2, keys) {
+  const next2 = { ...current2 };
+  for (const key of keys) next2[key] = void 0;
+  return next2;
+}
+function getExcelCommittedValue(nextValue, normalizedValue) {
+  return normalizedValue !== void 0 ? normalizedValue : nextValue;
+}
+function shouldSkipExcelCommit(cell, nextValue) {
+  return areExcelCellValuesEqual(cell.value, nextValue);
+}
+function getExcelFillDragTargetCells(source, cells) {
+  if (!source || !cells.length) return [];
+  return cells.filter((cell) => cell.itemId !== source.itemId && cell.canonicalField === source.canonicalField && canInlineEditExcelCell(cell));
+}
+function buildExcelFillDragBatchEdits(source, cells) {
+  return getExcelFillDragTargetCells(source, cells).map((cell) => ({ cell, editorValue: source?.editorValue || "" }));
 }
 function useExcelCellEditing(options) {
   const { onCellCommit } = options;
@@ -52077,9 +52701,9 @@ function useExcelCellEditing(options) {
   const flashSavedKey = q$1((key) => {
     const existing = saveFlashTimers.current[key];
     if (existing) clearTimeout(existing);
-    setSavedCellKeys((prev2) => addSavedKey(prev2, key));
+    setSavedCellKeys((prev2) => addExcelSetValue(prev2, key));
     saveFlashTimers.current[key] = setTimeout(() => {
-      setSavedCellKeys((prev2) => removeSavedKey(prev2, key));
+      setSavedCellKeys((prev2) => removeExcelSetValue(prev2, key));
       delete saveFlashTimers.current[key];
     }, 1200);
   }, []);
@@ -52090,11 +52714,11 @@ function useExcelCellEditing(options) {
     const key = getExcelCellKey(cell.itemId, cell.canonicalField);
     setSelectedCellKey(key);
     if (!onCellCommit) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: "当前视图没有配置保存处理器" }));
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellNoCommitHandlerMessage() }));
       return;
     }
     if (!canInlineEditExcelCell(cell)) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: cell.policy.reason || "该字段不可内联编辑" }));
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellReadonlyMessage(cell) }));
       return;
     }
     setEditingCellKey(key);
@@ -52106,14 +52730,14 @@ function useExcelCellEditing(options) {
   const commitCellValue = q$1(async (cell, nextValue, reason) => {
     const key = getExcelCellKey(cell.itemId, cell.canonicalField);
     if (!onCellCommit) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: "当前视图没有配置保存处理器" }));
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellNoCommitHandlerMessage() }));
       return false;
     }
     if (!canInlineEditExcelCell(cell)) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: cell.policy.reason || "该字段不可内联编辑" }));
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellReadonlyMessage(cell) }));
       return false;
     }
-    if (areExcelCellValuesEqual(cell.value, nextValue)) return true;
+    if (shouldSkipExcelCommit(cell, nextValue)) return true;
     try {
       const result = await onCellCommit({
         item: cell.item,
@@ -52125,75 +52749,56 @@ function useExcelCellEditing(options) {
         reason
       });
       if (!result?.ok) {
-        setCellErrors((prev2) => ({ ...prev2, [key]: result?.message || "保存失败" }));
+        setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellCommitFailureMessage(result?.message) }));
         return false;
       }
-      const normalizedValue = result.normalizedValue !== void 0 ? result.normalizedValue : nextValue;
-      setValueOverrides((prev2) => ({ ...prev2, [key]: normalizedValue }));
+      setValueOverrides((prev2) => ({ ...prev2, [key]: getExcelCommittedValue(nextValue, result.normalizedValue) }));
       setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
       flashSavedKey(key);
       return true;
     } catch (error) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: error instanceof Error ? error.message : "保存失败" }));
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellCommitExceptionMessage(error) }));
       return false;
     }
   }, [flashSavedKey, onCellCommit]);
   const commitBatchEdits = q$1(async (edits, reason) => {
     if (!edits.length) return;
-    const prepared = edits.map((edit) => {
-      const key = getExcelCellKey(edit.cell.itemId, edit.cell.canonicalField);
-      const validationMessage = validateExcelEditorValue(edit.cell, edit.editorValue);
-      const nextValue = validationMessage ? void 0 : parseExcelEditorValue(edit.cell, edit.editorValue);
-      return { ...edit, key, validationMessage, nextValue };
-    });
-    const invalid = prepared.filter((edit) => edit.validationMessage);
-    if (invalid.length) {
-      setCellErrors((prev2) => {
-        const next2 = { ...prev2 };
-        for (const edit of invalid) next2[edit.key] = edit.validationMessage || "字段值无效";
-        return next2;
-      });
+    const plan = buildExcelCellCommitPlan(edits, reason);
+    if (plan.invalid.length) {
+      setCellErrors((prev2) => buildExcelCellValidationErrors(prev2, plan.invalid));
     }
-    const valid = prepared.filter((edit) => !edit.validationMessage && canInlineEditExcelCell(edit.cell));
-    if (!valid.length) return;
-    const keys = uniqueKeys(valid.map((edit) => edit.key));
+    if (!plan.valid.length) return;
     setEditingCellKey(null);
-    setSelectedCellKey(valid[valid.length - 1].key);
-    setPendingCellKeys((prev2) => addPendingKeys(prev2, keys));
-    setCellErrors((prev2) => {
-      const next2 = { ...prev2 };
-      for (const key of keys) next2[key] = void 0;
-      return next2;
-    });
+    setSelectedCellKey(plan.valid[plan.valid.length - 1].key);
+    setPendingCellKeys((prev2) => addExcelSetValues(prev2, plan.keys));
+    setCellErrors((prev2) => clearExcelCellErrors(prev2, plan.keys));
     try {
       await enqueueCommitTask(async () => {
-        for (const edit of valid) {
-          await commitCellValue(edit.cell, edit.nextValue, reason);
+        for (const edit of plan.valid) {
+          await commitCellValue(edit.cell, edit.nextValue, plan.reason);
         }
       });
     } finally {
-      setPendingCellKeys((prev2) => removePendingKeys(prev2, keys));
+      setPendingCellKeys((prev2) => removeExcelSetValues(prev2, plan.keys));
     }
   }, [commitCellValue, enqueueCommitTask]);
   const commitEdit = q$1(async (cell, nextEditorValue) => {
-    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-    const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
-    if (validationMessage) {
-      setSelectedCellKey(key);
-      setCellErrors((prev2) => ({ ...prev2, [key]: validationMessage }));
+    const plan = buildExcelSingleCellEditPlan(cell, nextEditorValue);
+    if (plan.validationMessage) {
+      setSelectedCellKey(plan.key);
+      setCellErrors((prev2) => ({ ...prev2, [plan.key]: plan.validationMessage }));
       return;
     }
-    const nextValue = parseExcelEditorValue(cell, nextEditorValue);
-    setSelectedCellKey(key);
+    setSelectedCellKey(plan.key);
     setEditingCellKey(null);
-    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
-    setPendingCellKeys((prev2) => addPendingKey(prev2, key));
+    setCellErrors((prev2) => ({ ...prev2, [plan.key]: void 0 }));
+    setPendingCellKeys((prev2) => addExcelSetValue(prev2, plan.key));
     try {
       await enqueueCommitTask(async () => {
-        await commitCellValue(cell, nextValue, "inline-edit");
+        await commitCellValue(cell, plan.nextValue, "inline-edit");
       });
     } finally {
-      setPendingCellKeys((prev2) => removePendingKey(prev2, key));
+      setPendingCellKeys((prev2) => removeExcelSetValue(prev2, plan.key));
     }
   }, [commitCellValue, enqueueCommitTask]);
   const startFillDrag = q$1((cell) => {
@@ -52212,13 +52817,11 @@ function useExcelCellEditing(options) {
     setFillDragTargetCellKey(null);
   }, []);
   const finishFillDrag = q$1(async (cells) => {
-    const source = fillDragSourceCell;
+    const batchEdits = buildExcelFillDragBatchEdits(fillDragSourceCell, cells);
     setFillDragSourceCell(null);
     setFillDragTargetCellKey(null);
-    if (!source || !cells.length) return;
-    const targetCells = cells.filter((cell) => cell.itemId !== source.itemId && cell.canonicalField === source.canonicalField && canInlineEditExcelCell(cell));
-    if (!targetCells.length) return;
-    await commitBatchEdits(targetCells.map((cell) => ({ cell, editorValue: source.editorValue })), "fill-drag");
+    if (!batchEdits.length) return;
+    await commitBatchEdits(batchEdits, "fill-drag");
   }, [commitBatchEdits, fillDragSourceCell]);
   const resetTransientState = q$1(() => {
     setSelectedCellKey(null);
@@ -52274,24 +52877,382 @@ function getObsidianEventBoundaryProps() {
     onDblClick: stopObsidianPreviewDoubleClick
   };
 }
-function normalizeColumnWidth(width2) {
+function ExcelColumnChipList({
+  fields,
+  canEdit,
+  busy,
+  draggedField,
+  getFieldLabel: getFieldLabel2,
+  onOpenMenu,
+  onRemoveField,
+  onDragStart,
+  onDragEnd,
+  onDropField
+}) {
+  return /* @__PURE__ */ u2("div", { class: "excel-column-chip-list", role: "list", "aria-label": "当前显示字段顺序", children: fields.map((field) => {
+    const label = getFieldLabel2(field);
+    const canRemove = canEdit && !busy && fields.length > 1;
+    return /* @__PURE__ */ u2(
+      "span",
+      {
+        class: `excel-column-chip ${draggedField === field ? "is-dragging" : ""}`,
+        role: "listitem",
+        draggable: canEdit && !busy,
+        title: canEdit ? canRemove ? "拖动调整列顺序；双击隐藏该列；右键更多操作" : "至少保留一个显示字段" : "当前字段配置不可直接编辑",
+        onContextMenu: (event) => onOpenMenu(event, field),
+        onDblClick: (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (canRemove) onRemoveField(field);
+        },
+        onDragStart: (event) => {
+          if (!canEdit || busy) return;
+          onDragStart(field);
+          event.dataTransfer?.setData("text/plain", field);
+          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+        },
+        onDragEnd,
+        onDragOver: (event) => {
+          if (!canEdit || busy || !draggedField) return;
+          event.preventDefault();
+          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        },
+        onDrop: (event) => {
+          event.preventDefault();
+          if (!canEdit || busy) return;
+          onDropField(field);
+        },
+        children: [
+          /* @__PURE__ */ u2("span", { class: "excel-column-chip-handle", "aria-hidden": "true", children: "⋮⋮" }),
+          /* @__PURE__ */ u2("span", { class: "excel-column-chip-label", children: label })
+        ]
+      },
+      field
+    );
+  }) });
+}
+function ExcelColumnContextMenu({
+  menu,
+  menuModel,
+  onRemoveField,
+  onMoveFieldToStart,
+  onMoveFieldToEnd,
+  onToggleInfo
+}) {
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "excel-column-context-menu",
+      style: { left: `${menu.x}px`, top: `${menu.y}px` },
+      role: "menu",
+      onMouseDown: (event) => event.stopPropagation(),
+      onClick: (event) => event.stopPropagation(),
+      children: [
+        /* @__PURE__ */ u2("div", { class: "excel-column-context-menu-title", children: menuModel.label }),
+        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !menuModel.canRemove, onClick: () => onRemoveField(menuModel.field), children: "隐藏此列" }),
+        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !menuModel.canMoveToStart, onClick: () => onMoveFieldToStart(menuModel.field), children: "移到最前" }),
+        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !menuModel.canMoveToEnd, onClick: () => onMoveFieldToEnd(menuModel.field), children: "移到最后" }),
+        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", onClick: onToggleInfo, children: "查看字段说明" }),
+        menu.showInfo ? /* @__PURE__ */ u2("div", { class: "excel-column-context-info", children: [
+          /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2("span", { children: "名称" }),
+            /* @__PURE__ */ u2("strong", { children: menuModel.label })
+          ] }),
+          menuModel.group ? /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2("span", { children: "分组" }),
+            /* @__PURE__ */ u2("strong", { children: menuModel.group })
+          ] }) : null,
+          /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2("span", { children: "字段键" }),
+            /* @__PURE__ */ u2("code", { children: menuModel.field })
+          ] })
+        ] }) : null
+      ]
+    }
+  );
+}
+function moveExcelColumnField(fields, fromIndex, toIndex) {
+  if (fromIndex === toIndex) return fields;
+  if (fromIndex < 0 || fromIndex >= fields.length) return fields;
+  if (toIndex < 0 || toIndex >= fields.length) return fields;
+  const next2 = [...fields];
+  const [moved] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved);
+  return next2;
+}
+function buildExcelColumnAvailableOptions(fields, availableFields, getFieldLabel2, getFieldGroupLabel) {
+  const selected = new Set(fields);
+  return availableFields.filter((field) => !selected.has(field)).map((field) => ({
+    value: field,
+    label: getFieldLabel2(field),
+    group: getFieldGroupLabel?.(field)
+  }));
+}
+function canEditExcelColumnFields(canEdit, busy) {
+  return canEdit && !busy;
+}
+function canRemoveExcelColumnField(fields, canEdit, busy) {
+  return canEditExcelColumnFields(canEdit, busy) && fields.length > 1;
+}
+function addExcelColumnField(fields, field) {
+  if (!field || fields.includes(field)) return fields;
+  return [...fields, field];
+}
+function removeExcelColumnField(fields, field) {
+  if (fields.length <= 1) return fields;
+  return fields.filter((item) => item !== field);
+}
+function moveExcelColumnFieldToStart(fields, field) {
+  const index = fields.indexOf(field);
+  if (index <= 0) return fields;
+  return moveExcelColumnField(fields, index, 0);
+}
+function moveExcelColumnFieldToEnd(fields, field) {
+  const index = fields.indexOf(field);
+  if (index < 0 || index === fields.length - 1) return fields;
+  return moveExcelColumnField(fields, index, fields.length - 1);
+}
+function reorderExcelColumnFieldsByDrop(fields, sourceField, targetField) {
+  if (!sourceField || sourceField === targetField) return fields;
+  return moveExcelColumnField(fields, fields.indexOf(sourceField), fields.indexOf(targetField));
+}
+function buildExcelColumnMenuModel(menu, fields, canEdit, busy, getFieldLabel2, getFieldGroupLabel) {
+  if (!menu?.field) return null;
+  const index = fields.indexOf(menu.field);
+  return {
+    field: menu.field,
+    label: getFieldLabel2(menu.field),
+    group: getFieldGroupLabel?.(menu.field),
+    index,
+    canRemove: canRemoveExcelColumnField(fields, canEdit, busy),
+    canMoveToStart: canEditExcelColumnFields(canEdit, busy) && index > 0,
+    canMoveToEnd: canEditExcelColumnFields(canEdit, busy) && index >= 0 && index < fields.length - 1
+  };
+}
+function ExcelColumnToolbar({
+  fields,
+  availableFields,
+  disabled = false,
+  saving = false,
+  error,
+  getFieldLabel: getFieldLabel2 = (field) => field,
+  getFieldGroupLabel,
+  onFieldsChange
+}) {
+  const [draggedField, setDraggedField] = d(null);
+  const [menu, setMenu] = d(null);
+  const canEdit = !!onFieldsChange && !disabled;
+  const busy = saving || disabled;
+  const availableOptions = T$1(
+    () => buildExcelColumnAvailableOptions(fields, availableFields, getFieldLabel2, getFieldGroupLabel),
+    [availableFields, fields, getFieldGroupLabel, getFieldLabel2]
+  );
+  const menuModel = T$1(
+    () => buildExcelColumnMenuModel(menu, fields, canEdit, busy, getFieldLabel2, getFieldGroupLabel),
+    [busy, canEdit, fields, getFieldGroupLabel, getFieldLabel2, menu]
+  );
+  const emit2 = (nextFields) => {
+    if (!canEdit || busy || nextFields === fields) return;
+    onFieldsChange?.(nextFields);
+  };
+  const closeMenu = () => setMenu(null);
+  const addField = (field) => emit2(addExcelColumnField(fields, field));
+  const removeField = (field) => {
+    emit2(removeExcelColumnField(fields, field));
+    closeMenu();
+  };
+  const moveFieldToStart = (field) => {
+    emit2(moveExcelColumnFieldToStart(fields, field));
+    closeMenu();
+  };
+  const moveFieldToEnd = (field) => {
+    emit2(moveExcelColumnFieldToEnd(fields, field));
+    closeMenu();
+  };
+  const dropField = (targetField) => {
+    emit2(reorderExcelColumnFieldsByDrop(fields, draggedField, targetField));
+    setDraggedField(null);
+  };
+  const openMenu = (event, field) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setMenu({ field, x: event.clientX, y: event.clientY });
+  };
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "excel-column-toolbar",
+      "data-editable": canEdit ? "true" : "false",
+      "aria-label": "Excel 显示字段编辑",
+      onClick: () => menu ? closeMenu() : void 0,
+      children: [
+        /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-title", children: "显示字段" }),
+        /* @__PURE__ */ u2(
+          ExcelColumnChipList,
+          {
+            fields,
+            canEdit,
+            busy,
+            draggedField,
+            getFieldLabel: getFieldLabel2,
+            onOpenMenu: openMenu,
+            onRemoveField: removeField,
+            onDragStart: setDraggedField,
+            onDragEnd: () => setDraggedField(null),
+            onDropField: dropField
+          }
+        ),
+        canEdit ? /* @__PURE__ */ u2("div", { class: "excel-column-add-field", children: /* @__PURE__ */ u2(
+          SimpleSelect,
+          {
+            value: "",
+            options: availableOptions,
+            placeholder: availableOptions.length ? "+ 添加字段" : "所有字段已显示",
+            disabled: busy || !availableOptions.length,
+            onChange: addField,
+            sx: { minWidth: "150px" }
+          }
+        ) }) : /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-readonly", children: "字段配置只读" }),
+        saving ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-status", children: "保存字段设置中…" }) : null,
+        error ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-error", title: error, children: error }) : null,
+        menu && menuModel ? /* @__PURE__ */ u2(
+          ExcelColumnContextMenu,
+          {
+            menu,
+            menuModel,
+            onRemoveField: removeField,
+            onMoveFieldToStart: moveFieldToStart,
+            onMoveFieldToEnd: moveFieldToEnd,
+            onToggleInfo: () => setMenu((prev2) => prev2 ? { ...prev2, showInfo: !prev2.showInfo } : prev2)
+          }
+        ) : null
+      ]
+    }
+  );
+}
+function ExcelViewToolbar({
+  editableColumnCount,
+  readonlyColumnCount,
+  displayFields,
+  availableFields,
+  fieldConfigSaving,
+  fieldConfigError,
+  fieldsChangeDisabled,
+  excelConfigSaving,
+  contentDisplayMode,
+  hasContentColumn,
+  contentModeButtonTitle,
+  onFieldsChange,
+  onContentDisplayToggle
+}) {
+  const isFullMarkdownContent = contentDisplayMode === "fullMarkdown";
+  return /* @__PURE__ */ u2(S, { children: [
+    /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "Excel 视图编辑说明", children: [
+      /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-editable", children: [
+        "可编辑 ",
+        editableColumnCount
+      ] }),
+      /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-readonly", children: [
+        "只读 ",
+        readonlyColumnCount
+      ] }),
+      /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: `excel-view-content-mode-button ${isFullMarkdownContent ? "is-active" : ""} ${excelConfigSaving ? "is-saving" : ""}`,
+          "aria-pressed": isFullMarkdownContent ? "true" : "false",
+          title: contentModeButtonTitle,
+          disabled: !hasContentColumn || excelConfigSaving,
+          onClick: onContentDisplayToggle,
+          children: [
+            "内容：",
+            excelConfigSaving ? "保存中…" : isFullMarkdownContent ? "全文 Markdown" : "预览"
+          ]
+        }
+      ),
+      /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "双击/Enter/F2 编辑；方向键/Tab 导航；支持多行多列粘贴；内容字段可切换预览或全文 Markdown。" })
+    ] }),
+    /* @__PURE__ */ u2(
+      ExcelColumnToolbar,
+      {
+        fields: displayFields,
+        availableFields,
+        saving: fieldConfigSaving,
+        error: fieldConfigError,
+        disabled: fieldsChangeDisabled,
+        getFieldLabel,
+        getFieldGroupLabel: getFieldCategoryLabel,
+        onFieldsChange
+      }
+    )
+  ] });
+}
+function normalizeExcelColumnWidth(width2) {
   if (!Number.isFinite(width2)) return 160;
   return Math.max(80, Math.min(640, Math.round(width2)));
 }
-function normalizeColumnWidths(widths) {
+function normalizeExcelColumnWidths(widths) {
   if (!widths) return {};
   const next2 = {};
   for (const [field, width2] of Object.entries(widths)) {
     if (!field) continue;
-    next2[field] = normalizeColumnWidth(Number(width2));
+    next2[field] = normalizeExcelColumnWidth(Number(width2));
   }
   return next2;
 }
-function normalizeContentDisplayMode(mode) {
+function normalizeExcelContentDisplayMode(mode) {
   return mode === "fullMarkdown" ? "fullMarkdown" : "previewText";
 }
-function getNextContentDisplayMode(mode) {
+function getNextExcelContentDisplayMode(mode) {
   return mode === "fullMarkdown" ? "previewText" : "fullMarkdown";
+}
+function buildExcelContentModeButtonTitle(input) {
+  if (!input.hasContentColumn) return "当前表格未显示内容字段，请先在字段栏添加 content/内容字段";
+  if (input.excelConfigSaving) return "正在保存 Excel 视图配置";
+  return input.isFullMarkdownContent ? "当前：内容字段显示完整 Markdown；点击切回短文本预览" : "当前：内容字段短文本预览；点击显示完整 Markdown";
+}
+function buildExcelViewRenderModel({
+  items,
+  goals = [],
+  fields,
+  availableFields,
+  excelConfig
+}) {
+  const discoveredFields = getAllFields(items);
+  const normalizedAvailableFields = normalizeDisplayFields(
+    availableFields?.length ? availableFields : discoveredFields,
+    { includeUnknown: false }
+  );
+  const displayFields = normalizeDisplayFields(
+    fields && fields.length ? fields : normalizedAvailableFields,
+    {
+      availableFields: normalizedAvailableFields,
+      includeUnknown: true,
+      fallbackFields: normalizedAvailableFields
+    }
+  );
+  const columns = buildExcelColumns(displayFields);
+  const orderedItems = orderItemsByDisplayedGoalField(items, displayFields, { goals });
+  const itemSignature = orderedItems.map((item) => `${item.id}:${item.modified ?? ""}`).join("|");
+  const persistedColumnWidths = normalizeExcelColumnWidths(excelConfig?.columnWidths);
+  const persistedContentDisplayMode = normalizeExcelContentDisplayMode(excelConfig?.contentDisplayMode);
+  const editableColumnCount = columns.filter((column2) => column2.editable).length;
+  const readonlyColumnCount = Math.max(0, columns.length - editableColumnCount);
+  const hasContentColumn = columns.some((column2) => column2.canonicalField === "content");
+  return {
+    discoveredFields,
+    normalizedAvailableFields,
+    displayFields,
+    columns,
+    orderedItems,
+    itemSignature,
+    persistedColumnWidths,
+    persistedContentDisplayMode,
+    editableColumnCount,
+    readonlyColumnCount,
+    hasContentColumn
+  };
 }
 function ExcelView({
   items,
@@ -52305,54 +53266,41 @@ function ExcelView({
   onOpenRecord,
   messageRenderPort
 }) {
-  const discoveredFields = T$1(() => getAllFields(items), [items]);
-  const normalizedAvailableFields = T$1(() => normalizeDisplayFields(
-    availableFields?.length ? availableFields : discoveredFields,
-    { includeUnknown: false }
-  ), [availableFields, discoveredFields]);
-  const displayFields = T$1(() => normalizeDisplayFields(
-    fields && fields.length ? fields : normalizedAvailableFields,
-    {
-      availableFields: normalizedAvailableFields,
-      includeUnknown: true,
-      fallbackFields: normalizedAvailableFields
-    }
-  ), [fields, normalizedAvailableFields]);
-  const columns = T$1(() => buildExcelColumns(displayFields), [displayFields]);
-  const orderedItems = T$1(() => orderItemsByDisplayedGoalField(items, displayFields, { goals }), [items, displayFields, goals]);
-  const itemSignature = T$1(() => orderedItems.map((item) => `${item.id}:${item.modified ?? ""}`).join("|"), [orderedItems]);
-  const persistedColumnWidths = T$1(() => normalizeColumnWidths(excelConfig?.columnWidths), [excelConfig?.columnWidths]);
-  const persistedContentDisplayMode = T$1(
-    () => normalizeContentDisplayMode(excelConfig?.contentDisplayMode),
-    [excelConfig?.contentDisplayMode]
-  );
+  const renderModel = T$1(() => buildExcelViewRenderModel({
+    items,
+    goals,
+    fields,
+    availableFields,
+    excelConfig
+  }), [availableFields, excelConfig, fields, goals, items]);
   const editing = useExcelCellEditing({ onCellCommit });
   const resetTransientState = editing.resetTransientState;
-  const editableColumnCount = columns.filter((column2) => column2.editable).length;
-  const readonlyColumnCount = Math.max(0, columns.length - editableColumnCount);
   const [fieldConfigSaving, setFieldConfigSaving] = d(false);
   const [fieldConfigError, setFieldConfigError] = d(null);
   const [excelConfigSaving, setExcelConfigSaving] = d(false);
-  const [localColumnWidths, setLocalColumnWidths] = d(persistedColumnWidths);
-  const [localContentDisplayMode, setLocalContentDisplayMode] = d(persistedContentDisplayMode);
+  const [localColumnWidths, setLocalColumnWidths] = d(renderModel.persistedColumnWidths);
+  const [localContentDisplayMode, setLocalContentDisplayMode] = d(renderModel.persistedContentDisplayMode);
   const isFullMarkdownContent = localContentDisplayMode === "fullMarkdown";
-  const hasContentColumn = T$1(() => columns.some((column2) => column2.canonicalField === "content"), [columns]);
-  const contentModeButtonTitle = !hasContentColumn ? "当前表格未显示内容字段，请先在字段栏添加 content/内容字段" : excelConfigSaving ? "正在保存 Excel 视图配置" : isFullMarkdownContent ? "当前：内容字段显示完整 Markdown；点击切回短文本预览" : "当前：内容字段短文本预览；点击显示完整 Markdown";
+  const contentModeButtonTitle = buildExcelContentModeButtonTitle({
+    hasContentColumn: renderModel.hasContentColumn,
+    excelConfigSaving,
+    isFullMarkdownContent
+  });
   y(() => {
     resetTransientState();
-  }, [itemSignature, resetTransientState]);
+  }, [renderModel.itemSignature, resetTransientState]);
   y(() => {
-    setLocalColumnWidths(persistedColumnWidths);
-  }, [persistedColumnWidths]);
+    setLocalColumnWidths(renderModel.persistedColumnWidths);
+  }, [renderModel.persistedColumnWidths]);
   y(() => {
-    setLocalContentDisplayMode(persistedContentDisplayMode);
-  }, [persistedContentDisplayMode]);
+    setLocalContentDisplayMode(renderModel.persistedContentDisplayMode);
+  }, [renderModel.persistedContentDisplayMode]);
   const handleFieldsChange = q$1(async (nextFields) => {
     if (!onFieldsChange || fieldConfigSaving) return;
     const normalizedNextFields = normalizeDisplayFields(nextFields, {
-      availableFields: normalizedAvailableFields,
+      availableFields: renderModel.normalizedAvailableFields,
       includeUnknown: true,
-      fallbackFields: displayFields
+      fallbackFields: renderModel.displayFields
     });
     setFieldConfigSaving(true);
     setFieldConfigError(null);
@@ -52364,7 +53312,7 @@ function ExcelView({
     } finally {
       setFieldConfigSaving(false);
     }
-  }, [displayFields, fieldConfigSaving, normalizedAvailableFields, onFieldsChange]);
+  }, [fieldConfigSaving, onFieldsChange, renderModel.displayFields, renderModel.normalizedAvailableFields]);
   const persistExcelConfig = q$1(async (nextConfig, rollback) => {
     if (!onExcelConfigChange) return;
     setExcelConfigSaving(true);
@@ -52378,25 +53326,22 @@ function ExcelView({
     }
   }, [onExcelConfigChange]);
   const handleColumnWidthDraftChange = q$1((field, width2) => {
-    const nextWidth = normalizeColumnWidth(width2);
+    const nextWidth = normalizeExcelColumnWidth(width2);
     setLocalColumnWidths((prev2) => ({ ...prev2, [field]: nextWidth }));
   }, []);
   const handleColumnWidthCommit = q$1(async (field, width2) => {
-    const nextWidth = normalizeColumnWidth(width2);
-    const nextColumnWidths = {
-      ...localColumnWidths,
-      [field]: nextWidth
-    };
+    const nextWidth = normalizeExcelColumnWidth(width2);
+    const nextColumnWidths = { ...localColumnWidths, [field]: nextWidth };
     setLocalColumnWidths(nextColumnWidths);
     await persistExcelConfig({
       ...excelConfig || {},
       columnWidths: nextColumnWidths,
       contentDisplayMode: localContentDisplayMode
-    }, () => setLocalColumnWidths(persistedColumnWidths));
-  }, [excelConfig, localColumnWidths, localContentDisplayMode, persistedColumnWidths, persistExcelConfig]);
+    }, () => setLocalColumnWidths(renderModel.persistedColumnWidths));
+  }, [excelConfig, localColumnWidths, localContentDisplayMode, persistExcelConfig, renderModel.persistedColumnWidths]);
   const handleContentDisplayToggle = q$1(async () => {
-    if (!hasContentColumn || excelConfigSaving) return;
-    const nextMode = getNextContentDisplayMode(localContentDisplayMode);
+    if (!renderModel.hasContentColumn || excelConfigSaving) return;
+    const nextMode = getNextExcelContentDisplayMode(localContentDisplayMode);
     const previousMode = localContentDisplayMode;
     setLocalContentDisplayMode(nextMode);
     await persistExcelConfig({
@@ -52404,7 +53349,7 @@ function ExcelView({
       columnWidths: localColumnWidths,
       contentDisplayMode: nextMode
     }, () => setLocalContentDisplayMode(previousMode));
-  }, [excelConfig, excelConfigSaving, hasContentColumn, localColumnWidths, localContentDisplayMode, persistExcelConfig]);
+  }, [excelConfig, excelConfigSaving, localColumnWidths, localContentDisplayMode, persistExcelConfig, renderModel.hasContentColumn]);
   return /* @__PURE__ */ u2(
     "div",
     {
@@ -52415,50 +53360,29 @@ function ExcelView({
       "data-content-display-mode": localContentDisplayMode,
       ...getObsidianEventBoundaryProps(),
       children: [
-        /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "Excel 视图编辑说明", children: [
-          /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-editable", children: [
-            "可编辑 ",
-            editableColumnCount
-          ] }),
-          /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-readonly", children: [
-            "只读 ",
-            readonlyColumnCount
-          ] }),
-          /* @__PURE__ */ u2(
-            "button",
-            {
-              type: "button",
-              class: `excel-view-content-mode-button ${isFullMarkdownContent ? "is-active" : ""} ${excelConfigSaving ? "is-saving" : ""}`,
-              "aria-pressed": isFullMarkdownContent ? "true" : "false",
-              title: contentModeButtonTitle,
-              disabled: !hasContentColumn || excelConfigSaving,
-              onClick: handleContentDisplayToggle,
-              children: [
-                "内容：",
-                excelConfigSaving ? "保存中…" : isFullMarkdownContent ? "全文 Markdown" : "预览"
-              ]
-            }
-          ),
-          /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "双击/Enter/F2 编辑；方向键/Tab 导航；支持多行多列粘贴；内容字段可切换预览或全文 Markdown。" })
-        ] }),
         /* @__PURE__ */ u2(
-          ExcelColumnToolbar,
+          ExcelViewToolbar,
           {
-            fields: displayFields,
-            availableFields: normalizedAvailableFields,
-            saving: fieldConfigSaving,
-            error: fieldConfigError,
-            disabled: !onFieldsChange,
-            getFieldLabel,
-            getFieldGroupLabel: getFieldCategoryLabel,
-            onFieldsChange: handleFieldsChange
+            editableColumnCount: renderModel.editableColumnCount,
+            readonlyColumnCount: renderModel.readonlyColumnCount,
+            displayFields: renderModel.displayFields,
+            availableFields: renderModel.normalizedAvailableFields,
+            fieldConfigSaving,
+            fieldConfigError,
+            fieldsChangeDisabled: !onFieldsChange,
+            excelConfigSaving,
+            contentDisplayMode: localContentDisplayMode,
+            hasContentColumn: renderModel.hasContentColumn,
+            contentModeButtonTitle,
+            onFieldsChange: handleFieldsChange,
+            onContentDisplayToggle: handleContentDisplayToggle
           }
         ),
         /* @__PURE__ */ u2(
           ExcelGrid,
           {
-            items: orderedItems,
-            columns,
+            items: renderModel.orderedItems,
+            columns: renderModel.columns,
             selectedCellKey: editing.selectedCellKey,
             editingCellKey: editing.editingCellKey,
             pendingCellKeys: editing.pendingCellKeys,
@@ -53054,6 +53978,30 @@ function CategoryFilter({
     }
   );
 }
+const VIEW_TOOLBAR_OPTIONS = ["年", "季", "月", "周", "天"];
+function getViewToolbarUnit(view) {
+  return {
+    年: "year",
+    季: "quarter",
+    月: "month",
+    周: "week",
+    天: "day"
+  }[view] || "day";
+}
+function buildViewToolbarDateLabel(currentDate, currentView) {
+  return formatDateForView(currentDate, currentView);
+}
+function buildViewToolbarDateTargets(currentDate, currentView, today = dayjs()) {
+  const unit = getViewToolbarUnit(currentView);
+  return {
+    previous: currentDate.clone().subtract(1, unit),
+    next: currentDate.clone().add(1, unit),
+    today
+  };
+}
+function shouldRenderViewToolbarFallbackFilters(args) {
+  return !args.hasFilterSlot && (args.canSelectThemes || args.canSelectCategories);
+}
 function ViewToolbar({
   currentView,
   currentDate,
@@ -53070,26 +54018,25 @@ function ViewToolbar({
   hideToolbar = false,
   onLayoutSettingsClick
 }) {
-  const unit = T$1(() => (v2) => ({
-    "年": "year",
-    "季": "quarter",
-    "月": "month",
-    "周": "week",
-    "天": "day"
-  })[v2] || "day", []);
-  const viewOptions = ["年", "季", "月", "周", "天"];
+  const dateLabel = T$1(() => buildViewToolbarDateLabel(currentDate, currentView), [currentDate, currentView]);
+  const dateTargets = T$1(() => buildViewToolbarDateTargets(currentDate, currentView), [currentDate, currentView]);
+  const shouldRenderFallbackFilters = shouldRenderViewToolbarFallbackFilters({
+    hasFilterSlot: Boolean(filterSlot),
+    canSelectThemes: Boolean(onThemeSelectionChange),
+    canSelectCategories: Boolean(onCategorySelectionChange)
+  });
   if (hideToolbar) {
     return null;
   }
   return /* @__PURE__ */ u2("div", { class: "tp-toolbar", ...getObsidianEventBoundaryProps(), children: [
-    viewOptions.map((v2) => /* @__PURE__ */ u2(
+    VIEW_TOOLBAR_OPTIONS.map((viewOption) => /* @__PURE__ */ u2(
       "button",
       {
-        onClick: () => onViewChange(v2),
-        class: v2 === currentView ? "active" : "",
-        children: v2
+        onClick: () => onViewChange(viewOption),
+        class: viewOption === currentView ? "active" : "",
+        children: viewOption
       },
-      v2
+      viewOption
     )),
     /* @__PURE__ */ u2(
       "span",
@@ -53098,31 +54045,13 @@ function ViewToolbar({
         role: "status",
         "aria-live": "polite",
         title: "当前时间范围",
-        children: formatDateForView(currentDate, currentView)
+        children: dateLabel
       }
     ),
-    /* @__PURE__ */ u2(
-      "button",
-      {
-        onClick: () => onDateChange(currentDate.clone().subtract(1, unit(currentView))),
-        children: "←"
-      }
-    ),
-    /* @__PURE__ */ u2(
-      "button",
-      {
-        onClick: () => onDateChange(currentDate.clone().add(1, unit(currentView))),
-        children: "→"
-      }
-    ),
-    /* @__PURE__ */ u2(
-      "button",
-      {
-        onClick: () => onDateChange(dayjs()),
-        children: "＝"
-      }
-    ),
-    filterSlot || /* @__PURE__ */ u2(S, { children: [
+    /* @__PURE__ */ u2("button", { onClick: () => onDateChange(dateTargets.previous), children: "←" }),
+    /* @__PURE__ */ u2("button", { onClick: () => onDateChange(dateTargets.next), children: "→" }),
+    /* @__PURE__ */ u2("button", { onClick: () => onDateChange(dateTargets.today), children: "＝" }),
+    filterSlot || shouldRenderFallbackFilters && /* @__PURE__ */ u2(S, { children: [
       onThemeSelectionChange && /* @__PURE__ */ u2(
         ThemeFilter,
         {
@@ -58747,19 +59676,6 @@ function showQuickInputNotice(message, tone = "error") {
   const duration2 = tone === "success" ? 4e3 : tone === "warning" ? 12e3 : 1e4;
   new obsidian.Notice(`${prefix2}${message}`, duration2);
 }
-function hasRequiredValue(value) {
-  if (value === null || value === void 0) return false;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") {
-    const raw = value.value ?? value.label;
-    return raw !== void 0 && raw !== null && String(raw).trim() !== "";
-  }
-  return String(value).trim() !== "";
-}
-function findMissingRequiredFields(state) {
-  const fields = state.template?.fields || [];
-  return fields.filter((field) => field?.required).filter((field) => !hasRequiredValue(state.formData?.[field.key] ?? state.formData?.[field.label])).map((field) => field.label || field.key).filter(Boolean);
-}
 function useQuickInputSubmitController({
   mode,
   editItem,
@@ -58783,17 +59699,11 @@ function useQuickInputSubmitController({
     pendingActionRef.current = pendingAction;
   }, [pendingAction]);
   y(() => () => submitLatestRef.current.dispose(), []);
-  const buildCreateDraft = q$1(() => {
-    const currentState = getCurrentState();
-    return {
-      blockId: currentState.blockId,
-      themeId: currentState.themeId ?? null,
-      formData: currentState.formData,
-      context,
-      meta: currentState.meta,
-      source: source ?? (onSave ? "timer" : "quickinput")
-    };
-  }, [context, getCurrentState, onSave, source]);
+  const buildCreateDraft = q$1(() => buildRecordCreateDraftFromEditorState({
+    state: getCurrentState(),
+    context,
+    source: source ?? (onSave ? "timer" : "quickinput")
+  }), [context, getCurrentState, onSave, source]);
   const clearRecovery = q$1(() => {
     setLastConflictResult(null);
   }, []);
@@ -58827,32 +59737,23 @@ function useQuickInputSubmitController({
     try {
       const result = await submitLatestRef.current.run(async (signal) => {
         const latestState = getCurrentState();
-        const missingRequired = findMissingRequiredFields(latestState);
-        if (missingRequired.length > 0) {
-          throw new Error(`请补充必填字段：${missingRequired.join("、")}`);
-        }
+        assertRecordInputRequiredFields(latestState);
         if (mode === "edit" && editItem) {
-          return await useCases.recordInput.submitUpdateRecord({
+          return await useCases.recordInput.submitUpdateRecord(buildUpdateRecordSubmitParamsFromEditorState({
+            state: latestState,
             item: editItem,
-            blockId: latestState.blockId,
-            themeId: latestState.themeId,
-            formData: latestState.formData,
-            meta: latestState.meta,
             expectedOutputPlan: liveOutputPlan,
             expectedPersistencePlan: livePersistencePlan,
             signal,
             source: "quickinput"
-          });
+          }));
         }
-        return await useCases.recordInput.submitCreateRecord({
-          blockId: latestState.blockId,
-          themeId: latestState.themeId,
-          formData: latestState.formData,
+        return await useCases.recordInput.submitCreateRecord(buildCreateRecordSubmitParamsFromEditorState({
+          state: latestState,
           context,
-          meta: latestState.meta,
           signal,
           source: source ?? "quickinput"
-        });
+        }));
       });
       rememberConflict(result);
       const presentation = buildRecordSubmitFeedbackPresentation(
@@ -59413,32 +60314,26 @@ class AiTextPromptModal extends obsidian.Modal {
     unmountModalContent(this.contentEl);
   }
 }
-function normalizeAiFieldValue(field, value) {
-  if (value === void 0 || value === null || value === "") return value;
-  const isSelectable = ["select", "radio", "rating"].includes(field.type);
-  if (!isSelectable) return value;
-  if (typeof value === "object" && "value" in value && "label" in value) {
-    return value;
-  }
-  const options = field.options || [];
-  if (Array.isArray(value)) {
-    return value.map((entry) => {
-      if (entry && typeof entry === "object" && "value" in entry && "label" in entry) return entry;
-      const matched2 = options.find((option) => option.value === entry || option.label === entry);
-      return matched2 ? { value: matched2.value, label: matched2.label || matched2.value } : entry;
-    });
-  }
-  const matched = options.find((option) => option.value === value || option.label === value);
-  return matched ? { value: matched.value, label: matched.label || matched.value } : value;
-}
-function normalizeAiFormData(template, formData) {
-  if (!template?.fields?.length) return { ...formData };
-  const next2 = { ...formData };
-  template.fields.forEach((field) => {
-    if (!(field.key in next2)) return;
-    next2[field.key] = normalizeAiFieldValue(field, next2[field.key]);
-  });
-  return next2;
+function AiBatchConfirmFooter({ saved, skipped, onSkip, onSave, onComplete }) {
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      sx: {
+        p: 2,
+        borderTop: "1px solid var(--background-modifier-border)",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
+      },
+      children: [
+        /* @__PURE__ */ u2(Button2, { variant: "text", color: "inherit", onClick: onSkip, disabled: saved || skipped, children: "跳过此条" }),
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 1 }, children: [
+          /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: onSave, disabled: saved, children: saved ? "已保存" : "保存此条" }),
+          /* @__PURE__ */ u2(Button2, { variant: "outlined", onClick: onComplete, children: "完成" })
+        ] })
+      ]
+    }
+  );
 }
 function resolveGoalForAiTarget(goalSettings, target) {
   const goals = goalSettings?.goals || [];
@@ -59491,6 +60386,178 @@ function goalDisplayName(goal, goalPath) {
   if (goal?.title) return String(goal.title);
   const normalized = splitGoalPath(String(goal?.goalPath || goalPath || "")).leafGoal;
   return normalized || String(goalPath || "未匹配目标");
+}
+function buildAiBatchConfirmRecordItems({
+  items,
+  blocks,
+  themes,
+  goalSettings,
+  inputSettings
+}) {
+  return items.map((cmd, index) => {
+    let block2 = cmd.target.blockId ? blocks.find((entry) => entry.id === cmd.target.blockId) : void 0;
+    if (!block2 && cmd.target.categoryKey) {
+      block2 = blocks.find((entry) => entry.categoryKey === cmd.target.categoryKey);
+    }
+    if (!block2 && blocks.length > 0) block2 = blocks[0];
+    const goal = resolveGoalForAiTarget(goalSettings, cmd.target);
+    const goalPath = goal ? splitGoalPath(String(goal.goalPath || goal.title || "")).goalPath : splitGoalPath(String(cmd.target.goalPath || "")).goalPath;
+    const goalId = goal?.id || String(cmd.target.goalId || "").trim() || void 0;
+    const preset = block2 ? resolvePresetForAiTarget(goalSettings, goal, block2.id, cmd.target) : null;
+    const presetThemePath = readPresetThemePath(preset);
+    let themeId;
+    const preferredTheme = presetThemePath || cmd.target.themeId;
+    if (preferredTheme) {
+      const theme2 = themes.find((entry) => entry.id === preferredTheme || entry.path === preferredTheme);
+      if (theme2) themeId = theme2.id;
+    }
+    if (!themeId && themes.length > 0) themeId = themes[0].id;
+    const selectedTheme = themeId ? themes.find((entry) => entry.id === themeId) : void 0;
+    const aiThemePath = cmd.target.themeId ? themes.find((entry) => entry.id === cmd.target.themeId || entry.path === cmd.target.themeId)?.path : void 0;
+    const themePath = presetThemePath || selectedTheme?.path || aiThemePath || void 0;
+    const initialTemplate = preset || (block2 ? getEffectiveTemplate(inputSettings, block2.id, themeId).template : void 0);
+    const initialFormData = {
+      ...cmd.fieldValues || {},
+      ...goalId ? { goalId, "目标ID": goalId } : {},
+      ...goalPath ? { goalPath, "目标": goalPath } : {},
+      ...preset ? { templateVariantId: preset.variantId || "default", goalTemplateVariantId: preset.variantId || "default" } : {},
+      ...themePath ? { themePath, "主题": themePath } : {}
+    };
+    return {
+      id: `record-${index}`,
+      cmd,
+      blockId: block2?.id || "",
+      themeId,
+      goalLabel: goalDisplayName(goal, goalPath),
+      presetLabel: presetDisplayName(preset),
+      themePath,
+      formData: normalizeRecordInputFormDataForTemplate(initialTemplate ?? void 0, initialFormData),
+      saved: false,
+      skipped: false
+    };
+  });
+}
+function patchAiBatchConfirmRecordAtIndex(records, index, updates) {
+  return records.map((record, currentIndex) => currentIndex === index ? { ...record, ...updates } : record);
+}
+function findNextPendingAiBatchConfirmIndex(records, currentIndex) {
+  return records.findIndex((record, index) => index > currentIndex && !record.saved && !record.skipped);
+}
+function summarizeAiBatchConfirmRecords(records) {
+  const savedCount = records.filter((record) => record.saved).length;
+  const skippedCount = records.filter((record) => record.skipped).length;
+  return {
+    savedCount,
+    skippedCount,
+    pendingCount: records.length - savedCount - skippedCount
+  };
+}
+function buildAiBatchConfirmRecordContext(record) {
+  return buildRecordDraftContext(record.cmd.fieldValues, record.formData);
+}
+function buildAiBatchConfirmCreateSubmitParams(record) {
+  return {
+    blockId: record.blockId,
+    themeId: record.themeId ?? null,
+    formData: record.formData,
+    context: buildAiBatchConfirmRecordContext(record),
+    source: "ai_batch"
+  };
+}
+function buildAiBatchConfirmBatchSummary(results) {
+  return buildBatchCreateRecordSubmitResult(results);
+}
+function AiBatchConfirmRecordHeader({ title, currentIndex, record, onClose }) {
+  return /* @__PURE__ */ u2(
+    ModalHeader,
+    {
+      padding: 2,
+      left: /* @__PURE__ */ u2(Box, { children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 600 }, children: [
+          title,
+          " · 编辑第 ",
+          currentIndex + 1,
+          " 条记录"
+        ] }),
+        record.saved && /* @__PURE__ */ u2(Chip2, { label: "已保存", color: "success", size: "small", sx: { ml: 1 } }),
+        record.skipped && /* @__PURE__ */ u2(Chip2, { label: "已跳过", color: "default", size: "small", sx: { ml: 1 } }),
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1 }, children: [
+          /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `目标：${shortDisplay(record.goalLabel, "未匹配")}` }),
+          /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `预设：${shortDisplay(record.presetLabel, "CoreBlock 默认")}` }),
+          /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `主题：${shortDisplay(record.themePath, "未指定")}` })
+        ] })
+      ] }),
+      onClose
+    }
+  );
+}
+function AiBatchConfirmSidebar({
+  records,
+  blocks,
+  currentIndex,
+  savedCount,
+  pendingCount,
+  onSelect,
+  onSaveAll
+}) {
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      sx: {
+        width: "200px",
+        borderRight: "1px solid var(--background-modifier-border)",
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0
+      },
+      children: [
+        /* @__PURE__ */ u2(Box, { sx: { p: 1.5, borderBottom: "1px solid var(--background-modifier-border)" }, children: [
+          /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "AI 识别结果" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
+            "共 ",
+            records.length,
+            " 条 · 已保存 ",
+            savedCount
+          ] })
+        ] }),
+        /* @__PURE__ */ u2(List2, { sx: { flex: 1, overflow: "auto", py: 0 }, children: records.map((record, index) => {
+          const block2 = blocks.find((entry) => entry.id === record.blockId);
+          const isActive = index === currentIndex;
+          return /* @__PURE__ */ u2(
+            ListItemButton2,
+            {
+              selected: isActive,
+              onClick: () => onSelect(index),
+              sx: { py: 1, opacity: record.skipped ? 0.5 : 1, bgcolor: isActive ? "action.selected" : "transparent" },
+              children: [
+                /* @__PURE__ */ u2(ListItemIcon2, { sx: { minWidth: 32 }, children: record.saved ? /* @__PURE__ */ u2(CheckCircleIcon, { color: "success", fontSize: "small" }) : record.skipped ? /* @__PURE__ */ u2(DeleteIcon, { color: "disabled", fontSize: "small" }) : /* @__PURE__ */ u2(RadioButtonUncheckedIcon, { color: "action", fontSize: "small" }) }),
+                /* @__PURE__ */ u2(
+                  ListItemText2,
+                  {
+                    primary: /* @__PURE__ */ u2(Typography2, { variant: "body2", noWrap: true, sx: { fontWeight: isActive ? 600 : 400 }, children: block2?.name || "未知类型" }),
+                    secondary: /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
+                      /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", sx: { display: "block" }, children: [
+                        shortDisplay(record.goalLabel, "未匹配目标", 18),
+                        " · ",
+                        shortDisplay(record.presetLabel, "默认预设", 18)
+                      ] }),
+                      /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", sx: { display: "block" }, children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
+                    ] })
+                  }
+                )
+              ]
+            },
+            record.id
+          );
+        }) }),
+        /* @__PURE__ */ u2(Box, { sx: { p: 1.5, borderTop: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(Button2, { fullWidth: true, variant: "outlined", size: "small", onClick: onSaveAll, disabled: pendingCount === 0, children: [
+          "保存全部 (",
+          pendingCount,
+          ")"
+        ] }) })
+      ]
+    }
+  );
 }
 class AiBatchConfirmModal extends obsidian.Modal {
   constructor(app, args) {
@@ -59552,8 +60619,6 @@ class AiBatchConfirmModal extends obsidian.Modal {
 function AiBatchConfirmForm({
   resolveResourcePath,
   title,
-  confirmText,
-  cancelText,
   items: initialItems,
   closeModal,
   onComplete
@@ -59563,135 +60628,46 @@ function AiBatchConfirmForm({
   const goalSettings = fullSettings.goalSettings;
   const useCases = useUseCases();
   const blocks = settings.blocks || [];
-  const themes = settings.themes || [];
   const [records, setRecords] = d(
-    () => initialItems.map((cmd, index) => {
-      let block2 = cmd.target.blockId ? blocks.find((b2) => b2.id === cmd.target.blockId) : void 0;
-      if (!block2 && cmd.target.categoryKey) {
-        block2 = blocks.find((b2) => b2.categoryKey === cmd.target.categoryKey);
-      }
-      if (!block2 && blocks.length > 0) block2 = blocks[0];
-      const goal = resolveGoalForAiTarget(goalSettings, cmd.target);
-      const goalPath = goal ? splitGoalPath(String(goal.goalPath || goal.title || "")).goalPath : splitGoalPath(String(cmd.target.goalPath || "")).goalPath;
-      const goalId = goal?.id || String(cmd.target.goalId || "").trim() || void 0;
-      const preset = block2 ? resolvePresetForAiTarget(goalSettings, goal, block2.id, cmd.target) : null;
-      const presetThemePath = readPresetThemePath(preset);
-      let themeId;
-      const preferredTheme = presetThemePath || cmd.target.themeId;
-      if (preferredTheme) {
-        const theme2 = themes.find((t3) => t3.id === preferredTheme || t3.path === preferredTheme);
-        if (theme2) themeId = theme2.id;
-      }
-      if (!themeId && themes.length > 0) themeId = themes[0].id;
-      const selectedTheme = themeId ? themes.find((t3) => t3.id === themeId) : void 0;
-      const themePath = presetThemePath || selectedTheme?.path || cmd.target.themeId && themes.find((t3) => t3.id === cmd.target.themeId || t3.path === cmd.target.themeId)?.path || void 0;
-      const initialTemplate = preset || (block2 ? getEffectiveTemplate(settings, block2.id, themeId).template : void 0);
-      const initialFormData = {
-        ...cmd.fieldValues || {},
-        ...goalId ? { goalId, "目标ID": goalId } : {},
-        ...goalPath ? { goalPath, "目标": goalPath } : {},
-        ...preset ? { templateVariantId: preset.variantId || "default", goalTemplateVariantId: preset.variantId || "default" } : {},
-        ...themePath ? { themePath, "主题": themePath } : {}
-      };
-      return {
-        id: `record-${index}`,
-        cmd,
-        blockId: block2?.id || "",
-        themeId,
-        goalLabel: goalDisplayName(goal, goalPath),
-        presetLabel: presetDisplayName(preset),
-        themePath,
-        formData: normalizeAiFormData(initialTemplate ?? void 0, initialFormData),
-        saved: false,
-        skipped: false
-      };
+    () => buildAiBatchConfirmRecordItems({
+      items: initialItems,
+      blocks,
+      themes: settings.themes || [],
+      goalSettings,
+      inputSettings: settings
     })
   );
   const [currentIndex, setCurrentIndex] = d(0);
   const currentRecord = records[currentIndex];
+  const summary = summarizeAiBatchConfirmRecords(records);
   const updateCurrentRecord = (updates) => {
-    setRecords((prev2) => prev2.map((r2, i2) => i2 === currentIndex ? { ...r2, ...updates } : r2));
+    setRecords((prev2) => patchAiBatchConfirmRecordAtIndex(prev2, currentIndex, updates));
   };
-  const jumpToNextPending = () => {
-    const nextPending = records.findIndex((r2, i2) => i2 > currentIndex && !r2.saved && !r2.skipped);
+  const jumpToNextPending = (nextRecords = records) => {
+    const nextPending = findNextPendingAiBatchConfirmIndex(nextRecords, currentIndex);
     if (nextPending >= 0) setCurrentIndex(nextPending);
   };
   const readFailureMessage = (result, fallback) => {
     return readRecordSubmitMessage(result, fallback);
   };
-  const buildBatchCreateResult = (results) => {
-    const succeeded = results.filter((result) => result.status === "success");
-    const failed = results.filter((result) => result.status !== "success" && result.status !== "cancelled");
-    const scanPaths = Array.from(new Set(results.flatMap((result) => result.refresh.scanPaths || [])));
-    const warnings = results.flatMap((result) => result.warnings || []);
-    const errors = results.flatMap((result) => result.errors || []);
-    if (failed.length === 0) {
-      return {
-        status: "success",
-        operation: "create",
-        refresh: {
-          scanPaths,
-          notify: results.some((result) => result.refresh.notify)
-        },
-        feedback: {
-          notice: `✅ 批量保存完成：成功 ${succeeded.length} 条`
-        },
-        warnings
-      };
-    }
-    if (succeeded.length === 0) {
-      return {
-        status: "error",
-        operation: "create",
-        refresh: {
-          scanPaths,
-          notify: results.some((result) => result.refresh.notify)
-        },
-        feedback: {
-          notice: `❌ 批量保存失败：0/${results.length} 成功`
-        },
-        warnings,
-        errors
-      };
-    }
-    return {
-      status: "partial_success",
-      operation: "create",
-      refresh: {
-        scanPaths,
-        notify: results.some((result) => result.refresh.notify)
-      },
-      feedback: {
-        notice: `⚠️ 批量保存完成：成功 ${succeeded.length} 条，失败 ${failed.length} 条`
-      },
-      warnings,
-      errors
-    };
-  };
   const handleSaveCurrent = async () => {
     if (!currentRecord) return;
-    const result = await useCases.recordInput.submitCreateRecord({
-      blockId: currentRecord.blockId,
-      themeId: currentRecord.themeId ?? null,
-      formData: currentRecord.formData,
-      context: { ...currentRecord.cmd.fieldValues || {}, ...currentRecord.formData || {} },
-      source: "ai_batch"
-    });
+    const result = await useCases.recordInput.submitCreateRecord(buildAiBatchConfirmCreateSubmitParams(currentRecord));
     if (result.status === "success") {
-      updateCurrentRecord({ saved: true });
+      const nextRecords = patchAiBatchConfirmRecordAtIndex(records, currentIndex, { saved: true });
+      setRecords(nextRecords);
       new obsidian.Notice(`✅ 第 ${currentIndex + 1} 条已保存`);
-      jumpToNextPending();
+      jumpToNextPending(nextRecords);
       return;
     }
-    if (result.status === "cancelled") {
-      return;
-    }
+    if (result.status === "cancelled") return;
     new obsidian.Notice(`❌ 保存失败: ${readFailureMessage(result, "保存失败")}`, 1e4);
   };
   const handleSkipCurrent = () => {
     if (!currentRecord) return;
-    updateCurrentRecord({ skipped: true });
-    jumpToNextPending();
+    const nextRecords = patchAiBatchConfirmRecordAtIndex(records, currentIndex, { skipped: true });
+    setRecords(nextRecords);
+    jumpToNextPending(nextRecords);
   };
   const handleSaveAll = async () => {
     const results = [];
@@ -59699,120 +60675,39 @@ function AiBatchConfirmForm({
       const record = records[i2];
       if (record.saved || record.skipped) continue;
       setCurrentIndex(i2);
-      const result = await useCases.recordInput.submitCreateRecord({
-        blockId: record.blockId,
-        themeId: record.themeId ?? null,
-        formData: record.formData,
-        context: { ...record.cmd.fieldValues || {}, ...record.formData || {} },
-        source: "ai_batch"
-      });
+      const result = await useCases.recordInput.submitCreateRecord(buildAiBatchConfirmCreateSubmitParams(record));
       results.push(result);
       if (result.status === "success") {
-        setRecords((prev2) => prev2.map((r2, idx) => idx === i2 ? { ...r2, saved: true } : r2));
+        setRecords((prev2) => patchAiBatchConfirmRecordAtIndex(prev2, i2, { saved: true }));
       } else if (result.status !== "cancelled") {
         new obsidian.Notice(`❌ 第 ${i2 + 1} 条保存失败: ${readFailureMessage(result, "保存失败")}`);
       }
     }
-    const summary = buildBatchCreateResult(results);
-    if (summary.feedback?.notice) {
-      new obsidian.Notice(summary.feedback.notice);
-    }
+    const batchSummary = buildAiBatchConfirmBatchSummary(results);
+    if (batchSummary.feedback?.notice) new obsidian.Notice(batchSummary.feedback.notice);
   };
   const handleComplete = () => {
-    const savedCount2 = records.filter((r2) => r2.saved).length;
-    const skippedCount2 = records.filter((r2) => r2.skipped).length;
-    new obsidian.Notice(`完成：已保存 ${savedCount2} 条，跳过 ${skippedCount2} 条`);
+    const latestSummary = summarizeAiBatchConfirmRecords(records);
+    new obsidian.Notice(`完成：已保存 ${latestSummary.savedCount} 条，跳过 ${latestSummary.skippedCount} 条`);
     onComplete?.();
     closeModal();
   };
-  const savedCount = records.filter((r2) => r2.saved).length;
-  const skippedCount = records.filter((r2) => r2.skipped).length;
-  const pendingCount = records.length - savedCount - skippedCount;
-  if (!currentRecord) {
-    return /* @__PURE__ */ u2("div", { children: "没有可处理的记录" });
-  }
+  if (!currentRecord) return /* @__PURE__ */ u2("div", { children: "没有可处理的记录" });
   return /* @__PURE__ */ u2(Box, { sx: { display: "flex", height: "100%", overflow: "hidden" }, children: [
     /* @__PURE__ */ u2(
-      Box,
+      AiBatchConfirmSidebar,
       {
-        sx: {
-          width: "200px",
-          borderRight: "1px solid var(--background-modifier-border)",
-          display: "flex",
-          flexDirection: "column",
-          flexShrink: 0
-        },
-        children: [
-          /* @__PURE__ */ u2(Box, { sx: { p: 1.5, borderBottom: "1px solid var(--background-modifier-border)" }, children: [
-            /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "AI 识别结果" }),
-            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
-              "共 ",
-              records.length,
-              " 条 · 已保存 ",
-              savedCount
-            ] })
-          ] }),
-          /* @__PURE__ */ u2(List2, { sx: { flex: 1, overflow: "auto", py: 0 }, children: records.map((record, index) => {
-            const block2 = blocks.find((b2) => b2.id === record.blockId);
-            const isActive = index === currentIndex;
-            return /* @__PURE__ */ u2(
-              ListItemButton2,
-              {
-                selected: isActive,
-                onClick: () => setCurrentIndex(index),
-                sx: { py: 1, opacity: record.skipped ? 0.5 : 1, bgcolor: isActive ? "action.selected" : "transparent" },
-                children: [
-                  /* @__PURE__ */ u2(ListItemIcon2, { sx: { minWidth: 32 }, children: record.saved ? /* @__PURE__ */ u2(CheckCircleIcon, { color: "success", fontSize: "small" }) : record.skipped ? /* @__PURE__ */ u2(DeleteIcon, { color: "disabled", fontSize: "small" }) : /* @__PURE__ */ u2(RadioButtonUncheckedIcon, { color: "action", fontSize: "small" }) }),
-                  /* @__PURE__ */ u2(
-                    ListItemText2,
-                    {
-                      primary: /* @__PURE__ */ u2(Typography2, { variant: "body2", noWrap: true, sx: { fontWeight: isActive ? 600 : 400 }, children: block2?.name || "未知类型" }),
-                      secondary: /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
-                        /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", sx: { display: "block" }, children: [
-                          shortDisplay(record.goalLabel, "未匹配目标", 18),
-                          " · ",
-                          shortDisplay(record.presetLabel, "默认预设", 18)
-                        ] }),
-                        /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", sx: { display: "block" }, children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
-                      ] })
-                    }
-                  )
-                ]
-              },
-              record.id
-            );
-          }) }),
-          /* @__PURE__ */ u2(Box, { sx: { p: 1.5, borderTop: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(Button2, { fullWidth: true, variant: "outlined", size: "small", onClick: handleSaveAll, disabled: pendingCount === 0, children: [
-            "保存全部 (",
-            pendingCount,
-            ")"
-          ] }) })
-        ]
+        records,
+        blocks,
+        currentIndex,
+        savedCount: summary.savedCount,
+        pendingCount: summary.pendingCount,
+        onSelect: setCurrentIndex,
+        onSaveAll: handleSaveAll
       }
     ),
     /* @__PURE__ */ u2(Box, { sx: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }, children: [
-      /* @__PURE__ */ u2(
-        ModalHeader,
-        {
-          padding: 2,
-          left: /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 600 }, children: [
-              title,
-              " · 编辑第 ",
-              currentIndex + 1,
-              " 条记录"
-            ] }),
-            currentRecord.saved && /* @__PURE__ */ u2(Chip2, { label: "已保存", color: "success", size: "small", sx: { ml: 1 } }),
-            currentRecord.skipped && /* @__PURE__ */ u2(Chip2, { label: "已跳过", color: "default", size: "small", sx: { ml: 1 } }),
-            /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1 }, children: [
-              /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `目标：${shortDisplay(currentRecord.goalLabel, "未匹配")}` }),
-              /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `预设：${shortDisplay(currentRecord.presetLabel, "CoreBlock 默认")}` }),
-              /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `主题：${shortDisplay(currentRecord.themePath, "未指定")}` })
-            ] })
-          ] }),
-          onClose: closeModal
-        }
-      ),
+      /* @__PURE__ */ u2(AiBatchConfirmRecordHeader, { title, currentIndex, record: currentRecord, onClose: closeModal }),
       /* @__PURE__ */ u2(Box, { sx: { flex: 1, overflow: "auto", p: 2 }, children: /* @__PURE__ */ u2(
         QuickInputEditor,
         {
@@ -59820,7 +60715,7 @@ function AiBatchConfirmForm({
           initialBlockId: currentRecord.blockId,
           initialThemeId: currentRecord.themeId || null,
           initialFormData: currentRecord.formData,
-          context: { ...currentRecord.cmd.fieldValues || {}, ...currentRecord.formData || {} },
+          context: buildAiBatchConfirmRecordContext(currentRecord),
           allowBlockSwitch: true,
           dense: true,
           onStateChange: (state) => updateCurrentRecord({
@@ -59832,22 +60727,13 @@ function AiBatchConfirmForm({
         currentRecord.id
       ) }),
       /* @__PURE__ */ u2(
-        Box,
+        AiBatchConfirmFooter,
         {
-          sx: {
-            p: 2,
-            borderTop: "1px solid var(--background-modifier-border)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center"
-          },
-          children: [
-            /* @__PURE__ */ u2(Button2, { variant: "text", color: "inherit", onClick: handleSkipCurrent, disabled: currentRecord.saved || currentRecord.skipped, children: "跳过此条" }),
-            /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 1 }, children: [
-              /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleSaveCurrent, disabled: currentRecord.saved, children: currentRecord.saved ? "已保存" : "保存此条" }),
-              /* @__PURE__ */ u2(Button2, { variant: "outlined", onClick: handleComplete, children: "完成" })
-            ] })
-          ]
+          saved: currentRecord.saved,
+          skipped: currentRecord.skipped,
+          onSkip: handleSkipCurrent,
+          onSave: handleSaveCurrent,
+          onComplete: handleComplete
         }
       )
     ] })
@@ -61768,37 +62654,34 @@ const VIEW_EDITORS = Object.fromEntries(
 Object.fromEntries(
   Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.defaultConfig])
 );
-function useUniqueFieldValues(dataStore) {
-  return T$1(() => {
-    if (!dataStore) return {};
-    const items = dataStore.queryItems();
-    const allKnownFields = new Set(getAllFields(items));
-    const valueMap = {};
-    allKnownFields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
-    for (const item of items) {
-      for (const field of allKnownFields) {
-        const value = readField(item, field);
-        if (value === null || value === void 0 || String(value).trim() === "") continue;
-        const values2 = Array.isArray(value) ? value : [value];
-        values2.forEach((v2) => {
-          const strV = String(v2).trim();
-          if (strV) valueMap[field].add(strV);
-        });
-      }
-    }
-    const result = {};
-    for (const field in valueMap) {
-      if (valueMap[field].size > 0) {
-        result[field] = Array.from(valueMap[field]).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-      }
-    }
-    return result;
-  }, [dataStore]);
-}
-const defaultFilterRule = { field: "", op: "=", value: "" };
-const defaultSortRule = { field: "", dir: "asc" };
+const DEFAULT_FILTER_RULE = { field: "", op: "=", value: "" };
+const DEFAULT_SORT_RULE = { field: "", dir: "asc" };
+const RULE_OPERATOR_OPTIONS = [
+  { value: "=", label: "=" },
+  { value: "!=", label: "!=" },
+  { value: "includes", label: "包含" },
+  { value: "regex", label: "正则" },
+  { value: ">", label: ">" },
+  { value: "<", label: "<" },
+  { value: "in", label: "属于任一" },
+  { value: "notIn", label: "不属于任一" },
+  { value: "between", label: "区间" },
+  { value: "empty", label: "为空" },
+  { value: "notEmpty", label: "非空" }
+];
+const RULE_DIRECTION_OPTIONS = [
+  { value: "asc", label: "升序" },
+  { value: "desc", label: "降序" }
+];
+const RULE_LOGIC_OPTIONS = [
+  { value: "and", label: "且" },
+  { value: "or", label: "或" }
+];
 function cloneRule(rule) {
   return { ...rule };
+}
+function makeDefaultRule(mode) {
+  return mode === "filter" ? { ...DEFAULT_FILTER_RULE } : { ...DEFAULT_SORT_RULE };
 }
 function operatorNeedsValue(op) {
   return !["empty", "notEmpty"].includes(op);
@@ -61806,7 +62689,7 @@ function operatorNeedsValue(op) {
 function isMultiValueOperator(op) {
   return op === "in" || op === "notIn";
 }
-function getValuePlaceholder(op) {
+function getRuleValuePlaceholder(op) {
   if (op === "between") return "输入区间，如 1~5 或 2026-01-01~2026-01-31";
   if (isMultiValueOperator(op)) return "选择或输入多个值，回车确认";
   return "输入值";
@@ -61827,6 +62710,18 @@ function formatRuleValue(rule) {
   }
   return String(rule.value ?? "");
 }
+function buildRuleLabel(mode, rule) {
+  if (mode === "filter") {
+    const filterRule = rule;
+    if (filterRule.op === "empty") return `${getFieldLabel(filterRule.field)} 为空`;
+    if (filterRule.op === "notEmpty") return `${getFieldLabel(filterRule.field)} 非空`;
+    const valueText = formatRuleValue(filterRule);
+    const opText = filterRule.op === "in" ? "属于任一" : filterRule.op === "notIn" ? "不属于任一" : filterRule.op;
+    return `${getFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
+  }
+  const sortRule = rule;
+  return `${getFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
+}
 function normalizeFilterPatch(patch, current2) {
   const nextOp = patch.op ?? current2?.op;
   const normalized = { ...patch };
@@ -61845,87 +62740,139 @@ function normalizeFilterPatch(patch, current2) {
   }
   return normalized;
 }
+function patchRule(mode, rule, patch) {
+  const nextPatch = mode === "filter" ? normalizeFilterPatch(patch, rule) : patch;
+  return { ...rule, ...nextPatch };
+}
+function patchRuleRows(mode, rows, index, patch) {
+  return rows.map((row, rowIndex) => rowIndex === index ? patchRule(mode, row, patch) : cloneRule(row));
+}
+function patchRuleLogic(rows, index, logic, isFilterMode) {
+  return rows.map((row, rowIndex) => {
+    if (rowIndex !== index || !isFilterMode) return cloneRule(row);
+    return { ...row, logic };
+  });
+}
+function removeRuleAt(rows, index) {
+  return rows.filter((_2, rowIndex) => rowIndex !== index).map(cloneRule);
+}
+function appendRule(mode, rows, newRule) {
+  const updatedRows = rows.map(cloneRule);
+  const ruleToAdd = cloneRule(newRule);
+  if (mode === "filter" && updatedRows.length > 0) {
+    const lastIndex = updatedRows.length - 1;
+    const lastRule = updatedRows[lastIndex];
+    if (!lastRule.logic) {
+      updatedRows[lastIndex] = {
+        ...lastRule,
+        logic: "and"
+      };
+    }
+  }
+  updatedRows.push(ruleToAdd);
+  return updatedRows;
+}
+function shouldShowRuleValueInput(mode, rule) {
+  return mode !== "filter" || operatorNeedsValue(rule.op);
+}
+function getPanelRuleGridTemplate(mode, showValueInput) {
+  if (mode !== "filter") return "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px";
+  return showValueInput ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px";
+}
+function getPanelAddRuleGridTemplate(mode, showValueInput) {
+  if (mode !== "filter") return "minmax(260px, 1.4fr) minmax(150px, 0.6fr) auto";
+  return showValueInput ? "minmax(260px, 1.4fr) minmax(150px, 0.6fr) minmax(260px, 1.3fr) auto" : "minmax(260px, 1.4fr) minmax(150px, 0.6fr) auto";
+}
+function buildUniqueFieldValues(dataStore) {
+  if (!dataStore) return {};
+  const items = dataStore.queryItems();
+  const allKnownFields = new Set(getAllFields(items));
+  const valueMap = {};
+  allKnownFields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
+  for (const item of items) {
+    for (const field of allKnownFields) {
+      const value = readField(item, field);
+      if (value === null || value === void 0 || String(value).trim() === "") continue;
+      const values2 = Array.isArray(value) ? value : [value];
+      values2.forEach((v2) => {
+        const strV = String(v2).trim();
+        if (strV) valueMap[field].add(strV);
+      });
+    }
+  }
+  const result = {};
+  for (const field in valueMap) {
+    if (valueMap[field].size > 0) {
+      result[field] = Array.from(valueMap[field]).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+    }
+  }
+  return result;
+}
+function RuleBuilderValueInput({ rule, uniqueFieldValues, variant, onValueChange }) {
+  if (!operatorNeedsValue(rule.op)) return null;
+  if (isMultiValueOperator(rule.op)) {
+    return /* @__PURE__ */ u2(
+      Autocomplete2,
+      {
+        multiple: true,
+        freeSolo: true,
+        fullWidth: true,
+        size: "small",
+        disablePortal: true,
+        options: uniqueFieldValues[rule.field] || [],
+        value: normalizeMultiValue$1(rule.value),
+        onChange: (_2, newValue) => onValueChange(normalizeMultiValue$1(newValue)),
+        renderInput: (params) => /* @__PURE__ */ u2(
+          TextField2,
+          {
+            ...params,
+            variant: "outlined",
+            placeholder: getRuleValuePlaceholder(rule.op),
+            helperText: variant === "panel" ? "同一字段内多选表示“或”：匹配其中任一值即可。" : void 0
+          }
+        )
+      }
+    );
+  }
+  return /* @__PURE__ */ u2(
+    Autocomplete2,
+    {
+      freeSolo: true,
+      fullWidth: true,
+      size: "small",
+      disableClearable: true,
+      disablePortal: true,
+      options: uniqueFieldValues[rule.field] || [],
+      value: String(rule.value ?? ""),
+      inputValue: String(rule.value ?? ""),
+      onInputChange: (_2, newValue) => onValueChange(newValue || ""),
+      renderInput: (params) => /* @__PURE__ */ u2(TextField2, { ...params, variant: "outlined", placeholder: getRuleValuePlaceholder(rule.op) })
+    }
+  );
+}
 function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = "compact" }) {
   const isFilterMode = mode === "filter";
-  const [newRule, setNewRule] = d(
-    isFilterMode ? { ...defaultFilterRule } : { ...defaultSortRule }
-  );
-  const uniqueFieldValues = useUniqueFieldValues(dataStore);
-  const currentFilterRule = newRule;
-  const shouldShowValueInput = !isFilterMode || operatorNeedsValue(currentFilterRule.op);
-  const remove2 = (i2) => onChange(rows.filter((_2, j2) => j2 !== i2).map(cloneRule));
+  const [newRule, setNewRule] = d(makeDefaultRule(mode));
+  const uniqueFieldValues = T$1(() => buildUniqueFieldValues(dataStore), [dataStore]);
+  const shouldShowValueInput = shouldShowRuleValueInput(mode, newRule);
+  const remove2 = (index) => onChange(removeRuleAt(rows, index));
   const updateNewRule = (patch) => {
-    setNewRule((current2) => {
-      const nextPatch = isFilterMode ? normalizeFilterPatch(patch, current2) : patch;
-      return { ...current2, ...nextPatch };
-    });
+    setNewRule((current2) => patchRule(mode, current2, patch));
   };
   const updateRow = (index, patch) => {
-    const updatedRows = rows.map((row, rowIndex) => {
-      if (rowIndex !== index) return cloneRule(row);
-      const nextPatch = isFilterMode ? normalizeFilterPatch(patch, row) : patch;
-      return { ...row, ...nextPatch };
-    });
-    onChange(updatedRows);
+    onChange(patchRuleRows(mode, rows, index, patch));
   };
   const updateLogic = (index, logic) => {
-    const updatedRows = rows.map((row, rowIndex) => {
-      if (rowIndex !== index || !isFilterMode) return cloneRule(row);
-      return { ...row, logic };
-    });
-    onChange(updatedRows);
+    onChange(patchRuleLogic(rows, index, logic, isFilterMode));
   };
   const handleAddRule = () => {
     if (!newRule.field) {
       alert("请选择一个字段");
       return;
     }
-    const updatedRows = rows.map(cloneRule);
-    const ruleToAdd = cloneRule(newRule);
-    if (isFilterMode && updatedRows.length > 0) {
-      const lastIndex = updatedRows.length - 1;
-      const lastRule = updatedRows[lastIndex];
-      if (!lastRule.logic) {
-        updatedRows[lastIndex] = {
-          ...lastRule,
-          logic: "and"
-        };
-      }
-    }
-    updatedRows.push(ruleToAdd);
-    onChange(updatedRows);
-    setNewRule(isFilterMode ? { ...defaultFilterRule } : { ...defaultSortRule });
+    onChange(appendRule(mode, rows, newRule));
+    setNewRule(makeDefaultRule(mode));
   };
-  const formatRule = (rule) => {
-    if (isFilterMode) {
-      const filterRule = rule;
-      if (filterRule.op === "empty") return `${getFieldLabel(filterRule.field)} 为空`;
-      if (filterRule.op === "notEmpty") return `${getFieldLabel(filterRule.field)} 非空`;
-      const valueText = formatRuleValue(filterRule);
-      const opText = filterRule.op === "in" ? "属于任一" : filterRule.op === "notIn" ? "不属于任一" : filterRule.op;
-      return `${getFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
-    }
-    const sortRule = rule;
-    return `${getFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
-  };
-  const operatorOptions = [
-    { value: "=", label: "=" },
-    { value: "!=", label: "!=" },
-    { value: "includes", label: "包含" },
-    { value: "regex", label: "正则" },
-    { value: ">", label: ">" },
-    { value: "<", label: "<" },
-    { value: "in", label: "属于任一" },
-    { value: "notIn", label: "不属于任一" },
-    { value: "between", label: "区间" },
-    { value: "empty", label: "为空" },
-    { value: "notEmpty", label: "非空" }
-  ];
-  const directionOptions = [{ value: "asc", label: "升序" }, { value: "desc", label: "降序" }];
-  const logicOptions = [
-    { value: "and", label: "且" },
-    { value: "or", label: "或" }
-  ];
   const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => /* @__PURE__ */ u2(
     FieldPickerAutocomplete,
     {
@@ -61936,57 +62883,24 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
       helperText: variant === "panel" ? "字段按核心字段 / 文件字段 / 自定义字段分组。" : void 0
     }
   );
-  const renderValueInput = (rule, onValueChange) => {
-    if (!operatorNeedsValue(rule.op)) return null;
-    if (isMultiValueOperator(rule.op)) {
-      return /* @__PURE__ */ u2(
-        Autocomplete2,
-        {
-          multiple: true,
-          freeSolo: true,
-          fullWidth: true,
-          size: "small",
-          disablePortal: true,
-          options: uniqueFieldValues[rule.field] || [],
-          value: normalizeMultiValue$1(rule.value),
-          onChange: (_2, newValue) => onValueChange(normalizeMultiValue$1(newValue)),
-          renderInput: (params) => /* @__PURE__ */ u2(
-            TextField2,
-            {
-              ...params,
-              variant: "outlined",
-              placeholder: getValuePlaceholder(rule.op),
-              helperText: variant === "panel" ? "同一字段内多选表示“或”：匹配其中任一值即可。" : void 0
-            }
-          )
-        }
-      );
+  const renderValueInput = (rule, onValueChange) => /* @__PURE__ */ u2(
+    RuleBuilderValueInput,
+    {
+      rule,
+      uniqueFieldValues,
+      variant,
+      onValueChange
     }
-    return /* @__PURE__ */ u2(
-      Autocomplete2,
-      {
-        freeSolo: true,
-        fullWidth: true,
-        size: "small",
-        disableClearable: true,
-        disablePortal: true,
-        options: uniqueFieldValues[rule.field] || [],
-        value: String(rule.value ?? ""),
-        inputValue: String(rule.value ?? ""),
-        onInputChange: (_2, newValue) => onValueChange(newValue || ""),
-        renderInput: (params) => /* @__PURE__ */ u2(TextField2, { ...params, variant: "outlined", placeholder: getValuePlaceholder(rule.op) })
-      }
-    );
-  };
-  const existingRules = /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", alignItems: "center" }, children: rows.map((rule, i2) => {
-    const isLast = i2 === rows.length - 1;
+  );
+  const existingRules = /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", alignItems: "center" }, children: rows.map((rule, index) => {
+    const isLast = index === rows.length - 1;
     const filterRule = rule;
     return /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "4px" }, children: [
-      /* @__PURE__ */ u2(Tooltip2, { title: `点击删除规则: ${formatRule(rule)}`, children: /* @__PURE__ */ u2(
+      /* @__PURE__ */ u2(Tooltip2, { title: `点击删除规则: ${buildRuleLabel(mode, rule)}`, children: /* @__PURE__ */ u2(
         Chip2,
         {
-          label: formatRule(rule),
-          onClick: () => remove2(i2),
+          label: buildRuleLabel(mode, rule),
+          onClick: () => remove2(index),
           size: "small"
         }
       ) }),
@@ -61994,24 +62908,24 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
         SimpleSelect,
         {
           value: filterRule.logic || "and",
-          options: logicOptions,
-          onChange: (val) => updateLogic(i2, val),
+          options: RULE_LOGIC_OPTIONS,
+          onChange: (val) => updateLogic(index, val),
           sx: { minWidth: 50 }
         }
       )
-    ] }, i2);
+    ] }, index);
   }) });
   const panelRuleRows = /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: rows.map((rule, index) => {
     const filterRule = rule;
     const sortRule = rule;
     const isLast = index === rows.length - 1;
-    const gridTemplateColumns2 = isFilterMode && operatorNeedsValue(filterRule.op) ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px";
+    const showValueInput = isFilterMode && operatorNeedsValue(filterRule.op);
     return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 0.75 }, children: /* @__PURE__ */ u2(
       Box,
       {
         sx: {
           display: "grid",
-          gridTemplateColumns: gridTemplateColumns2,
+          gridTemplateColumns: getPanelRuleGridTemplate(mode, showValueInput),
           gap: 1,
           alignItems: "center",
           p: 1,
@@ -62026,7 +62940,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
               SimpleSelect,
               {
                 value: filterRule.op,
-                options: operatorOptions,
+                options: RULE_OPERATOR_OPTIONS,
                 onChange: (val) => updateRow(index, { op: val }),
                 sx: { minWidth: 140 }
               }
@@ -62036,7 +62950,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
             SimpleSelect,
             {
               value: sortRule.dir,
-              options: directionOptions,
+              options: RULE_DIRECTION_OPTIONS,
               onChange: (val) => updateRow(index, { dir: val }),
               sx: { minWidth: 120 }
             }
@@ -62045,7 +62959,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
             SimpleSelect,
             {
               value: filterRule.logic || "and",
-              options: logicOptions,
+              options: RULE_LOGIC_OPTIONS,
               onChange: (val) => updateLogic(index, val),
               sx: { minWidth: 80 }
             }
@@ -62078,7 +62992,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
           {
             sx: {
               display: "grid",
-              gridTemplateColumns: isFilterMode ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px",
+              gridTemplateColumns: getPanelRuleGridTemplate(mode, isFilterMode),
               gap: 1,
               px: 1,
               color: "text.secondary"
@@ -62099,7 +63013,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
         {
           sx: {
             display: "grid",
-            gridTemplateColumns: isFilterMode && shouldShowValueInput ? "minmax(260px, 1.4fr) minmax(150px, 0.6fr) minmax(260px, 1.3fr) auto" : "minmax(260px, 1.4fr) minmax(150px, 0.6fr) auto",
+            gridTemplateColumns: getPanelAddRuleGridTemplate(mode, shouldShowValueInput),
             gap: 1,
             alignItems: "center",
             p: 1.5,
@@ -62114,7 +63028,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
                 SimpleSelect,
                 {
                   value: newRule.op,
-                  options: operatorOptions,
+                  options: RULE_OPERATOR_OPTIONS,
                   onChange: (val) => updateNewRule({ op: val }),
                   sx: { minWidth: 140 }
                 }
@@ -62124,7 +63038,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
               SimpleSelect,
               {
                 value: newRule.dir,
-                options: directionOptions,
+                options: RULE_DIRECTION_OPTIONS,
                 onChange: (val) => updateNewRule({ dir: val }),
                 sx: { minWidth: 120 }
               }
@@ -62146,7 +63060,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
             SimpleSelect,
             {
               value: newRule.op,
-              options: operatorOptions,
+              options: RULE_OPERATOR_OPTIONS,
               onChange: (val) => updateNewRule({ op: val }),
               sx: { minWidth: 120 }
             }
@@ -62156,7 +63070,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
           SimpleSelect,
           {
             value: newRule.dir,
-            options: directionOptions,
+            options: RULE_DIRECTION_OPTIONS,
             onChange: (val) => updateNewRule({ dir: val }),
             sx: { minWidth: 100 }
           }
@@ -70027,17 +70941,6 @@ function buildGoalTemplateCell(goal, block2, templates) {
   }
   return { goal, block: block2, templates: cellTemplates, enabledTemplates, defaultCount, status, label, description };
 }
-const AnyTable = Table2;
-const AnyTableHead = TableHead2;
-const AnyTableRow = TableRow2;
-const AnyTableCell = TableCell2;
-const AnyTableBody = TableBody2;
-const AnyTypography = Typography2;
-const AnyBox = Box;
-const PATH_COL_WIDTH = 250;
-const BLOCK_COL_WIDTH = 136;
-const SEGMENT_HEIGHT = 36;
-const ADD_BUTTON_HEIGHT = SEGMENT_HEIGHT;
 function normalizeSearchText(value) {
   return String(value || "").toLowerCase().trim();
 }
@@ -70085,6 +70988,444 @@ function getEventDropPosition(event, target) {
 function isSameCell(left2, goal, block2) {
   return left2.goalId === goal.id && left2.blockId === block2.id;
 }
+function filterVisibleGoalTemplateMatrixGoals(input) {
+  const q2 = normalizeSearchText(input.query);
+  return input.goals.filter((goal) => {
+    if (!isGoalVisibleByExpandedState(goal, input.expandedPaths)) return false;
+    if (!q2) return true;
+    const goalText = `${getGoalDisplayName(goal)} ${getGoalDisplayPath(goal)} ${goal.themePath || ""}`.toLowerCase();
+    if (goalText.includes(q2)) return true;
+    return input.templates.some((template) => template.goalId === goal.id && presetSearchText(template, goal).includes(q2));
+  });
+}
+function splitGoalsByRoot(goals) {
+  const groups = [];
+  let current2 = [];
+  goals.forEach((goal) => {
+    if (getGoalDepth(goal) === 0) {
+      if (current2.length > 0) groups.push(current2);
+      current2 = [goal];
+    } else if (current2.length > 0) {
+      current2.push(goal);
+    } else {
+      current2 = [goal];
+    }
+  });
+  if (current2.length > 0) groups.push(current2);
+  return groups;
+}
+function buildNextActiveBlockIds(previous, blockId, coreBlocks) {
+  const next2 = new Set(previous);
+  if (next2.size === 0) coreBlocks.forEach((block2) => next2.add(block2.id));
+  if (next2.has(blockId) && next2.size > 1) next2.delete(blockId);
+  else next2.add(blockId);
+  return next2;
+}
+function addAllGoalPaths(previous, allGoalPaths) {
+  const next2 = new Set(previous);
+  allGoalPaths.forEach((path) => next2.add(path));
+  return next2;
+}
+function toggleGoalPath(previous, path) {
+  const next2 = new Set(previous);
+  if (next2.has(path)) next2.delete(path);
+  else next2.add(path);
+  return next2;
+}
+function toggleGoalCollapsed(previous, goalId) {
+  const next2 = new Set(previous);
+  if (next2.has(goalId)) next2.delete(goalId);
+  else next2.add(goalId);
+  return next2;
+}
+function orderDraggedGoalSiblings(input) {
+  if (input.dragGoalId === input.targetGoalId) return null;
+  const dragged = input.goals.find((goal) => goal.id === input.dragGoalId);
+  const target = input.goals.find((goal) => goal.id === input.targetGoalId);
+  if (!dragged || !target) return null;
+  const draggedParent = getGoalParentPath(dragged);
+  const targetParent = getGoalParentPath(target);
+  if (draggedParent !== targetParent) return null;
+  const siblings = sortGoalsForMatrix(input.goals.filter((goal) => getGoalParentPath(goal) === draggedParent));
+  const next2 = siblings.filter((goal) => goal.id !== dragged.id);
+  const targetIndex = next2.findIndex((goal) => goal.id === target.id);
+  if (targetIndex < 0) return null;
+  next2.splice(input.position === "before" ? targetIndex : targetIndex + 1, 0, dragged);
+  return next2;
+}
+function reorderPresetTemplatesInCell(input) {
+  const cellTemplates = sortPresets(input.templates.filter((template) => template.goalId === input.drag.goalId && template.coreBlockId === input.drag.blockId && template.enabled !== false), input.goals);
+  const dragged = cellTemplates.find((template) => goalTemplateKey(template) === input.drag.templateKey);
+  if (!dragged) return null;
+  const next2 = cellTemplates.filter((template) => goalTemplateKey(template) !== input.drag.templateKey);
+  if (input.targetTemplateKey) {
+    const targetIndex = next2.findIndex((template) => goalTemplateKey(template) === input.targetTemplateKey);
+    if (targetIndex >= 0) next2.splice(input.position === "before" ? targetIndex : targetIndex + 1, 0, dragged);
+    else next2.push(dragged);
+  } else {
+    next2.push(dragged);
+  }
+  return next2.map((template, index) => ({ ...template, sortOrder: index * 10 }));
+}
+const ADD_BUTTON_HEIGHT = 36;
+function AddPresetButton(props) {
+  const { goal, block: block2, openEditor } = props;
+  return /* @__PURE__ */ u2(
+    "button",
+    {
+      type: "button",
+      onClick: (event) => {
+        event.stopPropagation();
+        openEditor(goal, block2);
+      },
+      title: "添加预设",
+      style: {
+        width: "100%",
+        height: ADD_BUTTON_HEIGHT,
+        minHeight: ADD_BUTTON_HEIGHT,
+        border: "1px dashed var(--background-modifier-border)",
+        borderRadius: 8,
+        background: "var(--background-secondary)",
+        color: "var(--text-muted)",
+        cursor: "pointer",
+        font: "inherit",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 0,
+        margin: 0,
+        boxShadow: "none",
+        lineHeight: 1
+      },
+      children: "＋"
+    }
+  );
+}
+function PresetCard(props) {
+  const { goal, block: block2, template, themeIconByPath, draggingPreset, setDraggingPreset, setPresetDropCell, openEditor, openPresetContextMenu } = props;
+  const themePath = readGoalTemplateThemePath(template, goal);
+  const icon = readGoalTemplateIcon(template, themeIconByPath.get(themePath));
+  const name = getPresetCardName(template, goal);
+  const key = goalTemplateKey(template);
+  return /* @__PURE__ */ u2(
+    GoalPresetCard,
+    {
+      goal,
+      block: block2,
+      template,
+      templateKey: key,
+      name,
+      icon,
+      themePath,
+      isDragging: draggingPreset?.templateKey === key,
+      onOpen: () => openEditor(goal, block2, template),
+      onContextMenu: (event) => openPresetContextMenu(event, goal, block2, template),
+      onDragStart: (event) => {
+        event.stopPropagation();
+        if (event.dataTransfer) {
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", key);
+        }
+        setDraggingPreset({ goalId: goal.id, blockId: block2.id, templateKey: key });
+      },
+      onDragEnd: () => {
+        setDraggingPreset(null);
+        setPresetDropCell(null);
+      }
+    }
+  );
+}
+function GoalTemplateMatrixCell(props) {
+  const {
+    goal,
+    block: block2,
+    goals,
+    templates,
+    themeIconByPath,
+    collapsed,
+    draggingPreset,
+    presetDropCell,
+    setDraggingPreset,
+    setPresetDropCell,
+    handlePresetDropOnCell,
+    openEditor,
+    openPresetContextMenu
+  } = props;
+  const cell = buildGoalTemplateCell(goal, block2, templates);
+  const presets = sortPresets(cell.enabledTemplates, goals);
+  const isDropCell = presetDropCell?.goalId === goal.id && presetDropCell.blockId === block2.id;
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      title: "＋ 添加；左键编辑；右键复制；拖动排序或移动",
+      onDragEnter: (event) => {
+        if (!draggingPreset) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (!presetDropCell || presetDropCell.goalId !== goal.id || presetDropCell.blockId !== block2.id) setPresetDropCell({ goalId: goal.id, blockId: block2.id });
+      },
+      onDragOver: (event) => {
+        if (!draggingPreset) return;
+        event.preventDefault();
+      },
+      onDrop: (event) => handlePresetDropOnCell(event, goal, block2),
+      style: {
+        display: "grid",
+        gridAutoRows: "min-content",
+        alignContent: "start",
+        justifyItems: "stretch",
+        gap: 4,
+        minHeight: ADD_BUTTON_HEIGHT + 8,
+        padding: "0 4px 4px",
+        borderRadius: 10,
+        background: "transparent",
+        outline: isDropCell ? "2px dashed #7c3cff" : "none",
+        outlineOffset: isDropCell ? -2 : 0
+      },
+      children: [
+        /* @__PURE__ */ u2(AddPresetButton, { goal, block: block2, openEditor }),
+        !collapsed && presets.map((template) => /* @__PURE__ */ u2(
+          PresetCard,
+          {
+            goal,
+            block: block2,
+            template,
+            themeIconByPath,
+            draggingPreset,
+            setDraggingPreset,
+            setPresetDropCell,
+            openEditor,
+            openPresetContextMenu
+          },
+          goalTemplateKey(template)
+        ))
+      ]
+    }
+  );
+}
+const AnyTableRow$1 = TableRow2;
+const AnyTableCell$1 = TableCell2;
+const AnyTypography = Typography2;
+const AnyBox = Box;
+const PATH_COL_WIDTH$1 = 250;
+const BLOCK_COL_WIDTH$1 = 136;
+const SEGMENT_HEIGHT = 36;
+function GoalDragHandle(props) {
+  const { goal, setDraggingGoalId, setGoalDrop } = props;
+  return /* @__PURE__ */ u2(
+    "span",
+    {
+      draggable: true,
+      onClick: (event) => event.stopPropagation(),
+      onMouseDown: (event) => event.stopPropagation(),
+      onDragStart: (event) => {
+        event.stopPropagation();
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", goal.id);
+        setDraggingGoalId(goal.id);
+      },
+      onDragEnd: () => {
+        setDraggingGoalId(null);
+        setGoalDrop(null);
+      },
+      title: "拖动目标排序",
+      style: { color: "var(--text-muted)", cursor: "grab", userSelect: "none", width: 18, textAlign: "center", flexShrink: 0 },
+      children: "☰"
+    }
+  );
+}
+function TreeToggle(props) {
+  const { hasChildren, expanded, path, toggleTreePath } = props;
+  if (!hasChildren) return /* @__PURE__ */ u2("span", { style: { display: "inline-block", width: 18, flexShrink: 0 } });
+  return /* @__PURE__ */ u2(
+    "button",
+    {
+      type: "button",
+      onClick: (event) => {
+        event.stopPropagation();
+        toggleTreePath(path);
+      },
+      title: "折叠/展开子目标",
+      style: { border: "none", background: "transparent", color: "var(--text-muted)", width: 18, padding: 0, cursor: "pointer", flexShrink: 0 },
+      children: expanded ? "▾" : "▸"
+    }
+  );
+}
+function DeleteGoalButton(props) {
+  const { goal, handleDeleteGoal } = props;
+  return /* @__PURE__ */ u2(
+    "button",
+    {
+      type: "button",
+      title: "删除目标",
+      onClick: (event) => handleDeleteGoal(event, goal),
+      onMouseDown: (event) => event.stopPropagation(),
+      style: {
+        border: "none",
+        background: "transparent",
+        color: "var(--text-muted)",
+        cursor: "pointer",
+        width: 22,
+        height: 22,
+        borderRadius: 6,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: 1,
+        flexShrink: 0,
+        padding: 0,
+        margin: 0
+      },
+      children: "×"
+    }
+  );
+}
+function GoalPathCell(props) {
+  const { goal, goals, expandedPaths, collapsed, setDraggingGoalId, setGoalDrop, toggleGoalRow, toggleTreePath, handleDeleteGoal } = props;
+  const path = getGoalDisplayPath(goal);
+  const depth = getGoalDepth(goal);
+  const hasChildren = goalHasChildren(goal, goals);
+  const expanded = expandedPaths.has(path);
+  const isRoot = depth === 0;
+  const goalCellBg = isRoot ? "rgba(122, 94, 230, 0.18)" : "rgba(122, 94, 230, 0.06)";
+  return /* @__PURE__ */ u2(AnyTableCell$1, { sx: { width: PATH_COL_WIDTH$1, px: 0.5, py: 0.35, position: "sticky", left: 0, zIndex: 2, background: "var(--background-primary)", verticalAlign: "top" }, children: /* @__PURE__ */ u2(
+    AnyBox,
+    {
+      onClick: () => toggleGoalRow(goal.id),
+      title: "单击折叠/展开本目标；拖动 ☰ 排序",
+      sx: {
+        minHeight: `${SEGMENT_HEIGHT}px`,
+        display: "flex",
+        alignItems: "center",
+        borderRadius: 2,
+        backgroundColor: goalCellBg,
+        px: isRoot ? 1 : 0.75,
+        cursor: "pointer"
+      },
+      children: /* @__PURE__ */ u2(AnyBox, { sx: { display: "flex", alignItems: "center", gap: 0.75, minWidth: 0, width: "100%" }, children: [
+        /* @__PURE__ */ u2("span", { style: { display: "inline-block", width: depth * 18, flexShrink: 0 } }),
+        /* @__PURE__ */ u2(GoalDragHandle, { goal, setDraggingGoalId, setGoalDrop }),
+        /* @__PURE__ */ u2(TreeToggle, { hasChildren, expanded, path, toggleTreePath }),
+        /* @__PURE__ */ u2("span", { style: { color: collapsed ? "var(--text-muted)" : "var(--text-faint)", width: 16, textAlign: "center", flexShrink: 0 }, children: collapsed ? "▸" : "▾" }),
+        /* @__PURE__ */ u2(AnyBox, { sx: { minWidth: 0, flex: 1 }, children: /* @__PURE__ */ u2(AnyTypography, { sx: { fontWeight: isRoot ? 700 : 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: cleanDisplayText(getGoalDisplayName(goal)) }) }),
+        /* @__PURE__ */ u2(DeleteGoalButton, { goal, handleDeleteGoal })
+      ] })
+    }
+  ) });
+}
+function GoalTemplateMatrixGoalRow(props) {
+  const { goal, goals, visibleBlocks, templates, themeIconByPath, expandedPaths, collapsedGoalIds, draggingGoalId, goalDrop, draggingPreset, presetDropCell, setDraggingGoalId, setGoalDrop, setDraggingPreset, setPresetDropCell, toggleGoalRow, toggleTreePath, reorderGoalSiblings, handleDeleteGoal, handlePresetDropOnCell, openEditor, openPresetContextMenu } = props;
+  const collapsed = collapsedGoalIds.has(goal.id);
+  const dropActive = goalDrop?.goalId === goal.id;
+  return /* @__PURE__ */ u2(
+    AnyTableRow$1,
+    {
+      onDragEnter: (event) => {
+        if (!draggingGoalId || draggingGoalId === goal.id) return;
+        event.preventDefault();
+        setGoalDrop({ goalId: goal.id, position: getEventDropPosition(event) });
+      },
+      onDragOver: (event) => {
+        if (!draggingGoalId || draggingGoalId === goal.id) return;
+        event.preventDefault();
+      },
+      onDrop: async (event) => {
+        if (!draggingGoalId || !goalDrop) return;
+        event.preventDefault();
+        await reorderGoalSiblings(draggingGoalId, goalDrop.goalId, goalDrop.position);
+        setDraggingGoalId(null);
+        setGoalDrop(null);
+      },
+      onDragEnd: () => {
+        setDraggingGoalId(null);
+        setGoalDrop(null);
+      },
+      sx: { boxShadow: dropActive ? `inset 0 ${goalDrop?.position === "before" ? "3px" : "-3px"} 0 #7c3cff` : "none" },
+      children: [
+        /* @__PURE__ */ u2(
+          GoalPathCell,
+          {
+            goal,
+            goals,
+            expandedPaths,
+            collapsed,
+            setDraggingGoalId,
+            setGoalDrop,
+            toggleGoalRow,
+            toggleTreePath,
+            handleDeleteGoal
+          }
+        ),
+        visibleBlocks.map((block2) => /* @__PURE__ */ u2(AnyTableCell$1, { align: "center", sx: { width: BLOCK_COL_WIDTH$1, minWidth: BLOCK_COL_WIDTH$1, px: 0.35, py: 0.35, verticalAlign: "top" }, children: /* @__PURE__ */ u2(
+          GoalTemplateMatrixCell,
+          {
+            goal,
+            block: block2,
+            goals,
+            templates,
+            themeIconByPath,
+            collapsed,
+            draggingPreset,
+            presetDropCell,
+            setDraggingPreset,
+            setPresetDropCell,
+            handlePresetDropOnCell,
+            openEditor,
+            openPresetContextMenu
+          }
+        ) }, block2.id))
+      ]
+    },
+    goal.id
+  );
+}
+function GoalTemplateMatrixGroupRows(props) {
+  const rows = [];
+  if (props.groupIndex > 0) {
+    rows.push(
+      /* @__PURE__ */ u2(AnyTableRow$1, { children: /* @__PURE__ */ u2(AnyTableCell$1, { colSpan: props.visibleBlockCount + 1, sx: { border: 0, p: 0, height: 10, background: "transparent" } }) }, `spacer-${props.groupIndex}`)
+    );
+  }
+  props.group.forEach((goal) => rows.push(/* @__PURE__ */ u2(GoalTemplateMatrixGoalRow, { ...props, goal }, goal.id)));
+  return rows;
+}
+const AnyTable = Table2;
+const AnyTableHead = TableHead2;
+const AnyTableRow = TableRow2;
+const AnyTableCell = TableCell2;
+const AnyTableBody = TableBody2;
+const PATH_COL_WIDTH = 250;
+const BLOCK_COL_WIDTH = 136;
+function GoalTemplateMatrixHeader(props) {
+  const { visibleBlocks } = props;
+  return /* @__PURE__ */ u2(AnyTableHead, { children: /* @__PURE__ */ u2(AnyTableRow, { children: [
+    /* @__PURE__ */ u2(AnyTableCell, { sx: { fontWeight: "bold", width: PATH_COL_WIDTH, position: "sticky", left: 0, zIndex: 3, backgroundColor: "rgba(124, 60, 255, .18)" }, children: "目标" }),
+    visibleBlocks.map((block2) => /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { fontWeight: "bold", width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH }, children: block2.name }, block2.id))
+  ] }) });
+}
+function GoalTemplateMatrixTable(props) {
+  const { visibleGoals, visibleBlocks } = props;
+  const activeGroups = splitGoalsByRoot(visibleGoals);
+  return /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", width: "100%" }, children: /* @__PURE__ */ u2(
+    AnyTable,
+    {
+      size: "small",
+      sx: {
+        tableLayout: "fixed",
+        width: "max-content",
+        minWidth: "100%",
+        borderCollapse: "separate",
+        borderSpacing: "0 0",
+        "& th": { whiteSpace: "nowrap", py: 0.75, px: 0.75, borderBottom: "1px solid", borderColor: "divider", backgroundColor: "rgba(124, 60, 255, .12)" },
+        "& td": { whiteSpace: "nowrap", py: 0, px: 0.5, borderBottom: "none", verticalAlign: "top" }
+      },
+      children: [
+        /* @__PURE__ */ u2(GoalTemplateMatrixHeader, { visibleBlocks }),
+        /* @__PURE__ */ u2(AnyTableBody, { children: activeGroups.length > 0 ? activeGroups.flatMap((group, groupIndex) => GoalTemplateMatrixGroupRows({ ...props, group, groupIndex, visibleBlockCount: visibleBlocks.length })) : /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: visibleBlocks.length + 1, sx: { py: 2 }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无匹配目标" }) }) }) })
+      ]
+    }
+  ) });
+}
 function GoalTemplateMatrix() {
   const settings = useSelector(selectSettings);
   const useCases = useUseCases();
@@ -70106,62 +71447,22 @@ function GoalTemplateMatrix() {
   const [presetDropCell, setPresetDropCell] = d(null);
   y(() => {
     if (!coreBlocks.length) return;
-    setActiveBlockIds((previous) => {
-      if (previous.size > 0) return previous;
-      return new Set(coreBlocks.map((block2) => block2.id));
-    });
+    setActiveBlockIds((previous) => previous.size > 0 ? previous : new Set(coreBlocks.map((block2) => block2.id)));
   }, [coreBlocks]);
   y(() => {
-    setExpandedPaths((previous) => {
-      const next2 = new Set(previous);
-      allGoalPaths.forEach((path) => next2.add(path));
-      return next2;
-    });
+    setExpandedPaths((previous) => addAllGoalPaths(previous, allGoalPaths));
   }, [allGoalPaths]);
   const isBlockActive = (blockId) => activeBlockIds.size === 0 || activeBlockIds.has(blockId);
   const visibleBlocks = T$1(() => coreBlocks.filter((block2) => isBlockActive(block2.id)), [coreBlocks, activeBlockIds]);
-  const visibleGoals = T$1(() => {
-    const q2 = normalizeSearchText(query);
-    return goals.filter((goal) => {
-      if (!isGoalVisibleByExpandedState(goal, expandedPaths)) return false;
-      if (!q2) return true;
-      const goalText = `${getGoalDisplayName(goal)} ${getGoalDisplayPath(goal)} ${goal.themePath || ""}`.toLowerCase();
-      if (goalText.includes(q2)) return true;
-      return templates.some((template) => template.goalId === goal.id && presetSearchText(template, goal).includes(q2));
-    });
-  }, [goals, expandedPaths, query, templates]);
-  const toggleTreePath = (path) => {
-    setExpandedPaths((previous) => {
-      const next2 = new Set(previous);
-      if (next2.has(path)) next2.delete(path);
-      else next2.add(path);
-      return next2;
-    });
-  };
-  const toggleGoalRow = (goalId) => {
-    setCollapsedGoalIds((previous) => {
-      const next2 = new Set(previous);
-      if (next2.has(goalId)) next2.delete(goalId);
-      else next2.add(goalId);
-      return next2;
-    });
-  };
-  const toggleBlock = (blockId) => {
-    setActiveBlockIds((previous) => {
-      const next2 = new Set(previous);
-      if (next2.size === 0) coreBlocks.forEach((block2) => next2.add(block2.id));
-      if (next2.has(blockId) && next2.size > 1) next2.delete(blockId);
-      else next2.add(blockId);
-      return next2;
-    });
-  };
+  const visibleGoals = T$1(() => filterVisibleGoalTemplateMatrixGoals({ goals, expandedPaths, query, templates }), [goals, expandedPaths, query, templates]);
+  const toggleTreePath = (path) => setExpandedPaths((previous) => toggleGoalPath(previous, path));
+  const toggleGoalRow = (goalId) => setCollapsedGoalIds((previous) => toggleGoalCollapsed(previous, goalId));
+  const toggleBlock = (blockId) => setActiveBlockIds((previous) => buildNextActiveBlockIds(previous, blockId, coreBlocks));
   const expandAll = () => {
     setExpandedPaths(new Set(Array.from(allGoalPaths)));
     setCollapsedGoalIds(/* @__PURE__ */ new Set());
   };
-  const collapseAll = () => {
-    setCollapsedGoalIds(new Set(goals.map((goal) => goal.id)));
-  };
+  const collapseAll = () => setCollapsedGoalIds(new Set(goals.map((goal) => goal.id)));
   const selectedVariants = selected ? templates.filter((template) => template.goalId === selected.goal.id && template.coreBlockId === selected.block.id) : [];
   const openEditor = (goal, block2, template) => setSelected({ goal, block: block2, variantId: template ? goalTemplateVariantId(template) : null });
   const openPresetContextMenu = (event, goal, block2, template) => {
@@ -70226,37 +71527,20 @@ function GoalTemplateMatrix() {
     ui.notice(`补齐完成：创建 ${created} 个，跳过 ${skipped} 个`);
   };
   const reorderGoalSiblings = async (dragGoalId, targetGoalId, position2) => {
-    if (dragGoalId === targetGoalId) return;
-    const dragged = goals.find((goal) => goal.id === dragGoalId);
-    const target = goals.find((goal) => goal.id === targetGoalId);
-    if (!dragged || !target) return;
-    const draggedParent = getGoalParentPath(dragged);
-    const targetParent = getGoalParentPath(target);
-    if (draggedParent !== targetParent) {
-      ui.notice("当前只支持同级目标拖动排序");
+    const next2 = orderDraggedGoalSiblings({ goals, dragGoalId, targetGoalId, position: position2 });
+    if (!next2) {
+      const dragged = goals.find((goal) => goal.id === dragGoalId);
+      const target = goals.find((goal) => goal.id === targetGoalId);
+      if (dragged && target && getGoalParentPath(dragged) !== getGoalParentPath(target)) ui.notice("当前只支持同级目标拖动排序");
       return;
     }
-    const siblings = sortGoalsForMatrix(goals.filter((goal) => getGoalParentPath(goal) === draggedParent));
-    const next2 = siblings.filter((goal) => goal.id !== dragged.id);
-    const targetIndex = next2.findIndex((goal) => goal.id === target.id);
-    if (targetIndex < 0) return;
-    next2.splice(position2 === "before" ? targetIndex : targetIndex + 1, 0, dragged);
     await Promise.all(next2.map((goal, index) => useCases.goal.updateGoal(goal.id, { sortOrder: index * 10 })));
     ui.notice("目标排序已保存");
   };
   const reorderPresetsInCell = async (drag, targetTemplateKey, position2) => {
-    const cellTemplates = sortPresets(templates.filter((template) => template.goalId === drag.goalId && template.coreBlockId === drag.blockId && template.enabled !== false), goals);
-    const dragged = cellTemplates.find((template) => goalTemplateKey(template) === drag.templateKey);
-    if (!dragged) return;
-    const next2 = cellTemplates.filter((template) => goalTemplateKey(template) !== drag.templateKey);
-    if (targetTemplateKey) {
-      const targetIndex = next2.findIndex((template) => goalTemplateKey(template) === targetTemplateKey);
-      if (targetIndex >= 0) next2.splice(position2 === "before" ? targetIndex : targetIndex + 1, 0, dragged);
-      else next2.push(dragged);
-    } else {
-      next2.push(dragged);
-    }
-    await Promise.all(next2.map((template, index) => useCases.goal.upsertGoalTemplate({ ...template, sortOrder: index * 10 })));
+    const normalized = reorderPresetTemplatesInCell({ templates, goals, drag, targetTemplateKey, position: position2 });
+    if (!normalized) return;
+    await Promise.all(normalized.map((template) => useCases.goal.upsertGoalTemplate(template)));
     ui.notice("预设排序已保存");
   };
   const movePresetToCell = async (drag, targetGoal, targetBlock, targetTemplateKey, position2) => {
@@ -70325,243 +71609,6 @@ function GoalTemplateMatrix() {
     const count = typeof useCases.goal.deleteGoalCascade === "function" ? await useCases.goal.deleteGoalCascade(goal.id) : (await Promise.all(targets.map((target) => useCases.goal.deleteGoal(target.id))), targets.length);
     ui.notice(descendants.length > 0 ? `已删除目标及子目标：${count} 个` : `已删除目标：${cleanDisplayText(path)}`);
   };
-  const renderAddPresetButton = (goal, block2) => /* @__PURE__ */ u2(
-    "button",
-    {
-      type: "button",
-      onClick: (event) => {
-        event.stopPropagation();
-        openEditor(goal, block2);
-      },
-      title: "添加预设",
-      style: {
-        width: "100%",
-        height: ADD_BUTTON_HEIGHT,
-        minHeight: ADD_BUTTON_HEIGHT,
-        border: "1px dashed var(--background-modifier-border)",
-        borderRadius: 8,
-        background: "var(--background-secondary)",
-        color: "var(--text-muted)",
-        cursor: "pointer",
-        font: "inherit",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 0,
-        margin: 0,
-        boxShadow: "none",
-        lineHeight: 1
-      },
-      children: "＋"
-    }
-  );
-  const renderPresetCard = (goal, block2, template) => {
-    const themePath = readGoalTemplateThemePath(template, goal);
-    const icon = readGoalTemplateIcon(template, themeIconByPath.get(themePath));
-    const name = getPresetCardName(template, goal);
-    const key = goalTemplateKey(template);
-    return /* @__PURE__ */ u2(
-      GoalPresetCard,
-      {
-        goal,
-        block: block2,
-        template,
-        templateKey: key,
-        name,
-        icon,
-        themePath,
-        isDragging: draggingPreset?.templateKey === key,
-        onOpen: () => openEditor(goal, block2, template),
-        onContextMenu: (event) => openPresetContextMenu(event, goal, block2, template),
-        onDragStart: (event) => {
-          event.stopPropagation();
-          if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = "move";
-            event.dataTransfer.setData("text/plain", key);
-          }
-          setDraggingPreset({ goalId: goal.id, blockId: block2.id, templateKey: key });
-        },
-        onDragEnd: () => {
-          setDraggingPreset(null);
-          setPresetDropCell(null);
-        }
-      }
-    );
-  };
-  const renderBlockCell = (goal, block2, collapsed) => {
-    const cell = buildGoalTemplateCell(goal, block2, templates);
-    const presets = sortPresets(cell.enabledTemplates, goals);
-    const isDropCell = presetDropCell?.goalId === goal.id && presetDropCell.blockId === block2.id;
-    return /* @__PURE__ */ u2(
-      "div",
-      {
-        title: "＋ 添加；左键编辑；右键复制；拖动排序或移动",
-        onDragEnter: (event) => {
-          if (!draggingPreset) return;
-          event.preventDefault();
-          event.stopPropagation();
-          if (!presetDropCell || presetDropCell.goalId !== goal.id || presetDropCell.blockId !== block2.id) setPresetDropCell({ goalId: goal.id, blockId: block2.id });
-        },
-        onDragOver: (event) => {
-          if (!draggingPreset) return;
-          event.preventDefault();
-        },
-        onDrop: (event) => handlePresetDropOnCell(event, goal, block2),
-        style: {
-          display: "grid",
-          gridAutoRows: "min-content",
-          alignContent: "start",
-          justifyItems: "stretch",
-          gap: 4,
-          minHeight: ADD_BUTTON_HEIGHT + 8,
-          padding: "0 4px 4px",
-          borderRadius: 10,
-          background: "transparent",
-          outline: isDropCell ? "2px dashed #7c3cff" : "none",
-          outlineOffset: isDropCell ? -2 : 0
-        },
-        children: [
-          renderAddPresetButton(goal, block2),
-          !collapsed && presets.map((template) => renderPresetCard(goal, block2, template))
-        ]
-      }
-    );
-  };
-  const renderGroupRows = (group, groupIndex) => {
-    const rows = [];
-    if (groupIndex > 0) {
-      rows.push(
-        /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: visibleBlocks.length + 1, sx: { border: 0, p: 0, height: 10, background: "transparent" } }) }, `spacer-${groupIndex}`)
-      );
-    }
-    group.forEach((goal, index) => {
-      const path = getGoalDisplayPath(goal);
-      const depth = getGoalDepth(goal);
-      const hasChildren = goalHasChildren(goal, goals);
-      const expanded = expandedPaths.has(path);
-      const collapsed = collapsedGoalIds.has(goal.id);
-      const isRoot = depth === 0;
-      const goalCellBg = isRoot ? "rgba(122, 94, 230, 0.18)" : "rgba(122, 94, 230, 0.06)";
-      const dropActive = goalDrop?.goalId === goal.id;
-      rows.push(
-        /* @__PURE__ */ u2(
-          AnyTableRow,
-          {
-            onDragEnter: (event) => {
-              if (!draggingGoalId || draggingGoalId === goal.id) return;
-              event.preventDefault();
-              setGoalDrop({ goalId: goal.id, position: getEventDropPosition(event) });
-            },
-            onDragOver: (event) => {
-              if (!draggingGoalId || draggingGoalId === goal.id) return;
-              event.preventDefault();
-            },
-            onDrop: async (event) => {
-              if (!draggingGoalId || !goalDrop) return;
-              event.preventDefault();
-              await reorderGoalSiblings(draggingGoalId, goalDrop.goalId, goalDrop.position);
-              setDraggingGoalId(null);
-              setGoalDrop(null);
-            },
-            onDragEnd: () => {
-              setDraggingGoalId(null);
-              setGoalDrop(null);
-            },
-            sx: {
-              boxShadow: dropActive ? `inset 0 ${goalDrop?.position === "before" ? "3px" : "-3px"} 0 #7c3cff` : "none"
-            },
-            children: [
-              /* @__PURE__ */ u2(AnyTableCell, { sx: { width: PATH_COL_WIDTH, px: 0.5, py: 0.35, position: "sticky", left: 0, zIndex: 2, background: "var(--background-primary)", verticalAlign: "top" }, children: /* @__PURE__ */ u2(
-                AnyBox,
-                {
-                  onClick: () => toggleGoalRow(goal.id),
-                  title: "单击折叠/展开本目标；拖动 ☰ 排序",
-                  sx: {
-                    minHeight: `${SEGMENT_HEIGHT}px`,
-                    display: "flex",
-                    alignItems: "center",
-                    borderRadius: 2,
-                    backgroundColor: goalCellBg,
-                    px: isRoot ? 1 : 0.75,
-                    cursor: "pointer"
-                  },
-                  children: /* @__PURE__ */ u2(AnyBox, { sx: { display: "flex", alignItems: "center", gap: 0.75, minWidth: 0, width: "100%" }, children: [
-                    /* @__PURE__ */ u2("span", { style: { display: "inline-block", width: depth * 18, flexShrink: 0 } }),
-                    /* @__PURE__ */ u2(
-                      "span",
-                      {
-                        draggable: true,
-                        onClick: (event) => event.stopPropagation(),
-                        onMouseDown: (event) => event.stopPropagation(),
-                        onDragStart: (event) => {
-                          event.stopPropagation();
-                          event.dataTransfer.effectAllowed = "move";
-                          event.dataTransfer.setData("text/plain", goal.id);
-                          setDraggingGoalId(goal.id);
-                        },
-                        onDragEnd: () => {
-                          setDraggingGoalId(null);
-                          setGoalDrop(null);
-                        },
-                        title: "拖动目标排序",
-                        style: { color: "var(--text-muted)", cursor: "grab", userSelect: "none", width: 18, textAlign: "center", flexShrink: 0 },
-                        children: "☰"
-                      }
-                    ),
-                    hasChildren ? /* @__PURE__ */ u2(
-                      "button",
-                      {
-                        type: "button",
-                        onClick: (event) => {
-                          event.stopPropagation();
-                          toggleTreePath(path);
-                        },
-                        title: "折叠/展开子目标",
-                        style: { border: "none", background: "transparent", color: "var(--text-muted)", width: 18, padding: 0, cursor: "pointer", flexShrink: 0 },
-                        children: expanded ? "▾" : "▸"
-                      }
-                    ) : /* @__PURE__ */ u2("span", { style: { display: "inline-block", width: 18, flexShrink: 0 } }),
-                    /* @__PURE__ */ u2("span", { style: { color: collapsed ? "var(--text-muted)" : "var(--text-faint)", width: 16, textAlign: "center", flexShrink: 0 }, children: collapsed ? "▸" : "▾" }),
-                    /* @__PURE__ */ u2(AnyBox, { sx: { minWidth: 0, flex: 1 }, children: /* @__PURE__ */ u2(AnyTypography, { sx: { fontWeight: isRoot ? 700 : 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: cleanDisplayText(getGoalDisplayName(goal)) }) }),
-                    /* @__PURE__ */ u2(
-                      "button",
-                      {
-                        type: "button",
-                        title: "删除目标",
-                        onClick: (event) => handleDeleteGoal(event, goal),
-                        onMouseDown: (event) => event.stopPropagation(),
-                        style: {
-                          border: "none",
-                          background: "transparent",
-                          color: "var(--text-muted)",
-                          cursor: "pointer",
-                          width: 22,
-                          height: 22,
-                          borderRadius: 6,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          lineHeight: 1,
-                          flexShrink: 0,
-                          padding: 0,
-                          margin: 0
-                        },
-                        children: "×"
-                      }
-                    )
-                  ] })
-                }
-              ) }),
-              visibleBlocks.map((block2) => /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH, px: 0.35, py: 0.35, verticalAlign: "top" }, children: renderBlockCell(goal, block2, collapsed) }, block2.id))
-            ]
-          },
-          goal.id
-        )
-      );
-    });
-    return rows;
-  };
-  const activeGroups = splitByRoot(visibleGoals);
   return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1.25 }, children: [
     /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, alignItems: "center", flexWrap: "wrap" }, children: [
       /* @__PURE__ */ u2(TextField2, { size: "small", placeholder: "搜索", value: query, onChange: (event) => setQuery(event.target.value), sx: { minWidth: 220 } }),
@@ -70579,28 +71626,33 @@ function GoalTemplateMatrix() {
       },
       block2.id
     )) }),
-    goals.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有目标。请先到“目标”新建目标，然后在表格单元格里配置记录预设。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有启用的记录类型。请先在“数据管理 / 记录类型”里启用。" }) : /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", width: "100%" }, children: /* @__PURE__ */ u2(
-      AnyTable,
+    goals.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有目标。请先到“目标”新建目标，然后在表格单元格里配置记录预设。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有启用的记录类型。请先在“数据管理 / 记录类型”里启用。" }) : /* @__PURE__ */ u2(
+      GoalTemplateMatrixTable,
       {
-        size: "small",
-        sx: {
-          tableLayout: "fixed",
-          width: "max-content",
-          minWidth: "100%",
-          borderCollapse: "separate",
-          borderSpacing: "0 0",
-          "& th": { whiteSpace: "nowrap", py: 0.75, px: 0.75, borderBottom: "1px solid", borderColor: "divider", backgroundColor: "rgba(124, 60, 255, .12)" },
-          "& td": { whiteSpace: "nowrap", py: 0, px: 0.5, borderBottom: "none", verticalAlign: "top" }
-        },
-        children: [
-          /* @__PURE__ */ u2(AnyTableHead, { children: /* @__PURE__ */ u2(AnyTableRow, { children: [
-            /* @__PURE__ */ u2(AnyTableCell, { sx: { fontWeight: "bold", width: PATH_COL_WIDTH, position: "sticky", left: 0, zIndex: 3, backgroundColor: "rgba(124, 60, 255, .18)" }, children: "目标" }),
-            visibleBlocks.map((block2) => /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { fontWeight: "bold", width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH }, children: block2.name }, block2.id))
-          ] }) }),
-          /* @__PURE__ */ u2(AnyTableBody, { children: activeGroups.length > 0 ? activeGroups.flatMap(renderGroupRows) : /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: visibleBlocks.length + 1, sx: { py: 2 }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无匹配目标" }) }) }) })
-        ]
+        visibleGoals,
+        goals,
+        visibleBlocks,
+        templates,
+        themeIconByPath,
+        expandedPaths,
+        collapsedGoalIds,
+        draggingGoalId,
+        goalDrop,
+        draggingPreset,
+        presetDropCell,
+        setDraggingGoalId,
+        setGoalDrop,
+        setDraggingPreset,
+        setPresetDropCell,
+        toggleGoalRow,
+        toggleTreePath,
+        reorderGoalSiblings,
+        handleDeleteGoal,
+        handlePresetDropOnCell,
+        openEditor,
+        openPresetContextMenu
       }
-    ) }),
+    ),
     /* @__PURE__ */ u2(
       GoalTemplateContextMenu,
       {
@@ -70627,22 +71679,6 @@ function GoalTemplateMatrix() {
       }
     )
   ] });
-}
-function splitByRoot(goals) {
-  const groups = [];
-  let current2 = [];
-  goals.forEach((goal) => {
-    if (getGoalDepth(goal) === 0) {
-      if (current2.length > 0) groups.push(current2);
-      current2 = [goal];
-    } else if (current2.length > 0) {
-      current2.push(goal);
-    } else {
-      current2 = [goal];
-    }
-  });
-  if (current2.length > 0) groups.push(current2);
-  return groups;
 }
 const metricDirectionOptions = [
   { value: "increase", label: "增加到目标值" },

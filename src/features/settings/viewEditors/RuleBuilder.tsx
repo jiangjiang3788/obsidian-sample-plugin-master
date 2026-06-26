@@ -2,156 +2,59 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import {
-    Autocomplete,
-    Box,
-    Button,
-    Chip,
-    TextField,
-    Tooltip,
-    Typography,
-} from '@shared/public';
+import { Box, Button, Chip, Tooltip, Typography } from '@shared/public';
 import { DeleteOutlineIcon, IconAction, SimpleSelect } from '@shared/public';
-import { DataStore } from '@core/public';
-import { getAllFields, readField, getFieldLabel, FilterRule, SortRule } from '@core/public';
+import type { DataStore, FilterRule, SortRule } from '@core/public';
 import { FieldPickerAutocomplete } from './FieldPickerAutocomplete';
-
-function useUniqueFieldValues(dataStore: DataStore) {
-    return useMemo(() => {
-        if (!dataStore) return {};
-        const items = dataStore.queryItems();
-        const allKnownFields = new Set<string>(getAllFields(items));
-        const valueMap: Record<string, Set<string>> = {};
-        allKnownFields.forEach(field => valueMap[field] = new Set());
-        for (const item of items) {
-            for (const field of allKnownFields) {
-                const value = readField(item, field);
-                if (value === null || value === undefined || String(value).trim() === '') continue;
-                const values = Array.isArray(value) ? value : [value];
-                values.forEach(v => {
-                    const strV = String(v).trim();
-                    if (strV) valueMap[field].add(strV);
-                });
-            }
-        }
-        const result: Record<string, string[]> = {};
-        for (const field in valueMap) {
-            if (valueMap[field].size > 0) {
-                result[field] = Array.from(valueMap[field]).sort((a, b) => a.localeCompare(b, 'zh-CN'));
-            }
-        }
-        return result;
-    }, [dataStore]);
-}
-
-const defaultFilterRule: FilterRule = { field: '', op: '=', value: '' };
-const defaultSortRule: SortRule = { field: '', dir: 'asc' };
+import {
+    appendRule,
+    buildRuleLabel,
+    buildUniqueFieldValues,
+    getPanelAddRuleGridTemplate,
+    getPanelRuleGridTemplate,
+    makeDefaultRule,
+    operatorNeedsValue,
+    patchRule,
+    patchRuleLogic,
+    patchRuleRows,
+    removeRuleAt,
+    RULE_DIRECTION_OPTIONS,
+    RULE_LOGIC_OPTIONS,
+    RULE_OPERATOR_OPTIONS,
+    shouldShowRuleValueInput,
+    type RuleBuilderRule,
+    type RuleBuilderVariant,
+} from './RuleBuilderModel';
+import { RuleBuilderValueInput } from './RuleBuilderValueInput';
 
 interface RuleBuilderProps {
     title: string;
     mode: 'filter' | 'sort';
-    rows: (FilterRule | SortRule)[];
+    rows: RuleBuilderRule[];
     fieldOptions: string[];
-    onChange: (rows: (FilterRule | SortRule)[]) => void;
+    onChange: (rows: RuleBuilderRule[]) => void;
     dataStore: DataStore;
-    variant?: 'compact' | 'panel';
-}
-
-function cloneRule<T extends FilterRule | SortRule>(rule: T): T {
-    return { ...rule };
-}
-
-function operatorNeedsValue(op: FilterRule['op']): boolean {
-    return !['empty', 'notEmpty'].includes(op);
-}
-
-function isMultiValueOperator(op?: FilterRule['op']): boolean {
-    return op === 'in' || op === 'notIn';
-}
-
-function getValuePlaceholder(op?: FilterRule['op']): string {
-    if (op === 'between') return '输入区间，如 1~5 或 2026-01-01~2026-01-31';
-    if (isMultiValueOperator(op)) return '选择或输入多个值，回车确认';
-    return '输入值';
-}
-
-function normalizeMultiValue(value: any): string[] {
-    const rawValues = Array.isArray(value) ? value : [value];
-    const normalized = rawValues
-        .flatMap(v => String(v ?? '').split(/[,，\n]/))
-        .map(part => part.trim())
-        .filter(Boolean);
-    return Array.from(new Set(normalized));
-}
-
-function formatRuleValue(rule: FilterRule): string {
-    if (!operatorNeedsValue(rule.op)) return '';
-    if (isMultiValueOperator(rule.op)) {
-        const values = normalizeMultiValue(rule.value);
-        return values.length > 0 ? values.join('、') : '未选择';
-    }
-    if (rule.op === 'between' && Array.isArray(rule.value)) {
-        return rule.value.map(v => String(v)).join(' ~ ');
-    }
-    return String(rule.value ?? '');
-}
-
-function normalizeFilterPatch(patch: Partial<FilterRule>, current?: FilterRule): Partial<FilterRule> {
-    const nextOp = (patch.op ?? current?.op) as FilterRule['op'] | undefined;
-    const normalized: Partial<FilterRule> = { ...patch };
-
-    if (nextOp && !operatorNeedsValue(nextOp)) {
-        return { ...normalized, value: '' };
-    }
-
-    if (patch.field !== undefined && patch.field !== current?.field) {
-        normalized.value = nextOp && isMultiValueOperator(nextOp) ? [] : '';
-    }
-
-    if (nextOp && isMultiValueOperator(nextOp)) {
-        if ('value' in normalized || patch.op !== undefined) {
-            normalized.value = normalizeMultiValue(normalized.value ?? current?.value);
-        }
-    } else if (current && isMultiValueOperator(current.op) && patch.op !== undefined) {
-        normalized.value = normalizeMultiValue(current.value).join(',');
-    }
-
-    return normalized;
+    variant?: RuleBuilderVariant;
 }
 
 export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = 'compact' }: RuleBuilderProps) {
     const isFilterMode = mode === 'filter';
-    const [newRule, setNewRule] = useState<FilterRule | SortRule>(
-        isFilterMode ? { ...defaultFilterRule } : { ...defaultSortRule }
-    );
-    const uniqueFieldValues = useUniqueFieldValues(dataStore);
-    const currentFilterRule = newRule as FilterRule;
-    const shouldShowValueInput = !isFilterMode || operatorNeedsValue(currentFilterRule.op);
+    const [newRule, setNewRule] = useState<RuleBuilderRule>(makeDefaultRule(mode));
+    const uniqueFieldValues = useMemo(() => buildUniqueFieldValues(dataStore), [dataStore]);
+    const shouldShowValueInput = shouldShowRuleValueInput(mode, newRule);
 
-    const remove = (i: number) => onChange(rows.filter((_, j: number) => j !== i).map(cloneRule));
+    const remove = (index: number) => onChange(removeRuleAt(rows, index));
 
     const updateNewRule = (patch: Partial<FilterRule | SortRule>) => {
-        setNewRule(current => {
-            const nextPatch = isFilterMode ? normalizeFilterPatch(patch as Partial<FilterRule>, current as FilterRule) : patch;
-            return { ...current, ...nextPatch };
-        });
+        setNewRule(current => patchRule(mode, current, patch as Partial<RuleBuilderRule>));
     };
 
     const updateRow = (index: number, patch: Partial<FilterRule | SortRule>) => {
-        const updatedRows = rows.map((row, rowIndex) => {
-            if (rowIndex !== index) return cloneRule(row);
-            const nextPatch = isFilterMode ? normalizeFilterPatch(patch as Partial<FilterRule>, row as FilterRule) : patch;
-            return { ...row, ...nextPatch };
-        });
-        onChange(updatedRows);
+        onChange(patchRuleRows(mode, rows, index, patch as Partial<RuleBuilderRule>));
     };
 
     const updateLogic = (index: number, logic: 'and' | 'or') => {
-        const updatedRows = rows.map((row, rowIndex) => {
-            if (rowIndex !== index || !isFilterMode) return cloneRule(row);
-            return { ...(row as FilterRule), logic };
-        });
-        onChange(updatedRows);
+        onChange(patchRuleLogic(rows, index, logic, isFilterMode));
     };
 
     const handleAddRule = () => {
@@ -159,57 +62,9 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
             alert('请选择一个字段');
             return;
         }
-
-        const updatedRows = rows.map(cloneRule);
-        const ruleToAdd = cloneRule(newRule);
-
-        if (isFilterMode && updatedRows.length > 0) {
-            const lastIndex = updatedRows.length - 1;
-            const lastRule = updatedRows[lastIndex] as FilterRule;
-            if (!lastRule.logic) {
-                updatedRows[lastIndex] = {
-                    ...lastRule,
-                    logic: 'and',
-                };
-            }
-        }
-
-        updatedRows.push(ruleToAdd);
-        onChange(updatedRows);
-        setNewRule(isFilterMode ? { ...defaultFilterRule } : { ...defaultSortRule });
+        onChange(appendRule(mode, rows, newRule));
+        setNewRule(makeDefaultRule(mode));
     };
-
-    const formatRule = (rule: FilterRule | SortRule) => {
-        if (isFilterMode) {
-            const filterRule = rule as FilterRule;
-            if (filterRule.op === 'empty') return `${getFieldLabel(filterRule.field)} 为空`;
-            if (filterRule.op === 'notEmpty') return `${getFieldLabel(filterRule.field)} 非空`;
-            const valueText = formatRuleValue(filterRule);
-            const opText = filterRule.op === 'in' ? '属于任一' : filterRule.op === 'notIn' ? '不属于任一' : filterRule.op;
-            return `${getFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
-        }
-        const sortRule = rule as SortRule;
-        return `${getFieldLabel(sortRule.field)} ${sortRule.dir === 'asc' ? '升序' : '降序'}`;
-    };
-
-    const operatorOptions = [
-        { value: '=', label: '=' },
-        { value: '!=', label: '!=' },
-        { value: 'includes', label: '包含' },
-        { value: 'regex', label: '正则' },
-        { value: '>', label: '>' },
-        { value: '<', label: '<' },
-        { value: 'in', label: '属于任一' },
-        { value: 'notIn', label: '不属于任一' },
-        { value: 'between', label: '区间' },
-        { value: 'empty', label: '为空' },
-        { value: 'notEmpty', label: '非空' },
-    ];
-    const directionOptions = [{ value: 'asc', label: '升序' }, { value: 'desc', label: '降序' }];
-    const logicOptions = [
-        { value: 'and', label: '且' },
-        { value: 'or', label: '或' }
-    ];
 
     const renderFieldInput = (
         field: string,
@@ -225,63 +80,27 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
         />
     );
 
-    const renderValueInput = (
-        rule: FilterRule,
-        onValueChange: (value: any) => void
-    ) => {
-        if (!operatorNeedsValue(rule.op)) return null;
-
-        if (isMultiValueOperator(rule.op)) {
-            return (
-                <Autocomplete
-                    multiple
-                    freeSolo
-                    fullWidth
-                    size="small"
-                    disablePortal
-                    options={uniqueFieldValues[rule.field] || []}
-                    value={normalizeMultiValue(rule.value)}
-                    onChange={(_, newValue: string[]) => onValueChange(normalizeMultiValue(newValue))}
-                    renderInput={(params: any) => (
-                        <TextField
-                            {...params}
-                            variant="outlined"
-                            placeholder={getValuePlaceholder(rule.op)}
-                            helperText={variant === 'panel' ? '同一字段内多选表示“或”：匹配其中任一值即可。' : undefined}
-                        />
-                    )}
-                />
-            );
-        }
-
-        return (
-            <Autocomplete
-                freeSolo
-                fullWidth
-                size="small"
-                disableClearable
-                disablePortal
-                options={uniqueFieldValues[rule.field] || []}
-                value={String(rule.value ?? '')}
-                inputValue={String(rule.value ?? '')}
-                onInputChange={(_, newValue: string) => onValueChange(newValue || '')}
-                renderInput={(params: any) => <TextField {...params} variant="outlined" placeholder={getValuePlaceholder(rule.op)} />}
-            />
-        );
-    };
+    const renderValueInput = (rule: FilterRule, onValueChange: (value: any) => void) => (
+        <RuleBuilderValueInput
+            rule={rule}
+            uniqueFieldValues={uniqueFieldValues}
+            variant={variant}
+            onValueChange={onValueChange}
+        />
+    );
 
     const existingRules = (
         <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-            {rows.map((rule: FilterRule | SortRule, i: number) => {
-                const isLast = i === rows.length - 1;
+            {rows.map((rule: RuleBuilderRule, index: number) => {
+                const isLast = index === rows.length - 1;
                 const filterRule = rule as FilterRule;
 
                 return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Tooltip title={`点击删除规则: ${formatRule(rule)}`}>
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Tooltip title={`点击删除规则: ${buildRuleLabel(mode, rule)}`}>
                             <Chip
-                                label={formatRule(rule)}
-                                onClick={() => remove(i)}
+                                label={buildRuleLabel(mode, rule)}
+                                onClick={() => remove(index)}
                                 size="small"
                             />
                         </Tooltip>
@@ -289,8 +108,8 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                         {isFilterMode && !isLast && (
                             <SimpleSelect
                                 value={filterRule.logic || 'and'}
-                                options={logicOptions}
-                                onChange={(val: string) => updateLogic(i, val as 'and' | 'or')}
+                                options={RULE_LOGIC_OPTIONS}
+                                onChange={(val: string) => updateLogic(index, val as 'and' | 'or')}
                                 sx={{ minWidth: 50 }}
                             />
                         )}
@@ -302,20 +121,18 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
 
     const panelRuleRows = (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {rows.map((rule: FilterRule | SortRule, index: number) => {
+            {rows.map((rule: RuleBuilderRule, index: number) => {
                 const filterRule = rule as FilterRule;
                 const sortRule = rule as SortRule;
                 const isLast = index === rows.length - 1;
-                const gridTemplateColumns = isFilterMode && operatorNeedsValue(filterRule.op)
-                    ? 'minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px'
-                    : 'minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px';
+                const showValueInput = isFilterMode && operatorNeedsValue(filterRule.op);
 
                 return (
                     <Box key={index} sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
                         <Box
                             sx={{
                                 display: 'grid',
-                                gridTemplateColumns,
+                                gridTemplateColumns: getPanelRuleGridTemplate(mode, showValueInput),
                                 gap: 1,
                                 alignItems: 'center',
                                 p: 1,
@@ -330,7 +147,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                                 <>
                                     <SimpleSelect
                                         value={filterRule.op}
-                                        options={operatorOptions}
+                                        options={RULE_OPERATOR_OPTIONS}
                                         onChange={(val: string) => updateRow(index, { op: val as FilterRule['op'] })}
                                         sx={{ minWidth: 140 }}
                                     />
@@ -339,7 +156,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                             ) : (
                                 <SimpleSelect
                                     value={sortRule.dir}
-                                    options={directionOptions}
+                                    options={RULE_DIRECTION_OPTIONS}
                                     onChange={(val: string) => updateRow(index, { dir: val as 'asc' | 'desc' })}
                                     sx={{ minWidth: 120 }}
                                 />
@@ -348,7 +165,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                             {isFilterMode && !isLast ? (
                                 <SimpleSelect
                                     value={filterRule.logic || 'and'}
-                                    options={logicOptions}
+                                    options={RULE_LOGIC_OPTIONS}
                                     onChange={(val: string) => updateLogic(index, val as 'and' | 'or')}
                                     sx={{ minWidth: 80 }}
                                 />
@@ -388,9 +205,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                         <Box
                             sx={{
                                 display: 'grid',
-                                gridTemplateColumns: isFilterMode
-                                    ? 'minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px'
-                                    : 'minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px',
+                                gridTemplateColumns: getPanelRuleGridTemplate(mode, isFilterMode),
                                 gap: 1,
                                 px: 1,
                                 color: 'text.secondary',
@@ -413,9 +228,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                 <Box
                     sx={{
                         display: 'grid',
-                        gridTemplateColumns: isFilterMode && shouldShowValueInput
-                            ? 'minmax(260px, 1.4fr) minmax(150px, 0.6fr) minmax(260px, 1.3fr) auto'
-                            : 'minmax(260px, 1.4fr) minmax(150px, 0.6fr) auto',
+                        gridTemplateColumns: getPanelAddRuleGridTemplate(mode, shouldShowValueInput),
                         gap: 1,
                         alignItems: 'center',
                         p: 1.5,
@@ -430,7 +243,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                         <>
                             <SimpleSelect
                                 value={(newRule as FilterRule).op}
-                                options={operatorOptions}
+                                options={RULE_OPERATOR_OPTIONS}
                                 onChange={(val: string) => updateNewRule({ op: val as FilterRule['op'] })}
                                 sx={{ minWidth: 140 }}
                             />
@@ -439,7 +252,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                     ) : (
                         <SimpleSelect
                             value={(newRule as SortRule).dir}
-                            options={directionOptions}
+                            options={RULE_DIRECTION_OPTIONS}
                             onChange={(val: string) => updateNewRule({ dir: val as 'asc' | 'desc' })}
                             sx={{ minWidth: 120 }}
                         />
@@ -464,7 +277,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                         <>
                             <SimpleSelect
                                 value={(newRule as FilterRule).op}
-                                options={operatorOptions}
+                                options={RULE_OPERATOR_OPTIONS}
                                 onChange={(val: string) => updateNewRule({ op: val as FilterRule['op'] })}
                                 sx={{ minWidth: 120 }}
                             />
@@ -473,7 +286,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                     ) : (
                         <SimpleSelect
                             value={(newRule as SortRule).dir}
-                            options={directionOptions}
+                            options={RULE_DIRECTION_OPTIONS}
                             onChange={(val: string) => updateNewRule({ dir: val as 'asc' | 'desc' })}
                             sx={{ minWidth: 100 }}
                         />

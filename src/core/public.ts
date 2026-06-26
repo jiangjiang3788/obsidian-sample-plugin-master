@@ -246,6 +246,24 @@ export type { IPluginStorage } from './services/StorageService';
 export { GoalTemplateResolver } from './services/GoalTemplateResolver';
 export type { GoalTemplateResolveInput, GoalTemplateResolveResult, GoalTemplateSourceType } from './services/GoalTemplateResolver';
 export { RecordInputKernel } from './services/recordInput/RecordInputKernel';
+export {
+    assertRecordInputRequiredFields,
+    buildBatchCreateRecordSubmitResult,
+    buildCreateRecordSubmitParamsFromEditorState,
+    buildRecordCreateDraftFromEditorState,
+    buildRecordDraftContext,
+    buildUpdateRecordSubmitParamsFromEditorState,
+    findMissingRecordInputRequiredFields,
+    hasRecordInputRequiredValue,
+    normalizeRecordInputFieldValueForTemplate,
+    normalizeRecordInputFormDataForTemplate,
+} from './services/recordInput/RecordInputFacade';
+export type {
+    BuildCreateRecordSubmitParamsInput,
+    BuildRecordCreateDraftParams,
+    BuildUpdateRecordSubmitParamsInput,
+    RecordInputEditorStateLike,
+} from './services/recordInput/RecordInputFacade';
 export { buildRecordOutputPlan, buildRecordPersistencePlan } from './services/recordInput/snapshot/OutputPlanner';
 export {
     buildCancelledResult,

@@ -1,15 +1,12 @@
 // src/features/dashboard/ui/BlockView.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useRef, useState, useEffect } from 'preact/hooks';
-import { Item, ThemeDefinition, groupItemsByFields, type GroupNode, devLog } from '@core/public';
-import type { GoalDefinition } from '@core/public';
-import { TaskRow } from '../items/TaskRow';
-import { BlockItem } from '../items/BlockItem';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import type { GoalDefinition, GroupNode, Item, MessageRenderPort, ThemeDefinition } from '@core/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
 import { GroupedContainer } from '../GroupedContainer';
-import type { MessageRenderPort } from '@core/public';
-
+import { BlockViewItemList } from './BlockViewItemList';
+import { buildBlockViewGroupClassNames, buildBlockViewRenderModel } from './BlockViewModel';
 
 interface BlockViewProps {
     items: Item[];
@@ -18,7 +15,6 @@ interface BlockViewProps {
     /**
      * Phase2: shared/ui 纯化（渐进）
      * 如果上层（feature/usecase）已经预先算好了分组树，则直接使用。
-     * 这样 BlockView 不需要再做业务计算（groupItemsByFields）。
      */
     groupTree?: GroupNode[] | null;
     /** 上层已经归一化后的分组字段（优先级：groupFields > groupField） */
@@ -64,87 +60,42 @@ export function BlockView(props: BlockViewProps) {
         return () => observer.disconnect();
     }, []);
 
-    const renderItem = (item: Item) => {
-        if (item.type === 'task') {
-            const timer = timers.find(t => t.taskId === item.id);
-            return (
-                <TaskRow 
-                    key={item.id} 
-                    item={item} 
-                    onMarkDone={onMarkDone} 
-                    resolveResourcePath={resolveResourcePath}
-                    onOpenRecordOrigin={onOpenRecordOrigin}
-                    timerService={timerService} 
-                    timer={timer}
-                    allThemes={allThemes}
-                    onOpenRecord={onOpenRecord}
-                    showFields={[]} // TaskRow 中任务类型不显示其他字段
-                />
-            );
-        } else {
-            return (
-                <BlockItem 
-                    key={item.id} 
-                    item={item} 
-                    fields={fields} 
-                    isNarrow={isNarrow} 
-                    resolveResourcePath={resolveResourcePath}
-                    onOpenRecordOrigin={onOpenRecordOrigin}
-                    messageRenderPort={messageRenderPort}
-                    allThemes={allThemes} 
-                    onOpenRecord={onOpenRecord}
-                />
-            );
-        }
+    const renderModel = useMemo(() => buildBlockViewRenderModel({
+        items,
+        groupField,
+        groupFields,
+        groupTree: injectedGroupTree,
+        effectiveGroupFields: injectedGroupFields,
+        goals,
+    }), [items, groupField, groupFields, injectedGroupTree, injectedGroupFields, goals]);
+
+    const itemListProps = {
+        fields,
+        isNarrow,
+        resolveResourcePath,
+        onOpenRecordOrigin,
+        messageRenderPort,
+        onMarkDone,
+        timerService,
+        timers,
+        allThemes,
+        onOpenRecord,
     };
 
-    // 统一处理单字段 / 多字段：优先使用 groupFields，其次兼容 groupField
-    // Phase2 渐进：优先使用上层注入（feature/usecase 已经归一化过）
-    const effectiveGroupFields: string[] = injectedGroupFields ?? (() => {
-        if (groupFields && groupFields.length > 0) return groupFields;
-        if (groupField) return [groupField];
-        return [];
-    })();
-
-
-
-    // 无分组时的渲染逻辑保持不变
-    if (!effectiveGroupFields.length) {
+    if (!renderModel.isGrouped) {
         return (
             <div class="bv-container" ref={containerRef}>
-
-                {items.map(renderItem)}
+                <BlockViewItemList items={items} {...itemListProps} />
             </div>
         );
     }
 
-    // ===== 多字段层级分组逻辑 =====
-
-    // --- 调试日志（dev-only） ---
-    devLog('[BlockView] 接收到的 Props:', props);
-    devLog(`[BlockView] 生效的分组字段 (effectiveGroupFields):`, effectiveGroupFields);
-
-    // 使用多字段分组工具构建分组树
-    // Phase2 渐进：优先使用上层注入（避免 shared/ui 内部做业务计算）
-    const groupTree: GroupNode[] = (injectedGroupTree ?? groupItemsByFields(items, effectiveGroupFields, { goals })) as GroupNode[];
-
-    devLog('[BlockView] 生成的分组树 (groupTree):', JSON.parse(JSON.stringify(groupTree))); // 使用 JSON 深拷贝打印，避免控制台显示Proxy对象
-
-    // 之前这里有一整套手写的折叠 & 递归渲染逻辑，现已由 GroupedContainer 统一处理
-
     return (
         <div class="bv-container" ref={containerRef}>
             <GroupedContainer
-                nodes={groupTree}
-                classNames={{
-                    root: '',
-                    group: 'bv-group bv-group--level-0', // level 细分由缩进控制，这里保留原有 bv-group class
-                    title: 'bv-group-title',
-                    content: 'bv-group-content',
-                    toggleIcon: 'bv-group-toggle-icon',
-                    label: 'bv-group-label',
-                }}
-                renderLeaf={(leafItems) => leafItems.map(renderItem)}
+                nodes={renderModel.groupTree}
+                classNames={buildBlockViewGroupClassNames()}
+                renderLeaf={(leafItems) => <BlockViewItemList items={leafItems} {...itemListProps} />}
             />
         </div>
     );

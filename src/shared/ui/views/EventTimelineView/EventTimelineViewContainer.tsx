@@ -3,13 +3,12 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import type { Item, ViewInstance, MessageRenderPort, GoalDefinition } from '@core/public';
-import { normalizeDisplayFields, readField } from '@core/public';
-import { dayjs } from '@core/public';
+import type { GroupNode } from '@core/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../../types/actions';
-import { groupItemsByFields, type GroupNode } from '@core/public';
 import type { MarkDoneHandler } from '../../../types/actions';
 
 import { EventTimelineViewView } from './EventTimelineViewView';
+import { buildEventTimelineRenderModel, getEventTimelineItemTime } from './EventTimelineViewModel';
 
 interface EventTimelineViewProps {
   items: Item[];
@@ -41,7 +40,7 @@ interface EventTimelineViewProps {
 /**
  * 事件时间线视图：
  * - 纵向线性展示「这段时间发生了哪些事件」
- * - 按配置的字段进行多级分组（如有），组内按时间升序排列
+ * - 按配置字段进行多级分组（如有）
  * - 日期/时间仍然在左侧作为时间线主轴
  */
 export function EventTimelineView(props: EventTimelineViewProps) {
@@ -62,69 +61,34 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     onOpenRecord,
   } = props;
 
-  // 使用统一配置：优先使用模块级配置
-  const displayFields = normalizeDisplayFields(module.fields || ['title', 'date'], { fallbackFields: ['title', 'date'] });
-  const groupFields: string[] = normalizeDisplayFields(module.groupFields || []);
+  const renderModel = useMemo(
+    () => buildEventTimelineRenderModel({
+      items,
+      dateRange,
+      module,
+      injectedFilteredItems,
+      injectedGroupedTree,
+      goals,
+    }),
+    [items, dateRange, module, injectedFilteredItems, injectedGroupedTree, goals]
+  );
 
-  // 视图特有配置，fallback 到默认值
-  const viewConfig = (module.viewConfig as any) || {};
-  const timeField = viewConfig.timeField || 'date';
-  const titleField = viewConfig.titleField || 'title';
-  const contentField = viewConfig.contentField || 'content';
-  const maxContentLength = Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160;
-
-  const start = useMemo(() => dayjs(dateRange[0]), [dateRange]);
-  const end = useMemo(() => dayjs(dateRange[1]), [dateRange]);
-
-  function getItemTime(item: Item) {
-    const raw = readField(item, timeField);
-    if (!raw) return null;
-    try {
-      return dayjs(raw);
-    } catch {
-      return null;
-    }
-  }
-
-  // 先按时间过滤 + 排序，确保时间线语义正确
-  // Phase2 渐进：如果上层已注入 filteredItems，则这里不再重复计算。
-  const filteredItems = useMemo(() => {
-    if (injectedFilteredItems !== undefined) return injectedFilteredItems;
-
-    const result: Item[] = [];
-
-    for (const item of items) {
-      const t = getItemTime(item);
-      if (!t) continue;
-      if (!t.isBetween(start, end, 'minute', '[]')) continue;
-      result.push(item);
-    }
-
-    return result.sort((a, b) => {
-      const ta = getItemTime(a)!;
-      const tb = getItemTime(b)!;
-      return ta.valueOf() - tb.valueOf();
-    });
-  }, [items, start, end, timeField, injectedFilteredItems]);
-
-  // 如果配置了分组字段，则按字段进行多级分组；否则仅按时间线顺序展示
-  const groupedTree: GroupNode[] | null = useMemo(() => {
-    if (injectedGroupedTree !== undefined) return injectedGroupedTree;
-    if (!groupFields || groupFields.length === 0) return null;
-    return groupItemsByFields(filteredItems, groupFields, { goals });
-  }, [filteredItems, groupFields, injectedGroupedTree]);
+  const readItemTime = useMemo(
+    () => (item: Item) => getEventTimelineItemTime(item, renderModel.viewConfig.timeField),
+    [renderModel.viewConfig.timeField]
+  );
 
   return (
     <EventTimelineViewView
-      filteredItems={filteredItems}
-      groupedTree={groupedTree}
+      filteredItems={renderModel.filteredItems}
+      groupedTree={renderModel.groupedTree}
       resolveResourcePath={resolveResourcePath}
       onOpenRecordOrigin={onOpenRecordOrigin}
-      displayFields={displayFields}
-      getItemTime={getItemTime}
-      titleField={titleField}
-      contentField={contentField}
-      maxContentLength={maxContentLength}
+      displayFields={renderModel.displayFields}
+      getItemTime={readItemTime}
+      titleField={renderModel.viewConfig.titleField}
+      contentField={renderModel.viewConfig.contentField}
+      maxContentLength={renderModel.viewConfig.maxContentLength}
       messageRenderPort={messageRenderPort}
       onMarkDone={onMarkDone}
       timerService={timerService}

@@ -1,47 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { areExcelCellValuesEqual, parseExcelEditorValue, validateExcelEditorValue } from './value';
 import type { ExcelCellBatchEdit, ExcelCellCommitReason, ExcelCellEditingState, ExcelCellModel, UseExcelCellEditingOptions } from './types';
 import { canInlineEditExcelCell, getExcelCellKey } from './types';
-
-function addPendingKey(source: ReadonlySet<string>, key: string): Set<string> {
-  const next = new Set(source);
-  next.add(key);
-  return next;
-}
-
-function addPendingKeys(source: ReadonlySet<string>, keys: string[]): Set<string> {
-  const next = new Set(source);
-  for (const key of keys) next.add(key);
-  return next;
-}
-
-function removePendingKey(source: ReadonlySet<string>, key: string): Set<string> {
-  const next = new Set(source);
-  next.delete(key);
-  return next;
-}
-
-function removePendingKeys(source: ReadonlySet<string>, keys: string[]): Set<string> {
-  const next = new Set(source);
-  for (const key of keys) next.delete(key);
-  return next;
-}
-
-function addSavedKey(source: ReadonlySet<string>, key: string): Set<string> {
-  const next = new Set(source);
-  next.add(key);
-  return next;
-}
-
-function removeSavedKey(source: ReadonlySet<string>, key: string): Set<string> {
-  const next = new Set(source);
-  next.delete(key);
-  return next;
-}
-
-function uniqueKeys(keys: string[]): string[] {
-  return Array.from(new Set(keys));
-}
+import {
+  addExcelSetValue,
+  addExcelSetValues,
+  buildExcelCellCommitPlan,
+  buildExcelCellValidationErrors,
+  buildExcelFillDragBatchEdits,
+  buildExcelSingleCellEditPlan,
+  clearExcelCellErrors,
+  getExcelCellCommitExceptionMessage,
+  getExcelCellCommitFailureMessage,
+  getExcelCellNoCommitHandlerMessage,
+  getExcelCellReadonlyMessage,
+  getExcelCommittedValue,
+  removeExcelSetValue,
+  removeExcelSetValues,
+  shouldSkipExcelCommit,
+} from './ExcelCellEditingModel';
 
 export function useExcelCellEditing(options: UseExcelCellEditingOptions): ExcelCellEditingState {
   const { onCellCommit } = options;
@@ -70,9 +46,9 @@ export function useExcelCellEditing(options: UseExcelCellEditingOptions): ExcelC
   const flashSavedKey = useCallback((key: string) => {
     const existing = saveFlashTimers.current[key];
     if (existing) clearTimeout(existing);
-    setSavedCellKeys(prev => addSavedKey(prev, key));
+    setSavedCellKeys(prev => addExcelSetValue(prev, key));
     saveFlashTimers.current[key] = setTimeout(() => {
-      setSavedCellKeys(prev => removeSavedKey(prev, key));
+      setSavedCellKeys(prev => removeExcelSetValue(prev, key));
       delete saveFlashTimers.current[key];
     }, 1200);
   }, []);
@@ -85,11 +61,11 @@ export function useExcelCellEditing(options: UseExcelCellEditingOptions): ExcelC
     const key = getExcelCellKey(cell.itemId, cell.canonicalField);
     setSelectedCellKey(key);
     if (!onCellCommit) {
-      setCellErrors(prev => ({ ...prev, [key]: '当前视图没有配置保存处理器' }));
+      setCellErrors(prev => ({ ...prev, [key]: getExcelCellNoCommitHandlerMessage() }));
       return;
     }
     if (!canInlineEditExcelCell(cell)) {
-      setCellErrors(prev => ({ ...prev, [key]: cell.policy.reason || '该字段不可内联编辑' }));
+      setCellErrors(prev => ({ ...prev, [key]: getExcelCellReadonlyMessage(cell) }));
       return;
     }
     setEditingCellKey(key);
@@ -108,16 +84,16 @@ export function useExcelCellEditing(options: UseExcelCellEditingOptions): ExcelC
     const key = getExcelCellKey(cell.itemId, cell.canonicalField);
 
     if (!onCellCommit) {
-      setCellErrors(prev => ({ ...prev, [key]: '当前视图没有配置保存处理器' }));
+      setCellErrors(prev => ({ ...prev, [key]: getExcelCellNoCommitHandlerMessage() }));
       return false;
     }
 
     if (!canInlineEditExcelCell(cell)) {
-      setCellErrors(prev => ({ ...prev, [key]: cell.policy.reason || '该字段不可内联编辑' }));
+      setCellErrors(prev => ({ ...prev, [key]: getExcelCellReadonlyMessage(cell) }));
       return false;
     }
 
-    if (areExcelCellValuesEqual(cell.value, nextValue)) return true;
+    if (shouldSkipExcelCommit(cell, nextValue)) return true;
 
     try {
       const result = await onCellCommit({
@@ -131,17 +107,16 @@ export function useExcelCellEditing(options: UseExcelCellEditingOptions): ExcelC
       });
 
       if (!result?.ok) {
-        setCellErrors(prev => ({ ...prev, [key]: result?.message || '保存失败' }));
+        setCellErrors(prev => ({ ...prev, [key]: getExcelCellCommitFailureMessage(result?.message) }));
         return false;
       }
 
-      const normalizedValue = result.normalizedValue !== undefined ? result.normalizedValue : nextValue;
-      setValueOverrides(prev => ({ ...prev, [key]: normalizedValue }));
+      setValueOverrides(prev => ({ ...prev, [key]: getExcelCommittedValue(nextValue, result.normalizedValue) }));
       setCellErrors(prev => ({ ...prev, [key]: undefined }));
       flashSavedKey(key);
       return true;
     } catch (error) {
-      setCellErrors(prev => ({ ...prev, [key]: error instanceof Error ? error.message : '保存失败' }));
+      setCellErrors(prev => ({ ...prev, [key]: getExcelCellCommitExceptionMessage(error) }));
       return false;
     }
   }, [flashSavedKey, onCellCommit]);
@@ -149,68 +124,47 @@ export function useExcelCellEditing(options: UseExcelCellEditingOptions): ExcelC
   const commitBatchEdits = useCallback(async (edits: ExcelCellBatchEdit[], reason: ExcelCellCommitReason) => {
     if (!edits.length) return;
 
-    const prepared = edits.map(edit => {
-      const key = getExcelCellKey(edit.cell.itemId, edit.cell.canonicalField);
-      const validationMessage = validateExcelEditorValue(edit.cell, edit.editorValue);
-      const nextValue = validationMessage ? undefined : parseExcelEditorValue(edit.cell, edit.editorValue);
-      return { ...edit, key, validationMessage, nextValue };
-    });
-
-    const invalid = prepared.filter(edit => edit.validationMessage);
-    if (invalid.length) {
-      setCellErrors(prev => {
-        const next = { ...prev };
-        for (const edit of invalid) next[edit.key] = edit.validationMessage || '字段值无效';
-        return next;
-      });
+    const plan = buildExcelCellCommitPlan(edits, reason);
+    if (plan.invalid.length) {
+      setCellErrors(prev => buildExcelCellValidationErrors(prev, plan.invalid));
     }
+    if (!plan.valid.length) return;
 
-    const valid = prepared.filter(edit => !edit.validationMessage && canInlineEditExcelCell(edit.cell));
-    if (!valid.length) return;
-
-    const keys = uniqueKeys(valid.map(edit => edit.key));
     setEditingCellKey(null);
-    setSelectedCellKey(valid[valid.length - 1].key);
-    setPendingCellKeys(prev => addPendingKeys(prev, keys));
-    setCellErrors(prev => {
-      const next = { ...prev };
-      for (const key of keys) next[key] = undefined;
-      return next;
-    });
+    setSelectedCellKey(plan.valid[plan.valid.length - 1].key);
+    setPendingCellKeys(prev => addExcelSetValues(prev, plan.keys));
+    setCellErrors(prev => clearExcelCellErrors(prev, plan.keys));
 
     try {
       await enqueueCommitTask(async () => {
-        for (const edit of valid) {
-          await commitCellValue(edit.cell, edit.nextValue, reason);
+        for (const edit of plan.valid) {
+          await commitCellValue(edit.cell, edit.nextValue, plan.reason);
         }
       });
     } finally {
-      setPendingCellKeys(prev => removePendingKeys(prev, keys));
+      setPendingCellKeys(prev => removeExcelSetValues(prev, plan.keys));
     }
   }, [commitCellValue, enqueueCommitTask]);
 
   const commitEdit = useCallback(async (cell: ExcelCellModel, nextEditorValue: string) => {
-    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-    const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
-    if (validationMessage) {
-      setSelectedCellKey(key);
-      setCellErrors(prev => ({ ...prev, [key]: validationMessage }));
+    const plan = buildExcelSingleCellEditPlan(cell, nextEditorValue);
+    if (plan.validationMessage) {
+      setSelectedCellKey(plan.key);
+      setCellErrors(prev => ({ ...prev, [plan.key]: plan.validationMessage }));
       return;
     }
 
-    const nextValue = parseExcelEditorValue(cell, nextEditorValue);
-
-    setSelectedCellKey(key);
+    setSelectedCellKey(plan.key);
     setEditingCellKey(null);
-    setCellErrors(prev => ({ ...prev, [key]: undefined }));
-    setPendingCellKeys(prev => addPendingKey(prev, key));
+    setCellErrors(prev => ({ ...prev, [plan.key]: undefined }));
+    setPendingCellKeys(prev => addExcelSetValue(prev, plan.key));
 
     try {
       await enqueueCommitTask(async () => {
-        await commitCellValue(cell, nextValue, 'inline-edit');
+        await commitCellValue(cell, plan.nextValue, 'inline-edit');
       });
     } finally {
-      setPendingCellKeys(prev => removePendingKey(prev, key));
+      setPendingCellKeys(prev => removeExcelSetValue(prev, plan.key));
     }
   }, [commitCellValue, enqueueCommitTask]);
 
@@ -233,15 +187,12 @@ export function useExcelCellEditing(options: UseExcelCellEditingOptions): ExcelC
   }, []);
 
   const finishFillDrag = useCallback(async (cells: ExcelCellModel[]) => {
-    const source = fillDragSourceCell;
+    const batchEdits = buildExcelFillDragBatchEdits(fillDragSourceCell, cells);
     setFillDragSourceCell(null);
     setFillDragTargetCellKey(null);
-    if (!source || !cells.length) return;
+    if (!batchEdits.length) return;
 
-    const targetCells = cells.filter(cell => cell.itemId !== source.itemId && cell.canonicalField === source.canonicalField && canInlineEditExcelCell(cell));
-    if (!targetCells.length) return;
-
-    await commitBatchEdits(targetCells.map(cell => ({ cell, editorValue: source.editorValue })), 'fill-drag');
+    await commitBatchEdits(batchEdits, 'fill-drag');
   }, [commitBatchEdits, fillDragSourceCell]);
 
   const resetTransientState = useCallback(() => {

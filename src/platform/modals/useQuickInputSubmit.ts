@@ -5,6 +5,10 @@ import {
   buildRecordSubmitFeedbackPresentation,
   buildRecordSubmitRecoveryPresentation,
   type Item,
+  assertRecordInputRequiredFields,
+  buildCreateRecordSubmitParamsFromEditorState,
+  buildRecordCreateDraftFromEditorState,
+  buildUpdateRecordSubmitParamsFromEditorState,
   type QuickInputSaveData,
   type RecordInputSource,
   type RecordOutputPlan,
@@ -18,24 +22,6 @@ import { showQuickInputNotice } from './quickInputNotice';
 import type { QuickInputPendingAction } from './QuickInputModalFooter';
 
 
-function hasRequiredValue(value: unknown): boolean {
-  if (value === null || value === undefined) return false;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === 'object') {
-    const raw = (value as any).value ?? (value as any).label;
-    return raw !== undefined && raw !== null && String(raw).trim() !== '';
-  }
-  return String(value).trim() !== '';
-}
-
-function findMissingRequiredFields(state: QuickInputEditorState): string[] {
-  const fields = state.template?.fields || [];
-  return fields
-    .filter((field: any) => field?.required)
-    .filter((field: any) => !hasRequiredValue(state.formData?.[field.key] ?? state.formData?.[field.label]))
-    .map((field: any) => field.label || field.key)
-    .filter(Boolean);
-}
 
 export interface QuickInputSubmitControllerParams {
   mode: 'create' | 'edit';
@@ -89,17 +75,11 @@ export function useQuickInputSubmitController({
 
   useEffect(() => () => submitLatestRef.current.dispose(), []);
 
-  const buildCreateDraft = useCallback((): QuickInputSaveData => {
-    const currentState = getCurrentState();
-    return {
-      blockId: currentState.blockId,
-      themeId: currentState.themeId ?? null,
-      formData: currentState.formData,
-      context,
-      meta: currentState.meta,
-      source: source ?? (onSave ? 'timer' : 'quickinput'),
-    };
-  }, [context, getCurrentState, onSave, source]);
+  const buildCreateDraft = useCallback((): QuickInputSaveData => buildRecordCreateDraftFromEditorState({
+    state: getCurrentState(),
+    context,
+    source: source ?? (onSave ? 'timer' : 'quickinput'),
+  }), [context, getCurrentState, onSave, source]);
 
   const clearRecovery = useCallback(() => {
     setLastConflictResult(null);
@@ -139,33 +119,24 @@ export function useQuickInputSubmitController({
     try {
       const result = await submitLatestRef.current.run(async (signal) => {
         const latestState = getCurrentState();
-        const missingRequired = findMissingRequiredFields(latestState);
-        if (missingRequired.length > 0) {
-          throw new Error(`请补充必填字段：${missingRequired.join('、')}`);
-        }
+        assertRecordInputRequiredFields(latestState);
         if (mode === 'edit' && editItem) {
-          return await useCases.recordInput.submitUpdateRecord({
+          return await useCases.recordInput.submitUpdateRecord(buildUpdateRecordSubmitParamsFromEditorState({
+            state: latestState,
             item: editItem,
-            blockId: latestState.blockId,
-            themeId: latestState.themeId,
-            formData: latestState.formData,
-            meta: latestState.meta,
             expectedOutputPlan: liveOutputPlan,
             expectedPersistencePlan: livePersistencePlan,
             signal,
             source: 'quickinput',
-          });
+          }));
         }
 
-        return await useCases.recordInput.submitCreateRecord({
-          blockId: latestState.blockId,
-          themeId: latestState.themeId,
-          formData: latestState.formData,
+        return await useCases.recordInput.submitCreateRecord(buildCreateRecordSubmitParamsFromEditorState({
+          state: latestState,
           context,
-          meta: latestState.meta,
           signal,
           source: source ?? 'quickinput',
-        });
+        }));
       });
 
       rememberConflict(result);

@@ -2,9 +2,9 @@
 import { h } from 'preact';
 import type { Item } from '@core/public';
 import type { CategoryConfig } from '@core/public';
-import { aggregateByQuarter, aggregateByMonth, getMonthWeeksData, isSameIsoWeek, createPeriodData } from '@core/public';
 import { ChartBlock } from '../../../statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
+import { buildQuarterStatisticsRenderModel } from './QuarterStatisticsViewModel';
 
 export function QuarterStatisticsView({
   items,
@@ -27,72 +27,32 @@ export function QuarterStatisticsView({
   minVisibleHeight: number;
   bucketAccessor?: (item: Item) => string;
 }) {
-  const quarterStart = quarterDate.startOf('quarter');
-  const quarterData = aggregateByQuarter(items, categories, quarterDate, usePeriod, bucketAccessor);
-
-  // 准备3个月的数据和周数据
-  const monthsInfo = Array.from({ length: 3 }, (_, i) => {
-    const month = quarterStart.add(i, 'month');
-    const monthData = aggregateByMonth(items, categories, month, usePeriod, bucketAccessor);
-    const weeksData = getMonthWeeksData(items, categories, month, usePeriod, bucketAccessor);
-
-    const monthStart = month.startOf('month');
-    const monthEnd = month.endOf('month');
-
-    const weeksMeta: { weekStart: any }[] = [];
-    let weekCursor = monthStart.startOf('isoWeek');
-    while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
-      weeksMeta.push({ weekStart: weekCursor });
-      weekCursor = weekCursor.add(1, 'week');
-    }
-
-    return { month, data: monthData, weeksData, weeksMeta };
-  });
-
-  // 最大周数（用于占位对齐）
-  const maxWeeks = Math.max(...monthsInfo.map(m => m.weeksData.length), 1);
+  const model = buildQuarterStatisticsRenderModel({ items, categories, quarterDate, usePeriod, bucketAccessor });
 
   return (
     <div class="statistics-view">
-
       <div class="sv-quarter-grid">
-        {/* 第1行：季度汇总 - 跨全部3列 */}
         <div class="sv-quarter-grid-summary">
           <ChartBlock
-            data={quarterData}
-            label={`${quarterDate.format('YYYY年')} 第${quarterDate.quarter()}季度`}
+            data={model.quarterData}
+            label={model.quarterLabel}
             categories={categories}
             onCellClick={onCellClick}
-            cellIdentifier={(goal: string) => ({
-              type: 'quarter',
-              quarter: quarterDate.quarter(),
-              year: quarterDate.year(),
-              goal,
-            })}
+            cellIdentifier={model.quarterIdentifier}
             displayMode={displayMode}
             minVisibleHeight={minVisibleHeight}
             bucketAccessor={bucketAccessor}
           />
         </div>
 
-        {/* 第2行：3个月 - 每个占1列 */}
-        {monthsInfo.map(({ month, data }, i) => (
-          <div
-            key={month.format('YYYY-MM')}
-            class="sv-quarter-grid-month"
-            style={{ gridColumn: `${i + 1}` }}
-          >
+        {model.months.map((month) => (
+          <div key={month.key} class="sv-quarter-grid-month" style={{ gridColumn: month.gridColumn }}>
             <ChartBlock
-              data={data}
-              label={month.format('MM月')}
+              data={month.data}
+              label={month.label}
               categories={categories}
               onCellClick={onCellClick}
-              cellIdentifier={(goal: string) => ({
-                type: 'month',
-                month: month.month() + 1,
-                year: month.year(),
-                goal,
-              })}
+              cellIdentifier={month.identifier}
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
               bucketAccessor={bucketAccessor}
@@ -100,40 +60,24 @@ export function QuarterStatisticsView({
           </div>
         ))}
 
-        {/* 第3+行：每月的周 - 竖排在月列下方 */}
-        {monthsInfo.map(({ month, weeksData, weeksMeta }, i) => (
-          <div
-            key={`w-col-${month.format('YYYY-MM')}`}
-            class="sv-quarter-grid-week-col"
-            style={{ gridColumn: `${i + 1}` }}
-          >
-            {weeksData.map((data, index) => {
-              const meta = weeksMeta[index];
-              if (!meta) return null;
-              const { weekStart } = meta;
-              return (
-                <ChartBlock
-                  key={weekStart.format('YYYY-MM-DD')}
-                  data={data}
-                  label={`W${weekStart.isoWeek()}`}
-                  categories={categories}
-                  onCellClick={onCellClick}
-                  cellIdentifier={(goal: string) => ({
-                    type: 'week',
-                    week: weekStart.isoWeek(),
-                    year: weekStart.isoWeekYear(),
-                    goal,
-                  })}
-                  isCompact={true}
-                  displayMode={displayMode}
-                  minVisibleHeight={minVisibleHeight}
-                  bucketAccessor={bucketAccessor}
-                />
-              );
-            })}
-            {/* 占位块，确保3列等高 */}
-            {Array.from({ length: maxWeeks - weeksData.length }, (_, j) => (
-              <div key={`pad-${j}`} class="sv-week-placeholder" />
+        {model.months.map((month) => (
+          <div key={`w-col-${month.key}`} class="sv-quarter-grid-week-col" style={{ gridColumn: month.gridColumn }}>
+            {month.weeks.map((week) => (
+              <ChartBlock
+                key={week.key}
+                data={week.data}
+                label={week.label}
+                categories={categories}
+                onCellClick={onCellClick}
+                cellIdentifier={week.identifier}
+                isCompact={true}
+                displayMode={displayMode}
+                minVisibleHeight={minVisibleHeight}
+                bucketAccessor={bucketAccessor}
+              />
+            ))}
+            {Array.from({ length: month.placeholderCount }, (_, index) => (
+              <div key={`pad-${index}`} class="sv-week-placeholder" />
             ))}
           </div>
         ))}

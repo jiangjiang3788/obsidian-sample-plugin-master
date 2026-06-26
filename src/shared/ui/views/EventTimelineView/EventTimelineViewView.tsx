@@ -3,33 +3,22 @@
 import { h } from 'preact';
 import type { Item, MessageRenderPort } from '@core/public';
 import type { GroupNode } from '@core/public';
-import { readField } from '@core/public';
 import type { MarkDoneHandler, OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../../types/actions';
 
-import { TaskRow } from '../../items/TaskRow';
-import { BlockItem } from '../../items/BlockItem';
 import { GroupedContainer } from '../../GroupedContainer';
+import { EventTimelineEventList } from './EventTimelineEventList';
 
 interface EventTimelineViewViewProps {
   filteredItems: Item[];
   groupedTree: GroupNode[] | null;
-
   resolveResourcePath?: ResolveResourcePathHandler;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
-
-  /** BlockItem 需要展示的字段 */
   displayFields: string[];
-
-  /** 读取 item 时间（由 container 统一实现 timeField + parse） */
   getItemTime: (item: Item) => any | null;
-
-  /** key / 标题展示优先字段 */
   titleField: string;
-  /** 任务显示正文优先字段，默认 content；可切到完整数据做调试但视觉结构不变。 */
   contentField: string;
   maxContentLength: number;
   messageRenderPort?: MessageRenderPort;
-
   onMarkDone?: MarkDoneHandler;
   timerService: TimerController;
   timers: any[];
@@ -56,82 +45,30 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
     onOpenRecord,
   } = props;
 
-
-  const cleanDisplayText = (value: unknown): string => {
-    const text = String(value ?? '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-    if (!text) return '';
-    const compact = text.replace(/\s+/g, ' ').trim();
-    if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
-    return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
-  };
-
-  const getTaskDisplayTitle = (item: Item): string => {
-    const fromContent = cleanDisplayText(readField(item, contentField));
-    if (fromContent) return fromContent;
-    return cleanDisplayText(readField(item, 'content')) || cleanDisplayText(readField(item, titleField)) || item.title || '';
-  };
+  const renderEventList = (items: Item[]) => (
+    <EventTimelineEventList
+      items={items}
+      displayFields={displayFields}
+      getItemTime={getItemTime}
+      titleField={titleField}
+      contentField={contentField}
+      maxContentLength={maxContentLength}
+      resolveResourcePath={resolveResourcePath}
+      onOpenRecordOrigin={onOpenRecordOrigin}
+      messageRenderPort={messageRenderPort}
+      onMarkDone={onMarkDone}
+      timerService={timerService}
+      timers={timers}
+      allThemes={allThemes}
+      onOpenRecord={onOpenRecord}
+    />
+  );
 
   if (filteredItems.length === 0) {
     return <div class="event-timeline-empty">当前时间范围内没有事件记录。</div>;
   }
 
-  // 渲染事件列表，处理日期去重
-  const renderEventList = (items: Item[]) => {
-    let lastDate = '';
-
-    return items.map((item, index) => {
-      const t = getItemTime(item);
-      const dateLabel = t ? t.format('YYYY-MM-DD') : '';
-      const timeLabel = t ? t.format('HH:mm') : '';
-
-      // 日期去重：相同日期只在第一个显示
-      const showDate = dateLabel !== lastDate;
-      if (showDate) lastDate = dateLabel;
-
-      const titleForKey =
-        (readField(item, titleField) as string) || (readField(item, 'title') as string) || '';
-      const taskDisplayTitle = item.type === 'task' ? getTaskDisplayTitle(item) : '';
-
-      return (
-        <div class="et-event" key={`${dateLabel}-${timeLabel}-${titleForKey}-${index}`}>
-          {/* 左侧：日期和时间 */}
-          <div class="et-event-date">
-            {showDate && t && <div class="et-date-label">{dateLabel}</div>}
-            {/* task类型显示时间，block类型不显示时间 */}
-            {item.type === 'task' && <div class="et-time-label">{timeLabel}</div>}
-          </div>
-
-          {/* 中间：时间线 */}
-          <div class="et-line">
-            <div class="et-dot" />
-          </div>
-
-          {/* 右侧：内容卡片 */}
-          <div class="et-event-card">
-            {item.type === 'task' ? (
-              <TaskRow
-                item={item}
-                onMarkDone={(id: string) => onMarkDone?.(id)}
-                resolveResourcePath={resolveResourcePath}
-                onOpenRecordOrigin={onOpenRecordOrigin}
-                timerService={timerService}
-                timer={timers.find((t) => t.taskId === item.id)}
-                allThemes={allThemes}
-                displayTitle={taskDisplayTitle}
-                showFields={[]} // TaskRow 不显示额外字段
-                onOpenRecord={onOpenRecord}
-              />
-            ) : (
-              <BlockItem item={item} fields={displayFields} isNarrow={false} resolveResourcePath={resolveResourcePath} onOpenRecordOrigin={onOpenRecordOrigin} messageRenderPort={messageRenderPort} allThemes={allThemes} onOpenRecord={onOpenRecord} />
-            )}
-          </div>
-        </div>
-      );
-    });
-  };
-
   if (!groupedTree) {
-    // 无分组：保持原有结构，使用 .event-timeline-view + .et-ungrouped
     return (
       <div class="event-timeline-view">
         <div class="et-ungrouped">{renderEventList(filteredItems)}</div>
@@ -139,7 +76,6 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
     );
   }
 
-  // 有分组：使用通用 GroupedContainer 统一分组层级逻辑 + 折叠交互
   return (
     <GroupedContainer
       nodes={groupedTree}

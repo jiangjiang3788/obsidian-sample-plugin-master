@@ -78,3 +78,14 @@ Then install the generated plugin folder in a clean Obsidian vault and walk thro
 - Conflict results from edit/delete operations keep the modal open.
 - The modal shows conflict recovery actions for opening the original note, rescanning affected paths, and retrying the save/delete flow.
 - Recovery path planning is pure and covered by `test/unit/recordSubmitRecovery.test.ts`.
+
+
+## Single-user convergence acceptance
+
+- The destructive single-user convergence gates must remain part of the standard gate chain.
+- `npm run single-user:gate` blocks ThemeMatrix / ThemeOverride / legacy block-template regressions.
+- `npm run shared-view-convergence:gate` blocks large shared-view containers and local helper regressions.
+- `npm run non-shared-view-convergence:gate` blocks non-shared view regressions such as RuleBuilder helper回流.
+- `npm run docs-governance:gate` blocks old process reports and encoded `#Uxxxx` filenames from returning to `docs/`.
+- `npm run final-convergence:gate` checks the final handoff docs and gate chain wiring.
+- Small, clear components should not be split only for symmetry; extraction requires visible calculation, repeated rules, state derivation, or test value.
