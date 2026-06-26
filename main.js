@@ -2108,13 +2108,13 @@ function cleanupGoalTemplateStorage(goalSettings) {
 function compactText$3(value) {
   return String(value ?? "").trim();
 }
-function cleanPathSegment$1(value) {
+function cleanPathSegment$2(value) {
   return compactText$3(value).replace(/^[#＃]+\s*/, "").trim();
 }
 function normalizePath$6(value) {
-  return compactText$3(value).split("/").map(cleanPathSegment$1).filter(Boolean).join("/");
+  return compactText$3(value).split("/").map(cleanPathSegment$2).filter(Boolean).join("/");
 }
-function readOptionText$1(value) {
+function readOptionText$2(value) {
   if (value === void 0 || value === null) return "";
   if (typeof value === "object" && value && "value" in value) return compactText$3(value.value);
   return compactText$3(value);
@@ -2127,14 +2127,14 @@ function isGeneratedGoalTemplateName(value) {
   const text2 = compactText$3(value);
   return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "默认预设" || text2 === "默认模板" || text2 === "未命名预设";
 }
-function isThemeField$1(field) {
+function isThemeField$2(field) {
   const anyField = field;
   const key = compactText$3(anyField.key).toLowerCase();
   const label = compactText$3(anyField.label);
   const semantic = compactText$3(anyField.semantic || anyField.semanticType).toLowerCase();
   return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath");
 }
-function isIconField$1(field) {
+function isIconField$2(field) {
   const anyField = field;
   const key = compactText$3(anyField.key).toLowerCase();
   const label = compactText$3(anyField.label);
@@ -2144,7 +2144,7 @@ function isIconField$1(field) {
 function readFieldDefault$1(fields, predicate) {
   for (const field of fields || []) {
     if (!predicate(field)) continue;
-    const value = readOptionText$1(field.defaultValue);
+    const value = readOptionText$2(field.defaultValue);
     if (value && value !== "{{goal.themePath}}") return value;
   }
   return "";
@@ -2152,13 +2152,13 @@ function readFieldDefault$1(fields, predicate) {
 function readGoalTemplateThemePath$1(template, goal) {
   const values2 = template?.defaultValues || {};
   return normalizePath$6(
-    readOptionText$1(values2.themePath) || readOptionText$1(values2["主题"]) || readFieldDefault$1(template?.fields, isThemeField$1) || readOptionText$1(goal?.themePath)
+    readOptionText$2(values2.themePath) || readOptionText$2(values2["主题"]) || readFieldDefault$1(template?.fields, isThemeField$2) || readOptionText$2(goal?.themePath)
   );
 }
 function readGoalTemplateIcon$1(template, fallbackIcon) {
   const values2 = template?.defaultValues || {};
   return compactText$3(
-    readOptionText$1(values2.icon) || readOptionText$1(values2["图标"]) || readOptionText$1(values2["theme.icon"]) || readFieldDefault$1(template?.fields, isIconField$1) || fallbackIcon
+    readOptionText$2(values2.icon) || readOptionText$2(values2["图标"]) || readOptionText$2(values2["theme.icon"]) || readFieldDefault$1(template?.fields, isIconField$2) || fallbackIcon
   );
 }
 function getGoalTemplateDisplayName$1(template, goal, fallback = "记录预设") {
@@ -17318,7 +17318,7 @@ function normalizePath$2(value) {
   const trimmed = String(value || "").trim();
   return trimmed || null;
 }
-function readOptionText(value) {
+function readOptionText$1(value) {
   if (value && typeof value === "object") {
     const obj = value;
     return {
@@ -17330,14 +17330,14 @@ function readOptionText(value) {
   return { value: text2, label: text2 };
 }
 function buildTaskRenderTokens(data) {
-  const status = readOptionText(data["状态"] ?? data.status ?? data.taskStatus ?? data.taskStatusPrefix);
+  const status = readOptionText$1(data["状态"] ?? data.status ?? data.taskStatus ?? data.taskStatusPrefix);
   const statusText = `${status.value} ${status.label}`.trim();
   const isDone2 = /-\s*\[x\]/i.test(status.value) || /完成|done|✅/.test(statusText);
   const taskStatusPrefix = isDone2 ? "- [x]" : "- [ ]";
   const taskStatusKind = isDone2 ? "done" : "todo";
   const date2 = String(data["日期"] ?? data.date ?? "").trim();
   const dateMarker = isDone2 ? "✅" : /🛫/.test(statusText) ? "🛫" : /⏳/.test(statusText) ? "⏳" : /➕/.test(statusText) ? "➕" : "📅";
-  const repeat = readOptionText(data["重复"] ?? data.recurrence ?? data.repeat);
+  const repeat = readOptionText$1(data["重复"] ?? data.recurrence ?? data.repeat);
   const repeatText = repeat.value || repeat.label;
   return {
     taskStatusPrefix,
@@ -68980,13 +68980,124 @@ function NativeTextarea({
     )
   ] });
 }
+const presetGranularityOptions = [
+  { value: "week", label: "周" },
+  { value: "month", label: "月" },
+  { value: "quarter", label: "季度" },
+  { value: "year", label: "年" }
+];
+function compactText(value) {
+  return String(value ?? "").trim();
+}
 function cloneValue$1(value) {
   return JSON.parse(JSON.stringify(value));
 }
+function readOptionText(value) {
+  if (value === void 0 || value === null) return "";
+  if (typeof value === "object" && value && "value" in value) return compactText(value.value);
+  return compactText(value);
+}
+function cleanPathSegment$1(value) {
+  return compactText(value).replace(/^[#＃]+\s*/, "").trim();
+}
+function normalizeThemePath(path) {
+  return compactText(path).split("/").map(cleanPathSegment$1).filter(Boolean).join("/");
+}
+function cleanDisplayThemePath(path) {
+  return normalizeThemePath(path) || compactText(path);
+}
+function themeLeafLabel(path, fallback = "") {
+  const normalized = normalizeThemePath(path);
+  return normalized.split("/").filter(Boolean).pop() || fallback;
+}
+function isThemeField$1(field) {
+  const anyField = field;
+  const key = compactText(anyField.key).toLowerCase();
+  const label = compactText(anyField.label);
+  const semantic = compactText(anyField.semantic || anyField.semanticType).toLowerCase();
+  return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath") || semantic === "theme";
+}
+function isIconField$1(field) {
+  const anyField = field;
+  const key = compactText(anyField.key).toLowerCase();
+  const label = compactText(anyField.label);
+  const semantic = compactText(anyField.semantic || anyField.semanticType).toLowerCase();
+  return key === "icon" || key === "图标" || label === "图标" || semantic === "icon";
+}
+function readThemePathFromFields(fields) {
+  for (const field of fields || []) {
+    if (!isThemeField$1(field)) continue;
+    const value = readOptionText(field.defaultValue);
+    if (value && value !== "{{goal.themePath}}") return normalizeThemePath(value);
+  }
+  return "";
+}
+function readThemePathFromTemplate(template) {
+  return normalizeThemePath(readGoalTemplateThemePath$1(template));
+}
+function ensureThemeField(fields, themePath) {
+  const normalizedThemePath = normalizeThemePath(themePath);
+  let touched = false;
+  const next2 = (fields || []).map((field) => {
+    if (!isThemeField$1(field)) return field;
+    touched = true;
+    return { ...field, defaultValue: normalizedThemePath || field.defaultValue || "{{goal.themePath}}" };
+  });
+  if (!touched && normalizedThemePath) {
+    next2.push({
+      id: "themePath",
+      key: "themePath",
+      label: "主题",
+      type: "path",
+      semanticType: "themePath",
+      defaultValue: normalizedThemePath
+    });
+  }
+  return next2;
+}
+function mergeDefaultValues(draft, themeIcon) {
+  const result = { ...draft.defaultValues || {} };
+  const themePath = normalizeThemePath(draft.themePath) || readThemePathFromFields(draft.fields);
+  if (themePath) {
+    result.themePath = themePath;
+    result["主题"] = themePath;
+  }
+  const icon = compactText(themeIcon) || readIconFromFields(draft.fields);
+  if (icon) {
+    result.icon = icon;
+    result["图标"] = icon;
+  }
+  return result;
+}
+function readIconFromFields(fields) {
+  for (const field of fields || []) {
+    if (!isIconField$1(field)) continue;
+    const value = readOptionText(field.defaultValue);
+    if (value && value !== "{{theme.icon}}") return value;
+  }
+  return "";
+}
 function makeVariantId(label) {
-  const text2 = String(label || "").trim();
+  const text2 = compactText(label);
   if (!text2) return `variant-${Date.now()}`;
   return text2.replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-").replace(/^-+|-+$/g, "") || `variant-${Date.now()}`;
+}
+function isGeneratedPresetName$1(value) {
+  return isGeneratedGoalTemplateName(value);
+}
+function inferTemplateDisplayName(template, themePath = "") {
+  const displayName = getGoalTemplateDisplayName$1(template, null, "记录预设");
+  if (displayName && !isGeneratedPresetName$1(displayName)) return displayName;
+  return themeLeafLabel(themePath, displayName || "记录预设");
+}
+function readPeriodGranularity(template, block2) {
+  return normalizePeriodPolicyGranularity(
+    template?.periodPolicy?.granularity || template?.granularity || block2?.periodPolicy?.granularity || "week"
+  );
+}
+function buildDraftPeriodPolicy(block2, draft) {
+  if (!block2 || !isPeriodAwareCoreBlock(block2.id)) return void 0;
+  return { enabled: true, granularity: normalizePeriodPolicyGranularity(draft.granularity) };
 }
 function makeDraftFromTemplate(template, block2, variants) {
   const variantId = template?.variantId || "default";
@@ -69030,11 +69141,11 @@ function makeNewDraft(goal, block2, variants, themes) {
     sortOrder: variants.length * 10,
     themePath,
     fields,
-    defaultValues: mergeDefaultValues({ ...base, themePath, fields, name: label || "记录预设", variantId }, themes.find((theme2) => normalizeThemePath(theme2?.path) === themePath)?.icon)
+    defaultValues: mergeDefaultValues({ ...base, themePath, fields }, themes.find((theme2) => normalizeThemePath(theme2?.path) === themePath)?.icon)
   };
 }
 function deriveRequiredFields(fields) {
-  return (fields || []).filter((field) => field?.required === true).map((field) => String(field.key || field.label || "").trim()).filter(Boolean);
+  return (fields || []).filter((field) => field?.required === true).map((field) => compactText(field.key || field.label)).filter(Boolean);
 }
 function stableJson(value) {
   const seen = /* @__PURE__ */ new WeakSet();
@@ -69068,18 +69179,12 @@ function fieldsHaveSameStructure(left2, right2) {
   const normalize = (fields) => (fields || []).map(compactFieldForStructureCompare);
   return stableJson(normalize(left2)) === stableJson(normalize(right2));
 }
-function setOf(values2) {
-  return new Set(values2.map((value) => String(value || "").trim()).filter(Boolean));
-}
 function equalStringSet(left2, right2) {
-  const a2 = setOf(left2);
-  const b2 = setOf(right2);
+  const a2 = new Set(left2.map(compactText).filter(Boolean));
+  const b2 = new Set(right2.map(compactText).filter(Boolean));
   if (a2.size !== b2.size) return false;
   for (const value of a2) if (!b2.has(value)) return false;
   return true;
-}
-function compactText(value) {
-  return String(value ?? "").trim();
 }
 function getFieldDefaultMap(fields) {
   const result = {};
@@ -69121,7 +69226,7 @@ function cleanDefaultValuesOverride(draft, block2, goal, themeIcon) {
 function buildInheritedDraft(previous, block2) {
   const baseFields = ensureThemeField(cloneValue$1(block2?.fields || []), previous.themePath);
   const requiredFields = deriveRequiredFields(baseFields);
-  const next2 = {
+  return {
     ...previous,
     fields: baseFields,
     outputTemplate: block2?.outputTemplate || "",
@@ -69130,7 +69235,6 @@ function buildInheritedDraft(previous, block2) {
     requiredFields,
     defaultValues: mergeDefaultValues({ ...previous, fields: baseFields })
   };
-  return next2;
 }
 function inferTemplateEditMode(template, block2, goal) {
   return inferGoalTemplateEditMode(template, block2, goal);
@@ -69154,11 +69258,6 @@ function buildInheritedTemplatePatchFromDraft(params) {
     updatedAt: (/* @__PURE__ */ new Date()).toISOString()
   };
   return compactGoalTemplateForStorage(rawPatch, { coreBlock: block2, goal });
-}
-function buildDraftDiffSummary(goal, block2, draft, themeIcon) {
-  if (!block2 || !goal) return [];
-  const patch = buildTemplatePatchFromDraft({ goal, block: block2, draft, selectedTemplate: null, themeIcon });
-  return describeGoalTemplateStorageDiff(patch);
 }
 function buildTemplatePatchFromDraft(params) {
   const { goal, block: block2, draft, selectedTemplate, themeIcon } = params;
@@ -69197,6 +69296,11 @@ function buildTemplatePatchFromDraft(params) {
   };
   return compactGoalTemplateForStorage(rawPatch, { coreBlock: block2, goal });
 }
+function buildDraftDiffSummary(goal, block2, draft, themeIcon) {
+  if (!block2 || !goal) return [];
+  const patch = buildTemplatePatchFromDraft({ goal, block: block2, draft, selectedTemplate: null, themeIcon });
+  return describeGoalTemplateStorageDiff(patch);
+}
 function nextCopyVariantId(existing, sourceVariantId) {
   const base = `${sourceVariantId}-copy`;
   const used = new Set(existing.map((item) => String(item.variantId || "default")));
@@ -69205,32 +69309,81 @@ function nextCopyVariantId(existing, sourceVariantId) {
   while (used.has(`${base}-${index}`)) index += 1;
   return `${base}-${index}`;
 }
+function sortGoalTemplateVariants(variants) {
+  return variants.map((template, index) => ({ template, index })).sort((left2, right2) => {
+    const bySort = (left2.template.sortOrder ?? 9999) - (right2.template.sortOrder ?? 9999);
+    if (bySort !== 0) return bySort;
+    return left2.index - right2.index;
+  }).map(({ template }) => template);
+}
+function buildThemeOptions(themes) {
+  return [
+    { value: "", label: "不指定主题" },
+    ...(themes || []).map((theme2) => ({
+      value: theme2.path,
+      label: `${theme2.icon ? `${theme2.icon} ` : ""}${cleanDisplayThemePath(theme2.path)}`
+    }))
+  ];
+}
+function buildThemeByPath(themes) {
+  return new Map((themes || []).map((theme2) => [String(theme2.path || ""), theme2]));
+}
+function applyThemePathToDraft(draft, themePath, themeIcon) {
+  const normalizedThemePath = normalizeThemePath(themePath);
+  const fields = ensureThemeField(draft.fields || [], normalizedThemePath);
+  return {
+    ...draft,
+    themePath: normalizedThemePath,
+    fields,
+    defaultValues: mergeDefaultValues({ ...draft, themePath: normalizedThemePath, fields }, themeIcon)
+  };
+}
+function switchDraftToOverride(previous, block2) {
+  const base = buildInheritedDraft(previous, block2);
+  return {
+    ...previous,
+    fields: previous.fields?.length ? previous.fields : base.fields,
+    outputTemplate: previous.outputTemplate || base.outputTemplate,
+    targetFile: previous.targetFile || base.targetFile,
+    appendUnderHeader: previous.appendUnderHeader || base.appendUnderHeader,
+    requiredFields: previous.requiredFields?.length ? previous.requiredFields : base.requiredFields
+  };
+}
+function createCopiedDraft(currentDraft, selectedTemplate, sortedVariants) {
+  const sourceVariantId = currentDraft.variantId || selectedTemplate?.variantId || "default";
+  const variantId = nextCopyVariantId(sortedVariants, sourceVariantId);
+  return {
+    ...currentDraft,
+    variantId,
+    name: `${currentDraft.name || selectedTemplate?.name || sourceVariantId} 副本`,
+    sortOrder: sortedVariants.length * 10
+  };
+}
 function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variants, initialVariantId = null, useCases }) {
   const ui = useUiPort();
   const settings = useSelector(selectSettings);
   const themes = settings.inputSettings?.themes || [];
-  const themeOptions2 = [{ value: "", label: "不指定主题" }, ...themes.map((theme2) => ({ value: theme2.path, label: `${theme2.icon ? `${theme2.icon} ` : ""}${cleanDisplayThemePath(theme2.path)}` }))];
-  const themeByPath = new Map(themes.map((theme2) => [String(theme2.path || ""), theme2]));
-  const sortedVariants = T$1(() => variants.map((template, index) => ({ template, index })).sort((left2, right2) => {
-    const bySort = (left2.template.sortOrder ?? 9999) - (right2.template.sortOrder ?? 9999);
-    if (bySort !== 0) return bySort;
-    return left2.index - right2.index;
-  }).map(({ template }) => template), [variants]);
+  const themeOptions2 = T$1(() => buildThemeOptions(themes), [themes]);
+  const themeByPath = T$1(() => buildThemeByPath(themes), [themes]);
+  const sortedVariants = T$1(() => sortGoalTemplateVariants(variants), [variants]);
   const [mode, setMode] = d("inherit");
   const [selectedVariantId, setSelectedVariantId] = d("default");
   const [draft, setDraft] = d(() => makeDraftFromTemplate(null, block2, sortedVariants));
   const draftRef = A$1(draft);
-  const selectedTemplate = T$1(() => sortedVariants.find((template) => (template.variantId || "default") === selectedVariantId) || null, [sortedVariants, selectedVariantId]);
+  const selectedTemplate = T$1(
+    () => sortedVariants.find((template) => (template.variantId || "default") === selectedVariantId) || null,
+    [sortedVariants, selectedVariantId]
+  );
   y(() => {
     if (!isOpen) return;
     const initial = initialVariantId ? sortedVariants.find((template) => (template.variantId || "default") === initialVariantId || template.id === initialVariantId) || null : null;
     if (initial) {
       const nextVariantId2 = initial.variantId || "default";
       const nextMode = inferTemplateEditMode(initial, block2, goal);
-      setMode(nextMode);
-      setSelectedVariantId(nextVariantId2);
       const baseDraft = makeDraftFromTemplate(initial, block2, sortedVariants);
       const nextDraft2 = nextMode === "inherit" ? buildInheritedDraft(baseDraft, block2) : baseDraft;
+      setMode(nextMode);
+      setSelectedVariantId(nextVariantId2);
       draftRef.current = nextDraft2;
       setDraft(nextDraft2);
       return;
@@ -69253,13 +69406,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
   };
   const updateThemePath = (themePath) => {
     setDraft((previous) => {
-      const theme2 = themeByPath.get(String(themePath || ""));
-      const next2 = {
-        ...previous,
-        themePath: normalizeThemePath(themePath),
-        fields: ensureThemeField(previous.fields || [], themePath),
-        defaultValues: mergeDefaultValues({ ...previous, themePath: normalizeThemePath(themePath), fields: ensureThemeField(previous.fields || [], themePath) }, theme2?.icon)
-      };
+      const next2 = applyThemePathToDraft(previous, themePath, themeByPath.get(String(themePath || ""))?.icon);
       draftRef.current = next2;
       return next2;
     });
@@ -69268,6 +69415,9 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
   const isExistingTemplate = !!selectedTemplate;
   const diffSummary = T$1(() => buildDraftDiffSummary(goal, block2, draft, currentTheme?.icon), [goal, block2, draft, currentTheme?.icon]);
   const supportsPeriod = !!block2 && isPeriodAwareCoreBlock(block2.id);
+  const metadataDisabled = mode === "disabled";
+  const inheritedMode = mode === "inherit";
+  const fieldEditDisabled = mode !== "override";
   const effectiveBlockForCopier = T$1(() => {
     if (!block2) return null;
     return { ...block2, fields: draft.fields || block2.fields, outputTemplate: draft.outputTemplate || block2.outputTemplate };
@@ -69283,30 +69433,14 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
   const switchToOverride = () => {
     setMode("override");
     setDraft((previous) => {
-      const base = buildInheritedDraft(previous, block2);
-      const next2 = {
-        ...previous,
-        fields: previous.fields?.length ? previous.fields : base.fields,
-        outputTemplate: previous.outputTemplate || base.outputTemplate,
-        targetFile: previous.targetFile || base.targetFile,
-        appendUnderHeader: previous.appendUnderHeader || base.appendUnderHeader,
-        requiredFields: previous.requiredFields?.length ? previous.requiredFields : base.requiredFields
-      };
+      const next2 = switchDraftToOverride(previous, block2);
       draftRef.current = next2;
       return next2;
     });
   };
   const handleCopyVariant = async () => {
     if (!goal || !block2) return;
-    const currentDraft = draftRef.current;
-    const sourceVariantId = currentDraft.variantId || selectedTemplate?.variantId || "default";
-    const variantId = nextCopyVariantId(sortedVariants, sourceVariantId);
-    const nextDraft = {
-      ...currentDraft,
-      variantId,
-      name: `${currentDraft.name || selectedTemplate?.name || sourceVariantId} 副本`,
-      sortOrder: sortedVariants.length * 10
-    };
+    const nextDraft = createCopiedDraft(draftRef.current, selectedTemplate, sortedVariants);
     await useCases.goal.upsertGoalTemplate({
       ...buildTemplatePatchFromDraft({
         goal,
@@ -69337,13 +69471,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
     const currentDraft = draftRef.current;
     try {
       if (mode === "inherit") {
-        await useCases.goal.upsertGoalTemplate(buildInheritedTemplatePatchFromDraft({
-          goal,
-          block: block2,
-          draft: currentDraft,
-          selectedTemplate,
-          themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon
-        }));
+        await useCases.goal.upsertGoalTemplate(buildInheritedTemplatePatchFromDraft({ goal, block: block2, draft: currentDraft, selectedTemplate, themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon }));
         ui.notice(`已保存继承预设：${currentDraft.name || block2.name}`);
         onClose();
         return;
@@ -69366,14 +69494,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
         onClose();
         return;
       }
-      const variantId = currentDraft.variantId || "default";
-      await useCases.goal.upsertGoalTemplate(buildTemplatePatchFromDraft({
-        goal,
-        block: block2,
-        draft: currentDraft,
-        selectedTemplate,
-        themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon
-      }));
+      await useCases.goal.upsertGoalTemplate(buildTemplatePatchFromDraft({ goal, block: block2, draft: currentDraft, selectedTemplate, themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon }));
       ui.notice(`已保存记录预设：${goal.goalPath || goal.title} / ${block2.name}`);
       onClose();
     } catch (error) {
@@ -69384,9 +69505,6 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
   if (!isOpen || !goal || !block2) return null;
   const titleTheme = draft.themePath ? cleanDisplayThemePath(draft.themePath) : "新预设";
   const currentPresetTitle = draft.name || titleTheme || "记录预设";
-  const metadataDisabled = mode === "disabled";
-  const inheritedMode = mode === "inherit";
-  const fieldEditDisabled = mode !== "override";
   return /* @__PURE__ */ u2(
     FloatingPanel,
     {
@@ -69429,16 +69547,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
           block2.name,
           "」。保存前请先改为普通记录预设，或删除这条隐藏规则。"
         ] }) : null,
-        /* @__PURE__ */ u2(
-          GoalTemplateModeSwitch,
-          {
-            mode,
-            blockName: block2.name,
-            disabled: metadataDisabled,
-            onInherit: switchToInherit,
-            onOverride: switchToOverride
-          }
-        ),
+        /* @__PURE__ */ u2(GoalTemplateModeSwitch, { mode, blockName: block2.name, disabled: metadataDisabled, onInherit: switchToInherit, onOverride: switchToOverride }),
         /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1.25, p: 1.25, display: "grid", gap: 1 }, children: [
           /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: supportsPeriod ? "1.2fr 1.2fr 0.75fr" : "1.2fr 1.2fr" }, gap: 1 }, children: [
             /* @__PURE__ */ u2(NativeTextInput, { label: "名字", value: draft.name, onInput: (value) => updateDraft({ name: value }), disabled: metadataDisabled, placeholder: "例如：心情" }),
@@ -69446,7 +69555,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
               const themePath = String(value || "");
               updateThemePath(themePath);
               const label = themeLeafLabel(themePath);
-              if (label && isGeneratedPresetName(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
+              if (label && isGeneratedPresetName$1(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
             }, disabled: metadataDisabled }),
             supportsPeriod ? /* @__PURE__ */ u2(NativeSelectInput2, { label: "周期", value: draft.granularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: metadataDisabled }) : null
           ] }),
@@ -69939,13 +70048,13 @@ function leafPath(value) {
   const text2 = String(value ?? "").trim();
   return text2.split("/").filter(Boolean).pop() || text2;
 }
-function isGeneratedPresetName$1(value) {
+function isGeneratedPresetName(value) {
   const text2 = String(value ?? "").trim();
   return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "未命名预设";
 }
 function getPresetCardName(template, goal) {
   const raw = getGoalTemplateDisplayName(template);
-  if (!isGeneratedPresetName$1(raw)) return raw;
+  if (!isGeneratedPresetName(raw)) return raw;
   return cleanDisplayText(leafPath(readGoalTemplateThemePath(template, goal))) || raw;
 }
 function goalTemplateKey(template) {

@@ -132,6 +132,23 @@ for (const requiredHelper of [
   if (!goalTemplateEditorModel.includes(requiredHelper)) failures.push(`GoalTemplateEditorModel.ts must keep ${requiredHelper} after MVP7 extraction.`);
 }
 
+
+if (!exists('src/features/settings/goalTemplates/GoalTemplateMatrixTable.tsx')) {
+  failures.push('GoalTemplateMatrixTable.tsx must exist after MVP8 table extraction.');
+}
+const goalTemplateMatrix = read('src/features/settings/goalTemplates/GoalTemplateMatrix.tsx');
+const goalTemplateMatrixLines = goalTemplateMatrix.split(/\r?\n/).length;
+if (goalTemplateMatrixLines > 360) failures.push(`GoalTemplateMatrix.tsx should stay <= 360 lines after MVP8 table extraction; current ${goalTemplateMatrixLines}.`);
+const goalTemplateMatrixModel = read('src/features/settings/goalTemplates/goalTemplateMatrixModel.ts');
+for (const requiredHelper of [
+  'filterVisibleGoalTemplateMatrixGoals',
+  'orderDraggedGoalSiblings',
+  'reorderPresetTemplatesInCell',
+  'splitGoalsByRoot',
+]) {
+  if (!goalTemplateMatrixModel.includes(requiredHelper)) failures.push(`goalTemplateMatrixModel.ts must keep ${requiredHelper} after MVP8 extraction.`);
+}
+
 const schema = read('src/core/types/schema.ts');
 if (/interface\s+ThemeOverride\b/.test(schema)) failures.push('schema must not define ThemeOverride in single-user mode.');
 if (/inputSettings:\s*\{[^}]*overrides/s.test(schema)) failures.push('DEFAULT_SETTINGS.inputSettings must not contain overrides.');
