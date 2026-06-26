@@ -167,11 +167,6 @@ function analyze(data) {
   const issues = [];
   (data.viewInstances || []).forEach((view, index) => checkViewInstance(view, index, issues));
   (data.inputSettings?.blocks || []).forEach((block, index) => checkBlock(block, `inputSettings.blocks[${index}](${block?.name || block?.id || ''})`, issues));
-  (data.inputSettings?.overrides || []).forEach((override, index) => {
-    checkTemplate(override?.outputTemplate, `inputSettings.overrides[${index}].outputTemplate`, issues);
-    checkTemplate(override?.appendUnderHeader, `inputSettings.overrides[${index}].appendUnderHeader`, issues);
-    (override?.fields || []).forEach((field, fieldIndex) => checkFieldDefinition(field, `inputSettings.overrides[${index}].fields[${fieldIndex}]`, issues));
-  });
   return issues;
 }
 

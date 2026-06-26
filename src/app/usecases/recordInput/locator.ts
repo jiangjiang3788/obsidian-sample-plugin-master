@@ -4,7 +4,7 @@ export interface CreateLocatorContext {
   outputContent: string;
   normalizedFormData: Record<string, unknown>;
   templateId?: string | null;
-  templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null;
+  templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null;
   themePath?: string | null;
   blockCategoryKey?: string | null;
   itemTypeHint: 'task' | 'block' | 'unknown';

@@ -53,7 +53,7 @@ export const DEFAULT_SETTINGS: ThinkSettings = {
     groups: [],
     viewInstances: [],
     layouts: [],
-    inputSettings: { blocks: [], themes: [], overrides: [] },
+    inputSettings: { blocks: [], themes: [] },
     goalSettings: DEFAULT_GOAL_SETTINGS,
     coreBlockSettings: DEFAULT_CORE_BLOCK_SETTINGS,
     // [新增] 悬浮计时器默认启用
@@ -131,20 +131,9 @@ export interface ThemeDefinition {
     /** UI-only state; persisted as part of InputSettings for theme matrix. */
     status?: 'active' | 'inactive';
 }
-export interface ThemeOverride {
-    id: string;
-    blockId: string;
-    themeId: string;
-    disabled?: boolean;
-    fields?: TemplateField[];
-    outputTemplate?: string;
-    targetFile?: string;
-    appendUnderHeader?: string;
-}
 export interface InputSettings {
     blocks: BlockTemplate[];
     themes: ThemeDefinition[];
-    overrides: ThemeOverride[];
     categories?: string[];
 }
 
@@ -229,7 +218,7 @@ export interface SortRule {
 export interface Item {
     id: string;
     templateId?: string;
-    templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block';
+    templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block';
     title: string;
     content: string;
     /** 编辑态使用的正文真源：尽量保留用户原始表达，但去掉任务前缀/内联元数据噪音。 */

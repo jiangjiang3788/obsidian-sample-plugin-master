@@ -244,7 +244,6 @@ ThemeMatrix UI → useCases.theme.* → Zustand Store actions → SettingsReposi
 | 数据类型 | 存储位置 | 说明 |
 |----------|----------|------|
 | 主题定义 (ThemeDefinition) | settings.inputSettings.themes | 业务数据，持久化 |
-| 覆盖配置 (ThemeOverride) | settings.inputSettings.overrides | 业务数据，持久化 |
 | 选中态 (selectedThemes/selectedCells) | 组件 state | UI 临时态，不持久化 |
 | 展开态 (expandedNodes) | 组件 state | UI 临时态，不持久化 |
 | 编辑模式 (mode) | 组件 state | UI 临时态，不持久化 |
@@ -281,11 +280,6 @@ ThemeMatrix UI → useCases.theme.* → Zustand Store actions → SettingsReposi
 
 | 操作 | UseCase API | 内部实现 |
 |------|-------------|----------|
-| 更新/插入覆盖 | `themeUseCase.upsertOverride(data)` | `state.upsertOverride()` |
-| 删除覆盖 | `themeUseCase.deleteOverride(blockId, themeId)` | `state.deleteOverride()` |
-| 批量更新覆盖 | `themeUseCase.batchUpsertOverrides(overrides)` | `state.batchUpsertOverrides()` |
-| 批量删除覆盖 | `themeUseCase.batchDeleteOverrides(selections)` | `state.batchDeleteOverrides()` |
-| 批量设置状态 | `themeUseCase.batchSetOverrideStatus(cells, status)` | `state.batchSetOverrideStatus()` |
 
 ### UI 读取路径
 
@@ -296,7 +290,6 @@ UI 读取 theme 相关数据应使用 Zustand selector：
 import { useZustandAppStore } from '@/app/public';
 
 const themes = useZustandAppStore(state => state.settings.inputSettings.themes);
-const overrides = useZustandAppStore(state => state.settings.inputSettings.overrides);
 
 // ⛔ 禁止：使用已废弃的 API
 ```
@@ -406,5 +399,3 @@ const themes = getZustandState(store, s => s.settings.inputSettings.themes);
 | 获取顶级布局 | `layoutUseCase.getTopLevelLayouts()` |
 | 获取所有主题 | `themeUseCase.getThemes()` |
 | 获取单个主题 | `themeUseCase.getTheme(id)` |
-| 获取所有覆盖 | `themeUseCase.getOverrides()` |
-| 获取特定覆盖 | `themeUseCase.getOverride(blockId, themeId)` |

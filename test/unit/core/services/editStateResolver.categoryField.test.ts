@@ -32,7 +32,6 @@ describe('buildEditRecordState category backfill', () => {
       themes: [
         { id: 'theme-health', path: '健康/心情' },
       ],
-      overrides: [],
     };
 
     const item = {
@@ -88,7 +87,6 @@ describe('buildEditRecordState category backfill', () => {
         },
       ],
       themes: [],
-      overrides: [],
     };
 
     const item = {
@@ -134,7 +132,6 @@ describe('buildEditRecordState category backfill', () => {
         },
       ],
       themes: [],
-      overrides: [],
     };
 
     const item = {

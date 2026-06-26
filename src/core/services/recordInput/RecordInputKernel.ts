@@ -35,7 +35,7 @@ export class RecordInputKernel {
       theme: resolved.theme,
       templateMeta: {
         templateId: resolved.meta.templateId ?? resolved.template?.id ?? null,
-        templateSourceType: resolved.meta.templateSourceType ?? 'block',
+        templateSourceType: resolved.meta.templateSourceType ?? 'legacy-block',
       },
     });
 

@@ -187,7 +187,7 @@ export default class ThinkPlugin extends Plugin {
         const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
         merged.viewInstances = merged.viewInstances || [];
         merged.layouts = merged.layouts || [];
-        merged.inputSettings = merged.inputSettings || { blocks: [], themes: [], overrides: [] };
+        merged.inputSettings = merged.inputSettings || { blocks: [], themes: [] };
         merged.inputSettings.blocks = (merged.inputSettings.blocks || []).map((block: any) => ({
             ...block,
             categoryKey: block?.categoryKey || block?.name || '',

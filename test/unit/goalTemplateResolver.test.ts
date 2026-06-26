@@ -10,14 +10,6 @@ function baseSettings(): ThinkSettings {
     inputSettings: {
       blocks: [],
       themes: [{ id: 'theme-work', path: '工作/插件', icon: '🧩' }],
-      overrides: [
-        {
-          id: 'override-theme-task',
-          blockId: 'core.task',
-          themeId: 'theme-work',
-          outputTemplate: '主题覆盖模板不应主导新链',
-        },
-      ],
     },
     goalSettings: {
       goals: [
@@ -52,7 +44,7 @@ describe('GoalTemplateResolver', () => {
     });
     expect(result.templateSourceType).toBe('core-block');
     expect(result.theme?.icon).toBe('🧩');
-    expect(result.template?.outputTemplate).not.toBe('主题覆盖模板不应主导新链');
+    expect(result.template?.id).toBe('core.task');
   });
 
   it('uses goal + block template when a goal template exists', () => {

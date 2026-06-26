@@ -56,7 +56,6 @@ export function ThemeMetadataManager() {
   const settings = useSelector(selectSettings);
   const useCases = useUseCases();
   const themes = settings.inputSettings?.themes || [];
-  const legacyOverrides = settings.inputSettings?.overrides || [];
   const [path, setPath] = useState('');
   const [icon, setIcon] = useState('');
   const [message, setMessage] = useState('');
@@ -108,7 +107,7 @@ export function ThemeMetadataManager() {
 
   const handleDelete = async (id: string) => {
     await useCases.theme.deleteTheme(id);
-    setMessage('主题已删除；关联的旧主题 override 也会按旧逻辑移除。');
+    setMessage('主题已删除。');
   };
 
   return (
@@ -122,7 +121,6 @@ export function ThemeMetadataManager() {
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         <Chip size="small" label={`主题 ${themes.length}`} />
-        <Chip size="small" label={`旧主题模板 ${legacyOverrides.length}`} color={legacyOverrides.length ? 'warning' : 'default'} />
         <Chip size="small" label="模板主链：目标 × 记录类型" color="primary" />
       </Box>
 

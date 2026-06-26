@@ -57,7 +57,7 @@ function buildRenderData(
   template: BlockTemplate,
   formData: Record<string, unknown>,
   theme?: ThemeDefinition | null,
-  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
+  templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null },
 ): Record<string, unknown> {
   const normalizedData = normalizeTemplateRenderData(template, formData);
   const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === 'object' ? normalizedData.theme as Record<string, unknown> : null;
@@ -120,7 +120,7 @@ function buildRenderData(
     '周期': derivedPeriod ? cycleTitle || derivedPeriod.label : '',
     ...taskTokens,
     templateId: templateMeta?.templateId || template.id,
-    templateSourceType: templateMeta?.templateSourceType || 'block',
+    templateSourceType: templateMeta?.templateSourceType || 'legacy-block',
   };
 }
 
@@ -136,7 +136,7 @@ export function buildRecordOutputPlan(input: {
   template: BlockTemplate | null;
   formData: Record<string, unknown>;
   theme?: ThemeDefinition | null;
-  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null };
+  templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null };
 }): RecordOutputPlan {
   if (!input.template) {
     return {

@@ -456,7 +456,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '3. If a preset clearly matches user words, return target.goalTemplateId = preset.goalTemplateId/id and target.templateVariantId = preset.variantId.',
             '4. If several presets match, prefer preset.isDefault or the closest themePath/name match.',
             '5. themeId should come from the selected preset themePath or selected goal themePath. Theme is only a form default/stat dimension, not the main template selector.',
-            '6. Never output legacy templateSourceType values such as override, theme-fallback or goal-binding.',
+            '6. Never output legacy templateSourceType values such as deprecated template source values.',
             '',
             'BLOCK SELECTION:',
             '1. blockId is REQUIRED and must come from snapshot.blocks[].id or snapshot.goalPresets[].blockId, e.g. core.task/core.habit/core.plan.',

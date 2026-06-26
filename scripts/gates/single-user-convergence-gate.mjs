@@ -15,6 +15,7 @@ const removedPaths = [
   'release/obsidian-sample-plugin',
   'release/obsidian-sample-plugin-release.zip',
   'src/core/theme-matrix',
+  'src/core/services/TemplateResolver.ts',
   'src/features/settings/theme/ThemeMatrix.tsx',
   'src/features/settings/theme/ThemeMatrixView.tsx',
   'src/features/settings/theme/ThemeTable.tsx',
@@ -64,6 +65,7 @@ const forbiddenRuntimePatterns = [
   { re: /\bisThemeDisabledForBlock\b/, label: 'uses removed ThemeOverride disabled helper' },
   { re: /\bGoalOverviewView\b/, label: 'uses removed legacy GoalOverviewView' },
   { re: /\bGoalDetailView\b/, label: 'uses removed legacy GoalDetailView' },
+  { re: /from ['\"][^'\"]*services\/TemplateResolver['\"]/, label: 'imports removed TemplateResolver service' },
 ];
 
 for (const file of sourceFiles) {
@@ -80,6 +82,16 @@ if (!publicApi.includes("./theme/themePathParser")) failures.push('core/public.t
 
 const viewContent = read('src/features/settings/layout/ViewContent.tsx');
 if (viewContent.includes('normalizeLegacyGoalViewInstance')) failures.push('ViewContent must not normalize legacy goal view types at runtime.');
+
+const schema = read('src/core/types/schema.ts');
+if (/interface\s+ThemeOverride\b/.test(schema)) failures.push('schema must not define ThemeOverride in single-user mode.');
+if (/inputSettings:\s*\{[^}]*overrides/s.test(schema)) failures.push('DEFAULT_SETTINGS.inputSettings must not contain overrides.');
+if (/overrides:\s*ThemeOverride\[\]/.test(schema)) failures.push('InputSettings must not expose overrides.');
+
+const themeUseCase = read('src/app/usecases/theme.usecase.ts');
+for (const removedAction of ['upsertOverride', 'deleteOverride', 'batchUpsertOverrides', 'batchDeleteOverrides', 'batchSetOverrideStatus']) {
+  if (themeUseCase.includes(removedAction)) failures.push(`theme.usecase must not expose ${removedAction}.`);
+}
 
 if (failures.length) {
   console.error('[single-user-convergence-gate] failed:');

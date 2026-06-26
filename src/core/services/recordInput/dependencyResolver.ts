@@ -112,14 +112,12 @@ function normalizeDependencySettings(settings: ThinkSettings | InputSettings): T
 }
 
 function buildEffectiveInputSettings(settings: InputSettings): InputSettings {
-  const legacyBlockMap = buildLegacyCoreBlockMap(settings.blocks || []);
   return {
     ...settings,
     blocks: [
       ...(settings.blocks || []),
       ...DEFAULT_CORE_BLOCKS.filter((coreBlock) => !(settings.blocks || []).some((block) => block.id === coreBlock.id)),
     ],
-    overrides: (settings.overrides || []).map((override) => ({ ...override, blockId: legacyBlockMap[override.blockId] || override.blockId })),
   };
 }
 

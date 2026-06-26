@@ -1,16 +1,13 @@
 // src/core/utils/heatmapTemplate.ts
 // Heatmap 模板相关工具函数
 //
-// 注意：模板解析逻辑已统一到 TemplateResolver 中
-// 此文件保留兼容 API，内部调用 TemplateResolver
+// 单人版收敛：Heatmap 只读取 block fallback；新建记录主链使用 GoalTemplateResolver。
 
 import type { BlockTemplate, InputSettings, ThemeDefinition } from '@/core/types/schema';
-import { TemplateResolver } from '@/core/services/TemplateResolver';
 
 /**
  * 获取有效的模板配置
  * 
- * 此函数是对 TemplateResolver.resolveTemplateOnly 的兼容包装
  * 保持原有返回类型 BlockTemplate | null
  * 
  * @param settings InputSettings 配置
@@ -31,7 +28,8 @@ export function getEffectiveHeatmapTemplate(
     blockId: string, 
     themeId?: string
 ): BlockTemplate | null {
-    return TemplateResolver.resolveTemplateOnly(settings, blockId, themeId);
+    void themeId;
+    return settings.blocks.find((block) => block.id === blockId) ?? null;
 }
 
 /**

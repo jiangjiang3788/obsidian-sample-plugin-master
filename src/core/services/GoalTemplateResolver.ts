@@ -91,7 +91,7 @@ export class GoalTemplateResolver {
       // After theme forms are migrated, the only allowed chain is:
       // GoalTemplate -> CoreBlock -> legacy base block. If even the base block
       // cannot be found, return an explicit empty result instead of silently
-      // reviving inputSettings.overrides.
+      // reviving removed theme-template overrides.
       return {
         template: null,
         theme,

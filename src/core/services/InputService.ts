@@ -101,7 +101,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null },
   ): { renderData: Record<string, any>; outputContent: string; targetFilePath: string; header: string | null } {
     if (!template) throw new Error('传入了无效的模板对象。');
 
@@ -118,7 +118,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     const signal = options.signal;
@@ -151,7 +151,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     return this.executeTemplate(template, formData, theme, templateMeta, options);
@@ -162,7 +162,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-template' | 'goal-binding' | 'legacy-block' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | 'legacy-block' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     const signal = options.signal;

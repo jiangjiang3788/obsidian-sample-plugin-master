@@ -12,7 +12,6 @@ function settings(): ThinkSettings {
         { id: 'root', path: '工作', icon: '💼' },
         { id: 'plugin', path: '工作/插件', icon: '🧩' },
       ],
-      overrides: [],
     },
     floatingTimerEnabled: true,
     activeThemePaths: [],

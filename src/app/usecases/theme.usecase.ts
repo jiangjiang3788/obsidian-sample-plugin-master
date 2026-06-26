@@ -38,7 +38,7 @@
  * ============================================================================
  */
 
-import type { ThemeDefinition, ThemeOverride } from '@core/public';
+import type { ThemeDefinition } from '@core/public';
 import type { ActiveStatus } from '@core/public';
 import type { AppStoreApi } from './index';
 import { devError } from '@core/public';
@@ -58,11 +58,6 @@ import { devError } from '@core/public';
  * - batchDeleteThemes: 批量删除主题
  * - batchUpdateThemeStatus: 批量更新主题状态
  * - batchUpdateThemeIcon: 批量更新主题图标
- * - upsertOverride: 更新或插入覆盖配置
- * - deleteOverride: 删除覆盖配置
- * - batchUpsertOverrides: 批量更新覆盖配置
- * - batchDeleteOverrides: 批量删除覆盖配置
- * - batchSetOverrideStatus: 批量设置覆盖状态
  */
 export class ThemeUseCase {
     private store: AppStoreApi;
@@ -229,99 +224,6 @@ export class ThemeUseCase {
         }
     }
 
-    // ============== Override 操作 ==============
-
-    /**
-     * 更新或插入覆盖配置
-     * @param overrideData 覆盖配置数据（不含 id）
-     * @returns 创建/更新后的覆盖配置
-     */
-    async upsertOverride(overrideData: Omit<ThemeOverride, 'id'>): Promise<ThemeOverride | null> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) return null;
-            
-            return await state.upsertOverride(overrideData);
-        } catch (error) {
-            devError('[ThemeUseCase] upsertOverride 失败:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * 删除覆盖配置
-     * @param blockId Block ID
-     * @param themeId 主题 ID
-     */
-    async deleteOverride(blockId: string, themeId: string): Promise<void> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) return;
-            
-            await state.deleteOverride(blockId, themeId);
-        } catch (error) {
-            devError('[ThemeUseCase] deleteOverride 失败:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * 批量更新覆盖配置
-     * @param overrides 覆盖配置列表
-     */
-    async batchUpsertOverrides(overrides: Array<Omit<ThemeOverride, 'id'>>): Promise<void> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) return;
-            
-            await state.batchUpsertOverrides(overrides);
-        } catch (error) {
-            devError('[ThemeUseCase] batchUpsertOverrides 失败:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * 批量删除覆盖配置
-     * @param selections 选择列表
-     */
-    async batchDeleteOverrides(selections: Array<{blockId: string; themeId: string}>): Promise<void> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) return;
-            
-            await state.batchDeleteOverrides(selections);
-        } catch (error) {
-            devError('[ThemeUseCase] batchDeleteOverrides 失败:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * 批量设置覆盖状态
-     * @param cells 单元格列表
-     * @param status 目标状态
-     */
-    async batchSetOverrideStatus(
-        cells: Array<{ themeId: string; blockId: string }>,
-        status: 'inherit' | 'override' | 'disabled'
-    ): Promise<void> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) return;
-            
-            await state.batchSetOverrideStatus(cells, status);
-        } catch (error) {
-            devError('[ThemeUseCase] batchSetOverrideStatus 失败:', error);
-            throw error;
-        }
-    }
-
     // ============== 查询方法 ==============
     // 注意：查询方法不涉及写操作，UI 可以直接使用 Zustand selector 读取
     // 这里提供的查询方法是为了保持 API 一致性
@@ -355,35 +257,6 @@ export class ThemeUseCase {
         }
     }
 
-    /**
-     * 获取所有覆盖配置
-     * @returns 覆盖配置列表
-     */
-    getOverrides(): ThemeOverride[] {
-        try {
-            const state = this.store.getState();
-            return state.getOverrides();
-        } catch (error) {
-            devError('[ThemeUseCase] getOverrides 失败:', error);
-            return [];
-        }
-    }
-
-    /**
-     * 获取特定覆盖配置
-     * @param blockId Block ID
-     * @param themeId 主题 ID
-     * @returns 覆盖配置
-     */
-    getOverride(blockId: string, themeId: string): ThemeOverride | undefined {
-        try {
-            const state = this.store.getState();
-            return state.getOverride(blockId, themeId);
-        } catch (error) {
-            devError('[ThemeUseCase] getOverride 失败:', error);
-            return undefined;
-        }
-    }
 }
 
 /**

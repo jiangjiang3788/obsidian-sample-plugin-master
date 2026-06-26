@@ -6,7 +6,6 @@ describe('AI config snapshot domain model', () => {
   const input: InputSettings = {
     blocks: DEFAULT_CORE_BLOCKS as any,
     themes: [{ id: 'theme-sleep', path: '健康/睡眠', icon: '💤' } as any],
-    overrides: [],
   };
 
   const goalSettings: GoalSettings = {

@@ -19,7 +19,7 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@core/public';
+import type { ThinkSettings, ThemeDefinition } from '@core/public';
 import type { SettingsRepository } from '@core/public';
 import type { ActiveStatus } from '@core/public';
 import {generateId, devWarn, devError} from '@core/public';
@@ -74,19 +74,9 @@ export interface ThemeSliceActions {
     batchUpdateThemeStatus: (themeIds: string[], status: ActiveStatus) => Promise<void>;
     batchUpdateThemeIcon: (themeIds: string[], icon: string) => Promise<void>;
     
-    // Override 操作
-    upsertOverride: (overrideData: Omit<ThemeOverride, 'id'>) => Promise<ThemeOverride | null>;
-    deleteOverride: (blockId: string, themeId: string) => Promise<void>;
-    batchUpsertOverrides: (overrides: Array<Omit<ThemeOverride, 'id'>>) => Promise<void>;
-    batchDeleteOverrides: (selections: Array<{blockId: string; themeId: string}>) => Promise<void>;
-    batchSetOverrideStatus: (cells: Array<{ themeId: string; blockId: string }>, status: 'inherit' | 'override' | 'disabled') => Promise<void>;
-    
     // 查询方法
     getThemes: () => ThemeDefinition[];
     getTheme: (id: string) => ThemeDefinition | undefined;
-    getOverrides: () => ThemeOverride[];
-    getOverride: (blockId: string, themeId: string) => ThemeOverride | undefined;
-    
     // 状态管理
     setThemeError: (error: string | null) => void;
 }
@@ -211,8 +201,6 @@ export function createThemeSlice(
                 await settingsRepository.update(draft => {
                     // 删除主题
                     draft.inputSettings.themes = draft.inputSettings.themes?.filter(t => t.id !== id) || [];
-                    // 清理相关的 overrides
-                    draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(o => o.themeId !== id) || [];
                 }, createSliceMeta('theme.deleteTheme'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
@@ -294,7 +282,6 @@ export function createThemeSlice(
                 // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     draft.inputSettings.themes = draft.inputSettings.themes?.filter(t => !themeIdSet.has(t.id)) || [];
-                    draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(o => !themeIdSet.has(o.themeId)) || [];
                 }, createSliceMeta('theme.batchDeleteThemes'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
@@ -363,184 +350,6 @@ export function createThemeSlice(
             }
         },
 
-        // ============== Override 操作 ==============
-
-        upsertOverride: async (overrideData: Omit<ThemeOverride, 'id'>): Promise<ThemeOverride | null> => {
-            const state = get();
-            if (!state.isInitialized) return null;
-
-            set({ themeLoading: true, themeError: null });
-
-            try {
-                let resultOverride: ThemeOverride | null = null;
-                // S1: 传入 ActionMeta 用于 dev 日志
-                await settingsRepository.update(draft => {
-                    const existingIndex = draft.inputSettings.overrides?.findIndex(
-                        o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId
-                    ) ?? -1;
-
-                    if (!draft.inputSettings.overrides) {
-                        draft.inputSettings.overrides = [];
-                    }
-
-                    if (existingIndex > -1) {
-                        // 不要把 Immer draft proxy 泄漏到 update 回调外部。
-                        // 之前 resultOverride = draft.inputSettings.overrides![existingIndex]
-                        // 会把已 revoke 的 draft proxy 返回给 UI，保存后读取/打印时可能异常。
-                        const updatedOverride: ThemeOverride = {
-                            ...draft.inputSettings.overrides[existingIndex],
-                            ...overrideData,
-                        } as ThemeOverride;
-                        draft.inputSettings.overrides[existingIndex] = updatedOverride;
-                        resultOverride = JSON.parse(JSON.stringify(updatedOverride));
-                    } else {
-                        const newOverride: ThemeOverride = {
-                            ...overrideData,
-                            id: generateId('ovr')
-                        } as ThemeOverride;
-                        draft.inputSettings.overrides.push(newOverride);
-                        resultOverride = JSON.parse(JSON.stringify(newOverride));
-                    }
-                }, createSliceMeta('theme.upsertOverride'));
-                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
-                set({ themeLoading: false });
-                return resultOverride;
-            } catch (error: any) {
-                devError('[ThemeSlice] upsertOverride 失败:', error);
-                set({ themeError: error.message || '更新覆盖配置失败', themeLoading: false });
-                return null;
-            }
-        },
-
-        deleteOverride: async (blockId: string, themeId: string): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) return;
-
-            set({ themeLoading: true, themeError: null });
-
-            try {
-                // S1: 传入 ActionMeta 用于 dev 日志
-                await settingsRepository.update(draft => {
-                    draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
-                        o => !(o.blockId === blockId && o.themeId === themeId)
-                    ) || [];
-                }, createSliceMeta('theme.deleteOverride'));
-                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
-                set({ themeLoading: false });
-            } catch (error: any) {
-                devError('[ThemeSlice] deleteOverride 失败:', error);
-                set({ themeError: error.message || '删除覆盖配置失败', themeLoading: false });
-            }
-        },
-
-        batchUpsertOverrides: async (overrides: Array<Omit<ThemeOverride, 'id'>>): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) return;
-
-            set({ themeLoading: true, themeError: null });
-
-            try {
-                // S1: 传入 ActionMeta 用于 dev 日志
-                await settingsRepository.update(draft => {
-                    for (const overrideData of overrides) {
-                        const existingIndex = draft.inputSettings.overrides?.findIndex(
-                            o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId
-                        ) ?? -1;
-
-                        if (existingIndex > -1) {
-                            Object.assign(draft.inputSettings.overrides![existingIndex], overrideData);
-                        } else {
-                            if (!draft.inputSettings.overrides) {
-                                draft.inputSettings.overrides = [];
-                            }
-                            draft.inputSettings.overrides.push({
-                                ...overrideData,
-                                id: generateId('ovr')
-                            } as ThemeOverride);
-                        }
-                    }
-                }, createSliceMeta('theme.batchUpsertOverrides'));
-                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
-                set({ themeLoading: false });
-            } catch (error: any) {
-                devError('[ThemeSlice] batchUpsertOverrides 失败:', error);
-                set({ themeError: error.message || '批量更新覆盖配置失败', themeLoading: false });
-            }
-        },
-
-        batchDeleteOverrides: async (selections: Array<{blockId: string; themeId: string}>): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) return;
-
-            set({ themeLoading: true, themeError: null });
-
-            try {
-                const selectionSet = new Set(selections.map(s => `${s.blockId}:${s.themeId}`));
-                // S1: 传入 ActionMeta 用于 dev 日志
-                await settingsRepository.update(draft => {
-                    draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
-                        o => !selectionSet.has(`${o.blockId}:${o.themeId}`)
-                    ) || [];
-                }, createSliceMeta('theme.batchDeleteOverrides'));
-                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
-                set({ themeLoading: false });
-            } catch (error: any) {
-                devError('[ThemeSlice] batchDeleteOverrides 失败:', error);
-                set({ themeError: error.message || '批量删除覆盖配置失败', themeLoading: false });
-            }
-        },
-
-        batchSetOverrideStatus: async (cells: Array<{ themeId: string; blockId: string }>, status: 'inherit' | 'override' | 'disabled'): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) return;
-
-            set({ themeLoading: true, themeError: null });
-
-            try {
-                // S1: 传入 ActionMeta 用于 dev 日志
-                await settingsRepository.update(draft => {
-                    if (status === 'inherit') {
-                        const cellKeys = new Set(cells.map(c => `${c.themeId}:${c.blockId}`));
-                        draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
-                            o => !cellKeys.has(`${o.themeId}:${o.blockId}`)
-                        ) || [];
-                    } else {
-                        cells.forEach(cell => {
-                            const existingIndex = draft.inputSettings.overrides?.findIndex(
-                                o => o.blockId === cell.blockId && o.themeId === cell.themeId
-                            ) ?? -1;
-
-                            if (existingIndex > -1) {
-                                if (status === 'disabled') {
-                                    draft.inputSettings.overrides![existingIndex].disabled = true;
-                                } else {
-                                    delete draft.inputSettings.overrides![existingIndex].disabled;
-                                }
-                            } else {
-                                if (!draft.inputSettings.overrides) {
-                                    draft.inputSettings.overrides = [];
-                                }
-                                const newOverride: ThemeOverride = {
-                                    id: generateId('ovr'),
-                                    themeId: cell.themeId,
-                                    blockId: cell.blockId,
-                                } as ThemeOverride;
-                                if (status === 'disabled') {
-                                    newOverride.disabled = true;
-                                }
-                                draft.inputSettings.overrides.push(newOverride);
-                            }
-                        });
-                    }
-                }, createSliceMeta('theme.batchSetOverrideStatus'));
-                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
-                set({ themeLoading: false });
-            } catch (error: any) {
-                devError('[ThemeSlice] batchSetOverrideStatus 失败:', error);
-                set({ themeError: error.message || '批量设置覆盖状态失败', themeLoading: false });
-            }
-        },
-
         // ============== 查询方法 ==============
 
         getThemes: (): ThemeDefinition[] => {
@@ -553,17 +362,6 @@ export function createThemeSlice(
             return state.settings.inputSettings?.themes?.find(t => t.id === id);
         },
 
-        getOverrides: (): ThemeOverride[] => {
-            const state = get();
-            return state.settings.inputSettings?.overrides || [];
-        },
-
-        getOverride: (blockId: string, themeId: string): ThemeOverride | undefined => {
-            const state = get();
-            return state.settings.inputSettings?.overrides?.find(
-                o => o.blockId === blockId && o.themeId === themeId
-            );
-        },
 
         // ============== 状态管理 ==============
 

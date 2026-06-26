@@ -114,7 +114,7 @@ export function HeatmapView({
 
     useEffect(() => {
         ratingMappingsCache.clear();
-    }, [inputSettings.themes, inputSettings.blocks, inputSettings.overrides]);
+    }, [inputSettings.themes, inputSettings.blocks]);
 
     useEffect(() => {
         devLog(`🔄 [数据更新] 检测到items数据变化，项目数量: ${items.length}`);

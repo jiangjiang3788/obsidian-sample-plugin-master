@@ -170,11 +170,6 @@ function looksLikeBlockTemplate(block: any): boolean {
   return /<!--\s*start\s*-->/i.test(String(block?.outputTemplate || '')) || /内容\s*[:：]/.test(String(block?.outputTemplate || ''));
 }
 
-function findOverrideById(settings: InputSettings, overrideId?: string | null) {
-  if (!overrideId) return null;
-  return (settings.overrides || []).find((candidate: any) => candidate.id === overrideId) ?? null;
-}
-
 function readCoreBlockHint(item: Item): string | null {
   const extra = item.extra || {};
   const candidates = [
@@ -217,27 +212,8 @@ function resolveBlockForEdit(settings: InputSettings, item: Item, preferredBlock
     }
   }
 
-  // SNAPSHOT-MIGRATION / SAFETY-FIX:
-  // 任务编辑必须优先尊重原记录中的模板提示。
-  // 之前 (模板ID::ovr_xxx)(模板来源::override) 会被当成 blockId 去查，查不到后进入打分推断，
-  // 可能把任务误判成「闪念」这类 block 模板，导致路径从任务文件跳到闪念文件并被阻止保存。
-  if (item.templateId && item.templateSourceType === 'override') {
-    const override = findOverrideById(settings, item.templateId) as any;
-    if (override?.blockId) {
-      const block = blocks.find((candidate) => candidate.id === override.blockId);
-      if (block) {
-        return {
-          blockId: block.id,
-          themeIdFromTemplateHint: override.themeId ?? null,
-          resolvedBy: 'exact' as const,
-          usedFallbackBlock: false,
-          debugReason: `根据 override 模板ID ${item.templateId} 精确还原 block=${block.id} theme=${override.themeId || ''}`,
-        };
-      }
-    }
-  }
-
-  if (item.templateId && item.templateSourceType !== 'override') {
+  // 单人版收敛：不再读取 theme-template legacy；模板ID 只允许命中当前 block/core block。
+  if (item.templateId) {
     const exact = blocks.find((block) => block.id === item.templateId);
     if (exact) {
       return {
@@ -407,7 +383,7 @@ export function buildEditRecordState(input: BuildEditStateInput): PreparedEditRe
     theme: resolvedDependencies.theme,
     templateMeta: {
       templateId: resolvedDependencies.meta.templateId ?? resolvedDependencies.template?.id ?? null,
-      templateSourceType: resolvedDependencies.meta.templateSourceType ?? 'block',
+      templateSourceType: resolvedDependencies.meta.templateSourceType ?? 'legacy-block',
     },
   });
 

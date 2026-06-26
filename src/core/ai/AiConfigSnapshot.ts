@@ -129,7 +129,7 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
     const blocks = inputBlocks
         .filter(b => !enabledSet || enabledSet.has(b.id) || enabledSet.has((b as any).coreBlockId || ''))
         .map(b => {
-            // 新主链不再用 ThemeOverride 决定模板；这里仍使用 block 默认字段作为 AI 兜底字段。
+            // 新主链不再用 theme-template legacy 决定模板；这里仍使用 block 默认字段作为 AI 兜底字段。
             const effective = input ? getEffectiveTemplate(input, b.id, undefined) : undefined;
             const sourceFields = effective?.template?.fields ?? b.fields ?? [];
 

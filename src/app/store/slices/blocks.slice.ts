@@ -23,7 +23,7 @@
 import type { StateCreator } from 'zustand';
 import type { ZustandAppStore } from '../useAppStore';
 import type { SettingsRepository } from '@core/public';
-import type { BlockTemplate, ThemeOverride } from '@core/public';
+import type { BlockTemplate } from '@core/public';
 import {generateId, devError} from '@core/public';
 
 // ============== 类型定义 ==============
@@ -73,7 +73,7 @@ export function createBlocksSlice(
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
                 await settingsRepository.update(draft => {
                     if (!draft.inputSettings) {
-                        draft.inputSettings = { blocks: [], themes: [], overrides: [] };
+                        draft.inputSettings = { blocks: [], themes: [] };
                     }
                     if (!draft.inputSettings.blocks) {
                         draft.inputSettings.blocks = [];
@@ -138,12 +138,6 @@ export function createBlocksSlice(
                     const index = blocks.findIndex(b => b.id === id);
                     if (index !== -1) {
                         blocks.splice(index, 1);
-                    }
-                    // 同时删除相关的 overrides
-                    if (draft.inputSettings?.overrides) {
-                        draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
-                            (o: ThemeOverride) => o.blockId !== id
-                        );
                     }
                 });
 
