@@ -1,6 +1,8 @@
 import {
+  applyQuickInputFieldUpdate,
   applyQuickInputGoalSelection,
   applyQuickInputLinkedTimeChanges,
+  applyQuickInputTimeDirectionChange,
   buildInitialFieldSources,
   buildQuickInputEditorState,
   buildQuickInputPeriodUi,
@@ -50,6 +52,34 @@ describe('QuickInputEditorModel', () => {
     expect(hydrated.fieldSources.内容).toBe('user');
     expect(hydrated.formData.状态).toEqual({ value: 'todo', label: '待办' });
     expect(hydrated.fieldSources.状态).toBe('system_auto');
+  });
+
+
+
+  it('updates a user field and returns goal/theme selection side effects', () => {
+    const updated = applyQuickInputFieldUpdate({
+      formData: { 内容: '旧内容' },
+      fieldSources: { 内容: 'context' } as any,
+      key: '目标',
+      value: '学习/英语',
+      timeDirection: 'forward',
+    });
+    expect(updated.formData['目标']).toBe('学习/英语');
+    expect(updated.fieldSources['目标']).toBe('user');
+    expect(updated.nextGoalPath).toBe('学习/英语');
+    expect(updated.nextGoalId).toBe('goal:学习/英语');
+  });
+
+  it('applies backward time direction defaults inside the model layer', () => {
+    const updated = applyQuickInputTimeDirectionChange({
+      formData: { 时间: '09:00', 时长: 30 },
+      fieldSources: { 时间: 'user', 时长: 'user' } as any,
+      nextDirection: 'backward',
+      defaultEndTime: '10:00',
+    });
+    expect(updated.timeDirection).toBe('backward');
+    expect(updated.formData['结束']).toBe('10:00');
+    expect(updated.fieldSources['结束']).toBe('system_auto');
   });
 
   it('keeps linked time draft cleanup inside the model layer', () => {
