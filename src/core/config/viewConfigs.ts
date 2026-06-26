@@ -58,7 +58,7 @@ export interface ProgressViewConfig {
 
 export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
     mode: 'goal',
-    metric: 'completionRate',
+    metric: 'recordCount',
     statusFilter: ['active', 'paused'],
     basePoints: 1,
     levelStep: 20,

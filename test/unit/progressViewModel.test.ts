@@ -1,6 +1,8 @@
 import {
   buildProgressBlockCountRows,
   buildProgressCollapsedFacts,
+  buildProgressSkillRows,
+  getProgressLevelMeta,
   buildProgressSummary,
   getGoalProgressRemainingPoints,
   getGoalProgressTitle,
@@ -8,6 +10,7 @@ import {
   getVisibleProgressThemeBreakdown,
   progressBarWidth,
   ratioPercent,
+  type GoalProgressCardModel,
 } from '@/shared/ui/views/ProgressViewModel';
 
 const card = {
@@ -49,6 +52,15 @@ describe('ProgressViewModel', () => {
       '最近:2026-06-01',
     ]);
     expect(getVisibleProgressThemeBreakdown(card.themeBreakdown).map((row) => row.key)).toEqual(['工作/代码']);
+  });
+
+
+
+  it('builds skill rows and caps level metadata at level 10', () => {
+    const rows = buildProgressSkillRows({ ...card, levelStep: 20 } as unknown as GoalProgressCardModel);
+    expect(rows[0]).toMatchObject({ title: '代码', count: 2, points: 80 });
+    expect(rows[0]?.levelMeta.level).toBe(5);
+    expect(getProgressLevelMeta(99)).toMatchObject({ level: 10, title: '大师' });
   });
 
   it('builds block rows and fallback summary', () => {

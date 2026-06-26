@@ -3517,7 +3517,7 @@ const HEATMAP_VIEW_DEFAULT_CONFIG = {
 };
 const PROGRESS_VIEW_DEFAULT_CONFIG = {
   mode: "goal",
-  metric: "completionRate",
+  metric: "recordCount",
   statusFilter: ["active", "paused"],
   basePoints: 1,
   levelStep: 20,
@@ -51484,13 +51484,21 @@ const PROGRESS_BLOCK_LABELS = {
   evidence: "事件",
   unknown: "未分类"
 };
-const DEFAULT_COLLAPSED_BLOCKS = ["task", "habit", "blocker", "milestone"];
+const PROGRESS_LEVEL_META = [
+  { level: 1, icon: "🌱", title: "入门" },
+  { level: 2, icon: "🔰", title: "练习" },
+  { level: 3, icon: "🧩", title: "熟悉" },
+  { level: 4, icon: "⚙️", title: "稳定" },
+  { level: 5, icon: "🔥", title: "熟练" },
+  { level: 6, icon: "🛠️", title: "进阶" },
+  { level: 7, icon: "🧠", title: "专精" },
+  { level: 8, icon: "🏔️", title: "高阶" },
+  { level: 9, icon: "💎", title: "精通" },
+  { level: 10, icon: "👑", title: "大师" }
+];
 const EXPANDED_BLOCK_ORDER = ["task", "plan", "review", "habit", "blocker", "milestone", "thought", "evidence"];
 function clampProgressRatio(value) {
   return Math.max(0, Math.min(1, Number(value) || 0));
-}
-function ratioPercent(value) {
-  return `${Math.round(clampProgressRatio(value) * 100)}%`;
 }
 function progressBarWidth(value) {
   return `${Math.round(clampProgressRatio(value) * 100)}%`;
@@ -51502,8 +51510,28 @@ function getProgressLeafLabel(path) {
 function getGoalProgressTitle(card) {
   return card.title || card.goalPath || "未命名目标";
 }
-function getGoalProgressRemainingPoints(card) {
-  return Math.max(0, Number(card.levelStep || 0) - Number(card.currentLevelPoints || 0));
+function getProgressDisplayLevel(level) {
+  const normalized = Math.max(1, Math.floor(Number(level) || 1));
+  return Math.min(10, normalized);
+}
+function getProgressLevelMeta(level) {
+  return PROGRESS_LEVEL_META[getProgressDisplayLevel(level) - 1] || PROGRESS_LEVEL_META[0];
+}
+function buildProgressSkillRows(card) {
+  return getVisibleProgressThemeBreakdown(card.themeBreakdown).map((row) => {
+    const safeLevelStep = Math.max(1, Number(card.levelStep || 1));
+    const level = Math.floor(Number(row.points || 0) / safeLevelStep) + 1;
+    const currentLevelPoints = Number(row.points || 0) - (level - 1) * safeLevelStep;
+    return {
+      key: row.key,
+      title: getProgressLeafLabel(row.key),
+      points: Number(row.points || 0),
+      count: Number(row.count || 0),
+      level,
+      levelMeta: getProgressLevelMeta(level),
+      progressRatio: clampProgressRatio(currentLevelPoints / safeLevelStep)
+    };
+  });
 }
 function getVisibleProgressThemeBreakdown(rows) {
   return (rows || []).filter((row) => row.count > 0).slice(0, 8);
@@ -51511,157 +51539,97 @@ function getVisibleProgressThemeBreakdown(rows) {
 function buildProgressBlockCountRows(counts) {
   return EXPANDED_BLOCK_ORDER.map((key) => ({ key, label: PROGRESS_BLOCK_LABELS[key] || key, count: Number(counts?.[key] || 0) })).filter((row) => row.count > 0);
 }
-function buildProgressCollapsedFacts(card) {
-  const blockFacts = DEFAULT_COLLAPSED_BLOCKS.map((key) => ({
-    key,
-    label: PROGRESS_BLOCK_LABELS[key] || key,
-    value: Number(card.blockCounts?.[key] || 0)
-  }));
-  return [
-    ...blockFacts,
-    { key: "latestDate", label: "最近", value: card.latestDate || "暂无" }
-  ];
+function ExperienceBar({ ratio, tone = "goal", compact = false }) {
+  const background = tone === "goal" ? "linear-gradient(90deg, #8b5cf6 0%, #c084fc 54%, #f59e0b 100%)" : "linear-gradient(90deg, #10b981 0%, #a7f3d0 100%)";
+  return /* @__PURE__ */ u2("div", { style: { width: compact ? "180px" : "min(100%, 260px)", height: tone === "goal" ? "10px" : "9px", borderRadius: "999px", background: "#e7dfd2", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: progressBarWidth(ratio), height: "100%", borderRadius: "999px", background } }) });
 }
-function buildProgressSummary(cards, injectedSummary) {
-  if (injectedSummary) return injectedSummary;
-  return {
-    goalCount: cards.length,
-    totalPoints: cards.reduce((sum, card) => sum + Number(card.totalPoints || 0), 0),
-    totalItems: cards.reduce((sum, card) => sum + Number(card.itemCount || 0), 0)
-  };
+function SmallSkillRow({ row }) {
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "minmax(120px, 220px) 64px minmax(140px, 260px)", gap: "14px", alignItems: "center", padding: "12px 14px", border: "1px solid #eadfce", borderRadius: "16px", background: "rgba(255, 255, 255, 0.82)" }, title: row.key, children: [
+    /* @__PURE__ */ u2("div", { style: { fontWeight: 800, fontSize: "15px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#181411" }, children: row.title }),
+    /* @__PURE__ */ u2("div", { style: { fontWeight: 900, color: "#8b5cf6", whiteSpace: "nowrap" }, children: [
+      "Lv.",
+      row.levelMeta.level
+    ] }),
+    /* @__PURE__ */ u2(ExperienceBar, { ratio: row.progressRatio, tone: "skill" })
+  ] });
 }
-function ProgressBar({ ratio, height: height2 = "10px" }) {
-  return /* @__PURE__ */ u2("div", { style: { height: height2, borderRadius: "999px", background: "var(--background-modifier-border)", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: progressBarWidth(ratio), height: "100%", borderRadius: "999px", background: "var(--interactive-accent)", transition: "width 0.25s ease" } }) });
+function SkillList({ card }) {
+  const rows = buildProgressSkillRows(card);
+  if (rows.length === 0) {
+    return /* @__PURE__ */ u2("div", { style: { padding: "12px 14px", border: "1px solid #eadfce", borderRadius: "16px", color: "#8d8377", background: "rgba(255, 255, 255, 0.72)" }, children: "暂无小技能" });
+  }
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "10px" }, children: rows.map((row) => /* @__PURE__ */ u2(SmallSkillRow, { row }, row.key)) });
 }
-function ThemeBreakdownList({ rows }) {
-  const visible = getVisibleProgressThemeBreakdown(rows);
-  if (visible.length === 0) return /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "暂无主题细分" });
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "6px" }, children: visible.map((row) => /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "center", gap: "8px", fontSize: "12px" }, title: row.key, children: [
-    /* @__PURE__ */ u2("span", { style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: getProgressLeafLabel(row.key) }),
-    /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)" }, children: [
-      row.count,
-      " 条 · ",
-      row.points,
-      " 经验"
-    ] })
-  ] }, row.key)) });
-}
-function BlockCountGrid({ counts }) {
-  const rows = buildProgressBlockCountRows(counts);
-  if (rows.length === 0) return /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "暂无 Block 统计" });
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(86px, 1fr))", gap: "8px" }, children: rows.map((row) => /* @__PURE__ */ u2("div", { style: { border: "1px solid var(--background-modifier-border)", borderRadius: "10px", padding: "8px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "11px" }, children: row.label }),
-    /* @__PURE__ */ u2("div", { style: { fontWeight: 700, marginTop: "2px" }, children: row.count })
-  ] }, row.key)) });
-}
-function CollapsedProgressFacts({ card }) {
-  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px", color: "var(--text-muted)", fontSize: "12px" }, children: buildProgressCollapsedFacts(card).map((fact) => /* @__PURE__ */ u2("span", { children: [
-    fact.label,
-    " ",
-    fact.value
-  ] }, fact.key)) });
-}
-function GoalProgressCard({ card, expanded, onToggle }) {
-  const remain = getGoalProgressRemainingPoints(card);
-  const title = getGoalProgressTitle(card);
-  return /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px", display: "grid", gap: "10px" }, children: [
-    /* @__PURE__ */ u2(
+function ExpandedRecords({ records, onOpenRecord }) {
+  if (!records?.length) return null;
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "8px", paddingTop: "2px" }, children: [
+    /* @__PURE__ */ u2("div", { style: { fontWeight: 800, color: "#181411" }, children: "记录入口" }),
+    records.map((record) => /* @__PURE__ */ u2(
       "button",
       {
         type: "button",
-        onClick: onToggle,
-        style: { display: "grid", gridTemplateColumns: "1fr auto", gap: "12px", alignItems: "center", padding: 0, border: "none", background: "transparent", color: "inherit", textAlign: "left", cursor: "pointer" },
-        "aria-expanded": expanded,
+        onClick: (event) => {
+          event.stopPropagation();
+          onOpenRecord?.(record.item);
+        },
+        style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "12px", alignItems: "center", padding: "10px 12px", border: "1px solid #eadfce", borderRadius: "14px", background: "#fffdf8", color: "inherit", textAlign: "left", cursor: onOpenRecord ? "pointer" : "default" },
         children: [
-          /* @__PURE__ */ u2("div", { style: { minWidth: 0 }, children: [
-            /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }, children: [
-              /* @__PURE__ */ u2("span", { style: { fontSize: "18px", lineHeight: 1 }, children: card.icon || "🎯" }),
-              /* @__PURE__ */ u2("strong", { style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: title })
-            ] }),
-            /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: card.goalPath })
-          ] }),
-          /* @__PURE__ */ u2("div", { style: { textAlign: "right", flexShrink: 0 }, children: [
-            /* @__PURE__ */ u2("div", { style: { fontWeight: 700 }, children: [
-              "Lv.",
-              card.level
-            ] }),
-            /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: expanded ? "收起" : "展开" })
-          ] })
+          /* @__PURE__ */ u2("span", { style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: record.title || "未命名记录" }),
+          /* @__PURE__ */ u2("span", { style: { color: "#8d8377", fontSize: "12px" }, children: record.date || "无日期" })
         ]
-      }
-    ),
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "6px" }, children: [
-      /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", color: "var(--text-muted)", fontSize: "12px" }, children: [
-        /* @__PURE__ */ u2("span", { children: [
-          card.totalPoints,
-          " 经验 · ",
-          card.itemCount,
-          " 条记录"
-        ] }),
-        /* @__PURE__ */ u2("span", { children: ratioPercent(card.progressRatio) })
+      },
+      record.id
+    ))
+  ] });
+}
+function ExpandedFacts({ card, onOpenRecord }) {
+  const blockRows = buildProgressBlockCountRows(card.blockCounts || {});
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "12px", borderTop: "1px solid #eadfce", paddingTop: "14px" }, children: [
+    blockRows.length > 0 && /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: blockRows.map((row) => /* @__PURE__ */ u2("span", { style: { padding: "6px 10px", borderRadius: "999px", background: "#f3ecdf", color: "#6f655b", fontSize: "12px" }, children: [
+      row.label,
+      " ",
+      row.count
+    ] }, row.key)) }),
+    /* @__PURE__ */ u2(ExpandedRecords, { records: card.recentRecords, onOpenRecord })
+  ] });
+}
+function GoalProgressCard({ card, expanded, onToggle, onOpenRecord }) {
+  const title = getGoalProgressTitle(card);
+  const levelMeta = getProgressLevelMeta(card.level);
+  return /* @__PURE__ */ u2("article", { class: "think-card", style: { width: "min(100%, 760px)", padding: "16px", border: "1px solid #e8dccb", borderRadius: "22px", background: "linear-gradient(135deg, #fffdf8 0%, #fffaf1 100%)", boxShadow: "none", display: "grid", gap: "14px" }, children: [
+    /* @__PURE__ */ u2("button", { type: "button", onClick: onToggle, "aria-expanded": expanded, style: { display: "grid", gridTemplateColumns: "auto minmax(0, 1fr) auto", gap: "14px", alignItems: "center", padding: 0, border: "none", background: "transparent", color: "inherit", textAlign: "left", cursor: "pointer" }, children: [
+      /* @__PURE__ */ u2("div", { style: { width: "50px", height: "50px", borderRadius: "18px", border: "1px solid #eadfce", background: "#fbf3e5", display: "grid", placeItems: "center", fontSize: "28px", boxShadow: "none" }, children: card.icon || "🧩" }),
+      /* @__PURE__ */ u2("div", { style: { minWidth: 0, display: "flex", alignItems: "center", gap: "14px" }, children: [
+        /* @__PURE__ */ u2("div", { style: { fontSize: "24px", lineHeight: 1.1, fontWeight: 900, letterSpacing: "-0.04em", color: "#181411", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "280px" }, children: title }),
+        /* @__PURE__ */ u2(ExperienceBar, { ratio: card.progressRatio, compact: true })
       ] }),
-      /* @__PURE__ */ u2(ProgressBar, { ratio: card.progressRatio, height: "8px" })
-    ] }),
-    !expanded && /* @__PURE__ */ u2(CollapsedProgressFacts, { card }),
-    expanded && /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "12px" }, children: [
-      /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "8px" }, children: [
-        /* @__PURE__ */ u2("div", { children: [
-          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "总经验" }),
-          /* @__PURE__ */ u2("strong", { children: card.totalPoints })
+      /* @__PURE__ */ u2("div", { style: { display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: "1px solid #eadfce", borderRadius: "999px", background: "rgba(255, 255, 255, 0.72)", boxShadow: "none", whiteSpace: "nowrap" }, children: [
+        /* @__PURE__ */ u2("span", { style: { fontSize: "18px" }, children: levelMeta.icon }),
+        /* @__PURE__ */ u2("strong", { style: { color: "#8b5cf6", fontSize: "17px" }, children: [
+          "Lv.",
+          levelMeta.level
         ] }),
-        /* @__PURE__ */ u2("div", { children: [
-          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "当前等级" }),
-          /* @__PURE__ */ u2("strong", { children: [
-            "Lv.",
-            card.level
-          ] })
-        ] }),
-        /* @__PURE__ */ u2("div", { children: [
-          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "距下一级" }),
-          /* @__PURE__ */ u2("strong", { children: remain })
-        ] }),
-        /* @__PURE__ */ u2("div", { children: [
-          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "最近更新" }),
-          /* @__PURE__ */ u2("strong", { children: card.latestDate || "暂无" })
-        ] })
-      ] }),
-      /* @__PURE__ */ u2(BlockCountGrid, { counts: card.blockCounts || {} }),
-      /* @__PURE__ */ u2("div", { style: { borderTop: "1px solid var(--background-modifier-border)", paddingTop: "10px", display: "grid", gap: "6px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { fontWeight: 600, fontSize: "13px" }, children: "主题细分" }),
-        /* @__PURE__ */ u2(ThemeBreakdownList, { rows: card.themeBreakdown })
+        /* @__PURE__ */ u2("strong", { style: { fontSize: "15px", color: "#181411" }, children: levelMeta.title })
       ] })
-    ] })
+    ] }),
+    /* @__PURE__ */ u2(SkillList, { card }),
+    expanded && /* @__PURE__ */ u2(ExpandedFacts, { card, onOpenRecord })
   ] });
 }
-function SummaryCard({ label, value }) {
-  return /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: label }),
-    /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: value })
-  ] });
-}
-function ProgressSummaryCards({ summary }) {
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px" }, children: [
-    /* @__PURE__ */ u2(SummaryCard, { label: "目标数", value: summary.goalCount }),
-    /* @__PURE__ */ u2(SummaryCard, { label: "目标经验", value: summary.totalPoints }),
-    /* @__PURE__ */ u2(SummaryCard, { label: "目标记录", value: summary.totalItems })
-  ] });
-}
-function ProgressView({ progressModel }) {
+function ProgressView({ progressModel, onOpenRecord }) {
   const cards = progressModel?.goalCards || [];
   const [expandedKeys, setExpandedKeys] = d({});
-  if (cards.length === 0) return /* @__PURE__ */ u2("div", { children: "暂无目标进度数据" });
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "16px" }, children: [
-    /* @__PURE__ */ u2(ProgressSummaryCards, { summary: buildProgressSummary(cards, progressModel?.summary) }),
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: "12px" }, children: cards.map((card) => /* @__PURE__ */ u2(
-      GoalProgressCard,
-      {
-        card,
-        expanded: !!expandedKeys[card.key],
-        onToggle: () => setExpandedKeys((prev2) => ({ ...prev2, [card.key]: !prev2[card.key] }))
-      },
-      card.key
-    )) })
-  ] });
+  if (cards.length === 0) return /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)" }, children: "暂无目标技能经验" });
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "14px", justifyItems: "start", maxWidth: "780px" }, children: cards.map((card) => /* @__PURE__ */ u2(
+    GoalProgressCard,
+    {
+      card,
+      expanded: !!expandedKeys[card.key],
+      onToggle: () => setExpandedKeys((prev2) => ({ ...prev2, [card.key]: !prev2[card.key] })),
+      onOpenRecord
+    },
+    card.key
+  )) });
 }
 function getTaskExecutionChipToneClass(recurrenceLabel) {
   const recurrence = String(recurrenceLabel || "").trim().toLowerCase();
@@ -62830,11 +62798,11 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
 function ProgressViewEditor({ value, onChange }) {
   const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...value };
   return /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "ProgressView 只按目标展示经验卡片；每个目标一张卡片，可折叠。时间和筛选统一走控制栏与视图筛选。" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "ProgressView 只按目标展示大技能经验条；主题作为小技能纵向列表。时间和筛选统一走控制栏与视图筛选，不展示完成率和掉队提醒。" }),
     /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
       /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "显示目标数量", value: config2.topN, onChange: (e2) => onChange({ mode: "goal", topN: Number(e2.target.value) || 20 }) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "基础积分", value: config2.basePoints, onChange: (e2) => onChange({ mode: "goal", basePoints: Number(e2.target.value) || 1 }) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "每级积分", value: config2.levelStep, onChange: (e2) => onChange({ mode: "goal", levelStep: Number(e2.target.value) || 20 }) })
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "每条记录 XP", value: config2.basePoints, onChange: (e2) => onChange({ mode: "goal", basePoints: Number(e2.target.value) || 1 }) }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "每级 XP", value: config2.levelStep, onChange: (e2) => onChange({ mode: "goal", levelStep: Number(e2.target.value) || 20 }) })
     ] }),
     /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
       /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "评分加分阈值", value: config2.ratingBonusThreshold, onChange: (e2) => onChange({ mode: "goal", ratingBonusThreshold: Number(e2.target.value) || 4 }) }),
@@ -72997,27 +72965,35 @@ function buildStatisticsViewModel(args) {
     goalThemeSummaries
   };
 }
+const BLOCK_KEY_ALIASES = {
+  "任务": "task",
+  "计划": "plan",
+  "总结": "review",
+  "打卡": "habit",
+  "阻碍项": "blocker",
+  "里程碑": "milestone",
+  "思考": "thought",
+  "事件": "evidence"
+};
 function normalizeBlockKey(item) {
-  const raw = String(item.coreBlock || item.categoryKey || item.type || "").replace(/^core\./, "").trim();
+  const raw = readFirstString$1(asUnknownRecord(item), ["coreBlock", "categoryKey", "type"])?.replace(/^core\./, "").trim() || "";
   if (!raw) return "unknown";
-  const map = {
-    "任务": "task",
-    "计划": "plan",
-    "总结": "review",
-    "打卡": "habit",
-    "阻碍项": "blocker",
-    "里程碑": "milestone",
-    "思考": "thought",
-    "事件": "evidence"
-  };
-  return map[raw] || raw.split("/")[0] || raw;
+  return BLOCK_KEY_ALIASES[raw] || raw.split("/")[0] || raw;
 }
 function itemDateValue(item) {
   return String(item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || "");
 }
+function buildProgressRecentRecords(items, limit = 5) {
+  return [...items].sort((left2, right2) => itemDateValue(right2).localeCompare(itemDateValue(left2))).slice(0, limit).map((item) => ({
+    id: item.id,
+    title: item.title || item.content || item.file?.basename || item.filename || "未命名记录",
+    date: itemDateValue(item) || null,
+    item
+  }));
+}
 function buildProgressViewModel(args) {
   const { items, module: module2, goals = [], themes = [] } = args;
-  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {}, mode: "goal" };
+  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {}, mode: "goal", metric: "recordCount" };
   const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
   const levelStep = Math.max(1, Number(config2.levelStep) || 20);
   const cards = buckets.map((bucket) => {
@@ -73053,7 +73029,8 @@ function buildProgressViewModel(args) {
       latestDate,
       blockCounts,
       categoryBreakdown: progression.categoryBreakdown,
-      themeBreakdown: progression.themeBreakdown
+      themeBreakdown: progression.themeBreakdown,
+      recentRecords: buildProgressRecentRecords(goalItems)
     };
   });
   const topN = Math.max(0, Number(config2.topN) || 0);

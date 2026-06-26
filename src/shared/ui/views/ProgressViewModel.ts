@@ -1,3 +1,18 @@
+import type { Item } from '@core/public';
+
+export interface ProgressBreakdownLike {
+  key: string;
+  points: number;
+  count: number;
+}
+
+export interface ProgressRecentRecordModel {
+  id: string;
+  title: string;
+  date?: string | null;
+  item: Item;
+}
+
 export interface GoalProgressCardModel {
   key: string;
   title: string;
@@ -13,8 +28,9 @@ export interface GoalProgressCardModel {
   matchedCount: number;
   latestDate?: string | null;
   blockCounts: Record<string, number>;
-  categoryBreakdown?: Array<{ key: string; points: number; count: number }>;
-  themeBreakdown?: Array<{ key: string; points: number; count: number }>;
+  categoryBreakdown?: ProgressBreakdownLike[];
+  themeBreakdown?: ProgressBreakdownLike[];
+  recentRecords?: ProgressRecentRecordModel[];
 }
 
 export interface ProgressSummaryModel {
@@ -24,11 +40,11 @@ export interface ProgressSummaryModel {
 }
 
 export interface ProgressViewRenderModel {
-  config: any;
+  config: unknown;
   mode?: 'goal' | 'legacy';
   goalCards?: GoalProgressCardModel[];
   summary?: ProgressSummaryModel;
-  result?: any;
+  result?: unknown;
 }
 
 export interface ProgressBlockCountRow {
@@ -43,6 +59,22 @@ export interface ProgressCollapsedFact {
   value: string | number;
 }
 
+export interface ProgressLevelMeta {
+  level: number;
+  icon: string;
+  title: string;
+}
+
+export interface ProgressSkillRowModel {
+  key: string;
+  title: string;
+  points: number;
+  count: number;
+  level: number;
+  levelMeta: ProgressLevelMeta;
+  progressRatio: number;
+}
+
 export const PROGRESS_BLOCK_LABELS: Record<string, string> = {
   task: '任务',
   plan: '计划',
@@ -55,8 +87,22 @@ export const PROGRESS_BLOCK_LABELS: Record<string, string> = {
   unknown: '未分类',
 };
 
+export const PROGRESS_LEVEL_META: ProgressLevelMeta[] = [
+  { level: 1, icon: '🌱', title: '入门' },
+  { level: 2, icon: '🔰', title: '练习' },
+  { level: 3, icon: '🧩', title: '熟悉' },
+  { level: 4, icon: '⚙️', title: '稳定' },
+  { level: 5, icon: '🔥', title: '熟练' },
+  { level: 6, icon: '🛠️', title: '进阶' },
+  { level: 7, icon: '🧠', title: '专精' },
+  { level: 8, icon: '🏔️', title: '高阶' },
+  { level: 9, icon: '💎', title: '精通' },
+  { level: 10, icon: '👑', title: '大师' },
+];
+
 const DEFAULT_COLLAPSED_BLOCKS = ['task', 'habit', 'blocker', 'milestone'];
 const EXPANDED_BLOCK_ORDER = ['task', 'plan', 'review', 'habit', 'blocker', 'milestone', 'thought', 'evidence'];
+const TRACK_SEGMENT_COUNT = 10;
 
 export function clampProgressRatio(value: number): number {
   return Math.max(0, Math.min(1, Number(value) || 0));
@@ -83,7 +129,37 @@ export function getGoalProgressRemainingPoints(card: GoalProgressCardModel): num
   return Math.max(0, Number(card.levelStep || 0) - Number(card.currentLevelPoints || 0));
 }
 
-export function getVisibleProgressThemeBreakdown(rows?: Array<{ key: string; points: number; count: number }>) {
+export function getProgressDisplayLevel(level: number): number {
+  const normalized = Math.max(1, Math.floor(Number(level) || 1));
+  return Math.min(10, normalized);
+}
+
+export function getProgressLevelMeta(level: number): ProgressLevelMeta {
+  return PROGRESS_LEVEL_META[getProgressDisplayLevel(level) - 1] || PROGRESS_LEVEL_META[0];
+}
+
+export function buildProgressTrackSegments(count: number = TRACK_SEGMENT_COUNT): number[] {
+  return Array.from({ length: Math.max(1, count) }, (_, index) => index);
+}
+
+export function buildProgressSkillRows(card: GoalProgressCardModel): ProgressSkillRowModel[] {
+  return getVisibleProgressThemeBreakdown(card.themeBreakdown).map((row) => {
+    const safeLevelStep = Math.max(1, Number(card.levelStep || 1));
+    const level = Math.floor(Number(row.points || 0) / safeLevelStep) + 1;
+    const currentLevelPoints = Number(row.points || 0) - ((level - 1) * safeLevelStep);
+    return {
+      key: row.key,
+      title: getProgressLeafLabel(row.key),
+      points: Number(row.points || 0),
+      count: Number(row.count || 0),
+      level,
+      levelMeta: getProgressLevelMeta(level),
+      progressRatio: clampProgressRatio(currentLevelPoints / safeLevelStep),
+    };
+  });
+}
+
+export function getVisibleProgressThemeBreakdown(rows?: ProgressBreakdownLike[]) {
   return (rows || []).filter((row) => row.count > 0).slice(0, 8);
 }
 

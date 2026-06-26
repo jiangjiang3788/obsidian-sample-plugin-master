@@ -1,5 +1,5 @@
 import type { GoalDefinition, ThemeDefinition, Item } from '@core/public';
-import { PROGRESS_VIEW_DEFAULT_CONFIG, buildGoalBuckets, computeProgression, getItemGoalKey } from '@core/public';
+import { PROGRESS_VIEW_DEFAULT_CONFIG, buildGoalBuckets, computeProgression, getItemGoalKey, asUnknownRecord, readFirstString } from '@core/public';
 
 export interface GoalProgressCardModel {
   key: string;
@@ -18,31 +18,51 @@ export interface GoalProgressCardModel {
   blockCounts: Record<string, number>;
   categoryBreakdown: Array<{ key: string; points: number; count: number }>;
   themeBreakdown: Array<{ key: string; points: number; count: number }>;
+  recentRecords: Array<{ id: string; title: string; date?: string | null; item: Item }>;
 }
 
+interface ProgressViewModuleLike {
+  viewConfig?: Partial<typeof PROGRESS_VIEW_DEFAULT_CONFIG>;
+}
+
+const BLOCK_KEY_ALIASES: Record<string, string> = {
+  '任务': 'task',
+  '计划': 'plan',
+  '总结': 'review',
+  '打卡': 'habit',
+  '阻碍项': 'blocker',
+  '里程碑': 'milestone',
+  '思考': 'thought',
+  '事件': 'evidence',
+};
+
 function normalizeBlockKey(item: Item): string {
-  const raw = String((item as any).coreBlock || item.categoryKey || item.type || '').replace(/^core\./, '').trim();
+  const raw = readFirstString(asUnknownRecord(item), ['coreBlock', 'categoryKey', 'type'])
+    ?.replace(/^core\./, '')
+    .trim() || '';
   if (!raw) return 'unknown';
-  const map: Record<string, string> = {
-    '任务': 'task',
-    '计划': 'plan',
-    '总结': 'review',
-    '打卡': 'habit',
-    '阻碍项': 'blocker',
-    '里程碑': 'milestone',
-    '思考': 'thought',
-    '事件': 'evidence',
-  };
-  return map[raw] || raw.split('/')[0] || raw;
+  return BLOCK_KEY_ALIASES[raw] || raw.split('/')[0] || raw;
 }
 
 function itemDateValue(item: Item): string {
   return String(item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || '');
 }
 
-export function buildProgressViewModel(args: { items: Item[]; module: any; goals?: GoalDefinition[]; themes?: ThemeDefinition[] }) {
+function buildProgressRecentRecords(items: Item[], limit: number = 5): GoalProgressCardModel['recentRecords'] {
+  return [...items]
+    .sort((left, right) => itemDateValue(right).localeCompare(itemDateValue(left)))
+    .slice(0, limit)
+    .map((item) => ({
+      id: item.id,
+      title: item.title || item.content || item.file?.basename || item.filename || '未命名记录',
+      date: itemDateValue(item) || null,
+      item,
+    }));
+}
+
+export function buildProgressViewModel(args: { items: Item[]; module: ProgressViewModuleLike; goals?: GoalDefinition[]; themes?: ThemeDefinition[] }) {
   const { items, module, goals = [], themes = [] } = args;
-  const config = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...(module?.viewConfig || {}), mode: 'goal' };
+  const config = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...(module?.viewConfig || {}), mode: 'goal' as const, metric: 'recordCount' as const };
   const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
   const levelStep = Math.max(1, Number(config.levelStep) || 20);
 
@@ -86,6 +106,7 @@ export function buildProgressViewModel(args: { items: Item[]; module: any; goals
       blockCounts,
       categoryBreakdown: progression.categoryBreakdown,
       themeBreakdown: progression.themeBreakdown,
+      recentRecords: buildProgressRecentRecords(goalItems),
     };
   });
 
@@ -94,7 +115,7 @@ export function buildProgressViewModel(args: { items: Item[]; module: any; goals
 
   return {
     config,
-    mode: 'goal',
+    mode: 'goal' as const,
     goalCards: visibleCards,
     summary: {
       goalCount: visibleCards.length,

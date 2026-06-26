@@ -15,12 +15,12 @@ export function ProgressViewEditor({ value, onChange }: ViewEditorProps) {
   return (
     <Stack spacing={2}>
       <Typography variant="body2" color="text.secondary">
-        ProgressView 只按目标展示经验卡片；每个目标一张卡片，可折叠。时间和筛选统一走控制栏与视图筛选。
+        ProgressView 只按目标展示大技能经验条；主题作为小技能纵向列表。时间和筛选统一走控制栏与视图筛选，不展示完成率和掉队提醒。
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField size="small" type="number" label="显示目标数量" value={config.topN} onChange={(e) => onChange({ mode: 'goal', topN: Number((e.target as HTMLInputElement).value) || 20 })} />
-        <TextField size="small" type="number" label="基础积分" value={config.basePoints} onChange={(e) => onChange({ mode: 'goal', basePoints: Number((e.target as HTMLInputElement).value) || 1 })} />
-        <TextField size="small" type="number" label="每级积分" value={config.levelStep} onChange={(e) => onChange({ mode: 'goal', levelStep: Number((e.target as HTMLInputElement).value) || 20 })} />
+        <TextField size="small" type="number" label="每条记录 XP" value={config.basePoints} onChange={(e) => onChange({ mode: 'goal', basePoints: Number((e.target as HTMLInputElement).value) || 1 })} />
+        <TextField size="small" type="number" label="每级 XP" value={config.levelStep} onChange={(e) => onChange({ mode: 'goal', levelStep: Number((e.target as HTMLInputElement).value) || 20 })} />
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField size="small" type="number" label="评分加分阈值" value={config.ratingBonusThreshold} onChange={(e) => onChange({ mode: 'goal', ratingBonusThreshold: Number((e.target as HTMLInputElement).value) || 4 })} />

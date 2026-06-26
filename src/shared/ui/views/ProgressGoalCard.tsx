@@ -1,119 +1,116 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import type { Item } from '@core/public';
 import {
   buildProgressBlockCountRows,
-  buildProgressCollapsedFacts,
-  getGoalProgressRemainingPoints,
+  buildProgressSkillRows,
   getGoalProgressTitle,
-  getProgressLeafLabel,
-  getVisibleProgressThemeBreakdown,
+  getProgressLevelMeta,
   progressBarWidth,
-  ratioPercent,
   type GoalProgressCardModel,
+  type ProgressRecentRecordModel,
+  type ProgressSkillRowModel,
 } from './ProgressViewModel';
 
-function ProgressBar({ ratio, height = '10px' }: { ratio: number; height?: string }) {
+interface GoalProgressCardProps {
+  card: GoalProgressCardModel;
+  expanded: boolean;
+  onToggle: () => void;
+  onOpenRecord?: (item: Item) => void;
+}
+
+function ExperienceBar({ ratio, tone = 'goal', compact = false }: { ratio: number; tone?: 'goal' | 'skill'; compact?: boolean }) {
+  const background = tone === 'goal'
+    ? 'linear-gradient(90deg, #8b5cf6 0%, #c084fc 54%, #f59e0b 100%)'
+    : 'linear-gradient(90deg, #10b981 0%, #a7f3d0 100%)';
   return (
-    <div style={{ height, borderRadius: '999px', background: 'var(--background-modifier-border)', overflow: 'hidden' }}>
-      <div style={{ width: progressBarWidth(ratio), height: '100%', borderRadius: '999px', background: 'var(--interactive-accent)', transition: 'width 0.25s ease' }} />
+    <div style={{ width: compact ? '180px' : 'min(100%, 260px)', height: tone === 'goal' ? '10px' : '9px', borderRadius: '999px', background: '#e7dfd2', overflow: 'hidden' }}>
+      <div style={{ width: progressBarWidth(ratio), height: '100%', borderRadius: '999px', background }} />
     </div>
   );
 }
 
-function ThemeBreakdownList({ rows }: { rows?: Array<{ key: string; points: number; count: number }> }) {
-  const visible = getVisibleProgressThemeBreakdown(rows);
-  if (visible.length === 0) return <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>暂无主题细分</div>;
+function SmallSkillRow({ row }: { row: ProgressSkillRowModel }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 220px) 64px minmax(140px, 260px)', gap: '14px', alignItems: 'center', padding: '12px 14px', border: '1px solid #eadfce', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.82)' }} title={row.key}>
+      <div style={{ fontWeight: 800, fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#181411' }}>{row.title}</div>
+      <div style={{ fontWeight: 900, color: '#8b5cf6', whiteSpace: 'nowrap' }}>Lv.{row.levelMeta.level}</div>
+      <ExperienceBar ratio={row.progressRatio} tone="skill" />
+    </div>
+  );
+}
+
+function SkillList({ card }: { card: GoalProgressCardModel }) {
+  const rows = buildProgressSkillRows(card);
+  if (rows.length === 0) {
+    return <div style={{ padding: '12px 14px', border: '1px solid #eadfce', borderRadius: '16px', color: '#8d8377', background: 'rgba(255, 255, 255, 0.72)' }}>暂无小技能</div>;
+  }
 
   return (
-    <div style={{ display: 'grid', gap: '6px' }}>
-      {visible.map((row) => (
-        <div key={row.key} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: '8px', fontSize: '12px' }} title={row.key}>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getProgressLeafLabel(row.key)}</span>
-          <span style={{ color: 'var(--text-muted)' }}>{row.count} 条 · {row.points} 经验</span>
+    <div style={{ display: 'grid', gap: '10px' }}>
+      {rows.map((row) => <SmallSkillRow key={row.key} row={row} />)}
+    </div>
+  );
+}
+
+function ExpandedRecords({ records, onOpenRecord }: { records?: ProgressRecentRecordModel[]; onOpenRecord?: (item: Item) => void }) {
+  if (!records?.length) return null;
+  return (
+    <div style={{ display: 'grid', gap: '8px', paddingTop: '2px' }}>
+      <div style={{ fontWeight: 800, color: '#181411' }}>记录入口</div>
+      {records.map((record) => (
+        <button
+          key={record.id}
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenRecord?.(record.item);
+          }}
+          style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '12px', alignItems: 'center', padding: '10px 12px', border: '1px solid #eadfce', borderRadius: '14px', background: '#fffdf8', color: 'inherit', textAlign: 'left', cursor: onOpenRecord ? 'pointer' : 'default' }}
+        >
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title || '未命名记录'}</span>
+          <span style={{ color: '#8d8377', fontSize: '12px' }}>{record.date || '无日期'}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ExpandedFacts({ card, onOpenRecord }: { card: GoalProgressCardModel; onOpenRecord?: (item: Item) => void }) {
+  const blockRows = buildProgressBlockCountRows(card.blockCounts || {});
+  return (
+    <div style={{ display: 'grid', gap: '12px', borderTop: '1px solid #eadfce', paddingTop: '14px' }}>
+      {blockRows.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {blockRows.map((row) => <span key={row.key} style={{ padding: '6px 10px', borderRadius: '999px', background: '#f3ecdf', color: '#6f655b', fontSize: '12px' }}>{row.label} {row.count}</span>)}
         </div>
-      ))}
+      )}
+      <ExpandedRecords records={card.recentRecords} onOpenRecord={onOpenRecord} />
     </div>
   );
 }
 
-function BlockCountGrid({ counts }: { counts: Record<string, number> }) {
-  const rows = buildProgressBlockCountRows(counts);
-  if (rows.length === 0) return <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>暂无 Block 统计</div>;
-
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(86px, 1fr))', gap: '8px' }}>
-      {rows.map((row) => (
-        <div key={row.key} style={{ border: '1px solid var(--background-modifier-border)', borderRadius: '10px', padding: '8px' }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{row.label}</div>
-          <div style={{ fontWeight: 700, marginTop: '2px' }}>{row.count}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CollapsedProgressFacts({ card }: { card: GoalProgressCardModel }) {
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', color: 'var(--text-muted)', fontSize: '12px' }}>
-      {buildProgressCollapsedFacts(card).map((fact) => (
-        <span key={fact.key}>{fact.label} {fact.value}</span>
-      ))}
-    </div>
-  );
-}
-
-export function GoalProgressCard({ card, expanded, onToggle }: { card: GoalProgressCardModel; expanded: boolean; onToggle: () => void }) {
-  const remain = getGoalProgressRemainingPoints(card);
+export function GoalProgressCard({ card, expanded, onToggle, onOpenRecord }: GoalProgressCardProps) {
   const title = getGoalProgressTitle(card);
+  const levelMeta = getProgressLevelMeta(card.level);
 
   return (
-    <div class="think-card" style={{ padding: '14px', border: '1px solid var(--background-modifier-border)', borderRadius: '12px', display: 'grid', gap: '10px' }}>
-      <button
-        type="button"
-        onClick={onToggle}
-        style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center', padding: 0, border: 'none', background: 'transparent', color: 'inherit', textAlign: 'left', cursor: 'pointer' }}
-        aria-expanded={expanded}
-      >
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-            <span style={{ fontSize: '18px', lineHeight: 1 }}>{card.icon || '🎯'}</span>
-            <strong style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</strong>
-          </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {card.goalPath}
-          </div>
+    <article class="think-card" style={{ width: 'min(100%, 760px)', padding: '16px', border: '1px solid #e8dccb', borderRadius: '22px', background: 'linear-gradient(135deg, #fffdf8 0%, #fffaf1 100%)', boxShadow: 'none', display: 'grid', gap: '14px' }}>
+      <button type="button" onClick={onToggle} aria-expanded={expanded} style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr) auto', gap: '14px', alignItems: 'center', padding: 0, border: 'none', background: 'transparent', color: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
+        <div style={{ width: '50px', height: '50px', borderRadius: '18px', border: '1px solid #eadfce', background: '#fbf3e5', display: 'grid', placeItems: 'center', fontSize: '28px', boxShadow: 'none' }}>{card.icon || '🧩'}</div>
+        <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ fontSize: '24px', lineHeight: 1.1, fontWeight: 900, letterSpacing: '-0.04em', color: '#181411', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '280px' }}>{title}</div>
+          <ExperienceBar ratio={card.progressRatio} compact />
         </div>
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontWeight: 700 }}>Lv.{card.level}</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{expanded ? '收起' : '展开'}</div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 12px', border: '1px solid #eadfce', borderRadius: '999px', background: 'rgba(255, 255, 255, 0.72)', boxShadow: 'none', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: '18px' }}>{levelMeta.icon}</span>
+          <strong style={{ color: '#8b5cf6', fontSize: '17px' }}>Lv.{levelMeta.level}</strong>
+          <strong style={{ fontSize: '15px', color: '#181411' }}>{levelMeta.title}</strong>
         </div>
       </button>
 
-      <div style={{ display: 'grid', gap: '6px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '12px' }}>
-          <span>{card.totalPoints} 经验 · {card.itemCount} 条记录</span>
-          <span>{ratioPercent(card.progressRatio)}</span>
-        </div>
-        <ProgressBar ratio={card.progressRatio} height="8px" />
-      </div>
-
-      {!expanded && <CollapsedProgressFacts card={card} />}
-
-      {expanded && (
-        <div style={{ display: 'grid', gap: '12px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
-            <div><div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>总经验</div><strong>{card.totalPoints}</strong></div>
-            <div><div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>当前等级</div><strong>Lv.{card.level}</strong></div>
-            <div><div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>距下一级</div><strong>{remain}</strong></div>
-            <div><div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>最近更新</div><strong>{card.latestDate || '暂无'}</strong></div>
-          </div>
-          <BlockCountGrid counts={card.blockCounts || {}} />
-          <div style={{ borderTop: '1px solid var(--background-modifier-border)', paddingTop: '10px', display: 'grid', gap: '6px' }}>
-            <div style={{ fontWeight: 600, fontSize: '13px' }}>主题细分</div>
-            <ThemeBreakdownList rows={card.themeBreakdown} />
-          </div>
-        </div>
-      )}
-    </div>
+      <SkillList card={card} />
+      {expanded && <ExpandedFacts card={card} onOpenRecord={onOpenRecord} />}
+    </article>
   );
 }

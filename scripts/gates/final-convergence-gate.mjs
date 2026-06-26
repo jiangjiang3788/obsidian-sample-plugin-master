@@ -73,12 +73,18 @@ const requiredFinalDocs = [
   ['docs/Git提交备注-MVP28.md', 'MVP28 reusable commit note'],
   ['docs/单人版收敛-MVP29.md', 'MVP29 type governance record'],
   ['docs/Git提交备注-MVP29.md', 'MVP29 reusable commit note'],
+  ['docs/单人版收敛-MVP30.md', 'MVP30 progress skill view record'],
+  ['docs/Git提交备注-MVP30.md', 'MVP30 reusable commit note'],
+  ['docs/单人版收敛-MVP31.md', 'MVP31 compact progress skill view record'],
+  ['docs/Git提交备注-MVP31.md', 'MVP31 reusable commit note'],
+  ['docs/单人版收敛-MVP32.md', 'MVP32 inline progress skill bar record'],
+  ['docs/Git提交备注-MVP32.md', 'MVP32 reusable commit note'],
 ];
 
 for (const [relativePath, reason] of requiredFinalDocs) assertExists(relativePath, reason);
 
-assertIncludes('docs/README.md', ['最终封版说明', 'MVP25', 'MVP29', '类型治理计划', 'docs-governance:gate', 'any-budget:gate'], 'final docs entrypoint should point to handoff, type governance and gates');
-assertIncludes('docs/单人版收敛总览.md', ['MVP25', '最终封版', 'MVP26', 'MVP29', '类型治理', '不再继续拆'], 'overview should describe final convergence and type governance boundary');
+assertIncludes('docs/README.md', ['最终封版说明', 'MVP25', 'MVP29', 'MVP30', 'MVP31', 'MVP32', '类型治理计划', 'docs-governance:gate', 'any-budget:gate'], 'final docs entrypoint should point to handoff, type governance and gates');
+assertIncludes('docs/单人版收敛总览.md', ['MVP25', '最终封版', 'MVP26', 'MVP29', 'MVP30', 'MVP31', 'MVP32', '类型治理', '不再继续拆'], 'overview should describe final convergence and type governance boundary');
 assertIncludes('docs/最终封版说明.md', ['最终质量入口', '不再强拆', '完整本地验证'], 'final handoff should be actionable');
 assertIncludes('docs/MVP_ACCEPTANCE.md', ['single-user convergence', 'final-convergence:gate', 'docs-governance:gate', 'any-budget:gate'], 'acceptance should include convergence and type governance gates');
 
@@ -90,7 +96,7 @@ for (const file of allProjectFiles) {
 const docsRootMarkdownCount = fs.existsSync(full('docs'))
   ? fs.readdirSync(full('docs'), { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith('.md')).length
   : 0;
-if (docsRootMarkdownCount > 66) failures.push(`docs/ root should stay <= 66 markdown files in the final package; current ${docsRootMarkdownCount}.`);
+if (docsRootMarkdownCount > 72) failures.push(`docs/ root should stay <= 72 markdown files in the final package; current ${docsRootMarkdownCount}.`);
 
 const requiredGateScripts = [
   ['single-user:gate', 'single-user convergence gate'],
@@ -125,4 +131,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('[final-convergence-gate] ok: final handoff and MVP29 type-governance gates are wired.');
+console.log('[final-convergence-gate] ok: final handoff and MVP32 inline progress skill-bar gates are wired.');

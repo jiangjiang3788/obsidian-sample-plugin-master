@@ -58,10 +58,16 @@ const requiredDocs = [
   'docs/Git提交备注-MVP28.md',
   'docs/单人版收敛-MVP29.md',
   'docs/Git提交备注-MVP29.md',
+  'docs/单人版收敛-MVP30.md',
+  'docs/Git提交备注-MVP30.md',
+  'docs/单人版收敛-MVP31.md',
+  'docs/Git提交备注-MVP31.md',
+  'docs/单人版收敛-MVP32.md',
+  'docs/Git提交备注-MVP32.md',
 ];
 
 for (const doc of requiredDocs) {
-  if (!exists(doc)) failures.push(`${doc} must exist after MVP29 type governance.`);
+  if (!exists(doc)) failures.push(`${doc} must exist after MVP32 inline progress skill bar refinement.`);
 }
 
 const forbiddenRootDocPatterns = [
@@ -86,8 +92,8 @@ for (const file of allDocsFiles) {
 const rootMarkdownCount = fs.existsSync(docsDir)
   ? fs.readdirSync(docsDir, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith('.md')).length
   : 0;
-if (rootMarkdownCount > 66) {
-  failures.push(`docs/ root should stay <= 64 markdown files after MVP29 type governance; current ${rootMarkdownCount}.`);
+if (rootMarkdownCount > 72) {
+  failures.push(`docs/ root should stay <= 72 markdown files after MVP32 inline progress skill bar refinement; current ${rootMarkdownCount}.`);
 }
 
 if (exists('docs/README.md')) {
@@ -116,4 +122,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('[docs-governance-gate] ok: docs root is governed and MVP29 type-governance docs are present');
+console.log('[docs-governance-gate] ok: docs root is governed and MVP32 inline progress skill-bar docs are present');

@@ -100,3 +100,18 @@ Then install the generated plugin folder in a clean Obsidian vault and walk thro
 - MVP27 lowered the source budget from 1090 to 1020 and keeps QuickInput/editor-state model files out of the explicit-any top list.
 - MVP28 lowered the source budget to 935 and keeps AI parser / AI batch confirm / RetrievalService out of the explicit-any top list.
 - MVP29 lowered the source budget to 875 and keeps GoalTemplateEditorModel / itemFilter / FieldValueResolver out of the explicit-any top list.
+- MVP30 lowered the source budget to 870 while landing the Progress skill XP view.
+
+
+## Progress 技能经验视图
+
+- ProgressView 默认展示目标大技能卡片。
+- 主题拆解必须以小技能纵向列表展示，不再并排成卡片。
+- 默认视图不展示完成率、不展示掉队提醒、不新增独立时间切换。
+- 时间维度继续由统一控制栏和视图筛选传入。
+- 展开态记录入口应复用现有 `onOpenRecord` 链路。
+- MVP31 后，ProgressView 不应在大屏上撑满宽度，应保持左对齐紧凑卡片。
+- 默认卡片不展示目标路径/记录数经验文案、XP 数字详情、下级提示和 10 段刻度。
+- 小技能默认只展示小技能名、等级和经验条，不展示记录数/XP 文案。
+- MVP32 后，大技能经验条应内联显示在大技能名称后面，不再在 header 下方单独占行。
+- Progress 大技能卡片、目标图标和等级徽章不应使用明显投影。
