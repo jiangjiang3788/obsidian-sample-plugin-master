@@ -1,0 +1,44 @@
+Think OS CSS V2 incremental package
+
+Apply after CSS V1. Paths are relative to the project root.
+No files need to be deleted.
+
+Changed/new files: 37
+
+CSS_V2_NOTES.md
+docs/CSS_MIGRATION_GUIDE.md
+reports/css/css-audit-current.json
+reports/css/css-audit-v2.json
+scripts/audit/css-audit.mjs
+scripts/gates/css-boundary-gate.mjs
+src/app/ARCH_CONSTRAINTS.md
+src/app/ui/mountWithServices.tsx
+src/platform/SettingsRoot.tsx
+src/platform/SettingsTab.tsx
+src/platform/modals/modalPreact.ts
+src/shared/styles/mui-theme.ts
+src/shared/ui/components/IconAction.tsx
+src/shared/ui/components/ThinkMuiThemeProvider.tsx
+src/shared/ui/components/index.ts
+src/shared/ui/dev/StyleCatalog.tsx
+src/shared/ui/muiCompat.ts
+src/shared/ui/primitives/Button.tsx
+src/shared/ui/primitives/Card.tsx
+src/shared/ui/primitives/Chip.tsx
+src/shared/ui/primitives/EmptyState.tsx
+src/shared/ui/primitives/Field.tsx
+src/shared/ui/primitives/IconButton.tsx
+src/shared/ui/primitives/Section.tsx
+src/shared/ui/primitives/Toolbar.tsx
+src/shared/ui/primitives/index.ts
+src/styles/components/settings-shell.css
+src/styles/main.css
+src/styles/overrides/mui.css
+src/styles/primitives/button.css
+src/styles/primitives/card.css
+src/styles/primitives/chip.css
+src/styles/primitives/form-control.css
+src/styles/primitives/icon-button.css
+src/styles/primitives/tabs.css
+src/styles/primitives/toolbar.css
+test/unit/thinkMuiTheme.test.ts

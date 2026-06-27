@@ -1,0 +1,452 @@
+/* CSS V4 migrated from timeline.css. */
+/*
+ * --- TimelineView 样式 ---
+ */
+
+/* ===== 基础样式 ===== */
+.timeline-view-wrapper {
+  overflow-x: auto;
+  font-size: 14px; /* 统一字体大小 */
+}
+
+.timeline-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--think-bg-canvas);
+  display: flex;
+}
+
+.timeline-scrollable-body {
+  display: flex;
+}
+
+/* ===== 时间轴样式 ===== */
+.time-axis {
+  flex: 0 0 90px;
+}
+
+.time-axis-hour {
+  height: var(--timeline-hour-height, 60px);
+  border-bottom: 1px dashed var(--think-border-strong);
+  position: relative;
+  box-sizing: border-box;
+  text-align: right;
+  padding-right: 4px;
+  font-size: 11px;
+  color: var(--think-text-subtle);
+}
+
+/* ===== 天列样式 ===== */
+.day-column-header {
+  flex: 0 0 150px;
+  border-left: 1px solid var(--think-border-subtle);
+}
+
+.day-header-title {
+  font-weight: bold;
+  text-align: center;
+  height: 24px;
+  line-height: 24px;
+  border-bottom: 1px solid var(--think-border-strong);
+  font-size: 14px;
+}
+
+.daily-progress-bar {
+  min-height: 60px;
+}
+
+.day-column-body {
+  flex: 0 0 150px;
+  border-left: 1px solid var(--think-border-subtle);
+  position: relative;
+  cursor: cell;
+}
+
+/* ===== 进度块样式 ===== */
+.progress-block-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+}
+
+.progress-block-item {
+  width: 100%;
+  height: 16px;
+  background: var(--think-border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-block-bar {
+  height: 100%;
+}
+
+.progress-block-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.progress-block-text-light {
+  color: var(--think-text-on-accent);
+}
+
+.progress-block-text-dark {
+  color: var(--think-text-primary);
+}
+
+/* ===== 摘要样式 ===== */
+.summary-progress-container {
+  border-bottom: 1px solid var(--think-border-subtle);
+}
+
+.summary-title {
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 1px solid var(--think-border-strong);
+  font-size: 14px;
+}
+
+.summary-content {
+  min-height: 60px;
+}
+
+/* ===== 任务块样式 ===== */
+.timeline-task-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+}
+
+.timeline-task-link {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 2px;
+  text-decoration: none;
+}
+
+.timeline-task-indicator {
+  width: 4px;
+}
+
+.timeline-task-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  font-size: 12px;
+  overflow: hidden;
+  color: var(--think-text-primary);
+}
+
+.timeline-task-icon {
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.timeline-task-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.task-buttons {
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  gap: 1px;
+}
+
+.timeline-task-block:hover .task-buttons {
+  opacity: 1;
+}
+
+.task-button {
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: color-mix(in srgb, var(--think-text-primary) 60%, transparent);
+  color: white;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.task-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--think-text-primary) 80%, transparent);
+}
+
+/* ===== 表格样式 ===== */
+.timeline-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.timeline-summary-table th,
+.timeline-summary-table td {
+  padding: 8px;
+  border: 1px solid var(--think-border-subtle);
+  text-align: left;
+  vertical-align: top;
+}
+
+.timeline-summary-table th {
+  background: var(--think-bg-surface-1);
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.timeline-summary-table tbody tr:nth-child(even) {
+  background: var(--think-bg-surface-2);
+}
+
+/* ===== 空状态样式 ===== */
+.timeline-empty-state {
+  color: var(--think-text-subtle);
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+}
+
+/* ===== 响应式布局 ===== */
+@media (max-width: 768px) {
+  .day-column-header,
+  .day-column-body {
+    flex: 0 0 120px;
+  }
+  
+  .time-axis {
+    flex: 0 0 70px;
+  }
+  
+  .timeline-task-content {
+    font-size: 11px;
+  }
+  
+  .day-header-title {
+    font-size: 12px;
+  }
+}
+
+/* ===== 主题适配 ===== */
+.theme-dark .progress-block-item {
+  background: var(--think-text-primary);
+}
+
+.theme-dark .timeline-summary-table th {
+  background: var(--think-bg-surface-1);
+}
+
+.theme-dark .timeline-summary-table tbody tr:nth-child(even) {
+  background: var(--think-bg-surface-2);
+}
+
+/* TimeNavigator (概览模式导航器) 样式 */
+.time-navigator-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    height: 100px;
+    font-size: 12px;
+    user-select: none;
+    margin-bottom: 16px;
+    width: 100%;
+    background: var(--think-bg-surface-1);
+    padding: 8px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+.tn-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all var(--think-duration-normal) var(--think-ease-standard);
+    box-sizing: border-box;
+    border: 1px solid transparent;
+}
+.tn-control-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 60px;
+    flex-shrink: 0;
+}
+.tn-year-cell {
+    flex-grow: 1;
+    background: var(--think-data-5);
+    color: white;
+    font-weight: bold;
+    font-size: 1.4em;
+    cursor: pointer;
+    border: none;
+}
+.tn-year-cell:hover {
+    opacity: 0.9;
+}
+.tn-nav-buttons {
+    height: 28px;
+    flex-shrink: 0;
+    display: flex;
+    gap: 4px;
+    border: none;
+}
+.tn-nav-buttons button {
+    flex-grow: 1;
+    border: 1px solid var(--think-border-subtle);
+    background: var(--think-bg-canvas);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding-bottom: 2px;
+}
+.tn-nav-buttons button:hover {
+    background: var(--think-bg-hover);
+    border-color: var(--think-accent);
+}
+.tn-main-col {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: 4px;
+    min-width: 0;
+}
+.tn-row {
+    display: flex;
+    gap: 4px;
+}
+.tn-row-top {
+    flex-grow: 1;
+}
+.tn-quarter-block {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: var(--think-bg-canvas);
+    border-radius: 6px;
+    padding: 4px;
+    gap: 4px;
+    cursor: pointer;
+}
+.tn-quarter-block .tn-quarter-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: var(--think-text-secondary);
+    padding-bottom: 2px;
+}
+.tn-months-container {
+    display: flex;
+    flex-grow: 1;
+    gap: 4px;
+}
+.tn-quarter-block.is-before-selection .tn-quarter-header,
+.tn-month-cell.is-before-selection {
+    color: var(--think-data-5);
+}
+.tn-week-cell.is-before-selection {
+    background: color-mix(in srgb, var(--think-data-5) 8%, var(--think-bg-canvas));
+    color: var(--think-data-5);
+}
+body.theme-dark .tn-quarter-block.is-before-selection .tn-quarter-header,
+body.theme-dark .tn-month-cell.is-before-selection,
+body.theme-dark .tn-week-cell.is-before-selection {
+    color: color-mix(in srgb, var(--think-data-5) 48%, var(--think-bg-surface-1));
+}
+body.theme-dark .tn-week-cell.is-before-selection {
+    background: color-mix(in srgb, var(--think-data-5) 15%, transparent);
+}
+.tn-week-cell.is-today {
+    border-color: var(--think-data-3);
+}
+.tn-quarter-block.is-selected,
+.tn-month-cell.is-selected,
+.tn-week-cell.is-selected {
+    border-color: var(--think-data-5);
+    background-color: color-mix(in srgb, var(--think-data-5) 15%, transparent);
+    box-shadow: none;
+}
+.tn-quarter-block.is-selected .tn-quarter-header,
+.tn-month-cell.is-selected,
+.tn-week-cell.is-selected {
+    color: var(--think-data-5);
+    font-weight: bold;
+}
+body.theme-dark .tn-quarter-block.is-selected,
+body.theme-dark .tn-month-cell.is-selected,
+body.theme-dark .tn-week-cell.is-selected {
+    background-color: color-mix(in srgb, var(--think-data-5) 20%, transparent);
+}
+.tn-month-cell, .tn-week-cell {
+    font-weight: 500;
+    background: var(--think-bg-surface-1);
+    color: var(--think-text-secondary);
+}
+.tn-month-cell {
+    flex: 1;
+}
+.tn-week-cell {
+    flex-basis: 0;
+    flex-grow: 1;
+    font-size: 10px;
+    cursor: pointer;
+    min-width: 10px;
+}
+.tn-weeks-container {
+    height: 24px;
+    flex-shrink: 0;
+    background: var(--think-bg-canvas);
+    border-radius: 6px;
+    padding: 3px;
+    overflow: hidden;
+}
+
+.timeline-view-wrapper {
+    color: var(--think-text-primary);
+    container-type: inline-size;
+}
+
+.timeline-sticky-header,
+.day-column-header {
+    background: var(--think-bg-surface-1);
+}
+
+.timeline-empty-state {
+    border: 1px dashed var(--think-border-subtle);
+    border-radius: var(--think-radius-md);
+    background: var(--think-bg-surface-1);
+    color: var(--think-text-secondary);
+}
+
+.timeline-task-block,
+.progress-block-container {
+    border-radius: var(--think-radius-sm);
+}

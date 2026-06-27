@@ -1,0 +1,60 @@
+/*
+ * Data-visualization palette. These tokens are intentionally separate from UI
+ * surface/accent tokens. Charts must provide labels or legends in addition to
+ * color so meaning is not color-only.
+ */
+.think-os {
+  --think-data-1: #4f7cff;
+  --think-data-2: #20a675;
+  --think-data-3: #d98b22;
+  --think-data-4: #d65b74;
+  --think-data-5: #8b68d8;
+  --think-data-6: #168ca8;
+  --think-data-neutral: var(--think-text-secondary);
+
+  /* Recurrence intensity palette for Task Execution. */
+  --think-task-tone-0-bg: var(--think-bg-surface-1);
+  --think-task-tone-0-text: var(--think-text-primary);
+  --think-task-tone-1-bg: #8065a8;
+  --think-task-tone-1-text: #ffffff;
+  --think-task-tone-2-bg: #aa94c5;
+  --think-task-tone-2-text: #ffffff;
+  --think-task-tone-3-bg: #ddd2ec;
+  --think-task-tone-3-text: #674c87;
+  --think-task-tone-4-bg: #f1edf6;
+  --think-task-tone-4-text: #7f6d96;
+  --think-task-tone-4-border: #d8cde5;
+
+  --think-heatmap-0: var(--think-bg-surface-2);
+  --think-heatmap-1: #d9e4ff;
+  --think-heatmap-2: #a9c1ff;
+  --think-heatmap-3: #7298ff;
+  --think-heatmap-4: #3f6fe6;
+  --think-heatmap-5: #244eb3;
+}
+
+.theme-dark .think-os,
+.think-os.theme-dark {
+  --think-data-1: #7da2ff;
+  --think-data-2: #45c994;
+  --think-data-3: #f1b45b;
+  --think-data-4: #ef8095;
+  --think-data-5: #ac8ee8;
+  --think-data-6: #4ab7ce;
+
+  --think-task-tone-1-bg: #9b82bd;
+  --think-task-tone-1-text: #ffffff;
+  --think-task-tone-2-bg: #725e8c;
+  --think-task-tone-2-text: #ffffff;
+  --think-task-tone-3-bg: #43384f;
+  --think-task-tone-3-text: #d9cbea;
+  --think-task-tone-4-bg: #2f2936;
+  --think-task-tone-4-text: #bfaed2;
+  --think-task-tone-4-border: #51445f;
+
+  --think-heatmap-1: #243552;
+  --think-heatmap-2: #2d4a78;
+  --think-heatmap-3: #3865a5;
+  --think-heatmap-4: #4c7ed1;
+  --think-heatmap-5: #759cff;
+}

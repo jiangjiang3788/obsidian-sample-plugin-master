@@ -169,11 +169,11 @@ export function AiSettings(_props: AiSettingsProps) {
     const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(aiSettings);
 
     return (
-        <Box sx={{ maxWidth: 800 }}>
+        <Box className="think-settings-page">
             <Typography variant="h6" gutterBottom>
                 AI 自然语言快速记录
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" className="think-settings-lead">
                 启用后，可以通过自然语言描述快速创建记录，AI 会自动识别并填充相应字段。
             </Typography>
 
@@ -187,12 +187,12 @@ export function AiSettings(_props: AiSettingsProps) {
                 label="启用 AI 快速记录"
             />
             {localSettings.enabled && !readiness.ready && (
-                <Alert severity="warning" sx={{ mt: 1 }}>
+                <Alert severity="warning" className="think-settings-alert">
                     {readiness.message} 开启开关不会立即发起请求，但实际使用前需要补齐配置。
                 </Alert>
             )}
 
-            <Divider sx={{ my: 3 }} />
+            <Divider className="think-settings-divider" />
 
             <AiApiConfigSection
                 settings={localSettings}
@@ -220,7 +220,7 @@ export function AiSettings(_props: AiSettingsProps) {
             />
             <AiAdvancedSettingsSection settings={localSettings} onUpdate={updateLocal} />
 
-            <Divider sx={{ my: 3 }} />
+            <Divider className="think-settings-divider" />
 
             <AiSettingsFooter
                 hasChanges={hasChanges}

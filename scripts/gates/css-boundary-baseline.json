@@ -1,0 +1,2454 @@
+{
+  "css": {
+    "src/styles/components/grouped-container.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/components/modal.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/components/native-controls.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/components/settings-shell.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/components/simple-select.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/components/task-row.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/block.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/event-timeline.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/excel.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/heatmap.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/layout-editor.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/progress.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/settings-editors.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/settings.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/statistics.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/task-execution.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/timeline.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/view-shell.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/foundations/focus.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/foundations/motion.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/foundations/scope.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/foundations/typography.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/main.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": [
+        "css"
+      ]
+    },
+    "src/styles/overrides/mui.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/overrides/obsidian-modal.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/overrides/quick-input-modal.css": {
+      "important": 9,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/primitives/button.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/primitives/card.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/primitives/chip.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/primitives/form-control.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/primitives/icon-button.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/primitives/tabs.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/primitives/toolbar.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/tokens/data-colors.css": {
+      "important": 0,
+      "colors": [
+        "#168ca8",
+        "#20a675",
+        "#243552",
+        "#244eb3",
+        "#2d4a78",
+        "#2f2936",
+        "#3865a5",
+        "#3f6fe6",
+        "#43384f",
+        "#45c994",
+        "#4ab7ce",
+        "#4c7ed1",
+        "#4f7cff",
+        "#51445f",
+        "#674c87",
+        "#725e8c",
+        "#7298ff",
+        "#759cff",
+        "#7da2ff",
+        "#7f6d96",
+        "#8065a8",
+        "#8b68d8",
+        "#9b82bd",
+        "#a9c1ff",
+        "#aa94c5",
+        "#ac8ee8",
+        "#bfaed2",
+        "#d65b74",
+        "#d8cde5",
+        "#d98b22",
+        "#d9cbea",
+        "#d9e4ff",
+        "#ddd2ec",
+        "#ef8095",
+        "#f1b45b",
+        "#f1edf6",
+        "#ffffff"
+      ],
+      "colorOccurrences": 40,
+      "unprefixedClasses": []
+    },
+    "src/styles/tokens/density.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/tokens/semantic.css": {
+      "important": 0,
+      "colors": [
+        "rgba(0, 0, 0, 0.08)",
+        "rgba(0, 0, 0, 0.14)",
+        "rgba(0, 0, 0, 0.2)"
+      ],
+      "colorOccurrences": 3,
+      "unprefixedClasses": []
+    }
+  },
+  "scripts": {
+    "src/app/AppStoreContext.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/FeatureLoader.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/FeatureRegistry.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ServiceManager.services.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ServiceManager.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/obsidianRuntimeActions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordCreateActions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordEditActions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordExcelActions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordTaskActions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordUiActions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/bootstrap/buildRuntime.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/bootstrap/initializeCore.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/bootstrap/loadDataServices.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/bootstrap/loadTimerServices.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/bootstrap/loadUIFeatures.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/bootstrap/register.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/capabilities/CapabilityRegistry.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/capabilities/capabilities/ai.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/capabilities/capabilities/timer.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/capabilities/createCapabilities.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/capabilities/public.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/capabilities/registerCapabilityContributions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/capabilities/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/createServices.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/diagnostics/diDiagnostics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/features/featureContext.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/features/registerFeatureContributions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/public.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/runtime/disposables.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/runtime/lifecycleState.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/services.types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/selectors/floatingWindows.selectors.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/selectors/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/selectors/settings.selectors.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/selectors/timer.selectors.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/selectors/ui.selectors.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/slices/blocks.slice.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/slices/floatingWindows.slice.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/slices/layout.slice.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/slices/settings.slice.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/slices/theme.slice.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/slices/timer.slice.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/slices/ui.slice.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/useAppStore.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/store/useSelector.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/components/QuickInputEditor/QuickInputEditorModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/components/QuickInputEditor/QuickInputEditorView.tsx": {
+      "staticStyle": 2,
+      "staticSx": 3
+    },
+    "src/app/ui/components/QuickInputEditor/components/Fields.tsx": {
+      "staticStyle": 7,
+      "staticSx": 13
+    },
+    "src/app/ui/components/QuickInputEditor/components/GoalSelector.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/app/ui/components/QuickInputEditor/components/HierarchySingleSelect.tsx": {
+      "staticStyle": 3,
+      "staticSx": 5
+    },
+    "src/app/ui/components/QuickInputEditor/components/QuickInputOptionPillGroup.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/app/ui/components/QuickInputEditor/components/SelectablePill.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/app/ui/components/QuickInputEditor/components/ThemeSelector.tsx": {
+      "staticStyle": 2,
+      "staticSx": 5
+    },
+    "src/app/ui/components/QuickInputEditor/components/TwoLevelThemeSelector.tsx": {
+      "staticStyle": 0,
+      "staticSx": 10
+    },
+    "src/app/ui/components/QuickInputEditor/components/quickInputOptionSelection.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/components/QuickInputEditor/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/components/QuickInputEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/modals/AiBatchConfirmModal.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/modals/AiTextPromptModal.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/modals/QuickInputModal.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/mountWithServices.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/primitives/FloatingPanel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/widgets/FloatingWidget.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/widgets/FloatingWidgetManager.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/blocks.usecase.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/goal.usecase.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/layout.usecase.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/recordInput/error.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/recordInput/issues.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/recordInput/locator.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/recordInput/paths.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/recordInput/planGuard.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/recordInput/submitPipeline.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/recordInput/templateSubmit.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/recordInput/time.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/recordInput.usecase.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/settings.usecase.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/theme.usecase.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/timer.usecase.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/usecases/viewinstance.usecase.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ai/AiChatService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ai/AiConfigCache.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ai/AiConfigSnapshot.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ai/AiHttpClient.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ai/AiNaturalLanguageRecordParser.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ai/ChatSessionStore.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ai/INaturalLanguageRecordParser.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ai/RetrievalService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ai/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/blocks/defaultCoreBlocks.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/blocks/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/blocks/resolveCoreBlocks.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/blocks/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/viewConfigs.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/di/setupCore.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/ContentFieldSemantics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/CoreFieldCatalog.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/FieldDefinition.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/FieldEditPolicy.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/FieldLegacy.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/FieldMigration.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/FieldRegistry.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/FieldSystemHealth.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/FieldTypes.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/FieldValueResolver.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/LegacyFieldPolicy.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/TemplateFieldAdapter.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/TemplateFieldSanitizer.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/imageSemantics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/pathSemantics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/tagSemantics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/itemGoalGrouping.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/order.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/overview.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/path.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/period.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/templateDisplay.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/templateMode.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/templateVariant.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/templateVariantDiff.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/templates.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/goal/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/hooks/useTimelineZoom.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/layout/freeformLayout.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/layout/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/polyfills.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ports/AppPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ports/EventsPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ports/FileStatPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ports/MessageRenderPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ports/MetadataPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ports/ModalPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ports/UiPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ports/VaultPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/ports/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/progression/computeProgression.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/progression/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/public.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/records/RecordEntity.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/records/RecordNormalizer.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/records/codec/FieldValueCodec.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/records/codec/MarkdownBlockCodec.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/records/codec/MarkdownTaskCodec.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/records/codec/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/records/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/ActionService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/DataStore.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/GoalTemplateResolver.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/InputService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/ItemService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/RepositorySettingsProvider.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/SettingsRepository.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/StorageService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/TimerStateService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/dataStore/DataStoreCache.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/dataStore/DataStoreFileScanner.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/dataStore/DataStoreIndex.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/dataStore/WarmStartPlanner.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/dataStore/pathUtils.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/EditBackfillMapper.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/RecordInputFacade.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/RecordInputKernel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/dependencyResolver.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/editStateResolver.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/mutationErrors.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/mutationLocator.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/normalization.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/refreshCoordinator.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/snapshot/EditSnapshotFactory.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/snapshot/OutputPlanner.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/submitResult.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/recordInput/validation.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/theme/ThemeTreeBuilder.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/theme/sortThemes.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/theme/themePathParser.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/theme/themeSemantics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/themeMetadata.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/actionMeta.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/ai-schema.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/cache.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/common.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/constants.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/definitions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/fieldOrigin.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/fields.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/quickInput.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/recordInput.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/recordSnapshot.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/schema.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/services.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/theme.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/timeline.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/timer.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/types/viewConfigs.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/array.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/cellKey.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/dataAggregation.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/date.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/devLogger.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/exportUtils.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/heatmap.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/heatmapAggregation.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/heatmapTemplate.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/heatmapVisual.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/id.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/inputTemplateUtils.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/itemFilter.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/itemGrouping.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/layoutFilterAdapter.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/levelingSystem.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/mark.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/normalize.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/obsidian.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/parser.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/pathSemantic.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/pathUtils.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/recordDebug.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/recordSubmitFeedback.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/recordSubmitRecovery.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/regex.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/runtimeDiagnostics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/statisticsAggregation.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/tagUtils.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/taskStatus.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/taskTime.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/taskUtils.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/templateUtils.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/text.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/timeNavigator.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/timeline.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/timelineAggregation.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/timelineBlocks.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/timelineInteraction.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/timelineRange.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/timing.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/unknownRecord.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/utils/viewQueryPipeline.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/view-config/displayFields.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/view-config/domainFields.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/aichat/AiChatModalContainer.tsx": {
+      "staticStyle": 0,
+      "staticSx": 2
+    },
+    "src/features/aichat/AiChatModalView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 5
+    },
+    "src/features/aichat/components/ChatComposer.tsx": {
+      "staticStyle": 0,
+      "staticSx": 2
+    },
+    "src/features/aichat/components/ChatMessages.tsx": {
+      "staticStyle": 0,
+      "staticSx": 5
+    },
+    "src/features/aichat/components/FiltersBar.tsx": {
+      "staticStyle": 0,
+      "staticSx": 5
+    },
+    "src/features/aichat/components/MessageBubble.tsx": {
+      "staticStyle": 0,
+      "staticSx": 6
+    },
+    "src/features/aichat/components/SessionList.tsx": {
+      "staticStyle": 0,
+      "staticSx": 7
+    },
+    "src/features/aichat/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/aichat/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/aiinput/aiInputRuntime.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/aiinput/aiNaturalInputCommand.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/aiinput/aiProgressNotice.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/aiinput/aiSpeedTestCommand.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/aiinput/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/aiinput/registerCommands.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/aiinput/registerFeature.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/progression/computeProgression.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/progression/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/quickinput/QuickInputModal.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/quickinput/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/quickinput/registerCommands.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/quickinput/registerFeature.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/SettingsTab.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/components/LayoutEditorPanel.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/features/settings/data/ThemeMetadataManager.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/goalTemplates/GoalPresetCard.tsx": {
+      "staticStyle": 4,
+      "staticSx": 0
+    },
+    "src/features/settings/goalTemplates/GoalPresetMatrixWidget.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/features/settings/goalTemplates/GoalTemplateContextMenu.tsx": {
+      "staticStyle": 10,
+      "staticSx": 0
+    },
+    "src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/goalTemplates/GoalTemplateEditorModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/goalTemplates/GoalTemplateMatrix.tsx": {
+      "staticStyle": 0,
+      "staticSx": 5
+    },
+    "src/features/settings/goalTemplates/GoalTemplateMatrixCell.tsx": {
+      "staticStyle": 2,
+      "staticSx": 0
+    },
+    "src/features/settings/goalTemplates/GoalTemplateMatrixRow.tsx": {
+      "staticStyle": 6,
+      "staticSx": 8
+    },
+    "src/features/settings/goalTemplates/GoalTemplateMatrixTable.tsx": {
+      "staticStyle": 0,
+      "staticSx": 5
+    },
+    "src/features/settings/goalTemplates/GoalTemplateModeSwitch.tsx": {
+      "staticStyle": 0,
+      "staticSx": 4
+    },
+    "src/features/settings/goalTemplates/GoalTemplateNativeControls.tsx": {
+      "staticStyle": 6,
+      "staticSx": 0
+    },
+    "src/features/settings/goalTemplates/goalTemplateCopy.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/goalTemplates/goalTemplateMatrixModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/goalTemplates/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/input/BlockManager.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/input/FieldsEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/input/GoalManager.tsx": {
+      "staticStyle": 0,
+      "staticSx": 5
+    },
+    "src/features/settings/input/TemplateVariableCopier.tsx": {
+      "staticStyle": 0,
+      "staticSx": 1
+    },
+    "src/features/settings/input/fieldsEditor/FieldRow.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/input/fieldsEditor/OptionRow.tsx": {
+      "staticStyle": 2,
+      "staticSx": 1
+    },
+    "src/features/settings/input/fieldsEditor/nativeControls.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/input/fieldsEditor/useObsidianInputGuard.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/input/goalManager/GoalMetricSection.tsx": {
+      "staticStyle": 0,
+      "staticSx": 4
+    },
+    "src/features/settings/input/goalManager/shared.tsx": {
+      "staticStyle": 0,
+      "staticSx": 1
+    },
+    "src/features/settings/layout/CodeblockEmbedder.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/DataFilterPanel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 14
+    },
+    "src/features/settings/layout/FreeformCanvas.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/FreeformLayoutItem.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/LayoutRenderer.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/LayoutSettingsWidget.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/ModulePanel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/ModuleSettingsModal.tsx": {
+      "staticStyle": 10,
+      "staticSx": 6
+    },
+    "src/features/settings/layout/RendererService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/ViewContent.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/layoutRenderSignature.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/statisticsPopoverBridge.tsx": {
+      "staticStyle": 0,
+      "staticSx": 4
+    },
+    "src/features/settings/layout/useExpandedViewRendering.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/useLayoutItems.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/useLayoutModuleActions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/useViewRuntimeHandlers.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/layout/viewPropsFactory.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/registerFeature.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/tabs/AiAdvancedSettingsSection.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/tabs/AiApiConfigSection.tsx": {
+      "staticStyle": 0,
+      "staticSx": 2
+    },
+    "src/features/settings/tabs/AiPromptRulesSection.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/features/settings/tabs/AiScopeSection.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/features/settings/tabs/AiSettings.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/tabs/AiSettingsFooter.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/features/settings/tabs/DataManagementSettings.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/tabs/GeneralSettings.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/tabs/InputSettings.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/tabs/LayoutSettings.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/tabs/aiSettingsReadiness.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/tabs/aiSettingsUiTypes.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/theme/ThemeManager.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/useViewData.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewEditors/BlockViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewEditors/CommonFilterPanel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 7
+    },
+    "src/features/settings/viewEditors/EventTimelineViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 12
+    },
+    "src/features/settings/viewEditors/ExcelViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewEditors/FieldPickerAutocomplete.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewEditors/HeatmapViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 8
+    },
+    "src/features/settings/viewEditors/ProgressViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewEditors/RuleBuilder.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/features/settings/viewEditors/RuleBuilderModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewEditors/RuleBuilderValueInput.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewEditors/StatisticsViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewEditors/TableViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 1
+    },
+    "src/features/settings/viewEditors/TaskExecutionViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewEditors/TimelineViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 15
+    },
+    "src/features/settings/viewEditors/registry.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewModels/blockViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewModels/eventTimelineViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewModels/heatmapViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewModels/progressViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewModels/statisticsViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewModels/taskExecutionViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewModels/timelineViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/viewModels/viewModelRegistry.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/theme/themeActions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/theme/useThemeStore.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/timer/FloatingTimerWidget.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/timer/TimerRow.tsx": {
+      "staticStyle": 1,
+      "staticSx": 2
+    },
+    "src/features/timer/TimerService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/timer/TimerView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/timer/TimerViewView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 1
+    },
+    "src/main.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/ObsidianAiHttpTransport.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/ObsidianEventsPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/ObsidianFileStatPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/ObsidianMessageRenderPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/ObsidianMetadataPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/ObsidianModalPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/ObsidianUiPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/ObsidianVaultPort.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/SettingsRoot.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/SettingsTab.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/ThinkSettingsView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/events/VaultWatcher.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/AiBatchConfirmFooter.tsx": {
+      "staticStyle": 0,
+      "staticSx": 2
+    },
+    "src/platform/modals/AiBatchConfirmModal.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/platform/modals/AiBatchConfirmModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/AiBatchConfirmRecordHeader.tsx": {
+      "staticStyle": 0,
+      "staticSx": 4
+    },
+    "src/platform/modals/AiBatchConfirmSidebar.tsx": {
+      "staticStyle": 0,
+      "staticSx": 11
+    },
+    "src/platform/modals/AiChatModal.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/AiTextPromptModal.tsx": {
+      "staticStyle": 0,
+      "staticSx": 5
+    },
+    "src/platform/modals/CheckinManagerModal.tsx": {
+      "staticStyle": 3,
+      "staticSx": 0
+    },
+    "src/platform/modals/NamePromptModal.tsx": {
+      "staticStyle": 1,
+      "staticSx": 1
+    },
+    "src/platform/modals/QuickInputConflictRecoveryPanel.tsx": {
+      "staticStyle": 7,
+      "staticSx": 0
+    },
+    "src/platform/modals/QuickInputModal.tsx": {
+      "staticStyle": 2,
+      "staticSx": 0
+    },
+    "src/platform/modals/QuickInputModalFooter.tsx": {
+      "staticStyle": 3,
+      "staticSx": 0
+    },
+    "src/platform/modals/QuickInputModalHeader.tsx": {
+      "staticStyle": 3,
+      "staticSx": 1
+    },
+    "src/platform/modals/modalBackdropGuard.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/modalPreact.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/quickInputEnvironment.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/quickInputKeyboard.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/quickInputNotice.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/quickInputOriginalLink.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/useQuickInputOutputPlanPreview.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/platform/modals/useQuickInputSubmit.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/preact-shim.d.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/components/ThemeTreeSelect/MultiSelectToolbar.tsx": {
+      "staticStyle": 0,
+      "staticSx": 1
+    },
+    "src/shared/components/ThemeTreeSelect/Panel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/shared/components/ThemeTreeSelect/SearchBox.tsx": {
+      "staticStyle": 0,
+      "staticSx": 1
+    },
+    "src/shared/components/ThemeTreeSelect/SelectedPathsChips.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/shared/components/ThemeTreeSelect/ThemeTreeNodeItem.tsx": {
+      "staticStyle": 0,
+      "staticSx": 5
+    },
+    "src/shared/components/ThemeTreeSelect/ThemeTreeSelect.tsx": {
+      "staticStyle": 0,
+      "staticSx": 3
+    },
+    "src/shared/components/ThemeTreeSelect/Trigger.tsx": {
+      "staticStyle": 0,
+      "staticSx": 4
+    },
+    "src/shared/components/ThemeTreeSelect/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/debug/inputDiagnostics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/hooks/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/hooks/useClickOutside.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/hooks/useFormState.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/hooks/useIsMounted.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/hooks/useLocalStorage.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/patterns/ModalSavePattern.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/public.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/mui-theme.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/types/Theme.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/types/actions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/types/taskTime.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/GroupedContainer.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/components/FilterPopover.tsx": {
+      "staticStyle": 0,
+      "staticSx": 6
+    },
+    "src/shared/ui/components/IconAction.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/components/ModalHeader.tsx": {
+      "staticStyle": 0,
+      "staticSx": 2
+    },
+    "src/shared/ui/components/ThemeTreeNodeLabel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 4
+    },
+    "src/shared/ui/components/ThinkMuiThemeProvider.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/components/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/composites/FieldManager.tsx": {
+      "staticStyle": 5,
+      "staticSx": 1
+    },
+    "src/shared/ui/composites/FormField.tsx": {
+      "staticStyle": 7,
+      "staticSx": 0
+    },
+    "src/shared/ui/composites/SimpleSelect.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/composites/TagsRenderer.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/composites/TaskCheckbox.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/composites/TaskSendToTimerButton.tsx": {
+      "staticStyle": 0,
+      "staticSx": 1
+    },
+    "src/shared/ui/composites/dialogs/NamePromptModal.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/composites/form/ListEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/contracts.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/dev/StyleCatalog.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/events/obsidianEventBoundary.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/heatmap/HeatmapCell.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/icons/index.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/items/BlockItem.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/items/FieldPill.tsx": {
+      "staticStyle": 2,
+      "staticSx": 0
+    },
+    "src/shared/ui/items/ItemLink.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/shared/ui/items/TaskRow.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/markdown/MarkdownContent.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/modals/EditTaskModal.tsx": {
+      "staticStyle": 2,
+      "staticSx": 0
+    },
+    "src/shared/ui/muiCompat.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/Button.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/Card.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/Chip.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/EmptyState.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/Field.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/IconButton.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/Modal.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/Section.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/Toolbar.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/primitives/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/statistics/ChartBlock.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/shared/ui/timeline/DayColumnBody.tsx": {
+      "staticStyle": 4,
+      "staticSx": 0
+    },
+    "src/shared/ui/timeline/DayColumnHeader.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/timeline/ProgressBlock.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/shared/ui/timeline/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/utils/recordOrigin.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/BlockView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/BlockViewItemList.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/BlockViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/CategoryFilter.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/EventTimelineView/EventTimelineEventList.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/EventTimelineView/EventTimelineViewContainer.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/EventTimelineView/EventTimelineViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/EventTimelineView/EventTimelineViewView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/EventTimelineView/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/ExcelView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/HeatmapDayView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/HeatmapLayoutModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/HeatmapThemeGroup.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/HeatmapView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/HeatmapViewContent.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/HeatmapViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/ProgressGoalCard.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/ProgressSummaryCards.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/ProgressView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/ProgressViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/StatisticsViewContainer.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/StatisticsViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/StatisticsViewView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/components/PopoverContent.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/components/TopControls.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/useStatisticsCategoryConfigs.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/views/DayStatisticsView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/views/MonthStatisticsView.tsx": {
+      "staticStyle": 2,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/views/MonthStatisticsViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/views/QuarterStatisticsView.tsx": {
+      "staticStyle": 2,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/views/QuarterStatisticsViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/views/WeekStatisticsView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/views/YearStatisticsView.tsx": {
+      "staticStyle": 3,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView/views/YearStatisticsViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/StatisticsView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TableView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TableViewCell.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TableViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TaskExecutionChipGrid.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TaskExecutionContextMenu.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TaskExecutionView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TaskExecutionViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/ThemeFilter.tsx": {
+      "staticStyle": 0,
+      "staticSx": 1
+    },
+    "src/shared/ui/views/TimeNavigator.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TimeNavigatorModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TimelineView/TimelineDailyView.tsx": {
+      "staticStyle": 3,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TimelineView/TimelineDailyViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TimelineView/TimelineViewContainer.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TimelineView/TimelineViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TimelineView/TimelineViewView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/TimelineView/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/ViewToolbar.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/ViewToolbarModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelCell.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelCellContent.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelCellEditingModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelCellEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelCellModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelColumnChipList.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelColumnContextMenu.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelColumnToolbar.tsx": {
+      "staticStyle": 0,
+      "staticSx": 1
+    },
+    "src/shared/ui/views/excel-view/ExcelColumnToolbarModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelGrid.tsx": {
+      "staticStyle": 1,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelGridModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/ExcelViewToolbar.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/useExcelCellEditing.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/excel-view/value.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/timeline/components/TimelineSummaryTable.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/timeline-parser.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/ui/views/timelineInteraction.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/devConsole.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/diagnosticConsole.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/errorHandler.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/immutableListOps.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/linkedTimeFields.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/performance.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/takeLatest.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/types/dayjs-isBetween.d.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/types/dayjs-isoWeekYear.d.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/types/timeline/TimelineRange.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    }
+  }
+}

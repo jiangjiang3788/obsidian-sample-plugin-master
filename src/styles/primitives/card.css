@@ -1,0 +1,83 @@
+/* Think OS surfaces and card primitive. */
+.think-os .think-surface,
+.think-os .think-card {
+  background: var(--think-bg-surface-1);
+  color: var(--think-text-primary);
+  border: 1px solid var(--think-border-subtle);
+}
+
+.think-os .think-surface--0 {
+  background: var(--think-bg-canvas);
+  border-color: transparent;
+}
+
+.think-os .think-surface--2 {
+  background: var(--think-bg-surface-2);
+}
+
+.think-os .think-surface--elevated {
+  background: var(--think-bg-elevated);
+  box-shadow: var(--think-shadow-md);
+}
+
+.think-os .think-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: var(--think-radius-md);
+  padding: var(--think-space-6);
+  transition:
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    box-shadow var(--think-duration-fast) var(--think-ease-standard),
+    opacity var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.think-os .think-card--interactive {
+  cursor: pointer;
+}
+
+.think-os .think-card--interactive:hover {
+  background: var(--think-bg-hover);
+  border-color: var(--think-border-strong);
+}
+
+.think-os .think-card--selected,
+.think-os .think-card[aria-selected="true"] {
+  background: var(--think-accent-muted);
+  border-color: var(--think-accent);
+}
+
+.think-os .think-card--locked,
+.think-os .think-card[data-locked="true"] {
+  border-style: dashed;
+}
+
+.think-os .think-card--dragging,
+.think-os .think-card[data-dragging="true"] {
+  z-index: var(--think-z-drag);
+  box-shadow: var(--think-shadow-md);
+  opacity: 0.94;
+}
+
+.think-os .think-card__header,
+.think-os .think-card__footer {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.think-os .think-card__header {
+  gap: var(--think-space-4);
+  margin-bottom: var(--think-space-5);
+}
+
+.think-os .think-card__body {
+  min-width: 0;
+}
+
+.think-os .think-card__footer {
+  justify-content: flex-end;
+  gap: var(--think-space-4);
+  margin-top: var(--think-space-6);
+}

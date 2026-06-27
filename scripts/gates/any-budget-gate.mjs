@@ -2,7 +2,7 @@
 /**
  * any-budget-gate
  *
- * MVP26 type-governance baseline; MVP27-MVP29 lower the budget.  This gate does not ban every explicit any.
+ * MVP26 type-governance baseline; MVP27-MVP30 lower the budget.  This gate does not ban every explicit any.
  * It makes the current debt visible, separates source/test/scripts counts, and
  * gives the next refactor passes a budget that must move downward over time.
  */
@@ -13,12 +13,12 @@ const root = process.cwd();
 const failures = [];
 
 const budgets = {
-  src: 875,
+  src: 870,
   test: 165,
   scripts: 15,
-  total: 1040,
-  asAny: 520,
-  colonAny: 440,
+  total: 1035,
+  asAny: 516,
+  colonAny: 435,
 };
 
 const roots = ['src', 'test', 'scripts'];

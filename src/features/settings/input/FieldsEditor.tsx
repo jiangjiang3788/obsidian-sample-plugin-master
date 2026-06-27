@@ -7,8 +7,6 @@ import type { TemplateField } from "@core/public";
 import { createCustomTemplateField, sanitizeTemplateField, sanitizeTemplateFields } from "@core/public";
 import { FieldRow } from "./fieldsEditor/FieldRow";
 
-const fieldRowGridTemplateColumns = "20px minmax(0, 1.15fr) minmax(112px, 145px) minmax(0, 1fr) 54px 46px 30px";
-
 function createEmptyField(index: number): TemplateField {
   return createCustomTemplateField(index);
 }
@@ -72,26 +70,18 @@ export function FieldsEditor({
   };
 
   return (
-    <Stack spacing={1.25} sx={{ width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }}>
-      <Box
-        sx={{
-          px: 0.5,
-          display: "grid",
-          gridTemplateColumns: fieldRowGridTemplateColumns,
-          columnGap: 0.75,
-          alignItems: "center",
-        }}
-      >
+    <Stack spacing={1.25} className="think-fields-editor">
+      <Box className="think-fields-editor__grid think-fields-editor__header">
         <Box />
-        <Typography variant="caption" sx={{ color: "text.secondary" }}>字段名称</Typography>
-        <Typography variant="caption" sx={{ color: "text.secondary" }}>字段类型</Typography>
-        <Typography variant="caption" sx={{ color: "text.secondary" }}>默认值</Typography>
-        <Typography variant="caption" sx={{ color: "text.secondary", textAlign: "center" }}>必填</Typography>
-        <Typography variant="caption" sx={{ color: "text.secondary", textAlign: "center" }}>详情</Typography>
+        <Typography variant="caption">字段名称</Typography>
+        <Typography variant="caption">字段类型</Typography>
+        <Typography variant="caption">默认值</Typography>
+        <Typography variant="caption" className="think-fields-editor__header-center">必填</Typography>
+        <Typography variant="caption" className="think-fields-editor__header-center">详情</Typography>
         <Box />
       </Box>
 
-      <Stack spacing={0} divider={<Divider sx={{ my: 0.75 }} />}>
+      <Stack spacing={0} divider={<Divider className="think-fields-editor__divider" />}>
         {(fields || []).map((field: TemplateField, index: number) => (
           <Box
             key={field.id}
@@ -112,10 +102,7 @@ export function FieldsEditor({
               handleDropOn(index);
             }}
             onDragEnd={() => setDraggingIndex(null)}
-            sx={{
-              opacity: draggingIndex === index ? 0.55 : 1,
-              borderRadius: 1,
-            }}
+            className={`think-fields-editor__row-wrap${draggingIndex === index ? ' is-dragging' : ''}`}
           >
             <FieldRow
               field={field}

@@ -68,27 +68,20 @@ function SortableLayoutItem({
     const dragHandleProps = { ...attributes, ...listeners } as any;
 
     return (
-        <Box ref={setNodeRef as any} style={style} sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-            <Stack direction="row" alignItems="center" sx={{ p: 1 }}>
+        <Box ref={setNodeRef as any} style={style} className="think-layout-list__item">
+            <Stack direction="row" alignItems="center" className="think-layout-list__item-header">
                 <div
                     {...dragHandleProps}
-                    style={{
-                        cursor: 'grab',
-                        marginRight: 8,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: 4,
-                        borderRadius: 4,
-                    }}
+                    className="think-layout-list__drag-handle"
                 >
                     <DragIndicatorIcon fontSize="small" />
                 </div>
 
-                <IconButton size="small" onClick={onToggle} sx={{ mr: 1 }}>
+                <IconButton size="small" onClick={onToggle} className="think-layout-list__toggle">
                     {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
                 </IconButton>
 
-                <Typography sx={{ flex: 1, cursor: 'pointer' }} onClick={handleRename}>
+                <Typography className="think-layout-list__item-title" onClick={handleRename}>
                     {layout.name}
                 </Typography>
 
@@ -144,8 +137,8 @@ export function LayoutSettings({ app }: { app: any }) {
     const layoutIds = useMemo(() => layouts.map((layout) => layout.id), [layouts]);
 
     return (
-        <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Box className="think-layout-list">
+            <Stack direction="row" alignItems="center" justifyContent="space-between" className="think-layout-list__header">
                 <Typography variant="h6">管理布局</Typography>
                 <Button
                     onClick={onAddLayout}
@@ -172,7 +165,7 @@ export function LayoutSettings({ app }: { app: any }) {
             </DndContext>
 
             {layouts.length === 0 && (
-                <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                <Typography color="text.secondary" className="think-settings-centered-empty">
                     暂无布局，点击"添加布局"创建第一个
                 </Typography>
             )}

@@ -53,8 +53,8 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRe
     };
 
     return (
-        <div class="checkin-manager-modal">
-            <div class="modal-header">
+        <div class="think-checkin-modal">
+            <div class="think-checkin-modal__header">
                 <div>
                     <h3 style={{ margin: 0 }}>{`当天记录 - ${date}`}</h3>
                     <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px' }}>
@@ -66,13 +66,13 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRe
                 </div>
             </div>
 
-            <div class="modal-content">
+            <div class="think-checkin-modal__content">
                 {sortedItems.length === 0 ? (
                     <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px 0' }}>
                         点击右上角“新增记录”开始打卡。
                     </div>
                 ) : (
-                    <div class="checkin-details-list">
+                    <div class="think-checkin-modal__list">
                         {sortedItems.map(item => {
                             const gesture = createRecordGestureHandlers({
                                 item,
@@ -82,21 +82,21 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRe
                             return (
                             <div
                                 key={item.id}
-                                class="checkin-details-item"
+                                class="think-checkin-modal__item"
                                 onClick={gesture.onClick as any}
                                 onDblClick={gesture.onDblClick as any}
                                 onTouchEnd={gesture.onTouchEnd as any}
                             >
-                                <div class="checkin-item-main">
-                                    <div class="checkin-item-content">{item.content || item.title || '无内容'}</div>
-                                    <div class="checkin-item-meta">
+                                <div class="think-checkin-modal__item-main">
+                                    <div class="think-checkin-modal__item-content">{item.content || item.title || '无内容'}</div>
+                                    <div class="think-checkin-modal__item-meta">
                                         {`${dayjs(item.created).format('HH:mm:ss')} · ${item.file?.path || '未知位置'}`}
                                     </div>
                                 </div>
-                                <div class="checkin-item-actions">
+                                <div class="think-checkin-modal__item-actions">
                                     {onDeleteRecord && (
                                         <button
-                                            class="checkin-item-delete"
+                                            class="think-checkin-modal__item-delete"
                                             title="删除这条记录"
                                             onClick={(event) => handleDeleteRecord(event as MouseEvent, item)}
                                         >
@@ -110,7 +110,7 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRe
                 )}
             </div>
 
-            <div class="modal-footer">
+            <div class="think-checkin-modal__footer">
                 <button onClick={onClose}>关闭</button>
             </div>
         </div>
@@ -131,7 +131,11 @@ export class CheckinManagerModal extends Modal {
 
     onOpen() {
         this.contentEl.empty();
-        this.modalEl.addClass('checkin-manager-modal-container');
+        this.modalEl.addClass('think-os');
+        this.modalEl.addClass('think-os--modal');
+        this.modalEl.addClass('think-modal-host');
+        this.modalEl.addClass('think-modal-host--large');
+        this.modalEl.addClass('think-checkin-modal-host');
 
         renderModalContent(
             this.contentEl,
@@ -146,21 +150,7 @@ export class CheckinManagerModal extends Modal {
             />
         );
 
-        this.contentEl.createEl('style').textContent = `
-            .checkin-manager-modal-container .modal-content { padding: 0; }
-            .checkin-manager-modal { display: flex; flex-direction: column; height: 100%; }
-            .modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--background-modifier-border); }
-            .modal-content { padding: 16px; flex-grow: 1; }
-            .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--background-modifier-border); }
-            .checkin-details-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; transition: background-color 0.2s ease; }
-            .checkin-details-item:hover { background-color: var(--background-modifier-hover); }
-            .checkin-details-item:last-child { border-bottom: none; }
-            .checkin-item-main { min-width: 0; flex: 1 1 auto; }
-            .checkin-item-content { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .checkin-item-meta { font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .checkin-item-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
-            .checkin-item-delete { color: var(--text-error); }
-        `;
+
     }
 
     onClose() {

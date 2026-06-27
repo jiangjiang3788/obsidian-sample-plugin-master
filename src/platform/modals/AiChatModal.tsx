@@ -35,10 +35,11 @@ export class AiChatModal extends Modal {
 
     async onOpen() {
         this.contentEl.empty();
+        this.modalEl.addClass('think-os');
+        this.modalEl.addClass('think-os--modal');
+        this.modalEl.addClass('think-modal-host');
+        this.modalEl.addClass('think-modal-host--wide');
         this.modalEl.addClass('think-ai-chat-modal');
-        this.modalEl.style.width = '90vw';
-        this.modalEl.style.maxWidth = '1000px';
-        this.modalEl.style.height = '85vh';
 
         // 阻止 Modal 拦截输入事件
         this.keydownStopper = (e: KeyboardEvent) => {

@@ -1,23 +1,59 @@
 /*
- * ===================================================================
- * Think Plugin 全局样式表主入口
- * -------------------------------------------------------------------
- * 此文件通过 @import 引入所有模块化的CSS文件。
- * ===================================================================
+ * Think OS stylesheet entry.
+ *
+ * Tokens stay in a named layer. Host-facing component rules are intentionally
+ * unlayered: Obsidian and community themes are also unlayered author CSS, and
+ * putting every plugin rule in a layer would make host rules win regardless of
+ * specificity. Internal precedence is therefore explicit source order plus
+ * scoped semantic class names; host overrides remain last and narrowly scoped.
  */
 
-@import "../shared/styles/base.css";
-@import "../shared/styles/excel-view-content-md.css";
-@import "../shared/styles/utilities.css";
-@import "../shared/styles/components.css";
-@import "../shared/styles/common-group.css";
-@import "../shared/styles/layout.css";
-@import "../shared/styles/settings.css";
-@import "../shared/styles/timer.css";
-@import "../shared/styles/modals.css";
-@import "../shared/styles/heatmap.css";
-@import "../shared/styles/statistics.css";
-@import "../shared/styles/timeline.css";
-@import "../shared/styles/block-view.css";
-@import "../shared/styles/statistics-view.css";
-@import "../shared/styles/event-timeline.css";
+@layer think.reset,
+       think.tokens,
+       think.foundations,
+       think.primitives,
+       think.components,
+       think.features,
+       think.utilities,
+       think.overrides;
+
+@import "./tokens/semantic.css" layer(think.tokens);
+@import "./tokens/density.css" layer(think.tokens);
+@import "./tokens/data-colors.css" layer(think.tokens);
+
+@import "./foundations/scope.css";
+@import "./foundations/typography.css";
+@import "./foundations/focus.css";
+@import "./foundations/motion.css";
+
+@import "./primitives/button.css";
+@import "./primitives/icon-button.css";
+@import "./primitives/form-control.css";
+@import "./primitives/card.css";
+@import "./primitives/chip.css";
+@import "./primitives/toolbar.css";
+@import "./primitives/tabs.css";
+
+@import "./components/settings-shell.css";
+@import "./components/modal.css";
+@import "./components/simple-select.css";
+@import "./components/native-controls.css";
+@import "./components/task-row.css";
+@import "./components/grouped-container.css";
+
+@import "./features/settings.css";
+@import "./features/settings-editors.css";
+@import "./features/layout-editor.css";
+@import "./features/view-shell.css";
+@import "./features/progress.css";
+@import "./features/heatmap.css";
+@import "./features/statistics.css";
+@import "./features/timeline.css";
+@import "./features/excel.css";
+@import "./features/block.css";
+@import "./features/event-timeline.css";
+@import "./features/task-execution.css";
+
+@import "./overrides/mui.css";
+@import "./overrides/obsidian-modal.css";
+@import "./overrides/quick-input-modal.css";

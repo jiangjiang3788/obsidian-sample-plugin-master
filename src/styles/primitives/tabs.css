@@ -1,0 +1,38 @@
+/* Think OS tabs primitive. */
+.think-os .think-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: var(--think-space-2);
+  min-width: 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--think-border-subtle);
+  scrollbar-width: thin;
+}
+
+.think-os .think-tab {
+  min-height: var(--think-control-height-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--think-space-3);
+  padding: 0 var(--think-space-5);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--think-text-secondary);
+  font: inherit;
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.think-os .think-tab:hover {
+  color: var(--think-text-primary);
+  background: var(--think-bg-hover);
+}
+
+.think-os .think-tab[aria-selected="true"] {
+  border-bottom-color: var(--think-accent);
+  color: var(--think-text-accent);
+}

@@ -1,0 +1,8 @@
+{
+  "files": {
+    "src/styles/overrides/quick-input-modal.css": {
+      "maxOccurrences": 9,
+      "reason": "Reviewed Obsidian host geometry override; restricted to modal shell inset/size/transform properties."
+    }
+  }
+}

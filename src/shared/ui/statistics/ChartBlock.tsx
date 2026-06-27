@@ -122,7 +122,7 @@ export function ChartBlock({
                                     class="sv-vbar-bar" 
                                     style={{ 
                                         height: `${height}%`, 
-                                        backgroundColor: color || '#ccc' 
+                                        backgroundColor: color || 'var(--think-data-neutral)' 
                                     }}
                                 />
                             </div>

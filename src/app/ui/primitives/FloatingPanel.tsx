@@ -437,66 +437,34 @@ export function FloatingPanel({
         ...bodyStyle,
     };
 
-    const resizeHandleBase: JSX.CSSProperties = {
-        position: 'absolute',
-        zIndex: 1,
-    };
 
     const panel = (
         <div ref={rootRef}>
             <Paper
                 elevation={4}
+                className={`think-os think-os--modal think-floating-panel${inline ? ' is-inline' : ''}${mobile ? ' is-mobile' : ''}`}
                 onMouseDown={onPanelPointerDown as any}
                 onTouchStart={onPanelPointerDown as any}
                 style={paperStyle}
             >
                 {showHeader && (
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: mobile ? '10px 12px' : '6px 8px',
-                            borderBottom: '1px solid var(--background-modifier-border)',
-                            gap: 8,
-                            flexShrink: 0,
-                            minWidth: 0,
-                        }}
-                    >
+                    <div className="think-floating-panel__header">
                         <div
                             onMouseDown={onDragStart as any}
                             onTouchStart={onDragStart as any}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                cursor: inline ? 'default' : 'move',
-                                touchAction: inline ? 'auto' : 'none',
-                                userSelect: 'none',
-                                flex: 1,
-                                minWidth: 0,
-                                minHeight: mobile ? '44px' : undefined,
-                            }}
+                            className="think-floating-panel__drag-region"
                         >
-                            {!inline && <div style={{ display: 'inline-flex', alignItems: 'center', padding: mobile ? '4px' : undefined }}>
-                                <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: mobile ? '1.4rem' : '1.2rem' }} />
+                            {!inline && <div className="think-floating-panel__drag-icon">
+                                <DragIndicatorIcon fontSize="inherit" />
                             </div>}
                             {title && (
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap',
-                                        fontWeight: 600,
-                                        fontSize: mobile ? '0.95rem' : undefined,
-                                    }}
-                                >
+                                <div className="think-floating-panel__title">
                                     {title}
                                 </div>
                             )}
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 8 : 4, flexShrink: 0 }}>
+                        <div className="think-floating-panel__actions">
                             {headerActions}
                             {onClose && (
                                 <button
@@ -504,16 +472,7 @@ export function FloatingPanel({
                                         e.stopPropagation();
                                         onClose();
                                     }}
-                                    style={{
-                                        background: 'transparent',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        fontSize: mobile ? 24 : 18,
-                                        lineHeight: 1,
-                                        padding: mobile ? '4px 8px' : undefined,
-                                        minWidth: mobile ? '44px' : undefined,
-                                        minHeight: mobile ? '44px' : undefined,
-                                    }}
+                                    className="think-floating-panel__close"
                                     aria-label="Close"
                                 >
                                     ×
@@ -523,49 +482,24 @@ export function FloatingPanel({
                     </div>
                 )}
 
-                <div style={bodyMergedStyle}>{children}</div>
+                <div className="think-floating-panel__body" style={bodyMergedStyle}>{children}</div>
 
                 {resizable && !mobile && !inline && (
                     <>
                         <div
                             onMouseDown={onResizeStart('right') as any}
                             onTouchStart={onResizeStart('right') as any}
-                            style={{
-                                ...resizeHandleBase,
-                                top: 0,
-                                right: 0,
-                                width: '10px',
-                                height: '100%',
-                                cursor: 'ew-resize',
-                                touchAction: 'none',
-                            }}
+                            className="think-floating-panel__resize think-floating-panel__resize--right"
                         />
                         <div
                             onMouseDown={onResizeStart('bottom') as any}
                             onTouchStart={onResizeStart('bottom') as any}
-                            style={{
-                                ...resizeHandleBase,
-                                left: 0,
-                                bottom: 0,
-                                width: '100%',
-                                height: '10px',
-                                cursor: 'ns-resize',
-                                touchAction: 'none',
-                            }}
+                            className="think-floating-panel__resize think-floating-panel__resize--bottom"
                         />
                         <div
                             onMouseDown={onResizeStart('corner') as any}
                             onTouchStart={onResizeStart('corner') as any}
-                            style={{
-                                ...resizeHandleBase,
-                                right: 0,
-                                bottom: 0,
-                                width: '18px',
-                                height: '18px',
-                                cursor: 'nwse-resize',
-                                touchAction: 'none',
-                                background: 'linear-gradient(135deg, transparent 0 45%, var(--text-faint) 45% 55%, transparent 55% 100%)',
-                            }}
+                            className="think-floating-panel__resize think-floating-panel__resize--corner"
                         />
                     </>
                 )}
@@ -573,26 +507,9 @@ export function FloatingPanel({
                     <div
                         onMouseDown={onResizeStart('bottom') as any}
                         onTouchStart={onResizeStart('bottom') as any}
-                        style={{
-                            ...resizeHandleBase,
-                            left: 0,
-                            bottom: 0,
-                            width: '100%',
-                            height: '24px',
-                            cursor: 'ns-resize',
-                                touchAction: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
+                        className="think-floating-panel__resize think-floating-panel__resize--mobile"
                     >
-                        <div style={{
-                            width: '36px',
-                            height: '4px',
-                            borderRadius: '2px',
-                            background: 'var(--text-faint)',
-                            opacity: 0.5,
-                        }} />
+                        <div className="think-floating-panel__resize-grip" />
                     </div>
                 )}
             </Paper>

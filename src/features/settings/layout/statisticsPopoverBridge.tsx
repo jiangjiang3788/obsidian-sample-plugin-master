@@ -29,7 +29,7 @@ export const openStatisticsPopover: OpenStatisticsPopoverHandler = (request) => 
       bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
       onClose={request.onClose}
       headerActions={(
-        <div class="flex items-center gap-1">
+        <div class="sv-popover-heading">
           <Tooltip title="导出为 Markdown" PopperProps={{ disablePortal: true }}>
             <AnyIconButton
               size="small"

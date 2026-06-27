@@ -248,7 +248,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
   const useFreeformCanvas = isFreeform && !compactFreeformFallback;
 
   return (
-    <div>
+    <div class="think-os think-os--layout">
       <ViewToolbar
         currentView={layoutView}
         currentDate={layoutDate}

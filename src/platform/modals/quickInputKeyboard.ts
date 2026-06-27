@@ -78,8 +78,8 @@ export function setupQuickInputKeyboardDetection(host: KeyboardDetectionHost): (
     const detected = heightDiff > keyboardActivationThreshold && hasFocusedInput;
     const suspected = hasFocusedInput;
 
-    modalEl.classList.toggle('keyboard-detected', detected);
-    modalEl.classList.toggle('keyboard-suspected', suspected);
+    modalEl.classList.toggle('think-quick-input-keyboard-detected', detected);
+    modalEl.classList.toggle('think-quick-input-keyboard-suspected', suspected);
 
     if (detected) {
       setKeyboardHeight(heightDiff);
@@ -177,7 +177,7 @@ export function setupQuickInputKeyboardDetection(host: KeyboardDetectionHost): (
     modalEl.style.removeProperty('--keyboard-height');
     modalEl.style.removeProperty('--keyboard-accessory-inset');
     modalEl.style.removeProperty('--keyboard-offset');
-    modalEl.classList.remove('keyboard-detected');
-    modalEl.classList.remove('keyboard-suspected');
+    modalEl.classList.remove('think-quick-input-keyboard-detected');
+    modalEl.classList.remove('think-quick-input-keyboard-suspected');
   };
 }

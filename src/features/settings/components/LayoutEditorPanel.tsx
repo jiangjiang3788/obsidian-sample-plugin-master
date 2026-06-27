@@ -42,11 +42,9 @@ const DISPLAY_MODE_OPTIONS = [
   { value: 'freeform', label: '自由布局' },
 ];
 
-const LABEL_WIDTH = '80px';
-
 const AlignedRadioGroup = ({ label, options, selectedValue, onChange }: any) => (
-  <Stack direction="row" alignItems="center" spacing={2}>
-    <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>{label}</Typography>
+  <Stack direction="row" alignItems="center" spacing={2} className="think-settings-row">
+    <Typography className="think-settings-row__label">{label}</Typography>
     <MuiRadioGroup row value={selectedValue} onChange={(e) => onChange((e.target as HTMLInputElement).value)}>
       {options.map((opt: any) => (
         <FormControlLabel key={opt.value} value={opt.value} control={<Radio size="small" />} label={opt.label} />
@@ -212,11 +210,11 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
   }, [contextMenu, moveView, handleContextMenuClose]);
 
   if (!layout) {
-    return <div style={{ padding: 12 }}>未找到布局（可能已被删除）。</div>;
+    return <div className="think-settings-section">未找到布局（可能已被删除）。</div>;
   }
 
   return (
-    <Stack spacing={2} sx={{ p: '8px 16px 16px 16px', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+    <Stack spacing={2} className="think-layout-editor">
       <TextField
         label="布局名称"
         value={layout.name || ''}
@@ -225,8 +223,8 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
         fullWidth
       />
 
-      <Stack direction="row" alignItems="center" spacing={2}>
-        <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>工具栏</Typography>
+      <Stack direction="row" alignItems="center" spacing={2} className="think-settings-row">
+        <Typography className="think-settings-row__label">工具栏</Typography>
         <FormControlLabel
           control={
             <Checkbox
@@ -236,12 +234,12 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
             />
           }
           label={<Typography noWrap>显示工具栏/导航器</Typography>}
-          sx={{ flexShrink: 0, mr: 0 }}
+          className="think-settings-control-no-shrink"
         />
       </Stack>
 
-      <Stack direction="row" alignItems="center" spacing={2}>
-        <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>初始日期</Typography>
+      <Stack direction="row" alignItems="center" spacing={2} className="think-settings-row">
+        <Typography className="think-settings-row__label">初始日期</Typography>
         <TextField
           type="date"
           size="small"
@@ -249,7 +247,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
           disabled={!!layout.initialDateFollowsNow}
           value={layout.initialDate || ''}
           onChange={(e) => handleUpdate({ initialDate: (e.target as HTMLInputElement).value })}
-          sx={{ width: '170px' }}
+          className="think-settings-field--date"
         />
         <FormControlLabel
           control={
@@ -278,7 +276,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
       />
 
       {layout.displayMode === 'grid' && (
-        <Stack direction="row" alignItems="center" spacing={2} sx={{ pl: `calc(${LABEL_WIDTH} + 16px)` }}>
+        <Stack direction="row" alignItems="center" spacing={2} className="think-settings-indent">
           <TextField
             label="列数"
             type="number"
@@ -288,7 +286,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
             onChange={(e) =>
               handleUpdate({ gridConfig: { columns: parseInt((e.target as HTMLInputElement).value, 10) || 2 } })
             }
-            sx={{ width: '100px' }}
+            className="think-settings-field--xs"
           />
         </Stack>
       )}
@@ -312,7 +310,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
               });
             }}
           />
-          <Stack spacing={1} sx={{ pl: `calc(${LABEL_WIDTH} + 16px)` }}>
+          <Stack spacing={1} className="think-settings-indent">
           <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap" useFlexGap>
             <FormControlLabel
               control={
@@ -340,7 +338,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
                   gridSize: Math.max(4, parseInt((e.target as HTMLInputElement).value, 10) || 16),
                 },
               })}
-              sx={{ width: 110 }}
+              className="think-settings-field--sm"
             />
             <TextField
               label="最小宽度"
@@ -353,7 +351,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
                   minItemWidth: Math.max(160, parseInt((e.target as HTMLInputElement).value, 10) || 280),
                 },
               })}
-              sx={{ width: 120 }}
+              className="think-settings-field--sm"
             />
             <TextField
               label="最小高度"
@@ -366,7 +364,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
                   minItemHeight: Math.max(120, parseInt((e.target as HTMLInputElement).value, 10) || 180),
                 },
               })}
-              sx={{ width: 120 }}
+              className="think-settings-field--sm"
             />
             <TextField
               label="画布最小宽度"
@@ -379,7 +377,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
                   minCanvasWidth: Math.max(320, parseInt((e.target as HTMLInputElement).value, 10) || 720),
                 },
               })}
-              sx={{ width: 145 }}
+              className="think-settings-field--md"
             />
             <Button
               size="small"
@@ -400,33 +398,24 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
         </Stack>
       )}
 
-      <Stack direction="row" alignItems="flex-start" spacing={2} sx={{ minWidth: 0 }}>
-        <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500, pt: '6px' }}>包含视图</Typography>
+      <Stack direction="row" alignItems="flex-start" spacing={2} className="think-settings-row think-settings-row--top">
+        <Typography className="think-settings-row__label think-settings-row__label--top">包含视图</Typography>
 
-        <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', minHeight: 32 }}>
+        <Stack spacing={1} className="think-settings-row__body">
+          <Box className="think-layout-editor__views">
             {selectedViews.map((view, index) =>
               view ? (
                 <Box
                   key={view.id}
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 0.25,
-                    px: 0.25,
-                    py: 0.25,
-                    borderRadius: 1,
-                    background: 'var(--background-secondary)',
-                    maxWidth: '100%',
-                  }}
+                  className="think-layout-editor__view-item"
                 >
                   <IconAction
                     label="前移"
-                    icon={<ArrowBackIosNewIcon sx={{ fontSize: '0.85rem' }} />}
+                    icon={<ArrowBackIosNewIcon className="think-layout-editor__move-icon" />}
                     size="small"
                     disabled={index === 0}
                     onClick={() => moveView(view.id, -1)}
-                    sx={{ p: '2px' }}
+                    className="think-layout-editor__move-action"
                     stopPropagation={false}
                   />
 
@@ -436,17 +425,17 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
                       onClick={() => removeViewFromLayout(view.id)}
                       onContextMenu={(e) => handleChipRightClick(e as any, view)}
                       size="small"
-                      sx={{ cursor: 'pointer', maxWidth: 240 }}
+                      className="think-layout-editor__view-chip"
                     />
                   </Tooltip>
 
                   <IconAction
                     label="后移"
-                    icon={<ArrowForwardIosIcon sx={{ fontSize: '0.85rem' }} />}
+                    icon={<ArrowForwardIosIcon className="think-layout-editor__move-icon" />}
                     size="small"
                     disabled={index === selectedViews.length - 1}
                     onClick={() => moveView(view.id, 1)}
-                    sx={{ p: '2px' }}
+                    className="think-layout-editor__move-action"
                     stopPropagation={false}
                   />
                 </Box>
@@ -486,7 +475,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
                 }}
               />
             )}
-            sx={{ minWidth: 240, maxWidth: 520 }}
+            className="think-settings-search"
             size="small"
             disablePortal
             slotProps={{ popper: { style: { zIndex: 20000 } } } as any}
@@ -496,20 +485,16 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
 
       {contextMenu && (
         <div
+          className="think-layout-editor__context-menu"
           style={{
             position: 'fixed',
             top: contextMenu.mouseY,
             left: contextMenu.mouseX,
-            background: 'var(--background-primary)',
-            border: '1px solid var(--background-modifier-border)',
-            borderRadius: 8,
-            padding: 8,
             zIndex: 99999,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
           }}
           onMouseLeave={handleContextMenuClose}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 160 }}>
+          <div className="think-layout-editor__context-actions">
             <button className="mod-cta" onClick={handleViewSettings}>
               设置…
             </button>

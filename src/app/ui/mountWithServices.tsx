@@ -18,6 +18,7 @@ import { render, unmountComponentAtNode } from 'preact/compat';
 import { ServicesProvider } from '../AppStoreContext';
 import { createServices } from '../createServices';
 import type { Services } from '../services.types';
+import { ThinkMuiThemeProvider } from '@shared/public';
 
 export interface MountWithServicesResult {
   services: Services;
@@ -39,7 +40,7 @@ export function mountWithServices(
   const finalServices = services ?? createServices();
 
   render(
-    <ServicesProvider services={finalServices}>{children}</ServicesProvider>,
+    <ThinkMuiThemeProvider><ServicesProvider services={finalServices}>{children}</ServicesProvider></ThinkMuiThemeProvider>,
     containerEl
   );
 

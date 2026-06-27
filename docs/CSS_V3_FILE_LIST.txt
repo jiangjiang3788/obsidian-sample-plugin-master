@@ -1,0 +1,51 @@
+Think OS CSS V3 incremental file list
+
+Added files: 9
+Modified files: 30
+Deleted files: 0
+Package files (including this list): 40
+
+Apply after: Freeform V1-V4, CSS V1, CSS V2
+Extract to the project root and overwrite matching paths.
+
+[FILES]
+CSS_V3_FILE_LIST.txt
+CSS_V3_NOTES.md
+docs/CSS_MIGRATION_GUIDE.md
+reports/css/css-audit-current.json
+scripts/gates/css-boundary-gate.mjs
+src/app/ui/primitives/FloatingPanel.tsx
+src/features/settings/components/LayoutEditorPanel.tsx
+src/features/settings/data/ThemeMetadataManager.tsx
+src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx
+src/features/settings/input/BlockManager.tsx
+src/features/settings/input/FieldsEditor.tsx
+src/features/settings/input/fieldsEditor/FieldRow.tsx
+src/features/settings/input/fieldsEditor/nativeControls.tsx
+src/features/settings/tabs/AiSettings.tsx
+src/features/settings/tabs/DataManagementSettings.tsx
+src/features/settings/tabs/GeneralSettings.tsx
+src/features/settings/tabs/InputSettings.tsx
+src/features/settings/tabs/LayoutSettings.tsx
+src/features/settings/viewEditors/RuleBuilder.tsx
+src/features/settings/viewEditors/StatisticsViewEditor.tsx
+src/platform/modals/AiBatchConfirmModal.tsx
+src/platform/modals/AiChatModal.tsx
+src/platform/modals/AiTextPromptModal.tsx
+src/platform/modals/CheckinManagerModal.tsx
+src/platform/modals/NamePromptModal.tsx
+src/platform/modals/QuickInputModal.tsx
+src/shared/styles/settings.css
+src/shared/styles/statistics.css
+src/shared/ui/composites/SimpleSelect.tsx
+src/shared/ui/primitives/Modal.tsx
+src/styles/components/modal.css
+src/styles/components/native-controls.css
+src/styles/components/settings-shell.css
+src/styles/components/simple-select.css
+src/styles/features/layout-editor.css
+src/styles/features/settings-editors.css
+src/styles/features/settings.css
+src/styles/main.css
+src/styles/overrides/obsidian-modal.css
+test/unit/cssV3Governance.test.ts

@@ -89,15 +89,15 @@
         "pattern": "src/features/settings/InputSettings"
       },
       {
-        "file": "doc/_资源/页面内容索引.js",
+        "file": "文档/_资源/页面内容索引.js",
         "pattern": "src/features/settings/LayoutRenderer"
       },
       {
-        "file": "doc/_归档/2026-05-技术债收尾/迁移与重复页面/当前代码架构快照.html",
+        "file": "文档/_归档/2026-05-技术债收尾/迁移与重复页面/当前代码架构快照.html",
         "pattern": "src/features/settings/FieldsEditor"
       },
       {
-        "file": "doc/01-项目管理/00-计划与路线/开发计划/03-2026-05-全局数据筛选与架构分层计划.html",
+        "file": "文档/01-项目管理/00-计划与路线/开发计划/03-2026-05-全局数据筛选与架构分层计划.html",
         "pattern": "src/features/settings/LayoutRenderer"
       }
     ]
@@ -109,7 +109,7 @@
   "notes": [
     "本步骤只删除已确认未被 src 内 import 使用的旧路径文件。",
     "分类目录保留路径包括 tabs/input/theme/layout/viewEditors。",
-    "doc/_资源/页面内容索引.js 属于生成缓存；未使用 jsdom 重新生成，避免引入缺失依赖导致失败。"
+    "文档/_资源/页面内容索引.js 属于生成缓存；未使用 jsdom 重新生成，避免引入缺失依赖导致失败。"
   ],
   "sourceLegacyReferenceScan": {
     "count": 0,

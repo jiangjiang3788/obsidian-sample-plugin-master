@@ -1,0 +1,41 @@
+/* Think OS spacing and density tokens. */
+.think-os {
+  --think-space-0: 0;
+  --think-space-1: 2px;
+  --think-space-2: 4px;
+  --think-space-3: 6px;
+  --think-space-4: 8px;
+  --think-space-5: 12px;
+  --think-space-6: 16px;
+  --think-space-7: 24px;
+  --think-space-8: 32px;
+
+  --think-control-height-sm: 28px;
+  --think-control-height-md: 32px;
+  --think-control-height-lg: 36px;
+  --think-touch-target: 40px;
+
+  --think-icon-size-sm: 14px;
+  --think-icon-size-md: 16px;
+  --think-icon-size-lg: 18px;
+
+  --think-content-width-sm: 560px;
+  --think-content-width-md: 840px;
+  --think-content-width-lg: 1120px;
+  --think-content-width-xl: 1320px;
+}
+
+.think-os[data-think-density="compact"] {
+  --think-control-height-md: 28px;
+  --think-control-height-lg: 32px;
+  --think-space-5: 10px;
+  --think-space-6: 14px;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .think-os {
+    --think-control-height-sm: 36px;
+    --think-control-height-md: 40px;
+    --think-control-height-lg: 44px;
+  }
+}

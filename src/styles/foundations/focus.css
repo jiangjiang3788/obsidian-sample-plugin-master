@@ -1,0 +1,39 @@
+/* A single keyboard-focus contract. Mouse focus is intentionally not forced. */
+.think-os :where(
+  button,
+  [role="button"],
+  a[href],
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
+  outline-offset: var(--think-focus-ring-offset);
+}
+
+.think-os :where(
+  button,
+  [role="button"],
+  a[href],
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex="-1"])
+):focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (forced-colors: active) {
+  .think-os :where(
+    button,
+    [role="button"],
+    a[href],
+    input,
+    select,
+    textarea,
+    [tabindex]:not([tabindex="-1"])
+  ):focus-visible {
+    outline-color: Highlight;
+  }
+}

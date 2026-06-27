@@ -1,0 +1,33 @@
+/* Minimal, plugin-scoped normalization. Existing feature CSS remains untouched in V1. */
+.think-os,
+.think-os *,
+.think-os *::before,
+.think-os *::after {
+  box-sizing: border-box;
+}
+
+.think-os {
+  min-width: 0;
+  color: var(--think-text-primary);
+  font-family: var(--think-font-interface);
+  line-height: var(--think-line-height-normal);
+  text-rendering: optimizeLegibility;
+}
+
+.think-os--settings,
+.think-os--layout,
+.think-os--modal {
+  isolation: isolate;
+}
+
+.think-os :where(img, svg, canvas, video) {
+  max-width: 100%;
+}
+
+.think-os :where(button, input, select, textarea) {
+  font: inherit;
+}
+
+.think-os :where([hidden]) {
+  display: none;
+}

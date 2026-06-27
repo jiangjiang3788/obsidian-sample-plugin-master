@@ -60,11 +60,12 @@ export class AiBatchConfirmModal extends Modal {
 
   onOpen() {
     this.contentEl.empty();
+    this.modalEl.addClass('think-os');
+    this.modalEl.addClass('think-os--modal');
+    this.modalEl.addClass('think-modal-host');
+    this.modalEl.addClass('think-modal-host--large');
     this.modalEl.addClass('think-ai-batch-confirm-modal');
     this.cleanupBackdropCloseGuard = installBackdropCloseGuard(this);
-    this.modalEl.style.width = '90vw';
-    this.modalEl.style.maxWidth = '900px';
-    this.modalEl.style.height = '80vh';
 
     mountWithServices(
       this.contentEl,

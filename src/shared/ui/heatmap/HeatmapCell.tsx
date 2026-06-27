@@ -81,7 +81,7 @@ export function HeatmapCell({
             const imageUrl = resolveResourcePath?.(visualValue) || visualValue;
             cellContent = (
                 <div class="cell-with-image">
-                    <img src={imageUrl} alt="" class="w-full h-full object-cover" />
+                    <img src={imageUrl} alt="" class="heatmap-cell-image" />
                 </div>
             );
         } else {

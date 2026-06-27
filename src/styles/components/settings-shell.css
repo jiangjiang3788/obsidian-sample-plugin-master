@@ -1,0 +1,66 @@
+/* Settings roots migrated in V2 to remove static sx skin from the providers. */
+.think-os.think-setting-root {
+  width: 100%;
+  color: var(--think-text-primary);
+  background: var(--think-bg-canvas);
+}
+
+.think-os.think-setting-root--workspace {
+  max-width: var(--think-content-width-xl);
+  margin-inline: auto;
+}
+
+.think-os .think-settings-tabs {
+  position: sticky;
+  top: 0;
+  z-index: var(--think-z-sticky);
+  background: var(--think-bg-canvas);
+}
+
+.think-os .think-settings-panel {
+  padding: var(--think-space-7) var(--think-space-6) var(--think-space-6);
+}
+
+.think-os.think-setting-root--launcher {
+  max-width: 760px;
+  padding: var(--think-space-6);
+}
+
+.think-os .think-settings-launcher__title {
+  margin: 0 0 var(--think-space-4);
+  font-size: var(--think-font-size-xl);
+  font-weight: var(--think-font-weight-bold);
+}
+
+.think-os .think-settings-launcher__description {
+  margin: 0 0 var(--think-space-6);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  line-height: var(--think-line-height-relaxed);
+}
+
+.think-os .think-settings-launcher__hint {
+  display: block;
+  margin-top: var(--think-space-5);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+
+/* V3: Settings features may use container queries without depending on the viewport. */
+.think-os.think-setting-root {
+  container-name: think-settings;
+  container-type: inline-size;
+}
+
+.think-settings-workspace-view {
+  overflow: auto;
+  padding: var(--think-space-5) var(--think-space-6) var(--think-space-8);
+}
+
+.think-setting-root--workspace {
+  min-height: calc(100vh - 96px);
+}
+
+.think-setting-root--workspace .MuiTabs-scroller {
+  overflow-x: auto;
+}

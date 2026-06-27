@@ -69,6 +69,9 @@ export class QuickInputModal extends Modal {
     }
     QuickInputModal.activeModal = this;
     this.contentEl.empty();
+    this.modalEl.addClass('think-os');
+    this.modalEl.addClass('think-os--modal');
+    this.modalEl.addClass('think-modal-host');
     this.modalEl.addClass('think-quick-input-modal');
     const mobileLike = isMobileLikeEnvironment();
     this.modalEl.toggleClass('think-quick-input-modal--mobile', mobileLike);

@@ -121,6 +121,10 @@ export class AiTextPromptModal extends Modal {
 
     onOpen() {
         this.contentEl.empty();
+        this.modalEl.addClass('think-os');
+        this.modalEl.addClass('think-os--modal');
+        this.modalEl.addClass('think-modal-host');
+        this.modalEl.addClass('think-modal-host--medium');
         this.modalEl.addClass('think-ai-prompt-modal');
         this.cleanupBackdropCloseGuard = installBackdropCloseGuard(this);
         this.renderContent();

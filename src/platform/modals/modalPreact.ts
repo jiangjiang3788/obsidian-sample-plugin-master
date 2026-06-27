@@ -1,13 +1,15 @@
 // src/platform/modals/modalPreact.ts
-import type { ComponentChildren } from 'preact';
+import { h, type ComponentChildren } from 'preact';
 import { render, unmountComponentAtNode } from 'preact/compat';
+import { ThinkMuiThemeProvider } from '@shared/public';
 
 /**
  * Small local wrapper for Preact content mounted inside Obsidian Modal contentEl.
- * Keeps direct compat render/unmount calls out of individual modal classes.
+ * Keeps direct compat render/unmount calls out of individual modal classes and
+ * guarantees that every modal consumes the Think OS MUI bridge.
  */
 export function renderModalContent(containerEl: HTMLElement, children: ComponentChildren): void {
-  render(children, containerEl);
+  render(h(ThinkMuiThemeProvider, null, children), containerEl);
 }
 
 export function unmountModalContent(containerEl: HTMLElement): void {

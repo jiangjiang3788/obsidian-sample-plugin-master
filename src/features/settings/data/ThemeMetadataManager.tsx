@@ -42,7 +42,7 @@ function inheritedIconInfo(themes: Array<{ path: string; icon?: string }>, path:
 
 function ThemeCard({ children }: { children: any }) {
   return (
-    <Box sx={{ border: '1px solid var(--background-modifier-border)', borderRadius: 2, p: 1.5, display: 'grid', gap: 1 }}>
+    <Box className="think-editor-card">
       {children}
     </Box>
   );
@@ -111,7 +111,7 @@ export function ThemeMetadataManager() {
   };
 
   return (
-    <Box sx={{ maxWidth: 1040, mx: 'auto', display: 'grid', gap: 2 }}>
+    <Box className="think-theme-metadata">
       <Box>
         <Typography variant="h6">主题管理</Typography>
         <Typography variant="body2" color="text.secondary">
@@ -119,7 +119,7 @@ export function ThemeMetadataManager() {
         </Typography>
       </Box>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+      <Box className="think-theme-metadata__preview">
         <Chip size="small" label={`主题 ${themes.length}`} />
         <Chip size="small" label="模板主链：目标 × 记录类型" color="primary" />
       </Box>
@@ -127,11 +127,11 @@ export function ThemeMetadataManager() {
       {message && <Alert severity="info" onClose={() => setMessage('')}>{message}</Alert>}
 
       <ThemeCard>
-        <Typography sx={{ fontWeight: 700 }}>主题图标继承预览</Typography>
+        <Typography className="think-settings-label-strong">主题图标继承预览</Typography>
         <Typography variant="body2" color="text.secondary">
           目标绑定更深层主题时，图标会从当前主题或最近的父主题继承；模板仍然保留原始 themePath。
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+        <Box className="think-theme-metadata__preview">
           <Chip size="small" label={`预览路径：${previewThemePath || '未选择'}`} />
           <Chip size="small" label={`渲染图标：${previewMetadata.icon || previewIconInfo.icon || '🎯'}`} color={(previewMetadata.icon || previewIconInfo.icon) ? 'primary' : 'default'} />
           <Chip size="small" label={`图标来源：${previewIconInfo.sourcePath || '默认'}`} />
@@ -139,9 +139,9 @@ export function ThemeMetadataManager() {
       </ThemeCard>
 
       <ThemeCard>
-        <Typography sx={{ fontWeight: 700 }}>新增 / 更新主题元数据</Typography>
+        <Typography className="think-settings-label-strong">新增 / 更新主题元数据</Typography>
         <Typography variant="body2" color="text.secondary">如果路径已存在，会更新图标；不会创建或修改任何主题模板 override。</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 1fr) 110px auto', gap: 1, alignItems: 'center' }}>
+        <Box className="think-editor-grid think-editor-grid--metadata">
           <TextField size="small" label="主题路径" value={path} onChange={(event: any) => setPath(event.target.value)} placeholder="例如：电脑/记录系统" />
           <TextField size="small" label="图标" value={icon} onChange={(event: any) => setIcon(event.target.value)} placeholder="🎯" />
           <Button variant="contained" onClick={handleAddTheme} disabled={!path.trim()}>保存主题</Button>
@@ -149,25 +149,18 @@ export function ThemeMetadataManager() {
       </ThemeCard>
 
       <ThemeCard>
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr minmax(180px, 280px)', gap: 1, alignItems: 'center' }}>
+        <Box className="think-editor-grid think-editor-grid--list-toolbar">
           <Box>
-            <Typography sx={{ fontWeight: 700 }}>主题列表</Typography>
+            <Typography className="think-settings-label-strong">主题列表</Typography>
             <Typography variant="body2" color="text.secondary">在这里维护图标和路径。需要修改目标专属写法时请到“数据管理 → 目标 → 记录预设”。</Typography>
           </Box>
           <TextField size="small" label="搜索主题" value={query} onChange={(event: any) => setQuery(event.target.value)} />
         </Box>
-        <Box sx={{ display: 'grid', gap: 0.75 }}>
+        <Box className="think-theme-metadata__entries">
           {sortedThemes.length ? sortedThemes.map((theme) => (
             <Box
               key={theme.id}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: '56px minmax(220px, 1fr) 110px minmax(150px, 1fr) 120px auto',
-                gap: 1,
-                alignItems: 'center',
-                borderTop: '1px solid var(--background-modifier-border-hover)',
-                pt: 0.75,
-              }}
+              className="think-theme-metadata__entry"
             >
               <TextField size="small" label="图标" value={theme.icon || ''} onChange={(event: any) => updateThemeIcon(theme.id, event.target.value)} />
               <TextField size="small" label={parent(theme.path) ? `父级：${parent(theme.path)}` : '根主题'} value={theme.path || ''} onChange={(event: any) => updateThemePath(theme.id, event.target.value)} />

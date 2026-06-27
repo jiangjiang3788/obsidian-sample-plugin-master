@@ -35,13 +35,13 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
 
     return (
         <div ref={setNodeRef} style={style}>
-            <Accordion expanded={openId === block.id} onChange={() => setOpenId(openId === block.id ? null : block.id)} disableGutters elevation={1} sx={{ '&:before': { display: 'none' } }}>
+            <Accordion expanded={openId === block.id} onChange={() => setOpenId(openId === block.id ? null : block.id)} disableGutters elevation={1} className="think-block-accordion">
                 <AccordionSummary>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <Box className="think-block-accordion__summary">
                         <Stack direction="row" alignItems="center" spacing={0.5}>
                             <Tooltip title="拖动排序">
-                                <Box component="span" {...(attributes as any)} {...(listeners as any)} sx={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}>
-                                    <DragIndicatorIcon sx={{ color: 'text.disabled' }} />
+                                <Box component="span" {...(attributes as any)} {...(listeners as any)} className="think-block-accordion__drag">
+                                    <DragIndicatorIcon />
                                 </Box>
                             </Tooltip>
                             <Typography fontWeight={500}>{block.name}</Typography>
@@ -49,11 +49,11 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
                         <Stack direction="row" alignItems="center" spacing={0.5}>
                             {/* P1: 通过 UseCase 层复制记录类型 */}
                             <IconAction label="复制" icon={<ContentCopyIcon fontSize="small" />} onClick={() => handleDuplicate(block.id)} />
-                            <IconAction label="删除" icon={<DeleteForeverOutlinedIcon />} onClick={() => handleDelete(block.id, block.name)} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }} />
+                            <IconAction label="删除" icon={<DeleteForeverOutlinedIcon />} onClick={() => handleDelete(block.id, block.name)} color="error" />
                         </Stack>
                     </Box>
                 </AccordionSummary>
-                <AccordionDetails sx={{ bgcolor: 'action.hover', borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                <AccordionDetails className="think-block-accordion__details">
                     {/* P1: 传递 useCases */}
                     <BlockEditor block={block} useCases={useCases} />
                 </AccordionDetails>
@@ -72,16 +72,16 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
         if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] });
     };
     return (
-        <Stack spacing={3}>
-            <TextField label="记录类型名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" sx={{ maxWidth: 400 }} />
+        <Stack spacing={3} className="think-block-editor">
+            <TextField label="记录类型名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" className="think-block-editor__field--name" />
             <Divider />
             <Box>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>核心元数据</Typography>
-                <Box sx={{ p: 1.5, mb: 1.5, border: '1px solid rgba(0,0,0,0.12)', borderRadius: 1, bgcolor: 'background.default' }}>
+                <Typography variant="h6" className="think-block-editor__title">核心元数据</Typography>
+                <Box className="think-block-editor__hint">
                     <Typography variant="body2" color="text.secondary">
                         记录类型是一类记录模板；分类、主题、标签是核心字段。
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75, fontFamily: 'monospace' }}>
+                    <Typography variant="caption" color="text.secondary" className="think-block-editor__template-example">
                         推荐模板行：分类:: {'{{categoryKey}}'} ｜ 主题:: {'{{themePath}}'} ｜ 标签:: {'{{tags}}'}
                     </Typography>
                 </Box>
@@ -94,12 +94,12 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
                     helperText="默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。"
                     variant="outlined"
                     size="small"
-                    sx={{ maxWidth: 520 }}
+                    className="think-block-editor__field--category"
                 />
             </Box>
             <Divider />
             <Box>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>保存位置</Typography>
+                <Typography variant="h6" className="think-block-editor__title">保存位置</Typography>
                 <Stack spacing={2}>
                     <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{themePath}}/{{标题.value}}.md" variant="outlined" size="small" />
                     <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader || ''} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{themePath}}" variant="outlined" size="small" />
@@ -107,16 +107,16 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
             </Box>
             <Divider />
             <Box>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1.5 }}>表单字段</Typography>
+                <Typography variant="h6" className="think-block-editor__title think-block-editor__title--spacious">表单字段</Typography>
                 <FieldsEditor fields={localBlock.fields} onChange={(newFields) => handleUpdate({ fields: newFields })} />
             </Box>
             <Divider />
             <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                    <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出模板</Typography>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" className="think-block-editor__output-header">
+                    <Typography variant="h6" className="think-block-editor__title">输出模板</Typography>
                     <TemplateVariableCopier block={localBlock} />
                 </Stack>
-                <TextField label="输出模板" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }} />
+                <TextField label="输出模板" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" className="think-block-editor__template" />
             </Box>
         </Stack>
     );
@@ -172,12 +172,12 @@ export function BlockManager() {
     };
 
     return (
-        <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+        <Box className="think-block-manager">
+            <Stack direction="row" alignItems="center" spacing={1} className="think-block-manager__header">
                 <Typography variant="h6">记录类型</Typography>
                 <IconAction label="新增记录类型" onClick={handleAdd} color="success" icon={<AddCircleOutlineIcon />} />
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{mb: 1.5}}>定义快速输入可选择的记录类型，例如任务、打卡、总结。可拖动排序。</Typography>
+            <Typography variant="body2" color="text.secondary" className="think-block-manager__description">定义快速输入可选择的记录类型，例如任务、打卡、总结。可拖动排序。</Typography>
             
             <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>

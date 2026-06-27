@@ -1,0 +1,98 @@
+/* Think OS chip, tag and badge primitives. */
+.think-os .think-chip,
+.think-os .think-tag,
+.think-os .think-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  border-radius: var(--think-radius-pill);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.think-os .think-chip {
+  min-height: 26px;
+  gap: var(--think-space-2);
+  padding: 0 var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  background: var(--think-bg-surface-1);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  cursor: default;
+}
+
+.think-os button.think-chip {
+  cursor: pointer;
+}
+
+.think-os .think-chip:hover:not(:disabled) {
+  border-color: var(--think-border-strong);
+  background: var(--think-bg-hover);
+  color: var(--think-text-primary);
+}
+
+.think-os .think-chip--selected,
+.think-os .think-chip[aria-pressed="true"] {
+  border-color: var(--think-accent);
+  background: var(--think-accent-muted);
+  color: var(--think-text-accent);
+}
+
+.think-os .think-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.think-os .think-chip__remove {
+  width: 18px;
+  height: 18px;
+  margin-inline-end: -3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--think-radius-pill);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.think-os .think-chip__remove:hover {
+  background: var(--think-bg-active);
+}
+
+.think-os .think-tag {
+  min-height: 23px;
+  padding: 0 var(--think-space-4);
+  background: var(--think-bg-surface-2);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+
+.think-os .think-badge {
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0 var(--think-space-3);
+  background: var(--think-accent-muted);
+  color: var(--think-text-accent);
+  font-size: var(--think-font-size-2xs);
+  font-weight: var(--think-font-weight-semibold);
+}
+
+.think-os .think-chip__label {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

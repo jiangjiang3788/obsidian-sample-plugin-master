@@ -68,6 +68,7 @@ export const ListItemText = Mui.ListItemText as AnyMuiComponent;
 export const ThemeProvider = Mui.ThemeProvider as AnyMuiComponent;
 
 export const CssBaseline = Mui.CssBaseline as AnyMuiComponent;
+export const ScopedCssBaseline = Mui.ScopedCssBaseline as AnyMuiComponent;
 
 export const Tabs = Mui.Tabs as AnyMuiComponent;
 

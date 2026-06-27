@@ -1,0 +1,336 @@
+/* CSS V3: shared modal and floating-panel component contract. */
+.think-os--modal.think-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--think-z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--think-space-6);
+  background: color-mix(in srgb, var(--think-bg-canvas) 38%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.think-os--modal .think-modal {
+  width: min(100%, 640px);
+  max-height: min(88dvh, 920px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-lg);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  box-shadow: var(--think-shadow-overlay);
+}
+
+.think-os--modal .think-modal--small { width: min(100%, 420px); }
+.think-os--modal .think-modal--medium { width: min(100%, 640px); }
+.think-os--modal .think-modal--large { width: min(100%, 920px); }
+.think-os--modal .think-modal--full { width: min(100%, 1200px); height: min(92dvh, 960px); }
+
+.think-os--modal .think-modal__header,
+.think-floating-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-4);
+  min-width: 0;
+  padding: var(--think-space-5) var(--think-space-6);
+  border-bottom: 1px solid var(--think-border-subtle);
+  background: var(--think-bg-surface-1);
+}
+
+.think-os--modal .think-modal__title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-lg);
+  font-weight: var(--think-font-weight-bold);
+  line-height: var(--think-line-height-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.think-os--modal .think-modal__close,
+.think-floating-panel__close {
+  min-width: var(--think-control-height-sm);
+  min-height: var(--think-control-height-sm);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  color: var(--think-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--think-font-size-xl);
+  line-height: 1;
+}
+
+.think-os--modal .think-modal__close:hover,
+.think-floating-panel__close:hover {
+  background: var(--think-bg-hover);
+  color: var(--think-text-primary);
+}
+
+.think-os--modal .think-modal__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--think-space-6);
+}
+
+.think-os--modal .think-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--think-space-4);
+  padding: var(--think-space-5) var(--think-space-6);
+  border-top: 1px solid var(--think-border-subtle);
+  background: var(--think-bg-surface-1);
+}
+
+.think-floating-panel {
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-lg);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+}
+
+.think-floating-panel__header {
+  flex-shrink: 0;
+  padding: var(--think-space-3) var(--think-space-4);
+}
+
+.think-floating-panel__drag-region {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-4);
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.think-floating-panel.is-inline .think-floating-panel__drag-region {
+  cursor: default;
+  touch-action: auto;
+}
+
+.think-floating-panel__drag-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--think-text-disabled);
+  font-size: 1.2rem;
+}
+
+.think-floating-panel__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--think-font-size-md);
+  font-weight: var(--think-font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.think-floating-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  flex-shrink: 0;
+}
+
+.think-floating-panel__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  user-select: text;
+}
+
+.think-floating-panel__resize {
+  position: absolute;
+  z-index: 1;
+  touch-action: none;
+}
+
+.think-floating-panel__resize--right {
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.think-floating-panel__resize--bottom {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 10px;
+  cursor: ns-resize;
+}
+
+.think-floating-panel__resize--corner {
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 0 45%, var(--think-text-subtle) 45% 55%, transparent 55% 100%);
+}
+
+.think-floating-panel__resize--mobile {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ns-resize;
+}
+
+.think-floating-panel__resize-grip {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--think-radius-pill);
+  background: var(--think-text-subtle);
+  opacity: 0.5;
+}
+
+.think-floating-panel.is-mobile .think-floating-panel__header {
+  padding: var(--think-space-5) var(--think-space-6);
+}
+
+.think-floating-panel.is-mobile .think-floating-panel__drag-region {
+  min-height: var(--think-touch-target);
+}
+
+.think-floating-panel.is-mobile .think-floating-panel__drag-icon {
+  padding: var(--think-space-2);
+  font-size: 1.4rem;
+}
+
+.think-floating-panel.is-mobile .think-floating-panel__title {
+  font-size: var(--think-font-size-md);
+}
+
+.think-floating-panel.is-mobile .think-floating-panel__actions {
+  gap: var(--think-space-4);
+}
+
+.think-floating-panel.is-mobile .think-floating-panel__close {
+  min-width: var(--think-touch-target);
+  min-height: var(--think-touch-target);
+  padding: var(--think-space-2) var(--think-space-4);
+  font-size: 24px;
+}
+
+@media (max-width: 560px) {
+  .think-os--modal.think-modal-overlay {
+    align-items: end;
+    padding: var(--think-space-4);
+  }
+
+  .think-os--modal .think-modal {
+    width: 100%;
+    max-height: calc(100dvh - var(--think-space-4) * 2);
+  }
+}
+
+/* Check-in manager now consumes the shared modal structure instead of injecting CSS at runtime. */
+.modal.think-checkin-modal-host .think-checkin-modal__content {
+  height: 100%;
+  padding: 0;
+}
+
+.think-checkin-modal-host .think-checkin-modal {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.think-checkin-modal-host .think-checkin-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--think-space-5);
+  padding: var(--think-space-5) var(--think-space-6);
+  border-bottom: 1px solid var(--think-border-subtle);
+}
+
+.think-checkin-modal-host .think-checkin-modal__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--think-space-6);
+}
+
+.think-checkin-modal-host .think-checkin-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--think-space-4);
+  padding: var(--think-space-5) var(--think-space-6);
+  border-top: 1px solid var(--think-border-subtle);
+}
+
+.think-checkin-modal-host .think-checkin-modal__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-5);
+  padding: 10px var(--think-space-4);
+  border-bottom: 1px solid var(--think-border-subtle);
+  cursor: pointer;
+  transition: background-color var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.think-checkin-modal-host .think-checkin-modal__item:hover {
+  background: var(--think-bg-hover);
+}
+
+.think-checkin-modal-host .think-checkin-modal__item:last-child {
+  border-bottom: 0;
+}
+
+.think-checkin-modal-host .think-checkin-modal__item-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.think-checkin-modal-host .think-checkin-modal__item-content,
+.think-checkin-modal-host .think-checkin-modal__item-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.think-checkin-modal-host .think-checkin-modal__item-content {
+  font-weight: var(--think-font-weight-medium);
+}
+
+.think-checkin-modal-host .think-checkin-modal__item-meta {
+  margin-top: var(--think-space-2);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+
+.think-checkin-modal-host .think-checkin-modal__item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-3);
+  flex: 0 0 auto;
+}
+
+.think-checkin-modal-host .think-checkin-modal__item-delete {
+  color: var(--think-danger);
+}

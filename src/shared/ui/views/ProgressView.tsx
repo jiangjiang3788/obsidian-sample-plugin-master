@@ -16,10 +16,10 @@ export function ProgressView({ progressModel, onOpenRecord }: ProgressViewProps)
   const cards = progressModel?.goalCards || [];
   const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
 
-  if (cards.length === 0) return <div style={{ color: 'var(--text-muted)' }}>暂无目标技能经验</div>;
+  if (cards.length === 0) return <div class="think-progress-view__empty">暂无目标技能经验</div>;
 
   return (
-    <div style={{ display: 'grid', gap: '14px', justifyItems: 'start', maxWidth: '780px' }}>
+    <div class="think-progress-view">
       {cards.map((card) => (
         <GoalProgressCard
           key={card.key}

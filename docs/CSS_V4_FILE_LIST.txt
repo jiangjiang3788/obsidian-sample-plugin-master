@@ -1,0 +1,42 @@
+Think OS CSS V4 incremental file list
+
+Added files: 10
+Modified files: 20
+Deleted files: 0
+Package files (including this list): 31
+
+Apply after: Freeform V1-V4, CSS V1, CSS V2, CSS V3
+Extract to the project root and overwrite matching paths.
+
+[FILES]
+CSS_V4_FILE_LIST.txt
+CSS_V4_NOTES.md
+docs/CSS_MIGRATION_GUIDE.md
+reports/css/css-audit-current.json
+scripts/gates/css-boundary-gate.mjs
+src/features/settings/layout/ModulePanel.tsx
+src/features/settings/layout/statisticsPopoverBridge.tsx
+src/shared/styles/base.css
+src/shared/styles/block-view.css
+src/shared/styles/event-timeline.css
+src/shared/styles/excel-view-content-md.css
+src/shared/styles/heatmap.css
+src/shared/styles/layout.css
+src/shared/styles/statistics-view.css
+src/shared/styles/timeline.css
+src/shared/ui/heatmap/HeatmapCell.tsx
+src/shared/ui/statistics/ChartBlock.tsx
+src/shared/ui/views/ProgressGoalCard.tsx
+src/shared/ui/views/ProgressSummaryCards.tsx
+src/shared/ui/views/ProgressView.tsx
+src/shared/ui/views/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx
+src/styles/features/block.css
+src/styles/features/event-timeline.css
+src/styles/features/excel.css
+src/styles/features/heatmap.css
+src/styles/features/progress.css
+src/styles/features/statistics.css
+src/styles/features/timeline.css
+src/styles/features/view-shell.css
+src/styles/main.css
+test/unit/cssV4BusinessViews.test.ts

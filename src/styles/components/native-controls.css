@@ -1,0 +1,26 @@
+/* CSS V3: native controls used by complex Settings editors. */
+.think-native-field {
+  display: block;
+  min-width: 0;
+}
+
+.think-native-field__label {
+  display: block;
+  margin-bottom: var(--think-space-2);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-native-field .think-input,
+.think-native-field .think-textarea {
+  width: 100%;
+}
+
+.think-native-field.is-flex {
+  flex: 1 1 0;
+}
+
+.think-native-field--narrow {
+  width: 120px;
+}

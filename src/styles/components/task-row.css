@@ -1,0 +1,94 @@
+/* Shared task row used by table, block and event-timeline views. */
+.think-os .task-row {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--think-space-4);
+  max-width: 100%;
+  text-align: left;
+  vertical-align: top;
+}
+
+.think-os .task-row-checkbox-wrapper,
+.think-os .task-row-timer-action {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.think-os .task-row-checkbox-wrapper { padding-top: var(--think-space-1); }
+
+.think-os .task-row-content {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-width: 0;
+  text-align: left;
+}
+
+.think-os .task-row-main,
+.think-os .task-row-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.think-os .task-row-main { gap: var(--think-space-4); }
+
+.think-os .task-row-title {
+  flex: 0 1 auto;
+  gap: var(--think-space-2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.think-os .task-row-title:hover,
+.think-os .task-row-title:active,
+.think-os .task-row-title:focus-visible {
+  background: transparent;
+  box-shadow: none;
+}
+
+.think-os .task-row-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--think-space-3);
+  min-width: 0;
+  margin-top: var(--think-space-2);
+}
+
+.think-os .task-row-timer-action :is(button, .MuiButtonBase-root, .MuiIconButton-root) {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.think-os .task-row-timer-action :is(button, .MuiButtonBase-root, .MuiIconButton-root):is(:hover, :focus, :active) {
+  background: transparent;
+  box-shadow: none;
+}
+
+.think-os .think-table :is(th, td) { white-space: nowrap; }
+
+.think-os .think-table td > .think-table-cell-item {
+  display: flex;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.think-os .think-table td > .think-table-cell-item,
+.think-os .think-table td > .think-table-cell-item * { white-space: nowrap; }

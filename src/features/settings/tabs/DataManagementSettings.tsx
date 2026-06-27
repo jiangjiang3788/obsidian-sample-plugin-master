@@ -20,29 +20,29 @@ const sections: Array<{ key: DataSection; title: string }> = [
 export function DataManagementSettings() {
   const [section, setSection] = useState<DataSection>('goals');
   return (
-    <Box sx={{ display: 'grid', gap: 2 }}>
-      <Box sx={{ maxWidth: 1040, mx: 'auto', width: '100%', display: 'grid', gap: 1 }}>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>数据管理</Typography>
-        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+    <Box className="think-settings-page think-settings-page--wide">
+      <Box className="think-settings-stack think-settings-full-width">
+        <Typography variant="h5" className="think-settings-page__title">数据管理</Typography>
+        <Box className="think-settings-nav">
           {sections.map((item) => (
             <Button
               key={item.key}
               variant={section === item.key ? 'contained' : 'outlined'}
               size="small"
               onClick={() => setSection(item.key)}
-              sx={{ borderRadius: 999 }}
+
             >
               {item.title}
             </Button>
           ))}
         </Box>
       </Box>
-      <Divider sx={{ mx: 'auto', maxWidth: 1040, width: '100%' }} />
+      <Divider className="think-settings-full-width" />
       {section === 'recordTypes' && <BlockManager />}
       {section === 'goals' && <GoalManager />}
       {section === 'themes' && <ThemeMetadataManager />}
       {section === 'metrics' && (
-        <Box sx={{ maxWidth: 1040, mx: 'auto', width: '100%' }}>
+        <Box className="think-settings-full-width">
           <GoalMetricSection />
         </Box>
       )}

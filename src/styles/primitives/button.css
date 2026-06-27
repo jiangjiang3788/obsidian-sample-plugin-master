@@ -1,0 +1,140 @@
+/* Think OS button primitive. */
+.think-os .think-button {
+  --think-button-height: var(--think-control-height-md);
+  --think-button-padding-x: var(--think-space-5);
+  --think-button-font-size: var(--think-font-size-sm);
+  --think-button-icon-size: var(--think-icon-size-md);
+
+  min-width: 0;
+  min-height: var(--think-button-height);
+  height: var(--think-button-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--think-space-3);
+  padding: 0 var(--think-button-padding-x);
+  border: 1px solid transparent;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  color: var(--think-text-primary);
+  font: inherit;
+  font-family: var(--think-font-interface);
+  font-size: var(--think-button-font-size);
+  font-weight: var(--think-font-weight-medium);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    color var(--think-duration-fast) var(--think-ease-standard),
+    opacity var(--think-duration-fast) var(--think-ease-standard),
+    transform var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.think-os .think-button--sm {
+  --think-button-height: var(--think-control-height-sm);
+  --think-button-padding-x: var(--think-space-4);
+  --think-button-font-size: var(--think-font-size-xs);
+  --think-button-icon-size: var(--think-icon-size-sm);
+}
+
+.think-os .think-button--lg {
+  --think-button-height: var(--think-control-height-lg);
+  --think-button-padding-x: 14px;
+  --think-button-font-size: var(--think-font-size-md);
+  --think-button-icon-size: var(--think-icon-size-lg);
+}
+
+.think-os .think-button--primary {
+  background: var(--think-accent);
+  border-color: var(--think-accent);
+  color: var(--think-text-on-accent);
+}
+
+.think-os .think-button--primary:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--think-accent-hover);
+  border-color: var(--think-accent-hover);
+}
+
+.think-os .think-button--secondary {
+  background: var(--think-bg-surface-1);
+  border-color: var(--think-border-subtle);
+  color: var(--think-text-primary);
+}
+
+.think-os .think-button--secondary:hover:not(:disabled, [aria-disabled="true"]),
+.think-os .think-button--ghost:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--think-bg-hover);
+  border-color: var(--think-border-strong);
+}
+
+.think-os .think-button--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--think-text-secondary);
+}
+
+.think-os .think-button--danger {
+  background: transparent;
+  border-color: var(--think-border-subtle);
+  color: var(--think-danger);
+}
+
+.think-os .think-button--danger:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--think-danger-bg);
+  border-color: var(--think-danger);
+}
+
+.think-os .think-button--link {
+  min-height: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  color: var(--think-text-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.think-os .think-button:active:not(:disabled, [aria-disabled="true"]) {
+  transform: translateY(1px);
+}
+
+.think-os .think-button:disabled,
+.think-os .think-button[aria-disabled="true"] {
+  color: var(--think-text-disabled);
+  background: var(--think-bg-disabled);
+  border-color: var(--think-border-subtle);
+  cursor: not-allowed;
+  opacity: 0.68;
+  transform: none;
+}
+
+.think-os .think-button[aria-busy="true"] {
+  cursor: progress;
+}
+
+.think-os .think-button__icon {
+  width: var(--think-button-icon-size);
+  height: var(--think-button-icon-size);
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.think-os .think-button__spinner {
+  width: var(--think-button-icon-size);
+  height: var(--think-button-icon-size);
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: var(--think-radius-pill);
+  animation: think-button-spin 700ms linear infinite;
+}
+
+@keyframes think-button-spin {
+  to { transform: rotate(1turn); }
+}

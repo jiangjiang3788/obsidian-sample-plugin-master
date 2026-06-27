@@ -228,14 +228,14 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
       bodyPadding={0}
       bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
     >
-      <Box sx={{ p: 1.5, flex: 1, minHeight: 0, overflowY: 'auto', boxSizing: 'border-box' }}>
+      <Box className="think-goal-template-editor">
         <Stack spacing={1.5}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontWeight: 800, lineHeight: 1.2 }}>{currentTheme?.icon ? `${currentTheme.icon} ` : ''}{titleTheme}</Typography>
+          <Box className="think-editor-header">
+            <Box className="think-goal-template-editor__identity">
+              <Typography className="think-settings-title-strong">{currentTheme?.icon ? `${currentTheme.icon} ` : ''}{titleTheme}</Typography>
               <Typography variant="caption" color="text.secondary">{goal.goalPath || goal.title} / {block.name}</Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+            <Box className="think-settings-actions">
               <Button size="small" variant="outlined" disabled={!selectedTemplate || metadataDisabled} onClick={handleCopyVariant}>复制为新预设</Button>
             </Box>
           </Box>
@@ -244,8 +244,8 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
 
           <GoalTemplateModeSwitch mode={mode} blockName={block.name} disabled={metadataDisabled} onInherit={switchToInherit} onOverride={switchToOverride} />
 
-          <Box sx={{ border: '1px solid var(--background-modifier-border)', borderRadius: 1.25, p: 1.25, display: 'grid', gap: 1 }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: supportsPeriod ? '1.2fr 1.2fr 0.75fr' : '1.2fr 1.2fr' }, gap: 1 }}>
+          <Box className="think-goal-template-editor__fields">
+            <Box className={`think-goal-template-editor__primary-grid${supportsPeriod ? '' : ' is-two-column'}`}> 
               <NativeTextInput label="名字" value={draft.name} onInput={(value) => updateDraft({ name: value })} disabled={metadataDisabled} placeholder="例如：心情" />
               {isExistingTemplate ? (
                 <NativeTextInput label="主题" value={currentTheme?.icon ? `${currentTheme.icon} ${cleanDisplayThemePath(draft.themePath)}` : cleanDisplayThemePath(draft.themePath) || '未指定主题'} onInput={() => undefined} disabled />
@@ -260,30 +260,30 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
               {supportsPeriod ? <NativeSelectInput label="周期" value={draft.granularity} options={presetGranularityOptions} onChange={(value) => updateDraft({ granularity: value as GoalTemplateDraftState['granularity'] })} disabled={metadataDisabled} /> : null}
             </Box>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 1 }}>
+            <Box className="think-goal-template-editor__secondary-grid">
               <NativeTextInput label="保存文件" value={draft.targetFile} onInput={(value) => updateDraft({ targetFile: value })} disabled={fieldEditDisabled} placeholder="例如：01/目标打卡.md" />
               <NativeTextInput label="标题" value={draft.appendUnderHeader} onInput={(value) => updateDraft({ appendUnderHeader: value })} disabled={fieldEditDisabled} placeholder="## {{goalPath}}" />
             </Box>
             <NativeTextInput label="说明" value={draft.description} onInput={(value) => updateDraft({ description: value })} disabled={metadataDisabled} placeholder="可选" />
 
             {diffSummary.length ? (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
-                {diffSummary.map(item => <span key={item} style={{ fontSize: 12, padding: '2px 8px', borderRadius: 999, border: '1px solid var(--background-modifier-border)', color: 'var(--text-muted)' }}>{item}</span>)}
+              <Box className="think-editor-diff-list">
+                {diffSummary.map(item => <span key={item} className="think-editor-diff-chip">{item}</span>)}
               </Box>
             ) : null}
           </Box>
 
-          <Box sx={{ opacity: fieldEditDisabled ? 0.72 : 1 }}>
+          <Box className={fieldEditDisabled ? "think-settings-muted-disabled" : undefined}>
             <Stack spacing={1.5}>
               <Box>
-                <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, mb: 0.75 }}>表单字段</Typography>
-                {inheritedMode ? <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.75 }}>当前为继承模式，下面只读展示记录类型基础字段。切到“覆盖”后可单独修改这个主题预设。</Typography> : null}
+                <Typography className="think-goal-template-editor__section-heading">表单字段</Typography>
+                {inheritedMode ? <Typography variant="caption" color="text.secondary" className="think-goal-template-editor__section-help">当前为继承模式，下面只读展示记录类型基础字段。切到“覆盖”后可单独修改这个主题预设。</Typography> : null}
                 <FieldsEditor fields={draft.fields || []} disabled={fieldEditDisabled} onChange={(fields: TemplateField[]) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath })} />
               </Box>
               <Divider />
               <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
-                  <Typography sx={{ fontSize: '0.95rem', fontWeight: 700 }}>输出格式</Typography>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" className="think-goal-template-editor__output-heading">
+                  <Typography className="think-goal-template-editor__section-heading">输出格式</Typography>
                   {effectiveBlockForCopier ? <TemplateVariableCopier block={effectiveBlockForCopier} /> : null}
                 </Stack>
                 <NativeTextarea value={draft.outputTemplate} rows={7} onInput={(value) => updateDraft({ outputTemplate: value })} disabled={fieldEditDisabled} />
@@ -291,7 +291,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
             </Stack>
           </Box>
 
-          <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ position: 'sticky', bottom: -12, py: 1, background: 'var(--background-primary)', borderTop: '1px solid var(--background-modifier-border)' }}>
+          <Stack direction="row" justifyContent="space-between" spacing={1} className="think-settings-sticky-actions">
             <Button onClick={onClose}>取消</Button>
             <Button onClick={handleSave} variant="contained" disabled={metadataDisabled}>保存</Button>
           </Stack>

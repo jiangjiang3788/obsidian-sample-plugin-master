@@ -1,0 +1,29 @@
+/*
+ * MUI host bridge.
+ * Component skin lives in the MUI theme; this file handles selectors that are
+ * more reliable through scoped CSS in Obsidian's runtime.
+ */
+.think-os .MuiTouchRipple-root {
+  color: currentColor;
+}
+
+.think-os .MuiButtonBase-root.Mui-focusVisible,
+.think-os .MuiInputBase-root.Mui-focused,
+.think-os .MuiChip-root.Mui-focusVisible,
+.think-os .MuiTab-root.Mui-focusVisible {
+  outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
+  outline-offset: var(--think-focus-ring-offset);
+}
+
+.think-os .Mui-disabled {
+  cursor: not-allowed;
+}
+
+.think-os .MuiPopover-paper,
+.think-os .MuiMenu-paper,
+.think-os .MuiAutocomplete-paper {
+  border: 1px solid var(--think-border-subtle);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  box-shadow: var(--think-shadow-overlay);
+}

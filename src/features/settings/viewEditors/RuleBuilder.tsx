@@ -90,13 +90,13 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
     );
 
     const existingRules = (
-        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+        <div className="think-rule-builder__chips">
             {rows.map((rule: RuleBuilderRule, index: number) => {
                 const isLast = index === rows.length - 1;
                 const filterRule = rule as FilterRule;
 
                 return (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div key={index} className="think-rule-builder__chip-row">
                         <Tooltip title={`点击删除规则: ${buildRuleLabel(mode, rule)}`}>
                             <Chip
                                 label={buildRuleLabel(mode, rule)}
@@ -110,7 +110,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                                 value={filterRule.logic || 'and'}
                                 options={RULE_LOGIC_OPTIONS}
                                 onChange={(val: string) => updateLogic(index, val as 'and' | 'or')}
-                                sx={{ minWidth: 50 }}
+                                className="think-rule-builder__logic"
                             />
                         )}
                     </div>
@@ -120,7 +120,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
     );
 
     const panelRuleRows = (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box className="think-rule-builder__panel-rows">
             {rows.map((rule: RuleBuilderRule, index: number) => {
                 const filterRule = rule as FilterRule;
                 const sortRule = rule as SortRule;
@@ -128,18 +128,10 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                 const showValueInput = isFilterMode && operatorNeedsValue(filterRule.op);
 
                 return (
-                    <Box key={index} sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                    <Box key={index} className="think-rule-builder__row-shell">
                         <Box
-                            sx={{
-                                display: 'grid',
-                                gridTemplateColumns: getPanelRuleGridTemplate(mode, showValueInput),
-                                gap: 1,
-                                alignItems: 'center',
-                                p: 1,
-                                border: '1px solid var(--background-modifier-border)',
-                                borderRadius: '8px',
-                                background: 'var(--background-primary)',
-                            }}
+                            className="think-rule-builder__row-grid"
+                            sx={{ gridTemplateColumns: getPanelRuleGridTemplate(mode, showValueInput) }}
                         >
                             {renderFieldInput(rule.field, (field) => updateRow(index, { field }))}
 
@@ -149,7 +141,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                                         value={filterRule.op}
                                         options={RULE_OPERATOR_OPTIONS}
                                         onChange={(val: string) => updateRow(index, { op: val as FilterRule['op'] })}
-                                        sx={{ minWidth: 140 }}
+                                        className="think-rule-builder__field"
                                     />
                                     {renderValueInput(filterRule, (value) => updateRow(index, { value }))}
                                 </>
@@ -158,7 +150,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                                     value={sortRule.dir}
                                     options={RULE_DIRECTION_OPTIONS}
                                     onChange={(val: string) => updateRow(index, { dir: val as 'asc' | 'desc' })}
-                                    sx={{ minWidth: 120 }}
+                                    className="think-rule-builder__operator"
                                 />
                             )}
 
@@ -167,10 +159,10 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                                     value={filterRule.logic || 'and'}
                                     options={RULE_LOGIC_OPTIONS}
                                     onChange={(val: string) => updateLogic(index, val as 'and' | 'or')}
-                                    sx={{ minWidth: 80 }}
+                                    className="think-rule-builder__value"
                                 />
                             ) : (
-                                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                                <Typography variant="body2" color="text.secondary" className="think-rule-builder__end-label">
                                     {isFilterMode ? '末尾' : ''}
                                 </Typography>
                             )}
@@ -190,10 +182,10 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
 
     if (variant === 'panel') {
         return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+            <Box className="think-rule-builder">
+                <Box className="think-editor-header">
                     <div>
-                        <Typography sx={{ fontWeight: 600 }}>{title}规则</Typography>
+                        <Typography className="think-settings-label-strong">{title}规则</Typography>
                         <Typography variant="body2" color="text.secondary">
                             字段支持搜索；已有规则可直接编辑。“属于任一 / 不属于任一”支持多选 chip，也可输入后回车添加；区间用“开始~结束”。
                         </Typography>
@@ -201,15 +193,10 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                 </Box>
 
                 {rows.length > 0 ? (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box className="think-rule-builder__rules">
                         <Box
-                            sx={{
-                                display: 'grid',
-                                gridTemplateColumns: getPanelRuleGridTemplate(mode, isFilterMode),
-                                gap: 1,
-                                px: 1,
-                                color: 'text.secondary',
-                            }}
+                            className="think-rule-builder__column-head"
+                            sx={{ gridTemplateColumns: getPanelRuleGridTemplate(mode, isFilterMode) }}
                         >
                             <Typography variant="caption">字段</Typography>
                             <Typography variant="caption">{isFilterMode ? '条件' : '排序'}</Typography>
@@ -220,22 +207,14 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                         {panelRuleRows}
                     </Box>
                 ) : (
-                    <Box sx={{ p: 2, border: '1px dashed var(--background-modifier-border)', borderRadius: '8px' }}>
+                    <Box className="think-editor-card think-editor-card--dashed">
                         <Typography variant="body2" color="text.secondary">还没有规则。先在下方选择字段、条件和值，然后添加规则。</Typography>
                     </Box>
                 )}
 
                 <Box
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: getPanelAddRuleGridTemplate(mode, shouldShowValueInput),
-                        gap: 1,
-                        alignItems: 'center',
-                        p: 1.5,
-                        border: '1px solid var(--background-modifier-border)',
-                        borderRadius: '8px',
-                        background: 'var(--background-secondary)',
-                    }}
+                    className="think-rule-builder__add-grid"
+                    sx={{ gridTemplateColumns: getPanelAddRuleGridTemplate(mode, shouldShowValueInput) }}
                 >
                     {renderFieldInput(newRule.field, (field) => updateNewRule({ field }))}
 
@@ -245,7 +224,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                                 value={(newRule as FilterRule).op}
                                 options={RULE_OPERATOR_OPTIONS}
                                 onChange={(val: string) => updateNewRule({ op: val as FilterRule['op'] })}
-                                sx={{ minWidth: 140 }}
+                                className="think-rule-builder__field"
                             />
                             {shouldShowValueInput && renderValueInput(newRule as FilterRule, (value) => updateNewRule({ value }))}
                         </>
@@ -254,23 +233,23 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                             value={(newRule as SortRule).dir}
                             options={RULE_DIRECTION_OPTIONS}
                             onChange={(val: string) => updateNewRule({ dir: val as 'asc' | 'desc' })}
-                            sx={{ minWidth: 120 }}
+                            className="think-rule-builder__operator"
                         />
                     )}
 
-                    <Button variant="contained" size="small" onClick={handleAddRule} sx={{ whiteSpace: 'nowrap' }}>添加规则</Button>
+                    <Button variant="contained" size="small" onClick={handleAddRule} className="think-rule-builder__add">添加规则</Button>
                 </Box>
             </Box>
         );
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-            <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500, pt: '8px' }}>{title}</Typography>
-            <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="think-rule-builder__compact">
+            <Typography className="think-settings-row__label think-settings-row__label--top">{title}</Typography>
+            <div className="think-rule-builder__compact-body">
                 {existingRules}
 
-                <div style={{ display: 'flex', flexDirection: 'row', gap: '4px', alignItems: 'center' }}>
+                <div className="think-rule-builder__compact-add">
                     {renderFieldInput(newRule.field, (field) => updateNewRule({ field }))}
 
                     {isFilterMode ? (
@@ -279,7 +258,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                                 value={(newRule as FilterRule).op}
                                 options={RULE_OPERATOR_OPTIONS}
                                 onChange={(val: string) => updateNewRule({ op: val as FilterRule['op'] })}
-                                sx={{ minWidth: 120 }}
+                                className="think-rule-builder__operator"
                             />
                             {shouldShowValueInput && renderValueInput(newRule as FilterRule, (value) => updateNewRule({ value }))}
                         </>
@@ -288,7 +267,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                             value={(newRule as SortRule).dir}
                             options={RULE_DIRECTION_OPTIONS}
                             onChange={(val: string) => updateNewRule({ dir: val as 'asc' | 'desc' })}
-                            sx={{ minWidth: 100 }}
+                            className="think-rule-builder__operator"
                         />
                     )}
 

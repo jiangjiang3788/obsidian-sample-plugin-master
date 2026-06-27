@@ -1,0 +1,12 @@
+FREEFORM_V2_NOTES.md
+FREEFORM_V2_FILE_LIST.txt
+src/core/types/schema.ts
+src/core/layout/freeformLayout.ts
+src/core/layout/index.ts
+src/core/public.ts
+src/features/settings/components/LayoutEditorPanel.tsx
+src/features/settings/layout/FreeformCanvas.tsx
+src/features/settings/layout/FreeformLayoutItem.tsx
+src/features/settings/layout/LayoutRenderer.tsx
+src/shared/styles/layout.css
+test/unit/freeformLayoutModel.test.ts

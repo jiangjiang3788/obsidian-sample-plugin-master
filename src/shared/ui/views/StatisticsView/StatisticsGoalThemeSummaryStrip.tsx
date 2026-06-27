@@ -30,20 +30,14 @@ export function StatisticsGoalThemeSummaryStrip({ summaries }: { summaries: Stat
   if (visible.length === 0) return null;
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+    <div class="sv-goal-summary-strip">
       {visible.map((row) => (
         <div
           key={row.goalPath}
-          style={{
-            border: '1px solid var(--background-modifier-border)',
-            borderRadius: '999px',
-            padding: '5px 9px',
-            fontSize: '12px',
-            color: 'var(--text-muted)',
-          }}
+          class="sv-goal-summary-chip"
           title={getStatisticsGoalThemeSummaryTitle(row)}
         >
-          <span style={{ color: 'var(--text-normal)', fontWeight: 600 }}>{getStatisticsGoalThemeSummaryLabel(row.goalPath)}</span>
+          <span class="sv-goal-summary-label">{getStatisticsGoalThemeSummaryLabel(row.goalPath)}</span>
           <span> · </span>
           <span>{getStatisticsGoalThemeSummaryText(row)}</span>
         </div>

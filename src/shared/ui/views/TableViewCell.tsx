@@ -34,7 +34,7 @@ export function TableViewCell(props: TableViewCellProps) {
   return (
     <td>
       {items.map(item => (
-        <div key={item.id} class="table-view-cell-item">
+        <div key={item.id} class="think-table-cell-item">
           {item.type === 'task' ? (
             <TaskRow
               item={item}

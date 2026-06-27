@@ -1,0 +1,100 @@
+/*
+ * Think OS semantic design tokens.
+ *
+ * These variables deliberately map to Obsidian semantic variables instead of
+ * defining a standalone light/dark palette. Feature CSS must consume Think OS
+ * tokens; only this bridge should know about host theme variable names.
+ */
+.think-os {
+  color-scheme: inherit;
+
+  /* Canvas and surfaces */
+  --think-bg-canvas: var(--background-primary);
+  --think-bg-surface-1: var(--background-secondary, var(--background-primary));
+  --think-bg-surface-2: var(--background-secondary-alt, var(--background-modifier-hover));
+  --think-bg-elevated: var(--background-primary-alt, var(--background-primary));
+  --think-bg-hover: var(--background-modifier-hover);
+  --think-bg-active: var(--background-modifier-active-hover, var(--background-modifier-hover));
+  --think-bg-selected: var(--background-modifier-active-hover, var(--background-modifier-hover));
+  --think-bg-disabled: var(--background-modifier-form-field, var(--background-secondary));
+
+  /* Typography */
+  --think-text-primary: var(--text-normal);
+  --think-text-secondary: var(--text-muted);
+  --think-text-subtle: var(--text-faint, var(--text-muted));
+  --think-text-on-accent: var(--text-on-accent);
+  --think-text-accent: var(--text-accent, var(--interactive-accent));
+  --think-text-disabled: var(--text-faint, var(--text-muted));
+
+  /* Borders and focus */
+  --think-border-subtle: var(--background-modifier-border);
+  --think-border-strong: var(--background-modifier-border-hover, var(--background-modifier-border));
+  --think-border-focus: var(--interactive-accent);
+  --think-focus-ring-color: var(--interactive-accent);
+  --think-focus-ring-width: 2px;
+  --think-focus-ring-offset: 2px;
+
+  /* Interaction and status */
+  --think-accent: var(--interactive-accent);
+  --think-accent-hover: var(--interactive-accent-hover, var(--interactive-accent));
+  --think-accent-muted: var(--background-modifier-active-hover, var(--background-modifier-hover));
+  --think-danger: var(--text-error);
+  --think-danger-bg: var(--background-modifier-error, var(--background-modifier-hover));
+  --think-warning: var(--text-warning, var(--text-accent));
+  --think-warning-bg: var(--background-modifier-hover);
+  --think-success: var(--text-success, var(--text-accent));
+  --think-success-bg: var(--background-modifier-success, var(--background-modifier-hover));
+  --think-info: var(--text-accent, var(--interactive-accent));
+  --think-info-bg: var(--background-modifier-hover);
+
+  /* Typography scale */
+  --think-font-interface: var(--font-interface);
+  --think-font-text: var(--font-text, var(--font-interface));
+  --think-font-monospace: var(--font-monospace);
+  --think-font-size-2xs: 11px;
+  --think-font-size-xs: 12px;
+  --think-font-size-sm: 13px;
+  --think-font-size-md: 14px;
+  --think-font-size-lg: 16px;
+  --think-font-size-xl: 18px;
+  --think-font-size-2xl: 22px;
+  --think-font-size-3xl: 28px;
+  --think-line-height-tight: 1.25;
+  --think-line-height-normal: 1.5;
+  --think-line-height-relaxed: 1.7;
+  --think-font-weight-regular: 400;
+  --think-font-weight-medium: 500;
+  --think-font-weight-semibold: 600;
+  --think-font-weight-bold: 700;
+
+  /* Radius */
+  --think-radius-xs: 4px;
+  --think-radius-sm: 6px;
+  --think-radius-md: 8px;
+  --think-radius-lg: 12px;
+  --think-radius-pill: 999px;
+
+  /* Elevation */
+  --think-shadow-none: none;
+  --think-shadow-sm: var(--shadow-s, 0 1px 2px rgba(0, 0, 0, 0.08));
+  --think-shadow-md: var(--shadow-l, 0 8px 24px rgba(0, 0, 0, 0.14));
+  --think-shadow-overlay: var(--shadow-l, 0 16px 48px rgba(0, 0, 0, 0.2));
+
+  /* Layering */
+  --think-z-base: 0;
+  --think-z-raised: 10;
+  --think-z-sticky: 100;
+  --think-z-dropdown: 300;
+  --think-z-popover: 400;
+  --think-z-modal: 600;
+  --think-z-toast: 700;
+  --think-z-drag: 800;
+
+  /* Motion */
+  --think-duration-instant: 0ms;
+  --think-duration-fast: 120ms;
+  --think-duration-normal: 180ms;
+  --think-duration-slow: 260ms;
+  --think-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --think-ease-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
+}

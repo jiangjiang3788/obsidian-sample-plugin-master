@@ -84,6 +84,10 @@ export class NamePromptModal extends Modal {
 
   onOpen() {
     this.contentEl.empty();
+    this.modalEl.addClass('think-os');
+    this.modalEl.addClass('think-os--modal');
+    this.modalEl.addClass('think-modal-host');
+    this.modalEl.addClass('think-modal-host--medium');
     renderModalContent(
       this.contentEl,
       <PromptComponent

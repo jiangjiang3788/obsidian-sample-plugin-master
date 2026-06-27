@@ -3,6 +3,8 @@
  */
 
 import { h, ComponentChildren } from 'preact';
+import { ThinkButton } from './Button';
+import { ThinkIconButton } from './IconButton';
 import { useEffect, useRef, useState } from 'preact/hooks';
 
 export interface ModalProps {
@@ -119,33 +121,34 @@ export function Modal({
 
     const defaultFooter = (
         <div className="think-modal__footer">
+            <ThinkButton variant="secondary" onClick={handleClose}>取消</ThinkButton>
             {onSave && showSaveButton && (
-                <button 
-                    className="mod-cta" 
+                <ThinkButton
+                    variant="primary"
                     onClick={handleSave}
                     disabled={isSaving}
+                    loading={isSaving}
                 >
                     {isSaving ? '保存中...' : saveButtonText}
-                </button>
+                </ThinkButton>
             )}
-            <button onClick={handleClose}>取消</button>
         </div>
     );
 
     return (
-        <div className="think-modal-overlay">
+        <div className="think-os think-os--modal think-modal-overlay">
             <div className={modalClasses} ref={modalRef}>
                 {(title || showCloseButton) && (
                     <div className="think-modal__header">
                         {title && <h2 className="think-modal__title">{title}</h2>}
                         {showCloseButton && (
-                            <button
+                            <ThinkIconButton
                                 className="think-modal__close"
+                                label="关闭"
+                                icon="×"
+                                size="sm"
                                 onClick={handleClose}
-                                aria-label="Close modal"
-                            >
-                                ×
-                            </button>
+                            />
                         )}
                     </div>
                 )}

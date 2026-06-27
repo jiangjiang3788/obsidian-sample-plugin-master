@@ -1,15 +1,13 @@
 // src/features/dashboard/ui/ModulePanel.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { IconButton, Tooltip } from '@shared/public';
 import {
     DeleteOutlineIcon,
     DragIndicatorIcon,
     IosShareIcon,
     SettingsIcon,
+    ThinkIconButton,
 } from '@shared/public';
-
-const AnyIconButton = IconButton as any;
 
 export interface ModulePanelProps {
     title: string;
@@ -50,15 +48,13 @@ export function ModulePanel({
     onLayoutToggleCollapsed,
 }: ModulePanelProps) {
     const onHeaderClick = (e: MouseEvent) => {
-        if ((e.target as HTMLElement).closest('.module-header-actions, .module-drag-handle, .module-layout-actions')) {
-            return;
-        }
+        if ((e.target as HTMLElement).closest('.module-header-actions, .module-drag-handle, .module-layout-actions')) return;
         onToggle?.(e);
     };
 
     return (
-        <div class="think-module">
-            <div
+        <section class="think-module">
+            <header
                 class={`module-header${layoutEditing ? ' is-layout-editing' : ''}${layoutSelected ? ' is-layout-selected' : ''}`}
                 onClick={onHeaderClick as any}
                 title={layoutEditing
@@ -73,7 +69,7 @@ export function ModulePanel({
                             onClick={(event: MouseEvent) => event.stopPropagation()}
                             title={layoutLocked ? '卡片已锁定，先解锁后才能拖动' : '拖动整个视图'}
                         >
-                            <DragIndicatorIcon sx={{ fontSize: '1rem' }} />
+                            <DragIndicatorIcon className="module-header-icon" fontSize="inherit" />
                         </span>
                     )}
                     <span class="module-title">{title}</span>
@@ -83,9 +79,7 @@ export function ModulePanel({
                     {layoutEditing && layoutSelected && (
                         <div class="module-layout-actions" aria-label="自由布局操作">
                             {onLayoutBringToFront && (
-                                <button type="button" title="置于最上层" onClick={(e) => { e.stopPropagation(); onLayoutBringToFront(); }}>
-                                    置顶
-                                </button>
+                                <button type="button" title="置于最上层" onClick={(e) => { e.stopPropagation(); onLayoutBringToFront(); }}>置顶</button>
                             )}
                             {onLayoutToggleLock && (
                                 <button type="button" title={layoutLocked ? '解锁位置和尺寸' : '锁定位置和尺寸'} onClick={(e) => { e.stopPropagation(); onLayoutToggleLock(); }}>
@@ -101,64 +95,44 @@ export function ModulePanel({
                     )}
                     <div class="module-header-actions">
                         {onRemove && (
-                            <Tooltip title={removeFromLayout ? '从当前布局移除视图，保留视图配置' : '删除视图（从配置与所有布局中移除）'}>
-                                <AnyIconButton
-                                    size="small"
-                                    onClick={(e: any) => {
-                                        e.stopPropagation();
-                                        onRemove();
-                                    }}
-                                    sx={{ padding: '4px' }}
-                                >
-                                    <DeleteOutlineIcon sx={{ fontSize: '1rem' }} />
-                                </AnyIconButton>
-                            </Tooltip>
+                            <ThinkIconButton
+                                size="sm"
+                                tone="danger"
+                                label={removeFromLayout ? '从当前布局移除视图，保留视图配置' : '删除视图（从配置与所有布局中移除）'}
+                                icon={<DeleteOutlineIcon className="module-header-icon" fontSize="inherit" />}
+                                onClick={(event) => { event.stopPropagation(); onRemove(); }}
+                            />
                         )}
                         {onSettingsClick && (
-                            <Tooltip title="模块设置">
-                                <AnyIconButton
-                                    size="small"
-                                    onClick={(e: any) => {
-                                        e.stopPropagation();
-                                        onSettingsClick();
-                                    }}
-                                    sx={{ padding: '4px' }}
-                                >
-                                    <SettingsIcon sx={{ fontSize: '1rem' }} />
-                                </AnyIconButton>
-                            </Tooltip>
+                            <ThinkIconButton
+                                size="sm"
+                                label="模块设置"
+                                icon={<SettingsIcon className="module-header-icon" fontSize="inherit" />}
+                                onClick={(event) => { event.stopPropagation(); onSettingsClick(); }}
+                            />
                         )}
                         {onExport && (
-                            <Tooltip title="导出为 Markdown">
-                                <AnyIconButton
-                                    size="small"
-                                    onClick={(e: any) => {
-                                        e.stopPropagation();
-                                        onExport();
-                                    }}
-                                    sx={{ padding: '4px' }}
-                                >
-                                    <IosShareIcon sx={{ fontSize: '1rem' }} />
-                                </AnyIconButton>
-                            </Tooltip>
+                            <ThinkIconButton
+                                size="sm"
+                                label="导出为 Markdown"
+                                icon={<IosShareIcon className="module-header-icon" fontSize="inherit" />}
+                                onClick={(event) => { event.stopPropagation(); onExport(); }}
+                            />
                         )}
                         {onActionClick ? (
-                            <span
+                            <button
+                                type="button"
                                 class="module-action-plus"
                                 title="创建记录"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onActionClick();
-                                }}
-                            >
-                                +
-                            </span>
+                                aria-label="创建记录"
+                                onClick={(event) => { event.stopPropagation(); onActionClick(); }}
+                            >+</button>
                         ) : null}
                     </div>
-                    <div class="module-toggle">{collapsed ? '▶' : '▼'}</div>
+                    <span class="module-toggle" aria-hidden="true">{collapsed ? '▶' : '▼'}</span>
                 </div>
-            </div>
+            </header>
             {!collapsed && <div class="module-content">{children}</div>}
-        </div>
+        </section>
     );
 }

@@ -1,0 +1,138 @@
+/* Think OS native form-control and field primitives. */
+.think-os .think-input,
+.think-os .think-select,
+.think-os .think-textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--think-control-height-md);
+  padding: 0 var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+  color: var(--think-text-primary);
+  font: inherit;
+  font-family: var(--think-font-interface);
+  font-size: var(--think-font-size-sm);
+  line-height: var(--think-line-height-normal);
+  transition:
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    box-shadow var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.think-os .think-input::placeholder,
+.think-os .think-textarea::placeholder {
+  color: var(--think-text-subtle);
+  opacity: 1;
+}
+
+.think-os .think-input:hover:not(:disabled, [readonly]),
+.think-os .think-select:hover:not(:disabled),
+.think-os .think-textarea:hover:not(:disabled, [readonly]) {
+  border-color: var(--think-border-strong);
+}
+
+.think-os .think-input:focus,
+.think-os .think-select:focus,
+.think-os .think-textarea:focus {
+  border-color: var(--think-border-focus);
+  outline: none;
+  box-shadow: 0 0 0 var(--think-focus-ring-width) color-mix(in srgb, var(--think-focus-ring-color) 28%, transparent);
+}
+
+.think-os .think-input[aria-invalid="true"],
+.think-os .think-select[aria-invalid="true"],
+.think-os .think-textarea[aria-invalid="true"] {
+  border-color: var(--think-danger);
+}
+
+.think-os .think-input:disabled,
+.think-os .think-select:disabled,
+.think-os .think-textarea:disabled {
+  background: var(--think-bg-disabled);
+  color: var(--think-text-disabled);
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.think-os .think-input[readonly],
+.think-os .think-textarea[readonly] {
+  background: var(--think-bg-surface-2);
+  color: var(--think-text-secondary);
+}
+
+.think-os .think-textarea {
+  min-height: 80px;
+  padding-block: var(--think-space-4);
+  resize: vertical;
+}
+
+.think-os .think-select {
+  padding-inline-end: 30px;
+}
+
+.think-os .think-field {
+  display: grid;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+
+.think-os .think-field + .think-field {
+  margin-top: var(--think-space-6);
+}
+
+.think-os .think-field__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-medium);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-field__required {
+  color: var(--think-danger);
+  font-size: var(--think-font-size-xs);
+}
+
+.think-os .think-field__control {
+  min-width: 0;
+}
+
+.think-os .think-field__description,
+.think-os .think-field__error {
+  margin: 0;
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-normal);
+}
+
+.think-os .think-field__description {
+  color: var(--think-text-secondary);
+}
+
+.think-os .think-field__error {
+  color: var(--think-danger);
+}
+
+.think-os .think-selection-control {
+  min-height: var(--think-control-height-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-4);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  cursor: pointer;
+}
+
+.think-os .think-selection-control > input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--think-accent);
+}
+
+.think-os .think-selection-control:has(input:disabled) {
+  color: var(--think-text-disabled);
+  cursor: not-allowed;
+}

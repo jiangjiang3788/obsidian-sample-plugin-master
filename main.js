@@ -2469,10 +2469,10 @@ function resolveThemeIcon(goal, themes = []) {
   if (direct) return direct;
   const goalThemePath = normalizeThemePath$2(goal?.themePath);
   if (!goalThemePath) return void 0;
-  const byPath = new Map((themes || []).map((theme2) => [normalizeThemePath$2(theme2.path), theme2]));
+  const byPath = new Map((themes || []).map((theme) => [normalizeThemePath$2(theme.path), theme]));
   for (const candidate of themePathCandidates(goalThemePath)) {
-    const theme2 = byPath.get(candidate);
-    const icon = String(theme2?.icon || "").trim();
+    const theme = byPath.get(candidate);
+    const icon = String(theme?.icon || "").trim();
     if (icon) return icon;
   }
   return void 0;
@@ -3865,26 +3865,26 @@ class ThemeMetadataResolver {
   static resolve(settings, themePath) {
     const normalized = normalizePath$4(themePath);
     const themes = settings.inputSettings?.themes || [];
-    let theme2 = null;
+    let theme = null;
     let iconTheme = null;
     if (normalized) {
       const byPath = new Map(themes.map((item) => [normalizePath$4(item.path), item]));
       for (const candidate of pathCandidates$1(normalized)) {
         const matched = byPath.get(candidate);
-        if (matched && !theme2) theme2 = matched;
+        if (matched && !theme) theme = matched;
         if (matched && String(matched.icon || "").trim()) {
           iconTheme = matched;
           break;
         }
       }
     }
-    const path = normalized || theme2?.path || null;
+    const path = normalized || theme?.path || null;
     const color2 = path ? settings.categoryColors?.[path] ?? settings.categoryColors?.[path.split("/")[0]] ?? null : null;
     return {
       path,
-      icon: String((iconTheme || theme2)?.icon || "").trim(),
+      icon: String((iconTheme || theme)?.icon || "").trim(),
       color: color2,
-      theme: theme2
+      theme
     };
   }
 }
@@ -5566,7 +5566,7 @@ function filterItemsByThemes(items, themesToTrack) {
 function aggregateThemeData(items, themesToTrack) {
   const themeMap = /* @__PURE__ */ new Map();
   const effectiveThemes = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-  effectiveThemes.forEach((theme2) => themeMap.set(theme2, /* @__PURE__ */ new Map()));
+  effectiveThemes.forEach((theme) => themeMap.set(theme, /* @__PURE__ */ new Map()));
   const isDefaultMode = effectiveThemes.length === 1 && effectiveThemes[0] === "__default__";
   items.forEach((item) => {
     if (!item.date) return;
@@ -5693,10 +5693,10 @@ function getLatestHeatmapVisualValue(items, ratingMapping) {
 function getEffectiveTemplate(settings, blockId, themeId) {
   const templates = [...settings.blocks || [], ...DEFAULT_CORE_BLOCKS.filter((block2) => !(settings.blocks || []).some((existing) => existing.id === block2.id))];
   const template = templates.find((block2) => block2.id === blockId) ?? null;
-  const theme2 = themeId ? settings.themes.find((candidate) => candidate.id === themeId) ?? null : null;
+  const theme = themeId ? settings.themes.find((candidate) => candidate.id === themeId) ?? null : null;
   return {
     template,
-    theme: theme2,
+    theme,
     templateId: template?.id ?? null,
     templateSourceType: template ? "core-block" : null
   };
@@ -6329,7 +6329,7 @@ function decodeBlockContentLines(contentLines, parentFolder) {
   let rating;
   let image;
   let pintu;
-  let theme2;
+  let theme;
   let templateId;
   let goalId;
   let cycleId;
@@ -6352,7 +6352,7 @@ function decodeBlockContentLines(contentLines, parentFolder) {
           const source = value.trim();
           if (["core-block", "goal-template"].includes(source)) templateSourceType = source;
         } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) {
-          theme2 = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
+          theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
         } else if (["标签", "tag", "tags"].includes(key)) {
           tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
         } else if (["目标id", "goalid"].includes(key)) {
@@ -6416,7 +6416,7 @@ function decodeBlockContentLines(contentLines, parentFolder) {
     rating,
     image,
     pintu,
-    theme: theme2,
+    theme,
     templateId,
     templateSourceType
   };
@@ -7059,8 +7059,8 @@ function isClosedItem(item) {
 function applyLegacyThemeFilter(items, selectedThemes = []) {
   if (!selectedThemes.length) return items;
   return items.filter((item) => {
-    const theme2 = item.themePath || item.theme || item.themePathNormalized;
-    return !!theme2 && selectedThemes.includes(theme2);
+    const theme = item.themePath || item.theme || item.themePathNormalized;
+    return !!theme && selectedThemes.includes(theme);
   });
 }
 function applyLegacyCategoryFilter(items, selectedCategories = []) {
@@ -8120,11 +8120,11 @@ function summarizeUrl(baseURL) {
     return "(invalid-url)";
   }
 }
-function getBodySize(body2) {
+function getBodySize(body) {
   try {
-    return new Blob([body2]).size;
+    return new Blob([body]).size;
   } catch {
-    return body2.length;
+    return body.length;
   }
 }
 class AiHttpClient {
@@ -8393,8 +8393,8 @@ function compactSnapshotForFastMode(snapshot) {
         type: field.type
       }))
     })),
-    themes: (snapshot.themes ?? []).map((theme2) => ({
-      path: theme2.path
+    themes: (snapshot.themes ?? []).map((theme) => ({
+      path: theme.path
     })),
     goals: (snapshot.goals ?? []).map((goal) => ({
       path: goal.path
@@ -8739,7 +8739,7 @@ class AiNaturalLanguageRecordParser {
    * 快速模式用户提示：只保留必要字段，减少请求体积和模型推理负担。
    */
   buildFastUserPrompt(text2, nowIso2, maxResults, snapshot) {
-    const themePaths = (snapshot.themes ?? []).map((theme2) => theme2.path).filter(Boolean);
+    const themePaths = (snapshot.themes ?? []).map((theme) => theme.path).filter(Boolean);
     const goalPaths = (snapshot.goals ?? []).map((goal) => goal.path).filter(Boolean);
     const compactPresets = (snapshot.goalPresets ?? []).map((preset) => ({
       goalPath: preset.goalPath,
@@ -13232,7 +13232,7 @@ function __awaiter(thisArg, _arguments, P2, generator) {
     step((generator = generator.apply(thisArg, [])).next());
   });
 }
-function __generator(thisArg, body2) {
+function __generator(thisArg, body) {
   var _2 = { label: 0, sent: function() {
     if (t3[0] & 1) throw t3[1];
     return t3[1];
@@ -13290,7 +13290,7 @@ function __generator(thisArg, body2) {
           _2.trys.pop();
           continue;
       }
-      op = body2.call(thisArg, _2);
+      op = body.call(thisArg, _2);
     } catch (e2) {
       op = [6, e2];
       y2 = 0;
@@ -17034,11 +17034,11 @@ let AiChatService = class {
     let totalLength = 0;
     for (const item of items) {
       const date2 = item.dateMs ? dayjs(item.dateMs).format("YYYY-MM-DD") : "未知日期";
-      const theme2 = item.theme || "无主题";
+      const theme = item.theme || "无主题";
       const title = item.title || "无标题";
       const content = (item.content || "").slice(0, 5e3);
       const type = item.type === "task" ? "任务" : "记录";
-      const entry = `- [${type}] ${date2} | ${theme2} | ${title}${content ? ": " + content : ""}`;
+      const entry = `- [${type}] ${date2} | ${theme} | ${title}${content ? ": " + content : ""}`;
       if (totalLength + entry.length > MAX_CONTEXT_LENGTH) {
         break;
       }
@@ -17225,8 +17225,8 @@ class ThemeTreeBuilder {
       const roots2 = [];
       const nodeMap = /* @__PURE__ */ new Map();
       const sortedThemes = [...themes].sort((a2, b2) => a2.path.localeCompare(b2.path));
-      for (const theme2 of sortedThemes) {
-        const parts = theme2.path.split("/");
+      for (const theme of sortedThemes) {
+        const parts = theme.path.split("/");
         let currentPath = "";
         let parentNode = null;
         for (let i2 = 0; i2 < parts.length; i2++) {
@@ -17240,8 +17240,8 @@ class ThemeTreeBuilder {
               label: part,
               path: currentPath,
               depth: i2,
-              themeId: isLeaf ? theme2.id : null,
-              theme: isLeaf ? theme2 : null,
+              themeId: isLeaf ? theme.id : null,
+              theme: isLeaf ? theme : null,
               parentId: parentNode?.id ?? null,
               children: []
             };
@@ -17257,8 +17257,8 @@ class ThemeTreeBuilder {
               }
             }
           } else if (isLeaf) {
-            node2.themeId = theme2.id;
-            node2.theme = theme2;
+            node2.themeId = theme.id;
+            node2.theme = theme;
           }
           parentNode = node2;
         }
@@ -17275,27 +17275,27 @@ class ThemeTreeBuilder {
       themeByPath.set(t3.path, t3);
     }
     const nodeByPath = /* @__PURE__ */ new Map();
-    for (const theme2 of themes) {
-      const parts = theme2.path.split("/");
-      const label = parts[parts.length - 1] ?? theme2.path;
-      nodeByPath.set(theme2.path, {
-        id: theme2.path,
+    for (const theme of themes) {
+      const parts = theme.path.split("/");
+      const label = parts[parts.length - 1] ?? theme.path;
+      nodeByPath.set(theme.path, {
+        id: theme.path,
         label,
-        path: theme2.path,
+        path: theme.path,
         depth: 0,
         // will be filled after linking
-        themeId: theme2.id,
-        theme: theme2,
+        themeId: theme.id,
+        theme,
         parentId: null,
         children: []
       });
     }
     const roots = [];
     const rootIds = /* @__PURE__ */ new Set();
-    for (const theme2 of themes) {
-      const node2 = nodeByPath.get(theme2.path);
+    for (const theme of themes) {
+      const node2 = nodeByPath.get(theme.path);
       if (!node2) continue;
-      const parts = theme2.path.split("/");
+      const parts = theme.path.split("/");
       let parentPath = null;
       if (parts.length > 1) {
         for (let i2 = parts.length - 1; i2 >= 1; i2--) {
@@ -17569,11 +17569,11 @@ function computeProgression(items, options) {
     catRow.points += points;
     catRow.count += 1;
     categoryMap.set(category, catRow);
-    const theme2 = getItemThemeKey(item);
-    const themeRow = themeMap.get(theme2) || { points: 0, count: 0 };
+    const theme = getItemThemeKey(item);
+    const themeRow = themeMap.get(theme) || { points: 0, count: 0 };
     themeRow.points += points;
     themeRow.count += 1;
-    themeMap.set(theme2, themeRow);
+    themeMap.set(theme, themeRow);
   }
   const safeLevelStep = Math.max(1, levelStep);
   const level = Math.floor(totalPoints / safeLevelStep) + 1;
@@ -17760,11 +17760,11 @@ function buildTaskRenderTokens(data) {
     repeatToken: repeatText && repeatText !== "不重复" ? repeatText : ""
   };
 }
-function buildRenderData(template, formData, theme2, templateMeta) {
+function buildRenderData(template, formData, theme, templateMeta) {
   const normalizedData = normalizeTemplateRenderData(template, formData);
   const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === "object" ? normalizedData.theme : null;
   const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? "").trim();
-  const themeParts = splitThemePath(explicitThemePath || theme2?.path || null);
+  const themeParts = splitThemePath(explicitThemePath || theme?.path || null);
   const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? "").trim();
   const categoryParts = categoryPath.split("/").map((part) => part.trim()).filter(Boolean);
   const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? "").trim() : String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
@@ -17791,7 +17791,7 @@ function buildRenderData(template, formData, theme2, templateMeta) {
       path: themeParts.themePath,
       root: themeParts.rootTheme,
       leaf: themeParts.leafTheme,
-      icon: theme2?.icon || String(normalizedData.icon ?? normalizedData["图标"] ?? normalizedTheme?.icon ?? "")
+      icon: theme?.icon || String(normalizedData.icon ?? normalizedData["图标"] ?? normalizedTheme?.icon ?? "")
     },
     themePath: themeParts.themePath,
     rootTheme: themeParts.rootTheme,
@@ -17934,9 +17934,9 @@ let InputService = class {
   }
   vault;
   dataStore;
-  previewTemplateExecution(template, formData, theme2, templateMeta) {
+  previewTemplateExecution(template, formData, theme, templateMeta) {
     if (!template) throw new Error("传入了无效的模板对象。");
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme: theme2, templateMeta });
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta });
     return {
       renderData: outputPlan.renderData,
       outputContent: outputPlan.outputContent,
@@ -17944,10 +17944,10 @@ let InputService = class {
       header: outputPlan.targetHeader
     };
   }
-  async executeTemplate(template, formData, theme2, templateMeta, options = {}) {
+  async executeTemplate(template, formData, theme, templateMeta, options = {}) {
     const signal = options.signal;
     this.throwIfAborted(signal);
-    const preview = this.previewTemplateExecution(template, formData, theme2, templateMeta);
+    const preview = this.previewTemplateExecution(template, formData, theme, templateMeta);
     const { outputContent, targetFilePath, header } = preview;
     if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
     this.throwIfAborted(signal);
@@ -17967,10 +17967,10 @@ ${outputContent}` : outputContent;
    * 计划第 6.5 步：安全迁移保存。
    * 只负责“先写新位置”，删除旧记录由 usecase 在确认写入成功后再执行。
    */
-  async createRecordAtPlannedLocation(template, formData, theme2, templateMeta, options = {}) {
-    return this.executeTemplate(template, formData, theme2, templateMeta, options);
+  async createRecordAtPlannedLocation(template, formData, theme, templateMeta, options = {}) {
+    return this.executeTemplate(template, formData, theme, templateMeta, options);
   }
-  async updateExistingRecord(item, template, formData, theme2, templateMeta, options = {}) {
+  async updateExistingRecord(item, template, formData, theme, templateMeta, options = {}) {
     const signal = options.signal;
     const autoRefresh = options.autoRefresh !== false;
     this.throwIfAborted(signal);
@@ -17984,7 +17984,7 @@ ${outputContent}` : outputContent;
       throw createRecordConflictError("record_path_missing", `找不到文件: ${path}`);
     }
     this.throwIfAborted(signal);
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme: theme2, templateMeta });
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta });
     const nextText = outputPlan.outputContent.trim();
     if (!nextText) throw new Error("编辑后的输出内容为空，已取消保存。");
     const lines = existingContent.split("\n");
@@ -18724,13 +18724,13 @@ class GoalTemplateResolver {
     const goal = findGoal(settings.goalSettings, input.goalId, input.goalPath);
     const themePathFromId = input.themeId ? settings.inputSettings?.themes?.find((candidate) => candidate.id === input.themeId)?.path ?? null : null;
     const effectiveThemePath = input.themePath || goal?.themePath || themePathFromId || null;
-    const theme2 = ThemeMetadataResolver.resolveThemeForRender(settings, effectiveThemePath);
+    const theme = ThemeMetadataResolver.resolveThemeForRender(settings, effectiveThemePath);
     const coreBlock = getCoreBlockById(settings, effectiveBlockId);
     const baseTemplate = coreBlock;
     if (!baseTemplate) {
       return {
         template: null,
-        theme: theme2,
+        theme,
         goal,
         templateId: null,
         templateSourceType: null,
@@ -18742,7 +18742,7 @@ class GoalTemplateResolver {
     if (goalTemplate) {
       return {
         template: mergeTemplate(baseTemplate, goalTemplate),
-        theme: theme2,
+        theme,
         goal,
         templateId: goalTemplate.id,
         templateSourceType: "goal-template",
@@ -18752,7 +18752,7 @@ class GoalTemplateResolver {
     }
     const policy = resolveTemplatePeriodPolicy(baseTemplate);
     const template = policy ? { ...baseTemplate, periodPolicy: policy } : { ...baseTemplate, periodPolicy: void 0, granularity: void 0 };
-    return { template, theme: theme2, goal, templateId: baseTemplate.id, templateSourceType: "core-block", effectiveBlockId, templateVariantId: null };
+    return { template, theme, goal, templateId: baseTemplate.id, templateSourceType: "core-block", effectiveBlockId, templateVariantId: null };
   }
 }
 function buildEditableRecordSnapshot(input) {
@@ -18784,7 +18784,7 @@ function issue$2(code, message, field) {
 }
 function findThemeIdByPath(settings, path) {
   if (!path) return null;
-  return settings.themes.find((theme2) => theme2.path === path)?.id ?? null;
+  return settings.themes.find((theme) => theme.path === path)?.id ?? null;
 }
 function readNestedGoalContext(context) {
   const nested2 = context?.__goalContext;
@@ -18921,7 +18921,7 @@ function resolveRecordDependencies(input) {
     };
   }
   let usedFallbackTheme = false;
-  if (resolvedThemeId && !effectiveSettings.themes.some((theme2) => theme2.id === resolvedThemeId)) {
+  if (resolvedThemeId && !effectiveSettings.themes.some((theme) => theme.id === resolvedThemeId)) {
     warnings.push(issue$2("record_theme_not_found", "Selected theme no longer exists. Continuing with goal/template metadata.", "themeId"));
     resolvedThemeId = null;
     usedFallbackTheme = true;
@@ -23512,7 +23512,7 @@ function u2(e2, t3, n2, o2, i2, u3) {
 function isEmpty$2(obj) {
   return obj === void 0 || obj === null || Object.keys(obj).length === 0;
 }
-function GlobalStyles$3(props) {
+function GlobalStyles$2(props) {
   const {
     styles: styles2,
     defaultTheme: defaultTheme2 = {}
@@ -23752,8 +23752,8 @@ function createBreakpoints(breakpoints) {
     ...other
   };
 }
-function sortContainerQueries(theme2, css2) {
-  if (!theme2.containerQueries) {
+function sortContainerQueries(theme, css2) {
+  if (!theme.containerQueries) {
     return css2;
   }
   const sorted = Object.keys(css2).filter((key) => key.startsWith("@container")).sort((a2, b2) => {
@@ -23775,14 +23775,14 @@ function sortContainerQueries(theme2, css2) {
 function isCqShorthand(breakpointKeys, value) {
   return value === "@" || value.startsWith("@") && (breakpointKeys.some((key) => value.startsWith(`@${key}`)) || !!value.match(/^@\d/));
 }
-function getContainerQuery(theme2, shorthand) {
+function getContainerQuery(theme, shorthand) {
   const matches = shorthand.match(/^@([^/]+)?\/?(.+)?$/);
   if (!matches) {
     return null;
   }
   const [, containerQuery, containerName] = matches;
   const value = Number.isNaN(+containerQuery) ? containerQuery || 0 : +containerQuery;
-  return theme2.containerQueries(containerName).up(value);
+  return theme.containerQueries(containerName).up(value);
 }
 function cssContainerQueries(themeInput) {
   const toContainerQuery = (mediaQuery, name) => mediaQuery.replace("@media", name ? `@container ${name}` : "@container");
@@ -23852,19 +23852,19 @@ const defaultContainerQueries = {
   })
 };
 function handleBreakpoints(props, propValue, styleFromPropValue) {
-  const theme2 = props.theme || {};
+  const theme = props.theme || {};
   if (Array.isArray(propValue)) {
-    const themeBreakpoints = theme2.breakpoints || defaultBreakpoints;
+    const themeBreakpoints = theme.breakpoints || defaultBreakpoints;
     return propValue.reduce((acc, item, index) => {
       acc[themeBreakpoints.up(themeBreakpoints.keys[index])] = styleFromPropValue(propValue[index]);
       return acc;
     }, {});
   }
   if (typeof propValue === "object") {
-    const themeBreakpoints = theme2.breakpoints || defaultBreakpoints;
+    const themeBreakpoints = theme.breakpoints || defaultBreakpoints;
     return Object.keys(propValue).reduce((acc, breakpoint) => {
       if (isCqShorthand(themeBreakpoints.keys, breakpoint)) {
-        const containerKey = getContainerQuery(theme2.containerQueries ? theme2 : defaultContainerQueries, breakpoint);
+        const containerKey = getContainerQuery(theme.containerQueries ? theme : defaultContainerQueries, breakpoint);
         if (containerKey) {
           acc[containerKey] = styleFromPropValue(propValue[breakpoint], breakpoint);
         }
@@ -23998,8 +23998,8 @@ function style$2(options) {
       return null;
     }
     const propValue = props[prop];
-    const theme2 = props.theme;
-    const themeMapping = getPath(theme2, themeKey) || {};
+    const theme = props.theme;
+    const themeMapping = getPath(theme, themeKey) || {};
     const styleFromPropValue = (propValueFinal) => {
       let value = getStyleValue$1(themeMapping, transform2, propValueFinal);
       if (propValueFinal === value && typeof propValueFinal === "string") {
@@ -24061,8 +24061,8 @@ const getCssProperties = memoize((prop) => {
 const marginKeys = ["m", "mt", "mr", "mb", "ml", "mx", "my", "margin", "marginTop", "marginRight", "marginBottom", "marginLeft", "marginX", "marginY", "marginInline", "marginInlineStart", "marginInlineEnd", "marginBlock", "marginBlockStart", "marginBlockEnd"];
 const paddingKeys = ["p", "pt", "pr", "pb", "pl", "px", "py", "padding", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft", "paddingX", "paddingY", "paddingInline", "paddingInlineStart", "paddingInlineEnd", "paddingBlock", "paddingBlockStart", "paddingBlockEnd"];
 [...marginKeys, ...paddingKeys];
-function createUnaryUnit(theme2, themeKey, defaultValue2, propName) {
-  const themeSpacing = getPath(theme2, themeKey, true) ?? defaultValue2;
+function createUnaryUnit(theme, themeKey, defaultValue2, propName) {
+  const themeSpacing = getPath(theme, themeKey, true) ?? defaultValue2;
   if (typeof themeSpacing === "number" || typeof themeSpacing === "string") {
     return (val) => {
       if (typeof val === "string") {
@@ -24104,8 +24104,8 @@ function createUnaryUnit(theme2, themeKey, defaultValue2, propName) {
   }
   return () => void 0;
 }
-function createUnarySpacing(theme2) {
-  return createUnaryUnit(theme2, "spacing", 8);
+function createUnarySpacing(theme) {
+  return createUnaryUnit(theme, "spacing", 8);
 }
 function getValue(transformer, propValue) {
   if (typeof propValue === "string" || propValue == null) {
@@ -24659,10 +24659,10 @@ function callIfFn(maybeFn, arg2) {
   return typeof maybeFn === "function" ? maybeFn(arg2) : maybeFn;
 }
 function unstable_createStyleFunctionSx() {
-  function getThemeValue(prop, val, theme2, config2) {
+  function getThemeValue(prop, val, theme, config2) {
     const props = {
       [prop]: val,
-      theme: theme2
+      theme
     };
     const options = config2[prop];
     if (!options) {
@@ -24684,7 +24684,7 @@ function unstable_createStyleFunctionSx() {
         [prop]: val
       };
     }
-    const themeMapping = getPath(theme2, themeKey) || {};
+    const themeMapping = getPath(theme, themeKey) || {};
     if (style2) {
       return style2(props);
     }
@@ -24705,42 +24705,42 @@ function unstable_createStyleFunctionSx() {
   function styleFunctionSx2(props) {
     const {
       sx,
-      theme: theme2 = {},
+      theme = {},
       nested: nested2
     } = props || {};
     if (!sx) {
       return null;
     }
-    const config2 = theme2.unstable_sxConfig ?? defaultSxConfig;
+    const config2 = theme.unstable_sxConfig ?? defaultSxConfig;
     function traverse(sxInput) {
       let sxObject = sxInput;
       if (typeof sxInput === "function") {
-        sxObject = sxInput(theme2);
+        sxObject = sxInput(theme);
       } else if (typeof sxInput !== "object") {
         return sxInput;
       }
       if (!sxObject) {
         return null;
       }
-      const emptyBreakpoints = createEmptyBreakpointObject(theme2.breakpoints);
+      const emptyBreakpoints = createEmptyBreakpointObject(theme.breakpoints);
       const breakpointsKeys = Object.keys(emptyBreakpoints);
       let css2 = emptyBreakpoints;
       Object.keys(sxObject).forEach((styleKey) => {
-        const value = callIfFn(sxObject[styleKey], theme2);
+        const value = callIfFn(sxObject[styleKey], theme);
         if (value !== null && value !== void 0) {
           if (typeof value === "object") {
             if (config2[styleKey]) {
-              css2 = merge(css2, getThemeValue(styleKey, value, theme2, config2));
+              css2 = merge(css2, getThemeValue(styleKey, value, theme, config2));
             } else {
               const breakpointsValues = handleBreakpoints({
-                theme: theme2
+                theme
               }, value, (x2) => ({
                 [styleKey]: x2
               }));
               if (objectsHaveSameKeys(breakpointsValues, value)) {
                 css2[styleKey] = styleFunctionSx2({
                   sx: value,
-                  theme: theme2,
+                  theme,
                   nested: true
                 });
               } else {
@@ -24748,16 +24748,16 @@ function unstable_createStyleFunctionSx() {
               }
             }
           } else {
-            css2 = merge(css2, getThemeValue(styleKey, value, theme2, config2));
+            css2 = merge(css2, getThemeValue(styleKey, value, theme, config2));
           }
         }
       });
-      if (!nested2 && theme2.modularCssLayers) {
+      if (!nested2 && theme.modularCssLayers) {
         return {
-          "@layer sx": sortContainerQueries(theme2, removeUnusedBreakpoints(breakpointsKeys, css2))
+          "@layer sx": sortContainerQueries(theme, removeUnusedBreakpoints(breakpointsKeys, css2))
         };
       }
-      return sortContainerQueries(theme2, removeUnusedBreakpoints(breakpointsKeys, css2));
+      return sortContainerQueries(theme, removeUnusedBreakpoints(breakpointsKeys, css2));
     }
     return Array.isArray(sx) ? sx.map(traverse) : traverse(sx);
   }
@@ -24766,12 +24766,12 @@ function unstable_createStyleFunctionSx() {
 const styleFunctionSx = unstable_createStyleFunctionSx();
 styleFunctionSx.filterProps = ["sx"];
 function applyStyles$2(key, styles2) {
-  const theme2 = this;
-  if (theme2.vars) {
-    if (!theme2.colorSchemes?.[key] || typeof theme2.getColorSchemeSelector !== "function") {
+  const theme = this;
+  if (theme.vars) {
+    if (!theme.colorSchemes?.[key] || typeof theme.getColorSchemeSelector !== "function") {
       return {};
     }
-    let selector = theme2.getColorSchemeSelector(key);
+    let selector = theme.getColorSchemeSelector(key);
     if (selector === "&") {
       return styles2;
     }
@@ -24782,7 +24782,7 @@ function applyStyles$2(key, styles2) {
       [selector]: styles2
     };
   }
-  if (theme2.palette.mode === key) {
+  if (theme.palette.mode === key) {
     return styles2;
   }
   return {};
@@ -24848,7 +24848,7 @@ function wrapGlobalLayer(styles2) {
   }
   return styles2;
 }
-function GlobalStyles$2({
+function GlobalStyles$1({
   styles: styles2,
   themeId,
   defaultTheme: defaultTheme2 = {}
@@ -24868,7 +24868,7 @@ function GlobalStyles$2({
       globalStyles = wrapGlobalLayer(globalStyles);
     }
   }
-  return /* @__PURE__ */ u2(GlobalStyles$3, {
+  return /* @__PURE__ */ u2(GlobalStyles$2, {
     styles: globalStyles
   });
 }
@@ -24961,7 +24961,7 @@ function createBox(options = {}) {
     shouldForwardProp: (prop) => prop !== "theme" && prop !== "sx" && prop !== "as"
   })(styleFunctionSx);
   const Box2 = /* @__PURE__ */ D(function Box3(inProps, ref) {
-    const theme2 = useTheme$2(defaultTheme2);
+    const theme = useTheme$2(defaultTheme2);
     const {
       className,
       component = "div",
@@ -24971,7 +24971,7 @@ function createBox(options = {}) {
       as: component,
       ref,
       className: clsx(className, generateClassName ? generateClassName(defaultClassName) : defaultClassName),
-      theme: themeId ? theme2[themeId] || theme2 : theme2,
+      theme: themeId ? theme[themeId] || theme : theme,
       ...other
     });
   });
@@ -25168,8 +25168,8 @@ function createStyled2(input = {}) {
       expressionsHead.push(styleAttachTheme);
       if (componentName && overridesResolver2) {
         expressionsTail.push(function styleThemeOverrides(props) {
-          const theme2 = props.theme;
-          const styleOverrides = theme2.components?.[componentName]?.styleOverrides;
+          const theme = props.theme;
+          const styleOverrides = theme.components?.[componentName]?.styleOverrides;
           if (!styleOverrides) {
             return null;
           }
@@ -25182,8 +25182,8 @@ function createStyled2(input = {}) {
       }
       if (componentName && !skipVariantsResolver) {
         expressionsTail.push(function styleThemeVariants(props) {
-          const theme2 = props.theme;
-          const themeVariants = theme2?.components?.[componentName]?.variants;
+          const theme = props.theme;
+          const themeVariants = theme?.components?.[componentName]?.variants;
           if (!themeVariants) {
             return null;
           }
@@ -25287,14 +25287,14 @@ function resolveProps(defaultProps2, props, mergeClassNameAndStyle = false) {
 }
 function getThemeProps$1(params) {
   const {
-    theme: theme2,
+    theme,
     name,
     props
   } = params;
-  if (!theme2 || !theme2.components || !theme2.components[name] || !theme2.components[name].defaultProps) {
+  if (!theme || !theme.components || !theme.components[name] || !theme.components[name].defaultProps) {
     return props;
   }
-  return resolveProps(theme2.components[name].defaultProps, props);
+  return resolveProps(theme.components[name].defaultProps, props);
 }
 function useThemeProps({
   props,
@@ -25302,12 +25302,12 @@ function useThemeProps({
   defaultTheme: defaultTheme2,
   themeId
 }) {
-  let theme2 = useTheme$2(defaultTheme2);
+  let theme = useTheme$2(defaultTheme2);
   if (themeId) {
-    theme2 = theme2[themeId] || theme2;
+    theme = theme[themeId] || theme;
   }
   return getThemeProps$1({
-    theme: theme2,
+    theme,
     name,
     props
   });
@@ -25506,8 +25506,8 @@ function private_safeEmphasize(color2, coefficient, warning) {
 }
 const ThemeContext = /* @__PURE__ */ X$1(null);
 function useTheme$1() {
-  const theme2 = x$1(ThemeContext);
-  return theme2;
+  const theme = x$1(ThemeContext);
+  return theme;
 }
 const hasSymbol = typeof Symbol === "function" && Symbol.for;
 const nested = hasSymbol ? /* @__PURE__ */ Symbol.for("mui.nested") : "__THEME_NESTED__";
@@ -25527,7 +25527,7 @@ function ThemeProvider$3(props) {
     theme: localTheme
   } = props;
   const outerTheme = useTheme$1();
-  const theme2 = T$1(() => {
+  const theme = T$1(() => {
     const output = outerTheme === null ? {
       ...localTheme
     } : mergeOuterLocalTheme(outerTheme, localTheme);
@@ -25537,7 +25537,7 @@ function ThemeProvider$3(props) {
     return output;
   }, [localTheme, outerTheme]);
   return /* @__PURE__ */ u2(ThemeContext.Provider, {
-    value: theme2,
+    value: theme,
     children
   });
 }
@@ -25567,19 +25567,19 @@ function DefaultPropsProvider({
 }
 function getThemeProps(params) {
   const {
-    theme: theme2,
+    theme,
     name,
     props
   } = params;
-  if (!theme2 || !theme2.components || !theme2.components[name]) {
+  if (!theme || !theme.components || !theme.components[name]) {
     return props;
   }
-  const config2 = theme2.components[name];
+  const config2 = theme.components[name];
   if (config2.defaultProps) {
-    return resolveProps(config2.defaultProps, props, theme2.components.mergeClassNameAndStyle);
+    return resolveProps(config2.defaultProps, props, theme.components.mergeClassNameAndStyle);
   }
   if (!config2.styleOverrides && !config2.variants) {
-    return resolveProps(config2, props, theme2.components.mergeClassNameAndStyle);
+    return resolveProps(config2, props, theme.components.mergeClassNameAndStyle);
   }
   return props;
 }
@@ -25619,12 +25619,12 @@ function useId(idOverride) {
   }
   return useGlobalId(idOverride);
 }
-function useLayerOrder(theme2) {
+function useLayerOrder(theme) {
   const upperTheme = useTheme$3();
   const id = useId() || "";
   const {
     modularCssLayers
-  } = theme2;
+  } = theme;
   let layerOrder = "mui.global, mui.components, mui.theme, mui.custom, mui.sx";
   if (!modularCssLayers || upperTheme !== null) {
     layerOrder = "";
@@ -25654,7 +25654,7 @@ function useLayerOrder(theme2) {
   if (!layerOrder) {
     return null;
   }
-  return /* @__PURE__ */ u2(GlobalStyles$2, {
+  return /* @__PURE__ */ u2(GlobalStyles$1, {
     styles: layerOrder
   });
 }
@@ -26161,32 +26161,32 @@ function createCssVarsProvider(options) {
     }
     const memoTheme2 = T$1(() => {
       const themeVars = restThemeProp.generateThemeVars?.() || restThemeProp.vars;
-      const theme2 = {
+      const theme = {
         ...restThemeProp,
         components,
         colorSchemes,
         cssVarPrefix,
         vars: themeVars
       };
-      if (typeof theme2.generateSpacing === "function") {
-        theme2.spacing = theme2.generateSpacing();
+      if (typeof theme.generateSpacing === "function") {
+        theme.spacing = theme.generateSpacing();
       }
       if (calculatedColorScheme) {
         const scheme = colorSchemes[calculatedColorScheme];
         if (scheme && typeof scheme === "object") {
           Object.keys(scheme).forEach((schemeKey) => {
             if (scheme[schemeKey] && typeof scheme[schemeKey] === "object") {
-              theme2[schemeKey] = {
-                ...theme2[schemeKey],
+              theme[schemeKey] = {
+                ...theme[schemeKey],
                 ...scheme[schemeKey]
               };
             } else {
-              theme2[schemeKey] = scheme[schemeKey];
+              theme[schemeKey] = scheme[schemeKey];
             }
           });
         }
       }
-      return resolveTheme ? resolveTheme(theme2) : theme2;
+      return resolveTheme ? resolveTheme(theme) : theme;
     }, [restThemeProp, calculatedColorScheme, components, colorSchemes, cssVarPrefix]);
     const colorSchemeSelector = restThemeProp.colorSchemeSelector;
     useEnhancedEffect(() => {
@@ -26261,7 +26261,7 @@ function createCssVarsProvider(options) {
         themeId: scopedTheme ? themeId : void 0,
         theme: memoTheme2,
         children
-      }), shouldGenerateStyleSheet && /* @__PURE__ */ u2(GlobalStyles$3, {
+      }), shouldGenerateStyleSheet && /* @__PURE__ */ u2(GlobalStyles$2, {
         styles: memoTheme2.generateStyleSheets?.() || []
       })]
     });
@@ -26350,7 +26350,7 @@ const getCssValue = (keys, value) => {
   }
   return value;
 };
-function cssVarsParser(theme2, options) {
+function cssVarsParser(theme, options) {
   const {
     prefix: prefix2,
     shouldSkipGeneratingVar: shouldSkipGeneratingVar2
@@ -26359,7 +26359,7 @@ function cssVarsParser(theme2, options) {
   const vars = {};
   const varsWithDefaults = {};
   walkObjectDeep(
-    theme2,
+    theme,
     (keys, value, arrayKeys) => {
       if (typeof value === "string" || typeof value === "number") {
         if (!shouldSkipGeneratingVar2 || !shouldSkipGeneratingVar2(keys, value)) {
@@ -26382,7 +26382,7 @@ function cssVarsParser(theme2, options) {
     varsWithDefaults
   };
 }
-function prepareCssVars(theme2, parserConfig = {}) {
+function prepareCssVars(theme, parserConfig = {}) {
   const {
     getSelector = defaultGetSelector2,
     disableCssColorScheme,
@@ -26394,7 +26394,7 @@ function prepareCssVars(theme2, parserConfig = {}) {
     components,
     defaultColorScheme = "light",
     ...otherTheme
-  } = theme2;
+  } = theme;
   const {
     vars: rootVars,
     css: rootCss,
@@ -26443,7 +26443,7 @@ function prepareCssVars(theme2, parserConfig = {}) {
     }
     if (colorScheme) {
       if (rule === "media") {
-        if (theme2.defaultColorScheme === colorScheme) {
+        if (theme.defaultColorScheme === colorScheme) {
           return ":root";
         }
         const mode = colorSchemes[colorScheme]?.palette?.mode || colorScheme;
@@ -26454,7 +26454,7 @@ function prepareCssVars(theme2, parserConfig = {}) {
         };
       }
       if (rule) {
-        if (theme2.defaultColorScheme === colorScheme) {
+        if (theme.defaultColorScheme === colorScheme) {
           return `:root, ${rule.replace("%s", String(colorScheme))}`;
         }
         return rule.replace("%s", String(colorScheme));
@@ -26475,7 +26475,7 @@ function prepareCssVars(theme2, parserConfig = {}) {
   };
   const generateStyleSheets = () => {
     const stylesheets = [];
-    const colorScheme = theme2.defaultColorScheme || "light";
+    const colorScheme = theme.defaultColorScheme || "light";
     function insertStyleSheet(key, css2) {
       if (Object.keys(css2).length) {
         stylesheets.push(typeof key === "string" ? {
@@ -26622,23 +26622,23 @@ const getSideFromDirection = (direction) => {
 };
 const style = ({
   ownerState,
-  theme: theme2
+  theme
 }) => {
   let styles2 = {
     display: "flex",
     flexDirection: "column",
     ...handleBreakpoints({
-      theme: theme2
+      theme
     }, resolveBreakpointValues({
       values: ownerState.direction,
-      breakpoints: theme2.breakpoints.values
+      breakpoints: theme.breakpoints.values
     }), (propValue) => ({
       flexDirection: propValue
     }))
   };
   if (ownerState.spacing) {
-    const transformer = createUnarySpacing(theme2);
-    const base = Object.keys(theme2.breakpoints.values).reduce((acc, breakpoint) => {
+    const transformer = createUnarySpacing(theme);
+    const base = Object.keys(theme.breakpoints.values).reduce((acc, breakpoint) => {
       if (typeof ownerState.spacing === "object" && ownerState.spacing[breakpoint] != null || typeof ownerState.direction === "object" && ownerState.direction[breakpoint] != null) {
         acc[breakpoint] = true;
       }
@@ -26679,10 +26679,10 @@ const style = ({
       };
     };
     styles2 = deepmerge(styles2, handleBreakpoints({
-      theme: theme2
+      theme
     }, spacingValues, styleFromPropValue));
   }
-  styles2 = mergeBreakpointsInOrder(theme2.breakpoints, styles2);
+  styles2 = mergeBreakpointsInOrder(theme.breakpoints, styles2);
   return styles2;
 };
 function createStack(options = {}) {
@@ -27328,10 +27328,10 @@ const parseAddition = (str) => {
   }
   return sum;
 };
-function attachColorManipulators(theme2) {
-  Object.assign(theme2, {
+function attachColorManipulators(theme) {
+  Object.assign(theme, {
     alpha(color2, coefficient) {
-      const obj = this || theme2;
+      const obj = this || theme;
       if (obj.colorSpace) {
         return `oklch(from ${color2} l c h / ${typeof coefficient === "string" ? `calc(${coefficient})` : coefficient})`;
       }
@@ -27341,14 +27341,14 @@ function attachColorManipulators(theme2) {
       return alpha(color2, parseAddition(coefficient));
     },
     lighten(color2, coefficient) {
-      const obj = this || theme2;
+      const obj = this || theme;
       if (obj.colorSpace) {
         return `color-mix(in ${obj.colorSpace}, ${color2}, #fff ${coefficientToPercentage(coefficient)})`;
       }
       return lighten(color2, coefficient);
     },
     darken(color2, coefficient) {
-      const obj = this || theme2;
+      const obj = this || theme;
       if (obj.colorSpace) {
         return `color-mix(in ${obj.colorSpace}, ${color2}, #000 ${coefficientToPercentage(coefficient)})`;
       }
@@ -27462,9 +27462,9 @@ function shouldSkipGeneratingVar(keys) {
   keys[0] === "palette" && !!keys[1]?.match(/(mode|contrastThreshold|tonalOffset)/);
 }
 const excludeVariablesFromRoot = (cssVarPrefix) => [...[...Array(25)].map((_2, index) => `--${cssVarPrefix ? `${cssVarPrefix}-` : ""}overlays-${index}`), `--${cssVarPrefix ? `${cssVarPrefix}-` : ""}palette-AppBar-darkBg`, `--${cssVarPrefix ? `${cssVarPrefix}-` : ""}palette-AppBar-darkColor`];
-const defaultGetSelector = (theme2) => (colorScheme, css2) => {
-  const root = theme2.rootSelector || ":root";
-  const selector = theme2.colorSchemeSelector;
+const defaultGetSelector = (theme) => (colorScheme, css2) => {
+  const root = theme.rootSelector || ":root";
+  const selector = theme.colorSchemeSelector;
   let rule = selector;
   if (selector === "class") {
     rule = ".%s";
@@ -27475,10 +27475,10 @@ const defaultGetSelector = (theme2) => (colorScheme, css2) => {
   if (selector?.startsWith("data-") && !selector.includes("%s")) {
     rule = `[${selector}="%s"]`;
   }
-  if (theme2.defaultColorScheme === colorScheme) {
+  if (theme.defaultColorScheme === colorScheme) {
     if (colorScheme === "dark") {
       const excludedVariables = {};
-      excludeVariablesFromRoot(theme2.cssVarPrefix).forEach((cssVar) => {
+      excludeVariablesFromRoot(theme.cssVarPrefix).forEach((cssVar) => {
         excludedVariables[cssVar] = css2[cssVar];
         delete css2[cssVar];
       });
@@ -27643,7 +27643,7 @@ function createThemeWithVars(options = {}, ...args) {
   if (builtInDark && !colorSchemes.dark) {
     attachColorScheme$1(colorSpace, colorSchemes, builtInDark, void 0, "dark");
   }
-  let theme2 = {
+  let theme = {
     defaultColorScheme,
     ...muiTheme,
     cssVarPrefix,
@@ -27657,8 +27657,8 @@ function createThemeWithVars(options = {}, ...args) {
     },
     spacing: getSpacingVal(input.spacing)
   };
-  Object.keys(theme2.colorSchemes).forEach((key) => {
-    const palette = theme2.colorSchemes[key].palette;
+  Object.keys(theme.colorSchemes).forEach((key) => {
+    const palette = theme.colorSchemes[key].palette;
     const setCssVarColor = (cssVar) => {
       const tokens = cssVar.split("-");
       const color2 = tokens[1];
@@ -27851,50 +27851,50 @@ function createThemeWithVars(options = {}, ...args) {
       }
     });
   });
-  theme2 = args.reduce((acc, argument) => deepmerge(acc, argument), theme2);
+  theme = args.reduce((acc, argument) => deepmerge(acc, argument), theme);
   const parserConfig = {
     prefix: cssVarPrefix,
     disableCssColorScheme,
     shouldSkipGeneratingVar: shouldSkipGeneratingVar$1,
-    getSelector: defaultGetSelector(theme2),
+    getSelector: defaultGetSelector(theme),
     enableContrastVars: nativeColor
   };
   const {
     vars,
     generateThemeVars,
     generateStyleSheets
-  } = prepareCssVars(theme2, parserConfig);
-  theme2.vars = vars;
-  Object.entries(theme2.colorSchemes[theme2.defaultColorScheme]).forEach(([key, value]) => {
-    theme2[key] = value;
+  } = prepareCssVars(theme, parserConfig);
+  theme.vars = vars;
+  Object.entries(theme.colorSchemes[theme.defaultColorScheme]).forEach(([key, value]) => {
+    theme[key] = value;
   });
-  theme2.generateThemeVars = generateThemeVars;
-  theme2.generateStyleSheets = generateStyleSheets;
-  theme2.generateSpacing = function generateSpacing() {
+  theme.generateThemeVars = generateThemeVars;
+  theme.generateStyleSheets = generateStyleSheets;
+  theme.generateSpacing = function generateSpacing() {
     return createSpacing(input.spacing, createUnarySpacing(this));
   };
-  theme2.getColorSchemeSelector = createGetColorSchemeSelector(selector);
-  theme2.spacing = theme2.generateSpacing();
-  theme2.shouldSkipGeneratingVar = shouldSkipGeneratingVar$1;
-  theme2.unstable_sxConfig = {
+  theme.getColorSchemeSelector = createGetColorSchemeSelector(selector);
+  theme.spacing = theme.generateSpacing();
+  theme.shouldSkipGeneratingVar = shouldSkipGeneratingVar$1;
+  theme.unstable_sxConfig = {
     ...defaultSxConfig,
     ...input?.unstable_sxConfig
   };
-  theme2.unstable_sx = function sx(props) {
+  theme.unstable_sx = function sx(props) {
     return styleFunctionSx({
       sx: props,
       theme: this
     });
   };
-  theme2.toRuntimeSource = stringifyTheme;
-  return theme2;
+  theme.toRuntimeSource = stringifyTheme;
+  return theme;
 }
-function attachColorScheme(theme2, scheme, colorScheme) {
-  if (!theme2.colorSchemes) {
+function attachColorScheme(theme, scheme, colorScheme) {
+  if (!theme.colorSchemes) {
     return void 0;
   }
   if (colorScheme) {
-    theme2.colorSchemes[scheme] = {
+    theme.colorSchemes[scheme] = {
       ...colorScheme !== true && colorScheme,
       palette: createPalette({
         ...colorScheme === true ? {} : colorScheme.palette,
@@ -27941,27 +27941,27 @@ function createTheme(options = {}, ...args) {
         }
       }
     }
-    const theme2 = createThemeNoVars({
+    const theme = createThemeNoVars({
       ...options,
       palette: paletteOptions
     }, ...args);
-    theme2.defaultColorScheme = defaultColorSchemeInput;
-    theme2.colorSchemes = colorSchemesInput;
-    if (theme2.palette.mode === "light") {
-      theme2.colorSchemes.light = {
+    theme.defaultColorScheme = defaultColorSchemeInput;
+    theme.colorSchemes = colorSchemesInput;
+    if (theme.palette.mode === "light") {
+      theme.colorSchemes.light = {
         ...colorSchemesInput.light !== true && colorSchemesInput.light,
-        palette: theme2.palette
+        palette: theme.palette
       };
-      attachColorScheme(theme2, "dark", colorSchemesInput.dark);
+      attachColorScheme(theme, "dark", colorSchemesInput.dark);
     }
-    if (theme2.palette.mode === "dark") {
-      theme2.colorSchemes.dark = {
+    if (theme.palette.mode === "dark") {
+      theme.colorSchemes.dark = {
         ...colorSchemesInput.dark !== true && colorSchemesInput.dark,
-        palette: theme2.palette
+        palette: theme.palette
       };
-      attachColorScheme(theme2, "light", colorSchemesInput.light);
+      attachColorScheme(theme, "light", colorSchemesInput.light);
     }
-    return theme2;
+    return theme;
   }
   if (!palette && !("light" in colorSchemesInput) && defaultColorSchemeInput === "light") {
     colorSchemesInput.light = true;
@@ -27975,8 +27975,8 @@ function createTheme(options = {}, ...args) {
 }
 const defaultTheme$1 = createTheme();
 function useTheme() {
-  const theme2 = useTheme$2(defaultTheme$1);
-  return theme2[THEME_ID] || theme2;
+  const theme = useTheme$2(defaultTheme$1);
+  return theme[THEME_ID] || theme;
 }
 function slotShouldForwardProp(prop) {
   return prop !== "ownerState" && prop !== "theme" && prop !== "sx" && prop !== "as";
@@ -28018,10 +28018,10 @@ const {
     light: defaultConfig.defaultLightColorScheme,
     dark: defaultConfig.defaultDarkColorScheme
   },
-  resolveTheme: (theme2) => {
+  resolveTheme: (theme) => {
     const newTheme = {
-      ...theme2,
-      typography: createTypography(theme2.palette, theme2.typography)
+      ...theme,
+      typography: createTypography(theme.palette, theme.typography)
     };
     newTheme.unstable_sx = function sx(props) {
       return styleFunctionSx({
@@ -28034,25 +28034,25 @@ const {
 });
 const CssVarsProvider = InternalCssVarsProvider;
 function ThemeProvider$1({
-  theme: theme2,
+  theme,
   ...props
 }) {
   const noVarsTheme = T$1(() => {
-    if (typeof theme2 === "function") {
-      return theme2;
+    if (typeof theme === "function") {
+      return theme;
     }
-    const muiTheme = THEME_ID in theme2 ? theme2[THEME_ID] : theme2;
+    const muiTheme = THEME_ID in theme ? theme[THEME_ID] : theme;
     if (!("colorSchemes" in muiTheme)) {
       if (!("vars" in muiTheme)) {
         return {
-          ...theme2,
+          ...theme,
           vars: null
         };
       }
-      return theme2;
+      return theme;
     }
     return null;
-  }, [theme2]);
+  }, [theme]);
   if (noVarsTheme) {
     return /* @__PURE__ */ u2(ThemeProviderNoVars, {
       theme: noVarsTheme,
@@ -28060,65 +28060,462 @@ function ThemeProvider$1({
     });
   }
   return /* @__PURE__ */ u2(CssVarsProvider, {
-    theme: theme2,
+    theme,
     ...props
   });
 }
-const theme = createTheme({
-  palette: {
-    mode: "light",
-    primary: {
-      main: "#7c3aed"
-      // 紫色，类似--interactive-accent
-    },
-    secondary: {
-      main: "#6366f1"
-      // 蓝紫色
-    },
-    background: {
-      default: "#ffffff",
-      paper: "#f8fafc"
-    },
-    text: {
-      primary: "#1e293b",
-      secondary: "#64748b"
-    }
+const fallbackPalette = {
+  light: {
+    primary: "#6d4aff",
+    secondary: "#5b6472",
+    error: "#c93636",
+    warning: "#9a6700",
+    success: "#1f7a4c",
+    info: "#2764c7",
+    backgroundDefault: "#ffffff",
+    backgroundPaper: "#f7f7f8",
+    textPrimary: "#202124",
+    textSecondary: "#666a73",
+    divider: "#d8d9dc"
   },
-  typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-  },
-  components: {
-    // 使用CSS-in-JS而不是CSS变量来避免生产模式错误
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundColor: "#f8fafc",
-          color: "#1e293b",
-          // 暗色主题支持
-          ".theme-dark &": {
-            backgroundColor: "#1e293b",
-            color: "#f1f5f9"
+  dark: {
+    primary: "#a896ff",
+    secondary: "#aab0bc",
+    error: "#ff8b8b",
+    warning: "#e7bd68",
+    success: "#72d3a0",
+    info: "#8bb7ff",
+    backgroundDefault: "#202124",
+    backgroundPaper: "#292a2d",
+    textPrimary: "#f1f1f2",
+    textSecondary: "#b0b2b8",
+    divider: "#45474d"
+  }
+};
+function createThinkMuiTheme(mode) {
+  const fallback = fallbackPalette[mode];
+  return createTheme({
+    palette: {
+      mode,
+      primary: { main: fallback.primary },
+      secondary: { main: fallback.secondary },
+      error: { main: fallback.error },
+      warning: { main: fallback.warning },
+      success: { main: fallback.success },
+      info: { main: fallback.info },
+      background: {
+        default: fallback.backgroundDefault,
+        paper: fallback.backgroundPaper
+      },
+      text: {
+        primary: fallback.textPrimary,
+        secondary: fallback.textSecondary
+      },
+      divider: fallback.divider
+    },
+    spacing: 4,
+    shape: {
+      borderRadius: 8
+    },
+    typography: {
+      fontFamily: 'var(--think-font-interface, var(--font-interface, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif))',
+      fontSize: 13,
+      button: {
+        fontSize: "var(--think-font-size-sm, 13px)",
+        fontWeight: 500,
+        lineHeight: 1,
+        textTransform: "none"
+      },
+      body1: {
+        fontSize: "var(--think-font-size-md, 14px)",
+        lineHeight: "var(--think-line-height-normal, 1.5)"
+      },
+      body2: {
+        fontSize: "var(--think-font-size-sm, 13px)",
+        lineHeight: "var(--think-line-height-normal, 1.5)"
+      },
+      caption: {
+        fontSize: "var(--think-font-size-xs, 12px)",
+        lineHeight: "var(--think-line-height-normal, 1.5)"
+      },
+      h6: {
+        fontSize: "var(--think-font-size-xl, 18px)",
+        fontWeight: 600,
+        lineHeight: "var(--think-line-height-tight, 1.25)"
+      }
+    },
+    components: {
+      MuiButtonBase: {
+        defaultProps: {
+          disableRipple: true
+        }
+      },
+      MuiButton: {
+        defaultProps: {
+          disableElevation: true,
+          size: "medium"
+        },
+        styleOverrides: {
+          root: {
+            minHeight: "var(--think-control-height-md, 32px)",
+            padding: "0 var(--think-space-5, 12px)",
+            borderRadius: "var(--think-radius-sm, 6px)",
+            color: "var(--think-text-primary)",
+            fontSize: "var(--think-font-size-sm, 13px)",
+            fontWeight: "var(--think-font-weight-medium, 500)",
+            lineHeight: 1,
+            textTransform: "none",
+            transition: "background-color var(--think-duration-fast) var(--think-ease-standard), border-color var(--think-duration-fast) var(--think-ease-standard), color var(--think-duration-fast) var(--think-ease-standard), opacity var(--think-duration-fast) var(--think-ease-standard)",
+            "&.MuiButton-sizeSmall": {
+              minHeight: "var(--think-control-height-sm, 28px)",
+              paddingInline: "var(--think-space-4, 8px)",
+              fontSize: "var(--think-font-size-xs, 12px)"
+            },
+            "&.MuiButton-sizeLarge": {
+              minHeight: "var(--think-control-height-lg, 36px)",
+              paddingInline: "14px",
+              fontSize: "var(--think-font-size-md, 14px)"
+            },
+            "&.MuiButton-contained": {
+              backgroundColor: "var(--think-accent)",
+              color: "var(--think-text-on-accent)",
+              "&:hover": { backgroundColor: "var(--think-accent-hover)" }
+            },
+            "&.MuiButton-outlined": {
+              backgroundColor: "var(--think-bg-surface-1)",
+              borderColor: "var(--think-border-subtle)",
+              color: "var(--think-text-primary)",
+              "&:hover": {
+                backgroundColor: "var(--think-bg-hover)",
+                borderColor: "var(--think-border-strong)"
+              }
+            },
+            "&.MuiButton-text": {
+              color: "var(--think-text-secondary)",
+              "&:hover": {
+                backgroundColor: "var(--think-bg-hover)",
+                color: "var(--think-text-primary)"
+              }
+            },
+            "&.MuiButton-colorError": {
+              color: "var(--think-danger)",
+              "&.MuiButton-contained": {
+                backgroundColor: "var(--think-danger)",
+                color: "var(--think-text-on-accent)"
+              },
+              "&:hover": { backgroundColor: "var(--think-danger-bg)" }
+            },
+            "&.Mui-disabled": {
+              backgroundColor: "var(--think-bg-disabled)",
+              borderColor: "var(--think-border-subtle)",
+              color: "var(--think-text-disabled)",
+              opacity: 0.68
+            }
+          }
+        }
+      },
+      MuiIconButton: {
+        defaultProps: { size: "medium" },
+        styleOverrides: {
+          root: {
+            width: "var(--think-control-height-md, 32px)",
+            height: "var(--think-control-height-md, 32px)",
+            padding: 0,
+            border: "1px solid transparent",
+            borderRadius: "var(--think-radius-sm, 6px)",
+            color: "var(--think-text-secondary)",
+            "&:hover": {
+              backgroundColor: "var(--think-bg-hover)",
+              borderColor: "var(--think-border-subtle)",
+              color: "var(--think-text-primary)"
+            },
+            "&.MuiIconButton-sizeSmall": {
+              width: "var(--think-control-height-sm, 28px)",
+              height: "var(--think-control-height-sm, 28px)"
+            },
+            "&.MuiIconButton-sizeLarge": {
+              width: "var(--think-control-height-lg, 36px)",
+              height: "var(--think-control-height-lg, 36px)"
+            },
+            "&.Mui-disabled": {
+              color: "var(--think-text-disabled)",
+              opacity: 0.56
+            }
+          }
+        }
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            minHeight: "var(--think-control-height-md, 32px)",
+            borderRadius: "var(--think-radius-sm, 6px)",
+            backgroundColor: "var(--think-bg-surface-1)",
+            color: "var(--think-text-primary)",
+            fontSize: "var(--think-font-size-sm, 13px)",
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "var(--think-border-subtle)"
+            },
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "var(--think-border-strong)"
+            },
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderWidth: 1,
+              borderColor: "var(--think-border-focus)"
+            },
+            "&.Mui-error .MuiOutlinedInput-notchedOutline": {
+              borderColor: "var(--think-danger)"
+            },
+            "&.Mui-disabled": {
+              backgroundColor: "var(--think-bg-disabled)",
+              color: "var(--think-text-disabled)"
+            }
+          },
+          input: {
+            height: "auto",
+            padding: "7px var(--think-space-4, 8px)",
+            "&::placeholder": {
+              color: "var(--think-text-subtle)",
+              opacity: 1
+            }
+          },
+          multiline: {
+            minHeight: 80,
+            padding: "var(--think-space-4, 8px)"
+          }
+        }
+      },
+      MuiInputLabel: {
+        styleOverrides: {
+          root: {
+            color: "var(--think-text-secondary)",
+            fontSize: "var(--think-font-size-sm, 13px)",
+            "&.Mui-focused": { color: "var(--think-text-accent)" },
+            "&.Mui-error": { color: "var(--think-danger)" }
+          }
+        }
+      },
+      MuiFormHelperText: {
+        styleOverrides: {
+          root: {
+            marginInline: 0,
+            color: "var(--think-text-secondary)",
+            fontSize: "var(--think-font-size-xs, 12px)",
+            "&.Mui-error": { color: "var(--think-danger)" }
+          }
+        }
+      },
+      MuiFormLabel: {
+        styleOverrides: {
+          root: {
+            color: "var(--think-text-primary)",
+            fontSize: "var(--think-font-size-sm, 13px)",
+            fontWeight: "var(--think-font-weight-medium, 500)",
+            "&.Mui-focused": { color: "var(--think-text-primary)" }
+          }
+        }
+      },
+      MuiSelect: {
+        styleOverrides: {
+          icon: { color: "var(--think-text-secondary)" },
+          select: { paddingBlock: "7px" }
+        }
+      },
+      MuiCheckbox: {
+        styleOverrides: {
+          root: {
+            color: "var(--think-text-secondary)",
+            "&.Mui-checked, &.MuiCheckbox-indeterminate": { color: "var(--think-accent)" }
+          }
+        }
+      },
+      MuiRadio: {
+        styleOverrides: {
+          root: {
+            color: "var(--think-text-secondary)",
+            "&.Mui-checked": { color: "var(--think-accent)" }
+          }
+        }
+      },
+      MuiSwitch: {
+        styleOverrides: {
+          root: { width: 38, height: 24, padding: 4 },
+          switchBase: {
+            padding: 6,
+            "&.Mui-checked": {
+              color: "var(--think-text-on-accent)",
+              "& + .MuiSwitch-track": { backgroundColor: "var(--think-accent)", opacity: 1 }
+            }
+          },
+          thumb: { width: 12, height: 12, boxShadow: "none" },
+          track: { borderRadius: 10, backgroundColor: "var(--think-border-strong)", opacity: 1 }
+        }
+      },
+      MuiFormControlLabel: {
+        styleOverrides: {
+          root: {
+            minHeight: "var(--think-control-height-sm, 28px)",
+            marginInline: 0,
+            gap: "var(--think-space-3, 6px)"
+          },
+          label: {
+            color: "var(--think-text-primary)",
+            fontSize: "var(--think-font-size-sm, 13px)"
+          }
+        }
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundImage: "none",
+            backgroundColor: "var(--think-bg-elevated)",
+            color: "var(--think-text-primary)",
+            borderColor: "var(--think-border-subtle)"
+          },
+          rounded: { borderRadius: "var(--think-radius-md, 8px)" }
+        }
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            border: "1px solid var(--think-border-subtle)",
+            borderRadius: "var(--think-radius-md, 8px)",
+            backgroundColor: "var(--think-bg-surface-1)",
+            boxShadow: "var(--think-shadow-none)"
+          }
+        }
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            minHeight: 26,
+            height: 26,
+            borderRadius: "var(--think-radius-pill)",
+            border: "1px solid var(--think-border-subtle)",
+            backgroundColor: "var(--think-bg-surface-1)",
+            color: "var(--think-text-secondary)",
+            fontSize: "var(--think-font-size-xs, 12px)",
+            "&:hover": { backgroundColor: "var(--think-bg-hover)" },
+            "&.MuiChip-colorPrimary": {
+              borderColor: "var(--think-accent)",
+              backgroundColor: "var(--think-accent-muted)",
+              color: "var(--think-text-accent)"
+            }
+          },
+          deleteIcon: {
+            color: "inherit",
+            "&:hover": { color: "var(--think-text-primary)" }
+          }
+        }
+      },
+      MuiTabs: {
+        styleOverrides: {
+          root: {
+            minHeight: "var(--think-control-height-lg, 36px)",
+            borderBottom: "1px solid var(--think-border-subtle)"
+          },
+          indicator: {
+            height: 2,
+            backgroundColor: "var(--think-accent)"
+          }
+        }
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            minHeight: "var(--think-control-height-lg, 36px)",
+            minWidth: 0,
+            padding: "0 var(--think-space-5, 12px)",
+            color: "var(--think-text-secondary)",
+            fontSize: "var(--think-font-size-sm, 13px)",
+            fontWeight: "var(--think-font-weight-medium, 500)",
+            textTransform: "none",
+            "&:hover": {
+              backgroundColor: "var(--think-bg-hover)",
+              color: "var(--think-text-primary)"
+            },
+            "&.Mui-selected": { color: "var(--think-text-accent)" }
+          }
+        }
+      },
+      MuiDialog: {
+        styleOverrides: {
+          paper: {
+            maxHeight: "min(85vh, calc(100vh - 32px))",
+            border: "1px solid var(--think-border-subtle)",
+            borderRadius: "var(--think-radius-lg, 12px)",
+            backgroundColor: "var(--think-bg-elevated)",
+            boxShadow: "var(--think-shadow-overlay)"
+          }
+        }
+      },
+      MuiDialogTitle: {
+        styleOverrides: {
+          root: {
+            padding: "var(--think-space-6, 16px)",
+            color: "var(--think-text-primary)",
+            fontSize: "var(--think-font-size-lg, 16px)",
+            fontWeight: "var(--think-font-weight-semibold, 600)"
+          }
+        }
+      },
+      MuiDialogContent: {
+        styleOverrides: { root: { padding: "0 var(--think-space-6, 16px) var(--think-space-6, 16px)" } }
+      },
+      MuiDialogActions: {
+        styleOverrides: {
+          root: {
+            gap: "var(--think-space-4, 8px)",
+            padding: "var(--think-space-5, 12px) var(--think-space-6, 16px)",
+            borderTop: "1px solid var(--think-border-subtle)"
+          }
+        }
+      },
+      MuiMenuItem: {
+        styleOverrides: {
+          root: {
+            minHeight: "var(--think-control-height-md, 32px)",
+            borderRadius: "var(--think-radius-xs, 4px)",
+            fontSize: "var(--think-font-size-sm, 13px)",
+            "&:hover": { backgroundColor: "var(--think-bg-hover)" },
+            "&.Mui-selected": { backgroundColor: "var(--think-accent-muted)" }
+          }
+        }
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: {
+            borderRadius: "var(--think-radius-xs, 4px)",
+            backgroundColor: "var(--think-text-primary)",
+            color: "var(--think-bg-canvas)",
+            fontSize: "var(--think-font-size-xs, 12px)"
+          }
+        }
+      },
+      MuiDivider: {
+        styleOverrides: { root: { borderColor: "var(--think-border-subtle)" } }
+      },
+      MuiAccordion: {
+        styleOverrides: {
+          root: {
+            border: "1px solid var(--think-border-subtle)",
+            backgroundColor: "var(--think-bg-surface-1)",
+            boxShadow: "none",
+            "&::before": { display: "none" }
+          }
+        }
+      },
+      MuiAlert: {
+        styleOverrides: {
+          root: {
+            borderRadius: "var(--think-radius-md, 8px)",
+            color: "var(--think-text-primary)"
           }
         }
       }
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: "none"
-        }
-      }
-    },
-    MuiTab: {
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-          fontSize: "14px"
-        }
-      }
     }
-  }
-});
+  });
+}
+createThinkMuiTheme("light");
 function useLocalStorage(key, initialValue) {
   const [storedValue, setStoredValue] = d(() => {
     try {
@@ -28359,8 +28756,8 @@ function createChainedFunction(...funcs) {
   }, () => {
   });
 }
-function GlobalStyles$1(props) {
-  return /* @__PURE__ */ u2(GlobalStyles$2, {
+function GlobalStyles(props) {
+  return /* @__PURE__ */ u2(GlobalStyles$1, {
     ...props,
     defaultTheme: defaultTheme$1,
     themeId: THEME_ID
@@ -28370,9 +28767,9 @@ function globalCss(styles2) {
   return function GlobalStylesWrapper(props) {
     return (
       // Pigment CSS `globalCss` support callback with theme inside an object but `GlobalStyles` support theme as a callback value.
-      /* @__PURE__ */ u2(GlobalStyles$1, {
-        styles: typeof styles2 === "function" ? (theme2) => styles2({
-          theme: theme2,
+      /* @__PURE__ */ u2(GlobalStyles, {
+        styles: typeof styles2 === "function" ? (theme) => styles2({
+          theme,
           ...props
         }) : styles2
       })
@@ -28411,15 +28808,15 @@ const SvgIconRoot = styled("svg", {
     return [styles2.root, ownerState.color !== "inherit" && styles2[`color${capitalize(ownerState.color)}`], styles2[`fontSize${capitalize(ownerState.fontSize)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   userSelect: "none",
   width: "1em",
   height: "1em",
   display: "inline-block",
   flexShrink: 0,
-  transition: theme2.transitions?.create?.("fill", {
-    duration: (theme2.vars ?? theme2).transitions?.duration?.shorter
+  transition: theme.transitions?.create?.("fill", {
+    duration: (theme.vars ?? theme).transitions?.duration?.shorter
   }),
   variants: [
     {
@@ -28443,7 +28840,7 @@ const SvgIconRoot = styled("svg", {
         fontSize: "small"
       },
       style: {
-        fontSize: theme2.typography?.pxToRem?.(20) || "1.25rem"
+        fontSize: theme.typography?.pxToRem?.(20) || "1.25rem"
       }
     },
     {
@@ -28451,7 +28848,7 @@ const SvgIconRoot = styled("svg", {
         fontSize: "medium"
       },
       style: {
-        fontSize: theme2.typography?.pxToRem?.(24) || "1.5rem"
+        fontSize: theme.typography?.pxToRem?.(24) || "1.5rem"
       }
     },
     {
@@ -28459,16 +28856,16 @@ const SvgIconRoot = styled("svg", {
         fontSize: "large"
       },
       style: {
-        fontSize: theme2.typography?.pxToRem?.(35) || "2.1875rem"
+        fontSize: theme.typography?.pxToRem?.(35) || "2.1875rem"
       }
     },
     // TODO v5 deprecate color prop, v6 remove for sx
-    ...Object.entries((theme2.vars ?? theme2).palette).filter(([, value]) => value && value.main).map(([color2]) => ({
+    ...Object.entries((theme.vars ?? theme).palette).filter(([, value]) => value && value.main).map(([color2]) => ({
       props: {
         color: color2
       },
       style: {
-        color: (theme2.vars ?? theme2).palette?.[color2]?.main
+        color: (theme.vars ?? theme).palette?.[color2]?.main
       }
     })),
     {
@@ -28476,7 +28873,7 @@ const SvgIconRoot = styled("svg", {
         color: "action"
       },
       style: {
-        color: (theme2.vars ?? theme2).palette?.action?.active
+        color: (theme.vars ?? theme).palette?.action?.active
       }
     },
     {
@@ -28484,7 +28881,7 @@ const SvgIconRoot = styled("svg", {
         color: "disabled"
       },
       style: {
-        color: (theme2.vars ?? theme2).palette?.action?.disabled
+        color: (theme.vars ?? theme).palette?.action?.disabled
       }
     },
     {
@@ -29434,11 +29831,11 @@ const CollapseRoot = styled("div", {
     return [styles2.root, styles2[ownerState.orientation], ownerState.state === "entered" && styles2.entered, ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px" && styles2.hidden];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   height: 0,
   overflow: "hidden",
-  transition: theme2.transitions.create("height"),
+  transition: theme.transitions.create("height"),
   variants: [{
     props: {
       orientation: "horizontal"
@@ -29446,7 +29843,7 @@ const CollapseRoot = styled("div", {
     style: {
       height: "auto",
       width: 0,
-      transition: theme2.transitions.create("width")
+      transition: theme.transitions.create("width")
     }
   }, {
     props: {
@@ -29539,7 +29936,7 @@ const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
     collapsedSize: collapsedSizeProp
   };
   const classes = useUtilityClasses$W(ownerState);
-  const theme2 = useTheme();
+  const theme = useTheme();
   const timer = useTimeout();
   const wrapperRef = A$1(null);
   const autoTransitionDuration = A$1();
@@ -29574,7 +29971,7 @@ const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
       mode: "enter"
     });
     if (timeout === "auto") {
-      const duration2 = theme2.transitions.getAutoHeightDuration(wrapperSize);
+      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
       node2.style.transitionDuration = `${duration2}ms`;
       autoTransitionDuration.current = duration2;
     } else {
@@ -29612,7 +30009,7 @@ const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
       mode: "exit"
     });
     if (timeout === "auto") {
-      const duration2 = theme2.transitions.getAutoHeightDuration(wrapperSize);
+      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
       node2.style.transitionDuration = `${duration2}ms`;
       autoTransitionDuration.current = duration2;
     } else {
@@ -29733,24 +30130,24 @@ const PaperRoot = styled("div", {
     return [styles2.root, styles2[ownerState.variant], !ownerState.square && styles2.rounded, ownerState.variant === "elevation" && styles2[`elevation${ownerState.elevation}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  backgroundColor: (theme2.vars || theme2).palette.background.paper,
-  color: (theme2.vars || theme2).palette.text.primary,
-  transition: theme2.transitions.create("box-shadow"),
+  backgroundColor: (theme.vars || theme).palette.background.paper,
+  color: (theme.vars || theme).palette.text.primary,
+  transition: theme.transitions.create("box-shadow"),
   variants: [{
     props: ({
       ownerState
     }) => !ownerState.square,
     style: {
-      borderRadius: theme2.shape.borderRadius
+      borderRadius: theme.shape.borderRadius
     }
   }, {
     props: {
       variant: "outlined"
     },
     style: {
-      border: `1px solid ${(theme2.vars || theme2).palette.divider}`
+      border: `1px solid ${(theme.vars || theme).palette.divider}`
     }
   }, {
     props: {
@@ -29767,7 +30164,7 @@ const Paper$1 = /* @__PURE__ */ D(function Paper(inProps, ref) {
     props: inProps,
     name: "MuiPaper"
   });
-  const theme2 = useTheme();
+  const theme = useTheme();
   const {
     className,
     component = "div",
@@ -29792,11 +30189,11 @@ const Paper$1 = /* @__PURE__ */ D(function Paper(inProps, ref) {
     ...other,
     style: {
       ...variant === "elevation" && {
-        "--Paper-shadow": (theme2.vars || theme2).shadows[elevation],
-        ...theme2.vars && {
-          "--Paper-overlay": theme2.vars.overlays?.[elevation]
+        "--Paper-shadow": (theme.vars || theme).shadows[elevation],
+        ...theme.vars && {
+          "--Paper-overlay": theme.vars.overlays?.[elevation]
         },
-        ...!theme2.vars && theme2.palette.mode === "dark" && {
+        ...!theme.vars && theme.palette.mode === "dark" && {
           "--Paper-overlay": `linear-gradient(${alpha("#fff", getOverlayAlpha(elevation))}, ${alpha("#fff", getOverlayAlpha(elevation))})`
         }
       },
@@ -29836,14 +30233,14 @@ const AccordionRoot = styled(Paper$1, {
     }, styles2.root, !ownerState.square && styles2.rounded, !ownerState.disableGutters && styles2.gutters];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
   const transition = {
-    duration: theme2.transitions.duration.shortest
+    duration: theme.transitions.duration.shortest
   };
   return {
     position: "relative",
-    transition: theme2.transitions.create(["margin"], transition),
+    transition: theme.transitions.create(["margin"], transition),
     overflowAnchor: "none",
     // Keep the same scrolling position
     "&::before": {
@@ -29854,8 +30251,8 @@ const AccordionRoot = styled(Paper$1, {
       height: 1,
       content: '""',
       opacity: 1,
-      backgroundColor: (theme2.vars || theme2).palette.divider,
-      transition: theme2.transitions.create(["opacity", "background-color"], transition)
+      backgroundColor: (theme.vars || theme).palette.divider,
+      transition: theme.transitions.create(["opacity", "background-color"], transition)
     },
     "&:first-of-type": {
       "&::before": {
@@ -29879,23 +30276,23 @@ const AccordionRoot = styled(Paper$1, {
       }
     },
     [`&.${accordionClasses.disabled}`]: {
-      backgroundColor: (theme2.vars || theme2).palette.action.disabledBackground
+      backgroundColor: (theme.vars || theme).palette.action.disabledBackground
     }
   };
 }), memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   variants: [{
     props: (props) => !props.square,
     style: {
       borderRadius: 0,
       "&:first-of-type": {
-        borderTopLeftRadius: (theme2.vars || theme2).shape.borderRadius,
-        borderTopRightRadius: (theme2.vars || theme2).shape.borderRadius
+        borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
+        borderTopRightRadius: (theme.vars || theme).shape.borderRadius
       },
       "&:last-of-type": {
-        borderBottomLeftRadius: (theme2.vars || theme2).shape.borderRadius,
-        borderBottomRightRadius: (theme2.vars || theme2).shape.borderRadius,
+        borderBottomLeftRadius: (theme.vars || theme).shape.borderRadius,
+        borderBottomRightRadius: (theme.vars || theme).shape.borderRadius,
         // Fix a rendering issue on Edge
         "@supports (-ms-ime-align: auto)": {
           borderBottomLeftRadius: 0,
@@ -30048,9 +30445,9 @@ const AccordionDetailsRoot = styled("div", {
   name: "MuiAccordionDetails",
   slot: "Root"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  padding: theme2.spacing(1, 2, 2)
+  padding: theme.spacing(1, 2, 2)
 })));
 const AccordionDetails$1 = /* @__PURE__ */ D(function AccordionDetails(inProps, ref) {
   const props = useDefaultProps({
@@ -30248,14 +30645,14 @@ const TouchRippleRipple = styled(Ripple, {
     animation-name: ${enterKeyframe};
     animation-duration: ${DURATION}ms;
     animation-timing-function: ${({
-  theme: theme2
-}) => theme2.transitions.easing.easeInOut};
+  theme
+}) => theme.transitions.easing.easeInOut};
   }
 
   &.${touchRippleClasses.ripplePulsate} {
     animation-duration: ${({
-  theme: theme2
-}) => theme2.transitions.duration.shorter}ms;
+  theme
+}) => theme.transitions.duration.shorter}ms;
   }
 
   & .${touchRippleClasses.child} {
@@ -30272,8 +30669,8 @@ const TouchRippleRipple = styled(Ripple, {
     animation-name: ${exitKeyframe};
     animation-duration: ${DURATION}ms;
     animation-timing-function: ${({
-  theme: theme2
-}) => theme2.transitions.easing.easeInOut};
+  theme
+}) => theme.transitions.easing.easeInOut};
   }
 
   & .${touchRippleClasses.childPulsate} {
@@ -30284,8 +30681,8 @@ const TouchRippleRipple = styled(Ripple, {
     animation-name: ${pulsateKeyframe};
     animation-duration: 2500ms;
     animation-timing-function: ${({
-  theme: theme2
-}) => theme2.transitions.easing.easeInOut};
+  theme
+}) => theme.transitions.easing.easeInOut};
     animation-iteration-count: infinite;
     animation-delay: 200ms;
   }
@@ -30745,22 +31142,22 @@ const AccordionSummaryRoot = styled(ButtonBase, {
   name: "MuiAccordionSummary",
   slot: "Root"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
   const transition = {
-    duration: theme2.transitions.duration.shortest
+    duration: theme.transitions.duration.shortest
   };
   return {
     display: "flex",
     width: "100%",
     minHeight: 48,
-    padding: theme2.spacing(0, 2),
-    transition: theme2.transitions.create(["min-height", "background-color"], transition),
+    padding: theme.spacing(0, 2),
+    transition: theme.transitions.create(["min-height", "background-color"], transition),
     [`&.${accordionSummaryClasses.focusVisible}`]: {
-      backgroundColor: (theme2.vars || theme2).palette.action.focus
+      backgroundColor: (theme.vars || theme).palette.action.focus
     },
     [`&.${accordionSummaryClasses.disabled}`]: {
-      opacity: (theme2.vars || theme2).palette.action.disabledOpacity
+      opacity: (theme.vars || theme).palette.action.disabledOpacity
     },
     [`&:hover:not(.${accordionSummaryClasses.disabled})`]: {
       cursor: "pointer"
@@ -30779,7 +31176,7 @@ const AccordionSummaryContent = styled("span", {
   name: "MuiAccordionSummary",
   slot: "Content"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   display: "flex",
   textAlign: "start",
@@ -30788,8 +31185,8 @@ const AccordionSummaryContent = styled("span", {
   variants: [{
     props: (props) => !props.disableGutters,
     style: {
-      transition: theme2.transitions.create(["margin"], {
-        duration: theme2.transitions.duration.shortest
+      transition: theme.transitions.create(["margin"], {
+        duration: theme.transitions.duration.shortest
       }),
       [`&.${accordionSummaryClasses.expanded}`]: {
         margin: "20px 0"
@@ -30801,13 +31198,13 @@ const AccordionSummaryExpandIconWrapper = styled("span", {
   name: "MuiAccordionSummary",
   slot: "ExpandIconWrapper"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   display: "flex",
-  color: (theme2.vars || theme2).palette.action.active,
+  color: (theme.vars || theme).palette.action.active,
   transform: "rotate(0deg)",
-  transition: theme2.transitions.create("transform", {
-    duration: theme2.transitions.duration.shortest
+  transition: theme.transitions.create("transform", {
+    duration: theme.transitions.duration.shortest
   }),
   [`&.${accordionSummaryClasses.expanded}`]: {
     transform: "rotate(180deg)"
@@ -30983,7 +31380,7 @@ const CircularProgressRoot = styled("span", {
     return [styles2.root, styles2[ownerState.variant], styles2[`color${capitalize(ownerState.color)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   display: "inline-block",
   variants: [{
@@ -30991,7 +31388,7 @@ const CircularProgressRoot = styled("span", {
       variant: "determinate"
     },
     style: {
-      transition: theme2.transitions.create("transform")
+      transition: theme.transitions.create("transform")
     }
   }, {
     props: {
@@ -31000,12 +31397,12 @@ const CircularProgressRoot = styled("span", {
     style: rotateAnimation || {
       animation: `${circularRotateKeyframe} 1.4s linear infinite`
     }
-  }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2
     },
     style: {
-      color: (theme2.vars || theme2).palette[color2].main
+      color: (theme.vars || theme).palette[color2].main
     }
   }))]
 })));
@@ -31026,7 +31423,7 @@ const CircularProgressCircle = styled("circle", {
     return [styles2.circle, styles2[`circle${capitalize(ownerState.variant)}`], ownerState.disableShrink && styles2.circleDisableShrink];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   stroke: "currentColor",
   variants: [{
@@ -31034,7 +31431,7 @@ const CircularProgressCircle = styled("circle", {
       variant: "determinate"
     },
     style: {
-      transition: theme2.transitions.create("stroke-dashoffset")
+      transition: theme.transitions.create("stroke-dashoffset")
     }
   }, {
     props: {
@@ -31060,10 +31457,10 @@ const CircularProgressTrack = styled("circle", {
   name: "MuiCircularProgress",
   slot: "Track"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   stroke: "currentColor",
-  opacity: (theme2.vars || theme2).palette.action.activatedOpacity
+  opacity: (theme.vars || theme).palette.action.activatedOpacity
 })));
 const CircularProgress$1 = /* @__PURE__ */ D(function CircularProgress(inProps, ref) {
   const props = useDefaultProps({
@@ -31172,21 +31569,21 @@ const IconButtonRoot = styled(ButtonBase, {
     return [styles2.root, ownerState.loading && styles2.loading, ownerState.color !== "default" && styles2[`color${capitalize(ownerState.color)}`], ownerState.edge && styles2[`edge${capitalize(ownerState.edge)}`], styles2[`size${capitalize(ownerState.size)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   textAlign: "center",
   flex: "0 0 auto",
-  fontSize: theme2.typography.pxToRem(24),
+  fontSize: theme.typography.pxToRem(24),
   padding: 8,
   borderRadius: "50%",
-  color: (theme2.vars || theme2).palette.action.active,
-  transition: theme2.transitions.create("background-color", {
-    duration: theme2.transitions.duration.shortest
+  color: (theme.vars || theme).palette.action.active,
+  transition: theme.transitions.create("background-color", {
+    duration: theme.transitions.duration.shortest
   }),
   variants: [{
     props: (props) => !props.disableRipple,
     style: {
-      "--IconButton-hoverBg": theme2.alpha((theme2.vars || theme2).palette.action.active, (theme2.vars || theme2).palette.action.hoverOpacity),
+      "--IconButton-hoverBg": theme.alpha((theme.vars || theme).palette.action.active, (theme.vars || theme).palette.action.hoverOpacity),
       "&:hover": {
         backgroundColor: "var(--IconButton-hoverBg)",
         // Reset on touch devices, it doesn't add specificity
@@ -31227,7 +31624,7 @@ const IconButtonRoot = styled(ButtonBase, {
     }
   }]
 })), memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   variants: [{
     props: {
@@ -31236,19 +31633,19 @@ const IconButtonRoot = styled(ButtonBase, {
     style: {
       color: "inherit"
     }
-  }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2
     },
     style: {
-      color: (theme2.vars || theme2).palette[color2].main
+      color: (theme.vars || theme).palette[color2].main
     }
-  })), ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2
     },
     style: {
-      "--IconButton-hoverBg": theme2.alpha((theme2.vars || theme2).palette[color2].main, (theme2.vars || theme2).palette.action.hoverOpacity)
+      "--IconButton-hoverBg": theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.hoverOpacity)
     }
   })), {
     props: {
@@ -31256,7 +31653,7 @@ const IconButtonRoot = styled(ButtonBase, {
     },
     style: {
       padding: 5,
-      fontSize: theme2.typography.pxToRem(18)
+      fontSize: theme.typography.pxToRem(18)
     }
   }, {
     props: {
@@ -31264,12 +31661,12 @@ const IconButtonRoot = styled(ButtonBase, {
     },
     style: {
       padding: 12,
-      fontSize: theme2.typography.pxToRem(28)
+      fontSize: theme.typography.pxToRem(28)
     }
   }],
   [`&.${iconButtonClasses.disabled}`]: {
     backgroundColor: "transparent",
-    color: (theme2.vars || theme2).palette.action.disabled
+    color: (theme.vars || theme).palette.action.disabled
   },
   [`&.${iconButtonClasses.loading}`]: {
     color: "transparent"
@@ -31279,7 +31676,7 @@ const IconButtonLoadingIndicator = styled("span", {
   name: "MuiIconButton",
   slot: "LoadingIndicator"
 })(({
-  theme: theme2
+  theme
 }) => ({
   display: "none",
   position: "absolute",
@@ -31287,7 +31684,7 @@ const IconButtonLoadingIndicator = styled("span", {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  color: (theme2.vars || theme2).palette.action.disabled,
+  color: (theme.vars || theme).palette.action.disabled,
   variants: [{
     props: {
       loading: true
@@ -31395,56 +31792,56 @@ const AlertRoot = styled(Paper$1, {
     return [styles2.root, styles2[ownerState.variant], styles2[`${ownerState.variant}${capitalize(ownerState.color || ownerState.severity)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
-  const getColor = theme2.palette.mode === "light" ? theme2.darken : theme2.lighten;
-  const getBackgroundColor = theme2.palette.mode === "light" ? theme2.lighten : theme2.darken;
+  const getColor = theme.palette.mode === "light" ? theme.darken : theme.lighten;
+  const getBackgroundColor = theme.palette.mode === "light" ? theme.lighten : theme.darken;
   return {
-    ...theme2.typography.body2,
+    ...theme.typography.body2,
     backgroundColor: "transparent",
     display: "flex",
     padding: "6px 16px",
-    variants: [...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
+    variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
       props: {
         colorSeverity: color2,
         variant: "standard"
       },
       style: {
-        color: theme2.vars ? theme2.vars.palette.Alert[`${color2}Color`] : getColor(theme2.palette[color2].light, 0.6),
-        backgroundColor: theme2.vars ? theme2.vars.palette.Alert[`${color2}StandardBg`] : getBackgroundColor(theme2.palette[color2].light, 0.9),
-        [`& .${alertClasses.icon}`]: theme2.vars ? {
-          color: theme2.vars.palette.Alert[`${color2}IconColor`]
+        color: theme.vars ? theme.vars.palette.Alert[`${color2}Color`] : getColor(theme.palette[color2].light, 0.6),
+        backgroundColor: theme.vars ? theme.vars.palette.Alert[`${color2}StandardBg`] : getBackgroundColor(theme.palette[color2].light, 0.9),
+        [`& .${alertClasses.icon}`]: theme.vars ? {
+          color: theme.vars.palette.Alert[`${color2}IconColor`]
         } : {
-          color: theme2.palette[color2].main
+          color: theme.palette[color2].main
         }
       }
-    })), ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
+    })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
       props: {
         colorSeverity: color2,
         variant: "outlined"
       },
       style: {
-        color: theme2.vars ? theme2.vars.palette.Alert[`${color2}Color`] : getColor(theme2.palette[color2].light, 0.6),
-        border: `1px solid ${(theme2.vars || theme2).palette[color2].light}`,
-        [`& .${alertClasses.icon}`]: theme2.vars ? {
-          color: theme2.vars.palette.Alert[`${color2}IconColor`]
+        color: theme.vars ? theme.vars.palette.Alert[`${color2}Color`] : getColor(theme.palette[color2].light, 0.6),
+        border: `1px solid ${(theme.vars || theme).palette[color2].light}`,
+        [`& .${alertClasses.icon}`]: theme.vars ? {
+          color: theme.vars.palette.Alert[`${color2}IconColor`]
         } : {
-          color: theme2.palette[color2].main
+          color: theme.palette[color2].main
         }
       }
-    })), ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color2]) => ({
+    })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color2]) => ({
       props: {
         colorSeverity: color2,
         variant: "filled"
       },
       style: {
-        fontWeight: theme2.typography.fontWeightMedium,
-        ...theme2.vars ? {
-          color: theme2.vars.palette.Alert[`${color2}FilledColor`],
-          backgroundColor: theme2.vars.palette.Alert[`${color2}FilledBg`]
+        fontWeight: theme.typography.fontWeightMedium,
+        ...theme.vars ? {
+          color: theme.vars.palette.Alert[`${color2}FilledColor`],
+          backgroundColor: theme.vars.palette.Alert[`${color2}FilledBg`]
         } : {
-          backgroundColor: theme2.palette.mode === "dark" ? theme2.palette[color2].dark : theme2.palette[color2].main,
-          color: theme2.palette.getContrastText(theme2.palette[color2].main)
+          backgroundColor: theme.palette.mode === "dark" ? theme.palette[color2].dark : theme.palette[color2].main,
+          color: theme.palette.getContrastText(theme.palette[color2].main)
         }
       }
     }))]
@@ -31645,7 +32042,7 @@ const TypographyRoot = styled("span", {
     return [styles2.root, ownerState.variant && styles2[ownerState.variant], ownerState.align !== "inherit" && styles2[`align${capitalize(ownerState.align)}`], ownerState.noWrap && styles2.noWrap, ownerState.gutterBottom && styles2.gutterBottom, ownerState.paragraph && styles2.paragraph];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   margin: 0,
   variants: [{
@@ -31658,24 +32055,24 @@ const TypographyRoot = styled("span", {
       lineHeight: "inherit",
       letterSpacing: "inherit"
     }
-  }, ...Object.entries(theme2.typography).filter(([variant, value]) => variant !== "inherit" && value && typeof value === "object").map(([variant, value]) => ({
+  }, ...Object.entries(theme.typography).filter(([variant, value]) => variant !== "inherit" && value && typeof value === "object").map(([variant, value]) => ({
     props: {
       variant
     },
     style: value
-  })), ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2
     },
     style: {
-      color: (theme2.vars || theme2).palette[color2].main
+      color: (theme.vars || theme).palette[color2].main
     }
-  })), ...Object.entries(theme2.palette?.text || {}).filter(([, value]) => typeof value === "string").map(([color2]) => ({
+  })), ...Object.entries(theme.palette?.text || {}).filter(([, value]) => typeof value === "string").map(([color2]) => ({
     props: {
       color: `text${capitalize(color2)}`
     },
     style: {
-      color: (theme2.vars || theme2).palette.text[color2]
+      color: (theme.vars || theme).palette.text[color2]
     }
   })), {
     props: ({
@@ -33414,10 +33811,10 @@ function getWindowScrollBarX(element) {
 }
 function getViewportRect(element, strategy) {
   var win = getWindow$1(element);
-  var html2 = getDocumentElement(element);
+  var html = getDocumentElement(element);
   var visualViewport = win.visualViewport;
-  var width2 = html2.clientWidth;
-  var height2 = html2.clientHeight;
+  var width2 = html.clientWidth;
+  var height2 = html.clientHeight;
   var x2 = 0;
   var y2 = 0;
   if (visualViewport) {
@@ -33438,15 +33835,15 @@ function getViewportRect(element, strategy) {
 }
 function getDocumentRect(element) {
   var _element$ownerDocumen;
-  var html2 = getDocumentElement(element);
+  var html = getDocumentElement(element);
   var winScroll = getWindowScroll(element);
-  var body2 = (_element$ownerDocumen = element.ownerDocument) == null ? void 0 : _element$ownerDocumen.body;
-  var width2 = max(html2.scrollWidth, html2.clientWidth, body2 ? body2.scrollWidth : 0, body2 ? body2.clientWidth : 0);
-  var height2 = max(html2.scrollHeight, html2.clientHeight, body2 ? body2.scrollHeight : 0, body2 ? body2.clientHeight : 0);
+  var body = (_element$ownerDocumen = element.ownerDocument) == null ? void 0 : _element$ownerDocumen.body;
+  var width2 = max(html.scrollWidth, html.clientWidth, body ? body.scrollWidth : 0, body ? body.clientWidth : 0);
+  var height2 = max(html.scrollHeight, html.clientHeight, body ? body.scrollHeight : 0, body ? body.clientHeight : 0);
   var x2 = -winScroll.scrollLeft + getWindowScrollBarX(element);
   var y2 = -winScroll.scrollTop;
-  if (getComputedStyle(body2 || html2).direction === "rtl") {
-    x2 += max(html2.clientWidth, body2 ? body2.clientWidth : 0) - width2;
+  if (getComputedStyle(body || html).direction === "rtl") {
+    x2 += max(html.clientWidth, body ? body.clientWidth : 0) - width2;
   }
   return {
     width: width2,
@@ -34589,21 +34986,21 @@ const ListSubheaderRoot = styled("li", {
     return [styles2.root, ownerState.color !== "default" && styles2[`color${capitalize(ownerState.color)}`], !ownerState.disableGutters && styles2.gutters, ownerState.inset && styles2.inset, !ownerState.disableSticky && styles2.sticky];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   boxSizing: "border-box",
   lineHeight: "48px",
   listStyle: "none",
-  color: (theme2.vars || theme2).palette.text.secondary,
-  fontFamily: theme2.typography.fontFamily,
-  fontWeight: theme2.typography.fontWeightMedium,
-  fontSize: theme2.typography.pxToRem(14),
+  color: (theme.vars || theme).palette.text.secondary,
+  fontFamily: theme.typography.fontFamily,
+  fontWeight: theme.typography.fontWeightMedium,
+  fontSize: theme.typography.pxToRem(14),
   variants: [{
     props: {
       color: "primary"
     },
     style: {
-      color: (theme2.vars || theme2).palette.primary.main
+      color: (theme.vars || theme).palette.primary.main
     }
   }, {
     props: {
@@ -34635,7 +35032,7 @@ const ListSubheaderRoot = styled("li", {
       position: "sticky",
       top: 0,
       zIndex: 1,
-      backgroundColor: (theme2.vars || theme2).palette.background.paper
+      backgroundColor: (theme.vars || theme).palette.background.paper
     }
   }]
 })));
@@ -34738,23 +35135,23 @@ const ChipRoot = styled("div", {
     }, styles2.root, styles2[`size${capitalize(size)}`], styles2[`color${capitalize(color2)}`], clickable && styles2.clickable, clickable && color2 !== "default" && styles2[`clickableColor${capitalize(color2)}`], onDelete && styles2.deletable, onDelete && color2 !== "default" && styles2[`deletableColor${capitalize(color2)}`], styles2[variant], styles2[`${variant}${capitalize(color2)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
-  const textColor = theme2.palette.mode === "light" ? theme2.palette.grey[700] : theme2.palette.grey[300];
+  const textColor = theme.palette.mode === "light" ? theme.palette.grey[700] : theme.palette.grey[300];
   return {
     maxWidth: "100%",
-    fontFamily: theme2.typography.fontFamily,
-    fontSize: theme2.typography.pxToRem(13),
+    fontFamily: theme.typography.fontFamily,
+    fontSize: theme.typography.pxToRem(13),
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
     height: 32,
     lineHeight: 1.5,
-    color: (theme2.vars || theme2).palette.text.primary,
-    backgroundColor: (theme2.vars || theme2).palette.action.selected,
+    color: (theme.vars || theme).palette.text.primary,
+    backgroundColor: (theme.vars || theme).palette.action.selected,
     borderRadius: 32 / 2,
     whiteSpace: "nowrap",
-    transition: theme2.transitions.create(["background-color", "box-shadow"]),
+    transition: theme.transitions.create(["background-color", "box-shadow"]),
     // reset cursor explicitly in case ButtonBase is used
     cursor: "unset",
     // We disable the focus ring for mouse, touch and keyboard users.
@@ -34767,7 +35164,7 @@ const ChipRoot = styled("div", {
     verticalAlign: "middle",
     boxSizing: "border-box",
     [`&.${chipClasses.disabled}`]: {
-      opacity: (theme2.vars || theme2).palette.action.disabledOpacity,
+      opacity: (theme.vars || theme).palette.action.disabledOpacity,
       pointerEvents: "none"
     },
     [`& .${chipClasses.avatar}`]: {
@@ -34775,23 +35172,23 @@ const ChipRoot = styled("div", {
       marginRight: -6,
       width: 24,
       height: 24,
-      color: theme2.vars ? theme2.vars.palette.Chip.defaultAvatarColor : textColor,
-      fontSize: theme2.typography.pxToRem(12)
+      color: theme.vars ? theme.vars.palette.Chip.defaultAvatarColor : textColor,
+      fontSize: theme.typography.pxToRem(12)
     },
     [`& .${chipClasses.avatarColorPrimary}`]: {
-      color: (theme2.vars || theme2).palette.primary.contrastText,
-      backgroundColor: (theme2.vars || theme2).palette.primary.dark
+      color: (theme.vars || theme).palette.primary.contrastText,
+      backgroundColor: (theme.vars || theme).palette.primary.dark
     },
     [`& .${chipClasses.avatarColorSecondary}`]: {
-      color: (theme2.vars || theme2).palette.secondary.contrastText,
-      backgroundColor: (theme2.vars || theme2).palette.secondary.dark
+      color: (theme.vars || theme).palette.secondary.contrastText,
+      backgroundColor: (theme.vars || theme).palette.secondary.dark
     },
     [`& .${chipClasses.avatarSmall}`]: {
       marginLeft: 4,
       marginRight: -4,
       width: 18,
       height: 18,
-      fontSize: theme2.typography.pxToRem(10)
+      fontSize: theme.typography.pxToRem(10)
     },
     [`& .${chipClasses.icon}`]: {
       marginLeft: 5,
@@ -34799,12 +35196,12 @@ const ChipRoot = styled("div", {
     },
     [`& .${chipClasses.deleteIcon}`]: {
       WebkitTapHighlightColor: "transparent",
-      color: theme2.alpha((theme2.vars || theme2).palette.text.primary, 0.26),
+      color: theme.alpha((theme.vars || theme).palette.text.primary, 0.26),
       fontSize: 22,
       cursor: "pointer",
       margin: "0 5px 0 -6px",
       "&:hover": {
-        color: theme2.alpha((theme2.vars || theme2).palette.text.primary, 0.4)
+        color: theme.alpha((theme.vars || theme).palette.text.primary, 0.4)
       }
     },
     variants: [{
@@ -34824,18 +35221,18 @@ const ChipRoot = styled("div", {
           marginLeft: -4
         }
       }
-    }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter(["contrastText"])).map(([color2]) => {
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["contrastText"])).map(([color2]) => {
       return {
         props: {
           color: color2
         },
         style: {
-          backgroundColor: (theme2.vars || theme2).palette[color2].main,
-          color: (theme2.vars || theme2).palette[color2].contrastText,
+          backgroundColor: (theme.vars || theme).palette[color2].main,
+          color: (theme.vars || theme).palette[color2].contrastText,
           [`& .${chipClasses.deleteIcon}`]: {
-            color: theme2.alpha((theme2.vars || theme2).palette[color2].contrastText, 0.7),
+            color: theme.alpha((theme.vars || theme).palette[color2].contrastText, 0.7),
             "&:hover, &:active": {
-              color: (theme2.vars || theme2).palette[color2].contrastText
+              color: (theme.vars || theme).palette[color2].contrastText
             }
           }
         }
@@ -34844,7 +35241,7 @@ const ChipRoot = styled("div", {
       props: (props) => props.iconColor === props.color,
       style: {
         [`& .${chipClasses.icon}`]: {
-          color: theme2.vars ? theme2.vars.palette.Chip.defaultIconColor : textColor
+          color: theme.vars ? theme.vars.palette.Chip.defaultIconColor : textColor
         }
       }
     }, {
@@ -34860,10 +35257,10 @@ const ChipRoot = styled("div", {
       },
       style: {
         [`&.${chipClasses.focusVisible}`]: {
-          backgroundColor: theme2.alpha((theme2.vars || theme2).palette.action.selected, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
+          backgroundColor: theme.alpha((theme.vars || theme).palette.action.selected, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.focusOpacity}`)
         }
       }
-    }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color2]) => {
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color2]) => {
       return {
         props: {
           color: color2,
@@ -34871,7 +35268,7 @@ const ChipRoot = styled("div", {
         },
         style: {
           [`&.${chipClasses.focusVisible}`]: {
-            background: (theme2.vars || theme2).palette[color2].dark
+            background: (theme.vars || theme).palette[color2].dark
           }
         }
       };
@@ -34884,23 +35281,23 @@ const ChipRoot = styled("div", {
         WebkitTapHighlightColor: "transparent",
         cursor: "pointer",
         "&:hover": {
-          backgroundColor: theme2.alpha((theme2.vars || theme2).palette.action.selected, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`)
+          backgroundColor: theme.alpha((theme.vars || theme).palette.action.selected, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`)
         },
         [`&.${chipClasses.focusVisible}`]: {
-          backgroundColor: theme2.alpha((theme2.vars || theme2).palette.action.selected, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
+          backgroundColor: theme.alpha((theme.vars || theme).palette.action.selected, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.focusOpacity}`)
         },
         "&:active": {
-          boxShadow: (theme2.vars || theme2).shadows[1]
+          boxShadow: (theme.vars || theme).shadows[1]
         }
       }
-    }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color2]) => ({
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color2]) => ({
       props: {
         color: color2,
         clickable: true
       },
       style: {
         [`&:hover, &.${chipClasses.focusVisible}`]: {
-          backgroundColor: (theme2.vars || theme2).palette[color2].dark
+          backgroundColor: (theme.vars || theme).palette[color2].dark
         }
       }
     })), {
@@ -34909,12 +35306,12 @@ const ChipRoot = styled("div", {
       },
       style: {
         backgroundColor: "transparent",
-        border: theme2.vars ? `1px solid ${theme2.vars.palette.Chip.defaultBorder}` : `1px solid ${theme2.palette.mode === "light" ? theme2.palette.grey[400] : theme2.palette.grey[700]}`,
+        border: theme.vars ? `1px solid ${theme.vars.palette.Chip.defaultBorder}` : `1px solid ${theme.palette.mode === "light" ? theme.palette.grey[400] : theme.palette.grey[700]}`,
         [`&.${chipClasses.clickable}:hover`]: {
-          backgroundColor: (theme2.vars || theme2).palette.action.hover
+          backgroundColor: (theme.vars || theme).palette.action.hover
         },
         [`&.${chipClasses.focusVisible}`]: {
-          backgroundColor: (theme2.vars || theme2).palette.action.focus
+          backgroundColor: (theme.vars || theme).palette.action.focus
         },
         [`& .${chipClasses.avatar}`]: {
           marginLeft: 4
@@ -34935,24 +35332,24 @@ const ChipRoot = styled("div", {
           marginRight: 3
         }
       }
-    }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
       props: {
         variant: "outlined",
         color: color2
       },
       style: {
-        color: (theme2.vars || theme2).palette[color2].main,
-        border: `1px solid ${theme2.alpha((theme2.vars || theme2).palette[color2].main, 0.7)}`,
+        color: (theme.vars || theme).palette[color2].main,
+        border: `1px solid ${theme.alpha((theme.vars || theme).palette[color2].main, 0.7)}`,
         [`&.${chipClasses.clickable}:hover`]: {
-          backgroundColor: theme2.alpha((theme2.vars || theme2).palette[color2].main, (theme2.vars || theme2).palette.action.hoverOpacity)
+          backgroundColor: theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.hoverOpacity)
         },
         [`&.${chipClasses.focusVisible}`]: {
-          backgroundColor: theme2.alpha((theme2.vars || theme2).palette[color2].main, (theme2.vars || theme2).palette.action.focusOpacity)
+          backgroundColor: theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.focusOpacity)
         },
         [`& .${chipClasses.deleteIcon}`]: {
-          color: theme2.alpha((theme2.vars || theme2).palette[color2].main, 0.7),
+          color: theme.alpha((theme.vars || theme).palette[color2].main, 0.7),
           "&:hover, &:active": {
-            color: (theme2.vars || theme2).palette[color2].main
+            color: (theme.vars || theme).palette[color2].main
           }
         }
       }
@@ -35156,7 +35553,7 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
 function getStyleValue(value) {
   return parseInt(value, 10) || 0;
 }
-const styles$4 = {
+const styles$3 = {
   shadow: {
     // Visibility needed to hide the extra text area on iPads
     visibility: "hidden",
@@ -35323,7 +35720,7 @@ const TextareaAutosize = /* @__PURE__ */ D(function TextareaAutosize2(props, for
       ref: hiddenTextareaRef,
       tabIndex: -1,
       style: {
-        ...styles$4.shadow,
+        ...styles$3.shadow,
         ...style2,
         paddingTop: 0,
         paddingBottom: 0
@@ -35413,10 +35810,10 @@ const InputBaseRoot = styled("div", {
   slot: "Root",
   overridesResolver: rootOverridesResolver
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  ...theme2.typography.body1,
-  color: (theme2.vars || theme2).palette.text.primary,
+  ...theme.typography.body1,
+  color: (theme.vars || theme).palette.text.primary,
   lineHeight: "1.4375em",
   // 23px
   boxSizing: "border-box",
@@ -35426,7 +35823,7 @@ const InputBaseRoot = styled("div", {
   display: "inline-flex",
   alignItems: "center",
   [`&.${inputBaseClasses.disabled}`]: {
-    color: (theme2.vars || theme2).palette.text.disabled,
+    color: (theme.vars || theme).palette.text.disabled,
     cursor: "default"
   },
   variants: [{
@@ -35458,25 +35855,25 @@ const InputBaseInput = styled("input", {
   slot: "Input",
   overridesResolver: inputOverridesResolver
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
-  const light2 = theme2.palette.mode === "light";
+  const light2 = theme.palette.mode === "light";
   const placeholder = {
     color: "currentColor",
-    ...theme2.vars ? {
-      opacity: theme2.vars.opacity.inputPlaceholder
+    ...theme.vars ? {
+      opacity: theme.vars.opacity.inputPlaceholder
     } : {
       opacity: light2 ? 0.42 : 0.5
     },
-    transition: theme2.transitions.create("opacity", {
-      duration: theme2.transitions.duration.shorter
+    transition: theme.transitions.create("opacity", {
+      duration: theme.transitions.duration.shorter
     })
   };
   const placeholderHidden = {
     opacity: "0 !important"
   };
-  const placeholderVisible = theme2.vars ? {
-    opacity: theme2.vars.opacity.inputPlaceholder
+  const placeholderVisible = theme.vars ? {
+    opacity: theme.vars.opacity.inputPlaceholder
   } : {
     opacity: light2 ? 0.42 : 0.5
   };
@@ -35529,7 +35926,7 @@ const InputBaseInput = styled("input", {
     [`&.${inputBaseClasses.disabled}`]: {
       opacity: 1,
       // Reset iOS opacity
-      WebkitTextFillColor: (theme2.vars || theme2).palette.text.disabled
+      WebkitTextFillColor: (theme.vars || theme).palette.text.disabled
       // Fix opacity Safari bug
     },
     variants: [{
@@ -36139,9 +36536,9 @@ const AutocompletePopper = styled(Popper$1, {
     }, styles2.popper, ownerState.disablePortal && styles2.popperDisablePortal];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  zIndex: (theme2.vars || theme2).zIndex.modal,
+  zIndex: (theme.vars || theme).zIndex.modal,
   variants: [{
     props: {
       disablePortal: true
@@ -36155,34 +36552,34 @@ const AutocompletePaper = styled(Paper$1, {
   name: "MuiAutocomplete",
   slot: "Paper"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  ...theme2.typography.body1,
+  ...theme.typography.body1,
   overflow: "auto"
 })));
 const AutocompleteLoading = styled("div", {
   name: "MuiAutocomplete",
   slot: "Loading"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  color: (theme2.vars || theme2).palette.text.secondary,
+  color: (theme.vars || theme).palette.text.secondary,
   padding: "14px 16px"
 })));
 const AutocompleteNoOptions = styled("div", {
   name: "MuiAutocomplete",
   slot: "NoOptions"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  color: (theme2.vars || theme2).palette.text.secondary,
+  color: (theme.vars || theme).palette.text.secondary,
   padding: "14px 16px"
 })));
 const AutocompleteListbox = styled("ul", {
   name: "MuiAutocomplete",
   slot: "Listbox"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   listStyle: "none",
   margin: 0,
@@ -36204,34 +36601,34 @@ const AutocompleteListbox = styled("ul", {
     paddingBottom: 6,
     paddingLeft: 16,
     paddingRight: 16,
-    [theme2.breakpoints.up("sm")]: {
+    [theme.breakpoints.up("sm")]: {
       minHeight: "auto"
     },
     [`&.${autocompleteClasses.focused}`]: {
-      backgroundColor: (theme2.vars || theme2).palette.action.hover,
+      backgroundColor: (theme.vars || theme).palette.action.hover,
       // Reset on touch devices, it doesn't add specificity
       "@media (hover: none)": {
         backgroundColor: "transparent"
       }
     },
     '&[aria-disabled="true"]': {
-      opacity: (theme2.vars || theme2).palette.action.disabledOpacity,
+      opacity: (theme.vars || theme).palette.action.disabledOpacity,
       pointerEvents: "none"
     },
     [`&.${autocompleteClasses.focusVisible}`]: {
-      backgroundColor: (theme2.vars || theme2).palette.action.focus
+      backgroundColor: (theme.vars || theme).palette.action.focus
     },
     '&[aria-selected="true"]': {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity),
+      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity),
       [`&.${autocompleteClasses.focused}`]: {
-        backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`),
+        backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`),
         // Reset on touch devices, it doesn't add specificity
         "@media (hover: none)": {
-          backgroundColor: (theme2.vars || theme2).palette.action.selected
+          backgroundColor: (theme.vars || theme).palette.action.selected
         }
       },
       [`&.${autocompleteClasses.focusVisible}`]: {
-        backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
+        backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.focusOpacity}`)
       }
     }
   }
@@ -36240,9 +36637,9 @@ const AutocompleteGroupLabel = styled(ListSubheader, {
   name: "MuiAutocomplete",
   slot: "GroupLabel"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  backgroundColor: (theme2.vars || theme2).palette.background.paper,
+  backgroundColor: (theme.vars || theme).palette.background.paper,
   top: -8
 })));
 const AutocompleteGroupUl = styled("ul", {
@@ -36644,7 +37041,7 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
     }) : null]
   });
 });
-const styles$3 = {
+const styles$2 = {
   entering: {
     opacity: 1
   },
@@ -36663,10 +37060,10 @@ const hiddenStyles$2 = {
   visibility: "hidden"
 };
 const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
-  const theme2 = useTheme();
+  const theme = useTheme();
   const defaultTimeout = {
-    enter: theme2.transitions.duration.enteringScreen,
-    exit: theme2.transitions.duration.leavingScreen
+    enter: theme.transitions.duration.enteringScreen,
+    exit: theme.transitions.duration.leavingScreen
   };
   const {
     addEndListener,
@@ -36696,7 +37093,7 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
     }, {
       mode: "enter"
     });
-    node2.style.transition = theme2.transitions.create("opacity", transitionProps);
+    node2.style.transition = theme.transitions.create("opacity", transitionProps);
     if (onEnter) {
       onEnter(node2, isAppearing);
     }
@@ -36711,7 +37108,7 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
     }, {
       mode: "exit"
     });
-    node2.style.transition = theme2.transitions.create("opacity", transitionProps);
+    node2.style.transition = theme.transitions.create("opacity", transitionProps);
     if (onExit) {
       onExit(node2);
     }
@@ -36744,7 +37141,7 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
       ownerState,
       ...restChildProps
     }) => {
-      const childStyle = getTransitionChildStyle(state, inProp, styles$3, hiddenStyles$2, style2, children.props.style);
+      const childStyle = getTransitionChildStyle(state, inProp, styles$2, hiddenStyles$2, style2, children.props.style);
       return /* @__PURE__ */ mn(children, {
         style: childStyle,
         ref: handleRef,
@@ -36937,24 +37334,24 @@ const ButtonRoot = styled(ButtonBase, {
     return [styles2.root, styles2[ownerState.variant], styles2[`${ownerState.variant}${capitalize(ownerState.color)}`], styles2[`size${capitalize(ownerState.size)}`], styles2[`${ownerState.variant}Size${capitalize(ownerState.size)}`], ownerState.color === "inherit" && styles2.colorInherit, ownerState.disableElevation && styles2.disableElevation, ownerState.fullWidth && styles2.fullWidth, ownerState.loading && styles2.loading];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
-  const inheritContainedBackgroundColor = theme2.palette.mode === "light" ? theme2.palette.grey[300] : theme2.palette.grey[800];
-  const inheritContainedHoverBackgroundColor = theme2.palette.mode === "light" ? theme2.palette.grey.A100 : theme2.palette.grey[700];
+  const inheritContainedBackgroundColor = theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800];
+  const inheritContainedHoverBackgroundColor = theme.palette.mode === "light" ? theme.palette.grey.A100 : theme.palette.grey[700];
   return {
-    ...theme2.typography.button,
+    ...theme.typography.button,
     minWidth: 64,
     padding: "6px 16px",
     border: 0,
-    borderRadius: (theme2.vars || theme2).shape.borderRadius,
-    transition: theme2.transitions.create(["background-color", "box-shadow", "border-color", "color"], {
-      duration: theme2.transitions.duration.short
+    borderRadius: (theme.vars || theme).shape.borderRadius,
+    transition: theme.transitions.create(["background-color", "box-shadow", "border-color", "color"], {
+      duration: theme.transitions.duration.short
     }),
     "&:hover": {
       textDecoration: "none"
     },
     [`&.${buttonClasses.disabled}`]: {
-      color: (theme2.vars || theme2).palette.action.disabled
+      color: (theme.vars || theme).palette.action.disabled
     },
     variants: [{
       props: ({
@@ -36974,24 +37371,24 @@ const ButtonRoot = styled(ButtonBase, {
       style: {
         color: `var(--variant-containedColor)`,
         backgroundColor: `var(--variant-containedBg)`,
-        boxShadow: (theme2.vars || theme2).shadows[2],
+        boxShadow: (theme.vars || theme).shadows[2],
         "&:hover": {
-          boxShadow: (theme2.vars || theme2).shadows[4],
+          boxShadow: (theme.vars || theme).shadows[4],
           // Reset on touch devices, it doesn't add specificity
           "@media (hover: none)": {
-            boxShadow: (theme2.vars || theme2).shadows[2]
+            boxShadow: (theme.vars || theme).shadows[2]
           }
         },
         "&:active": {
-          boxShadow: (theme2.vars || theme2).shadows[8]
+          boxShadow: (theme.vars || theme).shadows[8]
         },
         [`&.${buttonClasses.focusVisible}`]: {
-          boxShadow: (theme2.vars || theme2).shadows[6]
+          boxShadow: (theme.vars || theme).shadows[6]
         },
         [`&.${buttonClasses.disabled}`]: {
-          color: (theme2.vars || theme2).palette.action.disabled,
-          boxShadow: (theme2.vars || theme2).shadows[0],
-          backgroundColor: (theme2.vars || theme2).palette.action.disabledBackground
+          color: (theme.vars || theme).palette.action.disabled,
+          boxShadow: (theme.vars || theme).shadows[0],
+          backgroundColor: (theme.vars || theme).palette.action.disabledBackground
         }
       }
     }, {
@@ -37005,7 +37402,7 @@ const ButtonRoot = styled(ButtonBase, {
         backgroundColor: `var(--variant-outlinedBg)`,
         color: `var(--variant-outlinedColor)`,
         [`&.${buttonClasses.disabled}`]: {
-          border: `1px solid ${(theme2.vars || theme2).palette.action.disabledBackground}`
+          border: `1px solid ${(theme.vars || theme).palette.action.disabledBackground}`
         }
       }
     }, {
@@ -37017,22 +37414,22 @@ const ButtonRoot = styled(ButtonBase, {
         color: `var(--variant-textColor)`,
         backgroundColor: `var(--variant-textBg)`
       }
-    }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
       props: {
         color: color2
       },
       style: {
-        "--variant-textColor": (theme2.vars || theme2).palette[color2].main,
-        "--variant-outlinedColor": (theme2.vars || theme2).palette[color2].main,
-        "--variant-outlinedBorder": theme2.alpha((theme2.vars || theme2).palette[color2].main, 0.5),
-        "--variant-containedColor": (theme2.vars || theme2).palette[color2].contrastText,
-        "--variant-containedBg": (theme2.vars || theme2).palette[color2].main,
+        "--variant-textColor": (theme.vars || theme).palette[color2].main,
+        "--variant-outlinedColor": (theme.vars || theme).palette[color2].main,
+        "--variant-outlinedBorder": theme.alpha((theme.vars || theme).palette[color2].main, 0.5),
+        "--variant-containedColor": (theme.vars || theme).palette[color2].contrastText,
+        "--variant-containedBg": (theme.vars || theme).palette[color2].main,
         "@media (hover: hover)": {
           "&:hover": {
-            "--variant-containedBg": (theme2.vars || theme2).palette[color2].dark,
-            "--variant-textBg": theme2.alpha((theme2.vars || theme2).palette[color2].main, (theme2.vars || theme2).palette.action.hoverOpacity),
-            "--variant-outlinedBorder": (theme2.vars || theme2).palette[color2].main,
-            "--variant-outlinedBg": theme2.alpha((theme2.vars || theme2).palette[color2].main, (theme2.vars || theme2).palette.action.hoverOpacity)
+            "--variant-containedBg": (theme.vars || theme).palette[color2].dark,
+            "--variant-textBg": theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.hoverOpacity),
+            "--variant-outlinedBorder": (theme.vars || theme).palette[color2].main,
+            "--variant-outlinedBg": theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.hoverOpacity)
           }
         }
       }
@@ -37043,12 +37440,12 @@ const ButtonRoot = styled(ButtonBase, {
       style: {
         color: "inherit",
         borderColor: "currentColor",
-        "--variant-containedBg": theme2.vars ? theme2.vars.palette.Button.inheritContainedBg : inheritContainedBackgroundColor,
+        "--variant-containedBg": theme.vars ? theme.vars.palette.Button.inheritContainedBg : inheritContainedBackgroundColor,
         "@media (hover: hover)": {
           "&:hover": {
-            "--variant-containedBg": theme2.vars ? theme2.vars.palette.Button.inheritContainedHoverBg : inheritContainedHoverBackgroundColor,
-            "--variant-textBg": theme2.alpha((theme2.vars || theme2).palette.text.primary, (theme2.vars || theme2).palette.action.hoverOpacity),
-            "--variant-outlinedBg": theme2.alpha((theme2.vars || theme2).palette.text.primary, (theme2.vars || theme2).palette.action.hoverOpacity)
+            "--variant-containedBg": theme.vars ? theme.vars.palette.Button.inheritContainedHoverBg : inheritContainedHoverBackgroundColor,
+            "--variant-textBg": theme.alpha((theme.vars || theme).palette.text.primary, (theme.vars || theme).palette.action.hoverOpacity),
+            "--variant-outlinedBg": theme.alpha((theme.vars || theme).palette.text.primary, (theme.vars || theme).palette.action.hoverOpacity)
           }
         }
       }
@@ -37059,7 +37456,7 @@ const ButtonRoot = styled(ButtonBase, {
       },
       style: {
         padding: "4px 5px",
-        fontSize: theme2.typography.pxToRem(13)
+        fontSize: theme.typography.pxToRem(13)
       }
     }, {
       props: {
@@ -37068,7 +37465,7 @@ const ButtonRoot = styled(ButtonBase, {
       },
       style: {
         padding: "8px 11px",
-        fontSize: theme2.typography.pxToRem(15)
+        fontSize: theme.typography.pxToRem(15)
       }
     }, {
       props: {
@@ -37077,7 +37474,7 @@ const ButtonRoot = styled(ButtonBase, {
       },
       style: {
         padding: "3px 9px",
-        fontSize: theme2.typography.pxToRem(13)
+        fontSize: theme.typography.pxToRem(13)
       }
     }, {
       props: {
@@ -37086,7 +37483,7 @@ const ButtonRoot = styled(ButtonBase, {
       },
       style: {
         padding: "7px 21px",
-        fontSize: theme2.typography.pxToRem(15)
+        fontSize: theme.typography.pxToRem(15)
       }
     }, {
       props: {
@@ -37095,7 +37492,7 @@ const ButtonRoot = styled(ButtonBase, {
       },
       style: {
         padding: "4px 10px",
-        fontSize: theme2.typography.pxToRem(13)
+        fontSize: theme.typography.pxToRem(13)
       }
     }, {
       props: {
@@ -37104,7 +37501,7 @@ const ButtonRoot = styled(ButtonBase, {
       },
       style: {
         padding: "8px 22px",
-        fontSize: theme2.typography.pxToRem(15)
+        fontSize: theme.typography.pxToRem(15)
       }
     }, {
       props: {
@@ -37137,8 +37534,8 @@ const ButtonRoot = styled(ButtonBase, {
         loadingPosition: "center"
       },
       style: {
-        transition: theme2.transitions.create(["background-color", "box-shadow", "border-color"], {
-          duration: theme2.transitions.duration.short
+        transition: theme.transitions.create(["background-color", "box-shadow", "border-color"], {
+          duration: theme.transitions.duration.short
         }),
         [`&.${buttonClasses.loading}`]: {
           color: "transparent"
@@ -37157,7 +37554,7 @@ const ButtonStartIcon = styled("span", {
     return [styles2.startIcon, ownerState.loading && styles2.startIconLoadingStart, styles2[`iconSize${capitalize(ownerState.size)}`]];
   }
 })(({
-  theme: theme2
+  theme
 }) => ({
   display: "inherit",
   marginRight: 8,
@@ -37175,8 +37572,8 @@ const ButtonStartIcon = styled("span", {
       loading: true
     },
     style: {
-      transition: theme2.transitions.create(["opacity"], {
-        duration: theme2.transitions.duration.short
+      transition: theme.transitions.create(["opacity"], {
+        duration: theme.transitions.duration.short
       }),
       opacity: 0
     }
@@ -37201,7 +37598,7 @@ const ButtonEndIcon = styled("span", {
     return [styles2.endIcon, ownerState.loading && styles2.endIconLoadingEnd, styles2[`iconSize${capitalize(ownerState.size)}`]];
   }
 })(({
-  theme: theme2
+  theme
 }) => ({
   display: "inherit",
   marginRight: -4,
@@ -37219,8 +37616,8 @@ const ButtonEndIcon = styled("span", {
       loading: true
     },
     style: {
-      transition: theme2.transitions.create(["opacity"], {
-        duration: theme2.transitions.duration.short
+      transition: theme.transitions.create(["opacity"], {
+        duration: theme.transitions.duration.short
       }),
       opacity: 0
     }
@@ -37239,7 +37636,7 @@ const ButtonLoadingIndicator = styled("span", {
   name: "MuiButton",
   slot: "LoadingIndicator"
 })(({
-  theme: theme2
+  theme
 }) => ({
   display: "none",
   position: "absolute",
@@ -37281,7 +37678,7 @@ const ButtonLoadingIndicator = styled("span", {
     style: {
       left: "50%",
       transform: "translate(-50%)",
-      color: (theme2.vars || theme2).palette.action.disabled
+      color: (theme.vars || theme).palette.action.disabled
     }
   }, {
     props: {
@@ -37693,9 +38090,9 @@ const CheckboxRoot = styled(SwitchBase, {
     return [styles2.root, ownerState.indeterminate && styles2.indeterminate, styles2[`size${capitalize(ownerState.size)}`], ownerState.color !== "default" && styles2[`color${capitalize(ownerState.color)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  color: (theme2.vars || theme2).palette.text.secondary,
+  color: (theme.vars || theme).palette.text.secondary,
   variants: [{
     props: {
       color: "default",
@@ -37703,29 +38100,29 @@ const CheckboxRoot = styled(SwitchBase, {
     },
     style: {
       "&:hover": {
-        backgroundColor: theme2.alpha((theme2.vars || theme2).palette.action.active, (theme2.vars || theme2).palette.action.hoverOpacity)
+        backgroundColor: theme.alpha((theme.vars || theme).palette.action.active, (theme.vars || theme).palette.action.hoverOpacity)
       }
     }
-  }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2,
       disableRipple: false
     },
     style: {
       "&:hover": {
-        backgroundColor: theme2.alpha((theme2.vars || theme2).palette[color2].main, (theme2.vars || theme2).palette.action.hoverOpacity)
+        backgroundColor: theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.hoverOpacity)
       }
     }
-  })), ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2
     },
     style: {
       [`&.${checkboxClasses.checked}, &.${checkboxClasses.indeterminate}`]: {
-        color: (theme2.vars || theme2).palette[color2].main
+        color: (theme.vars || theme).palette[color2].main
       },
       [`&.${checkboxClasses.disabled}`]: {
-        color: (theme2.vars || theme2).palette.action.disabled
+        color: (theme.vars || theme).palette.action.disabled
       }
     }
   })), {
@@ -37902,130 +38299,6 @@ function ClickAwayListener$1(props) {
     return void 0;
   }, [handleClickAway, mouseEvent]);
   return /* @__PURE__ */ mn(children, childrenProps);
-}
-const isDynamicSupport = typeof globalCss({}) === "function";
-const html = (theme2, enableColorScheme) => ({
-  WebkitFontSmoothing: "antialiased",
-  // Antialiasing.
-  MozOsxFontSmoothing: "grayscale",
-  // Antialiasing.
-  // Change from `box-sizing: content-box` so that `width`
-  // is not affected by `padding` or `border`.
-  boxSizing: "border-box",
-  // Fix font resize problem in iOS
-  WebkitTextSizeAdjust: "100%",
-  // When used under CssVarsProvider, colorScheme should not be applied dynamically because it will generate the stylesheet twice for server-rendered applications.
-  ...enableColorScheme && !theme2.vars && {
-    colorScheme: theme2.palette.mode
-  }
-});
-const body = (theme2) => ({
-  color: (theme2.vars || theme2).palette.text.primary,
-  ...theme2.typography.body1,
-  backgroundColor: (theme2.vars || theme2).palette.background.default,
-  "@media print": {
-    // Save printer ink.
-    backgroundColor: (theme2.vars || theme2).palette.common.white
-  }
-});
-const styles$2 = (theme2, enableColorScheme = false) => {
-  const colorSchemeStyles = {};
-  if (enableColorScheme && theme2.colorSchemes && typeof theme2.getColorSchemeSelector === "function") {
-    Object.entries(theme2.colorSchemes).forEach(([key, scheme]) => {
-      const selector = theme2.getColorSchemeSelector(key);
-      if (selector.startsWith("@")) {
-        colorSchemeStyles[selector] = {
-          ":root": {
-            colorScheme: scheme.palette?.mode
-          }
-        };
-      } else {
-        colorSchemeStyles[selector.replace(/\s*&/, "")] = {
-          colorScheme: scheme.palette?.mode
-        };
-      }
-    });
-  }
-  let defaultStyles = {
-    html: html(theme2, enableColorScheme),
-    "*, *::before, *::after": {
-      boxSizing: "inherit"
-    },
-    "strong, b": {
-      fontWeight: theme2.typography.fontWeightBold
-    },
-    body: {
-      margin: 0,
-      // Remove the margin in all browsers.
-      ...body(theme2),
-      // Add support for document.body.requestFullScreen().
-      // Other elements, if background transparent, are not supported.
-      "&::backdrop": {
-        backgroundColor: (theme2.vars || theme2).palette.background.default
-      }
-    },
-    ...colorSchemeStyles
-  };
-  const themeOverrides = theme2.components?.MuiCssBaseline?.styleOverrides;
-  if (themeOverrides) {
-    defaultStyles = [defaultStyles, themeOverrides];
-  }
-  return defaultStyles;
-};
-const SELECTOR$1 = "mui-ecs";
-const staticStyles = (theme2) => {
-  const result = styles$2(theme2, false);
-  const baseStyles = Array.isArray(result) ? result[0] : result;
-  if (!theme2.vars && baseStyles) {
-    baseStyles.html[`:root:has(${SELECTOR$1})`] = {
-      colorScheme: theme2.palette.mode
-    };
-  }
-  if (theme2.colorSchemes) {
-    Object.entries(theme2.colorSchemes).forEach(([key, scheme]) => {
-      const selector = theme2.getColorSchemeSelector(key);
-      if (selector.startsWith("@")) {
-        baseStyles[selector] = {
-          [`:root:not(:has(.${SELECTOR$1}))`]: {
-            colorScheme: scheme.palette?.mode
-          }
-        };
-      } else {
-        baseStyles[selector.replace(/\s*&/, "")] = {
-          [`&:not(:has(.${SELECTOR$1}))`]: {
-            colorScheme: scheme.palette?.mode
-          }
-        };
-      }
-    });
-  }
-  return result;
-};
-const GlobalStyles = globalCss(isDynamicSupport ? ({
-  theme: theme2,
-  enableColorScheme
-}) => styles$2(theme2, enableColorScheme) : ({
-  theme: theme2
-}) => staticStyles(theme2));
-function CssBaseline$1(inProps) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiCssBaseline"
-  });
-  const {
-    children,
-    enableColorScheme = false
-  } = props;
-  return /* @__PURE__ */ u2(S, {
-    children: [isDynamicSupport && /* @__PURE__ */ u2(GlobalStyles, {
-      enableColorScheme
-    }), !isDynamicSupport && !enableColorScheme && /* @__PURE__ */ u2("span", {
-      className: SELECTOR$1,
-      style: {
-        display: "none"
-      }
-    }), children]
-  });
 }
 function getScrollbarSize(win = window) {
   const documentWidth = win.document.documentElement.clientWidth;
@@ -38622,10 +38895,10 @@ const ModalRoot = styled("div", {
     return [styles2.root, !ownerState.open && ownerState.exited && styles2.hidden];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   position: "fixed",
-  zIndex: (theme2.vars || theme2).zIndex.modal,
+  zIndex: (theme.vars || theme).zIndex.modal,
   right: 0,
   bottom: 0,
   top: 0,
@@ -38676,7 +38949,7 @@ const Modal = /* @__PURE__ */ D(function Modal2(inProps, ref) {
     slotProps = {},
     slots = {},
     // eslint-disable-next-line react/prop-types
-    theme: theme2,
+    theme,
     ...other
   } = props;
   const propsWithDefaults = {
@@ -38874,7 +39147,7 @@ const DialogPaper = styled(Paper$1, {
     return [styles2.paper, styles2[`scrollPaper${capitalize(ownerState.scroll)}`], styles2[`paperWidth${capitalize(String(ownerState.maxWidth))}`], ownerState.fullWidth && styles2.paperFullWidth, ownerState.fullScreen && styles2.paperFullScreen];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   margin: 32,
   position: "relative",
@@ -38913,21 +39186,21 @@ const DialogPaper = styled(Paper$1, {
       maxWidth: "xs"
     },
     style: {
-      maxWidth: theme2.breakpoints.unit === "px" ? Math.max(theme2.breakpoints.values.xs, 444) : `max(${theme2.breakpoints.values.xs}${theme2.breakpoints.unit}, 444px)`,
+      maxWidth: theme.breakpoints.unit === "px" ? Math.max(theme.breakpoints.values.xs, 444) : `max(${theme.breakpoints.values.xs}${theme.breakpoints.unit}, 444px)`,
       [`&.${dialogClasses.paperScrollBody}`]: {
-        [theme2.breakpoints.down(Math.max(theme2.breakpoints.values.xs, 444) + 32 * 2)]: {
+        [theme.breakpoints.down(Math.max(theme.breakpoints.values.xs, 444) + 32 * 2)]: {
           maxWidth: "calc(100% - 64px)"
         }
       }
     }
-  }, ...Object.keys(theme2.breakpoints.values).filter((maxWidth2) => maxWidth2 !== "xs").map((maxWidth2) => ({
+  }, ...Object.keys(theme.breakpoints.values).filter((maxWidth2) => maxWidth2 !== "xs").map((maxWidth2) => ({
     props: {
       maxWidth: maxWidth2
     },
     style: {
-      maxWidth: `${theme2.breakpoints.values[maxWidth2]}${theme2.breakpoints.unit}`,
+      maxWidth: `${theme.breakpoints.values[maxWidth2]}${theme.breakpoints.unit}`,
       [`&.${dialogClasses.paperScrollBody}`]: {
-        [theme2.breakpoints.down(theme2.breakpoints.values[maxWidth2] + 32 * 2)]: {
+        [theme.breakpoints.down(theme.breakpoints.values[maxWidth2] + 32 * 2)]: {
           maxWidth: "calc(100% - 64px)"
         }
       }
@@ -38962,10 +39235,10 @@ const Dialog$1 = /* @__PURE__ */ D(function Dialog(inProps, ref) {
     props: inProps,
     name: "MuiDialog"
   });
-  const theme2 = useTheme();
+  const theme = useTheme();
   const defaultTransitionDuration = {
-    enter: theme2.transitions.duration.enteringScreen,
-    exit: theme2.transitions.duration.leavingScreen
+    enter: theme.transitions.duration.enteringScreen,
+    exit: theme.transitions.duration.leavingScreen
   };
   const {
     "aria-describedby": ariaDescribedby,
@@ -39211,7 +39484,7 @@ const DialogContentRoot = styled("div", {
     return [styles2.root, ownerState.dividers && styles2.dividers];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   flex: "1 1 auto",
   // Add iOS momentum scrolling for iOS < 13.0
@@ -39224,8 +39497,8 @@ const DialogContentRoot = styled("div", {
     }) => ownerState.dividers,
     style: {
       padding: "16px 24px",
-      borderTop: `1px solid ${(theme2.vars || theme2).palette.divider}`,
-      borderBottom: `1px solid ${(theme2.vars || theme2).palette.divider}`
+      borderTop: `1px solid ${(theme.vars || theme).palette.divider}`,
+      borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`
     }
   }, {
     props: ({
@@ -39332,14 +39605,14 @@ const DividerRoot = styled("div", {
     return [styles2.root, ownerState.absolute && styles2.absolute, styles2[ownerState.variant], ownerState.light && styles2.light, ownerState.orientation === "vertical" && styles2.vertical, ownerState.flexItem && styles2.flexItem, ownerState.children && styles2.withChildren, ownerState.children && ownerState.orientation === "vertical" && styles2.withChildrenVertical, ownerState.textAlign === "right" && ownerState.orientation !== "vertical" && styles2.textAlignRight, ownerState.textAlign === "left" && ownerState.orientation !== "vertical" && styles2.textAlignLeft];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   margin: 0,
   // Reset browser default style.
   flexShrink: 0,
   borderWidth: 0,
   borderStyle: "solid",
-  borderColor: (theme2.vars || theme2).palette.divider,
+  borderColor: (theme.vars || theme).palette.divider,
   borderBottomWidth: "thin",
   variants: [{
     props: {
@@ -39356,7 +39629,7 @@ const DividerRoot = styled("div", {
       light: true
     },
     style: {
-      borderColor: theme2.alpha((theme2.vars || theme2).palette.divider, 0.08)
+      borderColor: theme.alpha((theme.vars || theme).palette.divider, 0.08)
     }
   }, {
     props: {
@@ -39371,8 +39644,8 @@ const DividerRoot = styled("div", {
       orientation: "horizontal"
     },
     style: {
-      marginLeft: theme2.spacing(2),
-      marginRight: theme2.spacing(2)
+      marginLeft: theme.spacing(2),
+      marginRight: theme.spacing(2)
     }
   }, {
     props: {
@@ -39380,8 +39653,8 @@ const DividerRoot = styled("div", {
       orientation: "vertical"
     },
     style: {
-      marginTop: theme2.spacing(1),
-      marginBottom: theme2.spacing(1)
+      marginTop: theme.spacing(1),
+      marginBottom: theme.spacing(1)
     }
   }, {
     props: {
@@ -39422,7 +39695,7 @@ const DividerRoot = styled("div", {
     style: {
       "&::before, &::after": {
         width: "100%",
-        borderTop: `thin solid ${(theme2.vars || theme2).palette.divider}`,
+        borderTop: `thin solid ${(theme.vars || theme).palette.divider}`,
         borderTopStyle: "inherit"
       }
     }
@@ -39434,7 +39707,7 @@ const DividerRoot = styled("div", {
       flexDirection: "column",
       "&::before, &::after": {
         height: "100%",
-        borderLeft: `thin solid ${(theme2.vars || theme2).palette.divider}`,
+        borderLeft: `thin solid ${(theme.vars || theme).palette.divider}`,
         borderLeftStyle: "inherit"
       }
     }
@@ -39474,19 +39747,19 @@ const DividerWrapper = styled("span", {
     return [styles2.wrapper, ownerState.orientation === "vertical" && styles2.wrapperVertical];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   display: "inline-block",
-  paddingLeft: `calc(${theme2.spacing(1)} * 1.2)`,
-  paddingRight: `calc(${theme2.spacing(1)} * 1.2)`,
+  paddingLeft: `calc(${theme.spacing(1)} * 1.2)`,
+  paddingRight: `calc(${theme.spacing(1)} * 1.2)`,
   whiteSpace: "nowrap",
   variants: [{
     props: {
       orientation: "vertical"
     },
     style: {
-      paddingTop: `calc(${theme2.spacing(1)} * 1.2)`,
-      paddingBottom: `calc(${theme2.spacing(1)} * 1.2)`
+      paddingTop: `calc(${theme.spacing(1)} * 1.2)`,
+      paddingBottom: `calc(${theme.spacing(1)} * 1.2)`
     }
   }]
 })));
@@ -39570,34 +39843,34 @@ const FilledInputRoot = styled(InputBaseRoot, {
     return [...rootOverridesResolver(props, styles2), !ownerState.disableUnderline && styles2.underline];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
-  const light2 = theme2.palette.mode === "light";
+  const light2 = theme.palette.mode === "light";
   const bottomLineColor = light2 ? "rgba(0, 0, 0, 0.42)" : "rgba(255, 255, 255, 0.7)";
   const backgroundColor2 = light2 ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.09)";
   const hoverBackground = light2 ? "rgba(0, 0, 0, 0.09)" : "rgba(255, 255, 255, 0.13)";
   const disabledBackground = light2 ? "rgba(0, 0, 0, 0.12)" : "rgba(255, 255, 255, 0.12)";
   return {
     position: "relative",
-    backgroundColor: theme2.vars ? theme2.vars.palette.FilledInput.bg : backgroundColor2,
-    borderTopLeftRadius: (theme2.vars || theme2).shape.borderRadius,
-    borderTopRightRadius: (theme2.vars || theme2).shape.borderRadius,
-    transition: theme2.transitions.create("background-color", {
-      duration: theme2.transitions.duration.shorter,
-      easing: theme2.transitions.easing.easeOut
+    backgroundColor: theme.vars ? theme.vars.palette.FilledInput.bg : backgroundColor2,
+    borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
+    borderTopRightRadius: (theme.vars || theme).shape.borderRadius,
+    transition: theme.transitions.create("background-color", {
+      duration: theme.transitions.duration.shorter,
+      easing: theme.transitions.easing.easeOut
     }),
     "&:hover": {
-      backgroundColor: theme2.vars ? theme2.vars.palette.FilledInput.hoverBg : hoverBackground,
+      backgroundColor: theme.vars ? theme.vars.palette.FilledInput.hoverBg : hoverBackground,
       // Reset on touch devices, it doesn't add specificity
       "@media (hover: none)": {
-        backgroundColor: theme2.vars ? theme2.vars.palette.FilledInput.bg : backgroundColor2
+        backgroundColor: theme.vars ? theme.vars.palette.FilledInput.bg : backgroundColor2
       }
     },
     [`&.${filledInputClasses.focused}`]: {
-      backgroundColor: theme2.vars ? theme2.vars.palette.FilledInput.bg : backgroundColor2
+      backgroundColor: theme.vars ? theme.vars.palette.FilledInput.bg : backgroundColor2
     },
     [`&.${filledInputClasses.disabled}`]: {
-      backgroundColor: theme2.vars ? theme2.vars.palette.FilledInput.disabledBg : disabledBackground
+      backgroundColor: theme.vars ? theme.vars.palette.FilledInput.disabledBg : disabledBackground
     },
     variants: [{
       props: ({
@@ -39611,9 +39884,9 @@ const FilledInputRoot = styled(InputBaseRoot, {
           position: "absolute",
           right: 0,
           transform: "scaleX(0)",
-          transition: theme2.transitions.create("transform", {
-            duration: theme2.transitions.duration.shorter,
-            easing: theme2.transitions.easing.easeOut
+          transition: theme.transitions.create("transform", {
+            duration: theme.transitions.duration.shorter,
+            easing: theme.transitions.easing.easeOut
           }),
           pointerEvents: "none"
           // Transparent to the hover style.
@@ -39625,37 +39898,37 @@ const FilledInputRoot = styled(InputBaseRoot, {
         },
         [`&.${filledInputClasses.error}`]: {
           "&::before, &::after": {
-            borderBottomColor: (theme2.vars || theme2).palette.error.main
+            borderBottomColor: (theme.vars || theme).palette.error.main
           }
         },
         "&::before": {
-          borderBottom: `1px solid ${theme2.vars ? theme2.alpha(theme2.vars.palette.common.onBackground, theme2.vars.opacity.inputUnderline) : bottomLineColor}`,
+          borderBottom: `1px solid ${theme.vars ? theme.alpha(theme.vars.palette.common.onBackground, theme.vars.opacity.inputUnderline) : bottomLineColor}`,
           left: 0,
           bottom: 0,
           content: '""',
           position: "absolute",
           right: 0,
-          transition: theme2.transitions.create("border-bottom-color", {
-            duration: theme2.transitions.duration.shorter
+          transition: theme.transitions.create("border-bottom-color", {
+            duration: theme.transitions.duration.shorter
           }),
           pointerEvents: "none"
           // Transparent to the hover style.
         },
         [`&:hover:not(.${filledInputClasses.disabled}, .${filledInputClasses.error}):before`]: {
-          borderBottom: `1px solid ${(theme2.vars || theme2).palette.text.primary}`
+          borderBottom: `1px solid ${(theme.vars || theme).palette.text.primary}`
         },
         [`&.${filledInputClasses.disabled}:before`]: {
           borderBottomStyle: "dotted"
         }
       }
-    }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
       props: {
         disableUnderline: false,
         color: color2
       },
       style: {
         "&::after": {
-          borderBottom: `2px solid ${(theme2.vars || theme2).palette[color2]?.main}`
+          borderBottom: `2px solid ${(theme.vars || theme).palette[color2]?.main}`
         }
       }
     })), {
@@ -39712,27 +39985,27 @@ const FilledInputInput = styled(InputBaseInput, {
   slot: "Input",
   overridesResolver: inputOverridesResolver
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   paddingTop: 25,
   paddingRight: 12,
   paddingBottom: 8,
   paddingLeft: 12,
-  ...!theme2.vars && {
+  ...!theme.vars && {
     "&:-webkit-autofill": {
-      WebkitBoxShadow: theme2.palette.mode === "light" ? null : "0 0 0 100px #266798 inset",
-      WebkitTextFillColor: theme2.palette.mode === "light" ? null : "#fff",
-      caretColor: theme2.palette.mode === "light" ? null : "#fff",
+      WebkitBoxShadow: theme.palette.mode === "light" ? null : "0 0 0 100px #266798 inset",
+      WebkitTextFillColor: theme.palette.mode === "light" ? null : "#fff",
+      caretColor: theme.palette.mode === "light" ? null : "#fff",
       borderTopLeftRadius: "inherit",
       borderTopRightRadius: "inherit"
     }
   },
-  ...theme2.vars && {
+  ...theme.vars && {
     "&:-webkit-autofill": {
       borderTopLeftRadius: "inherit",
       borderTopRightRadius: "inherit"
     },
-    [theme2.getColorSchemeSelector("dark")]: {
+    [theme.getColorSchemeSelector("dark")]: {
       "&:-webkit-autofill": {
         WebkitBoxShadow: "0 0 0 100px #266798 inset",
         WebkitTextFillColor: "#fff",
@@ -40050,7 +40323,7 @@ const FormControlLabelRoot = styled("label", {
     }, styles2.root, styles2[`labelPlacement${capitalize(ownerState.labelPlacement)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   display: "inline-flex",
   alignItems: "center",
@@ -40066,7 +40339,7 @@ const FormControlLabelRoot = styled("label", {
   },
   [`& .${formControlLabelClasses.label}`]: {
     [`&.${formControlLabelClasses.disabled}`]: {
-      color: (theme2.vars || theme2).palette.text.disabled
+      color: (theme.vars || theme).palette.text.disabled
     }
   },
   variants: [{
@@ -40105,10 +40378,10 @@ const AsteriskComponent$1 = styled("span", {
   name: "MuiFormControlLabel",
   slot: "Asterisk"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   [`&.${formControlLabelClasses.error}`]: {
-    color: (theme2.vars || theme2).palette.error.main
+    color: (theme.vars || theme).palette.error.main
   }
 })));
 const FormControlLabel$1 = /* @__PURE__ */ D(function FormControlLabel(inProps, ref) {
@@ -40292,20 +40565,20 @@ const FormHelperTextRoot = styled("p", {
     return [styles2.root, ownerState.size && styles2[`size${capitalize(ownerState.size)}`], ownerState.contained && styles2.contained, ownerState.filled && styles2.filled];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  color: (theme2.vars || theme2).palette.text.secondary,
-  ...theme2.typography.caption,
+  color: (theme.vars || theme).palette.text.secondary,
+  ...theme.typography.caption,
   textAlign: "left",
   marginTop: 3,
   marginRight: 0,
   marginBottom: 0,
   marginLeft: 0,
   [`&.${formHelperTextClasses.disabled}`]: {
-    color: (theme2.vars || theme2).palette.text.disabled
+    color: (theme.vars || theme).palette.text.disabled
   },
   [`&.${formHelperTextClasses.error}`]: {
-    color: (theme2.vars || theme2).palette.error.main
+    color: (theme.vars || theme).palette.error.main
   },
   variants: [{
     props: {
@@ -40408,30 +40681,30 @@ const FormLabelRoot = styled("label", {
     return [styles2.root, ownerState.color === "secondary" && styles2.colorSecondary, ownerState.filled && styles2.filled];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  color: (theme2.vars || theme2).palette.text.secondary,
-  ...theme2.typography.body1,
+  color: (theme.vars || theme).palette.text.secondary,
+  ...theme.typography.body1,
   lineHeight: "1.4375em",
   padding: 0,
   position: "relative",
-  variants: [...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2
     },
     style: {
       [`&.${formLabelClasses.focused}`]: {
-        color: (theme2.vars || theme2).palette[color2].main
+        color: (theme.vars || theme).palette[color2].main
       }
     }
   })), {
     props: {},
     style: {
       [`&.${formLabelClasses.disabled}`]: {
-        color: (theme2.vars || theme2).palette.text.disabled
+        color: (theme.vars || theme).palette.text.disabled
       },
       [`&.${formLabelClasses.error}`]: {
-        color: (theme2.vars || theme2).palette.error.main
+        color: (theme.vars || theme).palette.error.main
       }
     }
   }]
@@ -40440,10 +40713,10 @@ const AsteriskComponent = styled("span", {
   name: "MuiFormLabel",
   slot: "Asterisk"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   [`&.${formLabelClasses.error}`]: {
-    color: (theme2.vars || theme2).palette.error.main
+    color: (theme.vars || theme).palette.error.main
   }
 })));
 const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
@@ -40539,7 +40812,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
   } = props;
   const timer = useTimeout();
   const autoTimeout = A$1();
-  const theme2 = useTheme();
+  const theme = useTheme();
   const nodeRef = A$1(null);
   const handleRef = useForkRef(nodeRef, getReactElementRef(children), ref);
   const handleEntering = normalizedTransitionCallback(nodeRef, onEntering);
@@ -40558,15 +40831,15 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
     });
     let duration2;
     if (timeout === "auto") {
-      duration2 = theme2.transitions.getAutoHeightDuration(node2.clientHeight);
+      duration2 = theme.transitions.getAutoHeightDuration(node2.clientHeight);
       autoTimeout.current = duration2;
     } else {
       duration2 = transitionDuration;
     }
-    node2.style.transition = [theme2.transitions.create("opacity", {
+    node2.style.transition = [theme.transitions.create("opacity", {
       duration: duration2,
       delay
-    }), theme2.transitions.create("transform", {
+    }), theme.transitions.create("transform", {
       duration: duration2 * 0.666,
       delay,
       easing: transitionTimingFunction
@@ -40591,15 +40864,15 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
     });
     let duration2;
     if (timeout === "auto") {
-      duration2 = theme2.transitions.getAutoHeightDuration(node2.clientHeight);
+      duration2 = theme.transitions.getAutoHeightDuration(node2.clientHeight);
       autoTimeout.current = duration2;
     } else {
       duration2 = transitionDuration;
     }
-    node2.style.transition = [theme2.transitions.create("opacity", {
+    node2.style.transition = [theme.transitions.create("opacity", {
       duration: duration2,
       delay
-    }), theme2.transitions.create("transform", {
+    }), theme.transitions.create("transform", {
       duration: duration2 * 0.666,
       delay: delay || duration2 * 0.333,
       easing: transitionTimingFunction
@@ -40680,12 +40953,12 @@ const InputRoot = styled(InputBaseRoot, {
     return [...rootOverridesResolver(props, styles2), !ownerState.disableUnderline && styles2.underline];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
-  const light2 = theme2.palette.mode === "light";
+  const light2 = theme.palette.mode === "light";
   let bottomLineColor = light2 ? "rgba(0, 0, 0, 0.42)" : "rgba(255, 255, 255, 0.7)";
-  if (theme2.vars) {
-    bottomLineColor = theme2.alpha(theme2.vars.palette.common.onBackground, theme2.vars.opacity.inputUnderline);
+  if (theme.vars) {
+    bottomLineColor = theme.alpha(theme.vars.palette.common.onBackground, theme.vars.opacity.inputUnderline);
   }
   return {
     position: "relative",
@@ -40710,9 +40983,9 @@ const InputRoot = styled(InputBaseRoot, {
           position: "absolute",
           right: 0,
           transform: "scaleX(0)",
-          transition: theme2.transitions.create("transform", {
-            duration: theme2.transitions.duration.shorter,
-            easing: theme2.transitions.easing.easeOut
+          transition: theme.transitions.create("transform", {
+            duration: theme.transitions.duration.shorter,
+            easing: theme.transitions.easing.easeOut
           }),
           pointerEvents: "none"
           // Transparent to the hover style.
@@ -40724,7 +40997,7 @@ const InputRoot = styled(InputBaseRoot, {
         },
         [`&.${inputClasses.error}`]: {
           "&::before, &::after": {
-            borderBottomColor: (theme2.vars || theme2).palette.error.main
+            borderBottomColor: (theme.vars || theme).palette.error.main
           }
         },
         "&::before": {
@@ -40734,14 +41007,14 @@ const InputRoot = styled(InputBaseRoot, {
           content: '""',
           position: "absolute",
           right: 0,
-          transition: theme2.transitions.create("border-bottom-color", {
-            duration: theme2.transitions.duration.shorter
+          transition: theme.transitions.create("border-bottom-color", {
+            duration: theme.transitions.duration.shorter
           }),
           pointerEvents: "none"
           // Transparent to the hover style.
         },
         [`&:hover:not(.${inputClasses.disabled}, .${inputClasses.error}):before`]: {
-          borderBottom: `2px solid ${(theme2.vars || theme2).palette.text.primary}`,
+          borderBottom: `2px solid ${(theme.vars || theme).palette.text.primary}`,
           // Reset on touch devices, it doesn't add specificity
           "@media (hover: none)": {
             borderBottom: `1px solid ${bottomLineColor}`
@@ -40751,14 +41024,14 @@ const InputRoot = styled(InputBaseRoot, {
           borderBottomStyle: "dotted"
         }
       }
-    }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
       props: {
         color: color2,
         disableUnderline: false
       },
       style: {
         "&::after": {
-          borderBottom: `2px solid ${(theme2.vars || theme2).palette[color2].main}`
+          borderBottom: `2px solid ${(theme.vars || theme).palette[color2].main}`
         }
       }
     }))]
@@ -40844,13 +41117,13 @@ const InputAdornmentRoot = styled("div", {
   slot: "Root",
   overridesResolver: overridesResolver$2
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   display: "flex",
   maxHeight: "2em",
   alignItems: "center",
   whiteSpace: "nowrap",
-  color: (theme2.vars || theme2).palette.action.active,
+  color: (theme.vars || theme).palette.action.active,
   variants: [{
     props: {
       variant: "filled"
@@ -40975,7 +41248,7 @@ const InputLabelRoot = styled(FormLabel, {
     }, styles2.root, ownerState.formControl && styles2.formControl, ownerState.size === "small" && styles2.sizeSmall, ownerState.shrink && styles2.shrink, !ownerState.disableAnimation && styles2.animated, ownerState.focused && styles2.focused, styles2[ownerState.variant]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   display: "block",
   transformOrigin: "top left",
@@ -41016,9 +41289,9 @@ const InputLabelRoot = styled(FormLabel, {
       ownerState
     }) => !ownerState.disableAnimation,
     style: {
-      transition: theme2.transitions.create(["color", "transform", "max-width"], {
-        duration: theme2.transitions.duration.shorter,
-        easing: theme2.transitions.easing.easeOut
+      transition: theme.transitions.create(["color", "transform", "max-width"], {
+        duration: theme.transitions.duration.shorter,
+        easing: theme.transitions.easing.easeOut
       })
     }
   }, {
@@ -41259,7 +41532,7 @@ const ListItemButtonRoot = styled(ButtonBase, {
   slot: "Root",
   overridesResolver: overridesResolver$1
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   display: "flex",
   flexGrow: 1,
@@ -41272,42 +41545,42 @@ const ListItemButtonRoot = styled(ButtonBase, {
   textAlign: "left",
   paddingTop: 8,
   paddingBottom: 8,
-  transition: theme2.transitions.create("background-color", {
-    duration: theme2.transitions.duration.shortest
+  transition: theme.transitions.create("background-color", {
+    duration: theme.transitions.duration.shortest
   }),
   "&:hover": {
     textDecoration: "none",
-    backgroundColor: (theme2.vars || theme2).palette.action.hover,
+    backgroundColor: (theme.vars || theme).palette.action.hover,
     // Reset on touch devices, it doesn't add specificity
     "@media (hover: none)": {
       backgroundColor: "transparent"
     }
   },
   [`&.${listItemButtonClasses.selected}`]: {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity),
+    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity),
     [`&.${listItemButtonClasses.focusVisible}`]: {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
+      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.focusOpacity}`)
     }
   },
   [`&.${listItemButtonClasses.selected}:hover`]: {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`),
+    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`),
     // Reset on touch devices, it doesn't add specificity
     "@media (hover: none)": {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity)
+      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity)
     }
   },
   [`&.${listItemButtonClasses.focusVisible}`]: {
-    backgroundColor: (theme2.vars || theme2).palette.action.focus
+    backgroundColor: (theme.vars || theme).palette.action.focus
   },
   [`&.${listItemButtonClasses.disabled}`]: {
-    opacity: (theme2.vars || theme2).palette.action.disabledOpacity
+    opacity: (theme.vars || theme).palette.action.disabledOpacity
   },
   variants: [{
     props: ({
       ownerState
     }) => ownerState.divider,
     style: {
-      borderBottom: `1px solid ${(theme2.vars || theme2).palette.divider}`,
+      borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`,
       backgroundClip: "padding-box"
     }
   }, {
@@ -41420,10 +41693,10 @@ const ListItemIconRoot = styled("div", {
     return [styles2.root, ownerState.alignItems === "flex-start" && styles2.alignItemsFlexStart];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   minWidth: 56,
-  color: (theme2.vars || theme2).palette.action.active,
+  color: (theme.vars || theme).palette.action.active,
   flexShrink: 0,
   display: "inline-flex",
   variants: [{
@@ -42338,7 +42611,7 @@ const useUtilityClasses$i = (ownerState) => {
 const StyledSelectSelect = styled("select", {
   name: "MuiNativeSelect"
 })(({
-  theme: theme2
+  theme
 }) => ({
   // Reset
   MozAppearance: "none",
@@ -42361,7 +42634,7 @@ const StyledSelectSelect = styled("select", {
     height: "auto"
   },
   "&:not([multiple]) option, &:not([multiple]) optgroup": {
-    backgroundColor: (theme2.vars || theme2).palette.background.paper
+    backgroundColor: (theme.vars || theme).palette.background.paper
   },
   variants: [{
     props: ({
@@ -42389,9 +42662,9 @@ const StyledSelectSelect = styled("select", {
       variant: "outlined"
     },
     style: {
-      borderRadius: (theme2.vars || theme2).shape.borderRadius,
+      borderRadius: (theme.vars || theme).shape.borderRadius,
       "&:focus": {
-        borderRadius: (theme2.vars || theme2).shape.borderRadius
+        borderRadius: (theme.vars || theme).shape.borderRadius
         // Reset the reset for Chrome style
       },
       "&&&": {
@@ -42416,7 +42689,7 @@ const NativeSelectSelect = styled(StyledSelectSelect, {
 const StyledSelectIcon = styled("svg", {
   name: "MuiNativeSelect"
 })(({
-  theme: theme2
+  theme
 }) => ({
   // We use a position absolute over a flexbox in order to forward the pointer events
   // to the input and to support wrapping tags..
@@ -42426,9 +42699,9 @@ const StyledSelectIcon = styled("svg", {
   top: "calc(50% - .5em)",
   // Don't block pointer events on the select under the icon.
   pointerEvents: "none",
-  color: (theme2.vars || theme2).palette.action.active,
+  color: (theme.vars || theme).palette.action.active,
   [`&.${nativeSelectClasses.disabled}`]: {
-    color: (theme2.vars || theme2).palette.action.disabled
+    color: (theme.vars || theme).palette.action.disabled
   },
   variants: [{
     props: ({
@@ -43034,7 +43307,7 @@ const NotchedOutlineLegend = styled("legend", {
   name: "MuiNotchedOutlined",
   shouldForwardProp: rootShouldForwardProp
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   float: "unset",
   // Fix conflict with bootstrap
@@ -43050,9 +43323,9 @@ const NotchedOutlineLegend = styled("legend", {
       padding: 0,
       lineHeight: "11px",
       // sync with `height` in `legend` styles
-      transition: theme2.transitions.create("width", {
+      transition: theme.transitions.create("width", {
         duration: 150,
-        easing: theme2.transitions.easing.easeOut
+        easing: theme.transitions.easing.easeOut
       })
     }
   }, {
@@ -43068,9 +43341,9 @@ const NotchedOutlineLegend = styled("legend", {
       fontSize: "0.75em",
       visibility: "hidden",
       maxWidth: 0.01,
-      transition: theme2.transitions.create("max-width", {
+      transition: theme.transitions.create("max-width", {
         duration: 50,
-        easing: theme2.transitions.easing.easeOut
+        easing: theme.transitions.easing.easeOut
       }),
       whiteSpace: "nowrap",
       "& > span": {
@@ -43087,9 +43360,9 @@ const NotchedOutlineLegend = styled("legend", {
     }) => ownerState.withLabel && ownerState.notched,
     style: {
       maxWidth: "100%",
-      transition: theme2.transitions.create("max-width", {
+      transition: theme.transitions.create("max-width", {
         duration: 100,
-        easing: theme2.transitions.easing.easeOut,
+        easing: theme.transitions.easing.easeOut,
         delay: 50
       })
     }
@@ -43152,31 +43425,31 @@ const OutlinedInputRoot = styled(InputBaseRoot, {
   slot: "Root",
   overridesResolver: rootOverridesResolver
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
-  const borderColor2 = theme2.palette.mode === "light" ? "rgba(0, 0, 0, 0.23)" : "rgba(255, 255, 255, 0.23)";
+  const borderColor2 = theme.palette.mode === "light" ? "rgba(0, 0, 0, 0.23)" : "rgba(255, 255, 255, 0.23)";
   return {
     position: "relative",
-    borderRadius: (theme2.vars || theme2).shape.borderRadius,
+    borderRadius: (theme.vars || theme).shape.borderRadius,
     [`&:hover .${outlinedInputClasses.notchedOutline}`]: {
-      borderColor: (theme2.vars || theme2).palette.text.primary
+      borderColor: (theme.vars || theme).palette.text.primary
     },
     // Reset on touch devices, it doesn't add specificity
     "@media (hover: none)": {
       [`&:hover .${outlinedInputClasses.notchedOutline}`]: {
-        borderColor: theme2.vars ? theme2.alpha(theme2.vars.palette.common.onBackground, 0.23) : borderColor2
+        borderColor: theme.vars ? theme.alpha(theme.vars.palette.common.onBackground, 0.23) : borderColor2
       }
     },
     [`&.${outlinedInputClasses.focused} .${outlinedInputClasses.notchedOutline}`]: {
       borderWidth: 2
     },
-    variants: [...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+    variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
       props: {
         color: color2
       },
       style: {
         [`&.${outlinedInputClasses.focused} .${outlinedInputClasses.notchedOutline}`]: {
-          borderColor: (theme2.vars || theme2).palette[color2].main
+          borderColor: (theme.vars || theme).palette[color2].main
         }
       }
     })), {
@@ -43184,10 +43457,10 @@ const OutlinedInputRoot = styled(InputBaseRoot, {
       // to override the above style
       style: {
         [`&.${outlinedInputClasses.error} .${outlinedInputClasses.notchedOutline}`]: {
-          borderColor: (theme2.vars || theme2).palette.error.main
+          borderColor: (theme.vars || theme).palette.error.main
         },
         [`&.${outlinedInputClasses.disabled} .${outlinedInputClasses.notchedOutline}`]: {
-          borderColor: (theme2.vars || theme2).palette.action.disabled
+          borderColor: (theme.vars || theme).palette.action.disabled
         }
       }
     }, {
@@ -43226,11 +43499,11 @@ const NotchedOutlineRoot = styled(NotchedOutline, {
   name: "MuiOutlinedInput",
   slot: "NotchedOutline"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
-  const borderColor2 = theme2.palette.mode === "light" ? "rgba(0, 0, 0, 0.23)" : "rgba(255, 255, 255, 0.23)";
+  const borderColor2 = theme.palette.mode === "light" ? "rgba(0, 0, 0, 0.23)" : "rgba(255, 255, 255, 0.23)";
   return {
-    borderColor: theme2.vars ? theme2.alpha(theme2.vars.palette.common.onBackground, 0.23) : borderColor2
+    borderColor: theme.vars ? theme.alpha(theme.vars.palette.common.onBackground, 0.23) : borderColor2
   };
 }));
 const OutlinedInputInput = styled(InputBaseInput, {
@@ -43238,22 +43511,22 @@ const OutlinedInputInput = styled(InputBaseInput, {
   slot: "Input",
   overridesResolver: inputOverridesResolver
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   padding: "16.5px 14px",
-  ...!theme2.vars && {
+  ...!theme.vars && {
     "&:-webkit-autofill": {
-      WebkitBoxShadow: theme2.palette.mode === "light" ? null : "0 0 0 100px #266798 inset",
-      WebkitTextFillColor: theme2.palette.mode === "light" ? null : "#fff",
-      caretColor: theme2.palette.mode === "light" ? null : "#fff",
+      WebkitBoxShadow: theme.palette.mode === "light" ? null : "0 0 0 100px #266798 inset",
+      WebkitTextFillColor: theme.palette.mode === "light" ? null : "#fff",
+      caretColor: theme.palette.mode === "light" ? null : "#fff",
       borderRadius: "inherit"
     }
   },
-  ...theme2.vars && {
+  ...theme.vars && {
     "&:-webkit-autofill": {
       borderRadius: "inherit"
     },
-    [theme2.getColorSchemeSelector("dark")]: {
+    [theme.getColorSchemeSelector("dark")]: {
       "&:-webkit-autofill": {
         WebkitBoxShadow: "0 0 0 100px #266798 inset",
         WebkitTextFillColor: "#fff",
@@ -43540,9 +43813,9 @@ const MenuItemRoot = styled(ButtonBase, {
   slot: "Root",
   overridesResolver
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  ...theme2.typography.body1,
+  ...theme.typography.body1,
   display: "flex",
   justifyContent: "flex-start",
   alignItems: "center",
@@ -43555,34 +43828,34 @@ const MenuItemRoot = styled(ButtonBase, {
   whiteSpace: "nowrap",
   "&:hover": {
     textDecoration: "none",
-    backgroundColor: (theme2.vars || theme2).palette.action.hover,
+    backgroundColor: (theme.vars || theme).palette.action.hover,
     // Reset on touch devices, it doesn't add specificity
     "@media (hover: none)": {
       backgroundColor: "transparent"
     }
   },
   [`&.${menuItemClasses.selected}`]: {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity),
+    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity),
     [`&.${menuItemClasses.focusVisible}`]: {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
+      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.focusOpacity}`)
     }
   },
   [`&.${menuItemClasses.selected}:hover`]: {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`),
+    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`),
     // Reset on touch devices, it doesn't add specificity
     "@media (hover: none)": {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity)
+      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity)
     }
   },
   [`&.${menuItemClasses.focusVisible}`]: {
-    backgroundColor: (theme2.vars || theme2).palette.action.focus
+    backgroundColor: (theme.vars || theme).palette.action.focus
   },
   [`&.${menuItemClasses.disabled}`]: {
-    opacity: (theme2.vars || theme2).palette.action.disabledOpacity
+    opacity: (theme.vars || theme).palette.action.disabledOpacity
   },
   [`& + .${dividerClasses.root}`]: {
-    marginTop: theme2.spacing(1),
-    marginBottom: theme2.spacing(1)
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1)
   },
   [`& + .${dividerClasses.inset}`]: {
     marginLeft: 52
@@ -43610,7 +43883,7 @@ const MenuItemRoot = styled(ButtonBase, {
       ownerState
     }) => ownerState.divider,
     style: {
-      borderBottom: `1px solid ${(theme2.vars || theme2).palette.divider}`,
+      borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`,
       backgroundClip: "padding-box"
     }
   }, {
@@ -43618,7 +43891,7 @@ const MenuItemRoot = styled(ButtonBase, {
       ownerState
     }) => !ownerState.dense,
     style: {
-      [theme2.breakpoints.up("sm")]: {
+      [theme.breakpoints.up("sm")]: {
         minHeight: "auto"
       }
     }
@@ -43631,7 +43904,7 @@ const MenuItemRoot = styled(ButtonBase, {
       // https://m2.material.io/components/menus#specs > Dense
       paddingTop: 4,
       paddingBottom: 4,
-      ...theme2.typography.body2,
+      ...theme.typography.body2,
       [`& .${listItemIconClasses.root} svg`]: {
         fontSize: "1.25rem"
       }
@@ -43722,14 +43995,14 @@ const RadioButtonIconBackground = styled(RadioButtonUncheckedIcon$1, {
 const RadioButtonIconDot = styled(RadioButtonCheckedIcon, {
   name: "MuiRadioButtonIcon"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   left: 0,
   position: "absolute",
   transform: "scale(0)",
-  transition: theme2.transitions.create("transform", {
-    easing: theme2.transitions.easing.easeIn,
-    duration: theme2.transitions.duration.shortest
+  transition: theme.transitions.create("transform", {
+    easing: theme.transitions.easing.easeIn,
+    duration: theme.transitions.duration.shortest
   }),
   variants: [{
     props: {
@@ -43737,9 +44010,9 @@ const RadioButtonIconDot = styled(RadioButtonCheckedIcon, {
     },
     style: {
       transform: "scale(1)",
-      transition: theme2.transitions.create("transform", {
-        easing: theme2.transitions.easing.easeOut,
-        duration: theme2.transitions.duration.shortest
+      transition: theme.transitions.create("transform", {
+        easing: theme.transitions.easing.easeOut,
+        duration: theme.transitions.duration.shortest
       })
     }
   }]
@@ -43801,11 +44074,11 @@ const RadioRoot = styled(SwitchBase, {
     return [styles2.root, ownerState.size !== "medium" && styles2[`size${capitalize(ownerState.size)}`], styles2[`color${capitalize(ownerState.color)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  color: (theme2.vars || theme2).palette.text.secondary,
+  color: (theme.vars || theme).palette.text.secondary,
   [`&.${radioClasses.disabled}`]: {
-    color: (theme2.vars || theme2).palette.action.disabled
+    color: (theme.vars || theme).palette.action.disabled
   },
   variants: [{
     props: {
@@ -43815,10 +44088,10 @@ const RadioRoot = styled(SwitchBase, {
     },
     style: {
       "&:hover": {
-        backgroundColor: theme2.alpha((theme2.vars || theme2).palette.action.active, (theme2.vars || theme2).palette.action.hoverOpacity)
+        backgroundColor: theme.alpha((theme.vars || theme).palette.action.active, (theme.vars || theme).palette.action.hoverOpacity)
       }
     }
-  }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2,
       disabled: false,
@@ -43826,17 +44099,17 @@ const RadioRoot = styled(SwitchBase, {
     },
     style: {
       "&:hover": {
-        backgroundColor: theme2.alpha((theme2.vars || theme2).palette[color2].main, (theme2.vars || theme2).palette.action.hoverOpacity)
+        backgroundColor: theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.hoverOpacity)
       }
     }
-  })), ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2,
       disabled: false
     },
     style: {
       [`&.${radioClasses.checked}`]: {
-        color: (theme2.vars || theme2).palette[color2].main
+        color: (theme.vars || theme).palette[color2].main
       }
     }
   })), {
@@ -44729,7 +45002,7 @@ const SliderRoot = styled("span", {
     return [styles2.root, styles2[`color${capitalize(ownerState.color)}`], ownerState.size !== "medium" && styles2[`size${capitalize(ownerState.size)}`], ownerState.marked && styles2.marked, ownerState.orientation === "vertical" && styles2.vertical, ownerState.track === "inverted" && styles2.trackInverted, ownerState.track === false && styles2.trackFalse];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   borderRadius: 12,
   boxSizing: "content-box",
@@ -44744,19 +45017,19 @@ const SliderRoot = styled("span", {
   [`&.${sliderClasses.disabled}`]: {
     pointerEvents: "none",
     cursor: "default",
-    color: (theme2.vars || theme2).palette.grey[400]
+    color: (theme.vars || theme).palette.grey[400]
   },
   [`&.${sliderClasses.dragging}`]: {
     [`& .${sliderClasses.thumb}, & .${sliderClasses.track}`]: {
       transition: "none"
     }
   },
-  variants: [...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2
     },
     style: {
-      color: (theme2.vars || theme2).palette[color2].main
+      color: (theme.vars || theme).palette[color2].main
     }
   })), {
     props: {
@@ -44862,7 +45135,7 @@ const SliderTrack = styled("span", {
   name: "MuiSlider",
   slot: "Track"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => {
   return {
     display: "block",
@@ -44870,8 +45143,8 @@ const SliderTrack = styled("span", {
     borderRadius: "inherit",
     border: "1px solid currentColor",
     backgroundColor: "currentColor",
-    transition: theme2.transitions.create(["left", "width", "bottom", "height"], {
-      duration: theme2.transitions.duration.shortest
+    transition: theme.transitions.create(["left", "width", "bottom", "height"], {
+      duration: theme.transitions.duration.shortest
     }),
     variants: [{
       props: {
@@ -44905,23 +45178,23 @@ const SliderTrack = styled("span", {
       style: {
         display: "none"
       }
-    }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
       props: {
         color: color2,
         track: "inverted"
       },
       style: {
-        ...theme2.vars ? {
-          backgroundColor: theme2.vars.palette.Slider[`${color2}Track`],
-          borderColor: theme2.vars.palette.Slider[`${color2}Track`]
+        ...theme.vars ? {
+          backgroundColor: theme.vars.palette.Slider[`${color2}Track`],
+          borderColor: theme.vars.palette.Slider[`${color2}Track`]
         } : {
-          backgroundColor: theme2.lighten(theme2.palette[color2].main, 0.62),
-          borderColor: theme2.lighten(theme2.palette[color2].main, 0.62),
-          ...theme2.applyStyles("dark", {
-            backgroundColor: theme2.darken(theme2.palette[color2].main, 0.5)
+          backgroundColor: theme.lighten(theme.palette[color2].main, 0.62),
+          borderColor: theme.lighten(theme.palette[color2].main, 0.62),
+          ...theme.applyStyles("dark", {
+            backgroundColor: theme.darken(theme.palette[color2].main, 0.5)
           }),
-          ...theme2.applyStyles("dark", {
-            borderColor: theme2.darken(theme2.palette[color2].main, 0.5)
+          ...theme.applyStyles("dark", {
+            borderColor: theme.darken(theme.palette[color2].main, 0.5)
           })
         }
       }
@@ -44938,7 +45211,7 @@ const SliderThumb = styled("span", {
     return [styles2.thumb, styles2[`thumbColor${capitalize(ownerState.color)}`], ownerState.size !== "medium" && styles2[`thumbSize${capitalize(ownerState.size)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   position: "absolute",
   width: 20,
@@ -44950,8 +45223,8 @@ const SliderThumb = styled("span", {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  transition: theme2.transitions.create(["box-shadow", "left", "bottom"], {
-    duration: theme2.transitions.duration.shortest
+  transition: theme.transitions.create(["box-shadow", "left", "bottom"], {
+    duration: theme.transitions.duration.shortest
   }),
   "&::before": {
     position: "absolute",
@@ -44959,7 +45232,7 @@ const SliderThumb = styled("span", {
     borderRadius: "inherit",
     width: "100%",
     height: "100%",
-    boxShadow: (theme2.vars || theme2).shadows[2]
+    boxShadow: (theme.vars || theme).shadows[2]
   },
   "&::after": {
     position: "absolute",
@@ -45004,19 +45277,19 @@ const SliderThumb = styled("span", {
       left: "50%",
       transform: "translate(-50%, 50%)"
     }
-  }, ...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
     props: {
       color: color2
     },
     style: {
       [`&:hover, &.${sliderClasses.focusVisible}`]: {
-        boxShadow: `0px 0px 0px 8px ${theme2.alpha((theme2.vars || theme2).palette[color2].main, 0.16)}`,
+        boxShadow: `0px 0px 0px 8px ${theme.alpha((theme.vars || theme).palette[color2].main, 0.16)}`,
         "@media (hover: none)": {
           boxShadow: "none"
         }
       },
       [`&.${sliderClasses.active}`]: {
-        boxShadow: `0px 0px 0px 14px ${theme2.alpha((theme2.vars || theme2).palette[color2].main, 0.16)}`
+        boxShadow: `0px 0px 0px 14px ${theme.alpha((theme.vars || theme).palette[color2].main, 0.16)}`
       }
     }
   }))]
@@ -45025,19 +45298,19 @@ const SliderValueLabel = styled(SliderValueLabel$1, {
   name: "MuiSlider",
   slot: "ValueLabel"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   zIndex: 1,
   whiteSpace: "nowrap",
-  ...theme2.typography.body2,
+  ...theme.typography.body2,
   fontWeight: 500,
-  transition: theme2.transitions.create(["transform"], {
-    duration: theme2.transitions.duration.shortest
+  transition: theme.transitions.create(["transform"], {
+    duration: theme.transitions.duration.shortest
   }),
   position: "absolute",
-  backgroundColor: (theme2.vars || theme2).palette.grey[600],
+  backgroundColor: (theme.vars || theme).palette.grey[600],
   borderRadius: 2,
-  color: (theme2.vars || theme2).palette.common.white,
+  color: (theme.vars || theme).palette.common.white,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -45092,7 +45365,7 @@ const SliderValueLabel = styled(SliderValueLabel$1, {
       size: "small"
     },
     style: {
-      fontSize: theme2.typography.pxToRem(12),
+      fontSize: theme.typography.pxToRem(12),
       padding: "0.25rem 0.5rem"
     }
   }, {
@@ -45116,7 +45389,7 @@ const SliderMark = styled("span", {
     return [styles2.mark, markActive && styles2.markActive];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   position: "absolute",
   width: 2,
@@ -45144,7 +45417,7 @@ const SliderMark = styled("span", {
       markActive: true
     },
     style: {
-      backgroundColor: (theme2.vars || theme2).palette.background.paper,
+      backgroundColor: (theme.vars || theme).palette.background.paper,
       opacity: 0.8
     }
   }]
@@ -45154,10 +45427,10 @@ const SliderMarkLabel = styled("span", {
   slot: "MarkLabel",
   shouldForwardProp: (prop) => slotShouldForwardProp(prop) && prop !== "markLabelActive"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  ...theme2.typography.body2,
-  color: (theme2.vars || theme2).palette.text.secondary,
+  ...theme.typography.body2,
+  color: (theme.vars || theme).palette.text.secondary,
   position: "absolute",
   whiteSpace: "nowrap",
   variants: [{
@@ -45187,7 +45460,7 @@ const SliderMarkLabel = styled("span", {
       markLabelActive: true
     },
     style: {
-      color: (theme2.vars || theme2).palette.text.primary
+      color: (theme.vars || theme).palette.text.primary
     }
   }]
 })));
@@ -45509,9 +45782,9 @@ const TooltipPopper = styled(Popper$1, {
     return [styles2.popper, !ownerState.disableInteractive && styles2.popperInteractive, ownerState.arrow && styles2.popperArrow, !ownerState.open && styles2.popperClose];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  zIndex: (theme2.vars || theme2).zIndex.tooltip,
+  zIndex: (theme.vars || theme).zIndex.tooltip,
   pointerEvents: "none",
   variants: [{
     props: ({
@@ -45613,18 +45886,18 @@ const TooltipTooltip = styled("div", {
     return [styles2.tooltip, ownerState.touch && styles2.touch, ownerState.arrow && styles2.tooltipArrow, styles2[`tooltipPlacement${capitalize(ownerState.placement.split("-")[0])}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  backgroundColor: theme2.vars ? theme2.vars.palette.Tooltip.bg : theme2.alpha(theme2.palette.grey[700], 0.92),
-  borderRadius: (theme2.vars || theme2).shape.borderRadius,
-  color: (theme2.vars || theme2).palette.common.white,
-  fontFamily: theme2.typography.fontFamily,
+  backgroundColor: theme.vars ? theme.vars.palette.Tooltip.bg : theme.alpha(theme.palette.grey[700], 0.92),
+  borderRadius: (theme.vars || theme).shape.borderRadius,
+  color: (theme.vars || theme).palette.common.white,
+  fontFamily: theme.typography.fontFamily,
   padding: "4px 8px",
-  fontSize: theme2.typography.pxToRem(11),
+  fontSize: theme.typography.pxToRem(11),
   maxWidth: 300,
   margin: 2,
   wordWrap: "break-word",
-  fontWeight: theme2.typography.fontWeightMedium,
+  fontWeight: theme.typography.fontWeightMedium,
   [`.${tooltipClasses.popper}[data-popper-placement*="left"] &`]: {
     transformOrigin: "right center"
   },
@@ -45653,9 +45926,9 @@ const TooltipTooltip = styled("div", {
     }) => ownerState.touch,
     style: {
       padding: "8px 16px",
-      fontSize: theme2.typography.pxToRem(14),
+      fontSize: theme.typography.pxToRem(14),
       lineHeight: `${round(16 / 14)}em`,
-      fontWeight: theme2.typography.fontWeightRegular
+      fontWeight: theme.typography.fontWeightRegular
     }
   }, {
     props: ({
@@ -45729,14 +46002,14 @@ const TooltipArrow = styled("span", {
   name: "MuiTooltip",
   slot: "Arrow"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   overflow: "hidden",
   position: "absolute",
   width: "1em",
   height: "0.71em",
   boxSizing: "border-box",
-  color: theme2.vars ? theme2.vars.palette.Tooltip.bg : theme2.alpha(theme2.palette.grey[700], 0.9),
+  color: theme.vars ? theme.vars.palette.Tooltip.bg : theme.alpha(theme.palette.grey[700], 0.9),
   "&::before": {
     content: '""',
     margin: "auto",
@@ -45800,7 +46073,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
   const children = /* @__PURE__ */ hn(childrenProp) ? childrenProp : /* @__PURE__ */ u2("span", {
     children: childrenProp
   });
-  const theme2 = useTheme();
+  const theme = useTheme();
   const isRtl = useRtl();
   const [childNode, setChildNode] = d();
   const [arrowRef, setArrowRef] = d(null);
@@ -45847,7 +46120,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
       if (onClose && open) {
         onClose(event);
       }
-      closeTimer.start(theme2.transitions.duration.shortest, () => {
+      closeTimer.start(theme.transitions.duration.shortest, () => {
         ignoreNonTouchEvents.current = false;
       });
     }
@@ -46105,7 +46378,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
       children: ({
         TransitionProps: TransitionPropsInner
       }) => /* @__PURE__ */ u2(TransitionSlot, {
-        timeout: theme2.transitions.duration.shorter,
+        timeout: theme.transitions.duration.shorter,
         ...TransitionPropsInner,
         ...transitionSlotProps,
         children: /* @__PURE__ */ u2(TooltipSlot, {
@@ -46227,62 +46500,62 @@ const SwitchSwitchBase = styled(SwitchBase, {
     }, ownerState.color !== "default" && styles2[`color${capitalize(ownerState.color)}`]];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   position: "absolute",
   top: 0,
   left: 0,
   zIndex: 1,
   // Render above the focus ripple.
-  color: theme2.vars ? theme2.vars.palette.Switch.defaultColor : `${theme2.palette.mode === "light" ? theme2.palette.common.white : theme2.palette.grey[300]}`,
-  transition: theme2.transitions.create(["left", "transform"], {
-    duration: theme2.transitions.duration.shortest
+  color: theme.vars ? theme.vars.palette.Switch.defaultColor : `${theme.palette.mode === "light" ? theme.palette.common.white : theme.palette.grey[300]}`,
+  transition: theme.transitions.create(["left", "transform"], {
+    duration: theme.transitions.duration.shortest
   }),
   [`&.${switchClasses.checked}`]: {
     transform: "translateX(20px)"
   },
   [`&.${switchClasses.disabled}`]: {
-    color: theme2.vars ? theme2.vars.palette.Switch.defaultDisabledColor : `${theme2.palette.mode === "light" ? theme2.palette.grey[100] : theme2.palette.grey[600]}`
+    color: theme.vars ? theme.vars.palette.Switch.defaultDisabledColor : `${theme.palette.mode === "light" ? theme.palette.grey[100] : theme.palette.grey[600]}`
   },
   [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
     opacity: 0.5
   },
   [`&.${switchClasses.disabled} + .${switchClasses.track}`]: {
-    opacity: theme2.vars ? theme2.vars.opacity.switchTrackDisabled : `${theme2.palette.mode === "light" ? 0.12 : 0.2}`
+    opacity: theme.vars ? theme.vars.opacity.switchTrackDisabled : `${theme.palette.mode === "light" ? 0.12 : 0.2}`
   },
   [`& .${switchClasses.input}`]: {
     left: "-100%",
     width: "300%"
   }
 })), memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   "&:hover": {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.action.active, (theme2.vars || theme2).palette.action.hoverOpacity),
+    backgroundColor: theme.alpha((theme.vars || theme).palette.action.active, (theme.vars || theme).palette.action.hoverOpacity),
     // Reset on touch devices, it doesn't add specificity
     "@media (hover: none)": {
       backgroundColor: "transparent"
     }
   },
-  variants: [...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
+  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
     props: {
       color: color2
     },
     style: {
       [`&.${switchClasses.checked}`]: {
-        color: (theme2.vars || theme2).palette[color2].main,
+        color: (theme.vars || theme).palette[color2].main,
         "&:hover": {
-          backgroundColor: theme2.alpha((theme2.vars || theme2).palette[color2].main, (theme2.vars || theme2).palette.action.hoverOpacity),
+          backgroundColor: theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.hoverOpacity),
           "@media (hover: none)": {
             backgroundColor: "transparent"
           }
         },
         [`&.${switchClasses.disabled}`]: {
-          color: theme2.vars ? theme2.vars.palette.Switch[`${color2}DisabledColor`] : `${theme2.palette.mode === "light" ? theme2.lighten(theme2.palette[color2].main, 0.62) : theme2.darken(theme2.palette[color2].main, 0.55)}`
+          color: theme.vars ? theme.vars.palette.Switch[`${color2}DisabledColor`] : `${theme.palette.mode === "light" ? theme.lighten(theme.palette[color2].main, 0.62) : theme.darken(theme.palette[color2].main, 0.55)}`
         }
       },
       [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
-        backgroundColor: (theme2.vars || theme2).palette[color2].main
+        backgroundColor: (theme.vars || theme).palette[color2].main
       }
     }
   }))]
@@ -46291,7 +46564,7 @@ const SwitchTrack = styled("span", {
   name: "MuiSwitch",
   slot: "Track"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   height: "100%",
   width: "100%",
@@ -46299,19 +46572,19 @@ const SwitchTrack = styled("span", {
   boxSizing: "border-box",
   border: "1px solid transparent",
   zIndex: -1,
-  transition: theme2.transitions.create(["opacity", "background-color"], {
-    duration: theme2.transitions.duration.shortest
+  transition: theme.transitions.create(["opacity", "background-color"], {
+    duration: theme.transitions.duration.shortest
   }),
-  backgroundColor: theme2.vars ? theme2.vars.palette.common.onBackground : `${theme2.palette.mode === "light" ? theme2.palette.common.black : theme2.palette.common.white}`,
-  opacity: theme2.vars ? theme2.vars.opacity.switchTrack : `${theme2.palette.mode === "light" ? 0.38 : 0.3}`
+  backgroundColor: theme.vars ? theme.vars.palette.common.onBackground : `${theme.palette.mode === "light" ? theme.palette.common.black : theme.palette.common.white}`,
+  opacity: theme.vars ? theme.vars.opacity.switchTrack : `${theme.palette.mode === "light" ? 0.38 : 0.3}`
 })));
 const SwitchThumb = styled("span", {
   name: "MuiSwitch",
   slot: "Thumb"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  boxShadow: (theme2.vars || theme2).shadows[1],
+  boxShadow: (theme.vars || theme).shadows[1],
   backgroundColor: "currentColor",
   boxSizing: "border-box",
   border: "1px solid transparent",
@@ -46439,9 +46712,9 @@ const TabRoot = styled(ButtonBase, {
     }];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  ...theme2.typography.button,
+  ...theme.typography.button,
   maxWidth: 360,
   minWidth: 90,
   position: "relative",
@@ -46502,7 +46775,7 @@ const TabRoot = styled(ButtonBase, {
     }) => ownerState.icon && ownerState.label && iconPosition === "start",
     style: {
       [`& > .${tabClasses.icon}`]: {
-        marginRight: theme2.spacing(1)
+        marginRight: theme.spacing(1)
       }
     }
   }, {
@@ -46512,7 +46785,7 @@ const TabRoot = styled(ButtonBase, {
     }) => ownerState.icon && ownerState.label && iconPosition === "end",
     style: {
       [`& > .${tabClasses.icon}`]: {
-        marginLeft: theme2.spacing(1)
+        marginLeft: theme.spacing(1)
       }
     }
   }, {
@@ -46527,7 +46800,7 @@ const TabRoot = styled(ButtonBase, {
         opacity: 1
       },
       [`&.${tabClasses.disabled}`]: {
-        opacity: (theme2.vars || theme2).palette.action.disabledOpacity
+        opacity: (theme.vars || theme).palette.action.disabledOpacity
       }
     }
   }, {
@@ -46535,12 +46808,12 @@ const TabRoot = styled(ButtonBase, {
       textColor: "primary"
     },
     style: {
-      color: (theme2.vars || theme2).palette.text.secondary,
+      color: (theme.vars || theme).palette.text.secondary,
       [`&.${tabClasses.selected}`]: {
-        color: (theme2.vars || theme2).palette.primary.main
+        color: (theme.vars || theme).palette.primary.main
       },
       [`&.${tabClasses.disabled}`]: {
-        color: (theme2.vars || theme2).palette.text.disabled
+        color: (theme.vars || theme).palette.text.disabled
       }
     }
   }, {
@@ -46548,12 +46821,12 @@ const TabRoot = styled(ButtonBase, {
       textColor: "secondary"
     },
     style: {
-      color: (theme2.vars || theme2).palette.text.secondary,
+      color: (theme.vars || theme).palette.text.secondary,
       [`&.${tabClasses.selected}`]: {
-        color: (theme2.vars || theme2).palette.secondary.main
+        color: (theme.vars || theme).palette.secondary.main
       },
       [`&.${tabClasses.disabled}`]: {
-        color: (theme2.vars || theme2).palette.text.disabled
+        color: (theme.vars || theme).palette.text.disabled
       }
     }
   }, {
@@ -46571,7 +46844,7 @@ const TabRoot = styled(ButtonBase, {
       ownerState
     }) => ownerState.wrapped,
     style: {
-      fontSize: theme2.typography.pxToRem(12)
+      fontSize: theme.typography.pxToRem(12)
     }
   }]
 })));
@@ -46680,16 +46953,16 @@ const TableRoot = styled("table", {
     return [styles2.root, ownerState.stickyHeader && styles2.stickyHeader];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   display: "table",
   width: "100%",
   borderCollapse: "collapse",
   borderSpacing: 0,
   "& caption": {
-    ...theme2.typography.body2,
-    padding: theme2.spacing(2),
-    color: (theme2.vars || theme2).palette.text.secondary,
+    ...theme.typography.body2,
+    padding: theme.spacing(2),
+    color: (theme.vars || theme).palette.text.secondary,
     textAlign: "left",
     captionSide: "bottom"
   },
@@ -46820,15 +47093,15 @@ const TableCellRoot = styled("td", {
     return [styles2.root, styles2[ownerState.variant], styles2[`size${capitalize(ownerState.size)}`], ownerState.padding !== "normal" && styles2[`padding${capitalize(ownerState.padding)}`], ownerState.align !== "inherit" && styles2[`align${capitalize(ownerState.align)}`], ownerState.stickyHeader && styles2.stickyHeader];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
-  ...theme2.typography.body2,
+  ...theme.typography.body2,
   display: "table-cell",
   verticalAlign: "inherit",
   // Workaround for a rendering bug with spanned columns in Chrome 62.0.
   // Removes the alpha (sets it to 1), and lightens or darkens the theme color.
-  borderBottom: theme2.vars ? `1px solid ${theme2.vars.palette.TableCell.border}` : `1px solid
-    ${theme2.palette.mode === "light" ? theme2.lighten(theme2.alpha(theme2.palette.divider, 1), 0.88) : theme2.darken(theme2.alpha(theme2.palette.divider, 1), 0.68)}`,
+  borderBottom: theme.vars ? `1px solid ${theme.vars.palette.TableCell.border}` : `1px solid
+    ${theme.palette.mode === "light" ? theme.lighten(theme.alpha(theme.palette.divider, 1), 0.88) : theme.darken(theme.alpha(theme.palette.divider, 1), 0.68)}`,
   textAlign: "left",
   padding: 16,
   variants: [{
@@ -46836,25 +47109,25 @@ const TableCellRoot = styled("td", {
       variant: "head"
     },
     style: {
-      color: (theme2.vars || theme2).palette.text.primary,
-      lineHeight: theme2.typography.pxToRem(24),
-      fontWeight: theme2.typography.fontWeightMedium
+      color: (theme.vars || theme).palette.text.primary,
+      lineHeight: theme.typography.pxToRem(24),
+      fontWeight: theme.typography.fontWeightMedium
     }
   }, {
     props: {
       variant: "body"
     },
     style: {
-      color: (theme2.vars || theme2).palette.text.primary
+      color: (theme.vars || theme).palette.text.primary
     }
   }, {
     props: {
       variant: "footer"
     },
     style: {
-      color: (theme2.vars || theme2).palette.text.secondary,
-      lineHeight: theme2.typography.pxToRem(21),
-      fontSize: theme2.typography.pxToRem(12)
+      color: (theme.vars || theme).palette.text.secondary,
+      lineHeight: theme.typography.pxToRem(21),
+      fontSize: theme.typography.pxToRem(12)
     }
   }, {
     props: {
@@ -46924,7 +47197,7 @@ const TableCellRoot = styled("td", {
       position: "sticky",
       top: 0,
       zIndex: 2,
-      backgroundColor: (theme2.vars || theme2).palette.background.default
+      backgroundColor: (theme.vars || theme).palette.background.default
     }
   }]
 })));
@@ -47068,7 +47341,7 @@ const TableRowRoot = styled("tr", {
     return [styles2.root, ownerState.head && styles2.head, ownerState.footer && styles2.footer];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   color: "inherit",
   display: "table-row",
@@ -47076,12 +47349,12 @@ const TableRowRoot = styled("tr", {
   // We disable the focus ring for mouse, touch and keyboard users.
   outline: 0,
   [`&.${tableRowClasses.hover}:hover`]: {
-    backgroundColor: (theme2.vars || theme2).palette.action.hover
+    backgroundColor: (theme.vars || theme).palette.action.hover
   },
   [`&.${tableRowClasses.selected}`]: {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity),
+    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity),
     "&:hover": {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`)
+      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`)
     }
   }
 })));
@@ -47380,7 +47653,7 @@ const TabsRoot = styled("div", {
     }, styles2.root, ownerState.vertical && styles2.vertical];
   }
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   overflow: "hidden",
   minHeight: 48,
@@ -47400,7 +47673,7 @@ const TabsRoot = styled("div", {
     }) => ownerState.scrollButtonsHideMobile,
     style: {
       [`& .${tabsClasses.scrollButtons}`]: {
-        [theme2.breakpoints.down("sm")]: {
+        [theme.breakpoints.down("sm")]: {
           display: "none"
         }
       }
@@ -47491,26 +47764,26 @@ const TabsIndicator = styled("span", {
   name: "MuiTabs",
   slot: "Indicator"
 })(memoTheme(({
-  theme: theme2
+  theme
 }) => ({
   position: "absolute",
   height: 2,
   bottom: 0,
   width: "100%",
-  transition: theme2.transitions.create(),
+  transition: theme.transitions.create(),
   variants: [{
     props: {
       indicatorColor: "primary"
     },
     style: {
-      backgroundColor: (theme2.vars || theme2).palette.primary.main
+      backgroundColor: (theme.vars || theme).palette.primary.main
     }
   }, {
     props: {
       indicatorColor: "secondary"
     },
     style: {
-      backgroundColor: (theme2.vars || theme2).palette.secondary.main
+      backgroundColor: (theme.vars || theme).palette.secondary.main
     }
   }, {
     props: ({
@@ -47540,7 +47813,7 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
     props: inProps,
     name: "MuiTabs"
   });
-  const theme2 = useTheme();
+  const theme = useTheme();
   const isRtl = useRtl();
   const {
     "aria-label": ariaLabel,
@@ -47693,7 +47966,7 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
   } = {}) => {
     if (animation) {
       animate(scrollStart, tabsRef.current, scrollValue, {
-        duration: theme2.transitions.duration.standard
+        duration: theme.transitions.duration.standard
       });
     } else {
       tabsRef.current[scrollStart] = scrollValue;
@@ -48241,7 +48514,6 @@ const CircularProgress2 = CircularProgress$1;
 const ListItemIcon2 = ListItemIcon$1;
 const ListItemText2 = ListItemText$1;
 const ThemeProvider = ThemeProvider$1;
-const CssBaseline = CssBaseline$1;
 const Tabs2 = Tabs$1;
 const Tab2 = Tab$1;
 const FormControl2 = FormControl$1;
@@ -48262,6 +48534,69 @@ const Slider2 = Slider$1;
 const TableHead2 = TableHead$1;
 const TableBody2 = TableBody$1;
 const Table2 = Table$1;
+function ThinkButton({
+  variant = "secondary",
+  size = "md",
+  loading = false,
+  leadingIcon,
+  trailingIcon,
+  children,
+  className,
+  disabled,
+  type = "button",
+  ...buttonProps
+}) {
+  const classes = [
+    "think-button",
+    `think-button--${variant}`,
+    size !== "md" ? `think-button--${size}` : "",
+    className
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2(
+    "button",
+    {
+      ...buttonProps,
+      type,
+      className: classes,
+      disabled: Boolean(disabled) || loading,
+      "aria-busy": loading || void 0,
+      children: [
+        loading ? /* @__PURE__ */ u2("span", { className: "think-button__spinner", "aria-hidden": "true" }) : leadingIcon ? /* @__PURE__ */ u2("span", { className: "think-button__icon", children: leadingIcon }) : null,
+        /* @__PURE__ */ u2("span", { children }),
+        !loading && trailingIcon ? /* @__PURE__ */ u2("span", { className: "think-button__icon", children: trailingIcon }) : null
+      ]
+    }
+  );
+}
+function ThinkIconButton({
+  label,
+  icon,
+  size = "md",
+  tone = "default",
+  pressed,
+  className,
+  type = "button",
+  ...buttonProps
+}) {
+  const classes = [
+    "think-icon-button",
+    size !== "md" ? `think-icon-button--${size}` : "",
+    tone === "danger" ? "think-icon-button--danger" : "",
+    className
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2(
+    "button",
+    {
+      ...buttonProps,
+      type,
+      className: classes,
+      "aria-label": label,
+      title: label,
+      "aria-pressed": pressed === void 0 ? void 0 : pressed,
+      children: icon
+    }
+  );
+}
 function createRecordGestureHandlers(params) {
   let lastTouchAt = 0;
   let suppressClickUntil = 0;
@@ -48501,9 +48836,11 @@ function IconAction({
   stopPropagation: stopPropagation2 = true,
   tooltipPlacement = "top",
   sx,
+  className,
   size = "small",
   edge,
-  color: color2
+  color: color2,
+  pressed
 }) {
   const handleClick = (e2) => {
     if (stopPropagation2) {
@@ -48514,13 +48851,22 @@ function IconAction({
     }
     onClick?.(e2);
   };
+  const primitiveSize = size === "small" ? "think-icon-button--sm" : size === "large" ? "think-icon-button--lg" : "";
+  const classes = [
+    "think-icon-button",
+    primitiveSize,
+    color2 === "error" ? "think-icon-button--danger" : "",
+    className
+  ].filter(Boolean).join(" ");
   const button = /* @__PURE__ */ u2(
     IconButton2,
     {
       "aria-label": label,
+      "aria-pressed": pressed === void 0 ? void 0 : pressed,
       onClick: onClick ? handleClick : void 0,
       disabled,
       sx,
+      className: classes,
       size,
       edge,
       color: color2,
@@ -48592,126 +48938,115 @@ function ThemeTreeNodeLabel({
     }
   );
 }
-function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, disabled = false }) {
+function hasThemeMarker(element, marker) {
+  return Boolean(element?.classList.contains(marker));
+}
+function detectObsidianColorMode(doc = document) {
+  const html = doc.documentElement;
+  const body = doc.body;
+  const explicit = html?.getAttribute("data-theme") ?? body?.getAttribute("data-theme");
+  if (explicit === "dark" || hasThemeMarker(html, "theme-dark") || hasThemeMarker(body, "theme-dark")) {
+    return "dark";
+  }
+  if (explicit === "light" || hasThemeMarker(html, "theme-light") || hasThemeMarker(body, "theme-light")) {
+    return "light";
+  }
+  try {
+    return doc.defaultView?.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+function ThinkMuiThemeProvider({ children }) {
+  const [mode, setMode] = d(() => detectObsidianColorMode());
+  y(() => {
+    const updateMode = () => setMode(detectObsidianColorMode());
+    const observer = new MutationObserver(updateMode);
+    const targets = [document.documentElement, document.body].filter(Boolean);
+    targets.forEach((target) => observer.observe(target, { attributes: true, attributeFilter: ["class", "data-theme"] }));
+    const media = window.matchMedia?.("(prefers-color-scheme: dark)");
+    media?.addEventListener?.("change", updateMode);
+    updateMode();
+    return () => {
+      observer.disconnect();
+      media?.removeEventListener?.("change", updateMode);
+    };
+  }, []);
+  const muiTheme = T$1(() => createThinkMuiTheme(mode), [mode]);
+  return /* @__PURE__ */ u2(ThemeProvider, { theme: muiTheme, children });
+}
+function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, className, disabled = false }) {
   const [isOpen, setIsOpen] = d(false);
   const wrapperRef = A$1(null);
-  const selectedLabel = options.find((opt) => opt.value === value)?.label || value;
+  const selectedLabel = options.find((option) => option.value === value)?.label || value;
   y(() => {
     function handleClickOutside(event) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) setIsOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [wrapperRef]);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   const handleOptionClick = (option) => {
     if (disabled || option.disabled) return;
     onChange(option.value);
     setIsOpen(false);
   };
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      ref: wrapperRef,
-      sx: {
-        position: "relative",
-        width: fullWidth ? "100%" : "auto",
-        ...sx
-      },
-      children: [
+  const rootClass = [
+    "think-os",
+    "think-simple-select",
+    fullWidth ? "think-simple-select--full" : "",
+    isOpen ? "is-open" : "",
+    disabled ? "is-disabled" : "",
+    className
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2(Box, { ref: wrapperRef, className: rootClass, sx, children: [
+    /* @__PURE__ */ u2(
+      Box,
+      {
+        className: "think-simple-select__trigger",
+        role: "combobox",
+        "aria-expanded": isOpen,
+        "aria-disabled": disabled,
+        tabIndex: disabled ? -1 : 0,
+        onClick: () => {
+          if (!disabled) setIsOpen(!isOpen);
+        },
+        onKeyDown: (event) => {
+          if (disabled) return;
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setIsOpen((current2) => !current2);
+          }
+          if (event.key === "Escape") setIsOpen(false);
+        },
+        children: [
+          /* @__PURE__ */ u2(Typography2, { className: `think-simple-select__value${value ? "" : " is-placeholder"}`, children: value ? selectedLabel : /* @__PURE__ */ u2("em", { children: placeholder }) }),
+          /* @__PURE__ */ u2(ArrowDropDownIcon, { className: "think-simple-select__arrow" })
+        ]
+      }
+    ),
+    isOpen && /* @__PURE__ */ u2(Box, { className: "think-simple-select__menu", role: "listbox", children: options.map((option, index) => {
+      const showGroupHeader = option.group && option.group !== options[index - 1]?.group;
+      return /* @__PURE__ */ u2("div", { children: [
+        showGroupHeader && /* @__PURE__ */ u2(Box, { className: "think-simple-select__group", children: option.group }),
         /* @__PURE__ */ u2(
           Box,
           {
-            onClick: () => {
-              if (!disabled) setIsOpen(!isOpen);
-            },
-            sx: {
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: "36px",
-              border: "1px solid rgba(0,0,0,0.15)",
-              borderRadius: "6px",
-              padding: "6px 10px",
-              cursor: disabled ? "not-allowed" : "pointer",
-              opacity: disabled ? 0.55 : 1,
-              bgcolor: "#fff",
-              "&:hover": {
-                borderColor: "rgba(0,0,0,0.4)"
-              }
-            },
-            children: [
-              /* @__PURE__ */ u2(Typography2, { sx: { fontSize: 13, color: value ? "text.primary" : "text.secondary" }, children: value ? selectedLabel : /* @__PURE__ */ u2("em", { children: placeholder }) }),
-              /* @__PURE__ */ u2(ArrowDropDownIcon, { sx: { color: "text.secondary", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" } })
-            ]
-          }
-        ),
-        isOpen && /* @__PURE__ */ u2(
-          Box,
-          {
-            sx: {
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              right: 0,
-              mt: "4px",
-              bgcolor: "background.paper",
-              border: "1px solid rgba(0,0,0,0.1)",
-              borderRadius: "6px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              maxHeight: "200px",
-              overflowY: "auto",
-              zIndex: 1300
-              // 确保在其他元素之上
-            },
-            children: options.map((option, index) => {
-              const showGroupHeader = option.group && option.group !== options[index - 1]?.group;
-              return /* @__PURE__ */ u2("div", { children: [
-                showGroupHeader && /* @__PURE__ */ u2(
-                  Box,
-                  {
-                    sx: {
-                      px: 1.5,
-                      py: 0.75,
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "text.secondary",
-                      bgcolor: "action.hover",
-                      borderTop: index === 0 ? "none" : "1px solid rgba(0,0,0,0.06)"
-                    },
-                    children: option.group
-                  }
-                ),
-                /* @__PURE__ */ u2(
-                  Box,
-                  {
-                    onClick: () => handleOptionClick(option),
-                    sx: {
-                      padding: "8px 12px",
-                      fontSize: 13,
-                      cursor: disabled || option.disabled ? "not-allowed" : "pointer",
-                      opacity: disabled || option.disabled ? 0.55 : 1,
-                      "&:hover": {
-                        bgcolor: option.disabled ? "transparent" : "action.hover"
-                      },
-                      ...value === option.value && {
-                        bgcolor: "action.selected",
-                        fontWeight: 500
-                      }
-                    },
-                    children: option.label
-                  }
-                )
-              ] }, `${option.group || "default"}-${option.value}`);
-            })
+            className: [
+              "think-simple-select__option",
+              value === option.value ? "is-selected" : "",
+              option.disabled ? "is-disabled" : ""
+            ].filter(Boolean).join(" "),
+            role: "option",
+            "aria-selected": value === option.value,
+            "aria-disabled": option.disabled,
+            onClick: () => handleOptionClick(option),
+            children: option.label
           }
         )
-      ]
-    }
-  );
+      ] }, `${option.group || "default"}-${option.value}`);
+    }) })
+  ] });
 }
 function FormField({
   label,
@@ -48896,7 +49231,7 @@ function TaskSendToTimerButton({ taskId, timerStatus, onStart }) {
   return /* @__PURE__ */ u2(IconAction, { label: "添加并开始计时", onClick: onStart, icon: /* @__PURE__ */ u2(PlayArrowIcon, { fontSize: "small" }) });
 }
 function renderModalContent(containerEl, children) {
-  nn(children, containerEl);
+  nn(k$2(ThinkMuiThemeProvider, null, children), containerEl);
 }
 function unmountModalContent(containerEl) {
   try {
@@ -48962,6 +49297,10 @@ class NamePromptModal extends obsidian.Modal {
   }
   onOpen() {
     this.contentEl.empty();
+    this.modalEl.addClass("think-os");
+    this.modalEl.addClass("think-os--modal");
+    this.modalEl.addClass("think-modal-host");
+    this.modalEl.addClass("think-modal-host--medium");
     renderModalContent(
       this.contentEl,
       /* @__PURE__ */ u2(
@@ -49094,7 +49433,7 @@ function HeatmapCell({
       cellStyle.backgroundColor = visualValue;
     } else if (isImagePath(visualValue)) {
       const imageUrl = resolveResourcePath?.(visualValue) || visualValue;
-      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-image", children: /* @__PURE__ */ u2("img", { src: imageUrl, alt: "", class: "w-full h-full object-cover" }) });
+      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-image", children: /* @__PURE__ */ u2("img", { src: imageUrl, alt: "", class: "heatmap-cell-image" }) });
     } else {
       cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-text", children: /* @__PURE__ */ u2("span", { class: "visual-content", children: visualValue }) });
     }
@@ -49298,7 +49637,7 @@ function TaskRow({
     /* @__PURE__ */ u2("div", { class: "task-row-checkbox-wrapper", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(TaskCheckbox, { done, onMarkDone: () => onMarkDone(item.id) }) }),
     /* @__PURE__ */ u2("div", { class: "task-row-content", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, children: [
       /* @__PURE__ */ u2("div", { class: "task-row-main", children: [
-        /* @__PURE__ */ u2("button", { type: "button", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, class: `task-row-title ${done ? "task-done" : ""}`, style: { background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }, children: [
+        /* @__PURE__ */ u2("button", { type: "button", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, class: `task-row-title ${done ? "task-done" : ""}`, children: [
           item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
           visibleTitle
         ] }),
@@ -50542,7 +50881,7 @@ function HeatmapDayView({
 }
 function HeatmapThemeGroup({
   normalizedCurrentView,
-  theme: theme2,
+  theme,
   dataForTheme,
   dateRange,
   config: config2,
@@ -50559,16 +50898,16 @@ function HeatmapThemeGroup({
   onCellClick,
   resolveCellRatingMapping
 }) {
-  const rowKey = `${keyPrefix}${entryKey || theme2}`;
+  const rowKey = `${keyPrefix}${entryKey || theme}`;
   const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
   const isVertical = normalizedCurrentView === "周" ? false : verticalLayouts.has(rowKey);
   const isCollapsed = normalizedCurrentView === "年" && collapsedThemes.has(rowKey);
-  const leafLabel2 = label || getThemeLeafLabel(theme2);
+  const leafLabel2 = label || getThemeLeafLabel(theme);
   const renderMonthGrid = (monthDate) => {
     const startOfMonth = monthDate.startOf("month");
     const endOfMonth = monthDate.endOf("month");
     const firstWeekday = startOfMonth.isoWeekday();
-    const themeRatingMapping = resolveCellRatingMapping(theme2, presetContext);
+    const themeRatingMapping = resolveCellRatingMapping(theme, presetContext);
     const days = [];
     for (let i2 = 1; i2 < firstWeekday; i2++) {
       days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
@@ -50585,7 +50924,7 @@ function HeatmapThemeGroup({
             config: config2,
             ratingMapping: themeRatingMapping,
             resolveResourcePath,
-            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme2, goalPath, presetContext)
+            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
           },
           dateStr
         )
@@ -50599,7 +50938,7 @@ function HeatmapThemeGroup({
   const renderHeaderCells = () => {
     const start2 = dayjs(dateRange[0]);
     const end2 = dayjs(dateRange[1]);
-    const themeRatingMapping = resolveCellRatingMapping(theme2, presetContext);
+    const themeRatingMapping = resolveCellRatingMapping(theme, presetContext);
     switch (normalizedCurrentView) {
       case "天":
       case "日":
@@ -50615,7 +50954,7 @@ function HeatmapThemeGroup({
               config: config2,
               ratingMapping: themeRatingMapping,
               resolveResourcePath,
-              onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme2, goalPath, presetContext)
+              onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
             },
             dateStr
           )
@@ -50638,9 +50977,9 @@ function HeatmapThemeGroup({
                 config: config2,
                 ratingMapping: themeRatingMapping,
                 resolveResourcePath,
-                onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme2, goalPath, presetContext)
+                onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
               },
-              `${theme2}-${dateStr}`
+              `${theme}-${dateStr}`
             )
           );
           currentDate = currentDate.add(1, "day");
@@ -50667,12 +51006,12 @@ function HeatmapThemeGroup({
       class: `heatmap-theme-header ${isRowLayout ? "row-inline-layout week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
       "data-theme": rowKey,
       ref: (el) => {
-        if (el && theme2 !== "__default__") {
+        if (el && theme !== "__default__") {
           headerRefs.current.set(rowKey, el);
         }
       },
       children: [
-        theme2 !== "__default__" && /* @__PURE__ */ u2(
+        theme !== "__default__" && /* @__PURE__ */ u2(
           "div",
           {
             class: `heatmap-header-info ${normalizedCurrentView === "年" ? "is-clickable" : ""}`,
@@ -50763,32 +51102,32 @@ function HeatmapViewContent({
     ] }, goalGroup.goalPath)) });
   }
   const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-  return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme2) => renderThemeGroup({
-    theme: theme2,
-    dataForTheme: dataByThemeAndDate.get(theme2) || /* @__PURE__ */ new Map()
+  return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme) => renderThemeGroup({
+    theme,
+    dataForTheme: dataByThemeAndDate.get(theme) || /* @__PURE__ */ new Map()
   })) });
 }
-function shouldSkipHeatmapVerticalLayout(theme2, normalizedCurrentView) {
-  if (!theme2 || theme2 === "__default__") return true;
+function shouldSkipHeatmapVerticalLayout(theme, normalizedCurrentView) {
+  if (!theme || theme === "__default__") return true;
   if (["年", "季"].includes(normalizedCurrentView)) return true;
   return normalizedCurrentView === "周";
 }
 function resolveHeatmapVerticalLayout(args) {
-  const { theme: theme2, normalizedCurrentView, isDayView, containerWidth } = args;
-  if (shouldSkipHeatmapVerticalLayout(theme2, normalizedCurrentView)) return null;
+  const { theme, normalizedCurrentView, isDayView, containerWidth } = args;
+  if (shouldSkipHeatmapVerticalLayout(theme, normalizedCurrentView)) return null;
   const threshold = isDayView ? 320 : 600;
   return containerWidth < threshold;
 }
-function applyHeatmapVerticalLayout(prev2, theme2, needsVertical) {
+function applyHeatmapVerticalLayout(prev2, theme, needsVertical) {
   const next2 = new Set(prev2);
-  if (needsVertical) next2.add(theme2);
-  else next2.delete(theme2);
+  if (needsVertical) next2.add(theme);
+  else next2.delete(theme);
   return next2;
 }
-function toggleHeatmapCollapsedTheme(prev2, theme2) {
+function toggleHeatmapCollapsedTheme(prev2, theme) {
   const next2 = new Set(prev2);
-  if (next2.has(theme2)) next2.delete(theme2);
-  else next2.add(theme2);
+  if (next2.has(theme)) next2.delete(theme);
+  else next2.add(theme);
   return next2;
 }
 function HeatmapView({
@@ -50906,32 +51245,32 @@ function HeatmapView({
   const [verticalLayouts, setVerticalLayouts] = d(/* @__PURE__ */ new Set());
   const [collapsedThemes, setCollapsedThemes] = d(/* @__PURE__ */ new Set());
   const headerRefs = A$1(/* @__PURE__ */ new Map());
-  const toggleThemeCollapsed = (theme2) => {
-    setCollapsedThemes((prev2) => toggleHeatmapCollapsedTheme(prev2, theme2));
+  const toggleThemeCollapsed = (theme) => {
+    setCollapsedThemes((prev2) => toggleHeatmapCollapsedTheme(prev2, theme));
   };
-  const checkLayout = (theme2, headerElement) => {
+  const checkLayout = (theme, headerElement) => {
     const needsVertical = resolveHeatmapVerticalLayout({
-      theme: theme2,
+      theme,
       normalizedCurrentView,
       isDayView,
       containerWidth: headerElement?.clientWidth ?? 0
     });
     if (needsVertical === null) return;
-    setVerticalLayouts((prev2) => applyHeatmapVerticalLayout(prev2, theme2, needsVertical));
+    setVerticalLayouts((prev2) => applyHeatmapVerticalLayout(prev2, theme, needsVertical));
   };
   y(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       entries.forEach((entry) => {
         const element = entry.target;
-        const theme2 = element.dataset.theme;
-        if (theme2) {
-          checkLayout(theme2, element);
+        const theme = element.dataset.theme;
+        if (theme) {
+          checkLayout(theme, element);
         }
       });
     });
-    headerRefs.current.forEach((element, theme2) => {
+    headerRefs.current.forEach((element, theme) => {
       resizeObserver.observe(element);
-      checkLayout(theme2, element);
+      checkLayout(theme, element);
     });
     return () => {
       resizeObserver.disconnect();
@@ -50966,27 +51305,21 @@ function getStatisticsGoalThemeSummaryLabel(goalPath) {
   return goalPath.split("/").filter(Boolean).pop() || goalPath;
 }
 function getStatisticsGoalThemeSummaryTitle(row) {
-  return `${row.goalPath}: ${row.themes.map((theme2) => `${theme2.themePath} ${theme2.count}`).join(" / ")}`;
+  return `${row.goalPath}: ${row.themes.map((theme) => `${theme.themePath} ${theme.count}`).join(" / ")}`;
 }
 function getStatisticsGoalThemeSummaryText(row) {
-  return row.themes.map((theme2) => `${theme2.label}${theme2.count}`).join(" / ");
+  return row.themes.map((theme) => `${theme.label}${theme.count}`).join(" / ");
 }
 function StatisticsGoalThemeSummaryStrip({ summaries }) {
   const visible = getStatisticsGoalThemeSummaryRows(summaries);
   if (visible.length === 0) return null;
-  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }, children: visible.map((row) => /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2("div", { class: "sv-goal-summary-strip", children: visible.map((row) => /* @__PURE__ */ u2(
     "div",
     {
-      style: {
-        border: "1px solid var(--background-modifier-border)",
-        borderRadius: "999px",
-        padding: "5px 9px",
-        fontSize: "12px",
-        color: "var(--text-muted)"
-      },
+      class: "sv-goal-summary-chip",
       title: getStatisticsGoalThemeSummaryTitle(row),
       children: [
-        /* @__PURE__ */ u2("span", { style: { color: "var(--text-normal)", fontWeight: 600 }, children: getStatisticsGoalThemeSummaryLabel(row.goalPath) }),
+        /* @__PURE__ */ u2("span", { class: "sv-goal-summary-label", children: getStatisticsGoalThemeSummaryLabel(row.goalPath) }),
         /* @__PURE__ */ u2("span", { children: " · " }),
         /* @__PURE__ */ u2("span", { children: getStatisticsGoalThemeSummaryText(row) })
       ]
@@ -51068,7 +51401,7 @@ function ChartBlock({
                     class: "sv-vbar-bar",
                     style: {
                       height: `${height2}%`,
-                      backgroundColor: color2 || "#ccc"
+                      backgroundColor: color2 || "var(--think-data-neutral)"
                     }
                   }
                 )
@@ -51879,13 +52212,18 @@ function buildProgressBlockCountRows(counts) {
   return EXPANDED_BLOCK_ORDER.map((key) => ({ key, label: PROGRESS_BLOCK_LABELS[key] || key, count: Number(counts?.[key] || 0) })).filter((row) => row.count > 0);
 }
 function ExperienceBar({ ratio, tone = "goal", compact = false }) {
-  const background = tone === "goal" ? "linear-gradient(90deg, #8b5cf6 0%, #c084fc 54%, #f59e0b 100%)" : "linear-gradient(90deg, #10b981 0%, #a7f3d0 100%)";
-  return /* @__PURE__ */ u2("div", { style: { width: compact ? "180px" : "min(100%, 260px)", height: tone === "goal" ? "10px" : "9px", borderRadius: "999px", background: "#e7dfd2", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: progressBarWidth(ratio), height: "100%", borderRadius: "999px", background } }) });
+  const style2 = { "--think-progress-ratio": progressBarWidth(ratio) };
+  const classes = [
+    "think-progress-bar",
+    `think-progress-bar--${tone}`,
+    compact ? "think-progress-bar--compact" : ""
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2("div", { class: classes, "aria-label": `进度 ${progressBarWidth(ratio)}`, children: /* @__PURE__ */ u2("div", { class: "think-progress-bar__fill", style: style2 }) });
 }
 function SmallSkillRow({ row }) {
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "minmax(120px, 220px) 64px minmax(140px, 260px)", gap: "14px", alignItems: "center", padding: "12px 14px", border: "1px solid #eadfce", borderRadius: "16px", background: "rgba(255, 255, 255, 0.82)" }, title: row.key, children: [
-    /* @__PURE__ */ u2("div", { style: { fontWeight: 800, fontSize: "15px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#181411" }, children: row.title }),
-    /* @__PURE__ */ u2("div", { style: { fontWeight: 900, color: "#8b5cf6", whiteSpace: "nowrap" }, children: [
+  return /* @__PURE__ */ u2("div", { class: "think-progress-skill", title: row.key, children: [
+    /* @__PURE__ */ u2("div", { class: "think-progress-skill__title", children: row.title }),
+    /* @__PURE__ */ u2("div", { class: "think-progress-skill__level", children: [
       "Lv.",
       row.levelMeta.level
     ] }),
@@ -51894,27 +52232,26 @@ function SmallSkillRow({ row }) {
 }
 function SkillList({ card }) {
   const rows = buildProgressSkillRows(card);
-  if (rows.length === 0) {
-    return /* @__PURE__ */ u2("div", { style: { padding: "12px 14px", border: "1px solid #eadfce", borderRadius: "16px", color: "#8d8377", background: "rgba(255, 255, 255, 0.72)" }, children: "暂无小技能" });
-  }
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "10px" }, children: rows.map((row) => /* @__PURE__ */ u2(SmallSkillRow, { row }, row.key)) });
+  if (rows.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-empty-skill", children: "暂无小技能" });
+  return /* @__PURE__ */ u2("div", { class: "think-progress-skills", children: rows.map((row) => /* @__PURE__ */ u2(SmallSkillRow, { row }, row.key)) });
 }
 function ExpandedRecords({ records, onOpenRecord }) {
   if (!records?.length) return null;
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "8px", paddingTop: "2px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { fontWeight: 800, color: "#181411" }, children: "记录入口" }),
+  return /* @__PURE__ */ u2("div", { class: "think-progress-records", children: [
+    /* @__PURE__ */ u2("div", { class: "think-progress-records__title", children: "记录入口" }),
     records.map((record) => /* @__PURE__ */ u2(
       "button",
       {
         type: "button",
+        disabled: !onOpenRecord,
         onClick: (event) => {
           event.stopPropagation();
           onOpenRecord?.(record.item);
         },
-        style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "12px", alignItems: "center", padding: "10px 12px", border: "1px solid #eadfce", borderRadius: "14px", background: "#fffdf8", color: "inherit", textAlign: "left", cursor: onOpenRecord ? "pointer" : "default" },
+        class: "think-progress-record",
         children: [
-          /* @__PURE__ */ u2("span", { style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: record.title || "未命名记录" }),
-          /* @__PURE__ */ u2("span", { style: { color: "#8d8377", fontSize: "12px" }, children: record.date || "无日期" })
+          /* @__PURE__ */ u2("span", { class: "think-progress-record__title", children: record.title || "未命名记录" }),
+          /* @__PURE__ */ u2("span", { class: "think-progress-record__date", children: record.date || "无日期" })
         ]
       },
       record.id
@@ -51923,8 +52260,8 @@ function ExpandedRecords({ records, onOpenRecord }) {
 }
 function ExpandedFacts({ card, onOpenRecord }) {
   const blockRows = buildProgressBlockCountRows(card.blockCounts || {});
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "12px", borderTop: "1px solid #eadfce", paddingTop: "14px" }, children: [
-    blockRows.length > 0 && /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: blockRows.map((row) => /* @__PURE__ */ u2("span", { style: { padding: "6px 10px", borderRadius: "999px", background: "#f3ecdf", color: "#6f655b", fontSize: "12px" }, children: [
+  return /* @__PURE__ */ u2("div", { class: "think-progress-details", children: [
+    blockRows.length > 0 && /* @__PURE__ */ u2("div", { class: "think-progress-details__chips", children: blockRows.map((row) => /* @__PURE__ */ u2("span", { class: "think-progress-details__chip", children: [
       row.label,
       " ",
       row.count
@@ -51935,20 +52272,20 @@ function ExpandedFacts({ card, onOpenRecord }) {
 function GoalProgressCard({ card, expanded, onToggle, onOpenRecord }) {
   const title = getGoalProgressTitle(card);
   const levelMeta = getProgressLevelMeta(card.level);
-  return /* @__PURE__ */ u2("article", { class: "think-card", style: { width: "min(100%, 760px)", padding: "16px", border: "1px solid #e8dccb", borderRadius: "22px", background: "linear-gradient(135deg, #fffdf8 0%, #fffaf1 100%)", boxShadow: "none", display: "grid", gap: "14px" }, children: [
-    /* @__PURE__ */ u2("button", { type: "button", onClick: onToggle, "aria-expanded": expanded, style: { display: "grid", gridTemplateColumns: "auto minmax(0, 1fr) auto", gap: "14px", alignItems: "center", padding: 0, border: "none", background: "transparent", color: "inherit", textAlign: "left", cursor: "pointer" }, children: [
-      /* @__PURE__ */ u2("div", { style: { width: "50px", height: "50px", borderRadius: "18px", border: "1px solid #eadfce", background: "#fbf3e5", display: "grid", placeItems: "center", fontSize: "28px", boxShadow: "none" }, children: card.icon || "🧩" }),
-      /* @__PURE__ */ u2("div", { style: { minWidth: 0, display: "flex", alignItems: "center", gap: "14px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { fontSize: "24px", lineHeight: 1.1, fontWeight: 900, letterSpacing: "-0.04em", color: "#181411", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "280px" }, children: title }),
+  return /* @__PURE__ */ u2("article", { class: "think-card think-progress-card", children: [
+    /* @__PURE__ */ u2("button", { type: "button", onClick: onToggle, "aria-expanded": expanded, class: "think-progress-card__trigger", children: [
+      /* @__PURE__ */ u2("div", { class: "think-progress-card__icon", children: card.icon || "🧩" }),
+      /* @__PURE__ */ u2("div", { class: "think-progress-card__main", children: [
+        /* @__PURE__ */ u2("div", { class: "think-progress-card__title", children: title }),
         /* @__PURE__ */ u2(ExperienceBar, { ratio: card.progressRatio, compact: true })
       ] }),
-      /* @__PURE__ */ u2("div", { style: { display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: "1px solid #eadfce", borderRadius: "999px", background: "rgba(255, 255, 255, 0.72)", boxShadow: "none", whiteSpace: "nowrap" }, children: [
-        /* @__PURE__ */ u2("span", { style: { fontSize: "18px" }, children: levelMeta.icon }),
-        /* @__PURE__ */ u2("strong", { style: { color: "#8b5cf6", fontSize: "17px" }, children: [
+      /* @__PURE__ */ u2("div", { class: "think-progress-card__level", children: [
+        /* @__PURE__ */ u2("span", { class: "think-progress-card__level-icon", children: levelMeta.icon }),
+        /* @__PURE__ */ u2("strong", { class: "think-progress-card__level-value", children: [
           "Lv.",
           levelMeta.level
         ] }),
-        /* @__PURE__ */ u2("strong", { style: { fontSize: "15px", color: "#181411" }, children: levelMeta.title })
+        /* @__PURE__ */ u2("strong", { class: "think-progress-card__level-title", children: levelMeta.title })
       ] })
     ] }),
     /* @__PURE__ */ u2(SkillList, { card }),
@@ -51958,8 +52295,8 @@ function GoalProgressCard({ card, expanded, onToggle, onOpenRecord }) {
 function ProgressView({ progressModel, onOpenRecord }) {
   const cards = progressModel?.goalCards || [];
   const [expandedKeys, setExpandedKeys] = d({});
-  if (cards.length === 0) return /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)" }, children: "暂无目标技能经验" });
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "14px", justifyItems: "start", maxWidth: "780px" }, children: cards.map((card) => /* @__PURE__ */ u2(
+  if (cards.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-view__empty", children: "暂无目标技能经验" });
+  return /* @__PURE__ */ u2("div", { class: "think-progress-view", children: cards.map((card) => /* @__PURE__ */ u2(
     GoalProgressCard,
     {
       card,
@@ -52150,7 +52487,7 @@ function TableViewCell(props) {
     onOpenRecord
   } = props;
   if (!items.length) return /* @__PURE__ */ u2("td", { class: "empty" });
-  return /* @__PURE__ */ u2("td", { children: items.map((item) => /* @__PURE__ */ u2("div", { class: "table-view-cell-item", children: item.type === "task" ? /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2("td", { children: items.map((item) => /* @__PURE__ */ u2("div", { class: "think-table-cell-item", children: item.type === "task" ? /* @__PURE__ */ u2(
     TaskRow,
     {
       item,
@@ -54061,9 +54398,9 @@ function ThemeTreeSelectPanel({
     if (multiSelect && selectedPaths.length > 0) {
       selectedPaths.forEach((p2) => pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(p2)));
     } else if (selectedThemeId) {
-      const theme2 = themes.find((t3) => t3.id === selectedThemeId);
-      if (theme2?.path) {
-        pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(theme2.path));
+      const theme = themes.find((t3) => t3.id === selectedThemeId);
+      if (theme?.path) {
+        pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(theme.path));
       }
     }
     if (pathsToExpand.length > 0) {
@@ -54216,10 +54553,10 @@ function ThemeTreeSelect({
       return `${selectedPaths.length} 个主题`;
     }
     if (!selectedThemeId) return placeholder;
-    const theme2 = themes.find((t3) => t3.id === selectedThemeId);
-    if (!theme2) return placeholder;
-    const name = theme2.path.split("/").pop() || theme2.path;
-    return theme2.icon ? `${theme2.icon} ${name}` : name;
+    const theme = themes.find((t3) => t3.id === selectedThemeId);
+    if (!theme) return placeholder;
+    const name = theme.path.split("/").pop() || theme.path;
+    return theme.icon ? `${theme.icon} ${name}` : name;
   }, [multiSelect, placeholder, selectedPaths, selectedThemeId, themes]);
   const handleClear = q$1(
     (e2) => {
@@ -54301,8 +54638,8 @@ function ThemeFilter({ selectedThemes, onSelectionChange, themes }) {
       selectedKeys: selectedThemes,
       totalCount: allThemePaths.length,
       getChipLabel: (themePath) => {
-        const theme2 = themes.find((t3) => t3.path === themePath);
-        return theme2 ? getLeafPath(theme2.path) || theme2.path : themePath;
+        const theme = themes.find((t3) => t3.path === themePath);
+        return theme ? getLeafPath(theme.path) || theme.path : themePath;
       },
       onDeleteKey: (themePath) => {
         onSelectionChange(selectedThemes.filter((t3) => t3 !== themePath));
@@ -54734,9 +55071,9 @@ function createThemeSlice(settingsRepository) {
       set2({ themeLoading: true, themeError: null });
       try {
         await settingsRepository.update((draft) => {
-          const theme2 = draft.inputSettings.themes?.find((t3) => t3.id === id);
-          if (theme2) {
-            Object.assign(theme2, updates);
+          const theme = draft.inputSettings.themes?.find((t3) => t3.id === id);
+          if (theme) {
+            Object.assign(theme, updates);
           }
         }, createSliceMeta("theme.updateTheme"));
         set2({ themeLoading: false });
@@ -54775,10 +55112,10 @@ function createThemeSlice(settingsRepository) {
         orderedThemeIds.forEach((id, index) => orderMap.set(id, index));
         await settingsRepository.update((draft) => {
           const themes = draft.inputSettings.themes || [];
-          themes.forEach((theme2) => {
-            const nextOrder = orderMap.get(theme2.id);
+          themes.forEach((theme) => {
+            const nextOrder = orderMap.get(theme.id);
             if (typeof nextOrder === "number") {
-              theme2.order = nextOrder;
+              theme.order = nextOrder;
             }
           });
         }, createSliceMeta("theme.reorderThemeSiblings"));
@@ -54796,9 +55133,9 @@ function createThemeSlice(settingsRepository) {
       try {
         await settingsRepository.update((draft) => {
           themeIds.forEach((id) => {
-            const theme2 = draft.inputSettings.themes?.find((t3) => t3.id === id);
-            if (theme2) {
-              Object.assign(theme2, updates);
+            const theme = draft.inputSettings.themes?.find((t3) => t3.id === id);
+            if (theme) {
+              Object.assign(theme, updates);
             }
           });
         }, createSliceMeta("theme.batchUpdateThemes"));
@@ -54856,9 +55193,9 @@ function createThemeSlice(settingsRepository) {
       try {
         await settingsRepository.update((draft) => {
           themeIds.forEach((id) => {
-            const theme2 = draft.inputSettings.themes?.find((t3) => t3.id === id);
-            if (theme2) {
-              theme2.icon = icon;
+            const theme = draft.inputSettings.themes?.find((t3) => t3.id === id);
+            if (theme) {
+              theme.icon = icon;
             }
           });
         }, createSliceMeta("theme.batchUpdateThemeIcon"));
@@ -57677,7 +58014,7 @@ function createServices(container = instance) {
 function mountWithServices(containerEl, children, services) {
   const finalServices = services ?? createServices();
   nn(
-    /* @__PURE__ */ u2(ServicesProvider, { services: finalServices, children }),
+    /* @__PURE__ */ u2(ThinkMuiThemeProvider, { children: /* @__PURE__ */ u2(ServicesProvider, { services: finalServices, children }) }),
     containerEl
   );
   return {
@@ -59160,12 +59497,12 @@ function makeGoalIdFromPath(path) {
   return `goal:${path}`;
 }
 function themeOptions(themes) {
-  return (themes || []).map((theme2) => ({
-    value: theme2.path,
+  return (themes || []).map((theme) => ({
+    value: theme.path,
     label: cleanDisplaySegment(
-      theme2.path.split("/").filter(Boolean).pop() || theme2.path
+      theme.path.split("/").filter(Boolean).pop() || theme.path
     ),
-    icon: theme2.icon
+    icon: theme.icon
   }));
 }
 const buildFieldSourceSummary = (sources) => ({
@@ -59332,7 +59669,7 @@ function hydrateQuickInputTemplateDefaults({
   selectedGoalId,
   currentGoalPath,
   currentGoalTitle,
-  theme: theme2,
+  theme,
   currentPeriod,
   timeDirection
 }) {
@@ -59343,7 +59680,7 @@ function hydrateQuickInputTemplateDefaults({
       id: selectedGoal?.id || selectedGoalId || "",
       title: currentGoalTitle || "",
       path: currentGoalPath || "",
-      themePath: selectedGoal?.themePath || theme2?.path || ""
+      themePath: selectedGoal?.themePath || theme?.path || ""
     },
     goalId: selectedGoal?.id || selectedGoalId || "",
     goalPath: currentGoalPath || "",
@@ -59359,7 +59696,7 @@ function hydrateQuickInputTemplateDefaults({
       periodId: currentPeriod.id,
       periodLabel: currentPeriod.label
     } : {},
-    theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : { path: selectedGoal?.themePath || "", icon: "" }
+    theme: theme ? { path: theme.path, icon: theme.icon || "" } : { path: selectedGoal?.themePath || "", icon: "" }
   };
   let changed = false;
   const next2 = { ...current2 };
@@ -59752,7 +60089,7 @@ function QuickInputEditor({
       setSelectedTemplateVariantId(next2?.variantId || "default");
     }
   }, [goalTemplateVariants, selectedTemplateVariantId]);
-  const { template: rawTemplate, theme: theme2, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = T$1(() => GoalTemplateResolver.resolve({
+  const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = T$1(() => GoalTemplateResolver.resolve({
     settings: fullSettings,
     blockId: currentBlockId,
     goalId: selectedGoal?.id || selectedGoalId,
@@ -59811,7 +60148,7 @@ function QuickInputEditor({
         selectedGoalId,
         currentGoalPath,
         currentGoalTitle,
-        theme: theme2,
+        theme,
         currentPeriod,
         timeDirection
       });
@@ -59819,7 +60156,7 @@ function QuickInputEditor({
       setFieldSources(hydrated.fieldSources);
       return hydrated.formData;
     });
-  }, [template, theme2, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle]);
+  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle]);
   y(() => {
     const presetThemePath = String(formData.themePath ?? formData["主题"] ?? "").trim();
     if (!presetThemePath) return;
@@ -59837,7 +60174,7 @@ function QuickInputEditor({
     currentPeriod,
     selectedThemeId,
     themeIdMap,
-    theme: theme2,
+    theme,
     formData: draftFormData,
     currentPeriodFields,
     timeDirection: directionOverride,
@@ -59850,7 +60187,7 @@ function QuickInputEditor({
   });
   y(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
-  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, selectedCycleId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme2]);
+  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, selectedCycleId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
   const emitDraftState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => {
     onStateChange?.(makeEditorState(draftFormData, directionOverride, sourceOverride));
   };
@@ -59932,7 +60269,7 @@ function QuickInputEditor({
       onRequestSubmit,
       isMobileLike,
       showTimeDirectionControl,
-      currentThemePath: String(formData.themePath ?? formData["主题"] ?? theme2?.path ?? selectedGoal?.themePath ?? "") || null,
+      currentThemePath: String(formData.themePath ?? formData["主题"] ?? theme?.path ?? selectedGoal?.themePath ?? "") || null,
       currentPeriodLabel: currentPeriod?.label || null,
       templateSourceType,
       fieldSourceSummary: makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary
@@ -59997,8 +60334,8 @@ function setupQuickInputKeyboardDetection(host) {
     const hasFocusedInput = hasActiveKeyboardInput();
     const detected = heightDiff > keyboardActivationThreshold && hasFocusedInput;
     const suspected = hasFocusedInput;
-    modalEl.classList.toggle("keyboard-detected", detected);
-    modalEl.classList.toggle("keyboard-suspected", suspected);
+    modalEl.classList.toggle("think-quick-input-keyboard-detected", detected);
+    modalEl.classList.toggle("think-quick-input-keyboard-suspected", suspected);
     if (detected) {
       setKeyboardHeight(heightDiff);
       setAccessoryInset(heightDiff + detectedBottomInsetExtra);
@@ -60081,8 +60418,8 @@ function setupQuickInputKeyboardDetection(host) {
     modalEl.style.removeProperty("--keyboard-height");
     modalEl.style.removeProperty("--keyboard-accessory-inset");
     modalEl.style.removeProperty("--keyboard-offset");
-    modalEl.classList.remove("keyboard-detected");
-    modalEl.classList.remove("keyboard-suspected");
+    modalEl.classList.remove("think-quick-input-keyboard-detected");
+    modalEl.classList.remove("think-quick-input-keyboard-suspected");
   };
 }
 function isMobileLikeEnvironment() {
@@ -60561,6 +60898,9 @@ class QuickInputModal extends obsidian.Modal {
     }
     QuickInputModal.activeModal = this;
     this.contentEl.empty();
+    this.modalEl.addClass("think-os");
+    this.modalEl.addClass("think-os--modal");
+    this.modalEl.addClass("think-modal-host");
     this.modalEl.addClass("think-quick-input-modal");
     const mobileLike = isMobileLikeEnvironment();
     this.modalEl.toggleClass("think-quick-input-modal--mobile", mobileLike);
@@ -60894,6 +61234,10 @@ class AiTextPromptModal extends obsidian.Modal {
   }
   onOpen() {
     this.contentEl.empty();
+    this.modalEl.addClass("think-os");
+    this.modalEl.addClass("think-os--modal");
+    this.modalEl.addClass("think-modal-host");
+    this.modalEl.addClass("think-modal-host--medium");
     this.modalEl.addClass("think-ai-prompt-modal");
     this.cleanupBackdropCloseGuard = installBackdropCloseGuard(this);
     this.renderContent();
@@ -61028,8 +61372,8 @@ function buildAiBatchConfirmRecordItems({
     let themeId;
     const preferredTheme = presetThemePath || cmd.target.themeId;
     if (preferredTheme) {
-      const theme2 = themes.find((entry) => entry.id === preferredTheme || entry.path === preferredTheme);
-      if (theme2) themeId = theme2.id;
+      const theme = themes.find((entry) => entry.id === preferredTheme || entry.path === preferredTheme);
+      if (theme) themeId = theme.id;
     }
     if (!themeId && themes.length > 0) themeId = themes[0].id;
     const selectedTheme = themeId ? themes.find((entry) => entry.id === themeId) : void 0;
@@ -61198,11 +61542,12 @@ class AiBatchConfirmModal extends obsidian.Modal {
   }
   onOpen() {
     this.contentEl.empty();
+    this.modalEl.addClass("think-os");
+    this.modalEl.addClass("think-os--modal");
+    this.modalEl.addClass("think-modal-host");
+    this.modalEl.addClass("think-modal-host--large");
     this.modalEl.addClass("think-ai-batch-confirm-modal");
     this.cleanupBackdropCloseGuard = installBackdropCloseGuard(this);
-    this.modalEl.style.width = "90vw";
-    this.modalEl.style.maxWidth = "900px";
-    this.modalEl.style.height = "80vh";
     mountWithServices(
       this.contentEl,
       /* @__PURE__ */ u2(
@@ -61659,109 +62004,52 @@ function FloatingPanel({
     userSelect: "text",
     ...bodyStyle
   };
-  const resizeHandleBase = {
-    position: "absolute",
-    zIndex: 1
-  };
   const panel = /* @__PURE__ */ u2("div", { ref: rootRef, children: /* @__PURE__ */ u2(
     Paper2,
     {
       elevation: 4,
+      className: `think-os think-os--modal think-floating-panel${inline ? " is-inline" : ""}${mobile ? " is-mobile" : ""}`,
       onMouseDown: onPanelPointerDown,
       onTouchStart: onPanelPointerDown,
       style: paperStyle,
       children: [
-        showHeader && /* @__PURE__ */ u2(
-          "div",
-          {
-            style: {
-              display: "flex",
-              alignItems: "center",
-              padding: mobile ? "10px 12px" : "6px 8px",
-              borderBottom: "1px solid var(--background-modifier-border)",
-              gap: 8,
-              flexShrink: 0,
-              minWidth: 0
-            },
-            children: [
-              /* @__PURE__ */ u2(
-                "div",
-                {
-                  onMouseDown: onDragStart,
-                  onTouchStart: onDragStart,
-                  style: {
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    cursor: inline ? "default" : "move",
-                    touchAction: inline ? "auto" : "none",
-                    userSelect: "none",
-                    flex: 1,
-                    minWidth: 0,
-                    minHeight: mobile ? "44px" : void 0
-                  },
-                  children: [
-                    !inline && /* @__PURE__ */ u2("div", { style: { display: "inline-flex", alignItems: "center", padding: mobile ? "4px" : void 0 }, children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { color: "text.disabled", fontSize: mobile ? "1.4rem" : "1.2rem" } }) }),
-                    title && /* @__PURE__ */ u2(
-                      "div",
-                      {
-                        style: {
-                          flex: 1,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          fontWeight: 600,
-                          fontSize: mobile ? "0.95rem" : void 0
-                        },
-                        children: title
-                      }
-                    )
-                  ]
-                }
-              ),
-              /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: mobile ? 8 : 4, flexShrink: 0 }, children: [
-                headerActions,
-                onClose && /* @__PURE__ */ u2(
-                  "button",
-                  {
-                    onClick: (e2) => {
-                      e2.stopPropagation();
-                      onClose();
-                    },
-                    style: {
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: mobile ? 24 : 18,
-                      lineHeight: 1,
-                      padding: mobile ? "4px 8px" : void 0,
-                      minWidth: mobile ? "44px" : void 0,
-                      minHeight: mobile ? "44px" : void 0
-                    },
-                    "aria-label": "Close",
-                    children: "×"
-                  }
-                )
-              ] })
-            ]
-          }
-        ),
-        /* @__PURE__ */ u2("div", { style: bodyMergedStyle, children }),
+        showHeader && /* @__PURE__ */ u2("div", { className: "think-floating-panel__header", children: [
+          /* @__PURE__ */ u2(
+            "div",
+            {
+              onMouseDown: onDragStart,
+              onTouchStart: onDragStart,
+              className: "think-floating-panel__drag-region",
+              children: [
+                !inline && /* @__PURE__ */ u2("div", { className: "think-floating-panel__drag-icon", children: /* @__PURE__ */ u2(DragIndicatorIcon, { fontSize: "inherit" }) }),
+                title && /* @__PURE__ */ u2("div", { className: "think-floating-panel__title", children: title })
+              ]
+            }
+          ),
+          /* @__PURE__ */ u2("div", { className: "think-floating-panel__actions", children: [
+            headerActions,
+            onClose && /* @__PURE__ */ u2(
+              "button",
+              {
+                onClick: (e2) => {
+                  e2.stopPropagation();
+                  onClose();
+                },
+                className: "think-floating-panel__close",
+                "aria-label": "Close",
+                children: "×"
+              }
+            )
+          ] })
+        ] }),
+        /* @__PURE__ */ u2("div", { className: "think-floating-panel__body", style: bodyMergedStyle, children }),
         resizable && !mobile && !inline && /* @__PURE__ */ u2(S, { children: [
           /* @__PURE__ */ u2(
             "div",
             {
               onMouseDown: onResizeStart("right"),
               onTouchStart: onResizeStart("right"),
-              style: {
-                ...resizeHandleBase,
-                top: 0,
-                right: 0,
-                width: "10px",
-                height: "100%",
-                cursor: "ew-resize",
-                touchAction: "none"
-              }
+              className: "think-floating-panel__resize think-floating-panel__resize--right"
             }
           ),
           /* @__PURE__ */ u2(
@@ -61769,15 +62057,7 @@ function FloatingPanel({
             {
               onMouseDown: onResizeStart("bottom"),
               onTouchStart: onResizeStart("bottom"),
-              style: {
-                ...resizeHandleBase,
-                left: 0,
-                bottom: 0,
-                width: "100%",
-                height: "10px",
-                cursor: "ns-resize",
-                touchAction: "none"
-              }
+              className: "think-floating-panel__resize think-floating-panel__resize--bottom"
             }
           ),
           /* @__PURE__ */ u2(
@@ -61785,16 +62065,7 @@ function FloatingPanel({
             {
               onMouseDown: onResizeStart("corner"),
               onTouchStart: onResizeStart("corner"),
-              style: {
-                ...resizeHandleBase,
-                right: 0,
-                bottom: 0,
-                width: "18px",
-                height: "18px",
-                cursor: "nwse-resize",
-                touchAction: "none",
-                background: "linear-gradient(135deg, transparent 0 45%, var(--text-faint) 45% 55%, transparent 55% 100%)"
-              }
+              className: "think-floating-panel__resize think-floating-panel__resize--corner"
             }
           )
         ] }),
@@ -61803,25 +62074,8 @@ function FloatingPanel({
           {
             onMouseDown: onResizeStart("bottom"),
             onTouchStart: onResizeStart("bottom"),
-            style: {
-              ...resizeHandleBase,
-              left: 0,
-              bottom: 0,
-              width: "100%",
-              height: "24px",
-              cursor: "ns-resize",
-              touchAction: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            },
-            children: /* @__PURE__ */ u2("div", { style: {
-              width: "36px",
-              height: "4px",
-              borderRadius: "2px",
-              background: "var(--text-faint)",
-              opacity: 0.5
-            } })
+            className: "think-floating-panel__resize think-floating-panel__resize--mobile",
+            children: /* @__PURE__ */ u2("div", { className: "think-floating-panel__resize-grip" })
           }
         )
       ]
@@ -61960,14 +62214,14 @@ class ThemeManager {
     const parts = path.split("/");
     if (parts.length <= 1) return null;
     const parentPath = parts.slice(0, -1).join("/");
-    const parentTheme = Array.from(this.themes.values()).find((theme2) => theme2.path === parentPath);
+    const parentTheme = Array.from(this.themes.values()).find((theme) => theme.path === parentPath);
     return parentTheme?.id || null;
   }
   /**
    * 添加预定义主题
    */
   addPredefinedTheme(path, icon) {
-    const existing = Array.from(this.themes.values()).find((theme22) => theme22.path === path);
+    const existing = Array.from(this.themes.values()).find((theme2) => theme2.path === path);
     if (existing) {
       existing.icon = icon || existing.icon;
       existing.source = "predefined";
@@ -61975,7 +62229,7 @@ class ThemeManager {
       existing.originallyPredefined = true;
       return existing;
     }
-    const theme2 = {
+    const theme = {
       id: this.generateThemeId(),
       path,
       name: path.split("/").pop() || path,
@@ -61988,8 +62242,8 @@ class ThemeManager {
       originallyPredefined: true
       // 标记为原始预定义
     };
-    this.themes.set(theme2.id, theme2);
-    return theme2;
+    this.themes.set(theme.id, theme);
+    return theme;
   }
   /**
    * 发现新主题（从数据中提取）
@@ -61998,13 +62252,13 @@ class ThemeManager {
     if (!path || path.trim() === "") {
       throw new Error("主题路径不能为空");
     }
-    const existing = Array.from(this.themes.values()).find((theme22) => theme22.path === path);
+    const existing = Array.from(this.themes.values()).find((theme2) => theme2.path === path);
     if (existing) {
       existing.usageCount++;
       existing.lastUsed = Date.now();
       return existing;
     }
-    const theme2 = {
+    const theme = {
       id: this.generateThemeId(),
       path,
       name: path.split("/").pop() || path,
@@ -62015,18 +62269,18 @@ class ThemeManager {
       lastUsed: Date.now(),
       order: this.themes.size
     };
-    this.themes.set(theme2.id, theme2);
-    return theme2;
+    this.themes.set(theme.id, theme);
+    return theme;
   }
   /**
    * 激活主题（使其在快速输入中可用）
    */
   activateTheme(path) {
-    const theme2 = Array.from(this.themes.values()).find((t3) => t3.path === path);
-    if (theme2) {
-      theme2.status = "active";
-      if (theme2.source === "discovered") {
-        theme2.source = "predefined";
+    const theme = Array.from(this.themes.values()).find((t3) => t3.path === path);
+    if (theme) {
+      theme.status = "active";
+      if (theme.source === "discovered") {
+        theme.source = "predefined";
       }
     }
   }
@@ -62034,16 +62288,16 @@ class ThemeManager {
    * 停用主题
    */
   deactivateTheme(path) {
-    const theme2 = Array.from(this.themes.values()).find((t3) => t3.path === path);
-    if (theme2 && !theme2.originallyPredefined) {
-      theme2.status = "inactive";
+    const theme = Array.from(this.themes.values()).find((t3) => t3.path === path);
+    if (theme && !theme.originallyPredefined) {
+      theme.status = "inactive";
     }
   }
   /**
    * 获取所有激活的主题
    */
   getActiveThemes() {
-    return Array.from(this.themes.values()).filter((theme2) => theme2.status === "active").sort((a2, b2) => {
+    return Array.from(this.themes.values()).filter((theme) => theme.status === "active").sort((a2, b2) => {
       if (a2.usageCount !== b2.usageCount) {
         return b2.usageCount - a2.usageCount;
       }
@@ -62086,33 +62340,33 @@ class ThemeManager {
     }
     const normalizedHeader = headerText.trim().toLowerCase();
     const allThemes = Array.from(this.themes.values());
-    for (const theme2 of allThemes) {
-      if (theme2.path.toLowerCase() === normalizedHeader) {
-        return theme2.path;
+    for (const theme of allThemes) {
+      if (theme.path.toLowerCase() === normalizedHeader) {
+        return theme.path;
       }
     }
-    for (const theme2 of allThemes) {
-      const themeName = theme2.path.split("/").pop()?.toLowerCase();
+    for (const theme of allThemes) {
+      const themeName = theme.path.split("/").pop()?.toLowerCase();
       if (themeName === normalizedHeader) {
-        return theme2.path;
+        return theme.path;
       }
     }
-    for (const theme2 of allThemes) {
-      if (theme2.path.toLowerCase().endsWith("/" + normalizedHeader)) {
-        return theme2.path;
+    for (const theme of allThemes) {
+      if (theme.path.toLowerCase().endsWith("/" + normalizedHeader)) {
+        return theme.path;
       }
     }
-    for (const theme2 of allThemes) {
-      const pathLower = theme2.path.toLowerCase();
+    for (const theme of allThemes) {
+      const pathLower = theme.path.toLowerCase();
       const regex = new RegExp(`(^|/)${normalizedHeader}(/|$)`, "i");
       if (regex.test(pathLower)) {
-        return theme2.path;
+        return theme.path;
       }
     }
-    for (const theme2 of allThemes) {
-      const themeName = theme2.path.split("/").pop()?.toLowerCase();
+    for (const theme of allThemes) {
+      const themeName = theme.path.split("/").pop()?.toLowerCase();
       if (themeName && themeName.includes(normalizedHeader)) {
-        return theme2.path;
+        return theme.path;
       }
     }
     return null;
@@ -62123,9 +62377,9 @@ class ThemeManager {
   scanDataForThemes(items) {
     const themeSet = /* @__PURE__ */ new Set();
     for (const item of items) {
-      const theme2 = this.extractTheme(item);
-      if (theme2) {
-        themeSet.add(theme2);
+      const theme = this.extractTheme(item);
+      if (theme) {
+        themeSet.add(theme);
       }
     }
     for (const themePath of themeSet) {
@@ -62149,9 +62403,9 @@ class ThemeManager {
    * 删除主题
    */
   removeTheme(path) {
-    const theme2 = Array.from(this.themes.values()).find((t3) => t3.path === path);
-    if (theme2 && !theme2.originallyPredefined) {
-      return this.themes.delete(theme2.id);
+    const theme = Array.from(this.themes.values()).find((t3) => t3.path === path);
+    if (theme && !theme.originallyPredefined) {
+      return this.themes.delete(theme.id);
     }
     return false;
   }
@@ -62159,9 +62413,9 @@ class ThemeManager {
    * 更新主题图标
    */
   updateThemeIcon(path, icon) {
-    const theme2 = Array.from(this.themes.values()).find((t3) => t3.path === path);
-    if (theme2) {
-      theme2.icon = icon;
+    const theme = Array.from(this.themes.values()).find((t3) => t3.path === path);
+    if (theme) {
+      theme.icon = icon;
     }
   }
   /**
@@ -62169,12 +62423,12 @@ class ThemeManager {
    */
   getThemeHierarchy() {
     const hierarchy = /* @__PURE__ */ new Map();
-    for (const theme2 of this.themes.values()) {
-      const parentId = theme2.parentId;
+    for (const theme of this.themes.values()) {
+      const parentId = theme.parentId;
       if (!hierarchy.has(parentId)) {
         hierarchy.set(parentId, []);
       }
-      hierarchy.get(parentId).push(theme2);
+      hierarchy.get(parentId).push(theme);
     }
     return hierarchy;
   }
@@ -62195,10 +62449,10 @@ class ThemeManager {
    * 导入主题配置
    */
   importThemes(themes) {
-    for (const theme2 of themes) {
-      if (!this.themes.has(theme2.id)) {
-        this.themes.set(theme2.id, theme2);
-        const idNum = parseInt(theme2.id.replace("theme_", ""));
+    for (const theme of themes) {
+      if (!this.themes.has(theme.id)) {
+        this.themes.set(theme.id, theme);
+        const idNum = parseInt(theme.id.replace("theme_", ""));
         if (!isNaN(idNum) && idNum > this.themeIdCounter) {
           this.themeIdCounter = idNum;
         }
@@ -62215,10 +62469,10 @@ class ThemeManager {
    * 更新主题使用统计
    */
   updateThemeUsage(path) {
-    const theme2 = this.getThemeByPath(path);
-    if (theme2) {
-      theme2.usageCount++;
-      theme2.lastUsed = Date.now();
+    const theme = this.getThemeByPath(path);
+    if (theme) {
+      theme.usageCount++;
+      theme.lastUsed = Date.now();
     }
   }
 }
@@ -62551,7 +62805,6 @@ function scanDataInBackground(opts) {
   setScanDataPromise(promise);
   return promise;
 }
-const AnyIconButton$1 = IconButton2;
 function ModulePanel({
   title,
   collapsed,
@@ -62571,14 +62824,12 @@ function ModulePanel({
   onLayoutToggleCollapsed
 }) {
   const onHeaderClick = (e2) => {
-    if (e2.target.closest(".module-header-actions, .module-drag-handle, .module-layout-actions")) {
-      return;
-    }
+    if (e2.target.closest(".module-header-actions, .module-drag-handle, .module-layout-actions")) return;
     onToggle?.(e2);
   };
-  return /* @__PURE__ */ u2("div", { class: "think-module", children: [
+  return /* @__PURE__ */ u2("section", { class: "think-module", children: [
     /* @__PURE__ */ u2(
-      "div",
+      "header",
       {
         class: `module-header${layoutEditing ? " is-layout-editing" : ""}${layoutSelected ? " is-layout-selected" : ""}`,
         onClick: onHeaderClick,
@@ -62592,7 +62843,7 @@ function ModulePanel({
                 ...dragHandleProps,
                 onClick: (event) => event.stopPropagation(),
                 title: layoutLocked ? "卡片已锁定，先解锁后才能拖动" : "拖动整个视图",
-                children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1rem" } })
+                children: /* @__PURE__ */ u2(DragIndicatorIcon, { className: "module-header-icon", fontSize: "inherit" })
               }
             ),
             /* @__PURE__ */ u2("span", { class: "module-title", children: title }),
@@ -62614,56 +62865,59 @@ function ModulePanel({
               }, children: collapsed ? "展开" : "折叠" })
             ] }),
             /* @__PURE__ */ u2("div", { class: "module-header-actions", children: [
-              onRemove && /* @__PURE__ */ u2(Tooltip2, { title: removeFromLayout ? "从当前布局移除视图，保留视图配置" : "删除视图（从配置与所有布局中移除）", children: /* @__PURE__ */ u2(
-                AnyIconButton$1,
+              onRemove && /* @__PURE__ */ u2(
+                ThinkIconButton,
                 {
-                  size: "small",
-                  onClick: (e2) => {
-                    e2.stopPropagation();
+                  size: "sm",
+                  tone: "danger",
+                  label: removeFromLayout ? "从当前布局移除视图，保留视图配置" : "删除视图（从配置与所有布局中移除）",
+                  icon: /* @__PURE__ */ u2(DeleteOutlineIcon, { className: "module-header-icon", fontSize: "inherit" }),
+                  onClick: (event) => {
+                    event.stopPropagation();
                     onRemove();
-                  },
-                  sx: { padding: "4px" },
-                  children: /* @__PURE__ */ u2(DeleteOutlineIcon, { sx: { fontSize: "1rem" } })
+                  }
                 }
-              ) }),
-              onSettingsClick && /* @__PURE__ */ u2(Tooltip2, { title: "模块设置", children: /* @__PURE__ */ u2(
-                AnyIconButton$1,
+              ),
+              onSettingsClick && /* @__PURE__ */ u2(
+                ThinkIconButton,
                 {
-                  size: "small",
-                  onClick: (e2) => {
-                    e2.stopPropagation();
+                  size: "sm",
+                  label: "模块设置",
+                  icon: /* @__PURE__ */ u2(SettingsIcon, { className: "module-header-icon", fontSize: "inherit" }),
+                  onClick: (event) => {
+                    event.stopPropagation();
                     onSettingsClick();
-                  },
-                  sx: { padding: "4px" },
-                  children: /* @__PURE__ */ u2(SettingsIcon, { sx: { fontSize: "1rem" } })
+                  }
                 }
-              ) }),
-              onExport && /* @__PURE__ */ u2(Tooltip2, { title: "导出为 Markdown", children: /* @__PURE__ */ u2(
-                AnyIconButton$1,
+              ),
+              onExport && /* @__PURE__ */ u2(
+                ThinkIconButton,
                 {
-                  size: "small",
-                  onClick: (e2) => {
-                    e2.stopPropagation();
+                  size: "sm",
+                  label: "导出为 Markdown",
+                  icon: /* @__PURE__ */ u2(IosShareIcon, { className: "module-header-icon", fontSize: "inherit" }),
+                  onClick: (event) => {
+                    event.stopPropagation();
                     onExport();
-                  },
-                  sx: { padding: "4px" },
-                  children: /* @__PURE__ */ u2(IosShareIcon, { sx: { fontSize: "1rem" } })
+                  }
                 }
-              ) }),
+              ),
               onActionClick ? /* @__PURE__ */ u2(
-                "span",
+                "button",
                 {
+                  type: "button",
                   class: "module-action-plus",
                   title: "创建记录",
-                  onClick: (e2) => {
-                    e2.stopPropagation();
+                  "aria-label": "创建记录",
+                  onClick: (event) => {
+                    event.stopPropagation();
                     onActionClick();
                   },
                   children: "+"
                 }
               ) : null
             ] }),
-            /* @__PURE__ */ u2("div", { class: "module-toggle", children: collapsed ? "▶" : "▼" })
+            /* @__PURE__ */ u2("span", { class: "module-toggle", "aria-hidden": "true", children: collapsed ? "▶" : "▼" })
           ] })
         ]
       }
@@ -63147,11 +63401,11 @@ function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
 }
 function StatisticsViewEditor({ value, onChange }) {
   const config2 = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...value };
-  return /* @__PURE__ */ u2("div", { class: "statistics-editor-container", children: [
-    /* @__PURE__ */ u2("div", { class: "statistics-section", children: [
-      /* @__PURE__ */ u2("div", { class: "categories-section-title", children: "目标统计视图" }),
-      /* @__PURE__ */ u2("div", { class: "categories-description", children: "StatisticsView 只按目标分组。时间范围使用上方控制栏，目标 / Block / 主题等条件使用视图筛选控制；“按照周期显示”只控制年/季/月视图内是否按 period 字段显示对应粒度。" }),
-      /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8, marginTop: 8 }, children: [
+  return /* @__PURE__ */ u2("div", { class: "think-statistics-editor", children: [
+    /* @__PURE__ */ u2("div", { class: "think-statistics-editor__section", children: [
+      /* @__PURE__ */ u2("div", { class: "think-statistics-editor__title", children: "目标统计视图" }),
+      /* @__PURE__ */ u2("div", { class: "think-statistics-editor__description", children: "StatisticsView 只按目标分组。时间范围使用上方控制栏，目标 / Block / 主题等条件使用视图筛选控制；“按照周期显示”只控制年/季/月视图内是否按 period 字段显示对应粒度。" }),
+      /* @__PURE__ */ u2("div", { class: "think-settings-grid think-settings-grid--compact", children: [
         /* @__PURE__ */ u2("label", { children: [
           /* @__PURE__ */ u2("div", { children: "显示目标数量" }),
           /* @__PURE__ */ u2(
@@ -63185,7 +63439,7 @@ function StatisticsViewEditor({ value, onChange }) {
             }
           )
         ] }),
-        /* @__PURE__ */ u2("label", { style: { display: "flex", alignItems: "center", gap: 6, marginTop: 18 }, children: [
+        /* @__PURE__ */ u2("label", { class: "think-statistics-editor__period-toggle", children: [
           /* @__PURE__ */ u2(
             "input",
             {
@@ -63198,7 +63452,7 @@ function StatisticsViewEditor({ value, onChange }) {
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ u2("div", { class: "statistics-section", children: /* @__PURE__ */ u2("div", { class: "categories-description", children: "该视图不再维护分类配置；分类可继续作为视图筛选条件，但不会作为 Statistics 的主柱状维度。" }) })
+    /* @__PURE__ */ u2("div", { class: "think-statistics-editor__section", children: /* @__PURE__ */ u2("div", { class: "think-statistics-editor__description", children: "该视图不再维护分类配置；分类可继续作为视图筛选条件，但不会作为 Statistics 的主柱状维度。" }) })
   ] });
 }
 function normalizeHeatmapConfig(value) {
@@ -63564,10 +63818,10 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
       onValueChange
     }
   );
-  const existingRules = /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", alignItems: "center" }, children: rows.map((rule, index) => {
+  const existingRules = /* @__PURE__ */ u2("div", { className: "think-rule-builder__chips", children: rows.map((rule, index) => {
     const isLast = index === rows.length - 1;
     const filterRule = rule;
-    return /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "4px" }, children: [
+    return /* @__PURE__ */ u2("div", { className: "think-rule-builder__chip-row", children: [
       /* @__PURE__ */ u2(Tooltip2, { title: `点击删除规则: ${buildRuleLabel(mode, rule)}`, children: /* @__PURE__ */ u2(
         Chip2,
         {
@@ -63582,29 +63836,21 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
           value: filterRule.logic || "and",
           options: RULE_LOGIC_OPTIONS,
           onChange: (val) => updateLogic(index, val),
-          sx: { minWidth: 50 }
+          className: "think-rule-builder__logic"
         }
       )
     ] }, index);
   }) });
-  const panelRuleRows = /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: rows.map((rule, index) => {
+  const panelRuleRows = /* @__PURE__ */ u2(Box, { className: "think-rule-builder__panel-rows", children: rows.map((rule, index) => {
     const filterRule = rule;
     const sortRule = rule;
     const isLast = index === rows.length - 1;
     const showValueInput = isFilterMode && operatorNeedsValue(filterRule.op);
-    return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 0.75 }, children: /* @__PURE__ */ u2(
+    return /* @__PURE__ */ u2(Box, { className: "think-rule-builder__row-shell", children: /* @__PURE__ */ u2(
       Box,
       {
-        sx: {
-          display: "grid",
-          gridTemplateColumns: getPanelRuleGridTemplate(mode, showValueInput),
-          gap: 1,
-          alignItems: "center",
-          p: 1,
-          border: "1px solid var(--background-modifier-border)",
-          borderRadius: "8px",
-          background: "var(--background-primary)"
-        },
+        className: "think-rule-builder__row-grid",
+        sx: { gridTemplateColumns: getPanelRuleGridTemplate(mode, showValueInput) },
         children: [
           renderFieldInput(rule.field, (field) => updateRow(index, { field })),
           isFilterMode ? /* @__PURE__ */ u2(S, { children: [
@@ -63614,7 +63860,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
                 value: filterRule.op,
                 options: RULE_OPERATOR_OPTIONS,
                 onChange: (val) => updateRow(index, { op: val }),
-                sx: { minWidth: 140 }
+                className: "think-rule-builder__field"
               }
             ),
             renderValueInput(filterRule, (value) => updateRow(index, { value }))
@@ -63624,7 +63870,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
               value: sortRule.dir,
               options: RULE_DIRECTION_OPTIONS,
               onChange: (val) => updateRow(index, { dir: val }),
-              sx: { minWidth: 120 }
+              className: "think-rule-builder__operator"
             }
           ),
           isFilterMode && !isLast ? /* @__PURE__ */ u2(
@@ -63633,9 +63879,9 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
               value: filterRule.logic || "and",
               options: RULE_LOGIC_OPTIONS,
               onChange: (val) => updateLogic(index, val),
-              sx: { minWidth: 80 }
+              className: "think-rule-builder__value"
             }
-          ) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { textAlign: "center" }, children: isFilterMode ? "末尾" : "" }),
+          ) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-rule-builder__end-label", children: isFilterMode ? "末尾" : "" }),
           /* @__PURE__ */ u2(
             IconAction,
             {
@@ -63650,25 +63896,20 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
     ) }, index);
   }) });
   if (variant === "panel") {
-    return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }, children: /* @__PURE__ */ u2("div", { children: [
-        /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 600 }, children: [
+    return /* @__PURE__ */ u2(Box, { className: "think-rule-builder", children: [
+      /* @__PURE__ */ u2(Box, { className: "think-editor-header", children: /* @__PURE__ */ u2("div", { children: [
+        /* @__PURE__ */ u2(Typography2, { className: "think-settings-label-strong", children: [
           title,
           "规则"
         ] }),
         /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "字段支持搜索；已有规则可直接编辑。“属于任一 / 不属于任一”支持多选 chip，也可输入后回车添加；区间用“开始~结束”。" })
       ] }) }),
-      rows.length > 0 ? /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: [
+      rows.length > 0 ? /* @__PURE__ */ u2(Box, { className: "think-rule-builder__rules", children: [
         /* @__PURE__ */ u2(
           Box,
           {
-            sx: {
-              display: "grid",
-              gridTemplateColumns: getPanelRuleGridTemplate(mode, isFilterMode),
-              gap: 1,
-              px: 1,
-              color: "text.secondary"
-            },
+            className: "think-rule-builder__column-head",
+            sx: { gridTemplateColumns: getPanelRuleGridTemplate(mode, isFilterMode) },
             children: [
               /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "字段" }),
               /* @__PURE__ */ u2(Typography2, { variant: "caption", children: isFilterMode ? "条件" : "排序" }),
@@ -63679,20 +63920,12 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
           }
         ),
         panelRuleRows
-      ] }) : /* @__PURE__ */ u2(Box, { sx: { p: 2, border: "1px dashed var(--background-modifier-border)", borderRadius: "8px" }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "还没有规则。先在下方选择字段、条件和值，然后添加规则。" }) }),
+      ] }) : /* @__PURE__ */ u2(Box, { className: "think-editor-card think-editor-card--dashed", children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "还没有规则。先在下方选择字段、条件和值，然后添加规则。" }) }),
       /* @__PURE__ */ u2(
         Box,
         {
-          sx: {
-            display: "grid",
-            gridTemplateColumns: getPanelAddRuleGridTemplate(mode, shouldShowValueInput),
-            gap: 1,
-            alignItems: "center",
-            p: 1.5,
-            border: "1px solid var(--background-modifier-border)",
-            borderRadius: "8px",
-            background: "var(--background-secondary)"
-          },
+          className: "think-rule-builder__add-grid",
+          sx: { gridTemplateColumns: getPanelAddRuleGridTemplate(mode, shouldShowValueInput) },
           children: [
             renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
             isFilterMode ? /* @__PURE__ */ u2(S, { children: [
@@ -63702,7 +63935,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
                   value: newRule.op,
                   options: RULE_OPERATOR_OPTIONS,
                   onChange: (val) => updateNewRule({ op: val }),
-                  sx: { minWidth: 140 }
+                  className: "think-rule-builder__field"
                 }
               ),
               shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
@@ -63712,20 +63945,20 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
                 value: newRule.dir,
                 options: RULE_DIRECTION_OPTIONS,
                 onChange: (val) => updateNewRule({ dir: val }),
-                sx: { minWidth: 120 }
+                className: "think-rule-builder__operator"
               }
             ),
-            /* @__PURE__ */ u2(Button2, { variant: "contained", size: "small", onClick: handleAddRule, sx: { whiteSpace: "nowrap" }, children: "添加规则" })
+            /* @__PURE__ */ u2(Button2, { variant: "contained", size: "small", onClick: handleAddRule, className: "think-rule-builder__add", children: "添加规则" })
           ]
         }
       )
     ] });
   }
-  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "8px" }, children: [
-    /* @__PURE__ */ u2(Typography2, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: title }),
-    /* @__PURE__ */ u2("div", { style: { flexGrow: 1, display: "flex", flexDirection: "column", gap: "12px" }, children: [
+  return /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact", children: [
+    /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label think-settings-row__label--top", children: title }),
+    /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact-body", children: [
       existingRules,
-      /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "4px", alignItems: "center" }, children: [
+      /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact-add", children: [
         renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
         isFilterMode ? /* @__PURE__ */ u2(S, { children: [
           /* @__PURE__ */ u2(
@@ -63734,7 +63967,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
               value: newRule.op,
               options: RULE_OPERATOR_OPTIONS,
               onChange: (val) => updateNewRule({ op: val }),
-              sx: { minWidth: 120 }
+              className: "think-rule-builder__operator"
             }
           ),
           shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
@@ -63744,7 +63977,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
             value: newRule.dir,
             options: RULE_DIRECTION_OPTIONS,
             onChange: (val) => updateNewRule({ dir: val }),
-            sx: { minWidth: 100 }
+            className: "think-rule-builder__operator"
           }
         ),
         /* @__PURE__ */ u2(Button2, { variant: "contained", size: "small", onClick: handleAddRule, children: "添加" })
@@ -64204,9 +64437,8 @@ const DISPLAY_MODE_OPTIONS = [
   { value: "grid", label: "网格" },
   { value: "freeform", label: "自由布局" }
 ];
-const LABEL_WIDTH = "80px";
-const AlignedRadioGroup = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-  /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: label }),
+const AlignedRadioGroup = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, className: "think-settings-row", children: [
+  /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label", children: label }),
   /* @__PURE__ */ u2(RadioGroup2, { row: true, value: selectedValue, onChange: (e2) => onChange(e2.target.value), children: options.map((opt) => /* @__PURE__ */ u2(FormControlLabel2, { value: opt.value, control: /* @__PURE__ */ u2(Radio2, { size: "small" }), label: opt.label }, opt.value)) })
 ] });
 function LayoutEditorPanel({ layoutId, useCases }) {
@@ -64335,9 +64567,9 @@ function LayoutEditorPanel({ layoutId, useCases }) {
     handleContextMenuClose();
   }, [contextMenu, moveView, handleContextMenuClose]);
   if (!layout) {
-    return /* @__PURE__ */ u2("div", { style: { padding: 12 }, children: "未找到布局（可能已被删除）。" });
+    return /* @__PURE__ */ u2("div", { className: "think-settings-section", children: "未找到布局（可能已被删除）。" });
   }
-  return /* @__PURE__ */ u2(Stack, { spacing: 2, sx: { p: "8px 16px 16px 16px", width: "100%", minWidth: 0, boxSizing: "border-box" }, children: [
+  return /* @__PURE__ */ u2(Stack, { spacing: 2, className: "think-layout-editor", children: [
     /* @__PURE__ */ u2(
       TextField2,
       {
@@ -64348,8 +64580,8 @@ function LayoutEditorPanel({ layoutId, useCases }) {
         fullWidth: true
       }
     ),
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, className: "think-settings-row", children: [
+      /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label", children: "工具栏" }),
       /* @__PURE__ */ u2(
         FormControlLabel2,
         {
@@ -64362,12 +64594,12 @@ function LayoutEditorPanel({ layoutId, useCases }) {
             }
           ),
           label: /* @__PURE__ */ u2(Typography2, { noWrap: true, children: "显示工具栏/导航器" }),
-          sx: { flexShrink: 0, mr: 0 }
+          className: "think-settings-control-no-shrink"
         }
       )
     ] }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, className: "think-settings-row", children: [
+      /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label", children: "初始日期" }),
       /* @__PURE__ */ u2(
         TextField2,
         {
@@ -64377,7 +64609,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
           disabled: !!layout.initialDateFollowsNow,
           value: layout.initialDate || "",
           onChange: (e2) => handleUpdate({ initialDate: e2.target.value }),
-          sx: { width: "170px" }
+          className: "think-settings-field--date"
         }
       ),
       /* @__PURE__ */ u2(
@@ -64413,7 +64645,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
         onChange: (value) => handleUpdate({ displayMode: value })
       }
     ),
-    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH} + 16px)` }, children: /* @__PURE__ */ u2(
+    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, className: "think-settings-indent", children: /* @__PURE__ */ u2(
       TextField2,
       {
         label: "列数",
@@ -64422,7 +64654,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
         variant: "outlined",
         value: layout.gridConfig?.columns || 2,
         onChange: (e2) => handleUpdate({ gridConfig: { columns: parseInt(e2.target.value, 10) || 2 } }),
-        sx: { width: "100px" }
+        className: "think-settings-field--xs"
       }
     ) }),
     layout.displayMode === "freeform" && /* @__PURE__ */ u2(Stack, { spacing: 1, children: [
@@ -64445,7 +64677,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
           }
         }
       ),
-      /* @__PURE__ */ u2(Stack, { spacing: 1, sx: { pl: `calc(${LABEL_WIDTH} + 16px)` }, children: [
+      /* @__PURE__ */ u2(Stack, { spacing: 1, className: "think-settings-indent", children: [
         /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, flexWrap: "wrap", useFlexGap: true, children: [
           /* @__PURE__ */ u2(
             FormControlLabel2,
@@ -64479,7 +64711,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
                   gridSize: Math.max(4, parseInt(e2.target.value, 10) || 16)
                 }
               }),
-              sx: { width: 110 }
+              className: "think-settings-field--sm"
             }
           ),
           /* @__PURE__ */ u2(
@@ -64495,7 +64727,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
                   minItemWidth: Math.max(160, parseInt(e2.target.value, 10) || 280)
                 }
               }),
-              sx: { width: 120 }
+              className: "think-settings-field--sm"
             }
           ),
           /* @__PURE__ */ u2(
@@ -64511,7 +64743,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
                   minItemHeight: Math.max(120, parseInt(e2.target.value, 10) || 180)
                 }
               }),
-              sx: { width: 120 }
+              className: "think-settings-field--sm"
             }
           ),
           /* @__PURE__ */ u2(
@@ -64527,7 +64759,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
                   minCanvasWidth: Math.max(320, parseInt(e2.target.value, 10) || 720)
                 }
               }),
-              sx: { width: 145 }
+              className: "think-settings-field--md"
             }
           ),
           /* @__PURE__ */ u2(
@@ -64547,33 +64779,24 @@ function LayoutEditorPanel({ layoutId, useCases }) {
         /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "“均衡排布”按视图推荐尺寸顺序装箱；“焦点 + 网格”会让第一个视图横跨首行。切换模板或重排会清空已保存的布局状态。" })
       ] })
     ] }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, sx: { minWidth: 0 }, children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500, pt: "6px" }, children: "包含视图" }),
-      /* @__PURE__ */ u2(Stack, { spacing: 1, sx: { flex: 1, minWidth: 0 }, children: [
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center", minHeight: 32 }, children: selectedViews.map(
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, className: "think-settings-row think-settings-row--top", children: [
+      /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label think-settings-row__label--top", children: "包含视图" }),
+      /* @__PURE__ */ u2(Stack, { spacing: 1, className: "think-settings-row__body", children: [
+        /* @__PURE__ */ u2(Box, { className: "think-layout-editor__views", children: selectedViews.map(
           (view, index) => view ? /* @__PURE__ */ u2(
             Box,
             {
-              sx: {
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 0.25,
-                px: 0.25,
-                py: 0.25,
-                borderRadius: 1,
-                background: "var(--background-secondary)",
-                maxWidth: "100%"
-              },
+              className: "think-layout-editor__view-item",
               children: [
                 /* @__PURE__ */ u2(
                   IconAction,
                   {
                     label: "前移",
-                    icon: /* @__PURE__ */ u2(ArrowBackIosNewIcon, { sx: { fontSize: "0.85rem" } }),
+                    icon: /* @__PURE__ */ u2(ArrowBackIosNewIcon, { className: "think-layout-editor__move-icon" }),
                     size: "small",
                     disabled: index === 0,
                     onClick: () => moveView(view.id, -1),
-                    sx: { p: "2px" },
+                    className: "think-layout-editor__move-action",
                     stopPropagation: false
                   }
                 ),
@@ -64584,18 +64807,18 @@ function LayoutEditorPanel({ layoutId, useCases }) {
                     onClick: () => removeViewFromLayout(view.id),
                     onContextMenu: (e2) => handleChipRightClick(e2, view),
                     size: "small",
-                    sx: { cursor: "pointer", maxWidth: 240 }
+                    className: "think-layout-editor__view-chip"
                   }
                 ) }),
                 /* @__PURE__ */ u2(
                   IconAction,
                   {
                     label: "后移",
-                    icon: /* @__PURE__ */ u2(ArrowForwardIosIcon, { sx: { fontSize: "0.85rem" } }),
+                    icon: /* @__PURE__ */ u2(ArrowForwardIosIcon, { className: "think-layout-editor__move-icon" }),
                     size: "small",
                     disabled: index === selectedViews.length - 1,
                     onClick: () => moveView(view.id, 1),
-                    sx: { p: "2px" },
+                    className: "think-layout-editor__move-action",
                     stopPropagation: false
                   }
                 )
@@ -64639,7 +64862,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
                 }
               }
             ),
-            sx: { minWidth: 240, maxWidth: 520 },
+            className: "think-settings-search",
             size: "small",
             disablePortal: true,
             slotProps: { popper: { style: { zIndex: 2e4 } } }
@@ -64650,19 +64873,15 @@ function LayoutEditorPanel({ layoutId, useCases }) {
     contextMenu && /* @__PURE__ */ u2(
       "div",
       {
+        className: "think-layout-editor__context-menu",
         style: {
           position: "fixed",
           top: contextMenu.mouseY,
           left: contextMenu.mouseX,
-          background: "var(--background-primary)",
-          border: "1px solid var(--background-modifier-border)",
-          borderRadius: 8,
-          padding: 8,
-          zIndex: 99999,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.25)"
+          zIndex: 99999
         },
         onMouseLeave: handleContextMenuClose,
-        children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "column", gap: 6, minWidth: 160 }, children: [
+        children: /* @__PURE__ */ u2("div", { className: "think-layout-editor__context-actions", children: [
           /* @__PURE__ */ u2("button", { className: "mod-cta", onClick: handleViewSettings, children: "设置…" }),
           /* @__PURE__ */ u2("button", { onClick: handleMoveLeftFromMenu, children: "向前移动" }),
           /* @__PURE__ */ u2("button", { onClick: handleMoveRightFromMenu, children: "向后移动" }),
@@ -68818,25 +69037,18 @@ function SortableLayoutItem({
     }
   }, [layout.id, layout.name, useCases.layout]);
   const dragHandleProps = { ...attributes, ...listeners };
-  return /* @__PURE__ */ u2(Box, { ref: setNodeRef, style: style2, sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: [
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", sx: { p: 1 }, children: [
+  return /* @__PURE__ */ u2(Box, { ref: setNodeRef, style: style2, className: "think-layout-list__item", children: [
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", className: "think-layout-list__item-header", children: [
       /* @__PURE__ */ u2(
         "div",
         {
           ...dragHandleProps,
-          style: {
-            cursor: "grab",
-            marginRight: 8,
-            display: "inline-flex",
-            alignItems: "center",
-            padding: 4,
-            borderRadius: 4
-          },
+          className: "think-layout-list__drag-handle",
           children: /* @__PURE__ */ u2(DragIndicatorIcon, { fontSize: "small" })
         }
       ),
-      /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: onToggle, sx: { mr: 1 }, children: isExpanded ? /* @__PURE__ */ u2(ExpandLessIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) }),
-      /* @__PURE__ */ u2(Typography2, { sx: { flex: 1, cursor: "pointer" }, onClick: handleRename, children: layout.name }),
+      /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: onToggle, className: "think-layout-list__toggle", children: isExpanded ? /* @__PURE__ */ u2(ExpandLessIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) }),
+      /* @__PURE__ */ u2(Typography2, { className: "think-layout-list__item-title", onClick: handleRename, children: layout.name }),
       /* @__PURE__ */ u2(IconAction, { label: "复制", onClick: handleDuplicate, icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }) }),
       /* @__PURE__ */ u2(IconAction, { label: "删除", onClick: handleDelete, color: "error", icon: /* @__PURE__ */ u2(DeleteOutlineIcon, { fontSize: "small" }) })
     ] }),
@@ -68877,8 +69089,8 @@ function LayoutSettings({ app }) {
     void useCases.layout.reorderLayouts(orderedIds);
   }, [layouts, useCases.layout]);
   const layoutIds = T$1(() => layouts.map((layout) => layout.id), [layouts]);
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", justifyContent: "space-between", sx: { mb: 2 }, children: [
+  return /* @__PURE__ */ u2(Box, { className: "think-layout-list", children: [
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", justifyContent: "space-between", className: "think-layout-list__header", children: [
       /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "管理布局" }),
       /* @__PURE__ */ u2(
         Button2,
@@ -68901,7 +69113,7 @@ function LayoutSettings({ app }) {
       },
       layout.id
     )) }) }),
-    layouts.length === 0 && /* @__PURE__ */ u2(Typography2, { color: "text.secondary", sx: { textAlign: "center", py: 4 }, children: '暂无布局，点击"添加布局"创建第一个' })
+    layouts.length === 0 && /* @__PURE__ */ u2(Typography2, { color: "text.secondary", className: "think-settings-centered-empty", children: '暂无布局，点击"添加布局"创建第一个' })
   ] });
 }
 function GeneralSettings() {
@@ -68910,20 +69122,19 @@ function GeneralSettings() {
   const savedCategoryColors = useSelector(selectCategoryColors);
   const useCases = useUseCases();
   const activeColors = T$1(() => getActiveCategoryColors(), [savedCategoryColors]);
-  const allCategoryNames = T$1(() => {
-    return Array.from(new Set(Object.keys(savedCategoryColors)));
-  }, [savedCategoryColors]);
+  const allCategoryNames = T$1(
+    () => Array.from(new Set(Object.keys(savedCategoryColors))),
+    [savedCategoryColors]
+  );
   const [newCategoryName, setNewCategoryName] = d("");
   const [newCategoryColor, setNewCategoryColor] = d("#cccccc");
   const handleColorChange = (name, color2) => {
-    const updated = { ...savedCategoryColors, [name]: color2 };
-    useCases.settings.updateCategoryColors(updated);
+    useCases.settings.updateCategoryColors({ ...savedCategoryColors, [name]: color2 });
   };
   const handleAddCategory = () => {
     const trimmed = newCategoryName.trim();
     if (!trimmed) return;
-    const updated = { ...savedCategoryColors, [trimmed]: newCategoryColor };
-    useCases.settings.updateCategoryColors(updated);
+    useCases.settings.updateCategoryColors({ ...savedCategoryColors, [trimmed]: newCategoryColor });
     setNewCategoryName("");
     setNewCategoryColor("#cccccc");
   };
@@ -68932,118 +69143,109 @@ function GeneralSettings() {
     delete updated[name];
     useCases.settings.updateCategoryColors(updated);
   };
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "模块开关" }),
-    /* @__PURE__ */ u2(
-      FormControlLabel2,
-      {
-        control: /* @__PURE__ */ u2(
-          Checkbox2,
+  return /* @__PURE__ */ u2(Box, { className: "think-settings-page", children: [
+    /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
+      /* @__PURE__ */ u2("div", { className: "think-settings-section__header", children: /* @__PURE__ */ u2("div", { children: [
+        /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "模块开关" }),
+        /* @__PURE__ */ u2("p", { className: "think-settings-help", children: "控制后台功能是否随 Obsidian 一起启动。" })
+      ] }) }),
+      /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
+        /* @__PURE__ */ u2(
+          FormControlLabel2,
           {
-            checked: floatingTimerEnabled,
-            onChange: (e2) => useCases.settings.setFloatingTimerEnabled(e2.target.checked)
+            control: /* @__PURE__ */ u2(
+              Checkbox2,
+              {
+                checked: floatingTimerEnabled,
+                onChange: (event) => useCases.settings.setFloatingTimerEnabled(event.target.checked)
+              }
+            ),
+            label: "启用悬浮计时器"
           }
         ),
-        label: "启用悬浮计时器"
-      }
-    ),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { pl: 4, mt: -1.5 }, children: "关闭后，下次启动Obsidian将不再加载悬浮计时器。你也可以通过命令面板临时切换它的可见性。" }),
-    /* @__PURE__ */ u2(
-      FormControlLabel2,
-      {
-        control: /* @__PURE__ */ u2(
-          Checkbox2,
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-settings-description-indent", children: "关闭后，下次启动 Obsidian 将不再加载悬浮计时器；仍可通过命令面板临时切换可见性。" }),
+        /* @__PURE__ */ u2(
+          FormControlLabel2,
           {
-            checked: devConsoleStackEnabled,
-            onChange: (e2) => useCases.settings.setDevConsoleStackEnabled(e2.target.checked)
+            control: /* @__PURE__ */ u2(
+              Checkbox2,
+              {
+                checked: devConsoleStackEnabled,
+                onChange: (event) => useCases.settings.setDevConsoleStackEnabled(event.target.checked)
+              }
+            ),
+            label: "开发模式：错误提示同时输出控制台堆栈"
           }
         ),
-        label: "开发模式：错误 toast 同时输出控制台堆栈"
-      }
-    ),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { pl: 4, mt: -1.5 }, children: "开启后：toast 仍显示，同时 console.error 打出完整 stack（便于定位）。关闭后：只 toast，不污染控制台。" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { mt: 3 }, children: "分类颜色" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "全局 CategoryKey 基础类别颜色配置。修改后所有视图（标签、统计等）统一生效。" }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: allCategoryNames.map((name) => {
-      const color2 = activeColors[name] || "#e0e0e0";
-      return /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1.5 }, children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-settings-description-indent", children: "开启后 toast 仍会显示，同时 console.error 输出完整 stack；关闭后只显示 toast。" })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
+      /* @__PURE__ */ u2("div", { className: "think-settings-section__header", children: /* @__PURE__ */ u2("div", { children: [
+        /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "分类颜色" }),
+        /* @__PURE__ */ u2("p", { className: "think-settings-help", children: "全局 CategoryKey 基础类别颜色，标签和统计视图统一消费该配置。" })
+      ] }) }),
+      /* @__PURE__ */ u2("div", { className: "think-category-list", children: allCategoryNames.map((name) => {
+        const color2 = activeColors[name] || "#e0e0e0";
+        return /* @__PURE__ */ u2("div", { className: "think-category-row", children: [
+          /* @__PURE__ */ u2(
+            "input",
+            {
+              className: "think-category-color",
+              type: "color",
+              value: color2,
+              "aria-label": `${name} 颜色`,
+              onChange: (event) => handleColorChange(name, event.target.value)
+            }
+          ),
+          /* @__PURE__ */ u2(Typography2, { variant: "body1", className: "think-category-row__name", children: name }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: color2 }),
+          /* @__PURE__ */ u2(
+            ThinkButton,
+            {
+              className: "think-category-row__remove",
+              variant: "ghost",
+              size: "sm",
+              onClick: () => handleRemoveCategory(name),
+              children: "删除"
+            }
+          )
+        ] }, name);
+      }) }),
+      /* @__PURE__ */ u2("div", { className: "think-category-add", children: [
         /* @__PURE__ */ u2(
           "input",
           {
+            className: "think-category-color",
             type: "color",
-            value: color2,
-            onChange: (e2) => handleColorChange(name, e2.target.value),
-            style: { width: 32, height: 32, border: "none", cursor: "pointer", padding: 0, background: "none" }
+            value: newCategoryColor,
+            "aria-label": "新分类颜色",
+            onChange: (event) => setNewCategoryColor(event.target.value)
           }
         ),
-        /* @__PURE__ */ u2(Typography2, { variant: "body1", sx: { minWidth: 60 }, children: name }),
-        /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: color2 }),
         /* @__PURE__ */ u2(
-          "button",
+          "input",
           {
-            onClick: () => handleRemoveCategory(name),
-            style: {
-              marginLeft: "auto",
-              cursor: "pointer",
-              background: "none",
-              border: "1px solid var(--text-muted)",
-              borderRadius: 4,
-              padding: "2px 8px",
-              color: "var(--text-muted)",
-              fontSize: 12
-            },
-            children: "删除"
+            className: "think-input",
+            type: "text",
+            value: newCategoryName,
+            placeholder: "新分类名称",
+            onChange: (event) => setNewCategoryName(event.target.value)
+          }
+        ),
+        /* @__PURE__ */ u2(
+          ThinkButton,
+          {
+            variant: "primary",
+            size: "sm",
+            onClick: handleAddCategory,
+            disabled: !newCategoryName.trim(),
+            children: "添加"
           }
         )
-      ] }, name);
-    }) }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1.5, mt: 1 }, children: [
-      /* @__PURE__ */ u2(
-        "input",
-        {
-          type: "color",
-          value: newCategoryColor,
-          onChange: (e2) => setNewCategoryColor(e2.target.value),
-          style: { width: 32, height: 32, border: "none", cursor: "pointer", padding: 0, background: "none" }
-        }
-      ),
-      /* @__PURE__ */ u2(
-        "input",
-        {
-          type: "text",
-          value: newCategoryName,
-          placeholder: "新分类名称",
-          onChange: (e2) => setNewCategoryName(e2.target.value),
-          style: {
-            padding: "4px 8px",
-            border: "1px solid var(--text-muted)",
-            borderRadius: 4,
-            background: "var(--background-primary)",
-            color: "var(--text-normal)",
-            fontSize: 14
-          }
-        }
-      ),
-      /* @__PURE__ */ u2(
-        "button",
-        {
-          onClick: handleAddCategory,
-          disabled: !newCategoryName.trim(),
-          style: {
-            cursor: newCategoryName.trim() ? "pointer" : "not-allowed",
-            background: "var(--interactive-accent)",
-            color: "var(--text-on-accent)",
-            border: "none",
-            borderRadius: 4,
-            padding: "4px 12px",
-            fontSize: 13,
-            opacity: newCategoryName.trim() ? 1 : 0.5
-          },
-          children: "添加"
-        }
-      )
+      ] })
     ] })
-  ] }) });
+  ] });
 }
 function AiAdvancedSettingsSection({ settings, onUpdate }) {
   return /* @__PURE__ */ u2(S, { children: [
@@ -69331,7 +69533,7 @@ function AiScopeSection({
               onChange: (e2) => onUpdate({ defaultThemeId: e2.target.value || void 0 }),
               children: [
                 /* @__PURE__ */ u2(MenuItem2, { value: "", children: /* @__PURE__ */ u2("em", { children: "不设置默认主题" }) }),
-                themes.map((theme2) => /* @__PURE__ */ u2(MenuItem2, { value: theme2.path, children: theme2.path }, theme2.id))
+                themes.map((theme) => /* @__PURE__ */ u2(MenuItem2, { value: theme.path, children: theme.path }, theme.id))
               ]
             }
           )
@@ -69502,9 +69704,9 @@ function AiSettings(_props) {
     updateLocal({ customPrompt: CUSTOM_PROMPT_EXAMPLES });
   };
   const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(aiSettings);
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 800 }, children: [
+  return /* @__PURE__ */ u2(Box, { className: "think-settings-page", children: [
     /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "AI 自然语言快速记录" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 3 }, children: "启用后，可以通过自然语言描述快速创建记录，AI 会自动识别并填充相应字段。" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-settings-lead", children: "启用后，可以通过自然语言描述快速创建记录，AI 会自动识别并填充相应字段。" }),
     /* @__PURE__ */ u2(
       FormControlLabel2,
       {
@@ -69518,11 +69720,11 @@ function AiSettings(_props) {
         label: "启用 AI 快速记录"
       }
     ),
-    localSettings.enabled && !readiness.ready && /* @__PURE__ */ u2(Alert2, { severity: "warning", sx: { mt: 1 }, children: [
+    localSettings.enabled && !readiness.ready && /* @__PURE__ */ u2(Alert2, { severity: "warning", className: "think-settings-alert", children: [
       readiness.message,
       " 开启开关不会立即发起请求，但实际使用前需要补齐配置。"
     ] }),
-    /* @__PURE__ */ u2(Divider2, { sx: { my: 3 } }),
+    /* @__PURE__ */ u2(Divider2, { className: "think-settings-divider" }),
     /* @__PURE__ */ u2(
       AiApiConfigSection,
       {
@@ -69557,7 +69759,7 @@ function AiSettings(_props) {
       }
     ),
     /* @__PURE__ */ u2(AiAdvancedSettingsSection, { settings: localSettings, onUpdate: updateLocal }),
-    /* @__PURE__ */ u2(Divider2, { sx: { my: 3 } }),
+    /* @__PURE__ */ u2(Divider2, { className: "think-settings-divider" }),
     /* @__PURE__ */ u2(
       AiSettingsFooter,
       {
@@ -69634,27 +69836,9 @@ function useObsidianInputGuard({
     }, [controlName, log, onFocus])
   };
 }
-const nativeControlBaseStyle$1 = {
-  width: "100%",
-  minWidth: 0,
-  boxSizing: "border-box",
-  border: "1px solid var(--background-modifier-border)",
-  borderRadius: 6,
-  background: "var(--background-primary)",
-  color: "var(--text-normal)",
-  padding: "8px 10px",
-  font: "inherit",
-  lineHeight: 1.4,
-  userSelect: "text",
-  WebkitUserSelect: "text",
-  pointerEvents: "auto"
-};
-const nativeLabelStyle$1 = {
-  display: "block",
-  marginBottom: 4,
-  fontSize: "0.75rem",
-  color: "var(--text-muted)"
-};
+function fieldClassName(className) {
+  return ["think-native-field", className].filter(Boolean).join(" ");
+}
 function NativeTextInput$1({
   label,
   value,
@@ -69665,7 +69849,8 @@ function NativeTextInput$1({
   placeholder,
   type = "text",
   title,
-  style: style2
+  style: style2,
+  className
 }) {
   const inputGuard = useObsidianInputGuard({
     scope: `FieldsEditor/${label}`,
@@ -69674,22 +69859,18 @@ function NativeTextInput$1({
     onBlur,
     onFocus
   });
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, title, children: [
-    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
+  return /* @__PURE__ */ u2("label", { className: fieldClassName(className), style: style2, title, children: [
+    label ? /* @__PURE__ */ u2("span", { className: "think-native-field__label", children: label }) : null,
     /* @__PURE__ */ u2(
       "input",
       {
+        className: "think-input",
         type,
         value,
         disabled,
         placeholder,
         "data-think-diag-control": label,
-        ...inputGuard,
-        style: {
-          ...nativeControlBaseStyle$1,
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text"
-        }
+        ...inputGuard
       }
     )
   ] });
@@ -69702,7 +69883,8 @@ function NativeTextarea$1({
   disabled = false,
   placeholder,
   rows = 3,
-  style: style2
+  style: style2,
+  className
 }) {
   const textareaGuard = useObsidianInputGuard({
     scope: `FieldsEditor/${label}`,
@@ -69710,23 +69892,18 @@ function NativeTextarea$1({
     onInput,
     onBlur
   });
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, children: [
-    /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
+  return /* @__PURE__ */ u2("label", { className: fieldClassName(className), style: style2, children: [
+    label ? /* @__PURE__ */ u2("span", { className: "think-native-field__label", children: label }) : null,
     /* @__PURE__ */ u2(
       "textarea",
       {
+        className: "think-textarea",
         value,
         disabled,
         rows,
         placeholder,
         "data-think-diag-control": label,
-        ...textareaGuard,
-        style: {
-          ...nativeControlBaseStyle$1,
-          resize: "vertical",
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text"
-        }
+        ...textareaGuard
       }
     )
   ] });
@@ -69826,8 +70003,6 @@ function OptionRow({
   ] });
 }
 const fieldTypeOptions = getUserTemplateFieldTypeOptions();
-const fieldRowGridTemplateColumns$1 = "20px minmax(0, 1.15fr) minmax(112px, 145px) minmax(0, 1fr) 54px 46px 30px";
-const emptyControlMinHeight = 40;
 function defaultInputType(uiType) {
   if (uiType === "number") return "number";
   if (uiType === "date") return "date";
@@ -69901,212 +70076,159 @@ function FieldRow({
   const showDefaultValueEditor = templateFieldTypeSupportsDefaultValue(uiType);
   const showInlineDefaultValue = showDefaultValueEditor && uiType !== "textarea";
   const showDetails = showOptionsEditor || uiType === "textarea" || uiType === "number";
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        py: 0.75,
-        px: 0.5,
-        borderRadius: 1,
-        bgcolor: isDragging ? "action.hover" : "transparent"
-      },
-      children: [
+  return /* @__PURE__ */ u2(Box, { className: `think-field-row${isDragging ? " is-dragging" : ""}`, children: [
+    /* @__PURE__ */ u2(Box, { className: "think-fields-editor__grid", children: [
+      /* @__PURE__ */ u2(
+        Box,
+        {
+          title: "拖动排序",
+          className: `think-field-row__drag${disabled ? " is-disabled" : ""}`,
+          children: /* @__PURE__ */ u2(DragIndicatorIcon, { className: "think-field-row__drag-icon" })
+        }
+      ),
+      /* @__PURE__ */ u2(Box, { className: "think-field-row__cell", children: /* @__PURE__ */ u2(
+        NativeTextInput$1,
+        {
+          label: "",
+          placeholder: "字段名称",
+          value: localName,
+          onInput: (value) => setLocalName(value),
+          onBlur: handleNameBlur,
+          onFocus: () => setIsEditing(true),
+          disabled,
+          className: "think-settings-full-width",
+          title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
+        }
+      ) }),
+      /* @__PURE__ */ u2(Box, { className: "think-field-row__cell", children: /* @__PURE__ */ u2(
+        SimpleSelect,
+        {
+          value: uiType,
+          options: fieldTypeOptions,
+          onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
+          disabled,
+          className: "think-settings-full-width"
+        }
+      ) }),
+      /* @__PURE__ */ u2(Box, { className: "think-field-row__cell", children: showInlineDefaultValue ? /* @__PURE__ */ u2(
+        NativeTextInput$1,
+        {
+          label: "",
+          value: localDefaultValue,
+          type: defaultInputType(uiType),
+          onInput: (value) => {
+            setLocalDefaultValue(value);
+            onUpdate({ defaultValue: value });
+          },
+          onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
+          disabled,
+          placeholder: "可留空",
+          className: "think-settings-full-width"
+        }
+      ) : /* @__PURE__ */ u2(Box, { className: "think-field-row__empty" }) }),
+      /* @__PURE__ */ u2(Box, { className: "think-field-row__required", children: /* @__PURE__ */ u2("label", { className: "think-field-row__required-label", title: "提交时此字段不能为空", children: [
         /* @__PURE__ */ u2(
-          Box,
+          "input",
           {
-            sx: {
-              display: "grid",
-              gridTemplateColumns: fieldRowGridTemplateColumns$1,
-              columnGap: 0.75,
-              alignItems: "center"
-            },
-            children: [
-              /* @__PURE__ */ u2(
-                Box,
-                {
-                  title: "拖动排序",
-                  sx: {
-                    width: 28,
-                    minHeight: emptyControlMinHeight,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "text.secondary",
-                    cursor: disabled ? "default" : "grab"
-                  },
-                  children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1.25rem" } })
-                }
-              ),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
-                NativeTextInput$1,
-                {
-                  label: "",
-                  placeholder: "字段名称",
-                  value: localName,
-                  onInput: (value) => setLocalName(value),
-                  onBlur: handleNameBlur,
-                  onFocus: () => setIsEditing(true),
-                  disabled,
-                  style: { width: "100%" },
-                  title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
-                }
-              ) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
-                SimpleSelect,
-                {
-                  value: uiType,
-                  options: fieldTypeOptions,
-                  onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
-                  disabled,
-                  sx: { width: "100%" }
-                }
-              ) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: showInlineDefaultValue ? /* @__PURE__ */ u2(
-                NativeTextInput$1,
-                {
-                  label: "",
-                  value: localDefaultValue,
-                  type: defaultInputType(uiType),
-                  onInput: (value) => {
-                    setLocalDefaultValue(value);
-                    onUpdate({ defaultValue: value });
-                  },
-                  onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
-                  disabled,
-                  placeholder: "可留空",
-                  style: { width: "100%" }
-                }
-              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center", alignItems: "center", minHeight: emptyControlMinHeight }, children: /* @__PURE__ */ u2("label", { style: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: "var(--text-muted)" }, title: "提交时此字段不能为空", children: [
-                /* @__PURE__ */ u2(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: field.required === true,
-                    disabled,
-                    onChange: (event) => onUpdate({ required: !!event.target.checked })
-                  }
-                ),
-                "必填"
-              ] }) }),
-              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center" }, children: showDetails ? /* @__PURE__ */ u2(
-                "button",
-                {
-                  type: "button",
-                  disabled: disabled && !showOptionsEditor,
-                  onClick: () => setDetailsOpen((open) => !open),
-                  style: {
-                    width: "100%",
-                    minWidth: 0,
-                    padding: "4px 2px",
-                    border: "none",
-                    background: "transparent",
-                    color: "var(--text-muted)",
-                    cursor: disabled && !showOptionsEditor ? "default" : "pointer",
-                    font: "inherit",
-                    fontSize: "12px",
-                    whiteSpace: "nowrap"
-                  },
-                  children: detailsOpen ? "收起" : "详情"
-                }
-              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
-              /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ u2(
-                "button",
-                {
-                  type: "button",
-                  title: "删除此字段",
-                  disabled,
-                  onClick: onRemove,
-                  style: {
-                    width: 26,
-                    height: 26,
-                    border: "none",
-                    borderRadius: 6,
-                    background: "transparent",
-                    color: "var(--text-muted)",
-                    cursor: disabled ? "default" : "pointer",
-                    font: "inherit",
-                    fontSize: "18px",
-                    lineHeight: 1
-                  },
-                  children: "−"
-                }
-              ) })
-            ]
+            type: "checkbox",
+            checked: field.required === true,
+            disabled,
+            onChange: (event) => onUpdate({ required: !!event.target.checked })
           }
         ),
-        customFieldNameWarning && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4.5 }, children: customFieldNameWarning }),
-        /* @__PURE__ */ u2(Collapse2, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box, { sx: { mt: 1.25, ml: 4.5, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
-          uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
-            NativeTextarea$1,
-            {
-              label: "默认值",
-              value: localDefaultValue,
-              rows: 3,
-              onInput: (value) => {
-                setLocalDefaultValue(value);
-                onUpdate({ defaultValue: value });
-              },
-              onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
-              disabled,
-              placeholder: "可留空",
-              style: { width: "100%" }
-            }
-          ),
-          uiType === "number" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mb: showOptionsEditor ? 1.5 : 0 }, children: [
-            /* @__PURE__ */ u2(
-              NativeTextInput$1,
-              {
-                label: "最小值",
-                type: "number",
-                value: field.min ?? "",
-                onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }),
-                disabled,
-                style: { width: 120 }
-              }
-            ),
-            /* @__PURE__ */ u2(
-              NativeTextInput$1,
-              {
-                label: "最大值",
-                type: "number",
-                value: field.max ?? "",
-                onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }),
-                disabled,
-                style: { width: 120 }
-              }
-            )
-          ] }),
-          showOptionsEditor && /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Stack, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider2, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
-              OptionRow,
-              {
-                option,
-                onChange: (newOpt) => handleOptionChange(optIndex, newOpt),
-                onRemove: () => removeOption(optIndex),
-                fieldType: uiType,
-                disabled
-              },
-              optIndex
-            )) }),
-            /* @__PURE__ */ u2(
-              Button2,
-              {
-                onClick: addOption,
-                disabled,
-                startIcon: /* @__PURE__ */ u2(AddIcon, {}),
-                size: "small",
-                sx: { mt: 1.25 },
-                children: "添加选项"
-              }
-            )
-          ] })
-        ] }) })
-      ]
-    }
-  );
+        "必填"
+      ] }) }),
+      /* @__PURE__ */ u2(Box, { className: "think-field-row__details-cell", children: showDetails ? /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          disabled: disabled && !showOptionsEditor,
+          onClick: () => setDetailsOpen((open) => !open),
+          className: "think-field-row__details-button",
+          children: detailsOpen ? "收起" : "详情"
+        }
+      ) : /* @__PURE__ */ u2(Box, { className: "think-field-row__empty" }) }),
+      /* @__PURE__ */ u2(Box, { className: "think-field-row__delete-cell", children: /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          title: "删除此字段",
+          disabled,
+          onClick: onRemove,
+          className: "think-field-row__delete",
+          children: "−"
+        }
+      ) })
+    ] }),
+    customFieldNameWarning && /* @__PURE__ */ u2(Typography2, { variant: "caption", className: "think-field-row__warning", children: customFieldNameWarning }),
+    /* @__PURE__ */ u2(Collapse2, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box, { className: "think-field-row__details", children: [
+      uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
+        NativeTextarea$1,
+        {
+          label: "默认值",
+          value: localDefaultValue,
+          rows: 3,
+          onInput: (value) => {
+            setLocalDefaultValue(value);
+            onUpdate({ defaultValue: value });
+          },
+          onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
+          disabled,
+          placeholder: "可留空",
+          className: "think-settings-full-width"
+        }
+      ),
+      uiType === "number" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, className: `think-field-row__number-range${showOptionsEditor ? " has-options" : ""}`, children: [
+        /* @__PURE__ */ u2(
+          NativeTextInput$1,
+          {
+            label: "最小值",
+            type: "number",
+            value: field.min ?? "",
+            onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }),
+            disabled,
+            className: "think-native-field--narrow"
+          }
+        ),
+        /* @__PURE__ */ u2(
+          NativeTextInput$1,
+          {
+            label: "最大值",
+            type: "number",
+            value: field.max ?? "",
+            onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }),
+            disabled,
+            className: "think-native-field--narrow"
+          }
+        )
+      ] }),
+      showOptionsEditor && /* @__PURE__ */ u2(Box, { children: [
+        /* @__PURE__ */ u2(Stack, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider2, { flexItem: true, className: "think-field-row__option-divider" }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
+          OptionRow,
+          {
+            option,
+            onChange: (newOpt) => handleOptionChange(optIndex, newOpt),
+            onRemove: () => removeOption(optIndex),
+            fieldType: uiType,
+            disabled
+          },
+          optIndex
+        )) }),
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            onClick: addOption,
+            disabled,
+            startIcon: /* @__PURE__ */ u2(AddIcon, {}),
+            size: "small",
+            className: "think-field-row__add-option",
+            children: "添加选项"
+          }
+        )
+      ] })
+    ] }) })
+  ] });
 }
-const fieldRowGridTemplateColumns = "20px minmax(0, 1.15fr) minmax(112px, 145px) minmax(0, 1fr) 54px 46px 30px";
 function createEmptyField(index) {
   return createCustomTemplateField(index);
 }
@@ -70155,29 +70277,17 @@ function FieldsEditor({
     emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
     setDraggingIndex(null);
   };
-  return /* @__PURE__ */ u2(Stack, { spacing: 1.25, sx: { width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }, children: [
-    /* @__PURE__ */ u2(
-      Box,
-      {
-        sx: {
-          px: 0.5,
-          display: "grid",
-          gridTemplateColumns: fieldRowGridTemplateColumns,
-          columnGap: 0.75,
-          alignItems: "center"
-        },
-        children: [
-          /* @__PURE__ */ u2(Box, {}),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段名称" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段类型" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "默认值" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", textAlign: "center" }, children: "必填" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", textAlign: "center" }, children: "详情" }),
-          /* @__PURE__ */ u2(Box, {})
-        ]
-      }
-    ),
-    /* @__PURE__ */ u2(Stack, { spacing: 0, divider: /* @__PURE__ */ u2(Divider2, { sx: { my: 0.75 } }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2(Stack, { spacing: 1.25, className: "think-fields-editor", children: [
+    /* @__PURE__ */ u2(Box, { className: "think-fields-editor__grid think-fields-editor__header", children: [
+      /* @__PURE__ */ u2(Box, {}),
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "字段名称" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "字段类型" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "默认值" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", className: "think-fields-editor__header-center", children: "必填" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", className: "think-fields-editor__header-center", children: "详情" }),
+      /* @__PURE__ */ u2(Box, {})
+    ] }),
+    /* @__PURE__ */ u2(Stack, { spacing: 0, divider: /* @__PURE__ */ u2(Divider2, { className: "think-fields-editor__divider" }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
       Box,
       {
         draggable: !disabled,
@@ -70197,10 +70307,7 @@ function FieldsEditor({
           handleDropOn(index);
         },
         onDragEnd: () => setDraggingIndex(null),
-        sx: {
-          opacity: draggingIndex === index ? 0.55 : 1,
-          borderRadius: 1
-        },
+        className: `think-fields-editor__row-wrap${draggingIndex === index ? " is-dragging" : ""}`,
         children: /* @__PURE__ */ u2(
           FieldRow,
           {
@@ -70276,18 +70383,18 @@ function TemplateVariableCopier({ block: block2 }) {
 function SortableBlockItem({ block: block2, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block2.id });
   const style2 = { transform: CSS$1.Transform.toString(transform2), transition };
-  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u2(Accordion2, { expanded: openId === block2.id, onChange: () => setOpenId(openId === block2.id ? null : block2.id), disableGutters: true, elevation: 1, sx: { "&:before": { display: "none" } }, children: [
-    /* @__PURE__ */ u2(AccordionSummary2, { children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }, children: [
+  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u2(Accordion2, { expanded: openId === block2.id, onChange: () => setOpenId(openId === block2.id ? null : block2.id), disableGutters: true, elevation: 1, className: "think-block-accordion", children: [
+    /* @__PURE__ */ u2(AccordionSummary2, { children: /* @__PURE__ */ u2(Box, { className: "think-block-accordion__summary", children: [
       /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
-        /* @__PURE__ */ u2(Tooltip2, { title: "拖动排序", children: /* @__PURE__ */ u2(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }),
+        /* @__PURE__ */ u2(Tooltip2, { title: "拖动排序", children: /* @__PURE__ */ u2(Box, { component: "span", ...attributes, ...listeners, className: "think-block-accordion__drag", children: /* @__PURE__ */ u2(DragIndicatorIcon, {}) }) }),
         /* @__PURE__ */ u2(Typography2, { fontWeight: 500, children: block2.name })
       ] }),
       /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
         /* @__PURE__ */ u2(IconAction, { label: "复制", icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }), onClick: () => handleDuplicate(block2.id) }),
-        /* @__PURE__ */ u2(IconAction, { label: "删除", icon: /* @__PURE__ */ u2(DeleteForeverOutlinedIcon, {}), onClick: () => handleDelete(block2.id, block2.name), sx: { color: "text.secondary", "&:hover": { color: "error.main" } } })
+        /* @__PURE__ */ u2(IconAction, { label: "删除", icon: /* @__PURE__ */ u2(DeleteForeverOutlinedIcon, {}), onClick: () => handleDelete(block2.id, block2.name), color: "error" })
       ] })
     ] }) }),
-    /* @__PURE__ */ u2(AccordionDetails2, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u2(BlockEditor, { block: block2, useCases }) })
+    /* @__PURE__ */ u2(AccordionDetails2, { className: "think-block-accordion__details", children: /* @__PURE__ */ u2(BlockEditor, { block: block2, useCases }) })
   ] }) });
 }
 function BlockEditor({ block: block2, useCases }) {
@@ -70301,14 +70408,14 @@ function BlockEditor({ block: block2, useCases }) {
   const handleBlur = (key) => {
     if (localBlock[key] !== block2[key]) handleUpdate({ [key]: localBlock[key] });
   };
-  return /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
-    /* @__PURE__ */ u2(TextField2, { label: "记录类型名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", sx: { maxWidth: 400 } }),
+  return /* @__PURE__ */ u2(Stack, { spacing: 3, className: "think-block-editor", children: [
+    /* @__PURE__ */ u2(TextField2, { label: "记录类型名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", className: "think-block-editor__field--name" }),
     /* @__PURE__ */ u2(Divider2, {}),
     /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "核心元数据" }),
-      /* @__PURE__ */ u2(Box, { sx: { p: 1.5, mb: 1.5, border: "1px solid rgba(0,0,0,0.12)", borderRadius: 1, bgcolor: "background.default" }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", className: "think-block-editor__title", children: "核心元数据" }),
+      /* @__PURE__ */ u2(Box, { className: "think-block-editor__hint", children: [
         /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "记录类型是一类记录模板；分类、主题、标签是核心字段。" }),
-        /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.75, fontFamily: "monospace" }, children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", className: "think-block-editor__template-example", children: [
           "推荐模板行：分类:: ",
           "{{categoryKey}}",
           " ｜ 主题:: ",
@@ -70328,13 +70435,13 @@ function BlockEditor({ block: block2, useCases }) {
           helperText: "默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。",
           variant: "outlined",
           size: "small",
-          sx: { maxWidth: 520 }
+          className: "think-block-editor__field--category"
         }
       )
     ] }),
     /* @__PURE__ */ u2(Divider2, {}),
     /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "保存位置" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", className: "think-block-editor__title", children: "保存位置" }),
       /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
         /* @__PURE__ */ u2(TextField2, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{themePath}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
         /* @__PURE__ */ u2(TextField2, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{themePath}}", variant: "outlined", size: "small" })
@@ -70342,16 +70449,16 @@ function BlockEditor({ block: block2, useCases }) {
     ] }),
     /* @__PURE__ */ u2(Divider2, {}),
     /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", className: "think-block-editor__title think-block-editor__title--spacious", children: "表单字段" }),
       /* @__PURE__ */ u2(FieldsEditor, { fields: localBlock.fields, onChange: (newFields) => handleUpdate({ fields: newFields }) })
     ] }),
     /* @__PURE__ */ u2(Divider2, {}),
     /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
+      /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", className: "think-block-editor__output-header", children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "h6", className: "think-block-editor__title", children: "输出模板" }),
         /* @__PURE__ */ u2(TemplateVariableCopier, { block: localBlock })
       ] }),
-      /* @__PURE__ */ u2(TextField2, { label: "输出模板", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", sx: { fontFamily: "monospace", "& textarea": { fontSize: "13px" } } })
+      /* @__PURE__ */ u2(TextField2, { label: "输出模板", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", className: "think-block-editor__template" })
     ] })
   ] });
 }
@@ -70381,12 +70488,12 @@ function BlockManager() {
       useCases.blocks.reorderBlocks(active.id, over.id);
     }
   };
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: [
+  return /* @__PURE__ */ u2(Box, { className: "think-block-manager", children: [
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 1, className: "think-block-manager__header", children: [
       /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "记录类型" }),
       /* @__PURE__ */ u2(IconAction, { label: "新增记录类型", onClick: handleAdd, color: "success", icon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}) })
     ] }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "定义快速输入可选择的记录类型，例如任务、打卡、总结。可拖动排序。" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-block-manager__description", children: "定义快速输入可选择的记录类型，例如任务、打卡、总结。可拖动排序。" }),
     /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2(Stack, { spacing: 1, children: blocks.map((block2) => /* @__PURE__ */ u2(
       SortableBlockItem,
       {
@@ -70685,7 +70792,7 @@ function makeNewDraft(goal, block2, variants, themes) {
   const usedVariantIds = new Set(variants.map((item) => String(item.variantId || "default")));
   const usedThemePaths = new Set(variants.map((item) => normalizeThemePath(readThemePathFromTemplate(item))).filter(Boolean));
   const preferredTheme = normalizeThemePath(goal?.themePath) || normalizeThemePath(base.themePath);
-  const firstUnusedTheme = themes.map((theme2) => normalizeThemePath(theme2.path)).find((path) => path && !usedThemePaths.has(path));
+  const firstUnusedTheme = themes.map((theme) => normalizeThemePath(theme.path)).find((path) => path && !usedThemePaths.has(path));
   const themePath = preferredTheme && !usedThemePaths.has(preferredTheme) ? preferredTheme : firstUnusedTheme || preferredTheme || "";
   const label = themeLeafLabel(themePath, block2?.name || "记录预设");
   let variantId = makeVariantId(label || `preset-${variants.length + 1}`);
@@ -70702,7 +70809,7 @@ function makeNewDraft(goal, block2, variants, themes) {
     sortOrder: variants.length * 10,
     themePath,
     fields,
-    defaultValues: mergeDefaultValues({ ...base, themePath, fields }, themes.find((theme2) => normalizeThemePath(theme2.path) === themePath)?.icon)
+    defaultValues: mergeDefaultValues({ ...base, themePath, fields }, themes.find((theme) => normalizeThemePath(theme.path) === themePath)?.icon)
   };
 }
 function deriveRequiredFields(fields) {
@@ -70883,14 +70990,14 @@ function sortGoalTemplateVariants(variants) {
 function buildThemeOptions(themes) {
   return [
     { value: "", label: "不指定主题" },
-    ...(themes || []).map((theme2) => ({
-      value: theme2.path,
-      label: `${theme2.icon ? `${theme2.icon} ` : ""}${cleanDisplayThemePath(theme2.path)}`
+    ...(themes || []).map((theme) => ({
+      value: theme.path,
+      label: `${theme.icon ? `${theme.icon} ` : ""}${cleanDisplayThemePath(theme.path)}`
     }))
   ];
 }
 function buildThemeByPath(themes) {
-  return new Map((themes || []).map((theme2) => [String(theme2.path || ""), theme2]));
+  return new Map((themes || []).map((theme) => [String(theme.path || ""), theme]));
 }
 function applyThemePathToDraft(draft, themePath, themeIcon) {
   const normalizedThemePath = normalizeThemePath(themePath);
@@ -71091,10 +71198,10 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
       resizable: true,
       bodyPadding: 0,
       bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      children: /* @__PURE__ */ u2(Box, { sx: { p: 1.5, flex: 1, minHeight: 0, overflowY: "auto", boxSizing: "border-box" }, children: /* @__PURE__ */ u2(Stack, { spacing: 1.5, children: [
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
-          /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
-            /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800, lineHeight: 1.2 }, children: [
+      children: /* @__PURE__ */ u2(Box, { className: "think-goal-template-editor", children: /* @__PURE__ */ u2(Stack, { spacing: 1.5, children: [
+        /* @__PURE__ */ u2(Box, { className: "think-editor-header", children: [
+          /* @__PURE__ */ u2(Box, { className: "think-goal-template-editor__identity", children: [
+            /* @__PURE__ */ u2(Typography2, { className: "think-settings-title-strong", children: [
               currentTheme?.icon ? `${currentTheme.icon} ` : "",
               titleTheme
             ] }),
@@ -71104,7 +71211,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
               block2.name
             ] })
           ] }),
-          /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, flexWrap: "wrap" }, children: /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", disabled: !selectedTemplate || metadataDisabled, onClick: handleCopyVariant, children: "复制为新预设" }) })
+          /* @__PURE__ */ u2(Box, { className: "think-settings-actions", children: /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", disabled: !selectedTemplate || metadataDisabled, onClick: handleCopyVariant, children: "复制为新预设" }) })
         ] }),
         mode === "disabled" ? /* @__PURE__ */ u2(Alert2, { severity: "warning", children: [
           "这个目标下已经隐藏「",
@@ -71112,8 +71219,8 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
           "」。保存前请先改为普通记录预设，或删除这条隐藏规则。"
         ] }) : null,
         /* @__PURE__ */ u2(GoalTemplateModeSwitch, { mode, blockName: block2.name, disabled: metadataDisabled, onInherit: switchToInherit, onOverride: switchToOverride }),
-        /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1.25, p: 1.25, display: "grid", gap: 1 }, children: [
-          /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: supportsPeriod ? "1.2fr 1.2fr 0.75fr" : "1.2fr 1.2fr" }, gap: 1 }, children: [
+        /* @__PURE__ */ u2(Box, { className: "think-goal-template-editor__fields", children: [
+          /* @__PURE__ */ u2(Box, { className: `think-goal-template-editor__primary-grid${supportsPeriod ? "" : " is-two-column"}`, children: [
             /* @__PURE__ */ u2(NativeTextInput, { label: "名字", value: draft.name, onInput: (value) => updateDraft({ name: value }), disabled: metadataDisabled, placeholder: "例如：心情" }),
             isExistingTemplate ? /* @__PURE__ */ u2(NativeTextInput, { label: "主题", value: currentTheme?.icon ? `${currentTheme.icon} ${cleanDisplayThemePath(draft.themePath)}` : cleanDisplayThemePath(draft.themePath) || "未指定主题", onInput: () => void 0, disabled: true }) : /* @__PURE__ */ u2(NativeSelectInput2, { label: "主题", value: draft.themePath || "", options: themeOptions2, onChange: (value) => {
               const themePath = String(value || "");
@@ -71123,29 +71230,29 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
             }, disabled: metadataDisabled }),
             supportsPeriod ? /* @__PURE__ */ u2(NativeSelectInput2, { label: "周期", value: draft.granularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: metadataDisabled }) : null
           ] }),
-          /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1 }, children: [
+          /* @__PURE__ */ u2(Box, { className: "think-goal-template-editor__secondary-grid", children: [
             /* @__PURE__ */ u2(NativeTextInput, { label: "保存文件", value: draft.targetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: fieldEditDisabled, placeholder: "例如：01/目标打卡.md" }),
             /* @__PURE__ */ u2(NativeTextInput, { label: "标题", value: draft.appendUnderHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: fieldEditDisabled, placeholder: "## {{goalPath}}" })
           ] }),
           /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: metadataDisabled, placeholder: "可选" }),
-          diffSummary.length ? /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, flexWrap: "wrap", alignItems: "center" }, children: diffSummary.map((item) => /* @__PURE__ */ u2("span", { style: { fontSize: 12, padding: "2px 8px", borderRadius: 999, border: "1px solid var(--background-modifier-border)", color: "var(--text-muted)" }, children: item }, item)) }) : null
+          diffSummary.length ? /* @__PURE__ */ u2(Box, { className: "think-editor-diff-list", children: diffSummary.map((item) => /* @__PURE__ */ u2("span", { className: "think-editor-diff-chip", children: item }, item)) }) : null
         ] }),
-        /* @__PURE__ */ u2(Box, { sx: { opacity: fieldEditDisabled ? 0.72 : 1 }, children: /* @__PURE__ */ u2(Stack, { spacing: 1.5, children: [
+        /* @__PURE__ */ u2(Box, { className: fieldEditDisabled ? "think-settings-muted-disabled" : void 0, children: /* @__PURE__ */ u2(Stack, { spacing: 1.5, children: [
           /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Typography2, { sx: { fontSize: "0.95rem", fontWeight: 700, mb: 0.75 }, children: "表单字段" }),
-            inheritedMode ? /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mb: 0.75 }, children: "当前为继承模式，下面只读展示记录类型基础字段。切到“覆盖”后可单独修改这个主题预设。" }) : null,
+            /* @__PURE__ */ u2(Typography2, { className: "think-goal-template-editor__section-heading", children: "表单字段" }),
+            inheritedMode ? /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", className: "think-goal-template-editor__section-help", children: "当前为继承模式，下面只读展示记录类型基础字段。切到“覆盖”后可单独修改这个主题预设。" }) : null,
             /* @__PURE__ */ u2(FieldsEditor, { fields: draft.fields || [], disabled: fieldEditDisabled, onChange: (fields) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath }) })
           ] }),
           /* @__PURE__ */ u2(Divider2, {}),
           /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 0.75 }, children: [
-              /* @__PURE__ */ u2(Typography2, { sx: { fontSize: "0.95rem", fontWeight: 700 }, children: "输出格式" }),
+            /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", className: "think-goal-template-editor__output-heading", children: [
+              /* @__PURE__ */ u2(Typography2, { className: "think-goal-template-editor__section-heading", children: "输出格式" }),
               effectiveBlockForCopier ? /* @__PURE__ */ u2(TemplateVariableCopier, { block: effectiveBlockForCopier }) : null
             ] }),
             /* @__PURE__ */ u2(NativeTextarea, { value: draft.outputTemplate, rows: 7, onInput: (value) => updateDraft({ outputTemplate: value }), disabled: fieldEditDisabled })
           ] })
         ] }) }),
-        /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", spacing: 1, sx: { position: "sticky", bottom: -12, py: 1, background: "var(--background-primary)", borderTop: "1px solid var(--background-modifier-border)" }, children: [
+        /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", spacing: 1, className: "think-settings-sticky-actions", children: [
           /* @__PURE__ */ u2(Button2, { onClick: onClose, children: "取消" }),
           /* @__PURE__ */ u2(Button2, { onClick: handleSave, variant: "contained", disabled: metadataDisabled, children: "保存" })
         ] })
@@ -71621,8 +71728,8 @@ function sortPresets(items, goals = []) {
 }
 function buildThemeIconMap(settings) {
   const map = /* @__PURE__ */ new Map();
-  for (const theme2 of settings.inputSettings?.themes || []) {
-    if (theme2?.path) map.set(String(theme2.path), String(theme2.icon || ""));
+  for (const theme of settings.inputSettings?.themes || []) {
+    if (theme?.path) map.set(String(theme.path), String(theme.icon || ""));
   }
   return map;
 }
@@ -72532,7 +72639,7 @@ function pathCandidates(path) {
   return result;
 }
 function inheritedIconInfo(themes, path) {
-  const byPath = new Map(themes.map((theme2) => [String(theme2.path || ""), theme2]));
+  const byPath = new Map(themes.map((theme) => [String(theme.path || ""), theme]));
   for (const candidate of pathCandidates(path)) {
     const matched = byPath.get(candidate);
     if (matched && String(matched.icon || "").trim()) {
@@ -72542,7 +72649,7 @@ function inheritedIconInfo(themes, path) {
   return { icon: "", sourcePath: "" };
 }
 function ThemeCard({ children }) {
-  return /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1.5, display: "grid", gap: 1 }, children });
+  return /* @__PURE__ */ u2(Box, { className: "think-editor-card", children });
 }
 function ThemeMetadataManager() {
   const settings = useSelector(selectSettings);
@@ -72554,7 +72661,7 @@ function ThemeMetadataManager() {
   const [query, setQuery] = d("");
   const sortedThemes = T$1(() => {
     const q2 = query.trim().toLowerCase();
-    return [...themes].filter((theme2) => !q2 || theme2.path.toLowerCase().includes(q2) || String(theme2.icon || "").includes(q2)).sort((a2, b2) => (a2.path || "").localeCompare(b2.path || "", "zh-Hans-CN"));
+    return [...themes].filter((theme) => !q2 || theme.path.toLowerCase().includes(q2) || String(theme.icon || "").includes(q2)).sort((a2, b2) => (a2.path || "").localeCompare(b2.path || "", "zh-Hans-CN"));
   }, [themes, query]);
   const previewThemePath = path.trim() || sortedThemes[0]?.path || "";
   const previewMetadata = T$1(() => ThemeMetadataResolver.resolve(settings, previewThemePath), [settings, previewThemePath]);
@@ -72562,7 +72669,7 @@ function ThemeMetadataManager() {
   const handleAddTheme = async () => {
     const normalizedPath = path.trim().replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/");
     if (!normalizedPath) return;
-    const existing = themes.find((theme2) => theme2.path === normalizedPath);
+    const existing = themes.find((theme) => theme.path === normalizedPath);
     if (existing) {
       await useCases.theme.updateTheme(existing.id, { icon: icon.trim() || existing.icon, status: existing.status || "active" });
       setMessage(`已更新主题元数据：${normalizedPath}`);
@@ -72592,71 +72699,64 @@ function ThemeMetadataManager() {
     await useCases.theme.deleteTheme(id);
     setMessage("主题已删除。");
   };
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", display: "grid", gap: 2 }, children: [
+  return /* @__PURE__ */ u2(Box, { className: "think-theme-metadata", children: [
     /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "主题管理" }),
       /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "主题已从快速输入模板主轴降级为数据元信息：只管理路径、图标和启停状态。目标通过 themePath 引用主题，模板仍由“目标 × 记录类型”决定。" })
     ] }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 1 }, children: [
+    /* @__PURE__ */ u2(Box, { className: "think-theme-metadata__preview", children: [
       /* @__PURE__ */ u2(Chip2, { size: "small", label: `主题 ${themes.length}` }),
       /* @__PURE__ */ u2(Chip2, { size: "small", label: "模板主链：目标 × 记录类型", color: "primary" })
     ] }),
     message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
     /* @__PURE__ */ u2(ThemeCard, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "主题图标继承预览" }),
+      /* @__PURE__ */ u2(Typography2, { className: "think-settings-label-strong", children: "主题图标继承预览" }),
       /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "目标绑定更深层主题时，图标会从当前主题或最近的父主题继承；模板仍然保留原始 themePath。" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: [
+      /* @__PURE__ */ u2(Box, { className: "think-theme-metadata__preview", children: [
         /* @__PURE__ */ u2(Chip2, { size: "small", label: `预览路径：${previewThemePath || "未选择"}` }),
         /* @__PURE__ */ u2(Chip2, { size: "small", label: `渲染图标：${previewMetadata.icon || previewIconInfo.icon || "🎯"}`, color: previewMetadata.icon || previewIconInfo.icon ? "primary" : "default" }),
         /* @__PURE__ */ u2(Chip2, { size: "small", label: `图标来源：${previewIconInfo.sourcePath || "默认"}` })
       ] })
     ] }),
     /* @__PURE__ */ u2(ThemeCard, { children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "新增 / 更新主题元数据" }),
+      /* @__PURE__ */ u2(Typography2, { className: "think-settings-label-strong", children: "新增 / 更新主题元数据" }),
       /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "如果路径已存在，会更新图标；不会创建或修改任何主题模板 override。" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(220px, 1fr) 110px auto", gap: 1, alignItems: "center" }, children: [
+      /* @__PURE__ */ u2(Box, { className: "think-editor-grid think-editor-grid--metadata", children: [
         /* @__PURE__ */ u2(TextField2, { size: "small", label: "主题路径", value: path, onChange: (event) => setPath(event.target.value), placeholder: "例如：电脑/记录系统" }),
         /* @__PURE__ */ u2(TextField2, { size: "small", label: "图标", value: icon, onChange: (event) => setIcon(event.target.value), placeholder: "🎯" }),
         /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleAddTheme, disabled: !path.trim(), children: "保存主题" })
       ] })
     ] }),
     /* @__PURE__ */ u2(ThemeCard, { children: [
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "1fr minmax(180px, 280px)", gap: 1, alignItems: "center" }, children: [
+      /* @__PURE__ */ u2(Box, { className: "think-editor-grid think-editor-grid--list-toolbar", children: [
         /* @__PURE__ */ u2(Box, { children: [
-          /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "主题列表" }),
+          /* @__PURE__ */ u2(Typography2, { className: "think-settings-label-strong", children: "主题列表" }),
           /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "在这里维护图标和路径。需要修改目标专属写法时请到“数据管理 → 目标 → 记录预设”。" })
         ] }),
         /* @__PURE__ */ u2(TextField2, { size: "small", label: "搜索主题", value: query, onChange: (event) => setQuery(event.target.value) })
       ] }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 0.75 }, children: sortedThemes.length ? sortedThemes.map((theme2) => /* @__PURE__ */ u2(
+      /* @__PURE__ */ u2(Box, { className: "think-theme-metadata__entries", children: sortedThemes.length ? sortedThemes.map((theme) => /* @__PURE__ */ u2(
         Box,
         {
-          sx: {
-            display: "grid",
-            gridTemplateColumns: "56px minmax(220px, 1fr) 110px minmax(150px, 1fr) 120px auto",
-            gap: 1,
-            alignItems: "center",
-            borderTop: "1px solid var(--background-modifier-border-hover)",
-            pt: 0.75
-          },
+          className: "think-theme-metadata__entry",
           children: [
-            /* @__PURE__ */ u2(TextField2, { size: "small", label: "图标", value: theme2.icon || "", onChange: (event) => updateThemeIcon(theme2.id, event.target.value) }),
-            /* @__PURE__ */ u2(TextField2, { size: "small", label: parent(theme2.path) ? `父级：${parent(theme2.path)}` : "根主题", value: theme2.path || "", onChange: (event) => updateThemePath(theme2.id, event.target.value) }),
-            /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: leaf(theme2.path) }),
+            /* @__PURE__ */ u2(TextField2, { size: "small", label: "图标", value: theme.icon || "", onChange: (event) => updateThemeIcon(theme.id, event.target.value) }),
+            /* @__PURE__ */ u2(TextField2, { size: "small", label: parent(theme.path) ? `父级：${parent(theme.path)}` : "根主题", value: theme.path || "", onChange: (event) => updateThemePath(theme.id, event.target.value) }),
+            /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: leaf(theme.path) }),
             (() => {
-              const info = inheritedIconInfo(themes, theme2.path);
-              const inherited = info.sourcePath && info.sourcePath !== theme2.path;
+              const info = inheritedIconInfo(themes, theme.path);
+              const inherited = info.sourcePath && info.sourcePath !== theme.path;
               return /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
                 info.icon || "🎯",
                 " ",
                 inherited ? `继承自 ${info.sourcePath}` : "本主题图标"
               ] });
             })(),
-            /* @__PURE__ */ u2(SimpleSelect, { value: theme2.status || "active", options: statusOptions, onChange: (value) => updateThemeStatus(theme2.id, value), fullWidth: true }),
-            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => handleDelete(theme2.id), children: "删除" })
+            /* @__PURE__ */ u2(SimpleSelect, { value: theme.status || "active", options: statusOptions, onChange: (value) => updateThemeStatus(theme.id, value), fullWidth: true }),
+            /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => handleDelete(theme.id), children: "删除" })
           ]
         },
-        theme2.id
+        theme.id
       )) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无主题。" }) })
     ] }),
     /* @__PURE__ */ u2(Divider2, {})
@@ -72670,26 +72770,25 @@ const sections = [
 ];
 function DataManagementSettings() {
   const [section, setSection] = d("goals");
-  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 2 }, children: [
-    /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", width: "100%", display: "grid", gap: 1 }, children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h5", sx: { fontWeight: 800 }, children: "数据管理" }),
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, flexWrap: "wrap" }, children: sections.map((item) => /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2(Box, { className: "think-settings-page think-settings-page--wide", children: [
+    /* @__PURE__ */ u2(Box, { className: "think-settings-stack think-settings-full-width", children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h5", className: "think-settings-page__title", children: "数据管理" }),
+      /* @__PURE__ */ u2(Box, { className: "think-settings-nav", children: sections.map((item) => /* @__PURE__ */ u2(
         Button2,
         {
           variant: section === item.key ? "contained" : "outlined",
           size: "small",
           onClick: () => setSection(item.key),
-          sx: { borderRadius: 999 },
           children: item.title
         },
         item.key
       )) })
     ] }),
-    /* @__PURE__ */ u2(Divider2, { sx: { mx: "auto", maxWidth: 1040, width: "100%" } }),
+    /* @__PURE__ */ u2(Divider2, { className: "think-settings-full-width" }),
     section === "recordTypes" && /* @__PURE__ */ u2(BlockManager, {}),
     section === "goals" && /* @__PURE__ */ u2(GoalManager, {}),
     section === "themes" && /* @__PURE__ */ u2(ThemeMetadataManager, {}),
-    section === "metrics" && /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1040, mx: "auto", width: "100%" }, children: /* @__PURE__ */ u2(GoalMetricSection, {}) })
+    section === "metrics" && /* @__PURE__ */ u2(Box, { className: "think-settings-full-width", children: /* @__PURE__ */ u2(GoalMetricSection, {}) })
   ] });
 }
 function a11yProps(index) {
@@ -72697,7 +72796,17 @@ function a11yProps(index) {
 }
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
-  return /* @__PURE__ */ u2("div", { role: "tabpanel", hidden: value !== index, id: `settings-tabpanel-${index}`, ...other, children: value === index && /* @__PURE__ */ u2(Box, { sx: { p: 2, pt: 3 }, children }) });
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      className: "think-settings-panel",
+      role: "tabpanel",
+      hidden: value !== index,
+      id: `settings-tabpanel-${index}`,
+      ...other,
+      children: value === index ? children : null
+    }
+  );
 }
 const SETTINGS_TABS_NO_QUICK_INPUT_KEY = `${LOCAL_STORAGE_KEYS.SETTINGS_TABS}:data-v2`;
 const SETTINGS_TAB_COUNT = 4;
@@ -72709,20 +72818,17 @@ function clampTabIndex(value) {
 function SettingsRoot({ app, variant = "workspace" }) {
   const [storedTabIndex, setStoredTabIndex] = useLocalStorage(SETTINGS_TABS_NO_QUICK_INPUT_KEY, 0);
   const tabIndex = clampTabIndex(storedTabIndex);
-  return /* @__PURE__ */ u2(ThemeProvider, { theme, children: [
-    /* @__PURE__ */ u2(CssBaseline, {}),
-    /* @__PURE__ */ u2(Box, { sx: { width: "100%", maxWidth: variant === "workspace" ? 1320 : "none", mx: variant === "workspace" ? "auto" : 0 }, class: `think-setting-root think-setting-root--${variant}`, children: [
-      /* @__PURE__ */ u2(Box, { sx: { borderBottom: 1, borderColor: "divider", position: "sticky", top: 0, zIndex: 2, backgroundColor: "var(--background-primary)" }, children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setStoredTabIndex(clampTabIndex(newValue)), "aria-label": "settings tabs", variant: "scrollable", scrollButtons: "auto", children: [
-        /* @__PURE__ */ u2(Tab2, { label: "数据管理", ...a11yProps(0) }),
-        /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(1) }),
-        /* @__PURE__ */ u2(Tab2, { label: "通用", ...a11yProps(2) }),
-        /* @__PURE__ */ u2(Tab2, { label: "AI", ...a11yProps(3) })
-      ] }) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(DataManagementSettings, {}) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, {}) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(AiSettings, {}) })
-    ] })
+  return /* @__PURE__ */ u2("div", { className: `think-os think-os--settings think-setting-root think-setting-root--${variant}`, children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-tabs", children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setStoredTabIndex(clampTabIndex(newValue)), "aria-label": "settings tabs", variant: "scrollable", scrollButtons: "auto", children: [
+      /* @__PURE__ */ u2(Tab2, { label: "数据管理", ...a11yProps(0) }),
+      /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(1) }),
+      /* @__PURE__ */ u2(Tab2, { label: "通用", ...a11yProps(2) }),
+      /* @__PURE__ */ u2(Tab2, { label: "AI", ...a11yProps(3) })
+    ] }) }),
+    /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(DataManagementSettings, {}) }),
+    /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
+    /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, {}) }),
+    /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(AiSettings, {}) })
   ] });
 }
 const THINK_SETTINGS_VIEW_TYPE = "think-os-settings-view";
@@ -72767,14 +72873,11 @@ async function openThinkSettingsWorkspaceView(plugin) {
   workspace.revealLeaf(leaf2);
 }
 function SettingsLauncher({ onOpenWorkspace }) {
-  return /* @__PURE__ */ u2(ThemeProvider, { theme, children: [
-    /* @__PURE__ */ u2(CssBaseline, {}),
-    /* @__PURE__ */ u2(Box, { class: "think-setting-root think-setting-root--launcher", sx: { p: 2, maxWidth: 760 }, children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 800, mb: 1 }, children: "Think OS 控制台" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { color: "text.secondary", mb: 2, lineHeight: 1.7 }, children: "完整设置已经收敛到 Obsidian 工作区标签页，那里空间更适合管理目标、记录预设、布局和 AI。 原生插件设置页只保留这个入口，避免继续塞入大型表单。" }),
-      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: onOpenWorkspace, children: "打开 Think OS 控制台" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { display: "block", mt: 1.5, color: "text.secondary" }, children: "也可以通过命令面板执行：打开 Think OS 控制台（标签页）。" })
-    ] })
+  return /* @__PURE__ */ u2("section", { className: "think-os think-os--settings think-setting-root think-setting-root--launcher", children: [
+    /* @__PURE__ */ u2("h2", { className: "think-settings-launcher__title", children: "Think OS 控制台" }),
+    /* @__PURE__ */ u2("p", { className: "think-settings-launcher__description", children: "完整设置已经收敛到 Obsidian 工作区标签页，那里空间更适合管理目标、记录预设、布局和 AI。 原生插件设置页只保留这个入口，避免继续塞入大型表单。" }),
+    /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: onOpenWorkspace, children: "打开 Think OS 控制台" }),
+    /* @__PURE__ */ u2("small", { className: "think-settings-launcher__hint", children: "也可以通过命令面板执行：打开 Think OS 控制台（标签页）。" })
   ] });
 }
 class SettingsTab extends obsidian.PluginSettingTab {
@@ -73517,8 +73620,8 @@ function buildAggregateKey(item) {
 function buildRenderKey(item) {
   return String(item.id || buildAggregateKey(item));
 }
-function getThemeGroup(theme2) {
-  const segments = parsePath(String(theme2 || "").trim());
+function getThemeGroup(theme) {
+  const segments = parsePath(String(theme || "").trim());
   return {
     parent: segments[0]?.name || "未分类",
     child: segments[1]?.name || "任务"
@@ -73697,7 +73800,7 @@ const openStatisticsPopover = (request) => {
       bodyPadding: 0,
       bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
       onClose: request.onClose,
-      headerActions: /* @__PURE__ */ u2("div", { class: "flex items-center gap-1", children: [
+      headerActions: /* @__PURE__ */ u2("div", { class: "sv-popover-heading", children: [
         /* @__PURE__ */ u2(Tooltip2, { title: "导出为 Markdown", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
           AnyIconButton,
           {
@@ -74710,7 +74813,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   const gridStyle = layout.displayMode === "grid" ? { display: "grid", gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`, gap: "8px" } : {};
   const isFreeform = layout.displayMode === "freeform";
   const useFreeformCanvas = isFreeform && !compactFreeformFallback;
-  return /* @__PURE__ */ u2("div", { children: [
+  return /* @__PURE__ */ u2("div", { class: "think-os think-os--layout", children: [
     /* @__PURE__ */ u2(
       ViewToolbar,
       {
@@ -76785,10 +76888,11 @@ class AiChatModal extends obsidian.Modal {
   }
   async onOpen() {
     this.contentEl.empty();
+    this.modalEl.addClass("think-os");
+    this.modalEl.addClass("think-os--modal");
+    this.modalEl.addClass("think-modal-host");
+    this.modalEl.addClass("think-modal-host--wide");
     this.modalEl.addClass("think-ai-chat-modal");
-    this.modalEl.style.width = "90vw";
-    this.modalEl.style.maxWidth = "1000px";
-    this.modalEl.style.height = "85vh";
     this.keydownStopper = (e2) => {
       e2.stopPropagation();
     };
@@ -76834,15 +76938,15 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onD
       new obsidian.Notice(`删除记录失败: ${error?.message || String(error)}`);
     }
   };
-  return /* @__PURE__ */ u2("div", { class: "checkin-manager-modal", children: [
-    /* @__PURE__ */ u2("div", { class: "modal-header", children: [
+  return /* @__PURE__ */ u2("div", { class: "think-checkin-modal", children: [
+    /* @__PURE__ */ u2("div", { class: "think-checkin-modal__header", children: [
       /* @__PURE__ */ u2("div", { children: [
         /* @__PURE__ */ u2("h3", { style: { margin: 0 }, children: `当天记录 - ${date2}` }),
         /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px" }, children: sortedItems.length > 0 ? `共 ${sortedItems.length} 条记录` : "当天还没有记录" })
       ] }),
       /* @__PURE__ */ u2("div", { class: "modal-actions", children: onAddRecord && /* @__PURE__ */ u2("button", { class: "mod-cta", onClick: onAddRecord, children: "新增记录" }) })
     ] }),
-    /* @__PURE__ */ u2("div", { class: "modal-content", children: sortedItems.length === 0 ? /* @__PURE__ */ u2("div", { style: { textAlign: "center", color: "var(--text-muted)", padding: "20px 0" }, children: "点击右上角“新增记录”开始打卡。" }) : /* @__PURE__ */ u2("div", { class: "checkin-details-list", children: sortedItems.map((item) => {
+    /* @__PURE__ */ u2("div", { class: "think-checkin-modal__content", children: sortedItems.length === 0 ? /* @__PURE__ */ u2("div", { style: { textAlign: "center", color: "var(--text-muted)", padding: "20px 0" }, children: "点击右上角“新增记录”开始打卡。" }) : /* @__PURE__ */ u2("div", { class: "think-checkin-modal__list", children: sortedItems.map((item) => {
       const gesture = createRecordGestureHandlers({
         item,
         onOpenOrigin: (originItem) => openRecordOrigin({ app, item: originItem }),
@@ -76851,19 +76955,19 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onD
       return /* @__PURE__ */ u2(
         "div",
         {
-          class: "checkin-details-item",
+          class: "think-checkin-modal__item",
           onClick: gesture.onClick,
           onDblClick: gesture.onDblClick,
           onTouchEnd: gesture.onTouchEnd,
           children: [
-            /* @__PURE__ */ u2("div", { class: "checkin-item-main", children: [
-              /* @__PURE__ */ u2("div", { class: "checkin-item-content", children: item.content || item.title || "无内容" }),
-              /* @__PURE__ */ u2("div", { class: "checkin-item-meta", children: `${dayjs(item.created).format("HH:mm:ss")} · ${item.file?.path || "未知位置"}` })
+            /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-main", children: [
+              /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-content", children: item.content || item.title || "无内容" }),
+              /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-meta", children: `${dayjs(item.created).format("HH:mm:ss")} · ${item.file?.path || "未知位置"}` })
             ] }),
-            /* @__PURE__ */ u2("div", { class: "checkin-item-actions", children: onDeleteRecord && /* @__PURE__ */ u2(
+            /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-actions", children: onDeleteRecord && /* @__PURE__ */ u2(
               "button",
               {
-                class: "checkin-item-delete",
+                class: "think-checkin-modal__item-delete",
                 title: "删除这条记录",
                 onClick: (event) => handleDeleteRecord(event, item),
                 children: "删除"
@@ -76874,7 +76978,7 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onD
         item.id
       );
     }) }) }),
-    /* @__PURE__ */ u2("div", { class: "modal-footer", children: /* @__PURE__ */ u2("button", { onClick: onClose, children: "关闭" }) })
+    /* @__PURE__ */ u2("div", { class: "think-checkin-modal__footer", children: /* @__PURE__ */ u2("button", { onClick: onClose, children: "关闭" }) })
   ] });
 }
 class CheckinManagerModal extends obsidian.Modal {
@@ -76893,7 +76997,11 @@ class CheckinManagerModal extends obsidian.Modal {
   onDeleteRecord;
   onOpen() {
     this.contentEl.empty();
-    this.modalEl.addClass("checkin-manager-modal-container");
+    this.modalEl.addClass("think-os");
+    this.modalEl.addClass("think-os--modal");
+    this.modalEl.addClass("think-modal-host");
+    this.modalEl.addClass("think-modal-host--large");
+    this.modalEl.addClass("think-checkin-modal-host");
     renderModalContent(
       this.contentEl,
       /* @__PURE__ */ u2(
@@ -76909,21 +77017,6 @@ class CheckinManagerModal extends obsidian.Modal {
         }
       )
     );
-    this.contentEl.createEl("style").textContent = `
-            .checkin-manager-modal-container .modal-content { padding: 0; }
-            .checkin-manager-modal { display: flex; flex-direction: column; height: 100%; }
-            .modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--background-modifier-border); }
-            .modal-content { padding: 16px; flex-grow: 1; }
-            .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--background-modifier-border); }
-            .checkin-details-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; transition: background-color 0.2s ease; }
-            .checkin-details-item:hover { background-color: var(--background-modifier-hover); }
-            .checkin-details-item:last-child { border-bottom: none; }
-            .checkin-item-main { min-width: 0; flex: 1 1 auto; }
-            .checkin-item-content { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .checkin-item-meta { font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .checkin-item-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
-            .checkin-item-delete { color: var(--text-error); }
-        `;
   }
   onClose() {
     unmountModalContent(this.contentEl);
@@ -77235,12 +77328,12 @@ function normalizeRequestHeaders(headers) {
   }
   return result;
 }
-function normalizeRequestBody(body2) {
-  if (body2 == null) return void 0;
-  if (typeof body2 === "string") return body2;
-  if (typeof ArrayBuffer !== "undefined" && body2 instanceof ArrayBuffer) return body2;
-  if (typeof URLSearchParams !== "undefined" && body2 instanceof URLSearchParams) return body2.toString();
-  return String(body2);
+function normalizeRequestBody(body) {
+  if (body == null) return void 0;
+  if (typeof body === "string") return body;
+  if (typeof ArrayBuffer !== "undefined" && body instanceof ArrayBuffer) return body;
+  if (typeof URLSearchParams !== "undefined" && body instanceof URLSearchParams) return body.toString();
+  return String(body);
 }
 function makeHeadersLike(headers) {
   const lookup2 = /* @__PURE__ */ new Map();

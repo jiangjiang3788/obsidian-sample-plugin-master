@@ -1,0 +1,190 @@
+/*
+ * Quick Input uses the Obsidian modal itself as the only visual surface.
+ * The nested Think modal is structural only: no second card and no shadow.
+ * Keep V5 semantic colors and keep !important limited to host geometry resets.
+ */
+.modal.think-quick-input-modal {
+  position: relative !important;
+  inset: auto !important;
+  width: min(720px, calc(100vw - 32px)) !important;
+  max-width: calc(100vw - 32px);
+  height: auto !important;
+  max-height: calc(100dvh - 32px) !important;
+  margin: auto !important;
+  transform: none !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-lg);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  box-shadow: none;
+}
+
+.modal.think-quick-input-modal .modal-close-button { display: none; }
+
+.modal.think-quick-input-modal .modal-content {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+}
+
+.modal.think-quick-input-modal .think-modal.think-modal--quick-input {
+  width: 100%;
+  min-height: 0;
+  max-height: calc(100dvh - 32px);
+  padding: 0 var(--think-space-5) var(--think-space-5);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.modal.think-quick-input-modal .think-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: var(--think-space-1);
+  padding-bottom: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal.think-quick-input-modal .think-modal__footer--quick-input {
+  position: static;
+  z-index: var(--think-z-raised);
+  bottom: auto;
+  padding-top: var(--think-space-5);
+  padding-bottom: 0;
+  background: var(--think-bg-canvas);
+}
+
+.modal.think-quick-input-modal--mobile .think-modal__body {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-6));
+}
+
+.modal.think-quick-input-modal--mobile .think-modal__footer--quick-input {
+  position: sticky;
+  bottom: 0;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4));
+}
+
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-suspected .think-modal__body {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 168px);
+}
+
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-detected .think-modal__body {
+  padding-bottom: calc(var(--keyboard-height, 0px) + env(safe-area-inset-bottom, 0px) + 120px);
+}
+
+.modal.think-quick-input-modal .think-native-input,
+.modal.think-quick-input-modal .think-native-input--textarea {
+  width: 100%;
+  padding: var(--think-space-4) var(--think-space-5);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-canvas);
+  box-shadow: none;
+}
+
+.modal.think-quick-input-modal .think-native-input:focus,
+.modal.think-quick-input-modal .think-native-input--textarea:focus {
+  border-color: var(--think-border-focus);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--think-focus-ring-color);
+}
+
+.modal.think-quick-input-modal .think-form-row--inline .MuiFormControl-root { margin-top: 0; }
+
+.modal.think-quick-input-modal .think-ob-tag-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-4);
+}
+
+.modal.think-quick-input-modal .think-ob-tag-editor__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--think-space-3);
+  width: 100%;
+  min-height: var(--think-touch-target);
+  padding: var(--think-space-3) var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-canvas);
+  box-sizing: border-box;
+}
+
+.modal.think-quick-input-modal .think-ob-tag-editor__row:focus-within {
+  border-color: var(--think-border-focus);
+  box-shadow: 0 0 0 1px var(--think-focus-ring-color);
+}
+
+.modal.think-quick-input-modal .think-ob-tag-input {
+  flex: 1 1 120px;
+  min-width: 90px;
+  padding: var(--think-space-2) var(--think-space-1);
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--think-text-primary);
+  font: inherit;
+}
+
+.modal.think-quick-input-modal .think-ob-tag-pill {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  max-width: 100%;
+  padding: var(--think-space-2) var(--think-space-4);
+  border: 1px solid var(--tag-border-color, var(--think-border-subtle));
+  border-radius: var(--tag-radius, var(--think-radius-pill));
+  background: var(--tag-background, var(--think-bg-surface-1));
+  color: var(--tag-color, var(--think-text-accent));
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-tight);
+  cursor: pointer;
+}
+
+.modal.think-quick-input-modal .think-ob-tag-pill:hover {
+  background: var(--tag-background-hover, var(--think-bg-hover));
+}
+
+.modal.think-quick-input-modal .think-ob-tag-pill.is-selected {
+  background: var(--tag-background, var(--think-bg-selected));
+  color: var(--tag-color, var(--think-text-primary));
+}
+
+.modal.think-quick-input-modal .think-ob-tag-pill__remove {
+  color: var(--think-text-secondary);
+  font-weight: var(--think-font-weight-bold);
+}
+
+.modal.think-quick-input-modal .think-ob-tag-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-3);
+  padding-left: var(--think-space-1);
+}
+
+@media (max-width: 768px) {
+  .modal.think-quick-input-modal {
+    border-radius: var(--think-radius-md);
+  }
+
+  .modal.think-quick-input-modal .think-modal.think-modal--quick-input {
+    max-height: calc(100dvh - 16px);
+    padding-inline: var(--think-space-4);
+    padding-bottom: var(--think-space-4);
+  }
+
+  .modal.think-quick-input-modal--mobile .think-modal__footer--quick-input { padding-top: var(--think-space-4); }
+  .modal.think-quick-input-modal--mobile.think-quick-input-keyboard-active .think-modal__footer--quick-input { position: static; }
+}

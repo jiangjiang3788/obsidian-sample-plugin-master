@@ -1,0 +1,67 @@
+/* Think OS icon-only action primitive. */
+.think-os .think-icon-button {
+  --think-icon-button-size: var(--think-control-height-md);
+  --think-icon-button-glyph: var(--think-icon-size-md);
+
+  width: var(--think-icon-button-size);
+  min-width: var(--think-icon-button-size);
+  height: var(--think-icon-button-size);
+  min-height: var(--think-icon-button-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  color: var(--think-text-secondary);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    color var(--think-duration-fast) var(--think-ease-standard),
+    opacity var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.think-os .think-icon-button--sm {
+  --think-icon-button-size: var(--think-control-height-sm);
+  --think-icon-button-glyph: var(--think-icon-size-sm);
+}
+
+.think-os .think-icon-button--lg {
+  --think-icon-button-size: var(--think-control-height-lg);
+  --think-icon-button-glyph: var(--think-icon-size-lg);
+}
+
+.think-os .think-icon-button:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--think-bg-hover);
+  border-color: var(--think-border-subtle);
+  color: var(--think-text-primary);
+}
+
+.think-os .think-icon-button[aria-pressed="true"] {
+  background: var(--think-accent-muted);
+  border-color: var(--think-accent);
+  color: var(--think-text-accent);
+}
+
+.think-os .think-icon-button--danger:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--think-danger-bg);
+  border-color: var(--think-danger);
+  color: var(--think-danger);
+}
+
+.think-os .think-icon-button:disabled,
+.think-os .think-icon-button[aria-disabled="true"] {
+  color: var(--think-text-disabled);
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.think-os .think-icon-button > svg,
+.think-os .think-icon-button__glyph {
+  width: var(--think-icon-button-glyph);
+  height: var(--think-icon-button-glyph);
+  font-size: var(--think-icon-button-glyph);
+}

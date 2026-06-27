@@ -409,3 +409,23 @@ const themes = getZustandState(store, s => s.settings.inputSettings.themes);
 - Pointer move / resize move 期间禁止写 SettingsRepository；只允许在交互结束时通过 `useCases.layout` 一次提交。
 - 完整层级调整使用 `updateViewPlacements` 原子提交，并将 zIndex 归一化为连续值，禁止无限递增。
 - RendererService 只按活动 Layout 及其引用的 ViewInstance 计算签名；禁止恢复对全部 layouts/viewInstances 的整包 JSON 比较。
+
+## CSS 设计系统边界（CSS V1）
+
+- 所有插件控制的 Settings、Layout、Modal 根节点必须包含 `.think-os` 和对应场景修饰类。
+- Feature 与组件样式消费 `--think-*` Semantic Token；普通 UI 禁止直接新增 hex/rgb/hsl 颜色。
+- 新共享 class 使用 `think-*`；状态 class 只能依附组件使用，禁止新增裸 `.active/.empty/.flex` 等全局规则。
+- 固定皮肤、间距、字体、边框和交互状态进入 CSS；运行时坐标、尺寸、百分比和图表几何可通过 CSS Variable 从 TSX 传入。
+- 普通组件禁止新增 `!important`；Obsidian/MUI 宿主兼容必须集中在 override 层并进入显式白名单。
+- V1 只分层加载 Token 与 Foundation，旧 CSS 暂时保持无 Layer 导入以维持优先级；Feature 在 V2–V4 逐项迁移，V5 删除兼容层。
+- `npm run css:audit` 用于生成量化报告；`npm run css-boundary:gate` 阻止历史问题继续增长。
+
+## CSS Primitive 与 MUI Bridge 边界（CSS V2）
+
+- 所有 Preact 挂载入口必须经过 `ThinkMuiThemeProvider`；统一入口为 `mountWithServices` 与 `renderModalContent`，页面组件不得重复创建固定浅色 Theme。
+- 禁止在插件根节点使用全局 `CssBaseline`；Think OS Reset/Foundation 只在 `.think-os` 作用域内生效。
+- 原生控件优先使用 `ThinkButton`、`ThinkIconButton`、`ThinkField`、`ThinkCard`、`ThinkChip`、`ThinkToolbar`、`ThinkSection`、`ThinkEmptyState` 等 Primitive。
+- MUI Button、IconButton、TextField、Select、Checkbox、Switch、Card、Chip、Tabs、Dialog 等必须通过 `createThinkMuiTheme()` 消费同一套 `--think-*` Token。
+- MUI 官方 `.Mui*` selector 只允许出现在 `src/styles/overrides/mui.css` 或 Theme component override 中，业务 Feature 不得直接复制 MUI 内部选择器。
+- 新组件禁止使用 `sx` 或内联 `style` 重复完整皮肤；只允许动态几何、运行时值和一次性排列关系。
+- `src/shared/ui/dev/StyleCatalog.tsx` 是视觉合同目录，不进入常规用户导航；每次新增 Primitive 状态应同步补充 Catalog。

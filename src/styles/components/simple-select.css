@@ -1,0 +1,114 @@
+/* CSS V3: shared select composite, aligned with native and MUI controls. */
+.think-simple-select {
+  position: relative;
+  width: auto;
+  min-width: 0;
+}
+
+.think-simple-select--full {
+  width: 100%;
+}
+
+.think-simple-select__trigger {
+  min-height: var(--think-control-height-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+  padding-inline: var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+  color: var(--think-text-primary);
+  cursor: pointer;
+  transition:
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    box-shadow var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.think-simple-select__trigger:hover {
+  border-color: var(--think-border-strong);
+}
+
+.think-simple-select.is-open .think-simple-select__trigger {
+  border-color: var(--think-border-focus);
+  box-shadow: 0 0 0 var(--think-focus-ring-width) color-mix(in srgb, var(--think-focus-ring-color) 28%, transparent);
+}
+
+.think-simple-select.is-disabled .think-simple-select__trigger {
+  background: var(--think-bg-disabled);
+  color: var(--think-text-disabled);
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.think-simple-select__value {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.think-simple-select__value.is-placeholder {
+  color: var(--think-text-secondary);
+}
+
+.think-simple-select__arrow {
+  flex: 0 0 auto;
+  color: var(--think-text-secondary);
+  transition: transform var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.think-simple-select.is-open .think-simple-select__arrow {
+  transform: rotate(180deg);
+}
+
+.think-simple-select__menu {
+  position: absolute;
+  inset: calc(100% + var(--think-space-2)) 0 auto;
+  z-index: var(--think-z-dropdown);
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-elevated);
+  box-shadow: var(--think-shadow-md);
+}
+
+.think-simple-select__group {
+  padding: var(--think-space-3) var(--think-space-5);
+  border-top: 1px solid var(--think-border-subtle);
+  background: var(--think-bg-surface-2);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-bold);
+}
+
+.think-simple-select__group:first-child {
+  border-top: 0;
+}
+
+.think-simple-select__option {
+  padding: var(--think-space-4) var(--think-space-5);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  cursor: pointer;
+}
+
+.think-simple-select__option:hover:not(.is-disabled) {
+  background: var(--think-bg-hover);
+}
+
+.think-simple-select__option.is-selected {
+  background: var(--think-bg-selected);
+  font-weight: var(--think-font-weight-medium);
+}
+
+.think-simple-select__option.is-disabled {
+  color: var(--think-text-disabled);
+  cursor: not-allowed;
+  opacity: 0.72;
+}

@@ -1,0 +1,32 @@
+.think-os .think-type-caption {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-normal);
+}
+
+.think-os .think-type-label {
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-medium);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-type-body {
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-md);
+  line-height: var(--think-line-height-normal);
+}
+
+.think-os .think-type-heading-sm {
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-lg);
+  font-weight: var(--think-font-weight-semibold);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-type-heading-md {
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-xl);
+  font-weight: var(--think-font-weight-bold);
+  line-height: var(--think-line-height-tight);
+}

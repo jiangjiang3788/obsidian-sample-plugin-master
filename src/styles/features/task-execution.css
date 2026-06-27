@@ -1,0 +1,179 @@
+/* Task execution dashboard and recurrence-tone chips. */
+.think-os .task-execution-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-7);
+}
+
+.think-os .task-execution-section,
+.think-os .task-execution-section-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.think-os .task-execution-section { gap: var(--think-space-5); }
+.think-os .task-execution-section-body { gap: var(--think-space-4); }
+
+.think-os .task-execution-section + .task-execution-section {
+  padding-top: var(--think-space-7);
+  border-top: 1px solid var(--think-border-subtle);
+}
+
+.think-os .task-execution-section-header {
+  display: flex;
+  align-items: center;
+}
+
+.think-os .task-execution-section-title {
+  margin: 0;
+  color: var(--think-text-accent);
+  font-size: var(--think-font-size-2xl);
+  font-weight: var(--think-font-weight-bold);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .task-execution-subsection-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--think-space-5) var(--think-space-6);
+  min-width: 0;
+}
+
+.think-os .task-execution-subsection-title {
+  flex: 0 0 auto;
+  margin: 0;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-md);
+  font-weight: var(--think-font-weight-semibold);
+  line-height: var(--think-control-height-md);
+}
+
+.think-os .task-execution-chip-grid {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--think-space-4);
+  min-width: 0;
+}
+
+.think-os .task-execution-chip {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--think-control-height-sm);
+  max-width: 100%;
+  padding: var(--think-space-3) var(--think-space-5);
+  border: 1px solid transparent;
+  border-radius: var(--think-radius-pill);
+  outline: none;
+  background: var(--think-task-tone-0-bg);
+  color: var(--think-task-tone-0-text);
+  box-shadow: var(--think-shadow-none);
+  font: inherit;
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-medium);
+  line-height: var(--think-line-height-normal);
+  cursor: pointer;
+  transition:
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    transform var(--think-duration-fast) var(--think-ease-standard),
+    box-shadow var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.think-os .task-execution-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.think-os .task-execution-chip-count {
+  margin-left: var(--think-space-1);
+  color: inherit;
+  font-size: inherit;
+  font-weight: var(--think-font-weight-semibold);
+  line-height: 1;
+  opacity: 0.78;
+}
+
+.think-os .task-execution-chip--tone-1 {
+  background: var(--think-task-tone-1-bg);
+  color: var(--think-task-tone-1-text);
+}
+
+.think-os .task-execution-chip--tone-2 {
+  background: var(--think-task-tone-2-bg);
+  color: var(--think-task-tone-2-text);
+}
+
+.think-os .task-execution-chip--tone-3 {
+  background: var(--think-task-tone-3-bg);
+  color: var(--think-task-tone-3-text);
+}
+
+.think-os .task-execution-chip--tone-4 {
+  border-color: var(--think-task-tone-4-border);
+  background: var(--think-task-tone-4-bg);
+  color: var(--think-task-tone-4-text);
+}
+
+.think-os .task-execution-chip:hover {
+  border-color: color-mix(in srgb, currentColor 24%, transparent);
+  box-shadow: var(--think-shadow-sm);
+}
+
+.think-os .task-execution-chip:active { transform: translateY(1px); }
+
+.think-os .task-execution-context-menu {
+  position: fixed;
+  z-index: var(--think-z-popover);
+  min-width: 220px;
+  max-width: 280px;
+  padding: var(--think-space-5);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-lg);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  box-shadow: var(--think-shadow-overlay);
+}
+
+.think-os .task-execution-context-title {
+  margin-bottom: var(--think-space-2);
+  font-size: var(--think-font-size-md);
+  font-weight: var(--think-font-weight-bold);
+}
+
+.think-os .task-execution-context-meta,
+.think-os .task-execution-context-rule,
+.think-os .task-execution-context-empty {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+
+.think-os .task-execution-context-meta,
+.think-os .task-execution-context-rule { margin-bottom: var(--think-space-2); }
+
+.think-os .task-execution-context-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-3);
+  margin-top: var(--think-space-4);
+}
+
+.think-os .task-execution-context-link {
+  padding: var(--think-space-3) var(--think-space-4);
+  border-radius: var(--think-radius-md);
+  color: var(--think-text-primary);
+  text-decoration: none;
+}
+
+.think-os .task-execution-context-link:hover { background: var(--think-bg-hover); }
+.think-os .task-execution-context-empty { padding: var(--think-space-2) 0; }
+
+@container think-view (max-width: 560px) {
+  .think-os .task-execution-subsection-body { gap: var(--think-space-4); }
+  .think-os .task-execution-chip-grid { flex-basis: 100%; }
+}

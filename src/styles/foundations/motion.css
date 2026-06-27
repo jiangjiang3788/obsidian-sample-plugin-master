@@ -1,0 +1,24 @@
+.think-os {
+  --think-transition-color: color var(--think-duration-fast) var(--think-ease-standard),
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    border-color var(--think-duration-fast) var(--think-ease-standard);
+  --think-transition-transform: transform var(--think-duration-normal) var(--think-ease-standard);
+  --think-transition-opacity: opacity var(--think-duration-fast) var(--think-ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .think-os {
+    --think-duration-fast: 0ms;
+    --think-duration-normal: 0ms;
+    --think-duration-slow: 0ms;
+  }
+
+  .think-os *,
+  .think-os *::before,
+  .think-os *::after {
+    scroll-behavior: auto;
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
+}

@@ -3,28 +3,9 @@
 import type { JSX } from "preact";
 import { useObsidianInputGuard } from './useObsidianInputGuard';
 
-const nativeControlBaseStyle: JSX.CSSProperties = {
-  width: "100%",
-  minWidth: 0,
-  boxSizing: "border-box",
-  border: "1px solid var(--background-modifier-border)",
-  borderRadius: 6,
-  background: "var(--background-primary)",
-  color: "var(--text-normal)",
-  padding: "8px 10px",
-  font: "inherit",
-  lineHeight: 1.4,
-  userSelect: "text",
-  WebkitUserSelect: "text",
-  pointerEvents: "auto",
-};
-
-const nativeLabelStyle: JSX.CSSProperties = {
-  display: "block",
-  marginBottom: 4,
-  fontSize: "0.75rem",
-  color: "var(--text-muted)",
-};
+function fieldClassName(className?: string): string {
+  return ['think-native-field', className].filter(Boolean).join(' ');
+}
 
 export function NativeTextInput({
   label,
@@ -37,6 +18,7 @@ export function NativeTextInput({
   type = "text",
   title,
   style,
+  className,
 }: {
   label: string;
   value: string | number;
@@ -48,6 +30,7 @@ export function NativeTextInput({
   type?: string;
   title?: string;
   style?: JSX.CSSProperties;
+  className?: string;
 }) {
   const inputGuard = useObsidianInputGuard({
     scope: `FieldsEditor/${label}`,
@@ -58,20 +41,16 @@ export function NativeTextInput({
   });
 
   return (
-    <label style={{ display: "block", minWidth: 0, ...style }} title={title}>
-      <span style={nativeLabelStyle}>{label}</span>
+    <label className={fieldClassName(className)} style={style} title={title}>
+      {label ? <span className="think-native-field__label">{label}</span> : null}
       <input
+        className="think-input"
         type={type}
         value={value as any}
         disabled={disabled}
         placeholder={placeholder}
         data-think-diag-control={label}
         {...inputGuard}
-        style={{
-          ...nativeControlBaseStyle,
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text",
-        }}
       />
     </label>
   );
@@ -86,6 +65,7 @@ export function NativeTextarea({
   placeholder,
   rows = 3,
   style,
+  className,
 }: {
   label: string;
   value: string;
@@ -95,6 +75,7 @@ export function NativeTextarea({
   placeholder?: string;
   rows?: number;
   style?: JSX.CSSProperties;
+  className?: string;
 }) {
   const textareaGuard = useObsidianInputGuard({
     scope: `FieldsEditor/${label}`,
@@ -104,21 +85,16 @@ export function NativeTextarea({
   });
 
   return (
-    <label style={{ display: "block", minWidth: 0, ...style }}>
-      <span style={nativeLabelStyle}>{label}</span>
+    <label className={fieldClassName(className)} style={style}>
+      {label ? <span className="think-native-field__label">{label}</span> : null}
       <textarea
+        className="think-textarea"
         value={value}
         disabled={disabled}
         rows={rows}
         placeholder={placeholder}
         data-think-diag-control={label}
         {...textareaGuard}
-        style={{
-          ...nativeControlBaseStyle,
-          resize: "vertical",
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "text",
-        }}
       />
     </label>
   );

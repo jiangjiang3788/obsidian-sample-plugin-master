@@ -1,0 +1,93 @@
+/* CSS V3: Layout settings and freeform editor management UI. */
+.think-os--settings .think-layout-editor {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--think-space-4) var(--think-space-6) var(--think-space-6);
+}
+
+.think-os--settings .think-layout-editor__views {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--think-space-4);
+  min-height: var(--think-control-height-md);
+}
+
+.think-os--settings .think-layout-editor__view-item {
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-1);
+  padding: var(--think-space-1);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-2);
+}
+
+.think-os--settings .think-layout-editor__view-chip {
+  max-width: 240px;
+  cursor: pointer;
+}
+
+.think-os--settings .think-layout-editor__move-action {
+  padding: var(--think-space-1);
+}
+
+.think-os--settings .think-layout-editor__move-icon {
+  font-size: var(--think-icon-size-sm);
+}
+
+.think-os--settings .think-layout-editor__context-menu {
+  min-width: 168px;
+  padding: var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-elevated);
+  box-shadow: var(--think-shadow-overlay);
+}
+
+.think-os--settings .think-layout-editor__context-actions {
+  display: grid;
+  gap: var(--think-space-3);
+}
+
+.think-os--settings .think-layout-list {
+  width: min(100%, 900px);
+  margin-inline: auto;
+}
+
+.think-os--settings .think-layout-list__header {
+  margin-bottom: var(--think-space-6);
+}
+
+.think-os--settings .think-layout-list__item {
+  border-bottom: 1px solid var(--think-border-subtle);
+}
+
+.think-os--settings .think-layout-list__item-header {
+  padding: var(--think-space-4);
+}
+
+.think-os--settings .think-layout-list__item-title {
+  flex: 1 1 auto;
+  cursor: pointer;
+}
+
+.think-os--settings .think-layout-list__toggle {
+  margin-right: var(--think-space-4);
+}
+
+.think-os--settings .think-layout-list__drag-handle {
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--think-space-4);
+  padding: var(--think-space-2);
+  border-radius: var(--think-radius-xs);
+  cursor: grab;
+  touch-action: none;
+}
+
+.think-os--settings .think-layout-list__drag-handle:active {
+  cursor: grabbing;
+}

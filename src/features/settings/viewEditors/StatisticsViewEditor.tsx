@@ -16,13 +16,13 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
     const config = { ...DEFAULT_CONFIG, ...value, groupBy: 'goal' };
 
     return (
-        <div class="statistics-editor-container">
-            <div class="statistics-section">
-                <div class="categories-section-title">目标统计视图</div>
-                <div class="categories-description">
+        <div class="think-statistics-editor">
+            <div class="think-statistics-editor__section">
+                <div class="think-statistics-editor__title">目标统计视图</div>
+                <div class="think-statistics-editor__description">
                     StatisticsView 只按目标分组。时间范围使用上方控制栏，目标 / Block / 主题等条件使用视图筛选控制；“按照周期显示”只控制年/季/月视图内是否按 period 字段显示对应粒度。
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8, marginTop: 8 }}>
+                <div class="think-settings-grid think-settings-grid--compact">
                     <label>
                         <div>显示目标数量</div>
                         <input
@@ -50,7 +50,7 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
                             onChange={(e) => onChange({ groupBy: 'goal', minVisibleHeight: Number((e.target as HTMLInputElement).value) || 15 })}
                         />
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 18 }}>
+                    <label class="think-statistics-editor__period-toggle">
                         <input
                             type="checkbox"
                             checked={!!config.usePeriodField}
@@ -60,8 +60,8 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
                     </label>
                 </div>
             </div>
-            <div class="statistics-section">
-                <div class="categories-description">
+            <div class="think-statistics-editor__section">
+                <div class="think-statistics-editor__description">
                     该视图不再维护分类配置；分类可继续作为视图筛选条件，但不会作为 Statistics 的主柱状维度。
                 </div>
             </div>
