@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import type { Item, ViewInstance } from '@core/public';
+import type { Item, ViewInstance, ViewPlacement } from '@core/public';
 import {
   calculateTimelineRange,
   dayjs,
@@ -25,9 +25,26 @@ import { useLayoutItems } from './useLayoutItems';
 import { useExpandedViewRendering } from './useExpandedViewRendering';
 import { ViewContent } from './ViewContent';
 import { useLayoutModuleActions } from './useLayoutModuleActions';
+import { FreeformCanvas } from './FreeformCanvas';
+import type { FreeformLayoutItemRenderProps } from './FreeformLayoutItem';
 
 function getLayoutInitialDate(layout: any) {
   return layout.initialDateFollowsNow ? dayjs() : (layout.initialDate ? dayjs(layout.initialDate) : dayjs());
+}
+
+function useCompactFreeformFallback(): boolean {
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const media = window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)');
+    const update = () => setCompact(media.matches);
+    update();
+    media.addEventListener?.('change', update);
+    return () => media.removeEventListener?.('change', update);
+  }, []);
+
+  return compact;
 }
 
 export function LayoutRenderer({ layout, dataStore, app, actionService, timerService }: any) {
@@ -35,6 +52,10 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
   const ui = useUiPort();
 
   const allViews = useSelector(selectViewInstances);
+  const allViewsById = useMemo(
+    () => new Map(allViews.map((view: ViewInstance) => [view.id, view])),
+    [allViews]
+  );
   const inputSettings = useSelector(selectInputSettings);
   const timers = useSelector(selectTimers);
   const allThemes = inputSettings.themes;
@@ -52,6 +73,9 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
 
   const [layoutView, setLayoutView] = useState(layout.initialView || '月');
   const [layoutDate, setLayoutDate] = useState(getLayoutInitialDate(layout));
+  const [isFreeformEditing, setIsFreeformEditing] = useState(false);
+  const [viewToAdd, setViewToAdd] = useState('');
+  const compactFreeformFallback = useCompactFreeformFallback();
 
   const legacyFilterState = useMemo(() => {
     return getLegacyLayoutFilterState(layout);
@@ -67,10 +91,25 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     return [range.start.toDate(), range.end.toDate()] as [Date, Date];
   }, [layoutDate, layoutView]);
 
+  const availableViews = useMemo(
+    () => allViews.filter((view: ViewInstance) => !layout.viewInstanceIds.includes(view.id)),
+    [allViews, layout.viewInstanceIds]
+  );
+
   useEffect(() => {
     setLayoutDate(getLayoutInitialDate(layout));
     setLayoutView(layout.initialView || '月');
   }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
+
+  useEffect(() => {
+    if (layout.displayMode !== 'freeform' || compactFreeformFallback) setIsFreeformEditing(false);
+  }, [compactFreeformFallback, layout.displayMode]);
+
+  useEffect(() => {
+    if (viewToAdd && !availableViews.some((view: ViewInstance) => view.id === viewToAdd)) {
+      setViewToAdd('');
+    }
+  }, [availableViews, viewToAdd]);
 
   const {
     handleExport,
@@ -92,26 +131,87 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     useCases,
   });
 
-  const renderViewInstance = (viewId: string) => {
-    const viewInstance = allViews.find((v: ViewInstance) => v.id === viewId);
+  const handlePlacementChange = (viewId: string, placement: ViewPlacement) => {
+    void useCases.layout.updateViewPlacement(layout.id, viewId, placement);
+  };
+
+  const handlePlacementsChange = (placements: Record<string, ViewPlacement>) => {
+    void useCases.layout.updateViewPlacements(layout.id, placements);
+  };
+
+  const handleResetFreeformLayout = () => {
+    if (!window.confirm('确认重置当前布局的位置、尺寸、层级、锁定和折叠状态吗？')) return;
+    void useCases.layout.resetFreeformLayout(layout.id);
+  };
+
+  const handleRemoveFromLayout = (viewId: string) => {
+    const view = allViewsById.get(viewId);
+    if (!window.confirm(`确认仅从当前布局移除“${view?.title || viewId}”吗？视图配置本身会保留。`)) return;
+    void useCases.layout.removeViewInstanceFromLayout(layout.id, viewId);
+  };
+
+  const handleAddExistingView = () => {
+    if (!viewToAdd) return;
+    void useCases.layout.addViewInstanceToLayout(layout.id, viewToAdd);
+    setViewToAdd('');
+  };
+
+  const handleCreateAndAddView = () => {
+    const title = window.prompt('请输入新视图名称');
+    if (!title?.trim()) return;
+    void (async () => {
+      const created = await useCases.viewInstance.createView(title.trim());
+      if (created) await useCases.layout.addViewInstanceToLayout(layout.id, created.id);
+    })();
+  };
+
+  const renderViewInstance = (
+    viewId: string,
+    freeformProps?: FreeformLayoutItemRenderProps,
+    freeformFallback = false
+  ) => {
+    const viewInstance = allViewsById.get(viewId);
     if (!viewInstance) return <div class="think-module">视图 (ID: {viewId}) 未找到</div>;
 
-    const isExpanded = !!expandedState[viewId];
+    const hasLayoutCollapseOverride = typeof freeformProps?.placement.collapsed === 'boolean';
+    const isExpanded = hasLayoutCollapseOverride
+      ? !freeformProps?.placement.collapsed
+      : !!expandedState[viewId];
     const expandedIndex = isExpanded ? expandedViewIds.indexOf(viewId) : -1;
-    const shouldRenderContent = isExpanded && expandedIndex >= 0 && expandedIndex < renderedExpandedCount;
+    const shouldRenderContent = isExpanded && (
+      freeformProps
+        ? (expandedIndex < 0 || expandedIndex < renderedExpandedCount)
+        : (expandedIndex >= 0 && expandedIndex < renderedExpandedCount)
+    );
+
+    const handlePanelToggle = (event: MouseEvent) => {
+      if (freeformProps) {
+        freeformProps.onToggleCollapsed();
+      } else {
+        handleToggle(viewId, event);
+      }
+    };
 
     return (
       <ModulePanel
         key={viewId}
         title={viewInstance.title}
         collapsed={!isExpanded}
-        onToggle={(e: MouseEvent) => handleToggle(viewId, e)}
+        onToggle={handlePanelToggle}
         onActionClick={isModuleHeaderCreateAllowed(viewInstance.viewType)
           ? () => handleQuickInputAction(viewInstance)
           : undefined}
         onExport={() => handleExport(viewInstance.id, viewInstance.title)}
         onSettingsClick={() => handleSettingsClick(viewInstance)}
-        onRemove={() => handleDeleteViewInstance(viewInstance.id)}
+        onRemove={(freeformProps || freeformFallback) ? () => handleRemoveFromLayout(viewInstance.id) : () => handleDeleteViewInstance(viewInstance.id)}
+        removeFromLayout={!!freeformProps || freeformFallback}
+        dragHandleProps={freeformProps?.dragHandleProps}
+        layoutEditing={!!freeformProps?.editing}
+        layoutSelected={!!freeformProps?.selected}
+        layoutLocked={!!freeformProps?.placement.locked}
+        onLayoutBringToFront={freeformProps?.onBringToFront}
+        onLayoutToggleLock={freeformProps?.onToggleLocked}
+        onLayoutToggleCollapsed={freeformProps?.onToggleCollapsed}
       >
         {shouldRenderContent ? (
           <ViewContent
@@ -144,6 +244,9 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     ? { display: 'grid', gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`, gap: '8px' }
     : {};
 
+  const isFreeform = layout.displayMode === 'freeform';
+  const useFreeformCanvas = isFreeform && !compactFreeformFallback;
+
   return (
     <div>
       <ViewToolbar
@@ -162,14 +265,72 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
             onMigrateLegacyFilters={handleMigrateLegacyLayoutFilters}
           />
         )}
-        viewInstances={layout.viewInstanceIds.map((id: string) => allViews.find((v: ViewInstance) => v.id === id)).filter(Boolean)}
+        viewInstances={layout.viewInstanceIds.map((id: string) => allViewsById.get(id)).filter(Boolean)}
         hideToolbar={layout.hideToolbar}
         onLayoutSettingsClick={() => openLayoutSettingsWidget(layout.id)}
         themes={allThemes}
       />
-      <div style={gridStyle}>
-        {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}
-      </div>
+
+      {isFreeform && (
+        <div class="think-freeform-toolbar">
+          <button
+            type="button"
+            class={isFreeformEditing ? 'mod-cta' : ''}
+            disabled={compactFreeformFallback}
+            onClick={() => setIsFreeformEditing((editing) => !editing)}
+          >
+            {isFreeformEditing ? '完成布局编辑' : '编辑自由布局'}
+          </button>
+          <button
+            type="button"
+            disabled={!isFreeformEditing}
+            onClick={handleResetFreeformLayout}
+          >
+            重置模板
+          </button>
+          {isFreeformEditing && (
+            <div class="think-freeform-add-controls">
+              <select
+                aria-label="选择要加入当前布局的视图"
+                value={viewToAdd}
+                onChange={(event) => setViewToAdd((event.target as HTMLSelectElement).value)}
+              >
+                <option value="">添加已有视图…</option>
+                {availableViews.map((view: ViewInstance) => (
+                  <option key={view.id} value={view.id}>{view.title}</option>
+                ))}
+              </select>
+              <button type="button" disabled={!viewToAdd} onClick={handleAddExistingView}>添加</button>
+              <button type="button" onClick={handleCreateAndAddView}>新建视图</button>
+            </div>
+          )}
+          <span class="think-freeform-toolbar-hint">
+            {compactFreeformFallback
+              ? '当前为窄屏或触控设备，已自动降级为只读列表；桌面宽屏可编辑自由布局。'
+              : isFreeformEditing
+                ? '点击卡片选中；方向键移动，Shift+方向键缩放，PageUp 置顶，L 锁定，C 折叠，Esc 取消选择。'
+                : '查看模式下不会误拖动；折叠状态按当前布局独立保存。'}
+          </span>
+        </div>
+      )}
+
+      {isStateInitialized && (
+        useFreeformCanvas ? (
+          <FreeformCanvas
+            layout={layout}
+            viewInstances={allViews}
+            editing={isFreeformEditing}
+            onPlacementChange={handlePlacementChange}
+            onPlacementsChange={handlePlacementsChange}
+            onRemoveView={handleRemoveFromLayout}
+            renderItem={(viewId, props) => renderViewInstance(viewId, props)}
+          />
+        ) : (
+          <div style={isFreeform ? {} : gridStyle} class={compactFreeformFallback && isFreeform ? 'think-freeform-mobile-fallback' : ''}>
+            {layout.viewInstanceIds.map((viewId: string) => renderViewInstance(viewId, undefined, compactFreeformFallback && isFreeform))}
+          </div>
+        )
+      )}
     </div>
   );
 }

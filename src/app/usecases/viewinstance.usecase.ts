@@ -213,6 +213,9 @@ export class ViewInstanceUseCase {
                         if (layout.viewInstanceIds) {
                             layout.viewInstanceIds = layout.viewInstanceIds.filter((vid: string) => vid !== id);
                         }
+                        if (layout.viewPlacements) {
+                            delete layout.viewPlacements[id];
+                        }
                     });
                 }
             });

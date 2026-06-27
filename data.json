@@ -587,7 +587,11 @@
       "useFieldGranularity": false,
       "selectedThemes": [],
       "selectedCategories": [],
-      "globalFilters": []
+      "globalFilters": [],
+      "viewPlacements": {},
+      "freeformConfig": {
+        "defaultTemplate": "balanced"
+      }
     },
     {
       "id": "layout_mpi3dfhyn14bsio",
@@ -602,6 +606,31 @@
       "globalFilters": [],
       "selectedThemes": [],
       "selectedCategories": []
+    },
+    {
+      "id": "layout_mqvoda9auqcqlkr",
+      "name": "全局布局 (副本)",
+      "viewInstanceIds": [
+        "vi_statistics_goal_mvp12",
+        "vi_mn9o962553qwhzp",
+        "vi_mmeolydjaga6z6u",
+        "vi_mmijitbq47u10wu",
+        "vi_mnztlf3wxrrqd8i",
+        "vi_mm9z0oe1cvlr53c",
+        "vi_mmikcsvy3rwcetd",
+        "vi_mno1upgdwpv72oj"
+      ],
+      "displayMode": "list",
+      "initialView": "天",
+      "initialDateFollowsNow": true,
+      "parentId": "group_memcg1u3us3jc",
+      "hideToolbar": false,
+      "isOverviewMode": false,
+      "initialDate": "2025-02-26",
+      "useFieldGranularity": false,
+      "selectedThemes": [],
+      "selectedCategories": [],
+      "globalFilters": []
     }
   ],
   "inputSettings": {

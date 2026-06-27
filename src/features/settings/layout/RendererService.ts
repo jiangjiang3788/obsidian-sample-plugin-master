@@ -1,35 +1,50 @@
 // src/core/services/RendererService.ts
 /**
- * RendererService - 使用 Zustand 精准订阅
- * 
- * 改动说明：
- * - 使用 Zustand store.subscribe(selector, listener) 精准订阅 layouts + viewInstances
- * - 只在 layout/viewInstances 变化时触发 rerenderAll()
- * - 在 cleanup 时取消订阅，避免内存泄漏
+ * RendererService - 活动布局的增量重渲染服务。
+ *
+ * - Zustand 只订阅 layouts/viewInstances 两个引用。
+ * - 每个活动 Layout 独立维护渲染签名。
+ * - 未被当前 Layout 引用的 ViewInstance 变化不会触发该 Layout 重渲染。
  */
 import { h, render } from 'preact';
-import {Layout, devLog, devError} from '@core/public';
-import { DataStore } from '@core/public';
+import type { Layout, ViewInstance } from '@core/public';
+import {
+    ActionService,
+    DataStore,
+    InputService,
+    ItemService,
+    devError,
+    devLog,
+} from '@core/public';
 import { ServicesProvider, type Services, validateServices as validateServicesImpl } from '@/app/public';
 import type { TimerController } from '@shared/public';
 import { LayoutRenderer } from '@features/settings/layout/LayoutRenderer';
-import { ActionService } from '@core/public';
-import { ItemService } from '@core/public';
-import { InputService } from '@core/public';
 import type { UseCases } from '@/app/public';
-import { getZustandState, subscribeZustandStore, type ZustandAppStore, type AppStoreInstance } from '@/app/public';
+import {
+    getZustandState,
+    subscribeZustandStore,
+    type ZustandAppStore,
+    type AppStoreInstance,
+} from '@/app/public';
+import { createLayoutRenderSignature } from './layoutRenderSignature';
+
+interface ActiveLayoutRender {
+    container: HTMLElement;
+    layoutId: string;
+    layoutName: string;
+    signature: string;
+}
+
+interface RendererSettingsSlice {
+    layouts: Layout[];
+    viewInstances: ViewInstance[];
+}
 
 export class RendererService {
     private isInitialized = false;
-    private activeLayouts: { container: HTMLElement; layoutName: string }[] = [];
-    
-    // 缓存的 Services 对象，用于 ServicesProvider
+    private activeLayouts: ActiveLayoutRender[] = [];
     private services: Services;
-    
-    // S8.1: Zustand 订阅取消函数
     private unsubscribeZustand: (() => void) | null = null;
-    
-    // App Store（由 ServiceManager 注入）
     private store: AppStoreInstance;
 
     constructor(
@@ -46,7 +61,6 @@ export class RendererService {
         store: AppStoreInstance
     ) {
         this.store = store;
-        // 构建 Services 对象，供 ServicesProvider 使用
         this.services = {
             zustandStore: this.store,
             dataStore: this.dataStore,
@@ -56,149 +70,117 @@ export class RendererService {
             modalPort: this.modalPort,
             messageRenderPort: this.messageRenderPort,
         };
-        
-        // 运行时校验：确保所有服务都已正确注入
+
         this.validateServices();
-        
-        // S8.1: 使用 Zustand 精准订阅替代 appStore.subscribe
         this.setupZustandSubscription();
-        
         this.isInitialized = true;
     }
-    
-    /**
-     * 运行时校验 Services 完整性
-     * 防止"传 undefined 但运行到深处才爆"
-     * Z3: 移除 appStore 校验
-     */
+
     private validateServices(): void {
         validateServicesImpl(this.services, 'RendererService');
     }
-    
-    /**
-     * S8.1: 设置 Zustand 精准订阅
-     * 只监听 layouts 和 viewInstances 的变化，避免其他 settings 变化导致全量 rerender
-     * P0-3: 使用 DI 注入的 store，通过纯函数 subscribeZustandStore 订阅
-     */
+
     private setupZustandSubscription(): void {
         try {
-            // P0-3: 使用纯函数版本，显式传入 store
             this.unsubscribeZustand = subscribeZustandStore(
                 this.store,
-                // Selector: 提取 layouts 和 viewInstances
-                (state: ZustandAppStore) => ({
+                (state: ZustandAppStore): RendererSettingsSlice => ({
                     layouts: state.settings.layouts,
                     viewInstances: state.settings.viewInstances,
                 }),
-                // Listener: 当 selector 返回值变化时触发
-                (current: { layouts: any[]; viewInstances: any[] }, previous: { layouts: any[]; viewInstances: any[] }) => {
-                    // 使用 JSON.stringify 进行深度比较
-                    const currentSnapshot = JSON.stringify(current);
-                    const previousSnapshot = JSON.stringify(previous);
-                    
-                    if (currentSnapshot !== previousSnapshot) {
-                        devLog('[RendererService] layouts/viewInstances 变化，触发 rerenderAll');
-                        this.rerenderAll();
-                    }
+                (current: RendererSettingsSlice) => {
+                    this.rerenderChangedLayouts(current);
                 },
-                // Options: 使用 shallow 比较（但我们在 listener 内做深度比较）
-                { equalityFn: (a: any, b: any) => a === b }
+                {
+                    equalityFn: (left, right) => (
+                        left.layouts === right.layouts
+                        && left.viewInstances === right.viewInstances
+                    ),
+                }
             );
-            
-            devLog('[RendererService] Zustand 精准订阅已建立');
+
+            devLog('[RendererService] 活动布局增量订阅已建立');
         } catch (error) {
             devError('[RendererService] Zustand 订阅失败:', error);
         }
     }
 
-    /**
-     * [主流程] 注册并渲染布局
-     * 将指定的布局配置渲染到目标容器中，并加入活跃布局列表进行管理。
-     * 
-     * ⚠️ P0 修复：使用 ServicesProvider 注入依赖，
-     * 确保 LayoutRenderer 及其子组件可以访问 useUseCases/useDataStore/useInputService
-     */
-    public register(container: HTMLElement, layout: Layout): void {
-        this.unregister(container);
-
+    private renderLayout(container: HTMLElement, layout: Layout): void {
         render(
-            h(ServicesProvider, { services: this.services, children: 
-                h(LayoutRenderer, {
-                    layout: layout,
+            h(ServicesProvider, {
+                services: this.services,
+                children: h(LayoutRenderer, {
+                    layout,
                     dataStore: this.dataStore,
                     app: this.app,
                     actionService: this.actionService,
                     itemService: this.itemService,
                     timerService: this.timerService,
-                })
+                }),
             }),
             container,
         );
+    }
 
-        this.activeLayouts.push({ container, layoutName: layout.name });
+    public register(container: HTMLElement, layout: Layout): void {
+        this.unregister(container);
+
+        const settings = getZustandState(this.store, (state) => state.settings);
+        const latestLayout = settings.layouts.find((candidate: Layout) => candidate.id === layout.id) ?? layout;
+        const signature = createLayoutRenderSignature(latestLayout, settings.viewInstances);
+
+        this.renderLayout(container, latestLayout);
+        this.activeLayouts.push({
+            container,
+            layoutId: latestLayout.id,
+            layoutName: latestLayout.name,
+            signature,
+        });
     }
 
     public unregister(container: HTMLElement): void {
-        const index = this.activeLayouts.findIndex(l => l.container === container);
-        if (index > -1) {
-            try {
-                render(null, container);
-            } catch (e) {
-                // 捕获异常
-            }
-            container.empty();
-            this.activeLayouts.splice(index, 1);
+        const index = this.activeLayouts.findIndex((layout) => layout.container === container);
+        if (index < 0) return;
+
+        try {
+            render(null, container);
+        } catch {
+            // 宿主容器可能已被 Obsidian 提前销毁。
         }
+        container.empty();
+        this.activeLayouts.splice(index, 1);
     }
 
-    /**
-     * [主流程] 重新渲染所有布局
-     * S8.1: 由 Zustand 精准订阅触发，只在 layouts/viewInstances 变化时调用
-     */
-    private rerenderAll(): void {
+    private rerenderChangedLayouts(settings: RendererSettingsSlice): void {
         if (!this.isInitialized) return;
-        
-        // P0-3: 使用 DI 注入的 store，通过纯函数 getZustandState 获取状态
-        const latestSettings = getZustandState(this.store, s => s.settings);
 
         for (const activeLayout of [...this.activeLayouts]) {
-            const { container, layoutName } = activeLayout;
-            const newLayoutConfig = latestSettings.layouts.find((l: Layout) => l.name === layoutName);
-
-            if (newLayoutConfig) {
-                render(
-                    h(ServicesProvider, { services: this.services, children:
-                        h(LayoutRenderer, {
-                            layout: newLayoutConfig,
-                            dataStore: this.dataStore,
-                            app: this.app,
-                            actionService: this.actionService,
-                            itemService: this.itemService,
-                            timerService: this.timerService,
-                        })
-                    }),
-                    container,
-                );
-            } else {
+            const nextLayout = settings.layouts.find((layout) => layout.id === activeLayout.layoutId);
+            if (!nextLayout) {
+                const { container, layoutName } = activeLayout;
                 this.unregister(container);
                 container.createDiv({ text: `布局配置 "${layoutName}" 已被删除。` });
+                continue;
             }
+
+            const nextSignature = createLayoutRenderSignature(nextLayout, settings.viewInstances);
+            if (nextSignature === activeLayout.signature) continue;
+
+            this.renderLayout(activeLayout.container, nextLayout);
+            activeLayout.layoutName = nextLayout.name;
+            activeLayout.signature = nextSignature;
+            devLog(`[RendererService] 已增量刷新布局: ${nextLayout.id}`);
         }
     }
 
-    /**
-     * 清理所有服务资源
-     * S8.1: 取消 Zustand 订阅，避免内存泄漏
-     */
     public cleanup(): void {
-        // S8.1: 取消 Zustand 订阅
         if (this.unsubscribeZustand) {
             this.unsubscribeZustand();
             this.unsubscribeZustand = null;
             devLog('[RendererService] Zustand 订阅已取消');
         }
-        
-        [...this.activeLayouts].forEach(layout => this.unregister(layout.container));
+
+        [...this.activeLayouts].forEach((layout) => this.unregister(layout.container));
         this.activeLayouts = [];
     }
 }

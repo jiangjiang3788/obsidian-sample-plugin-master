@@ -55,6 +55,27 @@ export type { ThemeMetadata } from './themeMetadata';
 // -------------------- Utils（可复用纯能力） --------------------
 //
 export * from './utils';
+export {
+    DEFAULT_FREEFORM_LAYOUT_CONFIG,
+    FREEFORM_COLLAPSED_HEIGHT,
+    bringViewPlacementToFront,
+    bringViewPlacementsToFront,
+    calculateFreeformCanvasHeight,
+    createDefaultViewPlacement,
+    createDefaultViewPlacements,
+    getDefaultFreeformItemSize,
+    filterViewPlacementsForLayout,
+    getFreeformVisualHeight,
+    moveViewPlacement,
+    normalizeFreeformLayoutConfig,
+    normalizeViewPlacementZIndices,
+    normalizeViewPlacement,
+    removeViewPlacement,
+    resizeViewPlacement,
+    resolveViewPlacements,
+    snapFreeformValue,
+} from './layout';
+export type { FreeformItemSize } from './layout';
 export { buildRecordSubmitFeedbackPresentation } from './utils/recordSubmitFeedback';
 export {
     buildRecordSubmitRecoveryPresentation,

@@ -25,14 +25,21 @@ import {
   RadioGroup as MuiRadioGroup,
   Autocomplete,
   Box,
+  Button,
 } from '@shared/public';
 
 import { openModuleSettingsWidget } from '@features/settings/layout/ModuleSettingsModal';
 
 const PERIOD_OPTIONS = ['年', '季', '月', '周', '天'].map((v) => ({ value: v, label: v }));
+const FREEFORM_TEMPLATE_OPTIONS = [
+  { value: 'balanced', label: '均衡排布' },
+  { value: 'focus', label: '焦点 + 网格' },
+];
+
 const DISPLAY_MODE_OPTIONS = [
   { value: 'list', label: '列表' },
   { value: 'grid', label: '网格' },
+  { value: 'freeform', label: '自由布局' },
 ];
 
 const LABEL_WIDTH = '80px';
@@ -83,16 +90,16 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     [layout?.viewInstanceIds, allViews]
   );
 
-  const addView = useCallback((viewId: string) => {
+  const addView = useCallback(async (viewId: string) => {
     if (!layout || !viewId) return;
     if (layout.viewInstanceIds.includes(viewId)) return;
-    handleUpdate({ viewInstanceIds: [...layout.viewInstanceIds, viewId] });
-  }, [layout, handleUpdate]);
+    await _useCases.layout.addViewInstanceToLayout(layout.id, viewId);
+  }, [layout, _useCases.layout]);
 
   const removeViewFromLayout = useCallback((viewId: string) => {
     if (!layout) return;
-    handleUpdate({ viewInstanceIds: layout.viewInstanceIds.filter((id) => id !== viewId) });
-  }, [layout, handleUpdate]);
+    void _useCases.layout.removeViewInstanceFromLayout(layout.id, viewId);
+  }, [layout, _useCases.layout]);
 
   const moveView = useCallback((viewId: string, direction: -1 | 1) => {
     if (!layout) return;
@@ -103,8 +110,8 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     if (targetIndex < 0 || targetIndex >= currentIds.length) return;
     const [moved] = currentIds.splice(index, 1);
     currentIds.splice(targetIndex, 0, moved);
-    handleUpdate({ viewInstanceIds: currentIds });
-  }, [layout, handleUpdate]);
+    void _useCases.layout.reorderViewInstancesInLayout(layout.id, currentIds);
+  }, [layout, _useCases.layout]);
 
   const autocompleteOptions = useMemo(() => {
     const opts: Array<{ value: string; label: string; type: 'existing' | 'create'; newName?: string }> =
@@ -135,7 +142,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     async (viewTitle: string) => {
       const newView = await _useCases.viewInstance.createView(viewTitle);
       if (!newView) return;
-      addView(newView.id);
+      await addView(newView.id);
       reopenAutocomplete();
     },
     [_useCases, addView, reopenAutocomplete]
@@ -145,7 +152,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     async (_event: any, newValue: any) => {
       if (!newValue) return;
       if (newValue.type === 'existing') {
-        addView(newValue.value);
+        await addView(newValue.value);
         setInputValue('');
         reopenAutocomplete();
         return;
@@ -267,7 +274,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
         label="排列方式"
         options={DISPLAY_MODE_OPTIONS}
         selectedValue={layout.displayMode || 'list'}
-        onChange={(value: string) => handleUpdate({ displayMode: value as 'list' | 'grid' })}
+        onChange={(value: string) => handleUpdate({ displayMode: value as Layout['displayMode'] })}
       />
 
       {layout.displayMode === 'grid' && (
@@ -283,6 +290,113 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
             }
             sx={{ width: '100px' }}
           />
+        </Stack>
+      )}
+
+
+      {layout.displayMode === 'freeform' && (
+        <Stack spacing={1}>
+          <AlignedRadioGroup
+            label="默认模板"
+            options={FREEFORM_TEMPLATE_OPTIONS}
+            selectedValue={layout.freeformConfig?.defaultTemplate || 'balanced'}
+            onChange={(value: string) => {
+              const hasSavedPlacement = Object.keys(layout.viewPlacements || {}).length > 0;
+              if (hasSavedPlacement && !confirm('切换模板会重置当前自由布局的位置、尺寸、层级、锁定和折叠状态，是否继续？')) return;
+              handleUpdate({
+                freeformConfig: {
+                  ...(layout.freeformConfig || {}),
+                  defaultTemplate: value as 'balanced' | 'focus',
+                },
+                viewPlacements: {},
+              });
+            }}
+          />
+          <Stack spacing={1} sx={{ pl: `calc(${LABEL_WIDTH} + 16px)` }}>
+          <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap" useFlexGap>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={layout.freeformConfig?.snapToGrid ?? true}
+                  onChange={(e) => handleUpdate({
+                    freeformConfig: {
+                      ...(layout.freeformConfig || {}),
+                      snapToGrid: (e.target as HTMLInputElement).checked,
+                    },
+                  })}
+                />
+              }
+              label="拖动时吸附网格"
+            />
+            <TextField
+              label="网格(px)"
+              type="number"
+              size="small"
+              value={layout.freeformConfig?.gridSize || 16}
+              onChange={(e) => handleUpdate({
+                freeformConfig: {
+                  ...(layout.freeformConfig || {}),
+                  gridSize: Math.max(4, parseInt((e.target as HTMLInputElement).value, 10) || 16),
+                },
+              })}
+              sx={{ width: 110 }}
+            />
+            <TextField
+              label="最小宽度"
+              type="number"
+              size="small"
+              value={layout.freeformConfig?.minItemWidth || 280}
+              onChange={(e: any) => handleUpdate({
+                freeformConfig: {
+                  ...(layout.freeformConfig || {}),
+                  minItemWidth: Math.max(160, parseInt((e.target as HTMLInputElement).value, 10) || 280),
+                },
+              })}
+              sx={{ width: 120 }}
+            />
+            <TextField
+              label="最小高度"
+              type="number"
+              size="small"
+              value={layout.freeformConfig?.minItemHeight || 180}
+              onChange={(e: any) => handleUpdate({
+                freeformConfig: {
+                  ...(layout.freeformConfig || {}),
+                  minItemHeight: Math.max(120, parseInt((e.target as HTMLInputElement).value, 10) || 180),
+                },
+              })}
+              sx={{ width: 120 }}
+            />
+            <TextField
+              label="画布最小宽度"
+              type="number"
+              size="small"
+              value={layout.freeformConfig?.minCanvasWidth || 720}
+              onChange={(e: any) => handleUpdate({
+                freeformConfig: {
+                  ...(layout.freeformConfig || {}),
+                  minCanvasWidth: Math.max(320, parseInt((e.target as HTMLInputElement).value, 10) || 720),
+                },
+              })}
+              sx={{ width: 145 }}
+            />
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                if (confirm('确认重置当前布局的自由布局位置吗？')) {
+                  void _useCases.layout.resetFreeformLayout(layout.id);
+                }
+              }}
+            >
+              按模板重排
+            </Button>
+          </Stack>
+          <Typography variant="caption" color="text.secondary">
+            “均衡排布”按视图推荐尺寸顺序装箱；“焦点 + 网格”会让第一个视图横跨首行。切换模板或重排会清空已保存的布局状态。
+          </Typography>
+          </Stack>
         </Stack>
       )}
 

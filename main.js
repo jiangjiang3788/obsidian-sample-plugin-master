@@ -7147,6 +7147,346 @@ function applyViewQueryPipeline(input) {
   }
   return sortItems(result, sort);
 }
+const DEFAULT_FREEFORM_LAYOUT_CONFIG = {
+  snapToGrid: true,
+  gridSize: 16,
+  defaultItemWidth: 420,
+  defaultItemHeight: 320,
+  minItemWidth: 280,
+  minItemHeight: 180,
+  minCanvasWidth: 720,
+  minCanvasHeight: 480
+};
+const DEFAULT_CANVAS_WIDTH = 960;
+const ITEM_GAP = 16;
+const FREEFORM_COLLAPSED_HEIGHT = 40;
+function normalizeTemplate(value) {
+  return value === "focus" ? "focus" : "balanced";
+}
+function finiteOr(value, fallback) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+function normalizeFreeformLayoutConfig(config2) {
+  const gridSize = Math.max(4, Math.round(finiteOr(config2?.gridSize, DEFAULT_FREEFORM_LAYOUT_CONFIG.gridSize)));
+  const minItemWidth = Math.max(
+    160,
+    Math.round(finiteOr(config2?.minItemWidth, DEFAULT_FREEFORM_LAYOUT_CONFIG.minItemWidth))
+  );
+  const minItemHeight = Math.max(
+    120,
+    Math.round(finiteOr(config2?.minItemHeight, DEFAULT_FREEFORM_LAYOUT_CONFIG.minItemHeight))
+  );
+  return {
+    defaultTemplate: normalizeTemplate(config2?.defaultTemplate),
+    snapToGrid: config2?.snapToGrid ?? DEFAULT_FREEFORM_LAYOUT_CONFIG.snapToGrid,
+    gridSize,
+    minItemWidth,
+    minItemHeight,
+    defaultItemWidth: Math.max(
+      minItemWidth,
+      Math.round(finiteOr(config2?.defaultItemWidth, DEFAULT_FREEFORM_LAYOUT_CONFIG.defaultItemWidth))
+    ),
+    defaultItemHeight: Math.max(
+      minItemHeight,
+      Math.round(finiteOr(config2?.defaultItemHeight, DEFAULT_FREEFORM_LAYOUT_CONFIG.defaultItemHeight))
+    ),
+    minCanvasWidth: Math.max(
+      minItemWidth,
+      Math.round(finiteOr(config2?.minCanvasWidth, DEFAULT_FREEFORM_LAYOUT_CONFIG.minCanvasWidth))
+    ),
+    minCanvasHeight: Math.max(
+      minItemHeight,
+      Math.round(finiteOr(config2?.minCanvasHeight, DEFAULT_FREEFORM_LAYOUT_CONFIG.minCanvasHeight))
+    )
+  };
+}
+function snapFreeformValue(value, gridSize) {
+  return Math.round(value / gridSize) * gridSize;
+}
+function getDefaultFreeformItemSize(viewType, config2) {
+  const normalizedConfig = normalizeFreeformLayoutConfig(config2);
+  const recommendations = {
+    BlockView: { width: 480, height: 340 },
+    TableView: { width: 680, height: 420 },
+    ExcelView: { width: 760, height: 460 },
+    TimelineView: { width: 680, height: 420 },
+    StatisticsView: { width: 440, height: 340 },
+    HeatmapView: { width: 520, height: 360 },
+    EventTimelineView: { width: 680, height: 420 },
+    ProgressView: { width: 480, height: 360 },
+    TaskExecutionView: { width: 560, height: 380 }
+  };
+  const recommended = viewType ? recommendations[viewType] : void 0;
+  return {
+    width: Math.max(normalizedConfig.minItemWidth, recommended?.width ?? normalizedConfig.defaultItemWidth),
+    height: Math.max(normalizedConfig.minItemHeight, recommended?.height ?? normalizedConfig.defaultItemHeight)
+  };
+}
+function normalizeViewPlacement(placement, fallback, canvasWidth, config2) {
+  const normalizedConfig = normalizeFreeformLayoutConfig(config2);
+  const safeCanvasWidth = Math.max(
+    normalizedConfig.minItemWidth,
+    finiteOr(canvasWidth, DEFAULT_CANVAS_WIDTH)
+  );
+  const width2 = Math.min(
+    safeCanvasWidth,
+    Math.max(
+      normalizedConfig.minItemWidth,
+      Math.round(finiteOr(placement?.width, fallback.width))
+    )
+  );
+  const height2 = Math.max(
+    normalizedConfig.minItemHeight,
+    Math.round(finiteOr(placement?.height, fallback.height))
+  );
+  const maxX = Math.max(0, safeCanvasWidth - width2);
+  const rawX = Math.min(maxX, Math.max(0, finiteOr(placement?.x, fallback.x)));
+  const rawY = Math.max(0, finiteOr(placement?.y, fallback.y));
+  const x2 = normalizedConfig.snapToGrid ? Math.min(maxX, snapFreeformValue(rawX, normalizedConfig.gridSize)) : Math.round(rawX);
+  const y2 = normalizedConfig.snapToGrid ? snapFreeformValue(rawY, normalizedConfig.gridSize) : Math.round(rawY);
+  return {
+    x: x2,
+    y: y2,
+    width: width2,
+    height: height2,
+    zIndex: placement?.zIndex ?? fallback.zIndex,
+    locked: placement?.locked ?? fallback.locked,
+    collapsed: placement?.collapsed ?? fallback.collapsed
+  };
+}
+function createDefaultViewPlacements(viewInstanceIds, canvasWidth, config2, preferredSizes) {
+  const normalizedConfig = normalizeFreeformLayoutConfig(config2);
+  const safeCanvasWidth = Math.max(
+    normalizedConfig.minItemWidth,
+    finiteOr(canvasWidth, DEFAULT_CANVAS_WIDTH)
+  );
+  const result = {};
+  let cursorX = 0;
+  let cursorY = 0;
+  let rowHeight = 0;
+  let startIndex = 0;
+  if (normalizedConfig.defaultTemplate === "focus" && viewInstanceIds.length > 0) {
+    const firstViewId = viewInstanceIds[0];
+    const preferred = preferredSizes?.[firstViewId];
+    const firstHeight = Math.max(
+      normalizedConfig.minItemHeight,
+      preferred?.height ?? normalizedConfig.defaultItemHeight
+    );
+    const fallback = {
+      x: 0,
+      y: 0,
+      width: safeCanvasWidth,
+      height: firstHeight,
+      zIndex: 1
+    };
+    result[firstViewId] = normalizeViewPlacement(
+      fallback,
+      fallback,
+      safeCanvasWidth,
+      normalizedConfig
+    );
+    cursorY = result[firstViewId].height + ITEM_GAP;
+    startIndex = 1;
+  }
+  for (let index = startIndex; index < viewInstanceIds.length; index += 1) {
+    const viewId = viewInstanceIds[index];
+    const preferred = preferredSizes?.[viewId];
+    const width2 = Math.min(
+      safeCanvasWidth,
+      Math.max(normalizedConfig.minItemWidth, preferred?.width ?? normalizedConfig.defaultItemWidth)
+    );
+    const height2 = Math.max(
+      normalizedConfig.minItemHeight,
+      preferred?.height ?? normalizedConfig.defaultItemHeight
+    );
+    if (cursorX > 0 && cursorX + width2 > safeCanvasWidth) {
+      cursorX = 0;
+      cursorY += rowHeight + ITEM_GAP;
+      rowHeight = 0;
+    }
+    const fallback = {
+      x: cursorX,
+      y: cursorY,
+      width: width2,
+      height: height2,
+      zIndex: index + 1
+    };
+    const placement = normalizeViewPlacement(
+      fallback,
+      fallback,
+      safeCanvasWidth,
+      normalizedConfig
+    );
+    result[viewId] = placement;
+    cursorX = placement.x + placement.width + ITEM_GAP;
+    rowHeight = Math.max(rowHeight, placement.height);
+  }
+  return result;
+}
+function resolveViewPlacements(viewInstanceIds, persistedPlacements, canvasWidth, config2, preferredSizes) {
+  const defaults = createDefaultViewPlacements(
+    viewInstanceIds,
+    canvasWidth,
+    config2,
+    preferredSizes
+  );
+  const persistedIds = viewInstanceIds.filter((viewId) => !!persistedPlacements?.[viewId]);
+  if (persistedIds.length === 0) return defaults;
+  const normalizedConfig = normalizeFreeformLayoutConfig(config2);
+  const safeCanvasWidth = Math.max(
+    normalizedConfig.minItemWidth,
+    finiteOr(canvasWidth, DEFAULT_CANVAS_WIDTH)
+  );
+  const result = {};
+  for (const viewId of persistedIds) {
+    result[viewId] = normalizeViewPlacement(
+      persistedPlacements?.[viewId],
+      defaults[viewId],
+      safeCanvasWidth,
+      normalizedConfig
+    );
+  }
+  let cursorX = 0;
+  let cursorY = Object.values(result).reduce(
+    (maxBottom, placement) => Math.max(maxBottom, placement.y + getFreeformVisualHeight(placement)),
+    0
+  ) + ITEM_GAP;
+  let rowHeight = 0;
+  let nextZIndex = Object.values(result).reduce(
+    (maxValue, placement) => Math.max(maxValue, placement.zIndex ?? 0),
+    0
+  ) + 1;
+  for (const viewId of viewInstanceIds) {
+    if (result[viewId]) continue;
+    const preferred = preferredSizes?.[viewId];
+    const width2 = Math.min(
+      safeCanvasWidth,
+      Math.max(normalizedConfig.minItemWidth, preferred?.width ?? normalizedConfig.defaultItemWidth)
+    );
+    const height2 = Math.max(
+      normalizedConfig.minItemHeight,
+      preferred?.height ?? normalizedConfig.defaultItemHeight
+    );
+    if (cursorX > 0 && cursorX + width2 > safeCanvasWidth) {
+      cursorX = 0;
+      cursorY += rowHeight + ITEM_GAP;
+      rowHeight = 0;
+    }
+    const fallback = {
+      x: cursorX,
+      y: cursorY,
+      width: width2,
+      height: height2,
+      zIndex: nextZIndex
+    };
+    const placement = normalizeViewPlacement(
+      fallback,
+      fallback,
+      safeCanvasWidth,
+      normalizedConfig
+    );
+    result[viewId] = placement;
+    cursorX = placement.x + placement.width + ITEM_GAP;
+    rowHeight = Math.max(rowHeight, placement.height);
+    nextZIndex += 1;
+  }
+  return viewInstanceIds.reduce((ordered, viewId) => {
+    ordered[viewId] = result[viewId];
+    return ordered;
+  }, {});
+}
+function moveViewPlacement(placement, delta, canvasWidth, config2) {
+  return normalizeViewPlacement(
+    {
+      ...placement,
+      x: placement.x + delta.x,
+      y: placement.y + delta.y
+    },
+    placement,
+    canvasWidth,
+    config2
+  );
+}
+function resizeViewPlacement(placement, delta, canvasWidth, config2) {
+  const normalizedConfig = normalizeFreeformLayoutConfig(config2);
+  const safeCanvasWidth = Math.max(
+    normalizedConfig.minItemWidth,
+    finiteOr(canvasWidth, DEFAULT_CANVAS_WIDTH)
+  );
+  const maxWidth2 = Math.max(normalizedConfig.minItemWidth, safeCanvasWidth - placement.x);
+  const rawWidth = placement.width + delta.x;
+  const rawHeight = placement.height + delta.y;
+  let width2 = Math.min(
+    maxWidth2,
+    Math.max(normalizedConfig.minItemWidth, rawWidth)
+  );
+  let height2 = Math.max(normalizedConfig.minItemHeight, rawHeight);
+  if (normalizedConfig.snapToGrid) {
+    width2 = rawWidth <= normalizedConfig.minItemWidth ? normalizedConfig.minItemWidth : snapFreeformValue(width2, normalizedConfig.gridSize);
+    height2 = rawHeight <= normalizedConfig.minItemHeight ? normalizedConfig.minItemHeight : snapFreeformValue(height2, normalizedConfig.gridSize);
+  }
+  width2 = Math.min(maxWidth2, Math.max(normalizedConfig.minItemWidth, Math.round(width2)));
+  height2 = Math.max(normalizedConfig.minItemHeight, Math.round(height2));
+  return {
+    ...placement,
+    width: width2,
+    height: height2
+  };
+}
+function getFreeformVisualHeight(placement) {
+  return placement.collapsed ? FREEFORM_COLLAPSED_HEIGHT : placement.height;
+}
+function normalizeViewPlacementZIndices(placements2, preferredOrder = Object.keys(placements2)) {
+  const order2 = new Map(preferredOrder.map((id, index) => [id, index]));
+  const entries = Object.entries(placements2).sort(([leftId, left2], [rightId, right2]) => {
+    const zDiff = (left2.zIndex ?? 0) - (right2.zIndex ?? 0);
+    if (zDiff !== 0) return zDiff;
+    return (order2.get(leftId) ?? Number.MAX_SAFE_INTEGER) - (order2.get(rightId) ?? Number.MAX_SAFE_INTEGER);
+  });
+  let changed = false;
+  const normalized = {};
+  entries.forEach(([id, placement], index) => {
+    const zIndex2 = index + 1;
+    if (placement.zIndex !== zIndex2) changed = true;
+    normalized[id] = placement.zIndex === zIndex2 ? placement : { ...placement, zIndex: zIndex2 };
+  });
+  return changed ? normalized : placements2;
+}
+function bringViewPlacementsToFront(placements2, viewInstanceId, preferredOrder = Object.keys(placements2)) {
+  if (!placements2[viewInstanceId]) return placements2;
+  const normalized = normalizeViewPlacementZIndices(placements2, preferredOrder);
+  const orderedIds = Object.entries(normalized).sort(([, left2], [, right2]) => (left2.zIndex ?? 0) - (right2.zIndex ?? 0)).map(([id]) => id);
+  const topId = orderedIds[orderedIds.length - 1];
+  if (topId === viewInstanceId) return normalized;
+  const withoutTarget = orderedIds.filter((id) => id !== viewInstanceId);
+  const nextOrder = [...withoutTarget, viewInstanceId];
+  let changed = normalized !== placements2;
+  const next2 = {};
+  nextOrder.forEach((id, index) => {
+    const placement = normalized[id];
+    const zIndex2 = index + 1;
+    if (placement.zIndex !== zIndex2) changed = true;
+    next2[id] = placement.zIndex === zIndex2 ? placement : { ...placement, zIndex: zIndex2 };
+  });
+  return changed ? next2 : placements2;
+}
+function calculateFreeformCanvasHeight(placements2, config2) {
+  const normalizedConfig = normalizeFreeformLayoutConfig(config2);
+  const contentBottom = Object.values(placements2).reduce(
+    (maxBottom, placement) => Math.max(maxBottom, placement.y + getFreeformVisualHeight(placement)),
+    0
+  );
+  return Math.max(normalizedConfig.minCanvasHeight, contentBottom + ITEM_GAP);
+}
+function filterViewPlacementsForLayout(viewInstanceIds, placements2) {
+  const validIds = new Set(viewInstanceIds);
+  const next2 = {};
+  for (const [viewInstanceId, placement] of Object.entries(placements2)) {
+    if (!validIds.has(viewInstanceId)) continue;
+    next2[viewInstanceId] = { ...placement };
+  }
+  return next2;
+}
 function uniqueNonEmpty(values2) {
   return Array.from(new Set(values2.map((value) => String(value || "").trim()).filter(Boolean)));
 }
@@ -41820,7 +42160,7 @@ const MenuMenuList = styled(MenuList, {
   // We disable the focus ring for mouse, touch and keyboard users.
   outline: 0
 });
-const Menu$1 = /* @__PURE__ */ D(function Menu(inProps, ref) {
+const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiMenu"
@@ -42633,7 +42973,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
       ownerState
     }), /* @__PURE__ */ u2(SelectFocusSourceProvider, {
       value: openInteractionType,
-      children: /* @__PURE__ */ u2(Menu$1, {
+      children: /* @__PURE__ */ u2(Menu, {
         id: `menu-${name || ""}`,
         anchorEl: anchorElement,
         open,
@@ -47916,7 +48256,6 @@ const Alert2 = Alert$1;
 const Radio2 = Radio$1;
 const RadioGroup2 = RadioGroup$1;
 const Autocomplete2 = Autocomplete$1;
-const Menu2 = Menu$1;
 const TableRow2 = TableRow$1;
 const TableCell2 = TableCell$1;
 const Slider2 = Slider$1;
@@ -54651,7 +54990,12 @@ function createLayoutSlice(settingsRepository) {
         const newLayout = {
           ...original,
           id: generateId("layout"),
-          name: `${original.name} (副本)`
+          name: `${original.name} (副本)`,
+          gridConfig: original.gridConfig ? { ...original.gridConfig } : void 0,
+          freeformConfig: original.freeformConfig ? { ...original.freeformConfig } : void 0,
+          viewPlacements: original.viewPlacements ? Object.fromEntries(
+            Object.entries(original.viewPlacements).map(([viewId, placement]) => [viewId, { ...placement }])
+          ) : void 0
         };
         await settingsRepository.update((draft) => {
           if (!draft.layouts) {
@@ -54769,6 +55113,9 @@ function createLayoutSlice(settingsRepository) {
           const layout = draft.layouts?.find((l2) => l2.id === layoutId);
           if (layout) {
             layout.viewInstanceIds = layout.viewInstanceIds.filter((id) => id !== viewInstanceId);
+            if (layout.viewPlacements) {
+              delete layout.viewPlacements[viewInstanceId];
+            }
           }
         }, createSliceMeta("layout.removeViewInstanceFromLayout"));
         set2({ layoutLoading: false });
@@ -54792,6 +55139,57 @@ function createLayoutSlice(settingsRepository) {
       } catch (error) {
         devError("[LayoutSlice] reorderViewInstancesInLayout 失败:", error);
         set2({ layoutError: error.message || "重排视图实例失败", layoutLoading: false });
+      }
+    },
+    updateViewPlacement: async (layoutId, viewInstanceId, placement) => {
+      const state = get();
+      if (!state.isInitialized) return;
+      set2({ layoutLoading: true, layoutError: null });
+      try {
+        await settingsRepository.update((draft) => {
+          const layout = draft.layouts?.find((l2) => l2.id === layoutId);
+          if (!layout || !layout.viewInstanceIds.includes(viewInstanceId)) return;
+          if (!layout.viewPlacements) layout.viewPlacements = {};
+          layout.viewPlacements[viewInstanceId] = { ...placement };
+        }, createSliceMeta("layout.updateViewPlacement"));
+        set2({ layoutLoading: false });
+      } catch (error) {
+        devError("[LayoutSlice] updateViewPlacement 失败:", error);
+        set2({ layoutError: error.message || "更新自由布局位置失败", layoutLoading: false });
+      }
+    },
+    updateViewPlacements: async (layoutId, placements2) => {
+      const state = get();
+      if (!state.isInitialized) return;
+      set2({ layoutLoading: true, layoutError: null });
+      try {
+        await settingsRepository.update((draft) => {
+          const layout = draft.layouts?.find((l2) => l2.id === layoutId);
+          if (!layout) return;
+          layout.viewPlacements = filterViewPlacementsForLayout(
+            layout.viewInstanceIds,
+            placements2
+          );
+        }, createSliceMeta("layout.updateViewPlacements"));
+        set2({ layoutLoading: false });
+      } catch (error) {
+        devError("[LayoutSlice] updateViewPlacements 失败:", error);
+        set2({ layoutError: error.message || "批量更新自由布局位置失败", layoutLoading: false });
+      }
+    },
+    resetFreeformLayout: async (layoutId) => {
+      const state = get();
+      if (!state.isInitialized) return;
+      set2({ layoutLoading: true, layoutError: null });
+      try {
+        await settingsRepository.update((draft) => {
+          const layout = draft.layouts?.find((l2) => l2.id === layoutId);
+          if (layout) layout.viewPlacements = {};
+        }, createSliceMeta("layout.resetFreeformLayout"));
+        set2({ layoutLoading: false });
+      } catch (error) {
+        devError("[LayoutSlice] resetFreeformLayout 失败:", error);
+        set2({ layoutError: error.message || "重置自由布局失败", layoutLoading: false });
       }
     },
     // ============== 查询方法 ==============
@@ -55925,6 +56323,39 @@ class LayoutUseCase {
       throw error;
     }
   }
+  /** 拖动结束后一次性提交某个视图在当前布局中的位置。 */
+  async updateViewPlacement(layoutId, viewInstanceId, placement) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) return;
+      await state.updateViewPlacement(layoutId, viewInstanceId, placement);
+    } catch (error) {
+      devError("[LayoutUseCase] updateViewPlacement 失败:", error);
+      throw error;
+    }
+  }
+  /** 一次性提交当前布局的完整 placement 集合，用于层级归一化等原子操作。 */
+  async updateViewPlacements(layoutId, placements2) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) return;
+      await state.updateViewPlacements(layoutId, placements2);
+    } catch (error) {
+      devError("[LayoutUseCase] updateViewPlacements 失败:", error);
+      throw error;
+    }
+  }
+  /** 清空已保存坐标，恢复由视图顺序推导的默认自由布局。 */
+  async resetFreeformLayout(layoutId) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) return;
+      await state.resetFreeformLayout(layoutId);
+    } catch (error) {
+      devError("[LayoutUseCase] resetFreeformLayout 失败:", error);
+      throw error;
+    }
+  }
   // ============== 查询方法 ==============
   /**
    * 获取所有布局
@@ -56148,6 +56579,9 @@ class ViewInstanceUseCase {
           draft.layouts.forEach((layout) => {
             if (layout.viewInstanceIds) {
               layout.viewInstanceIds = layout.viewInstanceIds.filter((vid) => vid !== id);
+            }
+            if (layout.viewPlacements) {
+              delete layout.viewPlacements[id];
             }
           });
         }
@@ -62118,70 +62552,122 @@ function scanDataInBackground(opts) {
   return promise;
 }
 const AnyIconButton$1 = IconButton2;
-function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onExport, onSettingsClick, onRemove }) {
+function ModulePanel({
+  title,
+  collapsed,
+  children,
+  onActionClick,
+  onToggle,
+  onExport,
+  onSettingsClick,
+  onRemove,
+  removeFromLayout = false,
+  dragHandleProps,
+  layoutEditing = false,
+  layoutSelected = false,
+  layoutLocked = false,
+  onLayoutBringToFront,
+  onLayoutToggleLock,
+  onLayoutToggleCollapsed
+}) {
   const onHeaderClick = (e2) => {
-    if (e2.target.closest(".module-header-actions")) {
+    if (e2.target.closest(".module-header-actions, .module-drag-handle, .module-layout-actions")) {
       return;
     }
     onToggle?.(e2);
   };
   return /* @__PURE__ */ u2("div", { class: "think-module", children: [
-    /* @__PURE__ */ u2("div", { class: "module-header", onClick: onHeaderClick, title: "点击折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开", children: [
-      /* @__PURE__ */ u2("span", { class: "module-title", children: title }),
-      /* @__PURE__ */ u2("div", { class: "module-header-controls", children: [
-        /* @__PURE__ */ u2("div", { class: "module-header-actions", children: [
-          onRemove && /* @__PURE__ */ u2(Tooltip2, { title: "删除视图（从配置与所有布局中移除）", children: /* @__PURE__ */ u2(
-            AnyIconButton$1,
-            {
-              size: "small",
-              onClick: (e2) => {
+    /* @__PURE__ */ u2(
+      "div",
+      {
+        class: `module-header${layoutEditing ? " is-layout-editing" : ""}${layoutSelected ? " is-layout-selected" : ""}`,
+        onClick: onHeaderClick,
+        title: layoutEditing ? "点击选中；拖动左侧手柄移动；点击标题区域折叠或展开" : "点击折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开",
+        children: [
+          /* @__PURE__ */ u2("div", { class: "module-header-main", children: [
+            layoutEditing && /* @__PURE__ */ u2(
+              "span",
+              {
+                class: `module-drag-handle${layoutLocked ? " is-disabled" : ""}`,
+                ...dragHandleProps,
+                onClick: (event) => event.stopPropagation(),
+                title: layoutLocked ? "卡片已锁定，先解锁后才能拖动" : "拖动整个视图",
+                children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1rem" } })
+              }
+            ),
+            /* @__PURE__ */ u2("span", { class: "module-title", children: title }),
+            layoutLocked && /* @__PURE__ */ u2("span", { class: "module-layout-lock-badge", title: "布局位置已锁定", children: "已锁定" })
+          ] }),
+          /* @__PURE__ */ u2("div", { class: "module-header-controls", children: [
+            layoutEditing && layoutSelected && /* @__PURE__ */ u2("div", { class: "module-layout-actions", "aria-label": "自由布局操作", children: [
+              onLayoutBringToFront && /* @__PURE__ */ u2("button", { type: "button", title: "置于最上层", onClick: (e2) => {
                 e2.stopPropagation();
-                onRemove();
-              },
-              sx: { padding: "4px" },
-              children: /* @__PURE__ */ u2(DeleteOutlineIcon, { sx: { fontSize: "1rem" } })
-            }
-          ) }),
-          onSettingsClick && /* @__PURE__ */ u2(Tooltip2, { title: "模块设置", children: /* @__PURE__ */ u2(
-            AnyIconButton$1,
-            {
-              size: "small",
-              onClick: (e2) => {
+                onLayoutBringToFront();
+              }, children: "置顶" }),
+              onLayoutToggleLock && /* @__PURE__ */ u2("button", { type: "button", title: layoutLocked ? "解锁位置和尺寸" : "锁定位置和尺寸", onClick: (e2) => {
                 e2.stopPropagation();
-                onSettingsClick();
-              },
-              sx: { padding: "4px" },
-              children: /* @__PURE__ */ u2(SettingsIcon, { sx: { fontSize: "1rem" } })
-            }
-          ) }),
-          onExport && /* @__PURE__ */ u2(Tooltip2, { title: "导出为 Markdown", children: /* @__PURE__ */ u2(
-            AnyIconButton$1,
-            {
-              size: "small",
-              onClick: (e2) => {
+                onLayoutToggleLock();
+              }, children: layoutLocked ? "解锁" : "锁定" }),
+              onLayoutToggleCollapsed && /* @__PURE__ */ u2("button", { type: "button", title: collapsed ? "展开卡片" : "折叠卡片", onClick: (e2) => {
                 e2.stopPropagation();
-                onExport();
-              },
-              sx: { padding: "4px" },
-              children: /* @__PURE__ */ u2(IosShareIcon, { sx: { fontSize: "1rem" } })
-            }
-          ) }),
-          onActionClick ? /* @__PURE__ */ u2(
-            "span",
-            {
-              class: "module-action-plus",
-              title: "创建记录",
-              onClick: (e2) => {
-                e2.stopPropagation();
-                onActionClick();
-              },
-              children: "+"
-            }
-          ) : null
-        ] }),
-        /* @__PURE__ */ u2("div", { class: "module-toggle", children: collapsed ? "▶" : "▼" })
-      ] })
-    ] }),
+                onLayoutToggleCollapsed();
+              }, children: collapsed ? "展开" : "折叠" })
+            ] }),
+            /* @__PURE__ */ u2("div", { class: "module-header-actions", children: [
+              onRemove && /* @__PURE__ */ u2(Tooltip2, { title: removeFromLayout ? "从当前布局移除视图，保留视图配置" : "删除视图（从配置与所有布局中移除）", children: /* @__PURE__ */ u2(
+                AnyIconButton$1,
+                {
+                  size: "small",
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    onRemove();
+                  },
+                  sx: { padding: "4px" },
+                  children: /* @__PURE__ */ u2(DeleteOutlineIcon, { sx: { fontSize: "1rem" } })
+                }
+              ) }),
+              onSettingsClick && /* @__PURE__ */ u2(Tooltip2, { title: "模块设置", children: /* @__PURE__ */ u2(
+                AnyIconButton$1,
+                {
+                  size: "small",
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    onSettingsClick();
+                  },
+                  sx: { padding: "4px" },
+                  children: /* @__PURE__ */ u2(SettingsIcon, { sx: { fontSize: "1rem" } })
+                }
+              ) }),
+              onExport && /* @__PURE__ */ u2(Tooltip2, { title: "导出为 Markdown", children: /* @__PURE__ */ u2(
+                AnyIconButton$1,
+                {
+                  size: "small",
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    onExport();
+                  },
+                  sx: { padding: "4px" },
+                  children: /* @__PURE__ */ u2(IosShareIcon, { sx: { fontSize: "1rem" } })
+                }
+              ) }),
+              onActionClick ? /* @__PURE__ */ u2(
+                "span",
+                {
+                  class: "module-action-plus",
+                  title: "创建记录",
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    onActionClick();
+                  },
+                  children: "+"
+                }
+              ) : null
+            ] }),
+            /* @__PURE__ */ u2("div", { class: "module-toggle", children: collapsed ? "▶" : "▼" })
+          ] })
+        ]
+      }
+    ),
     !collapsed && /* @__PURE__ */ u2("div", { class: "module-content", children })
   ] });
 }
@@ -63708,14 +64194,19 @@ function openModuleSettingsWidget(module2) {
     }
   ));
 }
-const PERIOD_OPTIONS$1 = ["年", "季", "月", "周", "天"].map((v2) => ({ value: v2, label: v2 }));
-const DISPLAY_MODE_OPTIONS$1 = [
-  { value: "list", label: "列表" },
-  { value: "grid", label: "网格" }
+const PERIOD_OPTIONS = ["年", "季", "月", "周", "天"].map((v2) => ({ value: v2, label: v2 }));
+const FREEFORM_TEMPLATE_OPTIONS = [
+  { value: "balanced", label: "均衡排布" },
+  { value: "focus", label: "焦点 + 网格" }
 ];
-const LABEL_WIDTH$1 = "80px";
-const AlignedRadioGroup$1 = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-  /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: label }),
+const DISPLAY_MODE_OPTIONS = [
+  { value: "list", label: "列表" },
+  { value: "grid", label: "网格" },
+  { value: "freeform", label: "自由布局" }
+];
+const LABEL_WIDTH = "80px";
+const AlignedRadioGroup = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+  /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: label }),
   /* @__PURE__ */ u2(RadioGroup2, { row: true, value: selectedValue, onChange: (e2) => onChange(e2.target.value), children: options.map((opt) => /* @__PURE__ */ u2(FormControlLabel2, { value: opt.value, control: /* @__PURE__ */ u2(Radio2, { size: "small" }), label: opt.label }, opt.value)) })
 ] });
 function LayoutEditorPanel({ layoutId, useCases }) {
@@ -63741,15 +64232,15 @@ function LayoutEditorPanel({ layoutId, useCases }) {
     () => allViews.filter((v2) => !(layout?.viewInstanceIds || []).includes(v2.id)),
     [layout?.viewInstanceIds, allViews]
   );
-  const addView = q$1((viewId) => {
+  const addView = q$1(async (viewId) => {
     if (!layout || !viewId) return;
     if (layout.viewInstanceIds.includes(viewId)) return;
-    handleUpdate({ viewInstanceIds: [...layout.viewInstanceIds, viewId] });
-  }, [layout, handleUpdate]);
+    await _useCases.layout.addViewInstanceToLayout(layout.id, viewId);
+  }, [layout, _useCases.layout]);
   const removeViewFromLayout = q$1((viewId) => {
     if (!layout) return;
-    handleUpdate({ viewInstanceIds: layout.viewInstanceIds.filter((id) => id !== viewId) });
-  }, [layout, handleUpdate]);
+    void _useCases.layout.removeViewInstanceFromLayout(layout.id, viewId);
+  }, [layout, _useCases.layout]);
   const moveView = q$1((viewId, direction) => {
     if (!layout) return;
     const currentIds = [...layout.viewInstanceIds];
@@ -63759,8 +64250,8 @@ function LayoutEditorPanel({ layoutId, useCases }) {
     if (targetIndex < 0 || targetIndex >= currentIds.length) return;
     const [moved] = currentIds.splice(index, 1);
     currentIds.splice(targetIndex, 0, moved);
-    handleUpdate({ viewInstanceIds: currentIds });
-  }, [layout, handleUpdate]);
+    void _useCases.layout.reorderViewInstancesInLayout(layout.id, currentIds);
+  }, [layout, _useCases.layout]);
   const autocompleteOptions = T$1(() => {
     const opts = availableViews.map((v2) => ({ value: v2.id, label: v2.title, type: "existing" }));
     if (inputValue.trim() && !availableViews.some((v2) => v2.title.toLowerCase().includes(inputValue.trim().toLowerCase()))) {
@@ -63783,7 +64274,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
     async (viewTitle) => {
       const newView = await _useCases.viewInstance.createView(viewTitle);
       if (!newView) return;
-      addView(newView.id);
+      await addView(newView.id);
       reopenAutocomplete();
     },
     [_useCases, addView, reopenAutocomplete]
@@ -63792,7 +64283,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
     async (_event, newValue) => {
       if (!newValue) return;
       if (newValue.type === "existing") {
-        addView(newValue.value);
+        await addView(newValue.value);
         setInputValue("");
         reopenAutocomplete();
         return;
@@ -63858,7 +64349,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
       }
     ),
     /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
+      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
       /* @__PURE__ */ u2(
         FormControlLabel2,
         {
@@ -63876,7 +64367,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
       )
     ] }),
     /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
+      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
       /* @__PURE__ */ u2(
         TextField2,
         {
@@ -63905,24 +64396,24 @@ function LayoutEditorPanel({ layoutId, useCases }) {
       )
     ] }),
     /* @__PURE__ */ u2(
-      AlignedRadioGroup$1,
+      AlignedRadioGroup,
       {
         label: "初始视图（时间窗）",
-        options: PERIOD_OPTIONS$1,
+        options: PERIOD_OPTIONS,
         selectedValue: layout.initialView || "月",
         onChange: (value) => handleUpdate({ initialView: value })
       }
     ),
     /* @__PURE__ */ u2(
-      AlignedRadioGroup$1,
+      AlignedRadioGroup,
       {
         label: "排列方式",
-        options: DISPLAY_MODE_OPTIONS$1,
+        options: DISPLAY_MODE_OPTIONS,
         selectedValue: layout.displayMode || "list",
         onChange: (value) => handleUpdate({ displayMode: value })
       }
     ),
-    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH$1} + 16px)` }, children: /* @__PURE__ */ u2(
+    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH} + 16px)` }, children: /* @__PURE__ */ u2(
       TextField2,
       {
         label: "列数",
@@ -63934,8 +64425,130 @@ function LayoutEditorPanel({ layoutId, useCases }) {
         sx: { width: "100px" }
       }
     ) }),
+    layout.displayMode === "freeform" && /* @__PURE__ */ u2(Stack, { spacing: 1, children: [
+      /* @__PURE__ */ u2(
+        AlignedRadioGroup,
+        {
+          label: "默认模板",
+          options: FREEFORM_TEMPLATE_OPTIONS,
+          selectedValue: layout.freeformConfig?.defaultTemplate || "balanced",
+          onChange: (value) => {
+            const hasSavedPlacement = Object.keys(layout.viewPlacements || {}).length > 0;
+            if (hasSavedPlacement && !confirm("切换模板会重置当前自由布局的位置、尺寸、层级、锁定和折叠状态，是否继续？")) return;
+            handleUpdate({
+              freeformConfig: {
+                ...layout.freeformConfig || {},
+                defaultTemplate: value
+              },
+              viewPlacements: {}
+            });
+          }
+        }
+      ),
+      /* @__PURE__ */ u2(Stack, { spacing: 1, sx: { pl: `calc(${LABEL_WIDTH} + 16px)` }, children: [
+        /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, flexWrap: "wrap", useFlexGap: true, children: [
+          /* @__PURE__ */ u2(
+            FormControlLabel2,
+            {
+              control: /* @__PURE__ */ u2(
+                Checkbox2,
+                {
+                  size: "small",
+                  checked: layout.freeformConfig?.snapToGrid ?? true,
+                  onChange: (e2) => handleUpdate({
+                    freeformConfig: {
+                      ...layout.freeformConfig || {},
+                      snapToGrid: e2.target.checked
+                    }
+                  })
+                }
+              ),
+              label: "拖动时吸附网格"
+            }
+          ),
+          /* @__PURE__ */ u2(
+            TextField2,
+            {
+              label: "网格(px)",
+              type: "number",
+              size: "small",
+              value: layout.freeformConfig?.gridSize || 16,
+              onChange: (e2) => handleUpdate({
+                freeformConfig: {
+                  ...layout.freeformConfig || {},
+                  gridSize: Math.max(4, parseInt(e2.target.value, 10) || 16)
+                }
+              }),
+              sx: { width: 110 }
+            }
+          ),
+          /* @__PURE__ */ u2(
+            TextField2,
+            {
+              label: "最小宽度",
+              type: "number",
+              size: "small",
+              value: layout.freeformConfig?.minItemWidth || 280,
+              onChange: (e2) => handleUpdate({
+                freeformConfig: {
+                  ...layout.freeformConfig || {},
+                  minItemWidth: Math.max(160, parseInt(e2.target.value, 10) || 280)
+                }
+              }),
+              sx: { width: 120 }
+            }
+          ),
+          /* @__PURE__ */ u2(
+            TextField2,
+            {
+              label: "最小高度",
+              type: "number",
+              size: "small",
+              value: layout.freeformConfig?.minItemHeight || 180,
+              onChange: (e2) => handleUpdate({
+                freeformConfig: {
+                  ...layout.freeformConfig || {},
+                  minItemHeight: Math.max(120, parseInt(e2.target.value, 10) || 180)
+                }
+              }),
+              sx: { width: 120 }
+            }
+          ),
+          /* @__PURE__ */ u2(
+            TextField2,
+            {
+              label: "画布最小宽度",
+              type: "number",
+              size: "small",
+              value: layout.freeformConfig?.minCanvasWidth || 720,
+              onChange: (e2) => handleUpdate({
+                freeformConfig: {
+                  ...layout.freeformConfig || {},
+                  minCanvasWidth: Math.max(320, parseInt(e2.target.value, 10) || 720)
+                }
+              }),
+              sx: { width: 145 }
+            }
+          ),
+          /* @__PURE__ */ u2(
+            Button2,
+            {
+              size: "small",
+              variant: "outlined",
+              onClick: () => {
+                if (confirm("确认重置当前布局的自由布局位置吗？")) {
+                  void _useCases.layout.resetFreeformLayout(layout.id);
+                }
+              },
+              children: "按模板重排"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "“均衡排布”按视图推荐尺寸顺序装箱；“焦点 + 网格”会让第一个视图横跨首行。切换模板或重排会清空已保存的布局状态。" })
+      ] })
+    ] }),
     /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, sx: { minWidth: 0 }, children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500, pt: "6px" }, children: "包含视图" }),
+      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500, pt: "6px" }, children: "包含视图" }),
       /* @__PURE__ */ u2(Stack, { spacing: 1, sx: { flex: 1, minWidth: 0 }, children: [
         /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center", minHeight: 32 }, children: selectedViews.map(
           (view, index) => view ? /* @__PURE__ */ u2(
@@ -64859,6 +65472,26 @@ var Action;
   Action2["UnregisterDroppable"] = "unregisterDroppable";
 })(Action || (Action = {}));
 function noop() {
+}
+function useSensor(sensor, options) {
+  return T$1(
+    () => ({
+      sensor,
+      options: options != null ? options : {}
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sensor, options]
+  );
+}
+function useSensors() {
+  for (var _len = arguments.length, sensors = new Array(_len), _key = 0; _key < _len; _key++) {
+    sensors[_key] = arguments[_key];
+  }
+  return T$1(
+    () => [...sensors].filter((sensor) => sensor != null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [...sensors]
+  );
 }
 const defaultCoordinates = /* @__PURE__ */ Object.freeze({
   x: 0,
@@ -68158,173 +68791,12 @@ function normalizeLocalDisabled(localDisabled, globalDisabled) {
   };
 }
 [KeyboardCode.Down, KeyboardCode.Right, KeyboardCode.Up, KeyboardCode.Left];
-const PERIOD_OPTIONS = ["年", "季", "月", "周", "天"].map((v2) => ({ value: v2, label: v2 }));
-const DISPLAY_MODE_OPTIONS = [{ value: "list", label: "列表" }, { value: "grid", label: "网格" }];
-const LABEL_WIDTH = "80px";
-const AlignedRadioGroup = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-  /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: label }),
-  /* @__PURE__ */ u2(RadioGroup2, { row: true, value: selectedValue, onChange: (e2) => onChange(e2.target.value), children: options.map((opt) => /* @__PURE__ */ u2(FormControlLabel2, { value: opt.value, control: /* @__PURE__ */ u2(Radio2, { size: "small" }), label: opt.label }, opt.value)) })
-] });
-function LayoutEditor({ layout, useCases }) {
-  const allViews = useSelector(selectViewInstances);
-  const [inputValue, setInputValue] = d("");
-  const [contextMenu, setContextMenu] = d(null);
-  const [settingsModalOpen, setSettingsModalOpen] = d(false);
-  const [selectedViewForSettings, setSelectedViewForSettings] = d(null);
-  const handleUpdate = q$1((updates) => {
-    useCases.layout.updateLayout(layout.id, updates);
-  }, [layout.id, useCases]);
-  const selectedViews = T$1(
-    () => layout.viewInstanceIds.map((id) => allViews.find((v2) => v2.id === id)).filter(Boolean),
-    [layout.viewInstanceIds, allViews]
-  );
-  const availableViews = T$1(
-    () => allViews.filter((v2) => !layout.viewInstanceIds.includes(v2.id)),
-    [layout.viewInstanceIds, allViews]
-  );
-  const addView = (viewId) => {
-    if (viewId) {
-      handleUpdate({ viewInstanceIds: [...layout.viewInstanceIds, viewId] });
-    }
-  };
-  const removeView = (viewId) => {
-    handleUpdate({ viewInstanceIds: layout.viewInstanceIds.filter((id) => id !== viewId) });
-  };
-  const autocompleteOptions = T$1(() => {
-    const existingOptions = availableViews.map((v2) => ({
-      value: v2.id,
-      label: v2.title,
-      type: "existing"
-    }));
-    if (inputValue.trim() && !availableViews.some(
-      (v2) => v2.title.toLowerCase().includes(inputValue.toLowerCase())
-    )) {
-      existingOptions.push({
-        value: "create",
-        label: `+ 创建新视图："${inputValue.trim()}"`,
-        type: "create",
-        newName: inputValue.trim()
-      });
-    }
-    return existingOptions;
-  }, [availableViews, inputValue]);
-  const handleCreateNewView = q$1(
-    async (viewTitle) => {
-      const newView = await useCases.viewInstance.createView(viewTitle);
-      if (!newView) return;
-      addView(newView.id);
-    },
-    [useCases, addView]
-  );
-  const handleAutocompleteChange = q$1(async (event, newValue) => {
-    if (!newValue) return;
-    if (newValue.type === "existing") {
-      addView(newValue.value);
-    } else if (newValue.type === "create") {
-      await handleCreateNewView(newValue.newName);
-    }
-    setInputValue("");
-  }, [addView, handleCreateNewView]);
-  const handleChipRightClick = q$1((event, view) => {
-    event.preventDefault();
-    setContextMenu({
-      mouseX: event.clientX - 2,
-      mouseY: event.clientY - 4,
-      viewId: view.id,
-      viewTitle: view.title
-    });
-  }, []);
-  const handleContextMenuClose = q$1(() => {
-    setContextMenu(null);
-  }, []);
-  const handleViewSettings = q$1(() => {
-    if (contextMenu) {
-      const view = allViews.find((v2) => v2.id === contextMenu.viewId);
-      if (view) {
-        openModuleSettingsWidget(view);
-      }
-    }
-    handleContextMenuClose();
-  }, [contextMenu, allViews, handleContextMenuClose]);
-  const handleViewRename = q$1(() => {
-    if (contextMenu) {
-      const newName = prompt("请输入新的视图名称", contextMenu.viewTitle);
-      if (newName && newName.trim()) {
-        useCases.viewInstance.updateView(contextMenu.viewId, { title: newName.trim() });
-      }
-    }
-    handleContextMenuClose();
-  }, [contextMenu, useCases, handleContextMenuClose]);
-  const handleViewRemove = q$1(() => {
-    if (contextMenu) {
-      removeView(contextMenu.viewId);
-    }
-    handleContextMenuClose();
-  }, [contextMenu, removeView, handleContextMenuClose]);
-  q$1(() => {
-    setSettingsModalOpen(false);
-    setSelectedViewForSettings(null);
-  }, []);
-  return /* @__PURE__ */ u2(Stack, { spacing: 2, sx: { p: "8px 16px 16px 50px" }, children: [
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
-      /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { size: "small", checked: !layout.hideToolbar, onChange: (e2) => handleUpdate({ hideToolbar: !e2.target.checked }) }), label: /* @__PURE__ */ u2(Typography2, { noWrap: true, children: "显示工具栏/导航器" }), sx: { flexShrink: 0, mr: 0 } })
-    ] }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
-      /* @__PURE__ */ u2(TextField2, { type: "date", size: "small", variant: "outlined", disabled: !!layout.initialDateFollowsNow, value: layout.initialDate || "", onChange: (e2) => handleUpdate({ initialDate: e2.target.value }), sx: { width: "170px" } }),
-      /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { size: "small", checked: !!layout.initialDateFollowsNow, onChange: (e2) => handleUpdate({ initialDateFollowsNow: e2.target.checked }) }), label: /* @__PURE__ */ u2(Typography2, { noWrap: true, children: "跟随今日" }) })
-    ] }),
-    /* @__PURE__ */ u2(AlignedRadioGroup, { label: "初始视图（时间窗）", options: PERIOD_OPTIONS, selectedValue: layout.initialView || "月", onChange: (value) => handleUpdate({ initialView: value }) }),
-    /* @__PURE__ */ u2(AlignedRadioGroup, { label: "排列方式", options: DISPLAY_MODE_OPTIONS, selectedValue: layout.displayMode || "list", onChange: (value) => handleUpdate({ displayMode: value }) }),
-    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH} + 16px)` }, children: /* @__PURE__ */ u2(TextField2, { label: "列数", type: "number", size: "small", variant: "outlined", value: layout.gridConfig?.columns || 2, onChange: (e2) => handleUpdate({ gridConfig: { columns: parseInt(e2.target.value, 10) || 2 } }), sx: { width: "100px" } }) }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "包含视图" }),
-      selectedViews.map((view) => view && /* @__PURE__ */ u2(Tooltip2, { title: `左键移除，右键更多选项`, children: /* @__PURE__ */ u2(
-        Chip2,
-        {
-          label: view.title,
-          onClick: () => removeView(view.id),
-          onContextMenu: (e2) => handleChipRightClick(e2, view),
-          size: "small",
-          sx: { cursor: "pointer" }
-        }
-      ) }, view.id)),
-      /* @__PURE__ */ u2(
-        Autocomplete2,
-        {
-          value: null,
-          inputValue,
-          onInputChange: (_2, newInputValue) => setInputValue(newInputValue),
-          options: autocompleteOptions,
-          getOptionLabel: (option) => option ? option.label : "",
-          onChange: handleAutocompleteChange,
-          disablePortal: true,
-          slotProps: { popper: { style: { zIndex: 2e4 } } },
-          renderInput: (params) => /* @__PURE__ */ u2(TextField2, { ...params, variant: "outlined", placeholder: "+ 搜索添加或创建视图..." }),
-          sx: { minWidth: 200 },
-          size: "small"
-        }
-      )
-    ] }),
-    /* @__PURE__ */ u2(
-      Menu2,
-      {
-        open: contextMenu !== null,
-        onClose: handleContextMenuClose,
-        disablePortal: true,
-        anchorReference: "anchorPosition",
-        anchorPosition: contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : void 0,
-        children: [
-          /* @__PURE__ */ u2(MenuItem2, { onClick: handleViewSettings, children: "设置视图" }),
-          /* @__PURE__ */ u2(MenuItem2, { onClick: handleViewRename, children: "重命名" }),
-          /* @__PURE__ */ u2(MenuItem2, { onClick: handleViewRemove, children: "移除" })
-        ]
-      }
-    )
-  ] });
-}
-function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }) {
+function SortableLayoutItem({
+  layout,
+  useCases,
+  isExpanded,
+  onToggle
+}) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: layout.id });
   const style2 = {
     transform: transform2 ? `translate3d(${transform2.x}px, ${transform2.y}px, 0)` : void 0,
@@ -68333,18 +68805,18 @@ function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }) {
   const handleDelete = q$1(() => {
     if (confirm(`确认删除布局 "${layout.name}" 吗？
 相关的引用可能会失效。`)) {
-      useCases.layout.deleteLayout(layout.id);
+      void useCases.layout.deleteLayout(layout.id);
     }
-  }, [layout, useCases]);
+  }, [layout.id, layout.name, useCases.layout]);
   const handleDuplicate = q$1(() => {
-    useCases.layout.duplicateLayout(layout.id);
-  }, [layout.id, useCases]);
+    void useCases.layout.duplicateLayout(layout.id);
+  }, [layout.id, useCases.layout]);
   const handleRename = q$1(() => {
     const newName = prompt("请输入新的布局名称", layout.name);
     if (newName && newName.trim()) {
-      useCases.layout.updateLayout(layout.id, { name: newName.trim() });
+      void useCases.layout.updateLayout(layout.id, { name: newName.trim() });
     }
-  }, [layout, useCases]);
+  }, [layout.id, layout.name, useCases.layout]);
   const dragHandleProps = { ...attributes, ...listeners };
   return /* @__PURE__ */ u2(Box, { ref: setNodeRef, style: style2, sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: [
     /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", sx: { p: 1 }, children: [
@@ -68364,18 +68836,11 @@ function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }) {
         }
       ),
       /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: onToggle, sx: { mr: 1 }, children: isExpanded ? /* @__PURE__ */ u2(ExpandLessIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) }),
-      /* @__PURE__ */ u2(
-        Typography2,
-        {
-          sx: { flex: 1, cursor: "pointer" },
-          onClick: handleRename,
-          children: layout.name
-        }
-      ),
+      /* @__PURE__ */ u2(Typography2, { sx: { flex: 1, cursor: "pointer" }, onClick: handleRename, children: layout.name }),
       /* @__PURE__ */ u2(IconAction, { label: "复制", onClick: handleDuplicate, icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }) }),
       /* @__PURE__ */ u2(IconAction, { label: "删除", onClick: handleDelete, color: "error", icon: /* @__PURE__ */ u2(DeleteOutlineIcon, { fontSize: "small" }) })
     ] }),
-    isExpanded && /* @__PURE__ */ u2(LayoutEditor, { layout, useCases })
+    isExpanded && /* @__PURE__ */ u2(LayoutEditorPanel, { layoutId: layout.id, useCases })
   ] });
 }
 function LayoutSettings({ app }) {
@@ -68391,33 +68856,27 @@ function LayoutSettings({ app }) {
     });
     modal.openAndGetValue().then((newName) => {
       if (!newName) return;
-      useCases.layout.addLayout(newName, null);
+      void useCases.layout.addLayout(newName, null);
     });
-  }, [app, useCases]);
+  }, [app, useCases.layout]);
   const toggleExpand = q$1((id) => {
-    setExpandedIds((prev2) => {
-      const next2 = new Set(prev2);
-      if (next2.has(id)) {
-        next2.delete(id);
-      } else {
-        next2.add(id);
-      }
+    setExpandedIds((previous) => {
+      const next2 = new Set(previous);
+      if (next2.has(id)) next2.delete(id);
+      else next2.add(id);
       return next2;
     });
   }, []);
   const handleDragEnd = q$1((event) => {
     const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      const oldIndex = layouts.findIndex((l2) => l2.id === active.id);
-      const newIndex = layouts.findIndex((l2) => l2.id === over.id);
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const reorderedLayouts = arrayMove$1(layouts, oldIndex, newIndex);
-        const orderedIds = reorderedLayouts.map((l2) => l2.id);
-        useCases.layout.reorderLayouts(orderedIds);
-      }
-    }
-  }, [layouts, useCases]);
-  const layoutIds = T$1(() => layouts.map((l2) => l2.id), [layouts]);
+    if (!active || !over || active.id === over.id) return;
+    const oldIndex = layouts.findIndex((layout) => layout.id === active.id);
+    const newIndex = layouts.findIndex((layout) => layout.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const orderedIds = arrayMove$1(layouts, oldIndex, newIndex).map((layout) => layout.id);
+    void useCases.layout.reorderLayouts(orderedIds);
+  }, [layouts, useCases.layout]);
+  const layoutIds = T$1(() => layouts.map((layout) => layout.id), [layouts]);
   return /* @__PURE__ */ u2(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
     /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", justifyContent: "space-between", sx: { mb: 2 }, children: [
       /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "管理布局" }),
@@ -73636,13 +74095,462 @@ function useLayoutModuleActions({
     handleMigrateLegacyLayoutFilters
   };
 }
+function hasSizeChanged(a2, b2) {
+  return a2.width !== b2.width || a2.height !== b2.height;
+}
+function getArrowDelta(key, step) {
+  if (key === "ArrowLeft") return { x: -step, y: 0 };
+  if (key === "ArrowRight") return { x: step, y: 0 };
+  if (key === "ArrowUp") return { x: 0, y: -step };
+  if (key === "ArrowDown") return { x: 0, y: step };
+  return null;
+}
+function FreeformLayoutItem({
+  id,
+  label,
+  viewType,
+  placement,
+  editing,
+  selected,
+  index,
+  canvasWidth,
+  keyboardStep,
+  config: config2,
+  onSelect,
+  onDeselect,
+  onBringToFront,
+  onToggleLocked,
+  onToggleCollapsed,
+  onRemoveFromLayout,
+  onKeyboardChange,
+  onResizePreview,
+  onResizeEnd,
+  children
+}) {
+  const { attributes, listeners, setNodeRef, transform: transform2, isDragging } = useDraggable({
+    id,
+    disabled: !editing || !!placement.locked
+  });
+  const [isResizing, setIsResizing] = d(false);
+  const resizeSessionRef = A$1(null);
+  const onResizePreviewRef = A$1(onResizePreview);
+  y(() => {
+    onResizePreviewRef.current = onResizePreview;
+  }, [onResizePreview]);
+  y(() => () => {
+    resizeSessionRef.current = null;
+    onResizePreviewRef.current(null);
+  }, []);
+  const dragHandleProps = editing && !placement.locked ? { ...attributes, ...listeners } : {};
+  const handleResizePointerDown = (event) => {
+    if (!editing || placement.locked || placement.collapsed || event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onSelect(id);
+    const target = event.currentTarget;
+    target.setPointerCapture?.(event.pointerId);
+    resizeSessionRef.current = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startPlacement: placement,
+      latestPlacement: placement,
+      target
+    };
+    setIsResizing(true);
+    onResizePreview(placement);
+  };
+  const handleResizePointerMove = (event) => {
+    const session = resizeSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const next2 = resizeViewPlacement(
+      session.startPlacement,
+      {
+        x: event.clientX - session.startClientX,
+        y: event.clientY - session.startClientY
+      },
+      canvasWidth,
+      config2
+    );
+    session.latestPlacement = next2;
+    onResizePreview(next2);
+  };
+  const finishResize = (event, commit) => {
+    const session = resizeSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      session.target.releasePointerCapture?.(event.pointerId);
+    } catch {
+    }
+    resizeSessionRef.current = null;
+    setIsResizing(false);
+    onResizePreview(null);
+    if (commit && hasSizeChanged(session.startPlacement, session.latestPlacement)) {
+      onResizeEnd(session.latestPlacement);
+    }
+  };
+  const handleItemKeyDown = (event) => {
+    if (!editing || event.target !== event.currentTarget) return;
+    const delta = getArrowDelta(event.key, keyboardStep);
+    if (delta) {
+      event.preventDefault();
+      if (!placement.locked) onKeyboardChange(id, delta, event.shiftKey);
+      return;
+    }
+    const key = event.key.toLowerCase();
+    if (key === "escape") {
+      event.preventDefault();
+      onDeselect();
+    } else if (key === "pageup") {
+      event.preventDefault();
+      onBringToFront(id);
+    } else if (key === "l") {
+      event.preventDefault();
+      onToggleLocked(id);
+    } else if (key === "c") {
+      event.preventDefault();
+      onToggleCollapsed(id);
+    }
+  };
+  const handleResizeKeyDown = (event) => {
+    const delta = getArrowDelta(event.key, keyboardStep);
+    if (!delta || placement.locked || placement.collapsed) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onSelect(id);
+    const next2 = resizeViewPlacement(placement, delta, canvasWidth, config2);
+    if (hasSizeChanged(placement, next2)) onResizeEnd(next2);
+  };
+  const visualHeight = getFreeformVisualHeight(placement);
+  const style2 = {
+    left: `${placement.x}px`,
+    top: `${placement.y}px`,
+    width: `${placement.width}px`,
+    height: `${visualHeight}px`,
+    zIndex: isDragging || isResizing ? 1e5 : placement.zIndex ?? index + 1,
+    transform: transform2 ? `translate3d(${Math.round(transform2.x)}px, ${Math.round(transform2.y)}px, 0)` : void 0
+  };
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      ref: setNodeRef,
+      class: `think-freeform-item${editing ? " is-editing" : ""}${selected ? " is-selected" : ""}${placement.locked ? " is-locked" : ""}${placement.collapsed ? " is-collapsed" : ""}${isDragging ? " is-dragging" : ""}${isResizing ? " is-resizing" : ""}`,
+      style: style2,
+      "data-view-instance-id": id,
+      "data-view-type": viewType,
+      "data-layout-locked": placement.locked ? "true" : "false",
+      role: editing ? "group" : void 0,
+      "aria-label": editing ? `自由布局卡片：${label}` : void 0,
+      "data-layout-selected": selected ? "true" : "false",
+      "aria-keyshortcuts": editing ? "ArrowUp ArrowDown ArrowLeft ArrowRight Shift+ArrowUp Shift+ArrowDown Shift+ArrowLeft Shift+ArrowRight PageUp L C Escape" : void 0,
+      tabIndex: editing ? 0 : void 0,
+      onKeyDown: handleItemKeyDown,
+      onPointerDown: ((event) => {
+        if (editing && event.button === 0) onSelect(id);
+      }),
+      onFocus: () => {
+        if (editing) onSelect(id);
+      },
+      children: [
+        children({
+          dragHandleProps,
+          isDragging,
+          isResizing,
+          editing,
+          selected,
+          placement,
+          onBringToFront: () => onBringToFront(id),
+          onToggleLocked: () => onToggleLocked(id),
+          onToggleCollapsed: () => onToggleCollapsed(id),
+          onRemoveFromLayout: () => onRemoveFromLayout(id)
+        }),
+        editing && !placement.locked && !placement.collapsed && /* @__PURE__ */ u2(
+          "span",
+          {
+            class: "think-freeform-resize-handle",
+            role: "button",
+            tabIndex: 0,
+            "aria-label": `调整“${label}”尺寸`,
+            "aria-keyshortcuts": "ArrowUp ArrowDown ArrowLeft ArrowRight",
+            title: `拖动或使用方向键调整尺寸（${Math.round(placement.width)} × ${Math.round(placement.height)}）`,
+            onKeyDown: handleResizeKeyDown,
+            onPointerDown: handleResizePointerDown,
+            onPointerMove: handleResizePointerMove,
+            onPointerUp: ((event) => finishResize(event, true)),
+            onPointerCancel: ((event) => finishResize(event, false))
+          }
+        ),
+        isResizing && /* @__PURE__ */ u2("span", { class: "think-freeform-size-indicator", "aria-hidden": "true", children: [
+          Math.round(placement.width),
+          " × ",
+          Math.round(placement.height)
+        ] })
+      ]
+    }
+  );
+}
+const FALLBACK_CANVAS_WIDTH = 960;
+function mergePlacement(base, override) {
+  return Object.keys(override).length > 0 ? { ...base, ...override } : base;
+}
+function isSamePlacement(left2, right2) {
+  return left2.x === right2.x && left2.y === right2.y && left2.width === right2.width && left2.height === right2.height && left2.zIndex === right2.zIndex && left2.locked === right2.locked && left2.collapsed === right2.collapsed;
+}
+function FreeformCanvas({
+  layout,
+  viewInstances,
+  editing,
+  renderItem,
+  onPlacementChange,
+  onPlacementsChange,
+  onRemoveView
+}) {
+  const hostRef = A$1(null);
+  const previousPersistedPlacementsRef = A$1(layout.viewPlacements);
+  const [canvasWidth, setCanvasWidth] = d(FALLBACK_CANVAS_WIDTH);
+  const [selectedViewId, setSelectedViewId] = d(null);
+  const [localOverrides, setLocalOverrides] = d({});
+  const [resizePreviews, setResizePreviews] = d({});
+  const [dragPreview, setDragPreview] = d(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 }
+    })
+  );
+  const config2 = T$1(
+    () => normalizeFreeformLayoutConfig(layout.freeformConfig),
+    [layout.freeformConfig]
+  );
+  const keyboardStep = config2.snapToGrid ? config2.gridSize : 8;
+  y(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const updateWidth = () => {
+      const measured = Math.max(
+        config2.minCanvasWidth,
+        Math.floor(host.clientWidth || FALLBACK_CANVAS_WIDTH)
+      );
+      setCanvasWidth((current2) => current2 === measured ? current2 : measured);
+    };
+    updateWidth();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateWidth);
+      return () => window.removeEventListener("resize", updateWidth);
+    }
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [config2.minCanvasWidth]);
+  y(() => {
+    setSelectedViewId(null);
+    setLocalOverrides({});
+    setResizePreviews({});
+    setDragPreview(null);
+    previousPersistedPlacementsRef.current = layout.viewPlacements;
+  }, [layout.id]);
+  y(() => {
+    if (previousPersistedPlacementsRef.current === layout.viewPlacements) return;
+    previousPersistedPlacementsRef.current = layout.viewPlacements;
+    setLocalOverrides({});
+  }, [layout.viewPlacements]);
+  y(() => {
+    if (editing) return;
+    setSelectedViewId(null);
+    setResizePreviews({});
+    setDragPreview(null);
+  }, [editing]);
+  y(() => {
+    if (selectedViewId && !layout.viewInstanceIds.includes(selectedViewId)) {
+      setSelectedViewId(null);
+    }
+  }, [layout.viewInstanceIds, selectedViewId]);
+  const viewById = T$1(
+    () => new Map(viewInstances.map((view) => [view.id, view])),
+    [viewInstances]
+  );
+  const preferredSizes = T$1(
+    () => layout.viewInstanceIds.reduce((result, viewId) => {
+      result[viewId] = getDefaultFreeformItemSize(viewById.get(viewId)?.viewType, config2);
+      return result;
+    }, {}),
+    [config2, layout.viewInstanceIds, viewById]
+  );
+  const resolvedPlacements = T$1(
+    () => resolveViewPlacements(
+      layout.viewInstanceIds,
+      layout.viewPlacements,
+      canvasWidth,
+      config2,
+      preferredSizes
+    ),
+    [canvasWidth, config2, layout.viewInstanceIds, layout.viewPlacements, preferredSizes]
+  );
+  const placements2 = T$1(
+    () => mergePlacement(resolvedPlacements, localOverrides),
+    [localOverrides, resolvedPlacements]
+  );
+  const displayedPlacements = T$1(
+    () => mergePlacement(placements2, resizePreviews),
+    [placements2, resizePreviews]
+  );
+  const placementsForHeight = T$1(() => {
+    if (!dragPreview) return displayedPlacements;
+    return {
+      ...displayedPlacements,
+      [dragPreview.id]: dragPreview.placement
+    };
+  }, [displayedPlacements, dragPreview]);
+  const canvasHeight = T$1(
+    () => calculateFreeformCanvasHeight(placementsForHeight, config2),
+    [config2, placementsForHeight]
+  );
+  const commitPlacement = q$1((viewId, placement) => {
+    setLocalOverrides((current2) => ({ ...current2, [viewId]: placement }));
+    onPlacementChange(viewId, placement);
+  }, [onPlacementChange]);
+  const commitPlacements = q$1((next2) => {
+    setLocalOverrides(next2);
+    onPlacementsChange(next2);
+  }, [onPlacementsChange]);
+  const handleDragStart = (event) => {
+    if (!editing) return;
+    setSelectedViewId(String(event.active.id));
+  };
+  const handleDragMove = (event) => {
+    const viewId = String(event.active.id);
+    const current2 = placements2[viewId];
+    if (!editing || !current2 || current2.locked) return;
+    setDragPreview({
+      id: viewId,
+      placement: moveViewPlacement(current2, event.delta, canvasWidth, config2)
+    });
+  };
+  const handleDragEnd = (event) => {
+    const viewId = String(event.active.id);
+    const current2 = placements2[viewId];
+    setDragPreview(null);
+    if (!editing || !current2 || current2.locked) return;
+    if (event.delta.x === 0 && event.delta.y === 0) return;
+    const next2 = moveViewPlacement(current2, event.delta, canvasWidth, config2);
+    if (!isSamePlacement(current2, next2)) commitPlacement(viewId, next2);
+  };
+  const handleBringToFront = (viewId) => {
+    const next2 = bringViewPlacementsToFront(
+      displayedPlacements,
+      viewId,
+      layout.viewInstanceIds
+    );
+    if (next2 === displayedPlacements) return;
+    commitPlacements(next2);
+  };
+  const handleToggleLocked = (viewId) => {
+    const current2 = displayedPlacements[viewId];
+    if (!current2) return;
+    commitPlacement(viewId, { ...current2, locked: !current2.locked });
+  };
+  const handleToggleCollapsed = (viewId) => {
+    const current2 = displayedPlacements[viewId];
+    if (!current2) return;
+    commitPlacement(viewId, { ...current2, collapsed: !current2.collapsed });
+  };
+  const handleKeyboardChange = (viewId, delta, resize) => {
+    const current2 = displayedPlacements[viewId];
+    if (!editing || !current2 || current2.locked) return;
+    const next2 = resize ? resizeViewPlacement(current2, delta, canvasWidth, config2) : moveViewPlacement(current2, delta, canvasWidth, config2);
+    if (!isSamePlacement(current2, next2)) commitPlacement(viewId, next2);
+  };
+  return /* @__PURE__ */ u2("div", { ref: hostRef, class: "think-freeform-host", children: /* @__PURE__ */ u2(
+    DndContext,
+    {
+      sensors,
+      onDragStart: handleDragStart,
+      onDragMove: handleDragMove,
+      onDragCancel: () => setDragPreview(null),
+      onDragEnd: handleDragEnd,
+      children: /* @__PURE__ */ u2(
+        "div",
+        {
+          class: `think-freeform-canvas${editing ? " is-editing" : ""}`,
+          style: {
+            width: `${canvasWidth}px`,
+            height: `${canvasHeight}px`,
+            minHeight: `${config2.minCanvasHeight}px`,
+            "--think-freeform-grid-size": `${config2.gridSize}px`
+          },
+          onPointerDown: ((event) => {
+            if (editing && event.target === event.currentTarget) setSelectedViewId(null);
+          }),
+          children: layout.viewInstanceIds.map((viewId, index) => {
+            const placement = displayedPlacements[viewId];
+            const view = viewById.get(viewId);
+            if (!placement) return null;
+            return /* @__PURE__ */ u2(
+              FreeformLayoutItem,
+              {
+                id: viewId,
+                label: view?.title || viewId,
+                viewType: view?.viewType,
+                placement,
+                editing,
+                selected: selectedViewId === viewId,
+                index,
+                canvasWidth,
+                keyboardStep,
+                config: config2,
+                onSelect: setSelectedViewId,
+                onDeselect: () => setSelectedViewId(null),
+                onBringToFront: handleBringToFront,
+                onToggleLocked: handleToggleLocked,
+                onToggleCollapsed: handleToggleCollapsed,
+                onRemoveFromLayout: onRemoveView,
+                onKeyboardChange: handleKeyboardChange,
+                onResizePreview: (preview) => {
+                  setResizePreviews((current2) => {
+                    if (preview) return { ...current2, [viewId]: preview };
+                    if (!(viewId in current2)) return current2;
+                    const next2 = { ...current2 };
+                    delete next2[viewId];
+                    return next2;
+                  });
+                },
+                onResizeEnd: (next2) => commitPlacement(viewId, next2),
+                children: (props) => renderItem(viewId, props)
+              },
+              viewId
+            );
+          })
+        }
+      )
+    }
+  ) });
+}
 function getLayoutInitialDate(layout) {
   return layout.initialDateFollowsNow ? dayjs() : layout.initialDate ? dayjs(layout.initialDate) : dayjs();
+}
+function useCompactFreeformFallback() {
+  const [compact, setCompact] = d(false);
+  y(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(max-width: 760px), (hover: none) and (pointer: coarse)");
+    const update = () => setCompact(media.matches);
+    update();
+    media.addEventListener?.("change", update);
+    return () => media.removeEventListener?.("change", update);
+  }, []);
+  return compact;
 }
 function LayoutRenderer({ layout, dataStore, app, actionService, timerService }) {
   const useCases = useUseCases();
   const ui = useUiPort();
   const allViews = useSelector(selectViewInstances);
+  const allViewsById = T$1(
+    () => new Map(allViews.map((view) => [view.id, view])),
+    [allViews]
+  );
   const inputSettings = useSelector(selectInputSettings);
   const timers = useSelector(selectTimers);
   const allThemes = inputSettings.themes;
@@ -73657,6 +74565,9 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   const modulesDataCache = A$1({});
   const [layoutView, setLayoutView] = d(layout.initialView || "月");
   const [layoutDate, setLayoutDate] = d(getLayoutInitialDate(layout));
+  const [isFreeformEditing, setIsFreeformEditing] = d(false);
+  const [viewToAdd, setViewToAdd] = d("");
+  const compactFreeformFallback = useCompactFreeformFallback();
   const legacyFilterState = T$1(() => {
     return getLegacyLayoutFilterState(layout);
   }, [layout.globalFilters, layout.selectedThemes, layout.selectedCategories]);
@@ -73669,10 +74580,22 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     const range = calculateTimelineRange(layoutDate, normalizeTimelineView(layoutView));
     return [range.start.toDate(), range.end.toDate()];
   }, [layoutDate, layoutView]);
+  const availableViews = T$1(
+    () => allViews.filter((view) => !layout.viewInstanceIds.includes(view.id)),
+    [allViews, layout.viewInstanceIds]
+  );
   y(() => {
     setLayoutDate(getLayoutInitialDate(layout));
     setLayoutView(layout.initialView || "月");
   }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
+  y(() => {
+    if (layout.displayMode !== "freeform" || compactFreeformFallback) setIsFreeformEditing(false);
+  }, [compactFreeformFallback, layout.displayMode]);
+  y(() => {
+    if (viewToAdd && !availableViews.some((view) => view.id === viewToAdd)) {
+      setViewToAdd("");
+    }
+  }, [availableViews, viewToAdd]);
   const {
     handleExport,
     handleQuickInputAction,
@@ -73692,26 +74615,70 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     ui,
     useCases
   });
-  const renderViewInstance = (viewId) => {
-    const viewInstance = allViews.find((v2) => v2.id === viewId);
+  const handlePlacementChange = (viewId, placement) => {
+    void useCases.layout.updateViewPlacement(layout.id, viewId, placement);
+  };
+  const handlePlacementsChange = (placements2) => {
+    void useCases.layout.updateViewPlacements(layout.id, placements2);
+  };
+  const handleResetFreeformLayout = () => {
+    if (!window.confirm("确认重置当前布局的位置、尺寸、层级、锁定和折叠状态吗？")) return;
+    void useCases.layout.resetFreeformLayout(layout.id);
+  };
+  const handleRemoveFromLayout = (viewId) => {
+    const view = allViewsById.get(viewId);
+    if (!window.confirm(`确认仅从当前布局移除“${view?.title || viewId}”吗？视图配置本身会保留。`)) return;
+    void useCases.layout.removeViewInstanceFromLayout(layout.id, viewId);
+  };
+  const handleAddExistingView = () => {
+    if (!viewToAdd) return;
+    void useCases.layout.addViewInstanceToLayout(layout.id, viewToAdd);
+    setViewToAdd("");
+  };
+  const handleCreateAndAddView = () => {
+    const title = window.prompt("请输入新视图名称");
+    if (!title?.trim()) return;
+    void (async () => {
+      const created = await useCases.viewInstance.createView(title.trim());
+      if (created) await useCases.layout.addViewInstanceToLayout(layout.id, created.id);
+    })();
+  };
+  const renderViewInstance = (viewId, freeformProps, freeformFallback = false) => {
+    const viewInstance = allViewsById.get(viewId);
     if (!viewInstance) return /* @__PURE__ */ u2("div", { class: "think-module", children: [
       "视图 (ID: ",
       viewId,
       ") 未找到"
     ] });
-    const isExpanded = !!expandedState[viewId];
+    const hasLayoutCollapseOverride = typeof freeformProps?.placement.collapsed === "boolean";
+    const isExpanded = hasLayoutCollapseOverride ? !freeformProps?.placement.collapsed : !!expandedState[viewId];
     const expandedIndex = isExpanded ? expandedViewIds.indexOf(viewId) : -1;
-    const shouldRenderContent = isExpanded && expandedIndex >= 0 && expandedIndex < renderedExpandedCount;
+    const shouldRenderContent = isExpanded && (freeformProps ? expandedIndex < 0 || expandedIndex < renderedExpandedCount : expandedIndex >= 0 && expandedIndex < renderedExpandedCount);
+    const handlePanelToggle = (event) => {
+      if (freeformProps) {
+        freeformProps.onToggleCollapsed();
+      } else {
+        handleToggle(viewId, event);
+      }
+    };
     return /* @__PURE__ */ u2(
       ModulePanel,
       {
         title: viewInstance.title,
         collapsed: !isExpanded,
-        onToggle: (e2) => handleToggle(viewId, e2),
+        onToggle: handlePanelToggle,
         onActionClick: isModuleHeaderCreateAllowed(viewInstance.viewType) ? () => handleQuickInputAction(viewInstance) : void 0,
         onExport: () => handleExport(viewInstance.id, viewInstance.title),
         onSettingsClick: () => handleSettingsClick(viewInstance),
-        onRemove: () => handleDeleteViewInstance(viewInstance.id),
+        onRemove: freeformProps || freeformFallback ? () => handleRemoveFromLayout(viewInstance.id) : () => handleDeleteViewInstance(viewInstance.id),
+        removeFromLayout: !!freeformProps || freeformFallback,
+        dragHandleProps: freeformProps?.dragHandleProps,
+        layoutEditing: !!freeformProps?.editing,
+        layoutSelected: !!freeformProps?.selected,
+        layoutLocked: !!freeformProps?.placement.locked,
+        onLayoutBringToFront: freeformProps?.onBringToFront,
+        onLayoutToggleLock: freeformProps?.onToggleLocked,
+        onLayoutToggleCollapsed: freeformProps?.onToggleCollapsed,
         children: shouldRenderContent ? /* @__PURE__ */ u2(
           ViewContent,
           {
@@ -73741,6 +74708,8 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     );
   };
   const gridStyle = layout.displayMode === "grid" ? { display: "grid", gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`, gap: "8px" } : {};
+  const isFreeform = layout.displayMode === "freeform";
+  const useFreeformCanvas = isFreeform && !compactFreeformFallback;
   return /* @__PURE__ */ u2("div", { children: [
     /* @__PURE__ */ u2(
       ViewToolbar,
@@ -73761,14 +74730,70 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
             onMigrateLegacyFilters: handleMigrateLegacyLayoutFilters
           }
         ),
-        viewInstances: layout.viewInstanceIds.map((id) => allViews.find((v2) => v2.id === id)).filter(Boolean),
+        viewInstances: layout.viewInstanceIds.map((id) => allViewsById.get(id)).filter(Boolean),
         hideToolbar: layout.hideToolbar,
         onLayoutSettingsClick: () => openLayoutSettingsWidget(layout.id),
         themes: allThemes
       }
     ),
-    /* @__PURE__ */ u2("div", { style: gridStyle, children: isStateInitialized && layout.viewInstanceIds.map(renderViewInstance) })
+    isFreeform && /* @__PURE__ */ u2("div", { class: "think-freeform-toolbar", children: [
+      /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: isFreeformEditing ? "mod-cta" : "",
+          disabled: compactFreeformFallback,
+          onClick: () => setIsFreeformEditing((editing) => !editing),
+          children: isFreeformEditing ? "完成布局编辑" : "编辑自由布局"
+        }
+      ),
+      /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          disabled: !isFreeformEditing,
+          onClick: handleResetFreeformLayout,
+          children: "重置模板"
+        }
+      ),
+      isFreeformEditing && /* @__PURE__ */ u2("div", { class: "think-freeform-add-controls", children: [
+        /* @__PURE__ */ u2(
+          "select",
+          {
+            "aria-label": "选择要加入当前布局的视图",
+            value: viewToAdd,
+            onChange: (event) => setViewToAdd(event.target.value),
+            children: [
+              /* @__PURE__ */ u2("option", { value: "", children: "添加已有视图…" }),
+              availableViews.map((view) => /* @__PURE__ */ u2("option", { value: view.id, children: view.title }, view.id))
+            ]
+          }
+        ),
+        /* @__PURE__ */ u2("button", { type: "button", disabled: !viewToAdd, onClick: handleAddExistingView, children: "添加" }),
+        /* @__PURE__ */ u2("button", { type: "button", onClick: handleCreateAndAddView, children: "新建视图" })
+      ] }),
+      /* @__PURE__ */ u2("span", { class: "think-freeform-toolbar-hint", children: compactFreeformFallback ? "当前为窄屏或触控设备，已自动降级为只读列表；桌面宽屏可编辑自由布局。" : isFreeformEditing ? "点击卡片选中；方向键移动，Shift+方向键缩放，PageUp 置顶，L 锁定，C 折叠，Esc 取消选择。" : "查看模式下不会误拖动；折叠状态按当前布局独立保存。" })
+    ] }),
+    isStateInitialized && (useFreeformCanvas ? /* @__PURE__ */ u2(
+      FreeformCanvas,
+      {
+        layout,
+        viewInstances: allViews,
+        editing: isFreeformEditing,
+        onPlacementChange: handlePlacementChange,
+        onPlacementsChange: handlePlacementsChange,
+        onRemoveView: handleRemoveFromLayout,
+        renderItem: (viewId, props) => renderViewInstance(viewId, props)
+      }
+    ) : /* @__PURE__ */ u2("div", { style: isFreeform ? {} : gridStyle, class: compactFreeformFallback && isFreeform ? "think-freeform-mobile-fallback" : "", children: layout.viewInstanceIds.map((viewId) => renderViewInstance(viewId, void 0, compactFreeformFallback && isFreeform)) }))
   ] });
+}
+function createLayoutRenderSignature(layout, viewInstances) {
+  const viewById = new Map(viewInstances.map((view) => [view.id, view]));
+  return JSON.stringify({
+    layout,
+    referencedViews: layout.viewInstanceIds.map((id) => viewById.get(id) ?? null)
+  });
 }
 class RendererService {
   constructor(app, dataStore, actionService, itemService, inputService, timerService, useCases, uiPort, modalPort, messageRenderPort, store) {
@@ -73808,60 +74833,33 @@ class RendererService {
   messageRenderPort;
   isInitialized = false;
   activeLayouts = [];
-  // 缓存的 Services 对象，用于 ServicesProvider
   services;
-  // S8.1: Zustand 订阅取消函数
   unsubscribeZustand = null;
-  // App Store（由 ServiceManager 注入）
   store;
-  /**
-   * 运行时校验 Services 完整性
-   * 防止"传 undefined 但运行到深处才爆"
-   * Z3: 移除 appStore 校验
-   */
   validateServices() {
     validateServices(this.services, "RendererService");
   }
-  /**
-   * S8.1: 设置 Zustand 精准订阅
-   * 只监听 layouts 和 viewInstances 的变化，避免其他 settings 变化导致全量 rerender
-   * P0-3: 使用 DI 注入的 store，通过纯函数 subscribeZustandStore 订阅
-   */
   setupZustandSubscription() {
     try {
       this.unsubscribeZustand = subscribeZustandStore(
         this.store,
-        // Selector: 提取 layouts 和 viewInstances
         (state) => ({
           layouts: state.settings.layouts,
           viewInstances: state.settings.viewInstances
         }),
-        // Listener: 当 selector 返回值变化时触发
-        (current2, previous) => {
-          const currentSnapshot = JSON.stringify(current2);
-          const previousSnapshot = JSON.stringify(previous);
-          if (currentSnapshot !== previousSnapshot) {
-            devLog("[RendererService] layouts/viewInstances 变化，触发 rerenderAll");
-            this.rerenderAll();
-          }
+        (current2) => {
+          this.rerenderChangedLayouts(current2);
         },
-        // Options: 使用 shallow 比较（但我们在 listener 内做深度比较）
-        { equalityFn: (a2, b2) => a2 === b2 }
+        {
+          equalityFn: (left2, right2) => left2.layouts === right2.layouts && left2.viewInstances === right2.viewInstances
+        }
       );
-      devLog("[RendererService] Zustand 精准订阅已建立");
+      devLog("[RendererService] 活动布局增量订阅已建立");
     } catch (error) {
       devError("[RendererService] Zustand 订阅失败:", error);
     }
   }
-  /**
-   * [主流程] 注册并渲染布局
-   * 将指定的布局配置渲染到目标容器中，并加入活跃布局列表进行管理。
-   * 
-   * ⚠️ P0 修复：使用 ServicesProvider 注入依赖，
-   * 确保 LayoutRenderer 及其子组件可以访问 useUseCases/useDataStore/useInputService
-   */
-  register(container, layout) {
-    this.unregister(container);
+  renderLayout(container, layout) {
     R$1(
       k$2(ServicesProvider, {
         services: this.services,
@@ -73876,54 +74874,48 @@ class RendererService {
       }),
       container
     );
-    this.activeLayouts.push({ container, layoutName: layout.name });
+  }
+  register(container, layout) {
+    this.unregister(container);
+    const settings = getZustandState(this.store, (state) => state.settings);
+    const latestLayout = settings.layouts.find((candidate) => candidate.id === layout.id) ?? layout;
+    const signature = createLayoutRenderSignature(latestLayout, settings.viewInstances);
+    this.renderLayout(container, latestLayout);
+    this.activeLayouts.push({
+      container,
+      layoutId: latestLayout.id,
+      layoutName: latestLayout.name,
+      signature
+    });
   }
   unregister(container) {
-    const index = this.activeLayouts.findIndex((l2) => l2.container === container);
-    if (index > -1) {
-      try {
-        R$1(null, container);
-      } catch (e2) {
-      }
-      container.empty();
-      this.activeLayouts.splice(index, 1);
+    const index = this.activeLayouts.findIndex((layout) => layout.container === container);
+    if (index < 0) return;
+    try {
+      R$1(null, container);
+    } catch {
     }
+    container.empty();
+    this.activeLayouts.splice(index, 1);
   }
-  /**
-   * [主流程] 重新渲染所有布局
-   * S8.1: 由 Zustand 精准订阅触发，只在 layouts/viewInstances 变化时调用
-   */
-  rerenderAll() {
+  rerenderChangedLayouts(settings) {
     if (!this.isInitialized) return;
-    const latestSettings = getZustandState(this.store, (s2) => s2.settings);
     for (const activeLayout of [...this.activeLayouts]) {
-      const { container, layoutName } = activeLayout;
-      const newLayoutConfig = latestSettings.layouts.find((l2) => l2.name === layoutName);
-      if (newLayoutConfig) {
-        R$1(
-          k$2(ServicesProvider, {
-            services: this.services,
-            children: k$2(LayoutRenderer, {
-              layout: newLayoutConfig,
-              dataStore: this.dataStore,
-              app: this.app,
-              actionService: this.actionService,
-              itemService: this.itemService,
-              timerService: this.timerService
-            })
-          }),
-          container
-        );
-      } else {
+      const nextLayout = settings.layouts.find((layout) => layout.id === activeLayout.layoutId);
+      if (!nextLayout) {
+        const { container, layoutName } = activeLayout;
         this.unregister(container);
         container.createDiv({ text: `布局配置 "${layoutName}" 已被删除。` });
+        continue;
       }
+      const nextSignature = createLayoutRenderSignature(nextLayout, settings.viewInstances);
+      if (nextSignature === activeLayout.signature) continue;
+      this.renderLayout(activeLayout.container, nextLayout);
+      activeLayout.layoutName = nextLayout.name;
+      activeLayout.signature = nextSignature;
+      devLog(`[RendererService] 已增量刷新布局: ${nextLayout.id}`);
     }
   }
-  /**
-   * 清理所有服务资源
-   * S8.1: 取消 Zustand 订阅，避免内存泄漏
-   */
   cleanup() {
     if (this.unsubscribeZustand) {
       this.unsubscribeZustand();

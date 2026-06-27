@@ -28,9 +28,9 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { ThinkSettings, Layout } from '@core/public';
+import type { ThinkSettings, Layout, ViewPlacement } from '@core/public';
 import type { SettingsRepository } from '@core/public';
-import {generateId, devWarn, devError} from '@core/public';
+import {filterViewPlacementsForLayout, generateId, devWarn, devError} from '@core/public';
 import { moveItemInArray } from '@core/public';
 import { createSliceMeta } from '@core/public';
 
@@ -61,6 +61,9 @@ export interface LayoutSliceActions {
     addViewInstanceToLayout: (layoutId: string, viewInstanceId: string) => Promise<void>;
     removeViewInstanceFromLayout: (layoutId: string, viewInstanceId: string) => Promise<void>;
     reorderViewInstancesInLayout: (layoutId: string, viewInstanceIds: string[]) => Promise<void>;
+    updateViewPlacement: (layoutId: string, viewInstanceId: string, placement: ViewPlacement) => Promise<void>;
+    updateViewPlacements: (layoutId: string, placements: Record<string, ViewPlacement>) => Promise<void>;
+    resetFreeformLayout: (layoutId: string) => Promise<void>;
     
     // 查询方法
     getLayouts: () => Layout[];
@@ -221,7 +224,14 @@ export function createLayoutSlice(
                 const newLayout: Layout = {
                     ...original,
                     id: generateId('layout'),
-                    name: `${original.name} (副本)`
+                    name: `${original.name} (副本)`,
+                    gridConfig: original.gridConfig ? { ...original.gridConfig } : undefined,
+                    freeformConfig: original.freeformConfig ? { ...original.freeformConfig } : undefined,
+                    viewPlacements: original.viewPlacements
+                        ? Object.fromEntries(
+                            Object.entries(original.viewPlacements).map(([viewId, placement]) => [viewId, { ...placement }])
+                        )
+                        : undefined,
                 };
 
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
@@ -380,6 +390,9 @@ export function createLayoutSlice(
                     const layout = draft.layouts?.find(l => l.id === layoutId);
                     if (layout) {
                         layout.viewInstanceIds = layout.viewInstanceIds.filter(id => id !== viewInstanceId);
+                        if (layout.viewPlacements) {
+                            delete layout.viewPlacements[viewInstanceId];
+                        }
                     }
                 }, createSliceMeta('layout.removeViewInstanceFromLayout'));
                 set({ layoutLoading: false });
@@ -408,6 +421,74 @@ export function createLayoutSlice(
             } catch (error: any) {
                 devError('[LayoutSlice] reorderViewInstancesInLayout 失败:', error);
                 set({ layoutError: error.message || '重排视图实例失败', layoutLoading: false });
+            }
+        },
+
+
+        updateViewPlacement: async (
+            layoutId: string,
+            viewInstanceId: string,
+            placement: ViewPlacement
+        ): Promise<void> => {
+            const state = get();
+            if (!state.isInitialized) return;
+
+            set({ layoutLoading: true, layoutError: null });
+
+            try {
+                await settingsRepository.update(draft => {
+                    const layout = draft.layouts?.find(l => l.id === layoutId);
+                    if (!layout || !layout.viewInstanceIds.includes(viewInstanceId)) return;
+                    if (!layout.viewPlacements) layout.viewPlacements = {};
+                    layout.viewPlacements[viewInstanceId] = { ...placement };
+                }, createSliceMeta('layout.updateViewPlacement'));
+                set({ layoutLoading: false });
+            } catch (error: any) {
+                devError('[LayoutSlice] updateViewPlacement 失败:', error);
+                set({ layoutError: error.message || '更新自由布局位置失败', layoutLoading: false });
+            }
+        },
+
+        updateViewPlacements: async (
+            layoutId: string,
+            placements: Record<string, ViewPlacement>
+        ): Promise<void> => {
+            const state = get();
+            if (!state.isInitialized) return;
+
+            set({ layoutLoading: true, layoutError: null });
+
+            try {
+                await settingsRepository.update(draft => {
+                    const layout = draft.layouts?.find(l => l.id === layoutId);
+                    if (!layout) return;
+                    layout.viewPlacements = filterViewPlacementsForLayout(
+                        layout.viewInstanceIds,
+                        placements
+                    );
+                }, createSliceMeta('layout.updateViewPlacements'));
+                set({ layoutLoading: false });
+            } catch (error: any) {
+                devError('[LayoutSlice] updateViewPlacements 失败:', error);
+                set({ layoutError: error.message || '批量更新自由布局位置失败', layoutLoading: false });
+            }
+        },
+
+        resetFreeformLayout: async (layoutId: string): Promise<void> => {
+            const state = get();
+            if (!state.isInitialized) return;
+
+            set({ layoutLoading: true, layoutError: null });
+
+            try {
+                await settingsRepository.update(draft => {
+                    const layout = draft.layouts?.find(l => l.id === layoutId);
+                    if (layout) layout.viewPlacements = {};
+                }, createSliceMeta('layout.resetFreeformLayout'));
+                set({ layoutLoading: false });
+            } catch (error: any) {
+                devError('[LayoutSlice] resetFreeformLayout 失败:', error);
+                set({ layoutError: error.message || '重置自由布局失败', layoutLoading: false });
             }
         },
 

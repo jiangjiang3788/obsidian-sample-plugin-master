@@ -32,7 +32,7 @@
  * - ⛔ 使用全局单例（禁止 getAppStoreInstance）
  */
 
-import type { Layout, ViewInstance } from '@core/public';
+import type { Layout, ViewPlacement } from '@core/public';
 import type { AppStoreApi } from './index';
 import { devError } from '@core/public';
 
@@ -261,6 +261,50 @@ export class LayoutUseCase {
             await state.reorderViewInstancesInLayout(layoutId, viewInstanceIds);
         } catch (error) {
             devError('[LayoutUseCase] reorderViewInstancesInLayout 失败:', error);
+            throw error;
+        }
+    }
+
+
+    /** 拖动结束后一次性提交某个视图在当前布局中的位置。 */
+    async updateViewPlacement(
+        layoutId: string,
+        viewInstanceId: string,
+        placement: ViewPlacement
+    ): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) return;
+            await state.updateViewPlacement(layoutId, viewInstanceId, placement);
+        } catch (error) {
+            devError('[LayoutUseCase] updateViewPlacement 失败:', error);
+            throw error;
+        }
+    }
+
+    /** 一次性提交当前布局的完整 placement 集合，用于层级归一化等原子操作。 */
+    async updateViewPlacements(
+        layoutId: string,
+        placements: Record<string, ViewPlacement>
+    ): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) return;
+            await state.updateViewPlacements(layoutId, placements);
+        } catch (error) {
+            devError('[LayoutUseCase] updateViewPlacements 失败:', error);
+            throw error;
+        }
+    }
+
+    /** 清空已保存坐标，恢复由视图顺序推导的默认自由布局。 */
+    async resetFreeformLayout(layoutId: string): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) return;
+            await state.resetFreeformLayout(layoutId);
+        } catch (error) {
+            devError('[LayoutUseCase] resetFreeformLayout 失败:', error);
             throw error;
         }
     }

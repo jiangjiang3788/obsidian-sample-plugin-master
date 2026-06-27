@@ -399,3 +399,13 @@ const themes = getZustandState(store, s => s.settings.inputSettings.themes);
 | 获取顶级布局 | `layoutUseCase.getTopLevelLayouts()` |
 | 获取所有主题 | `themeUseCase.getThemes()` |
 | 获取单个主题 | `themeUseCase.getTheme(id)` |
+
+## 自由布局边界（Freeform Layout）
+
+- `ViewInstance` 只描述“展示什么”；`x/y/width/height/zIndex/locked/collapsed` 只属于 `Layout.viewPlacements`。
+- 自由布局领域算法集中在 `src/core/layout/freeformLayout.ts`。
+- 拖动、缩放、键盘编排和临时预览状态集中在 `src/features/settings/layout/FreeformCanvas.tsx` 与 `FreeformLayoutItem.tsx`。
+- Progress、Heatmap、Timeline、Statistics、Excel 等业务 View 禁止直接持有 placement 或拖拽状态。
+- Pointer move / resize move 期间禁止写 SettingsRepository；只允许在交互结束时通过 `useCases.layout` 一次提交。
+- 完整层级调整使用 `updateViewPlacements` 原子提交，并将 zIndex 归一化为连续值，禁止无限递增。
+- RendererService 只按活动 Layout 及其引用的 ViewInstance 计算签名；禁止恢复对全部 layouts/viewInstances 的整包 JSON 比较。

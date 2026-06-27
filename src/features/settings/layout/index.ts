@@ -1,3 +1,5 @@
+export { FreeformCanvas } from './FreeformCanvas';
+export { FreeformLayoutItem } from './FreeformLayoutItem';
 export { CodeblockEmbedder } from './CodeblockEmbedder';
 export { DataFilterPanel } from './DataFilterPanel';
 export { LayoutRenderer } from './LayoutRenderer';

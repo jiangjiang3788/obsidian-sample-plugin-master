@@ -159,6 +159,38 @@ export interface ViewInstance extends Groupable {
     sort?: SortRule[];
 }
 
+export type LayoutDisplayMode = 'list' | 'grid' | 'freeform';
+
+/**
+ * ViewInstance 在某一个 Layout 中的二维摆放信息。
+ * 注意：它属于 Layout 与 ViewInstance 的关系，不属于 ViewInstance 本身。
+ */
+export interface ViewPlacement {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    zIndex?: number;
+    locked?: boolean;
+    collapsed?: boolean;
+}
+
+/** 自由布局画布配置。第一版采用像素坐标 + 可选网格吸附。 */
+export type FreeformLayoutTemplate = 'balanced' | 'focus';
+
+export interface FreeformLayoutConfig {
+    /** 无已保存坐标时使用的默认排布模板。 */
+    defaultTemplate?: FreeformLayoutTemplate;
+    snapToGrid?: boolean;
+    gridSize?: number;
+    defaultItemWidth?: number;
+    defaultItemHeight?: number;
+    minItemWidth?: number;
+    minItemHeight?: number;
+    minCanvasWidth?: number;
+    minCanvasHeight?: number;
+}
+
 // [修改] 实现 Groupable 接口
 export interface Layout extends Groupable {
     name: string;
@@ -173,10 +205,13 @@ export interface Layout extends Groupable {
     globalFilters?: FilterRule[];
     selectedThemes?: string[]; // [兼容] 旧版主题筛选字段，后续由 globalFilters 替代
     selectedCategories?: string[]; // [兼容] 旧版分类筛选字段，后续由 globalFilters 替代
-    displayMode?: 'list' | 'grid';
+    displayMode?: LayoutDisplayMode;
     gridConfig?: {
         columns?: number;
     };
+    /** 每个 ViewInstance 在当前 Layout 中的位置和尺寸。旧数据缺失时由运行时推导，不自动写回。 */
+    viewPlacements?: Record<string, ViewPlacement>;
+    freeformConfig?: FreeformLayoutConfig;
 }
 // ... 文件其余部分无变化 ...
 export interface ActionConfig {
