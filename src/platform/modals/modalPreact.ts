@@ -1,7 +1,17 @@
 // src/platform/modals/modalPreact.ts
 import { h, type ComponentChildren } from 'preact';
+import type { Modal } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { ThinkMuiThemeProvider } from '@shared/public';
+
+
+export function prepareThinkModal(modal: Modal, ...classes: string[]): HTMLElement {
+  modal.contentEl.empty();
+  for (const className of ['think-os', 'think-os--modal', 'think-modal-host', ...classes]) {
+    modal.modalEl.addClass(className);
+  }
+  return modal.contentEl;
+}
 
 /**
  * Small local wrapper for Preact content mounted inside Obsidian Modal contentEl.

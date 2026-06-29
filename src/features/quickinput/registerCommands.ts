@@ -6,8 +6,7 @@
  * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
 import type ThinkPlugin from '@/main';
-import { QuickInputModal } from './QuickInputModal';
-import { createServices, getZustandState } from '@/app/public';
+import { QuickInputModal, createServices, getZustandState } from '@/app/public';
 import { devWarn } from '@core/public';
 
 export function registerQuickInputCommands(plugin: ThinkPlugin) {

@@ -428,4 +428,4 @@ const themes = getZustandState(store, s => s.settings.inputSettings.themes);
 - MUI Button、IconButton、TextField、Select、Checkbox、Switch、Card、Chip、Tabs、Dialog 等必须通过 `createThinkMuiTheme()` 消费同一套 `--think-*` Token。
 - MUI 官方 `.Mui*` selector 只允许出现在 `src/styles/overrides/mui.css` 或 Theme component override 中，业务 Feature 不得直接复制 MUI 内部选择器。
 - 新组件禁止使用 `sx` 或内联 `style` 重复完整皮肤；只允许动态几何、运行时值和一次性排列关系。
-- `src/shared/ui/dev/StyleCatalog.tsx` 是视觉合同目录，不进入常规用户导航；每次新增 Primitive 状态应同步补充 Catalog。
+- 旧 `src/shared/ui/dev/StyleCatalog.tsx` 视觉目录已在 V1 清理中移除；新增 Primitive 状态时请用临时 dev view 或截图用例维护视觉合同。

@@ -5,7 +5,7 @@ import { App, Modal, Notice } from 'obsidian';
 import { Item, dayjs } from '@core/public';
 import { openEditFromItem, openRecordOrigin } from '@/app/public';
 import { createRecordGestureHandlers } from '@shared/public';
-import { renderModalContent, unmountModalContent } from './modalPreact';
+import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 
 export interface CheckinManagerData {
     displayCount: number;
@@ -130,12 +130,7 @@ export class CheckinManagerModal extends Modal {
     }
 
     onOpen() {
-        this.contentEl.empty();
-        this.modalEl.addClass('think-os');
-        this.modalEl.addClass('think-os--modal');
-        this.modalEl.addClass('think-modal-host');
-        this.modalEl.addClass('think-modal-host--large');
-        this.modalEl.addClass('think-checkin-modal-host');
+        prepareThinkModal(this, 'think-modal-host--large', 'think-checkin-modal-host');
 
         renderModalContent(
             this.contentEl,

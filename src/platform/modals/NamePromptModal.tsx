@@ -6,7 +6,7 @@ import type { App } from 'obsidian';
 import { Modal } from 'obsidian';
 import { TextField, Button } from '@shared/public';
 import type { NamePromptOptions } from '@core/public';
-import { renderModalContent, unmountModalContent } from './modalPreact';
+import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 
 function PromptComponent({
   title,
@@ -83,11 +83,7 @@ export class NamePromptModal extends Modal {
   }
 
   onOpen() {
-    this.contentEl.empty();
-    this.modalEl.addClass('think-os');
-    this.modalEl.addClass('think-os--modal');
-    this.modalEl.addClass('think-modal-host');
-    this.modalEl.addClass('think-modal-host--medium');
+    prepareThinkModal(this, 'think-modal-host--medium');
     renderModalContent(
       this.contentEl,
       <PromptComponent

@@ -24,3 +24,6 @@ export type { CompleteFromViewParams, UpdateTimeFromViewParams } from './recordT
 
 export { commitExcelCellFromView } from './recordExcelActions';
 export type { CommitExcelCellFromViewParams, CommitExcelCellFromViewResult } from './recordExcelActions';
+
+export { runUiRecordAction } from './runUiRecordAction';
+export type { RunUiRecordActionOptions, RunUiRecordActionResult } from './runUiRecordAction';

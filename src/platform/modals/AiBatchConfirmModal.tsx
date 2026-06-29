@@ -31,6 +31,7 @@ import {
 import { AiBatchConfirmRecordHeader } from './AiBatchConfirmRecordHeader';
 import { AiBatchConfirmSidebar } from './AiBatchConfirmSidebar';
 import { installBackdropCloseGuard } from './modalBackdropGuard';
+import { prepareThinkModal } from './modalPreact';
 
 export class AiBatchConfirmModal extends Modal {
   private services: Services;
@@ -59,12 +60,7 @@ export class AiBatchConfirmModal extends Modal {
   }
 
   onOpen() {
-    this.contentEl.empty();
-    this.modalEl.addClass('think-os');
-    this.modalEl.addClass('think-os--modal');
-    this.modalEl.addClass('think-modal-host');
-    this.modalEl.addClass('think-modal-host--large');
-    this.modalEl.addClass('think-ai-batch-confirm-modal');
+    prepareThinkModal(this, 'think-modal-host--large', 'think-ai-batch-confirm-modal');
     this.cleanupBackdropCloseGuard = installBackdropCloseGuard(this);
 
     mountWithServices(

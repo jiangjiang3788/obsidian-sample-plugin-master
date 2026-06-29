@@ -3,12 +3,11 @@ import {
   getFieldEditPolicy,
   getTemplateFieldInputType,
   getTemplateFieldSemantic,
-  isRecordSubmitSuccess,
   normalizeEditableFieldKey,
   normalizeTemplateFieldValue,
-  readRecordSubmitMessage,
 } from '@core/public';
 import type { UseCases } from '@/app/public';
+import { runUiRecordAction } from './runUiRecordAction';
 
 export interface CommitExcelCellFromViewParams {
   uiPort: UiPort;
@@ -149,13 +148,6 @@ function writeExcelCommitValueToFormData(
   return next;
 }
 
-function readResultMessage(
-  result: { status?: string; errors?: Array<{ message: string }>; feedback?: { notice?: string } },
-  fallback: string,
-): string {
-  return readRecordSubmitMessage(result as any, fallback);
-}
-
 export async function commitExcelCellFromView(params: CommitExcelCellFromViewParams): Promise<CommitExcelCellFromViewResult> {
   const canonicalField = normalizeEditableFieldKey(params.canonicalField || params.field);
   const policy = getFieldEditPolicy(canonicalField, params.oldValue);
@@ -205,17 +197,23 @@ export async function commitExcelCellFromView(params: CommitExcelCellFromViewPar
     params.nextValue,
   );
 
-  const result = await params.useCases.recordInput.submitUpdateRecord({
-    item: params.item,
-    blockId: prepared.blockId,
-    themeId: prepared.themeId,
-    formData,
-    source: 'quickinput',
-  });
+  const { ok, message } = await runUiRecordAction(
+    () => params.useCases.recordInput.submitUpdateRecord({
+      item: params.item,
+      blockId: prepared.blockId,
+      themeId: prepared.themeId,
+      formData,
+      source: 'quickinput',
+    }),
+    {
+      uiPort: params.uiPort,
+      failureMessage: '保存单元格失败',
+      successNotice: params.showSuccessNotice,
+      successFallback: '✅ 已保存单元格',
+    },
+  );
 
-  const message = readResultMessage(result, '保存单元格失败');
-  if (isRecordSubmitSuccess(result, { treatCancelledAsSuccess: true })) {
-    if (params.showSuccessNotice) params.uiPort.notice(result.feedback?.notice || '✅ 已保存单元格');
+  if (ok) {
     return {
       ok: true,
       message,
@@ -223,6 +221,5 @@ export async function commitExcelCellFromView(params: CommitExcelCellFromViewPar
     };
   }
 
-  params.uiPort.notice(message);
   return { ok: false, message };
 }

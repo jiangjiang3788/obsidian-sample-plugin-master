@@ -13,9 +13,7 @@ const ALLOW_APP_PUBLIC_RUNTIME = new Set([
   path.join(ROOT, 'src/shared/ui/views/BlockView.tsx'),
   path.join(ROOT, 'src/shared/ui/views/EventTimelineView.tsx'),
   path.join(ROOT, 'src/shared/ui/views/HeatmapView.tsx'),
-  path.join(ROOT, 'src/shared/ui/views/StatisticsView.tsx'),
   path.join(ROOT, 'src/shared/ui/views/TableView.tsx'),
-  path.join(ROOT, 'src/shared/ui/views/timelineInteraction.ts'),
 ]);
 
 /** @param {string} dir */

@@ -14,6 +14,10 @@ const ignoredFiles = new Set([
   'src/shared/ui/views/index.ts',
   'src/core/utils/themeUtils.ts',
   'src/core/utils/index.ts',
+  'src/features/progression/types.ts',
+  'src/features/progression/computeProgression.ts',
+  'src/features/settings/SettingsTab.tsx',
+  'src/features/quickinput/QuickInputModal.tsx',
 ]);
 
 const forbidden = [

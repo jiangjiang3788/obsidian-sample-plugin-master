@@ -2,6 +2,7 @@
 // Targeted guard for shared view barrel exports.
 // This prevents Rollup-only failures where a feature imports a shared view helper
 // through @shared/public but an intermediate barrel forgets to re-export it.
+// The legacy StatisticsView.tsx forwarder has been removed; check real barrels only.
 
 import { readFileSync } from 'fs';
 
@@ -16,7 +17,6 @@ function fail(message) {
 
 const sharedPublic = read('src/shared/public.ts');
 const viewsIndex = read('src/shared/ui/views/index.ts');
-const statisticsForwarder = read('src/shared/ui/views/StatisticsView.tsx');
 const statisticsIndex = read('src/shared/ui/views/StatisticsView/index.ts');
 const statisticsBridge = read('src/features/settings/layout/statisticsPopoverBridge.tsx');
 
@@ -28,9 +28,6 @@ if (statisticsBridge.includes('PopoverContent') && !viewsIndex.includes('Popover
   fail('src/shared/ui/views/index.ts must re-export PopoverContent when statisticsPopoverBridge imports it from @shared/public.');
 }
 
-if (!statisticsForwarder.includes('PopoverContent')) {
-  fail('src/shared/ui/views/StatisticsView.tsx must forward PopoverContent.');
-}
 
 if (!statisticsIndex.includes('PopoverContent')) {
   fail('src/shared/ui/views/StatisticsView/index.ts must export PopoverContent from components/PopoverContent.');

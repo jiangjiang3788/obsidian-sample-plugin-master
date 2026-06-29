@@ -27,6 +27,7 @@ import { useQuickInputOutputPlanPreview } from './useQuickInputOutputPlanPreview
 import { useQuickInputSubmitController } from './useQuickInputSubmit';
 import { QuickInputConflictRecoveryPanel } from './QuickInputConflictRecoveryPanel';
 import { showQuickInputNotice } from './quickInputNotice';
+import { prepareThinkModal } from './modalPreact';
 
 interface QuickInputEditOptions {
   mode?: 'create' | 'edit';
@@ -68,11 +69,7 @@ export class QuickInputModal extends Modal {
       }
     }
     QuickInputModal.activeModal = this;
-    this.contentEl.empty();
-    this.modalEl.addClass('think-os');
-    this.modalEl.addClass('think-os--modal');
-    this.modalEl.addClass('think-modal-host');
-    this.modalEl.addClass('think-quick-input-modal');
+    prepareThinkModal(this, 'think-quick-input-modal');
     const mobileLike = isMobileLikeEnvironment();
     this.modalEl.toggleClass('think-quick-input-modal--mobile', mobileLike);
     this.modalEl.toggleClass('think-quick-input-modal--desktop', !mobileLike);

@@ -31,6 +31,7 @@ const removedPaths = [
   'src/features/settings/viewModels/goalDetailViewModel.ts',
   'src/shared/ui/views/GoalOverviewView.tsx',
   'src/shared/ui/views/GoalDetailView.tsx',
+  'src/shared/ui/views/ProgressSummaryCards.tsx',
 ];
 
 function exists(relativePath) {
@@ -286,11 +287,7 @@ if (!exists('src/shared/ui/views/ProgressViewModel.ts')) {
 }
 if (!exists('src/shared/ui/views/ProgressGoalCard.tsx')) {
   failures.push('ProgressGoalCard.tsx must exist after MVP13 progress card extraction.');
-}
-if (!exists('src/shared/ui/views/ProgressSummaryCards.tsx')) {
-  failures.push('ProgressSummaryCards.tsx must exist after MVP13 progress summary extraction.');
-}
-const progressView = read('src/shared/ui/views/ProgressView.tsx');
+}const progressView = read('src/shared/ui/views/ProgressView.tsx');
 const progressViewLines = progressView.split(/\r?\n/).length;
 if (progressViewLines > 80) failures.push(`ProgressView.tsx should stay <= 80 lines after MVP13 component split; current ${progressViewLines}.`);
 for (const forbiddenLocal of ['function GoalProgressCard', 'function ProgressBar', 'function ThemeBreakdownList', 'function BlockCountGrid']) {

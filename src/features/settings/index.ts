@@ -17,7 +17,8 @@ export { ThemeManager } from './theme/ThemeManager';
 /* ========================================================================== */
 
 import type ThinkPlugin from '@main';
-import { SettingsTab, registerThinkSettingsWorkspaceView, openThinkSettingsWorkspaceView } from './SettingsTab';
+import { SettingsTab } from '@/platform/SettingsTab';
+import { registerThinkSettingsWorkspaceView, openThinkSettingsWorkspaceView } from '@/platform/ThinkSettingsView';
 import { DataStore } from '@core/public';
 
 import { BlockViewEditor } from './viewEditors/BlockViewEditor';

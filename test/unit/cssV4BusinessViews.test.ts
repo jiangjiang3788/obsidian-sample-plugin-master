@@ -42,7 +42,6 @@ describe('CSS V4 business view convergence', () => {
     const source = [
       read('src/shared/ui/views/ProgressView.tsx'),
       read('src/shared/ui/views/ProgressGoalCard.tsx'),
-      read('src/shared/ui/views/ProgressSummaryCards.tsx'),
     ].join('\n');
 
     expect(source).toContain('think-progress-card');

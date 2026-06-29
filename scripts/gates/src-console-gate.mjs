@@ -11,7 +11,6 @@ const srcDir = join(root, 'src');
 
 const allowed = new Set([
   'src/core/utils/devLogger.ts',
-  'src/core/utils/runtimeDiagnostics.ts',
   'src/core/utils/recordDebug.ts',
   'src/shared/utils/diagnosticConsole.ts',
 ]);
