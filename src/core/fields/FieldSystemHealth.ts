@@ -10,7 +10,7 @@ import {
   getFieldPickerOptions,
   isVisibleExtraField,
 } from './FieldRegistry';
-import { LEGACY_EXTRA_ALIAS_KEYS } from './FieldLegacy';
+import { LEGACY_EXTRA_ALIAS_KEYS } from './LegacyFieldPolicy';
 import { readFieldValue } from './FieldValueResolver';
 import { getBuiltInFieldGuideGroups, getCoreInputFieldPresets, isCoreInputFieldName, isReservedCustomFieldName, makeSafeCustomFieldName } from './CoreFieldCatalog';
 import type { FieldCategory } from './FieldTypes';

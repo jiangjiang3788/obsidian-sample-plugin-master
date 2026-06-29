@@ -708,3 +708,53 @@
     grid-column: 2 / -1;
   }
 }
+
+.think-os--settings .think-view-editor-shell__title,
+.think-os--settings .think-view-editor-section__title,
+.think-os--settings .think-view-editor-field-row__label {
+  font-weight: var(--think-font-weight-semibold);
+}
+
+.think-os--settings .think-view-editor-shell__description,
+.think-os--settings .think-view-editor-section__description,
+.think-os--settings .think-view-editor-field-row__description {
+  color: var(--think-text-secondary);
+}
+
+.think-os--settings .think-view-editor-section {
+  display: grid;
+  gap: var(--think-space-4);
+  padding: var(--think-space-4);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--think-radius-lg);
+}
+
+.think-os--settings .think-view-editor-field-row__label {
+  flex-shrink: 0;
+}
+
+.think-os--settings .think-view-editor-field-row__control {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.think-os--settings .think-view-editor-field-row__description {
+  display: block;
+  margin-top: var(--think-space-2);
+}
+
+.think-os--settings .think-view-editor-field-row__label {
+  width: 92px;
+}
+
+.think-os--settings .think-view-editor-field-row__label--narrow {
+  width: 80px;
+}
+
+.think-os--settings .think-view-editor-field-row__label--wide {
+  width: 104px;
+}
+
+.think-os--settings .think-view-editor-field-row__label--top {
+  padding-top: var(--think-space-2);
+}

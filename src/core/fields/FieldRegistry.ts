@@ -1,6 +1,6 @@
 // src/core/fields/FieldRegistry.ts
 import type { Item } from '@/core/types/schema';
-import { LEGACY_EXTRA_ALIAS_KEYS } from './FieldLegacy';
+import { LEGACY_EXTRA_ALIAS_KEYS } from './LegacyFieldPolicy';
 import { getLegacyAliasTargetField } from './LegacyFieldPolicy';
 import type { FieldDefinition } from './FieldDefinition';
 import type { FieldCategory, FieldValueType } from './FieldTypes';

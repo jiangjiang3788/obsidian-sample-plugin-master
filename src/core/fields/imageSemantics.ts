@@ -18,14 +18,15 @@ export function isImageLikeValue(value: unknown): boolean {
 }
 
 export function normalizeImageValue(value: unknown): ImageFieldValue | undefined {
-  if (value && typeof value === 'object' && 'src' in (value as any)) {
-    const src = String((value as any).src || '').trim();
+  if (value && typeof value === 'object' && 'src' in value) {
+    const image = value as Partial<ImageFieldValue>;
+    const src = String(image.src || '').trim();
     if (!src) return undefined;
     return {
       src,
       kind: inferImageKind(src),
-      alt: typeof (value as any).alt === 'string' ? (value as any).alt : undefined,
-      caption: typeof (value as any).caption === 'string' ? (value as any).caption : undefined,
+      alt: typeof image.alt === 'string' ? image.alt : undefined,
+      caption: typeof image.caption === 'string' ? image.caption : undefined,
     };
   }
   const raw = String(value ?? '').trim();

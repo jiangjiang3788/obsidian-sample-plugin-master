@@ -258,7 +258,7 @@
       ],
       "groupFields": [
         "coreBlock",
-        "rootGoal"
+        "leafTheme"
       ],
       "filters": [
         {
@@ -14813,7 +14813,22 @@
       "core.blocker",
       "core.milestone"
     ],
-    "patches": []
+    "patches": [],
+    "legacyBlockMap": {
+      "core.habit": "core.habit",
+      "core.task": "core.task",
+      "core.evidence": "core.evidence",
+      "core.thought": "core.thought",
+      "core.review": "core.review",
+      "core.plan": "core.plan",
+      "core.blocker": "core.blocker",
+      "core.milestone": "core.milestone",
+      "blk_meic1my6m62iu": "core.task",
+      "blk_mejsdvflptluo": "core.plan",
+      "blk_mejsfuehqj4s0": "core.review",
+      "blk_mejsg76atopau": "core.habit",
+      "blk_mejsg1dc46fj9": "core.thought"
+    }
   },
   "floatingTimerEnabled": false,
   "activeThemePaths": [

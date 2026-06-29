@@ -47,7 +47,7 @@ export {
 } from '@/core/fields/FieldRegistry';
 export {
   LEGACY_EXTRA_ALIAS_KEYS,
-} from '@/core/fields/FieldLegacy';
+} from '@/core/fields/LegacyFieldPolicy';
 export {
   getTemplateFieldInputType,
   getTemplateFieldSemantic,

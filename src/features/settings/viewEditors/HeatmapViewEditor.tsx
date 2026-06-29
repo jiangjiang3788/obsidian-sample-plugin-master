@@ -1,9 +1,8 @@
 // src/features/settings/ui/components/view-editors/HeatmapViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, Typography, Box, Button, FormControlLabel, Checkbox } from '@shared/public';
+import { Button, Checkbox, FormControlLabel, ListEditor, SimpleSelect } from '@shared/public';
 import type { ViewEditorProps } from './registry';
-import { ListEditor, SimpleSelect } from '@shared/public';
 import { useSelector, selectInputBlocks, useUiPort } from '@/app/public';
 import { useMemo } from 'preact/hooks';
 import {
@@ -13,6 +12,7 @@ import {
     type HeatmapViewConfig,
     type ViewInstance,
 } from '@core/public';
+import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
 // 重新导出以保持兼容性
 export { HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
@@ -37,8 +37,8 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
     const config = normalizeHeatmapConfig(value);
     const allBlocks = useSelector(selectInputBlocks);
 
-    const blockOptions = useMemo(() => 
-        allBlocks.map(b => ({ value: b.id, label: b.name })), 
+    const blockOptions = useMemo(() =>
+        allBlocks.map(b => ({ value: b.id, label: b.name })),
         [allBlocks]
     );
 
@@ -74,41 +74,53 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
     };
 
     return (
-        <Stack spacing={2.5}>
-            <Typography variant="body2" color="text.secondary">
-                打卡视图只负责主题 + 日期格子的记录入口：空白日期可新增，有记录日期查看当天记录并继续新增。经验/等级请使用独立的 ProgressView。
-            </Typography>
-            <div>
-                <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                    <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>源 Block</Typography>
-                    <Box sx={{ flexGrow: 1 }}>
-                        <SimpleSelect
-                            value={config.sourceBlockId}
-                            options={blockOptions}
-                            onChange={val => onChange({ sourceBlockId: val })}
-                            placeholder="-- 请选择用于打卡的 Block 模板 --"
+        <ViewEditorShell
+            title="打卡视图"
+            description="只负责主题 + 日期格子的记录入口：空白日期可新增，有记录日期查看当天记录并继续新增。经验/等级请使用独立的 ProgressView。"
+            spacing={2.5}
+        >
+            <ConfigSection title="数据来源">
+                <ConfigFieldRow
+                    label="源 Block"
+                    description="视图将从此 Block 模板的评分字段中读取 Emoji/图片/颜色映射。"
+                    labelWidth={80}
+                >
+                    <SimpleSelect
+                        value={config.sourceBlockId}
+                        options={blockOptions}
+                        onChange={val => onChange({ sourceBlockId: val })}
+                        placeholder="-- 请选择用于打卡的 Block 模板 --"
+                    />
+                </ConfigFieldRow>
+            </ConfigSection>
+
+            <ConfigSection title="主题范围">
+                <ConfigFieldRow
+                    label="主题路径"
+                    description="在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。"
+                    alignItems="flex-start"
+                    labelWidth={80}
+                >
+                    <ListEditor
+                        value={config.themePaths}
+                        onChange={val => onChange({ themePaths: val })}
+                        placeholder="例如: 生活/健康, 工作/项目"
+                    />
+                    <Button onClick={handleScanThemes} size="small" sx={{ mt: 1 }}>从数据源扫描并添加主题</Button>
+                </ConfigFieldRow>
+            </ConfigSection>
+
+            <ConfigSection title="交互">
+                <FormControlLabel
+                    control={(
+                        <Checkbox
+                            checked={!!config.allowManualEdit}
+                            onChange={(event: Event) => onChange({ allowManualEdit: (event.target as HTMLInputElement).checked })}
                         />
-                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                             视图将从此 Block 模板的"评分"字段中读取 Emoji/图片/颜色映射。
-                         </Typography>
-                    </Box>
-                </Stack>
-                <Stack direction="row" alignItems="flex-start" spacing={2}>
-                    <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500, pt: '8px' }}>主题路径</Typography>
-                    <Box sx={{ flexGrow: 1 }}>
-                       <ListEditor
-                           value={config.themePaths}
-                           onChange={val => onChange({ themePaths: val })}
-                           placeholder="例如: 生活/健康, 工作/项目"
-                       />
-                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                           在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。
-                       </Typography>
-                       <Button onClick={handleScanThemes} size="small" sx={{mt: 1}}>从数据源扫描并添加主题</Button>
-                    </Box>
-                </Stack>
-            </div>
-            <FormControlLabel control={<Checkbox checked={!!config.allowManualEdit} onChange={e => onChange({ allowManualEdit: (e.target as HTMLInputElement).checked })} />} label="允许查看当天记录并新增" />
-        </Stack>
+                    )}
+                    label="允许查看当天记录并新增"
+                />
+            </ConfigSection>
+        </ViewEditorShell>
     );
 }

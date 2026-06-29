@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { Box, Button, SimpleSelect, Stack, TextField, Typography } from '@shared/public';
+import { Button, SimpleSelect, Stack, TextField } from '@shared/public';
 import {
     EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
     FULL_DATA_FIELD_KEY,
@@ -12,6 +12,7 @@ import {
 } from '@core/public';
 import type { EventTimelineViewConfig } from '@core/public';
 import type { ViewEditorProps } from './registry';
+import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
 // 重新导出以保持兼容性
 export { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
@@ -51,62 +52,53 @@ export function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [
     const patch = (partial: Partial<EventTimelineViewConfig>) => onChange(partial as Record<string, any>);
 
     return (
-        <Box class="event-timeline-editor-description" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div>
-                <div class="statistics-section-title">事件时间线视图</div>
-                <div class="statistics-section-description">
-                    事件时间线视图按时间顺序纵向展示事件，采用三栏布局：
-                    <br />
-                    <strong>[左侧日期] - [中间时间线] - [右侧内容卡片]</strong>
-                    <br /><br />
-                    • <strong>任务内容语义</strong>：推荐使用 <strong>内容</strong> 字段显示干净正文；需要排查原始 Markdown 时再切换到 <strong>完整数据</strong>。
-                    <br />
+        <ViewEditorShell
+            title="事件时间线视图"
+            description={(
+                <span>
+                    事件时间线视图按时间顺序纵向展示事件，采用三栏布局：<br />
+                    <strong>[左侧日期] - [中间时间线] - [右侧内容卡片]</strong><br /><br />
+                    • <strong>任务内容语义</strong>：推荐使用 <strong>内容</strong> 字段显示干净正文；需要排查原始 Markdown 时再切换到 <strong>完整数据</strong>。<br />
                     • <strong>视觉保持</strong>：任务仍以 TaskRow 展示，Block 仍使用 BlockItem / Markdown 渲染。
-                </div>
-            </div>
-
-            <Box sx={{ p: 1.5, border: '1px solid var(--background-modifier-border)', borderRadius: '10px' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>字段映射</Typography>
+                </span>
+            )}
+        >
+            <ConfigSection title="字段映射">
                 <Stack spacing={1.25}>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Typography sx={{ width: 92, flexShrink: 0, fontWeight: 600 }}>时间字段</Typography>
+                    <ConfigFieldRow label="时间字段">
                         <SimpleSelect
                             value={config.timeField || 'date'}
                             options={fieldSelectOptions}
                             onChange={(field) => patch({ timeField: field })}
                             sx={{ minWidth: '220px' }}
                         />
-                    </Stack>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Typography sx={{ width: 92, flexShrink: 0, fontWeight: 600 }}>标题字段</Typography>
+                    </ConfigFieldRow>
+                    <ConfigFieldRow label="标题字段">
                         <SimpleSelect
                             value={config.titleField || 'title'}
                             options={fieldSelectOptions}
                             onChange={(field) => patch({ titleField: field })}
                             sx={{ minWidth: '220px' }}
                         />
-                    </Stack>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Typography sx={{ width: 92, flexShrink: 0, fontWeight: 600 }}>内容字段</Typography>
+                    </ConfigFieldRow>
+                    <ConfigFieldRow label="内容字段">
                         <SimpleSelect
                             value={config.contentField || CONTENT_FIELD_KEY}
                             options={fieldSelectOptions}
                             onChange={(field) => patch({ contentField: field })}
                             sx={{ minWidth: '220px' }}
                         />
-                    </Stack>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Typography sx={{ width: 92, flexShrink: 0, fontWeight: 600 }}>最大长度</Typography>
+                    </ConfigFieldRow>
+                    <ConfigFieldRow label="最大长度" description="0 表示不截断">
                         <TextField
                             type="number"
                             size="small"
                             value={config.maxContentLength ?? 160}
-                            onChange={(event: any) => patch({ maxContentLength: Number((event.target as HTMLInputElement).value) || 0 })}
+                            onChange={(event: Event) => patch({ maxContentLength: Number((event.target as HTMLInputElement).value) || 0 })}
                             inputProps={{ min: 0, max: 2000 }}
                             sx={{ width: '140px' }}
                         />
-                        <Typography variant="caption" color="text.secondary">0 表示不截断</Typography>
-                    </Stack>
+                    </ConfigFieldRow>
                 </Stack>
 
                 <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
@@ -125,7 +117,7 @@ export function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [
                         内容改为完整数据调试
                     </Button>
                 </Stack>
-            </Box>
-        </Box>
+            </ConfigSection>
+        </ViewEditorShell>
     );
 }

@@ -11,12 +11,15 @@ function supportsTaskTimeEditing(item: Item): boolean {
   return item.type === 'task' || !!(item.startTime || item.endTime || item.duration != null);
 }
 
+type EditableItemSource = Item & { path?: string; file?: { path?: string }; line?: number; lineNumber?: number };
+
 function deriveEntryContext(item: Item, openedFrom: EditFromItemParams['openedFrom'] = 'unknown') {
-  const sourcePath = (item as any).path || (item as any).file?.path || null;
-  const sourceLine = typeof (item as any).line === 'number'
-    ? (item as any).line
-    : typeof (item as any).lineNumber === 'number'
-      ? (item as any).lineNumber
+  const source = item as EditableItemSource;
+  const sourcePath = source.path || source.file?.path || null;
+  const sourceLine = typeof source.line === 'number'
+    ? source.line
+    : typeof source.lineNumber === 'number'
+      ? source.lineNumber
       : null;
   return {
     entryKind: item.type === 'task' ? 'task' : 'block',

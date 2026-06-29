@@ -19,7 +19,7 @@ import MiniSearch, { SearchResult } from 'minisearch';
 import type { Item } from '@/core/types/schema';
 import { DataStore } from '@/core/services/DataStore';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
-import { LEGACY_EXTRA_ALIAS_KEYS } from '@/core/fields/FieldLegacy';
+import { LEGACY_EXTRA_ALIAS_KEYS } from '@/core/fields/LegacyFieldPolicy';
 import { devLog, devWarn, devError } from '../utils/devLogger';
 import { asUnknownRecord, readNumber, readString, readUnknown } from '../utils/unknownRecord';
 import type { UnknownRecord } from '../utils/unknownRecord';

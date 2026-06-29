@@ -1,7 +1,7 @@
 // src/core/domain/schema.ts
 import type { RecurrenceInfo } from '@core/utils/mark';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
-import { LEGACY_EXTRA_ALIAS_KEYS } from '@/core/fields/FieldLegacy';
+import { LEGACY_EXTRA_ALIAS_KEYS } from '@/core/fields/LegacyFieldPolicy';
 import { getAvailableFields } from '@/core/fields/FieldRegistry';
 import type { AiSettings } from './ai-schema';
 import type { FieldInputType, FieldOption, FieldSemantic, FieldStoragePolicy } from '@/core/fields/FieldTypes';

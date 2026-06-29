@@ -131,7 +131,7 @@ export class Component {
 
 export const debounce = (fn: Function, _wait?: number) => fn;
 export const normalizePath = (path: string) => path;
-export const requestUrl = jest.fn((_options?: any) => Promise.resolve({ status: 200, headers: {}, text: '', json: {} }));
+export const requestUrl = jest.fn((_options?: unknown) => Promise.resolve({ status: 200, headers: {}, text: '', json: {} }));
 export const setIcon = () => {};
 export const addIcon = () => {};
 export const Platform = { isDesktop: true, isMobile: false, isDesktopApp: true };

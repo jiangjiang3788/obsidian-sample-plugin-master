@@ -73,8 +73,8 @@ export type {
 } from './actions/recordUiActions';
 
 // ============== Runtime UI (moved from shared/ui to app/ui) ==============
-export { QuickInputEditor, finalizeQuickInputFormData } from './ui/components/QuickInputEditor';
-export type { QuickInputEditorState, QuickInputEditorProps } from './ui/components/QuickInputEditor';
+export { QuickInputEditor, finalizeQuickInputFormData } from './ui/components/QuickInputEditor/index';
+export type { QuickInputEditorState, QuickInputEditorProps } from './ui/components/QuickInputEditor/index';
 export { QuickInputModal } from './ui/modals/QuickInputModal';
 export { AiTextPromptModal } from './ui/modals/AiTextPromptModal';
 export { AiBatchConfirmModal } from './ui/modals/AiBatchConfirmModal';

@@ -10,7 +10,6 @@ export * from './imageSemantics';
 export * from './ContentFieldSemantics';
 
 export * from './TemplateFieldAdapter';
-export * from './FieldLegacy';
 export * from './LegacyFieldPolicy';
 
 export * from './FieldMigration';
