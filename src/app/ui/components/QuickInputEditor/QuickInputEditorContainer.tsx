@@ -59,7 +59,6 @@ export function QuickInputEditor({
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(() => initialSelection.selectedGoalId);
   const [selectedGoalPath, setSelectedGoalPath] = useState<string | null>(() => initialSelection.selectedGoalPath);
   const [selectedTemplateVariantId, setSelectedTemplateVariantId] = useState<string | null>(() => initialSelection.selectedTemplateVariantId);
-  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(() => initialSelection.selectedCycleId);
   const [formData, setFormData] = useState<Record<string, any>>(() => initialFormData ?? EMPTY_FORM_DATA);
   const [fieldSources, setFieldSources] = useState<QuickInputFieldSourceMap>(() => buildInitialFieldSources(initialFormData));
   const [timeDirection, setTimeDirection] = useState<TimeDirection>(() => initialSelection.timeDirection);
@@ -75,7 +74,6 @@ export function QuickInputEditor({
     setSelectedGoalId(nextSelection.selectedGoalId);
     setSelectedGoalPath(nextSelection.selectedGoalPath);
     setSelectedTemplateVariantId(nextSelection.selectedTemplateVariantId);
-    setSelectedCycleId(nextSelection.selectedCycleId);
   }, [initialBlockId, initialThemeId, context]);
 
   const blocks = useMemo(() => {
@@ -119,7 +117,7 @@ export function QuickInputEditor({
     }
     const exists = selectedTemplateVariantId && goalTemplateVariants.some((template) => template.variantId === selectedTemplateVariantId || template.id === selectedTemplateVariantId);
     if (!exists) {
-      const next = goalTemplateVariants.find((template) => template.isDefault) || goalTemplateVariants[0];
+      const next = goalTemplateVariants[0];
       setSelectedTemplateVariantId(next?.variantId || 'default');
     }
   }, [goalTemplateVariants, selectedTemplateVariantId]);
@@ -156,7 +154,6 @@ export function QuickInputEditor({
     setSelectedGoalId(null);
     setSelectedGoalPath(null);
     setSelectedTemplateVariantId(null);
-    setSelectedCycleId(null);
     setFormData((current) => clearQuickInputGoalContext(current, fieldSources).formData);
     setFieldSources((current) => clearQuickInputGoalContext(formData, current).fieldSources);
   }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
@@ -234,7 +231,7 @@ export function QuickInputEditor({
 
   useEffect(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
-  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, selectedCycleId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
+  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
 
   const emitDraftState = (draftFormData: Record<string, any>, directionOverride: TimeDirection = timeDirection, sourceOverride: QuickInputFieldSourceMap = fieldSources) => {
     onStateChange?.(makeEditorState(draftFormData, directionOverride, sourceOverride));
@@ -286,7 +283,6 @@ export function QuickInputEditor({
     setSelectedGoalPath(nextSelection.goalPath);
     setSelectedTemplateVariantId(null);
     if (nextSelection.themePath) setSelectedThemeId(pathToIdMap.get(nextSelection.themePath) ?? null);
-    setSelectedCycleId(null);
     setFormData(nextSelection.formData);
     setFieldSources(nextSelection.fieldSources);
   };
@@ -305,12 +301,9 @@ export function QuickInputEditor({
       selectedGoalPath={currentGoalPath}
       onSelectGoal={handleSelectGoal}
       onCreateGoal={undefined}
-      templateVariants={goalTemplateVariants.map((template) => ({ value: template.variantId || 'default', label: template.name || template.variantId || '默认模板', isDefault: !!template.isDefault }))}
+      templateVariants={goalTemplateVariants.map((template) => ({ value: template.variantId || 'default', label: template.name || template.variantId || '默认模板' }))}
       selectedTemplateVariantId={resolvedTemplateVariantId || selectedTemplateVariantId}
       onSelectTemplateVariant={setSelectedTemplateVariantId}
-      cycles={[]}
-      selectedCycleId={currentPeriod?.id || null}
-      onSelectCycle={undefined}
       template={template}
       formData={formData}
       fieldValueOptionsByKey={{ themePath: themeOptions(availableThemes), '主题': themeOptions(availableThemes), ...currentPeriodOptions }}

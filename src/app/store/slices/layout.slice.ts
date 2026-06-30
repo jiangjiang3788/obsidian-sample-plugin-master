@@ -112,6 +112,7 @@ export function createLayoutSlice(
                     id: generateId('layout'),
                     name,
                     viewInstanceIds: [],
+                    globalFilters: [],
                     displayMode: 'list',
                     initialView: '月',
                     initialDateFollowsNow: true,

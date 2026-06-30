@@ -20,7 +20,7 @@ export interface HeatmapGoalThemeEntry {
     ratingOptions?: HeatmapRatingOptionLike[];
     /** 当前预设在设置里的排序。 */
     presetSortOrder?: number;
-    /** 当前预设在 data.goalBlockBindings 里的原始顺序，用作稳定兜底。 */
+    /** 当前预设在 data.goalTemplates 里的原始顺序，用作稳定兜底。 */
     presetOriginalIndex?: number;
     /** 仍然保留主题，用于图标、默认主题和统计二级维度。 */
     themePath: string;
@@ -111,7 +111,6 @@ interface PresetMeta {
 
 function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalDefinition[]): {
     byTemplateId: Map<string, PresetMeta>;
-    byLegacyOverrideId: Map<string, PresetMeta>;
     byGoalBlockVariant: Map<string, PresetMeta>;
     byGoalBlockTheme: Map<string, PresetMeta>;
     goalPathById: Map<string, string>;
@@ -127,12 +126,11 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalD
     }
 
     const byTemplateId = new Map<string, PresetMeta>();
-    const byLegacyOverrideId = new Map<string, PresetMeta>();
     const byGoalBlockVariant = new Map<string, PresetMeta>();
     const byGoalBlockTheme = new Map<string, PresetMeta>();
     const allPresets: PresetMeta[] = [];
 
-    for (const [presetOriginalIndex, raw] of (goalSettings?.goalBlockBindings || []).entries()) {
+    for (const [presetOriginalIndex, raw] of (goalSettings?.goalTemplates || []).entries()) {
         const template: any = raw || {};
         const id = firstText(template.id);
         const goalId = firstText(template.goalId);
@@ -144,21 +142,19 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalD
         const rawThemePath = firstText(defaults.themePath);
         const themePath = rawThemePath && !rawThemePath.includes('{{')
             ? rawThemePath
-            : (firstText(defaults['主题']) || firstText(defaults.legacyThemePath));
-        const label = firstText(template.name) || firstText(template.templateName) || themeLeaf(themePath) || variantId || '默认打卡';
+            : firstText(defaults['主题']);
+        const label = firstText(template.name) || themeLeaf(themePath) || variantId || '默认打卡';
         const key = id || `${goalId}:${coreBlockId}:${variantId}`;
         const ratingOptions = extractRatingOptions(template);
         const presetSortOrder = Number.isFinite(Number(template.sortOrder)) ? Number(template.sortOrder) : presetOriginalIndex;
         const meta: PresetMeta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
         allPresets.push(meta);
         if (id) byTemplateId.set(id, meta);
-        const legacyOverrideId = firstText(defaults.legacyOverrideId);
-        if (legacyOverrideId) byLegacyOverrideId.set(legacyOverrideId, meta);
         if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\u0000${coreBlockId}\u0000${variantId}`, meta);
         if (goalId && coreBlockId && themePath) byGoalBlockTheme.set(`${goalId}\u0000${coreBlockId}\u0000${themePath}`, meta);
     }
 
-    return { byTemplateId, byLegacyOverrideId, byGoalBlockVariant, byGoalBlockTheme, goalPathById, goalLabelById, allPresets };
+    return { byTemplateId, byGoalBlockVariant, byGoalBlockTheme, goalPathById, goalLabelById, allPresets };
 }
 
 function dateKeyOf(item: Item): string {
@@ -269,7 +265,7 @@ export function buildHeatmapViewModel(params: {
     function resolvePresetMeta(item: Item): PresetMeta | null {
         const templateId = itemTemplateId(item);
         if (templateId) {
-            const direct = lookups.byTemplateId.get(templateId) || lookups.byLegacyOverrideId.get(templateId);
+            const direct = lookups.byTemplateId.get(templateId);
             if (direct) return direct;
         }
 
@@ -292,8 +288,7 @@ export function buildHeatmapViewModel(params: {
 
         const preset = resolvePresetMeta(item);
         const themePath = preset?.themePath || getItemThemePath(item) || '__default__';
-        // 旧配置里的 themePaths 只作为 legacy fallback 过滤条件。
-        // 已经能识别到目标预设的记录不能再被旧主题列表挡掉，否则目标分组会缺行。
+        // 已经能识别到目标预设的记录不能再被主题列表挡掉，否则目标分组会缺行。
         if (!preset && filterByTheme && themePath !== '__default__' && !trackedThemeSet.has(themePath)) continue;
 
         const explicitGoalPath = getItemGoalKey(item, goals);

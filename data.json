@@ -16,6 +16,7 @@
     "configCacheTTLSeconds": 300,
     "customPrompt": "完成的任务状态勾选完成✅\n未开始的任务🛫\n未完成的任务、有截止日期的📅\n上午8点到12点工作 其中9点到十点写总结 这个应该断成三节 十点到九点工作 九点到十点写总结 十点到十二点工作\n时长只能是分钟为单位，只记录数字\n\n“通勤15分钟中午吃饭45分钟玩手机70分钟 睡觉20分钟”认为是一件事接着一件事记录时间"
   },
+  "schemaVersion": 2,
   "groups": [
     {
       "id": "group_mem9c0yqeumgu",
@@ -585,8 +586,6 @@
       "isOverviewMode": false,
       "initialDate": "2025-02-26",
       "useFieldGranularity": false,
-      "selectedThemes": [],
-      "selectedCategories": [],
       "globalFilters": []
     },
     {
@@ -599,9 +598,7 @@
       "initialView": "季",
       "initialDateFollowsNow": true,
       "parentId": null,
-      "globalFilters": [],
-      "selectedThemes": [],
-      "selectedCategories": []
+      "globalFilters": []
     }
   ],
   "inputSettings": {
@@ -1501,8 +1498,7 @@
         "sortOrder": 10
       }
     ],
-    "cycles": [],
-    "goalBlockBindings": [
+    "goalTemplates": [
       {
         "id": "goal-template.goal.照顾好自己.core.plan.健康",
         "goalId": "goal.照顾好自己",
@@ -3133,6 +3129,7 @@
         "description": "由主题收敛为记录预设：健康/身体",
         "sortOrder": 10,
         "enabled": true,
+        "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/身体",
           "主题": "健康/身体",
@@ -3140,8 +3137,7 @@
           "图标": "🔋"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-1健康.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.照顾好自己.core.task.专注",
@@ -3782,8 +3778,8 @@
         "coreBlockId": "core.task",
         "variantId": "健康",
         "name": "健康",
-        "description": "由主题收敛为记录预设：健康",
-        "sortOrder": 70,
+        "description": "按历史 md 主题补齐的目标预设：思考/健康（历史记录 1 条）",
+        "sortOrder": 110,
         "enabled": true,
         "fields": [
           {
@@ -3825,7 +3821,7 @@
             "semantic": "themePath",
             "semanticType": "path",
             "hierarchical": true,
-            "defaultValue": "健康"
+            "defaultValue": "思考/健康"
           },
           {
             "id": "field_mekt6ks3",
@@ -3887,18 +3883,18 @@
             "label": "图标",
             "type": "text",
             "semantic": "icon",
-            "defaultValue": "💤"
+            "defaultValue": "🔋"
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-1健康.md",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block:: task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
+        "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "健康",
-          "主题": "健康",
-          "icon": "💤",
-          "图标": "💤"
+          "themePath": "思考/健康",
+          "主题": "思考/健康",
+          "icon": "🔋",
+          "图标": "🔋"
         },
-        "createdAt": "2026-06-07T09:28:22.589Z",
+        "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
@@ -4276,131 +4272,6 @@
           "主题": "健康/习惯",
           "icon": "💊",
           "图标": "💊"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
-      },
-      {
-        "id": "goal-template.goal.照顾好自己.core.task.健康-2",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "健康",
-        "name": "健康",
-        "description": "按历史 md 主题补齐的目标预设：思考/健康（历史记录 1 条）",
-        "sortOrder": 110,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/健康"
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🔋"
-          }
-        ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block:: task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
-        "targetFile": "01/2-4思考.md",
-        "defaultValues": {
-          "themePath": "思考/健康",
-          "主题": "思考/健康",
-          "icon": "🔋",
-          "图标": "🔋"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -7950,8 +7821,7 @@
           "图标": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.plan.芦苇",
@@ -7973,8 +7843,7 @@
           "图标": "🌿"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.review.婆婆",
@@ -8018,8 +7887,7 @@
           "图标": "👨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.review.垚垚",
@@ -8041,8 +7909,7 @@
           "图标": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.review.家庭",
@@ -8064,8 +7931,7 @@
           "图标": "👪"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.review.芦苇",
@@ -8087,8 +7953,7 @@
           "图标": "🌿"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.task.时间整理",
@@ -8753,8 +8618,7 @@
           "图标": "👨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.thought.家庭",
@@ -8772,8 +8636,7 @@
           "图标": "👪"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.thought.芦苇",
@@ -8791,8 +8654,7 @@
           "图标": "🌿"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.thought.垚垚",
@@ -8810,8 +8672,7 @@
           "图标": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.evidence.婆婆",
@@ -8837,18 +8698,17 @@
         "coreBlockId": "core.evidence",
         "variantId": "垚垚",
         "name": "垚垚",
-        "description": "按历史 md 主题补齐的目标预设：思考/垚垚（历史记录 37 条）",
-        "sortOrder": 10,
+        "description": "按历史 md 主题补齐的目标预设：生活/垚垚（历史记录 3 条）",
+        "sortOrder": 40,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/垚垚",
-          "主题": "思考/垚垚",
+          "themePath": "生活/垚垚",
+          "主题": "生活/垚垚",
           "icon": "👶",
           "图标": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.evidence.阳阳",
@@ -8866,8 +8726,7 @@
           "图标": "👨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.evidence.芦苇",
@@ -8885,27 +8744,7 @@
           "图标": "🌿"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
-      },
-      {
-        "id": "goal-template.goal.了解世界.core.evidence.垚垚-2",
-        "goalId": "goal.了解世界",
-        "coreBlockId": "core.evidence",
-        "variantId": "垚垚",
-        "name": "垚垚",
-        "description": "按历史 md 主题补齐的目标预设：生活/垚垚（历史记录 3 条）",
-        "sortOrder": 40,
-        "enabled": true,
-        "defaultValues": {
-          "themePath": "生活/垚垚",
-          "主题": "生活/垚垚",
-          "icon": "👶",
-          "图标": "👶"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.evidence.时间整理",
@@ -8923,8 +8762,7 @@
           "图标": "🧠"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.了解世界.core.blocker.婆婆",
@@ -12235,6 +12073,7 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑",
           "主题": "电脑",
@@ -12242,8 +12081,7 @@
           "图标": "🖥"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.ob基础",
@@ -12361,6 +12199,7 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/ob基础",
           "主题": "电脑/ob基础",
@@ -12369,8 +12208,7 @@
           "任务内容": "ob"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.笔记系统",
@@ -12488,6 +12326,7 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/笔记系统",
           "主题": "电脑/笔记系统",
@@ -12496,8 +12335,7 @@
           "任务内容": "笔记系统"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.记录系统",
@@ -12615,6 +12453,7 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/记录系统",
           "主题": "电脑/记录系统",
@@ -12623,8 +12462,7 @@
           "任务内容": "插件"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.整理",
@@ -12741,6 +12579,7 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block::task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/整理",
           "主题": "电脑/整理",
@@ -12748,8 +12587,7 @@
           "图标": "✒"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.AI",
@@ -12760,6 +12598,7 @@
         "description": "由旧记录补充迁移：电脑/AI",
         "sortOrder": 999,
         "enabled": true,
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/AI",
           "主题": "电脑/AI",
@@ -12767,8 +12606,7 @@
           "图标": "🤖"
         },
         "createdAt": "2026-06-07T12:30:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.MediaPro",
@@ -12885,6 +12723,7 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block:: task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/MediaPro",
           "主题": "电脑/MediaPro",
@@ -12892,8 +12731,7 @@
           "图标": "📢"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.点读",
@@ -13010,6 +12848,7 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标ID::{{goalId}}) (目标::{{goalPath}}) (核心Block:: task) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}",
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/点读",
           "主题": "电脑/点读",
@@ -13017,8 +12856,7 @@
           "图标": "🔊"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.thought.电脑",
@@ -13518,8 +13356,7 @@
           "图标": "🧠"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "outputTemplate": ""
+        "updatedAt": "2026-06-25T00:00:00.000Z"
       },
       {
         "id": "goal-template.goal.武装大脑.core.review.思考",
@@ -14799,8 +14636,7 @@
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
       }
-    ],
-    "goalRecordRelations": []
+    ]
   },
   "coreBlockSettings": {
     "enabledCoreBlockIds": [
@@ -14813,22 +14649,7 @@
       "core.blocker",
       "core.milestone"
     ],
-    "patches": [],
-    "legacyBlockMap": {
-      "core.habit": "core.habit",
-      "core.task": "core.task",
-      "core.evidence": "core.evidence",
-      "core.thought": "core.thought",
-      "core.review": "core.review",
-      "core.plan": "core.plan",
-      "core.blocker": "core.blocker",
-      "core.milestone": "core.milestone",
-      "blk_meic1my6m62iu": "core.task",
-      "blk_mejsdvflptluo": "core.plan",
-      "blk_mejsfuehqj4s0": "core.review",
-      "blk_mejsg76atopau": "core.habit",
-      "blk_mejsg1dc46fj9": "core.thought"
-    }
+    "patches": []
   },
   "floatingTimerEnabled": false,
   "activeThemePaths": [

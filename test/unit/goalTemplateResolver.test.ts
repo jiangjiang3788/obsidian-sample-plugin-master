@@ -25,10 +25,8 @@ function baseSettings(): ThinkSettings {
           updatedAt: '2026-06-06T00:00:00.000Z',
         },
       ],
-      cycles: [],
-      goalBlockBindings: [],
-      goalRecordRelations: [],
-    },
+        goalTemplates: [],
+      },
     coreBlockSettings: DEFAULT_CORE_BLOCK_SETTINGS,
     floatingTimerEnabled: true,
     activeThemePaths: [],
@@ -49,7 +47,7 @@ describe('GoalTemplateResolver', () => {
 
   it('uses goal + block template when a goal template exists', () => {
     const settings = baseSettings();
-    settings.goalSettings!.goalBlockBindings.push({
+    settings.goalSettings!.goalTemplates.push({
       id: 'binding.goal.plugin.core.task',
       goalId: 'goal.plugin',
       coreBlockId: 'core.task',

@@ -5,12 +5,11 @@ import {
   getTemplateFieldInputType,
   getTemplateFieldSemantic,
   isOptionObject,
-  isTemplatePathField,
   isTemplateRatingPairField,
   normalizeTemplateFieldValue,
 } from '@/core/fields/TemplateFieldAdapter';
+import { matchTemplateFieldOptionValue } from '@/core/fields/FieldBehavior';
 import { decodeMarkdownFieldValue, type FieldCodecDefinition } from '@/core/records/codec/FieldValueCodec';
-import { normalizeHierarchyPath } from '@/core/fields/pathSemantics';
 import { parseTagList } from '@/core/fields/tagSemantics';
 import { normalizeImageValue } from '@/core/fields/imageSemantics';
 
@@ -152,38 +151,13 @@ function readRegisteredOrExtraValue(field: TemplateField, item: Item): unknown {
 
   return undefined;
 }
-
-function matchOptionValue(field: TemplateField, rawValue: unknown): unknown {
-  if (!isPresent(rawValue)) return rawValue;
-  if (isOptionObject(rawValue)) return rawValue;
-
-  const inputType = getTemplateFieldInputType(field);
-  const options = field.options || [];
-
-  if (isTemplatePathField(field)) {
-    const normalizedPath = normalizeHierarchyPath(rawValue);
-    if (!normalizedPath) return rawValue;
-    const matched = options.find((opt: any) => normalizeHierarchyPath(opt?.value) === normalizedPath || String(opt?.label ?? '') === String(rawValue));
-    return { value: normalizedPath, label: matched?.label || normalizedPath.split('/').pop() || normalizedPath };
-  }
-
-  if (['select', 'radio', 'singleSelect', 'rating'].includes(inputType)) {
-    const rawString = String(rawValue);
-    const matched = options.find((opt: any) => String(opt?.value) === rawString || String(opt?.label) === rawString || String(opt?.label ?? opt?.value) === rawString);
-    if (matched) return { value: matched.value, label: matched.label || matched.value };
-    if (inputType === 'rating') return { value: rawString, label: rawString };
-  }
-
-  return rawValue;
-}
-
 function normalizeBackfillValue(field: TemplateField, rawValue: unknown): unknown {
   if (!isPresent(rawValue)) return undefined;
   if (isTemplateRatingPairField(field) && isOptionObject(rawValue)) return rawValue;
 
   const decoded = decodeMarkdownFieldValue(rawValue, fieldCodecDefinition(field));
   const normalized = normalizeTemplateFieldValue(field, decoded);
-  return matchOptionValue(field, normalized);
+  return matchTemplateFieldOptionValue(field, normalized);
 }
 
 export function resolveInitialFieldValue(input: {

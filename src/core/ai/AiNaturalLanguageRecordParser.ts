@@ -85,7 +85,6 @@ interface AiSnapshotPreset {
     categoryKey?: string;
     name?: string;
     themePath?: string;
-    isDefault?: boolean;
 }
 
 interface AiParserSnapshot {
@@ -173,7 +172,7 @@ function findPresetByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): 
         const exactVariant = candidates.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.goalTemplateId === variantId);
         if (exactVariant) return exactVariant;
     }
-    return candidates.find((preset) => preset.isDefault) || candidates[0] || null;
+    return candidates[0] || null;
 }
 
 export function normalizeParsedBatch(batch: NaturalRecordBatch, snapshot: AiParserSnapshot, rawText: string, defaultThemeId?: string): NaturalRecordBatch {
@@ -498,7 +497,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '  "rawText": "original input text",',
             '  "target": {',
             '    "blockId": "core-block-id-from-snapshot",',
-            '    "categoryKey": "optional-legacy-category-label-from-snapshot",',
+            '    "categoryKey": "optional-category-label-from-snapshot",',
             '    "goalPath": "goal-path-from-snapshot",',
             '    "templateVariantId": "preset-variant-from-snapshot",',
             '    "themeId": "theme-path-from-selected-preset"',
@@ -541,15 +540,15 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '',
             'GOAL / PRESET SELECTION:',
             '1. goalPath is REQUIRED when snapshot.goals is not empty. Use a FULL goal path from snapshot.goals[].path.',
-            '2. Choose blockId first, then choose the best preset from snapshot.goalPresets with the same goalPath and blockId. categoryKey is only a legacy helper.',
+            '2. Choose blockId first, then choose the best preset from snapshot.goalPresets with the same goalPath and blockId. categoryKey is only a display helper.',
             '3. If a preset clearly matches user words, return target.goalTemplateId = preset.goalTemplateId/id and target.templateVariantId = preset.variantId.',
-            '4. If several presets match, prefer preset.isDefault or the closest themePath/name match.',
+            '4. If several presets match, prefer the closest themePath/name match.',
             '5. themeId should come from the selected preset themePath or selected goal themePath. Theme is only a form default/stat dimension, not the main template selector.',
-            '6. Never output legacy templateSourceType values such as deprecated template source values.',
+            '6. Do not output deprecated templateSourceType values.',
             '',
             'BLOCK SELECTION:',
             '1. blockId is REQUIRED and must come from snapshot.blocks[].id or snapshot.goalPresets[].blockId, e.g. core.task/core.habit/core.plan.',
-            '2. categoryKey is optional legacy display text. Return it only when it helps compatibility, and it must come from snapshot.blocks[].categoryKey.',
+            '2. categoryKey is optional display text. Return it only when it helps compatibility, and it must come from snapshot.blocks[].categoryKey.',
             '3. Common patterns:',
             '   - "任务"/"要做"/"待办" → blockId = "core.task"',
             '   - "计划" → blockId = "core.plan"',
@@ -590,7 +589,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         const lines = [
             'You convert user text into Think plugin record commands.',
             'Return ONLY valid JSON. No markdown. No explanations.',
-            'Schema: {"items":[{"rawText":"...","target":{"blockId":"core.task","categoryKey":"optional legacy label","goalPath":"...","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
+            'Schema: {"items":[{"rawText":"...","target":{"blockId":"core.task","categoryKey":"optional label","goalPath":"...","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
             'Use only goalPath/blockId/categoryKey/goalTemplateId/templateVariantId/themeId/fields provided by user prompt.',
             'If uncertain, choose the first plausible goal, preset/theme, and blockId.',
             'Dates: YYYY-MM-DD. Times: HH:mm. Never put goal/theme/template/period system fields into fieldValues.',

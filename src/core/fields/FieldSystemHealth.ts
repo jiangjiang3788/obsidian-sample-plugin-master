@@ -2,6 +2,7 @@
 import type { Item } from '@/core/types/schema';
 import {
   FIELD_CATEGORY_LABELS,
+  HIDDEN_EXTRA_ALIAS_KEYS,
   FIELD_REGISTRY,
   getAvailableFields,
   getCanonicalFieldKey,
@@ -10,7 +11,6 @@ import {
   getFieldPickerOptions,
   isVisibleExtraField,
 } from './FieldRegistry';
-import { LEGACY_EXTRA_ALIAS_KEYS } from './LegacyFieldPolicy';
 import { readFieldValue } from './FieldValueResolver';
 import { getBuiltInFieldGuideGroups, getCoreInputFieldPresets, isCoreInputFieldName, isReservedCustomFieldName, makeSafeCustomFieldName } from './CoreFieldCatalog';
 import type { FieldCategory } from './FieldTypes';
@@ -97,7 +97,7 @@ function hasCorrectFileCategories(): FieldSystemCheckResult {
 }
 
 function aliasesMapToCanonicalFields(): FieldSystemCheckResult {
-  const label = '历史字段别名仅内部映射到新核心字段';
+  const label = '用户常用字段别名映射到核心字段';
   const wrong = LEGACY_ALIAS_EXPECTATIONS
     .map(([alias, expected]) => ({ alias, expected, actual: getCanonicalFieldKey(alias) }))
     .filter(row => row.actual !== row.expected);
@@ -112,9 +112,9 @@ function aliasesMapToCanonicalFields(): FieldSystemCheckResult {
 }
 
 function legacyExtraAliasesAreHidden(): FieldSystemCheckResult {
-  const label = '历史 extra 污染字段默认隐藏';
-  const sample = { id: 'health-extra', extra: Object.fromEntries(LEGACY_EXTRA_ALIAS_KEYS.map(key => [key, 'x'])) } as unknown as Item;
-  const visible = LEGACY_EXTRA_ALIAS_KEYS.filter(key => isVisibleExtraField(sample, key));
+  const label = '正文 alias 污染字段默认隐藏';
+  const sample = { id: 'health-extra', extra: Object.fromEntries(HIDDEN_EXTRA_ALIAS_KEYS.map(key => [key, 'x'])) } as unknown as Item;
+  const visible = HIDDEN_EXTRA_ALIAS_KEYS.filter(key => isVisibleExtraField(sample, key));
   if (visible.length) {
     return fail('field.extra.legacy-hidden', label, `仍可见：${visible.join(', ')}`);
   }

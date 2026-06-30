@@ -3,29 +3,56 @@ import type {
   GoalDefinition,
   RecordInputMeta,
   TemplateField,
-  ThinkSettings,
   ThemeDefinition,
 } from "@core/public";
 import {
-  asUnknownRecord,
   dayjs,
-  getGoalTemplates,
   getLeafPath,
   getTemplateFieldSemantic,
   readFirstString,
-  readNumber,
   readRecord,
   renderTemplate,
-  splitGoalPath,
 } from "@core/public";
+import { finalizeLinkedTimeFields } from "@shared/public";
+
 import {
-  computeLinkedTimeChanges,
-  finalizeLinkedTimeFields,
-} from "@shared/public";
+  buildFieldSourceSummary,
+  isMeaningfulValue,
+  isOptionLike,
+  isRefreshableSource,
+  isSameValue,
+} from "./quickInputFieldSourceModel";
+import { cleanDisplayPath, splitThemePathParts, themeOptions } from "./quickInputPathModel";
 
-import type { GoalSelectorOption } from "./components/GoalSelector";
-
-// 稳定空引用：避免调用方传入 `initialFormData={{}}` 造成死循环。
+export {
+  buildInitialFieldSources,
+  clearQuickInputGoalContext,
+  isMeaningfulValue,
+  isOptionLike,
+  isRefreshableSource,
+  isSameValue,
+  preserveQuickInputBlockSwitchState,
+} from "./quickInputFieldSourceModel";
+export {
+  cleanDisplayPath,
+  cleanDisplaySegment,
+  getGoalPath,
+  makeGoalIdFromPath,
+  splitPathParts,
+  splitThemePathParts,
+  themeOptions,
+} from "./quickInputPathModel";
+export {
+  applyQuickInputFieldUpdate,
+  applyQuickInputLinkedTimeChanges,
+  applyQuickInputTimeDirectionChange,
+  finalizeQuickInputFormData,
+} from "./quickInputTimeModel";
+export {
+  applyQuickInputGoalSelection,
+  buildQuickInputGoalOptions,
+  resolveQuickInputCoreBlockId,
+} from "./quickInputGoalModel";
 
 export type QuickInputFormData = Record<string, unknown>;
 export type QuickInputContext = Record<string, unknown>;
@@ -109,315 +136,13 @@ export interface QuickInputEditorProps {
   isMobileLike?: boolean;
 }
 
-/** 将“时间/结束/时长”字段收敛成最终数据，并去掉编辑态元字段。 */
-export function finalizeQuickInputFormData(formData: QuickInputFormData) {
-  const finalData = { ...formData };
-  const direction =
-    finalData.__timeDirection === "backward" ? "backward" : "forward";
-  delete finalData.lastChanged;
-  delete finalData.__timeDirection;
-  return finalizeLinkedTimeFields(
-    finalData,
-    { startKey: "时间", endKey: "结束", durationKey: "时长" },
-    { durationOutput: "number", direction },
-  );
-}
-
-export const isMeaningfulValue = (value: unknown) => {
-  if (value === undefined || value === null) return false;
-  if (typeof value === "string") return value !== "";
-  return true;
-};
-
-export const isOptionLike = (value: unknown): value is QuickInputOptionLike =>
-  !!value && typeof value === "object" && "value" in value && "label" in value;
-
-export const isSameValue = (a: unknown, b: unknown) => {
-  if (isOptionLike(a) && isOptionLike(b)) {
-    return a.value === b.value && a.label === b.label;
-  }
-  return a === b;
-};
-
-export const isRefreshableSource = (source?: QuickInputFieldSource) =>
-  source === undefined ||
-  source === "template_default" ||
-  source === "system_auto" ||
-  source === "goal_context" ||
-  source === "theme_context";
-
-export const buildInitialFieldSources = (
-  initialData?: QuickInputFormData,
-): QuickInputFieldSourceMap => {
-  const next: QuickInputFieldSourceMap = {};
-  if (!initialData) return next;
-  Object.keys(initialData).forEach((key) => {
-    if (key === "__timeDirection" || key === "lastChanged") return;
-    if (!isMeaningfulValue(initialData[key])) return;
-    next[key] = "context";
-  });
-  return next;
-};
-
-export function cleanDisplaySegment(value: unknown): string {
-  return String(value ?? "")
-    .replace(/^[#＃]+\s*/, "")
-    .trim();
-}
-
-export function cleanDisplayPath(value?: string | null): string | null {
-  const normalized = splitGoalPath(value).goalPath;
-  if (!normalized) return null;
-  const parts = normalized.split("/").map(cleanDisplaySegment).filter(Boolean);
-  return parts.length ? parts.join("/") : null;
-}
-
-export const splitThemePathParts = (path?: string | null) => {
-  const parts = String(path || "")
-    .split("/")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  return {
-    themePath: parts.length ? parts.join("/") : null,
-    rootTheme: parts[0] || null,
-    leafTheme: parts.length ? parts[parts.length - 1] : null,
-  };
-};
-
-export const splitPathParts = (path?: string | null) => {
-  const parts = String(path || "")
-    .split("/")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  return {
-    path: parts.length ? parts.join("/") : null,
-    root: parts[0] || null,
-    leaf: parts.length ? parts[parts.length - 1] : null,
-  };
-};
-
-export function getGoalPath(goal?: GoalDefinition | null): string | null {
-  if (!goal) return null;
-  return cleanDisplayPath(goal.goalPath || goal.title);
-}
-
-export function makeGoalIdFromPath(path: string): string {
-  return `goal:${path}`;
-}
-
-export function themeOptions(themes: ThemeDefinition[]) {
-  return (themes || []).map((theme) => ({
-    value: theme.path,
-    label: cleanDisplaySegment(
-      theme.path.split("/").filter(Boolean).pop() || theme.path,
-    ),
-    icon: theme.icon,
-  }));
-}
-
-export const buildFieldSourceSummary = (
-  sources: QuickInputFieldSourceMap,
-): Record<QuickInputFieldSource, number> => ({
-  user: Object.values(sources).filter((v) => v === "user").length,
-  context: Object.values(sources).filter((v) => v === "context").length,
-  edit_backfill: Object.values(sources).filter((v) => v === "edit_backfill")
-    .length,
-  invocation_context: Object.values(sources).filter(
-    (v) => v === "invocation_context",
-  ).length,
-  goal_context: Object.values(sources).filter((v) => v === "goal_context")
-    .length,
-  theme_context: Object.values(sources).filter((v) => v === "theme_context")
-    .length,
-  template_default: Object.values(sources).filter(
-    (v) => v === "template_default",
-  ).length,
-  system_auto: Object.values(sources).filter((v) => v === "system_auto").length,
-});
-
-function getOrderedGoalIndex(
-  goal: GoalDefinition | null,
-  originalIndex: Map<string, number>,
-): number {
-  if (!goal) return Number.MAX_SAFE_INTEGER;
-  const order = readNumber(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
-  return Number.isFinite(order)
-    ? order
-    : (originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER);
-}
-
-function getGoalByDisplayPath(
-  goals: GoalDefinition[],
-  path: string,
-): GoalDefinition | null {
-  return goals.find((goal) => getGoalPath(goal) === path) || null;
-}
-
-function sortGoalsLikePresetMatrix(goals: GoalDefinition[]): GoalDefinition[] {
-  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
-  return [...goals].sort((left, right) => {
-    const leftParts = (getGoalPath(left) || "").split("/").filter(Boolean);
-    const rightParts = (getGoalPath(right) || "").split("/").filter(Boolean);
-    const max = Math.min(leftParts.length, rightParts.length);
-    for (let index = 0; index < max; index += 1) {
-      if (leftParts[index] === rightParts[index]) continue;
-      const leftSiblingPath = [
-        ...leftParts.slice(0, index),
-        leftParts[index],
-      ].join("/");
-      const rightSiblingPath = [
-        ...rightParts.slice(0, index),
-        rightParts[index],
-      ].join("/");
-      const leftSiblingGoal = getGoalByDisplayPath(goals, leftSiblingPath);
-      const rightSiblingGoal = getGoalByDisplayPath(goals, rightSiblingPath);
-      const leftOrder = getOrderedGoalIndex(leftSiblingGoal, originalIndex);
-      const rightOrder = getOrderedGoalIndex(rightSiblingGoal, originalIndex);
-      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
-      return leftParts[index].localeCompare(rightParts[index], "zh-CN");
-    }
-    if (leftParts.length !== rightParts.length)
-      return leftParts.length - rightParts.length;
-    const byOrder =
-      getOrderedGoalIndex(left, originalIndex) -
-      getOrderedGoalIndex(right, originalIndex);
-    if (byOrder !== 0) return byOrder;
-    return (
-      (originalIndex.get(left.id) ?? 0) - (originalIndex.get(right.id) ?? 0)
-    );
-  });
-}
-
-function goalHasDirectEnabledPreset(
-  fullSettings: ThinkSettings,
-  goal: GoalDefinition,
-  coreBlockId: string,
-): boolean {
-  if (!goal?.id || !coreBlockId) return false;
-  return getGoalTemplates(fullSettings.goalSettings).some(
-    (template) =>
-      template.enabled !== false &&
-      template.goalId === goal.id &&
-      template.coreBlockId === coreBlockId,
-  );
-}
-
-export function buildQuickInputGoalOptions(
-  fullSettings: ThinkSettings,
-  coreBlockId: string,
-): GoalSelectorOption[] {
-  const seen = new Set<string>();
-  const sourceGoals = sortGoalsLikePresetMatrix([
-    ...(fullSettings.goalSettings?.goals || []),
-  ])
-    .filter((goal) => goal.status !== "archived")
-    .filter((goal) =>
-      goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId),
-    );
-
-  const result: GoalSelectorOption[] = [];
-  for (const [index, goal] of sourceGoals.entries()) {
-    const normalized = cleanDisplayPath(goal.goalPath || goal.title);
-    if (!normalized || seen.has(normalized)) continue;
-    seen.add(normalized);
-    const leaf = normalized.split("/").filter(Boolean).pop() || normalized;
-    result.push({
-      id: goal.id || makeGoalIdFromPath(normalized),
-      value: normalized,
-      label: cleanDisplaySegment(goal.title) || leaf,
-      order: index,
-      goal,
-      themePath: goal.themePath ?? null,
-    });
-  }
-  return result;
-}
-
-export function resolveQuickInputCoreBlockId(
-  _fullSettings: ThinkSettings,
-  blockId: string,
-): string {
-  return String(blockId || "");
-}
-
-export function applyQuickInputLinkedTimeChanges(
-  draft: QuickInputFormData,
-  direction: TimeDirection,
-) {
-  const changes = computeLinkedTimeChanges(
-    draft,
-    { startKey: "时间", endKey: "结束", durationKey: "时长" },
-    draft.lastChanged,
-    {
-      durationOutput: "number",
-      direction,
-    },
-  );
-  if (!Object.keys(changes).length) {
-    const cleaned = { ...draft };
-    if ("lastChanged" in cleaned) delete cleaned.lastChanged;
-    return { formData: cleaned, autoKeys: [] as string[] };
-  }
-  const merged = { ...draft, ...changes };
-  if ("lastChanged" in merged) delete merged.lastChanged;
-  return { formData: merged, autoKeys: Object.keys(changes) };
-}
-
 export interface ApplyQuickInputFieldUpdateInput {
   formData: QuickInputFormData;
   fieldSources: QuickInputFieldSourceMap;
   key: string;
-  value: unknown;
+  value: QuickInputOptionLike | unknown;
   isOptionObject?: boolean;
   timeDirection: TimeDirection;
-}
-
-export function applyQuickInputFieldUpdate(
-  input: ApplyQuickInputFieldUpdateInput,
-) {
-  const {
-    formData,
-    fieldSources,
-    key,
-    value,
-    isOptionObject = false,
-    timeDirection,
-  } = input;
-  const rawValue = isOptionObject ? value?.value : value;
-  const fieldValue = isOptionObject
-    ? { value: value?.value, label: value?.label }
-    : value;
-  const draft = { ...formData, [key]: fieldValue, lastChanged: key };
-  const linked = applyQuickInputLinkedTimeChanges(draft, timeDirection);
-  const nextSources: QuickInputFieldSourceMap = {
-    ...fieldSources,
-    [key]: "user",
-  };
-  linked.autoKeys.forEach((autoKey) => {
-    if (autoKey !== key) nextSources[autoKey] = "system_auto";
-  });
-
-  const nextThemePath =
-    key === "themePath" || key === "主题"
-      ? String(rawValue ?? "").trim() || null
-      : undefined;
-  const nextGoalPath =
-    key === "goalPath" || key === "目标" || key === "目标路径"
-      ? cleanDisplayPath(String(rawValue ?? ""))
-      : undefined;
-
-  return {
-    formData: linked.formData,
-    fieldSources: nextSources,
-    nextThemePath,
-    nextGoalPath,
-    nextGoalId:
-      nextGoalPath === undefined
-        ? undefined
-        : nextGoalPath
-          ? makeGoalIdFromPath(nextGoalPath)
-          : null,
-  };
 }
 
 export interface ApplyQuickInputTimeDirectionChangeInput {
@@ -425,30 +150,6 @@ export interface ApplyQuickInputTimeDirectionChangeInput {
   fieldSources: QuickInputFieldSourceMap;
   nextDirection: TimeDirection;
   defaultEndTime?: string;
-}
-
-export function applyQuickInputTimeDirectionChange(
-  input: ApplyQuickInputTimeDirectionChangeInput,
-) {
-  const { formData, fieldSources, nextDirection } = input;
-  const draft = { ...formData };
-  let usedDefaultEnd = false;
-  if (nextDirection === "backward" && !draft["结束"]) {
-    draft["结束"] = input.defaultEndTime || dayjs().format("HH:mm");
-    usedDefaultEnd = true;
-  }
-  const linked = applyQuickInputLinkedTimeChanges(draft, nextDirection);
-  const nextSources: QuickInputFieldSourceMap = { ...fieldSources };
-  if (usedDefaultEnd && !fieldSources["结束"])
-    nextSources["结束"] = "system_auto";
-  linked.autoKeys.forEach((autoKey) => {
-    nextSources[autoKey] = "system_auto";
-  });
-  return {
-    formData: linked.formData,
-    fieldSources: nextSources,
-    timeDirection: nextDirection,
-  };
 }
 
 export interface HydrateQuickInputTemplateDefaultsInput {
@@ -462,6 +163,13 @@ export interface HydrateQuickInputTemplateDefaultsInput {
   currentGoalTitle?: string | null;
   theme?: ThemeDefinition | null;
   currentPeriod?: QuickInputPeriodLike | null;
+  timeDirection: TimeDirection;
+}
+
+export interface QuickInputInitialSelection {
+  selectedGoalId: string | null;
+  selectedGoalPath: string | null;
+  selectedTemplateVariantId: string | null;
   timeDirection: TimeDirection;
 }
 
@@ -662,15 +370,6 @@ export function hydrateQuickInputTemplateDefaults({
 
   return { changed: true, formData: next, fieldSources: nextSources };
 }
-
-export interface QuickInputInitialSelection {
-  selectedGoalId: string | null;
-  selectedGoalPath: string | null;
-  selectedTemplateVariantId: string | null;
-  selectedCycleId: string | null;
-  timeDirection: TimeDirection;
-}
-
 export function deriveQuickInputInitialSelection(
   initialFormData?: QuickInputFormData,
   context?: QuickInputContext,
@@ -707,75 +406,9 @@ export function deriveQuickInputInitialSelection(
         "templateId",
       ]) ??
       null,
-    selectedCycleId:
-      readFirstString(initialFormData, ["cycleId", "周期ID"]) ??
-      readFirstString(context, ["cycleId", "周期ID"]) ??
-      readFirstString(goalContext, ["cycleId"]) ??
-      null,
     timeDirection:
       initialFormData?.__timeDirection === "backward" ? "backward" : "forward",
   };
-}
-
-const QUICK_INPUT_GOAL_CONTEXT_KEYS = [
-  "goalId",
-  "目标ID",
-  "goalPath",
-  "目标",
-  "rootGoal",
-  "leafGoal",
-  "cycleId",
-  "周期ID",
-  "周期",
-  "周期粒度",
-  "templateId",
-  "goalTemplateId",
-  "templateVariantId",
-  "goalTemplateVariantId",
-];
-
-const QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
-  "内容",
-  "content",
-  "日期",
-  "date",
-  "时间",
-  "time",
-  "备注",
-  "note",
-  "description",
-  "目标",
-  "目标ID",
-  "goalId",
-  "goalPath",
-  "themePath",
-  "主题",
-];
-
-export function clearQuickInputGoalContext(
-  formData: QuickInputFormData,
-  fieldSources: QuickInputFieldSourceMap,
-) {
-  const nextFormData = { ...formData };
-  const nextFieldSources = { ...fieldSources };
-  QUICK_INPUT_GOAL_CONTEXT_KEYS.forEach((key) => {
-    delete nextFormData[key];
-    delete nextFieldSources[key];
-  });
-  return { formData: nextFormData, fieldSources: nextFieldSources };
-}
-
-export function preserveQuickInputBlockSwitchState(
-  formData: QuickInputFormData,
-  fieldSources: QuickInputFieldSourceMap,
-) {
-  const preservedFormData: QuickInputFormData = {};
-  const preservedFieldSources: QuickInputFieldSourceMap = {};
-  QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS.forEach((key) => {
-    if (formData[key] !== undefined) preservedFormData[key] = formData[key];
-    if (fieldSources[key]) preservedFieldSources[key] = fieldSources[key];
-  });
-  return { formData: preservedFormData, fieldSources: preservedFieldSources };
 }
 
 export function resolveQuickInputThemeSelectionOnClick(params: {
@@ -792,60 +425,6 @@ export function resolveQuickInputThemeSelectionOnClick(params: {
     : "";
   return parentPath ? (pathToIdMap.get(parentPath) ?? null) : null;
 }
-
-export function applyQuickInputGoalSelection(params: {
-  formData: QuickInputFormData;
-  fieldSources: QuickInputFieldSourceMap;
-  option: GoalSelectorOption;
-}) {
-  const { formData, fieldSources, option } = params;
-  const goal = option.goal || null;
-  const goalPath =
-    cleanDisplayPath(goal?.goalPath || option.value) || option.value;
-  const goalId =
-    goal?.id ||
-    (option.id && !String(option.id).startsWith("goal:")
-      ? option.id
-      : makeGoalIdFromPath(goalPath));
-  const themePath = goal?.themePath || option.themePath || null;
-  const nextFormData = { ...formData };
-  const nextFieldSources: QuickInputFieldSourceMap = { ...fieldSources };
-  const assign = (
-    key: string,
-    value: unknown,
-    source: QuickInputFieldSource = "goal_context",
-  ) => {
-    if (value === undefined || value === null || value === "") return;
-    const currentSource = nextFieldSources[key];
-    const hasUserValue =
-      currentSource === "user" && isMeaningfulValue(nextFormData[key]);
-    if (hasUserValue) return;
-    nextFormData[key] = value;
-    nextFieldSources[key] = source;
-  };
-
-  assign("goalId", goalId);
-  assign("目标ID", goalId);
-  assign("goalPath", goalPath);
-  assign("目标", goalPath);
-  const parts = splitGoalPath(cleanDisplayPath(goalPath) || "");
-  assign("rootGoal", parts.rootGoal || "", "goal_context");
-  assign("leafGoal", parts.leafGoal || "", "goal_context");
-  if (themePath) {
-    assign("themePath", themePath, "goal_context");
-    assign("主题", themePath, "goal_context");
-  }
-
-  return {
-    goal,
-    goalId,
-    goalPath,
-    themePath,
-    formData: nextFormData,
-    fieldSources: nextFieldSources,
-  };
-}
-
 export interface BuildQuickInputEditorStateInput {
   blockId: string;
   effectiveBlockId?: string | null;

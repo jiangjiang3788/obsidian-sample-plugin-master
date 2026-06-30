@@ -19,7 +19,6 @@ import MiniSearch, { SearchResult } from 'minisearch';
 import type { Item } from '@/core/types/schema';
 import { DataStore } from '@/core/services/DataStore';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
-import { LEGACY_EXTRA_ALIAS_KEYS } from '@/core/fields/LegacyFieldPolicy';
 import { devLog, devWarn, devError } from '../utils/devLogger';
 import { asUnknownRecord, readNumber, readString, readUnknown } from '../utils/unknownRecord';
 import type { UnknownRecord } from '../utils/unknownRecord';
@@ -78,7 +77,7 @@ interface SearchIndexDocument {
 // ============== Constants ==============
 
 const DEFAULT_LIMIT = 100;
-const LEGACY_EXTRA_ALIAS_SET = new Set<string>(LEGACY_EXTRA_ALIAS_KEYS as readonly string[]);
+const HIDDEN_EXTRA_ALIAS_SET = new Set<string>(['正文', '内容', '任务内容', '记录内容', 'editableText']);
 
 const SEARCH_FIELDS: Array<keyof SearchIndexDocument> = [
     'title',
@@ -141,7 +140,7 @@ function normalizeText(value: unknown): string {
 function collectSearchableExtraText(item: Item): string {
     const extra = item.extra || {};
     return Object.entries(extra)
-        .filter(([key]) => !LEGACY_EXTRA_ALIAS_SET.has(key))
+        .filter(([key]) => !HIDDEN_EXTRA_ALIAS_SET.has(key))
         .map(([key, value]) => `${key} ${normalizeText(value)}`.trim())
         .filter(Boolean)
         .join(' ');

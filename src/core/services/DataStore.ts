@@ -6,7 +6,6 @@ import { THEME_MATCHER_TOKEN } from '@core/types/theme';
 import type { IPluginStorage } from '@core/services/StorageService';
 import { STORAGE_TOKEN } from '@core/services/StorageService';
 import { devWarn, devError } from '../utils/devLogger';
-import { scanFieldMigrations, type FieldMigrationPreview } from '@/core/fields';
 // NOTE: core 内部禁止依赖 @core/public（对外门面）。
 // 否则会形成循环依赖：core/services -> core/public -> core/services...
 import { VAULT_PORT_TOKEN, type VaultPort } from '@core/ports/VaultPort';
@@ -168,13 +167,6 @@ export class DataStore {
       devError('ThinkPlugin: 扫描文件失败', filePath, err);
       return [];
     }
-  }
-
-  /**
-   * 字段迁移预览（只读）：扫描当前内存记录中的旧字段/污染字段，不修改 Markdown。
-   */
-  getFieldMigrationPreview(): FieldMigrationPreview {
-    return scanFieldMigrations(this.queryItems([], []));
   }
 
   removeFileItems(filePath: string) {

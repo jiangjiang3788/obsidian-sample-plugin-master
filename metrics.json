@@ -1,48 +1,44 @@
 {
-  "files": 229,
-  "totalLines": 31574,
+  "files": 534,
+  "totalLines": 61836,
   "console": {
-    "total": 65,
+    "total": 16,
     "top": [
       [
+        "src/core/utils/recordDebug.ts",
+        4
+      ],
+      [
         "src/core/utils/devLogger.ts",
-        16
-      ],
-      [
-        "src/shared/utils/performance.ts",
-        13
-      ],
-      [
-        "src/features/settings/useViewData.ts",
         3
       ],
       [
-        "src/shared/ui/views/BlockView.tsx",
-        3
-      ],
-      [
-        "src/shared/ui/widgets/FloatingWidget.ts",
-        3
-      ],
-      [
-        "src/app/store/useAppStore.ts",
+        "src/app/bootstrap/initializeCore.ts",
         2
       ],
       [
-        "src/core/services/InputService.ts",
+        "src/app/usecases/settings.usecase.ts",
         2
       ],
       [
-        "src/core/services/StorageService.ts",
-        2
+        "src/core/types/schema.ts",
+        1
       ],
       [
-        "src/core/services/TimerStateService.ts",
-        2
+        "src/features/settings/tabs/GeneralSettings.tsx",
+        1
       ],
       [
-        "src/features/settings/ThemeTreeNodeRow.tsx",
-        2
+        "src/shared/utils/devConsole.ts",
+        1
+      ],
+      [
+        "src/shared/utils/diagnosticConsole.ts",
+        1
+      ],
+      [
+        "src/shared/utils/errorHandler.ts",
+        1
       ]
     ]
   },
@@ -50,81 +46,65 @@
     "files": []
   },
   "tsIgnore": {
-    "total": 29,
+    "total": 4,
     "top": [
       [
-        "src/features/settings/TimelineViewEditor.tsx",
-        11
+        "src/shared/ui/muiCompat.ts",
+        3
       ],
       [
-        "src/features/timer/TimerRow.tsx",
-        7
-      ],
-      [
-        "src/features/settings/ContextualToolbar.tsx",
-        4
-      ],
-      [
-        "src/features/settings/ThemeMatrix.tsx",
-        4
-      ],
-      [
-        "src/features/settings/ThemeToolbar.tsx",
-        2
-      ],
-      [
-        "src/core/utils/date.ts",
+        "src/types/dayjs-isoWeekYear.d.ts",
         1
       ]
     ]
   },
   "obsidianImport": {
-    "total": 55,
+    "total": 28,
     "top": [
       [
-        "src/features/settings/index.ts",
+        "src/platform/ObsidianEventsPort.ts",
         2
       ],
       [
-        "src/shared/ui/views/BlockView.tsx",
+        "src/platform/ObsidianFileStatPort.ts",
         2
       ],
       [
-        "src/app/capabilities/CapabilityRegistry.ts",
+        "src/platform/ObsidianMetadataPort.ts",
+        2
+      ],
+      [
+        "src/platform/ThinkSettingsView.tsx",
+        2
+      ],
+      [
+        "src/platform/modals/AiBatchConfirmModal.tsx",
+        2
+      ],
+      [
+        "src/platform/modals/AiChatModal.tsx",
+        2
+      ],
+      [
+        "src/platform/modals/NamePromptModal.tsx",
+        2
+      ],
+      [
+        "src/main.ts",
         1
       ],
       [
-        "src/app/capabilities/capabilities/ai.ts",
+        "src/platform/ObsidianAiHttpTransport.ts",
         1
       ],
       [
-        "src/app/capabilities/capabilities/timer.ts",
-        1
-      ],
-      [
-        "src/app/capabilities/createCapabilities.ts",
-        1
-      ],
-      [
-        "src/core/di/setupCore.ts",
-        1
-      ],
-      [
-        "src/core/services/ActionService.ts",
-        1
-      ],
-      [
-        "src/core/services/DataStore.ts",
-        1
-      ],
-      [
-        "src/core/services/InputService.ts",
+        "src/platform/ObsidianMessageRenderPort.ts",
         1
       ]
     ]
   },
   "tsyringeImport": {
-    "total": 20,
+    "total": 35,
     "top": [
       [
         "src/core/services/StorageService.ts",
@@ -135,7 +115,23 @@
         1
       ],
       [
-        "src/app/capabilities/capabilities/ai.ts",
+        "src/app/bootstrap/buildRuntime.ts",
+        1
+      ],
+      [
+        "src/app/bootstrap/initializeCore.ts",
+        1
+      ],
+      [
+        "src/app/bootstrap/loadTimerServices.ts",
+        1
+      ],
+      [
+        "src/app/bootstrap/loadUIFeatures.ts",
+        1
+      ],
+      [
+        "src/app/bootstrap/register.ts",
         1
       ],
       [
@@ -149,43 +145,19 @@
       [
         "src/core/ai/AiChatService.ts",
         1
-      ],
-      [
-        "src/core/ai/ChatSessionStore.ts",
-        1
-      ],
-      [
-        "src/core/ai/RetrievalService.ts",
-        1
-      ],
-      [
-        "src/core/di/setupCore.ts",
-        1
-      ],
-      [
-        "src/core/services/ActionService.ts",
-        1
       ]
     ]
   },
   "containerResolve": {
-    "total": 16,
+    "total": 19,
     "top": [
       [
-        "src/app/ServiceManager.ts",
-        6
-      ],
-      [
-        "src/app/capabilities/capabilities/ai.ts",
-        3
+        "src/app/bootstrap/buildRuntime.ts",
+        13
       ],
       [
         "src/app/store/useAppStore.ts",
         3
-      ],
-      [
-        "src/app/createServices.ts",
-        2
       ],
       [
         "src/core/ai/AiChatService.ts",
@@ -193,6 +165,10 @@
       ],
       [
         "src/core/ai/RetrievalService.ts",
+        1
+      ],
+      [
+        "src/platform/ObsidianModalPort.ts",
         1
       ]
     ]

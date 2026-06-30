@@ -1,21 +1,7 @@
 import type { Item } from '@/core/types/schema';
-import type { CycleGranularity, GoalDefinition, GoalMetricContract, GoalRecordRelation, GoalRecordRelationType } from './types';
+import type { CycleGranularity, GoalDefinition, GoalMetricContract } from './types';
 import { splitGoalPath } from './path';
-import { createGoalOrderIndex } from './order';
 import { resolveDerivedPeriod } from './period';
-
-export interface GoalMigrationCandidate {
-  id: string;
-  title: string;
-  goalPath: string;
-  themePath?: string | null;
-  count: number;
-  firstDate?: string | null;
-  lastDate?: string | null;
-  source: 'existing-goal' | 'legacy-record' | 'mixed';
-  sampleItemIds: string[];
-  coreBlockCounts: Record<string, number>;
-}
 
 export interface GoalOverviewMetricProgress {
   key: string;
@@ -64,37 +50,6 @@ export interface GoalOverviewRow {
   icon?: string | null;
   activeCycle?: GoalOverviewCycleSummary | null;
   metricProgress?: GoalOverviewMetricProgress[];
-}
-
-export interface GoalMarkdownBackfillPreviewItem {
-  itemId: string;
-  goalPath: string;
-  goalId: string;
-  themePath?: string | null;
-  coreBlock: string;
-  missingFields: string[];
-  previewInline: string;
-  /** 可直接写回的键值。 */
-  patchFields: Record<string, string>;
-}
-
-export interface GoalMarkdownBackfillDiffItem extends GoalMarkdownBackfillPreviewItem {
-  beforeSnippet: string;
-  afterSnippet: string;
-}
-
-export interface GoalMarkdownBackfillDiffPreview {
-  total: number;
-  items: GoalMarkdownBackfillDiffItem[];
-  missingGoalIdCount: number;
-  missingCoreBlockCount: number;
-}
-
-export interface GoalMarkdownBackfillPreview {
-  total: number;
-  items: GoalMarkdownBackfillPreviewItem[];
-  missingGoalIdCount: number;
-  missingCoreBlockCount: number;
 }
 
 export interface GoalOverviewModel {
@@ -201,103 +156,6 @@ function isDoneTask(item: Item): boolean {
   return /^-\s*\[[xX]\]/.test(raw) || /完成/.test(String(readLooseField(item, '状态') ?? ''));
 }
 
-function relationTypeFromCoreBlock(coreBlock: string): GoalRecordRelationType {
-  const normalized = coreBlock.replace(/^core\./, '') as GoalRecordRelationType;
-  if (['task', 'plan', 'review', 'habit', 'thought', 'evidence', 'blocker', 'milestone', 'progress', 'feedback'].includes(normalized)) return normalized;
-  return 'progress';
-}
-
-export function inferGoalCandidatesFromItems(items: Item[], existingGoals: GoalDefinition[] = []): GoalMigrationCandidate[] {
-  const map = new Map<string, GoalMigrationCandidate>();
-
-  for (const goal of existingGoals || []) {
-    const goalPath = splitGoalPath(goal.goalPath || goal.title).goalPath;
-    if (!goalPath) continue;
-    map.set(goalPath, {
-      id: goal.id || makeStableGoalIdFromPath(goalPath),
-      title: goal.title || titleFromPath(goalPath),
-      goalPath,
-      themePath: goal.themePath ?? null,
-      count: 0,
-      firstDate: null,
-      lastDate: null,
-      source: 'existing-goal',
-      sampleItemIds: [],
-      coreBlockCounts: {},
-    });
-  }
-
-  for (const item of items || []) {
-    const paths = readGoalPaths(item);
-    if (!paths.length) continue;
-    const date = normalizeDate((item as any).date ?? readLooseField(item, '日期') ?? readLooseField(item, 'date'));
-    const themePath = readThemePath(item);
-    const coreBlock = readCoreBlock(item);
-
-    for (const path of paths) {
-      const candidate = map.get(path) || {
-        id: makeStableGoalIdFromPath(path),
-        title: titleFromPath(path),
-        goalPath: path,
-        themePath,
-        count: 0,
-        firstDate: null,
-        lastDate: null,
-        source: 'legacy-record' as const,
-        sampleItemIds: [],
-        coreBlockCounts: {},
-      };
-      candidate.count += 1;
-      if (!candidate.themePath && themePath) candidate.themePath = themePath;
-      if (date && (!candidate.firstDate || date < candidate.firstDate)) candidate.firstDate = date;
-      if (date && (!candidate.lastDate || date > candidate.lastDate)) candidate.lastDate = date;
-      if (candidate.sampleItemIds.length < 5) candidate.sampleItemIds.push(item.id);
-      candidate.coreBlockCounts[coreBlock] = (candidate.coreBlockCounts[coreBlock] || 0) + 1;
-      if (candidate.source === 'existing-goal') candidate.source = 'mixed';
-      map.set(path, candidate);
-    }
-  }
-
-  const order = createGoalOrderIndex(existingGoals);
-  return Array.from(map.values()).sort((a, b) => {
-    const byGoal = order.compareGoalPaths(a.goalPath, b.goalPath);
-    if (byGoal !== 0) return byGoal;
-    return b.count - a.count || a.goalPath.localeCompare(b.goalPath, 'zh-CN');
-  });
-}
-
-export function buildGoalRelationsFromItems(items: Item[], goals: GoalDefinition[]): GoalRecordRelation[] {
-  const goalsByPath = new Map<string, GoalDefinition>();
-  for (const goal of goals || []) {
-    const goalPath = splitGoalPath(goal.goalPath || goal.title).goalPath;
-    if (goalPath) goalsByPath.set(goalPath, goal);
-  }
-
-  const relations: GoalRecordRelation[] = [];
-  const seen = new Set<string>();
-  for (const item of items || []) {
-    for (const path of readGoalPaths(item)) {
-      const goal = goalsByPath.get(path);
-      if (!goal) continue;
-      const coreBlock = readCoreBlock(item);
-      const key = `${goal.id}::${item.id}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      relations.push({
-        id: `rel.${goal.id}.${item.id}`,
-        goalId: goal.id,
-        itemId: item.id,
-        recordId: item.id,
-        relationType: relationTypeFromCoreBlock(coreBlock),
-        weight: 1,
-        createdAt: new Date().toISOString(),
-      });
-    }
-  }
-  return relations;
-}
-
-
 function dateToEpochDay(value: string | null | undefined): number | null {
   if (!value) return null;
   const time = new Date(`${value}T00:00:00`).getTime();
@@ -336,91 +194,6 @@ function metricProgress(metric: GoalMetricContract, row: GoalOverviewRow): GoalO
     direction: metric.direction,
     progressRatio: clamped,
     status: clamped >= 1 ? 'achieved' : currentValue > 0 ? 'in-progress' : 'not-started',
-  };
-}
-
-export function buildGoalMarkdownBackfillPreview(items: Item[], goals: GoalDefinition[] = [], limit = 20): GoalMarkdownBackfillPreview {
-  const goalsByPath = new Map<string, GoalDefinition>();
-  for (const goal of goals || []) {
-    const path = splitGoalPath(goal.goalPath || goal.title).goalPath;
-    if (path) goalsByPath.set(path, goal);
-  }
-  const preview: GoalMarkdownBackfillPreviewItem[] = [];
-  let missingGoalIdCount = 0;
-  let missingCoreBlockCount = 0;
-
-  for (const item of items || []) {
-    const paths = readGoalPaths(item);
-    if (!paths.length) continue;
-    const existingGoalId = String((item as any).goalId ?? readLooseField(item, '目标ID') ?? '').trim();
-    const existingCoreBlock = String((item as any).coreBlock ?? readLooseField(item, '核心Block') ?? '').trim();
-    for (const path of paths) {
-      const goal = goalsByPath.get(path);
-      if (!goal) continue;
-      const coreBlock = readCoreBlock(item).replace(/^core\./, '');
-      const missingFields: string[] = [];
-      if (!existingGoalId) {
-        missingFields.push('目标ID');
-        missingGoalIdCount += 1;
-      }
-      if (!existingCoreBlock) {
-        missingFields.push('核心Block');
-        missingCoreBlockCount += 1;
-      }
-      if (!missingFields.length) continue;
-      const themePath = goal.themePath ?? readThemePath(item);
-      const patchFields: Record<string, string> = {
-        '目标ID': goal.id,
-        '目标': path,
-        '核心Block': coreBlock,
-      };
-      if (themePath) patchFields['主题'] = themePath;
-      preview.push({
-        itemId: item.id,
-        goalPath: path,
-        goalId: goal.id,
-        themePath,
-        coreBlock,
-        missingFields,
-        patchFields,
-        previewInline: Object.entries(patchFields).map(([key, value]) => `(${key}::${value})`).join(' '),
-      });
-      break;
-    }
-  }
-
-  return { total: preview.length, items: preview.slice(0, limit), missingGoalIdCount, missingCoreBlockCount };
-}
-
-
-function upsertPreviewInlineFields(line: string, fields: Record<string, string>): string {
-  let next = String(line || '').trim();
-  for (const [key, value] of Object.entries(fields || {})) {
-    const normalizedKey = String(key || '').trim();
-    const normalizedValue = String(value ?? '').trim();
-    if (!normalizedKey || !normalizedValue) continue;
-    const escapedKey = normalizedKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = new RegExp(`([\\(\\[]\\s*${escapedKey}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
-    if (pattern.test(next)) next = next.replace(pattern, `$1${normalizedValue}$2`);
-    else next = `${next} (${normalizedKey}::${normalizedValue})`;
-  }
-  return next;
-}
-
-export function buildGoalMarkdownBackfillDiffPreview(items: Item[], goals: GoalDefinition[] = [], limit = 20): GoalMarkdownBackfillDiffPreview {
-  const preview = buildGoalMarkdownBackfillPreview(items, goals, limit);
-  const itemsById = new Map((items || []).map((item) => [item.id, item]));
-  return {
-    ...preview,
-    items: preview.items.map((entry) => {
-      const item = itemsById.get(entry.itemId);
-      const beforeSnippet = String((item as any)?.rawSource ?? (item as any)?.fullData ?? item?.content ?? item?.title ?? entry.itemId).split('\n')[0] || entry.itemId;
-      return {
-        ...entry,
-        beforeSnippet,
-        afterSnippet: upsertPreviewInlineFields(beforeSnippet, entry.patchFields),
-      };
-    }),
   };
 }
 

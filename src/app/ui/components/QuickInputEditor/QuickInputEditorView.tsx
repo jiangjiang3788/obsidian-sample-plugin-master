@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import type { CycleDefinition, ThemeDefinition } from '@core/public';
+import type { ThemeDefinition } from '@core/public';
 
 import { Box, Divider, FormControl, Typography } from '@shared/public';
 
@@ -24,12 +24,9 @@ export interface QuickInputEditorViewProps {
   selectedGoalPath: string | null;
   onSelectGoal: (goal: GoalSelectorOption | null) => void;
   onCreateGoal?: (goalPath: string) => Promise<void> | void;
-  templateVariants?: Array<{ value: string; label: string; isDefault?: boolean }>;
+  templateVariants?: Array<{ value: string; label: string }>;
   selectedTemplateVariantId?: string | null;
   onSelectTemplateVariant?: (variantId: string | null) => void;
-  cycles?: CycleDefinition[];
-  selectedCycleId?: string | null;
-  onSelectCycle?: (cycleId: string | null) => void;
 
   template: any;
   formData: Record<string, any>;
@@ -82,9 +79,6 @@ export function QuickInputEditorView({
   templateVariants = [],
   selectedTemplateVariantId = null,
   onSelectTemplateVariant,
-  cycles = [],
-  selectedCycleId = null,
-  onSelectCycle,
   template,
   formData,
   fieldValueOptionsByKey,
@@ -147,9 +141,9 @@ export function QuickInputEditorView({
                     selected={isSelected}
                     disabled={templateVariants.length <= 1}
                     onClick={() => templateVariants.length > 1 ? onSelectTemplateVariant?.(variant.value) : undefined}
-                    title={variant.isDefault ? `${variant.label}（默认）` : variant.label}
+                    title={variant.label}
                   >
-                    {variant.label}{variant.isDefault ? ' · 默认' : ''}
+                    {variant.label}
                   </SelectablePill>
                 );
               })}

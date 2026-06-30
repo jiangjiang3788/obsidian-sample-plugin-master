@@ -1,7 +1,6 @@
 // src/core/domain/schema.ts
 import type { RecurrenceInfo } from '@core/utils/mark';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
-import { LEGACY_EXTRA_ALIAS_KEYS } from '@/core/fields/LegacyFieldPolicy';
 import { getAvailableFields } from '@/core/fields/FieldRegistry';
 import type { AiSettings } from './ai-schema';
 import type { FieldInputType, FieldOption, FieldSemantic, FieldStoragePolicy } from '@/core/fields/FieldTypes';
@@ -26,14 +25,18 @@ export interface Group extends Groupable {
     collapsed?: boolean;
 }
 
+export const THINK_SETTINGS_SCHEMA_VERSION = 2;
+
 // [修改] 将插件的顶层设置接口和默认值移到此处，使其成为领域模型的一部分
 export interface ThinkSettings {
+    /** Settings schema version for current single-user settings shape. */
+    schemaVersion: number;
     // [新增] 统一存储所有分组
     groups: Group[];
     viewInstances: ViewInstance[];
     layouts: Layout[];
     inputSettings: InputSettings;
-    /** 目标中心配置：目标实体、周期、目标-核心Block绑定和记录关系。 */
+    /** 目标中心配置：目标实体和目标记录预设。 */
     goalSettings?: GoalSettings;
     /** 插件核心 Block 配置：内置 block 的启用、patch 和旧 block 映射。 */
     coreBlockSettings?: CoreBlockSettings;
@@ -50,6 +53,7 @@ export interface ThinkSettings {
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
+    schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
     groups: [],
     viewInstances: [],
     layouts: [],
@@ -114,12 +118,10 @@ export interface BlockTemplate {
     fields: TemplateField[];
     outputTemplate: string;
     targetFile: string;
-    /** 目标中心迁移：旧 block 可映射到稳定核心 block，例如 core.task。 */
+    /** 稳定核心 block 绑定，例如 core.task。 */
     coreBlockId?: string;
     /** 只有计划 / 总结这类记录动作才启用周期；任务、打卡、思考、事件默认没有周期。 */
     periodPolicy?: PeriodPolicy;
-    /** @deprecated 旧字段。第一版 MVP 只在读取旧数据时迁移为 periodPolicy，不再作为默认 day 来源。 */
-    granularity?: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
     appendUnderHeader?: string;
 }
 export interface ThemeDefinition {
@@ -203,8 +205,6 @@ export interface Layout extends Groupable {
     useFieldGranularity?: boolean; // [新增] 按字段粒度过滤开关
     /** Layout 级全局筛选规则：由 toolbar 的数据筛选面板维护，作用于该布局下所有视图。 */
     globalFilters?: FilterRule[];
-    selectedThemes?: string[]; // [兼容] 旧版主题筛选字段，后续由 globalFilters 替代
-    selectedCategories?: string[]; // [兼容] 旧版分类筛选字段，后续由 globalFilters 替代
     displayMode?: LayoutDisplayMode;
     gridConfig?: {
         columns?: number;
@@ -366,11 +366,6 @@ export type CoreField = typeof CORE_FIELDS[number];
 export type SemanticField = typeof SEMANTIC_FIELDS[number];
 export type FileField = typeof FILE_FIELDS[number];
 export type LegacyField = typeof LEGACY_FIELDS[number];
-
-function isVisibleExtraField(_item: Item, key: string): boolean {
-    // 字段来源可观测能力已取消；历史 parser 自动写入的正文 alias 永久隐藏，避免污染字段选择器。
-    return !(LEGACY_EXTRA_ALIAS_KEYS as readonly string[]).includes(key);
-}
 
 export function getAllFields(items: Item[]): string[] {
     return getAvailableFields(items).map((field) => field.key);

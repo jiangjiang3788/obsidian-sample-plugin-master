@@ -74,7 +74,7 @@ export function resolvePresetForAiTarget(goalSettings: GoalSettings | undefined,
     if (matched) return matched;
   }
 
-  return variants.find((preset) => preset.isDefault) || variants[0] || null;
+  return variants[0] || null;
 }
 
 export function readPresetThemePath(preset: GoalTemplate | null): string | undefined {

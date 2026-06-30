@@ -1,6 +1,6 @@
 import { useCallback } from 'preact/hooks';
 import type { ActionService, FilterRule, Item, Layout, ViewInstance } from '@core/public';
-import { exportItemsToMarkdown, getExportConfigByViewType, migrateLegacyLayoutFilters } from '@core/public';
+import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public';
 import { completeFromView, openCreateFromViewHeader } from '@/app/public';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 
@@ -87,14 +87,8 @@ export function useLayoutModuleActions({
   const handleGlobalFiltersChange = useCallback((filters: FilterRule[]) => {
     void useCases.layout.updateLayout(layout.id, {
       globalFilters: filters,
-      selectedThemes: [],
-      selectedCategories: [],
     });
   }, [layout.id, useCases.layout]);
-
-  const handleMigrateLegacyLayoutFilters = useCallback(() => {
-    void useCases.layout.updateLayout(layout.id, migrateLegacyLayoutFilters(layout));
-  }, [layout, useCases.layout]);
 
   return {
     handleExport,
@@ -103,6 +97,5 @@ export function useLayoutModuleActions({
     handleSettingsClick,
     handleDeleteViewInstance,
     handleGlobalFiltersChange,
-    handleMigrateLegacyLayoutFilters,
   };
 }

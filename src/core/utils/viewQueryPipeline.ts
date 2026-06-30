@@ -1,7 +1,6 @@
 import type { FilterRule, Item, SortRule } from '../types/schema';
 import { dayjs } from './date';
 import { filterByDateRange, filterByKeyword, filterByPeriod, filterByRules, sortItems } from './itemFilter';
-import { getBasePath } from './pathSemantic';
 import { isSameIsoWeek, toIsoDateTuple } from './timelineRange';
 
 export interface ViewQueryInput {
@@ -14,8 +13,6 @@ export interface ViewQueryInput {
   layoutView: string;
   isOverviewMode?: boolean;
   useFieldGranularity?: boolean;
-  legacySelectedThemes?: string[];
-  legacySelectedCategories?: string[];
 }
 
 function getItemGranularity(item: Item): string {
@@ -24,19 +21,6 @@ function getItemGranularity(item: Item): string {
 
 function isClosedItem(item: Item): boolean {
   return /\/(done|cancelled)\b/.test((item.categoryKey || '').toLowerCase());
-}
-
-function applyLegacyThemeFilter(items: Item[], selectedThemes: string[] = []): Item[] {
-  if (!selectedThemes.length) return items;
-  return items.filter(item => {
-    const theme = item.themePath || item.theme || (item as any).themePathNormalized;
-    return !!theme && selectedThemes.includes(theme);
-  });
-}
-
-function applyLegacyCategoryFilter(items: Item[], selectedCategories: string[] = []): Item[] {
-  if (!selectedCategories.length) return items;
-  return items.filter(item => selectedCategories.includes(getBasePath(item.categoryKey)));
 }
 
 function applyOverviewDateFilter(items: Item[], dateRange: [Date, Date], useFieldGranularity: boolean): Item[] {
@@ -104,7 +88,7 @@ function applyStandardDateAndGranularityFilter(
   return filterByDateRange(result, start, end);
 }
 
-export function applyViewBaseFilters(input: Pick<ViewQueryInput, 'items' | 'layoutFilters' | 'viewFilters' | 'keyword' | 'legacySelectedThemes' | 'legacySelectedCategories'>): Item[] {
+export function applyViewBaseFilters(input: Pick<ViewQueryInput, 'items' | 'layoutFilters' | 'viewFilters' | 'keyword'>): Item[] {
   const layoutFilters = input.layoutFilters || [];
   const viewFilters = input.viewFilters || [];
 
@@ -113,12 +97,6 @@ export function applyViewBaseFilters(input: Pick<ViewQueryInput, 'items' | 'layo
   result = filterByRules(result, layoutFilters);
   result = filterByRules(result, viewFilters);
   result = filterByKeyword(result, input.keyword || '');
-
-  // 只有没有新版 layoutFilters 时才执行 legacy 字段，避免同一批主题/分类被重复 AND。
-  if (layoutFilters.length === 0) {
-    result = applyLegacyThemeFilter(result, input.legacySelectedThemes || []);
-    result = applyLegacyCategoryFilter(result, input.legacySelectedCategories || []);
-  }
 
   return result;
 }

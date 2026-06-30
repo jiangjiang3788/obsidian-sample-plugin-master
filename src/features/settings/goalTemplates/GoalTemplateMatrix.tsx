@@ -240,7 +240,7 @@ export function GoalTemplateMatrix() {
     const descendants = goals.filter((item) => item.id !== goal.id && getGoalDisplayPath(item).startsWith(`${path}/`));
     const targets = [goal, ...descendants];
     const suffix = descendants.length > 0 ? `\n同时删除 ${descendants.length} 个子目标。` : '';
-    const ok = window.confirm(`删除目标「${cleanDisplayText(path)}」？${suffix}\n\n会删除目标配置、该目标下的记录预设和旧目标关系；不会删除已经写入的 Markdown 记录。`);
+    const ok = window.confirm(`删除目标「${cleanDisplayText(path)}」？${suffix}\n\n会删除目标配置、该目标下的记录预设和目标关系；不会删除已经写入的 Markdown 记录。`);
     if (!ok) return;
     const count = typeof (useCases.goal as any).deleteGoalCascade === 'function'
       ? await (useCases.goal as any).deleteGoalCascade(goal.id)

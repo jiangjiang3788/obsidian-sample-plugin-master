@@ -20,17 +20,13 @@ export function normalizePeriodPolicyGranularity(value?: string | null): PeriodG
   return 'week';
 }
 
-export function resolveTemplatePeriodPolicy(template?: { coreBlockId?: string; id?: string; periodPolicy?: PeriodPolicy | null; granularity?: string | null } | null): PeriodPolicy | null {
+export function resolveTemplatePeriodPolicy(template?: { coreBlockId?: string; id?: string; periodPolicy?: PeriodPolicy | null } | null): PeriodPolicy | null {
   if (!template) return null;
   const coreBlockId = template.coreBlockId || template.id || '';
   if (!isPeriodAwareCoreBlock(coreBlockId)) return null;
   const explicitPolicy = template.periodPolicy;
   if (explicitPolicy && explicitPolicy.enabled !== false) {
     return { enabled: true, granularity: normalizePeriodPolicyGranularity(explicitPolicy.granularity) };
-  }
-  const legacyGranularity = String(template.granularity || '').trim();
-  if (legacyGranularity && legacyGranularity !== 'day' && legacyGranularity !== 'custom') {
-    return { enabled: true, granularity: normalizePeriodPolicyGranularity(legacyGranularity) };
   }
   // MVP 默认：只有计划/总结具备周期，默认按周。不要再把 day 作为全局兜底。
   return { enabled: true, granularity: 'week' };

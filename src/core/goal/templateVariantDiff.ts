@@ -140,7 +140,6 @@ export function compactGoalTemplateForStorage(template: GoalTemplate, options: C
   const baseFields = coreBlock?.fields as TemplateField[] | undefined;
   const next: GoalTemplate = {
     ...template,
-    granularity: undefined,
   };
 
   if (!isPeriodAwareCoreBlock(template.coreBlockId)) {

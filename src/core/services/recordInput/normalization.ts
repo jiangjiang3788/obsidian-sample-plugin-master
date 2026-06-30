@@ -1,10 +1,9 @@
 import type { NormalizeRecordInputParams, NormalizeRecordInputResult } from '@/core/types/recordInput';
 import {
   getTemplateFieldSemantic,
-  isTemplateTagField,
-  normalizeTemplateFieldValue,
   templateFieldMatches,
 } from '@/core/fields/TemplateFieldAdapter';
+import { normalizeFieldValueByBehavior } from '@/core/fields/FieldBehavior';
 import { recordDebugLog } from '@/core/utils/recordDebug';
 import { applyTaskTimePolicy } from '@/core/utils/taskTime';
 import type { TaskTimeDirection } from '@/core/utils/taskTime';
@@ -87,11 +86,7 @@ export function normalizeRecordInput(input: NormalizeRecordInputParams): Normali
 
   for (const field of input.template.fields || []) {
     if (!Object.prototype.hasOwnProperty.call(normalizedFormData, field.key)) continue;
-    if (isTemplateTagField(field)) {
-      normalizedFormData[field.key] = normalizeTemplateFieldValue(field, normalizedFormData[field.key]);
-      continue;
-    }
-    normalizedFormData[field.key] = normalizeTemplateFieldValue(field, normalizedFormData[field.key]);
+    normalizedFormData[field.key] = normalizeFieldValueByBehavior(field, normalizedFormData[field.key]);
   }
 
   const finalized = finalizeTimeFieldsByTemplate(

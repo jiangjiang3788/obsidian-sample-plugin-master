@@ -1,13 +1,9 @@
 import type { RecordSubmitIssue, RecordValidationResult, ValidateRecordInputParams } from '@/core/types/recordInput';
+import { templateFieldValueToString } from '@/core/fields/FieldBehavior';
 
 function issue(code: string, message: string, field?: string): RecordSubmitIssue {
   return { code, message, field };
 }
-
-function isOptionObject(value: unknown): value is { value?: unknown; label?: unknown } {
-  return !!value && typeof value === 'object' && ('value' in value || 'label' in value);
-}
-
 export function validateRecordInput(input: ValidateRecordInputParams): RecordValidationResult {
   const errors: RecordSubmitIssue[] = [];
   const warnings: RecordSubmitIssue[] = [];
@@ -44,8 +40,8 @@ export function validateRecordInput(input: ValidateRecordInputParams): RecordVal
     }
 
     if (['select', 'radio', 'rating'].includes(field.type) && Array.isArray(field.options) && field.options.length > 0) {
-      const valueToCheck = isOptionObject(rawValue) ? rawValue.value : rawValue;
-      const matched = field.options.some((option) => String(option.value) === String(valueToCheck) || String(option.label) === String(valueToCheck));
+      const valueToCheck = templateFieldValueToString(rawValue);
+      const matched = field.options.some((option) => String(option.value) === valueToCheck || String(option.label) === valueToCheck);
       if (!matched) {
         warnings.push(issue('record_field_option_unmatched', 'The current value does not match any configured option.', field.key));
       }

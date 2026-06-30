@@ -1,6 +1,7 @@
 export * from './FieldTypes';
 export type { FieldDefinition } from './FieldDefinition';
 export * from './FieldRegistry';
+export * from './FieldBehavior';
 export * from './CoreFieldCatalog';
 export * from './FieldValueResolver';
 export * from './FieldEditPolicy';
@@ -10,8 +11,5 @@ export * from './imageSemantics';
 export * from './ContentFieldSemantics';
 
 export * from './TemplateFieldAdapter';
-export * from './LegacyFieldPolicy';
-
-export * from './FieldMigration';
 export * from './FieldSystemHealth';
 export * from './TemplateFieldSanitizer';

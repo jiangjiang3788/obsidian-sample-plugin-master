@@ -1,26 +1,14 @@
 // src/core/goal/index.ts
 export type {
   GoalId,
-  CycleId,
-  PlanId,
-  TaskId,
-  RecordId,
-  ReviewId,
   GoalStatus,
-  CycleStatus,
   CycleGranularity,
   PeriodGranularity,
   PeriodPolicy,
   GoalMetricDirection,
   GoalMetricContract,
   GoalDefinition,
-  CycleDefinition,
-  GoalRecordRelationType,
-  GoalRecordRelation,
-  PlanTaskRelation,
-  GoalReviewSnapshot,
-  GoalRelationHint,
-  GoalBlockBinding,
+  GoalTemplateStorageRow,
   GoalSettings,
 } from './types';
 export { DEFAULT_GOAL_SETTINGS } from './types';
@@ -30,7 +18,7 @@ export type { GoalOrderIndex } from './order';
 export type { GoalPathParts } from './path';
 export { resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy } from './period';
 export { DEFAULT_TEMPLATE_VARIANT_ID, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, normalizeTemplateVariantId, isDefaultTemplateVariant } from './templateVariant';
-export { getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, fromLegacyGoalTemplateStorage, toLegacyGoalTemplateStorage, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage } from './templates';
+export { getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage } from './templates';
 export { getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon, readGoalTemplateThemePath } from './templateDisplay';
 export type { GoalTemplateDisplayInfo } from './templateDisplay';
 export { goalTemplateHasCustomOverrides, inferGoalTemplateEditMode } from './templateMode';

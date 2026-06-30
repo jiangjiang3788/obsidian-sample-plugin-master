@@ -10,7 +10,6 @@ export interface GoalTemplateCellModel {
   block: CoreBlockDefinition;
   templates: GoalTemplate[];
   enabledTemplates: GoalTemplate[];
-  defaultCount: number;
   status: GoalTemplateCellStatus;
   label: string;
   description: string;
@@ -69,7 +68,6 @@ export function sortGoalsForMatrix(goals: GoalDefinition[]): GoalDefinition[] {
 export function buildGoalTemplateCell(goal: GoalDefinition, block: CoreBlockDefinition, templates: GoalTemplate[]): GoalTemplateCellModel {
   const cellTemplates = templates.filter((template) => template.goalId === goal.id && template.coreBlockId === block.id);
   const enabledTemplates = cellTemplates.filter((template) => template.enabled !== false);
-  const defaultCount = enabledTemplates.filter((template) => template.isDefault).length;
   let status: GoalTemplateCellStatus = 'inherit';
   let label = '添加';
   let description = '点击添加此目标的 Block 预设';
@@ -78,10 +76,6 @@ export function buildGoalTemplateCell(goal: GoalDefinition, block: CoreBlockDefi
     status = 'disabled';
     label = '隐藏';
     description = '该目标下隐藏此 Block';
-  } else if (defaultCount > 1) {
-    status = 'warning';
-    label = '异常';
-    description = '存在多个默认预设';
   } else if (enabledTemplates.length > 1) {
     status = 'multi';
     label = `选项 ${enabledTemplates.length}`;
@@ -92,7 +86,7 @@ export function buildGoalTemplateCell(goal: GoalDefinition, block: CoreBlockDefi
     description = enabledTemplates[0].name || enabledTemplates[0].variantId || '目标专属预设';
   }
 
-  return { goal, block, templates: cellTemplates, enabledTemplates, defaultCount, status, label, description };
+  return { goal, block, templates: cellTemplates, enabledTemplates, status, label, description };
 }
 
 export function statusTone(status: GoalTemplateCellStatus): { border: string; background: string; color: string } {

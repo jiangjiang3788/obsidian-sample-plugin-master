@@ -20,8 +20,7 @@ describe('AI domain normalization', () => {
         categoryKey: '打卡',
         variantId: 'sleep',
         name: '睡眠打卡',
-        isDefault: true,
-        themePath: '健康/睡眠',
+          themePath: '健康/睡眠',
       },
     ],
   };

@@ -23,7 +23,6 @@ describe('Template Variant differential storage', () => {
       coreBlockId: 'core.task',
       variantId: 'default',
       name: '默认任务',
-      isDefault: true,
       enabled: true,
       fields: taskBlock.fields as any,
       outputTemplate: taskBlock.outputTemplate,
@@ -51,7 +50,6 @@ describe('Template Variant differential storage', () => {
     expect(compacted.requiredFields).toBeUndefined();
     expect(compacted.defaultValues).toEqual({ icon: '🧩' });
     expect(compacted.periodPolicy).toBeUndefined();
-    expect(compacted.granularity).toBeUndefined();
   });
 
   it('keeps periodPolicy only for plan/review templates', () => {

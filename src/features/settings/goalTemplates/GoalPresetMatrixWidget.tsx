@@ -18,16 +18,14 @@ function GoalPresetMatrixWidgetInner({ widgetId = WIDGET_ID }: { widgetId?: stri
     setCleaning(true);
     try {
       const goalUseCase = useCases.goal as any;
-      if (typeof goalUseCase.cleanupGoalSettingsStorage !== 'function') {
-        ui.notice?.('当前版本还没有整理旧数据能力');
+      if (typeof goalUseCase.cleanupGoalSettings !== 'function') {
+        ui.notice?.('当前版本还没有整理预设数据能力');
         return;
       }
-      const result = await goalUseCase.cleanupGoalSettingsStorage();
+      const result = await goalUseCase.cleanupGoalSettings();
       const parts = [
         `预设 ${result.beforeTemplateCount} → ${result.afterTemplateCount}`,
         result.removedDuplicateTemplates ? `去重 ${result.removedDuplicateTemplates}` : '',
-        result.removedDanglingCycles ? `清理周期 ${result.removedDanglingCycles}` : '',
-        result.removedDanglingRelations ? `清理关系 ${result.removedDanglingRelations}` : '',
       ].filter(Boolean);
       const message = result.changed ? `已整理：${parts.join('，')}` : '预设数据已经是干净状态';
       setCleanupText(message);
@@ -57,7 +55,7 @@ function GoalPresetMatrixWidgetInner({ widgetId = WIDGET_ID }: { widgetId?: stri
         <Typography variant="body2" color="text.secondary">目标 × 记录类型。单元格里的卡片就是快捷输入可用的记录预设。</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           {cleanupText ? <Typography variant="caption" color="text.secondary">{cleanupText}</Typography> : null}
-          <Button size="small" variant="outlined" onClick={handleCleanup} disabled={cleaning}>{cleaning ? '整理中…' : '整理旧数据'}</Button>
+          <Button size="small" variant="outlined" onClick={handleCleanup} disabled={cleaning}>{cleaning ? '整理中…' : '整理预设'}</Button>
         </Box>
       </Box>
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>

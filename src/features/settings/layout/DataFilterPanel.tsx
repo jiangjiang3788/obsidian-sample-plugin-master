@@ -5,7 +5,6 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  Alert,
   Box,
   Button,
   Chip,
@@ -27,9 +26,6 @@ interface DataFilterPanelProps {
   filters: FilterRule[];
   items?: Item[];
   onChange: (filters: FilterRule[]) => void;
-  legacyMode?: boolean;
-  legacySummary?: string;
-  onMigrateLegacyFilters?: () => void;
 }
 
 function asDisplayList(value: any): string[] {
@@ -61,9 +57,6 @@ export function DataFilterPanel({
   filters,
   items,
   onChange,
-  legacyMode = false,
-  legacySummary,
-  onMigrateLegacyFilters,
 }: DataFilterPanelProps) {
   const [open, setOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -81,9 +74,6 @@ export function DataFilterPanel({
   };
   const handleClose = () => setOpen(false);
   const handleClear = () => onChange([]);
-  const handleMigrateLegacyFilters = () => {
-    if (onMigrateLegacyFilters) onMigrateLegacyFilters();
-  };
   const handleDeleteRule = (index: number) => {
     onChange(filters.filter((_, currentIndex) => currentIndex !== index));
   };
@@ -97,7 +87,7 @@ export function DataFilterPanel({
         onClick={handleOpen}
         sx={{ textTransform: 'none' }}
       >
-        数据筛选{activeCount > 0 ? ` (${activeCount})` : ''}{legacyMode ? ' · 旧版' : ''}
+        数据筛选{activeCount > 0 ? ` (${activeCount})` : ''}
       </Button>
 
       {activeCount > 0 && (
@@ -148,19 +138,6 @@ export function DataFilterPanel({
         <Divider />
 
         <DialogContent sx={{ p: 2.5, overflow: 'auto' }}>
-          {legacyMode && (
-            <Alert
-              severity="info"
-              sx={{ mb: 2 }}
-              action={onMigrateLegacyFilters ? (
-                <Button color="inherit" size="small" onClick={handleMigrateLegacyFilters}>转为新版规则</Button>
-              ) : undefined}
-            >
-              当前规则来自旧版 toolbar 主题/分类筛选{legacySummary ? `（${legacySummary}）` : ''}。
-              继续编辑或清空时会自动保存为新版全局筛选规则，并清空旧字段，避免新旧筛选双写。
-            </Alert>
-          )}
-
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <CommonFilterPanel
               title="常用筛选"

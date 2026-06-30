@@ -46,8 +46,8 @@ export {
   isVisibleExtraField,
 } from '@/core/fields/FieldRegistry';
 export {
-  LEGACY_EXTRA_ALIAS_KEYS,
-} from '@/core/fields/LegacyFieldPolicy';
+  HIDDEN_EXTRA_ALIAS_KEYS,
+} from '@/core/fields/FieldRegistry';
 export {
   getTemplateFieldInputType,
   getTemplateFieldSemantic,
@@ -60,34 +60,6 @@ export {
   templateFieldMatches,
 } from '@/core/fields/TemplateFieldAdapter';
 
-export {
-  scanFieldMigrations,
-  previewFieldMigrations,
-  hasFieldMigrationIssues,
-  filterActionableFieldMigrationIssues,
-} from '@/core/fields/FieldMigration';
-export type {
-  FieldMigrationAction,
-  FieldMigrationIssue,
-  FieldMigrationIssueKind,
-  FieldMigrationPreview,
-  FieldMigrationScanInput,
-  FieldMigrationScanOptions,
-  FieldMigrationSeverity,
-} from '@/core/fields/FieldMigration';
-export {
-  LEGACY_THEME_FIELD_KEYS,
-  LEGACY_IMAGE_FIELD_KEYS,
-  LEGACY_CATEGORY_FIELD_KEYS,
-  LEGACY_TAG_FIELD_KEYS,
-  isLegacyExtraAliasKey,
-  isLegacyThemeFieldKey,
-  isLegacyImageFieldKey,
-  isLegacyCategoryFieldKey,
-  isLegacyTagFieldKey,
-  isLegacyCoreFieldAlias,
-  getLegacyAliasTargetField,
-} from '@/core/fields/LegacyFieldPolicy';
 
 export {
   createCustomTemplateField,

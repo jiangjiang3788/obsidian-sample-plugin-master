@@ -36,16 +36,14 @@ export function GoalManager() {
     setCleaning(true);
     try {
       const goalUseCase = useCases.goal as any;
-      if (typeof goalUseCase.cleanupGoalSettingsStorage !== 'function') {
-        setMessage('当前版本还没有整理旧数据能力');
+      if (typeof goalUseCase.cleanupGoalSettings !== 'function') {
+        setMessage('当前版本还没有整理预设数据能力');
         return;
       }
-      const result = await goalUseCase.cleanupGoalSettingsStorage();
+      const result = await goalUseCase.cleanupGoalSettings();
       const parts = [
         `预设 ${result.beforeTemplateCount} → ${result.afterTemplateCount}`,
         result.removedDuplicateTemplates ? `去重 ${result.removedDuplicateTemplates}` : '',
-        result.removedDanglingCycles ? `清理周期 ${result.removedDanglingCycles}` : '',
-        result.removedDanglingRelations ? `清理关系 ${result.removedDanglingRelations}` : '',
       ].filter(Boolean);
       setMessage(result.changed ? `已整理：${parts.join('，')}` : '预设数据已经是干净状态');
     } finally {
@@ -69,7 +67,7 @@ export function GoalManager() {
             <Typography sx={{ fontWeight: 800 }}>记录预设</Typography>
             <Typography variant="caption" color="text.secondary">点击某个目标主题预设卡片后，字段编辑页会以悬浮窗打开。</Typography>
           </Box>
-          <Button size="small" variant="outlined" onClick={handleCleanup} disabled={cleaning}>{cleaning ? '整理中…' : '整理旧数据'}</Button>
+          <Button size="small" variant="outlined" onClick={handleCleanup} disabled={cleaning}>{cleaning ? '整理中…' : '整理预设'}</Button>
         </Box>
         <GoalTemplateMatrix />
       </Box>

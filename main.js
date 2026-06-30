@@ -1167,61 +1167,6 @@ function applyExplicitThemeViewFields(item) {
   item.themePathNormalized = parts.themePath || void 0;
   return item;
 }
-const LEGACY_EXTRA_ALIAS_KEYS = [
-  "正文",
-  "内容",
-  "任务内容",
-  "记录内容",
-  "editableText"
-];
-const LEGACY_THEME_FIELD_KEYS = [
-  "theme",
-  "主题"
-];
-const LEGACY_IMAGE_FIELD_KEYS = [
-  "pintu",
-  "评图"
-];
-const LEGACY_CATEGORY_FIELD_KEYS = [
-  "category",
-  "categoryKey",
-  "分类",
-  "类别",
-  "分类路径"
-];
-const LEGACY_TAG_FIELD_KEYS = [
-  "tag",
-  "tags",
-  "标签"
-];
-const normalizeLegacyKey = (key) => String(key ?? "").trim();
-const extraAliasSet = new Set(LEGACY_EXTRA_ALIAS_KEYS);
-const themeAliasSet = new Set(LEGACY_THEME_FIELD_KEYS);
-const imageAliasSet = new Set(LEGACY_IMAGE_FIELD_KEYS);
-const categoryAliasSet = new Set(LEGACY_CATEGORY_FIELD_KEYS);
-const tagAliasSet = new Set(LEGACY_TAG_FIELD_KEYS);
-function isLegacyExtraAliasKey(key) {
-  return extraAliasSet.has(normalizeLegacyKey(key));
-}
-function isLegacyThemeFieldKey(key) {
-  return themeAliasSet.has(normalizeLegacyKey(key));
-}
-function isLegacyImageFieldKey(key) {
-  return imageAliasSet.has(normalizeLegacyKey(key));
-}
-function isLegacyCategoryFieldKey(key) {
-  return categoryAliasSet.has(normalizeLegacyKey(key));
-}
-function isLegacyTagFieldKey(key) {
-  return tagAliasSet.has(normalizeLegacyKey(key));
-}
-function getLegacyAliasTargetField(key) {
-  if (isLegacyThemeFieldKey(key)) return "themePath";
-  if (isLegacyImageFieldKey(key)) return "image";
-  if (isLegacyCategoryFieldKey(key)) return "categoryKey";
-  if (isLegacyTagFieldKey(key)) return "tags";
-  return void 0;
-}
 const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
 function isImageLikeValue(value) {
   const raw = String(value ?? "").trim();
@@ -1322,9 +1267,16 @@ const FIELD_REGISTRY = {
   countForLevel: { key: "countForLevel", label: "计入等级", type: "boolean", category: "core", source: "item" },
   manuallyEdited: { key: "manuallyEdited", label: "手动编辑", type: "boolean", category: "core", source: "item" }
 };
-const LEGACY_EXTRA_ALIAS_SET$1 = new Set(LEGACY_EXTRA_ALIAS_KEYS);
+const HIDDEN_EXTRA_ALIAS_KEYS = [
+  "正文",
+  "内容",
+  "任务内容",
+  "记录内容",
+  "editableText"
+];
+const HIDDEN_EXTRA_ALIAS_SET$1 = new Set(HIDDEN_EXTRA_ALIAS_KEYS);
 function isVisibleExtraField(_item, key) {
-  return !LEGACY_EXTRA_ALIAS_SET$1.has(key);
+  return !HIDDEN_EXTRA_ALIAS_SET$1.has(key);
 }
 function inferExtraFieldType(value) {
   if (typeof value === "number") return "number";
@@ -1407,8 +1359,6 @@ function getCanonicalFieldKey(key) {
   const raw = String(key || "").trim();
   if (!raw) return raw;
   if (raw.startsWith("extra.") || raw.startsWith("file.")) return raw;
-  const legacyTarget = getLegacyAliasTargetField(raw);
-  if (legacyTarget) return legacyTarget;
   return FIELD_ALIAS_MAP[raw] || raw;
 }
 function getFieldDefinition(key) {
@@ -1687,9 +1637,7 @@ const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
 5. 计划/总结的周期由应用根据预设 periodPolicy 和日期自动生成。`;
 const DEFAULT_GOAL_SETTINGS = {
   goals: [],
-  cycles: [],
-  goalBlockBindings: [],
-  goalRecordRelations: []
+  goalTemplates: []
 };
 function normalizeGoalPathSegment(segment) {
   return String(segment || "").trim().replace(/^[#＃]+\s*/, "").trim();
@@ -1818,10 +1766,6 @@ function resolveTemplatePeriodPolicy(template) {
   const explicitPolicy = template.periodPolicy;
   if (explicitPolicy && explicitPolicy.enabled !== false) {
     return { enabled: true, granularity: normalizePeriodPolicyGranularity(explicitPolicy.granularity) };
-  }
-  const legacyGranularity = String(template.granularity || "").trim();
-  if (legacyGranularity && legacyGranularity !== "day" && legacyGranularity !== "custom") {
-    return { enabled: true, granularity: normalizePeriodPolicyGranularity(legacyGranularity) };
   }
   return { enabled: true, granularity: "week" };
 }
@@ -1958,7 +1902,7 @@ function normalizeVariantId(value) {
 function safeIdPart(value) {
   return String(value || "").trim().replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-") || "default";
 }
-function parseVariantIdFromLegacyId(id) {
+function parseVariantIdFromTemplateId(id) {
   const text2 = String(id || "").trim();
   if (!text2.startsWith("goal-template.")) return DEFAULT_TEMPLATE_VARIANT_ID;
   const parts = text2.split(".");
@@ -1969,7 +1913,7 @@ function normalizeGoalTemplateId(goalId, coreBlockId, variantId, id) {
   const text2 = String(id || "").trim();
   const normalizedVariantId = normalizeVariantId(variantId);
   if (text2 && text2.startsWith("goal-template.")) {
-    const idVariantId = parseVariantIdFromLegacyId(text2);
+    const idVariantId = parseVariantIdFromTemplateId(text2);
     if (idVariantId === normalizedVariantId) return text2;
     if (normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID && idVariantId === DEFAULT_TEMPLATE_VARIANT_ID) return text2;
   }
@@ -1981,25 +1925,19 @@ function normalizeTemplatePeriodPolicy(coreBlockId, raw) {
   if (policy && policy.enabled !== false) {
     return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
   }
-  const legacy = String(raw?.granularity || "").trim();
-  if (legacy && legacy !== "day" && legacy !== "custom") {
-    return { enabled: true, granularity: normalizePeriodPolicyGranularity(legacy) };
-  }
   return { enabled: true, granularity: "week" };
 }
-function fromLegacyGoalTemplateStorage(row) {
-  const raw = row;
-  const variantId = normalizeVariantId(raw.variantId || parseVariantIdFromLegacyId(row.id));
+function normalizeGoalTemplateStorageRow(row) {
+  const variantId = normalizeVariantId(row.variantId || parseVariantIdFromTemplateId(row.id));
   return {
     id: normalizeGoalTemplateId(row.goalId, row.coreBlockId, variantId, row.id),
     goalId: row.goalId,
     coreBlockId: row.coreBlockId,
     variantId,
-    name: raw.name || raw.templateName || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
-    description: raw.description,
-    isDefault: void 0,
-    periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, raw),
-    sortOrder: typeof raw.sortOrder === "number" ? raw.sortOrder : void 0,
+    name: row.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
+    description: row.description,
+    periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, row),
+    sortOrder: typeof row.sortOrder === "number" ? row.sortOrder : void 0,
     enabled: row.enabled !== false,
     fields: row.fields,
     outputTemplate: row.outputTemplate,
@@ -2011,7 +1949,7 @@ function fromLegacyGoalTemplateStorage(row) {
     updatedAt: row.updatedAt
   };
 }
-function toLegacyGoalTemplateStorage(template, previous) {
+function toGoalTemplateStorageRow(template, previous) {
   const timestamp = nowIso$1();
   const variantId = normalizeVariantId(template.variantId);
   return {
@@ -2022,9 +1960,7 @@ function toLegacyGoalTemplateStorage(template, previous) {
     variantId,
     name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
     description: template.description,
-    isDefault: void 0,
     periodPolicy: normalizeTemplatePeriodPolicy(template.coreBlockId, template),
-    granularity: void 0,
     sortOrder: template.sortOrder,
     enabled: template.enabled !== false,
     fields: template.fields?.length ? template.fields : void 0,
@@ -2043,8 +1979,8 @@ function goalTemplateIdentityKey(template) {
 function getGoalTemplates(goalSettings) {
   const result = [];
   const indexByKey = /* @__PURE__ */ new Map();
-  for (const row of goalSettings?.goalBlockBindings || []) {
-    const template = fromLegacyGoalTemplateStorage(row);
+  for (const row of goalSettings?.goalTemplates || []) {
+    const template = normalizeGoalTemplateStorageRow(row);
     const key = goalTemplateIdentityKey(template);
     const existingIndex = indexByKey.get(key);
     if (existingIndex === void 0) {
@@ -2102,26 +2038,26 @@ function findGoalTemplate(goalSettings, goal, coreBlockId, variantId) {
   return variants[0] || null;
 }
 function upsertGoalTemplateInSettings(goalSettings, template) {
-  const previousRows = goalSettings.goalBlockBindings || [];
+  const previousRows = goalSettings.goalTemplates || [];
   const variantId = normalizeVariantId(template.variantId);
   const nextTemplate = { ...template, variantId, id: template.id || getGoalTemplateId(template.goalId, template.coreBlockId, variantId) };
   const rows = previousRows.slice();
   const index = rows.findIndex((item) => {
-    const itemVariantId = normalizeVariantId(item.variantId || parseVariantIdFromLegacyId(item.id));
+    const itemVariantId = normalizeVariantId(item.variantId || parseVariantIdFromTemplateId(item.id));
     return item.id === nextTemplate.id || item.goalId === nextTemplate.goalId && item.coreBlockId === nextTemplate.coreBlockId && itemVariantId === variantId;
   });
-  const next2 = toLegacyGoalTemplateStorage(nextTemplate, index >= 0 ? rows[index] : null);
+  const next2 = toGoalTemplateStorageRow(nextTemplate, index >= 0 ? rows[index] : null);
   const normalizedRows = rows.slice();
   if (index >= 0) normalizedRows[index] = next2;
   else normalizedRows.push(next2);
-  return { ...goalSettings, goalBlockBindings: normalizedRows };
+  return { ...goalSettings, goalTemplates: normalizedRows };
 }
 function removeGoalTemplateFromSettings(goalSettings, goalId, coreBlockId, variantId = "default") {
   const normalizedVariantId = normalizeVariantId(variantId);
   return {
     ...goalSettings,
-    goalBlockBindings: (goalSettings.goalBlockBindings || []).filter((template) => {
-      const itemVariantId = normalizeVariantId(template.variantId || parseVariantIdFromLegacyId(template.id));
+    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => {
+      const itemVariantId = normalizeVariantId(template.variantId || parseVariantIdFromTemplateId(template.id));
       return !(template.goalId === goalId && template.coreBlockId === coreBlockId && itemVariantId === normalizedVariantId);
     })
   };
@@ -2129,17 +2065,17 @@ function removeGoalTemplateFromSettings(goalSettings, goalId, coreBlockId, varia
 function removeGoalTemplatesForGoal(goalSettings, goalId) {
   return {
     ...goalSettings,
-    goalBlockBindings: (goalSettings.goalBlockBindings || []).filter((template) => template.goalId !== goalId)
+    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => template.goalId !== goalId)
   };
 }
 function cleanupGoalTemplateStorage(goalSettings) {
-  const beforeRows = goalSettings.goalBlockBindings || [];
+  const beforeRows = goalSettings.goalTemplates || [];
   const templates = getGoalTemplates(goalSettings);
-  const afterRows = templates.map((template) => toLegacyGoalTemplateStorage(template));
+  const afterRows = templates.map((template) => toGoalTemplateStorageRow(template));
   const beforeJson = JSON.stringify(beforeRows);
   const afterJson = JSON.stringify(afterRows);
   return {
-    goalSettings: { ...goalSettings, goalBlockBindings: afterRows },
+    goalSettings: { ...goalSettings, goalTemplates: afterRows },
     summary: {
       beforeCount: beforeRows.length,
       afterCount: afterRows.length,
@@ -2332,8 +2268,7 @@ function compactGoalTemplateForStorage(template, options = {}) {
   const coreBlock = options.coreBlock || null;
   const baseFields = coreBlock?.fields;
   const next2 = {
-    ...template,
-    granularity: void 0
+    ...template
   };
   if (!isPeriodAwareCoreBlock(template.coreBlockId)) {
     next2.periodPolicy = void 0;
@@ -2608,7 +2543,9 @@ function getEffectiveCoreBlocks(settings) {
 function getCoreBlockById(settings, blockId) {
   return getEffectiveCoreBlocks(settings).find((block2) => block2.id === blockId) || null;
 }
+const THINK_SETTINGS_SCHEMA_VERSION = 2;
 const DEFAULT_SETTINGS = {
+  schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
   groups: [],
   viewInstances: [],
   layouts: [],
@@ -3071,7 +3008,7 @@ function getTemplateFieldInputType(field) {
   if (semantic === "duration") return "number";
   return "text";
 }
-function isOptionObject$1(value) {
+function isOptionObject(value) {
   return !!value && typeof value === "object" && ("value" in value || "label" in value);
 }
 function isTemplateRatingPairField(field) {
@@ -3112,7 +3049,7 @@ function normalizeOptionObject(field, rawValue) {
 }
 function normalizeSingleRawValue(field, rawValue) {
   if (rawValue === void 0 || rawValue === null || rawValue === "") return rawValue;
-  if (isOptionObject$1(rawValue)) return normalizeOptionObject(field, rawValue);
+  if (isOptionObject(rawValue)) return normalizeOptionObject(field, rawValue);
   if (isTemplateTagField(field)) {
     return parseTagList(rawValue).join(", ");
   }
@@ -3153,7 +3090,7 @@ function normalizeTemplateFieldValue(field, rawValue) {
 function singleTemplateValueToString(value) {
   if (value === void 0 || value === null) return "";
   if (Array.isArray(value)) return value.map(singleTemplateValueToString).filter(Boolean).join(", ");
-  if (isOptionObject$1(value)) return String(value.value ?? value.label ?? "").trim();
+  if (isOptionObject(value)) return String(value.value ?? value.label ?? "").trim();
   if (typeof value === "object" && value && "src" in value) return String(value.src ?? "").trim();
   return String(value).trim();
 }
@@ -3274,7 +3211,7 @@ function normalizeTemplateRenderData(template, formData) {
     const raw = normalizedData[field.key] ?? normalizedData[field.label || ""];
     if (raw === void 0 || raw === null || raw === "") continue;
     if (isTemplateRatingPairField(field)) {
-      const obj = isOptionObject$1(raw) ? normalizeOptionObject(field, raw) : { value: raw, label: raw };
+      const obj = isOptionObject(raw) ? normalizeOptionObject(field, raw) : { value: raw, label: raw };
       normalizedData[field.key] = obj;
       if (field.label && field.label !== field.key) normalizedData[field.label] = obj;
       const auxKey = field.auxKey || "评图";
@@ -3288,201 +3225,6 @@ function normalizeTemplateRenderData(template, formData) {
     applyCoreTemplateAliases(normalizedData, field, normalizedValue);
   }
   return normalizedData;
-}
-function normalizeInput(input) {
-  return Array.isArray(input) ? { items: input } : input;
-}
-function toSampleValue(value) {
-  if (value == null) return "";
-  if (Array.isArray(value)) return value.map((v2) => String(v2)).join(", ");
-  if (typeof value === "object") {
-    try {
-      return JSON.stringify(value);
-    } catch {
-      return String(value);
-    }
-  }
-  return String(value);
-}
-function issueId(kind, fieldKey, targetFieldKey) {
-  return `${kind}:${fieldKey}->${targetFieldKey || ""}`;
-}
-function addOccurrence(map, draft, occurrence, sampleLimit) {
-  const id = issueId(draft.kind, draft.fieldKey, draft.targetFieldKey);
-  let acc = map.get(id);
-  if (!acc) {
-    acc = {
-      ...draft,
-      fieldLabel: draft.fieldLabel || getFieldLabel(draft.fieldKey),
-      recordIds: /* @__PURE__ */ new Set(),
-      templateIds: /* @__PURE__ */ new Set(),
-      sampleValues: []
-    };
-    map.set(id, acc);
-  }
-  if (occurrence.recordId) acc.recordIds.add(occurrence.recordId);
-  if (occurrence.templateId) acc.templateIds.add(occurrence.templateId);
-  const sample = toSampleValue(occurrence.value).trim();
-  if (sample && acc.sampleValues.length < sampleLimit && !acc.sampleValues.includes(sample)) {
-    acc.sampleValues.push(sample);
-  }
-}
-function hasValue$1(value) {
-  if (value == null) return false;
-  if (typeof value === "string") return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
-  return true;
-}
-function normalizeTemplateFields(input) {
-  const result = [];
-  (input.fields || []).forEach((field, index) => result.push({ field, templateId: `field:${field.id || index}` }));
-  (input.templates || []).forEach((template, templateIndex) => {
-    const templateId = template.id || template.name || `template:${templateIndex}`;
-    (template.fields || []).forEach((field, fieldIndex) => {
-      result.push({ field, templateId: `${templateId}#${field.id || field.key || fieldIndex}` });
-    });
-  });
-  return result;
-}
-function scanFieldMigrations(inputOrItems, options = {}) {
-  const input = normalizeInput(inputOrItems);
-  const items = input.items || [];
-  const templateFields = normalizeTemplateFields(input);
-  const sampleLimit = options.sampleLimit ?? 5;
-  const includeTemplateInternalMetadata = options.includeTemplateInternalMetadata ?? false;
-  const issues = /* @__PURE__ */ new Map();
-  const affectedRecords = /* @__PURE__ */ new Set();
-  const affectedTemplateFields = /* @__PURE__ */ new Set();
-  for (const item of items) {
-    const recordId = item.id || `${item.file?.path || item.filename || "record"}#${item.file?.line || ""}`;
-    if (hasValue$1(item.theme)) {
-      affectedRecords.add(recordId);
-      addOccurrence(issues, {
-        kind: "legacy_theme_field",
-        fieldKey: "theme",
-        targetFieldKey: "themePath",
-        action: "map_to_core",
-        severity: "safe",
-        reason: "旧记录仍带有 theme 字段；新体系中主题筛选和展示统一使用 themePath。",
-        recommendation: "内部读取时映射到 themePath；迁移写盘前先预览，不直接改 Markdown。",
-        safeAutoFix: true
-      }, { recordId, value: item.theme }, sampleLimit);
-    }
-    if (hasValue$1(item.pintu)) {
-      affectedRecords.add(recordId);
-      addOccurrence(issues, {
-        kind: "legacy_image_field",
-        fieldKey: "pintu",
-        targetFieldKey: "image",
-        action: "map_to_core",
-        severity: "safe",
-        reason: "pintu/评图 是旧图片字段特例；新体系中图片是通用 image 字段类型。",
-        recommendation: "保留兼容读取；后续可将 Markdown 字段名从 pintu/评图 迁移为图片或用户自定义图片字段。",
-        safeAutoFix: true
-      }, { recordId, value: item.pintu }, sampleLimit);
-    }
-    for (const [extraKey, value] of Object.entries(item.extra || {})) {
-      if (isLegacyExtraAliasKey(extraKey)) {
-        affectedRecords.add(recordId);
-        addOccurrence(issues, {
-          kind: "legacy_extra_alias",
-          fieldKey: `extra.${extraKey}`,
-          action: "ignore_pollution",
-          severity: "safe",
-          reason: "这是旧 parser 自动注入的正文别名，不是用户真实自定义字段。",
-          recommendation: "字段列表、搜索索引和新编辑回填中隐藏/忽略；不需要写回 Markdown。",
-          safeAutoFix: true
-        }, { recordId, value }, sampleLimit);
-        continue;
-      }
-      const targetFromLegacy = getLegacyAliasTargetField(extraKey);
-      const canonical = targetFromLegacy || getCanonicalFieldKey(extraKey);
-      if (canonical && canonical !== extraKey && !canonical.startsWith("extra.")) {
-        affectedRecords.add(recordId);
-        addOccurrence(issues, {
-          kind: "custom_core_name_collision",
-          fieldKey: `extra.${extraKey}`,
-          targetFieldKey: canonical,
-          action: "map_to_core",
-          severity: "review",
-          reason: "自定义 extra 字段名与插件内置核心字段别名重名。",
-          recommendation: `检查该字段是否应迁移为内置核心字段「${getFieldLabel(canonical)}」，或重命名为真正的自定义字段。`,
-          safeAutoFix: false
-        }, { recordId, value }, sampleLimit);
-      }
-    }
-  }
-  for (const { field, templateId } of templateFields) {
-    const key = field.key || field.label;
-    const label = field.label || field.key;
-    const target = getLegacyAliasTargetField(key) || getLegacyAliasTargetField(label) || getCanonicalFieldKey(key) || getCanonicalFieldKey(label);
-    const ownKey = String(key || "").trim();
-    const looksLikeCore = !!target && target !== ownKey && ["themePath", "image", "categoryKey", "tags", "goalPaths"].includes(target);
-    if (looksLikeCore) {
-      affectedTemplateFields.add(templateId);
-      addOccurrence(issues, {
-        kind: "template_core_field_collision",
-        fieldKey: ownKey || label,
-        targetFieldKey: target,
-        action: "review_template",
-        severity: "review",
-        reason: "表单字段名称与插件内置核心字段重名。分类、主题、标签、图片应由核心字段能力承载，而不是作为普通自定义字段概念暴露。",
-        recommendation: `确认模板写入是否仍需要该字段；若只是核心字段，请让模板使用「${getFieldLabel(target)}」对应变量。`,
-        safeAutoFix: false
-      }, { templateId, value: label }, sampleLimit);
-    }
-    if (includeTemplateInternalMetadata && (field.semantic || field.semanticType || field.storage || field.cardinality || field.hierarchical || field.aliases?.length)) {
-      affectedTemplateFields.add(templateId);
-      addOccurrence(issues, {
-        kind: "template_internal_metadata",
-        fieldKey: ownKey || label,
-        action: "keep_internal",
-        severity: "info",
-        reason: "字段配置里仍有旧版内部元数据。它们不再在 UI 暴露，但可以保留用于兼容旧配置。",
-        recommendation: "无需用户处理；后续设置保存时可由迁移器统一清理或规范化。",
-        safeAutoFix: true
-      }, { templateId, value: label }, sampleLimit);
-    }
-  }
-  const finalIssues = Array.from(issues.entries()).map(([id, acc]) => ({
-    id,
-    kind: acc.kind,
-    fieldKey: acc.fieldKey,
-    fieldLabel: acc.fieldLabel || getFieldLabel(acc.fieldKey),
-    targetFieldKey: acc.targetFieldKey,
-    targetFieldLabel: acc.targetFieldKey ? getFieldLabel(acc.targetFieldKey) : void 0,
-    action: acc.action,
-    severity: acc.severity,
-    recordCount: acc.recordIds.size,
-    templateCount: acc.templateIds.size,
-    sampleRecordIds: Array.from(acc.recordIds).slice(0, sampleLimit),
-    sampleTemplateIds: Array.from(acc.templateIds).slice(0, sampleLimit),
-    sampleValues: acc.sampleValues,
-    reason: acc.reason,
-    recommendation: acc.recommendation,
-    safeAutoFix: acc.safeAutoFix
-  })).sort((a2, b2) => {
-    const severityRank = { manual: 0, review: 1, safe: 2, info: 3 };
-    return severityRank[a2.severity] - severityRank[b2.severity] || b2.recordCount - a2.recordCount || b2.templateCount - a2.templateCount || a2.fieldKey.localeCompare(b2.fieldKey, "zh");
-  });
-  return {
-    version: "v1.4",
-    mode: "preview",
-    totalRecords: items.length,
-    totalTemplateFields: templateFields.length,
-    issueCount: finalIssues.length,
-    affectedRecordCount: affectedRecords.size,
-    affectedTemplateFieldCount: affectedTemplateFields.size,
-    issues: finalIssues,
-    summary: {
-      legacyThemeRecords: finalIssues.filter((i2) => i2.kind === "legacy_theme_field").reduce((sum, i2) => sum + i2.recordCount, 0),
-      legacyImageRecords: finalIssues.filter((i2) => i2.kind === "legacy_image_field").reduce((sum, i2) => sum + i2.recordCount, 0),
-      pollutedExtraRecords: finalIssues.filter((i2) => i2.kind === "legacy_extra_alias").reduce((sum, i2) => sum + i2.recordCount, 0),
-      customCoreNameCollisionRecords: finalIssues.filter((i2) => i2.kind === "custom_core_name_collision").reduce((sum, i2) => sum + i2.recordCount, 0),
-      templateCollisionFields: finalIssues.filter((i2) => i2.kind === "template_core_field_collision").reduce((sum, i2) => sum + i2.templateCount, 0),
-      templateInternalMetadataFields: finalIssues.filter((i2) => i2.kind === "template_internal_metadata").reduce((sum, i2) => sum + i2.templateCount, 0)
-    }
-  };
 }
 const DEFAULT_ACTION_META = {
   action: "unknown",
@@ -5005,7 +4747,7 @@ function filterByRules(items, rules = []) {
     return result;
   });
 }
-function isEmptyValue(value) {
+function isEmptyValue$1(value) {
   if (value === null || value === void 0) return true;
   if (Array.isArray(value)) return value.length === 0;
   return String(value).trim() === "";
@@ -5029,8 +4771,8 @@ function matchRule(item, rule) {
   const itemRecord = asUnknownRecord(item);
   let v1 = readField(item, canonicalField);
   let v2 = rule.value;
-  if (rule.op === "empty") return isEmptyValue(v1);
-  if (rule.op === "notEmpty") return !isEmptyValue(v1);
+  if (rule.op === "empty") return isEmptyValue$1(v1);
+  if (rule.op === "notEmpty") return !isEmptyValue$1(v1);
   if (canonicalField === "title") {
     v1 = readString(itemRecord, "titleLower") ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
@@ -5881,63 +5623,6 @@ function collectCategoriesFromViews(viewInstances, predefinedCategories = []) {
   });
   predefinedCategories.forEach((cat) => categorySet.add(cat));
   return Array.from(categorySet).sort();
-}
-function buildLegacyLayoutFilters(layout) {
-  const rules = [];
-  const selectedThemes = layout.selectedThemes || [];
-  const selectedCategories = layout.selectedCategories || [];
-  if (selectedThemes.length > 0) {
-    rules.push({
-      field: "themePath",
-      op: "in",
-      value: selectedThemes,
-      logic: selectedCategories.length > 0 ? "and" : void 0
-    });
-  }
-  if (selectedCategories.length > 0) {
-    rules.push({
-      field: "baseCategory",
-      op: "in",
-      value: selectedCategories
-    });
-  }
-  return rules;
-}
-function hasExplicitGlobalFilters(layout) {
-  return Array.isArray(layout.globalFilters);
-}
-function hasLegacyLayoutFilterValues(layout) {
-  return (layout.selectedThemes || []).length > 0 || (layout.selectedCategories || []).length > 0;
-}
-function getLegacyLayoutFilterState(layout) {
-  const isLegacyMode = !hasExplicitGlobalFilters(layout);
-  const selectedThemes = layout.selectedThemes || [];
-  const selectedCategories = layout.selectedCategories || [];
-  return {
-    isLegacyMode,
-    hasLegacyValues: hasLegacyLayoutFilterValues(layout),
-    selectedThemes,
-    selectedCategories,
-    effectiveFilters: isLegacyMode ? buildLegacyLayoutFilters(layout) : layout.globalFilters || []
-  };
-}
-function getEffectiveLayoutFilters(layout) {
-  return getLegacyLayoutFilterState(layout).effectiveFilters;
-}
-function migrateLegacyLayoutFilters(layout) {
-  return {
-    globalFilters: getEffectiveLayoutFilters(layout),
-    selectedThemes: [],
-    selectedCategories: []
-  };
-}
-function describeLegacyLayoutFilters(layout) {
-  const parts = [];
-  const selectedThemes = layout.selectedThemes || [];
-  const selectedCategories = layout.selectedCategories || [];
-  if (selectedThemes.length > 0) parts.push(`主题 ${selectedThemes.length} 项`);
-  if (selectedCategories.length > 0) parts.push(`分类 ${selectedCategories.length} 项`);
-  return parts.join("，");
 }
 function asStringList(value) {
   if (Array.isArray(value)) return value.map((v2) => String(v2)).filter(Boolean);
@@ -7057,17 +6742,6 @@ function getItemGranularity(item) {
 function isClosedItem(item) {
   return /\/(done|cancelled)\b/.test((item.categoryKey || "").toLowerCase());
 }
-function applyLegacyThemeFilter(items, selectedThemes = []) {
-  if (!selectedThemes.length) return items;
-  return items.filter((item) => {
-    const theme = item.themePath || item.theme || item.themePathNormalized;
-    return !!theme && selectedThemes.includes(theme);
-  });
-}
-function applyLegacyCategoryFilter(items, selectedCategories = []) {
-  if (!selectedCategories.length) return items;
-  return items.filter((item) => selectedCategories.includes(getBasePath(item.categoryKey)));
-}
 function applyOverviewDateFilter(items, dateRange, useFieldGranularity) {
   const [start2, end2] = toIsoDateTuple({
     start: dayjs(dateRange[0]).startOf("day"),
@@ -7125,10 +6799,6 @@ function applyViewBaseFilters(input) {
   result = filterByRules(result, layoutFilters);
   result = filterByRules(result, viewFilters);
   result = filterByKeyword(result, input.keyword || "");
-  if (layoutFilters.length === 0) {
-    result = applyLegacyThemeFilter(result, input.legacySelectedThemes || []);
-    result = applyLegacyCategoryFilter(result, input.legacySelectedCategories || []);
-  }
   return result;
 }
 function applyViewQueryPipeline(input) {
@@ -7716,6 +7386,10 @@ const VIEW_LEGACY_FIELD_ALIASES = {
   categoryKey: "coreBlock",
   baseCategory: "coreBlock",
   leafCategory: "coreBlock",
+  分类: "coreBlock",
+  类别: "coreBlock",
+  分类路径: "coreBlock",
+  根类别: "coreBlock",
   block: "coreBlock",
   blockId: "coreBlock",
   coreBlockId: "coreBlock",
@@ -7735,7 +7409,8 @@ const VIEW_LEGACY_FIELD_ALIASES = {
   目标: "goalPath",
   目标ID: "goalId",
   主题: "themePath",
-  核心Block: "coreBlock"
+  核心Block: "coreBlock",
+  日期: "date"
 };
 const TEMPLATE_SOURCE_FIELDS = /* @__PURE__ */ new Set(["templateSource", "templateSourceType"]);
 const VIEW_NOISY_DISPLAY_FIELDS = /* @__PURE__ */ new Set([
@@ -7906,6 +7581,204 @@ function moveDisplayField(fields, fromIndex, toIndex, options = {}) {
   next2.splice(toIndex, 0, moved);
   return next2;
 }
+const EMPTY_INPUT_TYPES = [];
+const OPTION_INPUT_TYPES = ["select", "radio", "singleSelect"];
+const MULTI_OPTION_INPUT_TYPES = ["multiSelect"];
+const PATH_INPUT_TYPES = ["path", "hierarchicalSingleSelect"];
+const MULTI_PATH_INPUT_TYPES = ["multiPath"];
+const TAG_INPUT_TYPES = ["tag"];
+const MULTI_TAG_INPUT_TYPES = ["multiTag"];
+const IMAGE_INPUT_TYPES = ["image"];
+const MULTI_IMAGE_INPUT_TYPES = ["multiImage"];
+const RATING_INPUT_TYPES = ["rating"];
+function splitTextList(value) {
+  if (Array.isArray(value)) return value.flatMap(splitTextList);
+  if (isOptionObject(value)) return splitTextList(value.value ?? value.label);
+  if (value && typeof value === "object" && "src" in value) return splitTextList(value.src);
+  return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function templateFieldValueToString(value) {
+  if (value === void 0 || value === null) return "";
+  if (Array.isArray(value)) return value.map(templateFieldValueToString).filter(Boolean).join(", ");
+  if (isOptionObject(value)) return String(value.value ?? value.label ?? "").trim();
+  if (typeof value === "object" && value && "src" in value) return String(value.src ?? "").trim();
+  return String(value).trim();
+}
+function templateFieldValueToArray(value) {
+  return Array.from(new Set(splitTextList(value)));
+}
+function isEmptyValue(value) {
+  if (value === void 0 || value === null) return true;
+  if (typeof value === "string") return value.trim() === "";
+  if (Array.isArray(value)) return value.length === 0;
+  return false;
+}
+function optionLabelFromPath(value) {
+  return value.split("/").filter(Boolean).pop() || value;
+}
+function normalizeOptionObjectForField(field, rawValue) {
+  if (isTemplatePathField(field)) {
+    const normalized = normalizeHierarchyPath(rawValue.value ?? rawValue.label);
+    return normalized ? { value: normalized, label: String(rawValue.label ?? optionLabelFromPath(normalized)) } : rawValue;
+  }
+  return { value: rawValue.value, label: rawValue.label ?? rawValue.value };
+}
+function findOption(field, value) {
+  const raw = templateFieldValueToString(value);
+  if (!raw) return void 0;
+  return (field.options || []).find((option) => {
+    const optionValue = String(option?.value ?? "");
+    const optionLabel = String(option?.label ?? "");
+    return optionValue === raw || optionLabel === raw || String(option?.label ?? option?.value ?? "") === raw;
+  });
+}
+function normalizePathValue(value) {
+  return normalizeHierarchyPath(templateFieldValueToString(value));
+}
+function matchPathOption(field, rawValue) {
+  const normalizedPath = normalizePathValue(rawValue);
+  if (!normalizedPath) return rawValue;
+  const matched = (field.options || []).find((option) => {
+    const optionValue = normalizeHierarchyPath(option?.value);
+    const optionLabel = String(option?.label ?? "");
+    return optionValue === normalizedPath || optionLabel === templateFieldValueToString(rawValue);
+  });
+  return {
+    value: normalizedPath,
+    label: matched?.label || optionLabelFromPath(normalizedPath)
+  };
+}
+function normalizeMultiPathValue(value) {
+  return templateFieldValueToArray(value).map((part) => normalizeHierarchyPath(part)).filter((part) => !!part);
+}
+function normalizeMultiImageValue(value) {
+  return templateFieldValueToArray(value).map((part) => normalizeImageValue(part)?.src).filter((src) => !!src);
+}
+function matchSingleOption(field, rawValue) {
+  if (isOptionObject(rawValue)) return normalizeOptionObjectForField(field, rawValue);
+  const matched = findOption(field, rawValue);
+  if (matched) return { value: matched.value, label: matched.label || matched.value };
+  const inputType = getTemplateFieldInputType(field);
+  if (inputType === "rating" || isTemplateRatingPairField(field)) {
+    const rawString = templateFieldValueToString(rawValue);
+    return rawString ? { value: rawString, label: rawString } : rawValue;
+  }
+  return rawValue;
+}
+const scalarBehavior = {
+  kind: "scalar",
+  inputTypes: EMPTY_INPUT_TYPES,
+  normalize: (field, rawValue) => normalizeTemplateFieldValue(field, rawValue),
+  matchOption: (_field, rawValue) => rawValue,
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const pathBehavior = {
+  kind: "path",
+  inputTypes: PATH_INPUT_TYPES,
+  normalize: (field, rawValue) => normalizeTemplateFieldValue(field, rawValue),
+  matchOption: matchPathOption,
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const multiPathBehavior = {
+  kind: "multiPath",
+  inputTypes: MULTI_PATH_INPUT_TYPES,
+  normalize: (_field, rawValue) => normalizeMultiPathValue(rawValue),
+  matchOption: (_field, rawValue) => normalizeMultiPathValue(rawValue),
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const tagBehavior = {
+  kind: "tag",
+  inputTypes: TAG_INPUT_TYPES,
+  normalize: (_field, rawValue) => parseTagList(rawValue).join(", "),
+  matchOption: (_field, rawValue) => rawValue,
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const multiTagBehavior = {
+  kind: "multiTag",
+  inputTypes: MULTI_TAG_INPUT_TYPES,
+  normalize: (_field, rawValue) => parseTagList(rawValue),
+  matchOption: (_field, rawValue) => parseTagList(rawValue),
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const imageBehavior = {
+  kind: "image",
+  inputTypes: IMAGE_INPUT_TYPES,
+  normalize: (field, rawValue) => normalizeTemplateFieldValue(field, rawValue),
+  matchOption: (_field, rawValue) => normalizeImageValue(rawValue)?.src ?? rawValue,
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const multiImageBehavior = {
+  kind: "multiImage",
+  inputTypes: MULTI_IMAGE_INPUT_TYPES,
+  normalize: (_field, rawValue) => normalizeMultiImageValue(rawValue),
+  matchOption: (_field, rawValue) => normalizeMultiImageValue(rawValue),
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const optionBehavior = {
+  kind: "option",
+  inputTypes: OPTION_INPUT_TYPES,
+  normalize: (field, rawValue) => normalizeTemplateFieldValue(field, rawValue),
+  matchOption: matchSingleOption,
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const multiOptionBehavior = {
+  kind: "multiOption",
+  inputTypes: MULTI_OPTION_INPUT_TYPES,
+  normalize: (field, rawValue) => normalizeTemplateFieldValue(field, rawValue),
+  matchOption: (_field, rawValue) => templateFieldValueToArray(rawValue),
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const ratingBehavior = {
+  kind: "rating",
+  inputTypes: RATING_INPUT_TYPES,
+  normalize: (field, rawValue) => normalizeTemplateFieldValue(field, rawValue),
+  matchOption: matchSingleOption,
+  toArray: templateFieldValueToArray,
+  toString: templateFieldValueToString
+};
+const FIELD_BEHAVIORS = {
+  scalar: scalarBehavior,
+  option: optionBehavior,
+  multiOption: multiOptionBehavior,
+  path: pathBehavior,
+  multiPath: multiPathBehavior,
+  tag: tagBehavior,
+  multiTag: multiTagBehavior,
+  image: imageBehavior,
+  multiImage: multiImageBehavior,
+  rating: ratingBehavior
+};
+function getTemplateFieldBehaviorKind(field) {
+  if (!field) return "scalar";
+  const inputType = getTemplateFieldInputType(field);
+  if (inputType === "rating" || isTemplateRatingPairField(field)) return "rating";
+  if (isTemplatePathField(field)) return isTemplateMultiValueField(field) || inputType === "multiPath" ? "multiPath" : "path";
+  if (isTemplateTagField(field)) return isTemplateMultiValueField(field) || inputType === "multiTag" ? "multiTag" : "tag";
+  if (isTemplateImageField(field)) return isTemplateMultiValueField(field) || inputType === "multiImage" ? "multiImage" : "image";
+  if (inputType === "multiSelect") return "multiOption";
+  if (OPTION_INPUT_TYPES.includes(inputType)) return "option";
+  return "scalar";
+}
+function getTemplateFieldBehavior(field) {
+  return FIELD_BEHAVIORS[getTemplateFieldBehaviorKind(field)];
+}
+function normalizeFieldValueByBehavior(field, rawValue) {
+  if (isEmptyValue(rawValue)) return rawValue;
+  return getTemplateFieldBehavior(field).normalize(field, rawValue);
+}
+function matchTemplateFieldOptionValue(field, rawValue) {
+  if (isEmptyValue(rawValue)) return rawValue;
+  return getTemplateFieldBehavior(field).matchOption(field, rawValue);
+}
 const CONTENT_FIELD_KEY = "content";
 const FULL_DATA_FIELD_KEY = "fullData";
 function leaf$1(path) {
@@ -7977,7 +7850,6 @@ function buildAiConfigSnapshot(input, ai, goalSettings) {
       variantId: preset.variantId || "default",
       goalTemplateId: preset.id,
       name: preset.name || preset.variantId || "默认预设",
-      isDefault: !!preset.isDefault,
       themePath: defaultThemePath,
       periodPolicy: preset.periodPolicy,
       fields
@@ -8345,7 +8217,7 @@ function findPresetByTarget(snapshot, target) {
     const exactVariant = candidates.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.goalTemplateId === variantId);
     if (exactVariant) return exactVariant;
   }
-  return candidates.find((preset) => preset.isDefault) || candidates[0] || null;
+  return candidates[0] || null;
 }
 function normalizeParsedBatch(batch, snapshot, rawText, defaultThemeId) {
   if (!batch.items) batch.items = [];
@@ -8614,7 +8486,7 @@ class AiNaturalLanguageRecordParser {
       '  "rawText": "original input text",',
       '  "target": {',
       '    "blockId": "core-block-id-from-snapshot",',
-      '    "categoryKey": "optional-legacy-category-label-from-snapshot",',
+      '    "categoryKey": "optional-category-label-from-snapshot",',
       '    "goalPath": "goal-path-from-snapshot",',
       '    "templateVariantId": "preset-variant-from-snapshot",',
       '    "themeId": "theme-path-from-selected-preset"',
@@ -8653,15 +8525,15 @@ class AiNaturalLanguageRecordParser {
       "",
       "GOAL / PRESET SELECTION:",
       "1. goalPath is REQUIRED when snapshot.goals is not empty. Use a FULL goal path from snapshot.goals[].path.",
-      "2. Choose blockId first, then choose the best preset from snapshot.goalPresets with the same goalPath and blockId. categoryKey is only a legacy helper.",
+      "2. Choose blockId first, then choose the best preset from snapshot.goalPresets with the same goalPath and blockId. categoryKey is only a display helper.",
       "3. If a preset clearly matches user words, return target.goalTemplateId = preset.goalTemplateId/id and target.templateVariantId = preset.variantId.",
-      "4. If several presets match, prefer preset.isDefault or the closest themePath/name match.",
+      "4. If several presets match, prefer the closest themePath/name match.",
       "5. themeId should come from the selected preset themePath or selected goal themePath. Theme is only a form default/stat dimension, not the main template selector.",
-      "6. Never output legacy templateSourceType values such as deprecated template source values.",
+      "6. Do not output deprecated templateSourceType values.",
       "",
       "BLOCK SELECTION:",
       "1. blockId is REQUIRED and must come from snapshot.blocks[].id or snapshot.goalPresets[].blockId, e.g. core.task/core.habit/core.plan.",
-      "2. categoryKey is optional legacy display text. Return it only when it helps compatibility, and it must come from snapshot.blocks[].categoryKey.",
+      "2. categoryKey is optional display text. Return it only when it helps compatibility, and it must come from snapshot.blocks[].categoryKey.",
       "3. Common patterns:",
       '   - "任务"/"要做"/"待办" → blockId = "core.task"',
       '   - "计划" → blockId = "core.plan"',
@@ -8700,7 +8572,7 @@ class AiNaturalLanguageRecordParser {
     const lines = [
       "You convert user text into Think plugin record commands.",
       "Return ONLY valid JSON. No markdown. No explanations.",
-      'Schema: {"items":[{"rawText":"...","target":{"blockId":"core.task","categoryKey":"optional legacy label","goalPath":"...","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
+      'Schema: {"items":[{"rawText":"...","target":{"blockId":"core.task","categoryKey":"optional label","goalPath":"...","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
       "Use only goalPath/blockId/categoryKey/goalTemplateId/templateVariantId/themeId/fields provided by user prompt.",
       "If uncertain, choose the first plausible goal, preset/theme, and blockId.",
       "Dates: YYYY-MM-DD. Times: HH:mm. Never put goal/theme/template/period system fields into fieldValues."
@@ -16585,12 +16457,6 @@ let DataStore = class {
       return [];
     }
   }
-  /**
-   * 字段迁移预览（只读）：扫描当前内存记录中的旧字段/污染字段，不修改 Markdown。
-   */
-  getFieldMigrationPreview() {
-    return scanFieldMigrations(this.queryItems([], []));
-  }
   removeFileItems(filePath) {
     this.index.removeFileItems(filePath);
     if (this.cacheStore.removeFile(filePath)) {
@@ -16640,7 +16506,7 @@ var __decorateClass$c = (decorators, target, key, kind) => {
 };
 var __decorateParam$b = (index, decorator) => (target, key) => decorator(target, key, index);
 const DEFAULT_LIMIT = 100;
-const LEGACY_EXTRA_ALIAS_SET = new Set(LEGACY_EXTRA_ALIAS_KEYS);
+const HIDDEN_EXTRA_ALIAS_SET = /* @__PURE__ */ new Set(["正文", "内容", "任务内容", "记录内容", "editableText"]);
 const SEARCH_FIELDS = [
   "title",
   "content",
@@ -16696,7 +16562,7 @@ function normalizeText$1(value) {
 }
 function collectSearchableExtraText(item) {
   const extra = item.extra || {};
-  return Object.entries(extra).filter(([key]) => !LEGACY_EXTRA_ALIAS_SET.has(key)).map(([key, value]) => `${key} ${normalizeText$1(value)}`.trim()).filter(Boolean).join(" ");
+  return Object.entries(extra).filter(([key]) => !HIDDEN_EXTRA_ALIAS_SET.has(key)).map(([key, value]) => `${key} ${normalizeText$1(value)}`.trim()).filter(Boolean).join(" ");
 }
 function getSearchResultRecord(sr) {
   return asUnknownRecord(sr);
@@ -19067,31 +18933,12 @@ function readRegisteredOrExtraValue(field, item) {
   if (isPresent(directLabel)) return directLabel;
   return void 0;
 }
-function matchOptionValue(field, rawValue) {
-  if (!isPresent(rawValue)) return rawValue;
-  if (isOptionObject$1(rawValue)) return rawValue;
-  const inputType = getTemplateFieldInputType(field);
-  const options = field.options || [];
-  if (isTemplatePathField(field)) {
-    const normalizedPath = normalizeHierarchyPath(rawValue);
-    if (!normalizedPath) return rawValue;
-    const matched = options.find((opt) => normalizeHierarchyPath(opt?.value) === normalizedPath || String(opt?.label ?? "") === String(rawValue));
-    return { value: normalizedPath, label: matched?.label || normalizedPath.split("/").pop() || normalizedPath };
-  }
-  if (["select", "radio", "singleSelect", "rating"].includes(inputType)) {
-    const rawString = String(rawValue);
-    const matched = options.find((opt) => String(opt?.value) === rawString || String(opt?.label) === rawString || String(opt?.label ?? opt?.value) === rawString);
-    if (matched) return { value: matched.value, label: matched.label || matched.value };
-    if (inputType === "rating") return { value: rawString, label: rawString };
-  }
-  return rawValue;
-}
 function normalizeBackfillValue(field, rawValue) {
   if (!isPresent(rawValue)) return void 0;
-  if (isTemplateRatingPairField(field) && isOptionObject$1(rawValue)) return rawValue;
+  if (isTemplateRatingPairField(field) && isOptionObject(rawValue)) return rawValue;
   const decoded = decodeMarkdownFieldValue(rawValue, fieldCodecDefinition(field));
   const normalized = normalizeTemplateFieldValue(field, decoded);
-  return matchOptionValue(field, normalized);
+  return matchTemplateFieldOptionValue(field, normalized);
 }
 function resolveInitialFieldValue(input) {
   const semanticValue = readSemanticFieldValue(input.field, input.item, input.snapshot);
@@ -19394,11 +19241,7 @@ function normalizeRecordInput(input) {
   delete normalizedFormData.__timeDirection;
   for (const field of input.template.fields || []) {
     if (!Object.prototype.hasOwnProperty.call(normalizedFormData, field.key)) continue;
-    if (isTemplateTagField(field)) {
-      normalizedFormData[field.key] = normalizeTemplateFieldValue(field, normalizedFormData[field.key]);
-      continue;
-    }
-    normalizedFormData[field.key] = normalizeTemplateFieldValue(field, normalizedFormData[field.key]);
+    normalizedFormData[field.key] = normalizeFieldValueByBehavior(field, normalizedFormData[field.key]);
   }
   const finalized = finalizeTimeFieldsByTemplate(
     normalizedFormData,
@@ -19412,9 +19255,6 @@ function normalizeRecordInput(input) {
 }
 function issue$1(code, message, field) {
   return { code, message, field };
-}
-function isOptionObject(value) {
-  return !!value && typeof value === "object" && ("value" in value || "label" in value);
 }
 function validateRecordInput(input) {
   const errors = [];
@@ -19446,8 +19286,8 @@ function validateRecordInput(input) {
       }
     }
     if (["select", "radio", "rating"].includes(field.type) && Array.isArray(field.options) && field.options.length > 0) {
-      const valueToCheck = isOptionObject(rawValue) ? rawValue.value : rawValue;
-      const matched = field.options.some((option) => String(option.value) === String(valueToCheck) || String(option.label) === String(valueToCheck));
+      const valueToCheck = templateFieldValueToString(rawValue);
+      const matched = field.options.some((option) => String(option.value) === valueToCheck || String(option.label) === valueToCheck);
       if (!matched) {
         warnings.push(issue$1("record_field_option_unmatched", "The current value does not match any configured option.", field.key));
       }
@@ -55096,6 +54936,7 @@ function createLayoutSlice(settingsRepository) {
           id: generateId("layout"),
           name,
           viewInstanceIds: [],
+          globalFilters: [],
           displayMode: "list",
           initialView: "月",
           initialDateFollowsNow: true,
@@ -57490,9 +57331,7 @@ function nowIso() {
 function ensureGoalSettings(settings) {
   return {
     goals: [...settings?.goals || []],
-    cycles: [...settings?.cycles || []],
-    goalBlockBindings: [...settings?.goalBlockBindings || []],
-    goalRecordRelations: [...settings?.goalRecordRelations || []]
+    goalTemplates: [...settings?.goalTemplates || []]
   };
 }
 function normalizeGoalInput(input) {
@@ -57511,9 +57350,6 @@ function normalizeGoalInput(input) {
     createdAt: timestamp,
     updatedAt: timestamp
   };
-}
-function safeCycleId(input) {
-  return `cycle.${input.goalId}.${input.startDate}.${input.endDate}`.replace(/[^a-z0-9_.-]/gi, "-");
 }
 function normalizeStoredGoalPath(goal) {
   return splitGoalPath(goal.goalPath || goal.title).goalPath || String(goal.goalPath || goal.title || "").trim();
@@ -57593,11 +57429,9 @@ class GoalUseCase {
     await state.updateSettings((draft) => {
       draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
       draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => !targetIds.has(goal.id));
-      draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => !targetIds.has(cycle.goalId));
       for (const targetId of targetIds) {
         draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, targetId);
       }
-      draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => !targetIds.has(relation.goalId));
     });
   }
   async deleteGoal(id) {
@@ -57621,108 +57455,31 @@ class GoalUseCase {
       throw error;
     }
   }
-  async cleanupGoalSettingsStorage() {
+  async cleanupGoalSettings() {
     try {
       const state = this.store.getState();
       const fallback = {
         beforeTemplateCount: 0,
         afterTemplateCount: 0,
         removedDuplicateTemplates: 0,
-        removedDanglingCycles: 0,
-        removedDanglingRelations: 0,
         changed: false
       };
       if (!state.isInitialized) return fallback;
       let summary = fallback;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const beforeCycles = draft.goalSettings.cycles.length;
-        const beforeRelations = draft.goalSettings.goalRecordRelations.length;
-        const liveGoalIds = new Set(draft.goalSettings.goals.map((goal) => goal.id));
         const cleaned = cleanupGoalTemplateStorage(draft.goalSettings);
         draft.goalSettings = cleaned.goalSettings;
-        draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => liveGoalIds.has(cycle.goalId));
-        draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => liveGoalIds.has(relation.goalId));
-        const removedDanglingCycles = beforeCycles - draft.goalSettings.cycles.length;
-        const removedDanglingRelations = beforeRelations - draft.goalSettings.goalRecordRelations.length;
         summary = {
           beforeTemplateCount: cleaned.summary.beforeCount,
           afterTemplateCount: cleaned.summary.afterCount,
           removedDuplicateTemplates: cleaned.summary.removedDuplicateCount,
-          removedDanglingCycles,
-          removedDanglingRelations,
-          changed: cleaned.summary.changed || removedDanglingCycles > 0 || removedDanglingRelations > 0
+          changed: cleaned.summary.changed
         };
       });
       return summary;
     } catch (error) {
-      devError("[GoalUseCase] cleanupGoalSettingsStorage failed:", error);
-      throw error;
-    }
-  }
-  async addCycle(input) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized || !input.goalId || !input.title.trim()) return null;
-      const timestamp = nowIso();
-      const cycle = {
-        id: safeCycleId(input),
-        goalId: input.goalId,
-        title: input.title.trim(),
-        granularity: input.granularity || "custom",
-        startDate: input.startDate,
-        endDate: input.endDate,
-        status: input.status || "planned",
-        createdAt: timestamp,
-        updatedAt: timestamp
-      };
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const index = draft.goalSettings.cycles.findIndex((item) => item.id === cycle.id);
-        if (index >= 0) draft.goalSettings.cycles[index] = { ...draft.goalSettings.cycles[index], ...cycle, updatedAt: timestamp };
-        else draft.goalSettings.cycles.push(cycle);
-      });
-      return cycle;
-    } catch (error) {
-      devError("[GoalUseCase] addCycle failed:", error);
-      throw error;
-    }
-  }
-  async updateCycle(id, patch) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const target = draft.goalSettings.cycles.find((cycle) => cycle.id === id);
-        if (!target) return;
-        Object.assign(target, patch, { updatedAt: nowIso() });
-      });
-    } catch (error) {
-      devError("[GoalUseCase] updateCycle failed:", error);
-      throw error;
-    }
-  }
-  async closeCycle(id) {
-    await this.updateCycle(id, { status: "closed" });
-  }
-  async reopenCycle(id) {
-    await this.updateCycle(id, { status: "active" });
-  }
-  async markCycleReviewing(id) {
-    await this.updateCycle(id, { status: "reviewing" });
-  }
-  async deleteCycle(id) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => cycle.id !== id);
-        draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.map((relation) => relation.cycleId === id ? { ...relation, cycleId: null } : relation);
-      });
-    } catch (error) {
-      devError("[GoalUseCase] deleteCycle failed:", error);
+      devError("[GoalUseCase] cleanupGoalSettings failed:", error);
       throw error;
     }
   }
@@ -57756,7 +57513,6 @@ class GoalUseCase {
       variantId: input.templateVariantId || "default",
       name: input.templateName || (input.templateVariantId === "default" || !input.templateVariantId ? "记录预设" : input.templateVariantId),
       description: input.description,
-      isDefault: void 0,
       sortOrder: input.sortOrder,
       enabled: input.enabled !== false,
       targetFile: input.targetFile?.trim() || void 0,
@@ -57782,18 +57538,6 @@ class GoalUseCase {
       devError("[GoalUseCase] deleteGoalTemplate failed:", error);
       throw error;
     }
-  }
-  /** @deprecated Use upsertGoalTemplate. Kept for old UI/plugin data compatibility. */
-  async upsertGoalBlockBinding(binding) {
-    return this.upsertGoalTemplate(binding);
-  }
-  /** @deprecated Use upsertGoalTemplateDraft. Kept for old UI/plugin data compatibility. */
-  async upsertGoalBlockBindingDraft(input) {
-    return this.upsertGoalTemplateDraft(input);
-  }
-  /** @deprecated Use deleteGoalTemplate. Kept for old UI/plugin data compatibility. */
-  async deleteGoalBlockBinding(goalId, coreBlockId, templateVariantId = "default") {
-    return this.deleteGoalTemplate(goalId, coreBlockId, templateVariantId);
   }
 }
 function createGoalUseCase(store) {
@@ -58665,11 +58409,6 @@ function HierarchySingleSelect({
 function isSystemContextField(field) {
   return isSystemRecordContextField(field.key, field.label, String(getTemplateFieldSemantic(field) || ""));
 }
-function toArrayValue(value) {
-  if (Array.isArray(value)) return value.map((v2) => String(typeof v2 === "object" && v2 !== null ? v2.value ?? v2.label ?? "" : v2)).filter(Boolean);
-  if (value && typeof value === "object") return [String(value.value ?? value.label ?? "")].filter(Boolean);
-  return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
-}
 function isRenderableImagePath(value) {
   return isImageLikeValue(value);
 }
@@ -58800,7 +58539,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, fieldValu
     return renderStandardField(label, control);
   };
   const renderMultiOptionPills = (field) => {
-    const selected = new Set(toArrayValue(formData[field.key]));
+    const selected = new Set(templateFieldValueToArray(formData[field.key]));
     const choices = normalizeQuickInputChoices(field.options);
     return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: choices.map((choice) => {
       const isSelected = selected.has(choice.value) || selected.has(choice.label);
@@ -58825,10 +58564,10 @@ function QuickInputEditorFields({ getResourcePath, template, formData, fieldValu
       );
     }) });
   };
-  const getSelectedValues = (field) => Array.from(new Set(toArrayValue(formData[field.key])));
+  const getSelectedValues = (field) => Array.from(new Set(templateFieldValueToArray(formData[field.key])));
   const commitMultiTagDraft = (field, rawValue) => {
     const draft = rawValue ?? tagDrafts[field.key] ?? "";
-    const additions = toArrayValue(draft);
+    const additions = templateFieldValueToArray(draft);
     if (!additions.length) return;
     const next2 = Array.from(/* @__PURE__ */ new Set([...getSelectedValues(field), ...additions]));
     handleUpdate(field.key, next2);
@@ -59233,9 +58972,6 @@ function QuickInputEditorView({
   templateVariants = [],
   selectedTemplateVariantId = null,
   onSelectTemplateVariant,
-  cycles = [],
-  selectedCycleId = null,
-  onSelectCycle,
   template,
   formData,
   fieldValueOptionsByKey,
@@ -59288,11 +59024,8 @@ function QuickInputEditorView({
             selected: isSelected,
             disabled: templateVariants.length <= 1,
             onClick: () => templateVariants.length > 1 ? onSelectTemplateVariant?.(variant.value) : void 0,
-            title: variant.isDefault ? `${variant.label}（默认）` : variant.label,
-            children: [
-              variant.label,
-              variant.isDefault ? " · 默认" : ""
-            ]
+            title: variant.label,
+            children: variant.label
           },
           variant.value
         );
@@ -59317,7 +59050,6 @@ function QuickInputEditorView({
     ) })
   ] });
 }
-const EMPTY_FORM_DATA = {};
 const isMeaningfulValue = (value) => {
   if (value === void 0 || value === null) return false;
   if (typeof value === "string") return value !== "";
@@ -59341,6 +59073,71 @@ const buildInitialFieldSources = (initialData) => {
   });
   return next2;
 };
+const buildFieldSourceSummary = (sources) => ({
+  user: Object.values(sources).filter((v2) => v2 === "user").length,
+  context: Object.values(sources).filter((v2) => v2 === "context").length,
+  edit_backfill: Object.values(sources).filter((v2) => v2 === "edit_backfill").length,
+  invocation_context: Object.values(sources).filter(
+    (v2) => v2 === "invocation_context"
+  ).length,
+  goal_context: Object.values(sources).filter((v2) => v2 === "goal_context").length,
+  theme_context: Object.values(sources).filter((v2) => v2 === "theme_context").length,
+  template_default: Object.values(sources).filter(
+    (v2) => v2 === "template_default"
+  ).length,
+  system_auto: Object.values(sources).filter((v2) => v2 === "system_auto").length
+});
+const QUICK_INPUT_GOAL_CONTEXT_KEYS = [
+  "goalId",
+  "目标ID",
+  "goalPath",
+  "目标",
+  "rootGoal",
+  "leafGoal",
+  "cycleId",
+  "周期ID",
+  "周期",
+  "周期粒度",
+  "templateId",
+  "goalTemplateId",
+  "templateVariantId",
+  "goalTemplateVariantId"
+];
+const QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
+  "内容",
+  "content",
+  "日期",
+  "date",
+  "时间",
+  "time",
+  "备注",
+  "note",
+  "description",
+  "目标",
+  "目标ID",
+  "goalId",
+  "goalPath",
+  "themePath",
+  "主题"
+];
+function clearQuickInputGoalContext(formData, fieldSources) {
+  const nextFormData = { ...formData };
+  const nextFieldSources = { ...fieldSources };
+  QUICK_INPUT_GOAL_CONTEXT_KEYS.forEach((key) => {
+    delete nextFormData[key];
+    delete nextFieldSources[key];
+  });
+  return { formData: nextFormData, fieldSources: nextFieldSources };
+}
+function preserveQuickInputBlockSwitchState(formData, fieldSources) {
+  const preservedFormData = {};
+  const preservedFieldSources = {};
+  QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS.forEach((key) => {
+    if (formData[key] !== void 0) preservedFormData[key] = formData[key];
+    if (fieldSources[key]) preservedFieldSources[key] = fieldSources[key];
+  });
+  return { formData: preservedFormData, fieldSources: preservedFieldSources };
+}
 function cleanDisplaySegment(value) {
   return String(value ?? "").replace(/^[#＃]+\s*/, "").trim();
 }
@@ -59382,20 +59179,77 @@ function themeOptions(themes) {
     icon: theme.icon
   }));
 }
-const buildFieldSourceSummary = (sources) => ({
-  user: Object.values(sources).filter((v2) => v2 === "user").length,
-  context: Object.values(sources).filter((v2) => v2 === "context").length,
-  edit_backfill: Object.values(sources).filter((v2) => v2 === "edit_backfill").length,
-  invocation_context: Object.values(sources).filter(
-    (v2) => v2 === "invocation_context"
-  ).length,
-  goal_context: Object.values(sources).filter((v2) => v2 === "goal_context").length,
-  theme_context: Object.values(sources).filter((v2) => v2 === "theme_context").length,
-  template_default: Object.values(sources).filter(
-    (v2) => v2 === "template_default"
-  ).length,
-  system_auto: Object.values(sources).filter((v2) => v2 === "system_auto").length
-});
+function applyQuickInputLinkedTimeChanges(draft, direction) {
+  const changes = computeLinkedTimeChanges(
+    draft,
+    { startKey: "时间", endKey: "结束", durationKey: "时长" },
+    draft.lastChanged,
+    {
+      durationOutput: "number",
+      direction
+    }
+  );
+  if (!Object.keys(changes).length) {
+    const cleaned = { ...draft };
+    if ("lastChanged" in cleaned) delete cleaned.lastChanged;
+    return { formData: cleaned, autoKeys: [] };
+  }
+  const merged = { ...draft, ...changes };
+  if ("lastChanged" in merged) delete merged.lastChanged;
+  return { formData: merged, autoKeys: Object.keys(changes) };
+}
+function applyQuickInputFieldUpdate(input) {
+  const {
+    formData,
+    fieldSources,
+    key,
+    value,
+    isOptionObject: isOptionObject2 = false,
+    timeDirection
+  } = input;
+  const optionValue = value;
+  const rawValue = isOptionObject2 ? optionValue?.value : value;
+  const fieldValue = isOptionObject2 ? { value: optionValue?.value, label: optionValue?.label } : value;
+  const draft = { ...formData, [key]: fieldValue, lastChanged: key };
+  const linked = applyQuickInputLinkedTimeChanges(draft, timeDirection);
+  const nextSources = {
+    ...fieldSources,
+    [key]: "user"
+  };
+  linked.autoKeys.forEach((autoKey) => {
+    if (autoKey !== key) nextSources[autoKey] = "system_auto";
+  });
+  const nextThemePath = key === "themePath" || key === "主题" ? String(rawValue ?? "").trim() || null : void 0;
+  const nextGoalPath = key === "goalPath" || key === "目标" || key === "目标路径" ? cleanDisplayPath(String(rawValue ?? "")) : void 0;
+  return {
+    formData: linked.formData,
+    fieldSources: nextSources,
+    nextThemePath,
+    nextGoalPath,
+    nextGoalId: nextGoalPath === void 0 ? void 0 : nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null
+  };
+}
+function applyQuickInputTimeDirectionChange(input) {
+  const { formData, fieldSources, nextDirection } = input;
+  const draft = { ...formData };
+  let usedDefaultEnd = false;
+  if (nextDirection === "backward" && !draft["结束"]) {
+    draft["结束"] = input.defaultEndTime || dayjs().format("HH:mm");
+    usedDefaultEnd = true;
+  }
+  const linked = applyQuickInputLinkedTimeChanges(draft, nextDirection);
+  const nextSources = { ...fieldSources };
+  if (usedDefaultEnd && !fieldSources["结束"])
+    nextSources["结束"] = "system_auto";
+  linked.autoKeys.forEach((autoKey) => {
+    nextSources[autoKey] = "system_auto";
+  });
+  return {
+    formData: linked.formData,
+    fieldSources: nextSources,
+    timeDirection: nextDirection
+  };
+}
 function getOrderedGoalIndex(goal, originalIndex) {
   if (!goal) return Number.MAX_SAFE_INTEGER;
   const order2 = readNumber(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
@@ -59467,76 +59321,43 @@ function buildQuickInputGoalOptions(fullSettings, coreBlockId) {
 function resolveQuickInputCoreBlockId(_fullSettings, blockId) {
   return String(blockId || "");
 }
-function applyQuickInputLinkedTimeChanges(draft, direction) {
-  const changes = computeLinkedTimeChanges(
-    draft,
-    { startKey: "时间", endKey: "结束", durationKey: "时长" },
-    draft.lastChanged,
-    {
-      durationOutput: "number",
-      direction
-    }
-  );
-  if (!Object.keys(changes).length) {
-    const cleaned = { ...draft };
-    if ("lastChanged" in cleaned) delete cleaned.lastChanged;
-    return { formData: cleaned, autoKeys: [] };
+function applyQuickInputGoalSelection(params) {
+  const { formData, fieldSources, option } = params;
+  const goal = option.goal || null;
+  const goalPath = cleanDisplayPath(goal?.goalPath || option.value) || option.value;
+  const goalId = goal?.id || (option.id && !String(option.id).startsWith("goal:") ? option.id : makeGoalIdFromPath(goalPath));
+  const themePath = goal?.themePath || option.themePath || null;
+  const nextFormData = { ...formData };
+  const nextFieldSources = { ...fieldSources };
+  const assign2 = (key, value, source = "goal_context") => {
+    if (value === void 0 || value === null || value === "") return;
+    const currentSource = nextFieldSources[key];
+    const hasUserValue = currentSource === "user" && isMeaningfulValue(nextFormData[key]);
+    if (hasUserValue) return;
+    nextFormData[key] = value;
+    nextFieldSources[key] = source;
+  };
+  assign2("goalId", goalId);
+  assign2("目标ID", goalId);
+  assign2("goalPath", goalPath);
+  assign2("目标", goalPath);
+  const parts = splitGoalPath(cleanDisplayPath(goalPath) || "");
+  assign2("rootGoal", parts.rootGoal || "", "goal_context");
+  assign2("leafGoal", parts.leafGoal || "", "goal_context");
+  if (themePath) {
+    assign2("themePath", themePath, "goal_context");
+    assign2("主题", themePath, "goal_context");
   }
-  const merged = { ...draft, ...changes };
-  if ("lastChanged" in merged) delete merged.lastChanged;
-  return { formData: merged, autoKeys: Object.keys(changes) };
-}
-function applyQuickInputFieldUpdate(input) {
-  const {
-    formData,
-    fieldSources,
-    key,
-    value,
-    isOptionObject: isOptionObject2 = false,
-    timeDirection
-  } = input;
-  const rawValue = isOptionObject2 ? value?.value : value;
-  const fieldValue = isOptionObject2 ? { value: value?.value, label: value?.label } : value;
-  const draft = { ...formData, [key]: fieldValue, lastChanged: key };
-  const linked = applyQuickInputLinkedTimeChanges(draft, timeDirection);
-  const nextSources = {
-    ...fieldSources,
-    [key]: "user"
-  };
-  linked.autoKeys.forEach((autoKey) => {
-    if (autoKey !== key) nextSources[autoKey] = "system_auto";
-  });
-  const nextThemePath = key === "themePath" || key === "主题" ? String(rawValue ?? "").trim() || null : void 0;
-  const nextGoalPath = key === "goalPath" || key === "目标" || key === "目标路径" ? cleanDisplayPath(String(rawValue ?? "")) : void 0;
   return {
-    formData: linked.formData,
-    fieldSources: nextSources,
-    nextThemePath,
-    nextGoalPath,
-    nextGoalId: nextGoalPath === void 0 ? void 0 : nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null
+    goal,
+    goalId,
+    goalPath,
+    themePath,
+    formData: nextFormData,
+    fieldSources: nextFieldSources
   };
 }
-function applyQuickInputTimeDirectionChange(input) {
-  const { formData, fieldSources, nextDirection } = input;
-  const draft = { ...formData };
-  let usedDefaultEnd = false;
-  if (nextDirection === "backward" && !draft["结束"]) {
-    draft["结束"] = input.defaultEndTime || dayjs().format("HH:mm");
-    usedDefaultEnd = true;
-  }
-  const linked = applyQuickInputLinkedTimeChanges(draft, nextDirection);
-  const nextSources = { ...fieldSources };
-  if (usedDefaultEnd && !fieldSources["结束"])
-    nextSources["结束"] = "system_auto";
-  linked.autoKeys.forEach((autoKey) => {
-    nextSources[autoKey] = "system_auto";
-  });
-  return {
-    formData: linked.formData,
-    fieldSources: nextSources,
-    timeDirection: nextDirection
-  };
-}
+const EMPTY_FORM_DATA = {};
 function hydrateQuickInputTemplateDefaults({
   template,
   context,
@@ -59646,8 +59467,8 @@ function hydrateQuickInputTemplateDefaults({
     );
     if (field.defaultValue) {
       if (isSelectable) {
-        const findOption = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
-        let opt = findOption(field.defaultValue);
+        const findOption2 = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
+        let opt = findOption2(field.defaultValue);
         if (!opt && field.options?.length) opt = field.options[0];
         if (opt)
           assignValue(
@@ -59713,60 +59534,8 @@ function deriveQuickInputInitialSelection(initialFormData, context) {
       "goalTemplateId",
       "templateId"
     ]) ?? null,
-    selectedCycleId: readFirstString$1(initialFormData, ["cycleId", "周期ID"]) ?? readFirstString$1(context, ["cycleId", "周期ID"]) ?? readFirstString$1(goalContext, ["cycleId"]) ?? null,
     timeDirection: initialFormData?.__timeDirection === "backward" ? "backward" : "forward"
   };
-}
-const QUICK_INPUT_GOAL_CONTEXT_KEYS = [
-  "goalId",
-  "目标ID",
-  "goalPath",
-  "目标",
-  "rootGoal",
-  "leafGoal",
-  "cycleId",
-  "周期ID",
-  "周期",
-  "周期粒度",
-  "templateId",
-  "goalTemplateId",
-  "templateVariantId",
-  "goalTemplateVariantId"
-];
-const QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
-  "内容",
-  "content",
-  "日期",
-  "date",
-  "时间",
-  "time",
-  "备注",
-  "note",
-  "description",
-  "目标",
-  "目标ID",
-  "goalId",
-  "goalPath",
-  "themePath",
-  "主题"
-];
-function clearQuickInputGoalContext(formData, fieldSources) {
-  const nextFormData = { ...formData };
-  const nextFieldSources = { ...fieldSources };
-  QUICK_INPUT_GOAL_CONTEXT_KEYS.forEach((key) => {
-    delete nextFormData[key];
-    delete nextFieldSources[key];
-  });
-  return { formData: nextFormData, fieldSources: nextFieldSources };
-}
-function preserveQuickInputBlockSwitchState(formData, fieldSources) {
-  const preservedFormData = {};
-  const preservedFieldSources = {};
-  QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS.forEach((key) => {
-    if (formData[key] !== void 0) preservedFormData[key] = formData[key];
-    if (fieldSources[key]) preservedFieldSources[key] = fieldSources[key];
-  });
-  return { formData: preservedFormData, fieldSources: preservedFieldSources };
 }
 function resolveQuickInputThemeSelectionOnClick(params) {
   const { selectedThemeId, themeId, path, pathToIdMap } = params;
@@ -59774,42 +59543,6 @@ function resolveQuickInputThemeSelectionOnClick(params) {
   if (selectedThemeId !== themeId) return themeId;
   const parentPath = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
   return parentPath ? pathToIdMap.get(parentPath) ?? null : null;
-}
-function applyQuickInputGoalSelection(params) {
-  const { formData, fieldSources, option } = params;
-  const goal = option.goal || null;
-  const goalPath = cleanDisplayPath(goal?.goalPath || option.value) || option.value;
-  const goalId = goal?.id || (option.id && !String(option.id).startsWith("goal:") ? option.id : makeGoalIdFromPath(goalPath));
-  const themePath = goal?.themePath || option.themePath || null;
-  const nextFormData = { ...formData };
-  const nextFieldSources = { ...fieldSources };
-  const assign2 = (key, value, source = "goal_context") => {
-    if (value === void 0 || value === null || value === "") return;
-    const currentSource = nextFieldSources[key];
-    const hasUserValue = currentSource === "user" && isMeaningfulValue(nextFormData[key]);
-    if (hasUserValue) return;
-    nextFormData[key] = value;
-    nextFieldSources[key] = source;
-  };
-  assign2("goalId", goalId);
-  assign2("目标ID", goalId);
-  assign2("goalPath", goalPath);
-  assign2("目标", goalPath);
-  const parts = splitGoalPath(cleanDisplayPath(goalPath) || "");
-  assign2("rootGoal", parts.rootGoal || "", "goal_context");
-  assign2("leafGoal", parts.leafGoal || "", "goal_context");
-  if (themePath) {
-    assign2("themePath", themePath, "goal_context");
-    assign2("主题", themePath, "goal_context");
-  }
-  return {
-    goal,
-    goalId,
-    goalPath,
-    themePath,
-    formData: nextFormData,
-    fieldSources: nextFieldSources
-  };
 }
 function buildQuickInputEditorState(input) {
   const currentTheme = input.selectedThemeId ? input.themeIdMap.get(input.selectedThemeId) ?? input.theme ?? null : input.theme ?? null;
@@ -59914,7 +59647,6 @@ function QuickInputEditor({
   const [selectedGoalId, setSelectedGoalId] = d(() => initialSelection.selectedGoalId);
   const [selectedGoalPath, setSelectedGoalPath] = d(() => initialSelection.selectedGoalPath);
   const [selectedTemplateVariantId, setSelectedTemplateVariantId] = d(() => initialSelection.selectedTemplateVariantId);
-  const [selectedCycleId, setSelectedCycleId] = d(() => initialSelection.selectedCycleId);
   const [formData, setFormData] = d(() => initialFormData ?? EMPTY_FORM_DATA);
   const [fieldSources, setFieldSources] = d(() => buildInitialFieldSources(initialFormData));
   const [timeDirection, setTimeDirection] = d(() => initialSelection.timeDirection);
@@ -59928,7 +59660,6 @@ function QuickInputEditor({
     setSelectedGoalId(nextSelection.selectedGoalId);
     setSelectedGoalPath(nextSelection.selectedGoalPath);
     setSelectedTemplateVariantId(nextSelection.selectedTemplateVariantId);
-    setSelectedCycleId(nextSelection.selectedCycleId);
   }, [initialBlockId, initialThemeId, context]);
   const blocks = T$1(() => {
     const coreBlocks = getEffectiveCoreBlocks(fullSettings);
@@ -59962,7 +59693,7 @@ function QuickInputEditor({
     }
     const exists = selectedTemplateVariantId && goalTemplateVariants.some((template2) => template2.variantId === selectedTemplateVariantId || template2.id === selectedTemplateVariantId);
     if (!exists) {
-      const next2 = goalTemplateVariants.find((template2) => template2.isDefault) || goalTemplateVariants[0];
+      const next2 = goalTemplateVariants[0];
       setSelectedTemplateVariantId(next2?.variantId || "default");
     }
   }, [goalTemplateVariants, selectedTemplateVariantId]);
@@ -59995,7 +59726,6 @@ function QuickInputEditor({
     setSelectedGoalId(null);
     setSelectedGoalPath(null);
     setSelectedTemplateVariantId(null);
-    setSelectedCycleId(null);
     setFormData((current2) => clearQuickInputGoalContext(current2, fieldSources).formData);
     setFieldSources((current2) => clearQuickInputGoalContext(formData, current2).fieldSources);
   }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
@@ -60064,7 +59794,7 @@ function QuickInputEditor({
   });
   y(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
-  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, selectedCycleId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
+  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
   const emitDraftState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => {
     onStateChange?.(makeEditorState(draftFormData, directionOverride, sourceOverride));
   };
@@ -60110,7 +59840,6 @@ function QuickInputEditor({
     setSelectedGoalPath(nextSelection.goalPath);
     setSelectedTemplateVariantId(null);
     if (nextSelection.themePath) setSelectedThemeId(pathToIdMap.get(nextSelection.themePath) ?? null);
-    setSelectedCycleId(null);
     setFormData(nextSelection.formData);
     setFieldSources(nextSelection.fieldSources);
   };
@@ -60129,12 +59858,9 @@ function QuickInputEditor({
       selectedGoalPath: currentGoalPath,
       onSelectGoal: handleSelectGoal,
       onCreateGoal: void 0,
-      templateVariants: goalTemplateVariants.map((template2) => ({ value: template2.variantId || "default", label: template2.name || template2.variantId || "默认模板", isDefault: !!template2.isDefault })),
+      templateVariants: goalTemplateVariants.map((template2) => ({ value: template2.variantId || "default", label: template2.name || template2.variantId || "默认模板" })),
       selectedTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId,
       onSelectTemplateVariant: setSelectedTemplateVariantId,
-      cycles: [],
-      selectedCycleId: currentPeriod?.id || null,
-      onSelectCycle: void 0,
       template,
       formData,
       fieldValueOptionsByKey: { themePath: themeOptions(availableThemes), "主题": themeOptions(availableThemes), ...currentPeriodOptions },
@@ -61196,7 +60922,7 @@ function resolvePresetForAiTarget(goalSettings, goal, blockId, target) {
     const matched = variants.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.name === variantId);
     if (matched) return matched;
   }
-  return variants.find((preset) => preset.isDefault) || variants[0] || null;
+  return variants[0] || null;
 }
 function readPresetThemePath(preset) {
   const values2 = asUnknownRecord(preset?.defaultValues);
@@ -64886,10 +64612,7 @@ function DataFilterPanel({
   dataStore,
   filters,
   items,
-  onChange,
-  legacyMode = false,
-  legacySummary,
-  onMigrateLegacyFilters
+  onChange
 }) {
   const [open, setOpen] = d(false);
   const [advancedOpen, setAdvancedOpen] = d(false);
@@ -64904,9 +64627,6 @@ function DataFilterPanel({
   };
   const handleClose = () => setOpen(false);
   const handleClear = () => onChange([]);
-  const handleMigrateLegacyFilters = () => {
-    if (onMigrateLegacyFilters) onMigrateLegacyFilters();
-  };
   const handleDeleteRule = (index) => {
     onChange(filters.filter((_2, currentIndex) => currentIndex !== index));
   };
@@ -64921,8 +64641,7 @@ function DataFilterPanel({
         sx: { textTransform: "none" },
         children: [
           "数据筛选",
-          activeCount > 0 ? ` (${activeCount})` : "",
-          legacyMode ? " · 旧版" : ""
+          activeCount > 0 ? ` (${activeCount})` : ""
         ]
       }
     ),
@@ -64965,67 +64684,52 @@ function DataFilterPanel({
             ] })
           ] }) }),
           /* @__PURE__ */ u2(Divider2, {}),
-          /* @__PURE__ */ u2(DialogContent2, { sx: { p: 2.5, overflow: "auto" }, children: [
-            legacyMode && /* @__PURE__ */ u2(
-              Alert2,
+          /* @__PURE__ */ u2(DialogContent2, { sx: { p: 2.5, overflow: "auto" }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+            /* @__PURE__ */ u2(
+              CommonFilterPanel,
               {
-                severity: "info",
-                sx: { mb: 2 },
-                action: onMigrateLegacyFilters ? /* @__PURE__ */ u2(Button2, { color: "inherit", size: "small", onClick: handleMigrateLegacyFilters, children: "转为新版规则" }) : void 0,
-                children: [
-                  "当前规则来自旧版 toolbar 主题/分类筛选",
-                  legacySummary ? `（${legacySummary}）` : "",
-                  "。 继续编辑或清空时会自动保存为新版全局筛选规则，并清空旧字段，避免新旧筛选双写。"
-                ]
+                title: "常用筛选",
+                description: "先用目标、核心Block、主题等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。",
+                dataStore,
+                filters,
+                items: sourceItems,
+                fieldOptions,
+                onChange
               }
             ),
-            /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
-              /* @__PURE__ */ u2(
-                CommonFilterPanel,
-                {
-                  title: "常用筛选",
-                  description: "先用目标、核心Block、主题等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。",
-                  dataStore,
-                  filters,
-                  items: sourceItems,
-                  fieldOptions,
-                  onChange
-                }
-              ),
-              /* @__PURE__ */ u2(
-                Accordion2,
-                {
-                  expanded: advancedOpen,
-                  onChange: (_2, expanded) => setAdvancedOpen(expanded),
-                  disableGutters: true,
-                  sx: {
-                    border: "1px solid var(--background-modifier-border)",
-                    borderRadius: "10px",
-                    "&:before": { display: "none" }
-                  },
-                  children: [
-                    /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
-                      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
-                      /* @__PURE__ */ u2(Chip2, { label: `${activeCount} 条`, size: "small", variant: "outlined" }),
-                      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "需要正则、区间、排除或复杂且/或关系时再展开" })
-                    ] }) }),
-                    /* @__PURE__ */ u2(AccordionDetails2, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
-                      RuleBuilder,
-                      {
-                        title: "筛选",
-                        mode: "filter",
-                        rows: filters,
-                        fieldOptions,
-                        onChange: (rows) => onChange(rows),
-                        dataStore,
-                        variant: "panel"
-                      }
-                    ) })
-                  ]
-                }
-              )
-            ] })
-          ] }),
+            /* @__PURE__ */ u2(
+              Accordion2,
+              {
+                expanded: advancedOpen,
+                onChange: (_2, expanded) => setAdvancedOpen(expanded),
+                disableGutters: true,
+                sx: {
+                  border: "1px solid var(--background-modifier-border)",
+                  borderRadius: "10px",
+                  "&:before": { display: "none" }
+                },
+                children: [
+                  /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
+                    /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
+                    /* @__PURE__ */ u2(Chip2, { label: `${activeCount} 条`, size: "small", variant: "outlined" }),
+                    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "需要正则、区间、排除或复杂且/或关系时再展开" })
+                  ] }) }),
+                  /* @__PURE__ */ u2(AccordionDetails2, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
+                    RuleBuilder,
+                    {
+                      title: "筛选",
+                      mode: "filter",
+                      rows: filters,
+                      fieldOptions,
+                      onChange: (rows) => onChange(rows),
+                      dataStore,
+                      variant: "panel"
+                    }
+                  ) })
+                ]
+              }
+            )
+          ] }) }),
           /* @__PURE__ */ u2(Divider2, {}),
           /* @__PURE__ */ u2(DialogActions2, { sx: { px: 2.5, py: 1.5, justifyContent: "space-between" }, children: [
             /* @__PURE__ */ u2(Button2, { size: "small", onClick: handleClear, disabled: activeCount === 0, children: "清空全部规则" }),
@@ -70706,7 +70410,7 @@ function inferTemplateDisplayName(template, themePath = "") {
 }
 function readPeriodGranularity(template, block2) {
   return normalizePeriodPolicyGranularity(
-    template?.periodPolicy?.granularity || template?.granularity || block2?.periodPolicy?.granularity || "week"
+    template?.periodPolicy?.granularity || block2?.periodPolicy?.granularity || "week"
   );
 }
 function buildDraftPeriodPolicy(block2, draft) {
@@ -71271,7 +70975,7 @@ function getGoalTemplateDisplayName(template) {
   const name = String(template.name || "").trim();
   if (name) return name;
   const variantId = String(template.variantId || "").trim();
-  if (variantId) return variantId.replace(/^legacy-/, "");
+  if (variantId) return variantId;
   return "未命名预设";
 }
 function readGoalTemplateThemePath(template, goal) {
@@ -71319,7 +71023,6 @@ function buildRetargetedGoalTemplate(input) {
   const name = getGoalTemplateDisplayName(sourceTemplate);
   const label = themePath ? leafPath$1(themePath) : name;
   const variantId = nextVariantId(targetGoal, targetBlock, templates, label || name || targetBlock.name);
-  const sameCellEnabled = templates.some((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id && template.enabled !== false);
   const goalPath = targetGoal.goalPath || targetGoal.title || targetGoal.id;
   const defaultValues = {
     themePath,
@@ -71341,8 +71044,7 @@ function buildRetargetedGoalTemplate(input) {
     variantId,
     name,
     description: reason === "move" ? `由「${sourceGoal.goalPath || sourceGoal.title} / ${sourceBlock.name}」移动到「${targetGoal.goalPath || targetGoal.title} / ${targetBlock.name}」` : `由「${sourceBlock.name}」预设复制到「${targetBlock.name}」`,
-    isDefault: !sameCellEnabled,
-    periodPolicy: isPeriodAwareCoreBlock(targetBlock.id) ? { enabled: true, granularity: normalizePeriodPolicyGranularity(sourceTemplate.periodPolicy?.granularity || sourceTemplate.granularity || targetBlock.periodPolicy?.granularity) } : void 0,
+    periodPolicy: isPeriodAwareCoreBlock(targetBlock.id) ? { enabled: true, granularity: normalizePeriodPolicyGranularity(sourceTemplate.periodPolicy?.granularity || targetBlock.periodPolicy?.granularity) } : void 0,
     sortOrder: templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id).length * 10,
     enabled: sourceTemplate.enabled !== false,
     fields,
@@ -71621,7 +71323,6 @@ function sortGoalsForMatrix(goals) {
 function buildGoalTemplateCell(goal, block2, templates) {
   const cellTemplates = templates.filter((template) => template.goalId === goal.id && template.coreBlockId === block2.id);
   const enabledTemplates = cellTemplates.filter((template) => template.enabled !== false);
-  const defaultCount = enabledTemplates.filter((template) => template.isDefault).length;
   let status = "inherit";
   let label = "添加";
   let description = "点击添加此目标的 Block 预设";
@@ -71629,10 +71330,6 @@ function buildGoalTemplateCell(goal, block2, templates) {
     status = "disabled";
     label = "隐藏";
     description = "该目标下隐藏此 Block";
-  } else if (defaultCount > 1) {
-    status = "warning";
-    label = "异常";
-    description = "存在多个默认预设";
   } else if (enabledTemplates.length > 1) {
     status = "multi";
     label = `选项 ${enabledTemplates.length}`;
@@ -71642,7 +71339,7 @@ function buildGoalTemplateCell(goal, block2, templates) {
     label = "有预设";
     description = enabledTemplates[0].name || enabledTemplates[0].variantId || "目标专属预设";
   }
-  return { goal, block: block2, templates: cellTemplates, enabledTemplates, defaultCount, status, label, description };
+  return { goal, block: block2, templates: cellTemplates, enabledTemplates, status, label, description };
 }
 function normalizeSearchText(value) {
   return String(value || "").toLowerCase().trim();
@@ -72307,7 +72004,7 @@ function GoalTemplateMatrix() {
 同时删除 ${descendants.length} 个子目标。` : "";
     const ok = window.confirm(`删除目标「${cleanDisplayText(path)}」？${suffix}
 
-会删除目标配置、该目标下的记录预设和旧目标关系；不会删除已经写入的 Markdown 记录。`);
+会删除目标配置、该目标下的记录预设和目标关系；不会删除已经写入的 Markdown 记录。`);
     if (!ok) return;
     const count = typeof useCases.goal.deleteGoalCascade === "function" ? await useCases.goal.deleteGoalCascade(goal.id) : (await Promise.all(targets.map((target) => useCases.goal.deleteGoal(target.id))), targets.length);
     ui.notice(descendants.length > 0 ? `已删除目标及子目标：${count} 个` : `已删除目标：${cleanDisplayText(path)}`);
@@ -72444,16 +72141,14 @@ function GoalManager() {
     setCleaning(true);
     try {
       const goalUseCase = useCases.goal;
-      if (typeof goalUseCase.cleanupGoalSettingsStorage !== "function") {
-        setMessage("当前版本还没有整理旧数据能力");
+      if (typeof goalUseCase.cleanupGoalSettings !== "function") {
+        setMessage("当前版本还没有整理预设数据能力");
         return;
       }
-      const result = await goalUseCase.cleanupGoalSettingsStorage();
+      const result = await goalUseCase.cleanupGoalSettings();
       const parts = [
         `预设 ${result.beforeTemplateCount} → ${result.afterTemplateCount}`,
-        result.removedDuplicateTemplates ? `去重 ${result.removedDuplicateTemplates}` : "",
-        result.removedDanglingCycles ? `清理周期 ${result.removedDanglingCycles}` : "",
-        result.removedDanglingRelations ? `清理关系 ${result.removedDanglingRelations}` : ""
+        result.removedDuplicateTemplates ? `去重 ${result.removedDuplicateTemplates}` : ""
       ].filter(Boolean);
       setMessage(result.changed ? `已整理：${parts.join("，")}` : "预设数据已经是干净状态");
     } finally {
@@ -72473,7 +72168,7 @@ function GoalManager() {
           /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "记录预设" }),
           /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "点击某个目标主题预设卡片后，字段编辑页会以悬浮窗打开。" })
         ] }),
-        /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: handleCleanup, disabled: cleaning, children: cleaning ? "整理中…" : "整理旧数据" })
+        /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: handleCleanup, disabled: cleaning, children: cleaning ? "整理中…" : "整理预设" })
       ] }),
       /* @__PURE__ */ u2(GoalTemplateMatrix, {})
     ] })
@@ -73189,11 +72884,10 @@ function buildPresetLookups(goalSettings, goals) {
     goalLabelById.set(goal.id, goal.title || splitGoalPath(normalized).leafGoal || normalized);
   }
   const byTemplateId = /* @__PURE__ */ new Map();
-  const byLegacyOverrideId = /* @__PURE__ */ new Map();
   const byGoalBlockVariant = /* @__PURE__ */ new Map();
   const byGoalBlockTheme = /* @__PURE__ */ new Map();
   const allPresets = [];
-  for (const [presetOriginalIndex, raw] of (goalSettings?.goalBlockBindings || []).entries()) {
+  for (const [presetOriginalIndex, raw] of (goalSettings?.goalTemplates || []).entries()) {
     const template = raw || {};
     const id = firstText(template.id);
     const goalId = firstText(template.goalId);
@@ -73203,20 +72897,18 @@ function buildPresetLookups(goalSettings, goals) {
     const goalPath = goalPathById.get(goalId) || firstText(defaults.goalPath) || firstText(defaults["目标"]) || goalId;
     const goalLabel = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
     const rawThemePath = firstText(defaults.themePath);
-    const themePath = rawThemePath && !rawThemePath.includes("{{") ? rawThemePath : firstText(defaults["主题"]) || firstText(defaults.legacyThemePath);
-    const label = firstText(template.name) || firstText(template.templateName) || themeLeaf(themePath) || variantId;
+    const themePath = rawThemePath && !rawThemePath.includes("{{") ? rawThemePath : firstText(defaults["主题"]);
+    const label = firstText(template.name) || themeLeaf(themePath) || variantId;
     const key = id || `${goalId}:${coreBlockId}:${variantId}`;
     const ratingOptions = extractRatingOptions(template);
     const presetSortOrder = Number.isFinite(Number(template.sortOrder)) ? Number(template.sortOrder) : presetOriginalIndex;
     const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
     allPresets.push(meta);
     if (id) byTemplateId.set(id, meta);
-    const legacyOverrideId = firstText(defaults.legacyOverrideId);
-    if (legacyOverrideId) byLegacyOverrideId.set(legacyOverrideId, meta);
     if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\0${coreBlockId}\0${variantId}`, meta);
     if (goalId && coreBlockId && themePath) byGoalBlockTheme.set(`${goalId}\0${coreBlockId}\0${themePath}`, meta);
   }
-  return { byTemplateId, byLegacyOverrideId, byGoalBlockVariant, byGoalBlockTheme, goalPathById, goalLabelById, allPresets };
+  return { byTemplateId, byGoalBlockVariant, byGoalBlockTheme, goalPathById, goalLabelById, allPresets };
 }
 function dateKeyOf(item) {
   return String(item?.date || "").trim();
@@ -73298,7 +72990,7 @@ function buildHeatmapViewModel(params) {
   function resolvePresetMeta(item) {
     const templateId = itemTemplateId(item);
     if (templateId) {
-      const direct = lookups.byTemplateId.get(templateId) || lookups.byLegacyOverrideId.get(templateId);
+      const direct = lookups.byTemplateId.get(templateId);
       if (direct) return direct;
     }
     const goalId = firstText(item.goalId) || readExtraText(item, "目标ID");
@@ -74127,22 +73819,16 @@ function useLayoutModuleActions({
   }, [useCases.viewInstance]);
   const handleGlobalFiltersChange = q$1((filters) => {
     void useCases.layout.updateLayout(layout.id, {
-      globalFilters: filters,
-      selectedThemes: [],
-      selectedCategories: []
+      globalFilters: filters
     });
   }, [layout.id, useCases.layout]);
-  const handleMigrateLegacyLayoutFilters = q$1(() => {
-    void useCases.layout.updateLayout(layout.id, migrateLegacyLayoutFilters(layout));
-  }, [layout, useCases.layout]);
   return {
     handleExport,
     handleQuickInputAction,
     handleMarkItemDone,
     handleSettingsClick,
     handleDeleteViewInstance,
-    handleGlobalFiltersChange,
-    handleMigrateLegacyLayoutFilters
+    handleGlobalFiltersChange
   };
 }
 function hasSizeChanged(a2, b2) {
@@ -74618,14 +74304,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   const [isFreeformEditing, setIsFreeformEditing] = d(false);
   const [viewToAdd, setViewToAdd] = d("");
   const compactFreeformFallback = useCompactFreeformFallback();
-  const legacyFilterState = T$1(() => {
-    return getLegacyLayoutFilterState(layout);
-  }, [layout.globalFilters, layout.selectedThemes, layout.selectedCategories]);
-  const globalFilters = legacyFilterState.effectiveFilters;
-  const isUsingLegacyLayoutFilters = legacyFilterState.isLegacyMode && legacyFilterState.hasLegacyValues;
-  const legacyLayoutFilterSummary = T$1(() => {
-    return describeLegacyLayoutFilters(layout);
-  }, [layout.selectedThemes, layout.selectedCategories]);
+  const globalFilters = T$1(() => layout.globalFilters || [], [layout.globalFilters]);
   const dateRangeForView = T$1(() => {
     const range = calculateTimelineRange(layoutDate, normalizeTimelineView(layoutView));
     return [range.start.toDate(), range.end.toDate()];
@@ -74652,8 +74331,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     handleMarkItemDone,
     handleSettingsClick,
     handleDeleteViewInstance,
-    handleGlobalFiltersChange,
-    handleMigrateLegacyLayoutFilters
+    handleGlobalFiltersChange
   } = useLayoutModuleActions({
     app,
     actionService,
@@ -74774,10 +74452,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
             dataStore,
             items: allItems,
             filters: globalFilters,
-            onChange: handleGlobalFiltersChange,
-            legacyMode: isUsingLegacyLayoutFilters,
-            legacySummary: legacyLayoutFilterSummary,
-            onMigrateLegacyFilters: handleMigrateLegacyLayoutFilters
+            onChange: handleGlobalFiltersChange
           }
         ),
         viewInstances: layout.viewInstanceIds.map((id) => allViewsById.get(id)).filter(Boolean),
@@ -77436,18 +77111,22 @@ class ThinkPlugin extends obsidian.Plugin {
   }
   async loadSettings() {
     const stored = await this.loadData();
-    const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
-    merged.viewInstances = merged.viewInstances || [];
-    merged.layouts = merged.layouts || [];
-    merged.inputSettings = merged.inputSettings || { blocks: [], themes: [] };
-    merged.inputSettings.blocks = (merged.inputSettings.blocks || []).map((block2) => ({
-      ...block2,
-      categoryKey: block2?.categoryKey || block2?.name || ""
-    }));
-    merged.goalSettings = { ...DEFAULT_GOAL_SETTINGS, ...merged.goalSettings || {} };
-    merged.coreBlockSettings = normalizeCoreBlockSettings(merged.coreBlockSettings, merged.inputSettings.blocks);
-    merged.groups = merged.groups || [];
-    return merged;
+    const raw = stored && typeof stored === "object" ? stored : {};
+    return {
+      ...DEFAULT_SETTINGS,
+      ...raw,
+      schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
+      groups: Array.isArray(raw.groups) ? raw.groups : [],
+      viewInstances: Array.isArray(raw.viewInstances) ? raw.viewInstances : [],
+      layouts: Array.isArray(raw.layouts) ? raw.layouts : [],
+      inputSettings: {
+        ...DEFAULT_SETTINGS.inputSettings,
+        ...raw.inputSettings ?? {},
+        blocks: Array.isArray(raw.inputSettings?.blocks) ? raw.inputSettings.blocks : [],
+        themes: Array.isArray(raw.inputSettings?.themes) ? raw.inputSettings.themes : []
+      },
+      activeThemePaths: Array.isArray(raw.activeThemePaths) ? raw.activeThemePaths : []
+    };
   }
   sanitizeSettingsForPersistence(settings) {
     const cloned = JSON.parse(JSON.stringify(settings ?? {}));

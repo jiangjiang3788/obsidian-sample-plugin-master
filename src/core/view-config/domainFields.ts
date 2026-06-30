@@ -22,6 +22,10 @@ export const VIEW_LEGACY_FIELD_ALIASES: Record<string, string> = {
   categoryKey: 'coreBlock',
   baseCategory: 'coreBlock',
   leafCategory: 'coreBlock',
+  分类: 'coreBlock',
+  类别: 'coreBlock',
+  分类路径: 'coreBlock',
+  根类别: 'coreBlock',
   block: 'coreBlock',
   blockId: 'coreBlock',
   coreBlockId: 'coreBlock',
@@ -42,6 +46,7 @@ export const VIEW_LEGACY_FIELD_ALIASES: Record<string, string> = {
   目标ID: 'goalId',
   主题: 'themePath',
   核心Block: 'coreBlock',
+  日期: 'date',
 };
 
 const TEMPLATE_SOURCE_FIELDS = new Set(['templateSource', 'templateSourceType']);

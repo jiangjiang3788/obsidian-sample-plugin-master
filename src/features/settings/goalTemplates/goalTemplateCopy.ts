@@ -81,7 +81,7 @@ export function getGoalTemplateDisplayName(template: Pick<GoalTemplate, 'name' |
   const name = String(template.name || '').trim();
   if (name) return name;
   const variantId = String(template.variantId || '').trim();
-  if (variantId) return variantId.replace(/^legacy-/, '');
+  if (variantId) return variantId;
   return '未命名预设';
 }
 
@@ -157,7 +157,6 @@ export function buildRetargetedGoalTemplate(input: {
   const name = getGoalTemplateDisplayName(sourceTemplate);
   const label = themePath ? leafPath(themePath) : name;
   const variantId = nextVariantId(targetGoal, targetBlock, templates, label || name || targetBlock.name);
-  const sameCellEnabled = templates.some((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id && template.enabled !== false);
   const goalPath = targetGoal.goalPath || targetGoal.title || targetGoal.id;
   const defaultValues: Record<string, unknown> = {
     themePath,
@@ -181,8 +180,7 @@ export function buildRetargetedGoalTemplate(input: {
     description: reason === 'move'
       ? `由「${sourceGoal.goalPath || sourceGoal.title} / ${sourceBlock.name}」移动到「${targetGoal.goalPath || targetGoal.title} / ${targetBlock.name}」`
       : `由「${sourceBlock.name}」预设复制到「${targetBlock.name}」`,
-    isDefault: !sameCellEnabled,
-    periodPolicy: isPeriodAwareCoreBlock(targetBlock.id) ? { enabled: true, granularity: normalizePeriodPolicyGranularity((sourceTemplate as any).periodPolicy?.granularity || sourceTemplate.granularity || (targetBlock as any).periodPolicy?.granularity) } : undefined,
+    periodPolicy: isPeriodAwareCoreBlock(targetBlock.id) ? { enabled: true, granularity: normalizePeriodPolicyGranularity(sourceTemplate.periodPolicy?.granularity || (targetBlock as any).periodPolicy?.granularity) } : undefined,
     sortOrder: templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id).length * 10,
     enabled: sourceTemplate.enabled !== false,
     fields,

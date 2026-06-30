@@ -35,16 +35,6 @@ describe('viewQueryPipeline', () => {
     expect(result.map(it => it.id)).toEqual(['a']);
   });
 
-  test('有新版 layoutFilters 时，不再重复应用 legacy 主题/分类', () => {
-    const result = applyViewBaseFilters({
-      items,
-      layoutFilters: [{ field: 'themePath', op: '=', value: '工作/项目A' }],
-      legacySelectedThemes: ['生活/项目B'],
-    });
-
-    expect(result.map(it => it.id)).toEqual(['a', 'c']);
-  });
-
   test('完整 pipeline 会在 base filters 后应用日期范围', () => {
     const result = applyViewQueryPipeline({
       items,

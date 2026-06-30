@@ -5,7 +5,10 @@ import path from 'node:path';
 const rootDir = process.cwd();
 const args = new Set(process.argv.slice(2));
 const strict = args.has('--strict');
-const dataPath = path.resolve(rootDir, args.has('--example') ? 'data.example.json' : 'data.json');
+const requestedExample = args.has('--example');
+const defaultDataPath = path.resolve(rootDir, 'data.json');
+const exampleDataPath = path.resolve(rootDir, 'data.example.json');
+const dataPath = requestedExample || !fs.existsSync(defaultDataPath) ? exampleDataPath : defaultDataPath;
 
 const LEGACY_FIELD_TARGETS = new Map([
   ['theme', 'themePath'],

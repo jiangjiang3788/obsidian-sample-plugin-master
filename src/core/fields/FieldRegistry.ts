@@ -1,7 +1,5 @@
 // src/core/fields/FieldRegistry.ts
 import type { Item } from '@/core/types/schema';
-import { LEGACY_EXTRA_ALIAS_KEYS } from './LegacyFieldPolicy';
-import { getLegacyAliasTargetField } from './LegacyFieldPolicy';
 import type { FieldDefinition } from './FieldDefinition';
 import type { FieldCategory, FieldValueType } from './FieldTypes';
 import { isImageLikeValue } from './imageSemantics';
@@ -96,11 +94,19 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
 
 };
 
-const LEGACY_EXTRA_ALIAS_SET = new Set<string>(LEGACY_EXTRA_ALIAS_KEYS as unknown as string[]);
+export const HIDDEN_EXTRA_ALIAS_KEYS = [
+  '正文',
+  '内容',
+  '任务内容',
+  '记录内容',
+  'editableText',
+] as const;
+
+const HIDDEN_EXTRA_ALIAS_SET = new Set<string>(HIDDEN_EXTRA_ALIAS_KEYS as unknown as string[]);
 
 export function isVisibleExtraField(_item: Item, key: string): boolean {
-  // 字段来源可观测能力本轮取消；历史 parser 自动写入的正文 alias 永久隐藏，避免污染字段选择器。
-  return !LEGACY_EXTRA_ALIAS_SET.has(key);
+  // Parser 已不再写这些正文 alias；保留隐藏规则只是避免当前缓存/扫描结果污染字段选择器。
+  return !HIDDEN_EXTRA_ALIAS_SET.has(key);
 }
 
 function inferExtraFieldType(value: unknown): FieldValueType {
@@ -206,8 +212,6 @@ export function getCanonicalFieldKey(key: string): string {
   const raw = String(key || '').trim();
   if (!raw) return raw;
   if (raw.startsWith('extra.') || raw.startsWith('file.')) return raw;
-  const legacyTarget = getLegacyAliasTargetField(raw);
-  if (legacyTarget) return legacyTarget;
   return FIELD_ALIAS_MAP[raw] || raw;
 }
 

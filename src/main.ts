@@ -9,7 +9,7 @@ import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
 import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
-import { ThinkSettings, DEFAULT_SETTINGS, DEFAULT_GOAL_SETTINGS, normalizeCoreBlockSettings } from '@core/public';
+import { DEFAULT_SETTINGS, THINK_SETTINGS_SCHEMA_VERSION, type ThinkSettings } from '@core/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer, setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/public';
 import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN, MODAL_PORT_TOKEN, EVENTS_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
@@ -184,20 +184,22 @@ export default class ThinkPlugin extends Plugin {
 
     private async loadSettings(): Promise<ThinkSettings> {
         const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
-        const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
-        merged.viewInstances = merged.viewInstances || [];
-        merged.layouts = merged.layouts || [];
-        merged.inputSettings = merged.inputSettings || { blocks: [], themes: [] };
-        merged.inputSettings.blocks = (merged.inputSettings.blocks || []).map((block: any) => ({
-            ...block,
-            categoryKey: block?.categoryKey || block?.name || '',
-        }));
-        merged.goalSettings = { ...DEFAULT_GOAL_SETTINGS, ...(merged.goalSettings || {}) };
-        merged.coreBlockSettings = normalizeCoreBlockSettings(merged.coreBlockSettings, merged.inputSettings.blocks);
-        // MVP5: 插件运行时不再执行任何数据迁移或自动写回。
-        // data.json / Markdown 的一次性整理由用户交给助手离线改文件，插件只读取当前数据。
-        merged.groups = merged.groups || [];
-        return merged as ThinkSettings;
+        const raw = stored && typeof stored === 'object' ? stored : {};
+        return {
+            ...DEFAULT_SETTINGS,
+            ...raw,
+            schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
+            groups: Array.isArray(raw.groups) ? raw.groups : [],
+            viewInstances: Array.isArray(raw.viewInstances) ? raw.viewInstances : [],
+            layouts: Array.isArray(raw.layouts) ? raw.layouts : [],
+            inputSettings: {
+                ...DEFAULT_SETTINGS.inputSettings,
+                ...(raw.inputSettings ?? {}),
+                blocks: Array.isArray(raw.inputSettings?.blocks) ? raw.inputSettings.blocks : [],
+                themes: Array.isArray(raw.inputSettings?.themes) ? raw.inputSettings.themes : [],
+            },
+            activeThemePaths: Array.isArray(raw.activeThemePaths) ? raw.activeThemePaths : [],
+        };
     }
 
 

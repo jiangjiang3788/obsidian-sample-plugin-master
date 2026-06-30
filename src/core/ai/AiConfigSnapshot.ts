@@ -63,7 +63,6 @@ export interface AiGoalPresetConfig {
     /** 与 id 同义，给 prompt 显示为目标预设 ID。 */
     goalTemplateId: string;
     name: string;
-    isDefault: boolean;
     themePath?: string;
     periodPolicy?: { enabled: boolean; granularity: 'week' | 'month' | 'quarter' | 'year' };
     fields: AiBlockConfigField[];
@@ -180,7 +179,6 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
                 variantId: preset.variantId || 'default',
                 goalTemplateId: preset.id,
                 name: preset.name || preset.variantId || '默认预设',
-                isDefault: !!preset.isDefault,
                 themePath: defaultThemePath,
                 periodPolicy: preset.periodPolicy,
                 fields,

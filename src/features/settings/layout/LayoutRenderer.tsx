@@ -6,8 +6,6 @@ import type { Item, ViewInstance, ViewPlacement } from '@core/public';
 import {
   calculateTimelineRange,
   dayjs,
-  describeLegacyLayoutFilters,
-  getLegacyLayoutFilterState,
   normalizeTimelineView,
 } from '@core/public';
 import { ModulePanel } from './ModulePanel';
@@ -77,14 +75,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
   const [viewToAdd, setViewToAdd] = useState('');
   const compactFreeformFallback = useCompactFreeformFallback();
 
-  const legacyFilterState = useMemo(() => {
-    return getLegacyLayoutFilterState(layout);
-  }, [layout.globalFilters, layout.selectedThemes, layout.selectedCategories]);
-  const globalFilters = legacyFilterState.effectiveFilters;
-  const isUsingLegacyLayoutFilters = legacyFilterState.isLegacyMode && legacyFilterState.hasLegacyValues;
-  const legacyLayoutFilterSummary = useMemo(() => {
-    return describeLegacyLayoutFilters(layout);
-  }, [layout.selectedThemes, layout.selectedCategories]);
+  const globalFilters = useMemo(() => layout.globalFilters || [], [layout.globalFilters]);
 
   const dateRangeForView = useMemo(() => {
     const range = calculateTimelineRange(layoutDate, normalizeTimelineView(layoutView));
@@ -118,7 +109,6 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     handleSettingsClick,
     handleDeleteViewInstance,
     handleGlobalFiltersChange,
-    handleMigrateLegacyLayoutFilters,
   } = useLayoutModuleActions({
     app,
     actionService,
@@ -260,9 +250,6 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
             items={allItems}
             filters={globalFilters}
             onChange={handleGlobalFiltersChange}
-            legacyMode={isUsingLegacyLayoutFilters}
-            legacySummary={legacyLayoutFilterSummary}
-            onMigrateLegacyFilters={handleMigrateLegacyLayoutFilters}
           />
         )}
         viewInstances={layout.viewInstanceIds.map((id: string) => allViewsById.get(id)).filter(Boolean)}

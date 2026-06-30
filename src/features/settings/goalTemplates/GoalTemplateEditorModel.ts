@@ -176,7 +176,6 @@ export function inferTemplateDisplayName(template: GoalTemplate | null | undefin
 export function readPeriodGranularity(template: GoalTemplate | null | undefined, block: CoreBlockDefinition | null | undefined): GoalTemplateDraftState['granularity'] {
   return normalizePeriodPolicyGranularity(
     template?.periodPolicy?.granularity
-    || template?.granularity
     || block?.periodPolicy?.granularity
     || 'week',
   );

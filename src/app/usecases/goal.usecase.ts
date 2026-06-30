@@ -2,12 +2,10 @@
  * GoalUseCase - 目标中心相关用例
  *
  * 目标：把 GoalSettings 的写操作收敛到 UseCase 层，避免 UI 直接改 settings。
- * MVP5 覆盖：目标 CRUD、周期 CRUD、目标 × Block 记录预设；不再在插件内提供迁移/写回能力。
+ * 单人版：目标只保留实体和记录预设；周期由 periodPolicy + 记录日期运行时推导。
  */
 
 import type {
-  CycleDefinition,
-  CycleGranularity,
   GoalDefinition,
   GoalMetricContract,
   GoalSettings,
@@ -36,17 +34,6 @@ export interface AddGoalInput {
   description?: string;
   themePath?: string | null;
   status?: GoalDefinition['status'];
-  /** @deprecated 目标不再绑定周期；保留入参只为兼容旧调用，创建时会忽略。 */
-  granularity?: GoalDefinition['granularity'];
-}
-
-export interface AddCycleInput {
-  goalId: string;
-  title: string;
-  granularity?: CycleGranularity;
-  startDate: string;
-  endDate: string;
-  status?: CycleDefinition['status'];
 }
 
 export interface UpsertGoalTemplateInput {
@@ -55,8 +42,6 @@ export interface UpsertGoalTemplateInput {
   templateVariantId?: string;
   templateName?: string;
   description?: string;
-  /** @deprecated 不再使用默认预设语义；保留入参只为兼容旧调用。 */
-  isDefault?: boolean;
   sortOrder?: number;
   enabled?: boolean;
   targetFile?: string;
@@ -68,7 +53,6 @@ export interface UpsertGoalTemplateInput {
   periodPolicy?: PeriodPolicy;
 }
 
-
 function nowIso(): string {
   return new Date().toISOString();
 }
@@ -76,9 +60,7 @@ function nowIso(): string {
 function ensureGoalSettings(settings?: GoalSettings): GoalSettings {
   return {
     goals: [...(settings?.goals || [])],
-    cycles: [...(settings?.cycles || [])],
-    goalBlockBindings: [...(settings?.goalBlockBindings || [])],
-    goalRecordRelations: [...(settings?.goalRecordRelations || [])],
+    goalTemplates: [...(settings?.goalTemplates || [])],
   };
 }
 
@@ -100,10 +82,6 @@ function normalizeGoalInput(input: AddGoalInput): GoalDefinition {
   };
 }
 
-function safeCycleId(input: AddCycleInput): string {
-  return `cycle.${input.goalId}.${input.startDate}.${input.endDate}`.replace(/[^a-z0-9_.-]/gi, '-');
-}
-
 function normalizeStoredGoalPath(goal: Pick<GoalDefinition, 'goalPath' | 'title'>): string {
   return splitGoalPath(goal.goalPath || goal.title).goalPath || String(goal.goalPath || goal.title || '').trim();
 }
@@ -120,8 +98,6 @@ function collectGoalCascadeIds(goals: GoalDefinition[], id: string): string[] {
     })
     .map((goal) => goal.id);
 }
-
-
 
 export class GoalUseCase {
   constructor(private store: AppStoreApi) {}
@@ -148,7 +124,6 @@ export class GoalUseCase {
       const state = this.store.getState();
       if (!state.isInitialized) return;
       const safePatch = { ...patch } as Partial<GoalDefinition> & { granularity?: unknown };
-      // Goal 本身不再拥有周期粒度；周期只属于 plan/review Template Variant 的 periodPolicy。
       delete safePatch.granularity;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
@@ -194,11 +169,9 @@ export class GoalUseCase {
     await state.updateSettings((draft) => {
       draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
       draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => !targetIds.has(goal.id));
-      draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => !targetIds.has(cycle.goalId));
       for (const targetId of targetIds) {
         draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, targetId);
       }
-      draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => !targetIds.has(relation.goalId));
     });
   }
 
@@ -225,12 +198,10 @@ export class GoalUseCase {
     }
   }
 
-  async cleanupGoalSettingsStorage(): Promise<{
+  async cleanupGoalSettings(): Promise<{
     beforeTemplateCount: number;
     afterTemplateCount: number;
     removedDuplicateTemplates: number;
-    removedDanglingCycles: number;
-    removedDanglingRelations: number;
     changed: boolean;
   }> {
     try {
@@ -239,8 +210,6 @@ export class GoalUseCase {
         beforeTemplateCount: 0,
         afterTemplateCount: 0,
         removedDuplicateTemplates: 0,
-        removedDanglingCycles: 0,
-        removedDanglingRelations: 0,
         changed: false,
       };
       if (!state.isInitialized) return fallback;
@@ -248,101 +217,18 @@ export class GoalUseCase {
       let summary = fallback;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const beforeCycles = draft.goalSettings.cycles.length;
-        const beforeRelations = draft.goalSettings.goalRecordRelations.length;
-        const liveGoalIds = new Set(draft.goalSettings.goals.map((goal) => goal.id));
-
         const cleaned = cleanupGoalTemplateStorage(draft.goalSettings);
         draft.goalSettings = cleaned.goalSettings;
-        draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => liveGoalIds.has(cycle.goalId));
-        draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.filter((relation) => liveGoalIds.has(relation.goalId));
-
-        const removedDanglingCycles = beforeCycles - draft.goalSettings.cycles.length;
-        const removedDanglingRelations = beforeRelations - draft.goalSettings.goalRecordRelations.length;
         summary = {
           beforeTemplateCount: cleaned.summary.beforeCount,
           afterTemplateCount: cleaned.summary.afterCount,
           removedDuplicateTemplates: cleaned.summary.removedDuplicateCount,
-          removedDanglingCycles,
-          removedDanglingRelations,
-          changed: cleaned.summary.changed || removedDanglingCycles > 0 || removedDanglingRelations > 0,
+          changed: cleaned.summary.changed,
         };
       });
       return summary;
     } catch (error) {
-      devError('[GoalUseCase] cleanupGoalSettingsStorage failed:', error);
-      throw error;
-    }
-  }
-
-  async addCycle(input: AddCycleInput): Promise<CycleDefinition | null> {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized || !input.goalId || !input.title.trim()) return null;
-      const timestamp = nowIso();
-      const cycle: CycleDefinition = {
-        id: safeCycleId(input),
-        goalId: input.goalId,
-        title: input.title.trim(),
-        granularity: input.granularity || 'custom',
-        startDate: input.startDate,
-        endDate: input.endDate,
-        status: input.status || 'planned',
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      };
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const index = draft.goalSettings.cycles.findIndex((item) => item.id === cycle.id);
-        if (index >= 0) draft.goalSettings.cycles[index] = { ...draft.goalSettings.cycles[index], ...cycle, updatedAt: timestamp };
-        else draft.goalSettings.cycles.push(cycle);
-      });
-      return cycle;
-    } catch (error) {
-      devError('[GoalUseCase] addCycle failed:', error);
-      throw error;
-    }
-  }
-
-  async updateCycle(id: string, patch: Partial<CycleDefinition>): Promise<void> {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const target = draft.goalSettings.cycles.find((cycle) => cycle.id === id);
-        if (!target) return;
-        Object.assign(target, patch, { updatedAt: nowIso() });
-      });
-    } catch (error) {
-      devError('[GoalUseCase] updateCycle failed:', error);
-      throw error;
-    }
-  }
-
-  async closeCycle(id: string): Promise<void> {
-    await this.updateCycle(id, { status: 'closed' });
-  }
-
-  async reopenCycle(id: string): Promise<void> {
-    await this.updateCycle(id, { status: 'active' });
-  }
-
-  async markCycleReviewing(id: string): Promise<void> {
-    await this.updateCycle(id, { status: 'reviewing' });
-  }
-
-  async deleteCycle(id: string): Promise<void> {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.updateSettings((draft) => {
-        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        draft.goalSettings.cycles = draft.goalSettings.cycles.filter((cycle) => cycle.id !== id);
-        draft.goalSettings.goalRecordRelations = draft.goalSettings.goalRecordRelations.map((relation) => relation.cycleId === id ? { ...relation, cycleId: null } : relation);
-      });
-    } catch (error) {
-      devError('[GoalUseCase] deleteCycle failed:', error);
+      devError('[GoalUseCase] cleanupGoalSettings failed:', error);
       throw error;
     }
   }
@@ -378,7 +264,6 @@ export class GoalUseCase {
       variantId: input.templateVariantId || 'default',
       name: input.templateName || (input.templateVariantId === 'default' || !input.templateVariantId ? '记录预设' : input.templateVariantId),
       description: input.description,
-      isDefault: undefined,
       sortOrder: input.sortOrder,
       enabled: input.enabled !== false,
       targetFile: input.targetFile?.trim() || undefined,
@@ -406,25 +291,6 @@ export class GoalUseCase {
       throw error;
     }
   }
-
-
-  /** @deprecated Use upsertGoalTemplate. Kept for old UI/plugin data compatibility. */
-  async upsertGoalBlockBinding(binding: GoalTemplate): Promise<void> {
-    return this.upsertGoalTemplate(binding);
-  }
-
-  /** @deprecated Use upsertGoalTemplateDraft. Kept for old UI/plugin data compatibility. */
-  async upsertGoalBlockBindingDraft(input: UpsertGoalTemplateInput): Promise<void> {
-    return this.upsertGoalTemplateDraft(input);
-  }
-
-  /** @deprecated Use deleteGoalTemplate. Kept for old UI/plugin data compatibility. */
-  async deleteGoalBlockBinding(goalId: string, coreBlockId: string, templateVariantId = 'default'): Promise<void> {
-    return this.deleteGoalTemplate(goalId, coreBlockId, templateVariantId);
-  }
-
-
-
 }
 
 export function createGoalUseCase(store: AppStoreApi): GoalUseCase {

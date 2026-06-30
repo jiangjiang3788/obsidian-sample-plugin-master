@@ -19,15 +19,12 @@ describe('AI config snapshot domain model', () => {
       createdAt: '2026-06-23T00:00:00.000Z',
       updatedAt: '2026-06-23T00:00:00.000Z',
     }],
-    cycles: [],
-    goalRecordRelations: [],
-    goalBlockBindings: [{
+    goalTemplates: [{
       id: 'goal-template.goal.self.core.habit.sleep',
       goalId: 'goal.self',
       coreBlockId: 'core.habit',
       variantId: 'sleep',
       name: '睡眠打卡',
-      isDefault: true,
       enabled: true,
       defaultValues: { themePath: '健康/睡眠', goalId: 'goal.self' },
       createdAt: '2026-06-23T00:00:00.000Z',

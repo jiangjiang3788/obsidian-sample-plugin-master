@@ -16,7 +16,7 @@ const blocks = [{ id: 'core.task', name: '任务', categoryKey: 'task', template
 const themes = [{ id: 'theme-reading', path: '学习/英语/阅读' }] as any[];
 const goalSettings = {
   goals: [{ id: 'goal-english', title: '英语', goalPath: '学习/英语' }],
-  goalBlockBindings: [
+  goalTemplates: [
     {
       id: 'goal-template.goal-english.core.task.reading',
       goalId: 'goal-english',

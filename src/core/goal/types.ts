@@ -9,14 +9,8 @@
  */
 
 export type GoalId = string;
-export type CycleId = string;
-export type PlanId = string;
-export type TaskId = string;
-export type RecordId = string;
-export type ReviewId = string;
 
 export type GoalStatus = 'active' | 'paused' | 'completed' | 'archived';
-export type CycleStatus = 'planned' | 'active' | 'reviewing' | 'closed';
 export type CycleGranularity = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
 export type PeriodGranularity = 'week' | 'month' | 'quarter' | 'year';
 
@@ -51,86 +45,13 @@ export interface GoalDefinition {
   parentGoalId?: GoalId | null;
   /** 与现有主题系统的轻绑定，不要求一开始做迁移。 */
   themePath?: string | null;
-  /** @deprecated 目标不再绑定周期。周期只属于计划 / 总结类 Template Variant。 */
-  granularity?: Exclude<CycleGranularity, 'custom'>;
   metrics?: GoalMetricContract[];
   createdAt: string;
   updatedAt: string;
 }
 
-/**
- * @deprecated 新主链不再手动维护周期表；周期由计划 / 总结记录预设的 periodPolicy + 记录日期运行时推导。
- * 该类型只用于读取旧 data.json 和历史 UI 兼容。
- */
-export interface CycleDefinition {
-  id: CycleId;
-  goalId: GoalId;
-  title: string;
-  granularity: CycleGranularity;
-  startDate: string;
-  endDate: string;
-  status: CycleStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type GoalRecordRelationType = 'evidence' | 'progress' | 'review' | 'feedback' | 'blocker' | 'milestone' | 'task' | 'plan' | 'habit' | 'thought';
-
-/**
- * @deprecated 新主链不再持久化目标-记录关系；视图运行时从记录字段推导。
- * 该类型只用于读取旧 data.json 和历史迁移结果。
- */
-export interface GoalRecordRelation {
-  id: string;
-  goalId: GoalId;
-  cycleId?: CycleId | null;
-  /** 现有 Item/Block 数据中的记录 ID。 */
-  recordId: RecordId;
-  /** 兼容当前 Item 主链，后续 recordId 稳定后可合并。 */
-  itemId?: string | null;
-  relationType: GoalRecordRelationType;
-  /** 该记录对目标进度的权重。默认 1。 */
-  weight?: number;
-  createdAt: string;
-}
-
-export interface PlanTaskRelation {
-  id: string;
-  planId: PlanId;
-  taskId: TaskId;
-  goalId?: GoalId | null;
-  cycleId?: CycleId | null;
-  createdAt: string;
-}
-
-export interface GoalReviewSnapshot {
-  id: ReviewId;
-  goalId: GoalId;
-  cycleId?: CycleId | null;
-  generatedAt: string;
-  score?: number;
-  summary?: string;
-  risks?: string[];
-  nextActions?: string[];
-}
-
-/**
- * 从现有 Item / Block / Theme 世界映射到目标闭环时使用的轻量 hint。
- * 这不是新存储格式，只是迁移和统计阶段的桥接合同。
- */
-export interface GoalRelationHint {
-  itemId: string;
-  categoryKey?: string | null;
-  themePath?: string | null;
-  date?: string | null;
-  content?: string | null;
-  sourceBlockId?: string | null;
-}
-
-/**
- * @deprecated 存储字段保留为 goalBlockBindings；新代码请使用 GoalTemplate 命名。
- */
-export interface GoalBlockBinding {
+/** Current persisted GoalTemplate row stored in GoalSettings.goalTemplates. */
+export interface GoalTemplateStorageRow {
   id: string;
   goalId: GoalId;
   coreBlockId: string;
@@ -139,15 +60,11 @@ export interface GoalBlockBinding {
   /** 面向 UI 显示的模板名称。 */
   name?: string;
   description?: string;
-  /** 多个变体中是否作为默认模板。 */
-  isDefault?: boolean;
   /** 同一个 Goal + Block 下的模板变体排序。 */
   sortOrder?: number;
   enabled: boolean;
   /** 只有计划 / 总结类记录预设才启用周期。 */
   periodPolicy?: PeriodPolicy;
-  /** @deprecated 旧周期字段。读取时会迁移为 periodPolicy；非计划/总结不再使用。 */
-  granularity?: Exclude<CycleGranularity, 'custom'>;
   /** 目标专属字段覆盖。为空时继承核心 block / 主题模板。 */
   fields?: import('@/core/types/schema').TemplateField[];
   outputTemplate?: string;
@@ -161,17 +78,11 @@ export interface GoalBlockBinding {
 
 export interface GoalSettings {
   goals: GoalDefinition[];
-  /** @deprecated legacy only; new periods are derived at runtime. */
-  cycles: CycleDefinition[];
-  /** legacy storage name for GoalTemplate[]. */
-  goalBlockBindings: GoalBlockBinding[];
-  /** @deprecated legacy only; relations are derived at runtime. */
-  goalRecordRelations: GoalRecordRelation[];
+  /** Current GoalTemplate storage rows. */
+  goalTemplates: GoalTemplateStorageRow[];
 }
 
 export const DEFAULT_GOAL_SETTINGS: GoalSettings = {
   goals: [],
-  cycles: [],
-  goalBlockBindings: [],
-  goalRecordRelations: [],
+  goalTemplates: [],
 };

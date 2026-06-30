@@ -13,6 +13,7 @@ import {
   normalizeImageValue,
   isImageLikeValue,
   isSystemRecordContextField,
+  templateFieldValueToArray,
 } from '@core/public';
 
 import { Box, Button, Stack, Typography } from '@shared/public';
@@ -41,14 +42,6 @@ export interface QuickInputEditorFieldsProps {
   showTimeDirectionControl?: boolean;
 }
 
-function toArrayValue(value: unknown): string[] {
-  if (Array.isArray(value)) return value.map((v) => String(typeof v === 'object' && v !== null ? (v as any).value ?? (v as any).label ?? '' : v)).filter(Boolean);
-  if (value && typeof value === 'object') return [String((value as any).value ?? (value as any).label ?? '')].filter(Boolean);
-  return String(value ?? '')
-    .split(/[,，\n]/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-}
 
 function isRenderableImagePath(value: unknown): boolean {
   // normalizeImageValue 会把任意非空字符串包装成 unknown 图片；这里必须先判断是否真像图片。
@@ -186,7 +179,7 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
   };
 
   const renderMultiOptionPills = (field: TemplateField) => {
-    const selected = new Set(toArrayValue(formData[field.key]));
+    const selected = new Set(templateFieldValueToArray(formData[field.key]));
     const choices = normalizeQuickInputChoices(field.options);
     return (
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -217,11 +210,11 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
   };
 
 
-  const getSelectedValues = (field: TemplateField): string[] => Array.from(new Set(toArrayValue(formData[field.key])));
+  const getSelectedValues = (field: TemplateField): string[] => Array.from(new Set(templateFieldValueToArray(formData[field.key])));
 
   const commitMultiTagDraft = (field: TemplateField, rawValue?: unknown) => {
     const draft = rawValue ?? tagDrafts[field.key] ?? '';
-    const additions = toArrayValue(draft);
+    const additions = templateFieldValueToArray(draft);
     if (!additions.length) return;
     const next = Array.from(new Set([...getSelectedValues(field), ...additions]));
     handleUpdate(field.key, next);
