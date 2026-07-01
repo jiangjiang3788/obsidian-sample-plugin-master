@@ -46,7 +46,7 @@ export function QuickInputOptionPillGroup({
               selected={selected}
               onClick={() => onSelect(toQuickInputOptionObject(choice))}
               title={choice.label}
-              className="qi-selectable-pill--single"
+              className="think-quick-input-selectable-pill--single"
             >
               {choice.label}
             </SelectablePill>

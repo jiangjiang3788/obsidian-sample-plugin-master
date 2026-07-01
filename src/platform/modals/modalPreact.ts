@@ -2,7 +2,7 @@
 import { h, type ComponentChildren } from 'preact';
 import type { Modal } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
-import { ThinkMuiThemeProvider } from '@shared/public';
+import { ThinkMuiThemeProvider, applyThinkDeviceProfileAttributes } from '@shared/public';
 
 
 export function prepareThinkModal(modal: Modal, ...classes: string[]): HTMLElement {
@@ -10,6 +10,7 @@ export function prepareThinkModal(modal: Modal, ...classes: string[]): HTMLEleme
   for (const className of ['think-os', 'think-os--modal', 'think-modal-host', ...classes]) {
     modal.modalEl.addClass(className);
   }
+  applyThinkDeviceProfileAttributes(modal.modalEl);
   return modal.contentEl;
 }
 

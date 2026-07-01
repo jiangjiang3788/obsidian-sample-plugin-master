@@ -1,73 +1,92 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { Box, ModalHeader } from '@shared/public';
+import { Button, ModalHeader } from '@shared/public';
+import type { QuickInputOperationMode } from './quickInputOperationMode';
+import { getQuickInputOperationTitle } from './quickInputOperationMode';
 
 
 export interface QuickInputModalHeaderProps {
-  mode: 'create' | 'edit';
+  operationMode: QuickInputOperationMode;
   currentBlockName: string;
   isTimerCreate: boolean;
   originalGestureHint?: string;
-  outputPlanHint?: string;
-  pathChangeHint?: string;
   onClose: () => void;
   onOriginalPointerClick: (event: MouseEvent) => void;
   onOriginalTouchEnd: (event: TouchEvent) => void;
+  onOperationModeChange: (mode: QuickInputOperationMode) => void;
 }
 
-function buildTitle(mode: 'create' | 'edit', currentBlockName: string, isTimerCreate: boolean): string {
-  if (mode === 'edit') return `编辑记录 · ${currentBlockName}`;
-  return isTimerCreate ? `开始新任务 · ${currentBlockName}` : `快速录入 · ${currentBlockName}`;
+function buildOperationHelpText(mode: QuickInputOperationMode): string {
+  if (mode === 'convert') {
+    return '转换会修改原记录的记录类型，并按新模板保存；如果保存位置变化，会先写入新位置，再删除旧记录。';
+  }
+  if (mode === 'duplicate') {
+    return '另存会按当前内容创建一条新记录，原记录保持不变。';
+  }
+  return '';
 }
 
 export function QuickInputModalHeader({
-  mode,
+  operationMode,
   currentBlockName,
   isTimerCreate,
   originalGestureHint,
-  outputPlanHint,
-  pathChangeHint,
   onClose,
   onOriginalPointerClick,
   onOriginalTouchEnd,
+  onOperationModeChange,
 }: QuickInputModalHeaderProps) {
+  const isEditingExistingRecord = operationMode !== 'create';
+  const helpText = buildOperationHelpText(operationMode);
+
   return (
-    <Box sx={{ mb: '0.75rem' }}>
+    <div class="think-quick-input-modal-header">
       <ModalHeader
         left={
           <h3
-            style={{ margin: 0 }}
+            class="think-quick-input-modal-title"
             title={originalGestureHint}
-            onClick={mode === 'edit' ? (onOriginalPointerClick as any) : undefined}
-            onTouchEnd={mode === 'edit' ? (onOriginalTouchEnd as any) : undefined}
+            onClick={isEditingExistingRecord ? (onOriginalPointerClick as any) : undefined}
+            onTouchEnd={isEditingExistingRecord ? (onOriginalTouchEnd as any) : undefined}
           >
-            {buildTitle(mode, currentBlockName, isTimerCreate)}
+            {getQuickInputOperationTitle(operationMode, currentBlockName, isTimerCreate)}
           </h3>
         }
         onClose={onClose}
         padding={0}
         borderBottom={false}
       />
-      {(pathChangeHint || outputPlanHint) ? (
-        <div
-          style={{
-            marginTop: '0.35rem',
-            fontSize: '12px',
-            color: pathChangeHint ? 'var(--text-warning)' : 'var(--text-muted)',
-            lineHeight: 1.5,
-            padding: pathChangeHint ? '0.45rem 0.55rem' : '0.25rem 0',
-            border: pathChangeHint ? '1px solid var(--background-modifier-border)' : undefined,
-            borderRadius: pathChangeHint ? '8px' : undefined,
-            background: pathChangeHint ? 'var(--background-secondary)' : undefined,
-          }}
-        >
-          <div style={{ fontWeight: pathChangeHint ? 600 : 400, marginBottom: pathChangeHint ? '0.15rem' : 0 }}>
-            {pathChangeHint ? '保存位置预览：将迁移保存' : '保存位置预览'}
+
+      {isEditingExistingRecord ? (
+        <div class="think-quick-input-operation-panel">
+          <div class="think-quick-input-operation-panel__actions" role="group" aria-label="编辑记录操作方式">
+            <Button
+              size="small"
+              variant={operationMode === 'edit' ? 'contained' : 'outlined'}
+              onClick={() => onOperationModeChange('edit')}
+            >
+              编辑原记录
+            </Button>
+            <Button
+              size="small"
+              variant={operationMode === 'convert' ? 'contained' : 'outlined'}
+              onClick={() => onOperationModeChange('convert')}
+            >
+              转换记录类型
+            </Button>
+            <Button
+              size="small"
+              variant={operationMode === 'duplicate' ? 'contained' : 'outlined'}
+              onClick={() => onOperationModeChange('duplicate')}
+            >
+              另存为新记录
+            </Button>
           </div>
-          <div>{pathChangeHint || outputPlanHint}</div>
+          {helpText ? <div class="think-quick-input-operation-panel__hint">{helpText}</div> : null}
         </div>
       ) : null}
-    </Box>
+
+    </div>
   );
 }

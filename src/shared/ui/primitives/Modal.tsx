@@ -5,7 +5,8 @@
 import { h, ComponentChildren } from 'preact';
 import { ThinkButton } from './Button';
 import { ThinkIconButton } from './IconButton';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { getThinkDeviceProfileAttributes } from '../../utils/deviceProfile';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 
 export interface ModalProps {
     isOpen: boolean;
@@ -57,6 +58,7 @@ export function Modal({
     onBeforeClose
 }: ModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
+    const deviceProfileAttrs = useMemo(() => getThinkDeviceProfileAttributes(), []);
     const [isSaving, setIsSaving] = useState(false);
 
     // 点击外部关闭
@@ -136,7 +138,7 @@ export function Modal({
     );
 
     return (
-        <div className="think-os think-os--modal think-modal-overlay">
+        <div className="think-os think-os--modal think-modal-overlay" {...deviceProfileAttrs}>
             <div className={modalClasses} ref={modalRef}>
                 {(title || showCloseButton) && (
                     <div className="think-modal__header">

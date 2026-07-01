@@ -31,6 +31,13 @@ describe('QuickInputEditorModel', () => {
     expect(buildInitialFieldSources({ 内容: '记录', 空值: '', __timeDirection: 'forward', lastChanged: '时间' })).toEqual({ 内容: 'context' });
   });
 
+  it('can mark edit backfilled initial fields explicitly', () => {
+    expect(buildInitialFieldSources({ 内容: '旧记录', 日期: '2026-06-30' }, 'edit_backfill')).toEqual({
+      内容: 'edit_backfill',
+      日期: 'edit_backfill',
+    });
+  });
+
   it('applies template defaults without overwriting user-owned fields', () => {
     const hydrated = hydrateQuickInputTemplateDefaults({
       template: {
@@ -90,11 +97,31 @@ describe('QuickInputEditorModel', () => {
 
   it('preserves only stable fields when switching block', () => {
     const preserved = preserveQuickInputBlockSwitchState(
-      { 内容: '继续保留', 自定义: '删除', goalId: 'goal-1', themePath: '学习' },
-      { 内容: 'user', 自定义: 'user', goalId: 'goal_context', themePath: 'goal_context' } as any,
+      {
+        内容: '继续保留',
+        日期: '2026-06-30',
+        时间: '09:00',
+        自定义: '删除',
+        goalId: 'goal-1',
+        themePath: '学习',
+        templateId: 'old-template',
+        templateVariantId: 'old-variant',
+        周期: '旧周期',
+      },
+      {
+        内容: 'user',
+        日期: 'context',
+        时间: 'context',
+        自定义: 'user',
+        goalId: 'goal_context',
+        themePath: 'goal_context',
+        templateId: 'system_auto',
+        templateVariantId: 'system_auto',
+        周期: 'system_auto',
+      } as any,
     );
-    expect(preserved.formData).toEqual({ 内容: '继续保留', goalId: 'goal-1', themePath: '学习' });
-    expect(preserved.fieldSources).toEqual({ 内容: 'user', goalId: 'goal_context', themePath: 'goal_context' });
+    expect(preserved.formData).toEqual({ 内容: '继续保留', 日期: '2026-06-30', 时间: '09:00', goalId: 'goal-1', themePath: '学习' });
+    expect(preserved.fieldSources).toEqual({ 内容: 'user', 日期: 'context', 时间: 'context', goalId: 'goal_context', themePath: 'goal_context' });
   });
 
   it('applies goal selection without overwriting user-owned fields', () => {

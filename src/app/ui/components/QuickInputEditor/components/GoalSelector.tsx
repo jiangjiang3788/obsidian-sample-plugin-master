@@ -41,7 +41,7 @@ export function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, 
         emptyLabel="还没有目标。请到目标管理中新建或导入目标。"
         dense={dense}
         allowClear
-        searchable
+        searchable={false}
       />
 
       {onCreateGoal && (

@@ -37,5 +37,8 @@
     --think-control-height-sm: 36px;
     --think-control-height-md: 40px;
     --think-control-height-lg: 44px;
+    --think-touch-target: 44px;
   }
 }
+
+.think-os[data-think-pointer="coarse"] { --think-control-height-sm: 36px; --think-control-height-md: 40px; --think-control-height-lg: 44px; --think-touch-target: 44px; }

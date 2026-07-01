@@ -281,6 +281,33 @@ export {
 } from './services/recordInput/submitResult';
 export { applyRecordRefreshPlan, finalizeRecordSubmitResult } from './services/recordInput/refreshCoordinator';
 export { isRecordConflictError } from './services/recordInput/mutationErrors';
+export {
+    RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS,
+    RECORD_INPUT_GOAL_CONTEXT_KEYS,
+    clearRecordInputGoalContext,
+    createRecordInputDraftSnapshot,
+    getRecordInputSessionDraft,
+    initializeRecordInputSession,
+    isRecordInputMeaningfulValue,
+    isRecordInputOptionLike,
+    isRecordInputRefreshableSource,
+    isRecordInputSameValue,
+    preserveRecordInputBlockSwitchState,
+    readRecordInputString,
+    reduceRecordInputSession,
+} from './services/recordInput/session';
+export type {
+    InitializeRecordInputSessionInput,
+    RecordInputDraftSnapshot,
+    RecordInputFieldSource,
+    RecordInputFieldSourceMap,
+    RecordInputFormData,
+    RecordInputSessionAction,
+    RecordInputSessionMode,
+    RecordInputSessionSelection,
+    RecordInputSessionState,
+    RecordInputTimeDirection,
+} from './services/recordInput/session';
 
 // -------------------- Core Ports（Phase2: platform 边界） --------------------
 // 说明：core 层只定义接口（Port）；平台层实现并在组合根注册。

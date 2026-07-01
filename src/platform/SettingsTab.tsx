@@ -3,13 +3,14 @@
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { PluginSettingTab, App, Notice } from 'obsidian';
 import type ThinkPlugin from '@main';
-import { Button } from '@shared/public';
+import { Button, getThinkDeviceProfileAttributes } from '@shared/public';
 import { SettingsRoot } from './SettingsRoot';
 import { openThinkSettingsWorkspaceView } from './ThinkSettingsView';
 
 function SettingsLauncher({ onOpenWorkspace }: { onOpenWorkspace: () => void }) {
+    const deviceProfileAttrs = getThinkDeviceProfileAttributes();
     return (
-        <section className="think-os think-os--settings think-setting-root think-setting-root--launcher">
+        <section className="think-os think-os--settings think-setting-root think-setting-root--launcher" {...deviceProfileAttrs}>
                 <h2 className="think-settings-launcher__title">Think OS 控制台</h2>
                 <p className="think-settings-launcher__description">
                     完整设置已经收敛到 Obsidian 工作区标签页，那里空间更适合管理目标、记录预设、布局和 AI。

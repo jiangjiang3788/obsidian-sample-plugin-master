@@ -2,6 +2,7 @@ import type {
   BlockTemplate,
   GoalDefinition,
   RecordInputMeta,
+  RecordInputSessionMode,
   TemplateField,
   ThemeDefinition,
 } from "@core/public";
@@ -128,6 +129,7 @@ export interface QuickInputEditorProps {
   context?: QuickInputContext;
   initialThemeId?: string | null;
   initialFormData?: QuickInputFormData;
+  recordInputMode?: RecordInputSessionMode;
   allowBlockSwitch?: boolean;
   dense?: boolean;
   showDivider?: boolean;

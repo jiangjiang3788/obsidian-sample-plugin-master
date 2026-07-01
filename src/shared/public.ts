@@ -13,6 +13,7 @@ export * from './utils/diagnosticConsole';
 export * from './utils/performance';
 export * from './utils/linkedTimeFields';
 export * from './utils/takeLatest';
+export * from './utils/deviceProfile';
 export * from './styles/mui-theme';
 export * from './types/actions';
 export * from './types/taskTime';

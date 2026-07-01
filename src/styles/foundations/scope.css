@@ -31,3 +31,7 @@
 .think-os :where([hidden]) {
   display: none;
 }
+
+/* Device profile hooks are attached to Think OS roots at runtime. */
+.think-os[data-think-platform="ios"], .think-os[data-think-platform="android"] { -webkit-tap-highlight-color: transparent; }
+.think-os[data-think-viewport="narrow"], .think-os[data-think-viewport="medium"] { min-width: 0; }

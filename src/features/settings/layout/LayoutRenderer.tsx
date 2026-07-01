@@ -18,7 +18,7 @@ import {
 } from '@/app/public';
 import { openLayoutSettingsWidget } from '@features/settings/layout/LayoutSettingsWidget';
 import { DataFilterPanel } from './DataFilterPanel';
-import { ViewToolbar } from '@shared/public';
+import { ViewToolbar, detectThinkDeviceProfile, getThinkDeviceProfileAttributes, isThinkMobileLikeProfile } from '@shared/public';
 import { useLayoutItems } from './useLayoutItems';
 import { useExpandedViewRendering } from './useExpandedViewRendering';
 import { ViewContent } from './ViewContent';
@@ -34,18 +34,26 @@ function useCompactFreeformFallback(): boolean {
   const [compact, setCompact] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const media = window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)');
-    const update = () => setCompact(media.matches);
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia?.('(max-width: 760px), (hover: none) and (pointer: coarse)');
+    const update = () => {
+      const profile = detectThinkDeviceProfile();
+      setCompact(Boolean(media?.matches) || isThinkMobileLikeProfile(profile));
+    };
     update();
-    media.addEventListener?.('change', update);
-    return () => media.removeEventListener?.('change', update);
+    media?.addEventListener?.('change', update);
+    window.addEventListener('resize', update);
+    return () => {
+      media?.removeEventListener?.('change', update);
+      window.removeEventListener('resize', update);
+    };
   }, []);
 
   return compact;
 }
 
 export function LayoutRenderer({ layout, dataStore, app, actionService, timerService }: any) {
+  const deviceProfileAttrs = getThinkDeviceProfileAttributes();
   const useCases = useUseCases();
   const ui = useUiPort();
 
@@ -238,7 +246,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
   const useFreeformCanvas = isFreeform && !compactFreeformFallback;
 
   return (
-    <div class="think-os think-os--layout">
+    <div class="think-os think-os--layout" {...deviceProfileAttrs}>
       <ViewToolbar
         currentView={layoutView}
         currentDate={layoutDate}

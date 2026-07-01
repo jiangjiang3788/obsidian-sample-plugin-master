@@ -15,7 +15,7 @@
 import type { ComponentChildren, JSX } from 'preact';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'preact/hooks';
 
-import { DragIndicatorIcon, Paper, diagnosticLog, useLocalStorage } from '@shared/public';
+import { DragIndicatorIcon, Paper, detectThinkDeviceProfile, getThinkDeviceProfileAttributes, isThinkMobileLikeProfile, diagnosticLog, useLocalStorage } from '@shared/public';
 import { createPortal } from 'preact/compat';
 
 import {
@@ -109,13 +109,6 @@ export interface FloatingPanelProps {
     placement?: 'floating' | 'inline';
 }
 
-const isMobile = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent)
-        || (window.matchMedia?.('(pointer: coarse)').matches ?? false)
-        || window.innerWidth <= 820;
-};
-
 export function FloatingPanel({
     id,
     defaultPosition = { x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 150 },
@@ -141,7 +134,9 @@ export function FloatingPanel({
     portalContainer,
     placement = 'floating',
 }: FloatingPanelProps) {
-    const mobile = useMemo(() => isMobile(), []);
+    const deviceProfile = useMemo(() => detectThinkDeviceProfile(), []);
+    const deviceProfileAttrs = useMemo(() => getThinkDeviceProfileAttributes(deviceProfile), [deviceProfile]);
+    const mobile = isThinkMobileLikeProfile(deviceProfile);
     const inline = placement === 'inline';
 
     const register = useSelector(selectFloatingWindowsRegister);
@@ -443,6 +438,7 @@ export function FloatingPanel({
             <Paper
                 elevation={4}
                 className={`think-os think-os--modal think-floating-panel${inline ? ' is-inline' : ''}${mobile ? ' is-mobile' : ''}`}
+                {...deviceProfileAttrs}
                 onMouseDown={onPanelPointerDown as any}
                 onTouchStart={onPanelPointerDown as any}
                 style={paperStyle}

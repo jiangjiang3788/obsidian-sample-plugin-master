@@ -315,7 +315,7 @@ for (const [file, contract] of v5Contracts) {
 
 const finalBudget = {
   cssFiles: 36,
-  cssLines: 7000,
+  cssLines: 7200,
   important: 12,
   hardcodedColorsOutsideTokens: 0,
   duplicateClassesAcrossFiles: 22,

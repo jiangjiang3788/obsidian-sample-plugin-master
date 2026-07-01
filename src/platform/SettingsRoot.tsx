@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 
 import type { App } from 'obsidian';
-import { Tab, Tabs, useLocalStorage } from '@shared/public';
+import { Tab, Tabs, getThinkDeviceProfileAttributes, useLocalStorage } from '@shared/public';
 import { LOCAL_STORAGE_KEYS } from '@core/public';
 
 import { LayoutSettings } from '@features/settings/tabs/LayoutSettings';
@@ -38,11 +38,12 @@ function clampTabIndex(value: unknown): number {
 }
 
 export function SettingsRoot({ app, variant = 'workspace' }: { app: App; variant?: 'settings-tab' | 'workspace' }) {
+    const deviceProfileAttrs = getThinkDeviceProfileAttributes();
     const [storedTabIndex, setStoredTabIndex] = useLocalStorage(SETTINGS_TABS_NO_QUICK_INPUT_KEY, 0);
     const tabIndex = clampTabIndex(storedTabIndex);
 
     return (
-        <div className={`think-os think-os--settings think-setting-root think-setting-root--${variant}`}>
+        <div className={`think-os think-os--settings think-setting-root think-setting-root--${variant}`} {...deviceProfileAttrs}>
                 <div className="think-settings-tabs">
                     <Tabs value={tabIndex} onChange={(_: unknown, newValue: number) => setStoredTabIndex(clampTabIndex(newValue))} aria-label="settings tabs" variant="scrollable" scrollButtons="auto">
                         <Tab label="数据管理" {...a11yProps(0)} />

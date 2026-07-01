@@ -6,6 +6,7 @@ import { Modal } from 'obsidian';
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { AiChatModalContainer } from '@/features/aichat/AiChatModalContainer';
 import type { AiServices } from '@/features/aichat/types';
+import { applyThinkDeviceProfileAttributes } from '@shared/public';
 
 // 对外继续导出 AiServices（便于上层注入依赖时标注类型）
 export type { AiServices } from '@/features/aichat/types';
@@ -40,6 +41,7 @@ export class AiChatModal extends Modal {
         this.modalEl.addClass('think-modal-host');
         this.modalEl.addClass('think-modal-host--wide');
         this.modalEl.addClass('think-ai-chat-modal');
+        applyThinkDeviceProfileAttributes(this.modalEl);
 
         // 阻止 Modal 拦截输入事件
         this.keydownStopper = (e: KeyboardEvent) => {

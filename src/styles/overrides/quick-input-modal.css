@@ -19,6 +19,7 @@
   border-radius: var(--think-radius-lg);
   background: var(--think-bg-elevated);
   color: var(--think-text-primary);
+  --think-quick-input-mobile-footer-space: 96px;
   box-shadow: none;
 }
 
@@ -35,9 +36,12 @@
 }
 
 .modal.think-quick-input-modal .think-modal.think-modal--quick-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-2);
   width: 100%;
   min-height: 0;
-  max-height: calc(100dvh - 32px);
+  max-height: calc(100dvh - 24px);
   padding: 0 var(--think-space-5) var(--think-space-5);
   border: 0;
   border-radius: 0;
@@ -55,6 +59,17 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.modal.think-quick-input-modal .think-quick-input-modal-header {
+  margin-bottom: var(--think-space-5);
+}
+
+.modal.think-quick-input-modal .think-quick-input-modal-title {
+  margin: 0;
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-lg);
+  font-weight: var(--think-font-weight-bold);
+  line-height: var(--think-line-height-tight);
+}
 .modal.think-quick-input-modal .think-modal__footer--quick-input {
   position: static;
   z-index: var(--think-z-raised);
@@ -65,7 +80,7 @@
 }
 
 .modal.think-quick-input-modal--mobile .think-modal__body {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-6));
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-quick-input-mobile-footer-space));
 }
 
 .modal.think-quick-input-modal--mobile .think-modal__footer--quick-input {
@@ -174,6 +189,97 @@
   padding-left: var(--think-space-1);
 }
 
+.modal.think-quick-input-modal .think-quick-input-record-type-switcher,
+.modal.think-quick-input-modal .think-quick-input-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-3);
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-quick-input-record-type-switcher {
+  padding-bottom: var(--think-space-1);
+}
+
+.modal.think-quick-input-modal .think-quick-input-record-type-switcher__item {
+  flex: 0 0 auto;
+}
+
+.modal.think-quick-input-modal .think-quick-input-selectable-pill {
+  appearance: none;
+  min-height: var(--think-control-height-sm);
+  padding: var(--think-space-3) var(--think-space-5);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-canvas);
+  color: var(--think-text-primary);
+  font: inherit;
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-medium);
+  line-height: var(--think-line-height-tight);
+  cursor: pointer;
+  transition:
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    color var(--think-duration-fast) var(--think-ease-standard),
+    box-shadow var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.modal.think-quick-input-modal .think-quick-input-selectable-pill:hover:not(:disabled),
+.modal.think-quick-input-modal .think-quick-input-selectable-pill:focus-visible:not(:disabled) {
+  border-color: var(--think-border-focus);
+  background: var(--think-bg-hover);
+  outline: none;
+}
+
+.modal.think-quick-input-modal .think-quick-input-selectable-pill.is-selected {
+  border-color: var(--think-accent);
+  background: var(--think-accent);
+  color: var(--think-text-on-accent);
+  font-weight: var(--think-font-weight-semibold);
+  box-shadow: var(--think-shadow-sm);
+}
+
+.modal.think-quick-input-modal .think-quick-input-selectable-pill:disabled {
+  cursor: default;
+  opacity: 0.68;
+}
+
+.modal.think-quick-input-modal .think-quick-input-context-hint {
+  margin-top: var(--think-space-2);
+  padding: var(--think-space-2) var(--think-space-3);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-normal);
+}
+
+.modal.think-quick-input-modal .think-quick-input-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+  width: 100%;
+}
+
+.modal.think-quick-input-modal .think-quick-input-footer-danger-zone,
+.modal.think-quick-input-modal .think-quick-input-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-3);
+}
+
+.modal.think-quick-input-modal .think-quick-input-footer-actions {
+  justify-content: flex-end;
+}
+
+@supports not (height: 100dvh) {
+  .modal.think-quick-input-modal { max-height: calc(100vh - 32px); }
+  .modal.think-quick-input-modal .think-modal.think-modal--quick-input { max-height: calc(100vh - 32px); }
+}
+
 @media (max-width: 768px) {
   .modal.think-quick-input-modal {
     border-radius: var(--think-radius-md);
@@ -187,4 +293,20 @@
 
   .modal.think-quick-input-modal--mobile .think-modal__footer--quick-input { padding-top: var(--think-space-4); }
   .modal.think-quick-input-modal--mobile.think-quick-input-keyboard-active .think-modal__footer--quick-input { position: static; }
+  .modal.think-quick-input-modal .think-quick-input-record-type-switcher,
+  .modal.think-quick-input-modal .think-quick-input-pill-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: var(--think-space-2);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .modal.think-quick-input-modal .think-quick-input-footer-row { align-items: stretch; }
 }
+
+.modal.think-quick-input-modal[data-think-pointer="coarse"] .think-quick-input-record-type-switcher, .modal.think-quick-input-modal[data-think-pointer="coarse"] .think-quick-input-pill-row, .modal.think-quick-input-modal[data-think-viewport="narrow"] .think-quick-input-record-type-switcher, .modal.think-quick-input-modal[data-think-viewport="narrow"] .think-quick-input-pill-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--think-space-2); -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.modal.think-quick-input-modal[data-think-platform="ios"] .think-modal__footer--quick-input, .modal.think-quick-input-modal[data-think-platform="android"] .think-modal__footer--quick-input { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4)); }
+
+.modal.think-quick-input-modal .think-quick-input-operation-panel { display: flex; flex-direction: column; gap: var(--think-space-2); margin-top: var(--think-space-3); padding: var(--think-space-3) var(--think-space-4); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-md); background: var(--think-bg-surface-1); }
+.modal.think-quick-input-modal .think-quick-input-operation-panel__actions { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
+.modal.think-quick-input-modal .think-quick-input-operation-panel__hint { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); line-height: var(--think-line-height-normal); }

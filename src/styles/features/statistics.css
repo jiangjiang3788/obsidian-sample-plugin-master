@@ -4,15 +4,18 @@
  */
 .statistics-view {
     padding: 8px;
-    background: var(--think-bg-surface-1);
+    background: var(--think-panel-bg);
     border-radius: 8px;
     box-sizing: border-box;
 }
 .statistics-view-placeholder {
     padding: 40px;
     text-align: center;
-    color: var(--think-text-subtle);
+    color: var(--think-empty-state-text);
     font-size: 1.1em;
+    border: 1px solid var(--think-section-border);
+    border-radius: var(--think-radius-md);
+    background: var(--think-empty-state-bg);
 }
 
 /* 顶部控制栏样式 */
@@ -642,11 +645,12 @@ body.theme-dark .sv-filter-btn.is-selected {
 
 .sv-goal-summary-chip {
     padding: var(--think-space-3) var(--think-space-4);
-    border: 1px solid var(--think-border-subtle);
+    border: 1px solid var(--think-row-emphasis-border);
     border-radius: var(--think-radius-pill);
-    background: var(--think-bg-surface-1);
-    color: var(--think-text-secondary);
+    background: var(--think-row-emphasis-bg);
+    color: var(--think-text-primary);
     font-size: var(--think-font-size-xs);
+    font-weight: var(--think-font-weight-medium);
 }
 
 .sv-goal-summary-label {
@@ -662,9 +666,9 @@ body.theme-dark .sv-filter-btn.is-selected {
 
 .statistics-view {
     padding: var(--think-space-4);
-    border: 1px solid var(--think-border-subtle);
+    border: 1px solid var(--think-section-border);
     border-radius: var(--think-radius-md);
-    background: var(--think-bg-canvas);
+    background: var(--think-panel-bg);
     container-type: inline-size;
 }
 
@@ -688,4 +692,12 @@ body.theme-dark .sv-filter-btn.is-selected {
     .sv-filter-buttons { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--think-space-2); }
     .sv-year-grid { min-width: 760px; }
     .sv-quarter-grid { min-width: 560px; }
+}
+
+@supports not (container-type: inline-size) {
+    @media (max-width: 560px) {
+        .sv-filter-buttons { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--think-space-2); }
+        .sv-year-grid { min-width: 760px; }
+        .sv-quarter-grid { min-width: 560px; }
+    }
 }

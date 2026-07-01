@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App, Modal } from 'obsidian';
-import { useCallback, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 
 import {
   createServices,
@@ -23,11 +23,12 @@ import { isMobileLikeEnvironment } from './quickInputEnvironment';
 import { useQuickInputOriginalNavigation } from './quickInputOriginalLink';
 import { QuickInputModalFooter } from './QuickInputModalFooter';
 import { QuickInputModalHeader } from './QuickInputModalHeader';
-import { useQuickInputOutputPlanPreview } from './useQuickInputOutputPlanPreview';
+import { useQuickInputOutputPlan } from './useQuickInputOutputPlan';
 import { useQuickInputSubmitController } from './useQuickInputSubmit';
 import { QuickInputConflictRecoveryPanel } from './QuickInputConflictRecoveryPanel';
 import { showQuickInputNotice } from './quickInputNotice';
 import { prepareThinkModal } from './modalPreact';
+import type { QuickInputOperationMode } from './quickInputOperationMode';
 
 interface QuickInputEditOptions {
   mode?: 'create' | 'edit';
@@ -48,7 +49,7 @@ export class QuickInputModal extends Modal {
     private context?: Record<string, any>,
     private themeId?: string,
     private onSave?: (data: QuickInputSaveData) => void,
-    private allowBlockSwitch: boolean = false,
+    private allowBlockSwitch: boolean = true,
     private options?: QuickInputEditOptions,
   ) {
     super(app);
@@ -185,6 +186,11 @@ function QuickInputModalContent({
   }, [useCases, initialBlockId, initialThemeId, context, mode, editItem, onSave, source]);
 
   const [isRescanningRecoveryPaths, setIsRescanningRecoveryPaths] = useState(false);
+  const [editOperationMode, setEditOperationMode] = useState<Extract<QuickInputOperationMode, 'edit' | 'convert' | 'duplicate'>>('edit');
+  const [editorResetVersion, setEditorResetVersion] = useState(0);
+  const operationMode: QuickInputOperationMode = mode === 'create' ? 'create' : editOperationMode;
+  const editorSessionMode = operationMode;
+  const outputPlanMode: 'create' | 'edit' = operationMode === 'duplicate' ? 'create' : mode;
   const [editorState, setEditorState] = useState<QuickInputEditorState>({
     blockId: preparedRecord.blockId || initialBlockId,
     themeId: preparedRecord.themeId,
@@ -197,6 +203,25 @@ function QuickInputModalContent({
   });
   const editorStateRef = useRef<QuickInputEditorState | null>(null);
   const isMobileLike = useMemo(() => isMobileLikeEnvironment(), []);
+  const editIdentity = `${mode}:${editItem?.id ?? ''}`;
+  const previousEditIdentityRef = useRef(editIdentity);
+
+  useEffect(() => {
+    if (previousEditIdentityRef.current === editIdentity) return;
+    previousEditIdentityRef.current = editIdentity;
+    setEditOperationMode('edit');
+    setEditorResetVersion((version) => version + 1);
+  }, [editIdentity]);
+
+  const handleOperationModeChange = useCallback((nextMode: QuickInputOperationMode) => {
+    if (nextMode === 'create') return;
+    setEditOperationMode((previousMode) => {
+      if (nextMode === 'edit' && previousMode !== 'edit') {
+        setEditorResetVersion((version) => version + 1);
+      }
+      return nextMode;
+    });
+  }, []);
 
   const currentState = editorStateRef.current || editorState;
   const currentBlock = (settings.blocks || []).find((block: any) => block.id === currentState.blockId);
@@ -205,9 +230,7 @@ function QuickInputModalContent({
   const {
     liveOutputPlan,
     livePersistencePlan,
-    outputPlanHint,
-    pathChangeHint,
-  } = useQuickInputOutputPlanPreview({ currentState, preparedRecord, editItem, mode });
+  } = useQuickInputOutputPlan({ currentState, preparedRecord, editItem, mode: outputPlanMode });
 
   const {
     originalGestureHint,
@@ -228,7 +251,7 @@ function QuickInputModalContent({
     recovery,
     clearRecovery,
   } = useQuickInputSubmitController({
-    mode,
+    operationMode,
     editItem,
     context,
     source,
@@ -261,15 +284,14 @@ function QuickInputModalContent({
   }, [dataStore, isRescanningRecoveryPaths, recovery.paths]);
 
   return (
-    <div class="think-modal think-modal--quick-input" style={{ padding: '0 0.9rem 0.9rem 0.9rem', display: 'flex', flexDirection: 'column', minHeight: 0, maxHeight: 'calc(100dvh - 24px)', gap: '0.25rem' }}>
+    <div class="think-modal think-modal--quick-input">
       <QuickInputModalHeader
-        mode={mode}
+        operationMode={operationMode}
         currentBlockName={currentBlockName}
         isTimerCreate={isTimerCreate}
         originalGestureHint={originalGestureHint}
-        outputPlanHint={outputPlanHint}
-        pathChangeHint={pathChangeHint}
         onClose={closeModal}
+        onOperationModeChange={handleOperationModeChange}
         onOriginalPointerClick={handleOriginalPointerClick}
         onOriginalTouchEnd={handleOriginalTouchEnd}
       />
@@ -284,14 +306,16 @@ function QuickInputModalContent({
         onDismiss={clearRecovery}
       />
 
-      <div class="think-modal__body" style={{ paddingBottom: isMobileLike ? '96px' : undefined }}>
+      <div class="think-modal__body">
         <QuickInputEditor
+          key={`${editorResetVersion}:${editItem?.id ?? 'create'}`}
           getResourcePath={getResourcePath}
           initialBlockId={preparedRecord.blockId || initialBlockId}
           initialThemeId={preparedRecord.themeId}
           initialFormData={preparedRecord.initialFormData}
           context={mode === 'edit' ? undefined : context}
-          allowBlockSwitch={mode === 'edit' ? false : allowBlockSwitch}
+          recordInputMode={editorSessionMode}
+          allowBlockSwitch={operationMode === 'convert' || operationMode === 'duplicate' ? true : (mode === 'edit' ? false : allowBlockSwitch)}
           onStateChange={handleEditorStateChange}
           onRequestSubmit={handleSubmit}
           isMobileLike={isMobileLike}
@@ -299,7 +323,7 @@ function QuickInputModalContent({
       </div>
 
       <QuickInputModalFooter
-        mode={mode}
+        operationMode={operationMode}
         isBusy={isBusy}
         isMobileLike={isMobileLike}
         pendingAction={pendingAction}

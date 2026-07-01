@@ -20,11 +20,17 @@ import { CancelledError, createTakeLatest } from '@shared/public';
 
 import { showQuickInputNotice } from './quickInputNotice';
 import type { QuickInputPendingAction } from './QuickInputModalFooter';
+import type { QuickInputOperationMode } from './quickInputOperationMode';
+import {
+  getQuickInputFailureMessage,
+  getQuickInputSuccessNotice,
+  isQuickInputUpdateOperation,
+} from './quickInputOperationMode';
 
 
 
 export interface QuickInputSubmitControllerParams {
-  mode: 'create' | 'edit';
+  operationMode: QuickInputOperationMode;
   editItem?: Item;
   context?: Record<string, any>;
   source?: Extract<RecordInputSource, 'quickinput' | 'view_quick_create' | 'timer' | 'unknown'>;
@@ -49,8 +55,29 @@ export interface QuickInputSubmitController {
   clearRecovery: () => void;
 }
 
+function withOperationSuccessNotice(
+  result: RecordSubmitResult,
+  operationMode: QuickInputOperationMode,
+): RecordSubmitResult {
+  if (result.status !== 'success') return result;
+  const notice = getQuickInputSuccessNotice(operationMode, result.feedback?.notice);
+  if (!notice) return result;
+  return {
+    ...result,
+    feedback: {
+      ...(result.feedback || {}),
+      notice,
+    },
+  };
+}
+
+function confirmConvertOperation(operationMode: QuickInputOperationMode): boolean {
+  if (operationMode !== 'convert') return true;
+  return window.confirm('确认转换这条记录的记录类型吗？转换会按当前记录类型模板改写原记录；若保存位置变化，会先写入新位置再删除旧记录。');
+}
+
 export function useQuickInputSubmitController({
-  mode,
+  operationMode,
   editItem,
   context,
   source,
@@ -101,9 +128,10 @@ export function useQuickInputSubmitController({
 
   const handleSubmit = useCallback(async () => {
     if (submitTriggeredRef.current || pendingActionRef.current) return;
+    if (!confirmConvertOperation(operationMode)) return;
     submitTriggeredRef.current = true;
 
-    if (onSave && mode === 'create') {
+    if (onSave && operationMode === 'create') {
       try {
         onSave(buildCreateDraft());
         closeModal();
@@ -120,7 +148,7 @@ export function useQuickInputSubmitController({
       const result = await submitLatestRef.current.run(async (signal) => {
         const latestState = getCurrentState();
         assertRecordInputRequiredFields(latestState);
-        if (mode === 'edit' && editItem) {
+        if (isQuickInputUpdateOperation(operationMode) && editItem) {
           return await useCases.recordInput.submitUpdateRecord(buildUpdateRecordSubmitParamsFromEditorState({
             state: latestState,
             item: editItem,
@@ -133,33 +161,34 @@ export function useQuickInputSubmitController({
 
         return await useCases.recordInput.submitCreateRecord(buildCreateRecordSubmitParamsFromEditorState({
           state: latestState,
-          context,
+          context: operationMode === 'duplicate' ? undefined : context,
           signal,
           source: source ?? 'quickinput',
         }));
       });
 
-      rememberConflict(result);
+      const feedbackResult = withOperationSuccessNotice(result, operationMode);
+      rememberConflict(feedbackResult);
 
       const presentation = buildRecordSubmitFeedbackPresentation(
-        result,
-        mode === 'edit' ? '保存修改失败' : '创建失败',
+        feedbackResult,
+        getQuickInputFailureMessage(operationMode),
       );
 
-      if (result.status === 'cancelled') {
+      if (feedbackResult.status === 'cancelled') {
         return;
       }
 
       if (presentation.message) {
-        const shouldShowOwnSuccessNotice = !(mode === 'create' && source === 'timer' && onSubmitSuccess);
+        const shouldShowOwnSuccessNotice = !(operationMode === 'create' && source === 'timer' && onSubmitSuccess);
         if (presentation.tone !== 'success' || shouldShowOwnSuccessNotice) {
           showQuickInputNotice(presentation.message, presentation.tone);
         }
       }
 
-      if (result.status === 'success' && mode === 'create' && onSubmitSuccess) {
+      if (feedbackResult.status === 'success' && operationMode === 'create' && onSubmitSuccess) {
         try {
-          await onSubmitSuccess(result, buildCreateDraft());
+          await onSubmitSuccess(feedbackResult, buildCreateDraft());
         } catch (followUpError: unknown) {
           showQuickInputNotice(followUpError instanceof Error ? followUpError.message : '记录已创建，但后续操作失败');
         }
@@ -170,7 +199,7 @@ export function useQuickInputSubmitController({
       }
     } catch (error: any) {
       if (!(error instanceof CancelledError)) {
-        showQuickInputNotice(error?.message || (mode === 'edit' ? '保存修改失败' : '创建失败'));
+        showQuickInputNotice(error?.message || getQuickInputFailureMessage(operationMode));
       }
     } finally {
       pendingActionRef.current = null;
@@ -185,7 +214,7 @@ export function useQuickInputSubmitController({
     getCurrentState,
     liveOutputPlan,
     livePersistencePlan,
-    mode,
+    operationMode,
     onSave,
     onSubmitSuccess,
     rememberConflict,
@@ -196,7 +225,7 @@ export function useQuickInputSubmitController({
 
   const handleDelete = useCallback(async () => {
     if (pendingActionRef.current) return;
-    if (mode !== 'edit' || !editItem) return;
+    if (!isQuickInputUpdateOperation(operationMode) || !editItem) return;
     if (!window.confirm('确认删除这条记录吗？')) return;
 
     setLastConflictResult(null);
@@ -231,7 +260,7 @@ export function useQuickInputSubmitController({
       pendingActionRef.current = null;
       setPendingAction(null);
     }
-  }, [closeModal, editItem, mode, rememberConflict, useCases]);
+  }, [closeModal, editItem, operationMode, rememberConflict, useCases]);
 
   const preserveDesktopInputFocus = useCallback((event: MouseEvent | PointerEvent) => {
     if (isMobileLike) return;
@@ -247,7 +276,7 @@ export function useQuickInputSubmitController({
 
   const recovery = buildRecordSubmitRecoveryPresentation(lastConflictResult, {
     fallbackPath: editItem?.file?.path ?? null,
-    canOpenOriginal: mode === 'edit' && Boolean(editItem),
+    canOpenOriginal: operationMode !== 'create' && Boolean(editItem),
   });
 
   return {

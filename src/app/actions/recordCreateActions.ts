@@ -72,7 +72,7 @@ export interface HeaderCreateParams {
 
 function openCreateModal(app: any, config: QuickInputConfig | null | undefined, source: Extract<RecordInputSource, 'quickinput' | 'view_quick_create'> = 'view_quick_create'): boolean {
   if (!config?.blockId) return false;
-  new QuickInputModal(app, config.blockId, config.context, config.themeId, undefined, false, {
+  new QuickInputModal(app, config.blockId, config.context, config.themeId, undefined, true, {
     mode: 'create',
     source,
   }).open();

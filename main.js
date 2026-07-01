@@ -5995,7 +5995,7 @@ function normalizeMetaKey(key) {
 function unique$1(values2) {
   return Array.from(new Set(values2.map((value) => value.trim()).filter(Boolean)));
 }
-function buildTitle$1(content, tags2) {
+function buildTitle(content, tags2) {
   let title = "";
   const trimmed = content.trim();
   if (trimmed) title = trimmed.split(/\r?\n/)[0];
@@ -6087,7 +6087,7 @@ function decodeBlockContentLines(contentLines, parentFolder) {
   const finalTags = unique$1(tags2);
   const finalGoalPaths = unique$1(goalPaths);
   return {
-    title: buildTitle$1(content, finalTags),
+    title: buildTitle(content, finalTags),
     content: content.trim(),
     categoryKey: categoryKey || parentFolder || "",
     date: date2,
@@ -19590,6 +19590,289 @@ async function finalizeRecordSubmitResult(dataStore, result) {
   await applyRecordRefreshPlan(dataStore, result.refresh);
   return result;
 }
+const RECORD_INPUT_GOAL_CONTEXT_KEYS = [
+  "goalId",
+  "目标ID",
+  "goalPath",
+  "目标",
+  "rootGoal",
+  "leafGoal",
+  "cycleId",
+  "周期ID",
+  "周期",
+  "周期粒度",
+  "templateId",
+  "goalTemplateId",
+  "templateVariantId",
+  "goalTemplateVariantId"
+];
+const RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
+  "内容",
+  "content",
+  "日期",
+  "date",
+  "时间",
+  "time",
+  "备注",
+  "note",
+  "description",
+  "目标",
+  "目标ID",
+  "goalId",
+  "goalPath",
+  "themePath",
+  "主题"
+];
+function isRecordInputMeaningfulValue(value) {
+  if (value === void 0 || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  return true;
+}
+function isRecordInputOptionLike(value) {
+  if (!value || typeof value !== "object") return false;
+  return "value" in value && "label" in value;
+}
+function isRecordInputSameValue(left2, right2) {
+  if (isRecordInputOptionLike(left2) && isRecordInputOptionLike(right2)) {
+    return left2.value === right2.value && left2.label === right2.label;
+  }
+  return left2 === right2;
+}
+function isRecordInputRefreshableSource(source) {
+  return source === void 0 || source === "template_default" || source === "system_auto" || source === "goal_context" || source === "theme_context";
+}
+function clearRecordInputGoalContext(formData, fieldSources) {
+  const nextFormData = { ...formData };
+  const nextFieldSources = { ...fieldSources };
+  RECORD_INPUT_GOAL_CONTEXT_KEYS.forEach((key) => {
+    delete nextFormData[key];
+    delete nextFieldSources[key];
+  });
+  return { formData: nextFormData, fieldSources: nextFieldSources };
+}
+function preserveRecordInputBlockSwitchState(formData, fieldSources) {
+  const preservedFormData = {};
+  const preservedFieldSources = {};
+  RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS.forEach((key) => {
+    if (formData[key] !== void 0) preservedFormData[key] = formData[key];
+    if (fieldSources[key]) preservedFieldSources[key] = fieldSources[key];
+  });
+  return { formData: preservedFormData, fieldSources: preservedFieldSources };
+}
+function readRecordInputString(formData, keys) {
+  for (const key of keys) {
+    const value = formData[key];
+    if (value === void 0 || value === null) continue;
+    const text2 = String(value).trim();
+    if (text2) return text2;
+  }
+  return null;
+}
+function copyDraft$1(draft) {
+  return {
+    selectedGoalId: draft.selectedGoalId,
+    selectedGoalPath: draft.selectedGoalPath,
+    selectedTemplateVariantId: draft.selectedTemplateVariantId,
+    selectedThemeId: draft.selectedThemeId,
+    timeDirection: draft.timeDirection,
+    formData: { ...draft.formData },
+    fieldSources: { ...draft.fieldSources }
+  };
+}
+function createRecordInputDraftSnapshot(input) {
+  const selection = input.initialSelection || {};
+  return {
+    selectedGoalId: selection.selectedGoalId ?? null,
+    selectedGoalPath: selection.selectedGoalPath ?? null,
+    selectedTemplateVariantId: selection.selectedTemplateVariantId ?? null,
+    selectedThemeId: selection.selectedThemeId ?? input.initialThemeId ?? null,
+    timeDirection: selection.timeDirection ?? "forward",
+    formData: { ...input.initialFormData || {} },
+    fieldSources: { ...input.initialFieldSources || {} }
+  };
+}
+function initializeRecordInputSession(input) {
+  const initialBlockId = String(input.initialBlockId || "");
+  const draft = createRecordInputDraftSnapshot(input);
+  return {
+    mode: input.mode || "create",
+    currentBlockId: initialBlockId,
+    originBlockId: initialBlockId,
+    ...copyDraft$1(draft),
+    draftByBlockId: {
+      [initialBlockId]: copyDraft$1(draft)
+    },
+    dirty: false,
+    revision: 0
+  };
+}
+function copyDraft(draft) {
+  return {
+    selectedGoalId: draft.selectedGoalId,
+    selectedGoalPath: draft.selectedGoalPath,
+    selectedTemplateVariantId: draft.selectedTemplateVariantId,
+    selectedThemeId: draft.selectedThemeId,
+    timeDirection: draft.timeDirection,
+    formData: { ...draft.formData },
+    fieldSources: { ...draft.fieldSources }
+  };
+}
+function getRecordInputSessionDraft(state) {
+  return copyDraft({
+    selectedGoalId: state.selectedGoalId,
+    selectedGoalPath: state.selectedGoalPath,
+    selectedTemplateVariantId: state.selectedTemplateVariantId,
+    selectedThemeId: state.selectedThemeId,
+    timeDirection: state.timeDirection,
+    formData: state.formData,
+    fieldSources: state.fieldSources
+  });
+}
+function withCachedCurrentDraft(state) {
+  return {
+    ...state.draftByBlockId,
+    [state.currentBlockId]: getRecordInputSessionDraft(state)
+  };
+}
+function commitDraft(state, draft, extra) {
+  const next2 = {
+    ...state,
+    ...extra,
+    ...copyDraft(draft),
+    dirty: true,
+    revision: state.revision + 1
+  };
+  return {
+    ...next2,
+    draftByBlockId: {
+      ...next2.draftByBlockId,
+      [next2.currentBlockId]: getRecordInputSessionDraft(next2)
+    }
+  };
+}
+function buildSwitchFallbackDraft(state) {
+  const preserved = preserveRecordInputBlockSwitchState(state.formData, state.fieldSources);
+  return {
+    formData: preserved.formData,
+    fieldSources: preserved.fieldSources,
+    selectedGoalId: readRecordInputString(preserved.formData, ["goalId", "目标ID"]) ?? state.selectedGoalId,
+    selectedGoalPath: readRecordInputString(preserved.formData, ["goalPath", "目标"]) ?? state.selectedGoalPath,
+    selectedTemplateVariantId: null,
+    selectedThemeId: state.selectedThemeId,
+    timeDirection: "forward"
+  };
+}
+function reduceRecordInputSession(state, action) {
+  switch (action.type) {
+    case "reset":
+      return initializeRecordInputSession(action.payload);
+    case "setMode":
+      if (action.mode === state.mode) return state;
+      return {
+        ...state,
+        mode: action.mode,
+        dirty: true,
+        revision: state.revision + 1
+      };
+    case "switchRecordType": {
+      const nextBlockId = String(action.blockId || "");
+      if (!nextBlockId || nextBlockId === state.currentBlockId) return state;
+      const cachedDrafts = withCachedCurrentDraft(state);
+      const restored = cachedDrafts[nextBlockId] ? copyDraft(cachedDrafts[nextBlockId]) : buildSwitchFallbackDraft(state);
+      return commitDraft(
+        {
+          ...state,
+          currentBlockId: nextBlockId,
+          draftByBlockId: cachedDrafts
+        },
+        restored,
+        { currentBlockId: nextBlockId }
+      );
+    }
+    case "updateDraft": {
+      return commitDraft(state, {
+        formData: action.formData,
+        fieldSources: action.fieldSources,
+        selectedGoalId: action.selectedGoalId !== void 0 ? action.selectedGoalId : state.selectedGoalId,
+        selectedGoalPath: action.selectedGoalPath !== void 0 ? action.selectedGoalPath : state.selectedGoalPath,
+        selectedTemplateVariantId: action.selectedTemplateVariantId !== void 0 ? action.selectedTemplateVariantId : state.selectedTemplateVariantId,
+        selectedThemeId: action.selectedThemeId !== void 0 ? action.selectedThemeId : state.selectedThemeId,
+        timeDirection: action.timeDirection ?? state.timeDirection
+      });
+    }
+    case "selectGoal": {
+      return commitDraft(state, {
+        formData: action.formData || state.formData,
+        fieldSources: action.fieldSources || state.fieldSources,
+        selectedGoalId: action.goalId,
+        selectedGoalPath: action.goalPath,
+        selectedTemplateVariantId: null,
+        selectedThemeId: action.selectedThemeId !== void 0 ? action.selectedThemeId : state.selectedThemeId,
+        timeDirection: state.timeDirection
+      });
+    }
+    case "clearGoalContext": {
+      const cleared = clearRecordInputGoalContext(state.formData, state.fieldSources);
+      return commitDraft(state, {
+        formData: cleared.formData,
+        fieldSources: cleared.fieldSources,
+        selectedGoalId: null,
+        selectedGoalPath: null,
+        selectedTemplateVariantId: null,
+        selectedThemeId: state.selectedThemeId,
+        timeDirection: state.timeDirection
+      });
+    }
+    case "selectTemplateVariant": {
+      if ((action.variantId ?? null) === state.selectedTemplateVariantId) return state;
+      return commitDraft(state, {
+        formData: state.formData,
+        fieldSources: state.fieldSources,
+        selectedGoalId: state.selectedGoalId,
+        selectedGoalPath: state.selectedGoalPath,
+        selectedTemplateVariantId: action.variantId ?? null,
+        selectedThemeId: state.selectedThemeId,
+        timeDirection: state.timeDirection
+      });
+    }
+    case "selectTheme": {
+      if ((action.themeId ?? null) === state.selectedThemeId) return state;
+      return commitDraft(state, {
+        formData: state.formData,
+        fieldSources: state.fieldSources,
+        selectedGoalId: state.selectedGoalId,
+        selectedGoalPath: state.selectedGoalPath,
+        selectedTemplateVariantId: state.selectedTemplateVariantId,
+        selectedThemeId: action.themeId ?? null,
+        timeDirection: state.timeDirection
+      });
+    }
+    case "changeTimeDirection": {
+      return commitDraft(state, {
+        formData: action.formData,
+        fieldSources: action.fieldSources,
+        selectedGoalId: state.selectedGoalId,
+        selectedGoalPath: state.selectedGoalPath,
+        selectedTemplateVariantId: state.selectedTemplateVariantId,
+        selectedThemeId: state.selectedThemeId,
+        timeDirection: action.timeDirection
+      });
+    }
+    case "hydrateDefaults": {
+      return commitDraft(state, {
+        formData: action.formData,
+        fieldSources: action.fieldSources,
+        selectedGoalId: state.selectedGoalId,
+        selectedGoalPath: state.selectedGoalPath,
+        selectedTemplateVariantId: state.selectedTemplateVariantId,
+        selectedThemeId: state.selectedThemeId,
+        timeDirection: state.timeDirection
+      });
+    }
+    default:
+      return state;
+  }
+}
 const EVENTS_PORT_TOKEN = "EventsPort";
 const MODAL_PORT_TOKEN = "ModalPort";
 const MESSAGE_RENDER_PORT_TOKEN = /* @__PURE__ */ Symbol("MessageRenderPort");
@@ -21482,6 +21765,65 @@ function createTakeLatest(label) {
       return current2?.signal ?? null;
     }
   };
+}
+function safeMatch(win, query) {
+  try {
+    return Boolean(win?.matchMedia?.(query).matches);
+  } catch {
+    return false;
+  }
+}
+function getRuntimeWindow() {
+  return typeof window === "undefined" ? void 0 : window;
+}
+function detectPlatform(userAgent, platform = "", maxTouchPoints = 0) {
+  if (/Android/i.test(userAgent)) return "android";
+  if (/iPhone|iPad|iPod/i.test(userAgent)) return "ios";
+  if (/Mac/i.test(platform) && maxTouchPoints > 1) return "ios";
+  return "desktop";
+}
+function detectViewport(width2) {
+  if (width2 <= 640) return "narrow";
+  if (width2 <= 1024) return "medium";
+  return "wide";
+}
+function detectThinkDeviceProfile(win = getRuntimeWindow()) {
+  const userAgent = String(win?.navigator?.userAgent || "");
+  const platformName = String(win?.navigator?.platform || "");
+  const maxTouchPoints = Number(win?.navigator?.maxTouchPoints || 0);
+  const viewportWidth = Math.max(0, Number(win?.innerWidth || 0));
+  const platform = detectPlatform(userAgent, platformName, maxTouchPoints);
+  const pointer = safeMatch(win, "(pointer: coarse)") || maxTouchPoints > 0 ? "coarse" : "fine";
+  const viewport2 = detectViewport(viewportWidth || 1024);
+  const isMobileLike = platform !== "desktop" || pointer === "coarse" || viewportWidth <= 820;
+  return {
+    platform,
+    pointer,
+    viewport: viewport2,
+    viewportWidth,
+    hasVisualViewport: Boolean(win?.visualViewport),
+    isMobileLike
+  };
+}
+function isThinkMobileLikeProfile(profile) {
+  return profile.isMobileLike;
+}
+function getThinkDeviceProfileAttributes(profile = detectThinkDeviceProfile()) {
+  return {
+    "data-think-platform": profile.platform,
+    "data-think-pointer": profile.pointer,
+    "data-think-viewport": profile.viewport,
+    "data-think-visual-viewport": profile.hasVisualViewport ? "true" : "false"
+  };
+}
+function applyThinkDeviceProfileAttributes(element, profile = detectThinkDeviceProfile(element.ownerDocument?.defaultView || void 0)) {
+  const attrs = getThinkDeviceProfileAttributes(profile);
+  Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+  element.classList.toggle("think-os--mobile", profile.isMobileLike);
+  element.classList.toggle("think-os--desktop", !profile.isMobileLike);
+  element.classList.toggle("think-os--android", profile.platform === "android");
+  element.classList.toggle("think-os--ios", profile.platform === "ios");
+  return profile;
 }
 function formatMuiErrorMessage(code, ...args) {
   const url = new URL(`https://mui.com/production-error/?code=${code}`);
@@ -49076,6 +49418,7 @@ function prepareThinkModal(modal, ...classes) {
   for (const className of ["think-os", "think-os--modal", "think-modal-host", ...classes]) {
     modal.modalEl.addClass(className);
   }
+  applyThinkDeviceProfileAttributes(modal.modalEl);
   return modal.contentEl;
 }
 function renderModalContent(containerEl, children) {
@@ -56861,7 +57204,7 @@ function buildPlanConsistencyIssues(params) {
     if (expectedPath !== actualPath || expectedHeader !== actualHeader) {
       issues.push(issue(
         "record_output_plan_changed_before_submit",
-        `保存位置预览和实际保存计划不一致：预览为 ${expectedPath || "未知位置"}${expectedHeader ? ` → ${expectedHeader}` : ""}，实际为 ${actualPath || "未知位置"}${actualHeader ? ` → ${actualHeader}` : ""}。为避免误写入，已取消本次保存，请重新打开面板后再试。`
+        `实时保存计划和实际保存计划不一致：计算值为 ${expectedPath || "未知位置"}${expectedHeader ? ` → ${expectedHeader}` : ""}，实际为 ${actualPath || "未知位置"}${actualHeader ? ` → ${actualHeader}` : ""}。为避免误写入，已取消本次保存，请重新打开面板后再试。`
       ));
     }
   }
@@ -56871,7 +57214,7 @@ function buildPlanConsistencyIssues(params) {
     if (expectedPersistence.pathChanged !== params.actualPersistencePlan.pathChanged || expectedPersistence.writeMode !== params.actualPersistencePlan.writeMode || expectedOriginalPath !== actualOriginalPath) {
       issues.push(issue(
         "record_persistence_plan_changed_before_submit",
-        `保存策略预览和实际保存策略不一致：预览为 ${expectedPersistence.writeMode}${expectedPersistence.pathChanged ? "，路径变化" : "，路径不变"}；实际为 ${params.actualPersistencePlan.writeMode}${params.actualPersistencePlan.pathChanged ? "，路径变化" : "，路径不变"}。为避免误保存，已取消本次保存。`
+        `保存策略快照和实际保存策略不一致：计算值为 ${expectedPersistence.writeMode}${expectedPersistence.pathChanged ? "，路径变化" : "，路径不变"}；实际为 ${params.actualPersistencePlan.writeMode}${params.actualPersistencePlan.pathChanged ? "，路径变化" : "，路径不变"}。为避免误保存，已取消本次保存。`
       ));
     }
   }
@@ -57638,7 +57981,7 @@ function unmountPreact(containerEl) {
 const MODULE_HEADER_CREATE_ALLOWLIST = ["TimelineView", "HeatmapView"];
 function openCreateModal(app, config2, source = "view_quick_create") {
   if (!config2?.blockId) return false;
-  new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, false, {
+  new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, true, {
     mode: "create",
     source
   }).open();
@@ -58172,7 +58515,7 @@ function SelectablePill({
   title
 }) {
   const classes = [
-    "qi-selectable-pill",
+    "think-quick-input-selectable-pill",
     selected ? "is-selected" : "",
     className || ""
   ].filter(Boolean).join(" ");
@@ -58185,20 +58528,6 @@ function SelectablePill({
       title,
       "aria-pressed": selected,
       className: classes,
-      style: {
-        appearance: "none",
-        border: selected ? "none" : "1px solid var(--background-modifier-border)",
-        background: selected ? "var(--interactive-accent)" : "var(--background-primary)",
-        color: selected ? "var(--text-on-accent, white)" : "var(--text-normal)",
-        borderRadius: "10px",
-        fontWeight: selected ? 600 : 500,
-        padding: "6px 14px",
-        cursor: disabled ? "default" : "pointer",
-        lineHeight: 1.2,
-        boxShadow: selected ? "0 1px 6px rgba(0,0,0,0.18)" : "none",
-        transition: "background-color 120ms ease, color 120ms ease, border 120ms ease, box-shadow 120ms ease",
-        opacity: disabled ? 0.6 : 1
-      },
       children
     }
   );
@@ -58265,7 +58594,7 @@ function QuickInputOptionPillGroup({
               selected,
               onClick: () => onSelect(toQuickInputOptionObject(choice)),
               title: choice.label,
-              className: "qi-selectable-pill--single",
+              className: "think-quick-input-selectable-pill--single",
               children: choice.label
             },
             `${choice.value}-${choice.label}`
@@ -58910,7 +59239,7 @@ function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense =
         emptyLabel: "还没有目标。请到目标管理中新建或导入目标。",
         dense,
         allowClear: true,
-        searchable: true
+        searchable: false
       }
     ),
     onCreateGoal && /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(140px, 1fr) auto", gap: 1, alignItems: "center" }, children: [
@@ -58940,6 +59269,28 @@ function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense =
     ] }),
     normalizedDraft && existing.has(normalizedDraft) && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "这个目标已经存在，可以直接在上方选择。" })
   ] });
+}
+function RecordTypeSwitcher({
+  blocks,
+  currentBlockId,
+  onBlockChange
+}) {
+  if (blocks.length <= 1) return null;
+  return /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { class: "think-quick-input-record-type-switcher", role: "tablist", "aria-label": "记录类型", children: blocks.map((block2) => {
+    const selected = currentBlockId === block2.id;
+    const label = block2.name || block2.id;
+    return /* @__PURE__ */ u2(
+      SelectablePill,
+      {
+        selected,
+        onClick: () => onBlockChange(block2.id),
+        title: label,
+        className: "think-quick-input-record-type-switcher__item",
+        children: label
+      },
+      block2.id
+    );
+  }) }) });
 }
 function SectionTitle({ title, compact = false }) {
   return /* @__PURE__ */ u2(
@@ -58982,12 +59333,26 @@ function QuickInputEditorView({
   onTimeDirectionChange,
   onRequestSubmit,
   isMobileLike = false,
-  showTimeDirectionControl = false
+  showTimeDirectionControl = false,
+  currentGoalPath = null,
+  templateSourceType = null
 }) {
   if (!template) {
     return /* @__PURE__ */ u2("div", { children: "错误：找不到当前记录类型的默认配置。" });
   }
+  const shouldShowCoreBlockFallbackHint = Boolean(currentGoalPath) && templateSourceType === "core-block" && templateVariants.length === 0;
   return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: dense ? 1.75 : 2 }, children: [
+    allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(SectionTitle, { title: "记录类型", compact: true }),
+      /* @__PURE__ */ u2(
+        RecordTypeSwitcher,
+        {
+          blocks,
+          currentBlockId,
+          onBlockChange
+        }
+      )
+    ] }),
     /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(SectionTitle, { title: "目标", compact: true }),
       /* @__PURE__ */ u2(
@@ -58999,24 +59364,12 @@ function QuickInputEditorView({
           onCreateGoal,
           dense
         }
-      )
-    ] }),
-    allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(SectionTitle, { title: "记录类型", compact: true }),
-      /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: blocks.map((block2) => /* @__PURE__ */ u2(
-        SelectablePill,
-        {
-          selected: currentBlockId === block2.id,
-          onClick: () => onBlockChange(block2.id),
-          title: block2.name,
-          children: block2.name
-        },
-        block2.id
-      )) }) })
+      ),
+      shouldShowCoreBlockFallbackHint && /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: "当前目标没有此记录类型的专属预设，已使用记录类型默认模板。" })
     ] }),
     templateVariants.length > 0 && /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(SectionTitle, { title: "记录预设", compact: true }),
-      /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: templateVariants.map((variant) => {
+      /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { class: "think-quick-input-pill-row think-quick-input-template-variant-switcher", children: templateVariants.map((variant) => {
         const isSelected = (selectedTemplateVariantId || "default") === variant.value;
         return /* @__PURE__ */ u2(
           SelectablePill,
@@ -59050,26 +59403,17 @@ function QuickInputEditorView({
     ) })
   ] });
 }
-const isMeaningfulValue = (value) => {
-  if (value === void 0 || value === null) return false;
-  if (typeof value === "string") return value !== "";
-  return true;
-};
-const isOptionLike = (value) => !!value && typeof value === "object" && "value" in value && "label" in value;
-const isSameValue = (a2, b2) => {
-  if (isOptionLike(a2) && isOptionLike(b2)) {
-    return a2.value === b2.value && a2.label === b2.label;
-  }
-  return a2 === b2;
-};
-const isRefreshableSource = (source) => source === void 0 || source === "template_default" || source === "system_auto" || source === "goal_context" || source === "theme_context";
-const buildInitialFieldSources = (initialData) => {
+const isMeaningfulValue = isRecordInputMeaningfulValue;
+const isOptionLike = (value) => isRecordInputOptionLike(value);
+const isSameValue = isRecordInputSameValue;
+const isRefreshableSource = (source) => isRecordInputRefreshableSource(source);
+const buildInitialFieldSources = (initialData, source = "context") => {
   const next2 = {};
   if (!initialData) return next2;
   Object.keys(initialData).forEach((key) => {
     if (key === "__timeDirection" || key === "lastChanged") return;
     if (!isMeaningfulValue(initialData[key])) return;
-    next2[key] = "context";
+    next2[key] = source;
   });
   return next2;
 };
@@ -59087,57 +59431,6 @@ const buildFieldSourceSummary = (sources) => ({
   ).length,
   system_auto: Object.values(sources).filter((v2) => v2 === "system_auto").length
 });
-const QUICK_INPUT_GOAL_CONTEXT_KEYS = [
-  "goalId",
-  "目标ID",
-  "goalPath",
-  "目标",
-  "rootGoal",
-  "leafGoal",
-  "cycleId",
-  "周期ID",
-  "周期",
-  "周期粒度",
-  "templateId",
-  "goalTemplateId",
-  "templateVariantId",
-  "goalTemplateVariantId"
-];
-const QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
-  "内容",
-  "content",
-  "日期",
-  "date",
-  "时间",
-  "time",
-  "备注",
-  "note",
-  "description",
-  "目标",
-  "目标ID",
-  "goalId",
-  "goalPath",
-  "themePath",
-  "主题"
-];
-function clearQuickInputGoalContext(formData, fieldSources) {
-  const nextFormData = { ...formData };
-  const nextFieldSources = { ...fieldSources };
-  QUICK_INPUT_GOAL_CONTEXT_KEYS.forEach((key) => {
-    delete nextFormData[key];
-    delete nextFieldSources[key];
-  });
-  return { formData: nextFormData, fieldSources: nextFieldSources };
-}
-function preserveQuickInputBlockSwitchState(formData, fieldSources) {
-  const preservedFormData = {};
-  const preservedFieldSources = {};
-  QUICK_INPUT_BLOCK_SWITCH_PRESERVE_KEYS.forEach((key) => {
-    if (formData[key] !== void 0) preservedFormData[key] = formData[key];
-    if (fieldSources[key]) preservedFieldSources[key] = fieldSources[key];
-  });
-  return { formData: preservedFormData, fieldSources: preservedFieldSources };
-}
 function cleanDisplaySegment(value) {
   return String(value ?? "").replace(/^[#＃]+\s*/, "").trim();
 }
@@ -59632,6 +59925,7 @@ function QuickInputEditor({
   context,
   initialThemeId = null,
   initialFormData,
+  recordInputMode = "create",
   allowBlockSwitch = true,
   dense = false,
   showDivider = true,
@@ -59641,26 +59935,48 @@ function QuickInputEditor({
 }) {
   const fullSettings = useSelector(selectSettings);
   const settings = fullSettings.inputSettings;
-  const [currentBlockId, setCurrentBlockId] = d(initialBlockId);
-  const [selectedThemeId, setSelectedThemeId] = d(initialThemeId);
-  const initialSelection = deriveQuickInputInitialSelection(initialFormData, context);
-  const [selectedGoalId, setSelectedGoalId] = d(() => initialSelection.selectedGoalId);
-  const [selectedGoalPath, setSelectedGoalPath] = d(() => initialSelection.selectedGoalPath);
-  const [selectedTemplateVariantId, setSelectedTemplateVariantId] = d(() => initialSelection.selectedTemplateVariantId);
-  const [formData, setFormData] = d(() => initialFormData ?? EMPTY_FORM_DATA);
-  const [fieldSources, setFieldSources] = d(() => buildInitialFieldSources(initialFormData));
-  const [timeDirection, setTimeDirection] = d(() => initialSelection.timeDirection);
-  y(() => setCurrentBlockId(initialBlockId), [initialBlockId]);
-  y(() => setSelectedThemeId(initialThemeId ?? null), [initialThemeId]);
+  const initialFieldSource = recordInputMode === "create" ? "context" : "edit_backfill";
+  const recordInputModeRef = A$1(recordInputMode);
+  const [session, dispatchSession] = h(
+    reduceRecordInputSession,
+    initializeRecordInputSession({
+      mode: recordInputMode,
+      initialBlockId,
+      initialThemeId,
+      initialFormData: initialFormData ?? EMPTY_FORM_DATA,
+      initialFieldSources: buildInitialFieldSources(initialFormData, initialFieldSource),
+      initialSelection: deriveQuickInputInitialSelection(initialFormData, context)
+    })
+  );
+  const {
+    currentBlockId,
+    selectedThemeId,
+    selectedGoalId,
+    selectedGoalPath,
+    selectedTemplateVariantId,
+    formData,
+    fieldSources,
+    timeDirection
+  } = session;
   y(() => {
-    const nextSelection = deriveQuickInputInitialSelection(initialFormData, context);
-    setFormData(initialFormData ?? EMPTY_FORM_DATA);
-    setFieldSources(buildInitialFieldSources(initialFormData));
-    setTimeDirection(nextSelection.timeDirection);
-    setSelectedGoalId(nextSelection.selectedGoalId);
-    setSelectedGoalPath(nextSelection.selectedGoalPath);
-    setSelectedTemplateVariantId(nextSelection.selectedTemplateVariantId);
+    const modeForReset = recordInputModeRef.current;
+    const sourceForReset = modeForReset === "create" ? "context" : "edit_backfill";
+    dispatchSession({
+      type: "reset",
+      payload: {
+        mode: modeForReset,
+        initialBlockId,
+        initialThemeId,
+        initialFormData: initialFormData ?? EMPTY_FORM_DATA,
+        initialFieldSources: buildInitialFieldSources(initialFormData, sourceForReset),
+        initialSelection: deriveQuickInputInitialSelection(initialFormData, context)
+      }
+    });
   }, [initialBlockId, initialThemeId, context]);
+  y(() => {
+    recordInputModeRef.current = recordInputMode;
+    dispatchSession({ type: "setMode", mode: recordInputMode });
+  }, [recordInputMode]);
   const blocks = T$1(() => {
     const coreBlocks = getEffectiveCoreBlocks(fullSettings);
     return coreBlocks.length ? coreBlocks : settings.blocks || [];
@@ -59688,13 +60004,13 @@ function QuickInputEditor({
   }, [fullSettings.goalSettings, selectedGoal, currentEffectiveBlockIdForTemplates]);
   y(() => {
     if (!goalTemplateVariants.length) {
-      if (selectedTemplateVariantId) setSelectedTemplateVariantId(null);
+      if (selectedTemplateVariantId) dispatchSession({ type: "selectTemplateVariant", variantId: null });
       return;
     }
     const exists = selectedTemplateVariantId && goalTemplateVariants.some((template2) => template2.variantId === selectedTemplateVariantId || template2.id === selectedTemplateVariantId);
     if (!exists) {
       const next2 = goalTemplateVariants[0];
-      setSelectedTemplateVariantId(next2?.variantId || "default");
+      dispatchSession({ type: "selectTemplateVariant", variantId: next2?.variantId || "default" });
     }
   }, [goalTemplateVariants, selectedTemplateVariantId]);
   const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = T$1(() => GoalTemplateResolver.resolve({
@@ -59723,11 +60039,7 @@ function QuickInputEditor({
     if (!selectedPath) return;
     const stillVisible = goalOptions.some((option) => cleanDisplayPath(option.value) === selectedPath);
     if (stillVisible) return;
-    setSelectedGoalId(null);
-    setSelectedGoalPath(null);
-    setSelectedTemplateVariantId(null);
-    setFormData((current2) => clearQuickInputGoalContext(current2, fieldSources).formData);
-    setFieldSources((current2) => clearQuickInputGoalContext(formData, current2).fieldSources);
+    dispatchSession({ type: "clearGoalContext" });
   }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
   const currentGoalTitle = cleanDisplaySegment(selectedGoal?.title || resolvedGoal?.title || "") || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
@@ -59745,30 +60057,31 @@ function QuickInputEditor({
   const showTimeDirectionControl = T$1(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
   y(() => {
     if (!template) return;
-    setFormData((current2) => {
-      const hydrated = hydrateQuickInputTemplateDefaults({
-        template,
-        context,
-        current: current2,
-        fieldSources,
-        selectedGoal,
-        selectedGoalId,
-        currentGoalPath,
-        currentGoalTitle,
-        theme,
-        currentPeriod,
-        timeDirection
-      });
-      if (!hydrated.changed) return current2;
-      setFieldSources(hydrated.fieldSources);
-      return hydrated.formData;
+    const hydrated = hydrateQuickInputTemplateDefaults({
+      template,
+      context,
+      current: formData,
+      fieldSources,
+      selectedGoal,
+      selectedGoalId,
+      currentGoalPath,
+      currentGoalTitle,
+      theme,
+      currentPeriod,
+      timeDirection
     });
-  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle]);
+    if (!hydrated.changed) return;
+    dispatchSession({
+      type: "hydrateDefaults",
+      formData: hydrated.formData,
+      fieldSources: hydrated.fieldSources
+    });
+  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources]);
   y(() => {
     const presetThemePath = String(formData.themePath ?? formData["主题"] ?? "").trim();
     if (!presetThemePath) return;
     const nextThemeId = pathToIdMap.get(presetThemePath) ?? null;
-    if (nextThemeId && nextThemeId !== selectedThemeId) setSelectedThemeId(nextThemeId);
+    if (nextThemeId && nextThemeId !== selectedThemeId) dispatchSession({ type: "selectTheme", themeId: nextThemeId });
   }, [formData.themePath, formData["主题"], pathToIdMap, selectedThemeId]);
   const makeEditorState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => buildQuickInputEditorState({
     blockId: currentBlockId,
@@ -59795,53 +60108,51 @@ function QuickInputEditor({
   y(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
   }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
-  const emitDraftState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => {
-    onStateChange?.(makeEditorState(draftFormData, directionOverride, sourceOverride));
-  };
   const handleUpdateField = (key, value, isOptionObject2 = false) => {
     const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject: isOptionObject2, timeDirection });
-    if (updated.nextThemePath !== void 0) setSelectedThemeId(updated.nextThemePath ? pathToIdMap.get(updated.nextThemePath) ?? null : null);
-    if (updated.nextGoalPath !== void 0) {
-      setSelectedGoalPath(updated.nextGoalPath);
-      setSelectedGoalId(updated.nextGoalId ?? null);
-    }
-    setFormData(updated.formData);
-    setFieldSources(updated.fieldSources);
-    emitDraftState(updated.formData, timeDirection, updated.fieldSources);
+    dispatchSession({
+      type: "updateDraft",
+      formData: updated.formData,
+      fieldSources: updated.fieldSources,
+      selectedThemeId: updated.nextThemePath !== void 0 ? updated.nextThemePath ? pathToIdMap.get(updated.nextThemePath) ?? null : null : void 0,
+      selectedGoalPath: updated.nextGoalPath !== void 0 ? updated.nextGoalPath : void 0,
+      selectedGoalId: updated.nextGoalPath !== void 0 ? updated.nextGoalId ?? null : void 0,
+      selectedTemplateVariantId: updated.nextGoalPath !== void 0 ? null : void 0
+    });
   };
   const handleTimeDirectionChange = (nextDirection) => {
     const updated = applyQuickInputTimeDirectionChange({ formData, fieldSources, nextDirection });
-    setTimeDirection(updated.timeDirection);
-    setFormData(updated.formData);
-    setFieldSources(updated.fieldSources);
-    emitDraftState(updated.formData, updated.timeDirection, updated.fieldSources);
+    dispatchSession({
+      type: "changeTimeDirection",
+      timeDirection: updated.timeDirection,
+      formData: updated.formData,
+      fieldSources: updated.fieldSources
+    });
   };
   const handleBlockChange = (newBlockId) => {
-    if (newBlockId === currentBlockId) return;
-    const preserved = preserveQuickInputBlockSwitchState(formData, fieldSources);
-    setSelectedTemplateVariantId(null);
-    setCurrentBlockId(newBlockId);
-    setFormData(preserved.formData);
-    setFieldSources(preserved.fieldSources);
-    setTimeDirection("forward");
+    if (newBlockId === currentBlockId || newBlockId === currentEffectiveBlockIdForTemplates) return;
+    dispatchSession({ type: "switchRecordType", blockId: newBlockId });
   };
   const handleSelectTheme = (themeId, path) => {
-    setSelectedThemeId(resolveQuickInputThemeSelectionOnClick({ selectedThemeId, themeId, path, pathToIdMap }));
+    dispatchSession({
+      type: "selectTheme",
+      themeId: resolveQuickInputThemeSelectionOnClick({ selectedThemeId, themeId, path, pathToIdMap })
+    });
   };
   const handleSelectGoal = (option) => {
     if (!option || !option.value) {
-      setSelectedGoalId(null);
-      setSelectedGoalPath(null);
-      setSelectedTemplateVariantId(null);
+      dispatchSession({ type: "selectGoal", goalId: null, goalPath: null });
       return;
     }
     const nextSelection = applyQuickInputGoalSelection({ formData, fieldSources, option });
-    setSelectedGoalId(nextSelection.goalId);
-    setSelectedGoalPath(nextSelection.goalPath);
-    setSelectedTemplateVariantId(null);
-    if (nextSelection.themePath) setSelectedThemeId(pathToIdMap.get(nextSelection.themePath) ?? null);
-    setFormData(nextSelection.formData);
-    setFieldSources(nextSelection.fieldSources);
+    dispatchSession({
+      type: "selectGoal",
+      goalId: nextSelection.goalId,
+      goalPath: nextSelection.goalPath,
+      selectedThemeId: nextSelection.themePath ? pathToIdMap.get(nextSelection.themePath) ?? null : void 0,
+      formData: nextSelection.formData,
+      fieldSources: nextSelection.fieldSources
+    });
   };
   return /* @__PURE__ */ u2(
     QuickInputEditorView,
@@ -59849,7 +60160,7 @@ function QuickInputEditor({
       getResourcePath,
       blocks,
       allowBlockSwitch,
-      currentBlockId,
+      currentBlockId: currentEffectiveBlockIdForTemplates || currentBlockId,
       onBlockChange: handleBlockChange,
       themes: availableThemes,
       selectedThemeId,
@@ -59860,7 +60171,7 @@ function QuickInputEditor({
       onCreateGoal: void 0,
       templateVariants: goalTemplateVariants.map((template2) => ({ value: template2.variantId || "default", label: template2.name || template2.variantId || "默认模板" })),
       selectedTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId,
-      onSelectTemplateVariant: setSelectedTemplateVariantId,
+      onSelectTemplateVariant: (variantId) => dispatchSession({ type: "selectTemplateVariant", variantId }),
       template,
       formData,
       fieldValueOptionsByKey: { themePath: themeOptions(availableThemes), "主题": themeOptions(availableThemes), ...currentPeriodOptions },
@@ -60026,8 +60337,7 @@ function setupQuickInputKeyboardDetection(host) {
   };
 }
 function isMobileLikeEnvironment() {
-  if (typeof window === "undefined") return false;
-  return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent) || (window.matchMedia?.("(pointer: coarse)").matches ?? false) || window.innerWidth <= 820;
+  return isThinkMobileLikeProfile(detectThinkDeviceProfile());
 }
 function useQuickInputOriginalNavigation({
   mode,
@@ -60074,12 +60384,71 @@ function useQuickInputOriginalNavigation({
     handleOriginalTouchEnd
   };
 }
-function submitButtonLabel(mode, pendingAction) {
-  if (pendingAction === "submit") return mode === "edit" ? "保存中..." : "创建中...";
-  return mode === "edit" ? "保存修改" : "创建";
+function isQuickInputUpdateOperation(mode) {
+  return mode === "edit" || mode === "convert";
+}
+function getQuickInputSubmitLabel(mode, pending) {
+  if (pending) {
+    switch (mode) {
+      case "edit":
+        return "保存中...";
+      case "convert":
+        return "转换中...";
+      case "duplicate":
+        return "另存中...";
+      case "create":
+      default:
+        return "创建中...";
+    }
+  }
+  switch (mode) {
+    case "edit":
+      return "保存修改";
+    case "convert":
+      return "转换并保存";
+    case "duplicate":
+      return "另存为新记录";
+    case "create":
+    default:
+      return "创建";
+  }
+}
+function getQuickInputFailureMessage(mode) {
+  switch (mode) {
+    case "edit":
+      return "保存修改失败";
+    case "convert":
+      return "转换记录类型失败";
+    case "duplicate":
+      return "另存为新记录失败";
+    case "create":
+    default:
+      return "创建失败";
+  }
+}
+function getQuickInputSuccessNotice(mode, existingNotice) {
+  if (mode === "duplicate") return "✅ 已另存为新记录";
+  if (mode === "convert") {
+    const notice = String(existingNotice || "").trim();
+    return notice.includes("迁移保存") || notice.includes("已迁移保存") ? notice : "✅ 已转换记录类型";
+  }
+  return null;
+}
+function getQuickInputOperationTitle(mode, currentBlockName, isTimerCreate) {
+  switch (mode) {
+    case "edit":
+      return `编辑记录 · ${currentBlockName}`;
+    case "convert":
+      return `转换记录类型 · ${currentBlockName}`;
+    case "duplicate":
+      return `另存为新记录 · ${currentBlockName}`;
+    case "create":
+    default:
+      return isTimerCreate ? `开始新任务 · ${currentBlockName}` : `快速录入 · ${currentBlockName}`;
+  }
 }
 function QuickInputModalFooter({
-  mode,
+  operationMode,
   isBusy,
   isMobileLike,
   pendingAction,
@@ -60089,80 +60458,69 @@ function QuickInputModalFooter({
   onSubmitPointerDown,
   onPreserveDesktopInputFocus
 }) {
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "think-modal__footer think-modal__footer--quick-input",
-      style: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginTop: "0.9rem",
-        gap: "8px",
-        position: isMobileLike ? "sticky" : "static",
-        bottom: 0,
-        background: "var(--background-primary)",
-        paddingBottom: isMobileLike ? "calc(env(safe-area-inset-bottom, 0px) + 8px)" : void 0,
-        zIndex: isMobileLike ? 3 : void 0
-      },
-      children: /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "space-between", width: "100%" }, children: [
-        /* @__PURE__ */ u2("div", { children: mode === "edit" ? /* @__PURE__ */ u2(
-          Button2,
-          {
-            color: "error",
-            onMouseDown: onPreserveDesktopInputFocus,
-            onPointerDown: onPreserveDesktopInputFocus,
-            onClick: onDelete,
-            disabled: isBusy,
-            children: pendingAction === "delete" ? "删除中..." : "删除"
-          }
-        ) : null }),
-        /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }, children: [
-          /* @__PURE__ */ u2(Button2, { onMouseDown: onPreserveDesktopInputFocus, onPointerDown: onPreserveDesktopInputFocus, onClick: onCancel, disabled: isBusy, children: "取消" }),
-          /* @__PURE__ */ u2(
-            Button2,
-            {
-              "data-submit": "true",
-              onMouseDown: onSubmitPointerDown,
-              onPointerDown: onSubmitPointerDown,
-              onClick: isMobileLike ? onSubmitClick : void 0,
-              variant: "contained",
-              disabled: isBusy,
-              children: submitButtonLabel(mode, pendingAction)
-            }
-          )
-        ] })
-      ] })
-    }
-  );
+  const showDelete = operationMode === "edit" || operationMode === "convert";
+  return /* @__PURE__ */ u2("div", { class: `think-modal__footer think-modal__footer--quick-input${isMobileLike ? " is-mobile-like" : ""}`, children: /* @__PURE__ */ u2("div", { class: "think-quick-input-footer-row", children: [
+    /* @__PURE__ */ u2("div", { class: "think-quick-input-footer-danger-zone", children: showDelete ? /* @__PURE__ */ u2(
+      Button2,
+      {
+        color: "error",
+        onMouseDown: onPreserveDesktopInputFocus,
+        onPointerDown: onPreserveDesktopInputFocus,
+        onClick: onDelete,
+        disabled: isBusy,
+        children: pendingAction === "delete" ? "删除中..." : "删除"
+      }
+    ) : null }),
+    /* @__PURE__ */ u2("div", { class: "think-quick-input-footer-actions", children: [
+      /* @__PURE__ */ u2(Button2, { onMouseDown: onPreserveDesktopInputFocus, onPointerDown: onPreserveDesktopInputFocus, onClick: onCancel, disabled: isBusy, children: "取消" }),
+      /* @__PURE__ */ u2(
+        Button2,
+        {
+          "data-submit": "true",
+          onMouseDown: onSubmitPointerDown,
+          onPointerDown: onSubmitPointerDown,
+          onClick: isMobileLike ? onSubmitClick : void 0,
+          variant: "contained",
+          disabled: isBusy,
+          children: getQuickInputSubmitLabel(operationMode, pendingAction === "submit")
+        }
+      )
+    ] })
+  ] }) });
 }
-function buildTitle(mode, currentBlockName, isTimerCreate) {
-  if (mode === "edit") return `编辑记录 · ${currentBlockName}`;
-  return isTimerCreate ? `开始新任务 · ${currentBlockName}` : `快速录入 · ${currentBlockName}`;
+function buildOperationHelpText(mode) {
+  if (mode === "convert") {
+    return "转换会修改原记录的记录类型，并按新模板保存；如果保存位置变化，会先写入新位置，再删除旧记录。";
+  }
+  if (mode === "duplicate") {
+    return "另存会按当前内容创建一条新记录，原记录保持不变。";
+  }
+  return "";
 }
 function QuickInputModalHeader({
-  mode,
+  operationMode,
   currentBlockName,
   isTimerCreate,
   originalGestureHint,
-  outputPlanHint,
-  pathChangeHint,
   onClose,
   onOriginalPointerClick,
-  onOriginalTouchEnd
+  onOriginalTouchEnd,
+  onOperationModeChange
 }) {
-  return /* @__PURE__ */ u2(Box, { sx: { mb: "0.75rem" }, children: [
+  const isEditingExistingRecord = operationMode !== "create";
+  const helpText = buildOperationHelpText(operationMode);
+  return /* @__PURE__ */ u2("div", { class: "think-quick-input-modal-header", children: [
     /* @__PURE__ */ u2(
       ModalHeader,
       {
         left: /* @__PURE__ */ u2(
           "h3",
           {
-            style: { margin: 0 },
+            class: "think-quick-input-modal-title",
             title: originalGestureHint,
-            onClick: mode === "edit" ? onOriginalPointerClick : void 0,
-            onTouchEnd: mode === "edit" ? onOriginalTouchEnd : void 0,
-            children: buildTitle(mode, currentBlockName, isTimerCreate)
+            onClick: isEditingExistingRecord ? onOriginalPointerClick : void 0,
+            onTouchEnd: isEditingExistingRecord ? onOriginalTouchEnd : void 0,
+            children: getQuickInputOperationTitle(operationMode, currentBlockName, isTimerCreate)
           }
         ),
         onClose,
@@ -60170,28 +60528,41 @@ function QuickInputModalHeader({
         borderBottom: false
       }
     ),
-    pathChangeHint || outputPlanHint ? /* @__PURE__ */ u2(
-      "div",
-      {
-        style: {
-          marginTop: "0.35rem",
-          fontSize: "12px",
-          color: pathChangeHint ? "var(--text-warning)" : "var(--text-muted)",
-          lineHeight: 1.5,
-          padding: pathChangeHint ? "0.45rem 0.55rem" : "0.25rem 0",
-          border: pathChangeHint ? "1px solid var(--background-modifier-border)" : void 0,
-          borderRadius: pathChangeHint ? "8px" : void 0,
-          background: pathChangeHint ? "var(--background-secondary)" : void 0
-        },
-        children: [
-          /* @__PURE__ */ u2("div", { style: { fontWeight: pathChangeHint ? 600 : 400, marginBottom: pathChangeHint ? "0.15rem" : 0 }, children: pathChangeHint ? "保存位置预览：将迁移保存" : "保存位置预览" }),
-          /* @__PURE__ */ u2("div", { children: pathChangeHint || outputPlanHint })
-        ]
-      }
-    ) : null
+    isEditingExistingRecord ? /* @__PURE__ */ u2("div", { class: "think-quick-input-operation-panel", children: [
+      /* @__PURE__ */ u2("div", { class: "think-quick-input-operation-panel__actions", role: "group", "aria-label": "编辑记录操作方式", children: [
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            variant: operationMode === "edit" ? "contained" : "outlined",
+            onClick: () => onOperationModeChange("edit"),
+            children: "编辑原记录"
+          }
+        ),
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            variant: operationMode === "convert" ? "contained" : "outlined",
+            onClick: () => onOperationModeChange("convert"),
+            children: "转换记录类型"
+          }
+        ),
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            variant: operationMode === "duplicate" ? "contained" : "outlined",
+            onClick: () => onOperationModeChange("duplicate"),
+            children: "另存为新记录"
+          }
+        )
+      ] }),
+      helpText ? /* @__PURE__ */ u2("div", { class: "think-quick-input-operation-panel__hint", children: helpText }) : null
+    ] }) : null
   ] });
 }
-function useQuickInputOutputPlanPreview({
+function useQuickInputOutputPlan({
   currentState,
   preparedRecord,
   editItem,
@@ -60210,7 +60581,7 @@ function useQuickInputOutputPlanPreview({
         }
       });
     } catch (error) {
-      diagnosticWarn("[记录调试][保存位置预览] 计算实时 OutputPlan 失败，回退到初始计划", error);
+      diagnosticWarn("[记录调试][保存计划] 计算实时 OutputPlan 失败，回退到初始计划", error);
       return preparedRecord.outputPlan ?? null;
     }
   }, [currentState.template, currentState.theme, currentState.formData, currentState.templateId, currentState.templateSourceType, preparedRecord.outputPlan]);
@@ -60222,13 +60593,9 @@ function useQuickInputOutputPlanPreview({
       outputPlan: liveOutputPlan
     });
   }, [liveOutputPlan, preparedRecord.persistencePlan, editItem, mode]);
-  const outputPlanHint = liveOutputPlan?.targetFilePath ? `目标位置：${liveOutputPlan.targetFilePath}${liveOutputPlan?.targetHeader ? ` → ${liveOutputPlan.targetHeader}` : ""}` : "";
-  const pathChangeHint = livePersistencePlan?.pathChanged ? `保存位置将变化：${livePersistencePlan.originalPath || "未知"} → ${liveOutputPlan?.targetFilePath || "未知"}${liveOutputPlan?.targetHeader ? ` → ${liveOutputPlan.targetHeader}` : ""}。保存时会执行迁移保存：先写入新位置，再删除旧记录；如果删除旧记录失败，会保留旧记录并提示手动清理。` : "";
   return {
     liveOutputPlan,
-    livePersistencePlan,
-    outputPlanHint,
-    pathChangeHint
+    livePersistencePlan
   };
 }
 function showQuickInputNotice(message, tone = "error") {
@@ -60236,8 +60603,24 @@ function showQuickInputNotice(message, tone = "error") {
   const duration2 = tone === "success" ? 4e3 : tone === "warning" ? 12e3 : 1e4;
   new obsidian.Notice(`${prefix2}${message}`, duration2);
 }
+function withOperationSuccessNotice(result, operationMode) {
+  if (result.status !== "success") return result;
+  const notice = getQuickInputSuccessNotice(operationMode, result.feedback?.notice);
+  if (!notice) return result;
+  return {
+    ...result,
+    feedback: {
+      ...result.feedback || {},
+      notice
+    }
+  };
+}
+function confirmConvertOperation(operationMode) {
+  if (operationMode !== "convert") return true;
+  return window.confirm("确认转换这条记录的记录类型吗？转换会按当前记录类型模板改写原记录；若保存位置变化，会先写入新位置再删除旧记录。");
+}
 function useQuickInputSubmitController({
-  mode,
+  operationMode,
   editItem,
   context,
   source,
@@ -60281,8 +60664,9 @@ function useQuickInputSubmitController({
   }, []);
   const handleSubmit = q$1(async () => {
     if (submitTriggeredRef.current || pendingActionRef.current) return;
+    if (!confirmConvertOperation(operationMode)) return;
     submitTriggeredRef.current = true;
-    if (onSave && mode === "create") {
+    if (onSave && operationMode === "create") {
       try {
         onSave(buildCreateDraft());
         closeModal();
@@ -60298,7 +60682,7 @@ function useQuickInputSubmitController({
       const result = await submitLatestRef.current.run(async (signal) => {
         const latestState = getCurrentState();
         assertRecordInputRequiredFields(latestState);
-        if (mode === "edit" && editItem) {
+        if (isQuickInputUpdateOperation(operationMode) && editItem) {
           return await useCases.recordInput.submitUpdateRecord(buildUpdateRecordSubmitParamsFromEditorState({
             state: latestState,
             item: editItem,
@@ -60310,28 +60694,29 @@ function useQuickInputSubmitController({
         }
         return await useCases.recordInput.submitCreateRecord(buildCreateRecordSubmitParamsFromEditorState({
           state: latestState,
-          context,
+          context: operationMode === "duplicate" ? void 0 : context,
           signal,
           source: source ?? "quickinput"
         }));
       });
-      rememberConflict(result);
+      const feedbackResult = withOperationSuccessNotice(result, operationMode);
+      rememberConflict(feedbackResult);
       const presentation = buildRecordSubmitFeedbackPresentation(
-        result,
-        mode === "edit" ? "保存修改失败" : "创建失败"
+        feedbackResult,
+        getQuickInputFailureMessage(operationMode)
       );
-      if (result.status === "cancelled") {
+      if (feedbackResult.status === "cancelled") {
         return;
       }
       if (presentation.message) {
-        const shouldShowOwnSuccessNotice = !(mode === "create" && source === "timer" && onSubmitSuccess);
+        const shouldShowOwnSuccessNotice = !(operationMode === "create" && source === "timer" && onSubmitSuccess);
         if (presentation.tone !== "success" || shouldShowOwnSuccessNotice) {
           showQuickInputNotice(presentation.message, presentation.tone);
         }
       }
-      if (result.status === "success" && mode === "create" && onSubmitSuccess) {
+      if (feedbackResult.status === "success" && operationMode === "create" && onSubmitSuccess) {
         try {
-          await onSubmitSuccess(result, buildCreateDraft());
+          await onSubmitSuccess(feedbackResult, buildCreateDraft());
         } catch (followUpError) {
           showQuickInputNotice(followUpError instanceof Error ? followUpError.message : "记录已创建，但后续操作失败");
         }
@@ -60341,7 +60726,7 @@ function useQuickInputSubmitController({
       }
     } catch (error) {
       if (!(error instanceof CancelledError)) {
-        showQuickInputNotice(error?.message || (mode === "edit" ? "保存修改失败" : "创建失败"));
+        showQuickInputNotice(error?.message || getQuickInputFailureMessage(operationMode));
       }
     } finally {
       pendingActionRef.current = null;
@@ -60356,7 +60741,7 @@ function useQuickInputSubmitController({
     getCurrentState,
     liveOutputPlan,
     livePersistencePlan,
-    mode,
+    operationMode,
     onSave,
     onSubmitSuccess,
     rememberConflict,
@@ -60366,7 +60751,7 @@ function useQuickInputSubmitController({
   ]);
   const handleDelete = q$1(async () => {
     if (pendingActionRef.current) return;
-    if (mode !== "edit" || !editItem) return;
+    if (!isQuickInputUpdateOperation(operationMode) || !editItem) return;
     if (!window.confirm("确认删除这条记录吗？")) return;
     setLastConflictResult(null);
     pendingActionRef.current = "delete";
@@ -60396,7 +60781,7 @@ function useQuickInputSubmitController({
       pendingActionRef.current = null;
       setPendingAction(null);
     }
-  }, [closeModal, editItem, mode, rememberConflict, useCases]);
+  }, [closeModal, editItem, operationMode, rememberConflict, useCases]);
   const preserveDesktopInputFocus = q$1((event) => {
     if (isMobileLike) return;
     event.preventDefault();
@@ -60409,7 +60794,7 @@ function useQuickInputSubmitController({
   }, [handleSubmit, isMobileLike]);
   const recovery = buildRecordSubmitRecoveryPresentation(lastConflictResult, {
     fallbackPath: editItem?.file?.path ?? null,
-    canOpenOriginal: mode === "edit" && Boolean(editItem)
+    canOpenOriginal: operationMode !== "create" && Boolean(editItem)
   });
   return {
     pendingAction,
@@ -60468,7 +60853,7 @@ function QuickInputConflictRecoveryPanel({
   );
 }
 class QuickInputModal extends obsidian.Modal {
-  constructor(app, blockId, context, themeId, onSave, allowBlockSwitch = false, options) {
+  constructor(app, blockId, context, themeId, onSave, allowBlockSwitch = true, options) {
     super(app);
     this.blockId = blockId;
     this.context = context;
@@ -60594,6 +60979,11 @@ function QuickInputModalContent({
     });
   }, [useCases, initialBlockId, initialThemeId, context, mode, editItem, onSave, source]);
   const [isRescanningRecoveryPaths, setIsRescanningRecoveryPaths] = d(false);
+  const [editOperationMode, setEditOperationMode] = d("edit");
+  const [editorResetVersion, setEditorResetVersion] = d(0);
+  const operationMode = mode === "create" ? "create" : editOperationMode;
+  const editorSessionMode = operationMode;
+  const outputPlanMode = operationMode === "duplicate" ? "create" : mode;
   const [editorState, setEditorState] = d({
     blockId: preparedRecord.blockId || initialBlockId,
     themeId: preparedRecord.themeId,
@@ -60606,16 +60996,31 @@ function QuickInputModalContent({
   });
   const editorStateRef = A$1(null);
   const isMobileLike = T$1(() => isMobileLikeEnvironment(), []);
+  const editIdentity = `${mode}:${editItem?.id ?? ""}`;
+  const previousEditIdentityRef = A$1(editIdentity);
+  y(() => {
+    if (previousEditIdentityRef.current === editIdentity) return;
+    previousEditIdentityRef.current = editIdentity;
+    setEditOperationMode("edit");
+    setEditorResetVersion((version2) => version2 + 1);
+  }, [editIdentity]);
+  const handleOperationModeChange = q$1((nextMode) => {
+    if (nextMode === "create") return;
+    setEditOperationMode((previousMode) => {
+      if (nextMode === "edit" && previousMode !== "edit") {
+        setEditorResetVersion((version2) => version2 + 1);
+      }
+      return nextMode;
+    });
+  }, []);
   const currentState = editorStateRef.current || editorState;
   const currentBlock = (settings.blocks || []).find((block2) => block2.id === currentState.blockId);
   const currentBlockName = currentBlock?.name || currentState.template?.name || currentState.blockId;
   const isTimerCreate = mode === "create" && (source === "timer" || !!onSave);
   const {
     liveOutputPlan,
-    livePersistencePlan,
-    outputPlanHint,
-    pathChangeHint
-  } = useQuickInputOutputPlanPreview({ currentState, preparedRecord, editItem, mode });
+    livePersistencePlan
+  } = useQuickInputOutputPlan({ currentState, preparedRecord, editItem, mode: outputPlanMode });
   const {
     originalGestureHint,
     openOriginal,
@@ -60633,7 +61038,7 @@ function QuickInputModalContent({
     recovery,
     clearRecovery
   } = useQuickInputSubmitController({
-    mode,
+    operationMode,
     editItem,
     context,
     source,
@@ -60662,17 +61067,16 @@ function QuickInputModalContent({
       setIsRescanningRecoveryPaths(false);
     }
   }, [dataStore, isRescanningRecoveryPaths, recovery.paths]);
-  return /* @__PURE__ */ u2("div", { class: "think-modal think-modal--quick-input", style: { padding: "0 0.9rem 0.9rem 0.9rem", display: "flex", flexDirection: "column", minHeight: 0, maxHeight: "calc(100dvh - 24px)", gap: "0.25rem" }, children: [
+  return /* @__PURE__ */ u2("div", { class: "think-modal think-modal--quick-input", children: [
     /* @__PURE__ */ u2(
       QuickInputModalHeader,
       {
-        mode,
+        operationMode,
         currentBlockName,
         isTimerCreate,
         originalGestureHint,
-        outputPlanHint,
-        pathChangeHint,
         onClose: closeModal,
+        onOperationModeChange: handleOperationModeChange,
         onOriginalPointerClick: handleOriginalPointerClick,
         onOriginalTouchEnd: handleOriginalTouchEnd
       }
@@ -60689,7 +61093,7 @@ function QuickInputModalContent({
         onDismiss: clearRecovery
       }
     ),
-    /* @__PURE__ */ u2("div", { class: "think-modal__body", style: { paddingBottom: isMobileLike ? "96px" : void 0 }, children: /* @__PURE__ */ u2(
+    /* @__PURE__ */ u2("div", { class: "think-modal__body", children: /* @__PURE__ */ u2(
       QuickInputEditor,
       {
         getResourcePath,
@@ -60697,16 +61101,18 @@ function QuickInputModalContent({
         initialThemeId: preparedRecord.themeId,
         initialFormData: preparedRecord.initialFormData,
         context: mode === "edit" ? void 0 : context,
-        allowBlockSwitch: mode === "edit" ? false : allowBlockSwitch,
+        recordInputMode: editorSessionMode,
+        allowBlockSwitch: operationMode === "convert" || operationMode === "duplicate" ? true : mode === "edit" ? false : allowBlockSwitch,
         onStateChange: handleEditorStateChange,
         onRequestSubmit: handleSubmit,
         isMobileLike
-      }
+      },
+      `${editorResetVersion}:${editItem?.id ?? "create"}`
     ) }),
     /* @__PURE__ */ u2(
       QuickInputModalFooter,
       {
-        mode,
+        operationMode,
         isBusy,
         isMobileLike,
         pendingAction,
@@ -61307,10 +61713,6 @@ const getNumericConstraint = (value, fallback) => {
   if (typeof value === "number") return value;
   return fallback;
 };
-const isMobile = () => {
-  if (typeof window === "undefined") return false;
-  return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent) || (window.matchMedia?.("(pointer: coarse)").matches ?? false) || window.innerWidth <= 820;
-};
 function FloatingPanel({
   id,
   defaultPosition = { x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 150 },
@@ -61336,7 +61738,9 @@ function FloatingPanel({
   portalContainer,
   placement = "floating"
 }) {
-  const mobile = T$1(() => isMobile(), []);
+  const deviceProfile = T$1(() => detectThinkDeviceProfile(), []);
+  const deviceProfileAttrs = T$1(() => getThinkDeviceProfileAttributes(deviceProfile), [deviceProfile]);
+  const mobile = isThinkMobileLikeProfile(deviceProfile);
   const inline = placement === "inline";
   const register = useSelector(selectFloatingWindowsRegister);
   const unregister = useSelector(selectFloatingWindowsUnregister);
@@ -61598,6 +62002,7 @@ function FloatingPanel({
     {
       elevation: 4,
       className: `think-os think-os--modal think-floating-panel${inline ? " is-inline" : ""}${mobile ? " is-mobile" : ""}`,
+      ...deviceProfileAttrs,
       onMouseDown: onPanelPointerDown,
       onTouchStart: onPanelPointerDown,
       style: paperStyle,
@@ -72457,9 +72862,10 @@ function clampTabIndex(value) {
   return Math.min(Math.max(0, Math.floor(numeric)), SETTINGS_TAB_COUNT - 1);
 }
 function SettingsRoot({ app, variant = "workspace" }) {
+  const deviceProfileAttrs = getThinkDeviceProfileAttributes();
   const [storedTabIndex, setStoredTabIndex] = useLocalStorage(SETTINGS_TABS_NO_QUICK_INPUT_KEY, 0);
   const tabIndex = clampTabIndex(storedTabIndex);
-  return /* @__PURE__ */ u2("div", { className: `think-os think-os--settings think-setting-root think-setting-root--${variant}`, children: [
+  return /* @__PURE__ */ u2("div", { className: `think-os think-os--settings think-setting-root think-setting-root--${variant}`, ...deviceProfileAttrs, children: [
     /* @__PURE__ */ u2("div", { className: "think-settings-tabs", children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setStoredTabIndex(clampTabIndex(newValue)), "aria-label": "settings tabs", variant: "scrollable", scrollButtons: "auto", children: [
       /* @__PURE__ */ u2(Tab2, { label: "数据管理", ...a11yProps(0) }),
       /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(1) }),
@@ -72514,7 +72920,8 @@ async function openThinkSettingsWorkspaceView(plugin) {
   workspace.revealLeaf(leaf2);
 }
 function SettingsLauncher({ onOpenWorkspace }) {
-  return /* @__PURE__ */ u2("section", { className: "think-os think-os--settings think-setting-root think-setting-root--launcher", children: [
+  const deviceProfileAttrs = getThinkDeviceProfileAttributes();
+  return /* @__PURE__ */ u2("section", { className: "think-os think-os--settings think-setting-root think-setting-root--launcher", ...deviceProfileAttrs, children: [
     /* @__PURE__ */ u2("h2", { className: "think-settings-launcher__title", children: "Think OS 控制台" }),
     /* @__PURE__ */ u2("p", { className: "think-settings-launcher__description", children: "完整设置已经收敛到 Obsidian 工作区标签页，那里空间更适合管理目标、记录预设、布局和 AI。 原生插件设置页只保留这个入口，避免继续塞入大型表单。" }),
     /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: onOpenWorkspace, children: "打开 Think OS 控制台" }),
@@ -74270,16 +74677,24 @@ function getLayoutInitialDate(layout) {
 function useCompactFreeformFallback() {
   const [compact, setCompact] = d(false);
   y(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
-    const media = window.matchMedia("(max-width: 760px), (hover: none) and (pointer: coarse)");
-    const update = () => setCompact(media.matches);
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia?.("(max-width: 760px), (hover: none) and (pointer: coarse)");
+    const update = () => {
+      const profile = detectThinkDeviceProfile();
+      setCompact(Boolean(media?.matches) || isThinkMobileLikeProfile(profile));
+    };
     update();
-    media.addEventListener?.("change", update);
-    return () => media.removeEventListener?.("change", update);
+    media?.addEventListener?.("change", update);
+    window.addEventListener("resize", update);
+    return () => {
+      media?.removeEventListener?.("change", update);
+      window.removeEventListener("resize", update);
+    };
   }, []);
   return compact;
 }
 function LayoutRenderer({ layout, dataStore, app, actionService, timerService }) {
+  const deviceProfileAttrs = getThinkDeviceProfileAttributes();
   const useCases = useUseCases();
   const ui = useUiPort();
   const allViews = useSelector(selectViewInstances);
@@ -74438,7 +74853,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   const gridStyle = layout.displayMode === "grid" ? { display: "grid", gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`, gap: "8px" } : {};
   const isFreeform = layout.displayMode === "freeform";
   const useFreeformCanvas = isFreeform && !compactFreeformFallback;
-  return /* @__PURE__ */ u2("div", { class: "think-os think-os--layout", children: [
+  return /* @__PURE__ */ u2("div", { class: "think-os think-os--layout", ...deviceProfileAttrs, children: [
     /* @__PURE__ */ u2(
       ViewToolbar,
       {
@@ -76515,6 +76930,7 @@ class AiChatModal extends obsidian.Modal {
     this.modalEl.addClass("think-modal-host");
     this.modalEl.addClass("think-modal-host--wide");
     this.modalEl.addClass("think-ai-chat-modal");
+    applyThinkDeviceProfileAttributes(this.modalEl);
     this.keydownStopper = (e2) => {
       e2.stopPropagation();
     };

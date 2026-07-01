@@ -6,8 +6,9 @@ import type { ThemeDefinition } from '@core/public';
 import { Box, Divider, FormControl, Typography } from '@shared/public';
 
 import { QuickInputEditorFields } from './components/Fields';
-import { SelectablePill } from './components/SelectablePill';
 import { GoalSelector, type GoalSelectorOption } from './components/GoalSelector';
+import { RecordTypeSwitcher } from './components/RecordTypeSwitcher';
+import { SelectablePill } from './components/SelectablePill';
 
 export interface QuickInputEditorViewProps {
   getResourcePath: (path: string) => string;
@@ -90,13 +91,30 @@ export function QuickInputEditorView({
   onRequestSubmit,
   isMobileLike = false,
   showTimeDirectionControl = false,
+  currentGoalPath = null,
+  templateSourceType = null,
 }: QuickInputEditorViewProps) {
   if (!template) {
     return <div>错误：找不到当前记录类型的默认配置。</div>;
   }
 
+  const shouldShowCoreBlockFallbackHint = Boolean(currentGoalPath)
+    && templateSourceType === 'core-block'
+    && templateVariants.length === 0;
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: dense ? 1.75 : 2 }}>
+      {allowBlockSwitch && blocks.length > 1 && (
+        <Box>
+          <SectionTitle title="记录类型" compact />
+          <RecordTypeSwitcher
+            blocks={blocks}
+            currentBlockId={currentBlockId}
+            onBlockChange={onBlockChange}
+          />
+        </Box>
+      )}
+
       <Box>
         <SectionTitle title="目标" compact />
         <GoalSelector
@@ -106,33 +124,16 @@ export function QuickInputEditorView({
           onCreateGoal={onCreateGoal}
           dense={dense}
         />
+        {shouldShowCoreBlockFallbackHint && (
+          <div class="think-quick-input-context-hint">当前目标没有此记录类型的专属预设，已使用记录类型默认模板。</div>
+        )}
       </Box>
-
-      {allowBlockSwitch && blocks.length > 1 && (
-        <Box>
-          <SectionTitle title="记录类型" compact />
-          <FormControl fullWidth>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {blocks.map((block: any) => (
-                <SelectablePill
-                  key={block.id}
-                  selected={currentBlockId === block.id}
-                  onClick={() => onBlockChange(block.id)}
-                  title={block.name}
-                >
-                  {block.name}
-                </SelectablePill>
-              ))}
-            </div>
-          </FormControl>
-        </Box>
-      )}
 
       {templateVariants.length > 0 && (
         <Box>
           <SectionTitle title="记录预设" compact />
           <FormControl fullWidth>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div class="think-quick-input-pill-row think-quick-input-template-variant-switcher">
               {templateVariants.map((variant) => {
                 const isSelected = (selectedTemplateVariantId || 'default') === variant.value;
                 return (
