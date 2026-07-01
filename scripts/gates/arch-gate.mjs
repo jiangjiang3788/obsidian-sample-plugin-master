@@ -25,6 +25,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
 import { failWithViolations, printOk } from '../lib/gate-formatter.mjs';
+import { CORE_PUBLIC_FACADES } from './public-facades.config.mjs';
 
 const require = createRequire(import.meta.url);
 // Use require() so this works even when TypeScript is provided via CommonJS.
@@ -39,6 +40,9 @@ const SRC_DIR = path.join(ROOT, 'src');
 const APP_PUBLIC = path.join(SRC_DIR, 'app', 'public.ts');
 const APP_CAPABILITIES_PUBLIC = path.join(SRC_DIR, 'app', 'capabilities', 'public.ts');
 const CORE_PUBLIC = path.join(SRC_DIR, 'core', 'public.ts');
+const CORE_PUBLIC_FACADE_FILES = new Set(
+  CORE_PUBLIC_FACADES.map((facade) => path.resolve(ROOT, facade.file))
+);
 
 function toPosix(p) {
   return p.split(path.sep).join('/');
@@ -71,7 +75,7 @@ function isAppCapabilitiesPublicFile(targetAbs) {
 }
 
 function isCorePublicFile(targetAbs) {
-  return path.resolve(targetAbs) === path.resolve(CORE_PUBLIC);
+  return CORE_PUBLIC_FACADE_FILES.has(path.resolve(targetAbs));
 }
 
 // Keep this “capability” lock as a string/regex scan.
@@ -291,7 +295,7 @@ for (const absPath of files) {
       if (!isCorePublicFile(targetAbs)) {
         errors.push({
           file: absPath,
-          msg: `❌ Rule3b: 非 core 层访问 core 必须通过 core/public.ts (found via ${kind} '${spec}' -> ${toPosix(path.relative(ROOT, targetAbs))})`,
+          msg: `❌ Rule3b: 非 core 层访问 core 必须通过 core/public.ts 或 @core/<domain>/public (found via ${kind} '${spec}' -> ${toPosix(path.relative(ROOT, targetAbs))})`,
           loc: formatLoc(sf, pos),
         });
         continue;

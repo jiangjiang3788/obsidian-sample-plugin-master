@@ -14,10 +14,12 @@ import {
   DialogTitle,
   Divider,
   Typography,
-} from '@shared/public';
-import { ExpandMoreIcon, FilterListIcon } from '@shared/public';
-import { DataStore, getAllFields, getFieldLabel } from '@core/public';
-import type { FilterRule, Item } from '@core/public';
+} from '@shared/ui/public';
+import { ExpandMoreIcon, FilterListIcon } from '@shared/ui/public';
+import { DataStore } from '@core/services/public';
+import { getAllFields } from '@core/types/public';
+import { getFieldLabel } from '@core/fields/public';
+import type { FilterRule, Item } from '@core/types/public';
 import { RuleBuilder } from '@features/settings/viewEditors/RuleBuilder';
 import { CommonFilterPanel } from '@features/settings/viewEditors/CommonFilterPanel';
 

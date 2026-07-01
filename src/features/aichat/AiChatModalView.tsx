@@ -1,9 +1,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RefObject } from 'preact';
-import { Box, Typography } from '@shared/public';
-import { ChatIcon, ModalHeader } from '@shared/public';
-import type { ChatMessage, ChatSession, ThemeDefinition } from '@core/public';
+import { Box, Typography } from '@shared/ui/public';
+import { ChatIcon, ModalHeader } from '@shared/ui/public';
+import type { ChatMessage, ChatSession } from '@core/ai/public';
+import type { ThemeDefinition } from '@core/types/public';
 import { FiltersBar, type BlockDefinition } from './components/FiltersBar';
 import { SessionList } from './components/SessionList';
 import { ChatMessages } from './components/ChatMessages';

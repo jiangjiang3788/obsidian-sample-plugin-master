@@ -8,8 +8,12 @@
  * 说明：这里仍然只做“位置迁移”，不改变视图行为。
  */
 
-import { dayjs, readField, groupItemsByFields, normalizeDisplayFields } from '@core/public';
-import type { Item, ViewInstance, GroupNode, GoalDefinition } from '@core/public';
+import { dayjs, groupItemsByFields } from '@core/utils/public';
+import { readField } from '@core/types/public';
+import { normalizeDisplayFields } from '@core/view/public';
+import type { Item, ViewInstance } from '@core/types/public';
+import type { GroupNode } from '@core/utils/public';
+import type { GoalDefinition } from '@core/goal/public';
 
 export interface EventTimelineViewModel {
   displayFields: string[];

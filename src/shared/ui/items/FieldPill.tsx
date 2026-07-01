@@ -1,11 +1,11 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item, ThemeDefinition } from '@core/public';
-import { readField } from '@core/public';
-import { getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeImageValue } from '@core/public';
-import { getCategoryColor } from '@core/public';
+import type { Item, ThemeDefinition } from '@core/types/public';
+import { readField } from '@core/types/public';
+import { getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeImageValue } from '@core/fields/public';
+import { getCategoryColor } from '@core/types/public';
 import { TagsRenderer } from '../composites/TagsRenderer';
-import { getBaseCategory, getLeafPath } from '@core/public';
+import { getBaseCategory, getLeafPath } from '@core/utils/public';
 import type { ResolveResourcePathHandler } from '../../types/actions';
 
 interface FieldPillProps {

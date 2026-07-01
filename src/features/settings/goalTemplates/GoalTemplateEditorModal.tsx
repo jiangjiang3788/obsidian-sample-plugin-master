@@ -1,10 +1,20 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Alert, Box, Button, Divider, Stack, Typography, diagnosticError } from '@shared/public';
+import {
+  Alert,
+  Box,
+  Button,
+  Divider,
+  Stack,
+  Typography,
+} from '@shared/ui/public';
+import { diagnosticError } from '@shared/utils/public';
 import { FloatingPanel, selectSettings, useSelector, useUiPort, type UseCases } from '@/app/public';
-import type { CoreBlockDefinition, GoalDefinition, GoalTemplate, TemplateField } from '@core/public';
-import { getGoalTemplateId, isPeriodAwareCoreBlock } from '@core/public';
+import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
+import type { TemplateField } from '@core/types/public';
+import { getGoalTemplateId, isPeriodAwareCoreBlock } from '@core/goal/public';
 import { FieldsEditor } from '../input/FieldsEditor';
 import { TemplateVariableCopier } from '../input/TemplateVariableCopier';
 import { GoalTemplateModeSwitch } from './GoalTemplateModeSwitch';

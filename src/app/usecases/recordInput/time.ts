@@ -1,9 +1,5 @@
-import { applyTaskTimePolicy } from '@core/public';
-import type {
-  RecordSubmitIssue,
-  SubmitCompleteRecordParams,
-  SubmitUpdateRecordTimeParams,
-} from '@core/public';
+import { applyTaskTimePolicy } from '@core/utils/public';
+import type { RecordSubmitIssue, SubmitCompleteRecordParams, SubmitUpdateRecordTimeParams } from '@core/recordInput/public';
 import { issue } from './issues';
 
 export interface TimeUpdatePayload {

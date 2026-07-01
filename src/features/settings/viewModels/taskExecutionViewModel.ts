@@ -1,12 +1,12 @@
-import type { FilterRule, Item, ViewInstance } from '@core/public';
+import type { FilterRule, Item, ViewInstance } from '@core/types/public';
 import {
   dayjs,
   applyViewBaseFilters,
   isTaskCompleted,
   isTaskOpen,
-  parsePath,
   cleanTaskText,
-} from '@core/public';
+} from '@core/utils/public';
+import { parsePath } from '@core/theme/public';
 
 export interface TaskExecutionRecordVM {
   id: string;

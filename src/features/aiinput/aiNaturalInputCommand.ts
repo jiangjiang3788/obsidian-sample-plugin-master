@@ -1,7 +1,8 @@
 import type ThinkPlugin from '@/main';
 import { AiTextPromptModal, AiBatchConfirmModal, type AppStoreInstance } from '@/app/public';
-import { AiNaturalLanguageRecordParser, devError, devLog, devWarn } from '@core/public';
-import { CancelledError, createTakeLatest } from '@shared/public';
+import { AiNaturalLanguageRecordParser } from '@core/ai/public';
+import { devError, devLog, devWarn } from '@core/utils/public';
+import { CancelledError, createTakeLatest } from '@shared/utils/public';
 
 import { startAiProgressNotice } from './aiProgressNotice';
 import type { AiInputUiPort } from './aiInputRuntime';

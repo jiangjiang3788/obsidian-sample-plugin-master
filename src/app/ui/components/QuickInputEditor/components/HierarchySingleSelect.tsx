@@ -2,7 +2,8 @@
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 
-import { Box, Typography } from '@shared/public';
+import { getLeafPath, normalizePath } from '@core/utils/public';
+import { Box, Typography } from '@shared/ui/public';
 
 import { SelectablePill } from './SelectablePill';
 
@@ -27,17 +28,13 @@ export interface HierarchySingleSelectProps {
   searchable?: boolean;
 }
 
-function normalizePath(value?: string | null): string {
-  return String(value || '').split('/').map((part) => part.trim()).filter(Boolean).join('/');
-}
 
 function cleanLabel(value: string): string {
   return String(value || '').replace(/^[#＃]+\s*/, '').trim();
 }
 
 function leafLabel(path: string): string {
-  const parts = normalizePath(path).split('/').filter(Boolean);
-  return cleanLabel(parts[parts.length - 1] || path);
+  return cleanLabel(getLeafPath(path) || path);
 }
 
 function getOrder(option: HierarchySingleSelectOption): number {

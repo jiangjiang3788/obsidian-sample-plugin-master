@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import type { Layout, ViewInstance } from '@core/public';
+import type { Layout, ViewInstance } from '@core/types/public';
 
 const INITIAL_RENDERED_EXPANDED_VIEWS = 3;
 const EXPANDED_VIEW_RENDER_BATCH_SIZE = 2;

@@ -11,8 +11,8 @@ import type {
   GoalSettings,
   GoalTemplate,
   PeriodPolicy,
-  TemplateField,
-} from '@core/public';
+} from '@core/goal/public';
+import type { TemplateField } from '@core/types/public';
 import {
   DEFAULT_GOAL_SETTINGS,
   getGoalTemplateId,
@@ -21,11 +21,11 @@ import {
   removeGoalTemplatesForGoal,
   compactGoalTemplateForStorage,
   cleanupGoalTemplateStorage,
-  getCoreBlockById,
-  devError,
   makeStableGoalIdFromPath,
   splitGoalPath,
-} from '@core/public';
+} from '@core/goal/public';
+import { getCoreBlockById } from '@core/blocks/public';
+import { devError } from '@core/utils/public';
 import type { AppStoreApi } from './index';
 
 export interface AddGoalInput {

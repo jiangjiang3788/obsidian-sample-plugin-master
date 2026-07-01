@@ -1,4 +1,4 @@
-import type { TaskBlock } from '@core/public';
+import type { TaskBlock } from '@core/types/public';
 import type { DailyViewData } from './TimelineViewView';
 
 export interface TimelineDayColumnModel {

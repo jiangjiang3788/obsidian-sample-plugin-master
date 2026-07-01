@@ -1,5 +1,5 @@
-import { dayjs } from "@core/public";
-import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from "@shared/public";
+import { dayjs } from '@core/utils/public';
+import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/utils/public';
 
 import type {
   ApplyQuickInputFieldUpdateInput,
@@ -8,7 +8,7 @@ import type {
   QuickInputFormData,
   QuickInputOptionLike,
   TimeDirection,
-} from "./QuickInputEditorModel";
+} from "./model/types";
 import { cleanDisplayPath, makeGoalIdFromPath } from "./quickInputPathModel";
 
 /** 将“时间/结束/时长”字段收敛成最终数据，并去掉编辑态元字段。 */

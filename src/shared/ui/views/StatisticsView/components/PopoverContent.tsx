@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
+import type { Item, ViewInstance } from '@core/types/public';
+import type { MessageRenderPort } from '@core/ports/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../../../types/actions';
 import { BlockView } from '../../BlockView';
 

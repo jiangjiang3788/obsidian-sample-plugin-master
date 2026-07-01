@@ -1,0 +1,46 @@
+/* Statistics popover base. */
+/* 弹窗样式 */
+.sv-popover {
+    background: var(--think-bg-canvas);
+    border-radius: 12px;
+    box-shadow: var(--shadow-l);
+    width: 500px;
+    max-width: 90vw;
+    z-index: 99999;
+}
+
+.sv-popover-title {
+    font-weight: bold;
+    padding: 8px 8px 8px 16px;
+    border-bottom: 1px solid var(--think-border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: grab;
+}
+
+.sv-popover-title button {
+    transition: background-color var(--think-duration-normal) var(--think-ease-standard);
+}
+
+.sv-popover-title button:hover {
+    background-color: var(--think-bg-hover);
+}
+
+.sv-popover-content {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.sv-popover-content .block-language-think {
+    padding: 0;
+}
+
+.sv-popover-empty {
+    color: var(--think-text-subtle);
+    padding: 24px;
+    text-align: center;
+}

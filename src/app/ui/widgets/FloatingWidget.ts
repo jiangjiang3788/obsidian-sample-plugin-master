@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { createServices, mountWithServices, unmountPreact, type Services } from '@/app/public';
-import { devLog } from '@core/public';
+import { devLog } from '@core/utils/public';
 
 /**
  * 通用 FloatingWidget：在 document.body 上创建容器并渲染传入的 Preact 子树

@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { Fragment, h } from 'preact';
-import type { Item, MessageRenderPort, ThemeDefinition } from '@core/public';
+import type { Item, ThemeDefinition } from '@core/types/public';
+import type { MessageRenderPort } from '@core/ports/public';
 import { TaskRow } from '../items/TaskRow';
 import { BlockItem } from '../items/BlockItem';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';

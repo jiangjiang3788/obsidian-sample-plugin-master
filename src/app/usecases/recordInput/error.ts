@@ -1,10 +1,5 @@
-import {
-  buildCancelledResult,
-  buildConflictResult,
-  buildErrorResult,
-  isRecordConflictError,
-} from '@core/public';
-import type { RecordSubmitResult } from '@core/public';
+import { buildCancelledResult, buildConflictResult, buildErrorResult, isRecordConflictError } from '@core/recordInput/public';
+import type { RecordSubmitResult } from '@core/recordInput/public';
 import { toArray } from './issues';
 
 export interface MapSubmitErrorOptions {

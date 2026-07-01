@@ -1,5 +1,5 @@
 import { QuickInputModal } from '@/app/public';
-import type { Item } from '@core/public';
+import type { Item } from '@core/types/public';
 
 export interface EditFromItemParams {
   app: any;

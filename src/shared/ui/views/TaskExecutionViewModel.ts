@@ -1,4 +1,4 @@
-import type { Item } from '@core/public';
+import type { Item } from '@core/types/public';
 
 export interface TaskExecutionRecordVM {
   id: string;

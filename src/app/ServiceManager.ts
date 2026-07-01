@@ -2,21 +2,21 @@ import { container } from 'tsyringe';
 
 import type ThinkPlugin from '@main';
 import type {
-    ActionService,
-    DataStore,
-    InputService,
-    SettingsRepository,
-    TimerStateService,
-} from '@core/public';
-import { devError, devLog, devWarn } from '@core/public';
+  ActionService,
+  DataStore,
+  InputService,
+  SettingsRepository,
+  TimerStateService,
+} from '@core/services/public';
+import { devError, devLog, devWarn } from '@core/utils/public';
 
 import type { FeatureLoader } from '@/app/FeatureLoader';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import { Disposables } from '@/app/runtime/disposables';
 import { markDisposed } from '@/app/runtime/lifecycleState';
 
-import { startMeasure } from '@shared/public';
-import { performanceMonitor } from '@shared/public';
+import { startMeasure } from '@shared/utils/public';
+import { performanceMonitor } from '@shared/utils/public';
 import { closeAllFloatingWidgets } from '@/app/public';
 
 import { registerSettingsPersistence } from '@/app/bootstrap/register';

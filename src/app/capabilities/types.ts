@@ -10,7 +10,7 @@
 import type { AiCapability } from './capabilities/ai';
 import type { TimerCapability } from './capabilities/timer';
 
-import type { ModalPort } from '@core/public';
+import type { ModalPort } from '@core/ports/public';
 import type { TimerService } from '@features/timer/TimerService';
 
 export interface CapabilityDeps {

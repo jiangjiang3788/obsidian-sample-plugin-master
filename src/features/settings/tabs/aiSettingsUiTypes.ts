@@ -1,4 +1,4 @@
-import type { AiSettings as AiSettingsType, BlockTemplate, ThemeDefinition } from '@core/public';
+import type { AiSettings as AiSettingsType, BlockTemplate, ThemeDefinition } from '@core/types/public';
 import type { AiSettingsReadiness } from './aiSettingsReadiness';
 
 export type AiSettingsUpdate = (updates: Partial<AiSettingsType>) => void;

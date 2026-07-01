@@ -3,17 +3,19 @@
 import { h } from 'preact';
 import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
 import {
-    Alert,
-    Box,
-    Divider,
-    FormControlLabel,
-    Switch,
-    Typography,
-} from '@shared/public';
+  Alert,
+  Box,
+  Divider,
+  FormControlLabel,
+  Switch,
+  Typography,
+} from '@shared/ui/public';
 import { useUseCases, selectAiSettings, selectInputSettings, useSelector } from '@/app/public';
-import type { AiSettings as AiSettingsType } from '@core/public';
-import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES, AiHttpClient } from '@core/public';
-import { CancelledError, createTakeLatest, useIsMounted } from '@shared/public';
+import type { AiSettings as AiSettingsType } from '@core/types/public';
+import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES } from '@core/types/public';
+import { AiHttpClient } from '@core/ai/public';
+import { CancelledError, createTakeLatest } from '@shared/utils/public';
+import { useIsMounted } from '@shared/hooks/public';
 import { AiAdvancedSettingsSection } from './AiAdvancedSettingsSection';
 import { AiApiConfigSection } from './AiApiConfigSection';
 import { AiPromptRulesSection } from './AiPromptRulesSection';

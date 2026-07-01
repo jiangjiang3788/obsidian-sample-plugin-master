@@ -1,4 +1,6 @@
-import { groupItemsByFields, type GoalDefinition, type GroupNode, type Item } from '@core/public';
+import { groupItemsByFields, type GroupNode } from '@core/utils/public';
+import type { GoalDefinition } from '@core/goal/public';
+import type { Item } from '@core/types/public';
 
 export interface ResolveBlockViewGroupFieldsInput {
   groupField?: string;

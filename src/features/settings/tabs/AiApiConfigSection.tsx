@@ -13,8 +13,8 @@ import {
   Switch,
   TextField,
   Typography,
-} from '@shared/public';
-import { ExpandMoreIcon } from '@shared/public';
+} from '@shared/ui/public';
+import { ExpandMoreIcon } from '@shared/ui/public';
 import type { AiApiConfigSectionProps } from './aiSettingsUiTypes';
 
 export function AiApiConfigSection({

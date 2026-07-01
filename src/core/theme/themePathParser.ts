@@ -1,3 +1,14 @@
+import {
+    buildHierarchyPathSegments,
+    compareHierarchyPathsForSort,
+    getCommonHierarchyParentPath,
+    getHierarchyPathDepth,
+    getRelativeHierarchyPath,
+    isChildHierarchyPath,
+    isDirectChildHierarchyPath,
+    normalizeHierarchyPathValue,
+} from '@/core/semantics/path';
+
 /**
  * 主题路径解析工具
  */
@@ -29,23 +40,7 @@ export interface PathSegment {
  * // ]
  */
 export function parsePath(path: string): PathSegment[] {
-    if (!path || path.trim() === '') {
-        return [];
-    }
-    
-    const segments = path.split('/').filter(s => s.length > 0);
-    const result: PathSegment[] = [];
-    
-    segments.forEach((segment, index) => {
-        const fullPath = segments.slice(0, index + 1).join('/');
-        result.push({
-            name: segment,
-            fullPath,
-            depth: index
-        });
-    });
-    
-    return result;
+    return buildHierarchyPathSegments(path);
 }
 
 /**
@@ -54,10 +49,8 @@ export function parsePath(path: string): PathSegment[] {
  * @returns 深度值（根路径为0）
  */
 export function getPathDepth(path: string): number {
-    if (!path || path.trim() === '') {
-        return 0;
-    }
-    return path.split('/').filter(s => s.length > 0).length - 1;
+    const depth = getHierarchyPathDepth(path);
+    return depth > 0 ? depth - 1 : 0;
 }
 
 /**
@@ -67,10 +60,7 @@ export function getPathDepth(path: string): number {
  * @returns 是否为子路径
  */
 export function isChildPath(childPath: string, parentPath: string): boolean {
-    if (!childPath || !parentPath) {
-        return false;
-    }
-    return childPath.startsWith(parentPath + '/');
+    return isChildHierarchyPath(childPath, parentPath);
 }
 
 /**
@@ -80,14 +70,7 @@ export function isChildPath(childPath: string, parentPath: string): boolean {
  * @returns 是否为直接子路径
  */
 export function isDirectChildPath(childPath: string, parentPath: string): boolean {
-    if (!isChildPath(childPath, parentPath)) {
-        return false;
-    }
-    
-    const childDepth = getPathDepth(childPath);
-    const parentDepth = getPathDepth(parentPath);
-    
-    return childDepth === parentDepth + 1;
+    return isDirectChildHierarchyPath(childPath, parentPath);
 }
 
 /**
@@ -96,29 +79,7 @@ export function isDirectChildPath(childPath: string, parentPath: string): boolea
  * @returns 公共父路径或null
  */
 export function getCommonParentPath(paths: string[]): string | null {
-    if (paths.length === 0) {
-        return null;
-    }
-    
-    if (paths.length === 1) {
-        const lastSlash = paths[0].lastIndexOf('/');
-        return lastSlash === -1 ? null : paths[0].substring(0, lastSlash);
-    }
-    
-    const segments = paths.map(p => p.split('/'));
-    const minLength = Math.min(...segments.map(s => s.length));
-    const commonSegments: string[] = [];
-    
-    for (let i = 0; i < minLength; i++) {
-        const segment = segments[0][i];
-        if (segments.every(s => s[i] === segment)) {
-            commonSegments.push(segment);
-        } else {
-            break;
-        }
-    }
-    
-    return commonSegments.length > 0 ? commonSegments.join('/') : null;
+    return getCommonHierarchyParentPath(paths);
 }
 
 /**
@@ -127,14 +88,7 @@ export function getCommonParentPath(paths: string[]): string | null {
  * @returns 规范化的路径
  */
 export function normalizePath(path: string): string {
-    if (!path) {
-        return '';
-    }
-    
-    return path
-        .trim()
-        .replace(/\/+/g, '/')  // 替换多个斜杠为单个
-        .replace(/^\/|\/$/g, ''); // 去除首尾斜杠
+    return normalizeHierarchyPathValue(path) || '';
 }
 
 /**
@@ -149,12 +103,14 @@ export function generateUniqueChildPath(
     baseName: string,
     existingPaths: string[]
 ): string {
-    const prefix = parentPath ? `${parentPath}/` : '';
-    let path = `${prefix}${baseName}`;
+    const parent = normalizePath(parentPath);
+    const base = normalizePath(baseName);
+    const prefix = parent ? `${parent}/` : '';
+    let path = `${prefix}${base}`;
     let counter = 1;
     
     while (existingPaths.includes(path)) {
-        path = `${prefix}${baseName}_${counter}`;
+        path = `${prefix}${base}_${counter}`;
         counter++;
     }
     
@@ -168,12 +124,7 @@ export function generateUniqueChildPath(
  * @returns 相对路径
  */
 export function getRelativePath(fullPath: string, basePath: string): string {
-    if (!fullPath.startsWith(basePath)) {
-        return fullPath;
-    }
-    
-    const relative = fullPath.substring(basePath.length);
-    return relative.startsWith('/') ? relative.substring(1) : relative;
+    return getRelativeHierarchyPath(fullPath, basePath);
 }
 
 /**
@@ -183,16 +134,7 @@ export function getRelativePath(fullPath: string, basePath: string): string {
  * @returns 排序值
  */
 export function comparePathsForSort(a: string, b: string): number {
-    const depthA = getPathDepth(a);
-    const depthB = getPathDepth(b);
-    
-    // 先按深度排序（深度小的在前）
-    if (depthA !== depthB) {
-        return depthA - depthB;
-    }
-    
-    // 同深度按字母顺序
-    return a.localeCompare(b, 'zh-CN');
+    return compareHierarchyPathsForSort(a, b);
 }
 
 /**
@@ -214,13 +156,14 @@ export function validatePathCharacters(path: string): {
         return { valid: false, message: '路径包含非法字符' };
     }
     
-    // 检查路径段
-    const segments = path.split('/');
-    for (const segment of segments) {
-        if (segment.trim() === '') {
+    // 检查路径段：验证保留原始空段语义，不在这里自动吞掉连续斜杠。
+    const rawSegments = path.split('/');
+    for (const segment of rawSegments) {
+        const trimmedSegment = segment.trim();
+        if (trimmedSegment === '') {
             return { valid: false, message: '路径段不能为空' };
         }
-        if (segment.startsWith('.') || segment.endsWith('.')) {
+        if (trimmedSegment.startsWith('.') || trimmedSegment.endsWith('.')) {
             return { valid: false, message: '路径段不能以点开始或结束' };
         }
     }

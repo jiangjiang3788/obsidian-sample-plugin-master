@@ -22,9 +22,9 @@
 
 import type { StateCreator } from 'zustand';
 import type { ZustandAppStore } from '../useAppStore';
-import type { SettingsRepository } from '@core/public';
-import type { BlockTemplate } from '@core/public';
-import {generateId, devError} from '@core/public';
+import type { SettingsRepository } from '@core/services/public';
+import type { BlockTemplate } from '@core/types/public';
+import { generateId, devError } from '@core/utils/public';
 
 // ============== 类型定义 ==============
 

@@ -1,8 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Box, Button } from '../../ui/muiCompat';
-import type { ThemePathTreeNode as ThemeTreeNode } from '@core/public';
-import { ThemePathTreeBuilder as ThemeTreeBuilder } from '@core/public';
+import type { ThemePathTreeNode as ThemeTreeNode } from '@core/theme/public';
+import { ThemePathTreeBuilder as ThemeTreeBuilder } from '@core/theme/public';
 
 export interface MultiSelectToolbarProps {
     themeTree: ThemeTreeNode[];

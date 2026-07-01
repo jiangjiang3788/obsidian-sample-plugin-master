@@ -1,10 +1,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { ViewEditorProps } from './registry';
-import { TASK_EXECUTION_VIEW_DEFAULT_CONFIG } from '@core/public';
+import { TASK_EXECUTION_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import { ReadonlyViewEditorNotice } from './settingsEditorUi';
 
-export { TASK_EXECUTION_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
+export { TASK_EXECUTION_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 export function TaskExecutionViewEditor(_props: ViewEditorProps) {
   return (

@@ -10,11 +10,27 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useSelector, selectInputBlocks, useUseCases } from '@/app/public';
-import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, Tooltip, Divider, TextField } from '@shared/public';
-import { AddCircleOutlineIcon, ContentCopyIcon, DeleteForeverOutlinedIcon, DragIndicatorIcon, IconAction } from '@shared/public';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Box,
+  Stack,
+  Typography,
+  Tooltip,
+  Divider,
+  TextField,
+} from '@shared/ui/public';
+import {
+  AddCircleOutlineIcon,
+  ContentCopyIcon,
+  DeleteForeverOutlinedIcon,
+  DragIndicatorIcon,
+  IconAction,
+} from '@shared/ui/public';
 import { useState, useEffect } from 'preact/hooks';
 import { FieldsEditor } from './FieldsEditor';
-import type { BlockTemplate } from '@core/public';
+import type { BlockTemplate } from '@core/types/public';
 import { TemplateVariableCopier } from './TemplateVariableCopier';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';

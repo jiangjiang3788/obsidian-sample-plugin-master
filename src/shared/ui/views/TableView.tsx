@@ -2,7 +2,8 @@
 
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { GoalDefinition, Item, ThemeDefinition } from '@core/public';
+import type { GoalDefinition } from '@core/goal/public';
+import type { Item, ThemeDefinition } from '@core/types/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
 import { TableViewCell } from './TableViewCell';
 import { buildTableViewRenderModel } from './TableViewModel';

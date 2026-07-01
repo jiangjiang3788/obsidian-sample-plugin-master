@@ -1,4 +1,11 @@
 // src/lib/utils/core/pathUtils.ts
+import {
+  buildHierarchyPathList,
+  getHierarchyPathLeaf,
+  getHierarchyPathParent,
+  normalizeHierarchyPathParts,
+} from '@/core/semantics/path';
+
 /**
  * 路径处理工具集
  */
@@ -9,7 +16,7 @@ export const pathUtils = {
    * @returns 规范化后的路径
    */
   normalize: (path: string): string => {
-    return path.trim().toLowerCase();
+    return String(path || '').trim().toLowerCase();
   },
 
   /**
@@ -18,7 +25,7 @@ export const pathUtils = {
    * @returns 路径段落数组
    */
   getSegments: (path: string): string[] => {
-    return path.split('/');
+    return normalizeHierarchyPathParts(path);
   },
 
   /**
@@ -27,11 +34,7 @@ export const pathUtils = {
    * @returns 父路径，如果不存在则返回 null
    */
   getParent: (path: string): string | null => {
-    const lastSlashIndex = path.lastIndexOf('/');
-    if (lastSlashIndex === -1) {
-      return null;
-    }
-    return path.substring(0, lastSlashIndex);
+    return getHierarchyPathParent(path) || null;
   },
 
   /**
@@ -40,11 +43,7 @@ export const pathUtils = {
    * @returns 显示名称
    */
   getDisplayName: (path: string): string => {
-    const lastSlashIndex = path.lastIndexOf('/');
-    if (lastSlashIndex === -1) {
-      return path;
-    }
-    return path.substring(lastSlashIndex + 1);
+    return getHierarchyPathLeaf(path) || path;
   },
 
   /**
@@ -63,8 +62,8 @@ export const pathUtils = {
     if (invalidChars.some(char => trimmed.includes(char))) return false;
     
     // 检查路径段是否有效（不能为空）
-    const parts = trimmed.split('/');
-    return parts.every(part => part.trim().length > 0);
+    const parts = normalizeHierarchyPathParts(trimmed);
+    return parts.length > 0 && parts.every(part => part.trim().length > 0);
   },
 
   /**
@@ -74,13 +73,6 @@ export const pathUtils = {
    * @returns 路径层级数组
    */
   getHierarchy: (path: string): string[] => {
-    const parts = path.split('/').filter(p => p.trim());
-    const hierarchy: string[] = [];
-    
-    for (let i = 0; i < parts.length; i++) {
-      hierarchy.push(parts.slice(0, i + 1).join('/'));
-    }
-    
-    return hierarchy;
+    return buildHierarchyPathList(path);
   },
 };

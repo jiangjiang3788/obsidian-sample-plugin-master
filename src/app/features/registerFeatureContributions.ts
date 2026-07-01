@@ -11,8 +11,8 @@
 //   2) add ONE import + register call here
 
 import type ThinkPlugin from '@main';
-import type { ActionService, DataStore } from '@core/public';
-import type { EventsPort } from '@core/public';
+import type { ActionService, DataStore } from '@core/services/public';
+import type { EventsPort } from '@core/ports/public';
 import type { RendererService } from '@features/settings/layout/RendererService';
 
 import { FeatureRegistry } from '../FeatureRegistry';

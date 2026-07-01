@@ -1,6 +1,6 @@
 import type { UseCases } from '@/app/public';
-import type { UiPort } from '@core/public';
-import type { RecordInputSource } from '@core/public';
+import type { UiPort } from '@core/ports/public';
+import type { RecordInputSource } from '@core/recordInput/public';
 import { runUiRecordAction } from './runUiRecordAction';
 
 export interface CompleteFromViewParams {

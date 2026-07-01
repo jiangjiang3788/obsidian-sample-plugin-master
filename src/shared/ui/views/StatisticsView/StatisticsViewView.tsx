@@ -1,7 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item } from '@core/public';
-import type { CategoryConfig, PeriodData } from '@core/public';
+import type { Item } from '@core/types/public';
+import type { CategoryConfig } from '@core/view/public';
+import type { PeriodData } from '@core/utils/public';
 import type { StatisticsCurrentView, StatisticsCellClickHandler } from './types';
 import { StatisticsGoalThemeSummaryStrip, type StatisticsGoalThemeSummary } from './StatisticsGoalThemeSummaryStrip';
 import { DayStatisticsView } from './views/DayStatisticsView';

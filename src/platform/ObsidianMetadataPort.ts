@@ -6,8 +6,8 @@
 import { singleton, inject } from 'tsyringe';
 import { TFile } from 'obsidian';
 import type { App } from 'obsidian';
-import { AppToken } from '@core/services/types';
-import type { HeadingInfo, MetadataPort } from '@core/ports/MetadataPort';
+import { AppToken } from '@core/services/public';
+import type { HeadingInfo, MetadataPort } from '@core/ports/public';
 
 @singleton()
 export class ObsidianMetadataPort implements MetadataPort {

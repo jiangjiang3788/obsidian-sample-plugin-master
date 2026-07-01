@@ -2,6 +2,7 @@ import type { TemplateField } from '@/core/types/schema';
 import type { FieldInputType } from './FieldTypes';
 import { normalizeImageValue } from './imageSemantics';
 import { normalizeHierarchyPath } from './pathSemantics';
+import { findMatchingOption, readOptionText } from '@/core/semantics/option';
 import { parseTagList } from './tagSemantics';
 import {
   getTemplateFieldInputType,
@@ -81,23 +82,20 @@ function optionLabelFromPath(value: string): string {
 }
 
 function normalizeOptionObjectForField(field: Partial<TemplateField>, rawValue: OptionLikeValue): OptionLikeValue {
+  const text = readOptionText(rawValue);
   if (isTemplatePathField(field)) {
-    const normalized = normalizeHierarchyPath(rawValue.value ?? rawValue.label);
+    const normalized = normalizeHierarchyPath(text.value || text.label);
     return normalized
-      ? { value: normalized, label: String(rawValue.label ?? optionLabelFromPath(normalized)) }
+      ? { value: normalized, label: String(text.label || optionLabelFromPath(normalized)) }
       : rawValue;
   }
-  return { value: rawValue.value, label: rawValue.label ?? rawValue.value };
+  return { value: rawValue.value ?? text.value, label: rawValue.label ?? text.label ?? rawValue.value };
 }
 
 function findOption(field: Partial<TemplateField>, value: unknown): OptionLikeValue | undefined {
   const raw = templateFieldValueToString(value);
   if (!raw) return undefined;
-  return (field.options || []).find((option) => {
-    const optionValue = String(option?.value ?? '');
-    const optionLabel = String(option?.label ?? '');
-    return optionValue === raw || optionLabel === raw || String(option?.label ?? option?.value ?? '') === raw;
-  });
+  return findMatchingOption(field.options, value);
 }
 
 function normalizePathValue(value: unknown): string | undefined {
@@ -107,11 +105,7 @@ function normalizePathValue(value: unknown): string | undefined {
 function matchPathOption(field: Partial<TemplateField>, rawValue: unknown): unknown {
   const normalizedPath = normalizePathValue(rawValue);
   if (!normalizedPath) return rawValue;
-  const matched = (field.options || []).find((option) => {
-    const optionValue = normalizeHierarchyPath(option?.value);
-    const optionLabel = String(option?.label ?? '');
-    return optionValue === normalizedPath || optionLabel === templateFieldValueToString(rawValue);
-  });
+  const matched = findMatchingOption(field.options, rawValue, { normalize: normalizeHierarchyPath, matchLeaf: true });
   return {
     value: normalizedPath,
     label: matched?.label || optionLabelFromPath(normalizedPath),

@@ -1796,6 +1796,8 @@
 .think-os--settings .think-settings-divider {
   margin-block: var(--think-space-7);
 }
+/* CSS V3: settings editor feature facade. Keep imports in legacy cascade order. */
+/* Settings editor shared composition primitives. */
 /* CSS V3: reusable editor composition for Settings feature. */
 .think-os--settings .think-editor-card {
   display: grid;
@@ -1895,6 +1897,7 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
+/* Settings rule builder base layout. */
 .think-os--settings .think-rule-builder {
   display: grid;
   gap: var(--think-space-6);
@@ -1926,6 +1929,7 @@
 .think-os--settings .think-rule-builder__add {
   white-space: nowrap;
 }
+/* Theme metadata editor list and preview. */
 .think-os--settings .think-theme-metadata {
   width: min(100%, 1040px);
   margin-inline: auto;
@@ -1952,6 +1956,7 @@
   border-radius: var(--think-radius-sm);
   background: var(--think-bg-surface-1);
 }
+/* Goal template editor primary layout. */
 .think-os--settings .think-goal-template-editor {
   min-height: 0;
   box-sizing: border-box;
@@ -1979,6 +1984,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--think-space-4);
 }
+/* Statistics editor and category controls. */
 .think-os--settings .think-statistics-editor {
   display: grid;
   gap: var(--think-space-6);
@@ -2087,6 +2093,7 @@
     grid-column: 1 / -1;
   }
 }
+/* Rule builder panel and compact rows. */
 .think-os--settings .think-rule-builder__chips,
 .think-os--settings .think-rule-builder__chip-row,
 .think-os--settings .think-rule-builder__compact-add {
@@ -2139,6 +2146,7 @@
   gap: var(--think-space-5);
   min-width: 0;
 }
+/* Block manager and block editor composition. */
 .think-os--settings .think-block-manager {
   width: min(100%, 900px);
   margin-inline: auto;
@@ -2205,6 +2213,7 @@
   font-family: var(--think-font-monospace);
   font-size: var(--think-font-size-sm);
 }
+/* Goal template and theme metadata editor extensions. */
 .think-os--settings .think-goal-template-editor__primary-grid.is-two-column {
   grid-template-columns: 1.2fr 1.2fr;
 }
@@ -2229,6 +2238,7 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
+/* Field editor grid and row controls. */
 .think-os--settings .think-fields-editor {
   width: 100%;
   max-width: 1040px;
@@ -2391,6 +2401,7 @@
     grid-column: 2 / -1;
   }
 }
+/* View editor shared settings rows. */
 .think-os--settings .think-view-editor-shell__title,
 .think-os--settings .think-view-editor-section__title,
 .think-os--settings .think-view-editor-field-row__label {
@@ -2509,6 +2520,8 @@
 .think-os--settings .think-layout-list__drag-handle:active {
   cursor: grabbing;
 }
+/* Shared view shell feature facade. Keep imports in legacy cascade order. */
+/* Shared module panel shell. */
 /* Shared view shell, toolbar and freeform layout contract. */
 /*
  * ===================================================================
@@ -2586,6 +2599,7 @@
     text-decoration: none;
     box-shadow: none;
 }
+/* Dashboard toolbar and theme filter shell. */
 /* Dashboard 工具栏 (tp-toolbar) */
 .tp-toolbar {
     margin-bottom: 8px;
@@ -2638,6 +2652,7 @@
     flex-wrap: nowrap;
     overflow: hidden;
 }
+/* Freeform layout base canvas and item rules. */
 /* ===================================================================
  * Freeform Layout v1
  * =================================================================== */
@@ -2743,6 +2758,7 @@
         flex-basis: 100%;
     }
 }
+/* Freeform resize handles and size feedback. */
 /* ===================================================================
  * Freeform Layout v2: resize, size feedback and narrow-pane behavior
  * =================================================================== */
@@ -2804,6 +2820,7 @@
     pointer-events: none;
     box-shadow: 0 2px 8px color-mix(in srgb, var(--think-text-primary) 16%, transparent);
 }
+/* Freeform selection, management actions and accessibility. */
 /* ===================================================================
  * Freeform Layout v3: selection, management actions and mobile fallback
  * =================================================================== */
@@ -2918,6 +2935,7 @@
         transition: none;
     }
 }
+/* View shell V4 token normalization. */
 /* CSS V4 view-shell normalization. */
 .think-os--layout {
     min-width: 0;
@@ -3641,6 +3659,8 @@ body.theme-dark .heatmap-cell.empty {
     .heatmap-theme-header.row-inline-layout { align-items: flex-start; flex-direction: column; }
     .heatmap-theme-header.row-inline-layout .heatmap-header-cells { width: 100%; }
 }
+/* CSS V4 statistics feature facade. Keep imports in legacy cascade order. */
+/* Statistics view base and empty state. */
 /* CSS V4 migrated from statistics-view.css. */
 /*
  * --- StatisticsView & Popover 样式 ---
@@ -3660,6 +3680,7 @@ body.theme-dark .heatmap-cell.empty {
     border-radius: var(--think-radius-md);
     background: var(--think-empty-state-bg);
 }
+/* Statistics top controls and category filters. */
 /* 顶部控制栏样式 */
 .sv-top-controls {
     display: flex;
@@ -3749,6 +3770,7 @@ body.theme-dark .sv-filter-btn:hover {
 body.theme-dark .sv-filter-btn.is-selected {
     box-shadow: var(--think-shadow-md);
 }
+/* Statistics year, quarter, month and row grids. */
 /* 时间轴容器 */
 .sv-timeline {
     display: flex;
@@ -3966,6 +3988,7 @@ body.theme-dark .sv-filter-btn.is-selected {
     flex-direction: column;
     gap: 4px;
 }
+/* Statistics chart blocks, bars and labels. */
 /* 图表块样式 */
 .sv-chart-block {
     display: flex;
@@ -4076,6 +4099,7 @@ body.theme-dark .sv-filter-btn.is-selected {
     min-height: 14px;
     line-height: 14px;
 }
+/* Statistics popover base. */
 /* 弹窗样式 */
 .sv-popover {
     background: var(--think-bg-canvas);
@@ -4115,6 +4139,7 @@ body.theme-dark .sv-filter-btn.is-selected {
     padding: 24px;
     text-align: center;
 }
+/* Statistics viewport responsive rules. */
 /* 响应式设计 */
 @media screen and (max-width: 768px) {
     .sv-top-controls {
@@ -4200,6 +4225,7 @@ body.theme-dark .sv-filter-btn.is-selected {
         /* font-size: 9px; -> 使用工具类: think-text-chart-mini */
     }
 }
+/* Statistics V4 summary and container normalization. */
 /* CSS V4 unified summary and popover helpers. */
 .sv-goal-summary-strip {
     display: flex;
@@ -4667,6 +4693,8 @@ body.theme-dark .tn-week-cell.is-selected {
 .progress-block-container {
     border-radius: var(--think-radius-sm);
 }
+/* Excel view feature facade. Keep imports in legacy cascade order. */
+/* Excel view shell and legend base. */
 /* Excel view feature contract. */
 /* ExcelView inline editing UX */
 .excel-view-shell {
@@ -4703,6 +4731,7 @@ body.theme-dark .tn-week-cell.is-selected {
 .excel-view-legend-note {
     color: var(--think-text-secondary);
 }
+/* Excel editable table cell states and editors. */
 .excel-view-table th {
     position: relative;
     white-space: nowrap;
@@ -4883,6 +4912,7 @@ body.theme-dark .tn-week-cell.is-selected {
 .excel-view-table .excel-view-cell[data-editable="false"] .excel-view-fill-handle {
     display: none;
 }
+/* Excel column toolbar chips and status states. */
 /* ExcelView column configuration toolbar */
 .excel-column-toolbar {
     display: flex;
@@ -4965,6 +4995,7 @@ body.theme-dark .tn-week-cell.is-selected {
 .excel-column-toolbar-error {
     color: var(--think-danger);
 }
+/* Excel sticky grid, resize, context menu and save feedback. */
 /* ExcelView step8: sticky grid, column resize, context menu, save flash */
 .excel-view-table {
     table-layout: fixed;
@@ -5149,6 +5180,7 @@ body.excel-view-is-resizing-column * {
     0% { transform: translateX(-70%); }
     100% { transform: translateX(70%); }
 }
+/* Excel expanded content and markdown cell rendering. */
 /* ExcelView content 字段全文 / Markdown 展示增强 */
 .excel-view-content-mode-button {
     display: inline-flex;
@@ -5255,6 +5287,7 @@ body.excel-view-is-resizing-column * {
     color: var(--think-text-accent);
     cursor: pointer;
 }
+/* Excel V4 surface normalization. */
 /* CSS V4 Excel surface normalization. */
 .excel-view-shell {
     border: 1px solid var(--think-border-subtle);
@@ -6189,3 +6222,28 @@ body.excel-view-is-resizing-column * {
 .modal.think-quick-input-modal .think-quick-input-operation-panel { display: flex; flex-direction: column; gap: var(--think-space-2); margin-top: var(--think-space-3); padding: var(--think-space-3) var(--think-space-4); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-md); background: var(--think-bg-surface-1); }
 .modal.think-quick-input-modal .think-quick-input-operation-panel__actions { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
 .modal.think-quick-input-modal .think-quick-input-operation-panel__hint { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); line-height: var(--think-line-height-normal); }
+.modal.think-quick-input-modal .think-qif-frame { display: flex; flex-direction: column; gap: 0.8rem; width: 100%; }
+.modal.think-quick-input-modal .think-qif-frame--inline { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: start; column-gap: var(--think-space-3); row-gap: var(--think-space-2); }
+.modal.think-quick-input-modal .think-qif-frame__inline-label { padding-top: var(--think-space-1); }
+.modal.think-quick-input-modal .think-qif-frame__inline-control { min-width: 0; }
+.modal.think-quick-input-modal .think-qif-label { color: var(--think-text-primary); font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-bold); line-height: var(--think-line-height-normal); }
+.modal.think-quick-input-modal .think-qif-label__required { color: var(--text-error); margin-left: var(--think-space-1); }
+.modal.think-quick-input-modal .think-qif-choice-row, .modal.think-quick-input-modal .think-qif-rating-row { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
+.modal.think-quick-input-modal .think-qif-image-preview { display: flex; align-items: center; gap: var(--think-space-2); margin-top: var(--think-space-2); }
+.modal.think-quick-input-modal .think-qif-image-preview__thumb { width: 56px; height: 56px; object-fit: cover; border-radius: var(--think-radius-md); border: 1px solid var(--think-border-subtle); }
+.modal.think-quick-input-modal .think-qif-image-preview__src { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); overflow-wrap: anywhere; }
+.modal.think-quick-input-modal .think-qif-rating-button { min-width: 40px; height: 40px; padding: var(--think-space-2); opacity: .8; border: 1px solid var(--think-border-subtle); background: transparent; border-radius: var(--think-radius-md); transition: opacity var(--think-motion-fast), background var(--think-motion-fast), border-color var(--think-motion-fast); }
+.modal.think-quick-input-modal .think-qif-rating-button:hover, .modal.think-quick-input-modal .think-qif-rating-button:focus-visible { opacity: 1; background: var(--think-bg-hover); }
+.modal.think-quick-input-modal .think-qif-rating-button.is-selected { opacity: 1; border: 2px solid var(--interactive-accent); background: var(--background-modifier-hover); }
+.modal.think-quick-input-modal .think-qif-rating-image { width: 22px; height: 22px; object-fit: contain; }
+.modal.think-quick-input-modal .think-qif-rating-text { font-size: 18px; line-height: 1; }
+.modal.think-quick-input-modal .think-qif-textarea { resize: none; overflow-y: hidden; min-height: 118px; }
+.modal.think-quick-input-modal .think-qif-textarea.is-dense { min-height: 96px; }
+.modal.think-quick-input-modal .think-qif-textarea--short { min-height: 96px; }
+.modal.think-quick-input-modal .think-qif-textarea--short.is-dense { min-height: 78px; }
+.modal.think-quick-input-modal .think-qif-time-input { min-height: 42px; }
+.modal.think-quick-input-modal .think-qif-time-section { display: flex; flex-direction: column; gap: var(--think-space-2); }
+.modal.think-quick-input-modal .think-qif-time-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: var(--think-space-3); padding-top: var(--think-space-1); }
+.modal.think-quick-input-modal .think-qif-time-direction { display: flex; align-items: center; justify-content: flex-end; min-height: 28px; }
+.modal.think-quick-input-modal .think-qif-time-direction__label { display: inline-flex; align-items: center; gap: var(--think-space-2); cursor: pointer; font-size: var(--think-font-size-xs); color: var(--think-text-secondary); }
+@media (max-width: 640px) { .modal.think-quick-input-modal .think-qif-frame--inline { grid-template-columns: 1fr; } .modal.think-quick-input-modal .think-qif-frame__inline-label { padding-top: 0; } }

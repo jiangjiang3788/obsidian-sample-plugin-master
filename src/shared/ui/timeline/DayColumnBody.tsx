@@ -2,10 +2,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useRef } from 'preact/hooks';
-import type { TaskBlock } from '@core/public';
+import type { TaskBlock } from '@core/types/public';
 import { createRecordGestureHandlers } from '../utils/recordOrigin';
-import { mapTaskToCategory } from '@core/public';
-import { dayjs } from '@core/public';
+import { mapTaskToCategory } from '@core/utils/public';
+import { dayjs } from '@core/utils/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler } from '../../types/actions';
 import type { UpdateTaskTimeHandler } from '../../types/taskTime';
 

@@ -1,5 +1,8 @@
-import type { GoalDefinition, ThemeDefinition } from "@core/public";
-import { splitGoalPath } from "@core/public";
+import type { GoalDefinition } from '@core/goal/public';
+import type { ThemeDefinition } from '@core/types/public';
+import { getLeafPath } from '@core/utils/public';
+import { normalizeGoalPath, splitGoalPath } from '@core/goal/public';
+import { splitHierarchyPath } from '@core/fields/public';
 
 export function cleanDisplaySegment(value: unknown): string {
   return String(value ?? "")
@@ -8,33 +11,24 @@ export function cleanDisplaySegment(value: unknown): string {
 }
 
 export function cleanDisplayPath(value?: string | null): string | null {
-  const normalized = splitGoalPath(value).goalPath;
-  if (!normalized) return null;
-  const parts = normalized.split("/").map(cleanDisplaySegment).filter(Boolean);
-  return parts.length ? parts.join("/") : null;
+  return normalizeGoalPath(value);
 }
 
 export const splitThemePathParts = (path?: string | null) => {
-  const parts = String(path || "")
-    .split("/")
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const parts = splitHierarchyPath(path);
   return {
-    themePath: parts.length ? parts.join("/") : null,
-    rootTheme: parts[0] || null,
-    leafTheme: parts.length ? parts[parts.length - 1] : null,
+    themePath: parts.path || null,
+    rootTheme: parts.root || null,
+    leafTheme: parts.leaf || null,
   };
 };
 
 export const splitPathParts = (path?: string | null) => {
-  const parts = String(path || "")
-    .split("/")
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const parts = splitHierarchyPath(path);
   return {
-    path: parts.length ? parts.join("/") : null,
-    root: parts[0] || null,
-    leaf: parts.length ? parts[parts.length - 1] : null,
+    path: parts.path || null,
+    root: parts.root || null,
+    leaf: parts.leaf || null,
   };
 };
 
@@ -50,9 +44,7 @@ export function makeGoalIdFromPath(path: string): string {
 export function themeOptions(themes: ThemeDefinition[]) {
   return (themes || []).map((theme) => ({
     value: theme.path,
-    label: cleanDisplaySegment(
-      theme.path.split("/").filter(Boolean).pop() || theme.path,
-    ),
+    label: cleanDisplaySegment(getLeafPath(theme.path) || theme.path),
     icon: theme.icon,
   }));
 }

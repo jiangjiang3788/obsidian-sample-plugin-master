@@ -1,7 +1,16 @@
 // src/features/settings/viewModels/heatmapViewModel.ts
 
-import type { Item, ViewInstance, InputSettings, GoalDefinition, GoalSettings, HeatmapRatingOptionLike } from '@core/public';
-import { buildThemeDataMap, buildThemesByPathMap, getItemThemePath, getItemGoalKey, getItemGoalLabel, UNASSIGNED_GOAL_KEY, splitGoalPath, createGoalOrderIndex } from '@core/public';
+import type { Item, ViewInstance, InputSettings } from '@core/types/public';
+import type { GoalDefinition, GoalSettings } from '@core/goal/public';
+import type { HeatmapRatingOptionLike } from '@core/utils/public';
+import { buildThemeDataMap, buildThemesByPathMap, getItemThemePath } from '@core/utils/public';
+import {
+  getItemGoalKey,
+  getItemGoalLabel,
+  UNASSIGNED_GOAL_KEY,
+  splitGoalPath,
+  createGoalOrderIndex,
+} from '@core/goal/public';
 
 /**
  * Phase2: shared/ui 纯化试点（HeatmapView）

@@ -30,7 +30,7 @@ import { ViewInstanceUseCase, createViewInstanceUseCase } from './viewinstance.u
 import { TimerUseCase, createTimerUseCase } from './timer.usecase';
 import { RecordInputUseCase, createRecordInputUseCase } from './recordInput.usecase';
 import { GoalUseCase, createGoalUseCase } from './goal.usecase';
-import type { DataStore, InputService, ItemService, TimerStateService } from '@core/public';
+import type { DataStore, InputService, ItemService, TimerStateService } from '@core/services/public';
 
 /**
  * Zustand Store 类型（用于 createUseCases 参数）

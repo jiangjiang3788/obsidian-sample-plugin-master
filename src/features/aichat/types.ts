@@ -1,4 +1,4 @@
-import type { AiChatService, ChatSessionStore, RetrievalService } from '@core/public';
+import type { AiChatService, ChatSessionStore, RetrievalService } from '@core/ai/public';
 
 // ============== AI 服务接口（用于依赖注入） ==============
 

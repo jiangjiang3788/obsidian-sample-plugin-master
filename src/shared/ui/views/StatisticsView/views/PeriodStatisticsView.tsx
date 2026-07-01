@@ -1,6 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { CategoryConfig, Item, PeriodData } from '@core/public';
+import type { CategoryConfig } from '@core/view/public';
+import type { Item } from '@core/types/public';
+import type { PeriodData } from '@core/utils/public';
 import { ChartBlock } from '../../../statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
 import { buildMonthStatisticsRenderModel } from './MonthStatisticsViewModel';

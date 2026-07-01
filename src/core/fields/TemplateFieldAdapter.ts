@@ -2,14 +2,12 @@
 import type { BlockTemplate, TemplateField } from '@/core/types/schema';
 import type { FieldInputType, FieldSemantic } from './FieldTypes';
 import { normalizeHierarchyPath, splitHierarchyPath } from './pathSemantics';
+import { findMatchingOption, isOptionLikeValue, readOptionText, type OptionLikeValue } from '@/core/semantics/option';
+export type { OptionLikeValue } from '@/core/semantics/option';
 import { parseTagList } from './tagSemantics';
 import { normalizeImageValue } from './imageSemantics';
 import { isMultiValueTemplateFieldType } from './TemplateFieldSanitizer';
 
-export interface OptionLikeValue {
-  value?: unknown;
-  label?: unknown;
-}
 
 const KNOWN_SEMANTICS = new Set<FieldSemantic>([
   'none',
@@ -127,7 +125,7 @@ export function getTemplateFieldInputType(field: Partial<TemplateField> | null |
 }
 
 export function isOptionObject(value: unknown): value is OptionLikeValue {
-  return !!value && typeof value === 'object' && ('value' in value || 'label' in value);
+  return isOptionLikeValue(value);
 }
 
 export function isTemplateRatingPairField(field: Partial<TemplateField> | null | undefined): boolean {
@@ -171,11 +169,12 @@ function splitMultiText(value: unknown): string[] {
 }
 
 function normalizeOptionObject(field: Partial<TemplateField>, rawValue: OptionLikeValue): OptionLikeValue {
+  const text = readOptionText(rawValue);
   if (isTemplatePathField(field)) {
-    const normalized = normalizeHierarchyPath(rawValue.value ?? rawValue.label);
-    return normalized ? { value: normalized, label: String(rawValue.label ?? normalized.split('/').pop() ?? normalized) } : rawValue;
+    const normalized = normalizeHierarchyPath(text.value || text.label);
+    return normalized ? { value: normalized, label: text.label || normalized.split('/').pop() || normalized } : rawValue;
   }
-  return { value: rawValue.value, label: rawValue.label ?? rawValue.value };
+  return { value: rawValue.value ?? text.value, label: rawValue.label ?? text.label ?? rawValue.value };
 }
 
 function normalizeSingleRawValue(field: Partial<TemplateField>, rawValue: unknown): unknown {
@@ -193,7 +192,7 @@ function normalizeSingleRawValue(field: Partial<TemplateField>, rawValue: unknow
   if (isTemplatePathField(field)) {
     const normalized = normalizeHierarchyPath(rawValue);
     if (!normalized) return rawValue;
-    const matched = field.options?.find((opt: any) => normalizeHierarchyPath(opt?.value) === normalized || String(opt?.label ?? '') === String(rawValue));
+    const matched = findMatchingOption(field.options, rawValue, { normalize: normalizeHierarchyPath, matchLeaf: true });
     return {
       value: normalized,
       label: matched?.label || normalized.split('/').pop() || normalized,
@@ -202,7 +201,7 @@ function normalizeSingleRawValue(field: Partial<TemplateField>, rawValue: unknow
 
   if (isTemplateOptionField(field)) {
     const rawString = String(rawValue);
-    const matched = field.options?.find((opt: any) => String(opt?.value) === rawString || String(opt?.label) === rawString || String(opt?.label ?? opt?.value) === rawString);
+    const matched = findMatchingOption(field.options, rawValue);
     if (matched) return { value: matched.value, label: matched.label || matched.value };
     if (getTemplateFieldInputType(field) === 'rating' || isTemplateRatingPairField(field)) return { value: rawString, label: rawString };
   }

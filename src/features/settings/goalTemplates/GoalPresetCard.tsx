@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { CoreBlockDefinition, GoalDefinition, GoalTemplate } from '@core/public';
+import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 
 const PRESET_CARD_HEIGHT = 30;
 

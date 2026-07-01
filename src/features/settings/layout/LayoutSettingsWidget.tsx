@@ -12,7 +12,7 @@
 
 import { h } from 'preact';
 import { useZustandAppStore, useSelector } from '@/app/public';
-import type { Layout } from '@core/public';
+import type { Layout } from '@core/types/public';
 import { FloatingPanel } from '@/app/public';
 import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
 import { LayoutEditorPanel } from '@/features/settings/components/LayoutEditorPanel';

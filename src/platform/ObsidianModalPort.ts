@@ -7,10 +7,10 @@
 
 import { singleton, inject } from 'tsyringe';
 import type { App } from 'obsidian';
-import { AppToken } from '@core/services/types';
-import type { ModalPort, NamePromptOptions, CheckinManagerOpenArgs } from '@core/public';
-import { AiChatService, RetrievalService, ChatSessionStore } from '@core/public';
-import type { NaturalRecordCommand } from '@core/types/ai-schema';
+import { AppToken } from '@core/services/public';
+import { AiChatService, RetrievalService, ChatSessionStore } from '@core/ai/public';
+import type { ModalPort, NamePromptOptions, CheckinManagerOpenArgs } from '@core/ports/public';
+import type { NaturalRecordCommand } from '@core/types/public';
 
 import { AiTextPromptModal } from './modals/AiTextPromptModal';
 import { AiBatchConfirmModal } from './modals/AiBatchConfirmModal';
@@ -18,8 +18,8 @@ import { QuickInputModal } from './modals/QuickInputModal';
 import { NamePromptModal } from './modals/NamePromptModal';
 import { AiChatModal } from './modals/AiChatModal';
 import { CheckinManagerModal } from './modals/CheckinManagerModal';
-import { todayISO } from '@core/public';
-import type { Item } from '@core/public';
+import { todayISO } from '@core/utils/public';
+import type { Item } from '@core/types/public';
 
 @singleton()
 export class ObsidianModalPort implements ModalPort {

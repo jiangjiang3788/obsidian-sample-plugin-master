@@ -1,4 +1,4 @@
-import { devWarn } from '@core/public';
+import { devWarn } from '@core/utils/public';
 
 import type { AiInputUiPort } from './aiInputRuntime';
 import { nowMs } from './aiInputRuntime';

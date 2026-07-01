@@ -2,12 +2,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import type { Item, ViewInstance, ViewPlacement } from '@core/public';
-import {
-  calculateTimelineRange,
-  dayjs,
-  normalizeTimelineView,
-} from '@core/public';
+import type { Item, ViewInstance, ViewPlacement } from '@core/types/public';
+import { calculateTimelineRange, dayjs, normalizeTimelineView } from '@core/utils/public';
 import { ModulePanel } from './ModulePanel';
 import { useSelector, useUiPort, useUseCases } from '@/app/public';
 import {
@@ -18,7 +14,8 @@ import {
 } from '@/app/public';
 import { openLayoutSettingsWidget } from '@features/settings/layout/LayoutSettingsWidget';
 import { DataFilterPanel } from './DataFilterPanel';
-import { ViewToolbar, detectThinkDeviceProfile, getThinkDeviceProfileAttributes, isThinkMobileLikeProfile } from '@shared/public';
+import { ViewToolbar } from '@shared/ui/public';
+import { detectThinkDeviceProfile, getThinkDeviceProfileAttributes, isThinkMobileLikeProfile } from '@shared/utils/public';
 import { useLayoutItems } from './useLayoutItems';
 import { useExpandedViewRendering } from './useExpandedViewRendering';
 import { ViewContent } from './ViewContent';

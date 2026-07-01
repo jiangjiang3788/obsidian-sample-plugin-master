@@ -1,0 +1,81 @@
+/* Shared module panel shell. */
+/* Shared view shell, toolbar and freeform layout contract. */
+/*
+ * ===================================================================
+ * Layout Styles
+ * -------------------------------------------------------------------
+ * Styles for main layout containers, modules, and toolbars.
+ * ===================================================================
+ */
+
+/* 模块面板 (ModulePanel) 容器 */
+.think-module {
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    border: 1px solid var(--think-panel-border);
+}
+/* 模块面板头部 */
+.module-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    padding: 5px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--think-panel-header-border);
+    background: var(--think-panel-header-bg);
+    color: var(--think-panel-title);
+    box-shadow: inset 0 -1px 0 var(--think-panel-header-border);
+}
+
+.module-header:hover {
+    background: var(--think-panel-header-hover-bg);
+}
+.module-title {
+    font-weight: 600;
+    font-size: 0.875rem; /* 14px */
+    color: var(--think-panel-title);
+}
+.module-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.module-action-plus {
+    font-size: 1.25rem; /* 20px */
+    font-weight: 500;
+    line-height: 1;
+    color: inherit;
+    opacity: 0.6;
+    padding: 0 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+}
+.module-action-plus:hover {
+    opacity: 1;
+    background-color: color-mix(in srgb, var(--think-text-on-accent) 18%, transparent);
+}
+.module-toggle {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1;
+    opacity: 0.7;
+}
+
+/* 模块面板内容区域 */
+.module-content {
+    padding: 12px;
+    overflow-x: auto;
+}
+.module-deferred-placeholder {
+    color: var(--think-text-secondary);
+    font-size: 0.8125rem;
+    padding: 8px 0;
+}
+.module-content a,
+.module-content a:visited,
+.module-content a:hover {
+    text-decoration: none;
+    box-shadow: none;
+}

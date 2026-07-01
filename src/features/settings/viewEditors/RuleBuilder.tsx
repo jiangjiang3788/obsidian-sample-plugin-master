@@ -2,9 +2,16 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { Box, Button, Chip, Tooltip, Typography } from '@shared/public';
-import { DeleteOutlineIcon, IconAction, SimpleSelect } from '@shared/public';
-import type { DataStore, FilterRule, SortRule } from '@core/public';
+import {
+  Box,
+  Button,
+  Chip,
+  Tooltip,
+  Typography,
+} from '@shared/ui/public';
+import { DeleteOutlineIcon, IconAction, SimpleSelect } from '@shared/ui/public';
+import type { DataStore } from '@core/services/public';
+import type { FilterRule, SortRule } from '@core/types/public';
 import { FieldPickerAutocomplete } from './FieldPickerAutocomplete';
 import {
     appendRule,

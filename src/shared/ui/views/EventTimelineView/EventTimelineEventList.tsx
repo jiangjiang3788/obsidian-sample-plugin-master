@@ -1,7 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item, MessageRenderPort } from '@core/public';
-import { readField } from '@core/public';
+import type { Item } from '@core/types/public';
+import type { MessageRenderPort } from '@core/ports/public';
+import { readField } from '@core/types/public';
 import type { MarkDoneHandler, OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../../types/actions';
 
 import { TaskRow } from '../../items/TaskRow';

@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import { diagnosticError } from '../../../utils/diagnosticConsole';
-import { normalizeDisplayFields } from '@core/public';
+import { normalizeDisplayFields } from '@core/view/public';
 import { ExcelGrid } from './ExcelGrid';
 import { useExcelCellEditing } from './useExcelCellEditing';
 import { getObsidianEventBoundaryProps } from '../../events/obsidianEventBoundary';

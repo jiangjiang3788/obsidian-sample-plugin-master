@@ -1,9 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item, ThemeDefinition } from '@core/public';
+import type { Item, ThemeDefinition } from '@core/types/public';
 import { TaskCheckbox } from '../composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '../composites/TaskSendToTimerButton';
-import { isDone } from '@core/public';
+import { isDone } from '@core/utils/public';
 import { FieldPill } from './FieldPill';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
 import { createRecordGestureHandlers } from '../utils/recordOrigin';

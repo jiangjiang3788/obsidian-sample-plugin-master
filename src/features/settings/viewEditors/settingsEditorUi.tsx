@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h, type ComponentChildren } from 'preact';
-import { Box, Stack, Typography } from '@shared/public';
+import { Box, Stack, Typography } from '@shared/ui/public';
 
 type Children = ComponentChildren;
 

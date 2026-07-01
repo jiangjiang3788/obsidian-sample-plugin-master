@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
-import type { MessageRenderPort, MessageContentType } from '@core/public';
+import type { MessageRenderPort, MessageContentType } from '@core/ports/public';
 
 export interface MarkdownContentProps {
   /** Prefer: reuse AI message renderer. Optional so we can degrade gracefully in non-AI views. */

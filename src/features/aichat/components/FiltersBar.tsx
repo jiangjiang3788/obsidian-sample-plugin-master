@@ -1,8 +1,19 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Chip, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, Typography } from '@shared/public';
-import { SearchIcon, ThemeTreeSelect } from '@shared/public';
-import type { ThemeDefinition } from '@core/public';
+import {
+  Box,
+  Chip,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
+  Switch,
+  Typography,
+} from '@shared/ui/public';
+import { SearchIcon } from '@shared/ui/public';
+import { ThemeTreeSelect } from '@shared/components/public';
+import type { ThemeDefinition } from '@core/types/public';
 
 export interface BlockDefinition {
     id: string;

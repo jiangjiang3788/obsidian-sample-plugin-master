@@ -1,9 +1,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import type { Item } from '@core/public';
-import type { PeriodData, CategoryConfig } from '@core/public';
-import { getBasePath } from '@core/public';
+import type { Item } from '@core/types/public';
+import type { PeriodData } from '@core/utils/public';
+import type { CategoryConfig } from '@core/view/public';
+import { getBasePath } from '@core/utils/public';
 
 interface ChartBlockProps {
     data: PeriodData;

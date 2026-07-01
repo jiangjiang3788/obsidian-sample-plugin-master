@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item } from '@core/public';
+import type { Item } from '@core/types/public';
 import { createRecordGestureHandlers } from '../utils/recordOrigin';
 import type { OpenRecordHandler, OpenRecordOriginHandler } from '../../types/actions';
 

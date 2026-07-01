@@ -1,10 +1,32 @@
 // src/features/settings/input/fieldsEditor/FieldRow.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Box, Button, Collapse, Divider, Stack, Typography } from '@shared/public';
-import { AddIcon, DeleteIcon, DragIndicatorIcon, ExpandLessIcon, ExpandMoreIcon, IconAction, SimpleSelect, logRenderDiagnostic } from '@shared/public';
-import type { TemplateField, TemplateFieldOption } from "@core/public";
-import { getCustomFieldNameWarning, getUserTemplateFieldTypeOptions, normalizeTemplateFieldType, templateFieldTypeSupportsDefaultValue, templateFieldTypeUsesOptions } from "@core/public";
+import {
+  Box,
+  Button,
+  Collapse,
+  Divider,
+  Stack,
+  Typography,
+} from '@shared/ui/public';
+import {
+  AddIcon,
+  DeleteIcon,
+  DragIndicatorIcon,
+  ExpandLessIcon,
+  ExpandMoreIcon,
+  IconAction,
+  SimpleSelect,
+} from '@shared/ui/public';
+import { logRenderDiagnostic } from '@shared/debug/public';
+import type { TemplateField, TemplateFieldOption } from '@core/types/public';
+import {
+  getCustomFieldNameWarning,
+  getUserTemplateFieldTypeOptions,
+  normalizeTemplateFieldType,
+  templateFieldTypeSupportsDefaultValue,
+  templateFieldTypeUsesOptions,
+} from '@core/fields/public';
 import { NativeTextarea, NativeTextInput } from "./nativeControls";
 import { OptionRow } from "./OptionRow";
 

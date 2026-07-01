@@ -1,5 +1,7 @@
-import type { CoreBlockDefinition, GoalDefinition, GoalTemplate, TemplateField } from '@core/public';
-import { getGoalTemplateId, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from '@core/public';
+import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
+import type { TemplateField } from '@core/types/public';
+import { getGoalTemplateId, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from '@core/goal/public';
 
 export const GOAL_TEMPLATE_BLOCK_ORDER = ['打卡', '任务', '事件', '思考', '总结', '计划', '阻碍项', '里程碑'];
 const GOAL_TEMPLATE_BLOCK_ID_ORDER = ['core.habit', 'core.task', 'core.evidence', 'core.thought', 'core.review', 'core.plan', 'core.blocker', 'core.milestone'];

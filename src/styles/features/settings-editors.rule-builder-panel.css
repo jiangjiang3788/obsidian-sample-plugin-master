@@ -1,0 +1,61 @@
+/* Rule builder panel and compact rows. */
+.think-os--settings .think-rule-builder__chips,
+.think-os--settings .think-rule-builder__chip-row,
+.think-os--settings .think-rule-builder__compact-add {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+}
+
+.think-os--settings .think-rule-builder__panel-rows,
+.think-os--settings .think-rule-builder__row-shell {
+  display: grid;
+  gap: var(--think-space-4);
+}
+
+.think-os--settings .think-rule-builder__row-grid,
+.think-os--settings .think-rule-builder__column-head,
+.think-os--settings .think-rule-builder__add-grid {
+  display: grid;
+  gap: var(--think-space-4);
+  align-items: center;
+  min-width: 0;
+}
+
+.think-os--settings .think-rule-builder__row-grid {
+  padding: var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-surface-1);
+}
+
+.think-os--settings .think-rule-builder__column-head {
+  padding-inline: var(--think-space-4);
+  color: var(--think-text-secondary);
+}
+
+.think-os--settings .think-rule-builder__add-grid {
+  padding: var(--think-space-5);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-surface-2);
+}
+
+.think-os--settings .think-rule-builder__end-label {
+  text-align: center;
+}
+
+.think-os--settings .think-rule-builder__compact {
+  display: flex;
+  flex-direction: row;
+  gap: var(--think-space-4);
+}
+
+.think-os--settings .think-rule-builder__compact-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-5);
+  min-width: 0;
+}

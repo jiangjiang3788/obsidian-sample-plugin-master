@@ -1,5 +1,7 @@
-import type { CategoryConfig, Item, PeriodData } from '@core/public';
-import { aggregateByMonth, aggregateByQuarter, getMonthWeeksData, isSameIsoWeek } from '@core/public';
+import type { CategoryConfig } from '@core/view/public';
+import type { Item } from '@core/types/public';
+import type { PeriodData } from '@core/utils/public';
+import { aggregateByMonth, aggregateByQuarter, getMonthWeeksData, isSameIsoWeek } from '@core/utils/public';
 
 export interface QuarterStatisticsWeekModel {
   key: string;

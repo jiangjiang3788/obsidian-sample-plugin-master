@@ -3,8 +3,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect } from 'preact/hooks';
-import type { TaskBlock } from '@core/public';
-import { timeToMinutes, minutesToTime, normalizeTaskTimeTriple } from '@core/public';
+import type { TaskBlock } from '@core/types/public';
+import { timeToMinutes, minutesToTime, normalizeTaskTimeTriple } from '@core/utils/public';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '../muiCompat';
 import { useTimeFormState } from '../../hooks/useFormState';
 import { useSaveHandler } from '../../patterns/ModalSavePattern';

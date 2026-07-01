@@ -1,9 +1,18 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Button, Divider, IconButton, List, ListItemButton, ListItemText, Typography } from '@shared/public';
-import { AddIcon, DeleteIcon } from '@shared/public';
-import type { ChatSession } from '@core/public';
-import { dayjs } from '@core/public';
+import {
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemText,
+  Typography,
+} from '@shared/ui/public';
+import { AddIcon, DeleteIcon } from '@shared/ui/public';
+import type { ChatSession } from '@core/ai/public';
+import { dayjs } from '@core/utils/public';
 
 export interface SessionListProps {
     sessions: ChatSession[];

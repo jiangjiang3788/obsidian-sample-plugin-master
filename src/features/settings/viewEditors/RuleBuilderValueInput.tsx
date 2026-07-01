@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Autocomplete, TextField } from '@shared/public';
-import type { FilterRule } from '@core/public';
+import { Autocomplete, TextField } from '@shared/ui/public';
+import type { FilterRule } from '@core/types/public';
 import {
   getRuleValuePlaceholder,
   isMultiValueOperator,

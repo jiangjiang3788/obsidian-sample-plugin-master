@@ -1,7 +1,7 @@
 // src/core/services/ThemeManager.ts
-import type { Theme } from '@core/public';
-import { Item } from '@core/public';
-import type { IThemeMatcher } from '@core/public';
+import type { Theme } from '@core/types/public';
+import { Item } from '@core/types/public';
+import type { IThemeMatcher } from '@core/types/public';
 
 /**
  * 主题管理服务

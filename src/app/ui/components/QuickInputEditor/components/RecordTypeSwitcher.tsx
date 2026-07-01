@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { FormControl } from '@shared/public';
+import { FormControl } from '@shared/ui/public';
 
 import { SelectablePill } from './SelectablePill';
 

@@ -1,306 +1,142 @@
 // src/app/store/slices/settings.slice.ts
 /**
  * SettingsSlice - Zustand Settings 状态切片
- * Role: Store Slice (状态管理)
- * 
- * 【S2 规范】Settings 真同源
- * - SettingsRepository 是 settings 的唯一写入口
- * - 本 Slice 只调用 settingsRepository.update()，不直接写 settings
- * - settings 由 ServiceManager 订阅 SettingsRepository 后统一同步到 Zustand
- * - 本 Slice 只管理辅助状态：settingsLoading、settingsError、isTimerWidgetVisible
- * 
- * Do:
- * - 管理通用 Settings 相关辅助状态（loading/error/临时UI状态）
- * - 提供 Settings 相关 actions，委托写操作给 SettingsRepository
- * - 委托 IO 给 SettingsRepository
- * 
- * Don't:
- * - 直接进行 IO 操作
- * - 直接写 settings（禁止 set({ settings: ... })）
- * - 持有 UI 逻辑
+ *
+ * V11 收敛后：
+ * - Slice 只保留 settingsLoading/settingsError、查询和 action wiring。
+ * - 通用 settings 数据变更进入 generalSettingsMutations。
+ * - SettingsRepository 写入包装统一交给 settingsMutationRunner。
  */
 
 import type { StateCreator } from 'zustand';
-import type { ThinkSettings, InputSettings } from '@core/public';
-import type { AiSettings } from '@core/public';
-import type { SettingsRepository } from '@core/public';
-import { devError } from '@core/public';
-
-// ============== 类型定义 ==============
+import type { AiSettings, InputSettings, ThinkSettings } from '@core/types/public';
+import type { SettingsRepository } from '@core/services/public';
+import { createSettingsMutationRunner } from '../mutations/settingsMutationRunner';
+import {
+    addActiveThemePathDraft,
+    patchInputSettingsDraft,
+    patchSettingsDraft,
+    removeActiveThemePathDraft,
+    replaceActiveThemePathsDraft,
+    replaceAiSettingsDraft,
+    setFloatingTimerEnabledDraft,
+} from '../mutations/generalSettingsMutations';
 
 export interface SettingsSliceState {
-    // 临时 UI 状态
     settingsLoading: boolean;
     settingsError: string | null;
 }
 
 export interface SettingsSliceActions {
-    // 悬浮计时器
     setFloatingTimerEnabled: (enabled: boolean) => Promise<void>;
-    
-    // 输入设置
     updateInputSettings: (updates: Partial<InputSettings>) => Promise<void>;
-    
-    // AI 设置
     updateAiSettings: (aiSettings: AiSettings) => Promise<void>;
-    
-    // 活跃主题路径
     updateActiveThemePaths: (paths: string[]) => Promise<void>;
     addActiveThemePath: (path: string) => Promise<void>;
     removeActiveThemePath: (path: string) => Promise<void>;
-    
-    // 通用设置更新
     updateSettings: (mutator: (draft: ThinkSettings) => void) => Promise<void>;
     batchUpdateSettings: (updates: Partial<ThinkSettings>) => Promise<void>;
-    
-    // 查询方法
     getFloatingTimerEnabled: () => boolean;
     getActiveThemePaths: () => string[];
     getInputSettings: () => InputSettings | undefined;
     getAiSettings: () => AiSettings | undefined;
-    
-    // 状态管理
     setSettingsError: (error: string | null) => void;
 }
 
 export type SettingsSlice = SettingsSliceState & SettingsSliceActions;
 
-// ============== Slice 创建器 ==============
+type SettingsSliceStoreState = SettingsSlice & { settings: ThinkSettings; isInitialized: boolean };
 
-/**
- * 创建 Settings Slice
- * @param settingsRepository 设置仓库（用于持久化）
- */
 export function createSettingsSlice(
-    settingsRepository: SettingsRepository
-): StateCreator<
-    SettingsSlice & { settings: ThinkSettings; isInitialized: boolean },
-    [],
-    [],
-    SettingsSlice
-> {
-    return (set, get) => ({
-        // ============== 初始状态 ==============
-        settingsLoading: false,
-        settingsError: null,
+    settingsRepository: SettingsRepository,
+): StateCreator<SettingsSliceStoreState, [], [], SettingsSlice> {
+    return (set, get) => {
+        const setSettingsStatus = (loading: boolean, error: string | null): void => {
+            set({ settingsLoading: loading, settingsError: error });
+        };
+        const runSettingsMutation = createSettingsMutationRunner({
+            sliceName: 'SettingsSlice',
+            repository: settingsRepository,
+            getState: get,
+            setStatus: setSettingsStatus,
+        });
 
-        // ============== 悬浮计时器 ==============
+        return {
+            settingsLoading: false,
+            settingsError: null,
 
-        setFloatingTimerEnabled: async (enabled: boolean): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) {
-                devError('[SettingsSlice] Store 未初始化');
-                return;
-            }
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
-                await settingsRepository.update(draft => {
-                    draft.floatingTimerEnabled = enabled;
+            setFloatingTimerEnabled: async (enabled: boolean): Promise<void> => {
+                await runSettingsMutation({
+                    action: 'settings.setFloatingTimerEnabled',
+                    fallbackError: '设置悬浮计时器状态失败',
+                    mutate: (draft) => setFloatingTimerEnabledDraft(draft, enabled),
                 });
-                
-                // NOTE: isTimerWidgetVisible 已移至 UiSlice，此处不再直接更新
-                // 若需联动，请在 ServiceManager 订阅或 UseCase 中处理
-                
-                set({ settingsLoading: false });
-            } catch (error: any) {
-                devError('[SettingsSlice] setFloatingTimerEnabled 失败:', error);
-                set({ 
-                    settingsError: error.message || '设置悬浮计时器状态失败',
-                    settingsLoading: false 
+            },
+
+            updateInputSettings: async (updates: Partial<InputSettings>): Promise<void> => {
+                await runSettingsMutation({
+                    action: 'settings.updateInputSettings',
+                    fallbackError: '更新输入设置失败',
+                    mutate: (draft) => patchInputSettingsDraft(draft, updates),
                 });
-            }
-        },
+            },
 
-        // ============== 输入设置 ==============
-
-        updateInputSettings: async (updates: Partial<InputSettings>): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) {
-                devError('[SettingsSlice] Store 未初始化');
-                return;
-            }
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
-                await settingsRepository.update(draft => {
-                    draft.inputSettings = { ...draft.inputSettings, ...updates };
+            updateAiSettings: async (aiSettings: AiSettings): Promise<void> => {
+                await runSettingsMutation({
+                    action: 'settings.updateAiSettings',
+                    fallbackError: 'AI 设置更新失败',
+                    mutate: (draft) => replaceAiSettingsDraft(draft, aiSettings),
                 });
-                set({ settingsLoading: false });
-            } catch (error: any) {
-                devError('[SettingsSlice] updateInputSettings 失败:', error);
-                set({ 
-                    settingsError: error.message || '更新输入设置失败',
-                    settingsLoading: false 
+            },
+
+            updateActiveThemePaths: async (paths: string[]): Promise<void> => {
+                await runSettingsMutation({
+                    action: 'settings.updateActiveThemePaths',
+                    fallbackError: '更新活跃主题路径失败',
+                    mutate: (draft) => replaceActiveThemePathsDraft(draft, paths),
                 });
-            }
-        },
+            },
 
-        // ============== AI 设置 ==============
-
-        updateAiSettings: async (aiSettings: AiSettings): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) {
-                devError('[SettingsSlice] Store 未初始化');
-                return;
-            }
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
-                await settingsRepository.update(draft => {
-                    draft.aiSettings = aiSettings;
+            addActiveThemePath: async (path: string): Promise<void> => {
+                await runSettingsMutation({
+                    action: 'settings.addActiveThemePath',
+                    fallbackError: '添加活跃主题路径失败',
+                    mutate: (draft) => addActiveThemePathDraft(draft, path),
                 });
-                set({ settingsLoading: false });
-            } catch (error: any) {
-                devError('[SettingsSlice] updateAiSettings 失败:', error);
-                set({ 
-                    settingsError: error.message || 'AI 设置更新失败',
-                    settingsLoading: false 
+            },
+
+            removeActiveThemePath: async (path: string): Promise<void> => {
+                await runSettingsMutation({
+                    action: 'settings.removeActiveThemePath',
+                    fallbackError: '移除活跃主题路径失败',
+                    mutate: (draft) => removeActiveThemePathDraft(draft, path),
                 });
-            }
-        },
+            },
 
-        // ============== 活跃主题路径 ==============
-
-        updateActiveThemePaths: async (paths: string[]): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) return;
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
-                await settingsRepository.update(draft => {
-                    draft.activeThemePaths = paths;
+            updateSettings: async (mutator: (draft: ThinkSettings) => void): Promise<void> => {
+                await runSettingsMutation({
+                    action: 'settings.updateSettings',
+                    fallbackError: '更新设置失败',
+                    mutate: mutator,
                 });
-                set({ settingsLoading: false });
-            } catch (error: any) {
-                devError('[SettingsSlice] updateActiveThemePaths 失败:', error);
-                set({ settingsError: error.message || '更新活跃主题路径失败', settingsLoading: false });
-            }
-        },
+            },
 
-        addActiveThemePath: async (path: string): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) return;
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
-                await settingsRepository.update(draft => {
-                    if (!draft.activeThemePaths) {
-                        draft.activeThemePaths = [];
-                    }
-                    if (!draft.activeThemePaths.includes(path)) {
-                        draft.activeThemePaths.push(path);
-                    }
+            batchUpdateSettings: async (updates: Partial<ThinkSettings>): Promise<void> => {
+                await runSettingsMutation({
+                    action: 'settings.batchUpdateSettings',
+                    fallbackError: '批量更新设置失败',
+                    mutate: (draft) => patchSettingsDraft(draft, updates),
                 });
-                set({ settingsLoading: false });
-            } catch (error: any) {
-                devError('[SettingsSlice] addActiveThemePath 失败:', error);
-                set({ settingsError: error.message || '添加活跃主题路径失败', settingsLoading: false });
-            }
-        },
+            },
 
-        removeActiveThemePath: async (path: string): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) return;
+            getFloatingTimerEnabled: (): boolean => get().settings.floatingTimerEnabled ?? false,
+            getActiveThemePaths: (): string[] => get().settings.activeThemePaths || [],
+            getInputSettings: (): InputSettings | undefined => get().settings.inputSettings,
+            getAiSettings: (): AiSettings | undefined => get().settings.aiSettings,
 
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
-                await settingsRepository.update(draft => {
-                    if (draft.activeThemePaths) {
-                        draft.activeThemePaths = draft.activeThemePaths.filter(p => p !== path);
-                    }
-                });
-                set({ settingsLoading: false });
-            } catch (error: any) {
-                devError('[SettingsSlice] removeActiveThemePath 失败:', error);
-                set({ settingsError: error.message || '移除活跃主题路径失败', settingsLoading: false });
-            }
-        },
-
-        // ============== 通用设置更新 ==============
-
-        updateSettings: async (mutator: (draft: ThinkSettings) => void): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) {
-                devError('[SettingsSlice] Store 未初始化，无法更新设置');
-                return;
-            }
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
-                await settingsRepository.update(mutator);
-                set({ settingsLoading: false });
-            } catch (error: any) {
-                devError('[SettingsSlice] updateSettings 失败:', error);
-                set({ 
-                    settingsError: error.message || '更新设置失败',
-                    settingsLoading: false 
-                });
-            }
-        },
-
-        batchUpdateSettings: async (updates: Partial<ThinkSettings>): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) return;
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
-                await settingsRepository.update(draft => {
-                    Object.assign(draft, updates);
-                });
-                set({ settingsLoading: false });
-            } catch (error: any) {
-                devError('[SettingsSlice] batchUpdateSettings 失败:', error);
-                set({ settingsError: error.message || '批量更新设置失败', settingsLoading: false });
-            }
-        },
-
-        // ============== 查询方法 ==============
-
-        getFloatingTimerEnabled: (): boolean => {
-            const state = get();
-            return state.settings.floatingTimerEnabled ?? false;
-        },
-
-        getActiveThemePaths: (): string[] => {
-            const state = get();
-            return state.settings.activeThemePaths || [];
-        },
-
-        getInputSettings: (): InputSettings | undefined => {
-            const state = get();
-            return state.settings.inputSettings;
-        },
-
-        getAiSettings: (): AiSettings | undefined => {
-            const state = get();
-            return state.settings.aiSettings;
-        },
-
-        // NOTE: ViewInstance CRUD 已移至 ViewInstanceSlice (viAddViewInstance 等)
-        // NOTE: reorderItems 已移至 GroupUseCase
-        // 使用 useCases.viewInstance.* 和 useCases.group.reorderItems
-
-        // ============== 状态管理 ==============
-
-        setSettingsError: (error: string | null) => {
-            set({ settingsError: error });
-        },
-    });
+            setSettingsError: (error: string | null): void => {
+                set({ settingsError: error });
+            },
+        };
+    };
 }

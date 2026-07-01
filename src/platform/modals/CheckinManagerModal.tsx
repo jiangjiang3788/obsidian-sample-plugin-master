@@ -2,9 +2,10 @@
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { App, Modal, Notice } from 'obsidian';
-import { Item, dayjs } from '@core/public';
+import { Item } from '@core/types/public';
+import { dayjs } from '@core/utils/public';
 import { openEditFromItem, openRecordOrigin } from '@/app/public';
-import { createRecordGestureHandlers } from '@shared/public';
+import { createRecordGestureHandlers } from '@shared/ui/public';
 import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 
 export interface CheckinManagerData {

@@ -1,5 +1,6 @@
-import { devLog, devWarn } from '@core/public';
-import type { AiSettings, ISettingsProvider, ThinkSettings } from '@core/public';
+import { devLog, devWarn } from '@core/utils/public';
+import type { AiSettings, ThinkSettings } from '@core/types/public';
+import type { ISettingsProvider } from '@core/services/public';
 import { getZustandState, type AppStoreInstance } from '@/app/public';
 
 export interface AiInputUiPort {

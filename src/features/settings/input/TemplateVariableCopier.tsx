@@ -3,9 +3,9 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { useUiPort } from '@/app/public';
-import type { BlockTemplate } from '@core/public';
-import { SimpleSelect } from '@shared/public';
-import { Box } from '@shared/public';
+import type { BlockTemplate } from '@core/types/public';
+import { SimpleSelect } from '@shared/ui/public';
+import { Box } from '@shared/ui/public';
 
 interface Props {
     block: BlockTemplate;

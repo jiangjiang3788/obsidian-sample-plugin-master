@@ -1,4 +1,7 @@
-import type { Item, FieldCommitMode, FieldEditDangerLevel, FieldEditPolicy, FieldEditorKind, MessageRenderPort, GoalDefinition } from '@core/public';
+import type { Item } from '@core/types/public';
+import type { FieldCommitMode, FieldEditDangerLevel, FieldEditPolicy, FieldEditorKind } from '@core/fields/public';
+import type { MessageRenderPort } from '@core/ports/public';
+import type { GoalDefinition } from '@core/goal/public';
 
 export type ExcelCellCommitReason = 'inline-edit' | 'fill-drag' | 'paste';
 export type ExcelCellSaveState = 'idle' | 'pending' | 'saved' | 'error';

@@ -1,6 +1,6 @@
-import type { GoalDefinition, GoalTemplate } from '@core/public';
-import { getGoalOrderPath, getGoalOrderLabel, sortGoalTemplatesBySettingsOrder, sortGoalsBySettingsOrder } from '@core/public';
-import type { CoreBlockDefinition } from '@core/public';
+import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
+import { getGoalOrderPath, getGoalOrderLabel, sortGoalTemplatesBySettingsOrder, sortGoalsBySettingsOrder } from '@core/goal/public';
+import type { CoreBlockDefinition } from '@core/blocks/public';
 import { getGoalTemplateDisplayName, readGoalTemplateIcon, readGoalTemplateThemePath } from './goalTemplateCopy';
 
 export type GoalTemplateCellStatus = 'inherit' | 'override' | 'multi' | 'disabled' | 'warning';

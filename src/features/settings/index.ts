@@ -19,7 +19,7 @@ export { ThemeManager } from './theme/ThemeManager';
 import type ThinkPlugin from '@main';
 import { SettingsTab } from '@/platform/SettingsTab';
 import { registerThinkSettingsWorkspaceView, openThinkSettingsWorkspaceView } from '@/platform/ThinkSettingsView';
-import { DataStore } from '@core/public';
+import { DataStore } from '@core/services/public';
 
 import { BlockViewEditor } from './viewEditors/BlockViewEditor';
 import { ExcelViewEditor } from './viewEditors/ExcelViewEditor';
@@ -85,8 +85,8 @@ export function setupSettings(deps: SettingsDependencies): void {
 /* ========================================================================== */
 
 import type { RendererService } from './layout/RendererService';
-import type { EventsPort } from '@core/public';
-import type { ActionService } from '@core/public';
+import type { EventsPort } from '@core/ports/public';
+import type { ActionService } from '@core/services/public';
 
 import { VaultWatcher } from '@/platform/events/VaultWatcher';
 import { CodeblockEmbedder } from './layout/CodeblockEmbedder';
@@ -135,12 +135,12 @@ import {
   HeatmapView,
   ProgressView,
   TaskExecutionView,
-} from '@shared/public';
+} from '@shared/ui/public';
 import type { ComponentType } from 'preact';
 
 /** 从 Domain 层导入 ViewName 和 VIEW_OPTIONS */
-import type { ViewName } from '@core/public';
-import { VIEW_OPTIONS as DOMAIN_VIEW_OPTIONS } from '@core/public';
+import type { ViewName } from '@core/types/public';
+import { VIEW_OPTIONS as DOMAIN_VIEW_OPTIONS } from '@core/types/public';
 
 /**
  * 视图注册表：域层的 ViewName -> 具体视图组件

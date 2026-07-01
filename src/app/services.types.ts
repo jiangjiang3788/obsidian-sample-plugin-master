@@ -9,10 +9,10 @@
  * - createServices / ServicesProvider 必须使用这里的 Services 类型
  */
 
-import type { DataStore } from '@core/public';
-import type { InputService } from '@core/public';
+import type { DataStore } from '@core/services/public';
+import type { InputService } from '@core/services/public';
 import type { UseCases } from './usecases';
-import type { UiPort, ModalPort, MessageRenderPort } from '@core/public';
+import type { UiPort, ModalPort, MessageRenderPort } from '@core/ports/public';
 import type { AppStoreInstance } from './store/useAppStore';
 
 /**

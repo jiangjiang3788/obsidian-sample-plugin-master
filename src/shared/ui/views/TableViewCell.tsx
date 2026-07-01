@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item, ThemeDefinition } from '@core/public';
+import type { Item, ThemeDefinition } from '@core/types/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
 import { TaskRow } from '../items/TaskRow';
 import { ItemLink } from '../items/ItemLink';

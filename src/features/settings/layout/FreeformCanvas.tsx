@@ -11,7 +11,7 @@ import {
   type DragMoveEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import type { Layout, ViewInstance, ViewPlacement } from '@core/public';
+import type { Layout, ViewInstance, ViewPlacement } from '@core/types/public';
 import {
   bringViewPlacementsToFront,
   calculateFreeformCanvasHeight,
@@ -20,7 +20,7 @@ import {
   normalizeFreeformLayoutConfig,
   resizeViewPlacement,
   resolveViewPlacements,
-} from '@core/public';
+} from '@core/layout/public';
 import { FreeformLayoutItem, type FreeformLayoutItemRenderProps } from './FreeformLayoutItem';
 
 export interface FreeformCanvasProps {

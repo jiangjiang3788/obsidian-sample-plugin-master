@@ -1,4 +1,5 @@
 import type { IThemeMatcher } from '@/core/types/theme';
+import { splitHierarchyPathValue } from '@/core/semantics/path';
 
 /**
  * Theme semantic helpers.
@@ -19,25 +20,15 @@ export interface ThemePathParts {
 }
 
 function cleanThemePath(value: unknown): string | null {
-  const cleaned = String(value ?? '')
-    .split('/')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .join('/');
-  return cleaned || null;
+  return splitHierarchyPathValue(value).path;
 }
 
 export function splitThemePath(themePath: string | null | undefined): ThemePathParts {
-  const cleaned = cleanThemePath(themePath);
-  if (!cleaned) {
-    return { themePath: null, rootTheme: null, leafTheme: null };
-  }
-
-  const parts = cleaned.split('/');
+  const parts = splitHierarchyPathValue(themePath);
   return {
-    themePath: cleaned,
-    rootTheme: parts[0] || null,
-    leafTheme: parts[parts.length - 1] || null,
+    themePath: parts.path,
+    rootTheme: parts.root,
+    leafTheme: parts.leaf,
   };
 }
 

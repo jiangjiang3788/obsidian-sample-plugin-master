@@ -1,4 +1,7 @@
-import { getAllFields, normalizeDisplayFields, orderItemsByDisplayedGoalField, type GoalDefinition, type Item } from '@core/public';
+import { getAllFields, type Item } from '@core/types/public';
+import { normalizeDisplayFields } from '@core/view/public';
+import { orderItemsByDisplayedGoalField } from '@core/utils/public';
+import type { GoalDefinition } from '@core/goal/public';
 import { buildExcelColumns } from './value';
 import type { ExcelColumnModel, ExcelColumnWidthMap, ExcelContentDisplayMode, ExcelViewDisplayConfig } from './types';
 

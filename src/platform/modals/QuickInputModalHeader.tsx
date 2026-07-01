@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { Button, ModalHeader } from '@shared/public';
+import { Button, ModalHeader } from '@shared/ui/public';
 import type { QuickInputOperationMode } from './quickInputOperationMode';
 import { getQuickInputOperationTitle } from './quickInputOperationMode';
 

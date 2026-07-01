@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 // src/shared/ui/views/timeline/TimelineViewView.tsx
-import type { TaskBlock } from '@core/public';
+import type { TaskBlock } from '@core/types/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler } from '../../../types/actions';
 import type { UpdateTaskTimeHandler } from '../../../types/taskTime';
 

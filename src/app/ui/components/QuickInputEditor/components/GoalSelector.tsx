@@ -2,8 +2,8 @@
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 
-import type { GoalDefinition } from '@core/public';
-import { Box, Button, Typography } from '@shared/public';
+import { normalizeGoalPath, type GoalDefinition } from '@core/goal/public';
+import { Box, Button, Typography } from '@shared/ui/public';
 
 import { HierarchySingleSelect, type HierarchySingleSelectOption } from './HierarchySingleSelect';
 
@@ -20,14 +20,11 @@ export interface GoalSelectorProps {
   dense?: boolean;
 }
 
-function normalizeGoalPath(value: string): string {
-  return String(value || '').split('/').map((part) => part.trim().replace(/^[#＃]+\s*/, '').trim()).filter(Boolean).join('/');
-}
 
 export function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense = false }: GoalSelectorProps) {
   const [draftGoalPath, setDraftGoalPath] = useState('');
-  const normalizedDraft = normalizeGoalPath(draftGoalPath);
-  const existing = useMemo(() => new Set((goals || []).map((goal) => normalizeGoalPath(goal.value))), [goals]);
+  const normalizedDraft = normalizeGoalPath(draftGoalPath) || '';
+  const existing = useMemo(() => new Set((goals || []).map((goal) => normalizeGoalPath(goal.value) || '')), [goals]);
   const canCreate = !!onCreateGoal && !!normalizedDraft && !existing.has(normalizedDraft);
 
   return (

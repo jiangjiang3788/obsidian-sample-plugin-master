@@ -1,10 +1,10 @@
 import { container } from 'tsyringe';
 import type ThinkPlugin from '@main';
 
-import { safeAsync } from '@shared/public';
-import { startMeasure } from '@shared/public';
+import { safeAsync } from '@shared/utils/public';
+import { startMeasure } from '@shared/utils/public';
 
-import { devLog } from '@core/public';
+import { devLog } from '@core/utils/public';
 
 import type { Services } from '@/app/services.types';
 import { RendererService } from '@features/settings/layout/RendererService';

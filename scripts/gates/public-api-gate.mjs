@@ -4,13 +4,14 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { failWithViolations, printOk } from '../lib/gate-formatter.mjs';
+import { CORE_MODULE_PUBLIC_FACADES, CORE_ROOT_PUBLIC_FACADE, isCorePublicFacadeSpecifier } from './public-facades.config.mjs';
 
 /**
  * Public API Gate (zero-deps)
  * 目标：
  *  - core/public.ts 只允许 export* 从模块级 barrel（./types ./utils ./ai）
  *  - core/utils/index.ts 的 export* 不允许产生命名冲突
- *  - 非 core 层禁止 deep import core（只能 import '@core/public'）
+ *  - 非 core 层禁止 deep import core（只能 import '@core/public' 或 '@core/<domain>/public'）
  *
  * 检测方式：
  *  - export/import 正则 + 模块路径真实落点解析（部分）
@@ -26,8 +27,8 @@ const UTILS_INDEX = path.join(SRC, 'core', 'utils', 'index.ts');
 // ---- Config (可调) ----
 const ALLOW_CORE_PUBLIC_EXPORT_STAR = new Set(['./types', './utils', './ai']);
 
-// 允许 core 外部 import 的唯一入口
-const CORE_FACADE_IMPORT = '@core/public';
+// 允许 core 外部 import 的 public 入口：root facade + 模块级 facade。
+const CORE_FACADE_IMPORT = CORE_ROOT_PUBLIC_FACADE;
 
 // 支持的 “绕过门面” import 前缀（你项目里同时存在 @/core 和 @core/xxx）
 const CORE_DEEP_PREFIX_RE = /(^@\/core\/)|(^@core\/(?!public\b))/;
@@ -52,15 +53,9 @@ function existsFile(p) {
 
 /** 粗略去掉注释 + 字符串，减少 “注释里提到 tsyringe/core” 误报 */
 function stripNoise(code) {
-  // 1) 去 block comments
+  // 只移除注释，保留 import/export 的字符串字面量，避免漏检模块 specifier。
   let s = code.replace(/\/\*[\s\S]*?\*\//g, ' ');
-  // 2) 去 line comments
   s = s.replace(/(^|[^:])\/\/.*$/gm, '$1 ');
-  // 3) 去单/双引号字符串
-  s = s.replace(/'([^'\\]|\\.)*'/g, "''");
-  s = s.replace(/"([^"\\]|\\.)*"/g, '""');
-  // 4) 去模板字符串（保留结构）
-  s = s.replace(/`([^`\\]|\\.)*`/g, '``');
   return s;
 }
 
@@ -171,6 +166,22 @@ function main() {
     }
   }
 
+
+  // A2) V13 module-level public facades must exist. They are optional to use
+  // immediately, but mandatory as architecture extension points.
+  for (const facade of CORE_MODULE_PUBLIC_FACADES) {
+    const facadePath = path.join(ROOT, facade.file);
+    if (!existsFile(facadePath)) {
+      violations.push(
+        fmt(
+          'PUB-004',
+          `缺少 core 模块级 public facade：${facade.file}`,
+          `修复：创建 ${facade.file}，并在 tsconfig paths / public-facades.config.mjs 中保持一致`
+        )
+      );
+    }
+  }
+
   // B) utils/index.ts 检测 export* 冲突
   if (existsFile(UTILS_INDEX)) {
     const utilsText = read(UTILS_INDEX);
@@ -222,8 +233,8 @@ function main() {
       const source = m[1] || m[2];
       if (!source) continue;
 
-      // 允许 core facade
-      if (source === CORE_FACADE_IMPORT) continue;
+      // 允许 root facade 和 V13 模块级 facade。
+      if (isCorePublicFacadeSpecifier(source)) continue;
 
       // 命中 deep import core
       if (CORE_DEEP_PREFIX_RE.test(source)) {
@@ -231,7 +242,7 @@ function main() {
           fmt(
             'PUB-003',
             `禁止绕过门面：${r} 出现 core 深层 import → '${source}'`,
-            `修复：只能 import '${CORE_FACADE_IMPORT}'（必要导出请加到 core/public.ts）`
+            `修复：只能 import '${CORE_FACADE_IMPORT}' 或 '@core/<domain>/public'（必要导出请加到对应 public facade）`
           )
         );
       }

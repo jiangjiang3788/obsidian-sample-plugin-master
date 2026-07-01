@@ -1,14 +1,15 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Box, Button, Typography } from '@shared/public';
+import { Box, Button, Typography } from '@shared/ui/public';
 import { selectAiSettings, selectInputSettings, useSelector } from '@/app/public';
-import type { OpenAIChatMessage, ChatMessage, ChatSession, SessionFilters } from '@core/public';
-import { devError, devLog } from '@core/public';
-import type { ChatResponse } from '@core/public';
+import type { OpenAIChatMessage, ChatMessage, ChatSession, SessionFilters } from '@core/ai/public';
+import { devError, devLog } from '@core/utils/public';
+import type { ChatResponse } from '@core/ai/public';
 import { AiChatModalView } from './AiChatModalView';
 import type { AiServices } from './types';
-import { CancelledError, createTakeLatest, useIsMounted } from '@shared/public';
+import { CancelledError, createTakeLatest } from '@shared/utils/public';
+import { useIsMounted } from '@shared/hooks/public';
 
 export interface AiChatModalContainerProps {
     closeModal: () => void;

@@ -1,4 +1,4 @@
-import { detectThinkDeviceProfile, isThinkMobileLikeProfile } from '@shared/public';
+import { detectThinkDeviceProfile, isThinkMobileLikeProfile } from '@shared/utils/public';
 
 export function isMobileLikeEnvironment(): boolean {
   return isThinkMobileLikeProfile(detectThinkDeviceProfile());

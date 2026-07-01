@@ -1,8 +1,9 @@
 // src/shared/ui/views/StatisticsView.tsx
 /** @jsxImportSource preact */
 import { useMemo, useRef, useState } from 'preact/hooks';
-import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
-import { exportItemsToMarkdown, getExportConfigByViewType, devLog } from '@core/public';
+import type { Item, ViewInstance } from '@core/types/public';
+import type { MessageRenderPort } from '@core/ports/public';
+import { exportItemsToMarkdown, getExportConfigByViewType, devLog } from '@core/utils/public';
 import type { CategoryColorMap, CloseStatisticsPopoverHandler, NoticeHandler, OpenQuickCreateHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenStatisticsPopoverHandler, ResolveResourcePathHandler, TimerController, UpdateCategoryColorsHandler } from '../../../types/actions';
 import { StatisticsViewView } from './StatisticsViewView';
 import { useStatisticsCategoryConfigs } from './useStatisticsCategoryConfigs';

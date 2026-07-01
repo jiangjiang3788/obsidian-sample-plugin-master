@@ -7,10 +7,10 @@
 
 import { singleton, inject } from 'tsyringe';
 import { App, TFile, TFolder } from 'obsidian';
-import { AppToken } from '@core/services/types';
-import { devError, devWarn } from '@core/utils/devLogger';
+import { AppToken } from '@core/services/public';
+import { devError, devWarn } from '@core/utils/public';
 import { isDisposed } from '@/app/runtime/lifecycleState';
-import type { VaultPort } from '@core/ports/VaultPort';
+import type { VaultPort } from '@core/ports/public';
 
 /**
  * ObsidianVaultPort

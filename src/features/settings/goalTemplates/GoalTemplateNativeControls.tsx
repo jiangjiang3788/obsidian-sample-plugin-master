@@ -53,12 +53,12 @@ export function NativeTextInput({
         value={value}
         disabled={disabled}
         placeholder={placeholder}
-        onMouseDown={stopEditorEvent as any}
-        onClick={stopEditorEvent as any}
-        onDblClick={stopEditorEvent as any}
-        onKeyDown={stopEditorEvent as any}
-        onKeyUp={stopEditorEvent as any}
-        onInput={(event) => onInput(readInputValue(event as any))}
+        onMouseDown={stopEditorEvent}
+        onClick={stopEditorEvent}
+        onDblClick={stopEditorEvent}
+        onKeyDown={stopEditorEvent}
+        onKeyUp={stopEditorEvent}
+        onInput={(event) => onInput(readInputValue(event))}
         style={{ ...nativeControlBaseStyle, opacity: disabled ? 0.6 : 1, cursor: disabled ? 'not-allowed' : 'text' }}
       />
     </label>
@@ -84,11 +84,11 @@ export function NativeSelectInput({
       <select
         value={value}
         disabled={disabled}
-        onMouseDown={stopEditorEvent as any}
-        onClick={stopEditorEvent as any}
-        onDblClick={stopEditorEvent as any}
-        onKeyDown={stopEditorEvent as any}
-        onKeyUp={stopEditorEvent as any}
+        onMouseDown={stopEditorEvent}
+        onClick={stopEditorEvent}
+        onDblClick={stopEditorEvent}
+        onKeyDown={stopEditorEvent}
+        onKeyUp={stopEditorEvent}
         onChange={(event) => onChange(((event.target || event.currentTarget) as HTMLSelectElement).value)}
         style={{ ...nativeControlBaseStyle, opacity: disabled ? 0.6 : 1 }}
       >
@@ -118,12 +118,12 @@ export function NativeTextarea({
         value={value}
         disabled={disabled}
         rows={rows}
-        onMouseDown={stopEditorEvent as any}
-        onClick={stopEditorEvent as any}
-        onDblClick={stopEditorEvent as any}
-        onKeyDown={stopEditorEvent as any}
-        onKeyUp={stopEditorEvent as any}
-        onInput={(event) => onInput(readInputValue(event as any))}
+        onMouseDown={stopEditorEvent}
+        onClick={stopEditorEvent}
+        onDblClick={stopEditorEvent}
+        onKeyDown={stopEditorEvent}
+        onKeyUp={stopEditorEvent}
+        onInput={(event) => onInput(readInputValue(event))}
         style={{
           ...nativeControlBaseStyle,
           fontFamily: 'monospace',

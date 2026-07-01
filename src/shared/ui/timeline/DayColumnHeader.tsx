@@ -2,10 +2,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { dayjs } from '@core/public';
-import { buildDailyCategoryHours } from '@core/public';
+import { dayjs } from '@core/utils/public';
+import { buildDailyCategoryHours } from '@core/utils/public';
 import { ProgressBlock } from './ProgressBlock';
-import type { TaskBlock } from '@core/public';
+import type { TaskBlock } from '@core/types/public';
 
 interface DayColumnHeaderProps {
     day: string;

@@ -38,10 +38,10 @@
  * ============================================================================
  */
 
-import type { ThemeDefinition } from '@core/public';
-import type { ActiveStatus } from '@core/public';
+import type { ThemeDefinition } from '@core/types/public';
+import type { ActiveStatus } from '@core/types/public';
 import type { AppStoreApi } from './index';
-import { devError } from '@core/public';
+import { devError } from '@core/utils/public';
 
 /**
  * 主题用例类

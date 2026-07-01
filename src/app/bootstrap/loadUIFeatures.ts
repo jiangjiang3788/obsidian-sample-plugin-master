@@ -1,7 +1,7 @@
 import type ThinkPlugin from '@main';
-import { devError } from '@core/public';
+import { devError } from '@core/utils/public';
 import { container } from 'tsyringe';
-import { EVENTS_PORT_TOKEN, type EventsPort } from '@core/public';
+import { EVENTS_PORT_TOKEN, type EventsPort } from '@core/ports/public';
 
 import { FeatureLoader } from '@/app/FeatureLoader';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';

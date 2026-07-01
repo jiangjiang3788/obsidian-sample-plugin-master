@@ -1,4 +1,5 @@
-import type { Item, ViewInstance, PeriodData } from '@core/public';
+import type { Item, ViewInstance } from '@core/types/public';
+import type { PeriodData } from '@core/utils/public';
 import {
   aggregateByMonth,
   aggregateByQuarter,
@@ -6,10 +7,10 @@ import {
   aggregateByYear,
   createPeriodData,
   dayjs,
-  getItemGoalKey,
   getWeeksInYear,
-  STATISTICS_VIEW_DEFAULT_CONFIG,
-} from '@core/public';
+} from '@core/utils/public';
+import { getItemGoalKey } from '@core/goal/public';
+import { STATISTICS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 
 export type StatisticsCurrentView = '年' | '季' | '月' | '周' | '天';
 

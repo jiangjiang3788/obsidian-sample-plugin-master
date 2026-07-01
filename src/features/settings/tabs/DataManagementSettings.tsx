@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { Box, Button, Divider, Typography } from '@shared/public';
+import { Box, Button, Divider, Typography } from '@shared/ui/public';
 import { BlockManager } from '@features/settings/input/BlockManager';
 import { GoalManager } from '@features/settings/input/GoalManager';
 import { GoalMetricSection } from '@features/settings/input/goalManager/GoalMetricSection';

@@ -1,501 +1,80 @@
 /**
- * 统一主题树构建器 - 单一真源
- * 
- * 用于构建主题树结构，供 QuickInput、AI Chat、主题选择器等模块共用
+ * 统一主题树构建器 - 单一真源。
+ *
+ * V12 后此文件只保留公共 facade：树构建、查询、过滤的实现分别进入
+ * ThemeTreeBuild / ThemeTreeQueries，避免公共入口继续膨胀为巨型文件。
  */
 import type { ThemeDefinition } from '@/core/types/schema';
+import { buildThemeTreeNodes } from './ThemeTreeBuild';
+import {
+    filterThemeTreeNodes,
+    findThemeTreeNodeByPath,
+    findThemeTreeNodeByThemeId,
+    flattenThemeTreeNodes,
+    getThemeAncestorPaths,
+    getThemeDescendantPaths,
+    getThemeLeafNodes,
+    getThemePathFromTree,
+    searchThemeTreeNodes,
+} from './ThemeTreeQueries';
+import type { BuildThemeTreeOptions, FlatThemeTreeNode, ThemeTreeNode } from './ThemeTreeTypes';
 
-/**
- * 主题树节点 - 统一结构
- */
-export interface ThemeTreeNode {
-    /** 节点唯一标识（使用路径作为 ID） */
-    id: string;
-    /** 节点显示名称（路径最后一段） */
-    label: string;
-    /** 完整路径 */
-    path: string;
-    /** 节点层级深度（从 0 开始） */
-    depth: number;
-    /** 关联的主题 ID（叶子节点有值，虚节点为 null） */
-    themeId: string | null;
-    /** 关联的完整主题定义（叶子节点有值，虚节点为 null） */
-    theme: ThemeDefinition | null;
-    /** 父节点 ID（根节点为 null） */
-    parentId: string | null;
-    /** 子节点列表 */
-    children: ThemeTreeNode[];
-}
+export type { BuildThemeTreeOptions, FlatThemeTreeNode, ThemeTreeNode } from './ThemeTreeTypes';
 
-/**
- * 扁平化的树节点（用于搜索/列表展示）
- */
-export interface FlatThemeTreeNode extends ThemeTreeNode {
-    /** 是否展开（运行时状态） */
-    expanded?: boolean;
-    /** 是否可见（基于搜索过滤） */
-    visible?: boolean;
-}
-
-/**
- * 构建选项
- */
-export interface BuildThemeTreeOptions {
-    /** 排序方式：'path' | 'label' | 'order'，默认 'path' */
-    sortBy?: 'path' | 'label' | 'order';
-    /** 是否创建虚节点（中间层节点），默认 true */
-    createVirtualNodes?: boolean;
-}
-
-/**
- * ThemeTreeBuilder - 主题树构建器
- * 
- * 提供统一的主题树构建逻辑，确保项目中所有模块使用一致的树结构
- */
+/** ThemeTreeBuilder - 主题树构建器。 */
 export class ThemeTreeBuilder {
-    /**
-     * 构建主题树
-     * 
-     * @param themes - 主题定义列表
-     * @param options - 构建选项
-     * @returns 树节点数组（根节点列表）
-     * 
-     * @example
-     * ```typescript
-     * const themes = [
-     *   { id: '1', path: 'work/project', ... },
-     *   { id: '2', path: 'work/meeting', ... },
-     *   { id: '3', path: 'personal', ... }
-     * ];
-     * const tree = ThemeTreeBuilder.buildTree(themes);
-     * // 结果：
-     * // [
-     * //   { id: 'work', label: 'work', children: [
-     * //     { id: 'work/project', label: 'project', themeId: '1', ... },
-     * //     { id: 'work/meeting', label: 'meeting', themeId: '2', ... }
-     * //   ]},
-     * //   { id: 'personal', label: 'personal', themeId: '3', ... }
-     * // ]
-     * ```
-     */
-    static buildTree(
-        themes: ThemeDefinition[],
-        options: BuildThemeTreeOptions = {}
-    ): ThemeTreeNode[] {
-
-        const { sortBy = 'path', createVirtualNodes = true } = options;
-
-        if (!themes || themes.length === 0) {
-            return [];
-        }
-
-        const getOrder = (node: ThemeTreeNode): number | null => {
-            const raw = node.theme?.order;
-            return typeof raw === 'number' && Number.isFinite(raw) ? raw : null;
-        };
-
-        const compareNodes = (a: ThemeTreeNode, b: ThemeTreeNode): number => {
-            if (sortBy === 'label') {
-                return a.label.localeCompare(b.label);
-            }
-            if (sortBy === 'order') {
-                const ao = getOrder(a);
-                const bo = getOrder(b);
-                if (ao !== null && bo !== null && ao !== bo) return ao - bo;
-                if (ao !== null && bo === null) return -1;
-                if (ao === null && bo !== null) return 1;
-            }
-            return a.path.localeCompare(b.path);
-        };
-
-        // Branch A: create virtual nodes (default) - keep existing behavior
-        if (createVirtualNodes) {
-            const roots: ThemeTreeNode[] = [];
-            const nodeMap = new Map<string, ThemeTreeNode>();
-
-            // 按路径排序确保父节点先被创建
-            const sortedThemes = [...themes].sort((a, b) => a.path.localeCompare(b.path));
-
-            for (const theme of sortedThemes) {
-                const parts = theme.path.split('/');
-                let currentPath = '';
-                let parentNode: ThemeTreeNode | null = null;
-
-                for (let i = 0; i < parts.length; i++) {
-                    const part = parts[i];
-                    const isLeaf = i === parts.length - 1;
-                    currentPath = currentPath ? `${currentPath}/${part}` : part;
-
-                    let node = nodeMap.get(currentPath);
-
-                    if (!node) {
-                        // 创建新节点
-                        const newNode: ThemeTreeNode = {
-                            id: currentPath,
-                            label: part,
-                            path: currentPath,
-                            depth: i,
-                            themeId: isLeaf ? theme.id : null,
-                            theme: isLeaf ? theme : null,
-                            parentId: parentNode?.id ?? null,
-                            children: [],
-                        };
-                        node = newNode;
-                        nodeMap.set(currentPath, newNode);
-
-                        // 添加到父节点或根列表
-                        if (parentNode) {
-                            if (!parentNode.children.some(c => c.id === newNode.id)) {
-                                parentNode.children.push(newNode);
-                            }
-                        } else {
-                            if (!roots.some(r => r.id === newNode.id)) {
-                                roots.push(newNode);
-                            }
-                        }
-                    } else if (isLeaf) {
-                        // 更新已存在的虚节点为真实节点
-                        node.themeId = theme.id;
-                        node.theme = theme;
-                    }
-
-                    parentNode = node;
-                }
-            }
-
-            // 排序子节点
-            const sortNodes = (nodes: ThemeTreeNode[]): void => {
-                nodes.sort(compareNodes);
-                nodes.forEach(node => sortNodes(node.children));
-            };
-            sortNodes(roots);
-
-            return roots;
-        }
-
-        // Branch B: do NOT create virtual nodes (only real themes form nodes).
-        // 父子关系：使用“最近的已存在祖先主题路径”作为 parent。
-        const themeByPath = new Map<string, ThemeDefinition>();
-        for (const t of themes) {
-            themeByPath.set(t.path, t);
-        }
-
-        const nodeByPath = new Map<string, ThemeTreeNode>();
-        for (const theme of themes) {
-            const parts = theme.path.split('/');
-            const label = parts[parts.length - 1] ?? theme.path;
-            nodeByPath.set(theme.path, {
-                id: theme.path,
-                label,
-                path: theme.path,
-                depth: 0, // will be filled after linking
-                themeId: theme.id,
-                theme,
-                parentId: null,
-                children: [],
-            });
-        }
-
-        const roots: ThemeTreeNode[] = [];
-        const rootIds = new Set<string>();
-
-        // Link parent/children
-        for (const theme of themes) {
-            const node = nodeByPath.get(theme.path);
-            if (!node) continue;
-
-            const parts = theme.path.split('/');
-            let parentPath: string | null = null;
-
-            if (parts.length > 1) {
-                for (let i = parts.length - 1; i >= 1; i--) {
-                    const candidate = parts.slice(0, i).join('/');
-                    if (themeByPath.has(candidate)) {
-                        parentPath = candidate;
-                        break;
-                    }
-                }
-            }
-
-            if (parentPath) {
-                const parentNode = nodeByPath.get(parentPath);
-                if (parentNode) {
-                    node.parentId = parentNode.id;
-                    if (!parentNode.children.some(c => c.id === node.id)) {
-                        parentNode.children.push(node);
-                    }
-                    continue;
-                }
-            }
-
-            // No parent => root
-            if (!rootIds.has(node.id)) {
-                roots.push(node);
-                rootIds.add(node.id);
-            }
-        }
-
-        // Compute depths based on actual parent/children relationships
-        const setDepth = (nodes: ThemeTreeNode[], depth: number): void => {
-            for (const n of nodes) {
-                n.depth = depth;
-                if (n.children.length > 0) {
-                    setDepth(n.children, depth + 1);
-                }
-            }
-        };
-        setDepth(roots, 0);
-
-        // Sort children
-        const sortNodes = (nodes: ThemeTreeNode[]): void => {
-            nodes.sort(compareNodes);
-            nodes.forEach(node => sortNodes(node.children));
-        };
-        sortNodes(roots);
-
-        return roots;
+    static buildTree(themes: ThemeDefinition[], options: BuildThemeTreeOptions = {}): ThemeTreeNode[] {
+        return buildThemeTreeNodes(themes, options);
     }
 
-    /**
-     * 扁平化主题树
-     * 
-     * @param nodes - 树节点数组
-     * @param expandedIds - 展开的节点 ID 集合（可选）
-     * @returns 扁平化的节点数组
-     */
-    static flattenTree(
-        nodes: ThemeTreeNode[],
-        expandedIds?: Set<string>
-    ): FlatThemeTreeNode[] {
-        const result: FlatThemeTreeNode[] = [];
-
-        const traverse = (nodeList: ThemeTreeNode[], visible: boolean = true): void => {
-            for (const node of nodeList) {
-                const expanded = expandedIds?.has(node.id) ?? true;
-                result.push({
-                    ...node,
-                    expanded,
-                    visible,
-                });
-                // 只有展开的节点的子节点才可见
-                if (node.children.length > 0) {
-                    traverse(node.children, visible && expanded);
-                }
-            }
-        };
-
-        traverse(nodes);
-        return result;
+    static flattenTree(nodes: ThemeTreeNode[], expandedIds?: Set<string>): FlatThemeTreeNode[] {
+        return flattenThemeTreeNodes(nodes, expandedIds);
     }
 
-    /**
-     * 根据主题 ID 获取完整路径
-     * 
-     * @param nodes - 树节点数组
-     * @param themeId - 主题 ID
-     * @returns 路径字符串，未找到返回 null
-     */
     static getThemePath(nodes: ThemeTreeNode[], themeId: string): string | null {
-        const search = (nodeList: ThemeTreeNode[]): string | null => {
-            for (const node of nodeList) {
-                if (node.themeId === themeId) {
-                    return node.path;
-                }
-                const found = search(node.children);
-                if (found) return found;
-            }
-            return null;
-        };
-        return search(nodes);
+        return getThemePathFromTree(nodes, themeId);
     }
 
-    /**
-     * 根据路径获取节点
-     * 
-     * @param nodes - 树节点数组
-     * @param path - 节点路径
-     * @returns 找到的节点或 null
-     */
     static findNodeByPath(nodes: ThemeTreeNode[], path: string): ThemeTreeNode | null {
-        const parts = path.split('/');
-        let current: ThemeTreeNode | undefined;
-        let searchList = nodes;
-
-        for (const part of parts) {
-            const expectedPath = current ? `${current.path}/${part}` : part;
-            current = searchList.find(n => n.path === expectedPath);
-            if (!current) return null;
-            searchList = current.children;
-        }
-
-        return current ?? null;
+        return findThemeTreeNodeByPath(nodes, path);
     }
 
-    /**
-     * 根据主题 ID 获取节点
-     * 
-     * @param nodes - 树节点数组
-     * @param themeId - 主题 ID
-     * @returns 找到的节点或 null
-     */
     static findNodeByThemeId(nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode | null {
-        const search = (nodeList: ThemeTreeNode[]): ThemeTreeNode | null => {
-            for (const node of nodeList) {
-                if (node.themeId === themeId) {
-                    return node;
-                }
-                const found = search(node.children);
-                if (found) return found;
-            }
-            return null;
-        };
-        return search(nodes);
+        return findThemeTreeNodeByThemeId(nodes, themeId);
     }
 
-    /**
-     * 过滤树节点
-     * 
-     * @param nodes - 树节点数组
-     * @param predicate - 过滤谓词函数
-     * @returns 过滤后的树（保留匹配节点及其祖先路径）
-     */
-    static filterTree(
-        nodes: ThemeTreeNode[],
-        predicate: (node: ThemeTreeNode) => boolean
-    ): ThemeTreeNode[] {
-        const filterNodes = (nodeList: ThemeTreeNode[]): ThemeTreeNode[] => {
-            return nodeList
-                .map(node => {
-                    // 先过滤子节点
-                    const filteredChildren = filterNodes(node.children);
-                    
-                    // 如果节点本身匹配或有匹配的子节点，保留该节点
-                    if (predicate(node) || filteredChildren.length > 0) {
-                        return {
-                            ...node,
-                            children: filteredChildren,
-                        };
-                    }
-                    return null;
-                })
-                .filter((n): n is ThemeTreeNode => n !== null);
-        };
-
-        return filterNodes(nodes);
+    static filterTree(nodes: ThemeTreeNode[], predicate: (node: ThemeTreeNode) => boolean): ThemeTreeNode[] {
+        return filterThemeTreeNodes(nodes, predicate);
     }
 
-    /**
-     * 搜索过滤（按路径或标签匹配）
-     * 
-     * @param nodes - 树节点数组
-     * @param searchTerm - 搜索词
-     * @returns 匹配的树节点
-     */
     static searchTree(nodes: ThemeTreeNode[], searchTerm: string): ThemeTreeNode[] {
-        if (!searchTerm.trim()) {
-            return nodes;
-        }
-
-        const term = searchTerm.toLowerCase();
-        return ThemeTreeBuilder.filterTree(nodes, node => {
-            return (
-                node.label.toLowerCase().includes(term) ||
-                node.path.toLowerCase().includes(term)
-            );
-        });
+        return searchThemeTreeNodes(nodes, searchTerm);
     }
 
-    /**
-     * 获取节点的所有祖先路径
-     * 
-     * @param path - 节点路径
-     * @returns 祖先路径数组（不包括自身）
-     */
     static getAncestorPaths(path: string): string[] {
-        const parts = path.split('/');
-        const ancestors: string[] = [];
-        let currentPath = '';
-
-        for (let i = 0; i < parts.length - 1; i++) {
-            currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i];
-            ancestors.push(currentPath);
-        }
-
-        return ancestors;
+        return getThemeAncestorPaths(path);
     }
 
-    /**
-     * 获取节点的所有后代路径
-     * 
-     * @param node - 树节点
-     * @returns 后代路径数组（不包括自身）
-     */
     static getDescendantPaths(node: ThemeTreeNode): string[] {
-        const descendants: string[] = [];
-
-        const collect = (n: ThemeTreeNode | null | undefined): void => {
-            if (!n) return;
-            for (const child of n.children || []) {
-                descendants.push(child.path);
-                collect(child);
-            }
-        };
-
-        collect(node);
-        return descendants;
+        return getThemeDescendantPaths(node);
     }
 
-    /**
-     * 获取所有叶子节点（有真实主题关联的节点）
-     * 
-     * @param nodes - 树节点数组
-     * @returns 叶子节点数组
-     */
     static getLeafNodes(nodes: ThemeTreeNode[]): ThemeTreeNode[] {
-        const leaves: ThemeTreeNode[] = [];
-
-        const collect = (nodeList: ThemeTreeNode[]): void => {
-            for (const node of nodeList) {
-                if (node.themeId !== null) {
-                    leaves.push(node);
-                }
-                collect(node.children);
-            }
-        };
-
-        collect(nodes);
-        return leaves;
+        return getThemeLeafNodes(nodes);
     }
 }
 
-// ============== 便捷函数导出 ==============
-
-/**
- * 构建主题树（便捷函数）
- */
-export function buildThemeTree(
-    themes: ThemeDefinition[],
-    options?: BuildThemeTreeOptions
-): ThemeTreeNode[] {
+/** 构建主题树（便捷函数）。 */
+export function buildThemeTree(themes: ThemeDefinition[], options?: BuildThemeTreeOptions): ThemeTreeNode[] {
     return ThemeTreeBuilder.buildTree(themes, options);
 }
 
-/**
- * 扁平化主题树（便捷函数）
- */
-export function flattenThemeTree(
-    nodes: ThemeTreeNode[],
-    expandedIds?: Set<string>
-): FlatThemeTreeNode[] {
+/** 扁平化主题树（便捷函数）。 */
+export function flattenThemeTree(nodes: ThemeTreeNode[], expandedIds?: Set<string>): FlatThemeTreeNode[] {
     return ThemeTreeBuilder.flattenTree(nodes, expandedIds);
 }
 
-/**
- * 搜索主题树（便捷函数）
- */
-export function searchThemeTree(
-    nodes: ThemeTreeNode[],
-    searchTerm: string
-): ThemeTreeNode[] {
+/** 搜索主题树（便捷函数）。 */
+export function searchThemeTree(nodes: ThemeTreeNode[], searchTerm: string): ThemeTreeNode[] {
     return ThemeTreeBuilder.searchTree(nodes, searchTerm);
 }

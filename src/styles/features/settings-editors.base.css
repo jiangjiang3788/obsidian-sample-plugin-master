@@ -1,0 +1,118 @@
+/* Settings editor shared composition primitives. */
+/* CSS V3: reusable editor composition for Settings feature. */
+.think-os--settings .think-editor-card {
+  display: grid;
+  gap: var(--think-space-4);
+  padding: var(--think-space-5);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-surface-1);
+}
+
+.think-os--settings .think-editor-card--dashed {
+  border-style: dashed;
+  background: transparent;
+}
+
+.think-os--settings .think-editor-card--interactive {
+  cursor: pointer;
+  transition:
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    background-color var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.think-os--settings .think-editor-card--interactive:hover {
+  border-color: var(--think-border-strong);
+  background: var(--think-bg-hover);
+}
+
+.think-os--settings .think-editor-card.is-selected {
+  border-color: var(--think-accent);
+  background: var(--think-accent-muted);
+}
+
+.think-os--settings .think-editor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--think-space-5);
+  flex-wrap: wrap;
+}
+
+.think-os--settings .think-editor-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-4);
+  min-width: 0;
+}
+
+.think-os--settings .think-editor-inline--wrap {
+  flex-wrap: wrap;
+}
+
+.think-os--settings .think-editor-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-4);
+  min-width: 0;
+}
+
+.think-os--settings .think-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--think-space-4);
+  min-width: 0;
+}
+
+.think-os--settings .think-editor-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.think-os--settings .think-editor-grid--metadata {
+  grid-template-columns: minmax(220px, 1fr) 110px auto;
+  align-items: center;
+}
+
+.think-os--settings .think-editor-grid--list-toolbar {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 280px);
+  align-items: center;
+}
+
+.think-os--settings .think-editor-field-label {
+  width: 92px;
+  flex: 0 0 92px;
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+}
+
+.think-os--settings .think-editor-field-control {
+  min-width: 220px;
+}
+
+.think-os--settings .think-editor-field-control--narrow {
+  width: 140px;
+  min-width: 0;
+}
+
+.think-os--settings .think-editor-section-title {
+  margin: 0 0 var(--think-space-3);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-md);
+  font-weight: var(--think-font-weight-bold);
+}
+
+.think-os--settings .think-editor-diff-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+}
+
+.think-os--settings .think-editor-diff-chip {
+  padding: var(--think-space-1) var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-pill);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}

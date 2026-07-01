@@ -2,12 +2,9 @@ import { container } from 'tsyringe';
 import type ThinkPlugin from '@main';
 import { z } from 'zod';
 
-import {
-    SETTINGS_PERSISTENCE_TOKEN,
-    type ISettingsPersistence,
-    THEME_MATCHER_TOKEN,
-    devWarn,
-} from '@core/public';
+import { SETTINGS_PERSISTENCE_TOKEN, type ISettingsPersistence } from '@core/services/public';
+import { THEME_MATCHER_TOKEN } from '@core/types/public';
+import { devWarn } from '@core/utils/public';
 
 import { diDebug } from '@/app/diagnostics/diDiagnostics';
 

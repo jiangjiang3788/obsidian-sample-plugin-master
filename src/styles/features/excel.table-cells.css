@@ -1,0 +1,215 @@
+/* Excel editable table cell states and editors. */
+.excel-view-table th {
+    position: relative;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.excel-view-table th[data-editable="true"] {
+    background: color-mix(in srgb, var(--think-accent) 8%, var(--think-bg-surface-1));
+}
+
+.excel-view-table th[data-editable="false"] {
+    color: var(--think-text-secondary);
+    background: var(--think-bg-surface-1);
+}
+
+.excel-view-table th[data-danger-level="medium"][data-editable="true"] {
+    background: color-mix(in srgb, var(--text-warning, var(--think-warning)) 12%, var(--think-bg-surface-1));
+}
+
+.excel-view-header-label {
+    margin-right: 6px;
+}
+
+.excel-view-header-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--think-border-subtle);
+    border-radius: 999px;
+    padding: 0 6px;
+    color: var(--think-text-secondary);
+    background: var(--think-bg-canvas);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.excel-view-table th[data-editable="true"] .excel-view-header-badge {
+    color: var(--think-text-accent);
+    border-color: var(--think-accent);
+}
+
+.excel-view-table th[data-danger-level="medium"][data-editable="true"] .excel-view-header-badge {
+    color: var(--text-warning, var(--think-warning));
+    border-color: var(--text-warning, var(--think-warning));
+}
+
+.excel-view-table .excel-view-cell {
+    position: relative;
+    min-width: 96px;
+    max-width: 320px;
+    white-space: nowrap;
+    cursor: cell;
+    vertical-align: middle;
+    transition: background-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+}
+
+.excel-view-table .excel-view-cell-value,
+.excel-view-table .excel-view-content-link {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.excel-view-table .excel-view-cell.is-inline-editable {
+    cursor: text;
+    background: color-mix(in srgb, var(--think-accent) 4%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-inline-editable:hover {
+    background: color-mix(in srgb, var(--think-accent) 9%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-readonly {
+    cursor: default;
+    color: var(--think-text-secondary);
+    background: color-mix(in srgb, var(--think-bg-surface-1) 72%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-policy-readonly .excel-view-cell-value,
+.excel-view-table .excel-view-cell.is-policy-readonly .excel-view-content-link {
+    opacity: 0.72;
+}
+
+.excel-view-table .excel-view-cell.is-medium-risk.is-inline-editable {
+    background: color-mix(in srgb, var(--text-warning, var(--think-warning)) 6%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-medium-risk.is-inline-editable:hover {
+    background: color-mix(in srgb, var(--text-warning, var(--think-warning)) 12%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-high-risk,
+.excel-view-table .excel-view-cell[data-editor-kind="path"] {
+    color: var(--think-text-subtle);
+    background: repeating-linear-gradient(
+        -45deg,
+        color-mix(in srgb, var(--think-bg-surface-1) 90%, transparent),
+        color-mix(in srgb, var(--think-bg-surface-1) 90%, transparent) 6px,
+        color-mix(in srgb, var(--think-border-subtle) 35%, transparent) 6px,
+        color-mix(in srgb, var(--think-border-subtle) 35%, transparent) 12px
+    );
+}
+
+.excel-view-table .excel-view-cell.is-selected {
+    outline: 2px solid var(--think-accent);
+    outline-offset: -2px;
+}
+
+.excel-view-table .excel-view-cell.is-selected.is-readonly {
+    outline-color: var(--think-text-subtle);
+}
+
+.excel-view-table .excel-view-cell.is-pending {
+    opacity: 0.72;
+}
+
+.excel-view-table .excel-view-cell.has-error {
+    outline: 2px solid var(--think-danger);
+    outline-offset: -2px;
+}
+
+.excel-view-cell-edit-wrap {
+    display: block;
+}
+
+.excel-view-table .excel-view-cell-editor {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 96px;
+    margin: 0;
+    border: 1px solid var(--think-accent);
+    border-radius: 4px;
+    background: var(--think-bg-canvas);
+    color: var(--think-text-primary);
+    font: inherit;
+    line-height: 1.4;
+    padding: 4px 6px;
+}
+
+.excel-view-table .excel-view-cell-editor:focus {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--think-accent) 24%, transparent);
+    outline: none;
+}
+
+.excel-view-table .excel-view-cell-editor-textarea {
+    min-height: 64px;
+    resize: vertical;
+}
+
+.excel-view-cell-edit-hint {
+    display: block;
+    margin-top: 2px;
+    color: var(--think-text-subtle);
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+.excel-view-table .excel-view-content-link {
+    color: var(--think-text-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.excel-view-table .excel-view-cell-status,
+.excel-view-table .excel-view-cell-error,
+.excel-view-table .excel-view-cell-affordance {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 11px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.excel-view-table .excel-view-cell-affordance {
+    color: var(--think-text-subtle);
+    opacity: 0.86;
+}
+
+.excel-view-table .excel-view-cell.is-inline-editable .excel-view-cell-affordance {
+    color: var(--think-text-accent);
+}
+
+.excel-view-table .excel-view-cell-error {
+    color: var(--think-danger);
+    font-weight: 700;
+}
+
+.excel-view-table .excel-view-cell.is-fill-source {
+    outline: 2px dashed var(--think-accent);
+    outline-offset: -3px;
+}
+
+.excel-view-table .excel-view-cell.is-fill-target {
+    box-shadow: inset 0 0 0 2px var(--interactive-accent-hover, var(--think-accent));
+}
+
+.excel-view-table .excel-view-fill-handle {
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--think-bg-canvas);
+    background: var(--think-accent);
+    cursor: crosshair;
+    z-index: 1;
+}
+
+.excel-view-table .excel-view-cell[data-editor-kind="path"] .excel-view-fill-handle,
+.excel-view-table .excel-view-cell[data-editable="false"] .excel-view-fill-handle {
+    display: none;
+}

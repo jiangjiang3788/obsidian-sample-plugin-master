@@ -1,3 +1,4 @@
+import { isOptionLikeValue } from '@/core/semantics/option';
 import type {
   RecordInputFieldSource,
   RecordInputFieldSourceMap,
@@ -46,8 +47,7 @@ export function isRecordInputMeaningfulValue(value: unknown): boolean {
 }
 
 export function isRecordInputOptionLike(value: unknown): value is { value?: unknown; label?: unknown } {
-  if (!value || typeof value !== 'object') return false;
-  return 'value' in value && 'label' in value;
+  return isOptionLikeValue(value);
 }
 
 export function isRecordInputSameValue(left: unknown, right: unknown): boolean {

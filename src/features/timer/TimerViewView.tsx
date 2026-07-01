@@ -2,9 +2,10 @@
 /** @jsxImportSource preact */
 
 import { FloatingPanel } from '@/app/public';
-import { AddCircleOutlineIcon, Button, Stack, Tooltip } from '@shared/public';
+import { AddCircleOutlineIcon, Button, Stack, Tooltip } from '@shared/ui/public';
 import { TimerRow } from './TimerRow';
-import type { DataStore, Item } from '@core/public';
+import type { DataStore } from '@core/services/public';
+import type { Item } from '@core/types/public';
 import type { TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
 

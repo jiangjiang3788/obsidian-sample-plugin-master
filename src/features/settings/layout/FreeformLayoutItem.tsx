@@ -3,8 +3,8 @@ import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useDraggable } from '@dnd-kit/core';
-import type { FreeformLayoutConfig, ViewName, ViewPlacement } from '@core/public';
-import { getFreeformVisualHeight, resizeViewPlacement } from '@core/public';
+import type { FreeformLayoutConfig, ViewName, ViewPlacement } from '@core/types/public';
+import { getFreeformVisualHeight, resizeViewPlacement } from '@core/layout/public';
 
 export interface FreeformLayoutItemRenderProps {
   dragHandleProps: Record<string, unknown>;

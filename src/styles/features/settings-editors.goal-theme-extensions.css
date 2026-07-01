@@ -1,0 +1,30 @@
+/* Goal template and theme metadata editor extensions. */
+.think-os--settings .think-goal-template-editor__primary-grid.is-two-column {
+  grid-template-columns: 1.2fr 1.2fr;
+}
+
+.think-os--settings .think-goal-template-editor__section-heading {
+  margin-bottom: var(--think-space-3);
+  font-size: 0.95rem;
+  font-weight: var(--think-font-weight-bold);
+}
+
+.think-os--settings .think-goal-template-editor__section-help {
+  display: block;
+  margin-bottom: var(--think-space-3);
+}
+
+.think-os--settings .think-goal-template-editor__output-heading {
+  margin-bottom: var(--think-space-3);
+}
+
+.think-os--settings .think-theme-metadata__entry {
+  grid-template-columns: 56px minmax(220px, 1fr) 110px minmax(150px, 1fr) 120px auto;
+  border-top: 1px solid var(--think-border-strong);
+}
+
+@container think-settings (max-width: 840px) {
+  .think-os--settings .think-theme-metadata__entry {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}

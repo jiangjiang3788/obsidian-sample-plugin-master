@@ -1,5 +1,6 @@
-import { AiHttpClient, devError, devLog, devWarn } from '@core/public';
-import { CancelledError, createTakeLatest } from '@shared/public';
+import { AiHttpClient } from '@core/ai/public';
+import { devError, devLog, devWarn } from '@core/utils/public';
+import { CancelledError, createTakeLatest } from '@shared/utils/public';
 import type { AppStoreInstance } from '@/app/public';
 
 import { startAiProgressNotice } from './aiProgressNotice';

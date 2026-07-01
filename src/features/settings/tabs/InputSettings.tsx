@@ -1,7 +1,7 @@
 // src/features/settings/ui/InputSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Alert } from '@shared/public';
+import { Box, Alert } from '@shared/ui/public';
 
 // 记录类型、目标、主题、指标已统一进入“数据管理”。
 export function InputSettings() {

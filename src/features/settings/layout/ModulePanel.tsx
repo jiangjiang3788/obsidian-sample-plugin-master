@@ -2,12 +2,12 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import {
-    DeleteOutlineIcon,
-    DragIndicatorIcon,
-    IosShareIcon,
-    SettingsIcon,
-    ThinkIconButton,
-} from '@shared/public';
+  DeleteOutlineIcon,
+  DragIndicatorIcon,
+  IosShareIcon,
+  SettingsIcon,
+  ThinkIconButton,
+} from '@shared/ui/public';
 
 export interface ModulePanelProps {
     title: string;

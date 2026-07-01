@@ -1,5 +1,5 @@
 /** @jsxImportSource preact */
-import type { Item } from '@core/public';
+import type { Item } from '@core/types/public';
 import type { ResolveResourcePathHandler } from '../../types/actions';
 import { HeatmapDayView } from './HeatmapDayView';
 import { HeatmapThemeGroup } from './HeatmapThemeGroup';

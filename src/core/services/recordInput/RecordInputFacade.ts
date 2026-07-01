@@ -10,6 +10,7 @@ import type {
   SubmitUpdateRecordParams,
   TemplateField,
 } from '@/core/types';
+import { findMatchingOption, readOptionText } from '@/core/semantics/option';
 
 export interface RecordInputEditorStateLike {
   blockId?: string | null;
@@ -141,13 +142,17 @@ export function normalizeRecordInputFieldValueForTemplate(field: TemplateField, 
   if (Array.isArray(value)) {
     return value.map((entry) => {
       if (entry && typeof entry === 'object' && 'value' in entry && 'label' in entry) return entry;
-      const matched = options.find((option) => option.value === entry || option.label === entry);
-      return matched ? { value: matched.value, label: matched.label || matched.value } : entry;
+      const matched = findMatchingOption(options, entry);
+      if (!matched) return entry;
+      const text = readOptionText(matched);
+      return { value: text.value, label: text.label || text.value };
     });
   }
 
-  const matched = options.find((option) => option.value === value || option.label === value);
-  return matched ? { value: matched.value, label: matched.label || matched.value } : value;
+  const matched = findMatchingOption(options, value);
+  if (!matched) return value;
+  const text = readOptionText(matched);
+  return { value: text.value, label: text.label || text.value };
 }
 
 export function normalizeRecordInputFormDataForTemplate(template: { fields?: TemplateField[] } | undefined | null, formData: Record<string, any>): Record<string, any> {

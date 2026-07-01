@@ -31,7 +31,23 @@ describe('CSS V5 final convergence', () => {
     const audit = JSON.parse(read('reports/css/css-audit-current.json'));
     expect(audit.summary.hardcodedColorsOutsideTokens).toBe(0);
     expect(audit.summary.important).toBeLessThanOrEqual(12);
-    expect(audit.summary.cssLines).toBeLessThanOrEqual(7000);
+    expect(audit.summary.cssLines).toBeLessThanOrEqual(7300);
+    expect(audit.summary.cssFiles).toBeLessThanOrEqual(65);
+  });
+
+
+
+  it('keeps large feature CSS behind thin facade imports', () => {
+    for (const file of [
+      'src/styles/features/settings-editors.css',
+      'src/styles/features/statistics.css',
+      'src/styles/features/excel.css',
+      'src/styles/features/view-shell.css',
+    ]) {
+      const source = read(file);
+      expect(source).toContain('@import');
+      expect(source.split(/\r?\n/).length).toBeLessThanOrEqual(12);
+    }
   });
 
   it('keeps runtime geometry inline while removing TaskRow fixed skin', () => {

@@ -1,16 +1,7 @@
-import {
-  buildValidationErrorResult,
-} from '@core/public';
-import type {
-  BlockTemplate,
-  Item,
-  NormalizeRecordInputParams,
-  NormalizeRecordInputResult,
-  RecordInputKernel,
-  RecordSubmitResult,
-  ResolveDependenciesResult,
-  ThemeDefinition,
-} from '@core/public';
+import { buildValidationErrorResult } from '@core/recordInput/public';
+import type { BlockTemplate, Item, ThemeDefinition } from '@core/types/public';
+import type { NormalizeRecordInputParams, NormalizeRecordInputResult, RecordSubmitResult, ResolveDependenciesResult } from '@core/recordInput/public';
+import type { RecordInputKernel } from '@core/recordInput/public';
 import type { CreateLocatorContext } from './locator';
 import { inferCreatedItemType } from './locator';
 import { getBeforeMaxLine } from './paths';

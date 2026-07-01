@@ -1,5 +1,5 @@
 // src/app/capabilities/createCapabilities.ts
-import type { ThinkSettings } from '@core/public';
+import type { ThinkSettings } from '@core/types/public';
 import { CapabilityRegistry } from './CapabilityRegistry';
 import type { Capabilities, CapabilityMap, CapabilityDeps } from './types';
 import { registerCapabilityContributions } from './registerCapabilityContributions';

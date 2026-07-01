@@ -8,8 +8,9 @@
 // - 高频 create/modify 事件按文件防抖，避免保存时重复扫描同一文件
 // ---------------------------------------------------------------------------
 
-import type { DataStore } from '@core/public';
-import { devWarn, type EventsPort, type UnsubscribeFn } from '@core/public';
+import type { DataStore } from '@core/services/public';
+import { devWarn } from '@core/utils/public';
+import type { EventsPort, UnsubscribeFn } from '@core/ports/public';
 
 /** 监听 Vault 变化并与 DataStore 联动 */
 export class VaultWatcher {

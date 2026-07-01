@@ -1,4 +1,6 @@
-import { buildTableMatrix, type GoalDefinition, type Item } from '@core/public';
+import { buildTableMatrix } from '@core/utils/public';
+import type { GoalDefinition } from '@core/goal/public';
+import type { Item } from '@core/types/public';
 
 export interface BuildTableViewRenderModelInput {
   items: Item[];

@@ -1,12 +1,20 @@
 // src/core/utils/pathSemantic.ts
+import {
+  buildHierarchyPathOption,
+  getHierarchyPathBase,
+  getHierarchyPathDepth,
+  getHierarchyPathLeaf,
+  getHierarchyPathParent,
+  normalizeHierarchyPathParts,
+  normalizeHierarchyPathValue,
+} from '@/core/semantics/path';
 
 export function normalizePath(path?: string | null): string {
-  return String(path || '').split('/').map(s => s.trim()).filter(Boolean).join('/');
+  return normalizeHierarchyPathValue(path) || '';
 }
 
 export function splitPath(path?: string | null): string[] {
-  const normalized = normalizePath(path);
-  return normalized ? normalized.split('/') : [];
+  return normalizeHierarchyPathParts(path);
 }
 
 export function getFullPath(path?: string | null): string {
@@ -14,21 +22,19 @@ export function getFullPath(path?: string | null): string {
 }
 
 export function getBasePath(path?: string | null): string {
-  return splitPath(path)[0] || '';
+  return getHierarchyPathBase(path);
 }
 
 export function getLeafPath(path?: string | null): string {
-  const parts = splitPath(path);
-  return parts[parts.length - 1] || '';
+  return getHierarchyPathLeaf(path);
 }
 
 export function getParentPath(path?: string | null): string {
-  const parts = splitPath(path);
-  return parts.length > 1 ? parts.slice(0, -1).join('/') : '';
+  return getHierarchyPathParent(path);
 }
 
 export function getPathDepth(path?: string | null): number {
-  return splitPath(path).length;
+  return getHierarchyPathDepth(path);
 }
 
 export function isSameBasePath(a?: string | null, b?: string | null): boolean {
@@ -44,7 +50,5 @@ export function formatPathForDisplay(path?: string | null, mode: 'base' | 'leaf'
 }
 
 export function buildPathOption(path?: string | null): { label: string; value: string } | null {
-  const full = getFullPath(path);
-  if (!full) return null;
-  return { label: getLeafPath(full) || full, value: full };
+  return buildHierarchyPathOption(path);
 }

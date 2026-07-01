@@ -1,11 +1,18 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Box, Chip, Paper, Tooltip, Typography } from '@shared/public';
-import { CheckIcon, ContentCopyIcon, IconAction } from '@shared/public';
+import {
+  Box,
+  Chip,
+  Paper,
+  Tooltip,
+  Typography,
+} from '@shared/ui/public';
+import { CheckIcon, ContentCopyIcon, IconAction } from '@shared/ui/public';
 
-import type { ChatMessage, MessageContentType } from '@core/public';
-import { devError, dayjs } from '@core/public';
+import type { ChatMessage } from '@core/ai/public';
+import type { MessageContentType } from '@core/ports/public';
+import { devError, dayjs } from '@core/utils/public';
 import { useMessageRenderPort } from '@/app/public';
 
 export interface MessageBubbleProps {

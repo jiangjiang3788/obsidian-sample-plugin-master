@@ -4,18 +4,19 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { failWithViolations, printOk } from '../lib/gate-formatter.mjs';
+import { SHARED_MODULE_PUBLIC_FACADES, SHARED_ROOT_PUBLIC_FACADE, isSharedPublicFacadeSpecifier } from './public-facades.config.mjs';
 
 /**
  * Shared Public API Gate
  * 目标：
- *  - shared 作为“薄出口”，上层只能 import '@shared/public'
+ *  - shared 作为“薄出口”，上层只能 import '@shared/public' 或 '@shared/<module>/public'
  *  - 禁止 app/features/core 等对 '@shared/**' / '@/shared/**' 深导入
  */
 
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, 'src');
 
-const SHARED_FACADE_IMPORT = '@shared/public';
+const SHARED_FACADE_IMPORT = SHARED_ROOT_PUBLIC_FACADE;
 const SHARED_DEEP_PREFIX_RE = /(^@\/shared\/)|(^@shared\/(?!public\b))/;
 const SCAN_EXTS = ['.ts', '.tsx', '.js', '.jsx'];
 
@@ -52,6 +53,19 @@ function fmt(rule, file, msg, detail = '') {
 function main() {
   const violations = [];
 
+  for (const facade of SHARED_MODULE_PUBLIC_FACADES) {
+    if (!fs.existsSync(path.join(ROOT, facade.file))) {
+      violations.push(
+        fmt(
+          'SHP-002',
+          facade.file,
+          `缺少 shared 模块级 public facade：${facade.file}`,
+          `修复：创建 ${facade.file}，并在 public-facades.config.mjs 中保持一致`
+        )
+      );
+    }
+  }
+
   const files = walk(SRC, SCAN_EXTS);
   for (const file of files) {
     const r = rel(file);
@@ -63,14 +77,14 @@ function main() {
     let m;
     while ((m = importRe.exec(code))) {
       const source = m[1];
-      if (source === SHARED_FACADE_IMPORT) continue;
+      if (isSharedPublicFacadeSpecifier(source)) continue;
       if (SHARED_DEEP_PREFIX_RE.test(source)) {
         violations.push(
           fmt(
             'SHP-001',
             r,
-            `禁止 deep import shared：'${source}'（必须走 '${SHARED_FACADE_IMPORT}'）`,
-            `修复：把引用迁移到 '@shared/public'（或在 shared/public.ts 增加需要的 re-export）`
+            `禁止 deep import shared：'${source}'（必须走 '${SHARED_FACADE_IMPORT}' 或 '@shared/<module>/public'）`,
+            `修复：把引用迁移到 '@shared/public' 或 '@shared/<module>/public'（或在对应 public facade 增加 re-export）`
           )
         );
       }

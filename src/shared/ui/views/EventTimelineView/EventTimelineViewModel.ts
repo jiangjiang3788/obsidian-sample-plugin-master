@@ -1,5 +1,8 @@
-import type { GoalDefinition, Item, ViewInstance } from '@core/public';
-import { dayjs, groupItemsByFields, normalizeDisplayFields, readField, type GroupNode } from '@core/public';
+import type { GoalDefinition } from '@core/goal/public';
+import type { Item, ViewInstance } from '@core/types/public';
+import { dayjs, groupItemsByFields, type GroupNode } from '@core/utils/public';
+import { normalizeDisplayFields } from '@core/view/public';
+import { readField } from '@core/types/public';
 
 export interface EventTimelineViewConfig {
   timeField: string;

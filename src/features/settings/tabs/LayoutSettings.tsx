@@ -10,22 +10,23 @@ import { useMemo, useCallback, useState } from 'preact/hooks';
 import { useSelector, selectLayouts, useUseCases } from '@/app/public';
 import type { UseCases } from '@/app/public';
 import {
-    AddCircleOutlineIcon,
-    Box,
-    Button,
-    ContentCopyIcon,
-    DeleteOutlineIcon,
-    DragIndicatorIcon,
-    ExpandLessIcon,
-    ExpandMoreIcon,
-    IconAction,
-    IconButton,
-    NamePromptModal,
-    Stack,
-    Typography,
-} from '@shared/public';
-import type { Layout } from '@core/public';
-import { arrayMove, DEFAULT_NAMES } from '@core/public';
+  AddCircleOutlineIcon,
+  Box,
+  Button,
+  ContentCopyIcon,
+  DeleteOutlineIcon,
+  DragIndicatorIcon,
+  ExpandLessIcon,
+  ExpandMoreIcon,
+  IconAction,
+  IconButton,
+  NamePromptModal,
+  Stack,
+  Typography,
+} from '@shared/ui/public';
+import type { Layout } from '@core/types/public';
+import { arrayMove } from '@core/utils/public';
+import { DEFAULT_NAMES } from '@core/types/public';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { LayoutEditorPanel } from '@/features/settings/components/LayoutEditorPanel';

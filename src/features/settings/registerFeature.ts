@@ -12,8 +12,8 @@
 // - Use `import type` to avoid runtime cycles (app -> features -> app).
 
 import type ThinkPlugin from '@main';
-import type { ActionService, DataStore } from '@core/public';
-import type { EventsPort } from '@core/public';
+import type { ActionService, DataStore } from '@core/services/public';
+import type { EventsPort } from '@core/ports/public';
 import type { FeatureRegistry, UIFeatureBootContext } from '@capabilities';
 
 import type { RendererService } from './layout/RendererService';

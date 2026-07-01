@@ -3,13 +3,26 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 
-import { AddIcon, Box, Button, DeleteIcon, IconAction, IconButton, SimpleSelect, Stack, TextField, Tooltip, Typography } from '@shared/public';
+import {
+  AddIcon,
+  Box,
+  Button,
+  DeleteIcon,
+  IconAction,
+  IconButton,
+  SimpleSelect,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@shared/ui/public';
 
-import { collectFileNames, TIMELINE_VIEW_DEFAULT_CONFIG, type CategoryConfig, type TimelineViewConfig } from '@core/public';
+import { collectFileNames } from '@core/utils/public';
+import { TIMELINE_VIEW_DEFAULT_CONFIG, type CategoryConfig, type TimelineViewConfig } from '@core/view/public';
 import { ViewEditorProps } from './registry';
 
 // 重新导出以保持兼容性
-export { TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
+export { TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 type CategoriesMap = Record<string, CategoryConfig>;
 

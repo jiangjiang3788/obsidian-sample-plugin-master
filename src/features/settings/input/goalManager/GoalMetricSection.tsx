@@ -1,9 +1,17 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { Alert, Box, Button, Chip, SimpleSelect, TextField, Typography } from '@shared/public';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  SimpleSelect,
+  TextField,
+  Typography,
+} from '@shared/ui/public';
 import { selectSettings, useSelector, useUseCases } from '@/app/public';
-import type { GoalMetricContract, GoalMetricDirection } from '@core/public';
+import type { GoalMetricContract, GoalMetricDirection } from '@core/goal/public';
 import { metricDirectionOptions, metricPresetKey, SectionCard } from './shared';
 
 export function GoalMetricSection() {

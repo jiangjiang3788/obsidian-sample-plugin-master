@@ -2,7 +2,7 @@
 import { h, type ComponentChildren } from 'preact';
 import { Checkbox, Collapse, IconButton, ListItemButton, Typography } from '../../ui/muiCompat';
 import { ExpandMoreIcon } from '../../ui/icons';
-import type { ThemePathTreeNode as ThemeTreeNode } from '@core/public';
+import type { ThemePathTreeNode as ThemeTreeNode } from '@core/theme/public';
 
 import { ThemeTreeNodeLabel } from '../../ui/components/ThemeTreeNodeLabel';
 

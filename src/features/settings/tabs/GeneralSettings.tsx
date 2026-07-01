@@ -9,8 +9,15 @@ import {
     useSelector,
     useUseCases,
 } from '@/app/public';
-import { Box, Checkbox, FormControlLabel, Stack, ThinkButton, Typography } from '@shared/public';
-import { getActiveCategoryColors } from '@core/public';
+import {
+  Box,
+  Checkbox,
+  FormControlLabel,
+  Stack,
+  ThinkButton,
+  Typography,
+} from '@shared/ui/public';
+import { getActiveCategoryColors } from '@core/types/public';
 
 /** 通用设置：模块开关与全局 CategoryKey 颜色。 */
 export function GeneralSettings() {

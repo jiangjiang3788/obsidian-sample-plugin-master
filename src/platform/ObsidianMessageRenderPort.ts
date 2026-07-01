@@ -1,7 +1,7 @@
 // src/platform/ObsidianMessageRenderPort.ts
 import { App, MarkdownRenderer, Component } from 'obsidian';
-import type { MessageRenderPort, RenderMessageArgs } from '@core/public';
-import { devWarn } from '@core/public';
+import type { MessageRenderPort, RenderMessageArgs } from '@core/ports/public';
+import { devWarn } from '@core/utils/public';
 
 export class ObsidianMessageRenderPort implements MessageRenderPort {
   constructor(private app: App) {}

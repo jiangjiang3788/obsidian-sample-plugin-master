@@ -1,0 +1,27 @@
+{
+  "version": "V19-refactor-release-locked",
+  "mode": "locked-budget",
+  "notes": "V19 closes the V14-V19 second-round refactor. The locked budget keeps large files at zero, root public imports at zero, module public facades present, and src explicit any at the V18 reduced level.",
+  "budgets": {
+    "largestFileLines": 480,
+    "filesOver500Lines": 0,
+    "nonCssFilesOver500Lines": 0,
+    "tsxFilesOver350Lines": 2,
+    "tsLikeFilesOver450Lines": 2,
+    "largeFileCandidates": 5,
+    "srcExplicitAny": 671,
+    "corePublicNamedExports": 317,
+    "corePublicStarExports": 3,
+    "sharedPublicNamedExports": 0,
+    "sharedPublicStarExports": 39,
+    "duplicateFunctionNameGroups": 50,
+    "coreDeepImports": 0,
+    "sharedDeepImports": 0,
+    "minimumCoreModulePublicFacades": 16,
+    "minimumSharedModulePublicFacades": 8,
+    "coreRootPublicImporters": 0,
+    "coreRootPublicImportStatements": 0,
+    "sharedRootPublicImporters": 0,
+    "sharedRootPublicImportStatements": 0
+  }
+}

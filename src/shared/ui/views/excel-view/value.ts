@@ -1,4 +1,5 @@
-import { getFieldEditPolicy, getFieldLabel, normalizeEditableFieldKey, readField, type Item } from '@core/public';
+import { getFieldEditPolicy, getFieldLabel, normalizeEditableFieldKey } from '@core/fields/public';
+import { readField, type Item } from '@core/types/public';
 import type { ExcelCellModel, ExcelColumnModel, ExcelEditorOption } from './types';
 
 function isOptionLikeValue(value: unknown): value is { value?: unknown; label?: unknown } {

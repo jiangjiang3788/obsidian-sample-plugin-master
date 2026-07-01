@@ -1,15 +1,10 @@
 // src/platform/modals/AiBatchConfirmModel.ts
-import type { BlockTemplate, GoalDefinition, GoalSettings, GoalTemplate, InputSettings, NaturalRecordCommand, RecordSubmitResult, SubmitCreateRecordParams, ThemeDefinition } from '@core/public';
-import {
-  asUnknownRecord,
-  buildBatchCreateRecordSubmitResult,
-  buildRecordDraftContext,
-  getEffectiveTemplate,
-  getGoalTemplateVariants,
-  normalizeRecordInputFormDataForTemplate,
-  readFirstString,
-  splitGoalPath,
-} from '@core/public';
+import type { BlockTemplate, InputSettings, NaturalRecordCommand, ThemeDefinition } from '@core/types/public';
+import type { GoalDefinition, GoalSettings, GoalTemplate } from '@core/goal/public';
+import type { RecordSubmitResult, SubmitCreateRecordParams } from '@core/recordInput/public';
+import { asUnknownRecord, getEffectiveTemplate, readFirstString } from '@core/utils/public';
+import { buildBatchCreateRecordSubmitResult, buildRecordDraftContext, normalizeRecordInputFormDataForTemplate } from '@core/recordInput/public';
+import { getGoalTemplateVariants, splitGoalPath } from '@core/goal/public';
 
 export interface AiBatchConfirmRecordItem {
   id: string;

@@ -3,8 +3,8 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 
-import type { ThemeDefinition } from '@core/public';
-import { getLeafPath } from '@core/public';
+import type { ThemeDefinition } from '@core/types/public';
+import { getLeafPath } from '@core/utils/public';
 import { FilterPopover } from '../components/FilterPopover';
 import { ThemeTreeSelectPanel } from '../../components/ThemeTreeSelect';
 

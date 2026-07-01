@@ -2,8 +2,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useCallback, useMemo } from 'preact/hooks';
-import type { Item } from '@core/public';
-import { useTimelineZoom } from '@core/public';
+import type { Item } from '@core/types/public';
+import { useTimelineZoom } from '@core/view/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, OpenTimelineCreateHandler } from '../../../types/actions';
 import type { UpdateTaskTimeHandler } from '../../../types/taskTime';
 import { TimelineViewView } from './TimelineViewView';

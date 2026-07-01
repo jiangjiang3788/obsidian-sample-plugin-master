@@ -5,7 +5,8 @@
  * 这些 handler 由 feature 层桥接（例如 LayoutRenderer）。
  */
 
-import type { Item, TaskBlock, ThemeDefinition, ViewInstance, MessageRenderPort } from '@core/public';
+import type { Item, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { MessageRenderPort } from '@core/ports/public';
 
 export type MarkDoneHandler = (id: string) => void;
 

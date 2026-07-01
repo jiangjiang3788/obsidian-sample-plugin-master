@@ -11,10 +11,11 @@ import { Modal, Notice } from 'obsidian';
 import { useState } from 'preact/hooks';
 
 import { type Services, createServices, mountWithServices, unmountPreact, useUseCases, useSelector, selectSettings, resolveVaultResourcePath } from '@/app/public';
-import type { NaturalRecordCommand, RecordSubmitResult } from '@core/public';
-import { readRecordSubmitMessage } from '@core/public';
+import type { NaturalRecordCommand } from '@core/types/public';
+import type { RecordSubmitResult } from '@core/recordInput/public';
+import { readRecordSubmitMessage } from '@core/utils/public';
 
-import { Box } from '@shared/public';
+import { Box } from '@shared/ui/public';
 import { QuickInputEditor } from '@/app/public';
 
 import { AiBatchConfirmFooter } from './AiBatchConfirmFooter';

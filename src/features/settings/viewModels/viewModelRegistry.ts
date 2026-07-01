@@ -1,4 +1,5 @@
-import type { FilterRule, InputSettings, Item, ViewInstance } from '@core/public';
+import type { FilterRule, InputSettings, Item, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { GoalDefinition, GoalSettings } from '@core/goal/public';
 import { buildBlockViewModel } from './blockViewModel';
 import { buildEventTimelineViewModel } from './eventTimelineViewModel';
 import { buildHeatmapViewModel } from './heatmapViewModel';
@@ -18,9 +19,9 @@ export interface ViewRenderModelContext {
   inputSettings: InputSettings;
   layoutFilters: FilterRule[];
   selectedCategories: string[];
-  goals?: import('@core/public').GoalDefinition[];
-  goalSettings?: import('@core/public').GoalSettings;
-  themes?: import('@core/public').ThemeDefinition[];
+  goals?: GoalDefinition[];
+  goalSettings?: GoalSettings;
+  themes?: ThemeDefinition[];
 }
 
 export interface ViewRenderModels {

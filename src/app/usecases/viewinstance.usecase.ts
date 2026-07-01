@@ -1,18 +1,17 @@
 // src/app/usecases/viewinstance.usecase.ts
-import type { ViewInstance, ViewName } from '@core/public';
+import type { ViewInstance, ViewName } from '@core/types/public';
 import type { AppStoreApi } from './index';
 import {
-    addDisplayField,
-    devError,
-    generateId,
-    moveDisplayField,
-    normalizeDisplayFields,
-    normalizeViewFilters,
-    normalizeViewGroupFields,
-    normalizeViewInstanceDomain,
-    normalizeViewSort,
-    removeDisplayField,
-} from '@core/public';
+  addDisplayField,
+  moveDisplayField,
+  normalizeDisplayFields,
+  normalizeViewFilters,
+  normalizeViewGroupFields,
+  normalizeViewInstanceDomain,
+  normalizeViewSort,
+  removeDisplayField,
+} from '@core/view/public';
+import { devError, generateId } from '@core/utils/public';
 
 /**
  * ViewInstanceUseCase - 视图实例 CRUD + 视图配置字段操作

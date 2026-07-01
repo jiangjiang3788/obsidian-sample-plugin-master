@@ -1,31 +1,20 @@
+import { splitHierarchyPathValue } from '@/core/semantics/path';
+
 export interface GoalPathParts {
   goalPath: string | null;
   rootGoal: string | null;
   leafGoal: string | null;
 }
 
-function normalizeGoalPathSegment(segment: string): string {
-  return String(segment || '')
-    .trim()
-    .replace(/^[#＃]+\s*/, '')
-    .trim();
-}
-
 export function normalizeGoalPath(path?: string | null): string | null {
-  const parts = String(path || '')
-    .split('/')
-    .map(normalizeGoalPathSegment)
-    .filter(Boolean);
-  return parts.length ? parts.join('/') : null;
+  return splitHierarchyPathValue(path, { stripLeadingHashes: true }).path;
 }
 
 export function splitGoalPath(path?: string | null): GoalPathParts {
-  const normalized = normalizeGoalPath(path);
-  if (!normalized) return { goalPath: null, rootGoal: null, leafGoal: null };
-  const parts = normalized.split('/').filter(Boolean);
+  const parts = splitHierarchyPathValue(path, { stripLeadingHashes: true });
   return {
-    goalPath: normalized,
-    rootGoal: parts[0] || null,
-    leafGoal: parts.length ? parts[parts.length - 1] : null,
+    goalPath: parts.path,
+    rootGoal: parts.root,
+    leafGoal: parts.leaf,
   };
 }

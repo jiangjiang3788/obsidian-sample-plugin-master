@@ -1,8 +1,9 @@
 // src/features/dashboard/hooks/useViewData.ts
 
 import { useState, useEffect, useMemo } from 'preact/hooks';
-import { DataStore, devTime, devTimeEnd, applyViewQueryPipeline } from '@core/public';
-import type { Item, ViewInstance, FilterRule, SortRule } from '@core/public';
+import { DataStore } from '@core/services/public';
+import { devTime, devTimeEnd, applyViewQueryPipeline } from '@core/utils/public';
+import type { Item, ViewInstance, FilterRule, SortRule } from '@core/types/public';
 
 interface UseViewDataProps {
     dataStore: DataStore;

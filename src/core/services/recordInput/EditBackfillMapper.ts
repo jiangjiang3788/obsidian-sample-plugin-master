@@ -12,6 +12,8 @@ import { matchTemplateFieldOptionValue } from '@/core/fields/FieldBehavior';
 import { decodeMarkdownFieldValue, type FieldCodecDefinition } from '@/core/records/codec/FieldValueCodec';
 import { parseTagList } from '@/core/fields/tagSemantics';
 import { normalizeImageValue } from '@/core/fields/imageSemantics';
+import { findMatchingOption, readOptionText } from '@/core/semantics/option';
+import { getHierarchyPathLeaf, normalizeHierarchyPathValue } from '@/core/semantics/path';
 
 function normalizeToken(value: unknown): string {
   return String(value ?? '').trim().toLowerCase();
@@ -63,13 +65,13 @@ function readPeriodFromLegacyCategory(field: TemplateField, item: Item, snapshot
   for (const candidate of candidates) {
     const raw = String(candidate || '').trim();
     if (!raw) continue;
-    const leaf = raw.split('/').filter(Boolean).pop() || raw;
-    const matched = options.find((opt: any) => {
-      const optValue = String(opt.value || '').trim();
-      const optLabel = String(opt.label || '').trim();
-      return optValue === raw || optLabel === raw || optValue === leaf || optLabel === leaf;
-    });
-    if (matched) return String(matched.value || matched.label || raw);
+    const leaf = getHierarchyPathLeaf(raw) || raw;
+    const matched = findMatchingOption(options, raw, { normalize: (value) => normalizeHierarchyPathValue(value), matchLeaf: true })
+      || findMatchingOption(options, leaf);
+    if (matched) {
+      const text = readOptionText(matched);
+      return text.value || text.label || raw;
+    }
   }
   return undefined;
 }
@@ -80,9 +82,12 @@ function buildRatingPairOption(field: TemplateField, item: Item, snapshot: Parse
   const image = String((item as any).image ?? item.pintu ?? item.extra?.['评图'] ?? item.extra?.['pintu'] ?? item.extra?.['图片'] ?? '');
 
   let matched = options.find((opt: any) => String(opt.label ?? '') === score && (!image || String(opt.value || '') === image));
-  if (!matched && score) matched = options.find((opt: any) => String(opt.label ?? opt.value) === score);
-  if (!matched && image) matched = options.find((opt: any) => String(opt.value || '') === image);
-  if (matched) return { value: matched.value, label: matched.label || matched.value };
+  if (!matched && score) matched = findMatchingOption(options, score);
+  if (!matched && image) matched = findMatchingOption(options, image);
+  if (matched) {
+    const text = readOptionText(matched);
+    return { value: text.value, label: text.label || text.value };
+  }
   if (score || image) return { value: image || score, label: score || image };
   return undefined;
 }

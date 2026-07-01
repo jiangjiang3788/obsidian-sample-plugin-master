@@ -1,12 +1,21 @@
 import { QuickInputModal } from '@/app/public';
-import type { ActionService, Item, TaskBlock, ThemeDefinition, UiPort, ViewInstance } from '@core/public';
-import { dayjs, getItemThemePath, minutesToTime, type Dayjs, type ThemeDefinition as ThemeDefinitionType, type QuickInputConfig, type RecordInputSource } from '@core/public';
+import type { ActionService } from '@core/services/public';
+import type { Item, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { UiPort } from '@core/ports/public';
+import { dayjs, getItemThemePath, minutesToTime, type Dayjs } from '@core/utils/public';
+import type { ThemeDefinition as ThemeDefinitionType } from '@core/types/public';
+import type { QuickInputConfig } from '@core/services/public';
+import type { RecordInputSource } from '@core/recordInput/public';
 
 export const MODULE_HEADER_CREATE_ALLOWLIST = ['TimelineView', 'HeatmapView'] as const;
 
 type ModuleHeaderCreateAllowedView = typeof MODULE_HEADER_CREATE_ALLOWLIST[number];
 
 type StatisticsPeriodType = 'day' | 'week' | 'month' | 'quarter' | 'year';
+
+type QuickInputApp = ConstructorParameters<typeof QuickInputModal>[0];
+
+type QuickInputBlockLike = { id: string; name?: string | null };
 
 export interface StatisticsCellIdentifier {
   type?: StatisticsPeriodType | string;
@@ -29,9 +38,9 @@ export interface StatisticsCreatePayload {
 }
 
 export interface TimelineCreateParams {
-  app: any;
+  app: QuickInputApp;
   uiPort: UiPort;
-  inputBlocks: any[];
+  inputBlocks: QuickInputBlockLike[];
   hourHeight: number;
   dayBlocks: TaskBlock[];
   day: string;
@@ -39,7 +48,7 @@ export interface TimelineCreateParams {
 }
 
 export interface HeatmapCreateParams {
-  app: any;
+  app: QuickInputApp;
   sourceBlockId?: string | null;
   date: string;
   item?: Item;
@@ -53,7 +62,7 @@ export interface HeatmapCreateParams {
 }
 
 export interface StatisticsCreateParams {
-  app: any;
+  app: QuickInputApp;
   actionService: ActionService;
   uiPort: UiPort;
   viewInstance: ViewInstance;
@@ -63,14 +72,14 @@ export interface StatisticsCreateParams {
 }
 
 export interface HeaderCreateParams {
-  app: any;
+  app: QuickInputApp;
   actionService: ActionService;
   viewInstance: ViewInstance;
   dateContext: Dayjs;
   periodContext: string;
 }
 
-function openCreateModal(app: any, config: QuickInputConfig | null | undefined, source: Extract<RecordInputSource, 'quickinput' | 'view_quick_create'> = 'view_quick_create'): boolean {
+function openCreateModal(app: QuickInputApp, config: QuickInputConfig | null | undefined, source: Extract<RecordInputSource, 'quickinput' | 'view_quick_create'> = 'view_quick_create'): boolean {
   if (!config?.blockId) return false;
   new QuickInputModal(app, config.blockId, config.context, config.themeId, undefined, true, {
     mode: 'create',
@@ -79,9 +88,9 @@ function openCreateModal(app: any, config: QuickInputConfig | null | undefined, 
   return true;
 }
 
-function findTaskBlock(inputBlocks: any[]): any | null {
+function findTaskBlock(inputBlocks: QuickInputBlockLike[]): QuickInputBlockLike | null {
   if (!Array.isArray(inputBlocks) || inputBlocks.length === 0) return null;
-  return inputBlocks.find((b: any) => b.name === 'Task' || b.name === '任务') || inputBlocks[0] || null;
+  return inputBlocks.find((block) => block.name === 'Task' || block.name === '任务') || inputBlocks[0] || null;
 }
 
 function getEventClientY(event: MouseEvent | TouchEvent): number {
@@ -112,7 +121,7 @@ function buildTimelineCreateConfig(params: TimelineCreateParams): QuickInputConf
   const prevBlock = params.dayBlocks.filter((b) => b.blockEndMinute <= clickedMinute).pop();
   const nextBlock = params.dayBlocks.find((b) => b.blockStartMinute >= clickedMinute);
 
-  const context: Record<string, any> = {
+  const context: Record<string, unknown> = {
     日期: params.day,
     __recordUiContext: {
       kind: 'timeline_create',
@@ -168,8 +177,8 @@ function firstNonEmptyText(...values: unknown[]): string | undefined {
 
 function buildHeatmapRatingContext(item?: Item): Record<string, unknown> {
   if (!item) return {};
-  const score = firstNonEmptyText(item.rating, (item as any).extra?.['评分'], (item as any).extra?.rating);
-  const visual = firstNonEmptyText(item.pintu, item.image, (item as any).extra?.['图片'], (item as any).extra?.['评图'], (item as any).extra?.pintu, (item as any).extra?.image);
+  const score = firstNonEmptyText(item.rating, item.extra?.['评分'], item.extra?.rating);
+  const visual = firstNonEmptyText(item.pintu, item.image, item.extra?.['图片'], item.extra?.['评图'], item.extra?.pintu, item.extra?.image);
   if (!score && !visual) return {};
   return {
     评分: {
@@ -197,7 +206,7 @@ function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig
       }
     : null;
 
-  const context: Record<string, any> = {
+  const context: Record<string, unknown> = {
     日期: params.date,
     __recordUiContext: {
       kind: 'heatmap_create',
@@ -301,7 +310,7 @@ function buildStatisticsExplicitContext(
       themeContext: {
         themeId: themeId ?? null,
       },
-      goalContext: (payload?.context as any)?.__goalContext || null,
+      goalContext: payload?.context?.__goalContext || null,
       filterContext: {
         title: payload?.title,
         blocksCount: payload?.blocks?.length ?? 0,

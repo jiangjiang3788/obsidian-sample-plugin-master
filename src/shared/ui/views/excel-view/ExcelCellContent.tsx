@@ -3,7 +3,7 @@ import { h } from 'preact';
 import { MarkdownContent } from '../../markdown/MarkdownContent';
 import { truncateExcelCellText } from './value';
 import type { ExcelCellModel } from './types';
-import type { MessageRenderPort } from '@core/public';
+import type { MessageRenderPort } from '@core/ports/public';
 
 export interface ExcelCellContentProps {
   cell: ExcelCellModel;

@@ -7,7 +7,7 @@
  */
 import type ThinkPlugin from '@/main';
 import { QuickInputModal, createServices, getZustandState } from '@/app/public';
-import { devWarn } from '@core/public';
+import { devWarn } from '@core/utils/public';
 
 export function registerQuickInputCommands(plugin: ThinkPlugin) {
     // Phase 4.3: 只能通过 app/public 获取 store（禁止 container 下沉）

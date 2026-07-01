@@ -2,7 +2,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import type { GoalDefinition, GroupNode, Item, MessageRenderPort, ThemeDefinition } from '@core/public';
+import type { GoalDefinition } from '@core/goal/public';
+import type { GroupNode } from '@core/utils/public';
+import type { Item, ThemeDefinition } from '@core/types/public';
+import type { MessageRenderPort } from '@core/ports/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
 import { GroupedContainer } from '../GroupedContainer';
 import { BlockViewItemList } from './BlockViewItemList';

@@ -1,6 +1,7 @@
 import { useCallback } from 'preact/hooks';
-import type { ActionService, FilterRule, Item, Layout, ViewInstance } from '@core/public';
-import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public';
+import type { ActionService } from '@core/services/public';
+import type { FilterRule, Item, Layout, ViewInstance } from '@core/types/public';
+import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/public';
 import { completeFromView, openCreateFromViewHeader } from '@/app/public';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 

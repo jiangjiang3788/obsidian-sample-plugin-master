@@ -8,12 +8,13 @@
  * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
 import { render } from 'preact';
-import { CODEBLOCK_LANG, devWarn } from '@core/public';
-import { DataStore } from '@core/public';
+import { CODEBLOCK_LANG } from '@core/types/public';
+import { devWarn } from '@core/utils/public';
+import { DataStore } from '@core/services/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
 import { RendererService } from '@features/settings/layout/RendererService';
-import type { Layout } from '@core/public';
-import type { ActionService } from '@core/public';
+import type { Layout } from '@core/types/public';
+import type { ActionService } from '@core/services/public';
 
 export class CodeblockEmbedder {
     // P0-3: store 从 DI 获取

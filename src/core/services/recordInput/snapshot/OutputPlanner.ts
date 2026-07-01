@@ -4,23 +4,14 @@ import { splitThemePath } from '@/core/types/recordSnapshot';
 import { renderTemplate } from '@/core/utils/templateUtils';
 import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter';
 import { resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@/core/goal';
+import { readOptionText } from '@/core/semantics/option';
+import { splitHierarchyPathValue } from '@/core/semantics/path';
 
 function normalizePath(value: string | null | undefined): string | null {
   const trimmed = String(value || '').trim();
   return trimmed || null;
 }
 
-function readOptionText(value: unknown): { value: string; label: string } {
-  if (value && typeof value === 'object') {
-    const obj = value as Record<string, unknown>;
-    return {
-      value: String(obj.value ?? obj.label ?? '').trim(),
-      label: String(obj.label ?? obj.value ?? '').trim(),
-    };
-  }
-  const text = String(value ?? '').trim();
-  return { value: text, label: text };
-}
 
 function buildTaskRenderTokens(data: Record<string, unknown>): {
   taskStatusPrefix: string;
@@ -63,11 +54,13 @@ function buildRenderData(
   const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === 'object' ? normalizedData.theme as Record<string, unknown> : null;
   const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? '').trim();
   const themeParts = splitThemePath(explicitThemePath || theme?.path || null);
-  const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? '').trim();
-  const categoryParts = categoryPath.split('/').map((part) => part.trim()).filter(Boolean);
-  const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? '').trim() : String(normalizedData.goalPath ?? normalizedData['目标'] ?? '').trim();
-  const goalPath = explicitGoalPath;
-  const goalParts = goalPath.split('/').map((part) => part.trim()).filter(Boolean);
+  const categoryPartsValue = splitHierarchyPathValue(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? null);
+  const categoryPath = categoryPartsValue.path || '';
+  const categoryParts = categoryPartsValue.parts;
+  const explicitGoalValue = Array.isArray(normalizedData.goalPaths) ? normalizedData.goalPaths[0] : (normalizedData.goalPath ?? normalizedData['目标']);
+  const goalPartsValue = splitHierarchyPathValue(explicitGoalValue, { stripLeadingHashes: true });
+  const goalPath = goalPartsValue.path || '';
+  const goalParts = goalPartsValue.parts;
   const goalId = String(normalizedData.goalId ?? normalizedData['目标ID'] ?? '').trim();
   const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
   const recordDate = String(normalizedData['日期'] ?? normalizedData.date ?? '').trim();

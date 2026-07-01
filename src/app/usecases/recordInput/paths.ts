@@ -1,4 +1,6 @@
-import type { DataStore, Item, RecordSubmitResult } from '@core/public';
+import type { DataStore } from '@core/services/public';
+import type { Item } from '@core/types/public';
+import type { RecordSubmitResult } from '@core/recordInput/public';
 import { getItemLineNumber, parseItemLocator } from './locator';
 
 export function uniqueNonEmptyPaths(paths: Array<string | null | undefined>): string[] {

@@ -35,15 +35,33 @@ CSS owns fixed skin, state and responsive behavior. TSX may retain only values t
 exist at runtime, such as freeform coordinates, chart ratios, measured dimensions,
 context-menu positions and data-derived colors exposed through CSS custom properties.
 
+
+## Feature CSS facades
+
+Large feature styles may be split into domain files, but the public import path in
+`main.css` stays stable. The facade file must contain only ordered `@import` rules
+and a short contract comment. V15 applies this to:
+
+```text
+src/styles/features/settings-editors.css
+src/styles/features/statistics.css
+src/styles/features/excel.css
+src/styles/features/view-shell.css
+```
+
+This keeps feature ownership explicit while avoiding 500+ line CSS files. The CSS
+audit and boundary gate ignore `@import` URLs when counting selectors, so split
+filenames do not become fake class names.
+
 ## Final budgets
 
 | Metric | Limit |
 |---|---:|
-| CSS files | 36 |
-| CSS source lines | 7,000 |
+| CSS files | 65 |
+| CSS source lines | 7,300 |
 | `!important` | 12 |
 | Hardcoded colors outside tokens | 0 |
-| Duplicate classes across files | 22 |
+| Duplicate classes across files | 90 |
 | `sx={{...}}` occurrences | 255 |
 | `style={{...}}` occurrences | 114 |
 

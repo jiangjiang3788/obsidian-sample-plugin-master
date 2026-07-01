@@ -1,0 +1,82 @@
+/* Block manager and block editor composition. */
+.think-os--settings .think-block-manager {
+  width: min(100%, 900px);
+  margin-inline: auto;
+}
+
+.think-os--settings .think-block-manager__header {
+  margin-bottom: var(--think-space-6);
+}
+
+.think-os--settings .think-block-manager__description {
+  margin-bottom: var(--think-space-5);
+}
+
+.think-os--settings .think-block-accordion::before {
+  display: none;
+}
+
+.think-os--settings .think-block-accordion__summary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.think-os--settings .think-block-accordion__drag {
+  display: flex;
+  align-items: center;
+  color: var(--think-text-disabled);
+  cursor: grab;
+}
+
+.think-os--settings .think-block-accordion__details {
+  border-top: 1px solid var(--think-border-subtle);
+  background: var(--think-bg-surface-2);
+}
+
+.think-os--settings .think-block-editor {
+  display: grid;
+  gap: var(--think-space-7);
+}
+
+.think-os--settings .think-block-editor__field--name {
+  max-width: 400px;
+}
+
+.think-os--settings .think-block-editor__field--category {
+  max-width: 520px;
+}
+
+.think-os--settings .think-block-editor__title {
+  margin-bottom: var(--think-space-4);
+  font-size: var(--think-font-size-lg);
+  font-weight: var(--think-font-weight-semibold);
+}
+
+.think-os--settings .think-block-editor__title--spacious {
+  margin-bottom: var(--think-space-5);
+}
+
+.think-os--settings .think-block-editor__hint {
+  margin-bottom: var(--think-space-5);
+  padding: var(--think-space-5);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-canvas);
+}
+
+.think-os--settings .think-block-editor__template-example {
+  display: block;
+  margin-top: var(--think-space-3);
+  font-family: var(--think-font-monospace);
+}
+
+.think-os--settings .think-block-editor__output-header {
+  margin-bottom: var(--think-space-4);
+}
+
+.think-os--settings .think-block-editor__template textarea {
+  font-family: var(--think-font-monospace);
+  font-size: var(--think-font-size-sm);
+}

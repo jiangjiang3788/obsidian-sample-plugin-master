@@ -1,5 +1,5 @@
-import type { Item } from '@core/public';
-import { makeObsUri } from '@core/public';
+import type { Item } from '@core/types/public';
+import { makeObsUri } from '@core/utils/public';
 
 interface ObsidianRuntimeApp {
   vault?: {

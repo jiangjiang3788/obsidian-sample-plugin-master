@@ -1,0 +1,68 @@
+/* Freeform resize handles and size feedback. */
+/* ===================================================================
+ * Freeform Layout v2: resize, size feedback and narrow-pane behavior
+ * =================================================================== */
+.think-freeform-host {
+    overscroll-behavior-x: contain;
+    scrollbar-gutter: stable;
+}
+
+.think-freeform-canvas {
+    min-width: 0;
+}
+
+.think-freeform-item.is-resizing,
+.think-freeform-item.is-dragging {
+    transition: none;
+    user-select: none;
+}
+
+.think-freeform-item.is-resizing {
+    outline-color: var(--think-accent);
+    box-shadow: 0 12px 32px color-mix(in srgb, var(--think-text-primary) 20%, transparent);
+}
+
+.think-freeform-resize-handle {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    z-index: 4;
+    width: 20px;
+    height: 20px;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 5px 0 5px 0;
+    cursor: nwse-resize;
+    touch-action: none;
+    opacity: 0.72;
+    background:
+        linear-gradient(135deg,
+            transparent 0 38%,
+            var(--think-accent) 39% 46%,
+            transparent 47% 58%,
+            var(--think-accent) 59% 66%,
+            transparent 67%);
+}
+
+.think-freeform-resize-handle:hover,
+.think-freeform-resize-handle:focus-visible {
+    opacity: 1;
+    outline: 2px solid color-mix(in srgb, var(--think-accent) 45%, transparent);
+    outline-offset: 1px;
+}
+
+.think-freeform-size-indicator {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    z-index: 5;
+    padding: 3px 7px;
+    border: 1px solid var(--think-border-subtle);
+    border-radius: 5px;
+    background: var(--background-primary-alt);
+    color: var(--think-text-secondary);
+    font-size: 11px;
+    line-height: 1.2;
+    pointer-events: none;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--think-text-primary) 16%, transparent);
+}

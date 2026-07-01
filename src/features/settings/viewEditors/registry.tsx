@@ -10,8 +10,8 @@ import { StatisticsViewEditor, DEFAULT_CONFIG as StatisticsViewDefault } from '.
 import { HeatmapViewEditor, DEFAULT_CONFIG as HeatmapViewDefault } from './HeatmapViewEditor';
 import { ProgressViewEditor, DEFAULT_CONFIG as ProgressViewDefault } from './ProgressViewEditor';
 import { TaskExecutionViewEditor, DEFAULT_CONFIG as TaskExecutionViewDefault } from './TaskExecutionViewEditor';
-import type { ViewName, ViewInstance } from '@core/public';
-import type { DataStore } from '@core/public';
+import type { ViewName, ViewInstance } from '@core/types/public';
+import type { DataStore } from '@core/services/public';
 
 // [REFACTOR] ViewKind is now derived from the domain-level ViewName
 export type ViewKind = ViewName;

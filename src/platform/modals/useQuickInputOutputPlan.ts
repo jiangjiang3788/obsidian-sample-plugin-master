@@ -1,8 +1,16 @@
 import { useMemo } from 'preact/hooks';
-import { diagnosticWarn } from '@shared/public';
+import { diagnosticWarn } from '@shared/utils/public';
 
 import type { QuickInputEditorState } from '@/app/public';
-import { buildRecordOutputPlan, buildRecordPersistencePlan, type Item, type PreparedCreateRecord, type PreparedEditRecord, type RecordOutputPlan, type RecordPersistencePlan } from '@core/public';
+import {
+  buildRecordOutputPlan,
+  buildRecordPersistencePlan,
+  type PreparedCreateRecord,
+  type PreparedEditRecord,
+  type RecordOutputPlan,
+  type RecordPersistencePlan,
+} from '@core/recordInput/public';
+import type { Item } from '@core/types/public';
 
 export interface QuickInputOutputPlanState {
   liveOutputPlan: RecordOutputPlan | null;

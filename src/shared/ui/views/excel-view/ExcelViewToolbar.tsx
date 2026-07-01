@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { getFieldCategoryLabel, getFieldLabel } from '@core/public';
+import { getFieldCategoryLabel, getFieldLabel } from '@core/fields/public';
 import { ExcelColumnToolbar } from './ExcelColumnToolbar';
 import type { ExcelContentDisplayMode, ExcelDisplayFieldsChangeHandler } from './types';
 

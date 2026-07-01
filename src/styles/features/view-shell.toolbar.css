@@ -1,0 +1,57 @@
+/* Dashboard toolbar and theme filter shell. */
+/* Dashboard 工具栏 (tp-toolbar) */
+.tp-toolbar {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.tp-toolbar button {
+    border: 1px solid transparent;
+    background-color: var(--think-bg-surface-1);
+    transition: all 0.2s ease;
+    font-size: 0.875rem; /* 14px */
+    padding: 4px 10px;
+}
+.tp-toolbar button:hover {
+    border-color: var(--think-border-strong);
+    background-color: var(--think-bg-hover);
+}
+.tp-toolbar button.active {
+    border: 1px solid var(--think-accent);
+    background-color: var(--think-accent-hover);
+    color: var(--think-text-on-accent);
+    font-weight: 600;
+}
+
+.tp-toolbar-date-display {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 4px 10px;
+    margin: 0 4px;
+    border: 1px solid transparent;
+    border-radius: var(--button-radius, 4px);
+    background: var(--think-bg-canvas);
+    color: var(--think-text-primary);
+    font-size: 0.875rem;
+    font-weight: bold;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+}
+
+/* 主题和分类筛选器样式 */
+.theme-filter-container,
+.theme-filter {
+    white-space: nowrap;
+}
+
+.theme-filter-selected-chips {
+    flex-wrap: nowrap;
+    overflow: hidden;
+}

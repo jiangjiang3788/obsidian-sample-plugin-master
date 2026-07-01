@@ -1,9 +1,18 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { Alert, Box, Button, Chip, Divider, SimpleSelect, TextField, Typography } from '@shared/public';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Divider,
+  SimpleSelect,
+  TextField,
+  Typography,
+} from '@shared/ui/public';
 import { selectSettings, useSelector, useUseCases } from '@/app/public';
-import { ThemeMetadataResolver } from '@core/public';
+import { ThemeMetadataResolver } from '@core/theme/public';
 
 type ThemeStatus = 'active' | 'inactive';
 

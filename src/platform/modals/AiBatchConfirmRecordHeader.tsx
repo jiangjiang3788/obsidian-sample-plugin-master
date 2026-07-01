@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { Box, Chip, ModalHeader, Typography } from '@shared/public';
+import { Box, Chip, ModalHeader, Typography } from '@shared/ui/public';
 
 import type { AiBatchConfirmRecordItem } from './AiBatchConfirmModel';
 import { shortDisplay } from './AiBatchConfirmModel';

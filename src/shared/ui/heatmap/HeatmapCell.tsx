@@ -1,10 +1,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item } from '@core/public';
+import type { Item } from '@core/types/public';
 import type { ResolveResourcePathHandler } from '../../types/actions';
-import { dayjs } from '@core/public';
-import { getEffectiveDisplayCount, getEffectiveLevelCount, getLatestHeatmapVisualValue } from '@core/public';
-import { isImagePath, isHexColor } from '@core/public';
+import { dayjs } from '@core/utils/public';
+import { getEffectiveDisplayCount, getEffectiveLevelCount, getLatestHeatmapVisualValue } from '@core/utils/public';
+import { isImagePath, isHexColor } from '@core/utils/public';
 
 interface HeatmapCellProps {
     date: string;

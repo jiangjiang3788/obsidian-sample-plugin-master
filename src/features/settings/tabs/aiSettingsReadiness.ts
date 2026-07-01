@@ -1,4 +1,4 @@
-import type { AiSettings } from '@core/public';
+import type { AiSettings } from '@core/types/public';
 
 export interface AiSettingsReadiness {
   ready: boolean;

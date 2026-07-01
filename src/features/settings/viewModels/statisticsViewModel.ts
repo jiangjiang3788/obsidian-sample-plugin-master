@@ -1,7 +1,6 @@
+import { type GoalDefinition, buildGoalBuckets, getItemGoalKey, getItemThemeKey } from '@core/goal/public';
+import type { ThemeDefinition, Item } from '@core/types/public';
 import {
-  type GoalDefinition,
-  type ThemeDefinition,
-  type Item,
   dayjs,
   getWeeksInYear,
   aggregateByDay,
@@ -10,11 +9,8 @@ import {
   aggregateByQuarter,
   aggregateByYear,
   createPeriodData,
-  buildGoalBuckets,
-  getItemGoalKey,
-  getItemThemeKey,
-  STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG,
-} from '@core/public';
+} from '@core/utils/public';
+import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 export type StatisticsCurrentView = '年' | '季' | '月' | '周' | '天';
 

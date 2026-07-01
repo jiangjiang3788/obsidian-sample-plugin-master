@@ -1,5 +1,5 @@
 import { requestUrl } from 'obsidian';
-import type { AiHttpResponse, AiHttpTransport } from '@core/public';
+import type { AiHttpResponse, AiHttpTransport } from '@core/ai/public';
 
 function createAbortError(): Error {
     try {

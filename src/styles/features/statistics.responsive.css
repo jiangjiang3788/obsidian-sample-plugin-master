@@ -1,0 +1,87 @@
+/* Statistics viewport responsive rules. */
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    .sv-top-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .sv-row-quarters {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .sv-row-months {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    
+    .sv-row-weeks {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    
+    .sv-row-week-days {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+    }
+    
+    .sv-row-month-weeks {
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    
+    .sv-chart-block {
+        height: 100px;
+        padding: 6px;
+    }
+    
+    .sv-chart-block.is-compact {
+        height: 50px;
+        padding: 3px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .sv-row-quarters {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    
+    .sv-row-months {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .sv-row-weeks {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .sv-row-week-days {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+    }
+    
+    .sv-row-month-weeks {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .sv-chart-block {
+        height: 80px;
+        padding: 4px;
+    }
+    
+    .sv-chart-block.is-compact {
+        height: 40px;
+        padding: 2px;
+    }
+    
+    .sv-chart-label {
+        /* font-size: 10px; -> 使用工具类: think-text-chart-label */
+    }
+    
+    .sv-chart-number {
+        /* font-size: 10px; -> 使用工具类: think-text-chart-label */
+    }
+    
+    .sv-chart-category {
+        /* font-size: 9px; -> 使用工具类: think-text-chart-mini */
+    }
+}

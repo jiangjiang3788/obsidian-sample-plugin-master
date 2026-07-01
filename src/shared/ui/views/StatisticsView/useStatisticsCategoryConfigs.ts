@@ -1,7 +1,9 @@
 // src/shared/ui/views/StatisticsView/useStatisticsCategoryConfigs.ts
 import { useEffect, useMemo } from 'preact/hooks';
-import type { Item, CategoryConfig } from '@core/public';
-import { discoverBaseCategories, generateCategoryColor, getBasePath, getCategoryColor } from '@core/public';
+import type { Item } from '@core/types/public';
+import type { CategoryConfig } from '@core/view/public';
+import { discoverBaseCategories, getBasePath } from '@core/utils/public';
+import { generateCategoryColor, getCategoryColor } from '@core/types/public';
 import type { CategoryColorMap, UpdateCategoryColorsHandler } from '../../../types/actions';
 
 export interface UseStatisticsCategoryConfigsParams {

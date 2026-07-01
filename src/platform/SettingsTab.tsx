@@ -3,7 +3,8 @@
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { PluginSettingTab, App, Notice } from 'obsidian';
 import type ThinkPlugin from '@main';
-import { Button, getThinkDeviceProfileAttributes } from '@shared/public';
+import { Button } from '@shared/ui/public';
+import { getThinkDeviceProfileAttributes } from '@shared/utils/public';
 import { SettingsRoot } from './SettingsRoot';
 import { openThinkSettingsWorkspaceView } from './ThinkSettingsView';
 

@@ -54,6 +54,78 @@
       ],
       "react": [
         "node_modules/preact/compat"
+      ],
+      "@core/goal/public": [
+        "src/core/goal/public.ts"
+      ],
+      "@core/fields/public": [
+        "src/core/fields/public.ts"
+      ],
+      "@core/recordInput/public": [
+        "src/core/recordInput/public.ts"
+      ],
+      "@core/layout/public": [
+        "src/core/layout/public.ts"
+      ],
+      "@core/theme/public": [
+        "src/core/theme/public.ts"
+      ],
+      "@core/semantics/public": [
+        "src/core/semantics/public.ts"
+      ],
+      "@shared/ui/public": [
+        "src/shared/ui/public.ts"
+      ],
+      "@shared/utils/public": [
+        "src/shared/utils/public.ts"
+      ],
+      "@core/utils/public": [
+        "src/core/utils/public.ts"
+      ],
+      "@core/types/public": [
+        "src/core/types/public.ts"
+      ],
+      "@core/blocks/public": [
+        "src/core/blocks/public.ts"
+      ],
+      "@core/services/public": [
+        "src/core/services/public.ts"
+      ],
+      "@core/ports/public": [
+        "src/core/ports/public.ts"
+      ],
+      "@core/ai/public": [
+        "src/core/ai/public.ts"
+      ],
+      "@core/view/public": [
+        "src/core/view/public.ts"
+      ],
+      "@core/records/public": [
+        "src/core/records/public.ts"
+      ],
+      "@core/progression/public": [
+        "src/core/progression/public.ts"
+      ],
+      "@core/bootstrap/public": [
+        "src/core/bootstrap/public.ts"
+      ],
+      "@shared/hooks/public": [
+        "src/shared/hooks/public.ts"
+      ],
+      "@shared/components/public": [
+        "src/shared/components/public.ts"
+      ],
+      "@shared/debug/public": [
+        "src/shared/debug/public.ts"
+      ],
+      "@shared/patterns/public": [
+        "src/shared/patterns/public.ts"
+      ],
+      "@shared/types/public": [
+        "src/shared/types/public.ts"
+      ],
+      "@shared/styles/public": [
+        "src/shared/styles/public.ts"
       ]
     },
     "types": [

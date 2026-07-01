@@ -7,17 +7,11 @@
  * - 未被当前 Layout 引用的 ViewInstance 变化不会触发该 Layout 重渲染。
  */
 import { h, render } from 'preact';
-import type { Layout, ViewInstance } from '@core/public';
-import {
-    ActionService,
-    DataStore,
-    InputService,
-    ItemService,
-    devError,
-    devLog,
-} from '@core/public';
+import type { Layout, ViewInstance } from '@core/types/public';
+import { ActionService, DataStore, InputService, ItemService } from '@core/services/public';
+import { devError, devLog } from '@core/utils/public';
 import { ServicesProvider, type Services, validateServices as validateServicesImpl } from '@/app/public';
-import type { TimerController } from '@shared/public';
+import type { TimerController } from '@shared/types/public';
 import { LayoutRenderer } from '@features/settings/layout/LayoutRenderer';
 import type { UseCases } from '@/app/public';
 import {

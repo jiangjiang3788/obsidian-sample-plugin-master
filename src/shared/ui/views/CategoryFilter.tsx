@@ -3,8 +3,8 @@ import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { Checkbox, FormControlLabel, FormGroup } from '../muiCompat';
 
-import type { ViewInstance } from '@core/public';
-import { collectCategoriesFromViews } from '@core/public';
+import type { ViewInstance } from '@core/types/public';
+import { collectCategoriesFromViews } from '@core/utils/public';
 import { FilterPopover } from '../components/FilterPopover';
 
 interface CategoryFilterProps {

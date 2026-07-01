@@ -1,9 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import type { ThemeDefinition } from '@core/public';
+import type { ThemeDefinition } from '@core/types/public';
 
-import { Box, Divider, FormControl, Typography } from '@shared/public';
+import { Box, Divider, FormControl, Typography } from '@shared/ui/public';
 
 import { QuickInputEditorFields } from './components/Fields';
 import { GoalSelector, type GoalSelectorOption } from './components/GoalSelector';

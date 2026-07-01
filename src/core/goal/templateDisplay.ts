@@ -2,6 +2,8 @@ import type { TemplateField } from '@/core/types/schema';
 import type { GoalDefinition } from './types';
 import type { GoalTemplate } from './templates';
 import { DEFAULT_TEMPLATE_VARIANT_ID, normalizeTemplateVariantId } from './templateVariant';
+import { getHierarchyPathLeaf, normalizeHierarchyPathValue } from '@/core/semantics/path';
+import { readOptionText as readOptionTextParts } from '@/core/semantics/option';
 
 export interface GoalTemplateDisplayInfo {
   name: string;
@@ -15,27 +17,17 @@ function compactText(value: unknown): string {
   return String(value ?? '').trim();
 }
 
-function cleanPathSegment(value: unknown): string {
-  return compactText(value).replace(/^[#＃]+\s*/, '').trim();
-}
-
 function normalizePath(value?: unknown): string {
-  return compactText(value)
-    .split('/')
-    .map(cleanPathSegment)
-    .filter(Boolean)
-    .join('/');
+  return normalizeHierarchyPathValue(value, { stripLeadingHashes: true }) || '';
 }
 
 function readOptionText(value: unknown): string {
-  if (value === undefined || value === null) return '';
-  if (typeof value === 'object' && value && 'value' in (value as any)) return compactText((value as any).value);
-  return compactText(value);
+  return readOptionTextParts(value).value;
 }
 
 function leafPath(value: unknown): string {
   const text = normalizePath(value);
-  return text.split('/').filter(Boolean).pop() || text;
+  return getHierarchyPathLeaf(text) || text;
 }
 
 export function isGeneratedGoalTemplateName(value: unknown): boolean {

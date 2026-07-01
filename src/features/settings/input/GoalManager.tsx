@@ -1,7 +1,13 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { Alert, Box, Button, TextField, Typography } from '@shared/public';
+import {
+  Alert,
+  Box,
+  Button,
+  TextField,
+  Typography,
+} from '@shared/ui/public';
 import { selectSettings, useSelector, useUseCases } from '@/app/public';
 import { GoalTemplateMatrix } from '@features/settings/goalTemplates';
 import { pathLeaf } from './goalManager/shared';

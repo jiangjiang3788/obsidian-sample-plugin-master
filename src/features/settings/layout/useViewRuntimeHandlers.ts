@@ -1,6 +1,7 @@
 import { useCallback } from 'preact/hooks';
-import type { ActionService, Item, ViewInstance } from '@core/public';
-import { dayjs, buildRecordSubmitFeedbackPresentation } from '@core/public';
+import type { ActionService } from '@core/services/public';
+import type { Item, ViewInstance } from '@core/types/public';
+import { dayjs, buildRecordSubmitFeedbackPresentation } from '@core/utils/public';
 import { useModalPort, useUiPort, useUseCases } from '@/app/public';
 import {
   commitExcelCellFromView,
@@ -21,7 +22,7 @@ import type {
   OpenTimelineCreateHandler,
   ResolveResourcePathHandler,
   UpdateTaskTimeHandler,
-} from '@shared/public';
+} from '@shared/types/public';
 
 export interface UseViewRuntimeHandlersParams {
   app: any;

@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { Box, Button } from '@shared/public';
+import { Box, Button } from '@shared/ui/public';
 
 export interface AiBatchConfirmFooterProps {
   saved: boolean;

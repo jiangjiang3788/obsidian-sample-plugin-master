@@ -32,9 +32,9 @@
  * - ⛔ 使用全局单例（禁止 getAppStoreInstance）
  */
 
-import type { Layout, ViewPlacement } from '@core/public';
+import type { Layout, ViewPlacement } from '@core/types/public';
 import type { AppStoreApi } from './index';
-import { devError } from '@core/public';
+import { devError } from '@core/utils/public';
 
 /**
  * 布局用例类

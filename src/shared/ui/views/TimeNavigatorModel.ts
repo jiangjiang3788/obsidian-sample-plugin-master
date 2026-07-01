@@ -1,4 +1,10 @@
-import { dayjs, getMondayByWeek, getWeekNumber, getWeekRangeStr, getWeeksInYear } from '@core/public';
+import {
+  dayjs,
+  getMondayByWeek,
+  getWeekNumber,
+  getWeekRangeStr,
+  getWeeksInYear,
+} from '@core/utils/public';
 
 export type TimeNavigatorView = '年' | '季' | '月' | '周';
 

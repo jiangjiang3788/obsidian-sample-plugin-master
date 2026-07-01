@@ -1,7 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, TableCell, TableRow, Typography } from '@shared/public';
-import type { CoreBlockDefinition, GoalDefinition, GoalTemplate } from '@core/public';
+import { Box, TableCell, TableRow, Typography } from '@shared/ui/public';
+import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { GoalTemplateMatrixCell } from './GoalTemplateMatrixCell';
 import {
   cleanDisplayText,

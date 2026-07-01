@@ -10,9 +10,9 @@ import {
   Stack,
   TextField,
   Typography,
-} from '@shared/public';
-import { ExpandMoreIcon } from '@shared/public';
-import { CUSTOM_PROMPT_EXAMPLES } from '@core/public';
+} from '@shared/ui/public';
+import { ExpandMoreIcon } from '@shared/ui/public';
+import { CUSTOM_PROMPT_EXAMPLES } from '@core/types/public';
 import type { AiPromptRulesSectionProps } from './aiSettingsUiTypes';
 
 export function AiPromptRulesSection({ settings, onUpdate, onInsertExample }: AiPromptRulesSectionProps) {

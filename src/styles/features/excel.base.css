@@ -1,0 +1,42 @@
+/* Excel view shell and legend base. */
+/* Excel view feature contract. */
+/* ExcelView inline editing UX */
+.excel-view-shell {
+    overflow-x: auto;
+}
+
+.excel-view-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    color: var(--think-text-secondary);
+    font-size: 12px;
+    user-select: none;
+}
+
+.excel-view-legend-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--think-border-subtle);
+    border-radius: 999px;
+    padding: 2px 8px;
+    background: var(--think-bg-surface-2);
+    line-height: 1.5;
+}
+
+.excel-view-legend-chip.is-editable {
+    color: var(--think-text-accent);
+    border-color: var(--think-accent);
+}
+
+.excel-view-legend-chip.is-readonly {
+    color: var(--think-text-subtle);
+    background: var(--think-bg-surface-1);
+}
+
+.excel-view-legend-note {
+    color: var(--think-text-secondary);
+}

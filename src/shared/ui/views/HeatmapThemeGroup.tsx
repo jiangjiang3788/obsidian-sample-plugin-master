@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
-import type { Item } from '@core/public';
-import { dayjs } from '@core/public';
+import type { Item } from '@core/types/public';
+import { dayjs } from '@core/utils/public';
 import type { ResolveResourcePathHandler } from '../../types/actions';
 import { HeatmapCell } from '../heatmap/HeatmapCell';
 import { getThemeLeafLabel, type HeatmapPresetContext } from './HeatmapViewModel';

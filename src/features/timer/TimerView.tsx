@@ -4,9 +4,11 @@
 import { useSelector } from '@/app/public';
 import { selectTimers, selectIsTimerWidgetVisible, selectSetTimerWidgetVisible } from '@/app/public';
 import { QuickInputModal, openEditFromItem, openRecordOrigin } from '@/app/public';
-import type { ActionService, Item, RecordSubmitResult } from '@core/public';
+import type { ActionService } from '@core/services/public';
+import type { Item } from '@core/types/public';
+import type { RecordSubmitResult } from '@core/recordInput/public';
 import type { TimerService } from '@features/timer/TimerService';
-import type { DataStore } from '@core/public';
+import type { DataStore } from '@core/services/public';
 import { TimerViewView } from './TimerViewView';
 
 interface TimerViewProps {

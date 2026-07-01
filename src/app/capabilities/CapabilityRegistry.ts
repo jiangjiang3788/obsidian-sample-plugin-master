@@ -1,5 +1,5 @@
 // src/app/capabilities/CapabilityRegistry.ts
-import type { ThinkSettings } from '@core/public';
+import type { ThinkSettings } from '@core/types/public';
 
 /**
  * Capability factory signature.

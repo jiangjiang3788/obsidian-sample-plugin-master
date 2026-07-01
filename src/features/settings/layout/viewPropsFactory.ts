@@ -1,5 +1,6 @@
-import type { Item, MessageRenderPort, ViewInstance } from '@core/public';
-import type { CloseStatisticsPopoverHandler, OpenStatisticsPopoverHandler, TimerController } from '@shared/public';
+import type { Item, ViewInstance } from '@core/types/public';
+import type { MessageRenderPort } from '@core/ports/public';
+import type { CloseStatisticsPopoverHandler, OpenStatisticsPopoverHandler, TimerController } from '@shared/types/public';
 import type { ViewRenderModels } from '@/features/settings/viewModels/viewModelRegistry';
 import type { ViewRuntimeHandlers } from './useViewRuntimeHandlers';
 

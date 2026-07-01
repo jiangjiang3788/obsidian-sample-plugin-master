@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
-import type { DataStore, Item, Layout } from '@core/public';
-import { devLog } from '@core/public';
+import type { DataStore } from '@core/services/public';
+import type { Item, Layout } from '@core/types/public';
+import { devLog } from '@core/utils/public';
 
 export function useLayoutItems({ dataStore, layout }: { dataStore: DataStore; layout: Layout }): Item[] {
   const [allItems, setAllItems] = useState<Item[]>(() => dataStore.queryItems());

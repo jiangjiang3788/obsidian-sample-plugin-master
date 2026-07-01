@@ -13,13 +13,13 @@ import { h, type ComponentChildren } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import { Box, List, Typography } from '../../ui/muiCompat';
 
-import type { ThemeDefinition } from '@core/public';
+import type { ThemeDefinition } from '@core/types/public';
 import {
   ThemePathTreeBuilder as ThemeTreeBuilder,
   type ThemePathTreeNode as ThemeTreeNode,
   buildThemePathTree as buildThemeTree,
   searchThemePathTree as searchThemeTree,
-} from '@core/public';
+} from '@core/theme/public';
 
 import { SearchBox } from './SearchBox';
 import { MultiSelectToolbar } from './MultiSelectToolbar';

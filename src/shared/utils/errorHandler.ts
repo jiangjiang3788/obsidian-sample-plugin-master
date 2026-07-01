@@ -3,7 +3,8 @@
  * 提供统一的错误分类、记录和用户通知功能
  */
 
-import { devError, devLog, type UiPort } from '@core/public';
+import { devError, devLog } from '@core/utils/public';
+import type { UiPort } from '@core/ports/public';
 import { diagnosticError } from './diagnosticConsole';
 
 /**

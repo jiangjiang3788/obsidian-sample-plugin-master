@@ -1,0 +1,36 @@
+/* Excel V4 surface normalization. */
+/* CSS V4 Excel surface normalization. */
+.excel-view-shell {
+    border: 1px solid var(--think-border-subtle);
+    border-radius: var(--think-radius-md);
+    background: var(--think-bg-canvas);
+    container-type: inline-size;
+}
+
+.excel-view-toolbar,
+.excel-column-toolbar {
+    padding: var(--think-space-4);
+    border-bottom: 1px solid var(--think-border-subtle);
+    background: var(--think-bg-surface-1);
+}
+
+.excel-view-table th {
+    background: var(--think-bg-surface-1);
+    color: var(--think-text-primary);
+}
+
+.excel-view-table td,
+.excel-view-table th {
+    border-color: var(--think-border-subtle);
+}
+
+.excel-view-table .excel-view-cell.is-selected {
+    box-shadow: inset 0 0 0 2px var(--think-accent);
+}
+
+.excel-column-context-menu {
+    z-index: var(--think-z-popover);
+    border-radius: var(--think-radius-md);
+    background: var(--think-bg-elevated);
+    box-shadow: var(--think-shadow-overlay);
+}

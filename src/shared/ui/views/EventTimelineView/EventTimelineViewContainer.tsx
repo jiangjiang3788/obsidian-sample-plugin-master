@@ -2,8 +2,10 @@
 // src/features/views/EventTimelineView.tsx
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import type { Item, ViewInstance, MessageRenderPort, GoalDefinition } from '@core/public';
-import type { GroupNode } from '@core/public';
+import type { Item, ViewInstance } from '@core/types/public';
+import type { MessageRenderPort } from '@core/ports/public';
+import type { GoalDefinition } from '@core/goal/public';
+import type { GroupNode } from '@core/utils/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../../types/actions';
 import type { MarkDoneHandler } from '../../../types/actions';
 

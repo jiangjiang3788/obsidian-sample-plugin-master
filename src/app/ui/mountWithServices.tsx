@@ -18,7 +18,7 @@ import { render, unmountComponentAtNode } from 'preact/compat';
 import { ServicesProvider } from '../AppStoreContext';
 import { createServices } from '../createServices';
 import type { Services } from '../services.types';
-import { ThinkMuiThemeProvider } from '@shared/public';
+import { ThinkMuiThemeProvider } from '@shared/ui/public';
 
 export interface MountWithServicesResult {
   services: Services;

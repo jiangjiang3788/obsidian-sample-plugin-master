@@ -1,12 +1,12 @@
-import type { Item } from '@core/public';
+import type { Item } from '@core/types/public';
+import { TIMELINE_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import {
-  TIMELINE_VIEW_DEFAULT_CONFIG,
   buildDailyViewData,
   buildMonthlyAndWeeklySummary,
   buildSummaryCategoryHours,
   dayjs,
   filterByRules,
-} from '@core/public';
+} from '@core/utils/public';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isBetween from 'dayjs/plugin/isBetween';

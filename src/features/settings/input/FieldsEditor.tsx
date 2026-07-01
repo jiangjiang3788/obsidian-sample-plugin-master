@@ -1,10 +1,17 @@
 // src/features/settings/input/FieldsEditor.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Box, Button, Divider, Stack, Typography } from '@shared/public';
-import { AddIcon, logRenderDiagnostic } from '@shared/public';
-import type { TemplateField } from "@core/public";
-import { createCustomTemplateField, sanitizeTemplateField, sanitizeTemplateFields } from "@core/public";
+import {
+  Box,
+  Button,
+  Divider,
+  Stack,
+  Typography,
+} from '@shared/ui/public';
+import { AddIcon } from '@shared/ui/public';
+import { logRenderDiagnostic } from '@shared/debug/public';
+import type { TemplateField } from '@core/types/public';
+import { createCustomTemplateField, sanitizeTemplateField, sanitizeTemplateFields } from '@core/fields/public';
 import { FieldRow } from "./fieldsEditor/FieldRow";
 
 function createEmptyField(index: number): TemplateField {

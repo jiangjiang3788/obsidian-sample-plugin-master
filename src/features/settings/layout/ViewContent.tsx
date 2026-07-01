@@ -2,11 +2,13 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo } from 'preact/hooks';
-import type { ActionService, DataStore, FilterRule, InputSettings, Item, ViewInstance } from '@core/public';
-import { getAllFields, getCategoryValuesFromFilters } from '@core/public';
+import type { ActionService, DataStore } from '@core/services/public';
+import type { FilterRule, InputSettings, Item, ViewInstance } from '@core/types/public';
+import { getAllFields } from '@core/types/public';
+import { getCategoryValuesFromFilters } from '@core/utils/public';
 import { DashboardViewComponents as ViewComponents } from '@features/settings';
 import { selectCategoryColors, selectSettings, useMessageRenderPort, useSelector } from '@/app/public';
-import type { TimerController } from '@shared/public';
+import type { TimerController } from '@shared/types/public';
 import { useViewData } from '@/features/settings/useViewData';
 import { buildViewRenderModels } from '@/features/settings/viewModels/viewModelRegistry';
 import { closeStatisticsPopover, openStatisticsPopover } from './statisticsPopoverBridge';

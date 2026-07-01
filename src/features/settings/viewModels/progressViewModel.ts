@@ -1,5 +1,9 @@
-import type { GoalDefinition, ThemeDefinition, Item } from '@core/public';
-import { PROGRESS_VIEW_DEFAULT_CONFIG, buildGoalBuckets, computeProgression, getItemGoalKey, asUnknownRecord, readFirstString } from '@core/public';
+import type { GoalDefinition } from '@core/goal/public';
+import type { ThemeDefinition, Item } from '@core/types/public';
+import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
+import { buildGoalBuckets, getItemGoalKey } from '@core/goal/public';
+import { computeProgression } from '@core/progression/public';
+import { asUnknownRecord, readFirstString } from '@core/utils/public';
 
 export interface GoalProgressCardModel {
   key: string;

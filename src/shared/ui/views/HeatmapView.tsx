@@ -2,10 +2,12 @@
 
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
-import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, buildHeatmapRatingMapping } from '@core/public';
+import { Item, ViewInstance, InputSettings, ThemeDefinition } from '@core/types/public';
+import { devLog, buildHeatmapRatingMapping } from '@core/utils/public';
 import type { OpenCheckinManagerHandler, OpenHeatmapCreateHandler, ResolveResourcePathHandler } from '../../types/actions';
-import { HEATMAP_VIEW_DEFAULT_CONFIG, dayjs } from '@core/public';
-import { buildThemeDataMap, buildThemesByPathMap } from '@core/public';
+import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/view/public';
+import { dayjs } from '@core/utils/public';
+import { buildThemeDataMap, buildThemesByPathMap } from '@core/utils/public';
 import {
     filterGoalHeatmapGroups,
     inferHeatmapBlockIdByTheme,
@@ -22,7 +24,7 @@ import {
     resolveHeatmapVerticalLayout,
     toggleHeatmapCollapsedTheme,
 } from './HeatmapLayoutModel';
-import { RatingMappingCache } from '@core/public';
+import { RatingMappingCache } from '@core/utils/public';
 
 // ========== Types ==========
 interface HeatmapViewProps {

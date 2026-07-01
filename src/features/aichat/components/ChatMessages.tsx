@@ -1,9 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RefObject } from 'preact';
-import { Box, CircularProgress, Stack, Typography } from '@shared/public';
-import { ChatIcon } from '@shared/public';
-import type { ChatMessage } from '@core/public';
+import { Box, CircularProgress, Stack, Typography } from '@shared/ui/public';
+import { ChatIcon } from '@shared/ui/public';
+import type { ChatMessage } from '@core/ai/public';
 import { MessageBubble } from './MessageBubble';
 
 export interface ChatMessagesProps {

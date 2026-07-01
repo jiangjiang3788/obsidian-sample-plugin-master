@@ -2,10 +2,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { Autocomplete, TextField } from '@shared/public';
+import { Autocomplete, TextField } from '@shared/ui/public';
 import type { SxProps, Theme } from '@mui/material/styles';
-import type { FieldPickerOption } from '@core/public';
-import { getFieldLabel, getFieldPickerOptions } from '@core/public';
+import type { FieldPickerOption } from '@core/fields/public';
+import { getFieldLabel, getFieldPickerOptions } from '@core/fields/public';
 
 type PickerOption = FieldPickerOption | string;
 

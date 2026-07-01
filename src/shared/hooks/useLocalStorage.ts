@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { devWarn } from '@core/public';
+import { devWarn } from '@core/utils/public';
 
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   // 从 localStorage 获取初始值

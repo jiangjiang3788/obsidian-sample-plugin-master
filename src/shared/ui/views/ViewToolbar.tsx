@@ -2,12 +2,12 @@
 import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { dayjs } from '@core/public';
+import { dayjs } from '@core/utils/public';
 import { ThemeFilter } from './ThemeFilter';
 import { CategoryFilter } from './CategoryFilter';
 import { getObsidianEventBoundaryProps } from '../events/obsidianEventBoundary';
-import type { ViewInstance } from '@core/public';
-import type { ThemeDefinition } from '@core/public';
+import type { ViewInstance } from '@core/types/public';
+import type { ThemeDefinition } from '@core/types/public';
 import {
     buildViewToolbarDateLabel,
     buildViewToolbarDateTargets,

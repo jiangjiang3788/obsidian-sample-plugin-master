@@ -2,20 +2,15 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { Button, SimpleSelect, Stack, TextField } from '@shared/public';
-import {
-    EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
-    FULL_DATA_FIELD_KEY,
-    CONTENT_FIELD_KEY,
-    getFieldCategoryLabel,
-    getFieldLabel,
-} from '@core/public';
-import type { EventTimelineViewConfig } from '@core/public';
+import { Button, SimpleSelect, Stack, TextField } from '@shared/ui/public';
+import { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG } from '@core/view/public';
+import { FULL_DATA_FIELD_KEY, CONTENT_FIELD_KEY, getFieldCategoryLabel, getFieldLabel } from '@core/fields/public';
+import type { EventTimelineViewConfig } from '@core/view/public';
 import type { ViewEditorProps } from './registry';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
 // 重新导出以保持兼容性
-export { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
+export { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 function uniqueFields(fields: string[]): string[] {
     const seen = new Set<string>();

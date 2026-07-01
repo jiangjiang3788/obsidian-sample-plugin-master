@@ -1,8 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import type { Item } from '@core/public';
-import type { GroupNode } from '@core/public';
+import type { Item } from '@core/types/public';
+import type { GroupNode } from '@core/utils/public';
 
 export type GroupPath = string;
 

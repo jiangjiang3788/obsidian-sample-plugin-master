@@ -315,7 +315,7 @@ export { VAULT_PORT_TOKEN } from './ports/VaultPort';
 export type { VaultPort } from './ports/VaultPort';
 
 export { UI_PORT_TOKEN } from './ports/UiPort';
-export type { UiPort } from './ports/UiPort';
+export type { UiPort, UiNoticeHandle } from './ports/UiPort';
 
 export { METADATA_PORT_TOKEN } from './ports/MetadataPort';
 export type { MetadataPort, HeadingInfo } from './ports/MetadataPort';

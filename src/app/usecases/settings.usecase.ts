@@ -18,9 +18,10 @@
  * NOTE: reorderItems 请使用 useCases.group.reorderItems
  */
 
-import type { AiSettings } from '@core/public';
+import type { AiSettings } from '@core/types/public';
 import type { AppStoreApi } from './index';
-import { devLog, devError, updateCategoryColorMap } from '@core/public';
+import { devLog, devError } from '@core/utils/public';
+import { updateCategoryColorMap } from '@core/types/public';
 
 /**
  * 设置用例类

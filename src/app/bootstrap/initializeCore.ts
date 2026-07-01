@@ -1,13 +1,15 @@
 import { container } from 'tsyringe';
 import type ThinkPlugin from '@main';
 
-import { SETTINGS_PERSISTENCE_TOKEN, devError, devLog, updateCategoryColorMap } from '@core/public';
+import { SETTINGS_PERSISTENCE_TOKEN } from '@core/services/public';
+import { devError, devLog } from '@core/utils/public';
+import { updateCategoryColorMap } from '@core/types/public';
 
 import { diDebug, diWarn } from '@/app/diagnostics/diDiagnostics';
 
-import type { ThinkSettings } from '@core/public';
-import { safeAsync } from '@shared/public';
-import { startMeasure } from '@shared/public';
+import type { ThinkSettings } from '@core/types/public';
+import { safeAsync } from '@shared/utils/public';
+import { startMeasure } from '@shared/utils/public';
 
 import { createAppStore, STORE_TOKEN } from '@/app/store/useAppStore';
 import { createUseCases, USECASES_TOKEN } from '@/app/usecases';
@@ -15,7 +17,7 @@ import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import type { Disposables } from '@/app/runtime/disposables';
 import type { BootstrapResolved } from '@/app/bootstrap/buildRuntime';
-import { setDevConsoleStackEnabled } from '@shared/public';
+import { setDevConsoleStackEnabled } from '@shared/utils/public';
 
 export async function initializeCore(opts: {
     plugin: ThinkPlugin;

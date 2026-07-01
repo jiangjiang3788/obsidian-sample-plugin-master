@@ -1,5 +1,6 @@
-import type { CategoryConfig, PeriodData } from '@core/public';
-import { createPeriodData } from '@core/public';
+import type { CategoryConfig } from '@core/view/public';
+import type { PeriodData } from '@core/utils/public';
+import { createPeriodData } from '@core/utils/public';
 import type { StatisticsYearlyWeekMonth } from '../StatisticsViewModel';
 
 export interface YearStatisticsQuarterModel {

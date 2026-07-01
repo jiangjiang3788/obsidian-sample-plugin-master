@@ -1,5 +1,6 @@
-import type { InputSettings, Item } from '@core/public';
-import { getItemThemePath, parsePath } from '@core/public';
+import type { InputSettings, Item } from '@core/types/public';
+import { getItemThemePath } from '@core/utils/public';
+import { parsePath } from '@core/theme/public';
 
 export interface DayThemeEntry {
     themePath: string;

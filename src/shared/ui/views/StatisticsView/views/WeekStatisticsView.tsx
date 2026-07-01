@@ -1,8 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item } from '@core/public';
-import type { CategoryConfig } from '@core/public';
-import { aggregateByWeek } from '@core/public';
+import type { Item } from '@core/types/public';
+import type { CategoryConfig } from '@core/view/public';
+import { aggregateByWeek } from '@core/utils/public';
 import { ChartBlock } from '../../../statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
 

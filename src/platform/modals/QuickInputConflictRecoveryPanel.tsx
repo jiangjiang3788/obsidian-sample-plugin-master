@@ -1,8 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Button } from '@shared/public';
+import { Button } from '@shared/ui/public';
 
-import type { RecordSubmitRecoveryPresentation } from '@core/public';
+import type { RecordSubmitRecoveryPresentation } from '@core/utils/public';
 
 export interface QuickInputConflictRecoveryPanelProps {
   recovery: RecordSubmitRecoveryPresentation;

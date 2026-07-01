@@ -1,9 +1,10 @@
 // src/features/settings/input/fieldsEditor/OptionRow.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Box, Stack } from '@shared/public';
-import { IconAction, RemoveCircleOutlineIcon, logRenderDiagnostic } from '@shared/public';
-import type { TemplateField, TemplateFieldOption } from "@core/public";
+import { Box, Stack } from '@shared/ui/public';
+import { IconAction, RemoveCircleOutlineIcon } from '@shared/ui/public';
+import { logRenderDiagnostic } from '@shared/debug/public';
+import type { TemplateField, TemplateFieldOption } from '@core/types/public';
 import { NativeTextInput } from "./nativeControls";
 
 export function OptionRow({

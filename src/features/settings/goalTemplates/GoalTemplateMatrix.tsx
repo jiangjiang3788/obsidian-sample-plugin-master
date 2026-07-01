@@ -1,9 +1,17 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Alert, Box, Button, Chip, TextField } from '@shared/public';
-import { getEffectiveCoreBlocks, getGoalTemplates } from '@core/public';
-import type { CoreBlockDefinition, GoalDefinition, GoalTemplate } from '@core/public';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  TextField,
+} from '@shared/ui/public';
+import { getEffectiveCoreBlocks } from '@core/blocks/public';
+import { getGoalTemplates } from '@core/goal/public';
+import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { selectSettings, useSelector, useUiPort, useUseCases } from '@/app/public';
 import { GoalTemplateEditorModal } from './GoalTemplateEditorModal';
 import { GoalTemplateContextMenu } from './GoalTemplateContextMenu';

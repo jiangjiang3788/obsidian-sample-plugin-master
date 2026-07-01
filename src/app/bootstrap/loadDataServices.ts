@@ -1,5 +1,5 @@
-import { devError, devLog, devTime, devTimeEnd } from '@core/public';
-import { startMeasure } from '@shared/public';
+import { devError, devLog, devTime, devTimeEnd } from '@core/utils/public';
+import { startMeasure } from '@shared/utils/public';
 
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import type { Services } from '@/app/services.types';

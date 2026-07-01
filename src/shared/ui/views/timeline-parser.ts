@@ -7,12 +7,12 @@ function resolveTimelineAnchorDate(item: any): string | null {
 }
 
 
-import type { Item } from '@core/public';
-import { dayjs, timeToMinutes, deriveDurationFromRange, deriveStartFromEndAndDuration } from '@core/public';
-import { splitTaskIntoDayBlocks } from '@core/public';
+import type { Item } from '@core/types/public';
+import { dayjs, timeToMinutes, deriveDurationFromRange, deriveStartFromEndAndDuration } from '@core/utils/public';
+import { splitTaskIntoDayBlocks } from '@core/utils/public';
 
-export type { TimelineTask, TaskBlock } from '@core/public';
-import type { TimelineTask } from '@core/public';
+export type { TimelineTask, TaskBlock } from '@core/types/public';
+import type { TimelineTask } from '@core/types/public';
 
 // TimelineTask / TaskBlock 已在 core/types/timeline.ts 定义并在此文件 re-export。
 

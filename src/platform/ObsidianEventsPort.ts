@@ -6,7 +6,7 @@
 import type { Plugin, TAbstractFile } from 'obsidian';
 import { TFile } from 'obsidian';
 
-import type { EventsPort, UnsubscribeFn } from '@core/public';
+import type { EventsPort, UnsubscribeFn } from '@core/ports/public';
 
 /** Obsidian 实现：把 vault/workspace 事件转换成 core 侧的 EventsPort 抽象 */
 export class ObsidianEventsPort implements EventsPort {

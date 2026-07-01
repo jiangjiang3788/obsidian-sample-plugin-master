@@ -3,7 +3,7 @@
 // Default: OFF to keep startup logs clean. Enable in dev console:
 //   globalThis.__THINK_DI_DEBUG__ = true
 
-import { devLog, devWarn } from '@core/public';
+import { devLog, devWarn } from '@core/utils/public';
 
 function isDevBuild(): boolean {
     // Vite provides import.meta.env in build; fallback for tests/Node.

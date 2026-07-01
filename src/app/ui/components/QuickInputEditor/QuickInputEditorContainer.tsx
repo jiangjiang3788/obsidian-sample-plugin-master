@@ -3,17 +3,12 @@ import { h } from 'preact';
 import { useEffect, useMemo, useReducer, useRef } from 'preact/hooks';
 
 import { selectSettings, useSelector } from '@/app/public';
-import {
-  GoalTemplateResolver,
-  dayjs,
-  getEffectiveCoreBlocks,
-  getGoalTemplateVariants,
-  initializeRecordInputSession,
-  reduceRecordInputSession,
-  resolveDerivedPeriod,
-  resolveTemplatePeriodPolicy,
-} from '@core/public';
-import type { ThemeDefinition } from '@core/public';
+import { GoalTemplateResolver } from '@core/recordInput/public';
+import { dayjs } from '@core/utils/public';
+import { getEffectiveCoreBlocks } from '@core/blocks/public';
+import { getGoalTemplateVariants, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/goal/public';
+import { initializeRecordInputSession, reduceRecordInputSession } from '@core/recordInput/public';
+import type { ThemeDefinition } from '@core/types/public';
 import { QuickInputEditorView } from './QuickInputEditorView';
 import type { GoalSelectorOption } from './components/GoalSelector';
 import {
@@ -41,11 +36,6 @@ import type { QuickInputEditorProps, QuickInputFieldSourceMap, QuickInputFormDat
 export { finalizeQuickInputFormData } from './QuickInputEditorModel';
 export type { QuickInputEditorProps, QuickInputEditorState } from './QuickInputEditorModel';
 
-/**
- * QuickInputEditor（Container）
- * - settings / 模板解析 / UI 订阅仍在这里
- * - 记录类型切换、每类型草稿缓存、目标/预设选择状态已收敛到 core RecordInputSession
- */
 export function QuickInputEditor({
   getResourcePath,
   initialBlockId,
@@ -131,7 +121,6 @@ export function QuickInputEditor({
       || null;
   }, [fullSettings.goalSettings?.goals, selectedGoalId, selectedGoalPath]);
 
-
   const currentEffectiveBlockIdForTemplates = useMemo(
     () => resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
     [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId]
@@ -204,7 +193,6 @@ export function QuickInputEditor({
 
   const showTimeDirectionControl = useMemo(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
 
-  // 默认值/从 context 回填
   useEffect(() => {
     if (!template) return;
     const hydrated = hydrateQuickInputTemplateDefaults({

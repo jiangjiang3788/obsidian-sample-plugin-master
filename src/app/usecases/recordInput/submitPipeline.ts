@@ -1,5 +1,6 @@
-import { finalizeRecordSubmitResult } from '@core/public';
-import type { DataStore, RecordOperation, RecordSubmitResult } from '@core/public';
+import { finalizeRecordSubmitResult } from '@core/recordInput/public';
+import type { DataStore } from '@core/services/public';
+import type { RecordOperation, RecordSubmitResult } from '@core/recordInput/public';
 import { mapSubmitError } from './error';
 
 export function throwIfAborted(signal?: AbortSignal): void {

@@ -6,8 +6,8 @@
 import { singleton, inject } from 'tsyringe';
 import { TFile } from 'obsidian';
 import type { App } from 'obsidian';
-import { AppToken } from '@core/services/types';
-import type { FileStat, FileStatPort } from '@core/ports/FileStatPort';
+import { AppToken } from '@core/services/public';
+import type { FileStat, FileStatPort } from '@core/ports/public';
 
 @singleton()
 export class ObsidianFileStatPort implements FileStatPort {

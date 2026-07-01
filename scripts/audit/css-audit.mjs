@@ -28,6 +28,10 @@ function stripCssComments(source) {
   return source.replace(/\/\*[\s\S]*?\*\//g, '');
 }
 
+function stripImportRules(source) {
+  return source.replace(/@import\s+(?:url\([^)]*\)|["'][^"']+["'])(?:\s+layer\([^)]*\))?[^;]*;/g, '');
+}
+
 function count(source, pattern) {
   return source.match(pattern)?.length ?? 0;
 }
@@ -99,9 +103,8 @@ for (const file of cssFiles) {
   const variableReferences = [...source.matchAll(/var\(\s*(--[\w-]+)/g)].map((match) => match[1]);
   const variableDefinitions = [...source.matchAll(/(--think-[\w-]+)\s*:/g)].map((match) => match[1]);
 
-  const selectorSource = source
-    .replace(/@layer\s+[^;{]+;/g, '')
-    .replace(/@import\s+[^;]+layer\([^)]*\)[^;]*;/g, '');
+  const selectorSource = stripImportRules(source)
+    .replace(/@layer\s+[^;{]+;/g, '');
   for (const match of selectorSource.matchAll(/\.(-?[_a-zA-Z]+[\w-]*)/g)) {
     const name = match[1];
     fileClasses.add(name);

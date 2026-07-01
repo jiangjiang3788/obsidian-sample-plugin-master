@@ -2,7 +2,8 @@
 import { h, type ComponentChildren } from 'preact';
 import type { Modal } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
-import { ThinkMuiThemeProvider, applyThinkDeviceProfileAttributes } from '@shared/public';
+import { ThinkMuiThemeProvider } from '@shared/ui/public';
+import { applyThinkDeviceProfileAttributes } from '@shared/utils/public';
 
 
 export function prepareThinkModal(modal: Modal, ...classes: string[]): HTMLElement {

@@ -1,0 +1,30 @@
+/* Theme metadata editor list and preview. */
+.think-os--settings .think-theme-metadata {
+  width: min(100%, 1040px);
+  margin-inline: auto;
+  display: grid;
+  gap: var(--think-space-6);
+}
+
+.think-os--settings .think-theme-metadata__preview,
+.think-os--settings .think-theme-metadata__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-4);
+}
+
+.think-os--settings .think-theme-metadata__entries {
+  display: grid;
+  gap: var(--think-space-3);
+}
+
+.think-os--settings .think-theme-metadata__entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--think-space-4);
+  align-items: center;
+  padding: var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+}

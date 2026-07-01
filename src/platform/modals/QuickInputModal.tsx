@@ -17,7 +17,8 @@ import {
   getVaultName,
   resolveVaultResourcePath,
 } from '@/app/public';
-import { type Item, type QuickInputSaveData, type RecordInputSource, type RecordSubmitResult } from '@core/public';
+import type { Item, QuickInputSaveData } from '@core/types/public';
+import type { RecordInputSource, RecordSubmitResult } from '@core/recordInput/public';
 import { setupQuickInputKeyboardDetection } from './quickInputKeyboard';
 import { isMobileLikeEnvironment } from './quickInputEnvironment';
 import { useQuickInputOriginalNavigation } from './quickInputOriginalLink';

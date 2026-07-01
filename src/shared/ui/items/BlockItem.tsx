@@ -1,9 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Item, ThemeDefinition } from '@core/public';
+import { Item, ThemeDefinition } from '@core/types/public';
 import { FieldPill } from './FieldPill';
 import { ItemLink } from './ItemLink';
-import type { MessageRenderPort } from '@core/public';
+import type { MessageRenderPort } from '@core/ports/public';
 import { MarkdownContent } from '../markdown/MarkdownContent';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler } from '../../types/actions';
 import { createRecordGestureHandlers } from '../utils/recordOrigin';

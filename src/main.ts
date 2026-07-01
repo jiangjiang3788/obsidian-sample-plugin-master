@@ -1,22 +1,31 @@
 import "reflect-metadata";
 
-import { ensureReflectMetadata } from '@core/public';
+import { ensureReflectMetadata } from '@core/bootstrap/public';
 
 // 立即执行环境检查
 ensureReflectMetadata();
 
 import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
-import { DataStore } from '@core/public';
-import { InputService } from '@core/public';
-import { DEFAULT_SETTINGS, THINK_SETTINGS_SCHEMA_VERSION, type ThinkSettings } from '@core/public';
+import { DataStore } from '@core/services/public';
+import { InputService } from '@core/services/public';
+import { DEFAULT_SETTINGS, THINK_SETTINGS_SCHEMA_VERSION, type ThinkSettings } from '@core/types/public';
 import type { UseCases } from '@/app/public';
-import { setupCoreContainer, setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/public';
-import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN, MODAL_PORT_TOKEN, EVENTS_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
-import type { ModalPort } from '@core/public';
+import { setupCoreContainer } from '@core/bootstrap/public';
+import { setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/ai/public';
+import {
+  VAULT_PORT_TOKEN,
+  UI_PORT_TOKEN,
+  METADATA_PORT_TOKEN,
+  FILESTAT_PORT_TOKEN,
+  MODAL_PORT_TOKEN,
+  EVENTS_PORT_TOKEN,
+  MESSAGE_RENDER_PORT_TOKEN,
+} from '@core/ports/public';
+import type { ModalPort } from '@core/ports/public';
 import './styles/main.css';
-import { safeAsync } from '@shared/public';
-import { startMeasure } from '@shared/public';
+import { safeAsync } from '@shared/utils/public';
+import { startMeasure } from '@shared/utils/public';
 import { ServiceManager } from '@/app/ServiceManager';
 import { isDisposed } from '@/app/runtime/lifecycleState';
 import { buildRuntime } from '@/app/bootstrap/buildRuntime';
@@ -25,10 +34,10 @@ import {
     createDefaultCapabilityRegistry,
     type Capabilities
 } from '@/app/capabilities/createCapabilities';
-import { TimerStateService } from '@core/public';
+import { TimerStateService } from '@core/services/public';
 import { TimerService } from '@features/timer/TimerService';
-import { ActionService } from '@core/public';
-import { devLog } from '@core/public';
+import { ActionService } from '@core/services/public';
+import { devLog } from '@core/utils/public';
 import { ObsidianVaultPort } from '@/platform/ObsidianVaultPort';
 import { ObsidianUiPort } from '@/platform/ObsidianUiPort';
 import { ObsidianModalPort } from '@/platform/ObsidianModalPort';

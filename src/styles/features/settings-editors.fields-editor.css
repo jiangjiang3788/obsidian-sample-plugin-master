@@ -1,0 +1,193 @@
+/* Field editor grid and row controls. */
+.think-os--settings .think-fields-editor {
+  width: 100%;
+  max-width: 1040px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.think-os--settings .think-fields-editor__grid {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1.15fr) minmax(112px, 145px) minmax(0, 1fr) 54px 46px 30px;
+  column-gap: var(--think-space-3);
+  align-items: center;
+  min-width: 0;
+}
+
+.think-os--settings .think-fields-editor__header {
+  padding-inline: var(--think-space-2);
+  color: var(--think-text-secondary);
+}
+
+.think-os--settings .think-fields-editor__header-center {
+  text-align: center;
+}
+
+.think-os--settings .think-fields-editor__divider {
+  margin-block: var(--think-space-3);
+}
+
+.think-os--settings .think-fields-editor__row-wrap {
+  border-radius: var(--think-radius-sm);
+}
+
+.think-os--settings .think-fields-editor__row-wrap.is-dragging {
+  opacity: 0.55;
+}
+
+.think-os--settings .think-field-row {
+  padding: var(--think-space-3) var(--think-space-2);
+  border-radius: var(--think-radius-sm);
+}
+
+.think-os--settings .think-field-row.is-dragging {
+  background: var(--think-bg-hover);
+}
+
+.think-os--settings .think-field-row__cell {
+  min-width: 0;
+}
+
+.think-os--settings .think-field-row__drag {
+  width: 28px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--think-text-secondary);
+  cursor: grab;
+}
+
+.think-os--settings .think-field-row__drag.is-disabled {
+  cursor: default;
+}
+
+.think-os--settings .think-field-row__drag-icon {
+  font-size: 1.25rem;
+}
+
+.think-os--settings .think-field-row__empty {
+  min-height: 40px;
+}
+
+.think-os--settings .think-field-row__required {
+  min-width: 0;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.think-os--settings .think-field-row__required-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+
+.think-os--settings .think-field-row__details-cell,
+.think-os--settings .think-field-row__delete-cell {
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.think-os--settings .think-field-row__details-button {
+  width: 100%;
+  min-width: 0;
+  padding: var(--think-space-2) var(--think-space-1);
+  border: 0;
+  border-radius: var(--think-radius-xs);
+  background: transparent;
+  color: var(--think-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--think-font-size-xs);
+  white-space: nowrap;
+}
+
+.think-os--settings .think-field-row__details-button:hover:not(:disabled) {
+  background: var(--think-bg-hover);
+  color: var(--think-text-primary);
+}
+
+.think-os--settings .think-field-row__details-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.think-os--settings .think-field-row__delete {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  color: var(--think-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.think-os--settings .think-field-row__delete:hover:not(:disabled) {
+  background: var(--think-danger-bg);
+  color: var(--think-danger);
+}
+
+.think-os--settings .think-field-row__delete:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.think-os--settings .think-field-row__warning {
+  display: block;
+  margin-top: var(--think-space-2);
+  margin-left: 36px;
+  color: var(--think-warning);
+}
+
+.think-os--settings .think-field-row__details {
+  margin-top: var(--think-space-5);
+  margin-left: 36px;
+  padding: var(--think-space-5);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-canvas);
+}
+
+.think-os--settings .think-field-row__number-range {
+  display: flex;
+  gap: var(--think-space-4);
+}
+
+.think-os--settings .think-field-row__number-range.has-options {
+  margin-bottom: var(--think-space-5);
+}
+
+.think-os--settings .think-field-row__option-divider {
+  border-style: dashed;
+}
+
+.think-os--settings .think-field-row__add-option {
+  margin-top: var(--think-space-5);
+}
+
+.think-os--settings .think-option-row__delete {
+  padding-top: 20px;
+}
+
+@container think-settings (max-width: 780px) {
+  .think-os--settings .think-fields-editor__header {
+    display: none;
+  }
+
+  .think-os--settings .think-fields-editor__grid {
+    grid-template-columns: 28px minmax(0, 1fr) minmax(112px, 145px) 54px 46px 30px;
+  }
+
+  .think-os--settings .think-field-row__grid-default {
+    grid-column: 2 / -1;
+  }
+}

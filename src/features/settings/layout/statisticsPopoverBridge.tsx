@@ -1,9 +1,9 @@
 // src/features/settings/layout/statisticsPopoverBridge.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { IconButton, Tooltip } from '@shared/public';
-import type { CloseStatisticsPopoverHandler, OpenStatisticsPopoverHandler } from '@shared/public';
-import { AddCircleOutlineIcon, IosShareIcon, PopoverContent } from '@shared/public';
+import { IconButton, Tooltip } from '@shared/ui/public';
+import type { CloseStatisticsPopoverHandler, OpenStatisticsPopoverHandler } from '@shared/types/public';
+import { AddCircleOutlineIcon, IosShareIcon, PopoverContent } from '@shared/ui/public';
 import { FloatingPanel, openFloatingWidget, closeFloatingWidget } from '@/app/public';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题。

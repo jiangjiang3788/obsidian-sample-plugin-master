@@ -14,10 +14,16 @@
  * - 直接渲染 UI
  * - 直接绕过 UseCase 触发 InputService / ItemService 写入
  */
-import { DataStore } from '@core/public';
-import type { RecordSubmitResult } from '@core/public';
-import { nowHHMM, applyTaskTimePolicy, normalizeTaskTimeTriple, devError, readRecordSubmitMessage } from '@core/public';
-import type { UiPort } from '@core/public';
+import { DataStore } from '@core/services/public';
+import type { RecordSubmitResult } from '@core/recordInput/public';
+import {
+  nowHHMM,
+  applyTaskTimePolicy,
+  normalizeTaskTimeTriple,
+  devError,
+  readRecordSubmitMessage,
+} from '@core/utils/public';
+import type { UiPort } from '@core/ports/public';
 import type { UseCases } from '@/app/public';
 
 function readResultMessage(

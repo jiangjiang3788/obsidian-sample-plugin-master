@@ -61,11 +61,21 @@ export interface GoalOverviewModel {
   orphanRecordCount: number;
 }
 
+type LooseRecord = Record<string, unknown>;
+type LooseGoalDefinition = GoalDefinition & { icon?: unknown };
 
-function readLooseField(item: Item, field: string): any {
-  const direct = (item as any)[field];
-  if (direct !== undefined && direct !== null && String(direct).trim?.() !== '') return direct;
-  const extra = (item as any).extra || {};
+function isMeaningfulLooseValue(value: unknown): boolean {
+  if (value === undefined || value === null) return false;
+  const text = String(value).trim?.() ?? String(value);
+  return text !== '';
+}
+
+function readLooseField(item: Item, field: string): unknown {
+  const record = item as Item & LooseRecord;
+  const direct = record[field];
+  if (isMeaningfulLooseValue(direct)) return direct;
+
+  const extra = item.extra || {};
   if (extra[field] !== undefined) return extra[field];
   const aliases: Record<string, string[]> = {
     goalPath: ['目标', '目标路径'],
@@ -76,7 +86,7 @@ function readLooseField(item: Item, field: string): any {
   };
   for (const alias of aliases[field] || []) {
     if (extra[alias] !== undefined) return extra[alias];
-    if ((item as any)[alias] !== undefined) return (item as any)[alias];
+    if (record[alias] !== undefined) return record[alias];
   }
   return undefined;
 }
@@ -117,15 +127,17 @@ function readGoalPaths(item: Item): string[] {
       value.forEach(push);
       return;
     }
-    const raw = typeof value === 'object' ? (value as any).value ?? (value as any).label : value;
+    const raw = typeof value === 'object' && value !== null
+      ? (value as LooseRecord).value ?? (value as LooseRecord).label
+      : value;
     String(raw ?? '')
       .split(/[,，\n]/)
       .map((part) => splitGoalPath(part).goalPath)
       .filter(Boolean)
       .forEach((part) => values.push(part as string));
   };
-  push((item as any).goalPath);
-  push((item as any).goalPaths);
+  push(item.goalPath);
+  push(item.goalPaths);
   push(readLooseField(item, 'goalPath'));
   push(readLooseField(item, 'goalPaths'));
   push(readLooseField(item, '目标'));
@@ -133,13 +145,13 @@ function readGoalPaths(item: Item): string[] {
 }
 
 function readThemePath(item: Item): string | null {
-  return String((item as any).themePath ?? readLooseField(item, 'themePath') ?? readLooseField(item, '主题') ?? '').trim() || null;
+  return String(item.themePath ?? readLooseField(item, 'themePath') ?? readLooseField(item, '主题') ?? '').trim() || null;
 }
 
 function readCoreBlock(item: Item): string {
-  const raw = String((item as any).coreBlock ?? readLooseField(item, 'coreBlock') ?? readLooseField(item, '核心Block') ?? '').trim();
+  const raw = String(item.coreBlock ?? readLooseField(item, 'coreBlock') ?? readLooseField(item, '核心Block') ?? '').trim();
   if (raw) return raw;
-  const category = String((item as any).categoryKey ?? '').trim();
+  const category = String(item.categoryKey ?? '').trim();
   if (/任务/.test(category) || item.type === 'task') return 'task';
   if (/计划/.test(category)) return 'plan';
   if (/总结|复盘/.test(category)) return 'review';
@@ -152,7 +164,7 @@ function readCoreBlock(item: Item): string {
 }
 
 function isDoneTask(item: Item): boolean {
-  const raw = String((item as any).rawSource ?? (item as any).fullData ?? item.content ?? item.title ?? '').trim();
+  const raw = String(item.rawSource ?? item.fullData ?? item.content ?? item.title ?? '').trim();
   return /^-\s*\[[xX]\]/.test(raw) || /完成/.test(String(readLooseField(item, '状态') ?? ''));
 }
 
@@ -254,7 +266,7 @@ export function buildGoalOverviewModel(input: {
       title: goal?.title || titleFromPath(normalizedPath),
       goalPath: normalizedPath,
       themePath: goal?.themePath ?? (item ? readThemePath(item) : null),
-      icon: String((goal as any)?.icon ?? (item ? readLooseField(item, '图标') ?? readLooseField(item, 'icon') ?? '' : '')).trim() || null,
+      icon: String((goal as LooseGoalDefinition | undefined)?.icon ?? (item ? readLooseField(item, '图标') ?? readLooseField(item, 'icon') ?? '' : '')).trim() || null,
       status: goal?.status,
       totalCount: 0,
       taskCount: 0,
@@ -289,7 +301,7 @@ export function buildGoalOverviewModel(input: {
       orphanRecordCount += 1;
       continue;
     }
-    const date = normalizeDate((item as any).date ?? readLooseField(item, '日期') ?? readLooseField(item, 'date'));
+    const date = normalizeDate(item.date ?? readLooseField(item, '日期') ?? readLooseField(item, 'date'));
     const coreBlock = readCoreBlock(item).replace(/^core\./, '');
     for (const path of paths) {
       const row = ensureRow(path, item);
@@ -322,7 +334,7 @@ export function buildGoalOverviewModel(input: {
       completionRatio: row.taskCount > 0 ? row.doneTaskCount / row.taskCount : 0,
       recentItems: row.recentItems
         .slice()
-        .sort((a, b) => String((b as any).date ?? '').localeCompare(String((a as any).date ?? ''), 'zh-CN'))
+        .sort((a, b) => String(b.date ?? '').localeCompare(String(a.date ?? ''), 'zh-CN'))
         .slice(0, 8),
     };
     nextRow.metricProgress = (goal?.metrics || []).map((metric) => metricProgress(metric, nextRow));

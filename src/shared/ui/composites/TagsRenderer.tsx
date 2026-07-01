@@ -1,7 +1,7 @@
 // src/shared/components/TagsRenderer.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { ThemeDefinition } from '@core/public';
+import type { ThemeDefinition } from '@core/types/public';
 // 术语对齐：tags 只负责“标签”，theme 独立由字段 theme 展示。
 
 interface TagsRendererProps {

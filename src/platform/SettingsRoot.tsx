@@ -1,8 +1,10 @@
 /** @jsxImportSource preact */
 
 import type { App } from 'obsidian';
-import { Tab, Tabs, getThinkDeviceProfileAttributes, useLocalStorage } from '@shared/public';
-import { LOCAL_STORAGE_KEYS } from '@core/public';
+import { Tab, Tabs } from '@shared/ui/public';
+import { getThinkDeviceProfileAttributes } from '@shared/utils/public';
+import { useLocalStorage } from '@shared/hooks/public';
+import { LOCAL_STORAGE_KEYS } from '@core/types/public';
 
 import { LayoutSettings } from '@features/settings/tabs/LayoutSettings';
 import { GeneralSettings } from '@features/settings/tabs/GeneralSettings';

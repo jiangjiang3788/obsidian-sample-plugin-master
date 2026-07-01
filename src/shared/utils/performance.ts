@@ -7,7 +7,7 @@
  * Deliberately avoids Performance API marks/measures and background timers;
  * Obsidian plugin bootstrap only needs lightweight in-memory timings.
  */
-import { devError, devWarn } from '@core/public';
+import { devError, devWarn } from '@core/utils/public';
 
 export interface PerformanceMetric {
     name: string;

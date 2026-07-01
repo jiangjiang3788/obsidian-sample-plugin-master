@@ -1,4 +1,4 @@
-import { devError } from '@core/public';
+import { devError } from '@core/utils/public';
 
 export type DisposeFn = () => void;
 

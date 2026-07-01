@@ -1,5 +1,5 @@
-import { buildRecordOutputPlan, buildRecordPersistencePlan } from '@core/public';
-import type { RecordSubmitIssue, SubmitUpdateRecordParams } from '@core/public';
+import { buildRecordOutputPlan, buildRecordPersistencePlan } from '@core/recordInput/public';
+import type { RecordSubmitIssue, SubmitUpdateRecordParams } from '@core/recordInput/public';
 import { issue } from './issues';
 
 function normalizePlanText(value: unknown): string {

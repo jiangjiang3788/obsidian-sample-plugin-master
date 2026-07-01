@@ -5,14 +5,14 @@ import {
   isRecordInputRefreshableSource,
   isRecordInputSameValue,
   preserveRecordInputBlockSwitchState,
-} from '@core/public';
+} from '@core/recordInput/public';
 
 import type {
   QuickInputFieldSource,
   QuickInputFieldSourceMap,
   QuickInputFormData,
   QuickInputOptionLike,
-} from './QuickInputEditorModel';
+} from './model/types';
 
 export const isMeaningfulValue = isRecordInputMeaningfulValue;
 

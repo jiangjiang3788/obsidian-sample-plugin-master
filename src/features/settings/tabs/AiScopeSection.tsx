@@ -15,8 +15,8 @@ import {
   Select,
   Stack,
   Typography,
-} from '@shared/public';
-import { ExpandMoreIcon } from '@shared/public';
+} from '@shared/ui/public';
+import { ExpandMoreIcon } from '@shared/ui/public';
 import type { AiScopeSectionProps } from './aiSettingsUiTypes';
 
 export function AiScopeSection({

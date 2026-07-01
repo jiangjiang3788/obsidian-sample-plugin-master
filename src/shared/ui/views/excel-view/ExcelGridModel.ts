@@ -1,7 +1,7 @@
 import { buildExcelCellModel } from './value';
 import { canInlineEditExcelCell, getExcelCellKey } from './types';
 import type { ExcelCellBatchEdit, ExcelCellModel, ExcelColumnModel, ExcelNavigationDirection } from './types';
-import type { Item } from '@core/public';
+import type { Item } from '@core/types/public';
 
 export interface ExcelGridPosition {
   rowIndex: number;

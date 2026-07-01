@@ -1,5 +1,6 @@
-import type { RecordSubmitResult, UiPort } from '@core/public';
-import { isRecordSubmitSuccess, readRecordSubmitMessage } from '@core/public';
+import type { RecordSubmitResult } from '@core/recordInput/public';
+import type { UiPort } from '@core/ports/public';
+import { isRecordSubmitSuccess, readRecordSubmitMessage } from '@core/utils/public';
 
 export interface RunUiRecordActionOptions {
   uiPort: UiPort;

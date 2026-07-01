@@ -1,8 +1,10 @@
-import type { GoalDefinition, ThinkSettings } from "@core/public";
-import { asUnknownRecord, getGoalTemplates, readNumber, splitGoalPath } from "@core/public";
+import type { GoalDefinition } from '@core/goal/public';
+import type { ThinkSettings } from '@core/types/public';
+import { asUnknownRecord, readNumber } from '@core/utils/public';
+import { getGoalTemplates, splitGoalPath } from '@core/goal/public';
 
 import type { GoalSelectorOption } from "./components/GoalSelector";
-import type { QuickInputFieldSource, QuickInputFieldSourceMap, QuickInputFormData } from "./QuickInputEditorModel";
+import type { QuickInputFieldSource, QuickInputFieldSourceMap, QuickInputFormData } from "./model/types";
 import { isMeaningfulValue } from "./quickInputFieldSourceModel";
 import { cleanDisplayPath, cleanDisplaySegment, getGoalPath, makeGoalIdFromPath } from "./quickInputPathModel";
 

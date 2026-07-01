@@ -8,10 +8,13 @@ import {
   Chip,
   TextField,
   Typography,
-} from '@shared/public';
-import { RestartAltIcon } from '@shared/public';
-import type { DataStore, FilterRule, Item } from '@core/public';
-import { getAllFields, getFieldLabel, normalizeViewFilters, normalizeViewFieldKey, readField } from '@core/public';
+} from '@shared/ui/public';
+import { RestartAltIcon } from '@shared/ui/public';
+import type { DataStore } from '@core/services/public';
+import type { FilterRule, Item } from '@core/types/public';
+import { getAllFields, readField } from '@core/types/public';
+import { getFieldLabel } from '@core/fields/public';
+import { normalizeViewFilters, normalizeViewFieldKey } from '@core/view/public';
 
 interface QuickFilterField {
   field: string;

@@ -1,11 +1,12 @@
-import type { Item, TemplateField, UiPort } from '@core/public';
+import type { Item, TemplateField } from '@core/types/public';
+import type { UiPort } from '@core/ports/public';
 import {
   getFieldEditPolicy,
   getTemplateFieldInputType,
   getTemplateFieldSemantic,
   normalizeEditableFieldKey,
   normalizeTemplateFieldValue,
-} from '@core/public';
+} from '@core/fields/public';
 import type { UseCases } from '@/app/public';
 import { runUiRecordAction } from './runUiRecordAction';
 

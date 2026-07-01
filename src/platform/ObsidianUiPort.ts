@@ -6,8 +6,8 @@
 
 import { singleton } from 'tsyringe';
 import { Notice } from 'obsidian';
-import { diagnosticTrace, isDevConsoleStackEnabled } from '@shared/public';
-import type { UiNoticeHandle, UiPort } from '@core/ports/UiPort';
+import { diagnosticTrace, isDevConsoleStackEnabled } from '@shared/utils/public';
+import type { UiNoticeHandle, UiPort } from '@core/ports/public';
 
 @singleton()
 export class ObsidianUiPort implements UiPort {

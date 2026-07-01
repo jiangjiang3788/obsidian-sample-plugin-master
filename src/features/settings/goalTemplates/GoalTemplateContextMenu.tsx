@@ -3,8 +3,9 @@ import { h } from 'preact';
 import type { JSX } from 'preact';
 import { createPortal } from 'preact/compat';
 import { useEffect } from 'preact/hooks';
-import type { CoreBlockDefinition, GoalDefinition, GoalTemplate } from '@core/public';
-import { getGoalTemplateDisplayInfo } from '@core/public';
+import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
+import { getGoalTemplateDisplayInfo } from '@core/goal/public';
 import { findExistingTemplateForTheme, readGoalTemplateThemePath } from './goalTemplateCopy';
 
 interface GoalTemplateContextMenuState {

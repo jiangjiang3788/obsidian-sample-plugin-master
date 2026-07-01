@@ -16,13 +16,13 @@ import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
 import { useStore } from 'zustand';
 import type { ComponentChildren } from 'preact';
-import type { DataStore } from '@core/public';
-import type { InputService } from '@core/public';
-import type { MessageRenderPort } from '@core/public';
+import type { DataStore } from '@core/services/public';
+import type { InputService } from '@core/services/public';
+import type { MessageRenderPort } from '@core/ports/public';
 import type { UseCases } from './usecases';
 import type { AppStoreInstance, ZustandAppStore } from './store/useAppStore';
 import { validateServices, type Services } from './services.types';
-import { devLog, devError } from '@core/public';
+import { devLog, devError } from '@core/utils/public';
 
 // 兼容性：允许外部仍从 AppStoreContext 引入 Services 类型
 export type { Services } from './services.types';

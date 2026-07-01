@@ -3,7 +3,16 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { App, Modal } from 'obsidian';
-import { Button, TextField, Box, Typography, Stack, CircularProgress, ModalHeader, SmartToyIcon } from '@shared/public';
+import {
+  Button,
+  TextField,
+  Box,
+  Typography,
+  Stack,
+  CircularProgress,
+  ModalHeader,
+  SmartToyIcon,
+} from '@shared/ui/public';
 import { installBackdropCloseGuard } from './modalBackdropGuard';
 import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 

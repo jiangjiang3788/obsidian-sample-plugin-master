@@ -1,5 +1,5 @@
 import { useCallback } from 'preact/hooks';
-import { logInputEvent } from '@shared/public';
+import { logInputEvent } from '@shared/debug/public';
 
 type NativeControlElement = HTMLInputElement | HTMLTextAreaElement;
 

@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box } from '@shared/public';
-import type { CycleGranularity } from '@core/public';
+import { Box } from '@shared/ui/public';
+import type { CycleGranularity } from '@core/goal/public';
 
 export type GoalGranularity = Exclude<CycleGranularity, 'day' | 'custom'>;
 

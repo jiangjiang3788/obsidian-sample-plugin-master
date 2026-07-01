@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { Box, Button, Typography } from '@shared/public';
+import { Box, Button, Typography } from '@shared/ui/public';
 import { FloatingPanel, closeFloatingWidget, openFloatingWidget, useUiPort, useUseCases } from '@/app/public';
 import { GoalTemplateMatrix } from './GoalTemplateMatrix';
 

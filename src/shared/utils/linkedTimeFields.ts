@@ -13,7 +13,7 @@
  * - 保持现有交互语义：尊重 lastChanged，避免反向覆盖用户刚输入的字段
  */
 
-import { applyTaskTimePolicy, type TaskTimeDirection } from '@core/public';
+import { applyTaskTimePolicy, type TaskTimeDirection } from '@core/utils/public';
 
 export interface LinkedTimeKeys {
   startKey: string;

@@ -1,21 +1,19 @@
 import { container as defaultContainer, type DependencyContainer } from 'tsyringe';
+import { devError } from '@core/utils/public';
+import { UI_PORT_TOKEN, MODAL_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/ports/public';
 import {
-  devError,
-  UI_PORT_TOKEN,
-  MODAL_PORT_TOKEN,
-  MESSAGE_RENDER_PORT_TOKEN,
   SettingsRepository,
   TimerStateService,
   SETTINGS_TOKEN,
-  type ThinkSettings,
   ActionService,
   ItemService,
-  ChatSessionStore,
-} from '@core/public';
+} from '@core/services/public';
+import type { ThinkSettings } from '@core/types/public';
+import { ChatSessionStore } from '@core/ai/public';
 import { validateServices, type Services } from '@/app/services.types';
 import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
-import { DataStore, InputService } from '@core/public';
+import { DataStore, InputService } from '@core/services/public';
 
 export type BootstrapResolved = {
   settingsRepository: SettingsRepository;

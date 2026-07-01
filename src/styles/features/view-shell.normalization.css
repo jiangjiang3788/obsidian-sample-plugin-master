@@ -1,0 +1,128 @@
+/* View shell V4 token normalization. */
+/* CSS V4 view-shell normalization. */
+.think-os--layout {
+    min-width: 0;
+    color: var(--think-text-primary);
+}
+
+.think-module {
+    margin-bottom: var(--think-space-6);
+    border-radius: var(--think-radius-md);
+    background: var(--think-panel-bg);
+    container-type: inline-size;
+}
+
+.module-header {
+    min-height: var(--think-control-height-md);
+    padding: var(--think-space-3) var(--think-space-5);
+    position: relative;
+    border-bottom: 1px solid var(--think-panel-header-border);
+    background: var(--think-panel-header-bg);
+    color: var(--think-panel-title);
+    box-shadow: inset 0 -1px 0 var(--think-panel-header-border);
+}
+
+.module-header:hover {
+    background: var(--think-panel-header-hover-bg);
+}
+
+.module-header.is-layout-selected {
+    background: var(--think-panel-header-hover-bg);
+}
+
+.module-title {
+    overflow: hidden;
+    font-size: var(--think-font-size-sm);
+    font-weight: var(--think-font-weight-bold);
+    color: var(--think-panel-title);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.module-header-controls,
+.module-header-actions,
+.module-layout-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--think-space-2);
+}
+
+.module-header-actions .think-icon-button {
+    color: inherit;
+}
+
+.module-header .think-icon-button:hover:not(:disabled, [aria-disabled="true"]),
+.module-header .think-icon-button:focus-visible {
+    border-color: var(--think-panel-header-border);
+    background: transparent;
+    color: inherit;
+}
+
+@supports (color: color-mix(in srgb, white 50%, black)) {
+    .module-header .think-icon-button:hover:not(:disabled, [aria-disabled="true"]),
+    .module-header .think-icon-button:focus-visible {
+        border-color: color-mix(in srgb, var(--think-text-on-accent) 34%, transparent);
+        background: color-mix(in srgb, var(--think-text-on-accent) 18%, transparent);
+    }
+}
+
+.module-header-icon {
+    font-size: var(--think-icon-size-md);
+}
+
+.module-action-plus {
+    display: inline-grid;
+    place-items: center;
+    width: var(--think-control-height-sm);
+    height: var(--think-control-height-sm);
+    padding: 0;
+    border: 0;
+    border-radius: var(--think-radius-sm);
+    background: transparent;
+    color: inherit;
+    font-size: var(--think-font-size-xl);
+}
+
+.module-content {
+    min-width: 0;
+    padding: var(--think-space-5);
+    background: var(--think-panel-bg);
+    container-type: inline-size;
+}
+
+.tp-toolbar {
+    gap: var(--think-space-2);
+    margin-bottom: var(--think-space-4);
+}
+
+.tp-toolbar button,
+.think-freeform-toolbar button,
+.think-freeform-add-controls select {
+    min-height: var(--think-control-height-sm);
+    border-radius: var(--think-radius-sm);
+    font-size: var(--think-font-size-sm);
+}
+
+.think-freeform-toolbar {
+    gap: var(--think-space-4);
+    margin: var(--think-space-2) 0 var(--think-space-5);
+    padding: var(--think-space-4);
+    border-radius: var(--think-radius-md);
+}
+
+.think-freeform-canvas,
+.think-freeform-item .think-module {
+    border-radius: var(--think-radius-md);
+}
+
+.think-freeform-item.is-dragging,
+.think-freeform-item.is-resizing {
+    z-index: var(--think-z-drag);
+    box-shadow: var(--think-shadow-overlay);
+}
+
+@container (max-width: 560px) {
+    .module-header { align-items: flex-start; }
+    .module-header-controls { flex-wrap: wrap; justify-content: flex-end; }
+    .module-layout-actions { order: 2; flex-basis: 100%; justify-content: flex-end; }
+}

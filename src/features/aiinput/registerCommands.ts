@@ -12,8 +12,8 @@
 
 import type ThinkPlugin from '@/main';
 import { createServices } from '@/app/public';
-import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@core/public';
-import { createTakeLatest } from '@shared/public';
+import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@core/ai/public';
+import { createTakeLatest } from '@shared/utils/public';
 
 import { createNaturalInputCommandRunner } from './aiNaturalInputCommand';
 import { createAiSpeedTestCommand } from './aiSpeedTestCommand';

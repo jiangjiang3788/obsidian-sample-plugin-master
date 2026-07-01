@@ -1,4 +1,4 @@
-import type { Item } from '@core/public';
+import type { Item } from '@core/types/public';
 
 export type StatisticsCurrentView = '年' | '季' | '月' | '周' | '天';
 

@@ -3,7 +3,8 @@
  * 提供统一的保存逻辑和错误处理
  */
 
-import { devError, type UiPort } from '@core/public';
+import { devError } from '@core/utils/public';
+import type { UiPort } from '@core/ports/public';
 
 export interface SaveOptions {
   uiPort?: UiPort;

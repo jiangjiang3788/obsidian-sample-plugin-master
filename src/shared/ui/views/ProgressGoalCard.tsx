@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { JSX } from 'preact';
-import type { Item } from '@core/public';
+import type { Item } from '@core/types/public';
 import {
   buildProgressBlockCountRows,
   buildProgressSkillRows,

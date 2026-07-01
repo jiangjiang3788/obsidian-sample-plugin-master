@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Typography } from '@shared/public';
-import type { GoalTemplateEditMode } from '@core/public';
+import { Box, Typography } from '@shared/ui/public';
+import type { GoalTemplateEditMode } from '@core/goal/public';
 
 interface GoalTemplateModeSwitchProps {
   mode: GoalTemplateEditMode;

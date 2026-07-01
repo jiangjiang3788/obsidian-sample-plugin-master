@@ -1,10 +1,16 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, TextField, Typography, FormControlLabel, Checkbox } from '@shared/public';
+import {
+  Stack,
+  TextField,
+  Typography,
+  FormControlLabel,
+  Checkbox,
+} from '@shared/ui/public';
 import type { ViewEditorProps } from './registry';
-import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/public';
+import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 
-export { PROGRESS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
+export { PROGRESS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 /**
  * ProgressView 只做目标经验卡片。时间 / 目标 / Block / 主题筛选由统一控制栏和视图筛选完成。

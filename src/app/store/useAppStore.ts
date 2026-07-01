@@ -23,9 +23,10 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import type { ThinkSettings } from '@core/public';
-import type { SettingsRepository } from '@core/public';
-import { createSliceMeta, devError } from '@core/public';
+import type { ThinkSettings } from '@core/types/public';
+import type { SettingsRepository } from '@core/services/public';
+import { createSliceMeta } from '@core/types/public';
+import { devError } from '@core/utils/public';
 import { createThemeSlice, type ThemeSlice } from './slices/theme.slice';
 import { createLayoutSlice, type LayoutSlice } from './slices/layout.slice';
 import { createSettingsSlice, type SettingsSlice } from './slices/settings.slice';

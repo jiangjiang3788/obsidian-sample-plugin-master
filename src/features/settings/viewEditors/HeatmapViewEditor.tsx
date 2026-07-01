@@ -1,21 +1,23 @@
 // src/features/settings/ui/components/view-editors/HeatmapViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Button, Checkbox, FormControlLabel, ListEditor, SimpleSelect } from '@shared/public';
+import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  ListEditor,
+  SimpleSelect,
+} from '@shared/ui/public';
 import type { ViewEditorProps } from './registry';
 import { useSelector, selectInputBlocks, useUiPort } from '@/app/public';
 import { useMemo } from 'preact/hooks';
-import {
-    HEATMAP_VIEW_DEFAULT_CONFIG,
-    collectThemePathsForHeatmap,
-    type BlockTemplate,
-    type HeatmapViewConfig,
-    type ViewInstance,
-} from '@core/public';
+import { HEATMAP_VIEW_DEFAULT_CONFIG, type HeatmapViewConfig } from '@core/view/public';
+import { collectThemePathsForHeatmap } from '@core/utils/public';
+import type { BlockTemplate, ViewInstance } from '@core/types/public';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
 // 重新导出以保持兼容性
-export { HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
+export { HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 function normalizeHeatmapConfig(value: Record<string, any> | undefined): HeatmapViewConfig {
     const base = HEATMAP_VIEW_DEFAULT_CONFIG;

@@ -1,5 +1,7 @@
-import type { DataStore, FilterRule, SortRule } from '@core/public';
-import { getAllFields, getFieldLabel, readField } from '@core/public';
+import type { DataStore } from '@core/services/public';
+import type { FilterRule, SortRule } from '@core/types/public';
+import { getAllFields, readField } from '@core/types/public';
+import { getFieldLabel } from '@core/fields/public';
 
 export type RuleBuilderMode = 'filter' | 'sort';
 export type RuleBuilderVariant = 'compact' | 'panel';

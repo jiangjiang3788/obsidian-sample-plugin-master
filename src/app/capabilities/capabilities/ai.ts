@@ -1,7 +1,7 @@
 // src/app/capabilities/capabilities/ai.ts
-import type { ModalPort } from '@core/public';
+import type { ModalPort } from '@core/ports/public';
 import type { CapabilityDeps } from '../types';
-import { devWarn } from '@core/public';
+import { devWarn } from '@core/utils/public';
 
 export interface AiCapability {
     /**

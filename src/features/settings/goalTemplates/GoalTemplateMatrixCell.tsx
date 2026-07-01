@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { CoreBlockDefinition, GoalDefinition, GoalTemplate } from '@core/public';
+import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { GoalPresetCard } from './GoalPresetCard';
 import { readGoalTemplateIcon, readGoalTemplateThemePath } from './goalTemplateCopy';
 import {

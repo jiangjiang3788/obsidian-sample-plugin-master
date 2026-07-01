@@ -1,0 +1,126 @@
+/* Statistics editor and category controls. */
+.think-os--settings .think-statistics-editor {
+  display: grid;
+  gap: var(--think-space-6);
+  font-size: var(--think-font-size-md);
+}
+
+.think-os--settings .think-statistics-editor__section {
+  display: grid;
+  gap: var(--think-space-4);
+}
+
+.think-os--settings .think-statistics-editor__title {
+  color: var(--think-text-primary);
+  font-weight: var(--think-font-weight-semibold);
+}
+
+.think-os--settings .think-statistics-editor__description {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-relaxed);
+}
+
+.think-os--settings .think-statistics-editor__period-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-3);
+  margin-top: 18px;
+}
+
+@container think-settings (max-width: 700px) {
+  .think-os--settings .think-editor-grid--two,
+  .think-os--settings .think-editor-grid--metadata,
+  .think-os--settings .think-editor-grid--list-toolbar,
+  .think-os--settings .think-goal-template-editor__primary-grid,
+  .think-os--settings .think-goal-template-editor__secondary-grid,
+  .think-os--settings .think-rule-builder__row {
+    grid-template-columns: 1fr;
+  }
+
+  .think-os--settings .think-editor-field-control,
+  .think-os--settings .think-editor-field-control--narrow {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.think-os--settings .think-category-list {
+  display: grid;
+  gap: var(--think-space-4);
+}
+
+.think-os--settings .think-category-row {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-5);
+  min-width: 0;
+  padding: var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+}
+
+.think-os--settings .think-category-row__name {
+  min-width: 60px;
+}
+
+.think-os--settings .think-category-row__remove {
+  margin-left: auto;
+}
+
+.think-os--settings .think-category-color {
+  width: var(--think-control-height-md);
+  height: var(--think-control-height-md);
+  flex: 0 0 var(--think-control-height-md);
+  padding: 0;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  cursor: pointer;
+}
+
+.think-os--settings .think-category-color::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.think-os--settings .think-category-color::-webkit-color-swatch {
+  border: 0;
+  border-radius: var(--think-radius-xs);
+}
+
+.think-os--settings .think-category-add {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 1fr) auto;
+  align-items: center;
+  gap: var(--think-space-5);
+}
+
+.think-os--settings .think-settings-nav {
+  display: flex;
+  gap: var(--think-space-3);
+  flex-wrap: wrap;
+}
+
+.think-os--settings .think-settings-nav .MuiButton-root {
+  border-radius: var(--think-radius-pill);
+}
+
+.think-os--settings .think-settings-description-indent {
+  margin-top: calc(-1 * var(--think-space-5));
+  padding-left: var(--think-space-8);
+}
+
+@container think-settings (max-width: 520px) {
+  .think-os--settings .think-category-row {
+    flex-wrap: wrap;
+  }
+
+  .think-os--settings .think-category-add {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .think-os--settings .think-category-add > :last-child {
+    grid-column: 1 / -1;
+  }
+}

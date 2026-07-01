@@ -1,0 +1,124 @@
+/* Statistics chart blocks, bars and labels. */
+/* 图表块样式 */
+.sv-chart-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-radius: 6px;
+    background: var(--think-bg-canvas);
+    cursor: pointer;
+    transition: all var(--think-duration-normal) var(--think-ease-standard);
+    padding: 8px;
+    height: 180px;
+    min-width: 0;
+}
+
+.sv-chart-block.is-compact {
+    height: 110px;
+    padding: 6px;
+    gap: 3px;
+}
+
+.sv-chart-block:hover {
+    border-color: var(--think-accent);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-s);
+}
+
+.sv-chart-block.is-empty .sv-chart-label {
+    color: var(--think-text-subtle);
+}
+
+/* 图表标题 */
+.sv-chart-label {
+    /* font-size: 13px; -> 使用工具类: think-text-chart-title */
+    font-weight: 600;
+    color: var(--think-text-primary);
+    text-align: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 图表内容容器 */
+.sv-chart-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+/* 数字标签行 */
+.sv-chart-numbers {
+    display: flex;
+    gap: 2px;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 14px;
+}
+
+.sv-chart-number {
+    flex: 1;
+    text-align: center;
+    /* font-size: 12px; -> 使用工具类: think-text-chart-value */
+    color: var(--think-text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+    min-height: 14px;
+    line-height: 14px;
+}
+
+/* 柱状图容器 */
+.sv-chart-bars-container {
+    display: flex;
+    gap: 3px;
+    flex-grow: 1;
+    align-items: flex-end;
+    min-height: 40px;
+}
+
+.sv-vbar-wrapper {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    cursor: pointer;
+}
+
+.sv-vbar-wrapper:hover {
+    opacity: 0.8;
+}
+
+.sv-vbar-bar {
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    background: var(--think-data-neutral);
+    min-height: 2px;
+    transition: all 0.3s ease;
+}
+
+/* 分类标签行 */
+.sv-chart-categories {
+    display: flex;
+    gap: 2px;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 14px;
+}
+
+.sv-chart-category {
+    flex: 1;
+    text-align: center;
+    /* font-size: 11px; -> 使用工具类: think-text-chart-value */
+    color: var(--think-text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 14px;
+    line-height: 14px;
+}

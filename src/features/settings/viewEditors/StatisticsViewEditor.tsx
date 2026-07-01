@@ -1,9 +1,9 @@
 // src/features/settings/ui/components/view-editors/StatisticsViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Checkbox, FormControlLabel, SimpleSelect, TextField } from '@shared/public';
+import { Checkbox, FormControlLabel, SimpleSelect, TextField } from '@shared/ui/public';
 import type { ViewEditorProps } from './registry';
-import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
+import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
 export { DEFAULT_CONFIG };

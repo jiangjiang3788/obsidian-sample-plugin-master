@@ -13,7 +13,7 @@ import {
   ListItemText,
   RadioButtonUncheckedIcon,
   Typography,
-} from '@shared/public';
+} from '@shared/ui/public';
 
 import type { AiBatchConfirmRecordItem } from './AiBatchConfirmModel';
 import { shortDisplay } from './AiBatchConfirmModel';

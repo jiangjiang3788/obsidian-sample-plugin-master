@@ -8,8 +8,9 @@ import {
   TableHead,
   TableRow,
   Typography,
-} from '@shared/public';
-import type { CoreBlockDefinition, GoalDefinition, GoalTemplate } from '@core/public';
+} from '@shared/ui/public';
+import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { GoalTemplateMatrixGroupRows } from './GoalTemplateMatrixRow';
 import { splitGoalsByRoot } from './goalTemplateMatrixModel';
 import type { GoalDropState, PresetDragState, PresetDropCellState } from './goalTemplateMatrixModel';

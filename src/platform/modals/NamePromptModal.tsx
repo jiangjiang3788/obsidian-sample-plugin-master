@@ -4,8 +4,8 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import type { App } from 'obsidian';
 import { Modal } from 'obsidian';
-import { TextField, Button } from '@shared/public';
-import type { NamePromptOptions } from '@core/public';
+import { TextField, Button } from '@shared/ui/public';
+import type { NamePromptOptions } from '@core/ports/public';
 import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 
 function PromptComponent({

@@ -1,6 +1,6 @@
 // src/app/usecases/timer.usecase.ts
-import { generateId } from '@core/public';
-import { TimerStateService } from '@core/public';
+import { generateId } from '@core/utils/public';
+import { TimerStateService } from '@core/services/public';
 import type { TimerState } from '@/app/store/types';
 import type { AppStoreApi } from './index';
 

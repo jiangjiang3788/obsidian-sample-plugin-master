@@ -1,22 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 
 import type { QuickInputEditorState, UseCases } from '@/app/public';
+import { buildRecordSubmitFeedbackPresentation } from '@core/utils/public';
+import { buildRecordSubmitRecoveryPresentation, type RecordSubmitRecoveryPresentation } from '@core/utils/public';
+import type { Item, QuickInputSaveData } from '@core/types/public';
 import {
-  buildRecordSubmitFeedbackPresentation,
-  buildRecordSubmitRecoveryPresentation,
-  type Item,
   assertRecordInputRequiredFields,
   buildCreateRecordSubmitParamsFromEditorState,
   buildRecordCreateDraftFromEditorState,
   buildUpdateRecordSubmitParamsFromEditorState,
-  type QuickInputSaveData,
   type RecordInputSource,
   type RecordOutputPlan,
   type RecordPersistencePlan,
-  type RecordSubmitRecoveryPresentation,
   type RecordSubmitResult,
-} from '@core/public';
-import { CancelledError, createTakeLatest } from '@shared/public';
+} from '@core/recordInput/public';
+import { CancelledError, createTakeLatest } from '@shared/utils/public';
 
 import { showQuickInputNotice } from './quickInputNotice';
 import type { QuickInputPendingAction } from './QuickInputModalFooter';

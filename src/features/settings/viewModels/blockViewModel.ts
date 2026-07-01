@@ -10,8 +10,10 @@
  * 这是一个纯函数（无副作用），便于单测与复用。
  */
 
-import type { Item, GroupNode, GoalDefinition } from '@core/public';
-import { groupItemsByFields } from '@core/public';
+import type { Item } from '@core/types/public';
+import type { GroupNode } from '@core/utils/public';
+import type { GoalDefinition } from '@core/goal/public';
+import { groupItemsByFields } from '@core/utils/public';
 
 export interface BlockViewModel {
   /** 生效的分组字段（按层级顺序） */

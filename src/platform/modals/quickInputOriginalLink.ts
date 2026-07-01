@@ -1,7 +1,8 @@
 import { Notice } from 'obsidian';
 import { useCallback, useMemo, useRef } from 'preact/hooks';
 
-import { makeObsUri, type Item } from '@core/public';
+import { makeObsUri } from '@core/utils/public';
+import type { Item } from '@core/types/public';
 
 export interface QuickInputOriginalNavigation {
   originalUri: string;

@@ -15,7 +15,9 @@
 import type { ComponentChildren, JSX } from 'preact';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'preact/hooks';
 
-import { DragIndicatorIcon, Paper, detectThinkDeviceProfile, getThinkDeviceProfileAttributes, isThinkMobileLikeProfile, diagnosticLog, useLocalStorage } from '@shared/public';
+import { DragIndicatorIcon, Paper } from '@shared/ui/public';
+import { detectThinkDeviceProfile, getThinkDeviceProfileAttributes, isThinkMobileLikeProfile, diagnosticLog } from '@shared/utils/public';
+import { useLocalStorage } from '@shared/hooks/public';
 import { createPortal } from 'preact/compat';
 
 import {
@@ -26,27 +28,21 @@ import {
     selectFloatingWindowsUnregister,
     useSelector,
 } from '@/app/public';
+import {
+    buildFloatingPanelBodyStyle,
+    buildFloatingPanelPaperStyle,
+    getEventCoords,
+    getMobileDefaultFloatingPosition,
+    getNumericConstraint,
+    passiveListenerOptions,
+    type PanelSize,
+    type ResizeDirection,
+} from './floatingPanelGeometry';
 
-const getEventCoords = (e: MouseEvent | TouchEvent) => {
-    if (e instanceof MouseEvent) return { x: e.clientX, y: e.clientY };
-    if ((e as TouchEvent).touches && (e as TouchEvent).touches.length > 0) {
-        const t = (e as TouchEvent).touches[0];
-        return { x: t.clientX, y: t.clientY };
-    }
-    return null;
-};
-
-type PanelSize = { width?: number; height?: number };
-type ResizeDirection = 'right' | 'bottom' | 'corner';
-
-const passiveListenerOptions = { passive: true } as AddEventListenerOptions;
-
-const toCssSize = (value?: number | string) => (typeof value === 'number' ? `${value}px` : value);
-
-const getNumericConstraint = (value: number | string | undefined, fallback?: number) => {
-    if (typeof value === 'number') return value;
-    return fallback;
-};
+type FloatingDomHandler = (event: MouseEvent | TouchEvent) => void;
+const toDomListener = (handler: FloatingDomHandler): EventListener => handler as unknown as EventListener;
+const toMouseEvent = (event: unknown): MouseEvent => event as MouseEvent;
+const toTouchEvent = (event: unknown): TouchEvent => event as TouchEvent;
 
 export interface FloatingPanelProps {
     /** 唯一 id：用于 localStorage & zIndex 管理 */
@@ -146,10 +142,7 @@ export function FloatingPanel({
     const managedZIndex = useSelector(makeSelectFloatingWindowZIndex(id));
     const effectiveZIndex = managedZIndex ?? zIndex;
 
-    const mobileDefaultPosition = useMemo(() => ({
-        x: 8,
-        y: Math.max(8, window.innerHeight / 2 - 250),
-    }), []);
+    const mobileDefaultPosition = useMemo(() => getMobileDefaultFloatingPosition(), []);
 
     const positionStorageKey = `think-floating-pos-${id}`;
     const sizeStorageKey = `think-floating-size-${id}`;
@@ -263,8 +256,8 @@ export function FloatingPanel({
         };
 
         const bindTimer = window.setTimeout(() => {
-            document.addEventListener('mousedown', handler as any);
-            document.addEventListener('touchstart', handler as any, passiveListenerOptions);
+            document.addEventListener('mousedown', toDomListener(handler));
+            document.addEventListener('touchstart', toDomListener(handler), passiveListenerOptions);
         }, 0);
         const clearIgnoreTimer = window.setTimeout(() => {
             ignoreFirstClick.current = false;
@@ -273,8 +266,8 @@ export function FloatingPanel({
         return () => {
             clearTimeout(bindTimer);
             clearTimeout(clearIgnoreTimer);
-            document.removeEventListener('mousedown', handler as any);
-            document.removeEventListener('touchstart', handler as any);
+            document.removeEventListener('mousedown', toDomListener(handler));
+            document.removeEventListener('touchstart', toDomListener(handler));
         };
     }, [onClose, closeOnOutsideClick, visible]);
 
@@ -309,10 +302,10 @@ export function FloatingPanel({
     }, [clampPosition]);
 
     const onDragEnd = useCallback(() => {
-        window.removeEventListener('mousemove', onDragMove as any);
-        window.removeEventListener('mouseup', onDragEnd as any);
-        window.removeEventListener('touchmove', onDragMove as any);
-        window.removeEventListener('touchend', onDragEnd as any);
+        window.removeEventListener('mousemove', toDomListener(onDragMove));
+        window.removeEventListener('mouseup', toDomListener(onDragEnd));
+        window.removeEventListener('touchmove', toDomListener(onDragMove));
+        window.removeEventListener('touchend', toDomListener(onDragEnd));
     }, [onDragMove]);
 
     const onDragStart = useCallback((e: MouseEvent | TouchEvent) => {
@@ -321,10 +314,10 @@ export function FloatingPanel({
         if (!coords) return;
         focus(id);
         dragRef.current = { startX: coords.x, startY: coords.y, panelX: position.x, panelY: position.y };
-        window.addEventListener('mousemove', onDragMove as any);
-        window.addEventListener('mouseup', onDragEnd as any);
-        window.addEventListener('touchmove', onDragMove as any, passiveListenerOptions);
-        window.addEventListener('touchend', onDragEnd as any, passiveListenerOptions);
+        window.addEventListener('mousemove', toDomListener(onDragMove));
+        window.addEventListener('mouseup', toDomListener(onDragEnd));
+        window.addEventListener('touchmove', toDomListener(onDragMove), passiveListenerOptions);
+        window.addEventListener('touchend', toDomListener(onDragEnd), passiveListenerOptions);
     }, [inline, id, focus, position, onDragMove, onDragEnd]);
 
     const onResizeMove = useCallback((e: MouseEvent | TouchEvent) => {
@@ -349,10 +342,10 @@ export function FloatingPanel({
     }, [clampSize, clampPosition, size]);
 
     const onResizeEnd = useCallback(() => {
-        window.removeEventListener('mousemove', onResizeMove as any);
-        window.removeEventListener('mouseup', onResizeEnd as any);
-        window.removeEventListener('touchmove', onResizeMove as any);
-        window.removeEventListener('touchend', onResizeEnd as any);
+        window.removeEventListener('mousemove', toDomListener(onResizeMove));
+        window.removeEventListener('mouseup', toDomListener(onResizeEnd));
+        window.removeEventListener('touchmove', toDomListener(onResizeMove));
+        window.removeEventListener('touchend', toDomListener(onResizeEnd));
     }, [onResizeMove]);
 
     const onResizeStart = useCallback((direction: ResizeDirection) => (e: MouseEvent | TouchEvent) => {
@@ -368,10 +361,10 @@ export function FloatingPanel({
             startHeight: getEffectiveHeight(),
             direction,
         };
-        window.addEventListener('mousemove', onResizeMove as any);
-        window.addEventListener('mouseup', onResizeEnd as any);
-        window.addEventListener('touchmove', onResizeMove as any, passiveListenerOptions);
-        window.addEventListener('touchend', onResizeEnd as any, passiveListenerOptions);
+        window.addEventListener('mousemove', toDomListener(onResizeMove));
+        window.addEventListener('mouseup', toDomListener(onResizeEnd));
+        window.addEventListener('touchmove', toDomListener(onResizeMove), passiveListenerOptions);
+        window.addEventListener('touchend', toDomListener(onResizeEnd), passiveListenerOptions);
     }, [resizable, focus, id, onResizeMove, onResizeEnd, getEffectiveWidth, getEffectiveHeight]);
 
     const onPanelPointerDown = useCallback(() => {
@@ -382,56 +375,20 @@ export function FloatingPanel({
 
     diagnosticLog('[FloatingPanel][portal-mode]', { id, portal, placement, portalTarget: portal ? (portalContainer ? 'custom' : 'document.body') : 'inline' });
 
-    const paperStyle: JSX.CSSProperties = inline ? {
-        position: 'relative',
-        left: undefined,
-        top: undefined,
-        zIndex: undefined,
-        minWidth: 0,
-        maxWidth: '100%',
-        minHeight: toCssSize(minHeight),
-        maxHeight: toCssSize(maxHeight),
-        width: '100%',
-        height: toCssSize(height),
-        userSelect: 'text',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-        margin: '8px 0',
-    } : {
-        position: 'fixed',
-        left: mobile ? '8px' : `${position.x}px`,
-        top: `${position.y}px`,
-        zIndex: effectiveZIndex,
-        minWidth: mobile ? `${window.innerWidth - 16}px` : toCssSize(minWidth),
-        maxWidth: mobile ? '100vw' : toCssSize(maxWidth),
-        minHeight: toCssSize(minHeight),
-        maxHeight: mobile ? `calc(100vh - env(safe-area-inset-bottom, 16px))` : toCssSize(maxHeight),
-        width: mobile ? `${window.innerWidth - 16}px` : toCssSize(size.width ?? width),
-        height: toCssSize(size.height ?? height),
-        // 不要在整个悬浮窗上禁用文本选择，否则输入框/textarea 在 Obsidian + Preact/MUI 下可能出现能聚焦但无法正常编辑/选择的问题。
-        // 只在标题拖拽区禁用选择，正文区域允许文本输入和选择。
-        userSelect: 'text',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-        paddingBottom: mobile ? 'env(safe-area-inset-bottom, 8px)' : undefined,
-    };
-
-    const bodyMergedStyle: JSX.CSSProperties = {
-        padding: mobile ? 12 : bodyPadding,
-        flex: 1,
-        minHeight: 0,
-        minWidth: 0,
-        overflow: 'auto',
-        boxSizing: 'border-box',
-        WebkitOverflowScrolling: 'touch',
-        userSelect: 'text',
-        ...bodyStyle,
-    };
-
+    const paperStyle = buildFloatingPanelPaperStyle({
+        inline,
+        mobile,
+        position,
+        effectiveZIndex,
+        minWidth,
+        maxWidth,
+        minHeight,
+        maxHeight,
+        width,
+        height,
+        size,
+    });
+    const bodyMergedStyle = buildFloatingPanelBodyStyle(mobile, bodyPadding, bodyStyle);
 
     const panel = (
         <div ref={rootRef}>
@@ -439,15 +396,15 @@ export function FloatingPanel({
                 elevation={4}
                 className={`think-os think-os--modal think-floating-panel${inline ? ' is-inline' : ''}${mobile ? ' is-mobile' : ''}`}
                 {...deviceProfileAttrs}
-                onMouseDown={onPanelPointerDown as any}
-                onTouchStart={onPanelPointerDown as any}
+                onMouseDown={onPanelPointerDown}
+                onTouchStart={onPanelPointerDown}
                 style={paperStyle}
             >
                 {showHeader && (
                     <div className="think-floating-panel__header">
                         <div
-                            onMouseDown={onDragStart as any}
-                            onTouchStart={onDragStart as any}
+                            onMouseDown={(event) => onDragStart(toMouseEvent(event))}
+                            onTouchStart={(event) => onDragStart(toTouchEvent(event))}
                             className="think-floating-panel__drag-region"
                         >
                             {!inline && <div className="think-floating-panel__drag-icon">
@@ -483,26 +440,26 @@ export function FloatingPanel({
                 {resizable && !mobile && !inline && (
                     <>
                         <div
-                            onMouseDown={onResizeStart('right') as any}
-                            onTouchStart={onResizeStart('right') as any}
+                            onMouseDown={(event) => onResizeStart('right')(toMouseEvent(event))}
+                            onTouchStart={(event) => onResizeStart('right')(toTouchEvent(event))}
                             className="think-floating-panel__resize think-floating-panel__resize--right"
                         />
                         <div
-                            onMouseDown={onResizeStart('bottom') as any}
-                            onTouchStart={onResizeStart('bottom') as any}
+                            onMouseDown={(event) => onResizeStart('bottom')(toMouseEvent(event))}
+                            onTouchStart={(event) => onResizeStart('bottom')(toTouchEvent(event))}
                             className="think-floating-panel__resize think-floating-panel__resize--bottom"
                         />
                         <div
-                            onMouseDown={onResizeStart('corner') as any}
-                            onTouchStart={onResizeStart('corner') as any}
+                            onMouseDown={(event) => onResizeStart('corner')(toMouseEvent(event))}
+                            onTouchStart={(event) => onResizeStart('corner')(toTouchEvent(event))}
                             className="think-floating-panel__resize think-floating-panel__resize--corner"
                         />
                     </>
                 )}
                 {resizable && mobile && !inline && (
                     <div
-                        onMouseDown={onResizeStart('bottom') as any}
-                        onTouchStart={onResizeStart('bottom') as any}
+                        onMouseDown={(event) => onResizeStart('bottom')(toMouseEvent(event))}
+                        onTouchStart={(event) => onResizeStart('bottom')(toTouchEvent(event))}
                         className="think-floating-panel__resize think-floating-panel__resize--mobile"
                     >
                         <div className="think-floating-panel__resize-grip" />

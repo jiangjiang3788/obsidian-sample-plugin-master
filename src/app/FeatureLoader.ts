@@ -1,7 +1,8 @@
 import type ThinkPlugin from '@main';
-import { ActionService, DataStore, devTime, devTimeEnd, devWarn } from '@core/public';
+import { ActionService, DataStore } from '@core/services/public';
+import { devTime, devTimeEnd, devWarn } from '@core/utils/public';
 import { RendererService } from '@features/settings/layout/RendererService';
-import type { EventsPort } from '@core/public';
+import type { EventsPort } from '@core/ports/public';
 import { FeatureRegistry } from './FeatureRegistry';
 import { registerFeatureContributions } from './features/registerFeatureContributions';
 import type { UIFeatureBootContext } from './features/featureContext';

@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { dayjs } from '@core/public';
+import { dayjs } from '@core/utils/public';
 import {
     buildTimeNavigatorCellClass,
     buildTimeNavigatorMonthTarget,

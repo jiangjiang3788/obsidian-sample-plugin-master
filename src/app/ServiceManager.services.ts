@@ -1,4 +1,12 @@
-import type { DataStore, ActionService, TimerStateService, InputService, ItemService, SettingsRepository, ChatSessionStore } from '@core/public';
+import type {
+  DataStore,
+  ActionService,
+  TimerStateService,
+  InputService,
+  ItemService,
+  SettingsRepository,
+} from '@core/services/public';
+import type { ChatSessionStore } from '@core/ai/public';
 import type { RendererService } from '@features/settings/layout/RendererService';
 import type { TimerService } from '@features/timer/TimerService';
 import type { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
