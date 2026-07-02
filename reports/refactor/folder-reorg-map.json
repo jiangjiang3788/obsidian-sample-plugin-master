@@ -1,0 +1,202 @@
+{
+  "version": "V25-current-schema-release-lock",
+  "rootDataJsonPolicy": {
+    "secretGateBlocksRootDataJson": false,
+    "releasePackageIncludesRootDataJson": false,
+    "note": "Root data.json is local runtime state. It is ignored by secret-gate and still excluded from release packages."
+  },
+  "packageScripts": [
+    "folder:map",
+    "folder:verify"
+  ],
+  "platformRootDirectFileCount": 0,
+  "migrations": [
+    {
+      "phase": "V21",
+      "area": "QuickInput editor",
+      "source": "src/app/ui/components/QuickInputEditor",
+      "target": "src/features/quickinput/editor",
+      "reason": "QuickInput editor is feature-owned UI, not app-wide UI infrastructure.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 33
+    },
+    {
+      "phase": "V21",
+      "area": "QuickInput modal business UI",
+      "source": "src/platform/obsidian/modals/QuickInputModalContent.tsx",
+      "target": "src/features/quickinput/modal/QuickInputModalContent.tsx",
+      "reason": "QuickInput modal content moved to the feature; src/platform/obsidian/modals/QuickInputModal.tsx now remains as the Obsidian adapter.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 1
+    },
+    {
+      "phase": "V21",
+      "area": "QuickInput modal helpers",
+      "source": "src/platform/obsidian/modals/quickInputOperationMode.ts",
+      "target": "src/features/quickinput/modal/quickInputOperationMode.ts",
+      "reason": "Edit / convert / duplicate operation semantics belong with the quickinput feature.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 1
+    },
+    {
+      "phase": "V22",
+      "area": "Business runtime views",
+      "source": "src/shared/ui/views",
+      "target": "src/features/settings/views/runtime",
+      "reason": "Statistics, timeline, excel and heatmap are business views, not shared primitives.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 85
+    },
+    {
+      "phase": "V22",
+      "area": "Settings view editors",
+      "source": "src/features/settings/viewEditors",
+      "target": "src/features/settings/views/editors",
+      "reason": "View runtime, editor and model files should live under the same feature ownership.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 16
+    },
+    {
+      "phase": "V22",
+      "area": "Settings view models",
+      "source": "src/features/settings/viewModels",
+      "target": "src/features/settings/views/models",
+      "reason": "View model helpers are owned by the settings views feature.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 8
+    },
+    {
+      "phase": "V23",
+      "area": "RecordInput core services",
+      "source": "src/core/services/recordInput",
+      "target": "src/core/recordInput",
+      "reason": "Record input is a core domain, not a generic service bucket.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 24
+    },
+    {
+      "phase": "V23",
+      "area": "Core utils ownership",
+      "source": "src/core/utils",
+      "target": "src/core/<domain>",
+      "reason": "Domain helpers should move into semantics, fields, records, settings or theme.",
+      "sourceExists": true,
+      "targetExists": false,
+      "sourceFileCount": 37,
+      "targetFileCount": 0
+    },
+    {
+      "phase": "V23",
+      "area": "Task record helpers",
+      "source": "src/core/utils/taskTime.ts",
+      "target": "src/core/records/task/taskTime.ts",
+      "reason": "Task time rules belong with task record helpers.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 1
+    },
+    {
+      "phase": "V23",
+      "area": "Record submit feedback helpers",
+      "source": "src/core/utils/recordSubmitRecovery.ts",
+      "target": "src/core/recordInput/recovery.ts",
+      "reason": "Record submit feedback and recovery belong with the RecordInput domain.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 1
+    },
+    {
+      "phase": "V24",
+      "area": "Platform Obsidian adapters",
+      "source": "src/platform",
+      "target": "src/platform/obsidian",
+      "reason": "The platform layer is currently Obsidian-specific and should say so explicitly; root files under src/platform are now forbidden.",
+      "sourceExists": true,
+      "targetExists": true,
+      "sourceFileCount": 27,
+      "targetFileCount": 27
+    },
+    {
+      "phase": "V24",
+      "area": "Shared item renderers",
+      "source": "src/shared/ui/items",
+      "target": "src/features/settings/views/runtime/components/items",
+      "reason": "TaskRow, BlockItem and related item renderers are business view runtime components.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 4
+    },
+    {
+      "phase": "V24",
+      "area": "Shared heatmap renderer",
+      "source": "src/shared/ui/heatmap",
+      "target": "src/features/settings/views/runtime/components/heatmap",
+      "reason": "Heatmap cells are owned by settings runtime views, not shared primitives.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 1
+    },
+    {
+      "phase": "V24",
+      "area": "Shared statistics renderer",
+      "source": "src/shared/ui/statistics",
+      "target": "src/features/settings/views/runtime/components/statistics",
+      "reason": "Statistics chart blocks are owned by settings runtime views.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 1
+    },
+    {
+      "phase": "V24",
+      "area": "Shared timeline renderer",
+      "source": "src/shared/ui/timeline",
+      "target": "src/features/settings/views/runtime/components/timeline",
+      "reason": "Timeline day-column renderers are business view runtime components.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 4
+    },
+    {
+      "phase": "V24",
+      "area": "Shared Obsidian modal forwarder",
+      "source": "src/shared/ui/composites/dialogs/NamePromptModal.ts",
+      "target": "src/platform/obsidian/modals/NamePromptModal.tsx",
+      "reason": "Obsidian Modal implementations belong to the platform adapter, not shared UI.",
+      "sourceExists": false,
+      "targetExists": true,
+      "sourceFileCount": 0,
+      "targetFileCount": 1
+    },
+    {
+      "phase": "V25",
+      "area": "Current schema lock",
+      "source": "src/core/settings",
+      "target": "src/core/settings",
+      "reason": "Single-user mode supports the current settings schema only; legacy migration code can be removed.",
+      "sourceExists": true,
+      "targetExists": true,
+      "sourceFileCount": 2,
+      "targetFileCount": 2
+    }
+  ]
+}

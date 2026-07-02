@@ -22,7 +22,7 @@ import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/types/public';
 import { getFieldLabel, getFieldCategoryLabel } from '@core/fields/public';
 import { normalizeDisplayFields, normalizeViewFilters, normalizeViewGroupFields, normalizeViewSort } from '@core/view/public';
 import type { FilterRule, ViewInstance } from '@core/types/public';
-import { VIEW_EDITORS } from '@features/settings/viewEditors/registry';
+import { VIEW_EDITORS } from '@features/settings/views/editors/registry';
 import { useSelector, makeSelectViewInstanceById, useDataStore, useUseCases } from '@/app/public';
 import {
   ExpandMoreIcon,
@@ -32,8 +32,8 @@ import {
   SimpleSelect,
 } from '@shared/ui/public';
 import { useSaveHandler } from '@shared/patterns/public';
-import { RuleBuilder } from '@features/settings/viewEditors/RuleBuilder';
-import { CommonFilterPanel } from '@features/settings/viewEditors/CommonFilterPanel';
+import { RuleBuilder } from '@features/settings/views/editors/RuleBuilder';
+import { CommonFilterPanel } from '@features/settings/views/editors/CommonFilterPanel';
 import { FloatingPanel } from '@/app/public';
 import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
 

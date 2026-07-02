@@ -7,7 +7,11 @@
  */
 export * from './themeSemantics';
 export * from './themePathParser';
+export * from './themePathSemantics';
 export * from './ThemeTreeBuilder';
+export * from './themeMatching';
+export * from './themeManagerSemantics';
+export { ThemeManager } from './ThemeManager';
 
 export { ThemeMetadataResolver } from '../themeMetadata';
 export type { ThemeMetadata } from '../themeMetadata';

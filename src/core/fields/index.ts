@@ -9,6 +9,7 @@ export * from './pathSemantics';
 export * from './tagSemantics';
 export * from './imageSemantics';
 export * from './ContentFieldSemantics';
+export * from './fieldTokenSemantics';
 
 export * from './TemplateFieldAdapter';
 export * from './FieldSystemHealth';

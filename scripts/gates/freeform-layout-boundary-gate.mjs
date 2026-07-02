@@ -20,9 +20,9 @@ const interactionTokens = [
 ];
 
 const businessViewRoots = [
-  'src/features/settings/viewModels',
-  'src/features/settings/viewEditors',
-  'src/shared/ui/views',
+  'src/features/settings/views/models',
+  'src/features/settings/views/editors',
+  'src/features/settings/views/runtime',
 ];
 
 function walk(dir) {

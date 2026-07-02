@@ -49,7 +49,7 @@ describe('CSS V3 governance contracts', () => {
 
   it('uses scoped Settings and Obsidian modal contracts', () => {
     expect(read('src/features/settings/components/LayoutEditorPanel.tsx')).toContain('think-layout-editor');
-    expect(read('src/platform/modals/CheckinManagerModal.tsx')).toContain('think-checkin-modal-host');
+    expect(read('src/platform/obsidian/modals/CheckinManagerModal.tsx')).toContain('think-checkin-modal-host');
     expect(read('src/shared/ui/primitives/Modal.tsx')).toContain('ThinkIconButton');
   });
 });

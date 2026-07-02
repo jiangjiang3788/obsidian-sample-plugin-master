@@ -51,17 +51,17 @@ describe('CSS V5 final convergence', () => {
   });
 
   it('keeps runtime geometry inline while removing TaskRow fixed skin', () => {
-    const row = read('src/shared/ui/items/TaskRow.tsx');
+    const row = read('src/features/settings/views/runtime/components/items/TaskRow.tsx');
     expect(row).not.toContain("style={{ background: 'none'");
     expect(row).toContain('task-row-title');
 
-    const contextMenu = read('src/shared/ui/views/TaskExecutionContextMenu.tsx');
+    const contextMenu = read('src/features/settings/views/runtime/TaskExecutionContextMenu.tsx');
     expect(contextMenu).toContain("style={{ left: `${menu.x}px`, top: `${menu.y}px` }}");
   });
 
   it('uses governed keyboard and table-cell state names', () => {
-    expect(read('src/platform/modals/quickInputKeyboard.ts')).toContain('think-quick-input-keyboard-detected');
-    expect(read('src/shared/ui/views/TableViewCell.tsx')).toContain('think-table-cell-item');
+    expect(read('src/platform/obsidian/modals/quickInputKeyboard.ts')).toContain('think-quick-input-keyboard-detected');
+    expect(read('src/features/settings/views/runtime/TableViewCell.tsx')).toContain('think-table-cell-item');
     expect(read('src/styles/overrides/quick-input-modal.css')).not.toContain('.keyboard-detected');
   });
 

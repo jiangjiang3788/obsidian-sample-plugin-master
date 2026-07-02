@@ -5,7 +5,7 @@ import {
   buildExcelSingleCellEditPlan,
   removeExcelSetValue,
   uniqueExcelKeys,
-} from '@/shared/ui/views/excel-view/ExcelCellEditingModel';
+} from '@/features/settings/views/runtime/excel-view/ExcelCellEditingModel';
 
 const baseCell = {
   item: { id: '1', title: 'One' },

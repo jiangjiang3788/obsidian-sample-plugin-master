@@ -7,7 +7,7 @@ import {
   moveExcelColumnFieldToStart,
   removeExcelColumnField,
   reorderExcelColumnFieldsByDrop,
-} from '@/shared/ui/views/excel-view/ExcelColumnToolbarModel';
+} from '@/features/settings/views/runtime/excel-view/ExcelColumnToolbarModel';
 
 describe('ExcelColumnToolbarModel', () => {
   it('moves, adds and removes fields without mutating the source', () => {

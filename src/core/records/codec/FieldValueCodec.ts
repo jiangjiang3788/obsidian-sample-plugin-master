@@ -4,6 +4,7 @@ import type { FieldInputType, FieldSemantic, FieldValueType } from '@/core/field
 import { normalizeImageValue, type ImageFieldValue } from '@/core/fields/imageSemantics';
 import { normalizeHierarchyPath } from '@/core/fields/pathSemantics';
 import { parseTagList } from '@/core/fields/tagSemantics';
+import { normalizeTextToken } from '@/core/semantics/text';
 
 export type FieldCodecDefinition = Partial<Pick<
   FieldDefinition,
@@ -18,10 +19,6 @@ export interface FieldValueCodecOptions {
 }
 
 const DEFAULT_MULTI_SEPARATOR = ', ';
-
-function normalizeToken(value: unknown): string {
-  return String(value ?? '').trim().toLowerCase();
-}
 
 export function isFieldCodecMultiValue(def?: FieldCodecDefinition | null): boolean {
   const inputType = def?.inputType as FieldInputType | undefined;
@@ -83,7 +80,7 @@ function decodeNumberValue(value: unknown): number | undefined {
 
 function decodeBooleanValue(value: unknown): boolean | undefined {
   if (typeof value === 'boolean') return value;
-  const raw = normalizeToken(value);
+  const raw = normalizeTextToken(value);
   if (!raw) return undefined;
   if (['true', 'yes', 'y', '1', '是'].includes(raw)) return true;
   if (['false', 'no', 'n', '0', '否'].includes(raw)) return false;

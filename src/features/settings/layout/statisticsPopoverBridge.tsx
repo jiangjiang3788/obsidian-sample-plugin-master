@@ -3,7 +3,8 @@
 import { h } from 'preact';
 import { IconButton, Tooltip } from '@shared/ui/public';
 import type { CloseStatisticsPopoverHandler, OpenStatisticsPopoverHandler } from '@shared/types/public';
-import { AddCircleOutlineIcon, IosShareIcon, PopoverContent } from '@shared/ui/public';
+import { AddCircleOutlineIcon, IosShareIcon } from '@shared/ui/public';
+import { PopoverContent } from '@features/settings/views/public';
 import { FloatingPanel, openFloatingWidget, closeFloatingWidget } from '@/app/public';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题。

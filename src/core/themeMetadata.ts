@@ -1,22 +1,11 @@
 import type { ThemeDefinition, ThinkSettings } from './types/schema';
+import { buildThemePathMap, getThemePathCandidates, normalizeThemePath, normalizeThemePathOrNull } from './theme/themePathSemantics';
 
 export interface ThemeMetadata {
   path: string | null;
   icon: string;
   color?: string | null;
   theme: ThemeDefinition | null;
-}
-
-function normalizePath(path?: string | null): string | null {
-  const normalized = String(path || '').split('/').map((part) => part.trim()).filter(Boolean).join('/');
-  return normalized || null;
-}
-
-function pathCandidates(path?: string | null): string[] {
-  const parts = normalizePath(path)?.split('/') || [];
-  const result: string[] = [];
-  for (let i = parts.length; i >= 1; i -= 1) result.push(parts.slice(0, i).join('/'));
-  return result;
 }
 
 export class ThemeMetadataResolver {
@@ -28,7 +17,7 @@ export class ThemeMetadataResolver {
    */
   static resolveThemeForRender(settings: Pick<ThinkSettings, 'inputSettings' | 'categoryColors'>, themePath?: string | null): ThemeDefinition | null {
     const metadata = ThemeMetadataResolver.resolve(settings, themePath);
-    const renderPath = normalizePath(themePath) || metadata.path;
+    const renderPath = normalizeThemePath(themePath) || metadata.path;
     if (!renderPath && !metadata.theme) return null;
     return {
       id: metadata.theme?.id || renderPath || 'theme.metadata',
@@ -40,13 +29,13 @@ export class ThemeMetadataResolver {
   }
 
   static resolve(settings: Pick<ThinkSettings, 'inputSettings' | 'categoryColors'>, themePath?: string | null): ThemeMetadata {
-    const normalized = normalizePath(themePath);
+    const normalized = normalizeThemePathOrNull(themePath);
     const themes = settings.inputSettings?.themes || [];
     let theme: ThemeDefinition | null = null;
     let iconTheme: ThemeDefinition | null = null;
     if (normalized) {
-      const byPath = new Map(themes.map((item) => [normalizePath(item.path), item]));
-      for (const candidate of pathCandidates(normalized)) {
+      const byPath = buildThemePathMap(themes);
+      for (const candidate of getThemePathCandidates(normalized)) {
         const matched = byPath.get(candidate);
         if (matched && !theme) theme = matched;
         if (matched && String((matched as any).icon || '').trim()) {

@@ -1,4 +1,4 @@
-import { buildStatisticsViewModel } from '@/features/settings/viewModels/statisticsViewModel';
+import { buildStatisticsViewModel } from '@/features/settings/views/models/statisticsViewModel';
 
 const items: any[] = [
   { id: '1', title: 'A', type: 'task', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-01-05', extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },

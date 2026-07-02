@@ -34,16 +34,7 @@ export * from './ui/composites/FieldManager';
 export * from './ui/composites/TagsRenderer';
 export * from './ui/composites/TaskCheckbox';
 export * from './ui/composites/TaskSendToTimerButton';
-export * from './ui/composites/dialogs/NamePromptModal';
 export * from './ui/composites/form/ListEditor';
-export * from './ui/heatmap/HeatmapCell';
-export * from './ui/items/BlockItem';
-export * from './ui/items/FieldPill';
-export * from './ui/items/ItemLink';
-export * from './ui/items/TaskRow';
 export * from './ui/modals/EditTaskModal';
-export * from './ui/timeline';
-export * from './ui/views';
-export * from './ui/views/ViewToolbar';
 // ui/components 已统一出口（ThemeTreeNodeLabel 等）
 export * from './components/ThemeTreeSelect';

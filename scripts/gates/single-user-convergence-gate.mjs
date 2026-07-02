@@ -25,13 +25,13 @@ const removedPaths = [
   'src/features/settings/input/TemplateEditorModal.tsx',
   'src/features/settings/input/goalManager/GoalEntitySection.tsx',
   'src/features/settings/input/goalManager/GoalTemplateSection.tsx',
-  'src/features/settings/viewEditors/GoalOverviewViewEditor.tsx',
-  'src/features/settings/viewEditors/GoalDetailViewEditor.tsx',
-  'src/features/settings/viewModels/goalOverviewViewModel.ts',
-  'src/features/settings/viewModels/goalDetailViewModel.ts',
-  'src/shared/ui/views/GoalOverviewView.tsx',
-  'src/shared/ui/views/GoalDetailView.tsx',
-  'src/shared/ui/views/ProgressSummaryCards.tsx',
+  'src/features/settings/views/editors/GoalOverviewViewEditor.tsx',
+  'src/features/settings/views/editors/GoalDetailViewEditor.tsx',
+  'src/features/settings/views/models/goalOverviewViewModel.ts',
+  'src/features/settings/views/models/goalDetailViewModel.ts',
+  'src/features/settings/views/runtime/GoalOverviewView.tsx',
+  'src/features/settings/views/runtime/GoalDetailView.tsx',
+  'src/features/settings/views/runtime/ProgressSummaryCards.tsx',
 ];
 
 function exists(relativePath) {
@@ -89,14 +89,14 @@ if (!publicApi.includes("./theme/themePathParser")) failures.push('core/public.t
 const viewContent = read('src/features/settings/layout/ViewContent.tsx');
 if (viewContent.includes('normalizeLegacyGoalViewInstance')) failures.push('ViewContent must not normalize legacy goal view types at runtime.');
 
-if (!exists('src/app/ui/components/QuickInputEditor/QuickInputEditorModel.ts')) {
+if (!exists('src/features/quickinput/editor/QuickInputEditorModel.ts')) {
   failures.push('QuickInputEditor pure model helper must exist after MVP4 extraction.');
 }
-const quickInputContainer = read('src/app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx');
+const quickInputContainer = read('src/features/quickinput/editor/QuickInputEditorContainer.tsx');
 const quickInputContainerLines = quickInputContainer.split(/\r?\n/).length;
 if (quickInputContainerLines > 350) failures.push(`QuickInputEditorContainer.tsx should stay <= 350 lines after MVP6 action extraction; current ${quickInputContainerLines}.`);
 
-const quickInputModel = read('src/app/ui/components/QuickInputEditor/QuickInputEditorModel.ts');
+const quickInputModel = read('src/features/quickinput/editor/QuickInputEditorModel.ts');
 for (const requiredHelper of [
   'deriveQuickInputInitialSelection',
   'buildQuickInputEditorState',
@@ -167,10 +167,10 @@ for (const requiredHelper of [
 
 
 
-if (!exists('src/core/services/recordInput/RecordInputFacade.ts')) {
+if (!exists('src/core/recordInput/RecordInputFacade.ts')) {
   failures.push('RecordInputFacade.ts must exist after MVP10 input facade extraction.');
 }
-const recordInputFacade = exists('src/core/services/recordInput/RecordInputFacade.ts') ? read('src/core/services/recordInput/RecordInputFacade.ts') : '';
+const recordInputFacade = exists('src/core/recordInput/RecordInputFacade.ts') ? read('src/core/recordInput/RecordInputFacade.ts') : '';
 for (const requiredHelper of [
   'findMissingRecordInputRequiredFields',
   'buildRecordCreateDraftFromEditorState',
@@ -181,33 +181,33 @@ for (const requiredHelper of [
 ]) {
   if (!recordInputFacade.includes(requiredHelper)) failures.push(`RecordInputFacade.ts must keep ${requiredHelper} after MVP10 extraction.`);
 }
-const quickInputSubmit = read('src/platform/modals/useQuickInputSubmit.ts');
+const quickInputSubmit = read('src/features/quickinput/modal/useQuickInputSubmit.ts');
 for (const forbiddenLocal of ['function hasRequiredValue', 'function findMissingRequiredFields']) {
   if (quickInputSubmit.includes(forbiddenLocal)) failures.push(`useQuickInputSubmit.ts must not keep local ${forbiddenLocal} after RecordInputFacade extraction.`);
 }
-const aiBatchConfirm = read('src/platform/modals/AiBatchConfirmModal.tsx');
+const aiBatchConfirm = read('src/platform/obsidian/modals/AiBatchConfirmModal.tsx');
 for (const forbiddenLocal of ['function normalizeAiFieldValue', 'function normalizeAiFormData', 'const buildBatchCreateResult']) {
   if (aiBatchConfirm.includes(forbiddenLocal)) failures.push(`AiBatchConfirmModal.tsx must not keep local ${forbiddenLocal} after RecordInputFacade extraction.`);
 }
 if ((aiBatchConfirm.match(/const isActive = index === currentIndex/g) || []).length > 1) {
   failures.push('AiBatchConfirmModal.tsx must not contain duplicated isActive declarations.');
 }
-if (!exists('src/platform/modals/AiBatchConfirmModel.ts')) {
+if (!exists('src/platform/obsidian/modals/AiBatchConfirmModel.ts')) {
   failures.push('AiBatchConfirmModel.ts must exist after MVP11 AI batch model extraction.');
 }
-if (!exists('src/platform/modals/AiBatchConfirmSidebar.tsx')) {
+if (!exists('src/platform/obsidian/modals/AiBatchConfirmSidebar.tsx')) {
   failures.push('AiBatchConfirmSidebar.tsx must exist after MVP11 sidebar extraction.');
 }
-if (!exists('src/platform/modals/AiBatchConfirmRecordHeader.tsx')) {
+if (!exists('src/platform/obsidian/modals/AiBatchConfirmRecordHeader.tsx')) {
   failures.push('AiBatchConfirmRecordHeader.tsx must exist after MVP11 header extraction.');
 }
-if (!exists('src/platform/modals/AiBatchConfirmFooter.tsx')) {
+if (!exists('src/platform/obsidian/modals/AiBatchConfirmFooter.tsx')) {
   failures.push('AiBatchConfirmFooter.tsx must exist after MVP11 footer extraction.');
 }
 const aiBatchConfirmLines = aiBatchConfirm.split(/\r?\n/).length;
 if (aiBatchConfirmLines > 280) failures.push(`AiBatchConfirmModal.tsx should stay <= 280 lines after MVP11 model/component extraction; current ${aiBatchConfirmLines}.`);
-if (exists('src/platform/modals/AiBatchConfirmModel.ts')) {
-  const aiBatchConfirmModel = read('src/platform/modals/AiBatchConfirmModel.ts');
+if (exists('src/platform/obsidian/modals/AiBatchConfirmModel.ts')) {
+  const aiBatchConfirmModel = read('src/platform/obsidian/modals/AiBatchConfirmModel.ts');
   for (const requiredHelper of [
     'buildAiBatchConfirmRecordItems',
     'resolveGoalForAiTarget',
@@ -230,31 +230,31 @@ for (const forbiddenLocal of [
 }
 
 
-if (!exists('src/shared/ui/views/HeatmapViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/HeatmapViewModel.ts')) {
   failures.push('HeatmapViewModel.ts must exist after MVP12 heatmap render model extraction.');
 }
-if (!exists('src/shared/ui/views/HeatmapThemeGroup.tsx')) {
+if (!exists('src/features/settings/views/runtime/HeatmapThemeGroup.tsx')) {
   failures.push('HeatmapThemeGroup.tsx must exist after MVP12 heatmap theme group extraction.');
 }
-if (!exists('src/shared/ui/views/HeatmapDayView.tsx')) {
+if (!exists('src/features/settings/views/runtime/HeatmapDayView.tsx')) {
   failures.push('HeatmapDayView.tsx must exist after MVP12 heatmap day view extraction.');
 }
-if (!exists('src/shared/ui/views/HeatmapViewContent.tsx')) {
+if (!exists('src/features/settings/views/runtime/HeatmapViewContent.tsx')) {
   failures.push('HeatmapViewContent.tsx must exist after MVP21 heatmap content extraction.');
 }
-if (!exists('src/shared/ui/views/HeatmapLayoutModel.ts')) {
+if (!exists('src/features/settings/views/runtime/HeatmapLayoutModel.ts')) {
   failures.push('HeatmapLayoutModel.ts must exist after MVP21 heatmap layout model extraction.');
 }
-const heatmapView = read('src/shared/ui/views/HeatmapView.tsx');
+const heatmapView = read('src/features/settings/views/runtime/HeatmapView.tsx');
 const heatmapViewLines = heatmapView.split(/\r?\n/).length;
 if (heatmapViewLines > 260) failures.push(`HeatmapView.tsx should stay <= 260 lines after MVP21 content/layout extraction; current ${heatmapViewLines}.`);
 if (heatmapView.includes('<HeatmapCell')) failures.push('HeatmapView.tsx must not directly render HeatmapCell after MVP12 split.');
 if (heatmapView.includes('const renderContent =')) failures.push('HeatmapView.tsx must not keep local renderContent after MVP21 content extraction.');
 if (heatmapView.includes('const renderThemeGroup =')) failures.push('HeatmapView.tsx must not keep local renderThemeGroup after MVP21 content extraction.');
-const heatmapViewContent = read('src/shared/ui/views/HeatmapViewContent.tsx');
+const heatmapViewContent = read('src/features/settings/views/runtime/HeatmapViewContent.tsx');
 const heatmapViewContentLines = heatmapViewContent.split(/\r?\n/).length;
 if (heatmapViewContentLines > 140) failures.push(`HeatmapViewContent.tsx should stay <= 140 lines after MVP21 extraction; current ${heatmapViewContentLines}.`);
-const heatmapLayoutModel = read('src/shared/ui/views/HeatmapLayoutModel.ts');
+const heatmapLayoutModel = read('src/features/settings/views/runtime/HeatmapLayoutModel.ts');
 for (const requiredHelper of [
   'resolveHeatmapVerticalLayout',
   'applyHeatmapVerticalLayout',
@@ -262,13 +262,13 @@ for (const requiredHelper of [
 ]) {
   if (!heatmapLayoutModel.includes(requiredHelper)) failures.push(`HeatmapLayoutModel.ts must keep ${requiredHelper} after MVP21 extraction.`);
 }
-const heatmapThemeGroup = read('src/shared/ui/views/HeatmapThemeGroup.tsx');
+const heatmapThemeGroup = read('src/features/settings/views/runtime/HeatmapThemeGroup.tsx');
 const heatmapThemeGroupLines = heatmapThemeGroup.split(/\r?\n/).length;
 if (heatmapThemeGroupLines > 220) failures.push(`HeatmapThemeGroup.tsx should stay <= 220 lines after MVP12 split; current ${heatmapThemeGroupLines}.`);
-const heatmapDayView = read('src/shared/ui/views/HeatmapDayView.tsx');
+const heatmapDayView = read('src/features/settings/views/runtime/HeatmapDayView.tsx');
 const heatmapDayViewLines = heatmapDayView.split(/\r?\n/).length;
 if (heatmapDayViewLines > 140) failures.push(`HeatmapDayView.tsx should stay <= 140 lines after MVP12 split; current ${heatmapDayViewLines}.`);
-const heatmapViewModel = read('src/shared/ui/views/HeatmapViewModel.ts');
+const heatmapViewModel = read('src/features/settings/views/runtime/HeatmapViewModel.ts');
 for (const requiredHelper of [
   'inferHeatmapThemePaths',
   'selectHeatmapThemesToTrack',
@@ -282,18 +282,18 @@ for (const requiredHelper of [
 
 
 
-if (!exists('src/shared/ui/views/ProgressViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/ProgressViewModel.ts')) {
   failures.push('ProgressViewModel.ts must exist after MVP13 progress render model extraction.');
 }
-if (!exists('src/shared/ui/views/ProgressGoalCard.tsx')) {
+if (!exists('src/features/settings/views/runtime/ProgressGoalCard.tsx')) {
   failures.push('ProgressGoalCard.tsx must exist after MVP13 progress card extraction.');
-}const progressView = read('src/shared/ui/views/ProgressView.tsx');
+}const progressView = read('src/features/settings/views/runtime/ProgressView.tsx');
 const progressViewLines = progressView.split(/\r?\n/).length;
 if (progressViewLines > 80) failures.push(`ProgressView.tsx should stay <= 80 lines after MVP13 component split; current ${progressViewLines}.`);
 for (const forbiddenLocal of ['function GoalProgressCard', 'function ProgressBar', 'function ThemeBreakdownList', 'function BlockCountGrid']) {
   if (progressView.includes(forbiddenLocal)) failures.push(`ProgressView.tsx must not keep local ${forbiddenLocal} after MVP13 split.`);
 }
-const progressViewModel = read('src/shared/ui/views/ProgressViewModel.ts');
+const progressViewModel = read('src/features/settings/views/runtime/ProgressViewModel.ts');
 for (const requiredHelper of [
   'buildProgressSummary',
   'buildProgressBlockCountRows',
@@ -303,36 +303,36 @@ for (const requiredHelper of [
   if (!progressViewModel.includes(requiredHelper)) failures.push(`ProgressViewModel.ts must keep ${requiredHelper} after MVP13 extraction.`);
 }
 
-if (!exists('src/shared/ui/views/TimelineView/TimelineViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/TimelineView/TimelineViewModel.ts')) {
   failures.push('TimelineViewModel.ts must exist after MVP13 timeline fallback model extraction.');
 }
-if (!exists('src/shared/ui/views/TimelineView/TimelineDailyView.tsx')) {
+if (!exists('src/features/settings/views/runtime/TimelineView/TimelineDailyView.tsx')) {
   failures.push('TimelineDailyView.tsx must exist after MVP21 daily timeline extraction.');
 }
-if (!exists('src/shared/ui/views/TimelineView/TimelineDailyViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/TimelineView/TimelineDailyViewModel.ts')) {
   failures.push('TimelineDailyViewModel.ts must exist after MVP21 daily timeline model extraction.');
 }
-const timelineViewContainer = read('src/shared/ui/views/TimelineView/TimelineViewContainer.tsx');
+const timelineViewContainer = read('src/features/settings/views/runtime/TimelineView/TimelineViewContainer.tsx');
 const timelineViewContainerLines = timelineViewContainer.split(/\r?\n/).length;
 if (timelineViewContainerLines > 120) failures.push(`TimelineViewContainer.tsx should stay <= 120 lines after MVP13 model extraction; current ${timelineViewContainerLines}.`);
 for (const forbiddenLocal of ['processItemsToTimelineTasks', 'buildMonthlyAndWeeklySummary', 'buildSummaryCategoryHours', 'buildDailyViewData', 'filterByRules']) {
   if (timelineViewContainer.includes(forbiddenLocal)) failures.push(`TimelineViewContainer.tsx must not keep local ${forbiddenLocal} after MVP13 TimelineViewModel extraction.`);
 }
-const timelineViewView = read('src/shared/ui/views/TimelineView/TimelineViewView.tsx');
+const timelineViewView = read('src/features/settings/views/runtime/TimelineView/TimelineViewView.tsx');
 const timelineViewViewLines = timelineViewView.split(/\r?\n/).length;
 if (timelineViewViewLines > 120) failures.push(`TimelineViewView.tsx should stay <= 120 lines after MVP21 daily view extraction; current ${timelineViewViewLines}.`);
 if (timelineViewView.includes('<DayColumnHeader') || timelineViewView.includes('<DayColumnBody') || timelineViewView.includes('<ProgressBlock')) {
   failures.push('TimelineViewView.tsx must not directly render daily timeline internals after MVP21 extraction.');
 }
-const timelineDailyView = read('src/shared/ui/views/TimelineView/TimelineDailyView.tsx');
+const timelineDailyView = read('src/features/settings/views/runtime/TimelineView/TimelineDailyView.tsx');
 const timelineDailyViewLines = timelineDailyView.split(/\r?\n/).length;
 if (timelineDailyViewLines > 125) failures.push(`TimelineDailyView.tsx should stay <= 125 lines after MVP21 extraction; current ${timelineDailyViewLines}.`);
-const timelineDailyViewModel = read('src/shared/ui/views/TimelineView/TimelineDailyViewModel.ts');
+const timelineDailyViewModel = read('src/features/settings/views/runtime/TimelineView/TimelineDailyViewModel.ts');
 for (const requiredHelper of ['buildTimelineDayColumns', 'buildTimelineTimeAxisRows']) {
   if (!timelineDailyViewModel.includes(requiredHelper)) failures.push(`TimelineDailyViewModel.ts must keep ${requiredHelper} after MVP21 extraction.`);
 }
 
-const timelineViewModel = read('src/shared/ui/views/TimelineView/TimelineViewModel.ts');
+const timelineViewModel = read('src/features/settings/views/runtime/TimelineView/TimelineViewModel.ts');
 for (const requiredHelper of [
   'buildTimelineRenderModel',
   'resolveTimelineConfig',
@@ -345,19 +345,19 @@ for (const requiredHelper of [
 
 
 
-if (!exists('src/shared/ui/views/excel-view/ExcelViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelViewModel.ts')) {
   failures.push('ExcelViewModel.ts must exist after MVP14 Excel view model extraction.');
 }
-if (!exists('src/shared/ui/views/excel-view/ExcelViewToolbar.tsx')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelViewToolbar.tsx')) {
   failures.push('ExcelViewToolbar.tsx must exist after MVP14 Excel toolbar extraction.');
 }
-const excelView = read('src/shared/ui/views/excel-view/ExcelView.tsx');
+const excelView = read('src/features/settings/views/runtime/excel-view/ExcelView.tsx');
 const excelViewLines = excelView.split(/\r?\n/).length;
 if (excelViewLines > 210) failures.push(`excel-view/ExcelView.tsx should stay <= 210 lines after MVP14 model/toolbar extraction; current ${excelViewLines}.`);
 for (const forbiddenLocal of ['function normalizeColumnWidth', 'function normalizeColumnWidths', 'function normalizeContentDisplayMode', 'function getNextContentDisplayMode']) {
   if (excelView.includes(forbiddenLocal)) failures.push(`excel-view/ExcelView.tsx must not keep local ${forbiddenLocal} after MVP14 ExcelViewModel extraction.`);
 }
-const excelViewModel = read('src/shared/ui/views/excel-view/ExcelViewModel.ts');
+const excelViewModel = read('src/features/settings/views/runtime/excel-view/ExcelViewModel.ts');
 for (const requiredHelper of [
   'buildExcelViewRenderModel',
   'normalizeExcelColumnWidth',
@@ -368,16 +368,16 @@ for (const requiredHelper of [
   if (!excelViewModel.includes(requiredHelper)) failures.push(`ExcelViewModel.ts must keep ${requiredHelper} after MVP14 extraction.`);
 }
 
-if (!exists('src/shared/ui/views/StatisticsView/StatisticsViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/StatisticsView/StatisticsViewModel.ts')) {
   failures.push('StatisticsViewModel.ts must exist after MVP14 statistics model extraction.');
 }
-const statisticsViewContainer = read('src/shared/ui/views/StatisticsView/StatisticsViewContainer.tsx');
+const statisticsViewContainer = read('src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx');
 const statisticsViewContainerLines = statisticsViewContainer.split(/\r?\n/).length;
 if (statisticsViewContainerLines > 190) failures.push(`StatisticsViewContainer.tsx should stay <= 190 lines after MVP14 model extraction; current ${statisticsViewContainerLines}.`);
 for (const forbiddenLocal of ['aggregateByYear', 'aggregateByQuarter', 'aggregateByMonth', 'aggregateByWeek', 'getWeeksInYear']) {
   if (statisticsViewContainer.includes(forbiddenLocal)) failures.push(`StatisticsViewContainer.tsx must not keep local ${forbiddenLocal} after StatisticsViewModel extraction.`);
 }
-const statisticsViewModel = read('src/shared/ui/views/StatisticsView/StatisticsViewModel.ts');
+const statisticsViewModel = read('src/features/settings/views/runtime/StatisticsView/StatisticsViewModel.ts');
 for (const requiredHelper of [
   'buildStatisticsProcessedData',
   'buildYearlyWeekStructure',
@@ -389,22 +389,22 @@ for (const requiredHelper of [
 }
 
 
-if (!exists('src/shared/ui/views/EventTimelineView/EventTimelineViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/EventTimelineView/EventTimelineViewModel.ts')) {
   failures.push('EventTimelineViewModel.ts must exist after MVP15 event timeline extraction.');
 }
-if (!exists('src/shared/ui/views/EventTimelineView/EventTimelineEventList.tsx')) {
+if (!exists('src/features/settings/views/runtime/EventTimelineView/EventTimelineEventList.tsx')) {
   failures.push('EventTimelineEventList.tsx must exist after MVP15 event list extraction.');
 }
-const eventTimelineContainer = read('src/shared/ui/views/EventTimelineView/EventTimelineViewContainer.tsx');
+const eventTimelineContainer = read('src/features/settings/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx');
 const eventTimelineContainerLines = eventTimelineContainer.split(/\r?\n/).length;
 if (eventTimelineContainerLines > 120) failures.push(`EventTimelineViewContainer.tsx should stay <= 120 lines after MVP15 model extraction; current ${eventTimelineContainerLines}.`);
-const eventTimelineView = read('src/shared/ui/views/EventTimelineView/EventTimelineViewView.tsx');
+const eventTimelineView = read('src/features/settings/views/runtime/EventTimelineView/EventTimelineViewView.tsx');
 const eventTimelineViewLines = eventTimelineView.split(/\r?\n/).length;
 if (eventTimelineViewLines > 120) failures.push(`EventTimelineViewView.tsx should stay <= 120 lines after MVP15 event list extraction; current ${eventTimelineViewLines}.`);
 for (const forbiddenLocal of ['function getItemTime', 'const getItemTime', 'function cleanDisplayText', 'const cleanDisplayText', 'function getTaskDisplayTitle', 'const getTaskDisplayTitle']) {
   if (eventTimelineContainer.includes(forbiddenLocal) || eventTimelineView.includes(forbiddenLocal)) failures.push(`EventTimeline view files must not keep local ${forbiddenLocal} after MVP15 extraction.`);
 }
-const eventTimelineModel = read('src/shared/ui/views/EventTimelineView/EventTimelineViewModel.ts');
+const eventTimelineModel = read('src/features/settings/views/runtime/EventTimelineView/EventTimelineViewModel.ts');
 for (const requiredHelper of [
   'buildEventTimelineRenderModel',
   'filterEventTimelineItemsByDateRange',
@@ -414,22 +414,22 @@ for (const requiredHelper of [
   if (!eventTimelineModel.includes(requiredHelper)) failures.push(`EventTimelineViewModel.ts must keep ${requiredHelper} after MVP15 extraction.`);
 }
 
-if (!exists('src/shared/ui/views/TaskExecutionViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/TaskExecutionViewModel.ts')) {
   failures.push('TaskExecutionViewModel.ts must exist after MVP15 task execution extraction.');
 }
-if (!exists('src/shared/ui/views/TaskExecutionChipGrid.tsx')) {
+if (!exists('src/features/settings/views/runtime/TaskExecutionChipGrid.tsx')) {
   failures.push('TaskExecutionChipGrid.tsx must exist after MVP15 task execution chip grid extraction.');
 }
-if (!exists('src/shared/ui/views/TaskExecutionContextMenu.tsx')) {
+if (!exists('src/features/settings/views/runtime/TaskExecutionContextMenu.tsx')) {
   failures.push('TaskExecutionContextMenu.tsx must exist after MVP15 task execution menu extraction.');
 }
-const taskExecutionView = read('src/shared/ui/views/TaskExecutionView.tsx');
+const taskExecutionView = read('src/features/settings/views/runtime/TaskExecutionView.tsx');
 const taskExecutionViewLines = taskExecutionView.split(/\r?\n/).length;
 if (taskExecutionViewLines > 90) failures.push(`TaskExecutionView.tsx should stay <= 90 lines after MVP15 model/component split; current ${taskExecutionViewLines}.`);
 for (const forbiddenLocal of ['function getChipToneClass', 'interface TaskExecutionRecordVM', 'interface TaskExecutionTaskVM', 'const taskMap = useMemo(() => {']) {
   if (taskExecutionView.includes(forbiddenLocal)) failures.push(`TaskExecutionView.tsx must not keep local ${forbiddenLocal} after MVP15 extraction.`);
 }
-const taskExecutionModel = read('src/shared/ui/views/TaskExecutionViewModel.ts');
+const taskExecutionModel = read('src/features/settings/views/runtime/TaskExecutionViewModel.ts');
 for (const requiredHelper of [
   'buildTaskExecutionTaskMap',
   'getTaskExecutionChipToneClass',
@@ -440,19 +440,19 @@ for (const requiredHelper of [
 }
 
 
-if (!exists('src/shared/ui/views/BlockViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/BlockViewModel.ts')) {
   failures.push('BlockViewModel.ts must exist after MVP16 block view extraction.');
 }
-if (!exists('src/shared/ui/views/BlockViewItemList.tsx')) {
+if (!exists('src/features/settings/views/runtime/BlockViewItemList.tsx')) {
   failures.push('BlockViewItemList.tsx must exist after MVP16 block item list extraction.');
 }
-const blockView = read('src/shared/ui/views/BlockView.tsx');
+const blockView = read('src/features/settings/views/runtime/BlockView.tsx');
 const blockViewLines = blockView.split(/\r?\n/).length;
 if (blockViewLines > 110) failures.push(`BlockView.tsx should stay <= 110 lines after MVP16 model/item-list split; current ${blockViewLines}.`);
 for (const forbiddenLocal of ['const renderItem =', 'function renderItem', 'groupItemsByFields', 'timers.find']) {
   if (blockView.includes(forbiddenLocal)) failures.push(`BlockView.tsx must not keep local ${forbiddenLocal} after MVP16 extraction.`);
 }
-const blockViewModel = read('src/shared/ui/views/BlockViewModel.ts');
+const blockViewModel = read('src/features/settings/views/runtime/BlockViewModel.ts');
 for (const requiredHelper of [
   'resolveBlockViewGroupFields',
   'buildBlockViewRenderModel',
@@ -461,24 +461,24 @@ for (const requiredHelper of [
 ]) {
   if (!blockViewModel.includes(requiredHelper)) failures.push(`BlockViewModel.ts must keep ${requiredHelper} after MVP16 extraction.`);
 }
-const blockViewItemList = read('src/shared/ui/views/BlockViewItemList.tsx');
+const blockViewItemList = read('src/features/settings/views/runtime/BlockViewItemList.tsx');
 if (!blockViewItemList.includes('TaskRow') || !blockViewItemList.includes('BlockItem')) {
   failures.push('BlockViewItemList.tsx must own TaskRow/BlockItem rendering after MVP16 extraction.');
 }
 
-if (!exists('src/shared/ui/views/TableViewModel.ts')) {
+if (!exists('src/features/settings/views/runtime/TableViewModel.ts')) {
   failures.push('TableViewModel.ts must exist after MVP16 table view extraction.');
 }
-if (!exists('src/shared/ui/views/TableViewCell.tsx')) {
+if (!exists('src/features/settings/views/runtime/TableViewCell.tsx')) {
   failures.push('TableViewCell.tsx must exist after MVP16 table cell extraction.');
 }
-const tableView = read('src/shared/ui/views/TableView.tsx');
+const tableView = read('src/features/settings/views/runtime/TableView.tsx');
 const tableViewLines = tableView.split(/\r?\n/).length;
 if (tableViewLines > 80) failures.push(`TableView.tsx should stay <= 80 lines after MVP16 model/cell split; current ${tableViewLines}.`);
 for (const forbiddenLocal of ['buildTableMatrix', 'function renderCellItem', 'const renderCellItem', 'timers.find']) {
   if (tableView.includes(forbiddenLocal)) failures.push(`TableView.tsx must not keep local ${forbiddenLocal} after MVP16 extraction.`);
 }
-const tableViewModel = read('src/shared/ui/views/TableViewModel.ts');
+const tableViewModel = read('src/features/settings/views/runtime/TableViewModel.ts');
 for (const requiredHelper of [
   'buildTableViewRenderModel',
   'isTableViewConfigured',
@@ -487,25 +487,25 @@ for (const requiredHelper of [
 ]) {
   if (!tableViewModel.includes(requiredHelper)) failures.push(`TableViewModel.ts must keep ${requiredHelper} after MVP16 extraction.`);
 }
-const tableViewCell = read('src/shared/ui/views/TableViewCell.tsx');
+const tableViewCell = read('src/features/settings/views/runtime/TableViewCell.tsx');
 if (!tableViewCell.includes('TaskRow') || !tableViewCell.includes('ItemLink')) {
   failures.push('TableViewCell.tsx must own TaskRow/ItemLink rendering after MVP16 extraction.');
 }
 
 
-if (!exists('src/shared/ui/views/excel-view/ExcelGridModel.ts')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelGridModel.ts')) {
   failures.push('ExcelGridModel.ts must exist after MVP17 ExcelGrid interaction model extraction.');
 }
-if (!exists('src/shared/ui/views/excel-view/ExcelCellModel.ts')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelCellModel.ts')) {
   failures.push('ExcelCellModel.ts must exist after MVP17 ExcelCell interaction model extraction.');
 }
-if (!exists('src/shared/ui/views/excel-view/ExcelCellEditor.tsx')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelCellEditor.tsx')) {
   failures.push('ExcelCellEditor.tsx must exist after MVP17 ExcelCell editor extraction.');
 }
-if (!exists('src/shared/ui/views/excel-view/ExcelCellContent.tsx')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelCellContent.tsx')) {
   failures.push('ExcelCellContent.tsx must exist after MVP17 ExcelCell content extraction.');
 }
-const excelGrid = read('src/shared/ui/views/excel-view/ExcelGrid.tsx');
+const excelGrid = read('src/features/settings/views/runtime/excel-view/ExcelGrid.tsx');
 const excelGridLines = excelGrid.split(/\r?\n/).length;
 if (excelGridLines > 210) failures.push(`ExcelGrid.tsx should stay <= 210 lines after MVP17 grid model extraction; current ${excelGridLines}.`);
 for (const forbiddenLocal of [
@@ -518,7 +518,7 @@ for (const forbiddenLocal of [
 ]) {
   if (excelGrid.includes(forbiddenLocal)) failures.push(`ExcelGrid.tsx must not keep local ${forbiddenLocal} after MVP17 extraction.`);
 }
-const excelCell = read('src/shared/ui/views/excel-view/ExcelCell.tsx');
+const excelCell = read('src/features/settings/views/runtime/excel-view/ExcelCell.tsx');
 const excelCellLines = excelCell.split(/\r?\n/).length;
 if (excelCellLines > 200) failures.push(`ExcelCell.tsx should stay <= 200 lines after MVP17 cell model/editor/content extraction; current ${excelCellLines}.`);
 for (const forbiddenLocal of [
@@ -529,7 +529,7 @@ for (const forbiddenLocal of [
 ]) {
   if (excelCell.includes(forbiddenLocal)) failures.push(`ExcelCell.tsx must not keep local ${forbiddenLocal} after MVP17 extraction.`);
 }
-const excelGridModel = read('src/shared/ui/views/excel-view/ExcelGridModel.ts');
+const excelGridModel = read('src/features/settings/views/runtime/excel-view/ExcelGridModel.ts');
 for (const requiredHelper of [
   'getExcelColumnWidth',
   'parseExcelClipboardMatrix',
@@ -540,7 +540,7 @@ for (const requiredHelper of [
 ]) {
   if (!excelGridModel.includes(requiredHelper)) failures.push(`ExcelGridModel.ts must keep ${requiredHelper} after MVP17 extraction.`);
 }
-const excelCellModel = read('src/shared/ui/views/excel-view/ExcelCellModel.ts');
+const excelCellModel = read('src/features/settings/views/runtime/excel-view/ExcelCellModel.ts');
 for (const requiredHelper of [
   'buildExcelCellUiState',
   'resolveExcelCellEditorKeyAction',
@@ -552,19 +552,19 @@ for (const requiredHelper of [
 }
 
 
-if (!exists('src/shared/ui/views/excel-view/ExcelCellEditingModel.ts')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelCellEditingModel.ts')) {
   failures.push('ExcelCellEditingModel.ts must exist after MVP18 useExcelCellEditing extraction.');
 }
-if (!exists('src/shared/ui/views/excel-view/ExcelColumnToolbarModel.ts')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelColumnToolbarModel.ts')) {
   failures.push('ExcelColumnToolbarModel.ts must exist after MVP18 column toolbar model extraction.');
 }
-if (!exists('src/shared/ui/views/excel-view/ExcelColumnChipList.tsx')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelColumnChipList.tsx')) {
   failures.push('ExcelColumnChipList.tsx must exist after MVP18 column chip list extraction.');
 }
-if (!exists('src/shared/ui/views/excel-view/ExcelColumnContextMenu.tsx')) {
+if (!exists('src/features/settings/views/runtime/excel-view/ExcelColumnContextMenu.tsx')) {
   failures.push('ExcelColumnContextMenu.tsx must exist after MVP18 column context menu extraction.');
 }
-const useExcelCellEditing = read('src/shared/ui/views/excel-view/useExcelCellEditing.ts');
+const useExcelCellEditing = read('src/features/settings/views/runtime/excel-view/useExcelCellEditing.ts');
 const useExcelCellEditingLines = useExcelCellEditing.split(/\r?\n/).length;
 if (useExcelCellEditingLines > 240) failures.push(`useExcelCellEditing.ts should stay <= 240 lines after MVP18 editing model extraction; current ${useExcelCellEditingLines}.`);
 for (const forbiddenLocal of [
@@ -578,7 +578,7 @@ for (const forbiddenLocal of [
 ]) {
   if (useExcelCellEditing.includes(forbiddenLocal)) failures.push(`useExcelCellEditing.ts must not keep local ${forbiddenLocal} after MVP18 extraction.`);
 }
-const excelCellEditingModel = read('src/shared/ui/views/excel-view/ExcelCellEditingModel.ts');
+const excelCellEditingModel = read('src/features/settings/views/runtime/excel-view/ExcelCellEditingModel.ts');
 for (const requiredHelper of [
   'buildExcelCellCommitPlan',
   'buildExcelSingleCellEditPlan',
@@ -588,7 +588,7 @@ for (const requiredHelper of [
 ]) {
   if (!excelCellEditingModel.includes(requiredHelper)) failures.push(`ExcelCellEditingModel.ts must keep ${requiredHelper} after MVP18 extraction.`);
 }
-const excelColumnToolbar = read('src/shared/ui/views/excel-view/ExcelColumnToolbar.tsx');
+const excelColumnToolbar = read('src/features/settings/views/runtime/excel-view/ExcelColumnToolbar.tsx');
 const excelColumnToolbarLines = excelColumnToolbar.split(/\r?\n/).length;
 if (excelColumnToolbarLines > 130) failures.push(`ExcelColumnToolbar.tsx should stay <= 130 lines after MVP18 model/chip/menu extraction; current ${excelColumnToolbarLines}.`);
 for (const forbiddenLocal of [
@@ -599,7 +599,7 @@ for (const forbiddenLocal of [
 ]) {
   if (excelColumnToolbar.includes(forbiddenLocal)) failures.push(`ExcelColumnToolbar.tsx must not keep local ${forbiddenLocal} after MVP18 extraction.`);
 }
-const excelColumnToolbarModel = read('src/shared/ui/views/excel-view/ExcelColumnToolbarModel.ts');
+const excelColumnToolbarModel = read('src/features/settings/views/runtime/excel-view/ExcelColumnToolbarModel.ts');
 for (const requiredHelper of [
   'moveExcelColumnField',
   'buildExcelColumnAvailableOptions',
@@ -610,10 +610,10 @@ for (const requiredHelper of [
 }
 
 
-if (!exists('src/shared/ui/views/TimeNavigatorModel.ts')) {
+if (!exists('src/features/settings/views/runtime/TimeNavigatorModel.ts')) {
   failures.push('TimeNavigatorModel.ts must exist after MVP19 time navigator model extraction.');
 }
-const timeNavigator = read('src/shared/ui/views/TimeNavigator.tsx');
+const timeNavigator = read('src/features/settings/views/runtime/TimeNavigator.tsx');
 const timeNavigatorLines = timeNavigator.split(/\r?\n/).length;
 if (timeNavigatorLines > 100) failures.push(`TimeNavigator.tsx should stay <= 100 lines after MVP19 model extraction; current ${timeNavigatorLines}.`);
 for (const forbiddenLocal of [
@@ -624,7 +624,7 @@ for (const forbiddenLocal of [
 ]) {
   if (timeNavigator.includes(forbiddenLocal)) failures.push(`TimeNavigator.tsx must not keep local ${forbiddenLocal} after MVP19 extraction.`);
 }
-const timeNavigatorModel = read('src/shared/ui/views/TimeNavigatorModel.ts');
+const timeNavigatorModel = read('src/features/settings/views/runtime/TimeNavigatorModel.ts');
 for (const requiredHelper of [
   'buildTimeNavigatorSelection',
   'buildTimeNavigatorQuarterBlocks',
@@ -634,10 +634,10 @@ for (const requiredHelper of [
   if (!timeNavigatorModel.includes(requiredHelper)) failures.push(`TimeNavigatorModel.ts must keep ${requiredHelper} after MVP19 extraction.`);
 }
 
-if (!exists('src/shared/ui/views/ViewToolbarModel.ts')) {
+if (!exists('src/features/settings/views/runtime/ViewToolbarModel.ts')) {
   failures.push('ViewToolbarModel.ts must exist after MVP19 view toolbar model extraction.');
 }
-const viewToolbar = read('src/shared/ui/views/ViewToolbar.tsx');
+const viewToolbar = read('src/features/settings/views/runtime/ViewToolbar.tsx');
 const viewToolbarLines = viewToolbar.split(/\r?\n/).length;
 if (viewToolbarLines > 130) failures.push(`ViewToolbar.tsx should stay <= 130 lines after MVP19 model extraction; current ${viewToolbarLines}.`);
 for (const forbiddenLocal of [
@@ -648,7 +648,7 @@ for (const forbiddenLocal of [
 ]) {
   if (viewToolbar.includes(forbiddenLocal)) failures.push(`ViewToolbar.tsx must not keep local ${forbiddenLocal} after MVP19 extraction.`);
 }
-const viewToolbarModel = read('src/shared/ui/views/ViewToolbarModel.ts');
+const viewToolbarModel = read('src/features/settings/views/runtime/ViewToolbarModel.ts');
 for (const requiredHelper of [
   'VIEW_TOOLBAR_OPTIONS',
   'getViewToolbarUnit',
@@ -659,39 +659,39 @@ for (const requiredHelper of [
 }
 
 
-if (!exists('src/shared/ui/views/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx')) {
+if (!exists('src/features/settings/views/runtime/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx')) {
   failures.push('StatisticsGoalThemeSummaryStrip.tsx must exist after MVP20 statistics summary strip extraction.');
 }
 for (const periodModel of [
-  'src/shared/ui/views/StatisticsView/views/MonthStatisticsViewModel.ts',
-  'src/shared/ui/views/StatisticsView/views/QuarterStatisticsViewModel.ts',
-  'src/shared/ui/views/StatisticsView/views/YearStatisticsViewModel.ts',
+  'src/features/settings/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts',
+  'src/features/settings/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts',
+  'src/features/settings/views/runtime/StatisticsView/views/YearStatisticsViewModel.ts',
 ]) {
   if (!exists(periodModel)) failures.push(`${periodModel} must exist after MVP20 statistics period model extraction.`);
 }
-const statisticsViewView = read('src/shared/ui/views/StatisticsView/StatisticsViewView.tsx');
+const statisticsViewView = read('src/features/settings/views/runtime/StatisticsView/StatisticsViewView.tsx');
 const statisticsViewViewLines = statisticsViewView.split(/\r?\n/).length;
 if (statisticsViewViewLines > 110) failures.push(`StatisticsViewView.tsx should stay <= 110 lines after MVP20 summary strip extraction; current ${statisticsViewViewLines}.`);
 if (statisticsViewView.includes('function GoalThemeSummaryStrip')) failures.push('StatisticsViewView.tsx must not keep inline GoalThemeSummaryStrip after MVP20 extraction.');
-const monthStatisticsView = read('src/shared/ui/views/StatisticsView/views/MonthStatisticsView.tsx');
+const monthStatisticsView = read('src/features/settings/views/runtime/StatisticsView/views/MonthStatisticsView.tsx');
 const monthStatisticsViewLines = monthStatisticsView.split(/\r?\n/).length;
 if (monthStatisticsViewLines > 90) failures.push(`MonthStatisticsView.tsx should stay <= 90 lines after MVP20 model extraction; current ${monthStatisticsViewLines}.`);
 for (const forbiddenLocal of ['getMonthWeeksData', 'isSameIsoWeek', 'let weekCursor', 'const weeksMeta']) {
   if (monthStatisticsView.includes(forbiddenLocal)) failures.push(`MonthStatisticsView.tsx must not keep local ${forbiddenLocal} after MVP20 extraction.`);
 }
-const quarterStatisticsView = read('src/shared/ui/views/StatisticsView/views/QuarterStatisticsView.tsx');
+const quarterStatisticsView = read('src/features/settings/views/runtime/StatisticsView/views/QuarterStatisticsView.tsx');
 const quarterStatisticsViewLines = quarterStatisticsView.split(/\r?\n/).length;
 if (quarterStatisticsViewLines > 110) failures.push(`QuarterStatisticsView.tsx should stay <= 110 lines after MVP20 model extraction; current ${quarterStatisticsViewLines}.`);
 for (const forbiddenLocal of ['aggregateByQuarter', 'aggregateByMonth', 'getMonthWeeksData', 'let weekCursor', 'const monthsInfo']) {
   if (quarterStatisticsView.includes(forbiddenLocal)) failures.push(`QuarterStatisticsView.tsx must not keep local ${forbiddenLocal} after MVP20 extraction.`);
 }
-const yearStatisticsView = read('src/shared/ui/views/StatisticsView/views/YearStatisticsView.tsx');
+const yearStatisticsView = read('src/features/settings/views/runtime/StatisticsView/views/YearStatisticsView.tsx');
 const yearStatisticsViewLines = yearStatisticsView.split(/\r?\n/).length;
 if (yearStatisticsViewLines > 125) failures.push(`YearStatisticsView.tsx should stay <= 125 lines after MVP20 model extraction; current ${yearStatisticsViewLines}.`);
 for (const forbiddenLocal of ['Math.max', 'createPeriodData', 'weekIndex', 'const maxWeeksInMonth']) {
   if (yearStatisticsView.includes(forbiddenLocal)) failures.push(`YearStatisticsView.tsx must not keep local ${forbiddenLocal} after MVP20 extraction.`);
 }
-const statisticsGoalThemeSummaryStrip = read('src/shared/ui/views/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx');
+const statisticsGoalThemeSummaryStrip = read('src/features/settings/views/runtime/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx');
 for (const requiredHelper of [
   'getStatisticsGoalThemeSummaryRows',
   'getStatisticsGoalThemeSummaryLabel',
@@ -700,15 +700,15 @@ for (const requiredHelper of [
 ]) {
   if (!statisticsGoalThemeSummaryStrip.includes(requiredHelper)) failures.push(`StatisticsGoalThemeSummaryStrip.tsx must keep ${requiredHelper} after MVP20 extraction.`);
 }
-const monthStatisticsViewModel = read('src/shared/ui/views/StatisticsView/views/MonthStatisticsViewModel.ts');
+const monthStatisticsViewModel = read('src/features/settings/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts');
 for (const requiredHelper of ['buildMonthWeekMeta', 'buildMonthStatisticsRenderModel']) {
   if (!monthStatisticsViewModel.includes(requiredHelper)) failures.push(`MonthStatisticsViewModel.ts must keep ${requiredHelper} after MVP20 extraction.`);
 }
-const quarterStatisticsViewModel = read('src/shared/ui/views/StatisticsView/views/QuarterStatisticsViewModel.ts');
+const quarterStatisticsViewModel = read('src/features/settings/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts');
 for (const requiredHelper of ['buildQuarterMonthWeekStarts', 'buildQuarterStatisticsRenderModel']) {
   if (!quarterStatisticsViewModel.includes(requiredHelper)) failures.push(`QuarterStatisticsViewModel.ts must keep ${requiredHelper} after MVP20 extraction.`);
 }
-const yearStatisticsViewModel = read('src/shared/ui/views/StatisticsView/views/YearStatisticsViewModel.ts');
+const yearStatisticsViewModel = read('src/features/settings/views/runtime/StatisticsView/views/YearStatisticsViewModel.ts');
 for (const requiredHelper of ['getYearStatisticsMaxWeeksInMonth', 'buildYearStatisticsRenderModel']) {
   if (!yearStatisticsViewModel.includes(requiredHelper)) failures.push(`YearStatisticsViewModel.ts must keep ${requiredHelper} after MVP20 extraction.`);
 }

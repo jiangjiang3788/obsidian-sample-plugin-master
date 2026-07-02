@@ -7,11 +7,11 @@ import { DataStore } from '@core/services/DataStore';
 import {
   resolveBlockRangeForMutation,
   resolveTaskLineIndexForMutation,
-} from '@core/services/recordInput/mutationLocator';
-import { createRecordConflictError } from '@core/services/recordInput/mutationErrors';
-import { buildRecordOutputPlan } from '@core/services/recordInput/snapshot/OutputPlanner';
-import { appendUnderHeader } from '@core/services/recordInput/mutation/HeaderAppender';
-import { mergeTaskLinePreservingSourceContext } from '@core/services/recordInput/mutation/TaskLinePatch';
+} from '@core/recordInput/mutationLocator';
+import { createRecordConflictError } from '@core/recordInput/mutationErrors';
+import { buildRecordOutputPlan } from '@core/recordInput/snapshot/OutputPlanner';
+import { appendUnderHeader } from '@core/recordInput/mutation/HeaderAppender';
+import { mergeTaskLinePreservingSourceContext } from '@core/recordInput/mutation/TaskLinePatch';
 
 export interface RecordWriteOptions {
   signal?: AbortSignal;

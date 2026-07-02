@@ -1,5 +1,5 @@
 import { requestUrl } from 'obsidian';
-import { ObsidianAiHttpTransport } from '@/platform/ObsidianAiHttpTransport';
+import { ObsidianAiHttpTransport } from '@/platform/obsidian/ObsidianAiHttpTransport';
 
 const requestUrlMock = requestUrl as jest.MockedFunction<typeof requestUrl>;
 

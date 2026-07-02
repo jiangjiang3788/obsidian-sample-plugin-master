@@ -2,8 +2,9 @@
 /**
  * refactor-release-gate
  *
- * V19 closes the second-round refactor by checking that the locked budgets,
- * module-public boundary rules, and manual regression checklist stay present.
+ * V31 keeps the V25 folder/schema release pass intact while checking that the final
+ * deep-refactor locked budgets, module-public boundary rules, prompt guardrails,
+ * and manual regression checklist stay present.
  * It intentionally does not replace typecheck/build; it makes the release
  * acceptance surface explicit and hard to accidentally delete.
  */
@@ -58,14 +59,21 @@ requireIncludes('package.json scripts.gate', scripts.gate ?? '', 'refactor:budge
 requireIncludes('package.json scripts.gate', scripts.gate ?? '', 'refactor:release');
 requireIncludes('package.json scripts.refactor:verify', scripts['refactor:verify'] ?? '', 'refactor:release');
 requireIncludes('package.json scripts.refactor:release', scripts['refactor:release'] ?? '', 'refactor-release-gate.mjs');
+requireIncludes('package.json scripts.gate', scripts.gate ?? '', 'deep-refactor-final:gate');
+requireIncludes('package.json scripts.deep-refactor-final:gate', scripts['deep-refactor-final:gate'] ?? '', 'deep-refactor-final-gate.mjs');
+requireIncludes('package.json scripts.gate', scripts.gate ?? '', 'schema:gate');
+requireIncludes('package.json scripts.refactor:verify', scripts['refactor:verify'] ?? '', 'schema:gate');
 
 const budgets = budgetJson?.budgets;
-if (budgetJson?.version !== 'V19-refactor-release-locked') failures.push(`refactor budget version is ${budgetJson?.version}`);
+if (budgetJson?.version !== 'V31-deep-refactor-final-locked') failures.push(`refactor budget version is ${budgetJson?.version}`);
 requireBudget(budgets, 'filesOver500Lines', 0);
 requireBudget(budgets, 'nonCssFilesOver500Lines', 0);
 requireBudget(budgets, 'coreRootPublicImporters', 0);
 requireBudget(budgets, 'sharedRootPublicImporters', 0);
-requireBudget(budgets, 'srcExplicitAny', 671);
+requireBudget(budgets, 'srcExplicitAny', 501);
+requireBudget(budgets, 'tsLikeFilesOver450Lines', 0);
+requireBudget(budgets, 'tsxFilesOver350Lines', 1);
+requireBudget(budgets, 'largeFileCandidates', 3);
 requireBudget(budgets, 'minimumCoreModulePublicFacades', 16);
 requireBudget(budgets, 'minimumSharedModulePublicFacades', 8);
 
@@ -78,12 +86,14 @@ for (const requiredSection of [
   '三端回归',
   'Public API / 类型预算回归',
   '发布命令',
+  '当前版 schema 验收',
 ]) {
   requireIncludes('docs/REFACTOR_ACCEPTANCE_CHECKLIST.md', checklist, requiredSection);
 }
 
 for (const requiredText of [
   '第二轮深度改造封版验收',
+  '第三轮目录重排与当前 schema 封版验收',
   'npm run refactor:verify',
   'npm run gate',
   'npm run typecheck',
@@ -92,21 +102,22 @@ for (const requiredText of [
   requireIncludes('docs/MVP_ACCEPTANCE.md', mvp, requiredText);
 }
 
-requireIncludes('docs/ARCH_REFACTOR_REPORT.md', arch, '## 19. V19 预算锁定与回归验收封版');
-requireIncludes('scripts/gates/refactor-budget-gate.mjs', budgetGate, 'V19');
-requireIncludes('scripts/gates/any-budget-gate.mjs', anyGate, 'V19');
+requireIncludes('docs/ARCH_REFACTOR_REPORT.md', arch, '## 25. V25 当前版 schema 锁定与目录封版');
+requireIncludes('docs/ARCH_REFACTOR_REPORT.md', arch, '## 31. V31 预算 / gate / 文档封版');
+requireIncludes('scripts/gates/refactor-budget-gate.mjs', budgetGate, 'V31');
+requireIncludes('scripts/gates/any-budget-gate.mjs', anyGate, 'V31');
 
 const report = buildReport({ root });
 if (report.fileHotspots.filesOver500Lines !== 0) failures.push(`files >= 500 lines: ${report.fileHotspots.filesOver500Lines} !== 0`);
 if (report.fileHotspots.nonCssFilesOver500Lines !== 0) failures.push(`non-CSS files >= 500 lines: ${report.fileHotspots.nonCssFilesOver500Lines} !== 0`);
 if (report.boundary.corePublic.imports.importers.length !== 0) failures.push(`@core/public importers: ${report.boundary.corePublic.imports.importers.length} !== 0`);
 if (report.boundary.sharedPublic.imports.importers.length !== 0) failures.push(`@shared/public importers: ${report.boundary.sharedPublic.imports.importers.length} !== 0`);
-if (report.typeHealth.explicitAny > 671) failures.push(`src explicit any: ${report.typeHealth.explicitAny} > 671`);
+if (report.typeHealth.explicitAny > 501) failures.push(`src explicit any: ${report.typeHealth.explicitAny} > 501`);
 
-console.log('[refactor-release-gate] V19 release acceptance');
+console.log('[refactor-release-gate] V31 release acceptance');
 console.log(`- files >= 500 lines: ${report.fileHotspots.filesOver500Lines}/0`);
 console.log(`- non-CSS files >= 500 lines: ${report.fileHotspots.nonCssFilesOver500Lines}/0`);
-console.log(`- src explicit any: ${report.typeHealth.explicitAny}/671`);
+console.log(`- src explicit any: ${report.typeHealth.explicitAny}/501`);
 console.log(`- root public importers: core ${report.boundary.corePublic.imports.importers.length}/0, shared ${report.boundary.sharedPublic.imports.importers.length}/0`);
 console.log(`- module public facades: core ${report.boundary.corePublicFacades.filter((facade) => facade.scope === 'module' && facade.exists).length}/16, shared ${report.boundary.sharedPublicFacades.filter((facade) => facade.scope === 'module' && facade.exists).length}/8`);
 
@@ -116,4 +127,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('[refactor-release-gate] ok: V19 acceptance checklist and locked budgets are present.');
+console.log('[refactor-release-gate] ok: V25 folder/schema release checklist and V31 deep-refactor final budget are present.');

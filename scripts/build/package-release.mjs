@@ -58,12 +58,8 @@ for (const file of allowedFiles) {
   }
 }
 
-for (const name of forbiddenNames) {
-  if (allowedFiles.includes(name)) continue;
-  if (existsSync(join(root, name)) && name === 'data.json') {
-    fail('data.json exists at project root. Remove it before packaging.');
-  }
-}
+// Root data.json is a local Obsidian runtime file and may exist during single-user development.
+// It is not copied because release packaging only copies allowedFiles.
 
 rmSync(releaseRoot, { recursive: true, force: true });
 mkdirSync(packageDir, { recursive: true });

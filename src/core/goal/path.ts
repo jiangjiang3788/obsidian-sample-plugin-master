@@ -18,3 +18,10 @@ export function splitGoalPath(path?: string | null): GoalPathParts {
     leafGoal: parts.leaf,
   };
 }
+
+export function getGoalPathCandidates(path?: string | null): string[] {
+  const parts = splitHierarchyPathValue(path, { stripLeadingHashes: true }).parts;
+  const result: string[] = [];
+  for (let i = parts.length; i >= 1; i -= 1) result.push(parts.slice(0, i).join('/'));
+  return result;
+}

@@ -1,4 +1,4 @@
-import { appendUnderHeader } from '@/core/services/recordInput/mutation/HeaderAppender';
+import { appendUnderHeader } from '@/core/recordInput/mutation/HeaderAppender';
 
 function createMemoryVault(initial: Record<string, string | null> = {}) {
   const files = new Map(Object.entries(initial));

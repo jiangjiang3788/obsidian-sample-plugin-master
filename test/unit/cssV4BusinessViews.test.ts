@@ -40,8 +40,8 @@ describe('CSS V4 business view convergence', () => {
 
   it('removes fixed visual skin from the Progress components', () => {
     const source = [
-      read('src/shared/ui/views/ProgressView.tsx'),
-      read('src/shared/ui/views/ProgressGoalCard.tsx'),
+      read('src/features/settings/views/runtime/ProgressView.tsx'),
+      read('src/features/settings/views/runtime/ProgressGoalCard.tsx'),
     ].join('\n');
 
     expect(source).toContain('think-progress-card');

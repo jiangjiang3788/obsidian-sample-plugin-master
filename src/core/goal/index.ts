@@ -12,7 +12,7 @@ export type {
   GoalSettings,
 } from './types';
 export { DEFAULT_GOAL_SETTINGS } from './types';
-export { normalizeGoalPath, splitGoalPath } from './path';
+export { getGoalPathCandidates, normalizeGoalPath, splitGoalPath } from './path';
 export { getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder } from './order';
 export type { GoalOrderIndex } from './order';
 export type { GoalPathParts } from './path';

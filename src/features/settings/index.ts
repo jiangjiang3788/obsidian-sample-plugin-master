@@ -17,18 +17,17 @@ export { ThemeManager } from './theme/ThemeManager';
 /* ========================================================================== */
 
 import type ThinkPlugin from '@main';
-import { SettingsTab } from '@/platform/SettingsTab';
-import { registerThinkSettingsWorkspaceView, openThinkSettingsWorkspaceView } from '@/platform/ThinkSettingsView';
+import { SettingsTab, registerThinkSettingsWorkspaceView, openThinkSettingsWorkspaceView } from '@/platform/obsidian/public';
 import { DataStore } from '@core/services/public';
 
-import { BlockViewEditor } from './viewEditors/BlockViewEditor';
-import { ExcelViewEditor } from './viewEditors/ExcelViewEditor';
-import { HeatmapViewEditor } from './viewEditors/HeatmapViewEditor';
-import { StatisticsViewEditor } from './viewEditors/StatisticsViewEditor';
-import { ProgressViewEditor } from './viewEditors/ProgressViewEditor';
-import { TaskExecutionViewEditor } from './viewEditors/TaskExecutionViewEditor';
-import { TableViewEditor } from './viewEditors/TableViewEditor';
-import { TimelineViewEditor } from './viewEditors/TimelineViewEditor';
+import { BlockViewEditor } from './views/editors/BlockViewEditor';
+import { ExcelViewEditor } from './views/editors/ExcelViewEditor';
+import { HeatmapViewEditor } from './views/editors/HeatmapViewEditor';
+import { StatisticsViewEditor } from './views/editors/StatisticsViewEditor';
+import { ProgressViewEditor } from './views/editors/ProgressViewEditor';
+import { TaskExecutionViewEditor } from './views/editors/TaskExecutionViewEditor';
+import { TableViewEditor } from './views/editors/TableViewEditor';
+import { TimelineViewEditor } from './views/editors/TimelineViewEditor';
 
 // 设置页里的多个子设置组件
 export { LayoutSettings } from './tabs/LayoutSettings';
@@ -88,7 +87,7 @@ import type { RendererService } from './layout/RendererService';
 import type { EventsPort } from '@core/ports/public';
 import type { ActionService } from '@core/services/public';
 
-import { VaultWatcher } from '@/platform/events/VaultWatcher';
+import { VaultWatcher } from '@/platform/obsidian/public';
 import { CodeblockEmbedder } from './layout/CodeblockEmbedder';
 
 /** 
@@ -135,7 +134,7 @@ import {
   HeatmapView,
   ProgressView,
   TaskExecutionView,
-} from '@shared/ui/public';
+} from '@features/settings/views/public';
 import type { ComponentType } from 'preact';
 
 /** 从 Domain 层导入 ViewName 和 VIEW_OPTIONS */

@@ -9,7 +9,7 @@ import {
   deriveQuickInputInitialSelection,
   hydrateQuickInputTemplateDefaults,
   preserveQuickInputBlockSwitchState,
-} from '@/app/ui/components/QuickInputEditor/QuickInputEditorModel';
+} from '@features/quickinput/editor/QuickInputEditorModel';
 
 describe('QuickInputEditorModel', () => {
 

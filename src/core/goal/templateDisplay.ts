@@ -2,7 +2,9 @@ import type { TemplateField } from '@/core/types/schema';
 import type { GoalDefinition } from './types';
 import type { GoalTemplate } from './templates';
 import { DEFAULT_TEMPLATE_VARIANT_ID, normalizeTemplateVariantId } from './templateVariant';
-import { getHierarchyPathLeaf, normalizeHierarchyPathValue } from '@/core/semantics/path';
+import { compactText } from '@/core/semantics/text';
+import { getThemePathLeaf, normalizeThemePath } from '@/core/theme/themePathSemantics';
+import { isIconTemplateField, isThemeTemplateField } from '@/core/fields/fieldTokenSemantics';
 import { readOptionText as readOptionTextParts } from '@/core/semantics/option';
 
 export interface GoalTemplateDisplayInfo {
@@ -13,21 +15,8 @@ export interface GoalTemplateDisplayInfo {
   isGeneratedName: boolean;
 }
 
-function compactText(value: unknown): string {
-  return String(value ?? '').trim();
-}
-
-function normalizePath(value?: unknown): string {
-  return normalizeHierarchyPathValue(value, { stripLeadingHashes: true }) || '';
-}
-
 function readOptionText(value: unknown): string {
   return readOptionTextParts(value).value;
-}
-
-function leafPath(value: unknown): string {
-  const text = normalizePath(value);
-  return getHierarchyPathLeaf(text) || text;
 }
 
 export function isGeneratedGoalTemplateName(value: unknown): boolean {
@@ -41,22 +30,6 @@ export function isGeneratedGoalTemplateName(value: unknown): boolean {
     || text === '未命名预设';
 }
 
-function isThemeField(field: TemplateField): boolean {
-  const anyField = field as any;
-  const key = compactText(anyField.key).toLowerCase();
-  const label = compactText(anyField.label);
-  const semantic = compactText(anyField.semantic || anyField.semanticType).toLowerCase();
-  return key === 'themepath' || key === '主题' || label === '主题' || semantic.includes('themepath');
-}
-
-function isIconField(field: TemplateField): boolean {
-  const anyField = field as any;
-  const key = compactText(anyField.key).toLowerCase();
-  const label = compactText(anyField.label);
-  const semantic = compactText(anyField.semantic || anyField.semanticType).toLowerCase();
-  return key === 'icon' || key === '图标' || label === '图标' || semantic === 'icon';
-}
-
 function readFieldDefault(fields: TemplateField[] | undefined, predicate: (field: TemplateField) => boolean): string {
   for (const field of fields || []) {
     if (!predicate(field)) continue;
@@ -68,10 +41,10 @@ function readFieldDefault(fields: TemplateField[] | undefined, predicate: (field
 
 export function readGoalTemplateThemePath(template?: Partial<GoalTemplate> | null, goal?: Pick<GoalDefinition, 'themePath'> | null): string {
   const values = (template?.defaultValues || {}) as Record<string, unknown>;
-  return normalizePath(
+  return normalizeThemePath(
     readOptionText(values.themePath)
     || readOptionText(values['主题'])
-    || readFieldDefault(template?.fields as TemplateField[] | undefined, isThemeField)
+    || readFieldDefault(template?.fields as TemplateField[] | undefined, isThemeTemplateField)
     || readOptionText(goal?.themePath)
   );
 }
@@ -82,7 +55,7 @@ export function readGoalTemplateIcon(template?: Partial<GoalTemplate> | null, fa
     readOptionText(values.icon)
     || readOptionText(values['图标'])
     || readOptionText(values['theme.icon'])
-    || readFieldDefault(template?.fields as TemplateField[] | undefined, isIconField)
+    || readFieldDefault(template?.fields as TemplateField[] | undefined, isIconTemplateField)
     || fallbackIcon
   );
 }
@@ -95,7 +68,7 @@ export function getGoalTemplateDisplayName(
   const rawName = compactText(template?.name);
   if (rawName && !isGeneratedGoalTemplateName(rawName)) return rawName;
 
-  const themeLabel = leafPath(readGoalTemplateThemePath(template as Partial<GoalTemplate> | null, goal));
+  const themeLabel = getThemePathLeaf(readGoalTemplateThemePath(template as Partial<GoalTemplate> | null, goal));
   if (themeLabel) return themeLabel;
 
   const variantId = normalizeTemplateVariantId(compactText(template?.variantId));

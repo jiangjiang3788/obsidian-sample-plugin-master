@@ -2,12 +2,10 @@ import type { CoreBlockDefinition } from '@/core/blocks';
 import type { GoalDefinition } from './types';
 import type { GoalTemplate } from './templates';
 import { compactGoalTemplateForStorage } from './templateVariantDiff';
+import { compactText } from '@/core/semantics/text';
 
 export type GoalTemplateEditMode = 'inherit' | 'override' | 'disabled';
 
-function compactText(value: unknown): string {
-  return String(value ?? '').trim();
-}
 
 const SYSTEM_DISPLAY_DEFAULT_KEYS = new Set(['themePath', '主题', 'icon', '图标']);
 

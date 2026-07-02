@@ -2,6 +2,9 @@ import type { CoreBlockDefinition } from '@core/blocks/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import type { TemplateField } from '@core/types/public';
 import { getGoalTemplateId, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from '@core/goal/public';
+import { compactText } from '@core/semantics/public';
+import { getThemePathLeaf, normalizeThemePath } from '@core/theme/public';
+import { isGoalPathTemplateField, isIconTemplateField, isThemeTemplateField } from '@core/fields/public';
 
 export const GOAL_TEMPLATE_BLOCK_ORDER = ['打卡', '任务', '事件', '思考', '总结', '计划', '阻碍项', '里程碑'];
 const GOAL_TEMPLATE_BLOCK_ID_ORDER = ['core.habit', 'core.task', 'core.evidence', 'core.thought', 'core.review', 'core.plan', 'core.blocker', 'core.milestone'];
@@ -10,12 +13,8 @@ function cloneValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
-function normalizePath(value: unknown): string {
-  return String(value ?? '').split('/').map((part) => part.trim()).filter(Boolean).join('/');
-}
-
 function normalizeDefault(value: unknown): string {
-  const text = String(value ?? '').trim();
+  const text = compactText(value);
   if (!text || text === '{{goal.themePath}}') return '';
   return text;
 }
@@ -29,39 +28,10 @@ function safeVariantPart(value: unknown): string {
     .replace(/^-|-$/g, '') || 'preset';
 }
 
-function leafPath(value: unknown): string {
-  const text = String(value ?? '').trim();
-  return text.split('/').filter(Boolean).pop() || text;
-}
-
-function isThemeField(field: TemplateField): boolean {
-  const anyField = field as any;
-  const key = String(anyField.key || '').toLowerCase();
-  const label = String(anyField.label || '').trim();
-  const semantic = String(anyField.semantic || anyField.semanticType || '').toLowerCase();
-  return key === 'themepath' || key === '主题' || label === '主题' || semantic.includes('themepath');
-}
-
-function isIconField(field: TemplateField): boolean {
-  const anyField = field as any;
-  const key = String(anyField.key || '').toLowerCase();
-  const label = String(anyField.label || '').trim();
-  const semantic = String(anyField.semantic || anyField.semanticType || '').toLowerCase();
-  return key === 'icon' || key === '图标' || label === '图标' || semantic === 'icon';
-}
-
-function isGoalField(field: TemplateField): boolean {
-  const anyField = field as any;
-  const key = String(anyField.key || '').toLowerCase();
-  const label = String(anyField.label || '').trim();
-  const semantic = String(anyField.semantic || anyField.semanticType || '').toLowerCase();
-  return key === 'goalpath' || key === '目标' || label === '目标' || semantic.includes('goalpath');
-}
-
 function readFieldDefault(fields: TemplateField[] | undefined, predicate: (field: TemplateField) => boolean): string {
   for (const field of fields || []) {
     if (!predicate(field)) continue;
-    const value = normalizeDefault((field as any).defaultValue);
+    const value = normalizeDefault(field.defaultValue);
     if (value) return value;
   }
   return '';
@@ -89,9 +59,9 @@ export function getGoalTemplateDisplayName(template: Pick<GoalTemplate, 'name' |
 
 export function readGoalTemplateThemePath(template: GoalTemplate | null | undefined, goal?: GoalDefinition | null): string {
   const values = (template?.defaultValues || {}) as Record<string, unknown>;
-  return normalizePath(normalizeDefault(values.themePath)
+  return normalizeThemePath(normalizeDefault(values.themePath)
     || normalizeDefault(values['主题'])
-    || readFieldDefault(template?.fields, isThemeField)
+    || readFieldDefault(template?.fields, isThemeTemplateField)
     || normalizeDefault(goal?.themePath));
 }
 
@@ -100,7 +70,7 @@ export function readGoalTemplateIcon(template: GoalTemplate | null | undefined, 
   return String(normalizeDefault(values.icon)
     || normalizeDefault(values['图标'])
     || normalizeDefault(values['theme.icon'])
-    || readFieldDefault(template?.fields, isIconField)
+    || readFieldDefault(template?.fields, isIconTemplateField)
     || themeIcon
     || '').trim();
 }
@@ -136,9 +106,9 @@ function nextVariantId(goal: GoalDefinition, targetBlock: CoreBlockDefinition, t
 
 function buildTargetFields(block: CoreBlockDefinition, goal: GoalDefinition, themePath: string, icon: string): TemplateField[] {
   return cloneValue(block.fields || []).map((field: TemplateField) => {
-    if (isThemeField(field)) return { ...(field as any), defaultValue: themePath || (field as any).defaultValue || '{{goal.themePath}}' } as TemplateField;
-    if (isIconField(field)) return { ...(field as any), defaultValue: icon || (field as any).defaultValue || '' } as TemplateField;
-    if (isGoalField(field)) return { ...(field as any), defaultValue: goal.goalPath || goal.title || goal.id } as TemplateField;
+    if (isThemeTemplateField(field)) return { ...field, defaultValue: themePath || field.defaultValue || '{{goal.themePath}}' } as TemplateField;
+    if (isIconTemplateField(field)) return { ...field, defaultValue: icon || field.defaultValue || '' } as TemplateField;
+    if (isGoalPathTemplateField(field)) return { ...field, defaultValue: goal.goalPath || goal.title || goal.id } as TemplateField;
     return field;
   });
 }
@@ -157,7 +127,7 @@ export function buildRetargetedGoalTemplate(input: {
   const themePath = readGoalTemplateThemePath(sourceTemplate, sourceGoal);
   const icon = readGoalTemplateIcon(sourceTemplate, themeIcon);
   const name = getGoalTemplateDisplayName(sourceTemplate);
-  const label = themePath ? leafPath(themePath) : name;
+  const label = themePath ? getThemePathLeaf(themePath) : name;
   const variantId = nextVariantId(targetGoal, targetBlock, templates, label || name || targetBlock.name);
   const goalPath = targetGoal.goalPath || targetGoal.title || targetGoal.id;
   const defaultValues: Record<string, unknown> = {
@@ -182,14 +152,14 @@ export function buildRetargetedGoalTemplate(input: {
     description: reason === 'move'
       ? `由「${sourceGoal.goalPath || sourceGoal.title} / ${sourceBlock.name}」移动到「${targetGoal.goalPath || targetGoal.title} / ${targetBlock.name}」`
       : `由「${sourceBlock.name}」预设复制到「${targetBlock.name}」`,
-    periodPolicy: isPeriodAwareCoreBlock(targetBlock.id) ? { enabled: true, granularity: normalizePeriodPolicyGranularity(sourceTemplate.periodPolicy?.granularity || (targetBlock as any).periodPolicy?.granularity) } : undefined,
+    periodPolicy: isPeriodAwareCoreBlock(targetBlock.id) ? { enabled: true, granularity: normalizePeriodPolicyGranularity(sourceTemplate.periodPolicy?.granularity || targetBlock.periodPolicy?.granularity) } : undefined,
     sortOrder: templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id).length * 10,
     enabled: sourceTemplate.enabled !== false,
     fields,
     outputTemplate: targetBlock.outputTemplate,
     targetFile: targetBlock.targetFile,
     appendUnderHeader: targetBlock.appendUnderHeader,
-    requiredFields: fields.filter((field: any) => field.required).map((field: any) => field.key).filter(Boolean),
+    requiredFields: fields.filter((field) => field.required).map((field) => field.key).filter(Boolean),
     defaultValues,
     createdAt: reason === 'move' ? sourceTemplate.createdAt || now : now,
     updatedAt: now,

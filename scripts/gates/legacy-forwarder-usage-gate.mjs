@@ -8,10 +8,10 @@ import path from 'path';
 const root = process.cwd();
 const scanRoots = ['src', 'test'];
 const ignoredFiles = new Set([
-  'src/shared/ui/views/TimelineView.tsx',
-  'src/shared/ui/views/EventTimelineView.tsx',
-  'src/shared/ui/views/StatisticsView.tsx',
-  'src/shared/ui/views/index.ts',
+  'src/features/settings/views/runtime/TimelineView.tsx',
+  'src/features/settings/views/runtime/EventTimelineView.tsx',
+  'src/features/settings/views/runtime/StatisticsView.tsx',
+  'src/features/settings/views/runtime/index.ts',
   'src/core/utils/themeUtils.ts',
   'src/core/utils/index.ts',
   'src/features/progression/types.ts',

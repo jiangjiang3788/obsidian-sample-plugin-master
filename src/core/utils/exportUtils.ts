@@ -2,7 +2,7 @@ import { Item, readField } from '@/core/types/schema';
 import { getFieldDefinition } from '@/core/fields/FieldRegistry';
 import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
 import { EMOJI } from '@/core/types/constants';
-import { getTaskStatus } from '@/core/utils/taskStatus';
+import { getTaskStatus } from '@/core/records/task/taskStatus';
 import { 
     BLOCK_EXPORT_DEFAULT_CONFIG, 
     EVENT_TIMELINE_EXPORT_CONFIG,

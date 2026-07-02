@@ -1,4 +1,4 @@
-import { buildProgressViewModel } from '@/features/settings/viewModels/progressViewModel';
+import { buildProgressViewModel } from '@/features/settings/views/models/progressViewModel';
 
 const items: any[] = [
   { id: '1', title: 'A', type: 'task', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },

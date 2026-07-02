@@ -3,7 +3,7 @@ import {
   findTableViewTimer,
   getTableViewEmptyMessage,
   isTableViewConfigured,
-} from '@/shared/ui/views/TableViewModel';
+} from '@/features/settings/views/runtime/TableViewModel';
 
 const items = [
   { id: 'a', type: 'block', title: 'A', fields: { status: 'todo', theme: 'work' } },

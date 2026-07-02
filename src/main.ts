@@ -9,7 +9,7 @@ import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
 import { DataStore } from '@core/services/public';
 import { InputService } from '@core/services/public';
-import { DEFAULT_SETTINGS, THINK_SETTINGS_SCHEMA_VERSION, type ThinkSettings } from '@core/types/public';
+import { toCurrentThinkSettings, type ThinkSettings } from '@core/types/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer } from '@core/bootstrap/public';
 import { setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/ai/public';
@@ -38,14 +38,16 @@ import { TimerStateService } from '@core/services/public';
 import { TimerService } from '@features/timer/TimerService';
 import { ActionService } from '@core/services/public';
 import { devLog } from '@core/utils/public';
-import { ObsidianVaultPort } from '@/platform/ObsidianVaultPort';
-import { ObsidianUiPort } from '@/platform/ObsidianUiPort';
-import { ObsidianModalPort } from '@/platform/ObsidianModalPort';
-import { ObsidianEventsPort } from '@/platform/ObsidianEventsPort';
-import { ObsidianMessageRenderPort } from '@/platform/ObsidianMessageRenderPort';
-import { ObsidianMetadataPort } from '@/platform/ObsidianMetadataPort';
-import { ObsidianFileStatPort } from '@/platform/ObsidianFileStatPort';
-import { ObsidianAiHttpTransport } from '@/platform/ObsidianAiHttpTransport';
+import {
+    ObsidianAiHttpTransport,
+    ObsidianEventsPort,
+    ObsidianFileStatPort,
+    ObsidianMessageRenderPort,
+    ObsidianMetadataPort,
+    ObsidianModalPort,
+    ObsidianUiPort,
+    ObsidianVaultPort,
+} from '@/platform/obsidian/public';
 
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -192,23 +194,7 @@ export default class ThinkPlugin extends Plugin {
     }
 
     private async loadSettings(): Promise<ThinkSettings> {
-        const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
-        const raw = stored && typeof stored === 'object' ? stored : {};
-        return {
-            ...DEFAULT_SETTINGS,
-            ...raw,
-            schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
-            groups: Array.isArray(raw.groups) ? raw.groups : [],
-            viewInstances: Array.isArray(raw.viewInstances) ? raw.viewInstances : [],
-            layouts: Array.isArray(raw.layouts) ? raw.layouts : [],
-            inputSettings: {
-                ...DEFAULT_SETTINGS.inputSettings,
-                ...(raw.inputSettings ?? {}),
-                blocks: Array.isArray(raw.inputSettings?.blocks) ? raw.inputSettings.blocks : [],
-                themes: Array.isArray(raw.inputSettings?.themes) ? raw.inputSettings.themes : [],
-            },
-            activeThemePaths: Array.isArray(raw.activeThemePaths) ? raw.activeThemePaths : [],
-        };
+        return toCurrentThinkSettings(await this.loadData());
     }
 
 

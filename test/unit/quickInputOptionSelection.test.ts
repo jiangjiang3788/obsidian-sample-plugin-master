@@ -3,7 +3,7 @@ import {
   isQuickInputChoiceSelected,
   normalizeQuickInputChoices,
   toQuickInputOptionObject,
-} from '@/app/ui/components/QuickInputEditor/components/quickInputOptionSelection';
+} from '@features/quickinput/editor/components/quickInputOptionSelection';
 
 describe('quickInputOptionSelection', () => {
   it('normalizes primitive and object options for visible single-select pills', () => {

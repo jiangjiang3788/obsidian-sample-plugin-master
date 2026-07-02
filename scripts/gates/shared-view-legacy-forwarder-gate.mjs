@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The tiny legacy files under shared/ui/views/*View.tsx may remain for backwards
+// The tiny legacy files under features/settings/views/runtime/*View.tsx may remain for backwards
 // compatible deep imports, but the public barrel must bypass them and export
 // directly from the real folder index modules.
 
@@ -10,7 +10,7 @@ function fail(message) {
   process.exit(1);
 }
 
-const file = 'src/shared/ui/views/index.ts';
+const file = 'src/features/settings/views/runtime/index.ts';
 const source = readFileSync(file, 'utf8');
 
 const required = [

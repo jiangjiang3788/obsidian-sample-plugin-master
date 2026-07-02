@@ -1,4 +1,4 @@
-import { buildTaskExecutionViewModel } from '@features/settings/viewModels/taskExecutionViewModel';
+import { buildTaskExecutionViewModel } from '@features/settings/views/models/taskExecutionViewModel';
 import type { Item, ViewInstance } from '@core/public';
 
 function item(partial: Partial<Item>): Item {

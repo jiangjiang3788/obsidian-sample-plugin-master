@@ -5,7 +5,7 @@ import {
   cleanEventTimelineDisplayText,
   filterEventTimelineItemsByDateRange,
   getEventTimelineTaskDisplayTitle,
-} from '@/shared/ui/views/EventTimelineView/EventTimelineViewModel';
+} from '@/features/settings/views/runtime/EventTimelineView/EventTimelineViewModel';
 
 const task = (id: string, date: string, content = '') => ({
   id,

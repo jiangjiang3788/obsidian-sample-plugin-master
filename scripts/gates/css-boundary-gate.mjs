@@ -218,8 +218,8 @@ for (const fragment of requiredMainFragments) {
 }
 
 const requiredScopeMarkers = [
-  ['src/platform/SettingsRoot.tsx', 'think-os--settings'],
-  ['src/platform/SettingsTab.tsx', 'think-os--settings'],
+  ['src/platform/obsidian/SettingsRoot.tsx', 'think-os--settings'],
+  ['src/platform/obsidian/SettingsTab.tsx', 'think-os--settings'],
   ['src/features/settings/layout/LayoutRenderer.tsx', 'think-os--layout'],
   ['src/shared/ui/primitives/Modal.tsx', 'think-os--modal'],
 ];
@@ -236,7 +236,7 @@ const v2Contracts = [
   ['src/shared/styles/mui-theme.ts', 'var(--think-control-height-md'],
   ['src/shared/ui/components/ThinkMuiThemeProvider.tsx', 'MutationObserver'],
   ['src/app/ui/mountWithServices.tsx', 'ThinkMuiThemeProvider'],
-  ['src/platform/modals/modalPreact.ts', 'ThinkMuiThemeProvider'],
+  ['src/platform/obsidian/modals/modalPreact.ts', 'ThinkMuiThemeProvider'],
 ];
 for (const [file, contract] of v2Contracts) {
   const full = path.join(ROOT, file);
@@ -252,10 +252,10 @@ const v3Contracts = [
   ['src/features/settings/tabs/DataManagementSettings.tsx', 'think-settings-page'],
   ['src/features/settings/tabs/AiSettings.tsx', 'think-settings-page'],
   ['src/features/settings/tabs/InputSettings.tsx', 'think-settings-page'],
-  ['src/features/settings/viewEditors/RuleBuilder.tsx', 'think-rule-builder'],
+  ['src/features/settings/views/editors/RuleBuilder.tsx', 'think-rule-builder'],
   ['src/features/settings/input/BlockManager.tsx', 'think-block-editor'],
   ['src/shared/ui/primitives/Modal.tsx', 'ThinkIconButton'],
-  ['src/platform/modals/CheckinManagerModal.tsx', 'think-checkin-modal-host'],
+  ['src/platform/obsidian/modals/CheckinManagerModal.tsx', 'think-checkin-modal-host'],
 ];
 for (const [file, contract] of v3Contracts) {
   const full = path.join(ROOT, file);
@@ -267,11 +267,11 @@ for (const [file, contract] of v3Contracts) {
 
 
 const v4Contracts = [
-  ['src/shared/ui/views/ProgressGoalCard.tsx', 'think-progress-card'],
-  ['src/shared/ui/views/ProgressView.tsx', 'think-progress-view'],
+  ['src/features/settings/views/runtime/ProgressGoalCard.tsx', 'think-progress-card'],
+  ['src/features/settings/views/runtime/ProgressView.tsx', 'think-progress-view'],
   ['src/features/settings/layout/ModulePanel.tsx', 'ThinkIconButton'],
-  ['src/shared/ui/heatmap/HeatmapCell.tsx', 'heatmap-cell-image'],
-  ['src/shared/ui/views/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx', 'sv-goal-summary-strip'],
+  ['src/features/settings/views/runtime/components/heatmap/HeatmapCell.tsx', 'heatmap-cell-image'],
+  ['src/features/settings/views/runtime/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx', 'sv-goal-summary-strip'],
 ];
 for (const [file, contract] of v4Contracts) {
   const full = path.join(ROOT, file);
@@ -304,9 +304,9 @@ const v5Contracts = [
   ['src/styles/components/task-row.css', 'think-table-cell-item'],
   ['src/styles/components/grouped-container.css', 'bv-group--level-1'],
   ['src/styles/overrides/quick-input-modal.css', 'think-quick-input-keyboard-detected'],
-  ['src/shared/ui/items/TaskRow.tsx', 'task-row-title'],
-  ['src/shared/ui/views/TableViewCell.tsx', 'think-table-cell-item'],
-  ['src/platform/modals/quickInputKeyboard.ts', 'think-quick-input-keyboard-detected'],
+  ['src/features/settings/views/runtime/components/items/TaskRow.tsx', 'task-row-title'],
+  ['src/features/settings/views/runtime/TableViewCell.tsx', 'think-table-cell-item'],
+  ['src/platform/obsidian/modals/quickInputKeyboard.ts', 'think-quick-input-keyboard-detected'],
 ];
 for (const [file, contract] of v5Contracts) {
   const full = path.join(ROOT, file);
@@ -370,7 +370,7 @@ for (const file of ['src/shared/styles/settings.css', 'src/shared/styles/statist
   }
 }
 
-for (const file of ['src/platform/SettingsRoot.tsx', 'src/platform/SettingsTab.tsx']) {
+for (const file of ['src/platform/obsidian/SettingsRoot.tsx', 'src/platform/obsidian/SettingsTab.tsx']) {
   const full = path.join(ROOT, file);
   const source = fs.existsSync(full) ? fs.readFileSync(full, 'utf8') : '';
   if (/ThemeProvider\s+theme=\{baseTheme\}/.test(source) || /<CssBaseline/.test(source)) {

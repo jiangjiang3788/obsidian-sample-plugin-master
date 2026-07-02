@@ -2,7 +2,7 @@ import {
   buildRecordSubmitFeedbackPresentation,
   getRecordConflictRecoveryAdvice,
   readRecordSubmitMessage,
-} from '@/core/utils/recordSubmitFeedback';
+} from '@/core/recordInput/feedback';
 import type { RecordSubmitResult } from '@core/public';
 
 function conflictResult(code: string, message: string): RecordSubmitResult {

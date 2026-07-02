@@ -11,7 +11,7 @@ import {
   progressBarWidth,
   ratioPercent,
   type GoalProgressCardModel,
-} from '@/shared/ui/views/ProgressViewModel';
+} from '@/features/settings/views/runtime/ProgressViewModel';
 
 const card = {
   key: 'g1',

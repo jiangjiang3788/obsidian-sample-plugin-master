@@ -2,11 +2,12 @@ import type { GoalTemplate } from '@core/goal/public';
 import type { TemplateField } from '@core/types/public';
 import { asUnknownRecord } from '@core/utils/public';
 import { readGoalTemplateThemePath } from '@core/goal/public';
+import { compactText } from '@core/semantics/public';
+import { getThemePathLeaf, normalizeThemePath } from '@core/theme/public';
+import { isIconTemplateField, isThemeTemplateField } from '@core/fields/public';
 import type { GoalTemplateDraftState } from './GoalTemplateEditorTypes';
 
-export function compactText(value: unknown): string {
-  return String(value ?? '').trim();
-}
+export { compactText, normalizeThemePath };
 
 export function cloneValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
@@ -19,48 +20,18 @@ function readOptionText(value: unknown): string {
   return compactText(value);
 }
 
-function cleanPathSegment(value: unknown): string {
-  return compactText(value).replace(/^[#＃]+\s*/, '').trim();
-}
-
-export function normalizeThemePath(path?: unknown): string {
-  return compactText(path)
-    .split('/')
-    .map(cleanPathSegment)
-    .filter(Boolean)
-    .join('/');
-}
 
 export function cleanDisplayThemePath(path?: unknown): string {
   return normalizeThemePath(path) || compactText(path);
 }
 
 export function themeLeafLabel(path?: unknown, fallback = ''): string {
-  const normalized = normalizeThemePath(path);
-  return normalized.split('/').filter(Boolean).pop() || fallback;
-}
-
-function getFieldSemantic(field: TemplateField): string {
-  return compactText(field.semantic || field.semanticType).toLowerCase();
-}
-
-function isThemeField(field: TemplateField): boolean {
-  const key = compactText(field.key).toLowerCase();
-  const label = compactText(field.label);
-  const semantic = getFieldSemantic(field);
-  return key === 'themepath' || key === '主题' || label === '主题' || semantic.includes('themepath') || semantic === 'theme';
-}
-
-function isIconField(field: TemplateField): boolean {
-  const key = compactText(field.key).toLowerCase();
-  const label = compactText(field.label);
-  const semantic = getFieldSemantic(field);
-  return key === 'icon' || key === '图标' || label === '图标' || semantic === 'icon';
+  return getThemePathLeaf(path) || fallback;
 }
 
 export function readThemePathFromFields(fields: TemplateField[] | undefined): string {
   for (const field of fields || []) {
-    if (!isThemeField(field)) continue;
+    if (!isThemeTemplateField(field)) continue;
     const value = readOptionText(field.defaultValue);
     if (value && value !== '{{goal.themePath}}') return normalizeThemePath(value);
   }
@@ -75,7 +46,7 @@ export function ensureThemeField(fields: TemplateField[], themePath: string): Te
   const normalizedThemePath = normalizeThemePath(themePath);
   let touched = false;
   const next = (fields || []).map((field) => {
-    if (!isThemeField(field)) return field;
+    if (!isThemeTemplateField(field)) return field;
     touched = true;
     return { ...field, defaultValue: normalizedThemePath || field.defaultValue || '{{goal.themePath}}' };
   });
@@ -112,7 +83,7 @@ export function mergeDefaultValues(
 
 function readIconFromFields(fields: TemplateField[] | undefined): string {
   for (const field of fields || []) {
-    if (!isIconField(field)) continue;
+    if (!isIconTemplateField(field)) continue;
     const value = readOptionText(field.defaultValue);
     if (value && value !== '{{theme.icon}}') return value;
   }

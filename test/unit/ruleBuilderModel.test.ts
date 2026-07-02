@@ -12,7 +12,7 @@ import {
   patchRuleRows,
   removeRuleAt,
   shouldShowRuleValueInput,
-} from '@/features/settings/viewEditors/RuleBuilderModel';
+} from '@/features/settings/views/editors/RuleBuilderModel';
 
 const filterRule = { field: 'status', op: '=', value: 'todo' } as any;
 const sortRule = { field: 'created', dir: 'desc' } as any;

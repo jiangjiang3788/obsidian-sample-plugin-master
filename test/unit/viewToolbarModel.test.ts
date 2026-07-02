@@ -3,7 +3,7 @@ import {
   getViewToolbarUnit,
   shouldRenderViewToolbarFallbackFilters,
   VIEW_TOOLBAR_OPTIONS,
-} from '@/shared/ui/views/ViewToolbarModel';
+} from '@/features/settings/views/runtime/ViewToolbarModel';
 import { dayjs } from '@core/public';
 
 describe('ViewToolbarModel', () => {

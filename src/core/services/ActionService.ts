@@ -1,7 +1,7 @@
 // src/core/services/ActionService.ts
 import { singleton, inject } from 'tsyringe';
 import { dayjs } from '@core/utils/date';
-import type { Item, ViewInstance, BlockTemplate } from '@/core/types/schema';
+import type { Item, ViewInstance, BlockTemplate, TemplateField } from '@/core/types/schema';
 import { getEffectiveCoreBlocks } from '@/core/blocks';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
@@ -57,7 +57,7 @@ export class ActionService {
         }
 
         const filters = viewInstance.filters || [];
-        const categoryFilter = filters.find((f: any) => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
+        const categoryFilter = filters.find((f) => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
         if (!categoryFilter || !categoryFilter.value) {
             this.ui.notice('快捷输入失败：此视图未按 "categoryKey" 进行筛选。');
             return null;
@@ -71,7 +71,7 @@ export class ActionService {
         }
 
         let preselectedThemeId: string | undefined;
-        const themeFilter = filters.find((f: any) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
+        const themeFilter = filters.find((f) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
         if (themeFilter) {
             const themePath = themeFilter.value;
             const matchedTheme = settings.inputSettings.themes.find(t => t.path === themePath);
@@ -80,12 +80,12 @@ export class ActionService {
             }
         }
 
-        const context: Record<string, any> = {
+        const context: Record<string, unknown> = {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
         };
 
-        const equalityFilters = filters.filter((f: any) => f.op === '=');
+        const equalityFilters = filters.filter((f) => f.op === '=');
         for (const filter of equalityFilters) {
             if (filter.field === 'categoryKey') continue;
 
@@ -105,7 +105,7 @@ export class ActionService {
     }
 
 
-    private buildFieldContextValue(field: any, item: Item): any {
+    private buildFieldContextValue(field: TemplateField, item: Item): unknown {
         const direct = readField(item, field.key) ?? readField(item, field.label);
         const fieldName = String(field.key || field.label || '');
         const isCategoryField = fieldName.includes('分类') || fieldName.toLowerCase().includes('category');
@@ -115,7 +115,7 @@ export class ActionService {
             const visual = item.pintu ?? item.extra?.['评图'] ?? item.extra?.['pintu'];
             if (field.options?.length) {
                 const scoreStr = score !== undefined && score !== null ? String(score) : '';
-                const matched = field.options.find((opt: any) =>
+                const matched = field.options.find((opt) =>
                     (scoreStr && String(opt.label || '') === scoreStr && (!visual || String(opt.value || '') === String(visual))) ||
                     (scoreStr && String(opt.label || '') === scoreStr) ||
                     (visual && String(opt.value || '') === String(visual))
@@ -129,7 +129,7 @@ export class ActionService {
             const pathValue = String(item.categoryKey || direct || '');
             if (!pathValue) return direct;
             if (field.options?.length) {
-                const matched = field.options.find((opt: any) => String(opt.value) === pathValue || String(opt.label) === getLeafPath(pathValue));
+                const matched = field.options.find((opt) => String(opt.value) === pathValue || String(opt.label) === getLeafPath(pathValue));
                 if (matched) return { value: matched.value, label: matched.label || matched.value };
             }
             return buildPathOption(pathValue) || direct;
@@ -153,7 +153,7 @@ export class ActionService {
             return null;
         }
 
-        const context: Record<string, any> = {};
+        const context: Record<string, unknown> = {};
         for (const field of targetBlock.fields) {
             const value = this.buildFieldContextValue(field, item);
             if (value !== undefined && value !== null) {
@@ -200,7 +200,7 @@ export class ActionService {
 
         let preselectedThemeId: string | undefined;
         const filters = viewInstance.filters || [];
-        const themeFilter = filters.find((f: any) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
+        const themeFilter = filters.find((f) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
         if (themeFilter) {
             const themePath = themeFilter.value;
             const matchedTheme = settings.inputSettings.themes.find(t => t.path === themePath);
@@ -209,12 +209,12 @@ export class ActionService {
             }
         }
 
-        const context: Record<string, any> = {
+        const context: Record<string, unknown> = {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
         };
 
-        const equalityFilters = filters.filter((f: any) => f.op === '=' && f.field !== 'categoryKey');
+        const equalityFilters = filters.filter((f) => f.op === '=' && f.field !== 'categoryKey');
         for (const filter of equalityFilters) {
             for (const templateField of targetBlock.fields) {
                 if (filter.field === templateField.key || filter.field === templateField.label) {

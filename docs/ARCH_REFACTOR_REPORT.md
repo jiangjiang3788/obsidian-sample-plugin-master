@@ -1,4 +1,28 @@
-# Think OS 深度架构改造报告（V7 基线）
+# Think OS 深度架构改造报告（V31 封版）
+
+> V31 是 V26～V31 深度收敛的封版入口。本报告前半部分保留 V7～V25 的历史架构记录，后半部分记录本轮 V26～V31 的最终结构、预算和后续开发约束。当前维护原则是：不要继续大拆已经小而清晰的组件；新增功能必须先做 ownership 判断、复用已有语义中心，并通过 gate 预算。
+
+## V31 当前快照
+
+| 指标 | V31 锁定值 |
+|---|---:|
+| `src` 文件数 | 756 |
+| `src` 总行数 | 71,383 |
+| TS-like 行数 | 64,132 |
+| CSS 行数 | 7,251 |
+| `>= 500` 行文件 | 0 |
+| 非 CSS `>= 500` 行文件 | 0 |
+| TS-like `>= 450` 行文件 | 0 |
+| TSX `>= 350` 行文件 | 1 |
+| explicit any | 501 |
+| `@core/public` importers | 0 |
+| `@shared/public` importers | 0 |
+| core module public facades | 16 |
+| shared module public facades | 8 |
+
+---
+
+# 历史架构改造记录（V7～V25）
 
 > V7 的目标不是先移动大量业务代码，而是建立后续 V8-V13 可以反复运行的改造指标、热点队列和不退化预算。后续每一版都应该让这些指标下降，或者明确说明为什么暂时不能下降。
 
@@ -163,10 +187,10 @@ src/core/theme/themePathParser.ts
 src/core/utils/pathUtils.ts
 src/core/fields/TemplateFieldAdapter.ts
 src/core/fields/FieldBehavior.ts
-src/core/services/recordInput/EditBackfillMapper.ts
-src/core/services/recordInput/RecordInputFacade.ts
-src/core/services/recordInput/session/policy.ts
-src/core/services/recordInput/snapshot/OutputPlanner.ts
+src/core/recordInput/EditBackfillMapper.ts
+src/core/recordInput/RecordInputFacade.ts
+src/core/recordInput/session/policy.ts
+src/core/recordInput/snapshot/OutputPlanner.ts
 src/core/goal/templateDisplay.ts
 ```
 
@@ -243,10 +267,10 @@ RecordMigrationTransaction
 同时把 `InputService` 中的写入细节拆成小的 core mutation helper：
 
 ```text
-src/core/services/recordInput/mutation/TaskLinePatch.ts
+src/core/recordInput/mutation/TaskLinePatch.ts
   负责任务行 checkbox 状态、tag、emoji date、recurrence、kv 元数据保留
 
-src/core/services/recordInput/mutation/HeaderAppender.ts
+src/core/recordInput/mutation/HeaderAppender.ts
   负责在 markdown heading 下追加内容
 ```
 
@@ -1050,3 +1074,597 @@ npm run gate
 ### 19.5 第二轮结论
 
 第二轮 V14～V19 完成后，架构治理状态从“已经有指标与部分拆分”推进到“复杂度预算被锁定、public 依赖真实迁移、主链回归清单可执行”。后续如果继续深化，优先方向不再是大文件拆分，而是更细粒度的领域语义收敛：目标/主题路径剩余热点、字段值语义剩余重复、以及 explicit any 的下一轮下压。
+
+
+## 20. V20 文件夹归属重排基线与本地 data.json 策略
+
+### 20.1 改造目标
+
+V20 开始第三轮整理：重点从“大文件与 public API 治理”转向“文件归属治理”。本版不大规模移动业务文件，而是建立 V21～V25 的目录迁移地图，并调整单人使用场景下的本地数据策略。
+
+### 20.2 本地 data.json 策略
+
+根目录 `data.json` 现在被视为本地 Obsidian 插件运行态文件：
+
+```text
+secret-gate 不再因为根目录 data.json 存在而失败
+package-release 不再因为根目录 data.json 存在而失败
+release 包仍然只复制 manifest.json、main.js、styles.css
+release-boundary 仍然禁止 data.json 进入发布包
+.gitignore 仍然忽略 data.json
+```
+
+这符合单人使用模式：本地可以有当前数据，发布包不能泄漏本地数据。
+
+### 20.3 新增文件夹治理命令
+
+新增：
+
+```bash
+npm run folder:map
+npm run folder:verify
+```
+
+`folder:map` 生成下一轮移动候选表；`folder:verify` 检查 `docs/FOLDER_REORG_PLAN.md`、data.json 策略和 V21～V25 迁移阶段是否存在。
+
+### 20.4 后续目录移动顺序
+
+```text
+V21 QuickInput：把快捷面板收进 features/quickinput
+V22 Settings / Views：把业务视图从 shared 移到 feature 归属
+V23 Core：合并 core recordInput，并删除旧兼容 facade / fallback
+V24 Shared / Platform：shared 只留通用能力，platform 明确为 Obsidian adapter
+V25 Schema / Release：只支持当前 schema，锁目录预算并生成 release 包
+```
+
+详细迁移表见 `docs/FOLDER_REORG_PLAN.md`。
+
+
+## 21. V21 QuickInput 目录归属重排
+
+### 21.1 改造目标
+
+V21 执行第三轮目录治理的第一步：把快捷面板从 app-wide UI 和 platform 业务 UI 中收敛到 `features/quickinput`。本版不改变 QuickInput 行为，重点是 ownership 清晰化。
+
+### 21.2 目录变化
+
+```text
+src/app/ui/components/QuickInputEditor/**
+  → src/features/quickinput/editor/**
+
+src/platform/obsidian/modals/QuickInputModalHeader.tsx
+src/platform/obsidian/modals/QuickInputModalFooter.tsx
+src/platform/obsidian/modals/QuickInputConflictRecoveryPanel.tsx
+src/platform/obsidian/modals/useQuickInputSubmit.ts
+src/platform/obsidian/modals/useQuickInputOutputPlan.ts
+src/platform/obsidian/modals/quickInputOperationMode.ts
+src/platform/obsidian/modals/quickInputOriginalLink.ts
+src/platform/obsidian/modals/quickInputEnvironment.ts
+  → src/features/quickinput/modal/**
+```
+
+`src/platform/obsidian/modals/QuickInputModal.tsx` 保留为 Obsidian adapter，只负责：
+
+```text
+Obsidian Modal 生命周期
+prepareThinkModal / mountWithServices / unmountPreact
+资源路径 getResourcePath 注入
+移动端键盘检测
+遮罩点击保护
+Notice port 注入
+```
+
+### 21.3 Obsidian API 边界
+
+QuickInput feature 不直接 import `obsidian`。`Notice` 仍在 `src/platform/obsidian/modals/quickInputNotice.ts` 中创建，并以 `showNotice` port 传入 feature modal content。这样满足 obsidian-leak gate，同时让业务 UI 离开 platform。
+
+### 21.4 保留在 app 的部分
+
+`src/app/actions/recordCreateActions.ts` 本版暂时不移动。原因是它是跨统计、时间线、热力图、视图 header 的应用层创建入口聚合，并且需要稳定导出给 `recordUiActions`。如果未来要移动，应先引入 QuickInput capability/open port，避免 feature 反向依赖 app public 造成循环。
+
+### 21.5 验收结果
+
+已通过：
+
+```bash
+npm run gate
+npm run refactor:verify
+npm run folder:verify
+```
+
+当前指标：
+
+```text
+@core/public importers: 0
+@shared/public importers: 0
+non-CSS files >= 500 lines: 0
+src explicit any: 668 / 671
+QuickInput editor old source files: 0
+QuickInput modal business old source files: 0
+```
+
+
+## 22. V22 Settings / Views 目录归属重排
+
+### 22.1 改造目标
+
+V22 执行第三轮目录治理的第二步：把业务视图从 `shared/ui` 中移出，并把 Settings 里的 view runtime / editor / model 收到同一个 feature ownership 下。
+
+### 22.2 目录变化
+
+```text
+src/shared/ui/views/**
+  → src/features/settings/views/runtime/**
+
+src/features/settings/viewEditors/**
+  → src/features/settings/views/editors/**
+
+src/features/settings/viewModels/**
+  → src/features/settings/views/models/**
+```
+
+新增 feature facade：
+
+```text
+src/features/settings/views/public.ts
+```
+
+它统一导出运行视图、视图工具条、timeline parser、view editor registry 和 view render model registry。
+
+### 22.3 Shared 边界
+
+`@shared/ui/public` 与 `@shared/public` 已移除业务视图导出。后续 shared 只保留 primitives、forms、icons、通用 UI 组件和通用工具。业务视图由 `@features/settings/views/public` 暴露。
+
+### 22.4 关键调用点
+
+```text
+src/features/settings/index.ts
+  DashboardViewComponents 从 @features/settings/views/public 获取
+
+src/features/settings/layout/LayoutRenderer.tsx
+  ViewToolbar 从 @features/settings/views/public 获取
+
+src/features/settings/layout/statisticsPopoverBridge.tsx
+  PopoverContent 从 @features/settings/views/public 获取
+```
+
+### 22.5 验收目标
+
+```text
+src/shared/ui/views 不存在
+src/features/settings/viewEditors 不存在
+src/features/settings/viewModels 不存在
+shared public 不再导出业务 runtime views
+settings views feature public 可作为唯一业务视图入口
+```
+
+## 23. V23 Core 领域目录收敛
+
+### 23.1 改造目标
+
+V23 执行第三轮目录治理的第三步：把 RecordInput 从 `core/services` generic bucket 中移出，并把任务记录 / 记录提交相关工具从 `core/utils` 放回对应领域。项目现在只服务当前个人数据，不再为了旧 schema 保留额外迁移层；但写入安全与提交冲突恢复继续保留。
+
+### 23.2 RecordInput 目录合并
+
+```text
+src/core/services/recordInput/**
+  → src/core/recordInput/**
+```
+
+`src/core/recordInput/public.ts` 现在直接导出领域内的 session、submit result、refresh coordinator、mutation helper、OutputPlanner、RecordInputFacade 与 RecordInputKernel。`core/public.ts` 也同步改为从 `./recordInput/**` 导出。
+
+### 23.3 core/utils ownership 收窄
+
+本版移走的工具：
+
+```text
+src/core/utils/taskTime.ts          → src/core/records/task/taskTime.ts
+src/core/utils/taskStatus.ts        → src/core/records/task/taskStatus.ts
+src/core/utils/taskUtils.ts         → src/core/records/task/taskUtils.ts
+src/core/utils/mark.ts              → src/core/records/task/mark.ts
+src/core/utils/recordSubmitFeedback.ts → src/core/recordInput/feedback.ts
+src/core/utils/recordSubmitRecovery.ts → src/core/recordInput/recovery.ts
+src/core/utils/recordDebug.ts       → src/core/recordInput/debug.ts
+```
+
+`src/core/records/task/index.ts` 作为任务记录子领域入口；`src/core/records/index.ts` 和 `src/core/records/public.ts` 继续向外提供 records 领域 public surface。为了避免外层一次性改动过大，`src/core/utils/index.ts` 与 `src/core/utils/public.ts` 仍对这些工具做稳定再导出。
+
+### 23.4 保留与边界
+
+本版没有移动 app 层工作流：
+
+```text
+src/app/usecases/recordInput/workflows/**
+```
+
+原因是 create / update / convert / duplicate / delete 工作流属于应用事务编排，依赖 DataStore、InputService 与 UI 提示策略，不应进入 core 领域层。
+
+本版也没有移动 `core/types/recordInput.ts` 与 `core/types/recordSnapshot.ts`。这些类型已通过 `@core/recordInput/public` 对外暴露；后续如果继续去中心化，会先保证外部调用只依赖 recordInput public，再移动底层类型文件。
+
+### 23.5 验收目标
+
+```text
+src/core/services/recordInput 不存在
+src/core/recordInput 包含领域实现与 public facade
+src/core/utils 不再包含 taskTime / taskStatus / taskUtils / mark / recordSubmitFeedback / recordSubmitRecovery / recordDebug
+src/core/records/task 包含任务记录规则
+src/core/recordInput 包含提交反馈、恢复和调试工具
+app/usecases/recordInput/workflows 仍保留在 app 层
+```
+
+
+## 24. V24 Shared / Platform 瘦身
+
+### 24.1 改造目标
+
+V24 执行第三轮目录治理的第四步：让 `platform` 明确成为 Obsidian 适配层，让 `shared` 只保留真正跨 feature 的 UI / hooks / utils。业务运行视图的子组件不再通过 shared public 暴露。
+
+### 24.2 Platform 目录明确化
+
+```text
+src/platform/*
+  → src/platform/obsidian/*
+```
+
+新增：
+
+```text
+src/platform/obsidian/public.ts
+```
+
+`main.ts`、settings 入口和布局新增弹窗现在优先从 `@/platform/obsidian/public` 获取 Obsidian adapter entrypoint。`src/platform` 根目录不再直接放 `.ts/.tsx` 适配器文件。
+
+### 24.3 Shared 业务视图组件迁出
+
+```text
+src/shared/ui/items/**       → src/features/settings/views/runtime/components/items/**
+src/shared/ui/heatmap/**     → src/features/settings/views/runtime/components/heatmap/**
+src/shared/ui/statistics/**  → src/features/settings/views/runtime/components/statistics/**
+src/shared/ui/timeline/**    → src/features/settings/views/runtime/components/timeline/**
+```
+
+`@shared/ui/public` 与 `@shared/public` 已移除这些业务组件导出。shared 继续保留 primitives、forms、icons、markdown、recordOrigin handler 等通用能力。
+
+### 24.4 Obsidian Modal forwarder 删除
+
+删除：
+
+```text
+src/shared/ui/composites/dialogs/NamePromptModal.ts
+```
+
+`NamePromptModal` 是 Obsidian Modal 实现，归属 `src/platform/obsidian/modals/NamePromptModal.tsx`，并通过 `src/platform/obsidian/public.ts` 提供平台入口。
+
+### 24.5 验收目标
+
+```text
+src/platform 根目录直接文件数为 0
+src/platform/obsidian 包含所有 Obsidian adapter
+src/shared/ui/items 不存在
+src/shared/ui/heatmap 不存在
+src/shared/ui/statistics 不存在
+src/shared/ui/timeline 不存在
+src/shared/ui/public 不再导出业务 runtime 组件
+npm run gate 通过
+npm run folder:verify 通过
+```
+
+## 25. V25 当前版 schema 锁定与目录封版
+
+### 25.1 改造目标
+
+V25 是第三轮目录治理的封版：不再继续移动大目录，而是把当前目录归属、当前版 settings schema、release 包边界和 gate 规则固定下来。项目是单人使用，因此不维护旧 `data.json` schema migration；用户数据需要自行保持当前版本结构。
+
+### 25.2 当前版 schema 策略
+
+新增当前 schema 锁定模块：
+
+```text
+src/core/settings/currentSettingsSchema.ts
+src/core/settings/public.ts
+```
+
+策略为：
+
+```text
+THINK_SETTINGS_SCHEMA_POLICY = 'current-only'
+supportsLegacyMigration = false
+```
+
+`main.ts` 的设置加载现在统一走：
+
+```text
+toCurrentThinkSettings(await this.loadData())
+```
+
+如果没有本地数据，则使用 `DEFAULT_SETTINGS`；如果存在本地数据，则必须声明当前 `schemaVersion`。这避免旧结构被静默迁移或半兼容读取。
+
+### 25.3 本地 data.json 与发布包边界
+
+V20 已允许根目录存在本地 `data.json`，V25 保持该策略：
+
+```text
+本地开发：允许 data.json
+secret-gate：不因根目录 data.json 失败
+release package：仍然禁止 data.json
+release 包内容：manifest.json / main.js / styles.css
+```
+
+### 25.4 新增 gate
+
+新增：
+
+```text
+npm run schema:gate
+scripts/gates/current-schema-gate.mjs
+```
+
+并接入：
+
+```text
+npm run gate
+npm run refactor:verify
+```
+
+V25 后，schema 策略、folder reorg 计划、release 预算、public API、CSS 和 any 预算都会一起参与主 gate。
+
+### 25.5 验收目标
+
+```text
+npm run folder:verify 通过
+npm run schema:gate 通过
+npm run refactor:verify 通过
+npm run gate 通过
+src/core/settings/currentSettingsSchema.ts 存在
+src/platform 根目录无直接适配器文件
+src/shared 不再导出业务 runtime view 组件
+release 包不包含 data.json
+```
+
+## 26. V26 语义函数收敛
+
+V26 的目标是处理散落函数、重复功能函数，不做大范围目录搬迁。它把常见的业务语义集中到更明确的中心模块，让领域文件可以保留 wrapper，但不再各自重复解释相同规则。
+
+主要产物：
+
+```text
+src/core/semantics/text.ts
+src/core/fields/fieldTokenSemantics.ts
+src/core/view-config/filterValueSemantics.ts
+src/core/theme/themePathSemantics.ts
+src/core/utils/timing.ts
+```
+
+收敛对象包括：
+
+```text
+compactText
+normalizeToken
+normalizeMultiValue
+nowMs / elapsedMs
+leafPath / pathCandidates
+isThemeField / isIconField
+theme path normalize / parent / leaf / map build
+```
+
+V26 的规则是：同一种业务语义只允许有一个权威实现；领域模块可以用 wrapper 表达上下文，但不能重新 split / trim / filter / lowercase 一套规则。
+
+## 27. V27 大文件职责拆分
+
+V27 处理容易继续膨胀的职责桶，不改变业务行为，保留旧 import path 作为 compatibility facade。
+
+主要拆分：
+
+```text
+src/app/ui/primitives/FloatingPanel.tsx
+src/shared/styles/mui-theme.ts
+src/shared/utils/errorHandler.ts
+```
+
+拆分后的职责边界：
+
+| 原文件 | V27 后职责 |
+|---|---|
+| `FloatingPanel.tsx` | facade、header、resize handles、interaction hook、lifecycle hook、event bridge |
+| `mui-theme.ts` | palette、typography、controls、forms、surfaces、overlays、theme factory |
+| `errorHandler.ts` | error type、classification、message、logger、safe execution 分离 |
+
+V27 后，TS-like `>= 450` 行文件降为 0，大文件不再作为继续开发的默认承载点。
+
+## 28. V28 View Config / Action 收敛
+
+V28 处理两个横向增长桶：
+
+```text
+src/core/config/viewConfigs.ts
+src/app/actions/recordCreateActions.ts
+```
+
+新结构：
+
+```text
+src/core/config/views/
+  types.ts
+  exportConfigs.ts
+  defaults/
+    block.ts
+    eventTimeline.ts
+    excel.ts
+    heatmap.ts
+    progress.ts
+    statistics.ts
+    table.ts
+    taskExecution.ts
+    timeline.ts
+
+src/app/actions/recordCreate/
+  types.ts
+  openCreateModal.ts
+  viewHeaderCreateAction.ts
+  timelineCreateAction.ts
+  heatmapCreateAction.ts
+  statisticsCreateAction.ts
+```
+
+V28 的规则是：新增 view default 进入 `core/config/views/defaults/<view>.ts`；新增 create action 进入 `app/actions/recordCreate/<source>CreateAction.ts`；旧 `viewConfigs.ts` 与 `recordCreateActions.ts` 只做兼容门面。
+
+## 29. V29 Service Ownership 收敛
+
+V29 处理 service ownership 的两个热点：
+
+```text
+src/core/services/ItemService.ts
+src/features/settings/theme/ThemeManager.ts
+```
+
+`ItemService` 拆成：
+
+```text
+src/core/services/item/
+  ItemService.ts
+  ItemLocator.ts
+  ItemMutationWriter.ts
+  TaskCompletionMutation.ts
+  InlineFieldMutation.ts
+  GoalTemplateMigrationMutation.ts
+  MigrationBackupService.ts
+  itemId.ts
+  lineMetadata.ts
+  types.ts
+```
+
+`ThemeManager` ownership 调整为：
+
+```text
+src/core/theme/ThemeManager.ts
+src/core/theme/themeMatching.ts
+src/core/theme/themeManagerSemantics.ts
+src/features/settings/theme/ThemeManager.ts   # compatibility facade
+```
+
+V29 后，app bootstrap 从 `@core/theme/public` 注册 matcher，不再从 settings feature 中直接拿 runtime matcher。core 负责 theme matching 领域语义；app 负责组装；features/settings 只负责 settings UI 与交互。
+
+## 30. V30 类型债收敛
+
+V30 的目标是降低 explicit any，并把类型预算锁进 gate。
+
+重点处理：
+
+```text
+src/features/settings/views/models/heatmapViewModel.ts
+src/features/settings/views/models/statisticsViewModel.ts
+src/features/settings/views/runtime/TimelineView/TimelineViewModel.ts
+src/features/settings/views/runtime/StatisticsView/StatisticsViewModel.ts
+src/core/records/RecordNormalizer.ts
+src/core/services/ActionService.ts
+src/core/recordInput/RecordInputFacade.ts
+src/core/types/quickInput.ts
+```
+
+结果：
+
+| 指标 | V29 | V30 |
+|---|---:|---:|
+| explicit any | 648 | 501 |
+| files `>= 500` lines | 0 | 0 |
+| TS-like files `>= 450` lines | 0 | 0 |
+| `@core/public` importers | 0 | 0 |
+| `@shared/public` importers | 0 | 0 |
+
+V30 后新增 `any` 会被 `any-budget:gate` 和 `refactor:budget` 阻止，除非明确更新预算并说明原因。
+
+## 31. V31 预算 / gate / 文档封版
+
+V31 不继续拆业务代码，目标是把 V26～V31 的深度收敛结果变成长期维护规则。
+
+### 31.1 V31 版本计划完成情况
+
+| 版本 | 主题 | 状态 | 封版产物 |
+|---|---|---|---|
+| V26 | 语义函数收敛 | 完成 | 中心语义模块与兼容 wrapper |
+| V27 | 大文件职责拆分 | 完成 | UI/style/error facade 化 |
+| V28 | View Config / Action 收敛 | 完成 | `core/config/views` 与 `app/actions/recordCreate` |
+| V29 | Service Ownership 收敛 | 完成 | `core/services/item` 与 core theme matcher |
+| V30 | 类型债收敛 | 完成 | explicit any 降至 501 并锁预算 |
+| V31 | 预算 / gate / 文档封版 | 完成 | final gate、验收清单、开发提示词、封版报告 |
+
+### 31.2 V31 锁定预算
+
+```text
+scripts/gates/refactor-budget-baseline.json
+version = V31-deep-refactor-final-locked
+```
+
+| 预算项 | V31 锁定值 |
+|---|---:|
+| 最大文件行数 | 480 |
+| files >= 500 lines | 0 |
+| non-CSS files >= 500 lines | 0 |
+| TS-like files >= 450 lines | 0 |
+| TSX files >= 350 lines | 1 |
+| large file candidates | 3 |
+| src explicit any | 501 |
+| duplicate function-name groups | 50 |
+| core root public importers | 0 |
+| shared root public importers | 0 |
+| core deep imports | 0 |
+| shared deep imports | 0 |
+| core module public facades | >= 16 |
+| shared module public facades | >= 8 |
+
+### 31.3 新增 final gate
+
+新增：
+
+```text
+npm run deep-refactor-final:gate
+scripts/gates/deep-refactor-final-gate.mjs
+```
+
+并接入主 gate：
+
+```text
+npm run gate
+```
+
+该 gate 检查：
+
+```text
+V31 budget version
+V26-V31 架构报告内容
+V31 回归验收清单
+开发防发散提示词
+最终封版说明
+当前 live metrics 是否仍在预算内
+```
+
+### 31.4 后续开发规则
+
+1. 新功能先判断 ownership，再写代码。
+2. 新增函数前必须搜索同义语义；能复用中心语义就不要新增局部实现。
+3. facade 只做导出与兼容，不写新业务逻辑。
+4. shared 不是业务垃圾桶，只放通用 UI、hooks、utils、styles、types。
+5. 单文件超过 300 行要说明原因，超过 380 行要优先拆分。
+6. 不要继续大拆已经小而清晰的组件。
+7. 预算只能降低或带说明调整，不能静默放宽。
+
+### 31.5 V31 完成定义
+
+V31 完成后，至少应通过：
+
+```bash
+npm run refactor:verify
+npm run gate
+npm run deep-refactor-final:gate
+npm run any-budget:gate
+```
+
+完整本地发布前仍需执行：
+
+```bash
+npm ci
+npm run typecheck
+npm run build
+npm run test:unit
+npm run gate
+```

@@ -1,5 +1,5 @@
 // src/core/domain/schema.ts
-import type { RecurrenceInfo } from '@core/utils/mark';
+import type { RecurrenceInfo } from '@core/records/task/mark';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
 import { getAvailableFields } from '@/core/fields/FieldRegistry';
 import type { AiSettings } from './ai-schema';

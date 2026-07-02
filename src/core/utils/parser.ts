@@ -9,9 +9,9 @@ import {
 import { extractDate, getPeriodCount, dayjs } from './date';
 import { EMOJI } from '@/core/types/constants';
 import { cleanTaskText, extractTaskEditableText, explainTaskEditableTextExtraction } from './text';
-import { extractRecurrenceText } from './mark';
+import { extractRecurrenceText } from '@/core/records/task/mark';
 import { applyTaskMetadata, decodeTaskMetadata, decodeBlockContentLines } from '@/core/records/codec';
-import { recordDebugLog } from './recordDebug';
+import { recordDebugLog } from '@/core/recordInput/debug';
 
 /* ---------- 工具 ---------- */
 function pick(line: string, emoji: string) { return extractDate(line, emoji); }

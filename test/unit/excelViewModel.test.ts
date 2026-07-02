@@ -5,7 +5,7 @@ import {
   normalizeExcelColumnWidth,
   normalizeExcelColumnWidths,
   normalizeExcelContentDisplayMode,
-} from '@/shared/ui/views/excel-view/ExcelViewModel';
+} from '@/features/settings/views/runtime/excel-view/ExcelViewModel';
 
 describe('ExcelViewModel', () => {
   it('normalizes column widths and content display mode', () => {

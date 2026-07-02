@@ -1,7 +1,7 @@
 import {
   buildRecordSubmitRecoveryPresentation,
   getRecordRecoveryPaths,
-} from '@/core/utils/recordSubmitRecovery';
+} from '@/core/recordInput/recovery';
 import type { RecordSubmitResult } from '@core/public';
 
 function conflictResult(overrides: Partial<RecordSubmitResult> = {}): RecordSubmitResult {

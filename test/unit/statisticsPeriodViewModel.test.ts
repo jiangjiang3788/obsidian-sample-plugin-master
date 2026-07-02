@@ -4,10 +4,10 @@ import {
   getStatisticsGoalThemeSummaryRows,
   getStatisticsGoalThemeSummaryText,
   getStatisticsGoalThemeSummaryTitle,
-} from '@/shared/ui/views/StatisticsView/StatisticsGoalThemeSummaryStrip';
-import { buildMonthStatisticsRenderModel, buildMonthWeekMeta } from '@/shared/ui/views/StatisticsView/views/MonthStatisticsViewModel';
-import { buildQuarterStatisticsRenderModel, buildQuarterMonthWeekStarts } from '@/shared/ui/views/StatisticsView/views/QuarterStatisticsViewModel';
-import { buildYearStatisticsRenderModel, getYearStatisticsMaxWeeksInMonth } from '@/shared/ui/views/StatisticsView/views/YearStatisticsViewModel';
+} from '@/features/settings/views/runtime/StatisticsView/StatisticsGoalThemeSummaryStrip';
+import { buildMonthStatisticsRenderModel, buildMonthWeekMeta } from '@/features/settings/views/runtime/StatisticsView/views/MonthStatisticsViewModel';
+import { buildQuarterStatisticsRenderModel, buildQuarterMonthWeekStarts } from '@/features/settings/views/runtime/StatisticsView/views/QuarterStatisticsViewModel';
+import { buildYearStatisticsRenderModel, getYearStatisticsMaxWeeksInMonth } from '@/features/settings/views/runtime/StatisticsView/views/YearStatisticsViewModel';
 
 const categories = [{ name: '目标' }] as any[];
 const emptyYearData = {

@@ -4,7 +4,7 @@ import {
   getQuickInputSuccessNotice,
   isQuickInputCreateOperation,
   isQuickInputUpdateOperation,
-} from '../../src/platform/modals/quickInputOperationMode';
+} from '../../src/features/quickinput/modal/quickInputOperationMode';
 
 describe('quickInputOperationMode', () => {
   it('separates create/update semantics for edit operations', () => {

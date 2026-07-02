@@ -15,8 +15,8 @@ import type { RecordInputMeta, RecordInputSource } from './recordInput';
 export interface QuickInputSaveData {
     blockId?: string;
     themeId?: string | null;
-    context?: Record<string, any>;
-    formData: Record<string, any>;
+    context?: Record<string, unknown>;
+    formData: Record<string, unknown>;
     meta?: RecordInputMeta;
     source?: Extract<RecordInputSource, 'timer' | 'quickinput' | 'view_quick_create' | 'unknown'>;
 

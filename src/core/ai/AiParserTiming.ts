@@ -1,21 +1,9 @@
 import type { ParseInput } from './INaturalLanguageRecordParser';
 import { devLog, devWarn } from '../utils/devLogger';
+import { durationMs, elapsedMs, nowMs } from '../utils/timing';
 
-export function nowMs(): number {
-    try {
-        return performance.now();
-    } catch {
-        return Date.now();
-    }
-}
-
-export function durationMs(start: number): number {
-    return nowMs() - start;
-}
-
-export function formatMs(start: number): string {
-    return `${durationMs(start).toFixed(2)}ms`;
-}
+export { durationMs, nowMs };
+export const formatMs = elapsedMs;
 
 export function aiTraceId(input?: ParseInput): string {
     return input?.traceId || `ai-parser-${Date.now().toString(36)}`;

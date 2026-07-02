@@ -14,10 +14,10 @@ import {
 } from './goalTemplateMatrixModel';
 import type { GoalDropState, PresetDragState, PresetDropCellState } from './goalTemplateMatrixModel';
 
-const AnyTableRow = TableRow as any;
-const AnyTableCell = TableCell as any;
-const AnyTypography = Typography as any;
-const AnyBox = Box as any;
+const MatrixTableRow = TableRow as unknown as typeof TableRow;
+const MatrixTableCell = TableCell as unknown as typeof TableCell;
+const MatrixTypography = Typography as unknown as typeof Typography;
+const MatrixBox = Box as unknown as typeof Box;
 
 const PATH_COL_WIDTH = 250;
 const BLOCK_COL_WIDTH = 136;
@@ -59,12 +59,14 @@ function GoalDragHandle(props: {
   return (
     <span
       draggable
-      onClick={(event: any) => event.stopPropagation()}
-      onMouseDown={(event: any) => event.stopPropagation()}
-      onDragStart={(event: any) => {
+      onClick={(event: MouseEvent) => event.stopPropagation()}
+      onMouseDown={(event: MouseEvent) => event.stopPropagation()}
+      onDragStart={(event: DragEvent) => {
         event.stopPropagation();
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', goal.id);
+        if (event.dataTransfer) {
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', goal.id);
+        }
         setDraggingGoalId(goal.id);
       }}
       onDragEnd={() => {
@@ -85,7 +87,7 @@ function TreeToggle(props: { hasChildren: boolean; expanded: boolean; path: stri
   return (
     <button
       type="button"
-      onClick={(event: any) => {
+      onClick={(event: MouseEvent) => {
         event.stopPropagation();
         toggleTreePath(path);
       }}
@@ -103,8 +105,8 @@ function DeleteGoalButton(props: { goal: GoalDefinition; handleDeleteGoal: (even
     <button
       type="button"
       title="删除目标"
-      onClick={(event: any) => handleDeleteGoal(event, goal)}
-      onMouseDown={(event: any) => event.stopPropagation()}
+      onClick={(event: MouseEvent) => handleDeleteGoal(event, goal)}
+      onMouseDown={(event: MouseEvent) => event.stopPropagation()}
       style={{
         border: 'none',
         background: 'transparent',
@@ -147,8 +149,8 @@ function GoalPathCell(props: {
   const goalCellBg = isRoot ? 'rgba(122, 94, 230, 0.18)' : 'rgba(122, 94, 230, 0.06)';
 
   return (
-    <AnyTableCell sx={{ width: PATH_COL_WIDTH, px: 0.5, py: 0.35, position: 'sticky', left: 0, zIndex: 2, background: 'var(--background-primary)', verticalAlign: 'top' }}>
-      <AnyBox
+    <MatrixTableCell sx={{ width: PATH_COL_WIDTH, px: 0.5, py: 0.35, position: 'sticky', left: 0, zIndex: 2, background: 'var(--background-primary)', verticalAlign: 'top' }}>
+      <MatrixBox
         onClick={() => toggleGoalRow(goal.id)}
         title="单击折叠/展开本目标；拖动 ☰ 排序"
         sx={{
@@ -161,18 +163,18 @@ function GoalPathCell(props: {
           cursor: 'pointer',
         }}
       >
-        <AnyBox sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0, width: '100%' }}>
+        <MatrixBox sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0, width: '100%' }}>
           <span style={{ display: 'inline-block', width: depth * 18, flexShrink: 0 }} />
           <GoalDragHandle goal={goal} setDraggingGoalId={setDraggingGoalId} setGoalDrop={setGoalDrop} />
           <TreeToggle hasChildren={hasChildren} expanded={expanded} path={path} toggleTreePath={toggleTreePath} />
           <span style={{ color: collapsed ? 'var(--text-muted)' : 'var(--text-faint)', width: 16, textAlign: 'center', flexShrink: 0 }}>{collapsed ? '▸' : '▾'}</span>
-          <AnyBox sx={{ minWidth: 0, flex: 1 }}>
-            <AnyTypography sx={{ fontWeight: isRoot ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanDisplayText(getGoalDisplayName(goal))}</AnyTypography>
-          </AnyBox>
+          <MatrixBox sx={{ minWidth: 0, flex: 1 }}>
+            <MatrixTypography sx={{ fontWeight: isRoot ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanDisplayText(getGoalDisplayName(goal))}</MatrixTypography>
+          </MatrixBox>
           <DeleteGoalButton goal={goal} handleDeleteGoal={handleDeleteGoal} />
-        </AnyBox>
-      </AnyBox>
-    </AnyTableCell>
+        </MatrixBox>
+      </MatrixBox>
+    </MatrixTableCell>
   );
 }
 
@@ -182,18 +184,18 @@ function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { g
   const dropActive = goalDrop?.goalId === goal.id;
 
   return (
-    <AnyTableRow
+    <MatrixTableRow
       key={goal.id}
-      onDragEnter={(event: any) => {
+      onDragEnter={(event: DragEvent) => {
         if (!draggingGoalId || draggingGoalId === goal.id) return;
         event.preventDefault();
         setGoalDrop({ goalId: goal.id, position: getEventDropPosition(event) });
       }}
-      onDragOver={(event: any) => {
+      onDragOver={(event: DragEvent) => {
         if (!draggingGoalId || draggingGoalId === goal.id) return;
         event.preventDefault();
       }}
-      onDrop={async (event: any) => {
+      onDrop={async (event: DragEvent) => {
         if (!draggingGoalId || !goalDrop) return;
         event.preventDefault();
         await reorderGoalSiblings(draggingGoalId, goalDrop.goalId, goalDrop.position);
@@ -218,7 +220,7 @@ function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { g
         handleDeleteGoal={handleDeleteGoal}
       />
       {visibleBlocks.map((block) => (
-        <AnyTableCell key={block.id} align="center" sx={{ width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH, px: 0.35, py: 0.35, verticalAlign: 'top' }}>
+        <MatrixTableCell key={block.id} align="center" sx={{ width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH, px: 0.35, py: 0.35, verticalAlign: 'top' }}>
           <GoalTemplateMatrixCell
             goal={goal}
             block={block}
@@ -234,9 +236,9 @@ function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { g
             openEditor={openEditor}
             openPresetContextMenu={openPresetContextMenu}
           />
-        </AnyTableCell>
+        </MatrixTableCell>
       ))}
-    </AnyTableRow>
+    </MatrixTableRow>
   );
 }
 
@@ -244,9 +246,9 @@ export function GoalTemplateMatrixGroupRows(props: GoalTemplateMatrixGroupRowsPr
   const rows: h.JSX.Element[] = [];
   if (props.groupIndex > 0) {
     rows.push(
-      <AnyTableRow key={`spacer-${props.groupIndex}`}>
-        <AnyTableCell colSpan={props.visibleBlockCount + 1} sx={{ border: 0, p: 0, height: 10, background: 'transparent' }} />
-      </AnyTableRow>
+      <MatrixTableRow key={`spacer-${props.groupIndex}`}>
+        <MatrixTableCell colSpan={props.visibleBlockCount + 1} sx={{ border: 0, p: 0, height: 10, background: 'transparent' }} />
+      </MatrixTableRow>
     );
   }
   props.group.forEach((goal) => rows.push(<GoalTemplateMatrixGoalRow key={goal.id} {...props} goal={goal} />));

@@ -7,6 +7,10 @@ export type { OptionLikeValue } from '@/core/semantics/option';
 import { parseTagList } from './tagSemantics';
 import { normalizeImageValue } from './imageSemantics';
 import { isMultiValueTemplateFieldType } from './TemplateFieldSanitizer';
+import {
+  normalizeFieldToken,
+  templateFieldMatchesAliases,
+} from './fieldTokenSemantics';
 
 
 const KNOWN_SEMANTICS = new Set<FieldSemantic>([
@@ -40,37 +44,12 @@ const KNOWN_SEMANTICS = new Set<FieldSemantic>([
   'heading',
 ]);
 
-function normalizeToken(value: unknown): string {
-  return String(value ?? '').trim().toLowerCase();
-}
-
-function normalizeCnToken(value: unknown): string {
-  return String(value ?? '').trim();
-}
-
 function isKnownSemantic(value: unknown): value is FieldSemantic {
   return KNOWN_SEMANTICS.has(value as FieldSemantic);
 }
 
-function tokensForField(field: Partial<TemplateField> | null | undefined): string[] {
-  if (!field) return [];
-  return [field.key, field.label, field.semantic, field.semanticType, (field as any).role]
-    .map(normalizeToken)
-    .filter(Boolean);
-}
-
-function cnTokensForField(field: Partial<TemplateField> | null | undefined): string[] {
-  if (!field) return [];
-  return [field.key, field.label, field.semantic, field.semanticType, (field as any).role]
-    .map(normalizeCnToken)
-    .filter(Boolean);
-}
-
 export function templateFieldMatches(field: Partial<TemplateField> | null | undefined, aliases: string[]): boolean {
-  const lowerTokens = tokensForField(field);
-  const cnTokens = cnTokensForField(field);
-  const lowerAliases = aliases.map(normalizeToken);
-  return lowerTokens.some(token => lowerAliases.includes(token)) || cnTokens.some(token => aliases.includes(token));
+  return templateFieldMatchesAliases(field, aliases);
 }
 
 export function getTemplateFieldSemantic(field: Partial<TemplateField> | null | undefined): FieldSemantic {
@@ -78,7 +57,7 @@ export function getTemplateFieldSemantic(field: Partial<TemplateField> | null | 
   if (isKnownSemantic(field.semantic)) return field.semantic;
   if (isKnownSemantic(field.semanticType)) return field.semanticType;
 
-  const semanticType = normalizeToken(field.semanticType);
+  const semanticType = normalizeFieldToken(field.semanticType);
   if (semanticType === 'ratingpair') return 'rating';
   if (semanticType === 'path') {
     if (templateFieldMatches(field, ['主题', 'theme', 'themePath', '完整主题', '主题路径'])) return 'themePath';
@@ -129,7 +108,7 @@ export function isOptionObject(value: unknown): value is OptionLikeValue {
 }
 
 export function isTemplateRatingPairField(field: Partial<TemplateField> | null | undefined): boolean {
-  return normalizeToken(field?.semanticType) === 'ratingpair';
+  return normalizeFieldToken(field?.semanticType) === 'ratingpair';
 }
 
 export function isTemplateOptionField(field: Partial<TemplateField> | null | undefined): boolean {
@@ -140,7 +119,7 @@ export function isTemplateOptionField(field: Partial<TemplateField> | null | und
 export function isTemplatePathField(field: Partial<TemplateField> | null | undefined): boolean {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
-  return inputType === 'path' || inputType === 'hierarchicalSingleSelect' || inputType === 'multiPath' || semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath' || normalizeToken(field?.semanticType) === 'path';
+  return inputType === 'path' || inputType === 'hierarchicalSingleSelect' || inputType === 'multiPath' || semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath' || normalizeFieldToken(field?.semanticType) === 'path';
 }
 
 export function isTemplateTagField(field: Partial<TemplateField> | null | undefined): boolean {

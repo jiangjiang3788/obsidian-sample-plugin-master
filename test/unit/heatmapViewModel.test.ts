@@ -6,7 +6,7 @@ import {
   normalizeHeatmapBlockId,
   resolveHeatmapCreateBlockId,
   selectHeatmapThemesToTrack,
-} from '@/shared/ui/views/HeatmapViewModel';
+} from '@/features/settings/views/runtime/HeatmapViewModel';
 
 const inputSettings = {
   blocks: [

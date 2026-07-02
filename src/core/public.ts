@@ -65,15 +65,15 @@ export {
     snapFreeformValue,
 } from './layout';
 export type { FreeformItemSize } from './layout';
-export { buildRecordSubmitFeedbackPresentation } from './utils/recordSubmitFeedback';
+export { buildRecordSubmitFeedbackPresentation } from './recordInput/feedback';
 export {
     buildRecordSubmitRecoveryPresentation,
     getRecordRecoveryPaths,
-} from './utils/recordSubmitRecovery';
+} from './recordInput/recovery';
 export type {
     BuildRecordSubmitRecoveryPresentationOptions,
     RecordSubmitRecoveryPresentation,
-} from './utils/recordSubmitRecovery';
+} from './recordInput/recovery';
 export {
     addDisplayField,
     moveDisplayField,
@@ -252,7 +252,7 @@ export type { IPluginStorage } from './services/StorageService';
 // 这里导出的是 usecase 编排所需的稳定核心构件，不允许 features/shared 直接依赖内部路径。
 export { GoalTemplateResolver } from './services/GoalTemplateResolver';
 export type { GoalTemplateResolveInput, GoalTemplateResolveResult, GoalTemplateSourceType } from './services/GoalTemplateResolver';
-export { RecordInputKernel } from './services/recordInput/RecordInputKernel';
+export { RecordInputKernel } from './recordInput/RecordInputKernel';
 export {
     assertRecordInputRequiredFields,
     buildBatchCreateRecordSubmitResult,
@@ -264,23 +264,23 @@ export {
     hasRecordInputRequiredValue,
     normalizeRecordInputFieldValueForTemplate,
     normalizeRecordInputFormDataForTemplate,
-} from './services/recordInput/RecordInputFacade';
+} from './recordInput/RecordInputFacade';
 export type {
     BuildCreateRecordSubmitParamsInput,
     BuildRecordCreateDraftParams,
     BuildUpdateRecordSubmitParamsInput,
     RecordInputEditorStateLike,
-} from './services/recordInput/RecordInputFacade';
-export { buildRecordOutputPlan, buildRecordPersistencePlan } from './services/recordInput/snapshot/OutputPlanner';
+} from './recordInput/RecordInputFacade';
+export { buildRecordOutputPlan, buildRecordPersistencePlan } from './recordInput/snapshot/OutputPlanner';
 export {
     buildCancelledResult,
     buildConflictResult,
     buildErrorResult,
     buildSuccessResult,
     buildValidationErrorResult,
-} from './services/recordInput/submitResult';
-export { applyRecordRefreshPlan, finalizeRecordSubmitResult } from './services/recordInput/refreshCoordinator';
-export { isRecordConflictError } from './services/recordInput/mutationErrors';
+} from './recordInput/submitResult';
+export { applyRecordRefreshPlan, finalizeRecordSubmitResult } from './recordInput/refreshCoordinator';
+export { isRecordConflictError } from './recordInput/mutationErrors';
 export {
     RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS,
     RECORD_INPUT_GOAL_CONTEXT_KEYS,
@@ -295,7 +295,7 @@ export {
     preserveRecordInputBlockSwitchState,
     readRecordInputString,
     reduceRecordInputSession,
-} from './services/recordInput/session';
+} from './recordInput/session';
 export type {
     InitializeRecordInputSessionInput,
     RecordInputDraftSnapshot,
@@ -307,7 +307,7 @@ export type {
     RecordInputSessionSelection,
     RecordInputSessionState,
     RecordInputTimeDirection,
-} from './services/recordInput/session';
+} from './recordInput/session';
 
 // -------------------- Core Ports（Phase2: platform 边界） --------------------
 // 说明：core 层只定义接口（Port）；平台层实现并在组合根注册。

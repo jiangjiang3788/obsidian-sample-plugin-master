@@ -2,20 +2,25 @@
 /**
  * Record input domain public facade.
  *
- * This facade groups the stable record-input planning, session, mutation, and
- * submit-result APIs. It lets future app/usecase code depend on a narrower
- * domain surface than the root `@core/public` compatibility facade.
+ * This facade owns the stable record-input surface after V23 moved the domain
+ * out of the generic core/services bucket. App/features/platform code should
+ * use this module-level facade instead of deep-importing record-input internals.
  */
 export * from '../types/recordInput';
 export * from '../types/recordSnapshot';
-export * from '../services/recordInput/session';
-export * from '../services/recordInput/submitResult';
-export * from '../services/recordInput/refreshCoordinator';
-export * from '../services/recordInput/mutationErrors';
-export * from '../services/recordInput/mutation/HeaderAppender';
-export * from '../services/recordInput/mutation/TaskLinePatch';
-export { buildRecordOutputPlan, buildRecordPersistencePlan } from '../services/recordInput/snapshot/OutputPlanner';
-export * from '../services/recordInput/RecordInputFacade';
-export { RecordInputKernel } from '../services/recordInput/RecordInputKernel';
+
+export * from './session';
+export * from './submitResult';
+export * from './refreshCoordinator';
+export * from './mutationErrors';
+export * from './feedback';
+export * from './recovery';
+export * from './debug';
+export * from './mutation/HeaderAppender';
+export * from './mutation/TaskLinePatch';
+export { buildRecordOutputPlan, buildRecordPersistencePlan } from './snapshot/OutputPlanner';
+export * from './RecordInputFacade';
+export { RecordInputKernel } from './RecordInputKernel';
+
 export { GoalTemplateResolver } from '../services/GoalTemplateResolver';
 export type { GoalTemplateResolveInput, GoalTemplateResolveResult, GoalTemplateSourceType } from '../services/GoalTemplateResolver';

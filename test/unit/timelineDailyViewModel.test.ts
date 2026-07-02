@@ -1,7 +1,7 @@
 import {
   buildTimelineDayColumns,
   buildTimelineTimeAxisRows,
-} from '@/shared/ui/views/TimelineView/TimelineDailyViewModel';
+} from '@/features/settings/views/runtime/TimelineView/TimelineDailyViewModel';
 
 describe('TimelineDailyViewModel', () => {
   it('builds day columns with empty block fallback', () => {

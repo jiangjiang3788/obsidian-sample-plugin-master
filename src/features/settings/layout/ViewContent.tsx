@@ -10,7 +10,7 @@ import { DashboardViewComponents as ViewComponents } from '@features/settings';
 import { selectCategoryColors, selectSettings, useMessageRenderPort, useSelector } from '@/app/public';
 import type { TimerController } from '@shared/types/public';
 import { useViewData } from '@/features/settings/useViewData';
-import { buildViewRenderModels } from '@/features/settings/viewModels/viewModelRegistry';
+import { buildViewRenderModels } from '@/features/settings/views/models/viewModelRegistry';
 import { closeStatisticsPopover, openStatisticsPopover } from './statisticsPopoverBridge';
 import { useViewRuntimeHandlers } from './useViewRuntimeHandlers';
 import { buildViewProps } from './viewPropsFactory';

@@ -1,7 +1,7 @@
 // src/core/ai/AiConfigSnapshot.ts
 // AI 配置快照 - 把 settings + aiSettings 转成模型可读的最小快照
 
-import type { InputSettings } from '@/core/types/schema';
+import type { InputSettings, TemplateField } from '@/core/types/schema';
 import type { AiSettings } from '@/core/types/ai-schema';
 import type { GoalSettings } from '@/core/goal';
 import { getGoalTemplates, isSystemRecordContextField } from '@/core/goal';
@@ -15,7 +15,7 @@ export interface AiBlockConfigField {
     label: string;
     type: string;
     options?: Array<{ value: string; label: string }>;
-    defaultValue?: any;
+    defaultValue?: unknown;
 }
 
 /**
@@ -85,16 +85,16 @@ function leaf(path?: string | null): string {
     return text.split('/').filter(Boolean).pop() || text;
 }
 
-function isAiVisibleField(field: any): boolean {
+function isAiVisibleField(field: TemplateField): boolean {
     return !isSystemRecordContextField(field?.key, field?.label, field?.semantic || field?.semanticType);
 }
 
-function normalizeField(field: any): AiBlockConfigField {
+function normalizeField(field: TemplateField): AiBlockConfigField {
     return {
         key: field.key,
         label: field.label,
         type: field.type,
-        options: (field.options ?? []).map((o: any) => ({
+        options: (field.options ?? []).map((o) => ({
             value: o.value,
             label: o.label || o.value,
         })),
@@ -105,7 +105,10 @@ function normalizeField(field: any): AiBlockConfigField {
 function readThemePath(value: unknown): string | undefined {
     if (!value) return undefined;
     if (typeof value === 'string') return value.trim() || undefined;
-    if (typeof value === 'object' && value && 'value' in value) return String((value as any).value || '').trim() || undefined;
+    if (typeof value === 'object' && value && 'value' in value) {
+        const option = value as { value?: unknown };
+        return String(option.value || '').trim() || undefined;
+    }
     return undefined;
 }
 
@@ -122,11 +125,11 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
     // 若 data 里仍是旧 blk_* ID，且已经无法匹配任何 CoreBlock，则忽略该过滤，避免 AI 快照为空。
     const rawEnabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
     const inputBlocks = input?.blocks ?? [];
-    const hasEnabledBlockMatch = !!rawEnabledSet && inputBlocks.some((b: any) => rawEnabledSet.has(b.id) || rawEnabledSet.has(b.coreBlockId || ''));
+    const hasEnabledBlockMatch = !!rawEnabledSet && inputBlocks.some((b) => rawEnabledSet.has(b.id) || rawEnabledSet.has(b.coreBlockId || ''));
     const enabledSet = hasEnabledBlockMatch ? rawEnabledSet : null;
 
     const blocks = inputBlocks
-        .filter(b => !enabledSet || enabledSet.has(b.id) || enabledSet.has((b as any).coreBlockId || ''))
+        .filter(b => !enabledSet || enabledSet.has(b.id) || enabledSet.has(b.coreBlockId || ''))
         .map(b => {
             // 新主链不再用 theme-template legacy 决定模板；这里仍使用 block 默认字段作为 AI 兜底字段。
             const effective = input ? getEffectiveTemplate(input, b.id, undefined) : undefined;
@@ -143,7 +146,7 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
         });
 
     const blockById = new Map(inputBlocks.map((block) => [block.id, block]));
-    const blockByCoreId = new Map(inputBlocks.map((block: any) => [block.coreBlockId || block.id, block]));
+    const blockByCoreId = new Map(inputBlocks.map((block) => [block.coreBlockId || block.id, block]));
 
     const themes = (input?.themes ?? []).map(t => ({
         id: t.id,
@@ -152,8 +155,8 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
     }));
 
     const goals = (goalSettings?.goals ?? [])
-        .filter((goal: any) => goal.status !== 'archived')
-        .map((goal: any) => ({
+        .filter((goal) => goal.status !== 'archived')
+        .map((goal) => ({
             id: goal.id,
             path: goal.goalPath || goal.title,
             title: goal.title || leaf(goal.goalPath),

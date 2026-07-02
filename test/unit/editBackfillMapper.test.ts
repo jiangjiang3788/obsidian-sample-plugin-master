@@ -1,6 +1,6 @@
 import type { BlockTemplate, Item } from '../../src/core/types/schema';
 import { buildParsedRecordSnapshot } from '../../src/core/types/recordSnapshot';
-import { buildInitialEditFormData } from '../../src/core/services/recordInput/EditBackfillMapper';
+import { buildInitialEditFormData } from '../../src/core/recordInput/EditBackfillMapper';
 
 const baseItem = (overrides: Partial<Item> = {}): Item => ({
   id: 'daily.md#4',

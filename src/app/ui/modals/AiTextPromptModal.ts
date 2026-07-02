@@ -1,1 +1,1 @@
-export { AiTextPromptModal } from '@/platform/modals/AiTextPromptModal';
+export { AiTextPromptModal } from '@/platform/obsidian/modals/AiTextPromptModal';

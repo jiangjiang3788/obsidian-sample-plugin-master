@@ -3,7 +3,7 @@ import {
   mergeTaskLinePreservingSourceContext,
   preserveTaskCheckboxStatus,
   taskLineContainsTokenIdentity,
-} from '@/core/services/recordInput/mutation/TaskLinePatch';
+} from '@/core/recordInput/mutation/TaskLinePatch';
 
 describe('task line patch helpers', () => {
   it('extracts task context tokens in stable order', () => {

@@ -1,7 +1,7 @@
 import type { Item, ViewInstance } from '@core/types/public';
 import type { MessageRenderPort } from '@core/ports/public';
 import type { CloseStatisticsPopoverHandler, OpenStatisticsPopoverHandler, TimerController } from '@shared/types/public';
-import type { ViewRenderModels } from '@/features/settings/viewModels/viewModelRegistry';
+import type { ViewRenderModels } from '@/features/settings/views/models/viewModelRegistry';
 import type { ViewRuntimeHandlers } from './useViewRuntimeHandlers';
 
 export interface BuildViewPropsParams {

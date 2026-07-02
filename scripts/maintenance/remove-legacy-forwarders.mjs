@@ -26,10 +26,10 @@ const sourceExt = /\.(ts|tsx|js|jsx)$/;
 const scanRoots = ['src', 'test'];
 
 const ignoredFiles = new Set([
-  'src/shared/ui/views/TimelineView.tsx',
-  'src/shared/ui/views/EventTimelineView.tsx',
-  'src/shared/ui/views/StatisticsView.tsx',
-  'src/shared/ui/views/index.ts',
+  'src/features/settings/views/runtime/TimelineView.tsx',
+  'src/features/settings/views/runtime/EventTimelineView.tsx',
+  'src/features/settings/views/runtime/StatisticsView.tsx',
+  'src/features/settings/views/runtime/index.ts',
   'src/core/utils/themeUtils.ts',
   'src/core/utils/index.ts',
   'src/features/progression/types.ts',
@@ -41,7 +41,7 @@ const ignoredFiles = new Set([
 const targets = [
   {
     name: 'legacy TimelineView forwarder',
-    file: 'src/shared/ui/views/TimelineView.tsx',
+    file: 'src/features/settings/views/runtime/TimelineView.tsx',
     importPatterns: [
       /from\s+['"](?:@shared\/ui\/views\/TimelineView|@\/shared\/ui\/views\/TimelineView)['"]/, 
       /from\s+['"](?:\.\/TimelineView|\.\.\/views\/TimelineView)['"]/, 
@@ -49,7 +49,7 @@ const targets = [
   },
   {
     name: 'legacy EventTimelineView forwarder',
-    file: 'src/shared/ui/views/EventTimelineView.tsx',
+    file: 'src/features/settings/views/runtime/EventTimelineView.tsx',
     importPatterns: [
       /from\s+['"](?:@shared\/ui\/views\/EventTimelineView|@\/shared\/ui\/views\/EventTimelineView)['"]/, 
       /from\s+['"](?:\.\/EventTimelineView|\.\.\/views\/EventTimelineView)['"]/, 
@@ -57,7 +57,7 @@ const targets = [
   },
   {
     name: 'legacy StatisticsView forwarder',
-    file: 'src/shared/ui/views/StatisticsView.tsx',
+    file: 'src/features/settings/views/runtime/StatisticsView.tsx',
     importPatterns: [
       /from\s+['"](?:@shared\/ui\/views\/StatisticsView|@\/shared\/ui\/views\/StatisticsView)['"]/, 
       /from\s+['"](?:\.\/StatisticsView|\.\.\/views\/StatisticsView)['"]/, 

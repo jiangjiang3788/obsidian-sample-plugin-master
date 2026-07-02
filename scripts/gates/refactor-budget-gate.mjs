@@ -2,11 +2,12 @@
 /**
  * refactor-budget-gate
  *
- * V19 closes the second-round deep-refactor by keeping large files, root public imports, module public facades, and lowered explicit-any debt under a mandatory locked budget.
+ * V31 keeps the second-round deep-refactor surface under a mandatory locked budget:
+ * large files, root public imports, module public facades, and lowered explicit-any debt.
  *
  * V7 used this gate as a no-regression baseline while code was moving. V13-V18
  * lowered the budgets as the codebase was split, public facades were migrated,
- * and explicit any was reduced. V19 treats those gains as the release floor.
+ * and explicit any was reduced. V31 preserves the source explicit-any floor again.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -60,7 +61,7 @@ checkLessOrEqual(failures, 'shared deep imports', report.boundary.sharedPublic.d
 checkGreaterOrEqual(failures, 'core module public facades', report.boundary.corePublicFacades.filter((facade) => facade.scope === 'module' && facade.exists).length, budgets.minimumCoreModulePublicFacades);
 checkGreaterOrEqual(failures, 'shared module public facades', report.boundary.sharedPublicFacades.filter((facade) => facade.scope === 'module' && facade.exists).length, budgets.minimumSharedModulePublicFacades);
 
-console.log('[refactor-budget-gate] V19 locked refactor budget');
+console.log(`[refactor-budget-gate] ${baseline.version || 'locked'} refactor budget`);
 console.log(`- largest file: ${largestFile?.lines ?? 0}/${budgets.largestFileLines} ${largestFile?.file ?? ''}`);
 console.log(`- files >= 500 lines: ${report.fileHotspots.filesOver500Lines}/${budgets.filesOver500Lines}`);
 console.log(`- non-CSS files >= 500 lines: ${report.fileHotspots.nonCssFilesOver500Lines}/${budgets.nonCssFilesOver500Lines}`);
@@ -84,4 +85,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('[refactor-budget-gate] ok: deep-refactor surface is within the V19 locked budget.');
+console.log('[refactor-budget-gate] ok: deep-refactor surface is within the locked budget.');

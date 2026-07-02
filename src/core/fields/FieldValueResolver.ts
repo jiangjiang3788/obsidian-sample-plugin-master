@@ -6,7 +6,7 @@ import type { FieldSource } from './FieldTypes';
 import { normalizeImageValue } from './imageSemantics';
 import { parseTagList } from './tagSemantics';
 import { splitHierarchyPath } from './pathSemantics';
-import { getTaskStatus } from '@/core/utils/taskStatus';
+import { getTaskStatus } from '@/core/records/task/taskStatus';
 import { asUnknownRecord, readFirstString, readString, readStringArray, readUnknown } from '@/core/utils/unknownRecord';
 
 export type FieldValueSource = FieldSource | 'unknown';

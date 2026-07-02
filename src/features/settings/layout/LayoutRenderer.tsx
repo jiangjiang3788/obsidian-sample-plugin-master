@@ -14,7 +14,7 @@ import {
 } from '@/app/public';
 import { openLayoutSettingsWidget } from '@features/settings/layout/LayoutSettingsWidget';
 import { DataFilterPanel } from './DataFilterPanel';
-import { ViewToolbar } from '@shared/ui/public';
+import { ViewToolbar } from '@features/settings/views/public';
 import { detectThinkDeviceProfile, getThinkDeviceProfileAttributes, isThinkMobileLikeProfile } from '@shared/utils/public';
 import { useLayoutItems } from './useLayoutItems';
 import { useExpandedViewRendering } from './useExpandedViewRendering';

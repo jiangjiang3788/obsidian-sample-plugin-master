@@ -1,4 +1,5 @@
 import type { FilterRule, SortRule, ViewInstance } from '../types/schema';
+import { normalizeViewMultiValue } from './filterValueSemantics';
 
 /**
  * View domain field policy
@@ -81,16 +82,9 @@ export function isPeriodViewField(field: string): boolean {
   return PERIOD_VIEW_FIELDS.has(normalizeViewFieldKey(field));
 }
 
-function normalizeMultiValue(value: any): string[] {
-  const rawValues = Array.isArray(value) ? value : [value];
-  return rawValues
-    .flatMap(v => String(v ?? '').split(/[,，\n]/))
-    .map(part => part.trim())
-    .filter(Boolean);
-}
 
 function readLegacyTaskStatusValue(value: any): 'open' | 'done' | 'cancelled' | null {
-  const values = normalizeMultiValue(value);
+  const values = normalizeViewMultiValue(value);
   if (values.some(text => text === '完成任务' || text.endsWith('/done'))) return 'done';
   if (values.some(text => text.endsWith('/cancelled'))) return 'cancelled';
   if (values.some(text => text === '未完成任务' || text.endsWith('/todo'))) return 'open';

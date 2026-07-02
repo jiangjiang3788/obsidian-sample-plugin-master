@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@shared/ui/public';
 import { selectSettings, useSelector, useUseCases } from '@/app/public';
-import { ThemeMetadataResolver } from '@core/theme/public';
+import { getThemePathCandidates, getThemePathLeaf, getThemePathParent, normalizeThemePath, ThemeMetadataResolver } from '@core/theme/public';
 
 type ThemeStatus = 'active' | 'inactive';
 
@@ -21,26 +21,9 @@ const statusOptions: Array<{ value: ThemeStatus; label: string }> = [
   { value: 'inactive', label: '停用' },
 ];
 
-function leaf(path: string): string {
-  return String(path || '').split('/').filter(Boolean).pop() || path;
-}
-
-function parent(path: string): string {
-  const parts = String(path || '').split('/').filter(Boolean);
-  parts.pop();
-  return parts.join('/');
-}
-
-function pathCandidates(path: string): string[] {
-  const parts = String(path || '').split('/').map((part) => part.trim()).filter(Boolean);
-  const result: string[] = [];
-  for (let i = parts.length; i >= 1; i -= 1) result.push(parts.slice(0, i).join('/'));
-  return result;
-}
-
 function inheritedIconInfo(themes: Array<{ path: string; icon?: string }>, path: string) {
   const byPath = new Map(themes.map((theme) => [String(theme.path || ''), theme]));
-  for (const candidate of pathCandidates(path)) {
+  for (const candidate of getThemePathCandidates(path)) {
     const matched = byPath.get(candidate);
     if (matched && String(matched.icon || '').trim()) {
       return { icon: String(matched.icon || '').trim(), sourcePath: matched.path };
@@ -82,7 +65,7 @@ export function ThemeMetadataManager() {
   const previewIconInfo = useMemo(() => inheritedIconInfo(themes, previewThemePath), [themes, previewThemePath]);
 
   const handleAddTheme = async () => {
-    const normalizedPath = path.trim().replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
+    const normalizedPath = normalizeThemePath(path);
     if (!normalizedPath) return;
     const existing = themes.find((theme) => theme.path === normalizedPath);
     if (existing) {
@@ -98,7 +81,7 @@ export function ThemeMetadataManager() {
   };
 
   const updateThemePath = async (id: string, nextPath: string) => {
-    const normalizedPath = nextPath.trim().replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
+    const normalizedPath = normalizeThemePath(nextPath);
     if (!normalizedPath) return;
     await useCases.theme.updateTheme(id, { path: normalizedPath });
     setMessage(`已更新主题路径：${normalizedPath}`);
@@ -172,8 +155,8 @@ export function ThemeMetadataManager() {
               className="think-theme-metadata__entry"
             >
               <TextField size="small" label="图标" value={theme.icon || ''} onChange={(event: any) => updateThemeIcon(theme.id, event.target.value)} />
-              <TextField size="small" label={parent(theme.path) ? `父级：${parent(theme.path)}` : '根主题'} value={theme.path || ''} onChange={(event: any) => updateThemePath(theme.id, event.target.value)} />
-              <Typography variant="body2" color="text.secondary">{leaf(theme.path)}</Typography>
+              <TextField size="small" label={getThemePathParent(theme.path) ? `父级：${getThemePathParent(theme.path)}` : '根主题'} value={theme.path || ''} onChange={(event: any) => updateThemePath(theme.id, event.target.value)} />
+              <Typography variant="body2" color="text.secondary">{getThemePathLeaf(theme.path)}</Typography>
               {(() => {
                 const info = inheritedIconInfo(themes, theme.path);
                 const inherited = info.sourcePath && info.sourcePath !== theme.path;

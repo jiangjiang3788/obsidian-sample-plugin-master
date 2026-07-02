@@ -4,18 +4,8 @@
 import type { ISettingsProvider } from '@/core/services/types';
 import { buildAiConfigSnapshot, type AiConfigSnapshot } from './AiConfigSnapshot';
 import { devLog, devWarn } from '../utils/devLogger';
+import { elapsedMs, nowMs } from '../utils/timing';
 
-function nowMs(): number {
-    try {
-        return performance.now();
-    } catch {
-        return Date.now();
-    }
-}
-
-function elapsedMs(start: number): string {
-    return `${(nowMs() - start).toFixed(2)}ms`;
-}
 
 /**
  * AI 配置缓存

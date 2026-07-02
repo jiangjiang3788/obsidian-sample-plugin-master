@@ -2,7 +2,7 @@
 import type { Item } from '@/core/types/schema';
 import { applyExplicitThemeViewFields, normalizeExplicitTheme } from '@/core/theme/themeSemantics';
 import { normalizeItemDates } from '@/core/utils/normalize';
-import { parseRecurrence } from '@/core/utils/mark';
+import { parseRecurrence } from '@/core/records/task/mark';
 import { extractTaskEditableText } from '@/core/utils/text';
 import type { RecordNormalizeContext } from './RecordEntity';
 import { splitGoalPath } from '@/core/goal';
@@ -21,6 +21,18 @@ function lineFromItemId(id: string): number | undefined {
 function normalizeSearchText(value: unknown): string {
   return String(value ?? '').toLowerCase();
 }
+
+type SearchIndexedItem = Item & {
+  titleLower?: string;
+  contentLower?: string;
+  fullDataLower?: string;
+  tagsLower?: string[];
+  goalPathsLower?: string[];
+  goalIdsLower?: string[];
+  goalPathLower?: string;
+  rootGoalLower?: string;
+  leafGoalLower?: string;
+};
 
 /**
  * 为视图/筛选/搜索补齐运行时派生字段。
@@ -56,8 +68,8 @@ export function normalizeRecordItem(item: Item, context: RecordNormalizeContext)
   item.leafGoal = goalParts.leafGoal || item.leafGoal;
 
   // 主题只允许来自显式元数据。normalizeExplicitTheme 只做清洗/匹配，不会读取 header。
-  item.theme = normalizeExplicitTheme((item as any).theme, context.themeMatcher);
-  applyExplicitThemeViewFields(item as any);
+  item.theme = normalizeExplicitTheme(item.theme, context.themeMatcher);
+  applyExplicitThemeViewFields(item);
 
   if (!item.extra) item.extra = {};
   if (!item.recurrence) item.recurrence = 'none';
@@ -82,21 +94,22 @@ export function normalizeRecordItem(item: Item, context: RecordNormalizeContext)
     }
 
     // recurrence 必须从 rawSource 读取；content 现在是干净正文，可能已经没有 🔁 元数据。
-    (item as any).recurrenceInfo = parseRecurrence(taskRawSource) || undefined;
+    item.recurrenceInfo = parseRecurrence(taskRawSource) || undefined;
   }
 
   // 完整数据是只读派生字段，运行时补齐可以让导出、JSON 调试和旧代码路径更稳定。
   item.fullData = item.rawSource || item.fullData || item.content || '';
 
-  (item as any).titleLower = normalizeSearchText(item.title);
-  (item as any).contentLower = normalizeSearchText(item.content);
-  (item as any).fullDataLower = normalizeSearchText(item.fullData);
-  (item as any).tagsLower = (item.tags || []).map(tag => normalizeSearchText(tag));
-  (item as any).goalPathsLower = (item.goalPaths || []).map(goal => normalizeSearchText(goal));
-  (item as any).goalIdsLower = (item.goalIds || []).map(goalId => normalizeSearchText(goalId));
-  (item as any).goalPathLower = normalizeSearchText(item.goalPath);
-  (item as any).rootGoalLower = normalizeSearchText(item.rootGoal);
-  (item as any).leafGoalLower = normalizeSearchText(item.leafGoal);
+  const indexedItem = item as SearchIndexedItem;
+  indexedItem.titleLower = normalizeSearchText(item.title);
+  indexedItem.contentLower = normalizeSearchText(item.content);
+  indexedItem.fullDataLower = normalizeSearchText(item.fullData);
+  indexedItem.tagsLower = (item.tags || []).map(tag => normalizeSearchText(tag));
+  indexedItem.goalPathsLower = (item.goalPaths || []).map(goal => normalizeSearchText(goal));
+  indexedItem.goalIdsLower = (item.goalIds || []).map(goalId => normalizeSearchText(goalId));
+  indexedItem.goalPathLower = normalizeSearchText(item.goalPath);
+  indexedItem.rootGoalLower = normalizeSearchText(item.rootGoal);
+  indexedItem.leafGoalLower = normalizeSearchText(item.leafGoal);
 
   return item;
 }

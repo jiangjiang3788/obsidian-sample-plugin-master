@@ -1,0 +1,22 @@
+reports/refactor: folder-reorg-map.json
+reports/refactor: folder-reorg-map.md
+reports/refactor: refactor-hotspots-v27.json
+reports/refactor: refactor-hotspots-v27.md
+reports/refactor: refactor-hotspots.json
+reports/refactor: refactor-hotspots.md
+reports/refactor: refactor-metrics-v27.json
+reports/refactor: refactor-metrics-v27.md
+reports/refactor: refactor-metrics.json
+reports/refactor: refactor-metrics.md
+reports/refactor: v27-changed-files.txt
+src/app/ui/primitives/FloatingPanel.tsx src/app/ui/primitives/FloatingPanel.tsx differ
+src/app/ui/primitives: FloatingPanel.types.ts
+src/app/ui/primitives: FloatingPanelHeader.tsx
+src/app/ui/primitives: FloatingPanelResizeHandles.tsx
+src/app/ui/primitives: floatingPanelEvents.ts
+src/app/ui/primitives: useFloatingPanelInteractions.ts
+src/app/ui/primitives: useFloatingPanelLifecycle.ts
+src/shared/styles/mui-theme.ts src/shared/styles/mui-theme.ts differ
+src/shared/styles: muiTheme
+src/shared/utils: error
+src/shared/utils/errorHandler.ts src/shared/utils/errorHandler.ts differ

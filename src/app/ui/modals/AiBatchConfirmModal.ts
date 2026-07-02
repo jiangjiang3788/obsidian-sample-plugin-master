@@ -1,1 +1,1 @@
-export { AiBatchConfirmModal } from '@/platform/modals/AiBatchConfirmModal';
+export { AiBatchConfirmModal } from '@/platform/obsidian/modals/AiBatchConfirmModal';

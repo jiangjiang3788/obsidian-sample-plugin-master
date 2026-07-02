@@ -2,6 +2,7 @@
 // OpenAI-Compatible HTTP Client - 支持 Gemini/自建转发等
 
 import { devLog, devWarn } from '../utils/devLogger';
+import { elapsedMs, nowMs } from '../utils/timing';
 
 /**
  * OpenAI 聊天消息格式
@@ -70,17 +71,6 @@ export function resetDefaultAiHttpTransportFactory(): void {
     defaultTransportFactory = () => new FetchAiHttpTransport();
 }
 
-function nowMs(): number {
-    try {
-        return performance.now();
-    } catch {
-        return Date.now();
-    }
-}
-
-function elapsedMs(start: number): string {
-    return `${(nowMs() - start).toFixed(2)}ms`;
-}
 
 function summarizeUrl(baseURL: string): string {
     try {

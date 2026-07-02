@@ -1,4 +1,4 @@
-import { devLog, devWarn } from '@core/utils/public';
+import { devLog, devWarn, elapsedMs, nowMs } from '@core/utils/public';
 import type { AiSettings, ThinkSettings } from '@core/types/public';
 import type { ISettingsProvider } from '@core/services/public';
 import { getZustandState, type AppStoreInstance } from '@/app/public';
@@ -18,17 +18,7 @@ export function createZustandSettingsProvider(store: AppStoreInstance): ISetting
     };
 }
 
-export function nowMs(): number {
-    try {
-        return performance.now();
-    } catch {
-        return Date.now();
-    }
-}
-
-export function elapsedMs(start: number): string {
-    return `${(nowMs() - start).toFixed(2)}ms`;
-}
+export { elapsedMs, nowMs };
 
 export function createAiInputTraceId(prefix = 'aiinput'): string {
     return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;

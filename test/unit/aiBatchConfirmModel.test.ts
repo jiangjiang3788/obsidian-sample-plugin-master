@@ -10,7 +10,7 @@ import {
   resolvePresetForAiTarget,
   shortDisplay,
   summarizeAiBatchConfirmRecords,
-} from '@/platform/modals/AiBatchConfirmModel';
+} from '@/platform/obsidian/modals/AiBatchConfirmModel';
 
 const blocks = [{ id: 'core.task', name: '任务', categoryKey: 'task', template: { fields: [] } }] as any[];
 const themes = [{ id: 'theme-reading', path: '学习/英语/阅读' }] as any[];

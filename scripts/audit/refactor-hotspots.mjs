@@ -2,7 +2,7 @@
 /**
  * refactor-hotspots
  *
- * Produces a focused queue for the second-round V14-V19 refactor passes
+ * Produces a focused queue for the third-round V20-V25 folder ownership passes
  * from the raw refactor metrics.  It is a planning aid, not a hard architecture gate.
  */
 import fs from 'node:fs';
@@ -92,49 +92,40 @@ function buildHotspots(report) {
     },
     recommendedBatches: [
       {
-        version: 'V14',
-        focus: 'QuickInput 真实深拆',
-        reason: '快捷面板字段渲染和 editor model 是主交互入口，必须保持 UI 变薄、领域规则内聚。',
+        version: 'V20',
+        focus: '构建基线 + 目录迁移地图',
+        reason: '第三轮先建立 folder ownership 地图，并允许本地 data.json 作为单人运行态文件。',
+        candidateFiles: ['docs/FOLDER_REORG_PLAN.md', 'scripts/audit/folder-reorg-map.mjs', 'scripts/gates/folder-reorg-plan-gate.mjs'],
+      },
+      {
+        version: 'V21',
+        focus: 'QuickInput 目录归属重排',
+        reason: '快捷面板 editor 与 modal content 属于 quickinput feature，platform 只保留 Obsidian adapter。',
         candidateFiles: pickFiles(quickInputFiles, 16),
       },
       {
-        version: 'V15',
-        focus: 'CSS 大文件模块化',
-        reason: '样式 facade 拆分后，统计、Excel、设置编辑器与视图外壳可以按领域维护。',
-        candidateFiles: pickFiles(largestFiles.filter((item) => item.file.endsWith('.css')), 12),
+        version: 'V22',
+        focus: 'Settings / Views 目录重排',
+        reason: 'Statistics、Timeline、Excel、Heatmap 等业务视图已经离开 shared/ui/views，归入 settings/views/runtime。',
+        candidateFiles: ['src/features/settings/views/runtime', 'src/features/settings/views/editors', 'src/features/settings/views/models'],
       },
       {
-        version: 'V16',
-        focus: 'AI / Retrieval / GoalTemplate 编辑模型收敛',
-        reason: 'AI 检索和目标预设编辑模型接近大文件阈值，适合拆成门面 + 内聚 helper。',
-        candidateFiles: [
-          ...pickFiles(topSemanticFiles(report, 'aiParsingFlow', 8)),
-          ...pickFiles(topSemanticFiles(report, 'fieldValueSemantics', 8)).filter((file) => file.includes('GoalTemplate')),
-        ],
+        version: 'V23',
+        focus: 'Core 领域目录收敛 + 删除旧兼容',
+        reason: 'RecordInput 已从 generic services bucket 移入 core/recordInput；任务记录和记录提交工具继续按领域归属收窄。',
+        candidateFiles: ['src/core/recordInput', 'src/core/utils', 'src/core/types'],
       },
       {
-        version: 'V17',
-        focus: 'Public API 实际迁移',
-        reason: '模块级 public facade 已建立，第一方代码应迁移出 @core/public / @shared/public 根入口。',
-        candidateFiles: [
-          'src/core/public.ts',
-          'src/shared/public.ts',
-          'scripts/gates/public-facades.config.mjs',
-          'scripts/gates/arch-gate.mjs',
-          'scripts/gates/refactor-budget-gate.mjs',
-        ],
+        version: 'V24',
+        focus: 'Shared / Platform 瘦身',
+        reason: 'shared 只保留通用 UI/hooks/utils，platform 显式整理为 Obsidian adapters。',
+        candidateFiles: ['src/features/settings/views/runtime', 'src/platform'],
       },
       {
-        version: 'V18',
-        focus: '类型与 explicit any 收敛',
-        reason: '大文件和 public 入口收敛后，应继续降低 any 预算，优先处理类型热点文件。',
-        candidateFiles: pickFiles(report.typeHealth.topFiles, 16),
-      },
-      {
-        version: 'V19',
-        focus: '预算锁定 + 回归验收',
-        reason: '把第二轮收敛成果固化到 gate 与文档，避免 public importers、any、大文件预算反弹。',
-        candidateFiles: ['scripts/gates/refactor-budget-gate.mjs', 'docs/ARCH_REFACTOR_REPORT.md', 'docs/MVP_ACCEPTANCE.md'],
+        version: 'V25',
+        focus: '当前 schema 锁定 + release 封版',
+        reason: '不做旧数据迁移，只锁当前 schema、目录预算和 release 包边界。',
+        candidateFiles: ['src/core/settings', 'scripts/gates/refactor-budget-baseline.json', 'docs/MVP_ACCEPTANCE.md'],
       },
     ],
 

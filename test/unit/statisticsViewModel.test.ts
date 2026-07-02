@@ -6,7 +6,7 @@ import {
   isSameStatisticsCell,
   isStatisticsYearView,
   resolveStatisticsYear,
-} from '@/shared/ui/views/StatisticsView/StatisticsViewModel';
+} from '@/features/settings/views/runtime/StatisticsView/StatisticsViewModel';
 
 describe('StatisticsViewModel', () => {
   it('derives config, year flags and popover keys', () => {

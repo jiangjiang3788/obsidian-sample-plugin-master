@@ -3,7 +3,7 @@ import {
   buildTimeNavigatorQuarterBlocks,
   buildTimeNavigatorSelection,
   buildTimeNavigatorWeekCells,
-} from '@/shared/ui/views/TimeNavigatorModel';
+} from '@/features/settings/views/runtime/TimeNavigatorModel';
 import { dayjs } from '@core/public';
 
 describe('TimeNavigatorModel', () => {

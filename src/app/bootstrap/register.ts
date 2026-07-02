@@ -8,7 +8,7 @@ import { devWarn } from '@core/utils/public';
 
 import { diDebug } from '@/app/diagnostics/diDiagnostics';
 
-import { ThemeManager } from '@features/settings/theme/ThemeManager';
+import { ThemeManager } from '@core/theme/public';
 import { isDisposed } from '@/app/runtime/lifecycleState';
 
 /**

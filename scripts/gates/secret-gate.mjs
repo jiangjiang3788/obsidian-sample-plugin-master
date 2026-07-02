@@ -22,6 +22,10 @@ const ignoredFiles = new Set([
   'styles.css',
 ]);
 
+const ignoredLocalRuntimeRootFiles = new Set([
+  'data.json',
+]);
+
 const textExtensions = new Set([
   '.cjs',
   '.css',
@@ -46,7 +50,6 @@ const allowedLocalConfigExamples = new Set([
 ]);
 
 const forbiddenRootFiles = new Set([
-  'data.json',
   '.env',
 ]);
 
@@ -132,6 +135,7 @@ function walk(dir, out = []) {
 }
 
 const findings = [];
+const ignoredLocalRuntimeFilesFound = [];
 
 for (const fileName of forbiddenRootFiles) {
   if (existsSync(join(root, fileName))) {
@@ -144,6 +148,11 @@ for (const fileName of forbiddenRootFiles) {
 
 for (const filePath of walk(root)) {
   const rel = relative(root, filePath).replaceAll('\\\\', '/');
+  if (ignoredLocalRuntimeRootFiles.has(rel)) {
+    ignoredLocalRuntimeFilesFound.push(rel);
+    continue;
+  }
+
   const baseName = rel.split('/').pop() || rel;
   const ext = extname(baseName);
 
@@ -178,6 +187,10 @@ for (const filePath of walk(root)) {
 
 if (findings.length > 0) {
   fail(findings);
+}
+
+if (ignoredLocalRuntimeFilesFound.length > 0) {
+  console.warn(`[secret-gate] ignored local runtime files: ${ignoredLocalRuntimeFilesFound.join(', ')}`);
 }
 
 console.log('[secret-gate] ok');

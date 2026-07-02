@@ -2,7 +2,8 @@ import type { Item, ThemeDefinition } from '@/core/types/schema';
 import { readField } from '@/core/types/schema';
 import type { CategoryConfig } from '@/core/config/viewConfigs';
 import type { GoalDefinition } from './types';
-import { splitGoalPath } from './path';
+import { normalizeGoalPath, splitGoalPath } from './path';
+import { getThemePathCandidates, getThemePathLeaf, normalizeThemePath } from '@/core/theme/themePathSemantics';
 import { createGoalOrderIndex } from './order';
 
 export const UNASSIGNED_GOAL_KEY = '未归属目标';
@@ -13,6 +14,8 @@ export interface GoalBucket extends CategoryConfig {
   icon?: string;
   isUnassigned?: boolean;
 }
+
+type GoalDefinitionWithIcon = GoalDefinition & { icon?: string | null };
 
 function firstString(value: unknown): string {
   if (Array.isArray(value)) {
@@ -31,45 +34,45 @@ function firstString(value: unknown): string {
   return String(value).trim();
 }
 
-function normalizePath(value: unknown): string {
+function normalizeItemGoalPath(value: unknown): string {
   const raw = firstString(value);
   if (!raw) return '';
-  return splitGoalPath(raw).goalPath || raw;
+  return normalizeGoalPath(raw) || raw;
 }
 
 function buildGoalPathById(goals: GoalDefinition[] = []): Map<string, string> {
   const map = new Map<string, string>();
   for (const goal of goals || []) {
-    const path = normalizePath(goal.goalPath || goal.title);
+    const path = normalizeItemGoalPath(goal.goalPath || goal.title);
     if (goal.id && path) map.set(goal.id, path);
   }
   return map;
 }
 
 function findGoalByPath(goals: GoalDefinition[] = [], goalPath: string): GoalDefinition | null {
-  const normalized = normalizePath(goalPath);
+  const normalized = normalizeItemGoalPath(goalPath);
   if (!normalized) return null;
-  return goals.find((goal) => normalizePath(goal.goalPath || goal.title) === normalized) || null;
+  return goals.find((goal) => normalizeItemGoalPath(goal.goalPath || goal.title) === normalized) || null;
 }
 
 export function getItemGoalKey(item: Item, goals: GoalDefinition[] = []): string {
-  const directPath = normalizePath((item as any).goalPath);
+  const directPath = normalizeItemGoalPath(item.goalPath);
   if (directPath) return directPath;
 
-  const directPaths = normalizePath((item as any).goalPaths);
+  const directPaths = normalizeItemGoalPath(item.goalPaths);
   if (directPaths) return directPaths;
 
-  const fieldPath = normalizePath(readField(item, 'goalPath')) || normalizePath(readField(item, '目标路径')) || normalizePath(readField(item, '目标'));
+  const fieldPath = normalizeItemGoalPath(readField(item, 'goalPath')) || normalizeItemGoalPath(readField(item, '目标路径')) || normalizeItemGoalPath(readField(item, '目标'));
   if (fieldPath) return fieldPath;
 
-  const fieldPaths = normalizePath(readField(item, 'goalPaths'));
+  const fieldPaths = normalizeItemGoalPath(readField(item, 'goalPaths'));
   if (fieldPaths) return fieldPaths;
 
   const byId = buildGoalPathById(goals);
-  const directId = firstString((item as any).goalId) || firstString(readField(item, 'goalId')) || firstString(readField(item, '目标ID'));
+  const directId = firstString(item.goalId) || firstString(readField(item, 'goalId')) || firstString(readField(item, '目标ID'));
   if (directId && byId.has(directId)) return byId.get(directId) || UNASSIGNED_GOAL_KEY;
 
-  const directIds = firstString((item as any).goalIds);
+  const directIds = firstString(item.goalIds);
   if (directIds && byId.has(directIds)) return byId.get(directIds) || UNASSIGNED_GOAL_KEY;
 
   return UNASSIGNED_GOAL_KEY;
@@ -83,13 +86,13 @@ export function getItemGoalLabel(item: Item, goals: GoalDefinition[] = []): stri
 }
 
 export function getItemThemeKey(item: Item): string {
-  const direct = normalizeThemePath((item as any).themePath) || normalizeThemePath((item as any).theme);
+  const direct = normalizeThemePath(item.themePath) || normalizeThemePath(item.theme);
   if (direct) return direct;
 
   const fieldTheme = normalizeThemePath(readField(item, 'themePath')) || normalizeThemePath(readField(item, '主题'));
   if (fieldTheme) return fieldTheme;
 
-  const extra = (item as any).extra || {};
+  const extra = item.extra || {};
   const extraTheme = normalizeThemePath(extra.themePath) || normalizeThemePath(extra['主题']) || normalizeThemePath(extra['主题路径']);
   if (extraTheme) return extraTheme;
 
@@ -99,8 +102,7 @@ export function getItemThemeKey(item: Item): string {
 export function getItemThemeLabel(item: Item): string {
   const key = getItemThemeKey(item);
   if (!key || key === '未设置主题') return '未设置主题';
-  const parts = key.split('/').filter(Boolean);
-  return parts[parts.length - 1] || key;
+  return getThemePathLeaf(key) || key;
 }
 
 export interface GoalThemeBreakdownRow {
@@ -128,27 +130,15 @@ export function buildGoalThemeBreakdown(items: Item[], goals: GoalDefinition[] =
   });
 }
 
-
-function normalizeThemePath(path?: string | null): string {
-  return String(path || '').split('/').map((part) => part.trim()).filter(Boolean).join('/');
-}
-
-function themePathCandidates(path?: string | null): string[] {
-  const parts = normalizeThemePath(path).split('/').filter(Boolean);
-  const result: string[] = [];
-  for (let i = parts.length; i >= 1; i -= 1) result.push(parts.slice(0, i).join('/'));
-  return result;
-}
-
 function resolveThemeIcon(goal: GoalDefinition | null | undefined, themes: ThemeDefinition[] = []): string | undefined {
-  const direct = String((goal as any)?.icon || '').trim();
+  const direct = String((goal as GoalDefinitionWithIcon | null | undefined)?.icon || '').trim();
   if (direct) return direct;
-  const goalThemePath = normalizeThemePath((goal as any)?.themePath);
+  const goalThemePath = normalizeThemePath(goal?.themePath);
   if (!goalThemePath) return undefined;
   const byPath = new Map((themes || []).map((theme) => [normalizeThemePath(theme.path), theme]));
-  for (const candidate of themePathCandidates(goalThemePath)) {
+  for (const candidate of getThemePathCandidates(goalThemePath)) {
     const theme = byPath.get(candidate);
-    const icon = String((theme as any)?.icon || '').trim();
+    const icon = String(theme?.icon || '').trim();
     if (icon) return icon;
   }
   return undefined;
@@ -166,7 +156,7 @@ export function buildGoalBuckets(items: Item[], goals: GoalDefinition[] = [], op
   const map = new Map<string, GoalBucket>();
 
   const addBucket = (goalPath: string, sourceGoal?: GoalDefinition | null) => {
-    const key = normalizePath(goalPath) || UNASSIGNED_GOAL_KEY;
+    const key = normalizeItemGoalPath(goalPath) || UNASSIGNED_GOAL_KEY;
     if (!includeUnassigned && key === UNASSIGNED_GOAL_KEY) return;
     if (map.has(key)) return;
     const goal = sourceGoal || findGoalByPath(goals, key);
@@ -186,7 +176,7 @@ export function buildGoalBuckets(items: Item[], goals: GoalDefinition[] = [], op
 
   if (includeKnownGoals) {
     for (const goal of goals || []) {
-      const path = normalizePath(goal.goalPath || goal.title);
+      const path = normalizeItemGoalPath(goal.goalPath || goal.title);
       if (path) addBucket(path, goal);
     }
   }

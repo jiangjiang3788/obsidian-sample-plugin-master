@@ -60,26 +60,26 @@ expectFile('src/app/actions/recordCreateActions.ts', 'record create actions shou
 expectFile('src/app/actions/recordEditActions.ts', 'record edit actions should stay split from the public barrel');
 expectFile('src/app/actions/recordTaskActions.ts', 'record task mutations should stay split from the public barrel');
 expectFile('src/app/actions/recordExcelActions.ts', 'Excel mutation actions should stay split from the public barrel');
-expectFile('src/platform/modals/useQuickInputSubmit.ts', 'QuickInput submit flow should stay isolated from the modal shell');
+expectFile('src/features/quickinput/modal/useQuickInputSubmit.ts', 'QuickInput submit flow should stay isolated from the modal shell');
 expectFile('src/features/settings/tabs/AiApiConfigSection.tsx', 'AI settings form should stay split by section');
 expectFile('scripts/gates/bundle-budget-gate.mjs', 'release builds should enforce a bundle size budget');
 expectFile('scripts/audit/bundle-size-report.mjs', 'release builds should produce a trackable bundle size report');
-expectFile('src/platform/ObsidianAiHttpTransport.ts', 'AI HTTP must use a platform transport for Obsidian requestUrl');
+expectFile('src/platform/obsidian/ObsidianAiHttpTransport.ts', 'AI HTTP must use a platform transport for Obsidian requestUrl');
 expectFile('test/unit/platform/obsidianAiHttpTransport.test.ts', 'Obsidian AI transport should be covered by unit tests');
 expectFile('test/unit/recordSubmitFeedback.test.ts', 'record conflict feedback should be covered by unit tests');
-expectFile('src/app/ui/components/QuickInputEditor/components/QuickInputOptionPillGroup.tsx', 'QuickInput single-select fields should render visible options instead of dropdowns');
-expectFile('src/app/ui/components/QuickInputEditor/components/quickInputOptionSelection.ts', 'QuickInput option selection state should be normalized and testable');
+expectFile('src/features/quickinput/editor/components/QuickInputOptionPillGroup.tsx', 'QuickInput single-select fields should render visible options instead of dropdowns');
+expectFile('src/features/quickinput/editor/components/quickInputOptionSelection.ts', 'QuickInput option selection state should be normalized and testable');
 expectFile('test/unit/quickInputOptionSelection.test.ts', 'QuickInput option selection helpers should be covered by unit tests');
 expectFile('docs/INITIAL_PLAN_PROGRESS.md', 'the original engineering plan should track implementation progress');
-expectFile('src/platform/modals/QuickInputConflictRecoveryPanel.tsx', 'QuickInput edit conflicts should expose in-modal recovery actions');
-expectFile('src/core/utils/recordSubmitRecovery.ts', 'record conflict recovery actions should be pure and testable');
+expectFile('src/features/quickinput/modal/QuickInputConflictRecoveryPanel.tsx', 'QuickInput edit conflicts should expose in-modal recovery actions');
+expectFile('src/core/recordInput/recovery.ts', 'record conflict recovery actions should be pure and testable');
 expectFile('test/unit/recordSubmitRecovery.test.ts', 'record conflict recovery action planning should be covered by unit tests');
 expectFile('src/shared/ui/icons/index.tsx', 'runtime icons should stay local instead of importing @mui/icons-material');
 expectFile('scripts/gates/no-mui-icons-gate.mjs', 'the gate chain should block MUI icon package regressions');
 expectFile('test/unit/sharedIcons.test.ts', 'the local lightweight icon layer should have a basic unit test');
 
 expectMaxLines('src/app/actions/recordUiActions.ts', 80, 'recordUiActions should remain a compatibility barrel');
-expectMaxLines('src/platform/modals/QuickInputModal.tsx', 350, 'QuickInput modal shell should remain manageable');
+expectMaxLines('src/platform/obsidian/modals/QuickInputModal.tsx', 350, 'QuickInput modal shell should remain manageable');
 expectMaxLines('src/features/settings/tabs/AiSettings.tsx', 260, 'AI settings shell should remain manageable');
 
 expectContains('package.json', 'build:release', 'release build command must be available');

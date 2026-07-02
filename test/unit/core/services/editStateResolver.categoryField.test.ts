@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { buildEditRecordState } from '@/core/services/recordInput/editStateResolver';
+import { buildEditRecordState } from '@/core/recordInput/editStateResolver';
 
 describe('buildEditRecordState category backfill', () => {
   it('uses categoryKey for flash-note category fields instead of theme path', () => {

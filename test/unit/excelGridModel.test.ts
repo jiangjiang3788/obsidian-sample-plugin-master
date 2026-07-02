@@ -5,7 +5,7 @@ import {
   getExcelColumnWidth,
   parseExcelClipboardMatrix,
   resolveExcelNavigationPosition,
-} from '@/shared/ui/views/excel-view/ExcelGridModel';
+} from '@/features/settings/views/runtime/excel-view/ExcelGridModel';
 
 const editableColumn = {
   key: 'title',

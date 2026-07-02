@@ -2,9 +2,9 @@
 /**
  * any-budget-gate
  *
- * V19 type-governance locked budget. This gate does not ban every explicit any.
+ * V31 final type-governance locked budget. This gate does not ban every explicit any.
  * It makes the current debt visible, separates source/test/scripts counts, and
- * keeps the V18 reduction as the V19 release floor and gives later passes a budget that must move downward over time.
+ * locks the V31 reduction floor so later passes cannot regress silently.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,12 +13,12 @@ const root = process.cwd();
 const failures = [];
 
 const budgets = {
-  src: 671,
+  src: 501,
   test: 165,
   scripts: 4,
-  total: 840,
-  asAny: 419,
-  colonAny: 341,
+  total: 670,
+  asAny: 350,
+  colonAny: 257,
 };
 
 const roots = ['src', 'test', 'scripts'];

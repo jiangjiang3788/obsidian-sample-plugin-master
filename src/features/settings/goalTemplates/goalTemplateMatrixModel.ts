@@ -1,5 +1,6 @@
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { getGoalOrderPath, getGoalOrderLabel, sortGoalTemplatesBySettingsOrder, sortGoalsBySettingsOrder } from '@core/goal/public';
+import { getThemePathLeaf } from '@core/theme/public';
 import type { CoreBlockDefinition } from '@core/blocks/public';
 import { getGoalTemplateDisplayName, readGoalTemplateIcon, readGoalTemplateThemePath } from './goalTemplateCopy';
 
@@ -19,13 +20,6 @@ function cleanPathSegment(value: string): string {
   return value.trim().replace(/^[#＃]+\s*/, '').trim();
 }
 
-function normalizePath(value?: string | null): string {
-  return String(value || '')
-    .split('/')
-    .map(cleanPathSegment)
-    .filter(Boolean)
-    .join('/');
-}
 
 export function getGoalDisplayPath(goal: GoalDefinition): string {
   return getGoalOrderPath(goal) || cleanPathSegment(goal.id);
@@ -119,10 +113,7 @@ export function cleanDisplayText(value: unknown): string {
   return String(value ?? '').replace(/^[#＃]+\s*/, '').trim();
 }
 
-export function leafPath(value: unknown): string {
-  const text = String(value ?? '').trim();
-  return text.split('/').filter(Boolean).pop() || text;
-}
+export { getThemePathLeaf as leafPath };
 
 export function isGeneratedPresetName(value: unknown): boolean {
   const text = String(value ?? '').trim();
@@ -132,7 +123,7 @@ export function isGeneratedPresetName(value: unknown): boolean {
 export function getPresetCardName(template: GoalTemplate, goal: GoalDefinition): string {
   const raw = getGoalTemplateDisplayName(template);
   if (!isGeneratedPresetName(raw)) return raw;
-  return cleanDisplayText(leafPath(readGoalTemplateThemePath(template, goal))) || raw;
+  return cleanDisplayText(getThemePathLeaf(readGoalTemplateThemePath(template, goal))) || raw;
 }
 
 export function goalTemplateKey(template: GoalTemplate): string {

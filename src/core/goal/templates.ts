@@ -1,6 +1,6 @@
 import type { TemplateField } from '@/core/types/schema';
 import type { GoalTemplateStorageRow, GoalDefinition, GoalId, GoalSettings, PeriodPolicy } from './types';
-import { splitGoalPath } from './path';
+import { getGoalPathCandidates, splitGoalPath } from './path';
 import { isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from './period';
 import { DEFAULT_TEMPLATE_VARIANT_ID, normalizeTemplateVariantId } from './templateVariant';
 
@@ -162,12 +162,6 @@ export function getGoalTemplateId(goalId: string, coreBlockId: string, variantId
   return normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID ? base : `${base}.${safeIdPart(normalizedVariantId)}`;
 }
 
-function pathCandidates(path?: string | null): string[] {
-  const parts = String(path || '').split('/').map((part) => part.trim()).filter(Boolean);
-  const result: string[] = [];
-  for (let i = parts.length; i >= 1; i -= 1) result.push(parts.slice(0, i).join('/'));
-  return result;
-}
 
 export function getGoalTemplateCandidateGoalIds(goalSettings: GoalSettings | undefined, goal: GoalDefinition | null): string[] {
   if (!goal) return [];
@@ -175,7 +169,7 @@ export function getGoalTemplateCandidateGoalIds(goalSettings: GoalSettings | und
   const ids: string[] = [goal.id];
   const path = splitGoalPath(goal.goalPath || goal.title).goalPath;
   const byPath = new Map(goals.map((item) => [splitGoalPath(item.goalPath || item.title).goalPath, item]));
-  for (const parentPath of pathCandidates(path).slice(1)) {
+  for (const parentPath of getGoalPathCandidates(path).slice(1)) {
     const parentGoal = byPath.get(parentPath);
     if (parentGoal && !ids.includes(parentGoal.id)) ids.push(parentGoal.id);
   }

@@ -63,11 +63,11 @@ function assertNotIncludes(relativePath, tokens, reason) {
   }
 }
 
-assertExists('src/features/settings/viewEditors/RuleBuilderModel.ts', 'MVP23 extracts rule normalization and mutation helpers.');
-assertExists('src/features/settings/viewEditors/RuleBuilderValueInput.tsx', 'MVP23 extracts autocomplete value editing.');
-assertLineLimit('src/features/settings/viewEditors/RuleBuilder.tsx', 320, 'RuleBuilder should stay as settings UI composition after MVP23.');
-assertLineLimit('src/features/settings/viewEditors/RuleBuilderValueInput.tsx', 80, 'value input is intentionally small and should not grow into a second builder.');
-assertIncludes('src/features/settings/viewEditors/RuleBuilderModel.ts', [
+assertExists('src/features/settings/views/editors/RuleBuilderModel.ts', 'MVP23 extracts rule normalization and mutation helpers.');
+assertExists('src/features/settings/views/editors/RuleBuilderValueInput.tsx', 'MVP23 extracts autocomplete value editing.');
+assertLineLimit('src/features/settings/views/editors/RuleBuilder.tsx', 320, 'RuleBuilder should stay as settings UI composition after MVP23.');
+assertLineLimit('src/features/settings/views/editors/RuleBuilderValueInput.tsx', 80, 'value input is intentionally small and should not grow into a second builder.');
+assertIncludes('src/features/settings/views/editors/RuleBuilderModel.ts', [
   'buildUniqueFieldValues',
   'normalizeFilterPatch',
   'appendRule',
@@ -75,7 +75,7 @@ assertIncludes('src/features/settings/viewEditors/RuleBuilderModel.ts', [
   'buildRuleLabel',
   'getPanelRuleGridTemplate',
 ], 'RuleBuilderModel owns non-visual rule state.');
-assertNotIncludes('src/features/settings/viewEditors/RuleBuilder.tsx', [
+assertNotIncludes('src/features/settings/views/editors/RuleBuilder.tsx', [
   'function useUniqueFieldValues',
   'function normalizeFilterPatch',
   'function normalizeMultiValue',
@@ -89,7 +89,7 @@ assertNotIncludes('src/features/settings/viewEditors/RuleBuilder.tsx', [
 const intentionallyNotSplit = [
   ['src/app/ui/primitives/FloatingPanel.tsx', 650],
   ['src/shared/components/ThemeTreeSelect/Panel.tsx', 320],
-  ['src/platform/modals/NamePromptModal.tsx', 140],
+  ['src/platform/obsidian/modals/NamePromptModal.tsx', 140],
 ];
 for (const [relativePath, maxLines] of intentionallyNotSplit) {
   assertLineLimit(relativePath, maxLines, 'reviewed as acceptable non-shared UI; do not split only for symmetry.');

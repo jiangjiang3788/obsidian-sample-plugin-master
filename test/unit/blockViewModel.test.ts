@@ -3,7 +3,7 @@ import {
   buildBlockViewRenderModel,
   findBlockViewTimer,
   resolveBlockViewGroupFields,
-} from '@/shared/ui/views/BlockViewModel';
+} from '@/features/settings/views/runtime/BlockViewModel';
 
 const items = [
   { id: 'a', type: 'block', title: 'A', fields: { status: 'todo' } },

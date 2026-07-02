@@ -7,4 +7,4 @@
  * reachable only through the root `@core/public` compatibility facade.
  */
 export * from './index';
-export * from './recordSubmitRecovery';
+export * from '../recordInput/recovery';

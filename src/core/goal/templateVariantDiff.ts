@@ -4,6 +4,7 @@ import type { GoalDefinition, PeriodPolicy } from './types';
 import type { GoalTemplate } from './templates';
 import { isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from './period';
 import { isSystemRecordContextField } from './templateVariant';
+import { compactText } from '@/core/semantics/text';
 
 export interface CompactGoalTemplateOptions {
   coreBlock?: Pick<CoreBlockDefinition, 'id' | 'fields' | 'outputTemplate' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null;
@@ -35,9 +36,6 @@ const FORBIDDEN_DEFAULT_KEYS = new Set([
   'goalGranularity',
 ]);
 
-function compactText(value: unknown): string {
-  return String(value ?? '').trim();
-}
 
 function stableJson(value: unknown): string {
   const seen = new WeakSet<object>();

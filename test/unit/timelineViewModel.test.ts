@@ -6,7 +6,7 @@ import {
   isTimelineSummaryView,
   resolveTimelineConfig,
   sumTimelineSummaryHours,
-} from '@/shared/ui/views/TimelineView/TimelineViewModel';
+} from '@/features/settings/views/runtime/TimelineView/TimelineViewModel';
 
 const moduleConfig = {
   viewConfig: {

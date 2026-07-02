@@ -90,7 +90,7 @@ assert(!goalUseCase.includes('applyLegacyGoalMigration'), 'GoalUseCase must not 
 assert(!goalUseCase.includes('applyMarkdownGoalBackfill'), 'GoalUseCase must not expose Markdown migration/writeback.');
 assert(goalUseCase.includes('delete safePatch.granularity'), 'GoalUseCase.updateGoal must ignore legacy goal granularity patches.');
 
-const workspaceView = read('src/platform/ThinkSettingsView.tsx');
+const workspaceView = read('src/platform/obsidian/ThinkSettingsView.tsx');
 assert(workspaceView.includes('THINK_SETTINGS_VIEW_TYPE'), 'Workspace settings view type is missing.');
 assert(workspaceView.includes('openThinkSettingsWorkspaceView'), 'Workspace settings view opener is missing.');
 const settingsIndex = read('src/features/settings/index.ts');
@@ -120,10 +120,10 @@ assert(!aiParser.includes('categoryKey is REQUIRED'), 'AI parser prompt must not
 assert(aiParser.includes('blockId is REQUIRED'), 'AI parser prompt must make blockId the required primary axis.');
 const aiScope = read('src/features/settings/tabs/AiScopeSection.tsx');
 assert(aiScope.includes('清理旧 Block ID'), 'AI settings must expose stale Block ID cleanup for migrated data.');
-const quickInputContainer = read('src/app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx');
+const quickInputContainer = read('src/features/quickinput/editor/QuickInputEditorContainer.tsx');
 assert(!quickInputContainer.includes('settings.overrides'), 'QuickInput must not use Theme × Block overrides to disable themes.');
 
-const quickFields = read('src/app/ui/components/QuickInputEditor/components/Fields.tsx');
+const quickFields = read('src/features/quickinput/editor/components/Fields.tsx');
 assert(quickFields.includes('isSystemRecordContextField'), 'QuickInput fields must use the shared system-context field policy.');
 
 
@@ -138,7 +138,7 @@ const viewUseCase = read('src/app/usecases/viewinstance.usecase.ts');
 assert(viewUseCase.includes('normalizeViewFilters'), 'ViewInstanceUseCase must normalize filters before saving.');
 assert(viewUseCase.includes('normalizeViewGroupFields'), 'ViewInstanceUseCase must normalize group fields before saving.');
 
-const outputPlanner = read('src/core/services/recordInput/snapshot/OutputPlanner.ts');
+const outputPlanner = read('src/core/recordInput/snapshot/OutputPlanner.ts');
 assert(outputPlanner.includes('resolveTemplatePeriodPolicy'), 'OutputPlanner must derive period only from periodPolicy-aware templates.');
 const templates = read('src/core/goal/templates.ts');
 assert(!/\n\s*granularity:\s*normalizeTemplatePeriodPolicy/.test(templates), 'GoalTemplate storage must not persist legacy granularity; use periodPolicy only.');

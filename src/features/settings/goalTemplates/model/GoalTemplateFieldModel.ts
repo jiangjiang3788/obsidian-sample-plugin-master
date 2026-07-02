@@ -1,7 +1,7 @@
 import type { TemplateField } from '@core/types/public';
 import type { UnknownRecord } from '@core/utils/public';
 import { isUnknownRecord } from '@core/utils/public';
-import { compactText } from './GoalTemplateThemeModel';
+import { compactText } from '@core/semantics/public';
 
 export function deriveRequiredFields(fields: TemplateField[]): string[] {
   return (fields || [])

@@ -22,6 +22,7 @@ module.exports = {
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',
     '^@app/(.*)$': '<rootDir>/src/app/$1',
     '^@features/(.*)$': '<rootDir>/src/features/$1',
+    '^@platform/obsidian/(.*)$': '<rootDir>/src/platform/obsidian/$1',
     '^@platform/(.*)$': '<rootDir>/src/platform/$1',
     '^@types/(.*)$': '<rootDir>/src/types/$1',
     '^@main$': '<rootDir>/src/main.ts',

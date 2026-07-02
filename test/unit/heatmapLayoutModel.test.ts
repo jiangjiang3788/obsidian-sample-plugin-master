@@ -3,7 +3,7 @@ import {
   resolveHeatmapVerticalLayout,
   shouldSkipHeatmapVerticalLayout,
   toggleHeatmapCollapsedTheme,
-} from '@/shared/ui/views/HeatmapLayoutModel';
+} from '@/features/settings/views/runtime/HeatmapLayoutModel';
 
 describe('HeatmapLayoutModel', () => {
   it('skips default/grid/week layouts and applies day/month thresholds', () => {

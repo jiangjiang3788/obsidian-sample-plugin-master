@@ -4,7 +4,7 @@ import {
   getTaskExecutionChipToneClass,
   getTaskExecutionRecordLabel,
   getTaskExecutionSelectedTask,
-} from '@/shared/ui/views/TaskExecutionViewModel';
+} from '@/features/settings/views/runtime/TaskExecutionViewModel';
 
 const item = { id: 'r1', type: 'block', title: '记录', fields: {} } as any;
 

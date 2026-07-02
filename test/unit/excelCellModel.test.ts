@@ -5,7 +5,7 @@ import {
   getExcelTypedInputProps,
   resolveExcelCellEditorKeyAction,
   resolveExcelCellKeyAction,
-} from '@/shared/ui/views/excel-view/ExcelCellModel';
+} from '@/features/settings/views/runtime/excel-view/ExcelCellModel';
 
 const cell = {
   item: { id: '1', title: 'Hello' },

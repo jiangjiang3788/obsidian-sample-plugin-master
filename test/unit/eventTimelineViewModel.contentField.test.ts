@@ -1,4 +1,4 @@
-import { buildEventTimelineViewModel } from '@/features/settings/viewModels/eventTimelineViewModel';
+import { buildEventTimelineViewModel } from '@/features/settings/views/models/eventTimelineViewModel';
 import type { Item, ViewInstance } from '@core/public';
 
 function item(overrides: Partial<Item> = {}): Item {
