@@ -1,8 +1,8 @@
 import { buildStatisticsViewModel } from '@/features/settings/views/models/statisticsViewModel';
 
 const items: any[] = [
-  { id: '1', title: 'A', type: 'task', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-01-05', extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
-  { id: '2', title: 'B', type: 'block', categoryKey: '事件', coreBlock: 'evidence', goalPaths: ['项目/目标B'], goalPath: '项目/目标B', date: '2026-01-06', extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
+  { id: '1', title: 'A', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-01-05', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '2', title: 'B', categoryKey: '事件', coreBlock: 'evidence', goalPaths: ['项目/目标B'], goalPath: '项目/目标B', date: '2026-01-06', extra: {}, tags: [], content: '', created: 0, modified: 0 },
 ];
 
 describe('StatisticsView goal grouping', () => {

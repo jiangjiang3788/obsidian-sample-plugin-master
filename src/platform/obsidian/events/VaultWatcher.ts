@@ -47,11 +47,22 @@ export class VaultWatcher {
     // rename
     this.unsubscribers.push(
       this.events.onMarkdownRename((newPath, oldPath) => {
-        this.cancelPendingScan(oldPath);
-        this.dataStore.removeFileItems(oldPath);
-        this.enqueueScan(newPath, 'rename');
+        void this.handleRename(newPath, oldPath);
       })
     );
+  }
+
+  private async handleRename(newPath: string, oldPath: string): Promise<void> {
+    if (this.disposed) return;
+    this.cancelPendingScan(oldPath);
+    this.cancelPendingScan(newPath);
+    this.dataStore.removeFileItems(oldPath);
+    try {
+      await this.dataStore.scanFileByPath(newPath, { throwOnError: true });
+      if (!this.disposed) this.dataStore.notifyChange();
+    } catch (error) {
+      devWarn('[VaultWatcher] Markdown rename 后扫描失败', { newPath, oldPath, error });
+    }
   }
 
   private enqueueScan(path: string, reason: string): void {

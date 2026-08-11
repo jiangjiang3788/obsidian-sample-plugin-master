@@ -1,5 +1,5 @@
 // src/core/domain/schema.ts
-import type { RecurrenceInfo } from '@core/records/task/mark';
+import type { RecurrenceInfo } from '@core/records/task/taskRecurrence';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
 import { getAvailableFields } from '@/core/fields/FieldRegistry';
 import type { AiSettings } from './ai-schema';
@@ -256,18 +256,22 @@ export interface SortRule {
     dir: 'asc' | 'desc';
 }
 export interface Item {
+    /** Stable Record Foundation v2 identity. Never derived from path/line. */
     id: string;
+    /** Persisted Record schema version. v2 records use 2. */
+    schemaVersion?: number;
+    /** Canonical entity status. Task v2 persists this explicitly. */
+    status?: 'open' | 'done' | 'cancelled' | 'skipped' | string;
     templateId?: string;
     templateSourceType?: 'core-block' | 'goal-template';
     title: string;
     content: string;
     /** 编辑态使用的正文真源：尽量保留用户原始表达，但去掉任务前缀/内联元数据噪音。 */
     editableText?: string;
-    /** 原始源文本（单行 task 或完整 block 内容），用于后续快照/调试。 */
+    /** 原始 Record Block 源文本，用于快照/调试；不得作为 Task 业务语义真源。 */
     rawSource?: string;
     /** 只读展示字段：完整原始 Markdown 数据；通常由 rawSource 派生，不要求持久化存储。 */
     fullData?: string;
-    type: 'task' | 'block';
     tags: string[];
     /** 稳定目标 ID，目标实体化后作为主关联键。 */
     goalId?: string;
@@ -288,8 +292,26 @@ export interface Item {
     /** 主题叶子节点，供视图设置按末级主题分组，例如：听力。 */
     leafTheme?: string;
     categoryKey: string;
-    recurrence: string;
     recurrenceInfo?: RecurrenceInfo;
+    /** Stable Task Series reference for recurring Task instances. */
+    seriesId?: string;
+    /** Task Series fields (only meaningful when coreBlock=task-series). */
+    seriesStartDate?: string;
+    currentTaskId?: string;
+    rolloverPolicy?: 'carry';
+    /** Task Session fields (only meaningful when coreBlock=task-session). */
+    taskId?: string;
+    sessionStartedAt?: string;
+    sessionEndedAt?: string;
+    sessionDurationMinutes?: number;
+    sessionResult?: 'work-block-ended' | 'task-completed' | string;
+    sessionSource?: 'timer' | 'energy-view' | 'unknown' | string;
+    suggestedDurationMinutes?: number;
+    startEnergyRecordId?: string;
+    endEnergyRecordId?: string;
+    energyDelta?: number;
+    brainDelta?: number;
+    physicalDelta?: number;
     startISO?: string;
     endISO?: string;
     startMs?: number;
@@ -303,6 +325,8 @@ export interface Item {
     header?: string;
     icon?: string;
     priority?: 'lowest' | 'low' | 'medium' | 'high' | 'highest';
+    /** User-declared expected duration. Actual work duration lives on TaskSession. */
+    expectedDurationMinutes?: number;
     extra: Record<string, string | number | boolean>;
     createdDate?: string;
     scheduledDate?: string;
@@ -310,6 +334,16 @@ export interface Item {
     dueDate?: string;
     doneDate?: string;
     cancelledDate?: string;
+    completedAt?: string;
+    cancelledAt?: string;
+    skippedAt?: string;
+    /** Current storage location. It is a locator, not business identity. */
+    source?: {
+        path: string;
+        startLine: number;
+        endLine: number;
+        modified: number;
+    };
     file?: {
         path: string;
         line?: number;
@@ -341,8 +375,8 @@ export interface Item {
 // DEFAULT_FIELD_OPTIONS via getAllFields(), not by assuming every Item property is
 // a user-facing field.
 export const CORE_FIELDS = [
-    'id', 'type', 'title', 'content', 'categoryKey', 'tags', 'goalId', 'goalIds', 'goalPath', 'goalPaths', 'coreBlock', 'cycleId',
-    'recurrence', 'icon', 'priority', 'date', 'startTime', 'endTime', 'duration',
+    'id', 'schemaVersion', 'title', 'content', 'categoryKey', 'tags', 'goalId', 'goalIds', 'goalPath', 'goalPaths', 'coreBlock', 'status', 'cycleId',
+    'icon', 'priority', 'expectedDurationMinutes', 'date', 'startTime', 'endTime', 'duration',
     'period', 'rating', 'image', 'folder', 'periodCount'
 ] as const;
 
@@ -350,7 +384,7 @@ export const SEMANTIC_FIELDS = [
     'baseCategory', 'leafCategory',
     // 主题筛选/分组的唯一默认字段：完整主题路径。
     // theme 是旧兼容字段，不再出现在默认字段选择器中。
-    'rootGoal', 'leafGoal', 'themePath', 'rootTheme', 'leafTheme',
+    'rootGoal', 'leafGoal', 'themePath', 'rootTheme', 'leafTheme', 'cadence',
 ] as const;
 
 export const FILE_FIELDS = [

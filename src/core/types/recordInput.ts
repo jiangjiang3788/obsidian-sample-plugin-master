@@ -1,11 +1,13 @@
 import type { BlockTemplate, ThemeDefinition, Item } from './schema';
 import type { EditableRecordSnapshot, RecordOutputPlan, RecordPersistencePlan } from './recordSnapshot';
+import type { TaskSessionCreateInput } from './timer';
 
 export type RecordOperation =
   | 'create'
   | 'update'
   | 'delete'
   | 'complete'
+  | 'task_session'
   | 'time_update';
 
 export type RecordSubmitStatus =
@@ -64,7 +66,6 @@ export interface EntryContext {
   templateId?: string | null;
   categoryKey?: string | null;
   openedFrom?: 'list' | 'detail' | 'search' | 'timeline' | 'quickinput' | 'timer' | 'unknown';
-  supportsTaskTimeEditing?: boolean;
 }
 
 export interface PrepareCreateRecordParams {
@@ -148,6 +149,8 @@ export interface SubmitDeleteRecordParams {
 
 export interface SubmitCompleteRecordParams {
   itemId: string;
+  /** When completion comes from Timer, Session creation and Task lifecycle commit atomically. */
+  session?: TaskSessionCreateInput;
   options?: {
     duration?: number;
     startTime?: string | null;
@@ -155,6 +158,13 @@ export interface SubmitCompleteRecordParams {
   };
   signal?: AbortSignal;
   source?: Extract<RecordInputSource, 'timer' | 'layout_renderer' | 'unknown'>;
+}
+
+export interface SubmitTaskSessionParams {
+  itemId: string;
+  session: TaskSessionCreateInput;
+  signal?: AbortSignal;
+  source?: Extract<RecordInputSource, 'timer' | 'unknown'>;
 }
 
 export interface SubmitUpdateRecordTimeParams {

@@ -1,5 +1,6 @@
 import type { Item } from '../types/schema';
 import { isEnergyItem, readEnergyItemSnapshot } from './item';
+import { asTaskSessionRecord } from '../records/task/taskSession';
 
 export type EnergyEffectConfidence = 'high' | 'medium';
 export type EnergyEffectEvidence = 'insufficient' | 'exploratory' | 'supported';
@@ -74,8 +75,6 @@ export interface BuildEnergyEffectsOptions {
   highAfterGapMinutes?: number;
   minimumTrendSamples?: number;
   supportedTrendSamples?: number;
-  /** Default true for legacy per-goal analysis. Global recommendation learning sets false. */
-  requireSharedGoal?: boolean;
 }
 
 interface TimedEnergyPoint extends EnergyEffectEndpoint {
@@ -93,8 +92,6 @@ interface ActivityInterval {
   durationMinutes: number;
 }
 
-const DEFAULT_MAX_BEFORE_GAP = 120;
-const DEFAULT_MAX_AFTER_GAP = 90;
 const DEFAULT_HIGH_BEFORE_GAP = 60;
 const DEFAULT_HIGH_AFTER_GAP = 30;
 const DEFAULT_MINIMUM_TREND_SAMPLES = 3;
@@ -105,130 +102,48 @@ function readEffectText(value: unknown): string | undefined {
   return text || undefined;
 }
 
-function readEffectNumber(value: unknown): number | undefined {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  const text = readEffectText(value);
-  if (!text) return undefined;
-  const parsed = Number(text);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function effectDateOrdinal(value: string): number | undefined {
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) return undefined;
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const stamp = Date.UTC(year, month - 1, day);
-  const date = new Date(stamp);
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return undefined;
-  return Math.floor(stamp / 86_400_000);
-}
-
-function effectDateFromOrdinal(ordinal: number): string {
-  return new Date(ordinal * 86_400_000).toISOString().slice(0, 10);
-}
-
-function parseEffectTimeMinutes(value: unknown): number | undefined {
-  const match = readEffectText(value)?.match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return undefined;
-  const hour = Number(match[1]);
-  const minute = Number(match[2]);
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return undefined;
-  return hour * 60 + minute;
-}
-
-function formatEffectTimeMinutes(value: number): string {
-  const normalized = ((Math.round(value) % 1440) + 1440) % 1440;
-  return `${String(Math.floor(normalized / 60)).padStart(2, '0')}:${String(normalized % 60).padStart(2, '0')}`;
-}
-
 function effectAbsoluteMinute(date: string, time: string): number | undefined {
-  const ordinal = effectDateOrdinal(date);
-  const minute = parseEffectTimeMinutes(time);
-  if (ordinal == null || minute == null) return undefined;
-  return ordinal * 1440 + minute;
+  const stamp = Date.parse(`${date}T${time.length === 5 ? `${time}:00` : time}`);
+  return Number.isFinite(stamp) ? stamp / 60000 : undefined;
 }
 
 
-function normalizeEffectGoalPath(value: unknown): string {
-  return String(value ?? '').trim().replace(/^#/, '');
+function localDateTimeFromMs(stamp: number): { date: string; time: string } {
+  const value = new Date(stamp);
+  const date = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+  const time = `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`;
+  return { date, time };
 }
 
-function effectGoalIds(item: Item): string[] {
-  return [item.goalId, ...(item.goalIds || [])].map((value) => String(value || '').trim()).filter(Boolean);
-}
-
-function effectGoalPaths(item: Item): string[] {
-  return [item.goalPath, ...(item.goalPaths || [])].map(normalizeEffectGoalPath).filter(Boolean);
-}
-
-function effectsShareGoal(left: Item, right: Item): boolean {
-  const leftIds = effectGoalIds(left);
-  const rightIds = effectGoalIds(right);
-  if (leftIds.length > 0 || rightIds.length > 0) return leftIds.some((id) => rightIds.includes(id));
-  const leftPaths = effectGoalPaths(left);
-  const rightPaths = effectGoalPaths(right);
-  if (leftPaths.length > 0 || rightPaths.length > 0) return leftPaths.some((path) => rightPaths.includes(path));
-  return true;
-}
-
-function effectOccurrenceDate(item: Item): string | undefined {
-  return readEffectText(item.date)
-    || readEffectText(item.doneDate)
-    || readEffectText(item.startDate)
-    || readEffectText(item.scheduledDate)
-    || readEffectText(item.dueDate)
-    || readEffectText(item.createdDate)
-    || readEffectText(item.extra?.['日期']);
-}
-
-function effectCoreBlock(item: Item): string {
-  return String(item.coreBlock || item.extra?.['核心Block'] || item.categoryKey || '')
-    .replace(/^core\./i, '')
-    .split('/')[0]
-    .trim()
-    .toLowerCase();
-}
-
-function isEffectTask(item: Item): boolean {
-  if (isEnergyItem(item)) return false;
-  const block = effectCoreBlock(item);
-  return block === 'task' || item.type === 'task' || /任务/.test(String(item.categoryKey || ''));
-}
-
-function resolveEffectActivityInterval(item: Item): ActivityInterval | null {
-  if (!isEffectTask(item)) return null;
-  const date = effectOccurrenceDate(item);
-  if (!date) return null;
-  const ordinal = effectDateOrdinal(date);
-  if (ordinal == null) return null;
-
-  const durationValue = readEffectNumber(item.duration ?? item.extra?.['时长']);
-  const duration = durationValue != null && durationValue >= 0 ? durationValue : undefined;
-  let startMinute = parseEffectTimeMinutes(item.startTime ?? item.extra?.['时间'] ?? item.extra?.['开始']);
-  let endMinute = parseEffectTimeMinutes(item.endTime ?? item.extra?.['结束']);
-  if (startMinute == null && endMinute != null && duration != null) startMinute = endMinute - duration;
-  if (endMinute == null && startMinute != null && duration != null) endMinute = startMinute + duration;
-  if (startMinute == null || endMinute == null) return null;
-
-  let startAbsolute = ordinal * 1440 + startMinute;
-  let endAbsolute = ordinal * 1440 + endMinute;
-  if (endAbsolute < startAbsolute) endAbsolute += 1440;
-  if (duration != null && Math.abs((endAbsolute - startAbsolute) - duration) > 1) endAbsolute = startAbsolute + duration;
-  if (endAbsolute <= startAbsolute) return null;
-
+function resolveEffectActivityInterval(item: Item, byId: Map<string, Item>): ActivityInterval | null {
+  const session = asTaskSessionRecord(item);
+  if (!session) return null;
+  const startMs = Date.parse(session.sessionStartedAt);
+  const endMs = Date.parse(session.sessionEndedAt);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
+  const task = byId.get(session.taskId);
+  const activityItem: Item = task ? {
+    ...task,
+    id: session.id,
+    goalId: session.goalId || task.goalId,
+    goalPath: session.goalPath || task.goalPath,
+    themePath: session.themePath || task.themePath,
+    duration: session.sessionDurationMinutes,
+  } : session;
+  const start = localDateTimeFromMs(startMs);
+  const end = localDateTimeFromMs(endMs);
   return {
-    item,
-    startAbsolute,
-    endAbsolute,
-    startDate: effectDateFromOrdinal(Math.floor(startAbsolute / 1440)),
-    startTime: formatEffectTimeMinutes(startAbsolute),
-    endDate: effectDateFromOrdinal(Math.floor(endAbsolute / 1440)),
-    endTime: formatEffectTimeMinutes(endAbsolute),
-    durationMinutes: Math.max(1, Math.round(endAbsolute - startAbsolute)),
+    item: activityItem,
+    startAbsolute: startMs / 60000,
+    endAbsolute: endMs / 60000,
+    startDate: start.date,
+    startTime: start.time,
+    endDate: end.date,
+    endTime: end.time,
+    durationMinutes: Math.max(1, Math.round(session.sessionDurationMinutes)),
   };
 }
+
 
 function readEffectEnergyPoint(item: Item): TimedEnergyPoint | null {
   if (!isEnergyItem(item)) return null;
@@ -279,36 +194,6 @@ function effectDurationBucket(durationMinutes: number): string {
   if (durationMinutes < 90) return '60–89min';
   if (durationMinutes < 120) return '90–119min';
   return '≥120min';
-}
-
-function nearestEffectBefore(points: TimedEnergyPoint[], absolute: number, maxGap: number): TimedEnergyPoint | undefined {
-  for (let index = points.length - 1; index >= 0; index -= 1) {
-    const point = points[index];
-    if (point.absoluteMinute > absolute) continue;
-    if (absolute - point.absoluteMinute > maxGap) return undefined;
-    return point;
-  }
-  return undefined;
-}
-
-function nearestEffectAfter(points: TimedEnergyPoint[], absolute: number, maxGap: number): TimedEnergyPoint | undefined {
-  for (const point of points) {
-    if (point.absoluteMinute < absolute) continue;
-    if (point.absoluteMinute - absolute > maxGap) return undefined;
-    return point;
-  }
-  return undefined;
-}
-
-function hasCompetingActivity(intervals: ActivityInterval[], target: ActivityInterval, before: TimedEnergyPoint, after: TimedEnergyPoint, requireSharedGoal: boolean): boolean {
-  return intervals.some((candidate) => {
-    if (candidate.item.id === target.item.id) return false;
-    if (requireSharedGoal && !effectsShareGoal(target.item, candidate.item)) return false;
-    if (candidate.endAbsolute <= before.absoluteMinute || candidate.startAbsolute >= after.absoluteMinute) return false;
-    const overlapStart = Math.max(candidate.startAbsolute, before.absoluteMinute);
-    const overlapEnd = Math.min(candidate.endAbsolute, after.absoluteMinute);
-    return overlapEnd - overlapStart >= 10;
-  });
 }
 
 function effectConfidence(beforeGap: number, afterGap: number, options: Required<Pick<BuildEnergyEffectsOptions, 'highBeforeGapMinutes' | 'highAfterGapMinutes'>>): EnergyEffectConfidence {
@@ -382,36 +267,51 @@ function aggregateEffectRows(
 }
 
 /**
- * Pair exact Energy observations around completed task intervals and aggregate candidate effects.
- * This is observational association only. Ambiguous intervals with another >=10 minute task between
- * the before/after observations are excluded rather than force-attributed to one activity.
+ * Build observational Energy effects from persisted TaskSession ↔ Energy references.
+ * The linker has already chosen the before/after snapshots, so analytics never re-match
+ * by Goal, timestamp proximity, raw Task fields, or Timer runtime history.
  */
 export function buildEnergyEffects(items: Item[], options: BuildEnergyEffectsOptions = {}): EnergyEffectAnalytics | null {
-  const maxBeforeGapMinutes = Math.max(1, options.maxBeforeGapMinutes ?? DEFAULT_MAX_BEFORE_GAP);
-  const maxAfterGapMinutes = Math.max(1, options.maxAfterGapMinutes ?? DEFAULT_MAX_AFTER_GAP);
   const highBeforeGapMinutes = Math.max(1, options.highBeforeGapMinutes ?? DEFAULT_HIGH_BEFORE_GAP);
   const highAfterGapMinutes = Math.max(1, options.highAfterGapMinutes ?? DEFAULT_HIGH_AFTER_GAP);
   const minimumTrendSamples = Math.max(2, options.minimumTrendSamples ?? DEFAULT_MINIMUM_TREND_SAMPLES);
   const supportedTrendSamples = Math.max(minimumTrendSamples, options.supportedTrendSamples ?? DEFAULT_SUPPORTED_TREND_SAMPLES);
-  const requireSharedGoal = options.requireSharedGoal !== false;
 
-  const points = items.map(readEffectEnergyPoint).filter((point): point is TimedEnergyPoint => !!point)
-    .sort((left, right) => left.absoluteMinute - right.absoluteMinute);
-  const intervals = items.map(resolveEffectActivityInterval).filter((interval): interval is ActivityInterval => !!interval)
+  const byId = new Map(items.map((item) => [item.id, item] as const));
+  const pointById = new Map<string, TimedEnergyPoint>();
+  for (const item of items) {
+    const point = readEffectEnergyPoint(item);
+    if (point) pointById.set(point.itemId, point);
+  }
+
+  const intervals = items
+    .map((item) => resolveEffectActivityInterval(item, byId))
+    .filter((interval): interval is ActivityInterval => !!interval)
     .sort((left, right) => left.startAbsolute - right.startAbsolute);
-  if (points.length < 2 || intervals.length === 0) return null;
+  if (intervals.length === 0) return null;
 
   const samples: EnergyActivityEffectSample[] = [];
-  for (const interval of intervals) {
-    const goalPoints = requireSharedGoal ? points.filter((point) => effectsShareGoal(interval.item, point.item)) : points;
-    const before = nearestEffectBefore(goalPoints, interval.startAbsolute, maxBeforeGapMinutes);
-    const after = nearestEffectAfter(goalPoints, interval.endAbsolute, maxAfterGapMinutes);
+  for (const record of items) {
+    const session = asTaskSessionRecord(record);
+    if (!session?.startEnergyRecordId || !session.endEnergyRecordId) continue;
+    const interval = resolveEffectActivityInterval(record, byId);
+    if (!interval) continue;
+    const before = pointById.get(session.startEnergyRecordId);
+    const after = pointById.get(session.endEnergyRecordId);
     if (!before || !after || before.itemId === after.itemId) continue;
-    if (hasCompetingActivity(intervals, interval, before, after, requireSharedGoal)) continue;
-    const beforeGapMinutes = Math.round(interval.startAbsolute - before.absoluteMinute);
-    const afterGapMinutes = Math.round(after.absoluteMinute - interval.endAbsolute);
+
+    const beforeGapMinutes = Math.max(0, Math.round(interval.startAbsolute - before.absoluteMinute));
+    const afterGapMinutes = Math.max(0, Math.round(after.absoluteMinute - interval.endAbsolute));
+    const deltaScore = typeof session.energyDelta === 'number' ? session.energyDelta : after.score - before.score;
+    const deltaBrain = typeof session.brainDelta === 'number'
+      ? session.brainDelta
+      : before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : undefined;
+    const deltaPhysical = typeof session.physicalDelta === 'number'
+      ? session.physicalDelta
+      : before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : undefined;
+
     samples.push({
-      activityItemId: interval.item.id,
+      activityItemId: session.id,
       activityTitle: activityTitle(interval.item),
       activityLabel: classifyEnergyActivity(interval.item),
       themeLabel: effectThemeLabel(interval.item),
@@ -425,9 +325,9 @@ export function buildEnergyEffects(items: Item[], options: BuildEnergyEffectsOpt
       after,
       beforeGapMinutes,
       afterGapMinutes,
-      deltaScore: after.score - before.score,
-      deltaBrain: before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : undefined,
-      deltaPhysical: before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : undefined,
+      deltaScore,
+      deltaBrain,
+      deltaPhysical,
       confidence: effectConfidence(beforeGapMinutes, afterGapMinutes, { highBeforeGapMinutes, highAfterGapMinutes }),
       item: interval.item,
     });

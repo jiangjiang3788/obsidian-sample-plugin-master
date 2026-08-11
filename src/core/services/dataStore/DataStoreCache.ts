@@ -1,6 +1,7 @@
 import type { Item } from '@/core/types/schema';
 import type { IPluginStorage } from '@core/services/StorageService';
 import type { FileStat } from '@core/ports/FileStatPort';
+import type { RecordIntegrityIssue } from '@/core/records/RecordIndex';
 import { devWarn } from '@core/utils/devLogger';
 import {
   type CacheV1,
@@ -59,12 +60,13 @@ export class DataStoreCache {
     return entry.items.map(fromCachedItem);
   }
 
-  upsertFile(filePath: string, stat: FileStat, items: Item[]): void {
+  upsertFile(filePath: string, stat: FileStat, items: Item[], integrityIssues: RecordIntegrityIssue[] = []): void {
     const cache = this.ensure();
     cache.files[filePath] = {
       mtime: stat.mtime,
       size: stat.size,
       items: items.map(toCachedItem),
+      integrityIssues: integrityIssues.map(issue => ({ ...issue })),
     };
   }
 

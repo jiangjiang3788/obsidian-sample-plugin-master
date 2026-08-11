@@ -17,7 +17,6 @@ export * from './feedback';
 export * from './recovery';
 export * from './debug';
 export * from './mutation/HeaderAppender';
-export * from './mutation/TaskLinePatch';
 export { buildRecordOutputPlan, buildRecordPersistencePlan } from './snapshot/OutputPlanner';
 export * from './RecordInputFacade';
 export { RecordInputKernel } from './RecordInputKernel';

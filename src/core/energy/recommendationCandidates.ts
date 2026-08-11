@@ -1,6 +1,7 @@
 import type { Item } from '../types/schema';
 import { isTaskOpen } from '../records/task/taskStatus';
 import { isTaskRecurring } from '../records/task/taskRecurrence';
+import { asTaskSessionRecord } from '../records/task/taskSession';
 import type { EnergyManagementModel } from './managementTypes';
 import { classifyEnergyActivity } from './effects';
 import type { EnergyActionCandidate, EnergyActionHistoricalEffect, EnergyActionLoad, EnergyActionSource } from './recommendationTypes';
@@ -12,6 +13,8 @@ export interface BuildEnergyActionCandidatesOptions {
   includeHabits?: boolean;
   includeRecurringTasks?: boolean;
   includeFutureTasks?: boolean;
+  /** Internal Record set used for persisted TaskSession duration evidence. */
+  historyRecords?: Item[];
 }
 
 export type EnergyCandidateExclusionReason =
@@ -74,7 +77,6 @@ function sourceFor(item: Item): EnergyActionSource | null {
   if (block === 'task') return 'task';
   if (block === 'plan') return 'plan';
   if (block === 'habit') return 'habit';
-  if (item.type === 'task') return 'task';
   return null;
 }
 
@@ -95,15 +97,19 @@ function median(values: number[]): number | undefined {
   return Math.max(10, Math.min(240, Math.round(value)));
 }
 
-function historyDurationMaps(items: Item[]): { byGoalTheme: Map<string, number>; byTheme: Map<string, number> } {
+function historyDurationMaps(records: Item[]): { byGoalTheme: Map<string, number>; byTheme: Map<string, number> } {
   const goalThemeRows = new Map<string, number[]>();
   const themeRows = new Map<string, number[]>();
-  for (const item of items) {
-    if (sourceFor(item) !== 'task' || isTaskOpen(item)) continue;
-    const duration = number(item.duration);
-    const theme = text(item.themePath || item.theme);
-    if (!duration || duration <= 0 || !theme) continue;
-    const goal = text(item.goalId || item.goalPath);
+  const byId = new Map(records.map((record) => [record.id, record] as const));
+  for (const record of records) {
+    const session = asTaskSessionRecord(record);
+    if (!session) continue;
+    const duration = number(session.sessionDurationMinutes);
+    if (!duration || duration <= 0) continue;
+    const task = byId.get(session.taskId);
+    const theme = text(session.themePath || task?.themePath || task?.theme);
+    if (!theme) continue;
+    const goal = text(session.goalId || session.goalPath || task?.goalId || task?.goalPath);
     const themeKey = theme.toLowerCase();
     const goalThemeKey = `${goal.toLowerCase()}|${themeKey}`;
     themeRows.set(themeKey, [...(themeRows.get(themeKey) || []), duration]);
@@ -123,8 +129,8 @@ function historyDurationMaps(items: Item[]): { byGoalTheme: Map<string, number>;
 
 function inferredDuration(item: Item, history: ReturnType<typeof historyDurationMaps>): number | undefined {
   const explicit = number(item.extra?.['\u9884\u8ba1\u65f6\u957f'] ?? item.extra?.['expectedDuration'] ?? item.extra?.['expectedDurationMinutes']);
-  const existing = number(item.duration);
-  const direct = explicit && explicit > 0 ? explicit : existing && existing > 0 ? existing : undefined;
+  const canonical = number(item.expectedDurationMinutes);
+  const direct = explicit && explicit > 0 ? explicit : canonical && canonical > 0 ? canonical : undefined;
   if (direct != null) return Math.max(10, Math.min(240, Math.round(direct)));
   const theme = text(item.themePath || item.theme).toLowerCase();
   if (!theme) return undefined;
@@ -176,7 +182,7 @@ function futureTask(item: Item, today: string): boolean {
 }
 
 function candidateTitle(item: Item): string {
-  return text(item.title || item.editableText || item.content).replace(/^[-*]\s*\[[ x-]\]\s*/i, '').slice(0, 120);
+  return text(item.content || item.editableText || item.title).slice(0, 120);
 }
 
 function normalizedLabel(value: string): string {
@@ -234,7 +240,7 @@ function personalEffectFor(candidate: EnergyActionCandidate, management?: Energy
  * Discovery + eligibility + enrichment pipeline for Energy recommendations.
  *
  * Important invariants:
- * - recurrence="none" is the canonical non-recurring value and must remain eligible;
+ * - recurring identity comes from seriesId; non-recurring Tasks have no seriesId;
  * - an old start/scheduled date does not invalidate an open backlog task;
  * - only a future start/scheduled date blocks "do it now";
  * - very old overdue due dates do not receive an urgency bonus forever;
@@ -243,7 +249,7 @@ function personalEffectFor(candidate: EnergyActionCandidate, management?: Energy
 export function buildEnergyActionCandidateResult(items: Item[], options: BuildEnergyActionCandidatesOptions = {}): EnergyActionCandidateBuildResult {
   const today = options.today || new Date().toISOString().slice(0, 10);
   const maximum = Math.max(1, Math.min(1000, Math.floor(options.maximumCandidates ?? 500)));
-  const history = historyDurationMaps(items);
+  const history = historyDurationMaps(options.historyRecords || items);
   const candidates: EnergyActionCandidate[] = [];
   const seen = new Set<string>();
   const diagnostics: EnergyCandidateDiagnostics = {
@@ -303,6 +309,7 @@ export function buildEnergyActionCandidateResult(items: Item[], options: BuildEn
       source,
       goalId: item.goalId,
       goalPath: item.goalPath,
+      seriesId: item.seriesId,
       theme: text(item.themePath || item.theme) || undefined,
       activityLabel: classifyEnergyActivity(item),
       durationMinutes: inferredDuration(item, history),

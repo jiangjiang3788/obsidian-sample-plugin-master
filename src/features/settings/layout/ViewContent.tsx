@@ -32,6 +32,7 @@ export interface ViewContentProps {
   timers: any[];
   allThemes: any[];
   allItems: Item[];
+  allRecords: Item[];
   inputSettings: InputSettings;
   onDataLoaded: (items: Item[]) => void;
 }
@@ -53,6 +54,7 @@ export function ViewContent({
   timers,
   allThemes,
   allItems,
+  allRecords,
   inputSettings,
   onDataLoaded,
 }: ViewContentProps) {
@@ -87,6 +89,7 @@ export function ViewContent({
     viewInstance: normalizedViewInstance,
     items: viewItems,
     allItems,
+    allRecords,
     dateRange,
     currentView: layoutView,
     inputSettings,
@@ -95,7 +98,7 @@ export function ViewContent({
     goals: settings.goalSettings?.goals || [],
     goalSettings: settings.goalSettings,
     timers,
-  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, timers, viewItems]);
+  }), [allItems, allRecords, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, timers, viewItems]);
 
   const handlers = useViewRuntimeHandlers({
     app,

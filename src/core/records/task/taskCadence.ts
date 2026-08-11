@@ -25,6 +25,5 @@ export function getTaskCadence(item: Item): TaskCadenceKey {
   if (recurrence.unit === 'week') return 'week';
   if (recurrence.unit === 'year') return 'year';
   if (recurrence.unit === 'quarter') return 'quarter';
-  if (recurrence.unit === 'month' && recurrence.interval === 3) return 'quarter';
   return 'month';
 }

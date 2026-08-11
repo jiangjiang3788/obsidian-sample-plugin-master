@@ -4,6 +4,7 @@ import type { MetadataPort } from '@/core/ports/MetadataPort';
 import type { VaultPort } from '@/core/ports/VaultPort';
 import type { IPluginStorage } from '@/core/services/StorageService';
 import type { IThemeMatcher } from '@/core/types/theme';
+import { encodeRecordBlock } from '@/core/records/codec';
 
 function createDataStoreForContent(content: string) {
   const vault: VaultPort = {
@@ -35,32 +36,34 @@ function createDataStoreForContent(content: string) {
 }
 
 describe('DataStore theme semantics', () => {
-  it('does not use current heading as theme fallback for tasks or blocks', async () => {
-    const store = createDataStoreForContent([
-      '# 学习/英语',
-      '- [ ] 没有显式主题的任务',
-      '- [ ] 有显式主题的任务 (主题::英语)',
-      '<!-- start -->',
-      '内容:: 没有显式主题的块',
-      '<!-- end -->',
-      '<!-- start -->',
-      '主题:: 英语',
-      '内容:: 有显式主题的块',
-      '<!-- end -->',
-    ].join('\n'));
+  it('does not use current heading as theme fallback for Record Blocks', async () => {
+    const taskImplicit = encodeRecordBlock({
+      recordId: 'task.01J00000000000000000000051', coreBlock: 'task',
+      fields: { status: 'open', content: '没有显式主题的任务' },
+    });
+    const taskExplicit = encodeRecordBlock({
+      recordId: 'task.01J00000000000000000000052', coreBlock: 'task',
+      fields: { status: 'open', content: '有显式主题的任务', themePath: '英语' },
+    });
+    const blockImplicit = encodeRecordBlock({
+      recordId: 'rec.01J00000000000000000000053', coreBlock: 'thought',
+      fields: { 内容: '没有显式主题的块' },
+    });
+    const blockExplicit = encodeRecordBlock({
+      recordId: 'rec.01J00000000000000000000054', coreBlock: 'thought',
+      fields: { 主题: '英语', 内容: '有显式主题的块' },
+    });
+    const store = createDataStoreForContent(['# 学习/英语', taskImplicit, taskExplicit, blockImplicit, blockExplicit].join('\n'));
 
     const items = await store.scanFileByPath('daily.md');
-
     expect(items).toHaveLength(4);
 
-    const implicitTask = items.find((item) => item.title.includes('没有显式主题的任务'))!;
+    const implicitTask = items.find((item) => item.content.includes('没有显式主题的任务'))!;
     expect(implicitTask.header).toBe('学习/英语');
     expect(implicitTask.theme).toBeUndefined();
     expect(implicitTask.themePath).toBeUndefined();
-    expect(implicitTask.rootTheme).toBeUndefined();
-    expect(implicitTask.leafTheme).toBeUndefined();
 
-    const explicitTask = items.find((item) => item.title.includes('有显式主题的任务'))!;
+    const explicitTask = items.find((item) => item.content.includes('有显式主题的任务'))!;
     expect(explicitTask.header).toBe('学习/英语');
     expect(explicitTask.theme).toBe('学习/英语');
     expect(explicitTask.themePath).toBe('学习/英语');

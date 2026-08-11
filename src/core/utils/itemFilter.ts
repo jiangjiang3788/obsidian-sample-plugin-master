@@ -1,6 +1,6 @@
 // src/core/utils/itemFilter.ts
 // 统一的筛选 / 排序 / 日期区间 / 关键字过滤助手
-// —— 删除 status/category 依赖，改用 categoryKey 推断是否“已关闭”
+// —— Task 关闭状态只认显式 status；不从 category/raw Markdown 推断。
 // —— 修正数字/日期的比较与排序（避免把数值/日期按字符串字典序比较）
 import { Item, FilterRule, SortRule, readField } from '@/core/types/schema';
 import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
@@ -197,8 +197,8 @@ export function sortItems(items: Item[], rules: SortRule[] = []) {
 
 /* ---------- 日期区间（仅保留有统一 date 的项） ---------- */
 function isClosed(it: Item) {
-  const k = (it.categoryKey || '').toLowerCase();
-  return /\/(done|cancelled)\b/.test(k);
+  if (it.coreBlock !== 'task') return false;
+  return it.status === 'done' || it.status === 'cancelled' || it.status === 'skipped';
 }
 
 export function filterByDateRange(items: Item[], startISO?: string, endISO?: string) {
@@ -240,8 +240,9 @@ export function filterByKeyword(items: Item[], kw: string) {
     const itemRecord = asUnknownRecord(it);
     const titleLower = readString(itemRecord, 'titleLower') ?? (it.title || '').toLowerCase();
     const contentLower = readString(itemRecord, 'contentLower') ?? (it.content || '').toLowerCase();
-    const fullDataLower = readString(itemRecord, 'fullDataLower') ?? String(readField(it, 'fullData') || '').toLowerCase();
-    return (titleLower + ' ' + contentLower + ' ' + fullDataLower).includes(s);
+    const tagsLower = (it.tags || []).join(' ').toLowerCase();
+    const semanticText = [it.goalPath, it.themePath, it.coreBlock, it.status].filter(Boolean).join(' ').toLowerCase();
+    return (titleLower + ' ' + contentLower + ' ' + tagsLower + ' ' + semanticText).includes(s);
   });
 }
 

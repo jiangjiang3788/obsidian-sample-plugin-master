@@ -2,7 +2,6 @@
 export { ItemService } from './item/ItemService';
 export type {
     GoalTemplateMigrationResult,
-    ItemCompletionOptions,
     ItemMutationOptions,
     ItemTimeUpdates,
     MigrationBackupResult,

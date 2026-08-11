@@ -1,33 +1,41 @@
 import { buildEnergyTaskListModel, classifyEnergyTaskCadence } from '@/features/settings/views/models/energyTaskListModel';
 import type { Item } from '@core/types/public';
 
-function task(id: string, title: string, extra: Partial<Item> = {}): Item {
+function task(id: string, title: string, overrides: Partial<Item> = {}): Item {
   return {
     id,
     title,
-    content: `- [ ] ${title}`,
-    type: 'task',
+    content: title,
     tags: [],
-    categoryKey: '任务',
-    recurrence: 'none',
+    categoryKey: '',
     created: 0,
     modified: 0,
     extra: {},
+    coreBlock: 'task',
+    status: 'open',
     goalPath: '#测试目标',
-    ...extra,
+    ...overrides,
   } as Item;
 }
 
+function recurring(id: string, title: string, unit: 'day' | 'week' | 'month' | 'quarter' | 'year', goalPath?: string): Item {
+  return task(id, title, {
+    goalPath: goalPath || '#测试目标',
+    seriesId: `taskseries.${id}`,
+    recurrenceInfo: { unit, interval: 1, anchor: 'scheduled' },
+  });
+}
+
 describe('buildEnergyTaskListModel', () => {
-  it('groups by goal first, then renders six fixed cadence rows', () => {
+  it('groups by goal first, then renders six fixed cadence rows from structured recurrence', () => {
     const today = '2026-08-10';
     const items = [
       task('routine', '普通任务'),
-      task('day', '天任务', { recurrence: 'every day' }),
-      task('week', '周任务', { recurrence: 'every week' }),
-      task('month', '月任务', { recurrence: 'every month' }),
-      task('quarter', '季任务', { recurrence: 'every quarter' }),
-      task('year', '年任务', { recurrence: 'every year' }),
+      recurring('day', '天任务', 'day'),
+      recurring('week', '周任务', 'week'),
+      recurring('month', '月任务', 'month'),
+      recurring('quarter', '季任务', 'quarter'),
+      recurring('year', '年任务', 'year'),
     ];
     const model = buildEnergyTaskListModel({ items, historyItems: items, timers: [], management: null, today });
     expect(model.goals).toHaveLength(1);
@@ -42,26 +50,26 @@ describe('buildEnergyTaskListModel', () => {
     ]);
   });
 
-  it('does not reinterpret scheduled ordinary tasks as day/week task types', () => {
+  it('does not reinterpret scheduled ordinary tasks as day/week cadence', () => {
     expect(classifyEnergyTaskCadence(task('today', '今天排期', { scheduledDate: '2026-08-10' }))).toBe('routine');
     expect(classifyEnergyTaskCadence(task('week', '本周排期', { dueDate: '2026-08-12' }))).toBe('routine');
   });
 
-  it('treats every 3 months as a quarter cadence', () => {
-    expect(classifyEnergyTaskCadence(task('quarter', '季度整理', { recurrence: 'every 3 months' }))).toBe('quarter');
+  it('uses explicit quarter recurrence instead of parsing every-3-month strings', () => {
+    expect(classifyEnergyTaskCadence(recurring('quarter', '季度整理', 'quarter'))).toBe('quarter');
   });
 
   it('keeps different goals separate while preserving the same cadence rows', () => {
     const items = [
       task('a', 'A任务', { goalPath: '#工作能力' }),
-      task('b', 'B任务', { goalPath: '#爱好能力', recurrence: 'every week' }),
+      recurring('b', 'B任务', 'week', '#爱好能力'),
     ];
     const model = buildEnergyTaskListModel({ items, historyItems: items, timers: [], management: null, today: '2026-08-10' });
     expect(model.goals.map((goal) => goal.label).sort()).toEqual(['#工作能力', '#爱好能力'].sort());
     expect(model.goals.every((goal) => goal.rows.length === 6)).toBe(true);
   });
 
-  it('keeps real tasks only and never creates virtual recovery actions', () => {
+  it('keeps real Tasks only and never creates virtual recovery actions', () => {
     const items = [task('real', '真实任务')];
     const model = buildEnergyTaskListModel({ items, historyItems: items, timers: [], management: null, today: '2026-08-10' });
     expect(model.goals.flatMap((goal) => goal.rows.flatMap((row) => row.tasks)).map((entry) => entry.itemId)).toEqual(['real']);

@@ -2888,14 +2888,6 @@ function setupCoreContainer(app, settings) {
   instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
 }
 const CODEBLOCK_LANG = "think";
-const EMOJI = {
-  done: "✅",
-  cancelled: "❌",
-  due: "📅",
-  scheduled: "⏳",
-  start: "🛫",
-  created: "➕"
-};
 const EMPTY_LABEL = "无日期";
 const LOCAL_STORAGE_KEYS = {
   SETTINGS_TABS: "think-settings-active-tab"
@@ -3062,59 +3054,59 @@ const FIELD_CATEGORY_LABELS = {
   custom: "自定义字段"
 };
 const FIELD_CATEGORY_ORDER = ["core", "file", "custom"];
-const text$4 = (partial2) => ({
+const text$3 = (partial2) => ({
   type: "string",
   ...partial2
 });
 const FIELD_REGISTRY = {
   // --- 核心字段 ---
-  id: text$4({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
-  type: text$4({ key: "type", label: "记录类型", category: "core", source: "item", semantic: "recordType", description: "任务或块等记录类型" }),
-  title: text$4({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录标题或主要摘要" }),
-  content: text$4({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与 Block 统一为用户正文，不包含任务勾选框、标签、时间等原始 Markdown 噪音" }),
-  editableText: text$4({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
-  rawSource: text$4({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
-  fullData: text$4({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整 Markdown 数据；任务为完整任务行，Block 为完整块内容，用于区分干净内容字段" }),
+  id: text$3({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
+  title: text$3({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录标题或主要摘要" }),
+  content: text$3({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与其他 Record 统一为用户正文，不包含存储层元数据" }),
+  editableText: text$3({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
+  rawSource: text$3({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
+  fullData: text$3({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整 Record Block，仅用于调试/导出，不作为业务语义真源。" }),
   // --- 内置核心业务字段 ---
-  categoryKey: text$4({ key: "categoryKey", label: "分类路径", type: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
+  categoryKey: text$3({ key: "categoryKey", label: "分类路径", type: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
   tags: { key: "tags", label: "标签", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tag", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
-  goalId: text$4({ key: "goalId", label: "目标ID", category: "core", source: "item", semantic: "goalId", inputType: "text", aliases: ["目标ID", "goalId"] }),
+  goalId: text$3({ key: "goalId", label: "目标ID", category: "core", source: "item", semantic: "goalId", inputType: "text", aliases: ["目标ID", "goalId"] }),
   goalIds: { key: "goalIds", label: "目标ID列表", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "goalId", cardinality: "multi", hierarchical: false, hiddenByDefault: true },
-  goalPath: text$4({ key: "goalPath", label: "目标路径", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标路径", "goalPath"] }),
+  goalPath: text$3({ key: "goalPath", label: "目标路径", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标路径", "goalPath"] }),
   goalPaths: { key: "goalPaths", label: "目标", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "goals", cardinality: "multi", hierarchical: true, description: "目标路径字段，例如 产品化/QuickInput、个人成长/写作", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
-  rootGoal: text$4({ key: "rootGoal", label: "根目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
-  leafGoal: text$4({ key: "leafGoal", label: "叶目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
-  cycleId: text$4({ key: "cycleId", label: "周期ID", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
-  "period.id": text$4({ key: "period.id", label: "周期ID", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
-  "period.label": text$4({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
-  "period.granularity": text$4({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
-  coreBlock: text$4({ key: "coreBlock", label: "核心Block", category: "core", source: "item", semantic: "coreBlock", inputType: "text", aliases: ["核心Block", "coreBlock"] }),
-  taskStatus: text$4({ key: "taskStatus", label: "任务状态", category: "core", source: "derived", semantic: "status", inputType: "singleSelect", aliases: ["任务状态", "taskStatus"], description: "由任务勾选框、完成日期和旧分类推导：open/done/cancelled。" }),
+  rootGoal: text$3({ key: "rootGoal", label: "根目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
+  leafGoal: text$3({ key: "leafGoal", label: "叶目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
+  cycleId: text$3({ key: "cycleId", label: "周期ID", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
+  "period.id": text$3({ key: "period.id", label: "周期ID", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
+  "period.label": text$3({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
+  "period.granularity": text$3({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
+  coreBlock: text$3({ key: "coreBlock", label: "核心Block", category: "core", source: "item", semantic: "coreBlock", inputType: "text", aliases: ["核心Block", "coreBlock"] }),
+  status: text$3({ key: "status", label: "状态", category: "core", source: "item", semantic: "status", inputType: "singleSelect", aliases: ["状态", "status"], description: "实体显式状态；Task 使用 open/done/cancelled/skipped。" }),
+  cadence: text$3({ key: "cadence", label: "任务周期", category: "core", source: "derived", semantic: "recurrence", inputType: "singleSelect", aliases: ["任务周期", "cadence"], description: "由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。" }),
   date: { key: "date", label: "日期", type: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
-  priority: text$4({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
+  priority: text$3({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
   icon: { key: "icon", label: "图标", type: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
-  recurrence: text$4({ key: "recurrence", label: "重复规则", category: "core", source: "item", semantic: "recurrence" }),
-  repeatToken: text$4({ key: "repeatToken", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", hiddenByDefault: true, aliases: ["重复", "repeat"] }),
-  period: text$4({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
+  recurrence: text$3({ key: "recurrence", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", description: "Task Series 结构化 recurrence 的只读展示投影。" }),
+  period: text$3({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
   startTime: { key: "startTime", label: "开始时间", type: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
   endTime: { key: "endTime", label: "结束时间", type: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
-  duration: { key: "duration", label: "时长", type: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"] },
+  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", type: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDuration", "expectedDurationMinutes"], description: "Task 的用户声明预计时长；实际工作时长只来自 TaskSession。" },
+  duration: { key: "duration", label: "时长", type: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用/历史时长字段；Task 应使用 expectedDurationMinutes，执行历史使用 TaskSession。" },
   rating: { key: "rating", label: "评分", type: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
   image: { key: "image", label: "图片", type: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image", "评图", "pintu"], description: "通用图片字段；当前兼容读取旧 pintu/评图 数据" },
   // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
-  themePath: text$4({ key: "themePath", label: "主题", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "themePath"], description: "主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段" }),
-  rootTheme: text$4({ key: "rootTheme", label: "根主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["根主题", "themeRoot"] }),
-  leafTheme: text$4({ key: "leafTheme", label: "叶主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["叶主题", "themeLeaf"] }),
+  themePath: text$3({ key: "themePath", label: "主题", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "themePath"], description: "主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段" }),
+  rootTheme: text$3({ key: "rootTheme", label: "根主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["根主题", "themeRoot"] }),
+  leafTheme: text$3({ key: "leafTheme", label: "叶主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["叶主题", "themeLeaf"] }),
   // --- 分类派生 ---
-  baseCategory: text$4({ key: "baseCategory", label: "根分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["根分类", "rootCategory", "分类根"] }),
-  leafCategory: text$4({ key: "leafCategory", label: "叶分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["叶分类", "leafCategory"] }),
+  baseCategory: text$3({ key: "baseCategory", label: "根分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["根分类", "rootCategory", "分类根"] }),
+  leafCategory: text$3({ key: "leafCategory", label: "叶分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["叶分类", "leafCategory"] }),
   // --- 文件字段 ---
-  "file.path": text$4({ key: "file.path", label: "文件路径", category: "file", source: "file", semantic: "filePath", aliases: ["文件路径", "filepath", "filePath", "path"] }),
-  "file.basename": text$4({ key: "file.basename", label: "文件名", category: "file", source: "file", semantic: "fileName", aliases: ["文件名", "filename", "basename"] }),
-  "file.name": text$4({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
-  "file.folder": text$4({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
-  folder: text$4({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
-  header: text$4({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示位置，绝不作为主题" }),
+  "file.path": text$3({ key: "file.path", label: "文件路径", category: "file", source: "file", semantic: "filePath", aliases: ["文件路径", "filepath", "filePath", "path"] }),
+  "file.basename": text$3({ key: "file.basename", label: "文件名", category: "file", source: "file", semantic: "fileName", aliases: ["文件名", "filename", "basename"] }),
+  "file.name": text$3({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
+  "file.folder": text$3({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
+  folder: text$3({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
+  header: text$3({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示位置，绝不作为主题" }),
   // --- 时间/统计派生 ---
   startISO: { key: "startISO", label: "开始日期", type: "date", category: "core", source: "derived", semantic: "date" },
   endISO: { key: "endISO", label: "结束日期", type: "date", category: "core", source: "derived", semantic: "date" },
@@ -3277,1364 +3269,6 @@ function parseTagList(value) {
   const tags2 = rawValues.map(normalizeTag).filter((tag) => !!tag);
   return Array.from(new Set(tags2));
 }
-function normalizeCategoryKey(categoryKey) {
-  return String(categoryKey || "").trim().toLowerCase();
-}
-function isTaskCompletedByCategory(categoryKey) {
-  const key = normalizeCategoryKey(categoryKey);
-  return key === "完成任务" || key.endsWith("/done") || key.endsWith("/cancelled");
-}
-function getTaskStatus(item) {
-  if (!item || item.type !== "task") return "unknown";
-  if (item.cancelledDate) return "cancelled";
-  if (item.doneDate) return "done";
-  const categoryKey = normalizeCategoryKey(item.categoryKey);
-  if (categoryKey === "完成任务") return "done";
-  if (categoryKey === "未完成任务") return "open";
-  if (categoryKey.endsWith("/cancelled")) return "cancelled";
-  if (categoryKey.endsWith("/done")) return "done";
-  if (categoryKey.endsWith("/todo")) return "open";
-  const content = String(item.content || "").trim();
-  if (/^-\s*\[x\]/i.test(content)) return "done";
-  if (/^-\s*\[-\]/.test(content)) return "cancelled";
-  if (/^-\s*\[ \]/.test(content)) return "open";
-  return "unknown";
-}
-function isTaskCompleted(item) {
-  const status = getTaskStatus(item);
-  return status === "done" || status === "cancelled";
-}
-function isTaskOpen(item) {
-  return getTaskStatus(item) === "open";
-}
-function isUnknownRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function asUnknownRecord(value) {
-  return isUnknownRecord(value) ? value : void 0;
-}
-function readUnknown(record, key) {
-  return record?.[key];
-}
-function readString(record, key) {
-  const value = readUnknown(record, key);
-  return typeof value === "string" ? value : void 0;
-}
-function readTrimmedString(record, key) {
-  const value = readString(record, key)?.trim();
-  return value ? value : void 0;
-}
-function readNumber$2(record, key) {
-  const value = readUnknown(record, key);
-  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-}
-function readStringArray(record, key) {
-  const value = readUnknown(record, key);
-  if (!Array.isArray(value)) return [];
-  return value.filter((item) => typeof item === "string");
-}
-function readRecord(record, key) {
-  return asUnknownRecord(readUnknown(record, key));
-}
-function readRecordArray(record, key) {
-  const value = readUnknown(record, key);
-  if (!Array.isArray(value)) return [];
-  return value.filter(isUnknownRecord);
-}
-function readFirstString$1(record, keys) {
-  for (const key of keys) {
-    const value = readTrimmedString(record, key);
-    if (value) return value;
-  }
-  return void 0;
-}
-function normalizeFieldKey(field) {
-  return getCanonicalFieldKey(field);
-}
-function readFileField(item, field) {
-  const file = item.file;
-  const fileRecord = asUnknownRecord(file);
-  const key = field.slice("file.".length);
-  if (key === "name" || key === "basename") {
-    return file?.basename ?? item.fileName ?? item.filename;
-  }
-  if (key === "folder") {
-    return file?.folder ?? item.folder;
-  }
-  return readUnknown(fileRecord, key);
-}
-function readCategoryPath(item) {
-  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).path;
-}
-function readRootCategory(item) {
-  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).root;
-}
-function readLeafCategory(item) {
-  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).leaf;
-}
-function readImageField(item) {
-  return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? item.extra?.["评图"] ?? item.extra?.["pintu"]);
-}
-function readCanonicalField(item, canonicalField) {
-  if (canonicalField.startsWith("extra.")) {
-    return item.extra?.[canonicalField.slice("extra.".length)];
-  }
-  if (canonicalField.startsWith("file.")) {
-    return readFileField(item, canonicalField);
-  }
-  if (canonicalField === "categoryKey") {
-    return readCategoryPath(item);
-  }
-  if (canonicalField === "baseCategory") {
-    return readRootCategory(item);
-  }
-  if (canonicalField === "leafCategory") {
-    return readLeafCategory(item);
-  }
-  if (canonicalField === "themePath") {
-    return readExplicitThemeParts(item).themePath ?? void 0;
-  }
-  if (canonicalField === "rootTheme") {
-    return readExplicitThemeParts(item).rootTheme ?? void 0;
-  }
-  if (canonicalField === "leafTheme") {
-    return readExplicitThemeParts(item).leafTheme ?? void 0;
-  }
-  if (canonicalField === "taskStatus") {
-    return getTaskStatus(item);
-  }
-  if (canonicalField === "period.id") {
-    return readFirstString$1(asUnknownRecord(item), ["cycleId", "periodId"]);
-  }
-  if (canonicalField === "period.label") {
-    return readFirstString$1(asUnknownRecord(item), ["period", "周期"]);
-  }
-  if (canonicalField === "period.granularity") {
-    return readFirstString$1(asUnknownRecord(item), ["periodGranularity", "goalGranularity"]);
-  }
-  if (canonicalField === "repeatToken") {
-    return item.recurrence;
-  }
-  if (canonicalField === "tags") {
-    return parseTagList(item.tags || []);
-  }
-  if (canonicalField === "goalPaths") {
-    return parseTagList(item.goalPaths?.length ? item.goalPaths : readStringArray(asUnknownRecord(item), "goalPaths"));
-  }
-  if (canonicalField === "fullData") {
-    return item.rawSource || item.fullData || item.content || "";
-  }
-  if (canonicalField === "image") {
-    return readImageField(item);
-  }
-  if (canonicalField === "time") {
-    return item.startTime;
-  }
-  if (canonicalField === "filename" || canonicalField === "fileName") {
-    return item.file?.basename ?? item.fileName ?? item.filename;
-  }
-  if (canonicalField === "pintu") {
-    return item.pintu;
-  }
-  return readUnknown(asUnknownRecord(item), canonicalField);
-}
-function resolveFieldValue(item, field) {
-  const canonicalField = normalizeFieldKey(field);
-  const def = getFieldDefinition(canonicalField);
-  const value = readCanonicalField(item, canonicalField);
-  const source = def?.source || "unknown";
-  return {
-    requestedField: field,
-    field: canonicalField,
-    value,
-    source,
-    derived: source === "derived",
-    legacy: source === "legacy" || !!def?.deprecated
-  };
-}
-function readFieldValue(item, field) {
-  return resolveFieldValue(item, field).value;
-}
-const DEFAULT_AI_SETTINGS = {
-  enabled: false,
-  provider: "openai_compat",
-  // 安全默认值：不预置任何第三方 endpoint / model / key，避免误请求或泄露。
-  apiEndpoint: "",
-  apiKey: "",
-  // 默认不把密钥写入插件数据；用户明确打开后才保存。
-  persistApiKey: false,
-  model: "",
-  temperature: 0.7,
-  maxTokens: 4096,
-  requestTimeoutMs: 3e4,
-  enabledBlockIds: [],
-  defaultThemeId: void 0,
-  allowMultipleResults: false,
-  maxResults: 10,
-  confirmMode: "batch",
-  preloadConfigOnStartup: false,
-  configCacheTTLSeconds: 300,
-  customPrompt: ""
-};
-const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
-1. 优先选择已有目标，再选择记录类型，最后选择目标 × Block 下最匹配的记录预设。
-2. 当我说"心情"、"开心"、"难过"等情绪词时，优先匹配目标下的"情绪/心情"打卡预设。
-3. 当我说"写文章"、"写作"时，使用任务记录类型，并优先匹配电脑/写作相关预设。
-4. 不要把目标、主题、模板ID、周期ID写进 fieldValues；这些属于 target 或应用自动推导。
-5. 计划/总结的周期由应用根据预设 periodPolicy 和日期自动生成。`;
-const DEFAULT_GOAL_SETTINGS = {
-  goals: [],
-  goalTemplates: []
-};
-function normalizeGoalPath$1(path) {
-  return splitHierarchyPathValue(path, { stripLeadingHashes: true }).path;
-}
-function splitGoalPath(path) {
-  const parts = splitHierarchyPathValue(path, { stripLeadingHashes: true });
-  return {
-    goalPath: parts.path,
-    rootGoal: parts.root,
-    leafGoal: parts.leaf
-  };
-}
-function getGoalPathCandidates(path) {
-  const parts = splitHierarchyPathValue(path, { stripLeadingHashes: true }).parts;
-  const result = [];
-  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
-  return result;
-}
-const UNKNOWN_GOAL_RANK = Number.MAX_SAFE_INTEGER - 1e3;
-const UNASSIGNED_GOAL_RANK = Number.MAX_SAFE_INTEGER;
-function finiteNumber(value, fallback) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : fallback;
-}
-function normalizeOrderPath(value) {
-  return splitGoalPath(String(value ?? "")).goalPath || String(value ?? "").trim();
-}
-function leafGoalLabel(value) {
-  const parsed = splitGoalPath(String(value ?? ""));
-  return parsed.leafGoal || parsed.goalPath || String(value ?? "").trim();
-}
-function getGoalOrderPath(goal) {
-  if (!goal) return "";
-  return normalizeOrderPath(goal.goalPath || goal.title || goal.id);
-}
-function getGoalOrderLabel(goal) {
-  if (!goal) return "";
-  return leafGoalLabel(goal.title || goal.goalPath || goal.id);
-}
-function createGoalOrderIndex(goals = []) {
-  const descriptors = (goals || []).map((goal, originalIndex) => {
-    const path = getGoalOrderPath(goal);
-    return {
-      id: goal.id,
-      path,
-      order: finiteNumber(goal?.sortOrder, originalIndex),
-      originalIndex
-    };
-  }).filter((entry) => Boolean(entry.path));
-  descriptors.sort((left2, right2) => {
-    if (left2.order !== right2.order) return left2.order - right2.order;
-    return left2.originalIndex - right2.originalIndex;
-  });
-  const byPath = /* @__PURE__ */ new Map();
-  const byId = /* @__PURE__ */ new Map();
-  const originalIndexByPath = /* @__PURE__ */ new Map();
-  const orderedPaths = [];
-  descriptors.forEach((entry, index) => {
-    if (!byPath.has(entry.path)) {
-      byPath.set(entry.path, index);
-      originalIndexByPath.set(entry.path, entry.originalIndex);
-      orderedPaths.push(entry.path);
-    }
-    if (entry.id && !byId.has(entry.id)) byId.set(entry.id, index);
-  });
-  const rankOfPath = (path) => {
-    const normalized2 = normalizeOrderPath(path || "");
-    if (!normalized2 || normalized2 === "未归属目标") return UNASSIGNED_GOAL_RANK;
-    const known = byPath.get(normalized2);
-    return known === void 0 ? UNKNOWN_GOAL_RANK : known;
-  };
-  const compareGoalPaths = (left2, right2) => {
-    const leftPath = normalizeOrderPath(left2 || "");
-    const rightPath = normalizeOrderPath(right2 || "");
-    const leftRank = rankOfPath(leftPath);
-    const rightRank = rankOfPath(rightPath);
-    if (leftRank !== rightRank) return leftRank - rightRank;
-    return leftPath.localeCompare(rightPath, "zh-CN");
-  };
-  const compareGoals = (left2, right2) => {
-    const byPathOrder = compareGoalPaths(getGoalOrderPath(left2), getGoalOrderPath(right2));
-    if (byPathOrder !== 0) return byPathOrder;
-    const leftIndex = left2.id && byId.has(left2.id) ? byId.get(left2.id) : UNKNOWN_GOAL_RANK;
-    const rightIndex = right2.id && byId.has(right2.id) ? byId.get(right2.id) : UNKNOWN_GOAL_RANK;
-    if (leftIndex !== rightIndex) return leftIndex - rightIndex;
-    return String(left2.id || "").localeCompare(String(right2.id || ""), "zh-CN");
-  };
-  return { byPath, byId, originalIndexByPath, orderedPaths, rankOfPath, compareGoalPaths, compareGoals };
-}
-function sortGoalsBySettingsOrder(goals = []) {
-  const order2 = createGoalOrderIndex(goals);
-  return [...goals].sort(order2.compareGoals);
-}
-function templateSortValue(template, fallback) {
-  return finiteNumber(template?.sortOrder, fallback);
-}
-function sortGoalTemplatesBySettingsOrder(templates = [], goals = []) {
-  const goalOrder = createGoalOrderIndex(goals);
-  const originalIndex = /* @__PURE__ */ new Map();
-  templates.forEach((template, index) => originalIndex.set(template, index));
-  return [...templates].sort((left2, right2) => {
-    const leftGoalPath = goals.find((goal) => goal.id === left2.goalId)?.goalPath || left2.goalId;
-    const rightGoalPath = goals.find((goal) => goal.id === right2.goalId)?.goalPath || right2.goalId;
-    const byGoal = goalOrder.compareGoalPaths(leftGoalPath, rightGoalPath);
-    if (byGoal !== 0) return byGoal;
-    const byBlock = String(left2.coreBlockId || "").localeCompare(String(right2.coreBlockId || ""), "zh-CN");
-    if (byBlock !== 0) return byBlock;
-    const byTemplateOrder = templateSortValue(left2, originalIndex.get(left2) ?? 0) - templateSortValue(right2, originalIndex.get(right2) ?? 0);
-    if (byTemplateOrder !== 0) return byTemplateOrder;
-    return (originalIndex.get(left2) ?? 0) - (originalIndex.get(right2) ?? 0);
-  });
-}
-function isPeriodAwareCoreBlock(coreBlockId) {
-  const id = String(coreBlockId || "").trim();
-  return id === "core.plan" || id === "core.review" || id === "plan" || id === "review";
-}
-function normalizePeriodPolicyGranularity(value) {
-  const text2 = String(value || "").trim().toLowerCase();
-  if (text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
-  return "week";
-}
-function resolveTemplatePeriodPolicy(template) {
-  if (!template) return null;
-  const coreBlockId = template.coreBlockId || template.id || "";
-  if (!isPeriodAwareCoreBlock(coreBlockId)) return null;
-  const explicitPolicy = template.periodPolicy;
-  if (explicitPolicy && explicitPolicy.enabled !== false) {
-    return { enabled: true, granularity: normalizePeriodPolicyGranularity(explicitPolicy.granularity) };
-  }
-  return { enabled: true, granularity: "week" };
-}
-function pad(value) {
-  return String(value).padStart(2, "0");
-}
-function ymd(date2) {
-  return `${date2.getFullYear()}-${pad(date2.getMonth() + 1)}-${pad(date2.getDate())}`;
-}
-function parseDate$1(value) {
-  const text2 = String(value || "").trim();
-  const parsed = text2 ? /* @__PURE__ */ new Date(`${text2.slice(0, 10)}T00:00:00`) : /* @__PURE__ */ new Date();
-  if (!Number.isFinite(parsed.getTime())) return /* @__PURE__ */ new Date();
-  return parsed;
-}
-function addDays(date2, days) {
-  const next2 = new Date(date2);
-  next2.setDate(next2.getDate() + days);
-  return next2;
-}
-function startOfISOWeek(date2) {
-  const d2 = new Date(date2);
-  const day = d2.getDay() || 7;
-  d2.setDate(d2.getDate() - day + 1);
-  return d2;
-}
-function isoWeekInfo(date2) {
-  const d2 = new Date(Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate()));
-  const day = d2.getUTCDay() || 7;
-  d2.setUTCDate(d2.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(d2.getUTCFullYear(), 0, 1));
-  const week = Math.ceil(((d2.getTime() - yearStart.getTime()) / 864e5 + 1) / 7);
-  return { year: d2.getUTCFullYear(), week };
-}
-function normalizePeriodGranularity(value) {
-  const text2 = String(value || "").trim().toLowerCase();
-  if (text2 === "day" || text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
-  return "day";
-}
-function resolveDerivedPeriod(dateValue, granularityValue) {
-  const granularity = normalizePeriodGranularity(granularityValue);
-  const date2 = parseDate$1(dateValue);
-  const year = date2.getFullYear();
-  if (granularity === "day") {
-    const day = ymd(date2);
-    return { id: day, label: day, granularity, startDate: day, endDate: day };
-  }
-  if (granularity === "week") {
-    const start22 = startOfISOWeek(date2);
-    const end22 = addDays(start22, 6);
-    const info = isoWeekInfo(date2);
-    const week = pad(info.week);
-    return { id: `${info.year}-W${week}`, label: `${info.year} 第 ${info.week} 周`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
-  }
-  if (granularity === "month") {
-    const start22 = new Date(year, date2.getMonth(), 1);
-    const end22 = new Date(year, date2.getMonth() + 1, 0);
-    return { id: `${year}-${pad(date2.getMonth() + 1)}`, label: `${year} 年 ${date2.getMonth() + 1} 月`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
-  }
-  if (granularity === "quarter") {
-    const quarter = Math.floor(date2.getMonth() / 3) + 1;
-    const start22 = new Date(year, (quarter - 1) * 3, 1);
-    const end22 = new Date(year, quarter * 3, 0);
-    return { id: `${year}-Q${quarter}`, label: `${year} Q${quarter}`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
-  }
-  const start2 = new Date(year, 0, 1);
-  const end2 = new Date(year, 11, 31);
-  return { id: `${year}`, label: `${year} 年`, granularity, startDate: ymd(start2), endDate: ymd(end2) };
-}
-const DEFAULT_TEMPLATE_VARIANT_ID = "default";
-const SYSTEM_RECORD_CONTEXT_FIELD_KEYS = [
-  "goalId",
-  "目标ID",
-  "goalPath",
-  "目标",
-  "目标路径",
-  "rootGoal",
-  "leafGoal",
-  "coreBlock",
-  "coreBlockId",
-  "核心Block",
-  "templateId",
-  "模板ID",
-  "templateSourceType",
-  "模板来源",
-  "templateVariantId",
-  "goalTemplateVariantId",
-  "变体ID",
-  "记录预设",
-  "cycleId",
-  "周期ID",
-  "periodId",
-  "period",
-  "周期",
-  "周期粒度",
-  "goalGranularity",
-  "themeId",
-  "themePath",
-  "主题",
-  "rootTheme",
-  "leafTheme"
-];
-const SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET = new Set(SYSTEM_RECORD_CONTEXT_FIELD_KEYS);
-const SYSTEM_RECORD_CONTEXT_SEMANTICS = /* @__PURE__ */ new Set([
-  "goalId",
-  "goalPath",
-  "goalPaths",
-  "goals",
-  "coreBlock",
-  "templateId",
-  "templateSourceType",
-  "templateVariantId",
-  "cycleId",
-  "period",
-  "themeId",
-  "themePath"
-]);
-function isSystemRecordContextField(key, label, semantic) {
-  const normalizedKey = String(key || "").trim();
-  const normalizedLabel2 = String(label || "").trim();
-  const normalizedSemantic = String(semantic || "").trim();
-  return SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedKey) || SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedLabel2) || SYSTEM_RECORD_CONTEXT_SEMANTICS.has(normalizedSemantic);
-}
-function normalizeTemplateVariantId(value) {
-  const normalized2 = String(value || "").trim();
-  return normalized2 || DEFAULT_TEMPLATE_VARIANT_ID;
-}
-function nowIso$1() {
-  return (/* @__PURE__ */ new Date()).toISOString();
-}
-function normalizeVariantId(value) {
-  return normalizeTemplateVariantId(value);
-}
-function safeIdPart(value) {
-  return String(value || "").trim().replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-") || "default";
-}
-function parseVariantIdFromTemplateId(id) {
-  const text2 = String(id || "").trim();
-  if (!text2.startsWith("goal-template.")) return DEFAULT_TEMPLATE_VARIANT_ID;
-  const parts = text2.split(".");
-  if (parts.length <= 4) return DEFAULT_TEMPLATE_VARIANT_ID;
-  return normalizeVariantId(parts.slice(4).join("."));
-}
-function normalizeGoalTemplateId(goalId, coreBlockId, variantId, id) {
-  const text2 = String(id || "").trim();
-  const normalizedVariantId = normalizeVariantId(variantId);
-  if (text2 && text2.startsWith("goal-template.")) {
-    const idVariantId = parseVariantIdFromTemplateId(text2);
-    if (idVariantId === normalizedVariantId) return text2;
-    if (normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID && idVariantId === DEFAULT_TEMPLATE_VARIANT_ID) return text2;
-  }
-  return getGoalTemplateId(goalId, coreBlockId, normalizedVariantId);
-}
-function normalizeTemplatePeriodPolicy(coreBlockId, raw) {
-  if (!isPeriodAwareCoreBlock(coreBlockId)) return void 0;
-  const policy = raw?.periodPolicy;
-  if (policy && policy.enabled !== false) {
-    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
-  }
-  return { enabled: true, granularity: "week" };
-}
-function normalizeGoalTemplateStorageRow(row) {
-  const variantId = normalizeVariantId(row.variantId || parseVariantIdFromTemplateId(row.id));
-  return {
-    id: normalizeGoalTemplateId(row.goalId, row.coreBlockId, variantId, row.id),
-    goalId: row.goalId,
-    coreBlockId: row.coreBlockId,
-    variantId,
-    name: row.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
-    description: row.description,
-    periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, row),
-    sortOrder: typeof row.sortOrder === "number" ? row.sortOrder : void 0,
-    enabled: row.enabled !== false,
-    fields: row.fields,
-    outputTemplate: row.outputTemplate,
-    targetFile: row.targetFile,
-    appendUnderHeader: row.appendUnderHeader,
-    defaultValues: row.defaultValues || {},
-    requiredFields: row.requiredFields || [],
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt
-  };
-}
-function toGoalTemplateStorageRow(template, previous) {
-  const timestamp = nowIso$1();
-  const variantId = normalizeVariantId(template.variantId);
-  return {
-    ...previous || {},
-    id: normalizeGoalTemplateId(template.goalId, template.coreBlockId, variantId, template.id),
-    goalId: template.goalId,
-    coreBlockId: template.coreBlockId,
-    variantId,
-    name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
-    description: template.description,
-    periodPolicy: normalizeTemplatePeriodPolicy(template.coreBlockId, template),
-    sortOrder: template.sortOrder,
-    enabled: template.enabled !== false,
-    fields: template.fields?.length ? template.fields : void 0,
-    outputTemplate: template.outputTemplate || void 0,
-    targetFile: template.targetFile || void 0,
-    appendUnderHeader: template.appendUnderHeader || void 0,
-    defaultValues: template.defaultValues && Object.keys(template.defaultValues).length ? template.defaultValues : void 0,
-    requiredFields: template.requiredFields?.length ? template.requiredFields : void 0,
-    createdAt: template.createdAt || previous?.createdAt || timestamp,
-    updatedAt: template.updatedAt || timestamp
-  };
-}
-function goalTemplateIdentityKey(template) {
-  return `${template.goalId}::${template.coreBlockId}::${normalizeVariantId(template.variantId)}`;
-}
-function getGoalTemplates(goalSettings) {
-  const result = [];
-  const indexByKey = /* @__PURE__ */ new Map();
-  for (const row of goalSettings?.goalTemplates || []) {
-    const template = normalizeGoalTemplateStorageRow(row);
-    const key = goalTemplateIdentityKey(template);
-    const existingIndex = indexByKey.get(key);
-    if (existingIndex === void 0) {
-      indexByKey.set(key, result.length);
-      result.push(template);
-    } else {
-      result[existingIndex] = template;
-    }
-  }
-  return result;
-}
-function getGoalTemplateId(goalId, coreBlockId, variantId = "default") {
-  const normalizedVariantId = normalizeVariantId(variantId);
-  const base = `goal-template.${safeIdPart(goalId)}.${safeIdPart(coreBlockId)}`;
-  return normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID ? base : `${base}.${safeIdPart(normalizedVariantId)}`;
-}
-function getGoalTemplateCandidateGoalIds(goalSettings, goal) {
-  if (!goal) return [];
-  const goals = goalSettings?.goals || [];
-  const ids2 = [goal.id];
-  const path = splitGoalPath(goal.goalPath || goal.title).goalPath;
-  const byPath = new Map(goals.map((item) => [splitGoalPath(item.goalPath || item.title).goalPath, item]));
-  for (const parentPath of getGoalPathCandidates(path).slice(1)) {
-    const parentGoal = byPath.get(parentPath);
-    if (parentGoal && !ids2.includes(parentGoal.id)) ids2.push(parentGoal.id);
-  }
-  return ids2;
-}
-function getGoalTemplateVariants(goalSettings, goal, coreBlockId) {
-  const candidateGoalIds = getGoalTemplateCandidateGoalIds(goalSettings, goal);
-  if (!candidateGoalIds.length) return [];
-  const rank = new Map(candidateGoalIds.map((id, index) => [id, index]));
-  return getGoalTemplates(goalSettings).map((template, storageIndex) => ({ template, storageIndex })).filter(({ template }) => template.enabled !== false && candidateGoalIds.includes(template.goalId) && template.coreBlockId === coreBlockId).sort((a2, b2) => {
-    const byGoal = (rank.get(a2.template.goalId) ?? 999) - (rank.get(b2.template.goalId) ?? 999);
-    if (byGoal !== 0) return byGoal;
-    const bySortOrder = (a2.template.sortOrder ?? 9999) - (b2.template.sortOrder ?? 9999);
-    if (bySortOrder !== 0) return bySortOrder;
-    return a2.storageIndex - b2.storageIndex;
-  }).map(({ template }) => template);
-}
-function findGoalTemplate(goalSettings, goal, coreBlockId, variantId) {
-  const variants = getGoalTemplateVariants(goalSettings, goal, coreBlockId);
-  if (!variants.length) return null;
-  const normalizedVariantId = normalizeVariantId(variantId);
-  if (variantId) {
-    const exact = variants.find((template) => normalizeVariantId(template.variantId) === normalizedVariantId || template.id === variantId);
-    if (exact) return exact;
-  }
-  return variants[0] || null;
-}
-function upsertGoalTemplateInSettings(goalSettings, template) {
-  const previousRows = goalSettings.goalTemplates || [];
-  const variantId = normalizeVariantId(template.variantId);
-  const nextTemplate = { ...template, variantId, id: template.id || getGoalTemplateId(template.goalId, template.coreBlockId, variantId) };
-  const rows = previousRows.slice();
-  const index = rows.findIndex((item) => {
-    const itemVariantId = normalizeVariantId(item.variantId || parseVariantIdFromTemplateId(item.id));
-    return item.id === nextTemplate.id || item.goalId === nextTemplate.goalId && item.coreBlockId === nextTemplate.coreBlockId && itemVariantId === variantId;
-  });
-  const next2 = toGoalTemplateStorageRow(nextTemplate, index >= 0 ? rows[index] : null);
-  const normalizedRows = rows.slice();
-  if (index >= 0) normalizedRows[index] = next2;
-  else normalizedRows.push(next2);
-  return { ...goalSettings, goalTemplates: normalizedRows };
-}
-function removeGoalTemplateFromSettings(goalSettings, goalId, coreBlockId, variantId = "default") {
-  const normalizedVariantId = normalizeVariantId(variantId);
-  return {
-    ...goalSettings,
-    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => {
-      const itemVariantId = normalizeVariantId(template.variantId || parseVariantIdFromTemplateId(template.id));
-      return !(template.goalId === goalId && template.coreBlockId === coreBlockId && itemVariantId === normalizedVariantId);
-    })
-  };
-}
-function removeGoalTemplatesForGoal(goalSettings, goalId) {
-  return {
-    ...goalSettings,
-    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => template.goalId !== goalId)
-  };
-}
-function cleanupGoalTemplateStorage(goalSettings) {
-  const beforeRows = goalSettings.goalTemplates || [];
-  const templates = getGoalTemplates(goalSettings);
-  const afterRows = templates.map((template) => toGoalTemplateStorageRow(template));
-  const beforeJson = JSON.stringify(beforeRows);
-  const afterJson = JSON.stringify(afterRows);
-  return {
-    goalSettings: { ...goalSettings, goalTemplates: afterRows },
-    summary: {
-      beforeCount: beforeRows.length,
-      afterCount: afterRows.length,
-      removedDuplicateCount: Math.max(0, beforeRows.length - afterRows.length),
-      changed: beforeJson !== afterJson
-    }
-  };
-}
-function compactText(value) {
-  return String(value ?? "").trim();
-}
-function normalizeTextToken(value) {
-  return compactText(value).toLowerCase();
-}
-const DEFAULT_THEME_PATH_OPTIONS = {
-  stripLeadingHashes: true
-};
-function themePathOptions(options = {}) {
-  return { ...DEFAULT_THEME_PATH_OPTIONS, ...options };
-}
-function normalizeThemePath(value, options = {}) {
-  return normalizeHierarchyPathValue(value, themePathOptions(options)) || "";
-}
-function normalizeThemePathOrNull(value, options = {}) {
-  return normalizeHierarchyPathValue(value, themePathOptions(options));
-}
-function getThemePathCandidates(value, options = {}) {
-  const parts = normalizeHierarchyPathParts(value, themePathOptions(options));
-  const result = [];
-  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
-  return result;
-}
-function getThemePathLeaf(value, options = {}) {
-  return getHierarchyPathLeaf(value, themePathOptions(options)) || normalizeThemePath(value, options);
-}
-function getThemePathParent(value, options = {}) {
-  return getHierarchyPathParent(value, themePathOptions(options));
-}
-function buildThemePathMap(themes, options = {}) {
-  return new Map((themes || []).map((theme) => [normalizeThemePath(theme.path, options), theme]).filter(([path]) => !!path));
-}
-function templateFieldTokenSources(field) {
-  if (!field) return [];
-  return [field.key, field.label, field.semantic, field.semanticType, field.role];
-}
-function normalizeFieldToken(value) {
-  return normalizeTextToken(value);
-}
-function normalizeFieldLabelToken(value) {
-  return compactText(value);
-}
-function getTemplateFieldLookupTokens(field) {
-  return templateFieldTokenSources(field).map(normalizeFieldToken).filter(Boolean);
-}
-function getTemplateFieldLabelTokens(field) {
-  return templateFieldTokenSources(field).map(normalizeFieldLabelToken).filter(Boolean);
-}
-function templateFieldMatchesAliases(field, aliases2) {
-  const lowerTokens = getTemplateFieldLookupTokens(field);
-  const labelTokens = getTemplateFieldLabelTokens(field);
-  const lowerAliases = aliases2.map(normalizeFieldToken);
-  return lowerTokens.some((token2) => lowerAliases.includes(token2)) || labelTokens.some((token2) => aliases2.includes(token2));
-}
-function templateFieldSemanticToken(field) {
-  return normalizeFieldToken(field?.semantic || field?.semanticType);
-}
-function isThemeTemplateField(field) {
-  const key = normalizeFieldToken(field?.key);
-  const label = normalizeFieldLabelToken(field?.label);
-  const semantic = templateFieldSemanticToken(field);
-  return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath") || semantic === "theme";
-}
-function isIconTemplateField(field) {
-  const key = normalizeFieldToken(field?.key);
-  const label = normalizeFieldLabelToken(field?.label);
-  const semantic = templateFieldSemanticToken(field);
-  return key === "icon" || key === "图标" || label === "图标" || semantic === "icon";
-}
-function isGoalPathTemplateField(field) {
-  const key = normalizeFieldToken(field?.key);
-  const label = normalizeFieldLabelToken(field?.label);
-  const semantic = templateFieldSemanticToken(field);
-  return key === "goalpath" || key === "目标" || label === "目标" || label === "目标路径" || semantic.includes("goalpath");
-}
-function isOptionLikeValue$1(value) {
-  return !!value && typeof value === "object" && ("value" in value || "label" in value);
-}
-function readOptionText$2(value) {
-  if (isOptionLikeValue$1(value)) {
-    const rawValue = value.value ?? value.label;
-    const rawLabel = value.label ?? value.value;
-    const optionValue = String(rawValue ?? "").trim();
-    const optionLabel = String(rawLabel ?? "").trim();
-    return {
-      value: optionValue || optionLabel,
-      label: optionLabel || optionValue
-    };
-  }
-  const text2 = String(value ?? "").trim();
-  return { value: text2, label: text2 };
-}
-function readComparableValues(value, options = {}) {
-  const text2 = readOptionText$2(value);
-  const rawValues = [text2.value, text2.label].map((entry) => String(entry ?? "").trim()).filter(Boolean);
-  const values2 = new Set(rawValues);
-  if (options.normalize) {
-    for (const raw of rawValues) {
-      const normalized2 = options.normalize(raw);
-      if (normalized2) {
-        values2.add(normalized2);
-        if (options.matchLeaf) {
-          values2.add(normalized2.split("/").filter(Boolean).pop() || normalized2);
-        }
-      }
-    }
-  }
-  return Array.from(values2);
-}
-function findMatchingOption(options, rawValue, matchOptions = {}) {
-  if (!Array.isArray(options) || options.length === 0) return void 0;
-  const rawComparable = new Set(readComparableValues(rawValue, matchOptions));
-  if (rawComparable.size === 0) return void 0;
-  return options.find((option) => {
-    const optionComparable = readComparableValues(option, matchOptions);
-    return optionComparable.some((entry) => rawComparable.has(entry));
-  });
-}
-function readOptionText$1(value) {
-  return readOptionText$2(value).value;
-}
-function isGeneratedGoalTemplateName(value) {
-  const text2 = compactText(value);
-  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "默认预设" || text2 === "默认模板" || text2 === "未命名预设";
-}
-function readFieldDefault$1(fields, predicate) {
-  for (const field of fields || []) {
-    if (!predicate(field)) continue;
-    const value = readOptionText$1(field.defaultValue);
-    if (value && value !== "{{goal.themePath}}") return value;
-  }
-  return "";
-}
-function readGoalTemplateThemePath$1(template, goal) {
-  const values2 = template?.defaultValues || {};
-  return normalizeThemePath(
-    readOptionText$1(values2.themePath) || readOptionText$1(values2["主题"]) || readFieldDefault$1(template?.fields, isThemeTemplateField) || readOptionText$1(goal?.themePath)
-  );
-}
-function readGoalTemplateIcon$1(template, fallbackIcon) {
-  const values2 = template?.defaultValues || {};
-  return compactText(
-    readOptionText$1(values2.icon) || readOptionText$1(values2["图标"]) || readOptionText$1(values2["theme.icon"]) || readFieldDefault$1(template?.fields, isIconTemplateField) || fallbackIcon
-  );
-}
-function getGoalTemplateDisplayName$1(template, goal, fallback = "记录预设") {
-  const rawName = compactText(template?.name);
-  if (rawName && !isGeneratedGoalTemplateName(rawName)) return rawName;
-  const themeLabel = getThemePathLeaf(readGoalTemplateThemePath$1(template, goal));
-  if (themeLabel) return themeLabel;
-  const variantId = normalizeTemplateVariantId(compactText(template?.variantId));
-  const variantText = variantId.replace(/^legacy-/, "");
-  if (variantText && variantText !== DEFAULT_TEMPLATE_VARIANT_ID && !isGeneratedGoalTemplateName(variantText)) return variantText;
-  return fallback;
-}
-function getGoalTemplateDisplayInfo(template, goal, fallbackIcon) {
-  const rawName = compactText(template?.name);
-  const themePath = readGoalTemplateThemePath$1(template, goal);
-  const name = getGoalTemplateDisplayName$1(template, goal);
-  return {
-    name,
-    themePath,
-    icon: readGoalTemplateIcon$1(template, fallbackIcon),
-    variantId: normalizeTemplateVariantId(template?.variantId),
-    isGeneratedName: !rawName || isGeneratedGoalTemplateName(rawName)
-  };
-}
-const ALLOWED_SYSTEM_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
-const FORBIDDEN_DEFAULT_KEYS = /* @__PURE__ */ new Set([
-  "legacyOverrideId",
-  "legacyThemePath",
-  "goalId",
-  "目标ID",
-  "goalPath",
-  "目标",
-  "templateId",
-  "模板ID",
-  "templateSourceType",
-  "模板来源",
-  "templateVariantId",
-  "goalTemplateVariantId",
-  "变体ID",
-  "记录预设",
-  "period",
-  "periodId",
-  "cycleId",
-  "周期",
-  "周期ID",
-  "周期粒度",
-  "goalGranularity"
-]);
-function stableJson$1(value) {
-  const seen = /* @__PURE__ */ new WeakSet();
-  const normalize = (input) => {
-    if (input === void 0) return void 0;
-    if (input === null || typeof input !== "object") return input;
-    if (seen.has(input)) return "[Circular]";
-    seen.add(input);
-    if (Array.isArray(input)) return input.map(normalize);
-    const out = {};
-    Object.keys(input).sort().forEach((key) => {
-      const value2 = normalize(input[key]);
-      if (value2 !== void 0) out[key] = value2;
-    });
-    return out;
-  };
-  return JSON.stringify(normalize(value));
-}
-function compactFieldForStructureCompare$1(field) {
-  const source = field;
-  const out = {};
-  Object.keys(source || {}).sort().forEach((key) => {
-    if (key === "id" || key === "defaultValue" || key === "required") return;
-    const value = source[key];
-    if (value === void 0 || value === null || value === "") return;
-    out[key] = value;
-  });
-  return out;
-}
-function fieldsHaveSameStructure$1(left2, right2) {
-  const normalize = (fields) => (fields || []).map(compactFieldForStructureCompare$1);
-  return stableJson$1(normalize(left2)) === stableJson$1(normalize(right2));
-}
-function deriveRequiredFields$1(fields) {
-  return (fields || []).filter((field) => field?.required === true).map((field) => compactText(field.key || field.label)).filter(Boolean);
-}
-function equalStringSet$1(left2, right2) {
-  const a2 = new Set((left2 || []).map(compactText).filter(Boolean));
-  const b2 = new Set((right2 || []).map(compactText).filter(Boolean));
-  if (a2.size !== b2.size) return false;
-  for (const value of a2) if (!b2.has(value)) return false;
-  return true;
-}
-function getFieldDefaultMap$1(fields) {
-  const result = {};
-  for (const field of fields || []) {
-    const key = compactText(field.key || field.label);
-    if (!key) continue;
-    const value = field.defaultValue;
-    if (value !== void 0 && value !== null && compactText(value) !== "") result[key] = compactText(value);
-  }
-  return result;
-}
-function compactDefaultValues(values2, baseFields, goal) {
-  const baseDefaults = getFieldDefaultMap$1(baseFields);
-  const goalThemePath = compactText(goal?.themePath);
-  const result = {};
-  Object.entries(values2 || {}).forEach(([key, raw]) => {
-    if (FORBIDDEN_DEFAULT_KEYS.has(key)) return;
-    const value = compactText(raw);
-    if (!value) return;
-    if (isSystemRecordContextField(key) && !ALLOWED_SYSTEM_DEFAULT_KEYS.has(key)) return;
-    if ((key === "themePath" || key === "主题") && (value === goalThemePath || value === "{{goal.themePath}}")) return;
-    if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
-    result[key] = raw;
-  });
-  return Object.keys(result).length ? result : void 0;
-}
-function normalizePeriodPolicyForTemplate(template) {
-  if (!isPeriodAwareCoreBlock(template.coreBlockId)) return void 0;
-  const policy = template.periodPolicy;
-  if (policy && policy.enabled !== false) {
-    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
-  }
-  return void 0;
-}
-function compactGoalTemplateForStorage(template, options = {}) {
-  const coreBlock = options.coreBlock || null;
-  const baseFields = coreBlock?.fields;
-  const next2 = {
-    ...template
-  };
-  if (!isPeriodAwareCoreBlock(template.coreBlockId)) {
-    next2.periodPolicy = void 0;
-  } else {
-    next2.periodPolicy = normalizePeriodPolicyForTemplate(template);
-  }
-  if (coreBlock) {
-    if (fieldsHaveSameStructure$1(template.fields, baseFields)) next2.fields = void 0;
-    if (compactText(template.outputTemplate) === compactText(coreBlock.outputTemplate)) next2.outputTemplate = void 0;
-    if (compactText(template.targetFile) === compactText(coreBlock.targetFile)) next2.targetFile = void 0;
-    if (compactText(template.appendUnderHeader) === compactText(coreBlock.appendUnderHeader)) next2.appendUnderHeader = void 0;
-    const explicitRequired = template.requiredFields && template.requiredFields.length ? template.requiredFields : deriveRequiredFields$1(template.fields);
-    const baseRequired = deriveRequiredFields$1(baseFields);
-    next2.requiredFields = equalStringSet$1(explicitRequired || [], baseRequired) ? void 0 : (explicitRequired || []).filter(Boolean);
-  } else if (next2.requiredFields && !next2.requiredFields.length) {
-    next2.requiredFields = void 0;
-  }
-  next2.defaultValues = compactDefaultValues(template.defaultValues, baseFields, options.goal);
-  return next2;
-}
-function describeGoalTemplateStorageDiff(template) {
-  const parts = [];
-  if (template.fields?.length) parts.push("字段覆盖");
-  if (template.defaultValues && Object.keys(template.defaultValues).length) parts.push(`默认值 ${Object.keys(template.defaultValues).length}`);
-  if (template.outputTemplate) parts.push("输出覆盖");
-  if (template.targetFile) parts.push("文件覆盖");
-  if (template.appendUnderHeader) parts.push("标题覆盖");
-  if (template.requiredFields?.length) parts.push("必填覆盖");
-  if (template.periodPolicy) parts.push(`周期 ${template.periodPolicy.granularity}`);
-  return parts;
-}
-const SYSTEM_DISPLAY_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
-function goalTemplateHasCustomOverrides(template, coreBlock, goal) {
-  if (!template || !coreBlock || template.enabled === false) return false;
-  const patch = compactGoalTemplateForStorage(template, { coreBlock, goal });
-  if (patch.fields?.length) return true;
-  if (compactText(patch.outputTemplate)) return true;
-  if (compactText(patch.targetFile)) return true;
-  if (compactText(patch.appendUnderHeader)) return true;
-  if (patch.requiredFields?.length) return true;
-  const customDefaultKeys = Object.keys(patch.defaultValues || {}).filter((key) => !SYSTEM_DISPLAY_DEFAULT_KEYS.has(key));
-  return customDefaultKeys.length > 0;
-}
-function inferGoalTemplateEditMode(template, coreBlock, goal) {
-  if (template?.enabled === false) return "disabled";
-  return goalTemplateHasCustomOverrides(template, coreBlock, goal) ? "override" : "inherit";
-}
-const ENERGY_QUICK_LEVELS = [20, 40, 60, 80, 100];
-const DEFAULT_ENERGY_SETTINGS = {
-  defaultGoalId: "",
-  defaultThemePath: ""
-};
-const ENERGY_QUICK_LEVEL_LABELS = {
-  20: "很低",
-  40: "偏低",
-  60: "一般",
-  80: "较高",
-  100: "充沛"
-};
-function normalizeEnergyScore(value) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.round(Math.min(100, Math.max(0, value)));
-}
-function toEnergyQuickLevel(value) {
-  const score = normalizeEnergyScore(value);
-  return ENERGY_QUICK_LEVELS.reduce((best, candidate) => Math.abs(candidate - score) < Math.abs(best - score) ? candidate : best, ENERGY_QUICK_LEVELS[0]);
-}
-function isEnergyQuickLevel(value) {
-  return ENERGY_QUICK_LEVELS.includes(value);
-}
-function calculateDetailedEnergyScore(brainScore, physicalScore) {
-  const brain = normalizeEnergyScore(brainScore);
-  const physical = normalizeEnergyScore(physicalScore);
-  return normalizeEnergyScore((brain + physical) / 2);
-}
-const ENERGY_TARGET_FILE = "01/目标精力.md";
-const ENERGY_APPEND_UNDER_HEADER = "## {{goalPath}}";
-function clean(value) {
-  return String(value || "").trim();
-}
-function buildEnergySnapshotRecord(input) {
-  const captureMode2 = input.captureMode || "realtime";
-  const timePrecision = input.timePrecision || (input.time ? "exact" : input.period ? "period" : "day");
-  const isDetailed = input.scoreMode === "detailed";
-  const brainScore = isDetailed ? normalizeEnergyScore(input.brainScore) : void 0;
-  const physicalScore = isDetailed ? normalizeEnergyScore(input.physicalScore) : void 0;
-  const score = isDetailed ? calculateDetailedEnergyScore(input.brainScore, input.physicalScore) : normalizeEnergyScore(input.score);
-  return {
-    ...input,
-    goalId: clean(input.goalId) || void 0,
-    goalPath: clean(input.goalPath) || void 0,
-    themePath: clean(input.themePath) || void 0,
-    time: clean(input.time) || void 0,
-    period: clean(input.period) || void 0,
-    recordedAt: clean(input.recordedAt) || void 0,
-    source: clean(input.source) || void 0,
-    coreBlock: "energy",
-    subtype: "snapshot",
-    categoryKey: "精力",
-    score,
-    scoreMode: input.scoreMode || "quick",
-    captureMode: captureMode2,
-    timePrecision,
-    quickLevel: toEnergyQuickLevel(score),
-    brainScore,
-    physicalScore,
-    aggregateMethod: isDetailed ? "arithmetic-mean-v1" : void 0
-  };
-}
-function buildEnergySnapshotMarkdown(input) {
-  const record = "coreBlock" in input ? input : buildEnergySnapshotRecord(input);
-  const lines = [
-    "<!-- start -->",
-    "核心Block:: energy",
-    "记录子类型:: snapshot"
-  ];
-  if (record.goalId) lines.push(`目标ID:: ${record.goalId}`);
-  if (record.goalPath) lines.push(`目标:: ${record.goalPath}`);
-  lines.push("分类:: 精力");
-  lines.push(`日期:: ${record.date}`);
-  if (record.time) lines.push(`时间:: ${record.time}`);
-  if (record.period) lines.push(`时段:: ${record.period}`);
-  if (record.themePath) lines.push(`主题:: ${record.themePath}`);
-  lines.push(`精力值:: ${record.score}`);
-  if (record.brainScore != null) lines.push(`脑力精力:: ${record.brainScore}`);
-  if (record.physicalScore != null) lines.push(`体力精力:: ${record.physicalScore}`);
-  if (record.aggregateMethod) lines.push(`综合算法:: ${record.aggregateMethod}`);
-  lines.push(`精力档位:: ${record.quickLevel}`);
-  lines.push(`评分模式:: ${record.scoreMode}`);
-  lines.push(`记录方式:: ${record.captureMode}`);
-  lines.push(`时间精度:: ${record.timePrecision}`);
-  if (record.recordedAt) lines.push(`记录时间:: ${record.recordedAt}`);
-  if (record.source) lines.push(`来源:: ${record.source}`);
-  lines.push("<!-- end -->");
-  return lines.join("\n");
-}
-const ENERGY_PROTOCOL_ACTION = "thinkos-energy";
-const ENERGY_PROTOCOL_VERSION = 1;
-function readInteger(raw) {
-  const text2 = String(raw ?? "").trim();
-  if (!/^-?\d+$/.test(text2)) return null;
-  const value = Number(text2);
-  return Number.isSafeInteger(value) ? value : null;
-}
-function parseEnergyProtocolParams(params) {
-  const version2 = readInteger(params.v);
-  if (version2 !== ENERGY_PROTOCOL_VERSION) {
-    return { ok: false, message: `不支持的精力快捷协议版本：${params.v || "缺失"}。` };
-  }
-  const mode = String(params.mode || "").trim();
-  if (mode === "quick") {
-    const score = readInteger(params.energy);
-    if (score == null || !isEnergyQuickLevel(score)) {
-      return { ok: false, message: "快捷精力只接受 20 / 40 / 60 / 80 / 100。" };
-    }
-    return { ok: true, payload: { version: 1, mode: "quick", score } };
-  }
-  if (mode === "detailed") {
-    const brainScore = readInteger(params.mental);
-    const physicalScore = readInteger(params.physical);
-    if (brainScore == null || brainScore < 0 || brainScore > 100) {
-      return { ok: false, message: "详细精力的脑力必须是 0–100 的整数。" };
-    }
-    if (physicalScore == null || physicalScore < 0 || physicalScore > 100) {
-      return { ok: false, message: "详细精力的体力必须是 0–100 的整数。" };
-    }
-    return {
-      ok: true,
-      payload: {
-        version: 1,
-        mode: "detailed",
-        brainScore: normalizeEnergyScore(brainScore),
-        physicalScore: normalizeEnergyScore(physicalScore)
-      }
-    };
-  }
-  return { ok: false, message: "精力快捷协议 mode 只支持 quick 或 detailed。" };
-}
-function resolveEnergyCaptureGoal(goals, defaultGoalId) {
-  const available = goals.filter((goal) => goal.status !== "archived");
-  const preferredId = String(defaultGoalId || "").trim();
-  if (preferredId) {
-    const preferred = available.find((goal) => goal.id === preferredId);
-    if (preferred) return preferred;
-  }
-  return available.find((goal) => goal.status === "active") || available[0] || null;
-}
-function readNumber$1(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  const text2 = String(value ?? "").trim();
-  if (!text2) return void 0;
-  const parsed = Number(text2);
-  return Number.isFinite(parsed) ? parsed : void 0;
-}
-function readText$1(value) {
-  const text2 = String(value ?? "").trim();
-  return text2 || void 0;
-}
-function readScore(value) {
-  const parsed = readNumber$1(value);
-  if (parsed == null || parsed < 0 || parsed > 100) return void 0;
-  return Math.round(parsed);
-}
-function isEnergyItem(item) {
-  const block2 = String(item.coreBlock || item.extra?.["核心Block"] || "").replace(/^core\./i, "").trim().toLowerCase();
-  if (block2 === "energy") return true;
-  const category = String(item.categoryKey || "").split("/")[0]?.trim();
-  return category === "精力";
-}
-function readEnergyItemSnapshot(item) {
-  if (!isEnergyItem(item)) return null;
-  const extra = item.extra || {};
-  const score = readScore(extra["精力值"]);
-  if (score == null) return null;
-  const explicitQuick = readNumber$1(extra["精力档位"]);
-  const quickLevel = explicitQuick != null && isEnergyQuickLevel(explicitQuick) ? explicitQuick : toEnergyQuickLevel(score);
-  const modeText = readText$1(extra["评分模式"]);
-  const scoreMode = modeText === "quick" || modeText === "detailed" || modeText === "percent" ? modeText : void 0;
-  const captureText = readText$1(extra["记录方式"]);
-  const captureMode2 = captureText === "realtime" || captureText === "retrospective" ? captureText : void 0;
-  const precisionText = readText$1(extra["时间精度"]);
-  const timePrecision = precisionText === "exact" || precisionText === "approximate" || precisionText === "period" || precisionText === "day" ? precisionText : void 0;
-  return {
-    score,
-    quickLevel,
-    brainScore: readScore(extra["脑力精力"]),
-    physicalScore: readScore(extra["体力精力"]),
-    scoreMode,
-    captureMode: captureMode2,
-    timePrecision,
-    date: readText$1(item.date || extra["日期"]),
-    time: readText$1(item.startTime || extra["时间"]),
-    recordedAt: readText$1(extra["记录时间"]),
-    source: readText$1(extra["来源"])
-  };
-}
-function energySnapshotOccurrenceKey(snapshot) {
-  return `${snapshot.date || ""}T${snapshot.time || "00:00"}`;
-}
-function text$3(value) {
-  return String(value ?? "").trim();
-}
-function itemBlock(item) {
-  return text$3(item.coreBlock || item.extra?.["核心Block"]).replace(/^core\./i, "").toLowerCase();
-}
-function itemDay(item) {
-  return text$3(item.doneDate || item.date || item.endISO || item.scheduledDate || item.startDate).slice(0, 10);
-}
-function recordedTaskMinutes(items, today) {
-  return items.reduce((sum, item) => {
-    if (itemBlock(item) !== "task" && item.type !== "task") return sum;
-    const hasCompletionEvidence = Boolean(item.doneDate || item.endTime || /^\s*-\s*\[[xX]\]\s*/.test(item.content || ""));
-    if (!hasCompletionEvidence || itemDay(item) !== today) return sum;
-    const duration2 = Number(item.duration ?? item.extra?.["时长"]);
-    if (!Number.isFinite(duration2) || duration2 <= 0) return sum;
-    return sum + Math.min(720, Math.max(0, duration2));
-  }, 0);
-}
-function buildEnergyActionPolicyContext(items, management, today) {
-  const dailyTaskMinutes = Math.round(recordedTaskMinutes(items, today));
-  const preserveGuardrail = management?.guardrails?.find((row) => row.key === "preserve-capacity" || row.key === "long-session");
-  const loadRisk = dailyTaskMinutes >= 180;
-  const preserveCapacityRisk = loadRisk || Boolean(preserveGuardrail);
-  let preserveCapacityReason;
-  if (dailyTaskMinutes >= 300) {
-    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}min，建议用更短工作块并到点收尾。`;
-  } else if (loadRisk) {
-    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}min，这一块先设明确停止点，给后续留余量。`;
-  } else if (preserveGuardrail) {
-    preserveCapacityReason = "你的历史里已出现高能后持续过久的迹象，这一块先设明确停止点。";
-  }
-  return { dailyTaskMinutes, preserveCapacityRisk, preserveCapacityReason };
-}
-function baseCap(band) {
-  if (band === "recover") return 30;
-  if (band === "steady") return 45;
-  return 60;
-}
-function resolveEnergyActionTiming(candidate, band, policy) {
-  const requested = candidate.durationMinutes && candidate.durationMinutes > 0 ? candidate.durationMinutes : void 0;
-  let cap = baseCap(band);
-  const personalDepletion = Boolean(
-    candidate.historicalEffect && candidate.historicalEffect.sampleCount >= 3 && candidate.historicalEffect.meanDelta <= -8
-  );
-  if (personalDepletion) cap = Math.min(cap, 45);
-  if (policy?.preserveCapacityRisk && band !== "recover") cap = Math.min(cap, 45);
-  if ((policy?.dailyTaskMinutes || 0) >= 300 && band !== "recover") cap = Math.min(cap, 30);
-  if (personalDepletion && (policy?.dailyTaskMinutes || 0) >= 180 && band !== "recover") cap = Math.min(cap, 30);
-  const minutes = Math.max(10, Math.round(Math.min(requested ?? cap, cap)));
-  const preserveCapacity = band !== "recover" && Boolean(policy?.preserveCapacityRisk);
-  return {
-    minutes,
-    preserveCapacity,
-    stopReason: preserveCapacity ? policy?.preserveCapacityReason : void 0
-  };
-}
-const DEFAULT_LOW_THRESHOLD = 40;
-const DEFAULT_HIGH_THRESHOLD = 60;
-const DEFAULT_MAXIMUM = 3;
-const PERSONAL_SAMPLE_MINIMUM = 3;
-function clampScore(value) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(100, Math.round(value)));
-}
-function bandFor(score, lowThreshold, highThreshold) {
-  if (score <= lowThreshold) return "recover";
-  if (score > highThreshold) return "use-capacity";
-  return "steady";
-}
-function stateLabel$1(band) {
-  if (band === "recover") return "低精力";
-  if (band === "use-capacity") return "精力可用";
-  return "中间状态";
-}
-function loadValue(load2) {
-  if (load2 === "low") return 25;
-  if (load2 === "medium") return 55;
-  if (load2 === "high") return 80;
-  return void 0;
-}
-function demandFit(available, load2) {
-  const demand = loadValue(load2);
-  if (demand == null) return 0;
-  const gap2 = available - demand;
-  let fit = 14 - Math.abs(gap2) * 0.35;
-  if (gap2 < -5) fit -= Math.min(18, Math.abs(gap2) * 0.4);
-  return Math.max(-24, Math.min(14, Math.round(fit * 10) / 10));
-}
-function effectEvidence(effect2) {
-  return effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM ? "personal" : "metadata";
-}
-function historicalFit(effect2, band) {
-  if (!effect2 || effect2.sampleCount < PERSONAL_SAMPLE_MINIMUM) return 0;
-  const delta = Math.max(-40, Math.min(40, effect2.meanDelta));
-  if (band === "recover") return delta * 1.25;
-  if (band === "use-capacity") {
-    return delta >= 0 ? Math.min(8, delta * 0.2) : delta * 0.45;
-  }
-  return delta * 0.6;
-}
-function durationFit(duration2, band) {
-  if (duration2 == null || duration2 <= 0) return 0;
-  if (band === "recover") {
-    if (duration2 <= 30) return 10;
-    if (duration2 <= 45) return 3;
-    if (duration2 <= 60) return -6;
-    return -16;
-  }
-  if (band === "use-capacity") {
-    if (duration2 <= 20) return 1;
-    if (duration2 <= 45) return 4;
-    if (duration2 <= 90) return 8;
-    if (duration2 <= 120) return 2;
-    return -8;
-  }
-  if (duration2 <= 45) return 6;
-  if (duration2 <= 75) return 1;
-  return -6;
-}
-function candidateScore(candidate, context, band) {
-  const overall = clampScore(context.score);
-  const brain = context.brainScore == null ? overall : clampScore(context.brainScore);
-  const physical = context.physicalScore == null ? overall : clampScore(context.physicalScore);
-  const value = candidate.valueScore == null ? 50 : clampScore(candidate.valueScore);
-  let score = 50;
-  score += demandFit(brain, candidate.brainLoad);
-  score += demandFit(physical, candidate.physicalLoad);
-  score += durationFit(candidate.durationMinutes, band);
-  score += historicalFit(candidate.historicalEffect, band);
-  if (band === "recover") {
-    if (candidate.recoveryIntent) score += 28;
-    if (candidate.brainLoad === "high") score -= 16;
-    if (candidate.physicalLoad === "high" && physical <= 40) score -= 16;
-    score += (value - 50) * 0.08;
-  } else if (band === "use-capacity") {
-    if (candidate.recoveryIntent) score -= 20;
-    score += (value - 50) * 0.8;
-  } else {
-    if (candidate.recoveryIntent) score += 8;
-    score += (value - 50) * 0.18;
-  }
-  return Math.round(score * 10) / 10;
-}
-function signed$1(value) {
-  const rounded = Math.round(value);
-  return `${rounded > 0 ? "+" : ""}${rounded}`;
-}
-function reasonFor(candidate, band, duration2) {
-  const effect2 = candidate.historicalEffect;
-  const personal = effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM;
-  const historyPrefix = effect2?.origin === "recommendation-feedback" ? "你的推荐执行反馈里" : "你的历史里";
-  if (band === "recover") {
-    if (personal && effect2.meanDelta > 0) return `${historyPrefix}这类活动平均 ${signed$1(effect2.meanDelta)}（N=${effect2.sampleCount}），先做 ${duration2}min。`;
-    if (candidate.recoveryIntent) return `当前精力偏低，先做低负荷恢复项 ${duration2}min。`;
-    return `当前精力偏低，这项负荷相对可控，先做 ${duration2}min。`;
-  }
-  if (band === "use-capacity") {
-    if (personal && effect2.meanDelta <= -8) return `当前能做，但${historyPrefix}这类活动平均 ${signed$1(effect2.meanDelta)}（N=${effect2.sampleCount}），先限时 ${duration2}min。`;
-    return `当前精力可用，适合推进这项高价值事项，先做 ${duration2}min。`;
-  }
-  if (personal) return `当前处于中间状态；${historyPrefix}变化 ${signed$1(effect2.meanDelta)}（N=${effect2.sampleCount}），先做 ${duration2}min。`;
-  return `当前适合中等负荷，先做 ${duration2}min 再看状态。`;
-}
-function buildEnergyActionRecommendations(context, candidates) {
-  const lowThreshold = Math.max(0, Math.min(80, Math.round(context.lowThreshold ?? DEFAULT_LOW_THRESHOLD)));
-  const highThreshold = Math.max(lowThreshold + 1, Math.min(100, Math.round(context.highThreshold ?? DEFAULT_HIGH_THRESHOLD)));
-  const maximum = Math.max(1, Math.min(500, Math.floor(context.maximumRecommendations ?? DEFAULT_MAXIMUM)));
-  const score = clampScore(context.score);
-  const band = bandFor(score, lowThreshold, highThreshold);
-  const normalizedContext = { ...context, score };
-  const recommendations = candidates.filter((candidate) => !!candidate.id && !!candidate.title.trim()).map((candidate) => {
-    const timing = resolveEnergyActionTiming(candidate, band, context.actionPolicy);
-    const duration2 = timing.minutes;
-    return {
-      candidate,
-      band,
-      fitScore: candidateScore(candidate, normalizedContext, band),
-      evidence: effectEvidence(candidate.historicalEffect),
-      reason: reasonFor(candidate, band, duration2),
-      suggestedDurationMinutes: duration2,
-      preserveCapacity: timing.preserveCapacity,
-      stopReason: timing.stopReason
-    };
-  }).sort((left2, right2) => right2.fitScore - left2.fitScore || left2.candidate.title.localeCompare(right2.candidate.title, "zh-CN")).slice(0, maximum);
-  return {
-    band,
-    stateLabel: stateLabel$1(band),
-    recommendations,
-    consideredCount: candidates.length
-  };
-}
-const DATE_YMD = "\\d{4}[-/]\\d{2}[-/]\\d{2}";
-const DATE_YMD_RE = new RegExp(DATE_YMD);
-const TAG_RE = /#([\p{L}\p{N}_\/-]+)/gu;
-const KV_IN_PAREN = /\(([^:：]+)::\s*([^)]+)\)/g;
-const RE_TASK_PREFIX = /^\s*-\s*\[[ xX-]\]/;
-const RE_DONE_BOX = /^\s*-\s*\[x\]/i;
-const RE_CANCEL_BOX = /^\s*-\s*\[-\]/;
 var SECONDS_A_MINUTE = 60;
 var SECONDS_A_HOUR = SECONDS_A_MINUTE * 60;
 var SECONDS_A_DAY = SECONDS_A_HOUR * 24;
@@ -4770,7 +3404,7 @@ var Utils = U$2;
 Utils.l = parseLocale;
 Utils.i = isDayjs;
 Utils.w = wrapper$1;
-var parseDate = function parseDate2(cfg) {
+var parseDate$2 = function parseDate(cfg) {
   var date2 = cfg.date, utc = cfg.utc;
   if (date2 === null) return /* @__PURE__ */ new Date(NaN);
   if (Utils.u(date2)) return /* @__PURE__ */ new Date();
@@ -4797,7 +3431,7 @@ var Dayjs = /* @__PURE__ */ (function() {
   }
   var _proto = Dayjs2.prototype;
   _proto.parse = function parse2(cfg) {
-    this.$d = parseDate(cfg);
+    this.$d = parseDate$2(cfg);
     this.init();
   };
   _proto.init = function init() {
@@ -5574,7 +4208,6 @@ dayjs.extend(isoWeek);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isBetween);
 const todayISO = () => dayjs().format("YYYY-MM-DD");
-const nowHHMM = () => dayjs().format("HH:mm");
 function formatSecondsToHHMMSS(totalSeconds) {
   if (isNaN(totalSeconds) || totalSeconds < 0) {
     return "00:00:00";
@@ -5600,15 +4233,6 @@ function normalizeDateStr(raw) {
   const s2 = (raw || "").replace(/\//g, "-");
   const d2 = dayjs(s2, ["YYYY-MM-DD", "YYYY-M-D", "YYYY/MM/DD", "YYYY/M/D"], true);
   return d2.isValid() ? d2.format("YYYY-MM-DD") : s2;
-}
-const DATE_FMT = "(\\d{4}[-/]\\d{2}[-/]\\d{2})";
-function extractDate(line2, em) {
-  const list = Array.isArray(em) ? em : [em];
-  for (const e2 of list) {
-    const m2 = line2.match(new RegExp(`${e2}\\s*${DATE_FMT}`));
-    if (m2) return normalizeDateStr(m2[1]);
-  }
-  return void 0;
 }
 const QTXT = ["一", "二", "三", "四"];
 function formatDateForView(d2, v2) {
@@ -5650,125 +4274,1964 @@ function getPeriodCount(period, date2) {
       return void 0;
   }
 }
-const RECURRENCE_RULE_RE = /(^|[\s\[(]|[^\s])🔁\s*(every\s+(?:\d+\s+)?(?:day|week|month|quarter|year)s?(?:\s+when\s+done)?)(?=$|\s*(?:[\(\[][^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/i;
-const PURE_RECURRENCE_RE = /^every\s+(\d+)?\s*(day|week|month|quarter|year)s?(\s+when\s+done)?$/i;
-function extractRecurrenceText(rawTask) {
-  const raw = String(rawTask || "").trim();
-  if (!raw) return null;
-  const pure = raw.replace(/^🔁\s*/u, "").trim();
-  if (PURE_RECURRENCE_RE.test(pure)) return pure;
-  const match5 = raw.match(RECURRENCE_RULE_RE);
-  if (!match5) return null;
-  return match5[2]?.trim() || null;
-}
-const cleanTimeAndDurationTags = (line2) => {
-  return line2.replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, "").trim();
-};
-function toggleToDone(rawLine, todayISO2, nowTime, options) {
-  let line2 = cleanTimeAndDurationTags(rawLine);
-  const duration2 = options?.duration;
-  const startTime = options?.startTime;
-  const endTime = options?.endTime;
-  const tagsToAppend = [];
-  if (startTime !== void 0) {
-    tagsToAppend.push(`(时间:: ${startTime})`);
-  } else if (duration2 === void 0 && endTime === void 0) {
-    tagsToAppend.push(`(时间:: ${nowTime})`);
-  }
-  if (endTime !== void 0) {
-    tagsToAppend.push(`(结束:: ${endTime})`);
-  }
-  if (duration2 !== void 0) {
-    tagsToAppend.push(`(时长:: ${duration2})`);
-  }
-  line2 = [line2, ...tagsToAppend].join(" ").replace(/\s+/g, " ").trim();
-  line2 = line2.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[x]");
-  if (!/^-\s*\[x\]/.test(line2)) {
-    line2 = `- [x] ${line2.replace(/^-\s*\[.\]/, "").replace(/^-\s*/, "")}`;
-  }
-  line2 = line2.replace(
-    new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}$`),
-    ""
-  );
-  return `${line2.trim()} ${EMOJI.done} ${todayISO2}`;
-}
-function buildCompletedTaskRecord(rawLine, todayISO2, nowTime, options) {
-  return toggleToDone(rawLine, todayISO2, nowTime, options);
-}
-function parseRecurrence(rawTask) {
-  const recurrenceText2 = extractRecurrenceText(rawTask);
-  if (!recurrenceText2) return null;
-  const m2 = recurrenceText2.match(PURE_RECURRENCE_RE);
-  if (!m2) return null;
-  const interval = m2[1] ? parseInt(m2[1], 10) : 1;
-  const unit = m2[2].toLowerCase();
-  const whenDone = Boolean(m2[3]);
-  return { interval, unit, whenDone };
-}
-function findBaseDateForRecurring(rawTask, whenDone, todayISO2) {
-  if (whenDone) return todayISO2;
-  const pick2 = (emoji2) => {
-    const r2 = new RegExp(`${emoji2}s*(${DATE_YMD_RE.source})`);
-    const mt = rawTask.match(r2);
-    return mt ? normalizeDateStr(mt[1]) : null;
-  };
-  return pick2(EMOJI.due) || pick2(EMOJI.scheduled) || pick2(EMOJI.start) || todayISO2;
-}
-function generateNextRecurringTask(rawTask, baseDateISO) {
-  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "");
-  const rec = parseRecurrence(rawTask);
-  if (!rec) return next2.trim();
-  const base = dayjs(baseDateISO, ["YYYY-MM-DD", "YYYY/MM/DD"]);
-  const nextDate = rec.unit === "quarter" ? base.add(rec.interval * 3, "month") : base.add(rec.interval, rec.unit);
-  const nextStr = nextDate.format("YYYY-MM-DD");
-  const replaceIf = (emoji2) => {
-    const re = new RegExp(`${emoji2}s*${DATE_YMD_RE.source}`);
-    if (re.test(next2)) next2 = next2.replace(re, `${emoji2} ${nextStr}`);
-  };
-  replaceIf(EMOJI.due);
-  replaceIf(EMOJI.scheduled);
-  replaceIf(EMOJI.start);
-  return next2.trim();
-}
-function markTaskDone(rawLine, todayISO2, nowTime, options) {
-  const completedLine = buildCompletedTaskRecord(rawLine, todayISO2, nowTime, options);
-  const rec = parseRecurrence(rawLine);
-  if (!rec) return { completedLine };
-  const baseISO = findBaseDateForRecurring(rawLine, rec.whenDone, todayISO2);
-  const nextTaskLine = generateNextRecurringTask(rawLine, baseISO);
-  return { completedLine, nextTaskLine };
-}
-const NON_RECURRING_MARKERS = /* @__PURE__ */ new Set([
-  "",
-  "none",
-  "no",
-  "false",
-  "0",
-  "off",
-  "不重复",
-  "无"
-]);
-function normalizeTaskRecurrenceValue(value) {
-  const raw = String(value ?? "").trim();
-  if (!raw) return null;
-  if (NON_RECURRING_MARKERS.has(raw.toLowerCase())) return null;
-  return raw;
+const RECURRENCE_UNITS = /* @__PURE__ */ new Set(["day", "week", "month", "quarter", "year"]);
+const RECURRENCE_ANCHORS = /* @__PURE__ */ new Set(["scheduled", "start", "due", "completion"]);
+function normalizeRecurrenceInfo(value) {
+  if (!value) return null;
+  const unit = String(value.unit || "").trim().toLowerCase();
+  const anchor = String(value.anchor || "").trim().toLowerCase();
+  const interval = Number(value.interval);
+  if (!RECURRENCE_UNITS.has(unit)) return null;
+  if (!RECURRENCE_ANCHORS.has(anchor)) return null;
+  if (!Number.isInteger(interval) || interval < 1) return null;
+  return { unit, interval, anchor };
 }
 function getTaskRecurrenceInfo(item) {
-  if (item.recurrenceInfo) return item.recurrenceInfo;
-  const normalized2 = normalizeTaskRecurrenceValue(item.recurrence);
-  if (normalized2) {
-    const parsedNormalized = parseRecurrence(normalized2);
-    if (parsedNormalized) return parsedNormalized;
-  }
-  const raw = String(item.rawSource || item.fullData || "");
-  return raw ? parseRecurrence(raw) : null;
+  return normalizeRecurrenceInfo(item.recurrenceInfo);
 }
 function isTaskRecurring(item) {
-  return getTaskRecurrenceInfo(item) != null;
+  return Boolean(String(item.seriesId || "").trim());
 }
-const DEFAULT_MAX_BEFORE_GAP = 120;
-const DEFAULT_MAX_AFTER_GAP = 90;
+function formatTaskRecurrence(info) {
+  const recurrence = normalizeRecurrenceInfo(info);
+  if (!recurrence) return "";
+  const interval = recurrence.interval === 1 ? "" : `${recurrence.interval} `;
+  return `every ${interval}${recurrence.unit}${recurrence.interval === 1 ? "" : "s"}`;
+}
+function addRecurrenceToDate(baseDateISO, recurrence) {
+  const normalizedBase = normalizeDateStr(baseDateISO) || baseDateISO;
+  const base = dayjs(normalizedBase, ["YYYY-MM-DD", "YYYY/MM/DD"]);
+  if (!base.isValid()) throw new Error(`task_recurrence_invalid_base_date:${baseDateISO}`);
+  const next2 = recurrence.unit === "quarter" ? base.add(recurrence.interval * 3, "month") : base.add(recurrence.interval, recurrence.unit);
+  return next2.format("YYYY-MM-DD");
+}
+function getTaskRecurrenceBaseDate(task, recurrence, completedAtISO) {
+  const completionDate = normalizeDateStr(completedAtISO) || String(completedAtISO || "").slice(0, 10);
+  if (recurrence.anchor === "completion") return completionDate;
+  if (recurrence.anchor === "start") return task.startDate || task.scheduledDate || task.dueDate || completionDate;
+  if (recurrence.anchor === "due") return task.dueDate || task.scheduledDate || task.startDate || completionDate;
+  return task.scheduledDate || task.startDate || task.dueDate || completionDate;
+}
+function buildNextOccurrenceDates(task, recurrence, completedAtISO) {
+  const baseDate = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
+  const nextAnchorDate = addRecurrenceToDate(baseDate, recurrence);
+  const result = {};
+  const shift = (value) => {
+    if (!value) return void 0;
+    return addRecurrenceToDate(value, recurrence);
+  };
+  if (recurrence.anchor === "scheduled") result.scheduledDate = nextAnchorDate;
+  else result.scheduledDate = shift(task.scheduledDate);
+  if (recurrence.anchor === "start") result.startDate = nextAnchorDate;
+  else result.startDate = shift(task.startDate);
+  if (recurrence.anchor === "due") result.dueDate = nextAnchorDate;
+  else result.dueDate = shift(task.dueDate);
+  if (recurrence.anchor === "completion" && !result.scheduledDate && !result.startDate && !result.dueDate) {
+    result.scheduledDate = nextAnchorDate;
+  }
+  return result;
+}
+const TASK_CADENCE_ORDER = ["routine", "day", "week", "month", "quarter", "year"];
+const TASK_CADENCE_META = {
+  routine: { label: "日常任务", emoji: "🌿" },
+  day: { label: "天任务", emoji: "☀️" },
+  week: { label: "周任务", emoji: "📅" },
+  month: { label: "月任务", emoji: "🗓️" },
+  quarter: { label: "季任务", emoji: "🍂" },
+  year: { label: "年任务", emoji: "🧭" }
+};
+function getTaskCadence(item) {
+  const recurrence = getTaskRecurrenceInfo(item);
+  if (!recurrence) return "routine";
+  if (recurrence.unit === "day") return "day";
+  if (recurrence.unit === "week") return "week";
+  if (recurrence.unit === "year") return "year";
+  if (recurrence.unit === "quarter") return "quarter";
+  return "month";
+}
+function isUnknownRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function asUnknownRecord(value) {
+  return isUnknownRecord(value) ? value : void 0;
+}
+function readUnknown(record, key) {
+  return record?.[key];
+}
+function readString(record, key) {
+  const value = readUnknown(record, key);
+  return typeof value === "string" ? value : void 0;
+}
+function readTrimmedString(record, key) {
+  const value = readString(record, key)?.trim();
+  return value ? value : void 0;
+}
+function readNumber$1(record, key) {
+  const value = readUnknown(record, key);
+  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+}
+function readStringArray(record, key) {
+  const value = readUnknown(record, key);
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => typeof item === "string");
+}
+function readRecord(record, key) {
+  return asUnknownRecord(readUnknown(record, key));
+}
+function readRecordArray(record, key) {
+  const value = readUnknown(record, key);
+  if (!Array.isArray(value)) return [];
+  return value.filter(isUnknownRecord);
+}
+function readFirstString$1(record, keys) {
+  for (const key of keys) {
+    const value = readTrimmedString(record, key);
+    if (value) return value;
+  }
+  return void 0;
+}
+function normalizeFieldKey(field) {
+  return getCanonicalFieldKey(field);
+}
+function readFileField(item, field) {
+  const file = item.file;
+  const fileRecord = asUnknownRecord(file);
+  const key = field.slice("file.".length);
+  if (key === "name" || key === "basename") {
+    return file?.basename ?? item.fileName ?? item.filename;
+  }
+  if (key === "folder") {
+    return file?.folder ?? item.folder;
+  }
+  return readUnknown(fileRecord, key);
+}
+function readCategoryPath(item) {
+  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).path;
+}
+function readRootCategory(item) {
+  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).root;
+}
+function readLeafCategory(item) {
+  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).leaf;
+}
+function readImageField(item) {
+  return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? item.extra?.["评图"] ?? item.extra?.["pintu"]);
+}
+function readCanonicalField(item, canonicalField) {
+  if (canonicalField.startsWith("extra.")) {
+    return item.extra?.[canonicalField.slice("extra.".length)];
+  }
+  if (canonicalField.startsWith("file.")) {
+    return readFileField(item, canonicalField);
+  }
+  if (canonicalField === "categoryKey") {
+    return readCategoryPath(item);
+  }
+  if (canonicalField === "baseCategory") {
+    return readRootCategory(item);
+  }
+  if (canonicalField === "leafCategory") {
+    return readLeafCategory(item);
+  }
+  if (canonicalField === "themePath") {
+    return readExplicitThemeParts(item).themePath ?? void 0;
+  }
+  if (canonicalField === "rootTheme") {
+    return readExplicitThemeParts(item).rootTheme ?? void 0;
+  }
+  if (canonicalField === "leafTheme") {
+    return readExplicitThemeParts(item).leafTheme ?? void 0;
+  }
+  if (canonicalField === "status") return item.status;
+  if (canonicalField === "cadence") return item.coreBlock === "task" ? getTaskCadence(item) : void 0;
+  if (canonicalField === "recurrence") return formatTaskRecurrence(item.recurrenceInfo);
+  if (canonicalField === "period.id") {
+    return readFirstString$1(asUnknownRecord(item), ["cycleId", "periodId"]);
+  }
+  if (canonicalField === "period.label") {
+    return readFirstString$1(asUnknownRecord(item), ["period", "周期"]);
+  }
+  if (canonicalField === "period.granularity") {
+    return readFirstString$1(asUnknownRecord(item), ["periodGranularity", "goalGranularity"]);
+  }
+  if (canonicalField === "tags") {
+    return parseTagList(item.tags || []);
+  }
+  if (canonicalField === "goalPaths") {
+    return parseTagList(item.goalPaths?.length ? item.goalPaths : readStringArray(asUnknownRecord(item), "goalPaths"));
+  }
+  if (canonicalField === "fullData") {
+    return item.rawSource || item.fullData || item.content || "";
+  }
+  if (canonicalField === "image") {
+    return readImageField(item);
+  }
+  if (canonicalField === "time") {
+    return item.startTime;
+  }
+  if (canonicalField === "filename" || canonicalField === "fileName") {
+    return item.file?.basename ?? item.fileName ?? item.filename;
+  }
+  if (canonicalField === "pintu") {
+    return item.pintu;
+  }
+  return readUnknown(asUnknownRecord(item), canonicalField);
+}
+function resolveFieldValue(item, field) {
+  const canonicalField = normalizeFieldKey(field);
+  const def = getFieldDefinition(canonicalField);
+  const value = readCanonicalField(item, canonicalField);
+  const source = def?.source || "unknown";
+  return {
+    requestedField: field,
+    field: canonicalField,
+    value,
+    source,
+    derived: source === "derived",
+    legacy: source === "legacy" || !!def?.deprecated
+  };
+}
+function readFieldValue(item, field) {
+  return resolveFieldValue(item, field).value;
+}
+const DEFAULT_AI_SETTINGS = {
+  enabled: false,
+  provider: "openai_compat",
+  // 安全默认值：不预置任何第三方 endpoint / model / key，避免误请求或泄露。
+  apiEndpoint: "",
+  apiKey: "",
+  // 默认不把密钥写入插件数据；用户明确打开后才保存。
+  persistApiKey: false,
+  model: "",
+  temperature: 0.7,
+  maxTokens: 4096,
+  requestTimeoutMs: 3e4,
+  enabledBlockIds: [],
+  defaultThemeId: void 0,
+  allowMultipleResults: false,
+  maxResults: 10,
+  confirmMode: "batch",
+  preloadConfigOnStartup: false,
+  configCacheTTLSeconds: 300,
+  customPrompt: ""
+};
+const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
+1. 优先选择已有目标，再选择记录类型，最后选择目标 × Block 下最匹配的记录预设。
+2. 当我说"心情"、"开心"、"难过"等情绪词时，优先匹配目标下的"情绪/心情"打卡预设。
+3. 当我说"写文章"、"写作"时，使用任务记录类型，并优先匹配电脑/写作相关预设。
+4. 不要把目标、主题、模板ID、周期ID写进 fieldValues；这些属于 target 或应用自动推导。
+5. 计划/总结的周期由应用根据预设 periodPolicy 和日期自动生成。`;
+const DEFAULT_GOAL_SETTINGS = {
+  goals: [],
+  goalTemplates: []
+};
+function normalizeGoalPath$1(path) {
+  return splitHierarchyPathValue(path, { stripLeadingHashes: true }).path;
+}
+function splitGoalPath(path) {
+  const parts = splitHierarchyPathValue(path, { stripLeadingHashes: true });
+  return {
+    goalPath: parts.path,
+    rootGoal: parts.root,
+    leafGoal: parts.leaf
+  };
+}
+function getGoalPathCandidates(path) {
+  const parts = splitHierarchyPathValue(path, { stripLeadingHashes: true }).parts;
+  const result = [];
+  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
+  return result;
+}
+const UNKNOWN_GOAL_RANK = Number.MAX_SAFE_INTEGER - 1e3;
+const UNASSIGNED_GOAL_RANK = Number.MAX_SAFE_INTEGER;
+function finiteNumber$1(value, fallback) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+function normalizeOrderPath(value) {
+  return splitGoalPath(String(value ?? "")).goalPath || String(value ?? "").trim();
+}
+function leafGoalLabel(value) {
+  const parsed = splitGoalPath(String(value ?? ""));
+  return parsed.leafGoal || parsed.goalPath || String(value ?? "").trim();
+}
+function getGoalOrderPath(goal) {
+  if (!goal) return "";
+  return normalizeOrderPath(goal.goalPath || goal.title || goal.id);
+}
+function getGoalOrderLabel(goal) {
+  if (!goal) return "";
+  return leafGoalLabel(goal.title || goal.goalPath || goal.id);
+}
+function createGoalOrderIndex(goals = []) {
+  const descriptors = (goals || []).map((goal, originalIndex) => {
+    const path = getGoalOrderPath(goal);
+    return {
+      id: goal.id,
+      path,
+      order: finiteNumber$1(goal?.sortOrder, originalIndex),
+      originalIndex
+    };
+  }).filter((entry) => Boolean(entry.path));
+  descriptors.sort((left2, right2) => {
+    if (left2.order !== right2.order) return left2.order - right2.order;
+    return left2.originalIndex - right2.originalIndex;
+  });
+  const byPath = /* @__PURE__ */ new Map();
+  const byId = /* @__PURE__ */ new Map();
+  const originalIndexByPath = /* @__PURE__ */ new Map();
+  const orderedPaths = [];
+  descriptors.forEach((entry, index) => {
+    if (!byPath.has(entry.path)) {
+      byPath.set(entry.path, index);
+      originalIndexByPath.set(entry.path, entry.originalIndex);
+      orderedPaths.push(entry.path);
+    }
+    if (entry.id && !byId.has(entry.id)) byId.set(entry.id, index);
+  });
+  const rankOfPath = (path) => {
+    const normalized2 = normalizeOrderPath(path || "");
+    if (!normalized2 || normalized2 === "未归属目标") return UNASSIGNED_GOAL_RANK;
+    const known = byPath.get(normalized2);
+    return known === void 0 ? UNKNOWN_GOAL_RANK : known;
+  };
+  const compareGoalPaths = (left2, right2) => {
+    const leftPath = normalizeOrderPath(left2 || "");
+    const rightPath = normalizeOrderPath(right2 || "");
+    const leftRank = rankOfPath(leftPath);
+    const rightRank = rankOfPath(rightPath);
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    return leftPath.localeCompare(rightPath, "zh-CN");
+  };
+  const compareGoals = (left2, right2) => {
+    const byPathOrder = compareGoalPaths(getGoalOrderPath(left2), getGoalOrderPath(right2));
+    if (byPathOrder !== 0) return byPathOrder;
+    const leftIndex = left2.id && byId.has(left2.id) ? byId.get(left2.id) : UNKNOWN_GOAL_RANK;
+    const rightIndex = right2.id && byId.has(right2.id) ? byId.get(right2.id) : UNKNOWN_GOAL_RANK;
+    if (leftIndex !== rightIndex) return leftIndex - rightIndex;
+    return String(left2.id || "").localeCompare(String(right2.id || ""), "zh-CN");
+  };
+  return { byPath, byId, originalIndexByPath, orderedPaths, rankOfPath, compareGoalPaths, compareGoals };
+}
+function sortGoalsBySettingsOrder(goals = []) {
+  const order2 = createGoalOrderIndex(goals);
+  return [...goals].sort(order2.compareGoals);
+}
+function templateSortValue(template, fallback) {
+  return finiteNumber$1(template?.sortOrder, fallback);
+}
+function sortGoalTemplatesBySettingsOrder(templates = [], goals = []) {
+  const goalOrder = createGoalOrderIndex(goals);
+  const originalIndex = /* @__PURE__ */ new Map();
+  templates.forEach((template, index) => originalIndex.set(template, index));
+  return [...templates].sort((left2, right2) => {
+    const leftGoalPath = goals.find((goal) => goal.id === left2.goalId)?.goalPath || left2.goalId;
+    const rightGoalPath = goals.find((goal) => goal.id === right2.goalId)?.goalPath || right2.goalId;
+    const byGoal = goalOrder.compareGoalPaths(leftGoalPath, rightGoalPath);
+    if (byGoal !== 0) return byGoal;
+    const byBlock = String(left2.coreBlockId || "").localeCompare(String(right2.coreBlockId || ""), "zh-CN");
+    if (byBlock !== 0) return byBlock;
+    const byTemplateOrder = templateSortValue(left2, originalIndex.get(left2) ?? 0) - templateSortValue(right2, originalIndex.get(right2) ?? 0);
+    if (byTemplateOrder !== 0) return byTemplateOrder;
+    return (originalIndex.get(left2) ?? 0) - (originalIndex.get(right2) ?? 0);
+  });
+}
+function isPeriodAwareCoreBlock(coreBlockId) {
+  const id = String(coreBlockId || "").trim();
+  return id === "core.plan" || id === "core.review" || id === "plan" || id === "review";
+}
+function normalizePeriodPolicyGranularity(value) {
+  const text2 = String(value || "").trim().toLowerCase();
+  if (text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
+  return "week";
+}
+function resolveTemplatePeriodPolicy(template) {
+  if (!template) return null;
+  const coreBlockId = template.coreBlockId || template.id || "";
+  if (!isPeriodAwareCoreBlock(coreBlockId)) return null;
+  const explicitPolicy = template.periodPolicy;
+  if (explicitPolicy && explicitPolicy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(explicitPolicy.granularity) };
+  }
+  return { enabled: true, granularity: "week" };
+}
+function pad(value) {
+  return String(value).padStart(2, "0");
+}
+function ymd(date2) {
+  return `${date2.getFullYear()}-${pad(date2.getMonth() + 1)}-${pad(date2.getDate())}`;
+}
+function parseDate$1(value) {
+  const text2 = String(value || "").trim();
+  const parsed = text2 ? /* @__PURE__ */ new Date(`${text2.slice(0, 10)}T00:00:00`) : /* @__PURE__ */ new Date();
+  if (!Number.isFinite(parsed.getTime())) return /* @__PURE__ */ new Date();
+  return parsed;
+}
+function addDays(date2, days) {
+  const next2 = new Date(date2);
+  next2.setDate(next2.getDate() + days);
+  return next2;
+}
+function startOfISOWeek(date2) {
+  const d2 = new Date(date2);
+  const day = d2.getDay() || 7;
+  d2.setDate(d2.getDate() - day + 1);
+  return d2;
+}
+function isoWeekInfo(date2) {
+  const d2 = new Date(Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate()));
+  const day = d2.getUTCDay() || 7;
+  d2.setUTCDate(d2.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d2.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d2.getTime() - yearStart.getTime()) / 864e5 + 1) / 7);
+  return { year: d2.getUTCFullYear(), week };
+}
+function normalizePeriodGranularity(value) {
+  const text2 = String(value || "").trim().toLowerCase();
+  if (text2 === "day" || text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
+  return "day";
+}
+function resolveDerivedPeriod(dateValue, granularityValue) {
+  const granularity = normalizePeriodGranularity(granularityValue);
+  const date2 = parseDate$1(dateValue);
+  const year = date2.getFullYear();
+  if (granularity === "day") {
+    const day = ymd(date2);
+    return { id: day, label: day, granularity, startDate: day, endDate: day };
+  }
+  if (granularity === "week") {
+    const start22 = startOfISOWeek(date2);
+    const end22 = addDays(start22, 6);
+    const info = isoWeekInfo(date2);
+    const week = pad(info.week);
+    return { id: `${info.year}-W${week}`, label: `${info.year} 第 ${info.week} 周`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+  }
+  if (granularity === "month") {
+    const start22 = new Date(year, date2.getMonth(), 1);
+    const end22 = new Date(year, date2.getMonth() + 1, 0);
+    return { id: `${year}-${pad(date2.getMonth() + 1)}`, label: `${year} 年 ${date2.getMonth() + 1} 月`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+  }
+  if (granularity === "quarter") {
+    const quarter = Math.floor(date2.getMonth() / 3) + 1;
+    const start22 = new Date(year, (quarter - 1) * 3, 1);
+    const end22 = new Date(year, quarter * 3, 0);
+    return { id: `${year}-Q${quarter}`, label: `${year} Q${quarter}`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+  }
+  const start2 = new Date(year, 0, 1);
+  const end2 = new Date(year, 11, 31);
+  return { id: `${year}`, label: `${year} 年`, granularity, startDate: ymd(start2), endDate: ymd(end2) };
+}
+const DEFAULT_TEMPLATE_VARIANT_ID = "default";
+const SYSTEM_RECORD_CONTEXT_FIELD_KEYS = [
+  "goalId",
+  "目标ID",
+  "goalPath",
+  "目标",
+  "目标路径",
+  "rootGoal",
+  "leafGoal",
+  "coreBlock",
+  "coreBlockId",
+  "核心Block",
+  "templateId",
+  "模板ID",
+  "templateSourceType",
+  "模板来源",
+  "templateVariantId",
+  "goalTemplateVariantId",
+  "变体ID",
+  "记录预设",
+  "cycleId",
+  "周期ID",
+  "periodId",
+  "period",
+  "周期",
+  "周期粒度",
+  "goalGranularity",
+  "themeId",
+  "themePath",
+  "主题",
+  "rootTheme",
+  "leafTheme"
+];
+const SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET = new Set(SYSTEM_RECORD_CONTEXT_FIELD_KEYS);
+const SYSTEM_RECORD_CONTEXT_SEMANTICS = /* @__PURE__ */ new Set([
+  "goalId",
+  "goalPath",
+  "goalPaths",
+  "goals",
+  "coreBlock",
+  "templateId",
+  "templateSourceType",
+  "templateVariantId",
+  "cycleId",
+  "period",
+  "themeId",
+  "themePath"
+]);
+function isSystemRecordContextField(key, label, semantic) {
+  const normalizedKey = String(key || "").trim();
+  const normalizedLabel2 = String(label || "").trim();
+  const normalizedSemantic = String(semantic || "").trim();
+  return SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedKey) || SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedLabel2) || SYSTEM_RECORD_CONTEXT_SEMANTICS.has(normalizedSemantic);
+}
+function normalizeTemplateVariantId(value) {
+  const normalized2 = String(value || "").trim();
+  return normalized2 || DEFAULT_TEMPLATE_VARIANT_ID;
+}
+function nowIso$1() {
+  return (/* @__PURE__ */ new Date()).toISOString();
+}
+function normalizeVariantId(value) {
+  return normalizeTemplateVariantId(value);
+}
+function safeIdPart(value) {
+  return String(value || "").trim().replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-") || "default";
+}
+function parseVariantIdFromTemplateId(id) {
+  const text2 = String(id || "").trim();
+  if (!text2.startsWith("goal-template.")) return DEFAULT_TEMPLATE_VARIANT_ID;
+  const parts = text2.split(".");
+  if (parts.length <= 4) return DEFAULT_TEMPLATE_VARIANT_ID;
+  return normalizeVariantId(parts.slice(4).join("."));
+}
+function normalizeGoalTemplateId(goalId, coreBlockId, variantId, id) {
+  const text2 = String(id || "").trim();
+  const normalizedVariantId = normalizeVariantId(variantId);
+  if (text2 && text2.startsWith("goal-template.")) {
+    const idVariantId = parseVariantIdFromTemplateId(text2);
+    if (idVariantId === normalizedVariantId) return text2;
+    if (normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID && idVariantId === DEFAULT_TEMPLATE_VARIANT_ID) return text2;
+  }
+  return getGoalTemplateId(goalId, coreBlockId, normalizedVariantId);
+}
+function normalizeTemplatePeriodPolicy(coreBlockId, raw) {
+  if (!isPeriodAwareCoreBlock(coreBlockId)) return void 0;
+  const policy = raw?.periodPolicy;
+  if (policy && policy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
+  }
+  return { enabled: true, granularity: "week" };
+}
+function normalizeGoalTemplateStorageRow(row) {
+  const variantId = normalizeVariantId(row.variantId || parseVariantIdFromTemplateId(row.id));
+  return {
+    id: normalizeGoalTemplateId(row.goalId, row.coreBlockId, variantId, row.id),
+    goalId: row.goalId,
+    coreBlockId: row.coreBlockId,
+    variantId,
+    name: row.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
+    description: row.description,
+    periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, row),
+    sortOrder: typeof row.sortOrder === "number" ? row.sortOrder : void 0,
+    enabled: row.enabled !== false,
+    fields: row.fields,
+    outputTemplate: row.outputTemplate,
+    targetFile: row.targetFile,
+    appendUnderHeader: row.appendUnderHeader,
+    defaultValues: row.defaultValues || {},
+    requiredFields: row.requiredFields || [],
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt
+  };
+}
+function toGoalTemplateStorageRow(template, previous) {
+  const timestamp = nowIso$1();
+  const variantId = normalizeVariantId(template.variantId);
+  return {
+    ...previous || {},
+    id: normalizeGoalTemplateId(template.goalId, template.coreBlockId, variantId, template.id),
+    goalId: template.goalId,
+    coreBlockId: template.coreBlockId,
+    variantId,
+    name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
+    description: template.description,
+    periodPolicy: normalizeTemplatePeriodPolicy(template.coreBlockId, template),
+    sortOrder: template.sortOrder,
+    enabled: template.enabled !== false,
+    fields: template.fields?.length ? template.fields : void 0,
+    outputTemplate: template.outputTemplate || void 0,
+    targetFile: template.targetFile || void 0,
+    appendUnderHeader: template.appendUnderHeader || void 0,
+    defaultValues: template.defaultValues && Object.keys(template.defaultValues).length ? template.defaultValues : void 0,
+    requiredFields: template.requiredFields?.length ? template.requiredFields : void 0,
+    createdAt: template.createdAt || previous?.createdAt || timestamp,
+    updatedAt: template.updatedAt || timestamp
+  };
+}
+function goalTemplateIdentityKey(template) {
+  return `${template.goalId}::${template.coreBlockId}::${normalizeVariantId(template.variantId)}`;
+}
+function getGoalTemplates(goalSettings) {
+  const result = [];
+  const indexByKey = /* @__PURE__ */ new Map();
+  for (const row of goalSettings?.goalTemplates || []) {
+    const template = normalizeGoalTemplateStorageRow(row);
+    const key = goalTemplateIdentityKey(template);
+    const existingIndex = indexByKey.get(key);
+    if (existingIndex === void 0) {
+      indexByKey.set(key, result.length);
+      result.push(template);
+    } else {
+      result[existingIndex] = template;
+    }
+  }
+  return result;
+}
+function getGoalTemplateId(goalId, coreBlockId, variantId = "default") {
+  const normalizedVariantId = normalizeVariantId(variantId);
+  const base = `goal-template.${safeIdPart(goalId)}.${safeIdPart(coreBlockId)}`;
+  return normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID ? base : `${base}.${safeIdPart(normalizedVariantId)}`;
+}
+function getGoalTemplateCandidateGoalIds(goalSettings, goal) {
+  if (!goal) return [];
+  const goals = goalSettings?.goals || [];
+  const ids2 = [goal.id];
+  const path = splitGoalPath(goal.goalPath || goal.title).goalPath;
+  const byPath = new Map(goals.map((item) => [splitGoalPath(item.goalPath || item.title).goalPath, item]));
+  for (const parentPath of getGoalPathCandidates(path).slice(1)) {
+    const parentGoal = byPath.get(parentPath);
+    if (parentGoal && !ids2.includes(parentGoal.id)) ids2.push(parentGoal.id);
+  }
+  return ids2;
+}
+function getGoalTemplateVariants(goalSettings, goal, coreBlockId) {
+  const candidateGoalIds = getGoalTemplateCandidateGoalIds(goalSettings, goal);
+  if (!candidateGoalIds.length) return [];
+  const rank = new Map(candidateGoalIds.map((id, index) => [id, index]));
+  return getGoalTemplates(goalSettings).map((template, storageIndex) => ({ template, storageIndex })).filter(({ template }) => template.enabled !== false && candidateGoalIds.includes(template.goalId) && template.coreBlockId === coreBlockId).sort((a2, b2) => {
+    const byGoal = (rank.get(a2.template.goalId) ?? 999) - (rank.get(b2.template.goalId) ?? 999);
+    if (byGoal !== 0) return byGoal;
+    const bySortOrder = (a2.template.sortOrder ?? 9999) - (b2.template.sortOrder ?? 9999);
+    if (bySortOrder !== 0) return bySortOrder;
+    return a2.storageIndex - b2.storageIndex;
+  }).map(({ template }) => template);
+}
+function findGoalTemplate(goalSettings, goal, coreBlockId, variantId) {
+  const variants = getGoalTemplateVariants(goalSettings, goal, coreBlockId);
+  if (!variants.length) return null;
+  const normalizedVariantId = normalizeVariantId(variantId);
+  if (variantId) {
+    const exact = variants.find((template) => normalizeVariantId(template.variantId) === normalizedVariantId || template.id === variantId);
+    if (exact) return exact;
+  }
+  return variants[0] || null;
+}
+function upsertGoalTemplateInSettings(goalSettings, template) {
+  const previousRows = goalSettings.goalTemplates || [];
+  const variantId = normalizeVariantId(template.variantId);
+  const nextTemplate = { ...template, variantId, id: template.id || getGoalTemplateId(template.goalId, template.coreBlockId, variantId) };
+  const rows = previousRows.slice();
+  const index = rows.findIndex((item) => {
+    const itemVariantId = normalizeVariantId(item.variantId || parseVariantIdFromTemplateId(item.id));
+    return item.id === nextTemplate.id || item.goalId === nextTemplate.goalId && item.coreBlockId === nextTemplate.coreBlockId && itemVariantId === variantId;
+  });
+  const next2 = toGoalTemplateStorageRow(nextTemplate, index >= 0 ? rows[index] : null);
+  const normalizedRows = rows.slice();
+  if (index >= 0) normalizedRows[index] = next2;
+  else normalizedRows.push(next2);
+  return { ...goalSettings, goalTemplates: normalizedRows };
+}
+function removeGoalTemplateFromSettings(goalSettings, goalId, coreBlockId, variantId = "default") {
+  const normalizedVariantId = normalizeVariantId(variantId);
+  return {
+    ...goalSettings,
+    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => {
+      const itemVariantId = normalizeVariantId(template.variantId || parseVariantIdFromTemplateId(template.id));
+      return !(template.goalId === goalId && template.coreBlockId === coreBlockId && itemVariantId === normalizedVariantId);
+    })
+  };
+}
+function removeGoalTemplatesForGoal(goalSettings, goalId) {
+  return {
+    ...goalSettings,
+    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => template.goalId !== goalId)
+  };
+}
+function cleanupGoalTemplateStorage(goalSettings) {
+  const beforeRows = goalSettings.goalTemplates || [];
+  const templates = getGoalTemplates(goalSettings);
+  const afterRows = templates.map((template) => toGoalTemplateStorageRow(template));
+  const beforeJson = JSON.stringify(beforeRows);
+  const afterJson = JSON.stringify(afterRows);
+  return {
+    goalSettings: { ...goalSettings, goalTemplates: afterRows },
+    summary: {
+      beforeCount: beforeRows.length,
+      afterCount: afterRows.length,
+      removedDuplicateCount: Math.max(0, beforeRows.length - afterRows.length),
+      changed: beforeJson !== afterJson
+    }
+  };
+}
+function compactText(value) {
+  return String(value ?? "").trim();
+}
+function normalizeTextToken(value) {
+  return compactText(value).toLowerCase();
+}
+const DEFAULT_THEME_PATH_OPTIONS = {
+  stripLeadingHashes: true
+};
+function themePathOptions(options = {}) {
+  return { ...DEFAULT_THEME_PATH_OPTIONS, ...options };
+}
+function normalizeThemePath(value, options = {}) {
+  return normalizeHierarchyPathValue(value, themePathOptions(options)) || "";
+}
+function normalizeThemePathOrNull(value, options = {}) {
+  return normalizeHierarchyPathValue(value, themePathOptions(options));
+}
+function getThemePathCandidates(value, options = {}) {
+  const parts = normalizeHierarchyPathParts(value, themePathOptions(options));
+  const result = [];
+  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
+  return result;
+}
+function getThemePathLeaf(value, options = {}) {
+  return getHierarchyPathLeaf(value, themePathOptions(options)) || normalizeThemePath(value, options);
+}
+function getThemePathParent(value, options = {}) {
+  return getHierarchyPathParent(value, themePathOptions(options));
+}
+function buildThemePathMap(themes, options = {}) {
+  return new Map((themes || []).map((theme) => [normalizeThemePath(theme.path, options), theme]).filter(([path]) => !!path));
+}
+function templateFieldTokenSources(field) {
+  if (!field) return [];
+  return [field.key, field.label, field.semantic, field.semanticType, field.role];
+}
+function normalizeFieldToken(value) {
+  return normalizeTextToken(value);
+}
+function normalizeFieldLabelToken(value) {
+  return compactText(value);
+}
+function getTemplateFieldLookupTokens(field) {
+  return templateFieldTokenSources(field).map(normalizeFieldToken).filter(Boolean);
+}
+function getTemplateFieldLabelTokens(field) {
+  return templateFieldTokenSources(field).map(normalizeFieldLabelToken).filter(Boolean);
+}
+function templateFieldMatchesAliases(field, aliases2) {
+  const lowerTokens = getTemplateFieldLookupTokens(field);
+  const labelTokens = getTemplateFieldLabelTokens(field);
+  const lowerAliases = aliases2.map(normalizeFieldToken);
+  return lowerTokens.some((token2) => lowerAliases.includes(token2)) || labelTokens.some((token2) => aliases2.includes(token2));
+}
+function templateFieldSemanticToken(field) {
+  return normalizeFieldToken(field?.semantic || field?.semanticType);
+}
+function isThemeTemplateField(field) {
+  const key = normalizeFieldToken(field?.key);
+  const label = normalizeFieldLabelToken(field?.label);
+  const semantic = templateFieldSemanticToken(field);
+  return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath") || semantic === "theme";
+}
+function isIconTemplateField(field) {
+  const key = normalizeFieldToken(field?.key);
+  const label = normalizeFieldLabelToken(field?.label);
+  const semantic = templateFieldSemanticToken(field);
+  return key === "icon" || key === "图标" || label === "图标" || semantic === "icon";
+}
+function isGoalPathTemplateField(field) {
+  const key = normalizeFieldToken(field?.key);
+  const label = normalizeFieldLabelToken(field?.label);
+  const semantic = templateFieldSemanticToken(field);
+  return key === "goalpath" || key === "目标" || label === "目标" || label === "目标路径" || semantic.includes("goalpath");
+}
+function isOptionLikeValue$1(value) {
+  return !!value && typeof value === "object" && ("value" in value || "label" in value);
+}
+function readOptionText$2(value) {
+  if (isOptionLikeValue$1(value)) {
+    const rawValue = value.value ?? value.label;
+    const rawLabel = value.label ?? value.value;
+    const optionValue = String(rawValue ?? "").trim();
+    const optionLabel = String(rawLabel ?? "").trim();
+    return {
+      value: optionValue || optionLabel,
+      label: optionLabel || optionValue
+    };
+  }
+  const text2 = String(value ?? "").trim();
+  return { value: text2, label: text2 };
+}
+function readComparableValues(value, options = {}) {
+  const text2 = readOptionText$2(value);
+  const rawValues = [text2.value, text2.label].map((entry) => String(entry ?? "").trim()).filter(Boolean);
+  const values2 = new Set(rawValues);
+  if (options.normalize) {
+    for (const raw of rawValues) {
+      const normalized2 = options.normalize(raw);
+      if (normalized2) {
+        values2.add(normalized2);
+        if (options.matchLeaf) {
+          values2.add(normalized2.split("/").filter(Boolean).pop() || normalized2);
+        }
+      }
+    }
+  }
+  return Array.from(values2);
+}
+function findMatchingOption(options, rawValue, matchOptions = {}) {
+  if (!Array.isArray(options) || options.length === 0) return void 0;
+  const rawComparable = new Set(readComparableValues(rawValue, matchOptions));
+  if (rawComparable.size === 0) return void 0;
+  return options.find((option) => {
+    const optionComparable = readComparableValues(option, matchOptions);
+    return optionComparable.some((entry) => rawComparable.has(entry));
+  });
+}
+function readOptionText$1(value) {
+  return readOptionText$2(value).value;
+}
+function isGeneratedGoalTemplateName(value) {
+  const text2 = compactText(value);
+  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "默认预设" || text2 === "默认模板" || text2 === "未命名预设";
+}
+function readFieldDefault$1(fields, predicate) {
+  for (const field of fields || []) {
+    if (!predicate(field)) continue;
+    const value = readOptionText$1(field.defaultValue);
+    if (value && value !== "{{goal.themePath}}") return value;
+  }
+  return "";
+}
+function readGoalTemplateThemePath$1(template, goal) {
+  const values2 = template?.defaultValues || {};
+  return normalizeThemePath(
+    readOptionText$1(values2.themePath) || readOptionText$1(values2["主题"]) || readFieldDefault$1(template?.fields, isThemeTemplateField) || readOptionText$1(goal?.themePath)
+  );
+}
+function readGoalTemplateIcon$1(template, fallbackIcon) {
+  const values2 = template?.defaultValues || {};
+  return compactText(
+    readOptionText$1(values2.icon) || readOptionText$1(values2["图标"]) || readOptionText$1(values2["theme.icon"]) || readFieldDefault$1(template?.fields, isIconTemplateField) || fallbackIcon
+  );
+}
+function getGoalTemplateDisplayName$1(template, goal, fallback = "记录预设") {
+  const rawName = compactText(template?.name);
+  if (rawName && !isGeneratedGoalTemplateName(rawName)) return rawName;
+  const themeLabel = getThemePathLeaf(readGoalTemplateThemePath$1(template, goal));
+  if (themeLabel) return themeLabel;
+  const variantId = normalizeTemplateVariantId(compactText(template?.variantId));
+  const variantText = variantId.replace(/^legacy-/, "");
+  if (variantText && variantText !== DEFAULT_TEMPLATE_VARIANT_ID && !isGeneratedGoalTemplateName(variantText)) return variantText;
+  return fallback;
+}
+function getGoalTemplateDisplayInfo(template, goal, fallbackIcon) {
+  const rawName = compactText(template?.name);
+  const themePath = readGoalTemplateThemePath$1(template, goal);
+  const name = getGoalTemplateDisplayName$1(template, goal);
+  return {
+    name,
+    themePath,
+    icon: readGoalTemplateIcon$1(template, fallbackIcon),
+    variantId: normalizeTemplateVariantId(template?.variantId),
+    isGeneratedName: !rawName || isGeneratedGoalTemplateName(rawName)
+  };
+}
+const ALLOWED_SYSTEM_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
+const FORBIDDEN_DEFAULT_KEYS = /* @__PURE__ */ new Set([
+  "legacyOverrideId",
+  "legacyThemePath",
+  "goalId",
+  "目标ID",
+  "goalPath",
+  "目标",
+  "templateId",
+  "模板ID",
+  "templateSourceType",
+  "模板来源",
+  "templateVariantId",
+  "goalTemplateVariantId",
+  "变体ID",
+  "记录预设",
+  "period",
+  "periodId",
+  "cycleId",
+  "周期",
+  "周期ID",
+  "周期粒度",
+  "goalGranularity"
+]);
+function stableJson$1(value) {
+  const seen = /* @__PURE__ */ new WeakSet();
+  const normalize = (input) => {
+    if (input === void 0) return void 0;
+    if (input === null || typeof input !== "object") return input;
+    if (seen.has(input)) return "[Circular]";
+    seen.add(input);
+    if (Array.isArray(input)) return input.map(normalize);
+    const out = {};
+    Object.keys(input).sort().forEach((key) => {
+      const value2 = normalize(input[key]);
+      if (value2 !== void 0) out[key] = value2;
+    });
+    return out;
+  };
+  return JSON.stringify(normalize(value));
+}
+function compactFieldForStructureCompare$1(field) {
+  const source = field;
+  const out = {};
+  Object.keys(source || {}).sort().forEach((key) => {
+    if (key === "id" || key === "defaultValue" || key === "required") return;
+    const value = source[key];
+    if (value === void 0 || value === null || value === "") return;
+    out[key] = value;
+  });
+  return out;
+}
+function fieldsHaveSameStructure$1(left2, right2) {
+  const normalize = (fields) => (fields || []).map(compactFieldForStructureCompare$1);
+  return stableJson$1(normalize(left2)) === stableJson$1(normalize(right2));
+}
+function deriveRequiredFields$1(fields) {
+  return (fields || []).filter((field) => field?.required === true).map((field) => compactText(field.key || field.label)).filter(Boolean);
+}
+function equalStringSet$1(left2, right2) {
+  const a2 = new Set((left2 || []).map(compactText).filter(Boolean));
+  const b2 = new Set((right2 || []).map(compactText).filter(Boolean));
+  if (a2.size !== b2.size) return false;
+  for (const value of a2) if (!b2.has(value)) return false;
+  return true;
+}
+function getFieldDefaultMap$1(fields) {
+  const result = {};
+  for (const field of fields || []) {
+    const key = compactText(field.key || field.label);
+    if (!key) continue;
+    const value = field.defaultValue;
+    if (value !== void 0 && value !== null && compactText(value) !== "") result[key] = compactText(value);
+  }
+  return result;
+}
+function compactDefaultValues(values2, baseFields, goal) {
+  const baseDefaults = getFieldDefaultMap$1(baseFields);
+  const goalThemePath = compactText(goal?.themePath);
+  const result = {};
+  Object.entries(values2 || {}).forEach(([key, raw]) => {
+    if (FORBIDDEN_DEFAULT_KEYS.has(key)) return;
+    const value = compactText(raw);
+    if (!value) return;
+    if (isSystemRecordContextField(key) && !ALLOWED_SYSTEM_DEFAULT_KEYS.has(key)) return;
+    if ((key === "themePath" || key === "主题") && (value === goalThemePath || value === "{{goal.themePath}}")) return;
+    if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
+    result[key] = raw;
+  });
+  return Object.keys(result).length ? result : void 0;
+}
+function normalizePeriodPolicyForTemplate(template) {
+  if (!isPeriodAwareCoreBlock(template.coreBlockId)) return void 0;
+  const policy = template.periodPolicy;
+  if (policy && policy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
+  }
+  return void 0;
+}
+function compactGoalTemplateForStorage(template, options = {}) {
+  const coreBlock = options.coreBlock || null;
+  const baseFields = coreBlock?.fields;
+  const next2 = {
+    ...template
+  };
+  if (!isPeriodAwareCoreBlock(template.coreBlockId)) {
+    next2.periodPolicy = void 0;
+  } else {
+    next2.periodPolicy = normalizePeriodPolicyForTemplate(template);
+  }
+  if (coreBlock) {
+    if (fieldsHaveSameStructure$1(template.fields, baseFields)) next2.fields = void 0;
+    if (compactText(template.outputTemplate) === compactText(coreBlock.outputTemplate)) next2.outputTemplate = void 0;
+    if (compactText(template.targetFile) === compactText(coreBlock.targetFile)) next2.targetFile = void 0;
+    if (compactText(template.appendUnderHeader) === compactText(coreBlock.appendUnderHeader)) next2.appendUnderHeader = void 0;
+    const explicitRequired = template.requiredFields && template.requiredFields.length ? template.requiredFields : deriveRequiredFields$1(template.fields);
+    const baseRequired = deriveRequiredFields$1(baseFields);
+    next2.requiredFields = equalStringSet$1(explicitRequired || [], baseRequired) ? void 0 : (explicitRequired || []).filter(Boolean);
+  } else if (next2.requiredFields && !next2.requiredFields.length) {
+    next2.requiredFields = void 0;
+  }
+  next2.defaultValues = compactDefaultValues(template.defaultValues, baseFields, options.goal);
+  return next2;
+}
+function describeGoalTemplateStorageDiff(template) {
+  const parts = [];
+  if (template.fields?.length) parts.push("字段覆盖");
+  if (template.defaultValues && Object.keys(template.defaultValues).length) parts.push(`默认值 ${Object.keys(template.defaultValues).length}`);
+  if (template.outputTemplate) parts.push("输出覆盖");
+  if (template.targetFile) parts.push("文件覆盖");
+  if (template.appendUnderHeader) parts.push("标题覆盖");
+  if (template.requiredFields?.length) parts.push("必填覆盖");
+  if (template.periodPolicy) parts.push(`周期 ${template.periodPolicy.granularity}`);
+  return parts;
+}
+const SYSTEM_DISPLAY_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
+function goalTemplateHasCustomOverrides(template, coreBlock, goal) {
+  if (!template || !coreBlock || template.enabled === false) return false;
+  const patch = compactGoalTemplateForStorage(template, { coreBlock, goal });
+  if (patch.fields?.length) return true;
+  if (compactText(patch.outputTemplate)) return true;
+  if (compactText(patch.targetFile)) return true;
+  if (compactText(patch.appendUnderHeader)) return true;
+  if (patch.requiredFields?.length) return true;
+  const customDefaultKeys = Object.keys(patch.defaultValues || {}).filter((key) => !SYSTEM_DISPLAY_DEFAULT_KEYS.has(key));
+  return customDefaultKeys.length > 0;
+}
+function inferGoalTemplateEditMode(template, coreBlock, goal) {
+  if (template?.enabled === false) return "disabled";
+  return goalTemplateHasCustomOverrides(template, coreBlock, goal) ? "override" : "inherit";
+}
+const ENERGY_QUICK_LEVELS = [20, 40, 60, 80, 100];
+const DEFAULT_ENERGY_SETTINGS = {
+  defaultGoalId: "",
+  defaultThemePath: ""
+};
+const ENERGY_QUICK_LEVEL_LABELS = {
+  20: "很低",
+  40: "偏低",
+  60: "一般",
+  80: "较高",
+  100: "充沛"
+};
+function normalizeEnergyScore(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(Math.min(100, Math.max(0, value)));
+}
+function toEnergyQuickLevel(value) {
+  const score = normalizeEnergyScore(value);
+  return ENERGY_QUICK_LEVELS.reduce((best, candidate) => Math.abs(candidate - score) < Math.abs(best - score) ? candidate : best, ENERGY_QUICK_LEVELS[0]);
+}
+function isEnergyQuickLevel(value) {
+  return ENERGY_QUICK_LEVELS.includes(value);
+}
+function calculateDetailedEnergyScore(brainScore, physicalScore) {
+  const brain = normalizeEnergyScore(brainScore);
+  const physical = normalizeEnergyScore(physicalScore);
+  return normalizeEnergyScore((brain + physical) / 2);
+}
+const RECORD_SCHEMA_VERSION = 2;
+const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+function encodeTime(time2, length2 = 10) {
+  let value = Math.max(0, Math.floor(time2));
+  let output = "";
+  for (let i2 = 0; i2 < length2; i2++) {
+    output = CROCKFORD[value % 32] + output;
+    value = Math.floor(value / 32);
+  }
+  return output;
+}
+function randomChars(length2) {
+  const values2 = new Uint8Array(length2);
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.getRandomValues) {
+    cryptoApi.getRandomValues(values2);
+  } else {
+    for (let i2 = 0; i2 < values2.length; i2++) values2[i2] = Math.floor(Math.random() * 256);
+  }
+  let output = "";
+  for (const value of values2) output += CROCKFORD[value % 32];
+  return output;
+}
+function recordIdPrefixForCoreBlock(coreBlock) {
+  switch (String(coreBlock || "").trim().toLowerCase()) {
+    case "task":
+      return "task";
+    case "task-series":
+      return "taskseries";
+    case "task-session":
+      return "tasksession";
+    case "energy":
+      return "energy";
+    default:
+      return "rec";
+  }
+}
+function createRecordId(coreBlock, now2 = Date.now()) {
+  const prefix2 = recordIdPrefixForCoreBlock(coreBlock);
+  return `${prefix2}.${encodeTime(now2)}${randomChars(16)}`;
+}
+function isStableRecordId(value) {
+  return /^(?:rec|task|taskseries|tasksession|energy)\.[0-9A-HJKMNP-TV-Z]{26}$/.test(String(value || "").trim());
+}
+const DEFAULT_MULTI_SEPARATOR = ", ";
+function isFieldCodecMultiValue(def) {
+  const inputType = def?.inputType;
+  return def?.cardinality === "multi" || inputType === "multiSelect" || inputType === "multiPath" || inputType === "multiTag" || inputType === "multiImage";
+}
+function isFieldCodecPath(def) {
+  return def?.type === "path" || def?.inputType === "path" || def?.inputType === "multiPath" || def?.semantic === "themePath" || def?.semantic === "categoryPath";
+}
+function isFieldCodecTag(def) {
+  return def?.type === "tags" || def?.inputType === "tag" || def?.inputType === "multiTag" || def?.semantic === "tags" || def?.semantic === "goals";
+}
+function isFieldCodecImage(def) {
+  return def?.type === "image" || def?.inputType === "image" || def?.inputType === "multiImage" || def?.semantic === "image";
+}
+function splitMarkdownMultiValue(value) {
+  if (Array.isArray(value)) return value.flatMap(splitMarkdownMultiValue);
+  return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function decodeUnknownMarkdownKvValue(value) {
+  const raw = String(value ?? "").trim();
+  if (/^(true|false)$/i.test(raw)) return raw.toLowerCase() === "true";
+  if (raw !== "") {
+    const numeric = Number(raw);
+    if (!Number.isNaN(numeric)) return numeric;
+  }
+  return raw;
+}
+function decodeNumberValue(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const raw = String(value ?? "").trim();
+  if (!raw) return void 0;
+  const numeric = Number(raw);
+  return Number.isNaN(numeric) ? void 0 : numeric;
+}
+function decodeBooleanValue(value) {
+  if (typeof value === "boolean") return value;
+  const raw = normalizeTextToken(value);
+  if (!raw) return void 0;
+  if (["true", "yes", "y", "1", "是"].includes(raw)) return true;
+  if (["false", "no", "n", "0", "否"].includes(raw)) return false;
+  return void 0;
+}
+function decodeImageValue(value) {
+  return normalizeImageValue(value);
+}
+function valueKind(def) {
+  return def?.type;
+}
+function semanticKind(def) {
+  return def?.semantic;
+}
+function decodeMarkdownFieldValue(value, def) {
+  if (value === void 0 || value === null) return void 0;
+  if (isFieldCodecMultiValue(def)) {
+    if (isFieldCodecTag(def)) return parseTagList(value);
+    if (isFieldCodecImage(def)) {
+      return splitMarkdownMultiValue(value).map(decodeImageValue).filter((img) => !!img);
+    }
+    if (isFieldCodecPath(def)) {
+      return splitMarkdownMultiValue(value).map(normalizeHierarchyPath).filter((path) => !!path);
+    }
+    return splitMarkdownMultiValue(value);
+  }
+  if (isFieldCodecTag(def)) return parseTagList(value);
+  if (isFieldCodecImage(def)) return decodeImageValue(value);
+  if (isFieldCodecPath(def)) return normalizeHierarchyPath(value) || void 0;
+  if (valueKind(def) === "number" || semanticKind(def) === "duration" || semanticKind(def) === "rating") {
+    return decodeNumberValue(value);
+  }
+  if (valueKind(def) === "boolean") return decodeBooleanValue(value);
+  return decodeUnknownMarkdownKvValue(value);
+}
+function imageFieldValueToMarkdown(value, options = {}) {
+  const src = String(value.src || "").trim();
+  if (!src) return "";
+  if (options.embedWikiImages && value.kind === "wikilink") return `![[${src}]]`;
+  return src;
+}
+function encodeFieldValueForMarkdown(value, def, options = {}) {
+  if (value === void 0 || value === null) return "";
+  if (Array.isArray(value)) {
+    const separator = options.multiSeparator ?? DEFAULT_MULTI_SEPARATOR;
+    return value.map((item) => encodeFieldValueForMarkdown(item, { ...def, cardinality: "single" }, options)).map((part) => part.trim()).filter(Boolean).join(separator);
+  }
+  if (isFieldCodecImage(def) || value && typeof value === "object" && "src" in value) {
+    const image = normalizeImageValue(value);
+    return image ? imageFieldValueToMarkdown(image, options) : "";
+  }
+  if (value && typeof value === "object") {
+    const objectValue = value;
+    if ("value" in objectValue) return encodeFieldValueForMarkdown(objectValue.value, def, options);
+    if ("label" in objectValue) return String(objectValue.label ?? "").trim();
+  }
+  if (typeof value === "boolean") return value ? "true" : "false";
+  return String(value).trim();
+}
+function formatFieldValueForTemplate(value, def) {
+  return encodeFieldValueForMarkdown(value, def, { multiSeparator: ", " });
+}
+const FIELD_CODEC_PRESETS = {
+  themePath: { type: "path", inputType: "path", semantic: "themePath", hierarchical: true },
+  categoryPath: { type: "path", inputType: "path", semantic: "categoryPath", hierarchical: true },
+  tags: { type: "tags", inputType: "multiTag", semantic: "tags", cardinality: "multi" },
+  goalPaths: { type: "tags", inputType: "multiTag", semantic: "goals", cardinality: "multi" },
+  image: { type: "image", inputType: "image", semantic: "image" },
+  number: { type: "number", inputType: "number" },
+  text: { type: "string", inputType: "text" }
+};
+function decodeMarkdownString(value, preset = FIELD_CODEC_PRESETS.text) {
+  const decoded = decodeMarkdownFieldValue(value, preset);
+  const encoded = encodeFieldValueForMarkdown(decoded, preset).trim();
+  return encoded || void 0;
+}
+function decodeMarkdownNumber(value) {
+  const decoded = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.number);
+  return typeof decoded === "number" && Number.isFinite(decoded) ? decoded : void 0;
+}
+function normalizeMetaKey(key) {
+  return String(key ?? "").trim().toLowerCase();
+}
+function unique$1(values2) {
+  return Array.from(new Set(values2.map((value) => value.trim()).filter(Boolean)));
+}
+function buildTitle(content, tags2) {
+  let title = "";
+  const trimmed = content.trim();
+  if (trimmed) title = trimmed.split(/\r?\n/)[0];
+  else if (tags2.length > 0) title = tags2.join(", ");
+  return title.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trim().slice(0, 80);
+}
+function parseDate2(value) {
+  const raw = value.trim();
+  if (!raw) return void 0;
+  return normalizeDateStr(raw) || raw;
+}
+function decodeRecordContentLines(contentLines, parentFolder) {
+  let categoryKey = null;
+  let date2;
+  const tags2 = [];
+  const goalPaths = [];
+  const extra = {};
+  let content = "";
+  let contentStarted = false;
+  let icon;
+  let period;
+  let rating;
+  let image;
+  let pintu;
+  let theme;
+  let templateId;
+  let goalId;
+  let cycleId;
+  let coreBlock;
+  let recordId;
+  let schemaVersion;
+  let status;
+  let templateSourceType;
+  let scheduledDate;
+  let startDate;
+  let dueDate;
+  let completedAt;
+  let cancelledAt;
+  let skippedAt;
+  let createdAt;
+  let priority;
+  let expectedDurationMinutes;
+  let energyDemand;
+  let brainDemand;
+  let physicalDemand;
+  let seriesId;
+  let recurrenceUnit;
+  let recurrenceInterval;
+  let recurrenceAnchor;
+  let seriesStartDate;
+  let currentTaskId;
+  let rolloverPolicy;
+  let taskId;
+  let sessionStartedAt;
+  let sessionEndedAt;
+  let sessionDurationMinutes;
+  let sessionResult;
+  let sessionSource;
+  let suggestedDurationMinutes;
+  let startEnergyRecordId;
+  let endEnergyRecordId;
+  let energyDelta;
+  let brainDelta;
+  let physicalDelta;
+  for (const rawLine of contentLines) {
+    const line2 = rawLine.trim();
+    if (!contentStarted) {
+      if (line2 === "") continue;
+      const kv = line2.match(/^([^:：]{1,32})[:：]{1,2}\s*(.*)$/);
+      if (kv) {
+        const rawKey = kv[1].trim();
+        const value = kv[2] || "";
+        const key = normalizeMetaKey(rawKey);
+        if (["记录id", "recordid"].includes(key)) recordId = value.trim() || void 0;
+        else if (["记录版本", "recordversion", "schemaversion"].includes(key)) {
+          const parsed = Number.parseInt(value.trim(), 10);
+          if (Number.isFinite(parsed)) schemaVersion = parsed;
+        } else if (["分类", "类别", "category", "categorypath", "分类路径"].includes(key)) categoryKey = decodeMarkdownString(value, FIELD_CODEC_PRESETS.categoryPath) || "";
+        else if (["模板id", "templateid"].includes(key)) templateId = value.trim();
+        else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
+          const source = value.trim();
+          if (["core-block", "goal-template"].includes(source)) templateSourceType = source;
+        } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
+        else if (["标签", "tag", "tags"].includes(key)) tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
+        else if (["目标id", "goalid"].includes(key)) goalId = value.trim();
+        else if (["周期id", "cycleid"].includes(key)) cycleId = value.trim();
+        else if (["系列id", "seriesid"].includes(key)) seriesId = value.trim();
+        else if (["重复单位", "recurrenceunit"].includes(key)) {
+          const unit = value.trim().toLowerCase();
+          if (["day", "week", "month", "quarter", "year"].includes(unit)) recurrenceUnit = unit;
+        } else if (["重复间隔", "recurrenceinterval"].includes(key)) {
+          const interval = Number.parseInt(value.trim(), 10);
+          if (Number.isInteger(interval) && interval > 0) recurrenceInterval = interval;
+        } else if (["重复锚点", "recurrenceanchor"].includes(key)) {
+          const anchor = value.trim().toLowerCase();
+          if (["scheduled", "start", "due", "completion"].includes(anchor)) recurrenceAnchor = anchor;
+        } else if (["系列开始日期", "seriesstartdate"].includes(key)) seriesStartDate = parseDate2(value);
+        else if (["当前任务id", "currenttaskid"].includes(key)) currentTaskId = value.trim() || void 0;
+        else if (["滚动策略", "rolloverpolicy"].includes(key)) {
+          if (value.trim().toLowerCase() === "carry") rolloverPolicy = "carry";
+        } else if (coreBlock === "task-session" && ["任务id", "taskid"].includes(key)) taskId = value.trim() || void 0;
+        else if (coreBlock === "task-session" && ["开始于", "sessionstartedat"].includes(key)) sessionStartedAt = value.trim() || void 0;
+        else if (coreBlock === "task-session" && ["结束于", "sessionendedat"].includes(key)) sessionEndedAt = value.trim() || void 0;
+        else if (coreBlock === "task-session" && ["时长", "sessiondurationminutes"].includes(key)) sessionDurationMinutes = decodeMarkdownNumber(value);
+        else if (coreBlock === "task-session" && ["结果", "sessionresult"].includes(key)) {
+          const result = value.trim().toLowerCase();
+          if (["work-block-ended", "task-completed"].includes(result)) sessionResult = result;
+        } else if (coreBlock === "task-session" && ["来源", "sessionsource"].includes(key)) {
+          const source = value.trim().toLowerCase();
+          if (["timer", "energy-view", "unknown"].includes(source)) sessionSource = source;
+        } else if (coreBlock === "task-session" && ["建议时长", "suggesteddurationminutes"].includes(key)) suggestedDurationMinutes = decodeMarkdownNumber(value);
+        else if (coreBlock === "task-session" && ["开始精力记录id", "startenergyrecordid"].includes(key)) startEnergyRecordId = value.trim() || void 0;
+        else if (coreBlock === "task-session" && ["结束精力记录id", "endenergyrecordid"].includes(key)) endEnergyRecordId = value.trim() || void 0;
+        else if (coreBlock === "task-session" && ["精力变化", "energydelta"].includes(key)) energyDelta = decodeMarkdownNumber(value);
+        else if (coreBlock === "task-session" && ["脑力变化", "braindelta"].includes(key)) brainDelta = decodeMarkdownNumber(value);
+        else if (coreBlock === "task-session" && ["体力变化", "physicaldelta"].includes(key)) physicalDelta = decodeMarkdownNumber(value);
+        else if (["核心block", "coreblock"].includes(key)) coreBlock = value.trim();
+        else if (["状态", "status"].includes(key)) status = value.trim().toLowerCase();
+        else if (key === "目标") goalPaths.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths));
+        else if (["日期", "date"].includes(key)) date2 = parseDate2(value);
+        else if (["计划日期", "scheduleddate"].includes(key)) scheduledDate = parseDate2(value);
+        else if (["开始日期", "startdate"].includes(key)) startDate = parseDate2(value);
+        else if (["截止日期", "duedate"].includes(key)) dueDate = parseDate2(value);
+        else if (["创建于", "createdat"].includes(key)) createdAt = value.trim() || void 0;
+        else if (["完成于", "completedat"].includes(key)) completedAt = value.trim() || void 0;
+        else if (["取消于", "cancelledat"].includes(key)) cancelledAt = value.trim() || void 0;
+        else if (["跳过于", "skippedat"].includes(key)) skippedAt = value.trim() || void 0;
+        else if (["优先级", "priority"].includes(key)) {
+          const p2 = value.trim().toLowerCase();
+          if (["lowest", "low", "medium", "high", "highest"].includes(p2)) priority = p2;
+        } else if (["预计时长", "expectedduration", "expecteddurationminutes"].includes(key)) expectedDurationMinutes = decodeMarkdownNumber(value);
+        else if (["精力要求", "energydemand"].includes(key)) energyDemand = value.trim().toLowerCase() || void 0;
+        else if (["脑力要求", "braindemand"].includes(key)) brainDemand = value.trim().toLowerCase() || void 0;
+        else if (["体力要求", "physicaldemand"].includes(key)) physicalDemand = value.trim().toLowerCase() || void 0;
+        else if (["周期", "period"].includes(key)) period = decodeMarkdownString(value);
+        else if (["评分", "rating"].includes(key)) {
+          const decodedRating = decodeMarkdownNumber(value);
+          if (decodedRating !== void 0) rating = decodedRating;
+          else {
+            const visualRating = String(value || "").trim();
+            if (visualRating) {
+              extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
+              if (!pintu) pintu = visualRating;
+              if (!image) image = visualRating;
+            }
+          }
+        } else if (["图标", "icon"].includes(key)) icon = value.trim();
+        else if (["评图", "pintu", "图片", "image"].includes(key)) {
+          image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
+          pintu = image;
+        } else if (["内容", "content"].includes(key)) {
+          contentStarted = true;
+          content = value;
+        } else extra[rawKey] = decodeUnknownMarkdownKvValue(value);
+      } else {
+        contentStarted = true;
+        content = rawLine;
+      }
+    } else content += (content ? "\n" : "") + rawLine;
+  }
+  const finalTags = unique$1(tags2);
+  const finalGoalPaths = unique$1(goalPaths);
+  return {
+    recordId,
+    schemaVersion,
+    title: buildTitle(content, finalTags),
+    content: content.trim(),
+    categoryKey: categoryKey || parentFolder || "",
+    status,
+    date: date2,
+    scheduledDate,
+    startDate,
+    dueDate,
+    completedAt,
+    cancelledAt,
+    skippedAt,
+    createdAt,
+    tags: finalTags,
+    goalPaths: finalGoalPaths,
+    goalId,
+    cycleId,
+    coreBlock,
+    extra,
+    icon,
+    period,
+    rating,
+    image,
+    pintu,
+    theme,
+    templateId,
+    templateSourceType,
+    priority,
+    expectedDurationMinutes,
+    energyDemand,
+    brainDemand,
+    physicalDemand,
+    seriesId,
+    recurrenceUnit,
+    recurrenceInterval,
+    recurrenceAnchor,
+    seriesStartDate,
+    currentTaskId,
+    rolloverPolicy,
+    taskId,
+    sessionStartedAt,
+    sessionEndedAt,
+    sessionDurationMinutes,
+    sessionResult,
+    sessionSource,
+    suggestedDurationMinutes,
+    startEnergyRecordId,
+    endEnergyRecordId,
+    energyDelta,
+    brainDelta,
+    physicalDelta
+  };
+}
+function markdownScalar(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean).join(", ");
+  if (typeof value === "object") return "";
+  return String(value).trim();
+}
+const TASK_FIELD_ORDER = [
+  ["状态", ["状态", "status"]],
+  ["目标ID", ["目标ID", "goalId"]],
+  ["目标", ["目标", "goalPath", "goalPaths"]],
+  ["主题", ["主题", "themePath"]],
+  ["创建于", ["创建于", "createdAt"]],
+  ["优先级", ["优先级", "priority"]],
+  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
+  ["精力要求", ["精力要求", "energyDemand"]],
+  ["脑力要求", ["脑力要求", "brainDemand"]],
+  ["体力要求", ["体力要求", "physicalDemand"]],
+  ["计划日期", ["计划日期", "scheduledDate"]],
+  ["开始日期", ["开始日期", "startDate"]],
+  ["截止日期", ["截止日期", "dueDate"]],
+  ["完成于", ["完成于", "completedAt"]],
+  ["取消于", ["取消于", "cancelledAt"]],
+  ["跳过于", ["跳过于", "skippedAt"]],
+  ["系列ID", ["系列ID", "seriesId"]],
+  ["模板ID", ["模板ID", "templateId"]],
+  ["模板来源", ["模板来源", "templateSourceType"]],
+  ["内容", ["内容", "content", "正文", "title"]]
+];
+const TASK_SESSION_FIELD_ORDER = [
+  ["任务ID", ["任务ID", "taskId"]],
+  ["系列ID", ["系列ID", "seriesId"]],
+  ["目标ID", ["目标ID", "goalId"]],
+  ["目标", ["目标", "goalPath", "goalPaths"]],
+  ["主题", ["主题", "themePath"]],
+  ["开始于", ["开始于", "sessionStartedAt"]],
+  ["结束于", ["结束于", "sessionEndedAt"]],
+  ["时长", ["时长", "sessionDurationMinutes"]],
+  ["结果", ["结果", "sessionResult"]],
+  ["来源", ["来源", "sessionSource"]],
+  ["建议时长", ["建议时长", "suggestedDurationMinutes"]],
+  ["开始精力记录ID", ["开始精力记录ID", "startEnergyRecordId"]],
+  ["结束精力记录ID", ["结束精力记录ID", "endEnergyRecordId"]],
+  ["精力变化", ["精力变化", "energyDelta"]],
+  ["脑力变化", ["脑力变化", "brainDelta"]],
+  ["体力变化", ["体力变化", "physicalDelta"]]
+];
+const TASK_SERIES_FIELD_ORDER = [
+  ["状态", ["状态", "status"]],
+  ["目标ID", ["目标ID", "goalId"]],
+  ["目标", ["目标", "goalPath", "goalPaths"]],
+  ["主题", ["主题", "themePath"]],
+  ["优先级", ["优先级", "priority"]],
+  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
+  ["精力要求", ["精力要求", "energyDemand"]],
+  ["脑力要求", ["脑力要求", "brainDemand"]],
+  ["体力要求", ["体力要求", "physicalDemand"]],
+  ["重复单位", ["重复单位", "recurrenceUnit"]],
+  ["重复间隔", ["重复间隔", "recurrenceInterval"]],
+  ["重复锚点", ["重复锚点", "recurrenceAnchor"]],
+  ["系列开始日期", ["系列开始日期", "seriesStartDate"]],
+  ["当前任务ID", ["当前任务ID", "currentTaskId"]],
+  ["滚动策略", ["滚动策略", "rolloverPolicy"]],
+  ["内容", ["内容", "content", "正文", "title"]]
+];
+function firstValue(fields, keys) {
+  for (const key of keys) {
+    const value = markdownScalar(fields[key]);
+    if (value) return value;
+  }
+  return "";
+}
+function encodeRecordBlock(document2) {
+  const schemaVersion = document2.schemaVersion ?? RECORD_SCHEMA_VERSION;
+  const fields = document2.fields || {};
+  const lines = ["<!-- start -->", `记录ID:: ${document2.recordId}`, `记录版本:: ${schemaVersion}`, `核心Block:: ${document2.coreBlock}`];
+  const emitted = /* @__PURE__ */ new Set();
+  if (document2.coreBlock === "task") {
+    for (const [label, keys] of TASK_FIELD_ORDER) {
+      let value = firstValue(fields, keys);
+      if (label === "状态" && !value) value = "open";
+      if (label === "创建于" && !value) value = (/* @__PURE__ */ new Date()).toISOString();
+      if (value) {
+        lines.push(`${label}:: ${value}`);
+        keys.forEach((key) => emitted.add(key));
+      }
+    }
+  } else if (document2.coreBlock === "task-session") {
+    for (const [label, keys] of TASK_SESSION_FIELD_ORDER) {
+      const value = firstValue(fields, keys);
+      if (value) lines.push(`${label}:: ${value}`);
+    }
+  } else if (document2.coreBlock === "task-series") {
+    for (const [label, keys] of TASK_SERIES_FIELD_ORDER) {
+      let value = firstValue(fields, keys);
+      if (label === "状态" && !value) value = "active";
+      if (label === "重复间隔" && !value) value = "1";
+      if (label === "重复锚点" && !value) value = "scheduled";
+      if (label === "滚动策略" && !value) value = "carry";
+      if (value) lines.push(`${label}:: ${value}`);
+    }
+  } else {
+    for (const [key, raw] of Object.entries(fields)) {
+      if (["记录ID", "recordId", "id", "记录版本", "schemaVersion", "核心Block", "coreBlock"].includes(key)) continue;
+      const value = markdownScalar(raw);
+      if (value) lines.push(`${key}:: ${value}`);
+    }
+  }
+  lines.push("<!-- end -->");
+  return lines.join("\n");
+}
+function ensureRecordEnvelope(markdown, input) {
+  const trimmed = markdown.trim();
+  const lines = trimmed.split(/\r?\n/);
+  if (lines[0]?.trim() !== "<!-- start -->" || lines[lines.length - 1]?.trim() !== "<!-- end -->") {
+    throw new Error("Record Foundation v2 只允许写入 Markdown Record Block。");
+  }
+  const body = lines.slice(1, -1).filter((line2) => !/^\s*(?:记录ID|recordId|记录版本|schemaVersion|核心Block|coreBlock)\s*[:：]{1,2}/i.test(line2));
+  return ["<!-- start -->", `记录ID:: ${input.recordId}`, `记录版本:: ${input.schemaVersion ?? RECORD_SCHEMA_VERSION}`, `核心Block:: ${input.coreBlock}`, ...body, "<!-- end -->"].join("\n");
+}
+const ENERGY_TARGET_FILE = "01/目标精力.md";
+const ENERGY_APPEND_UNDER_HEADER = "## {{goalPath}}";
+function clean(value) {
+  return String(value || "").trim();
+}
+function buildEnergySnapshotRecord(input) {
+  const captureMode2 = input.captureMode || "realtime";
+  const timePrecision = input.timePrecision || (input.time ? "exact" : input.period ? "period" : "day");
+  const isDetailed = input.scoreMode === "detailed";
+  const brainScore = isDetailed ? normalizeEnergyScore(input.brainScore) : void 0;
+  const physicalScore = isDetailed ? normalizeEnergyScore(input.physicalScore) : void 0;
+  const score = isDetailed ? calculateDetailedEnergyScore(input.brainScore, input.physicalScore) : normalizeEnergyScore(input.score);
+  return {
+    ...input,
+    recordId: createRecordId("energy"),
+    goalId: clean(input.goalId) || void 0,
+    goalPath: clean(input.goalPath) || void 0,
+    themePath: clean(input.themePath) || void 0,
+    time: clean(input.time) || void 0,
+    period: clean(input.period) || void 0,
+    recordedAt: clean(input.recordedAt) || void 0,
+    source: clean(input.source) || void 0,
+    coreBlock: "energy",
+    subtype: "snapshot",
+    categoryKey: "精力",
+    score,
+    scoreMode: input.scoreMode || "quick",
+    captureMode: captureMode2,
+    timePrecision,
+    quickLevel: toEnergyQuickLevel(score),
+    brainScore,
+    physicalScore,
+    aggregateMethod: isDetailed ? "arithmetic-mean-v1" : void 0
+  };
+}
+function buildEnergySnapshotMarkdown(input) {
+  const record = "coreBlock" in input ? input : buildEnergySnapshotRecord(input);
+  return encodeRecordBlock({
+    recordId: record.recordId,
+    coreBlock: "energy",
+    fields: {
+      "记录子类型": "snapshot",
+      "目标ID": record.goalId,
+      "目标": record.goalPath,
+      "分类": "精力",
+      "日期": record.date,
+      "时间": record.time,
+      "时段": record.period,
+      "主题": record.themePath,
+      "精力值": record.score,
+      "脑力精力": record.brainScore,
+      "体力精力": record.physicalScore,
+      "综合算法": record.aggregateMethod,
+      "精力档位": record.quickLevel,
+      "评分模式": record.scoreMode,
+      "记录方式": record.captureMode,
+      "时间精度": record.timePrecision,
+      "记录时间": record.recordedAt,
+      "来源": record.source
+    }
+  });
+}
+const ENERGY_PROTOCOL_ACTION = "thinkos-energy";
+const ENERGY_PROTOCOL_VERSION = 1;
+function readInteger(raw) {
+  const text2 = String(raw ?? "").trim();
+  if (!/^-?\d+$/.test(text2)) return null;
+  const value = Number(text2);
+  return Number.isSafeInteger(value) ? value : null;
+}
+function parseEnergyProtocolParams(params) {
+  const version2 = readInteger(params.v);
+  if (version2 !== ENERGY_PROTOCOL_VERSION) {
+    return { ok: false, message: `不支持的精力快捷协议版本：${params.v || "缺失"}。` };
+  }
+  const mode = String(params.mode || "").trim();
+  if (mode === "quick") {
+    const score = readInteger(params.energy);
+    if (score == null || !isEnergyQuickLevel(score)) {
+      return { ok: false, message: "快捷精力只接受 20 / 40 / 60 / 80 / 100。" };
+    }
+    return { ok: true, payload: { version: 1, mode: "quick", score } };
+  }
+  if (mode === "detailed") {
+    const brainScore = readInteger(params.mental);
+    const physicalScore = readInteger(params.physical);
+    if (brainScore == null || brainScore < 0 || brainScore > 100) {
+      return { ok: false, message: "详细精力的脑力必须是 0–100 的整数。" };
+    }
+    if (physicalScore == null || physicalScore < 0 || physicalScore > 100) {
+      return { ok: false, message: "详细精力的体力必须是 0–100 的整数。" };
+    }
+    return {
+      ok: true,
+      payload: {
+        version: 1,
+        mode: "detailed",
+        brainScore: normalizeEnergyScore(brainScore),
+        physicalScore: normalizeEnergyScore(physicalScore)
+      }
+    };
+  }
+  return { ok: false, message: "精力快捷协议 mode 只支持 quick 或 detailed。" };
+}
+function resolveEnergyCaptureGoal(goals, defaultGoalId) {
+  const available = goals.filter((goal) => goal.status !== "archived");
+  const preferredId = String(defaultGoalId || "").trim();
+  if (preferredId) {
+    const preferred = available.find((goal) => goal.id === preferredId);
+    if (preferred) return preferred;
+  }
+  return available.find((goal) => goal.status === "active") || available[0] || null;
+}
+function readNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const text2 = String(value ?? "").trim();
+  if (!text2) return void 0;
+  const parsed = Number(text2);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function readText$1(value) {
+  const text2 = String(value ?? "").trim();
+  return text2 || void 0;
+}
+function readScore(value) {
+  const parsed = readNumber(value);
+  if (parsed == null || parsed < 0 || parsed > 100) return void 0;
+  return Math.round(parsed);
+}
+function isEnergyItem(item) {
+  const block2 = String(item.coreBlock || item.extra?.["核心Block"] || "").replace(/^core\./i, "").trim().toLowerCase();
+  if (block2 === "energy") return true;
+  const category = String(item.categoryKey || "").split("/")[0]?.trim();
+  return category === "精力";
+}
+function readEnergyItemSnapshot(item) {
+  if (!isEnergyItem(item)) return null;
+  const extra = item.extra || {};
+  const score = readScore(extra["精力值"]);
+  if (score == null) return null;
+  const explicitQuick = readNumber(extra["精力档位"]);
+  const quickLevel = explicitQuick != null && isEnergyQuickLevel(explicitQuick) ? explicitQuick : toEnergyQuickLevel(score);
+  const modeText = readText$1(extra["评分模式"]);
+  const scoreMode = modeText === "quick" || modeText === "detailed" || modeText === "percent" ? modeText : void 0;
+  const captureText = readText$1(extra["记录方式"]);
+  const captureMode2 = captureText === "realtime" || captureText === "retrospective" ? captureText : void 0;
+  const precisionText = readText$1(extra["时间精度"]);
+  const timePrecision = precisionText === "exact" || precisionText === "approximate" || precisionText === "period" || precisionText === "day" ? precisionText : void 0;
+  return {
+    score,
+    quickLevel,
+    brainScore: readScore(extra["脑力精力"]),
+    physicalScore: readScore(extra["体力精力"]),
+    scoreMode,
+    captureMode: captureMode2,
+    timePrecision,
+    date: readText$1(item.date || extra["日期"]),
+    time: readText$1(item.startTime || extra["时间"]),
+    recordedAt: readText$1(extra["记录时间"]),
+    source: readText$1(extra["来源"])
+  };
+}
+function energySnapshotOccurrenceKey(snapshot) {
+  return `${snapshot.date || ""}T${snapshot.time || "00:00"}`;
+}
+function normalizeTaskSessionDurationMinutes(value) {
+  const number2 = Number(value);
+  if (!Number.isFinite(number2) || number2 < 0) return null;
+  return Math.round(number2 * 100) / 100;
+}
+function buildTaskSessionFields(task, input) {
+  const durationMinutes2 = normalizeTaskSessionDurationMinutes(input.durationMinutes);
+  if (durationMinutes2 == null) throw new Error("task_session_duration_invalid");
+  if (!input.startedAt || !Number.isFinite(Date.parse(input.startedAt))) throw new Error("task_session_started_at_invalid");
+  if (!input.endedAt || !Number.isFinite(Date.parse(input.endedAt))) throw new Error("task_session_ended_at_invalid");
+  if (Date.parse(input.endedAt) < Date.parse(input.startedAt)) throw new Error("task_session_time_order_invalid");
+  if (!["work-block-ended", "task-completed"].includes(input.result)) throw new Error("task_session_result_invalid");
+  if (!["timer", "energy-view", "unknown"].includes(input.source)) throw new Error("task_session_source_invalid");
+  return {
+    taskId: task.id,
+    seriesId: task.seriesId,
+    goalId: task.goalId,
+    goalPath: task.goalPath || task.goalPaths?.[0],
+    themePath: task.themePath || task.theme,
+    sessionStartedAt: input.startedAt,
+    sessionEndedAt: input.endedAt,
+    sessionDurationMinutes: durationMinutes2,
+    sessionResult: input.result,
+    sessionSource: input.source,
+    suggestedDurationMinutes: input.suggestedDurationMinutes,
+    startEnergyRecordId: input.startEnergyRecordId
+  };
+}
+function asTaskSessionRecord(item) {
+  if (!item || item.coreBlock !== "task-session") return null;
+  if (!item.taskId) return null;
+  if (!item.sessionStartedAt || !Number.isFinite(Date.parse(item.sessionStartedAt))) return null;
+  if (!item.sessionEndedAt || !Number.isFinite(Date.parse(item.sessionEndedAt))) return null;
+  if (normalizeTaskSessionDurationMinutes(item.sessionDurationMinutes) == null) return null;
+  if (!["work-block-ended", "task-completed"].includes(String(item.sessionResult || ""))) return null;
+  if (!["timer", "energy-view", "unknown"].includes(String(item.sessionSource || ""))) return null;
+  return item;
+}
+function localSessionDay(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return "";
+  return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
+}
+function recordedTaskMinutes(records, today) {
+  return records.reduce((sum, record) => {
+    const session = asTaskSessionRecord(record);
+    if (!session || localSessionDay(session.sessionStartedAt) !== today) return sum;
+    const duration2 = Number(session.sessionDurationMinutes);
+    if (!Number.isFinite(duration2) || duration2 <= 0) return sum;
+    return sum + Math.min(720, Math.max(0, duration2));
+  }, 0);
+}
+function buildEnergyActionPolicyContext(items, management, today) {
+  const dailyTaskMinutes = Math.round(recordedTaskMinutes(items, today));
+  const preserveGuardrail = management?.guardrails?.find((row) => row.key === "preserve-capacity" || row.key === "long-session");
+  const loadRisk = dailyTaskMinutes >= 180;
+  const preserveCapacityRisk = loadRisk || Boolean(preserveGuardrail);
+  let preserveCapacityReason;
+  if (dailyTaskMinutes >= 300) {
+    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}min，建议用更短工作块并到点收尾。`;
+  } else if (loadRisk) {
+    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}min，这一块先设明确停止点，给后续留余量。`;
+  } else if (preserveGuardrail) {
+    preserveCapacityReason = "你的历史里已出现高能后持续过久的迹象，这一块先设明确停止点。";
+  }
+  return { dailyTaskMinutes, preserveCapacityRisk, preserveCapacityReason };
+}
+function baseCap(band) {
+  if (band === "recover") return 30;
+  if (band === "steady") return 45;
+  return 60;
+}
+function resolveEnergyActionTiming(candidate, band, policy) {
+  const requested = candidate.durationMinutes && candidate.durationMinutes > 0 ? candidate.durationMinutes : void 0;
+  let cap = baseCap(band);
+  const personalDepletion = Boolean(
+    candidate.historicalEffect && candidate.historicalEffect.sampleCount >= 3 && candidate.historicalEffect.meanDelta <= -8
+  );
+  if (personalDepletion) cap = Math.min(cap, 45);
+  if (policy?.preserveCapacityRisk && band !== "recover") cap = Math.min(cap, 45);
+  if ((policy?.dailyTaskMinutes || 0) >= 300 && band !== "recover") cap = Math.min(cap, 30);
+  if (personalDepletion && (policy?.dailyTaskMinutes || 0) >= 180 && band !== "recover") cap = Math.min(cap, 30);
+  const minutes = Math.max(10, Math.round(Math.min(requested ?? cap, cap)));
+  const preserveCapacity = band !== "recover" && Boolean(policy?.preserveCapacityRisk);
+  return {
+    minutes,
+    preserveCapacity,
+    stopReason: preserveCapacity ? policy?.preserveCapacityReason : void 0
+  };
+}
+const DEFAULT_LOW_THRESHOLD = 40;
+const DEFAULT_HIGH_THRESHOLD = 60;
+const DEFAULT_MAXIMUM = 3;
+const PERSONAL_SAMPLE_MINIMUM = 3;
+function clampScore(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+function bandFor(score, lowThreshold, highThreshold) {
+  if (score <= lowThreshold) return "recover";
+  if (score > highThreshold) return "use-capacity";
+  return "steady";
+}
+function stateLabel$1(band) {
+  if (band === "recover") return "低精力";
+  if (band === "use-capacity") return "精力可用";
+  return "中间状态";
+}
+function loadValue(load2) {
+  if (load2 === "low") return 25;
+  if (load2 === "medium") return 55;
+  if (load2 === "high") return 80;
+  return void 0;
+}
+function demandFit(available, load2) {
+  const demand = loadValue(load2);
+  if (demand == null) return 0;
+  const gap2 = available - demand;
+  let fit = 14 - Math.abs(gap2) * 0.35;
+  if (gap2 < -5) fit -= Math.min(18, Math.abs(gap2) * 0.4);
+  return Math.max(-24, Math.min(14, Math.round(fit * 10) / 10));
+}
+function effectEvidence(effect2) {
+  return effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM ? "personal" : "metadata";
+}
+function historicalFit(effect2, band) {
+  if (!effect2 || effect2.sampleCount < PERSONAL_SAMPLE_MINIMUM) return 0;
+  const delta = Math.max(-40, Math.min(40, effect2.meanDelta));
+  if (band === "recover") return delta * 1.25;
+  if (band === "use-capacity") {
+    return delta >= 0 ? Math.min(8, delta * 0.2) : delta * 0.45;
+  }
+  return delta * 0.6;
+}
+function durationFit(duration2, band) {
+  if (duration2 == null || duration2 <= 0) return 0;
+  if (band === "recover") {
+    if (duration2 <= 30) return 10;
+    if (duration2 <= 45) return 3;
+    if (duration2 <= 60) return -6;
+    return -16;
+  }
+  if (band === "use-capacity") {
+    if (duration2 <= 20) return 1;
+    if (duration2 <= 45) return 4;
+    if (duration2 <= 90) return 8;
+    if (duration2 <= 120) return 2;
+    return -8;
+  }
+  if (duration2 <= 45) return 6;
+  if (duration2 <= 75) return 1;
+  return -6;
+}
+function candidateScore(candidate, context, band) {
+  const overall = clampScore(context.score);
+  const brain = context.brainScore == null ? overall : clampScore(context.brainScore);
+  const physical = context.physicalScore == null ? overall : clampScore(context.physicalScore);
+  const value = candidate.valueScore == null ? 50 : clampScore(candidate.valueScore);
+  let score = 50;
+  score += demandFit(brain, candidate.brainLoad);
+  score += demandFit(physical, candidate.physicalLoad);
+  score += durationFit(candidate.durationMinutes, band);
+  score += historicalFit(candidate.historicalEffect, band);
+  if (band === "recover") {
+    if (candidate.recoveryIntent) score += 28;
+    if (candidate.brainLoad === "high") score -= 16;
+    if (candidate.physicalLoad === "high" && physical <= 40) score -= 16;
+    score += (value - 50) * 0.08;
+  } else if (band === "use-capacity") {
+    if (candidate.recoveryIntent) score -= 20;
+    score += (value - 50) * 0.8;
+  } else {
+    if (candidate.recoveryIntent) score += 8;
+    score += (value - 50) * 0.18;
+  }
+  return Math.round(score * 10) / 10;
+}
+function signed$1(value) {
+  const rounded = Math.round(value);
+  return `${rounded > 0 ? "+" : ""}${rounded}`;
+}
+function reasonFor(candidate, band, duration2) {
+  const effect2 = candidate.historicalEffect;
+  const personal = effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM;
+  const historyPrefix = effect2?.origin === "recommendation-feedback" ? "你的推荐执行反馈里" : "你的历史里";
+  if (band === "recover") {
+    if (personal && effect2.meanDelta > 0) return `${historyPrefix}这类活动平均 ${signed$1(effect2.meanDelta)}（N=${effect2.sampleCount}），先做 ${duration2}min。`;
+    if (candidate.recoveryIntent) return `当前精力偏低，先做低负荷恢复项 ${duration2}min。`;
+    return `当前精力偏低，这项负荷相对可控，先做 ${duration2}min。`;
+  }
+  if (band === "use-capacity") {
+    if (personal && effect2.meanDelta <= -8) return `当前能做，但${historyPrefix}这类活动平均 ${signed$1(effect2.meanDelta)}（N=${effect2.sampleCount}），先限时 ${duration2}min。`;
+    return `当前精力可用，适合推进这项高价值事项，先做 ${duration2}min。`;
+  }
+  if (personal) return `当前处于中间状态；${historyPrefix}变化 ${signed$1(effect2.meanDelta)}（N=${effect2.sampleCount}），先做 ${duration2}min。`;
+  return `当前适合中等负荷，先做 ${duration2}min 再看状态。`;
+}
+function buildEnergyActionRecommendations(context, candidates) {
+  const lowThreshold = Math.max(0, Math.min(80, Math.round(context.lowThreshold ?? DEFAULT_LOW_THRESHOLD)));
+  const highThreshold = Math.max(lowThreshold + 1, Math.min(100, Math.round(context.highThreshold ?? DEFAULT_HIGH_THRESHOLD)));
+  const maximum = Math.max(1, Math.min(500, Math.floor(context.maximumRecommendations ?? DEFAULT_MAXIMUM)));
+  const score = clampScore(context.score);
+  const band = bandFor(score, lowThreshold, highThreshold);
+  const normalizedContext = { ...context, score };
+  const recommendations = candidates.filter((candidate) => !!candidate.id && !!candidate.title.trim()).map((candidate) => {
+    const timing = resolveEnergyActionTiming(candidate, band, context.actionPolicy);
+    const duration2 = timing.minutes;
+    return {
+      candidate,
+      band,
+      fitScore: candidateScore(candidate, normalizedContext, band),
+      evidence: effectEvidence(candidate.historicalEffect),
+      reason: reasonFor(candidate, band, duration2),
+      suggestedDurationMinutes: duration2,
+      preserveCapacity: timing.preserveCapacity,
+      stopReason: timing.stopReason
+    };
+  }).sort((left2, right2) => right2.fitScore - left2.fitScore || left2.candidate.title.localeCompare(right2.candidate.title, "zh-CN")).slice(0, maximum);
+  return {
+    band,
+    stateLabel: stateLabel$1(band),
+    recommendations,
+    consideredCount: candidates.length
+  };
+}
+function isTaskRecord(item) {
+  return item?.coreBlock === "task";
+}
+function getTaskStatus(item) {
+  if (!isTaskRecord(item)) return null;
+  const status = String(item.status || "").trim().toLowerCase();
+  return status === "open" || status === "done" || status === "cancelled" || status === "skipped" ? status : null;
+}
+function isTaskCompleted(item) {
+  return getTaskStatus(item) === "done";
+}
+function isTaskOpen(item) {
+  return getTaskStatus(item) === "open";
+}
+function canTransitionTaskStatus(from2, command, options) {
+  if (command === "reopen") return from2 === "done" || from2 === "cancelled" || from2 === "skipped";
+  if (from2 !== "open") return false;
+  if (command === "skip") return options.recurring;
+  if (command === "cancel") return !options.recurring;
+  return command === "complete";
+}
+function nextTaskStatus(command) {
+  if (command === "complete") return "done";
+  if (command === "cancel") return "cancelled";
+  if (command === "skip") return "skipped";
+  return "open";
+}
 const DEFAULT_HIGH_BEFORE_GAP = 60;
 const DEFAULT_HIGH_AFTER_GAP = 30;
 const DEFAULT_MINIMUM_TREND_SAMPLES = 3;
@@ -5777,101 +6240,42 @@ function readEffectText(value) {
   const text2 = String(value ?? "").trim();
   return text2 || void 0;
 }
-function readEffectNumber(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  const text2 = readEffectText(value);
-  if (!text2) return void 0;
-  const parsed = Number(text2);
-  return Number.isFinite(parsed) ? parsed : void 0;
-}
-function effectDateOrdinal(value) {
-  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match5) return void 0;
-  const year = Number(match5[1]);
-  const month = Number(match5[2]);
-  const day = Number(match5[3]);
-  const stamp = Date.UTC(year, month - 1, day);
-  const date2 = new Date(stamp);
-  if (date2.getUTCFullYear() !== year || date2.getUTCMonth() !== month - 1 || date2.getUTCDate() !== day) return void 0;
-  return Math.floor(stamp / 864e5);
-}
-function effectDateFromOrdinal(ordinal3) {
-  return new Date(ordinal3 * 864e5).toISOString().slice(0, 10);
-}
-function parseEffectTimeMinutes(value) {
-  const match5 = readEffectText(value)?.match(/^(\d{1,2}):(\d{2})$/);
-  if (!match5) return void 0;
-  const hour = Number(match5[1]);
-  const minute = Number(match5[2]);
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
-  return hour * 60 + minute;
-}
-function formatEffectTimeMinutes(value) {
-  const normalized2 = (Math.round(value) % 1440 + 1440) % 1440;
-  return `${String(Math.floor(normalized2 / 60)).padStart(2, "0")}:${String(normalized2 % 60).padStart(2, "0")}`;
-}
 function effectAbsoluteMinute(date2, time2) {
-  const ordinal3 = effectDateOrdinal(date2);
-  const minute = parseEffectTimeMinutes(time2);
-  if (ordinal3 == null || minute == null) return void 0;
-  return ordinal3 * 1440 + minute;
+  const stamp = Date.parse(`${date2}T${time2.length === 5 ? `${time2}:00` : time2}`);
+  return Number.isFinite(stamp) ? stamp / 6e4 : void 0;
 }
-function normalizeEffectGoalPath(value) {
-  return String(value ?? "").trim().replace(/^#/, "");
+function localDateTimeFromMs(stamp) {
+  const value = new Date(stamp);
+  const date2 = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+  const time2 = `${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}`;
+  return { date: date2, time: time2 };
 }
-function effectGoalIds(item) {
-  return [item.goalId, ...item.goalIds || []].map((value) => String(value || "").trim()).filter(Boolean);
-}
-function effectGoalPaths(item) {
-  return [item.goalPath, ...item.goalPaths || []].map(normalizeEffectGoalPath).filter(Boolean);
-}
-function effectsShareGoal(left2, right2) {
-  const leftIds = effectGoalIds(left2);
-  const rightIds = effectGoalIds(right2);
-  if (leftIds.length > 0 || rightIds.length > 0) return leftIds.some((id) => rightIds.includes(id));
-  const leftPaths = effectGoalPaths(left2);
-  const rightPaths = effectGoalPaths(right2);
-  if (leftPaths.length > 0 || rightPaths.length > 0) return leftPaths.some((path) => rightPaths.includes(path));
-  return true;
-}
-function effectOccurrenceDate(item) {
-  return readEffectText(item.date) || readEffectText(item.doneDate) || readEffectText(item.startDate) || readEffectText(item.scheduledDate) || readEffectText(item.dueDate) || readEffectText(item.createdDate) || readEffectText(item.extra?.["日期"]);
-}
-function effectCoreBlock(item) {
-  return String(item.coreBlock || item.extra?.["核心Block"] || item.categoryKey || "").replace(/^core\./i, "").split("/")[0].trim().toLowerCase();
-}
-function isEffectTask(item) {
-  if (isEnergyItem(item)) return false;
-  const block2 = effectCoreBlock(item);
-  return block2 === "task" || item.type === "task" || /任务/.test(String(item.categoryKey || ""));
-}
-function resolveEffectActivityInterval(item) {
-  if (!isEffectTask(item)) return null;
-  const date2 = effectOccurrenceDate(item);
-  if (!date2) return null;
-  const ordinal3 = effectDateOrdinal(date2);
-  if (ordinal3 == null) return null;
-  const durationValue = readEffectNumber(item.duration ?? item.extra?.["时长"]);
-  const duration2 = durationValue != null && durationValue >= 0 ? durationValue : void 0;
-  let startMinute = parseEffectTimeMinutes(item.startTime ?? item.extra?.["时间"] ?? item.extra?.["开始"]);
-  let endMinute = parseEffectTimeMinutes(item.endTime ?? item.extra?.["结束"]);
-  if (startMinute == null && endMinute != null && duration2 != null) startMinute = endMinute - duration2;
-  if (endMinute == null && startMinute != null && duration2 != null) endMinute = startMinute + duration2;
-  if (startMinute == null || endMinute == null) return null;
-  let startAbsolute = ordinal3 * 1440 + startMinute;
-  let endAbsolute = ordinal3 * 1440 + endMinute;
-  if (endAbsolute < startAbsolute) endAbsolute += 1440;
-  if (duration2 != null && Math.abs(endAbsolute - startAbsolute - duration2) > 1) endAbsolute = startAbsolute + duration2;
-  if (endAbsolute <= startAbsolute) return null;
+function resolveEffectActivityInterval(item, byId) {
+  const session = asTaskSessionRecord(item);
+  if (!session) return null;
+  const startMs = Date.parse(session.sessionStartedAt);
+  const endMs = Date.parse(session.sessionEndedAt);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
+  const task = byId.get(session.taskId);
+  const activityItem = task ? {
+    ...task,
+    id: session.id,
+    goalId: session.goalId || task.goalId,
+    goalPath: session.goalPath || task.goalPath,
+    themePath: session.themePath || task.themePath,
+    duration: session.sessionDurationMinutes
+  } : session;
+  const start2 = localDateTimeFromMs(startMs);
+  const end2 = localDateTimeFromMs(endMs);
   return {
-    item,
-    startAbsolute,
-    endAbsolute,
-    startDate: effectDateFromOrdinal(Math.floor(startAbsolute / 1440)),
-    startTime: formatEffectTimeMinutes(startAbsolute),
-    endDate: effectDateFromOrdinal(Math.floor(endAbsolute / 1440)),
-    endTime: formatEffectTimeMinutes(endAbsolute),
-    durationMinutes: Math.max(1, Math.round(endAbsolute - startAbsolute))
+    item: activityItem,
+    startAbsolute: startMs / 6e4,
+    endAbsolute: endMs / 6e4,
+    startDate: start2.date,
+    startTime: start2.time,
+    endDate: end2.date,
+    endTime: end2.time,
+    durationMinutes: Math.max(1, Math.round(session.sessionDurationMinutes))
   };
 }
 function readEffectEnergyPoint(item) {
@@ -5911,39 +6315,12 @@ function classifyEnergyActivity(item) {
 function effectThemeLabel(item) {
   return readEffectText(item.themePath) || readEffectText(item.theme) || readEffectText(item.rootTheme) || readEffectText(item.leafTheme) || "未标主题";
 }
-function effectDurationBucket(durationMinutes) {
-  if (durationMinutes < 30) return "<30min";
-  if (durationMinutes < 60) return "30–59min";
-  if (durationMinutes < 90) return "60–89min";
-  if (durationMinutes < 120) return "90–119min";
+function effectDurationBucket(durationMinutes2) {
+  if (durationMinutes2 < 30) return "<30min";
+  if (durationMinutes2 < 60) return "30–59min";
+  if (durationMinutes2 < 90) return "60–89min";
+  if (durationMinutes2 < 120) return "90–119min";
   return "≥120min";
-}
-function nearestEffectBefore(points, absolute, maxGap) {
-  for (let index = points.length - 1; index >= 0; index -= 1) {
-    const point = points[index];
-    if (point.absoluteMinute > absolute) continue;
-    if (absolute - point.absoluteMinute > maxGap) return void 0;
-    return point;
-  }
-  return void 0;
-}
-function nearestEffectAfter(points, absolute, maxGap) {
-  for (const point of points) {
-    if (point.absoluteMinute < absolute) continue;
-    if (point.absoluteMinute - absolute > maxGap) return void 0;
-    return point;
-  }
-  return void 0;
-}
-function hasCompetingActivity(intervals, target, before, after, requireSharedGoal) {
-  return intervals.some((candidate) => {
-    if (candidate.item.id === target.item.id) return false;
-    if (requireSharedGoal && !effectsShareGoal(target.item, candidate.item)) return false;
-    if (candidate.endAbsolute <= before.absoluteMinute || candidate.startAbsolute >= after.absoluteMinute) return false;
-    const overlapStart = Math.max(candidate.startAbsolute, before.absoluteMinute);
-    const overlapEnd = Math.min(candidate.endAbsolute, after.absoluteMinute);
-    return overlapEnd - overlapStart >= 10;
-  });
 }
 function effectConfidence(beforeGap, afterGap, options) {
   return beforeGap <= options.highBeforeGapMinutes && afterGap <= options.highAfterGapMinutes ? "high" : "medium";
@@ -6002,27 +6379,34 @@ function aggregateEffectRows(samples, dimension, keyOf, minimumTrendSamples, sup
   });
 }
 function buildEnergyEffects(items, options = {}) {
-  const maxBeforeGapMinutes = Math.max(1, options.maxBeforeGapMinutes ?? DEFAULT_MAX_BEFORE_GAP);
-  const maxAfterGapMinutes = Math.max(1, options.maxAfterGapMinutes ?? DEFAULT_MAX_AFTER_GAP);
   const highBeforeGapMinutes = Math.max(1, options.highBeforeGapMinutes ?? DEFAULT_HIGH_BEFORE_GAP);
   const highAfterGapMinutes = Math.max(1, options.highAfterGapMinutes ?? DEFAULT_HIGH_AFTER_GAP);
   const minimumTrendSamples = Math.max(2, options.minimumTrendSamples ?? DEFAULT_MINIMUM_TREND_SAMPLES);
   const supportedTrendSamples = Math.max(minimumTrendSamples, options.supportedTrendSamples ?? DEFAULT_SUPPORTED_TREND_SAMPLES);
-  const requireSharedGoal = options.requireSharedGoal !== false;
-  const points = items.map(readEffectEnergyPoint).filter((point) => !!point).sort((left2, right2) => left2.absoluteMinute - right2.absoluteMinute);
-  const intervals = items.map(resolveEffectActivityInterval).filter((interval) => !!interval).sort((left2, right2) => left2.startAbsolute - right2.startAbsolute);
-  if (points.length < 2 || intervals.length === 0) return null;
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const pointById = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    const point = readEffectEnergyPoint(item);
+    if (point) pointById.set(point.itemId, point);
+  }
+  const intervals = items.map((item) => resolveEffectActivityInterval(item, byId)).filter((interval) => !!interval).sort((left2, right2) => left2.startAbsolute - right2.startAbsolute);
+  if (intervals.length === 0) return null;
   const samples = [];
-  for (const interval of intervals) {
-    const goalPoints = requireSharedGoal ? points.filter((point) => effectsShareGoal(interval.item, point.item)) : points;
-    const before = nearestEffectBefore(goalPoints, interval.startAbsolute, maxBeforeGapMinutes);
-    const after = nearestEffectAfter(goalPoints, interval.endAbsolute, maxAfterGapMinutes);
+  for (const record of items) {
+    const session = asTaskSessionRecord(record);
+    if (!session?.startEnergyRecordId || !session.endEnergyRecordId) continue;
+    const interval = resolveEffectActivityInterval(record, byId);
+    if (!interval) continue;
+    const before = pointById.get(session.startEnergyRecordId);
+    const after = pointById.get(session.endEnergyRecordId);
     if (!before || !after || before.itemId === after.itemId) continue;
-    if (hasCompetingActivity(intervals, interval, before, after, requireSharedGoal)) continue;
-    const beforeGapMinutes = Math.round(interval.startAbsolute - before.absoluteMinute);
-    const afterGapMinutes = Math.round(after.absoluteMinute - interval.endAbsolute);
+    const beforeGapMinutes = Math.max(0, Math.round(interval.startAbsolute - before.absoluteMinute));
+    const afterGapMinutes = Math.max(0, Math.round(after.absoluteMinute - interval.endAbsolute));
+    const deltaScore = typeof session.energyDelta === "number" ? session.energyDelta : after.score - before.score;
+    const deltaBrain = typeof session.brainDelta === "number" ? session.brainDelta : before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0;
+    const deltaPhysical = typeof session.physicalDelta === "number" ? session.physicalDelta : before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0;
     samples.push({
-      activityItemId: interval.item.id,
+      activityItemId: session.id,
       activityTitle: activityTitle(interval.item),
       activityLabel: classifyEnergyActivity(interval.item),
       themeLabel: effectThemeLabel(interval.item),
@@ -6036,9 +6420,9 @@ function buildEnergyEffects(items, options = {}) {
       after,
       beforeGapMinutes,
       afterGapMinutes,
-      deltaScore: after.score - before.score,
-      deltaBrain: before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0,
-      deltaPhysical: before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0,
+      deltaScore,
+      deltaBrain,
+      deltaPhysical,
       confidence: effectConfidence(beforeGapMinutes, afterGapMinutes, { highBeforeGapMinutes, highAfterGapMinutes }),
       item: interval.item
     });
@@ -6081,7 +6465,6 @@ function sourceFor(item) {
   if (block2 === "task") return "task";
   if (block2 === "plan") return "plan";
   if (block2 === "habit") return "habit";
-  if (item.type === "task") return "task";
   return null;
 }
 function load(value) {
@@ -6099,15 +6482,19 @@ function median$1(values2) {
   const value = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
   return Math.max(10, Math.min(240, Math.round(value)));
 }
-function historyDurationMaps(items) {
+function historyDurationMaps(records) {
   const goalThemeRows = /* @__PURE__ */ new Map();
   const themeRows = /* @__PURE__ */ new Map();
-  for (const item of items) {
-    if (sourceFor(item) !== "task" || isTaskOpen(item)) continue;
-    const duration2 = number$2(item.duration);
-    const theme = text$2(item.themePath || item.theme);
-    if (!duration2 || duration2 <= 0 || !theme) continue;
-    const goal = text$2(item.goalId || item.goalPath);
+  const byId = new Map(records.map((record) => [record.id, record]));
+  for (const record of records) {
+    const session = asTaskSessionRecord(record);
+    if (!session) continue;
+    const duration2 = number$2(session.sessionDurationMinutes);
+    if (!duration2 || duration2 <= 0) continue;
+    const task = byId.get(session.taskId);
+    const theme = text$2(session.themePath || task?.themePath || task?.theme);
+    if (!theme) continue;
+    const goal = text$2(session.goalId || session.goalPath || task?.goalId || task?.goalPath);
     const themeKey = theme.toLowerCase();
     const goalThemeKey = `${goal.toLowerCase()}|${themeKey}`;
     themeRows.set(themeKey, [...themeRows.get(themeKey) || [], duration2]);
@@ -6126,8 +6513,8 @@ function historyDurationMaps(items) {
 }
 function inferredDuration(item, history) {
   const explicit = number$2(item.extra?.["预计时长"] ?? item.extra?.["expectedDuration"] ?? item.extra?.["expectedDurationMinutes"]);
-  const existing = number$2(item.duration);
-  const direct = explicit && explicit > 0 ? explicit : existing && existing > 0 ? existing : void 0;
+  const canonical = number$2(item.expectedDurationMinutes);
+  const direct = explicit && explicit > 0 ? explicit : canonical && canonical > 0 ? canonical : void 0;
   if (direct != null) return Math.max(10, Math.min(240, Math.round(direct)));
   const theme = text$2(item.themePath || item.theme).toLowerCase();
   if (!theme) return void 0;
@@ -6173,7 +6560,7 @@ function futureTask(item, today) {
   return diff != null && diff > 0;
 }
 function candidateTitle(item) {
-  return text$2(item.title || item.editableText || item.content).replace(/^[-*]\s*\[[ x-]\]\s*/i, "").slice(0, 120);
+  return text$2(item.content || item.editableText || item.title).slice(0, 120);
 }
 function normalizedLabel(value) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
@@ -6217,7 +6604,7 @@ function personalEffectFor(candidate, management) {
 function buildEnergyActionCandidateResult(items, options = {}) {
   const today = options.today || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
   const maximum = Math.max(1, Math.min(1e3, Math.floor(options.maximumCandidates ?? 500)));
-  const history = historyDurationMaps(items);
+  const history = historyDurationMaps(options.historyRecords || items);
   const candidates = [];
   const seen = /* @__PURE__ */ new Set();
   const diagnostics = {
@@ -6270,6 +6657,7 @@ function buildEnergyActionCandidateResult(items, options = {}) {
       source,
       goalId: item.goalId,
       goalPath: item.goalPath,
+      seriesId: item.seriesId,
       theme: text$2(item.themePath || item.theme) || void 0,
       activityLabel: classifyEnergyActivity(item),
       durationMinutes: inferredDuration(item, history),
@@ -6296,6 +6684,10 @@ function text$1(value) {
 function normalized(value) {
   return text$1(value).toLowerCase().replace(/\s+/g, " ");
 }
+function finiteNumber(value) {
+  const n2 = Number(value);
+  return Number.isFinite(n2) ? n2 : void 0;
+}
 function mean(values2) {
   const finite = values2.filter(Number.isFinite);
   if (!finite.length) return void 0;
@@ -6308,124 +6700,78 @@ function median(values2) {
   const value = finite.length % 2 ? finite[middle] : (finite[middle - 1] + finite[middle]) / 2;
   return Math.round(value);
 }
-function aggregateFeedback(rows, keyOf) {
+function aggregate(rows, keyOf) {
   const grouped = /* @__PURE__ */ new Map();
   for (const row of rows) {
     const key = normalized(keyOf(row));
     if (!key) continue;
     grouped.set(key, [...grouped.get(key) || [], row]);
   }
-  return new Map([...grouped.entries()].map(([key, group]) => {
-    const brain = group.map((row) => row.brainDelta).filter((value) => value != null);
-    const physical = group.map((row) => row.physicalDelta).filter((value) => value != null);
-    return [key, {
-      meanDelta: mean(group.map((row) => row.delta)) || 0,
-      sampleCount: group.length,
-      meanBrainDelta: mean(brain),
-      meanPhysicalDelta: mean(physical),
-      typicalDurationMinutes: median(group.map((row) => row.durationMinutes || 0)),
-      origin: "recommendation-feedback"
-    }];
-  }));
+  return new Map([...grouped.entries()].map(([key, group]) => [key, {
+    meanDelta: mean(group.map((row) => row.delta)) || 0,
+    sampleCount: group.length,
+    meanBrainDelta: mean(group.flatMap((row) => row.brainDelta == null ? [] : [row.brainDelta])),
+    meanPhysicalDelta: mean(group.flatMap((row) => row.physicalDelta == null ? [] : [row.physicalDelta])),
+    typicalDurationMinutes: median(group.flatMap((row) => row.durationMinutes == null ? [] : [row.durationMinutes])),
+    origin: "recommendation-feedback"
+  }]));
 }
-function feedbackRows(items, timers) {
-  const itemById = new Map(items.map((item) => [item.id, item]));
+function buildFeedbackRows(items) {
+  const byId = new Map(items.map((item) => [item.id, item]));
   const rows = [];
-  for (const timer of timers) {
-    const feedback = timer.energyFeedback;
-    const energyContext = timer.energyContext;
-    if (timer.status !== "feedback-recorded" || !feedback || !energyContext) continue;
-    const item = itemById.get(timer.taskId);
-    if (!item) continue;
-    const brainDelta = feedback.brainScore != null && energyContext.baselineBrainScore != null ? feedback.brainScore - energyContext.baselineBrainScore : void 0;
-    const physicalDelta = feedback.physicalScore != null && energyContext.baselinePhysicalScore != null ? feedback.physicalScore - energyContext.baselinePhysicalScore : void 0;
-    const elapsedMinutes = Math.round((timer.elapsedSeconds || 0) / 60);
+  for (const item of items) {
+    const session = asTaskSessionRecord(item);
+    if (!session || !session.endEnergyRecordId) continue;
+    const delta = finiteNumber(session.energyDelta);
+    if (delta == null) continue;
+    const task = byId.get(session.taskId);
+    const theme = text$1(session.themePath || task?.themePath || task?.theme) || void 0;
+    const activity = task ? classifyEnergyActivity(task) : theme || "未分类活动";
     rows.push({
-      taskId: timer.taskId,
-      activity: classifyEnergyActivity(item),
-      theme: text$1(item.themePath || item.theme) || void 0,
-      delta: feedback.delta,
-      brainDelta,
-      physicalDelta,
-      durationMinutes: elapsedMinutes > 0 ? elapsedMinutes : energyContext.suggestedDurationMinutes
+      taskId: session.taskId,
+      seriesId: session.seriesId || task?.seriesId,
+      activity,
+      theme,
+      delta,
+      brainDelta: finiteNumber(session.brainDelta),
+      physicalDelta: finiteNumber(session.physicalDelta),
+      durationMinutes: finiteNumber(session.sessionDurationMinutes)
     });
   }
   return rows;
 }
-function effectFromAggregate(row) {
-  return {
-    meanDelta: row.meanDelta,
-    sampleCount: row.sampleCount,
-    meanBrainDelta: row.meanBrainDelta,
-    meanPhysicalDelta: row.meanPhysicalDelta,
-    typicalDurationMinutes: row.meanDurationMinutes ? Math.round(row.meanDurationMinutes) : void 0,
-    origin: "activity-history"
-  };
+function recoveryEntries(effects, trend) {
+  return [...effects.entries()].flatMap(([key, effect2]) => {
+    if (effect2.sampleCount < 3) return [];
+    if (trend === "recovery" && effect2.meanDelta < 8) return [];
+    if (trend === "depletion" && effect2.meanDelta > -8) return [];
+    return [{ ...effect2, key, label: key, typicalDurationMinutes: effect2.typicalDurationMinutes }];
+  }).sort((left2, right2) => Math.abs(right2.meanDelta) - Math.abs(left2.meanDelta) || right2.sampleCount - left2.sampleCount);
 }
-function effectMap(rows) {
-  return new Map(rows.map((row) => [normalized(row.label), effectFromAggregate(row)]));
-}
-function recoveryEntries(activityRows, feedbackActivity, trend) {
-  const labels = /* @__PURE__ */ new Set();
-  for (const row of activityRows) labels.add(normalized(row.label));
-  for (const key of feedbackActivity.keys()) labels.add(key);
-  const rows = [];
-  for (const key of labels) {
-    const feedback = feedbackActivity.get(key);
-    const observedRow = activityRows.find((row) => normalized(row.label) === key);
-    const observed = observedRow ? effectFromAggregate(observedRow) : void 0;
-    const chosen = feedback && feedback.sampleCount >= 3 ? feedback : observed;
-    if (!chosen || chosen.sampleCount < 3) continue;
-    if (trend === "recovery" && chosen.meanDelta < 8) continue;
-    if (trend === "depletion" && chosen.meanDelta > -8) continue;
-    rows.push({
-      ...chosen,
-      key,
-      label: observedRow?.label || key,
-      typicalDurationMinutes: chosen.typicalDurationMinutes || (observedRow?.meanDurationMinutes ? Math.round(observedRow.meanDurationMinutes) : void 0)
-    });
-  }
-  return rows.sort((left2, right2) => {
-    const originDelta = Number(right2.origin === "recommendation-feedback") - Number(left2.origin === "recommendation-feedback");
-    if (originDelta) return originDelta;
-    const magnitude = Math.abs(right2.meanDelta) - Math.abs(left2.meanDelta);
-    if (magnitude) return magnitude;
-    return right2.sampleCount - left2.sampleCount;
-  });
-}
-function buildEnergyRecommendationLearning(items, timers = []) {
-  const effects = buildEnergyEffects(items, { requireSharedGoal: false });
-  const rows = feedbackRows(items, timers);
-  const feedbackByTask = aggregateFeedback(rows, (row) => row.taskId);
-  const feedbackByActivity = aggregateFeedback(rows, (row) => row.activity);
-  const feedbackByTheme = aggregateFeedback(rows.filter((row) => !!row.theme), (row) => row.theme || "");
-  const activityRows = effects?.byActivity || [];
-  const activityHistory = effectMap(activityRows);
-  const themeHistory = effectMap(effects?.byTheme || []);
-  const byActivity = new Map(activityHistory);
-  for (const [key, effect2] of feedbackByActivity) {
-    if (effect2.sampleCount >= 3) byActivity.set(key, effect2);
-  }
-  const byTheme = new Map(themeHistory);
-  for (const [key, effect2] of feedbackByTheme) {
-    if (effect2.sampleCount >= 3) byTheme.set(key, effect2);
-  }
+function buildEnergyRecommendationLearning(items) {
+  const rows = buildFeedbackRows(items);
+  const byTaskId = aggregate(rows, (row) => row.taskId);
+  const bySeriesId = aggregate(rows.filter((row) => !!row.seriesId), (row) => row.seriesId || "");
+  const byActivity = aggregate(rows, (row) => row.activity);
+  const byTheme = aggregate(rows.filter((row) => !!row.theme), (row) => row.theme || "");
   return {
     feedbackSampleCount: rows.length,
-    pairedActivityCount: effects?.pairedActivityCount || 0,
-    byTaskId: feedbackByTask,
+    pairedActivityCount: rows.length,
+    byTaskId,
+    bySeriesId,
     byActivity,
     byTheme,
-    recoveryActivities: recoveryEntries(activityRows, feedbackByActivity, "recovery"),
-    depletionActivities: recoveryEntries(activityRows, feedbackByActivity, "depletion")
+    recoveryActivities: recoveryEntries(byActivity, "recovery"),
+    depletionActivities: recoveryEntries(byActivity, "depletion")
   };
 }
 function attachEnergyRecommendationLearning(candidates, learning) {
   return candidates.map((candidate) => {
     const taskEffect = learning.byTaskId.get(normalized(candidate.id));
-    const activityEffect = candidate.activityLabel ? learning.byActivity.get(normalized(candidate.activityLabel)) : void 0;
+    const seriesEffect = candidate.seriesId ? learning.bySeriesId.get(normalized(candidate.seriesId)) : void 0;
     const themeEffect = candidate.theme ? learning.byTheme.get(normalized(candidate.theme)) : void 0;
-    const historicalEffect = taskEffect && taskEffect.sampleCount >= 3 ? taskEffect : activityEffect && activityEffect.sampleCount >= 3 ? activityEffect : themeEffect && themeEffect.sampleCount >= 3 ? themeEffect : void 0;
+    const activityEffect = candidate.activityLabel ? learning.byActivity.get(normalized(candidate.activityLabel)) : void 0;
+    const historicalEffect = taskEffect && taskEffect.sampleCount >= 3 ? taskEffect : seriesEffect && seriesEffect.sampleCount >= 3 ? seriesEffect : themeEffect && themeEffect.sampleCount >= 3 ? themeEffect : activityEffect && activityEffect.sampleCount >= 3 ? activityEffect : void 0;
     return historicalEffect ? { ...candidate, historicalEffect } : candidate;
   });
 }
@@ -6462,7 +6808,7 @@ function buildEnergyDataQuality(items, options) {
   }).length;
   const approximateTimeSamples = snapshots.length - exactTimeSamples;
   const detailedSamples = snapshots.filter(({ snapshot }) => snapshot.brainScore != null && snapshot.physicalScore != null).length;
-  const effects = buildEnergyEffects(items, { requireSharedGoal: options.requireSharedGoal !== false });
+  const effects = buildEnergyEffects(options.effectRecords || items);
   const coverageRatio = ratio(sampledDays, totalDays);
   const realtimeRatio = ratio(realtimeSamples, snapshots.length);
   const exactRatio = ratio(exactTimeSamples, snapshots.length);
@@ -6668,13 +7014,48 @@ const DEFAULT_CORE_BLOCKS = [
     fields: [
       { id: "core.task.content", key: "任务内容", label: "任务内容", type: "textarea", semantic: "body" },
       themeField,
-      dateField,
-      { id: "core.task.start", key: "时间", label: "时间", type: "time", semantic: "startTime" },
-      { id: "core.task.end", key: "结束", label: "结束", type: "time", semantic: "endTime" },
-      { id: "core.task.duration", key: "时长", label: "时长", type: "number", semantic: "duration" },
-      { id: "core.task.status", key: "状态", label: "状态", type: "singleSelect", semantic: "status", options: [{ value: "- [ ]", label: "待办" }, { value: "- [x]", label: "完成" }, { value: "🛫", label: "开始" }, { value: "📅", label: "计划" }] }
+      { id: "core.task.scheduledDate", key: "scheduledDate", label: "计划日期", type: "date" },
+      { id: "core.task.startDate", key: "startDate", label: "开始日期", type: "date" },
+      { id: "core.task.dueDate", key: "dueDate", label: "截止日期", type: "date" },
+      { id: "core.task.expectedDuration", key: "expectedDurationMinutes", label: "预计时长", type: "number", min: 1 },
+      { id: "core.task.priority", key: "priority", label: "优先级", type: "singleSelect", options: [
+        { value: "lowest", label: "最低" },
+        { value: "low", label: "低" },
+        { value: "medium", label: "中" },
+        { value: "high", label: "高" },
+        { value: "highest", label: "最高" }
+      ] },
+      { id: "core.task.energyDemand", key: "energyDemand", label: "精力要求", type: "singleSelect", options: [
+        { value: "low", label: "低" },
+        { value: "medium", label: "中" },
+        { value: "high", label: "高" }
+      ] },
+      { id: "core.task.brainDemand", key: "brainDemand", label: "脑力要求", type: "singleSelect", options: [
+        { value: "low", label: "低" },
+        { value: "medium", label: "中" },
+        { value: "high", label: "高" }
+      ] },
+      { id: "core.task.physicalDemand", key: "physicalDemand", label: "体力要求", type: "singleSelect", options: [
+        { value: "low", label: "低" },
+        { value: "medium", label: "中" },
+        { value: "high", label: "高" }
+      ] },
+      { id: "core.task.recurrenceUnit", key: "recurrenceUnit", label: "重复单位", type: "singleSelect", options: [
+        { value: "day", label: "天" },
+        { value: "week", label: "周" },
+        { value: "month", label: "月" },
+        { value: "quarter", label: "季" },
+        { value: "year", label: "年" }
+      ] },
+      { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" },
+      { id: "core.task.recurrenceAnchor", key: "recurrenceAnchor", label: "重复锚点", type: "singleSelect", defaultValue: "scheduled", options: [
+        { value: "scheduled", label: "计划日期" },
+        { value: "start", label: "开始日期" },
+        { value: "due", label: "截止日期" },
+        { value: "completion", label: "完成日期" }
+      ] }
     ],
-    outputTemplate: "{{taskStatusPrefix}} {{theme.icon}}{{任务内容}} (目标ID::{{goalId}}) (目标::{{goalPath}}) (主题::{{themePath}}) (核心Block::task) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{repeatToken}} {{taskDateToken}}",
+    outputTemplate: "<!-- start -->\n记录ID:: {{recordId}}\n记录版本:: 2\n核心Block:: task\n状态:: open\n内容:: {{任务内容}}\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n主题:: {{themePath}}\n计划日期:: {{scheduledDate}}\n开始日期:: {{startDate}}\n截止日期:: {{dueDate}}\n预计时长:: {{expectedDurationMinutes}}\n优先级:: {{priority.value}}\n精力要求:: {{energyDemand.value}}\n脑力要求:: {{brainDemand.value}}\n体力要求:: {{physicalDemand.value}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n<!-- end -->",
     targetFile: "01/目标.md",
     appendUnderHeader: "## {{goalPath}}"
   }),
@@ -6697,7 +7078,7 @@ function applyPatch(block2, patch) {
     name: patch.displayName || block2.name,
     categoryKey: patch.categoryKey || block2.categoryKey,
     fields: patch.fields || block2.fields,
-    outputTemplate: patch.outputTemplate || block2.outputTemplate,
+    outputTemplate: block2.id === "core.task" ? block2.outputTemplate : patch.outputTemplate || block2.outputTemplate,
     targetFile: patch.targetFile || block2.targetFile,
     appendUnderHeader: patch.appendUnderHeader ?? block2.appendUnderHeader
   };
@@ -7610,94 +7991,23 @@ const TABLE_EXPORT_CONFIG = {
     fullData: { type: "content" }
   }
 };
-function stripTaskPrefix(text2) {
-  return String(text2 || "").replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, "").trimStart();
-}
-function stripLeadingTaskIcons(text2) {
-  return String(text2 || "").replace(new RegExp("^\\s*(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trimStart();
-}
-function stripTaskMetadata(text2) {
-  let result = String(text2 || "");
-  result = result.replace(
-    /\s*🔁\s*every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?(?=$|\s*(?:[\(\[][^^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/gi,
-    " "
-  );
-  result = result.replace(/\s*[\(\[][\s\S]*?::[\s\S]*?[\)\]]/g, " ");
-  result = result.replace(/\s*📅\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*⏳\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*🛫\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*➕\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*✅\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*❌\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ");
-  result = result.replace(/\s*#[\p{L}\p{N}_/-]+/gu, " ");
-  return result;
-}
-function normalizeLineBreaksOnly(text2) {
-  return String(text2 || "").replace(/[\t\r\n]+/g, " ").trim();
-}
-function extractTaskEditableText(text2) {
-  const rawInput = String(text2 || "");
-  const withoutPrefix = stripTaskPrefix(rawInput);
-  const withoutLeadingIcon = stripLeadingTaskIcons(withoutPrefix);
-  const withoutMetadata = stripTaskMetadata(withoutLeadingIcon);
-  const editableText = normalizeLineBreaksOnly(withoutMetadata);
-  const notes = [];
-  if (/\s{2,}/.test(editableText)) {
-    notes.push("正文内部存在连续空格；当前统一提取入口会保留这些空格，不会按空格截断。");
-  }
-  if (/^[^\s]+$/.test(editableText) && /\s{2,}/.test(withoutMetadata.trim())) {
-    notes.push("警告：中间结果存在连续空格，但最终结果只剩单 token；请检查后续是否又读取 item.title。");
-  }
-  if (!editableText && rawInput) {
-    notes.push("警告：原始任务行非空，但最终正文为空；可能是元数据正则过度删除。");
-  }
-  if (editableText && editableText === rawInput.trim()) {
-    notes.push("提示：提取结果与原始输入几乎一致，说明输入可能不是完整任务行，或者没有任务语法/元数据可剥离。");
-  }
-  return { rawInput, withoutPrefix, withoutLeadingIcon, withoutMetadata, editableText, notes };
-}
-function cleanTaskText(text2) {
-  return extractTaskEditableText(text2).editableText;
-}
-function explainTaskEditableTextExtraction(text2) {
-  const result = extractTaskEditableText(text2);
-  return {
-    rawInput: result.rawInput,
-    withoutPrefix: result.withoutPrefix,
-    withoutLeadingIcon: result.withoutLeadingIcon,
-    withoutMetadata: result.withoutMetadata,
-    finalEditableText: result.editableText,
-    notes: result.notes
-  };
-}
 function splitThemePath(themePath) {
   return splitThemePath$1(themePath);
 }
 function pickEditableText(item) {
-  if (item.type === "task") {
-    const fromRaw = extractTaskEditableText(item.rawSource || item.content || "").editableText;
-    if (fromRaw) return fromRaw;
-    const extraBody2 = item.extra?.["正文"];
-    if (typeof extraBody2 === "string" && extraBody2.trim()) return extraBody2.trim();
-    if (item.editableText) return item.editableText;
-    return item.title || null;
-  }
-  if (item.editableText) return item.editableText;
+  if (item.editableText?.trim()) return item.editableText.trim();
   const extraBody = item.extra?.["正文"];
   if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
-  return item.content || item.title || null;
+  return item.content?.trim() || item.title || null;
 }
 function buildParsedRecordSnapshot(item) {
-  const path = item.file?.path ?? (() => {
-    const hashIndex = item.id.lastIndexOf("#");
-    return hashIndex >= 0 ? item.id.slice(0, hashIndex) : null;
-  })();
-  const line2 = typeof item.file?.line === "number" ? item.file.line : (() => {
-    const hashIndex = item.id.lastIndexOf("#");
-    if (hashIndex < 0) return null;
-    const parsed = Number.parseInt(item.id.slice(hashIndex + 1), 10);
-    return Number.isFinite(parsed) ? parsed : null;
-  })();
+  const path = item.source?.path ?? item.file?.path ?? null;
+  const line2 = item.source?.startLine ?? (typeof item.file?.line === "number" ? item.file.line : null);
   const editableText = pickEditableText(item);
   const themeParts = readExplicitThemeParts(item);
   return {
     itemId: item.id,
-    entryKind: item.type,
+    entryKind: item.coreBlock === "task" ? "task" : "block",
     locator: { path, line: line2 },
     raw: { sourceText: item.rawSource || item.content || "" },
     semantic: {
@@ -8825,7 +9135,7 @@ function shallowClone(o2) {
   return o2;
 }
 const propertyKeyTypes = /* @__PURE__ */ new Set(["string", "number", "symbol"]);
-function escapeRegex(str) {
+function escapeRegex$1(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function clone(inst, def, params) {
@@ -8862,7 +9172,7 @@ const NUMBER_FORMAT_RANGES = {
   float32: [-34028234663852886e22, 34028234663852886e22],
   float64: [-Number.MAX_VALUE, Number.MAX_VALUE]
 };
-function pick$1(schema, mask) {
+function pick(schema, mask) {
   const currDef = schema._zod.def;
   const checks = currDef.checks;
   const hasChecks = checks && checks.length > 0;
@@ -9606,7 +9916,7 @@ const $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (i
 });
 const $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const escapedRegex = escapeRegex(def.includes);
+  const escapedRegex = escapeRegex$1(def.includes);
   const pattern = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
   def.pattern = pattern;
   inst._zod.onattach.push((inst2) => {
@@ -9630,7 +9940,7 @@ const $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (ins
 });
 const $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`^${escapeRegex(def.prefix)}.*`);
+  const pattern = new RegExp(`^${escapeRegex$1(def.prefix)}.*`);
   def.pattern ?? (def.pattern = pattern);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
@@ -9653,7 +9963,7 @@ const $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", 
 });
 const $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`.*${escapeRegex(def.suffix)}$`);
+  const pattern = new RegExp(`.*${escapeRegex$1(def.suffix)}$`);
   def.pattern ?? (def.pattern = pattern);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
@@ -10679,7 +10989,7 @@ const $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def) => {
   const values2 = getEnumValues(def.entries);
   const valuesSet = new Set(values2);
   inst._zod.values = valuesSet;
-  inst._zod.pattern = new RegExp(`^(${values2.filter((k2) => propertyKeyTypes.has(typeof k2)).map((o2) => typeof o2 === "string" ? escapeRegex(o2) : o2.toString()).join("|")})$`);
+  inst._zod.pattern = new RegExp(`^(${values2.filter((k2) => propertyKeyTypes.has(typeof k2)).map((o2) => typeof o2 === "string" ? escapeRegex$1(o2) : o2.toString()).join("|")})$`);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (valuesSet.has(input)) {
@@ -10701,7 +11011,7 @@ const $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def) => {
   }
   const values2 = new Set(def.values);
   inst._zod.values = values2;
-  inst._zod.pattern = new RegExp(`^(${def.values.map((o2) => typeof o2 === "string" ? escapeRegex(o2) : o2 ? escapeRegex(o2.toString()) : String(o2)).join("|")})$`);
+  inst._zod.pattern = new RegExp(`^(${def.values.map((o2) => typeof o2 === "string" ? escapeRegex$1(o2) : o2 ? escapeRegex$1(o2.toString()) : String(o2)).join("|")})$`);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (values2.has(input)) {
@@ -12745,7 +13055,7 @@ const ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
       return merge$2(this, other);
     },
     pick(mask) {
-      return pick$1(this, mask);
+      return pick(this, mask);
     },
     omit(mask) {
       return omit(this, mask);
@@ -13067,7 +13377,7 @@ const ChatMessageSchema = object({
 });
 const SessionFiltersSchema = object({
   themePaths: array(string()).optional(),
-  types: array(_enum(["task", "block"])).optional(),
+  coreBlocks: array(string()).optional(),
   blockTemplateIds: array(string()).optional()
 });
 const ChatSessionSchema = object({
@@ -13304,58 +13614,143 @@ ChatSessionStore = __decorateClass$c([
 ], ChatSessionStore);
 const METADATA_PORT_TOKEN = "MetadataPort";
 const FILESTAT_PORT_TOKEN = "FileStatPort";
-const CURRENT_CACHE_SCHEMA_VERSION = 6;
+const CURRENT_CACHE_SCHEMA_VERSION = 12;
 function toCachedItem(it) {
   return {
     id: it.id,
-    filePath: it.file?.path || "",
+    schemaVersion: it.schemaVersion,
+    coreBlock: it.coreBlock,
+    status: it.status,
+    templateId: it.templateId,
+    templateSourceType: it.templateSourceType,
+    filePath: it.file?.path || it.source?.path || "",
+    startLine: it.source?.startLine ?? it.file?.line,
+    endLine: it.source?.endLine ?? it.file?.line,
     filename: it.filename ?? it.fileName,
-    titleLower: it.title?.toLowerCase(),
-    contentLower: it.content?.toLowerCase(),
-    tagsLower: (it.tags || []).map((t3) => t3.toLowerCase()),
-    goalPaths: it.goalPaths || [],
-    goalPathsLower: (it.goalPaths || []).map((t3) => t3.toLowerCase()),
-    themePathNormalized: it.themePath,
+    title: it.title || "",
+    content: it.content || "",
+    rawSource: it.rawSource,
+    tags: [...it.tags || []],
+    goalId: it.goalId,
+    goalPath: it.goalPath,
+    goalPaths: [...it.goalPaths || []],
+    theme: it.theme,
+    themePath: it.themePath,
     rootTheme: it.rootTheme,
     leafTheme: it.leafTheme,
-    dateMs: it.dateMs ?? it.startMs ?? it.endMs,
     categoryKey: it.categoryKey,
+    recurrenceInfo: it.recurrenceInfo,
+    priority: it.priority,
+    expectedDurationMinutes: it.expectedDurationMinutes,
+    createdDate: it.createdDate,
+    scheduledDate: it.scheduledDate,
+    startDate: it.startDate,
+    dueDate: it.dueDate,
+    doneDate: it.doneDate,
+    cancelledDate: it.cancelledDate,
+    completedAt: it.completedAt,
+    cancelledAt: it.cancelledAt,
+    skippedAt: it.skippedAt,
+    startISO: it.startISO,
+    endISO: it.endISO,
+    seriesId: it.seriesId,
+    seriesStartDate: it.seriesStartDate,
+    currentTaskId: it.currentTaskId,
+    rolloverPolicy: it.rolloverPolicy,
+    taskId: it.taskId,
+    sessionStartedAt: it.sessionStartedAt,
+    sessionEndedAt: it.sessionEndedAt,
+    sessionDurationMinutes: it.sessionDurationMinutes,
+    sessionResult: it.sessionResult,
+    sessionSource: it.sessionSource,
+    suggestedDurationMinutes: it.suggestedDurationMinutes,
+    startEnergyRecordId: it.startEnergyRecordId,
+    endEnergyRecordId: it.endEnergyRecordId,
+    energyDelta: it.energyDelta,
+    brainDelta: it.brainDelta,
+    physicalDelta: it.physicalDelta,
+    date: it.date,
+    dateMs: it.dateMs ?? it.startMs ?? it.endMs,
     created: it.created,
     modified: it.modified,
-    extra: it.extra || {}
+    extra: it.extra || {},
+    titleLower: it.titleLower ?? it.title?.toLowerCase(),
+    contentLower: it.contentLower ?? it.content?.toLowerCase(),
+    tagsLower: it.tagsLower ?? (it.tags || []).map((t3) => t3.toLowerCase()),
+    goalPathsLower: it.goalPathsLower ?? (it.goalPaths || []).map((t3) => t3.toLowerCase())
   };
 }
 function fromCachedItem(c2) {
+  const folder = c2.filePath.split("/").slice(0, -1).pop() || "";
   const it = {
     id: c2.id,
-    title: "",
-    // 恢复后可按需懒加载原文
-    content: "",
-    type: "task",
-    // 具体类型需在解析时写入，这里保守给默认值；下游通常不会依赖该字段筛选
-    tags: c2.tagsLower || [],
-    goalPaths: c2.goalPaths || [],
-    theme: c2.themePathNormalized,
-    themePath: c2.themePathNormalized,
+    schemaVersion: c2.schemaVersion,
+    coreBlock: c2.coreBlock,
+    status: c2.status,
+    templateId: c2.templateId,
+    templateSourceType: c2.templateSourceType,
+    title: c2.title || "",
+    content: c2.content || "",
+    rawSource: c2.rawSource,
+    tags: [...c2.tags || []],
+    goalId: c2.goalId,
+    goalPath: c2.goalPath,
+    goalIds: c2.goalId ? [c2.goalId] : [],
+    goalPaths: [...c2.goalPaths || []],
+    theme: c2.theme,
+    themePath: c2.themePath,
     rootTheme: c2.rootTheme,
     leafTheme: c2.leafTheme,
     categoryKey: c2.categoryKey,
-    recurrence: "none",
+    recurrenceInfo: c2.recurrenceInfo,
+    priority: c2.priority,
+    expectedDurationMinutes: c2.expectedDurationMinutes,
+    createdDate: c2.createdDate,
+    scheduledDate: c2.scheduledDate,
+    startDate: c2.startDate,
+    dueDate: c2.dueDate,
+    doneDate: c2.doneDate,
+    cancelledDate: c2.cancelledDate,
+    completedAt: c2.completedAt,
+    cancelledAt: c2.cancelledAt,
+    skippedAt: c2.skippedAt,
+    startISO: c2.startISO,
+    endISO: c2.endISO,
+    seriesId: c2.seriesId,
+    seriesStartDate: c2.seriesStartDate,
+    currentTaskId: c2.currentTaskId,
+    rolloverPolicy: c2.rolloverPolicy,
+    taskId: c2.taskId,
+    sessionStartedAt: c2.sessionStartedAt,
+    sessionEndedAt: c2.sessionEndedAt,
+    sessionDurationMinutes: c2.sessionDurationMinutes,
+    sessionResult: c2.sessionResult,
+    sessionSource: c2.sessionSource,
+    suggestedDurationMinutes: c2.suggestedDurationMinutes,
+    startEnergyRecordId: c2.startEnergyRecordId,
+    endEnergyRecordId: c2.endEnergyRecordId,
+    energyDelta: c2.energyDelta,
+    brainDelta: c2.brainDelta,
+    physicalDelta: c2.physicalDelta,
+    date: c2.date,
+    dateMs: c2.dateMs,
     created: c2.created,
     modified: c2.modified,
-    dateMs: c2.dateMs,
     filename: c2.filename,
-    file: { path: c2.filePath, folder: c2.filePath.split("/").slice(0, -1).pop() || "" },
+    fileName: c2.filename,
+    file: { path: c2.filePath, line: c2.startLine, folder },
+    source: {
+      path: c2.filePath,
+      startLine: c2.startLine || 0,
+      endLine: c2.endLine || c2.startLine || 0,
+      modified: c2.modified
+    },
     extra: c2.extra || {}
   };
-  it.titleLower = c2.titleLower ?? "";
-  it.contentLower = c2.contentLower ?? "";
-  it.tagsLower = c2.tagsLower ?? [];
+  it.titleLower = c2.titleLower ?? c2.title?.toLowerCase() ?? "";
+  it.contentLower = c2.contentLower ?? c2.content?.toLowerCase() ?? "";
+  it.tagsLower = c2.tagsLower ?? (c2.tags || []).map((t3) => t3.toLowerCase());
   it.goalPathsLower = c2.goalPathsLower ?? (c2.goalPaths || []).map((t3) => t3.toLowerCase());
-  it.themePathNormalized = c2.themePathNormalized;
-  it.themePath = c2.themePathNormalized;
-  it.rootTheme = c2.rootTheme;
-  it.leafTheme = c2.leafTheme;
   return it;
 }
 const DATASTORE_CACHE_PATH = "Think/cache.json";
@@ -13399,12 +13794,13 @@ class DataStoreCache {
   restoreItems(entry) {
     return entry.items.map(fromCachedItem);
   }
-  upsertFile(filePath, stat, items) {
+  upsertFile(filePath, stat, items, integrityIssues = []) {
     const cache = this.ensure();
     cache.files[filePath] = {
       mtime: stat.mtime,
       size: stat.size,
-      items: items.map(toCachedItem)
+      items: items.map(toCachedItem),
+      integrityIssues: integrityIssues.map((issue2) => ({ ...issue2 }))
     };
   }
   removeFile(filePath) {
@@ -13447,456 +13843,73 @@ class DataStoreCache {
     return { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
   }
 }
-const DEFAULT_MULTI_SEPARATOR = ", ";
-function isFieldCodecMultiValue(def) {
-  const inputType = def?.inputType;
-  return def?.cardinality === "multi" || inputType === "multiSelect" || inputType === "multiPath" || inputType === "multiTag" || inputType === "multiImage";
-}
-function isFieldCodecPath(def) {
-  return def?.type === "path" || def?.inputType === "path" || def?.inputType === "multiPath" || def?.semantic === "themePath" || def?.semantic === "categoryPath";
-}
-function isFieldCodecTag(def) {
-  return def?.type === "tags" || def?.inputType === "tag" || def?.inputType === "multiTag" || def?.semantic === "tags" || def?.semantic === "goals";
-}
-function isFieldCodecImage(def) {
-  return def?.type === "image" || def?.inputType === "image" || def?.inputType === "multiImage" || def?.semantic === "image";
-}
-function splitMarkdownMultiValue(value) {
-  if (Array.isArray(value)) return value.flatMap(splitMarkdownMultiValue);
-  return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
-}
-function decodeUnknownMarkdownKvValue(value) {
-  const raw = String(value ?? "").trim();
-  if (/^(true|false)$/i.test(raw)) return raw.toLowerCase() === "true";
-  if (raw !== "") {
-    const numeric = Number(raw);
-    if (!Number.isNaN(numeric)) return numeric;
-  }
-  return raw;
-}
-function decodeNumberValue(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  const raw = String(value ?? "").trim();
-  if (!raw) return void 0;
-  const numeric = Number(raw);
-  return Number.isNaN(numeric) ? void 0 : numeric;
-}
-function decodeBooleanValue(value) {
-  if (typeof value === "boolean") return value;
-  const raw = normalizeTextToken(value);
-  if (!raw) return void 0;
-  if (["true", "yes", "y", "1", "是"].includes(raw)) return true;
-  if (["false", "no", "n", "0", "否"].includes(raw)) return false;
-  return void 0;
-}
-function decodeImageValue(value) {
-  return normalizeImageValue(value);
-}
-function valueKind(def) {
-  return def?.type;
-}
-function semanticKind(def) {
-  return def?.semantic;
-}
-function decodeMarkdownFieldValue(value, def) {
-  if (value === void 0 || value === null) return void 0;
-  if (isFieldCodecMultiValue(def)) {
-    if (isFieldCodecTag(def)) return parseTagList(value);
-    if (isFieldCodecImage(def)) {
-      return splitMarkdownMultiValue(value).map(decodeImageValue).filter((img) => !!img);
-    }
-    if (isFieldCodecPath(def)) {
-      return splitMarkdownMultiValue(value).map(normalizeHierarchyPath).filter((path) => !!path);
-    }
-    return splitMarkdownMultiValue(value);
-  }
-  if (isFieldCodecTag(def)) return parseTagList(value);
-  if (isFieldCodecImage(def)) return decodeImageValue(value);
-  if (isFieldCodecPath(def)) return normalizeHierarchyPath(value) || void 0;
-  if (valueKind(def) === "number" || semanticKind(def) === "duration" || semanticKind(def) === "rating") {
-    return decodeNumberValue(value);
-  }
-  if (valueKind(def) === "boolean") return decodeBooleanValue(value);
-  return decodeUnknownMarkdownKvValue(value);
-}
-function imageFieldValueToMarkdown(value, options = {}) {
-  const src = String(value.src || "").trim();
-  if (!src) return "";
-  if (options.embedWikiImages && value.kind === "wikilink") return `![[${src}]]`;
-  return src;
-}
-function encodeFieldValueForMarkdown(value, def, options = {}) {
-  if (value === void 0 || value === null) return "";
-  if (Array.isArray(value)) {
-    const separator = options.multiSeparator ?? DEFAULT_MULTI_SEPARATOR;
-    return value.map((item) => encodeFieldValueForMarkdown(item, { ...def, cardinality: "single" }, options)).map((part) => part.trim()).filter(Boolean).join(separator);
-  }
-  if (isFieldCodecImage(def) || value && typeof value === "object" && "src" in value) {
-    const image = normalizeImageValue(value);
-    return image ? imageFieldValueToMarkdown(image, options) : "";
-  }
-  if (value && typeof value === "object") {
-    const objectValue = value;
-    if ("value" in objectValue) return encodeFieldValueForMarkdown(objectValue.value, def, options);
-    if ("label" in objectValue) return String(objectValue.label ?? "").trim();
-  }
-  if (typeof value === "boolean") return value ? "true" : "false";
-  return String(value).trim();
-}
-function formatFieldValueForTemplate(value, def) {
-  return encodeFieldValueForMarkdown(value, def, { multiSeparator: ", " });
-}
-const FIELD_CODEC_PRESETS = {
-  themePath: { type: "path", inputType: "path", semantic: "themePath", hierarchical: true },
-  categoryPath: { type: "path", inputType: "path", semantic: "categoryPath", hierarchical: true },
-  tags: { type: "tags", inputType: "multiTag", semantic: "tags", cardinality: "multi" },
-  goalPaths: { type: "tags", inputType: "multiTag", semantic: "goals", cardinality: "multi" },
-  image: { type: "image", inputType: "image", semantic: "image" },
-  number: { type: "number", inputType: "number" },
-  text: { type: "string", inputType: "text" }
-};
-function decodeMarkdownString$1(value, preset = FIELD_CODEC_PRESETS.text) {
-  const decoded = decodeMarkdownFieldValue(value, preset);
-  const encoded = encodeFieldValueForMarkdown(decoded, preset).trim();
-  return encoded || void 0;
-}
-function decodeMarkdownNumber$1(value) {
-  const decoded = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.number);
-  return typeof decoded === "number" && Number.isFinite(decoded) ? decoded : void 0;
-}
-function normalizeMetaKey$1(key) {
-  return String(key ?? "").trim().toLowerCase();
-}
-function unique$2(values2) {
-  return Array.from(new Set(values2.map((value) => value.trim()).filter(Boolean)));
-}
-function decodeTaskMetadata(lineText) {
-  const source = String(lineText || "");
-  const tags2 = (source.match(TAG_RE) || []).map((tag) => tag.trim()).filter(Boolean);
-  const extra = {};
-  const result = { tags: tags2, goalPaths: [], extra };
-  KV_IN_PAREN.lastIndex = 0;
-  let match5;
-  while ((match5 = KV_IN_PAREN.exec(source)) !== null) {
-    const rawKey = match5[1].trim();
-    const value = match5[2].trim();
-    const key = normalizeMetaKey$1(rawKey);
-    if (["主题", "theme", "主题路径", "themepath"].includes(key)) {
-      result.theme = decodeMarkdownString$1(value, FIELD_CODEC_PRESETS.themePath);
-    } else if (["分类", "类别", "category", "categorypath", "分类路径"].includes(key)) {
-      result.categoryKey = decodeMarkdownString$1(value, FIELD_CODEC_PRESETS.categoryPath);
-    } else if (["图片", "image", "评图", "pintu"].includes(key)) {
-      const imageValue = decodeMarkdownString$1(value, FIELD_CODEC_PRESETS.image);
-      if (imageValue) {
-        result.image = imageValue;
-        result.pintu = imageValue;
-      }
-    } else if (["模板id", "templateid"].includes(key)) {
-      result.templateId = value;
-    } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
-      if (["core-block", "goal-template"].includes(value)) result.templateSourceType = value;
-    } else if (["标签", "tag", "tags"].includes(key)) {
-      result.tags.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
-    } else if (["目标id", "goalid"].includes(key)) {
-      result.goalId = value.trim();
-    } else if (["周期id", "cycleid"].includes(key)) {
-      result.cycleId = value.trim();
-    } else if (["核心block", "coreblock"].includes(key)) {
-      result.coreBlock = value.trim();
-    } else if (key === "目标") {
-      result.goalPaths.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths));
-    } else if (["时间", "time", "start"].includes(key)) {
-      result.startTime = value;
-    } else if (["结束", "end"].includes(key)) {
-      result.endTime = value;
-    } else if (["时长", "duration"].includes(key)) {
-      result.duration = decodeMarkdownNumber$1(value);
-    } else {
-      result.extra[rawKey] = decodeUnknownMarkdownKvValue(value);
-    }
-  }
-  result.tags = unique$2(result.tags);
-  result.goalPaths = unique$2(result.goalPaths);
-  return result;
-}
-function applyTaskMetadata(item, metadata) {
-  item.tags = metadata.tags;
-  item.goalPaths = metadata.goalPaths;
-  if (metadata.goalId) {
-    item.goalId = metadata.goalId;
-    item.goalIds = [metadata.goalId];
-  }
-  if (metadata.cycleId) item.cycleId = metadata.cycleId;
-  if (metadata.coreBlock) item.coreBlock = metadata.coreBlock;
-  item.extra = metadata.extra;
-  if (metadata.theme) item.theme = metadata.theme;
-  if (metadata.categoryKey) item.categoryKey = metadata.categoryKey;
-  if (metadata.image) item.image = metadata.image;
-  if (metadata.pintu) item.pintu = metadata.pintu;
-  if (metadata.templateId) item.templateId = metadata.templateId;
-  if (metadata.templateSourceType) item.templateSourceType = metadata.templateSourceType;
-  if (metadata.startTime) item.startTime = metadata.startTime;
-  if (metadata.endTime) item.endTime = metadata.endTime;
-  if (metadata.duration !== void 0) item.duration = metadata.duration;
-  return item;
-}
-function decodeMarkdownString(value, preset = FIELD_CODEC_PRESETS.text) {
-  const decoded = decodeMarkdownFieldValue(value, preset);
-  const encoded = encodeFieldValueForMarkdown(decoded, preset).trim();
-  return encoded || void 0;
-}
-function decodeMarkdownNumber(value) {
-  const decoded = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.number);
-  return typeof decoded === "number" && Number.isFinite(decoded) ? decoded : void 0;
-}
-function normalizeMetaKey(key) {
-  return String(key ?? "").trim().toLowerCase();
-}
-function unique$1(values2) {
-  return Array.from(new Set(values2.map((value) => value.trim()).filter(Boolean)));
-}
-function buildTitle(content, tags2) {
-  let title = "";
-  const trimmed = content.trim();
-  if (trimmed) title = trimmed.split(/\r?\n/)[0];
-  else if (tags2.length > 0) title = tags2.join(", ");
-  return title.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trim().slice(0, 20);
-}
-function decodeBlockContentLines(contentLines, parentFolder) {
-  let categoryKey = null;
-  let date2;
-  const tags2 = [];
-  const goalPaths = [];
-  const extra = {};
-  let content = "";
-  let contentStarted = false;
-  let icon;
-  let period;
-  let rating;
-  let image;
-  let pintu;
-  let theme;
-  let templateId;
-  let goalId;
-  let cycleId;
-  let coreBlock;
-  let templateSourceType;
-  for (const rawLine of contentLines) {
-    const line2 = rawLine.trim();
-    if (!contentStarted) {
-      if (line2 === "") continue;
-      const kv = line2.match(/^([^:：]{1,20})[:：]{1,2}\s*(.*)$/);
-      if (kv) {
-        const rawKey = kv[1].trim();
-        const value = kv[2] || "";
-        const key = normalizeMetaKey(rawKey);
-        if (["分类", "类别", "category", "categorypath", "分类路径"].includes(key)) {
-          categoryKey = decodeMarkdownString(value, FIELD_CODEC_PRESETS.categoryPath) || "";
-        } else if (["模板id", "templateid"].includes(key)) {
-          templateId = value.trim();
-        } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
-          const source = value.trim();
-          if (["core-block", "goal-template"].includes(source)) templateSourceType = source;
-        } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) {
-          theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
-        } else if (["标签", "tag", "tags"].includes(key)) {
-          tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
-        } else if (["目标id", "goalid"].includes(key)) {
-          goalId = value.trim();
-        } else if (["周期id", "cycleid"].includes(key)) {
-          cycleId = value.trim();
-        } else if (["核心block", "coreblock"].includes(key)) {
-          coreBlock = value.trim();
-        } else if (key === "目标") {
-          goalPaths.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths));
-        } else if (["日期", "date"].includes(key)) {
-          date2 = normalizeDateStr(value.trim());
-        } else if (["周期", "period"].includes(key)) {
-          period = decodeMarkdownString(value);
-        } else if (["评分", "rating"].includes(key)) {
-          const decodedRating = decodeMarkdownNumber(value);
-          if (decodedRating !== void 0) {
-            rating = decodedRating;
-          } else {
-            const visualRating = String(value || "").trim();
-            if (visualRating) {
-              extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
-              if (!pintu) pintu = visualRating;
-              if (!image) image = visualRating;
-            }
-          }
-        } else if (["图标", "icon"].includes(key)) {
-          icon = value.trim();
-        } else if (["评图", "pintu", "图片", "image"].includes(key)) {
-          image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
-          pintu = image;
-        } else if (["内容", "content"].includes(key)) {
-          contentStarted = true;
-          content = value;
-        } else {
-          extra[rawKey] = decodeUnknownMarkdownKvValue(value);
-        }
-      } else {
-        contentStarted = true;
-        content = rawLine;
-      }
-    } else {
-      content += (content ? "\n" : "") + rawLine;
-    }
-  }
-  const finalTags = unique$1(tags2);
-  const finalGoalPaths = unique$1(goalPaths);
-  return {
-    title: buildTitle(content, finalTags),
-    content: content.trim(),
-    categoryKey: categoryKey || parentFolder || "",
-    date: date2,
-    tags: finalTags,
-    goalPaths: finalGoalPaths,
-    goalId,
-    cycleId,
-    coreBlock,
-    extra,
-    icon,
-    period,
-    rating,
-    image,
-    pintu,
-    theme,
-    templateId,
-    templateSourceType
-  };
-}
-function isRecordDebugEnabled() {
-  if (typeof window === "undefined") return false;
-  return Boolean(window.__THINK_RECORD_DEBUG__);
-}
-function recordDebugLog(scope, message, payload) {
-  if (!isRecordDebugEnabled()) return;
-  const prefix2 = `[记录调试][${scope}] ${message}`;
-  if (payload === void 0) {
-    console.info(prefix2);
-    return;
-  }
-  console.info(prefix2, payload);
-}
-function pick(line2, emoji2) {
-  return extractDate(line2, emoji2);
-}
-const isDoneLine = (line2) => RE_DONE_BOX.test(line2);
-const isCancelledLine = (line2) => RE_CANCEL_BOX.test(line2);
-function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
-  const lineText = rawLine;
-  if (!RE_TASK_PREFIX.test(lineText)) return null;
-  const item = {
-    id: `${filePath}#${lineNo}`,
-    title: "",
-    // 稍后填充
-    // 任务 content 统一为清洗后的正文；完整原始任务行保存在 rawSource / 完整数据字段中。
-    content: "",
-    rawSource: lineText.trim(),
-    type: "task",
-    tags: [],
-    // 稍后填充
-    recurrence: "none",
-    // 稍后填充
-    created: 0,
-    modified: 0,
-    extra: {},
-    categoryKey: "",
-    // 稍后填充
-    // [新增] 填充 folder
-    folder: parentFolder,
-    // [Day2新增] 主题字段，稍后从标题填充
-    theme: void 0
-  };
-  const status = isDoneLine(lineText) ? "done" : isCancelledLine(lineText) ? "cancelled" : "open";
-  item.categoryKey = status === "done" || status === "cancelled" ? "完成任务" : "未完成任务";
-  applyTaskMetadata(item, decodeTaskMetadata(lineText));
-  const recurrenceText2 = extractRecurrenceText(lineText);
-  if (recurrenceText2) item.recurrence = recurrenceText2;
-  const doneDate = pick(lineText, EMOJI.done);
-  const cancelledDate = pick(lineText, EMOJI.cancelled);
-  const dueDate = pick(lineText, EMOJI.due);
-  const scheduledDate = pick(lineText, EMOJI.scheduled);
-  const startDate = pick(lineText, EMOJI.start);
-  const createdDate = pick(lineText, EMOJI.created);
-  const pickPriority = (line2) => {
-    if (line2.includes("🔺")) return "highest";
-    if (line2.includes("⏫")) return "high";
-    if (line2.includes("🔼")) return "medium";
-    if (line2.includes("⏽")) return "low";
-    if (line2.includes("⏬")) return "lowest";
-    if (line2.includes("🔽")) return "low";
-    return void 0;
-  };
-  const afterPrefix = lineText.replace(RE_TASK_PREFIX, "").trim();
-  const iconMatch = afterPrefix.match(new RegExp("^(\\p{Extended_Pictographic}\\uFE0F?)", "u"));
-  let titleSrc = afterPrefix;
-  if (iconMatch) {
-    item.icon = iconMatch[1];
-    titleSrc = titleSrc.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "");
-  }
-  const editableExtraction = extractTaskEditableText(lineText);
-  const editableText = editableExtraction.editableText;
-  item.title = editableText || cleanTaskText(titleSrc) || "";
-  item.editableText = editableText || item.title || "";
-  item.content = item.editableText;
-  recordDebugLog("任务读取/parser.parseTaskLine", "正文提取", {
-    原始任务行: lineText,
-    去掉Checkbox和开头图标后的候选正文: titleSrc,
-    统一提取入口: editableExtraction,
-    最终EditableText: editableText,
-    正文长度: editableText.length,
-    是否包含连续空格: /\s{2,}/.test(editableText),
-    清洗过程: explainTaskEditableTextExtraction(lineText),
-    itemTitle: item.title,
-    itemContent: item.content,
-    说明: "完整原始任务行仍保存在 item.rawSource / 完整数据字段；不再写入 item.extra[正文]。"
-  });
-  item.priority = pickPriority(lineText);
-  if (createdDate) item.createdDate = createdDate;
-  if (scheduledDate) item.scheduledDate = scheduledDate;
-  if (startDate) item.startDate = startDate;
-  if (dueDate) item.dueDate = dueDate;
-  if (doneDate) item.doneDate = doneDate;
-  if (cancelledDate) item.cancelledDate = cancelledDate;
-  item.startISO = startDate || scheduledDate || dueDate || createdDate;
-  item.endISO = doneDate || cancelledDate || dueDate;
-  if (!item.startISO && status === "open") {
-    item.startISO = item.date = item.dueDate || item.scheduledDate || item.startDate || item.createdDate;
-  }
-  if (!item.endISO) item.endISO = item.startISO;
-  if (item.startISO) item.startMs = Date.parse(item.startISO);
-  if (item.endISO) item.endMs = Date.parse(item.endISO);
-  return item;
-}
-function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
+function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
   const contentLines = lines.slice(startIdx + 1, endIdx);
-  const parsed = decodeBlockContentLines(contentLines, parentFolder);
+  const parsed = decodeRecordContentLines(contentLines, parentFolder);
+  if (!parsed.recordId || !isStableRecordId(parsed.recordId)) return null;
+  if (parsed.schemaVersion !== RECORD_SCHEMA_VERSION) return null;
+  if (!parsed.coreBlock) return null;
+  const isTask = parsed.coreBlock === "task";
+  const isTaskSeries = parsed.coreBlock === "task-series";
+  const isTaskSession = parsed.coreBlock === "task-session";
+  if (isTask && !["open", "done", "cancelled", "skipped"].includes(String(parsed.status || ""))) return null;
+  if (isTask && parsed.status === "skipped" && !parsed.seriesId) return null;
+  if (isTaskSeries && !["active", "stopped"].includes(String(parsed.status || ""))) return null;
+  const recurrenceInfo = isTaskSeries ? normalizeRecurrenceInfo({ unit: parsed.recurrenceUnit, interval: parsed.recurrenceInterval, anchor: parsed.recurrenceAnchor }) : null;
+  if (isTaskSeries && !recurrenceInfo) return null;
+  const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
+  if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
+  const canonicalDate = parsed.scheduledDate || parsed.dueDate || parsed.startDate || parsed.date || (parsed.sessionStartedAt ? parsed.sessionStartedAt.slice(0, 10) : void 0);
   const item = {
-    id: `${filePath}#${startIdx + 1}`,
+    id: parsed.recordId,
+    schemaVersion: parsed.schemaVersion,
     title: parsed.title || "",
     content: parsed.content,
     rawSource: lines.slice(startIdx, endIdx + 1).join("\n"),
     editableText: parsed.content,
-    type: "block",
+    status: parsed.status,
     tags: parsed.tags,
     goalPaths: parsed.goalPaths,
-    recurrence: "none",
+    recurrenceInfo: recurrenceInfo || void 0,
     created: 0,
     modified: 0,
     extra: parsed.extra,
     categoryKey: parsed.categoryKey,
     folder: parentFolder,
-    theme: parsed.theme
+    theme: parsed.theme,
+    coreBlock: parsed.coreBlock,
+    priority: parsed.priority,
+    scheduledDate: parsed.scheduledDate,
+    startDate: parsed.startDate,
+    dueDate: parsed.dueDate,
+    completedAt: parsed.completedAt,
+    cancelledAt: parsed.cancelledAt,
+    skippedAt: parsed.skippedAt,
+    seriesId: parsed.seriesId,
+    seriesStartDate: parsed.seriesStartDate,
+    currentTaskId: parsed.currentTaskId,
+    rolloverPolicy: parsed.rolloverPolicy,
+    taskId: parsed.taskId,
+    sessionStartedAt: parsed.sessionStartedAt,
+    sessionEndedAt: parsed.sessionEndedAt,
+    sessionDurationMinutes: sessionDuration ?? void 0,
+    sessionResult: parsed.sessionResult,
+    sessionSource: parsed.sessionSource,
+    suggestedDurationMinutes: parsed.suggestedDurationMinutes,
+    startEnergyRecordId: parsed.startEnergyRecordId,
+    endEnergyRecordId: parsed.endEnergyRecordId,
+    energyDelta: parsed.energyDelta,
+    brainDelta: parsed.brainDelta,
+    physicalDelta: parsed.physicalDelta,
+    doneDate: parsed.completedAt,
+    cancelledDate: parsed.cancelledAt,
+    date: canonicalDate
   };
   if (parsed.goalId) {
     item.goalId = parsed.goalId;
     item.goalIds = [parsed.goalId];
   }
   if (parsed.cycleId) item.cycleId = parsed.cycleId;
-  if (parsed.coreBlock) item.coreBlock = parsed.coreBlock;
   if (parsed.templateId) item.templateId = parsed.templateId;
   if (parsed.templateSourceType) item.templateSourceType = parsed.templateSourceType;
   if (parsed.icon) item.icon = parsed.icon;
@@ -13904,19 +13917,24 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
   if (parsed.rating !== void 0) item.rating = parsed.rating;
   if (parsed.image) item.image = parsed.image;
   if (parsed.pintu) item.pintu = parsed.pintu;
-  item.startISO = parsed.date;
-  item.endISO = parsed.date;
-  if (item.startISO) item.startMs = Date.parse(item.startISO);
-  if (item.endISO) item.endMs = item.startMs;
-  item.date = parsed.date;
-  if (item.period && item.date) {
-    item.periodCount = getPeriodCount(item.period, dayjs(item.date));
+  if (parsed.seriesId) item.extra["系列ID"] = parsed.seriesId;
+  if (parsed.expectedDurationMinutes !== void 0) {
+    item.expectedDurationMinutes = parsed.expectedDurationMinutes;
   }
+  if (parsed.energyDemand) item.extra["精力要求"] = parsed.energyDemand;
+  if (parsed.brainDemand) item.extra["脑力要求"] = parsed.brainDemand;
+  if (parsed.physicalDemand) item.extra["体力要求"] = parsed.physicalDemand;
+  if (parsed.createdAt) item.extra["创建于"] = parsed.createdAt;
+  item.startISO = parsed.sessionStartedAt || parsed.startDate || parsed.scheduledDate || parsed.dueDate || parsed.date;
+  item.endISO = parsed.sessionEndedAt || parsed.completedAt || parsed.cancelledAt || parsed.dueDate || item.startISO;
+  if (item.startISO) item.startMs = Date.parse(item.startISO);
+  if (item.endISO) item.endMs = Date.parse(item.endISO);
+  if (item.period && item.date) item.periodCount = getPeriodCount(item.period, dayjs(item.date));
   return item;
 }
 const ORDER = ["done", "due", "scheduled", "start", "created", "end"];
 function normalizeItemDates(it) {
-  if (it.type === "block") {
+  if (it.coreBlock !== "task") {
     if (it.date) {
       it.dateSource = "block";
       const t3 = Date.parse(it.date);
@@ -13943,22 +13961,16 @@ function normalizeItemDates(it) {
       break;
     }
   }
-  if (!it.categoryKey) it.categoryKey = "任务/open";
+  if (!it.categoryKey) it.categoryKey = "任务";
 }
 function unique(values2) {
   return Array.from(new Set(values2.map((value) => String(value ?? "").trim()).filter(Boolean)));
-}
-function lineFromItemId(id) {
-  const hashIdx = String(id || "").lastIndexOf("#");
-  if (hashIdx < 0) return void 0;
-  const parsed = Number(String(id).slice(hashIdx + 1));
-  return Number.isFinite(parsed) ? parsed : void 0;
 }
 function normalizeSearchText$1(value) {
   return String(value ?? "").toLowerCase();
 }
 function normalizeRecordItem(item, context) {
-  const line2 = context.line ?? lineFromItemId(item.id);
+  const line2 = context.line;
   item.created = context.created;
   item.modified = context.modified;
   item.folder = item.folder || context.parentFolder;
@@ -13984,24 +13996,8 @@ function normalizeRecordItem(item, context) {
   item.theme = normalizeExplicitTheme(item.theme, context.themeMatcher);
   applyExplicitThemeViewFields(item);
   if (!item.extra) item.extra = {};
-  if (!item.recurrence) item.recurrence = "none";
-  if (!item.categoryKey) item.categoryKey = item.type === "task" ? "未完成任务" : context.parentFolder;
+  if (!item.categoryKey) item.categoryKey = item.coreBlock === "task" ? "任务" : context.parentFolder;
   normalizeItemDates(item);
-  if (item.type === "task") {
-    const taskRawSource = item.rawSource || item.content || "";
-    const extractedEditableText = extractTaskEditableText(taskRawSource).editableText;
-    const contentLooksRawTaskLine = /^\s*[-*+]\s*\[[ xX-]\]/.test(String(item.content || ""));
-    if (extractedEditableText && (!item.content || contentLooksRawTaskLine || item.content === taskRawSource)) {
-      item.content = extractedEditableText;
-    }
-    if (!item.editableText && extractedEditableText) {
-      item.editableText = extractedEditableText;
-    }
-    if ((!item.title || item.title === taskRawSource) && (item.editableText || item.content)) {
-      item.title = item.editableText || item.content;
-    }
-    item.recurrenceInfo = parseRecurrence(taskRawSource) || void 0;
-  }
   item.fullData = item.rawSource || item.fullData || item.content || "";
   const indexedItem = item;
   indexedItem.titleLower = normalizeSearchText$1(item.title);
@@ -14014,107 +14010,6 @@ function normalizeRecordItem(item, context) {
   indexedItem.rootGoalLower = normalizeSearchText$1(item.rootGoal);
   indexedItem.leafGoalLower = normalizeSearchText$1(item.leafGoal);
   return item;
-}
-function parseDuration(value) {
-  if (value === null || value === void 0 || value === "") return null;
-  const numeric = typeof value === "number" ? value : Number.parseInt(String(value), 10);
-  return Number.isFinite(numeric) ? numeric : null;
-}
-function normalizeTimeValue(value) {
-  if (!value) return void 0;
-  return timeToMinutes(value) === null ? void 0 : value;
-}
-function deriveDurationFromRange(startTime, endTime) {
-  const startMinutes = timeToMinutes(String(startTime || ""));
-  const endMinutes = timeToMinutes(String(endTime || ""));
-  if (startMinutes === null || endMinutes === null) return null;
-  let duration2 = endMinutes - startMinutes;
-  if (duration2 < 0) duration2 += 24 * 60;
-  return duration2;
-}
-function deriveEndFromStartAndDuration(startTime, duration2) {
-  const startMinutes = timeToMinutes(String(startTime || ""));
-  const normalizedDuration = parseDuration(duration2);
-  if (startMinutes === null || normalizedDuration === null) return null;
-  return minutesToTime(startMinutes + normalizedDuration) || null;
-}
-function deriveStartFromEndAndDuration(endTime, duration2) {
-  const endMinutes = timeToMinutes(String(endTime || ""));
-  const normalizedDuration = parseDuration(duration2);
-  if (endMinutes === null || normalizedDuration === null) return null;
-  return minutesToTime(endMinutes - normalizedDuration) || null;
-}
-function applyTaskTimePolicy(input) {
-  const startTime = normalizeTimeValue(input.startTime);
-  const endTime = normalizeTimeValue(input.endTime);
-  const duration2 = parseDuration(input.duration);
-  const direction = input.direction === "backward" ? "backward" : "forward";
-  const mode = input.mode ?? "finalize";
-  const lastChanged = input.lastChanged ?? null;
-  if (startTime && endTime && (mode === "finalize" || lastChanged !== "duration")) {
-    return {
-      startTime,
-      endTime,
-      duration: deriveDurationFromRange(startTime, endTime) ?? duration2 ?? void 0
-    };
-  }
-  if (direction === "backward") {
-    if (endTime && duration2 !== null && (mode === "finalize" || lastChanged !== "startTime")) {
-      return {
-        startTime: deriveStartFromEndAndDuration(endTime, duration2) ?? void 0,
-        endTime,
-        duration: duration2
-      };
-    }
-    if (startTime && duration2 !== null && mode === "finalize") {
-      return {
-        startTime,
-        endTime: deriveEndFromStartAndDuration(startTime, duration2) ?? void 0,
-        duration: duration2
-      };
-    }
-  }
-  if (startTime && duration2 !== null && (mode === "finalize" || lastChanged !== "endTime")) {
-    return {
-      startTime,
-      endTime: deriveEndFromStartAndDuration(startTime, duration2) ?? void 0,
-      duration: duration2
-    };
-  }
-  if (endTime && duration2 !== null && mode === "finalize") {
-    return {
-      startTime: deriveStartFromEndAndDuration(endTime, duration2) ?? void 0,
-      endTime,
-      duration: duration2
-    };
-  }
-  return {
-    startTime,
-    endTime,
-    duration: duration2 ?? void 0
-  };
-}
-function isDone(categoryKey) {
-  return isTaskCompletedByCategory(categoryKey);
-}
-const TASK_CADENCE_ORDER = ["routine", "day", "week", "month", "quarter", "year"];
-const TASK_CADENCE_META = {
-  routine: { label: "日常任务", emoji: "🌿" },
-  day: { label: "天任务", emoji: "☀️" },
-  week: { label: "周任务", emoji: "📅" },
-  month: { label: "月任务", emoji: "🗓️" },
-  quarter: { label: "季任务", emoji: "🍂" },
-  year: { label: "年任务", emoji: "🧭" }
-};
-function getTaskCadence(item) {
-  const recurrence = getTaskRecurrenceInfo(item);
-  if (!recurrence) return "routine";
-  if (recurrence.unit === "day") return "day";
-  if (recurrence.unit === "week") return "week";
-  if (recurrence.unit === "year") return "year";
-  if (recurrence.unit === "quarter") return "quarter";
-  if (recurrence.unit === "month" && recurrence.interval === 3) return "quarter";
-  return "month";
 }
 function normalizeFilePathInput(input) {
   return typeof input === "string" ? input : input && typeof input.path === "string" ? input.path : "";
@@ -14129,9 +14024,6 @@ function pathParentName(path) {
 }
 function basenameNoExt(filename) {
   return filename.toLowerCase().endsWith(".md") ? filename.slice(0, -3) : filename;
-}
-function itemBelongsToFileId(itemId, filePath) {
-  return Boolean(itemId && itemId.startsWith(filePath + "#"));
 }
 class DataStoreFileScanner {
   constructor(vault, metadata, fileStat, themeMatcher) {
@@ -14165,6 +14057,7 @@ class DataStoreFileScanner {
     const parentFolder = pathParentName(filePath);
     const fileName = basenameNoExt(pathBasename(filePath));
     const items = [];
+    const integrityIssues = [];
     let nextHeadingIndex = 0;
     let currentSectionTags = [];
     let currentHeader = "";
@@ -14184,24 +14077,29 @@ class DataStoreFileScanner {
       if (line2.trim() === "<!-- start -->") {
         const endIdx = lines.indexOf("<!-- end -->", i2 + 1);
         if (endIdx !== -1) {
-          const blockItem = parseBlockContent(filePath, lines, i2, endIdx, parentFolder);
+          const blockItem = parseRecordBlock(filePath, lines, i2, endIdx, parentFolder);
           if (blockItem) {
-            this.normalizeScannedItem(blockItem, filePath, fileName, parentFolder, stat, i2 + 1, currentHeader, currentSectionTags);
+            this.normalizeScannedItem(blockItem, filePath, fileName, parentFolder, stat, i2 + 1, endIdx + 1, currentHeader, currentSectionTags);
             items.push(blockItem);
+          } else {
+            const blockLines = lines.slice(i2 + 1, endIdx);
+            const idLine = blockLines.find((candidate) => /^\s*(?:记录ID|recordId)\s*[:：]{1,2}/i.test(candidate));
+            const recordId = idLine?.replace(/^\s*(?:记录ID|recordId)\s*[:：]{1,2}\s*/i, "").trim();
+            integrityIssues.push({
+              code: !recordId || !isStableRecordId(recordId) ? "record_id_missing" : "record_block_malformed",
+              recordId: recordId || void 0,
+              path: filePath,
+              message: !recordId || !isStableRecordId(recordId) ? `Record Block at ${filePath}:${i2 + 1} is missing a valid stable 记录ID.` : `Record Block ${recordId} at ${filePath}:${i2 + 1} does not satisfy Record v2 envelope requirements.`
+            });
           }
           i2 = endIdx;
           continue;
         }
       }
-      const taskItem = parseTaskLine(filePath, line2, i2 + 1, parentFolder);
-      if (taskItem) {
-        this.normalizeScannedItem(taskItem, filePath, fileName, parentFolder, stat, i2 + 1, currentHeader, currentSectionTags);
-        items.push(taskItem);
-      }
     }
-    return { filePath, items, stat };
+    return { filePath, items, stat, integrityIssues };
   }
-  normalizeScannedItem(item, filePath, fileName, parentFolder, stat, line2, currentHeader, currentSectionTags) {
+  normalizeScannedItem(item, filePath, fileName, parentFolder, stat, line2, endLine, currentHeader, currentSectionTags) {
     normalizeRecordItem(item, {
       filePath,
       fileName,
@@ -14213,6 +14111,8 @@ class DataStoreFileScanner {
       sectionTags: currentSectionTags,
       themeMatcher: this.themeMatcher
     });
+    item.source = { path: filePath, startLine: line2, endLine, modified: stat.mtime };
+    if (item.file) item.file.line = line2;
   }
 }
 function coerceForCompare(v2) {
@@ -14367,8 +14267,8 @@ function sortItems(items, rules = []) {
   });
 }
 function isClosed(it) {
-  const k2 = (it.categoryKey || "").toLowerCase();
-  return /\/(done|cancelled)\b/.test(k2);
+  if (it.coreBlock !== "task") return false;
+  return it.status === "done" || it.status === "cancelled" || it.status === "skipped";
 }
 function filterByDateRange(items, startISO, endISO) {
   if (!startISO && !endISO) return items;
@@ -14399,8 +14299,9 @@ function filterByKeyword(items, kw) {
     const itemRecord = asUnknownRecord(it);
     const titleLower = readString(itemRecord, "titleLower") ?? (it.title || "").toLowerCase();
     const contentLower = readString(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
-    const fullDataLower = readString(itemRecord, "fullDataLower") ?? String(readField(it, "fullData") || "").toLowerCase();
-    return (titleLower + " " + contentLower + " " + fullDataLower).includes(s2);
+    const tagsLower = (it.tags || []).join(" ").toLowerCase();
+    const semanticText = [it.goalPath, it.themePath, it.coreBlock, it.status].filter(Boolean).join(" ").toLowerCase();
+    return (titleLower + " " + contentLower + " " + tagsLower + " " + semanticText).includes(s2);
   });
 }
 function filterByPeriod(items, period) {
@@ -14412,50 +14313,197 @@ function filterByPeriod(items, period) {
     return itemPeriod == null || itemPeriod === "" || itemPeriod === period;
   });
 }
+class RecordIndex {
+  itemsById = /* @__PURE__ */ new Map();
+  locationsById = /* @__PURE__ */ new Map();
+  issues = [];
+  clear() {
+    this.itemsById.clear();
+    this.locationsById.clear();
+    this.issues = [];
+  }
+  rebuild(fileIndex) {
+    this.clear();
+    const all = [];
+    for (const [path, items] of fileIndex.entries()) {
+      for (const item of items) {
+        const id = String(item.id || "").trim();
+        if (!id) {
+          this.issues.push({ code: "record_id_missing", path, message: `Record in ${path} has no 记录ID.` });
+          continue;
+        }
+        const source = item.source;
+        const line2 = source?.startLine ?? item.file?.line ?? 0;
+        const location = {
+          recordId: id,
+          path,
+          startLine: line2,
+          endLine: source?.endLine ?? line2,
+          modified: source?.modified ?? item.modified ?? 0
+        };
+        const locations = this.locationsById.get(id) || [];
+        locations.push(location);
+        this.locationsById.set(id, locations);
+        all.push(item);
+      }
+    }
+    const unique2 = [];
+    for (const item of all) {
+      const locations = this.locationsById.get(item.id) || [];
+      if (locations.length !== 1) continue;
+      if (this.itemsById.has(item.id)) continue;
+      this.itemsById.set(item.id, item);
+      unique2.push(item);
+    }
+    for (const [recordId, locations] of this.locationsById.entries()) {
+      if (locations.length > 1) {
+        this.issues.push({
+          code: "record_id_duplicate",
+          recordId,
+          message: `Duplicate 记录ID ${recordId}: ${locations.map((location) => `${location.path}:${location.startLine}`).join(", ")}`
+        });
+      }
+    }
+    const openTasksBySeries = /* @__PURE__ */ new Map();
+    for (const item of unique2) {
+      if (item.coreBlock === "task" && item.seriesId && item.status === "open") {
+        const group = openTasksBySeries.get(item.seriesId) || [];
+        group.push(item);
+        openTasksBySeries.set(item.seriesId, group);
+      }
+      if (item.coreBlock === "task" && item.seriesId) {
+        const series = this.itemsById.get(item.seriesId);
+        if (!series || series.coreBlock !== "task-series") {
+          this.issues.push({
+            code: "task_series_reference_orphan",
+            recordId: item.id,
+            path: item.source?.path,
+            message: `Task ${item.id} references missing Task Series ${item.seriesId}.`
+          });
+          continue;
+        }
+        item.recurrenceInfo = series.recurrenceInfo;
+      }
+      if (item.coreBlock === "task-session") {
+        const task = item.taskId ? this.itemsById.get(item.taskId) : null;
+        const series = item.seriesId ? this.itemsById.get(item.seriesId) : null;
+        const taskInvalid = !task || task.coreBlock !== "task";
+        const seriesInvalid = Boolean(item.seriesId) && (!series || series.coreBlock !== "task-series");
+        const relationMismatch = Boolean(task && item.seriesId && task.seriesId !== item.seriesId);
+        const energyRefs = [item.startEnergyRecordId, item.endEnergyRecordId].filter(Boolean);
+        const invalidEnergyRef = energyRefs.find((recordId) => this.itemsById.get(recordId)?.coreBlock !== "energy");
+        if (taskInvalid || seriesInvalid || relationMismatch || invalidEnergyRef) {
+          this.issues.push({
+            code: "task_session_reference_orphan",
+            recordId: item.id,
+            path: item.source?.path,
+            message: taskInvalid ? `Task Session ${item.id} references missing Task ${item.taskId || ""}.` : seriesInvalid ? `Task Session ${item.id} references missing Task Series ${item.seriesId || ""}.` : relationMismatch ? `Task Session ${item.id} series reference does not match Task ${item.taskId}.` : `Task Session ${item.id} references missing Energy Record ${invalidEnergyRef || ""}.`
+          });
+        }
+      }
+      if (item.coreBlock === "task-series") {
+        if (item.status === "active" && !item.currentTaskId) {
+          this.issues.push({
+            code: "record_reference_orphan",
+            recordId: item.id,
+            path: item.source?.path,
+            message: `Active Task Series ${item.id} has no currentTaskId.`
+          });
+        } else if (item.currentTaskId) {
+          const current2 = this.itemsById.get(item.currentTaskId);
+          const relationInvalid = !current2 || current2.coreBlock !== "task" || current2.seriesId !== item.id;
+          const activePointerInvalid = item.status === "active" && current2?.status !== "open";
+          if (relationInvalid || activePointerInvalid) {
+            this.issues.push({
+              code: "record_reference_orphan",
+              recordId: item.id,
+              path: item.source?.path,
+              message: relationInvalid ? `Task Series ${item.id} currentTaskId ${item.currentTaskId} is missing or points outside the series.` : `Active Task Series ${item.id} currentTaskId ${item.currentTaskId} is not open.`
+            });
+          }
+        }
+      }
+    }
+    for (const [seriesId, openTasks] of openTasksBySeries.entries()) {
+      if (openTasks.length > 1) {
+        this.issues.push({
+          code: "record_reference_orphan",
+          recordId: seriesId,
+          message: `Task Series ${seriesId} has ${openTasks.length} open instances; single-active-instance requires at most one.`
+        });
+      }
+    }
+    return unique2;
+  }
+  getById(recordId) {
+    return this.itemsById.get(recordId) || null;
+  }
+  getLocation(recordId) {
+    const locations = this.locationsById.get(recordId) || [];
+    return locations.length === 1 ? locations[0] : null;
+  }
+  getLocations(recordId) {
+    return [...this.locationsById.get(recordId) || []];
+  }
+  getIssues() {
+    return this.issues.map((issue2) => ({ ...issue2 }));
+  }
+}
 class DataStoreIndex {
   items = [];
   fileIndex = /* @__PURE__ */ new Map();
   queryCache = /* @__PURE__ */ new Map();
   dataVersion = 0;
+  recordIndex = new RecordIndex();
   dispose() {
-    this.queryCache.clear();
-    this.fileIndex.clear();
-    this.items = [];
+    this.clear();
   }
   clear() {
     this.items = [];
     this.fileIndex.clear();
     this.queryCache.clear();
+    this.recordIndex.clear();
   }
   clearQueryCache() {
     this.queryCache.clear();
   }
-  hydrateFileItems(filePath, items) {
+  hydrateFileItems(filePath, items, opts = {}) {
     this.fileIndex.set(filePath, items);
-    this.items.push(...items);
+    if (opts.rebuild !== false) this.rebuildIdentityIndex();
+  }
+  stageFileItems(filePath, items) {
+    this.fileIndex.set(filePath, items);
+  }
+  rebuild(opts = {}) {
+    this.rebuildIdentityIndex();
+    if (opts.bumpVersion !== false) this.bumpVersion();
   }
   replaceFileItems(filePath, items, opts = {}) {
-    if (this.fileIndex.has(filePath)) {
-      this.items = this.items.filter((it) => !itemBelongsToFileId(it.id, filePath));
-    }
     this.fileIndex.set(filePath, items);
-    this.items.push(...items);
-    if (opts.bumpVersion !== false) {
-      this.bumpVersion();
-    }
+    this.rebuildIdentityIndex();
+    if (opts.bumpVersion !== false) this.bumpVersion();
   }
   removeFileItems(filePath, opts = {}) {
     const hadItems = this.fileIndex.delete(filePath);
-    if (hadItems) {
-      this.items = this.items.filter((it) => !itemBelongsToFileId(it.id, filePath));
-    }
-    if (opts.bumpVersion !== false) {
-      this.bumpVersion();
-    }
+    if (hadItems) this.rebuildIdentityIndex();
+    if (opts.bumpVersion !== false) this.bumpVersion();
     return hadItems;
   }
-  queryItems(filters = [], sortRules = []) {
-    const key = this.makeQueryKey(filters, sortRules);
+  getById(recordId) {
+    return this.recordIndex.getById(recordId);
+  }
+  getLocation(recordId) {
+    return this.recordIndex.getLocation(recordId);
+  }
+  getLocations(recordId) {
+    return this.recordIndex.getLocations(recordId);
+  }
+  getIntegrityIssues() {
+    return this.recordIndex.getIssues();
+  }
+  /** All valid Record v2 entities, including internal task-series/task-session records. */
+  queryRecords(filters = [], sortRules = []) {
+    const key = `records:${this.makeQueryKey(filters, sortRules)}`;
     const cached2 = this.queryCache.get(key);
     if (cached2) return cached2;
     const filtered = filterByRules(this.items, filters);
@@ -14463,8 +14511,23 @@ class DataStoreIndex {
     this.queryCache.set(key, result);
     return result;
   }
+  /** User-visible records only. Internal Series/Session entities stay behind the application boundary. */
+  queryItems(filters = [], sortRules = []) {
+    const key = this.makeQueryKey(filters, sortRules);
+    const cached2 = this.queryCache.get(key);
+    if (cached2) return cached2;
+    const userVisibleItems = this.items.filter((item) => item.coreBlock !== "task-series" && item.coreBlock !== "task-session");
+    const filtered = filterByRules(userVisibleItems, filters);
+    const result = sortItems(filtered, sortRules);
+    this.queryCache.set(key, result);
+    return result;
+  }
   bumpVersion() {
     this.dataVersion++;
+    this.queryCache.clear();
+  }
+  rebuildIdentityIndex() {
+    this.items = this.recordIndex.rebuild(this.fileIndex);
     this.queryCache.clear();
   }
   makeQueryKey(filters = [], sortRules = []) {
@@ -14517,6 +14580,8 @@ let DataStore = class {
   index = new DataStoreIndex();
   cacheStore;
   fileScanner;
+  scannerIssuesByFile = /* @__PURE__ */ new Map();
+  runtimeIntegrityIssues = [];
   changeListeners = /* @__PURE__ */ new Set();
   _perf = { start: 0, end: 0, scannedFiles: 0, scannedItems: 0 };
   _disposed = false;
@@ -14527,6 +14592,8 @@ let DataStore = class {
     this._disposed = true;
     this.cacheStore.dispose();
     this.index.dispose();
+    this.scannerIssuesByFile.clear();
+    this.runtimeIntegrityIssues.length = 0;
     this.changeListeners.clear();
   }
   _assertNotDisposed() {
@@ -14537,14 +14604,17 @@ let DataStore = class {
   async scanAll() {
     if (!this._assertNotDisposed()) return;
     this.index.clear();
+    this.scannerIssuesByFile.clear();
+    this.runtimeIntegrityIssues.length = 0;
     const paths = this.vault.listMarkdownFilePaths();
     for (const path of paths) {
       if (!this._assertNotDisposed()) break;
-      const scanned = await this.scanFile(path, { bumpVersion: false });
+      const scanned = await this.scanFile(path, { bumpVersion: false, deferIndexRebuild: true, deferCacheSave: true });
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
     }
-    this.index.bumpVersion();
+    this.index.rebuild();
+    this.cacheStore.scheduleSave();
   }
   // [主流程] 初始扫描（代理到暖启动）
   async initialScan() {
@@ -14583,16 +14653,19 @@ let DataStore = class {
     const paths = this.vault.listMarkdownFilePaths();
     const plan = await buildWarmStartPlan(paths, cache, this.fileStat);
     this.index.clear();
+    this.scannerIssuesByFile.clear();
+    this.runtimeIntegrityIssues.length = 0;
     for (const { path, cached: cached2 } of plan.unchangedEntries) {
-      this.index.hydrateFileItems(path, this.cacheStore.restoreItems(cached2));
+      this.index.stageFileItems(path, this.cacheStore.restoreItems(cached2));
+      this.scannerIssuesByFile.set(path, (cached2.integrityIssues || []).map((issue2) => ({ ...issue2, code: issue2.code })));
     }
     for (const pth of plan.changedFiles) {
-      const scanned = await this.scanFile(pth, { bumpVersion: false });
+      const scanned = await this.scanFile(pth, { bumpVersion: false, deferIndexRebuild: true, deferCacheSave: true });
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
     }
     this.cacheStore.removeMissingFiles(plan.seen);
-    this.index.bumpVersion();
+    this.index.rebuild();
     this._perf.end = Date.now();
     this.cacheStore.scheduleSave();
     this.notifyChange();
@@ -14620,26 +14693,72 @@ let DataStore = class {
     if (!this._assertNotDisposed()) return [];
     try {
       const scanned = await this.fileScanner.scan(filePathOrFile);
-      if (!scanned) return [];
-      this.index.replaceFileItems(scanned.filePath, scanned.items, { bumpVersion: opts.bumpVersion });
-      this.cacheStore.upsertFile(scanned.filePath, scanned.stat, scanned.items);
-      this.cacheStore.scheduleSave();
+      if (!scanned) {
+        const filePath = typeof filePathOrFile === "string" ? filePathOrFile : filePathOrFile?.path || "";
+        const error = new Error(`record_scan_unavailable:${filePath || "<unknown>"}`);
+        const issue2 = {
+          code: "record_scan_failed",
+          path: filePath || void 0,
+          message: error.message
+        };
+        if (filePath) this.scannerIssuesByFile.set(filePath, [issue2]);
+        if (opts.throwOnError) throw error;
+        return [];
+      }
+      this.scannerIssuesByFile.set(scanned.filePath, scanned.integrityIssues);
+      if (opts.deferIndexRebuild) this.index.stageFileItems(scanned.filePath, scanned.items);
+      else this.index.replaceFileItems(scanned.filePath, scanned.items, { bumpVersion: opts.bumpVersion });
+      this.cacheStore.upsertFile(scanned.filePath, scanned.stat, scanned.items, scanned.integrityIssues);
+      if (!opts.deferCacheSave) this.cacheStore.scheduleSave();
       return scanned.items;
     } catch (err) {
       const filePath = typeof filePathOrFile === "string" ? filePathOrFile : filePathOrFile?.path || "";
+      const issue2 = {
+        code: "record_scan_failed",
+        path: filePath || void 0,
+        message: `Record scan failed for ${filePath || "<unknown>"}: ${err instanceof Error ? err.message : String(err)}`
+      };
+      if (filePath) this.scannerIssuesByFile.set(filePath, [issue2]);
       devError("ThinkPlugin: 扫描文件失败", filePath, err);
+      if (opts.throwOnError) throw err;
       return [];
     }
   }
   removeFileItems(filePath) {
+    this.scannerIssuesByFile.delete(filePath);
     this.index.removeFileItems(filePath);
     if (this.cacheStore.removeFile(filePath)) {
       this.cacheStore.scheduleSave();
     }
   }
   /* ---------------- 查询 ---------------- */
+  queryRecords(filters = [], sortRules = []) {
+    return this.index.queryRecords(filters, sortRules);
+  }
   queryItems(filters = [], sortRules = []) {
     return this.index.queryItems(filters, sortRules);
+  }
+  getRecordById(recordId) {
+    return this.index.getById(recordId);
+  }
+  getRecordLocation(recordId) {
+    return this.index.getLocation(recordId);
+  }
+  getRecordLocations(recordId) {
+    return this.index.getLocations(recordId);
+  }
+  getRecordIntegrityIssues() {
+    return [
+      ...Array.from(this.scannerIssuesByFile.values()).flat(),
+      ...this.index.getIntegrityIssues(),
+      ...this.runtimeIntegrityIssues.map((issue2) => ({ ...issue2 }))
+    ];
+  }
+  reportRecordIntegrityIssue(issue2) {
+    this.runtimeIntegrityIssues.push({ ...issue2 });
+  }
+  clearRuntimeIntegrityIssues() {
+    this.runtimeIntegrityIssues.length = 0;
   }
   /* ---------------- 变更通知 ---------------- */
   _emitChange() {
@@ -14699,7 +14818,7 @@ function readSearchResultText(sr, key) {
   return normalizeRetrievalText(readUnknown(getSearchResultRecord(sr), key));
 }
 function readSearchResultNumber(sr, key) {
-  return readNumber$2(getSearchResultRecord(sr), key);
+  return readNumber$1(getSearchResultRecord(sr), key);
 }
 function tokenizeRetrievalText(text2) {
   if (!text2) return [];
@@ -14724,7 +14843,7 @@ function applyRetrievalFilters(results, filters, indexedItemsById) {
   return results.filter((sr) => {
     const item = indexedItemsById.get(getSearchResultId(sr));
     if (!matchesThemePath(sr, item, filters)) return false;
-    if (!matchesItemType(sr, item, filters)) return false;
+    if (!matchesCoreBlock(sr, item, filters)) return false;
     if (!matchesBlockTemplateId(sr, item, filters)) return false;
     if (!matchesBlockTemplateName(sr, item, filters)) return false;
     return true;
@@ -14736,10 +14855,10 @@ function matchesThemePath(sr, item, filters) {
   if (!itemThemePath) return false;
   return filters.themePaths.some((tp) => itemThemePath === tp || itemThemePath.startsWith(tp + "/"));
 }
-function matchesItemType(sr, item, filters) {
-  if (!filters.types?.length) return true;
-  const itemType = item?.type || readSearchResultText(sr, "type");
-  return !!itemType && filters.types.includes(itemType);
+function matchesCoreBlock(sr, item, filters) {
+  if (!filters.coreBlocks?.length) return true;
+  const coreBlock = normalizeRetrievalText(item?.coreBlock ?? readSearchResultText(sr, "coreBlock"));
+  return !!coreBlock && filters.coreBlocks.map(normalizeRetrievalText).includes(coreBlock);
 }
 function matchesBlockTemplateId(sr, item, filters) {
   if (!filters.blockTemplateIds?.length) return true;
@@ -16566,7 +16685,6 @@ const SEARCH_FIELDS = [
   "title",
   "content",
   "editableText",
-  "fullData",
   "tags",
   "themePath",
   "rootTheme",
@@ -16592,7 +16710,7 @@ const STORE_FIELDS = [
   "categoryKey",
   "baseCategory",
   "leafCategory",
-  "type",
+  "coreBlock",
   "templateId",
   "fileName",
   "folder",
@@ -16612,7 +16730,6 @@ function createRetrievalMiniSearch() {
       boost: {
         title: 2,
         editableText: 1.8,
-        fullData: 0.6,
         themePath: 1.5,
         tags: 1.3,
         categoryKey: 1.2,
@@ -16638,7 +16755,7 @@ function itemToSearchDocument(item) {
     categoryKey: normalizeRetrievalText(readFieldValue(item, "categoryKey")),
     baseCategory: normalizeRetrievalText(readFieldValue(item, "baseCategory")),
     leafCategory: normalizeRetrievalText(readFieldValue(item, "leafCategory")),
-    type: normalizeRetrievalText(item.type),
+    coreBlock: normalizeRetrievalText(item.coreBlock),
     templateId: normalizeRetrievalText(item.templateId),
     fileName: normalizeRetrievalText(readFieldValue(item, "fileName")),
     folder: normalizeRetrievalText(readFieldValue(item, "file.folder") ?? item.folder),
@@ -16660,8 +16777,7 @@ function searchResultToItem(sr, indexedItemsById) {
     content: readSearchResultText(sr, "content"),
     editableText: readSearchResultText(sr, "editableText"),
     fullData,
-    rawSource: fullData || void 0,
-    type: readSearchResultText(sr, "type") || "task",
+    coreBlock: readSearchResultText(sr, "coreBlock") || "unknown",
     themePath: readSearchResultText(sr, "themePath") || void 0,
     rootTheme: readSearchResultText(sr, "rootTheme") || void 0,
     leafTheme: readSearchResultText(sr, "leafTheme") || void 0,
@@ -16671,7 +16787,6 @@ function searchResultToItem(sr, indexedItemsById) {
     dateMs: readSearchResultNumber(sr, "dateMs"),
     created: readSearchResultNumber(sr, "created") ?? 0,
     modified: readSearchResultNumber(sr, "modified") ?? 0,
-    recurrence: "none",
     extra: {}
   };
 }
@@ -16858,8 +16973,8 @@ let AiChatService = class {
       const theme = item.theme || "无主题";
       const title = item.title || "无标题";
       const content = (item.content || "").slice(0, 5e3);
-      const type = item.type === "task" ? "任务" : "记录";
-      const entry = `- [${type}] ${date2} | ${theme} | ${title}${content ? ": " + content : ""}`;
+      const type = item.coreBlock === "task" ? "任务" : "记录";
+      const entry = `- ${type} | ${date2} | ${theme} | ${title}${content ? ": " + content : ""}`;
       if (totalLength + entry.length > MAX_CONTEXT_LENGTH) {
         break;
       }
@@ -17170,9 +17285,9 @@ function collectThemePathsForHeatmap(params) {
   const filteredItems = filterByRules(items, dataSource.filters || []);
   const themeSet = /* @__PURE__ */ new Set();
   filteredItems.forEach((item) => {
-    const itemBlock2 = item.coreBlock || item.templateId || item.categoryKey;
+    const itemBlock = item.coreBlock || item.templateId || item.categoryKey;
     const sourceBlockKey = sourceBlock.coreBlockId || sourceBlock.id || sourceBlock.name || sourceBlock.categoryKey;
-    const isSourceBlock = itemBlock2 === sourceBlockKey || item.categoryKey === sourceBlock.categoryKey || item.categoryKey === sourceBlock.name;
+    const isSourceBlock = itemBlock === sourceBlockKey || item.categoryKey === sourceBlock.categoryKey || item.categoryKey === sourceBlock.name;
     const themePath = getItemThemePath(item);
     if (isSourceBlock && themePath) {
       themeSet.add(themePath);
@@ -17268,7 +17383,7 @@ function exportItemsToMarkdown(items, config2 = BLOCK_EXPORT_DEFAULT_CONFIG) {
         renderGroupTree(node2.children, level + 1);
       }
       node2.items.forEach((item, index) => {
-        if (item.type === "task") {
+        if (item.coreBlock === "task") {
           lines.push(formatTaskItem(item));
         } else {
           lines.push(...formatBlockItem(item, index + 1, config2));
@@ -17318,31 +17433,30 @@ function formatBlockItem(item, index, config2) {
   return lines;
 }
 function formatTaskItem(item) {
-  const status = getTaskStatus(item);
-  const checkbox = status === "done" ? "[x]" : status === "cancelled" ? "[-]" : "[ ]";
-  let taskLine = `- ${checkbox} ${item.title}`;
-  const extraFields = {
-    "周期": item.period,
-    "评分": item.rating,
-    "时间": item.startTime,
-    "结束": item.endTime,
-    "时长": item.duration,
-    ...item.extra
-  };
-  for (const key in extraFields) {
-    const value = extraFields[key];
-    if (key === "filename" || key === "header") continue;
-    if (value !== null && value !== void 0 && value !== "") {
-      taskLine += ` (${key}:: ${value})`;
-    }
+  const status = getTaskStatus(item) || "unknown";
+  const content = String(item.content || item.editableText || item.title || "").trim() || "未命名任务";
+  const lines = [`- **任务** ${content}`];
+  const fields = [
+    ["记录ID", item.id],
+    ["状态", status],
+    ["目标ID", item.goalId],
+    ["目标", item.goalPath || item.goalPaths?.[0]],
+    ["主题", item.themePath || item.theme],
+    ["优先级", item.priority],
+    ["预计时长", item.expectedDurationMinutes ?? item.duration],
+    ["计划日期", item.scheduledDate],
+    ["开始日期", item.startDate],
+    ["截止日期", item.dueDate],
+    ["完成于", item.completedAt],
+    ["取消于", item.cancelledAt],
+    ["跳过于", item.skippedAt],
+    ["系列ID", item.seriesId]
+  ];
+  for (const [label, value] of fields) {
+    if (value === void 0 || value === null || value === "") continue;
+    lines.push(`  - ${label}: ${String(value)}`);
   }
-  if (item.dueDate) taskLine += ` ${EMOJI.due} ${item.dueDate}`;
-  if (item.scheduledDate) taskLine += ` ${EMOJI.scheduled} ${item.scheduledDate}`;
-  if (item.startDate) taskLine += ` ${EMOJI.start} ${item.startDate}`;
-  if (item.createdDate) taskLine += ` ${EMOJI.created} ${item.createdDate}`;
-  if (item.doneDate) taskLine += ` ${EMOJI.done} ${item.doneDate}`;
-  if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
-  return taskLine.replace(/\s+/g, " ").trim();
+  return lines.join("\n");
 }
 function filterItemsByThemes(items, themesToTrack) {
   const kept = [];
@@ -17504,7 +17618,7 @@ function isGoalOrderField(field) {
   const canonical = getCanonicalFieldKey(String(field || "").trim());
   return ["goalPath", "goalPaths", "rootGoal", "leafGoal", "goalId", "goalIds"].includes(canonical);
 }
-function normalizeText$1(value) {
+function normalizeText(value) {
   if (value === null || value === void 0) return "";
   return String(value).trim();
 }
@@ -17516,7 +17630,7 @@ function firstText$1(value) {
     }
     return "";
   }
-  const text2 = normalizeText$1(value);
+  const text2 = normalizeText(value);
   if (!text2) return "";
   return text2.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean)[0] || "";
 }
@@ -17703,16 +17817,14 @@ function makeObsUri(ref, vaultName) {
   let filePath = "";
   let line2 = "";
   const anyRef = ref;
-  if (anyRef && anyRef.file && anyRef.file.path) {
+  if (anyRef?.source?.path) {
+    filePath = String(anyRef.source.path);
+    if (typeof anyRef.source.startLine === "number") line2 = String(anyRef.source.startLine);
+  } else if (anyRef?.file?.path) {
     filePath = String(anyRef.file.path);
     if (typeof anyRef.file.line === "number") line2 = String(anyRef.file.line);
   }
-  if (!filePath) {
-    const id = typeof ref === "string" ? ref : anyRef?.id || "";
-    const hashIndex = id.lastIndexOf("#");
-    filePath = hashIndex >= 0 ? id.substring(0, hashIndex) : id;
-    line2 = hashIndex >= 0 ? id.substring(hashIndex + 1) : "";
-  }
+  if (!filePath) return "#error-record-location-unavailable";
   const vault = encodeURIComponent(vaultName);
   const qp = `vault=${vault}&filepath=${encodeURIComponent(filePath)}`;
   return `obsidian://advanced-uri?${qp}${line2 ? "&line=" + line2 : ""}`;
@@ -17881,6 +17993,88 @@ function getMonthWeeksData(items, categories, targetMonth, usePeriod = false, bu
   }
   return weeksData;
 }
+function parseDuration(value) {
+  if (value === null || value === void 0 || value === "") return null;
+  const numeric = typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+function normalizeTimeValue(value) {
+  if (!value) return void 0;
+  return timeToMinutes(value) === null ? void 0 : value;
+}
+function deriveDurationFromRange(startTime, endTime) {
+  const startMinutes = timeToMinutes(String(startTime || ""));
+  const endMinutes = timeToMinutes(String(endTime || ""));
+  if (startMinutes === null || endMinutes === null) return null;
+  let duration2 = endMinutes - startMinutes;
+  if (duration2 < 0) duration2 += 24 * 60;
+  return duration2;
+}
+function deriveEndFromStartAndDuration(startTime, duration2) {
+  const startMinutes = timeToMinutes(String(startTime || ""));
+  const normalizedDuration = parseDuration(duration2);
+  if (startMinutes === null || normalizedDuration === null) return null;
+  return minutesToTime(startMinutes + normalizedDuration) || null;
+}
+function deriveStartFromEndAndDuration(endTime, duration2) {
+  const endMinutes = timeToMinutes(String(endTime || ""));
+  const normalizedDuration = parseDuration(duration2);
+  if (endMinutes === null || normalizedDuration === null) return null;
+  return minutesToTime(endMinutes - normalizedDuration) || null;
+}
+function applyTaskTimePolicy(input) {
+  const startTime = normalizeTimeValue(input.startTime);
+  const endTime = normalizeTimeValue(input.endTime);
+  const duration2 = parseDuration(input.duration);
+  const direction = input.direction === "backward" ? "backward" : "forward";
+  const mode = input.mode ?? "finalize";
+  const lastChanged = input.lastChanged ?? null;
+  if (startTime && endTime && (mode === "finalize" || lastChanged !== "duration")) {
+    return {
+      startTime,
+      endTime,
+      duration: deriveDurationFromRange(startTime, endTime) ?? duration2 ?? void 0
+    };
+  }
+  if (direction === "backward") {
+    if (endTime && duration2 !== null && (mode === "finalize" || lastChanged !== "startTime")) {
+      return {
+        startTime: deriveStartFromEndAndDuration(endTime, duration2) ?? void 0,
+        endTime,
+        duration: duration2
+      };
+    }
+    if (startTime && duration2 !== null && mode === "finalize") {
+      return {
+        startTime,
+        endTime: deriveEndFromStartAndDuration(startTime, duration2) ?? void 0,
+        duration: duration2
+      };
+    }
+  }
+  if (startTime && duration2 !== null && (mode === "finalize" || lastChanged !== "endTime")) {
+    return {
+      startTime,
+      endTime: deriveEndFromStartAndDuration(startTime, duration2) ?? void 0,
+      duration: duration2
+    };
+  }
+  if (endTime && duration2 !== null && mode === "finalize") {
+    return {
+      startTime: deriveStartFromEndAndDuration(endTime, duration2) ?? void 0,
+      endTime,
+      duration: duration2
+    };
+  }
+  return {
+    startTime,
+    endTime,
+    duration: duration2 ?? void 0
+  };
+}
+function isItemDone(item) {
+  return isTaskRecord(item) && isTaskCompleted(item);
+}
 function formatTemplateValue(value) {
   return formatFieldValueForTemplate(value);
 }
@@ -18048,7 +18242,7 @@ function buildDailyCategoryHours(blocks, categoriesConfig, untrackedLabel) {
     totalDayHours: Math.max(24, trackedHours)
   };
 }
-const DATE_FORMAT$1 = "YYYY-MM-DD";
+const DATE_FORMAT = "YYYY-MM-DD";
 function splitTaskIntoDayBlocks(task, dateRange) {
   const blocks = [];
   if (!task.doneDate) return [];
@@ -18056,7 +18250,7 @@ function splitTaskIntoDayBlocks(task, dateRange) {
   let currentStartMinute = task.startMinute % 1440;
   let remainingDuration = task.duration;
   while (remainingDuration > 0 && currentDate.isBefore(dateRange[1].add(1, "day"))) {
-    const dayStr = currentDate.format(DATE_FORMAT$1);
+    const dayStr = currentDate.format(DATE_FORMAT);
     if (currentDate.isBefore(dateRange[0], "day")) {
       const minutesInDay = Math.min(1440 - currentStartMinute, remainingDuration);
       remainingDuration -= minutesInDay;
@@ -18193,6 +18387,8 @@ function operationLabel(operation) {
       return "删除";
     case "complete":
       return "完成";
+    case "task_session":
+      return "保存工作记录";
     case "time_update":
       return "更新时间";
     case "create":
@@ -18232,7 +18428,7 @@ function buildRecordSubmitRecoveryPresentation(result, options = {}) {
     paths,
     canOpenOriginal: Boolean(options.canOpenOriginal),
     canRescan: paths.length > 0,
-    canRetry: result.operation === "update" || result.operation === "delete" || result.operation === "time_update" || result.operation === "complete"
+    canRetry: result.operation === "update" || result.operation === "delete" || result.operation === "time_update" || result.operation === "complete" || result.operation === "task_session"
   };
 }
 function logErrorEntryToConsole(entry) {
@@ -19682,146 +19878,60 @@ function isRecordConflictError(error) {
 }
 const BLOCK_START_MARKER = "<!-- start -->";
 const BLOCK_END_MARKER = "<!-- end -->";
-const TASK_PREFIX_RE = /^\s*-\s*\[[ xX]?\]\s*/;
-function normalizeText(value) {
-  return String(value ?? "").replace(/\r/g, "").replace(/\s+/g, " ").trim().toLowerCase();
-}
-function normalizeMultilineText(value) {
-  return String(value ?? "").replace(/\r/g, "").split("\n").map((line2) => line2.trim()).filter(Boolean).join("\n").toLowerCase();
-}
-function normalizeTaskLine(value) {
-  return normalizeText(value);
-}
-function resolveNearestIndex(indexes, expectedIndex) {
-  return indexes.slice().sort((a2, b2) => {
-    const distanceDiff = Math.abs(a2 - expectedIndex) - Math.abs(b2 - expectedIndex);
-    if (distanceDiff !== 0) return distanceDiff;
-    return a2 - b2;
-  })[0];
-}
-function findTaskCandidates(lines, item) {
-  const expectedRawSource = normalizeTaskLine(item?.rawSource);
-  const expectedLine = normalizeTaskLine(item?.content);
-  const expectedTitle = normalizeText(item?.title);
-  const candidates = [];
-  for (let index = 0; index < lines.length; index += 1) {
-    const line2 = lines[index];
-    if (!TASK_PREFIX_RE.test(line2)) continue;
-    let score = 0;
-    const normalizedLine = normalizeTaskLine(line2);
-    if (expectedRawSource && normalizedLine === expectedRawSource) score += 180;
-    else if (expectedRawSource && normalizedLine.includes(expectedRawSource)) score += 120;
-    if (expectedLine && normalizedLine === expectedLine) score += 120;
-    else if (expectedLine && normalizedLine.includes(expectedLine)) score += 45;
-    if (expectedTitle && normalizedLine.includes(expectedTitle)) score += 20;
-    if (score > 0) candidates.push({ index, score });
-  }
-  return candidates;
-}
-function resolveTaskLineIndexForMutation(lines, item, expectedIndex) {
-  const directLine = lines[expectedIndex];
-  if (directLine && TASK_PREFIX_RE.test(directLine)) {
-    const directCandidates = findTaskCandidates([directLine], item);
-    if (directCandidates.length > 0) return expectedIndex;
-  }
-  const candidates = findTaskCandidates(lines, item);
-  if (candidates.length > 0) {
-    const maxScore = Math.max(...candidates.map((candidate) => candidate.score));
-    const topIndexes = candidates.filter((candidate) => candidate.score === maxScore).map((candidate) => candidate.index);
-    return resolveNearestIndex(topIndexes, expectedIndex);
-  }
-  if (!item && directLine && TASK_PREFIX_RE.test(directLine)) {
-    return expectedIndex;
-  }
-  throw createRecordConflictError(
-    directLine ? "record_line_stale" : "record_item_missing",
-    "原始任务位置已变化或记录已不存在。"
-  );
-}
-function tryFindBlockEndIndex(lines, startIndex) {
-  for (let index = startIndex; index < lines.length; index += 1) {
+const RECORD_ID_RE = /^\s*(?:记录ID|recordId)\s*[:：]{1,2}\s*(\S+)\s*$/i;
+function findBlockEnd(lines, startIndex) {
+  for (let index = startIndex + 1; index < lines.length; index += 1) {
     if (lines[index].trim() === BLOCK_END_MARKER) return index;
   }
   return null;
 }
-function buildBlockTitle(contentLines) {
-  const firstMeaningfulLine = contentLines.map((line2) => line2.trim()).find((line2) => Boolean(line2));
-  return firstMeaningfulLine || "";
-}
-function scoreBlockCandidate(lines, range, item, expectedIndex) {
-  const contentLines = lines.slice(range.startIndex + 1, range.endIndex);
-  const normalizedContent = normalizeMultilineText(contentLines.join("\n"));
-  const normalizedExpectedContent = normalizeMultilineText(item.content);
-  const normalizedTitle = normalizeText(buildBlockTitle(contentLines));
-  const normalizedExpectedTitle = normalizeText(item.title);
-  let score = 0;
-  if (normalizedExpectedContent && normalizedContent === normalizedExpectedContent) score += 140;
-  else if (normalizedExpectedContent && normalizedContent.includes(normalizedExpectedContent)) score += 45;
-  else if (normalizedExpectedContent && normalizedExpectedContent.includes(normalizedContent)) score += 30;
-  if (normalizedExpectedTitle && normalizedTitle === normalizedExpectedTitle) score += 28;
-  else if (normalizedExpectedTitle && normalizedTitle.includes(normalizedExpectedTitle)) score += 12;
-  const distance = Math.abs(range.startIndex - expectedIndex);
-  score += Math.max(0, 12 - Math.min(distance, 12));
-  return score;
-}
-function resolveBlockRangeForMutation(lines, item, expectedIndex) {
-  const directLine = lines[expectedIndex];
-  if (directLine?.trim() === BLOCK_START_MARKER) {
-    const directEndIndex = tryFindBlockEndIndex(lines, expectedIndex);
-    if (directEndIndex === null) {
-      throw createRecordConflictError(
-        "record_block_boundary_invalid",
-        "原始块边界已损坏，无法安全更新。"
-      );
-    }
-    const directRange = { startIndex: expectedIndex, endIndex: directEndIndex };
-    if (scoreBlockCandidate(lines, directRange, item, expectedIndex) >= 28) {
-      return directRange;
-    }
+function blockRecordId(lines, startIndex, endIndex) {
+  for (let index = startIndex + 1; index < endIndex; index += 1) {
+    const match5 = lines[index].match(RECORD_ID_RE);
+    if (match5) return match5[1].trim();
   }
-  const candidates = [];
+  return null;
+}
+function resolveRecordBlockRangeById(lines, recordId, expectedStartIndex) {
+  const expected = typeof expectedStartIndex === "number" ? expectedStartIndex : null;
+  if (expected !== null && expected >= 0 && lines[expected]?.trim() === BLOCK_START_MARKER) {
+    const endIndex = findBlockEnd(lines, expected);
+    if (endIndex === null) {
+      throw createRecordConflictError("record_block_boundary_invalid", "Record Block 边界已损坏，无法安全更新。");
+    }
+    if (blockRecordId(lines, expected, endIndex) === recordId) return { startIndex: expected, endIndex };
+  }
+  const matches = [];
   for (let index = 0; index < lines.length; index += 1) {
     if (lines[index].trim() !== BLOCK_START_MARKER) continue;
-    const endIndex = tryFindBlockEndIndex(lines, index);
+    const endIndex = findBlockEnd(lines, index);
     if (endIndex === null) continue;
-    const range = { startIndex: index, endIndex };
-    const score = scoreBlockCandidate(lines, range, item, expectedIndex);
-    if (score > 0) {
-      candidates.push({ range, score });
-    }
+    if (blockRecordId(lines, index, endIndex) === recordId) matches.push({ startIndex: index, endIndex });
+    index = endIndex;
   }
-  if (candidates.length > 0) {
-    candidates.sort((a2, b2) => {
-      if (b2.score !== a2.score) return b2.score - a2.score;
-      return Math.abs(a2.range.startIndex - expectedIndex) - Math.abs(b2.range.startIndex - expectedIndex);
-    });
-    return candidates[0].range;
+  if (matches.length === 1) return matches[0];
+  if (matches.length > 1) {
+    throw createRecordConflictError("record_id_duplicate", `记录ID ${recordId} 在同一文件中重复，拒绝猜测 mutation 目标。`);
   }
-  throw createRecordConflictError(
-    directLine ? "record_line_stale" : "record_item_missing",
-    "原始块位置已变化或记录已不存在。"
-  );
+  throw createRecordConflictError("record_item_missing", `找不到记录ID ${recordId} 对应的 Record Block。`);
 }
 function normalizeNonEmptyPath(value) {
   const trimmed = String(value || "").trim();
   return trimmed || null;
 }
-function buildTaskRenderTokens(data) {
-  const status = readOptionText$2(data["状态"] ?? data.status ?? data.taskStatus ?? data.taskStatusPrefix);
-  const statusText = `${status.value} ${status.label}`.trim();
-  const isDone2 = /-\s*\[x\]/i.test(status.value) || /完成|done|✅/.test(statusText);
-  const taskStatusPrefix = isDone2 ? "- [x]" : "- [ ]";
-  const taskStatusKind = isDone2 ? "done" : "todo";
-  const date2 = String(data["日期"] ?? data.date ?? "").trim();
-  const dateMarker = isDone2 ? "✅" : /🛫/.test(statusText) ? "🛫" : /⏳/.test(statusText) ? "⏳" : /➕/.test(statusText) ? "➕" : "📅";
-  const repeat = readOptionText$2(data["重复"] ?? data.recurrence ?? data.repeat);
-  const repeatText = repeat.value || repeat.label;
-  return {
-    taskStatusPrefix,
-    taskStatusKind,
-    taskDateToken: date2 ? `${dateMarker} ${date2}` : "",
-    repeatToken: repeatText && repeatText !== "不重复" ? repeatText : ""
-  };
+function readScalarOption(value) {
+  const option = readOptionText$2(value);
+  return String(option.value || option.label || value || "").trim();
+}
+function readStructuredTaskRecurrence(renderData) {
+  const rawUnit = readScalarOption(renderData["重复单位"] ?? renderData.recurrenceUnit).toLowerCase();
+  if (!rawUnit || rawUnit === "none") return null;
+  if (!["day", "week", "month", "quarter", "year"].includes(rawUnit)) throw new Error(`task_recurrence_unit_invalid:${rawUnit}`);
+  const interval = Number(renderData["重复间隔"] ?? renderData.recurrenceInterval ?? 1);
+  if (!Number.isInteger(interval) || interval < 1) throw new Error(`task_recurrence_interval_invalid:${interval}`);
+  const rawAnchor = readScalarOption(renderData["重复锚点"] ?? renderData.recurrenceAnchor ?? "scheduled").toLowerCase();
+  if (!["scheduled", "start", "due", "completion"].includes(rawAnchor)) throw new Error(`task_recurrence_anchor_invalid:${rawAnchor}`);
+  return { unit: rawUnit, interval, anchor: rawAnchor };
 }
 function buildRenderData(template, formData, theme, templateMeta) {
   const normalizedData = normalizeTemplateRenderData(template, formData);
@@ -19842,7 +19952,6 @@ function buildRenderData(template, formData, theme, templateMeta) {
   const derivedPeriod = periodPolicy ? resolveDerivedPeriod(recordDate || void 0, periodPolicy.granularity) : null;
   const cycleId = derivedPeriod ? String(normalizedData.cycleId ?? normalizedData["周期ID"] ?? derivedPeriod.id ?? "").trim() : "";
   const cycleTitle = derivedPeriod ? String(normalizedData.period ?? normalizedData["周期"] ?? derivedPeriod.label ?? "").trim() : "";
-  const taskTokens = buildTaskRenderTokens(normalizedData);
   return {
     ...normalizedData,
     block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
@@ -19876,7 +19985,7 @@ function buildRenderData(template, formData, theme, templateMeta) {
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
     coreBlock,
     period: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label } : null,
-    cycle: derivedPeriod ? { id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label, ...derivedPeriod } : null,
+    cycle: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label } : null,
     cycleId: derivedPeriod ? cycleId || derivedPeriod.id : "",
     cycleTitle: derivedPeriod ? cycleTitle || derivedPeriod.label : "",
     periodId: derivedPeriod ? cycleId || derivedPeriod.id : "",
@@ -19884,7 +19993,6 @@ function buildRenderData(template, formData, theme, templateMeta) {
     "周期粒度": derivedPeriod ? derivedPeriod.granularity : "",
     "周期ID": derivedPeriod ? cycleId || derivedPeriod.id : "",
     "周期": derivedPeriod ? cycleTitle || derivedPeriod.label : "",
-    ...taskTokens,
     templateId: templateMeta?.templateId || template.id,
     templateSourceType: templateMeta?.templateSourceType || "core-block"
   };
@@ -19892,6 +20000,9 @@ function buildRenderData(template, formData, theme, templateMeta) {
 function buildRecordOutputPlan(input) {
   if (!input.template) {
     return {
+      recordId: null,
+      schemaVersion: null,
+      coreBlock: null,
       targetFilePath: null,
       targetHeader: null,
       outputContent: "",
@@ -19900,10 +20011,86 @@ function buildRecordOutputPlan(input) {
     };
   }
   const renderData = buildRenderData(input.template, input.formData, input.theme, input.templateMeta);
-  const outputContent = renderTemplate(input.template.outputTemplate, renderData).trim();
+  const explicitCoreBlockId = String(input.template.coreBlockId || "").trim();
+  const systemCoreBlockId = String(input.template.id || "").trim().startsWith("core.") ? String(input.template.id || "").trim() : "";
+  const trustedCoreBlock = (explicitCoreBlockId || systemCoreBlockId).replace(/^core\./, "");
+  const renderedTemplate = trustedCoreBlock === "task" ? "" : renderTemplate(input.template.outputTemplate, renderData).trim();
+  const literalCoreBlock = renderedTemplate.match(/^\s*核心Block\s*[:：]{1,2}\s*([^\s]+)\s*$/mi)?.[1]?.trim();
+  const hintedCoreBlock = String(renderData.coreBlock || input.template.id || "").trim().replace(/^core\./, "");
+  const coreBlock = trustedCoreBlock || literalCoreBlock || hintedCoreBlock;
+  if (!coreBlock) throw new Error("Record Foundation v2 要求每条记录都有核心Block。");
+  const recordId = String(input.recordId || "").trim() || createRecordId(coreBlock);
+  let outputContent;
+  if (coreBlock === "task") {
+    const statusOption = readOptionText$2(renderData["状态"] ?? renderData.status);
+    const candidateStatus = String(statusOption.value || statusOption.label || "open").trim().toLowerCase();
+    const status = ["open", "done", "cancelled", "skipped"].includes(candidateStatus) ? candidateStatus : "open";
+    const recurrence = readStructuredTaskRecurrence(renderData);
+    if (!recurrence && status === "skipped") throw new Error("task_status_skipped_requires_series");
+    if (recurrence && status !== "open") throw new Error("task_series_initial_instance_must_be_open");
+    const taskFields = {
+      ...renderData,
+      status,
+      content: renderData["任务内容"] ?? renderData["内容"] ?? renderData.content,
+      goalId: renderData.goalId,
+      goalPath: renderData.goalPath,
+      themePath: renderData.themePath,
+      scheduledDate: renderData["计划日期"] ?? renderData.scheduledDate ?? renderData["日期"] ?? renderData.date,
+      startDate: renderData["开始日期"] ?? renderData.startDate,
+      dueDate: renderData["截止日期"] ?? renderData.dueDate,
+      expectedDurationMinutes: renderData["预计时长"] ?? renderData.expectedDurationMinutes,
+      createdAt: renderData["创建于"] ?? renderData.createdAt ?? (/* @__PURE__ */ new Date()).toISOString(),
+      templateId: input.templateMeta?.templateId || input.template.id,
+      templateSourceType: input.templateMeta?.templateSourceType || "core-block",
+      seriesId: renderData.seriesId ?? renderData["系列ID"]
+    };
+    const existingSeriesId = String(taskFields.seriesId || "").trim();
+    if (recurrence && existingSeriesId) {
+      throw new Error("task_series_recurrence_edit_requires_series_command");
+    }
+    if (recurrence && !existingSeriesId) {
+      const seriesId = createRecordId("task-series");
+      taskFields.seriesId = seriesId;
+      const seriesStartDate = String(taskFields.scheduledDate || taskFields.startDate || taskFields.dueDate || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
+      const seriesBlock = encodeRecordBlock({
+        recordId: seriesId,
+        schemaVersion: RECORD_SCHEMA_VERSION,
+        coreBlock: "task-series",
+        fields: {
+          status: "active",
+          content: taskFields.content,
+          goalId: taskFields.goalId,
+          goalPath: taskFields.goalPath,
+          themePath: taskFields.themePath,
+          priority: taskFields.priority,
+          expectedDurationMinutes: taskFields.expectedDurationMinutes,
+          energyDemand: taskFields.energyDemand,
+          brainDemand: taskFields.brainDemand,
+          physicalDemand: taskFields.physicalDemand,
+          recurrenceUnit: recurrence.unit,
+          recurrenceInterval: recurrence.interval,
+          recurrenceAnchor: recurrence.anchor,
+          seriesStartDate,
+          currentTaskId: recordId,
+          rolloverPolicy: "carry"
+        }
+      });
+      const taskBlock = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: "task", fields: taskFields });
+      outputContent = `${seriesBlock}
+
+${taskBlock}`;
+    } else {
+      outputContent = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: "task", fields: taskFields });
+    }
+  } else {
+    outputContent = ensureRecordEnvelope(renderedTemplate, { recordId, coreBlock, schemaVersion: RECORD_SCHEMA_VERSION });
+  }
   const targetFilePath = normalizeNonEmptyPath(renderTemplate(input.template.targetFile, renderData));
   const targetHeader = input.template.appendUnderHeader ? normalizeNonEmptyPath(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
   return {
+    recordId,
+    schemaVersion: RECORD_SCHEMA_VERSION,
+    coreBlock,
     targetFilePath,
     targetHeader,
     outputContent,
@@ -19939,12 +20126,10 @@ function checkAbort(options) {
     throw error;
   }
 }
-async function appendUnderHeader(vault, filePath, header, payload, options = {}) {
+function appendUnderHeaderText(text2, header, payload) {
   const esc2 = header.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`^${esc2}\\s*$`, "m");
-  const text2 = await vault.readFile(filePath) ?? "";
-  checkAbort(options);
-  const lines = text2.split("\n");
+  const regex = new RegExp(`^${esc2}\\s*$`);
+  const lines = String(text2 || "").split("\n");
   let headerLineIndex = lines.findIndex((line2) => regex.test(line2));
   if (headerLineIndex === -1) {
     if (lines.length && lines[lines.length - 1].trim() !== "") lines.push("");
@@ -19960,68 +20145,16 @@ async function appendUnderHeader(vault, filePath, header, payload, options = {})
       break;
     }
   }
-  if (insertAtIndex > 0 && lines[insertAtIndex - 1].trim() !== "") {
-    lines.splice(insertAtIndex, 0, "", payload);
-  } else {
-    lines.splice(insertAtIndex, 0, payload);
-  }
+  if (insertAtIndex > 0 && lines[insertAtIndex - 1].trim() !== "") lines.splice(insertAtIndex, 0, "", payload);
+  else lines.splice(insertAtIndex, 0, payload);
+  return lines.join("\n");
+}
+async function appendUnderHeader(vault, filePath, header, payload, options = {}) {
+  const text2 = await vault.readFile(filePath) ?? "";
   checkAbort(options);
-  await vault.writeFile(filePath, lines.join("\n"));
-}
-function uniqPreserveOrder(values2) {
-  const seen = /* @__PURE__ */ new Set();
-  const result = [];
-  for (const value of values2) {
-    const cleaned = value.trim();
-    if (!cleaned || seen.has(cleaned)) continue;
-    seen.add(cleaned);
-    result.push(cleaned);
-  }
-  return result;
-}
-function extractTaskContextTokens(line2) {
-  const source = String(line2 || "");
-  const tokens = [];
-  for (const match5 of source.matchAll(/#[\p{L}\p{N}_-]+/gu)) tokens.push(match5[0]);
-  for (const match5 of source.matchAll(/[📅⏳🛫➕✅❌]\s*\d{4}[-/]\d{2}[-/]\d{2}/gu)) tokens.push(match5[0]);
-  for (const match5 of source.matchAll(/🔁\s*every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?/giu)) tokens.push(match5[0]);
-  for (const match5 of source.matchAll(/[\(\[][^\[\]()]*::[^\)\]]*[\)\]]/g)) tokens.push(match5[0]);
-  return uniqPreserveOrder(tokens);
-}
-function getTaskContextTokenIdentity(token2) {
-  const trimmed = token2.trim();
-  if (trimmed.startsWith("#")) return { kind: "tag", key: trimmed };
-  const emoji2 = trimmed.match(/^([📅⏳🛫➕✅❌])/u)?.[1];
-  if (emoji2) return { kind: "emoji-date", key: emoji2 };
-  if (/^🔁/u.test(trimmed)) return { kind: "recurrence", key: "🔁" };
-  const kv = trimmed.match(/^[\(\[]\s*([^:\]\)]+?)\s*::/);
-  if (kv?.[1]) return { kind: "kv", key: kv[1].trim() };
-  return { kind: "literal", key: trimmed };
-}
-function taskLineContainsTokenIdentity(line2, token2) {
-  const identity2 = getTaskContextTokenIdentity(token2);
-  if (identity2.kind === "tag" || identity2.kind === "literal") return line2.includes(identity2.key);
-  if (identity2.kind === "emoji-date" || identity2.kind === "recurrence") return line2.includes(identity2.key);
-  if (identity2.kind === "kv") {
-    const escaped = identity2.key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`[\\(\\[]\\s*${escaped}\\s*::`).test(line2);
-  }
-  return false;
-}
-function preserveTaskCheckboxStatus(originalLine, nextLine) {
-  const original = originalLine.match(/^(\s*[-*]\s*\[)([ xX-])(\]\s*)/);
-  const next2 = nextLine.match(/^(\s*[-*]\s*\[)([ xX-])(\]\s*)/);
-  if (!original || !next2) return nextLine;
-  if (original[2] === next2[2]) return nextLine;
-  return nextLine.replace(/^(\s*[-*]\s*\[)[ xX-](\]\s*)/, `$1${original[2]}$2`);
-}
-function mergeTaskLinePreservingSourceContext(originalLine, renderedText) {
-  const nextLines = renderedText.split(/\r?\n/);
-  if (nextLines.length !== 1) return renderedText;
-  let nextLine = preserveTaskCheckboxStatus(originalLine, nextLines[0]);
-  const tokensToAppend = extractTaskContextTokens(originalLine).filter((token2) => !taskLineContainsTokenIdentity(nextLine, token2));
-  if (!tokensToAppend.length) return nextLine;
-  return `${nextLine.trimEnd()} ${tokensToAppend.join(" ")}`.trimEnd();
+  const next2 = appendUnderHeaderText(text2, header, payload);
+  checkAbort(options);
+  await vault.writeFile(filePath, next2);
 }
 var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
 var __decorateClass$8 = (decorators, target, key, kind) => {
@@ -20039,10 +20172,11 @@ let InputService = class {
   }
   vault;
   dataStore;
-  previewTemplateExecution(template, formData, theme, templateMeta) {
+  previewTemplateExecution(template, formData, theme, templateMeta, recordId) {
     if (!template) throw new Error("传入了无效的模板对象。");
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta });
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta, recordId });
     return {
+      recordId: outputPlan.recordId,
       renderData: outputPlan.renderData,
       outputContent: outputPlan.outputContent,
       targetFilePath: outputPlan.targetFilePath || "",
@@ -20052,7 +20186,7 @@ let InputService = class {
   async executeTemplate(template, formData, theme, templateMeta, options = {}) {
     const signal = options.signal;
     this.throwIfAborted(signal);
-    const preview = this.previewTemplateExecution(template, formData, theme, templateMeta);
+    const preview = this.previewTemplateExecution(template, formData, theme, templateMeta, options.recordId);
     const { outputContent, targetFilePath, header } = preview;
     if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
     return this.appendDirectRecord(targetFilePath, outputContent, header, options);
@@ -20092,30 +20226,19 @@ ${outputContent}` : outputContent;
     const signal = options.signal;
     const autoRefresh = options.autoRefresh !== false;
     this.throwIfAborted(signal);
-    const path = item.file?.path || this.parseItemId(item.id).path;
-    const lineNo = item.file?.line || this.parseItemId(item.id).lineNo;
-    if (!path || !lineNo) {
-      throw createRecordConflictError("record_locator_invalid", "无法定位原始记录。");
-    }
+    const indexed = this.dataStore.getRecordLocation(item.id);
+    const path = item.source?.path || item.file?.path || indexed?.path || "";
+    const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
+    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录ID ${item.id}。`);
     const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) {
-      throw createRecordConflictError("record_path_missing", `找不到文件: ${path}`);
-    }
+    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件: ${path}`);
     this.throwIfAborted(signal);
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta });
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta, recordId: item.id });
     const nextText = outputPlan.outputContent.trim();
     if (!nextText) throw new Error("编辑后的输出内容为空，已取消保存。");
     const lines = existingContent.split("\n");
-    const nextLines = nextText.split(/\r?\n/);
-    const expectedIndex = Math.max(0, lineNo - 1);
-    if (item.type === "block") {
-      const range = resolveBlockRangeForMutation(lines, item, expectedIndex);
-      lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextLines);
-    } else {
-      const startIndex = resolveTaskLineIndexForMutation(lines, item, expectedIndex);
-      const preservedTaskText = mergeTaskLinePreservingSourceContext(lines[startIndex] || item.rawSource || item.content || "", nextText);
-      lines.splice(startIndex, 1, ...preservedTaskText.split(/\r?\n/));
-    }
+    const range = resolveRecordBlockRangeById(lines, item.id, startLine > 0 ? startLine - 1 : null);
+    lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextText.split(/\r?\n/));
     await this.vault.writeFile(path, lines.join("\n"));
     if (autoRefresh) {
       await this.dataStore.scanFileByPath(path);
@@ -20127,41 +20250,22 @@ ${outputContent}` : outputContent;
     const signal = options.signal;
     const autoRefresh = options.autoRefresh !== false;
     this.throwIfAborted(signal);
-    const path = item.file?.path || this.parseItemId(item.id).path;
-    const lineNo = item.file?.line || this.parseItemId(item.id).lineNo;
-    if (!path || !lineNo) {
-      throw createRecordConflictError("record_locator_invalid", "无法定位原始记录。");
-    }
+    const indexed = this.dataStore.getRecordLocation(item.id);
+    const path = item.source?.path || item.file?.path || indexed?.path || "";
+    const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
+    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录ID ${item.id}。`);
     const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) {
-      throw createRecordConflictError("record_path_missing", `找不到文件: ${path}`);
-    }
+    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件: ${path}`);
     this.throwIfAborted(signal);
     const lines = existingContent.split("\n");
-    const expectedIndex = Math.max(0, lineNo - 1);
-    if (item.type === "block") {
-      const range = resolveBlockRangeForMutation(lines, item, expectedIndex);
-      lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
-    } else {
-      const startIndex = resolveTaskLineIndexForMutation(lines, item, expectedIndex);
-      lines.splice(startIndex, 1);
-    }
+    const range = resolveRecordBlockRangeById(lines, item.id, startLine > 0 ? startLine - 1 : null);
+    lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
     await this.vault.writeFile(path, lines.join("\n"));
     if (autoRefresh) {
       await this.dataStore.scanFileByPath(path);
       this.dataStore.notifyChange();
     }
     return path;
-  }
-  parseItemId(itemId) {
-    const hashIndex = itemId.lastIndexOf("#");
-    if (hashIndex === -1) throw createRecordConflictError("record_locator_invalid", `无效的条目ID格式: ${itemId}`);
-    const path = itemId.substring(0, hashIndex);
-    const lineNo = parseInt(itemId.substring(hashIndex + 1), 10);
-    if (!path || Number.isNaN(lineNo)) {
-      throw createRecordConflictError("record_locator_invalid", `无效的条目ID格式: ${itemId}`);
-    }
-    return { path, lineNo };
   }
   throwIfAborted(signal) {
     if (signal?.aborted) {
@@ -20176,196 +20280,46 @@ InputService = __decorateClass$8([
   __decorateParam$7(0, inject(VAULT_PORT_TOKEN)),
   __decorateParam$7(1, inject(DataStore))
 ], InputService);
-function parseItemId(itemId) {
-  const hashIndex = itemId.lastIndexOf("#");
-  if (hashIndex === -1) {
-    throw createRecordConflictError("record_locator_invalid", `无效的条目ID格式: ${itemId}`);
-  }
-  const path = itemId.substring(0, hashIndex);
-  const lineNo = parseInt(itemId.substring(hashIndex + 1), 10);
-  if (isNaN(lineNo)) {
-    throw createRecordConflictError("record_locator_invalid", `无效的条目行号: ${itemId}`);
-  }
-  return { path, lineNo };
-}
-function safePathFromItemId(itemId) {
-  const hashIndex = itemId.lastIndexOf("#");
-  if (hashIndex <= 0) return null;
-  const path = itemId.substring(0, hashIndex).trim();
-  return path || null;
-}
-const BLOCK_METADATA_ALIASES = {
-  "模板ID": ["模板ID", "templateId"],
-  "模板来源": ["模板来源", "templateSource", "templateSourceType"],
-  "目标ID": ["目标ID", "goalId"],
-  "目标": ["目标"],
-  "核心Block": ["核心Block", "coreBlock", "coreBlockId"],
-  "主题": ["主题", "themePath", "主题路径", "theme"]
-};
-function escapeRegExp$1(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-function safeInlineKeyPattern(key) {
-  return new RegExp(`([\\(\\[]\\s*${escapeRegExp$1(key)}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
-}
-function upsertKvTag(line2, key, value) {
-  const pattern = safeInlineKeyPattern(key);
-  if (pattern.test(line2)) {
-    return line2.replace(pattern, `$1${value}$2`);
-  }
-  return `${line2.trim()} (${key}:: ${value})`;
-}
-function blockMetaKeyPattern(key) {
-  const keys = BLOCK_METADATA_ALIASES[key] || [key];
-  const source = keys.map((item) => escapeRegExp$1(item)).join("|") || escapeRegExp$1(key);
-  return new RegExp(`^\\s*(?:${source})\\s*[:：]{1,2}\\s*.*$`, "i");
-}
-function upsertBlockMetadataLine(lines, startIndex, endIndex, key, value) {
-  const keyPattern = blockMetaKeyPattern(key);
-  for (let index = startIndex + 1; index < endIndex; index += 1) {
-    if (keyPattern.test(lines[index])) {
-      lines[index] = `${key}:: ${value}`;
-      return endIndex;
-    }
-  }
-  let insertIndex = endIndex;
-  for (let index = startIndex + 1; index < endIndex; index += 1) {
-    const line2 = lines[index].trim();
-    if (!line2) continue;
-    if (/^内容\s*[:：]{1,2}/.test(line2)) {
-      insertIndex = index;
-      break;
-    }
-    if (!/^([^:：]{1,24})[:：]{1,2}\s*(.*)$/.test(line2)) {
-      insertIndex = index;
-      break;
-    }
-  }
-  lines.splice(insertIndex, 0, `${key}:: ${value}`);
-  return endIndex + 1;
-}
-function normalizeNonEmptyFieldEntries(fields) {
-  return Object.entries(fields).map(([key, value]) => [String(key || "").trim(), String(value ?? "").trim()]).filter(([key, value]) => !!key && !!value);
-}
 class GoalTemplateMigrationMutation {
-  constructor(dataStore, vault, locator, writer) {
-    this.dataStore = dataStore;
-    this.vault = vault;
-    this.locator = locator;
-    this.writer = writer;
+  constructor(repository) {
+    this.repository = repository;
   }
-  dataStore;
-  vault;
-  locator;
-  writer;
-  /**
-   * 目标迁移专用写回：
-   * - task：写回当前任务行内 `(字段:: 值)`；
-   * - block：写回 `<!-- start --> ... <!-- end -->` 内的块元数据行。
-   *
-   * 这样旧记录改写不再只覆盖任务行，也能安全处理计划/总结/打卡等块记录。
-   */
-  async upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions = {}) {
-    const { path, lineNo } = parseItemId(itemId);
-    const content = await this.vault.readFile(path);
-    if (content == null) {
-      throw createRecordConflictError("record_path_missing", `找不到条目文件: ${path}`);
-    }
-    const lines = content.split("\n");
-    const item = this.dataStore.queryItems().find((candidate) => candidate.id === itemId);
-    const expectedIndex = lineNo - 1;
-    if (item?.type === "block") {
-      const range = resolveBlockRangeForMutation(lines, item, expectedIndex);
-      const beforeText = lines.slice(range.startIndex, range.endIndex + 1).join("\n");
-      let endIndex = range.endIndex;
-      for (const [key, value] of normalizeNonEmptyFieldEntries(fields)) {
-        endIndex = upsertBlockMetadataLine(lines, range.startIndex, endIndex, key, value);
-      }
-      const afterText = lines.slice(range.startIndex, endIndex + 1).join("\n");
-      await this.writer.writeLines(path, lines, mutationOptions);
-      return { path, beforeText, afterText, shape: "block-metadata" };
-    }
-    const context = await this.locator.loadMutableTaskContext(itemId);
-    const mutableLines = [...context.lines];
-    let line2 = context.rawLine;
-    for (const [key, value] of normalizeNonEmptyFieldEntries(fields)) {
-      line2 = upsertKvTag(line2, key, value);
-    }
-    mutableLines[context.index] = line2;
-    await this.writer.writeLines(path, mutableLines, mutationOptions);
-    return { path, beforeText: context.rawLine, afterText: line2, shape: "task-inline" };
-  }
-}
-class InlineFieldMutation {
-  constructor(locator, writer) {
-    this.locator = locator;
-    this.writer = writer;
-  }
-  locator;
-  writer;
-  /**
-   * 目标中心 Markdown 回填：在定位到的记录行上补齐内联元数据。
-   * 保留给任务行使用：只改当前行的 `(key:: value)`，不移动正文。
-   */
-  async upsertItemInlineFields(itemId, fields, mutationOptions = {}) {
-    const context = await this.locator.loadMutableTaskContext(itemId);
-    const { path, index, rawLine } = context;
-    const lines = [...context.lines];
-    let line2 = rawLine;
-    for (const [key, value] of normalizeNonEmptyFieldEntries(fields)) {
-      line2 = upsertKvTag(line2, key, value);
-    }
-    lines[index] = line2;
-    await this.writer.writeLines(path, lines, mutationOptions);
-    return { path, beforeLine: rawLine, afterLine: line2 };
-  }
-}
-class ItemLocator {
-  constructor(dataStore, vault) {
-    this.dataStore = dataStore;
-    this.vault = vault;
-  }
-  dataStore;
-  vault;
-  async loadMutableTaskContext(itemId) {
-    const { path, lineNo } = parseItemId(itemId);
-    const content = await this.vault.readFile(path);
-    if (content == null) {
-      throw createRecordConflictError("record_path_missing", `找不到条目文件: ${path}`);
-    }
-    const lines = content.split("\n");
-    const item = this.dataStore.queryItems().find((candidate) => candidate.id === itemId);
-    const resolvedIndex = resolveTaskLineIndexForMutation(lines, item ?? null, lineNo - 1);
-    const rawLine = lines[resolvedIndex];
-    if (!rawLine) {
-      throw createRecordConflictError("record_item_missing", "条目已不存在，无法继续操作。");
-    }
+  repository;
+  /** Goal/Template migration now patches the Record Block by stable Record ID. */
+  async upsertItemGoalTemplateMigrationFields(itemId, fields, _mutationOptions = {}) {
+    const before = await this.repository.getById(itemId);
+    if (!before) throw new Error(`record_not_found:${itemId}`);
+    const path = before.source?.path || before.file?.path || "";
+    if (!path) throw new Error(`record_location_unavailable:${itemId}`);
+    const updated = await this.repository.update(itemId, fields);
     return {
       path,
-      index: resolvedIndex,
-      lines,
-      rawLine,
-      item: item ? {
-        content: item.content,
-        title: item.title,
-        duration: item.duration
-      } : void 0
+      beforeText: before.rawSource || "",
+      afterText: updated.rawSource || "",
+      shape: "block-metadata"
     };
   }
 }
-class ItemMutationWriter {
-  constructor(dataStore, vault) {
-    this.dataStore = dataStore;
-    this.vault = vault;
+class InlineFieldMutation {
+  constructor(repository) {
+    this.repository = repository;
   }
-  dataStore;
-  vault;
-  async writeLines(path, lines, options = {}) {
-    await this.vault.writeFile(path, lines.join("\n"));
-    if (options.autoRefresh !== false) {
-      await this.dataStore.scanFileByPath(path);
-      this.dataStore.notifyChange();
-    }
+  repository;
+  /**
+   * Foundation v2 write-back: field edits are Record patches addressed by stable Record ID.
+   * The public method name is retained for callers, but only canonical Record fields are emitted.
+   */
+  async upsertItemInlineFields(itemId, fields, _mutationOptions = {}) {
+    const before = await this.repository.getById(itemId);
+    if (!before) throw new Error(`record_not_found:${itemId}`);
+    const path = before.source?.path || before.file?.path || "";
+    if (!path) throw new Error(`record_location_unavailable:${itemId}`);
+    const updated = await this.repository.update(itemId, fields);
+    return {
+      path,
+      beforeLine: before.rawSource || "",
+      afterLine: updated.rawSource || ""
+    };
   }
 }
 class MigrationBackupService {
@@ -20386,7 +20340,7 @@ class MigrationBackupService {
     const settingsPath = `${root}/data-settings.json`;
     const items = this.dataStore.queryItems();
     const markdownPaths = Array.from(new Set(
-      items.map((item) => safePathFromItemId(String(item.id || ""))).filter((path) => !!path)
+      items.map((item) => item.source?.path || item.file?.path || "").filter((path) => !!path)
     )).sort((left2, right2) => left2.localeCompare(right2));
     await this.vault.writeFile(settingsPath, JSON.stringify(settings, null, 2));
     await this.vault.writeFile(`${root}/markdown-paths.json`, JSON.stringify(markdownPaths, null, 2));
@@ -20414,110 +20368,574 @@ class MigrationBackupService {
     return { backupRoot: root, settingsPath, markdownFileCount, failedPaths };
   }
 }
+function asTaskRecord(item) {
+  if (!item || item.coreBlock !== "task") return null;
+  const status = String(item.status || "");
+  if (!["open", "done", "cancelled", "skipped"].includes(status)) return null;
+  return item;
+}
+function asTaskSeriesRecord(item) {
+  if (!item || item.coreBlock !== "task-series") return null;
+  if (!item.recurrenceInfo) return null;
+  const status = String(item.status || "");
+  if (status !== "active" && status !== "stopped") return null;
+  return item;
+}
+const ENERGY_FEEDBACK_WINDOW_MINUTES = 120;
+function parseClock(value) {
+  const match5 = String(value || "").trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!match5) return null;
+  const hours = Number(match5[1]);
+  const minutes = Number(match5[2]);
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+  return { hours, minutes };
+}
+function withLocalClock(iso, value) {
+  const clock = parseClock(value);
+  if (!clock) throw new Error("task_session_clock_invalid");
+  const date2 = new Date(iso);
+  if (!Number.isFinite(date2.getTime())) throw new Error("task_session_time_invalid");
+  date2.setHours(clock.hours, clock.minutes, 0, 0);
+  return date2.getTime();
+}
+function energyOccurrenceMs(item) {
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot?.date || !snapshot.time) return null;
+  const value = Date.parse(`${snapshot.date}T${snapshot.time.length === 5 ? `${snapshot.time}:00` : snapshot.time}`);
+  return Number.isFinite(value) ? value : null;
+}
+class TaskSessionMutation {
+  constructor(dataStore, repository) {
+    this.dataStore = dataStore;
+    this.repository = repository;
+  }
+  dataStore;
+  repository;
+  async createSession(taskId, input) {
+    const task = await this.requireTask(taskId);
+    const prepared = this.prepareCreateOperation(task, input);
+    await this.repository.batch([prepared.operation]);
+    const created = await this.repository.getById(prepared.recordId);
+    if (!created || created.coreBlock !== "task-session") {
+      throw new Error(`task_session_create_scan_failed:${prepared.recordId}`);
+    }
+    return created;
+  }
+  async updateSessionTime(sessionId, updates) {
+    const session = asTaskSessionRecord(await this.repository.getById(sessionId));
+    if (!session) throw new Error(`task_session_required:${sessionId}`);
+    let startedMs = Date.parse(session.sessionStartedAt);
+    let endedMs = Date.parse(session.sessionEndedAt);
+    const originalDuration = session.sessionDurationMinutes;
+    if (updates.time) startedMs = withLocalClock(session.sessionStartedAt, updates.time);
+    if (updates.endTime) {
+      endedMs = withLocalClock(session.sessionEndedAt, updates.endTime);
+      if (endedMs < startedMs) endedMs += 864e5;
+    } else if (updates.duration != null || updates.time) {
+      const duration2 = updates.duration != null ? updates.duration : originalDuration;
+      if (!Number.isFinite(duration2) || duration2 < 0) throw new Error("task_session_duration_invalid");
+      endedMs = startedMs + duration2 * 6e4;
+    }
+    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs < startedMs) {
+      throw new Error("task_session_time_order_invalid");
+    }
+    const durationMinutes2 = Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
+    await this.repository.update(session.id, {
+      sessionStartedAt: new Date(startedMs).toISOString(),
+      sessionEndedAt: new Date(endedMs).toISOString(),
+      sessionDurationMinutes: durationMinutes2
+    });
+    const updated = await this.repository.getById(session.id);
+    if (!updated) throw new Error(`task_session_update_scan_failed:${session.id}`);
+    return updated;
+  }
+  /**
+   * Bind a newly persisted Energy snapshot to the nearest eligible finished Session.
+   * Goal is intentionally not part of the match: Energy is a person-level state.
+   */
+  async linkEnergySnapshot(energyRecordId) {
+    const energy = this.dataStore.getRecordById(energyRecordId);
+    const after = energy ? readEnergyItemSnapshot(energy) : null;
+    const afterMs = energy ? energyOccurrenceMs(energy) : null;
+    if (!energy || !after || afterMs == null) return null;
+    const candidates = this.dataStore.queryRecords().map((item) => asTaskSessionRecord(item)).filter((session) => !!session).filter((session) => !!session.startEnergyRecordId && !session.endEnergyRecordId).map((session) => {
+      const endedMs = Date.parse(session.sessionEndedAt);
+      return { session, endedMs, gapMinutes: (afterMs - endedMs) / 6e4 };
+    }).filter(({ endedMs, gapMinutes }) => Number.isFinite(endedMs) && gapMinutes >= 0 && gapMinutes <= ENERGY_FEEDBACK_WINDOW_MINUTES).sort((left2, right2) => left2.gapMinutes - right2.gapMinutes);
+    const chosen = candidates[0]?.session;
+    if (!chosen?.startEnergyRecordId) return null;
+    const beforeItem = this.dataStore.getRecordById(chosen.startEnergyRecordId);
+    const before = beforeItem ? readEnergyItemSnapshot(beforeItem) : null;
+    if (!before) return null;
+    const patch = {
+      endEnergyRecordId: energyRecordId,
+      energyDelta: after.score - before.score,
+      brainDelta: before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0,
+      physicalDelta: before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0
+    };
+    await this.repository.update(chosen.id, patch);
+    return this.dataStore.getRecordById(chosen.id);
+  }
+  prepareCreateOperation(task, input, recordId = createRecordId("task-session")) {
+    if (!asTaskRecord(task)) throw new Error(`task_record_required:${task.id}`);
+    const path = task.source?.path || task.file?.path || this.dataStore.getRecordLocation(task.id)?.path || "";
+    if (!path) throw new Error(`record_location_unavailable:${task.id}`);
+    return {
+      recordId,
+      operation: {
+        kind: "create",
+        record: {
+          recordId,
+          coreBlock: "task-session",
+          targetFilePath: path,
+          targetHeader: task.header || null,
+          fields: buildTaskSessionFields(task, input)
+        }
+      }
+    };
+  }
+  async requireTask(taskId) {
+    const task = await this.repository.getById(taskId);
+    if (!asTaskRecord(task)) throw new Error(`task_record_required:${taskId}`);
+    return task;
+  }
+}
+function timestampNow() {
+  return (/* @__PURE__ */ new Date()).toISOString();
+}
+function sourcePath(dataStore, item) {
+  return item.source?.path || item.file?.path || dataStore.getRecordLocation(item.id)?.path || "";
+}
+function nextTaskFields(task, series, completedAt, nextDates) {
+  return {
+    status: "open",
+    // Series owns future-instance defaults. Historical/current Task metadata is never used
+    // as the authority for future occurrences after a Series update.
+    content: series.content || task.content,
+    goalId: series.goalId,
+    goalPath: series.goalPath || series.goalPaths?.[0],
+    themePath: series.themePath || series.theme,
+    createdAt: completedAt,
+    priority: series.priority,
+    expectedDurationMinutes: series.expectedDurationMinutes,
+    energyDemand: series.extra?.["精力要求"],
+    brainDemand: series.extra?.["脑力要求"],
+    physicalDemand: series.extra?.["体力要求"],
+    scheduledDate: nextDates.scheduledDate,
+    startDate: nextDates.startDate,
+    dueDate: nextDates.dueDate,
+    seriesId: series.id,
+    templateId: task.templateId,
+    templateSourceType: task.templateSourceType
+  };
+}
 class TaskCompletionMutation {
-  constructor(locator, writer) {
-    this.locator = locator;
-    this.writer = writer;
+  constructor(dataStore, repository, taskSessions) {
+    this.dataStore = dataStore;
+    this.repository = repository;
+    this.taskSessions = taskSessions ?? new TaskSessionMutation(dataStore, repository);
   }
-  locator;
-  writer;
-  async getItemLine(itemId) {
-    const context = await this.locator.loadMutableTaskContext(itemId);
-    return context.rawLine;
+  dataStore;
+  repository;
+  taskSessions;
+  async completeItem(itemId, _mutationOptions = {}) {
+    await this.transition(itemId, "complete");
   }
-  async completeItem(itemId, options, mutationOptions = {}) {
-    const context = await this.locator.loadMutableTaskContext(itemId);
-    const { path, index, rawLine, item } = context;
-    const lines = [...context.lines];
-    if (options) {
-      const fallbackEndTime = options.endTime || nowHHMM();
-      const seedOptions = {
-        duration: typeof options.duration === "number" ? options.duration : void 0,
-        startTime: options.startTime || void 0,
-        endTime: fallbackEndTime
-      };
-      const normalizedTriple = seedOptions.duration !== void 0 ? applyTaskTimePolicy({ ...seedOptions, mode: "finalize", direction: "forward" }) : {
-        startTime: seedOptions.startTime,
-        endTime: fallbackEndTime,
-        duration: void 0
-      };
-      const normalizedOptions = {
-        duration: normalizedTriple.duration,
-        startTime: normalizedTriple.startTime,
-        endTime: normalizedTriple.endTime || fallbackEndTime
-      };
-      const { completedLine: completedLine2, nextTaskLine: nextTaskLine2 } = markTaskDone(
-        rawLine,
-        todayISO(),
-        normalizedOptions.endTime || nowHHMM(),
-        normalizedOptions
-      );
-      lines[index] = completedLine2;
-      if (nextTaskLine2) {
-        lines.splice(index + 1, 0, nextTaskLine2);
+  async completeItemWithSession(itemId, session, _mutationOptions = {}) {
+    if (session.result !== "task-completed") throw new Error("task_session_complete_result_required");
+    await this.transition(itemId, "complete", session);
+  }
+  async cancelItem(itemId) {
+    await this.transition(itemId, "cancel");
+  }
+  async skipItem(itemId) {
+    await this.transition(itemId, "skip");
+  }
+  async reopenItem(itemId) {
+    await this.transition(itemId, "reopen");
+  }
+  async updateSeries(seriesId, update, options = {}) {
+    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
+    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
+    const seriesPatch = {};
+    if (Object.prototype.hasOwnProperty.call(update, "content") && !String(update.content || "").trim()) {
+      throw new Error(`task_series_content_required:${seriesId}`);
+    }
+    if (update.recurrence) {
+      const recurrence = normalizeRecurrenceInfo({
+        ...series.recurrenceInfo,
+        ...update.recurrence
+      });
+      if (!recurrence) throw new Error(`task_series_recurrence_invalid:${seriesId}`);
+      seriesPatch.recurrenceUnit = recurrence.unit;
+      seriesPatch.recurrenceInterval = recurrence.interval;
+      seriesPatch.recurrenceAnchor = recurrence.anchor;
+    }
+    const sharedFields = [
+      ["content", "content"],
+      ["goalId", "goalId"],
+      ["goalPath", "goalPath"],
+      ["themePath", "themePath"],
+      ["priority", "priority"],
+      ["expectedDurationMinutes", "expectedDurationMinutes"],
+      ["energyDemand", "energyDemand"],
+      ["brainDemand", "brainDemand"],
+      ["physicalDemand", "physicalDemand"]
+    ];
+    for (const [sourceKey, patchKey] of sharedFields) {
+      if (Object.prototype.hasOwnProperty.call(update, sourceKey)) seriesPatch[patchKey] = update[sourceKey];
+    }
+    const operations = [];
+    if (Object.keys(seriesPatch).length) operations.push({ kind: "update", recordId: series.id, patch: seriesPatch });
+    if (options.includeCurrent && series.currentTaskId) {
+      const current2 = asTaskRecord(await this.repository.getById(series.currentTaskId));
+      if (!current2 || current2.seriesId !== series.id) throw new Error(`task_series_current_conflict:${series.id}`);
+      if (getTaskStatus(current2) !== "open") throw new Error(`task_series_current_not_open:${series.id}`);
+      const currentPatch = {};
+      for (const [sourceKey, patchKey] of sharedFields) {
+        if (Object.prototype.hasOwnProperty.call(update, sourceKey)) currentPatch[patchKey] = update[sourceKey];
       }
-      await this.writer.writeLines(path, lines, mutationOptions);
+      if (Object.keys(currentPatch).length) operations.push({ kind: "update", recordId: current2.id, patch: currentPatch });
+    }
+    if (operations.length) await this.repository.batch(operations);
+  }
+  async repairSeriesCurrentTask(seriesId) {
+    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
+    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
+    if (series.status !== "active") throw new Error(`task_series_repair_requires_active:${seriesId}`);
+    const pointed = series.currentTaskId ? asTaskRecord(await this.repository.getById(series.currentTaskId)) : null;
+    if (pointed && pointed.seriesId === series.id && getTaskStatus(pointed) === "open") return "already-valid";
+    const candidates = this.dataStore.queryRecords().filter((item) => item.coreBlock === "task" && item.seriesId === series.id && getTaskStatus(item) === "open");
+    if (candidates.length !== 1) {
+      throw new Error(`task_series_repair_ambiguous:${seriesId}:${candidates.length}`);
+    }
+    await this.repository.update(series.id, { currentTaskId: candidates[0].id });
+    return "repaired";
+  }
+  async stopSeries(seriesId, options = {}) {
+    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
+    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
+    if (series.status !== "active") return;
+    const operations = [{ kind: "update", recordId: series.id, patch: { status: "stopped" } }];
+    if (options.cancelCurrent && series.currentTaskId) {
+      const current2 = asTaskRecord(await this.repository.getById(series.currentTaskId));
+      if (current2 && getTaskStatus(current2) === "open") {
+        operations.push({ kind: "update", recordId: current2.id, patch: { status: "cancelled", cancelledAt: timestampNow() } });
+      }
+    }
+    await this.repository.batch(operations);
+  }
+  async transition(itemId, command, sessionInput) {
+    const task = await this.requireTask(itemId);
+    const status = getTaskStatus(task);
+    if (!status) throw new Error(`task_status_invalid:${itemId}`);
+    const recurring = Boolean(task.seriesId);
+    if (!canTransitionTaskStatus(status, command, { recurring })) {
+      throw new Error(`task_transition_invalid:${status}:${command}`);
+    }
+    const at = timestampNow();
+    if (command === "reopen") {
+      if (task.seriesId) {
+        const series2 = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
+        if (!series2 || series2.currentTaskId !== task.id) throw new Error("task_reopen_recurring_conflict");
+      }
+      await this.repository.update(task.id, { status: "open", completedAt: null, cancelledAt: null, skippedAt: null });
       return;
     }
-    if (item && item.duration) {
-      const durationMinutes = item.duration;
-      const endTime = nowHHMM();
-      const normalizedTriple = applyTaskTimePolicy({ endTime, duration: durationMinutes, mode: "finalize", direction: "forward" });
-      const startTime = normalizedTriple.startTime || void 0;
-      const calculatedOptions = {
-        duration: normalizedTriple.duration ?? durationMinutes,
-        startTime,
-        endTime
-      };
-      const { completedLine: completedLine2, nextTaskLine: nextTaskLine2 } = markTaskDone(
-        rawLine,
-        todayISO(),
-        endTime,
-        calculatedOptions
-      );
-      lines[index] = completedLine2;
-      if (nextTaskLine2) {
-        lines.splice(index + 1, 0, nextTaskLine2);
-      }
-      await this.writer.writeLines(path, lines, mutationOptions);
+    const patch = { status: nextTaskStatus(command) };
+    const sessionOperation = sessionInput ? this.taskSessions.prepareCreateOperation(task, sessionInput).operation : null;
+    if (command === "complete") patch.completedAt = at;
+    if (command === "cancel") patch.cancelledAt = at;
+    if (command === "skip") patch.skippedAt = at;
+    if (!task.seriesId || command === "cancel") {
+      if (sessionOperation) await this.repository.batch([{ kind: "update", recordId: task.id, patch }, sessionOperation]);
+      else await this.repository.update(task.id, patch);
       return;
     }
-    const { completedLine, nextTaskLine } = markTaskDone(rawLine, todayISO(), nowHHMM());
-    lines[index] = completedLine;
-    if (nextTaskLine) {
-      lines.splice(index + 1, 0, nextTaskLine);
+    const series = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
+    if (!series) throw new Error(`task_series_missing:${task.seriesId}`);
+    if (series.currentTaskId !== task.id) throw new Error(`task_series_current_conflict:${series.id}`);
+    if (series.status === "stopped") {
+      if (sessionOperation) await this.repository.batch([{ kind: "update", recordId: task.id, patch }, sessionOperation]);
+      else await this.repository.update(task.id, patch);
+      return;
     }
-    await this.writer.writeLines(path, lines, mutationOptions);
-  }
-  async appendCompletionRecord(itemId, options, mutationOptions = {}) {
-    const context = await this.locator.loadMutableTaskContext(itemId);
-    const { path, index, rawLine } = context;
-    const lines = [...context.lines];
-    const completedLine = buildCompletedTaskRecord(
-      rawLine,
-      todayISO(),
-      options?.endTime || nowHHMM(),
-      options
+    const recurrence = normalizeRecurrenceInfo(series.recurrenceInfo);
+    if (!recurrence) throw new Error(`task_series_recurrence_invalid:${series.id}`);
+    const nextId = createRecordId("task");
+    const nextDates = buildNextOccurrenceDates(task, recurrence, at);
+    const path = sourcePath(this.dataStore, task);
+    if (!path) throw new Error(`record_location_unavailable:${task.id}`);
+    const operations = [
+      { kind: "update", recordId: task.id, patch }
+    ];
+    if (sessionOperation) operations.push(sessionOperation);
+    operations.push(
+      { kind: "create", record: {
+        recordId: nextId,
+        coreBlock: "task",
+        targetFilePath: path,
+        targetHeader: task.header || null,
+        fields: nextTaskFields(task, series, at, nextDates)
+      } },
+      { kind: "update", recordId: series.id, patch: { currentTaskId: nextId } }
     );
-    lines.splice(index + 1, 0, completedLine);
-    await this.writer.writeLines(path, lines, mutationOptions);
+    await this.repository.batch(operations);
   }
-  async updateItemTime(itemId, updates, mutationOptions = {}) {
-    const context = await this.locator.loadMutableTaskContext(itemId);
-    const { path, index, rawLine } = context;
-    const lines = [...context.lines];
-    let line2 = rawLine;
-    if (updates.time !== void 0) {
-      line2 = upsertKvTag(line2, "时间", updates.time);
+  async requireTask(itemId) {
+    const item = await this.repository.getById(itemId);
+    if (!asTaskRecord(item)) throw new Error(`task_record_required:${itemId}`);
+    return item;
+  }
+}
+class RecordTransactionRecoveryError extends Error {
+  constructor(originalError, writtenPaths, recoveryFailedPaths) {
+    super(`record_transaction_recovery_required:${recoveryFailedPaths.join(",")}`, { cause: originalError });
+    this.originalError = originalError;
+    this.writtenPaths = writtenPaths;
+    this.recoveryFailedPaths = recoveryFailedPaths;
+    this.name = "RecordTransactionRecoveryError";
+  }
+  originalError;
+  writtenPaths;
+  recoveryFailedPaths;
+  code = "record_transaction_recovery_required";
+}
+class RecordMutationTransaction {
+  constructor(vault) {
+    this.vault = vault;
+  }
+  vault;
+  async commit(writes) {
+    const unique2 = /* @__PURE__ */ new Map();
+    for (const write2 of writes) unique2.set(write2.path, write2);
+    const ordered = [...unique2.values()];
+    for (const write2 of ordered) {
+      const current2 = await this.vault.readFile(write2.path);
+      if ((current2 ?? "") !== write2.before) {
+        throw new Error(`record_write_conflict:${write2.path}`);
+      }
     }
-    if (updates.endTime !== void 0) {
-      line2 = upsertKvTag(line2, "结束", updates.endTime);
+    const written = [];
+    try {
+      for (const write2 of ordered) {
+        await this.vault.writeFile(write2.path, write2.after);
+        written.push(write2);
+      }
+      return { writtenPaths: written.map((write2) => write2.path) };
+    } catch (error) {
+      const recoveryFailedPaths = [];
+      for (const write2 of written.reverse()) {
+        try {
+          await this.vault.writeFile(write2.path, write2.before);
+        } catch {
+          recoveryFailedPaths.push(write2.path);
+        }
+      }
+      if (recoveryFailedPaths.length > 0) {
+        throw new RecordTransactionRecoveryError(
+          error,
+          written.map((write2) => write2.path),
+          recoveryFailedPaths
+        );
+      }
+      throw error;
     }
-    if (updates.duration !== void 0) {
-      line2 = upsertKvTag(line2, "时长", String(updates.duration));
+  }
+}
+const PATCH_FIELDS = {
+  status: { label: "状态", aliases: ["状态", "status"] },
+  content: { label: "内容", aliases: ["内容", "content"] },
+  goalId: { label: "目标ID", aliases: ["目标ID", "goalId"] },
+  goalPath: { label: "目标", aliases: ["目标", "goalPath", "goalPaths"] },
+  themePath: { label: "主题", aliases: ["主题", "theme", "themePath"] },
+  createdAt: { label: "创建于", aliases: ["创建于", "createdAt"] },
+  scheduledDate: { label: "计划日期", aliases: ["计划日期", "scheduledDate"] },
+  startDate: { label: "开始日期", aliases: ["开始日期", "startDate"] },
+  dueDate: { label: "截止日期", aliases: ["截止日期", "dueDate"] },
+  completedAt: { label: "完成于", aliases: ["完成于", "completedAt"] },
+  cancelledAt: { label: "取消于", aliases: ["取消于", "cancelledAt"] },
+  skippedAt: { label: "跳过于", aliases: ["跳过于", "skippedAt"] },
+  priority: { label: "优先级", aliases: ["优先级", "priority"] },
+  expectedDurationMinutes: { label: "预计时长", aliases: ["预计时长", "expectedDurationMinutes"] },
+  energyDemand: { label: "精力要求", aliases: ["精力要求", "energyDemand"] },
+  brainDemand: { label: "脑力要求", aliases: ["脑力要求", "brainDemand"] },
+  physicalDemand: { label: "体力要求", aliases: ["体力要求", "physicalDemand"] },
+  seriesId: { label: "系列ID", aliases: ["系列ID", "seriesId"] },
+  recurrenceUnit: { label: "重复单位", aliases: ["重复单位", "recurrenceUnit"] },
+  recurrenceInterval: { label: "重复间隔", aliases: ["重复间隔", "recurrenceInterval"] },
+  recurrenceAnchor: { label: "重复锚点", aliases: ["重复锚点", "recurrenceAnchor"] },
+  seriesStartDate: { label: "系列开始日期", aliases: ["系列开始日期", "seriesStartDate"] },
+  currentTaskId: { label: "当前任务ID", aliases: ["当前任务ID", "currentTaskId"] },
+  rolloverPolicy: { label: "滚动策略", aliases: ["滚动策略", "rolloverPolicy"] },
+  taskId: { label: "任务ID", aliases: ["任务ID", "taskId"] },
+  sessionStartedAt: { label: "开始于", aliases: ["开始于", "sessionStartedAt"] },
+  sessionEndedAt: { label: "结束于", aliases: ["结束于", "sessionEndedAt"] },
+  sessionDurationMinutes: { label: "时长", aliases: ["时长", "sessionDurationMinutes"] },
+  sessionResult: { label: "结果", aliases: ["结果", "sessionResult"] },
+  sessionSource: { label: "来源", aliases: ["来源", "sessionSource"] },
+  suggestedDurationMinutes: { label: "建议时长", aliases: ["建议时长", "suggestedDurationMinutes"] },
+  startEnergyRecordId: { label: "开始精力记录ID", aliases: ["开始精力记录ID", "startEnergyRecordId"] },
+  endEnergyRecordId: { label: "结束精力记录ID", aliases: ["结束精力记录ID", "endEnergyRecordId"] },
+  energyDelta: { label: "精力变化", aliases: ["精力变化", "energyDelta"] },
+  brainDelta: { label: "脑力变化", aliases: ["脑力变化", "brainDelta"] },
+  physicalDelta: { label: "体力变化", aliases: ["体力变化", "physicalDelta"] },
+  templateId: { label: "模板ID", aliases: ["模板ID", "templateId"] },
+  templateSourceType: { label: "模板来源", aliases: ["模板来源", "templateSourceType"] },
+  startTime: { label: "时间", aliases: ["时间", "startTime"] },
+  endTime: { label: "结束", aliases: ["结束", "endTime"] },
+  duration: { label: "时长", aliases: ["时长", "duration"] }
+};
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function scalar(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean).join(", ");
+  if (typeof value === "object") return "";
+  return String(value).trim();
+}
+function resolvePatchField(rawKey) {
+  const normalized2 = rawKey.trim();
+  const byCanonical = PATCH_FIELDS[normalized2];
+  if (byCanonical) return byCanonical;
+  for (const definition of Object.values(PATCH_FIELDS)) {
+    if (definition.aliases.some((alias) => alias.toLowerCase() === normalized2.toLowerCase())) return definition;
+  }
+  return { label: normalized2, aliases: [normalized2] };
+}
+function patchRecordBlockMarkdown(markdown, patch) {
+  const lines = markdown.split(/\r?\n/);
+  const protectedKeys = /* @__PURE__ */ new Set(["记录id", "recordid", "id", "记录版本", "recordversion", "schemaversion", "核心block", "coreblock"]);
+  for (const [rawKey, value] of Object.entries(patch)) {
+    const key = rawKey.trim();
+    if (!key || protectedKeys.has(key.toLowerCase())) continue;
+    const definition = resolvePatchField(key);
+    const aliases2 = definition.aliases.map((alias) => escapeRegex(alias)).join("|");
+    const re = new RegExp(`^\\s*(?:${aliases2})\\s*[:：]{1,2}`, "i");
+    const index = lines.findIndex((line2, i2) => i2 > 0 && i2 < lines.length - 1 && re.test(line2));
+    const encoded = scalar(value);
+    if (!encoded) {
+      if (index >= 0) lines.splice(index, 1);
+      continue;
     }
-    lines[index] = line2;
-    await this.writer.writeLines(path, lines, mutationOptions);
+    const nextLine = `${definition.label}:: ${encoded}`;
+    if (index >= 0) lines[index] = nextLine;
+    else {
+      const contentIndex = lines.findIndex((line2, i2) => i2 > 0 && /^\s*(?:内容|content)\s*[:：]{1,2}/i.test(line2));
+      lines.splice(contentIndex >= 0 ? contentIndex : lines.length - 1, 0, nextLine);
+    }
+  }
+  return lines.join("\n");
+}
+function appendRecordText(before, markdown, header) {
+  if (header) return appendUnderHeaderText(before, header, markdown);
+  return before.trim() ? `${before.trim()}
+
+${markdown}` : markdown;
+}
+class RecordRepository {
+  constructor(vault, dataStore) {
+    this.vault = vault;
+    this.dataStore = dataStore;
+    this.transaction = new RecordMutationTransaction(vault);
+  }
+  vault;
+  dataStore;
+  transaction;
+  async getById(recordId) {
+    return this.dataStore.getRecordById(recordId);
+  }
+  async create(record) {
+    const recordId = record.recordId || createRecordId(record.coreBlock);
+    await this.batch([{ kind: "create", record: { ...record, recordId } }]);
+    const created = this.dataStore.getRecordById(recordId);
+    if (!created) throw new Error(`record_create_scan_failed:${recordId}`);
+    return created;
+  }
+  async update(recordId, patch) {
+    await this.batch([{ kind: "update", recordId, patch }]);
+    const updated = this.dataStore.getRecordById(recordId);
+    if (!updated) throw new Error(`record_update_scan_failed:${recordId}`);
+    return updated;
+  }
+  async delete(recordId) {
+    await this.batch([{ kind: "delete", recordId }]);
+  }
+  async batch(operations) {
+    const beforeByPath = /* @__PURE__ */ new Map();
+    const afterByPath = /* @__PURE__ */ new Map();
+    const createdRecordIds = [];
+    const createdIdsInBatch = /* @__PURE__ */ new Set();
+    const loadPath = async (path) => {
+      if (!beforeByPath.has(path)) {
+        const before = await this.vault.readFile(path) ?? "";
+        beforeByPath.set(path, before);
+        afterByPath.set(path, before);
+      }
+      return afterByPath.get(path) ?? "";
+    };
+    for (const operation of operations) {
+      if (operation.kind === "create") {
+        const recordId = operation.record.recordId || createRecordId(operation.record.coreBlock);
+        if (createdIdsInBatch.has(recordId) || this.dataStore.getRecordLocations(recordId).length > 0) {
+          throw new Error(`record_id_duplicate_create:${recordId}`);
+        }
+        createdIdsInBatch.add(recordId);
+        const markdown = encodeRecordBlock({
+          recordId,
+          schemaVersion: operation.record.schemaVersion ?? RECORD_SCHEMA_VERSION,
+          coreBlock: operation.record.coreBlock,
+          fields: operation.record.fields
+        });
+        const current22 = await loadPath(operation.record.targetFilePath);
+        afterByPath.set(
+          operation.record.targetFilePath,
+          appendRecordText(current22, markdown, operation.record.targetHeader)
+        );
+        createdRecordIds.push(recordId);
+        continue;
+      }
+      const location = this.dataStore.getRecordLocation(operation.recordId);
+      if (!location) throw new Error(`record_location_unavailable:${operation.recordId}`);
+      const current2 = await loadPath(location.path);
+      const lines = current2.split(/\r?\n/);
+      const range = resolveRecordBlockRangeById(lines, operation.recordId, location.startLine - 1);
+      if (operation.kind === "delete") {
+        lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
+      } else {
+        const currentBlock = lines.slice(range.startIndex, range.endIndex + 1).join("\n");
+        const nextBlock = patchRecordBlockMarkdown(currentBlock, operation.patch);
+        lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextBlock.split("\n"));
+      }
+      afterByPath.set(location.path, lines.join("\n"));
+    }
+    const writes = [...afterByPath.entries()].map(([path, after]) => ({ path, before: beforeByPath.get(path) ?? "", after })).filter((write2) => write2.before !== write2.after);
+    let committed;
+    try {
+      committed = await this.transaction.commit(writes);
+    } catch (error) {
+      if (error instanceof RecordTransactionRecoveryError) {
+        this.dataStore.reportRecordIntegrityIssue({
+          code: "record_transaction_recovery_required",
+          message: `Record transaction rollback was incomplete. Written: ${error.writtenPaths.join(", ")}; recovery failed: ${error.recoveryFailedPaths.join(", ")}.`
+        });
+      }
+      throw error;
+    }
+    const rescanFailures = [];
+    for (const path of committed.writtenPaths) {
+      try {
+        await this.dataStore.scanFileByPath(path, { bumpVersion: false, throwOnError: true });
+      } catch (error) {
+        rescanFailures.push({ path, error });
+      }
+    }
+    if (committed.writtenPaths.length) this.dataStore.notifyChange();
+    if (rescanFailures.length > 0) {
+      throw new Error(`record_post_commit_rescan_failed:${rescanFailures.map((entry) => entry.path).join(",")}`);
+    }
+    return { writtenPaths: committed.writtenPaths, createdRecordIds };
   }
 }
 var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
@@ -20531,28 +20949,50 @@ var __decorateClass$7 = (decorators, target, key, kind) => {
 var __decorateParam$6 = (index, decorator) => (target, key) => decorator(target, key, index);
 let ItemService = class {
   taskCompletion;
+  taskSessions;
   inlineFields;
   goalTemplateMigration;
   migrationBackup;
   constructor(dataStore, vault) {
-    const locator = new ItemLocator(dataStore, vault);
-    const writer = new ItemMutationWriter(dataStore, vault);
-    this.taskCompletion = new TaskCompletionMutation(locator, writer);
-    this.inlineFields = new InlineFieldMutation(locator, writer);
-    this.goalTemplateMigration = new GoalTemplateMigrationMutation(dataStore, vault, locator, writer);
+    const recordRepository = new RecordRepository(vault, dataStore);
+    this.taskSessions = new TaskSessionMutation(dataStore, recordRepository);
+    this.taskCompletion = new TaskCompletionMutation(dataStore, recordRepository, this.taskSessions);
+    this.inlineFields = new InlineFieldMutation(recordRepository);
+    this.goalTemplateMigration = new GoalTemplateMigrationMutation(recordRepository);
     this.migrationBackup = new MigrationBackupService(dataStore, vault);
   }
-  getItemLine(itemId) {
-    return this.taskCompletion.getItemLine(itemId);
+  completeItem(itemId, mutationOptions = {}) {
+    return this.taskCompletion.completeItem(itemId, mutationOptions);
   }
-  completeItem(itemId, options, mutationOptions = {}) {
-    return this.taskCompletion.completeItem(itemId, options, mutationOptions);
+  createTaskSession(taskId, session) {
+    return this.taskSessions.createSession(taskId, session);
   }
-  appendCompletionRecord(itemId, options, mutationOptions = {}) {
-    return this.taskCompletion.appendCompletionRecord(itemId, options, mutationOptions);
+  linkEnergySnapshot(energyRecordId) {
+    return this.taskSessions.linkEnergySnapshot(energyRecordId);
   }
-  updateItemTime(itemId, updates, mutationOptions = {}) {
-    return this.taskCompletion.updateItemTime(itemId, updates, mutationOptions);
+  completeItemWithSession(itemId, session, mutationOptions = {}) {
+    return this.taskCompletion.completeItemWithSession(itemId, session, mutationOptions);
+  }
+  cancelItem(itemId) {
+    return this.taskCompletion.cancelItem(itemId);
+  }
+  skipItem(itemId) {
+    return this.taskCompletion.skipItem(itemId);
+  }
+  reopenItem(itemId) {
+    return this.taskCompletion.reopenItem(itemId);
+  }
+  stopTaskSeries(seriesId, options = {}) {
+    return this.taskCompletion.stopSeries(seriesId, options);
+  }
+  repairTaskSeriesCurrentTask(seriesId) {
+    return this.taskCompletion.repairSeriesCurrentTask(seriesId);
+  }
+  updateTaskSeries(seriesId, update, options = {}) {
+    return this.taskCompletion.updateSeries(seriesId, update, options);
+  }
+  async updateItemTime(itemId, updates, _mutationOptions = {}) {
+    await this.taskSessions.updateSessionTime(itemId, updates);
   }
   upsertItemInlineFields(itemId, fields, mutationOptions = {}) {
     return this.inlineFields.upsertItemInlineFields(itemId, fields, mutationOptions);
@@ -20624,19 +21064,22 @@ let ActionService = class {
     const settings = this.settingsProvider.getSettings();
     return getEffectiveCoreBlocks(settings);
   }
+  findBlockByCoreBlock(coreBlock) {
+    const normalized2 = String(coreBlock || "").trim().replace(/^core\./i, "");
+    if (!normalized2) return void 0;
+    return this.getRuntimeBlocks().find(
+      (block2) => String(block2.coreBlockId || block2.id || "").trim().replace(/^core\./i, "") === normalized2
+    );
+  }
   findBlockByCategoryKey(categoryKey) {
     if (!categoryKey) return void 0;
     const blocks = this.getRuntimeBlocks();
-    if (categoryKey === "完成任务" || categoryKey === "未完成任务") {
-      return blocks.find((b2) => b2.categoryKey === "任务");
-    }
     const exact = blocks.find((b2) => b2.categoryKey === categoryKey);
     if (exact) return exact;
     const segments = categoryKey.split("/");
     while (segments.length > 1) {
       segments.pop();
-      const parentKey = segments.join("/");
-      const matched = blocks.find((b2) => b2.categoryKey === parentKey);
+      const matched = blocks.find((b2) => b2.categoryKey === segments.join("/"));
       if (matched) return matched;
     }
     return void 0;
@@ -20647,15 +21090,15 @@ let ActionService = class {
       return this.getQuickInputConfigForStatisticsView(viewInstance, dateContext, periodContext);
     }
     const filters = viewInstance.filters || [];
-    const categoryFilter = filters.find((f2) => f2.field === "categoryKey" && (f2.op === "=" || f2.op === "includes"));
-    if (!categoryFilter || !categoryFilter.value) {
-      this.ui.notice('快捷输入失败：此视图未按 "categoryKey" 进行筛选。');
+    const coreBlockFilter = filters.find((f2) => f2.field === "coreBlock" && (f2.op === "=" || f2.op === "includes"));
+    if (!coreBlockFilter || !coreBlockFilter.value) {
+      this.ui.notice('快捷输入失败：此视图未按 "coreBlock" 进行筛选。');
       return null;
     }
-    const categoryKey = String(categoryFilter.value);
-    const targetBlock = this.findBlockByCategoryKey(categoryKey);
+    const coreBlock = String(coreBlockFilter.value);
+    const targetBlock = this.findBlockByCoreBlock(coreBlock);
     if (!targetBlock) {
-      this.ui.notice(`快捷输入失败：找不到分类为 "${categoryKey}" 的 Block 模板。`);
+      this.ui.notice(`快捷输入失败：找不到核心 Block 为 "${coreBlock}" 的模板。`);
       return null;
     }
     let preselectedThemeId;
@@ -20673,7 +21116,7 @@ let ActionService = class {
     };
     const equalityFilters = filters.filter((f2) => f2.op === "=");
     for (const filter of equalityFilters) {
-      if (filter.field === "categoryKey") continue;
+      if (filter.field === "coreBlock") continue;
       for (const templateField of targetBlock.fields) {
         if (filter.field === templateField.key || filter.field === templateField.label) {
           context[templateField.key] = filter.value;
@@ -20720,10 +21163,10 @@ let ActionService = class {
       this.ui.notice(`错误：找不到ID为 ${taskId} 的任务。`);
       return null;
     }
-    const baseCategory = getBasePath(item.categoryKey) || item.categoryKey || "";
-    const targetBlock = this.findBlockByCategoryKey(baseCategory);
+    const coreBlock = String(item.coreBlock || "").trim();
+    const targetBlock = this.findBlockByCoreBlock(coreBlock);
     if (!targetBlock) {
-      this.ui.notice(`找不到与分类 "${baseCategory}" 匹配的 Block 模板，无法编辑。`);
+      this.ui.notice(`找不到与核心 Block "${coreBlock}" 匹配的模板，无法编辑。`);
       return null;
     }
     const context = {};
@@ -20794,7 +21237,7 @@ let ActionService = class {
       this.ui.notice("没有可用的Block模板，请先在设置中创建一个。");
       return null;
     }
-    const taskBlock = blocks.find((b2) => b2.categoryKey === "任务") || blocks[0];
+    const taskBlock = blocks.find((b2) => String(b2.coreBlockId || b2.id).replace(/^core\./i, "") === "task") || blocks[0];
     return {
       blockId: taskBlock.id
     };
@@ -20817,6 +21260,12 @@ var __decorateClass$5 = (decorators, target, key, kind) => {
 };
 var __decorateParam$4 = (index, decorator) => (target, key) => decorator(target, key, index);
 const TIMER_STATE_PATH = "think-plugin-timer-state.json";
+const TIMER_RUNTIME_SCHEMA_VERSION = 2;
+function isTimerRuntimeState(entry) {
+  if (!entry || typeof entry !== "object") return false;
+  const timer = entry;
+  return typeof timer.id === "string" && timer.id.length > 0 && typeof timer.taskId === "string" && timer.taskId.length > 0 && typeof timer.startedAt === "number" && Number.isFinite(timer.startedAt) && typeof timer.startTime === "number" && Number.isFinite(timer.startTime) && typeof timer.elapsedSeconds === "number" && Number.isFinite(timer.elapsedSeconds) && (timer.status === "running" || timer.status === "paused") && (timer.source === "timer" || timer.source === "energy-view");
+}
 let TimerStateService = class {
   constructor(vault) {
     this.vault = vault;
@@ -20826,30 +21275,24 @@ let TimerStateService = class {
     try {
       const content = await this.vault.readFile(TIMER_STATE_PATH);
       if (!content) return [];
-      const timers = JSON.parse(content);
-      if (!Array.isArray(timers)) return [];
-      const allowedStatuses = /* @__PURE__ */ new Set([
-        "running",
-        "paused",
-        "awaiting-energy",
-        "feedback-recorded"
-      ]);
-      return timers.filter((entry) => {
-        if (!entry || typeof entry !== "object") return false;
-        const timer = entry;
-        return typeof timer.id === "string" && timer.id.length > 0 && typeof timer.taskId === "string" && timer.taskId.length > 0 && typeof timer.startTime === "number" && Number.isFinite(timer.startTime) && typeof timer.elapsedSeconds === "number" && Number.isFinite(timer.elapsedSeconds) && typeof timer.status === "string" && allowedStatuses.has(timer.status);
-      });
+      const parsed = JSON.parse(content);
+      if (!parsed || parsed.schemaVersion !== TIMER_RUNTIME_SCHEMA_VERSION || !Array.isArray(parsed.timers)) return [];
+      return parsed.timers.filter(isTimerRuntimeState);
     } catch (error) {
-      devWarn("Think Plugin: Failed to load timer state from file.", error);
+      devWarn("Think Plugin: Failed to load timer runtime state from file.", error);
       return [];
     }
   }
   async saveStateToFile(timers) {
     try {
-      const content = JSON.stringify(timers, null, 2);
-      await this.vault.writeFile(TIMER_STATE_PATH, content);
+      const runtimeTimers = timers.filter(isTimerRuntimeState);
+      const payload = {
+        schemaVersion: TIMER_RUNTIME_SCHEMA_VERSION,
+        timers: runtimeTimers
+      };
+      await this.vault.writeFile(TIMER_STATE_PATH, JSON.stringify(payload, null, 2));
     } catch (error) {
-      devWarn("Think Plugin: Failed to save timer state to file.", error);
+      devWarn("Think Plugin: Failed to save timer runtime state to file.", error);
     }
   }
 };
@@ -22712,13 +23155,13 @@ function createLayoutUseCase(store) {
   return new LayoutUseCase(store);
 }
 const FIELD_ALIASES = {
-  status: "categoryKey",
   category: "categoryKey",
   categoryPath: "categoryKey"
 };
 const NEVER_INLINE_EDITABLE = /* @__PURE__ */ new Set([
   "id",
   "type",
+  "status",
   "created",
   "modified",
   "rawSource",
@@ -22882,11 +23325,6 @@ function getFieldEditPolicy(field, sampleValue) {
     reason: void 0
   };
 }
-function normalizeViewMultiValue(value, options = {}) {
-  const rawValues = Array.isArray(value) ? value : [value];
-  const normalized2 = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
-  return options.dedupe === false ? normalized2 : Array.from(new Set(normalized2));
-}
 const VIEW_LEGACY_FIELD_ALIASES = {
   category: "coreBlock",
   categoryPath: "coreBlock",
@@ -22907,9 +23345,8 @@ const VIEW_LEGACY_FIELD_ALIASES = {
   周期: "period.label",
   granularity: "period.granularity",
   周期粒度: "period.granularity",
-  recurrence: "repeatToken",
-  repeat: "repeatToken",
-  重复: "repeatToken",
+  repeat: "recurrence",
+  重复: "recurrence",
   templateSourceType: "templateSource",
   模板来源: "templateSource",
   模板ID: "templateId",
@@ -22926,8 +23363,7 @@ const VIEW_NOISY_DISPLAY_FIELDS = /* @__PURE__ */ new Set([
   "templateId",
   "period.id",
   "period.label",
-  "period.granularity",
-  "repeatToken"
+  "period.granularity"
 ]);
 function normalizeViewFieldKey(field) {
   const raw = String(field || "").trim();
@@ -22940,23 +23376,13 @@ function isNoisyViewDisplayField(field) {
 function isTemplateSourceViewField(field) {
   return TEMPLATE_SOURCE_FIELDS.has(normalizeViewFieldKey(field));
 }
-function readLegacyTaskStatusValue(value) {
-  const values2 = normalizeViewMultiValue(value);
-  if (values2.some((text2) => text2 === "完成任务" || text2.endsWith("/done"))) return "done";
-  if (values2.some((text2) => text2.endsWith("/cancelled"))) return "cancelled";
-  if (values2.some((text2) => text2 === "未完成任务" || text2.endsWith("/todo"))) return "open";
-  return null;
-}
-function isLegacyCategoryRuleField(field) {
-  return ["category", "categoryKey", "categoryPath", "baseCategory", "leafCategory", "分类", "类别", "分类路径"].includes(String(field || "").trim());
-}
 function normalizeRuleValue(field, value) {
   const normalizedField = normalizeViewFieldKey(field);
   if (normalizedField !== "coreBlock") return value;
   const mapOne = (item) => {
     const text2 = String(item ?? "").trim();
     if (text2 === "打卡") return "habit";
-    if (text2 === "任务" || text2 === "未完成任务" || text2 === "完成任务") return "task";
+    if (text2 === "任务") return "task";
     if (text2 === "计划") return "plan";
     if (text2 === "总结") return "review";
     if (text2 === "思考" || text2 === "闪念") return "thought";
@@ -22974,12 +23400,6 @@ function normalizeViewFilters(filters) {
     const rawField = String(rule.field || "").trim();
     const field = normalizeViewFieldKey(rawField);
     if (!field || isTemplateSourceViewField(field)) continue;
-    const legacyTaskStatus = isLegacyCategoryRuleField(rawField) ? readLegacyTaskStatusValue(rule.value) : null;
-    if (legacyTaskStatus) {
-      result.push({ ...rule, field: "coreBlock", value: "task" });
-      result.push({ field: "taskStatus", op: rule.op, value: legacyTaskStatus });
-      continue;
-    }
     result.push({ ...rule, field, value: normalizeRuleValue(field, rule.value) });
   }
   return result.map((rule, index) => {
@@ -23083,6 +23503,11 @@ function moveDisplayField(fields, fromIndex, toIndex, options = {}) {
   const [moved] = next2.splice(fromIndex, 1);
   next2.splice(toIndex, 0, moved);
   return next2;
+}
+function normalizeViewMultiValue(value, options = {}) {
+  const rawValues = Array.isArray(value) ? value : [value];
+  const normalized2 = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
+  return options.dedupe === false ? normalized2 : Array.from(new Set(normalized2));
 }
 function useTimelineZoom(options) {
   const {
@@ -23335,10 +23760,6 @@ class TimerUseCase {
   timerStateService;
   getTimers() {
     return this.store.getState().timer.timers.filter(isActiveTimerState);
-  }
-  /** Persisted timer state also contains Energy feedback lifecycle entries. */
-  getAllTimerEntries() {
-    return this.store.getState().timer.timers;
   }
   async setInitialTimersFromDisk() {
     const timers = await this.timerStateService.loadStateFromFile();
@@ -23732,6 +24153,19 @@ async function finalizeRecordSubmitResult(dataStore, result) {
   result.refresh = normalizeRecordRefreshPlan(result.refresh);
   await applyRecordRefreshPlan(dataStore, result.refresh);
   return result;
+}
+function isRecordDebugEnabled() {
+  if (typeof window === "undefined") return false;
+  return Boolean(window.__THINK_RECORD_DEBUG__);
+}
+function recordDebugLog(scope, message, payload) {
+  if (!isRecordDebugEnabled()) return;
+  const prefix2 = `[记录调试][${scope}] ${message}`;
+  if (payload === void 0) {
+    console.info(prefix2);
+    return;
+  }
+  console.info(prefix2, payload);
 }
 function hasRecordInputRequiredValue(value) {
   if (value === null || value === void 0) return false;
@@ -24459,9 +24893,9 @@ function readSemanticFieldValue(field, item, snapshot) {
   const semantic = getTemplateFieldSemantic(field);
   switch (semantic) {
     case "body":
-      return item.type === "task" ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content : snapshot.semantic.editableText || snapshot.semantic.content || snapshot.semantic.title;
+      return item.coreBlock === "task" ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content : snapshot.semantic.editableText || snapshot.semantic.content || snapshot.semantic.title;
     case "title":
-      return item.type === "task" ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content : snapshot.semantic.title || snapshot.semantic.editableText || snapshot.semantic.content;
+      return item.coreBlock === "task" ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content : snapshot.semantic.title || snapshot.semantic.editableText || snapshot.semantic.content;
     case "date":
       return snapshot.semantic.date;
     case "period":
@@ -24490,7 +24924,7 @@ function readSemanticFieldValue(field, item, snapshot) {
     case "priority":
       return item.priority;
     case "recurrence":
-      return item.recurrence;
+      return formatTaskRecurrence(item.recurrenceInfo);
     default:
       return void 0;
   }
@@ -24530,6 +24964,10 @@ function buildInitialEditFormData(input) {
     const value = resolveInitialFieldValue({ field, item: input.item, snapshot: input.snapshot });
     if (isPresent(value)) result[field.key] = value;
   }
+  if (input.item.coreBlock === "task") {
+    if (isPresent(input.item.status)) result.status = input.item.status;
+    if (isPresent(input.item.seriesId)) result.seriesId = input.item.seriesId;
+  }
   return result;
 }
 function getItemSemanticTokens(item) {
@@ -24554,42 +24992,42 @@ function getItemSemanticTokens(item) {
   if (item.rating !== void 0) push("rating");
   return tokens;
 }
+function templateCoreBlock(block2) {
+  const raw = String(block2?.coreBlockId || block2?.id || "").trim().replace(/^core\./i, "");
+  return normalizeFieldToken(raw);
+}
+function itemCoreBlock$1(item) {
+  return normalizeFieldToken(String(item.coreBlock || "").replace(/^core\./i, ""));
+}
 function scoreTemplateForItem(block2, item) {
   let score = 0;
-  const outputTemplate = String(block2?.outputTemplate || "");
   const semanticTokens = getItemSemanticTokens(item);
   const categoryKey = normalizeFieldToken(item.categoryKey);
   const blockId = normalizeFieldToken(block2?.id);
   const blockName = normalizeFieldToken(block2?.name);
   const blockCategory = normalizeFieldToken(block2?.categoryKey);
-  if (item.templateId && normalizeFieldToken(item.templateId) === blockId)
-    score += 100;
+  const recordBlock = itemCoreBlock$1(item);
+  const candidateBlock = templateCoreBlock(block2);
+  if (item.templateId && normalizeFieldToken(item.templateId) === blockId) score += 100;
+  if (recordBlock && candidateBlock === recordBlock) score += 80;
   if (categoryKey && categoryKey === blockCategory) score += 30;
   if (categoryKey && categoryKey === blockName) score += 20;
-  if (item.type === "task") {
-    if (/^\s*-\s*\[[ xX]?\]/m.test(outputTemplate)) score += 40;
-    else score -= 10;
-  } else if (/<!--\s*start\s*-->/i.test(outputTemplate) || /内容\s*[:：]/.test(outputTemplate)) {
-    score += 20;
-  }
   const fields = Array.isArray(block2?.fields) ? block2.fields : [];
   for (const field of fields) {
     const key = normalizeFieldToken(field?.key);
     const label = normalizeFieldToken(field?.label);
     if (semanticTokens.has(key)) score += 8;
     if (label && semanticTokens.has(label)) score += 6;
-    if (item.type === "task" && ["title", "标题", "content", "内容"].includes(field?.key))
-      score += 4;
-    if (item.type === "block" && ["content", "内容"].includes(field?.key))
-      score += 4;
+    if (recordBlock === "task" && ["title", "标题", "content", "内容"].includes(field?.key)) score += 4;
+    if (recordBlock !== "task" && ["content", "内容"].includes(field?.key)) score += 4;
   }
   return score;
 }
 function looksLikeTaskTemplate(block2) {
-  return /^\s*-\s*\[[ xX]?\]/m.test(String(block2?.outputTemplate || ""));
+  return templateCoreBlock(block2) === "task";
 }
 function looksLikeBlockTemplate(block2) {
-  return /<!--\s*start\s*-->/i.test(String(block2?.outputTemplate || "")) || /内容\s*[:：]/.test(String(block2?.outputTemplate || ""));
+  return templateCoreBlock(block2) !== "task";
 }
 function readCoreBlockHint(item) {
   const text2 = readFirstString$1(asUnknownRecord(item), ["coreBlock", "coreBlockId"]) ?? readFirstString$1(asUnknownRecord(item.extra || {}), [
@@ -24639,7 +25077,7 @@ function resolveBlockForEdit(blocks, item, preferredBlockId) {
   }
   const preferred = preferredBlockId ? blocks.find((block2) => block2.id === preferredBlockId) : null;
   if (preferred) {
-    const typeMatches = item.type === "task" ? looksLikeTaskTemplate(preferred) : !looksLikeTaskTemplate(preferred);
+    const typeMatches = item.coreBlock === "task" ? looksLikeTaskTemplate(preferred) : !looksLikeTaskTemplate(preferred);
     if (typeMatches) {
       return {
         blockId: preferred.id,
@@ -24650,7 +25088,7 @@ function resolveBlockForEdit(blocks, item, preferredBlockId) {
       };
     }
   }
-  const typedCandidates = item.type === "task" ? blocks.filter(looksLikeTaskTemplate) : blocks.filter((block2) => !looksLikeTaskTemplate(block2));
+  const typedCandidates = item.coreBlock === "task" ? blocks.filter(looksLikeTaskTemplate) : blocks.filter((block2) => !looksLikeTaskTemplate(block2));
   const candidatePool = typedCandidates.length > 0 ? typedCandidates : blocks;
   const withScores = candidatePool.map((block2) => ({ block: block2, score: scoreTemplateForItem(block2, item) })).sort((left2, right2) => right2.score - left2.score);
   const top2 = withScores[0];
@@ -24663,7 +25101,7 @@ function resolveBlockForEdit(blocks, item, preferredBlockId) {
       debugReason: `按记录类型护栏后推断命中 ${top2.block.id}，score=${top2.score}。`
     };
   }
-  const sameTypeFallback = item.type === "task" ? blocks.find(looksLikeTaskTemplate) : blocks.find(looksLikeBlockTemplate);
+  const sameTypeFallback = item.coreBlock === "task" ? blocks.find(looksLikeTaskTemplate) : blocks.find(looksLikeBlockTemplate);
   return {
     blockId: sameTypeFallback?.id ?? blocks[0]?.id ?? null,
     themeIdFromTemplateHint: null,
@@ -24686,7 +25124,7 @@ function buildEditRecordState(input) {
   );
   const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(inputSettings, item.theme) ?? preferredThemeId ?? void 0;
   recordDebugLog("编辑模板解析", "任务/块模板选择", {
-    itemType: item.type,
+    coreBlock: item.coreBlock,
     itemTitle: item.title,
     itemEditableText: item.editableText,
     templateId: item.templateId,
@@ -24937,26 +25375,11 @@ function readText(value) {
   const text2 = String(value ?? "").trim();
   return text2 || void 0;
 }
-function readNumber(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  const text2 = readText(value);
-  if (!text2) return void 0;
-  const parsed = Number(text2);
-  return Number.isFinite(parsed) ? parsed : void 0;
-}
 function normalizeCoreBlock(item) {
-  return String(item.coreBlock || item.extra?.["核心Block"] || item.categoryKey || "").replace(/^core\./i, "").split("/")[0].trim().toLowerCase();
-}
-function isTaskLike$1(item) {
-  if (isEnergyItem(item)) return false;
-  const block2 = normalizeCoreBlock(item);
-  if (block2 === "task") return true;
-  if (item.type === "task") return true;
-  return /任务/.test(String(item.categoryKey || ""));
+  return String(item.coreBlock || item.extra?.["核心Block"] || "").replace(/^core\./i, "").trim().toLowerCase();
 }
 function isHabitLike(item) {
-  const block2 = normalizeCoreBlock(item);
-  return block2 === "habit" || String(item.categoryKey || "").split("/")[0]?.trim() === "打卡";
+  return normalizeCoreBlock(item) === "habit";
 }
 function normalizeGoalPath(value) {
   return String(value ?? "").trim().replace(/^#/, "");
@@ -24977,6 +25400,12 @@ function matchesEnergyGoal(energyItem, candidate) {
   return candidatePaths.some((path) => energyPaths.includes(path));
 }
 function occurrenceDate(item) {
+  if (item.coreBlock === "task-session" && item.sessionStartedAt) {
+    const value = new Date(item.sessionStartedAt);
+    if (Number.isFinite(value.getTime())) {
+      return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+    }
+  }
   return readText(item.date) || readText(item.doneDate) || readText(item.startDate) || readText(item.scheduledDate) || readText(item.dueDate) || readText(item.createdDate) || readText(item.extra?.["日期"]);
 }
 function parseTimeMinutes(time2) {
@@ -24987,19 +25416,10 @@ function parseTimeMinutes(time2) {
   if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
   return hour * 60 + minute;
 }
-function formatTimeMinutes(value) {
-  const normalized2 = (Math.round(value) % 1440 + 1440) % 1440;
-  const hour = Math.floor(normalized2 / 60);
-  const minute = normalized2 % 60;
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
 function dateOrdinal$1(date2) {
   const match5 = date2.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match5) return void 0;
   return Math.floor(Date.UTC(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3])) / 864e5);
-}
-function dateFromOrdinal$1(ordinal3) {
-  return new Date(ordinal3 * 864e5).toISOString().slice(0, 10);
 }
 function absoluteMinute(date2, time2) {
   const ordinal3 = dateOrdinal$1(date2);
@@ -25007,36 +25427,38 @@ function absoluteMinute(date2, time2) {
   if (ordinal3 == null || minutes == null) return void 0;
   return ordinal3 * 1440 + minutes;
 }
-function resolveActivityInterval(item) {
-  const date2 = occurrenceDate(item);
-  if (!date2) return null;
-  const ordinal3 = dateOrdinal$1(date2);
-  if (ordinal3 == null) return null;
-  const duration2 = readNumber(item.duration ?? item.extra?.["时长"]);
-  const safeDuration = duration2 != null && duration2 >= 0 ? duration2 : void 0;
-  let startMinutes = parseTimeMinutes(item.startTime ?? item.extra?.["时间"] ?? item.extra?.["开始"]);
-  let endMinutes = parseTimeMinutes(item.endTime ?? item.extra?.["结束"]);
-  if (startMinutes == null && endMinutes == null) return null;
-  if (startMinutes == null && endMinutes != null && safeDuration != null) startMinutes = endMinutes - safeDuration;
-  if (endMinutes == null && startMinutes != null && safeDuration != null) endMinutes = startMinutes + safeDuration;
-  if (startMinutes == null || endMinutes == null) return null;
-  let startAbsolute = ordinal3 * 1440 + startMinutes;
-  let endAbsolute = ordinal3 * 1440 + endMinutes;
-  if (endAbsolute < startAbsolute) endAbsolute += 1440;
-  if (safeDuration != null && Math.abs(endAbsolute - startAbsolute - safeDuration) > 1) {
-    endAbsolute = startAbsolute + safeDuration;
-  }
-  if (endAbsolute < startAbsolute) return null;
-  const startDayOrdinal = Math.floor(startAbsolute / 1440);
-  const endDayOrdinal = Math.floor(endAbsolute / 1440);
+function localSessionParts$1(value) {
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return null;
   return {
+    date: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`,
+    time: `${String(parsed.getHours()).padStart(2, "0")}:${String(parsed.getMinutes()).padStart(2, "0")}`
+  };
+}
+function resolveActivityInterval(record, byId) {
+  const session = asTaskSessionRecord(record);
+  if (!session) return null;
+  const task = byId.get(session.taskId);
+  if (!task || task.coreBlock !== "task") return null;
+  const start2 = localSessionParts$1(session.sessionStartedAt);
+  const end2 = localSessionParts$1(session.sessionEndedAt);
+  if (!start2 || !end2) return null;
+  const startAbsolute = absoluteMinute(start2.date, start2.time);
+  const endAbsoluteRaw = absoluteMinute(end2.date, end2.time);
+  if (startAbsolute == null || endAbsoluteRaw == null) return null;
+  const duration2 = Number(session.sessionDurationMinutes);
+  if (!Number.isFinite(duration2) || duration2 < 0) return null;
+  const endAbsolute = Math.max(endAbsoluteRaw, startAbsolute + duration2);
+  return {
+    session,
+    task,
     startAbsolute,
     endAbsolute,
-    startDate: dateFromOrdinal$1(startDayOrdinal),
-    startTime: formatTimeMinutes(startAbsolute),
-    endDate: dateFromOrdinal$1(endDayOrdinal),
-    endTime: formatTimeMinutes(endAbsolute),
-    durationMinutes: Math.max(0, Math.round(endAbsolute - startAbsolute))
+    startDate: start2.date,
+    startTime: start2.time,
+    endDate: end2.date,
+    endTime: end2.time,
+    durationMinutes: Math.round(duration2)
   };
 }
 function activityConfidence(relation, gapMinutes) {
@@ -25044,14 +25466,16 @@ function activityConfidence(relation, gapMinutes) {
   if (gapMinutes <= 60) return "medium";
   return "low";
 }
-function buildActivityContext(item, energyAbsolute, recentWindowMinutes) {
-  if (!isTaskLike$1(item)) return null;
-  const interval = resolveActivityInterval(item);
+function buildActivityContext(record, byId, energyItemId, energyAbsolute, recentWindowMinutes) {
+  const interval = resolveActivityInterval(record, byId);
   if (!interval) return null;
-  if (energyAbsolute >= interval.startAbsolute && energyAbsolute <= interval.endAbsolute) {
+  const session = asTaskSessionRecord(record);
+  const directStart = session.startEnergyRecordId === energyItemId;
+  const directEnd = session.endEnergyRecordId === energyItemId;
+  if (directStart || energyAbsolute >= interval.startAbsolute && energyAbsolute <= interval.endAbsolute) {
     return {
-      itemId: item.id,
-      title: item.title || item.content || "未命名任务",
+      itemId: session.id,
+      title: interval.task.content || interval.task.title || "未命名任务",
       relation: "active",
       confidence: "high",
       gapMinutes: 0,
@@ -25060,23 +25484,23 @@ function buildActivityContext(item, energyAbsolute, recentWindowMinutes) {
       startTime: interval.startTime,
       endDate: interval.endDate,
       endTime: interval.endTime,
-      item
+      item: interval.task
     };
   }
-  const gapMinutes = Math.round(energyAbsolute - interval.endAbsolute);
+  const gapMinutes = directEnd ? 0 : Math.round(energyAbsolute - interval.endAbsolute);
   if (gapMinutes < 0 || gapMinutes > recentWindowMinutes) return null;
   return {
-    itemId: item.id,
-    title: item.title || item.content || "未命名任务",
+    itemId: session.id,
+    title: interval.task.content || interval.task.title || "未命名任务",
     relation: "recent",
-    confidence: activityConfidence("recent", gapMinutes),
+    confidence: directEnd ? "high" : activityConfidence("recent", gapMinutes),
     gapMinutes,
     durationMinutes: interval.durationMinutes,
     startDate: interval.startDate,
     startTime: interval.startTime,
     endDate: interval.endDate,
     endTime: interval.endTime,
-    item
+    item: interval.task
   };
 }
 function activityRank(activity) {
@@ -25131,7 +25555,8 @@ function resolveEnergyContext(energyItem, items, options = {}) {
   const recentWindowMinutes = Math.max(0, options.recentWindowMinutes ?? DEFAULT_RECENT_WINDOW_MINUTES);
   const reliableWindowMinutes = Math.max(0, options.reliableWindowMinutes ?? DEFAULT_RELIABLE_WINDOW_MINUTES);
   const maxNearbyActivities = Math.max(1, options.maxNearbyActivities ?? DEFAULT_MAX_NEARBY_ACTIVITIES);
-  const nearbyActivities = items.filter((item) => item.id !== energyItem.id && matchesEnergyGoal(energyItem, item)).map((item) => buildActivityContext(item, energyAbsolute, recentWindowMinutes)).filter((row) => !!row).sort((left2, right2) => activityRank(left2) - activityRank(right2)).slice(0, maxNearbyActivities);
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const nearbyActivities = items.filter((item) => item.id !== energyItem.id && item.coreBlock === "task-session").map((item) => buildActivityContext(item, byId, energyItem.id, energyAbsolute, recentWindowMinutes)).filter((row) => !!row).sort((left2, right2) => activityRank(left2) - activityRank(right2)).slice(0, maxNearbyActivities);
   const primaryActivity = nearbyActivities.find((activity) => activity.relation === "active" || activity.gapMinutes <= reliableWindowMinutes);
   const dailySignals = buildDailySignals(energyItem, items, snapshot.date);
   return { primaryActivity, nearbyActivities, dailySignals };
@@ -25178,31 +25603,28 @@ function patternAbsoluteMinute(date2, time2) {
   const minute = patternTimeMinutes(time2);
   return ordinal3 == null || minute == null ? void 0 : ordinal3 * 1440 + minute;
 }
-function isTaskLike(item) {
-  const core = patternText(item.coreBlock)?.replace(/^core\./, "");
-  const category = patternText(item.categoryKey);
-  return core === "task" || item.type === "task" || category === "任务" || category === "task";
+function localSessionParts(value) {
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return null;
+  return {
+    date: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`,
+    time: `${String(parsed.getHours()).padStart(2, "0")}:${String(parsed.getMinutes()).padStart(2, "0")}`
+  };
 }
 function resolvePatternActivity(item) {
-  if (!isTaskLike(item)) return null;
-  const date2 = patternText(item.date ?? item.startDate ?? item.doneDate ?? item.scheduledDate ?? item.extra?.["日期"]);
-  if (!date2) return null;
-  const ordinal3 = patternDateOrdinal(date2);
-  if (ordinal3 == null) return null;
-  const duration2 = patternNumber(item.duration ?? item.extra?.["时长"]);
-  const safeDuration = duration2 != null && duration2 >= 0 ? duration2 : void 0;
-  let start2 = patternTimeMinutes(item.startTime ?? item.extra?.["时间"] ?? item.extra?.["开始"]);
-  let end2 = patternTimeMinutes(item.endTime ?? item.extra?.["结束"]);
-  if (start2 == null && end2 == null) return null;
-  if (start2 == null && end2 != null && safeDuration != null) start2 = end2 - safeDuration;
-  if (end2 == null && start2 != null && safeDuration != null) end2 = start2 + safeDuration;
-  if (start2 == null || end2 == null) return null;
-  const startAbsolute = ordinal3 * 1440 + start2;
-  let endAbsolute = ordinal3 * 1440 + end2;
-  if (endAbsolute < startAbsolute) endAbsolute += 1440;
-  if (safeDuration != null && Math.abs(endAbsolute - startAbsolute - safeDuration) > 1) endAbsolute = startAbsolute + safeDuration;
+  const session = asTaskSessionRecord(item);
+  if (!session) return null;
+  const start2 = localSessionParts(session.sessionStartedAt);
+  const end2 = localSessionParts(session.sessionEndedAt);
+  if (!start2 || !end2) return null;
+  const startAbsolute = patternAbsoluteMinute(start2.date, start2.time);
+  const endAbsoluteRaw = patternAbsoluteMinute(end2.date, end2.time);
+  if (startAbsolute == null || endAbsoluteRaw == null) return null;
+  const duration2 = patternNumber(session.sessionDurationMinutes);
+  if (duration2 == null || duration2 < 0) return null;
+  const endAbsolute = Math.max(endAbsoluteRaw, startAbsolute + duration2);
   if (endAbsolute <= startAbsolute) return null;
-  return { item, startAbsolute, endAbsolute, durationMinutes: Math.round(endAbsolute - startAbsolute) };
+  return { item: session, startAbsolute, endAbsolute, durationMinutes: Math.round(duration2) };
 }
 function patternEvidence(count) {
   if (count >= 5) return "supported";
@@ -25330,9 +25752,12 @@ function buildLag(points, windowStart) {
     };
   });
 }
-function pairSession(session, points, beforeWindow, afterWindow) {
-  const before = [...points].reverse().find((point) => point.absoluteMinute <= session.startAbsolute && session.startAbsolute - point.absoluteMinute <= beforeWindow);
-  const after = points.find((point) => point.absoluteMinute >= session.endAbsolute && point.absoluteMinute - session.endAbsolute <= afterWindow);
+function pairSession(session, pointById) {
+  const first = asTaskSessionRecord(session.items[0]);
+  const last2 = asTaskSessionRecord(session.items[session.items.length - 1]);
+  if (!first?.startEnergyRecordId || !last2?.endEnergyRecordId) return null;
+  const before = pointById.get(first.startEnergyRecordId);
+  const after = pointById.get(last2.endEnergyRecordId);
   if (!before || !after || before.itemId === after.itemId) return null;
   return {
     session,
@@ -25403,11 +25828,10 @@ function buildStopProxy(points, sessions, windowStart, threshold, workStartWindo
 }
 function buildEnergyPatterns(items, options = {}) {
   const points = readPoints(items);
+  const activityRecords = options.activityRecords || items;
   if (!points.length) return null;
   const analysisWindowDays = Math.max(7, Math.min(90, Math.floor(options.analysisWindowDays ?? 30)));
   const sessionGapMinutes = Math.max(0, Math.min(60, Math.floor(options.sessionGapMinutes ?? 15)));
-  const beforeWindow = Math.max(15, Math.min(240, Math.floor(options.beforeSessionWindowMinutes ?? 120)));
-  const afterWindow = Math.max(15, Math.min(180, Math.floor(options.afterSessionWindowMinutes ?? 90)));
   const highThreshold = Math.max(60, Math.min(100, Math.floor(options.highEnergyThreshold ?? 80)));
   const workStartWindow = Math.max(0, Math.min(180, Math.floor(options.highEnergyWorkStartWindowMinutes ?? 60)));
   const longMinutes = Math.max(30, Math.min(360, Math.floor(options.longContinuationMinutes ?? 120)));
@@ -25416,9 +25840,11 @@ function buildEnergyPatterns(items, options = {}) {
   const startOrdinal = endOrdinal - analysisWindowDays + 1;
   const windowStart = startOrdinal * 1440;
   const visiblePoints = points.filter((point) => point.absoluteMinute >= windowStart);
-  const intervals = items.map(resolvePatternActivity).filter((value) => !!value).filter((interval) => interval.endAbsolute >= windowStart);
+  const intervals = activityRecords.map(resolvePatternActivity).filter((value) => !!value).filter((interval) => interval.endAbsolute >= windowStart);
   const sessions = mergePatternSessions(intervals, sessionGapMinutes);
-  const pairs = sessions.map((session) => pairSession(session, points, beforeWindow, afterWindow)).filter((value) => !!value);
+  const evidencePoints = readPoints(activityRecords);
+  const pointById = new Map([...points, ...evidencePoints].map((point) => [point.itemId, point]));
+  const pairs = sessions.map((session) => pairSession(session, pointById)).filter((value) => !!value);
   return {
     analysisWindowDays,
     startDate: patternDateFromOrdinal(startOrdinal),
@@ -25525,8 +25951,8 @@ function selectCandidates(rows, trend, focus, limit, minimumSamples) {
     reason: candidateReason(row, focus)
   }));
 }
-function buildGuardrails(items, analysisWindowDays, highThreshold) {
-  const patterns = buildEnergyPatterns(items, { analysisWindowDays, highEnergyThreshold: highThreshold });
+function buildGuardrails(items, evidenceRecords, analysisWindowDays, highThreshold) {
+  const patterns = buildEnergyPatterns(items, { activityRecords: evidenceRecords, analysisWindowDays, highEnergyThreshold: highThreshold });
   if (!patterns) return [];
   const rows = [];
   const stop = patterns.stopProxy;
@@ -25582,11 +26008,12 @@ function buildEnergyManagement(items, options = {}) {
   const analysisWindowDays = Math.max(7, Math.min(90, Math.floor(options.analysisWindowDays ?? 30)));
   const latest2 = latestState(items, highThreshold, dimensionGap);
   if (!latest2) return null;
-  const effects = buildEnergyEffects(items, { requireSharedGoal: options.effectScope !== "global" });
+  const evidenceRecords = options.evidenceRecords || items;
+  const effects = buildEnergyEffects(evidenceRecords);
   const activityRows = effects?.byActivity || [];
   const recoveryCandidates = selectCandidates(activityRows, "recovery", latest2.dimensionFocus, maximumCandidates, minimumPersonalSamples);
   const cautionCandidates = selectCandidates(activityRows, "depletion", latest2.dimensionFocus, maximumCandidates, minimumPersonalSamples);
-  const guardrails = buildGuardrails(items, analysisWindowDays, highThreshold);
+  const guardrails = buildGuardrails(items, evidenceRecords, analysisWindowDays, highThreshold);
   const pairedActivityCount = effects?.pairedActivityCount || 0;
   const sufficient = recoveryCandidates.length > 0 || cautionCandidates.length > 0 || guardrails.length > 0;
   return {
@@ -25700,139 +26127,8 @@ function buildEnergyPeriod(items, options) {
     totalSamples: samples.length
   };
 }
-function normalizeComparableText(value) {
-  return String(value ?? "").replace(/\s+/g, " ").trim().toLowerCase();
-}
-function normalizeLineText(value) {
-  return String(value ?? "").replace(/\r/g, "").split("\n").map((line2) => line2.trim()).filter(Boolean).join(" ").toLowerCase();
-}
-function getFirstDefinedValue(record, keys) {
-  for (const key of keys) {
-    if (!Object.prototype.hasOwnProperty.call(record, key)) continue;
-    const value = record[key];
-    if (value !== void 0 && value !== null && value !== "") return value;
-  }
-  return void 0;
-}
-function parseItemLocator(itemId) {
-  const hashIndex = itemId.lastIndexOf("#");
-  if (hashIndex === -1) throw new Error(`无效的条目ID格式: ${itemId}`);
-  const path = itemId.substring(0, hashIndex);
-  const lineNo = Number.parseInt(itemId.substring(hashIndex + 1), 10);
-  if (!path || Number.isNaN(lineNo)) {
-    throw new Error(`无效的条目ID格式: ${itemId}`);
-  }
-  return { path, lineNo };
-}
-function getItemLineNumber(item) {
-  if (typeof item.file?.line === "number") return item.file.line;
-  try {
-    return parseItemLocator(item.id).lineNo;
-  } catch {
-    return 0;
-  }
-}
 function getItemFilePath(item) {
-  if (item.file?.path) return item.file.path;
-  try {
-    return parseItemLocator(item.id).path;
-  } catch {
-    return null;
-  }
-}
-function buildItemSignature(item) {
-  return JSON.stringify([
-    item.type,
-    item.title || "",
-    item.content || "",
-    item.templateId || "",
-    item.templateSourceType || "",
-    item.theme || "",
-    item.categoryKey || "",
-    item.header || "",
-    item.date || "",
-    item.startTime || "",
-    item.endTime || "",
-    item.duration ?? ""
-  ]);
-}
-function scoreCreatedRecordCandidate(item, context, isFallbackSearch) {
-  let score = 0;
-  const normalizedOutput = normalizeLineText(context.outputContent);
-  const normalizedItemContent = normalizeLineText(item.content);
-  const normalizedItemTitle = normalizeComparableText(item.title);
-  if (context.templateId && item.templateId === context.templateId) score += 30;
-  if (context.templateSourceType && item.templateSourceType === context.templateSourceType) score += 8;
-  if (context.themePath && item.theme === context.themePath) score += 6;
-  if (context.blockCategoryKey && item.categoryKey === context.blockCategoryKey) score += 6;
-  if (context.itemTypeHint !== "unknown" && item.type === context.itemTypeHint) score += 10;
-  if (context.appendMode === "header" && context.targetHeader) {
-    if (item.header === context.targetHeader) score += 16;
-    else score -= 4;
-  }
-  const lineNo = getItemLineNumber(item);
-  if (context.appendMode === "append") {
-    if (lineNo > context.beforeMaxLine) score += 12;
-    else if (context.beforeMaxLine > 0) score -= 3;
-  }
-  if (normalizedOutput) {
-    if (normalizedItemContent === normalizedOutput) score += 44;
-    else if (normalizedItemContent && normalizedOutput.includes(normalizedItemContent)) score += 18;
-    else if (normalizedItemContent && normalizedItemContent.includes(normalizedOutput)) score += 12;
-  }
-  const titleHint = getFirstDefinedValue(context.normalizedFormData, ["标题", "title", "内容", "content", "名称", "name"]);
-  const normalizedTitleHint = normalizeComparableText(titleHint);
-  if (normalizedTitleHint) {
-    if (normalizedItemTitle === normalizedTitleHint) score += 20;
-    else if (normalizedItemTitle && (normalizedItemTitle.includes(normalizedTitleHint) || normalizedTitleHint.includes(normalizedItemTitle))) score += 10;
-    const normalizedContentHint = normalizeComparableText(item.content);
-    if (normalizedContentHint && normalizedContentHint === normalizedTitleHint) score += 12;
-    else if (normalizedContentHint && normalizedContentHint.includes(normalizedTitleHint)) score += 6;
-  }
-  const startHint = getFirstDefinedValue(context.normalizedFormData, ["时间", "time", "start"]);
-  if (startHint && String(item.startTime || "") === String(startHint)) score += 4;
-  const endHint = getFirstDefinedValue(context.normalizedFormData, ["结束", "end", "endTime"]);
-  if (endHint && String(item.endTime || "") === String(endHint)) score += 4;
-  const durationHint = getFirstDefinedValue(context.normalizedFormData, ["时长", "duration"]);
-  if (durationHint !== void 0 && Number(item.duration) === Number(durationHint)) score += 4;
-  if (context.itemTypeHint === "task" && /^\s*-\s*\[[ xX]?\]/.test(item.content || "")) {
-    score += 4;
-  }
-  if (isFallbackSearch && score < 16) {
-    return 0;
-  }
-  return score;
-}
-function locateCreatedRecord(beforeItems, afterItems, context) {
-  const beforeSignatureCount = /* @__PURE__ */ new Map();
-  for (const item of beforeItems) {
-    const signature = buildItemSignature(item);
-    beforeSignatureCount.set(signature, (beforeSignatureCount.get(signature) || 0) + 1);
-  }
-  const extraCandidates = [];
-  for (const item of afterItems) {
-    const signature = buildItemSignature(item);
-    const remaining = beforeSignatureCount.get(signature) || 0;
-    if (remaining > 0) {
-      beforeSignatureCount.set(signature, remaining - 1);
-      continue;
-    }
-    extraCandidates.push(item);
-  }
-  const candidates = extraCandidates.length > 0 ? extraCandidates : afterItems;
-  if (!candidates.length) return void 0;
-  const scored = candidates.map((item) => ({ item, score: scoreCreatedRecordCandidate(item, context, extraCandidates.length === 0) })).filter((entry) => entry.score > 0 || extraCandidates.length > 0).sort((a2, b2) => {
-    if (b2.score !== a2.score) return b2.score - a2.score;
-    return getItemLineNumber(b2.item) - getItemLineNumber(a2.item);
-  });
-  return scored[0]?.item;
-}
-function inferCreatedItemType(outputTemplate) {
-  const text2 = String(outputTemplate || "").trim();
-  if (!text2) return "unknown";
-  if (/^\s*-\s*\[[ xX]?\]/m.test(text2)) return "task";
-  if (/<!--\s*start\s*-->/i.test(text2) || /<!--\s*end\s*-->/i.test(text2)) return "block";
-  return "unknown";
+  return item.source?.path ?? item.file?.path ?? null;
 }
 function uniqueNonEmptyPaths(paths) {
   return Array.from(new Set(paths.map((path) => String(path || "").trim()).filter(Boolean)));
@@ -25843,25 +26139,8 @@ function buildRefreshPlan(paths, notify = true) {
     notify
   };
 }
-function getBeforeMaxLine(items) {
-  return items.reduce((max2, item) => Math.max(max2, getItemLineNumber(item)), 0);
-}
 function getFileItemsByPath(dataStore, path) {
-  return dataStore.queryItems().filter((item) => {
-    if (item.file?.path) return item.file.path === path;
-    try {
-      return parseItemLocator(item.id).path === path;
-    } catch {
-      return false;
-    }
-  });
-}
-function tryParseItemPath(itemId) {
-  try {
-    return parseItemLocator(itemId).path;
-  } catch {
-    return null;
-  }
+  return dataStore.queryItems().filter((item) => (item.source?.path || item.file?.path || "") === path);
 }
 function issue(code, message, field) {
   return { code, message, field };
@@ -25924,32 +26203,6 @@ async function submitFinalizedRecordMutation(params) {
       refreshPaths
     }));
   }
-}
-function normalizeCompletionOptions(options) {
-  if (!options) return void 0;
-  const normalized2 = {
-    duration: typeof options.duration === "number" ? options.duration : void 0,
-    startTime: options.startTime ?? void 0,
-    endTime: options.endTime ?? void 0
-  };
-  if (normalized2.duration == null && !normalized2.startTime && !normalized2.endTime) {
-    return void 0;
-  }
-  if (normalized2.duration != null) {
-    const normalizedTriple = applyTaskTimePolicy({
-      startTime: normalized2.startTime,
-      endTime: normalized2.endTime,
-      duration: normalized2.duration,
-      mode: "finalize",
-      direction: "forward"
-    });
-    return {
-      duration: normalizedTriple.duration ?? normalized2.duration,
-      startTime: normalizedTriple.startTime,
-      endTime: normalizedTriple.endTime ?? normalized2.endTime
-    };
-  }
-  return normalized2;
 }
 function normalizeTimeUpdates(updates) {
   const time2 = updates.time ?? updates.start ?? void 0;
@@ -26037,20 +26290,6 @@ function getTemplateExecutionMeta(resolved, template) {
     templateSourceType: resolved.meta.templateSourceType ?? "core-block"
   };
 }
-function buildCreatedRecordLocatorContext(params) {
-  return {
-    outputContent: params.outputContent,
-    normalizedFormData: params.normalizedFormData,
-    templateId: params.meta.templateId,
-    templateSourceType: params.meta.templateSourceType,
-    themePath: params.theme?.path ?? null,
-    blockCategoryKey: params.template.categoryKey ?? null,
-    itemTypeHint: inferCreatedItemType(params.template.outputTemplate),
-    appendMode: params.appendMode,
-    targetHeader: params.targetHeader ?? null,
-    beforeMaxLine: getBeforeMaxLine(params.beforeItems)
-  };
-}
 class CreateRecordWorkflow {
   constructor(runtime) {
     this.runtime = runtime;
@@ -26078,33 +26317,25 @@ class CreateRecordWorkflow {
         resolved.theme ?? void 0,
         templateMeta
       );
-      const beforeItems = getFileItemsByPath(this.runtime.deps.dataStore, preview.targetFilePath);
+      if (!preview.recordId) throw new Error("record_id_required_before_create");
       const path = await this.runtime.deps.inputService.executeTemplate(
         resolved.template,
         normalized2.normalizedFormData,
         resolved.theme ?? void 0,
         templateMeta,
-        { signal: params.signal }
+        { signal: params.signal, recordId: preview.recordId || void 0 }
       );
       const refreshPlan = buildRefreshPlan([path]);
       const scannedByPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, refreshPlan);
       const scannedItems = scannedByPath.get(path) ?? getFileItemsByPath(this.runtime.deps.dataStore, path);
-      const createdRecord = locateCreatedRecord(beforeItems, scannedItems, buildCreatedRecordLocatorContext({
-        template: resolved.template,
-        theme: resolved.theme,
-        meta: templateMeta,
-        outputContent: preview.outputContent,
-        normalizedFormData: normalized2.normalizedFormData,
-        appendMode: preview.header ? "header" : "append",
-        targetHeader: preview.header ?? null,
-        beforeItems
-      }));
+      const createdRecord = scannedItems.find((item) => item.id === preview.recordId);
+      if (!createdRecord) throw new Error(`record_create_scan_failed:${preview.recordId}`);
       return buildSuccessResult("create", {
         affectedPath: path,
         affectedRecordId: createdRecord?.id,
         refresh: refreshPlan,
         feedback: { notice: "✅ 已创建" },
-        followUp: createdRecord?.type === "task" ? { startTimerForRecordId: createdRecord.id } : void 0,
+        followUp: createdRecord.coreBlock === "task" ? { startTimerForRecordId: createdRecord.id } : void 0,
         warnings
       });
     } catch (error) {
@@ -26144,27 +26375,18 @@ class RecordMigrationTransaction {
   }
   runtime;
   async execute(params) {
-    const targetPath = params.outputPlan.targetFilePath || "";
-    const beforeTargetItems = getFileItemsByPath(this.runtime.deps.dataStore, targetPath);
+    params.outputPlan.targetFilePath || "";
     const createdPath = await this.runtime.deps.inputService.createRecordAtPlannedLocation(
       params.template,
       params.normalized.normalizedFormData,
       params.theme ?? void 0,
       params.templateMeta,
-      { signal: params.signal, autoRefresh: false }
+      { signal: params.signal, autoRefresh: false, recordId: params.item.id }
     );
     const scannedNewPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, buildRefreshPlan([createdPath], false));
     const afterTargetItems = scannedNewPath.get(createdPath) ?? getFileItemsByPath(this.runtime.deps.dataStore, createdPath);
-    const createdRecord = locateCreatedRecord(beforeTargetItems, afterTargetItems, buildCreatedRecordLocatorContext({
-      template: params.template,
-      theme: params.theme,
-      meta: params.templateMeta,
-      outputContent: params.outputPlan.outputContent,
-      normalizedFormData: params.normalized.normalizedFormData,
-      appendMode: params.outputPlan.targetHeader ? "header" : "append",
-      targetHeader: params.outputPlan.targetHeader ?? null,
-      beforeItems: beforeTargetItems
-    }));
+    const createdRecord = afterTargetItems.find((item) => item.id === params.item.id);
+    if (!createdRecord) throw new Error(`record_move_scan_failed:${params.item.id}`);
     try {
       const deletedPath = await this.runtime.deps.inputService.deleteExistingRecord(params.item, {
         signal: params.signal,
@@ -26250,7 +26472,7 @@ class UpdateRecordWorkflow {
       blockId: params.blockId,
       themeId: params.themeId ?? null,
       item: params.item,
-      formData: params.formData,
+      formData: { ...params.formData, seriesId: params.item.seriesId },
       normalizeMode: "edit",
       validateMode: "edit"
     });
@@ -26261,7 +26483,8 @@ class UpdateRecordWorkflow {
       template: resolved.template,
       formData: normalized2.normalizedFormData,
       theme: resolved.theme ?? void 0,
-      templateMeta
+      templateMeta,
+      recordId: params.item.id
     });
     const persistencePlan = buildRecordPersistencePlan({
       mode: "edit",
@@ -26367,11 +26590,12 @@ class RecordInputUseCase {
       );
       const refresh = buildRefreshPlan([path]);
       await applyRecordRefreshPlan(this.deps.dataStore, refresh);
-      const energyFeedback = await this.attachEnergyTaskFeedback(record);
+      const linkedSession = await this.deps.itemService.linkEnergySnapshot(record.recordId);
       return buildSuccessResult("create", {
         affectedPath: path,
+        affectedRecordId: record.recordId,
         refresh,
-        feedback: { notice: energyFeedback ? `已记录精力 ${record.score} · 任务反馈 ${energyFeedback.delta > 0 ? "+" : ""}${energyFeedback.delta}` : `已记录精力 ${record.score}` }
+        feedback: { notice: linkedSession ? `已记录精力 ${record.score}，并关联本次工作反馈。` : `已记录精力 ${record.score}` }
       });
     } catch (error) {
       return mapSubmitError("create", error);
@@ -26388,18 +26612,39 @@ class RecordInputUseCase {
       dataStore: this.deps.dataStore,
       operation: "complete",
       signal: params.signal,
-      refreshPathsOnError: () => [tryParseItemPath(params.itemId)],
+      refreshPathsOnError: () => [this.deps.dataStore.getRecordLocation(params.itemId)?.path || null],
       run: async () => {
-        const path = parseItemLocator(params.itemId).path;
-        const options = normalizeCompletionOptions(params.options);
-        await this.deps.itemService.completeItem(params.itemId, options, { autoRefresh: false });
+        const path = this.deps.dataStore.getRecordLocation(params.itemId)?.path;
+        if (!path) throw new Error(`record_location_unavailable:${params.itemId}`);
+        if (params.session) {
+          await this.deps.itemService.completeItemWithSession(params.itemId, params.session, { autoRefresh: false });
+        } else {
+          await this.deps.itemService.completeItem(params.itemId, { autoRefresh: false });
+        }
         return buildSuccessResult("complete", {
           affectedPath: path,
           affectedRecordId: params.itemId,
           refresh: buildRefreshPlan([path]),
-          feedback: {
-            notice: options?.duration != null ? `任务已完成，时长 ${options.duration} 分钟已记录。` : "任务已完成。"
-          }
+          feedback: { notice: params.session ? `任务已完成，本次工作已保存为 Session。` : "任务已完成。" }
+        });
+      }
+    });
+  }
+  async submitTaskSession(params) {
+    return submitFinalizedRecordMutation({
+      dataStore: this.deps.dataStore,
+      operation: "task_session",
+      signal: params.signal,
+      refreshPathsOnError: () => [this.deps.dataStore.getRecordLocation(params.itemId)?.path || null],
+      run: async () => {
+        const path = this.deps.dataStore.getRecordLocation(params.itemId)?.path;
+        if (!path) throw new Error(`record_location_unavailable:${params.itemId}`);
+        const session = await this.deps.itemService.createTaskSession(params.itemId, params.session);
+        return buildSuccessResult("task_session", {
+          affectedPath: path,
+          affectedRecordId: session.id,
+          refresh: buildRefreshPlan([path]),
+          feedback: { notice: "本次工作已保存。" }
         });
       }
     });
@@ -26413,62 +26658,21 @@ class RecordInputUseCase {
       dataStore: this.deps.dataStore,
       operation: "time_update",
       signal: params.signal,
-      refreshPathsOnError: () => [tryParseItemPath(params.itemId)],
+      refreshPathsOnError: () => [this.deps.dataStore.getRecordLocation(params.itemId)?.path || null],
       run: async () => {
-        const path = parseItemLocator(params.itemId).path;
+        const path = this.deps.dataStore.getRecordLocation(params.itemId)?.path;
+        if (!path) throw new Error(`record_location_unavailable:${params.itemId}`);
         await this.deps.itemService.updateItemTime(params.itemId, normalizedUpdates, { autoRefresh: false });
         return buildSuccessResult("time_update", {
           affectedPath: path,
           affectedRecordId: params.itemId,
           refresh: buildRefreshPlan([path]),
           feedback: {
-            notice: normalizedUpdates.duration != null ? `任务时长已更新为 ${normalizedUpdates.duration} 分钟。` : "任务时间已更新。"
+            notice: normalizedUpdates.duration != null ? `工作 Session 时长已更新为 ${normalizedUpdates.duration} 分钟。` : "工作 Session 时间已更新。"
           }
         });
       }
     });
-  }
-  /**
-   * Conservative 1.0.28 feedback binding:
-   * - only Energy-started work blocks that already stopped are eligible;
-   * - only the nearest completed work block within 120 minutes;
-   * - one Energy snapshot binds to at most one Energy-started work block.
-   * This follows the Energy rule: prefer no association over a weak association.
-   */
-  async attachEnergyTaskFeedback(record) {
-    const sampleAt = Date.parse(`${record.date}T${record.time}:00`);
-    if (!Number.isFinite(sampleAt)) return null;
-    const entries = this.store.getState().timer.timers;
-    const eligible = entries.filter((entry) => entry.status === "awaiting-energy" && entry.energyContext && entry.completedAt).map((entry) => {
-      const completedAt = Number(entry.completedAt);
-      const sameMinute = Math.floor(sampleAt / 6e4) === Math.floor(completedAt / 6e4);
-      return { entry, gapMs: sameMinute ? 0 : sampleAt - completedAt };
-    }).filter(({ gapMs }) => gapMs >= 0 && gapMs <= 120 * 60 * 1e3).sort((left2, right2) => left2.gapMs - right2.gapMs);
-    const match5 = eligible[0];
-    if (!match5) return null;
-    const baseline = Number(match5.entry.energyContext.baselineScore);
-    const updated = {
-      ...match5.entry,
-      status: "feedback-recorded",
-      energyFeedback: {
-        score: record.score,
-        brainScore: record.brainScore,
-        physicalScore: record.physicalScore,
-        delta: Math.round((record.score - baseline) * 10) / 10,
-        delayMinutes: Math.max(0, Math.round(match5.gapMs / 6e4)),
-        capturedAt: sampleAt,
-        date: record.date,
-        time: record.time
-      }
-    };
-    this.store.getState().timer.timerUpdate(updated);
-    const afterUpdate = this.store.getState().timer.timers;
-    const completedHistory = afterUpdate.filter((entry) => entry.status === "feedback-recorded").sort((a2, b2) => Number(b2.energyFeedback?.capturedAt || 0) - Number(a2.energyFeedback?.capturedAt || 0));
-    for (const stale of completedHistory.slice(100)) {
-      this.store.getState().timer.timerRemove(stale.id);
-    }
-    await this.deps.timerStateService.saveStateToFile(this.store.getState().timer.timers);
-    return { delta: updated.energyFeedback.delta, taskId: updated.taskId };
   }
   getWorkflowRuntime() {
     return createRecordInputWorkflowRuntime(this.deps, {
@@ -26712,8 +26916,7 @@ function createUseCases(store, deps) {
     recordInput: createRecordInputUseCase(store, {
       inputService: deps.inputService,
       itemService: deps.itemService,
-      dataStore: deps.dataStore,
-      timerStateService: deps.timerStateService
+      dataStore: deps.dataStore
     }),
     goal: createGoalUseCase(store)
   };
@@ -54001,7 +54204,7 @@ function MarkdownContent({
   renderPort,
   content,
   contentType = "markdown",
-  sourcePath = "",
+  sourcePath: sourcePath2 = "",
   className = "",
   onClick,
   onDblClick,
@@ -54022,7 +54225,7 @@ function MarkdownContent({
       containerEl,
       content,
       contentType: contentType === "plain" ? "plain" : "markdown",
-      sourcePath
+      sourcePath: sourcePath2
     }).catch(() => {
       if (!disposed2 && elRef.current === containerEl) {
         renderPlainFallback(containerEl, content);
@@ -54032,7 +54235,7 @@ function MarkdownContent({
       disposed2 = true;
       if (elRef.current === containerEl) renderPort.clear(containerEl);
     };
-  }, [renderPort, content, contentType, sourcePath]);
+  }, [renderPort, content, contentType, sourcePath2]);
   return /* @__PURE__ */ u$1("div", { ref: elRef, className: `md-content ${className}`.trim(), onClick, onDblClick, onTouchEnd });
 }
 function isNativeInteractiveTarget(target) {
@@ -54426,22 +54629,18 @@ function openCreateFromStatistics(params) {
   }
   return openCreateModal(params.app, config2, "view_quick_create");
 }
-function supportsTaskTimeEditing(item) {
-  return item.type === "task" || !!(item.startTime || item.endTime || item.duration != null);
-}
 function deriveEntryContext(item, openedFrom = "unknown") {
   const source = item;
-  const sourcePath = source.path || source.file?.path || null;
+  const sourcePath2 = source.path || source.file?.path || null;
   const sourceLine = typeof source.line === "number" ? source.line : typeof source.lineNumber === "number" ? source.lineNumber : null;
   return {
-    entryKind: item.type === "task" ? "task" : "block",
+    entryKind: item.coreBlock === "task" ? "task" : "block",
     entryId: item.id,
-    sourcePath,
+    sourcePath: sourcePath2,
     sourceLine,
     templateId: item.templateId || null,
     categoryKey: item.categoryKey || null,
-    openedFrom: openedFrom || "unknown",
-    supportsTaskTimeEditing: supportsTaskTimeEditing(item)
+    openedFrom: openedFrom || "unknown"
   };
 }
 function openEditFromItem(params) {
@@ -54495,7 +54694,7 @@ async function updateTimeFromView(params) {
     }),
     {
       uiPort: params.uiPort,
-      failureMessage: "更新任务时间失败",
+      failureMessage: "更新工作 Session 时间失败",
       successNotice: params.showSuccessNotice
     }
   );
@@ -56074,7 +56273,7 @@ function applyQuickInputTimeDirectionChange(input) {
 }
 function getOrderedGoalIndex(goal, originalIndex) {
   if (!goal) return Number.MAX_SAFE_INTEGER;
-  const order2 = readNumber$2(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
+  const order2 = readNumber$1(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
   return Number.isFinite(order2) ? order2 : originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
 }
 function getGoalByDisplayPath(goals, path) {
@@ -61029,8 +61228,8 @@ const DEFAULT_QUICK_FILTER_FIELDS = [
   { field: "goalId", label: "目标ID", help: "稳定目标 ID，适合目标实体化后的精确筛选。", placeholder: "输入目标ID" },
   { field: "coreBlock", label: "记录类型", help: "Goal × Block 主链字段，按 task/plan/review/thought/habit/evidence/blocker/milestone 筛选。旧分类筛选会自动归一到 coreBlock。", placeholder: "选择记录类型" },
   { field: "themePath", label: "主题", help: "主题已降级为表单层级单选字段，但仍可用于上下文筛选。", placeholder: "选择主题" },
-  { field: "taskStatus", label: "任务状态", help: "由任务勾选框 / 完成日期推导，代替旧的“完成任务 / 未完成任务”分类。", placeholder: "选择任务状态" },
-  { field: "type", label: "类型", placeholder: "选择记录类型" },
+  { field: "status", label: "状态", help: "Task 使用显式 open/done/cancelled/skipped 状态。", placeholder: "选择状态" },
+  { field: "cadence", label: "任务周期", help: "由 Task Series 的结构化 recurrence 派生。", placeholder: "选择任务周期" },
   { field: "priority", label: "优先级", placeholder: "选择优先级" },
   { field: "period.label", label: "周期", help: "仅计划 / 总结类记录有周期。", placeholder: "选择周期" }
 ];
@@ -61223,7 +61422,7 @@ function ViewInstanceEditor({ vi }) {
     const labels = { ProgressView: "成长", EnergyView: "精力" };
     return VIEW_OPTIONS.map((v2) => ({ value: v2, label: labels[v2] || v2.replace("View", "") }));
   }, []);
-  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "taskStatus", "type", "priority", "period.label"], []);
+  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "status", "cadence", "priority", "period.label"], []);
   const hasAdvancedFilters = T$1(() => (currentVi.filters || []).some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [currentVi.filters, commonFilterFields]);
   const handleFieldsChange = (fields) => {
     handleUpdate({ fields: normalizeDisplayFields(fields, { includeUnknown: true }) });
@@ -62007,7 +62206,7 @@ function DataFilterPanel({
   const activeCount = filters.length;
   const sourceItems = items ?? dataStore.queryItems();
   const fieldOptions = T$1(() => getAllFields(sourceItems), [sourceItems]);
-  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "baseCategory", "type", "priority", "period"], []);
+  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "baseCategory", "status", "cadence", "priority", "period"], []);
   const hasAdvancedFilters = T$1(() => filters.some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [filters, commonFilterFields]);
   const handleOpen = () => {
     setAdvancedOpen(hasAdvancedFilters);
@@ -62169,7 +62368,7 @@ function TaskRow({
   displayTitle,
   onOpenRecord
 }) {
-  const done = isDone(item.categoryKey);
+  const done = isItemDone(item);
   const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? "").trim() || item.title;
   const openEdit = (evt) => {
     void onOpenRecord?.(item);
@@ -62329,7 +62528,7 @@ function BlockViewItemList(props) {
     onOpenRecord
   } = props;
   return /* @__PURE__ */ u$1(S, { children: items.map((item) => {
-    if (item.type === "task") {
+    if (item.coreBlock === "task") {
       return /* @__PURE__ */ u$1(
         TaskRow,
         {
@@ -62591,13 +62790,13 @@ function DayColumnBody({
   const suppressClickUntilRef = A$1(0);
   const tryUpdateTaskTime = async (taskId, updates) => {
     if (!onUpdateTaskTime) {
-      onNotice?.("未提供保存处理器，无法更新任务时间");
+      onNotice?.("未提供保存处理器，无法更新工作 Session 时间");
       return;
     }
     try {
       await onUpdateTaskTime(taskId, updates);
     } catch (e2) {
-      onNotice?.("更新任务时间失败");
+      onNotice?.("更新工作 Session 时间失败");
     }
   };
   const handleEdit = (block2) => {
@@ -62605,7 +62804,7 @@ function DayColumnBody({
       onEditTask(block2);
       return;
     }
-    void onOpenRecord?.(block2);
+    void onOpenRecord?.({ ...block2, id: block2.taskRecordId });
   };
   const handleAlignToPrev = (block2, prevBlock) => {
     if (onAlignPrev) {
@@ -62668,7 +62867,7 @@ function DayColumnBody({
         const prevBlock = index > 0 ? blocks[index - 1] : null;
         const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
         const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block2.blockStartMinute;
-        const blockGesture = createRecordGestureHandlers({ item: block2, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block2) });
+        const blockGesture = createRecordGestureHandlers({ item: { ...block2, id: block2.taskRecordId }, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block2) });
         return /* @__PURE__ */ u$1(
           "div",
           {
@@ -62881,66 +63080,58 @@ function TimelineViewView(props) {
     }
   );
 }
-const DATE_FORMAT = "YYYY-MM-DD";
-function parseAllTimes(item) {
-  const startMinute = item.startTime ? timeToMinutes(item.startTime) : null;
-  const explicitEndMinute = item.endTime ? timeToMinutes(item.endTime) : null;
-  const duration2 = item.duration ?? null;
-  if (startMinute !== null && item.startTime && item.endTime) {
-    const normalizedDuration = deriveDurationFromRange(item.startTime, item.endTime);
-    if (normalizedDuration !== null) {
-      return {
-        startMinute,
-        duration: normalizedDuration,
-        endMinute: startMinute + normalizedDuration
-      };
-    }
-  }
-  if (startMinute !== null && duration2 !== null && duration2 >= 0) {
-    return { startMinute, duration: duration2, endMinute: startMinute + duration2 };
-  }
-  if (explicitEndMinute !== null && duration2 !== null && duration2 >= 0 && item.endTime) {
-    const derivedStart = deriveStartFromEndAndDuration(item.endTime, duration2);
-    const derivedStartMinute = derivedStart ? timeToMinutes(derivedStart) : null;
-    if (derivedStartMinute !== null) {
-      return { startMinute: derivedStartMinute, duration: duration2, endMinute: derivedStartMinute + duration2 };
-    }
-  }
-  return { startMinute: null, duration: null, endMinute: null };
+function localDate(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return null;
+  const y2 = date2.getFullYear();
+  const m2 = String(date2.getMonth() + 1).padStart(2, "0");
+  const d2 = String(date2.getDate()).padStart(2, "0");
+  return `${y2}-${m2}-${d2}`;
 }
-function extractPureText(rawText) {
-  return rawText.replace(/<!--[\s\S]*?-->/g, "").replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, "").replace(new RegExp("^\\s*(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").replace(/[\(\[]\s*(时间|结束|时长)::.*?[\)\]]/g, "").replace(/[\(\[][^\(\)\[\]]*?::.*?[\)\]]/g, "").replace(/#[\p{L}\d\-_/]+/gu, "").replace(/[📅⏳🛫➕✅❌]?\s*\d{4}-\d{2}-\d{2}/g, "").replace(/\s*🔁\s*every\s+.*?(?=$|\s*[#\(\[])/gi, "").replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, "").replace(/\s+/g, " ").trim();
+function localMinute(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return null;
+  return date2.getHours() * 60 + date2.getMinutes() + date2.getSeconds() / 60;
 }
-function resolveTimelineDisplayText(item) {
-  const cleanContent = extractPureText(item.content || item.editableText || item.title || "");
-  if (cleanContent) return cleanContent;
-  const fromRaw = extractPureText(item.rawSource || "");
-  if (fromRaw) return fromRaw;
-  return item.title || "";
+function displayText(task) {
+  return String(task.content || task.editableText || task.title || "").trim();
 }
-function processItemsToTimelineTasks(items) {
+function processItemsToTimelineTasks(records) {
+  const byId = new Map(records.map((record) => [record.id, record]));
   const timelineTasks = [];
-  for (const item of items) {
-    const fileName = item.file?.basename || item.filename || "";
+  for (const record of records) {
+    const session = asTaskSessionRecord(record);
+    if (!session) continue;
+    const task = byId.get(session.taskId);
+    if (!task || task.coreBlock !== "task") continue;
+    const startedMs = Date.parse(session.sessionStartedAt);
+    const endedMs = Date.parse(session.sessionEndedAt);
+    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs < startedMs) continue;
+    const actualStartDate = localDate(session.sessionStartedAt);
+    const startMinute = localMinute(session.sessionStartedAt);
+    if (!actualStartDate || startMinute == null) continue;
+    const duration2 = Number(session.sessionDurationMinutes);
+    if (!Number.isFinite(duration2) || duration2 < 0) continue;
+    const endMinute = startMinute + duration2;
+    const fileName = task.file?.basename || task.filename || "";
     if (!fileName) continue;
-    const isCompletedTask = item.categoryKey?.endsWith("/done") || item.categoryKey?.endsWith("/cancelled") || item.categoryKey === "完成任务";
-    if (item.type !== "task" || !isCompletedTask) continue;
-    const { startMinute, duration: duration2, endMinute } = parseAllTimes(item);
-    if (startMinute !== null && duration2 !== null && endMinute !== null && item.doneDate) {
-      const anchorDate = item.doneDate || item.date;
-      if (!anchorDate) continue;
-      const actualStartDate = dayjs(anchorDate).format(DATE_FORMAT);
-      timelineTasks.push({
-        ...item,
-        startMinute,
-        duration: duration2,
-        endMinute,
-        // Timeline 视觉保持不变；显示文本来自统一后的 content 字段，旧缓存则降级从 rawSource 清洗。
-        pureText: resolveTimelineDisplayText(item),
-        fileName,
-        actualStartDate
-      });
-    }
+    timelineTasks.push({
+      ...task,
+      // A Timeline row represents an execution fact, so its identity is the Session identity.
+      id: session.id,
+      sessionRecordId: session.id,
+      taskRecordId: task.id,
+      date: actualStartDate,
+      doneDate: actualStartDate,
+      startTime: new Date(startedMs).toTimeString().slice(0, 5),
+      endTime: new Date(endedMs).toTimeString().slice(0, 5),
+      duration: duration2,
+      startMinute,
+      endMinute,
+      pureText: displayText(task),
+      fileName,
+      actualStartDate
+    });
   }
   return timelineTasks;
 }
@@ -63182,14 +63373,14 @@ function EventTimelineEventList(props) {
     const showDate = dateLabel !== lastDate;
     if (showDate) lastDate = dateLabel;
     const titleForKey = readField(item, titleField) || readField(item, "title") || "";
-    const taskDisplayTitle = item.type === "task" ? getEventTimelineTaskDisplayTitle({ item, titleField, contentField: contentField2, maxContentLength }) : "";
+    const taskDisplayTitle = item.coreBlock === "task" ? getEventTimelineTaskDisplayTitle({ item, titleField, contentField: contentField2, maxContentLength }) : "";
     return /* @__PURE__ */ u$1("div", { class: "et-event", children: [
       /* @__PURE__ */ u$1("div", { class: "et-event-date", children: [
         showDate && t3 && /* @__PURE__ */ u$1("div", { class: "et-date-label", children: dateLabel }),
-        item.type === "task" && /* @__PURE__ */ u$1("div", { class: "et-time-label", children: timeLabel })
+        item.coreBlock === "task" && /* @__PURE__ */ u$1("div", { class: "et-time-label", children: timeLabel })
       ] }),
       /* @__PURE__ */ u$1("div", { class: "et-line", children: /* @__PURE__ */ u$1("div", { class: "et-dot" }) }),
-      /* @__PURE__ */ u$1("div", { class: "et-event-card", children: item.type === "task" ? /* @__PURE__ */ u$1(
+      /* @__PURE__ */ u$1("div", { class: "et-event-card", children: item.coreBlock === "task" ? /* @__PURE__ */ u$1(
         TaskRow,
         {
           item,
@@ -63402,8 +63593,8 @@ function inferHeatmapBlockIdByTheme(items) {
 function resolveHeatmapCreateBlockId(params) {
   const { themePath, item, sourceBlockId, heatmapSourceBlockId, inferredBlockIdByTheme, normalizeBlockId } = params;
   const rowBlock = normalizeBlockId(sourceBlockId);
-  const itemBlock2 = item?.coreBlock || item?.templateId || item?.categoryKey;
-  return rowBlock || normalizeBlockId(heatmapSourceBlockId) || normalizeBlockId(itemBlock2) || normalizeBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeBlockId(inferredBlockIdByTheme.get("__default__")) || "";
+  const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
+  return rowBlock || normalizeBlockId(heatmapSourceBlockId) || normalizeBlockId(itemBlock) || normalizeBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeBlockId(inferredBlockIdByTheme.get("__default__")) || "";
 }
 function buildDayThemeGroups(params) {
   const { themesToTrack, dataByThemeAndDate } = params;
@@ -65250,7 +65441,7 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
       task.count,
       " 次"
     ] }),
-    task.recurrenceLabel && task.recurrenceLabel !== "none" && /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__menu-meta", children: task.recurrenceLabel }),
+    task.recurrenceLabel && /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__menu-meta", children: task.recurrenceLabel }),
     /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__menu-records", children: task.records.length > 0 ? task.records.map((record) => {
       const gesture = createRecordGestureHandlers({
         item: record.item,
@@ -65454,7 +65645,7 @@ function TableViewCell(props) {
     onOpenRecord
   } = props;
   if (!items.length) return /* @__PURE__ */ u$1("td", { class: "empty" });
-  return /* @__PURE__ */ u$1("td", { children: items.map((item) => /* @__PURE__ */ u$1("div", { class: "think-table-cell-item", children: item.type === "task" ? /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u$1("td", { children: items.map((item) => /* @__PURE__ */ u$1("div", { class: "think-table-cell-item", children: item.coreBlock === "task" ? /* @__PURE__ */ u$1(
     TaskRow,
     {
       item,
@@ -67091,7 +67282,7 @@ function ExcelView({
 function ThemeTreeSelectTrigger({
   open,
   onToggleOpen,
-  displayText,
+  displayText: displayText2,
   hasSelection,
   allowClear,
   disabled,
@@ -67131,7 +67322,7 @@ function ThemeTreeSelectTrigger({
               textOverflow: "ellipsis",
               whiteSpace: "nowrap"
             },
-            children: displayText
+            children: displayText2
           }
         ),
         allowClear && hasSelection && !disabled && /* @__PURE__ */ u$1(IconButton2, { size: "small", onClick: onClear, sx: { p: 0.25 }, children: /* @__PURE__ */ u$1(ClearIcon, { fontSize: "small" }) }),
@@ -67493,7 +67684,7 @@ function ThemeTreeSelect({
   const [open, setOpen] = d(false);
   const anchorRef = A$1(null);
   const hasSelection = multiSelect ? selectedPaths.length > 0 : !!selectedThemeId;
-  const displayText = T$1(() => {
+  const displayText2 = T$1(() => {
     if (multiSelect) {
       if (selectedPaths.length === 0) return placeholder;
       if (selectedPaths.length === 1) {
@@ -67548,7 +67739,7 @@ function ThemeTreeSelect({
         anchorRef,
         open,
         onToggleOpen: () => !disabled && setOpen(!open),
-        displayText,
+        displayText: displayText2,
         hasSelection,
         allowClear,
         disabled,
@@ -68032,11 +68223,13 @@ dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
 dayjs.extend(isBetween);
 function buildTimelineViewModel(args) {
-  const { items, module: module2, dateRange, currentView } = args;
+  const { items, records = items, module: module2, dateRange, currentView } = args;
   const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
   const userConfig = module2?.viewConfig || {};
   const config2 = { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
-  const timelineTasks = processItemsToTimelineTasks(items);
+  const visibleTaskIds = new Set(items.filter((item) => item.coreBlock === "task").map((item) => item.id));
+  const timelineRecords = records.filter((record) => record.coreBlock === "task" && visibleTaskIds.has(record.id) || record.coreBlock === "task-session" && !!record.taskId && visibleTaskIds.has(record.taskId));
+  const timelineTasks = processItemsToTimelineTasks(timelineRecords);
   const categoriesConfig = config2.categories || {};
   const colorMap = {};
   for (const categoryName in categoriesConfig) {
@@ -68214,7 +68407,7 @@ const BLOCK_KEY_ALIASES = {
   "事件": "evidence"
 };
 function normalizeBlockKey(item) {
-  const raw = readFirstString$1(asUnknownRecord(item), ["coreBlock", "categoryKey", "type"])?.replace(/^core\./, "").trim() || "";
+  const raw = String(item.coreBlock || "").replace(/^core\./, "").trim();
   if (!raw) return "unknown";
   return BLOCK_KEY_ALIASES[raw] || raw.split("/")[0] || raw;
 }
@@ -68308,8 +68501,8 @@ function buildGoalEnergyContext(item, goalItems) {
     }))
   };
 }
-function buildGoalEnergyEffects(items) {
-  const effects = buildEnergyEffects(items);
+function buildGoalEnergyEffects(evidenceRecords) {
+  const effects = buildEnergyEffects(evidenceRecords);
   if (!effects) return null;
   const mapRows = (rows) => rows.slice(0, 6).map((row) => ({
     key: row.key,
@@ -68334,7 +68527,9 @@ function buildGoalEnergyEffects(items) {
     byDuration: mapRows(effects.byDuration)
   };
 }
-function buildGoalEnergySummary(items, limit = 5) {
+function buildGoalEnergySummary(items, limit = 5, options = {}) {
+  const contextRecords = options.contextRecords || items;
+  const effectRecords = options.effectRecords || contextRecords;
   const ordered = items.reduce((rows, item) => {
     const snapshot = readEnergyItemSnapshot(item);
     if (!snapshot) return rows;
@@ -68355,7 +68550,7 @@ function buildGoalEnergySummary(items, limit = 5) {
   if (ordered.length === 0) return null;
   const recentSamples = ordered.slice(0, limit).map(({ occurrenceKey: _occurrenceKey, ...row }) => ({
     ...row,
-    context: buildGoalEnergyContext(row.item, items)
+    context: buildGoalEnergyContext(row.item, contextRecords)
   }));
   const latest2 = recentSamples[0];
   return {
@@ -68368,7 +68563,7 @@ function buildGoalEnergySummary(items, limit = 5) {
     latestDate: latest2.date || null,
     latestTime: latest2.time || null,
     recentSamples,
-    effects: buildGoalEnergyEffects(items)
+    effects: buildGoalEnergyEffects(effectRecords)
   };
 }
 function text(value) {
@@ -68376,7 +68571,7 @@ function text(value) {
 }
 function taskTitle(item) {
   const raw = text(item.editableText || item.content || item.title);
-  return cleanTaskText(raw) || text(item.title) || "未命名任务";
+  return raw || text(item.title) || "未命名任务";
 }
 function normalizedGoalPath(item) {
   return text(item.goalPath || item.goalPaths?.[0] || item.goalId);
@@ -68385,25 +68580,44 @@ function goalLabel(item) {
   return normalizedGoalPath(item) || "未分目标";
 }
 function recurrenceText(item) {
-  return text(item.recurrence);
+  return text(formatTaskRecurrence(item.recurrenceInfo));
 }
 function aggregateKey(item) {
   return [taskTitle(item).toLowerCase(), goalLabel(item).toLowerCase(), recurrenceText(item).toLowerCase()].join("::");
 }
-function recordTime(item) {
-  return text(item.endTime || item.startTime || item.doneDate);
+function localSessionDate(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return "";
+  return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
 }
-function historyMap(items, today) {
+function localSessionTime(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return "";
+  return `${String(date2.getHours()).padStart(2, "0")}:${String(date2.getMinutes()).padStart(2, "0")}`;
+}
+function historyMap(records, today) {
   const start2 = dayjs(today).subtract(365, "day").startOf("day");
   const end2 = dayjs(today).endOf("day");
+  const byId = new Map(records.map((record) => [record.id, record]));
   const map = /* @__PURE__ */ new Map();
-  for (const item of items) {
-    if (item.type !== "task" || !isTaskCompleted(item) || !item.doneDate) continue;
-    const done = dayjs(item.doneDate);
-    if (!done.isValid() || done.isBefore(start2) || done.isAfter(end2)) continue;
-    const key = aggregateKey(item);
+  for (const record of records) {
+    const session = asTaskSessionRecord(record);
+    if (!session) continue;
+    const task = byId.get(session.taskId);
+    if (!task || task.coreBlock !== "task") continue;
+    const dateText2 = localSessionDate(session.sessionStartedAt);
+    const occurred = dayjs(dateText2);
+    if (!dateText2 || !occurred.isValid() || occurred.isBefore(start2) || occurred.isAfter(end2)) continue;
+    const key = aggregateKey(task);
     const rows = map.get(key) || [];
-    rows.push({ id: item.id, doneDate: item.doneDate, timeLabel: recordTime(item), item });
+    const startTime = localSessionTime(session.sessionStartedAt);
+    const endTime = localSessionTime(session.sessionEndedAt);
+    rows.push({
+      id: session.id,
+      doneDate: dateText2,
+      timeLabel: [startTime, endTime].filter(Boolean).join("–"),
+      item: task
+    });
     map.set(key, rows);
   }
   for (const rows of map.values()) {
@@ -68415,19 +68629,20 @@ function emptyCadenceMap() {
   return new Map(TASK_CADENCE_ORDER.map((key) => [key, []]));
 }
 function buildEnergyTaskListModel(args) {
-  const { items, historyItems, timers, management, goals = [], today } = args;
-  const openTasks = items.filter((item) => item.type === "task" && isTaskOpen(item));
+  const { items, historyItems, management, goals = [], today } = args;
+  const openTasks = items.filter((item) => item.coreBlock === "task" && isTaskOpen(item));
   const visibleItems = openTasks;
   const visibleIds = new Set(visibleItems.map((item) => item.id));
-  const records = historyMap(items, today);
+  const records = historyMap(historyItems, today);
   const candidateBuild = buildEnergyActionCandidateResult(items, {
     today,
     maximumCandidates: 1e3,
     includeRecurringTasks: true,
-    includeFutureTasks: true
+    includeFutureTasks: true,
+    historyRecords: historyItems
   });
   const taskCandidates = candidateBuild.candidates.filter((candidate) => candidate.source === "task" && visibleIds.has(candidate.id));
-  const learning = buildEnergyRecommendationLearning(historyItems, timers);
+  const learning = buildEnergyRecommendationLearning(historyItems);
   const learned = attachEnergyRecommendationLearning(taskCandidates, learning);
   const enriched = attachEnergyRecommendationEvidence(learned, management);
   let rankedIds = enriched.map((candidate) => candidate.id);
@@ -68438,7 +68653,7 @@ function buildEnergyTaskListModel(args) {
       brainScore: management.latest.brainScore,
       physicalScore: management.latest.physicalScore,
       maximumRecommendations: Math.min(500, enriched.length),
-      actionPolicy: buildEnergyActionPolicyContext(items, management, today)
+      actionPolicy: buildEnergyActionPolicyContext(historyItems, management, today)
     }, enriched);
     rankedIds = ranked.recommendations.map((row) => row.candidate.id);
     for (const row of ranked.recommendations) actionById.set(row.candidate.id, row);
@@ -68536,7 +68751,7 @@ function periodLabel(currentView, dateRange) {
   if (currentView === "季") return `${start2.year()} Q${start2.quarter()}`;
   return start2.format("YYYY");
 }
-function periodRenderModel(period, goalItems, label) {
+function periodRenderModel(period, goalItems, label, contextRecords) {
   if (!period) return null;
   return {
     ...period,
@@ -68552,7 +68767,7 @@ function periodRenderModel(period, goalItems, label) {
         brainScore: sample.brainScore,
         physicalScore: sample.physicalScore,
         captureMode: sample.captureMode,
-        context: buildGoalEnergyContext(sample.item, goalItems),
+        context: buildGoalEnergyContext(sample.item, contextRecords),
         item: sample.item
       }))
     }))
@@ -68596,12 +68811,49 @@ function compactReviewLines(args) {
   }
   return lines.slice(0, 5);
 }
+function recordOccurrenceDate(item) {
+  if (item.coreBlock === "task-session" && item.sessionStartedAt) {
+    const date2 = new Date(item.sessionStartedAt);
+    if (Number.isFinite(date2.getTime())) {
+      return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
+    }
+  }
+  return String(item.date || item.doneDate || item.startDate || item.scheduledDate || item.createdDate || "").slice(0, 10);
+}
+function recordAtOrBefore(item, today, nowTime) {
+  const itemDate = recordOccurrenceDate(item);
+  if (!itemDate) return true;
+  if (itemDate < today) return true;
+  if (itemDate > today) return false;
+  if (item.coreBlock === "task-session" && item.sessionEndedAt) return Date.parse(item.sessionEndedAt) <= Date.now();
+  if (!isEnergyItem(item)) return true;
+  const itemTime = String(item.startTime || item.extra?.["时间"] || "00:00").slice(0, 5);
+  return itemTime <= nowTime;
+}
+function evidenceRecordsForGoal(records, goalKey, goals, startDate, endDate) {
+  const goalTaskIds = new Set(records.filter((item) => item.coreBlock === "task" && getItemGoalKey(item, goals) === goalKey).map((item) => item.id));
+  const sessions = records.filter((item) => {
+    if (item.coreBlock !== "task-session") return false;
+    if (getItemGoalKey(item, goals) !== goalKey && !goalTaskIds.has(String(item.taskId || ""))) return false;
+    if (!startDate || !endDate) return true;
+    const date2 = recordOccurrenceDate(item);
+    return Boolean(date2 && date2 >= startDate && date2 <= endDate);
+  });
+  const requiredIds = /* @__PURE__ */ new Set();
+  for (const session of sessions) {
+    for (const value of [session.id, session.taskId, session.startEnergyRecordId, session.endEnergyRecordId]) {
+      const id = String(value || "").trim();
+      if (id) requiredIds.add(id);
+    }
+  }
+  return records.filter((item) => requiredIds.has(item.id));
+}
 function itemInRange(item, startDate, endDate) {
-  const date2 = String(item.date || item.doneDate || item.startDate || item.scheduledDate || item.createdDate || "").slice(0, 10);
+  const date2 = recordOccurrenceDate(item);
   return Boolean(date2 && date2 >= startDate && date2 <= endDate);
 }
 function buildEnergyViewModel(args) {
-  const { items = [], module: module2, goals = [], themes = [], timers = [], currentView, dateRange } = args;
+  const { items = [], records = items, module: module2, goals = [], themes = [], currentView, dateRange } = args;
   const rawConfig = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {} };
   const config2 = {
     ...rawConfig,
@@ -68626,22 +68878,20 @@ function buildEnergyViewModel(args) {
     const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
     if (!goalItems.some(isEnergyItem)) continue;
     const periodItems = goalItems.filter((item) => itemInRange(item, startDate, endDate));
-    const summary = buildGoalEnergySummary(goalItems, config2.recentSampleLimit);
-    if (!summary) continue;
-    const patterns = buildEnergyPatterns(periodItems, { analysisWindowDays: Math.max(7, Math.min(config2.analysisWindowDays, 90)) });
-    const currentHistoryItems = goalItems.filter((item) => {
-      const itemDate = String(item.doneDate || item.date || item.startDate || item.scheduledDate || item.createdDate || "").slice(0, 10);
-      if (!itemDate) return true;
-      if (itemDate < today) return true;
-      if (itemDate > today) return false;
-      if (!isEnergyItem(item)) return true;
-      const itemTime = String(item.startTime || item.extra?.["时间"] || "00:00").slice(0, 5);
-      return itemTime <= nowTime;
+    const allGoalEvidenceRecords = evidenceRecordsForGoal(records, bucket.name, goals);
+    const periodEvidenceRecords = evidenceRecordsForGoal(records, bucket.name, goals, startDate, endDate);
+    const currentEvidenceRecords = allGoalEvidenceRecords.filter((item) => recordAtOrBefore(item, today, nowTime));
+    const summary = buildGoalEnergySummary(goalItems, config2.recentSampleLimit, {
+      contextRecords: records,
+      effectRecords: allGoalEvidenceRecords
     });
-    const management = buildEnergyManagement(currentHistoryItems, { analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: 60 });
-    const periodManagement = buildEnergyManagement(periodItems, { analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: 60 });
-    const quality = buildEnergyDataQuality(periodItems, { startDate, endDate });
-    const period = periodRenderModel(buildEnergyPeriod(goalItems, { currentView, startDate, endDate }), goalItems, displayPeriodLabel);
+    if (!summary) continue;
+    const patterns = buildEnergyPatterns(periodItems, { activityRecords: periodEvidenceRecords, analysisWindowDays: Math.max(7, Math.min(config2.analysisWindowDays, 90)) });
+    const currentHistoryItems = goalItems.filter((item) => recordAtOrBefore(item, today, nowTime));
+    const management = buildEnergyManagement(currentHistoryItems, { evidenceRecords: currentEvidenceRecords, analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: 60 });
+    const periodManagement = buildEnergyManagement(periodItems, { evidenceRecords: periodEvidenceRecords, analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: 60 });
+    const quality = buildEnergyDataQuality(periodItems, { startDate, endDate, effectRecords: periodEvidenceRecords });
+    const period = periodRenderModel(buildEnergyPeriod(goalItems, { currentView, startDate, endDate }), goalItems, displayPeriodLabel, records);
     panels.push({
       key: bucket.name,
       title: bucket.alias || bucket.name,
@@ -68661,24 +68911,16 @@ function buildEnergyViewModel(args) {
     return rightKey.localeCompare(leftKey);
   });
   const visible = config2.maxGoals > 0 ? panels.slice(0, config2.maxGoals) : panels;
-  const globalCurrentHistoryItems = items.filter((item) => {
-    const itemDate = String(item.doneDate || item.date || item.startDate || item.scheduledDate || item.createdDate || "").slice(0, 10);
-    if (!itemDate) return true;
-    if (itemDate < today) return true;
-    if (itemDate > today) return false;
-    if (!isEnergyItem(item)) return true;
-    const itemTime = String(item.startTime || item.extra?.["时间"] || "00:00").slice(0, 5);
-    return itemTime <= nowTime;
-  });
+  const globalCurrentHistoryItems = items.filter((item) => recordAtOrBefore(item, today, nowTime));
+  const globalEvidenceRecords = records.filter((item) => recordAtOrBefore(item, today, nowTime));
   const globalManagement = buildEnergyManagement(globalCurrentHistoryItems, {
+    evidenceRecords: globalEvidenceRecords,
     analysisWindowDays: config2.analysisWindowDays,
-    highEnergyThreshold: 60,
-    effectScope: "global"
+    highEnergyThreshold: 60
   });
   const taskList = buildEnergyTaskListModel({
     items,
-    historyItems: globalCurrentHistoryItems,
-    timers,
+    historyItems: records,
     management: globalManagement,
     goals,
     today
@@ -68733,9 +68975,10 @@ const viewModelBuilders = {
       injectedGoalHeatmapGroups: model.goalGroups
     };
   },
-  TimelineView: ({ items, viewInstance, dateRange, currentView }) => ({
+  TimelineView: ({ items, allRecords, viewInstance, dateRange, currentView }) => ({
     timelineModel: buildTimelineViewModel({
       items,
+      records: allRecords,
       module: viewInstance,
       dateRange,
       currentView
@@ -68759,15 +69002,15 @@ const viewModelBuilders = {
       themes: inputSettings?.themes || []
     })
   }),
-  EnergyView: ({ allItems, viewInstance, dateRange, currentView, goals, inputSettings, timers }) => ({
+  EnergyView: ({ allItems, allRecords, viewInstance, dateRange, currentView, goals, inputSettings, timers }) => ({
     energyModel: buildEnergyViewModel({
       items: allItems,
+      records: allRecords,
       module: viewInstance,
       dateRange,
       currentView,
       goals: goals || [],
-      themes: inputSettings?.themes || [],
-      timers: timers || []
+      themes: inputSettings?.themes || []
     })
   })
 };
@@ -69123,7 +69366,7 @@ class ObsidianMessageRenderPort {
       containerEl,
       content,
       contentType = "markdown",
-      sourcePath = "",
+      sourcePath: sourcePath2 = "",
       cls
     } = args;
     this.clear(containerEl);
@@ -69139,7 +69382,7 @@ class ObsidianMessageRenderPort {
     const renderComponent = new obsidian.Component();
     renderComponent.load();
     try {
-      await obsidian.MarkdownRenderer.render(this.app, content, wrapper3, sourcePath, renderComponent);
+      await obsidian.MarkdownRenderer.render(this.app, content, wrapper3, sourcePath2, renderComponent);
     } catch (e2) {
       devWarn("MessageRenderPort: Markdown 渲染失败，降级为纯文本", e2);
       this.clear(containerEl);
@@ -69782,7 +70025,7 @@ function AiChatModalContainer({ closeModal, services }) {
   const handleNewSession = async () => {
     const filters = {};
     if (selectedThemes.length > 0) filters.themePaths = selectedThemes;
-    if (selectedType) filters.types = [selectedType];
+    if (selectedType) filters.coreBlocks = [selectedType];
     if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
     const session = await sessionStore.createSession(void 0, filters);
     setCurrentSessionId(session.id);
@@ -69795,7 +70038,7 @@ function AiChatModalContainer({ closeModal, services }) {
     const session = sessionStore.getSession(sessionId);
     if (session?.filters) {
       setSelectedThemes(session.filters.themePaths ?? []);
-      setSelectedType(session.filters.types?.[0] ?? "");
+      setSelectedType(session.filters.coreBlocks?.[0] ?? "");
       setSelectedBlockId(session.filters.blockTemplateIds?.[0] ?? "");
     }
   };
@@ -69825,7 +70068,7 @@ function AiChatModalContainer({ closeModal, services }) {
       const history = currentMessages.filter((m2) => m2.role !== "system").slice(0, -1).map((m2) => ({ role: m2.role, content: m2.content }));
       const filters = {};
       if (selectedThemes.length > 0) filters.themePaths = selectedThemes;
-      if (selectedType) filters.types = [selectedType];
+      if (selectedType) filters.coreBlocks = [selectedType];
       if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
       const response = await takeLatestRef.current.run(
         (signal) => chatService.chat(
@@ -75528,6 +75771,7 @@ function SortableBlockItem({ block: block2, openId, setOpenId, handleDelete, han
 }
 function BlockEditor({ block: block2, useCases }) {
   const [localBlock, setLocalBlock] = d(block2);
+  const isTaskBlock = block2.id === "core.task";
   h(() => {
     setLocalBlock(block2);
   }, [block2]);
@@ -75585,9 +75829,9 @@ function BlockEditor({ block: block2, useCases }) {
     /* @__PURE__ */ u$1(Box, { children: [
       /* @__PURE__ */ u$1(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", className: "think-block-editor__output-header", children: [
         /* @__PURE__ */ u$1(Typography2, { variant: "h6", className: "think-block-editor__title", children: "输出模板" }),
-        /* @__PURE__ */ u$1(TemplateVariableCopier, { block: localBlock })
+        !isTaskBlock ? /* @__PURE__ */ u$1(TemplateVariableCopier, { block: localBlock }) : null
       ] }),
-      /* @__PURE__ */ u$1(TextField2, { label: "输出模板", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", className: "think-block-editor__template" })
+      isTaskBlock ? /* @__PURE__ */ u$1(Typography2, { variant: "body2", color: "text.secondary", children: "Task v2 固定由 Record Codec 写入 Block；这里不再提供 Markdown Task 输出 grammar 编辑。" }) : /* @__PURE__ */ u$1(TextField2, { label: "输出模板", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", className: "think-block-editor__template" })
     ] })
   ] });
 }
@@ -76080,7 +76324,8 @@ function buildTemplatePatchFromDraft(params) {
   const defaultValues = cleanDefaultValuesOverride(draft, block2, goal, themeIcon);
   const sameFields = fieldsHaveSameStructure(draftFields, baseFields);
   const sameRequired = equalStringSet(requiredFields, baseRequiredFields);
-  const outputTemplate = compactText(draft.outputTemplate);
+  const isTaskBlock = block2.id === "core.task";
+  const outputTemplate = isTaskBlock ? "" : compactText(draft.outputTemplate);
   const targetFile = compactText(draft.targetFile);
   const appendUnderHeader2 = compactText(draft.appendUnderHeader);
   const baseOutputTemplate = compactText(block2.outputTemplate);
@@ -76097,7 +76342,7 @@ function buildTemplatePatchFromDraft(params) {
     sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
     enabled: true,
     fields: sameFields ? void 0 : draftFields,
-    outputTemplate: outputTemplate && outputTemplate !== baseOutputTemplate ? outputTemplate : void 0,
+    outputTemplate: !isTaskBlock && outputTemplate && outputTemplate !== baseOutputTemplate ? outputTemplate : void 0,
     targetFile: targetFile && targetFile !== baseTargetFile ? targetFile : void 0,
     appendUnderHeader: appendUnderHeader2 && appendUnderHeader2 !== baseAppendUnderHeader ? appendUnderHeader2 : void 0,
     requiredFields: sameRequired ? void 0 : requiredFields,
@@ -76215,13 +76460,14 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
   const isExistingTemplate = !!selectedTemplate;
   const diffSummary = T$1(() => buildDraftDiffSummary(goal, block2, draft, currentTheme?.icon), [goal, block2, draft, currentTheme?.icon]);
   const supportsPeriod = !!block2 && isPeriodAwareCoreBlock(block2.id);
+  const isTaskBlock = block2?.id === "core.task";
   const metadataDisabled = mode === "disabled";
   const inheritedMode = mode === "inherit";
   const fieldEditDisabled = mode !== "override";
   const effectiveBlockForCopier = T$1(() => {
     if (!block2) return null;
-    return { ...block2, fields: draft.fields || block2.fields, outputTemplate: draft.outputTemplate || block2.outputTemplate };
-  }, [block2, draft.fields, draft.outputTemplate]);
+    return { ...block2, fields: draft.fields || block2.fields, outputTemplate: isTaskBlock ? block2.outputTemplate : draft.outputTemplate || block2.outputTemplate };
+  }, [block2, draft.fields, draft.outputTemplate, isTaskBlock]);
   const switchToInherit = () => {
     setMode("inherit");
     setDraft((previous) => {
@@ -76376,9 +76622,9 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block: block2, variant
           /* @__PURE__ */ u$1(Box, { children: [
             /* @__PURE__ */ u$1(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", className: "think-goal-template-editor__output-heading", children: [
               /* @__PURE__ */ u$1(Typography2, { className: "think-goal-template-editor__section-heading", children: "输出格式" }),
-              effectiveBlockForCopier ? /* @__PURE__ */ u$1(TemplateVariableCopier, { block: effectiveBlockForCopier }) : null
+              !isTaskBlock && effectiveBlockForCopier ? /* @__PURE__ */ u$1(TemplateVariableCopier, { block: effectiveBlockForCopier }) : null
             ] }),
-            /* @__PURE__ */ u$1(NativeTextarea, { value: draft.outputTemplate, rows: 7, onInput: (value) => updateDraft({ outputTemplate: value }), disabled: fieldEditDisabled })
+            isTaskBlock ? /* @__PURE__ */ u$1(Alert2, { severity: "info", children: "Task v2 的 Markdown Record Block 由统一 Record Codec 生成；Goal Template 只定义字段、默认值与保存位置，不覆盖 Task 存储 grammar。" }) : /* @__PURE__ */ u$1(NativeTextarea, { value: draft.outputTemplate, rows: 7, onInput: (value) => updateDraft({ outputTemplate: value }), disabled: fieldEditDisabled })
           ] })
         ] }) }),
         /* @__PURE__ */ u$1(Stack, { direction: "row", justifyContent: "space-between", spacing: 1, className: "think-settings-sticky-actions", children: [
@@ -78068,11 +78314,21 @@ class VaultWatcher {
     );
     this.unsubscribers.push(
       this.events.onMarkdownRename((newPath, oldPath) => {
-        this.cancelPendingScan(oldPath);
-        this.dataStore.removeFileItems(oldPath);
-        this.enqueueScan(newPath, "rename");
+        void this.handleRename(newPath, oldPath);
       })
     );
+  }
+  async handleRename(newPath, oldPath) {
+    if (this.disposed) return;
+    this.cancelPendingScan(oldPath);
+    this.cancelPendingScan(newPath);
+    this.dataStore.removeFileItems(oldPath);
+    try {
+      await this.dataStore.scanFileByPath(newPath, { throwOnError: true });
+      if (!this.disposed) this.dataStore.notifyChange();
+    } catch (error) {
+      devWarn("[VaultWatcher] Markdown rename 后扫描失败", { newPath, oldPath, error });
+    }
   }
   enqueueScan(path, reason) {
     if (this.disposed) return;
@@ -78394,7 +78650,7 @@ function useViewRuntimeHandlers({
         },
         source: "unknown"
       });
-      if (!ok) throw new Error("更新任务时间失败");
+      if (!ok) throw new Error("更新工作 Session 时间失败");
     },
     [ui, useCases]
   );
@@ -78576,6 +78832,7 @@ function ViewContent({
   timers,
   allThemes,
   allItems,
+  allRecords,
   inputSettings,
   onDataLoaded
 }) {
@@ -78608,6 +78865,7 @@ function ViewContent({
     viewInstance: normalizedViewInstance,
     items: viewItems,
     allItems,
+    allRecords,
     dateRange,
     currentView: layoutView,
     inputSettings,
@@ -78616,7 +78874,7 @@ function ViewContent({
     goals: settings.goalSettings?.goals || [],
     goalSettings: settings.goalSettings,
     timers
-  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, timers, viewItems]);
+  }), [allItems, allRecords, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, timers, viewItems]);
   const handlers = useViewRuntimeHandlers({
     app,
     actionService,
@@ -79187,6 +79445,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   const timers = useSelector(selectTimers);
   const allThemes = inputSettings.themes;
   const allItems = useLayoutItems({ dataStore, layout });
+  const allRecords = dataStore.queryRecords();
   const {
     expandedState,
     expandedViewIds,
@@ -79321,6 +79580,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
             timers,
             allThemes,
             allItems,
+            allRecords,
             inputSettings,
             onDataLoaded: (items) => {
               modulesDataCache.current[viewInstance.id] = items;
@@ -79550,6 +79810,9 @@ class RendererService {
 function readResultMessage(result, fallback) {
   return readRecordSubmitMessage(result, fallback);
 }
+function durationMinutes(totalSeconds) {
+  return Math.max(0, Math.round(Math.max(0, totalSeconds) / 60 * 100) / 100);
+}
 class TimerService {
   constructor(useCases, dataStore, ui) {
     this.useCases = useCases;
@@ -79562,70 +79825,69 @@ class TimerService {
   async startOrResume(taskId) {
     const timers = this.useCases.timer.getTimers();
     for (const timer of timers) {
-      if (timer.status === "running") {
-        await this.pause(timer.id);
-      }
+      if (timer.status === "running") await this.pause(timer.id);
     }
-    const existingTimer = timers.find((t3) => t3.taskId === taskId);
+    const existingTimer = this.useCases.timer.getTimers().find((timer) => timer.taskId === taskId);
     if (existingTimer && existingTimer.status === "paused") {
       await this.resume(existingTimer.id);
-    } else if (!existingTimer) {
-      const taskItem = this.dataStore.queryItems().find((i2) => i2.id === taskId);
-      if (!taskItem) {
-        this.ui.notice("找不到要计时的任务");
-        return;
-      }
-      this.ui.notice(`计时开始。`);
-      await this.useCases.timer.addTimer({
-        taskId,
-        startTime: Date.now(),
-        elapsedSeconds: 0,
-        status: "running"
-      });
+      return;
     }
+    if (existingTimer) return;
+    const taskItem = this.dataStore.getRecordById(taskId);
+    if (!taskItem || taskItem.coreBlock !== "task" || taskItem.status !== "open") {
+      this.ui.notice("找不到可执行的未完成任务");
+      return;
+    }
+    const now2 = Date.now();
+    await this.useCases.timer.addTimer({
+      taskId,
+      startedAt: now2,
+      startTime: now2,
+      elapsedSeconds: 0,
+      status: "running",
+      source: "timer"
+    });
+    this.ui.notice("计时开始。");
   }
-  /**
-   * Start a task from Energy task while preserving the baseline used
-   * for later Energy feedback. Timer owns execution; Energy only supplies the baseline
-   * and the suggested work-block length.
-   */
+  /** Start from Energy while Timer remains the sole runtime owner. */
   async startEnergyTask(taskId, context) {
     const timers = this.useCases.timer.getTimers();
     for (const timer of timers) {
-      if (timer.status === "running" && timer.taskId !== taskId) {
-        await this.pause(timer.id);
-      }
+      if (timer.status === "running" && timer.taskId !== taskId) await this.pause(timer.id);
     }
-    const existing = this.useCases.timer.getTimers().find((timer) => timer.taskId === taskId);
+    const taskItem = this.dataStore.getRecordById(taskId);
+    if (!taskItem || taskItem.coreBlock !== "task" || taskItem.status !== "open") {
+      this.ui.notice("找不到要执行的任务");
+      return;
+    }
+    const now2 = Date.now();
     const energyContext = {
       ...context,
       suggestedDurationMinutes: Math.max(10, Math.min(240, Math.round(context.suggestedDurationMinutes || 30))),
-      startedAt: Date.now()
+      startedAt: now2
     };
+    const existing = this.useCases.timer.getTimers().find((timer) => timer.taskId === taskId);
     if (existing) {
-      await this.useCases.timer.updateTimer({ ...existing, energyContext });
+      await this.useCases.timer.updateTimer({ ...existing, source: "energy-view", energyContext });
       if (existing.status === "paused") await this.resume(existing.id);
       this.ui.notice("任务已开始");
       return;
     }
-    const taskItem = this.dataStore.queryItems().find((i2) => i2.id === taskId);
-    if (!taskItem) {
-      this.ui.notice("找不到要执行的任务");
-      return;
-    }
     await this.useCases.timer.addTimer({
       taskId,
-      startTime: Date.now(),
+      startedAt: now2,
+      startTime: now2,
       elapsedSeconds: 0,
       status: "running",
+      source: "energy-view",
       energyContext
     });
     this.ui.notice("任务已开始");
   }
   async pause(timerId) {
-    const timer = this.useCases.timer.getTimers().find((t3) => t3.id === timerId);
+    const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
     if (timer && timer.status === "running") {
-      const elapsed = (Date.now() - timer.startTime) / 1e3;
+      const elapsed = Math.max(0, (Date.now() - timer.startTime) / 1e3);
       await this.useCases.timer.updateTimer({
         ...timer,
         elapsedSeconds: timer.elapsedSeconds + elapsed,
@@ -79635,12 +79897,10 @@ class TimerService {
   }
   async resume(timerId) {
     const timers = this.useCases.timer.getTimers();
-    for (const t3 of timers) {
-      if (t3.id !== timerId && t3.status === "running") {
-        await this.pause(t3.id);
-      }
+    for (const timer of timers) {
+      if (timer.id !== timerId && timer.status === "running") await this.pause(timer.id);
     }
-    const timerToResume = timers.find((t3) => t3.id === timerId);
+    const timerToResume = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
     if (timerToResume && timerToResume.status === "paused") {
       await this.useCases.timer.updateTimer({
         ...timerToResume,
@@ -79649,103 +79909,57 @@ class TimerService {
       });
     }
   }
-  /**
-   * End only this work block. The source Task remains open.
-   * Energy-started timers still move to awaiting-energy so the next Energy
-   * sample can become feedback for this session.
-   */
+  /** End only this work block. The source Task remains open. */
   async endWorkBlock(timerId) {
-    const timer = this.useCases.timer.getTimers().find((t3) => t3.id === timerId);
+    const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
     if (!timer) return false;
-    const taskItem = this.dataStore.queryItems().find((i2) => i2.id === timer.taskId);
-    if (!taskItem) {
+    const taskItem = this.dataStore.getRecordById(timer.taskId);
+    if (!taskItem || taskItem.coreBlock !== "task") {
       this.ui.notice("找不到原始任务，本次工作无法保存。");
-      await this.useCases.timer.removeTimer(timerId);
       return false;
     }
-    let totalSeconds = timer.elapsedSeconds;
-    if (timer.status === "running") totalSeconds += (Date.now() - timer.startTime) / 1e3;
-    if (timer.energyContext) {
-      await this.useCases.timer.updateTimer({
-        ...timer,
-        elapsedSeconds: totalSeconds,
-        status: "awaiting-energy",
-        completedAt: Date.now()
-      });
-      this.ui.notice("本次工作已结束；任务保持未完成，下一次精力记录会作为反馈。");
-    } else {
-      await this.useCases.timer.removeTimer(timerId);
-      this.ui.notice("本次工作已结束；任务保持未完成。");
+    const endedAt = Date.now();
+    const result = await this.useCases.recordInput.submitTaskSession({
+      itemId: timer.taskId,
+      session: this.buildSession(timer, endedAt, "work-block-ended"),
+      source: "timer"
+    });
+    if (result.status !== "success") {
+      if (result.status !== "cancelled") this.ui.notice(readResultMessage(result, "保存本次工作失败"));
+      return false;
     }
+    await this.useCases.timer.removeTimer(timerId);
+    this.ui.notice("本次工作已结束；任务保持未完成。");
     return true;
   }
+  /** Complete Task and persist the final work block in one Record transaction. */
   async stopAndApply(timerId) {
-    const timer = this.useCases.timer.getTimers().find((t3) => t3.id === timerId);
+    const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
     if (!timer) return false;
-    let totalSeconds = timer.elapsedSeconds;
-    if (timer.status === "running") {
-      totalSeconds += (Date.now() - timer.startTime) / 1e3;
+    const taskItem = this.dataStore.getRecordById(timer.taskId);
+    if (!taskItem || taskItem.coreBlock !== "task") {
+      this.ui.notice("找不到原始任务，无法完成任务。");
+      return false;
     }
-    const totalMinutes = Math.ceil(totalSeconds / 60);
-    let applied = false;
+    const endedAt = Date.now();
     try {
-      const taskItem = this.dataStore.queryItems().find((i2) => i2.id === timer.taskId);
-      if (!taskItem) {
-        this.ui.notice("找不到原始任务，可能已被移动或删除，计时时长无法保存。");
-        await this.useCases.timer.removeTimer(timerId);
+      const result = await this.useCases.recordInput.submitCompleteRecord({
+        itemId: timer.taskId,
+        session: this.buildSession(timer, endedAt, "task-completed"),
+        source: "timer"
+      });
+      if (result.status !== "success") {
+        if (result.status !== "cancelled") this.ui.notice(readResultMessage(result, "完成任务失败"));
         return false;
       }
-      const endTime = nowHHMM();
-      const normalizedTime = totalMinutes > 0 ? applyTaskTimePolicy({ endTime, duration: totalMinutes, mode: "finalize", direction: "backward" }) : { startTime: void 0, endTime, duration: void 0 };
-      const startTime = normalizedTime.startTime ?? void 0;
-      const isOpenTask = /^\s*-\s*\[ \]\s*/.test(taskItem.content || "");
-      const result = isOpenTask ? await this.useCases.recordInput.submitCompleteRecord({
-        itemId: timer.taskId,
-        options: {
-          duration: normalizedTime.duration ?? totalMinutes,
-          startTime: startTime ?? null,
-          endTime
-        },
-        source: "timer"
-      }) : await this.useCases.recordInput.submitUpdateRecordTime({
-        itemId: timer.taskId,
-        updates: {
-          time: startTime ?? null,
-          endTime,
-          duration: totalMinutes
-        },
-        source: "timer"
-      });
-      if (result.status === "success") {
-        applied = true;
-        if (result.feedback?.notice) {
-          this.ui.notice(result.feedback.notice);
-        }
-      } else if (result.status !== "cancelled") {
-        this.ui.notice(readResultMessage(result, "更新任务失败"));
-      }
-    } catch (e2) {
-      this.ui.notice(`更新任务失败：${e2.message}`);
-      devError("TimerService Error:", e2);
       await this.useCases.timer.removeTimer(timerId);
+      this.ui.notice(result.feedback?.notice || "任务已完成。");
+      return true;
+    } catch (error) {
+      this.ui.notice(`完成任务失败：${error.message}`);
+      devError("TimerService Error:", error);
       return false;
     }
-    if (!applied) {
-      await this.useCases.timer.removeTimer(timerId);
-      return false;
-    }
-    if (timer.energyContext) {
-      await this.useCases.timer.updateTimer({
-        ...timer,
-        elapsedSeconds: totalSeconds,
-        status: "awaiting-energy",
-        completedAt: Date.now()
-      });
-      this.ui.notice("任务已完成；下一次精力记录会自动作为反馈。");
-    } else {
-      await this.useCases.timer.removeTimer(timerId);
-    }
-    return true;
   }
   async cancel(timerId) {
     await this.useCases.timer.removeTimer(timerId);
@@ -79758,6 +79972,19 @@ class TimerService {
       return;
     }
     await this.startOrResume(taskId);
+  }
+  buildSession(timer, endedAt, result) {
+    let totalSeconds = timer.elapsedSeconds;
+    if (timer.status === "running") totalSeconds += Math.max(0, (endedAt - timer.startTime) / 1e3);
+    return {
+      startedAt: new Date(timer.startedAt).toISOString(),
+      endedAt: new Date(endedAt).toISOString(),
+      durationMinutes: durationMinutes(totalSeconds),
+      result,
+      source: timer.source,
+      suggestedDurationMinutes: timer.energyContext?.suggestedDurationMinutes,
+      startEnergyRecordId: timer.energyContext?.baselineEnergyItemId
+    };
   }
 }
 async function loadTimerServices(opts) {

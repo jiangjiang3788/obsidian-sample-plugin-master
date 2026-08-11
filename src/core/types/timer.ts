@@ -1,7 +1,15 @@
 // src/core/types/timer.ts
-/** Timer execution state. Energy context is optional and never changes Timer UI ownership. */
+/**
+ * TimerRuntimeState v2.
+ *
+ * TimerState is runtime-only and persists solely for pause/resume/restart recovery.
+ * Completed work is a task-session Record and never remains in timer-state.json.
+ */
 
-export type TimerStatus = 'running' | 'paused' | 'awaiting-energy' | 'feedback-recorded';
+export type TimerStatus = 'running' | 'paused';
+export type TimerOrigin = 'timer' | 'energy-view';
+export type TaskSessionResult = 'work-block-ended' | 'task-completed';
+export type TaskSessionSource = TimerOrigin | 'unknown';
 
 export interface EnergyTaskExecutionStart {
   baselineScore: number;
@@ -18,28 +26,29 @@ export interface EnergyTaskExecutionMeta extends EnergyTaskExecutionStart {
   startedAt: number;
 }
 
-export interface EnergyTaskExecutionFeedback {
-  score: number;
-  brainScore?: number;
-  physicalScore?: number;
-  delta: number;
-  delayMinutes: number;
-  capturedAt: number;
-  date: string;
-  time: string;
+export interface TaskSessionCreateInput {
+  startedAt: string;
+  endedAt: string;
+  durationMinutes: number;
+  result: TaskSessionResult;
+  source: TaskSessionSource;
+  suggestedDurationMinutes?: number;
+  startEnergyRecordId?: string;
 }
 
 export interface TimerState {
   id: string;
   taskId: string;
+  /** First start of the current work block. Never reset by resume. */
+  startedAt: number;
+  /** Start of the currently running segment. Reset on resume. */
   startTime: number;
+  /** Accumulated active seconds before the currently running segment. */
   elapsedSeconds: number;
   status: TimerStatus;
-  /** Present when this work block began from the Energy task surface. */
+  source: TimerOrigin;
+  /** Present when this work block began from the Energy task surface. Runtime baseline only. */
   energyContext?: EnergyTaskExecutionMeta;
-  completedAt?: number;
-  /** Bound conservatively to the next reliable Energy snapshot after the work block. */
-  energyFeedback?: EnergyTaskExecutionFeedback;
 }
 
 export function isActiveTimerState(timer: TimerState | null | undefined): timer is TimerState {

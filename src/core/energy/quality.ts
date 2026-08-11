@@ -26,7 +26,7 @@ export interface EnergyDataQualityModel {
 export interface BuildEnergyDataQualityOptions {
   startDate: string;
   endDate: string;
-  requireSharedGoal?: boolean;
+  effectRecords?: Item[];
 }
 
 function ordinal(value: string): number | undefined {
@@ -75,7 +75,7 @@ export function buildEnergyDataQuality(items: Item[], options: BuildEnergyDataQu
   }).length;
   const approximateTimeSamples = snapshots.length - exactTimeSamples;
   const detailedSamples = snapshots.filter(({ snapshot }) => snapshot.brainScore != null && snapshot.physicalScore != null).length;
-  const effects = buildEnergyEffects(items, { requireSharedGoal: options.requireSharedGoal !== false });
+  const effects = buildEnergyEffects(options.effectRecords || items);
   const coverageRatio = ratio(sampledDays, totalDays);
   const realtimeRatio = ratio(realtimeSamples, snapshots.length);
   const exactRatio = ratio(exactTimeSamples, snapshots.length);

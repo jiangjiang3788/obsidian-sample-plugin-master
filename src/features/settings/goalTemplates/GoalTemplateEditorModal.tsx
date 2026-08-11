@@ -118,14 +118,15 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
   const isExistingTemplate = !!selectedTemplate;
   const diffSummary = useMemo(() => buildDraftDiffSummary(goal, block, draft, currentTheme?.icon), [goal, block, draft, currentTheme?.icon]);
   const supportsPeriod = !!block && isPeriodAwareCoreBlock(block.id);
+  const isTaskBlock = block?.id === 'core.task';
   const metadataDisabled = mode === 'disabled';
   const inheritedMode = mode === 'inherit';
   const fieldEditDisabled = mode !== 'override';
 
   const effectiveBlockForCopier = useMemo(() => {
     if (!block) return null;
-    return { ...block, fields: draft.fields || block.fields, outputTemplate: draft.outputTemplate || block.outputTemplate };
-  }, [block, draft.fields, draft.outputTemplate]);
+    return { ...block, fields: draft.fields || block.fields, outputTemplate: isTaskBlock ? block.outputTemplate : (draft.outputTemplate || block.outputTemplate) };
+  }, [block, draft.fields, draft.outputTemplate, isTaskBlock]);
 
   const switchToInherit = () => {
     setMode('inherit');
@@ -294,9 +295,13 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
               <Box>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" className="think-goal-template-editor__output-heading">
                   <Typography className="think-goal-template-editor__section-heading">输出格式</Typography>
-                  {effectiveBlockForCopier ? <TemplateVariableCopier block={effectiveBlockForCopier} /> : null}
+                  {!isTaskBlock && effectiveBlockForCopier ? <TemplateVariableCopier block={effectiveBlockForCopier} /> : null}
                 </Stack>
-                <NativeTextarea value={draft.outputTemplate} rows={7} onInput={(value) => updateDraft({ outputTemplate: value })} disabled={fieldEditDisabled} />
+                {isTaskBlock ? (
+                  <Alert severity="info">Task v2 的 Markdown Record Block 由统一 Record Codec 生成；Goal Template 只定义字段、默认值与保存位置，不覆盖 Task 存储 grammar。</Alert>
+                ) : (
+                  <NativeTextarea value={draft.outputTemplate} rows={7} onInput={(value) => updateDraft({ outputTemplate: value })} disabled={fieldEditDisabled} />
+                )}
               </Box>
             </Stack>
           </Box>

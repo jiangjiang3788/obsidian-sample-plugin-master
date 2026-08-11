@@ -1,5 +1,6 @@
 import type { Item } from '../types/schema';
 import { isEnergyItem, readEnergyItemSnapshot } from './item';
+import { asTaskSessionRecord } from '../records/task/taskSession';
 import {
   mergePatternSessions,
   patternAbsoluteMinute,
@@ -141,9 +142,12 @@ function buildLag(points: EnergyPatternPoint[], windowStart: number): EnergyLagP
   });
 }
 
-function pairSession(session: EnergyPatternWorkSession, points: EnergyPatternPoint[], beforeWindow: number, afterWindow: number): PairedSession | null {
-  const before = [...points].reverse().find((point) => point.absoluteMinute <= session.startAbsolute && session.startAbsolute - point.absoluteMinute <= beforeWindow);
-  const after = points.find((point) => point.absoluteMinute >= session.endAbsolute && point.absoluteMinute - session.endAbsolute <= afterWindow);
+function pairSession(session: EnergyPatternWorkSession, pointById: Map<string, EnergyPatternPoint>): PairedSession | null {
+  const first = asTaskSessionRecord(session.items[0]);
+  const last = asTaskSessionRecord(session.items[session.items.length - 1]);
+  if (!first?.startEnergyRecordId || !last?.endEnergyRecordId) return null;
+  const before = pointById.get(first.startEnergyRecordId);
+  const after = pointById.get(last.endEnergyRecordId);
   if (!before || !after || before.itemId === after.itemId) return null;
   return {
     session,
@@ -226,11 +230,10 @@ function buildStopProxy(
 
 export function buildEnergyPatterns(items: Item[], options: BuildEnergyPatternsOptions = {}): EnergyPatternAnalytics | null {
   const points = readPoints(items);
+  const activityRecords = options.activityRecords || items;
   if (!points.length) return null;
   const analysisWindowDays = Math.max(7, Math.min(90, Math.floor(options.analysisWindowDays ?? 30)));
   const sessionGapMinutes = Math.max(0, Math.min(60, Math.floor(options.sessionGapMinutes ?? 15)));
-  const beforeWindow = Math.max(15, Math.min(240, Math.floor(options.beforeSessionWindowMinutes ?? 120)));
-  const afterWindow = Math.max(15, Math.min(180, Math.floor(options.afterSessionWindowMinutes ?? 90)));
   const highThreshold = Math.max(60, Math.min(100, Math.floor(options.highEnergyThreshold ?? 80)));
   const workStartWindow = Math.max(0, Math.min(180, Math.floor(options.highEnergyWorkStartWindowMinutes ?? 60)));
   const longMinutes = Math.max(30, Math.min(360, Math.floor(options.longContinuationMinutes ?? 120)));
@@ -239,9 +242,11 @@ export function buildEnergyPatterns(items: Item[], options: BuildEnergyPatternsO
   const startOrdinal = endOrdinal - analysisWindowDays + 1;
   const windowStart = startOrdinal * 1440;
   const visiblePoints = points.filter((point) => point.absoluteMinute >= windowStart);
-  const intervals = items.map(resolvePatternActivity).filter((value): value is NonNullable<typeof value> => !!value).filter((interval) => interval.endAbsolute >= windowStart);
+  const intervals = activityRecords.map(resolvePatternActivity).filter((value): value is NonNullable<typeof value> => !!value).filter((interval) => interval.endAbsolute >= windowStart);
   const sessions = mergePatternSessions(intervals, sessionGapMinutes);
-  const pairs = sessions.map((session) => pairSession(session, points, beforeWindow, afterWindow)).filter((value): value is PairedSession => !!value);
+  const evidencePoints = readPoints(activityRecords);
+  const pointById = new Map([...points, ...evidencePoints].map((point) => [point.itemId, point] as const));
+  const pairs = sessions.map((session) => pairSession(session, pointById)).filter((value): value is PairedSession => !!value);
   return {
     analysisWindowDays,
     startDate: patternDateFromOrdinal(startOrdinal),

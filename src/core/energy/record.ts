@@ -1,4 +1,6 @@
 import type { EnergySnapshotInput, EnergySnapshotRecord } from './types';
+import { createRecordId } from '@/core/records/RecordId';
+import { encodeRecordBlock } from '@/core/records/codec/MarkdownRecordCodec';
 import { calculateDetailedEnergyScore, normalizeEnergyScore, toEnergyQuickLevel } from './scale';
 
 export const ENERGY_TARGET_FILE = '01/目标精力.md';
@@ -20,6 +22,7 @@ export function buildEnergySnapshotRecord(input: EnergySnapshotInput): EnergySna
 
   return {
     ...input,
+    recordId: createRecordId('energy'),
     goalId: clean(input.goalId) || undefined,
     goalPath: clean(input.goalPath) || undefined,
     themePath: clean(input.themePath) || undefined,
@@ -42,33 +45,33 @@ export function buildEnergySnapshotRecord(input: EnergySnapshotInput): EnergySna
 }
 
 /**
- * Energy Direct Record v1 的 Markdown 协议。
+ * Energy Snapshot uses the universal Record v2 envelope.
  * 故意不写 模板ID / 模板来源：Energy 是 Goal-bound，但不是 Template-bound。
  */
 export function buildEnergySnapshotMarkdown(input: EnergySnapshotInput | EnergySnapshotRecord): string {
   const record = 'coreBlock' in input ? input : buildEnergySnapshotRecord(input);
-  const lines = [
-    '<!-- start -->',
-    '核心Block:: energy',
-    '记录子类型:: snapshot',
-  ];
-  if (record.goalId) lines.push(`目标ID:: ${record.goalId}`);
-  if (record.goalPath) lines.push(`目标:: ${record.goalPath}`);
-  lines.push('分类:: 精力');
-  lines.push(`日期:: ${record.date}`);
-  if (record.time) lines.push(`时间:: ${record.time}`);
-  if (record.period) lines.push(`时段:: ${record.period}`);
-  if (record.themePath) lines.push(`主题:: ${record.themePath}`);
-  lines.push(`精力值:: ${record.score}`);
-  if (record.brainScore != null) lines.push(`脑力精力:: ${record.brainScore}`);
-  if (record.physicalScore != null) lines.push(`体力精力:: ${record.physicalScore}`);
-  if (record.aggregateMethod) lines.push(`综合算法:: ${record.aggregateMethod}`);
-  lines.push(`精力档位:: ${record.quickLevel}`);
-  lines.push(`评分模式:: ${record.scoreMode}`);
-  lines.push(`记录方式:: ${record.captureMode}`);
-  lines.push(`时间精度:: ${record.timePrecision}`);
-  if (record.recordedAt) lines.push(`记录时间:: ${record.recordedAt}`);
-  if (record.source) lines.push(`来源:: ${record.source}`);
-  lines.push('<!-- end -->');
-  return lines.join('\n');
+  return encodeRecordBlock({
+    recordId: record.recordId,
+    coreBlock: 'energy',
+    fields: {
+      '记录子类型': 'snapshot',
+      '目标ID': record.goalId,
+      '目标': record.goalPath,
+      '分类': '精力',
+      '日期': record.date,
+      '时间': record.time,
+      '时段': record.period,
+      '主题': record.themePath,
+      '精力值': record.score,
+      '脑力精力': record.brainScore,
+      '体力精力': record.physicalScore,
+      '综合算法': record.aggregateMethod,
+      '精力档位': record.quickLevel,
+      '评分模式': record.scoreMode,
+      '记录方式': record.captureMode,
+      '时间精度': record.timePrecision,
+      '记录时间': record.recordedAt,
+      '来源': record.source,
+    },
+  });
 }

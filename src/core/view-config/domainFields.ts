@@ -1,5 +1,4 @@
 import type { FilterRule, SortRule, ViewInstance } from '../types/schema';
-import { normalizeViewMultiValue } from './filterValueSemantics';
 
 /**
  * View domain field policy
@@ -37,9 +36,8 @@ export const VIEW_LEGACY_FIELD_ALIASES: Record<string, string> = {
   周期: 'period.label',
   granularity: 'period.granularity',
   周期粒度: 'period.granularity',
-  recurrence: 'repeatToken',
-  repeat: 'repeatToken',
-  重复: 'repeatToken',
+  repeat: 'recurrence',
+  重复: 'recurrence',
   templateSourceType: 'templateSource',
   模板来源: 'templateSource',
   模板ID: 'templateId',
@@ -61,7 +59,6 @@ export const VIEW_NOISY_DISPLAY_FIELDS = new Set<string>([
   'period.id',
   'period.label',
   'period.granularity',
-  'repeatToken',
 ]);
 
 export function normalizeViewFieldKey(field: string): string {
@@ -83,18 +80,6 @@ export function isPeriodViewField(field: string): boolean {
 }
 
 
-function readLegacyTaskStatusValue(value: any): 'open' | 'done' | 'cancelled' | null {
-  const values = normalizeViewMultiValue(value);
-  if (values.some(text => text === '完成任务' || text.endsWith('/done'))) return 'done';
-  if (values.some(text => text.endsWith('/cancelled'))) return 'cancelled';
-  if (values.some(text => text === '未完成任务' || text.endsWith('/todo'))) return 'open';
-  return null;
-}
-
-function isLegacyCategoryRuleField(field: string): boolean {
-  return ['category', 'categoryKey', 'categoryPath', 'baseCategory', 'leafCategory', '分类', '类别', '分类路径'].includes(String(field || '').trim());
-}
-
 function normalizeRuleValue(field: string, value: any): any {
   const normalizedField = normalizeViewFieldKey(field);
   if (normalizedField !== 'coreBlock') return value;
@@ -102,7 +87,7 @@ function normalizeRuleValue(field: string, value: any): any {
   const mapOne = (item: unknown) => {
     const text = String(item ?? '').trim();
     if (text === '打卡') return 'habit';
-    if (text === '任务' || text === '未完成任务' || text === '完成任务') return 'task';
+    if (text === '任务') return 'task';
     if (text === '计划') return 'plan';
     if (text === '总结') return 'review';
     if (text === '思考' || text === '闪念') return 'thought';
@@ -122,13 +107,6 @@ export function normalizeViewFilters(filters: readonly FilterRule[] | undefined)
     const rawField = String(rule.field || '').trim();
     const field = normalizeViewFieldKey(rawField);
     if (!field || isTemplateSourceViewField(field)) continue;
-
-    const legacyTaskStatus = isLegacyCategoryRuleField(rawField) ? readLegacyTaskStatusValue(rule.value) : null;
-    if (legacyTaskStatus) {
-      result.push({ ...rule, field: 'coreBlock', value: 'task' });
-      result.push({ field: 'taskStatus', op: rule.op, value: legacyTaskStatus });
-      continue;
-    }
 
     result.push({ ...rule, field, value: normalizeRuleValue(field, rule.value) });
   }

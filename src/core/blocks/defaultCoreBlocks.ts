@@ -40,13 +40,31 @@ export const DEFAULT_CORE_BLOCKS: CoreBlockDefinition[] = [
     fields: [
       { id: 'core.task.content', key: '任务内容', label: '任务内容', type: 'textarea', semantic: 'body' },
       themeField,
-      dateField,
-      { id: 'core.task.start', key: '时间', label: '时间', type: 'time', semantic: 'startTime' },
-      { id: 'core.task.end', key: '结束', label: '结束', type: 'time', semantic: 'endTime' },
-      { id: 'core.task.duration', key: '时长', label: '时长', type: 'number', semantic: 'duration' },
-      { id: 'core.task.status', key: '状态', label: '状态', type: 'singleSelect', semantic: 'status', options: [{ value: '- [ ]', label: '待办' }, { value: '- [x]', label: '完成' }, { value: '🛫', label: '开始' }, { value: '📅', label: '计划' }] },
+      { id: 'core.task.scheduledDate', key: 'scheduledDate', label: '计划日期', type: 'date' },
+      { id: 'core.task.startDate', key: 'startDate', label: '开始日期', type: 'date' },
+      { id: 'core.task.dueDate', key: 'dueDate', label: '截止日期', type: 'date' },
+      { id: 'core.task.expectedDuration', key: 'expectedDurationMinutes', label: '预计时长', type: 'number', min: 1 },
+      { id: 'core.task.priority', key: 'priority', label: '优先级', type: 'singleSelect', options: [
+        { value: 'lowest', label: '最低' }, { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' }, { value: 'highest', label: '最高' },
+      ] },
+      { id: 'core.task.energyDemand', key: 'energyDemand', label: '精力要求', type: 'singleSelect', options: [
+        { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' },
+      ] },
+      { id: 'core.task.brainDemand', key: 'brainDemand', label: '脑力要求', type: 'singleSelect', options: [
+        { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' },
+      ] },
+      { id: 'core.task.physicalDemand', key: 'physicalDemand', label: '体力要求', type: 'singleSelect', options: [
+        { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' },
+      ] },
+      { id: 'core.task.recurrenceUnit', key: 'recurrenceUnit', label: '重复单位', type: 'singleSelect', options: [
+        { value: 'day', label: '天' }, { value: 'week', label: '周' }, { value: 'month', label: '月' }, { value: 'quarter', label: '季' }, { value: 'year', label: '年' },
+      ] },
+      { id: 'core.task.recurrenceInterval', key: 'recurrenceInterval', label: '重复间隔', type: 'number', min: 1, defaultValue: '1' },
+      { id: 'core.task.recurrenceAnchor', key: 'recurrenceAnchor', label: '重复锚点', type: 'singleSelect', defaultValue: 'scheduled', options: [
+        { value: 'scheduled', label: '计划日期' }, { value: 'start', label: '开始日期' }, { value: 'due', label: '截止日期' }, { value: 'completion', label: '完成日期' },
+      ] },
     ],
-    outputTemplate: '{{taskStatusPrefix}} {{theme.icon}}{{任务内容}} (目标ID::{{goalId}}) (目标::{{goalPath}}) (主题::{{themePath}}) (核心Block::task) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{repeatToken}} {{taskDateToken}}',
+    outputTemplate: '<!-- start -->\n记录ID:: {{recordId}}\n记录版本:: 2\n核心Block:: task\n状态:: open\n内容:: {{任务内容}}\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n主题:: {{themePath}}\n计划日期:: {{scheduledDate}}\n开始日期:: {{startDate}}\n截止日期:: {{dueDate}}\n预计时长:: {{expectedDurationMinutes}}\n优先级:: {{priority.value}}\n精力要求:: {{energyDemand.value}}\n脑力要求:: {{brainDemand.value}}\n体力要求:: {{physicalDemand.value}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n<!-- end -->',
     targetFile: '01/目标.md',
     appendUnderHeader: '## {{goalPath}}',
   }),

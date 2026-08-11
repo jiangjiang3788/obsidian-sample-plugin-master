@@ -7,9 +7,6 @@ export interface EditFromItemParams {
   openedFrom?: 'list' | 'detail' | 'search' | 'timeline' | 'quickinput' | 'timer' | 'unknown';
 }
 
-function supportsTaskTimeEditing(item: Item): boolean {
-  return item.type === 'task' || !!(item.startTime || item.endTime || item.duration != null);
-}
 
 type EditableItemSource = Item & { path?: string; file?: { path?: string }; line?: number; lineNumber?: number };
 
@@ -22,14 +19,13 @@ function deriveEntryContext(item: Item, openedFrom: EditFromItemParams['openedFr
       ? source.lineNumber
       : null;
   return {
-    entryKind: item.type === 'task' ? 'task' : 'block',
+    entryKind: item.coreBlock === 'task' ? 'task' : 'block',
     entryId: item.id,
     sourcePath,
     sourceLine,
     templateId: item.templateId || null,
     categoryKey: item.categoryKey || null,
     openedFrom: openedFrom || 'unknown',
-    supportsTaskTimeEditing: supportsTaskTimeEditing(item),
   };
 }
 

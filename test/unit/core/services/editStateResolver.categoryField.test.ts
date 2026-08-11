@@ -35,14 +35,12 @@ describe('buildEditRecordState category backfill', () => {
     };
 
     const item = {
-      id: '01/闪念.md#12',
-      type: 'block' as const,
+      id: 'rec.01J00000000000000000000071',
       title: '我有点累',
       content: '我有点累',
       editableText: '我有点累',
       rawSource: '<!-- start -->\n分类:: 闪念/感受\n主题:: 健康/心情\n内容:: 我有点累\n<!-- end -->',
       tags: [],
-      recurrence: 'none',
       created: 0,
       modified: 0,
       extra: {},
@@ -90,16 +88,14 @@ describe('buildEditRecordState category backfill', () => {
     };
 
     const item = {
-      id: '01/计划.md#20',
+      id: 'rec.01J00000000000000000000072',
       templateId: 'blk-plan',
       templateSourceType: 'block' as const,
-      type: 'block' as const,
       title: '五月计划',
       content: '五月计划',
       editableText: '五月计划',
       rawSource: '<!-- start -->\n模板ID:: blk-plan\n模板来源:: block\n分类:: 计划\n分类:: 月\n内容:: 五月计划\n<!-- end -->',
       tags: [],
-      recurrence: 'none',
       created: 0,
       modified: 0,
       extra: {},
@@ -135,16 +131,14 @@ describe('buildEditRecordState category backfill', () => {
     };
 
     const item = {
-      id: '01/闪念.md#8',
+      id: 'rec.01J00000000000000000000073',
       templateId: 'blk-flash',
       templateSourceType: 'block' as const,
-      type: 'block' as const,
       title: '灵感',
       content: '灵感',
       editableText: '灵感',
       rawSource: '<!-- start -->\n分类:: 闪念\n标签:: 阅读,AI\n内容:: 灵感\n<!-- end -->',
       tags: ['阅读', 'AI'],
-      recurrence: 'none',
       created: 0,
       modified: 0,
       extra: {},

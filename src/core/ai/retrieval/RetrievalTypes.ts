@@ -3,8 +3,8 @@ import type { Item } from '@/core/types/schema';
 export interface RetrievalFilters {
     /** 主题路径过滤，明确使用 item.themePath 语义，不再使用 legacy item.theme */
     themePaths?: string[];
-    /** 类型过滤（item.type: 'task' | 'block'） */
-    types?: ('task' | 'block')[];
+    /** Canonical business type filter (Item.coreBlock). */
+    coreBlocks?: string[];
     /** Block 模板 ID 过滤（通过 item.templateId/templateId 匹配） */
     blockTemplateIds?: string[];
     /** Block 模板名称过滤（通过 categoryKey/root category 匹配） */
@@ -38,7 +38,7 @@ export interface SearchIndexDocument {
     categoryKey: string;
     baseCategory: string;
     leafCategory: string;
-    type: string;
+    coreBlock: string;
     templateId: string;
     fileName: string;
     folder: string;
@@ -55,7 +55,6 @@ export const SEARCH_FIELDS: Array<keyof SearchIndexDocument> = [
     'title',
     'content',
     'editableText',
-    'fullData',
     'tags',
     'themePath',
     'rootTheme',
@@ -82,7 +81,7 @@ export const STORE_FIELDS: Array<keyof SearchIndexDocument> = [
     'categoryKey',
     'baseCategory',
     'leafCategory',
-    'type',
+    'coreBlock',
     'templateId',
     'fileName',
     'folder',

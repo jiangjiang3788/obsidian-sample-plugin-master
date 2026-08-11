@@ -6,10 +6,9 @@ function item(partial: Partial<Item>): Item {
     id: partial.id || 'item',
     title: partial.title || '',
     content: partial.content || '',
-    type: partial.type || 'block',
+    coreBlock: partial.coreBlock || 'note',
     tags: partial.tags || [],
     categoryKey: partial.categoryKey || '记录/默认',
-    recurrence: partial.recurrence || '',
     created: partial.created || 0,
     modified: partial.modified || 0,
     extra: {},
@@ -19,9 +18,9 @@ function item(partial: Partial<Item>): Item {
 
 describe('viewQueryPipeline', () => {
   const items = [
-    item({ id: 'a', title: 'Alpha 设计', themePath: '工作/项目A', categoryKey: '任务/todo', date: '2026-05-10', dateMs: Date.parse('2026-05-10') }),
-    item({ id: 'b', title: 'Beta 复盘', themePath: '生活/项目B', categoryKey: '习惯/check', date: '2026-05-11', dateMs: Date.parse('2026-05-11') }),
-    item({ id: 'c', title: 'Gamma 设计', themePath: '工作/项目A', categoryKey: '任务/done', date: '2026-06-01', dateMs: Date.parse('2026-06-01') }),
+    item({ id: 'a', title: 'Alpha 设计', coreBlock: 'task', status: 'open', themePath: '工作/项目A', categoryKey: '任务', date: '2026-05-10', dateMs: Date.parse('2026-05-10') }),
+    item({ id: 'b', title: 'Beta 复盘', coreBlock: 'habit', themePath: '生活/项目B', categoryKey: '打卡', date: '2026-05-11', dateMs: Date.parse('2026-05-11') }),
+    item({ id: 'c', title: 'Gamma 设计', coreBlock: 'task', status: 'done', themePath: '工作/项目A', categoryKey: '任务', date: '2026-06-01', dateMs: Date.parse('2026-06-01') }),
   ];
 
   test('base filters 统一应用 layoutFilters、viewFilters、keyword', () => {

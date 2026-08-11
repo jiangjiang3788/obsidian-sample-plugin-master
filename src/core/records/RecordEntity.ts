@@ -35,4 +35,8 @@ export interface RecordNormalizeContext extends RecordFileContext, RecordLocatio
  *
  * 当前仍兼容 Item 结构；单独导出类型是为了后续逐步把视图/搜索/编辑迁移到 RecordEntity。
  */
-export type RecordEntity = Item;
+export type RecordEntity = Item & {
+  schemaVersion: number;
+  coreBlock: string;
+  source: { path: string; startLine: number; endLine: number; modified: number };
+};

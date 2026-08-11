@@ -6,7 +6,8 @@ import type { FieldSource } from './FieldTypes';
 import { normalizeImageValue } from './imageSemantics';
 import { parseTagList } from './tagSemantics';
 import { splitHierarchyPath } from './pathSemantics';
-import { getTaskStatus } from '@/core/records/task/taskStatus';
+import { getTaskCadence } from '@/core/records/task/taskCadence';
+import { formatTaskRecurrence } from '@/core/records/task/taskRecurrence';
 import { asUnknownRecord, readFirstString, readString, readStringArray, readUnknown } from '@/core/utils/unknownRecord';
 
 export type FieldValueSource = FieldSource | 'unknown';
@@ -91,9 +92,9 @@ function readCanonicalField(item: Item, canonicalField: string): unknown {
     return readExplicitThemeParts(item).leafTheme ?? undefined;
   }
 
-  if (canonicalField === 'taskStatus') {
-    return getTaskStatus(item);
-  }
+  if (canonicalField === 'status') return item.status;
+  if (canonicalField === 'cadence') return item.coreBlock === 'task' ? getTaskCadence(item) : undefined;
+  if (canonicalField === 'recurrence') return formatTaskRecurrence(item.recurrenceInfo);
 
   if (canonicalField === 'period.id') {
     return readFirstString(asUnknownRecord(item), ['cycleId', 'periodId']);
@@ -103,10 +104,6 @@ function readCanonicalField(item: Item, canonicalField: string): unknown {
   }
   if (canonicalField === 'period.granularity') {
     return readFirstString(asUnknownRecord(item), ['periodGranularity', 'goalGranularity']);
-  }
-
-  if (canonicalField === 'repeatToken') {
-    return item.recurrence;
   }
 
   if (canonicalField === 'tags') {

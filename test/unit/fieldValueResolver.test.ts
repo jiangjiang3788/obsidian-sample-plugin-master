@@ -3,12 +3,10 @@ import type { Item } from '@/core/types/schema';
 
 function makeItem(overrides: Partial<Item> = {}): Item {
   return {
-    id: 'note.md#1',
+    id: 'rec.01J00000000000000000000061',
     title: '标题',
     content: '内容',
-    type: 'task',
     tags: [],
-    recurrence: 'none',
     categoryKey: '项目/插件',
     created: 1,
     modified: 2,

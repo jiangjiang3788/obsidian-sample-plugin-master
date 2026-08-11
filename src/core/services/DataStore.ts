@@ -16,12 +16,15 @@ import { DataStoreFileScanner } from '@core/services/dataStore/DataStoreFileScan
 import { DataStoreIndex } from '@core/services/dataStore/DataStoreIndex';
 import { buildWarmStartPlan } from '@core/services/dataStore/WarmStartPlanner';
 import type { FilePathInput } from '@core/services/dataStore/pathUtils';
+import type { RecordIntegrityIssue } from '@/core/records/RecordIndex';
 
 @singleton()
 export class DataStore {
   private readonly index = new DataStoreIndex();
   private readonly cacheStore: DataStoreCache;
   private readonly fileScanner: DataStoreFileScanner;
+  private readonly scannerIssuesByFile = new Map<string, RecordIntegrityIssue[]>();
+  private readonly runtimeIntegrityIssues: RecordIntegrityIssue[] = [];
 
   private changeListeners: Set<() => void> = new Set();
   private _perf = { start: 0, end: 0, scannedFiles: 0, scannedItems: 0 };
@@ -45,6 +48,8 @@ export class DataStore {
     this._disposed = true;
     this.cacheStore.dispose();
     this.index.dispose();
+    this.scannerIssuesByFile.clear();
+    this.runtimeIntegrityIssues.length = 0;
     this.changeListeners.clear();
   }
 
@@ -58,14 +63,17 @@ export class DataStore {
   async scanAll() {
     if (!this._assertNotDisposed()) return;
     this.index.clear();
+    this.scannerIssuesByFile.clear();
+    this.runtimeIntegrityIssues.length = 0;
     const paths = this.vault.listMarkdownFilePaths();
     for (const path of paths) {
       if (!this._assertNotDisposed()) break;
-      const scanned = await this.scanFile(path, { bumpVersion: false });
+      const scanned = await this.scanFile(path, { bumpVersion: false, deferIndexRebuild: true, deferCacheSave: true });
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
     }
-    this.index.bumpVersion();
+    this.index.rebuild();
+    this.cacheStore.scheduleSave();
   }
 
   // [主流程] 初始扫描（代理到暖启动）
@@ -112,19 +120,22 @@ export class DataStore {
     const plan = await buildWarmStartPlan(paths, cache, this.fileStat);
 
     this.index.clear();
+    this.scannerIssuesByFile.clear();
+    this.runtimeIntegrityIssues.length = 0;
 
     for (const { path, cached } of plan.unchangedEntries) {
-      this.index.hydrateFileItems(path, this.cacheStore.restoreItems(cached));
+      this.index.stageFileItems(path, this.cacheStore.restoreItems(cached));
+      this.scannerIssuesByFile.set(path, (cached.integrityIssues || []).map(issue => ({ ...issue, code: issue.code as RecordIntegrityIssue['code'] })));
     }
 
     for (const pth of plan.changedFiles) {
-      const scanned = await this.scanFile(pth, { bumpVersion: false });
+      const scanned = await this.scanFile(pth, { bumpVersion: false, deferIndexRebuild: true, deferCacheSave: true });
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
     }
 
     this.cacheStore.removeMissingFiles(plan.seen);
-    this.index.bumpVersion();
+    this.index.rebuild();
     this._perf.end = Date.now();
     this.cacheStore.scheduleSave();
     this.notifyChange();
@@ -136,7 +147,7 @@ export class DataStore {
    * Phase2 迁移辅助：按路径扫描文件。
    * 目的：让 core 其它服务（如 ItemService）不需要依赖 Obsidian 的 TFile 类型。
    */
-  async scanFileByPath(filePath: string, opts: { bumpVersion?: boolean } = {}): Promise<Item[]> {
+  async scanFileByPath(filePath: string, opts: { bumpVersion?: boolean; deferIndexRebuild?: boolean; deferCacheSave?: boolean; throwOnError?: boolean } = {}): Promise<Item[]> {
     if (!this._assertNotDisposed()) return [];
     return await this.scanFile(filePath, opts);
   }
@@ -151,25 +162,46 @@ export class DataStore {
    * - string: file path
    * - { path: string }: 结构化对象（兼容 TFile）
    */
-  async scanFile(filePathOrFile: FilePathInput, opts: { bumpVersion?: boolean } = {}): Promise<Item[]> {
+  async scanFile(filePathOrFile: FilePathInput, opts: { bumpVersion?: boolean; deferIndexRebuild?: boolean; deferCacheSave?: boolean; throwOnError?: boolean } = {}): Promise<Item[]> {
     if (!this._assertNotDisposed()) return [];
     try {
       const scanned = await this.fileScanner.scan(filePathOrFile);
-      if (!scanned) return [];
+      if (!scanned) {
+        const filePath = typeof filePathOrFile === 'string' ? filePathOrFile : filePathOrFile?.path || '';
+        const error = new Error(`record_scan_unavailable:${filePath || '<unknown>'}`);
+        const issue: RecordIntegrityIssue = {
+          code: 'record_scan_failed',
+          path: filePath || undefined,
+          message: error.message,
+        };
+        if (filePath) this.scannerIssuesByFile.set(filePath, [issue]);
+        if (opts.throwOnError) throw error;
+        return [];
+      }
 
-      this.index.replaceFileItems(scanned.filePath, scanned.items, { bumpVersion: opts.bumpVersion });
-      this.cacheStore.upsertFile(scanned.filePath, scanned.stat, scanned.items);
-      this.cacheStore.scheduleSave();
+      this.scannerIssuesByFile.set(scanned.filePath, scanned.integrityIssues);
+      if (opts.deferIndexRebuild) this.index.stageFileItems(scanned.filePath, scanned.items);
+      else this.index.replaceFileItems(scanned.filePath, scanned.items, { bumpVersion: opts.bumpVersion });
+      this.cacheStore.upsertFile(scanned.filePath, scanned.stat, scanned.items, scanned.integrityIssues);
+      if (!opts.deferCacheSave) this.cacheStore.scheduleSave();
 
       return scanned.items;
     } catch (err) {
       const filePath = typeof filePathOrFile === 'string' ? filePathOrFile : filePathOrFile?.path || '';
+      const issue: RecordIntegrityIssue = {
+        code: 'record_scan_failed',
+        path: filePath || undefined,
+        message: `Record scan failed for ${filePath || '<unknown>'}: ${err instanceof Error ? err.message : String(err)}`,
+      };
+      if (filePath) this.scannerIssuesByFile.set(filePath, [issue]);
       devError('ThinkPlugin: 扫描文件失败', filePath, err);
+      if (opts.throwOnError) throw err;
       return [];
     }
   }
 
   removeFileItems(filePath: string) {
+    this.scannerIssuesByFile.delete(filePath);
     this.index.removeFileItems(filePath);
     if (this.cacheStore.removeFile(filePath)) {
       this.cacheStore.scheduleSave();
@@ -178,9 +210,39 @@ export class DataStore {
 
   /* ---------------- 查询 ---------------- */
 
+  queryRecords(filters: FilterRule[] = [], sortRules: SortRule[] = []): Item[] {
+    return this.index.queryRecords(filters, sortRules);
+  }
+
   queryItems(filters: FilterRule[] = [], sortRules: SortRule[] = []): Item[] {
     return this.index.queryItems(filters, sortRules);
   }
+
+  getRecordById(recordId: string): Item | null {
+    return this.index.getById(recordId);
+  }
+
+  getRecordLocation(recordId: string) {
+    return this.index.getLocation(recordId);
+  }
+
+  getRecordLocations(recordId: string) {
+    return this.index.getLocations(recordId);
+  }
+
+  getRecordIntegrityIssues() {
+    return [
+      ...Array.from(this.scannerIssuesByFile.values()).flat(),
+      ...this.index.getIntegrityIssues(),
+      ...this.runtimeIntegrityIssues.map(issue => ({ ...issue })),
+    ];
+  }
+
+  reportRecordIntegrityIssue(issue: RecordIntegrityIssue): void {
+    this.runtimeIntegrityIssues.push({ ...issue });
+  }
+
+  clearRuntimeIntegrityIssues(): void { this.runtimeIntegrityIssues.length = 0; }
 
   /* ---------------- 变更通知 ---------------- */
 

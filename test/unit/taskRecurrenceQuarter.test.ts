@@ -1,12 +1,15 @@
-import { generateNextRecurringTask, parseRecurrence } from '@core/records/public';
+import { addRecurrenceToDate, buildNextOccurrenceDates } from '@core/records/public';
 
-describe('task recurrence quarter support', () => {
-  it('parses pure normalized recurrence text', () => {
-    expect(parseRecurrence('every week')).toEqual({ interval: 1, unit: 'week', whenDone: false });
+describe('task recurrence quarter support v2', () => {
+  it('supports quarter as a first-class structured recurrence unit', () => {
+    expect(addRecurrenceToDate('2026-01-10', { unit: 'quarter', interval: 1, anchor: 'scheduled' })).toBe('2026-04-10');
   });
 
-  it('supports quarter as a first-class recurrence unit', () => {
-    expect(parseRecurrence('🔁 every quarter')).toEqual({ interval: 1, unit: 'quarter', whenDone: false });
-    expect(generateNextRecurringTask('- [ ] 季度复盘 🔁 every quarter 📅 2026-01-10', '2026-01-10')).toContain('📅 2026-04-10');
+  it('handles month-end boundaries through date arithmetic rather than task-line tokens', () => {
+    expect(buildNextOccurrenceDates(
+      { scheduledDate: '2026-01-31' },
+      { unit: 'month', interval: 1, anchor: 'scheduled' },
+      '2026-01-31T10:00:00Z',
+    ).scheduledDate).toBe('2026-02-28');
   });
 });

@@ -1,17 +1,7 @@
-// src/core/records/task/taskUtils.ts
 import type { Item } from '@/core/types/schema';
-import { isTaskCompleted, isTaskCompletedByCategory } from './taskStatus';
+import { isTaskCompleted, isTaskRecord } from './taskStatus';
 
-/**
- * 判断任务是否已完成（包括 done 和 cancelled 状态）
- */
-export function isDone(categoryKey?: string): boolean {
-    return isTaskCompletedByCategory(categoryKey);
-}
-
-/**
- * 判断 Item 是否为已完成的任务
- */
+/** Canonical Task completion predicate. Category labels are never status truth. */
 export function isItemDone(item: Item): boolean {
-    return item.type === 'task' && isTaskCompleted(item);
+  return isTaskRecord(item) && isTaskCompleted(item);
 }

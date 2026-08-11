@@ -1,5 +1,6 @@
 import type { Item } from '../types/schema';
 import { readEnergyItemSnapshot, type EnergyItemSnapshot } from './item';
+import { asTaskSessionRecord } from '../records/task/taskSession';
 
 export function energyDateOrdinal(value: string): number | undefined {
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -20,6 +21,8 @@ export function energyDateFromOrdinal(ordinal: number): string {
 export function energyItemOccurrenceDate(item: Item): string | undefined {
   const energy = readEnergyItemSnapshot(item);
   if (energy?.date) return energy.date;
+  const session = asTaskSessionRecord(item);
+  if (session?.sessionStartedAt) return session.sessionStartedAt.slice(0, 10);
   const candidates = [
     item.date,
     item.doneDate,

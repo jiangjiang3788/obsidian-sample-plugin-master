@@ -97,7 +97,7 @@ function periodLabel(currentView: CurrentView, dateRange: [Date, Date]): string 
   return start.format('YYYY');
 }
 
-function periodRenderModel(period: EnergyPeriodModel | null, goalItems: Item[], label: string): EnergyPeriodRenderModel | null {
+function periodRenderModel(period: EnergyPeriodModel | null, goalItems: Item[], label: string, contextRecords: Item[]): EnergyPeriodRenderModel | null {
   if (!period) return null;
   return {
     ...period,
@@ -113,7 +113,7 @@ function periodRenderModel(period: EnergyPeriodModel | null, goalItems: Item[], 
         brainScore: sample.brainScore,
         physicalScore: sample.physicalScore,
         captureMode: sample.captureMode,
-        context: buildGoalEnergyContext(sample.item, goalItems),
+        context: buildGoalEnergyContext(sample.item, contextRecords),
         item: sample.item,
       })),
     })),
@@ -172,13 +172,62 @@ function compactReviewLines(args: {
 
 
 
+function recordOccurrenceDate(item: Item): string {
+  if (item.coreBlock === 'task-session' && item.sessionStartedAt) {
+    const date = new Date(item.sessionStartedAt);
+    if (Number.isFinite(date.getTime())) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+  }
+  return String(item.date || item.doneDate || item.startDate || item.scheduledDate || item.createdDate || '').slice(0, 10);
+}
+
+function recordAtOrBefore(item: Item, today: string, nowTime: string): boolean {
+  const itemDate = recordOccurrenceDate(item);
+  if (!itemDate) return true;
+  if (itemDate < today) return true;
+  if (itemDate > today) return false;
+  if (item.coreBlock === 'task-session' && item.sessionEndedAt) return Date.parse(item.sessionEndedAt) <= Date.now();
+  if (!isEnergyItem(item)) return true;
+  const itemTime = String(item.startTime || item.extra?.['时间'] || '00:00').slice(0, 5);
+  return itemTime <= nowTime;
+}
+
+function evidenceRecordsForGoal(
+  records: Item[],
+  goalKey: string,
+  goals: GoalDefinition[],
+  startDate?: string,
+  endDate?: string,
+): Item[] {
+  const goalTaskIds = new Set(records
+    .filter((item) => item.coreBlock === 'task' && getItemGoalKey(item, goals) === goalKey)
+    .map((item) => item.id));
+  const sessions = records.filter((item) => {
+    if (item.coreBlock !== 'task-session') return false;
+    if (getItemGoalKey(item, goals) !== goalKey && !goalTaskIds.has(String(item.taskId || ''))) return false;
+    if (!startDate || !endDate) return true;
+    const date = recordOccurrenceDate(item);
+    return Boolean(date && date >= startDate && date <= endDate);
+  });
+  const requiredIds = new Set<string>();
+  for (const session of sessions) {
+    for (const value of [session.id, session.taskId, session.startEnergyRecordId, session.endEnergyRecordId]) {
+      const id = String(value || '').trim();
+      if (id) requiredIds.add(id);
+    }
+  }
+  return records.filter((item) => requiredIds.has(item.id));
+}
+
 function itemInRange(item: Item, startDate: string, endDate: string): boolean {
-  const date = String(item.date || item.doneDate || item.startDate || item.scheduledDate || item.createdDate || '').slice(0, 10);
+  const date = recordOccurrenceDate(item);
   return Boolean(date && date >= startDate && date <= endDate);
 }
 
 export function buildEnergyViewModel(args: {
   items: Item[];
+  records?: Item[];
   module: EnergyViewModuleLike;
   currentView: CurrentView;
   dateRange: [Date, Date];
@@ -186,7 +235,7 @@ export function buildEnergyViewModel(args: {
   themes?: ThemeDefinition[];
   timers?: TimerState[];
 }): EnergyViewRenderModel {
-  const { items = [], module, goals = [], themes = [], timers = [], currentView, dateRange } = args;
+  const { items = [], records = items, module, goals = [], themes = [], timers = [], currentView, dateRange } = args;
   const rawConfig = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...(module?.viewConfig || {}) };
   const config: EnergyViewConfig = {
     ...rawConfig,
@@ -215,22 +264,20 @@ export function buildEnergyViewModel(args: {
     if (!goalItems.some(isEnergyItem)) continue;
     const periodItems = goalItems.filter((item) => itemInRange(item, startDate, endDate));
 
-    const summary = buildGoalEnergySummary(goalItems, config.recentSampleLimit);
-    if (!summary) continue;
-    const patterns = buildEnergyPatterns(periodItems, { analysisWindowDays: Math.max(7, Math.min(config.analysisWindowDays, 90)) });
-    const currentHistoryItems = goalItems.filter((item) => {
-      const itemDate = String(item.doneDate || item.date || item.startDate || item.scheduledDate || item.createdDate || '').slice(0, 10);
-      if (!itemDate) return true;
-      if (itemDate < today) return true;
-      if (itemDate > today) return false;
-      if (!isEnergyItem(item)) return true;
-      const itemTime = String(item.startTime || item.extra?.['时间'] || '00:00').slice(0, 5);
-      return itemTime <= nowTime;
+    const allGoalEvidenceRecords = evidenceRecordsForGoal(records, bucket.name, goals);
+    const periodEvidenceRecords = evidenceRecordsForGoal(records, bucket.name, goals, startDate, endDate);
+    const currentEvidenceRecords = allGoalEvidenceRecords.filter((item) => recordAtOrBefore(item, today, nowTime));
+    const summary = buildGoalEnergySummary(goalItems, config.recentSampleLimit, {
+      contextRecords: records,
+      effectRecords: allGoalEvidenceRecords,
     });
-    const management = buildEnergyManagement(currentHistoryItems, { analysisWindowDays: config.analysisWindowDays, highEnergyThreshold: 60 });
-    const periodManagement = buildEnergyManagement(periodItems, { analysisWindowDays: config.analysisWindowDays, highEnergyThreshold: 60 });
-    const quality = buildEnergyDataQuality(periodItems, { startDate, endDate });
-    const period = periodRenderModel(buildEnergyPeriod(goalItems, { currentView, startDate, endDate }), goalItems, displayPeriodLabel);
+    if (!summary) continue;
+    const patterns = buildEnergyPatterns(periodItems, { activityRecords: periodEvidenceRecords, analysisWindowDays: Math.max(7, Math.min(config.analysisWindowDays, 90)) });
+    const currentHistoryItems = goalItems.filter((item) => recordAtOrBefore(item, today, nowTime));
+    const management = buildEnergyManagement(currentHistoryItems, { evidenceRecords: currentEvidenceRecords, analysisWindowDays: config.analysisWindowDays, highEnergyThreshold: 60 });
+    const periodManagement = buildEnergyManagement(periodItems, { evidenceRecords: periodEvidenceRecords, analysisWindowDays: config.analysisWindowDays, highEnergyThreshold: 60 });
+    const quality = buildEnergyDataQuality(periodItems, { startDate, endDate, effectRecords: periodEvidenceRecords });
+    const period = periodRenderModel(buildEnergyPeriod(goalItems, { currentView, startDate, endDate }), goalItems, displayPeriodLabel, records);
 
     panels.push({
       key: bucket.name,
@@ -253,23 +300,16 @@ export function buildEnergyViewModel(args: {
   });
   const visible = config.maxGoals > 0 ? panels.slice(0, config.maxGoals) : panels;
 
-  const globalCurrentHistoryItems = items.filter((item) => {
-    const itemDate = String(item.doneDate || item.date || item.startDate || item.scheduledDate || item.createdDate || '').slice(0, 10);
-    if (!itemDate) return true;
-    if (itemDate < today) return true;
-    if (itemDate > today) return false;
-    if (!isEnergyItem(item)) return true;
-    const itemTime = String(item.startTime || item.extra?.['\u65f6\u95f4'] || '00:00').slice(0, 5);
-    return itemTime <= nowTime;
-  });
+  const globalCurrentHistoryItems = items.filter((item) => recordAtOrBefore(item, today, nowTime));
+  const globalEvidenceRecords = records.filter((item) => recordAtOrBefore(item, today, nowTime));
   const globalManagement = buildEnergyManagement(globalCurrentHistoryItems, {
+    evidenceRecords: globalEvidenceRecords,
     analysisWindowDays: config.analysisWindowDays,
     highEnergyThreshold: 60,
-    effectScope: 'global',
   });
   const taskList = buildEnergyTaskListModel({
     items,
-    historyItems: globalCurrentHistoryItems,
+    historyItems: records,
     timers,
     management: globalManagement,
     goals,

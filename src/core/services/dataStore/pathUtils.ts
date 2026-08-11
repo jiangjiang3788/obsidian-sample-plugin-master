@@ -20,6 +20,3 @@ export function basenameNoExt(filename: string): string {
   return filename.toLowerCase().endsWith('.md') ? filename.slice(0, -3) : filename;
 }
 
-export function itemBelongsToFileId(itemId: string | undefined, filePath: string): boolean {
-  return Boolean(itemId && itemId.startsWith(filePath + '#'));
-}

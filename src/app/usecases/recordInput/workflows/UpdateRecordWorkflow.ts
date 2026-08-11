@@ -25,7 +25,7 @@ export class UpdateRecordWorkflow {
       blockId: params.blockId,
       themeId: params.themeId ?? null,
       item: params.item,
-      formData: params.formData,
+      formData: { ...params.formData, seriesId: params.item.seriesId },
       normalizeMode: 'edit',
       validateMode: 'edit',
     });
@@ -38,6 +38,7 @@ export class UpdateRecordWorkflow {
       formData: normalized.normalizedFormData,
       theme: resolved.theme ?? undefined,
       templateMeta,
+      recordId: params.item.id,
     });
     const persistencePlan = buildRecordPersistencePlan({
       mode: 'edit',

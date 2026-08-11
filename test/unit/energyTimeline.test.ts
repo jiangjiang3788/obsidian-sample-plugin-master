@@ -5,12 +5,10 @@ function energy(id: string, date: string, time: string, score: number, extra: Re
     id,
     title: '',
     content: '',
-    type: 'block',
     tags: [],
     categoryKey: '精力',
     coreBlock: 'energy',
     date,
-    recurrence: '',
     created: 0,
     modified: 0,
     extra: {

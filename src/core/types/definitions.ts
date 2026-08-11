@@ -66,7 +66,7 @@ export function getActiveCategoryColors(): Record<string, string> {
 
 /**
  * 根据类别键名获取对应的颜色。
- * @param categoryKey - 完整的类别键名，例如 "任务/done"。
+ * @param categoryKey - 完整的类别键名，例如 "任务" 或 "打卡/健康"。
  * @returns 对应的十六进制颜色字符串。
  */
 export function getCategoryColor(categoryKey: string): string {

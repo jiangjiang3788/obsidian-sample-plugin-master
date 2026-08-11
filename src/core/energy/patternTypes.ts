@@ -85,6 +85,8 @@ export interface EnergyPatternAnalytics {
 }
 
 export interface BuildEnergyPatternsOptions {
+  /** Internal TaskSession/evidence records; Energy daypart points still come from the primary items argument. */
+  activityRecords?: Item[];
   analysisWindowDays?: number;
   sessionGapMinutes?: number;
   beforeSessionWindowMinutes?: number;

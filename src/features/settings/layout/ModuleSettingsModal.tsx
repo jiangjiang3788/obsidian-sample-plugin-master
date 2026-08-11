@@ -69,7 +69,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
         return VIEW_OPTIONS.map(v => ({ value: v, label: labels[v] || v.replace('View', '') }));
     }, []);
 
-    const commonFilterFields = useMemo(() => ['goalPath', 'goalPaths', 'goalId', 'coreBlock', 'themePath', 'taskStatus', 'type', 'priority', 'period.label'], []);
+    const commonFilterFields = useMemo(() => ['goalPath', 'goalPaths', 'goalId', 'coreBlock', 'themePath', 'status', 'cadence', 'priority', 'period.label'], []);
     const hasAdvancedFilters = useMemo(() => (currentVi.filters || []).some((rule: any) => (
         rule.op !== 'in' || !commonFilterFields.includes(rule.field)
     )), [currentVi.filters, commonFilterFields]);

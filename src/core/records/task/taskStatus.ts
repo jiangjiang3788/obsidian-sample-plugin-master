@@ -1,42 +1,53 @@
 import type { Item } from '@/core/types/schema';
 
-export type TaskStatus = 'open' | 'done' | 'cancelled' | 'unknown';
+export type TaskStatus = 'open' | 'done' | 'cancelled' | 'skipped';
+export type TaskLifecycleCommand = 'complete' | 'cancel' | 'skip' | 'reopen';
 
-function normalizeCategoryKey(categoryKey?: string): string {
-  return String(categoryKey || '').trim().toLowerCase();
+export function isTaskRecord(item: Pick<Item, 'coreBlock'> | null | undefined): boolean {
+  return item?.coreBlock === 'task';
 }
 
-export function isTaskCompletedByCategory(categoryKey?: string): boolean {
-  const key = normalizeCategoryKey(categoryKey);
-  return key === '完成任务' || key.endsWith('/done') || key.endsWith('/cancelled');
+export function isTaskSeriesRecord(item: Pick<Item, 'coreBlock'> | null | undefined): boolean {
+  return item?.coreBlock === 'task-series';
 }
 
-export function getTaskStatus(item: Item): TaskStatus {
-  if (!item || item.type !== 'task') return 'unknown';
-
-  if (item.cancelledDate) return 'cancelled';
-  if (item.doneDate) return 'done';
-
-  const categoryKey = normalizeCategoryKey(item.categoryKey);
-  if (categoryKey === '完成任务') return 'done';
-  if (categoryKey === '未完成任务') return 'open';
-  if (categoryKey.endsWith('/cancelled')) return 'cancelled';
-  if (categoryKey.endsWith('/done')) return 'done';
-  if (categoryKey.endsWith('/todo')) return 'open';
-
-  const content = String(item.content || '').trim();
-  if (/^-\s*\[x\]/i.test(content)) return 'done';
-  if (/^-\s*\[-\]/.test(content)) return 'cancelled';
-  if (/^-\s*\[ \]/.test(content)) return 'open';
-
-  return 'unknown';
+export function getTaskStatus(item: Pick<Item, 'coreBlock' | 'status'>): TaskStatus | null {
+  if (!isTaskRecord(item)) return null;
+  const status = String(item.status || '').trim().toLowerCase();
+  return status === 'open' || status === 'done' || status === 'cancelled' || status === 'skipped'
+    ? status
+    : null;
 }
 
-export function isTaskCompleted(item: Item): boolean {
+export function assertTaskStatus(item: Pick<Item, 'id' | 'coreBlock' | 'status'>): TaskStatus {
   const status = getTaskStatus(item);
-  return status === 'done' || status === 'cancelled';
+  if (!status) throw new Error(`task_status_invalid:${item.id}`);
+  return status;
 }
 
-export function isTaskOpen(item: Item): boolean {
+export function isTaskCompleted(item: Pick<Item, 'coreBlock' | 'status'>): boolean {
+  return getTaskStatus(item) === 'done';
+}
+
+export function isTaskOpen(item: Pick<Item, 'coreBlock' | 'status'>): boolean {
   return getTaskStatus(item) === 'open';
+}
+
+export function canTransitionTaskStatus(
+  from: TaskStatus,
+  command: TaskLifecycleCommand,
+  options: { recurring: boolean },
+): boolean {
+  if (command === 'reopen') return from === 'done' || from === 'cancelled' || from === 'skipped';
+  if (from !== 'open') return false;
+  if (command === 'skip') return options.recurring;
+  if (command === 'cancel') return !options.recurring;
+  return command === 'complete';
+}
+
+export function nextTaskStatus(command: TaskLifecycleCommand): TaskStatus {
+  if (command === 'complete') return 'done';
+  if (command === 'cancel') return 'cancelled';
+  if (command === 'skip') return 'skipped';
+  return 'open';
 }

@@ -3,7 +3,7 @@ import { buildEnergyExperimentComparison } from '@core/energy/public';
 
 function energy(id: string, date: string, score: number, brain = score, physical = score): Item {
   return {
-    id, goalId: 'goal.demo', goalPath: 'Demo', date, startTime: '12:00', coreBlock: 'energy', categoryKey: '精力', type: 'block', title: '', content: '', tags: [], recurrence: 'none', created: 0, modified: 0,
+    id, goalId: 'goal.demo', goalPath: 'Demo', date, startTime: '12:00', coreBlock: 'energy', categoryKey: '精力', title: '', content: '', tags: [], created: 0, modified: 0,
     extra: { 核心Block: 'energy', 日期: date, 时间: '12:00', 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), 脑力精力: brain, 体力精力: physical, 评分模式: 'detailed', 记录方式: 'realtime' },
   } as Item;
 }

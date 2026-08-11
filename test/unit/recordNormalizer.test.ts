@@ -2,15 +2,16 @@ import type { Item } from '../../src/core/types/schema';
 import { normalizeRecordItem } from '../../src/core/records/RecordNormalizer';
 
 const baseItem = (overrides: Partial<Item> = {}): Item => ({
-  id: 'daily.md#3',
+  id: 'task.01J00000000000000000000003',
+  schemaVersion: 2,
+  coreBlock: 'task',
+  status: 'open',
   title: '任务',
-  content: '- [ ] 任务',
-  type: 'task',
+  content: '任务',
   tags: [],
-  recurrence: 'none',
   created: 0,
   modified: 0,
-  categoryKey: '未完成任务',
+  categoryKey: '任务',
   extra: {},
   ...overrides,
 });

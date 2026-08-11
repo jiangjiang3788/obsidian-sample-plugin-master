@@ -23,6 +23,7 @@ export interface EnergyActionCandidate {
   source: EnergyActionSource;
   goalId?: string;
   goalPath?: string;
+  seriesId?: string;
   theme?: string;
   /** Stable activity class used only for personal evidence matching. */
   activityLabel?: string;

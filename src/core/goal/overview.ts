@@ -158,23 +158,11 @@ function readThemePath(item: Item): string | null {
 
 function readCoreBlock(item: Item): string {
   const raw = String(item.coreBlock ?? readLooseField(item, 'coreBlock') ?? readLooseField(item, '核心Block') ?? '').trim();
-  if (raw) return raw;
-  const category = String(item.categoryKey ?? '').trim();
-  if (/任务/.test(category) || item.type === 'task') return 'task';
-  if (/计划/.test(category)) return 'plan';
-  if (/总结|复盘/.test(category)) return 'review';
-  if (/打卡/.test(category)) return 'habit';
-  if (/事件|证据/.test(category)) return 'evidence';
-  if (/阻碍|风险/.test(category)) return 'blocker';
-  if (/里程碑/.test(category)) return 'milestone';
-  if (/思考|闪念/.test(category)) return 'thought';
-  if (/精力/.test(category)) return 'energy';
-  return category || 'record';
+  return raw.replace(/^core\./i, '') || 'record';
 }
 
-function isDoneTask(item: Item): boolean {
-  const raw = String(item.rawSource ?? item.fullData ?? item.content ?? item.title ?? '').trim();
-  return /^-\s*\[[xX]\]/.test(raw) || /完成/.test(String(readLooseField(item, '状态') ?? ''));
+function readTaskStatus(item: Item): string {
+  return String(item.status ?? readLooseField(item, '状态') ?? '').trim().toLowerCase();
 }
 
 function dateToEpochDay(value: string | null | undefined): number | null {
@@ -350,8 +338,9 @@ export function buildGoalOverviewModel(input: {
 
       if (coreBlock === 'task') {
         row.taskCount += 1;
-        if (isDoneTask(item)) row.doneTaskCount += 1;
-        else row.openTaskCount += 1;
+        const status = readTaskStatus(item);
+        if (status === 'done') row.doneTaskCount += 1;
+        if (status === 'open') row.openTaskCount += 1;
       } else if (coreBlock === 'plan') row.planCount += 1;
       else if (coreBlock === 'review') row.reviewCount += 1;
       else if (coreBlock === 'habit') row.habitCount += 1;

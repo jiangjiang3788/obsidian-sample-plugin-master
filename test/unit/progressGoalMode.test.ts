@@ -1,10 +1,10 @@
 import { buildProgressViewModel } from '@/features/settings/views/models/progressViewModel';
 
 const items: any[] = [
-  { id: '1', title: 'A', type: 'task', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
-  { id: '2', title: 'B', type: 'block', categoryKey: '打卡', coreBlock: 'habit', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
-  { id: '3', title: 'C', type: 'block', categoryKey: '事件', coreBlock: 'evidence', goalPaths: ['项目/目标B'], goalPath: '项目/目标B', extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
-  { id: '4', title: '', type: 'block', categoryKey: '精力', coreBlock: 'energy', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '14:35', '精力值': 80, '精力档位': 80, '评分模式': 'quick' }, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
+  { id: '1', title: 'A', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '2', title: 'B', categoryKey: '打卡', coreBlock: 'habit', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '3', title: 'C', categoryKey: '事件', coreBlock: 'evidence', goalPaths: ['项目/目标B'], goalPath: '项目/目标B', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '4', title: '', categoryKey: '精力', coreBlock: 'energy', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '14:35', '精力值': 80, '精力档位': 80, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
 ];
 
 describe('ProgressView goal mode', () => {
@@ -31,10 +31,10 @@ describe('ProgressView goal mode', () => {
 
   it('attaches reliable nearby activity and same-day health signals to recent Energy samples', () => {
     const contextItems: any[] = [
-      { id: 'task', title: '写代码', type: 'task', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', startTime: '14:00', endTime: '15:30', duration: 90, extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
-      { id: 'sleep', title: '睡眠', type: 'block', categoryKey: '打卡', coreBlock: 'habit', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', rating: 40, extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
-      { id: 'body', title: '身体状态', type: 'block', categoryKey: '打卡', coreBlock: 'habit', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', rating: 60, extra: {}, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
-      { id: 'energy', title: '', type: 'block', categoryKey: '精力', coreBlock: 'energy', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '15:38', '精力值': 20, '精力档位': 20, '评分模式': 'quick' }, tags: [], content: '', recurrence: '', created: 0, modified: 0 },
+      { id: 'task', title: '写代码', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', startTime: '14:00', endTime: '15:30', duration: 90, extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'sleep', title: '睡眠', categoryKey: '打卡', coreBlock: 'habit', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', rating: 40, extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'body', title: '身体状态', categoryKey: '打卡', coreBlock: 'habit', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', rating: 60, extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'energy', title: '', categoryKey: '精力', coreBlock: 'energy', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '15:38', '精力值': 20, '精力档位': 20, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
     ];
     const model = buildProgressViewModel({ items: contextItems, module: { viewConfig: {} }, goals: [] });
     const sample = model.goalCards[0]?.energySummary?.recentSamples[0];

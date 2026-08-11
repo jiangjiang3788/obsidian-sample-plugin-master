@@ -1,3 +1,4 @@
+import type { Item } from '../types/schema';
 import type { EnergyEffectEvidence } from './effects';
 import type { EnergyPatternEvidence } from './patternTypes';
 
@@ -64,5 +65,6 @@ export interface BuildEnergyManagementOptions {
   minimumPersonalSamples?: number;
   highEnergyThreshold?: number;
   dimensionGapThreshold?: number;
-  effectScope?: 'shared-goal' | 'global';
+  /** Internal TaskSession + linked Energy records used for historical evidence. */
+  evidenceRecords?: Item[];
 }

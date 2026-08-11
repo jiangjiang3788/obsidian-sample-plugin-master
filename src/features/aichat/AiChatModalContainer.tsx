@@ -95,7 +95,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     const handleNewSession = async () => {
         const filters: SessionFilters = {};
         if (selectedThemes.length > 0) filters.themePaths = selectedThemes;
-        if (selectedType) filters.types = [selectedType as 'task' | 'block'];
+        if (selectedType) filters.coreBlocks = [selectedType];
         if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
 
         const session = await sessionStore.createSession(undefined, filters);
@@ -113,7 +113,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         const session = sessionStore.getSession(sessionId);
         if (session?.filters) {
             setSelectedThemes(session.filters.themePaths ?? []);
-            setSelectedType(session.filters.types?.[0] ?? '');
+            setSelectedType(session.filters.coreBlocks?.[0] ?? '');
             setSelectedBlockId(session.filters.blockTemplateIds?.[0] ?? '');
         }
     };
@@ -159,7 +159,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
             // 构建过滤器
             const filters: any = {};
             if (selectedThemes.length > 0) filters.themePaths = selectedThemes;
-            if (selectedType) filters.types = [selectedType];
+            if (selectedType) filters.coreBlocks = [selectedType];
             if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
 
             // 发送请求

@@ -41,8 +41,8 @@ const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
   { field: 'goalId', label: '目标ID', help: '稳定目标 ID，适合目标实体化后的精确筛选。', placeholder: '输入目标ID' },
   { field: 'coreBlock', label: '记录类型', help: 'Goal × Block 主链字段，按 task/plan/review/thought/habit/evidence/blocker/milestone 筛选。旧分类筛选会自动归一到 coreBlock。', placeholder: '选择记录类型' },
   { field: 'themePath', label: '主题', help: '主题已降级为表单层级单选字段，但仍可用于上下文筛选。', placeholder: '选择主题' },
-  { field: 'taskStatus', label: '任务状态', help: '由任务勾选框 / 完成日期推导，代替旧的“完成任务 / 未完成任务”分类。', placeholder: '选择任务状态' },
-  { field: 'type', label: '类型', placeholder: '选择记录类型' },
+  { field: 'status', label: '状态', help: 'Task 使用显式 open/done/cancelled/skipped 状态。', placeholder: '选择状态' },
+  { field: 'cadence', label: '任务周期', help: '由 Task Series 的结构化 recurrence 派生。', placeholder: '选择任务周期' },
   { field: 'priority', label: '优先级', placeholder: '选择优先级' },
   { field: 'period.label', label: '周期', help: '仅计划 / 总结类记录有周期。', placeholder: '选择周期' },
 ];

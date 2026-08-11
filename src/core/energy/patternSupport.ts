@@ -1,5 +1,6 @@
 import type { Item } from '../types/schema';
 import type { EnergyPatternActivityInterval, EnergyPatternEvidence, EnergyPatternTrend, EnergyPatternWorkSession } from './patternTypes';
+import { asTaskSessionRecord } from '../records/task/taskSession';
 
 export function patternText(value: unknown): string | undefined {
   const text = String(value ?? '').trim();
@@ -50,32 +51,29 @@ export function patternAbsoluteMinute(date: string, time: string): number | unde
   return ordinal == null || minute == null ? undefined : ordinal * 1440 + minute;
 }
 
-function isTaskLike(item: Item): boolean {
-  const core = patternText(item.coreBlock)?.replace(/^core\./, '');
-  const category = patternText(item.categoryKey);
-  return core === 'task' || item.type === 'task' || category === '任务' || category === 'task';
+function localSessionParts(value: string): { date: string; time: string } | null {
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return null;
+  return {
+    date: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`,
+    time: `${String(parsed.getHours()).padStart(2, '0')}:${String(parsed.getMinutes()).padStart(2, '0')}`,
+  };
 }
 
 export function resolvePatternActivity(item: Item): EnergyPatternActivityInterval | null {
-  if (!isTaskLike(item)) return null;
-  const date = patternText(item.date ?? item.startDate ?? item.doneDate ?? item.scheduledDate ?? item.extra?.['日期']);
-  if (!date) return null;
-  const ordinal = patternDateOrdinal(date);
-  if (ordinal == null) return null;
-  const duration = patternNumber(item.duration ?? item.extra?.['时长']);
-  const safeDuration = duration != null && duration >= 0 ? duration : undefined;
-  let start = patternTimeMinutes(item.startTime ?? item.extra?.['时间'] ?? item.extra?.['开始']);
-  let end = patternTimeMinutes(item.endTime ?? item.extra?.['结束']);
-  if (start == null && end == null) return null;
-  if (start == null && end != null && safeDuration != null) start = end - safeDuration;
-  if (end == null && start != null && safeDuration != null) end = start + safeDuration;
-  if (start == null || end == null) return null;
-  const startAbsolute = ordinal * 1440 + start;
-  let endAbsolute = ordinal * 1440 + end;
-  if (endAbsolute < startAbsolute) endAbsolute += 1440;
-  if (safeDuration != null && Math.abs((endAbsolute - startAbsolute) - safeDuration) > 1) endAbsolute = startAbsolute + safeDuration;
+  const session = asTaskSessionRecord(item);
+  if (!session) return null;
+  const start = localSessionParts(session.sessionStartedAt);
+  const end = localSessionParts(session.sessionEndedAt);
+  if (!start || !end) return null;
+  const startAbsolute = patternAbsoluteMinute(start.date, start.time);
+  const endAbsoluteRaw = patternAbsoluteMinute(end.date, end.time);
+  if (startAbsolute == null || endAbsoluteRaw == null) return null;
+  const duration = patternNumber(session.sessionDurationMinutes);
+  if (duration == null || duration < 0) return null;
+  const endAbsolute = Math.max(endAbsoluteRaw, startAbsolute + duration);
   if (endAbsolute <= startAbsolute) return null;
-  return { item, startAbsolute, endAbsolute, durationMinutes: Math.round(endAbsolute - startAbsolute) };
+  return { item: session, startAbsolute, endAbsolute, durationMinutes: Math.round(duration) };
 }
 
 export function patternEvidence(count: number): EnergyPatternEvidence {

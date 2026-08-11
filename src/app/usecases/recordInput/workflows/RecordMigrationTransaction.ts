@@ -10,12 +10,9 @@ import type {
 
 import { mapSubmitError } from '../error';
 import { issue, toArray } from '../issues';
-import { getItemFilePath, locateCreatedRecord } from '../locator';
+import { getItemFilePath } from '../locator';
 import { buildRefreshPlan, getFileItemsByPath } from '../paths';
-import {
-  buildCreatedRecordLocatorContext,
-  type TemplateExecutionMeta,
-} from '../templateSubmit';
+import type { TemplateExecutionMeta } from '../templateSubmit';
 import type { RecordInputWorkflowRuntime } from './types';
 
 export interface RecordMigrationTransactionParams {
@@ -44,27 +41,18 @@ export class RecordMigrationTransaction {
 
   async execute(params: RecordMigrationTransactionParams): Promise<RecordSubmitResult> {
     const targetPath = params.outputPlan.targetFilePath || '';
-    const beforeTargetItems = getFileItemsByPath(this.runtime.deps.dataStore, targetPath);
     const createdPath = await this.runtime.deps.inputService.createRecordAtPlannedLocation(
       params.template,
       params.normalized.normalizedFormData,
       params.theme ?? undefined,
       params.templateMeta,
-      { signal: params.signal, autoRefresh: false },
+      { signal: params.signal, autoRefresh: false, recordId: params.item.id },
     );
 
     const scannedNewPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, buildRefreshPlan([createdPath], false));
     const afterTargetItems = scannedNewPath.get(createdPath) ?? getFileItemsByPath(this.runtime.deps.dataStore, createdPath);
-    const createdRecord = locateCreatedRecord(beforeTargetItems, afterTargetItems, buildCreatedRecordLocatorContext({
-      template: params.template,
-      theme: params.theme,
-      meta: params.templateMeta,
-      outputContent: params.outputPlan.outputContent,
-      normalizedFormData: params.normalized.normalizedFormData,
-      appendMode: params.outputPlan.targetHeader ? 'header' : 'append',
-      targetHeader: params.outputPlan.targetHeader ?? null,
-      beforeItems: beforeTargetItems,
-    }));
+    const createdRecord = afterTargetItems.find(item => item.id === params.item.id);
+    if (!createdRecord) throw new Error(`record_move_scan_failed:${params.item.id}`);
 
     try {
       const deletedPath = await this.runtime.deps.inputService.deleteExistingRecord(params.item, {

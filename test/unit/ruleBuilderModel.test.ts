@@ -53,8 +53,8 @@ describe('RuleBuilderModel', () => {
   it('collects unique field values from the data store', () => {
     const dataStore = {
       queryItems: () => [
-        { id: '1', type: 'block', title: 'todo', tags: ['a', 'b'], extra: {} },
-        { id: '2', type: 'block', title: 'done', tags: ['a'], extra: {} },
+        { id: '1', title: 'todo', tags: ['a', 'b'], extra: {} },
+        { id: '2', title: 'done', tags: ['a'], extra: {} },
       ],
     } as any;
 

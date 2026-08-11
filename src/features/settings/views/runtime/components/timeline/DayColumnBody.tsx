@@ -77,13 +77,13 @@ export function DayColumnBody({
 
     const tryUpdateTaskTime = async (taskId: string, updates: Parameters<UpdateTaskTimeHandler>[1]) => {
         if (!onUpdateTaskTime) {
-            onNotice?.('未提供保存处理器，无法更新任务时间');
+            onNotice?.('未提供保存处理器，无法更新工作 Session 时间');
             return;
         }
         try {
             await onUpdateTaskTime(taskId, updates);
         } catch (e) {
-            onNotice?.('更新任务时间失败');
+            onNotice?.('更新工作 Session 时间失败');
         }
     };
 
@@ -93,7 +93,7 @@ export function DayColumnBody({
             return;
         }
 
-        void onOpenRecord?.(block as any);
+        void onOpenRecord?.({ ...block, id: block.taskRecordId } as any);
     };
 
 
@@ -173,7 +173,7 @@ export function DayColumnBody({
                 const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
                 const canAlignToNext = nextBlock && (nextBlock.blockStartMinute > block.blockStartMinute);
 
-                const blockGesture = createRecordGestureHandlers({ item: block as any, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block) });
+                const blockGesture = createRecordGestureHandlers({ item: { ...block, id: block.taskRecordId } as any, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block) });
 
                 return (
                     <div 

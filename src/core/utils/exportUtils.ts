@@ -1,7 +1,6 @@
 import { Item, readField } from '@/core/types/schema';
 import { getFieldDefinition } from '@/core/fields/FieldRegistry';
 import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
-import { EMOJI } from '@/core/types/constants';
 import { getTaskStatus } from '@/core/records/task/taskStatus';
 import { 
     BLOCK_EXPORT_DEFAULT_CONFIG, 
@@ -123,7 +122,7 @@ export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = 
 
             // 渲染当前层级的 items
             node.items.forEach((item, index) => {
-                if (item.type === 'task') {
+                if (item.coreBlock === 'task') {
                     lines.push(formatTaskItem(item));
                 } else {
                     lines.push(...formatBlockItem(item, index + 1, config));
@@ -203,40 +202,32 @@ function formatBlockItem(item: Item, index: number, config: ExportViewConfig): s
 }
 
 /**
- * 格式化 Task 类型的 Item (保持原有逻辑的简化版)
+ * Export a Task using canonical domain fields.
+ * Export is presentation only; it is not a storage/round-trip codec.
  */
 function formatTaskItem(item: Item): string {
-    const status = getTaskStatus(item);
-    const checkbox = status === 'done' ? '[x]' : status === 'cancelled' ? '[-]' : '[ ]';
-    
-    let taskLine = `- ${checkbox} ${item.title}`;
-
-    // 添加核心和自定义字段 (key:: value)
-    const extraFields: Record<string, any> = {
-        '周期': item.period,
-        '评分': item.rating,
-        '时间': item.startTime,
-        '结束': item.endTime,
-        '时长': item.duration,
-        ...item.extra,
-    };
-
-    for (const key in extraFields) {
-        const value = extraFields[key];
-        // 过滤掉 filename 和 header，因为它们可能已经被用于分组
-        if (key === 'filename' || key === 'header') continue;
-        if (value !== null && value !== undefined && value !== '') {
-            taskLine += ` (${key}:: ${value})`;
-        }
+    const status = getTaskStatus(item) || 'unknown';
+    const content = String(item.content || item.editableText || item.title || '').trim() || '未命名任务';
+    const lines = [`- **任务** ${content}`];
+    const fields: Array<[string, unknown]> = [
+        ['记录ID', item.id],
+        ['状态', status],
+        ['目标ID', item.goalId],
+        ['目标', item.goalPath || item.goalPaths?.[0]],
+        ['主题', item.themePath || item.theme],
+        ['优先级', item.priority],
+        ['预计时长', item.expectedDurationMinutes ?? item.duration],
+        ['计划日期', item.scheduledDate],
+        ['开始日期', item.startDate],
+        ['截止日期', item.dueDate],
+        ['完成于', item.completedAt],
+        ['取消于', item.cancelledAt],
+        ['跳过于', item.skippedAt],
+        ['系列ID', item.seriesId],
+    ];
+    for (const [label, value] of fields) {
+        if (value === undefined || value === null || value === '') continue;
+        lines.push(`  - ${label}: ${String(value)}`);
     }
-    
-    // 添加日期字段
-    if (item.dueDate) taskLine += ` ${EMOJI.due} ${item.dueDate}`;
-    if (item.scheduledDate) taskLine += ` ${EMOJI.scheduled} ${item.scheduledDate}`;
-    if (item.startDate) taskLine += ` ${EMOJI.start} ${item.startDate}`;
-    if (item.createdDate) taskLine += ` ${EMOJI.created} ${item.createdDate}`;
-    if (item.doneDate) taskLine += ` ${EMOJI.done} ${item.doneDate}`;
-    if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
-
-    return taskLine.replace(/\s+/g, ' ').trim();
+    return lines.join('\n');
 }

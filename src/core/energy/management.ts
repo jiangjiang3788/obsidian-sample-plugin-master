@@ -130,8 +130,8 @@ function selectCandidates(
     }));
 }
 
-function buildGuardrails(items: Item[], analysisWindowDays: number, highThreshold: number): EnergyManagementGuardrail[] {
-  const patterns = buildEnergyPatterns(items, { analysisWindowDays, highEnergyThreshold: highThreshold });
+function buildGuardrails(items: Item[], evidenceRecords: Item[], analysisWindowDays: number, highThreshold: number): EnergyManagementGuardrail[] {
+  const patterns = buildEnergyPatterns(items, { activityRecords: evidenceRecords, analysisWindowDays, highEnergyThreshold: highThreshold });
   if (!patterns) return [];
   const rows: EnergyManagementGuardrail[] = [];
   const stop = patterns.stopProxy;
@@ -196,11 +196,12 @@ export function buildEnergyManagement(items: Item[], options: BuildEnergyManagem
   const latest = latestState(items, highThreshold, dimensionGap);
   if (!latest) return null;
 
-  const effects = buildEnergyEffects(items, { requireSharedGoal: options.effectScope !== 'global' });
+  const evidenceRecords = options.evidenceRecords || items;
+  const effects = buildEnergyEffects(evidenceRecords);
   const activityRows = effects?.byActivity || [];
   const recoveryCandidates = selectCandidates(activityRows, 'recovery', latest.dimensionFocus, maximumCandidates, minimumPersonalSamples);
   const cautionCandidates = selectCandidates(activityRows, 'depletion', latest.dimensionFocus, maximumCandidates, minimumPersonalSamples);
-  const guardrails = buildGuardrails(items, analysisWindowDays, highThreshold);
+  const guardrails = buildGuardrails(items, evidenceRecords, analysisWindowDays, highThreshold);
   const pairedActivityCount = effects?.pairedActivityCount || 0;
   const sufficient = recoveryCandidates.length > 0 || cautionCandidates.length > 0 || guardrails.length > 0;
 

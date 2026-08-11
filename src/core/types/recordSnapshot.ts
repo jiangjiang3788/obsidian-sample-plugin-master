@@ -1,5 +1,4 @@
 import type { Item } from './schema';
-import { extractTaskEditableText } from '@/core/utils/text';
 import { readExplicitThemeParts, splitThemePath as splitExplicitThemePath } from '@/core/theme/themeSemantics';
 
 /**
@@ -16,6 +15,10 @@ export interface ThemePathParts {
 }
 
 export interface RecordOutputPlan {
+  /** Stable identity allocated before persistence. */
+  recordId?: string | null;
+  schemaVersion?: number | null;
+  coreBlock?: string | null;
   targetFilePath: string | null;
   targetHeader: string | null;
   outputContent: string;
@@ -90,44 +93,22 @@ export function splitThemePath(themePath: string | null | undefined): ThemePathP
 }
 
 function pickEditableText(item: Item): string | null {
-  if (item.type === 'task') {
-    // SNAPSHOT-MIGRATION DEBUG FIX:
-    // 任务正文优先从 rawSource/content 重新剥离，而不是优先信任 item.title / item.editableText。
-    // 原因：历史缓存或旧 parser 可能已经把 editableText/title 写成被空格截断的摘要。
-    // 例如：`长治学院  设计道旗定稿` 曾经会只剩 `长治学院`。
-    const fromRaw = extractTaskEditableText(item.rawSource || item.content || '').editableText;
-    if (fromRaw) return fromRaw;
-    const extraBody = item.extra?.['正文'];
-    if (typeof extraBody === 'string' && extraBody.trim()) return extraBody.trim();
-    if (item.editableText) return item.editableText;
-    return item.title || null;
-  }
-  if (item.editableText) return item.editableText;
+  if (item.editableText?.trim()) return item.editableText.trim();
   const extraBody = item.extra?.['正文'];
   if (typeof extraBody === 'string' && extraBody.trim()) return extraBody.trim();
-  return item.content || item.title || null;
+  return item.content?.trim() || item.title || null;
 }
 
 export function buildParsedRecordSnapshot(item: Item): ParsedRecordSnapshot {
-  const path = item.file?.path ?? (() => {
-    const hashIndex = item.id.lastIndexOf('#');
-    return hashIndex >= 0 ? item.id.slice(0, hashIndex) : null;
-  })();
-  const line = typeof item.file?.line === 'number'
-    ? item.file.line
-    : (() => {
-        const hashIndex = item.id.lastIndexOf('#');
-        if (hashIndex < 0) return null;
-        const parsed = Number.parseInt(item.id.slice(hashIndex + 1), 10);
-        return Number.isFinite(parsed) ? parsed : null;
-      })();
+  const path = item.source?.path ?? item.file?.path ?? null;
+  const line = item.source?.startLine ?? (typeof item.file?.line === 'number' ? item.file.line : null);
 
   const editableText = pickEditableText(item);
   const themeParts = readExplicitThemeParts(item as any);
 
   return {
     itemId: item.id,
-    entryKind: item.type,
+    entryKind: item.coreBlock === 'task' ? 'task' : 'block',
     locator: { path, line },
     raw: { sourceText: item.rawSource || item.content || '' },
     semantic: {

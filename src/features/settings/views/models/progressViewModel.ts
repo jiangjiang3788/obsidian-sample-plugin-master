@@ -3,7 +3,6 @@ import type { ThemeDefinition, Item } from '@core/types/public';
 import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import { buildGoalBuckets, getItemGoalKey } from '@core/goal/public';
 import { computeProgression } from '@core/progression/public';
-import { asUnknownRecord, readFirstString } from '@core/utils/public';
 import { isEnergyItem } from '@core/energy/public';
 
 export interface GoalProgressCardModel {
@@ -42,9 +41,7 @@ const BLOCK_KEY_ALIASES: Record<string, string> = {
 };
 
 function normalizeBlockKey(item: Item): string {
-  const raw = readFirstString(asUnknownRecord(item), ['coreBlock', 'categoryKey', 'type'])
-    ?.replace(/^core\./, '')
-    .trim() || '';
+  const raw = String(item.coreBlock || '').replace(/^core\./, '').trim();
   if (!raw) return 'unknown';
   return BLOCK_KEY_ALIASES[raw] || raw.split('/')[0] || raw;
 }

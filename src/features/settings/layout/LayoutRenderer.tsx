@@ -64,6 +64,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
   const allThemes = inputSettings.themes;
 
   const allItems = useLayoutItems({ dataStore, layout });
+  const allRecords = dataStore.queryRecords();
   const {
     expandedState,
     expandedViewIds,
@@ -225,6 +226,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
             timers={timers}
             allThemes={allThemes}
             allItems={allItems}
+            allRecords={allRecords}
             inputSettings={inputSettings}
             onDataLoaded={(items) => { modulesDataCache.current[viewInstance.id] = items; }}
           />

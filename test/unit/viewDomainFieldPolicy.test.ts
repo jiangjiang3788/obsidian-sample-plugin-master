@@ -2,20 +2,18 @@ import { normalizeViewFilters, normalizeViewGroupFields, normalizeDisplayFields,
 import type { Item } from '@/core/public';
 
 describe('view domain field policy', () => {
-  it('converts legacy category filters into coreBlock filters', () => {
-    const filters = normalizeViewFilters([
-      { field: 'categoryKey', op: '=', value: '打卡' },
-    ]);
-    expect(filters).toEqual([{ field: 'coreBlock', op: '=', value: 'habit' }]);
+  it('converts generic category filters into canonical coreBlock filters', () => {
+    expect(normalizeViewFilters([{ field: 'categoryKey', op: '=', value: '打卡' }]))
+      .toEqual([{ field: 'coreBlock', op: '=', value: 'habit' }]);
   });
 
-  it('preserves task done/open meaning when converging old task categories', () => {
-    const filters = normalizeViewFilters([
-      { field: 'categoryKey', op: '=', value: '完成任务' },
-    ]);
-    expect(filters).toEqual([
+  it('keeps canonical Task status filters canonical', () => {
+    expect(normalizeViewFilters([
       { field: 'coreBlock', op: '=', value: 'task', logic: 'and' },
-      { field: 'taskStatus', op: '=', value: 'done' },
+      { field: 'status', op: '=', value: 'done' },
+    ])).toEqual([
+      { field: 'coreBlock', op: '=', value: 'task', logic: 'and' },
+      { field: 'status', op: '=', value: 'done' },
     ]);
   });
 
@@ -24,11 +22,9 @@ describe('view domain field policy', () => {
     expect(normalizeViewGroupFields(['categoryKey', '模板来源', 'leafTheme'])).toEqual(['coreBlock', 'leafTheme']);
   });
 
-
-
-  it('normalizes legacy viewConfig field axes without deleting color category palettes', () => {
+  it('normalizes canonical view axes without introducing Task storage aliases', () => {
     expect(normalizeViewConfigDomain({ rowField: 'recurrence', colField: 'categoryKey', groupBy: 'category', categories: [{ name: '打卡' }] })).toEqual({
-      rowField: 'repeatToken',
+      rowField: 'recurrence',
       colField: 'coreBlock',
       groupBy: 'coreBlock',
       categories: [{ name: '打卡' }],
@@ -36,19 +32,14 @@ describe('view domain field policy', () => {
     expect(normalizeViewConfigDomain({ categories: [], themePaths: [] })).toEqual({});
   });
 
-  it('resolves derived taskStatus for filters and view grouping', () => {
+  it('resolves explicit status and structured cadence', () => {
     const item = {
-      id: 'item-1',
-      type: 'task',
-      title: 'done task',
-      content: '- [x] done task',
-      tags: [],
-      categoryKey: '完成任务',
-      recurrence: 'none',
-      created: 0,
-      modified: 0,
-      extra: {},
+      id: 'task.01J00000000000000000000044', schemaVersion: 2, coreBlock: 'task', status: 'done',
+      title: 'done task', content: 'done task', tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+      seriesId: 'taskseries.01J00000000000000000000044', recurrenceInfo: { unit: 'week', interval: 1, anchor: 'scheduled' },
     } as Item;
-    expect(readFieldValue(item, 'taskStatus')).toBe('done');
+    expect(readFieldValue(item, 'status')).toBe('done');
+    expect(readFieldValue(item, 'cadence')).toBe('week');
+    expect(readFieldValue(item, 'recurrence')).toBe('every week');
   });
 });

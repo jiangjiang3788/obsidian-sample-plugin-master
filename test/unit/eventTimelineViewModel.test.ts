@@ -9,7 +9,6 @@ import {
 
 const task = (id: string, date: string, content = '') => ({
   id,
-  type: 'task',
   title: `任务${id}`,
   fields: { date, content, title: `字段标题${id}`, category: '工作' },
 });

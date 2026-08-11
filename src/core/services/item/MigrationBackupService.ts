@@ -1,6 +1,5 @@
 import type { VaultPort } from '@core/ports/VaultPort';
 import type { DataStore } from '../DataStore';
-import { safePathFromItemId } from './itemId';
 import type { MigrationBackupResult } from './types';
 
 export class MigrationBackupService {
@@ -18,9 +17,9 @@ export class MigrationBackupService {
     async createMigrationBackup(backupRoot: string, settings: unknown): Promise<MigrationBackupResult> {
         const root = String(backupRoot || '').replace(/^\/+|\/+$/g, '') || `ThinkOS/Backups/goal-migration-${Date.now()}`;
         const settingsPath = `${root}/data-settings.json`;
-        const items = this.dataStore.queryItems() as Array<{ id?: string }>;
+        const items = this.dataStore.queryItems();
         const markdownPaths = Array.from(new Set(items
-            .map((item) => safePathFromItemId(String(item.id || '')))
+            .map((item) => item.source?.path || item.file?.path || '')
             .filter((path): path is string => !!path)
         )).sort((left, right) => left.localeCompare(right));
 

@@ -3,16 +3,17 @@ import { buildParsedRecordSnapshot } from '../../src/core/types/recordSnapshot';
 import { buildInitialEditFormData } from '../../src/core/recordInput/EditBackfillMapper';
 
 const baseItem = (overrides: Partial<Item> = {}): Item => ({
-  id: 'daily.md#4',
+  id: 'task.01J00000000000000000000004',
+  schemaVersion: 2,
+  coreBlock: 'task',
+  status: 'open',
   title: '默认标题',
-  content: '- [ ] 默认标题',
-  rawSource: '- [ ] 默认标题',
-  type: 'task',
+  content: '默认标题',
+  rawSource: '<!-- start -->\n记录ID:: task.01J00000000000000000000004\n记录版本:: 2\n核心Block:: task\n状态:: open\n内容:: 默认标题\n<!-- end -->',
   tags: [],
-  recurrence: 'none',
   created: 0,
   modified: 0,
-  categoryKey: '未完成任务',
+  categoryKey: '任务',
   extra: {},
   ...overrides,
 });
@@ -50,11 +51,11 @@ describe('EditBackfillMapper', () => {
     expect(data.topic).toEqual({ value: '学习/英语/听力', label: '听力' });
   });
 
-  it('任务正文回填优先使用 rawSource 提取出的完整可编辑文本', () => {
+  it('任务正文回填使用 canonical content 并保留正文内部空格', () => {
     const item = baseItem({
       title: '长治学院',
-      content: '- [ ] 长治学院  设计道旗定稿 (时间::09:00)',
-      rawSource: '- [ ] 长治学院  设计道旗定稿 (时间::09:00)',
+      content: '长治学院  设计道旗定稿',
+      editableText: '长治学院  设计道旗定稿',
     });
     const snapshot = buildParsedRecordSnapshot(item);
     const data = buildInitialEditFormData({

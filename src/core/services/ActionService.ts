@@ -8,7 +8,7 @@ import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
 import { SettingsProviderToken } from '@core/services/types';
 import { readField } from '@/core/types/schema';
-import { buildPathOption, getBasePath, getLeafPath } from '@core/utils/pathSemantic';
+import { buildPathOption, getLeafPath } from '@core/utils/pathSemantic';
 import { formatTagsForField } from '@/core/utils/tagUtils';
 import type { UiPort } from '@core/ports/UiPort';
 import { UI_PORT_TOKEN } from '@core/ports/UiPort';
@@ -27,25 +27,25 @@ export class ActionService {
         return getEffectiveCoreBlocks(settings);
     }
 
+    private findBlockByCoreBlock(coreBlock: string | undefined): BlockTemplate | undefined {
+        const normalized = String(coreBlock || '').trim().replace(/^core\./i, '');
+        if (!normalized) return undefined;
+        return this.getRuntimeBlocks().find((block) =>
+            String(block.coreBlockId || block.id || '').trim().replace(/^core\./i, '') === normalized
+        );
+    }
+
     private findBlockByCategoryKey(categoryKey: string | undefined): BlockTemplate | undefined {
         if (!categoryKey) return undefined;
         const blocks = this.getRuntimeBlocks();
-
-        if (categoryKey === '完成任务' || categoryKey === '未完成任务') {
-            return blocks.find((b) => b.categoryKey === '任务');
-        }
-
         const exact = blocks.find((b) => b.categoryKey === categoryKey);
         if (exact) return exact;
-
         const segments = categoryKey.split('/');
         while (segments.length > 1) {
             segments.pop();
-            const parentKey = segments.join('/');
-            const matched = blocks.find((b) => b.categoryKey === parentKey);
+            const matched = blocks.find((b) => b.categoryKey === segments.join('/'));
             if (matched) return matched;
         }
-
         return undefined;
     }
 
@@ -57,16 +57,16 @@ export class ActionService {
         }
 
         const filters = viewInstance.filters || [];
-        const categoryFilter = filters.find((f) => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
-        if (!categoryFilter || !categoryFilter.value) {
-            this.ui.notice('快捷输入失败：此视图未按 "categoryKey" 进行筛选。');
+        const coreBlockFilter = filters.find((f) => f.field === 'coreBlock' && (f.op === '=' || f.op === 'includes'));
+        if (!coreBlockFilter || !coreBlockFilter.value) {
+            this.ui.notice('快捷输入失败：此视图未按 "coreBlock" 进行筛选。');
             return null;
         }
 
-        const categoryKey = String(categoryFilter.value);
-        const targetBlock = this.findBlockByCategoryKey(categoryKey);
+        const coreBlock = String(coreBlockFilter.value);
+        const targetBlock = this.findBlockByCoreBlock(coreBlock);
         if (!targetBlock) {
-            this.ui.notice(`快捷输入失败：找不到分类为 "${categoryKey}" 的 Block 模板。`);
+            this.ui.notice(`快捷输入失败：找不到核心 Block 为 "${coreBlock}" 的模板。`);
             return null;
         }
 
@@ -87,7 +87,7 @@ export class ActionService {
 
         const equalityFilters = filters.filter((f) => f.op === '=');
         for (const filter of equalityFilters) {
-            if (filter.field === 'categoryKey') continue;
+            if (filter.field === 'coreBlock') continue;
 
             for (const templateField of targetBlock.fields) {
                 if (filter.field === templateField.key || filter.field === templateField.label) {
@@ -145,11 +145,11 @@ export class ActionService {
             return null;
         }
 
-        const baseCategory = getBasePath(item.categoryKey) || item.categoryKey || '';
-        const targetBlock = this.findBlockByCategoryKey(baseCategory);
+        const coreBlock = String(item.coreBlock || '').trim();
+        const targetBlock = this.findBlockByCoreBlock(coreBlock);
 
         if (!targetBlock) {
-            this.ui.notice(`找不到与分类 "${baseCategory}" 匹配的 Block 模板，无法编辑。`);
+            this.ui.notice(`找不到与核心 Block "${coreBlock}" 匹配的模板，无法编辑。`);
             return null;
         }
 
@@ -237,7 +237,7 @@ export class ActionService {
             this.ui.notice('没有可用的Block模板，请先在设置中创建一个。');
             return null;
         }
-        const taskBlock = blocks.find((b) => b.categoryKey === '任务') || blocks[0];
+        const taskBlock = blocks.find((b) => String(b.coreBlockId || b.id).replace(/^core\./i, '') === 'task') || blocks[0];
         return {
             blockId: taskBlock.id,
         };

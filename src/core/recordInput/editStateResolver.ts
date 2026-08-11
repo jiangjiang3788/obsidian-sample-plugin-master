@@ -53,29 +53,29 @@ function getItemSemanticTokens(item: Item): Set<string> {
   return tokens;
 }
 
+function templateCoreBlock(block: BlockTemplate): string {
+  const raw = String(block?.coreBlockId || block?.id || '').trim().replace(/^core\./i, '');
+  return normalizeFieldToken(raw);
+}
+
+function itemCoreBlock(item: Item): string {
+  return normalizeFieldToken(String(item.coreBlock || '').replace(/^core\./i, ''));
+}
+
 function scoreTemplateForItem(block: BlockTemplate, item: Item): number {
   let score = 0;
-  const outputTemplate = String(block?.outputTemplate || "");
   const semanticTokens = getItemSemanticTokens(item);
   const categoryKey = normalizeFieldToken(item.categoryKey);
   const blockId = normalizeFieldToken(block?.id);
   const blockName = normalizeFieldToken(block?.name);
   const blockCategory = normalizeFieldToken(block?.categoryKey);
+  const recordBlock = itemCoreBlock(item);
+  const candidateBlock = templateCoreBlock(block);
 
-  if (item.templateId && normalizeFieldToken(item.templateId) === blockId)
-    score += 100;
+  if (item.templateId && normalizeFieldToken(item.templateId) === blockId) score += 100;
+  if (recordBlock && candidateBlock === recordBlock) score += 80;
   if (categoryKey && categoryKey === blockCategory) score += 30;
   if (categoryKey && categoryKey === blockName) score += 20;
-
-  if (item.type === "task") {
-    if (/^\s*-\s*\[[ xX]?\]/m.test(outputTemplate)) score += 40;
-    else score -= 10;
-  } else if (
-    /<!--\s*start\s*-->/i.test(outputTemplate) ||
-    /内容\s*[:：]/.test(outputTemplate)
-  ) {
-    score += 20;
-  }
 
   const fields = Array.isArray(block?.fields) ? block.fields : [];
   for (const field of fields) {
@@ -83,28 +83,18 @@ function scoreTemplateForItem(block: BlockTemplate, item: Item): number {
     const label = normalizeFieldToken(field?.label);
     if (semanticTokens.has(key)) score += 8;
     if (label && semanticTokens.has(label)) score += 6;
-
-    if (
-      item.type === "task" &&
-      ["title", "标题", "content", "内容"].includes(field?.key)
-    )
-      score += 4;
-    if (item.type === "block" && ["content", "内容"].includes(field?.key))
-      score += 4;
+    if (recordBlock === 'task' && ['title', '标题', 'content', '内容'].includes(field?.key)) score += 4;
+    if (recordBlock !== 'task' && ['content', '内容'].includes(field?.key)) score += 4;
   }
-
   return score;
 }
 
 function looksLikeTaskTemplate(block: BlockTemplate): boolean {
-  return /^\s*-\s*\[[ xX]?\]/m.test(String(block?.outputTemplate || ""));
+  return templateCoreBlock(block) === 'task';
 }
 
 function looksLikeBlockTemplate(block: BlockTemplate): boolean {
-  return (
-    /<!--\s*start\s*-->/i.test(String(block?.outputTemplate || "")) ||
-    /内容\s*[:：]/.test(String(block?.outputTemplate || ""))
-  );
+  return templateCoreBlock(block) !== 'task';
 }
 
 function readCoreBlockHint(item: Item): string | null {
@@ -170,9 +160,9 @@ function resolveBlockForEdit(
     ? blocks.find((block) => block.id === preferredBlockId)
     : null;
   if (preferred) {
-    // preferredBlockId 只有在类型匹配时才作为强候选，避免 categoryKey / 外部误传把 task 带到 block 模板。
+    // preferredBlockId 只有在核心 Block 匹配时才作为强候选。
     const typeMatches =
-      item.type === "task"
+      item.coreBlock === 'task'
         ? looksLikeTaskTemplate(preferred)
         : !looksLikeTaskTemplate(preferred);
     if (typeMatches) {
@@ -186,10 +176,9 @@ function resolveBlockForEdit(
     }
   }
 
-  // 类型护栏：任务只能在任务模板里推断，block 只能优先在非任务模板里推断。
-  // 这是为了防止任务内容字段较少时，被「闪念」等 block 模板高分抢走。
+  // 核心 Block 护栏：Task 只在 core.task 模板中推断，其它记录优先匹配自身 coreBlock。
   const typedCandidates =
-    item.type === "task"
+    item.coreBlock === 'task'
       ? blocks.filter(looksLikeTaskTemplate)
       : blocks.filter((block) => !looksLikeTaskTemplate(block));
   const candidatePool = typedCandidates.length > 0 ? typedCandidates : blocks;
@@ -210,7 +199,7 @@ function resolveBlockForEdit(
   }
 
   const sameTypeFallback =
-    item.type === "task"
+    item.coreBlock === 'task'
       ? blocks.find(looksLikeTaskTemplate)
       : blocks.find(looksLikeBlockTemplate);
 
@@ -253,7 +242,7 @@ export function buildEditRecordState(
     preferredThemeId ??
     undefined;
   recordDebugLog("编辑模板解析", "任务/块模板选择", {
-    itemType: item.type,
+    coreBlock: item.coreBlock,
     itemTitle: item.title,
     itemEditableText: item.editableText,
     templateId: item.templateId,

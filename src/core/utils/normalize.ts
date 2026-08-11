@@ -8,8 +8,8 @@ type DateKey = typeof ORDER[number];
 
 /** 统一计算出 date/dateMs/dateSource；并兜底 categoryKey */
 export function normalizeItemDates(it: Item): void {
-  // Block：原本就有 date
-  if (it.type === 'block') {
+  // Non-Task records keep their own primary date semantics.
+  if (it.coreBlock !== 'task') {
     if (it.date) {
       it.dateSource = 'block';
       const t = Date.parse(it.date);
@@ -41,6 +41,6 @@ export function normalizeItemDates(it: Item): void {
     }
   }
 
-  // 兜底 categoryKey：任务默认 open
-  if (!it.categoryKey) (it as any).categoryKey = '任务/open';
+  // categoryKey is display metadata only; Task status is never encoded here.
+  if (!it.categoryKey) (it as any).categoryKey = '任务';
 }

@@ -57,6 +57,7 @@ export interface EnergyDetailedSnapshotInput extends EnergySnapshotBaseInput {
 export type EnergySnapshotInput = EnergyQuickSnapshotInput | EnergyDetailedSnapshotInput;
 
 export interface EnergySnapshotRecord extends EnergySnapshotBaseInput {
+  recordId: string;
   coreBlock: 'energy';
   subtype: 'snapshot';
   categoryKey: '精力';

@@ -56,6 +56,7 @@ export function buildEnergyWeeklyReview(items: Item[], options: BuildEnergyWeekl
   if (endOrdinal == null) return null;
   const startDate = energyDateFromOrdinal(endOrdinal - windowDays + 1);
   const windowItems = filterItemsByDateWindow(items, startDate, endDate);
+  const evidenceRecords = filterItemsByDateWindow(options.evidenceRecords || items, startDate, endDate);
   const timeline = buildEnergyTimeline(windowItems, { windowDays, endDate });
   if (!timeline) return null;
 
@@ -63,8 +64,8 @@ export function buildEnergyWeeklyReview(items: Item[], options: BuildEnergyWeekl
   const dailyScoreMeans = energyDayBalancedMeans(snapshots, 'score');
   const dailyBrainMeans = energyDayBalancedMeans(snapshots, 'brainScore');
   const dailyPhysicalMeans = energyDayBalancedMeans(snapshots, 'physicalScore');
-  const effects = buildEnergyEffects(windowItems);
-  const patterns = buildEnergyPatterns(windowItems, { analysisWindowDays: windowDays });
+  const effects = buildEnergyEffects(evidenceRecords);
+  const patterns = buildEnergyPatterns(windowItems, { activityRecords: evidenceRecords, analysisWindowDays: windowDays });
   const recovery = bestActivity(effects?.byActivity, 'recovery');
   const depletion = bestActivity(effects?.byActivity, 'depletion');
   const longWork = patterns?.continuousWork.find((row) => row.key === 'ge120');

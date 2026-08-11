@@ -3,7 +3,7 @@ import { h } from 'preact';
 import type { Item, ThemeDefinition } from '@core/types/public';
 import { TaskCheckbox } from '@shared/ui/public';
 import { TaskSendToTimerButton } from '@shared/ui/public';
-import { isDone } from '@core/utils/public';
+import { isItemDone } from '@core/utils/public';
 import { FieldPill } from './FieldPill';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
 import { createRecordGestureHandlers } from '@shared/ui/public';
@@ -37,7 +37,7 @@ export function TaskRow({
     displayTitle,
     onOpenRecord
 }: TaskRowProps) {
-    const done = isDone(item.categoryKey);
+    const done = isItemDone(item);
     const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? '').trim() || item.title;
 
     const openEdit = (evt?: Event) => {

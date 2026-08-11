@@ -42,7 +42,7 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
       <div class="think-energy-task-list__menu-title">{task.title}</div>
       <button type="button" class="think-energy-task-list__menu-action" onClick={editTask}>编辑任务</button>
       <div class="think-energy-task-list__menu-meta">{currentView}内完成 {task.count} 次</div>
-      {task.recurrenceLabel && task.recurrenceLabel !== 'none' && <div class="think-energy-task-list__menu-meta">{task.recurrenceLabel}</div>}
+      {task.recurrenceLabel && <div class="think-energy-task-list__menu-meta">{task.recurrenceLabel}</div>}
       <div class="think-energy-task-list__menu-records">
         {task.records.length > 0 ? task.records.map((record) => {
           const gesture = createRecordGestureHandlers({

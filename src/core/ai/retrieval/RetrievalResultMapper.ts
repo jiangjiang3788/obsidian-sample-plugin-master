@@ -14,8 +14,7 @@ export function searchResultToItem(sr: SearchResult, indexedItemsById: Map<strin
         content: readSearchResultText(sr, 'content'),
         editableText: readSearchResultText(sr, 'editableText'),
         fullData,
-        rawSource: fullData || undefined,
-        type: readSearchResultText(sr, 'type') || 'task',
+        coreBlock: readSearchResultText(sr, 'coreBlock') || 'unknown',
         themePath: readSearchResultText(sr, 'themePath') || undefined,
         rootTheme: readSearchResultText(sr, 'rootTheme') || undefined,
         leafTheme: readSearchResultText(sr, 'leafTheme') || undefined,
@@ -25,7 +24,6 @@ export function searchResultToItem(sr: SearchResult, indexedItemsById: Map<strin
         dateMs: readSearchResultNumber(sr, 'dateMs'),
         created: readSearchResultNumber(sr, 'created') ?? 0,
         modified: readSearchResultNumber(sr, 'modified') ?? 0,
-        recurrence: 'none',
         extra: {},
     } as Item;
 }

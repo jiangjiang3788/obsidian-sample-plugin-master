@@ -75,7 +75,7 @@ export function useViewRuntimeHandlers({
         source: 'unknown',
       });
 
-      if (!ok) throw new Error('更新任务时间失败');
+      if (!ok) throw new Error('更新工作 Session 时间失败');
     },
     [ui, useCases]
   );

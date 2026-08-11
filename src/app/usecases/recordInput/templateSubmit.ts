@@ -1,10 +1,7 @@
 import { buildValidationErrorResult } from '@core/recordInput/public';
-import type { BlockTemplate, Item, ThemeDefinition } from '@core/types/public';
+import type { BlockTemplate, Item } from '@core/types/public';
 import type { NormalizeRecordInputParams, NormalizeRecordInputResult, RecordSubmitResult, ResolveDependenciesResult } from '@core/recordInput/public';
 import type { RecordInputKernel } from '@core/recordInput/public';
-import type { CreateLocatorContext } from './locator';
-import { inferCreatedItemType } from './locator';
-import { getBeforeMaxLine } from './paths';
 
 export interface TemplateExecutionMeta {
   templateId: string;
@@ -92,29 +89,5 @@ export function getTemplateExecutionMeta(
   return {
     templateId: resolved.meta.templateId ?? template.id,
     templateSourceType: resolved.meta.templateSourceType ?? 'core-block',
-  };
-}
-
-export function buildCreatedRecordLocatorContext(params: {
-  template: BlockTemplate;
-  theme?: ThemeDefinition | null;
-  meta: TemplateExecutionMeta;
-  outputContent: string;
-  normalizedFormData: Record<string, unknown>;
-  appendMode: 'header' | 'append';
-  targetHeader?: string | null;
-  beforeItems: Item[];
-}): CreateLocatorContext {
-  return {
-    outputContent: params.outputContent,
-    normalizedFormData: params.normalizedFormData,
-    templateId: params.meta.templateId,
-    templateSourceType: params.meta.templateSourceType,
-    themePath: params.theme?.path ?? null,
-    blockCategoryKey: params.template.categoryKey ?? null,
-    itemTypeHint: inferCreatedItemType(params.template.outputTemplate),
-    appendMode: params.appendMode,
-    targetHeader: params.targetHeader ?? null,
-    beforeMaxLine: getBeforeMaxLine(params.beforeItems),
   };
 }

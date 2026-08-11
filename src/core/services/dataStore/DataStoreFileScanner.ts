@@ -1,11 +1,13 @@
 import type { Item } from '@/core/types/schema';
-import { parseBlockContent, parseTaskLine } from '@core/utils/parser';
-import { normalizeRecordItem } from '@/core/records';
+import { parseRecordBlock } from '@core/utils/parser';
+import { normalizeRecordItem } from '@/core/records/RecordNormalizer';
 import type { IThemeMatcher } from '@core/types/theme';
 import type { VaultPort } from '@core/ports/VaultPort';
 import type { MetadataPort } from '@core/ports/MetadataPort';
 import type { FileStat, FileStatPort } from '@core/ports/FileStatPort';
 import { devWarn } from '@core/utils/devLogger';
+import type { RecordIntegrityIssue } from '@/core/records/RecordIndex';
+import { isStableRecordId } from '@/core/records/RecordId';
 import {
   basenameNoExt,
   normalizeFilePathInput,
@@ -18,6 +20,7 @@ export interface ScannedMarkdownFile {
   filePath: string;
   items: Item[];
   stat: FileStat;
+  integrityIssues: RecordIntegrityIssue[];
 }
 
 export class DataStoreFileScanner {
@@ -52,6 +55,7 @@ export class DataStoreFileScanner {
     const parentFolder = pathParentName(filePath);
     const fileName = basenameNoExt(pathBasename(filePath));
     const items: Item[] = [];
+    const integrityIssues: RecordIntegrityIssue[] = [];
 
     let nextHeadingIndex = 0;
     let currentSectionTags: string[] = [];
@@ -75,24 +79,31 @@ export class DataStoreFileScanner {
       if (line.trim() === '<!-- start -->') {
         const endIdx = lines.indexOf('<!-- end -->', i + 1);
         if (endIdx !== -1) {
-          const blockItem = parseBlockContent(filePath, lines, i, endIdx, parentFolder);
+          const blockItem = parseRecordBlock(filePath, lines, i, endIdx, parentFolder);
           if (blockItem) {
-            this.normalizeScannedItem(blockItem, filePath, fileName, parentFolder, stat, i + 1, currentHeader, currentSectionTags);
+            this.normalizeScannedItem(blockItem, filePath, fileName, parentFolder, stat, i + 1, endIdx + 1, currentHeader, currentSectionTags);
             items.push(blockItem);
+          } else {
+            const blockLines = lines.slice(i + 1, endIdx);
+            const idLine = blockLines.find(candidate => /^\s*(?:记录ID|recordId)\s*[:：]{1,2}/i.test(candidate));
+            const recordId = idLine?.replace(/^\s*(?:记录ID|recordId)\s*[:：]{1,2}\s*/i, '').trim();
+            integrityIssues.push({
+              code: !recordId || !isStableRecordId(recordId) ? 'record_id_missing' : 'record_block_malformed',
+              recordId: recordId || undefined,
+              path: filePath,
+              message: !recordId || !isStableRecordId(recordId)
+                ? `Record Block at ${filePath}:${i + 1} is missing a valid stable 记录ID.`
+                : `Record Block ${recordId} at ${filePath}:${i + 1} does not satisfy Record v2 envelope requirements.`,
+            });
           }
           i = endIdx;
           continue;
         }
       }
 
-      const taskItem = parseTaskLine(filePath, line, i + 1, parentFolder);
-      if (taskItem) {
-        this.normalizeScannedItem(taskItem, filePath, fileName, parentFolder, stat, i + 1, currentHeader, currentSectionTags);
-        items.push(taskItem);
-      }
     }
 
-    return { filePath, items, stat };
+    return { filePath, items, stat, integrityIssues };
   }
 
   private normalizeScannedItem(
@@ -102,6 +113,7 @@ export class DataStoreFileScanner {
     parentFolder: string,
     stat: FileStat,
     line: number,
+    endLine: number,
     currentHeader: string,
     currentSectionTags: string[]
   ): void {
@@ -116,5 +128,7 @@ export class DataStoreFileScanner {
       sectionTags: currentSectionTags,
       themeMatcher: this.themeMatcher,
     });
+    item.source = { path: filePath, startLine: line, endLine, modified: stat.mtime };
+    if (item.file) item.file.line = line;
   }
 }

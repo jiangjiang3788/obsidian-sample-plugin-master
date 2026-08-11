@@ -1,30 +1,15 @@
 /**
- * TimerService - 计时器业务逻辑
- * 角色：Service (业务)
- * 依赖：UseCases, DataStore
+ * TimerService - TimerRuntime / TaskSession boundary
  *
- * 只做：
- * - 开始 / 暂停 / 恢复 / 停止计时
- * - 切换当前任务
- * - 将计时结果提交到统一 recordInput.usecase
- * - 创建新任务并立即开始计时
- *
- * 不做：
- * - 直接管理和存储计时器的状态 (这是 Zustand Store 的职责)
- * - 直接渲染 UI
- * - 直接绕过 UseCase 触发 InputService / ItemService 写入
+ * TimerState owns only active/paused runtime recovery. Every finished work block
+ * becomes a persistent task-session Record. Task completion and Session creation
+ * commit through the same Record transaction.
  */
 import { DataStore } from '@core/services/public';
 import type { RecordSubmitResult } from '@core/recordInput/public';
-import {
-  nowHHMM,
-  applyTaskTimePolicy,
-  normalizeTaskTimeTriple,
-  devError,
-  readRecordSubmitMessage,
-} from '@core/utils/public';
+import { devError, readRecordSubmitMessage } from '@core/utils/public';
 import type { UiPort } from '@core/ports/public';
-import type { EnergyTaskExecutionStart, TimerState } from '@core/types/public';
+import type { EnergyTaskExecutionStart, TaskSessionCreateInput, TimerState } from '@core/types/public';
 import type { UseCases } from '@/app/public';
 
 function readResultMessage(
@@ -32,6 +17,10 @@ function readResultMessage(
     fallback: string,
 ): string {
     return readRecordSubmitMessage(result as any, fallback);
+}
+
+function durationMinutes(totalSeconds: number): number {
+    return Math.max(0, Math.round((Math.max(0, totalSeconds) / 60) * 100) / 100);
 }
 
 export class TimerService {
@@ -44,78 +33,76 @@ export class TimerService {
     public async startOrResume(taskId: string): Promise<void> {
         const timers = this.useCases.timer.getTimers();
         for (const timer of timers) {
-            if (timer.status === 'running') {
-                await this.pause(timer.id);
-            }
+            if (timer.status === 'running') await this.pause(timer.id);
         }
-        const existingTimer = timers.find((t: any) => t.taskId === taskId);
+        const existingTimer = this.useCases.timer.getTimers().find((timer) => timer.taskId === taskId);
         if (existingTimer && existingTimer.status === 'paused') {
             await this.resume(existingTimer.id);
-        } else if (!existingTimer) {
-            const taskItem = this.dataStore.queryItems().find(i => i.id === taskId);
-            if (!taskItem) {
-                this.ui.notice('找不到要计时的任务');
-                return;
-            }
-
-            this.ui.notice(`计时开始。`);
-
-            await this.useCases.timer.addTimer({
-                taskId,
-                startTime: Date.now(),
-                elapsedSeconds: 0,
-                status: 'running',
-            });
+            return;
         }
+        if (existingTimer) return;
+
+        const taskItem = this.dataStore.getRecordById(taskId);
+        if (!taskItem || taskItem.coreBlock !== 'task' || taskItem.status !== 'open') {
+            this.ui.notice('找不到可执行的未完成任务');
+            return;
+        }
+
+        const now = Date.now();
+        await this.useCases.timer.addTimer({
+            taskId,
+            startedAt: now,
+            startTime: now,
+            elapsedSeconds: 0,
+            status: 'running',
+            source: 'timer',
+        });
+        this.ui.notice('计时开始。');
     }
 
-
-    /**
-     * Start a task from Energy task while preserving the baseline used
-     * for later Energy feedback. Timer owns execution; Energy only supplies the baseline
-     * and the suggested work-block length.
-     */
+    /** Start from Energy while Timer remains the sole runtime owner. */
     public async startEnergyTask(taskId: string, context: EnergyTaskExecutionStart): Promise<void> {
         const timers = this.useCases.timer.getTimers();
         for (const timer of timers) {
-            if (timer.status === 'running' && timer.taskId !== taskId) {
-                await this.pause(timer.id);
-            }
+            if (timer.status === 'running' && timer.taskId !== taskId) await this.pause(timer.id);
         }
 
-        const existing = this.useCases.timer.getTimers().find((timer) => timer.taskId === taskId);
+        const taskItem = this.dataStore.getRecordById(taskId);
+        if (!taskItem || taskItem.coreBlock !== 'task' || taskItem.status !== 'open') {
+            this.ui.notice('找不到要执行的任务');
+            return;
+        }
+
+        const now = Date.now();
         const energyContext = {
             ...context,
             suggestedDurationMinutes: Math.max(10, Math.min(240, Math.round(context.suggestedDurationMinutes || 30))),
-            startedAt: Date.now(),
+            startedAt: now,
         };
-
+        const existing = this.useCases.timer.getTimers().find((timer) => timer.taskId === taskId);
         if (existing) {
-            await this.useCases.timer.updateTimer({ ...existing, energyContext } as TimerState);
+            await this.useCases.timer.updateTimer({ ...existing, source: 'energy-view', energyContext });
             if (existing.status === 'paused') await this.resume(existing.id);
             this.ui.notice('任务已开始');
             return;
         }
 
-        const taskItem = this.dataStore.queryItems().find(i => i.id === taskId);
-        if (!taskItem) {
-            this.ui.notice('找不到要执行的任务');
-            return;
-        }
         await this.useCases.timer.addTimer({
             taskId,
-            startTime: Date.now(),
+            startedAt: now,
+            startTime: now,
             elapsedSeconds: 0,
             status: 'running',
+            source: 'energy-view',
             energyContext,
         });
         this.ui.notice('任务已开始');
     }
 
     public async pause(timerId: string): Promise<void> {
-        const timer = this.useCases.timer.getTimers().find((t: any) => t.id === timerId);
+        const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
         if (timer && timer.status === 'running') {
-            const elapsed = (Date.now() - timer.startTime) / 1000;
+            const elapsed = Math.max(0, (Date.now() - timer.startTime) / 1000);
             await this.useCases.timer.updateTimer({
                 ...timer,
                 elapsedSeconds: timer.elapsedSeconds + elapsed,
@@ -126,12 +113,10 @@ export class TimerService {
 
     public async resume(timerId: string): Promise<void> {
         const timers = this.useCases.timer.getTimers();
-        for (const t of timers) {
-            if (t.id !== timerId && t.status === 'running') {
-                await this.pause(t.id);
-            }
+        for (const timer of timers) {
+            if (timer.id !== timerId && timer.status === 'running') await this.pause(timer.id);
         }
-        const timerToResume = timers.find((t: any) => t.id === timerId);
+        const timerToResume = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
         if (timerToResume && timerToResume.status === 'paused') {
             await this.useCases.timer.updateTimer({
                 ...timerToResume,
@@ -141,116 +126,61 @@ export class TimerService {
         }
     }
 
-    /**
-     * End only this work block. The source Task remains open.
-     * Energy-started timers still move to awaiting-energy so the next Energy
-     * sample can become feedback for this session.
-     */
+    /** End only this work block. The source Task remains open. */
     public async endWorkBlock(timerId: string): Promise<boolean> {
-        const timer = this.useCases.timer.getTimers().find((t: any) => t.id === timerId);
+        const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
         if (!timer) return false;
-        const taskItem = this.dataStore.queryItems().find(i => i.id === timer.taskId);
-        if (!taskItem) {
+        const taskItem = this.dataStore.getRecordById(timer.taskId);
+        if (!taskItem || taskItem.coreBlock !== 'task') {
             this.ui.notice('找不到原始任务，本次工作无法保存。');
-            await this.useCases.timer.removeTimer(timerId);
             return false;
         }
-        let totalSeconds = timer.elapsedSeconds;
-        if (timer.status === 'running') totalSeconds += (Date.now() - timer.startTime) / 1000;
 
-        if (timer.energyContext) {
-            await this.useCases.timer.updateTimer({
-                ...timer,
-                elapsedSeconds: totalSeconds,
-                status: 'awaiting-energy',
-                completedAt: Date.now(),
-            });
-            this.ui.notice('本次工作已结束；任务保持未完成，下一次精力记录会作为反馈。');
-        } else {
-            await this.useCases.timer.removeTimer(timerId);
-            this.ui.notice('本次工作已结束；任务保持未完成。');
+        const endedAt = Date.now();
+        const result = await this.useCases.recordInput.submitTaskSession({
+            itemId: timer.taskId,
+            session: this.buildSession(timer, endedAt, 'work-block-ended'),
+            source: 'timer',
+        });
+        if (result.status !== 'success') {
+            if (result.status !== 'cancelled') this.ui.notice(readResultMessage(result, '保存本次工作失败'));
+            return false;
         }
+
+        await this.useCases.timer.removeTimer(timerId);
+        this.ui.notice('本次工作已结束；任务保持未完成。');
         return true;
     }
 
+    /** Complete Task and persist the final work block in one Record transaction. */
     public async stopAndApply(timerId: string): Promise<boolean> {
-        const timer = this.useCases.timer.getTimers().find((t: any) => t.id === timerId);
+        const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
         if (!timer) return false;
-        let totalSeconds = timer.elapsedSeconds;
-        if (timer.status === 'running') {
-            totalSeconds += (Date.now() - timer.startTime) / 1000;
+        const taskItem = this.dataStore.getRecordById(timer.taskId);
+        if (!taskItem || taskItem.coreBlock !== 'task') {
+            this.ui.notice('找不到原始任务，无法完成任务。');
+            return false;
         }
-        const totalMinutes = Math.ceil(totalSeconds / 60);
 
-        let applied = false;
+        const endedAt = Date.now();
         try {
-            const taskItem = this.dataStore.queryItems().find(i => i.id === timer.taskId);
-
-            if (!taskItem) {
-                this.ui.notice('找不到原始任务，可能已被移动或删除，计时时长无法保存。');
-                await this.useCases.timer.removeTimer(timerId);
+            const result = await this.useCases.recordInput.submitCompleteRecord({
+                itemId: timer.taskId,
+                session: this.buildSession(timer, endedAt, 'task-completed'),
+                source: 'timer',
+            });
+            if (result.status !== 'success') {
+                if (result.status !== 'cancelled') this.ui.notice(readResultMessage(result, '完成任务失败'));
                 return false;
             }
-
-            const endTime = nowHHMM();
-            const normalizedTime = totalMinutes > 0
-                ? applyTaskTimePolicy({ endTime, duration: totalMinutes, mode: 'finalize', direction: 'backward' })
-                : { startTime: undefined, endTime, duration: undefined };
-            const startTime = normalizedTime.startTime ?? undefined;
-
-            const isOpenTask = /^\s*-\s*\[ \]\s*/.test(taskItem.content || '');
-            const result = isOpenTask
-                ? await this.useCases.recordInput.submitCompleteRecord({
-                    itemId: timer.taskId,
-                    options: {
-                        duration: normalizedTime.duration ?? totalMinutes,
-                        startTime: startTime ?? null,
-                        endTime,
-                    },
-                    source: 'timer',
-                  })
-                : await this.useCases.recordInput.submitUpdateRecordTime({
-                    itemId: timer.taskId,
-                    updates: {
-                        time: startTime ?? null,
-                        endTime,
-                        duration: totalMinutes,
-                    },
-                    source: 'timer',
-                  });
-
-            if (result.status === 'success') {
-                applied = true;
-                if (result.feedback?.notice) {
-                    this.ui.notice(result.feedback.notice);
-                }
-            } else if (result.status !== 'cancelled') {
-                this.ui.notice(readResultMessage(result, '更新任务失败'));
-            }
-        } catch (e: any) {
-            this.ui.notice(`更新任务失败：${e.message}`);
-            devError('TimerService Error:', e);
             await this.useCases.timer.removeTimer(timerId);
+            this.ui.notice(result.feedback?.notice || '任务已完成。');
+            return true;
+        } catch (error: any) {
+            this.ui.notice(`完成任务失败：${error.message}`);
+            devError('TimerService Error:', error);
             return false;
         }
-
-        if (!applied) {
-            await this.useCases.timer.removeTimer(timerId);
-            return false;
-        }
-
-        if (timer.energyContext) {
-            await this.useCases.timer.updateTimer({
-                ...timer,
-                elapsedSeconds: totalSeconds,
-                status: 'awaiting-energy',
-                completedAt: Date.now(),
-            });
-            this.ui.notice('任务已完成；下一次精力记录会自动作为反馈。');
-        } else {
-            await this.useCases.timer.removeTimer(timerId);
-        }
-        return true;
     }
 
     public async cancel(timerId: string): Promise<void> {
@@ -265,5 +195,19 @@ export class TimerService {
             return;
         }
         await this.startOrResume(taskId);
+    }
+
+    private buildSession(timer: TimerState, endedAt: number, result: TaskSessionCreateInput['result']): TaskSessionCreateInput {
+        let totalSeconds = timer.elapsedSeconds;
+        if (timer.status === 'running') totalSeconds += Math.max(0, (endedAt - timer.startTime) / 1000);
+        return {
+            startedAt: new Date(timer.startedAt).toISOString(),
+            endedAt: new Date(endedAt).toISOString(),
+            durationMinutes: durationMinutes(totalSeconds),
+            result,
+            source: timer.source,
+            suggestedDurationMinutes: timer.energyContext?.suggestedDurationMinutes,
+            startEnergyRecordId: timer.energyContext?.baselineEnergyItemId,
+        };
     }
 }

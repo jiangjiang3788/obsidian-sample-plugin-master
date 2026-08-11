@@ -17,19 +17,11 @@ function checkAbort(options: AppendUnderHeaderOptions): void {
   }
 }
 
-export async function appendUnderHeader(
-  vault: Pick<VaultPort, 'readFile' | 'writeFile'>,
-  filePath: string,
-  header: string,
-  payload: string,
-  options: AppendUnderHeaderOptions = {},
-): Promise<void> {
+/** Pure text helper used by both direct writes and multi-record transactions. */
+export function appendUnderHeaderText(text: string, header: string, payload: string): string {
   const esc = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`^${esc}\\s*$`, 'm');
-
-  const text = (await vault.readFile(filePath)) ?? '';
-  checkAbort(options);
-  const lines = text.split('\n');
+  const regex = new RegExp(`^${esc}\\s*$`);
+  const lines = String(text || '').split('\n');
 
   let headerLineIndex = lines.findIndex((line) => regex.test(line));
   if (headerLineIndex === -1) {
@@ -48,12 +40,21 @@ export async function appendUnderHeader(
     }
   }
 
-  if (insertAtIndex > 0 && lines[insertAtIndex - 1].trim() !== '') {
-    lines.splice(insertAtIndex, 0, '', payload);
-  } else {
-    lines.splice(insertAtIndex, 0, payload);
-  }
+  if (insertAtIndex > 0 && lines[insertAtIndex - 1].trim() !== '') lines.splice(insertAtIndex, 0, '', payload);
+  else lines.splice(insertAtIndex, 0, payload);
+  return lines.join('\n');
+}
 
+export async function appendUnderHeader(
+  vault: Pick<VaultPort, 'readFile' | 'writeFile'>,
+  filePath: string,
+  header: string,
+  payload: string,
+  options: AppendUnderHeaderOptions = {},
+): Promise<void> {
+  const text = (await vault.readFile(filePath)) ?? '';
   checkAbort(options);
-  await vault.writeFile(filePath, lines.join('\n'));
+  const next = appendUnderHeaderText(text, header, payload);
+  checkAbort(options);
+  await vault.writeFile(filePath, next);
 }

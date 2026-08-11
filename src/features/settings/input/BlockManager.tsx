@@ -81,6 +81,7 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
 // P1: 组件 props 接收 useCases
 function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseCases }) {
     const [localBlock, setLocalBlock] = useState(block);
+    const isTaskBlock = block.id === 'core.task';
     useEffect(() => { setLocalBlock(block); }, [block]);
     // P1: 通过 UseCase 层更新 Block
     const handleUpdate = (updates: Partial<BlockTemplate>) => { useCases.blocks.updateBlock(block.id, updates); };
@@ -130,9 +131,13 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
             <Box>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" className="think-block-editor__output-header">
                     <Typography variant="h6" className="think-block-editor__title">输出模板</Typography>
-                    <TemplateVariableCopier block={localBlock} />
+                    {!isTaskBlock ? <TemplateVariableCopier block={localBlock} /> : null}
                 </Stack>
-                <TextField label="输出模板" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" className="think-block-editor__template" />
+                {isTaskBlock ? (
+                    <Typography variant="body2" color="text.secondary">Task v2 固定由 Record Codec 写入 Block；这里不再提供 Markdown Task 输出 grammar 编辑。</Typography>
+                ) : (
+                    <TextField label="输出模板" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" className="think-block-editor__template" />
+                )}
             </Box>
         </Stack>
     );

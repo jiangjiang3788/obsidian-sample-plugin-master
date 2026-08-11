@@ -2,13 +2,8 @@ import { applyRecordRefreshPlan, buildSuccessResult } from '@core/recordInput/pu
 import type { RecordSubmitResult, SubmitCreateRecordParams } from '@core/recordInput/public';
 
 import { mapSubmitError } from '../error';
-import { locateCreatedRecord } from '../locator';
 import { buildRefreshPlan, getFileItemsByPath } from '../paths';
-import {
-  buildCreatedRecordLocatorContext,
-  getTemplateExecutionMeta,
-  prepareTemplateSubmit,
-} from '../templateSubmit';
+import { getTemplateExecutionMeta, prepareTemplateSubmit } from '../templateSubmit';
 import { throwIfAborted } from '../submitPipeline';
 import type { RecordInputWorkflowRuntime } from './types';
 
@@ -39,37 +34,27 @@ export class CreateRecordWorkflow {
         resolved.theme ?? undefined,
         templateMeta,
       );
-      const beforeItems = getFileItemsByPath(this.runtime.deps.dataStore, preview.targetFilePath);
+      if (!preview.recordId) throw new Error('record_id_required_before_create');
       const path = await this.runtime.deps.inputService.executeTemplate(
         resolved.template,
         normalized.normalizedFormData,
         resolved.theme ?? undefined,
         templateMeta,
-        { signal: params.signal },
+        { signal: params.signal, recordId: preview.recordId || undefined },
       );
 
       const refreshPlan = buildRefreshPlan([path]);
       const scannedByPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, refreshPlan);
       const scannedItems = scannedByPath.get(path) ?? getFileItemsByPath(this.runtime.deps.dataStore, path);
-      const createdRecord = locateCreatedRecord(beforeItems, scannedItems, buildCreatedRecordLocatorContext({
-        template: resolved.template,
-        theme: resolved.theme,
-        meta: templateMeta,
-        outputContent: preview.outputContent,
-        normalizedFormData: normalized.normalizedFormData,
-        appendMode: preview.header ? 'header' : 'append',
-        targetHeader: preview.header ?? null,
-        beforeItems,
-      }));
+      const createdRecord = scannedItems.find(item => item.id === preview.recordId);
+      if (!createdRecord) throw new Error(`record_create_scan_failed:${preview.recordId}`);
 
       return buildSuccessResult('create', {
         affectedPath: path,
         affectedRecordId: createdRecord?.id,
         refresh: refreshPlan,
         feedback: { notice: '✅ 已创建' },
-        followUp: createdRecord?.type === 'task'
-          ? { startTimerForRecordId: createdRecord.id }
-          : undefined,
+        followUp: createdRecord.coreBlock === 'task' ? { startTimerForRecordId: createdRecord.id } : undefined,
         warnings,
       });
     } catch (error) {

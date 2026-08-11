@@ -16,9 +16,7 @@ const item = (overrides: Partial<Item> = {}): Item => ({
   id: 'item-1',
   title: '记录',
   content: '记录',
-  type: 'task',
   tags: [],
-  recurrence: 'none',
   created: 0,
   modified: 0,
   categoryKey: '任务',
@@ -40,8 +38,8 @@ describe('retrieval model helpers', () => {
 
   it('applies theme/type/template/category filters through the shared helper', () => {
     const indexed = new Map<string, Item>([
-      ['a', item({ id: 'a', type: 'task', themePath: '学习/英语', templateId: 'tpl-a', categoryKey: '打卡/听力' })],
-      ['b', item({ id: 'b', type: 'block', themePath: '健康/运动', templateId: 'tpl-b', categoryKey: '总结' })],
+      ['a', item({ id: 'a', themePath: '学习/英语', templateId: 'tpl-a', categoryKey: '打卡/听力' })],
+      ['b', item({ id: 'b', themePath: '健康/运动', templateId: 'tpl-b', categoryKey: '总结' })],
     ]);
     const results = [searchResult('a'), searchResult('b')];
 

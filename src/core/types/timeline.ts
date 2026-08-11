@@ -2,7 +2,7 @@
 import type { Item } from './schema';
 
 /**
- * Timeline 视图的领域类型：从完成任务 Item 中提取并规范化后的结构。
+ * Timeline 视图的领域类型：从持久 TaskSession 执行事实中投影的结构。
  *
  * 这是“结构性唯一真源”：
  * - shared / features / app 之间传递 timeline 数据，都应使用这里的类型；
@@ -13,6 +13,10 @@ import type { Item } from './schema';
  * 增强后的任务项，包含用于时间轴视图的额外信息。
  */
 export interface TimelineTask extends Item {
+  /** Timeline row identity: persisted TaskSession Record ID. */
+  sessionRecordId: string;
+  /** Source Task identity used when opening/editing Task metadata. */
+  taskRecordId: string;
   startMinute: number;
   endMinute: number;
   duration: number;

@@ -53,7 +53,7 @@ export const ChatMessageSchema = z.object({
 /** 会话过滤器 schema */
 export const SessionFiltersSchema = z.object({
     themePaths: z.array(z.string()).optional(),
-    types: z.array(z.enum(['task', 'block'])).optional(),
+    coreBlocks: z.array(z.string()).optional(),
     blockTemplateIds: z.array(z.string()).optional(),
 });
 

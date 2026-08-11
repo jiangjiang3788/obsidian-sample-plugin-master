@@ -2,20 +2,11 @@
 import type { Item } from '@/core/types/schema';
 import { applyExplicitThemeViewFields, normalizeExplicitTheme } from '@/core/theme/themeSemantics';
 import { normalizeItemDates } from '@/core/utils/normalize';
-import { parseRecurrence } from '@/core/records/task/mark';
-import { extractTaskEditableText } from '@/core/utils/text';
 import type { RecordNormalizeContext } from './RecordEntity';
 import { splitGoalPath } from '@/core/goal';
 
 function unique(values: Array<string | undefined | null>): string[] {
   return Array.from(new Set(values.map(value => String(value ?? '').trim()).filter(Boolean)));
-}
-
-function lineFromItemId(id: string): number | undefined {
-  const hashIdx = String(id || '').lastIndexOf('#');
-  if (hashIdx < 0) return undefined;
-  const parsed = Number(String(id).slice(hashIdx + 1));
-  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 function normalizeSearchText(value: unknown): string {
@@ -40,7 +31,7 @@ type SearchIndexedItem = Item & {
  * 注意：这里明确只从显式 theme 派生 themePath/rootTheme/leafTheme，header 永远只表示章节位置。
  */
 export function normalizeRecordItem(item: Item, context: RecordNormalizeContext): Item {
-  const line = context.line ?? lineFromItemId(item.id);
+  const line = context.line;
 
   item.created = context.created;
   item.modified = context.modified;
@@ -72,30 +63,10 @@ export function normalizeRecordItem(item: Item, context: RecordNormalizeContext)
   applyExplicitThemeViewFields(item);
 
   if (!item.extra) item.extra = {};
-  if (!item.recurrence) item.recurrence = 'none';
-  if (!item.categoryKey) item.categoryKey = item.type === 'task' ? '未完成任务' : context.parentFolder;
+  if (!item.categoryKey) item.categoryKey = item.coreBlock === 'task' ? '任务' : context.parentFolder;
 
   normalizeItemDates(item);
 
-  if (item.type === 'task') {
-    const taskRawSource = item.rawSource || item.content || '';
-    const extractedEditableText = extractTaskEditableText(taskRawSource).editableText;
-    const contentLooksRawTaskLine = /^\s*[-*+]\s*\[[ xX-]\]/.test(String(item.content || ''));
-
-    // 兼容旧缓存 / 旧 parser：任务 content 必须统一为干净正文，rawSource/fullData 才保留完整 Markdown。
-    if (extractedEditableText && (!item.content || contentLooksRawTaskLine || item.content === taskRawSource)) {
-      item.content = extractedEditableText;
-    }
-    if (!item.editableText && extractedEditableText) {
-      item.editableText = extractedEditableText;
-    }
-    if ((!item.title || item.title === taskRawSource) && (item.editableText || item.content)) {
-      item.title = item.editableText || item.content;
-    }
-
-    // recurrence 必须从 rawSource 读取；content 现在是干净正文，可能已经没有 🔁 元数据。
-    item.recurrenceInfo = parseRecurrence(taskRawSource) || undefined;
-  }
 
   // 完整数据是只读派生字段，运行时补齐可以让导出、JSON 调试和旧代码路径更稳定。
   item.fullData = item.rawSource || item.fullData || item.content || '';

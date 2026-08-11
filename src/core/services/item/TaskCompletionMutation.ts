@@ -1,138 +1,246 @@
-import { nowHHMM, todayISO } from '@core/utils/date';
-import { applyTaskTimePolicy } from '@core/records/task/taskTime';
-import { buildCompletedTaskRecord, markTaskDone } from '@core/records/task/mark';
-import { upsertKvTag } from './lineMetadata';
-import type { ItemLocator } from './ItemLocator';
-import type { ItemMutationWriter } from './ItemMutationWriter';
-import type { ItemCompletionOptions, ItemMutationOptions, ItemTimeUpdates } from './types';
+import type { Item } from '@/core/types/schema';
+import type { DataStore } from '../DataStore';
+import { RecordRepository, type RecordBatchOperation } from '@/core/records/RecordRepository';
+import { createRecordId } from '@/core/records/RecordId';
+import { asTaskRecord, asTaskSeriesRecord, type TaskDemandLevel, type TaskPriority } from '@/core/records/task/taskDomain';
+import { canTransitionTaskStatus, getTaskStatus, nextTaskStatus, type TaskLifecycleCommand } from '@/core/records/task/taskStatus';
+import { buildNextOccurrenceDates, normalizeRecurrenceInfo, type RecurrenceInfo } from '@/core/records/task/taskRecurrence';
+import type { TaskSessionCreateInput } from '@/core/types/timer';
+import { TaskSessionMutation } from './TaskSessionMutation';
+import type { ItemMutationOptions } from './types';
+
+function timestampNow(): string { return new Date().toISOString(); }
+
+export interface TaskSeriesUpdate {
+  recurrence?: Partial<RecurrenceInfo>;
+  content?: string;
+  goalId?: string | null;
+  goalPath?: string | null;
+  themePath?: string | null;
+  priority?: TaskPriority | null;
+  expectedDurationMinutes?: number | null;
+  energyDemand?: TaskDemandLevel | null;
+  brainDemand?: TaskDemandLevel | null;
+  physicalDemand?: TaskDemandLevel | null;
+}
+
+
+function sourcePath(dataStore: DataStore, item: Item): string {
+  return item.source?.path || item.file?.path || dataStore.getRecordLocation(item.id)?.path || '';
+}
+
+function nextTaskFields(task: Item, series: Item, completedAt: string, nextDates: ReturnType<typeof buildNextOccurrenceDates>): Record<string, unknown> {
+  return {
+    status: 'open',
+    // Series owns future-instance defaults. Historical/current Task metadata is never used
+    // as the authority for future occurrences after a Series update.
+    content: series.content || task.content,
+    goalId: series.goalId,
+    goalPath: series.goalPath || series.goalPaths?.[0],
+    themePath: series.themePath || series.theme,
+    createdAt: completedAt,
+    priority: series.priority,
+    expectedDurationMinutes: series.expectedDurationMinutes,
+    energyDemand: series.extra?.['精力要求'],
+    brainDemand: series.extra?.['脑力要求'],
+    physicalDemand: series.extra?.['体力要求'],
+    scheduledDate: nextDates.scheduledDate,
+    startDate: nextDates.startDate,
+    dueDate: nextDates.dueDate,
+    seriesId: series.id,
+    templateId: task.templateId,
+    templateSourceType: task.templateSourceType,
+  };
+}
 
 export class TaskCompletionMutation {
-    constructor(
-        private readonly locator: ItemLocator,
-        private readonly writer: ItemMutationWriter,
-    ) {}
+  private readonly taskSessions: TaskSessionMutation;
 
-    async getItemLine(itemId: string): Promise<string> {
-        const context = await this.locator.loadMutableTaskContext(itemId);
-        return context.rawLine;
+  constructor(
+    private readonly dataStore: DataStore,
+    private readonly repository: RecordRepository,
+    taskSessions?: TaskSessionMutation,
+  ) {
+    this.taskSessions = taskSessions ?? new TaskSessionMutation(dataStore, repository);
+  }
+
+  async completeItem(itemId: string, _mutationOptions: ItemMutationOptions = {}): Promise<void> {
+    await this.transition(itemId, 'complete');
+  }
+
+  async completeItemWithSession(
+    itemId: string,
+    session: TaskSessionCreateInput,
+    _mutationOptions: ItemMutationOptions = {},
+  ): Promise<void> {
+    if (session.result !== 'task-completed') throw new Error('task_session_complete_result_required');
+    await this.transition(itemId, 'complete', session);
+  }
+
+  async cancelItem(itemId: string): Promise<void> { await this.transition(itemId, 'cancel'); }
+  async skipItem(itemId: string): Promise<void> { await this.transition(itemId, 'skip'); }
+  async reopenItem(itemId: string): Promise<void> { await this.transition(itemId, 'reopen'); }
+
+  async updateSeries(
+    seriesId: string,
+    update: TaskSeriesUpdate,
+    options: { includeCurrent?: boolean } = {},
+  ): Promise<void> {
+    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
+    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
+
+    const seriesPatch: Record<string, unknown> = {};
+    if (Object.prototype.hasOwnProperty.call(update, 'content') && !String(update.content || '').trim()) {
+      throw new Error(`task_series_content_required:${seriesId}`);
+    }
+    if (update.recurrence) {
+      const recurrence = normalizeRecurrenceInfo({
+        ...series.recurrenceInfo,
+        ...update.recurrence,
+      });
+      if (!recurrence) throw new Error(`task_series_recurrence_invalid:${seriesId}`);
+      seriesPatch.recurrenceUnit = recurrence.unit;
+      seriesPatch.recurrenceInterval = recurrence.interval;
+      seriesPatch.recurrenceAnchor = recurrence.anchor;
     }
 
-    async completeItem(
-        itemId: string,
-        options?: ItemCompletionOptions,
-        mutationOptions: ItemMutationOptions = {},
-    ): Promise<void> {
-        const context = await this.locator.loadMutableTaskContext(itemId);
-        const { path, index, rawLine, item } = context;
-        const lines = [...context.lines];
-
-        if (options) {
-            const fallbackEndTime = options.endTime || nowHHMM();
-            const seedOptions = {
-                duration: typeof options.duration === 'number' ? options.duration : undefined,
-                startTime: options.startTime || undefined,
-                endTime: fallbackEndTime,
-            };
-            const normalizedTriple = seedOptions.duration !== undefined
-                ? applyTaskTimePolicy({ ...seedOptions, mode: 'finalize', direction: 'forward' })
-                : {
-                    startTime: seedOptions.startTime,
-                    endTime: fallbackEndTime,
-                    duration: undefined,
-                };
-            const normalizedOptions = {
-                duration: normalizedTriple.duration,
-                startTime: normalizedTriple.startTime,
-                endTime: normalizedTriple.endTime || fallbackEndTime,
-            };
-
-            const { completedLine, nextTaskLine } = markTaskDone(
-                rawLine,
-                todayISO(),
-                normalizedOptions.endTime || nowHHMM(),
-                normalizedOptions,
-            );
-            lines[index] = completedLine;
-            if (nextTaskLine) {
-                lines.splice(index + 1, 0, nextTaskLine);
-            }
-            await this.writer.writeLines(path, lines, mutationOptions);
-            return;
-        }
-
-        if (item && item.duration) {
-            const durationMinutes = item.duration;
-            const endTime = nowHHMM();
-            const normalizedTriple = applyTaskTimePolicy({ endTime, duration: durationMinutes, mode: 'finalize', direction: 'forward' });
-            const startTime = normalizedTriple.startTime || undefined;
-
-            const calculatedOptions = {
-                duration: normalizedTriple.duration ?? durationMinutes,
-                startTime,
-                endTime,
-            };
-
-            const { completedLine, nextTaskLine } = markTaskDone(
-                rawLine,
-                todayISO(),
-                endTime,
-                calculatedOptions,
-            );
-            lines[index] = completedLine;
-            if (nextTaskLine) {
-                lines.splice(index + 1, 0, nextTaskLine);
-            }
-            await this.writer.writeLines(path, lines, mutationOptions);
-            return;
-        }
-
-        const { completedLine, nextTaskLine } = markTaskDone(rawLine, todayISO(), nowHHMM());
-        lines[index] = completedLine;
-        if (nextTaskLine) {
-            lines.splice(index + 1, 0, nextTaskLine);
-        }
-        await this.writer.writeLines(path, lines, mutationOptions);
+    const sharedFields: Array<[keyof TaskSeriesUpdate, string]> = [
+      ['content', 'content'],
+      ['goalId', 'goalId'],
+      ['goalPath', 'goalPath'],
+      ['themePath', 'themePath'],
+      ['priority', 'priority'],
+      ['expectedDurationMinutes', 'expectedDurationMinutes'],
+      ['energyDemand', 'energyDemand'],
+      ['brainDemand', 'brainDemand'],
+      ['physicalDemand', 'physicalDemand'],
+    ];
+    for (const [sourceKey, patchKey] of sharedFields) {
+      if (Object.prototype.hasOwnProperty.call(update, sourceKey)) seriesPatch[patchKey] = update[sourceKey];
     }
 
-    async appendCompletionRecord(
-        itemId: string,
-        options?: ItemCompletionOptions,
-        mutationOptions: ItemMutationOptions = {},
-    ): Promise<void> {
-        const context = await this.locator.loadMutableTaskContext(itemId);
-        const { path, index, rawLine } = context;
-        const lines = [...context.lines];
-        const completedLine = buildCompletedTaskRecord(
-            rawLine,
-            todayISO(),
-            options?.endTime || nowHHMM(),
-            options,
-        );
-        lines.splice(index + 1, 0, completedLine);
-        await this.writer.writeLines(path, lines, mutationOptions);
+    const operations: RecordBatchOperation[] = [];
+    if (Object.keys(seriesPatch).length) operations.push({ kind: 'update', recordId: series.id, patch: seriesPatch });
+
+    if (options.includeCurrent && series.currentTaskId) {
+      const current = asTaskRecord(await this.repository.getById(series.currentTaskId));
+      if (!current || current.seriesId !== series.id) throw new Error(`task_series_current_conflict:${series.id}`);
+      if (getTaskStatus(current) !== 'open') throw new Error(`task_series_current_not_open:${series.id}`);
+      const currentPatch: Record<string, unknown> = {};
+      for (const [sourceKey, patchKey] of sharedFields) {
+        if (Object.prototype.hasOwnProperty.call(update, sourceKey)) currentPatch[patchKey] = update[sourceKey];
+      }
+      if (Object.keys(currentPatch).length) operations.push({ kind: 'update', recordId: current.id, patch: currentPatch });
     }
 
-    async updateItemTime(
-        itemId: string,
-        updates: ItemTimeUpdates,
-        mutationOptions: ItemMutationOptions = {},
-    ): Promise<void> {
-        const context = await this.locator.loadMutableTaskContext(itemId);
-        const { path, index, rawLine } = context;
-        const lines = [...context.lines];
-        let line = rawLine;
+    if (operations.length) await this.repository.batch(operations);
+  }
 
-        if (updates.time !== undefined) {
-            line = upsertKvTag(line, '时间', updates.time);
-        }
-        if (updates.endTime !== undefined) {
-            line = upsertKvTag(line, '结束', updates.endTime);
-        }
-        if (updates.duration !== undefined) {
-            line = upsertKvTag(line, '时长', String(updates.duration));
-        }
+  async repairSeriesCurrentTask(seriesId: string): Promise<'already-valid' | 'repaired'> {
+    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
+    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
+    if (series.status !== 'active') throw new Error(`task_series_repair_requires_active:${seriesId}`);
 
-        lines[index] = line;
-        await this.writer.writeLines(path, lines, mutationOptions);
+    const pointed = series.currentTaskId ? asTaskRecord(await this.repository.getById(series.currentTaskId)) : null;
+    if (pointed && pointed.seriesId === series.id && getTaskStatus(pointed) === 'open') return 'already-valid';
+
+    const candidates = this.dataStore.queryRecords()
+      .filter(item => item.coreBlock === 'task' && item.seriesId === series.id && getTaskStatus(item) === 'open');
+    if (candidates.length !== 1) {
+      throw new Error(`task_series_repair_ambiguous:${seriesId}:${candidates.length}`);
     }
+    await this.repository.update(series.id, { currentTaskId: candidates[0].id });
+    return 'repaired';
+  }
+
+  async stopSeries(seriesId: string, options: { cancelCurrent?: boolean } = {}): Promise<void> {
+    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
+    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
+    if (series.status !== 'active') return;
+    const operations: RecordBatchOperation[] = [{ kind: 'update', recordId: series.id, patch: { status: 'stopped' } }];
+    if (options.cancelCurrent && series.currentTaskId) {
+      const current = asTaskRecord(await this.repository.getById(series.currentTaskId));
+      if (current && getTaskStatus(current) === 'open') {
+        operations.push({ kind: 'update', recordId: current.id, patch: { status: 'cancelled', cancelledAt: timestampNow() } });
+      }
+    }
+    await this.repository.batch(operations);
+  }
+
+  private async transition(
+    itemId: string,
+    command: TaskLifecycleCommand,
+    sessionInput?: TaskSessionCreateInput,
+  ): Promise<void> {
+    const task = await this.requireTask(itemId);
+    const status = getTaskStatus(task);
+    if (!status) throw new Error(`task_status_invalid:${itemId}`);
+    const recurring = Boolean(task.seriesId);
+    if (!canTransitionTaskStatus(status, command, { recurring })) {
+      throw new Error(`task_transition_invalid:${status}:${command}`);
+    }
+
+    const at = timestampNow();
+    if (command === 'reopen') {
+      if (task.seriesId) {
+        const series = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
+        if (!series || series.currentTaskId !== task.id) throw new Error('task_reopen_recurring_conflict');
+      }
+      await this.repository.update(task.id, { status: 'open', completedAt: null, cancelledAt: null, skippedAt: null });
+      return;
+    }
+
+    const patch: Record<string, unknown> = { status: nextTaskStatus(command) };
+    const sessionOperation = sessionInput
+      ? this.taskSessions.prepareCreateOperation(task, sessionInput).operation
+      : null;
+    if (command === 'complete') patch.completedAt = at;
+    if (command === 'cancel') patch.cancelledAt = at;
+    if (command === 'skip') patch.skippedAt = at;
+    if (!task.seriesId || command === 'cancel') {
+      if (sessionOperation) await this.repository.batch([{ kind: 'update', recordId: task.id, patch }, sessionOperation]);
+      else await this.repository.update(task.id, patch);
+      return;
+    }
+
+    const series = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
+    if (!series) throw new Error(`task_series_missing:${task.seriesId}`);
+    if (series.currentTaskId !== task.id) throw new Error(`task_series_current_conflict:${series.id}`);
+    if (series.status === 'stopped') {
+      // Stopping recurrence does not have to cancel the current occurrence. It can still
+      // be completed/skipped, but it must never generate another instance.
+      if (sessionOperation) await this.repository.batch([{ kind: 'update', recordId: task.id, patch }, sessionOperation]);
+      else await this.repository.update(task.id, patch);
+      return;
+    }
+    const recurrence = normalizeRecurrenceInfo(series.recurrenceInfo);
+    if (!recurrence) throw new Error(`task_series_recurrence_invalid:${series.id}`);
+
+    const nextId = createRecordId('task');
+    const nextDates = buildNextOccurrenceDates(task, recurrence, at);
+    const path = sourcePath(this.dataStore, task);
+    if (!path) throw new Error(`record_location_unavailable:${task.id}`);
+
+    const operations: RecordBatchOperation[] = [
+      { kind: 'update', recordId: task.id, patch },
+    ];
+    if (sessionOperation) operations.push(sessionOperation);
+    operations.push(
+      { kind: 'create', record: {
+        recordId: nextId,
+        coreBlock: 'task',
+        targetFilePath: path,
+        targetHeader: task.header || null,
+        fields: nextTaskFields(task, series, at, nextDates),
+      } },
+      { kind: 'update', recordId: series.id, patch: { currentTaskId: nextId } },
+    );
+    await this.repository.batch(operations);
+  }
+
+  private async requireTask(itemId: string): Promise<Item> {
+    const item = await this.repository.getById(itemId);
+    if (!asTaskRecord(item)) throw new Error(`task_record_required:${itemId}`);
+    return item!;
+  }
 }

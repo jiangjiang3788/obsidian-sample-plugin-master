@@ -111,7 +111,6 @@ describe('recordUiActions', () => {
   it('opens edit mode with item context', () => {
     const item = {
       id: 'item-1',
-      type: 'task',
       templateId: 'task-block',
       categoryKey: 'Task',
       path: 'Daily/2026-05-13.md',

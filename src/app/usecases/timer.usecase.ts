@@ -20,11 +20,6 @@ export class TimerUseCase {
         return this.store.getState().timer.timers.filter(isActiveTimerState);
     }
 
-    /** Persisted timer state also contains Energy feedback lifecycle entries. */
-    getAllTimerEntries(): TimerState[] {
-        return this.store.getState().timer.timers;
-    }
-
     async setInitialTimersFromDisk(): Promise<void> {
         const timers = await this.timerStateService.loadStateFromFile();
         this.store.getState().timer.timersSetInitial(timers);

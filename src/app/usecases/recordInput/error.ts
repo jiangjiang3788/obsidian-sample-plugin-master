@@ -1,5 +1,5 @@
 import { buildCancelledResult, buildConflictResult, buildErrorResult, isRecordConflictError } from '@core/recordInput/public';
-import type { RecordSubmitResult } from '@core/recordInput/public';
+import type { RecordOperation, RecordSubmitResult } from '@core/recordInput/public';
 import { toArray } from './issues';
 
 export interface MapSubmitErrorOptions {
@@ -22,7 +22,7 @@ function applyRecoveryRefresh(
 }
 
 export function mapSubmitError(
-  operation: 'create' | 'update' | 'delete' | 'complete' | 'time_update',
+  operation: RecordOperation,
   error: unknown,
   warnings: RecordSubmitResult['warnings'] = [],
   options: MapSubmitErrorOptions = {},

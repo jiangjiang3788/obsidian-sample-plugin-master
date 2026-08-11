@@ -3,13 +3,13 @@ import { buildParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 
 function makeItem(overrides: Partial<Item>): Item {
   return {
-    id: 'file.md#1',
+    id: 'rec.01J00000000000000000000062',
     title: '任务',
     content: '任务',
-    type: 'task',
     tags: [],
-    recurrence: 'none',
-    categoryKey: '未完成任务',
+    coreBlock: 'task',
+  status: 'open',
+  categoryKey: '任务',
     created: 1,
     modified: 2,
     extra: {},

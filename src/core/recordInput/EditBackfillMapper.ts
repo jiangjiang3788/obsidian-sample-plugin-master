@@ -1,6 +1,7 @@
 import type { BlockTemplate, Item, TemplateField } from '@/core/types/schema';
 import type { ParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 import { resolveFieldValue } from '@/core/fields/FieldValueResolver';
+import { formatTaskRecurrence } from '@/core/records/task/taskRecurrence';
 import {
   getTemplateFieldInputType,
   getTemplateFieldSemantic,
@@ -93,12 +94,12 @@ function readSemanticFieldValue(field: TemplateField, item: Item, snapshot: Pars
   const semantic = getTemplateFieldSemantic(field);
   switch (semantic) {
     case 'body':
-      return item.type === 'task'
+      return item.coreBlock === 'task'
         ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content
         : snapshot.semantic.editableText || snapshot.semantic.content || snapshot.semantic.title;
     case 'title':
-      // Task title historically mirrored the editable task text. Preserve that behavior so editing does not truncate tasks.
-      return item.type === 'task'
+      // Task title mirrors canonical editable content so editing does not truncate the record.
+      return item.coreBlock === 'task'
         ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content
         : snapshot.semantic.title || snapshot.semantic.editableText || snapshot.semantic.content;
     case 'date':
@@ -129,7 +130,7 @@ function readSemanticFieldValue(field: TemplateField, item: Item, snapshot: Pars
     case 'priority':
       return item.priority;
     case 'recurrence':
-      return item.recurrence;
+      return formatTaskRecurrence(item.recurrenceInfo);
     default:
       return undefined;
   }
@@ -186,6 +187,14 @@ export function buildInitialEditFormData(input: {
   for (const field of fields) {
     const value = resolveInitialFieldValue({ field, item: input.item, snapshot: input.snapshot });
     if (isPresent(value)) result[field.key] = value;
+  }
+
+  // Task lifecycle/series identity is domain state, not editable form state.
+  // Preserve it as hidden context so a normal content edit cannot reopen a task
+  // or detach a recurring instance from its TaskSeries.
+  if (input.item.coreBlock === 'task') {
+    if (isPresent(input.item.status)) result.status = input.item.status;
+    if (isPresent(input.item.seriesId)) result.seriesId = input.item.seriesId;
   }
   return result;
 }

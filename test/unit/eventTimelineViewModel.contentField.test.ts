@@ -3,15 +3,15 @@ import type { Item, ViewInstance } from '@core/public';
 
 function item(overrides: Partial<Item> = {}): Item {
   return {
-    id: 'daily.md#1',
+    id: 'task.01J00000000000000000000001',
     title: '标题',
     content: '干净内容',
-    fullData: '- [ ] 干净内容 #dev (时间::09:00)',
-    rawSource: '- [ ] 干净内容 #dev (时间::09:00)',
-    type: 'task',
+    fullData: '<!-- start -->\n记录ID:: task.01J00000000000000000000001\n记录版本:: 2\n核心Block:: task\n状态:: open\n内容:: 干净内容\n<!-- end -->',
+    rawSource: '<!-- start -->\n记录ID:: task.01J00000000000000000000001\n记录版本:: 2\n核心Block:: task\n状态:: open\n内容:: 干净内容\n<!-- end -->',
     tags: [],
-    recurrence: 'none',
-    categoryKey: '未完成任务',
+    categoryKey: '任务',
+    coreBlock: 'task',
+    status: 'open',
     date: '2026-06-04T09:00:00',
     created: 1,
     modified: 2,

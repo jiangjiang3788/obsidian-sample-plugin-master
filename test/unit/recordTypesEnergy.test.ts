@@ -45,6 +45,8 @@ describe('Energy direct record foundation', () => {
     expect(record.quickLevel).toBe(80);
 
     const markdown = buildEnergySnapshotMarkdown(record);
+    expect(markdown).toMatch(/记录ID:: energy\.[0-9A-HJKMNP-TV-Z]{26}/);
+    expect(markdown).toContain('记录版本:: 2');
     expect(markdown).toContain('核心Block:: energy');
     expect(markdown).toContain('目标ID:: goal.我若安好便是晴天');
     expect(markdown).toContain('精力值:: 80');

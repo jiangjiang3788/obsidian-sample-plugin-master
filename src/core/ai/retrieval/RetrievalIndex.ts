@@ -16,7 +16,6 @@ export function createRetrievalMiniSearch(): MiniSearch<SearchIndexDocument> {
             boost: {
                 title: 2,
                 editableText: 1.8,
-                fullData: 0.6,
                 themePath: 1.5,
                 tags: 1.3,
                 categoryKey: 1.2,
@@ -43,7 +42,7 @@ export function itemToSearchDocument(item: Item): SearchIndexDocument {
         categoryKey: normalizeRetrievalText(readFieldValue(item, 'categoryKey')),
         baseCategory: normalizeRetrievalText(readFieldValue(item, 'baseCategory')),
         leafCategory: normalizeRetrievalText(readFieldValue(item, 'leafCategory')),
-        type: normalizeRetrievalText(item.type),
+        coreBlock: normalizeRetrievalText(item.coreBlock),
         templateId: normalizeRetrievalText(item.templateId),
         fileName: normalizeRetrievalText(readFieldValue(item, 'fileName')),
         folder: normalizeRetrievalText(readFieldValue(item, 'file.folder') ?? item.folder),

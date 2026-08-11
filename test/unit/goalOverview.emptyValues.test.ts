@@ -19,9 +19,9 @@ describe('buildGoalOverviewModel Energy integration', () => {
     const model = buildGoalOverviewModel({
       goals: [{ id: 'goal.life', title: '生活', goalPath: '生活', status: 'active' } as any],
       items: [
-        { id: 'task', title: '散步', type: 'task', content: '散步', categoryKey: '任务', coreBlock: 'task', goalId: 'goal.life', goalPaths: ['生活'], date: '2026-08-09', extra: {} } as any,
-        { id: 'energy-1', title: '', type: 'block', content: '', categoryKey: '精力', coreBlock: 'energy', goalId: 'goal.life', goalPaths: ['生活'], date: '2026-08-10', extra: { '时间': '09:10', '精力值': 40, '精力档位': 40, '评分模式': 'quick' } } as any,
-        { id: 'energy-2', title: '', type: 'block', content: '', categoryKey: '精力', coreBlock: 'energy', goalId: 'goal.life', goalPaths: ['生活'], date: '2026-08-10', extra: { '时间': '15:20', '精力值': 57, '精力档位': 60, '脑力精力': 73, '体力精力': 41, '评分模式': 'detailed' } } as any,
+        { id: 'task', title: '散步', content: '散步', categoryKey: '任务', coreBlock: 'task', goalId: 'goal.life', goalPaths: ['生活'], date: '2026-08-09', extra: {} } as any,
+        { id: 'energy-1', title: '', content: '', categoryKey: '精力', coreBlock: 'energy', goalId: 'goal.life', goalPaths: ['生活'], date: '2026-08-10', extra: { '时间': '09:10', '精力值': 40, '精力档位': 40, '评分模式': 'quick' } } as any,
+        { id: 'energy-2', title: '', content: '', categoryKey: '精力', coreBlock: 'energy', goalId: 'goal.life', goalPaths: ['生活'], date: '2026-08-10', extra: { '时间': '15:20', '精力值': 57, '精力档位': 60, '脑力精力': 73, '体力精力': 41, '评分模式': 'detailed' } } as any,
       ],
     });
 

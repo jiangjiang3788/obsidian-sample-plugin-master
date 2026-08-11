@@ -9,7 +9,7 @@ function applyPatch(block: CoreBlockDefinition, patch?: CoreBlockPatch): CoreBlo
     name: patch.displayName || block.name,
     categoryKey: patch.categoryKey || block.categoryKey,
     fields: patch.fields || block.fields,
-    outputTemplate: patch.outputTemplate || block.outputTemplate,
+    outputTemplate: block.id === 'core.task' ? block.outputTemplate : (patch.outputTemplate || block.outputTemplate),
     targetFile: patch.targetFile || block.targetFile,
     appendUnderHeader: patch.appendUnderHeader ?? block.appendUnderHeader,
   };

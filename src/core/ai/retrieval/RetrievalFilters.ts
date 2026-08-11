@@ -15,7 +15,7 @@ export function applyRetrievalFilters(
         const item = indexedItemsById.get(getSearchResultId(sr));
 
         if (!matchesThemePath(sr, item, filters)) return false;
-        if (!matchesItemType(sr, item, filters)) return false;
+        if (!matchesCoreBlock(sr, item, filters)) return false;
         if (!matchesBlockTemplateId(sr, item, filters)) return false;
         if (!matchesBlockTemplateName(sr, item, filters)) return false;
 
@@ -30,11 +30,12 @@ function matchesThemePath(sr: SearchResult, item: Item | undefined, filters: Ret
     return filters.themePaths.some(tp => itemThemePath === tp || itemThemePath.startsWith(tp + '/'));
 }
 
-function matchesItemType(sr: SearchResult, item: Item | undefined, filters: RetrievalFilters): boolean {
-    if (!filters.types?.length) return true;
-    const itemType = (item?.type || readSearchResultText(sr, 'type')) as 'task' | 'block' | undefined;
-    return !!itemType && filters.types.includes(itemType);
+function matchesCoreBlock(sr: SearchResult, item: Item | undefined, filters: RetrievalFilters): boolean {
+    if (!filters.coreBlocks?.length) return true;
+    const coreBlock = normalizeRetrievalText(item?.coreBlock ?? readSearchResultText(sr, 'coreBlock'));
+    return !!coreBlock && filters.coreBlocks.map(normalizeRetrievalText).includes(coreBlock);
 }
+
 
 function matchesBlockTemplateId(sr: SearchResult, item: Item | undefined, filters: RetrievalFilters): boolean {
     if (!filters.blockTemplateIds?.length) return true;

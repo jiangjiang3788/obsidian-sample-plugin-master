@@ -119,9 +119,9 @@ export class AiChatService {
             const theme = item.theme || '无主题';
             const title = item.title || '无标题';
             const content = (item.content || '').slice(0, 5000); // 提高单条内容长度限制
-            const type = item.type === 'task' ? '任务' : '记录';
+            const type = item.coreBlock === 'task' ? '任务' : '记录';
 
-            const entry = `- [${type}] ${date} | ${theme} | ${title}${content ? ': ' + content : ''}`;
+            const entry = `- ${type} | ${date} | ${theme} | ${title}${content ? ': ' + content : ''}`;
             
             // 检查长度限制
             if (totalLength + entry.length > MAX_CONTEXT_LENGTH) {

@@ -27,6 +27,8 @@ function operationLabel(operation: RecordSubmitResult['operation']): string {
       return '删除';
     case 'complete':
       return '完成';
+    case 'task_session':
+      return '保存工作记录';
     case 'time_update':
       return '更新时间';
     case 'create':
@@ -75,6 +77,6 @@ export function buildRecordSubmitRecoveryPresentation(
     paths,
     canOpenOriginal: Boolean(options.canOpenOriginal),
     canRescan: paths.length > 0,
-    canRetry: result.operation === 'update' || result.operation === 'delete' || result.operation === 'time_update' || result.operation === 'complete',
+    canRetry: result.operation === 'update' || result.operation === 'delete' || result.operation === 'time_update' || result.operation === 'complete' || result.operation === 'task_session',
   };
 }

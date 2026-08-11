@@ -32,12 +32,11 @@ const text = (partial: Omit<FieldDefinition, 'type'> & { type?: FieldDefinition[
 export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   // --- 核心字段 ---
   id: text({ key: 'id', label: '记录ID', category: 'core', source: 'item', semantic: 'id', description: '内部记录标识' }),
-  type: text({ key: 'type', label: '记录类型', category: 'core', source: 'item', semantic: 'recordType', description: '任务或块等记录类型' }),
   title: text({ key: 'title', label: '标题', category: 'core', source: 'item', semantic: 'title', inputType: 'text', description: '记录标题或主要摘要' }),
-  content: text({ key: 'content', label: '内容', category: 'core', source: 'item', semantic: 'body', inputType: 'textarea', description: '记录正文；任务与 Block 统一为用户正文，不包含任务勾选框、标签、时间等原始 Markdown 噪音' }),
+  content: text({ key: 'content', label: '内容', category: 'core', source: 'item', semantic: 'body', inputType: 'textarea', description: '记录正文；任务与其他 Record 统一为用户正文，不包含存储层元数据' }),
   editableText: text({ key: 'editableText', label: '可编辑正文', category: 'core', source: 'item', semantic: 'body', inputType: 'textarea', hiddenByDefault: true, description: '编辑态正文真源' }),
   rawSource: text({ key: 'rawSource', label: '原始源文本', category: 'core', source: 'item', semantic: 'body', hiddenByDefault: true }),
-  fullData: text({ key: 'fullData', label: '完整数据', category: 'core', source: 'derived', semantic: 'body', inputType: 'textarea', aliases: ['完整数据', '原始数据', '源数据', '完整源文本', '原始源文本', 'rawsource', 'rawData', 'sourceText', 'fullData', 'originalData'], description: '原始完整 Markdown 数据；任务为完整任务行，Block 为完整块内容，用于区分干净内容字段' }),
+  fullData: text({ key: 'fullData', label: '完整数据', category: 'core', source: 'derived', semantic: 'body', inputType: 'textarea', aliases: ['完整数据', '原始数据', '源数据', '完整源文本', '原始源文本', 'rawsource', 'rawData', 'sourceText', 'fullData', 'originalData'], description: '原始完整 Record Block，仅用于调试/导出，不作为业务语义真源。' }),
 
   // --- 内置核心业务字段 ---
   categoryKey: text({ key: 'categoryKey', label: '分类路径', type: 'path', inputType: 'path', category: 'core', source: 'item', semantic: 'categoryPath', hierarchical: true, aliases: ['categoryPath', '分类', '类别', '分类路径'], description: '完整分类路径，例如 闪念/感受' }),
@@ -53,16 +52,17 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   'period.label': text({ key: 'period.label', label: '周期', category: 'core', source: 'derived', semantic: 'period', inputType: 'text', aliases: ['周期', 'periodLabel'] }),
   'period.granularity': text({ key: 'period.granularity', label: '周期粒度', category: 'core', source: 'derived', semantic: 'period', inputType: 'text', hiddenByDefault: true, aliases: ['周期粒度', 'periodGranularity'] }),
   coreBlock: text({ key: 'coreBlock', label: '核心Block', category: 'core', source: 'item', semantic: 'coreBlock', inputType: 'text', aliases: ['核心Block', 'coreBlock'] }),
-  taskStatus: text({ key: 'taskStatus', label: '任务状态', category: 'core', source: 'derived', semantic: 'status', inputType: 'singleSelect', aliases: ['任务状态', 'taskStatus'], description: '由任务勾选框、完成日期和旧分类推导：open/done/cancelled。' }),
+  status: text({ key: 'status', label: '状态', category: 'core', source: 'item', semantic: 'status', inputType: 'singleSelect', aliases: ['状态', 'status'], description: '实体显式状态；Task 使用 open/done/cancelled/skipped。' }),
+  cadence: text({ key: 'cadence', label: '任务周期', category: 'core', source: 'derived', semantic: 'recurrence', inputType: 'singleSelect', aliases: ['任务周期', 'cadence'], description: '由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。' }),
   date: { key: 'date', label: '日期', type: 'date', inputType: 'date', category: 'core', source: 'item', semantic: 'date', aliases: ['日期', 'date'], description: '记录的主要日期' },
   priority: text({ key: 'priority', label: '优先级', category: 'core', source: 'item', semantic: 'priority' }),
   icon: { key: 'icon', label: '图标', type: 'icon', inputType: 'text', category: 'core', source: 'item', semantic: 'icon' },
-  recurrence: text({ key: 'recurrence', label: '重复规则', category: 'core', source: 'item', semantic: 'recurrence' }),
-  repeatToken: text({ key: 'repeatToken', label: '重复规则', category: 'core', source: 'derived', semantic: 'recurrence', hiddenByDefault: true, aliases: ['重复', 'repeat'] }),
+  recurrence: text({ key: 'recurrence', label: '重复规则', category: 'core', source: 'derived', semantic: 'recurrence', description: 'Task Series 结构化 recurrence 的只读展示投影。' }),
   period: text({ key: 'period', label: '字段粒度', category: 'core', source: 'item', semantic: 'period', inputType: 'singleSelect', description: '时间粒度：年/季/月/周/天' }),
   startTime: { key: 'startTime', label: '开始时间', type: 'time', inputType: 'time', category: 'core', source: 'item', semantic: 'startTime', aliases: ['时间', 'time', 'start'] },
   endTime: { key: 'endTime', label: '结束时间', type: 'time', inputType: 'time', category: 'core', source: 'item', semantic: 'endTime', aliases: ['结束', 'end'] },
-  duration: { key: 'duration', label: '时长', type: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['时长', 'duration'] },
+  expectedDurationMinutes: { key: 'expectedDurationMinutes', label: '预计时长', type: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['预计时长', 'expectedDuration', 'expectedDurationMinutes'], description: 'Task 的用户声明预计时长；实际工作时长只来自 TaskSession。' },
+  duration: { key: 'duration', label: '时长', type: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['时长', 'duration'], hiddenByDefault: true, description: '通用/历史时长字段；Task 应使用 expectedDurationMinutes，执行历史使用 TaskSession。' },
   rating: { key: 'rating', label: '评分', type: 'number', inputType: 'rating', category: 'core', source: 'item', semantic: 'rating', aliases: ['评分', 'rating'] },
   image: { key: 'image', label: '图片', type: 'image', inputType: 'image', category: 'core', source: 'item', semantic: 'image', aliases: ['图片', 'image', '评图', 'pintu'], description: '通用图片字段；当前兼容读取旧 pintu/评图 数据' },
 

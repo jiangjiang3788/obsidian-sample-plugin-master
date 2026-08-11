@@ -1,0 +1,128 @@
+﻿file,evidence,classification,target_phase,decision
+src/app/actions/recordEditActions.ts,"storage_type,path_line_id",延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/app/usecases/recordInput/locator.ts,path_line_id,重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/app/usecases/recordInput/paths.ts,path_line_id,延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/app/usecases/recordInput/workflows/DeleteRecordWorkflow.ts,path_line_id,延后,Phase 4-6,静态命中 Task/storage 语义，按所属消费者阶段迁移并在最终 gate 清零。
+src/app/usecases/recordInput/workflows/RecordMigrationTransaction.ts,path_line_id,重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/app/usecases/recordInput/workflows/UpdateRecordWorkflow.ts,path_line_id,重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/ai/AiChatService.ts,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/ai/AiNaturalLanguageRecordParser.ts,ai_structured_input_boundary,保留,Phase 1-4,结构化输入/UX 外壳可保留；写入端由 Foundation 截断旧 Markdown grammar，后续只改契约。
+src/core/ai/retrieval/RetrievalResultMapper.ts,recurrence,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/ai/retrieval/RetrievalTypes.ts,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/blocks/defaultCoreBlocks.ts,"checkbox_grammar,task_status",重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/energy/actionPolicy.ts,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/energy/context.ts,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/energy/effects.ts,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/energy/patternSupport.ts,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/energy/recommendationCandidates.ts,"storage_type,recurrence,task_status",延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/energy/recommendationLearning.ts,timer_history_energy_learning,延后,Phase 3,TimerRuntime 与持久 TaskSession 分离后重写。
+src/core/fields/FieldRegistry.ts,"checkbox_grammar,recurrence,task_status",延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/fields/FieldTypes.ts,recurrence,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/fields/FieldValueResolver.ts,"checkbox_grammar,recurrence,task_status",延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/fields/TemplateFieldAdapter.ts,recurrence,延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/goal/overview.ts,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/goal/types.ts,goal_template_contract,保留,Phase 1-4,结构化输入/UX 外壳可保留；写入端由 Foundation 截断旧 Markdown grammar，后续只改契约。
+src/core/recordInput/EditBackfillMapper.ts,"storage_type,recurrence",延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/core/recordInput/editStateResolver.ts,storage_type,延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/core/recordInput/mutation/TaskLinePatch.ts,"task_line_api,recurrence",删除,Phase 5,旧 Task Line 专属 codec/patch，最终物理删除；Phase 1 起不再进入主读写链。
+src/core/recordInput/mutationLocator.ts,"task_line_api,raw_source_task",重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/recordInput/public.ts,task_line_api,延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/core/recordInput/snapshot/OutputPlanner.ts,"checkbox_grammar,recurrence,task_status",重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/records/RecordEntity.ts,record_shape,重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/records/RecordNormalizer.ts,"storage_type,path_line_id,recurrence,task_status,raw_source_task",重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/records/codec/MarkdownBlockCodec.ts,block_codec,重写,Phase 1,收敛为 MarkdownRecordCodec。
+src/core/records/codec/MarkdownTaskCodec.ts,task_line_api,删除,Phase 5,旧 Task Line 专属 codec/patch，最终物理删除；Phase 1 起不再进入主读写链。
+src/core/records/codec/index.ts,task_line_api,延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/core/records/task/index.ts,task_status,延后,Phase 4-6,静态命中 Task/storage 语义，按所属消费者阶段迁移并在最终 gate 清零。
+src/core/records/task/mark.ts,"task_line_api,checkbox_grammar,recurrence",延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/records/task/taskCadence.ts,recurrence,延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/records/task/taskRecurrence.ts,"recurrence,raw_source_task",延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/records/task/taskStatus.ts,"storage_type,task_status",延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/records/task/taskUtils.ts,"storage_type,task_status",延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/services/ActionService.ts,task_status,延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/services/InputService.ts,"task_line_api,storage_type,path_line_id,raw_source_task",重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/services/ItemService.ts,task_mutation_orchestrator,延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/services/TimerStateService.ts,timer_history_runtime_mix,延后,Phase 3,TimerRuntime 与持久 TaskSession 分离后重写。
+src/core/services/dataStore/DataStoreCache.ts,cache_warm_start,重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/services/dataStore/DataStoreFileScanner.ts,task_line_api,重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/services/dataStore/DataStoreIndex.ts,path_line_id,重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/services/dataStore/WarmStartPlanner.ts,cache_warm_start,延后,Phase 4-6,静态命中 Task/storage 语义，按所属消费者阶段迁移并在最终 gate 清零。
+src/core/services/dataStore/pathUtils.ts,path_line_id,延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/core/services/item/GoalTemplateMigrationMutation.ts,"task_line_api,path_line_id",延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/services/item/InlineFieldMutation.ts,task_line_api,延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/services/item/ItemLocator.ts,"task_line_api,path_line_id",延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/services/item/ItemMutationWriter.ts,mutation_writer,延后,Phase 4-6,静态命中 Task/storage 语义，按所属消费者阶段迁移并在最终 gate 清零。
+src/core/services/item/ItemService.ts,task_mutation_orchestrator,延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/services/item/TaskCompletionMutation.ts,task_line_api,延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/core/services/item/itemId.ts,path_line_id,删除,Phase 5,path#line ID 解析工具在稳定 ID 完成消费者迁移后删除。
+src/core/types/ai-schema.ts,ai_structured_command_contract,保留,Phase 1-4,结构化输入/UX 外壳可保留；写入端由 Foundation 截断旧 Markdown grammar，后续只改契约。
+src/core/types/cache.ts,"storage_type,recurrence",重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/types/recordInput.ts,path_line_id,延后,Phase 4-6,静态命中 Task/storage 语义，按所属消费者阶段迁移并在最终 gate 清零。
+src/core/types/recordSnapshot.ts,"storage_type,path_line_id,raw_source_task",重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/types/schema.ts,"storage_type,recurrence",重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/types/timeline.ts,task_status,延后,Phase 4-6,静态命中 Task/storage 语义，按所属消费者阶段迁移并在最终 gate 清零。
+src/core/types/timer.ts,timer_state_contract,延后,Phase 3,TimerRuntime 与持久 TaskSession 分离后重写。
+src/core/utils/exportUtils.ts,"storage_type,task_status",延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/utils/index.ts,task_status,延后,Phase 4-6,静态命中 Task/storage 语义，按所属消费者阶段迁移并在最终 gate 清零。
+src/core/utils/itemFilter.ts,search_filter_semantics,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/core/utils/normalize.ts,storage_type,延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/core/utils/obsidian.ts,path_line_id,延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/core/utils/parser.ts,"task_line_api,storage_type,path_line_id,checkbox_grammar,recurrence,task_status",重写,Phase 1,稳定 ID / Record Block-only codec / ID locator-mutation / Task v2 create-read 主链。
+src/core/utils/regex.ts,checkbox_grammar,延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/core/utils/text.ts,"checkbox_grammar,recurrence",延后,Phase 4-5,先保留通用职责；旧 Task grammar/path#line 分支在消费者迁移完成后清零。
+src/core/view-config/domainFields.ts,"checkbox_grammar,recurrence,task_status",延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/features/aiinput/aiNaturalInputCommand.ts,ai_input_submit_boundary,保留,Phase 1-4,结构化输入/UX 外壳可保留；写入端由 Foundation 截断旧 Markdown grammar，后续只改契约。
+src/features/quickinput/editor/fields/fieldSemantics.ts,recurrence,延后,Phase 2,Task status/recurrence/lifecycle/series domain 完成时重写；Phase 1 不继续解析旧行。
+src/features/quickinput/modal/useQuickInputOutputPlan.ts,quickinput_output_plan_boundary,保留,Phase 1-4,结构化输入/UX 外壳可保留；写入端由 Foundation 截断旧 Markdown grammar，后续只改契约。
+src/features/quickinput/modal/useQuickInputSubmit.ts,quickinput_submit_boundary,保留,Phase 1-4,结构化输入/UX 外壳可保留；写入端由 Foundation 截断旧 Markdown grammar，后续只改契约。
+src/features/settings/goalTemplates/model/GoalTemplateDraftModel.ts,goal_template_output_override,保留,Phase 1-4,结构化输入/UX 外壳可保留；写入端由 Foundation 截断旧 Markdown grammar，后续只改契约。
+src/features/settings/input/goalManager/GoalMetricSection.tsx,task_status,延后,Phase 4-6,静态命中 Task/storage 语义，按所属消费者阶段迁移并在最终 gate 清零。
+src/features/settings/layout/ModuleSettingsModal.tsx,task_status,延后,Phase 4-6,静态命中 Task/storage 语义，按所属消费者阶段迁移并在最终 gate 清零。
+src/features/settings/views/editors/CommonFilterPanel.tsx,task_status,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/features/settings/views/models/energyTaskListModel.ts,"storage_type,recurrence",延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/features/settings/views/runtime/BlockViewItemList.tsx,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/features/settings/views/runtime/EnergyTaskList.tsx,task_status,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/features/settings/views/runtime/EventTimelineView/EventTimelineEventList.tsx,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/features/settings/views/runtime/TableViewCell.tsx,storage_type,延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/features/settings/views/runtime/timeline-parser.ts,"storage_type,task_status",延后,Phase 4,消费者改读 coreBlock/status/cadence/stable references；禁止 raw Task grammar。
+src/features/timer/TimerRow.tsx,"recurrence,task_status",延后,Phase 3,TimerRuntime 与持久 TaskSession 分离后重写。
+src/features/timer/TimerService.ts,task_runtime_lifecycle,延后,Phase 3,TimerRuntime 与持久 TaskSession 分离后重写。
+test/integration/parserDataFlow.test.ts,"task_line_api,checkbox_grammar,task_status",重写,Phase 1,改为 Record v2/稳定 ID/单 parser 基线测试。
+test/unit/app/actions/recordUiActions.test.ts,storage_type,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/app/usecases/recordInput.locator.test.ts,"storage_type,path_line_id,checkbox_grammar",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/blockViewModel.test.ts,storage_type,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/core/services/editStateResolver.categoryField.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/core/utils/itemFilter.test.ts,recurrence,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/core/utils/viewQueryPipeline.test.ts,recurrence,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/dataStore.themeFallback.test.ts,checkbox_grammar,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/editBackfillMapper.test.ts,"storage_type,checkbox_grammar,recurrence,task_status,raw_source_task",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyActionPolicy.test.ts,"storage_type,checkbox_grammar,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyContext.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyEffects.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyExperiment.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyManagement.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyPatterns.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyPeriod.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyRecommendationCandidates.test.ts,"storage_type,recurrence,task_status",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyTimeline.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/energyWeeklyReview.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/eventTimelineViewModel.contentField.test.ts,"storage_type,checkbox_grammar,recurrence,task_status,raw_source_task",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/eventTimelineViewModel.test.ts,storage_type,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/features/settings/viewModels/energyTaskListModel.test.ts,"storage_type,checkbox_grammar,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/fieldSemantics.test.ts,"task_line_api,storage_type,checkbox_grammar,recurrence,task_status,raw_source_task",重写,Phase 1,改为 Record v2/稳定 ID/单 parser 基线测试。
+test/unit/fieldValueResolver.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/goalOverview.emptyValues.test.ts,storage_type,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/headerAppender.test.ts,checkbox_grammar,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/parser.test.ts,"task_line_api,checkbox_grammar,recurrence,task_status",重写,Phase 1,改为 Record v2/稳定 ID/单 parser 基线测试。
+test/unit/progressGoalMode.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/recordNormalizer.test.ts,"storage_type,checkbox_grammar,recurrence,task_status",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/retrievalModel.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/retrievalService.test.ts,"storage_type,recurrence,task_status",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/ruleBuilderModel.test.ts,storage_type,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/statisticsGoalMode.test.ts,"storage_type,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/tableViewModel.test.ts,storage_type,延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/taskLinePatch.test.ts,"task_line_api,checkbox_grammar",删除,Phase 5,Task Line patch 世界的 legacy test。
+test/unit/taskRecurrence.test.ts,"storage_type,checkbox_grammar,recurrence,raw_source_task",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/taskRecurrenceQuarter.test.ts,"task_line_api,checkbox_grammar,recurrence",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/themeSemantics.test.ts,"storage_type,recurrence,task_status",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。
+test/unit/viewDomainFieldPolicy.test.ts,"storage_type,checkbox_grammar,recurrence,task_status",延后,Phase 2-6,随所属领域迁移为 canonical domain/record fixtures。

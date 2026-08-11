@@ -65,7 +65,7 @@ export function DataFilterPanel({
   const activeCount = filters.length;
   const sourceItems = items ?? dataStore.queryItems();
   const fieldOptions = useMemo(() => getAllFields(sourceItems), [sourceItems]);
-  const commonFilterFields = useMemo(() => ['goalPath', 'goalPaths', 'goalId', 'coreBlock', 'themePath', 'baseCategory', 'type', 'priority', 'period'], []);
+  const commonFilterFields = useMemo(() => ['goalPath', 'goalPaths', 'goalId', 'coreBlock', 'themePath', 'baseCategory', 'status', 'cadence', 'priority', 'period'], []);
   const hasAdvancedFilters = useMemo(() => filters.some(rule => (
     rule.op !== 'in' || !commonFilterFields.includes(rule.field)
   )), [filters, commonFilterFields]);

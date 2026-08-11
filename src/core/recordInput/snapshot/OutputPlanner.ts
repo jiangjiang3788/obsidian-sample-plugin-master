@@ -5,6 +5,8 @@ import { renderTemplate } from '@/core/utils/templateUtils';
 import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter';
 import { resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@/core/goal';
 import { readOptionText } from '@/core/semantics/option';
+import { createRecordId, RECORD_SCHEMA_VERSION } from '@/core/records/RecordId';
+import { encodeRecordBlock, ensureRecordEnvelope } from '@/core/records/codec';
 import { splitHierarchyPathValue } from '@/core/semantics/path';
 
 function normalizeNonEmptyPath(value: string | null | undefined): string | null {
@@ -12,37 +14,22 @@ function normalizeNonEmptyPath(value: string | null | undefined): string | null 
   return trimmed || null;
 }
 
-
-function buildTaskRenderTokens(data: Record<string, unknown>): {
-  taskStatusPrefix: string;
-  taskStatusKind: 'todo' | 'done';
-  taskDateToken: string;
-  repeatToken: string;
-} {
-  const status = readOptionText(data['状态'] ?? data.status ?? data.taskStatus ?? data.taskStatusPrefix);
-  const statusText = `${status.value} ${status.label}`.trim();
-  const isDone = /-\s*\[x\]/i.test(status.value) || /完成|done|✅/.test(statusText);
-  const taskStatusPrefix = isDone ? '- [x]' : '- [ ]';
-  const taskStatusKind = isDone ? 'done' : 'todo';
-  const date = String(data['日期'] ?? data.date ?? '').trim();
-  const dateMarker = isDone
-    ? '✅'
-    : /🛫/.test(statusText)
-      ? '🛫'
-      : /⏳/.test(statusText)
-        ? '⏳'
-        : /➕/.test(statusText)
-          ? '➕'
-          : '📅';
-  const repeat = readOptionText(data['重复'] ?? data.recurrence ?? data.repeat);
-  const repeatText = repeat.value || repeat.label;
-  return {
-    taskStatusPrefix,
-    taskStatusKind,
-    taskDateToken: date ? `${dateMarker} ${date}` : '',
-    repeatToken: repeatText && repeatText !== '不重复' ? repeatText : '',
-  };
+function readScalarOption(value: unknown): string {
+  const option = readOptionText(value);
+  return String(option.value || option.label || value || '').trim();
 }
+
+function readStructuredTaskRecurrence(renderData: Record<string, unknown>): { unit: 'day' | 'week' | 'month' | 'quarter' | 'year'; interval: number; anchor: 'scheduled' | 'start' | 'due' | 'completion' } | null {
+  const rawUnit = readScalarOption(renderData['重复单位'] ?? renderData.recurrenceUnit).toLowerCase();
+  if (!rawUnit || rawUnit === 'none') return null;
+  if (!['day', 'week', 'month', 'quarter', 'year'].includes(rawUnit)) throw new Error(`task_recurrence_unit_invalid:${rawUnit}`);
+  const interval = Number(renderData['重复间隔'] ?? renderData.recurrenceInterval ?? 1);
+  if (!Number.isInteger(interval) || interval < 1) throw new Error(`task_recurrence_interval_invalid:${interval}`);
+  const rawAnchor = readScalarOption(renderData['重复锚点'] ?? renderData.recurrenceAnchor ?? 'scheduled').toLowerCase();
+  if (!['scheduled', 'start', 'due', 'completion'].includes(rawAnchor)) throw new Error(`task_recurrence_anchor_invalid:${rawAnchor}`);
+  return { unit: rawUnit as any, interval, anchor: rawAnchor as any };
+}
+
 
 function buildRenderData(
   template: BlockTemplate,
@@ -68,7 +55,6 @@ function buildRenderData(
   const derivedPeriod = periodPolicy ? resolveDerivedPeriod(recordDate || undefined, periodPolicy.granularity) : null;
   const cycleId = derivedPeriod ? String(normalizedData.cycleId ?? normalizedData['周期ID'] ?? derivedPeriod.id ?? '').trim() : '';
   const cycleTitle = derivedPeriod ? String(normalizedData.period ?? normalizedData['周期'] ?? derivedPeriod.label ?? '').trim() : '';
-  const taskTokens = buildTaskRenderTokens(normalizedData);
 
   return {
     ...normalizedData,
@@ -103,7 +89,7 @@ function buildRenderData(
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
     coreBlock,
     period: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label } : null,
-    cycle: derivedPeriod ? { id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label, ...derivedPeriod } : null,
+    cycle: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label } : null,
     cycleId: derivedPeriod ? cycleId || derivedPeriod.id : '',
     cycleTitle: derivedPeriod ? cycleTitle || derivedPeriod.label : '',
     periodId: derivedPeriod ? cycleId || derivedPeriod.id : '',
@@ -111,7 +97,6 @@ function buildRenderData(
     '周期粒度': derivedPeriod ? derivedPeriod.granularity : '',
     '周期ID': derivedPeriod ? cycleId || derivedPeriod.id : '',
     '周期': derivedPeriod ? cycleTitle || derivedPeriod.label : '',
-    ...taskTokens,
     templateId: templateMeta?.templateId || template.id,
     templateSourceType: templateMeta?.templateSourceType || 'core-block',
   };
@@ -130,9 +115,13 @@ export function buildRecordOutputPlan(input: {
   formData: Record<string, unknown>;
   theme?: ThemeDefinition | null;
   templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null };
+  recordId?: string | null;
 }): RecordOutputPlan {
   if (!input.template) {
     return {
+      recordId: null,
+      schemaVersion: null,
+      coreBlock: null,
       targetFilePath: null,
       targetHeader: null,
       outputContent: '',
@@ -142,13 +131,88 @@ export function buildRecordOutputPlan(input: {
   }
 
   const renderData = buildRenderData(input.template, input.formData, input.theme, input.templateMeta);
-  const outputContent = renderTemplate(input.template.outputTemplate, renderData).trim();
+  const explicitCoreBlockId = String((input.template as any).coreBlockId || '').trim();
+  const systemCoreBlockId = String(input.template.id || '').trim().startsWith('core.') ? String(input.template.id || '').trim() : '';
+  const trustedCoreBlock = (explicitCoreBlockId || systemCoreBlockId).replace(/^core\./, '');
+  const renderedTemplate = trustedCoreBlock === 'task' ? '' : renderTemplate(input.template.outputTemplate, renderData).trim();
+  const literalCoreBlock = renderedTemplate.match(/^\s*核心Block\s*[:：]{1,2}\s*([^\s]+)\s*$/mi)?.[1]?.trim();
+  const hintedCoreBlock = String(renderData.coreBlock || input.template.id || '').trim().replace(/^core\./, '');
+  const coreBlock = trustedCoreBlock || literalCoreBlock || hintedCoreBlock;
+  if (!coreBlock) throw new Error('Record Foundation v2 要求每条记录都有核心Block。');
+  const recordId = String(input.recordId || '').trim() || createRecordId(coreBlock);
+
+  let outputContent: string;
+  if (coreBlock === 'task') {
+    const statusOption = readOptionText(renderData['状态'] ?? renderData.status);
+    const candidateStatus = String(statusOption.value || statusOption.label || 'open').trim().toLowerCase();
+    const status = ['open', 'done', 'cancelled', 'skipped'].includes(candidateStatus) ? candidateStatus : 'open';
+    const recurrence = readStructuredTaskRecurrence(renderData);
+    if (!recurrence && status === 'skipped') throw new Error('task_status_skipped_requires_series');
+    if (recurrence && status !== 'open') throw new Error('task_series_initial_instance_must_be_open');
+    const taskFields = {
+      ...renderData,
+      status,
+      content: renderData['任务内容'] ?? renderData['内容'] ?? renderData.content,
+      goalId: renderData.goalId,
+      goalPath: renderData.goalPath,
+      themePath: renderData.themePath,
+      scheduledDate: renderData['计划日期'] ?? renderData.scheduledDate ?? renderData['日期'] ?? renderData.date,
+      startDate: renderData['开始日期'] ?? renderData.startDate,
+      dueDate: renderData['截止日期'] ?? renderData.dueDate,
+      expectedDurationMinutes: renderData['预计时长'] ?? renderData.expectedDurationMinutes,
+      createdAt: renderData['创建于'] ?? renderData.createdAt ?? new Date().toISOString(),
+      templateId: input.templateMeta?.templateId || input.template.id,
+      templateSourceType: input.templateMeta?.templateSourceType || 'core-block',
+      seriesId: renderData.seriesId ?? renderData['系列ID'],
+    } as Record<string, unknown>;
+    const existingSeriesId = String(taskFields.seriesId || '').trim();
+    if (recurrence && existingSeriesId) {
+      throw new Error('task_series_recurrence_edit_requires_series_command');
+    }
+    if (recurrence && !existingSeriesId) {
+      const seriesId = createRecordId('task-series');
+      taskFields.seriesId = seriesId;
+      const seriesStartDate = String(taskFields.scheduledDate || taskFields.startDate || taskFields.dueDate || new Date().toISOString().slice(0, 10));
+      const seriesBlock = encodeRecordBlock({
+        recordId: seriesId,
+        schemaVersion: RECORD_SCHEMA_VERSION,
+        coreBlock: 'task-series',
+        fields: {
+          status: 'active',
+          content: taskFields.content,
+          goalId: taskFields.goalId,
+          goalPath: taskFields.goalPath,
+          themePath: taskFields.themePath,
+          priority: taskFields.priority,
+          expectedDurationMinutes: taskFields.expectedDurationMinutes,
+          energyDemand: taskFields.energyDemand,
+          brainDemand: taskFields.brainDemand,
+          physicalDemand: taskFields.physicalDemand,
+          recurrenceUnit: recurrence.unit,
+          recurrenceInterval: recurrence.interval,
+          recurrenceAnchor: recurrence.anchor,
+          seriesStartDate,
+          currentTaskId: recordId,
+          rolloverPolicy: 'carry',
+        },
+      });
+      const taskBlock = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: 'task', fields: taskFields });
+      outputContent = `${seriesBlock}\n\n${taskBlock}`;
+    } else {
+      outputContent = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: 'task', fields: taskFields });
+    }
+  } else {
+    outputContent = ensureRecordEnvelope(renderedTemplate, { recordId, coreBlock, schemaVersion: RECORD_SCHEMA_VERSION });
+  }
   const targetFilePath = normalizeNonEmptyPath(renderTemplate(input.template.targetFile, renderData));
   const targetHeader = input.template.appendUnderHeader
     ? normalizeNonEmptyPath(renderTemplate(input.template.appendUnderHeader, renderData))
     : null;
 
   return {
+    recordId,
+    schemaVersion: RECORD_SCHEMA_VERSION,
+    coreBlock,
     targetFilePath,
     targetHeader,
     outputContent,

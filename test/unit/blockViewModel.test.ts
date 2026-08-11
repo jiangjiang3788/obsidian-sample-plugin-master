@@ -6,8 +6,8 @@ import {
 } from '@/features/settings/views/runtime/BlockViewModel';
 
 const items = [
-  { id: 'a', type: 'block', title: 'A', fields: { status: 'todo' } },
-  { id: 'b', type: 'block', title: 'B', fields: { status: 'done' } },
+  { id: 'a', title: 'A', fields: { status: 'todo' } },
+  { id: 'b', title: 'B', fields: { status: 'done' } },
 ] as any[];
 
 describe('BlockViewModel', () => {

@@ -1384,10 +1384,6 @@
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/core/recordInput/mutation/TaskLinePatch.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
     "src/core/recordInput/mutationErrors.ts": {
       "staticStyle": 0,
       "staticSx": 0
@@ -1473,14 +1469,6 @@
       "staticSx": 0
     },
     "src/core/records/codec/FieldValueCodec.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/core/records/codec/MarkdownBlockCodec.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/core/records/codec/MarkdownTaskCodec.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -1604,14 +1592,6 @@
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/core/services/item/ItemLocator.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/core/services/item/ItemMutationWriter.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
     "src/core/services/item/ItemService.ts": {
       "staticStyle": 0,
       "staticSx": 0
@@ -1625,14 +1605,6 @@
       "staticSx": 0
     },
     "src/core/services/item/index.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/core/services/item/itemId.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/core/services/item/lineMetadata.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -1881,10 +1853,6 @@
       "staticSx": 0
     },
     "src/core/utils/templateUtils.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/core/utils/text.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },

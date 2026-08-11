@@ -4,18 +4,16 @@ import type { VaultPort } from '@core/ports/VaultPort';
 import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
 import type { BlockTemplate, ThemeDefinition, Item } from '@core/types/schema';
 import { DataStore } from '@core/services/DataStore';
-import {
-  resolveBlockRangeForMutation,
-  resolveTaskLineIndexForMutation,
-} from '@core/recordInput/mutationLocator';
+import { resolveRecordBlockRangeById } from '@core/recordInput/mutationLocator';
 import { createRecordConflictError } from '@core/recordInput/mutationErrors';
 import { buildRecordOutputPlan } from '@core/recordInput/snapshot/OutputPlanner';
 import { appendUnderHeader } from '@core/recordInput/mutation/HeaderAppender';
-import { mergeTaskLinePreservingSourceContext } from '@core/recordInput/mutation/TaskLinePatch';
 
 export interface RecordWriteOptions {
   signal?: AbortSignal;
   autoRefresh?: boolean;
+  /** Reuse an already allocated stable ID (create preview or move transaction). */
+  recordId?: string;
 }
 
 
@@ -31,11 +29,13 @@ export class InputService {
     formData: Record<string, any>,
     theme?: ThemeDefinition,
     templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
-  ): { renderData: Record<string, any>; outputContent: string; targetFilePath: string; header: string | null } {
+    recordId?: string,
+  ): { recordId?: string | null; renderData: Record<string, any>; outputContent: string; targetFilePath: string; header: string | null } {
     if (!template) throw new Error('传入了无效的模板对象。');
 
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta });
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta, recordId });
     return {
+      recordId: outputPlan.recordId,
       renderData: outputPlan.renderData,
       outputContent: outputPlan.outputContent,
       targetFilePath: outputPlan.targetFilePath || '',
@@ -52,7 +52,7 @@ export class InputService {
   ): Promise<string> {
     const signal = options.signal;
     this.throwIfAborted(signal);
-    const preview = this.previewTemplateExecution(template, formData, theme, templateMeta);
+    const preview = this.previewTemplateExecution(template, formData, theme, templateMeta, options.recordId);
     const { outputContent, targetFilePath, header } = preview;
 
     if (!targetFilePath) throw new Error('模板未定义目标文件路径 (targetFile)。');
@@ -116,34 +116,22 @@ export class InputService {
     const signal = options.signal;
     const autoRefresh = options.autoRefresh !== false;
     this.throwIfAborted(signal);
-    const path = item.file?.path || this.parseItemId(item.id).path;
-    const lineNo = item.file?.line || this.parseItemId(item.id).lineNo;
-    if (!path || !lineNo) {
-      throw createRecordConflictError('record_locator_invalid', '无法定位原始记录。');
-    }
+    const indexed = this.dataStore.getRecordLocation(item.id);
+    const path = item.source?.path || item.file?.path || indexed?.path || '';
+    const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
+    if (!path) throw createRecordConflictError('record_locator_invalid', `无法定位记录ID ${item.id}。`);
 
     const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) {
-      throw createRecordConflictError('record_path_missing', `找不到文件: ${path}`);
-    }
+    if (existingContent == null) throw createRecordConflictError('record_path_missing', `找不到文件: ${path}`);
     this.throwIfAborted(signal);
 
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta });
+    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta, recordId: item.id });
     const nextText = outputPlan.outputContent.trim();
     if (!nextText) throw new Error('编辑后的输出内容为空，已取消保存。');
 
     const lines = existingContent.split('\n');
-    const nextLines = nextText.split(/\r?\n/);
-    const expectedIndex = Math.max(0, lineNo - 1);
-
-    if (item.type === 'block') {
-      const range = resolveBlockRangeForMutation(lines, item, expectedIndex);
-      lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextLines);
-    } else {
-      const startIndex = resolveTaskLineIndexForMutation(lines, item, expectedIndex);
-      const preservedTaskText = mergeTaskLinePreservingSourceContext(lines[startIndex] || item.rawSource || item.content || '', nextText);
-      lines.splice(startIndex, 1, ...preservedTaskText.split(/\r?\n/));
-    }
+    const range = resolveRecordBlockRangeById(lines, item.id, startLine > 0 ? startLine - 1 : null);
+    lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextText.split(/\r?\n/));
 
     await this.vault.writeFile(path, lines.join('\n'));
     if (autoRefresh) {
@@ -157,46 +145,24 @@ export class InputService {
     const signal = options.signal;
     const autoRefresh = options.autoRefresh !== false;
     this.throwIfAborted(signal);
-    const path = item.file?.path || this.parseItemId(item.id).path;
-    const lineNo = item.file?.line || this.parseItemId(item.id).lineNo;
-    if (!path || !lineNo) {
-      throw createRecordConflictError('record_locator_invalid', '无法定位原始记录。');
-    }
+    const indexed = this.dataStore.getRecordLocation(item.id);
+    const path = item.source?.path || item.file?.path || indexed?.path || '';
+    const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
+    if (!path) throw createRecordConflictError('record_locator_invalid', `无法定位记录ID ${item.id}。`);
 
     const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) {
-      throw createRecordConflictError('record_path_missing', `找不到文件: ${path}`);
-    }
+    if (existingContent == null) throw createRecordConflictError('record_path_missing', `找不到文件: ${path}`);
     this.throwIfAborted(signal);
 
     const lines = existingContent.split('\n');
-    const expectedIndex = Math.max(0, lineNo - 1);
-
-    if (item.type === 'block') {
-      const range = resolveBlockRangeForMutation(lines, item, expectedIndex);
-      lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
-    } else {
-      const startIndex = resolveTaskLineIndexForMutation(lines, item, expectedIndex);
-      lines.splice(startIndex, 1);
-    }
-
+    const range = resolveRecordBlockRangeById(lines, item.id, startLine > 0 ? startLine - 1 : null);
+    lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
     await this.vault.writeFile(path, lines.join('\n'));
     if (autoRefresh) {
       await this.dataStore.scanFileByPath(path);
       this.dataStore.notifyChange();
     }
     return path;
-  }
-
-  private parseItemId(itemId: string): { path: string; lineNo: number } {
-    const hashIndex = itemId.lastIndexOf('#');
-    if (hashIndex === -1) throw createRecordConflictError('record_locator_invalid', `无效的条目ID格式: ${itemId}`);
-    const path = itemId.substring(0, hashIndex);
-    const lineNo = parseInt(itemId.substring(hashIndex + 1), 10);
-    if (!path || Number.isNaN(lineNo)) {
-      throw createRecordConflictError('record_locator_invalid', `无效的条目ID格式: ${itemId}`);
-    }
-    return { path, lineNo };
   }
 
   private throwIfAborted(signal?: AbortSignal) {

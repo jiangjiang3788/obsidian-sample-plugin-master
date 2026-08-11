@@ -1,6 +1,7 @@
 import type { Item } from '../types/schema';
 import type { EnergyManagementModel } from './managementTypes';
 import type { EnergyActionCandidate, EnergyRecommendationBand } from './recommendationTypes';
+import { asTaskSessionRecord } from '../records/task/taskSession';
 
 export interface EnergyActionPolicyContext {
   /** Completed/recorded task minutes for the current day across goals. */
@@ -16,24 +17,17 @@ export interface EnergyActionTimingDecision {
   stopReason?: string;
 }
 
-function text(value: unknown): string {
-  return String(value ?? '').trim();
+function localSessionDay(value: string): string {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-function itemBlock(item: Item): string {
-  return text(item.coreBlock || item.extra?.['\u6838\u5fc3Block']).replace(/^core\./i, '').toLowerCase();
-}
-
-function itemDay(item: Item): string {
-  return text(item.doneDate || item.date || item.endISO || item.scheduledDate || item.startDate).slice(0, 10);
-}
-
-function recordedTaskMinutes(items: Item[], today: string): number {
-  return items.reduce((sum, item) => {
-    if (itemBlock(item) !== 'task' && item.type !== 'task') return sum;
-    const hasCompletionEvidence = Boolean(item.doneDate || item.endTime || /^\s*-\s*\[[xX]\]\s*/.test(item.content || ''));
-    if (!hasCompletionEvidence || itemDay(item) !== today) return sum;
-    const duration = Number(item.duration ?? item.extra?.['\u65f6\u957f']);
+function recordedTaskMinutes(records: Item[], today: string): number {
+  return records.reduce((sum, record) => {
+    const session = asTaskSessionRecord(record);
+    if (!session || localSessionDay(session.sessionStartedAt) !== today) return sum;
+    const duration = Number(session.sessionDurationMinutes);
     if (!Number.isFinite(duration) || duration <= 0) return sum;
     return sum + Math.min(720, Math.max(0, duration));
   }, 0);

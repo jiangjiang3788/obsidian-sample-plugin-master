@@ -14,6 +14,7 @@ export interface ViewRenderModelContext {
   viewInstance: ViewInstance;
   items: Item[];
   allItems: Item[];
+  allRecords: Item[];
   dateRange: [Date, Date];
   currentView: LayoutViewGranularity;
   inputSettings: InputSettings;
@@ -88,9 +89,10 @@ const viewModelBuilders: Record<string, ViewModelBuilder> = {
     };
   },
 
-  TimelineView: ({ items, viewInstance, dateRange, currentView }) => ({
+  TimelineView: ({ items, allRecords, viewInstance, dateRange, currentView }) => ({
     timelineModel: buildTimelineViewModel({
       items,
+      records: allRecords,
       module: viewInstance,
       dateRange,
       currentView: currentView as any,
@@ -117,9 +119,10 @@ const viewModelBuilders: Record<string, ViewModelBuilder> = {
     }),
   }),
 
-  EnergyView: ({ allItems, viewInstance, dateRange, currentView, goals, inputSettings, timers }) => ({
+  EnergyView: ({ allItems, allRecords, viewInstance, dateRange, currentView, goals, inputSettings, timers }) => ({
     energyModel: buildEnergyViewModel({
       items: allItems,
+      records: allRecords,
       module: viewInstance,
       dateRange,
       currentView: currentView as CurrentView,

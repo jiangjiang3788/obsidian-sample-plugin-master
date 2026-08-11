@@ -6,8 +6,8 @@ import {
 } from '@/features/settings/views/runtime/TableViewModel';
 
 const items = [
-  { id: 'a', type: 'block', title: 'A', fields: { status: 'todo', theme: 'work' } },
-  { id: 'b', type: 'task', title: 'B', fields: { status: 'done', theme: 'work' } },
+  { id: 'a', title: 'A', fields: { status: 'todo', theme: 'work' } },
+  { id: 'b', title: 'B', fields: { status: 'done', theme: 'work' } },
 ] as any[];
 
 describe('TableViewModel', () => {

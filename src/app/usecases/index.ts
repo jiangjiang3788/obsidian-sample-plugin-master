@@ -92,7 +92,6 @@ export function createUseCases(store: AppStoreApi, deps: UseCaseDeps): UseCases 
             inputService: deps.inputService,
             itemService: deps.itemService,
             dataStore: deps.dataStore,
-            timerStateService: deps.timerStateService,
         }),
         goal: createGoalUseCase(store),
     };

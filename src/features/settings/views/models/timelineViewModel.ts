@@ -30,19 +30,25 @@ export interface TimelineViewModel {
  */
 export function buildTimelineViewModel(args: {
   items: Item[];
+  records?: Item[];
   module: any;
   dateRange: [Date, Date];
   currentView: TimelineCurrentView;
 }): TimelineViewModel {
-  const { items, module, dateRange, currentView } = args;
+  const { items, records = items, module, dateRange, currentView } = args;
 
   const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
   const userConfig = module?.viewConfig || {};
   const config = { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
 
   // items 已经由 useViewData/applyViewQueryPipeline 应用 layoutFilters + viewInstance.filters。
-  // 这里不要重复 filterByRules，否则 OR/区间等规则可能被二次解释。
-  const timelineTasks = processItemsToTimelineTasks(items);
+  // Timeline 的事实来自 internal TaskSession，但 Session 必须继承可见 Task 的查询边界。
+  const visibleTaskIds = new Set(items.filter((item) => item.coreBlock === 'task').map((item) => item.id));
+  const timelineRecords = records.filter((record) => (
+    (record.coreBlock === 'task' && visibleTaskIds.has(record.id))
+    || (record.coreBlock === 'task-session' && !!record.taskId && visibleTaskIds.has(record.taskId))
+  ));
+  const timelineTasks = processItemsToTimelineTasks(timelineRecords);
 
   const categoriesConfig = config.categories || {};
   const colorMap: Record<string, string> = {};

@@ -1,8 +1,9 @@
 import type { Item, TimerState } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
 import { createGoalOrderIndex } from '@core/goal/public';
-import { getTaskCadence, TASK_CADENCE_META, TASK_CADENCE_ORDER, type TaskCadenceKey } from '@core/records/public';
-import { isTaskCompleted, isTaskOpen, cleanTaskText, dayjs } from '@core/utils/public';
+import { asTaskSessionRecord, getTaskCadence, TASK_CADENCE_META, TASK_CADENCE_ORDER, type TaskCadenceKey } from '@core/records/public';
+import { isTaskOpen, dayjs } from '@core/utils/public';
+import { formatTaskRecurrence } from '@core/records/public';
 import {
   attachEnergyRecommendationEvidence,
   attachEnergyRecommendationLearning,
@@ -77,7 +78,7 @@ function text(value: unknown): string {
 
 function taskTitle(item: Item): string {
   const raw = text(item.editableText || item.content || item.title);
-  return cleanTaskText(raw) || text(item.title) || '未命名任务';
+  return raw || text(item.title) || '未命名任务';
 }
 
 function normalizedGoalPath(item: Item): string {
@@ -89,28 +90,48 @@ function goalLabel(item: Item): string {
 }
 
 function recurrenceText(item: Item): string {
-  return text(item.recurrence);
+  return text(formatTaskRecurrence(item.recurrenceInfo));
 }
 
 function aggregateKey(item: Item): string {
   return [taskTitle(item).toLowerCase(), goalLabel(item).toLowerCase(), recurrenceText(item).toLowerCase()].join('::');
 }
 
-function recordTime(item: Item): string {
-  return text(item.endTime || item.startTime || item.doneDate);
+function localSessionDate(value: string): string {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-function historyMap(items: Item[], today: string): Map<string, EnergyTaskRecordVM[]> {
+function localSessionTime(value: string): string {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function historyMap(records: Item[], today: string): Map<string, EnergyTaskRecordVM[]> {
   const start = dayjs(today).subtract(365, 'day').startOf('day');
   const end = dayjs(today).endOf('day');
+  const byId = new Map(records.map((record) => [record.id, record] as const));
   const map = new Map<string, EnergyTaskRecordVM[]>();
-  for (const item of items) {
-    if (item.type !== 'task' || !isTaskCompleted(item) || !item.doneDate) continue;
-    const done = dayjs(item.doneDate);
-    if (!done.isValid() || done.isBefore(start) || done.isAfter(end)) continue;
-    const key = aggregateKey(item);
+  for (const record of records) {
+    const session = asTaskSessionRecord(record);
+    if (!session) continue;
+    const task = byId.get(session.taskId);
+    if (!task || task.coreBlock !== 'task') continue;
+    const dateText = localSessionDate(session.sessionStartedAt);
+    const occurred = dayjs(dateText);
+    if (!dateText || !occurred.isValid() || occurred.isBefore(start) || occurred.isAfter(end)) continue;
+    const key = aggregateKey(task);
     const rows = map.get(key) || [];
-    rows.push({ id: item.id, doneDate: item.doneDate, timeLabel: recordTime(item), item });
+    const startTime = localSessionTime(session.sessionStartedAt);
+    const endTime = localSessionTime(session.sessionEndedAt);
+    rows.push({
+      id: session.id,
+      doneDate: dateText,
+      timeLabel: [startTime, endTime].filter(Boolean).join('–'),
+      item: task,
+    });
     map.set(key, rows);
   }
   for (const rows of map.values()) {
@@ -131,20 +152,21 @@ export function buildEnergyTaskListModel(args: {
   goals?: GoalDefinition[];
   today: string;
 }): EnergyTaskListModel {
-  const { items, historyItems, timers, management, goals = [], today } = args;
-  const openTasks = items.filter((item) => item.type === 'task' && isTaskOpen(item));
+  const { items, historyItems, management, goals = [], today } = args;
+  const openTasks = items.filter((item) => item.coreBlock === 'task' && isTaskOpen(item));
   const visibleItems = openTasks;
   const visibleIds = new Set(visibleItems.map((item) => item.id));
-  const records = historyMap(items, today);
+  const records = historyMap(historyItems, today);
 
   const candidateBuild = buildEnergyActionCandidateResult(items, {
     today,
     maximumCandidates: 1000,
     includeRecurringTasks: true,
     includeFutureTasks: true,
+    historyRecords: historyItems,
   });
   const taskCandidates = candidateBuild.candidates.filter((candidate) => candidate.source === 'task' && visibleIds.has(candidate.id));
-  const learning = buildEnergyRecommendationLearning(historyItems, timers);
+  const learning = buildEnergyRecommendationLearning(historyItems);
   const learned = attachEnergyRecommendationLearning(taskCandidates, learning);
   const enriched = attachEnergyRecommendationEvidence(learned, management);
 
@@ -156,7 +178,7 @@ export function buildEnergyTaskListModel(args: {
       brainScore: management.latest.brainScore,
       physicalScore: management.latest.physicalScore,
       maximumRecommendations: Math.min(500, enriched.length),
-      actionPolicy: buildEnergyActionPolicyContext(items, management, today),
+      actionPolicy: buildEnergyActionPolicyContext(historyItems, management, today),
     }, enriched);
     rankedIds = ranked.recommendations.map((row) => row.candidate.id);
     for (const row of ranked.recommendations) actionById.set(row.candidate.id, row);

@@ -1,5 +1,6 @@
 import type { Item } from '../types/schema';
 import { isEnergyItem, readEnergyItemSnapshot } from './item';
+import { asTaskSessionRecord } from '../records/task/taskSession';
 
 export type EnergyContextConfidence = 'high' | 'medium' | 'low';
 export type EnergyActivityRelation = 'active' | 'recent';
@@ -57,24 +58,14 @@ function readNumber(value: unknown): number | undefined {
 }
 
 function normalizeCoreBlock(item: Item): string {
-  return String(item.coreBlock || item.extra?.['核心Block'] || item.categoryKey || '')
+  return String(item.coreBlock || item.extra?.['核心Block'] || '')
     .replace(/^core\./i, '')
-    .split('/')[0]
     .trim()
     .toLowerCase();
 }
 
-function isTaskLike(item: Item): boolean {
-  if (isEnergyItem(item)) return false;
-  const block = normalizeCoreBlock(item);
-  if (block === 'task') return true;
-  if (item.type === 'task') return true;
-  return /任务/.test(String(item.categoryKey || ''));
-}
-
 function isHabitLike(item: Item): boolean {
-  const block = normalizeCoreBlock(item);
-  return block === 'habit' || String(item.categoryKey || '').split('/')[0]?.trim() === '打卡';
+  return normalizeCoreBlock(item) === 'habit';
 }
 
 function normalizeGoalPath(value: unknown): string {
@@ -101,6 +92,12 @@ function matchesEnergyGoal(energyItem: Item, candidate: Item): boolean {
 }
 
 function occurrenceDate(item: Item): string | undefined {
+  if (item.coreBlock === 'task-session' && item.sessionStartedAt) {
+    const value = new Date(item.sessionStartedAt);
+    if (Number.isFinite(value.getTime())) {
+      return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+    }
+  }
   return readText(item.date)
     || readText(item.doneDate)
     || readText(item.startDate)
@@ -143,7 +140,18 @@ function absoluteMinute(date: string, time: string): number | undefined {
   return ordinal * 1440 + minutes;
 }
 
+function localSessionParts(value: string): { date: string; time: string } | null {
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return null;
+  return {
+    date: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`,
+    time: `${String(parsed.getHours()).padStart(2, '0')}:${String(parsed.getMinutes()).padStart(2, '0')}`,
+  };
+}
+
 interface ActivityInterval {
+  session: Item;
+  task: Item;
   startAbsolute: number;
   endAbsolute: number;
   startDate: string;
@@ -153,40 +161,30 @@ interface ActivityInterval {
   durationMinutes: number;
 }
 
-function resolveActivityInterval(item: Item): ActivityInterval | null {
-  const date = occurrenceDate(item);
-  if (!date) return null;
-  const ordinal = dateOrdinal(date);
-  if (ordinal == null) return null;
-
-  const duration = readNumber(item.duration ?? item.extra?.['时长']);
-  const safeDuration = duration != null && duration >= 0 ? duration : undefined;
-  let startMinutes = parseTimeMinutes(item.startTime ?? item.extra?.['时间'] ?? item.extra?.['开始']);
-  let endMinutes = parseTimeMinutes(item.endTime ?? item.extra?.['结束']);
-
-  if (startMinutes == null && endMinutes == null) return null;
-  if (startMinutes == null && endMinutes != null && safeDuration != null) startMinutes = endMinutes - safeDuration;
-  if (endMinutes == null && startMinutes != null && safeDuration != null) endMinutes = startMinutes + safeDuration;
-  if (startMinutes == null || endMinutes == null) return null;
-
-  let startAbsolute = ordinal * 1440 + startMinutes;
-  let endAbsolute = ordinal * 1440 + endMinutes;
-  if (endAbsolute < startAbsolute) endAbsolute += 1440;
-  if (safeDuration != null && Math.abs((endAbsolute - startAbsolute) - safeDuration) > 1) {
-    endAbsolute = startAbsolute + safeDuration;
-  }
-  if (endAbsolute < startAbsolute) return null;
-
-  const startDayOrdinal = Math.floor(startAbsolute / 1440);
-  const endDayOrdinal = Math.floor(endAbsolute / 1440);
+function resolveActivityInterval(record: Item, byId: Map<string, Item>): ActivityInterval | null {
+  const session = asTaskSessionRecord(record);
+  if (!session) return null;
+  const task = byId.get(session.taskId);
+  if (!task || task.coreBlock !== 'task') return null;
+  const start = localSessionParts(session.sessionStartedAt);
+  const end = localSessionParts(session.sessionEndedAt);
+  if (!start || !end) return null;
+  const startAbsolute = absoluteMinute(start.date, start.time);
+  const endAbsoluteRaw = absoluteMinute(end.date, end.time);
+  if (startAbsolute == null || endAbsoluteRaw == null) return null;
+  const duration = Number(session.sessionDurationMinutes);
+  if (!Number.isFinite(duration) || duration < 0) return null;
+  const endAbsolute = Math.max(endAbsoluteRaw, startAbsolute + duration);
   return {
+    session,
+    task,
     startAbsolute,
     endAbsolute,
-    startDate: dateFromOrdinal(startDayOrdinal),
-    startTime: formatTimeMinutes(startAbsolute),
-    endDate: dateFromOrdinal(endDayOrdinal),
-    endTime: formatTimeMinutes(endAbsolute),
-    durationMinutes: Math.max(0, Math.round(endAbsolute - startAbsolute)),
+    startDate: start.date,
+    startTime: start.time,
+    endDate: end.date,
+    endTime: end.time,
+    durationMinutes: Math.round(duration),
   };
 }
 
@@ -196,15 +194,23 @@ function activityConfidence(relation: EnergyActivityRelation, gapMinutes: number
   return 'low';
 }
 
-function buildActivityContext(item: Item, energyAbsolute: number, recentWindowMinutes: number): EnergyActivityContext | null {
-  if (!isTaskLike(item)) return null;
-  const interval = resolveActivityInterval(item);
+function buildActivityContext(
+  record: Item,
+  byId: Map<string, Item>,
+  energyItemId: string,
+  energyAbsolute: number,
+  recentWindowMinutes: number,
+): EnergyActivityContext | null {
+  const interval = resolveActivityInterval(record, byId);
   if (!interval) return null;
+  const session = asTaskSessionRecord(record)!;
+  const directStart = session.startEnergyRecordId === energyItemId;
+  const directEnd = session.endEnergyRecordId === energyItemId;
 
-  if (energyAbsolute >= interval.startAbsolute && energyAbsolute <= interval.endAbsolute) {
+  if (directStart || (energyAbsolute >= interval.startAbsolute && energyAbsolute <= interval.endAbsolute)) {
     return {
-      itemId: item.id,
-      title: item.title || item.content || '未命名任务',
+      itemId: session.id,
+      title: interval.task.content || interval.task.title || '未命名任务',
       relation: 'active',
       confidence: 'high',
       gapMinutes: 0,
@@ -213,24 +219,24 @@ function buildActivityContext(item: Item, energyAbsolute: number, recentWindowMi
       startTime: interval.startTime,
       endDate: interval.endDate,
       endTime: interval.endTime,
-      item,
+      item: interval.task,
     };
   }
 
-  const gapMinutes = Math.round(energyAbsolute - interval.endAbsolute);
+  const gapMinutes = directEnd ? 0 : Math.round(energyAbsolute - interval.endAbsolute);
   if (gapMinutes < 0 || gapMinutes > recentWindowMinutes) return null;
   return {
-    itemId: item.id,
-    title: item.title || item.content || '未命名任务',
+    itemId: session.id,
+    title: interval.task.content || interval.task.title || '未命名任务',
     relation: 'recent',
-    confidence: activityConfidence('recent', gapMinutes),
+    confidence: directEnd ? 'high' : activityConfidence('recent', gapMinutes),
     gapMinutes,
     durationMinutes: interval.durationMinutes,
     startDate: interval.startDate,
     startTime: interval.startTime,
     endDate: interval.endDate,
     endTime: interval.endTime,
-    item,
+    item: interval.task,
   };
 }
 
@@ -303,9 +309,10 @@ export function resolveEnergyContext(
   const reliableWindowMinutes = Math.max(0, options.reliableWindowMinutes ?? DEFAULT_RELIABLE_WINDOW_MINUTES);
   const maxNearbyActivities = Math.max(1, options.maxNearbyActivities ?? DEFAULT_MAX_NEARBY_ACTIVITIES);
 
+  const byId = new Map(items.map((item) => [item.id, item] as const));
   const nearbyActivities = items
-    .filter((item) => item.id !== energyItem.id && matchesEnergyGoal(energyItem, item))
-    .map((item) => buildActivityContext(item, energyAbsolute, recentWindowMinutes))
+    .filter((item) => item.id !== energyItem.id && item.coreBlock === 'task-session')
+    .map((item) => buildActivityContext(item, byId, energyItem.id, energyAbsolute, recentWindowMinutes))
     .filter((row): row is EnergyActivityContext => !!row)
     .sort((left, right) => activityRank(left) - activityRank(right))
     .slice(0, maxNearbyActivities);

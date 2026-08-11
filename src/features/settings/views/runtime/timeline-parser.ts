@@ -1,125 +1,81 @@
-// src/features/dashboard/views/timeline/timeline-parser.ts
-//
-// 注意：timeline 的“类型形状”不再由 features 定义。
-// 这里仅保留解析/拆分的实现；类型来自 core（唯一真源）。
-function resolveTimelineAnchorDate(item: any): string | null {
-  return item?.date || item?.doneDate || item?.completedDate || item?.createdDate || null;
-}
-
+// src/features/settings/views/runtime/timeline-parser.ts
+// Timeline execution history is projected exclusively from persisted TaskSession records.
+// Task records provide display metadata; TaskSession owns start/end/duration facts.
 
 import type { Item } from '@core/types/public';
-import { dayjs, timeToMinutes, deriveDurationFromRange, deriveStartFromEndAndDuration } from '@core/utils/public';
 import { splitTaskIntoDayBlocks } from '@core/utils/public';
+import { asTaskSessionRecord } from '@core/records/public';
 
 export type { TimelineTask, TaskBlock } from '@core/types/public';
 import type { TimelineTask } from '@core/types/public';
 
-// TimelineTask / TaskBlock 已在 core/types/timeline.ts 定义并在此文件 re-export。
+function localDate(value: string): string | null {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
-const DATE_FORMAT = 'YYYY-MM-DD';
+function localMinute(value: string): number | null {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  return date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60;
+}
 
-/**
- * 从 Item 对象解析出一致的时间信息
- */
-function parseAllTimes(item: Item): { startMinute: number | null; duration: number | null; endMinute: number | null } {
-    const startMinute = item.startTime ? timeToMinutes(item.startTime) : null;
-    const explicitEndMinute = item.endTime ? timeToMinutes(item.endTime) : null;
-    const duration = item.duration ?? null;
-
-    if (startMinute !== null && item.startTime && item.endTime) {
-        const normalizedDuration = deriveDurationFromRange(item.startTime, item.endTime);
-        if (normalizedDuration !== null) {
-            return {
-                startMinute,
-                duration: normalizedDuration,
-                endMinute: startMinute + normalizedDuration,
-            };
-        }
-    }
-
-    if (startMinute !== null && duration !== null && duration >= 0) {
-        return { startMinute, duration, endMinute: startMinute + duration };
-    }
-
-    if (explicitEndMinute !== null && duration !== null && duration >= 0 && item.endTime) {
-        const derivedStart = deriveStartFromEndAndDuration(item.endTime, duration);
-        const derivedStartMinute = derivedStart ? timeToMinutes(derivedStart) : null;
-        if (derivedStartMinute !== null) {
-            return { startMinute: derivedStartMinute, duration, endMinute: derivedStartMinute + duration };
-        }
-    }
-
-    return { startMinute: null, duration: null, endMinute: null };
+function displayText(task: Item): string {
+  return String(task.content || task.editableText || task.title || '').trim();
 }
 
 /**
- * 从原始任务文本中提取纯净的显示文本
+ * Convert persisted TaskSession records into TimelineTask projections.
+ * No Task status/category/raw Markdown grammar is consulted here.
  */
-function extractPureText(rawText: string): string {
-    return rawText
-        .replace(/<!--[\s\S]*?-->/g, '') // [核心修复] 恢复此行，移除 HTML 注释
-        .replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, '') // 兼容旧缓存：移除任务 checkbox 前缀
-        .replace(/^\s*(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '') // 兼容旧缓存：移除正文开头图标
-        .replace(/[\(\[]\s*(时间|结束|时长)::.*?[\)\]]/g, '') // 移除所有时间相关标签
-        .replace(/[\(\[][^\(\)\[\]]*?::.*?[\)\]]/g, '') // 兼容旧缓存：移除其它 inline KV
-        .replace(/#[\p{L}\d\-_/]+/gu, '') // 移除 tags
-        .replace(/[📅⏳🛫➕✅❌]?\s*\d{4}-\d{2}-\d{2}/g, '') // 移除任务日期
-        .replace(/\s*🔁\s*every\s+.*?(?=$|\s*[#\(\[])/gi, '') // 移除重复任务
-        .replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, '') // 移除重复任务
-        .replace(/\s+/g, ' ')
-        .trim();
+export function processItemsToTimelineTasks(records: Item[]): TimelineTask[] {
+  const byId = new Map(records.map((record) => [record.id, record] as const));
+  const timelineTasks: TimelineTask[] = [];
+
+  for (const record of records) {
+    const session = asTaskSessionRecord(record);
+    if (!session) continue;
+    const task = byId.get(session.taskId);
+    if (!task || task.coreBlock !== 'task') continue;
+
+    const startedMs = Date.parse(session.sessionStartedAt);
+    const endedMs = Date.parse(session.sessionEndedAt);
+    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs < startedMs) continue;
+
+    const actualStartDate = localDate(session.sessionStartedAt);
+    const startMinute = localMinute(session.sessionStartedAt);
+    if (!actualStartDate || startMinute == null) continue;
+
+    const duration = Number(session.sessionDurationMinutes);
+    if (!Number.isFinite(duration) || duration < 0) continue;
+    const endMinute = startMinute + duration;
+    const fileName = task.file?.basename || task.filename || '';
+    if (!fileName) continue;
+
+    timelineTasks.push({
+      ...task,
+      // A Timeline row represents an execution fact, so its identity is the Session identity.
+      id: session.id,
+      sessionRecordId: session.id,
+      taskRecordId: task.id,
+      date: actualStartDate,
+      doneDate: actualStartDate,
+      startTime: new Date(startedMs).toTimeString().slice(0, 5),
+      endTime: new Date(endedMs).toTimeString().slice(0, 5),
+      duration,
+      startMinute,
+      endMinute,
+      pureText: displayText(task),
+      fileName,
+      actualStartDate,
+    });
+  }
+
+  return timelineTasks;
 }
 
-function resolveTimelineDisplayText(item: Item): string {
-    const cleanContent = extractPureText(item.content || item.editableText || item.title || '');
-    if (cleanContent) return cleanContent;
-    const fromRaw = extractPureText(item.rawSource || '');
-    if (fromRaw) return fromRaw;
-    return item.title || '';
-}
-
-/**
- * 过滤并转换原始 Item 为 TimelineTask
- */
-export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
-    const timelineTasks: TimelineTask[] = [];
-
-    for (const item of items) {
-        const fileName = item.file?.basename || item.filename || '';
-        if (!fileName) continue;
-
-        // 检查是否为已完成的任务（支持新旧格式）
-        const isCompletedTask = item.categoryKey?.endsWith('/done') || 
-                               item.categoryKey?.endsWith('/cancelled') || 
-                               item.categoryKey === '完成任务';
-        if (item.type !== 'task' || !isCompletedTask) continue;
-
-        const { startMinute, duration, endMinute } = parseAllTimes(item);
-
-        if (startMinute !== null && duration !== null && endMinute !== null && item.doneDate) {
-            
-            const anchorDate = item.doneDate || item.date;
-            if (!anchorDate) continue;
-            const actualStartDate = dayjs(anchorDate).format(DATE_FORMAT);
-
-            timelineTasks.push({
-                ...item,
-                startMinute,
-                duration,
-                endMinute,
-                // Timeline 视觉保持不变；显示文本来自统一后的 content 字段，旧缓存则降级从 rawSource 清洗。
-                pureText: resolveTimelineDisplayText(item),
-                fileName: fileName,
-                actualStartDate: actualStartDate,
-            });
-        }
-    }
-    return timelineTasks;
-}
-
-/**
- * 将单个任务（可能跨天）拆分为多个按天对齐的 TaskBlock
- */
-// splitTaskIntoDayBlocks 已迁移至 core（唯一真源）
-// timeline-parser 仅做 re-export，保留对外调用点稳定。
 export { splitTaskIntoDayBlocks };

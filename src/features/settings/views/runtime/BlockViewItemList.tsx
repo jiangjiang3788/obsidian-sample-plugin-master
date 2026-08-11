@@ -39,7 +39,7 @@ export function BlockViewItemList(props: BlockViewItemListProps) {
   return (
     <Fragment>
       {items.map(item => {
-        if (item.type === 'task') {
+        if (item.coreBlock === 'task') {
           return (
             <TaskRow
               key={item.id}

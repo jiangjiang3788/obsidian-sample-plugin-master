@@ -97,8 +97,8 @@ export function buildGoalEnergyContext(item: Item, goalItems: Item[]): GoalEnerg
   };
 }
 
-function buildGoalEnergyEffects(items: Item[]): GoalEnergyEffectsModel | null {
-  const effects = buildEnergyEffects(items);
+function buildGoalEnergyEffects(evidenceRecords: Item[]): GoalEnergyEffectsModel | null {
+  const effects = buildEnergyEffects(evidenceRecords);
   if (!effects) return null;
   const mapRows = (rows: typeof effects.byActivity): GoalEnergyEffectRowModel[] => rows.slice(0, 6).map((row) => ({
     key: row.key,
@@ -124,7 +124,13 @@ function buildGoalEnergyEffects(items: Item[]): GoalEnergyEffectsModel | null {
   };
 }
 
-export function buildGoalEnergySummary(items: Item[], limit: number = 5): GoalEnergySummaryModel | null {
+export function buildGoalEnergySummary(
+  items: Item[],
+  limit: number = 5,
+  options: { contextRecords?: Item[]; effectRecords?: Item[] } = {},
+): GoalEnergySummaryModel | null {
+  const contextRecords = options.contextRecords || items;
+  const effectRecords = options.effectRecords || contextRecords;
   const ordered = items.reduce<Array<GoalEnergySampleModel & { occurrenceKey: string }>>((rows, item) => {
     const snapshot = readEnergyItemSnapshot(item);
     if (!snapshot) return rows;
@@ -146,7 +152,7 @@ export function buildGoalEnergySummary(items: Item[], limit: number = 5): GoalEn
   if (ordered.length === 0) return null;
   const recentSamples = ordered.slice(0, limit).map(({ occurrenceKey: _occurrenceKey, ...row }) => ({
     ...row,
-    context: buildGoalEnergyContext(row.item, items),
+    context: buildGoalEnergyContext(row.item, contextRecords),
   }));
   const latest = recentSamples[0];
   return {
@@ -159,6 +165,6 @@ export function buildGoalEnergySummary(items: Item[], limit: number = 5): GoalEn
     latestDate: latest.date || null,
     latestTime: latest.time || null,
     recentSamples,
-    effects: buildGoalEnergyEffects(items),
+    effects: buildGoalEnergyEffects(effectRecords),
   };
 }

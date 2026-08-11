@@ -1,3 +1,4 @@
+import type { Item } from '../types/schema';
 import type { EnergyEffectAggregate, EnergyEffectEvidence } from './effects';
 import type { EnergyDaypartPattern, EnergyPatternEvidence, EnergyStopProxyPattern } from './patternTypes';
 import type { EnergyTimelineCoverage } from './timeline';
@@ -60,6 +61,8 @@ export interface EnergyWeeklyReview {
 export interface BuildEnergyWeeklyReviewOptions {
   windowDays?: number;
   endDate?: string;
+  /** Internal Record evidence (TaskSession + linked Energy snapshots). */
+  evidenceRecords?: Item[];
 }
 
 export function weeklyFindingFromEffect(row: EnergyEffectAggregate): EnergyWeeklyActivityFinding {

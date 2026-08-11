@@ -24,7 +24,7 @@ export interface EditTaskModalProps {
 }
 
 /**
- * 通用的“精确编辑任务时间”弹窗。
+ * 时间轴的“精确编辑工作 Session 时间”弹窗。
  *
  * 迁移原因：
  * - shared/ui 不能依赖 features（否则 shared 就会变成绕过边界的 tunnel）
@@ -88,14 +88,14 @@ export function EditTaskModal({ isOpen, onClose, task, onUpdateTaskTime, onSave 
       onClose();
     },
     {
-      successMessage: '任务时间已更新',
+      successMessage: '工作 Session 时间已更新',
       errorMessage: '更新失败',
     }
   );
 
   return (
     <Dialog open={isOpen} onClose={onClose}>
-      <DialogTitle>编辑任务时间</DialogTitle>
+      <DialogTitle>编辑工作 Session 时间</DialogTitle>
       <DialogContent>
         <div style={{ marginBottom: '1rem', marginTop: '0.5rem' }}>
           <p
