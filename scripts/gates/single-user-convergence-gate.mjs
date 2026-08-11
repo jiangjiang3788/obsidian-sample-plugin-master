@@ -414,32 +414,7 @@ for (const requiredHelper of [
   if (!eventTimelineModel.includes(requiredHelper)) failures.push(`EventTimelineViewModel.ts must keep ${requiredHelper} after MVP15 extraction.`);
 }
 
-if (!exists('src/features/settings/views/runtime/TaskExecutionViewModel.ts')) {
-  failures.push('TaskExecutionViewModel.ts must exist after MVP15 task execution extraction.');
-}
-if (!exists('src/features/settings/views/runtime/TaskExecutionChipGrid.tsx')) {
-  failures.push('TaskExecutionChipGrid.tsx must exist after MVP15 task execution chip grid extraction.');
-}
-if (!exists('src/features/settings/views/runtime/TaskExecutionContextMenu.tsx')) {
-  failures.push('TaskExecutionContextMenu.tsx must exist after MVP15 task execution menu extraction.');
-}
-const taskExecutionView = read('src/features/settings/views/runtime/TaskExecutionView.tsx');
-const taskExecutionViewLines = taskExecutionView.split(/\r?\n/).length;
-if (taskExecutionViewLines > 90) failures.push(`TaskExecutionView.tsx should stay <= 90 lines after MVP15 model/component split; current ${taskExecutionViewLines}.`);
-for (const forbiddenLocal of ['function getChipToneClass', 'interface TaskExecutionRecordVM', 'interface TaskExecutionTaskVM', 'const taskMap = useMemo(() => {']) {
-  if (taskExecutionView.includes(forbiddenLocal)) failures.push(`TaskExecutionView.tsx must not keep local ${forbiddenLocal} after MVP15 extraction.`);
-}
-const taskExecutionModel = read('src/features/settings/views/runtime/TaskExecutionViewModel.ts');
-for (const requiredHelper of [
-  'buildTaskExecutionTaskMap',
-  'getTaskExecutionChipToneClass',
-  'getTaskExecutionSelectedTask',
-  'getTaskExecutionRecordLabel',
-]) {
-  if (!taskExecutionModel.includes(requiredHelper)) failures.push(`TaskExecutionViewModel.ts must keep ${requiredHelper} after MVP15 extraction.`);
-}
-
-
+// 1.0.32: TaskExecutionView retired; EnergyTaskList is the single task surface.
 if (!exists('src/features/settings/views/runtime/BlockViewModel.ts')) {
   failures.push('BlockViewModel.ts must exist after MVP16 block view extraction.');
 }

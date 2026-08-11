@@ -1,0 +1,9 @@
+.think-energy-weekly { display: grid; gap: var(--think-space-3); }
+.think-energy-weekly__metrics { display: grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap: var(--think-space-2); }
+.think-energy-weekly__metrics > div, .think-energy-weekly__findings > div, .think-energy-weekly__readiness { display: grid; gap: 3px; padding: var(--think-space-2); border: 1px solid var(--background-modifier-border); border-radius: var(--think-radius-sm); background: var(--background-secondary); }
+.think-energy-weekly__metrics span, .think-energy-weekly__metrics small, .think-energy-weekly__findings span, .think-energy-weekly__note, .think-energy-weekly__readiness span { color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.think-energy-weekly__metrics strong { font-size: 1.25rem; }
+.think-energy-weekly__findings { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: var(--think-space-2); }
+.think-energy-weekly__observations { display: grid; gap: var(--think-space-1); padding: var(--think-space-3); border-left: 3px solid var(--background-modifier-border); background: var(--background-secondary); }
+.think-energy-weekly__readiness.is-ready { border-style: solid; }
+.think-energy-weekly__readiness:not(.is-ready) { border-style: dashed; }

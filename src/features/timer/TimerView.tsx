@@ -1,4 +1,3 @@
-// src/features/timer/ui/TimerView.tsx
 /** @jsxImportSource preact */
 
 import { useSelector } from '@/app/public';
@@ -18,23 +17,13 @@ interface TimerViewProps {
     dataStore: DataStore;
 }
 
-/**
- * Container: 负责 state 订阅与运行时能力桥接；View 只负责渲染。
- * Round3: 容器/视图分离，减少视图组件的 store 依赖。
- * Round14: Obsidian app / QuickInputModal 只停留在容器层。
- */
 export function TimerView({ app, actionService, timerService, dataStore }: TimerViewProps) {
     const timers = useSelector(selectTimers);
     const isVisible = useSelector(selectIsTimerWidgetVisible);
     const setTimerWidgetVisible = useSelector(selectSetTimerWidgetVisible);
 
-    const handleOpenRecord = (item: Item) => {
-        openEditFromItem({ app, item, openedFrom: 'timer' });
-    };
-
-    const handleOpenRecordOrigin = (item: Item) => {
-        openRecordOrigin({ app, item });
-    };
+    const handleOpenRecord = (item: Item) => openEditFromItem({ app, item, openedFrom: 'timer' });
+    const handleOpenRecordOrigin = (item: Item) => openRecordOrigin({ app, item });
 
     const handleCreateNewTask = () => {
         const config = actionService.getQuickInputConfigForNewTimer();

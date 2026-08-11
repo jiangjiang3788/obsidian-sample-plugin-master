@@ -65,8 +65,6 @@ export function buildViewProps({
     onExcelConfigChange: viewType === 'ExcelView' ? handlers.onExcelConfigChange : undefined,
     onMarkDone,
     onUpdateTaskTime: handlers.onUpdateTaskTime,
-    // Statistics / Progress 只负责展示；新增数据统一走 QuickInput 主入口，不从视图 popover 创建。
-    onQuickCreate: undefined,
     onOpenStatisticsPopover: viewType === 'StatisticsView' ? onOpenStatisticsPopover : undefined,
     onCloseStatisticsPopover: viewType === 'StatisticsView' ? onCloseStatisticsPopover : undefined,
     categoryColors: viewType === 'StatisticsView' ? categoryColors : undefined,

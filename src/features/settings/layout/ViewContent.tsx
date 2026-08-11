@@ -94,7 +94,8 @@ export function ViewContent({
     selectedCategories: selectedLayoutCategories,
     goals: settings.goalSettings?.goals || [],
     goalSettings: settings.goalSettings,
-  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, viewItems]);
+    timers,
+  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, timers, viewItems]);
 
   const handlers = useViewRuntimeHandlers({
     app,

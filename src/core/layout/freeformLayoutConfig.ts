@@ -66,7 +66,7 @@ export function getDefaultFreeformItemSize(viewType: ViewName | undefined, confi
         HeatmapView: { width: 520, height: 360 },
         EventTimelineView: { width: 680, height: 420 },
         ProgressView: { width: 480, height: 360 },
-        TaskExecutionView: { width: 560, height: 380 },
+        EnergyView: { width: 720, height: 620 },
     };
     const recommended = viewType ? recommendations[viewType] : undefined;
 

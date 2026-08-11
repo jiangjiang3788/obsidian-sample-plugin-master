@@ -20,7 +20,7 @@ describe('CSS V5 final convergence', () => {
     for (const fragment of [
       'components/task-row.css',
       'components/grouped-container.css',
-      'features/task-execution.css',
+      'features/energy-task-list.css',
       'overrides/quick-input-modal.css',
     ]) {
       expect(main).toContain(fragment);
@@ -55,8 +55,8 @@ describe('CSS V5 final convergence', () => {
     expect(row).not.toContain("style={{ background: 'none'");
     expect(row).toContain('task-row-title');
 
-    const contextMenu = read('src/features/settings/views/runtime/TaskExecutionContextMenu.tsx');
-    expect(contextMenu).toContain("style={{ left: `${menu.x}px`, top: `${menu.y}px` }}");
+    const taskList = read('src/features/settings/views/runtime/EnergyTaskList.tsx');
+    expect(taskList).toContain("style={`left:${menu.x}px;top:${menu.y}px;`}");
   });
 
   it('uses governed keyboard and table-cell state names', () => {

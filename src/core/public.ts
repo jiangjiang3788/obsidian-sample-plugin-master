@@ -233,7 +233,6 @@ export type {
     CoreBlockSettings,
 } from './blocks';
 
-
 // -------------------- Core Services（DI 需要的 token / class） --------------------
 // 说明：这些 export 是为了组合根（main/app）和 usecases 能 resolve。
 //
@@ -351,4 +350,4 @@ export { setupCoreContainer } from './di/setupCore';
 // -------------------- Hooks（暂时放 core，后续可迁移到 shared/ui） --------------------
 //
 export { useTimelineZoom } from './hooks/useTimelineZoom';
-export { PROGRESS_VIEW_DEFAULT_CONFIG, TASK_EXECUTION_VIEW_DEFAULT_CONFIG } from './config/viewConfigs';
+export { PROGRESS_VIEW_DEFAULT_CONFIG } from './config/viewConfigs';

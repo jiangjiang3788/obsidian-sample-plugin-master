@@ -1,0 +1,329 @@
+.think-energy-period-map {
+  min-width: 0;
+}
+
+.think-energy-period-map--empty {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  color: var(--text-muted);
+}
+
+.think-energy-period-map__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--think-space-3);
+  padding-bottom: var(--think-space-3);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.think-energy-period-map__heading > strong {
+  font-size: var(--font-ui-medium);
+}
+
+.think-energy-period-map__heading > span,
+.think-energy-period-map__hint {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.think-energy-period-map__hint {
+  padding-top: var(--think-space-2);
+  text-align: right;
+}
+
+.think-energy-dot {
+  --think-energy-dot-size: 23px;
+  display: block;
+  width: var(--think-energy-dot-size);
+  height: var(--think-energy-dot-size);
+  min-width: var(--think-energy-dot-size);
+  min-height: var(--think-energy-dot-size);
+  overflow: visible;
+  color: var(--interactive-accent);
+  cursor: pointer;
+  outline: none;
+  transition: transform 120ms ease;
+  user-select: none;
+}
+
+/* SVG owns the geometry. No native button box, background or theme chrome exists. */
+.think-energy-dot__shape,
+.think-energy-dot__selection {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.think-energy-dot__selection {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 0;
+  opacity: 0;
+}
+
+.think-energy-dot__shape {
+  opacity: 1;
+}
+
+/* Realtime = unmistakably filled disk. */
+.think-energy-dot.is-realtime .think-energy-dot__shape {
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 0;
+}
+
+/* Retrospective = unmistakably hollow ring. The center stays transparent. */
+.think-energy-dot.is-retrospective .think-energy-dot__shape {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+}
+
+.think-energy-dot.is-plot {
+  transform: translate(-50%, -50%);
+}
+
+.think-energy-dot.is-cell {
+  transform: none;
+}
+
+.think-energy-dot.is-plot:hover,
+.think-energy-dot.is-plot.is-selected,
+.think-energy-dot.is-plot:focus-visible {
+  z-index: 4;
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.think-energy-dot.is-cell:hover,
+.think-energy-dot.is-cell.is-selected,
+.think-energy-dot.is-cell:focus-visible {
+  z-index: 4;
+  transform: scale(1.12);
+}
+
+.think-energy-dot:hover .think-energy-dot__selection,
+.think-energy-dot.is-selected .think-energy-dot__selection,
+.think-energy-dot:focus-visible .think-energy-dot__selection {
+  stroke-width: 3;
+  opacity: 0.24;
+}
+
+/* day: horizontal time */
+.think-energy-day-map__track {
+  position: relative;
+  height: 138px;
+  margin: var(--think-space-3) var(--think-space-2) 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.think-energy-day-map__guide {
+  --think-energy-x: 0%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--think-energy-x);
+  width: 1px;
+}
+
+.think-energy-day-map__guide > i {
+  position: absolute;
+  inset: 0;
+  border-left: 1px dashed color-mix(in srgb, var(--background-modifier-border) 75%, transparent);
+}
+
+.think-energy-day-map__guide > b {
+  position: absolute;
+  bottom: -24px;
+  left: 0;
+  color: var(--text-faint);
+  font-size: 10px;
+  font-weight: normal;
+  transform: translateX(-50%);
+}
+
+.think-energy-day-map__track > .think-energy-dot {
+  --think-energy-x: 0%;
+  position: absolute;
+  top: 54%;
+  left: var(--think-energy-x);
+}
+
+.think-energy-day-map__empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  transform: translate(-50%, -50%);
+}
+
+/* week/month: date x time */
+.think-energy-date-map__scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: var(--think-space-3);
+}
+
+.think-energy-date-map__chart {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+
+.think-energy-date-map__chart.is-week {
+  min-width: 700px;
+}
+
+.think-energy-date-map__chart.is-month {
+  min-width: 1280px;
+}
+
+.think-energy-date-map__axis {
+  display: grid;
+  grid-template-rows: 42px 360px;
+}
+
+.think-energy-date-map__axis-track {
+  position: relative;
+}
+
+.think-energy-date-map__axis-track > span {
+  --think-energy-y: 0%;
+  position: absolute;
+  top: var(--think-energy-y);
+  right: var(--think-space-2);
+  color: var(--text-faint);
+  font-size: 10px;
+  transform: translateY(-50%);
+}
+
+.think-energy-date-map__axis-track > span:first-child {
+  transform: translateY(0);
+}
+
+.think-energy-date-map__axis-track > span:last-child {
+  transform: translateY(-100%);
+}
+
+.think-energy-date-map__days {
+  --think-energy-day-count: 7;
+  display: grid;
+  grid-template-columns: repeat(var(--think-energy-day-count), minmax(38px, 1fr));
+}
+
+.think-energy-date-map__day {
+  display: grid;
+  grid-template-rows: 42px 360px;
+  min-width: 38px;
+  border-left: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+}
+
+.think-energy-date-map__day.is-missing {
+  background: color-mix(in srgb, var(--background-secondary) 55%, transparent);
+}
+
+.think-energy-date-map__day-head {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+}
+
+.think-energy-date-map__day-head > strong {
+  font-size: var(--font-ui-smaller);
+}
+
+.think-energy-date-map__day-head > span {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.think-energy-date-map__lane {
+  position: relative;
+}
+
+.think-energy-date-map__guide {
+  --think-energy-y: 0%;
+  position: absolute;
+  top: var(--think-energy-y);
+  right: 0;
+  left: 0;
+  border-top: 1px dashed color-mix(in srgb, var(--background-modifier-border) 58%, transparent);
+}
+
+.think-energy-date-map__lane > .think-energy-dot {
+  --think-energy-y: 0%;
+  position: absolute;
+  top: var(--think-energy-y);
+  left: 50%;
+}
+
+/* quarter/year: one day = one strongly encoded dot */
+.think-energy-daily-dots__months {
+  display: grid;
+  gap: var(--think-space-4);
+  padding-top: var(--think-space-3);
+}
+
+.think-energy-daily-dots__months.is-quarter {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.think-energy-daily-dots__months.is-year {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.think-energy-daily-dots__month {
+  min-width: 0;
+}
+
+.think-energy-daily-dots__month > strong {
+  display: block;
+  margin-bottom: var(--think-space-2);
+  font-size: var(--font-ui-small);
+}
+
+.think-energy-daily-dots__weekdays,
+.think-energy-daily-dots__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(30px, 1fr));
+  gap: 4px;
+}
+
+.think-energy-daily-dots__weekdays {
+  margin-bottom: 4px;
+  color: var(--text-faint);
+  font-size: 9px;
+  text-align: center;
+}
+
+.think-energy-daily-dots__grid > i,
+.think-energy-daily-dot-cell {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 32px;
+}
+
+.think-energy-daily-dot-cell.is-missing {
+  background: transparent;
+}
+
+.think-energy-daily-dot {
+  justify-self: center;
+  align-self: center;
+}
+
+@media (max-width: 900px) {
+  .think-energy-daily-dots__months.is-year,
+  .think-energy-daily-dots__months.is-quarter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .think-energy-daily-dots__months.is-year,
+  .think-energy-daily-dots__months.is-quarter {
+    grid-template-columns: 1fr;
+  }
+}

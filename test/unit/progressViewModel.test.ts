@@ -26,7 +26,7 @@ const card = {
   progressRatio: 1.4,
   matchedCount: 3,
   latestDate: '2026-06-01',
-  blockCounts: { task: 2, habit: 0, milestone: 1 },
+  blockCounts: { task: 2, habit: 0, milestone: 1, energy: 4 },
   themeBreakdown: [
     { key: '工作/代码', points: 80, count: 2 },
     { key: '工作/会议', points: 0, count: 0 },
@@ -67,6 +67,7 @@ describe('ProgressViewModel', () => {
     expect(buildProgressBlockCountRows(card.blockCounts).map((row) => [row.key, row.count])).toEqual([
       ['task', 2],
       ['milestone', 1],
+      ['energy', 4],
     ]);
     expect(buildProgressSummary([card as any])).toEqual({ goalCount: 1, totalPoints: 120, totalItems: 3 });
     expect(buildProgressSummary([card as any], { goalCount: 9, totalPoints: 8, totalItems: 7 })).toEqual({ goalCount: 9, totalPoints: 8, totalItems: 7 });

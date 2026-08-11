@@ -1,6 +1,7 @@
 import type { BlockTemplate, TemplateField, ThemeDefinition } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
 import type { RecordInputMeta, RecordInputSessionMode } from '@core/recordInput/public';
+import type { EnergyCaptureMode, EnergyQuickLevel } from '@core/energy/public';
 
 export type QuickInputFormData = Record<string, unknown>;
 export type QuickInputContext = Record<string, unknown>;
@@ -74,6 +75,28 @@ export interface QuickInputEditorState {
   fieldSourceSummary?: Record<QuickInputFieldSource, number>;
 }
 
+type QuickInputEnergyCaptureTiming =
+  | { captureMode: Extract<EnergyCaptureMode, 'realtime'> }
+  | { captureMode: Extract<EnergyCaptureMode, 'retrospective'>; date: string; time: string };
+
+type QuickInputEnergyCaptureContext = {
+  goalId: string;
+  goalPath: string;
+  themePath?: string | null;
+};
+
+export type QuickInputEnergyCaptureRequest = QuickInputEnergyCaptureTiming & QuickInputEnergyCaptureContext & (
+  | {
+      scoreMode: 'quick';
+      score: EnergyQuickLevel;
+    }
+  | {
+      scoreMode: 'detailed';
+      brainScore: number;
+      physicalScore: number;
+    }
+);
+
 export interface QuickInputEditorProps {
   /** 用于渲染 rating 图片资源（由 platform 注入）。 */
   getResourcePath: (path: string) => string;
@@ -87,6 +110,7 @@ export interface QuickInputEditorProps {
   showDivider?: boolean;
   onStateChange?: (state: QuickInputEditorState) => void;
   onRequestSubmit?: () => void;
+  onEnergyCapture?: (request: QuickInputEnergyCaptureRequest) => Promise<void> | void;
   isMobileLike?: boolean;
 }
 

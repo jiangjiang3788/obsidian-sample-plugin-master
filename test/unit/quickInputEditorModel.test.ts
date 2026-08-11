@@ -5,6 +5,7 @@ import {
   applyQuickInputTimeDirectionChange,
   buildInitialFieldSources,
   buildQuickInputEditorState,
+  buildQuickInputGoalOptions,
   buildQuickInputPeriodUi,
   deriveQuickInputInitialSelection,
   hydrateQuickInputTemplateDefaults,
@@ -12,6 +13,28 @@ import {
 } from '@features/quickinput/editor/QuickInputEditorModel';
 
 describe('QuickInputEditorModel', () => {
+
+
+  it('lists active goals without GoalTemplate requirements for direct record types', () => {
+    const settings = {
+      schemaVersion: 2,
+      groups: [],
+      viewInstances: [],
+      layouts: [],
+      inputSettings: { blocks: [], themes: [] },
+      goalSettings: {
+        goals: [
+          { id: 'goal-a', title: '生活', goalPath: '生活', status: 'active', createdAt: '', updatedAt: '' },
+          { id: 'goal-b', title: '归档', goalPath: '归档', status: 'archived', createdAt: '', updatedAt: '' },
+        ],
+        goalTemplates: [],
+      },
+      floatingTimerEnabled: true,
+    } as any;
+
+    expect(buildQuickInputGoalOptions(settings, '', { requirePreset: false }).map((goal) => goal.id)).toEqual(['goal-a']);
+    expect(buildQuickInputGoalOptions(settings, 'core.plan').map((goal) => goal.id)).toEqual([]);
+  });
 
 
   it('derives initial goal/template selection from form data before invocation context', () => {

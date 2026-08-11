@@ -47,6 +47,7 @@ import {
     ObsidianModalPort,
     ObsidianUiPort,
     ObsidianVaultPort,
+    registerEnergyProtocolHandler,
 } from '@/platform/obsidian/public';
 
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
@@ -111,7 +112,11 @@ export default class ThinkPlugin extends Plugin {
                 }, capabilityRegistry);
 
 
-                // 4. 注册命令
+                // 4. 注册跨应用协议 + 命令
+                registerEnergyProtocolHandler(this, {
+                    getSettings: () => this.serviceManager.settingsRepository.getSettings(),
+                    recordInput: this.serviceManager.useCases.recordInput,
+                });
                 devLog('[ThinkPlugin][BOOT] before registerCommands');
                 this.registerCommands();
 

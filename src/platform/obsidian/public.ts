@@ -20,3 +20,5 @@ export { SettingsRoot } from './SettingsRoot';
 export { THINK_SETTINGS_VIEW_TYPE, openThinkSettingsWorkspaceView, registerThinkSettingsWorkspaceView } from './ThinkSettingsView';
 export { VaultWatcher } from './events/VaultWatcher';
 export { NamePromptModal } from './modals/NamePromptModal';
+
+export { registerEnergyProtocolHandler } from './protocols/EnergyProtocolHandler';

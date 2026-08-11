@@ -1,4 +1,4 @@
-import type { FilterRule, InputSettings, Item, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { CurrentView, FilterRule, InputSettings, Item, ThemeDefinition, TimerState, ViewInstance } from '@core/types/public';
 import type { GoalDefinition, GoalSettings } from '@core/goal/public';
 import { buildBlockViewModel } from './blockViewModel';
 import { buildEventTimelineViewModel } from './eventTimelineViewModel';
@@ -6,7 +6,7 @@ import { buildHeatmapViewModel } from './heatmapViewModel';
 import { buildTimelineViewModel } from './timelineViewModel';
 import { buildStatisticsViewModel } from './statisticsViewModel';
 import { buildProgressViewModel } from './progressViewModel';
-import { buildTaskExecutionViewModel } from './taskExecutionViewModel';
+import { buildEnergyViewModel } from './energyViewModel';
 
 export type LayoutViewGranularity = '年' | '季' | '月' | '周' | '天' | string;
 
@@ -22,6 +22,7 @@ export interface ViewRenderModelContext {
   goals?: GoalDefinition[];
   goalSettings?: GoalSettings;
   themes?: ThemeDefinition[];
+  timers?: TimerState[];
 }
 
 export interface ViewRenderModels {
@@ -32,7 +33,7 @@ export interface ViewRenderModels {
   timelineModel?: unknown;
   statisticsModel?: unknown;
   progressModel?: unknown;
-  taskExecutionModel?: unknown;
+  energyModel?: unknown;
   injectedThemesByPath?: unknown;
   injectedThemesToTrack?: string[];
   injectedDataByThemeAndDate?: unknown;
@@ -116,15 +117,19 @@ const viewModelBuilders: Record<string, ViewModelBuilder> = {
     }),
   }),
 
-  TaskExecutionView: ({ allItems, viewInstance, dateRange, currentView, layoutFilters }) => ({
-    taskExecutionModel: buildTaskExecutionViewModel({
+  EnergyView: ({ allItems, viewInstance, dateRange, currentView, goals, inputSettings, timers }) => ({
+    energyModel: buildEnergyViewModel({
       items: allItems,
+      module: viewInstance,
       dateRange,
-      viewInstance,
-      keyword: '',
-      layoutFilters,
+      currentView: currentView as CurrentView,
+      goals: goals || [],
+      themes: inputSettings?.themes || [],
+      timers: timers || [],
     }),
   }),
+
+
 };
 
 export function buildViewRenderModels(context: ViewRenderModelContext): ViewRenderModels {

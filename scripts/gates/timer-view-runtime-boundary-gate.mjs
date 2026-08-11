@@ -23,6 +23,25 @@ const forbidden = [
   ['new QuickInputModal', 'TimerViewView must not instantiate QuickInputModal'],
 ];
 
+
+if (source.includes('class="empty-state"') || source.includes("class='empty-state'")) {
+  fail('Timer empty state must be namespaced; host themes may use .empty-state as a full overlay');
+}
+if (!source.includes('think-timer-empty-state')) {
+  fail('TimerViewView must use the namespaced think-timer-empty-state class');
+}
+
+const timerCssFile = 'src/styles/features/timer.css';
+const timerCss = fs.existsSync(timerCssFile) ? fs.readFileSync(timerCssFile, 'utf8') : '';
+if (!timerCss.includes('.think-os .think-timer-empty-state')) {
+  fail('timer.css must own a namespaced empty-state style');
+}
+const modalCssFile = 'src/styles/components/modal.css';
+const modalCss = fs.existsSync(modalCssFile) ? fs.readFileSync(modalCssFile, 'utf8') : '';
+if (!modalCss.includes('.think-floating-panel__header') || !modalCss.includes('z-index: 2')) {
+  fail('floating panel header must stay above body content so drag/close remain reachable');
+}
+
 for (const [needle, reason] of forbidden) {
   if (source.includes(needle)) fail(`${reason}: found '${needle}' in ${file}`);
 }

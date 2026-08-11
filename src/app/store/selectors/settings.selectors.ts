@@ -27,3 +27,6 @@ export const selectDevConsoleStackEnabled = (s: ZustandAppStore) => !!s.settings
 
 const EMPTY_CATEGORY_COLORS: Record<string, string> = {};
 export const selectCategoryColors = (s: ZustandAppStore) => s.settings.categoryColors ?? EMPTY_CATEGORY_COLORS;
+
+export const selectEnergyDefaultGoalId = (s: ZustandAppStore) => s.settings.energySettings?.defaultGoalId ?? '';
+export const selectEnergyDefaultThemePath = (s: ZustandAppStore) => s.settings.energySettings?.defaultThemePath ?? '';

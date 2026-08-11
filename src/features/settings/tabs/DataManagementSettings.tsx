@@ -6,6 +6,7 @@ import { BlockManager } from '@features/settings/input/BlockManager';
 import { GoalManager } from '@features/settings/input/GoalManager';
 import { GoalMetricSection } from '@features/settings/input/goalManager/GoalMetricSection';
 import { ThemeMetadataManager } from '@features/settings/data/ThemeMetadataManager';
+import { EnergySettingsSection } from './EnergySettingsSection';
 
 type DataSection = 'recordTypes' | 'goals' | 'themes' | 'metrics';
 
@@ -38,7 +39,13 @@ export function DataManagementSettings() {
         </Box>
       </Box>
       <Divider className="think-settings-full-width" />
-      {section === 'recordTypes' && <BlockManager />}
+      {section === 'recordTypes' && (
+        <Box className="think-settings-stack think-settings-full-width">
+          <EnergySettingsSection />
+          <Divider />
+          <BlockManager />
+        </Box>
+      )}
       {section === 'goals' && <GoalManager />}
       {section === 'themes' && <ThemeMetadataManager />}
       {section === 'metrics' && (

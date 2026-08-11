@@ -4,6 +4,7 @@ import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import { buildGoalBuckets, getItemGoalKey } from '@core/goal/public';
 import { computeProgression } from '@core/progression/public';
 import { asUnknownRecord, readFirstString } from '@core/utils/public';
+import { isEnergyItem } from '@core/energy/public';
 
 export interface GoalProgressCardModel {
   key: string;
@@ -72,7 +73,8 @@ export function buildProgressViewModel(args: { items: Item[]; module: ProgressVi
 
   const cards: GoalProgressCardModel[] = buckets.map((bucket) => {
     const goalItems = (items || []).filter((item) => getItemGoalKey(item, goals) === bucket.name);
-    const progression = computeProgression(goalItems, {
+    const progressItems = goalItems.filter((item) => !isEnergyItem(item));
+    const progression = computeProgression(progressItems, {
       basePoints: config.basePoints,
       levelStep,
       includedCategories: config.includedCategories,
@@ -82,12 +84,12 @@ export function buildProgressViewModel(args: { items: Item[]; module: ProgressVi
     });
 
     const blockCounts: Record<string, number> = {};
-    for (const item of goalItems) {
+    for (const item of progressItems) {
       const key = normalizeBlockKey(item);
       blockCounts[key] = (blockCounts[key] || 0) + 1;
     }
 
-    const sortedDates = goalItems
+    const sortedDates = progressItems
       .map(itemDateValue)
       .filter(Boolean)
       .sort();
@@ -98,7 +100,7 @@ export function buildProgressViewModel(args: { items: Item[]; module: ProgressVi
       title: bucket.alias || bucket.name,
       goalPath: bucket.goalPath || bucket.name,
       icon: bucket.icon || null,
-      itemCount: goalItems.length,
+      itemCount: progressItems.length,
       totalPoints: progression.totalPoints,
       level: progression.level,
       currentLevelPoints: progression.currentLevelPoints,
@@ -110,7 +112,7 @@ export function buildProgressViewModel(args: { items: Item[]; module: ProgressVi
       blockCounts,
       categoryBreakdown: progression.categoryBreakdown,
       themeBreakdown: progression.themeBreakdown,
-      recentRecords: buildProgressRecentRecords(goalItems),
+      recentRecords: buildProgressRecentRecords(progressItems),
     };
   });
 

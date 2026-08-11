@@ -41,10 +41,34 @@ export interface ProgressViewConfig {
   topN: number;
 }
 
-/** TaskExecutionView 默认配置（按主题分组的任务执行视图）。 */
-export interface TaskExecutionViewConfig {
-  onlyRecurring: boolean;
+/** EnergyView 默认配置（独立精力状态 / 时间线 / 观察分析视图）。 */
+export interface EnergyViewConfig {
+  /** 最近时间线窗口。当前 core timeline 允许 1–31 天。 */
+  windowDays: number;
+  /** 最近记录列表数量。 */
+  recentSampleLimit: number;
+  /** 同一视图最多展示多少个有 Energy 的目标；0 表示不限制。 */
+  maxGoals: number;
+  /** 可选目标路径；留空时按目标分组展示所有有 Energy 的目标。 */
+  goalPath: string;
+  showTimeline: boolean;
+  showContext: boolean;
+  showEffects: boolean;
+  /** 节律 / 延迟 / 连续工作 / 停止代理分析窗口。 */
+  analysisWindowDays: number;
+  showPatterns: boolean;
+  /** 当前精力的个人化管理候选与保存力量护栏。 */
+  showManagement: boolean;
+  /** 最近一周自动复盘。 */
+  showWeeklyReview: boolean;
+  /** 轻量 N-of-1 前后比较。 */
+  showExperiment: boolean;
+  experimentName: string;
+  experimentHypothesis: string;
+  experimentInterventionDate: string;
+  experimentWindowDays: number;
 }
+
 
 /** TableView 默认配置（供视图 + 编辑器复用）。 */
 export interface TableViewConfig {
@@ -136,6 +160,6 @@ export type ViewDefaultConfig =
   | StatisticsViewConfig
   | HeatmapViewConfig
   | ProgressViewConfig
-  | TaskExecutionViewConfig;
+  | EnergyViewConfig;
 
 export type ViewDefaultConfigMap = Record<ViewName, ViewDefaultConfig>;

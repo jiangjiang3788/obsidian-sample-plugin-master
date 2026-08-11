@@ -5,7 +5,7 @@
  * 这些 handler 由 feature 层桥接（例如 LayoutRenderer）。
  */
 
-import type { Item, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { EnergyTaskExecutionStart, Item, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
 import type { MessageRenderPort } from '@core/ports/public';
 
 export type MarkDoneHandler = (id: string) => void;
@@ -84,6 +84,8 @@ export type OpenCheckinManagerHandler = (request: OpenCheckinManagerRequest) => 
  */
 export interface TimerController {
   startOrResume(taskId: string): Promise<void>;
+  /** Starts a task with the current Energy baseline; Timer remains the execution UI. */
+  startEnergyTask?(taskId: string, context: EnergyTaskExecutionStart): Promise<void>;
 }
 
 export interface StatisticsQuickCreatePayload {

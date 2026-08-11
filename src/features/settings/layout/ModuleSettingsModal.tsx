@@ -64,10 +64,10 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     };
 
     // 准备选项数据
-    const viewTypeOptions = useMemo(() => 
-        VIEW_OPTIONS.map(v => ({ value: v, label: v.replace('View', '') })), 
-        []
-    );
+    const viewTypeOptions = useMemo(() => {
+        const labels: Partial<Record<ViewName, string>> = { ProgressView: '成长', EnergyView: '精力' };
+        return VIEW_OPTIONS.map(v => ({ value: v, label: labels[v] || v.replace('View', '') }));
+    }, []);
 
     const commonFilterFields = useMemo(() => ['goalPath', 'goalPaths', 'goalId', 'coreBlock', 'themePath', 'taskStatus', 'type', 'priority', 'period.label'], []);
     const hasAdvancedFilters = useMemo(() => (currentVi.filters || []).some((rule: any) => (

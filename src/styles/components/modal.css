@@ -101,6 +101,8 @@
 }
 
 .think-floating-panel__header {
+  position: relative;
+  z-index: 2;
   flex-shrink: 0;
   padding: var(--think-space-3) var(--think-space-4);
 }
@@ -147,6 +149,8 @@
 }
 
 .think-floating-panel__body {
+  position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;

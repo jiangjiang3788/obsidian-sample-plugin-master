@@ -107,6 +107,47 @@ export class SettingsUseCase {
         }
     }
 
+
+    /** 设置无上下文精力记录（例如 iOS Shortcut）的默认目标。空值表示自动选择第一个活跃目标。 */
+    async setEnergyDefaultGoalId(goalId: string | null): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) {
+                devError('[SettingsUseCase] Store 未初始化，无法设置默认精力目标');
+                return;
+            }
+            await state.updateSettings((draft) => {
+                draft.energySettings = {
+                    ...(draft.energySettings || {}),
+                    defaultGoalId: String(goalId || '').trim(),
+                };
+            });
+        } catch (error) {
+            devError('[SettingsUseCase] setEnergyDefaultGoalId 失败:', error);
+            throw error;
+        }
+    }
+
+    /** 设置 Energy 快捷记录的默认主题。主题仅作为记录元数据，不进入 GoalTemplate 解析。 */
+    async setEnergyDefaultThemePath(themePath: string | null): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) {
+                devError('[SettingsUseCase] Store 未初始化，无法设置默认精力主题');
+                return;
+            }
+            await state.updateSettings((draft) => {
+                draft.energySettings = {
+                    ...(draft.energySettings || {}),
+                    defaultThemePath: String(themePath || '').trim(),
+                };
+            });
+        } catch (error) {
+            devError('[SettingsUseCase] setEnergyDefaultThemePath 失败:', error);
+            throw error;
+        }
+    }
+
     /**
      * 更新 AI 设置
      * P0 止血点：UI 不再直接调用 appStore._updateSettingsAndPersist

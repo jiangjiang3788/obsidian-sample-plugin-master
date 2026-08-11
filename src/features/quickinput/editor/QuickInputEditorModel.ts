@@ -4,6 +4,7 @@ export type {
   HydrateQuickInputTemplateDefaultsInput,
   QuickInputContext,
   QuickInputEditorProps,
+  QuickInputEnergyCaptureRequest,
   QuickInputEditorState,
   QuickInputFieldSource,
   QuickInputFieldSourceMap,
@@ -54,4 +55,6 @@ export {
   applyQuickInputGoalSelection,
   buildQuickInputGoalOptions,
   resolveQuickInputCoreBlockId,
+  resolveQuickInputEnergyDefaultGoal,
+  resolveQuickInputEnergyThemePath,
 } from './quickInputGoalModel';

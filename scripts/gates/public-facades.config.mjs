@@ -19,6 +19,8 @@ export const CORE_PUBLIC_FACADES = [
   { specifier: '@core/records/public', file: 'src/core/records/public.ts', scope: 'module' },
   { specifier: '@core/progression/public', file: 'src/core/progression/public.ts', scope: 'module' },
   { specifier: '@core/bootstrap/public', file: 'src/core/bootstrap/public.ts', scope: 'module' },
+  { specifier: '@core/recordTypes/public', file: 'src/core/recordTypes/public.ts', scope: 'module' },
+  { specifier: '@core/energy/public', file: 'src/core/energy/public.ts', scope: 'module' },
 ];
 
 export const SHARED_PUBLIC_FACADES = [

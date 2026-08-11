@@ -1,7 +1,9 @@
 import type { Item } from '@/core/types/schema';
 import type { CycleGranularity, GoalDefinition, GoalMetricContract } from './types';
 import { splitGoalPath } from './path';
+import { createGoalOrderIndex } from './order';
 import { resolveDerivedPeriod } from './period';
+import { energySnapshotOccurrenceKey, readEnergyItemSnapshot } from '@/core/energy';
 
 export interface GoalOverviewMetricProgress {
   key: string;
@@ -43,6 +45,12 @@ export interface GoalOverviewRow {
   blockerCount: number;
   milestoneCount: number;
   thoughtCount: number;
+  energyCount: number;
+  latestEnergyScore?: number | null;
+  latestBrainEnergy?: number | null;
+  latestPhysicalEnergy?: number | null;
+  latestEnergyDate?: string | null;
+  latestEnergyTime?: string | null;
   latestDate?: string | null;
   completionRatio: number;
   recentItems: Item[];
@@ -104,7 +112,7 @@ function titleFromPath(path: string | null | undefined): string {
 }
 
 function normalizeGoalPathValue(path: unknown): string | null {
-  const normalized = splitGoalPath(path || '').goalPath || String(path ?? '').trim();
+  const normalized = splitGoalPath(String(path ?? '')).goalPath || String(path ?? '').trim();
   return normalized || null;
 }
 
@@ -160,6 +168,7 @@ function readCoreBlock(item: Item): string {
   if (/阻碍|风险/.test(category)) return 'blocker';
   if (/里程碑/.test(category)) return 'milestone';
   if (/思考|闪念/.test(category)) return 'thought';
+  if (/精力/.test(category)) return 'energy';
   return category || 'record';
 }
 
@@ -186,6 +195,7 @@ function metricSourceValue(metric: GoalMetricContract, row: GoalOverviewRow): nu
   if (/review|总结|复盘/.test(text)) return row.reviewCount;
   if (/plan|计划/.test(text)) return row.planCount;
   if (/thought|思考|闪念/.test(text)) return row.thoughtCount;
+  if (/energy|精力/.test(text)) return row.energyCount;
   return row.totalCount;
 }
 
@@ -253,6 +263,7 @@ export function buildGoalOverviewModel(input: {
   }
 
   const rowMap = new Map<string, GoalOverviewRow>();
+  const latestEnergyOccurrenceByGoalPath = new Map<string, string>();
   let orphanRecordCount = 0;
 
   const ensureRow = (path: string | null | undefined, item?: Item): GoalOverviewRow | null => {
@@ -279,6 +290,12 @@ export function buildGoalOverviewModel(input: {
       blockerCount: 0,
       milestoneCount: 0,
       thoughtCount: 0,
+      energyCount: 0,
+      latestEnergyScore: null,
+      latestBrainEnergy: null,
+      latestPhysicalEnergy: null,
+      latestEnergyDate: null,
+      latestEnergyTime: null,
       latestDate: null,
       completionRatio: 0,
       recentItems: [],
@@ -306,9 +323,28 @@ export function buildGoalOverviewModel(input: {
     for (const path of paths) {
       const row = ensureRow(path, item);
       if (!row) continue;
-      row.totalCount += 1;
       row.coreBlockCounts[coreBlock] = (row.coreBlockCounts[coreBlock] || 0) + 1;
       if (!row.themePath) row.themePath = readThemePath(item);
+
+      if (coreBlock === 'energy') {
+        row.energyCount += 1;
+        const snapshot = readEnergyItemSnapshot(item);
+        if (snapshot) {
+          const occurrenceKey = energySnapshotOccurrenceKey(snapshot);
+          const previousKey = latestEnergyOccurrenceByGoalPath.get(row.goalPath) || '';
+          if (!previousKey || occurrenceKey > previousKey) {
+            latestEnergyOccurrenceByGoalPath.set(row.goalPath, occurrenceKey);
+            row.latestEnergyScore = snapshot.score;
+            row.latestBrainEnergy = snapshot.brainScore ?? null;
+            row.latestPhysicalEnergy = snapshot.physicalScore ?? null;
+            row.latestEnergyDate = snapshot.date || null;
+            row.latestEnergyTime = snapshot.time || null;
+          }
+        }
+        continue;
+      }
+
+      row.totalCount += 1;
       if (date && (!row.latestDate || date > row.latestDate)) row.latestDate = date;
       if (row.recentItems.length < 20) row.recentItems.push(item);
 

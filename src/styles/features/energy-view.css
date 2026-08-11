@@ -1,0 +1,192 @@
+.think-energy-view {
+  display: grid;
+  gap: var(--think-space-4);
+  min-width: 0;
+}
+
+.think-energy-view__goals,
+.think-energy-view__goal {
+  display: grid;
+  gap: var(--think-space-5);
+  min-width: 0;
+}
+
+
+.think-energy-view__goal + .think-energy-view__goal {
+  padding-top: var(--think-space-5);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+/* Desktop UX final: the retired count/capture/header chrome has no runtime CSS. */
+
+.think-energy-view__primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 310px);
+  gap: var(--think-space-5);
+  align-items: start;
+  min-width: 0;
+}
+
+.think-energy-view__timeline-off {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  color: var(--text-muted);
+}
+
+/* period review: flat list, not cards */
+.think-energy-review,
+.think-energy-detail {
+  min-width: 0;
+  padding-left: var(--think-space-4);
+  border-left: 1px solid var(--background-modifier-border);
+}
+
+.think-energy-review__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--think-space-2);
+  padding-bottom: var(--think-space-3);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.think-energy-review__head > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.think-energy-review__list {
+  display: grid;
+}
+
+.think-energy-review__row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: var(--think-space-3);
+  padding: var(--think-space-3) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+}
+
+.think-energy-review__row > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.think-energy-review__row > p {
+  margin: 0;
+  color: var(--text-normal);
+  line-height: 1.45;
+}
+
+/* selected node/day */
+.think-energy-detail {
+  display: grid;
+  gap: var(--think-space-3);
+  align-content: start;
+}
+
+.think-energy-detail__back,
+.think-energy-detail__open {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-accent);
+  cursor: pointer;
+}
+
+.think-energy-detail__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+}
+
+.think-energy-detail__head > div {
+  display: grid;
+  gap: 2px;
+}
+
+.think-energy-detail__head > div > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.think-energy-detail__mode {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.think-energy-detail__total {
+  display: flex;
+  align-items: baseline;
+  gap: var(--think-space-2);
+  padding: var(--think-space-2) 0;
+}
+
+.think-energy-detail__total > strong {
+  color: var(--interactive-accent);
+  font-size: 2.15rem;
+  line-height: 1;
+}
+
+.think-energy-detail__total > span {
+  color: var(--text-muted);
+}
+
+.think-energy-detail__bars {
+  display: grid;
+  gap: var(--think-space-3);
+}
+
+.think-energy-detail__bars > div {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: var(--think-space-3);
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.think-energy-detail__bars i {
+  position: relative;
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--background-secondary);
+}
+
+.think-energy-detail__bars i > b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--think-energy-detail-value);
+  border-radius: inherit;
+  background: var(--interactive-accent);
+}
+
+.think-energy-detail__section,
+.think-energy-detail__impact {
+  display: grid;
+  gap: var(--think-space-2);
+  padding-top: var(--think-space-3);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.think-energy-detail__section > p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.45;
+}
+
+.think-energy-detail__impact > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.think-energy-detail__impact > strong {
+  font-size: var(--font-ui-small);
+}
+

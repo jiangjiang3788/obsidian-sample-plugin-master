@@ -78,15 +78,15 @@ function goalHasDirectEnabledPreset(
 export function buildQuickInputGoalOptions(
   fullSettings: ThinkSettings,
   coreBlockId: string,
+  options: { requirePreset?: boolean } = {},
 ): GoalSelectorOption[] {
   const seen = new Set<string>();
+  const requirePreset = options.requirePreset !== false;
   const sourceGoals = sortGoalsLikePresetMatrix([
     ...(fullSettings.goalSettings?.goals || []),
   ])
     .filter((goal) => goal.status !== "archived")
-    .filter((goal) =>
-      goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId),
-    );
+    .filter((goal) => !requirePreset || goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId));
 
   const result: GoalSelectorOption[] = [];
   for (const [index, goal] of sourceGoals.entries()) {
@@ -164,4 +164,34 @@ export function applyQuickInputGoalSelection(params: {
     formData: nextFormData,
     fieldSources: nextFieldSources,
   };
+}
+
+export function resolveQuickInputEnergyDefaultGoal(
+  goals: GoalSelectorOption[],
+  defaultGoalId?: string | null,
+): GoalSelectorOption | null {
+  if (goals.length === 0) return null;
+  const preferredId = String(defaultGoalId || '').trim();
+  if (preferredId) {
+    const preferred = goals.find((option) => option.goal?.id === preferredId || option.id === preferredId);
+    if (preferred) return preferred;
+  }
+  return goals[0] || null;
+}
+
+
+export function resolveQuickInputEnergyThemePath(params: {
+  formThemePath?: unknown;
+  formThemeSource?: QuickInputFieldSource;
+  defaultThemePath?: string | null;
+  goalThemePath?: string | null;
+}): string | null {
+  const explicitSources = new Set<QuickInputFieldSource>(['user', 'context', 'edit_backfill', 'invocation_context']);
+  const formThemePath = String(params.formThemePath || '').trim();
+  if (formThemePath && params.formThemeSource && explicitSources.has(params.formThemeSource)) return formThemePath;
+  const configured = String(params.defaultThemePath || '').trim();
+  if (configured) return configured;
+  if (formThemePath) return formThemePath;
+  const goalThemePath = String(params.goalThemePath || '').trim();
+  return goalThemePath || null;
 }

@@ -4,11 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
 import {
   selectInputSettings,
+  selectSettings,
   useDataStore,
   useSelector,
   useUseCases,
 } from '@/app/public';
 import type { Item, QuickInputSaveData } from '@core/types/public';
+import { getRecordTypeById, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
+import type { QuickInputEnergyCaptureRequest } from '../editor/QuickInputEditorModel';
+import { dayjs } from '@core/utils/public';
+import { buildRecordSubmitFeedbackPresentation } from '@core/utils/public';
 import type { RecordInputSource, RecordSubmitResult } from '@core/recordInput/public';
 
 import { QuickInputEditor, type QuickInputEditorState } from '../editor';
@@ -54,6 +59,7 @@ export function QuickInputModalContent({
   showNotice,
 }: QuickInputModalContentProps) {
   const settings = useSelector(selectInputSettings);
+  const fullSettings = useSelector(selectSettings);
   const useCases = useUseCases();
   const dataStore = useDataStore();
 
@@ -115,7 +121,9 @@ export function QuickInputModalContent({
 
   const currentState = editorStateRef.current || editorState;
   const currentBlock = (settings.blocks || []).find((block: { id: string }) => block.id === currentState.blockId);
-  const currentBlockName = currentBlock?.name || currentState.template?.name || currentState.blockId;
+  const currentRecordType = getRecordTypeById(fullSettings, currentState.blockId);
+  const currentBlockName = currentRecordType?.name || currentBlock?.name || currentState.template?.name || currentState.blockId;
+  const isEnergyDirect = mode === 'create' && currentState.blockId === ENERGY_RECORD_TYPE_ID;
   const isTimerCreate = mode === 'create' && (source === 'timer' || !!onSave);
   const {
     liveOutputPlan,
@@ -161,6 +169,37 @@ export function QuickInputModalContent({
     setEditorState(state);
   }, []);
 
+  const handleEnergyCapture = useCallback(async (request: QuickInputEnergyCaptureRequest) => {
+    const now = dayjs();
+    const isRetrospective = request.captureMode === 'retrospective';
+    const common = {
+      goalId: request.goalId,
+      goalPath: request.goalPath,
+      themePath: request.themePath || undefined,
+      date: isRetrospective ? request.date : now.format('YYYY-MM-DD'),
+      time: isRetrospective ? request.time : now.format('HH:mm'),
+      captureMode: request.captureMode,
+      timePrecision: 'exact' as const,
+      recordedAt: isRetrospective ? now.format('YYYY-MM-DD HH:mm') : undefined,
+      source: 'desktop-panel',
+    };
+    const result = request.scoreMode === 'detailed'
+      ? await useCases.recordInput.submitEnergySnapshot({
+          ...common,
+          scoreMode: 'detailed',
+          brainScore: request.brainScore,
+          physicalScore: request.physicalScore,
+        })
+      : await useCases.recordInput.submitEnergySnapshot({
+          ...common,
+          scoreMode: 'quick',
+          score: request.score,
+        });
+    const presentation = buildRecordSubmitFeedbackPresentation(result, '精力记录失败');
+    if (presentation.message) showNotice(presentation.message, presentation.tone);
+    if (presentation.shouldCloseModal) closeModal();
+  }, [closeModal, showNotice, useCases]);
+
   const handleRecoveryRescan = useCallback(async () => {
     if (!recovery.paths.length || isRescanningRecoveryPaths) return;
     setIsRescanningRecoveryPaths(true);
@@ -187,7 +226,7 @@ export function QuickInputModalContent({
         onOriginalTouchEnd={handleOriginalTouchEnd}
       />
 
-      <QuickInputConflictRecoveryPanel
+      {!isEnergyDirect && <QuickInputConflictRecoveryPanel
         recovery={recovery}
         isBusy={isBusy}
         isRescanning={isRescanningRecoveryPaths}
@@ -195,7 +234,7 @@ export function QuickInputModalContent({
         onRescan={handleRecoveryRescan}
         onRetry={handleSubmit}
         onDismiss={clearRecovery}
-      />
+      />}
 
       <div class="think-modal__body">
         <QuickInputEditor
@@ -209,11 +248,12 @@ export function QuickInputModalContent({
           allowBlockSwitch={operationMode === 'convert' || operationMode === 'duplicate' ? true : (mode === 'edit' ? false : allowBlockSwitch)}
           onStateChange={handleEditorStateChange}
           onRequestSubmit={handleSubmit}
+          onEnergyCapture={handleEnergyCapture}
           isMobileLike={isMobileLike}
         />
       </div>
 
-      <QuickInputModalFooter
+      {!isEnergyDirect && <QuickInputModalFooter
         operationMode={operationMode}
         isBusy={isBusy}
         isMobileLike={isMobileLike}
@@ -223,7 +263,7 @@ export function QuickInputModalContent({
         onSubmitClick={handleSubmit}
         onSubmitPointerDown={handleSubmitPointerDown}
         onPreserveDesktopInputFocus={preserveDesktopInputFocus}
-      />
+      />}
     </div>
   );
 }

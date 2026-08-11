@@ -46,14 +46,19 @@
 @import "./features/layout-editor.css";
 @import "./features/view-shell.css";
 @import "./features/progress.css";
+@import "./features/progress-energy.css";
+@import "./features/energy-view.css";
+@import "./features/energy-task-list.css";
+@import "./features/energy-map.css";
 @import "./features/heatmap.css";
 @import "./features/statistics.css";
 @import "./features/timeline.css";
 @import "./features/excel.css";
 @import "./features/block.css";
 @import "./features/event-timeline.css";
-@import "./features/task-execution.css";
+@import "./features/timer.css";
 
 @import "./overrides/mui.css";
 @import "./overrides/obsidian-modal.css";
 @import "./overrides/quick-input-modal.css";
+@import "./features/energy-capture.css";

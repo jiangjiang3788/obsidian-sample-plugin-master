@@ -8,7 +8,7 @@ export { EventTimelineView } from './EventTimelineView/index';
 export { HeatmapView } from './HeatmapView';
 export { StatisticsView, PopoverContent } from './StatisticsView/index';
 export { ProgressView } from './ProgressView';
-export { TaskExecutionView } from './TaskExecutionView';
+export { EnergyView } from './EnergyView';
 export { TableView } from './TableView';
 export { ExcelView } from './ExcelView';
 
@@ -20,3 +20,4 @@ export { CategoryFilter } from './CategoryFilter';
 
 // 工具函数
 export * from './timeline-parser';
+export { EnergyTaskList } from './EnergyTaskList';

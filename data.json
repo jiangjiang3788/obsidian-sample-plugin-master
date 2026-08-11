@@ -43,7 +43,7 @@
       "title": "目标统计",
       "viewType": "StatisticsView",
       "parentId": null,
-      "collapsed": false,
+      "collapsed": true,
       "fields": [
         "goalPath",
         "themePath",
@@ -259,15 +259,9 @@
       ],
       "groupFields": [
         "coreBlock",
-        "leafTheme"
+        "rootGoal"
       ],
-      "filters": [
-        {
-          "field": "type",
-          "op": "=",
-          "value": "block"
-        }
-      ],
+      "filters": [],
       "sort": [
         {
           "field": "date",
@@ -275,77 +269,6 @@
         }
       ],
       "collapsed": true
-    },
-    {
-      "id": "vi_mmikcsvy3rwcetd",
-      "parentId": null,
-      "title": "任务",
-      "viewType": "TableView",
-      "viewConfig": {
-        "categories": [
-          {
-            "name": "打卡",
-            "color": "#b888e7"
-          },
-          {
-            "name": "计划",
-            "color": "#9eeabe"
-          },
-          {
-            "name": "闪念",
-            "color": "#e47272"
-          },
-          {
-            "name": "事件",
-            "color": "#e0e0e0"
-          },
-          {
-            "name": "完成任务",
-            "color": "#88c1dd"
-          },
-          {
-            "name": "未完成任务",
-            "color": "#ebebeb"
-          },
-          {
-            "name": "总结",
-            "color": "#e5bf8a"
-          }
-        ],
-        "rowField": "taskStatus",
-        "colField": "goalPath"
-      },
-      "fields": [
-        "title"
-      ],
-      "groupFields": [],
-      "filters": [
-        {
-          "field": "coreBlock",
-          "op": "=",
-          "value": "task",
-          "logic": "and"
-        },
-        {
-          "field": "taskStatus",
-          "op": "=",
-          "value": "open",
-          "logic": "and"
-        },
-        {
-          "field": "file.basename",
-          "op": "!=",
-          "value": "2-2三餐",
-          "logic": "and"
-        },
-        {
-          "field": "repeatToken",
-          "op": "=",
-          "value": "none"
-        }
-      ],
-      "sort": [],
-      "collapsed": false
     },
     {
       "id": "vi_mn9o962553qwhzp",
@@ -368,7 +291,13 @@
         "content"
       ],
       "groupFields": [],
-      "filters": [],
+      "filters": [
+        {
+          "field": "taskStatus",
+          "op": "=",
+          "value": "open"
+        }
+      ],
       "sort": [],
       "collapsed": false
     },
@@ -500,7 +429,7 @@
       "id": "vi_mpi3dydfsejfio8",
       "parentId": null,
       "title": "excle",
-      "viewType": "ExcelView",
+      "viewType": "EnergyView",
       "viewConfig": {
         "categories": [
           {
@@ -570,12 +499,11 @@
       "name": "全局布局",
       "viewInstanceIds": [
         "vi_statistics_goal_mvp12",
-        "vi_mn9o962553qwhzp",
         "vi_mmeolydjaga6z6u",
+        "vi_mn9o962553qwhzp",
         "vi_mmijitbq47u10wu",
         "vi_mnztlf3wxrrqd8i",
         "vi_mm9z0oe1cvlr53c",
-        "vi_mmikcsvy3rwcetd",
         "vi_mno1upgdwpv72oj"
       ],
       "displayMode": "list",
@@ -14810,6 +14738,10 @@
     ],
     "patches": []
   },
+  "energySettings": {
+    "defaultGoalId": "",
+    "defaultThemePath": ""
+  },
   "floatingTimerEnabled": false,
   "activeThemePaths": [
     "思考",
@@ -14927,7 +14859,8 @@
     "闪念": "#e47272",
     "事件": "#a5c8ee",
     "生活": "#8cd4ee",
-    "01": "#a8e184"
+    "01": "#a8e184",
+    "精力": "#96b0e8"
   },
   "goalCoreMvpVersion": "mvp9-view-domain-fields",
   "goalCoreP0FixVersion": 1,

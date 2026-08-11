@@ -4,6 +4,7 @@ import {
   type InputSettings,
   type ThinkSettings,
 } from '@/core/types/schema';
+import { DEFAULT_ENERGY_SETTINGS } from '@/core/energy';
 
 export const THINK_SETTINGS_SCHEMA_POLICY = 'current-only' as const;
 
@@ -32,6 +33,7 @@ function normalizeInputSettings(value: unknown): InputSettings {
     themes: Array.isArray(raw.themes) ? raw.themes as InputSettings['themes'] : [],
   };
 }
+
 
 function assertCurrentSchemaVersion(raw: Record<string, unknown>): void {
   if (Object.keys(raw).length === 0) return;
@@ -64,6 +66,7 @@ export function toCurrentThinkSettings(rawValue: unknown): ThinkSettings {
     viewInstances: Array.isArray(partial.viewInstances) ? partial.viewInstances : [],
     layouts: Array.isArray(partial.layouts) ? partial.layouts : [],
     inputSettings: normalizeInputSettings(partial.inputSettings),
+    energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...(isRecord(partial.energySettings) ? partial.energySettings : {}) },
     activeThemePaths: Array.isArray(partial.activeThemePaths) ? partial.activeThemePaths : [],
   };
 }

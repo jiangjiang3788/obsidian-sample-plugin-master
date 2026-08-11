@@ -2,6 +2,7 @@
 import { generateId } from '@core/utils/public';
 import { TimerStateService } from '@core/services/public';
 import type { TimerState } from '@/app/store/types';
+import { isActiveTimerState } from '@core/types/public';
 import type { AppStoreApi } from './index';
 
 /**
@@ -16,6 +17,11 @@ export class TimerUseCase {
     ) {}
 
     getTimers(): TimerState[] {
+        return this.store.getState().timer.timers.filter(isActiveTimerState);
+    }
+
+    /** Persisted timer state also contains Energy feedback lifecycle entries. */
+    getAllTimerEntries(): TimerState[] {
         return this.store.getState().timer.timers;
     }
 

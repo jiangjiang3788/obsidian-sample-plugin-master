@@ -56,6 +56,22 @@ export class InputService {
     const { outputContent, targetFilePath, header } = preview;
 
     if (!targetFilePath) throw new Error('模板未定义目标文件路径 (targetFile)。');
+    return this.appendDirectRecord(targetFilePath, outputContent, header, options);
+  }
+
+  /**
+   * Direct Record 共用落盘入口。
+   * 不解析模板，只负责把已经生成好的稳定 Markdown 写到指定文件/目标标题下。
+   */
+  async appendDirectRecord(
+    targetFilePath: string,
+    outputContent: string,
+    header: string | null = null,
+    options: RecordWriteOptions = {},
+  ): Promise<string> {
+    const signal = options.signal;
+    if (!targetFilePath) throw new Error('Direct Record 未定义目标文件路径。');
+    if (!outputContent.trim()) throw new Error('Direct Record 输出内容为空。');
     this.throwIfAborted(signal);
 
     if (header) {

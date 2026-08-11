@@ -26,7 +26,6 @@ export function getExportConfigByViewType(viewType: string): ExportViewConfig {
         'HeatmapView': HEATMAP_EXPORT_CONFIG,
         'TimelineView': TIMELINE_EXPORT_CONFIG,
         'TableView': TABLE_EXPORT_CONFIG,
-        'TaskExecutionView': TABLE_EXPORT_CONFIG,
     };
     
     return configMap[viewType] || BLOCK_EXPORT_DEFAULT_CONFIG;

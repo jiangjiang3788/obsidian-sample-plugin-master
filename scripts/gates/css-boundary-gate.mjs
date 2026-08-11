@@ -205,7 +205,7 @@ const requiredMainFragments = [
   'features/excel.css',
   'features/block.css',
   'features/event-timeline.css',
-  'features/task-execution.css',
+  'features/energy-task-list.css',
   'overrides/obsidian-modal.css',
   'overrides/quick-input-modal.css',
 ];
@@ -300,7 +300,7 @@ if (mainCss.includes('../shared/styles/')) {
 }
 
 const v5Contracts = [
-  ['src/styles/features/task-execution.css', '--think-task-tone-1-bg'],
+  ['src/styles/features/energy-task-list.css', '--think-task-cadence-year-bg'],
   ['src/styles/components/task-row.css', 'think-table-cell-item'],
   ['src/styles/components/grouped-container.css', 'bv-group--level-1'],
   ['src/styles/overrides/quick-input-modal.css', 'think-quick-input-keyboard-detected'],

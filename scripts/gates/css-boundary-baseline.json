@@ -42,6 +42,54 @@
       "colorOccurrences": 0,
       "unprefixedClasses": []
     },
+    "src/styles/features/energy-capture.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/energy-experiment.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/energy-management.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/energy-map.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/energy-patterns.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/energy-task-list.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/energy-view.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/energy-weekly.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
     "src/styles/features/event-timeline.css": {
       "important": 0,
       "colors": [],
@@ -97,6 +145,12 @@
       "unprefixedClasses": []
     },
     "src/styles/features/layout-editor.css": {
+      "important": 0,
+      "colors": [],
+      "colorOccurrences": 0,
+      "unprefixedClasses": []
+    },
+    "src/styles/features/progress-energy.css": {
       "important": 0,
       "colors": [],
       "colorOccurrences": 0,
@@ -228,13 +282,13 @@
       "colorOccurrences": 0,
       "unprefixedClasses": []
     },
-    "src/styles/features/task-execution.css": {
+    "src/styles/features/timeline.css": {
       "important": 0,
       "colors": [],
       "colorOccurrences": 0,
       "unprefixedClasses": []
     },
-    "src/styles/features/timeline.css": {
+    "src/styles/features/timer.css": {
       "important": 0,
       "colors": [],
       "colorOccurrences": 0,
@@ -458,6 +512,34 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/app/actions/recordCreate/heatmapCreateAction.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordCreate/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordCreate/openCreateModal.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordCreate/statisticsCreateAction.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordCreate/timelineCreateAction.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordCreate/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/actions/recordCreate/viewHeaderCreateAction.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/app/actions/recordCreateActions.ts": {
       "staticStyle": 0,
       "staticSx": 0
@@ -662,7 +744,31 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/app/ui/primitives/FloatingPanel.types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/primitives/FloatingPanelHeader.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/primitives/FloatingPanelResizeHandles.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/primitives/floatingPanelEvents.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/app/ui/primitives/floatingPanelGeometry.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/primitives/useFloatingPanelInteractions.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/app/ui/primitives/useFloatingPanelLifecycle.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -874,7 +980,167 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/core/config/views/defaults/block.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/defaults/energy.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/defaults/eventTimeline.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/defaults/excel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/defaults/heatmap.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/defaults/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/defaults/progress.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/defaults/statistics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/defaults/table.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/defaults/timeline.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/exportConfigs.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/config/views/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/core/di/setupCore.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/actionPolicy.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/context.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/effects.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/experiment.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/experimentTypes.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/item.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/management.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/managementTypes.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/patternSupport.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/patternTypes.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/patterns.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/period.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/protocol.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/public.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/quality.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/recommendation.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/recommendationCandidates.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/recommendationLearning.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/recommendationTypes.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/record.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/scale.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/timeline.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/weekly.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/weeklySupport.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/energy/weeklyTypes.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -919,6 +1185,10 @@
       "staticSx": 0
     },
     "src/core/fields/TemplateFieldSanitizer.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/fields/fieldTokenSemantics.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -1178,6 +1448,22 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/core/recordTypes/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/recordTypes/public.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/recordTypes/registry.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/recordTypes/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/core/records/RecordEntity.ts": {
       "staticStyle": 0,
       "staticSx": 0
@@ -1218,6 +1504,10 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/core/records/task/taskRecurrence.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/core/records/task/taskStatus.ts": {
       "staticStyle": 0,
       "staticSx": 0
@@ -1243,6 +1533,10 @@
       "staticSx": 0
     },
     "src/core/semantics/public.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/semantics/text.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -1302,11 +1596,67 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/core/services/item/GoalTemplateMigrationMutation.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/InlineFieldMutation.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/ItemLocator.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/ItemMutationWriter.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/ItemService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/MigrationBackupService.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/TaskCompletionMutation.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/itemId.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/lineMetadata.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/services/item/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/core/services/public.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
     "src/core/services/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/settings/currentSettingsSchema.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/settings/public.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/theme/ThemeManager.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -1330,7 +1680,19 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/core/theme/themeManagerSemantics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/theme/themeMatching.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/core/theme/themePathParser.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/core/theme/themePathSemantics.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -1574,6 +1936,10 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/core/view-config/filterValueSemantics.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/features/aichat/AiChatModalContainer.tsx": {
       "staticStyle": 0,
       "staticSx": 2
@@ -1649,6 +2015,10 @@
     "src/features/quickinput/editor/QuickInputEditorView.tsx": {
       "staticStyle": 0,
       "staticSx": 3
+    },
+    "src/features/quickinput/editor/components/EnergyQuickCapturePanel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
     },
     "src/features/quickinput/editor/components/Fields.tsx": {
       "staticStyle": 0,
@@ -1763,6 +2133,10 @@
       "staticSx": 0
     },
     "src/features/quickinput/editor/quickInputPathModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/quickinput/editor/quickInputRecordTypeModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2062,6 +2436,10 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/features/settings/tabs/EnergySettingsSection.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/features/settings/tabs/GeneralSettings.tsx": {
       "staticStyle": 0,
       "staticSx": 0
@@ -2097,6 +2475,10 @@
     "src/features/settings/views/editors/CommonFilterPanel.tsx": {
       "staticStyle": 0,
       "staticSx": 7
+    },
+    "src/features/settings/views/editors/EnergyViewEditor.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
     },
     "src/features/settings/views/editors/EventTimelineViewEditor.tsx": {
       "staticStyle": 0,
@@ -2138,10 +2520,6 @@
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/editors/TaskExecutionViewEditor.tsx": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
     "src/features/settings/views/editors/TimelineViewEditor.tsx": {
       "staticStyle": 0,
       "staticSx": 15
@@ -2158,6 +2536,18 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/features/settings/views/models/energySummaryModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/models/energyTaskListModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/models/energyViewModel.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/features/settings/views/models/eventTimelineViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
@@ -2171,10 +2561,6 @@
       "staticSx": 0
     },
     "src/features/settings/views/models/statisticsViewModel.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/features/settings/views/models/taskExecutionViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2203,6 +2589,74 @@
       "staticSx": 0
     },
     "src/features/settings/views/runtime/CategoryFilter.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyCalendarMap.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyDot.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyEffectsList.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyExperimentPanel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyInsightCards.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyManagementPanel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyMapTypes.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyMoreSummary.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyPatternsPanel.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyPeriodMap.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyPeriodReview.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergySampleDetail.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyTaskList.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyTimelineMap.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyView.tsx": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyVisualEncoding.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/features/settings/views/runtime/EnergyWeeklyReviewPanel.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2343,22 +2797,6 @@
       "staticSx": 0
     },
     "src/features/settings/views/runtime/TableViewModel.ts": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/features/settings/views/runtime/TaskExecutionChipGrid.tsx": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/features/settings/views/runtime/TaskExecutionContextMenu.tsx": {
-      "staticStyle": 1,
-      "staticSx": 0
-    },
-    "src/features/settings/views/runtime/TaskExecutionView.tsx": {
-      "staticStyle": 0,
-      "staticSx": 0
-    },
-    "src/features/settings/views/runtime/TaskExecutionViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2658,6 +3096,10 @@
       "staticStyle": 0,
       "staticSx": 0
     },
+    "src/platform/obsidian/protocols/EnergyProtocolHandler.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
     "src/platform/obsidian/public.ts": {
       "staticStyle": 0,
       "staticSx": 0
@@ -2747,6 +3189,50 @@
       "staticSx": 0
     },
     "src/shared/styles/mui-theme.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/components.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/controlComponents.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/feedbackComponents.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/formComponents.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/navigationComponents.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/overlayComponents.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/palette.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/surfaceComponents.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/types.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/styles/muiTheme/typography.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2903,6 +3389,34 @@
       "staticSx": 0
     },
     "src/shared/utils/diagnosticConsole.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/error/ErrorHandler.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/error/classification.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/error/errors.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/error/index.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/error/logging.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/error/messages.ts": {
+      "staticStyle": 0,
+      "staticSx": 0
+    },
+    "src/shared/utils/error/types.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },

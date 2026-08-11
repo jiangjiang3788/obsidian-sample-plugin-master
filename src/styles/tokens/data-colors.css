@@ -11,19 +11,21 @@
   --think-data-5: #8b68d8;
   --think-data-6: #168ca8;
   --think-data-neutral: var(--think-text-secondary);
+  --think-energy-match: #f2a93b;
 
-  /* Recurrence intensity palette for Task Execution. */
-  --think-task-tone-0-bg: var(--think-bg-surface-1);
-  --think-task-tone-0-text: var(--think-text-primary);
-  --think-task-tone-1-bg: #8065a8;
-  --think-task-tone-1-text: #ffffff;
-  --think-task-tone-2-bg: #aa94c5;
-  --think-task-tone-2-text: #ffffff;
-  --think-task-tone-3-bg: #ddd2ec;
-  --think-task-tone-3-text: #674c87;
-  --think-task-tone-4-bg: #f1edf6;
-  --think-task-tone-4-text: #7f6d96;
-  --think-task-tone-4-border: #d8cde5;
+  /* Task cadence is semantic: higher frequency stays lighter; longer cycles become darker. */
+  --think-task-cadence-routine-bg: var(--think-bg-surface-1);
+  --think-task-cadence-routine-text: var(--think-text-primary);
+  --think-task-cadence-day-bg: #f1edf6;
+  --think-task-cadence-day-text: #735f8c;
+  --think-task-cadence-week-bg: #ddd2ec;
+  --think-task-cadence-week-text: #674c87;
+  --think-task-cadence-month-bg: #c3b2d8;
+  --think-task-cadence-month-text: #533d6e;
+  --think-task-cadence-quarter-bg: #aa94c5;
+  --think-task-cadence-quarter-text: #3f2f54;
+  --think-task-cadence-year-bg: #8065a8;
+  --think-task-cadence-year-text: #ffffff;
 
   --think-heatmap-0: var(--think-bg-surface-2);
   --think-heatmap-1: #d9e4ff;
@@ -41,16 +43,20 @@
   --think-data-4: #ef8095;
   --think-data-5: #ac8ee8;
   --think-data-6: #4ab7ce;
+  --think-energy-match: #ffc14f;
 
-  --think-task-tone-1-bg: #9b82bd;
-  --think-task-tone-1-text: #ffffff;
-  --think-task-tone-2-bg: #725e8c;
-  --think-task-tone-2-text: #ffffff;
-  --think-task-tone-3-bg: #43384f;
-  --think-task-tone-3-text: #d9cbea;
-  --think-task-tone-4-bg: #2f2936;
-  --think-task-tone-4-text: #bfaed2;
-  --think-task-tone-4-border: #51445f;
+  --think-task-cadence-routine-bg: var(--think-bg-surface-1);
+  --think-task-cadence-routine-text: var(--think-text-primary);
+  --think-task-cadence-day-bg: #352f3c;
+  --think-task-cadence-day-text: #d6c9e5;
+  --think-task-cadence-week-bg: #43384f;
+  --think-task-cadence-week-text: #e1d6ee;
+  --think-task-cadence-month-bg: #5a496c;
+  --think-task-cadence-month-text: #f0e9f7;
+  --think-task-cadence-quarter-bg: #725e8c;
+  --think-task-cadence-quarter-text: #ffffff;
+  --think-task-cadence-year-bg: #9b82bd;
+  --think-task-cadence-year-text: #ffffff;
 
   --think-heatmap-1: #243552;
   --think-heatmap-2: #2d4a78;

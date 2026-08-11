@@ -13,7 +13,7 @@
  */
 
 import { singleton, inject } from 'tsyringe';
-import type { TimerState } from '@core/types/timer';
+import type { TimerState, TimerStatus } from '@core/types/timer';
 import type { VaultPort } from '@core/ports/VaultPort';
 import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
 import { devWarn } from '@core/utils/devLogger';
@@ -30,7 +30,31 @@ export class TimerStateService {
       if (!content) return [];
 
       const timers = JSON.parse(content);
-      return Array.isArray(timers) ? (timers as TimerState[]) : [];
+      if (!Array.isArray(timers)) return [];
+
+      // Timer state lives across plugin upgrades. Never allow malformed or
+      // partially-written JSON entries to poison workspace bootstrap.
+      const allowedStatuses = new Set<TimerStatus>([
+        'running',
+        'paused',
+        'awaiting-energy',
+        'feedback-recorded',
+      ]);
+
+      return timers.filter((entry: unknown): entry is TimerState => {
+        if (!entry || typeof entry !== 'object') return false;
+        const timer = entry as Partial<TimerState>;
+        return typeof timer.id === 'string'
+          && timer.id.length > 0
+          && typeof timer.taskId === 'string'
+          && timer.taskId.length > 0
+          && typeof timer.startTime === 'number'
+          && Number.isFinite(timer.startTime)
+          && typeof timer.elapsedSeconds === 'number'
+          && Number.isFinite(timer.elapsedSeconds)
+          && typeof timer.status === 'string'
+          && allowedStatuses.has(timer.status as TimerStatus);
+      });
     } catch (error) {
       devWarn('Think Plugin: Failed to load timer state from file.', error);
       return [];

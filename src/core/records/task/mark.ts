@@ -8,19 +8,27 @@ import { dayjs } from '@/core/utils/date';
 /* ---------- 周期任务工具类型 ---------- */
 export interface RecurrenceInfo {
     interval: number;
-    unit: 'day' | 'week' | 'month' | 'year';
+    unit: 'day' | 'week' | 'month' | 'quarter' | 'year';
     whenDone: boolean;
 }
 
-// 放宽了 🔁 前面的限制：允许紧贴正文（如 “什么也不干🔁every day”）也能识别。
+// 允许从完整任务行提取，也允许解析标准化后的纯规则文本。
 const RECURRENCE_RULE_RE =
-    /(^|[\s\[(]|[^\s])🔁\s*(every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?)(?=$|\s*(?:[\(\[][^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/i;
+    /(^|[\s\[(]|[^\s])🔁\s*(every\s+(?:\d+\s+)?(?:day|week|month|quarter|year)s?(?:\s+when\s+done)?)(?=$|\s*(?:[\(\[][^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/i;
+
+const PURE_RECURRENCE_RE =
+    /^every\s+(\d+)?\s*(day|week|month|quarter|year)s?(\s+when\s+done)?$/i;
 
 /*
  * 从一整行任务文本中抽取“纯 recurrence 规则文本”。
+ * 如果调用方已经传入纯规则文本，也直接接受。
  */
 export function extractRecurrenceText(rawTask: string): string | null {
-    const match = rawTask.match(RECURRENCE_RULE_RE);
+    const raw = String(rawTask || '').trim();
+    if (!raw) return null;
+    const pure = raw.replace(/^🔁\s*/u, '').trim();
+    if (PURE_RECURRENCE_RE.test(pure)) return pure;
+    const match = raw.match(RECURRENCE_RULE_RE);
     if (!match) return null;
     return match[2]?.trim() || null;
 }
@@ -89,9 +97,7 @@ export function parseRecurrence(rawTask: string): RecurrenceInfo | null {
     const recurrenceText = extractRecurrenceText(rawTask);
     if (!recurrenceText) return null;
 
-    const m = recurrenceText.match(
-        /^every\s+(\d+)?\s*(day|week|month|year)s?(\s+when\s+done)?$/i,
-    );
+    const m = recurrenceText.match(PURE_RECURRENCE_RE);
     if (!m) return null;
 
     const interval = m[1] ? parseInt(m[1], 10) : 1;
@@ -134,7 +140,9 @@ export function generateNextRecurringTask(
     if (!rec) return next.trim();
 
     const base = dayjs(baseDateISO, ['YYYY-MM-DD', 'YYYY/MM/DD']);
-    const nextDate = base.add(rec.interval, rec.unit);
+    const nextDate = rec.unit === 'quarter'
+        ? base.add(rec.interval * 3, 'month')
+        : base.add(rec.interval, rec.unit);
     const nextStr = nextDate.format('YYYY-MM-DD');
 
     const replaceIf = (emoji: string) => {

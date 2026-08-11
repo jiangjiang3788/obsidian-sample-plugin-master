@@ -62,7 +62,7 @@ export function TimerViewView({
                         />
                     ))
                 ) : (
-                    <div class="empty-state">暂无计时任务</div>
+                    <div class="think-timer-empty-state">暂无计时任务</div>
                 )}
             </Stack>
         </FloatingPanel>

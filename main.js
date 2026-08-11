@@ -3007,8 +3007,8 @@ function normalizeExplicitTheme(rawTheme, matcher) {
   return cleanThemePath(matched) || explicitTheme;
 }
 function readExplicitThemePath(item) {
-  const normalized = cleanThemePath(item?.themePath);
-  if (normalized) return normalized;
+  const normalized2 = cleanThemePath(item?.themePath);
+  if (normalized2) return normalized2;
   const cached2 = cleanThemePath(item?.themePathNormalized);
   if (cached2) return cached2;
   return cleanThemePath(item?.theme) || void 0;
@@ -3062,59 +3062,59 @@ const FIELD_CATEGORY_LABELS = {
   custom: "自定义字段"
 };
 const FIELD_CATEGORY_ORDER = ["core", "file", "custom"];
-const text = (partial2) => ({
+const text$4 = (partial2) => ({
   type: "string",
   ...partial2
 });
 const FIELD_REGISTRY = {
   // --- 核心字段 ---
-  id: text({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
-  type: text({ key: "type", label: "记录类型", category: "core", source: "item", semantic: "recordType", description: "任务或块等记录类型" }),
-  title: text({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录标题或主要摘要" }),
-  content: text({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与 Block 统一为用户正文，不包含任务勾选框、标签、时间等原始 Markdown 噪音" }),
-  editableText: text({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
-  rawSource: text({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
-  fullData: text({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整 Markdown 数据；任务为完整任务行，Block 为完整块内容，用于区分干净内容字段" }),
+  id: text$4({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
+  type: text$4({ key: "type", label: "记录类型", category: "core", source: "item", semantic: "recordType", description: "任务或块等记录类型" }),
+  title: text$4({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录标题或主要摘要" }),
+  content: text$4({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与 Block 统一为用户正文，不包含任务勾选框、标签、时间等原始 Markdown 噪音" }),
+  editableText: text$4({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
+  rawSource: text$4({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
+  fullData: text$4({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整 Markdown 数据；任务为完整任务行，Block 为完整块内容，用于区分干净内容字段" }),
   // --- 内置核心业务字段 ---
-  categoryKey: text({ key: "categoryKey", label: "分类路径", type: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
+  categoryKey: text$4({ key: "categoryKey", label: "分类路径", type: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
   tags: { key: "tags", label: "标签", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tag", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
-  goalId: text({ key: "goalId", label: "目标ID", category: "core", source: "item", semantic: "goalId", inputType: "text", aliases: ["目标ID", "goalId"] }),
+  goalId: text$4({ key: "goalId", label: "目标ID", category: "core", source: "item", semantic: "goalId", inputType: "text", aliases: ["目标ID", "goalId"] }),
   goalIds: { key: "goalIds", label: "目标ID列表", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "goalId", cardinality: "multi", hierarchical: false, hiddenByDefault: true },
-  goalPath: text({ key: "goalPath", label: "目标路径", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标路径", "goalPath"] }),
+  goalPath: text$4({ key: "goalPath", label: "目标路径", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标路径", "goalPath"] }),
   goalPaths: { key: "goalPaths", label: "目标", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "goals", cardinality: "multi", hierarchical: true, description: "目标路径字段，例如 产品化/QuickInput、个人成长/写作", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
-  rootGoal: text({ key: "rootGoal", label: "根目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
-  leafGoal: text({ key: "leafGoal", label: "叶目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
-  cycleId: text({ key: "cycleId", label: "周期ID", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
-  "period.id": text({ key: "period.id", label: "周期ID", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
-  "period.label": text({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
-  "period.granularity": text({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
-  coreBlock: text({ key: "coreBlock", label: "核心Block", category: "core", source: "item", semantic: "coreBlock", inputType: "text", aliases: ["核心Block", "coreBlock"] }),
-  taskStatus: text({ key: "taskStatus", label: "任务状态", category: "core", source: "derived", semantic: "status", inputType: "singleSelect", aliases: ["任务状态", "taskStatus"], description: "由任务勾选框、完成日期和旧分类推导：open/done/cancelled。" }),
+  rootGoal: text$4({ key: "rootGoal", label: "根目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
+  leafGoal: text$4({ key: "leafGoal", label: "叶目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
+  cycleId: text$4({ key: "cycleId", label: "周期ID", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
+  "period.id": text$4({ key: "period.id", label: "周期ID", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
+  "period.label": text$4({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
+  "period.granularity": text$4({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
+  coreBlock: text$4({ key: "coreBlock", label: "核心Block", category: "core", source: "item", semantic: "coreBlock", inputType: "text", aliases: ["核心Block", "coreBlock"] }),
+  taskStatus: text$4({ key: "taskStatus", label: "任务状态", category: "core", source: "derived", semantic: "status", inputType: "singleSelect", aliases: ["任务状态", "taskStatus"], description: "由任务勾选框、完成日期和旧分类推导：open/done/cancelled。" }),
   date: { key: "date", label: "日期", type: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
-  priority: text({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
+  priority: text$4({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
   icon: { key: "icon", label: "图标", type: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
-  recurrence: text({ key: "recurrence", label: "重复规则", category: "core", source: "item", semantic: "recurrence" }),
-  repeatToken: text({ key: "repeatToken", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", hiddenByDefault: true, aliases: ["重复", "repeat"] }),
-  period: text({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
+  recurrence: text$4({ key: "recurrence", label: "重复规则", category: "core", source: "item", semantic: "recurrence" }),
+  repeatToken: text$4({ key: "repeatToken", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", hiddenByDefault: true, aliases: ["重复", "repeat"] }),
+  period: text$4({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
   startTime: { key: "startTime", label: "开始时间", type: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
   endTime: { key: "endTime", label: "结束时间", type: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
   duration: { key: "duration", label: "时长", type: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"] },
   rating: { key: "rating", label: "评分", type: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
   image: { key: "image", label: "图片", type: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image", "评图", "pintu"], description: "通用图片字段；当前兼容读取旧 pintu/评图 数据" },
   // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
-  themePath: text({ key: "themePath", label: "主题", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "themePath"], description: "主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段" }),
-  rootTheme: text({ key: "rootTheme", label: "根主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["根主题", "themeRoot"] }),
-  leafTheme: text({ key: "leafTheme", label: "叶主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["叶主题", "themeLeaf"] }),
+  themePath: text$4({ key: "themePath", label: "主题", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "themePath"], description: "主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段" }),
+  rootTheme: text$4({ key: "rootTheme", label: "根主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["根主题", "themeRoot"] }),
+  leafTheme: text$4({ key: "leafTheme", label: "叶主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["叶主题", "themeLeaf"] }),
   // --- 分类派生 ---
-  baseCategory: text({ key: "baseCategory", label: "根分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["根分类", "rootCategory", "分类根"] }),
-  leafCategory: text({ key: "leafCategory", label: "叶分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["叶分类", "leafCategory"] }),
+  baseCategory: text$4({ key: "baseCategory", label: "根分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["根分类", "rootCategory", "分类根"] }),
+  leafCategory: text$4({ key: "leafCategory", label: "叶分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["叶分类", "leafCategory"] }),
   // --- 文件字段 ---
-  "file.path": text({ key: "file.path", label: "文件路径", category: "file", source: "file", semantic: "filePath", aliases: ["文件路径", "filepath", "filePath", "path"] }),
-  "file.basename": text({ key: "file.basename", label: "文件名", category: "file", source: "file", semantic: "fileName", aliases: ["文件名", "filename", "basename"] }),
-  "file.name": text({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
-  "file.folder": text({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
-  folder: text({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
-  header: text({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示位置，绝不作为主题" }),
+  "file.path": text$4({ key: "file.path", label: "文件路径", category: "file", source: "file", semantic: "filePath", aliases: ["文件路径", "filepath", "filePath", "path"] }),
+  "file.basename": text$4({ key: "file.basename", label: "文件名", category: "file", source: "file", semantic: "fileName", aliases: ["文件名", "filename", "basename"] }),
+  "file.name": text$4({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
+  "file.folder": text$4({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
+  folder: text$4({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
+  header: text$4({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示位置，绝不作为主题" }),
   // --- 时间/统计派生 ---
   startISO: { key: "startISO", label: "开始日期", type: "date", category: "core", source: "derived", semantic: "date" },
   endISO: { key: "endISO", label: "结束日期", type: "date", category: "core", source: "derived", semantic: "date" },
@@ -3324,7 +3324,7 @@ function readTrimmedString(record, key) {
   const value = readString(record, key)?.trim();
   return value ? value : void 0;
 }
-function readNumber(record, key) {
+function readNumber$2(record, key) {
   const value = readUnknown(record, key);
   return typeof value === "number" && Number.isFinite(value) ? value : void 0;
 }
@@ -3486,7 +3486,7 @@ const DEFAULT_GOAL_SETTINGS = {
   goals: [],
   goalTemplates: []
 };
-function normalizeGoalPath(path) {
+function normalizeGoalPath$1(path) {
   return splitHierarchyPathValue(path, { stripLeadingHashes: true }).path;
 }
 function splitGoalPath(path) {
@@ -3551,9 +3551,9 @@ function createGoalOrderIndex(goals = []) {
     if (entry.id && !byId.has(entry.id)) byId.set(entry.id, index);
   });
   const rankOfPath = (path) => {
-    const normalized = normalizeOrderPath(path || "");
-    if (!normalized || normalized === "未归属目标") return UNASSIGNED_GOAL_RANK;
-    const known = byPath.get(normalized);
+    const normalized2 = normalizeOrderPath(path || "");
+    if (!normalized2 || normalized2 === "未归属目标") return UNASSIGNED_GOAL_RANK;
+    const known = byPath.get(normalized2);
     return known === void 0 ? UNKNOWN_GOAL_RANK : known;
   };
   const compareGoalPaths = (left2, right2) => {
@@ -3732,13 +3732,13 @@ const SYSTEM_RECORD_CONTEXT_SEMANTICS = /* @__PURE__ */ new Set([
 ]);
 function isSystemRecordContextField(key, label, semantic) {
   const normalizedKey = String(key || "").trim();
-  const normalizedLabel = String(label || "").trim();
+  const normalizedLabel2 = String(label || "").trim();
   const normalizedSemantic = String(semantic || "").trim();
-  return SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedKey) || SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedLabel) || SYSTEM_RECORD_CONTEXT_SEMANTICS.has(normalizedSemantic);
+  return SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedKey) || SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedLabel2) || SYSTEM_RECORD_CONTEXT_SEMANTICS.has(normalizedSemantic);
 }
 function normalizeTemplateVariantId(value) {
-  const normalized = String(value || "").trim();
-  return normalized || DEFAULT_TEMPLATE_VARIANT_ID;
+  const normalized2 = String(value || "").trim();
+  return normalized2 || DEFAULT_TEMPLATE_VARIANT_ID;
 }
 function nowIso$1() {
   return (/* @__PURE__ */ new Date()).toISOString();
@@ -4024,11 +4024,11 @@ function readComparableValues(value, options = {}) {
   const values2 = new Set(rawValues);
   if (options.normalize) {
     for (const raw of rawValues) {
-      const normalized = options.normalize(raw);
-      if (normalized) {
-        values2.add(normalized);
+      const normalized2 = options.normalize(raw);
+      if (normalized2) {
+        values2.add(normalized2);
         if (options.matchLeaf) {
-          values2.add(normalized.split("/").filter(Boolean).pop() || normalized);
+          values2.add(normalized2.split("/").filter(Boolean).pop() || normalized2);
         }
       }
     }
@@ -4244,9 +4244,2267 @@ function inferGoalTemplateEditMode(template, coreBlock, goal) {
   if (template?.enabled === false) return "disabled";
   return goalTemplateHasCustomOverrides(template, coreBlock, goal) ? "override" : "inherit";
 }
+const ENERGY_QUICK_LEVELS = [20, 40, 60, 80, 100];
+const DEFAULT_ENERGY_SETTINGS = {
+  defaultGoalId: "",
+  defaultThemePath: ""
+};
+const ENERGY_QUICK_LEVEL_LABELS = {
+  20: "很低",
+  40: "偏低",
+  60: "一般",
+  80: "较高",
+  100: "充沛"
+};
+function normalizeEnergyScore(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(Math.min(100, Math.max(0, value)));
+}
+function toEnergyQuickLevel(value) {
+  const score = normalizeEnergyScore(value);
+  return ENERGY_QUICK_LEVELS.reduce((best, candidate) => Math.abs(candidate - score) < Math.abs(best - score) ? candidate : best, ENERGY_QUICK_LEVELS[0]);
+}
+function isEnergyQuickLevel(value) {
+  return ENERGY_QUICK_LEVELS.includes(value);
+}
+function calculateDetailedEnergyScore(brainScore, physicalScore) {
+  const brain = normalizeEnergyScore(brainScore);
+  const physical = normalizeEnergyScore(physicalScore);
+  return normalizeEnergyScore((brain + physical) / 2);
+}
+const ENERGY_TARGET_FILE = "01/目标精力.md";
+const ENERGY_APPEND_UNDER_HEADER = "## {{goalPath}}";
+function clean(value) {
+  return String(value || "").trim();
+}
+function buildEnergySnapshotRecord(input) {
+  const captureMode2 = input.captureMode || "realtime";
+  const timePrecision = input.timePrecision || (input.time ? "exact" : input.period ? "period" : "day");
+  const isDetailed = input.scoreMode === "detailed";
+  const brainScore = isDetailed ? normalizeEnergyScore(input.brainScore) : void 0;
+  const physicalScore = isDetailed ? normalizeEnergyScore(input.physicalScore) : void 0;
+  const score = isDetailed ? calculateDetailedEnergyScore(input.brainScore, input.physicalScore) : normalizeEnergyScore(input.score);
+  return {
+    ...input,
+    goalId: clean(input.goalId) || void 0,
+    goalPath: clean(input.goalPath) || void 0,
+    themePath: clean(input.themePath) || void 0,
+    time: clean(input.time) || void 0,
+    period: clean(input.period) || void 0,
+    recordedAt: clean(input.recordedAt) || void 0,
+    source: clean(input.source) || void 0,
+    coreBlock: "energy",
+    subtype: "snapshot",
+    categoryKey: "精力",
+    score,
+    scoreMode: input.scoreMode || "quick",
+    captureMode: captureMode2,
+    timePrecision,
+    quickLevel: toEnergyQuickLevel(score),
+    brainScore,
+    physicalScore,
+    aggregateMethod: isDetailed ? "arithmetic-mean-v1" : void 0
+  };
+}
+function buildEnergySnapshotMarkdown(input) {
+  const record = "coreBlock" in input ? input : buildEnergySnapshotRecord(input);
+  const lines = [
+    "<!-- start -->",
+    "核心Block:: energy",
+    "记录子类型:: snapshot"
+  ];
+  if (record.goalId) lines.push(`目标ID:: ${record.goalId}`);
+  if (record.goalPath) lines.push(`目标:: ${record.goalPath}`);
+  lines.push("分类:: 精力");
+  lines.push(`日期:: ${record.date}`);
+  if (record.time) lines.push(`时间:: ${record.time}`);
+  if (record.period) lines.push(`时段:: ${record.period}`);
+  if (record.themePath) lines.push(`主题:: ${record.themePath}`);
+  lines.push(`精力值:: ${record.score}`);
+  if (record.brainScore != null) lines.push(`脑力精力:: ${record.brainScore}`);
+  if (record.physicalScore != null) lines.push(`体力精力:: ${record.physicalScore}`);
+  if (record.aggregateMethod) lines.push(`综合算法:: ${record.aggregateMethod}`);
+  lines.push(`精力档位:: ${record.quickLevel}`);
+  lines.push(`评分模式:: ${record.scoreMode}`);
+  lines.push(`记录方式:: ${record.captureMode}`);
+  lines.push(`时间精度:: ${record.timePrecision}`);
+  if (record.recordedAt) lines.push(`记录时间:: ${record.recordedAt}`);
+  if (record.source) lines.push(`来源:: ${record.source}`);
+  lines.push("<!-- end -->");
+  return lines.join("\n");
+}
+const ENERGY_PROTOCOL_ACTION = "thinkos-energy";
+const ENERGY_PROTOCOL_VERSION = 1;
+function readInteger(raw) {
+  const text2 = String(raw ?? "").trim();
+  if (!/^-?\d+$/.test(text2)) return null;
+  const value = Number(text2);
+  return Number.isSafeInteger(value) ? value : null;
+}
+function parseEnergyProtocolParams(params) {
+  const version2 = readInteger(params.v);
+  if (version2 !== ENERGY_PROTOCOL_VERSION) {
+    return { ok: false, message: `不支持的精力快捷协议版本：${params.v || "缺失"}。` };
+  }
+  const mode = String(params.mode || "").trim();
+  if (mode === "quick") {
+    const score = readInteger(params.energy);
+    if (score == null || !isEnergyQuickLevel(score)) {
+      return { ok: false, message: "快捷精力只接受 20 / 40 / 60 / 80 / 100。" };
+    }
+    return { ok: true, payload: { version: 1, mode: "quick", score } };
+  }
+  if (mode === "detailed") {
+    const brainScore = readInteger(params.mental);
+    const physicalScore = readInteger(params.physical);
+    if (brainScore == null || brainScore < 0 || brainScore > 100) {
+      return { ok: false, message: "详细精力的脑力必须是 0–100 的整数。" };
+    }
+    if (physicalScore == null || physicalScore < 0 || physicalScore > 100) {
+      return { ok: false, message: "详细精力的体力必须是 0–100 的整数。" };
+    }
+    return {
+      ok: true,
+      payload: {
+        version: 1,
+        mode: "detailed",
+        brainScore: normalizeEnergyScore(brainScore),
+        physicalScore: normalizeEnergyScore(physicalScore)
+      }
+    };
+  }
+  return { ok: false, message: "精力快捷协议 mode 只支持 quick 或 detailed。" };
+}
+function resolveEnergyCaptureGoal(goals, defaultGoalId) {
+  const available = goals.filter((goal) => goal.status !== "archived");
+  const preferredId = String(defaultGoalId || "").trim();
+  if (preferredId) {
+    const preferred = available.find((goal) => goal.id === preferredId);
+    if (preferred) return preferred;
+  }
+  return available.find((goal) => goal.status === "active") || available[0] || null;
+}
+function readNumber$1(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const text2 = String(value ?? "").trim();
+  if (!text2) return void 0;
+  const parsed = Number(text2);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function readText$1(value) {
+  const text2 = String(value ?? "").trim();
+  return text2 || void 0;
+}
+function readScore(value) {
+  const parsed = readNumber$1(value);
+  if (parsed == null || parsed < 0 || parsed > 100) return void 0;
+  return Math.round(parsed);
+}
+function isEnergyItem(item) {
+  const block2 = String(item.coreBlock || item.extra?.["核心Block"] || "").replace(/^core\./i, "").trim().toLowerCase();
+  if (block2 === "energy") return true;
+  const category = String(item.categoryKey || "").split("/")[0]?.trim();
+  return category === "精力";
+}
+function readEnergyItemSnapshot(item) {
+  if (!isEnergyItem(item)) return null;
+  const extra = item.extra || {};
+  const score = readScore(extra["精力值"]);
+  if (score == null) return null;
+  const explicitQuick = readNumber$1(extra["精力档位"]);
+  const quickLevel = explicitQuick != null && isEnergyQuickLevel(explicitQuick) ? explicitQuick : toEnergyQuickLevel(score);
+  const modeText = readText$1(extra["评分模式"]);
+  const scoreMode = modeText === "quick" || modeText === "detailed" || modeText === "percent" ? modeText : void 0;
+  const captureText = readText$1(extra["记录方式"]);
+  const captureMode2 = captureText === "realtime" || captureText === "retrospective" ? captureText : void 0;
+  const precisionText = readText$1(extra["时间精度"]);
+  const timePrecision = precisionText === "exact" || precisionText === "approximate" || precisionText === "period" || precisionText === "day" ? precisionText : void 0;
+  return {
+    score,
+    quickLevel,
+    brainScore: readScore(extra["脑力精力"]),
+    physicalScore: readScore(extra["体力精力"]),
+    scoreMode,
+    captureMode: captureMode2,
+    timePrecision,
+    date: readText$1(item.date || extra["日期"]),
+    time: readText$1(item.startTime || extra["时间"]),
+    recordedAt: readText$1(extra["记录时间"]),
+    source: readText$1(extra["来源"])
+  };
+}
+function energySnapshotOccurrenceKey(snapshot) {
+  return `${snapshot.date || ""}T${snapshot.time || "00:00"}`;
+}
+function text$3(value) {
+  return String(value ?? "").trim();
+}
+function itemBlock(item) {
+  return text$3(item.coreBlock || item.extra?.["核心Block"]).replace(/^core\./i, "").toLowerCase();
+}
+function itemDay(item) {
+  return text$3(item.doneDate || item.date || item.endISO || item.scheduledDate || item.startDate).slice(0, 10);
+}
+function recordedTaskMinutes(items, today) {
+  return items.reduce((sum, item) => {
+    if (itemBlock(item) !== "task" && item.type !== "task") return sum;
+    const hasCompletionEvidence = Boolean(item.doneDate || item.endTime || /^\s*-\s*\[[xX]\]\s*/.test(item.content || ""));
+    if (!hasCompletionEvidence || itemDay(item) !== today) return sum;
+    const duration2 = Number(item.duration ?? item.extra?.["时长"]);
+    if (!Number.isFinite(duration2) || duration2 <= 0) return sum;
+    return sum + Math.min(720, Math.max(0, duration2));
+  }, 0);
+}
+function buildEnergyActionPolicyContext(items, management, today) {
+  const dailyTaskMinutes = Math.round(recordedTaskMinutes(items, today));
+  const preserveGuardrail = management?.guardrails?.find((row) => row.key === "preserve-capacity" || row.key === "long-session");
+  const loadRisk = dailyTaskMinutes >= 180;
+  const preserveCapacityRisk = loadRisk || Boolean(preserveGuardrail);
+  let preserveCapacityReason;
+  if (dailyTaskMinutes >= 300) {
+    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}min，建议用更短工作块并到点收尾。`;
+  } else if (loadRisk) {
+    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}min，这一块先设明确停止点，给后续留余量。`;
+  } else if (preserveGuardrail) {
+    preserveCapacityReason = "你的历史里已出现高能后持续过久的迹象，这一块先设明确停止点。";
+  }
+  return { dailyTaskMinutes, preserveCapacityRisk, preserveCapacityReason };
+}
+function baseCap(band) {
+  if (band === "recover") return 30;
+  if (band === "steady") return 45;
+  return 60;
+}
+function resolveEnergyActionTiming(candidate, band, policy) {
+  const requested = candidate.durationMinutes && candidate.durationMinutes > 0 ? candidate.durationMinutes : void 0;
+  let cap = baseCap(band);
+  const personalDepletion = Boolean(
+    candidate.historicalEffect && candidate.historicalEffect.sampleCount >= 3 && candidate.historicalEffect.meanDelta <= -8
+  );
+  if (personalDepletion) cap = Math.min(cap, 45);
+  if (policy?.preserveCapacityRisk && band !== "recover") cap = Math.min(cap, 45);
+  if ((policy?.dailyTaskMinutes || 0) >= 300 && band !== "recover") cap = Math.min(cap, 30);
+  if (personalDepletion && (policy?.dailyTaskMinutes || 0) >= 180 && band !== "recover") cap = Math.min(cap, 30);
+  const minutes = Math.max(10, Math.round(Math.min(requested ?? cap, cap)));
+  const preserveCapacity = band !== "recover" && Boolean(policy?.preserveCapacityRisk);
+  return {
+    minutes,
+    preserveCapacity,
+    stopReason: preserveCapacity ? policy?.preserveCapacityReason : void 0
+  };
+}
+const DEFAULT_LOW_THRESHOLD = 40;
+const DEFAULT_HIGH_THRESHOLD = 60;
+const DEFAULT_MAXIMUM = 3;
+const PERSONAL_SAMPLE_MINIMUM = 3;
+function clampScore(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+function bandFor(score, lowThreshold, highThreshold) {
+  if (score <= lowThreshold) return "recover";
+  if (score > highThreshold) return "use-capacity";
+  return "steady";
+}
+function stateLabel$1(band) {
+  if (band === "recover") return "低精力";
+  if (band === "use-capacity") return "精力可用";
+  return "中间状态";
+}
+function loadValue(load2) {
+  if (load2 === "low") return 25;
+  if (load2 === "medium") return 55;
+  if (load2 === "high") return 80;
+  return void 0;
+}
+function demandFit(available, load2) {
+  const demand = loadValue(load2);
+  if (demand == null) return 0;
+  const gap2 = available - demand;
+  let fit = 14 - Math.abs(gap2) * 0.35;
+  if (gap2 < -5) fit -= Math.min(18, Math.abs(gap2) * 0.4);
+  return Math.max(-24, Math.min(14, Math.round(fit * 10) / 10));
+}
+function effectEvidence(effect2) {
+  return effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM ? "personal" : "metadata";
+}
+function historicalFit(effect2, band) {
+  if (!effect2 || effect2.sampleCount < PERSONAL_SAMPLE_MINIMUM) return 0;
+  const delta = Math.max(-40, Math.min(40, effect2.meanDelta));
+  if (band === "recover") return delta * 1.25;
+  if (band === "use-capacity") {
+    return delta >= 0 ? Math.min(8, delta * 0.2) : delta * 0.45;
+  }
+  return delta * 0.6;
+}
+function durationFit(duration2, band) {
+  if (duration2 == null || duration2 <= 0) return 0;
+  if (band === "recover") {
+    if (duration2 <= 30) return 10;
+    if (duration2 <= 45) return 3;
+    if (duration2 <= 60) return -6;
+    return -16;
+  }
+  if (band === "use-capacity") {
+    if (duration2 <= 20) return 1;
+    if (duration2 <= 45) return 4;
+    if (duration2 <= 90) return 8;
+    if (duration2 <= 120) return 2;
+    return -8;
+  }
+  if (duration2 <= 45) return 6;
+  if (duration2 <= 75) return 1;
+  return -6;
+}
+function candidateScore(candidate, context, band) {
+  const overall = clampScore(context.score);
+  const brain = context.brainScore == null ? overall : clampScore(context.brainScore);
+  const physical = context.physicalScore == null ? overall : clampScore(context.physicalScore);
+  const value = candidate.valueScore == null ? 50 : clampScore(candidate.valueScore);
+  let score = 50;
+  score += demandFit(brain, candidate.brainLoad);
+  score += demandFit(physical, candidate.physicalLoad);
+  score += durationFit(candidate.durationMinutes, band);
+  score += historicalFit(candidate.historicalEffect, band);
+  if (band === "recover") {
+    if (candidate.recoveryIntent) score += 28;
+    if (candidate.brainLoad === "high") score -= 16;
+    if (candidate.physicalLoad === "high" && physical <= 40) score -= 16;
+    score += (value - 50) * 0.08;
+  } else if (band === "use-capacity") {
+    if (candidate.recoveryIntent) score -= 20;
+    score += (value - 50) * 0.8;
+  } else {
+    if (candidate.recoveryIntent) score += 8;
+    score += (value - 50) * 0.18;
+  }
+  return Math.round(score * 10) / 10;
+}
+function signed$1(value) {
+  const rounded = Math.round(value);
+  return `${rounded > 0 ? "+" : ""}${rounded}`;
+}
+function reasonFor(candidate, band, duration2) {
+  const effect2 = candidate.historicalEffect;
+  const personal = effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM;
+  const historyPrefix = effect2?.origin === "recommendation-feedback" ? "你的推荐执行反馈里" : "你的历史里";
+  if (band === "recover") {
+    if (personal && effect2.meanDelta > 0) return `${historyPrefix}这类活动平均 ${signed$1(effect2.meanDelta)}（N=${effect2.sampleCount}），先做 ${duration2}min。`;
+    if (candidate.recoveryIntent) return `当前精力偏低，先做低负荷恢复项 ${duration2}min。`;
+    return `当前精力偏低，这项负荷相对可控，先做 ${duration2}min。`;
+  }
+  if (band === "use-capacity") {
+    if (personal && effect2.meanDelta <= -8) return `当前能做，但${historyPrefix}这类活动平均 ${signed$1(effect2.meanDelta)}（N=${effect2.sampleCount}），先限时 ${duration2}min。`;
+    return `当前精力可用，适合推进这项高价值事项，先做 ${duration2}min。`;
+  }
+  if (personal) return `当前处于中间状态；${historyPrefix}变化 ${signed$1(effect2.meanDelta)}（N=${effect2.sampleCount}），先做 ${duration2}min。`;
+  return `当前适合中等负荷，先做 ${duration2}min 再看状态。`;
+}
+function buildEnergyActionRecommendations(context, candidates) {
+  const lowThreshold = Math.max(0, Math.min(80, Math.round(context.lowThreshold ?? DEFAULT_LOW_THRESHOLD)));
+  const highThreshold = Math.max(lowThreshold + 1, Math.min(100, Math.round(context.highThreshold ?? DEFAULT_HIGH_THRESHOLD)));
+  const maximum = Math.max(1, Math.min(500, Math.floor(context.maximumRecommendations ?? DEFAULT_MAXIMUM)));
+  const score = clampScore(context.score);
+  const band = bandFor(score, lowThreshold, highThreshold);
+  const normalizedContext = { ...context, score };
+  const recommendations = candidates.filter((candidate) => !!candidate.id && !!candidate.title.trim()).map((candidate) => {
+    const timing = resolveEnergyActionTiming(candidate, band, context.actionPolicy);
+    const duration2 = timing.minutes;
+    return {
+      candidate,
+      band,
+      fitScore: candidateScore(candidate, normalizedContext, band),
+      evidence: effectEvidence(candidate.historicalEffect),
+      reason: reasonFor(candidate, band, duration2),
+      suggestedDurationMinutes: duration2,
+      preserveCapacity: timing.preserveCapacity,
+      stopReason: timing.stopReason
+    };
+  }).sort((left2, right2) => right2.fitScore - left2.fitScore || left2.candidate.title.localeCompare(right2.candidate.title, "zh-CN")).slice(0, maximum);
+  return {
+    band,
+    stateLabel: stateLabel$1(band),
+    recommendations,
+    consideredCount: candidates.length
+  };
+}
+const DATE_YMD = "\\d{4}[-/]\\d{2}[-/]\\d{2}";
+const DATE_YMD_RE = new RegExp(DATE_YMD);
+const TAG_RE = /#([\p{L}\p{N}_\/-]+)/gu;
+const KV_IN_PAREN = /\(([^:：]+)::\s*([^)]+)\)/g;
+const RE_TASK_PREFIX = /^\s*-\s*\[[ xX-]\]/;
+const RE_DONE_BOX = /^\s*-\s*\[x\]/i;
+const RE_CANCEL_BOX = /^\s*-\s*\[-\]/;
+var SECONDS_A_MINUTE = 60;
+var SECONDS_A_HOUR = SECONDS_A_MINUTE * 60;
+var SECONDS_A_DAY = SECONDS_A_HOUR * 24;
+var SECONDS_A_WEEK = SECONDS_A_DAY * 7;
+var MILLISECONDS_A_SECOND = 1e3;
+var MILLISECONDS_A_MINUTE = SECONDS_A_MINUTE * MILLISECONDS_A_SECOND;
+var MILLISECONDS_A_HOUR = SECONDS_A_HOUR * MILLISECONDS_A_SECOND;
+var MILLISECONDS_A_DAY = SECONDS_A_DAY * MILLISECONDS_A_SECOND;
+var MILLISECONDS_A_WEEK = SECONDS_A_WEEK * MILLISECONDS_A_SECOND;
+var MS$1 = "millisecond";
+var S$1 = "second";
+var MIN = "minute";
+var H$2 = "hour";
+var D$3 = "day";
+var W$2 = "week";
+var M$2 = "month";
+var Q$2 = "quarter";
+var Y$1 = "year";
+var DATE = "date";
+var FORMAT_DEFAULT = "YYYY-MM-DDTHH:mm:ssZ";
+var INVALID_DATE_STRING = "Invalid Date";
+var REGEX_PARSE = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/;
+var REGEX_FORMAT = /\[([^\]]+)]|YYYY|YY|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
+const en$1 = {
+  name: "en",
+  weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),
+  months: "January_February_March_April_May_June_July_August_September_October_November_December".split("_"),
+  ordinal: function ordinal(n2) {
+    var s2 = ["th", "st", "nd", "rd"];
+    var v2 = n2 % 100;
+    return "[" + n2 + (s2[(v2 - 20) % 10] || s2[v2] || s2[0]) + "]";
+  }
+};
+var padStart = function padStart2(string2, length2, pad2) {
+  var s2 = String(string2);
+  if (!s2 || s2.length >= length2) return string2;
+  return "" + Array(length2 + 1 - s2.length).join(pad2) + string2;
+};
+var padZoneStr = function padZoneStr2(instance2) {
+  var negMinutes = -instance2.utcOffset();
+  var minutes = Math.abs(negMinutes);
+  var hourOffset = Math.floor(minutes / 60);
+  var minuteOffset = minutes % 60;
+  return (negMinutes <= 0 ? "+" : "-") + padStart(hourOffset, 2, "0") + ":" + padStart(minuteOffset, 2, "0");
+};
+var monthDiff = function monthDiff2(a2, b2) {
+  if (a2.date() < b2.date()) return -monthDiff2(b2, a2);
+  var wholeMonthDiff = (b2.year() - a2.year()) * 12 + (b2.month() - a2.month());
+  var anchor = a2.clone().add(wholeMonthDiff, M$2);
+  var c2 = b2 - anchor < 0;
+  var anchor2 = a2.clone().add(wholeMonthDiff + (c2 ? -1 : 1), M$2);
+  return +(-(wholeMonthDiff + (b2 - anchor) / (c2 ? anchor - anchor2 : anchor2 - anchor)) || 0);
+};
+var absFloor = function absFloor2(n2) {
+  return n2 < 0 ? Math.ceil(n2) || 0 : Math.floor(n2);
+};
+var prettyUnit = function prettyUnit2(u3) {
+  var special = {
+    M: M$2,
+    y: Y$1,
+    w: W$2,
+    d: D$3,
+    D: DATE,
+    h: H$2,
+    m: MIN,
+    s: S$1,
+    ms: MS$1,
+    Q: Q$2
+  };
+  return special[u3] || String(u3 || "").toLowerCase().replace(/s$/, "");
+};
+var isUndefined = function isUndefined2(s2) {
+  return s2 === void 0;
+};
+const U$2 = {
+  s: padStart,
+  z: padZoneStr,
+  m: monthDiff,
+  a: absFloor,
+  p: prettyUnit,
+  u: isUndefined
+};
+var L$2 = "en";
+var Ls = {};
+Ls[L$2] = en$1;
+var IS_DAYJS = "$isDayjsObject";
+var isDayjs = function isDayjs2(d2) {
+  return d2 instanceof Dayjs || !!(d2 && d2[IS_DAYJS]);
+};
+var parseLocale = function parseLocale2(preset, object2, isLocal) {
+  var l2;
+  if (!preset) return L$2;
+  if (typeof preset === "string") {
+    var presetLower = preset.toLowerCase();
+    if (Ls[presetLower]) {
+      l2 = presetLower;
+    }
+    if (object2) {
+      Ls[presetLower] = object2;
+      l2 = presetLower;
+    }
+    var presetSplit = preset.split("-");
+    if (!l2 && presetSplit.length > 1) {
+      return parseLocale2(presetSplit[0]);
+    }
+  } else {
+    var name = preset.name;
+    Ls[name] = preset;
+    l2 = name;
+  }
+  if (!isLocal && l2) L$2 = l2;
+  return l2 || !isLocal && L$2;
+};
+var dayjs = function dayjs2(date2, c2) {
+  if (isDayjs(date2)) {
+    return date2.clone();
+  }
+  var cfg = typeof c2 === "object" ? c2 : {};
+  cfg.date = date2;
+  cfg.args = arguments;
+  return new Dayjs(cfg);
+};
+var wrapper$1 = function wrapper(date2, instance2) {
+  return dayjs(date2, {
+    locale: instance2.$L,
+    utc: instance2.$u,
+    x: instance2.$x,
+    $offset: instance2.$offset
+    // todo: refactor; do not use this.$offset in you code
+  });
+};
+var Utils = U$2;
+Utils.l = parseLocale;
+Utils.i = isDayjs;
+Utils.w = wrapper$1;
+var parseDate = function parseDate2(cfg) {
+  var date2 = cfg.date, utc = cfg.utc;
+  if (date2 === null) return /* @__PURE__ */ new Date(NaN);
+  if (Utils.u(date2)) return /* @__PURE__ */ new Date();
+  if (date2 instanceof Date) return new Date(date2);
+  if (typeof date2 === "string" && !/Z$/i.test(date2)) {
+    var d2 = date2.match(REGEX_PARSE);
+    if (d2) {
+      var m2 = d2[2] - 1 || 0;
+      var ms = (d2[7] || "0").substring(0, 3);
+      if (utc) {
+        return new Date(Date.UTC(d2[1], m2, d2[3] || 1, d2[4] || 0, d2[5] || 0, d2[6] || 0, ms));
+      }
+      return new Date(d2[1], m2, d2[3] || 1, d2[4] || 0, d2[5] || 0, d2[6] || 0, ms);
+    }
+  }
+  return new Date(date2);
+};
+var Dayjs = /* @__PURE__ */ (function() {
+  function Dayjs2(cfg) {
+    this.$L = parseLocale(cfg.locale, null, true);
+    this.parse(cfg);
+    this.$x = this.$x || cfg.x || {};
+    this[IS_DAYJS] = true;
+  }
+  var _proto = Dayjs2.prototype;
+  _proto.parse = function parse2(cfg) {
+    this.$d = parseDate(cfg);
+    this.init();
+  };
+  _proto.init = function init() {
+    var $d = this.$d;
+    this.$y = $d.getFullYear();
+    this.$M = $d.getMonth();
+    this.$D = $d.getDate();
+    this.$W = $d.getDay();
+    this.$H = $d.getHours();
+    this.$m = $d.getMinutes();
+    this.$s = $d.getSeconds();
+    this.$ms = $d.getMilliseconds();
+  };
+  _proto.$utils = function $utils() {
+    return Utils;
+  };
+  _proto.isValid = function isValid() {
+    return !(this.$d.toString() === INVALID_DATE_STRING);
+  };
+  _proto.isSame = function isSame(that, units) {
+    var other = dayjs(that);
+    return this.startOf(units) <= other && other <= this.endOf(units);
+  };
+  _proto.isAfter = function isAfter(that, units) {
+    return dayjs(that) < this.startOf(units);
+  };
+  _proto.isBefore = function isBefore(that, units) {
+    return this.endOf(units) < dayjs(that);
+  };
+  _proto.$g = function $g(input, get, set2) {
+    if (Utils.u(input)) return this[get];
+    return this.set(set2, input);
+  };
+  _proto.unix = function unix() {
+    return Math.floor(this.valueOf() / 1e3);
+  };
+  _proto.valueOf = function valueOf() {
+    return this.$d.getTime();
+  };
+  _proto.startOf = function startOf(units, _startOf) {
+    var _this = this;
+    var isStartOf = !Utils.u(_startOf) ? _startOf : true;
+    var unit = Utils.p(units);
+    var instanceFactory = function instanceFactory2(d2, m2) {
+      var ins = Utils.w(_this.$u ? Date.UTC(_this.$y, m2, d2) : new Date(_this.$y, m2, d2), _this);
+      return isStartOf ? ins : ins.endOf(D$3);
+    };
+    var instanceFactorySet = function instanceFactorySet2(method, slice2) {
+      var argumentStart = [0, 0, 0, 0];
+      var argumentEnd = [23, 59, 59, 999];
+      return Utils.w(_this.toDate()[method].apply(
+        // eslint-disable-line prefer-spread
+        _this.toDate("s"),
+        (isStartOf ? argumentStart : argumentEnd).slice(slice2)
+      ), _this);
+    };
+    var $W = this.$W, $M = this.$M, $D = this.$D;
+    var utcPad = "set" + (this.$u ? "UTC" : "");
+    switch (unit) {
+      case Y$1:
+        return isStartOf ? instanceFactory(1, 0) : instanceFactory(31, 11);
+      case M$2:
+        return isStartOf ? instanceFactory(1, $M) : instanceFactory(0, $M + 1);
+      case W$2: {
+        var weekStart = this.$locale().weekStart || 0;
+        var gap2 = ($W < weekStart ? $W + 7 : $W) - weekStart;
+        return instanceFactory(isStartOf ? $D - gap2 : $D + (6 - gap2), $M);
+      }
+      case D$3:
+      case DATE:
+        return instanceFactorySet(utcPad + "Hours", 0);
+      case H$2:
+        return instanceFactorySet(utcPad + "Minutes", 1);
+      case MIN:
+        return instanceFactorySet(utcPad + "Seconds", 2);
+      case S$1:
+        return instanceFactorySet(utcPad + "Milliseconds", 3);
+      default:
+        return this.clone();
+    }
+  };
+  _proto.endOf = function endOf(arg2) {
+    return this.startOf(arg2, false);
+  };
+  _proto.$set = function $set(units, _int2) {
+    var _C$D$C$DATE$C$M$C$Y$C;
+    var unit = Utils.p(units);
+    var utcPad = "set" + (this.$u ? "UTC" : "");
+    var name = (_C$D$C$DATE$C$M$C$Y$C = {}, _C$D$C$DATE$C$M$C$Y$C[D$3] = utcPad + "Date", _C$D$C$DATE$C$M$C$Y$C[DATE] = utcPad + "Date", _C$D$C$DATE$C$M$C$Y$C[M$2] = utcPad + "Month", _C$D$C$DATE$C$M$C$Y$C[Y$1] = utcPad + "FullYear", _C$D$C$DATE$C$M$C$Y$C[H$2] = utcPad + "Hours", _C$D$C$DATE$C$M$C$Y$C[MIN] = utcPad + "Minutes", _C$D$C$DATE$C$M$C$Y$C[S$1] = utcPad + "Seconds", _C$D$C$DATE$C$M$C$Y$C[MS$1] = utcPad + "Milliseconds", _C$D$C$DATE$C$M$C$Y$C)[unit];
+    var arg2 = unit === D$3 ? this.$D + (_int2 - this.$W) : _int2;
+    if (unit === M$2 || unit === Y$1) {
+      var date2 = this.clone().set(DATE, 1);
+      date2.$d[name](arg2);
+      date2.init();
+      this.$d = date2.set(DATE, Math.min(this.$D, date2.daysInMonth())).$d;
+    } else if (name) this.$d[name](arg2);
+    this.init();
+    return this;
+  };
+  _proto.set = function set2(string2, _int2) {
+    return this.clone().$set(string2, _int2);
+  };
+  _proto.get = function get(unit) {
+    return this[Utils.p(unit)]();
+  };
+  _proto.add = function add2(number2, units) {
+    var _this2 = this, _C$MIN$C$H$C$S$unit;
+    number2 = Number(number2);
+    var unit = Utils.p(units);
+    var instanceFactorySet = function instanceFactorySet2(n2) {
+      var d2 = dayjs(_this2);
+      return Utils.w(d2.date(d2.date() + Math.round(n2 * number2)), _this2);
+    };
+    if (unit === M$2) {
+      return this.set(M$2, this.$M + number2);
+    }
+    if (unit === Y$1) {
+      return this.set(Y$1, this.$y + number2);
+    }
+    if (unit === D$3) {
+      return instanceFactorySet(1);
+    }
+    if (unit === W$2) {
+      return instanceFactorySet(7);
+    }
+    var step = (_C$MIN$C$H$C$S$unit = {}, _C$MIN$C$H$C$S$unit[MIN] = MILLISECONDS_A_MINUTE, _C$MIN$C$H$C$S$unit[H$2] = MILLISECONDS_A_HOUR, _C$MIN$C$H$C$S$unit[S$1] = MILLISECONDS_A_SECOND, _C$MIN$C$H$C$S$unit)[unit] || 1;
+    var nextTimeStamp = this.$d.getTime() + number2 * step;
+    return Utils.w(nextTimeStamp, this);
+  };
+  _proto.subtract = function subtract2(number2, string2) {
+    return this.add(number2 * -1, string2);
+  };
+  _proto.format = function format(formatStr) {
+    var _this3 = this;
+    var locale2 = this.$locale();
+    if (!this.isValid()) return locale2.invalidDate || INVALID_DATE_STRING;
+    var str = formatStr || FORMAT_DEFAULT;
+    var zoneStr = Utils.z(this);
+    var $H = this.$H, $m = this.$m, $M = this.$M;
+    var weekdays = locale2.weekdays, months = locale2.months, meridiem = locale2.meridiem;
+    var getShort = function getShort2(arr, index, full, length2) {
+      return arr && (arr[index] || arr(_this3, str)) || full[index].slice(0, length2);
+    };
+    var get$H = function get$H2(num) {
+      return Utils.s($H % 12 || 12, num, "0");
+    };
+    var meridiemFunc = meridiem || function(hour, minute, isLowercase) {
+      var m2 = hour < 12 ? "AM" : "PM";
+      return isLowercase ? m2.toLowerCase() : m2;
+    };
+    var matches = function matches2(match5) {
+      switch (match5) {
+        case "YY":
+          return String(_this3.$y).slice(-2);
+        case "YYYY":
+          return Utils.s(_this3.$y, 4, "0");
+        case "M":
+          return $M + 1;
+        case "MM":
+          return Utils.s($M + 1, 2, "0");
+        case "MMM":
+          return getShort(locale2.monthsShort, $M, months, 3);
+        case "MMMM":
+          return getShort(months, $M);
+        case "D":
+          return _this3.$D;
+        case "DD":
+          return Utils.s(_this3.$D, 2, "0");
+        case "d":
+          return String(_this3.$W);
+        case "dd":
+          return getShort(locale2.weekdaysMin, _this3.$W, weekdays, 2);
+        case "ddd":
+          return getShort(locale2.weekdaysShort, _this3.$W, weekdays, 3);
+        case "dddd":
+          return weekdays[_this3.$W];
+        case "H":
+          return String($H);
+        case "HH":
+          return Utils.s($H, 2, "0");
+        case "h":
+          return get$H(1);
+        case "hh":
+          return get$H(2);
+        case "a":
+          return meridiemFunc($H, $m, true);
+        case "A":
+          return meridiemFunc($H, $m, false);
+        case "m":
+          return String($m);
+        case "mm":
+          return Utils.s($m, 2, "0");
+        case "s":
+          return String(_this3.$s);
+        case "ss":
+          return Utils.s(_this3.$s, 2, "0");
+        case "SSS":
+          return Utils.s(_this3.$ms, 3, "0");
+        case "Z":
+          return zoneStr;
+      }
+      return null;
+    };
+    return str.replace(REGEX_FORMAT, function(match5, $1) {
+      return $1 || matches(match5) || zoneStr.replace(":", "");
+    });
+  };
+  _proto.utcOffset = function utcOffset() {
+    return -Math.round(this.$d.getTimezoneOffset() / 15) * 15;
+  };
+  _proto.diff = function diff(input, units, _float) {
+    var _this4 = this;
+    var unit = Utils.p(units);
+    var that = dayjs(input);
+    var zoneDelta = (that.utcOffset() - this.utcOffset()) * MILLISECONDS_A_MINUTE;
+    var diff2 = this - that;
+    var getMonth = function getMonth2() {
+      return Utils.m(_this4, that);
+    };
+    var result;
+    switch (unit) {
+      case Y$1:
+        result = getMonth() / 12;
+        break;
+      case M$2:
+        result = getMonth();
+        break;
+      case Q$2:
+        result = getMonth() / 3;
+        break;
+      case W$2:
+        result = (diff2 - zoneDelta) / MILLISECONDS_A_WEEK;
+        break;
+      case D$3:
+        result = (diff2 - zoneDelta) / MILLISECONDS_A_DAY;
+        break;
+      case H$2:
+        result = diff2 / MILLISECONDS_A_HOUR;
+        break;
+      case MIN:
+        result = diff2 / MILLISECONDS_A_MINUTE;
+        break;
+      case S$1:
+        result = diff2 / MILLISECONDS_A_SECOND;
+        break;
+      default:
+        result = diff2;
+        break;
+    }
+    return _float ? result : Utils.a(result);
+  };
+  _proto.daysInMonth = function daysInMonth() {
+    return this.endOf(M$2).$D;
+  };
+  _proto.$locale = function $locale() {
+    return Ls[this.$L];
+  };
+  _proto.locale = function locale2(preset, object2) {
+    if (!preset) return this.$L;
+    var that = this.clone();
+    var nextLocaleName = parseLocale(preset, object2, true);
+    if (nextLocaleName) that.$L = nextLocaleName;
+    return that;
+  };
+  _proto.clone = function clone2() {
+    return Utils.w(this.$d, this);
+  };
+  _proto.toDate = function toDate() {
+    return new Date(this.valueOf());
+  };
+  _proto.toJSON = function toJSON() {
+    return this.isValid() ? this.toISOString() : null;
+  };
+  _proto.toISOString = function toISOString() {
+    return this.$d.toISOString();
+  };
+  _proto.toString = function toString() {
+    return this.$d.toUTCString();
+  };
+  return Dayjs2;
+})();
+var proto = Dayjs.prototype;
+dayjs.prototype = proto;
+[["$ms", MS$1], ["$s", S$1], ["$m", MIN], ["$H", H$2], ["$W", D$3], ["$M", M$2], ["$y", Y$1], ["$D", DATE]].forEach(function(g2) {
+  proto[g2[1]] = function(input) {
+    return this.$g(input, g2[0], g2[1]);
+  };
+});
+dayjs.extend = function(plugin, option) {
+  if (!plugin.$i) {
+    plugin(option, Dayjs, dayjs);
+    plugin.$i = true;
+  }
+  return dayjs;
+};
+dayjs.locale = parseLocale;
+dayjs.isDayjs = isDayjs;
+dayjs.unix = function(timestamp) {
+  return dayjs(timestamp * 1e3);
+};
+dayjs.en = Ls[L$2];
+dayjs.Ls = Ls;
+dayjs.p = {};
+const quarterOfYear = (function(o2, c2) {
+  var proto2 = c2.prototype;
+  proto2.quarter = function(quarter) {
+    if (!this.$utils().u(quarter)) {
+      return this.month(this.month() % 3 + (quarter - 1) * 3);
+    }
+    return Math.ceil((this.month() + 1) / 3);
+  };
+  var oldAdd = proto2.add;
+  proto2.add = function(number2, units) {
+    number2 = Number(number2);
+    var unit = this.$utils().p(units);
+    if (unit === Q$2) {
+      return this.add(number2 * 3, M$2);
+    }
+    return oldAdd.bind(this)(number2, units);
+  };
+  var oldStartOf = proto2.startOf;
+  proto2.startOf = function(units, startOf) {
+    var utils = this.$utils();
+    var isStartOf = !utils.u(startOf) ? startOf : true;
+    var unit = utils.p(units);
+    if (unit === Q$2) {
+      var quarter = this.quarter() - 1;
+      return isStartOf ? this.month(quarter * 3).startOf(M$2).startOf(D$3) : this.month(quarter * 3 + 2).endOf(M$2).endOf(D$3);
+    }
+    return oldStartOf.bind(this)(units, startOf);
+  };
+});
+const weekOfYear = (function(o2, c2, d2) {
+  var proto2 = c2.prototype;
+  proto2.week = function(week) {
+    if (week === void 0) {
+      week = null;
+    }
+    if (week !== null) {
+      return this.add((week - this.week()) * 7, D$3);
+    }
+    var yearStart = this.$locale().yearStart || 1;
+    if (this.month() === 11 && this.date() > 25) {
+      var nextYearStartDay = d2(this).startOf(Y$1).add(1, Y$1).date(yearStart);
+      var thisEndOfWeek = d2(this).endOf(W$2);
+      if (nextYearStartDay.isBefore(thisEndOfWeek)) {
+        return 1;
+      }
+    }
+    var yearStartDay = d2(this).startOf(Y$1).date(yearStart);
+    var yearStartWeek = yearStartDay.startOf(W$2).subtract(1, MS$1);
+    var diffInWeek = this.diff(yearStartWeek, W$2, true);
+    if (diffInWeek < 0) {
+      return d2(this).startOf("week").week();
+    }
+    return Math.ceil(diffInWeek);
+  };
+  proto2.weeks = function(week) {
+    if (week === void 0) {
+      week = null;
+    }
+    return this.week(week);
+  };
+});
+var t$1 = function t(format) {
+  return format.replace(/(\[[^\]]+])|(MMMM|MM|DD|dddd)/g, function(_2, a2, b2) {
+    return a2 || b2.slice(1);
+  });
+};
+var englishFormats = {
+  LTS: "h:mm:ss A",
+  LT: "h:mm A",
+  L: "MM/DD/YYYY",
+  LL: "MMMM D, YYYY",
+  LLL: "MMMM D, YYYY h:mm A",
+  LLLL: "dddd, MMMM D, YYYY h:mm A"
+};
+var u$3 = function u(formatStr, formats) {
+  return formatStr.replace(/(\[[^\]]+])|(LTS?|l{1,4}|L{1,4})/g, function(_2, a2, b2) {
+    var B2 = b2 && b2.toUpperCase();
+    return a2 || formats[b2] || englishFormats[b2] || t$1(formats[B2]);
+  });
+};
+var formattingTokens = /(\[[^[]*\])|([-_:/.,()\s]+)|(A|a|Q|YYYY|YY?|ww?|MM?M?M?|Do|DD?|hh?|HH?|mm?|ss?|S{1,3}|z|ZZ?)/g;
+var match1 = /\d/;
+var match2 = /\d\d/;
+var match3 = /\d{3}/;
+var match4 = /\d{4}/;
+var match1to2 = /\d\d?/;
+var matchSigned = /[+-]?\d+/;
+var matchOffset = /[+-]\d\d:?(\d\d)?|Z/;
+var matchWord = /\d*[^-_:/,()\s\d]+/;
+var locale = {};
+var parseTwoDigitYear = function parseTwoDigitYear2(input) {
+  input = +input;
+  return input + (input > 68 ? 1900 : 2e3);
+};
+function offsetFromString(string2) {
+  if (!string2) return 0;
+  if (string2 === "Z") return 0;
+  var parts = string2.match(/([+-]|\d\d)/g);
+  var minutes = +(parts[1] * 60) + (+parts[2] || 0);
+  return minutes === 0 ? 0 : parts[0] === "+" ? -minutes : minutes;
+}
+var addInput = function addInput2(property) {
+  return function(input) {
+    this[property] = +input;
+  };
+};
+var zoneExpressions = [matchOffset, function(input) {
+  var zone = this.zone || (this.zone = {});
+  zone.offset = offsetFromString(input);
+}];
+var getLocalePart = function getLocalePart2(name) {
+  var part = locale[name];
+  return part && (part.indexOf ? part : part.s.concat(part.f));
+};
+var meridiemMatch = function meridiemMatch2(input, isLowerCase) {
+  var isAfternoon;
+  var _locale = locale, meridiem = _locale.meridiem;
+  if (!meridiem) {
+    isAfternoon = input === (isLowerCase ? "pm" : "PM");
+  } else {
+    for (var i2 = 1; i2 <= 24; i2 += 1) {
+      if (input.indexOf(meridiem(i2, 0, isLowerCase)) > -1) {
+        isAfternoon = i2 > 12;
+        break;
+      }
+    }
+  }
+  return isAfternoon;
+};
+var expressions = {
+  A: [matchWord, function(input) {
+    this.afternoon = meridiemMatch(input, false);
+  }],
+  a: [matchWord, function(input) {
+    this.afternoon = meridiemMatch(input, true);
+  }],
+  Q: [match1, function(input) {
+    this.month = (input - 1) * 3 + 1;
+  }],
+  S: [match1, function(input) {
+    this.milliseconds = +input * 100;
+  }],
+  SS: [match2, function(input) {
+    this.milliseconds = +input * 10;
+  }],
+  SSS: [match3, function(input) {
+    this.milliseconds = +input;
+  }],
+  s: [match1to2, addInput("seconds")],
+  ss: [match1to2, addInput("seconds")],
+  m: [match1to2, addInput("minutes")],
+  mm: [match1to2, addInput("minutes")],
+  H: [match1to2, addInput("hours")],
+  h: [match1to2, addInput("hours")],
+  HH: [match1to2, addInput("hours")],
+  hh: [match1to2, addInput("hours")],
+  D: [match1to2, addInput("day")],
+  DD: [match2, addInput("day")],
+  Do: [matchWord, function(input) {
+    var _locale2 = locale, ordinal3 = _locale2.ordinal;
+    var _input$match = input.match(/\d+/);
+    this.day = _input$match[0];
+    if (!ordinal3) return;
+    for (var i2 = 1; i2 <= 31; i2 += 1) {
+      if (ordinal3(i2).replace(/\[|\]/g, "") === input) {
+        this.day = i2;
+      }
+    }
+  }],
+  w: [match1to2, addInput("week")],
+  ww: [match2, addInput("week")],
+  M: [match1to2, addInput("month")],
+  MM: [match2, addInput("month")],
+  MMM: [matchWord, function(input) {
+    var months = getLocalePart("months");
+    var monthsShort = getLocalePart("monthsShort");
+    var matchIndex = (monthsShort || months.map(function(_2) {
+      return _2.slice(0, 3);
+    })).indexOf(input) + 1;
+    if (matchIndex < 1) {
+      throw new Error();
+    }
+    this.month = matchIndex % 12 || matchIndex;
+  }],
+  MMMM: [matchWord, function(input) {
+    var months = getLocalePart("months");
+    var matchIndex = months.indexOf(input) + 1;
+    if (matchIndex < 1) {
+      throw new Error();
+    }
+    this.month = matchIndex % 12 || matchIndex;
+  }],
+  Y: [matchSigned, addInput("year")],
+  YY: [match2, function(input) {
+    this.year = parseTwoDigitYear(input);
+  }],
+  YYYY: [match4, addInput("year")],
+  Z: zoneExpressions,
+  ZZ: zoneExpressions
+};
+function correctHours(time2) {
+  var afternoon = time2.afternoon;
+  if (afternoon !== void 0) {
+    var hours = time2.hours;
+    if (afternoon) {
+      if (hours < 12) {
+        time2.hours += 12;
+      }
+    } else if (hours === 12) {
+      time2.hours = 0;
+    }
+    delete time2.afternoon;
+  }
+}
+function makeParser(format) {
+  format = u$3(format, locale && locale.formats);
+  var array2 = format.match(formattingTokens);
+  var length2 = array2.length;
+  for (var i2 = 0; i2 < length2; i2 += 1) {
+    var token2 = array2[i2];
+    var parseTo = expressions[token2];
+    var regex = parseTo && parseTo[0];
+    var parser = parseTo && parseTo[1];
+    if (parser) {
+      array2[i2] = {
+        regex,
+        parser
+      };
+    } else {
+      array2[i2] = token2.replace(/^\[|\]$/g, "");
+    }
+  }
+  return function(input) {
+    var time2 = {};
+    for (var _i = 0, start2 = 0; _i < length2; _i += 1) {
+      var _token = array2[_i];
+      if (typeof _token === "string") {
+        start2 += _token.length;
+      } else {
+        var _regex2 = _token.regex, _parser = _token.parser;
+        var part = input.slice(start2);
+        var match5 = _regex2.exec(part);
+        var value = match5[0];
+        _parser.call(time2, value);
+        input = input.replace(value, "");
+      }
+    }
+    correctHours(time2);
+    return time2;
+  };
+}
+var parseFormattedInput = function parseFormattedInput2(input, format, utc, dayjs3) {
+  try {
+    if (["x", "X"].indexOf(format) > -1) return new Date((format === "X" ? 1e3 : 1) * input);
+    var parser = makeParser(format);
+    var _parser2 = parser(input), year = _parser2.year, month = _parser2.month, day = _parser2.day, hours = _parser2.hours, minutes = _parser2.minutes, seconds = _parser2.seconds, milliseconds = _parser2.milliseconds, zone = _parser2.zone, week = _parser2.week;
+    var now2 = /* @__PURE__ */ new Date();
+    var d2 = day || (!year && !month ? now2.getDate() : 1);
+    var y2 = year || now2.getFullYear();
+    var M2 = 0;
+    if (!(year && !month)) {
+      M2 = month > 0 ? month - 1 : now2.getMonth();
+    }
+    var h2 = hours || 0;
+    var m2 = minutes || 0;
+    var s2 = seconds || 0;
+    var ms = milliseconds || 0;
+    if (zone) {
+      return new Date(Date.UTC(y2, M2, d2, h2, m2, s2, ms + zone.offset * 60 * 1e3));
+    }
+    if (utc) {
+      return new Date(Date.UTC(y2, M2, d2, h2, m2, s2, ms));
+    }
+    var newDate;
+    newDate = new Date(y2, M2, d2, h2, m2, s2, ms);
+    if (week) {
+      newDate = dayjs3(newDate).week(week).toDate();
+    }
+    return newDate;
+  } catch (e2) {
+    return /* @__PURE__ */ new Date("");
+  }
+};
+const customParse = (function(o2, C2, d2) {
+  d2.p.customParseFormat = true;
+  if (o2 && o2.parseTwoDigitYear) {
+    parseTwoDigitYear = o2.parseTwoDigitYear;
+  }
+  var proto2 = C2.prototype;
+  var oldParse = proto2.parse;
+  proto2.parse = function(cfg) {
+    var date2 = cfg.date, utc = cfg.utc, args = cfg.args;
+    this.$u = utc;
+    var format = args[1];
+    if (typeof format === "string") {
+      var isStrictWithoutLocale = args[2] === true;
+      var isStrictWithLocale = args[3] === true;
+      var isStrict = isStrictWithoutLocale || isStrictWithLocale;
+      var pl = args[2];
+      if (isStrictWithLocale) {
+        pl = args[2];
+      }
+      locale = this.$locale();
+      if (!isStrictWithoutLocale && pl) {
+        locale = d2.Ls[pl];
+      }
+      this.$d = parseFormattedInput(date2, format, utc, d2);
+      this.init();
+      if (pl && pl !== true) this.$L = this.locale(pl).$L;
+      if (isStrict && date2 != this.format(format)) {
+        this.$d = /* @__PURE__ */ new Date("");
+      }
+      locale = {};
+    } else if (format instanceof Array) {
+      var len = format.length;
+      for (var i2 = 1; i2 <= len; i2 += 1) {
+        args[1] = format[i2 - 1];
+        var result = d2.apply(this, args);
+        if (result.isValid()) {
+          this.$d = result.$d;
+          this.$L = result.$L;
+          this.init();
+          break;
+        }
+        if (i2 === len) this.$d = /* @__PURE__ */ new Date("");
+      }
+    } else {
+      oldParse.call(this, cfg);
+    }
+  };
+});
+var isoWeekPrettyUnit = "isoweek";
+const isoWeek = (function(o2, c2, d2) {
+  var getYearFirstThursday = function getYearFirstThursday2(year, isUtc) {
+    var yearFirstDay = (isUtc ? d2.utc : d2)().year(year).startOf(Y$1);
+    var addDiffDays = 4 - yearFirstDay.isoWeekday();
+    if (yearFirstDay.isoWeekday() > 4) {
+      addDiffDays += 7;
+    }
+    return yearFirstDay.add(addDiffDays, D$3);
+  };
+  var getCurrentWeekThursday = function getCurrentWeekThursday2(ins) {
+    return ins.add(4 - ins.isoWeekday(), D$3);
+  };
+  var proto2 = c2.prototype;
+  proto2.isoWeekYear = function() {
+    var nowWeekThursday = getCurrentWeekThursday(this);
+    return nowWeekThursday.year();
+  };
+  proto2.isoWeek = function(week) {
+    if (!this.$utils().u(week)) {
+      return this.add((week - this.isoWeek()) * 7, D$3);
+    }
+    var nowWeekThursday = getCurrentWeekThursday(this);
+    var diffWeekThursday = getYearFirstThursday(this.isoWeekYear(), this.$u);
+    return nowWeekThursday.diff(diffWeekThursday, W$2) + 1;
+  };
+  proto2.isoWeekday = function(week) {
+    if (!this.$utils().u(week)) {
+      return this.day(this.day() % 7 ? week : week - 7);
+    }
+    return this.day() || 7;
+  };
+  var oldStartOf = proto2.startOf;
+  proto2.startOf = function(units, startOf) {
+    var utils = this.$utils();
+    var isStartOf = !utils.u(startOf) ? startOf : true;
+    var unit = utils.p(units);
+    if (unit === isoWeekPrettyUnit) {
+      return isStartOf ? this.date(this.date() - (this.isoWeekday() - 1)).startOf("day") : this.date(this.date() - 1 - (this.isoWeekday() - 1) + 7).endOf("day");
+    }
+    return oldStartOf.bind(this)(units, startOf);
+  };
+});
+const isSameOrBefore = (function(o2, c2) {
+  c2.prototype.isSameOrBefore = function(that, units) {
+    return this.isSame(that, units) || this.isBefore(that, units);
+  };
+});
+const isBetween = (function(o2, c2, d2) {
+  c2.prototype.isBetween = function(a2, b2, u3, i2) {
+    var dA = d2(a2);
+    var dB = d2(b2);
+    i2 = i2 || "()";
+    var dAi = i2[0] === "(";
+    var dBi = i2[1] === ")";
+    return (dAi ? this.isAfter(dA, u3) : !this.isBefore(dA, u3)) && (dBi ? this.isBefore(dB, u3) : !this.isAfter(dB, u3)) || (dAi ? this.isBefore(dA, u3) : !this.isAfter(dA, u3)) && (dBi ? this.isAfter(dB, u3) : !this.isBefore(dB, u3));
+  };
+});
+function normalizeTimelineView(view) {
+  switch (view) {
+    case "年":
+    case "季":
+    case "月":
+    case "周":
+    case "天":
+      return view;
+    // Some parts of the UI may still use "日"; normalize it to "天".
+    case "日":
+      return "天";
+    default:
+      return "天";
+  }
+}
+function isoWeekKey(d2) {
+  return `${d2.isoWeekYear()}-W${String(d2.isoWeek()).padStart(2, "0")}`;
+}
+function isSameIsoWeek(a2, b2) {
+  return isoWeekKey(a2) === isoWeekKey(b2);
+}
+function rangeKeyForView(anchor, view) {
+  switch (view) {
+    case "年":
+      return anchor.format("YYYY");
+    case "季": {
+      return `${anchor.year()}-Q${anchor.quarter()}`;
+    }
+    case "月":
+      return anchor.format("YYYY-MM");
+    case "周": {
+      const isoYear = anchor.isoWeekYear();
+      const isoWeek2 = anchor.isoWeek();
+      return `${isoYear}-W${String(isoWeek2).padStart(2, "0")}`;
+    }
+    case "天":
+    default:
+      return anchor.format("YYYY-MM-DD");
+  }
+}
+function calculateTimelineRange(anchor, view) {
+  let start2;
+  let end2;
+  switch (view) {
+    case "年":
+      start2 = anchor.startOf("year");
+      end2 = anchor.endOf("year");
+      break;
+    case "季":
+      start2 = anchor.startOf("quarter");
+      end2 = anchor.endOf("quarter");
+      break;
+    case "月":
+      start2 = anchor.startOf("month");
+      end2 = anchor.endOf("month");
+      break;
+    case "周":
+      start2 = anchor.startOf("isoWeek");
+      end2 = anchor.endOf("isoWeek");
+      break;
+    case "天":
+    default:
+      start2 = anchor.startOf("day");
+      end2 = anchor.endOf("day");
+      break;
+  }
+  return {
+    view,
+    anchor,
+    start: start2,
+    end: end2,
+    key: rangeKeyForView(anchor, view)
+  };
+}
+function toIsoDateTuple(range) {
+  return [range.start.format("YYYY-MM-DD"), range.end.format("YYYY-MM-DD")];
+}
+dayjs.extend(quarterOfYear);
+dayjs.extend(weekOfYear);
+dayjs.extend(customParse);
+dayjs.extend(isoWeek);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isBetween);
+const todayISO = () => dayjs().format("YYYY-MM-DD");
+const nowHHMM = () => dayjs().format("HH:mm");
+function formatSecondsToHHMMSS(totalSeconds) {
+  if (isNaN(totalSeconds) || totalSeconds < 0) {
+    return "00:00:00";
+  }
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor(totalSeconds % 3600 / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const pad2 = (num) => String(num).padStart(2, "0");
+  return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
+}
+const timeToMinutes = (time2) => {
+  if (!time2 || !/^\d{1,2}:\d{2}$/.test(time2)) return null;
+  const [h2, m2] = time2.split(":").map(Number);
+  return h2 * 60 + m2;
+};
+const minutesToTime = (minutes) => {
+  if (isNaN(minutes) || minutes < 0) return "";
+  const h2 = Math.floor(minutes / 60) % 24;
+  const m2 = minutes % 60;
+  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
+};
+function normalizeDateStr(raw) {
+  const s2 = (raw || "").replace(/\//g, "-");
+  const d2 = dayjs(s2, ["YYYY-MM-DD", "YYYY-M-D", "YYYY/MM/DD", "YYYY/M/D"], true);
+  return d2.isValid() ? d2.format("YYYY-MM-DD") : s2;
+}
+const DATE_FMT = "(\\d{4}[-/]\\d{2}[-/]\\d{2})";
+function extractDate(line2, em) {
+  const list = Array.isArray(em) ? em : [em];
+  for (const e2 of list) {
+    const m2 = line2.match(new RegExp(`${e2}\\s*${DATE_FMT}`));
+    if (m2) return normalizeDateStr(m2[1]);
+  }
+  return void 0;
+}
+const QTXT = ["一", "二", "三", "四"];
+function formatDateForView(d2, v2) {
+  switch (v2) {
+    case "年":
+      return d2.format("YYYY年");
+    case "季":
+      return `${d2.year()}年${QTXT[d2.quarter() - 1]}季度`;
+    case "月":
+      return d2.format("YYYY-MM");
+    case "周": {
+      const isoYear = d2.isoWeekYear();
+      const isoWeekNum = d2.isoWeek();
+      return `${isoYear}-W${String(isoWeekNum).padStart(2, "0")}`;
+    }
+    default:
+      return d2.format("YYYY-MM-DD");
+  }
+}
+const getWeeksInYear = (year) => {
+  const endOfYear = dayjs().year(year).endOf("year");
+  return endOfYear.isoWeek() === 1 ? 52 : endOfYear.isoWeek();
+};
+function getPeriodCount(period, date2) {
+  if (!date2 || !date2.isValid()) {
+    return void 0;
+  }
+  switch (period) {
+    case "年":
+      return date2.year();
+    case "季":
+      return date2.quarter();
+    case "月":
+      return date2.month() + 1;
+    // dayjs month is 0-indexed
+    case "周":
+      return date2.isoWeek();
+    default:
+      return void 0;
+  }
+}
+const RECURRENCE_RULE_RE = /(^|[\s\[(]|[^\s])🔁\s*(every\s+(?:\d+\s+)?(?:day|week|month|quarter|year)s?(?:\s+when\s+done)?)(?=$|\s*(?:[\(\[][^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/i;
+const PURE_RECURRENCE_RE = /^every\s+(\d+)?\s*(day|week|month|quarter|year)s?(\s+when\s+done)?$/i;
+function extractRecurrenceText(rawTask) {
+  const raw = String(rawTask || "").trim();
+  if (!raw) return null;
+  const pure = raw.replace(/^🔁\s*/u, "").trim();
+  if (PURE_RECURRENCE_RE.test(pure)) return pure;
+  const match5 = raw.match(RECURRENCE_RULE_RE);
+  if (!match5) return null;
+  return match5[2]?.trim() || null;
+}
+const cleanTimeAndDurationTags = (line2) => {
+  return line2.replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, "").trim();
+};
+function toggleToDone(rawLine, todayISO2, nowTime, options) {
+  let line2 = cleanTimeAndDurationTags(rawLine);
+  const duration2 = options?.duration;
+  const startTime = options?.startTime;
+  const endTime = options?.endTime;
+  const tagsToAppend = [];
+  if (startTime !== void 0) {
+    tagsToAppend.push(`(时间:: ${startTime})`);
+  } else if (duration2 === void 0 && endTime === void 0) {
+    tagsToAppend.push(`(时间:: ${nowTime})`);
+  }
+  if (endTime !== void 0) {
+    tagsToAppend.push(`(结束:: ${endTime})`);
+  }
+  if (duration2 !== void 0) {
+    tagsToAppend.push(`(时长:: ${duration2})`);
+  }
+  line2 = [line2, ...tagsToAppend].join(" ").replace(/\s+/g, " ").trim();
+  line2 = line2.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[x]");
+  if (!/^-\s*\[x\]/.test(line2)) {
+    line2 = `- [x] ${line2.replace(/^-\s*\[.\]/, "").replace(/^-\s*/, "")}`;
+  }
+  line2 = line2.replace(
+    new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}$`),
+    ""
+  );
+  return `${line2.trim()} ${EMOJI.done} ${todayISO2}`;
+}
+function buildCompletedTaskRecord(rawLine, todayISO2, nowTime, options) {
+  return toggleToDone(rawLine, todayISO2, nowTime, options);
+}
+function parseRecurrence(rawTask) {
+  const recurrenceText2 = extractRecurrenceText(rawTask);
+  if (!recurrenceText2) return null;
+  const m2 = recurrenceText2.match(PURE_RECURRENCE_RE);
+  if (!m2) return null;
+  const interval = m2[1] ? parseInt(m2[1], 10) : 1;
+  const unit = m2[2].toLowerCase();
+  const whenDone = Boolean(m2[3]);
+  return { interval, unit, whenDone };
+}
+function findBaseDateForRecurring(rawTask, whenDone, todayISO2) {
+  if (whenDone) return todayISO2;
+  const pick2 = (emoji2) => {
+    const r2 = new RegExp(`${emoji2}s*(${DATE_YMD_RE.source})`);
+    const mt = rawTask.match(r2);
+    return mt ? normalizeDateStr(mt[1]) : null;
+  };
+  return pick2(EMOJI.due) || pick2(EMOJI.scheduled) || pick2(EMOJI.start) || todayISO2;
+}
+function generateNextRecurringTask(rawTask, baseDateISO) {
+  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "");
+  const rec = parseRecurrence(rawTask);
+  if (!rec) return next2.trim();
+  const base = dayjs(baseDateISO, ["YYYY-MM-DD", "YYYY/MM/DD"]);
+  const nextDate = rec.unit === "quarter" ? base.add(rec.interval * 3, "month") : base.add(rec.interval, rec.unit);
+  const nextStr = nextDate.format("YYYY-MM-DD");
+  const replaceIf = (emoji2) => {
+    const re = new RegExp(`${emoji2}s*${DATE_YMD_RE.source}`);
+    if (re.test(next2)) next2 = next2.replace(re, `${emoji2} ${nextStr}`);
+  };
+  replaceIf(EMOJI.due);
+  replaceIf(EMOJI.scheduled);
+  replaceIf(EMOJI.start);
+  return next2.trim();
+}
+function markTaskDone(rawLine, todayISO2, nowTime, options) {
+  const completedLine = buildCompletedTaskRecord(rawLine, todayISO2, nowTime, options);
+  const rec = parseRecurrence(rawLine);
+  if (!rec) return { completedLine };
+  const baseISO = findBaseDateForRecurring(rawLine, rec.whenDone, todayISO2);
+  const nextTaskLine = generateNextRecurringTask(rawLine, baseISO);
+  return { completedLine, nextTaskLine };
+}
+const NON_RECURRING_MARKERS = /* @__PURE__ */ new Set([
+  "",
+  "none",
+  "no",
+  "false",
+  "0",
+  "off",
+  "不重复",
+  "无"
+]);
+function normalizeTaskRecurrenceValue(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  if (NON_RECURRING_MARKERS.has(raw.toLowerCase())) return null;
+  return raw;
+}
+function getTaskRecurrenceInfo(item) {
+  if (item.recurrenceInfo) return item.recurrenceInfo;
+  const normalized2 = normalizeTaskRecurrenceValue(item.recurrence);
+  if (normalized2) {
+    const parsedNormalized = parseRecurrence(normalized2);
+    if (parsedNormalized) return parsedNormalized;
+  }
+  const raw = String(item.rawSource || item.fullData || "");
+  return raw ? parseRecurrence(raw) : null;
+}
+function isTaskRecurring(item) {
+  return getTaskRecurrenceInfo(item) != null;
+}
+const DEFAULT_MAX_BEFORE_GAP = 120;
+const DEFAULT_MAX_AFTER_GAP = 90;
+const DEFAULT_HIGH_BEFORE_GAP = 60;
+const DEFAULT_HIGH_AFTER_GAP = 30;
+const DEFAULT_MINIMUM_TREND_SAMPLES = 3;
+const DEFAULT_SUPPORTED_TREND_SAMPLES = 5;
+function readEffectText(value) {
+  const text2 = String(value ?? "").trim();
+  return text2 || void 0;
+}
+function readEffectNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const text2 = readEffectText(value);
+  if (!text2) return void 0;
+  const parsed = Number(text2);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function effectDateOrdinal(value) {
+  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match5) return void 0;
+  const year = Number(match5[1]);
+  const month = Number(match5[2]);
+  const day = Number(match5[3]);
+  const stamp = Date.UTC(year, month - 1, day);
+  const date2 = new Date(stamp);
+  if (date2.getUTCFullYear() !== year || date2.getUTCMonth() !== month - 1 || date2.getUTCDate() !== day) return void 0;
+  return Math.floor(stamp / 864e5);
+}
+function effectDateFromOrdinal(ordinal3) {
+  return new Date(ordinal3 * 864e5).toISOString().slice(0, 10);
+}
+function parseEffectTimeMinutes(value) {
+  const match5 = readEffectText(value)?.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match5) return void 0;
+  const hour = Number(match5[1]);
+  const minute = Number(match5[2]);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
+  return hour * 60 + minute;
+}
+function formatEffectTimeMinutes(value) {
+  const normalized2 = (Math.round(value) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(normalized2 / 60)).padStart(2, "0")}:${String(normalized2 % 60).padStart(2, "0")}`;
+}
+function effectAbsoluteMinute(date2, time2) {
+  const ordinal3 = effectDateOrdinal(date2);
+  const minute = parseEffectTimeMinutes(time2);
+  if (ordinal3 == null || minute == null) return void 0;
+  return ordinal3 * 1440 + minute;
+}
+function normalizeEffectGoalPath(value) {
+  return String(value ?? "").trim().replace(/^#/, "");
+}
+function effectGoalIds(item) {
+  return [item.goalId, ...item.goalIds || []].map((value) => String(value || "").trim()).filter(Boolean);
+}
+function effectGoalPaths(item) {
+  return [item.goalPath, ...item.goalPaths || []].map(normalizeEffectGoalPath).filter(Boolean);
+}
+function effectsShareGoal(left2, right2) {
+  const leftIds = effectGoalIds(left2);
+  const rightIds = effectGoalIds(right2);
+  if (leftIds.length > 0 || rightIds.length > 0) return leftIds.some((id) => rightIds.includes(id));
+  const leftPaths = effectGoalPaths(left2);
+  const rightPaths = effectGoalPaths(right2);
+  if (leftPaths.length > 0 || rightPaths.length > 0) return leftPaths.some((path) => rightPaths.includes(path));
+  return true;
+}
+function effectOccurrenceDate(item) {
+  return readEffectText(item.date) || readEffectText(item.doneDate) || readEffectText(item.startDate) || readEffectText(item.scheduledDate) || readEffectText(item.dueDate) || readEffectText(item.createdDate) || readEffectText(item.extra?.["日期"]);
+}
+function effectCoreBlock(item) {
+  return String(item.coreBlock || item.extra?.["核心Block"] || item.categoryKey || "").replace(/^core\./i, "").split("/")[0].trim().toLowerCase();
+}
+function isEffectTask(item) {
+  if (isEnergyItem(item)) return false;
+  const block2 = effectCoreBlock(item);
+  return block2 === "task" || item.type === "task" || /任务/.test(String(item.categoryKey || ""));
+}
+function resolveEffectActivityInterval(item) {
+  if (!isEffectTask(item)) return null;
+  const date2 = effectOccurrenceDate(item);
+  if (!date2) return null;
+  const ordinal3 = effectDateOrdinal(date2);
+  if (ordinal3 == null) return null;
+  const durationValue = readEffectNumber(item.duration ?? item.extra?.["时长"]);
+  const duration2 = durationValue != null && durationValue >= 0 ? durationValue : void 0;
+  let startMinute = parseEffectTimeMinutes(item.startTime ?? item.extra?.["时间"] ?? item.extra?.["开始"]);
+  let endMinute = parseEffectTimeMinutes(item.endTime ?? item.extra?.["结束"]);
+  if (startMinute == null && endMinute != null && duration2 != null) startMinute = endMinute - duration2;
+  if (endMinute == null && startMinute != null && duration2 != null) endMinute = startMinute + duration2;
+  if (startMinute == null || endMinute == null) return null;
+  let startAbsolute = ordinal3 * 1440 + startMinute;
+  let endAbsolute = ordinal3 * 1440 + endMinute;
+  if (endAbsolute < startAbsolute) endAbsolute += 1440;
+  if (duration2 != null && Math.abs(endAbsolute - startAbsolute - duration2) > 1) endAbsolute = startAbsolute + duration2;
+  if (endAbsolute <= startAbsolute) return null;
+  return {
+    item,
+    startAbsolute,
+    endAbsolute,
+    startDate: effectDateFromOrdinal(Math.floor(startAbsolute / 1440)),
+    startTime: formatEffectTimeMinutes(startAbsolute),
+    endDate: effectDateFromOrdinal(Math.floor(endAbsolute / 1440)),
+    endTime: formatEffectTimeMinutes(endAbsolute),
+    durationMinutes: Math.max(1, Math.round(endAbsolute - startAbsolute))
+  };
+}
+function readEffectEnergyPoint(item) {
+  if (!isEnergyItem(item)) return null;
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot?.date || !snapshot.time) return null;
+  const absoluteMinute2 = effectAbsoluteMinute(snapshot.date, snapshot.time);
+  if (absoluteMinute2 == null) return null;
+  return {
+    itemId: item.id,
+    date: snapshot.date,
+    time: snapshot.time,
+    score: snapshot.score,
+    brainScore: snapshot.brainScore,
+    physicalScore: snapshot.physicalScore,
+    item,
+    absoluteMinute: absoluteMinute2
+  };
+}
+function activityTitle(item) {
+  return readEffectText(item.title) || readEffectText(item.content) || "未命名任务";
+}
+function classifyEnergyActivity(item) {
+  const text2 = [item.title, item.content, item.themePath, item.theme, item.leafTheme, item.rootTheme].map((value) => String(value || "")).join(" ");
+  if (/代码|编码|编程|开发|插件|debug|调试/i.test(text2)) return "代码 / 开发";
+  if (/会议|开会|沟通|讨论|同步/.test(text2)) return "会议 / 沟通";
+  if (/读书|阅读|看书|学习|课程/.test(text2)) return "阅读 / 学习";
+  if (/写作|记录|总结|复盘|笔记/.test(text2)) return "写作 / 记录";
+  if (/午睡|睡觉|睡眠|补觉/.test(text2)) return "睡眠 / 午睡";
+  if (/运动|锻炼|健身|跑步|散步|八段锦|瑜伽|骑行|游泳/.test(text2)) return "运动 / 活动";
+  if (/手机|抖音|短视频|刷视频|刷手机/.test(text2)) return "手机 / 短视频";
+  if (/吃饭|早餐|午饭|晚饭|餐|做饭/.test(text2)) return "饮食";
+  if (/孩子|陪娃|陪.*玩|家庭|家人/.test(text2)) return "家庭 / 陪伴";
+  if (/家务|打扫|收拾|整理/.test(text2)) return "家务 / 整理";
+  return activityTitle(item).slice(0, 24);
+}
+function effectThemeLabel(item) {
+  return readEffectText(item.themePath) || readEffectText(item.theme) || readEffectText(item.rootTheme) || readEffectText(item.leafTheme) || "未标主题";
+}
+function effectDurationBucket(durationMinutes) {
+  if (durationMinutes < 30) return "<30min";
+  if (durationMinutes < 60) return "30–59min";
+  if (durationMinutes < 90) return "60–89min";
+  if (durationMinutes < 120) return "90–119min";
+  return "≥120min";
+}
+function nearestEffectBefore(points, absolute, maxGap) {
+  for (let index = points.length - 1; index >= 0; index -= 1) {
+    const point = points[index];
+    if (point.absoluteMinute > absolute) continue;
+    if (absolute - point.absoluteMinute > maxGap) return void 0;
+    return point;
+  }
+  return void 0;
+}
+function nearestEffectAfter(points, absolute, maxGap) {
+  for (const point of points) {
+    if (point.absoluteMinute < absolute) continue;
+    if (point.absoluteMinute - absolute > maxGap) return void 0;
+    return point;
+  }
+  return void 0;
+}
+function hasCompetingActivity(intervals, target, before, after, requireSharedGoal) {
+  return intervals.some((candidate) => {
+    if (candidate.item.id === target.item.id) return false;
+    if (requireSharedGoal && !effectsShareGoal(target.item, candidate.item)) return false;
+    if (candidate.endAbsolute <= before.absoluteMinute || candidate.startAbsolute >= after.absoluteMinute) return false;
+    const overlapStart = Math.max(candidate.startAbsolute, before.absoluteMinute);
+    const overlapEnd = Math.min(candidate.endAbsolute, after.absoluteMinute);
+    return overlapEnd - overlapStart >= 10;
+  });
+}
+function effectConfidence(beforeGap, afterGap, options) {
+  return beforeGap <= options.highBeforeGapMinutes && afterGap <= options.highAfterGapMinutes ? "high" : "medium";
+}
+function medianEffect(values2) {
+  const sorted = [...values2].sort((left2, right2) => left2 - right2);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
+}
+function meanEffect(values2) {
+  return values2.reduce((sum, value) => sum + value, 0) / Math.max(1, values2.length);
+}
+function roundedEffect(value) {
+  return Math.round(value * 10) / 10;
+}
+function aggregateEffectRows(samples, dimension, keyOf, minimumTrendSamples, supportedTrendSamples) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const sample of samples) {
+    const key = keyOf(sample);
+    const bucket = groups.get(key) || [];
+    bucket.push(sample);
+    groups.set(key, bucket);
+  }
+  return [...groups.entries()].map(([key, rows]) => {
+    const deltas = rows.map((row) => row.deltaScore);
+    const brainDeltas = rows.map((row) => row.deltaBrain).filter((value) => value != null);
+    const physicalDeltas = rows.map((row) => row.deltaPhysical).filter((value) => value != null);
+    const meanDelta = meanEffect(deltas);
+    const medianDelta = medianEffect(deltas);
+    const evidence = rows.length < minimumTrendSamples ? "insufficient" : rows.length < supportedTrendSamples ? "exploratory" : "supported";
+    let trend = "insufficient";
+    if (evidence !== "insufficient") {
+      if (meanDelta >= 8 && medianDelta >= 5) trend = "recovery";
+      else if (meanDelta <= -8 && medianDelta <= -5) trend = "depletion";
+      else trend = "mixed";
+    }
+    return {
+      dimension,
+      key,
+      label: key,
+      sampleCount: rows.length,
+      meanDelta: roundedEffect(meanDelta),
+      medianDelta: roundedEffect(medianDelta),
+      meanBrainDelta: brainDeltas.length ? roundedEffect(meanEffect(brainDeltas)) : void 0,
+      meanPhysicalDelta: physicalDeltas.length ? roundedEffect(meanEffect(physicalDeltas)) : void 0,
+      meanDurationMinutes: roundedEffect(meanEffect(rows.map((row) => row.durationMinutes))),
+      positiveCount: rows.filter((row) => row.deltaScore >= 5).length,
+      negativeCount: rows.filter((row) => row.deltaScore <= -5).length,
+      neutralCount: rows.filter((row) => Math.abs(row.deltaScore) < 5).length,
+      trend,
+      evidence
+    };
+  }).sort((left2, right2) => {
+    if (left2.sampleCount !== right2.sampleCount) return right2.sampleCount - left2.sampleCount;
+    return Math.abs(right2.meanDelta) - Math.abs(left2.meanDelta);
+  });
+}
+function buildEnergyEffects(items, options = {}) {
+  const maxBeforeGapMinutes = Math.max(1, options.maxBeforeGapMinutes ?? DEFAULT_MAX_BEFORE_GAP);
+  const maxAfterGapMinutes = Math.max(1, options.maxAfterGapMinutes ?? DEFAULT_MAX_AFTER_GAP);
+  const highBeforeGapMinutes = Math.max(1, options.highBeforeGapMinutes ?? DEFAULT_HIGH_BEFORE_GAP);
+  const highAfterGapMinutes = Math.max(1, options.highAfterGapMinutes ?? DEFAULT_HIGH_AFTER_GAP);
+  const minimumTrendSamples = Math.max(2, options.minimumTrendSamples ?? DEFAULT_MINIMUM_TREND_SAMPLES);
+  const supportedTrendSamples = Math.max(minimumTrendSamples, options.supportedTrendSamples ?? DEFAULT_SUPPORTED_TREND_SAMPLES);
+  const requireSharedGoal = options.requireSharedGoal !== false;
+  const points = items.map(readEffectEnergyPoint).filter((point) => !!point).sort((left2, right2) => left2.absoluteMinute - right2.absoluteMinute);
+  const intervals = items.map(resolveEffectActivityInterval).filter((interval) => !!interval).sort((left2, right2) => left2.startAbsolute - right2.startAbsolute);
+  if (points.length < 2 || intervals.length === 0) return null;
+  const samples = [];
+  for (const interval of intervals) {
+    const goalPoints = requireSharedGoal ? points.filter((point) => effectsShareGoal(interval.item, point.item)) : points;
+    const before = nearestEffectBefore(goalPoints, interval.startAbsolute, maxBeforeGapMinutes);
+    const after = nearestEffectAfter(goalPoints, interval.endAbsolute, maxAfterGapMinutes);
+    if (!before || !after || before.itemId === after.itemId) continue;
+    if (hasCompetingActivity(intervals, interval, before, after, requireSharedGoal)) continue;
+    const beforeGapMinutes = Math.round(interval.startAbsolute - before.absoluteMinute);
+    const afterGapMinutes = Math.round(after.absoluteMinute - interval.endAbsolute);
+    samples.push({
+      activityItemId: interval.item.id,
+      activityTitle: activityTitle(interval.item),
+      activityLabel: classifyEnergyActivity(interval.item),
+      themeLabel: effectThemeLabel(interval.item),
+      durationBucket: effectDurationBucket(interval.durationMinutes),
+      durationMinutes: interval.durationMinutes,
+      startDate: interval.startDate,
+      startTime: interval.startTime,
+      endDate: interval.endDate,
+      endTime: interval.endTime,
+      before,
+      after,
+      beforeGapMinutes,
+      afterGapMinutes,
+      deltaScore: after.score - before.score,
+      deltaBrain: before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0,
+      deltaPhysical: before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0,
+      confidence: effectConfidence(beforeGapMinutes, afterGapMinutes, { highBeforeGapMinutes, highAfterGapMinutes }),
+      item: interval.item
+    });
+  }
+  return {
+    eligibleActivityCount: intervals.length,
+    pairedActivityCount: samples.length,
+    highConfidencePairCount: samples.filter((sample) => sample.confidence === "high").length,
+    mediumConfidencePairCount: samples.filter((sample) => sample.confidence === "medium").length,
+    excludedActivityCount: intervals.length - samples.length,
+    samples,
+    byActivity: aggregateEffectRows(samples, "activity", (sample) => sample.activityLabel, minimumTrendSamples, supportedTrendSamples),
+    byTheme: aggregateEffectRows(samples, "theme", (sample) => sample.themeLabel, minimumTrendSamples, supportedTrendSamples),
+    byDuration: aggregateEffectRows(samples, "duration", (sample) => sample.durationBucket, minimumTrendSamples, supportedTrendSamples)
+  };
+}
+function text$2(value) {
+  return String(value ?? "").trim();
+}
+function bool(value) {
+  if (typeof value === "boolean") return value;
+  const raw = text$2(value).toLowerCase();
+  if (!raw) return void 0;
+  if (["true", "1", "yes", "y", "是", "启用"].includes(raw)) return true;
+  if (["false", "0", "no", "n", "否", "禁用"].includes(raw)) return false;
+  return void 0;
+}
+function number$2(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const raw = text$2(value);
+  if (!raw) return void 0;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function normalizedBlock(item) {
+  return text$2(item.coreBlock || item.extra?.["核心Block"]).replace(/^core\./i, "").toLowerCase();
+}
+function sourceFor(item) {
+  const block2 = normalizedBlock(item);
+  if (block2 === "task") return "task";
+  if (block2 === "plan") return "plan";
+  if (block2 === "habit") return "habit";
+  if (item.type === "task") return "task";
+  return null;
+}
+function load(value) {
+  const raw = text$2(value).toLowerCase();
+  if (!raw) return void 0;
+  if (["low", "低", "轻", "轻量"].includes(raw)) return "low";
+  if (["medium", "mid", "中", "中等"].includes(raw)) return "medium";
+  if (["high", "高", "重", "高负荷"].includes(raw)) return "high";
+  return void 0;
+}
+function median$1(values2) {
+  const sorted = values2.filter((value2) => Number.isFinite(value2) && value2 > 0).sort((a2, b2) => a2 - b2);
+  if (sorted.length < 3) return void 0;
+  const middle = Math.floor(sorted.length / 2);
+  const value = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+  return Math.max(10, Math.min(240, Math.round(value)));
+}
+function historyDurationMaps(items) {
+  const goalThemeRows = /* @__PURE__ */ new Map();
+  const themeRows = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    if (sourceFor(item) !== "task" || isTaskOpen(item)) continue;
+    const duration2 = number$2(item.duration);
+    const theme = text$2(item.themePath || item.theme);
+    if (!duration2 || duration2 <= 0 || !theme) continue;
+    const goal = text$2(item.goalId || item.goalPath);
+    const themeKey = theme.toLowerCase();
+    const goalThemeKey = `${goal.toLowerCase()}|${themeKey}`;
+    themeRows.set(themeKey, [...themeRows.get(themeKey) || [], duration2]);
+    if (goal) goalThemeRows.set(goalThemeKey, [...goalThemeRows.get(goalThemeKey) || [], duration2]);
+  }
+  return {
+    byGoalTheme: new Map([...goalThemeRows].flatMap(([key, values2]) => {
+      const value = median$1(values2);
+      return value == null ? [] : [[key, value]];
+    })),
+    byTheme: new Map([...themeRows].flatMap(([key, values2]) => {
+      const value = median$1(values2);
+      return value == null ? [] : [[key, value]];
+    }))
+  };
+}
+function inferredDuration(item, history) {
+  const explicit = number$2(item.extra?.["预计时长"] ?? item.extra?.["expectedDuration"] ?? item.extra?.["expectedDurationMinutes"]);
+  const existing = number$2(item.duration);
+  const direct = explicit && explicit > 0 ? explicit : existing && existing > 0 ? existing : void 0;
+  if (direct != null) return Math.max(10, Math.min(240, Math.round(direct)));
+  const theme = text$2(item.themePath || item.theme).toLowerCase();
+  if (!theme) return void 0;
+  const goal = text$2(item.goalId || item.goalPath).toLowerCase();
+  return (goal ? history.byGoalTheme.get(`${goal}|${theme}`) : void 0) || history.byTheme.get(theme);
+}
+function priorityValue(item) {
+  const map = {
+    lowest: 20,
+    low: 35,
+    medium: 55,
+    high: 75,
+    highest: 95
+  };
+  return map[item.priority || ""] ?? 50;
+}
+function parseDayDiff(value, today) {
+  if (!value || !today) return null;
+  const valueMs = Date.parse(`${value}T12:00:00`);
+  const todayMs = Date.parse(`${today}T12:00:00`);
+  if (!Number.isFinite(valueMs) || !Number.isFinite(todayMs)) return null;
+  return Math.round((valueMs - todayMs) / 864e5);
+}
+function dueBonus(item, today) {
+  const due = text$2(item.dueDate).slice(0, 10);
+  const days = parseDayDiff(due, today);
+  if (days == null) return 0;
+  if (days < -30) return 0;
+  if (days < 0) return 18;
+  if (days <= 1) return 14;
+  if (days <= 3) return 8;
+  if (days <= 7) return 3;
+  return 0;
+}
+function scheduleBonus(item, today) {
+  const date2 = text$2(item.scheduledDate || item.startDate).slice(0, 10);
+  const diff = parseDayDiff(date2, today);
+  return diff === 0 ? 8 : 0;
+}
+function futureTask(item, today) {
+  const date2 = text$2(item.startDate || item.scheduledDate).slice(0, 10);
+  const diff = parseDayDiff(date2, today);
+  return diff != null && diff > 0;
+}
+function candidateTitle(item) {
+  return text$2(item.title || item.editableText || item.content).replace(/^[-*]\s*\[[ x-]\]\s*/i, "").slice(0, 120);
+}
+function normalizedLabel(value) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+function exclusionReason(item, source, today, options) {
+  const explicit = bool(item.extra?.["可推荐"] ?? item.extra?.["recommendable"]);
+  if (explicit === false) return "explicitly-disabled";
+  if (source === "task") {
+    if (!isTaskOpen(item)) return "not-open-task";
+    if (isTaskRecurring(item) && !options.includeRecurringTasks && explicit !== true) return "recurring-task";
+    if (futureTask(item, today) && options.includeFutureTasks !== true) return "future-task";
+    return null;
+  }
+  if (source === "habit") {
+    if (options.includeHabits === true && explicit === true && !item.doneDate && !item.cancelledDate) return null;
+    return "habit-not-opted-in";
+  }
+  if (source === "plan") {
+    if (options.includePlans === true && explicit === true && !item.doneDate && !item.cancelledDate) return null;
+    return "plan-not-opted-in";
+  }
+  return "not-action-source";
+}
+function incrementReason(diagnostics, reason) {
+  diagnostics.excludedByReason[reason] = (diagnostics.excludedByReason[reason] || 0) + 1;
+}
+function personalEffectFor(candidate, management) {
+  if (!management) return void 0;
+  const title = normalizedLabel(candidate.title);
+  const theme = normalizedLabel(candidate.theme || "");
+  const rows = [...management.recoveryCandidates, ...management.cautionCandidates];
+  const row = rows.find((entry) => normalizedLabel(entry.label) === title) || (theme ? rows.find((entry) => normalizedLabel(entry.label) === theme) : void 0);
+  if (!row || row.sampleCount < 3) return void 0;
+  return {
+    meanDelta: row.meanDelta,
+    sampleCount: row.sampleCount,
+    meanBrainDelta: row.meanBrainDelta,
+    meanPhysicalDelta: row.meanPhysicalDelta
+  };
+}
+function buildEnergyActionCandidateResult(items, options = {}) {
+  const today = options.today || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  const maximum = Math.max(1, Math.min(1e3, Math.floor(options.maximumCandidates ?? 500)));
+  const history = historyDurationMaps(items);
+  const candidates = [];
+  const seen = /* @__PURE__ */ new Set();
+  const diagnostics = {
+    totalItems: items.length,
+    taskItems: 0,
+    openTasks: 0,
+    recurringOpenTasks: 0,
+    futureOpenTasks: 0,
+    eligibleTasks: 0,
+    eligiblePlans: 0,
+    eligibleHabits: 0,
+    candidateCount: 0,
+    excludedByReason: {}
+  };
+  for (const item of items) {
+    const source = sourceFor(item);
+    if (!source) {
+      incrementReason(diagnostics, "not-action-source");
+      continue;
+    }
+    if (source === "task") {
+      diagnostics.taskItems += 1;
+      if (isTaskOpen(item)) {
+        diagnostics.openTasks += 1;
+        if (isTaskRecurring(item)) diagnostics.recurringOpenTasks += 1;
+        if (futureTask(item, today)) diagnostics.futureOpenTasks += 1;
+      }
+    }
+    const reason = exclusionReason(item, source, today, options);
+    if (reason) {
+      incrementReason(diagnostics, reason);
+      continue;
+    }
+    const title = candidateTitle(item);
+    if (!title) {
+      incrementReason(diagnostics, "missing-title");
+      continue;
+    }
+    if (source === "task") diagnostics.eligibleTasks += 1;
+    if (source === "plan") diagnostics.eligiblePlans += 1;
+    if (source === "habit") diagnostics.eligibleHabits += 1;
+    const dedupeKey = `${source}|${normalizedLabel(title)}|${text$2(item.goalId || item.goalPath).toLowerCase()}|${text$2(item.themePath || item.theme).toLowerCase()}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+    const sharedLoad = load(item.extra?.["精力要求"] ?? item.extra?.["energyLoad"]);
+    const valueScore = Math.max(0, Math.min(100, priorityValue(item) + dueBonus(item, today) + scheduleBonus(item, today)));
+    candidates.push({
+      id: item.id,
+      title,
+      source,
+      goalId: item.goalId,
+      goalPath: item.goalPath,
+      theme: text$2(item.themePath || item.theme) || void 0,
+      activityLabel: classifyEnergyActivity(item),
+      durationMinutes: inferredDuration(item, history),
+      brainLoad: load(item.extra?.["脑力要求"] ?? item.extra?.["brainLoad"]) || sharedLoad,
+      physicalLoad: load(item.extra?.["体力要求"] ?? item.extra?.["physicalLoad"]) || sharedLoad,
+      valueScore,
+      recoveryIntent: bool(item.extra?.["恢复意图"] ?? item.extra?.["recoveryIntent"]) === true
+    });
+  }
+  const sorted = candidates.sort((left2, right2) => (right2.valueScore || 0) - (left2.valueScore || 0) || left2.title.localeCompare(right2.title, "zh-CN")).slice(0, maximum);
+  diagnostics.candidateCount = sorted.length;
+  return { candidates: sorted, diagnostics };
+}
+function attachEnergyRecommendationEvidence(candidates, management) {
+  return candidates.map((candidate) => {
+    if (candidate.historicalEffect) return candidate;
+    const historicalEffect = personalEffectFor(candidate, management);
+    return historicalEffect ? { ...candidate, historicalEffect } : candidate;
+  });
+}
+function text$1(value) {
+  return String(value ?? "").trim();
+}
+function normalized(value) {
+  return text$1(value).toLowerCase().replace(/\s+/g, " ");
+}
+function mean(values2) {
+  const finite = values2.filter(Number.isFinite);
+  if (!finite.length) return void 0;
+  return Math.round(finite.reduce((sum, value) => sum + value, 0) / finite.length * 10) / 10;
+}
+function median(values2) {
+  const finite = values2.filter((value2) => Number.isFinite(value2) && value2 > 0).sort((a2, b2) => a2 - b2);
+  if (!finite.length) return void 0;
+  const middle = Math.floor(finite.length / 2);
+  const value = finite.length % 2 ? finite[middle] : (finite[middle - 1] + finite[middle]) / 2;
+  return Math.round(value);
+}
+function aggregateFeedback(rows, keyOf) {
+  const grouped = /* @__PURE__ */ new Map();
+  for (const row of rows) {
+    const key = normalized(keyOf(row));
+    if (!key) continue;
+    grouped.set(key, [...grouped.get(key) || [], row]);
+  }
+  return new Map([...grouped.entries()].map(([key, group]) => {
+    const brain = group.map((row) => row.brainDelta).filter((value) => value != null);
+    const physical = group.map((row) => row.physicalDelta).filter((value) => value != null);
+    return [key, {
+      meanDelta: mean(group.map((row) => row.delta)) || 0,
+      sampleCount: group.length,
+      meanBrainDelta: mean(brain),
+      meanPhysicalDelta: mean(physical),
+      typicalDurationMinutes: median(group.map((row) => row.durationMinutes || 0)),
+      origin: "recommendation-feedback"
+    }];
+  }));
+}
+function feedbackRows(items, timers) {
+  const itemById = new Map(items.map((item) => [item.id, item]));
+  const rows = [];
+  for (const timer of timers) {
+    const feedback = timer.energyFeedback;
+    const energyContext = timer.energyContext;
+    if (timer.status !== "feedback-recorded" || !feedback || !energyContext) continue;
+    const item = itemById.get(timer.taskId);
+    if (!item) continue;
+    const brainDelta = feedback.brainScore != null && energyContext.baselineBrainScore != null ? feedback.brainScore - energyContext.baselineBrainScore : void 0;
+    const physicalDelta = feedback.physicalScore != null && energyContext.baselinePhysicalScore != null ? feedback.physicalScore - energyContext.baselinePhysicalScore : void 0;
+    const elapsedMinutes = Math.round((timer.elapsedSeconds || 0) / 60);
+    rows.push({
+      taskId: timer.taskId,
+      activity: classifyEnergyActivity(item),
+      theme: text$1(item.themePath || item.theme) || void 0,
+      delta: feedback.delta,
+      brainDelta,
+      physicalDelta,
+      durationMinutes: elapsedMinutes > 0 ? elapsedMinutes : energyContext.suggestedDurationMinutes
+    });
+  }
+  return rows;
+}
+function effectFromAggregate(row) {
+  return {
+    meanDelta: row.meanDelta,
+    sampleCount: row.sampleCount,
+    meanBrainDelta: row.meanBrainDelta,
+    meanPhysicalDelta: row.meanPhysicalDelta,
+    typicalDurationMinutes: row.meanDurationMinutes ? Math.round(row.meanDurationMinutes) : void 0,
+    origin: "activity-history"
+  };
+}
+function effectMap(rows) {
+  return new Map(rows.map((row) => [normalized(row.label), effectFromAggregate(row)]));
+}
+function recoveryEntries(activityRows, feedbackActivity, trend) {
+  const labels = /* @__PURE__ */ new Set();
+  for (const row of activityRows) labels.add(normalized(row.label));
+  for (const key of feedbackActivity.keys()) labels.add(key);
+  const rows = [];
+  for (const key of labels) {
+    const feedback = feedbackActivity.get(key);
+    const observedRow = activityRows.find((row) => normalized(row.label) === key);
+    const observed = observedRow ? effectFromAggregate(observedRow) : void 0;
+    const chosen = feedback && feedback.sampleCount >= 3 ? feedback : observed;
+    if (!chosen || chosen.sampleCount < 3) continue;
+    if (trend === "recovery" && chosen.meanDelta < 8) continue;
+    if (trend === "depletion" && chosen.meanDelta > -8) continue;
+    rows.push({
+      ...chosen,
+      key,
+      label: observedRow?.label || key,
+      typicalDurationMinutes: chosen.typicalDurationMinutes || (observedRow?.meanDurationMinutes ? Math.round(observedRow.meanDurationMinutes) : void 0)
+    });
+  }
+  return rows.sort((left2, right2) => {
+    const originDelta = Number(right2.origin === "recommendation-feedback") - Number(left2.origin === "recommendation-feedback");
+    if (originDelta) return originDelta;
+    const magnitude = Math.abs(right2.meanDelta) - Math.abs(left2.meanDelta);
+    if (magnitude) return magnitude;
+    return right2.sampleCount - left2.sampleCount;
+  });
+}
+function buildEnergyRecommendationLearning(items, timers = []) {
+  const effects = buildEnergyEffects(items, { requireSharedGoal: false });
+  const rows = feedbackRows(items, timers);
+  const feedbackByTask = aggregateFeedback(rows, (row) => row.taskId);
+  const feedbackByActivity = aggregateFeedback(rows, (row) => row.activity);
+  const feedbackByTheme = aggregateFeedback(rows.filter((row) => !!row.theme), (row) => row.theme || "");
+  const activityRows = effects?.byActivity || [];
+  const activityHistory = effectMap(activityRows);
+  const themeHistory = effectMap(effects?.byTheme || []);
+  const byActivity = new Map(activityHistory);
+  for (const [key, effect2] of feedbackByActivity) {
+    if (effect2.sampleCount >= 3) byActivity.set(key, effect2);
+  }
+  const byTheme = new Map(themeHistory);
+  for (const [key, effect2] of feedbackByTheme) {
+    if (effect2.sampleCount >= 3) byTheme.set(key, effect2);
+  }
+  return {
+    feedbackSampleCount: rows.length,
+    pairedActivityCount: effects?.pairedActivityCount || 0,
+    byTaskId: feedbackByTask,
+    byActivity,
+    byTheme,
+    recoveryActivities: recoveryEntries(activityRows, feedbackByActivity, "recovery"),
+    depletionActivities: recoveryEntries(activityRows, feedbackByActivity, "depletion")
+  };
+}
+function attachEnergyRecommendationLearning(candidates, learning) {
+  return candidates.map((candidate) => {
+    const taskEffect = learning.byTaskId.get(normalized(candidate.id));
+    const activityEffect = candidate.activityLabel ? learning.byActivity.get(normalized(candidate.activityLabel)) : void 0;
+    const themeEffect = candidate.theme ? learning.byTheme.get(normalized(candidate.theme)) : void 0;
+    const historicalEffect = taskEffect && taskEffect.sampleCount >= 3 ? taskEffect : activityEffect && activityEffect.sampleCount >= 3 ? activityEffect : themeEffect && themeEffect.sampleCount >= 3 ? themeEffect : void 0;
+    return historicalEffect ? { ...candidate, historicalEffect } : candidate;
+  });
+}
+function ordinal2(value) {
+  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match5) return void 0;
+  const stamp = Date.UTC(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3]));
+  const date2 = new Date(stamp);
+  if (date2.toISOString().slice(0, 10) !== value) return void 0;
+  return Math.floor(stamp / 864e5);
+}
+function ratio(value, total) {
+  if (total <= 0) return 0;
+  return Math.round(value / total * 1e3) / 1e3;
+}
+function pct(value) {
+  return Math.round(value * 100);
+}
+function buildEnergyDataQuality(items, options) {
+  const start2 = ordinal2(options.startDate);
+  const end2 = ordinal2(options.endDate);
+  const totalDays = start2 == null || end2 == null || end2 < start2 ? 0 : end2 - start2 + 1;
+  const snapshots = items.filter(isEnergyItem).map((item) => ({ item, snapshot: readEnergyItemSnapshot(item) })).filter((row) => !!row.snapshot).filter(({ snapshot }) => {
+    if (!snapshot.date) return false;
+    const value = ordinal2(snapshot.date);
+    return start2 != null && end2 != null && value != null && value >= start2 && value <= end2;
+  });
+  const sampledDays = new Set(snapshots.map(({ snapshot }) => snapshot.date).filter(Boolean)).size;
+  const realtimeSamples = snapshots.filter(({ snapshot }) => snapshot.captureMode !== "retrospective").length;
+  const retrospectiveSamples = snapshots.filter(({ snapshot }) => snapshot.captureMode === "retrospective").length;
+  const exactTimeSamples = snapshots.filter(({ snapshot }) => {
+    if (snapshot.timePrecision === "exact") return true;
+    return !snapshot.timePrecision && snapshot.captureMode !== "retrospective" && Boolean(snapshot.time);
+  }).length;
+  const approximateTimeSamples = snapshots.length - exactTimeSamples;
+  const detailedSamples = snapshots.filter(({ snapshot }) => snapshot.brainScore != null && snapshot.physicalScore != null).length;
+  const effects = buildEnergyEffects(items, { requireSharedGoal: options.requireSharedGoal !== false });
+  const coverageRatio = ratio(sampledDays, totalDays);
+  const realtimeRatio = ratio(realtimeSamples, snapshots.length);
+  const exactRatio = ratio(exactTimeSamples, snapshots.length);
+  const pairedActivityCount = effects?.pairedActivityCount || 0;
+  const highConfidencePairCount = effects?.highConfidencePairCount || 0;
+  const mediumConfidencePairCount = effects?.mediumConfidencePairCount || 0;
+  let level = "limited";
+  if (sampledDays >= Math.min(7, Math.max(4, Math.ceil(totalDays * 0.6))) && snapshots.length >= 8 && coverageRatio >= 0.6 && exactRatio >= 0.6) {
+    level = "strong";
+  } else if (sampledDays >= Math.min(3, Math.max(2, totalDays)) && snapshots.length >= 4) {
+    level = "usable";
+  }
+  const gaps = [];
+  if (sampledDays < Math.min(3, totalDays || 3)) gaps.push(`只有 ${sampledDays}/${totalDays || "—"} 天有记录`);
+  else if (coverageRatio < 0.5) gaps.push(`覆盖率 ${pct(coverageRatio)}%`);
+  if (snapshots.length > 0 && realtimeRatio < 0.5) gaps.push(`实时记录仅 ${pct(realtimeRatio)}%`);
+  if (snapshots.length > 0 && exactRatio < 0.5) gaps.push(`精确时间仅 ${pct(exactRatio)}%`);
+  if (pairedActivityCount < 3) gaps.push(`活动前后有效配对 ${pairedActivityCount}`);
+  const levelLabel = level === "strong" ? "较可靠" : level === "usable" ? "可观察" : "数据不足";
+  const message = level === "strong" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%），可以形成观察性模式；仍不把时间邻近关系当因果。` : level === "usable" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%）；可以看趋势，但个人规律仍需更多重复样本。` : `本周期 ${sampledDays}/${totalDays || "—"} 天有记录；先把地图当作状态记录，不强行形成规律。`;
+  return {
+    level,
+    levelLabel,
+    totalDays,
+    sampledDays,
+    coverageRatio,
+    sampleCount: snapshots.length,
+    realtimeSamples,
+    retrospectiveSamples,
+    exactTimeSamples,
+    approximateTimeSamples,
+    detailedSamples,
+    pairedActivityCount,
+    highConfidencePairCount,
+    mediumConfidencePairCount,
+    message,
+    gaps
+  };
+}
 function makeStableGoalIdFromPath(path) {
-  const normalized = splitGoalPath(path).goalPath || String(path || "").trim();
-  const safe = normalized.toLowerCase().replace(/[\\/\s]+/g, "-").replace(/[^a-z0-9\-_.\u4e00-\u9fa5]/gi, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  const normalized2 = splitGoalPath(path).goalPath || String(path || "").trim();
+  const safe = normalized2.toLowerCase().replace(/[\\/\s]+/g, "-").replace(/[^a-z0-9\-_.\u4e00-\u9fa5]/gi, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
   return `goal.${safe || "untitled"}`;
 }
 const UNASSIGNED_GOAL_KEY = "未归属目标";
@@ -4269,7 +6527,7 @@ function firstString(value) {
 function normalizeItemGoalPath(value) {
   const raw = firstString(value);
   if (!raw) return "";
-  return normalizeGoalPath(raw) || raw;
+  return normalizeGoalPath$1(raw) || raw;
 }
 function buildGoalPathById$1(goals = []) {
   const map = /* @__PURE__ */ new Map();
@@ -4280,9 +6538,9 @@ function buildGoalPathById$1(goals = []) {
   return map;
 }
 function findGoalByPath(goals = [], goalPath) {
-  const normalized = normalizeItemGoalPath(goalPath);
-  if (!normalized) return null;
-  return goals.find((goal) => normalizeItemGoalPath(goal.goalPath || goal.title) === normalized) || null;
+  const normalized2 = normalizeItemGoalPath(goalPath);
+  if (!normalized2) return null;
+  return goals.find((goal) => normalizeItemGoalPath(goal.goalPath || goal.title) === normalized2) || null;
 }
 function getItemGoalKey(item, goals = []) {
   const directPath = normalizeItemGoalPath(item.goalPath);
@@ -4468,6 +6726,7 @@ const DEFAULT_SETTINGS = {
   inputSettings: { blocks: [], themes: [] },
   goalSettings: DEFAULT_GOAL_SETTINGS,
   coreBlockSettings: DEFAULT_CORE_BLOCK_SETTINGS,
+  energySettings: DEFAULT_ENERGY_SETTINGS,
   // [新增] 悬浮计时器默认启用
   floatingTimerEnabled: true,
   // [新增]
@@ -4477,7 +6736,7 @@ const DEFAULT_SETTINGS = {
   // [新增] 默认关闭（避免污染控制台）
   devConsoleStackEnabled: false
 };
-const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView", "EventTimelineView", "ProgressView", "TaskExecutionView"];
+const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView", "EventTimelineView", "ProgressView", "EnergyView"];
 function getAllFields(items) {
   return getAvailableFields(items).map((field) => field.key);
 }
@@ -4623,12 +6882,12 @@ function normalizeFieldNameForCompare(value) {
 const CORE_INPUT_NAME_SET = new Set(Object.keys(CORE_INPUT_ALIAS_TARGETS).map(normalizeFieldNameForCompare));
 const RESERVED_NON_INPUT_NAME_SET = new Set(RESERVED_NON_INPUT_FIELD_NAMES.map(normalizeFieldNameForCompare));
 function isCoreInputFieldName(name) {
-  const normalized = normalizeFieldNameForCompare(name);
-  return Boolean(normalized && CORE_INPUT_NAME_SET.has(normalized));
+  const normalized2 = normalizeFieldNameForCompare(name);
+  return Boolean(normalized2 && CORE_INPUT_NAME_SET.has(normalized2));
 }
 function isReservedCustomFieldName(name) {
-  const normalized = normalizeFieldNameForCompare(name);
-  return Boolean(normalized && RESERVED_NON_INPUT_NAME_SET.has(normalized));
+  const normalized2 = normalizeFieldNameForCompare(name);
+  return Boolean(normalized2 && RESERVED_NON_INPUT_NAME_SET.has(normalized2));
 }
 function makeSafeCustomFieldName(name, fallback = "新字段") {
   const trimmed = String(name ?? "").trim() || fallback;
@@ -4798,18 +7057,18 @@ function sanitizeTemplateField(field, index = 1) {
 function makeUniqueCustomFieldName(name, usedNames) {
   const normalize = (value) => value.trim().replace(/\s+/g, "").toLocaleLowerCase();
   let candidate = name;
-  let normalized = normalize(candidate);
-  if (!usedNames.has(normalized)) {
-    usedNames.add(normalized);
+  let normalized2 = normalize(candidate);
+  if (!usedNames.has(normalized2)) {
+    usedNames.add(normalized2);
     return candidate;
   }
   let suffix = 2;
   do {
     candidate = `${name}${suffix}`;
-    normalized = normalize(candidate);
+    normalized2 = normalize(candidate);
     suffix += 1;
-  } while (usedNames.has(normalized));
-  usedNames.add(normalized);
+  } while (usedNames.has(normalized2));
+  usedNames.add(normalized2);
   return candidate;
 }
 function sanitizeTemplateFields(fields) {
@@ -4942,8 +7201,8 @@ function splitMultiText(value) {
 function normalizeOptionObject(field, rawValue) {
   const text2 = readOptionText$2(rawValue);
   if (isTemplatePathField(field)) {
-    const normalized = normalizeHierarchyPath(text2.value || text2.label);
-    return normalized ? { value: normalized, label: text2.label || normalized.split("/").pop() || normalized } : rawValue;
+    const normalized2 = normalizeHierarchyPath(text2.value || text2.label);
+    return normalized2 ? { value: normalized2, label: text2.label || normalized2.split("/").pop() || normalized2 } : rawValue;
   }
   return { value: rawValue.value ?? text2.value, label: rawValue.label ?? text2.label ?? rawValue.value };
 }
@@ -4957,12 +7216,12 @@ function normalizeSingleRawValue(field, rawValue) {
     return normalizeImageValue(rawValue)?.src ?? rawValue;
   }
   if (isTemplatePathField(field)) {
-    const normalized = normalizeHierarchyPath(rawValue);
-    if (!normalized) return rawValue;
+    const normalized2 = normalizeHierarchyPath(rawValue);
+    if (!normalized2) return rawValue;
     const matched = findMatchingOption(field.options, rawValue, { normalize: normalizeHierarchyPath, matchLeaf: true });
     return {
-      value: normalized,
-      label: matched?.label || normalized.split("/").pop() || normalized
+      value: normalized2,
+      label: matched?.label || normalized2.split("/").pop() || normalized2
     };
   }
   if (isTemplateOptionField(field)) {
@@ -5127,6 +7386,9 @@ function normalizeTemplateRenderData(template, formData) {
   return normalizedData;
 }
 const THEME_MATCHER_TOKEN = /* @__PURE__ */ Symbol("IThemeMatcher");
+function isActiveTimerState(timer) {
+  return !!timer && (timer.status === "running" || timer.status === "paused");
+}
 const BLOCK_VIEW_DEFAULT_CONFIG = {
   view: "BlockView",
   title: "块视图",
@@ -5143,6 +7405,24 @@ const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG = {
   maxContentLength: 160,
   fields: ["title", "date"],
   groupFields: []
+};
+const ENERGY_VIEW_DEFAULT_CONFIG = {
+  windowDays: 7,
+  recentSampleLimit: 5,
+  maxGoals: 3,
+  goalPath: "",
+  showTimeline: true,
+  showContext: true,
+  showEffects: true,
+  analysisWindowDays: 30,
+  showPatterns: true,
+  showManagement: true,
+  showWeeklyReview: true,
+  showExperiment: true,
+  experimentName: "",
+  experimentHypothesis: "",
+  experimentInterventionDate: "",
+  experimentWindowDays: 7
 };
 const EXCEL_VIEW_DEFAULT_CONFIG = {
   view: "ExcelView",
@@ -5187,9 +7467,6 @@ const TABLE_VIEW_DEFAULT_CONFIG = {
   collapsed: false,
   rowField: "categoryKey",
   colField: "date"
-};
-const TASK_EXECUTION_VIEW_DEFAULT_CONFIG = {
-  onlyRecurring: true
 };
 const TIMELINE_VIEW_DEFAULT_CONFIG = {
   defaultHourHeight: 50,
@@ -5477,6 +7754,7 @@ function toCurrentThinkSettings(rawValue) {
     viewInstances: Array.isArray(partial2.viewInstances) ? partial2.viewInstances : [],
     layouts: Array.isArray(partial2.layouts) ? partial2.layouts : [],
     inputSettings: normalizeInputSettings(partial2.inputSettings),
+    energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...isRecord(partial2.energySettings) ? partial2.energySettings : {} },
     activeThemePaths: Array.isArray(partial2.activeThemePaths) ? partial2.activeThemePaths : []
   };
 }
@@ -6447,12 +8725,12 @@ function cleanRegex(source) {
   return source.slice(start2, end2);
 }
 function floatSafeRemainder(val, step) {
-  const ratio = val / step;
-  const roundedRatio = Math.round(ratio);
-  const tolerance = Number.EPSILON * Math.max(Math.abs(ratio), 1);
-  if (Math.abs(ratio - roundedRatio) < tolerance)
+  const ratio2 = val / step;
+  const roundedRatio = Math.round(ratio2);
+  const tolerance = Number.EPSILON * Math.max(Math.abs(ratio2), 1);
+  if (Math.abs(ratio2 - roundedRatio) < tolerance)
     return 0;
-  return ratio - roundedRatio;
+  return ratio2 - roundedRatio;
 }
 const EVALUATING = /* @__PURE__ */ Symbol("evaluating");
 function defineLazy(object2, key, getter) {
@@ -8112,7 +10390,7 @@ const $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) 
   const _normalized = cached(() => normalizeDef(def));
   const generateFastpass = (shape2) => {
     const doc = new Doc(["shape", "payload", "ctx"]);
-    const normalized = _normalized.value;
+    const normalized2 = _normalized.value;
     const parseStr = (key) => {
       const k2 = esc(key);
       return `shape[${k2}]._zod.run({ value: input[${k2}], issues: [] }, ctx)`;
@@ -8120,11 +10398,11 @@ const $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) 
     doc.write(`const input = payload.value;`);
     const ids2 = /* @__PURE__ */ Object.create(null);
     let counter = 0;
-    for (const key of normalized.keys) {
+    for (const key of normalized2.keys) {
       ids2[key] = `key_${counter++}`;
     }
     doc.write(`const newResult = {};`);
-    for (const key of normalized.keys) {
+    for (const key of normalized2.keys) {
       const id = ids2[key];
       const k2 = esc(key);
       const schema = shape2[key];
@@ -11169,1113 +13447,6 @@ class DataStoreCache {
     return { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
   }
 }
-const DATE_YMD = "\\d{4}[-/]\\d{2}[-/]\\d{2}";
-const DATE_YMD_RE = new RegExp(DATE_YMD);
-const TAG_RE = /#([\p{L}\p{N}_\/-]+)/gu;
-const KV_IN_PAREN = /\(([^:：]+)::\s*([^)]+)\)/g;
-const RE_TASK_PREFIX = /^\s*-\s*\[[ xX-]\]/;
-const RE_DONE_BOX = /^\s*-\s*\[x\]/i;
-const RE_CANCEL_BOX = /^\s*-\s*\[-\]/;
-var SECONDS_A_MINUTE = 60;
-var SECONDS_A_HOUR = SECONDS_A_MINUTE * 60;
-var SECONDS_A_DAY = SECONDS_A_HOUR * 24;
-var SECONDS_A_WEEK = SECONDS_A_DAY * 7;
-var MILLISECONDS_A_SECOND = 1e3;
-var MILLISECONDS_A_MINUTE = SECONDS_A_MINUTE * MILLISECONDS_A_SECOND;
-var MILLISECONDS_A_HOUR = SECONDS_A_HOUR * MILLISECONDS_A_SECOND;
-var MILLISECONDS_A_DAY = SECONDS_A_DAY * MILLISECONDS_A_SECOND;
-var MILLISECONDS_A_WEEK = SECONDS_A_WEEK * MILLISECONDS_A_SECOND;
-var MS$1 = "millisecond";
-var S$1 = "second";
-var MIN = "minute";
-var H$2 = "hour";
-var D$3 = "day";
-var W$2 = "week";
-var M$2 = "month";
-var Q$2 = "quarter";
-var Y$1 = "year";
-var DATE = "date";
-var FORMAT_DEFAULT = "YYYY-MM-DDTHH:mm:ssZ";
-var INVALID_DATE_STRING = "Invalid Date";
-var REGEX_PARSE = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/;
-var REGEX_FORMAT = /\[([^\]]+)]|YYYY|YY|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
-const en$1 = {
-  name: "en",
-  weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),
-  months: "January_February_March_April_May_June_July_August_September_October_November_December".split("_"),
-  ordinal: function ordinal(n2) {
-    var s2 = ["th", "st", "nd", "rd"];
-    var v2 = n2 % 100;
-    return "[" + n2 + (s2[(v2 - 20) % 10] || s2[v2] || s2[0]) + "]";
-  }
-};
-var padStart = function padStart2(string2, length2, pad2) {
-  var s2 = String(string2);
-  if (!s2 || s2.length >= length2) return string2;
-  return "" + Array(length2 + 1 - s2.length).join(pad2) + string2;
-};
-var padZoneStr = function padZoneStr2(instance2) {
-  var negMinutes = -instance2.utcOffset();
-  var minutes = Math.abs(negMinutes);
-  var hourOffset = Math.floor(minutes / 60);
-  var minuteOffset = minutes % 60;
-  return (negMinutes <= 0 ? "+" : "-") + padStart(hourOffset, 2, "0") + ":" + padStart(minuteOffset, 2, "0");
-};
-var monthDiff = function monthDiff2(a2, b2) {
-  if (a2.date() < b2.date()) return -monthDiff2(b2, a2);
-  var wholeMonthDiff = (b2.year() - a2.year()) * 12 + (b2.month() - a2.month());
-  var anchor = a2.clone().add(wholeMonthDiff, M$2);
-  var c2 = b2 - anchor < 0;
-  var anchor2 = a2.clone().add(wholeMonthDiff + (c2 ? -1 : 1), M$2);
-  return +(-(wholeMonthDiff + (b2 - anchor) / (c2 ? anchor - anchor2 : anchor2 - anchor)) || 0);
-};
-var absFloor = function absFloor2(n2) {
-  return n2 < 0 ? Math.ceil(n2) || 0 : Math.floor(n2);
-};
-var prettyUnit = function prettyUnit2(u3) {
-  var special = {
-    M: M$2,
-    y: Y$1,
-    w: W$2,
-    d: D$3,
-    D: DATE,
-    h: H$2,
-    m: MIN,
-    s: S$1,
-    ms: MS$1,
-    Q: Q$2
-  };
-  return special[u3] || String(u3 || "").toLowerCase().replace(/s$/, "");
-};
-var isUndefined = function isUndefined2(s2) {
-  return s2 === void 0;
-};
-const U$2 = {
-  s: padStart,
-  z: padZoneStr,
-  m: monthDiff,
-  a: absFloor,
-  p: prettyUnit,
-  u: isUndefined
-};
-var L$2 = "en";
-var Ls = {};
-Ls[L$2] = en$1;
-var IS_DAYJS = "$isDayjsObject";
-var isDayjs = function isDayjs2(d2) {
-  return d2 instanceof Dayjs || !!(d2 && d2[IS_DAYJS]);
-};
-var parseLocale = function parseLocale2(preset, object2, isLocal) {
-  var l2;
-  if (!preset) return L$2;
-  if (typeof preset === "string") {
-    var presetLower = preset.toLowerCase();
-    if (Ls[presetLower]) {
-      l2 = presetLower;
-    }
-    if (object2) {
-      Ls[presetLower] = object2;
-      l2 = presetLower;
-    }
-    var presetSplit = preset.split("-");
-    if (!l2 && presetSplit.length > 1) {
-      return parseLocale2(presetSplit[0]);
-    }
-  } else {
-    var name = preset.name;
-    Ls[name] = preset;
-    l2 = name;
-  }
-  if (!isLocal && l2) L$2 = l2;
-  return l2 || !isLocal && L$2;
-};
-var dayjs = function dayjs2(date2, c2) {
-  if (isDayjs(date2)) {
-    return date2.clone();
-  }
-  var cfg = typeof c2 === "object" ? c2 : {};
-  cfg.date = date2;
-  cfg.args = arguments;
-  return new Dayjs(cfg);
-};
-var wrapper$1 = function wrapper(date2, instance2) {
-  return dayjs(date2, {
-    locale: instance2.$L,
-    utc: instance2.$u,
-    x: instance2.$x,
-    $offset: instance2.$offset
-    // todo: refactor; do not use this.$offset in you code
-  });
-};
-var Utils = U$2;
-Utils.l = parseLocale;
-Utils.i = isDayjs;
-Utils.w = wrapper$1;
-var parseDate = function parseDate2(cfg) {
-  var date2 = cfg.date, utc = cfg.utc;
-  if (date2 === null) return /* @__PURE__ */ new Date(NaN);
-  if (Utils.u(date2)) return /* @__PURE__ */ new Date();
-  if (date2 instanceof Date) return new Date(date2);
-  if (typeof date2 === "string" && !/Z$/i.test(date2)) {
-    var d2 = date2.match(REGEX_PARSE);
-    if (d2) {
-      var m2 = d2[2] - 1 || 0;
-      var ms = (d2[7] || "0").substring(0, 3);
-      if (utc) {
-        return new Date(Date.UTC(d2[1], m2, d2[3] || 1, d2[4] || 0, d2[5] || 0, d2[6] || 0, ms));
-      }
-      return new Date(d2[1], m2, d2[3] || 1, d2[4] || 0, d2[5] || 0, d2[6] || 0, ms);
-    }
-  }
-  return new Date(date2);
-};
-var Dayjs = /* @__PURE__ */ (function() {
-  function Dayjs2(cfg) {
-    this.$L = parseLocale(cfg.locale, null, true);
-    this.parse(cfg);
-    this.$x = this.$x || cfg.x || {};
-    this[IS_DAYJS] = true;
-  }
-  var _proto = Dayjs2.prototype;
-  _proto.parse = function parse2(cfg) {
-    this.$d = parseDate(cfg);
-    this.init();
-  };
-  _proto.init = function init() {
-    var $d = this.$d;
-    this.$y = $d.getFullYear();
-    this.$M = $d.getMonth();
-    this.$D = $d.getDate();
-    this.$W = $d.getDay();
-    this.$H = $d.getHours();
-    this.$m = $d.getMinutes();
-    this.$s = $d.getSeconds();
-    this.$ms = $d.getMilliseconds();
-  };
-  _proto.$utils = function $utils() {
-    return Utils;
-  };
-  _proto.isValid = function isValid() {
-    return !(this.$d.toString() === INVALID_DATE_STRING);
-  };
-  _proto.isSame = function isSame(that, units) {
-    var other = dayjs(that);
-    return this.startOf(units) <= other && other <= this.endOf(units);
-  };
-  _proto.isAfter = function isAfter(that, units) {
-    return dayjs(that) < this.startOf(units);
-  };
-  _proto.isBefore = function isBefore(that, units) {
-    return this.endOf(units) < dayjs(that);
-  };
-  _proto.$g = function $g(input, get, set2) {
-    if (Utils.u(input)) return this[get];
-    return this.set(set2, input);
-  };
-  _proto.unix = function unix() {
-    return Math.floor(this.valueOf() / 1e3);
-  };
-  _proto.valueOf = function valueOf() {
-    return this.$d.getTime();
-  };
-  _proto.startOf = function startOf(units, _startOf) {
-    var _this = this;
-    var isStartOf = !Utils.u(_startOf) ? _startOf : true;
-    var unit = Utils.p(units);
-    var instanceFactory = function instanceFactory2(d2, m2) {
-      var ins = Utils.w(_this.$u ? Date.UTC(_this.$y, m2, d2) : new Date(_this.$y, m2, d2), _this);
-      return isStartOf ? ins : ins.endOf(D$3);
-    };
-    var instanceFactorySet = function instanceFactorySet2(method, slice2) {
-      var argumentStart = [0, 0, 0, 0];
-      var argumentEnd = [23, 59, 59, 999];
-      return Utils.w(_this.toDate()[method].apply(
-        // eslint-disable-line prefer-spread
-        _this.toDate("s"),
-        (isStartOf ? argumentStart : argumentEnd).slice(slice2)
-      ), _this);
-    };
-    var $W = this.$W, $M = this.$M, $D = this.$D;
-    var utcPad = "set" + (this.$u ? "UTC" : "");
-    switch (unit) {
-      case Y$1:
-        return isStartOf ? instanceFactory(1, 0) : instanceFactory(31, 11);
-      case M$2:
-        return isStartOf ? instanceFactory(1, $M) : instanceFactory(0, $M + 1);
-      case W$2: {
-        var weekStart = this.$locale().weekStart || 0;
-        var gap2 = ($W < weekStart ? $W + 7 : $W) - weekStart;
-        return instanceFactory(isStartOf ? $D - gap2 : $D + (6 - gap2), $M);
-      }
-      case D$3:
-      case DATE:
-        return instanceFactorySet(utcPad + "Hours", 0);
-      case H$2:
-        return instanceFactorySet(utcPad + "Minutes", 1);
-      case MIN:
-        return instanceFactorySet(utcPad + "Seconds", 2);
-      case S$1:
-        return instanceFactorySet(utcPad + "Milliseconds", 3);
-      default:
-        return this.clone();
-    }
-  };
-  _proto.endOf = function endOf(arg2) {
-    return this.startOf(arg2, false);
-  };
-  _proto.$set = function $set(units, _int2) {
-    var _C$D$C$DATE$C$M$C$Y$C;
-    var unit = Utils.p(units);
-    var utcPad = "set" + (this.$u ? "UTC" : "");
-    var name = (_C$D$C$DATE$C$M$C$Y$C = {}, _C$D$C$DATE$C$M$C$Y$C[D$3] = utcPad + "Date", _C$D$C$DATE$C$M$C$Y$C[DATE] = utcPad + "Date", _C$D$C$DATE$C$M$C$Y$C[M$2] = utcPad + "Month", _C$D$C$DATE$C$M$C$Y$C[Y$1] = utcPad + "FullYear", _C$D$C$DATE$C$M$C$Y$C[H$2] = utcPad + "Hours", _C$D$C$DATE$C$M$C$Y$C[MIN] = utcPad + "Minutes", _C$D$C$DATE$C$M$C$Y$C[S$1] = utcPad + "Seconds", _C$D$C$DATE$C$M$C$Y$C[MS$1] = utcPad + "Milliseconds", _C$D$C$DATE$C$M$C$Y$C)[unit];
-    var arg2 = unit === D$3 ? this.$D + (_int2 - this.$W) : _int2;
-    if (unit === M$2 || unit === Y$1) {
-      var date2 = this.clone().set(DATE, 1);
-      date2.$d[name](arg2);
-      date2.init();
-      this.$d = date2.set(DATE, Math.min(this.$D, date2.daysInMonth())).$d;
-    } else if (name) this.$d[name](arg2);
-    this.init();
-    return this;
-  };
-  _proto.set = function set2(string2, _int2) {
-    return this.clone().$set(string2, _int2);
-  };
-  _proto.get = function get(unit) {
-    return this[Utils.p(unit)]();
-  };
-  _proto.add = function add2(number2, units) {
-    var _this2 = this, _C$MIN$C$H$C$S$unit;
-    number2 = Number(number2);
-    var unit = Utils.p(units);
-    var instanceFactorySet = function instanceFactorySet2(n2) {
-      var d2 = dayjs(_this2);
-      return Utils.w(d2.date(d2.date() + Math.round(n2 * number2)), _this2);
-    };
-    if (unit === M$2) {
-      return this.set(M$2, this.$M + number2);
-    }
-    if (unit === Y$1) {
-      return this.set(Y$1, this.$y + number2);
-    }
-    if (unit === D$3) {
-      return instanceFactorySet(1);
-    }
-    if (unit === W$2) {
-      return instanceFactorySet(7);
-    }
-    var step = (_C$MIN$C$H$C$S$unit = {}, _C$MIN$C$H$C$S$unit[MIN] = MILLISECONDS_A_MINUTE, _C$MIN$C$H$C$S$unit[H$2] = MILLISECONDS_A_HOUR, _C$MIN$C$H$C$S$unit[S$1] = MILLISECONDS_A_SECOND, _C$MIN$C$H$C$S$unit)[unit] || 1;
-    var nextTimeStamp = this.$d.getTime() + number2 * step;
-    return Utils.w(nextTimeStamp, this);
-  };
-  _proto.subtract = function subtract2(number2, string2) {
-    return this.add(number2 * -1, string2);
-  };
-  _proto.format = function format(formatStr) {
-    var _this3 = this;
-    var locale2 = this.$locale();
-    if (!this.isValid()) return locale2.invalidDate || INVALID_DATE_STRING;
-    var str = formatStr || FORMAT_DEFAULT;
-    var zoneStr = Utils.z(this);
-    var $H = this.$H, $m = this.$m, $M = this.$M;
-    var weekdays = locale2.weekdays, months = locale2.months, meridiem = locale2.meridiem;
-    var getShort = function getShort2(arr, index, full, length2) {
-      return arr && (arr[index] || arr(_this3, str)) || full[index].slice(0, length2);
-    };
-    var get$H = function get$H2(num) {
-      return Utils.s($H % 12 || 12, num, "0");
-    };
-    var meridiemFunc = meridiem || function(hour, minute, isLowercase) {
-      var m2 = hour < 12 ? "AM" : "PM";
-      return isLowercase ? m2.toLowerCase() : m2;
-    };
-    var matches = function matches2(match5) {
-      switch (match5) {
-        case "YY":
-          return String(_this3.$y).slice(-2);
-        case "YYYY":
-          return Utils.s(_this3.$y, 4, "0");
-        case "M":
-          return $M + 1;
-        case "MM":
-          return Utils.s($M + 1, 2, "0");
-        case "MMM":
-          return getShort(locale2.monthsShort, $M, months, 3);
-        case "MMMM":
-          return getShort(months, $M);
-        case "D":
-          return _this3.$D;
-        case "DD":
-          return Utils.s(_this3.$D, 2, "0");
-        case "d":
-          return String(_this3.$W);
-        case "dd":
-          return getShort(locale2.weekdaysMin, _this3.$W, weekdays, 2);
-        case "ddd":
-          return getShort(locale2.weekdaysShort, _this3.$W, weekdays, 3);
-        case "dddd":
-          return weekdays[_this3.$W];
-        case "H":
-          return String($H);
-        case "HH":
-          return Utils.s($H, 2, "0");
-        case "h":
-          return get$H(1);
-        case "hh":
-          return get$H(2);
-        case "a":
-          return meridiemFunc($H, $m, true);
-        case "A":
-          return meridiemFunc($H, $m, false);
-        case "m":
-          return String($m);
-        case "mm":
-          return Utils.s($m, 2, "0");
-        case "s":
-          return String(_this3.$s);
-        case "ss":
-          return Utils.s(_this3.$s, 2, "0");
-        case "SSS":
-          return Utils.s(_this3.$ms, 3, "0");
-        case "Z":
-          return zoneStr;
-      }
-      return null;
-    };
-    return str.replace(REGEX_FORMAT, function(match5, $1) {
-      return $1 || matches(match5) || zoneStr.replace(":", "");
-    });
-  };
-  _proto.utcOffset = function utcOffset() {
-    return -Math.round(this.$d.getTimezoneOffset() / 15) * 15;
-  };
-  _proto.diff = function diff(input, units, _float) {
-    var _this4 = this;
-    var unit = Utils.p(units);
-    var that = dayjs(input);
-    var zoneDelta = (that.utcOffset() - this.utcOffset()) * MILLISECONDS_A_MINUTE;
-    var diff2 = this - that;
-    var getMonth = function getMonth2() {
-      return Utils.m(_this4, that);
-    };
-    var result;
-    switch (unit) {
-      case Y$1:
-        result = getMonth() / 12;
-        break;
-      case M$2:
-        result = getMonth();
-        break;
-      case Q$2:
-        result = getMonth() / 3;
-        break;
-      case W$2:
-        result = (diff2 - zoneDelta) / MILLISECONDS_A_WEEK;
-        break;
-      case D$3:
-        result = (diff2 - zoneDelta) / MILLISECONDS_A_DAY;
-        break;
-      case H$2:
-        result = diff2 / MILLISECONDS_A_HOUR;
-        break;
-      case MIN:
-        result = diff2 / MILLISECONDS_A_MINUTE;
-        break;
-      case S$1:
-        result = diff2 / MILLISECONDS_A_SECOND;
-        break;
-      default:
-        result = diff2;
-        break;
-    }
-    return _float ? result : Utils.a(result);
-  };
-  _proto.daysInMonth = function daysInMonth() {
-    return this.endOf(M$2).$D;
-  };
-  _proto.$locale = function $locale() {
-    return Ls[this.$L];
-  };
-  _proto.locale = function locale2(preset, object2) {
-    if (!preset) return this.$L;
-    var that = this.clone();
-    var nextLocaleName = parseLocale(preset, object2, true);
-    if (nextLocaleName) that.$L = nextLocaleName;
-    return that;
-  };
-  _proto.clone = function clone2() {
-    return Utils.w(this.$d, this);
-  };
-  _proto.toDate = function toDate() {
-    return new Date(this.valueOf());
-  };
-  _proto.toJSON = function toJSON() {
-    return this.isValid() ? this.toISOString() : null;
-  };
-  _proto.toISOString = function toISOString() {
-    return this.$d.toISOString();
-  };
-  _proto.toString = function toString() {
-    return this.$d.toUTCString();
-  };
-  return Dayjs2;
-})();
-var proto = Dayjs.prototype;
-dayjs.prototype = proto;
-[["$ms", MS$1], ["$s", S$1], ["$m", MIN], ["$H", H$2], ["$W", D$3], ["$M", M$2], ["$y", Y$1], ["$D", DATE]].forEach(function(g2) {
-  proto[g2[1]] = function(input) {
-    return this.$g(input, g2[0], g2[1]);
-  };
-});
-dayjs.extend = function(plugin, option) {
-  if (!plugin.$i) {
-    plugin(option, Dayjs, dayjs);
-    plugin.$i = true;
-  }
-  return dayjs;
-};
-dayjs.locale = parseLocale;
-dayjs.isDayjs = isDayjs;
-dayjs.unix = function(timestamp) {
-  return dayjs(timestamp * 1e3);
-};
-dayjs.en = Ls[L$2];
-dayjs.Ls = Ls;
-dayjs.p = {};
-const quarterOfYear = (function(o2, c2) {
-  var proto2 = c2.prototype;
-  proto2.quarter = function(quarter) {
-    if (!this.$utils().u(quarter)) {
-      return this.month(this.month() % 3 + (quarter - 1) * 3);
-    }
-    return Math.ceil((this.month() + 1) / 3);
-  };
-  var oldAdd = proto2.add;
-  proto2.add = function(number2, units) {
-    number2 = Number(number2);
-    var unit = this.$utils().p(units);
-    if (unit === Q$2) {
-      return this.add(number2 * 3, M$2);
-    }
-    return oldAdd.bind(this)(number2, units);
-  };
-  var oldStartOf = proto2.startOf;
-  proto2.startOf = function(units, startOf) {
-    var utils = this.$utils();
-    var isStartOf = !utils.u(startOf) ? startOf : true;
-    var unit = utils.p(units);
-    if (unit === Q$2) {
-      var quarter = this.quarter() - 1;
-      return isStartOf ? this.month(quarter * 3).startOf(M$2).startOf(D$3) : this.month(quarter * 3 + 2).endOf(M$2).endOf(D$3);
-    }
-    return oldStartOf.bind(this)(units, startOf);
-  };
-});
-const weekOfYear = (function(o2, c2, d2) {
-  var proto2 = c2.prototype;
-  proto2.week = function(week) {
-    if (week === void 0) {
-      week = null;
-    }
-    if (week !== null) {
-      return this.add((week - this.week()) * 7, D$3);
-    }
-    var yearStart = this.$locale().yearStart || 1;
-    if (this.month() === 11 && this.date() > 25) {
-      var nextYearStartDay = d2(this).startOf(Y$1).add(1, Y$1).date(yearStart);
-      var thisEndOfWeek = d2(this).endOf(W$2);
-      if (nextYearStartDay.isBefore(thisEndOfWeek)) {
-        return 1;
-      }
-    }
-    var yearStartDay = d2(this).startOf(Y$1).date(yearStart);
-    var yearStartWeek = yearStartDay.startOf(W$2).subtract(1, MS$1);
-    var diffInWeek = this.diff(yearStartWeek, W$2, true);
-    if (diffInWeek < 0) {
-      return d2(this).startOf("week").week();
-    }
-    return Math.ceil(diffInWeek);
-  };
-  proto2.weeks = function(week) {
-    if (week === void 0) {
-      week = null;
-    }
-    return this.week(week);
-  };
-});
-var t$1 = function t(format) {
-  return format.replace(/(\[[^\]]+])|(MMMM|MM|DD|dddd)/g, function(_2, a2, b2) {
-    return a2 || b2.slice(1);
-  });
-};
-var englishFormats = {
-  LTS: "h:mm:ss A",
-  LT: "h:mm A",
-  L: "MM/DD/YYYY",
-  LL: "MMMM D, YYYY",
-  LLL: "MMMM D, YYYY h:mm A",
-  LLLL: "dddd, MMMM D, YYYY h:mm A"
-};
-var u$3 = function u(formatStr, formats) {
-  return formatStr.replace(/(\[[^\]]+])|(LTS?|l{1,4}|L{1,4})/g, function(_2, a2, b2) {
-    var B2 = b2 && b2.toUpperCase();
-    return a2 || formats[b2] || englishFormats[b2] || t$1(formats[B2]);
-  });
-};
-var formattingTokens = /(\[[^[]*\])|([-_:/.,()\s]+)|(A|a|Q|YYYY|YY?|ww?|MM?M?M?|Do|DD?|hh?|HH?|mm?|ss?|S{1,3}|z|ZZ?)/g;
-var match1 = /\d/;
-var match2 = /\d\d/;
-var match3 = /\d{3}/;
-var match4 = /\d{4}/;
-var match1to2 = /\d\d?/;
-var matchSigned = /[+-]?\d+/;
-var matchOffset = /[+-]\d\d:?(\d\d)?|Z/;
-var matchWord = /\d*[^-_:/,()\s\d]+/;
-var locale = {};
-var parseTwoDigitYear = function parseTwoDigitYear2(input) {
-  input = +input;
-  return input + (input > 68 ? 1900 : 2e3);
-};
-function offsetFromString(string2) {
-  if (!string2) return 0;
-  if (string2 === "Z") return 0;
-  var parts = string2.match(/([+-]|\d\d)/g);
-  var minutes = +(parts[1] * 60) + (+parts[2] || 0);
-  return minutes === 0 ? 0 : parts[0] === "+" ? -minutes : minutes;
-}
-var addInput = function addInput2(property) {
-  return function(input) {
-    this[property] = +input;
-  };
-};
-var zoneExpressions = [matchOffset, function(input) {
-  var zone = this.zone || (this.zone = {});
-  zone.offset = offsetFromString(input);
-}];
-var getLocalePart = function getLocalePart2(name) {
-  var part = locale[name];
-  return part && (part.indexOf ? part : part.s.concat(part.f));
-};
-var meridiemMatch = function meridiemMatch2(input, isLowerCase) {
-  var isAfternoon;
-  var _locale = locale, meridiem = _locale.meridiem;
-  if (!meridiem) {
-    isAfternoon = input === (isLowerCase ? "pm" : "PM");
-  } else {
-    for (var i2 = 1; i2 <= 24; i2 += 1) {
-      if (input.indexOf(meridiem(i2, 0, isLowerCase)) > -1) {
-        isAfternoon = i2 > 12;
-        break;
-      }
-    }
-  }
-  return isAfternoon;
-};
-var expressions = {
-  A: [matchWord, function(input) {
-    this.afternoon = meridiemMatch(input, false);
-  }],
-  a: [matchWord, function(input) {
-    this.afternoon = meridiemMatch(input, true);
-  }],
-  Q: [match1, function(input) {
-    this.month = (input - 1) * 3 + 1;
-  }],
-  S: [match1, function(input) {
-    this.milliseconds = +input * 100;
-  }],
-  SS: [match2, function(input) {
-    this.milliseconds = +input * 10;
-  }],
-  SSS: [match3, function(input) {
-    this.milliseconds = +input;
-  }],
-  s: [match1to2, addInput("seconds")],
-  ss: [match1to2, addInput("seconds")],
-  m: [match1to2, addInput("minutes")],
-  mm: [match1to2, addInput("minutes")],
-  H: [match1to2, addInput("hours")],
-  h: [match1to2, addInput("hours")],
-  HH: [match1to2, addInput("hours")],
-  hh: [match1to2, addInput("hours")],
-  D: [match1to2, addInput("day")],
-  DD: [match2, addInput("day")],
-  Do: [matchWord, function(input) {
-    var _locale2 = locale, ordinal2 = _locale2.ordinal;
-    var _input$match = input.match(/\d+/);
-    this.day = _input$match[0];
-    if (!ordinal2) return;
-    for (var i2 = 1; i2 <= 31; i2 += 1) {
-      if (ordinal2(i2).replace(/\[|\]/g, "") === input) {
-        this.day = i2;
-      }
-    }
-  }],
-  w: [match1to2, addInput("week")],
-  ww: [match2, addInput("week")],
-  M: [match1to2, addInput("month")],
-  MM: [match2, addInput("month")],
-  MMM: [matchWord, function(input) {
-    var months = getLocalePart("months");
-    var monthsShort = getLocalePart("monthsShort");
-    var matchIndex = (monthsShort || months.map(function(_2) {
-      return _2.slice(0, 3);
-    })).indexOf(input) + 1;
-    if (matchIndex < 1) {
-      throw new Error();
-    }
-    this.month = matchIndex % 12 || matchIndex;
-  }],
-  MMMM: [matchWord, function(input) {
-    var months = getLocalePart("months");
-    var matchIndex = months.indexOf(input) + 1;
-    if (matchIndex < 1) {
-      throw new Error();
-    }
-    this.month = matchIndex % 12 || matchIndex;
-  }],
-  Y: [matchSigned, addInput("year")],
-  YY: [match2, function(input) {
-    this.year = parseTwoDigitYear(input);
-  }],
-  YYYY: [match4, addInput("year")],
-  Z: zoneExpressions,
-  ZZ: zoneExpressions
-};
-function correctHours(time2) {
-  var afternoon = time2.afternoon;
-  if (afternoon !== void 0) {
-    var hours = time2.hours;
-    if (afternoon) {
-      if (hours < 12) {
-        time2.hours += 12;
-      }
-    } else if (hours === 12) {
-      time2.hours = 0;
-    }
-    delete time2.afternoon;
-  }
-}
-function makeParser(format) {
-  format = u$3(format, locale && locale.formats);
-  var array2 = format.match(formattingTokens);
-  var length2 = array2.length;
-  for (var i2 = 0; i2 < length2; i2 += 1) {
-    var token2 = array2[i2];
-    var parseTo = expressions[token2];
-    var regex = parseTo && parseTo[0];
-    var parser = parseTo && parseTo[1];
-    if (parser) {
-      array2[i2] = {
-        regex,
-        parser
-      };
-    } else {
-      array2[i2] = token2.replace(/^\[|\]$/g, "");
-    }
-  }
-  return function(input) {
-    var time2 = {};
-    for (var _i = 0, start2 = 0; _i < length2; _i += 1) {
-      var _token = array2[_i];
-      if (typeof _token === "string") {
-        start2 += _token.length;
-      } else {
-        var _regex2 = _token.regex, _parser = _token.parser;
-        var part = input.slice(start2);
-        var match5 = _regex2.exec(part);
-        var value = match5[0];
-        _parser.call(time2, value);
-        input = input.replace(value, "");
-      }
-    }
-    correctHours(time2);
-    return time2;
-  };
-}
-var parseFormattedInput = function parseFormattedInput2(input, format, utc, dayjs3) {
-  try {
-    if (["x", "X"].indexOf(format) > -1) return new Date((format === "X" ? 1e3 : 1) * input);
-    var parser = makeParser(format);
-    var _parser2 = parser(input), year = _parser2.year, month = _parser2.month, day = _parser2.day, hours = _parser2.hours, minutes = _parser2.minutes, seconds = _parser2.seconds, milliseconds = _parser2.milliseconds, zone = _parser2.zone, week = _parser2.week;
-    var now2 = /* @__PURE__ */ new Date();
-    var d2 = day || (!year && !month ? now2.getDate() : 1);
-    var y2 = year || now2.getFullYear();
-    var M2 = 0;
-    if (!(year && !month)) {
-      M2 = month > 0 ? month - 1 : now2.getMonth();
-    }
-    var h2 = hours || 0;
-    var m2 = minutes || 0;
-    var s2 = seconds || 0;
-    var ms = milliseconds || 0;
-    if (zone) {
-      return new Date(Date.UTC(y2, M2, d2, h2, m2, s2, ms + zone.offset * 60 * 1e3));
-    }
-    if (utc) {
-      return new Date(Date.UTC(y2, M2, d2, h2, m2, s2, ms));
-    }
-    var newDate;
-    newDate = new Date(y2, M2, d2, h2, m2, s2, ms);
-    if (week) {
-      newDate = dayjs3(newDate).week(week).toDate();
-    }
-    return newDate;
-  } catch (e2) {
-    return /* @__PURE__ */ new Date("");
-  }
-};
-const customParse = (function(o2, C2, d2) {
-  d2.p.customParseFormat = true;
-  if (o2 && o2.parseTwoDigitYear) {
-    parseTwoDigitYear = o2.parseTwoDigitYear;
-  }
-  var proto2 = C2.prototype;
-  var oldParse = proto2.parse;
-  proto2.parse = function(cfg) {
-    var date2 = cfg.date, utc = cfg.utc, args = cfg.args;
-    this.$u = utc;
-    var format = args[1];
-    if (typeof format === "string") {
-      var isStrictWithoutLocale = args[2] === true;
-      var isStrictWithLocale = args[3] === true;
-      var isStrict = isStrictWithoutLocale || isStrictWithLocale;
-      var pl = args[2];
-      if (isStrictWithLocale) {
-        pl = args[2];
-      }
-      locale = this.$locale();
-      if (!isStrictWithoutLocale && pl) {
-        locale = d2.Ls[pl];
-      }
-      this.$d = parseFormattedInput(date2, format, utc, d2);
-      this.init();
-      if (pl && pl !== true) this.$L = this.locale(pl).$L;
-      if (isStrict && date2 != this.format(format)) {
-        this.$d = /* @__PURE__ */ new Date("");
-      }
-      locale = {};
-    } else if (format instanceof Array) {
-      var len = format.length;
-      for (var i2 = 1; i2 <= len; i2 += 1) {
-        args[1] = format[i2 - 1];
-        var result = d2.apply(this, args);
-        if (result.isValid()) {
-          this.$d = result.$d;
-          this.$L = result.$L;
-          this.init();
-          break;
-        }
-        if (i2 === len) this.$d = /* @__PURE__ */ new Date("");
-      }
-    } else {
-      oldParse.call(this, cfg);
-    }
-  };
-});
-var isoWeekPrettyUnit = "isoweek";
-const isoWeek = (function(o2, c2, d2) {
-  var getYearFirstThursday = function getYearFirstThursday2(year, isUtc) {
-    var yearFirstDay = (isUtc ? d2.utc : d2)().year(year).startOf(Y$1);
-    var addDiffDays = 4 - yearFirstDay.isoWeekday();
-    if (yearFirstDay.isoWeekday() > 4) {
-      addDiffDays += 7;
-    }
-    return yearFirstDay.add(addDiffDays, D$3);
-  };
-  var getCurrentWeekThursday = function getCurrentWeekThursday2(ins) {
-    return ins.add(4 - ins.isoWeekday(), D$3);
-  };
-  var proto2 = c2.prototype;
-  proto2.isoWeekYear = function() {
-    var nowWeekThursday = getCurrentWeekThursday(this);
-    return nowWeekThursday.year();
-  };
-  proto2.isoWeek = function(week) {
-    if (!this.$utils().u(week)) {
-      return this.add((week - this.isoWeek()) * 7, D$3);
-    }
-    var nowWeekThursday = getCurrentWeekThursday(this);
-    var diffWeekThursday = getYearFirstThursday(this.isoWeekYear(), this.$u);
-    return nowWeekThursday.diff(diffWeekThursday, W$2) + 1;
-  };
-  proto2.isoWeekday = function(week) {
-    if (!this.$utils().u(week)) {
-      return this.day(this.day() % 7 ? week : week - 7);
-    }
-    return this.day() || 7;
-  };
-  var oldStartOf = proto2.startOf;
-  proto2.startOf = function(units, startOf) {
-    var utils = this.$utils();
-    var isStartOf = !utils.u(startOf) ? startOf : true;
-    var unit = utils.p(units);
-    if (unit === isoWeekPrettyUnit) {
-      return isStartOf ? this.date(this.date() - (this.isoWeekday() - 1)).startOf("day") : this.date(this.date() - 1 - (this.isoWeekday() - 1) + 7).endOf("day");
-    }
-    return oldStartOf.bind(this)(units, startOf);
-  };
-});
-const isSameOrBefore = (function(o2, c2) {
-  c2.prototype.isSameOrBefore = function(that, units) {
-    return this.isSame(that, units) || this.isBefore(that, units);
-  };
-});
-const isBetween = (function(o2, c2, d2) {
-  c2.prototype.isBetween = function(a2, b2, u3, i2) {
-    var dA = d2(a2);
-    var dB = d2(b2);
-    i2 = i2 || "()";
-    var dAi = i2[0] === "(";
-    var dBi = i2[1] === ")";
-    return (dAi ? this.isAfter(dA, u3) : !this.isBefore(dA, u3)) && (dBi ? this.isBefore(dB, u3) : !this.isAfter(dB, u3)) || (dAi ? this.isBefore(dA, u3) : !this.isAfter(dA, u3)) && (dBi ? this.isAfter(dB, u3) : !this.isBefore(dB, u3));
-  };
-});
-function normalizeTimelineView(view) {
-  switch (view) {
-    case "年":
-    case "季":
-    case "月":
-    case "周":
-    case "天":
-      return view;
-    // Some parts of the UI may still use "日"; normalize it to "天".
-    case "日":
-      return "天";
-    default:
-      return "天";
-  }
-}
-function isoWeekKey(d2) {
-  return `${d2.isoWeekYear()}-W${String(d2.isoWeek()).padStart(2, "0")}`;
-}
-function isSameIsoWeek(a2, b2) {
-  return isoWeekKey(a2) === isoWeekKey(b2);
-}
-function rangeKeyForView(anchor, view) {
-  switch (view) {
-    case "年":
-      return anchor.format("YYYY");
-    case "季": {
-      return `${anchor.year()}-Q${anchor.quarter()}`;
-    }
-    case "月":
-      return anchor.format("YYYY-MM");
-    case "周": {
-      const isoYear = anchor.isoWeekYear();
-      const isoWeek2 = anchor.isoWeek();
-      return `${isoYear}-W${String(isoWeek2).padStart(2, "0")}`;
-    }
-    case "天":
-    default:
-      return anchor.format("YYYY-MM-DD");
-  }
-}
-function calculateTimelineRange(anchor, view) {
-  let start2;
-  let end2;
-  switch (view) {
-    case "年":
-      start2 = anchor.startOf("year");
-      end2 = anchor.endOf("year");
-      break;
-    case "季":
-      start2 = anchor.startOf("quarter");
-      end2 = anchor.endOf("quarter");
-      break;
-    case "月":
-      start2 = anchor.startOf("month");
-      end2 = anchor.endOf("month");
-      break;
-    case "周":
-      start2 = anchor.startOf("isoWeek");
-      end2 = anchor.endOf("isoWeek");
-      break;
-    case "天":
-    default:
-      start2 = anchor.startOf("day");
-      end2 = anchor.endOf("day");
-      break;
-  }
-  return {
-    view,
-    anchor,
-    start: start2,
-    end: end2,
-    key: rangeKeyForView(anchor, view)
-  };
-}
-function toIsoDateTuple(range) {
-  return [range.start.format("YYYY-MM-DD"), range.end.format("YYYY-MM-DD")];
-}
-dayjs.extend(quarterOfYear);
-dayjs.extend(weekOfYear);
-dayjs.extend(customParse);
-dayjs.extend(isoWeek);
-dayjs.extend(isSameOrBefore);
-dayjs.extend(isBetween);
-const todayISO = () => dayjs().format("YYYY-MM-DD");
-const nowHHMM = () => dayjs().format("HH:mm");
-function formatSecondsToHHMMSS(totalSeconds) {
-  if (isNaN(totalSeconds) || totalSeconds < 0) {
-    return "00:00:00";
-  }
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor(totalSeconds % 3600 / 60);
-  const seconds = Math.floor(totalSeconds % 60);
-  const pad2 = (num) => String(num).padStart(2, "0");
-  return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
-}
-const timeToMinutes = (time2) => {
-  if (!time2 || !/^\d{1,2}:\d{2}$/.test(time2)) return null;
-  const [h2, m2] = time2.split(":").map(Number);
-  return h2 * 60 + m2;
-};
-const minutesToTime = (minutes) => {
-  if (isNaN(minutes) || minutes < 0) return "";
-  const h2 = Math.floor(minutes / 60) % 24;
-  const m2 = minutes % 60;
-  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
-};
-function normalizeDateStr(raw) {
-  const s2 = (raw || "").replace(/\//g, "-");
-  const d2 = dayjs(s2, ["YYYY-MM-DD", "YYYY-M-D", "YYYY/MM/DD", "YYYY/M/D"], true);
-  return d2.isValid() ? d2.format("YYYY-MM-DD") : s2;
-}
-const DATE_FMT = "(\\d{4}[-/]\\d{2}[-/]\\d{2})";
-function extractDate(line2, em) {
-  const list = Array.isArray(em) ? em : [em];
-  for (const e2 of list) {
-    const m2 = line2.match(new RegExp(`${e2}\\s*${DATE_FMT}`));
-    if (m2) return normalizeDateStr(m2[1]);
-  }
-  return void 0;
-}
-const QTXT = ["一", "二", "三", "四"];
-function formatDateForView(d2, v2) {
-  switch (v2) {
-    case "年":
-      return d2.format("YYYY年");
-    case "季":
-      return `${d2.year()}年${QTXT[d2.quarter() - 1]}季度`;
-    case "月":
-      return d2.format("YYYY-MM");
-    case "周": {
-      const isoYear = d2.isoWeekYear();
-      const isoWeekNum = d2.isoWeek();
-      return `${isoYear}-W${String(isoWeekNum).padStart(2, "0")}`;
-    }
-    default:
-      return d2.format("YYYY-MM-DD");
-  }
-}
-const getWeeksInYear = (year) => {
-  const endOfYear = dayjs().year(year).endOf("year");
-  return endOfYear.isoWeek() === 1 ? 52 : endOfYear.isoWeek();
-};
-function getPeriodCount(period, date2) {
-  if (!date2 || !date2.isValid()) {
-    return void 0;
-  }
-  switch (period) {
-    case "年":
-      return date2.year();
-    case "季":
-      return date2.quarter();
-    case "月":
-      return date2.month() + 1;
-    // dayjs month is 0-indexed
-    case "周":
-      return date2.isoWeek();
-    default:
-      return void 0;
-  }
-}
-const RECURRENCE_RULE_RE = /(^|[\s\[(]|[^\s])🔁\s*(every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?)(?=$|\s*(?:[\(\[][^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/i;
-function extractRecurrenceText(rawTask) {
-  const match5 = rawTask.match(RECURRENCE_RULE_RE);
-  if (!match5) return null;
-  return match5[2]?.trim() || null;
-}
-const cleanTimeAndDurationTags = (line2) => {
-  return line2.replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, "").trim();
-};
-function toggleToDone(rawLine, todayISO2, nowTime, options) {
-  let line2 = cleanTimeAndDurationTags(rawLine);
-  const duration2 = options?.duration;
-  const startTime = options?.startTime;
-  const endTime = options?.endTime;
-  const tagsToAppend = [];
-  if (startTime !== void 0) {
-    tagsToAppend.push(`(时间:: ${startTime})`);
-  } else if (duration2 === void 0 && endTime === void 0) {
-    tagsToAppend.push(`(时间:: ${nowTime})`);
-  }
-  if (endTime !== void 0) {
-    tagsToAppend.push(`(结束:: ${endTime})`);
-  }
-  if (duration2 !== void 0) {
-    tagsToAppend.push(`(时长:: ${duration2})`);
-  }
-  line2 = [line2, ...tagsToAppend].join(" ").replace(/\s+/g, " ").trim();
-  line2 = line2.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[x]");
-  if (!/^-\s*\[x\]/.test(line2)) {
-    line2 = `- [x] ${line2.replace(/^-\s*\[.\]/, "").replace(/^-\s*/, "")}`;
-  }
-  line2 = line2.replace(
-    new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}$`),
-    ""
-  );
-  return `${line2.trim()} ${EMOJI.done} ${todayISO2}`;
-}
-function buildCompletedTaskRecord(rawLine, todayISO2, nowTime, options) {
-  return toggleToDone(rawLine, todayISO2, nowTime, options);
-}
-function parseRecurrence(rawTask) {
-  const recurrenceText = extractRecurrenceText(rawTask);
-  if (!recurrenceText) return null;
-  const m2 = recurrenceText.match(
-    /^every\s+(\d+)?\s*(day|week|month|year)s?(\s+when\s+done)?$/i
-  );
-  if (!m2) return null;
-  const interval = m2[1] ? parseInt(m2[1], 10) : 1;
-  const unit = m2[2].toLowerCase();
-  const whenDone = Boolean(m2[3]);
-  return { interval, unit, whenDone };
-}
-function findBaseDateForRecurring(rawTask, whenDone, todayISO2) {
-  if (whenDone) return todayISO2;
-  const pick2 = (emoji2) => {
-    const r2 = new RegExp(`${emoji2}s*(${DATE_YMD_RE.source})`);
-    const mt = rawTask.match(r2);
-    return mt ? normalizeDateStr(mt[1]) : null;
-  };
-  return pick2(EMOJI.due) || pick2(EMOJI.scheduled) || pick2(EMOJI.start) || todayISO2;
-}
-function generateNextRecurringTask(rawTask, baseDateISO) {
-  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "");
-  const rec = parseRecurrence(rawTask);
-  if (!rec) return next2.trim();
-  const base = dayjs(baseDateISO, ["YYYY-MM-DD", "YYYY/MM/DD"]);
-  const nextDate = base.add(rec.interval, rec.unit);
-  const nextStr = nextDate.format("YYYY-MM-DD");
-  const replaceIf = (emoji2) => {
-    const re = new RegExp(`${emoji2}s*${DATE_YMD_RE.source}`);
-    if (re.test(next2)) next2 = next2.replace(re, `${emoji2} ${nextStr}`);
-  };
-  replaceIf(EMOJI.due);
-  replaceIf(EMOJI.scheduled);
-  replaceIf(EMOJI.start);
-  return next2.trim();
-}
-function markTaskDone(rawLine, todayISO2, nowTime, options) {
-  const completedLine = buildCompletedTaskRecord(rawLine, todayISO2, nowTime, options);
-  const rec = parseRecurrence(rawLine);
-  if (!rec) return { completedLine };
-  const baseISO = findBaseDateForRecurring(rawLine, rec.whenDone, todayISO2);
-  const nextTaskLine = generateNextRecurringTask(rawLine, baseISO);
-  return { completedLine, nextTaskLine };
-}
 const DEFAULT_MULTI_SEPARATOR = ", ";
 function isFieldCodecMultiValue(def) {
   const inputType = def?.inputType;
@@ -12642,8 +13813,8 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
   const status = isDoneLine(lineText) ? "done" : isCancelledLine(lineText) ? "cancelled" : "open";
   item.categoryKey = status === "done" || status === "cancelled" ? "完成任务" : "未完成任务";
   applyTaskMetadata(item, decodeTaskMetadata(lineText));
-  const recurrenceText = extractRecurrenceText(lineText);
-  if (recurrenceText) item.recurrence = recurrenceText;
+  const recurrenceText2 = extractRecurrenceText(lineText);
+  if (recurrenceText2) item.recurrence = recurrenceText2;
   const doneDate = pick(lineText, EMOJI.done);
   const cancelledDate = pick(lineText, EMOJI.cancelled);
   const dueDate = pick(lineText, EMOJI.due);
@@ -12925,6 +14096,25 @@ function applyTaskTimePolicy(input) {
 }
 function isDone(categoryKey) {
   return isTaskCompletedByCategory(categoryKey);
+}
+const TASK_CADENCE_ORDER = ["routine", "day", "week", "month", "quarter", "year"];
+const TASK_CADENCE_META = {
+  routine: { label: "日常任务", emoji: "🌿" },
+  day: { label: "天任务", emoji: "☀️" },
+  week: { label: "周任务", emoji: "📅" },
+  month: { label: "月任务", emoji: "🗓️" },
+  quarter: { label: "季任务", emoji: "🍂" },
+  year: { label: "年任务", emoji: "🧭" }
+};
+function getTaskCadence(item) {
+  const recurrence = getTaskRecurrenceInfo(item);
+  if (!recurrence) return "routine";
+  if (recurrence.unit === "day") return "day";
+  if (recurrence.unit === "week") return "week";
+  if (recurrence.unit === "year") return "year";
+  if (recurrence.unit === "quarter") return "quarter";
+  if (recurrence.unit === "month" && recurrence.interval === 3) return "quarter";
+  return "month";
 }
 function normalizeFilePathInput(input) {
   return typeof input === "string" ? input : input && typeof input.path === "string" ? input.path : "";
@@ -13509,7 +14699,7 @@ function readSearchResultText(sr, key) {
   return normalizeRetrievalText(readUnknown(getSearchResultRecord(sr), key));
 }
 function readSearchResultNumber(sr, key) {
-  return readNumber(getSearchResultRecord(sr), key);
+  return readNumber$2(getSearchResultRecord(sr), key);
 }
 function tokenizeRetrievalText(text2) {
   if (!text2) return [];
@@ -15980,9 +17170,9 @@ function collectThemePathsForHeatmap(params) {
   const filteredItems = filterByRules(items, dataSource.filters || []);
   const themeSet = /* @__PURE__ */ new Set();
   filteredItems.forEach((item) => {
-    const itemBlock = item.coreBlock || item.templateId || item.categoryKey;
+    const itemBlock2 = item.coreBlock || item.templateId || item.categoryKey;
     const sourceBlockKey = sourceBlock.coreBlockId || sourceBlock.id || sourceBlock.name || sourceBlock.categoryKey;
-    const isSourceBlock = itemBlock === sourceBlockKey || item.categoryKey === sourceBlock.categoryKey || item.categoryKey === sourceBlock.name;
+    const isSourceBlock = itemBlock2 === sourceBlockKey || item.categoryKey === sourceBlock.categoryKey || item.categoryKey === sourceBlock.name;
     const themePath = getItemThemePath(item);
     if (isSourceBlock && themePath) {
       themeSet.add(themePath);
@@ -16014,8 +17204,7 @@ function getExportConfigByViewType(viewType) {
     "StatisticsView": STATISTICS_EXPORT_CONFIG,
     "HeatmapView": HEATMAP_EXPORT_CONFIG,
     "TimelineView": TIMELINE_EXPORT_CONFIG,
-    "TableView": TABLE_EXPORT_CONFIG,
-    "TaskExecutionView": TABLE_EXPORT_CONFIG
+    "TableView": TABLE_EXPORT_CONFIG
   };
   return configMap[viewType] || BLOCK_EXPORT_DEFAULT_CONFIG;
 }
@@ -17201,9 +18390,9 @@ const DEFAULT_CONFIG = {
   errorThreshold: 5e3
 };
 const now = () => typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
-function percentile(sorted, pct) {
+function percentile(sorted, pct2) {
   if (!sorted.length) return 0;
-  const index = Math.max(0, Math.ceil(pct / 100 * sorted.length) - 1);
+  const index = Math.max(0, Math.ceil(pct2 / 100 * sorted.length) - 1);
   return sorted[index] ?? 0;
 }
 function createMetric(name) {
@@ -17368,7 +18557,7 @@ function computeLinkedTimeChanges(data, keys, lastChanged, options = {}) {
   const endVal = data[keys.endKey];
   const durationVal = data[keys.durationKey];
   const normalizedChanged = lastChanged === keys.startKey ? "startTime" : lastChanged === keys.endKey ? "endTime" : lastChanged === keys.durationKey ? "duration" : null;
-  const normalized = applyTaskTimePolicy({
+  const normalized2 = applyTaskTimePolicy({
     startTime: startVal,
     endTime: endVal,
     duration: durationVal,
@@ -17377,14 +18566,14 @@ function computeLinkedTimeChanges(data, keys, lastChanged, options = {}) {
     mode: "interactive"
   });
   const changes = {};
-  if (normalized.startTime !== void 0 && normalized.startTime !== startVal) {
-    changes[keys.startKey] = normalized.startTime;
+  if (normalized2.startTime !== void 0 && normalized2.startTime !== startVal) {
+    changes[keys.startKey] = normalized2.startTime;
   }
-  if (normalized.endTime !== void 0 && normalized.endTime !== endVal) {
-    changes[keys.endKey] = normalized.endTime;
+  if (normalized2.endTime !== void 0 && normalized2.endTime !== endVal) {
+    changes[keys.endKey] = normalized2.endTime;
   }
-  if (normalized.duration !== void 0) {
-    const nextDuration = formatDuration(normalized.duration, durationVal, options.durationOutput);
+  if (normalized2.duration !== void 0) {
+    const nextDuration = formatDuration(normalized2.duration, durationVal, options.durationOutput);
     if (nextDuration !== durationVal) changes[keys.durationKey] = nextDuration;
   }
   return changes;
@@ -17392,17 +18581,17 @@ function computeLinkedTimeChanges(data, keys, lastChanged, options = {}) {
 function finalizeLinkedTimeFields(data, keys, options = {}) {
   const next2 = { ...data };
   const durationVal = next2[keys.durationKey];
-  const normalized = applyTaskTimePolicy({
+  const normalized2 = applyTaskTimePolicy({
     startTime: next2[keys.startKey],
     endTime: next2[keys.endKey],
     duration: durationVal,
     mode: "finalize",
     direction: options.direction
   });
-  if (normalized.startTime !== void 0) next2[keys.startKey] = normalized.startTime;
-  if (normalized.endTime !== void 0) next2[keys.endKey] = normalized.endTime;
-  if (normalized.duration !== void 0) {
-    next2[keys.durationKey] = formatDuration(normalized.duration, durationVal, options.durationOutput);
+  if (normalized2.startTime !== void 0) next2[keys.startKey] = normalized2.startTime;
+  if (normalized2.endTime !== void 0) next2[keys.endKey] = normalized2.endTime;
+  if (normalized2.duration !== void 0) {
+    next2[keys.durationKey] = formatDuration(normalized2.duration, durationVal, options.durationOutput);
   }
   return next2;
 }
@@ -18866,6 +20055,16 @@ let InputService = class {
     const preview = this.previewTemplateExecution(template, formData, theme, templateMeta);
     const { outputContent, targetFilePath, header } = preview;
     if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
+    return this.appendDirectRecord(targetFilePath, outputContent, header, options);
+  }
+  /**
+   * Direct Record 共用落盘入口。
+   * 不解析模板，只负责把已经生成好的稳定 Markdown 写到指定文件/目标标题下。
+   */
+  async appendDirectRecord(targetFilePath, outputContent, header = null, options = {}) {
+    const signal = options.signal;
+    if (!targetFilePath) throw new Error("Direct Record 未定义目标文件路径。");
+    if (!outputContent.trim()) throw new Error("Direct Record 输出内容为空。");
     this.throwIfAborted(signal);
     if (header) {
       await appendUnderHeader(this.vault, targetFilePath, header, outputContent, {
@@ -19377,10 +20576,10 @@ function parseTagsInput(value) {
   const result = [];
   const seen = /* @__PURE__ */ new Set();
   const push = (token2) => {
-    const normalized = normalizeTagToken(token2);
-    if (!normalized || seen.has(normalized)) return;
-    seen.add(normalized);
-    result.push(normalized);
+    const normalized2 = normalizeTagToken(token2);
+    if (!normalized2 || seen.has(normalized2)) return;
+    seen.add(normalized2);
+    result.push(normalized2);
   };
   const visit = (input) => {
     if (input === void 0 || input === null) return;
@@ -19628,7 +20827,18 @@ let TimerStateService = class {
       const content = await this.vault.readFile(TIMER_STATE_PATH);
       if (!content) return [];
       const timers = JSON.parse(content);
-      return Array.isArray(timers) ? timers : [];
+      if (!Array.isArray(timers)) return [];
+      const allowedStatuses = /* @__PURE__ */ new Set([
+        "running",
+        "paused",
+        "awaiting-energy",
+        "feedback-recorded"
+      ]);
+      return timers.filter((entry) => {
+        if (!entry || typeof entry !== "object") return false;
+        const timer = entry;
+        return typeof timer.id === "string" && timer.id.length > 0 && typeof timer.taskId === "string" && timer.taskId.length > 0 && typeof timer.startTime === "number" && Number.isFinite(timer.startTime) && typeof timer.elapsedSeconds === "number" && Number.isFinite(timer.elapsedSeconds) && typeof timer.status === "string" && allowedStatuses.has(timer.status);
+      });
     } catch (error) {
       devWarn("Think Plugin: Failed to load timer state from file.", error);
       return [];
@@ -19935,7 +21145,7 @@ function getDefaultFreeformItemSize(viewType, config2) {
     HeatmapView: { width: 520, height: 360 },
     EventTimelineView: { width: 680, height: 420 },
     ProgressView: { width: 480, height: 360 },
-    TaskExecutionView: { width: 560, height: 380 }
+    EnergyView: { width: 720, height: 620 }
   };
   const recommended = viewType ? recommendations[viewType] : void 0;
   return {
@@ -20078,26 +21288,26 @@ function normalizeViewPlacementZIndices(placements2, preferredOrder = Object.key
     return (order2.get(leftId) ?? Number.MAX_SAFE_INTEGER) - (order2.get(rightId) ?? Number.MAX_SAFE_INTEGER);
   });
   let changed = false;
-  const normalized = {};
+  const normalized2 = {};
   entries.forEach(([id, placement], index) => {
     const zIndex2 = index + 1;
     if (placement.zIndex !== zIndex2) changed = true;
-    normalized[id] = placement.zIndex === zIndex2 ? placement : { ...placement, zIndex: zIndex2 };
+    normalized2[id] = placement.zIndex === zIndex2 ? placement : { ...placement, zIndex: zIndex2 };
   });
-  return changed ? normalized : placements2;
+  return changed ? normalized2 : placements2;
 }
 function bringViewPlacementsToFront(placements2, viewInstanceId, preferredOrder = Object.keys(placements2)) {
   if (!placements2[viewInstanceId]) return placements2;
-  const normalized = normalizeViewPlacementZIndices(placements2, preferredOrder);
-  const orderedIds = Object.entries(normalized).sort(([, left2], [, right2]) => (left2.zIndex ?? 0) - (right2.zIndex ?? 0)).map(([id]) => id);
+  const normalized2 = normalizeViewPlacementZIndices(placements2, preferredOrder);
+  const orderedIds = Object.entries(normalized2).sort(([, left2], [, right2]) => (left2.zIndex ?? 0) - (right2.zIndex ?? 0)).map(([id]) => id);
   const topId = orderedIds[orderedIds.length - 1];
-  if (topId === viewInstanceId) return normalized;
+  if (topId === viewInstanceId) return normalized2;
   const withoutTarget = orderedIds.filter((id) => id !== viewInstanceId);
   const nextOrder = [...withoutTarget, viewInstanceId];
-  let changed = normalized !== placements2;
+  let changed = normalized2 !== placements2;
   const next2 = {};
   nextOrder.forEach((id, index) => {
-    const placement = normalized[id];
+    const placement = normalized2[id];
     const zIndex2 = index + 1;
     if (placement.zIndex !== zIndex2) changed = true;
     next2[id] = placement.zIndex === zIndex2 ? placement : { ...placement, zIndex: zIndex2 };
@@ -20856,6 +22066,44 @@ class SettingsUseCase {
       }
     } catch (error) {
       devError("[SettingsUseCase] toggleTimerWidgetVisibility 失败:", error);
+    }
+  }
+  /** 设置无上下文精力记录（例如 iOS Shortcut）的默认目标。空值表示自动选择第一个活跃目标。 */
+  async setEnergyDefaultGoalId(goalId) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) {
+        devError("[SettingsUseCase] Store 未初始化，无法设置默认精力目标");
+        return;
+      }
+      await state.updateSettings((draft) => {
+        draft.energySettings = {
+          ...draft.energySettings || {},
+          defaultGoalId: String(goalId || "").trim()
+        };
+      });
+    } catch (error) {
+      devError("[SettingsUseCase] setEnergyDefaultGoalId 失败:", error);
+      throw error;
+    }
+  }
+  /** 设置 Energy 快捷记录的默认主题。主题仅作为记录元数据，不进入 GoalTemplate 解析。 */
+  async setEnergyDefaultThemePath(themePath) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) {
+        devError("[SettingsUseCase] Store 未初始化，无法设置默认精力主题");
+        return;
+      }
+      await state.updateSettings((draft) => {
+        draft.energySettings = {
+          ...draft.energySettings || {},
+          defaultThemePath: String(themePath || "").trim()
+        };
+      });
+    } catch (error) {
+      devError("[SettingsUseCase] setEnergyDefaultThemePath 失败:", error);
+      throw error;
     }
   }
   /**
@@ -21636,8 +22884,8 @@ function getFieldEditPolicy(field, sampleValue) {
 }
 function normalizeViewMultiValue(value, options = {}) {
   const rawValues = Array.isArray(value) ? value : [value];
-  const normalized = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
-  return options.dedupe === false ? normalized : Array.from(new Set(normalized));
+  const normalized2 = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
+  return options.dedupe === false ? normalized2 : Array.from(new Set(normalized2));
 }
 const VIEW_LEGACY_FIELD_ALIASES = {
   category: "coreBlock",
@@ -22086,6 +23334,10 @@ class TimerUseCase {
   store;
   timerStateService;
   getTimers() {
+    return this.store.getState().timer.timers.filter(isActiveTimerState);
+  }
+  /** Persisted timer state also contains Energy feedback lifecycle entries. */
+  getAllTimerEntries() {
     return this.store.getState().timer.timers;
   }
   async setInitialTimersFromDisk() {
@@ -22678,13 +23930,13 @@ class ThemeMetadataResolver {
     };
   }
   static resolve(settings, themePath) {
-    const normalized = normalizeThemePathOrNull(themePath);
+    const normalized2 = normalizeThemePathOrNull(themePath);
     const themes = settings.inputSettings?.themes || [];
     let theme = null;
     let iconTheme = null;
-    if (normalized) {
+    if (normalized2) {
       const byPath = buildThemePathMap(themes);
-      for (const candidate of getThemePathCandidates(normalized)) {
+      for (const candidate of getThemePathCandidates(normalized2)) {
         const matched = byPath.get(candidate);
         if (matched && !theme) theme = matched;
         if (matched && String(matched.icon || "").trim()) {
@@ -22693,7 +23945,7 @@ class ThemeMetadataResolver {
         }
       }
     }
-    const path = normalized || theme?.path || null;
+    const path = normalized2 || theme?.path || null;
     const color2 = path ? settings.categoryColors?.[path] ?? settings.categoryColors?.[path.split("/")[0]] ?? null : null;
     return {
       path,
@@ -22992,8 +24244,8 @@ function optionLabelFromPath(value) {
 function normalizeOptionObjectForField(field, rawValue) {
   const text2 = readOptionText$2(rawValue);
   if (isTemplatePathField(field)) {
-    const normalized = normalizeHierarchyPath(text2.value || text2.label);
-    return normalized ? { value: normalized, label: String(text2.label || optionLabelFromPath(normalized)) } : rawValue;
+    const normalized2 = normalizeHierarchyPath(text2.value || text2.label);
+    return normalized2 ? { value: normalized2, label: String(text2.label || optionLabelFromPath(normalized2)) } : rawValue;
   }
   return { value: rawValue.value ?? text2.value, label: rawValue.label ?? text2.label ?? rawValue.value };
 }
@@ -23261,8 +24513,8 @@ function normalizeBackfillValue(field, rawValue) {
   if (!isPresent(rawValue)) return void 0;
   if (isTemplateRatingPairField(field) && isOptionObject(rawValue)) return rawValue;
   const decoded = decodeMarkdownFieldValue(rawValue, fieldCodecDefinition(field));
-  const normalized = normalizeTemplateFieldValue(field, decoded);
-  return matchTemplateFieldOptionValue(field, normalized);
+  const normalized2 = normalizeTemplateFieldValue(field, decoded);
+  return matchTemplateFieldOptionValue(field, normalized2);
 }
 function resolveInitialFieldValue(input) {
   const semanticValue = readSemanticFieldValue(input.field, input.item, input.snapshot);
@@ -23283,8 +24535,8 @@ function buildInitialEditFormData(input) {
 function getItemSemanticTokens(item) {
   const tokens = /* @__PURE__ */ new Set();
   const push = (value) => {
-    const normalized = normalizeFieldToken(value);
-    if (normalized) tokens.add(normalized);
+    const normalized2 = normalizeFieldToken(value);
+    if (normalized2) tokens.add(normalized2);
   };
   push(item.categoryKey);
   push(item.theme);
@@ -23678,6 +24930,776 @@ class RecordInputKernel {
     return validateRecordInput(params);
   }
 }
+const DEFAULT_RECENT_WINDOW_MINUTES = 120;
+const DEFAULT_RELIABLE_WINDOW_MINUTES = 60;
+const DEFAULT_MAX_NEARBY_ACTIVITIES = 3;
+function readText(value) {
+  const text2 = String(value ?? "").trim();
+  return text2 || void 0;
+}
+function readNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const text2 = readText(value);
+  if (!text2) return void 0;
+  const parsed = Number(text2);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function normalizeCoreBlock(item) {
+  return String(item.coreBlock || item.extra?.["核心Block"] || item.categoryKey || "").replace(/^core\./i, "").split("/")[0].trim().toLowerCase();
+}
+function isTaskLike$1(item) {
+  if (isEnergyItem(item)) return false;
+  const block2 = normalizeCoreBlock(item);
+  if (block2 === "task") return true;
+  if (item.type === "task") return true;
+  return /任务/.test(String(item.categoryKey || ""));
+}
+function isHabitLike(item) {
+  const block2 = normalizeCoreBlock(item);
+  return block2 === "habit" || String(item.categoryKey || "").split("/")[0]?.trim() === "打卡";
+}
+function normalizeGoalPath(value) {
+  return String(value ?? "").trim().replace(/^#/, "");
+}
+function itemGoalIds(item) {
+  return [item.goalId, ...item.goalIds || []].map((value) => String(value || "").trim()).filter(Boolean);
+}
+function itemGoalPaths(item) {
+  return [item.goalPath, ...item.goalPaths || []].map(normalizeGoalPath).filter(Boolean);
+}
+function matchesEnergyGoal(energyItem, candidate) {
+  const energyIds = itemGoalIds(energyItem);
+  const candidateIds = itemGoalIds(candidate);
+  if (energyIds.length > 0) return candidateIds.some((id) => energyIds.includes(id));
+  const energyPaths = itemGoalPaths(energyItem);
+  if (energyPaths.length === 0) return true;
+  const candidatePaths = itemGoalPaths(candidate);
+  return candidatePaths.some((path) => energyPaths.includes(path));
+}
+function occurrenceDate(item) {
+  return readText(item.date) || readText(item.doneDate) || readText(item.startDate) || readText(item.scheduledDate) || readText(item.dueDate) || readText(item.createdDate) || readText(item.extra?.["日期"]);
+}
+function parseTimeMinutes(time2) {
+  const match5 = readText(time2)?.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match5) return void 0;
+  const hour = Number(match5[1]);
+  const minute = Number(match5[2]);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
+  return hour * 60 + minute;
+}
+function formatTimeMinutes(value) {
+  const normalized2 = (Math.round(value) % 1440 + 1440) % 1440;
+  const hour = Math.floor(normalized2 / 60);
+  const minute = normalized2 % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+function dateOrdinal$1(date2) {
+  const match5 = date2.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match5) return void 0;
+  return Math.floor(Date.UTC(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3])) / 864e5);
+}
+function dateFromOrdinal$1(ordinal3) {
+  return new Date(ordinal3 * 864e5).toISOString().slice(0, 10);
+}
+function absoluteMinute(date2, time2) {
+  const ordinal3 = dateOrdinal$1(date2);
+  const minutes = parseTimeMinutes(time2);
+  if (ordinal3 == null || minutes == null) return void 0;
+  return ordinal3 * 1440 + minutes;
+}
+function resolveActivityInterval(item) {
+  const date2 = occurrenceDate(item);
+  if (!date2) return null;
+  const ordinal3 = dateOrdinal$1(date2);
+  if (ordinal3 == null) return null;
+  const duration2 = readNumber(item.duration ?? item.extra?.["时长"]);
+  const safeDuration = duration2 != null && duration2 >= 0 ? duration2 : void 0;
+  let startMinutes = parseTimeMinutes(item.startTime ?? item.extra?.["时间"] ?? item.extra?.["开始"]);
+  let endMinutes = parseTimeMinutes(item.endTime ?? item.extra?.["结束"]);
+  if (startMinutes == null && endMinutes == null) return null;
+  if (startMinutes == null && endMinutes != null && safeDuration != null) startMinutes = endMinutes - safeDuration;
+  if (endMinutes == null && startMinutes != null && safeDuration != null) endMinutes = startMinutes + safeDuration;
+  if (startMinutes == null || endMinutes == null) return null;
+  let startAbsolute = ordinal3 * 1440 + startMinutes;
+  let endAbsolute = ordinal3 * 1440 + endMinutes;
+  if (endAbsolute < startAbsolute) endAbsolute += 1440;
+  if (safeDuration != null && Math.abs(endAbsolute - startAbsolute - safeDuration) > 1) {
+    endAbsolute = startAbsolute + safeDuration;
+  }
+  if (endAbsolute < startAbsolute) return null;
+  const startDayOrdinal = Math.floor(startAbsolute / 1440);
+  const endDayOrdinal = Math.floor(endAbsolute / 1440);
+  return {
+    startAbsolute,
+    endAbsolute,
+    startDate: dateFromOrdinal$1(startDayOrdinal),
+    startTime: formatTimeMinutes(startAbsolute),
+    endDate: dateFromOrdinal$1(endDayOrdinal),
+    endTime: formatTimeMinutes(endAbsolute),
+    durationMinutes: Math.max(0, Math.round(endAbsolute - startAbsolute))
+  };
+}
+function activityConfidence(relation, gapMinutes) {
+  if (gapMinutes <= 15) return "high";
+  if (gapMinutes <= 60) return "medium";
+  return "low";
+}
+function buildActivityContext(item, energyAbsolute, recentWindowMinutes) {
+  if (!isTaskLike$1(item)) return null;
+  const interval = resolveActivityInterval(item);
+  if (!interval) return null;
+  if (energyAbsolute >= interval.startAbsolute && energyAbsolute <= interval.endAbsolute) {
+    return {
+      itemId: item.id,
+      title: item.title || item.content || "未命名任务",
+      relation: "active",
+      confidence: "high",
+      gapMinutes: 0,
+      durationMinutes: interval.durationMinutes,
+      startDate: interval.startDate,
+      startTime: interval.startTime,
+      endDate: interval.endDate,
+      endTime: interval.endTime,
+      item
+    };
+  }
+  const gapMinutes = Math.round(energyAbsolute - interval.endAbsolute);
+  if (gapMinutes < 0 || gapMinutes > recentWindowMinutes) return null;
+  return {
+    itemId: item.id,
+    title: item.title || item.content || "未命名任务",
+    relation: "recent",
+    confidence: activityConfidence("recent", gapMinutes),
+    gapMinutes,
+    durationMinutes: interval.durationMinutes,
+    startDate: interval.startDate,
+    startTime: interval.startTime,
+    endDate: interval.endDate,
+    endTime: interval.endTime,
+    item
+  };
+}
+function activityRank(activity) {
+  const relationRank = activity.relation === "active" ? 0 : 1;
+  const confidenceRank = activity.confidence === "high" ? 0 : activity.confidence === "medium" ? 1 : 2;
+  return relationRank * 1e6 + confidenceRank * 1e5 + activity.gapMinutes;
+}
+function classifyDailySignal(item) {
+  if (!isHabitLike(item)) return null;
+  const text2 = [item.title, item.content, item.themePath, item.theme, item.categoryKey].map((value) => String(value || "")).join(" ");
+  if (/睡眠|睡觉|睡醒/.test(text2)) return "sleep";
+  if (/身体|体力|身体状态/.test(text2)) return "body";
+  if (/运动|锻炼|健身|跑步|散步|八段锦|瑜伽|骑行|游泳/.test(text2)) return "exercise";
+  return null;
+}
+function dailySignalLabel(kind) {
+  if (kind === "sleep") return "睡眠";
+  if (kind === "body") return "身体";
+  return "运动";
+}
+function dailySignalValue(item) {
+  if (typeof item.rating === "number") return item.rating;
+  const extra = item.extra || {};
+  for (const key of ["评分", "分数", "值", "状态"]) {
+    const value = extra[key];
+    if (typeof value === "number" || typeof value === "string" && value.trim()) return value;
+  }
+  return void 0;
+}
+function buildDailySignals(energyItem, items, date2) {
+  const byKind = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    if (item.id === energyItem.id || !matchesEnergyGoal(energyItem, item)) continue;
+    if (occurrenceDate(item) !== date2) continue;
+    const kind = classifyDailySignal(item);
+    if (!kind || byKind.has(kind)) continue;
+    byKind.set(kind, {
+      itemId: item.id,
+      kind,
+      label: dailySignalLabel(kind),
+      value: dailySignalValue(item),
+      item
+    });
+  }
+  return ["sleep", "body", "exercise"].map((kind) => byKind.get(kind)).filter((row) => !!row);
+}
+function resolveEnergyContext(energyItem, items, options = {}) {
+  const snapshot = readEnergyItemSnapshot(energyItem);
+  if (!snapshot?.date || !snapshot.time) return null;
+  const energyAbsolute = absoluteMinute(snapshot.date, snapshot.time);
+  if (energyAbsolute == null) return null;
+  const recentWindowMinutes = Math.max(0, options.recentWindowMinutes ?? DEFAULT_RECENT_WINDOW_MINUTES);
+  const reliableWindowMinutes = Math.max(0, options.reliableWindowMinutes ?? DEFAULT_RELIABLE_WINDOW_MINUTES);
+  const maxNearbyActivities = Math.max(1, options.maxNearbyActivities ?? DEFAULT_MAX_NEARBY_ACTIVITIES);
+  const nearbyActivities = items.filter((item) => item.id !== energyItem.id && matchesEnergyGoal(energyItem, item)).map((item) => buildActivityContext(item, energyAbsolute, recentWindowMinutes)).filter((row) => !!row).sort((left2, right2) => activityRank(left2) - activityRank(right2)).slice(0, maxNearbyActivities);
+  const primaryActivity = nearbyActivities.find((activity) => activity.relation === "active" || activity.gapMinutes <= reliableWindowMinutes);
+  const dailySignals = buildDailySignals(energyItem, items, snapshot.date);
+  return { primaryActivity, nearbyActivities, dailySignals };
+}
+function patternText(value) {
+  const text2 = String(value ?? "").trim();
+  return text2 || void 0;
+}
+function patternNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const text2 = patternText(value);
+  if (!text2) return void 0;
+  const parsed = Number(text2);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function patternDateOrdinal(value) {
+  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match5) return void 0;
+  const year = Number(match5[1]);
+  const month = Number(match5[2]);
+  const day = Number(match5[3]);
+  const stamp = Date.UTC(year, month - 1, day);
+  const date2 = new Date(stamp);
+  if (date2.getUTCFullYear() !== year || date2.getUTCMonth() !== month - 1 || date2.getUTCDate() !== day) return void 0;
+  return Math.floor(stamp / 864e5);
+}
+function patternDateFromOrdinal(ordinal3) {
+  return new Date(ordinal3 * 864e5).toISOString().slice(0, 10);
+}
+function patternTimeMinutes(value) {
+  const match5 = patternText(value)?.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match5) return void 0;
+  const hour = Number(match5[1]);
+  const minute = Number(match5[2]);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
+  return hour * 60 + minute;
+}
+function patternFormatTime(absoluteMinute2) {
+  const minuteOfDay = (Math.round(absoluteMinute2) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(minuteOfDay / 60)).padStart(2, "0")}:${String(minuteOfDay % 60).padStart(2, "0")}`;
+}
+function patternAbsoluteMinute(date2, time2) {
+  const ordinal3 = patternDateOrdinal(date2);
+  const minute = patternTimeMinutes(time2);
+  return ordinal3 == null || minute == null ? void 0 : ordinal3 * 1440 + minute;
+}
+function isTaskLike(item) {
+  const core = patternText(item.coreBlock)?.replace(/^core\./, "");
+  const category = patternText(item.categoryKey);
+  return core === "task" || item.type === "task" || category === "任务" || category === "task";
+}
+function resolvePatternActivity(item) {
+  if (!isTaskLike(item)) return null;
+  const date2 = patternText(item.date ?? item.startDate ?? item.doneDate ?? item.scheduledDate ?? item.extra?.["日期"]);
+  if (!date2) return null;
+  const ordinal3 = patternDateOrdinal(date2);
+  if (ordinal3 == null) return null;
+  const duration2 = patternNumber(item.duration ?? item.extra?.["时长"]);
+  const safeDuration = duration2 != null && duration2 >= 0 ? duration2 : void 0;
+  let start2 = patternTimeMinutes(item.startTime ?? item.extra?.["时间"] ?? item.extra?.["开始"]);
+  let end2 = patternTimeMinutes(item.endTime ?? item.extra?.["结束"]);
+  if (start2 == null && end2 == null) return null;
+  if (start2 == null && end2 != null && safeDuration != null) start2 = end2 - safeDuration;
+  if (end2 == null && start2 != null && safeDuration != null) end2 = start2 + safeDuration;
+  if (start2 == null || end2 == null) return null;
+  const startAbsolute = ordinal3 * 1440 + start2;
+  let endAbsolute = ordinal3 * 1440 + end2;
+  if (endAbsolute < startAbsolute) endAbsolute += 1440;
+  if (safeDuration != null && Math.abs(endAbsolute - startAbsolute - safeDuration) > 1) endAbsolute = startAbsolute + safeDuration;
+  if (endAbsolute <= startAbsolute) return null;
+  return { item, startAbsolute, endAbsolute, durationMinutes: Math.round(endAbsolute - startAbsolute) };
+}
+function patternEvidence(count) {
+  if (count >= 5) return "supported";
+  if (count >= 3) return "exploratory";
+  return "insufficient";
+}
+function patternMean(values2) {
+  if (!values2.length) return void 0;
+  return Math.round(values2.reduce((sum, value) => sum + value, 0) / values2.length * 10) / 10;
+}
+function patternMedian(values2) {
+  if (!values2.length) return void 0;
+  const sorted = [...values2].sort((a2, b2) => a2 - b2);
+  const middle = Math.floor(sorted.length / 2);
+  const raw = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+  return Math.round(raw * 10) / 10;
+}
+function patternTrend(values2) {
+  if (values2.length < 3) return "insufficient";
+  const avg = patternMean(values2) ?? 0;
+  const med = patternMedian(values2) ?? 0;
+  if (avg >= 5 && med >= 3) return "up";
+  if (avg <= -5 && med <= -3) return "down";
+  if (Math.abs(avg) < 5 && Math.abs(med) < 5) return "stable";
+  return "mixed";
+}
+function mergePatternSessions(intervals, gapMinutes) {
+  const sessions = [];
+  for (const interval of [...intervals].sort((a2, b2) => a2.startAbsolute - b2.startAbsolute)) {
+    const current2 = sessions[sessions.length - 1];
+    if (!current2 || interval.startAbsolute > current2.endAbsolute + gapMinutes) {
+      sessions.push({ startAbsolute: interval.startAbsolute, endAbsolute: interval.endAbsolute, durationMinutes: interval.durationMinutes, items: [interval.item] });
+      continue;
+    }
+    current2.endAbsolute = Math.max(current2.endAbsolute, interval.endAbsolute);
+    current2.durationMinutes = Math.round(current2.endAbsolute - current2.startAbsolute);
+    current2.items.push(interval.item);
+  }
+  return sessions;
+}
+const DAYPARTS = [
+  { key: "night", label: "深夜 00–06", startHour: 0, endHour: 6 },
+  { key: "morning", label: "早晨 06–10", startHour: 6, endHour: 10 },
+  { key: "midday", label: "上午 10–14", startHour: 10, endHour: 14 },
+  { key: "afternoon", label: "下午 14–18", startHour: 14, endHour: 18 },
+  { key: "evening", label: "晚上 18–22", startHour: 18, endHour: 22 },
+  { key: "late", label: "夜间 22–24", startHour: 22, endHour: 24 }
+];
+const LAG_WINDOWS = [
+  { key: "6h", label: "+6 小时", lagHours: 6, toleranceMinutes: 90 },
+  { key: "12h", label: "+12 小时", lagHours: 12, toleranceMinutes: 120 },
+  { key: "24h", label: "+24 小时", lagHours: 24, toleranceMinutes: 180 }
+];
+const SESSION_BUCKETS = [
+  { key: "lt30", label: "<30min", minMinutes: 0, maxMinutes: 29 },
+  { key: "30-59", label: "30–59min", minMinutes: 30, maxMinutes: 59 },
+  { key: "60-89", label: "60–89min", minMinutes: 60, maxMinutes: 89 },
+  { key: "90-119", label: "90–119min", minMinutes: 90, maxMinutes: 119 },
+  { key: "ge120", label: "≥120min", minMinutes: 120 }
+];
+function readPoints(items) {
+  const points = [];
+  for (const item of items) {
+    if (!isEnergyItem(item)) continue;
+    const snapshot = readEnergyItemSnapshot(item);
+    if (!snapshot?.date || !snapshot.time) continue;
+    const absolute = patternAbsoluteMinute(snapshot.date, snapshot.time);
+    const minuteOfDay = patternTimeMinutes(snapshot.time);
+    if (absolute == null || minuteOfDay == null) continue;
+    points.push({ itemId: item.id, date: snapshot.date, time: snapshot.time, absoluteMinute: absolute, minuteOfDay, score: snapshot.score, brainScore: snapshot.brainScore, physicalScore: snapshot.physicalScore, item });
+  }
+  return points.sort((a2, b2) => a2.absoluteMinute - b2.absoluteMinute);
+}
+function buildDayparts(points) {
+  return DAYPARTS.map((bucket) => {
+    const selected = points.filter((point) => point.minuteOfDay >= bucket.startHour * 60 && point.minuteOfDay < bucket.endHour * 60);
+    const brain = selected.flatMap((point) => point.brainScore == null ? [] : [point.brainScore]);
+    const physical = selected.flatMap((point) => point.physicalScore == null ? [] : [point.physicalScore]);
+    return {
+      ...bucket,
+      sampleCount: selected.length,
+      meanScore: patternMean(selected.map((point) => point.score)),
+      medianScore: patternMedian(selected.map((point) => point.score)),
+      meanBrainScore: patternMean(brain),
+      meanPhysicalScore: patternMean(physical),
+      evidence: patternEvidence(selected.length)
+    };
+  });
+}
+function nearestPoint(points, desired, tolerance, after) {
+  let best;
+  let bestGap = Number.POSITIVE_INFINITY;
+  for (const point of points) {
+    if (point.absoluteMinute <= after) continue;
+    const gap2 = Math.abs(point.absoluteMinute - desired);
+    if (gap2 <= tolerance && gap2 < bestGap) {
+      best = point;
+      bestGap = gap2;
+    }
+  }
+  return best;
+}
+function buildLag(points, windowStart) {
+  return LAG_WINDOWS.map((window2) => {
+    const deltas = [];
+    const brain = [];
+    const physical = [];
+    for (const baseline of points) {
+      if (baseline.absoluteMinute < windowStart) continue;
+      const target = nearestPoint(points, baseline.absoluteMinute + window2.lagHours * 60, window2.toleranceMinutes, baseline.absoluteMinute);
+      if (!target) continue;
+      deltas.push(target.score - baseline.score);
+      if (baseline.brainScore != null && target.brainScore != null) brain.push(target.brainScore - baseline.brainScore);
+      if (baseline.physicalScore != null && target.physicalScore != null) physical.push(target.physicalScore - baseline.physicalScore);
+    }
+    return {
+      ...window2,
+      sampleCount: deltas.length,
+      meanDelta: patternMean(deltas),
+      medianDelta: patternMedian(deltas),
+      meanBrainDelta: patternMean(brain),
+      meanPhysicalDelta: patternMean(physical),
+      trend: patternTrend(deltas),
+      evidence: patternEvidence(deltas.length)
+    };
+  });
+}
+function pairSession(session, points, beforeWindow, afterWindow) {
+  const before = [...points].reverse().find((point) => point.absoluteMinute <= session.startAbsolute && session.startAbsolute - point.absoluteMinute <= beforeWindow);
+  const after = points.find((point) => point.absoluteMinute >= session.endAbsolute && point.absoluteMinute - session.endAbsolute <= afterWindow);
+  if (!before || !after || before.itemId === after.itemId) return null;
+  return {
+    session,
+    before,
+    after,
+    deltaScore: after.score - before.score,
+    deltaBrain: before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0,
+    deltaPhysical: before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0
+  };
+}
+function inBucket(session, bucket) {
+  return session.durationMinutes >= bucket.minMinutes && (!("maxMinutes" in bucket) || session.durationMinutes <= bucket.maxMinutes);
+}
+function buildContinuousWork(sessions, pairs) {
+  return SESSION_BUCKETS.map((bucket) => {
+    const bucketSessions = sessions.filter((session) => inBucket(session, bucket));
+    const bucketPairs = pairs.filter((pair) => inBucket(pair.session, bucket));
+    const deltas = bucketPairs.map((pair) => pair.deltaScore);
+    return {
+      ...bucket,
+      sessionCount: bucketSessions.length,
+      pairedSessionCount: bucketPairs.length,
+      meanDelta: patternMean(deltas),
+      medianDelta: patternMedian(deltas),
+      meanBrainDelta: patternMean(bucketPairs.flatMap((pair) => pair.deltaBrain == null ? [] : [pair.deltaBrain])),
+      meanPhysicalDelta: patternMean(bucketPairs.flatMap((pair) => pair.deltaPhysical == null ? [] : [pair.deltaPhysical])),
+      trend: patternTrend(deltas),
+      evidence: patternEvidence(bucketPairs.length)
+    };
+  });
+}
+function buildStopProxy(points, sessions, windowStart, threshold, workStartWindow, longMinutes, lateNightHour) {
+  const highPoints = points.filter((point) => point.absoluteMinute >= windowStart && point.score >= threshold);
+  const samples = [];
+  for (const point of highPoints) {
+    const session = sessions.find((candidate) => candidate.endAbsolute > point.absoluteMinute && (candidate.startAbsolute <= point.absoluteMinute || candidate.startAbsolute - point.absoluteMinute <= workStartWindow));
+    if (!session) continue;
+    const stopLatencyMinutes = Math.max(0, Math.round(session.endAbsolute - point.absoluteMinute));
+    const crossesMidnight = Math.floor(session.endAbsolute / 1440) > Math.floor(session.startAbsolute / 1440);
+    const endMinuteOfDay = (session.endAbsolute % 1440 + 1440) % 1440;
+    samples.push({
+      energyItemId: point.itemId,
+      date: point.date,
+      time: point.time,
+      score: point.score,
+      sessionDurationMinutes: Math.round(session.durationMinutes),
+      stopLatencyMinutes,
+      sessionStartTime: patternFormatTime(session.startAbsolute),
+      sessionEndTime: patternFormatTime(session.endAbsolute),
+      crossesMidnight,
+      lateNight: crossesMidnight || endMinuteOfDay >= lateNightHour * 60
+    });
+  }
+  const longCount = samples.filter((sample) => sample.stopLatencyMinutes >= longMinutes).length;
+  const lateCount = samples.filter((sample) => sample.lateNight).length;
+  return {
+    highEnergySampleCount: highPoints.length,
+    followedByWorkCount: samples.length,
+    longContinuationCount: longCount,
+    lateNightCount: lateCount,
+    meanSessionDurationMinutes: patternMean(samples.map((sample) => sample.sessionDurationMinutes)),
+    meanStopLatencyMinutes: patternMean(samples.map((sample) => sample.stopLatencyMinutes)),
+    longContinuationRatio: samples.length ? longCount / samples.length : void 0,
+    lateNightRatio: samples.length ? lateCount / samples.length : void 0,
+    evidence: patternEvidence(samples.length),
+    recentSamples: [...samples].sort((a2, b2) => `${b2.date} ${b2.time}`.localeCompare(`${a2.date} ${a2.time}`)).slice(0, 5)
+  };
+}
+function buildEnergyPatterns(items, options = {}) {
+  const points = readPoints(items);
+  if (!points.length) return null;
+  const analysisWindowDays = Math.max(7, Math.min(90, Math.floor(options.analysisWindowDays ?? 30)));
+  const sessionGapMinutes = Math.max(0, Math.min(60, Math.floor(options.sessionGapMinutes ?? 15)));
+  const beforeWindow = Math.max(15, Math.min(240, Math.floor(options.beforeSessionWindowMinutes ?? 120)));
+  const afterWindow = Math.max(15, Math.min(180, Math.floor(options.afterSessionWindowMinutes ?? 90)));
+  const highThreshold = Math.max(60, Math.min(100, Math.floor(options.highEnergyThreshold ?? 80)));
+  const workStartWindow = Math.max(0, Math.min(180, Math.floor(options.highEnergyWorkStartWindowMinutes ?? 60)));
+  const longMinutes = Math.max(30, Math.min(360, Math.floor(options.longContinuationMinutes ?? 120)));
+  const lateNightHour = Math.max(20, Math.min(23, Math.floor(options.lateNightHour ?? 23)));
+  const endOrdinal = Math.floor(points[points.length - 1].absoluteMinute / 1440);
+  const startOrdinal = endOrdinal - analysisWindowDays + 1;
+  const windowStart = startOrdinal * 1440;
+  const visiblePoints = points.filter((point) => point.absoluteMinute >= windowStart);
+  const intervals = items.map(resolvePatternActivity).filter((value) => !!value).filter((interval) => interval.endAbsolute >= windowStart);
+  const sessions = mergePatternSessions(intervals, sessionGapMinutes);
+  const pairs = sessions.map((session) => pairSession(session, points, beforeWindow, afterWindow)).filter((value) => !!value);
+  return {
+    analysisWindowDays,
+    startDate: patternDateFromOrdinal(startOrdinal),
+    endDate: patternDateFromOrdinal(endOrdinal),
+    energySampleCount: visiblePoints.length,
+    dayparts: buildDayparts(visiblePoints),
+    lag: buildLag(points, windowStart),
+    continuousWork: buildContinuousWork(sessions, pairs),
+    continuousSessionCount: sessions.length,
+    pairedContinuousSessionCount: pairs.length,
+    stopProxy: buildStopProxy(points, sessions, windowStart, highThreshold, workStartWindow, longMinutes, lateNightHour)
+  };
+}
+const DEFAULT_MAXIMUM_CANDIDATES = 3;
+const DEFAULT_MINIMUM_PERSONAL_SAMPLES = 3;
+const DEFAULT_HIGH_ENERGY_THRESHOLD = 80;
+const DEFAULT_DIMENSION_GAP = 15;
+function occurrenceKey(item) {
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot) return "";
+  return `${snapshot.date || ""}T${snapshot.time || "00:00"}`;
+}
+function latestEnergyItem(items) {
+  return items.filter(isEnergyItem).filter((item) => !!readEnergyItemSnapshot(item)).sort((left2, right2) => occurrenceKey(right2).localeCompare(occurrenceKey(left2)))[0];
+}
+function stateFor(score, highThreshold) {
+  if (score <= 40) return "low";
+  if (score <= 60) return "guarded";
+  if (score < highThreshold) return "available";
+  return "high";
+}
+function stateLabel(state) {
+  if (state === "low") return "低精力";
+  if (state === "guarded") return "需要节制";
+  if (state === "available") return "可用精力";
+  return "高精力";
+}
+function dimensionFocus(brain, physical, gap2) {
+  if (brain == null || physical == null) return "balanced";
+  if (physical - brain >= gap2) return "brain-low";
+  if (brain - physical >= gap2) return "physical-low";
+  return "balanced";
+}
+function dimensionLabel(focus, brain, physical) {
+  if (focus === "brain-low") return `脑力明显低于体力（脑 ${brain} / 体 ${physical}）`;
+  if (focus === "physical-low") return `体力明显低于脑力（脑 ${brain} / 体 ${physical}）`;
+  if (brain != null && physical != null) return `脑体较均衡（脑 ${brain} / 体 ${physical}）`;
+  return void 0;
+}
+function latestState(items, highThreshold, dimensionGap) {
+  const item = latestEnergyItem(items);
+  if (!item) return null;
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot) return null;
+  const state = stateFor(snapshot.score, highThreshold);
+  const focus = dimensionFocus(snapshot.brainScore, snapshot.physicalScore, dimensionGap);
+  return {
+    score: snapshot.score,
+    brainScore: snapshot.brainScore,
+    physicalScore: snapshot.physicalScore,
+    date: snapshot.date,
+    time: snapshot.time,
+    state,
+    stateLabel: stateLabel(state),
+    dimensionFocus: focus,
+    dimensionLabel: dimensionLabel(focus, snapshot.brainScore, snapshot.physicalScore)
+  };
+}
+function evidenceWeight(value) {
+  if (value === "supported") return 2;
+  if (value === "exploratory") return 1;
+  return 0;
+}
+function focusBonus(row, focus, trend) {
+  const sign = trend === "recovery" ? 1 : -1;
+  if (focus === "brain-low" && row.meanBrainDelta != null) return Math.max(0, sign * row.meanBrainDelta) / 4;
+  if (focus === "physical-low" && row.meanPhysicalDelta != null) return Math.max(0, sign * row.meanPhysicalDelta) / 4;
+  return 0;
+}
+function candidateReason(row, focus) {
+  const parts = [`综合平均 ${row.meanDelta > 0 ? "+" : ""}${row.meanDelta}`];
+  if (focus === "brain-low" && row.meanBrainDelta != null) parts.push(`脑力 ${row.meanBrainDelta > 0 ? "+" : ""}${row.meanBrainDelta}`);
+  if (focus === "physical-low" && row.meanPhysicalDelta != null) parts.push(`体力 ${row.meanPhysicalDelta > 0 ? "+" : ""}${row.meanPhysicalDelta}`);
+  parts.push(`N=${row.sampleCount}`);
+  return parts.join(" · ");
+}
+function selectCandidates(rows, trend, focus, limit, minimumSamples) {
+  return rows.filter((row) => row.trend === trend && row.sampleCount >= minimumSamples && row.evidence !== "insufficient").sort((left2, right2) => {
+    const evidenceDelta = evidenceWeight(right2.evidence) - evidenceWeight(left2.evidence);
+    if (evidenceDelta) return evidenceDelta;
+    const leftMagnitude = Math.abs(left2.meanDelta) + focusBonus(left2, focus, trend);
+    const rightMagnitude = Math.abs(right2.meanDelta) + focusBonus(right2, focus, trend);
+    if (rightMagnitude !== leftMagnitude) return rightMagnitude - leftMagnitude;
+    return right2.sampleCount - left2.sampleCount;
+  }).slice(0, limit).map((row) => ({
+    key: row.key,
+    label: row.label,
+    sampleCount: row.sampleCount,
+    meanDelta: row.meanDelta,
+    medianDelta: row.medianDelta,
+    meanBrainDelta: row.meanBrainDelta,
+    meanPhysicalDelta: row.meanPhysicalDelta,
+    evidence: row.evidence,
+    reason: candidateReason(row, focus)
+  }));
+}
+function buildGuardrails(items, analysisWindowDays, highThreshold) {
+  const patterns = buildEnergyPatterns(items, { analysisWindowDays, highEnergyThreshold: highThreshold });
+  if (!patterns) return [];
+  const rows = [];
+  const stop = patterns.stopProxy;
+  if (stop.followedByWorkCount >= 3 && stop.evidence !== "insufficient") {
+    const longRatio = stop.longContinuationRatio || 0;
+    const lateRatio = stop.lateNightRatio || 0;
+    if (longRatio >= 0.5 || lateRatio >= 0.4) {
+      const details = [
+        `高能后进入/处于工作 N=${stop.followedByWorkCount}`,
+        `≥120min ${Math.round(longRatio * 100)}%`,
+        `深夜延续 ${Math.round(lateRatio * 100)}%`
+      ];
+      rows.push({
+        key: "preserve-capacity",
+        level: "caution",
+        title: "高能时也要预先设停止点",
+        detail: details.join(" · "),
+        sampleCount: stop.followedByWorkCount,
+        evidence: stop.evidence
+      });
+    }
+  }
+  const longBucket = patterns.continuousWork.find((row) => row.key === "ge120");
+  if (longBucket && longBucket.pairedSessionCount >= 3 && longBucket.meanDelta != null && longBucket.meanDelta <= -8) {
+    rows.push({
+      key: "long-session",
+      level: "caution",
+      title: "长连续工作是当前值得防守的区间",
+      detail: `≥120min 前后综合平均 ${longBucket.meanDelta > 0 ? "+" : ""}${longBucket.meanDelta} · 可配对 N=${longBucket.pairedSessionCount}`,
+      sampleCount: longBucket.pairedSessionCount,
+      evidence: longBucket.evidence
+    });
+  }
+  return rows;
+}
+function managementHeadline(latest2) {
+  if (latest2.state === "low") return "当前先考虑恢复，不必把低能状态硬撑成高负荷时段";
+  if (latest2.state === "guarded") return "当前有一定可用精力，但更适合控制负荷和工作长度";
+  if (latest2.state === "available") return "当前精力可用，优先把它用在高价值事项，同时观察消耗边界";
+  return "当前处于高精力，重点不是继续加码，而是把力量用在重要事项并保留停止能力";
+}
+function managementGuidance(latest2, recoveryCount, cautionCount) {
+  if (latest2.dimensionFocus === "brain-low") return recoveryCount ? "脑力低于体力：优先参考对脑力恢复更友好的个人候选。" : "脑力低于体力，但个人恢复样本还不够，先记录而不是猜。";
+  if (latest2.dimensionFocus === "physical-low") return recoveryCount ? "体力低于脑力：优先参考对体力恢复更友好的个人候选。" : "体力低于脑力，但个人恢复样本还不够，先记录而不是猜。";
+  if (latest2.state === "low" || latest2.state === "guarded") return recoveryCount ? "下面只列你的历史数据里重复出现的恢复候选；它们是观察关联，不是因果处方。" : "当前没有达到最小样本门槛的个人恢复候选。";
+  return cautionCount ? "高能不等于无限可用；下面的消耗候选和停止护栏用于帮助你保存力量。" : "目前没有足够个人样本形成明确消耗候选，保持观察即可。";
+}
+function buildEnergyManagement(items, options = {}) {
+  const maximumCandidates = Math.max(1, Math.min(5, Math.floor(options.maximumCandidates ?? DEFAULT_MAXIMUM_CANDIDATES)));
+  const minimumPersonalSamples = Math.max(3, Math.min(10, Math.floor(options.minimumPersonalSamples ?? DEFAULT_MINIMUM_PERSONAL_SAMPLES)));
+  const highThreshold = Math.max(60, Math.min(100, Math.floor(options.highEnergyThreshold ?? DEFAULT_HIGH_ENERGY_THRESHOLD)));
+  const dimensionGap = Math.max(5, Math.min(50, Math.floor(options.dimensionGapThreshold ?? DEFAULT_DIMENSION_GAP)));
+  const analysisWindowDays = Math.max(7, Math.min(90, Math.floor(options.analysisWindowDays ?? 30)));
+  const latest2 = latestState(items, highThreshold, dimensionGap);
+  if (!latest2) return null;
+  const effects = buildEnergyEffects(items, { requireSharedGoal: options.effectScope !== "global" });
+  const activityRows = effects?.byActivity || [];
+  const recoveryCandidates = selectCandidates(activityRows, "recovery", latest2.dimensionFocus, maximumCandidates, minimumPersonalSamples);
+  const cautionCandidates = selectCandidates(activityRows, "depletion", latest2.dimensionFocus, maximumCandidates, minimumPersonalSamples);
+  const guardrails = buildGuardrails(items, analysisWindowDays, highThreshold);
+  const pairedActivityCount = effects?.pairedActivityCount || 0;
+  const sufficient = recoveryCandidates.length > 0 || cautionCandidates.length > 0 || guardrails.length > 0;
+  return {
+    latest: latest2,
+    headline: managementHeadline(latest2),
+    guidance: managementGuidance(latest2, recoveryCandidates.length, cautionCandidates.length),
+    recoveryCandidates,
+    cautionCandidates,
+    guardrails,
+    readiness: {
+      pairedActivityCount,
+      recoveryCandidateCount: recoveryCandidates.length,
+      depletionCandidateCount: cautionCandidates.length,
+      stopProxySampleCount: guardrails.find((row) => row.key === "preserve-capacity")?.sampleCount || 0,
+      sufficientForPersonalSuggestions: sufficient,
+      message: sufficient ? `已有 ${pairedActivityCount} 个活动前后可配对样本；只展示达到 N≥${minimumPersonalSamples} 的个人候选。` : `目前只有 ${pairedActivityCount} 个活动前后可配对样本，尚没有达到 N≥${minimumPersonalSamples} 且方向稳定的个人候选。`
+    },
+    disclaimer: "个人历史关联，仅用于自我观察与安排，不代表因果、医学判断或必须执行的建议。"
+  };
+}
+function dateOrdinal(value) {
+  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match5) return void 0;
+  const year = Number(match5[1]);
+  const month = Number(match5[2]);
+  const day = Number(match5[3]);
+  const stamp = Date.UTC(year, month - 1, day);
+  const date2 = new Date(stamp);
+  if (date2.getUTCFullYear() !== year || date2.getUTCMonth() !== month - 1 || date2.getUTCDate() !== day) return void 0;
+  return Math.floor(stamp / 864e5);
+}
+function dateFromOrdinal(value) {
+  return new Date(value * 864e5).toISOString().slice(0, 10);
+}
+function timeMinutes(value) {
+  const match5 = value.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match5) return void 0;
+  const hour = Number(match5[1]);
+  const minute = Number(match5[2]);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
+  return hour * 60 + minute;
+}
+function captureMode(value) {
+  return String(value || "").trim() === "retrospective" ? "retrospective" : "realtime";
+}
+function roundMean(values2) {
+  if (!values2.length) return void 0;
+  return Math.round(values2.reduce((sum, value) => sum + value, 0) / values2.length * 10) / 10;
+}
+function readSample(item) {
+  if (!isEnergyItem(item)) return null;
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot?.date || !snapshot.time) return null;
+  const ordinal3 = dateOrdinal(snapshot.date);
+  const minuteOfDay = timeMinutes(snapshot.time);
+  if (ordinal3 == null || minuteOfDay == null) return null;
+  return {
+    itemId: item.id,
+    date: snapshot.date,
+    time: snapshot.time,
+    minuteOfDay,
+    score: snapshot.score,
+    brainScore: snapshot.brainScore,
+    physicalScore: snapshot.physicalScore,
+    scoreMode: snapshot.scoreMode,
+    captureMode: captureMode(snapshot.captureMode),
+    item
+  };
+}
+function periodMode(currentView) {
+  if (currentView === "天") return "day-horizontal";
+  if (currentView === "周" || currentView === "月") return "date-time";
+  return "daily-dots";
+}
+function buildEnergyPeriod(items, options) {
+  const startOrdinal = dateOrdinal(options.startDate);
+  const endOrdinal = dateOrdinal(options.endDate);
+  if (startOrdinal == null || endOrdinal == null || endOrdinal < startOrdinal) return null;
+  const samples = items.map(readSample).filter((sample) => !!sample).filter((sample) => {
+    const ordinal3 = dateOrdinal(sample.date);
+    return ordinal3 != null && ordinal3 >= startOrdinal && ordinal3 <= endOrdinal;
+  }).sort((left2, right2) => left2.date.localeCompare(right2.date) || left2.minuteOfDay - right2.minuteOfDay);
+  const byDate = /* @__PURE__ */ new Map();
+  for (const sample of samples) {
+    const rows = byDate.get(sample.date) || [];
+    rows.push(sample);
+    byDate.set(sample.date, rows);
+  }
+  const days = [];
+  for (let ordinal3 = startOrdinal; ordinal3 <= endOrdinal; ordinal3 += 1) {
+    const date2 = dateFromOrdinal(ordinal3);
+    const daySamples = byDate.get(date2) || [];
+    days.push({
+      date: date2,
+      sampled: daySamples.length > 0,
+      samples: daySamples,
+      dailyScore: roundMean(daySamples.map((row) => row.score)),
+      dailyBrainScore: roundMean(daySamples.map((row) => row.brainScore).filter((value) => value != null)),
+      dailyPhysicalScore: roundMean(daySamples.map((row) => row.physicalScore).filter((value) => value != null))
+    });
+  }
+  const sampledDays = days.filter((day) => day.sampled).length;
+  return {
+    currentView: options.currentView,
+    mode: periodMode(options.currentView),
+    startDate: options.startDate,
+    endDate: options.endDate,
+    days,
+    sampledDays,
+    missingDays: days.length - sampledDays,
+    totalSamples: samples.length
+  };
+}
 function normalizeComparableText(value) {
   return String(value ?? "").replace(/\s+/g, " ").trim().toLowerCase();
 }
@@ -23905,29 +25927,29 @@ async function submitFinalizedRecordMutation(params) {
 }
 function normalizeCompletionOptions(options) {
   if (!options) return void 0;
-  const normalized = {
+  const normalized2 = {
     duration: typeof options.duration === "number" ? options.duration : void 0,
     startTime: options.startTime ?? void 0,
     endTime: options.endTime ?? void 0
   };
-  if (normalized.duration == null && !normalized.startTime && !normalized.endTime) {
+  if (normalized2.duration == null && !normalized2.startTime && !normalized2.endTime) {
     return void 0;
   }
-  if (normalized.duration != null) {
+  if (normalized2.duration != null) {
     const normalizedTriple = applyTaskTimePolicy({
-      startTime: normalized.startTime,
-      endTime: normalized.endTime,
-      duration: normalized.duration,
+      startTime: normalized2.startTime,
+      endTime: normalized2.endTime,
+      duration: normalized2.duration,
       mode: "finalize",
       direction: "forward"
     });
     return {
-      duration: normalizedTriple.duration ?? normalized.duration,
+      duration: normalizedTriple.duration ?? normalized2.duration,
       startTime: normalizedTriple.startTime,
-      endTime: normalizedTriple.endTime ?? normalized.endTime
+      endTime: normalizedTriple.endTime ?? normalized2.endTime
     };
   }
-  return normalized;
+  return normalized2;
 }
 function normalizeTimeUpdates(updates) {
   const time2 = updates.time ?? updates.start ?? void 0;
@@ -23945,7 +25967,7 @@ function normalizeTimeUpdates(updates) {
     return { error: issue("record_time_update_empty", "至少需要提供一个时间更新字段。") };
   }
   if (duration2 !== void 0) {
-    const normalized = applyTaskTimePolicy({
+    const normalized2 = applyTaskTimePolicy({
       startTime: time2,
       endTime,
       duration: duration2,
@@ -23953,9 +25975,9 @@ function normalizeTimeUpdates(updates) {
       direction
     });
     return {
-      time: normalized.startTime ?? time2,
-      endTime: normalized.endTime ?? endTime,
-      duration: normalized.duration ?? duration2
+      time: normalized2.startTime ?? time2,
+      endTime: normalized2.endTime ?? endTime,
+      duration: normalized2.duration ?? duration2
     };
   }
   return {
@@ -23981,7 +26003,7 @@ function prepareTemplateSubmit(params) {
     };
   }
   const strictResolved = resolved;
-  const normalized = params.kernel.normalizeRecordInput({
+  const normalized2 = params.kernel.normalizeRecordInput({
     template: strictResolved.template,
     formData: params.formData,
     context: params.context,
@@ -23989,11 +26011,11 @@ function prepareTemplateSubmit(params) {
   });
   const validation = params.kernel.validateRecordInput({
     template: strictResolved.template,
-    formData: normalized.normalizedFormData,
+    formData: normalized2.normalizedFormData,
     mode: params.validateMode,
     item: params.item
   });
-  const warnings = [...strictResolved.warnings, ...normalized.warnings, ...validation.warnings];
+  const warnings = [...strictResolved.warnings, ...normalized2.warnings, ...validation.warnings];
   if (!validation.ok) {
     return {
       ok: false,
@@ -24004,7 +26026,7 @@ function prepareTemplateSubmit(params) {
     ok: true,
     submit: {
       resolved: strictResolved,
-      normalized,
+      normalized: normalized2,
       warnings
     }
   };
@@ -24046,20 +26068,20 @@ class CreateRecordWorkflow {
       validateMode: "create"
     });
     if (!prepared.ok) return prepared.result;
-    const { resolved, normalized, warnings } = prepared.submit;
+    const { resolved, normalized: normalized2, warnings } = prepared.submit;
     try {
       throwIfAborted$1(params.signal);
       const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
       const preview = this.runtime.deps.inputService.previewTemplateExecution(
         resolved.template,
-        normalized.normalizedFormData,
+        normalized2.normalizedFormData,
         resolved.theme ?? void 0,
         templateMeta
       );
       const beforeItems = getFileItemsByPath(this.runtime.deps.dataStore, preview.targetFilePath);
       const path = await this.runtime.deps.inputService.executeTemplate(
         resolved.template,
-        normalized.normalizedFormData,
+        normalized2.normalizedFormData,
         resolved.theme ?? void 0,
         templateMeta,
         { signal: params.signal }
@@ -24072,7 +26094,7 @@ class CreateRecordWorkflow {
         theme: resolved.theme,
         meta: templateMeta,
         outputContent: preview.outputContent,
-        normalizedFormData: normalized.normalizedFormData,
+        normalizedFormData: normalized2.normalizedFormData,
         appendMode: preview.header ? "header" : "append",
         targetHeader: preview.header ?? null,
         beforeItems
@@ -24233,11 +26255,11 @@ class UpdateRecordWorkflow {
       validateMode: "edit"
     });
     if (!prepared.ok) return prepared.result;
-    const { resolved, normalized, warnings } = prepared.submit;
+    const { resolved, normalized: normalized2, warnings } = prepared.submit;
     const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
     const outputPlan = buildRecordOutputPlan({
       template: resolved.template,
-      formData: normalized.normalizedFormData,
+      formData: normalized2.normalizedFormData,
       theme: resolved.theme ?? void 0,
       templateMeta
     });
@@ -24262,7 +26284,7 @@ class UpdateRecordWorkflow {
           template: resolved.template,
           theme: resolved.theme,
           resolved,
-          normalized,
+          normalized: normalized2,
           templateMeta,
           outputPlan,
           persistencePlan,
@@ -24273,7 +26295,7 @@ class UpdateRecordWorkflow {
       const path = await this.runtime.deps.inputService.updateExistingRecord(
         params.item,
         resolved.template,
-        normalized.normalizedFormData,
+        normalized2.normalizedFormData,
         resolved.theme ?? void 0,
         templateMeta,
         { signal: params.signal, autoRefresh: false }
@@ -24310,6 +26332,50 @@ class RecordInputUseCase {
   }
   async submitCreateRecord(params) {
     return new CreateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
+  }
+  async submitEnergySnapshot(params) {
+    const record = buildEnergySnapshotRecord(params);
+    if (!record.goalId || !record.goalPath) {
+      return buildValidationErrorResult("create", [{
+        code: "energy_goal_required",
+        field: "目标",
+        message: "精力记录必须绑定目标。"
+      }]);
+    }
+    if (record.captureMode === "retrospective" && (!record.date || !record.time || !record.recordedAt)) {
+      return buildValidationErrorResult("create", [{
+        code: "energy_retrospective_exact_time_required",
+        field: "时间",
+        message: "补录精力必须提供实际发生日期、具体时间和记录时间。"
+      }]);
+    }
+    if (record.captureMode === "retrospective" && `${record.date} ${record.time}` > record.recordedAt) {
+      return buildValidationErrorResult("create", [{
+        code: "energy_retrospective_future_time",
+        field: "时间",
+        message: "补录发生时间不能晚于当前记录时间。"
+      }]);
+    }
+    const header = ENERGY_APPEND_UNDER_HEADER.replace("{{goalPath}}", record.goalPath);
+    const markdown = buildEnergySnapshotMarkdown(record);
+    try {
+      const path = await this.deps.inputService.appendDirectRecord(
+        ENERGY_TARGET_FILE,
+        markdown,
+        header,
+        { signal: params.signal }
+      );
+      const refresh = buildRefreshPlan([path]);
+      await applyRecordRefreshPlan(this.deps.dataStore, refresh);
+      const energyFeedback = await this.attachEnergyTaskFeedback(record);
+      return buildSuccessResult("create", {
+        affectedPath: path,
+        refresh,
+        feedback: { notice: energyFeedback ? `已记录精力 ${record.score} · 任务反馈 ${energyFeedback.delta > 0 ? "+" : ""}${energyFeedback.delta}` : `已记录精力 ${record.score}` }
+      });
+    } catch (error) {
+      return mapSubmitError("create", error);
+    }
   }
   async submitUpdateRecord(params) {
     return new UpdateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
@@ -24361,6 +26427,48 @@ class RecordInputUseCase {
         });
       }
     });
+  }
+  /**
+   * Conservative 1.0.28 feedback binding:
+   * - only Energy-started work blocks that already stopped are eligible;
+   * - only the nearest completed work block within 120 minutes;
+   * - one Energy snapshot binds to at most one Energy-started work block.
+   * This follows the Energy rule: prefer no association over a weak association.
+   */
+  async attachEnergyTaskFeedback(record) {
+    const sampleAt = Date.parse(`${record.date}T${record.time}:00`);
+    if (!Number.isFinite(sampleAt)) return null;
+    const entries = this.store.getState().timer.timers;
+    const eligible = entries.filter((entry) => entry.status === "awaiting-energy" && entry.energyContext && entry.completedAt).map((entry) => {
+      const completedAt = Number(entry.completedAt);
+      const sameMinute = Math.floor(sampleAt / 6e4) === Math.floor(completedAt / 6e4);
+      return { entry, gapMs: sameMinute ? 0 : sampleAt - completedAt };
+    }).filter(({ gapMs }) => gapMs >= 0 && gapMs <= 120 * 60 * 1e3).sort((left2, right2) => left2.gapMs - right2.gapMs);
+    const match5 = eligible[0];
+    if (!match5) return null;
+    const baseline = Number(match5.entry.energyContext.baselineScore);
+    const updated = {
+      ...match5.entry,
+      status: "feedback-recorded",
+      energyFeedback: {
+        score: record.score,
+        brainScore: record.brainScore,
+        physicalScore: record.physicalScore,
+        delta: Math.round((record.score - baseline) * 10) / 10,
+        delayMinutes: Math.max(0, Math.round(match5.gapMs / 6e4)),
+        capturedAt: sampleAt,
+        date: record.date,
+        time: record.time
+      }
+    };
+    this.store.getState().timer.timerUpdate(updated);
+    const afterUpdate = this.store.getState().timer.timers;
+    const completedHistory = afterUpdate.filter((entry) => entry.status === "feedback-recorded").sort((a2, b2) => Number(b2.energyFeedback?.capturedAt || 0) - Number(a2.energyFeedback?.capturedAt || 0));
+    for (const stale of completedHistory.slice(100)) {
+      this.store.getState().timer.timerRemove(stale.id);
+    }
+    await this.deps.timerStateService.saveStateToFile(this.store.getState().timer.timers);
+    return { delta: updated.energyFeedback.delta, taskId: updated.taskId };
   }
   getWorkflowRuntime() {
     return createRecordInputWorkflowRuntime(this.deps, {
@@ -24604,7 +26712,8 @@ function createUseCases(store, deps) {
     recordInput: createRecordInputUseCase(store, {
       inputService: deps.inputService,
       itemService: deps.itemService,
-      dataStore: deps.dataStore
+      dataStore: deps.dataStore,
+      timerStateService: deps.timerStateService
     }),
     goal: createGoalUseCase(store)
   };
@@ -51969,6 +54078,47 @@ function unmountPreact(containerEl) {
   } catch (e2) {
   }
 }
+const ENERGY_RECORD_TYPE_ID = "core.energy";
+function fromCoreBlock(block2) {
+  return {
+    id: block2.id,
+    key: block2.key,
+    name: block2.name,
+    categoryKey: block2.categoryKey,
+    captureMode: "template",
+    goalBindable: true,
+    periodAware: Boolean(block2.periodPolicy?.enabled),
+    coreBlockId: block2.id,
+    targetFile: block2.targetFile,
+    appendUnderHeader: block2.appendUnderHeader,
+    description: block2.description
+  };
+}
+const ENERGY_RECORD_TYPE = {
+  id: ENERGY_RECORD_TYPE_ID,
+  key: "energy",
+  name: "精力",
+  categoryKey: "精力",
+  captureMode: "direct",
+  goalBindable: true,
+  periodAware: false,
+  targetFile: "01/目标精力.md",
+  appendUnderHeader: "## {{goalPath}}",
+  description: "目标绑定的精力状态记录；不创建 GoalTemplate，使用直接采集协议。"
+};
+[
+  ...DEFAULT_CORE_BLOCKS.map(fromCoreBlock),
+  ENERGY_RECORD_TYPE
+];
+function getEffectiveRecordTypes(settings) {
+  return [
+    ...getEffectiveCoreBlocks(settings).map(fromCoreBlock),
+    ENERGY_RECORD_TYPE
+  ];
+}
+function getRecordTypeById(settings, recordTypeId) {
+  return getEffectiveRecordTypes(settings).find((item) => item.id === recordTypeId) || null;
+}
 function openCreateModal(app, config2, source = "view_quick_create") {
   if (!config2?.blockId) return false;
   new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, true, {
@@ -51977,12 +54127,25 @@ function openCreateModal(app, config2, source = "view_quick_create") {
   }).open();
   return true;
 }
-const MODULE_HEADER_CREATE_ALLOWLIST = ["TimelineView", "HeatmapView", "StatisticsView"];
+const MODULE_HEADER_CREATE_ALLOWLIST = ["TimelineView", "HeatmapView", "StatisticsView", "EnergyView"];
 function isModuleHeaderCreateAllowed(viewType) {
   return MODULE_HEADER_CREATE_ALLOWLIST.includes(viewType);
 }
 function openCreateFromViewHeader(params) {
   if (!isModuleHeaderCreateAllowed(params.viewInstance.viewType)) return false;
+  if (params.viewInstance.viewType === "EnergyView") {
+    const goalPath = String(params.viewInstance.viewConfig?.goalPath || "").trim();
+    new QuickInputModal(
+      params.app,
+      ENERGY_RECORD_TYPE_ID,
+      goalPath ? { goalPath } : void 0,
+      void 0,
+      void 0,
+      true,
+      { mode: "create", source: "view_quick_create" }
+    ).open();
+    return true;
+  }
   const config2 = params.actionService.getQuickInputConfigForView(
     params.viewInstance,
     params.dateContext,
@@ -53329,8 +55492,8 @@ function QuickInputEditorFields({
 }
 function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense = false }) {
   const [draftGoalPath, setDraftGoalPath] = d("");
-  const normalizedDraft = normalizeGoalPath(draftGoalPath) || "";
-  const existing = T$1(() => new Set((goals || []).map((goal) => normalizeGoalPath(goal.value) || "")), [goals]);
+  const normalizedDraft = normalizeGoalPath$1(draftGoalPath) || "";
+  const existing = T$1(() => new Set((goals || []).map((goal) => normalizeGoalPath$1(goal.value) || "")), [goals]);
   const canCreate = !!onCreateGoal && !!normalizedDraft && !existing.has(normalizedDraft);
   return /* @__PURE__ */ u$1(Box, { sx: { display: "grid", gap: dense ? 1 : 1.2 }, children: [
     /* @__PURE__ */ u$1(
@@ -53508,6 +55671,27 @@ function QuickInputEditorView({
     ) })
   ] });
 }
+function resolveQuickInputRecordTypeRuntime(input) {
+  if (input.isEnergyDirect) {
+    return {
+      template: null,
+      theme: null,
+      goal: input.selectedGoal,
+      templateId: null,
+      templateSourceType: null,
+      effectiveBlockId: ENERGY_RECORD_TYPE_ID,
+      templateVariantId: null
+    };
+  }
+  return GoalTemplateResolver.resolve({
+    settings: input.settings,
+    blockId: input.currentBlockId,
+    goalId: input.selectedGoal?.id || input.selectedGoalId,
+    goalPath: input.selectedGoalPath,
+    themeId: input.selectedThemeId || void 0,
+    templateVariantId: input.selectedTemplateVariantId || void 0
+  });
+}
 const EMPTY_FORM_DATA = {};
 const isMeaningfulValue = isRecordInputMeaningfulValue;
 const isOptionLike = (value) => isRecordInputOptionLike(value);
@@ -53674,7 +55858,7 @@ function cleanDisplaySegment(value) {
   return String(value ?? "").replace(/^[#＃]+\s*/, "").trim();
 }
 function cleanDisplayPath(value) {
-  return normalizeGoalPath(value);
+  return normalizeGoalPath$1(value);
 }
 const splitThemePathParts = (path) => {
   const parts = splitHierarchyPath(path);
@@ -53890,7 +56074,7 @@ function applyQuickInputTimeDirectionChange(input) {
 }
 function getOrderedGoalIndex(goal, originalIndex) {
   if (!goal) return Number.MAX_SAFE_INTEGER;
-  const order2 = readNumber(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
+  const order2 = readNumber$2(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
   return Number.isFinite(order2) ? order2 : originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
 }
 function getGoalByDisplayPath(goals, path) {
@@ -53932,22 +56116,21 @@ function goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId) {
     (template) => template.enabled !== false && template.goalId === goal.id && template.coreBlockId === coreBlockId
   );
 }
-function buildQuickInputGoalOptions(fullSettings, coreBlockId) {
+function buildQuickInputGoalOptions(fullSettings, coreBlockId, options = {}) {
   const seen = /* @__PURE__ */ new Set();
+  const requirePreset = options.requirePreset !== false;
   const sourceGoals = sortGoalsLikePresetMatrix([
     ...fullSettings.goalSettings?.goals || []
-  ]).filter((goal) => goal.status !== "archived").filter(
-    (goal) => goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId)
-  );
+  ]).filter((goal) => goal.status !== "archived").filter((goal) => !requirePreset || goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId));
   const result = [];
   for (const [index, goal] of sourceGoals.entries()) {
-    const normalized = cleanDisplayPath(goal.goalPath || goal.title);
-    if (!normalized || seen.has(normalized)) continue;
-    seen.add(normalized);
-    const leaf2 = normalized.split("/").filter(Boolean).pop() || normalized;
+    const normalized2 = cleanDisplayPath(goal.goalPath || goal.title);
+    if (!normalized2 || seen.has(normalized2)) continue;
+    seen.add(normalized2);
+    const leaf2 = normalized2.split("/").filter(Boolean).pop() || normalized2;
     result.push({
-      id: goal.id || makeGoalIdFromPath(normalized),
-      value: normalized,
+      id: goal.id || makeGoalIdFromPath(normalized2),
+      value: normalized2,
       label: cleanDisplaySegment(goal.title) || leaf2,
       order: index,
       goal,
@@ -53995,6 +56178,293 @@ function applyQuickInputGoalSelection(params) {
     fieldSources: nextFieldSources
   };
 }
+function resolveQuickInputEnergyDefaultGoal(goals, defaultGoalId) {
+  if (goals.length === 0) return null;
+  const preferredId = String(defaultGoalId || "").trim();
+  if (preferredId) {
+    const preferred = goals.find((option) => option.goal?.id === preferredId || option.id === preferredId);
+    if (preferred) return preferred;
+  }
+  return goals[0] || null;
+}
+function resolveQuickInputEnergyThemePath(params) {
+  const explicitSources = /* @__PURE__ */ new Set(["user", "context", "edit_backfill", "invocation_context"]);
+  const formThemePath = String(params.formThemePath || "").trim();
+  if (formThemePath && params.formThemeSource && explicitSources.has(params.formThemeSource)) return formThemePath;
+  const configured = String(params.defaultThemePath || "").trim();
+  if (configured) return configured;
+  if (formThemePath) return formThemePath;
+  const goalThemePath = String(params.goalThemePath || "").trim();
+  return goalThemePath || null;
+}
+function EnergyQuickCapturePanel({
+  blocks,
+  allowBlockSwitch,
+  currentBlockId,
+  onBlockChange,
+  goals,
+  selectedGoalPath,
+  onSelectGoal,
+  selectedGoalId,
+  defaultGoalId,
+  selectedThemePath,
+  onCapture
+}) {
+  const [pendingScore, setPendingScore] = d(null);
+  const [isDetailed, setIsDetailed] = d(false);
+  const [brainScore, setBrainScore] = d(60);
+  const [physicalScore, setPhysicalScore] = d(60);
+  const [isSavingDetailed, setIsSavingDetailed] = d(false);
+  const [captureMode2, setCaptureMode] = d("realtime");
+  const [retrospectiveDate, setRetrospectiveDate] = d(() => dayjs().format("YYYY-MM-DD"));
+  const [retrospectiveTime, setRetrospectiveTime] = d("");
+  const [showTargetEditor, setShowTargetEditor] = d(false);
+  h(() => {
+    if (selectedGoalPath || goals.length === 0) return;
+    onSelectGoal(resolveQuickInputEnergyDefaultGoal(goals, defaultGoalId));
+  }, [defaultGoalId, goals, onSelectGoal, selectedGoalPath]);
+  const detailedScore = T$1(
+    () => calculateDetailedEnergyScore(brainScore, physicalScore),
+    [brainScore, physicalScore]
+  );
+  const hasCaptureTime = captureMode2 === "realtime" || Boolean(retrospectiveDate && retrospectiveTime);
+  const captureTiming = captureMode2 === "retrospective" ? { captureMode: "retrospective", date: retrospectiveDate, time: retrospectiveTime } : { captureMode: "realtime" };
+  const canCapture = Boolean(
+    selectedGoalId && selectedGoalPath && onCapture && hasCaptureTime && pendingScore === null && !isSavingDetailed
+  );
+  const captureQuick = async (score) => {
+    if (!selectedGoalId || !selectedGoalPath || !onCapture || !canCapture) return;
+    setPendingScore(score);
+    try {
+      await onCapture({
+        scoreMode: "quick",
+        score,
+        goalId: selectedGoalId,
+        goalPath: selectedGoalPath,
+        themePath: selectedThemePath || null,
+        ...captureTiming
+      });
+    } finally {
+      setPendingScore(null);
+    }
+  };
+  const captureDetailed = async () => {
+    if (!selectedGoalId || !selectedGoalPath || !onCapture || !canCapture) return;
+    setIsSavingDetailed(true);
+    try {
+      await onCapture({
+        scoreMode: "detailed",
+        brainScore: normalizeEnergyScore(brainScore),
+        physicalScore: normalizeEnergyScore(physicalScore),
+        goalId: selectedGoalId,
+        goalPath: selectedGoalPath,
+        themePath: selectedThemePath || null,
+        ...captureTiming
+      });
+    } finally {
+      setIsSavingDetailed(false);
+    }
+  };
+  const updateBrainScore = (value) => setBrainScore(normalizeEnergyScore(Number(value)));
+  const updatePhysicalScore = (value) => setPhysicalScore(normalizeEnergyScore(Number(value)));
+  return /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-panel", children: [
+    allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u$1("section", { class: "think-quick-input-energy-section", children: [
+      /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-section__title", children: "记录类型" }),
+      /* @__PURE__ */ u$1(
+        RecordTypeSwitcher,
+        {
+          blocks,
+          currentBlockId,
+          onBlockChange
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u$1("section", { class: "think-quick-input-energy-section think-quick-input-energy-target", children: [
+      /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-target__summary", children: [
+        /* @__PURE__ */ u$1("div", { children: [
+          /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-section__title", children: "记录到" }),
+          /* @__PURE__ */ u$1("div", { class: "think-quick-input-context-hint", children: [
+            selectedGoalPath || "未选择目标",
+            selectedThemePath ? ` · ${selectedThemePath}` : ""
+          ] })
+        ] }),
+        /* @__PURE__ */ u$1(
+          "button",
+          {
+            type: "button",
+            class: "think-quick-input-energy-detail-toggle",
+            onClick: () => setShowTargetEditor((value) => !value),
+            disabled: pendingScore !== null || isSavingDetailed,
+            children: showTargetEditor ? "收起" : "修改目标"
+          }
+        )
+      ] }),
+      showTargetEditor && /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-target__editor", children: [
+        /* @__PURE__ */ u$1(GoalSelector, { goals, selectedGoalPath, onSelect: onSelectGoal, dense: true }),
+        /* @__PURE__ */ u$1("div", { class: "think-quick-input-context-hint", children: "主题不在这里临时选择；请到“设置 → 数据管理 → 记录类型 → 精力记录默认值”维护默认精力主题。" })
+      ] })
+    ] }),
+    /* @__PURE__ */ u$1("section", { class: "think-quick-input-energy-section", children: [
+      /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-section__title", children: "记录时间" }),
+      /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-capture-mode", role: "group", "aria-label": "精力记录时间模式", children: [
+        /* @__PURE__ */ u$1(
+          "button",
+          {
+            type: "button",
+            class: `think-quick-input-energy-capture-mode__button${captureMode2 === "realtime" ? " is-active" : ""}`,
+            onClick: () => setCaptureMode("realtime"),
+            disabled: pendingScore !== null || isSavingDetailed,
+            children: "实时"
+          }
+        ),
+        /* @__PURE__ */ u$1(
+          "button",
+          {
+            type: "button",
+            class: `think-quick-input-energy-capture-mode__button${captureMode2 === "retrospective" ? " is-active" : ""}`,
+            onClick: () => setCaptureMode("retrospective"),
+            disabled: pendingScore !== null || isSavingDetailed,
+            children: "补录"
+          }
+        )
+      ] }),
+      captureMode2 === "retrospective" && /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-retrospective-time", children: [
+        /* @__PURE__ */ u$1("label", { children: [
+          /* @__PURE__ */ u$1("span", { children: "发生日期" }),
+          /* @__PURE__ */ u$1(
+            "input",
+            {
+              type: "date",
+              value: retrospectiveDate,
+              max: dayjs().format("YYYY-MM-DD"),
+              disabled: pendingScore !== null || isSavingDetailed,
+              onInput: (event) => setRetrospectiveDate(event.currentTarget.value)
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u$1("label", { children: [
+          /* @__PURE__ */ u$1("span", { children: "发生时间" }),
+          /* @__PURE__ */ u$1(
+            "input",
+            {
+              type: "time",
+              value: retrospectiveTime,
+              step: "60",
+              disabled: pendingScore !== null || isSavingDetailed,
+              onInput: (event) => setRetrospectiveTime(event.currentTarget.value)
+            }
+          )
+        ] }),
+        !retrospectiveTime && /* @__PURE__ */ u$1("div", { class: "think-quick-input-context-hint", children: "补录必须选择具体时间；不会用“上午/下午”等模糊时段代替。" })
+      ] })
+    ] }),
+    /* @__PURE__ */ u$1("section", { class: "think-quick-input-energy-section", children: [
+      /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-mode-row", children: [
+        /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-section__title", children: isDetailed ? "详细精力" : captureMode2 === "retrospective" ? "补录精力" : "当前精力" }),
+        /* @__PURE__ */ u$1(
+          "button",
+          {
+            type: "button",
+            class: "think-quick-input-energy-detail-toggle",
+            onClick: () => setIsDetailed((value) => !value),
+            disabled: pendingScore !== null || isSavingDetailed,
+            children: isDetailed ? "返回快捷" : "详细模式"
+          }
+        )
+      ] }),
+      !isDetailed ? /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-levels", role: "group", "aria-label": "当前精力快捷评分", children: ENERGY_QUICK_LEVELS.map((score) => {
+        const label = ENERGY_QUICK_LEVEL_LABELS[score];
+        const pending = pendingScore === score;
+        return /* @__PURE__ */ u$1(
+          SelectablePill,
+          {
+            disabled: !canCapture,
+            onClick: () => void captureQuick(score),
+            title: `${score} · ${label}`,
+            className: "think-quick-input-energy-level",
+            children: [
+              /* @__PURE__ */ u$1("span", { class: "think-quick-input-energy-level__score", children: score }),
+              /* @__PURE__ */ u$1("span", { class: "think-quick-input-energy-level__label", children: pending ? "记录中…" : label })
+            ]
+          },
+          score
+        );
+      }) }) : /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-detailed", children: [
+        /* @__PURE__ */ u$1(
+          EnergyDimensionInput,
+          {
+            label: "脑力",
+            value: brainScore,
+            onChange: updateBrainScore,
+            disabled: !canCapture
+          }
+        ),
+        /* @__PURE__ */ u$1(
+          EnergyDimensionInput,
+          {
+            label: "体力",
+            value: physicalScore,
+            onChange: updatePhysicalScore,
+            disabled: !canCapture
+          }
+        ),
+        /* @__PURE__ */ u$1("div", { class: "think-quick-input-energy-summary", children: [
+          /* @__PURE__ */ u$1("span", { children: "综合精力" }),
+          /* @__PURE__ */ u$1("strong", { children: detailedScore }),
+          /* @__PURE__ */ u$1("span", { class: "think-quick-input-energy-summary__hint", children: "脑力与体力等权平均，仅用于统一时间线" })
+        ] }),
+        /* @__PURE__ */ u$1(
+          "button",
+          {
+            type: "button",
+            class: "think-quick-input-energy-save-detailed",
+            disabled: !canCapture,
+            onClick: () => void captureDetailed(),
+            children: isSavingDetailed ? "记录中…" : "保存详细精力"
+          }
+        )
+      ] }),
+      !selectedGoalPath && /* @__PURE__ */ u$1("div", { class: "think-quick-input-context-hint", children: "请先选择一个目标，精力记录不会脱离目标单独保存。" })
+    ] })
+  ] });
+}
+function EnergyDimensionInput({ label, value, disabled, onChange }) {
+  return /* @__PURE__ */ u$1("label", { class: "think-quick-input-energy-dimension", children: [
+    /* @__PURE__ */ u$1("span", { class: "think-quick-input-energy-dimension__header", children: [
+      /* @__PURE__ */ u$1("span", { children: label }),
+      /* @__PURE__ */ u$1("strong", { children: value })
+    ] }),
+    /* @__PURE__ */ u$1("span", { class: "think-quick-input-energy-dimension__controls", children: [
+      /* @__PURE__ */ u$1(
+        "input",
+        {
+          type: "range",
+          min: "0",
+          max: "100",
+          step: "1",
+          value,
+          disabled,
+          onInput: (event) => onChange(event.currentTarget.value),
+          "aria-label": `${label}精力百分制`
+        }
+      ),
+      /* @__PURE__ */ u$1(
+        "input",
+        {
+          class: "think-quick-input-energy-dimension__number",
+          type: "number",
+          min: "0",
+          max: "100",
+          step: "1",
+          value,
+          disabled,
+          onInput: (event) => onChange(event.currentTarget.value),
+          "aria-label": `${label}精力数值`
+        }
+      )
+    ] })
+  ] });
+}
 function QuickInputEditor({
   getResourcePath,
   initialBlockId,
@@ -54007,6 +56477,7 @@ function QuickInputEditor({
   showDivider = true,
   onStateChange,
   onRequestSubmit,
+  onEnergyCapture,
   isMobileLike = false
 }) {
   const fullSettings = useSelector(selectSettings);
@@ -54053,10 +56524,12 @@ function QuickInputEditor({
     recordInputModeRef.current = recordInputMode;
     dispatchSession({ type: "setMode", mode: recordInputMode });
   }, [recordInputMode]);
-  const blocks = T$1(() => {
-    const coreBlocks = getEffectiveCoreBlocks(fullSettings);
-    return coreBlocks.length ? coreBlocks : settings.blocks || [];
-  }, [fullSettings, settings.blocks]);
+  const blocks = T$1(() => getEffectiveRecordTypes(fullSettings), [fullSettings]);
+  const currentRecordType = T$1(
+    () => blocks.find((recordType) => recordType.id === currentBlockId) || null,
+    [blocks, currentBlockId]
+  );
+  const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === "direct";
   const themes = T$1(() => settings.themes || [], [settings.themes]);
   const { availableThemes, themeIdMap, pathToIdMap } = T$1(() => {
     return {
@@ -54070,8 +56543,8 @@ function QuickInputEditor({
     return (selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) : null) || (selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) : null) || null;
   }, [fullSettings.goalSettings?.goals, selectedGoalId, selectedGoalPath]);
   const currentEffectiveBlockIdForTemplates = T$1(
-    () => resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
-    [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId]
+    () => isEnergyDirect ? "" : resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
+    [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId, isEnergyDirect]
   );
   const goalTemplateVariants = T$1(() => {
     const goal = selectedGoal || null;
@@ -54089,25 +56562,13 @@ function QuickInputEditor({
       dispatchSession({ type: "selectTemplateVariant", variantId: next2?.variantId || "default" });
     }
   }, [goalTemplateVariants, selectedTemplateVariantId]);
-  const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = T$1(() => GoalTemplateResolver.resolve({
-    settings: fullSettings,
-    blockId: currentBlockId,
-    goalId: selectedGoal?.id || selectedGoalId,
-    goalPath: selectedGoalPath,
-    themeId: selectedThemeId || void 0,
-    templateVariantId: selectedTemplateVariantId || void 0
-  }), [
-    fullSettings,
-    currentBlockId,
-    selectedGoal?.id,
-    selectedGoalId,
-    selectedGoalPath,
-    selectedThemeId,
-    selectedTemplateVariantId
-  ]);
+  const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = T$1(
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedGoalPath, selectedThemeId, selectedTemplateVariantId }),
+    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedGoalPath, selectedThemeId, selectedTemplateVariantId]
+  );
   const goalOptions = T$1(
-    () => buildQuickInputGoalOptions(fullSettings, currentEffectiveBlockIdForTemplates),
-    [fullSettings, currentEffectiveBlockIdForTemplates]
+    () => buildQuickInputGoalOptions(fullSettings, currentEffectiveBlockIdForTemplates, { requirePreset: !isEnergyDirect }),
+    [fullSettings, currentEffectiveBlockIdForTemplates, isEnergyDirect]
   );
   const goalFieldOptions = T$1(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label })), [goalOptions]);
   h(() => {
@@ -54121,18 +56582,18 @@ function QuickInputEditor({
   const currentGoalTitle = cleanDisplaySegment(selectedGoal?.title || resolvedGoal?.title || "") || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData["日期"] ?? formData.date ?? dayjs().format("YYYY-MM-DD")).trim();
-  const periodPolicy = resolveTemplatePeriodPolicy(rawTemplate);
+  const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(rawTemplate);
   const currentPeriod = periodPolicy ? resolveDerivedPeriod(currentRecordDate || dayjs().format("YYYY-MM-DD"), periodPolicy.granularity) : null;
   const currentPeriodUi = T$1(() => buildQuickInputPeriodUi(currentPeriod), [currentPeriod?.id, currentPeriod?.label, currentPeriod?.granularity]);
   const currentPeriodFields = currentPeriodUi.fields;
   const currentPeriodOptions = currentPeriodUi.options;
   const template = T$1(
-    () => buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions),
-    [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions]
+    () => isEnergyDirect ? null : buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions),
+    [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions, isEnergyDirect]
   );
   const showTimeDirectionControl = T$1(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
   h(() => {
-    if (!template) return;
+    if (isEnergyDirect || !template) return;
     const hydrated = hydrateQuickInputTemplateDefaults({
       template,
       context,
@@ -54152,7 +56613,7 @@ function QuickInputEditor({
       formData: hydrated.formData,
       fieldSources: hydrated.fieldSources
     });
-  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources]);
+  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources, isEnergyDirect]);
   h(() => {
     const presetThemePath = String(formData.themePath ?? formData["主题"] ?? "").trim();
     if (!presetThemePath) return;
@@ -54161,7 +56622,7 @@ function QuickInputEditor({
   }, [formData.themePath, formData["主题"], pathToIdMap, selectedThemeId]);
   const makeEditorState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => buildQuickInputEditorState({
     blockId: currentBlockId,
-    effectiveBlockId,
+    effectiveBlockId: isEnergyDirect ? ENERGY_RECORD_TYPE_ID : effectiveBlockId,
     selectedGoal,
     selectedGoalId,
     currentGoalPath,
@@ -54230,6 +56691,24 @@ function QuickInputEditor({
       fieldSources: nextSelection.fieldSources
     });
   };
+  if (isEnergyDirect) {
+    return /* @__PURE__ */ u$1(
+      EnergyQuickCapturePanel,
+      {
+        blocks,
+        allowBlockSwitch,
+        currentBlockId,
+        onBlockChange: handleBlockChange,
+        goals: goalOptions,
+        selectedGoalPath: currentGoalPath,
+        onSelectGoal: handleSelectGoal,
+        selectedGoalId: selectedGoal?.id || selectedGoalId || null,
+        defaultGoalId: fullSettings.energySettings?.defaultGoalId || null,
+        selectedThemePath: resolveQuickInputEnergyThemePath({ formThemePath: formData.themePath ?? formData["主题"], formThemeSource: fieldSources.themePath ?? fieldSources["主题"], defaultThemePath: fullSettings.energySettings?.defaultThemePath, goalThemePath: selectedGoal?.themePath }),
+        onCapture: onEnergyCapture
+      }
+    );
+  }
   return /* @__PURE__ */ u$1(
     QuickInputEditorView,
     {
@@ -54652,11 +57131,11 @@ function useQuickInputSubmitController({
     setPendingAction("submit");
     try {
       const result = await submitLatestRef.current.run(async (signal) => {
-        const latestState = getCurrentState();
-        assertRecordInputRequiredFields(latestState);
+        const latestState2 = getCurrentState();
+        assertRecordInputRequiredFields(latestState2);
         if (isQuickInputUpdateOperation(operationMode) && editItem) {
           return await useCases.recordInput.submitUpdateRecord(buildUpdateRecordSubmitParamsFromEditorState({
-            state: latestState,
+            state: latestState2,
             item: editItem,
             expectedOutputPlan: liveOutputPlan,
             expectedPersistencePlan: livePersistencePlan,
@@ -54665,7 +57144,7 @@ function useQuickInputSubmitController({
           }));
         }
         return await useCases.recordInput.submitCreateRecord(buildCreateRecordSubmitParamsFromEditorState({
-          state: latestState,
+          state: latestState2,
           context: operationMode === "duplicate" ? void 0 : context,
           signal,
           source: source ?? "quickinput"
@@ -54795,6 +57274,7 @@ function QuickInputModalContent({
   showNotice
 }) {
   const settings = useSelector(selectInputSettings);
+  const fullSettings = useSelector(selectSettings);
   const useCases = useUseCases();
   const dataStore = useDataStore();
   const preparedRecord = T$1(() => {
@@ -54850,7 +57330,9 @@ function QuickInputModalContent({
   }, []);
   const currentState = editorStateRef.current || editorState;
   const currentBlock = (settings.blocks || []).find((block2) => block2.id === currentState.blockId);
-  const currentBlockName = currentBlock?.name || currentState.template?.name || currentState.blockId;
+  const currentRecordType = getRecordTypeById(fullSettings, currentState.blockId);
+  const currentBlockName = currentRecordType?.name || currentBlock?.name || currentState.template?.name || currentState.blockId;
+  const isEnergyDirect = mode === "create" && currentState.blockId === ENERGY_RECORD_TYPE_ID;
   const isTimerCreate = mode === "create" && (source === "timer" || !!onSave);
   const {
     liveOutputPlan,
@@ -54891,6 +57373,34 @@ function QuickInputModalContent({
     editorStateRef.current = state;
     setEditorState(state);
   }, []);
+  const handleEnergyCapture = q$1(async (request) => {
+    const now2 = dayjs();
+    const isRetrospective = request.captureMode === "retrospective";
+    const common2 = {
+      goalId: request.goalId,
+      goalPath: request.goalPath,
+      themePath: request.themePath || void 0,
+      date: isRetrospective ? request.date : now2.format("YYYY-MM-DD"),
+      time: isRetrospective ? request.time : now2.format("HH:mm"),
+      captureMode: request.captureMode,
+      timePrecision: "exact",
+      recordedAt: isRetrospective ? now2.format("YYYY-MM-DD HH:mm") : void 0,
+      source: "desktop-panel"
+    };
+    const result = request.scoreMode === "detailed" ? await useCases.recordInput.submitEnergySnapshot({
+      ...common2,
+      scoreMode: "detailed",
+      brainScore: request.brainScore,
+      physicalScore: request.physicalScore
+    }) : await useCases.recordInput.submitEnergySnapshot({
+      ...common2,
+      scoreMode: "quick",
+      score: request.score
+    });
+    const presentation = buildRecordSubmitFeedbackPresentation(result, "精力记录失败");
+    if (presentation.message) showNotice(presentation.message, presentation.tone);
+    if (presentation.shouldCloseModal) closeModal();
+  }, [closeModal, showNotice, useCases]);
   const handleRecoveryRescan = q$1(async () => {
     if (!recovery.paths.length || isRescanningRecoveryPaths) return;
     setIsRescanningRecoveryPaths(true);
@@ -54917,7 +57427,7 @@ function QuickInputModalContent({
         onOriginalTouchEnd: handleOriginalTouchEnd
       }
     ),
-    /* @__PURE__ */ u$1(
+    !isEnergyDirect && /* @__PURE__ */ u$1(
       QuickInputConflictRecoveryPanel,
       {
         recovery,
@@ -54941,11 +57451,12 @@ function QuickInputModalContent({
         allowBlockSwitch: operationMode === "convert" || operationMode === "duplicate" ? true : mode === "edit" ? false : allowBlockSwitch,
         onStateChange: handleEditorStateChange,
         onRequestSubmit: handleSubmit,
+        onEnergyCapture: handleEnergyCapture,
         isMobileLike
       },
       `${editorResetVersion}:${editItem?.id ?? "create"}`
     ) }),
-    /* @__PURE__ */ u$1(
+    !isEnergyDirect && /* @__PURE__ */ u$1(
       QuickInputModalFooter,
       {
         operationMode,
@@ -55453,8 +57964,8 @@ function presetDisplayName(preset) {
 }
 function goalDisplayName(goal, goalPath) {
   if (goal?.title) return String(goal.title);
-  const normalized = splitGoalPath(String(goal?.goalPath || goalPath || "")).leafGoal;
-  return normalized || String(goalPath || "未匹配目标");
+  const normalized2 = splitGoalPath(String(goal?.goalPath || goalPath || "")).leafGoal;
+  return normalized2 || String(goalPath || "未匹配目标");
 }
 function buildAiBatchConfirmRecordItems({
   items,
@@ -56349,6 +58860,7 @@ function useSelector(selector, equalityFn) {
 const selectSettings = (s2) => s2.settings;
 const selectInputSettings = (s2) => s2.settings.inputSettings;
 const selectInputBlocks = (s2) => s2.settings.inputSettings?.blocks ?? [];
+const selectInputThemes = (s2) => s2.settings.inputSettings?.themes ?? [];
 const selectAiSettings = (s2) => s2.settings.aiSettings;
 const selectLayouts = (s2) => s2.settings.layouts;
 const selectViewInstances = (s2) => s2.settings.viewInstances;
@@ -56357,7 +58869,17 @@ const selectFloatingTimerEnabled = (s2) => s2.settings.floatingTimerEnabled;
 const selectDevConsoleStackEnabled = (s2) => !!s2.settings.devConsoleStackEnabled;
 const EMPTY_CATEGORY_COLORS = {};
 const selectCategoryColors = (s2) => s2.settings.categoryColors ?? EMPTY_CATEGORY_COLORS;
-const selectTimers = (s2) => s2.timer.timers;
+const selectEnergyDefaultGoalId = (s2) => s2.settings.energySettings?.defaultGoalId ?? "";
+const selectEnergyDefaultThemePath = (s2) => s2.settings.energySettings?.defaultThemePath ?? "";
+let lastTimerEntries = null;
+let lastActiveTimers = [];
+const selectTimers = (s2) => {
+  const entries = s2.timer.timers;
+  if (entries === lastTimerEntries) return lastActiveTimers;
+  lastTimerEntries = entries;
+  lastActiveTimers = entries.filter(isActiveTimerState);
+  return lastActiveTimers;
+};
 const selectFloatingWindowsActiveId = (s2) => s2.floatingWindows.activeId;
 const selectFloatingWindowsRegister = (s2) => s2.floatingWindows.register;
 const selectFloatingWindowsUnregister = (s2) => s2.floatingWindows.unregister;
@@ -56946,64 +59468,66 @@ function registerSettingsPersistence(plugin) {
   instance.registerSingleton(ThemeManager);
   instance.register(THEME_MATCHER_TOKEN, { useToken: ThemeManager });
 }
+function elapsedSecondsAt(timer, now2) {
+  if (timer.status !== "running") return timer.elapsedSeconds;
+  return timer.elapsedSeconds + Math.max(0, (now2 - timer.startTime) / 1e3);
+}
 function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOrigin }) {
-  const [displayTime, setDisplayTime] = d("00:00:00");
+  const [elapsedSeconds, setElapsedSeconds] = d(() => elapsedSecondsAt(timer, Date.now()));
   const taskItem = dataStore.queryItems().find((i2) => i2.id === timer.taskId);
+  const recurringTask = taskItem ? isTaskRecurring(taskItem) : false;
   h(() => {
     let interval = null;
-    const update = () => {
-      const now2 = Date.now();
-      const currentSessionSeconds = (now2 - timer.startTime) / 1e3;
-      const totalSeconds = timer.elapsedSeconds + currentSessionSeconds;
-      setDisplayTime(formatSecondsToHHMMSS(totalSeconds));
-    };
-    if (timer.status === "running") {
-      update();
-      interval = window.setInterval(update, 1e3);
-    } else {
-      setDisplayTime(formatSecondsToHHMMSS(timer.elapsedSeconds));
-    }
+    const update = () => setElapsedSeconds(elapsedSecondsAt(timer, Date.now()));
+    update();
+    if (timer.status === "running") interval = window.setInterval(update, 1e3);
     return () => {
-      if (interval) {
-        window.clearInterval(interval);
-      }
+      if (interval) window.clearInterval(interval);
     };
   }, [timer]);
   const handleEdit = () => {
-    if (taskItem) {
-      onOpenRecord(taskItem);
-    }
+    if (taskItem) onOpenRecord(taskItem);
   };
   const titleGesture = taskItem ? createRecordGestureHandlers({
     item: taskItem,
     onOpenOrigin: onOpenRecordOrigin,
     onPrimary: handleEdit
   }) : null;
-  return /* @__PURE__ */ u$1(Box, { sx: { display: "flex", alignItems: "center", gap: "8px", width: "100%" }, children: [
-    /* @__PURE__ */ u$1(Tooltip2, { title: taskItem ? `点击编辑；Ctrl/⌘+点击或双击打开原文：${taskItem?.title}` : "任务已不存在", children: /* @__PURE__ */ u$1(
-      "div",
-      {
-        style: {
-          flexGrow: 1,
-          minWidth: 0,
-          textDecoration: "none",
-          color: "inherit",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          cursor: taskItem ? "pointer" : "default"
-        },
-        onClick: titleGesture ? titleGesture.onClick : void 0,
-        onDblClick: titleGesture ? titleGesture.onDblClick : void 0,
-        onTouchEnd: titleGesture ? titleGesture.onTouchEnd : void 0,
-        children: /* @__PURE__ */ u$1(Typography2, { variant: "body2", noWrap: true, children: taskItem?.title || "任务已不存在" })
-      }
-    ) }),
-    /* @__PURE__ */ u$1(Typography2, { variant: "body2", sx: { fontFamily: "monospace" }, children: displayTime }),
-    timer.status === "running" ? /* @__PURE__ */ u$1(IconAction, { label: "暂停", onClick: () => timerService.pause(timer.id), icon: /* @__PURE__ */ u$1(PauseIcon, { fontSize: "inherit" }) }) : /* @__PURE__ */ u$1(IconAction, { label: "继续", onClick: () => timerService.resume(timer.id), color: "primary", icon: /* @__PURE__ */ u$1(PlayArrowIcon, { fontSize: "inherit" }) }),
-    /* @__PURE__ */ u$1(IconAction, { label: "停止并记录", onClick: () => timerService.stopAndApply(timer.id), icon: /* @__PURE__ */ u$1(StopIcon, { fontSize: "inherit" }) }),
-    /* @__PURE__ */ u$1(IconAction, { label: "编辑任务", onClick: handleEdit, icon: /* @__PURE__ */ u$1(EditIcon, { fontSize: "inherit" }) }),
-    /* @__PURE__ */ u$1(IconAction, { label: "取消任务", onClick: () => timerService.cancel(timer.id), color: "error", icon: /* @__PURE__ */ u$1(DeleteForeverIcon, { fontSize: "inherit" }) })
+  return /* @__PURE__ */ u$1("div", { class: "think-timer-row", children: [
+    timer.energyContext?.suggestedDurationMinutes ? /* @__PURE__ */ u$1("div", { class: "think-timer-row__suggested-duration", children: [
+      "建议工作块 ",
+      timer.energyContext.suggestedDurationMinutes,
+      "min"
+    ] }) : null,
+    /* @__PURE__ */ u$1(Box, { sx: { display: "flex", alignItems: "center", gap: "8px", width: "100%" }, children: [
+      /* @__PURE__ */ u$1(Tooltip2, { title: taskItem ? `点击编辑；Ctrl/⌘+点击或双击打开原文：${taskItem?.title}` : "任务已不存在", children: /* @__PURE__ */ u$1(
+        "div",
+        {
+          style: {
+            flexGrow: 1,
+            minWidth: 0,
+            textDecoration: "none",
+            color: "inherit",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            cursor: taskItem ? "pointer" : "default"
+          },
+          onClick: titleGesture ? titleGesture.onClick : void 0,
+          onDblClick: titleGesture ? titleGesture.onDblClick : void 0,
+          onTouchEnd: titleGesture ? titleGesture.onTouchEnd : void 0,
+          children: /* @__PURE__ */ u$1(Typography2, { variant: "body2", noWrap: true, children: taskItem?.title || "任务已不存在" })
+        }
+      ) }),
+      /* @__PURE__ */ u$1(Typography2, { variant: "body2", sx: { fontFamily: "monospace" }, children: formatSecondsToHHMMSS(elapsedSeconds) }),
+      timer.status === "running" ? /* @__PURE__ */ u$1(IconAction, { label: "暂停", onClick: () => timerService.pause(timer.id), icon: /* @__PURE__ */ u$1(PauseIcon, { fontSize: "inherit" }) }) : /* @__PURE__ */ u$1(IconAction, { label: "继续", onClick: () => timerService.resume(timer.id), color: "primary", icon: /* @__PURE__ */ u$1(PlayArrowIcon, { fontSize: "inherit" }) }),
+      recurringTask ? /* @__PURE__ */ u$1(IconAction, { label: "完成本次", onClick: () => timerService.stopAndApply(timer.id), icon: /* @__PURE__ */ u$1(StopIcon, { fontSize: "inherit" }) }) : /* @__PURE__ */ u$1(S, { children: [
+        /* @__PURE__ */ u$1(IconAction, { label: "结束本次", onClick: () => timerService.endWorkBlock(timer.id), icon: /* @__PURE__ */ u$1(StopIcon, { fontSize: "inherit" }) }),
+        /* @__PURE__ */ u$1(Button2, { size: "small", variant: "text", onClick: () => timerService.stopAndApply(timer.id), children: "完成任务" })
+      ] }),
+      /* @__PURE__ */ u$1(IconAction, { label: "编辑任务", onClick: handleEdit, icon: /* @__PURE__ */ u$1(EditIcon, { fontSize: "inherit" }) }),
+      /* @__PURE__ */ u$1(IconAction, { label: "取消任务", onClick: () => timerService.cancel(timer.id), color: "error", icon: /* @__PURE__ */ u$1(DeleteForeverIcon, { fontSize: "inherit" }) })
+    ] })
   ] });
 }
 function TimerViewView({
@@ -57039,7 +59563,7 @@ function TimerViewView({
           onOpenRecordOrigin
         },
         timer.id
-      )) : /* @__PURE__ */ u$1("div", { class: "empty-state", children: "暂无计时任务" }) })
+      )) : /* @__PURE__ */ u$1("div", { class: "think-timer-empty-state", children: "暂无计时任务" }) })
     }
   );
 }
@@ -57047,12 +59571,8 @@ function TimerView({ app, actionService, timerService, dataStore }) {
   const timers = useSelector(selectTimers);
   const isVisible = useSelector(selectIsTimerWidgetVisible);
   const setTimerWidgetVisible = useSelector(selectSetTimerWidgetVisible);
-  const handleOpenRecord = (item) => {
-    openEditFromItem({ app, item, openedFrom: "timer" });
-  };
-  const handleOpenRecordOrigin = (item) => {
-    openRecordOrigin({ app, item });
-  };
+  const handleOpenRecord = (item) => openEditFromItem({ app, item, openedFrom: "timer" });
+  const handleOpenRecordOrigin = (item) => openRecordOrigin({ app, item });
   const handleCreateNewTask = () => {
     const config2 = actionService.getQuickInputConfigForNewTimer();
     if (!config2) return;
@@ -58069,14 +60589,19 @@ function ProgressViewEditor({ value, onChange }) {
     )
   ] });
 }
-function TaskExecutionViewEditor(_props) {
-  return /* @__PURE__ */ u$1(
-    ReadonlyViewEditorNotice,
-    {
-      title: "任务执行视图",
-      description: "按主题两级分组展示带 🔁 的未完成任务；左键记录一次，右键查看当前时间范围内的完成记录，并可跳转到原位置。"
-    }
-  );
+function EnergyViewEditor({ value, onChange }) {
+  const config2 = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...value };
+  return /* @__PURE__ */ u$1(Stack, { spacing: 2, children: [
+    /* @__PURE__ */ u$1(Typography2, { variant: "body2", color: "text.secondary", children: "EnergyView 跟随布局当前的 年 / 季 / 月 / 周 / 天周期。任务按目标分组，每个目标固定显示日常 / 天 / 周 / 月 / 季 / 年六类；当前精力只影响任务排序，不改变任务所属类型。" }),
+    /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 2, children: [
+      /* @__PURE__ */ u$1(TextField2, { size: "small", type: "number", label: "最近原始记录", value: config2.recentSampleLimit, onChange: (e2) => onChange({ recentSampleLimit: Math.max(1, Math.min(20, Number(e2.target.value) || 5)) }) }),
+      /* @__PURE__ */ u$1(TextField2, { size: "small", type: "number", label: "最多精力目标数", value: config2.maxGoals, onChange: (e2) => onChange({ maxGoals: Math.max(0, Math.min(20, Number(e2.target.value) || 0)) }) }),
+      /* @__PURE__ */ u$1(TextField2, { size: "small", type: "number", label: "历史分析窗口", value: config2.analysisWindowDays, onChange: (e2) => onChange({ analysisWindowDays: Math.max(7, Math.min(90, Number(e2.target.value) || 30)) }) })
+    ] }),
+    /* @__PURE__ */ u$1(TextField2, { size: "small", label: "精力目标路径（可选）", value: config2.goalPath, placeholder: "留空 = 所有有精力记录的目标", onChange: (e2) => onChange({ goalPath: e2.target.value }) }),
+    /* @__PURE__ */ u$1(FormControlLabel2, { control: /* @__PURE__ */ u$1(Checkbox2, { checked: config2.showTimeline !== false, onChange: (e2) => onChange({ showTimeline: e2.target.checked }) }), label: "显示精力地图" }),
+    /* @__PURE__ */ u$1(Typography2, { variant: "body2", color: "text.secondary", children: "数据质量、时间规律和活动影响继续用于“本周期”短句与后台任务排序；原“更多”诊断区已退出主界面，不再单独堆统计项。" })
+  ] });
 }
 const VIEW_INFO_REGISTRY = {
   TableView: { component: TableViewEditor, defaultConfig: TABLE_VIEW_DEFAULT_CONFIG },
@@ -58087,7 +60612,7 @@ const VIEW_INFO_REGISTRY = {
   StatisticsView: { component: StatisticsViewEditor, defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG },
   HeatmapView: { component: HeatmapViewEditor, defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG },
   ProgressView: { component: ProgressViewEditor, defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG },
-  TaskExecutionView: { component: TaskExecutionViewEditor, defaultConfig: TASK_EXECUTION_VIEW_DEFAULT_CONFIG }
+  EnergyView: { component: EnergyViewEditor, defaultConfig: ENERGY_VIEW_DEFAULT_CONFIG }
 };
 const VIEW_EDITORS = Object.fromEntries(
   Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.component])
@@ -58163,21 +60688,21 @@ function buildRuleLabel(mode, rule) {
 }
 function normalizeFilterPatch(patch, current2) {
   const nextOp = patch.op ?? current2?.op;
-  const normalized = { ...patch };
+  const normalized2 = { ...patch };
   if (nextOp && !operatorNeedsValue(nextOp)) {
-    return { ...normalized, value: "" };
+    return { ...normalized2, value: "" };
   }
   if (patch.field !== void 0 && patch.field !== current2?.field) {
-    normalized.value = nextOp && isMultiValueOperator(nextOp) ? [] : "";
+    normalized2.value = nextOp && isMultiValueOperator(nextOp) ? [] : "";
   }
   if (nextOp && isMultiValueOperator(nextOp)) {
-    if ("value" in normalized || patch.op !== void 0) {
-      normalized.value = normalizeMultiValue(normalized.value ?? current2?.value);
+    if ("value" in normalized2 || patch.op !== void 0) {
+      normalized2.value = normalizeMultiValue(normalized2.value ?? current2?.value);
     }
   } else if (current2 && isMultiValueOperator(current2.op) && patch.op !== void 0) {
-    normalized.value = normalizeMultiValue(current2.value).join(",");
+    normalized2.value = normalizeMultiValue(current2.value).join(",");
   }
-  return normalized;
+  return normalized2;
 }
 function patchRule(mode, rule, patch) {
   const nextPatch = mode === "filter" ? normalizeFilterPatch(patch, rule) : patch;
@@ -58694,10 +61219,10 @@ function ViewInstanceEditor({ vi }) {
   const handleUpdate = (updates) => {
     useCases.viewInstance.updateView(currentVi.id, updates);
   };
-  const viewTypeOptions = T$1(
-    () => VIEW_OPTIONS.map((v2) => ({ value: v2, label: v2.replace("View", "") })),
-    []
-  );
+  const viewTypeOptions = T$1(() => {
+    const labels = { ProgressView: "成长", EnergyView: "精力" };
+    return VIEW_OPTIONS.map((v2) => ({ value: v2, label: labels[v2] || v2.replace("View", "") }));
+  }, []);
   const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "taskStatus", "type", "priority", "period.label"], []);
   const hasAdvancedFilters = T$1(() => (currentVi.filters || []).some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [currentVi.filters, commonFilterFields]);
   const handleFieldsChange = (fields) => {
@@ -60877,8 +63402,8 @@ function inferHeatmapBlockIdByTheme(items) {
 function resolveHeatmapCreateBlockId(params) {
   const { themePath, item, sourceBlockId, heatmapSourceBlockId, inferredBlockIdByTheme, normalizeBlockId } = params;
   const rowBlock = normalizeBlockId(sourceBlockId);
-  const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
-  return rowBlock || normalizeBlockId(heatmapSourceBlockId) || normalizeBlockId(itemBlock) || normalizeBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeBlockId(inferredBlockIdByTheme.get("__default__")) || "";
+  const itemBlock2 = item?.coreBlock || item?.templateId || item?.categoryKey;
+  return rowBlock || normalizeBlockId(heatmapSourceBlockId) || normalizeBlockId(itemBlock2) || normalizeBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeBlockId(inferredBlockIdByTheme.get("__default__")) || "";
 }
 function buildDayThemeGroups(params) {
   const { themesToTrack, dataByThemeAndDate } = params;
@@ -62208,8 +64733,8 @@ function getGoalProgressTitle(card) {
   return card.title || card.goalPath || "未命名目标";
 }
 function getProgressDisplayLevel(level) {
-  const normalized = Math.max(1, Math.floor(Number(level) || 1));
-  return Math.min(10, normalized);
+  const normalized2 = Math.max(1, Math.floor(Number(level) || 1));
+  return Math.min(10, normalized2);
 }
 function getProgressLevelMeta(level) {
   return PROGRESS_LEVEL_META[getProgressDisplayLevel(level) - 1] || PROGRESS_LEVEL_META[0];
@@ -62236,14 +64761,14 @@ function getVisibleProgressThemeBreakdown(rows) {
 function buildProgressBlockCountRows(counts) {
   return EXPANDED_BLOCK_ORDER.map((key) => ({ key, label: PROGRESS_BLOCK_LABELS[key] || key, count: Number(counts?.[key] || 0) })).filter((row) => row.count > 0);
 }
-function ExperienceBar({ ratio, tone = "goal", compact = false }) {
-  const style2 = { "--think-progress-ratio": progressBarWidth(ratio) };
+function ExperienceBar({ ratio: ratio2, tone = "goal", compact = false }) {
+  const style2 = { "--think-progress-ratio": progressBarWidth(ratio2) };
   const classes = [
     "think-progress-bar",
     `think-progress-bar--${tone}`,
     compact ? "think-progress-bar--compact" : ""
   ].filter(Boolean).join(" ");
-  return /* @__PURE__ */ u$1("div", { class: classes, "aria-label": `进度 ${progressBarWidth(ratio)}`, children: /* @__PURE__ */ u$1("div", { class: "think-progress-bar__fill", style: style2 }) });
+  return /* @__PURE__ */ u$1("div", { class: classes, "aria-label": `进度 ${progressBarWidth(ratio2)}`, children: /* @__PURE__ */ u$1("div", { class: "think-progress-bar__fill", style: style2 }) });
 }
 function SmallSkillRow({ row }) {
   return /* @__PURE__ */ u$1("div", { class: "think-progress-skill", title: row.key, children: [
@@ -62332,67 +64857,401 @@ function ProgressView({ progressModel, onOpenRecord }) {
     card.key
   )) });
 }
-function getTaskExecutionChipToneClass(recurrenceLabel) {
-  const recurrence = String(recurrenceLabel || "").trim().toLowerCase();
-  if (!recurrence) return "task-execution-chip--tone-0";
-  if (recurrence.includes("day")) return "task-execution-chip--tone-1";
-  if (recurrence.includes("week")) return "task-execution-chip--tone-2";
-  if (recurrence.includes("month")) return "task-execution-chip--tone-3";
-  if (recurrence.includes("year")) return "task-execution-chip--tone-4";
-  return "task-execution-chip--tone-0";
-}
-function buildTaskExecutionTaskMap(model) {
-  const map = /* @__PURE__ */ new Map();
-  for (const section of model?.sections || []) {
-    for (const group of section.groups || []) {
-      for (const task of group.tasks || []) map.set(task.key, task);
+function EnergyDot({ visual, selected = false, title, className = "", style: style2, onClick, cell = false }) {
+  const label = title || (visual.capture === "retrospective" ? "补录精力点" : "实时精力点");
+  const interactive = Boolean(onClick);
+  const activate = () => onClick?.();
+  return /* @__PURE__ */ u$1(
+    "svg",
+    {
+      viewBox: "0 0 100 100",
+      role: interactive ? "button" : "img",
+      tabIndex: interactive ? 0 : void 0,
+      "aria-label": label,
+      class: `think-energy-dot ${cell ? "is-cell" : "is-plot"} is-${visual.capture} is-band-${visual.band} ${selected ? "is-selected" : ""} ${className}`.trim(),
+      style: style2,
+      onClick: activate,
+      onKeyDown: (event) => {
+        if (!interactive) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activate();
+        }
+      },
+      children: [
+        /* @__PURE__ */ u$1("title", { children: label }),
+        /* @__PURE__ */ u$1("circle", { class: "think-energy-dot__selection", cx: "50", cy: "50", r: "47" }),
+        /* @__PURE__ */ u$1("circle", { class: "think-energy-dot__shape", cx: "50", cy: "50", r: "41" })
+      ]
     }
+  );
+}
+const TIMELINE_SIZES = {
+  1: 10,
+  2: 16,
+  3: 23,
+  4: 31,
+  5: 40
+};
+const CALENDAR_SIZES = {
+  1: 7,
+  2: 11,
+  3: 15,
+  4: 20,
+  5: 27
+};
+function energyScoreBand(score) {
+  const value = Math.max(0, Math.min(100, Number(score) || 0));
+  if (value < 30) return 1;
+  if (value < 50) return 2;
+  if (value < 70) return 3;
+  if (value < 90) return 4;
+  return 5;
+}
+function buildEnergyDotVisual(args) {
+  const score = Math.max(0, Math.min(100, Number(args.score) || 0));
+  const band = energyScoreBand(score);
+  const sizes = args.density === "calendar" ? CALENDAR_SIZES : TIMELINE_SIZES;
+  return {
+    score,
+    band,
+    sizePx: sizes[band],
+    capture: args.capture
+  };
+}
+function energyDotStyle(visual, extra = {}) {
+  return {
+    "--think-energy-dot-size": `${visual.sizePx}px`,
+    ...extra
+  };
+}
+function monthKey(date2) {
+  return date2.slice(0, 7);
+}
+function monthLabel(key) {
+  return `${Number(key.slice(5, 7))}月`;
+}
+function mondayIndex(date2) {
+  const parsed = /* @__PURE__ */ new Date(`${date2}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return 0;
+  return (parsed.getDay() + 6) % 7;
+}
+function dayCaptureMode(day) {
+  return day.samples.length > 0 && day.samples.every((sample) => sample.captureMode === "retrospective") ? "retrospective" : "realtime";
+}
+function dayCaptureLabel(day) {
+  const retrospective = day.samples.filter((sample) => sample.captureMode === "retrospective").length;
+  if (retrospective === day.samples.length) return "仅补录";
+  if (retrospective > 0) return `含 ${retrospective} 次补录`;
+  return "实时";
+}
+function EnergyCalendarMap({ period, selectedKey, onSelect }) {
+  const months = /* @__PURE__ */ new Map();
+  for (const day of period.days) {
+    const key = monthKey(day.date);
+    const rows = months.get(key) || [];
+    rows.push(day);
+    months.set(key, rows);
   }
-  return map;
+  return /* @__PURE__ */ u$1("section", { class: "think-energy-period-map think-energy-daily-dots", "aria-label": `${period.currentView}每日精力`, children: [
+    /* @__PURE__ */ u$1("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u$1("span", { children: [
+      period.label,
+      " · 一天一个点"
+    ] }) }),
+    /* @__PURE__ */ u$1("div", { class: `think-energy-daily-dots__months is-${period.currentView === "年" ? "year" : "quarter"}`, children: [...months.entries()].map(([key, days]) => {
+      const blanks = days.length ? mondayIndex(days[0].date) : 0;
+      return /* @__PURE__ */ u$1("div", { class: "think-energy-daily-dots__month", children: [
+        /* @__PURE__ */ u$1("strong", { children: monthLabel(key) }),
+        /* @__PURE__ */ u$1("div", { class: "think-energy-daily-dots__weekdays", children: [
+          /* @__PURE__ */ u$1("span", { children: "一" }),
+          /* @__PURE__ */ u$1("span", { children: "二" }),
+          /* @__PURE__ */ u$1("span", { children: "三" }),
+          /* @__PURE__ */ u$1("span", { children: "四" }),
+          /* @__PURE__ */ u$1("span", { children: "五" }),
+          /* @__PURE__ */ u$1("span", { children: "六" }),
+          /* @__PURE__ */ u$1("span", { children: "日" })
+        ] }),
+        /* @__PURE__ */ u$1("div", { class: "think-energy-daily-dots__grid", children: [
+          Array.from({ length: blanks }).map((_2, index) => /* @__PURE__ */ u$1("i", {}, `blank-${index}`)),
+          days.map((day) => {
+            const score = day.dailyScore;
+            const keyValue = `day:${day.date}`;
+            if (score == null) return /* @__PURE__ */ u$1("div", { class: "think-energy-daily-dot-cell is-missing" }, day.date);
+            const visual = buildEnergyDotVisual({ score, capture: dayCaptureMode(day), density: "calendar" });
+            return /* @__PURE__ */ u$1("div", { class: "think-energy-daily-dot-cell", children: /* @__PURE__ */ u$1(
+              EnergyDot,
+              {
+                visual,
+                cell: true,
+                selected: selectedKey === keyValue,
+                className: "think-energy-daily-dot",
+                style: energyDotStyle(visual),
+                title: `${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}`,
+                onClick: () => onSelect?.({ kind: "day", day })
+              }
+            ) }, day.date);
+          })
+        ] })
+      ] }, key);
+    }) }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-period-map__hint", children: "实心＝当天含实时记录 · 空心＝当天仅补录 · 5 档尺寸＝日均精力 · Missing 留白" })
+  ] });
 }
-function getTaskExecutionSelectedTask(args) {
-  const { menu, taskMap } = args;
-  return menu ? taskMap.get(menu.taskKey) || null : null;
+const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+const TIME_TICKS = [0, 360, 720, 1080, 1440];
+function weekday(date2) {
+  const parsed = /* @__PURE__ */ new Date(`${date2}T12:00:00`);
+  return Number.isNaN(parsed.getTime()) ? "" : WEEKDAYS[parsed.getDay()];
 }
-function buildTaskExecutionCountLabel(currentView, count) {
-  return `${currentView}内完成 ${count} 次`;
+function shortDate(date2) {
+  const match5 = date2.match(/^\d{4}-(\d{2})-(\d{2})$/);
+  return match5 ? `${match5[1]}-${match5[2]}` : date2;
 }
-function getTaskExecutionRecordLabel(record) {
+function dayNumber(date2) {
+  return date2.slice(-2);
+}
+function axisStyle(name, percent) {
+  return { [name]: `${percent}%` };
+}
+function dayCountStyle(count) {
+  return { "--think-energy-day-count": String(count) };
+}
+function sampleTitle(sample) {
+  const parts = [`${sample.date} ${sample.time}`, `综合 ${sample.score}`];
+  if (sample.brainScore != null) parts.push(`脑力 ${sample.brainScore}`);
+  if (sample.physicalScore != null) parts.push(`体力 ${sample.physicalScore}`);
+  parts.push(sample.captureMode === "retrospective" ? "补录" : "实时");
+  return parts.join(" · ");
+}
+function sampleVisual(sample) {
+  return buildEnergyDotVisual({
+    score: sample.score,
+    capture: sample.captureMode,
+    density: "timeline"
+  });
+}
+function EnergyDayMap({ period, selectedKey, onSelect }) {
+  const day = period.days[0];
+  return /* @__PURE__ */ u$1("section", { class: "think-energy-period-map think-energy-day-map", "aria-label": "日精力地图", children: [
+    /* @__PURE__ */ u$1("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u$1("span", { children: period.label }) }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-day-map__track", children: [
+      TIME_TICKS.map((tick) => /* @__PURE__ */ u$1("span", { class: "think-energy-day-map__guide", style: axisStyle("--think-energy-x", tick / 1440 * 100), children: [
+        /* @__PURE__ */ u$1("i", {}),
+        /* @__PURE__ */ u$1("b", { children: [
+          String(Math.floor(tick / 60)).padStart(2, "0"),
+          ":00"
+        ] })
+      ] }, tick)),
+      day?.samples.map((sample) => {
+        const visual = sampleVisual(sample);
+        return /* @__PURE__ */ u$1(
+          EnergyDot,
+          {
+            visual,
+            selected: selectedKey === sample.id,
+            className: "think-energy-map-dot",
+            style: energyDotStyle(visual, { "--think-energy-x": `${sample.minuteOfDay / 1440 * 100}%` }),
+            title: sampleTitle(sample),
+            onClick: () => onSelect?.({ kind: "sample", sample })
+          },
+          sample.id
+        );
+      }),
+      !day?.sampled && /* @__PURE__ */ u$1("span", { class: "think-energy-day-map__empty", children: "当天未记录" })
+    ] }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-period-map__hint", children: "实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低" })
+  ] });
+}
+function EnergyDateTimeMap({ period, selectedKey, onSelect }) {
+  const isMonth = period.currentView === "月";
+  return /* @__PURE__ */ u$1("section", { class: "think-energy-period-map think-energy-date-map", "aria-label": `${period.currentView}精力地图`, children: [
+    /* @__PURE__ */ u$1("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u$1("span", { children: [
+      period.label,
+      " · ",
+      period.sampledDays,
+      "/",
+      period.days.length,
+      " 天有记录"
+    ] }) }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-date-map__scroll", children: /* @__PURE__ */ u$1("div", { class: `think-energy-date-map__chart ${isMonth ? "is-month" : "is-week"}`, children: [
+      /* @__PURE__ */ u$1("div", { class: "think-energy-date-map__axis", children: [
+        /* @__PURE__ */ u$1("div", { class: "think-energy-date-map__axis-head" }),
+        /* @__PURE__ */ u$1("div", { class: "think-energy-date-map__axis-track", children: TIME_TICKS.map((tick) => /* @__PURE__ */ u$1("span", { style: axisStyle("--think-energy-y", tick / 1440 * 100), children: [
+          String(Math.floor(tick / 60)).padStart(2, "0"),
+          ":00"
+        ] }, tick)) })
+      ] }),
+      /* @__PURE__ */ u$1("div", { class: "think-energy-date-map__days", style: dayCountStyle(period.days.length), children: period.days.map((day) => /* @__PURE__ */ u$1("div", { class: `think-energy-date-map__day ${day.sampled ? "" : "is-missing"}`, children: [
+        /* @__PURE__ */ u$1("div", { class: "think-energy-date-map__day-head", children: [
+          !isMonth && /* @__PURE__ */ u$1("strong", { children: weekday(day.date) }),
+          /* @__PURE__ */ u$1("span", { children: isMonth ? dayNumber(day.date) : shortDate(day.date) })
+        ] }),
+        /* @__PURE__ */ u$1("div", { class: "think-energy-date-map__lane", children: [
+          TIME_TICKS.map((tick) => /* @__PURE__ */ u$1("i", { class: "think-energy-date-map__guide", style: axisStyle("--think-energy-y", tick / 1440 * 100) }, tick)),
+          day.samples.map((sample) => {
+            const visual = sampleVisual(sample);
+            return /* @__PURE__ */ u$1(
+              EnergyDot,
+              {
+                visual,
+                selected: selectedKey === sample.id,
+                className: "think-energy-map-dot",
+                style: energyDotStyle(visual, { "--think-energy-y": `${sample.minuteOfDay / 1440 * 100}%` }),
+                title: sampleTitle(sample),
+                onClick: () => onSelect?.({ kind: "sample", sample })
+              },
+              sample.id
+            );
+          })
+        ] })
+      ] }, day.date)) })
+    ] }) }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-period-map__hint", children: "实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低 · Missing 留白" })
+  ] });
+}
+function EnergyPeriodMap(props) {
+  const { period } = props;
+  if (!period) return /* @__PURE__ */ u$1("div", { class: "think-energy-period-map think-energy-period-map--empty", children: "本周期没有精力记录。" });
+  if (period.mode === "day-horizontal") return /* @__PURE__ */ u$1(EnergyDayMap, { ...props, period });
+  if (period.mode === "date-time") return /* @__PURE__ */ u$1(EnergyDateTimeMap, { ...props, period });
+  return /* @__PURE__ */ u$1(EnergyCalendarMap, { ...props, period });
+}
+function EnergyPeriodReview({ periodLabel: periodLabel2, lines }) {
+  return /* @__PURE__ */ u$1("aside", { class: "think-energy-review", "aria-label": "本周期精力复盘", children: [
+    /* @__PURE__ */ u$1("div", { class: "think-energy-review__head", children: [
+      /* @__PURE__ */ u$1("strong", { children: "本周期" }),
+      /* @__PURE__ */ u$1("span", { children: periodLabel2 })
+    ] }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-review__list", children: lines.map((line2) => /* @__PURE__ */ u$1("div", { class: "think-energy-review__row", children: [
+      /* @__PURE__ */ u$1("span", { children: line2.label }),
+      /* @__PURE__ */ u$1("p", { children: line2.text })
+    ] }, `${line2.key}-${line2.text}`)) })
+  ] });
+}
+function barStyle(value) {
+  return { "--think-energy-detail-value": `${Math.max(0, Math.min(100, value ?? 0))}%` };
+}
+function signalsText(selection) {
+  const signals = selection.sample.context?.dailySignals || [];
+  return signals.map((signal) => `${signal.label}${signal.value != null ? ` ${signal.value}` : ""}`).join(" · ");
+}
+function impactText(selection, management) {
+  const activity = selection.sample.context?.activity;
+  if (!activity) return null;
+  const label = classifyEnergyActivity(activity.item);
+  const candidate = [...management?.recoveryCandidates || [], ...management?.cautionCandidates || []].find((row) => row.label === label);
+  if (!candidate) return null;
+  const delta = Math.round(candidate.meanDelta);
+  return `${label} · 预计 ${delta > 0 ? "+" : ""}${delta}`;
+}
+function SampleDetail({ selection, management, onBack, onOpenRecord }) {
+  const point = selection.sample;
+  const activity = point.context?.activity;
+  const signals = signalsText(selection);
+  const impact = impactText(selection, management);
+  return /* @__PURE__ */ u$1("aside", { class: "think-energy-detail", "aria-label": "精力记录详情", children: [
+    /* @__PURE__ */ u$1("button", { type: "button", class: "think-energy-detail__back", onClick: onBack, children: "‹ 返回本周期" }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-detail__head", children: [
+      /* @__PURE__ */ u$1("div", { children: [
+        /* @__PURE__ */ u$1("strong", { children: point.date }),
+        /* @__PURE__ */ u$1("span", { children: point.time })
+      ] }),
+      /* @__PURE__ */ u$1("span", { class: `think-energy-detail__mode ${point.captureMode === "retrospective" ? "is-retrospective" : ""}`, children: point.captureMode === "retrospective" ? "补录" : "实时" })
+    ] }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-detail__total", children: [
+      /* @__PURE__ */ u$1("strong", { children: point.score }),
+      /* @__PURE__ */ u$1("span", { children: "综合" })
+    ] }),
+    (point.brainScore != null || point.physicalScore != null) && /* @__PURE__ */ u$1("div", { class: "think-energy-detail__bars", children: [
+      point.brainScore != null && /* @__PURE__ */ u$1("div", { title: `脑力 ${point.brainScore}`, children: [
+        /* @__PURE__ */ u$1("span", { children: "脑力" }),
+        /* @__PURE__ */ u$1("i", { style: barStyle(point.brainScore), children: /* @__PURE__ */ u$1("b", {}) })
+      ] }),
+      point.physicalScore != null && /* @__PURE__ */ u$1("div", { title: `体力 ${point.physicalScore}`, children: [
+        /* @__PURE__ */ u$1("span", { children: "体力" }),
+        /* @__PURE__ */ u$1("i", { style: barStyle(point.physicalScore), children: /* @__PURE__ */ u$1("b", {}) })
+      ] })
+    ] }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-detail__section", children: [
+      /* @__PURE__ */ u$1("strong", { children: "当时" }),
+      activity ? /* @__PURE__ */ u$1("p", { children: [
+        "前后活动　",
+        activity.title,
+        activity.durationMinutes ? ` · ${activity.durationMinutes}min` : ""
+      ] }) : /* @__PURE__ */ u$1("p", { children: "附近没有可靠活动" }),
+      signals && /* @__PURE__ */ u$1("p", { children: [
+        "当天　　　",
+        signals
+      ] })
+    ] }),
+    impact && /* @__PURE__ */ u$1("div", { class: "think-energy-detail__impact", children: [
+      /* @__PURE__ */ u$1("span", { children: "活动影响" }),
+      /* @__PURE__ */ u$1("strong", { children: impact })
+    ] }),
+    onOpenRecord && /* @__PURE__ */ u$1("button", { type: "button", class: "think-energy-detail__open", onClick: () => onOpenRecord(point.item), children: "打开原记录 →" })
+  ] });
+}
+function DayDetail({ selection, onBack, onOpenRecord }) {
+  const { day } = selection;
+  const latest2 = day.samples[day.samples.length - 1];
+  return /* @__PURE__ */ u$1("aside", { class: "think-energy-detail", "aria-label": "每日精力详情", children: [
+    /* @__PURE__ */ u$1("button", { type: "button", class: "think-energy-detail__back", onClick: onBack, children: "‹ 返回本周期" }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-detail__head", children: /* @__PURE__ */ u$1("div", { children: [
+      /* @__PURE__ */ u$1("strong", { children: day.date }),
+      /* @__PURE__ */ u$1("span", { children: [
+        day.samples.length,
+        " 次记录"
+      ] })
+    ] }) }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-detail__total", children: [
+      /* @__PURE__ */ u$1("strong", { children: day.dailyScore ?? "—" }),
+      /* @__PURE__ */ u$1("span", { children: "当日平均" })
+    ] }),
+    (day.dailyBrainScore != null || day.dailyPhysicalScore != null) && /* @__PURE__ */ u$1("div", { class: "think-energy-detail__bars", children: [
+      day.dailyBrainScore != null && /* @__PURE__ */ u$1("div", { title: `脑力日均 ${day.dailyBrainScore}`, children: [
+        /* @__PURE__ */ u$1("span", { children: "脑力" }),
+        /* @__PURE__ */ u$1("i", { style: barStyle(day.dailyBrainScore), children: /* @__PURE__ */ u$1("b", {}) })
+      ] }),
+      day.dailyPhysicalScore != null && /* @__PURE__ */ u$1("div", { title: `体力日均 ${day.dailyPhysicalScore}`, children: [
+        /* @__PURE__ */ u$1("span", { children: "体力" }),
+        /* @__PURE__ */ u$1("i", { style: barStyle(day.dailyPhysicalScore), children: /* @__PURE__ */ u$1("b", {}) })
+      ] })
+    ] }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-detail__section", children: [
+      /* @__PURE__ */ u$1("strong", { children: "当天记录" }),
+      day.samples.map((sample) => /* @__PURE__ */ u$1("p", { children: [
+        sample.time,
+        "　综合 ",
+        sample.score
+      ] }, sample.id))
+    ] }),
+    latest2 && onOpenRecord && /* @__PURE__ */ u$1("button", { type: "button", class: "think-energy-detail__open", onClick: () => onOpenRecord(latest2.item), children: "打开最后一条记录 →" })
+  ] });
+}
+function EnergySampleDetail(props) {
+  if (!props.selection) return null;
+  if (props.selection.kind === "day") return /* @__PURE__ */ u$1(DayDetail, { ...props, selection: props.selection });
+  return /* @__PURE__ */ u$1(SampleDetail, { ...props, selection: props.selection });
+}
+function recordLabel(record) {
   return record.timeLabel || record.doneDate || "查看记录";
 }
-function TaskExecutionChipGrid({ sections: sections2, onMarkDone, onOpenMenu }) {
-  return /* @__PURE__ */ u$1(S, { children: sections2.map((section) => /* @__PURE__ */ u$1("section", { class: "task-execution-section", children: [
-    /* @__PURE__ */ u$1("div", { class: "task-execution-section-header", children: /* @__PURE__ */ u$1("h2", { class: "task-execution-section-title", children: section.title }) }),
-    /* @__PURE__ */ u$1("div", { class: "task-execution-section-body", children: (section.groups || []).map((group) => /* @__PURE__ */ u$1("div", { class: "task-execution-subsection", children: /* @__PURE__ */ u$1("div", { class: "task-execution-subsection-body", children: [
-      /* @__PURE__ */ u$1("div", { class: "task-execution-subsection-title", children: group.title }),
-      /* @__PURE__ */ u$1("div", { class: "task-execution-chip-grid", children: (group.tasks || []).map((task) => /* @__PURE__ */ u$1(
-        "button",
-        {
-          type: "button",
-          class: `task-execution-chip ${getTaskExecutionChipToneClass(task.recurrenceLabel)}`,
-          title: task.recurrenceLabel || task.title,
-          onClick: () => onMarkDone?.(task.itemId),
-          onContextMenu: (event) => onOpenMenu(event, task.key),
-          children: [
-            /* @__PURE__ */ u$1("span", { class: "task-execution-chip-label", children: task.title }),
-            task.count > 0 && /* @__PURE__ */ u$1("span", { class: "task-execution-chip-count", children: [
-              "·",
-              task.count
-            ] })
-          ]
-        },
-        task.key
-      )) })
-    ] }) }, group.key)) })
-  ] }, section.key)) });
-}
-function TaskExecutionContextMenu(props) {
-  const { menu, selectedTask, currentView, menuRef, onOpenRecord, onOpenRecordOrigin, onClose } = props;
-  return /* @__PURE__ */ u$1("div", { class: "task-execution-context-menu", ref: menuRef, style: { left: `${menu.x}px`, top: `${menu.y}px` }, children: [
-    /* @__PURE__ */ u$1("div", { class: "task-execution-context-title", children: selectedTask.title }),
-    /* @__PURE__ */ u$1("div", { class: "task-execution-context-meta", children: buildTaskExecutionCountLabel(currentView, selectedTask.count) }),
-    /* @__PURE__ */ u$1("div", { class: "task-execution-context-rule", children: selectedTask.recurrenceLabel }),
-    /* @__PURE__ */ u$1("div", { class: "task-execution-context-list", children: selectedTask.records.length > 0 ? selectedTask.records.map((record) => {
+function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecordOrigin, onClose }) {
+  const editTask = () => {
+    void onOpenRecord?.(task.item);
+    onClose();
+  };
+  return /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__menu", ref: menuRef, style: `left:${menu.x}px;top:${menu.y}px;`, children: [
+    /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__menu-title", children: task.title }),
+    /* @__PURE__ */ u$1("button", { type: "button", class: "think-energy-task-list__menu-action", onClick: editTask, children: "编辑任务" }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__menu-meta", children: [
+      currentView,
+      "内完成 ",
+      task.count,
+      " 次"
+    ] }),
+    task.recurrenceLabel && task.recurrenceLabel !== "none" && /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__menu-meta", children: task.recurrenceLabel }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__menu-records", children: task.records.length > 0 ? task.records.map((record) => {
       const gesture = createRecordGestureHandlers({
         item: record.item,
         onOpenOrigin: onOpenRecordOrigin,
@@ -62404,7 +65263,7 @@ function TaskExecutionContextMenu(props) {
       return /* @__PURE__ */ u$1(
         "a",
         {
-          class: "task-execution-context-link",
+          class: "think-energy-task-list__menu-record",
           href: "#",
           onClick: (event) => {
             gesture.onClick(event);
@@ -62414,25 +65273,30 @@ function TaskExecutionContextMenu(props) {
             gesture.onDblClick(event);
             onClose();
           },
-          onTouchEnd: (event) => {
-            gesture.onTouchEnd(event);
-          },
-          children: getTaskExecutionRecordLabel(record)
+          onTouchEnd: (event) => gesture.onTouchEnd(event),
+          children: recordLabel(record)
         },
         record.id
       );
-    }) : /* @__PURE__ */ u$1("div", { class: "task-execution-context-empty", children: "暂无记录" }) })
+    }) : /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__menu-empty", children: "暂无历史记录" }) })
   ] });
 }
-function TaskExecutionView({ currentView, taskExecutionModel, onMarkDone, onOpenRecord, onOpenRecordOrigin }) {
+function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, onOpenRecordOrigin }) {
   const [menu, setMenu] = d(null);
   const menuRef = A$1(null);
-  const taskMap = T$1(() => buildTaskExecutionTaskMap(taskExecutionModel), [taskExecutionModel]);
-  const selectedTask = T$1(() => getTaskExecutionSelectedTask({ menu, taskMap }), [menu, taskMap]);
+  const taskMap = T$1(() => {
+    const map = /* @__PURE__ */ new Map();
+    for (const goal of model.goals) {
+      for (const row of goal.rows) {
+        for (const task of row.tasks) map.set(task.itemId, task);
+      }
+    }
+    return map;
+  }, [model]);
+  const selectedTask = menu ? taskMap.get(menu.taskId) || null : null;
   h(() => {
     const onDown = (event) => {
-      if (!menuRef.current) return;
-      if (menuRef.current.contains(event.target)) return;
+      if (!menuRef.current || menuRef.current.contains(event.target)) return;
       setMenu(null);
     };
     const onEsc = (event) => {
@@ -62445,24 +65309,44 @@ function TaskExecutionView({ currentView, taskExecutionModel, onMarkDone, onOpen
       window.removeEventListener("keydown", onEsc);
     };
   }, []);
-  const openMenu = (event, taskKey) => {
-    event.preventDefault();
-    setMenu({ x: event.clientX, y: event.clientY, taskKey });
-  };
-  return /* @__PURE__ */ u$1("div", { class: "task-execution-view", children: [
-    /* @__PURE__ */ u$1(
-      TaskExecutionChipGrid,
-      {
-        sections: taskExecutionModel?.sections || [],
-        onMarkDone,
-        onOpenMenu: openMenu
-      }
-    ),
+  return /* @__PURE__ */ u$1("section", { class: "think-energy-task-list", "aria-label": "任务", children: [
+    /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__title", children: "任务" }),
+    /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__goals", children: model.goals.length > 0 ? model.goals.map((goal) => /* @__PURE__ */ u$1("section", { class: "think-energy-task-list__goal-group", children: [
+      /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__goal-title", children: goal.label }),
+      /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__rows", children: goal.rows.map((row) => /* @__PURE__ */ u$1("div", { class: `think-energy-task-list__row think-energy-task-list__row--${row.key}`, children: [
+        /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__row-label", children: [
+          /* @__PURE__ */ u$1("span", { "aria-hidden": "true", children: row.emoji }),
+          /* @__PURE__ */ u$1("span", { children: row.label })
+        ] }),
+        /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__items", children: row.tasks.map((task) => /* @__PURE__ */ u$1(
+          "button",
+          {
+            type: "button",
+            class: `think-energy-task-list__item think-energy-task-list__item--${task.cadence}`,
+            title: task.title,
+            onClick: () => onStartTask?.(task),
+            onContextMenu: (event) => {
+              event.preventDefault();
+              setMenu({ x: event.clientX, y: event.clientY, taskId: task.itemId });
+            },
+            children: [
+              /* @__PURE__ */ u$1("span", { class: "think-energy-task-list__task", children: task.title }),
+              task.recurring && task.count > 0 && /* @__PURE__ */ u$1("span", { class: "think-energy-task-list__count", children: [
+                "·",
+                task.count
+              ] }),
+              task.energyMatched && /* @__PURE__ */ u$1("span", { class: "think-energy-task-list__energy-match", "aria-label": "当前精力更匹配", title: "当前精力更匹配", children: "★" })
+            ]
+          },
+          task.itemId
+        )) })
+      ] }, row.key)) })
+    ] }, goal.key)) : /* @__PURE__ */ u$1("div", { class: "think-energy-task-list__empty-state", children: "当前没有未完成任务。" }) }),
     menu && selectedTask && /* @__PURE__ */ u$1(
-      TaskExecutionContextMenu,
+      TaskMenu,
       {
         menu,
-        selectedTask,
+        task: selectedTask,
         currentView,
         menuRef,
         onOpenRecord,
@@ -62471,6 +65355,64 @@ function TaskExecutionView({ currentView, taskExecutionModel, onMarkDone, onOpen
       }
     )
   ] });
+}
+function selectionKey(selection) {
+  if (!selection) return null;
+  return selection.kind === "sample" ? selection.sample.id : `day:${selection.day.date}`;
+}
+function GoalEnergyPanel({ panel, model, onOpenRecord }) {
+  const [selection, setSelection] = d(null);
+  return /* @__PURE__ */ u$1("section", { class: "think-energy-view__goal", children: /* @__PURE__ */ u$1("div", { class: "think-energy-view__primary", children: [
+    model.config.showTimeline ? /* @__PURE__ */ u$1(EnergyPeriodMap, { period: panel.period, selectedKey: selectionKey(selection), onSelect: setSelection }) : /* @__PURE__ */ u$1("div", { class: "think-energy-view__timeline-off", children: "精力地图已关闭。" }),
+    selection ? /* @__PURE__ */ u$1(
+      EnergySampleDetail,
+      {
+        selection,
+        management: model.config.showManagement ? panel.management : null,
+        onBack: () => setSelection(null),
+        onOpenRecord
+      }
+    ) : /* @__PURE__ */ u$1(EnergyPeriodReview, { periodLabel: model.periodLabel, lines: panel.reviewLines })
+  ] }) });
+}
+function EmptyEnergyPanel() {
+  return /* @__PURE__ */ u$1("section", { class: "think-energy-view__goal think-energy-view__goal--empty", children: /* @__PURE__ */ u$1("div", { class: "think-energy-view think-energy-view--empty", children: [
+    /* @__PURE__ */ u$1("strong", { children: "还没有可展示的精力记录" }),
+    /* @__PURE__ */ u$1("span", { children: "任务仍可直接从下方开始；精力记录可继续使用现有快捷入口。" })
+  ] }) });
+}
+function EnergyView({ energyModel, onOpenRecord, onOpenRecordOrigin, timerService }) {
+  if (!energyModel) return /* @__PURE__ */ u$1("div", { class: "think-energy-view think-energy-view--empty", children: "精力视图尚未初始化。" });
+  const startTask = async (task) => {
+    const baseline = energyModel.taskList.latestEnergy;
+    if (baseline && timerService?.startEnergyTask) {
+      await timerService.startEnergyTask(task.itemId, {
+        baselineScore: baseline.score,
+        baselineBrainScore: baseline.brainScore,
+        baselinePhysicalScore: baseline.physicalScore,
+        baselineDate: baseline.date,
+        baselineTime: baseline.time,
+        suggestedDurationMinutes: task.suggestedDurationMinutes
+      });
+      return;
+    }
+    await timerService?.startOrResume(task.itemId);
+  };
+  const [firstPanel, ...otherPanels] = energyModel.goalPanels;
+  return /* @__PURE__ */ u$1("div", { class: "think-energy-view", children: /* @__PURE__ */ u$1("div", { class: "think-energy-view__goals", children: [
+    firstPanel ? /* @__PURE__ */ u$1(GoalEnergyPanel, { panel: firstPanel, model: energyModel, onOpenRecord }) : /* @__PURE__ */ u$1(EmptyEnergyPanel, {}),
+    /* @__PURE__ */ u$1(
+      EnergyTaskList,
+      {
+        model: energyModel.taskList,
+        currentView: energyModel.currentView,
+        onStartTask: timerService ? startTask : void 0,
+        onOpenRecord,
+        onOpenRecordOrigin
+      }
+    ),
+    otherPanels.map((panel) => /* @__PURE__ */ u$1(GoalEnergyPanel, { panel, model: energyModel, onOpenRecord }, panel.key))
+  ] }) });
 }
 function isTableViewConfigured(rowField, colField) {
   return Boolean(rowField && colField);
@@ -62654,14 +65596,14 @@ function getExcelEditorOptions(cell) {
   if (!Array.isArray(options) || !options.length) {
     return cell.editorValue ? [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }] : [{ value: "", label: "空" }];
   }
-  const normalized = options.map((option) => ({
+  const normalized2 = options.map((option) => ({
     value: String(option?.value ?? ""),
     label: String(option?.label ?? option?.value ?? "")
   })).filter((option) => option.value || option.label);
-  if (cell.editorValue && !normalized.some((option) => option.value === cell.editorValue)) {
-    return [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }, ...normalized];
+  if (cell.editorValue && !normalized2.some((option) => option.value === cell.editorValue)) {
+    return [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }, ...normalized2];
   }
-  return normalized;
+  return normalized2;
 }
 function validateExcelEditorValue(cell, editorValue) {
   const trimmed = editorValue.trim();
@@ -63114,8 +66056,8 @@ function normalizeExcelClipboardText(text2) {
   return String(text2 || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
 function parseExcelClipboardMatrix(text2) {
-  const normalized = normalizeExcelClipboardText(text2);
-  const withoutFinalNewline = normalized.endsWith("\n") ? normalized.slice(0, -1) : normalized;
+  const normalized2 = normalizeExcelClipboardText(text2);
+  const withoutFinalNewline = normalized2.endsWith("\n") ? normalized2.slice(0, -1) : normalized2;
   if (!withoutFinalNewline) return [[""]];
   return withoutFinalNewline.split("\n").map((row) => row.split("	"));
 }
@@ -64918,9 +67860,9 @@ function buildPresetLookups(goalSettings, goals) {
   const goalPathById = /* @__PURE__ */ new Map();
   const goalLabelById = /* @__PURE__ */ new Map();
   for (const goal of goals || []) {
-    const normalized = splitGoalPath(goal.goalPath || goal.title || goal.id).goalPath || goal.goalPath || goal.title || goal.id;
-    goalPathById.set(goal.id, normalized);
-    goalLabelById.set(goal.id, goal.title || splitGoalPath(normalized).leafGoal || normalized);
+    const normalized2 = splitGoalPath(goal.goalPath || goal.title || goal.id).goalPath || goal.goalPath || goal.title || goal.id;
+    goalPathById.set(goal.id, normalized2);
+    goalLabelById.set(goal.id, goal.title || splitGoalPath(normalized2).leafGoal || normalized2);
   }
   const byTemplateId = /* @__PURE__ */ new Map();
   const byGoalBlockVariant = /* @__PURE__ */ new Map();
@@ -64934,14 +67876,14 @@ function buildPresetLookups(goalSettings, goals) {
     const variantId = firstText(template.variantId) || "default";
     const defaults = template.defaultValues || {};
     const goalPath = goalPathById.get(goalId) || firstText(defaults.goalPath) || firstText(defaults["目标"]) || goalId;
-    const goalLabel = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
+    const goalLabel2 = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
     const rawThemePath = firstText(defaults.themePath);
     const themePath = rawThemePath && !rawThemePath.includes("{{") ? rawThemePath : firstText(defaults["主题"]);
     const label = firstText(template.name) || themeLeaf(themePath) || variantId;
     const key = id || `${goalId}:${coreBlockId}:${variantId}`;
     const ratingOptions = extractRatingOptions(template);
     const presetSortOrder = Number.isFinite(Number(template.sortOrder)) ? Number(template.sortOrder) : presetOriginalIndex;
-    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
+    const meta = { key, id, goalId, goalPath, goalLabel: goalLabel2, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
     allPresets.push(meta);
     if (id) byTemplateId.set(id, meta);
     if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\0${coreBlockId}\0${variantId}`, meta);
@@ -64974,11 +67916,11 @@ function buildHeatmapViewModel(params) {
   const lookups = buildPresetLookups(goalSettings, goals);
   const goalOrder = createGoalOrderIndex(goals);
   function ensureGoalGroup(goalPath, label) {
-    const normalizedGoalPath = goalPath || UNASSIGNED_GOAL_KEY;
-    let goalGroup = goalMap.get(normalizedGoalPath);
+    const normalizedGoalPath2 = goalPath || UNASSIGNED_GOAL_KEY;
+    let goalGroup = goalMap.get(normalizedGoalPath2);
     if (!goalGroup) {
-      goalGroup = { goalPath: normalizedGoalPath, label: label || normalizedGoalPath, count: 0, entries: [] };
-      goalMap.set(normalizedGoalPath, goalGroup);
+      goalGroup = { goalPath: normalizedGoalPath2, label: label || normalizedGoalPath2, count: 0, entries: [] };
+      goalMap.set(normalizedGoalPath2, goalGroup);
     }
     return goalGroup;
   }
@@ -65049,8 +67991,8 @@ function buildHeatmapViewModel(params) {
     if (!preset && filterByTheme && themePath !== "__default__" && !trackedThemeSet.has(themePath)) continue;
     const explicitGoalPath = getItemGoalKey(item, goals);
     const goalPath = preset?.goalPath || (explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : UNASSIGNED_GOAL_KEY);
-    const goalLabel = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
-    const goalGroup = ensureGoalGroup(goalPath, goalLabel);
+    const goalLabel2 = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
+    const goalGroup = ensureGoalGroup(goalPath, goalLabel2);
     goalGroup.count += 1;
     const presetKey = preset?.key || `${goalPath}\0${themePath}\0${itemCoreBlock(item) || "habit"}`;
     const label = preset?.label || themeLeaf(themePath);
@@ -65294,7 +68236,8 @@ function buildProgressViewModel(args) {
   const levelStep = Math.max(1, Number(config2.levelStep) || 20);
   const cards = buckets.map((bucket) => {
     const goalItems = (items || []).filter((item) => getItemGoalKey(item, goals) === bucket.name);
-    const progression = computeProgression(goalItems, {
+    const progressItems = goalItems.filter((item) => !isEnergyItem(item));
+    const progression = computeProgression(progressItems, {
       basePoints: config2.basePoints,
       levelStep,
       includedCategories: config2.includedCategories,
@@ -65303,18 +68246,18 @@ function buildProgressViewModel(args) {
       topN: config2.topN
     });
     const blockCounts = {};
-    for (const item of goalItems) {
+    for (const item of progressItems) {
       const key = normalizeBlockKey(item);
       blockCounts[key] = (blockCounts[key] || 0) + 1;
     }
-    const sortedDates = goalItems.map(itemDateValue).filter(Boolean).sort();
+    const sortedDates = progressItems.map(itemDateValue).filter(Boolean).sort();
     const latestDate = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : null;
     return {
       key: bucket.name,
       title: bucket.alias || bucket.name,
       goalPath: bucket.goalPath || bucket.name,
       icon: bucket.icon || null,
-      itemCount: goalItems.length,
+      itemCount: progressItems.length,
       totalPoints: progression.totalPoints,
       level: progression.level,
       currentLevelPoints: progression.currentLevelPoints,
@@ -65326,7 +68269,7 @@ function buildProgressViewModel(args) {
       blockCounts,
       categoryBreakdown: progression.categoryBreakdown,
       themeBreakdown: progression.themeBreakdown,
-      recentRecords: buildProgressRecentRecords(goalItems)
+      recentRecords: buildProgressRecentRecords(progressItems)
     };
   });
   const topN = Math.max(0, Number(config2.topN) || 0);
@@ -65343,96 +68286,412 @@ function buildProgressViewModel(args) {
     result: null
   };
 }
-function getIdentityTitle(item) {
-  const raw = String(item.content || item.title || "").trim();
-  const cleaned = cleanTaskText(raw);
-  return cleaned || String(item.title || "").trim();
-}
-function buildAggregateKey(item) {
-  return [item.file?.path || "", getIdentityTitle(item), item.theme || "", String(item.recurrence || "").trim()].join("::");
-}
-function buildRenderKey(item) {
-  return String(item.id || buildAggregateKey(item));
-}
-function getThemeGroup(theme) {
-  const segments = parsePath(String(theme || "").trim());
+function buildGoalEnergyContext(item, goalItems) {
+  const context = resolveEnergyContext(item, goalItems);
+  if (!context) return null;
   return {
-    parent: segments[0]?.name || "未分类",
-    child: segments[1]?.name || "任务"
+    activity: context.primaryActivity ? {
+      id: context.primaryActivity.itemId,
+      title: context.primaryActivity.title,
+      relation: context.primaryActivity.relation,
+      confidence: context.primaryActivity.confidence,
+      gapMinutes: context.primaryActivity.gapMinutes,
+      durationMinutes: context.primaryActivity.durationMinutes,
+      item: context.primaryActivity.item
+    } : void 0,
+    dailySignals: context.dailySignals.map((signal) => ({
+      id: signal.itemId,
+      kind: signal.kind,
+      label: signal.label,
+      value: signal.value,
+      item: signal.item
+    }))
   };
 }
-function formatRecordTime(item) {
-  return String(item.endTime || item.startTime || item.doneDate || "").trim();
+function buildGoalEnergyEffects(items) {
+  const effects = buildEnergyEffects(items);
+  if (!effects) return null;
+  const mapRows = (rows) => rows.slice(0, 6).map((row) => ({
+    key: row.key,
+    label: row.label,
+    sampleCount: row.sampleCount,
+    meanDelta: row.meanDelta,
+    medianDelta: row.medianDelta,
+    meanBrainDelta: row.meanBrainDelta,
+    meanPhysicalDelta: row.meanPhysicalDelta,
+    meanDurationMinutes: row.meanDurationMinutes,
+    trend: row.trend,
+    evidence: row.evidence
+  }));
+  return {
+    eligibleActivityCount: effects.eligibleActivityCount,
+    pairedActivityCount: effects.pairedActivityCount,
+    highConfidencePairCount: effects.highConfidencePairCount,
+    mediumConfidencePairCount: effects.mediumConfidencePairCount,
+    excludedActivityCount: effects.excludedActivityCount,
+    byActivity: mapRows(effects.byActivity),
+    byTheme: mapRows(effects.byTheme),
+    byDuration: mapRows(effects.byDuration)
+  };
 }
-function hasRecurringRule(item) {
-  const value = String(item.recurrence || "").trim();
-  return !!value && value.toLowerCase() !== "none";
+function buildGoalEnergySummary(items, limit = 5) {
+  const ordered = items.reduce((rows, item) => {
+    const snapshot = readEnergyItemSnapshot(item);
+    if (!snapshot) return rows;
+    rows.push({
+      id: item.id,
+      score: snapshot.score,
+      quickLevel: snapshot.quickLevel,
+      brainScore: snapshot.brainScore,
+      physicalScore: snapshot.physicalScore,
+      scoreMode: snapshot.scoreMode,
+      date: snapshot.date || null,
+      time: snapshot.time || null,
+      item,
+      occurrenceKey: energySnapshotOccurrenceKey(snapshot)
+    });
+    return rows;
+  }, []).sort((left2, right2) => right2.occurrenceKey.localeCompare(left2.occurrenceKey));
+  if (ordered.length === 0) return null;
+  const recentSamples = ordered.slice(0, limit).map(({ occurrenceKey: _occurrenceKey, ...row }) => ({
+    ...row,
+    context: buildGoalEnergyContext(row.item, items)
+  }));
+  const latest2 = recentSamples[0];
+  return {
+    count: ordered.length,
+    latestScore: latest2.score,
+    latestQuickLevel: latest2.quickLevel,
+    latestBrainScore: latest2.brainScore,
+    latestPhysicalScore: latest2.physicalScore,
+    latestScoreMode: latest2.scoreMode,
+    latestDate: latest2.date || null,
+    latestTime: latest2.time || null,
+    recentSamples,
+    effects: buildGoalEnergyEffects(items)
+  };
 }
-function buildTaskExecutionViewModel(params) {
-  const { items, dateRange, viewInstance, keyword, layoutFilters = [] } = params;
-  const [start2, end2] = dateRange;
-  const startDay = dayjs(start2).startOf("day");
-  const endDay = dayjs(end2).endOf("day");
-  const onlyRecurring = viewInstance.viewConfig?.onlyRecurring !== false;
-  const filtered = applyViewBaseFilters({
-    items,
-    layoutFilters,
-    viewFilters: viewInstance.filters || [],
-    keyword
-  }).filter((item) => {
-    if (item.type !== "task") return false;
-    if (onlyRecurring && !hasRecurringRule(item)) return false;
-    return true;
-  });
-  const baseTasks = filtered.filter((item) => isTaskOpen(item) && (hasRecurringRule(item) || !onlyRecurring));
-  const completed = filtered.filter((item) => {
-    if (!isTaskCompleted(item)) return false;
-    if (!item.doneDate) return false;
+function text(value) {
+  return String(value ?? "").trim();
+}
+function taskTitle(item) {
+  const raw = text(item.editableText || item.content || item.title);
+  return cleanTaskText(raw) || text(item.title) || "未命名任务";
+}
+function normalizedGoalPath(item) {
+  return text(item.goalPath || item.goalPaths?.[0] || item.goalId);
+}
+function goalLabel(item) {
+  return normalizedGoalPath(item) || "未分目标";
+}
+function recurrenceText(item) {
+  return text(item.recurrence);
+}
+function aggregateKey(item) {
+  return [taskTitle(item).toLowerCase(), goalLabel(item).toLowerCase(), recurrenceText(item).toLowerCase()].join("::");
+}
+function recordTime(item) {
+  return text(item.endTime || item.startTime || item.doneDate);
+}
+function historyMap(items, today) {
+  const start2 = dayjs(today).subtract(365, "day").startOf("day");
+  const end2 = dayjs(today).endOf("day");
+  const map = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    if (item.type !== "task" || !isTaskCompleted(item) || !item.doneDate) continue;
     const done = dayjs(item.doneDate);
-    return done.isValid() && !done.isBefore(startDay) && !done.isAfter(endDay);
-  });
-  const recordMap = /* @__PURE__ */ new Map();
-  for (const item of completed) {
-    const aggregateKey = buildAggregateKey(item);
-    const list = recordMap.get(aggregateKey) || [];
-    list.push({ id: item.id, doneDate: item.doneDate, timeLabel: formatRecordTime(item), item });
-    recordMap.set(aggregateKey, list);
+    if (!done.isValid() || done.isBefore(start2) || done.isAfter(end2)) continue;
+    const key = aggregateKey(item);
+    const rows = map.get(key) || [];
+    rows.push({ id: item.id, doneDate: item.doneDate, timeLabel: recordTime(item), item });
+    map.set(key, rows);
   }
-  recordMap.forEach((list) => {
-    list.sort((a2, b2) => `${b2.doneDate || ""} ${b2.timeLabel}`.localeCompare(`${a2.doneDate || ""} ${a2.timeLabel}`, "zh-CN"));
+  for (const rows of map.values()) {
+    rows.sort((a2, b2) => `${b2.doneDate || ""} ${b2.timeLabel}`.localeCompare(`${a2.doneDate || ""} ${a2.timeLabel}`, "zh-CN"));
+  }
+  return map;
+}
+function emptyCadenceMap() {
+  return new Map(TASK_CADENCE_ORDER.map((key) => [key, []]));
+}
+function buildEnergyTaskListModel(args) {
+  const { items, historyItems, timers, management, goals = [], today } = args;
+  const openTasks = items.filter((item) => item.type === "task" && isTaskOpen(item));
+  const visibleItems = openTasks;
+  const visibleIds = new Set(visibleItems.map((item) => item.id));
+  const records = historyMap(items, today);
+  const candidateBuild = buildEnergyActionCandidateResult(items, {
+    today,
+    maximumCandidates: 1e3,
+    includeRecurringTasks: true,
+    includeFutureTasks: true
   });
-  const sectionMap = /* @__PURE__ */ new Map();
-  for (const item of baseTasks) {
-    const group = getThemeGroup(item.theme);
-    if (!sectionMap.has(group.parent)) sectionMap.set(group.parent, /* @__PURE__ */ new Map());
-    const childMap = sectionMap.get(group.parent);
-    if (!childMap.has(group.child)) childMap.set(group.child, []);
-    const aggregateKey = buildAggregateKey(item);
-    childMap.get(group.child).push({
-      key: buildRenderKey(item),
-      aggregateKey,
+  const taskCandidates = candidateBuild.candidates.filter((candidate) => candidate.source === "task" && visibleIds.has(candidate.id));
+  const learning = buildEnergyRecommendationLearning(historyItems, timers);
+  const learned = attachEnergyRecommendationLearning(taskCandidates, learning);
+  const enriched = attachEnergyRecommendationEvidence(learned, management);
+  let rankedIds = enriched.map((candidate) => candidate.id);
+  const actionById = /* @__PURE__ */ new Map();
+  if (management?.latest && enriched.length > 0) {
+    const ranked = buildEnergyActionRecommendations({
+      score: management.latest.score,
+      brainScore: management.latest.brainScore,
+      physicalScore: management.latest.physicalScore,
+      maximumRecommendations: Math.min(500, enriched.length),
+      actionPolicy: buildEnergyActionPolicyContext(items, management, today)
+    }, enriched);
+    rankedIds = ranked.recommendations.map((row) => row.candidate.id);
+    for (const row of ranked.recommendations) actionById.set(row.candidate.id, row);
+  }
+  const rank = new Map(rankedIds.map((id, index) => [id, index]));
+  const candidateById = new Map(enriched.map((candidate) => [candidate.id, candidate]));
+  const energyMatchedIds = /* @__PURE__ */ new Set();
+  if (management?.latest) {
+    const matchable = Array.from(actionById.values()).filter((row) => {
+      const candidate = row.candidate;
+      return !!candidate.brainLoad || !!candidate.physicalLoad || !!candidate.historicalEffect;
+    }).sort((left2, right2) => right2.fitScore - left2.fitScore).slice(0, 5);
+    for (const row of matchable) energyMatchedIds.add(row.candidate.id);
+  }
+  const goalBuckets = /* @__PURE__ */ new Map();
+  for (const item of visibleItems) {
+    const goalPath = normalizedGoalPath(item) || void 0;
+    const label = goalLabel(item);
+    const goalKey = goalPath || "__unassigned__";
+    const cadence = getTaskCadence(item);
+    const key = aggregateKey(item);
+    const history = records.get(key) || [];
+    const action = actionById.get(item.id);
+    const candidate = candidateById.get(item.id);
+    let bucket = goalBuckets.get(goalKey);
+    if (!bucket) {
+      bucket = { label, goalPath, rows: emptyCadenceMap() };
+      goalBuckets.set(goalKey, bucket);
+    }
+    bucket.rows.get(cadence).push({
+      key: item.id,
       itemId: item.id,
-      title: getIdentityTitle(item),
-      count: (recordMap.get(aggregateKey) || []).length,
-      recurrenceLabel: String(item.recurrence || "").trim(),
-      records: recordMap.get(aggregateKey) || [],
+      title: taskTitle(item),
+      goalLabel: label,
+      goalPath,
+      cadence,
+      recurring: cadence !== "routine",
+      recurrenceLabel: recurrenceText(item),
+      count: history.length,
+      records: history,
+      suggestedDurationMinutes: action?.suggestedDurationMinutes || candidate?.durationMinutes || 30,
+      energyFitScore: action?.fitScore,
+      energyMatched: energyMatchedIds.has(item.id),
       item
     });
   }
-  const sections2 = Array.from(sectionMap.entries()).map(([parent, childMap]) => ({
-    key: parent,
-    title: parent,
-    groups: Array.from(childMap.entries()).map(([child, tasks]) => ({
-      key: `${parent}/${child}`,
-      title: child,
-      tasks: tasks.sort((a2, b2) => a2.title.localeCompare(b2.title, "zh-CN"))
-    })).sort((a2, b2) => {
-      if (a2.title === "任务" && b2.title !== "任务") return -1;
-      if (b2.title === "任务" && a2.title !== "任务") return 1;
-      return a2.title.localeCompare(b2.title, "zh-CN");
-    })
-  })).sort((a2, b2) => a2.title.localeCompare(b2.title, "zh-CN"));
-  return { sections: sections2 };
+  for (const bucket of goalBuckets.values()) {
+    for (const tasks of bucket.rows.values()) {
+      tasks.sort((left2, right2) => {
+        const leftRank = rank.get(left2.itemId) ?? Number.MAX_SAFE_INTEGER;
+        const rightRank = rank.get(right2.itemId) ?? Number.MAX_SAFE_INTEGER;
+        return leftRank - rightRank || left2.title.localeCompare(right2.title, "zh-CN");
+      });
+    }
+  }
+  const goalOrder = createGoalOrderIndex(goals);
+  const goalModels = Array.from(goalBuckets.entries()).sort(([, left2], [, right2]) => goalOrder.compareGoalPaths(left2.goalPath || left2.label, right2.goalPath || right2.label)).map(([key, bucket]) => ({
+    key,
+    label: bucket.label,
+    goalPath: bucket.goalPath,
+    rows: TASK_CADENCE_ORDER.flatMap((cadence) => {
+      const tasks = bucket.rows.get(cadence) || [];
+      return tasks.length > 0 ? [{ key: cadence, ...TASK_CADENCE_META[cadence], tasks }] : [];
+    }),
+    taskCount: Array.from(bucket.rows.values()).reduce((sum, tasks) => sum + tasks.length, 0)
+  }));
+  return {
+    goals: goalModels,
+    latestEnergy: management?.latest ? {
+      score: management.latest.score,
+      brainScore: management.latest.brainScore,
+      physicalScore: management.latest.physicalScore,
+      date: management.latest.date,
+      time: management.latest.time
+    } : void 0,
+    diagnostics: {
+      openTaskCount: openTasks.length,
+      visibleTaskCount: goalModels.reduce((sum, goal) => sum + goal.taskCount, 0),
+      goalCount: goalModels.length
+    }
+  };
+}
+function normalizedGoalFilter(value) {
+  return normalizeGoalPath$1(String(value || "").trim()) || String(value || "").trim().replace(/^#/, "");
+}
+function dateText(value) {
+  return dayjs(value).format("YYYY-MM-DD");
+}
+function periodLabel(currentView, dateRange) {
+  const start2 = dayjs(dateRange[0]);
+  const end2 = dayjs(dateRange[1]);
+  if (currentView === "天") return `${start2.format("YYYY-MM-DD")}`;
+  if (currentView === "周") return `${start2.format("MM-DD")} — ${end2.format("MM-DD")}`;
+  if (currentView === "月") return start2.format("YYYY-MM");
+  if (currentView === "季") return `${start2.year()} Q${start2.quarter()}`;
+  return start2.format("YYYY");
+}
+function periodRenderModel(period, goalItems, label) {
+  if (!period) return null;
+  return {
+    ...period,
+    label,
+    days: period.days.map((day) => ({
+      ...day,
+      samples: day.samples.map((sample) => ({
+        id: sample.itemId,
+        date: sample.date,
+        time: sample.time,
+        minuteOfDay: sample.minuteOfDay,
+        score: sample.score,
+        brainScore: sample.brainScore,
+        physicalScore: sample.physicalScore,
+        captureMode: sample.captureMode,
+        context: buildGoalEnergyContext(sample.item, goalItems),
+        item: sample.item
+      }))
+    }))
+  };
+}
+function signed(value) {
+  const rounded = Math.round(value);
+  return `${rounded > 0 ? "+" : ""}${rounded}`;
+}
+function compactReviewLines(args) {
+  const { periodItems, patterns, management, quality } = args;
+  const lines = [];
+  if (quality.level === "limited") {
+    lines.push({ key: "data", label: "数据", text: quality.message });
+  }
+  const dayparts = (patterns?.dayparts || []).filter((row) => row.sampleCount >= 3 && row.meanScore != null);
+  if (dayparts.length >= 2) {
+    const best = [...dayparts].sort((a2, b2) => (b2.meanScore || 0) - (a2.meanScore || 0))[0];
+    const low = [...dayparts].sort((a2, b2) => (a2.meanScore || 0) - (b2.meanScore || 0))[0];
+    const gap2 = Math.abs((best.meanScore || 0) - (low.meanScore || 0));
+    if (best.key !== low.key && gap2 >= 10) {
+      lines.push({ key: "overall", label: "状态", text: `${best.label}相对较高（${Math.round(best.meanScore || 0)}，N=${best.sampleCount}），${low.label}相对较低（${Math.round(low.meanScore || 0)}，N=${low.sampleCount}）。` });
+    }
+  }
+  const recovery = management?.recoveryCandidates?.[0];
+  if (recovery) {
+    const prefix2 = recovery.evidence === "supported" ? "" : "初步观察：";
+    lines.push({ key: "recovery", label: "恢复", text: `${prefix2}${recovery.label}后偏回升（平均 ${signed(recovery.meanDelta)}，N=${recovery.sampleCount}）。` });
+  }
+  const depletion = management?.cautionCandidates?.[0];
+  if (depletion) {
+    const prefix2 = depletion.evidence === "supported" ? "" : "初步观察：";
+    lines.push({ key: "depletion", label: "消耗", text: `${prefix2}${depletion.label}后偏下降（平均 ${signed(depletion.meanDelta)}，N=${depletion.sampleCount}）。` });
+  }
+  const stop = patterns?.stopProxy;
+  if (stop && stop.followedByWorkCount >= 3 && stop.evidence !== "insufficient" && (stop.longContinuationRatio || 0) >= 0.5) {
+    lines.push({ key: "attention", label: "注意", text: `高精力后继续工作过久的情况较多（N=${stop.followedByWorkCount}），先定停止点更合适。` });
+  }
+  if (lines.length === 0 && periodItems.some(isEnergyItem)) {
+    lines.push({ key: "overall", label: "状态", text: "本周期已有记录，但暂时没有达到最小重复样本的稳定模式。" });
+  }
+  return lines.slice(0, 5);
+}
+function itemInRange(item, startDate, endDate) {
+  const date2 = String(item.date || item.doneDate || item.startDate || item.scheduledDate || item.createdDate || "").slice(0, 10);
+  return Boolean(date2 && date2 >= startDate && date2 <= endDate);
+}
+function buildEnergyViewModel(args) {
+  const { items = [], module: module2, goals = [], themes = [], timers = [], currentView, dateRange } = args;
+  const rawConfig = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {} };
+  const config2 = {
+    ...rawConfig,
+    windowDays: Math.max(1, Math.min(31, Math.floor(Number(rawConfig.windowDays) || 7))),
+    recentSampleLimit: Math.max(1, Math.min(20, Math.floor(Number(rawConfig.recentSampleLimit) || 5))),
+    maxGoals: Math.max(0, Math.min(20, Math.floor(Number(rawConfig.maxGoals) || 0))),
+    goalPath: String(rawConfig.goalPath || "").trim(),
+    analysisWindowDays: Math.max(7, Math.min(90, Math.floor(Number(rawConfig.analysisWindowDays) || 30)))
+  };
+  const startDate = dateText(dateRange[0]);
+  const endDate = dateText(dateRange[1]);
+  const now2 = dayjs();
+  const today = now2.format("YYYY-MM-DD");
+  const nowTime = now2.format("HH:mm");
+  const displayPeriodLabel = periodLabel(currentView, dateRange);
+  const requestedGoal = normalizedGoalFilter(config2.goalPath);
+  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
+  const panels = [];
+  for (const bucket of buckets) {
+    const bucketPath = normalizedGoalFilter(bucket.goalPath || bucket.name);
+    if (requestedGoal && bucketPath !== requestedGoal && normalizedGoalFilter(bucket.name) !== requestedGoal) continue;
+    const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
+    if (!goalItems.some(isEnergyItem)) continue;
+    const periodItems = goalItems.filter((item) => itemInRange(item, startDate, endDate));
+    const summary = buildGoalEnergySummary(goalItems, config2.recentSampleLimit);
+    if (!summary) continue;
+    const patterns = buildEnergyPatterns(periodItems, { analysisWindowDays: Math.max(7, Math.min(config2.analysisWindowDays, 90)) });
+    const currentHistoryItems = goalItems.filter((item) => {
+      const itemDate = String(item.doneDate || item.date || item.startDate || item.scheduledDate || item.createdDate || "").slice(0, 10);
+      if (!itemDate) return true;
+      if (itemDate < today) return true;
+      if (itemDate > today) return false;
+      if (!isEnergyItem(item)) return true;
+      const itemTime = String(item.startTime || item.extra?.["时间"] || "00:00").slice(0, 5);
+      return itemTime <= nowTime;
+    });
+    const management = buildEnergyManagement(currentHistoryItems, { analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: 60 });
+    const periodManagement = buildEnergyManagement(periodItems, { analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: 60 });
+    const quality = buildEnergyDataQuality(periodItems, { startDate, endDate });
+    const period = periodRenderModel(buildEnergyPeriod(goalItems, { currentView, startDate, endDate }), goalItems, displayPeriodLabel);
+    panels.push({
+      key: bucket.name,
+      title: bucket.alias || bucket.name,
+      goalPath: bucket.goalPath || bucket.name,
+      icon: bucket.icon || null,
+      summary,
+      period,
+      reviewLines: compactReviewLines({ periodItems, patterns, management: periodManagement, quality }),
+      quality,
+      patterns,
+      management
+    });
+  }
+  panels.sort((left2, right2) => {
+    const leftKey = `${left2.summary.latestDate || ""} ${left2.summary.latestTime || ""}`;
+    const rightKey = `${right2.summary.latestDate || ""} ${right2.summary.latestTime || ""}`;
+    return rightKey.localeCompare(leftKey);
+  });
+  const visible = config2.maxGoals > 0 ? panels.slice(0, config2.maxGoals) : panels;
+  const globalCurrentHistoryItems = items.filter((item) => {
+    const itemDate = String(item.doneDate || item.date || item.startDate || item.scheduledDate || item.createdDate || "").slice(0, 10);
+    if (!itemDate) return true;
+    if (itemDate < today) return true;
+    if (itemDate > today) return false;
+    if (!isEnergyItem(item)) return true;
+    const itemTime = String(item.startTime || item.extra?.["时间"] || "00:00").slice(0, 5);
+    return itemTime <= nowTime;
+  });
+  const globalManagement = buildEnergyManagement(globalCurrentHistoryItems, {
+    analysisWindowDays: config2.analysisWindowDays,
+    highEnergyThreshold: 60,
+    effectScope: "global"
+  });
+  const taskList = buildEnergyTaskListModel({
+    items,
+    historyItems: globalCurrentHistoryItems,
+    timers,
+    management: globalManagement,
+    goals,
+    today
+  });
+  return {
+    config: config2,
+    currentView,
+    periodLabel: displayPeriodLabel,
+    goalPanels: visible,
+    totalEnergySamples: visible.reduce((sum, panel) => sum + (panel.period?.totalSamples || 0), 0),
+    sampledGoalCount: visible.length,
+    taskList
+  };
 }
 const viewModelBuilders = {
   BlockView: ({ items, viewInstance, goals }) => {
@@ -65500,13 +68759,15 @@ const viewModelBuilders = {
       themes: inputSettings?.themes || []
     })
   }),
-  TaskExecutionView: ({ allItems, viewInstance, dateRange, currentView, layoutFilters }) => ({
-    taskExecutionModel: buildTaskExecutionViewModel({
+  EnergyView: ({ allItems, viewInstance, dateRange, currentView, goals, inputSettings, timers }) => ({
+    energyModel: buildEnergyViewModel({
       items: allItems,
+      module: viewInstance,
       dateRange,
-      viewInstance,
-      keyword: "",
-      layoutFilters
+      currentView,
+      goals: goals || [],
+      themes: inputSettings?.themes || [],
+      timers: timers || []
     })
   })
 };
@@ -74126,9 +77387,9 @@ function GoalTemplateMatrix() {
     ui.notice("目标排序已保存");
   };
   const reorderPresetsInCell = async (drag, targetTemplateKey, position2) => {
-    const normalized = reorderPresetTemplatesInCell({ templates, goals, drag, targetTemplateKey, position: position2 });
-    if (!normalized) return;
-    await Promise.all(normalized.map((template) => useCases.goal.upsertGoalTemplate(template)));
+    const normalized2 = reorderPresetTemplatesInCell({ templates, goals, drag, targetTemplateKey, position: position2 });
+    if (!normalized2) return;
+    await Promise.all(normalized2.map((template) => useCases.goal.upsertGoalTemplate(template)));
     ui.notice("预设排序已保存");
   };
   const movePresetToCell = async (drag, targetGoal, targetBlock, targetTemplateKey, position2) => {
@@ -74577,6 +77838,51 @@ function ThemeMetadataManager() {
     /* @__PURE__ */ u$1(Divider2, {})
   ] });
 }
+function EnergySettingsSection() {
+  const settings = useSelector(selectSettings);
+  const themes = useSelector(selectInputThemes);
+  const defaultGoalId = useSelector(selectEnergyDefaultGoalId);
+  const defaultThemePath = useSelector(selectEnergyDefaultThemePath);
+  const useCases = useUseCases();
+  const goals = (settings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived");
+  const goalOptions = [
+    { value: "", label: "自动选择第一个活跃目标" },
+    ...goals.map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title }))
+  ];
+  const themeOptions2 = [
+    { value: "", label: "不指定默认主题" },
+    ...themes.filter((theme) => theme.status !== "inactive").map((theme) => ({ value: theme.path, label: `${theme.icon || "•"} ${theme.path}` }))
+  ];
+  return /* @__PURE__ */ u$1("section", { className: "think-settings-section", children: [
+    /* @__PURE__ */ u$1("div", { className: "think-settings-section__header", children: /* @__PURE__ */ u$1("div", { children: [
+      /* @__PURE__ */ u$1("h2", { className: "think-settings-section__title", children: "精力记录默认值" }),
+      /* @__PURE__ */ u$1("p", { className: "think-settings-help", children: "属于“记录类型”的默认数据，不属于 EnergyView。桌面快捷记录没有显式上下文时使用这里的目标与主题。" })
+    ] }) }),
+    /* @__PURE__ */ u$1("div", { className: "think-settings-field-stack", children: [
+      /* @__PURE__ */ u$1(Typography2, { variant: "body2", children: "默认精力目标" }),
+      /* @__PURE__ */ u$1(
+        SimpleSelect,
+        {
+          value: defaultGoalId,
+          options: goalOptions,
+          onChange: (value) => void useCases.settings.setEnergyDefaultGoalId(value || null),
+          fullWidth: true
+        }
+      ),
+      /* @__PURE__ */ u$1(Typography2, { variant: "body2", children: "默认精力主题" }),
+      /* @__PURE__ */ u$1(
+        SimpleSelect,
+        {
+          value: defaultThemePath,
+          options: themeOptions2,
+          onChange: (value) => void useCases.settings.setEnergyDefaultThemePath(value || null),
+          fullWidth: true
+        }
+      ),
+      /* @__PURE__ */ u$1(Typography2, { variant: "body2", color: "text.secondary", children: "优先级：当前明确传入的主题 → 默认精力主题 → 当前目标主题。快捷录入默认不展示目标/主题表单，只在需要时展开目标修改。" })
+    ] })
+  ] });
+}
 const sections = [
   { key: "recordTypes", title: "记录类型" },
   { key: "goals", title: "目标" },
@@ -74600,7 +77906,11 @@ function DataManagementSettings() {
       )) })
     ] }),
     /* @__PURE__ */ u$1(Divider2, { className: "think-settings-full-width" }),
-    section === "recordTypes" && /* @__PURE__ */ u$1(BlockManager, {}),
+    section === "recordTypes" && /* @__PURE__ */ u$1(Box, { className: "think-settings-stack think-settings-full-width", children: [
+      /* @__PURE__ */ u$1(EnergySettingsSection, {}),
+      /* @__PURE__ */ u$1(Divider2, {}),
+      /* @__PURE__ */ u$1(BlockManager, {})
+    ] }),
     section === "goals" && /* @__PURE__ */ u$1(GoalManager, {}),
     section === "themes" && /* @__PURE__ */ u$1(ThemeMetadataManager, {}),
     section === "metrics" && /* @__PURE__ */ u$1(Box, { className: "think-settings-full-width", children: /* @__PURE__ */ u$1(GoalMetricSection, {}) })
@@ -74803,6 +78113,51 @@ class VaultWatcher {
     }
   }
 }
+function registerEnergyProtocolHandler(plugin, deps) {
+  plugin.registerObsidianProtocolHandler(ENERGY_PROTOCOL_ACTION, async (params) => {
+    const parsed = parseEnergyProtocolParams(params);
+    if (!parsed.ok) {
+      new obsidian.Notice(`Think OS: ${parsed.message}`, 5e3);
+      return;
+    }
+    const settings = deps.getSettings();
+    const goal = resolveEnergyCaptureGoal(
+      settings.goalSettings?.goals || [],
+      settings.energySettings?.defaultGoalId
+    );
+    if (!goal) {
+      new obsidian.Notice("Think OS: 没有可用于精力记录的目标，请先在设置中创建/选择默认精力目标。", 6e3);
+      return;
+    }
+    const now2 = dayjs();
+    const common2 = {
+      goalId: goal.id,
+      goalPath: goal.goalPath || goal.title,
+      themePath: goal.themePath || void 0,
+      date: now2.format("YYYY-MM-DD"),
+      time: now2.format("HH:mm"),
+      captureMode: "realtime",
+      timePrecision: "exact",
+      source: "ios-shortcut"
+    };
+    const result = parsed.payload.mode === "quick" ? await deps.recordInput.submitEnergySnapshot({
+      ...common2,
+      scoreMode: "quick",
+      score: parsed.payload.score
+    }) : await deps.recordInput.submitEnergySnapshot({
+      ...common2,
+      scoreMode: "detailed",
+      brainScore: parsed.payload.brainScore,
+      physicalScore: parsed.payload.physicalScore
+    });
+    if (result.status === "success") {
+      new obsidian.Notice(result.feedback?.notice || "Think OS: 精力已记录", 1800);
+      return;
+    }
+    const issue2 = result.errors?.[0]?.message || result.feedback?.notice || "精力记录失败";
+    new obsidian.Notice(`Think OS: ${issue2}`, 5e3);
+  });
+}
 class CodeblockEmbedder {
   constructor(plugin, dataStore, rendererService, actionService) {
     this.plugin = plugin;
@@ -74903,7 +78258,7 @@ const VIEW_REGISTRY = {
   StatisticsView,
   HeatmapView,
   ProgressView,
-  TaskExecutionView
+  EnergyView
 };
 const DashboardViewComponents = VIEW_REGISTRY;
 function useViewData({
@@ -75183,8 +78538,6 @@ function buildViewProps({
     onExcelConfigChange: viewType === "ExcelView" ? handlers.onExcelConfigChange : void 0,
     onMarkDone,
     onUpdateTaskTime: handlers.onUpdateTaskTime,
-    // Statistics / Progress 只负责展示；新增数据统一走 QuickInput 主入口，不从视图 popover 创建。
-    onQuickCreate: void 0,
     onOpenStatisticsPopover: viewType === "StatisticsView" ? onOpenStatisticsPopover : void 0,
     onCloseStatisticsPopover: viewType === "StatisticsView" ? onCloseStatisticsPopover : void 0,
     categoryColors: viewType === "StatisticsView" ? categoryColors : void 0,
@@ -75261,8 +78614,9 @@ function ViewContent({
     layoutFilters,
     selectedCategories: selectedLayoutCategories,
     goals: settings.goalSettings?.goals || [],
-    goalSettings: settings.goalSettings
-  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, viewItems]);
+    goalSettings: settings.goalSettings,
+    timers
+  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings, normalizedViewInstance, timers, viewItems]);
   const handlers = useViewRuntimeHandlers({
     app,
     actionService,
@@ -76230,6 +79584,44 @@ class TimerService {
       });
     }
   }
+  /**
+   * Start a task from Energy task while preserving the baseline used
+   * for later Energy feedback. Timer owns execution; Energy only supplies the baseline
+   * and the suggested work-block length.
+   */
+  async startEnergyTask(taskId, context) {
+    const timers = this.useCases.timer.getTimers();
+    for (const timer of timers) {
+      if (timer.status === "running" && timer.taskId !== taskId) {
+        await this.pause(timer.id);
+      }
+    }
+    const existing = this.useCases.timer.getTimers().find((timer) => timer.taskId === taskId);
+    const energyContext = {
+      ...context,
+      suggestedDurationMinutes: Math.max(10, Math.min(240, Math.round(context.suggestedDurationMinutes || 30))),
+      startedAt: Date.now()
+    };
+    if (existing) {
+      await this.useCases.timer.updateTimer({ ...existing, energyContext });
+      if (existing.status === "paused") await this.resume(existing.id);
+      this.ui.notice("任务已开始");
+      return;
+    }
+    const taskItem = this.dataStore.queryItems().find((i2) => i2.id === taskId);
+    if (!taskItem) {
+      this.ui.notice("找不到要执行的任务");
+      return;
+    }
+    await this.useCases.timer.addTimer({
+      taskId,
+      startTime: Date.now(),
+      elapsedSeconds: 0,
+      status: "running",
+      energyContext
+    });
+    this.ui.notice("任务已开始");
+  }
   async pause(timerId) {
     const timer = this.useCases.timer.getTimers().find((t3) => t3.id === timerId);
     if (timer && timer.status === "running") {
@@ -76257,20 +79649,51 @@ class TimerService {
       });
     }
   }
+  /**
+   * End only this work block. The source Task remains open.
+   * Energy-started timers still move to awaiting-energy so the next Energy
+   * sample can become feedback for this session.
+   */
+  async endWorkBlock(timerId) {
+    const timer = this.useCases.timer.getTimers().find((t3) => t3.id === timerId);
+    if (!timer) return false;
+    const taskItem = this.dataStore.queryItems().find((i2) => i2.id === timer.taskId);
+    if (!taskItem) {
+      this.ui.notice("找不到原始任务，本次工作无法保存。");
+      await this.useCases.timer.removeTimer(timerId);
+      return false;
+    }
+    let totalSeconds = timer.elapsedSeconds;
+    if (timer.status === "running") totalSeconds += (Date.now() - timer.startTime) / 1e3;
+    if (timer.energyContext) {
+      await this.useCases.timer.updateTimer({
+        ...timer,
+        elapsedSeconds: totalSeconds,
+        status: "awaiting-energy",
+        completedAt: Date.now()
+      });
+      this.ui.notice("本次工作已结束；任务保持未完成，下一次精力记录会作为反馈。");
+    } else {
+      await this.useCases.timer.removeTimer(timerId);
+      this.ui.notice("本次工作已结束；任务保持未完成。");
+    }
+    return true;
+  }
   async stopAndApply(timerId) {
     const timer = this.useCases.timer.getTimers().find((t3) => t3.id === timerId);
-    if (!timer) return;
+    if (!timer) return false;
     let totalSeconds = timer.elapsedSeconds;
     if (timer.status === "running") {
       totalSeconds += (Date.now() - timer.startTime) / 1e3;
     }
     const totalMinutes = Math.ceil(totalSeconds / 60);
+    let applied = false;
     try {
       const taskItem = this.dataStore.queryItems().find((i2) => i2.id === timer.taskId);
       if (!taskItem) {
         this.ui.notice("找不到原始任务，可能已被移动或删除，计时时长无法保存。");
         await this.useCases.timer.removeTimer(timerId);
-        return;
+        return false;
       }
       const endTime = nowHHMM();
       const normalizedTime = totalMinutes > 0 ? applyTaskTimePolicy({ endTime, duration: totalMinutes, mode: "finalize", direction: "backward" }) : { startTime: void 0, endTime, duration: void 0 };
@@ -76294,6 +79717,7 @@ class TimerService {
         source: "timer"
       });
       if (result.status === "success") {
+        applied = true;
         if (result.feedback?.notice) {
           this.ui.notice(result.feedback.notice);
         }
@@ -76303,8 +79727,25 @@ class TimerService {
     } catch (e2) {
       this.ui.notice(`更新任务失败：${e2.message}`);
       devError("TimerService Error:", e2);
+      await this.useCases.timer.removeTimer(timerId);
+      return false;
     }
-    await this.useCases.timer.removeTimer(timerId);
+    if (!applied) {
+      await this.useCases.timer.removeTimer(timerId);
+      return false;
+    }
+    if (timer.energyContext) {
+      await this.useCases.timer.updateTimer({
+        ...timer,
+        elapsedSeconds: totalSeconds,
+        status: "awaiting-energy",
+        completedAt: Date.now()
+      });
+      this.ui.notice("任务已完成；下一次精力记录会自动作为反馈。");
+    } else {
+      await this.useCases.timer.removeTimer(timerId);
+    }
+    return true;
   }
   async cancel(timerId) {
     await this.useCases.timer.removeTimer(timerId);
@@ -77287,6 +80728,10 @@ class ThinkPlugin extends obsidian.Plugin {
           modalPort: runtime.modalPort,
           timerService: this.serviceManager.timerService
         }, capabilityRegistry);
+        registerEnergyProtocolHandler(this, {
+          getSettings: () => this.serviceManager.settingsRepository.getSettings(),
+          recordInput: this.serviceManager.useCases.recordInput
+        });
         devLog("[ThinkPlugin][BOOT] before registerCommands");
         this.registerCommands();
         devLog("[ThinkPlugin][BOOT] after registerCommands");

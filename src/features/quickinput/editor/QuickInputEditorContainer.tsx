@@ -2,14 +2,13 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useReducer, useRef } from 'preact/hooks';
 
-import { selectSettings, useSelector } from '@/app/public';
-import { GoalTemplateResolver } from '@core/recordInput/public';
-import { dayjs } from '@core/utils/public';
-import { getEffectiveCoreBlocks } from '@core/blocks/public';
-import { getGoalTemplateVariants, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/goal/public';
+import { selectSettings, useSelector } from '@/app/public'; import { dayjs } from '@core/utils/public';
+import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public'; import { getGoalTemplateVariants, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/goal/public';
 import { initializeRecordInputSession, reduceRecordInputSession } from '@core/recordInput/public';
 import type { ThemeDefinition } from '@core/types/public';
 import { QuickInputEditorView } from './QuickInputEditorView';
+import { resolveQuickInputRecordTypeRuntime } from './quickInputRecordTypeModel';
+import { EnergyQuickCapturePanel } from './components/EnergyQuickCapturePanel';
 import type { GoalSelectorOption } from './components/GoalSelector';
 import {
   EMPTY_FORM_DATA,
@@ -28,6 +27,7 @@ import {
   hydrateQuickInputTemplateDefaults,
   resolveQuickInputThemeSelectionOnClick,
   resolveQuickInputCoreBlockId,
+  resolveQuickInputEnergyThemePath,
   shouldShowQuickInputTimeDirectionControl,
   splitPathParts,
   themeOptions,
@@ -48,11 +48,11 @@ export function QuickInputEditor({
   showDivider = true,
   onStateChange,
   onRequestSubmit,
+  onEnergyCapture,
   isMobileLike = false,
 }: QuickInputEditorProps) {
   const fullSettings = useSelector(selectSettings);
-  const settings = fullSettings.inputSettings;
-  const initialFieldSource = recordInputMode === 'create' ? 'context' : 'edit_backfill';
+  const settings = fullSettings.inputSettings; const initialFieldSource = recordInputMode === 'create' ? 'context' : 'edit_backfill';
   const recordInputModeRef = useRef(recordInputMode);
   const [session, dispatchSession] = useReducer(
     reduceRecordInputSession,
@@ -99,10 +99,12 @@ export function QuickInputEditor({
     dispatchSession({ type: 'setMode', mode: recordInputMode });
   }, [recordInputMode]);
 
-  const blocks = useMemo(() => {
-    const coreBlocks = getEffectiveCoreBlocks(fullSettings);
-    return coreBlocks.length ? coreBlocks : (settings.blocks || []);
-  }, [fullSettings, settings.blocks]);
+  const blocks = useMemo(() => getEffectiveRecordTypes(fullSettings), [fullSettings]);
+  const currentRecordType = useMemo(
+    () => blocks.find((recordType) => recordType.id === currentBlockId) || null,
+    [blocks, currentBlockId],
+  );
+  const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === 'direct';
   const themes = useMemo(() => settings.themes || [], [settings.themes]);
 
   const { availableThemes, themeIdMap, pathToIdMap } = useMemo(() => {
@@ -122,8 +124,8 @@ export function QuickInputEditor({
   }, [fullSettings.goalSettings?.goals, selectedGoalId, selectedGoalPath]);
 
   const currentEffectiveBlockIdForTemplates = useMemo(
-    () => resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
-    [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId]
+    () => isEnergyDirect ? '' : resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
+    [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId, isEnergyDirect]
   );
 
   const goalTemplateVariants = useMemo(() => {
@@ -144,26 +146,14 @@ export function QuickInputEditor({
     }
   }, [goalTemplateVariants, selectedTemplateVariantId]);
 
-  const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = useMemo(() => GoalTemplateResolver.resolve({
-    settings: fullSettings,
-    blockId: currentBlockId,
-    goalId: selectedGoal?.id || selectedGoalId,
-    goalPath: selectedGoalPath,
-    themeId: selectedThemeId || undefined,
-    templateVariantId: selectedTemplateVariantId || undefined,
-  }), [
-    fullSettings,
-    currentBlockId,
-    selectedGoal?.id,
-    selectedGoalId,
-    selectedGoalPath,
-    selectedThemeId,
-    selectedTemplateVariantId,
-  ]);
+  const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = useMemo(
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedGoalPath, selectedThemeId, selectedTemplateVariantId }),
+    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedGoalPath, selectedThemeId, selectedTemplateVariantId],
+  );
 
   const goalOptions = useMemo<GoalSelectorOption[]>(
-    () => buildQuickInputGoalOptions(fullSettings, currentEffectiveBlockIdForTemplates),
-    [fullSettings, currentEffectiveBlockIdForTemplates]
+    () => buildQuickInputGoalOptions(fullSettings, currentEffectiveBlockIdForTemplates, { requirePreset: !isEnergyDirect }),
+    [fullSettings, currentEffectiveBlockIdForTemplates, isEnergyDirect]
   );
 
   const goalFieldOptions = useMemo(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label })), [goalOptions]);
@@ -180,21 +170,21 @@ export function QuickInputEditor({
   const currentGoalTitle = cleanDisplaySegment(selectedGoal?.title || resolvedGoal?.title || '') || (currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null);
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData['日期'] ?? formData.date ?? dayjs().format('YYYY-MM-DD')).trim();
-  const periodPolicy = resolveTemplatePeriodPolicy(rawTemplate as any);
+  const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(rawTemplate as any);
   const currentPeriod = periodPolicy ? resolveDerivedPeriod(currentRecordDate || dayjs().format('YYYY-MM-DD'), periodPolicy.granularity) : null;
   const currentPeriodUi = useMemo(() => buildQuickInputPeriodUi(currentPeriod), [currentPeriod?.id, currentPeriod?.label, currentPeriod?.granularity]);
   const currentPeriodFields = currentPeriodUi.fields;
   const currentPeriodOptions = currentPeriodUi.options;
 
   const template = useMemo(
-    () => buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions),
-    [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions]
+    () => isEnergyDirect ? null : buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions),
+    [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions, isEnergyDirect]
   );
 
   const showTimeDirectionControl = useMemo(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
 
   useEffect(() => {
-    if (!template) return;
+    if (isEnergyDirect || !template) return;
     const hydrated = hydrateQuickInputTemplateDefaults({
       template,
       context,
@@ -214,7 +204,7 @@ export function QuickInputEditor({
       formData: hydrated.formData,
       fieldSources: hydrated.fieldSources,
     });
-  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources]);
+  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources, isEnergyDirect]);
 
   useEffect(() => {
     const presetThemePath = String(formData.themePath ?? formData['主题'] ?? '').trim();
@@ -225,7 +215,7 @@ export function QuickInputEditor({
 
   const makeEditorState = (draftFormData: QuickInputFormData, directionOverride: TimeDirection = timeDirection, sourceOverride: QuickInputFieldSourceMap = fieldSources) => buildQuickInputEditorState({
     blockId: currentBlockId,
-    effectiveBlockId,
+    effectiveBlockId: isEnergyDirect ? ENERGY_RECORD_TYPE_ID : effectiveBlockId,
     selectedGoal,
     selectedGoalId,
     currentGoalPath,
@@ -302,6 +292,24 @@ export function QuickInputEditor({
       fieldSources: nextSelection.fieldSources,
     });
   };
+
+  if (isEnergyDirect) {
+    return (
+      <EnergyQuickCapturePanel
+        blocks={blocks}
+        allowBlockSwitch={allowBlockSwitch}
+        currentBlockId={currentBlockId}
+        onBlockChange={handleBlockChange}
+        goals={goalOptions}
+        selectedGoalPath={currentGoalPath}
+        onSelectGoal={handleSelectGoal}
+        selectedGoalId={selectedGoal?.id || selectedGoalId || null}
+        defaultGoalId={fullSettings.energySettings?.defaultGoalId || null}
+        selectedThemePath={resolveQuickInputEnergyThemePath({ formThemePath: formData.themePath ?? formData['主题'], formThemeSource: fieldSources.themePath ?? fieldSources['主题'], defaultThemePath: fullSettings.energySettings?.defaultThemePath, goalThemePath: selectedGoal?.themePath })}
+        onCapture={onEnergyCapture}
+      />
+    );
+  }
 
   return (
     <QuickInputEditorView

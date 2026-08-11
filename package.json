@@ -1,10 +1,10 @@
 {
   "name": "think-os",
-  "version": "1.0.10",
+  "version": "1.0.35",
   "scripts": {
     "dev": "vite",
     "check": "npm run lint && npm run typecheck && npm run gate",
-    "gate": "npm run secret:gate && npm run version:gate && npm run manifest:gate && npm run mvp:gate && npm run no-mui-icons:gate && npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run di:gate && npm run dual-system:gate && npm run single-user:gate && npm run shared-view-convergence:gate && npm run non-shared-view-convergence:gate && npm run docs-governance:gate && npm run final-convergence:gate && npm run any-budget:gate && npm run refactor:budget && npm run refactor:release && npm run deep-refactor-final:gate && npm run obsidian-leak:gate && npm run events-boundary:gate && npm run core-obsidian:gate && npm run core-public:gate && npm run shared-public:gate && npm run shared-runtime:gate && npm run gate:settings-persistence && npm run di-resolve:gate && npm run modal-promise:gate && npm run selector-giant-subscription:gate && npm run theme-tree-recursion:gate && npm run theme-matrix-legacy-import:gate && npm run iconaction:gate && npm run data-store:gate && npm run src-console:gate && npm run shared-view-export:gate && npm run performance:gate && npm run shared-view-legacy-forwarder:gate && npm run shared-internal-alias:gate && npm run timer-view-runtime:gate && npm run shared-self-alias-migrated:gate && npm run mui-compat-migrated:gate && npm run legacy-forwarder-usage:gate && npm run unused-export-candidates:gate && npm run domain:gate && npm run freeform-layout:gate && npm run css-boundary:gate && npm run schema:gate",
+    "gate": "npm run secret:gate && npm run version:gate && npm run manifest:gate && npm run mvp:gate && npm run no-mui-icons:gate && npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run di:gate && npm run dual-system:gate && npm run single-user:gate && npm run shared-view-convergence:gate && npm run non-shared-view-convergence:gate && npm run docs-governance:gate && npm run final-convergence:gate && npm run any-budget:gate && npm run refactor:budget && npm run refactor:release && npm run deep-refactor-final:gate && npm run obsidian-leak:gate && npm run events-boundary:gate && npm run core-obsidian:gate && npm run core-public:gate && npm run shared-public:gate && npm run shared-runtime:gate && npm run gate:settings-persistence && npm run di-resolve:gate && npm run modal-promise:gate && npm run selector-giant-subscription:gate && npm run theme-tree-recursion:gate && npm run theme-matrix-legacy-import:gate && npm run iconaction:gate && npm run data-store:gate && npm run src-console:gate && npm run shared-view-export:gate && npm run performance:gate && npm run shared-view-legacy-forwarder:gate && npm run shared-internal-alias:gate && npm run timer-view-runtime:gate && npm run shared-self-alias-migrated:gate && npm run mui-compat-migrated:gate && npm run legacy-forwarder-usage:gate && npm run unused-export-candidates:gate && npm run domain:gate && npm run freeform-layout:gate && npm run css-boundary:gate && npm run schema:gate && npm run energy-recommendation-pipeline:gate && npm run energy-ui-unicode:gate && npm run energy-learning:gate && npm run energy-quality:gate && npm run energy-task-merge:gate && npm run energy-task-match:gate && npm run energy-architecture-convergence:gate",
     "build": "vite build && node scripts/build/fix-sourcemap.mjs && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
     "test": "jest --config test/configs/jest.config.js",
     "test:watch": "jest --config test/configs/jest.config.js --watch",
@@ -95,7 +95,16 @@
     "folder:map": "node scripts/audit/folder-reorg-map.mjs --output reports/refactor/folder-reorg-map.json --markdown reports/refactor/folder-reorg-map.md",
     "folder:verify": "npm run folder:map && node scripts/gates/folder-reorg-plan-gate.mjs",
     "schema:gate": "node scripts/gates/current-schema-gate.mjs",
-    "deep-refactor-final:gate": "node scripts/gates/deep-refactor-final-gate.mjs"
+    "deep-refactor-final:gate": "node scripts/gates/deep-refactor-final-gate.mjs",
+    "energy-visual:gate": "node scripts/gates/energy-visual-gate.mjs",
+    "timer-selector-stability:gate": "node scripts/gates/timer-selector-stability-gate.mjs",
+    "energy-recommendation-pipeline:gate": "node scripts/gates/energy-recommendation-pipeline-gate.mjs",
+    "energy-ui-unicode:gate": "node scripts/gates/energy-ui-unicode-gate.mjs",
+    "energy-learning:gate": "node scripts/gates/energy-learning-gate.mjs",
+    "energy-quality:gate": "node scripts/gates/energy-quality-gate.mjs",
+    "energy-task-merge:gate": "node scripts/gates/energy-task-merge-gate.mjs",
+    "energy-task-match:gate": "node scripts/gates/energy-task-match-gate.mjs",
+    "energy-architecture-convergence:gate": "node scripts/gates/energy-architecture-convergence-gate.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

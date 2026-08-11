@@ -202,19 +202,21 @@
   --think-data-5: #8b68d8;
   --think-data-6: #168ca8;
   --think-data-neutral: var(--think-text-secondary);
+  --think-energy-match: #f2a93b;
 
-  /* Recurrence intensity palette for Task Execution. */
-  --think-task-tone-0-bg: var(--think-bg-surface-1);
-  --think-task-tone-0-text: var(--think-text-primary);
-  --think-task-tone-1-bg: #8065a8;
-  --think-task-tone-1-text: #ffffff;
-  --think-task-tone-2-bg: #aa94c5;
-  --think-task-tone-2-text: #ffffff;
-  --think-task-tone-3-bg: #ddd2ec;
-  --think-task-tone-3-text: #674c87;
-  --think-task-tone-4-bg: #f1edf6;
-  --think-task-tone-4-text: #7f6d96;
-  --think-task-tone-4-border: #d8cde5;
+  /* Task cadence is semantic: higher frequency stays lighter; longer cycles become darker. */
+  --think-task-cadence-routine-bg: var(--think-bg-surface-1);
+  --think-task-cadence-routine-text: var(--think-text-primary);
+  --think-task-cadence-day-bg: #f1edf6;
+  --think-task-cadence-day-text: #735f8c;
+  --think-task-cadence-week-bg: #ddd2ec;
+  --think-task-cadence-week-text: #674c87;
+  --think-task-cadence-month-bg: #c3b2d8;
+  --think-task-cadence-month-text: #533d6e;
+  --think-task-cadence-quarter-bg: #aa94c5;
+  --think-task-cadence-quarter-text: #3f2f54;
+  --think-task-cadence-year-bg: #8065a8;
+  --think-task-cadence-year-text: #ffffff;
 
   --think-heatmap-0: var(--think-bg-surface-2);
   --think-heatmap-1: #d9e4ff;
@@ -232,16 +234,20 @@
   --think-data-4: #ef8095;
   --think-data-5: #ac8ee8;
   --think-data-6: #4ab7ce;
+  --think-energy-match: #ffc14f;
 
-  --think-task-tone-1-bg: #9b82bd;
-  --think-task-tone-1-text: #ffffff;
-  --think-task-tone-2-bg: #725e8c;
-  --think-task-tone-2-text: #ffffff;
-  --think-task-tone-3-bg: #43384f;
-  --think-task-tone-3-text: #d9cbea;
-  --think-task-tone-4-bg: #2f2936;
-  --think-task-tone-4-text: #bfaed2;
-  --think-task-tone-4-border: #51445f;
+  --think-task-cadence-routine-bg: var(--think-bg-surface-1);
+  --think-task-cadence-routine-text: var(--think-text-primary);
+  --think-task-cadence-day-bg: #352f3c;
+  --think-task-cadence-day-text: #d6c9e5;
+  --think-task-cadence-week-bg: #43384f;
+  --think-task-cadence-week-text: #e1d6ee;
+  --think-task-cadence-month-bg: #5a496c;
+  --think-task-cadence-month-text: #f0e9f7;
+  --think-task-cadence-quarter-bg: #725e8c;
+  --think-task-cadence-quarter-text: #ffffff;
+  --think-task-cadence-year-bg: #9b82bd;
+  --think-task-cadence-year-text: #ffffff;
 
   --think-heatmap-1: #243552;
   --think-heatmap-2: #2d4a78;
@@ -1099,6 +1105,8 @@
   color: var(--think-text-primary);
 }
 .think-floating-panel__header {
+  position: relative;
+  z-index: 2;
   flex-shrink: 0;
   padding: var(--think-space-3) var(--think-space-4);
 }
@@ -1139,6 +1147,8 @@
   flex-shrink: 0;
 }
 .think-floating-panel__body {
+  position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
@@ -3244,6 +3254,864 @@
   .think-progress-bar--compact { width: min(100%, 220px); }
   .think-progress-skill { grid-template-columns: minmax(0, 1fr) auto; }
   .think-progress-skill .think-progress-bar { grid-column: 1 / -1; width: 100%; }
+}
+.think-progress-energy {
+  margin: 0 var(--think-space-6) var(--think-space-4);
+  padding: var(--think-space-3) var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-secondary);
+}
+.think-progress-energy__summary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--think-space-3);
+  flex-wrap: wrap;
+}
+.think-progress-energy__title {
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+}
+.think-progress-energy__score {
+  font-size: var(--think-font-size-xl);
+  line-height: 1;
+}
+.think-progress-energy__dimension,
+.think-progress-energy__meta {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+.think-progress-energy__meta {
+  margin-left: auto;
+}
+.think-progress-energy__samples {
+  display: grid;
+  gap: var(--think-space-2);
+  margin-top: var(--think-space-3);
+}
+.think-progress-energy__sample {
+  display: block;
+  width: 100%;
+  padding: var(--think-space-2) var(--think-space-3);
+  border: 0;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+.think-progress-energy__sample:not(:disabled) {
+  cursor: pointer;
+}
+.think-progress-energy__sample:not(:disabled):hover {
+  background: var(--think-bg-hover);
+}
+@media (max-width: 600px) {
+  .think-progress-energy__meta { margin-left: 0; width: 100%; }
+}
+.think-progress-energy__sample-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: var(--think-space-3);
+  align-items: center;
+}
+.think-progress-energy__context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-2) var(--think-space-4);
+  margin-top: var(--think-space-1);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+@media (max-width: 600px) {
+  .think-progress-energy__sample-main { grid-template-columns: minmax(0, 1fr) auto; }
+  .think-progress-energy__sample-main > span:nth-child(n+3) { display: none; }
+}
+.think-progress-energy-timeline {
+  display: grid;
+  gap: var(--think-space-2);
+  margin-top: var(--think-space-3);
+  padding-top: var(--think-space-3);
+  border-top: 1px solid var(--think-border-subtle);
+}
+.think-progress-energy-timeline__stats,
+.think-progress-energy-timeline__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-2) var(--think-space-4);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+.think-progress-energy-timeline__stats strong {
+  color: var(--think-text-normal);
+}
+.think-progress-energy-timeline__axis,
+.think-progress-energy-timeline__day {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: var(--think-space-2);
+}
+.think-progress-energy-timeline__axis {
+  grid-template-columns: 48px repeat(5, 1fr);
+  color: var(--think-text-faint);
+  font-size: 10px;
+  text-align: center;
+}
+.think-progress-energy-timeline__axis span:nth-child(2) { text-align: left; }
+.think-progress-energy-timeline__axis span:last-child { text-align: right; }
+.think-progress-energy-timeline__date {
+  padding-top: 12px;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+.think-progress-energy-timeline__track {
+  position: relative;
+  min-height: 58px;
+  border-left: 1px solid var(--think-border-subtle);
+  border-right: 1px solid var(--think-border-subtle);
+  background: var(--think-bg-primary);
+  overflow: visible;
+}
+.think-progress-energy-timeline__guide {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-top: 1px dashed var(--think-border-subtle);
+  pointer-events: none;
+}
+.think-progress-energy-timeline__guide.is-high { top: 20%; }
+.think-progress-energy-timeline__guide.is-mid { top: 50%; }
+.think-progress-energy-timeline__guide.is-low { top: 80%; }
+.think-progress-energy-timeline__line {
+  position: absolute;
+  left: var(--think-energy-line-left);
+  top: var(--think-energy-line-top);
+  width: var(--think-energy-line-width);
+  height: 1px;
+  background: var(--think-text-muted);
+  transform: rotate(var(--think-energy-line-angle));
+  transform-origin: 0 0;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.think-progress-energy-timeline__point {
+  position: absolute;
+  left: var(--think-energy-time);
+  bottom: var(--think-energy-score);
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 2px solid var(--think-text-accent);
+  border-radius: 999px;
+  background: var(--think-bg-primary);
+  color: var(--think-text-normal);
+  font-size: 9px;
+  font-weight: var(--think-font-weight-semibold);
+  line-height: 21px;
+  text-align: center;
+  transform: translate(-50%, 50%);
+  z-index: 2;
+}
+.think-progress-energy-timeline__point.is-retrospective {
+  border-style: dashed;
+}
+.think-progress-energy-timeline__point:not(:disabled) { cursor: pointer; }
+.think-progress-energy-timeline__point:not(:disabled):hover { background: var(--think-bg-hover); }
+.think-progress-energy-timeline__missing {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--think-text-faint);
+  font-size: var(--think-font-size-xs);
+}
+.think-progress-energy-timeline__day.is-missing .think-progress-energy-timeline__track {
+  background: transparent;
+  border-right-style: dashed;
+  border-left-style: dashed;
+}
+.think-progress-energy-timeline__dimensions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-2) var(--think-space-3);
+  color: var(--think-text-secondary);
+  font-size: 10px;
+}
+@media (max-width: 600px) {
+  .think-progress-energy-timeline__stats { gap: var(--think-space-1) var(--think-space-3); }
+  .think-progress-energy-timeline__axis,
+  .think-progress-energy-timeline__day { grid-template-columns: 40px minmax(0, 1fr); }
+  .think-progress-energy-timeline__axis { grid-template-columns: 40px repeat(5, 1fr); }
+  .think-progress-energy-timeline__point { width: 23px; height: 23px; line-height: 19px; }
+}
+.think-progress-energy-effects {
+  display: grid;
+  gap: var(--think-space-3);
+  margin-top: var(--think-space-3);
+  padding-top: var(--think-space-3);
+  border-top: 1px solid var(--think-border-subtle);
+}
+.think-progress-energy-effects__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+}
+.think-progress-energy-effects__header > div:first-child {
+  display: grid;
+  gap: var(--think-space-1);
+}
+.think-progress-energy-effects__header span,
+.think-progress-energy-effects__coverage,
+.think-progress-energy-effects__note,
+.think-progress-energy-effects__empty {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+.think-progress-energy-effects__coverage {
+  white-space: nowrap;
+}
+.think-progress-energy-effects__group {
+  display: grid;
+  gap: var(--think-space-2);
+}
+.think-progress-energy-effects__group-title {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-semibold);
+}
+.think-progress-energy-effects__rows {
+  display: grid;
+  gap: var(--think-space-1);
+}
+.think-progress-energy-effects__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px minmax(90px, auto);
+  gap: var(--think-space-3);
+  align-items: center;
+  padding: var(--think-space-2) var(--think-space-3);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-primary);
+}
+.think-progress-energy-effects__label,
+.think-progress-energy-effects__delta,
+.think-progress-energy-effects__dimension {
+  display: grid;
+  gap: 2px;
+}
+.think-progress-energy-effects__label span,
+.think-progress-energy-effects__delta span,
+.think-progress-energy-effects__dimension {
+  color: var(--think-text-secondary);
+  font-size: 10px;
+}
+.think-progress-energy-effects__delta {
+  text-align: right;
+}
+.think-progress-energy-effects__dimension {
+  grid-auto-flow: column;
+  justify-content: end;
+  gap: var(--think-space-2);
+}
+.think-progress-energy-effects__note {
+  padding-top: var(--think-space-1);
+  border-top: 1px dashed var(--think-border-subtle);
+}
+@media (max-width: 600px) {
+  .think-progress-energy-effects__header { display: grid; }
+  .think-progress-energy-effects__row { grid-template-columns: minmax(0, 1fr) 56px; }
+  .think-progress-energy-effects__dimension { grid-column: 1 / -1; justify-content: start; }
+}
+.think-progress-energy-effects__discoveries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-2) var(--think-space-4);
+  padding: var(--think-space-2) var(--think-space-3);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-primary);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+.think-progress-energy-effects__discoveries strong {
+  color: var(--think-text-normal);
+}
+.think-energy-view {
+  display: grid;
+  gap: var(--think-space-4);
+  min-width: 0;
+}
+.think-energy-view__goals,
+.think-energy-view__goal {
+  display: grid;
+  gap: var(--think-space-5);
+  min-width: 0;
+}
+.think-energy-view__goal + .think-energy-view__goal {
+  padding-top: var(--think-space-5);
+  border-top: 1px solid var(--background-modifier-border);
+}
+/* Desktop UX final: the retired count/capture/header chrome has no runtime CSS. */
+.think-energy-view__primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 310px);
+  gap: var(--think-space-5);
+  align-items: start;
+  min-width: 0;
+}
+.think-energy-view__timeline-off {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  color: var(--text-muted);
+}
+/* period review: flat list, not cards */
+.think-energy-review,
+.think-energy-detail {
+  min-width: 0;
+  padding-left: var(--think-space-4);
+  border-left: 1px solid var(--background-modifier-border);
+}
+.think-energy-review__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--think-space-2);
+  padding-bottom: var(--think-space-3);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.think-energy-review__head > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.think-energy-review__list {
+  display: grid;
+}
+.think-energy-review__row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: var(--think-space-3);
+  padding: var(--think-space-3) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+}
+.think-energy-review__row > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.think-energy-review__row > p {
+  margin: 0;
+  color: var(--text-normal);
+  line-height: 1.45;
+}
+/* selected node/day */
+.think-energy-detail {
+  display: grid;
+  gap: var(--think-space-3);
+  align-content: start;
+}
+.think-energy-detail__back,
+.think-energy-detail__open {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-accent);
+  cursor: pointer;
+}
+.think-energy-detail__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+}
+.think-energy-detail__head > div {
+  display: grid;
+  gap: 2px;
+}
+.think-energy-detail__head > div > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.think-energy-detail__mode {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.think-energy-detail__total {
+  display: flex;
+  align-items: baseline;
+  gap: var(--think-space-2);
+  padding: var(--think-space-2) 0;
+}
+.think-energy-detail__total > strong {
+  color: var(--interactive-accent);
+  font-size: 2.15rem;
+  line-height: 1;
+}
+.think-energy-detail__total > span {
+  color: var(--text-muted);
+}
+.think-energy-detail__bars {
+  display: grid;
+  gap: var(--think-space-3);
+}
+.think-energy-detail__bars > div {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: var(--think-space-3);
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.think-energy-detail__bars i {
+  position: relative;
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--background-secondary);
+}
+.think-energy-detail__bars i > b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--think-energy-detail-value);
+  border-radius: inherit;
+  background: var(--interactive-accent);
+}
+.think-energy-detail__section,
+.think-energy-detail__impact {
+  display: grid;
+  gap: var(--think-space-2);
+  padding-top: var(--think-space-3);
+  border-top: 1px solid var(--background-modifier-border);
+}
+.think-energy-detail__section > p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.45;
+}
+.think-energy-detail__impact > span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.think-energy-detail__impact > strong {
+  font-size: var(--font-ui-small);
+}
+/* 1.0.33: tasks are grouped by Goal, then by cadence. Energy only ranks within the real task system. */
+.think-os .think-energy-task-list {
+  display: grid;
+  gap: var(--think-space-3);
+  padding-top: var(--think-space-4);
+  border-top: 1px solid var(--think-border-subtle);
+}
+.think-os .think-energy-task-list__title {
+  color: var(--think-text-accent);
+  font-size: var(--think-font-size-xl);
+  font-weight: var(--think-font-weight-bold);
+}
+.think-os .think-energy-task-list__goals {
+  display: grid;
+  gap: 0;
+}
+.think-os .think-energy-task-list__goal-group {
+  display: grid;
+  gap: var(--think-space-2);
+}
+/* Desktop UX final: Goal is the stable first-level boundary. */
+.think-os .think-energy-task-list__goal-group + .think-energy-task-list__goal-group {
+  margin-top: var(--think-space-4);
+  padding-top: var(--think-space-4);
+  border-top: 1px solid var(--think-border-subtle);
+}
+.think-os .think-energy-task-list__goal-title {
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-md);
+  font-weight: var(--think-font-weight-bold);
+}
+.think-os .think-energy-task-list__rows {
+  display: grid;
+  gap: var(--think-space-2);
+}
+.think-os .think-energy-task-list__row {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: var(--think-space-3);
+  align-items: start;
+}
+.think-os .think-energy-task-list__row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  min-height: var(--think-control-height-sm);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+}
+.think-os .think-energy-task-list__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+.think-os .think-energy-task-list__item {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  max-width: 100%;
+  min-height: var(--think-control-height-sm);
+  padding: var(--think-space-2) var(--think-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--think-radius-pill);
+  background: var(--think-task-cadence-routine-bg);
+  color: var(--think-task-cadence-routine-text);
+  box-shadow: none;
+  font: inherit;
+  font-size: var(--think-font-size-sm);
+  cursor: pointer;
+}
+.think-os .think-energy-task-list__item--day { background: var(--think-task-cadence-day-bg); color: var(--think-task-cadence-day-text); }
+.think-os .think-energy-task-list__item--week { background: var(--think-task-cadence-week-bg); color: var(--think-task-cadence-week-text); }
+.think-os .think-energy-task-list__item--month { background: var(--think-task-cadence-month-bg); color: var(--think-task-cadence-month-text); }
+.think-os .think-energy-task-list__item--quarter { background: var(--think-task-cadence-quarter-bg); color: var(--think-task-cadence-quarter-text); }
+.think-os .think-energy-task-list__item--year { background: var(--think-task-cadence-year-bg); color: var(--think-task-cadence-year-text); }
+.think-os .think-energy-task-list__item:hover { border-color: color-mix(in srgb, currentColor 24%, transparent); }
+.think-os .think-energy-task-list__task {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--think-font-weight-medium);
+}
+.think-os .think-energy-task-list__count { color: var(--think-text-secondary); }
+.think-os .think-energy-task-list__empty,
+.think-os .think-energy-task-list__empty-state { color: var(--think-text-tertiary); line-height: var(--think-control-height-sm); }
+.think-os .think-energy-task-list__menu {
+  position: fixed;
+  z-index: var(--think-z-popover);
+  min-width: 220px;
+  max-width: 300px;
+  padding: var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-lg);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  box-shadow: var(--think-shadow-overlay);
+}
+.think-os .think-energy-task-list__menu-title { margin-bottom: var(--think-space-2); font-weight: var(--think-font-weight-bold); }
+.think-os .think-energy-task-list__menu-action {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-accent);
+  box-shadow: none;
+  cursor: pointer;
+}
+.think-os .think-energy-task-list__menu-meta,
+.think-os .think-energy-task-list__menu-empty { color: var(--think-text-secondary); font-size: var(--think-font-size-sm); }
+.think-os .think-energy-task-list__menu-records { display: grid; gap: var(--think-space-2); margin-top: var(--think-space-3); }
+.think-os .think-energy-task-list__menu-record { color: var(--think-text-primary); text-decoration: none; }
+@container think-view (max-width: 620px) {
+  .think-os .think-energy-task-list__row { grid-template-columns: 1fr; gap: var(--think-space-1); }
+  .think-os .think-energy-task-list__row-label { min-height: auto; }
+}
+/* 1.0.34 Desktop UX final: Energy match is a visible but lightweight badge.
+   Use warm orange-yellow instead of the task cadence purple so the signal survives
+   on day/week/month chips without turning the task itself into a recommendation card. */
+.think-os .think-energy-task-list__item { position: relative; }
+.think-os .think-energy-task-list__energy-match {
+  position: absolute;
+  top: -9px;
+  right: -7px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--think-energy-match);
+  filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--background-primary) 75%, transparent));
+  pointer-events: none;
+}
+.think-energy-period-map {
+  min-width: 0;
+}
+.think-energy-period-map--empty {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  color: var(--text-muted);
+}
+.think-energy-period-map__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--think-space-3);
+  padding-bottom: var(--think-space-3);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.think-energy-period-map__heading > strong {
+  font-size: var(--font-ui-medium);
+}
+.think-energy-period-map__heading > span,
+.think-energy-period-map__hint {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.think-energy-period-map__hint {
+  padding-top: var(--think-space-2);
+  text-align: right;
+}
+.think-energy-dot {
+  --think-energy-dot-size: 23px;
+  display: block;
+  width: var(--think-energy-dot-size);
+  height: var(--think-energy-dot-size);
+  min-width: var(--think-energy-dot-size);
+  min-height: var(--think-energy-dot-size);
+  overflow: visible;
+  color: var(--interactive-accent);
+  cursor: pointer;
+  outline: none;
+  transition: transform 120ms ease;
+  user-select: none;
+}
+/* SVG owns the geometry. No native button box, background or theme chrome exists. */
+.think-energy-dot__shape,
+.think-energy-dot__selection {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.think-energy-dot__selection {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 0;
+  opacity: 0;
+}
+.think-energy-dot__shape {
+  opacity: 1;
+}
+/* Realtime = unmistakably filled disk. */
+.think-energy-dot.is-realtime .think-energy-dot__shape {
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 0;
+}
+/* Retrospective = unmistakably hollow ring. The center stays transparent. */
+.think-energy-dot.is-retrospective .think-energy-dot__shape {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+}
+.think-energy-dot.is-plot {
+  transform: translate(-50%, -50%);
+}
+.think-energy-dot.is-cell {
+  transform: none;
+}
+.think-energy-dot.is-plot:hover,
+.think-energy-dot.is-plot.is-selected,
+.think-energy-dot.is-plot:focus-visible {
+  z-index: 4;
+  transform: translate(-50%, -50%) scale(1.12);
+}
+.think-energy-dot.is-cell:hover,
+.think-energy-dot.is-cell.is-selected,
+.think-energy-dot.is-cell:focus-visible {
+  z-index: 4;
+  transform: scale(1.12);
+}
+.think-energy-dot:hover .think-energy-dot__selection,
+.think-energy-dot.is-selected .think-energy-dot__selection,
+.think-energy-dot:focus-visible .think-energy-dot__selection {
+  stroke-width: 3;
+  opacity: 0.24;
+}
+/* day: horizontal time */
+.think-energy-day-map__track {
+  position: relative;
+  height: 138px;
+  margin: var(--think-space-3) var(--think-space-2) 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.think-energy-day-map__guide {
+  --think-energy-x: 0%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--think-energy-x);
+  width: 1px;
+}
+.think-energy-day-map__guide > i {
+  position: absolute;
+  inset: 0;
+  border-left: 1px dashed color-mix(in srgb, var(--background-modifier-border) 75%, transparent);
+}
+.think-energy-day-map__guide > b {
+  position: absolute;
+  bottom: -24px;
+  left: 0;
+  color: var(--text-faint);
+  font-size: 10px;
+  font-weight: normal;
+  transform: translateX(-50%);
+}
+.think-energy-day-map__track > .think-energy-dot {
+  --think-energy-x: 0%;
+  position: absolute;
+  top: 54%;
+  left: var(--think-energy-x);
+}
+.think-energy-day-map__empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  transform: translate(-50%, -50%);
+}
+/* week/month: date x time */
+.think-energy-date-map__scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: var(--think-space-3);
+}
+.think-energy-date-map__chart {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+.think-energy-date-map__chart.is-week {
+  min-width: 700px;
+}
+.think-energy-date-map__chart.is-month {
+  min-width: 1280px;
+}
+.think-energy-date-map__axis {
+  display: grid;
+  grid-template-rows: 42px 360px;
+}
+.think-energy-date-map__axis-track {
+  position: relative;
+}
+.think-energy-date-map__axis-track > span {
+  --think-energy-y: 0%;
+  position: absolute;
+  top: var(--think-energy-y);
+  right: var(--think-space-2);
+  color: var(--text-faint);
+  font-size: 10px;
+  transform: translateY(-50%);
+}
+.think-energy-date-map__axis-track > span:first-child {
+  transform: translateY(0);
+}
+.think-energy-date-map__axis-track > span:last-child {
+  transform: translateY(-100%);
+}
+.think-energy-date-map__days {
+  --think-energy-day-count: 7;
+  display: grid;
+  grid-template-columns: repeat(var(--think-energy-day-count), minmax(38px, 1fr));
+}
+.think-energy-date-map__day {
+  display: grid;
+  grid-template-rows: 42px 360px;
+  min-width: 38px;
+  border-left: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+}
+.think-energy-date-map__day.is-missing {
+  background: color-mix(in srgb, var(--background-secondary) 55%, transparent);
+}
+.think-energy-date-map__day-head {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+}
+.think-energy-date-map__day-head > strong {
+  font-size: var(--font-ui-smaller);
+}
+.think-energy-date-map__day-head > span {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+.think-energy-date-map__lane {
+  position: relative;
+}
+.think-energy-date-map__guide {
+  --think-energy-y: 0%;
+  position: absolute;
+  top: var(--think-energy-y);
+  right: 0;
+  left: 0;
+  border-top: 1px dashed color-mix(in srgb, var(--background-modifier-border) 58%, transparent);
+}
+.think-energy-date-map__lane > .think-energy-dot {
+  --think-energy-y: 0%;
+  position: absolute;
+  top: var(--think-energy-y);
+  left: 50%;
+}
+/* quarter/year: one day = one strongly encoded dot */
+.think-energy-daily-dots__months {
+  display: grid;
+  gap: var(--think-space-4);
+  padding-top: var(--think-space-3);
+}
+.think-energy-daily-dots__months.is-quarter {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.think-energy-daily-dots__months.is-year {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.think-energy-daily-dots__month {
+  min-width: 0;
+}
+.think-energy-daily-dots__month > strong {
+  display: block;
+  margin-bottom: var(--think-space-2);
+  font-size: var(--font-ui-small);
+}
+.think-energy-daily-dots__weekdays,
+.think-energy-daily-dots__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(30px, 1fr));
+  gap: 4px;
+}
+.think-energy-daily-dots__weekdays {
+  margin-bottom: 4px;
+  color: var(--text-faint);
+  font-size: 9px;
+  text-align: center;
+}
+.think-energy-daily-dots__grid > i,
+.think-energy-daily-dot-cell {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 32px;
+}
+.think-energy-daily-dot-cell.is-missing {
+  background: transparent;
+}
+.think-energy-daily-dot {
+  justify-self: center;
+  align-self: center;
+}
+@media (max-width: 900px) {
+  .think-energy-daily-dots__months.is-year,
+  .think-energy-daily-dots__months.is-quarter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .think-energy-daily-dots__months.is-year,
+  .think-energy-daily-dots__months.is-quarter {
+    grid-template-columns: 1fr;
+  }
 }
 /* Migrated heatmap feature styles. */
 /*
@@ -5734,159 +6602,35 @@ body.excel-view-is-resizing-column * {
     border-color: var(--think-border-strong);
     background: var(--think-bg-hover);
 }
-/* Task execution dashboard and recurrence-tone chips. */
-.think-os .task-execution-view {
-  display: flex;
-  flex-direction: column;
-  gap: var(--think-space-7);
+.think-timer-row {
+  display: grid;
+  gap: 4px;
+  width: 100%;
 }
-.think-os .task-execution-section,
-.think-os .task-execution-section-body {
-  display: flex;
-  flex-direction: column;
+.think-timer-row__suggested-duration {
+  padding-inline: 4px;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: 1.35;
 }
-.think-os .task-execution-section { gap: var(--think-space-5); }
-.think-os .task-execution-section-body { gap: var(--think-space-4); }
-.think-os .task-execution-section + .task-execution-section {
-  padding-top: var(--think-space-7);
-  border-top: 1px solid var(--think-border-subtle);
-}
-.think-os .task-execution-section-header {
+.think-timer-row__stop-point {
   display: flex;
   align-items: center;
+  gap: 8px;
+  padding-inline-start: 4px;
 }
-.think-os .task-execution-section-title {
-  margin: 0;
-  color: var(--think-text-accent);
-  font-size: var(--think-font-size-2xl);
-  font-weight: var(--think-font-weight-bold);
-  line-height: var(--think-line-height-tight);
-}
-.think-os .task-execution-subsection-body {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--think-space-5) var(--think-space-6);
-  min-width: 0;
-}
-.think-os .task-execution-subsection-title {
-  flex: 0 0 auto;
-  margin: 0;
-  color: var(--think-text-secondary);
-  font-size: var(--think-font-size-md);
-  font-weight: var(--think-font-weight-semibold);
-  line-height: var(--think-control-height-md);
-}
-.think-os .task-execution-chip-grid {
-  display: flex;
-  flex: 1 1 auto;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--think-space-4);
-  min-width: 0;
-}
-.think-os .task-execution-chip {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--think-control-height-sm);
-  max-width: 100%;
-  padding: var(--think-space-3) var(--think-space-5);
-  border: 1px solid transparent;
-  border-radius: var(--think-radius-pill);
-  outline: none;
-  background: var(--think-task-tone-0-bg);
-  color: var(--think-task-tone-0-text);
-  box-shadow: var(--think-shadow-none);
-  font: inherit;
-  font-size: var(--think-font-size-sm);
-  font-weight: var(--think-font-weight-medium);
-  line-height: var(--think-line-height-normal);
-  cursor: pointer;
-  transition:
-    background-color var(--think-duration-fast) var(--think-ease-standard),
-    border-color var(--think-duration-fast) var(--think-ease-standard),
-    transform var(--think-duration-fast) var(--think-ease-standard),
-    box-shadow var(--think-duration-fast) var(--think-ease-standard);
-}
-.think-os .task-execution-chip-label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.think-os .task-execution-chip-count {
-  margin-left: var(--think-space-1);
-  color: inherit;
-  font-size: inherit;
-  font-weight: var(--think-font-weight-semibold);
-  line-height: 1;
-  opacity: 0.78;
-}
-.think-os .task-execution-chip--tone-1 {
-  background: var(--think-task-tone-1-bg);
-  color: var(--think-task-tone-1-text);
-}
-.think-os .task-execution-chip--tone-2 {
-  background: var(--think-task-tone-2-bg);
-  color: var(--think-task-tone-2-text);
-}
-.think-os .task-execution-chip--tone-3 {
-  background: var(--think-task-tone-3-bg);
-  color: var(--think-task-tone-3-text);
-}
-.think-os .task-execution-chip--tone-4 {
-  border-color: var(--think-task-tone-4-border);
-  background: var(--think-task-tone-4-bg);
-  color: var(--think-task-tone-4-text);
-}
-.think-os .task-execution-chip:hover {
-  border-color: color-mix(in srgb, currentColor 24%, transparent);
-  box-shadow: var(--think-shadow-sm);
-}
-.think-os .task-execution-chip:active { transform: translateY(1px); }
-.think-os .task-execution-context-menu {
-  position: fixed;
-  z-index: var(--think-z-popover);
-  min-width: 220px;
-  max-width: 280px;
-  padding: var(--think-space-5);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
-  background: var(--think-bg-elevated);
-  color: var(--think-text-primary);
-  box-shadow: var(--think-shadow-overlay);
-}
-.think-os .task-execution-context-title {
-  margin-bottom: var(--think-space-2);
-  font-size: var(--think-font-size-md);
-  font-weight: var(--think-font-weight-bold);
-}
-.think-os .task-execution-context-meta,
-.think-os .task-execution-context-rule,
-.think-os .task-execution-context-empty {
-  color: var(--think-text-secondary);
-  font-size: var(--think-font-size-sm);
-}
-.think-os .task-execution-context-meta,
-.think-os .task-execution-context-rule { margin-bottom: var(--think-space-2); }
-.think-os .task-execution-context-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--think-space-3);
-  margin-top: var(--think-space-4);
-}
-.think-os .task-execution-context-link {
+/* Namespaced on purpose: Obsidian themes may own a global .empty-state selector.
+   The timer empty body must never cover the floating header / drag / close controls. */
+.think-os .think-timer-empty-state {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
   padding: var(--think-space-3) var(--think-space-4);
-  border-radius: var(--think-radius-md);
-  color: var(--think-text-primary);
-  text-decoration: none;
-}
-.think-os .task-execution-context-link:hover { background: var(--think-bg-hover); }
-.think-os .task-execution-context-empty { padding: var(--think-space-2) 0; }
-@container think-view (max-width: 560px) {
-  .think-os .task-execution-subsection-body { gap: var(--think-space-4); }
-  .think-os .task-execution-chip-grid { flex-basis: 100%; }
+  color: var(--think-text-tertiary);
+  font-size: var(--think-font-size-sm);
+  line-height: 1.4;
+  pointer-events: none;
+  user-select: none;
 }
 /*
  * MUI host bridge.
@@ -6247,3 +6991,202 @@ body.excel-view-is-resizing-column * {
 .modal.think-quick-input-modal .think-qif-time-direction { display: flex; align-items: center; justify-content: flex-end; min-height: 28px; }
 .modal.think-quick-input-modal .think-qif-time-direction__label { display: inline-flex; align-items: center; gap: var(--think-space-2); cursor: pointer; font-size: var(--think-font-size-xs); color: var(--think-text-secondary); }
 @media (max-width: 640px) { .modal.think-quick-input-modal .think-qif-frame--inline { grid-template-columns: 1fr; } .modal.think-quick-input-modal .think-qif-frame__inline-label { padding-top: 0; } }
+/* Energy direct-capture surface. Kept separate from generic QuickInput overrides. */
+.modal.think-quick-input-modal .think-quick-input-energy-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-6);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-section {
+  display: block;
+  min-width: 0;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-section__title {
+  margin-bottom: var(--think-space-2);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-bold);
+  line-height: var(--think-line-height-tight);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-levels {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--think-space-2);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-level {
+  min-width: 0;
+  min-height: 64px;
+  padding: var(--think-space-3) var(--think-space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--think-space-1);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-level__score {
+  font-size: var(--think-font-size-md);
+  font-weight: var(--think-font-weight-bold);
+  line-height: 1;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-level__label {
+  color: inherit;
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-tight);
+  white-space: nowrap;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+  margin-bottom: var(--think-space-2);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-mode-row .think-quick-input-energy-section__title {
+  margin-bottom: 0;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-detail-toggle,
+.modal.think-quick-input-modal .think-quick-input-energy-save-detailed {
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+  color: var(--think-text-primary);
+  cursor: pointer;
+  font: inherit;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-detail-toggle {
+  padding: var(--think-space-1) var(--think-space-3);
+  font-size: var(--think-font-size-xs);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-detailed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-4);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-dimension {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-2);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-dimension__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+  color: var(--think-text-primary);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-dimension__controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: var(--think-space-3);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-dimension__controls input[type="range"] {
+  width: 100%;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-dimension__number {
+  width: 100%;
+  box-sizing: border-box;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-summary {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--think-space-2);
+  padding: var(--think-space-3);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-summary strong {
+  font-size: var(--think-font-size-lg);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-summary__hint {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-save-detailed {
+  min-height: 40px;
+  padding: var(--think-space-2) var(--think-space-4);
+  font-weight: var(--think-font-weight-bold);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-detail-toggle:disabled,
+.modal.think-quick-input-modal .think-quick-input-energy-save-detailed:disabled {
+  cursor: default;
+  opacity: 0.68;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-capture-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--think-space-2);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-capture-mode__button {
+  min-height: 36px;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+  color: var(--think-text-primary);
+  cursor: pointer;
+  font: inherit;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-capture-mode__button.is-active {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+  font-weight: var(--think-font-weight-bold);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-retrospective-time {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--think-space-3);
+  margin-top: var(--think-space-3);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-retrospective-time label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-1);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-retrospective-time input {
+  min-height: 36px;
+  box-sizing: border-box;
+}
+.modal.think-quick-input-modal .think-quick-input-energy-retrospective-time .think-quick-input-context-hint {
+  grid-column: 1 / -1;
+}
+@media (max-width: 640px) {
+  .modal.think-quick-input-modal .think-quick-input-energy-levels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .modal.think-quick-input-modal .think-quick-input-energy-retrospective-time {
+    grid-template-columns: 1fr;
+  }
+
+  .modal.think-quick-input-modal .think-quick-input-energy-retrospective-time .think-quick-input-context-hint {
+    grid-column: auto;
+  }
+
+  .modal.think-quick-input-modal .think-quick-input-energy-dimension__controls {
+    grid-template-columns: minmax(0, 1fr) 68px;
+  }
+
+  .modal.think-quick-input-modal .think-quick-input-energy-summary {
+    grid-template-columns: auto auto;
+  }
+
+  .modal.think-quick-input-modal .think-quick-input-energy-summary__hint {
+    grid-column: 1 / -1;
+  }
+}
+/* 1.0.26 desktop reset: target context is informational by default. */
+.think-quick-input-energy-target__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+}
+.think-quick-input-energy-target__editor {
+  display: grid;
+  gap: var(--think-space-2);
+  padding-top: var(--think-space-2);
+}
