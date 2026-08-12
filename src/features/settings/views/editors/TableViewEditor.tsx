@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Stack } from '@shared/ui/public';
-import type { ViewEditorProps } from './registry';
+import type { ViewEditorProps } from './ViewEditorProps';
 import { TABLE_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import { FieldPickerAutocomplete } from './FieldPickerAutocomplete';
 import { ConfigSection, ViewEditorShell } from './settingsEditorUi';

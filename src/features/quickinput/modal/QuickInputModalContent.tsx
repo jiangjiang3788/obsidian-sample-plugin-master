@@ -9,7 +9,7 @@ import {
   useSelector,
   useUseCases,
 } from '@/app/public';
-import type { Item, QuickInputSaveData } from '@core/types/public';
+import type { RecordViewItem, QuickInputSaveData } from '@core/types/public';
 import { getRecordTypeById, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
 import type { QuickInputEnergyCaptureRequest } from '../editor/QuickInputEditorModel';
 import { dayjs } from '@core/utils/public';
@@ -36,7 +36,7 @@ export interface QuickInputModalContentProps {
   closeModal: () => void;
   allowBlockSwitch: boolean;
   mode: 'create' | 'edit';
-  editItem?: Item;
+  editItem?: RecordViewItem;
   source?: Extract<RecordInputSource, 'quickinput' | 'view_quick_create' | 'timer' | 'unknown'>;
   vaultName: string;
   onSubmitSuccess?: (result: RecordSubmitResult, draft: QuickInputSaveData) => void | Promise<void>;

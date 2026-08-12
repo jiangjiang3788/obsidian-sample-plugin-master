@@ -1,6 +1,6 @@
 /* src/core/services/types.ts */
 import type { InjectionToken } from 'tsyringe';
-import type { ThinkSettings } from '@/core/types/schema';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 
 // [Phase2] Obsidian App 类型不应进入 core。
 // - Token 仍然存在（供 platform/app 组合根注册/注入）

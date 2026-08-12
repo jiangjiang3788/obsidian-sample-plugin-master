@@ -3,7 +3,7 @@ import { generateId } from '@core/utils/public';
 import { TimerStateService } from '@core/services/public';
 import type { TimerState } from '@/app/store/types';
 import { isActiveTimerState } from '@core/types/public';
-import type { AppStoreApi } from './index';
+import type { AppStoreApi } from './AppStoreApi';
 
 /**
  * TimerUseCase

@@ -1,5 +1,5 @@
 import { applyRecordRefreshPlan, buildSuccessResult, finalizeRecordSubmitResult } from '@core/recordInput/public';
-import type { BlockTemplate, Item, ThemeDefinition } from '@core/types/public';
+import type { RecordCaptureTemplate, RecordViewItem, ThemeDefinition } from '@core/types/public';
 import type {
   NormalizeRecordInputResult,
   RecordOutputPlan,
@@ -16,8 +16,8 @@ import type { TemplateExecutionMeta } from '../templateSubmit';
 import type { RecordInputWorkflowRuntime } from './types';
 
 export interface RecordMigrationTransactionParams {
-  item: Item;
-  template: BlockTemplate;
+  item: RecordViewItem;
+  template: RecordCaptureTemplate;
   theme?: ThemeDefinition | null;
   resolved: ResolveDependenciesResult;
   normalized: NormalizeRecordInputResult;

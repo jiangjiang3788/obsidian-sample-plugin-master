@@ -1,5 +1,5 @@
 // src/platform/obsidian/modals/AiBatchConfirmModel.ts
-import type { BlockTemplate, InputSettings, NaturalRecordCommand, ThemeDefinition } from '@core/types/public';
+import type { RecordCaptureTemplate, InputSettings, NaturalRecordCommand, ThemeDefinition } from '@core/types/public';
 import type { GoalDefinition, GoalSettings, GoalTemplate } from '@core/goal/public';
 import type { RecordSubmitResult, SubmitCreateRecordParams } from '@core/recordInput/public';
 import { asUnknownRecord, getEffectiveTemplate, readFirstString } from '@core/utils/public';
@@ -21,7 +21,7 @@ export interface AiBatchConfirmRecordItem {
 
 export interface BuildAiBatchConfirmRecordItemsInput {
   items: NaturalRecordCommand[];
-  blocks: BlockTemplate[];
+  blocks: RecordCaptureTemplate[];
   themes: ThemeDefinition[];
   goalSettings?: GoalSettings;
   inputSettings: InputSettings;

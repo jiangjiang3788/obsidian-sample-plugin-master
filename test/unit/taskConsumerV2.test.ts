@@ -1,16 +1,16 @@
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyRecommendationLearning, attachEnergyRecommendationLearning } from '@core/energy/public';
-import { readFieldValue } from '@/core/fields';
-import { processItemsToTimelineTasks } from '@/features/settings/views/runtime/timeline-parser';
+import { readFieldValue } from '@/core/fields/public';
+import { processItemsToTimelineTasks } from '@/features/views/runtime/timeline-parser';
 import { fromCachedItem, toCachedItem } from '@/core/types/cache';
 
-function item(overrides: Partial<Item>): Item {
+function item(overrides: Partial<RecordViewItem>): RecordViewItem {
   return {
     id: 'record', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides,
-  } as Item;
+  } as RecordViewItem;
 }
 
-function task(id: string, overrides: Partial<Item> = {}): Item {
+function task(id: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return item({
     id, title: id, content: id, coreBlock: 'task', status: 'open',
     file: { path: 'tasks.md', basename: 'tasks', folder: '' },
@@ -18,7 +18,7 @@ function task(id: string, overrides: Partial<Item> = {}): Item {
   });
 }
 
-function session(id: string, taskId: string, seriesId: string, delta: number, date: string): Item {
+function session(id: string, taskId: string, seriesId: string, delta: number, date: string): RecordViewItem {
   return item({
     id, coreBlock: 'task-session', taskId, seriesId,
     sessionStartedAt: `${date}T09:00:00`, sessionEndedAt: `${date}T10:00:00`, sessionDurationMinutes: 60,

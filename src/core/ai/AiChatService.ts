@@ -18,7 +18,7 @@ import { AiHttpClient, OpenAIChatMessage } from './AiHttpClient';
 import { RetrievalService, RetrievalFilters } from './RetrievalService';
 import type { AiSettings } from '@/core/types/ai-schema';
 import { DEFAULT_AI_SETTINGS } from '@/core/types/ai-schema';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { ISettingsProvider } from '@/core/services/types';
 import { SettingsProviderToken } from '@/core/services/types';
 import { dayjs } from '@core/utils/date';
@@ -42,7 +42,7 @@ export interface ChatRequest {
 export interface ChatResponse {
     /** AI 回复内容 */
     content: string;
-    /** 引用的 Item ID 列表 */
+    /** 引用的 RecordViewItem ID 列表 */
     referencedItemIds: string[];
     /** 使用的模型 */
     model: string;
@@ -105,7 +105,7 @@ export class AiChatService {
     /**
      * 从检索结果构建上下文字符串
      */
-    private buildContextFromItems(items: Item[]): string {
+    private buildContextFromItems(items: RecordViewItem[]): string {
         if (!items || items.length === 0) {
             return '';
         }

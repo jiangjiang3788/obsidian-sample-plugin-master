@@ -5,7 +5,7 @@ import { FloatingPanel } from '@/app/public';
 import { AddCircleOutlineIcon, Button, Stack, Tooltip } from '@shared/ui/public';
 import { TimerRow } from './TimerRow';
 import type { DataStore } from '@core/services/public';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
 
@@ -15,8 +15,8 @@ interface TimerViewViewProps {
     timers: TimerState[];
     isVisible: boolean;
     setVisible: (v: boolean) => void;
-    onOpenRecord: (item: Item) => void;
-    onOpenRecordOrigin: (item: Item) => void;
+    onOpenRecord: (item: RecordViewItem) => void;
+    onOpenRecordOrigin: (item: RecordViewItem) => void;
     onCreateNewTask: () => void;
 }
 

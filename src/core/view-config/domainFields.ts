@@ -1,4 +1,4 @@
-import type { FilterRule, SortRule, ViewInstance } from '../types/schema';
+import type { FilterRule, SortRule, ViewInstance } from '@/core/view/ViewConfig';
 
 /**
  * View domain field policy

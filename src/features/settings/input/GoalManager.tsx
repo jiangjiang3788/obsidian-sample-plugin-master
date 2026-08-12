@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@shared/ui/public';
 import { selectSettings, useSelector, useUseCases } from '@/app/public';
-import { GoalTemplateMatrix } from '@features/settings/goalTemplates';
+import { GoalTemplateMatrix } from '@features/settings/goalTemplates/GoalTemplateMatrix';
 import { pathLeaf } from './goalManager/shared';
 
 /**

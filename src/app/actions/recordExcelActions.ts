@@ -1,4 +1,4 @@
-import type { Item, TemplateField } from '@core/types/public';
+import type { RecordViewItem, TemplateField } from '@core/types/public';
 import type { UiPort } from '@core/ports/public';
 import {
   getFieldEditPolicy,
@@ -7,13 +7,13 @@ import {
   normalizeEditableFieldKey,
   normalizeTemplateFieldValue,
 } from '@core/fields/public';
-import type { UseCases } from '@/app/public';
+import type { UseCases } from '@/app/usecases';
 import { runUiRecordAction } from './runUiRecordAction';
 
 export interface CommitExcelCellFromViewParams {
   uiPort: UiPort;
   useCases: UseCases;
-  item: Item;
+  item: RecordViewItem;
   field: string;
   canonicalField?: string;
   oldValue?: unknown;

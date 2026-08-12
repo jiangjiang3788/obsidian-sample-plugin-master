@@ -3,17 +3,18 @@
 //
 // 单人版收敛：Heatmap 只读取 block fallback；新建记录主链使用 GoalTemplateResolver。
 
-import type { BlockTemplate, InputSettings, ThemeDefinition } from '@/core/types/schema';
+import type { RecordCaptureTemplate, InputSettings } from '@/core/recordInput/CaptureTemplate';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 
 /**
  * 获取有效的模板配置
  * 
- * 保持原有返回类型 BlockTemplate | null
+ * 保持原有返回类型 RecordCaptureTemplate | null
  * 
  * @param settings InputSettings 配置
  * @param blockId Block 模板 ID
  * @param themeId 可选的主题 ID
- * @returns BlockTemplate 或 null
+ * @returns RecordCaptureTemplate 或 null
  */
 // NOTE:
 // 这里原本导出名为 getEffectiveTemplate，与 inputTemplateUtils.ts 的同名导出冲突。
@@ -22,12 +23,12 @@ import type { BlockTemplate, InputSettings, ThemeDefinition } from '@/core/types
 //
 // 为了让 @core/public 的 API 形状稳定：
 // - inputTemplateUtils.ts 保留 getEffectiveTemplate（返回 {template, theme}）
-// - heatmapTemplate.ts 改名为 getEffectiveHeatmapTemplate（返回 BlockTemplate | null）
+// - heatmapTemplate.ts 改名为 getEffectiveHeatmapTemplate（返回 RecordCaptureTemplate | null）
 export function getEffectiveHeatmapTemplate(
     settings: InputSettings, 
     blockId: string, 
     themeId?: string
-): BlockTemplate | null {
+): RecordCaptureTemplate | null {
     void themeId;
     return settings.blocks.find((block) => block.id === blockId) ?? null;
 }

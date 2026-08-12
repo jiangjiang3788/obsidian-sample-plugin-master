@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 
 import { safeAsync } from '@shared/utils/public';
 import { startMeasure } from '@shared/utils/public';
@@ -7,13 +7,13 @@ import { startMeasure } from '@shared/utils/public';
 import { devLog } from '@core/utils/public';
 
 import type { Services } from '@/app/services.types';
-import { RendererService } from '@features/settings/layout/RendererService';
+import { RendererService } from '@/app/dashboard/RendererService';
 import { TimerService } from '@features/timer/TimerService';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 
 export async function loadTimerServices(opts: {
-    plugin: ThinkPlugin;
+    plugin: PluginHost;
     services: ServiceManagerServices;
     runtime: Services;
 }): Promise<void> {

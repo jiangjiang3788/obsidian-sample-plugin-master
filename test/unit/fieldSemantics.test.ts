@@ -1,6 +1,7 @@
 import { parseRecordBlock } from '@/core/utils/parser';
 import { encodeRecordBlock } from '@/core/records/codec';
-import { getAllFields, readField, type Item } from '@/core/types/schema';
+import { getAllFields, readField } from '@/core/fields/ViewFieldCatalog';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { filterByKeyword, filterByRules } from '@/core/utils/itemFilter';
 import { normalizeRecordItem } from '@/core/records/RecordNormalizer';
 import { getAvailableFieldsByCategory, getFieldLabel } from '@/core/types/fields';
@@ -8,7 +9,7 @@ import { getAvailableFieldsByCategory, getFieldLabel } from '@/core/types/fields
 const TASK_ID = 'task.01J00000000000000000000000';
 const REC_ID = 'rec.01J00000000000000000000000';
 
-function parseRecord(coreBlock: string, fields: Record<string, unknown>, id = REC_ID): Item {
+function parseRecord(coreBlock: string, fields: Record<string, unknown>, id = REC_ID): RecordViewItem {
   const markdown = encodeRecordBlock({ recordId: id, coreBlock, fields });
   const lines = markdown.split('\n');
   const item = parseRecordBlock('records.md', lines, 0, lines.length - 1, 'root');
@@ -16,7 +17,7 @@ function parseRecord(coreBlock: string, fields: Record<string, unknown>, id = RE
   return item;
 }
 
-function normalize(item: Item): Item {
+function normalize(item: RecordViewItem): RecordViewItem {
   return normalizeRecordItem(item, {
     created: 1,
     modified: 2,
@@ -57,5 +58,43 @@ describe('field semantics on Record Foundation v2', () => {
     expect(grouped.core.map(f => f.key)).toContain('title');
     expect(grouped.file.map(f => f.key)).toContain('file.path');
     expect(grouped.custom.map(f => f.key)).toContain('extra.地点');
+  });
+});
+
+
+import {
+  findMatchingOption,
+  isOptionLikeValue,
+  readOptionText,
+  toOptionObject,
+} from '@/core/semantics/option';
+import { normalizeHierarchyPath } from '@/core/fields/pathSemantics';
+
+
+describe('field option semantics', () => {
+  const options = [
+    { value: 'todo', label: '待办' },
+    { value: 'done', label: '完成' },
+    { value: '学习/英语', label: '英语' },
+  ];
+
+  it('reads primitive and option-like values with stable value/label fallbacks', () => {
+    expect(isOptionLikeValue({ label: '完成' })).toBe(true);
+    expect(isOptionLikeValue('完成')).toBe(false);
+    expect(readOptionText({ value: 'done', label: '完成' })).toEqual({ value: 'done', label: '完成' });
+    expect(readOptionText({ label: '完成' })).toEqual({ value: '完成', label: '完成' });
+    expect(readOptionText('待办')).toEqual({ value: '待办', label: '待办' });
+  });
+
+  it('matches options by value, label or normalized hierarchy path', () => {
+    expect(findMatchingOption(options, '完成')).toEqual({ value: 'done', label: '完成' });
+    expect(findMatchingOption(options, { value: 'todo' })).toEqual({ value: 'todo', label: '待办' });
+    expect(findMatchingOption(options, '学习 / 英语', { normalize: normalizeHierarchyPath, matchLeaf: true })).toEqual({ value: '学习/英语', label: '英语' });
+    expect(findMatchingOption(options, '英语', { normalize: normalizeHierarchyPath, matchLeaf: true })).toEqual({ value: '学习/英语', label: '英语' });
+  });
+
+  it('converts user selections into stable option objects only when meaningful', () => {
+    expect(toOptionObject({ value: 'done', label: '完成' })).toEqual({ value: 'done', label: '完成' });
+    expect(toOptionObject('')).toBeNull();
   });
 });

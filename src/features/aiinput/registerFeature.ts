@@ -3,13 +3,13 @@
 // Feature registration (AiInput)
 // ---------------------------------------------------------------------------
 
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import type { FeatureRegistry, UIFeatureBootContext } from '@capabilities';
 
 import { setup } from './index';
 
 export interface AiInputFeatureDeps {
-    plugin: ThinkPlugin;
+    plugin: PluginHost;
 }
 
 export function registerAiInputFeature(

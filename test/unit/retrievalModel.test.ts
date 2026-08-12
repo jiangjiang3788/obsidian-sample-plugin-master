@@ -1,5 +1,5 @@
 import type { SearchResult } from 'minisearch';
-import type { Item } from '../../src/core/types/schema';
+import type { RecordViewItem } from '../../src/core/records/RecordEntity';
 import { applyRetrievalFilters } from '../../src/core/ai/retrieval/RetrievalFilters';
 import { collectSearchableExtraText, normalizeRetrievalText, tokenizeRetrievalText } from '../../src/core/ai/retrieval/RetrievalText';
 
@@ -12,7 +12,7 @@ const searchResult = (id: string, fields: Record<string, unknown> = {}): SearchR
   ...fields,
 } as unknown as SearchResult);
 
-const item = (overrides: Partial<Item> = {}): Item => ({
+const item = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'item-1',
   title: '记录',
   content: '记录',
@@ -22,7 +22,7 @@ const item = (overrides: Partial<Item> = {}): Item => ({
   categoryKey: '任务',
   extra: {},
   ...overrides,
-} as Item);
+} as RecordViewItem);
 
 describe('retrieval model helpers', () => {
   it('normalizes nested text and tokenizes Chinese query text', () => {
@@ -37,7 +37,7 @@ describe('retrieval model helpers', () => {
   });
 
   it('applies theme/type/template/category filters through the shared helper', () => {
-    const indexed = new Map<string, Item>([
+    const indexed = new Map<string, RecordViewItem>([
       ['a', item({ id: 'a', themePath: '学习/英语', templateId: 'tpl-a', categoryKey: '打卡/听力' })],
       ['b', item({ id: 'b', themePath: '健康/运动', templateId: 'tpl-b', categoryKey: '总结' })],
     ]);

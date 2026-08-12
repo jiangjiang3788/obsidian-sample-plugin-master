@@ -10,7 +10,7 @@ import {
   type RecordOutputPlan,
   type RecordPersistencePlan,
 } from '@core/recordInput/public';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 
 export interface QuickInputOutputPlanState {
   liveOutputPlan: RecordOutputPlan | null;
@@ -25,7 +25,7 @@ export function useQuickInputOutputPlan({
 }: {
   currentState: QuickInputEditorState;
   preparedRecord: PreparedCreateRecord | PreparedEditRecord;
-  editItem?: Item;
+  editItem?: RecordViewItem;
   mode: 'create' | 'edit';
 }): QuickInputOutputPlanState {
   const liveOutputPlan = useMemo(() => {

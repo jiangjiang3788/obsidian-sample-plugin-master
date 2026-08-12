@@ -1,5 +1,6 @@
-import type { Item, ThemeDefinition } from '@/core/types/schema';
-import { readField } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
+import { readField } from '@/core/fields/ViewFieldCatalog';
 import { getItemThemePath } from './heatmap';
 import { devLog } from './devLogger';
 
@@ -7,7 +8,7 @@ import { devLog } from './devLogger';
  * 过滤结果类型
  */
 export interface FilterResult {
-    kept: Item[];
+    kept: RecordViewItem[];
     skippedCount: number;
     skippedByReason: {
         noDate: number;
@@ -22,10 +23,10 @@ export interface FilterResult {
  * @returns 过滤结果，包含保留的 items 和跳过统计
  */
 export function filterItemsByThemes(
-    items: Item[],
+    items: RecordViewItem[],
     themesToTrack: string[]
 ): FilterResult {
-    const kept: Item[] = [];
+    const kept: RecordViewItem[] = [];
     const skippedByReason = {
         noDate: 0,
         themeNotTracked: 0
@@ -70,10 +71,10 @@ export function filterItemsByThemes(
  * @returns 按主题和日期聚合的 Map
  */
 export function aggregateThemeData(
-    items: Item[],
+    items: RecordViewItem[],
     themesToTrack: string[]
-): Map<string, Map<string, Item[]>> {
-    const themeMap = new Map<string, Map<string, Item[]>>();
+): Map<string, Map<string, RecordViewItem[]>> {
+    const themeMap = new Map<string, Map<string, RecordViewItem[]>>();
 
     const effectiveThemes = themesToTrack.length > 0 
         ? themesToTrack 
@@ -111,7 +112,7 @@ export function aggregateThemeData(
  * 构建主题数据 Map 的扩展结果（包含 skipped 统计）
  */
 export interface BuildThemeDataMapResult {
-    themeMap: Map<string, Map<string, Item[]>>;
+    themeMap: Map<string, Map<string, RecordViewItem[]>>;
     filterResult: FilterResult;
 }
 
@@ -122,7 +123,7 @@ export interface BuildThemeDataMapResult {
  * @returns 包含 themeMap 和 filterResult 的结果对象
  */
 export function buildThemeDataMapWithStats(
-    items: Item[], 
+    items: RecordViewItem[], 
     themePaths: string[]
 ): BuildThemeDataMapResult {
     const themesToTrack = themePaths && themePaths.length > 0 
@@ -145,9 +146,9 @@ export function buildThemeDataMapWithStats(
  * @returns 按主题和日期聚合的 Map
  */
 export function buildThemeDataMap(
-    items: Item[], 
+    items: RecordViewItem[], 
     themePaths: string[]
-): Map<string, Map<string, Item[]>> {
+): Map<string, Map<string, RecordViewItem[]>> {
     const result = buildThemeDataMapWithStats(items, themePaths);
     
     // 调试日志（可选）
@@ -171,13 +172,13 @@ export function buildThemesByPathMap(themes: ThemeDefinition[]): Map<string, The
  * 获取指定主题的所有 items
  */
 export function getThemeItems(
-    dataByThemeAndDate: Map<string, Map<string, Item[]>>, 
+    dataByThemeAndDate: Map<string, Map<string, RecordViewItem[]>>, 
     theme: string
-): Item[] {
+): RecordViewItem[] {
     const themeData = dataByThemeAndDate.get(theme);
     if (!themeData) return [];
     
-    const items: Item[] = [];
+    const items: RecordViewItem[] = [];
     themeData.forEach(itemsOnDate => {
         if (itemsOnDate) items.push(...itemsOnDate);
     });

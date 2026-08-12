@@ -2,7 +2,7 @@
 
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { PluginSettingTab, App, Notice } from 'obsidian';
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import { Button } from '@shared/ui/public';
 import { getThinkDeviceProfileAttributes } from '@shared/utils/public';
 import { SettingsRoot } from './SettingsRoot';
@@ -29,8 +29,8 @@ export class SettingsTab extends PluginSettingTab {
     id: string;
     private services: Services;
 
-    constructor(public app: App, private plugin: ThinkPlugin) {
-        super(app, plugin);
+    constructor(public app: App, private plugin: PluginHost) {
+        super(app, plugin as any);
         this.id = plugin.manifest.id;
         this.services = createServices();
     }

@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { isEnergyItem, readEnergyItemSnapshot } from './item';
 import { asTaskSessionRecord } from '../records/task/taskSession';
 
@@ -14,7 +14,7 @@ export interface EnergyEffectEndpoint {
   score: number;
   brainScore?: number;
   physicalScore?: number;
-  item: Item;
+  item: RecordViewItem;
 }
 
 export interface EnergyActivityEffectSample {
@@ -36,7 +36,7 @@ export interface EnergyActivityEffectSample {
   deltaBrain?: number;
   deltaPhysical?: number;
   confidence: EnergyEffectConfidence;
-  item: Item;
+  item: RecordViewItem;
 }
 
 export interface EnergyEffectAggregate {
@@ -82,7 +82,7 @@ interface TimedEnergyPoint extends EnergyEffectEndpoint {
 }
 
 interface ActivityInterval {
-  item: Item;
+  item: RecordViewItem;
   startAbsolute: number;
   endAbsolute: number;
   startDate: string;
@@ -115,14 +115,14 @@ function localDateTimeFromMs(stamp: number): { date: string; time: string } {
   return { date, time };
 }
 
-function resolveEffectActivityInterval(item: Item, byId: Map<string, Item>): ActivityInterval | null {
+function resolveEffectActivityInterval(item: RecordViewItem, byId: Map<string, RecordViewItem>): ActivityInterval | null {
   const session = asTaskSessionRecord(item);
   if (!session) return null;
   const startMs = Date.parse(session.sessionStartedAt);
   const endMs = Date.parse(session.sessionEndedAt);
   if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
   const task = byId.get(session.taskId);
-  const activityItem: Item = task ? {
+  const activityItem: RecordViewItem = task ? {
     ...task,
     id: session.id,
     goalId: session.goalId || task.goalId,
@@ -145,7 +145,7 @@ function resolveEffectActivityInterval(item: Item, byId: Map<string, Item>): Act
 }
 
 
-function readEffectEnergyPoint(item: Item): TimedEnergyPoint | null {
+function readEffectEnergyPoint(item: RecordViewItem): TimedEnergyPoint | null {
   if (!isEnergyItem(item)) return null;
   const snapshot = readEnergyItemSnapshot(item);
   if (!snapshot?.date || !snapshot.time) return null;
@@ -163,11 +163,11 @@ function readEffectEnergyPoint(item: Item): TimedEnergyPoint | null {
   };
 }
 
-function activityTitle(item: Item): string {
+function activityTitle(item: RecordViewItem): string {
   return readEffectText(item.title) || readEffectText(item.content) || '未命名任务';
 }
 
-export function classifyEnergyActivity(item: Item): string {
+export function classifyEnergyActivity(item: RecordViewItem): string {
   const text = [item.title, item.content, item.themePath, item.theme, item.leafTheme, item.rootTheme]
     .map((value) => String(value || ''))
     .join(' ');
@@ -184,7 +184,7 @@ export function classifyEnergyActivity(item: Item): string {
   return activityTitle(item).slice(0, 24);
 }
 
-function effectThemeLabel(item: Item): string {
+function effectThemeLabel(item: RecordViewItem): string {
   return readEffectText(item.themePath) || readEffectText(item.theme) || readEffectText(item.rootTheme) || readEffectText(item.leafTheme) || '未标主题';
 }
 
@@ -271,7 +271,7 @@ function aggregateEffectRows(
  * The linker has already chosen the before/after snapshots, so analytics never re-match
  * by Goal, timestamp proximity, raw Task fields, or Timer runtime history.
  */
-export function buildEnergyEffects(items: Item[], options: BuildEnergyEffectsOptions = {}): EnergyEffectAnalytics | null {
+export function buildEnergyEffects(items: RecordViewItem[], options: BuildEnergyEffectsOptions = {}): EnergyEffectAnalytics | null {
   const highBeforeGapMinutes = Math.max(1, options.highBeforeGapMinutes ?? DEFAULT_HIGH_BEFORE_GAP);
   const highAfterGapMinutes = Math.max(1, options.highAfterGapMinutes ?? DEFAULT_HIGH_AFTER_GAP);
   const minimumTrendSamples = Math.max(2, options.minimumTrendSamples ?? DEFAULT_MINIMUM_TREND_SAMPLES);

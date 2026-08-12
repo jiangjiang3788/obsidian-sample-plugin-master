@@ -1,4 +1,4 @@
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { EditableRecordSnapshot } from '@/core/types/recordSnapshot';
 import { buildParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 import { buildRecordOutputPlan, buildRecordPersistencePlan } from './OutputPlanner';
@@ -9,7 +9,7 @@ import { buildRecordOutputPlan, buildRecordPersistencePlan } from './OutputPlann
  */
 export function buildEditableRecordSnapshot(input: {
   mode: 'create' | 'edit';
-  item?: Item | null;
+  item?: RecordViewItem | null;
   blockId: string | null;
   themeId: string | null;
   fields: Record<string, unknown>;

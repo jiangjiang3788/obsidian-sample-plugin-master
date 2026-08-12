@@ -8,7 +8,7 @@
  */
 export { DataStore } from './DataStore';
 export { InputService } from './InputService';
-export { ItemService } from './ItemService';
+export { ItemService } from './item/ItemService';
 export { ActionService } from './ActionService';
 export { TimerStateService } from './TimerStateService';
 export { SettingsRepository, SETTINGS_PERSISTENCE_TOKEN } from './SettingsRepository';

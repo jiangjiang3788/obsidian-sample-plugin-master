@@ -1,7 +1,7 @@
-import type { Item } from '../../src/core/types/schema';
+import type { RecordViewItem } from '../../src/core/records/RecordEntity';
 import { normalizeRecordItem } from '../../src/core/records/RecordNormalizer';
 
-const baseItem = (overrides: Partial<Item> = {}): Item => ({
+const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'task.01J00000000000000000000003',
   schemaVersion: 2,
   coreBlock: 'task',

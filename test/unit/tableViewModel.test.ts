@@ -3,7 +3,7 @@ import {
   findTableViewTimer,
   getTableViewEmptyMessage,
   isTableViewConfigured,
-} from '@/features/settings/views/runtime/TableViewModel';
+} from '@/features/views/runtime/TableViewModel';
 
 const items = [
   { id: 'a', title: 'A', fields: { status: 'todo', theme: 'work' } },

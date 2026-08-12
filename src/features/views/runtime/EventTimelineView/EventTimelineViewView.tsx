@@ -1,0 +1,94 @@
+/** @jsxImportSource preact */
+// src/features/settings/views/runtime/timeline/EventTimelineViewView.tsx
+import { h } from 'preact';
+import type { RecordViewItem } from '@core/types/public';
+import type { MessageRenderPort } from '@core/ports/public';
+import type { GroupNode } from '@core/utils/public';
+import type { MarkDoneHandler, OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
+
+import { GroupedContainer } from '@shared/ui/public';
+import { EventTimelineEventList } from './EventTimelineEventList';
+
+interface EventTimelineViewViewProps {
+  filteredItems: RecordViewItem[];
+  groupedTree: GroupNode[] | null;
+  resolveResourcePath?: ResolveResourcePathHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
+  displayFields: string[];
+  getItemTime: (item: RecordViewItem) => any | null;
+  titleField: string;
+  contentField: string;
+  maxContentLength: number;
+  messageRenderPort?: MessageRenderPort;
+  onMarkDone?: MarkDoneHandler;
+  timerService: TimerController;
+  timers: any[];
+  allThemes: any[];
+  onOpenRecord?: OpenRecordHandler;
+}
+
+export function EventTimelineViewView(props: EventTimelineViewViewProps) {
+  const {
+    filteredItems,
+    groupedTree,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    displayFields,
+    getItemTime,
+    titleField,
+    contentField,
+    maxContentLength,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord,
+  } = props;
+
+  const renderEventList = (items: RecordViewItem[]) => (
+    <EventTimelineEventList
+      items={items}
+      displayFields={displayFields}
+      getItemTime={getItemTime}
+      titleField={titleField}
+      contentField={contentField}
+      maxContentLength={maxContentLength}
+      resolveResourcePath={resolveResourcePath}
+      onOpenRecordOrigin={onOpenRecordOrigin}
+      messageRenderPort={messageRenderPort}
+      onMarkDone={onMarkDone}
+      timerService={timerService}
+      timers={timers}
+      allThemes={allThemes}
+      onOpenRecord={onOpenRecord}
+    />
+  );
+
+  if (filteredItems.length === 0) {
+    return <div class="event-timeline-empty">当前时间范围内没有事件记录。</div>;
+  }
+
+  if (!groupedTree) {
+    return (
+      <div class="event-timeline-view">
+        <div class="et-ungrouped">{renderEventList(filteredItems)}</div>
+      </div>
+    );
+  }
+
+  return (
+    <GroupedContainer
+      nodes={groupedTree}
+      classNames={{
+        root: 'event-timeline-view',
+        group: 'et-group',
+        title: 'et-group-title',
+        content: 'et-group-content',
+        toggleIcon: 'et-group-toggle-icon',
+        label: 'et-group-label',
+      }}
+      renderLeaf={(leafItems) => renderEventList(leafItems)}
+    />
+  );
+}

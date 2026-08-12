@@ -1,4 +1,5 @@
-import type { Item, Theme } from '@core/types/public';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { Theme } from '@/core/types/theme';
 import { getThemePathLeaf } from './themePathSemantics';
 
 export type ManagedTheme = Theme & {
@@ -77,7 +78,7 @@ export function groupThemesByStatus(themes: Iterable<ManagedTheme>): { active: T
     };
 }
 
-export function extractExplicitThemeFromItem(item: Item): string | null {
+export function extractExplicitThemeFromItem(item: RecordViewItem): string | null {
     return item.theme || null;
 }
 

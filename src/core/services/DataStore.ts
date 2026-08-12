@@ -1,5 +1,7 @@
 import { singleton, inject } from 'tsyringe';
-import type { Item, FilterRule, SortRule } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { FilterRule, SortRule } from '@/core/view/ViewConfig';
+import { toRecordViewItem, type RecordEntity } from '@/core/records/RecordEntity';
 import { throttle } from '@core/utils/timing';
 import type { IThemeMatcher } from '@core/types/theme';
 import { THEME_MATCHER_TOKEN } from '@core/types/theme';
@@ -147,7 +149,7 @@ export class DataStore {
    * Phase2 迁移辅助：按路径扫描文件。
    * 目的：让 core 其它服务（如 ItemService）不需要依赖 Obsidian 的 TFile 类型。
    */
-  async scanFileByPath(filePath: string, opts: { bumpVersion?: boolean; deferIndexRebuild?: boolean; deferCacheSave?: boolean; throwOnError?: boolean } = {}): Promise<Item[]> {
+  async scanFileByPath(filePath: string, opts: { bumpVersion?: boolean; deferIndexRebuild?: boolean; deferCacheSave?: boolean; throwOnError?: boolean } = {}): Promise<RecordEntity[]> {
     if (!this._assertNotDisposed()) return [];
     return await this.scanFile(filePath, opts);
   }
@@ -162,7 +164,7 @@ export class DataStore {
    * - string: file path
    * - { path: string }: 结构化对象（兼容 TFile）
    */
-  async scanFile(filePathOrFile: FilePathInput, opts: { bumpVersion?: boolean; deferIndexRebuild?: boolean; deferCacheSave?: boolean; throwOnError?: boolean } = {}): Promise<Item[]> {
+  async scanFile(filePathOrFile: FilePathInput, opts: { bumpVersion?: boolean; deferIndexRebuild?: boolean; deferCacheSave?: boolean; throwOnError?: boolean } = {}): Promise<RecordEntity[]> {
     if (!this._assertNotDisposed()) return [];
     try {
       const scanned = await this.fileScanner.scan(filePathOrFile);
@@ -210,25 +212,17 @@ export class DataStore {
 
   /* ---------------- 查询 ---------------- */
 
-  queryRecords(filters: FilterRule[] = [], sortRules: SortRule[] = []): Item[] {
-    return this.index.queryRecords(filters, sortRules);
-  }
+  queryRecords(filters: FilterRule[] = [], sortRules: SortRule[] = []): RecordViewItem[] { return this.index.queryRecords(filters, sortRules); }
+  queryItems(filters: FilterRule[] = [], sortRules: SortRule[] = []): RecordViewItem[] { return this.index.queryItems(filters, sortRules); }
 
-  queryItems(filters: FilterRule[] = [], sortRules: SortRule[] = []): Item[] {
-    return this.index.queryItems(filters, sortRules);
+  /** Canonical entity lookup for repository/domain code; getRecordById is the consumer projection. */
+  getRecordEntityById(recordId: string): RecordEntity | null { return this.index.getById(recordId); }
+  getRecordById(recordId: string): RecordViewItem | null {
+    const record = this.index.getById(recordId);
+    return record ? toRecordViewItem(record) : null;
   }
-
-  getRecordById(recordId: string): Item | null {
-    return this.index.getById(recordId);
-  }
-
-  getRecordLocation(recordId: string) {
-    return this.index.getLocation(recordId);
-  }
-
-  getRecordLocations(recordId: string) {
-    return this.index.getLocations(recordId);
-  }
+  getRecordLocation(recordId: string) { return this.index.getLocation(recordId); }
+  getRecordLocations(recordId: string) { return this.index.getLocations(recordId); }
 
   getRecordIntegrityIssues() {
     return [

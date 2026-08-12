@@ -1,5 +1,5 @@
 import type { CurrentView } from '../types/common';
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { isEnergyItem, readEnergyItemSnapshot } from './item';
 import type { EnergyCaptureMode, EnergyScoreMode } from './types';
 
@@ -15,7 +15,7 @@ export interface EnergyPeriodSample {
   physicalScore?: number;
   scoreMode?: EnergyScoreMode;
   captureMode: EnergyCaptureMode;
-  item: Item;
+  item: RecordViewItem;
 }
 
 export interface EnergyPeriodDay {
@@ -78,7 +78,7 @@ function roundMean(values: number[]): number | undefined {
   return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10;
 }
 
-function readSample(item: Item): EnergyPeriodSample | null {
+function readSample(item: RecordViewItem): EnergyPeriodSample | null {
   if (!isEnergyItem(item)) return null;
   const snapshot = readEnergyItemSnapshot(item);
   if (!snapshot?.date || !snapshot.time) return null;
@@ -109,7 +109,7 @@ function periodMode(currentView: CurrentView): EnergyPeriodMode {
  * Build the visual Energy period projection used by EnergyView.
  * It never interpolates. Quarter/year intentionally collapse each calendar day to one equal-weight daily point.
  */
-export function buildEnergyPeriod(items: Item[], options: BuildEnergyPeriodOptions): EnergyPeriodModel | null {
+export function buildEnergyPeriod(items: RecordViewItem[], options: BuildEnergyPeriodOptions): EnergyPeriodModel | null {
   const startOrdinal = dateOrdinal(options.startDate);
   const endOrdinal = dateOrdinal(options.endDate);
   if (startOrdinal == null || endOrdinal == null || endOrdinal < startOrdinal) return null;

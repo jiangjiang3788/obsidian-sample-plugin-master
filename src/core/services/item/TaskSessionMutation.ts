@@ -1,8 +1,8 @@
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { DataStore } from '../DataStore';
 import { RecordRepository, type RecordBatchOperation } from '@/core/records/RecordRepository';
 import { createRecordId } from '@/core/records/RecordId';
-import { asTaskRecord } from '@/core/records/task/taskDomain';
+import { asTaskRecord, type TaskRecord } from '@/core/records/task/taskDomain';
 import { asTaskSessionRecord, buildTaskSessionFields, type TaskSessionCreateInput } from '@/core/records/task/taskSession';
 import { readEnergyItemSnapshot } from '@/core/energy/item';
 import type { ItemTimeUpdates } from './types';
@@ -29,7 +29,7 @@ function withLocalClock(iso: string, value: string): number {
   return date.getTime();
 }
 
-function energyOccurrenceMs(item: Item): number | null {
+function energyOccurrenceMs(item: RecordViewItem): number | null {
   const snapshot = readEnergyItemSnapshot(item);
   if (!snapshot?.date || !snapshot.time) return null;
   const value = Date.parse(`${snapshot.date}T${snapshot.time.length === 5 ? `${snapshot.time}:00` : snapshot.time}`);
@@ -47,7 +47,7 @@ export class TaskSessionMutation {
     private readonly repository: RecordRepository,
   ) {}
 
-  async createSession(taskId: string, input: TaskSessionCreateInput): Promise<Item> {
+  async createSession(taskId: string, input: TaskSessionCreateInput): Promise<RecordViewItem> {
     const task = await this.requireTask(taskId);
     const prepared = this.prepareCreateOperation(task, input);
     await this.repository.batch([prepared.operation]);
@@ -58,7 +58,7 @@ export class TaskSessionMutation {
     return created;
   }
 
-  async updateSessionTime(sessionId: string, updates: ItemTimeUpdates): Promise<Item> {
+  async updateSessionTime(sessionId: string, updates: ItemTimeUpdates): Promise<RecordViewItem> {
     const session = asTaskSessionRecord(await this.repository.getById(sessionId));
     if (!session) throw new Error(`task_session_required:${sessionId}`);
 
@@ -94,7 +94,7 @@ export class TaskSessionMutation {
    * Bind a newly persisted Energy snapshot to the nearest eligible finished Session.
    * Goal is intentionally not part of the match: Energy is a person-level state.
    */
-  async linkEnergySnapshot(energyRecordId: string): Promise<Item | null> {
+  async linkEnergySnapshot(energyRecordId: string): Promise<RecordViewItem | null> {
     const energy = this.dataStore.getRecordById(energyRecordId);
     const after = energy ? readEnergyItemSnapshot(energy) : null;
     const afterMs = energy ? energyOccurrenceMs(energy) : null;
@@ -127,9 +127,10 @@ export class TaskSessionMutation {
     return this.dataStore.getRecordById(chosen.id);
   }
 
-  prepareCreateOperation(task: Item, input: TaskSessionCreateInput, recordId = createRecordId('task-session')): PreparedTaskSessionCreate {
-    if (!asTaskRecord(task)) throw new Error(`task_record_required:${task.id}`);
-    const path = task.source?.path || task.file?.path || this.dataStore.getRecordLocation(task.id)?.path || '';
+  prepareCreateOperation(task: RecordViewItem, input: TaskSessionCreateInput, recordId = createRecordId('task-session')): PreparedTaskSessionCreate {
+    const taskRecord = asTaskRecord(task);
+    if (!taskRecord) throw new Error(`task_record_required:${task.id}`);
+    const path = taskRecord.source?.path || taskRecord.file?.path || this.dataStore.getRecordLocation(taskRecord.id)?.path || '';
     if (!path) throw new Error(`record_location_unavailable:${task.id}`);
     return {
       recordId,
@@ -139,16 +140,16 @@ export class TaskSessionMutation {
           recordId,
           coreBlock: 'task-session',
           targetFilePath: path,
-          targetHeader: task.header || null,
-          fields: buildTaskSessionFields(task, input),
+          targetHeader: taskRecord.header || null,
+          fields: buildTaskSessionFields(taskRecord, input),
         },
       },
     };
   }
 
-  private async requireTask(taskId: string): Promise<Item> {
-    const task = await this.repository.getById(taskId);
-    if (!asTaskRecord(task)) throw new Error(`task_record_required:${taskId}`);
-    return task!;
+  private async requireTask(taskId: string): Promise<TaskRecord> {
+    const task = asTaskRecord(await this.repository.getById(taskId));
+    if (!task) throw new Error(`task_record_required:${taskId}`);
+    return task;
   }
 }

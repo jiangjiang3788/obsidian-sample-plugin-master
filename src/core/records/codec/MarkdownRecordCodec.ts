@@ -7,6 +7,7 @@ import {
   type FieldCodecDefinition,
 } from './FieldValueCodec';
 import { RECORD_SCHEMA_VERSION } from '@/core/records/RecordId';
+import type { RecordDraft } from '@/core/records/RecordDraft';
 
 export interface ParsedRecordMetadata {
   recordId?: string;
@@ -28,6 +29,7 @@ export interface ParsedRecordMetadata {
   goalId?: string;
   cycleId?: string;
   coreBlock?: string;
+  recordSubtype?: string;
   extra: Record<string, string | number | boolean>;
   icon?: string;
   period?: string;
@@ -104,7 +106,7 @@ function parseDate(value: string): string | undefined {
 }
 
 /** Record Block body -> canonical typed metadata. Only canonical Record Block fields are accepted here. */
-export function decodeRecordContentLines(contentLines: string[], parentFolder: string): ParsedRecordMetadata {
+export function decodeRecordContentLines(contentLines: string[], _parentFolder: string): ParsedRecordMetadata {
   let categoryKey: string | null = null;
   let date: string | undefined;
   const tags: string[] = [];
@@ -122,6 +124,7 @@ export function decodeRecordContentLines(contentLines: string[], parentFolder: s
   let goalId: string | undefined;
   let cycleId: string | undefined;
   let coreBlock: string | undefined;
+  let recordSubtype: string | undefined;
   let recordId: string | undefined;
   let schemaVersion: number | undefined;
   let status: string | undefined;
@@ -174,6 +177,7 @@ export function decodeRecordContentLines(contentLines: string[], parentFolder: s
           if (Number.isFinite(parsed)) schemaVersion = parsed;
         }
         else if (['分类', '类别', 'category', 'categorypath', '分类路径'].includes(key)) categoryKey = decodeMarkdownString(value, FIELD_CODEC_PRESETS.categoryPath) || '';
+        else if (['记录子类型', 'recordsubtype', 'subtype'].includes(key)) recordSubtype = value.trim() || undefined;
         else if (['模板id', 'templateid'].includes(key)) templateId = value.trim();
         else if (['模板来源', 'templatesource', 'templatesourcetype'].includes(key)) {
           const source = value.trim();
@@ -264,9 +268,9 @@ export function decodeRecordContentLines(contentLines: string[], parentFolder: s
   const finalGoalPaths = unique(goalPaths);
   return {
     recordId, schemaVersion, title: buildTitle(content, finalTags), content: content.trim(),
-    categoryKey: categoryKey || parentFolder || '', status, date, scheduledDate, startDate, dueDate,
+    categoryKey: categoryKey || '', status, date, scheduledDate, startDate, dueDate,
     completedAt, cancelledAt, skippedAt, createdAt, tags: finalTags, goalPaths: finalGoalPaths,
-    goalId, cycleId, coreBlock, extra, icon, period, rating, image, pintu, theme, templateId,
+    goalId, cycleId, coreBlock, recordSubtype, extra, icon, period, rating, image, pintu, theme, templateId,
     templateSourceType, priority, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, seriesId,
     recurrenceUnit, recurrenceInterval, recurrenceAnchor, seriesStartDate, currentTaskId, rolloverPolicy,
     taskId, sessionStartedAt, sessionEndedAt, sessionDurationMinutes, sessionResult, sessionSource,
@@ -333,6 +337,11 @@ export function encodeRecordBlock(document: RecordDocument): string {
       if (label === '创建于' && !value) value = new Date().toISOString();
       if (value) { lines.push(`${label}:: ${value}`); keys.forEach(key => emitted.add(key)); }
     }
+    for (const [key, raw] of Object.entries(fields)) {
+      if (emitted.has(key) || ['记录ID','recordId','id','记录版本','schemaVersion','核心Block','coreBlock'].includes(key)) continue;
+      const value = markdownScalar(raw);
+      if (value) lines.push(`${key}:: ${value}`);
+    }
   } else if (document.coreBlock === 'task-session') {
     for (const [label, keys] of TASK_SESSION_FIELD_ORDER) {
       const value = firstValue(fields, keys);
@@ -357,6 +366,16 @@ export function encodeRecordBlock(document: RecordDocument): string {
 
   lines.push('<!-- end -->');
   return lines.join('\n');
+}
+
+/** Canonical R4 writer for a schema-filtered RecordDraft. */
+export function encodeRecordDraft(input: { recordId: string; schemaVersion?: number; draft: RecordDraft }): string {
+  return encodeRecordBlock({
+    recordId: input.recordId,
+    schemaVersion: input.schemaVersion ?? RECORD_SCHEMA_VERSION,
+    coreBlock: input.draft.coreBlock,
+    fields: input.draft.fields,
+  });
 }
 
 /** Adds/replaces the universal envelope in an existing Record Block. */

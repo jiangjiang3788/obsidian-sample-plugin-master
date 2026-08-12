@@ -1,5 +1,6 @@
 // src/core/records/RecordNormalizer.ts
-import type { Item } from '@/core/types/schema';
+import type { RecordEntity } from './RecordEntity';
+import { toRecordViewItem } from './RecordEntity';
 import { applyExplicitThemeViewFields, normalizeExplicitTheme } from '@/core/theme/themeSemantics';
 import { normalizeItemDates } from '@/core/utils/normalize';
 import type { RecordNormalizeContext } from './RecordEntity';
@@ -13,7 +14,7 @@ function normalizeSearchText(value: unknown): string {
   return String(value ?? '').toLowerCase();
 }
 
-type SearchIndexedItem = Item & {
+type SearchIndexedItem = RecordEntity & {
   titleLower?: string;
   contentLower?: string;
   fullDataLower?: string;
@@ -30,7 +31,7 @@ type SearchIndexedItem = Item & {
  *
  * 注意：这里明确只从显式 theme 派生 themePath/rootTheme/leafTheme，header 永远只表示章节位置。
  */
-export function normalizeRecordItem(item: Item, context: RecordNormalizeContext): Item {
+export function normalizeRecordItem(item: RecordEntity, context: RecordNormalizeContext): RecordEntity {
   const line = context.line;
 
   item.created = context.created;
@@ -60,12 +61,12 @@ export function normalizeRecordItem(item: Item, context: RecordNormalizeContext)
 
   // 主题只允许来自显式元数据。normalizeExplicitTheme 只做清洗/匹配，不会读取 header。
   item.theme = normalizeExplicitTheme(item.theme, context.themeMatcher);
-  applyExplicitThemeViewFields(item);
+  applyExplicitThemeViewFields(toRecordViewItem(item));
 
   if (!item.extra) item.extra = {};
   if (!item.categoryKey) item.categoryKey = item.coreBlock === 'task' ? '任务' : context.parentFolder;
 
-  normalizeItemDates(item);
+  normalizeItemDates(toRecordViewItem(item));
 
 
   // 完整数据是只读派生字段，运行时补齐可以让导出、JSON 调试和旧代码路径更稳定。
@@ -85,6 +86,6 @@ export function normalizeRecordItem(item: Item, context: RecordNormalizeContext)
   return item;
 }
 
-export function normalizeRecordItems(items: Item[], context: RecordNormalizeContext): Item[] {
+export function normalizeRecordItems(items: RecordEntity[], context: RecordNormalizeContext): RecordEntity[] {
   return items.map(item => normalizeRecordItem(item, context));
 }

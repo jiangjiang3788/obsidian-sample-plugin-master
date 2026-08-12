@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
 
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import type {
   ActionService,
   DataStore,
@@ -16,8 +16,7 @@ import { Disposables } from '@/app/runtime/disposables';
 import { markDisposed } from '@/app/runtime/lifecycleState';
 
 import { startMeasure } from '@shared/utils/public';
-import { performanceMonitor } from '@shared/utils/public';
-import { closeAllFloatingWidgets } from '@/app/public';
+import { closeAllFloatingWidgets } from '@/app/ui/widgets/FloatingWidgetManager';
 
 import { registerSettingsPersistence } from '@/app/bootstrap/register';
 import { initializeCore } from '@/app/bootstrap/initializeCore';
@@ -36,7 +35,7 @@ import { buildRuntime, resetRuntimeCache, resolveBootstrap, type BootstrapResolv
  * 4. 统一资源清理
  */
 export class ServiceManager {
-    private plugin: ThinkPlugin;
+    private plugin: PluginHost;
     private scanDataPromise: Promise<void> | null = null;
 
     // UI 特性加载器（用于 unload 时清理 background feature 的定时任务）
@@ -54,7 +53,7 @@ export class ServiceManager {
     // 统一资源释放表
     private disposables: Disposables = new Disposables();
 
-    constructor(plugin: ThinkPlugin) {
+    constructor(plugin: PluginHost) {
         this.plugin = plugin;
 
         // Cleanup 资源表（逆序执行：LIFO）
@@ -90,9 +89,6 @@ export class ServiceManager {
             try { closeAllFloatingWidgets(); } catch {}
         });
 
-        this.disposables.add('performanceMonitor.reset()', () => {
-            try { performanceMonitor.reset(); } catch {}
-        });
 
         this.disposables.add('FeatureLoader.cleanup()', () => {
             // 先清理 feature registry 的 background 定时任务，避免 unload 后仍触发。

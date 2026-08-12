@@ -1,4 +1,4 @@
-import type { AiSettings as AiSettingsType, BlockTemplate, ThemeDefinition } from '@core/types/public';
+import type { AiSettings as AiSettingsType, RecordCaptureTemplate, ThemeDefinition } from '@core/types/public';
 import type { AiSettingsReadiness } from './aiSettingsReadiness';
 
 export type AiSettingsUpdate = (updates: Partial<AiSettingsType>) => void;
@@ -22,7 +22,7 @@ export interface AiPromptRulesSectionProps extends AiSettingsSectionProps {
 }
 
 export interface AiScopeSectionProps extends AiSettingsSectionProps {
-  blocks: BlockTemplate[];
+  blocks: RecordCaptureTemplate[];
   themes: ThemeDefinition[];
   staleEnabledBlockIds?: string[];
   onInitAllBlocks: () => void;

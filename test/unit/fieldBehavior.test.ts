@@ -1,4 +1,4 @@
-import type { TemplateField } from '@/core/types/schema';
+import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import {
   getTemplateFieldBehaviorKind,
   matchTemplateFieldOptionValue,

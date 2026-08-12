@@ -1,4 +1,4 @@
-import type { Item } from '@/core/types/schema';
+import type { RecordEntity } from '@/core/records/RecordEntity';
 import type { VaultPort } from '@/core/ports/VaultPort';
 import type { DataStore } from '@/core/services/DataStore';
 import { appendUnderHeaderText } from '@/core/recordInput/mutation/HeaderAppender';
@@ -130,21 +130,21 @@ export class RecordRepository {
     this.transaction = new RecordMutationTransaction(vault);
   }
 
-  async getById(recordId: string): Promise<Item | null> {
-    return this.dataStore.getRecordById(recordId);
+  async getById(recordId: string): Promise<RecordEntity | null> {
+    return this.dataStore.getRecordEntityById(recordId);
   }
 
-  async create(record: NewRecord): Promise<Item> {
+  async create(record: NewRecord): Promise<RecordEntity> {
     const recordId = record.recordId || createRecordId(record.coreBlock);
     await this.batch([{ kind: 'create', record: { ...record, recordId } }]);
-    const created = this.dataStore.getRecordById(recordId);
+    const created = this.dataStore.getRecordEntityById(recordId);
     if (!created) throw new Error(`record_create_scan_failed:${recordId}`);
     return created;
   }
 
-  async update(recordId: string, patch: RecordPatch): Promise<Item> {
+  async update(recordId: string, patch: RecordPatch): Promise<RecordEntity> {
     await this.batch([{ kind: 'update', recordId, patch }]);
-    const updated = this.dataStore.getRecordById(recordId);
+    const updated = this.dataStore.getRecordEntityById(recordId);
     if (!updated) throw new Error(`record_update_scan_failed:${recordId}`);
     return updated;
   }

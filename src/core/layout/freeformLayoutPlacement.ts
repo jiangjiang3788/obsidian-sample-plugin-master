@@ -1,4 +1,4 @@
-import type { FreeformLayoutConfig, ViewPlacement } from '../types/schema';
+import type { FreeformLayoutConfig, ViewPlacement } from '@/core/view/ViewConfig';
 import {
     DEFAULT_CANVAS_WIDTH,
     FREEFORM_COLLAPSED_HEIGHT,

@@ -53,7 +53,7 @@ export function isEnergyItem(item: EnergyItemLike): boolean {
 }
 
 /**
- * Read the stable Energy v1 fields from a DataStore Item without mutating it.
+ * Read the stable Energy v1 fields from a DataStore RecordViewItem without mutating it.
  * Missing/invalid score stays unknown; it is never coerced to zero.
  */
 export function readEnergyItemSnapshot(item: EnergyItemLike): EnergyItemSnapshot | null {

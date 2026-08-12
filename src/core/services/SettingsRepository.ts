@@ -22,7 +22,7 @@
 
 import { singleton, inject } from 'tsyringe';
 import { produce } from 'immer';
-import type { ThinkSettings } from '@/core/types/schema';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { ActionMeta } from '@/core/types/actionMeta';
 import { logSettingsWrite } from '@/core/utils/devLogger';
 

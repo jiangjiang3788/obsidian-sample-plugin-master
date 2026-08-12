@@ -1,4 +1,4 @@
-import type { FreeformLayoutConfig, ViewName } from '../types/schema';
+import type { FreeformLayoutConfig, ViewName } from '@/core/view/ViewConfig';
 
 export const DEFAULT_FREEFORM_LAYOUT_CONFIG: Required<FreeformLayoutConfig> = {
     defaultTemplate: 'balanced',

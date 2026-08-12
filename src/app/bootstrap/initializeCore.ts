@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 
 import { SETTINGS_PERSISTENCE_TOKEN } from '@core/services/public';
 import { devError, devLog } from '@core/utils/public';
@@ -20,7 +20,7 @@ import type { BootstrapResolved } from '@/app/bootstrap/buildRuntime';
 import { setDevConsoleStackEnabled } from '@shared/utils/public';
 
 export async function initializeCore(opts: {
-    plugin: ThinkPlugin;
+    plugin: PluginHost;
     services: ServiceManagerServices;
     disposables?: Disposables;
     bootstrap: Pick<BootstrapResolved, 'settingsRepository' | 'timerStateService' | 'initialSettings' | 'inputService' | 'itemService' | 'dataStore'>;

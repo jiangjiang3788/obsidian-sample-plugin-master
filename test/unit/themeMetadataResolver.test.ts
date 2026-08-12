@@ -1,4 +1,4 @@
-import type { ThinkSettings } from '@/core/types/schema';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { ThemeMetadataResolver } from '@/core/themeMetadata';
 
 function settings(): ThinkSettings {
@@ -33,4 +33,11 @@ describe('ThemeMetadataResolver', () => {
     expect(metadata.icon).toBe('🧩');
     expect(metadata.theme?.path).toBe('工作/插件');
   });
+
+  it('preserves the requested child path while inheriting parent render metadata', () => {
+    const metadata = ThemeMetadataResolver.resolveThemeForRender(settings(), '工作/插件/目标中心');
+    expect(metadata?.path).toBe('工作/插件/目标中心');
+    expect(metadata?.icon).toBe('🧩');
+  });
+
 });

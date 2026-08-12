@@ -10,7 +10,7 @@
  * 具体运行逻辑下沉到 aiNaturalInputCommand / aiSpeedTestCommand，避免命令注册文件继续膨胀。
  */
 
-import type ThinkPlugin from '@/main';
+import type { PluginHost } from '@core/ports/public';
 import { createServices } from '@/app/public';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@core/ai/public';
 import { createTakeLatest } from '@shared/utils/public';
@@ -22,7 +22,7 @@ import { createZustandSettingsProvider } from './aiInputRuntime';
 /**
  * 注册 AI 输入相关命令。
  */
-export function registerAiInputCommands(plugin: ThinkPlugin): void {
+export function registerAiInputCommands(plugin: PluginHost): void {
     // Phase 4.3: 只能通过 app/public 获取 store（禁止 container 下沉）
     const { zustandStore: store, uiPort: ui } = createServices();
 

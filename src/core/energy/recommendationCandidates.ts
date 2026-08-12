@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { isTaskOpen } from '../records/task/taskStatus';
 import { isTaskRecurring } from '../records/task/taskRecurrence';
 import { asTaskSessionRecord } from '../records/task/taskSession';
@@ -14,7 +14,7 @@ export interface BuildEnergyActionCandidatesOptions {
   includeRecurringTasks?: boolean;
   includeFutureTasks?: boolean;
   /** Internal Record set used for persisted TaskSession duration evidence. */
-  historyRecords?: Item[];
+  historyRecords?: RecordViewItem[];
 }
 
 export type EnergyCandidateExclusionReason =
@@ -66,13 +66,13 @@ function number(value: unknown): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function normalizedBlock(item: Item): string {
+function normalizedBlock(item: RecordViewItem): string {
   return text(item.coreBlock || item.extra?.['\u6838\u5fc3Block'])
     .replace(/^core\./i, '')
     .toLowerCase();
 }
 
-function sourceFor(item: Item): EnergyActionSource | null {
+function sourceFor(item: RecordViewItem): EnergyActionSource | null {
   const block = normalizedBlock(item);
   if (block === 'task') return 'task';
   if (block === 'plan') return 'plan';
@@ -97,7 +97,7 @@ function median(values: number[]): number | undefined {
   return Math.max(10, Math.min(240, Math.round(value)));
 }
 
-function historyDurationMaps(records: Item[]): { byGoalTheme: Map<string, number>; byTheme: Map<string, number> } {
+function historyDurationMaps(records: RecordViewItem[]): { byGoalTheme: Map<string, number>; byTheme: Map<string, number> } {
   const goalThemeRows = new Map<string, number[]>();
   const themeRows = new Map<string, number[]>();
   const byId = new Map(records.map((record) => [record.id, record] as const));
@@ -127,7 +127,7 @@ function historyDurationMaps(records: Item[]): { byGoalTheme: Map<string, number
   };
 }
 
-function inferredDuration(item: Item, history: ReturnType<typeof historyDurationMaps>): number | undefined {
+function inferredDuration(item: RecordViewItem, history: ReturnType<typeof historyDurationMaps>): number | undefined {
   const explicit = number(item.extra?.['\u9884\u8ba1\u65f6\u957f'] ?? item.extra?.['expectedDuration'] ?? item.extra?.['expectedDurationMinutes']);
   const canonical = number(item.expectedDurationMinutes);
   const direct = explicit && explicit > 0 ? explicit : canonical && canonical > 0 ? canonical : undefined;
@@ -138,7 +138,7 @@ function inferredDuration(item: Item, history: ReturnType<typeof historyDuration
   return (goal ? history.byGoalTheme.get(`${goal}|${theme}`) : undefined) || history.byTheme.get(theme);
 }
 
-function priorityValue(item: Item): number {
+function priorityValue(item: RecordViewItem): number {
   const map: Record<string, number> = {
     lowest: 20,
     low: 35,
@@ -157,7 +157,7 @@ function parseDayDiff(value: string, today: string): number | null {
   return Math.round((valueMs - todayMs) / 86400000);
 }
 
-function dueBonus(item: Item, today: string): number {
+function dueBonus(item: RecordViewItem, today: string): number {
   const due = text(item.dueDate).slice(0, 10);
   const days = parseDayDiff(due, today);
   if (days == null) return 0;
@@ -169,19 +169,19 @@ function dueBonus(item: Item, today: string): number {
   return 0;
 }
 
-function scheduleBonus(item: Item, today: string): number {
+function scheduleBonus(item: RecordViewItem, today: string): number {
   const date = text(item.scheduledDate || item.startDate).slice(0, 10);
   const diff = parseDayDiff(date, today);
   return diff === 0 ? 8 : 0;
 }
 
-function futureTask(item: Item, today: string): boolean {
+function futureTask(item: RecordViewItem, today: string): boolean {
   const date = text(item.startDate || item.scheduledDate).slice(0, 10);
   const diff = parseDayDiff(date, today);
   return diff != null && diff > 0;
 }
 
-function candidateTitle(item: Item): string {
+function candidateTitle(item: RecordViewItem): string {
   return text(item.content || item.editableText || item.title).slice(0, 120);
 }
 
@@ -190,7 +190,7 @@ function normalizedLabel(value: string): string {
 }
 
 function exclusionReason(
-  item: Item,
+  item: RecordViewItem,
   source: EnergyActionSource,
   today: string,
   options: BuildEnergyActionCandidatesOptions,
@@ -246,7 +246,7 @@ function personalEffectFor(candidate: EnergyActionCandidate, management?: Energy
  * - very old overdue due dates do not receive an urgency bonus forever;
  * - Habit/Plan remain opt-in action sources.
  */
-export function buildEnergyActionCandidateResult(items: Item[], options: BuildEnergyActionCandidatesOptions = {}): EnergyActionCandidateBuildResult {
+export function buildEnergyActionCandidateResult(items: RecordViewItem[], options: BuildEnergyActionCandidatesOptions = {}): EnergyActionCandidateBuildResult {
   const today = options.today || new Date().toISOString().slice(0, 10);
   const maximum = Math.max(1, Math.min(1000, Math.floor(options.maximumCandidates ?? 500)));
   const history = historyDurationMaps(options.historyRecords || items);
@@ -327,7 +327,7 @@ export function buildEnergyActionCandidateResult(items: Item[], options: BuildEn
   return { candidates: sorted, diagnostics };
 }
 
-export function buildEnergyActionCandidates(items: Item[], options: BuildEnergyActionCandidatesOptions = {}): EnergyActionCandidate[] {
+export function buildEnergyActionCandidates(items: RecordViewItem[], options: BuildEnergyActionCandidatesOptions = {}): EnergyActionCandidate[] {
   return buildEnergyActionCandidateResult(items, options).candidates;
 }
 

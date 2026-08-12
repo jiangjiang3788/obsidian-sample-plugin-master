@@ -1,20 +1,20 @@
 # Refactor Hotspots Queue
 
-Generated: 2026-07-02T08:01:07.986Z
+Generated: 2026-08-11T21:51:29.921Z
 
 ## Summary
 
 | Metric | Value |
 | --- | --- |
-| files | 756 |
-| lines | 71383 |
+| files | 736 |
+| lines | 74999 |
 | filesOver500Lines | 0 |
 | tsxFilesOver350Lines | 1 |
-| explicitAny | 501 |
-| corePublicExports | 317 |
+| explicitAny | 472 |
+| corePublicExports | 303 |
 | corePublicStarExports | 3 |
 | sharedPublicExports | 0 |
-| sharedPublicStarExports | 30 |
+| sharedPublicStarExports | 27 |
 | duplicateFunctionNameGroups | 50 |
 
 ## Largest file queue
@@ -23,44 +23,42 @@ Generated: 2026-07-02T08:01:07.986Z
 | --- | --- | --- | --- |
 | 1 | src/styles/features/heatmap.css | 480 | styles |
 | 2 | src/styles/features/timeline.css | 453 | styles |
-| 3 | src/core/types/schema.ts | 377 | core |
-| 4 | src/app/usecases/layout.usecase.ts | 374 | app |
-| 5 | src/features/settings/views/models/heatmapViewModel.ts | 373 | features |
-| 6 | src/core/fields/TemplateFieldAdapter.ts | 365 | core |
-| 7 | src/core/fields/FieldSystemHealth.ts | 362 | core |
+| 3 | src/shared/styles/muiTheme/components.ts | 397 | shared |
+| 4 | src/core/records/codec/MarkdownRecordCodec.ts | 391 | core |
+| 5 | src/app/usecases/layout.usecase.ts | 374 | app |
+| 6 | src/features/views/models/heatmapViewModel.ts | 373 | features |
+| 7 | src/core/fields/TemplateFieldAdapter.ts | 367 | core |
 | 8 | src/features/settings/layout/ModuleSettingsModal.tsx | 359 | features |
-| 9 | src/core/goal/overview.ts | 358 | core |
-| 10 | src/core/ai/ChatSessionStore.ts | 356 | core |
-| 11 | src/core/public.ts | 355 | core |
-| 12 | src/features/quickinput/editor/QuickInputEditorContainer.tsx | 341 | features |
-| 13 | src/styles/components/modal.css | 337 | styles |
-| 14 | src/styles/overrides/quick-input-modal.css | 337 | styles |
-| 15 | src/features/settings/goalTemplates/GoalTemplateMatrix.tsx | 336 | features |
+| 9 | src/core/ai/ChatSessionStore.ts | 356 | core |
+| 10 | src/features/quickinput/editor/QuickInputEditorContainer.tsx | 349 | features |
+| 11 | src/core/energy/effects.ts | 348 | core |
+| 12 | src/core/public.ts | 348 | core |
+| 13 | src/core/energy/recommendationCandidates.ts | 344 | core |
+| 14 | src/styles/components/modal.css | 341 | styles |
+| 15 | src/styles/overrides/quick-input-modal.css | 337 | styles |
 
 ## Duplicate function-name queue
 
 | # | Name | Files | Example files |
 | --- | --- | --- | --- |
-| 1 | handleClose | 4 | src/features/settings/layout/DataFilterPanel.tsx<br>src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx<br>src/shared/ui/components/FilterPopover.tsx<br>src/shared/ui/primitives/Modal.tsx |
-| 2 | listener | 4 | src/features/settings/layout/useLayoutItems.ts<br>src/features/settings/useViewData.ts<br>src/shared/hooks/useClickOutside.ts<br>src/shared/ui/primitives/Modal.tsx |
-| 3 | emit | 3 | src/core/utils/devLogger.ts<br>src/features/settings/views/runtime/excel-view/ExcelColumnToolbar.tsx<br>src/shared/utils/diagnosticConsole.ts |
-| 4 | handleCellClick | 3 | src/features/settings/views/runtime/HeatmapView.tsx<br>src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx<br>src/features/settings/views/runtime/excel-view/ExcelCell.tsx |
-| 5 | handleClick | 3 | src/shared/components/ThemeTreeSelect/ThemeTreeNodeItem.tsx<br>src/shared/ui/components/FilterPopover.tsx<br>src/shared/ui/components/IconAction.tsx |
-| 6 | handleKeyDown | 3 | src/features/aichat/AiChatModalContainer.tsx<br>src/platform/obsidian/modals/AiTextPromptModal.tsx<br>src/platform/obsidian/modals/NamePromptModal.tsx |
-| 7 | handleSave | 3 | src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx<br>src/features/settings/tabs/AiSettings.tsx<br>src/shared/ui/primitives/Modal.tsx |
-| 8 | handleUpdate | 3 | src/features/settings/input/BlockManager.tsx<br>src/features/settings/input/FieldsEditor.tsx<br>src/features/settings/layout/ModuleSettingsModal.tsx |
-| 9 | issue | 3 | src/app/usecases/recordInput/issues.ts<br>src/core/recordInput/dependencyResolver.ts<br>src/core/recordInput/validation.ts |
+| 1 | handleClose | 4 | src/features/settings/layout/DataFilterPanel.tsx<br>src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx<br>src/shared/ui/components/FilterPopover.tsx<br>src/shared/ui/primitives/Modal.tsx |
+| 2 | emit | 3 | src/core/utils/devLogger.ts<br>src/features/views/runtime/excel-view/ExcelColumnToolbar.tsx<br>src/shared/utils/diagnosticConsole.ts |
+| 3 | handleCellClick | 3 | src/features/views/runtime/HeatmapView.tsx<br>src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx<br>src/features/views/runtime/excel-view/ExcelCell.tsx |
+| 4 | handleClick | 3 | src/shared/components/ThemeTreeSelect/ThemeTreeNodeItem.tsx<br>src/shared/ui/components/FilterPopover.tsx<br>src/shared/ui/components/IconAction.tsx |
+| 5 | handleKeyDown | 3 | src/features/aichat/AiChatModalContainer.tsx<br>src/platform/obsidian/modals/AiTextPromptModal.tsx<br>src/platform/obsidian/modals/NamePromptModal.tsx |
+| 6 | handleSave | 3 | src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx<br>src/features/settings/tabs/AiSettings.tsx<br>src/shared/ui/primitives/Modal.tsx |
+| 7 | handleUpdate | 3 | src/features/settings/input/BlockManager.tsx<br>src/features/settings/input/FieldsEditor.tsx<br>src/features/settings/layout/ModuleSettingsModal.tsx |
+| 8 | issue | 3 | src/app/usecases/recordInput/issues.ts<br>src/core/recordInput/dependencyResolver.ts<br>src/core/recordInput/validation.ts |
+| 9 | listener | 3 | src/app/dashboard/useLayoutItems.ts<br>src/app/dashboard/useViewData.ts<br>src/shared/ui/primitives/Modal.tsx |
 | 10 | normalize | 3 | src/core/fields/TemplateFieldSanitizer.ts<br>src/core/goal/templateVariantDiff.ts<br>src/features/settings/goalTemplates/model/GoalTemplateFieldModel.ts |
-| 11 | push | 3 | src/core/goal/overview.ts<br>src/core/recordInput/editStateResolver.ts<br>src/core/utils/tagUtils.ts |
+| 11 | readNumber | 3 | src/core/energy/context.ts<br>src/core/energy/item.ts<br>src/core/utils/unknownRecord.ts |
 | 12 | readOptionText | 3 | src/core/goal/templateDisplay.ts<br>src/core/semantics/option.ts<br>src/features/settings/goalTemplates/model/GoalTemplateThemeModel.ts |
 
 ## Recommended batches
 
 | Version | Focus | Reason | Candidate files |
 | --- | --- | --- | --- |
-| V20 | 构建基线 + 目录迁移地图 | 第三轮先建立 folder ownership 地图，并允许本地 data.json 作为单人运行态文件。 | docs/FOLDER_REORG_PLAN.md<br>scripts/audit/folder-reorg-map.mjs<br>scripts/gates/folder-reorg-plan-gate.mjs |
-| V21 | QuickInput 目录归属重排 | 快捷面板 editor 与 modal content 属于 quickinput feature，platform 只保留 Obsidian adapter。 | src/core/services/InputService.ts<br>src/app/usecases/recordInput/workflows/RecordMigrationTransaction.ts<br>src/features/quickinput/modal/useQuickInputSubmit.ts<br>src/app/usecases/recordInput/workflows/UpdateRecordWorkflow.ts<br>src/features/quickinput/modal/useQuickInputOutputPlan.ts<br>src/core/recordInput/snapshot/EditSnapshotFactory.ts |
-| V22 | Settings / Views 目录重排 | Statistics、Timeline、Excel、Heatmap 等业务视图已经离开 shared/ui/views，归入 settings/views/runtime。 | src/features/settings/views/runtime<br>src/features/settings/views/editors<br>src/features/settings/views/models |
-| V23 | Core 领域目录收敛 + 删除旧兼容 | RecordInput 已从 generic services bucket 移入 core/recordInput；任务记录和记录提交工具继续按领域归属收窄。 | src/core/recordInput<br>src/core/utils<br>src/core/types |
-| V24 | Shared / Platform 瘦身 | shared 只保留通用 UI/hooks/utils，platform 显式整理为 Obsidian adapters。 | src/features/settings/views/runtime<br>src/platform |
-| V25 | 当前 schema 锁定 + release 封版 | 不做旧数据迁移，只锁当前 schema、目录预算和 release 包边界。 | src/core/settings<br>scripts/gates/refactor-budget-baseline.json<br>docs/MVP_ACCEPTANCE.md |
+| Capture | QuickInput / RecordInput maintenance | Keep capture behavior on the shared RecordDraft/FieldSchema path and avoid new compatibility layers. | src/core/services/InputService.ts<br>src/features/quickinput/modal/useQuickInputSubmit.ts<br>src/features/quickinput/modal/QuickInputModalContent.tsx<br>src/app/usecases/recordInput/workflows/UpdateRecordWorkflow.ts<br>src/features/quickinput/modal/useQuickInputOutputPlan.ts<br>src/core/recordInput/snapshot/EditSnapshotFactory.ts |
+| Views | View runtime maintenance | Keep renderers on RecordQuery and preserve the settings/runtime boundary established by R6-R7. | src/features/views/runtime<br>src/features/settings/views/editors |
+| Core | Record platform maintenance | Prefer existing Record/Field/Query contracts and delete compatibility code instead of adding parallel abstractions. | src/core/records<br>src/core/fields<br>src/core/query<br>src/core/recordInput |
+| Release | Release stability | Keep dependency budgets, current schema, integration scenarios and release checks green before product changes ship. | scripts/gates/refactor-budget-baseline.json<br>docs/TESTING_RELEASE.md<br>test/integration |

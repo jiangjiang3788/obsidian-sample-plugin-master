@@ -1,14 +1,14 @@
 // src/features/timer/FloatingTimerWidget.ts
 import { h } from 'preact';
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import { TimerView } from './TimerView';
 import { FloatingWidget } from '@/app/public';
 
 export class FloatingTimerWidget {
-    private plugin: ThinkPlugin;
+    private plugin: PluginHost;
     private widget: FloatingWidget | null = null;
 
-    constructor(plugin: ThinkPlugin) {
+    constructor(plugin: PluginHost) {
         this.plugin = plugin;
     }
 

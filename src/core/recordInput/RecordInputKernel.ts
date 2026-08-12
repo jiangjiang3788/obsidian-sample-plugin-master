@@ -9,7 +9,7 @@ import type {
   ResolveDependenciesResult,
   ValidateRecordInputParams,
 } from '@/core/types/recordInput';
-import type { ThinkSettings } from '@/core/types/schema';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { buildEditRecordState } from './editStateResolver';
 import { buildEditableRecordSnapshot } from './snapshot/EditSnapshotFactory';
 import { normalizeRecordInput as normalizeRecordInputImpl } from './normalization';

@@ -20,8 +20,8 @@ import {
     selectFloatingWindowsFocus,
     selectFloatingWindowsRegister,
     selectFloatingWindowsUnregister,
-    useSelector,
-} from '@/app/public';
+} from '@/app/store/selectors';
+import { useSelector } from '@/app/store/useSelector';
 import { FloatingPanelHeader } from './FloatingPanelHeader';
 import { FloatingPanelResizeHandles } from './FloatingPanelResizeHandles';
 import type { FloatingPanelProps } from './FloatingPanel.types';

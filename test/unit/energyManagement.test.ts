@@ -1,22 +1,22 @@
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyManagement } from '@core/energy/public';
 
-function base(overrides: Partial<Item>): Item {
-  return { id: 'item', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides } as Item;
+function base(overrides: Partial<RecordViewItem>): RecordViewItem {
+  return { id: 'item', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides } as RecordViewItem;
 }
 
-function energy(id: string, date: string, time: string, score: number, brain?: number, physical?: number): Item {
+function energy(id: string, date: string, time: string, score: number, brain?: number, physical?: number): RecordViewItem {
   return base({
     id, goalId: 'goal.demo', goalPath: '精力研究示例', date, startTime: time, coreBlock: 'energy', categoryKey: '精力',
     extra: { 核心Block: 'energy', 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), 时间: time, 日期: date, 评分模式: brain != null || physical != null ? 'detailed' : 'quick', ...(brain != null ? { 脑力精力: brain } : {}), ...(physical != null ? { 体力精力: physical } : {}) },
   });
 }
 
-function task(id: string, title: string): Item {
+function task(id: string, title: string): RecordViewItem {
   return base({ id, goalId: 'goal.demo', goalPath: '精力研究示例', title, content: title, coreBlock: 'task', status: 'open', themePath: /散步|午睡/.test(title) ? '生活/恢复' : '工作/开发' });
 }
 
-function session(id: string, taskId: string, date: string, startTime: string, endTime: string, duration: number, beforeId: string, afterId: string): Item {
+function session(id: string, taskId: string, date: string, startTime: string, endTime: string, duration: number, beforeId: string, afterId: string): RecordViewItem {
   return base({
     id, coreBlock: 'task-session', taskId,
     sessionStartedAt: `${date}T${startTime}:00`, sessionEndedAt: `${date}T${endTime}:00`, sessionDurationMinutes: duration,
@@ -24,7 +24,7 @@ function session(id: string, taskId: string, date: string, startTime: string, en
   });
 }
 
-function activityDay(date: string, kind: 'code' | 'walk', index: number): Item[] {
+function activityDay(date: string, kind: 'code' | 'walk', index: number): RecordViewItem[] {
   if (kind === 'code') {
     const beforeId = `code-before-${index}`;
     const afterId = `code-after-${index}`;
@@ -49,7 +49,7 @@ function activityDay(date: string, kind: 'code' | 'walk', index: number): Item[]
 
 describe('Energy management cues', () => {
   it('turns repeated persistent Session evidence into recovery/caution candidates and guardrails', () => {
-    const evidence: Item[] = [
+    const evidence: RecordViewItem[] = [
       ...activityDay('2026-08-01', 'code', 1), ...activityDay('2026-08-01', 'walk', 1),
       ...activityDay('2026-08-02', 'code', 2), ...activityDay('2026-08-02', 'walk', 2),
       ...activityDay('2026-08-03', 'code', 3), ...activityDay('2026-08-03', 'walk', 3),

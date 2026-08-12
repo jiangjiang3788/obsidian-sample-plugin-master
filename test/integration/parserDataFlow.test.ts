@@ -1,12 +1,12 @@
 import { parseRecordBlock } from '@/core/utils/parser';
 import { encodeRecordBlock } from '@/core/records/codec';
 import { RecordIndex } from '@/core/records/RecordIndex';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 const TASK_ID = 'task.01J00000000000000000000000';
 const NOTE_ID = 'rec.01J00000000000000000000000';
 
-function parseAt(markdown: string, filePath: string, startLine = 1): Item {
+function parseAt(markdown: string, filePath: string, startLine = 1): RecordViewItem {
   const lines = markdown.split('\n');
   const item = parseRecordBlock(filePath, lines, 0, lines.length - 1, 'root');
   if (!item) throw new Error('fixture failed to parse');
@@ -15,7 +15,7 @@ function parseAt(markdown: string, filePath: string, startLine = 1): Item {
   return item;
 }
 
-describe('Record Block -> Item -> RecordIndex v2', () => {
+describe('Record Block -> RecordViewItem -> RecordIndex v2', () => {
   it('keeps identity stable when a record moves files', () => {
     const task = encodeRecordBlock({ recordId: TASK_ID, coreBlock: 'task', fields: { status: 'open', content: 'move me' } });
     const first = parseAt(task, 'a.md', 2);

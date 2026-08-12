@@ -62,7 +62,6 @@ export function makeDraftFromTemplate(
     granularity: readPeriodGranularity(template, block),
     sortOrder: template?.sortOrder ?? index * 10,
     fields,
-    outputTemplate: template?.outputTemplate || block?.outputTemplate || '',
     targetFile: template?.targetFile || block?.targetFile || '',
     appendUnderHeader: template?.appendUnderHeader || block?.appendUnderHeader || '## {{goalPath}}',
     requiredFields: cloneValue(template?.requiredFields || []),
@@ -111,7 +110,6 @@ export function buildInheritedDraft(previous: GoalTemplateDraftState, block: Cor
   return {
     ...previous,
     fields: baseFields,
-    outputTemplate: block?.outputTemplate || '',
     targetFile: block?.targetFile || '',
     appendUnderHeader: block?.appendUnderHeader || '## {{goalPath}}',
     requiredFields,
@@ -124,7 +122,6 @@ export function switchDraftToOverride(previous: GoalTemplateDraftState, block: C
   return {
     ...previous,
     fields: previous.fields?.length ? previous.fields : base.fields,
-    outputTemplate: previous.outputTemplate || base.outputTemplate,
     targetFile: previous.targetFile || base.targetFile,
     appendUnderHeader: previous.appendUnderHeader || base.appendUnderHeader,
     requiredFields: previous.requiredFields?.length ? previous.requiredFields : base.requiredFields,

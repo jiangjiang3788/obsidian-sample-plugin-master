@@ -1,7 +1,7 @@
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import { ActionService, DataStore } from '@core/services/public';
 import { devTime, devTimeEnd, devWarn } from '@core/utils/public';
-import { RendererService } from '@features/settings/layout/RendererService';
+import { RendererService } from '@/app/dashboard/RendererService';
 import type { EventsPort } from '@core/ports/public';
 import { FeatureRegistry } from './FeatureRegistry';
 import { registerFeatureContributions } from './features/registerFeatureContributions';
@@ -17,7 +17,7 @@ import type { UIFeatureBootContext } from './features/featureContext';
  * - useCases 由 ServiceManager 创建并注册到 DI
  */
 export class FeatureLoader {
-    private plugin: ThinkPlugin;
+    private plugin: PluginHost;
     private dataStore: DataStore;
     private rendererService: RendererService;
     private actionService: ActionService;
@@ -27,7 +27,7 @@ export class FeatureLoader {
     private registry: FeatureRegistry<UIFeatureBootContext> | null = null;
 
     constructor(
-        plugin: ThinkPlugin,
+        plugin: PluginHost,
         dataStore: DataStore,
         rendererService: RendererService,
         actionService: ActionService,

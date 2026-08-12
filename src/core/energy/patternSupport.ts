@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { EnergyPatternActivityInterval, EnergyPatternEvidence, EnergyPatternTrend, EnergyPatternWorkSession } from './patternTypes';
 import { asTaskSessionRecord } from '../records/task/taskSession';
 
@@ -60,7 +60,7 @@ function localSessionParts(value: string): { date: string; time: string } | null
   };
 }
 
-export function resolvePatternActivity(item: Item): EnergyPatternActivityInterval | null {
+export function resolvePatternActivity(item: RecordViewItem): EnergyPatternActivityInterval | null {
   const session = asTaskSessionRecord(item);
   if (!session) return null;
   const start = localSessionParts(session.sessionStartedAt);

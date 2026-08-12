@@ -2,7 +2,9 @@
 import { singleton, inject } from 'tsyringe';
 import type { VaultPort } from '@core/ports/VaultPort';
 import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
-import type { BlockTemplate, ThemeDefinition, Item } from '@core/types/schema';
+import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { DataStore } from '@core/services/DataStore';
 import { resolveRecordBlockRangeById } from '@core/recordInput/mutationLocator';
 import { createRecordConflictError } from '@core/recordInput/mutationErrors';
@@ -25,7 +27,7 @@ export class InputService {
   ) {}
 
   previewTemplateExecution(
-    template: BlockTemplate,
+    template: RecordCaptureTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
     templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
@@ -44,7 +46,7 @@ export class InputService {
   }
 
   async executeTemplate(
-    template: BlockTemplate,
+    template: RecordCaptureTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
     templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
@@ -96,7 +98,7 @@ export class InputService {
    * 只负责“先写新位置”，删除旧记录由 usecase 在确认写入成功后再执行。
    */
   async createRecordAtPlannedLocation(
-    template: BlockTemplate,
+    template: RecordCaptureTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
     templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
@@ -106,8 +108,8 @@ export class InputService {
   }
 
   async updateExistingRecord(
-    item: Item,
-    template: BlockTemplate,
+    item: RecordViewItem,
+    template: RecordCaptureTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
     templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
@@ -141,7 +143,7 @@ export class InputService {
     return path;
   }
 
-  async deleteExistingRecord(item: Item, options: RecordWriteOptions = {}): Promise<string> {
+  async deleteExistingRecord(item: RecordViewItem, options: RecordWriteOptions = {}): Promise<string> {
     const signal = options.signal;
     const autoRefresh = options.autoRefresh !== false;
     this.throwIfAborted(signal);

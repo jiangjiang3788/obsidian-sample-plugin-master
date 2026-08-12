@@ -1,4 +1,4 @@
-import { createLayoutRenderSignature } from '@features/settings/layout/layoutRenderSignature';
+import { createLayoutRenderSignature } from '@/app/dashboard/layoutRenderSignature';
 
 function createView(id: string, title: string) {
   return {

@@ -1,22 +1,22 @@
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyPatterns } from '@core/energy/public';
 
-function base(overrides: Partial<Item>): Item {
-  return { id: 'item', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides } as Item;
+function base(overrides: Partial<RecordViewItem>): RecordViewItem {
+  return { id: 'item', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides } as RecordViewItem;
 }
 
-function energy(id: string, date: string, time: string, score: number, brainScore?: number, physicalScore?: number): Item {
+function energy(id: string, date: string, time: string, score: number, brainScore?: number, physicalScore?: number): RecordViewItem {
   return base({
     id, title: 'energy', goalPath: '生活', date, startTime: time, coreBlock: 'energy', categoryKey: '精力',
     extra: { 核心Block: 'energy', 日期: date, 时间: time, 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), ...(brainScore != null ? { 脑力精力: brainScore } : {}), ...(physicalScore != null ? { 体力精力: physicalScore } : {}) },
   });
 }
 
-function task(id: string): Item {
+function task(id: string): RecordViewItem {
   return base({ id, title: '写代码', content: '写代码', goalPath: '生活', coreBlock: 'task', status: 'open', themePath: '工作/开发' });
 }
 
-function session(id: string, taskId: string, date: string, start: string, end: string, duration: number, beforeId?: string, afterId?: string): Item {
+function session(id: string, taskId: string, date: string, start: string, end: string, duration: number, beforeId?: string, afterId?: string): RecordViewItem {
   return base({ id, coreBlock: 'task-session', taskId, sessionStartedAt: `${date}T${start}:00`, sessionEndedAt: `${date}T${end}:00`, sessionDurationMinutes: duration, sessionResult: 'work-block-ended', sessionSource: 'timer', startEnergyRecordId: beforeId, endEnergyRecordId: afterId });
 }
 
@@ -24,7 +24,7 @@ describe('buildEnergyPatterns', () => {
   it('builds daypart, lag, continuous-session and high-energy continuation observations from TaskSession facts', () => {
     const t1 = task('t1');
     const t2 = task('t2');
-    const records: Item[] = [
+    const records: RecordViewItem[] = [
       energy('e1', '2026-08-08', '08:00', 80, 85, 75),
       t1,
       session('s1', t1.id, '2026-08-08', '08:15', '09:15', 60, 'e1'),

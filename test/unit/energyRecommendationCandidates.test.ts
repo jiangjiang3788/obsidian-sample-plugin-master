@@ -1,18 +1,18 @@
 import { attachEnergyRecommendationEvidence, buildEnergyActionCandidateResult, buildEnergyActionCandidates } from '@core/energy/public';
 import type { EnergyManagementModel } from '@core/energy/public';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 
-function item(overrides: Partial<Item>): Item {
+function item(overrides: Partial<RecordViewItem>): RecordViewItem {
   return {
     id: 'item', title: '事项', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides,
-  } as Item;
+  } as RecordViewItem;
 }
 
-function task(id: string, title: string, overrides: Partial<Item> = {}): Item {
+function task(id: string, title: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return item({ id, title, content: title, coreBlock: 'task', status: 'open', ...overrides });
 }
 
-function session(id: string, taskId: string, duration: number, startedAt: string): Item {
+function session(id: string, taskId: string, duration: number, startedAt: string): RecordViewItem {
   const start = new Date(startedAt);
   const end = new Date(start.getTime() + duration * 60_000);
   return item({

@@ -1,5 +1,5 @@
 import type { SearchResult } from 'minisearch';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
 import type { RetrievalFilters } from './RetrievalTypes';
 import { getSearchResultId, normalizeRetrievalText, readSearchResultText } from './RetrievalText';
@@ -7,7 +7,7 @@ import { getSearchResultId, normalizeRetrievalText, readSearchResultText } from 
 export function applyRetrievalFilters(
     results: SearchResult[],
     filters: RetrievalFilters | undefined,
-    indexedItemsById: Map<string, Item>,
+    indexedItemsById: Map<string, RecordViewItem>,
 ): SearchResult[] {
     if (!filters) return results;
 
@@ -16,34 +16,34 @@ export function applyRetrievalFilters(
 
         if (!matchesThemePath(sr, item, filters)) return false;
         if (!matchesCoreBlock(sr, item, filters)) return false;
-        if (!matchesBlockTemplateId(sr, item, filters)) return false;
-        if (!matchesBlockTemplateName(sr, item, filters)) return false;
+        if (!matchesRecordCaptureTemplateId(sr, item, filters)) return false;
+        if (!matchesRecordCaptureTemplateName(sr, item, filters)) return false;
 
         return true;
     });
 }
 
-function matchesThemePath(sr: SearchResult, item: Item | undefined, filters: RetrievalFilters): boolean {
+function matchesThemePath(sr: SearchResult, item: RecordViewItem | undefined, filters: RetrievalFilters): boolean {
     if (!filters.themePaths?.length) return true;
     const itemThemePath = normalizeRetrievalText(item ? readFieldValue(item, 'themePath') : readSearchResultText(sr, 'themePath'));
     if (!itemThemePath) return false;
     return filters.themePaths.some(tp => itemThemePath === tp || itemThemePath.startsWith(tp + '/'));
 }
 
-function matchesCoreBlock(sr: SearchResult, item: Item | undefined, filters: RetrievalFilters): boolean {
+function matchesCoreBlock(sr: SearchResult, item: RecordViewItem | undefined, filters: RetrievalFilters): boolean {
     if (!filters.coreBlocks?.length) return true;
     const coreBlock = normalizeRetrievalText(item?.coreBlock ?? readSearchResultText(sr, 'coreBlock'));
     return !!coreBlock && filters.coreBlocks.map(normalizeRetrievalText).includes(coreBlock);
 }
 
 
-function matchesBlockTemplateId(sr: SearchResult, item: Item | undefined, filters: RetrievalFilters): boolean {
+function matchesRecordCaptureTemplateId(sr: SearchResult, item: RecordViewItem | undefined, filters: RetrievalFilters): boolean {
     if (!filters.blockTemplateIds?.length) return true;
     const templateId = normalizeRetrievalText(item?.templateId ?? readSearchResultText(sr, 'templateId'));
     return !!templateId && filters.blockTemplateIds.includes(templateId);
 }
 
-function matchesBlockTemplateName(sr: SearchResult, item: Item | undefined, filters: RetrievalFilters): boolean {
+function matchesRecordCaptureTemplateName(sr: SearchResult, item: RecordViewItem | undefined, filters: RetrievalFilters): boolean {
     if (!filters.blockTemplateNames?.length) return true;
     const categoryKey = normalizeRetrievalText(item ? readFieldValue(item, 'categoryKey') : readSearchResultText(sr, 'categoryKey'));
     if (!categoryKey) return false;

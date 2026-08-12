@@ -2,7 +2,9 @@
 // 统一的筛选 / 排序 / 日期区间 / 关键字过滤助手
 // —— Task 关闭状态只认显式 status；不从 category/raw Markdown 推断。
 // —— 修正数字/日期的比较与排序（避免把数值/日期按字符串字典序比较）
-import { Item, FilterRule, SortRule, readField } from '@/core/types/schema';
+import { RecordViewItem } from '@/core/records/RecordEntity';
+import { FilterRule, SortRule } from '@/core/view/ViewConfig';
+import { readField } from '@/core/fields/ViewFieldCatalog';
 import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
 import { asUnknownRecord, readString, readStringArray } from './unknownRecord';
 
@@ -41,7 +43,7 @@ function cmpMixed(a: unknown, b: unknown): number {
 }
 
 /* ---------- 过滤 ---------- */
-export function filterByRules(items: Item[], rules: FilterRule[] = []) {
+export function filterByRules(items: RecordViewItem[], rules: FilterRule[] = []) {
   if (!rules.length) return items;
   
   return items.filter(item => {
@@ -96,7 +98,7 @@ function normalizeBetweenValue(value: unknown): [unknown, unknown] | null {
   return [parts[0], parts[1]];
 }
 
-function matchRule(item: Item, rule: FilterRule): boolean {
+function matchRule(item: RecordViewItem, rule: FilterRule): boolean {
   const canonicalField = normalizeFieldKey(rule.field);
   const itemRecord = asUnknownRecord(item);
   let v1: unknown = readField(item, canonicalField);
@@ -174,7 +176,7 @@ function matchRule(item: Item, rule: FilterRule): boolean {
 }
 
 /* ---------- 排序 ---------- */
-export function sortItems(items: Item[], rules: SortRule[] = []) {
+export function sortItems(items: RecordViewItem[], rules: SortRule[] = []) {
   if (!rules.length) return items;
 
   return [...items].sort((a, b) => {
@@ -196,12 +198,12 @@ export function sortItems(items: Item[], rules: SortRule[] = []) {
 }
 
 /* ---------- 日期区间（仅保留有统一 date 的项） ---------- */
-function isClosed(it: Item) {
+function isClosed(it: RecordViewItem) {
   if (it.coreBlock !== 'task') return false;
   return it.status === 'done' || it.status === 'cancelled' || it.status === 'skipped';
 }
 
-export function filterByDateRange(items: Item[], startISO?: string, endISO?: string) {
+export function filterByDateRange(items: RecordViewItem[], startISO?: string, endISO?: string) {
   if (!startISO && !endISO) return items;
 
   // [修复] 结束日期需要按“当天结束”做包含式过滤：
@@ -233,7 +235,7 @@ export function filterByDateRange(items: Item[], startISO?: string, endISO?: str
 }
 
 /* ---------- 关键字 ---------- */
-export function filterByKeyword(items: Item[], kw: string) {
+export function filterByKeyword(items: RecordViewItem[], kw: string) {
   if (!kw.trim()) return items;
   const s = kw.trim().toLowerCase();
   return items.filter(it => {
@@ -255,7 +257,7 @@ export function filterByKeyword(items: Item[], kw: string) {
  * 1. 它没有 `period` 字段。
  * 2. 它的 `period` 字段值与传入的 `period` 参数匹配。
  */
-export function filterByPeriod(items: Item[], period: string): Item[] {
+export function filterByPeriod(items: RecordViewItem[], period: string): RecordViewItem[] {
     if (!period) {
         return items;
     }

@@ -118,7 +118,7 @@ export function getFieldEditorKind(definition?: FieldDefinition, sampleValue?: u
   if (inputType === 'image' || inputType === 'multiImage') return 'image';
   if (inputType === 'rating') return 'rating';
 
-  switch (definition?.type) {
+  switch (definition?.valueType) {
     case 'number': return 'number';
     case 'boolean': return 'boolean';
     case 'date': return 'date';
@@ -145,7 +145,7 @@ function inferExtraDefinition(field: string, sampleValue?: unknown): FieldDefini
   return {
     key: field,
     label,
-    type: isNumber ? 'number' : isBoolean ? 'boolean' : isMulti ? 'tags' : 'string',
+    valueType: isNumber ? 'number' : isBoolean ? 'boolean' : isMulti ? 'tags' : 'string',
     inputType: isNumber ? 'number' : isBoolean ? 'boolean' : isMulti ? 'multiTag' : 'text',
     category: 'custom',
     source: 'extra',
@@ -201,11 +201,11 @@ export function getFieldEditPolicy(field: string, sampleValue?: unknown): FieldE
   }
 
   const editorKind = getFieldEditorKind(definition, sampleValue);
-  if (editorKind === 'path' || definition?.type === 'path' || definition?.inputType === 'path' || definition?.inputType === 'multiPath') {
+  if (editorKind === 'path' || definition?.valueType === 'path' || definition?.inputType === 'path' || definition?.inputType === 'multiPath') {
     return readonlyPolicy(field, canonicalField, definition, '路径类字段涉及文件定位、分类或主题结构，不能在 Excel 单元格内直接修改');
   }
 
-  if (editorKind === 'readonly' || definition?.type === 'file' || definition?.inputType === 'file') {
+  if (editorKind === 'readonly' || definition?.valueType === 'file' || definition?.inputType === 'file') {
     return readonlyPolicy(field, canonicalField, definition, '该字段类型暂不支持内联编辑');
   }
 

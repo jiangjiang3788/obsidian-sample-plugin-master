@@ -1,4 +1,6 @@
-import type { BlockTemplate, ThemeDefinition, ThinkSettings } from '@/core/types/schema';
+import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { GoalDefinition, GoalSettings } from '@/core/goal';
 import { findGoalTemplate, resolveTemplatePeriodPolicy, splitGoalPath } from '@/core/goal';
 import { getCoreBlockById } from '@/core/blocks';
@@ -18,7 +20,7 @@ export interface GoalTemplateResolveInput {
 
 
 export interface GoalTemplateResolveResult {
-  template: BlockTemplate | null;
+  template: RecordCaptureTemplate | null;
   theme: ThemeDefinition | null;
   goal: GoalDefinition | null;
   templateId: string | null;
@@ -38,7 +40,7 @@ function findGoal(goalSettings: GoalSettings | undefined, goalId?: string | null
   return goals.find((goal) => splitGoalPath(goal.goalPath || goal.title).goalPath === normalizedPath) || null;
 }
 
-function mergeTemplate(base: BlockTemplate, patch: Partial<BlockTemplate> & { defaultValues?: Record<string, unknown>; requiredFields?: string[]; granularity?: string }): BlockTemplate {
+function mergeTemplate(base: RecordCaptureTemplate, patch: Partial<RecordCaptureTemplate> & { defaultValues?: Record<string, unknown>; requiredFields?: string[]; granularity?: string }): RecordCaptureTemplate {
   const required = new Set(patch.requiredFields || []);
   const defaultValues = patch.defaultValues || {};
   const fields = (patch.fields ?? base.fields).map((field) => {
@@ -53,7 +55,6 @@ function mergeTemplate(base: BlockTemplate, patch: Partial<BlockTemplate> & { de
   const merged = {
     ...base,
     fields,
-    outputTemplate: patch.outputTemplate ?? base.outputTemplate,
     targetFile: patch.targetFile ?? base.targetFile,
     appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
     periodPolicy: (patch as any).periodPolicy ?? (base as any).periodPolicy,

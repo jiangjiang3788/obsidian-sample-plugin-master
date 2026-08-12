@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import { z } from 'zod';
 
 import { SETTINGS_PERSISTENCE_TOKEN, type ISettingsPersistence } from '@core/services/public';
@@ -16,7 +16,7 @@ import { isDisposed } from '@/app/runtime/lifecycleState';
  * - SettingsPersistence（封装 plugin.loadData/saveData）
  * - Theme matcher（ThemeManager）
  */
-export function registerSettingsPersistence(plugin: ThinkPlugin): void {
+export function registerSettingsPersistence(plugin: PluginHost): void {
     // 持久化前对设置做可选脱敏（AI apiKey）。
     // - 默认不允许落盘：apiKey 通常会进入插件 data/settings，同步服务也可能同步它。
     // - 只有 aiSettings.persistApiKey=true 时才保留密钥。

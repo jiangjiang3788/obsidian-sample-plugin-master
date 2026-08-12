@@ -1,4 +1,4 @@
-import type { TemplateField } from '@/core/types/schema';
+import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { GoalTemplateStorageRow, GoalDefinition, GoalId, GoalSettings, PeriodPolicy } from './types';
 import { getGoalPathCandidates, splitGoalPath } from './path';
 import { isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from './period';
@@ -27,7 +27,6 @@ export interface GoalTemplate {
   sortOrder?: number;
   enabled: boolean;
   fields?: TemplateField[];
-  outputTemplate?: string;
   targetFile?: string;
   appendUnderHeader?: string;
   defaultValues?: Record<string, unknown>;
@@ -97,7 +96,6 @@ export function normalizeGoalTemplateStorageRow(row: GoalTemplateStorageRow): Go
     sortOrder: typeof row.sortOrder === 'number' ? row.sortOrder : undefined,
     enabled: row.enabled !== false,
     fields: row.fields,
-    outputTemplate: row.outputTemplate,
     targetFile: row.targetFile,
     appendUnderHeader: row.appendUnderHeader,
     defaultValues: row.defaultValues || {},
@@ -123,7 +121,6 @@ export function toGoalTemplateStorageRow(template: GoalTemplate, previous?: Goal
     sortOrder: template.sortOrder,
     enabled: template.enabled !== false,
     fields: template.fields?.length ? template.fields : undefined,
-    outputTemplate: template.outputTemplate || undefined,
     targetFile: template.targetFile || undefined,
     appendUnderHeader: template.appendUnderHeader || undefined,
     defaultValues: template.defaultValues && Object.keys(template.defaultValues).length ? template.defaultValues : undefined,

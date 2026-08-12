@@ -1,4 +1,4 @@
-import type { AppStoreApi } from './index';
+import type { AppStoreApi } from './AppStoreApi';
 import { DataStore, InputService, ItemService } from '@core/services/public';
 import { RecordInputKernel } from '@core/recordInput/public';
 import { applyRecordRefreshPlan, buildSuccessResult, buildValidationErrorResult } from '@core/recordInput/public';

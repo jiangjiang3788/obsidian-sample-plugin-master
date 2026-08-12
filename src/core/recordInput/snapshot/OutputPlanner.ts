@@ -1,4 +1,5 @@
-import type { BlockTemplate, ThemeDefinition } from '@/core/types/schema';
+import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import type { RecordOutputPlan, RecordPersistencePlan } from '@/core/types/recordSnapshot';
 import { splitThemePath } from '@/core/types/recordSnapshot';
 import { renderTemplate } from '@/core/utils/templateUtils';
@@ -6,7 +7,9 @@ import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter'
 import { resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@/core/goal';
 import { readOptionText } from '@/core/semantics/option';
 import { createRecordId, RECORD_SCHEMA_VERSION } from '@/core/records/RecordId';
-import { encodeRecordBlock, ensureRecordEnvelope } from '@/core/records/codec';
+import { encodeRecordBlock, encodeRecordDraft } from '@/core/records/codec';
+import { buildCustomCaptureFields, buildGenericRecordDraft } from '@/core/records/RecordDraft';
+import { getRecordSchemaDefinition } from '@/core/records/schema';
 import { splitHierarchyPathValue } from '@/core/semantics/path';
 
 function normalizeNonEmptyPath(value: string | null | undefined): string | null {
@@ -32,7 +35,7 @@ function readStructuredTaskRecurrence(renderData: Record<string, unknown>): { un
 
 
 function buildRenderData(
-  template: BlockTemplate,
+  template: RecordCaptureTemplate,
   formData: Record<string, unknown>,
   theme?: ThemeDefinition | null,
   templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
@@ -111,7 +114,7 @@ function buildRenderData(
  * 但必须返回 partial_success 并提示用户手动清理旧记录。
  */
 export function buildRecordOutputPlan(input: {
-  template: BlockTemplate | null;
+  template: RecordCaptureTemplate | null;
   formData: Record<string, unknown>;
   theme?: ThemeDefinition | null;
   templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null };
@@ -134,11 +137,11 @@ export function buildRecordOutputPlan(input: {
   const explicitCoreBlockId = String((input.template as any).coreBlockId || '').trim();
   const systemCoreBlockId = String(input.template.id || '').trim().startsWith('core.') ? String(input.template.id || '').trim() : '';
   const trustedCoreBlock = (explicitCoreBlockId || systemCoreBlockId).replace(/^core\./, '');
-  const renderedTemplate = trustedCoreBlock === 'task' ? '' : renderTemplate(input.template.outputTemplate, renderData).trim();
-  const literalCoreBlock = renderedTemplate.match(/^\s*核心Block\s*[:：]{1,2}\s*([^\s]+)\s*$/mi)?.[1]?.trim();
   const hintedCoreBlock = String(renderData.coreBlock || input.template.id || '').trim().replace(/^core\./, '');
-  const coreBlock = trustedCoreBlock || literalCoreBlock || hintedCoreBlock;
+  const coreBlock = trustedCoreBlock || hintedCoreBlock;
   if (!coreBlock) throw new Error('Record Foundation v2 要求每条记录都有核心Block。');
+  const schema = getRecordSchemaDefinition(coreBlock);
+  if (!schema) throw new Error(`unknown_record_schema:${coreBlock}`);
   const recordId = String(input.recordId || '').trim() || createRecordId(coreBlock);
 
   let outputContent: string;
@@ -150,21 +153,23 @@ export function buildRecordOutputPlan(input: {
     if (!recurrence && status === 'skipped') throw new Error('task_status_skipped_requires_series');
     if (recurrence && status !== 'open') throw new Error('task_series_initial_instance_must_be_open');
     const taskFields = {
-      ...renderData,
       status,
       content: renderData['任务内容'] ?? renderData['内容'] ?? renderData.content,
       goalId: renderData.goalId,
       goalPath: renderData.goalPath,
       themePath: renderData.themePath,
+      priority: renderData['优先级'] ?? renderData.priority,
+      energyDemand: renderData['精力要求'] ?? renderData.energyDemand,
+      brainDemand: renderData['脑力要求'] ?? renderData.brainDemand,
+      physicalDemand: renderData['体力要求'] ?? renderData.physicalDemand,
       scheduledDate: renderData['计划日期'] ?? renderData.scheduledDate ?? renderData['日期'] ?? renderData.date,
       startDate: renderData['开始日期'] ?? renderData.startDate,
       dueDate: renderData['截止日期'] ?? renderData.dueDate,
       expectedDurationMinutes: renderData['预计时长'] ?? renderData.expectedDurationMinutes,
       createdAt: renderData['创建于'] ?? renderData.createdAt ?? new Date().toISOString(),
-      templateId: input.templateMeta?.templateId || input.template.id,
-      templateSourceType: input.templateMeta?.templateSourceType || 'core-block',
       seriesId: renderData.seriesId ?? renderData['系列ID'],
     } as Record<string, unknown>;
+    Object.assign(taskFields, buildCustomCaptureFields('task', renderData, input.template.fields));
     const existingSeriesId = String(taskFields.seriesId || '').trim();
     if (recurrence && existingSeriesId) {
       throw new Error('task_series_recurrence_edit_requires_series_command');
@@ -193,7 +198,6 @@ export function buildRecordOutputPlan(input: {
           recurrenceAnchor: recurrence.anchor,
           seriesStartDate,
           currentTaskId: recordId,
-          rolloverPolicy: 'carry',
         },
       });
       const taskBlock = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: 'task', fields: taskFields });
@@ -201,8 +205,11 @@ export function buildRecordOutputPlan(input: {
     } else {
       outputContent = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: 'task', fields: taskFields });
     }
+  } else if (schema?.family === 'generic') {
+    const draft = buildGenericRecordDraft(schema.coreBlock, renderData, input.template.fields);
+    outputContent = encodeRecordDraft({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, draft });
   } else {
-    outputContent = ensureRecordEnvelope(renderedTemplate, { recordId, coreBlock, schemaVersion: RECORD_SCHEMA_VERSION });
+    throw new Error(`record_capture_not_supported:${schema.coreBlock}:${schema.captureMode}`);
   }
   const targetFilePath = normalizeNonEmptyPath(renderTemplate(input.template.targetFile, renderData));
   const targetHeader = input.template.appendUnderHeader

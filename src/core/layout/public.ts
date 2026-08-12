@@ -1,8 +1,21 @@
-// src/core/layout/public.ts
-/**
- * Layout domain public facade.
- *
- * Exposes freeform-layout configuration, placement normalization, movement,
- * resize, and z-index helpers as a focused module-level API.
- */
-export * from './index';
+export {
+    DEFAULT_FREEFORM_LAYOUT_CONFIG,
+    FREEFORM_COLLAPSED_HEIGHT,
+    bringViewPlacementToFront,
+    bringViewPlacementsToFront,
+    calculateFreeformCanvasHeight,
+    createDefaultViewPlacement,
+    createDefaultViewPlacements,
+    getDefaultFreeformItemSize,
+    filterViewPlacementsForLayout,
+    getFreeformVisualHeight,
+    moveViewPlacement,
+    normalizeFreeformLayoutConfig,
+    normalizeViewPlacementZIndices,
+    normalizeViewPlacement,
+    removeViewPlacement,
+    resizeViewPlacement,
+    resolveViewPlacements,
+    snapFreeformValue,
+} from './freeformLayout';
+export type { FreeformItemSize } from './freeformLayout';

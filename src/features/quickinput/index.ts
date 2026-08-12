@@ -1,4 +1,4 @@
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import { registerQuickInputCommands } from './registerCommands';
 
 /**
@@ -9,7 +9,7 @@ import { registerQuickInputCommands } from './registerCommands';
  * existing callers.
  */
 export interface QuickInputDependencies {
-    plugin: ThinkPlugin;
+    plugin: PluginHost;
 }
 
 export function setup(deps: QuickInputDependencies) {

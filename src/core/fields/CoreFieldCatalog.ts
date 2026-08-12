@@ -22,7 +22,7 @@ export interface CoreInputFieldPreset {
   /** 推荐的基础字段类型。用户仍然可以在 UI 里改类型。 */
   type: FieldInputType;
   /** 内部核心字段目标。只用于归一化和模板渲染，不暴露成 UI 配置项。 */
-  target: 'themePath' | 'categoryKey' | 'tags' | 'goalPaths' | 'image' | 'title' | 'content' | 'date' | 'rating' | 'startTime' | 'endTime' | 'duration';
+  target: 'themePath' | 'categoryKey' | 'recordSubtype' | 'tags' | 'goalPaths' | 'image' | 'title' | 'content' | 'date' | 'rating' | 'startTime' | 'endTime' | 'duration';
   description: string;
 }
 
@@ -77,7 +77,8 @@ const BUILT_IN_FIELD_GUIDE_GROUPS: BuiltInFieldGuideGroup[] = [
 ];
 
 const CORE_INPUT_FIELD_PRESETS: CoreInputFieldPreset[] = [
-  { label: '分类', type: 'path', target: 'categoryKey', description: '写入 Block KV 分类::，并用于分类路径、根分类、叶分类。' },
+  { label: '记录子类型', type: 'singleSelect', target: 'recordSubtype', description: 'Record 内部子类型；Thought 推荐使用 感受/思考。' },
+  { label: '分类', type: 'path', target: 'categoryKey', description: '历史兼容输入。Canonical Record 新写入不再把分类作为类型真源。' },
   { label: '主题', type: 'path', target: 'themePath', description: '写入显式主题路径；不会从 heading 推导主题。' },
   { label: '标签', type: 'multiTag', target: 'tags', description: '多标签字段，可填写多个标签。' },
   { label: '目标', type: 'multiTag', target: 'goalPaths', description: '目标字段，可填写多个目标路径。' },
@@ -95,6 +96,10 @@ const CORE_INPUT_ALIAS_TARGETS: Record<string, CoreInputFieldPreset['target']> =
   '主题': 'themePath',
   '主题路径': 'themePath',
   '完整主题': 'themePath',
+  // Record 子类型
+  recordsubtype: 'recordSubtype',
+  subtype: 'recordSubtype',
+  '记录子类型': 'recordSubtype',
   // 分类
   category: 'categoryKey',
   categorykey: 'categoryKey',

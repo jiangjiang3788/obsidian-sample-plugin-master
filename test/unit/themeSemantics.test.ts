@@ -1,7 +1,8 @@
-import { readField, type Item } from '@/core/types/schema';
+import { readField } from '@/core/fields/ViewFieldCatalog';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { buildParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 
-function makeItem(overrides: Partial<Item>): Item {
+function makeItem(overrides: Partial<RecordViewItem>): RecordViewItem {
   return {
     id: 'rec.01J00000000000000000000062',
     title: '任务',

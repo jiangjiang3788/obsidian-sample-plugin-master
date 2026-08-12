@@ -1,18 +1,21 @@
-import type { FilterRule, Item, SortRule } from '@/core/types/schema';
-import { filterByRules, sortItems } from '@core/utils/itemFilter';
+import type { FilterRule, SortRule } from '@/core/view/ViewConfig';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { RecordEntity } from '@/core/records/RecordEntity';
+import { toRecordViewItem } from '@/core/records/RecordEntity';
+import { queryRecordItems } from '@/core/query/RecordQuery';
 import { RecordIndex, type RecordIntegrityIssue, type RecordLocation } from '@/core/records/RecordIndex';
 
 export class DataStoreIndex {
-  private items: Item[] = [];
-  private fileIndex: Map<string, Item[]> = new Map();
-  private queryCache: Map<string, Item[]> = new Map();
+  private records: RecordEntity[] = [];
+  private fileIndex: Map<string, RecordEntity[]> = new Map();
+  private queryCache: Map<string, RecordViewItem[]> = new Map();
   private dataVersion = 0;
   private readonly recordIndex = new RecordIndex();
 
   dispose(): void { this.clear(); }
 
   clear(): void {
-    this.items = [];
+    this.records = [];
     this.fileIndex.clear();
     this.queryCache.clear();
     this.recordIndex.clear();
@@ -20,13 +23,13 @@ export class DataStoreIndex {
 
   clearQueryCache(): void { this.queryCache.clear(); }
 
-  hydrateFileItems(filePath: string, items: Item[], opts: { rebuild?: boolean } = {}): void {
-    this.fileIndex.set(filePath, items);
+  hydrateFileItems(filePath: string, records: RecordEntity[], opts: { rebuild?: boolean } = {}): void {
+    this.fileIndex.set(filePath, records);
     if (opts.rebuild !== false) this.rebuildIdentityIndex();
   }
 
-  stageFileItems(filePath: string, items: Item[]): void {
-    this.fileIndex.set(filePath, items);
+  stageFileItems(filePath: string, records: RecordEntity[]): void {
+    this.fileIndex.set(filePath, records);
   }
 
   rebuild(opts: { bumpVersion?: boolean } = {}): void {
@@ -34,8 +37,8 @@ export class DataStoreIndex {
     if (opts.bumpVersion !== false) this.bumpVersion();
   }
 
-  replaceFileItems(filePath: string, items: Item[], opts: { bumpVersion?: boolean } = {}): void {
-    this.fileIndex.set(filePath, items);
+  replaceFileItems(filePath: string, records: RecordEntity[], opts: { bumpVersion?: boolean } = {}): void {
+    this.fileIndex.set(filePath, records);
     this.rebuildIdentityIndex();
     if (opts.bumpVersion !== false) this.bumpVersion();
   }
@@ -47,30 +50,39 @@ export class DataStoreIndex {
     return hadItems;
   }
 
-  getById(recordId: string): Item | null { return this.recordIndex.getById(recordId); }
+  getById(recordId: string): RecordEntity | null { return this.recordIndex.getById(recordId); }
   getLocation(recordId: string): RecordLocation | null { return this.recordIndex.getLocation(recordId); }
   getLocations(recordId: string): RecordLocation[] { return this.recordIndex.getLocations(recordId); }
   getIntegrityIssues(): RecordIntegrityIssue[] { return this.recordIndex.getIssues(); }
 
-  /** All valid Record v2 entities, including internal task-series/task-session records. */
-  queryRecords(filters: FilterRule[] = [], sortRules: SortRule[] = []): Item[] {
+  /** Canonical entity access for domain/repository code. No view projection is implied. */
+  getRecordEntities(): RecordEntity[] {
+    return [...this.records];
+  }
+
+  /**
+   * All valid Record v2 entities projected for existing query/view consumers.
+   * Internal task-series/task-session records are included.
+   */
+  queryRecords(filters: FilterRule[] = [], sortRules: SortRule[] = []): RecordViewItem[] {
     const key = `records:${this.makeQueryKey(filters, sortRules)}`;
     const cached = this.queryCache.get(key);
     if (cached) return cached;
-    const filtered = filterByRules(this.items, filters);
-    const result = sortItems(filtered, sortRules);
+    const projected = this.records.map(toRecordViewItem);
+    const result = queryRecordItems(projected, { filterGroups: [filters], sort: sortRules });
     this.queryCache.set(key, result);
     return result;
   }
 
   /** User-visible records only. Internal Series/Session entities stay behind the application boundary. */
-  queryItems(filters: FilterRule[] = [], sortRules: SortRule[] = []): Item[] {
+  queryItems(filters: FilterRule[] = [], sortRules: SortRule[] = []): RecordViewItem[] {
     const key = this.makeQueryKey(filters, sortRules);
     const cached = this.queryCache.get(key);
     if (cached) return cached;
-    const userVisibleItems = this.items.filter(item => item.coreBlock !== 'task-series' && item.coreBlock !== 'task-session');
-    const filtered = filterByRules(userVisibleItems, filters);
-    const result = sortItems(filtered, sortRules);
+    const userVisibleItems = this.records
+      .filter(record => record.coreBlock !== 'task-series' && record.coreBlock !== 'task-session')
+      .map(toRecordViewItem);
+    const result = queryRecordItems(userVisibleItems, { filterGroups: [filters], sort: sortRules });
     this.queryCache.set(key, result);
     return result;
   }
@@ -78,7 +90,7 @@ export class DataStoreIndex {
   bumpVersion(): void { this.dataVersion++; this.queryCache.clear(); }
 
   private rebuildIdentityIndex(): void {
-    this.items = this.recordIndex.rebuild(this.fileIndex);
+    this.records = this.recordIndex.rebuild(this.fileIndex);
     this.queryCache.clear();
   }
 

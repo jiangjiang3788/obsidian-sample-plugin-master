@@ -1,8 +1,8 @@
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { DataStore } from '../DataStore';
 import { RecordRepository, type RecordBatchOperation } from '@/core/records/RecordRepository';
 import { createRecordId } from '@/core/records/RecordId';
-import { asTaskRecord, asTaskSeriesRecord, type TaskDemandLevel, type TaskPriority } from '@/core/records/task/taskDomain';
+import { asTaskRecord, asTaskSeriesRecord, type TaskDemandLevel, type TaskPriority, type TaskRecord, type TaskSeriesRecord } from '@/core/records/task/taskDomain';
 import { canTransitionTaskStatus, getTaskStatus, nextTaskStatus, type TaskLifecycleCommand } from '@/core/records/task/taskStatus';
 import { buildNextOccurrenceDates, normalizeRecurrenceInfo, type RecurrenceInfo } from '@/core/records/task/taskRecurrence';
 import type { TaskSessionCreateInput } from '@/core/types/timer';
@@ -25,11 +25,11 @@ export interface TaskSeriesUpdate {
 }
 
 
-function sourcePath(dataStore: DataStore, item: Item): string {
+function sourcePath(dataStore: DataStore, item: TaskRecord): string {
   return item.source?.path || item.file?.path || dataStore.getRecordLocation(item.id)?.path || '';
 }
 
-function nextTaskFields(task: Item, series: Item, completedAt: string, nextDates: ReturnType<typeof buildNextOccurrenceDates>): Record<string, unknown> {
+function nextTaskFields(task: TaskRecord, series: TaskSeriesRecord, completedAt: string, nextDates: ReturnType<typeof buildNextOccurrenceDates>): Record<string, unknown> {
   return {
     status: 'open',
     // Series owns future-instance defaults. Historical/current Task metadata is never used
@@ -238,9 +238,9 @@ export class TaskCompletionMutation {
     await this.repository.batch(operations);
   }
 
-  private async requireTask(itemId: string): Promise<Item> {
-    const item = await this.repository.getById(itemId);
-    if (!asTaskRecord(item)) throw new Error(`task_record_required:${itemId}`);
-    return item!;
+  private async requireTask(itemId: string): Promise<TaskRecord> {
+    const task = asTaskRecord(await this.repository.getById(itemId));
+    if (!task) throw new Error(`task_record_required:${itemId}`);
+    return task;
   }
 }

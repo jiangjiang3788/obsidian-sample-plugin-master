@@ -1,13 +1,13 @@
 // src/core/utils/normalize.ts
 // 统一 date/dateMs/dateSource（categoryKey 已由 parser 决定；此处只兜底）
 
-import { Item } from '@/core/types/schema';
+import { RecordViewItem } from '@/core/records/RecordEntity';
 
 const ORDER = ['done','due','scheduled','start','created','end'] as const;
 type DateKey = typeof ORDER[number];
 
 /** 统一计算出 date/dateMs/dateSource；并兜底 categoryKey */
-export function normalizeItemDates(it: Item): void {
+export function normalizeItemDates(it: RecordViewItem): void {
   // Non-Task records keep their own primary date semantics.
   if (it.coreBlock !== 'task') {
     if (it.date) {

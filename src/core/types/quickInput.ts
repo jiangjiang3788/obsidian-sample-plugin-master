@@ -9,7 +9,8 @@
  * 该类型仅为 QuickInputModal 的 legacy onSave 兼容口保留。
  */
 
-import type { BlockTemplate, ThemeDefinition } from './schema';
+import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import type { RecordInputMeta, RecordInputSource } from './recordInput';
 
 export interface QuickInputSaveData {
@@ -21,7 +22,7 @@ export interface QuickInputSaveData {
     source?: Extract<RecordInputSource, 'timer' | 'quickinput' | 'view_quick_create' | 'unknown'>;
 
     // 兼容 Batch 1 之前的旧调用方；Batch 2 之后 Timer create 不再依赖这些字段。
-    template?: BlockTemplate;
+    template?: RecordCaptureTemplate;
     theme?: ThemeDefinition;
     templateId?: string | null;
     templateSourceType?: 'core-block' | 'goal-template' | null;

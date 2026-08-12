@@ -1,10 +1,10 @@
 import { TaskCompletionMutation } from '@core/services/item/TaskCompletionMutation';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 
 const taskId = 'task.01J00000000000000000000000';
 const seriesId = 'taskseries.01J00000000000000000000000';
 
-function openTask(overrides: Partial<Item> = {}): Item {
+function openTask(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: taskId,
     schemaVersion: 2,
@@ -19,10 +19,10 @@ function openTask(overrides: Partial<Item> = {}): Item {
     extra: {},
     source: { path: 'Tasks.md', startLine: 1, endLine: 10, modified: 1 },
     ...overrides,
-  } as Item;
+  } as RecordViewItem;
 }
 
-function activeSeries(overrides: Partial<Item> = {}): Item {
+function activeSeries(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: seriesId,
     schemaVersion: 2,
@@ -42,11 +42,11 @@ function activeSeries(overrides: Partial<Item> = {}): Item {
     goalPath: '#Series',
     scheduledDate: undefined,
     ...overrides,
-  } as Item;
+  } as RecordViewItem;
 }
 
-function harness(task: Item, series?: Item) {
-  const records = new Map<string, Item>([[task.id, task]]);
+function harness(task: RecordViewItem, series?: RecordViewItem) {
+  const records = new Map<string, RecordViewItem>([[task.id, task]]);
   if (series) records.set(series.id, series);
   const updates: Array<{ recordId: string; patch: Record<string, unknown> }> = [];
   const batches: any[][] = [];

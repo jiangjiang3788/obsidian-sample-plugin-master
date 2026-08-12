@@ -1,7 +1,7 @@
 import type { SearchResult } from 'minisearch';
 import { asUnknownRecord, readNumber, readString, readUnknown } from '../../utils/unknownRecord';
 import type { UnknownRecord } from '../../utils/unknownRecord';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 const HIDDEN_EXTRA_ALIAS_SET = new Set<string>(['正文', '内容', '任务内容', '记录内容', 'editableText']);
 
@@ -20,7 +20,7 @@ export function normalizeRetrievalText(value: unknown): string {
     return String(value).trim();
 }
 
-export function collectSearchableExtraText(item: Item): string {
+export function collectSearchableExtraText(item: RecordViewItem): string {
     const extra = item.extra || {};
     return Object.entries(extra)
         .filter(([key]) => !HIDDEN_EXTRA_ALIAS_SET.has(key))

@@ -69,6 +69,7 @@ export type FieldSemantic =
   | 'goalPath'
   | 'cycleId'
   | 'coreBlock'
+  | 'recordSubtype'
   | 'status'
   | 'date'
   | 'startTime'

@@ -29,7 +29,7 @@ import { DEFAULT_NAMES } from '@core/types/public';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { LayoutEditorPanel } from '@/features/settings/components/LayoutEditorPanel';
-import { NamePromptModal } from '@/platform/obsidian/public';
+import { NamePromptModal } from '@/platform/obsidian/modals/NamePromptModal';
 
 function SortableLayoutItem({
     layout,

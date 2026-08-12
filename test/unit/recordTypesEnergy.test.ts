@@ -50,7 +50,8 @@ describe('Energy direct record foundation', () => {
     expect(markdown).toContain('核心Block:: energy');
     expect(markdown).toContain('目标ID:: goal.我若安好便是晴天');
     expect(markdown).toContain('精力值:: 80');
-    expect(markdown).toContain('精力档位:: 80');
+    expect(markdown).not.toContain('精力档位::');
+    expect(markdown).not.toContain('分类:: 精力');
     expect(markdown).toContain('评分模式:: quick');
     expect(markdown).toContain('来源:: desktop-panel');
     expect(markdown).not.toContain('模板ID::');

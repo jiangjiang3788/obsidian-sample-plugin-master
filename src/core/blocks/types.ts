@@ -1,6 +1,7 @@
-import type { BlockTemplate, TemplateField } from '@/core/types/schema';
+import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
+import type { RecordCoreBlock, RecordSchemaDefinition } from '@/core/records/schema';
 
-export type CoreBlockKey =
+export type CoreBlockKey = Extract<RecordCoreBlock,
   | 'task'
   | 'plan'
   | 'review'
@@ -8,14 +9,15 @@ export type CoreBlockKey =
   | 'habit'
   | 'evidence'
   | 'blocker'
-  | 'milestone';
+  | 'milestone'>;
 
-export interface CoreBlockDefinition extends BlockTemplate {
+/** Derived capture view of the authoritative RecordSchemaDefinition. */
+export type CoreBlockDefinition = RecordSchemaDefinition & {
   key: CoreBlockKey;
-  system: true;
-  version: number;
-  description?: string;
-}
+  coreBlock: CoreBlockKey;
+  captureMode: 'template';
+  coreBlockId: string;
+};
 
 export interface CoreBlockPatch {
   blockId: string;
@@ -23,7 +25,6 @@ export interface CoreBlockPatch {
   displayName?: string;
   categoryKey?: string;
   fields?: TemplateField[];
-  outputTemplate?: string;
   targetFile?: string;
   appendUnderHeader?: string;
 }

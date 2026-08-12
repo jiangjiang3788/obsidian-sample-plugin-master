@@ -1,4 +1,5 @@
-import type { BlockTemplate, Item, TemplateField } from '@/core/types/schema';
+import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { ParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 import { resolveFieldValue } from '@/core/fields/FieldValueResolver';
 import { formatTaskRecurrence } from '@/core/records/task/taskRecurrence';
@@ -44,7 +45,7 @@ function fieldCodecDefinition(field: TemplateField): FieldCodecDefinition {
   };
 }
 
-function readExtraByAlias(item: Item, aliases: unknown[]): unknown {
+function readExtraByAlias(item: RecordViewItem, aliases: unknown[]): unknown {
   const entries = Object.entries(item.extra || {});
   for (const alias of aliases) {
     const rawAlias = String(alias ?? '').trim();
@@ -57,7 +58,7 @@ function readExtraByAlias(item: Item, aliases: unknown[]): unknown {
   return undefined;
 }
 
-function readPeriodFromLegacyCategory(field: TemplateField, item: Item, snapshot: ParsedRecordSnapshot): string | undefined {
+function readPeriodFromLegacyCategory(field: TemplateField, item: RecordViewItem, snapshot: ParsedRecordSnapshot): string | undefined {
   const candidates = [snapshot.semantic.categoryKey, item.categoryKey];
   const options = field.options || [];
   for (const candidate of candidates) {
@@ -74,7 +75,7 @@ function readPeriodFromLegacyCategory(field: TemplateField, item: Item, snapshot
   return undefined;
 }
 
-function buildRatingPairOption(field: TemplateField, item: Item, snapshot: ParsedRecordSnapshot): unknown {
+function buildRatingPairOption(field: TemplateField, item: RecordViewItem, snapshot: ParsedRecordSnapshot): unknown {
   const options = field.options || [];
   const score = String(item.rating ?? '');
   const image = String((item as any).image ?? item.pintu ?? item.extra?.['评图'] ?? item.extra?.['pintu'] ?? item.extra?.['图片'] ?? '');
@@ -90,7 +91,7 @@ function buildRatingPairOption(field: TemplateField, item: Item, snapshot: Parse
   return undefined;
 }
 
-function readSemanticFieldValue(field: TemplateField, item: Item, snapshot: ParsedRecordSnapshot): unknown {
+function readSemanticFieldValue(field: TemplateField, item: RecordViewItem, snapshot: ParsedRecordSnapshot): unknown {
   const semantic = getTemplateFieldSemantic(field);
   switch (semantic) {
     case 'body':
@@ -136,7 +137,7 @@ function readSemanticFieldValue(field: TemplateField, item: Item, snapshot: Pars
   }
 }
 
-function readRegisteredOrExtraValue(field: TemplateField, item: Item): unknown {
+function readRegisteredOrExtraValue(field: TemplateField, item: RecordViewItem): unknown {
   const aliases = [field.key, field.label, ...(field.storage?.aliases || [])];
   const byKey = field.key ? resolveFieldValue(item, field.key).value : undefined;
   if (isPresent(byKey)) return byKey;
@@ -165,7 +166,7 @@ function normalizeBackfillValue(field: TemplateField, rawValue: unknown): unknow
 
 export function resolveInitialFieldValue(input: {
   field: TemplateField;
-  item: Item;
+  item: RecordViewItem;
   snapshot: ParsedRecordSnapshot;
 }): unknown {
   const semanticValue = readSemanticFieldValue(input.field, input.item, input.snapshot);
@@ -178,8 +179,8 @@ export function resolveInitialFieldValue(input: {
 }
 
 export function buildInitialEditFormData(input: {
-  template: Pick<BlockTemplate, 'fields'> | null | undefined;
-  item: Item;
+  template: Pick<RecordCaptureTemplate, 'fields'> | null | undefined;
+  item: RecordViewItem;
   snapshot: ParsedRecordSnapshot;
 }): Record<string, unknown> {
   const result: Record<string, unknown> = {};

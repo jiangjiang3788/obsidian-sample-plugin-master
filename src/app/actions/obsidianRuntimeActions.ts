@@ -1,4 +1,4 @@
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import { makeObsUri } from '@core/utils/public';
 
 interface ObsidianRuntimeApp {
@@ -12,7 +12,7 @@ interface ObsidianRuntimeApp {
 
 export interface OpenRecordOriginParams {
   app: ObsidianRuntimeApp | null | undefined;
-  item: Item;
+  item: RecordViewItem;
   target?: string;
 }
 

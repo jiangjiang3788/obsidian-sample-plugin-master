@@ -1,7 +1,7 @@
 import { filterByRules } from '@/core/utils/itemFilter';
-import type { Item } from '@core/public';
+import type { RecordViewItem } from '@core/public';
 
-function item(partial: Partial<Item>): Item {
+function item(partial: Partial<RecordViewItem>): RecordViewItem {
   return {
     id: partial.id || 'item',
     title: partial.title || '',
@@ -13,7 +13,7 @@ function item(partial: Partial<Item>): Item {
     modified: partial.modified || 0,
     extra: {},
     ...partial,
-  } as Item;
+  } as RecordViewItem;
 }
 
 describe('itemFilter extended operators', () => {

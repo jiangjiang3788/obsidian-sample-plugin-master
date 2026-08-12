@@ -1,7 +1,9 @@
 // src/shared/ui/widgets/FloatingWidget.ts
 import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
-import { createServices, mountWithServices, unmountPreact, type Services } from '@/app/public';
+import { createServices } from '@/app/createServices';
+import { mountWithServices, unmountPreact } from '@/app/ui/mountWithServices';
+import type { Services } from '@/app/services.types';
 import { devLog } from '@core/utils/public';
 
 /**

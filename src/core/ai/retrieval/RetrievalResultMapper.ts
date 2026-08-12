@@ -1,8 +1,8 @@
 import type { SearchResult } from 'minisearch';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { getSearchResultId, readSearchResultNumber, readSearchResultText } from './RetrievalText';
 
-export function searchResultToItem(sr: SearchResult, indexedItemsById: Map<string, Item>): Item {
+export function searchResultToItem(sr: SearchResult, indexedItemsById: Map<string, RecordViewItem>): RecordViewItem {
     const id = getSearchResultId(sr);
     const indexedItem = indexedItemsById.get(id);
     if (indexedItem) return indexedItem;
@@ -25,5 +25,5 @@ export function searchResultToItem(sr: SearchResult, indexedItemsById: Map<strin
         created: readSearchResultNumber(sr, 'created') ?? 0,
         modified: readSearchResultNumber(sr, 'modified') ?? 0,
         extra: {},
-    } as Item;
+    } as RecordViewItem;
 }

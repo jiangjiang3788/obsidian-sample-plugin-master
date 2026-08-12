@@ -6,7 +6,7 @@ export {
   openCreateFromTimeline,
   openCreateFromHeatmap,
   openCreateFromStatistics,
-} from './recordCreateActions';
+} from './recordCreate';
 export type {
   StatisticsCellIdentifier,
   StatisticsCreatePayload,
@@ -14,7 +14,7 @@ export type {
   HeatmapCreateParams,
   StatisticsCreateParams,
   HeaderCreateParams,
-} from './recordCreateActions';
+} from './recordCreate';
 
 export { openEditFromItem } from './recordEditActions';
 export type { EditFromItemParams } from './recordEditActions';

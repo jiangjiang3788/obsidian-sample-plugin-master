@@ -1,9 +1,6 @@
-import {
-  DEFAULT_SETTINGS,
-  THINK_SETTINGS_SCHEMA_VERSION,
-  type InputSettings,
-  type ThinkSettings,
-} from '@/core/types/schema';
+import { DEFAULT_SETTINGS, THINK_SETTINGS_SCHEMA_VERSION } from '@/core/settings/ThinkSettings';
+import type { InputSettings } from '@/core/recordInput/CaptureTemplate';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { DEFAULT_ENERGY_SETTINGS } from '@/core/energy';
 
 export const THINK_SETTINGS_SCHEMA_POLICY = 'current-only' as const;

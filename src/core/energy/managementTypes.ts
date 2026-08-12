@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { EnergyEffectEvidence } from './effects';
 import type { EnergyPatternEvidence } from './patternTypes';
 
@@ -66,5 +66,5 @@ export interface BuildEnergyManagementOptions {
   highEnergyThreshold?: number;
   dimensionGapThreshold?: number;
   /** Internal TaskSession + linked Energy records used for historical evidence. */
-  evidenceRecords?: Item[];
+  evidenceRecords?: RecordViewItem[];
 }

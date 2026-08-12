@@ -1,4 +1,6 @@
-import type { Item } from '@/core/types/schema';
+import type { RecordEntity, TaskRecordEntity } from '@/core/records/RecordEntity';
+import { asTaskRecord, asTaskSeriesRecord } from '@/core/records/task/taskDomain';
+import { asTaskSessionRecord } from '@/core/records/task/taskSession';
 
 export interface RecordLocation {
   recordId: string;
@@ -27,49 +29,49 @@ export interface RecordIntegrityIssue {
 
 /** Stable-ID runtime index. Location is mutable metadata, never identity. */
 export class RecordIndex {
-  private readonly itemsById = new Map<string, Item>();
+  private readonly recordsById = new Map<string, RecordEntity>();
   private readonly locationsById = new Map<string, RecordLocation[]>();
   private issues: RecordIntegrityIssue[] = [];
 
   clear(): void {
-    this.itemsById.clear();
+    this.recordsById.clear();
     this.locationsById.clear();
     this.issues = [];
   }
 
-  rebuild(fileIndex: Map<string, Item[]>): Item[] {
+  rebuild(fileIndex: Map<string, RecordEntity[]>): RecordEntity[] {
     this.clear();
-    const all: Item[] = [];
-    for (const [path, items] of fileIndex.entries()) {
-      for (const item of items) {
-        const id = String(item.id || '').trim();
+    const all: RecordEntity[] = [];
+    for (const [path, records] of fileIndex.entries()) {
+      for (const record of records) {
+        const id = String(record.id || '').trim();
         if (!id) {
           this.issues.push({ code: 'record_id_missing', path, message: `Record in ${path} has no 记录ID.` });
           continue;
         }
-        const source = item.source;
-        const line = source?.startLine ?? item.file?.line ?? 0;
+        const source = record.source;
+        const line = source?.startLine ?? record.file?.line ?? 0;
         const location: RecordLocation = {
           recordId: id,
           path,
           startLine: line,
           endLine: source?.endLine ?? line,
-          modified: source?.modified ?? item.modified ?? 0,
+          modified: source?.modified ?? record.modified ?? 0,
         };
         const locations = this.locationsById.get(id) || [];
         locations.push(location);
         this.locationsById.set(id, locations);
-        all.push(item);
+        all.push(record);
       }
     }
 
-    const unique: Item[] = [];
-    for (const item of all) {
-      const locations = this.locationsById.get(item.id) || [];
+    const unique: RecordEntity[] = [];
+    for (const record of all) {
+      const locations = this.locationsById.get(record.id) || [];
       if (locations.length !== 1) continue;
-      if (this.itemsById.has(item.id)) continue;
-      this.itemsById.set(item.id, item);
-      unique.push(item);
+      if (this.recordsById.has(record.id)) continue;
+      this.recordsById.set(record.id, record);
+      unique.push(record);
     }
 
     for (const [recordId, locations] of this.locationsById.entries()) {
@@ -82,76 +84,83 @@ export class RecordIndex {
       }
     }
 
-    // Relation projection + integrity diagnostics. Task instances may receive structured
-    // recurrenceInfo from their Series, but no recurrence prose is persisted or projected.
-    const openTasksBySeries = new Map<string, Item[]>();
-    for (const item of unique) {
-      if (item.coreBlock === 'task' && item.seriesId && item.status === 'open') {
-        const group = openTasksBySeries.get(item.seriesId) || [];
-        group.push(item);
-        openTasksBySeries.set(item.seriesId, group);
+    // Relation projection + integrity diagnostics. Internal foundation code narrows
+    // RecordEntity to typed domain projections before reading domain-only fields.
+    const openTasksBySeries = new Map<string, TaskRecordEntity[]>();
+    for (const record of unique) {
+      const task = asTaskRecord(record);
+      if (task?.seriesId && task.status === 'open') {
+        const group = openTasksBySeries.get(task.seriesId) || [];
+        group.push(task);
+        openTasksBySeries.set(task.seriesId, group);
       }
-      if (item.coreBlock === 'task' && item.seriesId) {
-        const series = this.itemsById.get(item.seriesId);
-        if (!series || series.coreBlock !== 'task-series') {
+
+      if (task?.seriesId) {
+        const series = asTaskSeriesRecord(this.recordsById.get(task.seriesId));
+        if (!series) {
           this.issues.push({
             code: 'task_series_reference_orphan',
-            recordId: item.id,
-            path: item.source?.path,
-            message: `Task ${item.id} references missing Task Series ${item.seriesId}.`,
+            recordId: task.id,
+            path: task.source?.path,
+            message: `Task ${task.id} references missing Task Series ${task.seriesId}.`,
           });
-          continue;
+        } else {
+          task.recurrenceInfo = series.recurrenceInfo;
         }
-        item.recurrenceInfo = series.recurrenceInfo;
       }
-      if (item.coreBlock === 'task-session') {
-        const task = item.taskId ? this.itemsById.get(item.taskId) : null;
-        const series = item.seriesId ? this.itemsById.get(item.seriesId) : null;
-        const taskInvalid = !task || task.coreBlock !== 'task';
-        const seriesInvalid = Boolean(item.seriesId) && (!series || series.coreBlock !== 'task-series');
-        const relationMismatch = Boolean(task && item.seriesId && task.seriesId !== item.seriesId);
-        const energyRefs = [item.startEnergyRecordId, item.endEnergyRecordId].filter(Boolean) as string[];
-        const invalidEnergyRef = energyRefs.find(recordId => this.itemsById.get(recordId)?.coreBlock !== 'energy');
+
+      const session = asTaskSessionRecord(record);
+      if (session) {
+        const sessionTask = asTaskRecord(this.recordsById.get(session.taskId));
+        const sessionSeries = session.seriesId ? asTaskSeriesRecord(this.recordsById.get(session.seriesId)) : null;
+        const taskInvalid = !sessionTask;
+        const seriesInvalid = Boolean(session.seriesId) && !sessionSeries;
+        const relationMismatch = Boolean(sessionTask && session.seriesId && sessionTask.seriesId !== session.seriesId);
+        const energyRefs = [session.startEnergyRecordId, session.endEnergyRecordId].filter(Boolean) as string[];
+        const invalidEnergyRef = energyRefs.find(recordId => this.recordsById.get(recordId)?.coreBlock !== 'energy');
         if (taskInvalid || seriesInvalid || relationMismatch || invalidEnergyRef) {
           this.issues.push({
             code: 'task_session_reference_orphan',
-            recordId: item.id,
-            path: item.source?.path,
+            recordId: session.id,
+            path: session.source?.path,
             message: taskInvalid
-              ? `Task Session ${item.id} references missing Task ${item.taskId || ""}.`
+              ? `Task Session ${session.id} references missing Task ${session.taskId || ''}.`
               : seriesInvalid
-                ? `Task Session ${item.id} references missing Task Series ${item.seriesId || ""}.`
+                ? `Task Session ${session.id} references missing Task Series ${session.seriesId || ''}.`
                 : relationMismatch
-                  ? `Task Session ${item.id} series reference does not match Task ${item.taskId}.`
-                  : `Task Session ${item.id} references missing Energy Record ${invalidEnergyRef || ""}.`,
+                  ? `Task Session ${session.id} series reference does not match Task ${session.taskId}.`
+                  : `Task Session ${session.id} references missing Energy Record ${invalidEnergyRef || ''}.`,
           });
         }
       }
-      if (item.coreBlock === 'task-series') {
-        if (item.status === 'active' && !item.currentTaskId) {
+
+      const series = asTaskSeriesRecord(record);
+      if (series) {
+        if (series.status === 'active' && !series.currentTaskId) {
           this.issues.push({
             code: 'record_reference_orphan',
-            recordId: item.id,
-            path: item.source?.path,
-            message: `Active Task Series ${item.id} has no currentTaskId.`,
+            recordId: series.id,
+            path: series.source?.path,
+            message: `Active Task Series ${series.id} has no currentTaskId.`,
           });
-        } else if (item.currentTaskId) {
-          const current = this.itemsById.get(item.currentTaskId);
-          const relationInvalid = !current || current.coreBlock !== 'task' || current.seriesId !== item.id;
-          const activePointerInvalid = item.status === 'active' && current?.status !== 'open';
+        } else if (series.currentTaskId) {
+          const current = asTaskRecord(this.recordsById.get(series.currentTaskId));
+          const relationInvalid = !current || current.seriesId !== series.id;
+          const activePointerInvalid = series.status === 'active' && current?.status !== 'open';
           if (relationInvalid || activePointerInvalid) {
             this.issues.push({
               code: 'record_reference_orphan',
-              recordId: item.id,
-              path: item.source?.path,
+              recordId: series.id,
+              path: series.source?.path,
               message: relationInvalid
-                ? `Task Series ${item.id} currentTaskId ${item.currentTaskId} is missing or points outside the series.`
-                : `Active Task Series ${item.id} currentTaskId ${item.currentTaskId} is not open.`,
+                ? `Task Series ${series.id} currentTaskId ${series.currentTaskId} is missing or points outside the series.`
+                : `Active Task Series ${series.id} currentTaskId ${series.currentTaskId} is not open.`,
             });
           }
         }
       }
     }
+
     for (const [seriesId, openTasks] of openTasksBySeries.entries()) {
       if (openTasks.length > 1) {
         this.issues.push({
@@ -164,8 +173,8 @@ export class RecordIndex {
     return unique;
   }
 
-  getById(recordId: string): Item | null {
-    return this.itemsById.get(recordId) || null;
+  getById(recordId: string): RecordEntity | null {
+    return this.recordsById.get(recordId) || null;
   }
 
   getLocation(recordId: string): RecordLocation | null {

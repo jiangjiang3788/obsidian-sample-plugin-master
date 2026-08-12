@@ -1,6 +1,8 @@
 // src/core/utils/heatmap.ts
-import type { Item, ViewInstance, BlockTemplate } from '@/core/types/schema';
-import { filterByRules } from './itemFilter';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { ViewInstance } from '@/core/view/ViewConfig';
+import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
+import { queryRecordItems } from '@/core/query/RecordQuery';
 
 /**
  * 统一读取记录的主题路径。
@@ -10,7 +12,7 @@ import { filterByRules } from './itemFilter';
  * item.themePath / extra.themePath / extra.主题。Heatmap 必须统一读这些入口，
  * 否则会落到 __default__，把多个主题混在同一张日历里。
  */
-export function getItemThemePath(item: Item | null | undefined): string {
+export function getItemThemePath(item: RecordViewItem | null | undefined): string {
     if (!item) return '';
     const candidates = [
         item.themePath,
@@ -30,14 +32,14 @@ export function getItemThemePath(item: Item | null | undefined): string {
  * 从数据源中过滤出指定 Block 的所有 theme，并按字典序排序去重。
  */
 export function collectThemePathsForHeatmap(params: {
-    items: Item[];
+    items: RecordViewItem[];
     dataSource: ViewInstance;
-    sourceBlock: BlockTemplate;
+    sourceBlock: RecordCaptureTemplate;
 }): string[] {
     const { items, dataSource, sourceBlock } = params;
 
     // 先按数据源规则过滤
-    const filteredItems = filterByRules(items, dataSource.filters || []);
+    const filteredItems = queryRecordItems(items, { filterGroups: [dataSource.filters || []] });
 
     const themeSet = new Set<string>();
 
@@ -62,6 +64,17 @@ export function collectThemePathsForHeatmap(params: {
  * 这些函数原先在 core/config/heatmapViewConfig.ts 中对外导出。
  * 现在统一归入 core/utils（通过 @core/public 暴露）。
  */
+
+/** Effective count semantics used by Heatmap cells. */
+export function getEffectiveLevelCount(item: RecordViewItem): number {
+    if (item.levelCount !== undefined) return item.levelCount;
+    if (item.countForLevel === false) return 0;
+    return item.displayCount || 1;
+}
+
+export function getEffectiveDisplayCount(item: RecordViewItem): number {
+    return item.displayCount || 1;
+}
 
 export const isImagePath = (value: string): boolean => {
     return /\.(png|svg|jpg|jpeg|gif)$/i.test(value);

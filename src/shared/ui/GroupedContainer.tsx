@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { GroupNode } from '@core/utils/public';
 
 export type GroupPath = string;
@@ -20,7 +20,7 @@ export interface GroupedContainerProps {
     /**
      * 渲染叶子分组下的 items
      */
-    renderLeaf: (items: Item[], context: { path: GroupPath; level: number; chain: { field: string; key: string }[] }) => preact.VNode | preact.VNode[];
+    renderLeaf: (items: RecordViewItem[], context: { path: GroupPath; level: number; chain: { field: string; key: string }[] }) => preact.VNode | preact.VNode[];
     /**
      * 自定义 className 前缀 / 映射，支持 bv-* / et-* 两套样式
      */
@@ -134,7 +134,7 @@ export function GroupedContainer(props: GroupedContainerProps) {
     ): preact.VNode[] => {
         return nodes.map(node => {
             const n: any = node as any;
-            const items = n.items as Item[] | undefined;
+            const items = n.items as RecordViewItem[] | undefined;
             const children = (n.children as GroupNode[]) || [];
             const chain = [...parentChain, { field: node.field, key: node.key }];
             const path = makeGroupPath(chain);

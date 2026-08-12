@@ -9,7 +9,7 @@
 
 import { singleton, inject } from 'tsyringe';
 import MiniSearch, { SearchResult } from 'minisearch';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { DataStore } from '@/core/services/DataStore';
 import { devLog, devWarn, devError } from '../utils/devLogger';
 import { applyRetrievalFilters } from './retrieval/RetrievalFilters';
@@ -24,7 +24,7 @@ export type { RetrievalFilters, RetrievalResult, RetrievalSearchResult } from '.
 export class RetrievalService {
     private miniSearch: MiniSearch<SearchIndexDocument> | null = null;
     private indexedItemIds: Set<string> = new Set();
-    private indexedItemsById: Map<string, Item> = new Map();
+    private indexedItemsById: Map<string, RecordViewItem> = new Map();
     private lastIndexTime: number = 0;
 
     constructor(
@@ -39,9 +39,9 @@ export class RetrievalService {
 
     /**
      * 构建/重建索引。
-     * @param items 要索引的 Item 列表，若为空则从 dataStore 获取。
+     * @param items 要索引的 RecordViewItem 列表，若为空则从 dataStore 获取。
      */
-    buildIndex(items?: Item[]): void {
+    buildIndex(items?: RecordViewItem[]): void {
         const startTime = Date.now();
         const itemsToIndex = items ?? this.getItemsFromDataStore();
 
@@ -70,7 +70,7 @@ export class RetrievalService {
         }
     }
 
-    private getItemsFromDataStore(): Item[] {
+    private getItemsFromDataStore(): RecordViewItem[] {
         if (!this.dataStore) {
             devWarn('RetrievalService: DataStore 未初始化');
             return [];
@@ -127,11 +127,11 @@ export class RetrievalService {
     }
 
     /**
-     * 根据 ID 列表获取完整 Item（优先从当前索引缓存，其次从 DataStore）。
+     * 根据 ID 列表获取完整 RecordViewItem（优先从当前索引缓存，其次从 DataStore）。
      */
-    getItemsByIds(ids: string[]): Item[] {
+    getItemsByIds(ids: string[]): RecordViewItem[] {
         if (!ids.length) return [];
-        const result: Item[] = [];
+        const result: RecordViewItem[] = [];
         const missing: string[] = [];
 
         for (const id of ids) {

@@ -1,17 +1,18 @@
-import type { Item } from '@/core/types/schema';
-
 export type TaskStatus = 'open' | 'done' | 'cancelled' | 'skipped';
 export type TaskLifecycleCommand = 'complete' | 'cancel' | 'skip' | 'reopen';
 
-export function isTaskRecord(item: Pick<Item, 'coreBlock'> | null | undefined): boolean {
+type TaskStatusCarrier = { coreBlock?: string; status?: string };
+type IdentifiedTaskStatusCarrier = TaskStatusCarrier & { id: string };
+
+export function isTaskRecord(item: Pick<TaskStatusCarrier, 'coreBlock'> | null | undefined): boolean {
   return item?.coreBlock === 'task';
 }
 
-export function isTaskSeriesRecord(item: Pick<Item, 'coreBlock'> | null | undefined): boolean {
+export function isTaskSeriesRecord(item: Pick<TaskStatusCarrier, 'coreBlock'> | null | undefined): boolean {
   return item?.coreBlock === 'task-series';
 }
 
-export function getTaskStatus(item: Pick<Item, 'coreBlock' | 'status'>): TaskStatus | null {
+export function getTaskStatus(item: TaskStatusCarrier): TaskStatus | null {
   if (!isTaskRecord(item)) return null;
   const status = String(item.status || '').trim().toLowerCase();
   return status === 'open' || status === 'done' || status === 'cancelled' || status === 'skipped'
@@ -19,17 +20,17 @@ export function getTaskStatus(item: Pick<Item, 'coreBlock' | 'status'>): TaskSta
     : null;
 }
 
-export function assertTaskStatus(item: Pick<Item, 'id' | 'coreBlock' | 'status'>): TaskStatus {
+export function assertTaskStatus(item: IdentifiedTaskStatusCarrier): TaskStatus {
   const status = getTaskStatus(item);
   if (!status) throw new Error(`task_status_invalid:${item.id}`);
   return status;
 }
 
-export function isTaskCompleted(item: Pick<Item, 'coreBlock' | 'status'>): boolean {
+export function isTaskCompleted(item: TaskStatusCarrier): boolean {
   return getTaskStatus(item) === 'done';
 }
 
-export function isTaskOpen(item: Pick<Item, 'coreBlock' | 'status'>): boolean {
+export function isTaskOpen(item: TaskStatusCarrier): boolean {
   return getTaskStatus(item) === 'open';
 }
 

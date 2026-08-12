@@ -1,1 +1,0 @@
-export { QuarterStatisticsView } from './PeriodStatisticsView';

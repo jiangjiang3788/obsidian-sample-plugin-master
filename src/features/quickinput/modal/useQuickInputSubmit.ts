@@ -4,7 +4,7 @@ import type { UseCases } from '@/app/public';
 import type { QuickInputEditorState } from '../editor';
 import { buildRecordSubmitFeedbackPresentation } from '@core/utils/public';
 import { buildRecordSubmitRecoveryPresentation, type RecordSubmitRecoveryPresentation } from '@core/utils/public';
-import type { Item, QuickInputSaveData } from '@core/types/public';
+import type { RecordViewItem, QuickInputSaveData } from '@core/types/public';
 import {
   assertRecordInputRequiredFields,
   buildCreateRecordSubmitParamsFromEditorState,
@@ -30,7 +30,7 @@ import {
 
 export interface QuickInputSubmitControllerParams {
   operationMode: QuickInputOperationMode;
-  editItem?: Item;
+  editItem?: RecordViewItem;
   context?: Record<string, any>;
   source?: Extract<RecordInputSource, 'quickinput' | 'view_quick_create' | 'timer' | 'unknown'>;
   onSave?: (data: QuickInputSaveData) => void;

@@ -1,4 +1,4 @@
-import { QuickInputModal } from '@/app/public';
+import { QuickInputModal } from '@/app/ui/modals/QuickInputModal';
 import type { QuickInputConfig } from '@core/services/public';
 
 import type { QuickCreateSource, QuickInputApp } from './types';

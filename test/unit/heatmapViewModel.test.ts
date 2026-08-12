@@ -1,12 +1,37 @@
 import {
+  applyHeatmapVerticalLayout,
+  resolveHeatmapVerticalLayout,
+  shouldSkipHeatmapVerticalLayout,
+  toggleHeatmapCollapsedTheme,
+} from '@/features/views/runtime/HeatmapLayoutModel';
+import {
   buildDayThemeGroups,
   filterGoalHeatmapGroups,
   inferHeatmapBlockIdByTheme,
-  inferHeatmapThemePaths,
   normalizeHeatmapBlockId,
   resolveHeatmapCreateBlockId,
-  selectHeatmapThemesToTrack,
-} from '@/features/settings/views/runtime/HeatmapViewModel';
+} from '@/features/views/runtime/HeatmapViewModel';
+
+describe('HeatmapLayoutModel', () => {
+  it('skips default/grid/week layouts and applies day/month thresholds', () => {
+    expect(shouldSkipHeatmapVerticalLayout('__default__', '月')).toBe(true);
+    expect(shouldSkipHeatmapVerticalLayout('健康/睡眠', '年')).toBe(true);
+    expect(shouldSkipHeatmapVerticalLayout('健康/睡眠', '周')).toBe(true);
+    expect(resolveHeatmapVerticalLayout({ theme: '健康/睡眠', normalizedCurrentView: '天', isDayView: true, containerWidth: 319 })).toBe(true);
+    expect(resolveHeatmapVerticalLayout({ theme: '健康/睡眠', normalizedCurrentView: '天', isDayView: true, containerWidth: 320 })).toBe(false);
+    expect(resolveHeatmapVerticalLayout({ theme: '健康/睡眠', normalizedCurrentView: '月', isDayView: false, containerWidth: 599 })).toBe(true);
+  });
+
+  it('updates vertical and collapsed sets immutably', () => {
+    const vertical = applyHeatmapVerticalLayout(new Set(['a']), 'b', true);
+    expect(Array.from(vertical).sort()).toEqual(['a', 'b']);
+    expect(Array.from(applyHeatmapVerticalLayout(vertical, 'a', false))).toEqual(['b']);
+
+    const collapsed = toggleHeatmapCollapsedTheme(new Set(['x']), 'x');
+    expect(collapsed.has('x')).toBe(false);
+    expect(toggleHeatmapCollapsedTheme(collapsed, 'y').has('y')).toBe(true);
+  });
+});
 
 const inputSettings = {
   blocks: [
@@ -17,19 +42,6 @@ const inputSettings = {
 } as any;
 
 describe('HeatmapViewModel', () => {
-  it('infers and selects theme paths without mixing injected state', () => {
-    const items = [
-      { themePath: '健康/睡眠' },
-      { themePath: '健康/运动' },
-      { themePath: '健康/睡眠' },
-    ] as any[];
-
-    expect(inferHeatmapThemePaths(items)).toEqual(['健康/睡眠', '健康/运动']);
-    expect(selectHeatmapThemesToTrack({ injectedThemesToTrack: ['注入/主题'], configuredThemePaths: ['配置/主题'], inferredThemePaths: ['推断/主题'] })).toEqual(['注入/主题']);
-    expect(selectHeatmapThemesToTrack({ configuredThemePaths: ['配置/主题'], inferredThemePaths: ['推断/主题'] })).toEqual(['配置/主题']);
-    expect(selectHeatmapThemesToTrack({ inferredThemePaths: ['推断/主题'] })).toEqual(['推断/主题']);
-  });
-
   it('normalizes block ids and keeps core.habit as destructive convergence fallback', () => {
     expect(normalizeHeatmapBlockId({ candidate: 'core.habit', inputSettings })).toBe('habit-block');
     expect(normalizeHeatmapBlockId({ candidate: '任务', inputSettings })).toBe('task-block');

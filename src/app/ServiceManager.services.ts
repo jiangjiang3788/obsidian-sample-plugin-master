@@ -7,7 +7,7 @@ import type {
   SettingsRepository,
 } from '@core/services/public';
 import type { ChatSessionStore } from '@core/ai/public';
-import type { RendererService } from '@features/settings/layout/RendererService';
+import type { RendererService } from '@/app/dashboard/RendererService';
 import type { TimerService } from '@features/timer/TimerService';
 import type { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import type { UseCases } from '@/app/usecases';

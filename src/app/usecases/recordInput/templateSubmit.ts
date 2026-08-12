@@ -1,5 +1,5 @@
 import { buildValidationErrorResult } from '@core/recordInput/public';
-import type { BlockTemplate, Item } from '@core/types/public';
+import type { RecordCaptureTemplate, RecordViewItem } from '@core/types/public';
 import type { NormalizeRecordInputParams, NormalizeRecordInputResult, RecordSubmitResult, ResolveDependenciesResult } from '@core/recordInput/public';
 import type { RecordInputKernel } from '@core/recordInput/public';
 
@@ -10,7 +10,7 @@ export interface TemplateExecutionMeta {
 
 export type ResolvedTemplateDependencies = ResolveDependenciesResult & {
   blockId: string;
-  template: BlockTemplate;
+  template: RecordCaptureTemplate;
 };
 
 export interface PreparedTemplateSubmit {
@@ -28,7 +28,7 @@ export function prepareTemplateSubmit(params: {
   operation: 'create' | 'update';
   blockId: string;
   themeId?: string | null;
-  item?: Item;
+  item?: RecordViewItem;
   formData: Record<string, unknown>;
   context?: Record<string, unknown>;
   normalizeMode: NormalizeRecordInputParams['mode'];
@@ -84,7 +84,7 @@ export function prepareTemplateSubmit(params: {
 
 export function getTemplateExecutionMeta(
   resolved: ResolveDependenciesResult,
-  template: BlockTemplate,
+  template: RecordCaptureTemplate,
 ): TemplateExecutionMeta {
   return {
     templateId: resolved.meta.templateId ?? template.id,

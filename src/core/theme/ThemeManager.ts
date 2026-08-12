@@ -1,4 +1,5 @@
-import type { IThemeMatcher, Item, Theme } from '@core/types/public';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { IThemeMatcher, Theme } from '@/core/types/theme';
 import { findThemePathByPartialMatch } from './themeMatching';
 import {
     buildThemeHierarchy,
@@ -109,7 +110,7 @@ export class ThemeManager implements IThemeMatcher {
         return groupThemesByStatus(this.themes.values());
     }
 
-    extractTheme(item: Item): string | null {
+    extractTheme(item: RecordViewItem): string | null {
         return extractExplicitThemeFromItem(item);
     }
 
@@ -117,7 +118,7 @@ export class ThemeManager implements IThemeMatcher {
         return findThemePathByPartialMatch(Array.from(this.themes.values()), headerText);
     }
 
-    scanDataForThemes(items: Item[]): void {
+    scanDataForThemes(items: RecordViewItem[]): void {
         const themeSet = new Set<string>();
         for (const item of items) {
             const theme = this.extractTheme(item);

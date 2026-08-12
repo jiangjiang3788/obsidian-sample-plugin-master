@@ -1,4 +1,4 @@
-import type { Item } from '@/core/types/schema';
+import type { RecordEntity } from '@/core/records/RecordEntity';
 import { parseRecordBlock } from '@core/utils/parser';
 import { normalizeRecordItem } from '@/core/records/RecordNormalizer';
 import type { IThemeMatcher } from '@core/types/theme';
@@ -18,7 +18,7 @@ import {
 
 export interface ScannedMarkdownFile {
   filePath: string;
-  items: Item[];
+  items: RecordEntity[];
   stat: FileStat;
   integrityIssues: RecordIntegrityIssue[];
 }
@@ -54,7 +54,7 @@ export class DataStoreFileScanner {
     const lines = content.split(/\r?\n/);
     const parentFolder = pathParentName(filePath);
     const fileName = basenameNoExt(pathBasename(filePath));
-    const items: Item[] = [];
+    const items: RecordEntity[] = [];
     const integrityIssues: RecordIntegrityIssue[] = [];
 
     let nextHeadingIndex = 0;
@@ -107,7 +107,7 @@ export class DataStoreFileScanner {
   }
 
   private normalizeScannedItem(
-    item: Item,
+    item: RecordEntity,
     filePath: string,
     fileName: string,
     parentFolder: string,

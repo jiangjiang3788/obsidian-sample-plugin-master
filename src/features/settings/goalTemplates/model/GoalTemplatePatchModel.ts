@@ -104,11 +104,8 @@ export function buildTemplatePatchFromDraft(params: {
   const defaultValues = cleanDefaultValuesOverride(draft, block, goal, themeIcon);
   const sameFields = fieldsHaveSameStructure(draftFields, baseFields);
   const sameRequired = equalStringSet(requiredFields, baseRequiredFields);
-  const isTaskBlock = block.id === 'core.task';
-  const outputTemplate = isTaskBlock ? '' : compactText(draft.outputTemplate);
   const targetFile = compactText(draft.targetFile);
   const appendUnderHeader = compactText(draft.appendUnderHeader);
-  const baseOutputTemplate = compactText(block.outputTemplate);
   const baseTargetFile = compactText(block.targetFile);
   const baseAppendUnderHeader = compactText(block.appendUnderHeader);
 
@@ -123,7 +120,6 @@ export function buildTemplatePatchFromDraft(params: {
     sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
     enabled: true,
     fields: sameFields ? undefined : draftFields,
-    outputTemplate: !isTaskBlock && outputTemplate && outputTemplate !== baseOutputTemplate ? outputTemplate : undefined,
     targetFile: targetFile && targetFile !== baseTargetFile ? targetFile : undefined,
     appendUnderHeader: appendUnderHeader && appendUnderHeader !== baseAppendUnderHeader ? appendUnderHeader : undefined,
     requiredFields: sameRequired ? undefined : requiredFields,

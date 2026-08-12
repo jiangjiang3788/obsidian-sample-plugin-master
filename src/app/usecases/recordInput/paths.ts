@@ -1,5 +1,5 @@
 import type { DataStore } from '@core/services/public';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { RecordSubmitResult } from '@core/recordInput/public';
 import { getItemLineNumber } from './locator';
 
@@ -17,11 +17,11 @@ export function buildRefreshPlan(
   };
 }
 
-export function getBeforeMaxLine(items: Item[]): number {
+export function getBeforeMaxLine(items: RecordViewItem[]): number {
   return items.reduce((max, item) => Math.max(max, getItemLineNumber(item)), 0);
 }
 
-export function getFileItemsByPath(dataStore: DataStore, path: string): Item[] {
+export function getFileItemsByPath(dataStore: DataStore, path: string): RecordViewItem[] {
   return dataStore.queryItems().filter((item) => (item.source?.path || item.file?.path || '') === path);
 }
 

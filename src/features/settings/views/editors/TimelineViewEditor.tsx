@@ -19,7 +19,7 @@ import {
 
 import { collectFileNames } from '@core/utils/public';
 import { TIMELINE_VIEW_DEFAULT_CONFIG, type CategoryConfig, type TimelineViewConfig } from '@core/view/public';
-import { ViewEditorProps } from './registry';
+import { ViewEditorProps } from './ViewEditorProps';
 
 // 重新导出以保持兼容性
 export { TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';

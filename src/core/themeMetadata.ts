@@ -1,4 +1,5 @@
-import type { ThemeDefinition, ThinkSettings } from './types/schema';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { buildThemePathMap, getThemePathCandidates, normalizeThemePath, normalizeThemePathOrNull } from './theme/themePathSemantics';
 
 export interface ThemeMetadata {

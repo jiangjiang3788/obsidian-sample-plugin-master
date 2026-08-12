@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 
 import type { InjectionToken } from 'tsyringe';
-import type { Item } from '../types';
+import type { RecordViewItem } from '../types';
 
 export interface NamePromptOptions {
   title: string;
@@ -19,9 +19,9 @@ export interface NamePromptOptions {
 
 export interface CheckinManagerOpenArgs {
   date: string;
-  items: Item[];
+  items: RecordViewItem[];
   onAddRecord?: () => void;
-  onDeleteRecord?: (item: Item) => Promise<boolean> | boolean | void;
+  onDeleteRecord?: (item: RecordViewItem) => Promise<boolean> | boolean | void;
 }
 
 export interface ModalPort {

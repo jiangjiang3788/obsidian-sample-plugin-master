@@ -4,7 +4,7 @@
  * V12 后此文件只保留公共 facade：树构建、查询、过滤的实现分别进入
  * ThemeTreeBuild / ThemeTreeQueries，避免公共入口继续膨胀为巨型文件。
  */
-import type { ThemeDefinition } from '@/core/types/schema';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import { buildThemeTreeNodes } from './ThemeTreeBuild';
 import {
     filterThemeTreeNodes,

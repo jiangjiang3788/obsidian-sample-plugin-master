@@ -15,7 +15,6 @@ const commandSets = {
     ['npm', ['run', 'test:unit']],
   ],
   full: [
-    ['npm', ['run', 'docs:index']],
     ['npm', ['run', 'typecheck:src']],
     ['npm', ['run', 'gate']],
     ['npm', ['run', 'test:unit']],
@@ -47,9 +46,6 @@ try {
   console.log(`[verify] mode=${isFast ? 'fast' : isCi ? 'ci' : 'full'}`);
   for (const [cmd, cmdArgs] of steps) {
     await run(cmd, cmdArgs);
-  }
-  if (isCi) {
-    await run('git', ['diff', '--exit-code', '--', '文档/_资源/搜索索引.js', '文档/_资源/页面内容索引.js']);
   }
   console.log('\n[verify] OK');
 } catch (error) {

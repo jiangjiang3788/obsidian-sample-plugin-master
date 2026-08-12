@@ -1,76 +1,76 @@
 {
-  "generatedAt": "2026-07-02T08:01:07.062Z",
-  "root": "/mnt/data/v31_work",
+  "generatedAt": "2026-08-11T21:51:29.219Z",
+  "root": "/mnt/data/thinkos_r12_work/think-os-1.0.35-r11-physical-simplification",
   "scope": "src/**/*.{ts,tsx,js,jsx,mjs,mts,cts,css}",
   "totals": {
-    "files": 756,
-    "lines": 71383,
-    "tsLikeFiles": 691,
-    "tsLikeLines": 64132,
-    "cssFiles": 65,
-    "cssLines": 7251
+    "files": 736,
+    "lines": 74999,
+    "tsLikeFiles": 666,
+    "tsLikeLines": 66635,
+    "cssFiles": 70,
+    "cssLines": 8364
   },
   "byLayer": [
     {
-      "layer": "features",
+      "layer": "core",
       "files": 244,
-      "lines": 25874,
+      "lines": 24819,
       "tsLikeFiles": 244,
-      "tsLikeLines": 25874,
+      "tsLikeLines": 24819,
       "cssFiles": 0,
       "cssLines": 0
     },
     {
-      "layer": "core",
-      "files": 235,
-      "lines": 21780,
-      "tsLikeFiles": 235,
-      "tsLikeLines": 21780,
+      "layer": "features",
+      "files": 221,
+      "lines": 24020,
+      "tsLikeFiles": 221,
+      "tsLikeLines": 24020,
       "cssFiles": 0,
       "cssLines": 0
     },
     {
       "layer": "app",
-      "files": 96,
-      "lines": 8341,
-      "tsLikeFiles": 96,
-      "tsLikeLines": 8341,
+      "files": 108,
+      "lines": 10439,
+      "tsLikeFiles": 108,
+      "tsLikeLines": 10439,
       "cssFiles": 0,
       "cssLines": 0
     },
     {
       "layer": "styles",
-      "files": 65,
-      "lines": 7251,
+      "files": 70,
+      "lines": 8364,
       "tsLikeFiles": 0,
       "tsLikeLines": 0,
-      "cssFiles": 65,
-      "cssLines": 7251
+      "cssFiles": 70,
+      "cssLines": 8364
     },
     {
       "layer": "shared",
-      "files": 84,
-      "lines": 5329,
-      "tsLikeFiles": 84,
-      "tsLikeLines": 5329,
+      "files": 60,
+      "lines": 4463,
+      "tsLikeFiles": 60,
+      "tsLikeLines": 4463,
       "cssFiles": 0,
       "cssLines": 0
     },
     {
       "layer": "platform",
-      "files": 27,
-      "lines": 2488,
-      "tsLikeFiles": 27,
-      "tsLikeLines": 2488,
+      "files": 28,
+      "lines": 2569,
+      "tsLikeFiles": 28,
+      "tsLikeLines": 2569,
       "cssFiles": 0,
       "cssLines": 0
     },
     {
       "layer": "main.ts",
       "files": 1,
-      "lines": 242,
+      "lines": 247,
       "tsLikeFiles": 1,
-      "tsLikeLines": 242,
+      "tsLikeLines": 247,
       "cssFiles": 0,
       "cssLines": 0
     },
@@ -120,24 +120,35 @@
         "exportedDeclarations": 0
       },
       {
-        "file": "src/core/types/schema.ts",
+        "file": "src/shared/styles/muiTheme/components.ts",
         "ext": ".ts",
-        "layer": "core",
-        "lines": 377,
-        "imports": 10,
+        "layer": "shared",
+        "lines": 397,
+        "imports": 1,
         "importedSources": [
-          "./ai-schema",
-          "@/core/blocks",
-          "@/core/fields/FieldRegistry",
-          "@/core/fields/FieldTypes",
-          "@/core/fields/FieldValueResolver",
-          "@/core/goal",
-          "@core/records/task/mark"
+          "@mui/material/styles"
         ],
-        "functionLikeDeclarations": 2,
+        "functionLikeDeclarations": 0,
         "hooks": 0,
         "jsxElements": 0,
-        "exportedDeclarations": 36
+        "exportedDeclarations": 1
+      },
+      {
+        "file": "src/core/records/codec/MarkdownRecordCodec.ts",
+        "ext": ".ts",
+        "layer": "core",
+        "lines": 391,
+        "imports": 4,
+        "importedSources": [
+          "./FieldValueCodec",
+          "@/core/records/RecordDraft",
+          "@/core/records/RecordId",
+          "@/core/utils/date"
+        ],
+        "functionLikeDeclarations": 12,
+        "hooks": 0,
+        "jsxElements": 0,
+        "exportedDeclarations": 6
       },
       {
         "file": "src/app/usecases/layout.usecase.ts",
@@ -146,7 +157,7 @@
         "lines": 374,
         "imports": 3,
         "importedSources": [
-          "./index",
+          "./AppStoreApi",
           "@core/types/public",
           "@core/utils/public"
         ],
@@ -156,7 +167,7 @@
         "exportedDeclarations": 2
       },
       {
-        "file": "src/features/settings/views/models/heatmapViewModel.ts",
+        "file": "src/features/views/models/heatmapViewModel.ts",
         "ext": ".ts",
         "layer": "features",
         "lines": 373,
@@ -175,7 +186,7 @@
         "file": "src/core/fields/TemplateFieldAdapter.ts",
         "ext": ".ts",
         "layer": "core",
-        "lines": 365,
+        "lines": 367,
         "imports": 9,
         "importedSources": [
           "./FieldTypes",
@@ -184,32 +195,13 @@
           "./imageSemantics",
           "./pathSemantics",
           "./tagSemantics",
-          "@/core/semantics/option",
-          "@/core/types/schema"
+          "@/core/recordInput/CaptureTemplate",
+          "@/core/semantics/option"
         ],
         "functionLikeDeclarations": 19,
         "hooks": 0,
         "jsxElements": 0,
         "exportedDeclarations": 13
-      },
-      {
-        "file": "src/core/fields/FieldSystemHealth.ts",
-        "ext": ".ts",
-        "layer": "core",
-        "lines": 362,
-        "imports": 6,
-        "importedSources": [
-          "./CoreFieldCatalog",
-          "./FieldRegistry",
-          "./FieldTypes",
-          "./FieldValueResolver",
-          "./TemplateFieldSanitizer",
-          "@/core/types/schema"
-        ],
-        "functionLikeDeclarations": 21,
-        "hooks": 0,
-        "jsxElements": 0,
-        "exportedDeclarations": 5
       },
       {
         "file": "src/features/settings/layout/ModuleSettingsModal.tsx",
@@ -231,25 +223,8 @@
         ],
         "functionLikeDeclarations": 7,
         "hooks": 5,
-        "jsxElements": 33,
+        "jsxElements": 35,
         "exportedDeclarations": 2
-      },
-      {
-        "file": "src/core/goal/overview.ts",
-        "ext": ".ts",
-        "layer": "core",
-        "lines": 358,
-        "imports": 4,
-        "importedSources": [
-          "./path",
-          "./period",
-          "./types",
-          "@/core/types/schema"
-        ],
-        "functionLikeDeclarations": 15,
-        "hooks": 0,
-        "jsxElements": 0,
-        "exportedDeclarations": 6
       },
       {
         "file": "src/core/ai/ChatSessionStore.ts",
@@ -270,22 +245,63 @@
         "exportedDeclarations": 11
       },
       {
+        "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
+        "ext": ".tsx",
+        "layer": "features",
+        "lines": 349,
+        "imports": 16,
+        "importedSources": [
+          "./QuickInputEditorModel",
+          "./QuickInputEditorView",
+          "./components/EnergyQuickCapturePanel",
+          "./components/GoalSelector",
+          "./quickInputRecordTypeModel",
+          "@/app/public",
+          "@core/goal/public",
+          "@core/recordInput/public",
+          "@core/recordTypes/public",
+          "@core/types/public",
+          "@core/utils/public",
+          "preact",
+          "preact/hooks"
+        ],
+        "functionLikeDeclarations": 7,
+        "hooks": 21,
+        "jsxElements": 3,
+        "exportedDeclarations": 2
+      },
+      {
+        "file": "src/core/energy/effects.ts",
+        "ext": ".ts",
+        "layer": "core",
+        "lines": 348,
+        "imports": 3,
+        "importedSources": [
+          "../records/task/taskSession",
+          "./item",
+          "@/core/records/RecordEntity"
+        ],
+        "functionLikeDeclarations": 15,
+        "hooks": 0,
+        "jsxElements": 0,
+        "exportedDeclarations": 11
+      },
+      {
         "file": "src/core/public.ts",
         "ext": ".ts",
         "layer": "core",
-        "lines": 355,
-        "imports": 68,
+        "lines": 348,
+        "imports": 67,
         "importedSources": [
-          "./ai",
+          "./ai/public",
           "./blocks",
-          "./config/viewConfigs",
+          "./config/views",
           "./di/setupCore",
-          "./fields",
+          "./fields/public",
           "./goal",
           "./hooks/useTimelineZoom",
-          "./layout",
+          "./layout/public",
           "./polyfills",
-          "./ports/AppPort",
           "./ports/EventsPort",
           "./ports/FileStatPort",
           "./ports/MessageRenderPort",
@@ -304,58 +320,54 @@
           "./recordInput/session",
           "./recordInput/snapshot/OutputPlanner",
           "./recordInput/submitResult",
-          "./records",
+          "./records/public",
           "./services/ActionService",
           "./services/DataStore",
           "./services/GoalTemplateResolver",
           "./services/InputService",
-          "./services/ItemService",
           "./services/RepositorySettingsProvider",
           "./services/SettingsRepository",
           "./services/StorageService",
           "./services/TimerStateService",
+          "./services/public",
           "./theme/ThemeTreeBuilder",
           "./theme/themePathParser",
           "./themeMetadata",
           "./types",
-          "./utils",
+          "./utils/public",
           "./view-config/displayFields",
           "./view-config/domainFields"
         ],
         "functionLikeDeclarations": 0,
         "hooks": 0,
         "jsxElements": 0,
-        "exportedDeclarations": 25
+        "exportedDeclarations": 24
       },
       {
-        "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
-        "ext": ".tsx",
-        "layer": "features",
-        "lines": 341,
-        "imports": 15,
+        "file": "src/core/energy/recommendationCandidates.ts",
+        "ext": ".ts",
+        "layer": "core",
+        "lines": 344,
+        "imports": 7,
         "importedSources": [
-          "./QuickInputEditorModel",
-          "./QuickInputEditorView",
-          "./components/GoalSelector",
-          "@/app/public",
-          "@core/blocks/public",
-          "@core/goal/public",
-          "@core/recordInput/public",
-          "@core/types/public",
-          "@core/utils/public",
-          "preact",
-          "preact/hooks"
+          "../records/task/taskRecurrence",
+          "../records/task/taskSession",
+          "../records/task/taskStatus",
+          "./effects",
+          "./managementTypes",
+          "./recommendationTypes",
+          "@/core/records/RecordEntity"
         ],
-        "functionLikeDeclarations": 7,
-        "hooks": 20,
-        "jsxElements": 2,
-        "exportedDeclarations": 2
+        "functionLikeDeclarations": 22,
+        "hooks": 0,
+        "jsxElements": 0,
+        "exportedDeclarations": 7
       },
       {
         "file": "src/styles/components/modal.css",
         "ext": ".css",
         "layer": "styles",
-        "lines": 337,
+        "lines": 341,
         "imports": 0,
         "importedSources": [],
         "functionLikeDeclarations": 0,
@@ -400,13 +412,45 @@
         "exportedDeclarations": 1
       },
       {
+        "file": "src/app/dashboard/LayoutRenderer.tsx",
+        "ext": ".tsx",
+        "layer": "app",
+        "lines": 332,
+        "imports": 19,
+        "importedSources": [
+          "./FreeformCanvas",
+          "./FreeformLayoutItem",
+          "./ModulePanel",
+          "./ViewContent",
+          "./useExpandedViewRendering",
+          "./useLayoutItems",
+          "@/app/AppStoreContext",
+          "@/app/actions/recordCreate",
+          "@/app/dashboard/useLayoutModuleActions",
+          "@/app/store/selectors",
+          "@/app/store/useSelector",
+          "@core/types/public",
+          "@core/utils/public",
+          "@features/settings/layout/DataFilterPanel",
+          "@features/settings/layout/LayoutSettingsWidget",
+          "@features/views/public",
+          "@shared/utils/public",
+          "preact",
+          "preact/hooks"
+        ],
+        "functionLikeDeclarations": 12,
+        "hooks": 13,
+        "jsxElements": 6,
+        "exportedDeclarations": 1
+      },
+      {
         "file": "src/features/settings/views/editors/TimelineViewEditor.tsx",
         "ext": ".tsx",
         "layer": "features",
         "lines": 332,
         "imports": 7,
         "importedSources": [
-          "./registry",
+          "./ViewEditorProps",
           "@core/utils/public",
           "@core/view/public",
           "@shared/ui/public",
@@ -419,61 +463,69 @@
         "exportedDeclarations": 1
       },
       {
-        "file": "src/core/recordInput/editStateResolver.ts",
-        "ext": ".ts",
-        "layer": "core",
+        "file": "src/styles/features/energy-map.css",
+        "ext": ".css",
+        "layer": "styles",
         "lines": 330,
-        "imports": 11,
-        "importedSources": [
-          "./EditBackfillMapper",
-          "./dependencyResolver",
-          "@/core/blocks",
-          "@/core/fields/fieldTokenSemantics",
-          "@/core/recordInput/debug",
-          "@/core/recordInput/snapshot/EditSnapshotFactory",
-          "@/core/types/recordInput",
-          "@/core/types/recordSnapshot",
-          "@/core/types/schema",
-          "@/core/utils/unknownRecord"
-        ],
-        "functionLikeDeclarations": 9,
+        "imports": 0,
+        "importedSources": [],
+        "functionLikeDeclarations": 0,
         "hooks": 0,
         "jsxElements": 0,
-        "exportedDeclarations": 2
+        "exportedDeclarations": 0
       },
       {
-        "file": "src/features/settings/layout/LayoutRenderer.tsx",
-        "ext": ".tsx",
+        "file": "src/styles/features/progress-energy.css",
+        "ext": ".css",
+        "layer": "styles",
+        "lines": 330,
+        "imports": 0,
+        "importedSources": [],
+        "functionLikeDeclarations": 0,
+        "hooks": 0,
+        "jsxElements": 0,
+        "exportedDeclarations": 0
+      },
+      {
+        "file": "src/features/views/models/energyViewModel.ts",
+        "ext": ".ts",
         "layer": "features",
         "lines": 329,
-        "imports": 17,
+        "imports": 8,
         "importedSources": [
-          "./DataFilterPanel",
-          "./FreeformCanvas",
-          "./FreeformLayoutItem",
-          "./ModulePanel",
-          "./ViewContent",
-          "./useExpandedViewRendering",
-          "./useLayoutItems",
-          "./useLayoutModuleActions",
-          "@/app/public",
+          "./energySummaryModel",
+          "./energyTaskListModel",
+          "@core/energy/public",
+          "@core/goal/public",
           "@core/types/public",
           "@core/utils/public",
-          "@features/settings/layout/LayoutSettingsWidget",
-          "@features/settings/views/public",
-          "@shared/utils/public",
-          "preact",
-          "preact/hooks"
+          "@core/view/public"
         ],
-        "functionLikeDeclarations": 12,
-        "hooks": 13,
-        "jsxElements": 6,
-        "exportedDeclarations": 1
+        "functionLikeDeclarations": 11,
+        "hooks": 0,
+        "jsxElements": 0,
+        "exportedDeclarations": 7
       },
       {
-        "file": "src/features/settings/layout/FreeformCanvas.tsx",
+        "file": "src/core/energy/context.ts",
+        "ext": ".ts",
+        "layer": "core",
+        "lines": 325,
+        "imports": 3,
+        "importedSources": [
+          "../records/task/taskSession",
+          "./item",
+          "@/core/records/RecordEntity"
+        ],
+        "functionLikeDeclarations": 24,
+        "hooks": 0,
+        "jsxElements": 0,
+        "exportedDeclarations": 8
+      },
+      {
+        "file": "src/app/dashboard/FreeformCanvas.tsx",
         "ext": ".tsx",
-        "layer": "features",
+        "layer": "app",
         "lines": 316,
         "imports": 7,
         "importedSources": [
@@ -490,30 +542,50 @@
         "exportedDeclarations": 2
       },
       {
-        "file": "src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx",
+        "file": "src/core/recordInput/editStateResolver.ts",
+        "ext": ".ts",
+        "layer": "core",
+        "lines": 316,
+        "imports": 13,
+        "importedSources": [
+          "./EditBackfillMapper",
+          "./dependencyResolver",
+          "@/core/blocks",
+          "@/core/fields/fieldTokenSemantics",
+          "@/core/recordInput/CaptureTemplate",
+          "@/core/recordInput/debug",
+          "@/core/recordInput/snapshot/EditSnapshotFactory",
+          "@/core/records/RecordEntity",
+          "@/core/settings/ThinkSettings",
+          "@/core/types/recordInput",
+          "@/core/types/recordSnapshot",
+          "@/core/utils/unknownRecord"
+        ],
+        "functionLikeDeclarations": 11,
+        "hooks": 0,
+        "jsxElements": 0,
+        "exportedDeclarations": 2
+      },
+      {
+        "file": "src/features/quickinput/editor/components/EnergyQuickCapturePanel.tsx",
         "ext": ".tsx",
         "layer": "features",
-        "lines": 313,
-        "imports": 14,
+        "lines": 316,
+        "imports": 8,
         "importedSources": [
-          "../input/FieldsEditor",
-          "../input/TemplateVariableCopier",
-          "./GoalTemplateEditorModel",
-          "./GoalTemplateModeSwitch",
-          "./GoalTemplateNativeControls",
-          "@/app/public",
-          "@core/blocks/public",
-          "@core/goal/public",
-          "@core/types/public",
-          "@shared/ui/public",
-          "@shared/utils/public",
+          "../QuickInputEditorModel",
+          "./GoalSelector",
+          "./RecordTypeSwitcher",
+          "./SelectablePill",
+          "@core/energy/public",
+          "@core/utils/public",
           "preact",
           "preact/hooks"
         ],
-        "functionLikeDeclarations": 8,
+        "functionLikeDeclarations": 6,
         "hooks": 9,
-        "jsxElements": 42,
-        "exportedDeclarations": 1
+        "jsxElements": 6,
+        "exportedDeclarations": 2
       },
       {
         "file": "src/features/settings/components/LayoutEditorPanel.tsx",
@@ -536,6 +608,31 @@
         "exportedDeclarations": 1
       },
       {
+        "file": "src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx",
+        "ext": ".tsx",
+        "layer": "features",
+        "lines": 304,
+        "imports": 13,
+        "importedSources": [
+          "../input/FieldsEditor",
+          "./GoalTemplateEditorModel",
+          "./GoalTemplateModeSwitch",
+          "./GoalTemplateNativeControls",
+          "@/app/public",
+          "@core/blocks/public",
+          "@core/goal/public",
+          "@core/types/public",
+          "@shared/ui/public",
+          "@shared/utils/public",
+          "preact",
+          "preact/hooks"
+        ],
+        "functionLikeDeclarations": 8,
+        "hooks": 8,
+        "jsxElements": 40,
+        "exportedDeclarations": 1
+      },
+      {
         "file": "src/core/utils/itemGrouping.ts",
         "ext": ".ts",
         "layer": "core",
@@ -544,11 +641,12 @@
         "importedSources": [
           "./pathSemantic",
           "@/core/fields/FieldRegistry",
+          "@/core/fields/ViewFieldCatalog",
           "@/core/goal/order",
           "@/core/goal/path",
           "@/core/goal/types",
-          "@/core/types/constants",
-          "@/core/types/schema"
+          "@/core/records/RecordEntity",
+          "@/core/types/constants"
         ],
         "functionLikeDeclarations": 17,
         "hooks": 0,
@@ -559,10 +657,10 @@
         "file": "src/app/usecases/goal.usecase.ts",
         "ext": ".ts",
         "layer": "app",
-        "lines": 299,
+        "lines": 297,
         "imports": 6,
         "importedSources": [
-          "./index",
+          "./AppStoreApi",
           "@core/blocks/public",
           "@core/goal/public",
           "@core/types/public",
@@ -639,11 +737,32 @@
         "exportedDeclarations": 1
       },
       {
+        "file": "src/core/ai/AiChatService.ts",
+        "ext": ".ts",
+        "layer": "core",
+        "lines": 291,
+        "imports": 10,
+        "importedSources": [
+          "../utils/devLogger",
+          "./AiHttpClient",
+          "./RetrievalService",
+          "@/core/records/RecordEntity",
+          "@/core/services/types",
+          "@/core/types/ai-schema",
+          "@core/utils/date",
+          "tsyringe"
+        ],
+        "functionLikeDeclarations": 0,
+        "hooks": 0,
+        "jsxElements": 0,
+        "exportedDeclarations": 3
+      },
+      {
         "file": "src/app/ServiceManager.ts",
         "ext": ".ts",
         "layer": "app",
-        "lines": 293,
-        "imports": 18,
+        "lines": 289,
+        "imports": 17,
         "importedSources": [
           "./services.types",
           "@/app/FeatureLoader",
@@ -654,12 +773,12 @@
           "@/app/bootstrap/loadTimerServices",
           "@/app/bootstrap/loadUIFeatures",
           "@/app/bootstrap/register",
-          "@/app/public",
           "@/app/runtime/disposables",
           "@/app/runtime/lifecycleState",
+          "@/app/ui/widgets/FloatingWidgetManager",
+          "@core/ports/public",
           "@core/services/public",
           "@core/utils/public",
-          "@main",
           "@shared/utils/public",
           "tsyringe"
         ],
@@ -669,25 +788,22 @@
         "exportedDeclarations": 1
       },
       {
-        "file": "src/core/ai/AiChatService.ts",
+        "file": "src/features/views/runtime/ProgressViewModel.ts",
         "ext": ".ts",
-        "layer": "core",
-        "lines": 291,
-        "imports": 10,
+        "layer": "features",
+        "lines": 288,
+        "imports": 6,
         "importedSources": [
-          "../utils/devLogger",
-          "./AiHttpClient",
-          "./RetrievalService",
-          "@/core/services/types",
-          "@/core/types/ai-schema",
-          "@/core/types/schema",
-          "@core/utils/date",
-          "tsyringe"
+          "@core/energy/public",
+          "@core/goal/public",
+          "@core/progression/public",
+          "@core/types/public",
+          "@core/view/public"
         ],
-        "functionLikeDeclarations": 0,
+        "functionLikeDeclarations": 18,
         "hooks": 0,
         "jsxElements": 0,
-        "exportedDeclarations": 3
+        "exportedDeclarations": 26
       },
       {
         "file": "src/features/settings/views/editors/RuleBuilder.tsx",
@@ -711,27 +827,46 @@
         "exportedDeclarations": 1
       },
       {
-        "file": "src/core/goal/templates.ts",
+        "file": "src/features/views/models/energyTaskListModel.ts",
         "ext": ".ts",
-        "layer": "core",
-        "lines": 275,
-        "imports": 5,
+        "layer": "features",
+        "lines": 286,
+        "imports": 7,
         "importedSources": [
-          "./path",
-          "./period",
-          "./templateVariant",
-          "./types",
-          "@/core/types/schema"
+          "@core/energy/public",
+          "@core/goal/public",
+          "@core/records/public",
+          "@core/types/public",
+          "@core/utils/public"
         ],
-        "functionLikeDeclarations": 18,
+        "functionLikeDeclarations": 11,
         "hooks": 0,
         "jsxElements": 0,
-        "exportedDeclarations": 13
+        "exportedDeclarations": 7
       },
       {
-        "file": "src/features/settings/layout/FreeformLayoutItem.tsx",
+        "file": "src/core/records/RecordDraft.ts",
+        "ext": ".ts",
+        "layer": "core",
+        "lines": 278,
+        "imports": 6,
+        "importedSources": [
+          "./schema/registry",
+          "./schema/types",
+          "@/core/fields/CaptureFieldResolver",
+          "@/core/fields/TemplateFieldAdapter",
+          "@/core/fields/imageSemantics",
+          "@/core/recordInput/CaptureTemplate"
+        ],
+        "functionLikeDeclarations": 13,
+        "hooks": 0,
+        "jsxElements": 0,
+        "exportedDeclarations": 3
+      },
+      {
+        "file": "src/app/dashboard/FreeformLayoutItem.tsx",
         "ext": ".tsx",
-        "layer": "features",
+        "layer": "app",
         "lines": 275,
         "imports": 6,
         "importedSources": [
@@ -759,139 +894,6 @@
         "hooks": 0,
         "jsxElements": 0,
         "exportedDeclarations": 9
-      },
-      {
-        "file": "src/core/fields/FieldBehavior.ts",
-        "ext": ".ts",
-        "layer": "core",
-        "lines": 272,
-        "imports": 7,
-        "importedSources": [
-          "./FieldTypes",
-          "./TemplateFieldAdapter",
-          "./imageSemantics",
-          "./pathSemantics",
-          "./tagSemantics",
-          "@/core/semantics/option",
-          "@/core/types/schema"
-        ],
-        "functionLikeDeclarations": 17,
-        "hooks": 0,
-        "jsxElements": 0,
-        "exportedDeclarations": 10
-      },
-      {
-        "file": "src/app/usecases/theme.usecase.ts",
-        "ext": ".ts",
-        "layer": "app",
-        "lines": 269,
-        "imports": 4,
-        "importedSources": [
-          "./index",
-          "@core/types/public",
-          "@core/utils/public"
-        ],
-        "functionLikeDeclarations": 1,
-        "hooks": 0,
-        "jsxElements": 0,
-        "exportedDeclarations": 2
-      },
-      {
-        "file": "src/features/aichat/AiChatModalContainer.tsx",
-        "ext": ".tsx",
-        "layer": "features",
-        "lines": 269,
-        "imports": 11,
-        "importedSources": [
-          "./AiChatModalView",
-          "./types",
-          "@/app/public",
-          "@core/ai/public",
-          "@core/utils/public",
-          "@shared/hooks/public",
-          "@shared/ui/public",
-          "@shared/utils/public",
-          "preact",
-          "preact/hooks"
-        ],
-        "functionLikeDeclarations": 6,
-        "hooks": 8,
-        "jsxElements": 8,
-        "exportedDeclarations": 2
-      },
-      {
-        "file": "src/styles/features/event-timeline.css",
-        "ext": ".css",
-        "layer": "styles",
-        "lines": 269,
-        "imports": 0,
-        "importedSources": [],
-        "functionLikeDeclarations": 0,
-        "hooks": 0,
-        "jsxElements": 0,
-        "exportedDeclarations": 0
-      },
-      {
-        "file": "src/core/utils/itemFilter.ts",
-        "ext": ".ts",
-        "layer": "core",
-        "lines": 267,
-        "imports": 3,
-        "importedSources": [
-          "./unknownRecord",
-          "@/core/fields/FieldValueResolver",
-          "@/core/types/schema"
-        ],
-        "functionLikeDeclarations": 15,
-        "hooks": 0,
-        "jsxElements": 0,
-        "exportedDeclarations": 5
-      },
-      {
-        "file": "src/features/settings/goalTemplates/goalTemplateMatrixModel.ts",
-        "ext": ".ts",
-        "layer": "features",
-        "lines": 266,
-        "imports": 5,
-        "importedSources": [
-          "./goalTemplateCopy",
-          "@core/blocks/public",
-          "@core/goal/public",
-          "@core/theme/public"
-        ],
-        "functionLikeDeclarations": 28,
-        "hooks": 0,
-        "jsxElements": 0,
-        "exportedDeclarations": 34
-      },
-      {
-        "file": "src/styles/features/settings.css",
-        "ext": ".css",
-        "layer": "styles",
-        "lines": 259,
-        "imports": 0,
-        "importedSources": [],
-        "functionLikeDeclarations": 0,
-        "hooks": 0,
-        "jsxElements": 0,
-        "exportedDeclarations": 0
-      },
-      {
-        "file": "src/core/fields/FieldRegistry.ts",
-        "ext": ".ts",
-        "layer": "core",
-        "lines": 258,
-        "imports": 4,
-        "importedSources": [
-          "./FieldDefinition",
-          "./FieldTypes",
-          "./imageSemantics",
-          "@/core/types/schema"
-        ],
-        "functionLikeDeclarations": 11,
-        "hooks": 0,
-        "jsxElements": 0,
-        "exportedDeclarations": 14
       }
     ],
     "largeFileCandidates": [
@@ -939,7 +941,7 @@
         ],
         "functionLikeDeclarations": 7,
         "hooks": 5,
-        "jsxElements": 33,
+        "jsxElements": 35,
         "exportedDeclarations": 2
       }
     ],
@@ -949,21 +951,21 @@
     "tsxFilesOver350Lines": 1
   },
   "typeHealth": {
-    "explicitAny": 501,
-    "asAny": 202,
-    "colonAny": 242,
+    "explicitAny": 472,
+    "asAny": 195,
+    "colonAny": 224,
     "tsIgnore": 4,
     "tsNoCheckFiles": 0,
     "topFiles": [
       {
-        "file": "src/features/settings/layout/FreeformLayoutItem.tsx",
+        "file": "src/app/dashboard/FreeformLayoutItem.tsx",
         "explicitAny": 9,
         "asAny": 9,
         "colonAny": 0,
         "tsIgnore": 0,
         "tsNoCheck": false,
         "lines": 275,
-        "layer": "features"
+        "layer": "app"
       },
       {
         "file": "src/core/goal/templateVariantDiff.ts",
@@ -972,27 +974,7 @@
         "colonAny": 4,
         "tsIgnore": 0,
         "tsNoCheck": false,
-        "lines": 178,
-        "layer": "core"
-      },
-      {
-        "file": "src/core/utils/array.ts",
-        "explicitAny": 8,
-        "asAny": 2,
-        "colonAny": 5,
-        "tsIgnore": 0,
-        "tsNoCheck": false,
-        "lines": 125,
-        "layer": "core"
-      },
-      {
-        "file": "src/core/view-config/domainFields.ts",
-        "explicitAny": 8,
-        "asAny": 2,
-        "colonAny": 3,
-        "tsIgnore": 0,
-        "tsNoCheck": false,
-        "lines": 190,
+        "lines": 176,
         "layer": "core"
       },
       {
@@ -1012,7 +994,17 @@
         "colonAny": 0,
         "tsIgnore": 0,
         "tsNoCheck": false,
-        "lines": 118,
+        "lines": 119,
+        "layer": "core"
+      },
+      {
+        "file": "src/core/view-config/domainFields.ts",
+        "explicitAny": 7,
+        "asAny": 2,
+        "colonAny": 2,
+        "tsIgnore": 0,
+        "tsNoCheck": false,
+        "lines": 168,
         "layer": "core"
       },
       {
@@ -1026,7 +1018,7 @@
         "layer": "features"
       },
       {
-        "file": "src/features/settings/views/runtime/components/items/TaskRow.tsx",
+        "file": "src/features/views/runtime/components/items/TaskRow.tsx",
         "explicitAny": 7,
         "asAny": 6,
         "colonAny": 1,
@@ -1036,7 +1028,7 @@
         "layer": "features"
       },
       {
-        "file": "src/features/settings/views/runtime/components/timeline/DayColumnBody.tsx",
+        "file": "src/features/views/runtime/components/timeline/DayColumnBody.tsx",
         "explicitAny": 7,
         "asAny": 7,
         "colonAny": 0,
@@ -1066,13 +1058,23 @@
         "layer": "app"
       },
       {
+        "file": "src/app/dashboard/useViewRuntimeHandlers.ts",
+        "explicitAny": 6,
+        "asAny": 1,
+        "colonAny": 3,
+        "tsIgnore": 0,
+        "tsNoCheck": false,
+        "lines": 195,
+        "layer": "app"
+      },
+      {
         "file": "src/core/services/InputService.ts",
         "explicitAny": 6,
         "asAny": 1,
         "colonAny": 0,
         "tsIgnore": 0,
         "tsNoCheck": false,
-        "lines": 194,
+        "lines": 178,
         "layer": "core"
       },
       {
@@ -1106,43 +1108,13 @@
         "layer": "features"
       },
       {
-        "file": "src/features/settings/layout/useViewRuntimeHandlers.ts",
-        "explicitAny": 6,
-        "asAny": 1,
-        "colonAny": 3,
-        "tsIgnore": 0,
-        "tsNoCheck": false,
-        "lines": 196,
-        "layer": "features"
-      },
-      {
-        "file": "src/features/settings/views/models/timelineViewModel.ts",
-        "explicitAny": 6,
-        "asAny": 0,
-        "colonAny": 6,
-        "tsIgnore": 0,
-        "tsNoCheck": false,
-        "lines": 82,
-        "layer": "features"
-      },
-      {
-        "file": "src/features/settings/views/runtime/excel-view/ExcelGrid.tsx",
+        "file": "src/features/views/runtime/excel-view/ExcelGrid.tsx",
         "explicitAny": 6,
         "asAny": 6,
         "colonAny": 0,
         "tsIgnore": 0,
         "tsNoCheck": false,
         "lines": 188,
-        "layer": "features"
-      },
-      {
-        "file": "src/features/timer/TimerService.ts",
-        "explicitAny": 6,
-        "asAny": 1,
-        "colonAny": 5,
-        "tsIgnore": 0,
-        "tsNoCheck": false,
-        "lines": 173,
         "layer": "features"
       },
       {
@@ -1154,17 +1126,45 @@
         "tsNoCheck": false,
         "lines": 249,
         "layer": "app"
+      },
+      {
+        "file": "src/app/store/slices/blocks.slice.ts",
+        "explicitAny": 5,
+        "asAny": 0,
+        "colonAny": 5,
+        "tsIgnore": 0,
+        "tsNoCheck": false,
+        "lines": 230,
+        "layer": "app"
+      },
+      {
+        "file": "src/app/usecases/recordInput/error.ts",
+        "explicitAny": 5,
+        "asAny": 5,
+        "colonAny": 0,
+        "tsIgnore": 0,
+        "tsNoCheck": false,
+        "lines": 63,
+        "layer": "app"
+      },
+      {
+        "file": "src/core/recordInput/EditBackfillMapper.ts",
+        "explicitAny": 5,
+        "asAny": 4,
+        "colonAny": 1,
+        "tsIgnore": 0,
+        "tsNoCheck": false,
+        "lines": 202,
+        "layer": "core"
       }
     ]
   },
   "boundary": {
     "corePublic": {
       "exports": {
-        "count": 317,
+        "count": 303,
         "names": [
           "ActionService",
-          "AppPort",
-          "AppVaultNamePort",
           "BuildCreateRecordSubmitParamsInput",
           "BuildRecordCreateDraftParams",
           "BuildRecordSubmitRecoveryPresentationOptions",
@@ -1206,9 +1206,6 @@
           "FieldInputType",
           "FieldPickerOption",
           "FieldSemantic",
-          "FieldSystemCheckResult",
-          "FieldSystemCheckStatus",
-          "FieldSystemHealthReport",
           "FieldValueResolution",
           "FieldValueSource",
           "FileStat",
@@ -1220,10 +1217,6 @@
           "GoalMetricContract",
           "GoalMetricDirection",
           "GoalOrderIndex",
-          "GoalOverviewCycleSummary",
-          "GoalOverviewMetricProgress",
-          "GoalOverviewModel",
-          "GoalOverviewRow",
           "GoalPathParts",
           "GoalSettings",
           "GoalStatus",
@@ -1282,7 +1275,6 @@
           "STORAGE_TOKEN",
           "SYSTEM_RECORD_CONTEXT_FIELD_KEYS",
           "SettingsRepository",
-          "TASK_EXECUTION_VIEW_DEFAULT_CONFIG",
           "TemplateVariantId",
           "TemplateVariantIdentity",
           "ThemeMetadata",
@@ -1304,7 +1296,6 @@
           "VaultPort",
           "addDisplayField",
           "applyRecordRefreshPlan",
-          "assertFieldSystemHealthy",
           "assertRecordInputRequiredFields",
           "bringViewPlacementToFront",
           "bringViewPlacementsToFront",
@@ -1314,7 +1305,6 @@
           "buildCreateRecordSubmitParamsFromEditorState",
           "buildErrorResult",
           "buildGoalBuckets",
-          "buildGoalOverviewModel",
           "buildGoalThemeBreakdown",
           "buildRecordCreateDraftFromEditorState",
           "buildRecordDraftContext",
@@ -1378,7 +1368,6 @@
           "getItemThemeLabel",
           "getRecordInputSessionDraft",
           "getRecordRecoveryPaths",
-          "getRelativePath",
           "getReservedCustomFieldNames",
           "getTemplateFieldBehavior",
           "getTemplateFieldBehaviorKind",
@@ -1461,7 +1450,6 @@
           "resolveFieldValue",
           "resolveTemplatePeriodPolicy",
           "resolveViewPlacements",
-          "runFieldSystemHealthChecks",
           "sanitizeTemplateField",
           "sanitizeTemplateFields",
           "searchThemePathTree",
@@ -1495,7 +1483,7 @@
       "exports": {
         "count": 0,
         "names": [],
-        "starExports": 30
+        "starExports": 27
       },
       "imports": {
         "totalImports": 0,
@@ -1513,11 +1501,9 @@
         "scope": "root",
         "exists": true,
         "exports": {
-          "count": 317,
+          "count": 303,
           "names": [
             "ActionService",
-            "AppPort",
-            "AppVaultNamePort",
             "BuildCreateRecordSubmitParamsInput",
             "BuildRecordCreateDraftParams",
             "BuildRecordSubmitRecoveryPresentationOptions",
@@ -1559,9 +1545,6 @@
             "FieldInputType",
             "FieldPickerOption",
             "FieldSemantic",
-            "FieldSystemCheckResult",
-            "FieldSystemCheckStatus",
-            "FieldSystemHealthReport",
             "FieldValueResolution",
             "FieldValueSource",
             "FileStat",
@@ -1573,10 +1556,6 @@
             "GoalMetricContract",
             "GoalMetricDirection",
             "GoalOrderIndex",
-            "GoalOverviewCycleSummary",
-            "GoalOverviewMetricProgress",
-            "GoalOverviewModel",
-            "GoalOverviewRow",
             "GoalPathParts",
             "GoalSettings",
             "GoalStatus",
@@ -1635,7 +1614,6 @@
             "STORAGE_TOKEN",
             "SYSTEM_RECORD_CONTEXT_FIELD_KEYS",
             "SettingsRepository",
-            "TASK_EXECUTION_VIEW_DEFAULT_CONFIG",
             "TemplateVariantId",
             "TemplateVariantIdentity",
             "ThemeMetadata",
@@ -1657,7 +1635,6 @@
             "VaultPort",
             "addDisplayField",
             "applyRecordRefreshPlan",
-            "assertFieldSystemHealthy",
             "assertRecordInputRequiredFields",
             "bringViewPlacementToFront",
             "bringViewPlacementsToFront",
@@ -1667,7 +1644,6 @@
             "buildCreateRecordSubmitParamsFromEditorState",
             "buildErrorResult",
             "buildGoalBuckets",
-            "buildGoalOverviewModel",
             "buildGoalThemeBreakdown",
             "buildRecordCreateDraftFromEditorState",
             "buildRecordDraftContext",
@@ -1731,7 +1707,6 @@
             "getItemThemeLabel",
             "getRecordInputSessionDraft",
             "getRecordRecoveryPaths",
-            "getRelativePath",
             "getReservedCustomFieldNames",
             "getTemplateFieldBehavior",
             "getTemplateFieldBehaviorKind",
@@ -1814,7 +1789,6 @@
             "resolveFieldValue",
             "resolveTemplatePeriodPolicy",
             "resolveViewPlacements",
-            "runFieldSystemHealthChecks",
             "sanitizeTemplateField",
             "sanitizeTemplateFields",
             "searchThemePathTree",
@@ -1851,7 +1825,7 @@
           "starExports": 1
         },
         "imports": {
-          "totalImports": 54,
+          "totalImports": 60,
           "importers": [
             {
               "file": "src/app/usecases/goal.usecase.ts",
@@ -1909,12 +1883,27 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/heatmapViewModel.ts",
+              "file": "src/features/views/models/energyTaskListModel.ts",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/progressViewModel.ts",
+              "file": "src/features/views/models/energyViewModel.ts",
+              "imports": 2,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/heatmapViewModel.ts",
+              "imports": 2,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ProgressViewModel.ts",
+              "imports": 2,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
@@ -1945,6 +1934,11 @@
             },
             {
               "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/editor/quickInputRecordTypeModel.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -1989,67 +1983,62 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/blockViewModel.ts",
+              "file": "src/features/views/runtime/BlockView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/eventTimelineViewModel.ts",
+              "file": "src/features/views/runtime/BlockViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/statisticsViewModel.ts",
+              "file": "src/features/views/runtime/EnergyView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/viewModelRegistry.ts",
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/BlockView.tsx",
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/BlockViewModel.ts",
+              "file": "src/features/views/runtime/excel-view/ExcelViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx",
+              "file": "src/features/views/runtime/excel-view/types.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewModel.ts",
+              "file": "src/features/views/runtime/HeatmapView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelViewModel.ts",
+              "file": "src/features/views/runtime/ProgressView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/excel-view/types.ts",
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewModel.ts",
+              "file": "src/features/views/runtime/TableView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/TableView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TableViewModel.ts",
+              "file": "src/features/views/runtime/TableViewModel.ts",
               "imports": 1,
               "layer": "features"
             }
@@ -2062,9 +2051,11 @@
         "scope": "module",
         "exists": true,
         "exports": {
-          "count": 0,
-          "names": [],
-          "starExports": 1
+          "count": 1,
+          "names": [
+            "FieldDefinition"
+          ],
+          "starExports": 15
         },
         "imports": {
           "totalImports": 26,
@@ -2175,22 +2166,22 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/items/FieldPill.tsx",
+              "file": "src/features/views/runtime/components/items/FieldPill.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelViewToolbar.tsx",
+              "file": "src/features/views/runtime/excel-view/ExcelViewToolbar.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/excel-view/types.ts",
+              "file": "src/features/views/runtime/excel-view/types.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/excel-view/value.ts",
+              "file": "src/features/views/runtime/excel-view/value.ts",
               "imports": 1,
               "layer": "features"
             }
@@ -2203,20 +2194,32 @@
         "scope": "module",
         "exists": true,
         "exports": {
-          "count": 7,
+          "count": 19,
           "names": [
             "GoalTemplateResolveInput",
             "GoalTemplateResolveResult",
             "GoalTemplateResolver",
             "GoalTemplateSourceType",
+            "RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS",
+            "RECORD_INPUT_GOAL_CONTEXT_KEYS",
             "RecordInputKernel",
             "buildRecordOutputPlan",
-            "buildRecordPersistencePlan"
+            "buildRecordPersistencePlan",
+            "clearRecordInputGoalContext",
+            "getRecordInputSessionDraft",
+            "initializeRecordInputSession",
+            "isRecordInputMeaningfulValue",
+            "isRecordInputOptionLike",
+            "isRecordInputRefreshableSource",
+            "isRecordInputSameValue",
+            "preserveRecordInputBlockSwitchState",
+            "readRecordInputString",
+            "reduceRecordInputSession"
           ],
-          "starExports": 12
+          "starExports": 11
         },
         "imports": {
-          "totalImports": 40,
+          "totalImports": 41,
           "importers": [
             {
               "file": "src/app/usecases/recordInput.usecase.ts",
@@ -2264,11 +2267,6 @@
               "layer": "app"
             },
             {
-              "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
               "file": "src/platform/obsidian/modals/AiBatchConfirmModel.ts",
               "imports": 2,
               "layer": "platform"
@@ -2314,7 +2312,17 @@
               "layer": "features"
             },
             {
+              "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
               "file": "src/features/quickinput/editor/quickInputFieldSourceModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/editor/quickInputRecordTypeModel.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -2352,6 +2360,11 @@
               "file": "src/platform/obsidian/modals/QuickInputModal.tsx",
               "imports": 1,
               "layer": "platform"
+            },
+            {
+              "file": "src/platform/obsidian/protocols/EnergyProtocolHandler.ts",
+              "imports": 1,
+              "layer": "platform"
             }
           ]
         }
@@ -2362,27 +2375,47 @@
         "scope": "module",
         "exists": true,
         "exports": {
-          "count": 0,
-          "names": [],
-          "starExports": 1
+          "count": 19,
+          "names": [
+            "DEFAULT_FREEFORM_LAYOUT_CONFIG",
+            "FREEFORM_COLLAPSED_HEIGHT",
+            "FreeformItemSize",
+            "bringViewPlacementToFront",
+            "bringViewPlacementsToFront",
+            "calculateFreeformCanvasHeight",
+            "createDefaultViewPlacement",
+            "createDefaultViewPlacements",
+            "filterViewPlacementsForLayout",
+            "getDefaultFreeformItemSize",
+            "getFreeformVisualHeight",
+            "moveViewPlacement",
+            "normalizeFreeformLayoutConfig",
+            "normalizeViewPlacement",
+            "normalizeViewPlacementZIndices",
+            "removeViewPlacement",
+            "resizeViewPlacement",
+            "resolveViewPlacements",
+            "snapFreeformValue"
+          ],
+          "starExports": 0
         },
         "imports": {
           "totalImports": 3,
           "importers": [
             {
-              "file": "src/app/store/mutations/layoutSettingsMutations.ts",
+              "file": "src/app/dashboard/FreeformCanvas.tsx",
               "imports": 1,
               "layer": "app"
             },
             {
-              "file": "src/features/settings/layout/FreeformCanvas.tsx",
+              "file": "src/app/dashboard/FreeformLayoutItem.tsx",
               "imports": 1,
-              "layer": "features"
+              "layer": "app"
             },
             {
-              "file": "src/features/settings/layout/FreeformLayoutItem.tsx",
+              "file": "src/app/store/mutations/layoutSettingsMutations.ts",
               "imports": 1,
-              "layer": "features"
+              "layer": "app"
             }
           ]
         }
@@ -2408,7 +2441,7 @@
           "starExports": 6
         },
         "imports": {
-          "totalImports": 13,
+          "totalImports": 11,
           "importers": [
             {
               "file": "src/shared/components/ThemeTreeSelect/MultiSelectToolbar.tsx",
@@ -2441,17 +2474,7 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/theme/ThemeManager.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/taskExecutionViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/HeatmapViewModel.ts",
+              "file": "src/features/views/runtime/HeatmapViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -2481,7 +2504,7 @@
         "exports": {
           "count": 0,
           "names": [],
-          "starExports": 1
+          "starExports": 3
         },
         "imports": {
           "totalImports": 3,
@@ -2512,19 +2535,24 @@
         "exports": {
           "count": 0,
           "names": [],
-          "starExports": 2
+          "starExports": 31
         },
         "imports": {
-          "totalImports": 142,
+          "totalImports": 132,
           "importers": [
             {
-              "file": "src/features/settings/views/runtime/HeatmapView.tsx",
-              "imports": 4,
+              "file": "src/features/views/runtime/components/heatmap/HeatmapCell.tsx",
+              "imports": 3,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/heatmap/HeatmapCell.tsx",
+              "file": "src/features/views/runtime/HeatmapView.tsx",
               "imports": 3,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/modal/QuickInputModalContent.tsx",
+              "imports": 2,
               "layer": "features"
             },
             {
@@ -2538,57 +2566,47 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/blockViewModel.ts",
+              "file": "src/features/views/models/heatmapViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/eventTimelineViewModel.ts",
+              "file": "src/features/views/runtime/components/statistics/ChartBlock.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/heatmapViewModel.ts",
+              "file": "src/features/views/runtime/components/timeline/DayColumnBody.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/statistics/ChartBlock.tsx",
+              "file": "src/features/views/runtime/components/timeline/DayColumnHeader.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/timeline/DayColumnBody.tsx",
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/timeline/DayColumnHeader.tsx",
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewModel.ts",
+              "file": "src/features/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts",
+              "file": "src/features/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/YearStatisticsViewModel.ts",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/timeline-parser.ts",
+              "file": "src/features/views/runtime/StatisticsView/views/YearStatisticsViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
@@ -2664,6 +2682,46 @@
             },
             {
               "file": "src/app/capabilities/capabilities/timer.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/CodeblockEmbedder.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/LayoutRenderer.tsx",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/RendererService.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useLayoutItems.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useLayoutModuleActions.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useViewData.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useViewRuntimeHandlers.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/ViewContent.tsx",
               "imports": 1,
               "layer": "app"
             },
@@ -2803,6 +2861,11 @@
               "layer": "features"
             },
             {
+              "file": "src/features/quickinput/editor/components/EnergyQuickCapturePanel.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
               "file": "src/features/quickinput/editor/components/HierarchySingleSelect.tsx",
               "imports": 1,
               "layer": "features"
@@ -2858,47 +2921,7 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/CodeblockEmbedder.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/LayoutRenderer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/RendererService.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useLayoutItems.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useLayoutModuleActions.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useViewRuntimeHandlers.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/ViewContent.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/tabs/LayoutSettings.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/useViewData.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -2913,152 +2936,117 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/progressViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/statisticsViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/taskExecutionViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/timelineViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/BlockView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/BlockViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/CategoryFilter.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/items/FieldPill.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/items/TaskRow.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/HeatmapThemeGroup.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/HeatmapViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/useStatisticsCategoryConfigs.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/DayStatisticsView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/PeriodStatisticsView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/WeekStatisticsView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TableViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ThemeFilter.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TimeNavigator.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TimeNavigatorModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ViewToolbar.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ViewToolbarModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
               "file": "src/features/timer/TimerRow.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
               "file": "src/features/timer/TimerService.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/energyTaskListModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/energyViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/BlockViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/CategoryFilter.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/items/FieldPill.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/items/TaskRow.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/ExcelViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/HeatmapThemeGroup.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/HeatmapViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/views/DayStatisticsView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/views/PeriodStatisticsView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/views/WeekStatisticsView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/TableViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ThemeFilter.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/timeline-parser.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/TimelineView/TimelineViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ViewToolbar.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ViewToolbarModel.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -3118,11 +3106,6 @@
               "layer": "shared"
             },
             {
-              "file": "src/shared/ui/modals/EditTaskModal.tsx",
-              "imports": 1,
-              "layer": "shared"
-            },
-            {
               "file": "src/shared/utils/error/logging.ts",
               "imports": 1,
               "layer": "shared"
@@ -3151,15 +3134,15 @@
           "starExports": 1
         },
         "imports": {
-          "totalImports": 194,
+          "totalImports": 192,
           "importers": [
             {
-              "file": "src/features/settings/views/runtime/components/items/FieldPill.tsx",
+              "file": "src/features/views/runtime/components/items/FieldPill.tsx",
               "imports": 3,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/timeline-parser.ts",
+              "file": "src/features/views/runtime/timeline-parser.ts",
               "imports": 3,
               "layer": "features"
             },
@@ -3169,7 +3152,22 @@
               "layer": "app"
             },
             {
+              "file": "src/app/dashboard/CodeblockEmbedder.ts",
+              "imports": 2,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/ViewContent.tsx",
+              "imports": 2,
+              "layer": "app"
+            },
+            {
               "file": "src/app/store/mutations/settingsMutationRunner.ts",
+              "imports": 2,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/store/selectors/index.ts",
               "imports": 2,
               "layer": "app"
             },
@@ -3199,22 +3197,12 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/CodeblockEmbedder.ts",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/layout/DataFilterPanel.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
               "file": "src/features/settings/layout/ModuleSettingsModal.tsx",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/ViewContent.tsx",
               "imports": 2,
               "layer": "features"
             },
@@ -3239,27 +3227,17 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/eventTimelineViewModel.ts",
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineEventList.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineEventList.tsx",
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewModel.ts",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/useStatisticsCategoryConfigs.ts",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ViewToolbar.tsx",
+              "file": "src/features/views/runtime/ViewToolbar.tsx",
               "imports": 2,
               "layer": "features"
             },
@@ -3310,6 +3288,56 @@
             },
             {
               "file": "src/app/capabilities/createCapabilities.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/FreeformCanvas.tsx",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/FreeformLayoutItem.tsx",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/LayoutRenderer.tsx",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/RendererService.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useExpandedViewRendering.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useLayoutItems.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useLayoutModuleActions.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useViewData.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useViewRuntimeHandlers.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/viewPropsFactory.ts",
               "imports": 1,
               "layer": "app"
             },
@@ -3384,19 +3412,14 @@
               "layer": "app"
             },
             {
-              "file": "src/app/usecases/viewinstance.usecase.ts",
+              "file": "src/app/usecases/timer.usecase.ts",
               "imports": 1,
               "layer": "app"
             },
             {
-              "file": "src/core/theme/ThemeManager.ts",
+              "file": "src/app/usecases/viewinstance.usecase.ts",
               "imports": 1,
-              "layer": "core"
-            },
-            {
-              "file": "src/core/theme/themeManagerSemantics.ts",
-              "imports": 1,
-              "layer": "core"
+              "layer": "app"
             },
             {
               "file": "src/features/aichat/AiChatModalView.tsx",
@@ -3470,6 +3493,11 @@
             },
             {
               "file": "src/features/quickinput/editor/quickInputPathModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/editor/quickInputRecordTypeModel.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -3564,57 +3592,7 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/input/TemplateVariableCopier.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/FreeformCanvas.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/FreeformLayoutItem.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/LayoutRenderer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/layout/LayoutSettingsWidget.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/RendererService.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useExpandedViewRendering.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useLayoutItems.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useLayoutModuleActions.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useViewRuntimeHandlers.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/viewPropsFactory.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -3639,11 +3617,6 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/useViewData.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/views/editors/HeatmapViewEditor.tsx",
               "imports": 1,
               "layer": "features"
@@ -3664,262 +3637,17 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/blockViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/heatmapViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/progressViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/statisticsViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/taskExecutionViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/timelineViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/models/viewModelRegistry.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/BlockView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/BlockViewItemList.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/BlockViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/CategoryFilter.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/heatmap/HeatmapCell.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/items/BlockItem.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/items/ItemLink.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/items/TaskRow.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/statistics/ChartBlock.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/timeline/DayColumnBody.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/timeline/DayColumnHeader.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelGridModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/types.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/value.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/HeatmapDayView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/HeatmapThemeGroup.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/HeatmapView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/HeatmapViewContent.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/HeatmapViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ProgressGoalCard.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ProgressView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ProgressViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/components/PopoverContent.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/types.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/DayStatisticsView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/PeriodStatisticsView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/WeekStatisticsView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TableView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TableViewCell.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TableViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TaskExecutionViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ThemeFilter.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineDailyViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineViewContainer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineViewView.tsx",
+              "file": "src/features/settings/views/editors/ViewEditorProps.ts",
               "imports": 1,
               "layer": "features"
             },
             {
               "file": "src/features/timer/TimerRow.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/timer/TimerService.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -3930,6 +3658,256 @@
             },
             {
               "file": "src/features/timer/TimerViewView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/energySummaryModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/energyTaskListModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/energyViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/heatmapViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/registry.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/BlockView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/BlockViewItemList.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/BlockViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/CategoryFilter.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/heatmap/HeatmapCell.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/items/BlockItem.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/items/ItemLink.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/items/TaskRow.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/statistics/ChartBlock.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/timeline/DayColumnBody.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/timeline/DayColumnHeader.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EnergySampleDetail.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EnergyView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/ExcelGridModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/ExcelViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/types.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/value.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/HeatmapDayView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/HeatmapThemeGroup.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/HeatmapView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/HeatmapViewContent.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/HeatmapViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ProgressGoalCard.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ProgressView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ProgressViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/components/PopoverContent.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/types.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/views/DayStatisticsView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/views/PeriodStatisticsView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/views/WeekStatisticsView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/TableView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/TableViewCell.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/TableViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ThemeFilter.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/TimelineView/TimelineDailyViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/TimelineView/TimelineViewContainer.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/TimelineView/TimelineViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/TimelineView/TimelineViewTypes.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -3955,6 +3933,11 @@
             },
             {
               "file": "src/platform/obsidian/modals/QuickInputModal.tsx",
+              "imports": 1,
+              "layer": "platform"
+            },
+            {
+              "file": "src/platform/obsidian/protocols/EnergyProtocolHandler.ts",
               "imports": 1,
               "layer": "platform"
             },
@@ -3989,11 +3972,6 @@
               "layer": "shared"
             },
             {
-              "file": "src/shared/ui/modals/EditTaskModal.tsx",
-              "imports": 1,
-              "layer": "shared"
-            },
-            {
               "file": "src/shared/ui/utils/recordOrigin.ts",
               "imports": 1,
               "layer": "shared"
@@ -4012,7 +3990,7 @@
           "starExports": 1
         },
         "imports": {
-          "totalImports": 14,
+          "totalImports": 13,
           "importers": [
             {
               "file": "src/features/settings/goalTemplates/GoalTemplateMatrix.tsx",
@@ -4023,11 +4001,6 @@
               "file": "src/app/usecases/goal.usecase.ts",
               "imports": 1,
               "layer": "app"
-            },
-            {
-              "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
-              "imports": 1,
-              "layer": "features"
             },
             {
               "file": "src/features/settings/goalTemplates/GoalPresetCard.tsx",
@@ -4124,19 +4097,14 @@
               "layer": "app"
             },
             {
-              "file": "src/app/services.types.ts",
+              "file": "src/app/dashboard/CodeblockEmbedder.ts",
               "imports": 2,
               "layer": "app"
             },
             {
-              "file": "src/features/settings/index.ts",
+              "file": "src/app/services.types.ts",
               "imports": 2,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/CodeblockEmbedder.ts",
-              "imports": 2,
-              "layer": "features"
+              "layer": "app"
             },
             {
               "file": "src/features/timer/TimerView.tsx",
@@ -4175,6 +4143,41 @@
             },
             {
               "file": "src/app/bootstrap/register.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/registerDashboard.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/RendererService.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useLayoutItems.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useLayoutModuleActions.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useViewData.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useViewRuntimeHandlers.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/ViewContent.tsx",
               "imports": 1,
               "layer": "app"
             },
@@ -4264,32 +4267,12 @@
               "layer": "features"
             },
             {
+              "file": "src/features/settings/index.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
               "file": "src/features/settings/layout/DataFilterPanel.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/RendererService.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useLayoutItems.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useLayoutModuleActions.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/useViewRuntimeHandlers.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/ViewContent.tsx",
               "imports": 1,
               "layer": "features"
             },
@@ -4299,17 +4282,7 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/useViewData.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/views/editors/CommonFilterPanel.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/editors/registry.tsx",
               "imports": 1,
               "layer": "features"
             },
@@ -4320,6 +4293,11 @@
             },
             {
               "file": "src/features/settings/views/editors/RuleBuilderModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/settings/views/editors/ViewEditorProps.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -4372,13 +4350,35 @@
         "scope": "module",
         "exists": true,
         "exports": {
-          "count": 0,
-          "names": [],
-          "starExports": 1
+          "count": 1,
+          "names": [
+            "PluginHost"
+          ],
+          "starExports": 7
         },
         "imports": {
-          "totalImports": 43,
+          "totalImports": 62,
           "importers": [
+            {
+              "file": "src/app/bootstrap/loadUIFeatures.ts",
+              "imports": 2,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/registerDashboard.ts",
+              "imports": 2,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/FeatureLoader.ts",
+              "imports": 2,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/features/registerFeatureContributions.ts",
+              "imports": 2,
+              "layer": "app"
+            },
             {
               "file": "src/main.ts",
               "imports": 2,
@@ -4415,7 +4415,17 @@
               "layer": "app"
             },
             {
-              "file": "src/app/bootstrap/loadUIFeatures.ts",
+              "file": "src/app/bootstrap/initializeCore.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/bootstrap/loadTimerServices.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/bootstrap/register.ts",
               "imports": 1,
               "layer": "app"
             },
@@ -4425,17 +4435,17 @@
               "layer": "app"
             },
             {
-              "file": "src/app/capabilities/types.ts",
+              "file": "src/app/capabilities/CapabilityDeps.ts",
               "imports": 1,
               "layer": "app"
             },
             {
-              "file": "src/app/FeatureLoader.ts",
+              "file": "src/app/dashboard/viewPropsFactory.ts",
               "imports": 1,
               "layer": "app"
             },
             {
-              "file": "src/app/features/registerFeatureContributions.ts",
+              "file": "src/app/ServiceManager.ts",
               "imports": 1,
               "layer": "app"
             },
@@ -4450,12 +4460,42 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/index.ts",
+              "file": "src/features/aiinput/aiNaturalInputCommand.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/viewPropsFactory.ts",
+              "file": "src/features/aiinput/index.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/aiinput/registerCommands.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/aiinput/registerFeature.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/index.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/registerCommands.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/registerFeature.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/settings/index.ts",
               "imports": 1,
               "layer": "features"
             },
@@ -4465,57 +4505,62 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/BlockView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/BlockViewItemList.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/items/BlockItem.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineEventList.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelCellContent.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/types.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/components/PopoverContent.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
+              "file": "src/features/timer/FloatingTimerWidget.ts",
               "imports": 1,
               "layer": "features"
             },
             {
               "file": "src/features/timer/TimerService.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/BlockView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/BlockViewItemList.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/items/BlockItem.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineEventList.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/ExcelCellContent.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/types.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/components/PopoverContent.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
               "imports": 1,
               "layer": "features"
             },
@@ -4565,6 +4610,16 @@
               "layer": "platform"
             },
             {
+              "file": "src/platform/obsidian/SettingsTab.tsx",
+              "imports": 1,
+              "layer": "platform"
+            },
+            {
+              "file": "src/platform/obsidian/ThinkSettingsView.tsx",
+              "imports": 1,
+              "layer": "platform"
+            },
+            {
               "file": "src/shared/patterns/ModalSavePattern.ts",
               "imports": 1,
               "layer": "shared"
@@ -4598,9 +4653,38 @@
         "scope": "module",
         "exists": true,
         "exports": {
-          "count": 0,
-          "names": [],
-          "starExports": 1
+          "count": 28,
+          "names": [
+            "AiBlockConfig",
+            "AiBlockConfigField",
+            "AiChatService",
+            "AiConfigCache",
+            "AiConfigSnapshot",
+            "AiHttpClient",
+            "AiHttpResponse",
+            "AiHttpTransport",
+            "AiHttpTransportFactory",
+            "AiNaturalLanguageRecordParser",
+            "AiThemeConfig",
+            "ChatCompletionRequest",
+            "ChatMessage",
+            "ChatRequest",
+            "ChatResponse",
+            "ChatSession",
+            "ChatSessionStore",
+            "INaturalLanguageRecordParser",
+            "OpenAIChatMessage",
+            "ParseInput",
+            "RetrievalFilters",
+            "RetrievalResult",
+            "RetrievalSearchResult",
+            "RetrievalService",
+            "SessionFilters",
+            "buildAiConfigSnapshot",
+            "resetDefaultAiHttpTransportFactory",
+            "setDefaultAiHttpTransportFactory"
+          ],
+          "starExports": 0
         },
         "imports": {
           "totalImports": 16,
@@ -4693,10 +4777,10 @@
           "names": [
             "useTimelineZoom"
           ],
-          "starExports": 4
+          "starExports": 6
         },
         "imports": {
-          "totalImports": 45,
+          "totalImports": 44,
           "importers": [
             {
               "file": "src/features/settings/views/editors/EventTimelineViewEditor.tsx",
@@ -4705,6 +4789,11 @@
             },
             {
               "file": "src/features/settings/views/editors/BlockViewEditor.tsx",
+              "imports": 2,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/settings/views/editors/EnergyViewEditor.tsx",
               "imports": 2,
               "layer": "features"
             },
@@ -4729,29 +4818,29 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/editors/TaskExecutionViewEditor.tsx",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/views/editors/TimelineViewEditor.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/statisticsViewModel.ts",
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewModel.ts",
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewModel.ts",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineViewModel.ts",
+              "file": "src/features/views/runtime/TimelineView/TimelineViewModel.ts",
               "imports": 2,
               "layer": "features"
+            },
+            {
+              "file": "src/app/dashboard/useViewData.ts",
+              "imports": 1,
+              "layer": "app"
             },
             {
               "file": "src/app/usecases/viewinstance.usecase.ts",
@@ -4779,87 +4868,77 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/eventTimelineViewModel.ts",
+              "file": "src/features/views/models/energyViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/progressViewModel.ts",
+              "file": "src/features/views/runtime/BlockViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/models/timelineViewModel.ts",
+              "file": "src/features/views/runtime/components/statistics/ChartBlock.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/statistics/ChartBlock.tsx",
+              "file": "src/features/views/runtime/excel-view/ExcelView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewModel.ts",
+              "file": "src/features/views/runtime/excel-view/ExcelViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelView.tsx",
+              "file": "src/features/views/runtime/HeatmapView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelViewModel.ts",
+              "file": "src/features/views/runtime/ProgressViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/HeatmapView.tsx",
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewView.tsx",
+              "file": "src/features/views/runtime/StatisticsView/views/DayStatisticsView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/useStatisticsCategoryConfigs.ts",
+              "file": "src/features/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/DayStatisticsView.tsx",
+              "file": "src/features/views/runtime/StatisticsView/views/PeriodStatisticsView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts",
+              "file": "src/features/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/PeriodStatisticsView.tsx",
+              "file": "src/features/views/runtime/StatisticsView/views/WeekStatisticsView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts",
+              "file": "src/features/views/runtime/StatisticsView/views/YearStatisticsViewModel.ts",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/WeekStatisticsView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/views/YearStatisticsViewModel.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineViewContainer.tsx",
+              "file": "src/features/views/runtime/TimelineView/TimelineViewContainer.tsx",
               "imports": 1,
               "layer": "features"
             }
@@ -4874,11 +4953,27 @@
         "exports": {
           "count": 0,
           "names": [],
-          "starExports": 1
+          "starExports": 16
         },
         "imports": {
-          "totalImports": 0,
-          "importers": []
+          "totalImports": 4,
+          "importers": [
+            {
+              "file": "src/features/views/models/energyTaskListModel.ts",
+              "imports": 2,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/timer/TimerRow.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/timeline-parser.ts",
+              "imports": 1,
+              "layer": "features"
+            }
+          ]
         }
       },
       {
@@ -4895,7 +4990,7 @@
           "totalImports": 1,
           "importers": [
             {
-              "file": "src/features/settings/views/models/progressViewModel.ts",
+              "file": "src/features/views/runtime/ProgressViewModel.ts",
               "imports": 1,
               "layer": "features"
             }
@@ -4925,6 +5020,182 @@
             }
           ]
         }
+      },
+      {
+        "specifier": "@core/recordTypes/public",
+        "file": "src/core/recordTypes/public.ts",
+        "scope": "module",
+        "exists": true,
+        "exports": {
+          "count": 7,
+          "names": [
+            "DEFAULT_RECORD_TYPES",
+            "ENERGY_RECORD_TYPE",
+            "ENERGY_RECORD_TYPE_ID",
+            "RecordCaptureMode",
+            "getEffectiveRecordTypes",
+            "getRecordTypeById",
+            "isDirectRecordType"
+          ],
+          "starExports": 0
+        },
+        "imports": {
+          "totalImports": 4,
+          "importers": [
+            {
+              "file": "src/app/actions/recordCreate/viewHeaderCreateAction.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/editor/quickInputRecordTypeModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/modal/QuickInputModalContent.tsx",
+              "imports": 1,
+              "layer": "features"
+            }
+          ]
+        }
+      },
+      {
+        "specifier": "@core/energy/public",
+        "file": "src/core/energy/public.ts",
+        "scope": "module",
+        "exists": true,
+        "exports": {
+          "count": 70,
+          "names": [
+            "BuildEnergyActionCandidatesOptions",
+            "BuildEnergyDataQualityOptions",
+            "BuildEnergyEffectsOptions",
+            "BuildEnergyManagementOptions",
+            "BuildEnergyPatternsOptions",
+            "BuildEnergyPeriodOptions",
+            "EnergyActionCandidate",
+            "EnergyActionCandidateBuildResult",
+            "EnergyActionHistoricalEffect",
+            "EnergyActionLoad",
+            "EnergyActionPolicyContext",
+            "EnergyActionSource",
+            "EnergyActionTimingDecision",
+            "EnergyActivityContext",
+            "EnergyActivityEffectSample",
+            "EnergyActivityRelation",
+            "EnergyCandidateDiagnostics",
+            "EnergyCandidateExclusionReason",
+            "EnergyContext",
+            "EnergyContextConfidence",
+            "EnergyContinuousWorkPattern",
+            "EnergyDailySignalContext",
+            "EnergyDailySignalKind",
+            "EnergyDataQualityLevel",
+            "EnergyDataQualityModel",
+            "EnergyDaypartPattern",
+            "EnergyDimensionFocus",
+            "EnergyEffectAggregate",
+            "EnergyEffectAnalytics",
+            "EnergyEffectConfidence",
+            "EnergyEffectDimension",
+            "EnergyEffectEndpoint",
+            "EnergyEffectEvidence",
+            "EnergyEffectTrend",
+            "EnergyHighStateContinuationSample",
+            "EnergyLagPattern",
+            "EnergyManagementCandidate",
+            "EnergyManagementGuardrail",
+            "EnergyManagementLatestState",
+            "EnergyManagementLevel",
+            "EnergyManagementModel",
+            "EnergyManagementReadiness",
+            "EnergyManagementState",
+            "EnergyPatternAnalytics",
+            "EnergyPatternEvidence",
+            "EnergyPatternTrend",
+            "EnergyPeriodDay",
+            "EnergyPeriodMode",
+            "EnergyPeriodModel",
+            "EnergyPeriodSample",
+            "EnergyRecommendationBand",
+            "EnergyRecommendationContext",
+            "EnergyRecommendationEvidence",
+            "EnergyRecommendationResult",
+            "EnergyRecommendedAction",
+            "EnergyStopProxyPattern",
+            "ResolveEnergyContextOptions",
+            "attachEnergyRecommendationEvidence",
+            "buildEnergyActionCandidateResult",
+            "buildEnergyActionCandidates",
+            "buildEnergyActionPolicyContext",
+            "buildEnergyActionRecommendations",
+            "buildEnergyDataQuality",
+            "buildEnergyEffects",
+            "buildEnergyManagement",
+            "buildEnergyPatterns",
+            "buildEnergyPeriod",
+            "classifyEnergyActivity",
+            "resolveEnergyActionTiming",
+            "resolveEnergyContext"
+          ],
+          "starExports": 1
+        },
+        "imports": {
+          "totalImports": 10,
+          "importers": [
+            {
+              "file": "src/platform/obsidian/protocols/EnergyProtocolHandler.ts",
+              "imports": 2,
+              "layer": "platform"
+            },
+            {
+              "file": "src/app/usecases/recordInput.usecase.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/features/quickinput/editor/components/EnergyQuickCapturePanel.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/quickinput/editor/model/types.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/energySummaryModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/energyTaskListModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/models/energyViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EnergySampleDetail.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ProgressViewModel.ts",
+              "imports": 1,
+              "layer": "features"
+            }
+          ]
+        }
       }
     ],
     "sharedPublicFacades": [
@@ -4936,7 +5207,7 @@
         "exports": {
           "count": 0,
           "names": [],
-          "starExports": 30
+          "starExports": 27
         },
         "imports": {
           "totalImports": 0,
@@ -4951,15 +5222,20 @@
         "exports": {
           "count": 0,
           "names": [],
-          "starExports": 17
+          "starExports": 21
         },
         "imports": {
-          "totalImports": 113,
+          "totalImports": 111,
           "importers": [
             {
-              "file": "src/features/settings/views/runtime/components/items/TaskRow.tsx",
+              "file": "src/features/views/runtime/components/items/TaskRow.tsx",
               "imports": 3,
               "layer": "features"
+            },
+            {
+              "file": "src/app/dashboard/statisticsPopoverBridge.tsx",
+              "imports": 2,
+              "layer": "app"
             },
             {
               "file": "src/features/aichat/AiChatModalView.tsx",
@@ -5017,22 +5293,12 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/input/TemplateVariableCopier.tsx",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/layout/DataFilterPanel.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
               "file": "src/features/settings/layout/ModuleSettingsModal.tsx",
-              "imports": 2,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/layout/statisticsPopoverBridge.tsx",
               "imports": 2,
               "layer": "features"
             },
@@ -5067,14 +5333,19 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/CategoryFilter.tsx",
+              "file": "src/features/views/runtime/CategoryFilter.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/items/BlockItem.tsx",
+              "file": "src/features/views/runtime/components/items/BlockItem.tsx",
               "imports": 2,
               "layer": "features"
+            },
+            {
+              "file": "src/app/dashboard/ModulePanel.tsx",
+              "imports": 1,
+              "layer": "app"
             },
             {
               "file": "src/app/ui/mountWithServices.tsx",
@@ -5157,11 +5428,6 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/goalTemplates/GoalPresetMatrixWidget.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx",
               "imports": 1,
               "layer": "features"
@@ -5202,11 +5468,6 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/ModulePanel.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/tabs/AiSettings.tsx",
               "imports": 1,
               "layer": "features"
@@ -5222,17 +5483,22 @@
               "layer": "features"
             },
             {
+              "file": "src/features/settings/tabs/EnergySettingsSection.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
               "file": "src/features/settings/tabs/GeneralSettings.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/tabs/InputSettings.tsx",
+              "file": "src/features/settings/tabs/LayoutSettings.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/tabs/LayoutSettings.tsx",
+              "file": "src/features/settings/views/editors/EnergyViewEditor.tsx",
               "imports": 1,
               "layer": "features"
             },
@@ -5282,67 +5548,67 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/BlockView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/items/FieldPill.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/items/ItemLink.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/components/timeline/DayColumnBody.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelCellContent.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelColumnToolbar.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TaskExecutionContextMenu.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ThemeFilter.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/ViewToolbar.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
               "file": "src/features/timer/TimerRow.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
               "file": "src/features/timer/TimerViewView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/BlockView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/items/FieldPill.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/items/ItemLink.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/components/timeline/DayColumnBody.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EnergyTaskList.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/ExcelCellContent.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/ExcelColumnToolbar.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/excel-view/ExcelView.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ThemeFilter.tsx",
+              "imports": 1,
+              "layer": "features"
+            },
+            {
+              "file": "src/features/views/runtime/ViewToolbar.tsx",
               "imports": 1,
               "layer": "features"
             },
@@ -5410,7 +5676,7 @@
           "starExports": 7
         },
         "imports": {
-          "totalImports": 29,
+          "totalImports": 28,
           "importers": [
             {
               "file": "src/app/bootstrap/initializeCore.ts",
@@ -5423,17 +5689,22 @@
               "layer": "app"
             },
             {
-              "file": "src/app/ServiceManager.ts",
-              "imports": 2,
-              "layer": "app"
-            },
-            {
               "file": "src/main.ts",
               "imports": 2,
               "layer": "main.ts"
             },
             {
               "file": "src/app/bootstrap/loadDataServices.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/LayoutRenderer.tsx",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/ServiceManager.ts",
               "imports": 1,
               "layer": "app"
             },
@@ -5493,17 +5764,12 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/LayoutRenderer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
               "file": "src/features/settings/tabs/AiSettings.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/excel-view/ExcelView.tsx",
+              "file": "src/features/views/runtime/excel-view/ExcelView.tsx",
               "imports": 1,
               "layer": "features"
             },
@@ -5541,9 +5807,12 @@
         "scope": "module",
         "exists": true,
         "exports": {
-          "count": 0,
-          "names": [],
-          "starExports": 2
+          "count": 2,
+          "names": [
+            "useIsMounted",
+            "useLocalStorage"
+          ],
+          "starExports": 0
         },
         "imports": {
           "totalImports": 4,
@@ -5577,9 +5846,13 @@
         "scope": "module",
         "exists": true,
         "exports": {
-          "count": 0,
-          "names": [],
-          "starExports": 1
+          "count": 3,
+          "names": [
+            "ThemeTreeSelect",
+            "ThemeTreeSelectPanel",
+            "ThemeTreeSelectPanelProps"
+          ],
+          "starExports": 0
         },
         "imports": {
           "totalImports": 2,
@@ -5590,7 +5863,7 @@
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/ThemeFilter.tsx",
+              "file": "src/features/views/runtime/ThemeFilter.tsx",
               "imports": 1,
               "layer": "features"
             }
@@ -5665,155 +5938,150 @@
           "starExports": 2
         },
         "imports": {
-          "totalImports": 35,
+          "totalImports": 34,
           "importers": [
             {
-              "file": "src/features/settings/views/runtime/components/timeline/DayColumnBody.tsx",
+              "file": "src/features/views/runtime/components/timeline/DayColumnBody.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx",
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineDailyView.tsx",
+              "file": "src/features/views/runtime/TimelineView/TimelineDailyView.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineViewContainer.tsx",
+              "file": "src/features/views/runtime/TimelineView/TimelineViewContainer.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/TimelineView/TimelineViewView.tsx",
+              "file": "src/features/views/runtime/TimelineView/TimelineViewView.tsx",
               "imports": 2,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/RendererService.ts",
+              "file": "src/app/dashboard/RendererService.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/statisticsPopoverBridge.tsx",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/useViewRuntimeHandlers.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/ViewContent.tsx",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/app/dashboard/viewPropsFactory.ts",
+              "imports": 1,
+              "layer": "app"
+            },
+            {
+              "file": "src/features/views/runtime/BlockView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/statisticsPopoverBridge.tsx",
+              "file": "src/features/views/runtime/BlockViewItemList.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/useViewRuntimeHandlers.ts",
+              "file": "src/features/views/runtime/components/heatmap/HeatmapCell.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/ViewContent.tsx",
+              "file": "src/features/views/runtime/components/items/BlockItem.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/layout/viewPropsFactory.ts",
+              "file": "src/features/views/runtime/components/items/FieldPill.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/BlockView.tsx",
+              "file": "src/features/views/runtime/components/items/ItemLink.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/BlockViewItemList.tsx",
+              "file": "src/features/views/runtime/components/items/TaskRow.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/heatmap/HeatmapCell.tsx",
+              "file": "src/features/views/runtime/EnergyTaskList.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/items/BlockItem.tsx",
+              "file": "src/features/views/runtime/EnergyView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/items/FieldPill.tsx",
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineEventList.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/items/ItemLink.tsx",
+              "file": "src/features/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/components/items/TaskRow.tsx",
+              "file": "src/features/views/runtime/HeatmapDayView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineEventList.tsx",
+              "file": "src/features/views/runtime/HeatmapThemeGroup.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewView.tsx",
+              "file": "src/features/views/runtime/HeatmapView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/HeatmapDayView.tsx",
+              "file": "src/features/views/runtime/HeatmapViewContent.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/HeatmapThemeGroup.tsx",
+              "file": "src/features/views/runtime/StatisticsView/components/PopoverContent.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/HeatmapView.tsx",
+              "file": "src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/HeatmapViewContent.tsx",
+              "file": "src/features/views/runtime/TableView.tsx",
               "imports": 1,
               "layer": "features"
             },
             {
-              "file": "src/features/settings/views/runtime/StatisticsView/components/PopoverContent.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/StatisticsView/useStatisticsCategoryConfigs.ts",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TableView.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TableViewCell.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TaskExecutionContextMenu.tsx",
-              "imports": 1,
-              "layer": "features"
-            },
-            {
-              "file": "src/features/settings/views/runtime/TaskExecutionView.tsx",
+              "file": "src/features/views/runtime/TableViewCell.tsx",
               "imports": 1,
               "layer": "features"
             }
@@ -5842,10 +6110,10 @@
       "id": "pathSemantics",
       "label": "路径 / 层级语义",
       "description": "normalize/split/leaf/parent/pathCandidates/themePath/goalPath 等逻辑散落情况。",
-      "totalMatches": 717,
+      "totalMatches": 792,
       "files": [
         {
-          "file": "src/features/settings/views/models/heatmapViewModel.ts",
+          "file": "src/features/views/models/heatmapViewModel.ts",
           "matches": 49,
           "lines": 373,
           "layer": "features"
@@ -5853,7 +6121,7 @@
         {
           "file": "src/core/goal/itemGoalGrouping.ts",
           "matches": 40,
-          "lines": 197,
+          "lines": 198,
           "layer": "core"
         },
         {
@@ -5863,21 +6131,21 @@
           "layer": "platform"
         },
         {
-          "file": "src/core/goal/overview.ts",
-          "matches": 29,
-          "lines": 358,
-          "layer": "core"
-        },
-        {
           "file": "src/app/usecases/goal.usecase.ts",
           "matches": 27,
-          "lines": 299,
+          "lines": 297,
           "layer": "app"
         },
         {
-          "file": "src/features/settings/views/runtime/HeatmapViewModel.ts",
-          "matches": 27,
-          "lines": 200,
+          "file": "src/core/recordInput/snapshot/OutputPlanner.ts",
+          "matches": 25,
+          "lines": 254,
+          "layer": "core"
+        },
+        {
+          "file": "src/features/views/runtime/HeatmapViewModel.ts",
+          "matches": 24,
+          "lines": 179,
           "layer": "features"
         },
         {
@@ -5889,44 +6157,44 @@
         {
           "file": "src/features/settings/goalTemplates/model/GoalTemplateDraftModel.ts",
           "matches": 21,
-          "lines": 133,
+          "lines": 130,
           "layer": "features"
         },
         {
-          "file": "src/features/settings/views/runtime/HeatmapView.tsx",
+          "file": "src/features/views/runtime/HeatmapView.tsx",
           "matches": 19,
-          "lines": 257,
+          "lines": 226,
           "layer": "features"
         },
         {
           "file": "src/features/quickinput/editor/quickInputGoalModel.ts",
           "matches": 19,
-          "lines": 168,
+          "lines": 198,
           "layer": "features"
         },
         {
           "file": "src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx",
           "matches": 18,
-          "lines": 313,
+          "lines": 304,
           "layer": "features"
         },
         {
           "file": "src/core/recordInput/dependencyResolver.ts",
           "matches": 18,
-          "lines": 209,
+          "lines": 211,
           "layer": "core"
         },
         {
           "file": "src/features/settings/goalTemplates/goalTemplateCopy.ts",
           "matches": 17,
-          "lines": 188,
+          "lines": 187,
           "layer": "features"
         },
         {
-          "file": "src/core/recordInput/snapshot/OutputPlanner.ts",
-          "matches": 17,
-          "lines": 183,
-          "layer": "core"
+          "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
+          "matches": 16,
+          "lines": 349,
+          "layer": "features"
         },
         {
           "file": "src/core/ai/AiParserNormalize.ts",
@@ -5941,21 +6209,21 @@
           "layer": "features"
         },
         {
-          "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
-          "matches": 14,
-          "lines": 341,
-          "layer": "features"
-        },
-        {
           "file": "src/core/services/GoalTemplateResolver.ts",
           "matches": 13,
-          "lines": 118,
+          "lines": 119,
           "layer": "core"
+        },
+        {
+          "file": "src/features/views/models/energyTaskListModel.ts",
+          "matches": 12,
+          "lines": 286,
+          "layer": "features"
         },
         {
           "file": "src/features/settings/goalTemplates/model/GoalTemplatePatchModel.ts",
           "matches": 11,
-          "lines": 146,
+          "lines": 143,
           "layer": "features"
         },
         {
@@ -5970,7 +6238,7 @@
       "id": "layoutGeometryFlow",
       "label": "布局 / 浮窗几何流程",
       "description": "freeform、FloatingPanel、drag、resize、placement、zIndex、viewport 等逻辑密度。",
-      "totalMatches": 289,
+      "totalMatches": 288,
       "files": [
         {
           "file": "src/core/layout/freeformLayoutPlacement.ts",
@@ -5985,10 +6253,10 @@
           "layer": "core"
         },
         {
-          "file": "src/features/settings/layout/FreeformLayoutItem.tsx",
+          "file": "src/app/dashboard/FreeformLayoutItem.tsx",
           "matches": 28,
           "lines": 275,
-          "layer": "features"
+          "layer": "app"
         },
         {
           "file": "src/styles/features/view-shell.freeform-base.css",
@@ -5997,10 +6265,10 @@
           "layer": "styles"
         },
         {
-          "file": "src/features/settings/layout/FreeformCanvas.tsx",
+          "file": "src/app/dashboard/FreeformCanvas.tsx",
           "matches": 15,
           "lines": 316,
-          "layer": "features"
+          "layer": "app"
         },
         {
           "file": "src/styles/features/view-shell.freeform-management.css",
@@ -6039,10 +6307,10 @@
           "layer": "styles"
         },
         {
-          "file": "src/features/settings/layout/LayoutRenderer.tsx",
+          "file": "src/app/dashboard/LayoutRenderer.tsx",
           "matches": 5,
-          "lines": 329,
-          "layer": "features"
+          "lines": 332,
+          "layer": "app"
         },
         {
           "file": "src/features/settings/goalTemplates/goalTemplateMatrixModel.ts",
@@ -6053,7 +6321,7 @@
         {
           "file": "src/styles/components/modal.css",
           "matches": 4,
-          "lines": 337,
+          "lines": 341,
           "layer": "styles"
         },
         {
@@ -6065,7 +6333,7 @@
         {
           "file": "src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx",
           "matches": 4,
-          "lines": 313,
+          "lines": 304,
           "layer": "features"
         },
         {
@@ -6098,7 +6366,7 @@
       "id": "fieldValueSemantics",
       "label": "字段值 / 选项语义",
       "description": "字段值、option label/value、字段来源、默认值注水等逻辑散落情况。",
-      "totalMatches": 216,
+      "totalMatches": 232,
       "files": [
         {
           "file": "src/core/recordInput/session/reducer.ts",
@@ -6114,8 +6382,8 @@
         },
         {
           "file": "src/features/quickinput/editor/QuickInputEditorContainer.tsx",
-          "matches": 19,
-          "lines": 341,
+          "matches": 21,
+          "lines": 349,
           "layer": "features"
         },
         {
@@ -6163,7 +6431,7 @@
         {
           "file": "src/core/ai/AiConfigSnapshot.ts",
           "matches": 7,
-          "lines": 193,
+          "lines": 195,
           "layer": "core"
         },
         {
@@ -6181,13 +6449,19 @@
         {
           "file": "src/features/settings/goalTemplates/goalTemplateCopy.ts",
           "matches": 6,
-          "lines": 188,
+          "lines": 187,
           "layer": "features"
         },
         {
           "file": "src/core/recordInput/session/types.ts",
           "matches": 5,
           "lines": 88,
+          "layer": "core"
+        },
+        {
+          "file": "src/core/fields/CaptureFieldResolver.ts",
+          "matches": 5,
+          "lines": 76,
           "layer": "core"
         },
         {
@@ -6199,26 +6473,20 @@
         {
           "file": "src/features/quickinput/editor/quickInputGoalModel.ts",
           "matches": 4,
-          "lines": 168,
+          "lines": 198,
           "layer": "features"
         },
         {
           "file": "src/features/quickinput/editor/model/types.ts",
           "matches": 4,
-          "lines": 129,
+          "lines": 153,
           "layer": "features"
         },
         {
           "file": "src/core/services/GoalTemplateResolver.ts",
           "matches": 4,
-          "lines": 118,
+          "lines": 119,
           "layer": "core"
-        },
-        {
-          "file": "src/features/quickinput/editor/model/editorState.ts",
-          "matches": 4,
-          "lines": 81,
-          "layer": "features"
         }
       ]
     },
@@ -6226,7 +6494,7 @@
       "id": "storeMutationFlow",
       "label": "Store / Settings 写入流程",
       "description": "Zustand set/get、SettingsRepository、load/save/update 等写入逻辑密度。",
-      "totalMatches": 124,
+      "totalMatches": 123,
       "files": [
         {
           "file": "src/app/usecases/layout.usecase.ts",
@@ -6237,13 +6505,19 @@
         {
           "file": "src/app/usecases/goal.usecase.ts",
           "matches": 13,
-          "lines": 299,
+          "lines": 297,
           "layer": "app"
         },
         {
           "file": "src/app/usecases/viewinstance.usecase.ts",
           "matches": 12,
           "lines": 231,
+          "layer": "app"
+        },
+        {
+          "file": "src/app/usecases/settings.usecase.ts",
+          "matches": 11,
+          "lines": 203,
           "layer": "app"
         },
         {
@@ -6259,12 +6533,6 @@
           "layer": "app"
         },
         {
-          "file": "src/app/usecases/settings.usecase.ts",
-          "matches": 7,
-          "lines": 162,
-          "layer": "app"
-        },
-        {
           "file": "src/app/bootstrap/initializeCore.ts",
           "matches": 6,
           "lines": 153,
@@ -6273,14 +6541,8 @@
         {
           "file": "src/app/usecases/timer.usecase.ts",
           "matches": 6,
-          "lines": 55,
+          "lines": 56,
           "layer": "app"
-        },
-        {
-          "file": "src/shared/hooks/useFormState.ts",
-          "matches": 5,
-          "lines": 171,
-          "layer": "shared"
         },
         {
           "file": "src/app/store/slices/settings.slice.ts",
@@ -6295,16 +6557,16 @@
           "layer": "app"
         },
         {
+          "file": "src/main.ts",
+          "matches": 3,
+          "lines": 247,
+          "layer": "main.ts"
+        },
+        {
           "file": "src/app/store/slices/layout.slice.ts",
           "matches": 3,
           "lines": 243,
           "layer": "app"
-        },
-        {
-          "file": "src/main.ts",
-          "matches": 3,
-          "lines": 242,
-          "layer": "main.ts"
         },
         {
           "file": "src/app/store/useAppStore.ts",
@@ -6333,13 +6595,13 @@
         {
           "file": "src/app/ServiceManager.ts",
           "matches": 2,
-          "lines": 293,
+          "lines": 289,
           "layer": "app"
         },
         {
           "file": "src/app/store/slices/blocks.slice.ts",
           "matches": 2,
-          "lines": 231,
+          "lines": 230,
           "layer": "app"
         },
         {
@@ -6347,6 +6609,12 @@
           "matches": 2,
           "lines": 39,
           "layer": "core"
+        },
+        {
+          "file": "src/app/ServiceManager.services.ts",
+          "matches": 2,
+          "lines": 33,
+          "layer": "app"
         }
       ]
     },
@@ -6354,19 +6622,13 @@
       "id": "recordInputFlow",
       "label": "记录输入 / 提交流程",
       "description": "QuickInput、RecordInput、OutputPlanner、InputService、转换/另存等流程密度。",
-      "totalMatches": 81,
+      "totalMatches": 87,
       "files": [
         {
           "file": "src/core/services/InputService.ts",
-          "matches": 8,
-          "lines": 194,
+          "matches": 9,
+          "lines": 178,
           "layer": "core"
-        },
-        {
-          "file": "src/app/usecases/recordInput/workflows/RecordMigrationTransaction.ts",
-          "matches": 5,
-          "lines": 111,
-          "layer": "app"
         },
         {
           "file": "src/features/quickinput/modal/useQuickInputSubmit.ts",
@@ -6375,9 +6637,21 @@
           "layer": "features"
         },
         {
+          "file": "src/features/quickinput/modal/QuickInputModalContent.tsx",
+          "matches": 4,
+          "lines": 270,
+          "layer": "features"
+        },
+        {
+          "file": "src/main.ts",
+          "matches": 4,
+          "lines": 247,
+          "layer": "main.ts"
+        },
+        {
           "file": "src/app/usecases/index.ts",
           "matches": 4,
-          "lines": 111,
+          "lines": 112,
           "layer": "app"
         },
         {
@@ -6389,7 +6663,7 @@
         {
           "file": "src/app/usecases/recordInput/workflows/UpdateRecordWorkflow.ts",
           "matches": 4,
-          "lines": 96,
+          "lines": 97,
           "layer": "app"
         },
         {
@@ -6413,7 +6687,7 @@
         {
           "file": "src/core/services/ActionService.ts",
           "matches": 3,
-          "lines": 245,
+          "lines": 247,
           "layer": "core"
         },
         {
@@ -6425,20 +6699,32 @@
         {
           "file": "src/app/usecases/recordInput.usecase.ts",
           "matches": 3,
-          "lines": 126,
+          "lines": 204,
           "layer": "app"
+        },
+        {
+          "file": "src/platform/obsidian/protocols/EnergyProtocolHandler.ts",
+          "matches": 3,
+          "lines": 68,
+          "layer": "platform"
         },
         {
           "file": "src/core/recordInput/editStateResolver.ts",
           "matches": 2,
-          "lines": 330,
+          "lines": 316,
           "layer": "core"
         },
         {
           "file": "src/app/ServiceManager.ts",
           "matches": 2,
-          "lines": 293,
+          "lines": 289,
           "layer": "app"
+        },
+        {
+          "file": "src/core/recordInput/snapshot/OutputPlanner.ts",
+          "matches": 2,
+          "lines": 254,
+          "layer": "core"
         },
         {
           "file": "src/platform/obsidian/modals/AiBatchConfirmModal.tsx",
@@ -6447,33 +6733,15 @@
           "layer": "platform"
         },
         {
-          "file": "src/main.ts",
-          "matches": 2,
-          "lines": 242,
-          "layer": "main.ts"
-        },
-        {
-          "file": "src/features/quickinput/modal/QuickInputModalContent.tsx",
-          "matches": 2,
-          "lines": 230,
-          "layer": "features"
-        },
-        {
           "file": "src/core/types/recordInput.ts",
           "matches": 2,
+          "lines": 226,
+          "layer": "core"
+        },
+        {
+          "file": "src/features/timer/TimerService.ts",
+          "matches": 2,
           "lines": 214,
-          "layer": "core"
-        },
-        {
-          "file": "src/core/recordInput/snapshot/OutputPlanner.ts",
-          "matches": 2,
-          "lines": 183,
-          "layer": "core"
-        },
-        {
-          "file": "src/features/settings/layout/RendererService.ts",
-          "matches": 2,
-          "lines": 181,
           "layer": "features"
         }
       ]
@@ -6482,7 +6750,7 @@
       "id": "aiParsingFlow",
       "label": "AI 解析 / 检索流程",
       "description": "AI 自然语言解析、prompt、batch JSON、retrieval、命令归一化等逻辑密度。",
-      "totalMatches": 48,
+      "totalMatches": 56,
       "files": [
         {
           "file": "src/core/ai/AiNaturalLanguageRecordParser.ts",
@@ -6497,9 +6765,21 @@
           "layer": "features"
         },
         {
+          "file": "src/core/services/item/TaskCompletionMutation.ts",
+          "matches": 5,
+          "lines": 247,
+          "layer": "core"
+        },
+        {
           "file": "src/core/ai/AiParserNormalize.ts",
           "matches": 5,
           "lines": 118,
+          "layer": "core"
+        },
+        {
+          "file": "src/core/records/RecordRepository.ts",
+          "matches": 4,
+          "lines": 238,
           "layer": "core"
         },
         {
@@ -6521,10 +6801,10 @@
           "layer": "core"
         },
         {
-          "file": "src/features/settings/layout/LayoutRenderer.tsx",
+          "file": "src/app/dashboard/LayoutRenderer.tsx",
           "matches": 1,
-          "lines": 329,
-          "layer": "features"
+          "lines": 332,
+          "layer": "app"
         },
         {
           "file": "src/features/settings/components/LayoutEditorPanel.tsx",
@@ -6535,13 +6815,13 @@
         {
           "file": "src/main.ts",
           "matches": 1,
-          "lines": 242,
+          "lines": 247,
           "layer": "main.ts"
         },
         {
           "file": "src/features/settings/goalTemplates/goalTemplateCopy.ts",
           "matches": 1,
-          "lines": 188,
+          "lines": 187,
           "layer": "features"
         },
         {
@@ -6551,10 +6831,10 @@
           "layer": "features"
         },
         {
-          "file": "src/features/settings/views/runtime/TimelineView/TimelineViewModel.ts",
+          "file": "src/core/services/item/TaskSessionMutation.ts",
           "matches": 1,
-          "lines": 160,
-          "layer": "features"
+          "lines": 156,
+          "layer": "core"
         },
         {
           "file": "src/platform/obsidian/ObsidianAiHttpTransport.ts",
@@ -6563,27 +6843,21 @@
           "layer": "platform"
         },
         {
-          "file": "src/core/utils/array.ts",
+          "file": "src/features/views/runtime/TimelineView/TimelineViewModel.ts",
           "matches": 1,
-          "lines": 125,
-          "layer": "core"
+          "lines": 104,
+          "layer": "features"
         },
         {
-          "file": "src/features/settings/layout/CodeblockEmbedder.ts",
+          "file": "src/app/dashboard/CodeblockEmbedder.ts",
           "matches": 1,
-          "lines": 93,
-          "layer": "features"
+          "lines": 94,
+          "layer": "app"
         },
         {
           "file": "src/features/settings/goalTemplates/model/GoalTemplateThemeModel.ts",
           "matches": 1,
           "lines": 92,
-          "layer": "features"
-        },
-        {
-          "file": "src/features/settings/views/models/timelineViewModel.ts",
-          "matches": 1,
-          "lines": 82,
           "layer": "features"
         },
         {
@@ -6595,13 +6869,7 @@
         {
           "file": "src/core/services/TimerStateService.ts",
           "matches": 1,
-          "lines": 49,
-          "layer": "core"
-        },
-        {
-          "file": "src/core/services/StorageService.ts",
-          "matches": 1,
-          "lines": 48,
+          "lines": 71,
           "layer": "core"
         }
       ]
@@ -6612,19 +6880,8 @@
       "name": "handleClose",
       "files": [
         "src/features/settings/layout/DataFilterPanel.tsx",
-        "src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
+        "src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
         "src/shared/ui/components/FilterPopover.tsx",
-        "src/shared/ui/primitives/Modal.tsx"
-      ],
-      "fileCount": 4,
-      "totalDeclarations": 4
-    },
-    {
-      "name": "listener",
-      "files": [
-        "src/features/settings/layout/useLayoutItems.ts",
-        "src/features/settings/useViewData.ts",
-        "src/shared/hooks/useClickOutside.ts",
         "src/shared/ui/primitives/Modal.tsx"
       ],
       "fileCount": 4,
@@ -6634,7 +6891,7 @@
       "name": "emit",
       "files": [
         "src/core/utils/devLogger.ts",
-        "src/features/settings/views/runtime/excel-view/ExcelColumnToolbar.tsx",
+        "src/features/views/runtime/excel-view/ExcelColumnToolbar.tsx",
         "src/shared/utils/diagnosticConsole.ts"
       ],
       "fileCount": 3,
@@ -6643,9 +6900,9 @@
     {
       "name": "handleCellClick",
       "files": [
-        "src/features/settings/views/runtime/HeatmapView.tsx",
-        "src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
-        "src/features/settings/views/runtime/excel-view/ExcelCell.tsx"
+        "src/features/views/runtime/HeatmapView.tsx",
+        "src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx",
+        "src/features/views/runtime/excel-view/ExcelCell.tsx"
       ],
       "fileCount": 3,
       "totalDeclarations": 3
@@ -6701,6 +6958,16 @@
       "totalDeclarations": 3
     },
     {
+      "name": "listener",
+      "files": [
+        "src/app/dashboard/useLayoutItems.ts",
+        "src/app/dashboard/useViewData.ts",
+        "src/shared/ui/primitives/Modal.tsx"
+      ],
+      "fileCount": 3,
+      "totalDeclarations": 3
+    },
+    {
       "name": "normalize",
       "files": [
         "src/core/fields/TemplateFieldSanitizer.ts",
@@ -6711,11 +6978,11 @@
       "totalDeclarations": 3
     },
     {
-      "name": "push",
+      "name": "readNumber",
       "files": [
-        "src/core/goal/overview.ts",
-        "src/core/recordInput/editStateResolver.ts",
-        "src/core/utils/tagUtils.ts"
+        "src/core/energy/context.ts",
+        "src/core/energy/item.ts",
+        "src/core/utils/unknownRecord.ts"
       ],
       "fileCount": 3,
       "totalDeclarations": 3
@@ -6731,11 +6998,11 @@
       "totalDeclarations": 3
     },
     {
-      "name": "unique",
+      "name": "text",
       "files": [
-        "src/core/records/RecordNormalizer.ts",
-        "src/core/records/codec/MarkdownBlockCodec.ts",
-        "src/core/records/codec/MarkdownTaskCodec.ts"
+        "src/core/energy/recommendationCandidates.ts",
+        "src/core/energy/recommendationLearning.ts",
+        "src/features/views/models/energyTaskListModel.ts"
       ],
       "fileCount": 3,
       "totalDeclarations": 3
@@ -6743,8 +7010,8 @@
     {
       "name": "update",
       "files": [
+        "src/app/dashboard/LayoutRenderer.tsx",
         "src/features/aiinput/aiProgressNotice.ts",
-        "src/features/settings/layout/LayoutRenderer.tsx",
         "src/features/timer/TimerRow.tsx"
       ],
       "fileCount": 3,
@@ -6754,7 +7021,7 @@
       "name": "addField",
       "files": [
         "src/features/settings/input/FieldsEditor.tsx",
-        "src/features/settings/views/runtime/excel-view/ExcelColumnToolbar.tsx"
+        "src/features/views/runtime/excel-view/ExcelColumnToolbar.tsx"
       ],
       "fileCount": 2,
       "totalDeclarations": 2
@@ -6796,19 +7063,19 @@
       "totalDeclarations": 2
     },
     {
-      "name": "decodeMarkdownNumber",
+      "name": "dateFromOrdinal",
       "files": [
-        "src/core/records/codec/MarkdownBlockCodec.ts",
-        "src/core/records/codec/MarkdownTaskCodec.ts"
+        "src/core/energy/context.ts",
+        "src/core/energy/period.ts"
       ],
       "fileCount": 2,
       "totalDeclarations": 2
     },
     {
-      "name": "decodeMarkdownString",
+      "name": "dateOrdinal",
       "files": [
-        "src/core/records/codec/MarkdownBlockCodec.ts",
-        "src/core/records/codec/MarkdownTaskCodec.ts"
+        "src/core/energy/context.ts",
+        "src/core/energy/period.ts"
       ],
       "fileCount": 2,
       "totalDeclarations": 2
@@ -6832,15 +7099,6 @@
       "totalDeclarations": 2
     },
     {
-      "name": "escapeRegExp",
-      "files": [
-        "src/core/services/item/lineMetadata.ts",
-        "src/core/theme/themeMatching.ts"
-      ],
-      "fileCount": 2,
-      "totalDeclarations": 2
-    },
-    {
       "name": "fieldsHaveSameStructure",
       "files": [
         "src/core/goal/templateVariantDiff.ts",
@@ -6859,6 +7117,15 @@
       "totalDeclarations": 2
     },
     {
+      "name": "finiteNumber",
+      "files": [
+        "src/core/energy/recommendationLearning.ts",
+        "src/core/goal/order.ts"
+      ],
+      "fileCount": 2,
+      "totalDeclarations": 2
+    },
+    {
       "name": "firstNonEmptyText",
       "files": [
         "src/app/actions/recordCreate/heatmapCreateAction.ts",
@@ -6871,7 +7138,7 @@
       "name": "firstText",
       "files": [
         "src/core/utils/itemGrouping.ts",
-        "src/features/settings/views/models/heatmapViewModel.ts"
+        "src/features/views/models/heatmapViewModel.ts"
       ],
       "fileCount": 2,
       "totalDeclarations": 2
@@ -6922,24 +7189,6 @@
       "totalDeclarations": 2
     },
     {
-      "name": "handleCleanup",
-      "files": [
-        "src/features/settings/goalTemplates/GoalPresetMatrixWidget.tsx",
-        "src/features/settings/input/GoalManager.tsx"
-      ],
-      "fileCount": 2,
-      "totalDeclarations": 2
-    },
-    {
-      "name": "handleCopy",
-      "files": [
-        "src/features/aichat/components/MessageBubble.tsx",
-        "src/features/settings/input/TemplateVariableCopier.tsx"
-      ],
-      "fileCount": 2,
-      "totalDeclarations": 2
-    },
-    {
       "name": "handleDelete",
       "files": [
         "src/features/settings/data/ThemeMetadataManager.tsx",
@@ -6951,8 +7200,8 @@
     {
       "name": "handleDragEnd",
       "files": [
-        "src/features/settings/input/BlockManager.tsx",
-        "src/features/settings/layout/FreeformCanvas.tsx"
+        "src/app/dashboard/FreeformCanvas.tsx",
+        "src/features/settings/input/BlockManager.tsx"
       ],
       "fileCount": 2,
       "totalDeclarations": 2
@@ -6960,8 +7209,8 @@
     {
       "name": "handleEdit",
       "files": [
-        "src/features/settings/views/runtime/components/timeline/DayColumnBody.tsx",
-        "src/features/timer/TimerRow.tsx"
+        "src/features/timer/TimerRow.tsx",
+        "src/features/views/runtime/components/timeline/DayColumnBody.tsx"
       ],
       "fileCount": 2,
       "totalDeclarations": 2
@@ -7006,7 +7255,34 @@
       "name": "isOptionLikeValue",
       "files": [
         "src/core/semantics/option.ts",
-        "src/features/settings/views/runtime/excel-view/value.ts"
+        "src/features/views/runtime/excel-view/value.ts"
+      ],
+      "fileCount": 2,
+      "totalDeclarations": 2
+    },
+    {
+      "name": "itemCoreBlock",
+      "files": [
+        "src/core/recordInput/editStateResolver.ts",
+        "src/features/views/models/heatmapViewModel.ts"
+      ],
+      "fileCount": 2,
+      "totalDeclarations": 2
+    },
+    {
+      "name": "localSessionParts",
+      "files": [
+        "src/core/energy/context.ts",
+        "src/core/energy/patternSupport.ts"
+      ],
+      "fileCount": 2,
+      "totalDeclarations": 2
+    },
+    {
+      "name": "median",
+      "files": [
+        "src/core/energy/recommendationCandidates.ts",
+        "src/core/energy/recommendationLearning.ts"
       ],
       "fileCount": 2,
       "totalDeclarations": 2
@@ -7030,10 +7306,10 @@
       "totalDeclarations": 2
     },
     {
-      "name": "normalizeMetaKey",
+      "name": "normalizeGoalPath",
       "files": [
-        "src/core/records/codec/MarkdownBlockCodec.ts",
-        "src/core/records/codec/MarkdownTaskCodec.ts"
+        "src/core/energy/context.ts",
+        "src/core/goal/path.ts"
       ],
       "fileCount": 2,
       "totalDeclarations": 2
@@ -7052,15 +7328,6 @@
       "files": [
         "src/core/records/RecordNormalizer.ts",
         "src/features/settings/goalTemplates/goalTemplateMatrixModel.ts"
-      ],
-      "fileCount": 2,
-      "totalDeclarations": 2
-    },
-    {
-      "name": "normalizeText",
-      "files": [
-        "src/core/recordInput/mutationLocator.ts",
-        "src/core/utils/itemGrouping.ts"
       ],
       "fileCount": 2,
       "totalDeclarations": 2

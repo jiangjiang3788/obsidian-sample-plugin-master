@@ -11,14 +11,6 @@ export type {
   ResolveEnergyContextOptions,
 } from './context';
 
-export { buildEnergyTimeline } from './timeline';
-export type {
-  BuildEnergyTimelineOptions,
-  EnergyTimelineCoverage,
-  EnergyTimelineDay,
-  EnergyTimelineModel,
-  EnergyTimelinePoint,
-} from './timeline';
 
 export { buildEnergyEffects, classifyEnergyActivity } from './effects';
 export type {
@@ -59,24 +51,7 @@ export type {
   EnergyManagementState,
 } from './managementTypes';
 
-export { buildEnergyWeeklyReview } from './weekly';
-export type {
-  BuildEnergyWeeklyReviewOptions,
-  EnergyWeeklyActivityFinding,
-  EnergyWeeklyLongWorkFinding,
-  EnergyWeeklyMetricSummary,
-  EnergyWeeklyReview,
-  EnergyWeeklyReviewReadiness,
-} from './weeklyTypes';
 
-export { buildEnergyExperimentComparison } from './experiment';
-export type {
-  EnergyExperimentComparison,
-  EnergyExperimentConfig,
-  EnergyExperimentPeriodSummary,
-  EnergyExperimentReadiness,
-  EnergyExperimentTrend,
-} from './experimentTypes';
 
 export { buildEnergyDataQuality } from './quality';
 export type { BuildEnergyDataQualityOptions, EnergyDataQualityLevel, EnergyDataQualityModel } from './quality';
@@ -107,4 +82,5 @@ export { buildEnergyActionCandidates, buildEnergyActionCandidateResult, attachEn
 export type { EnergyActionCandidateBuildResult, EnergyCandidateDiagnostics, EnergyCandidateExclusionReason, BuildEnergyActionCandidatesOptions } from './recommendationCandidates';
 
 export { buildEnergyActionPolicyContext, resolveEnergyActionTiming } from './actionPolicy';
-export type { EnergyActionPolicyContext, EnergyActionTimingDecision } from './actionPolicy';
+export type { EnergyActionPolicyContext } from './recommendationTypes';
+export type { EnergyActionTimingDecision } from './actionPolicy';

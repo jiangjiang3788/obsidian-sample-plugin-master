@@ -1,7 +1,7 @@
-import { resolveFieldValue, readFieldValue, normalizeFieldKey } from '@/core/fields';
-import type { Item } from '@/core/types/schema';
+import { resolveFieldValue, readFieldValue, normalizeFieldKey } from '@/core/fields/public';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
-function makeItem(overrides: Partial<Item> = {}): Item {
+function makeItem(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: 'rec.01J00000000000000000000061',
     title: '标题',

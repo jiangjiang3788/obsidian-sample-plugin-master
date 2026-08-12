@@ -1,5 +1,5 @@
 import type { CoreBlockDefinition } from '@/core/blocks';
-import type { TemplateField } from '@/core/types/schema';
+import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { GoalDefinition, PeriodPolicy } from './types';
 import type { GoalTemplate } from './templates';
 import { isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from './period';
@@ -7,7 +7,7 @@ import { isSystemRecordContextField } from './templateVariant';
 import { compactText } from '@/core/semantics/text';
 
 export interface CompactGoalTemplateOptions {
-  coreBlock?: Pick<CoreBlockDefinition, 'id' | 'fields' | 'outputTemplate' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null;
+  coreBlock?: Pick<CoreBlockDefinition, 'id' | 'fields' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null;
   goal?: Pick<GoalDefinition, 'themePath'> | null;
 }
 
@@ -148,7 +148,6 @@ export function compactGoalTemplateForStorage(template: GoalTemplate, options: C
 
   if (coreBlock) {
     if (fieldsHaveSameStructure(template.fields, baseFields)) next.fields = undefined;
-    if (compactText(template.outputTemplate) === compactText(coreBlock.outputTemplate)) next.outputTemplate = undefined;
     if (compactText(template.targetFile) === compactText(coreBlock.targetFile)) next.targetFile = undefined;
     if (compactText(template.appendUnderHeader) === compactText(coreBlock.appendUnderHeader)) next.appendUnderHeader = undefined;
 
@@ -168,7 +167,6 @@ export function describeGoalTemplateStorageDiff(template: GoalTemplate): string[
   const parts: string[] = [];
   if (template.fields?.length) parts.push('字段覆盖');
   if (template.defaultValues && Object.keys(template.defaultValues).length) parts.push(`默认值 ${Object.keys(template.defaultValues).length}`);
-  if (template.outputTemplate) parts.push('输出覆盖');
   if (template.targetFile) parts.push('文件覆盖');
   if (template.appendUnderHeader) parts.push('标题覆盖');
   if (template.requiredFields?.length) parts.push('必填覆盖');

@@ -156,7 +156,6 @@ export function buildRetargetedGoalTemplate(input: {
     sortOrder: templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id).length * 10,
     enabled: sourceTemplate.enabled !== false,
     fields,
-    outputTemplate: targetBlock.outputTemplate,
     targetFile: targetBlock.targetFile,
     appendUnderHeader: targetBlock.appendUnderHeader,
     requiredFields: fields.filter((field) => field.required).map((field) => field.key).filter(Boolean),

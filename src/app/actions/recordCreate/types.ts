@@ -1,7 +1,7 @@
-import type { QuickInputModal } from '@/app/public';
+import type { QuickInputModal } from '@/app/ui/modals/QuickInputModal';
 import type { RecordInputSource } from '@core/recordInput/public';
 import type { ActionService } from '@core/services/public';
-import type { Item, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { RecordViewItem, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
 import type { Dayjs } from '@core/utils/public';
 import type { UiPort } from '@core/ports/public';
 
@@ -30,7 +30,7 @@ export interface StatisticsCreatePayload {
   /** 建议使用的核心 block，兼容后续更精确的 actionService 选择。 */
   preferredBlockId?: string;
   cellIdentifier?: StatisticsCellIdentifier | null;
-  blocks?: Item[];
+  blocks?: RecordViewItem[];
   title?: string;
 }
 
@@ -48,7 +48,7 @@ export interface HeatmapCreateParams {
   app: QuickInputApp;
   sourceBlockId?: string | null;
   date: string;
-  item?: Item;
+  item?: RecordViewItem;
   themePath?: string;
   goalPath?: string;
   goalId?: string;

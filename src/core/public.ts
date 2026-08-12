@@ -34,8 +34,8 @@ export type {
       GoalTemplateStorageRow,
     GoalSettings,
 } from './goal';
-export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath, getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder, buildGoalOverviewModel, makeStableGoalIdFromPath, resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy, DEFAULT_TEMPLATE_VARIANT_ID, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, normalizeTemplateVariantId, isDefaultTemplateVariant, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage, getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon, readGoalTemplateThemePath, goalTemplateHasCustomOverrides, inferGoalTemplateEditMode, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, getItemThemeKey, getItemThemeLabel, buildGoalThemeBreakdown, buildGoalBuckets } from './goal';
-export type { GoalPathParts, GoalOrderIndex, GoalOverviewModel, GoalOverviewRow, GoalOverviewMetricProgress, GoalOverviewCycleSummary, DerivedPeriod, TemplateVariantId, TemplateVariantIdentity, GoalTemplate, PeriodGranularity, PeriodPolicy, GoalBucket, GoalThemeBreakdownRow, CompactGoalTemplateOptions, GoalTemplateDisplayInfo, GoalTemplateEditMode } from './goal';
+export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath, getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder, makeStableGoalIdFromPath, resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy, DEFAULT_TEMPLATE_VARIANT_ID, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, normalizeTemplateVariantId, isDefaultTemplateVariant, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage, getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon, readGoalTemplateThemePath, goalTemplateHasCustomOverrides, inferGoalTemplateEditMode, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, getItemThemeKey, getItemThemeLabel, buildGoalThemeBreakdown, buildGoalBuckets } from './goal';
+export type { GoalPathParts, GoalOrderIndex, DerivedPeriod, TemplateVariantId, TemplateVariantIdentity, GoalTemplate, PeriodGranularity, PeriodPolicy, GoalBucket, GoalThemeBreakdownRow, CompactGoalTemplateOptions, GoalTemplateDisplayInfo, GoalTemplateEditMode } from './goal';
 
 export { ThemeMetadataResolver } from './themeMetadata';
 export type { ThemeMetadata } from './themeMetadata';
@@ -43,7 +43,7 @@ export type { ThemeMetadata } from './themeMetadata';
 //
 // -------------------- Utils（可复用纯能力） --------------------
 //
-export * from './utils';
+export * from './utils/public';
 export {
     DEFAULT_FREEFORM_LAYOUT_CONFIG,
     FREEFORM_COLLAPSED_HEIGHT,
@@ -63,8 +63,8 @@ export {
     resizeViewPlacement,
     resolveViewPlacements,
     snapFreeformValue,
-} from './layout';
-export type { FreeformItemSize } from './layout';
+} from './layout/public';
+export type { FreeformItemSize } from './layout/public';
 export { buildRecordSubmitFeedbackPresentation } from './recordInput/feedback';
 export {
     buildRecordSubmitRecoveryPresentation,
@@ -145,8 +145,6 @@ export {
     templateFieldTypeSupportsDefaultValue,
     templateFieldTypeUsesOptions,
     parseTagList,
-    runFieldSystemHealthChecks,
-    assertFieldSystemHealthy,
     readFieldValue,
     resolveFieldValue,
     splitHierarchyPath,
@@ -156,7 +154,7 @@ export {
     normalizeEditableFieldKey,
     CONTENT_FIELD_KEY,
     FULL_DATA_FIELD_KEY,
-} from './fields';
+} from './fields/public';
 export type {
     BuiltInFieldGuideGroup,
     BuiltInFieldGuideItem,
@@ -168,22 +166,19 @@ export type {
     FieldSemantic,
     FieldValueResolution,
     FieldValueSource,
-    FieldSystemCheckResult,
-    FieldSystemCheckStatus,
-    FieldSystemHealthReport,
     ImageFieldValue,
     FieldCommitMode,
     FieldEditDangerLevel,
     FieldEditPolicy,
     FieldEditValueSource,
     FieldEditorKind,
-} from './fields';
+} from './fields/public';
 
 //
 // -------------------- AI Module（模块级 public） --------------------
 // 注意：AI 子模块本身已经有 index.ts 作为 public barrel
 //
-export * from './ai';
+export * from './ai/public';
 
 // -------------------- Theme Tree (Unified) --------------------
 // 说明：这是“主题路径树/选择器”用的统一实现（core/theme）。
@@ -199,18 +194,18 @@ export type {
     FlatThemeTreeNode as ThemePathTreeFlatNode,
 } from './theme/ThemeTreeBuilder';
 
-export { parsePath, getRelativePath } from './theme/themePathParser';
+export { parsePath } from './theme/themePathParser';
 
 //
 
 // -------------------- Records（记录标准化/Codec） --------------------
-export { normalizeRecordItem, normalizeRecordItems } from './records';
+export { normalizeRecordItem, normalizeRecordItems } from './records/public';
 export type {
     RecordEntity,
     RecordFileContext,
     RecordLocationContext,
     RecordNormalizeContext,
-} from './records';
+} from './records/public';
 
 // -------------------- Progression（目标/成长反馈纯计算） --------------------
 export { computeProgression } from './progression/computeProgression';
@@ -238,7 +233,7 @@ export type {
 //
 export { DataStore } from './services/DataStore';
 export { InputService } from './services/InputService';
-export { ItemService } from './services/ItemService';
+export { ItemService } from './services/public';
 export { ActionService } from './services/ActionService';
 export { TimerStateService } from './services/TimerStateService';
 
@@ -325,7 +320,6 @@ export type { FileStatPort, FileStat } from './ports/FileStatPort';
 export { EVENTS_PORT_TOKEN } from './ports/EventsPort';
 export type { EventsPort, UnsubscribeFn } from './ports/EventsPort';
 
-export type { AppPort, AppVaultNamePort } from './ports/AppPort';
 export { MODAL_PORT_TOKEN } from './ports/ModalPort';
 export { MESSAGE_RENDER_PORT_TOKEN } from './ports/MessageRenderPort';
 export type { MessageRenderPort, RenderMessageArgs, MessageContentType } from './ports/MessageRenderPort';
@@ -350,4 +344,4 @@ export { setupCoreContainer } from './di/setupCore';
 // -------------------- Hooks（暂时放 core，后续可迁移到 shared/ui） --------------------
 //
 export { useTimelineZoom } from './hooks/useTimelineZoom';
-export { PROGRESS_VIEW_DEFAULT_CONFIG } from './config/viewConfigs';
+export { PROGRESS_VIEW_DEFAULT_CONFIG } from './config/views';

@@ -30,8 +30,7 @@ import {
 } from '@shared/ui/public';
 import { useState, useEffect } from 'preact/hooks';
 import { FieldsEditor } from './FieldsEditor';
-import type { BlockTemplate } from '@core/types/public';
-import { TemplateVariableCopier } from './TemplateVariableCopier';
+import type { RecordCaptureTemplate } from '@core/types/public';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -39,7 +38,7 @@ import type { UseCases } from '@/app/public';
 
 // P1: 组件 props 接收 useCases
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }: {
-    block: BlockTemplate;
+    block: RecordCaptureTemplate;
     openId: string | null;
     setOpenId: (id: string | null) => void;
     handleDelete: (id: string, name: string) => void | Promise<void>;
@@ -79,13 +78,12 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
 }
 
 // P1: 组件 props 接收 useCases
-function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseCases }) {
+function BlockEditor({ block, useCases }: { block: RecordCaptureTemplate, useCases: UseCases }) {
     const [localBlock, setLocalBlock] = useState(block);
-    const isTaskBlock = block.id === 'core.task';
     useEffect(() => { setLocalBlock(block); }, [block]);
     // P1: 通过 UseCase 层更新 Block
-    const handleUpdate = (updates: Partial<BlockTemplate>) => { useCases.blocks.updateBlock(block.id, updates); };
-    const handleBlur = (key: keyof BlockTemplate) => {
+    const handleUpdate = (updates: Partial<RecordCaptureTemplate>) => { useCases.blocks.updateBlock(block.id, updates); };
+    const handleBlur = (key: keyof RecordCaptureTemplate) => {
         if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] });
     };
     return (
@@ -129,15 +127,8 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
             </Box>
             <Divider />
             <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" className="think-block-editor__output-header">
-                    <Typography variant="h6" className="think-block-editor__title">输出模板</Typography>
-                    {!isTaskBlock ? <TemplateVariableCopier block={localBlock} /> : null}
-                </Stack>
-                {isTaskBlock ? (
-                    <Typography variant="body2" color="text.secondary">Task v2 固定由 Record Codec 写入 Block；这里不再提供 Markdown Task 输出 grammar 编辑。</Typography>
-                ) : (
-                    <TextField label="输出模板" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" className="think-block-editor__template" />
-                )}
+                <Typography variant="h6" className="think-block-editor__title">存储格式</Typography>
+                <Typography variant="body2" color="text.secondary">Canonical Record 的 Markdown Block 由 RecordSchemaDefinition + Record Codec 统一生成；这里仅配置字段、默认值和保存位置。</Typography>
             </Box>
         </Stack>
     );

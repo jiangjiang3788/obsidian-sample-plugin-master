@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { asTaskSessionRecord } from '../records/task/taskSession';
 import { classifyEnergyActivity } from './effects';
 import type { EnergyActionCandidate, EnergyActionHistoricalEffect } from './recommendationTypes';
@@ -69,7 +69,7 @@ function aggregate(rows: FeedbackRow[], keyOf: (row: FeedbackRow) => string): Ma
   }]));
 }
 
-function buildFeedbackRows(items: Item[]): FeedbackRow[] {
+function buildFeedbackRows(items: RecordViewItem[]): FeedbackRow[] {
   const byId = new Map(items.map((item) => [item.id, item]));
   const rows: FeedbackRow[] = [];
   for (const item of items) {
@@ -107,7 +107,7 @@ function recoveryEntries(
 }
 
 /** Persistent TaskSession feedback is the only recommendation-execution history source. */
-export function buildEnergyRecommendationLearning(items: Item[]): EnergyRecommendationLearningModel {
+export function buildEnergyRecommendationLearning(items: RecordViewItem[]): EnergyRecommendationLearningModel {
   const rows = buildFeedbackRows(items);
   const byTaskId = aggregate(rows, (row) => row.taskId);
   const bySeriesId = aggregate(rows.filter((row) => !!row.seriesId), (row) => row.seriesId || '');

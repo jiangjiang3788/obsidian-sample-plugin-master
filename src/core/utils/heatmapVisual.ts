@@ -1,5 +1,5 @@
 // src/core/utils/heatmapVisual.ts
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 export interface HeatmapRatingOptionLike {
   value?: unknown;
@@ -26,7 +26,7 @@ function firstNonEmptyText(...values: unknown[]): string {
   return '';
 }
 
-function readExtra(item: Item | undefined, key: string): unknown {
+function readExtra(item: RecordViewItem | undefined, key: string): unknown {
   return (item as any)?.extra?.[key];
 }
 
@@ -44,7 +44,7 @@ export function buildHeatmapRatingMapping(options?: HeatmapRatingOptionLike[] | 
   return mapping;
 }
 
-export function readHeatmapRatingText(item: Item | undefined): string {
+export function readHeatmapRatingText(item: RecordViewItem | undefined): string {
   if (!item) return '';
   return firstNonEmptyText(
     (item as any).rating,
@@ -53,7 +53,7 @@ export function readHeatmapRatingText(item: Item | undefined): string {
   );
 }
 
-export function readHeatmapVisualText(item: Item | undefined): string {
+export function readHeatmapVisualText(item: RecordViewItem | undefined): string {
   if (!item) return '';
   return firstNonEmptyText(
     (item as any).pintu,
@@ -65,7 +65,7 @@ export function readHeatmapVisualText(item: Item | undefined): string {
   );
 }
 
-export function getHeatmapItemVisualValue(item: Item | undefined, ratingMapping?: Map<string, string>): string | null {
+export function getHeatmapItemVisualValue(item: RecordViewItem | undefined, ratingMapping?: Map<string, string>): string | null {
   if (!item) return null;
   const directVisual = readHeatmapVisualText(item);
   if (directVisual) return directVisual;
@@ -75,7 +75,7 @@ export function getHeatmapItemVisualValue(item: Item | undefined, ratingMapping?
   return ratingMapping?.get(rating) || rating;
 }
 
-export function getLatestHeatmapVisualValue(items: Item[] | undefined, ratingMapping?: Map<string, string>): string | null {
+export function getLatestHeatmapVisualValue(items: RecordViewItem[] | undefined, ratingMapping?: Map<string, string>): string | null {
   if (!items || !items.length) return null;
   const latestItemWithValue = [...items].reverse().find((item) => !!getHeatmapItemVisualValue(item, ratingMapping));
   return getHeatmapItemVisualValue(latestItemWithValue, ratingMapping);

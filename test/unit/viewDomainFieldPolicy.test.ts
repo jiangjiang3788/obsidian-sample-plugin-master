@@ -1,5 +1,5 @@
 import { normalizeViewFilters, normalizeViewGroupFields, normalizeDisplayFields, normalizeViewConfigDomain, readFieldValue } from '@/core/public';
-import type { Item } from '@/core/public';
+import type { RecordViewItem } from '@/core/public';
 
 describe('view domain field policy', () => {
   it('converts generic category filters into canonical coreBlock filters', () => {
@@ -37,7 +37,7 @@ describe('view domain field policy', () => {
       id: 'task.01J00000000000000000000044', schemaVersion: 2, coreBlock: 'task', status: 'done',
       title: 'done task', content: 'done task', tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
       seriesId: 'taskseries.01J00000000000000000000044', recurrenceInfo: { unit: 'week', interval: 1, anchor: 'scheduled' },
-    } as Item;
+    } as RecordViewItem;
     expect(readFieldValue(item, 'status')).toBe('done');
     expect(readFieldValue(item, 'cadence')).toBe('week');
     expect(readFieldValue(item, 'recurrence')).toBe('every week');

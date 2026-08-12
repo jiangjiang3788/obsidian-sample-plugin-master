@@ -1,5 +1,5 @@
 import type { RecordSubmitResult } from '@/core/types/recordInput';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { DataStore } from '@core/services/DataStore';
 
 export interface RecordRefreshPlan {
@@ -21,8 +21,8 @@ export function normalizeRecordRefreshPlan(plan: RecordRefreshPlan): RecordRefre
 export async function applyRecordRefreshPlan(
   dataStore: DataStore,
   plan: RecordRefreshPlan,
-): Promise<Map<string, Item[]>> {
-  const scannedByPath = new Map<string, Item[]>();
+): Promise<Map<string, RecordViewItem[]>> {
+  const scannedByPath = new Map<string, RecordViewItem[]>();
   const normalizedPlan = normalizeRecordRefreshPlan(plan);
 
   for (const path of normalizedPlan.scanPaths) {

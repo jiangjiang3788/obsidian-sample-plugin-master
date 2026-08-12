@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Checkbox, FormControlLabel, SimpleSelect, TextField } from '@shared/ui/public';
-import type { ViewEditorProps } from './registry';
+import type { ViewEditorProps } from './ViewEditorProps';
 import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 

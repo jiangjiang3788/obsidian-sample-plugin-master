@@ -1,7 +1,7 @@
 {
-  "version": "V31-deep-refactor-final-locked",
+  "version": "record-platform-current-locked",
   "mode": "final-locked-budget",
-  "notes": "V31 seals the V26-V31 deep convergence pass. The budget locks the current large-file, root-public, module-facade and explicit-any surface. Future development must lower these numbers or document an intentional budget change.",
+  "notes": "Current single-user maintenance budget. Future changes should lower these limits or explicitly justify an intentional budget change.",
   "budgets": {
     "largestFileLines": 480,
     "filesOver500Lines": 0,

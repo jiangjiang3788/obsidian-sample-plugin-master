@@ -1,4 +1,4 @@
-import type { ViewName } from '@/core/types/schema';
+import type { ViewName } from '@/core/view/ViewConfig';
 
 /** StatisticsView 的默认配置。 */
 export interface StatisticsViewConfig {
@@ -60,13 +60,7 @@ export interface EnergyViewConfig {
   /** 当前精力的个人化管理候选与保存力量护栏。 */
   showManagement: boolean;
   /** 最近一周自动复盘。 */
-  showWeeklyReview: boolean;
   /** 轻量 N-of-1 前后比较。 */
-  showExperiment: boolean;
-  experimentName: string;
-  experimentHypothesis: string;
-  experimentInterventionDate: string;
-  experimentWindowDays: number;
 }
 
 

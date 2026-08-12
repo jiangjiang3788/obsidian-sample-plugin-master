@@ -3,6 +3,15 @@ export type EnergyActionSource = 'task' | 'plan' | 'habit' | 'activity' | 'manua
 export type EnergyActionLoad = 'low' | 'medium' | 'high';
 export type EnergyRecommendationEvidence = 'personal' | 'metadata' | 'fallback';
 
+
+export interface EnergyActionPolicyContext {
+  /** Completed/recorded task minutes for the current day across goals. */
+  dailyTaskMinutes: number;
+  /** True only when observed load or personal stop guardrails justify preserving capacity. */
+  preserveCapacityRisk: boolean;
+  preserveCapacityReason?: string;
+}
+
 export interface EnergyActionHistoricalEffect {
   /** Observed before/after delta from the user's own history. Positive means recovery-like. */
   meanDelta: number;
@@ -46,7 +55,7 @@ export interface EnergyRecommendationContext {
   lowThreshold?: number;
   highThreshold?: number;
   maximumRecommendations?: number;
-  actionPolicy?: import('./actionPolicy').EnergyActionPolicyContext;
+  actionPolicy?: EnergyActionPolicyContext;
 }
 
 export interface EnergyRecommendedAction {

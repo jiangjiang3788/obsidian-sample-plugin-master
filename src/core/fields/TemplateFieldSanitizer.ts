@@ -1,5 +1,5 @@
 // src/core/fields/TemplateFieldSanitizer.ts
-import type { TemplateField, TemplateFieldOption } from '@/core/types/schema';
+import type { TemplateField, TemplateFieldOption } from '@/core/recordInput/CaptureTemplate';
 import type { FieldInputType } from './FieldTypes';
 import { makeSafeCustomFieldName } from './CoreFieldCatalog';
 

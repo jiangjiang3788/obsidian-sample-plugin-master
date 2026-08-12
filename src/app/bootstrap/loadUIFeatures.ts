@@ -1,4 +1,4 @@
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import { devError } from '@core/utils/public';
 import { container } from 'tsyringe';
 import { EVENTS_PORT_TOKEN, type EventsPort } from '@core/ports/public';
@@ -7,7 +7,7 @@ import { FeatureLoader } from '@/app/FeatureLoader';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 
 export async function loadUIFeatures(opts: {
-    plugin: ThinkPlugin;
+    plugin: PluginHost;
     services: ServiceManagerServices;
     scanDataPromise: Promise<void> | null;
     getFeatureLoader: () => FeatureLoader | null;

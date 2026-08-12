@@ -4,7 +4,7 @@
  * ---------------------------------------------------------------
  * 目的：
  * - 先把路线图中的“目标闭环”概念落成 core 层稳定类型；
- * - 不替换现有 Item / Block / View / QuickInput 主链；
+ * - 不替换现有 RecordViewItem / Block / View / QuickInput 主链；
  * - 后续 UI、统计、复盘、迁移逻辑只能围绕这些类型增量展开。
  */
 
@@ -12,12 +12,8 @@ export type GoalId = string;
 
 export type GoalStatus = 'active' | 'paused' | 'completed' | 'archived';
 export type CycleGranularity = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
-export type PeriodGranularity = 'week' | 'month' | 'quarter' | 'year';
-
-export interface PeriodPolicy {
-  enabled: boolean;
-  granularity: PeriodGranularity;
-}
+export type { PeriodGranularity, PeriodPolicy } from '@/core/period/PeriodPolicy';
+import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 
 export type GoalMetricDirection = 'increase' | 'decrease' | 'maintain' | 'boolean';
 
@@ -66,8 +62,7 @@ export interface GoalTemplateStorageRow {
   /** 只有计划 / 总结类记录预设才启用周期。 */
   periodPolicy?: PeriodPolicy;
   /** 目标专属字段覆盖。为空时继承核心 block / 主题模板。 */
-  fields?: import('@/core/types/schema').TemplateField[];
-  outputTemplate?: string;
+  fields?: TemplateField[];
   targetFile?: string;
   appendUnderHeader?: string;
   defaultValues?: Record<string, unknown>;

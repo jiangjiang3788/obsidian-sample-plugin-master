@@ -4,10 +4,10 @@ import {
   formatTaskRecurrence,
   isTaskRecurring,
   normalizeRecurrenceInfo,
-} from '@core/records/task';
-import type { Item } from '@core/types/public';
+} from '@core/records/public';
+import type { RecordViewItem } from '@core/types/public';
 
-function task(seriesId?: string): Item {
+function task(seriesId?: string): RecordViewItem {
   return {
     id: 'task.01J00000000000000000000000',
     schemaVersion: 2,
@@ -21,7 +21,7 @@ function task(seriesId?: string): Item {
     created: 0,
     modified: 0,
     extra: {},
-  } as Item;
+  } as RecordViewItem;
 }
 
 describe('Task recurrence v2', () => {
@@ -46,4 +46,14 @@ describe('Task recurrence v2', () => {
     )).toEqual({ scheduledDate: '2026-08-18', startDate: '2026-08-17', dueDate: '2026-08-19' });
     expect(addRecurrenceToDate('2026-08-11', { unit: 'day', interval: 3, anchor: 'scheduled' })).toBe('2026-08-14');
   });
+
+  it('supports quarter recurrence and month-end boundaries', () => {
+    expect(addRecurrenceToDate('2026-01-10', { unit: 'quarter', interval: 1, anchor: 'scheduled' })).toBe('2026-04-10');
+    expect(buildNextOccurrenceDates(
+      { scheduledDate: '2026-01-31' },
+      { unit: 'month', interval: 1, anchor: 'scheduled' },
+      '2026-01-31T10:00:00Z',
+    ).scheduledDate).toBe('2026-02-28');
+  });
+
 });

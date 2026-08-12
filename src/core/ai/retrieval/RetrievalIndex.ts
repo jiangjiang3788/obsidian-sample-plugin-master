@@ -1,5 +1,5 @@
 import MiniSearch from 'minisearch';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
 import type { SearchIndexDocument } from './RetrievalTypes';
 import { SEARCH_FIELDS, STORE_FIELDS } from './RetrievalTypes';
@@ -28,7 +28,7 @@ export function createRetrievalMiniSearch(): MiniSearch<SearchIndexDocument> {
     });
 }
 
-export function itemToSearchDocument(item: Item): SearchIndexDocument {
+export function itemToSearchDocument(item: RecordViewItem): SearchIndexDocument {
     return {
         id: item.id,
         title: normalizeRetrievalText(readFieldValue(item, 'title')),

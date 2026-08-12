@@ -1,24 +1,8 @@
-import type { Item } from '@/core/types/schema';
+import type { RecordEntity, TaskRecordEntity, TaskSessionRecordEntity as RuntimeTaskSessionRecord } from '@/core/records/RecordEntity';
 import type { TaskSessionCreateInput, TaskSessionResult, TaskSessionSource } from '@/core/types/timer';
 
 export type { TaskSessionCreateInput, TaskSessionResult, TaskSessionSource } from '@/core/types/timer';
-
-export interface TaskSessionRecord extends Item {
-  coreBlock: 'task-session';
-  taskId: string;
-  sessionStartedAt: string;
-  sessionEndedAt: string;
-  sessionDurationMinutes: number;
-  sessionResult: TaskSessionResult;
-  sessionSource: TaskSessionSource;
-  suggestedDurationMinutes?: number;
-  startEnergyRecordId?: string;
-  endEnergyRecordId?: string;
-  energyDelta?: number;
-  brainDelta?: number;
-  physicalDelta?: number;
-}
-
+export type TaskSessionRecord = RuntimeTaskSessionRecord;
 
 export function normalizeTaskSessionDurationMinutes(value: unknown): number | null {
   const number = Number(value);
@@ -26,7 +10,7 @@ export function normalizeTaskSessionDurationMinutes(value: unknown): number | nu
   return Math.round(number * 100) / 100;
 }
 
-export function buildTaskSessionFields(task: Item, input: TaskSessionCreateInput): Record<string, unknown> {
+export function buildTaskSessionFields(task: TaskRecordEntity, input: TaskSessionCreateInput): Record<string, unknown> {
   const durationMinutes = normalizeTaskSessionDurationMinutes(input.durationMinutes);
   if (durationMinutes == null) throw new Error('task_session_duration_invalid');
   if (!input.startedAt || !Number.isFinite(Date.parse(input.startedAt))) throw new Error('task_session_started_at_invalid');
@@ -51,13 +35,14 @@ export function buildTaskSessionFields(task: Item, input: TaskSessionCreateInput
   };
 }
 
-export function asTaskSessionRecord(item: Item | null | undefined): TaskSessionRecord | null {
-  if (!item || item.coreBlock !== 'task-session') return null;
-  if (!item.taskId) return null;
-  if (!item.sessionStartedAt || !Number.isFinite(Date.parse(item.sessionStartedAt))) return null;
-  if (!item.sessionEndedAt || !Number.isFinite(Date.parse(item.sessionEndedAt))) return null;
-  if (normalizeTaskSessionDurationMinutes(item.sessionDurationMinutes) == null) return null;
-  if (!['work-block-ended', 'task-completed'].includes(String(item.sessionResult || ''))) return null;
-  if (!['timer', 'energy-view', 'unknown'].includes(String(item.sessionSource || ''))) return null;
-  return item as TaskSessionRecord;
+export function asTaskSessionRecord(record: RecordEntity | null | undefined): TaskSessionRecord | null {
+  if (!record || record.coreBlock !== 'task-session') return null;
+  const candidate = record as Partial<TaskSessionRecord>;
+  if (!candidate.taskId) return null;
+  if (!candidate.sessionStartedAt || !Number.isFinite(Date.parse(candidate.sessionStartedAt))) return null;
+  if (!candidate.sessionEndedAt || !Number.isFinite(Date.parse(candidate.sessionEndedAt))) return null;
+  if (normalizeTaskSessionDurationMinutes(candidate.sessionDurationMinutes) == null) return null;
+  if (!['work-block-ended', 'task-completed'].includes(String(candidate.sessionResult || ''))) return null;
+  if (!['timer', 'energy-view', 'unknown'].includes(String(candidate.sessionSource || ''))) return null;
+  return record as TaskSessionRecord;
 }

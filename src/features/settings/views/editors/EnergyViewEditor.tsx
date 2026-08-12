@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { Checkbox, FormControlLabel, Stack, TextField, Typography } from '@shared/ui/public';
 import { ENERGY_VIEW_DEFAULT_CONFIG } from '@core/view/public';
-import type { ViewEditorProps } from './registry';
+import type { ViewEditorProps } from './ViewEditorProps';
 
 export { ENERGY_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 

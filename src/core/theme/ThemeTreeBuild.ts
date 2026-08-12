@@ -1,4 +1,4 @@
-import type { ThemeDefinition } from '@/core/types/schema';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import type { BuildThemeTreeOptions, ThemeTreeNode } from './ThemeTreeTypes';
 
 function getOrder(node: ThemeTreeNode): number | null {

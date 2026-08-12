@@ -1,5 +1,5 @@
 // src/core/fields/TemplateFieldAdapter.ts
-import type { BlockTemplate, TemplateField } from '@/core/types/schema';
+import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { FieldInputType, FieldSemantic } from './FieldTypes';
 import { normalizeHierarchyPath, splitHierarchyPath } from './pathSemantics';
 import { findMatchingOption, isOptionLikeValue, readOptionText, type OptionLikeValue } from '@/core/semantics/option';
@@ -27,6 +27,7 @@ const KNOWN_SEMANTICS = new Set<FieldSemantic>([
   'goalPath',
   'cycleId',
   'coreBlock',
+  'recordSubtype',
   'status',
   'date',
   'startTime',
@@ -74,6 +75,7 @@ export function getTemplateFieldSemantic(field: Partial<TemplateField> | null | 
   if (templateFieldMatches(field, ['目标路径', 'goalPath'])) return 'goalPath';
   if (templateFieldMatches(field, ['周期ID', 'cycleId'])) return 'cycleId';
   if (templateFieldMatches(field, ['核心Block', 'coreBlock'])) return 'coreBlock';
+  if (templateFieldMatches(field, ['记录子类型', 'recordSubtype', 'subtype'])) return 'recordSubtype';
   if (templateFieldMatches(field, ['目标'])) return 'goals';
   if (templateFieldMatches(field, ['状态', 'status'])) return 'status';
   if (templateFieldMatches(field, ['日期', 'date'])) return 'date';
@@ -339,7 +341,7 @@ function applyCoreTemplateAliases(data: Record<string, unknown>, field: Partial<
   if (directKey) setIfMeaningful(data, directKey, value);
 }
 
-export function normalizeTemplateRenderData(template: Pick<BlockTemplate, 'fields'>, formData: Record<string, unknown>): Record<string, unknown> {
+export function normalizeTemplateRenderData(template: Pick<RecordCaptureTemplate, 'fields'>, formData: Record<string, unknown>): Record<string, unknown> {
   const normalizedData: Record<string, unknown> = { ...formData };
   for (const field of template.fields || []) {
     const raw = normalizedData[field.key] ?? normalizedData[field.label || ''];

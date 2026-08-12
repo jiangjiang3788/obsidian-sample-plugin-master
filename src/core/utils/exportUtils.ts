@@ -1,4 +1,5 @@
-import { Item, readField } from '@/core/types/schema';
+import { RecordViewItem } from '@/core/records/RecordEntity';
+import { readField } from '@/core/fields/ViewFieldCatalog';
 import { getFieldDefinition } from '@/core/fields/FieldRegistry';
 import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
 import { getTaskStatus } from '@/core/records/task/taskStatus';
@@ -11,7 +12,7 @@ import {
     TIMELINE_EXPORT_CONFIG,
     TABLE_EXPORT_CONFIG,
     ExportViewConfig 
-} from '@/core/config/viewConfigs';
+} from '@/core/config/views';
 
 /**
  * 根据视图类型获取对应的导出配置
@@ -31,14 +32,14 @@ export function getExportConfigByViewType(viewType: string): ExportViewConfig {
 }
 
 /**
- * 将 Item 数组导出为 Markdown 格式。
+ * 将 RecordViewItem 数组导出为 Markdown 格式。
  * 支持基于配置的分组和自定义字段输出。
  * 
- * @param items - 要导出的 Item 数组。
+ * @param items - 要导出的 RecordViewItem 数组。
  * @param config - 导出配置，默认为 BLOCK_EXPORT_DEFAULT_CONFIG。
  * @returns Markdown 格式的字符串。
  */
-export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = BLOCK_EXPORT_DEFAULT_CONFIG): string {
+export function exportItemsToMarkdown(items: RecordViewItem[], config: ExportViewConfig = BLOCK_EXPORT_DEFAULT_CONFIG): string {
     const lines: string[] = [];
     const UNGROUPED_KEY = '未分类';
 
@@ -55,7 +56,7 @@ export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = 
         return text ? [text] : [UNGROUPED_KEY];
     };
 
-    const groupRecursively = (itemsToGroup: Item[], groupFields: string[] | undefined, level: number): { key: string; items: Item[]; children?: any[] }[] => {
+    const groupRecursively = (itemsToGroup: RecordViewItem[], groupFields: string[] | undefined, level: number): { key: string; items: RecordViewItem[]; children?: any[] }[] => {
         if (!groupFields || level >= groupFields.length) {
             return [{
                 key: UNGROUPED_KEY,
@@ -64,7 +65,7 @@ export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = 
         }
 
         const field = groupFields[level];
-        const map = new Map<string, Item[]>();
+        const map = new Map<string, RecordViewItem[]>();
 
         itemsToGroup.forEach(item => {
             const keys = field ? normalizeExportGroupKeys(readField(item, field)) : [UNGROUPED_KEY];
@@ -76,7 +77,7 @@ export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = 
             });
         });
 
-        const results: { key: string; items: Item[]; children?: any[] }[] = [];
+        const results: { key: string; items: RecordViewItem[]; children?: any[] }[] = [];
         map.forEach((groupItems, key) => {
             const children = groupRecursively(groupItems, groupFields, level + 1);
             // 如果还有下一层字段，则 children 中会包含具体 items
@@ -96,7 +97,7 @@ export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = 
     /**
      * 展平分组树为有层级标题的 Markdown
      */
-    const renderGroupTree = (nodes: { key: string; items: Item[]; children?: any[] }[], level: number) => {
+    const renderGroupTree = (nodes: { key: string; items: RecordViewItem[]; children?: any[] }[], level: number) => {
         nodes.forEach((node, groupIndex) => {
             const isRootLevel = level === 0;
 
@@ -137,9 +138,9 @@ export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = 
 }
 
 /**
- * 格式化 Block 类型的 Item
+ * 格式化 Block 类型的 RecordViewItem
  */
-function formatBlockItem(item: Item, index: number, config: ExportViewConfig): string[] {
+function formatBlockItem(item: RecordViewItem, index: number, config: ExportViewConfig): string[] {
     const lines: string[] = [];
 
     // 1. 构建 ID 行 (第一行)
@@ -205,7 +206,7 @@ function formatBlockItem(item: Item, index: number, config: ExportViewConfig): s
  * Export a Task using canonical domain fields.
  * Export is presentation only; it is not a storage/round-trip codec.
  */
-function formatTaskItem(item: Item): string {
+function formatTaskItem(item: RecordViewItem): string {
     const status = getTaskStatus(item) || 'unknown';
     const content = String(item.content || item.editableText || item.title || '').trim() || '未命名任务';
     const lines = [`- **任务** ${content}`];

@@ -5,7 +5,7 @@
  * 这些 handler 由 feature 层桥接（例如 LayoutRenderer）。
  */
 
-import type { EnergyTaskExecutionStart, Item, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { EnergyTaskExecutionStart, RecordViewItem, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
 import type { MessageRenderPort } from '@core/ports/public';
 
 export type MarkDoneHandler = (id: string) => void;
@@ -15,12 +15,12 @@ export type NoticeHandler = (message: string) => void;
 export type CategoryColorMap = Record<string, string>;
 export type UpdateCategoryColorsHandler = (nextColors: CategoryColorMap) => void | Promise<void>;
 export type ResolveResourcePathHandler = (path: string) => string;
-export type OpenRecordOriginHandler = (item: Item) => void | Promise<void>;
+export type OpenRecordOriginHandler = (item: RecordViewItem) => void | Promise<void>;
 
 export interface StatisticsPopoverRequest {
   widgetId: string;
   title: string;
-  blocks: Item[];
+  blocks: RecordViewItem[];
   module: ViewInstance;
   timerService: TimerController;
   timers: any[];
@@ -39,7 +39,7 @@ export type OpenStatisticsPopoverHandler = (request: StatisticsPopoverRequest) =
 export type CloseStatisticsPopoverHandler = (widgetId: string) => void;
 
 
-export type OpenRecordHandler = (item: Item) => void | Promise<void>;
+export type OpenRecordHandler = (item: RecordViewItem) => void | Promise<void>;
 
 /**
  * shared/ui 只表达“在时间轴某一天/时刻创建记录”的意图。
@@ -59,7 +59,7 @@ export type OpenTimelineCreateHandler = (payload: TimelineCreatePayload) => void
 export interface HeatmapCreateRequest {
   sourceBlockId: string;
   date: string;
-  item?: Item;
+  item?: RecordViewItem;
   themePath?: string;
   goalPath?: string;
   goalId?: string;
@@ -72,9 +72,9 @@ export type OpenHeatmapCreateHandler = (request: HeatmapCreateRequest) => void;
 
 export interface OpenCheckinManagerRequest {
   date: string;
-  items: Item[];
+  items: RecordViewItem[];
   onAddRecord: () => void;
-  onDeleteRecord?: (item: Item) => Promise<boolean> | boolean | void;
+  onDeleteRecord?: (item: RecordViewItem) => Promise<boolean> | boolean | void;
 }
 
 export type OpenCheckinManagerHandler = (request: OpenCheckinManagerRequest) => void;
@@ -102,7 +102,7 @@ export interface StatisticsQuickCreatePayload {
     quarter?: number;
     year?: number;
   } | null;
-  blocks?: Item[];
+  blocks?: RecordViewItem[];
   title?: string;
 }
 

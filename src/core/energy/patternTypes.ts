@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 export type EnergyPatternEvidence = 'insufficient' | 'exploratory' | 'supported';
 export type EnergyPatternTrend = 'up' | 'down' | 'stable' | 'mixed' | 'insufficient';
@@ -86,7 +86,7 @@ export interface EnergyPatternAnalytics {
 
 export interface BuildEnergyPatternsOptions {
   /** Internal TaskSession/evidence records; Energy daypart points still come from the primary items argument. */
-  activityRecords?: Item[];
+  activityRecords?: RecordViewItem[];
   analysisWindowDays?: number;
   sessionGapMinutes?: number;
   beforeSessionWindowMinutes?: number;
@@ -106,11 +106,11 @@ export interface EnergyPatternPoint {
   score: number;
   brainScore?: number;
   physicalScore?: number;
-  item: Item;
+  item: RecordViewItem;
 }
 
 export interface EnergyPatternActivityInterval {
-  item: Item;
+  item: RecordViewItem;
   startAbsolute: number;
   endAbsolute: number;
   durationMinutes: number;
@@ -120,5 +120,5 @@ export interface EnergyPatternWorkSession {
   startAbsolute: number;
   endAbsolute: number;
   durationMinutes: number;
-  items: Item[];
+  items: RecordViewItem[];
 }

@@ -3,13 +3,13 @@
 // Feature registration (QuickInput)
 // ---------------------------------------------------------------------------
 
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import type { FeatureRegistry, UIFeatureBootContext } from '@capabilities';
 
 import { setup } from './index';
 
 export interface QuickInputFeatureDeps {
-    plugin: ThinkPlugin;
+    plugin: PluginHost;
 }
 
 export function registerQuickInputFeature(

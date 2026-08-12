@@ -35,7 +35,8 @@ import type { DataStore, InputService, ItemService, TimerStateService } from '@c
 /**
  * Zustand Store 类型（用于 createUseCases 参数）
  */
-export type AppStoreApi = ReturnType<typeof import('@/app/store/useAppStore').createAppStore>;
+export type { AppStoreApi } from './AppStoreApi';
+import type { AppStoreApi } from './AppStoreApi';
 
 /**
  * UseCases 集合接口

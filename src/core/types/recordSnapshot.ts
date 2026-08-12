@@ -1,4 +1,4 @@
-import type { Item } from './schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { readExplicitThemeParts, splitThemePath as splitExplicitThemePath } from '@/core/theme/themeSemantics';
 
 /**
@@ -92,14 +92,14 @@ export function splitThemePath(themePath: string | null | undefined): ThemePathP
   return splitExplicitThemePath(themePath);
 }
 
-function pickEditableText(item: Item): string | null {
+function pickEditableText(item: RecordViewItem): string | null {
   if (item.editableText?.trim()) return item.editableText.trim();
   const extraBody = item.extra?.['正文'];
   if (typeof extraBody === 'string' && extraBody.trim()) return extraBody.trim();
   return item.content?.trim() || item.title || null;
 }
 
-export function buildParsedRecordSnapshot(item: Item): ParsedRecordSnapshot {
+export function buildParsedRecordSnapshot(item: RecordViewItem): ParsedRecordSnapshot {
   const path = item.source?.path ?? item.file?.path ?? null;
   const line = item.source?.startLine ?? (typeof item.file?.line === 'number' ? item.file.line : null);
 

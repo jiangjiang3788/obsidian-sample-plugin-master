@@ -1,4 +1,4 @@
-import type { ViewPlacement } from '../types/schema';
+import type { ViewPlacement } from '@/core/view/ViewConfig';
 
 /** 返回目标卡片置顶后的 placement；未改变其它卡片的持久化数据。 */
 export function bringViewPlacementToFront(placements: Record<string, ViewPlacement>, viewInstanceId: string): ViewPlacement | undefined {

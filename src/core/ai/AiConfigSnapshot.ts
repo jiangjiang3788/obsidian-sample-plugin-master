@@ -1,11 +1,12 @@
 // src/core/ai/AiConfigSnapshot.ts
 // AI 配置快照 - 把 settings + aiSettings 转成模型可读的最小快照
 
-import type { InputSettings, TemplateField } from '@/core/types/schema';
+import type { InputSettings, TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { AiSettings } from '@/core/types/ai-schema';
 import type { GoalSettings } from '@/core/goal';
 import { getGoalTemplates, isSystemRecordContextField } from '@/core/goal';
 import { getEffectiveTemplate } from '@/core/utils/inputTemplateUtils';
+import { resolveCaptureFieldSchema } from '@/core/fields/CaptureFieldResolver';
 
 /**
  * AI Block 配置字段
@@ -90,15 +91,16 @@ function isAiVisibleField(field: TemplateField): boolean {
 }
 
 function normalizeField(field: TemplateField): AiBlockConfigField {
+    const schema = resolveCaptureFieldSchema(field);
     return {
         key: field.key,
-        label: field.label,
-        type: field.type,
-        options: (field.options ?? []).map((o) => ({
+        label: schema.label,
+        type: schema.inputType || field.type,
+        options: (schema.options ?? []).map((o) => ({
             value: o.value,
             label: o.label || o.value,
         })),
-        defaultValue: field.defaultValue,
+        defaultValue: schema.defaultValue,
     };
 }
 

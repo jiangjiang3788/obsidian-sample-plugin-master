@@ -1,6 +1,7 @@
-import type { Item, ThemeDefinition } from '@/core/types/schema';
-import { readField } from '@/core/types/schema';
-import type { CategoryConfig } from '@/core/config/viewConfigs';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
+import { readField } from '@/core/fields/ViewFieldCatalog';
+import type { CategoryConfig } from '@/core/config/views';
 import type { GoalDefinition } from './types';
 import { normalizeGoalPath, splitGoalPath } from './path';
 import { getThemePathCandidates, getThemePathLeaf, normalizeThemePath } from '@/core/theme/themePathSemantics';
@@ -55,7 +56,7 @@ function findGoalByPath(goals: GoalDefinition[] = [], goalPath: string): GoalDef
   return goals.find((goal) => normalizeItemGoalPath(goal.goalPath || goal.title) === normalized) || null;
 }
 
-export function getItemGoalKey(item: Item, goals: GoalDefinition[] = []): string {
+export function getItemGoalKey(item: RecordViewItem, goals: GoalDefinition[] = []): string {
   const directPath = normalizeItemGoalPath(item.goalPath);
   if (directPath) return directPath;
 
@@ -78,14 +79,14 @@ export function getItemGoalKey(item: Item, goals: GoalDefinition[] = []): string
   return UNASSIGNED_GOAL_KEY;
 }
 
-export function getItemGoalLabel(item: Item, goals: GoalDefinition[] = []): string {
+export function getItemGoalLabel(item: RecordViewItem, goals: GoalDefinition[] = []): string {
   const key = getItemGoalKey(item, goals);
   if (key === UNASSIGNED_GOAL_KEY) return UNASSIGNED_GOAL_KEY;
   const goal = findGoalByPath(goals, key);
   return goal?.title || splitGoalPath(key).leafGoal || key;
 }
 
-export function getItemThemeKey(item: Item): string {
+export function getItemThemeKey(item: RecordViewItem): string {
   const direct = normalizeThemePath(item.themePath) || normalizeThemePath(item.theme);
   if (direct) return direct;
 
@@ -99,7 +100,7 @@ export function getItemThemeKey(item: Item): string {
   return '未设置主题';
 }
 
-export function getItemThemeLabel(item: Item): string {
+export function getItemThemeLabel(item: RecordViewItem): string {
   const key = getItemThemeKey(item);
   if (!key || key === '未设置主题') return '未设置主题';
   return getThemePathLeaf(key) || key;
@@ -112,7 +113,7 @@ export interface GoalThemeBreakdownRow {
   count: number;
 }
 
-export function buildGoalThemeBreakdown(items: Item[], goals: GoalDefinition[] = []): GoalThemeBreakdownRow[] {
+export function buildGoalThemeBreakdown(items: RecordViewItem[], goals: GoalDefinition[] = []): GoalThemeBreakdownRow[] {
   const map = new Map<string, GoalThemeBreakdownRow>();
   for (const item of items || []) {
     const goalPath = getItemGoalKey(item, goals);
@@ -151,7 +152,7 @@ function stableColor(seed: string): string {
   return palette[Math.abs(hash) % palette.length] || '#8b5cf6';
 }
 
-export function buildGoalBuckets(items: Item[], goals: GoalDefinition[] = [], options: { includeUnassigned?: boolean; includeKnownGoals?: boolean; themes?: ThemeDefinition[] } = {}): GoalBucket[] {
+export function buildGoalBuckets(items: RecordViewItem[], goals: GoalDefinition[] = [], options: { includeUnassigned?: boolean; includeKnownGoals?: boolean; themes?: ThemeDefinition[] } = {}): GoalBucket[] {
   const { includeUnassigned = true, includeKnownGoals = false, themes = [] } = options;
   const map = new Map<string, GoalBucket>();
 

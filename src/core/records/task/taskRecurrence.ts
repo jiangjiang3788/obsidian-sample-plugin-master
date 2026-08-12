@@ -1,16 +1,8 @@
-import type { Item } from '@/core/types/schema';
+import type { TaskRecordEntity } from '@/core/records/RecordEntity';
 import { dayjs, normalizeDateStr } from '@/core/utils/date';
 
-export type RecurrenceUnit = 'day' | 'week' | 'month' | 'quarter' | 'year';
-export type RecurrenceAnchor = 'scheduled' | 'start' | 'due' | 'completion';
-export type TaskRolloverPolicy = 'carry';
-
-/** Canonical Task Series recurrence. It is persisted as structured fields, never parsed from Markdown prose. */
-export interface RecurrenceInfo {
-  interval: number;
-  unit: RecurrenceUnit;
-  anchor: RecurrenceAnchor;
-}
+import type { RecurrenceAnchor, RecurrenceInfo, RecurrenceUnit } from './RecurrenceTypes';
+export type { RecurrenceAnchor, RecurrenceInfo, RecurrenceUnit, TaskRolloverPolicy } from './RecurrenceTypes';
 
 const RECURRENCE_UNITS = new Set<RecurrenceUnit>(['day', 'week', 'month', 'quarter', 'year']);
 const RECURRENCE_ANCHORS = new Set<RecurrenceAnchor>(['scheduled', 'start', 'due', 'completion']);
@@ -27,11 +19,11 @@ export function normalizeRecurrenceInfo(value: Partial<RecurrenceInfo> | null | 
 }
 
 /** Canonical accessor. No rawSource / recurrence string fallback is intentionally provided. */
-export function getTaskRecurrenceInfo(item: Pick<Item, 'recurrenceInfo'>): RecurrenceInfo | null {
+export function getTaskRecurrenceInfo(item: Pick<TaskRecordEntity, 'recurrenceInfo'>): RecurrenceInfo | null {
   return normalizeRecurrenceInfo(item.recurrenceInfo);
 }
 
-export function isTaskRecurring(item: Pick<Item, 'seriesId'>): boolean {
+export function isTaskRecurring(item: Pick<TaskRecordEntity, 'seriesId'>): boolean {
   return Boolean(String(item.seriesId || '').trim());
 }
 
@@ -53,7 +45,7 @@ export function addRecurrenceToDate(baseDateISO: string, recurrence: RecurrenceI
 }
 
 export function getTaskRecurrenceBaseDate(
-  task: Pick<Item, 'scheduledDate' | 'startDate' | 'dueDate' | 'completedAt'>,
+  task: Pick<TaskRecordEntity, 'scheduledDate' | 'startDate' | 'dueDate' | 'completedAt'>,
   recurrence: RecurrenceInfo,
   completedAtISO: string,
 ): string {
@@ -65,14 +57,14 @@ export function getTaskRecurrenceBaseDate(
 }
 
 export function buildNextOccurrenceDates(
-  task: Pick<Item, 'scheduledDate' | 'startDate' | 'dueDate' | 'completedAt'>,
+  task: Pick<TaskRecordEntity, 'scheduledDate' | 'startDate' | 'dueDate' | 'completedAt'>,
   recurrence: RecurrenceInfo,
   completedAtISO: string,
-): Pick<Item, 'scheduledDate' | 'startDate' | 'dueDate'> {
+): Pick<TaskRecordEntity, 'scheduledDate' | 'startDate' | 'dueDate'> {
   const baseDate = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
   const nextAnchorDate = addRecurrenceToDate(baseDate, recurrence);
 
-  const result: Pick<Item, 'scheduledDate' | 'startDate' | 'dueDate'> = {};
+  const result: Pick<TaskRecordEntity, 'scheduledDate' | 'startDate' | 'dueDate'> = {};
   const shift = (value?: string): string | undefined => {
     if (!value) return undefined;
     return addRecurrenceToDate(value, recurrence);

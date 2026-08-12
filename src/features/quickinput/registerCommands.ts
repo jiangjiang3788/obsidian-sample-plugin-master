@@ -5,11 +5,11 @@
  * - 使用 createServices() 作为唯一入口拿到 zustandStore
  * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
-import type ThinkPlugin from '@/main';
+import type { PluginHost } from '@core/ports/public';
 import { QuickInputModal, createServices, getZustandState } from '@/app/public';
 import { devWarn } from '@core/utils/public';
 
-export function registerQuickInputCommands(plugin: ThinkPlugin) {
+export function registerQuickInputCommands(plugin: PluginHost) {
     // Phase 4.3: 只能通过 app/public 获取 store（禁止 container 下沉）
     const { zustandStore: store } = createServices();
     

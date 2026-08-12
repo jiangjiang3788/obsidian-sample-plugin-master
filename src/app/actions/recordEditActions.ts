@@ -1,16 +1,16 @@
-import { QuickInputModal } from '@/app/public';
-import type { Item } from '@core/types/public';
+import { QuickInputModal } from '@/app/ui/modals/QuickInputModal';
+import type { RecordViewItem } from '@core/types/public';
 
 export interface EditFromItemParams {
   app: any;
-  item: Item;
+  item: RecordViewItem;
   openedFrom?: 'list' | 'detail' | 'search' | 'timeline' | 'quickinput' | 'timer' | 'unknown';
 }
 
 
-type EditableItemSource = Item & { path?: string; file?: { path?: string }; line?: number; lineNumber?: number };
+type EditableItemSource = RecordViewItem & { path?: string; file?: { path?: string }; line?: number; lineNumber?: number };
 
-function deriveEntryContext(item: Item, openedFrom: EditFromItemParams['openedFrom'] = 'unknown') {
+function deriveEntryContext(item: RecordViewItem, openedFrom: EditFromItemParams['openedFrom'] = 'unknown') {
   const source = item as EditableItemSource;
   const sourcePath = source.path || source.file?.path || null;
   const sourceLine = typeof source.line === 'number'

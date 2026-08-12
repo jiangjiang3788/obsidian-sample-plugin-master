@@ -33,7 +33,7 @@
  */
 
 import type { Layout, ViewPlacement } from '@core/types/public';
-import type { AppStoreApi } from './index';
+import type { AppStoreApi } from './AppStoreApi';
 import { devError } from '@core/utils/public';
 
 /**

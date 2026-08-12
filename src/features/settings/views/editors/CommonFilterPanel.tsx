@@ -11,7 +11,7 @@ import {
 } from '@shared/ui/public';
 import { RestartAltIcon } from '@shared/ui/public';
 import type { DataStore } from '@core/services/public';
-import type { FilterRule, Item } from '@core/types/public';
+import type { FilterRule, RecordViewItem } from '@core/types/public';
 import { getAllFields, readField } from '@core/types/public';
 import { getFieldLabel } from '@core/fields/public';
 import { normalizeViewFilters, normalizeViewFieldKey, normalizeViewMultiValue } from '@core/view/public';
@@ -27,7 +27,7 @@ interface CommonFilterPanelProps {
   dataStore: DataStore;
   filters: FilterRule[];
   onChange: (filters: FilterRule[]) => void;
-  items?: Item[];
+  items?: RecordViewItem[];
   fieldOptions?: string[];
   title?: string;
   description?: string;
@@ -48,7 +48,7 @@ const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
 ];
 
 
-function collectFieldValues(items: Item[], fields: string[]): Record<string, string[]> {
+function collectFieldValues(items: RecordViewItem[], fields: string[]): Record<string, string[]> {
   const valueMap: Record<string, Set<string>> = {};
   fields.forEach(field => valueMap[normalizeViewFieldKey(field)] = new Set<string>());
 

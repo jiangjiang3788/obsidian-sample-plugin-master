@@ -1,4 +1,4 @@
-import type { ThinkSettings } from '@/core/types/schema';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { DEFAULT_CORE_BLOCK_SETTINGS } from '@/core/blocks';
 import { GoalTemplateResolver } from '@/core/services/GoalTemplateResolver';
 

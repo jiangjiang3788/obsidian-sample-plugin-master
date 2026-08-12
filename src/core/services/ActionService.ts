@@ -1,13 +1,15 @@
 // src/core/services/ActionService.ts
 import { singleton, inject } from 'tsyringe';
 import { dayjs } from '@core/utils/date';
-import type { Item, ViewInstance, BlockTemplate, TemplateField } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { ViewInstance } from '@/core/view/ViewConfig';
+import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
 import { getEffectiveCoreBlocks } from '@/core/blocks';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
 import { SettingsProviderToken } from '@core/services/types';
-import { readField } from '@/core/types/schema';
+import { readField } from '@/core/fields/ViewFieldCatalog';
 import { buildPathOption, getLeafPath } from '@core/utils/pathSemantic';
 import { formatTagsForField } from '@/core/utils/tagUtils';
 import type { UiPort } from '@core/ports/UiPort';
@@ -22,12 +24,12 @@ export class ActionService {
         @inject(InputService) private inputService: InputService
     ) {}
 
-    private getRuntimeBlocks(): BlockTemplate[] {
+    private getRuntimeBlocks(): RecordCaptureTemplate[] {
         const settings = this.settingsProvider.getSettings();
         return getEffectiveCoreBlocks(settings);
     }
 
-    private findBlockByCoreBlock(coreBlock: string | undefined): BlockTemplate | undefined {
+    private findBlockByCoreBlock(coreBlock: string | undefined): RecordCaptureTemplate | undefined {
         const normalized = String(coreBlock || '').trim().replace(/^core\./i, '');
         if (!normalized) return undefined;
         return this.getRuntimeBlocks().find((block) =>
@@ -35,7 +37,7 @@ export class ActionService {
         );
     }
 
-    private findBlockByCategoryKey(categoryKey: string | undefined): BlockTemplate | undefined {
+    private findBlockByCategoryKey(categoryKey: string | undefined): RecordCaptureTemplate | undefined {
         if (!categoryKey) return undefined;
         const blocks = this.getRuntimeBlocks();
         const exact = blocks.find((b) => b.categoryKey === categoryKey);
@@ -105,7 +107,7 @@ export class ActionService {
     }
 
 
-    private buildFieldContextValue(field: TemplateField, item: Item): unknown {
+    private buildFieldContextValue(field: TemplateField, item: RecordViewItem): unknown {
         const direct = readField(item, field.key) ?? readField(item, field.label);
         const fieldName = String(field.key || field.label || '');
         const isCategoryField = fieldName.includes('分类') || fieldName.toLowerCase().includes('category');

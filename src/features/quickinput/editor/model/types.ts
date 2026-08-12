@@ -1,4 +1,4 @@
-import type { BlockTemplate, TemplateField, ThemeDefinition } from '@core/types/public';
+import type { RecordCaptureTemplate, TemplateField, ThemeDefinition } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
 import type { RecordInputMeta, RecordInputSessionMode } from '@core/recordInput/public';
 import type { EnergyCaptureMode, EnergyQuickLevel } from '@core/energy/public';
@@ -11,7 +11,7 @@ export interface QuickInputOptionLike {
   label?: unknown;
 }
 
-export type QuickInputTemplateLike = Partial<BlockTemplate> & {
+export type QuickInputTemplateLike = Partial<RecordCaptureTemplate> & {
   fields?: TemplateField[];
   coreBlockId?: string | null;
   variantId?: string | null;

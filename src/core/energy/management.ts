@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { buildEnergyEffects, type EnergyEffectAggregate } from './effects';
 import { isEnergyItem, readEnergyItemSnapshot } from './item';
 import { buildEnergyPatterns } from './patterns';
@@ -17,13 +17,13 @@ const DEFAULT_MINIMUM_PERSONAL_SAMPLES = 3;
 const DEFAULT_HIGH_ENERGY_THRESHOLD = 80;
 const DEFAULT_DIMENSION_GAP = 15;
 
-function occurrenceKey(item: Item): string {
+function occurrenceKey(item: RecordViewItem): string {
   const snapshot = readEnergyItemSnapshot(item);
   if (!snapshot) return '';
   return `${snapshot.date || ''}T${snapshot.time || '00:00'}`;
 }
 
-function latestEnergyItem(items: Item[]): Item | undefined {
+function latestEnergyItem(items: RecordViewItem[]): RecordViewItem | undefined {
   return items
     .filter(isEnergyItem)
     .filter((item) => !!readEnergyItemSnapshot(item))
@@ -58,7 +58,7 @@ function dimensionLabel(focus: EnergyDimensionFocus, brain?: number, physical?: 
   return undefined;
 }
 
-function latestState(items: Item[], highThreshold: number, dimensionGap: number): EnergyManagementLatestState | null {
+function latestState(items: RecordViewItem[], highThreshold: number, dimensionGap: number): EnergyManagementLatestState | null {
   const item = latestEnergyItem(items);
   if (!item) return null;
   const snapshot = readEnergyItemSnapshot(item);
@@ -130,7 +130,7 @@ function selectCandidates(
     }));
 }
 
-function buildGuardrails(items: Item[], evidenceRecords: Item[], analysisWindowDays: number, highThreshold: number): EnergyManagementGuardrail[] {
+function buildGuardrails(items: RecordViewItem[], evidenceRecords: RecordViewItem[], analysisWindowDays: number, highThreshold: number): EnergyManagementGuardrail[] {
   const patterns = buildEnergyPatterns(items, { activityRecords: evidenceRecords, analysisWindowDays, highEnergyThreshold: highThreshold });
   if (!patterns) return [];
   const rows: EnergyManagementGuardrail[] = [];
@@ -187,7 +187,7 @@ function managementGuidance(latest: EnergyManagementLatestState, recoveryCount: 
  * Convert the existing observational Energy analytics into conservative, explainable management cues.
  * No medical claims, causal claims, or synthetic scores are introduced: every personalized cue carries sample evidence.
  */
-export function buildEnergyManagement(items: Item[], options: BuildEnergyManagementOptions = {}): EnergyManagementModel | null {
+export function buildEnergyManagement(items: RecordViewItem[], options: BuildEnergyManagementOptions = {}): EnergyManagementModel | null {
   const maximumCandidates = Math.max(1, Math.min(5, Math.floor(options.maximumCandidates ?? DEFAULT_MAXIMUM_CANDIDATES)));
   const minimumPersonalSamples = Math.max(3, Math.min(10, Math.floor(options.minimumPersonalSamples ?? DEFAULT_MINIMUM_PERSONAL_SAMPLES)));
   const highThreshold = Math.max(60, Math.min(100, Math.floor(options.highEnergyThreshold ?? DEFAULT_HIGH_ENERGY_THRESHOLD)));

@@ -12,7 +12,7 @@ import {
 } from '@/app/public';
 import { QuickInputModalContent } from '@features/quickinput/modal/QuickInputModalContent';
 import { isMobileLikeEnvironment } from '@features/quickinput/modal/quickInputEnvironment';
-import type { Item, QuickInputSaveData } from '@core/types/public';
+import type { RecordViewItem, QuickInputSaveData } from '@core/types/public';
 import type { RecordInputSource, RecordSubmitResult } from '@core/recordInput/public';
 
 import { prepareThinkModal } from './modalPreact';
@@ -21,7 +21,7 @@ import { showQuickInputNotice } from './quickInputNotice';
 
 interface QuickInputEditOptions {
   mode?: 'create' | 'edit';
-  editItem?: Item;
+  editItem?: RecordViewItem;
   source?: Extract<RecordInputSource, 'quickinput' | 'view_quick_create' | 'timer' | 'unknown'>;
   onSubmitSuccess?: (result: RecordSubmitResult, draft: QuickInputSaveData) => void | Promise<void>;
 }

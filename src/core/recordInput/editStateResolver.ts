@@ -1,9 +1,6 @@
-import type {
-  BlockTemplate,
-  Item,
-  TemplateField,
-  ThinkSettings,
-} from "@/core/types/schema";
+import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { PreparedEditRecord } from "@/core/types/recordInput";
 import type { ParsedRecordSnapshot } from "@/core/types/recordSnapshot";
 import { buildEditableRecordSnapshot } from "@/core/recordInput/snapshot/EditSnapshotFactory";
@@ -20,13 +17,13 @@ import { normalizeFieldToken } from "@/core/fields/fieldTokenSemantics";
 
 export interface BuildEditStateInput {
   settings: ThinkSettings;
-  item: Item;
+  item: RecordViewItem;
   preferredBlockId?: string | null;
   preferredThemeId?: string | null;
 }
 
 
-function getItemSemanticTokens(item: Item): Set<string> {
+function getItemSemanticTokens(item: RecordViewItem): Set<string> {
   const tokens = new Set<string>();
   const push = (value: unknown) => {
     const normalized = normalizeFieldToken(value);
@@ -53,16 +50,16 @@ function getItemSemanticTokens(item: Item): Set<string> {
   return tokens;
 }
 
-function templateCoreBlock(block: BlockTemplate): string {
+function templateCoreBlock(block: RecordCaptureTemplate): string {
   const raw = String(block?.coreBlockId || block?.id || '').trim().replace(/^core\./i, '');
   return normalizeFieldToken(raw);
 }
 
-function itemCoreBlock(item: Item): string {
+function itemCoreBlock(item: RecordViewItem): string {
   return normalizeFieldToken(String(item.coreBlock || '').replace(/^core\./i, ''));
 }
 
-function scoreTemplateForItem(block: BlockTemplate, item: Item): number {
+function scoreTemplateForItem(block: RecordCaptureTemplate, item: RecordViewItem): number {
   let score = 0;
   const semanticTokens = getItemSemanticTokens(item);
   const categoryKey = normalizeFieldToken(item.categoryKey);
@@ -89,15 +86,15 @@ function scoreTemplateForItem(block: BlockTemplate, item: Item): number {
   return score;
 }
 
-function looksLikeTaskTemplate(block: BlockTemplate): boolean {
+function looksLikeTaskTemplate(block: RecordCaptureTemplate): boolean {
   return templateCoreBlock(block) === 'task';
 }
 
-function looksLikeBlockTemplate(block: BlockTemplate): boolean {
+function looksLikeRecordCaptureTemplate(block: RecordCaptureTemplate): boolean {
   return templateCoreBlock(block) !== 'task';
 }
 
-function readCoreBlockHint(item: Item): string | null {
+function readCoreBlockHint(item: RecordViewItem): string | null {
   const text =
     readFirstString(asUnknownRecord(item), ["coreBlock", "coreBlockId"]) ??
     readFirstString(asUnknownRecord(item.extra || {}), [
@@ -110,8 +107,8 @@ function readCoreBlockHint(item: Item): string | null {
 }
 
 function resolveBlockForEdit(
-  blocks: BlockTemplate[],
-  item: Item,
+  blocks: RecordCaptureTemplate[],
+  item: RecordViewItem,
   preferredBlockId?: string | null,
 ) {
   if (!Array.isArray(blocks) || blocks.length === 0) {
@@ -201,7 +198,7 @@ function resolveBlockForEdit(
   const sameTypeFallback =
     item.coreBlock === 'task'
       ? blocks.find(looksLikeTaskTemplate)
-      : blocks.find(looksLikeBlockTemplate);
+      : blocks.find(looksLikeRecordCaptureTemplate);
 
   return {
     blockId: sameTypeFallback?.id ?? blocks[0]?.id ?? null,
@@ -214,8 +211,8 @@ function resolveBlockForEdit(
 
 
 function buildInitialFormData(
-  template: BlockTemplate,
-  item: Item,
+  template: RecordCaptureTemplate,
+  item: RecordViewItem,
   snapshot: ParsedRecordSnapshot = buildParsedRecordSnapshot(item),
 ): Record<string, unknown> {
   // P3 编辑回填重构 MVP：

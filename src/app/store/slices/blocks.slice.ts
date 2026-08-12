@@ -23,17 +23,17 @@
 import type { StateCreator } from 'zustand';
 import type { ZustandAppStore } from '../useAppStore';
 import type { SettingsRepository } from '@core/services/public';
-import type { BlockTemplate } from '@core/types/public';
+import type { RecordCaptureTemplate } from '@core/types/public';
 import { generateId, devError } from '@core/utils/public';
 
 // ============== 类型定义 ==============
 
 export interface BlocksSlice {
     // Block CRUD Actions
-    addBlock: (name: string) => Promise<BlockTemplate | undefined>;
-    updateBlock: (id: string, updates: Partial<BlockTemplate>) => Promise<void>;
+    addBlock: (name: string) => Promise<RecordCaptureTemplate | undefined>;
+    updateBlock: (id: string, updates: Partial<RecordCaptureTemplate>) => Promise<void>;
     deleteBlock: (id: string) => Promise<void>;
-    duplicateBlock: (id: string) => Promise<BlockTemplate | undefined>;
+    duplicateBlock: (id: string) => Promise<RecordCaptureTemplate | undefined>;
     moveBlock: (id: string, direction: 'up' | 'down') => Promise<void>;
 }
 
@@ -50,7 +50,7 @@ export function createBlocksSlice(
         /**
          * 添加新 Block
          */
-        addBlock: async (name: string): Promise<BlockTemplate | undefined> => {
+        addBlock: async (name: string): Promise<RecordCaptureTemplate | undefined> => {
             const state = get();
             if (!state.isInitialized) {
                 devError('[BlocksSlice] Store 未初始化，无法添加 Block');
@@ -60,13 +60,12 @@ export function createBlocksSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newBlock: BlockTemplate = {
+                const newBlock: RecordCaptureTemplate = {
                     id: generateId('block'),
                     name,
                     categoryKey: name,
                     targetFile: '',
                     appendUnderHeader: '',
-                    outputTemplate: '',
                     fields: [],
                 };
 
@@ -93,7 +92,7 @@ export function createBlocksSlice(
         /**
          * 更新 Block
          */
-        updateBlock: async (id: string, updates: Partial<BlockTemplate>): Promise<void> => {
+        updateBlock: async (id: string, updates: Partial<RecordCaptureTemplate>): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
                 devError('[BlocksSlice] Store 未初始化，无法更新 Block');
@@ -151,7 +150,7 @@ export function createBlocksSlice(
         /**
          * 复制 Block
          */
-        duplicateBlock: async (id: string): Promise<BlockTemplate | undefined> => {
+        duplicateBlock: async (id: string): Promise<RecordCaptureTemplate | undefined> => {
             const state = get();
             if (!state.isInitialized) {
                 devError('[BlocksSlice] Store 未初始化，无法复制 Block');
@@ -168,7 +167,7 @@ export function createBlocksSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newBlock: BlockTemplate = {
+                const newBlock: RecordCaptureTemplate = {
                     ...source,
                     id: generateId('block'),
                     name: `${source.name} (副本)`,

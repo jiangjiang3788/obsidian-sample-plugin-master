@@ -1,4 +1,4 @@
-import type { Item } from '../types';
+import type { RecordViewItem } from '../types';
 import { getItemThemeKey } from '../goal/itemGoalGrouping';
 import type { ProgressResult, ProgressBreakdownRow } from './types';
 
@@ -23,7 +23,7 @@ function toSortedRows(map: Map<string, { points: number; count: number }>, topN:
     .slice(0, topN);
 }
 
-export function computeProgression(items: Item[], options: ProgressComputationOptions): ProgressResult {
+export function computeProgression(items: RecordViewItem[], options: ProgressComputationOptions): ProgressResult {
   const {
     basePoints = 1,
     levelStep = 20,

@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { buildEnergyEffects } from './effects';
 import { isEnergyItem, readEnergyItemSnapshot } from './item';
 
@@ -26,7 +26,7 @@ export interface EnergyDataQualityModel {
 export interface BuildEnergyDataQualityOptions {
   startDate: string;
   endDate: string;
-  effectRecords?: Item[];
+  effectRecords?: RecordViewItem[];
 }
 
 function ordinal(value: string): number | undefined {
@@ -52,14 +52,14 @@ function pct(value: number): number {
  * It reports what the data can support; it never fills missing days or upgrades retrospective
  * records to exact-time evidence.
  */
-export function buildEnergyDataQuality(items: Item[], options: BuildEnergyDataQualityOptions): EnergyDataQualityModel {
+export function buildEnergyDataQuality(items: RecordViewItem[], options: BuildEnergyDataQualityOptions): EnergyDataQualityModel {
   const start = ordinal(options.startDate);
   const end = ordinal(options.endDate);
   const totalDays = start == null || end == null || end < start ? 0 : end - start + 1;
   const snapshots = items
     .filter(isEnergyItem)
     .map((item) => ({ item, snapshot: readEnergyItemSnapshot(item) }))
-    .filter((row): row is { item: Item; snapshot: NonNullable<ReturnType<typeof readEnergyItemSnapshot>> } => !!row.snapshot)
+    .filter((row): row is { item: RecordViewItem; snapshot: NonNullable<ReturnType<typeof readEnergyItemSnapshot>> } => !!row.snapshot)
     .filter(({ snapshot }) => {
       if (!snapshot.date) return false;
       const value = ordinal(snapshot.date);

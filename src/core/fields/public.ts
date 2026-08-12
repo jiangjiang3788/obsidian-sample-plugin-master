@@ -1,9 +1,17 @@
-// src/core/fields/public.ts
-/**
- * Field domain public facade.
- *
- * Exposes field definitions, registries, behavior helpers, value resolvers,
- * and field-specific semantics without requiring callers to import from
- * internal field implementation files.
- */
-export * from './index';
+export * from './FieldTypes';
+export type { FieldDefinition } from './FieldDefinition';
+export * from './FieldRegistry';
+export * from './FieldBehavior';
+export * from './CoreFieldCatalog';
+export * from './FieldValueResolver';
+export * from './FieldEditPolicy';
+export * from './pathSemantics';
+export * from './tagSemantics';
+export * from './imageSemantics';
+export * from './ContentFieldSemantics';
+export * from './fieldTokenSemantics';
+
+export * from './TemplateFieldAdapter';
+export * from './TemplateFieldSanitizer';
+export * from './FieldSchema';
+export * from './CaptureFieldResolver';

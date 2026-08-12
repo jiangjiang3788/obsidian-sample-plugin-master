@@ -3,7 +3,7 @@
 // All "周" calculations use ISO week.
 
 import type { TimelineRange, TimelineView } from '@/types/timeline/TimelineRange';
-import { dayjs } from '@/core/utils/date';
+import { dayjs } from './dayjsRuntime';
 
 export function normalizeTimelineView(view: string): TimelineView {
     switch (view) {

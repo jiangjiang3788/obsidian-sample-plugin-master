@@ -8,12 +8,12 @@ import {
   ListEditor,
   SimpleSelect,
 } from '@shared/ui/public';
-import type { ViewEditorProps } from './registry';
+import type { ViewEditorProps } from './ViewEditorProps';
 import { useSelector, selectInputBlocks, useUiPort } from '@/app/public';
 import { useMemo } from 'preact/hooks';
 import { HEATMAP_VIEW_DEFAULT_CONFIG, type HeatmapViewConfig } from '@core/view/public';
 import { collectThemePathsForHeatmap } from '@core/utils/public';
-import type { BlockTemplate, ViewInstance } from '@core/types/public';
+import type { RecordCaptureTemplate, ViewInstance } from '@core/types/public';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
 // 重新导出以保持兼容性
@@ -57,7 +57,7 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
         }
 
         const dataSource: ViewInstance = module;
-        const sourceBlock: BlockTemplate | undefined = allBlocks.find(b => b.id === config.sourceBlockId);
+        const sourceBlock: RecordCaptureTemplate | undefined = allBlocks.find(b => b.id === config.sourceBlockId);
         if (!sourceBlock) {
             ui.notice('找不到所选的 Block 模板。');
             return;

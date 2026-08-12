@@ -1,5 +1,5 @@
 // src/core/types/timeline.ts
-import type { Item } from './schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 /**
  * Timeline 视图的领域类型：从持久 TaskSession 执行事实中投影的结构。
@@ -12,7 +12,7 @@ import type { Item } from './schema';
 /**
  * 增强后的任务项，包含用于时间轴视图的额外信息。
  */
-export interface TimelineTask extends Item {
+export interface TimelineTask extends RecordViewItem {
   /** Timeline row identity: persisted TaskSession Record ID. */
   sessionRecordId: string;
   /** Source Task identity used when opening/editing Task metadata. */

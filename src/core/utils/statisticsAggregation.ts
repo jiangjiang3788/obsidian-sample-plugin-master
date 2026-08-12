@@ -1,22 +1,22 @@
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { dayjs } from '@core/utils/date';
-import { readField } from '@/core/types/schema';
+import { readField } from '@/core/fields/ViewFieldCatalog';
 import { getBaseCategory } from '@core/utils/itemGrouping';
 import { isSameIsoWeek } from '@core/utils/timelineRange';
-import type { CategoryConfig } from '@/core/config/viewConfigs';
+import type { CategoryConfig } from '@/core/config/views';
 
 export interface PeriodData {
     counts: Record<string, number>;
-    blocks: Item[];
+    blocks: RecordViewItem[];
 }
 
-export type StatisticsBucketAccessor = (item: Item) => string;
+export type StatisticsBucketAccessor = (item: RecordViewItem) => string;
 
-function defaultBucketAccessor(item: Item): string {
+function defaultBucketAccessor(item: RecordViewItem): string {
     return getBaseCategory(item.categoryKey);
 }
 
-function addItemToPeriod(data: PeriodData, categoryOrder: string[], item: Item, bucketAccessor?: StatisticsBucketAccessor) {
+function addItemToPeriod(data: PeriodData, categoryOrder: string[], item: RecordViewItem, bucketAccessor?: StatisticsBucketAccessor) {
     const bucketKey = (bucketAccessor || defaultBucketAccessor)(item);
     if (!categoryOrder.includes(bucketKey)) return;
     data.counts[bucketKey]++;
@@ -37,7 +37,7 @@ export function createPeriodData(categories: CategoryConfig[]): PeriodData {
  * 按天聚合数据
  */
 export function aggregateByDay(
-    items: Item[],
+    items: RecordViewItem[],
     categories: CategoryConfig[],
     targetDate: dayjs.Dayjs,
     bucketAccessor?: StatisticsBucketAccessor
@@ -58,7 +58,7 @@ export function aggregateByDay(
  * 按周聚合数据
  */
 export function aggregateByWeek(
-    items: Item[],
+    items: RecordViewItem[],
     categories: CategoryConfig[],
     targetDate: dayjs.Dayjs,
     usePeriod = false,
@@ -89,7 +89,7 @@ export function aggregateByWeek(
  * 按月聚合数据
  */
 export function aggregateByMonth(
-    items: Item[],
+    items: RecordViewItem[],
     categories: CategoryConfig[],
     targetDate: dayjs.Dayjs,
     usePeriod = false,
@@ -117,7 +117,7 @@ export function aggregateByMonth(
  * 按季度聚合数据
  */
 export function aggregateByQuarter(
-    items: Item[],
+    items: RecordViewItem[],
     categories: CategoryConfig[],
     targetDate: dayjs.Dayjs,
     usePeriod = false,
@@ -145,7 +145,7 @@ export function aggregateByQuarter(
  * 按年聚合数据
  */
 export function aggregateByYear(
-    items: Item[],
+    items: RecordViewItem[],
     categories: CategoryConfig[],
     targetDate: dayjs.Dayjs,
     usePeriod = false,
@@ -173,7 +173,7 @@ export function aggregateByYear(
  * 获取月份的周数据
  */
 export function getMonthWeeksData(
-    items: Item[],
+    items: RecordViewItem[],
     categories: CategoryConfig[],
     targetMonth: dayjs.Dayjs,
     usePeriod = false,

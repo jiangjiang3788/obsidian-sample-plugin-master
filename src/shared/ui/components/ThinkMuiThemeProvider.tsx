@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { createThinkMuiTheme, type ThinkMuiColorMode } from '../../styles/mui-theme';
+import { createThinkMuiTheme, type ThinkMuiColorMode } from '../../styles/muiTheme';
 import { ThemeProvider } from '../muiCompat';
 
 function hasThemeMarker(element: Element | null, marker: string): boolean {

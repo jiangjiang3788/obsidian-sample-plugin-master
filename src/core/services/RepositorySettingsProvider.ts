@@ -8,7 +8,7 @@
  */
 
 import { singleton, inject } from 'tsyringe';
-import type { ThinkSettings } from '@/core/types/schema';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { ISettingsProvider } from '@core/services/types';
 import { SettingsRepository } from '@core/services/SettingsRepository';
 

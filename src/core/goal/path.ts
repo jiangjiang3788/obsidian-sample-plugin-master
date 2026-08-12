@@ -25,3 +25,14 @@ export function getGoalPathCandidates(path?: string | null): string[] {
   for (let i = parts.length; i >= 1; i -= 1) result.push(parts.slice(0, i).join('/'));
   return result;
 }
+
+export function makeStableGoalIdFromPath(path: string): string {
+  const normalized = splitGoalPath(path).goalPath || String(path || '').trim();
+  const safe = normalized
+    .toLowerCase()
+    .replace(/[\/\s]+/g, '-')
+    .replace(/[^a-z0-9\-_.\u4e00-\u9fa5]/gi, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `goal.${safe || 'untitled'}`;
+}

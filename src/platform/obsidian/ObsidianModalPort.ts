@@ -19,7 +19,7 @@ import { NamePromptModal } from './modals/NamePromptModal';
 import { AiChatModal } from './modals/AiChatModal';
 import { CheckinManagerModal } from './modals/CheckinManagerModal';
 import { todayISO } from '@core/utils/public';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 
 @singleton()
 export class ObsidianModalPort implements ModalPort {
@@ -76,7 +76,7 @@ export class ObsidianModalPort implements ModalPort {
   openCheckinManager(args?: CheckinManagerOpenArgs): void {
     // Provide safe defaults for ad-hoc opening while allowing shared/features
     // to request a concrete platform modal without importing or new-ing it.
-    const emptyItems: Item[] = [];
+    const emptyItems: RecordViewItem[] = [];
     const noop = async () => {};
     new CheckinManagerModal(
       this.app,

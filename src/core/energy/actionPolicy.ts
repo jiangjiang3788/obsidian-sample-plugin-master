@@ -1,15 +1,7 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { EnergyManagementModel } from './managementTypes';
-import type { EnergyActionCandidate, EnergyRecommendationBand } from './recommendationTypes';
+import type { EnergyActionCandidate, EnergyActionPolicyContext, EnergyRecommendationBand } from './recommendationTypes';
 import { asTaskSessionRecord } from '../records/task/taskSession';
-
-export interface EnergyActionPolicyContext {
-  /** Completed/recorded task minutes for the current day across goals. */
-  dailyTaskMinutes: number;
-  /** True only when observed load or personal stop guardrails justify preserving capacity. */
-  preserveCapacityRisk: boolean;
-  preserveCapacityReason?: string;
-}
 
 export interface EnergyActionTimingDecision {
   minutes: number;
@@ -23,7 +15,7 @@ function localSessionDay(value: string): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-function recordedTaskMinutes(records: Item[], today: string): number {
+function recordedTaskMinutes(records: RecordViewItem[], today: string): number {
   return records.reduce((sum, record) => {
     const session = asTaskSessionRecord(record);
     if (!session || localSessionDay(session.sessionStartedAt) !== today) return sum;
@@ -37,7 +29,7 @@ function recordedTaskMinutes(records: Item[], today: string): number {
  * Build a conservative load context from recorded facts only. No synthetic battery score is created.
  */
 export function buildEnergyActionPolicyContext(
-  items: Item[],
+  items: RecordViewItem[],
   management: EnergyManagementModel | null | undefined,
   today: string,
 ): EnergyActionPolicyContext {

@@ -2,11 +2,12 @@
 // 单人版收敛：输入模板工具只做 block 默认模板读取。
 // 新建记录主链必须使用 GoalTemplateResolver；此文件仅给 AI/Heatmap 等辅助场景读取 block fallback。
 
-import type { InputSettings, BlockTemplate, ThemeDefinition } from '@/core/types/schema';
+import type { InputSettings, RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import { DEFAULT_CORE_BLOCKS } from '@/core/blocks';
 
 export interface TemplateResolveResult {
-    template: BlockTemplate | null;
+    template: RecordCaptureTemplate | null;
     theme: ThemeDefinition | null;
     templateId: string | null;
     templateSourceType: 'core-block' | null;
@@ -32,6 +33,6 @@ export function getEffectiveTemplateOnly(
     settings: InputSettings,
     blockId: string,
     themeId?: string
-): BlockTemplate | null {
+): RecordCaptureTemplate | null {
     return getEffectiveTemplate(settings, blockId, themeId).template;
 }

@@ -7,7 +7,7 @@
  * - 允许逐步迁移：先把出口做薄、稳定，再逐步收敛内部结构
  */
 
-export * from './utils/errorHandler';
+export * from './utils/error';
 export * from './utils/devConsole';
 export * from './utils/diagnosticConsole';
 export * from './utils/performance';
@@ -18,10 +18,8 @@ export * from './styles/mui-theme';
 export * from './types/actions';
 export * from './types/taskTime';
 export * from './hooks';
-export * from './hooks/useFormState';
 export * from './debug/inputDiagnostics';
 export * from './patterns/ModalSavePattern';
-export * from './ui/contracts';
 export * from './ui/GroupedContainer';
 export * from './ui/muiCompat';
 export * from './ui/primitives';
@@ -35,6 +33,5 @@ export * from './ui/composites/TagsRenderer';
 export * from './ui/composites/TaskCheckbox';
 export * from './ui/composites/TaskSendToTimerButton';
 export * from './ui/composites/form/ListEditor';
-export * from './ui/modals/EditTaskModal';
 // ui/components 已统一出口（ThemeTreeNodeLabel 等）
 export * from './components/ThemeTreeSelect';

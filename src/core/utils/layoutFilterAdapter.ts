@@ -1,4 +1,4 @@
-import type { FilterRule } from '../types/schema';
+import type { FilterRule } from '@/core/view/ViewConfig';
 import { getBasePath } from './pathSemantic';
 
 function asStringList(value: any): string[] {

@@ -1,4 +1,4 @@
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { getTaskRecurrenceInfo } from './taskRecurrence';
 
 export type TaskCadenceKey = 'routine' | 'day' | 'week' | 'month' | 'quarter' | 'year';
@@ -18,7 +18,7 @@ export const TASK_CADENCE_META: Record<TaskCadenceKey, { label: string; emoji: s
  * Canonical task cadence taxonomy. Dates can affect urgency/ranking but never
  * change the cadence row a task belongs to.
  */
-export function getTaskCadence(item: Item): TaskCadenceKey {
+export function getTaskCadence(item: RecordViewItem): TaskCadenceKey {
   const recurrence = getTaskRecurrenceInfo(item);
   if (!recurrence) return 'routine';
   if (recurrence.unit === 'day') return 'day';

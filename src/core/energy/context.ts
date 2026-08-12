@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { isEnergyItem, readEnergyItemSnapshot } from './item';
 import { asTaskSessionRecord } from '../records/task/taskSession';
 
@@ -17,7 +17,7 @@ export interface EnergyActivityContext {
   startTime: string;
   endDate: string;
   endTime: string;
-  item: Item;
+  item: RecordViewItem;
 }
 
 export interface EnergyDailySignalContext {
@@ -25,7 +25,7 @@ export interface EnergyDailySignalContext {
   kind: EnergyDailySignalKind;
   label: string;
   value?: string | number;
-  item: Item;
+  item: RecordViewItem;
 }
 
 export interface EnergyContext {
@@ -57,14 +57,14 @@ function readNumber(value: unknown): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function normalizeCoreBlock(item: Item): string {
+function normalizeCoreBlock(item: RecordViewItem): string {
   return String(item.coreBlock || item.extra?.['核心Block'] || '')
     .replace(/^core\./i, '')
     .trim()
     .toLowerCase();
 }
 
-function isHabitLike(item: Item): boolean {
+function isHabitLike(item: RecordViewItem): boolean {
   return normalizeCoreBlock(item) === 'habit';
 }
 
@@ -72,15 +72,15 @@ function normalizeGoalPath(value: unknown): string {
   return String(value ?? '').trim().replace(/^#/, '');
 }
 
-function itemGoalIds(item: Item): string[] {
+function itemGoalIds(item: RecordViewItem): string[] {
   return [item.goalId, ...(item.goalIds || [])].map((value) => String(value || '').trim()).filter(Boolean);
 }
 
-function itemGoalPaths(item: Item): string[] {
+function itemGoalPaths(item: RecordViewItem): string[] {
   return [item.goalPath, ...(item.goalPaths || [])].map(normalizeGoalPath).filter(Boolean);
 }
 
-function matchesEnergyGoal(energyItem: Item, candidate: Item): boolean {
+function matchesEnergyGoal(energyItem: RecordViewItem, candidate: RecordViewItem): boolean {
   const energyIds = itemGoalIds(energyItem);
   const candidateIds = itemGoalIds(candidate);
   if (energyIds.length > 0) return candidateIds.some((id) => energyIds.includes(id));
@@ -91,7 +91,7 @@ function matchesEnergyGoal(energyItem: Item, candidate: Item): boolean {
   return candidatePaths.some((path) => energyPaths.includes(path));
 }
 
-function occurrenceDate(item: Item): string | undefined {
+function occurrenceDate(item: RecordViewItem): string | undefined {
   if (item.coreBlock === 'task-session' && item.sessionStartedAt) {
     const value = new Date(item.sessionStartedAt);
     if (Number.isFinite(value.getTime())) {
@@ -150,8 +150,8 @@ function localSessionParts(value: string): { date: string; time: string } | null
 }
 
 interface ActivityInterval {
-  session: Item;
-  task: Item;
+  session: RecordViewItem;
+  task: RecordViewItem;
   startAbsolute: number;
   endAbsolute: number;
   startDate: string;
@@ -161,7 +161,7 @@ interface ActivityInterval {
   durationMinutes: number;
 }
 
-function resolveActivityInterval(record: Item, byId: Map<string, Item>): ActivityInterval | null {
+function resolveActivityInterval(record: RecordViewItem, byId: Map<string, RecordViewItem>): ActivityInterval | null {
   const session = asTaskSessionRecord(record);
   if (!session) return null;
   const task = byId.get(session.taskId);
@@ -195,8 +195,8 @@ function activityConfidence(relation: EnergyActivityRelation, gapMinutes: number
 }
 
 function buildActivityContext(
-  record: Item,
-  byId: Map<string, Item>,
+  record: RecordViewItem,
+  byId: Map<string, RecordViewItem>,
   energyItemId: string,
   energyAbsolute: number,
   recentWindowMinutes: number,
@@ -246,7 +246,7 @@ function activityRank(activity: EnergyActivityContext): number {
   return relationRank * 1_000_000 + confidenceRank * 100_000 + activity.gapMinutes;
 }
 
-function classifyDailySignal(item: Item): EnergyDailySignalKind | null {
+function classifyDailySignal(item: RecordViewItem): EnergyDailySignalKind | null {
   if (!isHabitLike(item)) return null;
   const text = [item.title, item.content, item.themePath, item.theme, item.categoryKey]
     .map((value) => String(value || ''))
@@ -263,7 +263,7 @@ function dailySignalLabel(kind: EnergyDailySignalKind): string {
   return '运动';
 }
 
-function dailySignalValue(item: Item): string | number | undefined {
+function dailySignalValue(item: RecordViewItem): string | number | undefined {
   if (typeof item.rating === 'number') return item.rating;
   const extra = item.extra || {};
   for (const key of ['评分', '分数', '值', '状态']) {
@@ -273,7 +273,7 @@ function dailySignalValue(item: Item): string | number | undefined {
   return undefined;
 }
 
-function buildDailySignals(energyItem: Item, items: Item[], date: string): EnergyDailySignalContext[] {
+function buildDailySignals(energyItem: RecordViewItem, items: RecordViewItem[], date: string): EnergyDailySignalContext[] {
   const byKind = new Map<EnergyDailySignalKind, EnergyDailySignalContext>();
   for (const item of items) {
     if (item.id === energyItem.id || !matchesEnergyGoal(energyItem, item)) continue;
@@ -296,8 +296,8 @@ function buildDailySignals(energyItem: Item, items: Item[], date: string): Energ
  * The resolver never writes inferred relationships back to Markdown: association is evidence, not causation.
  */
 export function resolveEnergyContext(
-  energyItem: Item,
-  items: Item[],
+  energyItem: RecordViewItem,
+  items: RecordViewItem[],
   options: ResolveEnergyContextOptions = {}
 ): EnergyContext | null {
   const snapshot = readEnergyItemSnapshot(energyItem);

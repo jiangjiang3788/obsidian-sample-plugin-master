@@ -1,6 +1,6 @@
 // src/app/usecases/viewinstance.usecase.ts
 import type { ViewInstance, ViewName } from '@core/types/public';
-import type { AppStoreApi } from './index';
+import type { AppStoreApi } from './AppStoreApi';
 import {
   addDisplayField,
   moveDisplayField,

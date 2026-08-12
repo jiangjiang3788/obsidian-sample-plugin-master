@@ -1,5 +1,5 @@
 // DataStore cache for Record Foundation v2.
-import type { Item } from './schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 export interface CachedItem {
   id: string;
@@ -24,8 +24,8 @@ export interface CachedItem {
   rootTheme?: string;
   leafTheme?: string;
   categoryKey: string;
-  recurrenceInfo?: Item['recurrenceInfo'];
-  priority?: Item['priority'];
+  recurrenceInfo?: RecordViewItem['recurrenceInfo'];
+  priority?: RecordViewItem['priority'];
   expectedDurationMinutes?: number;
   createdDate?: string;
   scheduledDate?: string;
@@ -85,7 +85,7 @@ export interface CacheV1 {
 // v12: persist scanner integrity diagnostics so warm-start cannot hide malformed/missing-ID records.
 export const CURRENT_CACHE_SCHEMA_VERSION = 12;
 
-export function toCachedItem(it: Item): CachedItem {
+export function toCachedItem(it: RecordViewItem): CachedItem {
   return {
     id: it.id,
     schemaVersion: it.schemaVersion,
@@ -151,12 +151,12 @@ export function toCachedItem(it: Item): CachedItem {
   };
 }
 
-export function fromCachedItem(c: CachedItem): Item {
+export function fromCachedItem(c: CachedItem): RecordViewItem {
   const folder = c.filePath.split('/').slice(0, -1).pop() || '';
-  const it: Item & Record<string, any> = {
+  const it: RecordViewItem & Record<string, any> = {
     id: c.id,
-    schemaVersion: c.schemaVersion,
-    coreBlock: c.coreBlock,
+    schemaVersion: c.schemaVersion ?? 2,
+    coreBlock: c.coreBlock || '',
     status: c.status,
     templateId: c.templateId,
     templateSourceType: c.templateSourceType,
@@ -195,8 +195,8 @@ export function fromCachedItem(c: CachedItem): Item {
     sessionStartedAt: c.sessionStartedAt,
     sessionEndedAt: c.sessionEndedAt,
     sessionDurationMinutes: c.sessionDurationMinutes,
-    sessionResult: c.sessionResult,
-    sessionSource: c.sessionSource,
+    sessionResult: c.sessionResult as RecordViewItem['sessionResult'],
+    sessionSource: c.sessionSource as RecordViewItem['sessionSource'],
     suggestedDurationMinutes: c.suggestedDurationMinutes,
     startEnergyRecordId: c.startEnergyRecordId,
     endEnergyRecordId: c.endEnergyRecordId,

@@ -1,9 +1,9 @@
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 export interface RetrievalFilters {
     /** 主题路径过滤，明确使用 item.themePath 语义，不再使用 legacy item.theme */
     themePaths?: string[];
-    /** Canonical business type filter (Item.coreBlock). */
+    /** Canonical business type filter (RecordViewItem.coreBlock). */
     coreBlocks?: string[];
     /** Block 模板 ID 过滤（通过 item.templateId/templateId 匹配） */
     blockTemplateIds?: string[];
@@ -14,13 +14,13 @@ export interface RetrievalFilters {
 }
 
 export interface RetrievalResult {
-    item: Item;
+    item: RecordViewItem;
     score: number;
     match: Record<string, string[]>;
 }
 
 export interface RetrievalSearchResult {
-    items: Item[];
+    items: RecordViewItem[];
     results: RetrievalResult[];
     totalMatched: number;
 }

@@ -1,4 +1,4 @@
-import type ThinkPlugin from '@/main';
+import type { PluginHost } from '@core/ports/public';
 import { AiTextPromptModal, AiBatchConfirmModal, type AppStoreInstance } from '@/app/public';
 import { AiNaturalLanguageRecordParser } from '@core/ai/public';
 import { devError, devLog, devWarn } from '@core/utils/public';
@@ -18,7 +18,7 @@ import {
 } from './aiInputRuntime';
 
 export interface AiNaturalInputCommandDeps {
-    plugin: ThinkPlugin;
+    plugin: PluginHost;
     store: AppStoreInstance;
     ui: AiInputUiPort;
     parser: AiNaturalLanguageRecordParser;

@@ -4,11 +4,11 @@
  * 只需要 plugin 实例，其他依赖通过 DI 或 zustand 获取
  */
 
-import type ThinkPlugin from '@/main';
+import type { PluginHost } from '@core/ports/public';
 import { registerAiInputCommands } from './registerCommands';
 
 export interface AiInputDependencies {
-    plugin: ThinkPlugin;
+    plugin: PluginHost;
 }
 
 /**

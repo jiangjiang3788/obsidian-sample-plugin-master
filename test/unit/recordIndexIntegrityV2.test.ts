@@ -1,7 +1,7 @@
 import { RecordIndex } from '@/core/records/RecordIndex';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
-function item(id: string, coreBlock: string, extra: Partial<Item> = {}): Item {
+function item(id: string, coreBlock: string, extra: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id,
     coreBlock,
@@ -15,7 +15,7 @@ function item(id: string, coreBlock: string, extra: Partial<Item> = {}): Item {
     extra: {},
     source: { path: `${id}.md`, startLine: 1, endLine: 3, modified: 1 },
     ...extra,
-  } as Item;
+  } as RecordViewItem;
 }
 
 describe('RecordIndex v2 integrity stabilization', () => {

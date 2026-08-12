@@ -19,7 +19,7 @@
  */
 
 import type { AiSettings } from '@core/types/public';
-import type { AppStoreApi } from './index';
+import type { AppStoreApi } from './AppStoreApi';
 import { devLog, devError } from '@core/utils/public';
 import { updateCategoryColorMap } from '@core/types/public';
 

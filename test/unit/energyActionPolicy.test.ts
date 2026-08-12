@@ -4,7 +4,7 @@ import {
   type EnergyActionCandidate,
   type EnergyManagementModel,
 } from '@core/energy/public';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 
 const candidate: EnergyActionCandidate = {
   id: 'code',
@@ -14,7 +14,7 @@ const candidate: EnergyActionCandidate = {
   valueScore: 90,
 };
 
-function session(id: string, duration: number, startedAt: string): Item {
+function session(id: string, duration: number, startedAt: string): RecordViewItem {
   const start = new Date(startedAt);
   const end = new Date(start.getTime() + duration * 60_000);
   return {
@@ -33,7 +33,7 @@ function session(id: string, duration: number, startedAt: string): Item {
     sessionResult: 'work-block-ended',
     sessionSource: 'timer',
     extra: {},
-  } as Item;
+  } as RecordViewItem;
 }
 
 describe('Energy action policy', () => {

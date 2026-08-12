@@ -1,4 +1,4 @@
-import { normalizeTemplateRenderData } from '@/core/fields';
+import { normalizeTemplateRenderData } from '@/core/fields/public';
 
 describe('core input fields in templates', () => {
   it('keeps 分类 / 主题 / 标签 as form fields and exposes canonical render variables', () => {

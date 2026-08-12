@@ -44,5 +44,5 @@ export function inferImageKind(src: string): ImageValueKind {
 }
 
 export function isImageFieldDefinition(def: FieldDefinition | undefined): boolean {
-  return !!def && (def.type === 'image' || def.inputType === 'image' || def.inputType === 'multiImage' || def.semantic === 'image');
+  return !!def && (def.valueType === 'image' || def.inputType === 'image' || def.inputType === 'multiImage' || def.semantic === 'image');
 }

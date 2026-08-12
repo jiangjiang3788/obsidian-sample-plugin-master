@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 /**
- * Item mutation facade.
+ * RecordViewItem mutation facade.
  *
  * V29 后 ItemService 只保留对外 API 和 DI 组装；定位、写回、任务完成、
  * inline 字段、block metadata、迁移备份分别下沉到 item/ 子模块。

@@ -2,8 +2,8 @@
 /**
  * refactor-hotspots
  *
- * Produces a focused queue for the third-round V20-V25 folder ownership passes
- * from the raw refactor metrics.  It is a planning aid, not a hard architecture gate.
+ * Produces a focused queue for current maintenance hotspots from the raw refactor
+ * metrics. It is a planning aid, not a hard architecture gate.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -92,40 +92,28 @@ function buildHotspots(report) {
     },
     recommendedBatches: [
       {
-        version: 'V20',
-        focus: '构建基线 + 目录迁移地图',
-        reason: '第三轮先建立 folder ownership 地图，并允许本地 data.json 作为单人运行态文件。',
-        candidateFiles: ['docs/FOLDER_REORG_PLAN.md', 'scripts/audit/folder-reorg-map.mjs', 'scripts/gates/folder-reorg-plan-gate.mjs'],
-      },
-      {
-        version: 'V21',
-        focus: 'QuickInput 目录归属重排',
-        reason: '快捷面板 editor 与 modal content 属于 quickinput feature，platform 只保留 Obsidian adapter。',
+        version: 'Capture',
+        focus: 'QuickInput / RecordInput maintenance',
+        reason: 'Keep capture behavior on the shared RecordDraft/FieldSchema path and avoid new compatibility layers.',
         candidateFiles: pickFiles(quickInputFiles, 16),
       },
       {
-        version: 'V22',
-        focus: 'Settings / Views 目录重排',
-        reason: 'Statistics、Timeline、Excel、Heatmap 等业务视图已经离开 shared/ui/views，归入 settings/views/runtime。',
-        candidateFiles: ['src/features/settings/views/runtime', 'src/features/settings/views/editors', 'src/features/settings/views/models'],
+        version: 'Views',
+        focus: 'View runtime maintenance',
+        reason: 'Keep renderers on RecordQuery and preserve the settings/runtime boundary established by R6-R7.',
+        candidateFiles: ['src/features/views/runtime', 'src/features/settings/views/editors'],
       },
       {
-        version: 'V23',
-        focus: 'Core 领域目录收敛 + 删除旧兼容',
-        reason: 'RecordInput 已从 generic services bucket 移入 core/recordInput；任务记录和记录提交工具继续按领域归属收窄。',
-        candidateFiles: ['src/core/recordInput', 'src/core/utils', 'src/core/types'],
+        version: 'Core',
+        focus: 'Record platform maintenance',
+        reason: 'Prefer existing Record/Field/Query contracts and delete compatibility code instead of adding parallel abstractions.',
+        candidateFiles: ['src/core/records', 'src/core/fields', 'src/core/query', 'src/core/recordInput'],
       },
       {
-        version: 'V24',
-        focus: 'Shared / Platform 瘦身',
-        reason: 'shared 只保留通用 UI/hooks/utils，platform 显式整理为 Obsidian adapters。',
-        candidateFiles: ['src/features/settings/views/runtime', 'src/platform'],
-      },
-      {
-        version: 'V25',
-        focus: '当前 schema 锁定 + release 封版',
-        reason: '不做旧数据迁移，只锁当前 schema、目录预算和 release 包边界。',
-        candidateFiles: ['src/core/settings', 'scripts/gates/refactor-budget-baseline.json', 'docs/MVP_ACCEPTANCE.md'],
+        version: 'Release',
+        focus: 'Release stability',
+        reason: 'Keep dependency budgets, current schema, integration scenarios and release checks green before product changes ship.',
+        candidateFiles: ['scripts/gates/refactor-budget-baseline.json', 'docs/TESTING_RELEASE.md', 'test/integration'],
       },
     ],
 

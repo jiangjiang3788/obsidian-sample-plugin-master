@@ -1,4 +1,4 @@
-import type { Item } from '../types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { isEnergyItem, readEnergyItemSnapshot } from './item';
 import { asTaskSessionRecord } from '../records/task/taskSession';
 import {
@@ -71,7 +71,7 @@ interface PairedSession {
   deltaPhysical?: number;
 }
 
-function readPoints(items: Item[]): EnergyPatternPoint[] {
+function readPoints(items: RecordViewItem[]): EnergyPatternPoint[] {
   const points: EnergyPatternPoint[] = [];
   for (const item of items) {
     if (!isEnergyItem(item)) continue;
@@ -228,7 +228,7 @@ function buildStopProxy(
   };
 }
 
-export function buildEnergyPatterns(items: Item[], options: BuildEnergyPatternsOptions = {}): EnergyPatternAnalytics | null {
+export function buildEnergyPatterns(items: RecordViewItem[], options: BuildEnergyPatternsOptions = {}): EnergyPatternAnalytics | null {
   const points = readPoints(items);
   const activityRecords = options.activityRecords || items;
   if (!points.length) return null;

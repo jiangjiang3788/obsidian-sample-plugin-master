@@ -4,7 +4,7 @@ import { useSelector } from '@/app/public';
 import { selectTimers, selectIsTimerWidgetVisible, selectSetTimerWidgetVisible } from '@/app/public';
 import { QuickInputModal, openEditFromItem, openRecordOrigin } from '@/app/public';
 import type { ActionService } from '@core/services/public';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { RecordSubmitResult } from '@core/recordInput/public';
 import type { TimerService } from '@features/timer/TimerService';
 import type { DataStore } from '@core/services/public';
@@ -22,8 +22,8 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
     const isVisible = useSelector(selectIsTimerWidgetVisible);
     const setTimerWidgetVisible = useSelector(selectSetTimerWidgetVisible);
 
-    const handleOpenRecord = (item: Item) => openEditFromItem({ app, item, openedFrom: 'timer' });
-    const handleOpenRecordOrigin = (item: Item) => openRecordOrigin({ app, item });
+    const handleOpenRecord = (item: RecordViewItem) => openEditFromItem({ app, item, openedFrom: 'timer' });
+    const handleOpenRecordOrigin = (item: RecordViewItem) => openRecordOrigin({ app, item });
 
     const handleCreateNewTask = () => {
         const config = actionService.getQuickInputConfigForNewTimer();

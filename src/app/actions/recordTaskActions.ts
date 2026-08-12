@@ -1,4 +1,4 @@
-import type { UseCases } from '@/app/public';
+import type { UseCases } from '@/app/usecases';
 import type { UiPort } from '@core/ports/public';
 import type { RecordInputSource } from '@core/recordInput/public';
 import { runUiRecordAction } from './runUiRecordAction';

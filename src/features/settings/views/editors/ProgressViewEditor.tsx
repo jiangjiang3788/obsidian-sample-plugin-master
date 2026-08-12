@@ -7,7 +7,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from '@shared/ui/public';
-import type { ViewEditorProps } from './registry';
+import type { ViewEditorProps } from './ViewEditorProps';
 import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 
 export { PROGRESS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';

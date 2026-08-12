@@ -1,4 +1,4 @@
-import type { TemplateField } from '@/core/types/schema';
+import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { FieldInputType } from './FieldTypes';
 import { normalizeImageValue } from './imageSemantics';
 import { normalizeHierarchyPath } from './pathSemantics';

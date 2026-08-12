@@ -19,14 +19,14 @@ import { ExpandMoreIcon, FilterListIcon } from '@shared/ui/public';
 import { DataStore } from '@core/services/public';
 import { getAllFields } from '@core/types/public';
 import { getFieldLabel } from '@core/fields/public';
-import type { FilterRule, Item } from '@core/types/public';
+import type { FilterRule, RecordViewItem } from '@core/types/public';
 import { RuleBuilder } from '@features/settings/views/editors/RuleBuilder';
 import { CommonFilterPanel } from '@features/settings/views/editors/CommonFilterPanel';
 
 interface DataFilterPanelProps {
   dataStore: DataStore;
   filters: FilterRule[];
-  items?: Item[];
+  items?: RecordViewItem[];
   onChange: (filters: FilterRule[]) => void;
 }
 

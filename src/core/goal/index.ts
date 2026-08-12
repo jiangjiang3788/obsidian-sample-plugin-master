@@ -12,7 +12,7 @@ export type {
   GoalSettings,
 } from './types';
 export { DEFAULT_GOAL_SETTINGS } from './types';
-export { getGoalPathCandidates, normalizeGoalPath, splitGoalPath } from './path';
+export { getGoalPathCandidates, makeStableGoalIdFromPath, normalizeGoalPath, splitGoalPath } from './path';
 export { getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder } from './order';
 export type { GoalOrderIndex } from './order';
 export type { GoalPathParts } from './path';
@@ -29,8 +29,6 @@ export type { TemplateVariantId, TemplateVariantIdentity } from './templateVaria
 export { compactGoalTemplateForStorage, describeGoalTemplateStorageDiff } from './templateVariantDiff';
 export type { CompactGoalTemplateOptions } from './templateVariantDiff';
 
-export { buildGoalOverviewModel, makeStableGoalIdFromPath } from './overview';
-export type { GoalOverviewModel, GoalOverviewRow, GoalOverviewMetricProgress, GoalOverviewCycleSummary } from './overview';
 
 export { UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, getItemThemeKey, getItemThemeLabel, buildGoalThemeBreakdown, buildGoalBuckets } from './itemGoalGrouping';
 export type { GoalBucket, GoalThemeBreakdownRow } from './itemGoalGrouping';

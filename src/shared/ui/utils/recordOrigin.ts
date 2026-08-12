@@ -1,8 +1,8 @@
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { OpenRecordOriginHandler } from '../../types/actions';
 
 interface RecordGestureParams {
-  item: Item;
+  item: RecordViewItem;
   onPrimary?: () => void;
   onOpenOrigin?: OpenRecordOriginHandler;
 }

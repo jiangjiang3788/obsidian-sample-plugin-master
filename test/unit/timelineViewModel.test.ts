@@ -1,12 +1,12 @@
 import {
   buildTimelineColorMap,
-  buildTimelineDailyViewData,
   buildTimelineRenderModel,
-  buildTimelineSummaryCategoryHours,
-  isTimelineSummaryView,
   resolveTimelineConfig,
-  sumTimelineSummaryHours,
-} from '@/features/settings/views/runtime/TimelineView/TimelineViewModel';
+} from '@/features/views/runtime/TimelineView/TimelineViewModel';
+import {
+  buildTimelineDayColumns,
+  buildTimelineTimeAxisRows,
+} from '@/features/views/runtime/TimelineView/TimelineDailyViewModel';
 
 const moduleConfig = {
   viewConfig: {
@@ -27,26 +27,6 @@ describe('TimelineViewModel', () => {
     expect(buildTimelineColorMap(resolveTimelineConfig(moduleConfig))).toEqual({ work: '#111111', 未跟踪: '#9ca3af' });
   });
 
-  it('handles summary and daily mode branches', () => {
-    expect(isTimelineSummaryView('年')).toBe(true);
-    expect(isTimelineSummaryView('月')).toBe(false);
-    expect(isTimelineSummaryView('月', { isSummaryView: true })).toBe(true);
-
-    const daily = buildTimelineDailyViewData({
-      timelineTasks: [],
-      dateRange: [new Date('2026-06-01'), new Date('2026-06-02')],
-      isSummaryView: true,
-    });
-    expect(daily).toBeNull();
-
-    expect(buildTimelineSummaryCategoryHours({
-      timelineTasks: [],
-      dateRange: [new Date('2026-06-01'), new Date('2026-06-02')],
-      config: resolveTimelineConfig(moduleConfig),
-      isSummaryView: true,
-    })).toEqual({});
-    expect(sumTimelineSummaryHours({ a: 1, b: 2 })).toBe(3);
-  });
 
   it('builds a render model that respects injected timeline data', () => {
     const renderModel = buildTimelineRenderModel({
@@ -66,4 +46,19 @@ describe('TimelineViewModel', () => {
     expect(renderModel.totalSummaryHours).toBe(2);
     expect(renderModel.dailyViewData).toEqual({ dateRangeDays: [], blocksByDay: {} });
   });
+
+  it('builds daily columns and time-axis rows', () => {
+    const day = { format: () => '2026-06-01' };
+    expect(buildTimelineDayColumns({ dateRangeDays: [day], blocksByDay: {} } as any)).toEqual([
+      { day: '2026-06-01', blocks: [] },
+    ]);
+    expect(buildTimelineTimeAxisRows(4, 24)).toEqual([
+      { hour: 0, label: '', height: '24px' },
+      { hour: 1, label: '', height: '24px' },
+      { hour: 2, label: '2:00', height: '24px' },
+      { hour: 3, label: '', height: '24px' },
+      { hour: 4, label: '4:00', height: '24px' },
+    ]);
+  });
+
 });

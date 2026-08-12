@@ -1,7 +1,7 @@
-import type { Item } from '../../src/core/types/schema';
+import type { RecordViewItem } from '../../src/core/records/RecordEntity';
 import { RetrievalService } from '../../src/core/ai/RetrievalService';
 
-const baseItem = (overrides: Partial<Item> = {}): Item => ({
+const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'item-1',
   title: '记录',
   content: '记录',

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef } from 'preact/hooks';
 
 import { makeObsUri } from '@core/utils/public';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { ShowQuickInputNotice } from './quickInputNotice';
 
 export interface QuickInputOriginalNavigation {
@@ -19,7 +19,7 @@ export function useQuickInputOriginalNavigation({
   showNotice,
 }: {
   mode: 'create' | 'edit';
-  editItem?: Item;
+  editItem?: RecordViewItem;
   vaultName: string;
   showNotice: ShowQuickInputNotice;
 }): QuickInputOriginalNavigation {

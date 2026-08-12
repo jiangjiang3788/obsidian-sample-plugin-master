@@ -1,10 +1,10 @@
 // src/core/utils/timeline.ts
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 /**
  * 从 items 中提取所有可用的文件基本名称（basename），并按字典序排序
  */
-export function collectFileNames(items: Item[]): string[] {
+export function collectFileNames(items: RecordViewItem[]): string[] {
     const fileNames = new Set<string>();
     items.forEach(item => {
         if (item.file?.basename) {

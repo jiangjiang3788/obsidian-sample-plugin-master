@@ -1,4 +1,6 @@
-import type { BlockTemplate, ThemeDefinition, Item } from './schema';
+import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { EditableRecordSnapshot, RecordOutputPlan, RecordPersistencePlan } from './recordSnapshot';
 import type { TaskSessionCreateInput } from './timer';
 
@@ -76,7 +78,7 @@ export interface PrepareCreateRecordParams {
 }
 
 export interface PrepareEditRecordParams {
-  item: Item;
+  item: RecordViewItem;
   blockId?: string | null;
   themeId?: string | null;
   source?: Extract<RecordInputSource, 'quickinput' | 'timer' | 'unknown'>;
@@ -85,7 +87,7 @@ export interface PrepareEditRecordParams {
 export interface PreparedCreateRecord {
   blockId: string | null;
   themeId: string | null;
-  template: BlockTemplate | null;
+  template: RecordCaptureTemplate | null;
   initialFormData: Record<string, unknown>;
   snapshot?: EditableRecordSnapshot | null;
   outputPlan?: RecordOutputPlan;
@@ -96,7 +98,7 @@ export interface PreparedCreateRecord {
 export interface PreparedEditRecord {
   blockId: string | null;
   themeId: string | null;
-  template: BlockTemplate | null;
+  template: RecordCaptureTemplate | null;
   initialFormData: Record<string, unknown>;
   snapshot?: EditableRecordSnapshot | null;
   outputPlan?: RecordOutputPlan;
@@ -123,7 +125,7 @@ export interface SubmitCreateRecordParams {
 }
 
 export interface SubmitUpdateRecordParams {
-  item: Item;
+  item: RecordViewItem;
   blockId: string;
   themeId?: string | null;
   formData: Record<string, unknown>;
@@ -142,7 +144,7 @@ export interface SubmitUpdateRecordParams {
 }
 
 export interface SubmitDeleteRecordParams {
-  item: Item;
+  item: RecordViewItem;
   signal?: AbortSignal;
   source?: Extract<RecordInputSource, 'quickinput' | 'unknown'>;
 }
@@ -185,7 +187,7 @@ export interface SubmitUpdateRecordTimeParams {
 export interface ResolveDependenciesResult {
   blockId: string | null;
   themeId: string | null;
-  template: BlockTemplate | null;
+  template: RecordCaptureTemplate | null;
   theme: ThemeDefinition | null;
   warnings: RecordSubmitIssue[];
   errors: RecordSubmitIssue[];
@@ -198,7 +200,7 @@ export interface ResolveDependenciesResult {
 }
 
 export interface NormalizeRecordInputParams {
-  template: BlockTemplate;
+  template: RecordCaptureTemplate;
   formData: Record<string, unknown>;
   context?: Record<string, unknown>;
   mode: 'create' | 'edit' | 'ai_batch';
@@ -210,10 +212,10 @@ export interface NormalizeRecordInputResult {
 }
 
 export interface ValidateRecordInputParams {
-  template: BlockTemplate | null;
+  template: RecordCaptureTemplate | null;
   formData: Record<string, unknown>;
   mode: 'create' | 'edit' | 'delete' | 'complete' | 'time_update';
-  item?: Item;
+  item?: RecordViewItem;
 }
 
 export interface RecordValidationResult {

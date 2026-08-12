@@ -1,7 +1,7 @@
 // src/app/capabilities/capabilities/timer.ts
 import { devWarn } from '@core/utils/public';
 import type { TimerService } from '@features/timer/TimerService';
-import type { CapabilityDeps } from '../types';
+import type { CapabilityDeps } from '../CapabilityDeps';
 
 export interface TimerCapability {
     /**

@@ -3,10 +3,10 @@ import {
   getTaskStatus,
   isTaskOpen,
   nextTaskStatus,
-} from '@core/records/task';
-import type { Item } from '@core/types/public';
+} from '@core/records/public';
+import type { RecordViewItem } from '@core/types/public';
 
-function task(status: string, seriesId?: string): Item {
+function task(status: string, seriesId?: string): RecordViewItem {
   return {
     id: 'task.01J00000000000000000000000',
     schemaVersion: 2,
@@ -20,7 +20,7 @@ function task(status: string, seriesId?: string): Item {
     created: 0,
     modified: 0,
     extra: {},
-  } as Item;
+  } as RecordViewItem;
 }
 
 describe('Task status v2', () => {

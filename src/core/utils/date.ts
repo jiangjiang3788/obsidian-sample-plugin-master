@@ -3,25 +3,11 @@
  * 统一使用 dayjs，彻底移除 moment‑shim
  * 提供 todayISO / nowHHMM 等常用工具函数
  */
-import dayjs from 'dayjs';
-import quarterOfYear from 'dayjs/plugin/quarterOfYear';
-import weekOfYear from 'dayjs/plugin/weekOfYear';
-import customParse from 'dayjs/plugin/customParseFormat';
-import isoWeek from 'dayjs/plugin/isoWeek';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'; // 确保引入
-import isBetween from 'dayjs/plugin/isBetween';
-
+import { dayjs } from './dayjsRuntime';
 import { calculateTimelineRange, normalizeTimelineView } from './timelineRange';
 
-dayjs.extend(quarterOfYear);
-dayjs.extend(weekOfYear);
-dayjs.extend(customParse);
-dayjs.extend(isoWeek);
-dayjs.extend(isSameOrBefore); // 确保扩展
-dayjs.extend(isBetween);
-
 export { dayjs };
-export type { Dayjs } from 'dayjs';
+export type { Dayjs } from './dayjsRuntime';
 
 /* ---------- 快捷工具 ---------- */
 export const todayISO = () => dayjs().format('YYYY-MM-DD');

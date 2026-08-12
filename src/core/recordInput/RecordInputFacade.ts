@@ -1,5 +1,5 @@
 import type {
-  Item,
+  RecordViewItem,
   QuickInputSaveData,
   RecordInputMeta,
   RecordInputSource,
@@ -37,7 +37,7 @@ export interface BuildCreateRecordSubmitParamsInput {
 
 export interface BuildUpdateRecordSubmitParamsInput {
   state: RecordInputEditorStateLike;
-  item: Item;
+  item: RecordViewItem;
   expectedOutputPlan?: Pick<RecordOutputPlan, 'targetFilePath' | 'targetHeader'> | null;
   expectedPersistencePlan?: Pick<RecordPersistencePlan, 'originalPath' | 'pathChanged' | 'writeMode'> | null;
   source?: SubmitUpdateRecordParams['source'];

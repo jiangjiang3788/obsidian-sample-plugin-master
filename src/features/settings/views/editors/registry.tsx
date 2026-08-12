@@ -10,20 +10,13 @@ import { StatisticsViewEditor, DEFAULT_CONFIG as StatisticsViewDefault } from '.
 import { HeatmapViewEditor, DEFAULT_CONFIG as HeatmapViewDefault } from './HeatmapViewEditor';
 import { ProgressViewEditor, DEFAULT_CONFIG as ProgressViewDefault } from './ProgressViewEditor';
 import { EnergyViewEditor, DEFAULT_CONFIG as EnergyViewDefault } from './EnergyViewEditor';
-import type { ViewName, ViewInstance } from '@core/types/public';
-import type { DataStore } from '@core/services/public';
+import type { ViewName } from '@core/types/public';
 
 // [REFACTOR] ViewKind is now derived from the domain-level ViewName
 export type ViewKind = ViewName;
 
-// [MODIFIED] Add the optional 'module' prop to pass the full ViewInstance
-export interface ViewEditorProps {
-  value: Record<string, any>;
-  onChange: (patch: Record<string, any>) => void;
-  fieldOptions: string[];
-  module?: ViewInstance; // Pass the entire module for context
-  dataStore: DataStore;
-}
+export type { ViewEditorProps } from './ViewEditorProps';
+import type { ViewEditorProps } from './ViewEditorProps';
 
 // [REFACTOR] The registry is now the Single Source of Truth for both the editor component and its default configuration.
 export const VIEW_INFO_REGISTRY = {

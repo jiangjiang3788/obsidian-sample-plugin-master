@@ -1,1 +1,0 @@
-export { MonthStatisticsView } from './PeriodStatisticsView';

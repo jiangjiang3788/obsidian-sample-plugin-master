@@ -9,7 +9,7 @@ import {
   sanitizeTemplateFields,
   templateFieldTypeSupportsDefaultValue,
   templateFieldTypeUsesOptions,
-} from '@/core/fields';
+} from '@/core/fields/public';
 
 describe('TemplateFieldSanitizer', () => {
   it('keeps persisted custom fields limited to name and type plus type-owned config', () => {

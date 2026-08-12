@@ -1,4 +1,4 @@
-import { QuickInputModal } from '@/app/public';
+import { QuickInputModal } from '@/app/ui/modals/QuickInputModal';
 import { ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
 import { openCreateModal } from './openCreateModal';
 import type { HeaderCreateParams } from './types';

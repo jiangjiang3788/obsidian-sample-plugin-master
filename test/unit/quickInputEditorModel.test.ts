@@ -187,3 +187,67 @@ describe('QuickInputEditorModel', () => {
     expect(state.fieldSourceSummary?.user).toBe(1);
   });
 });
+
+
+import {
+  getQuickInputFailureMessage,
+  getQuickInputSubmitLabel,
+  getQuickInputSuccessNotice,
+  isQuickInputCreateOperation,
+  isQuickInputUpdateOperation,
+} from '../../src/features/quickinput/modal/quickInputOperationMode';
+
+describe('quickInputOperationMode', () => {
+  it('separates create/update semantics for edit operations', () => {
+    expect(isQuickInputUpdateOperation('edit')).toBe(true);
+    expect(isQuickInputUpdateOperation('convert')).toBe(true);
+    expect(isQuickInputCreateOperation('duplicate')).toBe(true);
+    expect(isQuickInputCreateOperation('convert')).toBe(false);
+  });
+
+  it('uses explicit submit labels for convert and duplicate modes', () => {
+    expect(getQuickInputSubmitLabel('convert', false)).toBe('转换并保存');
+    expect(getQuickInputSubmitLabel('convert', true)).toBe('转换中...');
+    expect(getQuickInputSubmitLabel('duplicate', false)).toBe('另存为新记录');
+    expect(getQuickInputSubmitLabel('duplicate', true)).toBe('另存中...');
+  });
+
+  it('keeps operation-specific feedback copy', () => {
+    expect(getQuickInputFailureMessage('duplicate')).toBe('另存为新记录失败');
+    expect(getQuickInputSuccessNotice('duplicate')).toBe('✅ 已另存为新记录');
+    expect(getQuickInputSuccessNotice('convert', '✅ 已保存修改')).toBe('✅ 已转换记录类型');
+    expect(getQuickInputSuccessNotice('convert', '✅ 已迁移保存：A → B')).toBe('✅ 已迁移保存：A → B');
+  });
+});
+
+
+import {
+  getQuickInputSelectedValue,
+  isQuickInputChoiceSelected,
+  normalizeQuickInputChoices,
+  toQuickInputOptionObject,
+} from '@features/quickinput/editor/components/quickInputOptionSelection';
+
+describe('quickInputOptionSelection', () => {
+  it('normalizes primitive and object options for visible single-select pills', () => {
+    expect(normalizeQuickInputChoices(['Todo', { value: 'doing', label: 'Doing' }, { label: 'Done' }])).toEqual([
+      { value: 'Todo', label: 'Todo' },
+      { value: 'doing', label: 'Doing' },
+      { value: 'Done', label: 'Done' },
+    ]);
+  });
+
+  it('detects selected values from both stored option objects and primitive values', () => {
+    const choice = { value: 'doing', label: 'Doing' };
+
+    expect(isQuickInputChoiceSelected({ value: 'doing', label: 'Doing' }, choice)).toBe(true);
+    expect(isQuickInputChoiceSelected('doing', choice)).toBe(true);
+    expect(isQuickInputChoiceSelected('Doing', choice)).toBe(true);
+    expect(isQuickInputChoiceSelected('todo', choice)).toBe(false);
+  });
+
+  it('stores selected single-select choices as option objects', () => {
+    expect(toQuickInputOptionObject({ value: 'done', label: 'Done' })).toEqual({ value: 'done', label: 'Done' });
+    expect(getQuickInputSelectedValue({ value: 'done', label: 'Done' })).toBe('done');
+  });
+});

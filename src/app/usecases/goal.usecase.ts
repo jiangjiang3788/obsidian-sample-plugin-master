@@ -26,7 +26,7 @@ import {
 } from '@core/goal/public';
 import { getCoreBlockById } from '@core/blocks/public';
 import { devError } from '@core/utils/public';
-import type { AppStoreApi } from './index';
+import type { AppStoreApi } from './AppStoreApi';
 
 export interface AddGoalInput {
   title: string;
@@ -46,7 +46,6 @@ export interface UpsertGoalTemplateInput {
   enabled?: boolean;
   targetFile?: string;
   appendUnderHeader?: string;
-  outputTemplate?: string;
   fields?: TemplateField[];
   defaultValues?: Record<string, unknown>;
   requiredFields?: string[];
@@ -268,7 +267,6 @@ export class GoalUseCase {
       enabled: input.enabled !== false,
       targetFile: input.targetFile?.trim() || undefined,
       appendUnderHeader: input.appendUnderHeader?.trim() || undefined,
-      outputTemplate: input.outputTemplate?.trim() || undefined,
       fields: input.fields,
       defaultValues: input.defaultValues || {},
       requiredFields: input.requiredFields || [],

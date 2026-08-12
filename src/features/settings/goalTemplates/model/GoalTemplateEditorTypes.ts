@@ -9,7 +9,6 @@ export interface GoalTemplateDraftState {
   granularity: 'week' | 'month' | 'quarter' | 'year';
   sortOrder: number;
   fields: TemplateField[];
-  outputTemplate: string;
   targetFile: string;
   appendUnderHeader: string;
   requiredFields: string[];

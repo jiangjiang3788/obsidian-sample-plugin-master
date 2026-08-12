@@ -2,7 +2,7 @@
 /**
  * Shared utility module public facade.
  */
-export * from './errorHandler';
+export * from './error';
 export * from './devConsole';
 export * from './diagnosticConsole';
 export * from './performance';

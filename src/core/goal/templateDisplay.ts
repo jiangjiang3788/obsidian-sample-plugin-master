@@ -1,4 +1,4 @@
-import type { TemplateField } from '@/core/types/schema';
+import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { GoalDefinition } from './types';
 import type { GoalTemplate } from './templates';
 import { DEFAULT_TEMPLATE_VARIANT_ID, normalizeTemplateVariantId } from './templateVariant';

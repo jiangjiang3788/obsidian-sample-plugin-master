@@ -3,7 +3,7 @@
 
 import { ItemView } from 'obsidian';
 import type { WorkspaceLeaf } from 'obsidian';
-import type ThinkPlugin from '@main';
+import type { PluginHost } from '@core/ports/public';
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { SettingsRoot } from './SettingsRoot';
 
@@ -12,7 +12,7 @@ export const THINK_SETTINGS_VIEW_TYPE = 'think-os-settings-view';
 export class ThinkSettingsView extends ItemView {
     private services: Services;
 
-    constructor(leaf: WorkspaceLeaf, private plugin: ThinkPlugin) {
+    constructor(leaf: WorkspaceLeaf, private plugin: PluginHost) {
         super(leaf);
         this.services = createServices();
     }
@@ -41,14 +41,14 @@ export class ThinkSettingsView extends ItemView {
     }
 }
 
-export function registerThinkSettingsWorkspaceView(plugin: ThinkPlugin): void {
+export function registerThinkSettingsWorkspaceView(plugin: PluginHost): void {
     plugin.registerView(
         THINK_SETTINGS_VIEW_TYPE,
         (leaf) => new ThinkSettingsView(leaf, plugin)
     );
 }
 
-export async function openThinkSettingsWorkspaceView(plugin: ThinkPlugin): Promise<void> {
+export async function openThinkSettingsWorkspaceView(plugin: PluginHost): Promise<void> {
     const workspace = plugin.app.workspace;
     const existingLeaf = workspace.getLeavesOfType(THINK_SETTINGS_VIEW_TYPE)[0];
     const leaf = existingLeaf || (workspace as any).getLeaf('tab');

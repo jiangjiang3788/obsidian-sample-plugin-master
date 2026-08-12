@@ -1,4 +1,3 @@
-// src/shared/hooks/public.ts
 /** Shared hooks public facade. */
-export * from './index';
-export * from './useFormState';
+export { useLocalStorage } from './useLocalStorage';
+export { useIsMounted } from './useIsMounted';

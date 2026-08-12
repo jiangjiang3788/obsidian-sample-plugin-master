@@ -1,7 +1,7 @@
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyDataQuality } from '@core/energy/public';
 
-function energy(id: string, date: string, time: string, mode: 'realtime' | 'retrospective', precision: 'exact' | 'approximate', detailed = false): Item {
+function energy(id: string, date: string, time: string, mode: 'realtime' | 'retrospective', precision: 'exact' | 'approximate', detailed = false): RecordViewItem {
   return {
     id,
     date,
@@ -18,7 +18,7 @@ function energy(id: string, date: string, time: string, mode: 'realtime' | 'retr
       时间精度: precision,
       ...(detailed ? { 评分模式: 'detailed', 脑力精力: 70, 体力精力: 50 } : { 评分模式: 'quick' }),
     },
-  } as Item;
+  } as RecordViewItem;
 }
 
 describe('buildEnergyDataQuality', () => {

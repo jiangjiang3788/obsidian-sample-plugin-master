@@ -1,4 +1,6 @@
-import type { InputSettings, Item, ThinkSettings } from '@/core/types/schema';
+import type { InputSettings } from '@/core/recordInput/CaptureTemplate';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { GoalTemplateResolver } from '@/core/services/GoalTemplateResolver';
 import { DEFAULT_CORE_BLOCKS } from '@/core/blocks';
 import type { RecordSubmitIssue, ResolveDependenciesResult } from '@/core/types/recordInput';
@@ -8,7 +10,7 @@ export interface DependencyResolverInput {
   settings: ThinkSettings | InputSettings;
   blockId?: string | null;
   themeId?: string | null;
-  item?: Item | null;
+  item?: RecordViewItem | null;
   /** QuickInput draft context / normalized form data. Used to resolve Goal + Block templates during submit. */
   context?: Record<string, unknown> | null;
 }

@@ -16,7 +16,7 @@ import {
   createRecordGestureHandlers,
 } from '@shared/ui/public';
 import type { DataStore } from '@core/services/public';
-import type { Item } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import { isTaskRecurring } from '@core/records/public';
 import { TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
@@ -26,8 +26,8 @@ interface TimerRowProps {
     timer: TimerState;
     timerService: TimerService;
     dataStore: DataStore;
-    onOpenRecord: (item: Item) => void;
-    onOpenRecordOrigin: (item: Item) => void;
+    onOpenRecord: (item: RecordViewItem) => void;
+    onOpenRecordOrigin: (item: RecordViewItem) => void;
 }
 
 function elapsedSecondsAt(timer: TimerState, now: number): number {

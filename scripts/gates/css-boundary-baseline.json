@@ -2300,7 +2300,7 @@
       "staticStyle": 0,
       "staticSx": 1
     },
-    "src/features/settings/layout/CodeblockEmbedder.ts": {
+    "src/app/dashboard/CodeblockEmbedder.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2308,15 +2308,15 @@
       "staticStyle": 0,
       "staticSx": 13
     },
-    "src/features/settings/layout/FreeformCanvas.tsx": {
+    "src/app/dashboard/FreeformCanvas.tsx": {
       "staticStyle": 1,
       "staticSx": 0
     },
-    "src/features/settings/layout/FreeformLayoutItem.tsx": {
+    "src/app/dashboard/FreeformLayoutItem.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/layout/LayoutRenderer.tsx": {
+    "src/app/dashboard/LayoutRenderer.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2324,7 +2324,7 @@
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/layout/ModulePanel.tsx": {
+    "src/app/dashboard/ModulePanel.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2332,11 +2332,11 @@
       "staticStyle": 10,
       "staticSx": 6
     },
-    "src/features/settings/layout/RendererService.ts": {
+    "src/app/dashboard/RendererService.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/layout/ViewContent.tsx": {
+    "src/app/dashboard/ViewContent.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2344,31 +2344,31 @@
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/layout/layoutRenderSignature.ts": {
+    "src/app/dashboard/layoutRenderSignature.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/layout/statisticsPopoverBridge.tsx": {
+    "src/app/dashboard/statisticsPopoverBridge.tsx": {
       "staticStyle": 0,
       "staticSx": 4
     },
-    "src/features/settings/layout/useExpandedViewRendering.ts": {
+    "src/app/dashboard/useExpandedViewRendering.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/layout/useLayoutItems.ts": {
+    "src/app/dashboard/useLayoutItems.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/layout/useLayoutModuleActions.ts": {
+    "src/app/dashboard/useLayoutModuleActions.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/layout/useViewRuntimeHandlers.ts": {
+    "src/app/dashboard/useViewRuntimeHandlers.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/layout/viewPropsFactory.ts": {
+    "src/app/dashboard/viewPropsFactory.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2544,395 +2544,395 @@
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/BlockView.tsx": {
+    "src/features/views/runtime/BlockView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/BlockViewItemList.tsx": {
+    "src/features/views/runtime/BlockViewItemList.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/BlockViewModel.ts": {
+    "src/features/views/runtime/BlockViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/CategoryFilter.tsx": {
+    "src/features/views/runtime/CategoryFilter.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyCalendarMap.tsx": {
+    "src/features/views/runtime/EnergyCalendarMap.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyDot.tsx": {
+    "src/features/views/runtime/EnergyDot.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyEffectsList.tsx": {
+    "src/features/views/runtime/EnergyEffectsList.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyExperimentPanel.tsx": {
+    "src/features/views/runtime/EnergyExperimentPanel.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyInsightCards.tsx": {
+    "src/features/views/runtime/EnergyInsightCards.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyManagementPanel.tsx": {
+    "src/features/views/runtime/EnergyManagementPanel.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyMapTypes.ts": {
+    "src/features/views/runtime/EnergyMapTypes.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyMoreSummary.tsx": {
+    "src/features/views/runtime/EnergyMoreSummary.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyPatternsPanel.tsx": {
+    "src/features/views/runtime/EnergyPatternsPanel.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyPeriodMap.tsx": {
+    "src/features/views/runtime/EnergyPeriodMap.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyPeriodReview.tsx": {
+    "src/features/views/runtime/EnergyPeriodReview.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergySampleDetail.tsx": {
+    "src/features/views/runtime/EnergySampleDetail.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyTaskList.tsx": {
+    "src/features/views/runtime/EnergyTaskList.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyTimelineMap.tsx": {
+    "src/features/views/runtime/EnergyTimelineMap.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyView.tsx": {
+    "src/features/views/runtime/EnergyView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyVisualEncoding.ts": {
+    "src/features/views/runtime/EnergyVisualEncoding.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EnergyWeeklyReviewPanel.tsx": {
+    "src/features/views/runtime/EnergyWeeklyReviewPanel.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EventTimelineView/EventTimelineEventList.tsx": {
+    "src/features/views/runtime/EventTimelineView/EventTimelineEventList.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx": {
+    "src/features/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewModel.ts": {
+    "src/features/views/runtime/EventTimelineView/EventTimelineViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EventTimelineView/EventTimelineViewView.tsx": {
+    "src/features/views/runtime/EventTimelineView/EventTimelineViewView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/EventTimelineView/index.ts": {
+    "src/features/views/runtime/EventTimelineView/index.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/ExcelView.tsx": {
+    "src/features/views/runtime/ExcelView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/HeatmapDayView.tsx": {
+    "src/features/views/runtime/HeatmapDayView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/HeatmapLayoutModel.ts": {
+    "src/features/views/runtime/HeatmapLayoutModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/HeatmapThemeGroup.tsx": {
+    "src/features/views/runtime/HeatmapThemeGroup.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/HeatmapView.tsx": {
+    "src/features/views/runtime/HeatmapView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/HeatmapViewContent.tsx": {
+    "src/features/views/runtime/HeatmapViewContent.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/HeatmapViewModel.ts": {
+    "src/features/views/runtime/HeatmapViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/ProgressGoalCard.tsx": {
+    "src/features/views/runtime/ProgressGoalCard.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/ProgressView.tsx": {
+    "src/features/views/runtime/ProgressView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/ProgressViewModel.ts": {
+    "src/features/views/runtime/ProgressViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx": {
+    "src/features/views/runtime/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/StatisticsViewContainer.tsx": {
+    "src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/StatisticsViewModel.ts": {
+    "src/features/views/runtime/StatisticsView/StatisticsViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/StatisticsViewView.tsx": {
+    "src/features/views/runtime/StatisticsView/StatisticsViewView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/components/PopoverContent.tsx": {
+    "src/features/views/runtime/StatisticsView/components/PopoverContent.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/index.ts": {
+    "src/features/views/runtime/StatisticsView/index.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/types.ts": {
+    "src/features/views/runtime/StatisticsView/types.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/useStatisticsCategoryConfigs.ts": {
+    "src/features/views/runtime/StatisticsView/useStatisticsCategoryConfigs.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/views/DayStatisticsView.tsx": {
+    "src/features/views/runtime/StatisticsView/views/DayStatisticsView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/views/MonthStatisticsView.tsx": {
+    "src/features/views/runtime/StatisticsView/views/MonthStatisticsView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts": {
+    "src/features/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/views/PeriodStatisticsView.tsx": {
+    "src/features/views/runtime/StatisticsView/views/PeriodStatisticsView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/views/QuarterStatisticsView.tsx": {
+    "src/features/views/runtime/StatisticsView/views/QuarterStatisticsView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts": {
+    "src/features/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/views/WeekStatisticsView.tsx": {
+    "src/features/views/runtime/StatisticsView/views/WeekStatisticsView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/views/YearStatisticsView.tsx": {
+    "src/features/views/runtime/StatisticsView/views/YearStatisticsView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/StatisticsView/views/YearStatisticsViewModel.ts": {
+    "src/features/views/runtime/StatisticsView/views/YearStatisticsViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TableView.tsx": {
+    "src/features/views/runtime/TableView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TableViewCell.tsx": {
+    "src/features/views/runtime/TableViewCell.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TableViewModel.ts": {
+    "src/features/views/runtime/TableViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/ThemeFilter.tsx": {
+    "src/features/views/runtime/ThemeFilter.tsx": {
       "staticStyle": 0,
       "staticSx": 1
     },
-    "src/features/settings/views/runtime/TimeNavigator.tsx": {
+    "src/features/views/runtime/TimeNavigator.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TimeNavigatorModel.ts": {
+    "src/features/views/runtime/TimeNavigatorModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TimelineView/TimelineDailyView.tsx": {
+    "src/features/views/runtime/TimelineView/TimelineDailyView.tsx": {
       "staticStyle": 3,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TimelineView/TimelineDailyViewModel.ts": {
+    "src/features/views/runtime/TimelineView/TimelineDailyViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TimelineView/TimelineViewContainer.tsx": {
+    "src/features/views/runtime/TimelineView/TimelineViewContainer.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TimelineView/TimelineViewModel.ts": {
+    "src/features/views/runtime/TimelineView/TimelineViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TimelineView/TimelineViewView.tsx": {
+    "src/features/views/runtime/TimelineView/TimelineViewView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/TimelineView/index.ts": {
+    "src/features/views/runtime/TimelineView/index.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/ViewToolbar.tsx": {
+    "src/features/views/runtime/ViewToolbar.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/ViewToolbarModel.ts": {
+    "src/features/views/runtime/ViewToolbarModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/heatmap/HeatmapCell.tsx": {
+    "src/features/views/runtime/components/heatmap/HeatmapCell.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/items/BlockItem.tsx": {
+    "src/features/views/runtime/components/items/BlockItem.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/items/FieldPill.tsx": {
+    "src/features/views/runtime/components/items/FieldPill.tsx": {
       "staticStyle": 2,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/items/ItemLink.tsx": {
+    "src/features/views/runtime/components/items/ItemLink.tsx": {
       "staticStyle": 1,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/items/TaskRow.tsx": {
+    "src/features/views/runtime/components/items/TaskRow.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/statistics/ChartBlock.tsx": {
+    "src/features/views/runtime/components/statistics/ChartBlock.tsx": {
       "staticStyle": 1,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/timeline/DayColumnBody.tsx": {
+    "src/features/views/runtime/components/timeline/DayColumnBody.tsx": {
       "staticStyle": 4,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/timeline/DayColumnHeader.tsx": {
+    "src/features/views/runtime/components/timeline/DayColumnHeader.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/timeline/ProgressBlock.tsx": {
+    "src/features/views/runtime/components/timeline/ProgressBlock.tsx": {
       "staticStyle": 1,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/components/timeline/index.ts": {
+    "src/features/views/runtime/components/timeline/index.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelCell.tsx": {
+    "src/features/views/runtime/excel-view/ExcelCell.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelCellContent.tsx": {
+    "src/features/views/runtime/excel-view/ExcelCellContent.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelCellEditingModel.ts": {
+    "src/features/views/runtime/excel-view/ExcelCellEditingModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelCellEditor.tsx": {
+    "src/features/views/runtime/excel-view/ExcelCellEditor.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelCellModel.ts": {
+    "src/features/views/runtime/excel-view/ExcelCellModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelColumnChipList.tsx": {
+    "src/features/views/runtime/excel-view/ExcelColumnChipList.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelColumnContextMenu.tsx": {
+    "src/features/views/runtime/excel-view/ExcelColumnContextMenu.tsx": {
       "staticStyle": 1,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelColumnToolbar.tsx": {
+    "src/features/views/runtime/excel-view/ExcelColumnToolbar.tsx": {
       "staticStyle": 0,
       "staticSx": 1
     },
-    "src/features/settings/views/runtime/excel-view/ExcelColumnToolbarModel.ts": {
+    "src/features/views/runtime/excel-view/ExcelColumnToolbarModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelGrid.tsx": {
+    "src/features/views/runtime/excel-view/ExcelGrid.tsx": {
       "staticStyle": 1,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelGridModel.ts": {
+    "src/features/views/runtime/excel-view/ExcelGridModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelView.tsx": {
+    "src/features/views/runtime/excel-view/ExcelView.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelViewModel.ts": {
+    "src/features/views/runtime/excel-view/ExcelViewModel.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/ExcelViewToolbar.tsx": {
+    "src/features/views/runtime/excel-view/ExcelViewToolbar.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/index.ts": {
+    "src/features/views/runtime/excel-view/index.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/types.ts": {
+    "src/features/views/runtime/excel-view/types.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/useExcelCellEditing.ts": {
+    "src/features/views/runtime/excel-view/useExcelCellEditing.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/excel-view/value.ts": {
+    "src/features/views/runtime/excel-view/value.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/index.ts": {
+    "src/features/views/runtime/index.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/timeline/components/TimelineSummaryTable.tsx": {
+    "src/features/views/runtime/timeline/components/TimelineSummaryTable.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/views/runtime/timeline-parser.ts": {
+    "src/features/views/runtime/timeline-parser.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },

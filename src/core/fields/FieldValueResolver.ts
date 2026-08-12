@@ -1,6 +1,6 @@
 // src/core/fields/FieldValueResolver.ts
 import { readExplicitThemeParts } from '@/core/theme/themeSemantics';
-import type { Item } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { getCanonicalFieldKey, getFieldDefinition } from './FieldRegistry';
 import type { FieldSource } from './FieldTypes';
 import { normalizeImageValue } from './imageSemantics';
@@ -31,7 +31,7 @@ export function normalizeFieldKey(field: string): string {
   return getCanonicalFieldKey(field);
 }
 
-function readFileField(item: Item, field: string): unknown {
+function readFileField(item: RecordViewItem, field: string): unknown {
   const file = item.file;
   const fileRecord = asUnknownRecord(file);
   const key = field.slice('file.'.length);
@@ -45,23 +45,23 @@ function readFileField(item: Item, field: string): unknown {
   return readUnknown(fileRecord, key);
 }
 
-function readCategoryPath(item: Item): string | undefined {
+function readCategoryPath(item: RecordViewItem): string | undefined {
   return splitHierarchyPath(readString(asUnknownRecord(item), 'categoryPath') ?? item.categoryKey).path;
 }
 
-function readRootCategory(item: Item): string | undefined {
+function readRootCategory(item: RecordViewItem): string | undefined {
   return splitHierarchyPath(readString(asUnknownRecord(item), 'categoryPath') ?? item.categoryKey).root;
 }
 
-function readLeafCategory(item: Item): string | undefined {
+function readLeafCategory(item: RecordViewItem): string | undefined {
   return splitHierarchyPath(readString(asUnknownRecord(item), 'categoryPath') ?? item.categoryKey).leaf;
 }
 
-function readImageField(item: Item): unknown {
+function readImageField(item: RecordViewItem): unknown {
   return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.['图片'] ?? item.extra?.['image'] ?? item.extra?.['评图'] ?? item.extra?.['pintu']);
 }
 
-function readCanonicalField(item: Item, canonicalField: string): unknown {
+function readCanonicalField(item: RecordViewItem, canonicalField: string): unknown {
   if (canonicalField.startsWith('extra.')) {
     return item.extra?.[canonicalField.slice('extra.'.length)];
   }
@@ -135,7 +135,7 @@ function readCanonicalField(item: Item, canonicalField: string): unknown {
   return readUnknown(asUnknownRecord(item), canonicalField);
 }
 
-export function resolveFieldValue(item: Item, field: string): FieldValueResolution {
+export function resolveFieldValue(item: RecordViewItem, field: string): FieldValueResolution {
   const canonicalField = normalizeFieldKey(field);
   const def = getFieldDefinition(canonicalField);
   const value = readCanonicalField(item, canonicalField);
@@ -152,6 +152,6 @@ export function resolveFieldValue(item: Item, field: string): FieldValueResoluti
 }
 
 /** Compatibility helper for existing code paths. */
-export function readFieldValue(item: Item, field: string): unknown {
+export function readFieldValue(item: RecordViewItem, field: string): unknown {
   return resolveFieldValue(item, field).value;
 }

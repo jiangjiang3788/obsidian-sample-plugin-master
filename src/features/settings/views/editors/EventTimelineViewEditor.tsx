@@ -6,7 +6,7 @@ import { Button, SimpleSelect, Stack, TextField } from '@shared/ui/public';
 import { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import { FULL_DATA_FIELD_KEY, CONTENT_FIELD_KEY, getFieldCategoryLabel, getFieldLabel } from '@core/fields/public';
 import type { EventTimelineViewConfig } from '@core/view/public';
-import type { ViewEditorProps } from './registry';
+import type { ViewEditorProps } from './ViewEditorProps';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
 // 重新导出以保持兼容性

@@ -4,6 +4,7 @@
  * 新实现已经迁移到 core/fields/*，这里仅 re-export，避免多套字段注册表继续分裂。
  */
 export type { FieldDefinition } from '@/core/fields/FieldDefinition';
+export type { FieldSchema, CaptureFieldConfig } from '@/core/fields/FieldSchema';
 export type { FieldPickerOption } from '@/core/fields/FieldRegistry';
 export type {
   FieldCardinality,
@@ -71,3 +72,5 @@ export {
   templateFieldTypeSupportsDefaultValue,
   templateFieldTypeUsesOptions,
 } from '@/core/fields/TemplateFieldSanitizer';
+
+export { resolveCaptureFieldSchema, getCaptureFieldMarkdownKey } from '@/core/fields/CaptureFieldResolver';

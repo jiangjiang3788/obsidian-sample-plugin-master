@@ -1,6 +1,6 @@
 // src/core/utils/itemGrouping.ts
-import type { Item } from '@/core/types/schema';
-import { readField } from '@/core/types/schema';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
+import { readField } from '@/core/fields/ViewFieldCatalog';
 import { EMPTY_LABEL } from '@/core/types/constants';
 import { getBasePath } from './pathSemantic';
 import { getCanonicalFieldKey } from '@/core/fields/FieldRegistry';
@@ -84,7 +84,7 @@ export function compareFieldValuesByViewOrder(field: string, left: unknown, righ
     return String(left ?? '').localeCompare(String(right ?? ''), 'zh-CN');
 }
 
-function readOrderedFieldValue(item: Item, field: string, context?: ViewFieldOrderContext): unknown {
+function readOrderedFieldValue(item: RecordViewItem, field: string, context?: ViewFieldOrderContext): unknown {
     const canonical = getCanonicalFieldKey(String(field || '').trim());
     if (isGoalOrderField(canonical)) {
         if (canonical === 'goalId' || canonical === 'goalIds') {
@@ -108,7 +108,7 @@ function findFirstGoalOrderField(fields: string[] = []): string | null {
  * - 只重排目标之间的顺序；
  * - 同一目标内部保留原 items 顺序，让内容排序、时间排序、用户排序继续生效。
  */
-export function orderItemsByDisplayedGoalField<T extends Item>(items: T[] = [], displayFields: string[] = [], context?: ViewFieldOrderContext): T[] {
+export function orderItemsByDisplayedGoalField<T extends RecordViewItem>(items: T[] = [], displayFields: string[] = [], context?: ViewFieldOrderContext): T[] {
     const goalField = findFirstGoalOrderField(displayFields);
     if (!goalField) return items;
 
@@ -139,8 +139,8 @@ function normalizeGroupKeys(value: unknown, defaultLabel: string): string[] {
     return text ? [text] : [defaultLabel];
 }
 
-export function groupItemsByField(items: Item[], groupField: string, defaultLabel: string = '(未分类)'): Record<string, Item[]> {
-    const grouped: Record<string, Item[]> = {};
+export function groupItemsByField(items: RecordViewItem[], groupField: string, defaultLabel: string = '(未分类)'): Record<string, RecordViewItem[]> {
+    const grouped: Record<string, RecordViewItem[]> = {};
     
     for (const item of items) {
         const keys = normalizeGroupKeys(readField(item, groupField), defaultLabel);
@@ -156,7 +156,7 @@ export function groupItemsByField(items: Item[], groupField: string, defaultLabe
 /**
  * 获取分组后的排序键值列表
  */
-export function getSortedGroupKeys(grouped: Record<string, Item[]>, field?: string, context?: ViewFieldOrderContext): string[] {
+export function getSortedGroupKeys(grouped: Record<string, RecordViewItem[]>, field?: string, context?: ViewFieldOrderContext): string[] {
     const keys = Object.keys(grouped);
     if (field && isGoalOrderField(field)) {
         return keys.sort((a, b) => compareFieldValuesByViewOrder(field, a, b, context));
@@ -170,7 +170,7 @@ export function getSortedGroupKeys(grouped: Record<string, Item[]>, field?: stri
 export interface GroupNode {
     key: string;           // 当前层的分组 key（字段值）
     field: string;         // 当前层使用的字段名
-    items?: Item[];        // 叶子节点：具体 items
+    items?: RecordViewItem[];        // 叶子节点：具体 items
     children?: GroupNode[];// 中间节点：子分组
 }
 
@@ -179,7 +179,7 @@ export interface GroupNode {
  *  例如 ['A','B','C'] => A 层 -> B 层 -> C 层 -> items
  * 每一层复用 groupItemsByField + getSortedGroupKeys 的逻辑。
  */
-export function groupItemsByFields(items: Item[], fields: string[], context?: ViewFieldOrderContext): GroupNode[] {
+export function groupItemsByFields(items: RecordViewItem[], fields: string[], context?: ViewFieldOrderContext): GroupNode[] {
     if (!fields || fields.length === 0) {
         // 不分组时，返回一个虚拟根节点，方便视图统一处理
         return [{
@@ -189,7 +189,7 @@ export function groupItemsByFields(items: Item[], fields: string[], context?: Vi
         }];
     }
 
-    const groupLevel = (levelItems: Item[], level: number): GroupNode[] => {
+    const groupLevel = (levelItems: RecordViewItem[], level: number): GroupNode[] => {
         const field = fields[level];
 
         // 复用单字段分组逻辑（包括 defaultLabel 行为）
@@ -223,15 +223,15 @@ export function groupItemsByFields(items: Item[], fields: string[], context?: Vi
  * 构建表格矩阵数据结构
  */
 export interface TableMatrix {
-    matrix: Record<string, Record<string, Item[]>>;
+    matrix: Record<string, Record<string, RecordViewItem[]>>;
     sortedRows: string[];
     sortedCols: string[];
 }
 
-export function buildTableMatrix(items: Item[], rowField: string, colField: string, context?: ViewFieldOrderContext): TableMatrix {
+export function buildTableMatrix(items: RecordViewItem[], rowField: string, colField: string, context?: ViewFieldOrderContext): TableMatrix {
     const rowVals: Set<string> = new Set();
     const colVals: Set<string> = new Set();
-    const matrix: Record<string, Record<string, Item[]>> = {};
+    const matrix: Record<string, Record<string, RecordViewItem[]>> = {};
 
     items.forEach(item => {
         const rows = normalizeGroupKeys(readField(item, rowField), EMPTY_LABEL);
@@ -263,7 +263,7 @@ export function getBaseCategory(categoryKey?: string): string {
 /**
  * 从 items 中收集所有基础分类
  */
-export function collectBaseCategories(items: Item[]): string[] {
+export function collectBaseCategories(items: RecordViewItem[]): string[] {
     const categorySet = new Set<string>();
     items.forEach(item => {
         const baseCategory = getBaseCategory(item.categoryKey);

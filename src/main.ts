@@ -168,7 +168,7 @@ export default class ThinkPlugin extends Plugin {
             callback: async () => {
                 const taskId = await this.modalPort?.openNamePrompt({
                     title: '开始/继续计时',
-                    placeholder: '请输入任务 Item ID（例如：来自 Dashboard 的 item.id）',
+                    placeholder: '请输入任务 RecordViewItem ID（例如：来自 Dashboard 的 item.id）',
                     ctaText: '开始',
                 });
                 if (!taskId) return;

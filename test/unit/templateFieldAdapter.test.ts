@@ -5,7 +5,7 @@ import {
   normalizeTemplateFieldValue,
   normalizeTemplateRenderData,
 } from '../../src/core/fields/TemplateFieldAdapter';
-import type { BlockTemplate, TemplateField } from '../../src/core/types/schema';
+import type { RecordCaptureTemplate, TemplateField } from '../../src/core/recordInput/CaptureTemplate';
 
 describe('TemplateFieldAdapter', () => {
   it('识别显式语义，不依赖固定字段名', () => {
@@ -33,7 +33,7 @@ describe('TemplateFieldAdapter', () => {
 
     const template = {
       fields: [{ key: 'score', label: '评分', type: 'rating', semanticType: 'ratingPair', auxKey: 'pintu' }],
-    } satisfies Pick<BlockTemplate, 'fields'>;
+    } satisfies Pick<RecordCaptureTemplate, 'fields'>;
     const data = normalizeTemplateRenderData(template, {
       score: { label: '不错', value: 'icons/good.png' },
     });

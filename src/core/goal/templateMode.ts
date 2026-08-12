@@ -11,13 +11,12 @@ const SYSTEM_DISPLAY_DEFAULT_KEYS = new Set(['themePath', '主题', 'icon', '图
 
 export function goalTemplateHasCustomOverrides(
   template: GoalTemplate | null | undefined,
-  coreBlock: Pick<CoreBlockDefinition, 'id' | 'fields' | 'outputTemplate' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null | undefined,
+  coreBlock: Pick<CoreBlockDefinition, 'id' | 'fields' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null | undefined,
   goal?: Pick<GoalDefinition, 'themePath'> | null,
 ): boolean {
   if (!template || !coreBlock || template.enabled === false) return false;
   const patch = compactGoalTemplateForStorage(template, { coreBlock, goal });
   if (patch.fields?.length) return true;
-  if (compactText(patch.outputTemplate)) return true;
   if (compactText(patch.targetFile)) return true;
   if (compactText(patch.appendUnderHeader)) return true;
   if (patch.requiredFields?.length) return true;
@@ -27,7 +26,7 @@ export function goalTemplateHasCustomOverrides(
 
 export function inferGoalTemplateEditMode(
   template: GoalTemplate | null | undefined,
-  coreBlock: Pick<CoreBlockDefinition, 'id' | 'fields' | 'outputTemplate' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null | undefined,
+  coreBlock: Pick<CoreBlockDefinition, 'id' | 'fields' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null | undefined,
   goal?: Pick<GoalDefinition, 'themePath'> | null,
 ): GoalTemplateEditMode {
   if (template?.enabled === false) return 'disabled';

@@ -1,4 +1,4 @@
-import type { ThemeDefinition } from '@/core/types/schema';
+import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 
 /** 主题树节点 - 统一结构。 */
 export interface ThemeTreeNode {

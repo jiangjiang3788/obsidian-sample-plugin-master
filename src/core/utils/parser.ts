@@ -1,10 +1,11 @@
 // Record Foundation v2 parser: runtime reads Markdown Record Blocks only.
-import type { Item } from '@/core/types/schema';
+import type { RecordEntity, RecordViewItem } from '@/core/records/RecordEntity';
 import { getPeriodCount, dayjs } from './date';
 import { decodeRecordContentLines } from '@/core/records/codec';
 import { RECORD_SCHEMA_VERSION, isStableRecordId } from '@/core/records/RecordId';
 import { normalizeRecurrenceInfo } from '@/core/records/task/taskRecurrence';
 import { normalizeTaskSessionDurationMinutes } from '@/core/records/task/taskSession';
+import { getRecordSchemaDefinition } from '@/core/records/schema';
 
 /**
  * Parse one <!-- start --> ... <!-- end --> Record Block.
@@ -17,7 +18,7 @@ export function parseRecordBlock(
   startIdx: number,
   endIdx: number,
   parentFolder: string,
-): Item | null {
+): RecordEntity | null {
   const contentLines = lines.slice(startIdx + 1, endIdx);
   const parsed = decodeRecordContentLines(contentLines, parentFolder);
   if (!parsed.recordId || !isStableRecordId(parsed.recordId)) return null;
@@ -37,7 +38,12 @@ export function parseRecordBlock(
   const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
   if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
   const canonicalDate = parsed.scheduledDate || parsed.dueDate || parsed.startDate || parsed.date || (parsed.sessionStartedAt ? parsed.sessionStartedAt.slice(0, 10) : undefined);
-  const item: Item = {
+  const schema = getRecordSchemaDefinition(parsed.coreBlock);
+  const derivedCategory = parsed.coreBlock === 'thought' && parsed.recordSubtype
+    ? `闪念/${parsed.recordSubtype}`
+    : (schema?.categoryKey || parentFolder);
+  const categoryKey = parsed.categoryKey || derivedCategory;
+  const item: RecordViewItem = {
     id: parsed.recordId,
     schemaVersion: parsed.schemaVersion,
     title: parsed.title || '',
@@ -51,7 +57,7 @@ export function parseRecordBlock(
     created: 0,
     modified: 0,
     extra: parsed.extra,
-    categoryKey: parsed.categoryKey,
+    categoryKey,
     folder: parentFolder,
     theme: parsed.theme,
     coreBlock: parsed.coreBlock,
@@ -78,6 +84,7 @@ export function parseRecordBlock(
     energyDelta: parsed.energyDelta,
     brainDelta: parsed.brainDelta,
     physicalDelta: parsed.physicalDelta,
+    recordSubtype: parsed.recordSubtype,
     doneDate: parsed.completedAt,
     cancelledDate: parsed.cancelledAt,
     date: canonicalDate,

@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { App, Modal, Notice } from 'obsidian';
-import { Item } from '@core/types/public';
+import { RecordViewItem } from '@core/types/public';
 import { dayjs } from '@core/utils/public';
 import { openEditFromItem, openRecordOrigin } from '@/app/public';
 import { createRecordGestureHandlers } from '@shared/ui/public';
@@ -17,18 +17,18 @@ export interface CheckinManagerData {
 interface CheckinManagerModalProps {
     app: App;
     date: string;
-    items: Item[];
+    items: RecordViewItem[];
     onSave: (data: CheckinManagerData) => Promise<void>;
     onClose: () => void;
     onAddRecord?: () => void;
-    onDeleteRecord?: (item: Item) => Promise<boolean> | boolean | void;
+    onDeleteRecord?: (item: RecordViewItem) => Promise<boolean> | boolean | void;
 }
 
 function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRecord }: CheckinManagerModalProps) {
-    const [managedItems, setManagedItems] = useState<Item[]>(() => items || []);
+    const [managedItems, setManagedItems] = useState<RecordViewItem[]>(() => items || []);
     const sortedItems = useMemo(() => [...managedItems].sort((a, b) => (a.created || 0) - (b.created || 0)), [managedItems]);
 
-    const handleOpenRecord = (item: Item) => {
+    const handleOpenRecord = (item: RecordViewItem) => {
         if (!item.file?.path) return;
         try {
             openEditFromItem({ app, item });
@@ -39,7 +39,7 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRe
     };
 
 
-    const handleDeleteRecord = async (event: MouseEvent, item: Item) => {
+    const handleDeleteRecord = async (event: MouseEvent, item: RecordViewItem) => {
         event.preventDefault();
         event.stopPropagation();
         if (!onDeleteRecord) return;
@@ -122,10 +122,10 @@ export class CheckinManagerModal extends Modal {
     constructor(
         app: App,
         private date: string,
-        private items: Item[],
+        private items: RecordViewItem[],
         private onSave: (data: CheckinManagerData) => Promise<void>,
         private onAddRecord?: () => void,
-        private onDeleteRecord?: (item: Item) => Promise<boolean> | boolean | void
+        private onDeleteRecord?: (item: RecordViewItem) => Promise<boolean> | boolean | void
     ) {
         super(app);
     }
