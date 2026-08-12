@@ -9,7 +9,7 @@ export interface TagPathParts {
 }
 
 function normalizeTagPath(value: unknown): string | undefined {
-  const raw = String(value ?? '').trim();
+  const raw = String(value ?? '').trim().replace(/^#+/, '');
   if (!raw) return undefined;
   const parts = raw
     .split('/')

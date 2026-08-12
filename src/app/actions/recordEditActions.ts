@@ -1,8 +1,9 @@
 import { QuickInputModal } from '@/app/ui/modals/QuickInputModal';
 import type { RecordViewItem } from '@core/types/public';
+import type { QuickInputApp } from './recordCreate/types';
 
 export interface EditFromItemParams {
-  app: any;
+  app: QuickInputApp;
   item: RecordViewItem;
   openedFrom?: 'list' | 'detail' | 'search' | 'timeline' | 'quickinput' | 'timer' | 'unknown';
 }
@@ -37,7 +38,8 @@ export function openEditFromItem(params: EditFromItemParams): boolean {
     },
   };
 
-  new QuickInputModal(params.app, params.item.templateId || params.item.categoryKey || '', editContext, undefined, undefined, false, {
+  const modalApp = params.app as ConstructorParameters<typeof QuickInputModal>[0];
+  new QuickInputModal(modalApp, params.item.templateId || params.item.categoryKey || '', editContext, undefined, undefined, false, {
     mode: 'edit',
     editItem: params.item,
   }).open();

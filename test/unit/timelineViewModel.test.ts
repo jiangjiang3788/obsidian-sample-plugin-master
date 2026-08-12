@@ -35,7 +35,7 @@ describe('TimelineViewModel', () => {
       dateRange: [new Date('2026-06-01'), new Date('2026-06-02')],
       currentView: '月',
       injectedModel: {
-        timelineTasks: [{ doneDate: '2026-06-01' }],
+        timelineTasks: [{ doneDate: '2026-06-01' } as any],
         summaryCategoryHours: { work: 2 },
         dailyViewData: { dateRangeDays: [], blocksByDay: {} },
       },

@@ -9,7 +9,7 @@ import { DEFAULT_ENERGY_SETTINGS } from '@/core/energy/types';
 import type { InputSettings } from '@/core/recordInput/CaptureTemplate';
 import type { Group, Layout, ViewInstance } from '@/core/view/ViewConfig';
 
-export const THINK_SETTINGS_SCHEMA_VERSION = 3;
+export const THINK_SETTINGS_SCHEMA_VERSION = 5;
 
 export interface ThinkSettings {
   schemaVersion: number;

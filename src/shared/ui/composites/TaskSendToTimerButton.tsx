@@ -7,19 +7,20 @@ import { HourglassTopIcon, PlayArrowIcon } from '../icons';
 interface TaskSendToTimerButtonProps {
     taskId: string;
     timerStatus?: 'running' | 'paused';
-    onStart: () => void;
+    onStart: () => void | Promise<void>;
 }
 
 /**
- * 任务列表中的“发送到计时器”按钮 (多任务版本)。
- * - 如果任务已在计时器中，显示激活状态。
- * - 否则，显示播放按钮以添加并开始计时。
+ * Task-row execution control.
+ * - no Timer: create + start
+ * - paused Timer: resume from the same Task row
+ * - running Timer: display active state; the Timer panel owns pause/end controls
  */
-export function TaskSendToTimerButton({ taskId, timerStatus, onStart }: TaskSendToTimerButtonProps) {
-    if (timerStatus) {
+export function TaskSendToTimerButton({ timerStatus, onStart }: TaskSendToTimerButtonProps) {
+    if (timerStatus === 'running') {
         return (
             <IconAction
-                label={`该任务已在计时面板中 (${timerStatus})`}
+                label="正在计时"
                 color="primary"
                 sx={{ cursor: 'default' }}
                 icon={<HourglassTopIcon fontSize="small" />}
@@ -27,7 +28,18 @@ export function TaskSendToTimerButton({ taskId, timerStatus, onStart }: TaskSend
         );
     }
 
+    if (timerStatus === 'paused') {
+        return (
+            <IconAction
+                label="继续计时"
+                color="primary"
+                onClick={() => { void onStart(); }}
+                icon={<PlayArrowIcon fontSize="small" />}
+            />
+        );
+    }
+
     return (
-        <IconAction label="添加并开始计时" onClick={onStart} icon={<PlayArrowIcon fontSize="small" />} />
+        <IconAction label="添加并开始计时" onClick={() => { void onStart(); }} icon={<PlayArrowIcon fontSize="small" />} />
     );
 }

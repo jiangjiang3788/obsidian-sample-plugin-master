@@ -19,7 +19,7 @@ const ENVELOPE = [
 
 const GOAL = [
   f('目标ID', 'canonical-reference', 'target', 'goal-id', 'Stable Goal reference and business truth.', { aliases: ['goalId'] }),
-  f('目标', 'human-snapshot', 'target', 'string', 'Human-readable Goal snapshot; never used as identity.', { aliases: ['goalPath', 'goalPaths'] }),
+  f('目标', 'human-snapshot', 'target', 'string', 'Human-readable Goal snapshot; never used as identity.', { aliases: ['goalPath'] }),
 ] as const;
 
 const THEME = f('主题', 'business-history', 'target', 'string', 'Historical theme-path snapshot. May reference a theme no longer present in current settings.', { aliases: ['theme', 'themePath'] });

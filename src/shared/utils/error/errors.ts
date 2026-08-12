@@ -1,8 +1,8 @@
 import { ErrorType } from './types';
 
-interface ErrorConstructorWithCaptureStack extends ErrorConstructor {
-    captureStackTrace?: (targetObject: object, constructorOpt?: new (...args: never[]) => unknown) => void;
-}
+type ErrorConstructorWithCaptureStack = ErrorConstructor & {
+    captureStackTrace?: (targetObject: object, constructorOpt?: Function) => void;
+};
 
 /** 自定义错误基类 */
 export class BaseError extends Error {
@@ -19,7 +19,7 @@ export class BaseError extends Error {
 
         // 维护正确的堆栈跟踪（仅在 V8 引擎中有效）
         const ErrorWithCaptureStack = Error as ErrorConstructorWithCaptureStack;
-        ErrorWithCaptureStack.captureStackTrace?.(this, this.constructor as new (...args: never[]) => unknown);
+        ErrorWithCaptureStack.captureStackTrace?.(this, this.constructor as Function);
     }
 }
 

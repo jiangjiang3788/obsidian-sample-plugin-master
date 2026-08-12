@@ -61,7 +61,7 @@ export function EventTimelineEventList(props: EventTimelineEventListProps) {
           : '';
 
         return (
-          <div class="et-event" key={`${dateLabel}-${timeLabel}-${titleForKey}-${index}`}>
+          <div class={`et-event ${index === 0 ? 'et-event--first' : ''} ${index === items.length - 1 ? 'et-event--last' : ''}`} key={`${dateLabel}-${timeLabel}-${titleForKey}-${index}`}>
             <div class="et-event-date">
               {showDate && t && <div class="et-date-label">{dateLabel}</div>}
               {item.coreBlock === 'task' && <div class="et-time-label">{timeLabel}</div>}

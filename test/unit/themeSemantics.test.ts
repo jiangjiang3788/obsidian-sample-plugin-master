@@ -5,6 +5,7 @@ import { buildParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 function makeItem(overrides: Partial<RecordViewItem>): RecordViewItem {
   return {
     id: 'rec.01J00000000000000000000062',
+    schemaVersion: 2,
     title: '任务',
     content: '任务',
     tags: [],

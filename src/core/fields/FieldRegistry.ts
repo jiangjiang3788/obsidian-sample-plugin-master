@@ -43,9 +43,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   categoryKey: text({ key: 'categoryKey', label: '分类路径', valueType: 'path', inputType: 'path', category: 'core', source: 'item', semantic: 'categoryPath', hierarchical: true, aliases: ['categoryPath', '分类', '类别', '分类路径'], description: '完整分类路径，例如 闪念/感受' }),
   tags: { key: 'tags', label: '标签', valueType: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'tags', cardinality: 'multi', hierarchical: true, aliases: ['标签', 'tag', 'tags'], description: '多值层级标签，例如 项目/插件、地点/家', formatter: (v) => Array.isArray(v) ? v.join(', ') : String(v ?? '') },
   goalId: text({ key: 'goalId', label: '目标ID', category: 'core', source: 'item', semantic: 'goalId', inputType: 'text', aliases: ['目标ID', 'goalId'] }),
-  goalIds: { key: 'goalIds', label: '目标ID列表', valueType: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'goalId', cardinality: 'multi', hierarchical: false, hiddenByDefault: true },
-  goalPath: text({ key: 'goalPath', label: '目标路径', valueType: 'path', inputType: 'hierarchicalSingleSelect', category: 'core', source: 'item', semantic: 'goalPath', hierarchical: true, aliases: ['目标路径', 'goalPath'] }),
-  goalPaths: { key: 'goalPaths', label: '目标', valueType: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'goals', cardinality: 'multi', hierarchical: true, description: '目标路径字段，例如 产品化/QuickInput、个人成长/写作', formatter: (v) => Array.isArray(v) ? v.join(', ') : String(v ?? '') },
+  goalPath: text({ key: 'goalPath', label: '目标', valueType: 'path', inputType: 'hierarchicalSingleSelect', category: 'core', source: 'item', semantic: 'goalPath', hierarchical: true, aliases: ['目标', '目标路径', 'goalPath'], description: '单值 Goal 路径；Goal 是独立实体，不使用 Tag 语义。' }),
   rootGoal: text({ key: 'rootGoal', label: '根目标', valueType: 'path', category: 'core', source: 'derived', semantic: 'goalPath', hierarchical: true, aliases: ['根目标'] }),
   leafGoal: text({ key: 'leafGoal', label: '叶目标', valueType: 'path', category: 'core', source: 'derived', semantic: 'goalPath', hierarchical: true, aliases: ['叶目标'] }),
   cycleId: text({ key: 'cycleId', label: '周期ID', category: 'core', source: 'item', semantic: 'cycleId', inputType: 'text', aliases: ['周期ID', 'cycleId'] }),
@@ -64,12 +62,20 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   startTime: { key: 'startTime', label: '开始时间', valueType: 'time', inputType: 'time', category: 'core', source: 'item', semantic: 'startTime', aliases: ['时间', 'time', 'start'] },
   endTime: { key: 'endTime', label: '结束时间', valueType: 'time', inputType: 'time', category: 'core', source: 'item', semantic: 'endTime', aliases: ['结束', 'end'] },
   expectedDurationMinutes: { key: 'expectedDurationMinutes', label: '预计时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['预计时长', 'expectedDuration', 'expectedDurationMinutes'], description: 'Task 的用户声明预计时长；实际工作时长只来自 TaskSession。' },
+  scheduledDate: { key: 'scheduledDate', label: '计划日期', valueType: 'date', inputType: 'date', category: 'core', source: 'item', semantic: 'date', aliases: ['计划日期', 'scheduledDate'] },
+  startDate: { key: 'startDate', label: '开始日期', valueType: 'date', inputType: 'date', category: 'core', source: 'item', semantic: 'date', aliases: ['开始日期', 'startDate'] },
+  dueDate: { key: 'dueDate', label: '截止日期', valueType: 'date', inputType: 'date', category: 'core', source: 'item', semantic: 'date', aliases: ['截止日期', 'dueDate'] },
+  completedAt: text({ key: 'completedAt', label: '完成时间', category: 'core', source: 'item', semantic: 'date', aliases: ['完成于', 'completedAt'] }),
+  createdAt: text({ key: 'createdAt', label: '创建时间', category: 'core', source: 'item', semantic: 'date', aliases: ['创建于', 'createdAt'], hiddenByDefault: true }),
+  energyDemand: text({ key: 'energyDemand', label: '精力要求', category: 'core', source: 'item', semantic: 'none', aliases: ['精力要求', 'energyDemand'] }),
+  brainDemand: text({ key: 'brainDemand', label: '脑力要求', category: 'core', source: 'item', semantic: 'none', aliases: ['脑力要求', 'brainDemand'] }),
+  physicalDemand: text({ key: 'physicalDemand', label: '体力要求', category: 'core', source: 'item', semantic: 'none', aliases: ['体力要求', 'physicalDemand'] }),
   duration: { key: 'duration', label: '时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['时长', 'duration'], hiddenByDefault: true, description: '通用/历史时长字段；Task 应使用 expectedDurationMinutes，执行历史使用 TaskSession。' },
   rating: { key: 'rating', label: '评分', valueType: 'number', inputType: 'rating', category: 'core', source: 'item', semantic: 'rating', aliases: ['评分', 'rating'] },
   image: { key: 'image', label: '图片', valueType: 'image', inputType: 'image', category: 'core', source: 'item', semantic: 'image', aliases: ['图片', 'image', '评图', 'pintu'], description: '通用图片字段；当前兼容读取旧 pintu/评图 数据' },
 
   // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
-  themePath: text({ key: 'themePath', label: '主题', valueType: 'path', inputType: 'hierarchicalSingleSelect', category: 'core', source: 'item', semantic: 'themePath', hierarchical: true, aliases: ['主题', '主题路径', '完整主题', 'themePath'], description: '主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段' }),
+  themePath: text({ key: 'themePath', label: '主题路径', valueType: 'path', inputType: 'hierarchicalSingleSelect', category: 'core', source: 'item', semantic: 'themePath', hierarchical: true, aliases: ['主题', '主题路径', '完整主题', 'theme', 'themePath'], description: '主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段' }),
   rootTheme: text({ key: 'rootTheme', label: '根主题', valueType: 'path', category: 'core', source: 'derived', semantic: 'themePath', hierarchical: true, aliases: ['根主题', 'themeRoot'] }),
   leafTheme: text({ key: 'leafTheme', label: '叶主题', valueType: 'path', category: 'core', source: 'derived', semantic: 'themePath', hierarchical: true, aliases: ['叶主题', 'themeLeaf'] }),
 
@@ -95,6 +101,48 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   manuallyEdited: { key: 'manuallyEdited', label: '手动编辑', valueType: 'boolean', category: 'core', source: 'item' },
 
 };
+
+/**
+ * Field Foundation V5: the field picker is a product surface, not a dump of the
+ * runtime entity. Internal IDs/debug counters remain resolvable by explicit key,
+ * but they are never advertised as normal user fields.
+ */
+export const VIEW_FIELD_PICKER_KEYS = new Set([
+  'title', 'content', 'categoryKey', 'tags',
+  'goalPath', 'rootGoal', 'leafGoal',
+  'coreBlock', 'recordSubtype', 'status', 'cadence',
+  'date', 'scheduledDate', 'startDate', 'dueDate', 'completedAt',
+  'priority', 'expectedDurationMinutes', 'energyDemand', 'brainDemand', 'physicalDemand',
+  'rating', 'image', 'icon',
+  'themePath', 'rootTheme', 'leafTheme',
+  'period.label', 'recurrence',
+  'file.path', 'file.basename', 'file.folder', 'header',
+] as const);
+
+const FIELD_PICKER_KEY_ORDER = new Map<string, number>(
+  Array.from(VIEW_FIELD_PICKER_KEYS).map((key, index) => [String(key), index]),
+);
+
+function getFieldPickerKeyRank(key: string): number {
+  return FIELD_PICKER_KEY_ORDER.get(key) ?? Number.MAX_SAFE_INTEGER;
+}
+
+/**
+ * Field picker ordering is a product contract, not a side-effect of localized labels.
+ * Keep category groups contiguous and keep built-ins in the curated product order.
+ * Custom fields are the only group sorted alphabetically by their user label.
+ */
+export function compareFieldDefinitionsForPicker(a: FieldDefinition, b: FieldDefinition): number {
+  const aCategory = FIELD_CATEGORY_ORDER.includes(a.category) ? a.category : 'custom';
+  const bCategory = FIELD_CATEGORY_ORDER.includes(b.category) ? b.category : 'custom';
+  const byCategory = FIELD_CATEGORY_ORDER.indexOf(aCategory) - FIELD_CATEGORY_ORDER.indexOf(bCategory);
+  if (byCategory !== 0) return byCategory;
+
+  const byRank = getFieldPickerKeyRank(a.key) - getFieldPickerKeyRank(b.key);
+  if (byRank !== 0 && Number.isFinite(byRank)) return byRank;
+
+  return a.label.localeCompare(b.label, 'zh-CN');
+}
 
 export const HIDDEN_EXTRA_ALIAS_KEYS = [
   '正文',
@@ -123,14 +171,19 @@ export function getAvailableFields(items: RecordViewItem[]): FieldDefinition[] {
   const registeredLabels = new Set<string>();
 
   Object.values(FIELD_REGISTRY).forEach(def => {
-    if (def.hiddenByDefault) return;
-    allFields.set(def.key, def);
+    // Every registered label/alias is reserved, including internal/hidden fields.
+    // This prevents a canonical hidden value from reappearing as extra.<label>.
     registeredLabels.add(def.label);
+    registeredLabels.add(def.key);
+    (def.aliases || []).forEach(alias => registeredLabels.add(alias));
+    if (def.hiddenByDefault || !VIEW_FIELD_PICKER_KEYS.has(def.key as any)) return;
+    allFields.set(def.key, def);
   });
 
   items.forEach(it => {
     Object.keys(it.extra || {}).forEach(key => {
       if (!isVisibleExtraField(it, key)) return;
+      if (!key || key.length > 64 || /[\r\n:：]/.test(key)) return;
       if (registeredLabels.has(key)) return;
       const fullKey = 'extra.' + key;
       if (!allFields.has(fullKey)) {
@@ -151,7 +204,7 @@ export function getAvailableFields(items: RecordViewItem[]): FieldDefinition[] {
     });
   });
 
-  return Array.from(allFields.values()).sort((a, b) => a.label.localeCompare(b.label, 'zh'));
+  return Array.from(allFields.values()).sort(compareFieldDefinitionsForPicker);
 }
 
 export function getAvailableFieldsByCategory(items: RecordViewItem[]): Record<FieldCategory, FieldDefinition[]> {
@@ -169,7 +222,12 @@ export function getAvailableFieldsByCategory(items: RecordViewItem[]): Record<Fi
 
 export function getFieldCategory(key: string): FieldCategory {
   const def = getFieldDefinition(key);
-  if (!def) return key.startsWith('extra.') ? 'custom' : 'core';
+  if (!def) {
+    if (key.startsWith('file.')) return 'file';
+    // Unknown fields are user/custom surface by default. Treating an unknown raw key
+    // as core is what caused legacy/custom entries to split the picker into repeated groups.
+    return 'custom';
+  }
   return (FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : 'custom') as FieldCategory;
 }
 
@@ -199,6 +257,10 @@ export function getFieldPickerOptions(fields: string[]): FieldPickerOption[] {
   return options.sort((a, b) => {
     const byCategory = FIELD_CATEGORY_ORDER.indexOf(a.category) - FIELD_CATEGORY_ORDER.indexOf(b.category);
     if (byCategory !== 0) return byCategory;
+
+    const byRank = getFieldPickerKeyRank(a.value) - getFieldPickerKeyRank(b.value);
+    if (byRank !== 0 && Number.isFinite(byRank)) return byRank;
+
     return a.label.localeCompare(b.label, 'zh-CN');
   });
 }

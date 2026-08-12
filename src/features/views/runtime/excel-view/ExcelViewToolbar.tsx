@@ -51,7 +51,7 @@ export function ExcelViewToolbar({
         >
           内容：{excelConfigSaving ? '保存中…' : isFullMarkdownContent ? '全文 Markdown' : '预览'}
         </button>
-        <span class="excel-view-legend-note">双击/Enter/F2 编辑；方向键/Tab 导航；支持多行多列粘贴；内容字段可切换预览或全文 Markdown。</span>
+        <span class="excel-view-legend-note">单击选中；双击/Enter/F2 编辑；Ctrl/⌘+点击打开完整记录；方向键/Tab 导航；支持多行多列粘贴。</span>
       </div>
       <ExcelColumnToolbar
         fields={displayFields}

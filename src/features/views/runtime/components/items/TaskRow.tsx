@@ -6,7 +6,7 @@ import { TaskSendToTimerButton } from '@shared/ui/public';
 import { isItemDone } from '@core/utils/public';
 import { FieldPill } from './FieldPill';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
-import { createRecordGestureHandlers } from '@shared/ui/public';
+import { createRecordGestureHandlers, RECORD_GESTURE_HINT } from '@shared/ui/public';
 
 interface TaskRowProps {
     item: RecordViewItem;
@@ -56,7 +56,7 @@ export function TaskRow({
             
             <div class="task-row-content" onClick={gesture.onClick as any} onDblClick={gesture.onDblClick as any} onTouchEnd={gesture.onTouchEnd as any}>
                 <div class="task-row-main">
-                    <button type="button" onClick={gesture.onClick as any} onDblClick={gesture.onDblClick as any} onTouchEnd={gesture.onTouchEnd as any} class={`task-row-title ${done ? 'task-done' : ''}`}>
+                    <button type="button" title={RECORD_GESTURE_HINT} onClick={gesture.onClick as any} onDblClick={gesture.onDblClick as any} onTouchEnd={gesture.onTouchEnd as any} onKeyDown={gesture.onKeyDown as any} class={`task-row-title ${done ? 'task-done' : ''}`}>
                         {item.icon && <span class="icon mr-1">{item.icon}</span>}
                         {visibleTitle}
                     </button>
@@ -79,7 +79,8 @@ export function TaskRow({
                                 item={item} 
                                 fieldKey={fieldKey} 
                                 resolveResourcePath={resolveResourcePath} 
-                                allThemes={allThemes} 
+                                allThemes={allThemes}
+                                onOpenRecordOrigin={onOpenRecordOrigin}
                             />
                         ))}
                     </div>

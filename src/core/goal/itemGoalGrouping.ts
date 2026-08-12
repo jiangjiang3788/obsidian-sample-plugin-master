@@ -18,27 +18,8 @@ export interface GoalBucket extends CategoryConfig {
 
 type GoalDefinitionWithIcon = GoalDefinition & { icon?: string | null };
 
-function firstString(value: unknown): string {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const candidate = firstString(item);
-      if (candidate) return candidate;
-    }
-    return '';
-  }
-  if (typeof value === 'string') {
-    const text = value.trim();
-    if (!text) return '';
-    return text.split(',').map((part) => part.trim()).filter(Boolean)[0] || '';
-  }
-  if (value == null) return '';
-  return String(value).trim();
-}
-
 function normalizeItemGoalPath(value: unknown): string {
-  const raw = firstString(value);
-  if (!raw) return '';
-  return normalizeGoalPath(raw) || raw;
+  return normalizeGoalPath(String(value ?? '').trim()) || '';
 }
 
 function buildGoalPathById(goals: GoalDefinition[] = []): Map<string, string> {
@@ -56,27 +37,17 @@ function findGoalByPath(goals: GoalDefinition[] = [], goalPath: string): GoalDef
   return goals.find((goal) => normalizeItemGoalPath(goal.goalPath || goal.title) === normalized) || null;
 }
 
+/**
+ * Goal identity is single-valued and ID-first. A record without goalId is
+ * unassigned; we no longer infer Goal identity from tag-like strings or aliases.
+ * goalPath is only a readable snapshot if the referenced Goal no longer exists.
+ */
 export function getItemGoalKey(item: RecordViewItem, goals: GoalDefinition[] = []): string {
-  const directPath = normalizeItemGoalPath(item.goalPath);
-  if (directPath) return directPath;
-
-  const directPaths = normalizeItemGoalPath(item.goalPaths);
-  if (directPaths) return directPaths;
-
-  const fieldPath = normalizeItemGoalPath(readField(item, 'goalPath')) || normalizeItemGoalPath(readField(item, '目标路径')) || normalizeItemGoalPath(readField(item, '目标'));
-  if (fieldPath) return fieldPath;
-
-  const fieldPaths = normalizeItemGoalPath(readField(item, 'goalPaths'));
-  if (fieldPaths) return fieldPaths;
-
-  const byId = buildGoalPathById(goals);
-  const directId = firstString(item.goalId) || firstString(readField(item, 'goalId')) || firstString(readField(item, '目标ID'));
-  if (directId && byId.has(directId)) return byId.get(directId) || UNASSIGNED_GOAL_KEY;
-
-  const directIds = firstString(item.goalIds);
-  if (directIds && byId.has(directIds)) return byId.get(directIds) || UNASSIGNED_GOAL_KEY;
-
-  return UNASSIGNED_GOAL_KEY;
+  const goalId = String(item.goalId || '').trim();
+  if (!goalId) return UNASSIGNED_GOAL_KEY;
+  const currentPath = buildGoalPathById(goals).get(goalId);
+  if (currentPath) return currentPath;
+  return normalizeItemGoalPath(item.goalPath) || UNASSIGNED_GOAL_KEY;
 }
 
 export function getItemGoalLabel(item: RecordViewItem, goals: GoalDefinition[] = []): string {

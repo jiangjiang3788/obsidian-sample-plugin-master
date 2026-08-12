@@ -125,7 +125,7 @@ export function hydrateQuickInputTemplateDefaults({
   const assignValue = (key: string, value: unknown, source: QuickInputFieldSource) =>
     assignQuickInputDefaultValue({ next, nextSources, key, value, source, markChanged });
 
-  template.fields.forEach((field: TemplateField) => {
+  (template.fields || []).forEach((field: TemplateField) => {
     const key = field.key;
     const existingValue = next[key];
     const existingSource = nextSources[key];

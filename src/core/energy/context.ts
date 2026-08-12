@@ -68,27 +68,10 @@ function isHabitLike(item: RecordViewItem): boolean {
   return normalizeCoreBlock(item) === 'habit';
 }
 
-function normalizeGoalPath(value: unknown): string {
-  return String(value ?? '').trim().replace(/^#/, '');
-}
-
-function itemGoalIds(item: RecordViewItem): string[] {
-  return [item.goalId, ...(item.goalIds || [])].map((value) => String(value || '').trim()).filter(Boolean);
-}
-
-function itemGoalPaths(item: RecordViewItem): string[] {
-  return [item.goalPath, ...(item.goalPaths || [])].map(normalizeGoalPath).filter(Boolean);
-}
-
 function matchesEnergyGoal(energyItem: RecordViewItem, candidate: RecordViewItem): boolean {
-  const energyIds = itemGoalIds(energyItem);
-  const candidateIds = itemGoalIds(candidate);
-  if (energyIds.length > 0) return candidateIds.some((id) => energyIds.includes(id));
-
-  const energyPaths = itemGoalPaths(energyItem);
-  if (energyPaths.length === 0) return true;
-  const candidatePaths = itemGoalPaths(candidate);
-  return candidatePaths.some((path) => energyPaths.includes(path));
+  const energyGoalId = String(energyItem.goalId || '').trim();
+  if (!energyGoalId) return true;
+  return String(candidate.goalId || '').trim() === energyGoalId;
 }
 
 function occurrenceDate(item: RecordViewItem): string | undefined {

@@ -20,6 +20,7 @@ const item = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   created: 0,
   modified: 0,
   categoryKey: '任务',
+  coreBlock: 'task',
   extra: {},
   ...overrides,
 } as RecordViewItem);

@@ -17,7 +17,7 @@ export interface GoalTemplateCellModel {
 }
 
 function cleanPathSegment(value: string): string {
-  return value.trim().replace(/^[#＃]+\s*/, '').trim();
+  return value.trim();
 }
 
 
@@ -110,7 +110,7 @@ export function normalizeSearchText(value: string): string {
 }
 
 export function cleanDisplayText(value: unknown): string {
-  return String(value ?? '').replace(/^[#＃]+\s*/, '').trim();
+  return String(value ?? '').trim();
 }
 
 export { getThemePathLeaf as leafPath };

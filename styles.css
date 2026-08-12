@@ -1446,13 +1446,17 @@
   align-items: center;
   justify-content: flex-start;
 }
-.think-os .task-row-checkbox-wrapper { padding-top: var(--think-space-1); }
+.think-os .task-row-checkbox-wrapper {
+  min-height: var(--think-control-height-sm);
+  padding-top: 0;
+}
 .think-os .task-row-content {
   display: flex;
   flex: 0 1 auto;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
+  gap: var(--think-space-2);
   min-width: 0;
   text-align: left;
 }
@@ -1464,7 +1468,10 @@
   min-width: 0;
   max-width: 100%;
 }
-.think-os .task-row-main { gap: var(--think-space-4); }
+.think-os .task-row-main {
+  gap: var(--think-space-4);
+  min-height: var(--think-control-height-sm);
+}
 .think-os .task-row-title {
   flex: 0 1 auto;
   gap: var(--think-space-2);
@@ -1491,7 +1498,7 @@
   justify-content: flex-start;
   gap: var(--think-space-3);
   min-width: 0;
-  margin-top: var(--think-space-2);
+  margin-top: 0;
 }
 .think-os .task-row-timer-action :is(button, .MuiButtonBase-root, .MuiIconButton-root) {
   border: 0;
@@ -1510,15 +1517,22 @@
 }
 .think-os .think-table td > .think-table-cell-item,
 .think-os .think-table td > .think-table-cell-item * { white-space: nowrap; }
-/* Shared hierarchy shell for Block and Event Timeline groups. */
+/* Shared group structure. Visual language is selected per view:
+ * - BlockView uses a flat indented list.
+ * - EventTimeline keeps its event-group surface because the time axis is its primary structure.
+ */
 .think-os :is(.bv-group, .et-group) {
+  min-width: 0;
+}
+/* EventTimeline grouped shell. */
+.think-os .et-group {
   margin-bottom: var(--think-space-5);
   overflow: hidden;
   border: 1px solid var(--think-border-subtle);
   border-radius: var(--think-radius-md);
   background: var(--think-bg-canvas);
 }
-.think-os :is(.bv-group-title, .et-group-title) {
+.think-os .et-group-title {
   display: flex;
   align-items: center;
   gap: var(--think-space-4);
@@ -1535,58 +1549,125 @@
   user-select: none;
   transition: background-color var(--think-duration-normal) var(--think-ease-standard);
 }
-.think-os :is(.bv-group-title, .et-group-title):hover {
+.think-os .et-group-title:hover {
   background: var(--think-bg-hover);
   box-shadow: none;
 }
-.think-os :is(.bv-group-toggle-icon, .et-group-toggle-icon) {
+.think-os .et-group-toggle-icon {
   flex-shrink: 0;
   color: var(--think-text-secondary);
   font-size: 0.8em;
-  transition: transform var(--think-duration-normal) var(--think-ease-standard);
 }
-.think-os :is(.bv-group-content, .et-group-content) {
+.think-os .et-group-content {
   display: flex;
   flex-direction: column;
   gap: var(--think-space-4);
-  padding: var(--think-space-4);
+  padding: var(--think-space-3) var(--think-space-4);
 }
-.think-os :is(.bv-group--level-0, .et-group--level-0) { margin-left: 0; }
-.think-os :is(.bv-group--level-1, .et-group--level-1) {
+.think-os .et-group--level-1 {
   margin-left: var(--think-space-6);
   border-left: 3px solid var(--think-accent);
 }
-.think-os :is(.bv-group--level-2, .et-group--level-2) {
+.think-os .et-group--level-2 {
   margin-left: var(--think-space-8);
   border-left: 2px solid var(--think-text-accent);
 }
-.think-os :is(.bv-group--level-3, .et-group--level-3) {
+.think-os .et-group--level-3 {
   margin-left: calc(var(--think-space-8) + var(--think-space-6));
   border-left: 1px solid var(--think-text-secondary);
 }
-.think-os :is(.bv-group--level-1 .bv-group-title, .et-group--level-1 .et-group-title) {
-  padding-left: var(--think-space-6);
+.think-os .et-group--level-1 .et-group-title {
   background: var(--think-bg-surface-2);
-  font-size: var(--think-font-size-sm);
 }
-.think-os :is(.bv-group--level-2 .bv-group-title, .et-group--level-2 .et-group-title) {
-  padding-left: var(--think-space-7);
+.think-os .et-group--level-2 .et-group-title {
   background: var(--think-bg-selected);
   font-size: var(--think-font-size-xs);
   font-weight: var(--think-font-weight-medium);
 }
-.think-os :is(.bv-group--level-3 .bv-group-title, .et-group--level-3 .et-group-title) {
-  padding-left: var(--think-space-7);
+.think-os .et-group--level-3 .et-group-title {
   background: var(--think-border-subtle);
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-2xs);
   font-weight: var(--think-font-weight-regular);
 }
-.think-os :is([class*="bv-group--level-"], [class*="et-group--level-"]) {
-  border-radius: var(--think-radius-xs);
+/* BlockView: same hierarchy idea as the Energy task list.
+ * A header establishes the level; descendants are expressed by indentation + one guide line,
+ * never by nesting another bordered surface inside the parent.
+ */
+.think-os .bv-group {
+  --think-bv-indent-step: var(--think-space-4);
+  --think-bv-guide-offset: 6px;
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
-.think-os :is([class*="bv-group--level-"] .bv-group-content, [class*="et-group--level-"] .et-group-content) {
-  padding: var(--think-space-3) var(--think-space-4);
+.think-os .bv-group + .bv-group {
+  margin-top: var(--think-space-2);
+  padding-top: var(--think-space-2);
+  border-top: 1px solid color-mix(in srgb, var(--think-border-subtle) 82%, transparent);
+}
+.think-os .bv-group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  min-height: calc(var(--think-control-height-sm) - 2px);
+  margin: 0;
+  padding: var(--think-space-1) 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--think-text-primary);
+  box-shadow: none;
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+  cursor: pointer;
+  user-select: none;
+}
+.think-os .bv-group-title:hover {
+  background: transparent;
+  color: var(--think-text-accent);
+  box-shadow: none;
+}
+.think-os .bv-group-toggle-icon {
+  display: inline-flex;
+  flex: 0 0 16px;
+  align-items: center;
+  justify-content: center;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-2xs);
+}
+.think-os .bv-group-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.think-os .bv-group-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  margin-left: var(--think-bv-guide-offset);
+  padding: 0 0 0 var(--think-bv-indent-step);
+  border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 70%, transparent);
+}
+.think-os .bv-group--level-1 > .bv-group-title {
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-semibold);
+}
+.think-os .bv-group--level-1 > .bv-group-content {
+  --think-bv-indent-step: var(--think-space-4);
+}
+.think-os .bv-group--level-2 > .bv-group-content,
+.think-os .bv-group--level-3 > .bv-group-content {
+  --think-bv-indent-step: var(--think-space-3);
+}
+.think-os :is(.bv-group--level-2, .bv-group--level-3) > .bv-group-title {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-medium);
 }
 /* CSS V3: governed Settings workspace and page composition. */
 .think-os--settings .think-settings-page {
@@ -2126,20 +2207,22 @@
   min-width: 0;
 }
 .think-os--settings .think-rule-builder__row-grid {
-  padding: var(--think-space-4);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
-  background: var(--think-bg-surface-1);
+  padding: var(--think-space-3) 0;
+  border: 0;
+  border-top: 1px solid var(--think-border-subtle);
+  border-radius: 0;
+  background: transparent;
 }
 .think-os--settings .think-rule-builder__column-head {
-  padding-inline: var(--think-space-4);
+  padding-inline: 0;
   color: var(--think-text-secondary);
 }
 .think-os--settings .think-rule-builder__add-grid {
-  padding: var(--think-space-5);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
-  background: var(--think-bg-surface-2);
+  padding: var(--think-space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--think-border-subtle);
+  border-radius: 0;
+  background: transparent;
 }
 .think-os--settings .think-rule-builder__end-label {
   text-align: center;
@@ -3055,205 +3138,322 @@
     .module-header-controls { flex-wrap: wrap; justify-content: flex-end; }
     .module-layout-actions { order: 2; flex-basis: 100%; justify-content: flex-end; }
 }
-/* Progress view visual contract. Static skin lives here; only percentages stay inline. */
+/* Progress / 成长视图：纯列表系统。
+   目标 -> 主题 -> 复用 BlockView/TaskRow 的真实记录；不建立卡片、白底或目标统计胶囊。
+   Goal / Theme 共用同一列系统，确保等级与进度条严格纵向对齐。 */
 .think-progress-view {
-  display: grid;
-  gap: var(--think-space-6);
-  justify-items: stretch;
-  width: min(100%, 780px);
+  --think-progress-chevron-col: 12px;
+  --think-progress-icon-col: 24px;
+  --think-progress-level-col: 54px;
+  --think-progress-tail-col: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
 }
 .think-progress-view__empty {
-  padding: var(--think-space-6);
-  border: 1px dashed var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
+  padding: var(--think-space-5) 0;
   color: var(--think-text-secondary);
   text-align: center;
 }
-.think-progress-card {
-  display: grid;
-  gap: var(--think-space-6);
-  width: min(100%, 760px);
-  padding: var(--think-space-6);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
-  background: linear-gradient(135deg, var(--think-bg-elevated), var(--think-bg-surface-1));
-  box-shadow: var(--think-shadow-none);
+.think-progress-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-bottom: 1px solid var(--think-border-subtle);
 }
-.think-progress-card__trigger {
+.think-os .think-progress-section__trigger,
+.think-os .think-progress-skill {
   appearance: none;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--think-space-6);
-  align-items: center;
-  width: 100%;
-  min-height: 0;
-  padding: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
+  box-shadow: none;
   color: inherit;
   text-align: left;
+}
+.think-os .think-progress-section__trigger:is(:hover, :focus, :active),
+.think-os .think-progress-skill:is(:hover, :focus, :active) {
+  border: 0;
+  background: color-mix(in srgb, var(--think-bg-hover) 35%, transparent);
+  box-shadow: none;
+}
+/* 一级：目标。
+   展开符 | 图标 | 名称 | 等级 | 进度 | 百分比 */
+.think-progress-section__trigger,
+.think-progress-skill {
+  grid-template-columns:
+    var(--think-progress-chevron-col)
+    var(--think-progress-icon-col)
+    minmax(120px, 1fr)
+    var(--think-progress-level-col)
+    minmax(120px, 1.35fr)
+    var(--think-progress-tail-col);
+}
+.think-progress-section__trigger {
+  display: grid;
+  gap: var(--think-space-2);
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: var(--think-space-1) 0;
   cursor: pointer;
 }
-.think-progress-card__icon {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
-  background: var(--think-bg-surface-2);
-  font-size: var(--think-font-size-3xl);
+.think-progress-section__chevron,
+.think-progress-skill__chevron {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-md);
+  line-height: 1;
 }
-.think-progress-card__main {
-  display: flex;
-  align-items: center;
-  gap: var(--think-space-6);
-  min-width: 0;
-}
-.think-progress-card__title {
-  max-width: 280px;
-  overflow: hidden;
-  color: var(--think-text-primary);
-  font-size: var(--think-font-size-2xl);
-  font-weight: var(--think-font-weight-bold);
-  letter-spacing: -0.025em;
-  line-height: var(--think-line-height-tight);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.think-progress-card__level {
+.think-progress-section__icon {
   display: inline-flex;
   align-items: center;
-  gap: var(--think-space-4);
-  padding: var(--think-space-4) var(--think-space-5);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-pill);
-  background: var(--think-bg-surface-1);
-  white-space: nowrap;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: calc(var(--think-font-size-lg) + 1px);
+  line-height: 1;
 }
-.think-progress-card__level-icon { font-size: var(--think-font-size-xl); }
-.think-progress-card__level-value { color: var(--think-data-5); font-size: var(--think-font-size-lg); }
-.think-progress-card__level-title { color: var(--think-text-primary); font-size: var(--think-font-size-sm); }
-.think-progress-bar {
-  width: min(100%, 260px);
-  height: 9px;
+.think-progress-section__name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--think-space-2);
+  min-width: 0;
   overflow: hidden;
-  border-radius: var(--think-radius-pill);
-  background: var(--think-bg-surface-2);
 }
-.think-progress-bar--goal { height: 10px; }
-.think-progress-bar--compact { width: 180px; }
-.think-progress-bar__fill {
-  width: var(--think-progress-ratio, 0%);
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--think-data-1), var(--think-data-5), var(--think-data-3));
-  transition: width var(--think-duration-normal) var(--think-ease-standard);
-}
-.think-progress-bar--skill .think-progress-bar__fill {
-  background: linear-gradient(90deg, var(--think-data-2), color-mix(in srgb, var(--think-data-2) 35%, var(--think-bg-surface-1)));
-}
-.think-progress-skills,
-.think-progress-records {
-  display: grid;
-  gap: var(--think-space-5);
-}
-.think-progress-skill {
-  display: grid;
-  grid-template-columns: minmax(120px, 220px) 64px minmax(140px, 260px);
-  gap: var(--think-space-6);
-  align-items: center;
-  padding: var(--think-space-5) var(--think-space-6);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
-  background: var(--think-bg-surface-1);
-}
-.think-progress-skill__title {
+.think-progress-section__title {
+  min-width: 0;
   overflow: hidden;
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-md);
+  font-size: calc(var(--think-font-size-lg) + 1px);
   font-weight: var(--think-font-weight-bold);
+  letter-spacing: -0.015em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.think-progress-section__level,
 .think-progress-skill__level {
+  justify-self: start;
   color: var(--think-data-5);
   font-weight: var(--think-font-weight-bold);
   white-space: nowrap;
 }
-.think-progress-empty-skill {
-  padding: var(--think-space-5) var(--think-space-6);
-  border: 1px dashed var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
-  background: var(--think-bg-surface-1);
-  color: var(--think-text-secondary);
+.think-progress-section__level {
+  font-size: var(--think-font-size-md);
 }
-.think-progress-details {
-  display: grid;
-  gap: var(--think-space-5);
-  padding-top: var(--think-space-6);
-  border-top: 1px solid var(--think-border-subtle);
-}
-.think-progress-details__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--think-space-4);
-}
-.think-progress-details__chip {
-  padding: var(--think-space-3) var(--think-space-5);
-  border-radius: var(--think-radius-pill);
-  background: var(--think-bg-surface-2);
+.think-progress-section__level-title {
+  flex: 0 0 auto;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-medium);
+  white-space: nowrap;
 }
-.think-progress-records__title {
-  color: var(--think-text-primary);
+.think-progress-section__percent {
+  justify-self: end;
+  color: var(--think-data-2);
+  font-size: var(--think-font-size-lg);
   font-weight: var(--think-font-weight-bold);
+  text-align: right;
+  white-space: nowrap;
 }
-.think-progress-record {
-  appearance: none;
+.think-progress-section__body {
+  min-width: 0;
+  padding-left: 0;
+}
+.think-progress-bar {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--think-radius-pill);
+  background: color-mix(in srgb, var(--think-border-subtle) 45%, transparent);
+}
+.think-progress-bar--goal { height: 7px; }
+.think-progress-bar__fill {
+  display: block;
+  width: var(--think-progress-ratio, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--think-data-2), color-mix(in srgb, var(--think-data-2) 42%, var(--think-data-3)));
+  transition: width var(--think-duration-normal) var(--think-ease-standard);
+}
+.think-progress-bar--skill .think-progress-bar__fill {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--think-data-2) 88%, white), color-mix(in srgb, var(--think-data-2) 45%, white));
+}
+.think-progress-skills {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--think-space-5);
+  gap: 0;
+  min-width: 0;
+}
+.think-progress-skill-group {
+  display: grid;
+  min-width: 0;
+  border-top: 1px solid color-mix(in srgb, var(--think-border-subtle) 72%, transparent);
+}
+/* 二级：主题。与目标完全共用列宽，只在图标列 + 名称列制造轻微缩进。
+   这样缩进不会推动 Lv / progress / meta 三列。 */
+.think-progress-skill {
+  display: grid;
+  gap: var(--think-space-2);
   align-items: center;
   width: 100%;
-  padding: var(--think-space-4) var(--think-space-5);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
-  background: var(--think-bg-elevated);
-  color: inherit;
-  text-align: left;
+  min-width: 0;
+  min-height: 40px;
+  padding: var(--think-space-1) 0;
+  cursor: pointer;
 }
-.think-progress-record:not(:disabled) { cursor: pointer; }
-.think-progress-record:not(:disabled):hover { background: var(--think-bg-hover); }
-.think-progress-record__title {
+.think-progress-skill__bullet {
+  grid-column: 2;
+  justify-self: center;
+  color: var(--think-data-5);
+  font-size: var(--think-font-size-sm);
+  text-align: center;
+}
+.think-progress-skill__title {
+  grid-column: 3;
+  min-width: 0;
   overflow: hidden;
+  padding-left: var(--think-space-1);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.think-progress-record__date {
+.think-progress-skill__level {
+  grid-column: 4;
+  font-size: var(--think-font-size-sm);
+}
+.think-progress-skill > .think-progress-bar {
+  grid-column: 5;
+}
+.think-progress-skill__tail {
+  grid-column: 6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+.think-progress-skill__meta {
+  min-width: 0;
+  overflow: hidden;
   color: var(--think-text-secondary);
-  font-size: var(--think-font-size-xs);
+  font-size: var(--think-font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.think-progress-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--think-space-5);
+.think-progress-empty-skill,
+.think-progress-theme-records__empty {
+  padding: var(--think-space-3) 0;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
 }
-.think-progress-summary__card {
-  padding: var(--think-space-6);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
+/* 主题展开后直接复用 Statistics 使用的 BlockView 渲染链。
+   记录内容从主题名称起点再内缩一层，不影响主列表列对齐。 */
+.think-progress-theme-records {
+  min-width: 0;
+  margin-left: calc(
+    var(--think-progress-chevron-col) +
+    var(--think-progress-icon-col) +
+    var(--think-space-3)
+  );
+  padding: 0 0 var(--think-space-2) var(--think-space-3);
+  border-left: 2px solid color-mix(in srgb, var(--think-data-5) 28%, transparent);
 }
-.think-progress-summary__label { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
-.think-progress-summary__value { margin-top: var(--think-space-2); font-size: var(--think-font-size-3xl); font-weight: var(--think-font-weight-bold); }
-@container (max-width: 560px) {
-  .think-progress-card__trigger { grid-template-columns: auto minmax(0, 1fr); }
-  .think-progress-card__level { grid-column: 1 / -1; justify-self: start; }
-  .think-progress-card__main { align-items: flex-start; flex-direction: column; gap: var(--think-space-4); }
-  .think-progress-bar--compact { width: min(100%, 220px); }
-  .think-progress-skill { grid-template-columns: minmax(0, 1fr) auto; }
-  .think-progress-skill .think-progress-bar { grid-column: 1 / -1; width: 100%; }
+.think-progress-theme-records .bv-container {
+  gap: 0;
+  padding: 0;
+  background: transparent;
+}
+.think-progress-theme-records .bv-item {
+  margin: 0;
+  padding: var(--think-space-1) 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 65%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.think-progress-theme-records .bv-item:hover {
+  border-color: color-mix(in srgb, var(--think-border-subtle) 65%, transparent);
+  background: color-mix(in srgb, var(--think-bg-hover) 30%, transparent);
+}
+.think-progress-theme-records .task-row {
+  width: 100%;
+  min-height: 34px;
+}
+.think-progress-theme-records .bv-block-main { gap: 0; }
+.think-progress-theme-records .bv-block-content,
+.think-progress-theme-records .bv-block-title {
+  font-size: var(--think-font-size-sm);
+}
+/* 小屏仍然共用同一列系统：缩列但不改变列语义，所以 Lv / progress 始终对齐。 */
+@container (max-width: 760px) {
+  .think-progress-view {
+    --think-progress-chevron-col: 10px;
+    --think-progress-icon-col: 20px;
+    --think-progress-level-col: 38px;
+    --think-progress-tail-col: 76px;
+  }
+
+  .think-progress-section__trigger,
+  .think-progress-skill {
+    grid-template-columns:
+      var(--think-progress-chevron-col)
+      var(--think-progress-icon-col)
+      minmax(62px, 1fr)
+      var(--think-progress-level-col)
+      minmax(64px, 1fr)
+      var(--think-progress-tail-col);
+    gap: var(--think-space-2);
+  }
+
+  .think-progress-section__icon {
+    width: 20px;
+    height: 20px;
+    font-size: var(--think-font-size-md);
+  }
+
+  .think-progress-section__title { font-size: var(--think-font-size-lg); }
+  .think-progress-section__level-title { display: none; }
+  .think-progress-section__level { font-size: var(--think-font-size-sm); }
+  .think-progress-section__percent { font-size: var(--think-font-size-md); }
+  .think-progress-skill__title { padding-left: var(--think-space-2); font-size: var(--think-font-size-xs); }
+  .think-progress-skill__meta { font-size: var(--think-font-size-xs); }
+}
+@container (max-width: 500px) {
+  .think-progress-view {
+    --think-progress-chevron-col: 8px;
+    --think-progress-icon-col: 18px;
+    --think-progress-level-col: 32px;
+    --think-progress-tail-col: 62px;
+  }
+
+  .think-progress-section__trigger,
+  .think-progress-skill {
+    grid-template-columns:
+      var(--think-progress-chevron-col)
+      var(--think-progress-icon-col)
+      minmax(50px, 1fr)
+      var(--think-progress-level-col)
+      minmax(44px, .85fr)
+      var(--think-progress-tail-col);
+    gap: var(--think-space-1);
+  }
+
+  .think-progress-section__trigger { min-height: 44px; }
+  .think-progress-section__icon { width: 18px; height: 18px; font-size: var(--think-font-size-sm); }
+  .think-progress-section__title { font-size: var(--think-font-size-md); }
+  .think-progress-section__level,
+  .think-progress-section__percent,
+  .think-progress-skill__level,
+  .think-progress-skill__meta { font-size: var(--think-font-size-2xs); }
+  .think-progress-skill__title { padding-left: var(--think-space-1); }
+  .think-progress-skill__bullet { font-size: var(--think-font-size-xs); }
 }
 .think-progress-energy {
   margin: 0 var(--think-space-6) var(--think-space-4);
@@ -3697,10 +3897,31 @@
 .think-energy-detail__impact > strong {
   font-size: var(--font-ui-small);
 }
+/* Record rows inside Energy details are real record surfaces, not decorative text.
+ * Keep them visually flat while sharing the global Record interaction contract. */
+.think-energy-detail__record-row {
+  appearance: none;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--font-ui-smaller);
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+.think-energy-detail__record-row:hover,
+.think-energy-detail__record-row:focus-visible {
+  color: var(--text-accent);
+  text-decoration: underline;
+}
 /* 1.0.33: tasks are grouped by Goal, then by cadence. Energy only ranks within the real task system. */
 .think-os .think-energy-task-list {
   display: grid;
-  gap: var(--think-space-3);
+  gap: var(--think-space-4);
   padding-top: var(--think-space-4);
   border-top: 1px solid var(--think-border-subtle);
 }
@@ -3715,18 +3936,28 @@
 }
 .think-os .think-energy-task-list__goal-group {
   display: grid;
-  gap: var(--think-space-2);
+  gap: var(--think-space-1);
 }
 /* Desktop UX final: Goal is the stable first-level boundary. */
 .think-os .think-energy-task-list__goal-group + .think-energy-task-list__goal-group {
-  margin-top: var(--think-space-4);
-  padding-top: var(--think-space-4);
+  margin-top: var(--think-space-3);
+  padding-top: var(--think-space-3);
   border-top: 1px solid var(--think-border-subtle);
 }
 .think-os .think-energy-task-list__goal-title {
-  color: var(--think-text-primary);
-  font-size: var(--think-font-size-md);
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: var(--think-control-height-sm);
+  padding: var(--think-space-1) var(--think-space-3);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--think-text-accent);
+  font-size: var(--think-font-size-lg);
   font-weight: var(--think-font-weight-bold);
+  letter-spacing: -0.01em;
 }
 .think-os .think-energy-task-list__rows {
   display: grid;
@@ -3734,17 +3965,18 @@
 }
 .think-os .think-energy-task-list__row {
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
+  grid-template-columns: 32px minmax(0, 1fr);
   gap: var(--think-space-3);
   align-items: start;
 }
 .think-os .think-energy-task-list__row-label {
   display: inline-flex;
   align-items: center;
-  gap: var(--think-space-2);
+  justify-content: center;
+  width: 32px;
   min-height: var(--think-control-height-sm);
   color: var(--think-text-secondary);
-  font-size: var(--think-font-size-sm);
+  font-size: var(--think-font-size-md);
   font-weight: var(--think-font-weight-semibold);
 }
 .think-os .think-energy-task-list__items {
@@ -3813,7 +4045,11 @@
 .think-os .think-energy-task-list__menu-record { color: var(--think-text-primary); text-decoration: none; }
 @container think-view (max-width: 620px) {
   .think-os .think-energy-task-list__row { grid-template-columns: 1fr; gap: var(--think-space-1); }
-  .think-os .think-energy-task-list__row-label { min-height: auto; }
+  .think-os .think-energy-task-list__row-label {
+    width: auto;
+    justify-content: flex-start;
+    min-height: auto;
+  }
 }
 /* 1.0.34 Desktop UX final: Energy match is a visible but lightweight badge.
    Use warm orange-yellow instead of the task cadence purple so the signal survives
@@ -4057,22 +4293,30 @@
 }
 /* quarter/year: one day = one strongly encoded dot */
 .think-energy-daily-dots__months {
+  --think-energy-gap-minor: var(--think-space-4);
+  --think-energy-gap-major: var(--think-space-6);
   display: grid;
-  gap: var(--think-space-4);
+  gap: var(--think-energy-gap-major);
+  row-gap: var(--think-energy-gap-major);
   padding-top: var(--think-space-3);
 }
 .think-energy-daily-dots__months.is-quarter {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: calc(var(--think-energy-gap-major) + var(--think-space-1));
 }
 .think-energy-daily-dots__months.is-year {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: calc(var(--think-energy-gap-major) + var(--think-space-2));
+  row-gap: calc(var(--think-energy-gap-major) + var(--think-space-1));
 }
 .think-energy-daily-dots__month {
   min-width: 0;
+  display: grid;
+  gap: var(--think-energy-gap-minor);
 }
 .think-energy-daily-dots__month > strong {
   display: block;
-  margin-bottom: var(--think-space-2);
+  margin-bottom: 0;
   font-size: var(--font-ui-small);
 }
 .think-energy-daily-dots__weekdays,
@@ -4236,9 +4480,10 @@
 }
 .heatmap-day-section-title {
     margin: 0;
-    font-size: 16px;
-    line-height: 1.3;
-    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.25;
+    font-weight: 800;
+    letter-spacing: -0.01em;
     color: var(--think-text-accent);
 }
 .heatmap-day-section-grid {
@@ -4481,9 +4726,10 @@ body.theme-dark .heatmap-cell.empty {
 }
 .heatmap-goal-title {
     margin: 0;
-    font-size: 16px;
-    line-height: 1.35;
-    font-weight: 700;
+    font-size: 20px;
+    line-height: 1.3;
+    font-weight: 800;
+    letter-spacing: -0.01em;
     color: var(--think-text-accent);
 }
 .heatmap-goal-meta {
@@ -4534,9 +4780,10 @@ body.theme-dark .heatmap-cell.empty {
  * --- StatisticsView & Popover 样式 ---
  */
 .statistics-view {
-    padding: 8px;
-    background: var(--think-panel-bg);
-    border-radius: 8px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
     box-sizing: border-box;
 }
 .statistics-view-placeholder {
@@ -4554,11 +4801,13 @@ body.theme-dark .heatmap-cell.empty {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
-    padding: 12px;
-    background: var(--think-bg-canvas);
-    border-radius: 8px;
-    gap: 16px;
+    margin-bottom: var(--think-space-5);
+    padding: 0 0 var(--think-space-4);
+    border: 0;
+    border-bottom: 1px solid var(--think-border-subtle);
+    border-radius: 0;
+    background: transparent;
+    gap: var(--think-space-5);
     flex-wrap: wrap;
 }
 .sv-period-toggle {
@@ -4638,303 +4887,247 @@ body.theme-dark .sv-filter-btn:hover {
 body.theme-dark .sv-filter-btn.is-selected {
     box-shadow: var(--think-shadow-md);
 }
-/* Statistics year, quarter, month and row grids. */
-/* 时间轴容器 */
+/* Statistics time hierarchy. No nested cards: levels use indentation and guide lines. */
 .sv-timeline {
+    --sv-gap-minor: var(--think-space-2);
+    --sv-gap-major: var(--think-space-5);
+    --sv-gap-section: var(--think-space-6);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0;
 }
-/* =============== 年视图统一 12 列网格 =============== */
-.sv-year-grid {
+.sv-year-grid,
+.sv-quarter-grid,
+.sv-month-grid {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 6px;
-    column-gap: 6px;
-    row-gap: 12px;
+    gap: var(--sv-gap-minor);
+    row-gap: var(--sv-gap-major);
+    min-width: 0;
 }
-/* 年度汇总行 - 跨全部12列 */
-.sv-year-grid-year {
+.sv-year-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--sv-gap-minor); row-gap: var(--sv-gap-section); }
+.sv-quarter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--sv-gap-major); }
+.sv-month-grid { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); column-gap: var(--sv-gap-major); }
+.sv-period-level {
+    min-width: 0;
+    box-sizing: border-box;
+    background: transparent;
+    border-radius: 0;
+}
+.sv-period-level--0 {
+    padding: 0 0 var(--think-space-4);
+    border-bottom: 1px solid var(--think-border-subtle);
+}
+.sv-period-level--1 {
+    padding-left: var(--think-space-2);
+    border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 80%, transparent);
+}
+.sv-period-level--2 {
+    padding-left: var(--think-space-3);
+    border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 66%, transparent);
+}
+.sv-period-level--3 {
+    padding-left: var(--think-space-4);
+    border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 52%, transparent);
+}
+/* Summary rows span the current grid; child levels flow into the remaining cells.
+ * Empty periods are removed by PeriodStatisticsView, so the grid naturally compacts.
+ */
+.sv-year-grid-year,
+.sv-quarter-grid-summary,
+.sv-month-grid-summary {
     grid-column: 1 / -1;
-    padding: 8px 10px 12px;
-    background: color-mix(in srgb, var(--think-accent) 8%, var(--think-bg-canvas));
-    border-radius: 10px;
 }
-/* 季度 - 每个跨3列（通过 inline style 设置 grid-column） */
 .sv-year-grid-quarter {
+    grid-column: span 3;
+}
+.sv-year-grid-month,
+.sv-quarter-grid-month,
+.sv-month-grid-week {
     min-width: 0;
 }
-/* 月份 - 每个占1列 */
-.sv-year-grid-month {
-    min-width: 0;
-    padding: 8px 8px 10px;
-    background: color-mix(in srgb, var(--think-bg-hover) 55%, var(--think-bg-canvas));
-    border-radius: 8px;
-}
-/* 季度边界 - 在季度末尾列增加右侧间距，形成视觉分隔 */
-.sv-quarter-end {
-    margin-right: 10px;
-}
-/* 周列 - 每月占1列，内部周竖排 */
-.sv-year-grid-week-col {
+.sv-year-grid-week-col,
+.sv-quarter-grid-week-col {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--sv-gap-minor);
     min-width: 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--think-border-strong);
+    padding-top: var(--think-space-3);
+    border-top: 1px solid var(--think-border-subtle);
 }
-/* 周占位块 - 确保所有月列等高 */
-.sv-week-placeholder {
-    height: 110px; /* 与 is-compact 高度一致 */
-    flex-shrink: 0;
-}
-/* 年视图内周图表块：柱子变细、文字省略 */
+/* Historical placeholder cells are intentionally unused in the flat hierarchy. */
+.sv-week-placeholder { display: none; }
+.sv-quarter-end { margin-right: 0; }
 .sv-year-grid-week-col .sv-chart-block {
-    padding: 4px;
-    gap: 3px;
+    padding: var(--think-space-1) 0;
+    gap: var(--think-space-1);
 }
 .sv-year-grid-week-col .sv-vbar-bar {
     max-width: 10px;
     margin: 0 auto;
 }
-.sv-year-grid-week-col .sv-chart-label {
-    font-size: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+.sv-year-grid-week-col .sv-chart-label { font-size: 10px; }
 .sv-year-grid-week-col .sv-chart-number {
-    font-size: 9px;
     min-height: 12px;
+    font-size: 9px;
     line-height: 12px;
 }
 .sv-year-grid-week-col .sv-chart-category {
-    font-size: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     min-height: 14px;
+    overflow: hidden;
+    font-size: 8px;
     line-height: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .sv-year-grid-week-col .sv-chart-bars-container {
     min-height: 40px;
     gap: 2px;
 }
-/* =============== 季度视图统一 3 列网格 =============== */
-.sv-quarter-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    row-gap: 12px;
-}
-/* 季度汇总 - 跨全部3列 */
-.sv-quarter-grid-summary {
-    grid-column: 1 / -1;
-    padding: 8px 10px 12px;
-    background: color-mix(in srgb, var(--think-accent) 8%, var(--think-bg-canvas));
-    border-radius: 10px;
-}
-/* 月份 - 每个占1列 */
-.sv-quarter-grid-month {
-    min-width: 0;
-    padding: 8px 8px 10px;
-    background: color-mix(in srgb, var(--think-bg-hover) 55%, var(--think-bg-canvas));
-    border-radius: 8px;
-}
-/* 周列 - 每月占1列，内部周竖排 */
-.sv-quarter-grid-week-col {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--think-border-strong);
-}
-/* =============== 月视图 N 列网格 =============== */
-.sv-month-grid {
-    display: grid;
-    gap: 6px;
-    row-gap: 12px;
-}
-/* 月度汇总 - 跨全部列 */
-.sv-month-grid-summary {
-    grid-column: 1 / -1;
-    padding: 8px 10px 12px;
-    background: color-mix(in srgb, var(--think-accent) 8%, var(--think-bg-canvas));
-    border-radius: 10px;
-}
-/* 周 - 每个占1列 */
-.sv-month-grid-week {
-    min-width: 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--think-border-strong);
-}
-/* 年视图内月份图表块也稍微紧凑 */
 .sv-year-grid-month .sv-chart-block {
-    padding: 6px;
-    gap: 4px;
+    padding: var(--think-space-2) 0;
+    gap: var(--sv-gap-minor);
 }
 .sv-year-grid-month .sv-vbar-bar {
     max-width: 14px;
     margin: 0 auto;
 }
-.sv-year-grid-month .sv-chart-label {
-    font-size: 11px;
-}
-.sv-year-grid-month .sv-chart-number {
-    font-size: 10px;
-}
+.sv-year-grid-month .sv-chart-label { font-size: 11px; }
+.sv-year-grid-month .sv-chart-number { font-size: 10px; }
 .sv-year-grid-month .sv-chart-category {
-    font-size: 9px;
-    white-space: nowrap;
     overflow: hidden;
+    font-size: 9px;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .sv-row {
     display: grid;
-    gap: 8px;
+    gap: var(--think-space-3);
+    padding-top: var(--think-space-3);
     border-top: 1px solid var(--think-border-subtle);
-    padding-top: 12px;
 }
 .sv-row:first-child {
-    border-top: none;
     padding-top: 0;
+    border-top: 0;
 }
-/* 视图网格样式 */
-.sv-row-quarters { 
-    grid-template-columns: repeat(4, 1fr); 
-}
-.sv-row-months { 
-    grid-template-columns: repeat(12, 1fr); 
-}
+.sv-row-quarters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sv-row-months { grid-template-columns: repeat(12, minmax(0, 1fr)); }
 .sv-row-weeks {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 4px;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--sv-gap-minor);
+    padding-top: var(--think-space-3);
     border-top: 1px solid var(--think-border-subtle);
-    padding-top: 12px;
 }
-.sv-row-week-days {
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-}
-.sv-row-month-weeks {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-}
-.sv-row-quarter-months {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-}
-/* 季度视图的月份周视图部分 */
+.sv-row-week-days { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.sv-row-month-weeks { display: flex; gap: var(--think-space-3); width: 100%; }
+.sv-row-quarter-months { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .sv-month-weeks-section {
-    border-top: 1px solid var(--think-border-strong);
-    padding-top: 12px;
+    padding-top: var(--think-space-3);
+    border-top: 1px solid var(--think-border-subtle);
 }
 .sv-month-header {
-    font-weight: 600;
-    margin-bottom: 8px;
-    text-align: center;
+    margin-bottom: var(--think-space-2);
     color: var(--think-text-primary);
-    /* font-size: 14px; -> 使用工具类: think-text-lg */
+    font-weight: var(--think-font-weight-semibold);
+    text-align: left;
 }
-.sv-month-col {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
+.sv-month-col { display: flex; flex-direction: column; gap: var(--think-space-1); }
 .sv-month-col-header {
-    text-align: center;
-    /* font-size: 11px; -> 使用工具类: think-text-sm */
-    font-weight: 500;
     color: var(--think-text-subtle);
+    font-weight: var(--think-font-weight-medium);
+    text-align: left;
 }
-.sv-month-col-weeks {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-/* Statistics chart blocks, bars and labels. */
-/* 图表块样式 */
+.sv-month-col-weeks { display: flex; flex-direction: column; gap: var(--think-space-1); }
+.sv-year-grid-year > .sv-chart-block { height: 128px; }
+.sv-year-grid-quarter > .sv-chart-block,
+.sv-quarter-grid-summary > .sv-chart-block,
+.sv-month-grid-summary > .sv-chart-block { height: 116px; }
+.sv-year-grid-month > .sv-chart-block,
+.sv-quarter-grid-month > .sv-chart-block { height: 96px; }
+.sv-year-grid-week-col .sv-chart-block,
+.sv-quarter-grid-week-col .sv-chart-block,
+.sv-month-grid-week > .sv-chart-block { height: 82px; }
+/* Statistics chart rows: charts remain charts, but the shell is a flat list surface.
+ * Period hierarchy is expressed by indentation/separators in statistics.grids.css.
+ */
 .sv-chart-block {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    border-radius: 6px;
-    background: var(--think-bg-canvas);
-    cursor: pointer;
-    transition: all var(--think-duration-normal) var(--think-ease-standard);
-    padding: 8px;
-    height: 180px;
+    gap: var(--think-space-1);
+    height: 120px;
     min-width: 0;
+    padding: var(--think-space-2) 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color var(--think-duration-normal) var(--think-ease-standard);
 }
 .sv-chart-block.is-compact {
-    height: 110px;
-    padding: 6px;
-    gap: 3px;
+    height: 84px;
+    padding: var(--think-space-2) 0;
+    gap: var(--think-space-1);
 }
 .sv-chart-block:hover {
-    border-color: var(--think-accent);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-s);
+    background: color-mix(in srgb, var(--think-bg-hover) 42%, transparent);
+    box-shadow: none;
+    transform: none;
 }
-.sv-chart-block.is-empty .sv-chart-label {
+.sv-chart-block.is-empty .sv-chart-label,
+.sv-chart-block.is-empty .sv-chart-number,
+.sv-chart-block.is-empty .sv-chart-category {
     color: var(--think-text-subtle);
 }
-/* 图表标题 */
-.sv-chart-label {
-    /* font-size: 13px; -> 使用工具类: think-text-chart-title */
-    font-weight: 600;
-    color: var(--think-text-primary);
-    text-align: center;
-    flex-shrink: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.sv-chart-block.is-empty .sv-vbar-bar {
+    opacity: 0.28;
 }
-/* 图表内容容器 */
+.sv-chart-label {
+    flex-shrink: 0;
+    overflow: hidden;
+    color: var(--think-text-primary);
+    font-weight: var(--think-font-weight-semibold);
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .sv-chart-content {
     display: flex;
-    flex-direction: column;
-    gap: 3px;
     flex-grow: 1;
+    flex-direction: column;
+    gap: var(--think-space-1);
     min-height: 0;
 }
-/* 数字标签行 */
 .sv-chart-numbers {
     display: flex;
-    gap: 2px;
-    justify-content: space-between;
     align-items: center;
-    min-height: 14px;
+    justify-content: space-between;
+    gap: 2px;
+    min-height: 12px;
 }
 .sv-chart-number {
     flex: 1;
-    text-align: center;
-    /* font-size: 12px; -> 使用工具类: think-text-chart-value */
+    min-height: 12px;
     color: var(--think-text-secondary);
-    font-weight: 600;
+    font-weight: var(--think-font-weight-semibold);
+    line-height: 12px;
+    text-align: center;
     white-space: nowrap;
-    min-height: 14px;
-    line-height: 14px;
 }
-/* 柱状图容器 */
 .sv-chart-bars-container {
     display: flex;
-    gap: 3px;
     flex-grow: 1;
     align-items: flex-end;
-    min-height: 40px;
+    gap: 2px;
+    min-height: 32px;
+    border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 72%, transparent);
 }
 .sv-vbar-wrapper {
+    display: flex;
     flex: 1;
+    align-items: flex-end;
+    justify-content: center;
     min-width: 0;
     height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
     cursor: pointer;
 }
 .sv-vbar-wrapper:hover {
@@ -4942,30 +5135,28 @@ body.theme-dark .sv-filter-btn.is-selected {
 }
 .sv-vbar-bar {
     width: 100%;
+    min-height: 2px;
     border-radius: 3px 3px 0 0;
     background: var(--think-data-neutral);
-    min-height: 2px;
-    transition: all 0.3s ease;
+    transition: height var(--think-duration-normal) var(--think-ease-standard);
 }
-/* 分类标签行 */
 .sv-chart-categories {
     display: flex;
-    gap: 2px;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    gap: 2px;
     min-height: 14px;
 }
 .sv-chart-category {
     flex: 1;
-    text-align: center;
-    /* font-size: 11px; -> 使用工具类: think-text-chart-value */
-    color: var(--think-text-secondary);
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     min-height: 14px;
-    line-height: 14px;
+    overflow: hidden;
+    color: var(--think-text-secondary);
+    font-weight: var(--think-font-weight-medium);
+    line-height: 12px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 /* Statistics popover base. */
 /* 弹窗样式 */
@@ -5095,43 +5286,25 @@ body.theme-dark .sv-filter-btn.is-selected {
 }
 /* Statistics V4 summary and container normalization. */
 /* CSS V4 unified summary and popover helpers. */
-.sv-goal-summary-strip {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--think-space-4);
-    margin-bottom: var(--think-space-5);
-}
-.sv-goal-summary-chip {
-    padding: var(--think-space-3) var(--think-space-4);
-    border: 1px solid var(--think-row-emphasis-border);
-    border-radius: var(--think-radius-pill);
-    background: var(--think-row-emphasis-bg);
-    color: var(--think-text-primary);
-    font-size: var(--think-font-size-xs);
-    font-weight: var(--think-font-weight-medium);
-}
-.sv-goal-summary-label {
-    color: var(--think-text-primary);
-    font-weight: var(--think-font-weight-semibold);
-}
 .sv-popover-heading {
     display: flex;
     align-items: center;
     gap: var(--think-space-2);
 }
 .statistics-view {
-    padding: var(--think-space-4);
-    border: 1px solid var(--think-section-border);
-    border-radius: var(--think-radius-md);
-    background: var(--think-panel-bg);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     container-type: inline-size;
 }
 .sv-top-controls {
     gap: var(--think-space-5);
     margin-bottom: var(--think-space-5);
-    padding: var(--think-space-5);
-    border: 1px solid var(--think-border-subtle);
-    background: var(--think-bg-surface-1);
+    padding: 0 0 var(--think-space-4);
+    border: 0;
+    border-bottom: 1px solid var(--think-border-subtle);
+    background: transparent;
 }
 .sv-filter-btn,
 .sv-filter-toggle-all {
@@ -6192,20 +6365,24 @@ body.excel-view-is-resizing-column * {
 .bv-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 4px;
+    gap: 0;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
 }
 /* 分组样式已提取到 common-group.css */
 /* --- 条目通用样式 --- */
 .bv-item {
-    padding: 8px;
-    border-radius: 6px;
-    background-color: var(--think-bg-canvas);
-    transition: all var(--think-duration-normal) var(--think-ease-standard);
+    padding: var(--think-space-3) 0;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 68%, transparent);
+    border-radius: 0;
+    background: transparent;
+    transition: background-color var(--think-duration-normal) var(--think-ease-standard);
     font-size: 1rem;
 }
 .bv-item:hover {
-    background-color: var(--think-bg-hover);
+    background: color-mix(in srgb, var(--think-bg-hover) 44%, transparent);
 }
 /* --- BlockView 核心布局 (合并了 TS 中的响应式逻辑) --- */
 /* 整体容器：默认是flex双栏 */
@@ -6330,8 +6507,8 @@ body.excel-view-is-resizing-column * {
 .bv-item--task {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px;
+    gap: 6px;
+    padding: 2px 0;
 }
 .bv-task-checkbox-wrapper {
     flex-shrink: 0;
@@ -6358,14 +6535,16 @@ body.excel-view-is-resizing-column * {
     color: var(--think-text-primary);
     container-type: inline-size;
 }
-.bv-item {
-    border-color: var(--think-border-subtle);
-    border-radius: var(--think-radius-md);
-    background: var(--think-bg-canvas);
+.bv-container > .task-row,
+.bv-group-content > .task-row {
+    width: 100%;
+    min-height: 32px;
+    padding: var(--think-space-2) 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 68%, transparent);
 }
-.bv-item:hover {
-    border-color: var(--think-border-strong);
-    background: var(--think-bg-hover);
+.bv-container > :is(.bv-item, .task-row):last-child,
+.bv-group-content > :is(.bv-item, .task-row):last-child {
+    border-bottom: 0;
 }
 /* CSS V4 migrated from event-timeline.css. */
 /* Event Timeline View Styles - 三栏布局：[左侧日期] - [中间时间线] - [右侧内容卡片] */
@@ -6375,6 +6554,8 @@ body.excel-view-is-resizing-column * {
     gap: 16px;
     padding: 8px 4px;
     font-family: var(--font-interface);
+    color: var(--think-text-primary);
+    container-type: inline-size;
 }
 .event-timeline-empty {
     padding: 20px;
@@ -6386,25 +6567,26 @@ body.excel-view-is-resizing-column * {
 .et-ungrouped {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
+}
+.et-group-content {
+    gap: 0;
 }
 /* 单个事件 - 三栏 Grid 布局 */
 .et-event {
     display: grid;
-    grid-template-columns: 120px auto 1fr;
+    grid-template-columns: 120px 28px 1fr;
     gap: 12px;
-    align-items: start;
-    margin-bottom: 0;
-    transition: transform var(--think-duration-normal) var(--think-ease-standard);
-}
-.et-event:hover {
-    transform: translateX(2px);
+    align-items: stretch;
+    margin: 0;
+    padding: 0;
 }
 /* 左侧：日期和时间 */
 .et-event-date {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    margin: 6px 0;
     padding: 8px 12px;
     text-align: right;
     min-height: 60px;
@@ -6414,7 +6596,7 @@ body.excel-view-is-resizing-column * {
 .et-date-label {
     font-size: 0.85rem;
     color: var(--think-text-primary);
-    font-weight: 600; /* 加粗日期显示 */
+    font-weight: 600;
     margin-bottom: 2px;
     white-space: nowrap;
 }
@@ -6424,63 +6606,62 @@ body.excel-view-is-resizing-column * {
     color: var(--think-text-primary);
     white-space: nowrap;
 }
-/* 中间：时间线 - 连续线条效果 */
+/* 中间：时间线主轴。
+   轴线由每行撑满自身高度，行与行之间不留 gap；首行从圆点向下、末行从上方到圆点，
+   因此视觉上是一根连续主轴，而不是很多短线段。 */
 .et-line {
     position: relative;
-    width: 3px;
-    background: linear-gradient(to bottom, var(--think-accent), var(--think-accent-hover));
-    border-radius: 2px;
-    min-height: 60px;
+    width: 28px;
+    min-height: 72px;
     display: flex;
     align-items: center;
     justify-content: center;
     align-self: stretch;
 }
-/* 同一分组内的时间线连续效果 */
-.et-group-content .et-event:not(:last-child) .et-line::after {
+.et-line::before {
     content: '';
     position: absolute;
-    top: 100%;
+    top: 0;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 3px;
-    height: 8px;
-    background: linear-gradient(to bottom, var(--think-accent), var(--think-accent-hover));
-    z-index: 0;
+    border-radius: 2px;
+    background: var(--think-accent);
 }
-.et-ungrouped .et-event:not(:last-child) .et-line::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 8px;
-    background: linear-gradient(to bottom, var(--think-accent), var(--think-accent-hover));
-    z-index: 0;
+.et-event--first .et-line::before {
+    top: 50%;
+}
+.et-event--last .et-line::before {
+    bottom: 50%;
+}
+.et-event--first.et-event--last .et-line::before {
+    top: 50%;
+    bottom: 50%;
 }
 .et-dot {
+    position: relative;
     width: 12px;
     height: 12px;
     border-radius: 50%;
     border: 3px solid var(--think-accent);
     background-color: var(--think-bg-canvas);
     z-index: 1;
-    transition: all var(--think-duration-normal) var(--think-ease-standard);
+    transition: border-color var(--think-duration-normal) var(--think-ease-standard), box-shadow var(--think-duration-normal) var(--think-ease-standard);
     flex-shrink: 0;
 }
 .et-event:hover .et-dot {
     border-color: var(--think-accent-hover);
-    transform: scale(1.2);
     box-shadow: 0 0 8px var(--think-accent);
 }
 /* 右侧：内容卡片 */
 .et-event-card {
+    margin: 6px 0;
     background: var(--think-bg-surface-1);
     border-radius: 8px;
     padding: 12px;
     border: 1px solid var(--think-border-subtle);
-    transition: all var(--think-duration-normal) var(--think-ease-standard);
+    transition: background-color var(--think-duration-normal) var(--think-ease-standard), border-color var(--think-duration-normal) var(--think-ease-standard), box-shadow var(--think-duration-normal) var(--think-ease-standard);
     position: relative;
     min-height: 60px;
 }
@@ -6521,16 +6702,18 @@ body.excel-view-is-resizing-column * {
         align-items: flex-start;
         text-align: left;
         min-height: auto;
+        margin: 0;
         padding: 0;
         flex-direction: row;
         gap: 8px;
     }
 
     .et-line {
-        display: none; /* 小屏幕隐藏时间线 */
+        display: none;
     }
 
     .et-event-card {
+        margin: 0;
         background: transparent;
         border: none;
         padding: 0;
@@ -6589,18 +6772,8 @@ body.excel-view-is-resizing-column * {
         font-size: 0.8rem;
     }
 }
-.event-timeline-view {
-    color: var(--think-text-primary);
-    container-type: inline-size;
-}
 .et-event-card {
     border-color: var(--think-border-subtle);
-    border-radius: var(--think-radius-md);
-    background: var(--think-bg-canvas);
-}
-.et-event-card:hover {
-    border-color: var(--think-border-strong);
-    background: var(--think-bg-hover);
 }
 .think-timer-row {
   display: grid;

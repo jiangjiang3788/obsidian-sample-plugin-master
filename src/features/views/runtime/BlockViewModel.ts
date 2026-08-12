@@ -18,26 +18,32 @@ export interface BlockViewGroupClassNames {
   label: string;
 }
 
-export function resolveBlockViewGroupFields(groupField?: string, groupFields?: string[]): string[] {
-  if (groupFields && groupFields.length > 0) return groupFields;
-  if (groupField) return [groupField];
+export interface BlockViewGroupingInput {
+  effectiveGroupFields?: string[];
+  groupFields?: string[];
+  groupField?: string;
+}
+
+export function resolveBlockViewGroupFields(input: BlockViewGroupingInput = {}): string[] {
+  if (input.effectiveGroupFields?.length) return [...input.effectiveGroupFields];
+  if (input.groupFields?.length) return [...input.groupFields];
+  if (input.groupField) return [input.groupField];
   return [];
 }
 
-export function buildBlockViewRenderModel(input: {
+export function buildBlockViewRenderModel(input: BlockViewGroupingInput & {
   items: RecordViewItem[];
-  groupField?: string;
-  groupFields?: string[];
+  groupTree?: GroupNode[];
   goals?: GoalDefinition[];
 }): BlockViewRenderModel {
-  const effectiveGroupFields = resolveBlockViewGroupFields(input.groupField, input.groupFields);
+  const effectiveGroupFields = resolveBlockViewGroupFields(input);
   const isGrouped = effectiveGroupFields.length > 0;
-  const groupTree = isGrouped
-    ? (executeRecordQuery(input.items, {
+  const groupTree = !isGrouped
+    ? []
+    : input.groupTree ?? (executeRecordQuery(input.items, {
         groupBy: effectiveGroupFields,
         groupContext: { goals: input.goals ?? [] },
-      }).groupTree ?? [])
-    : [];
+      }).groupTree ?? []);
   return { effectiveGroupFields, groupTree, isGrouped };
 }
 
@@ -48,7 +54,7 @@ export function findBlockViewTimer(timers: any[] | undefined, itemId: string): a
 export function buildBlockViewGroupClassNames(): BlockViewGroupClassNames {
   return {
     root: '',
-    group: 'bv-group bv-group--level-0',
+    group: 'bv-group',
     title: 'bv-group-title',
     content: 'bv-group-content',
     toggleIcon: 'bv-group-toggle-icon',

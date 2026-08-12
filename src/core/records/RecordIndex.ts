@@ -1,4 +1,4 @@
-import type { RecordEntity, TaskRecordEntity } from '@/core/records/RecordEntity';
+import type { RecordEntity, TaskRecordEntity, TaskSessionRecordEntity } from '@/core/records/RecordEntity';
 import { asTaskRecord, asTaskSeriesRecord } from '@/core/records/task/taskDomain';
 import { asTaskSessionRecord } from '@/core/records/task/taskSession';
 
@@ -109,9 +109,14 @@ export class RecordIndex {
         }
       }
 
-      const session = asTaskSessionRecord(record);
+      // Integrity inspection is intentionally looser than domain projection. A malformed
+      // TaskSession must still participate in reference diagnostics instead of disappearing
+      // merely because the strict runtime projection rejects its timing/result payload.
+      const session = record.coreBlock === 'task-session'
+        ? record as RecordEntity & Partial<TaskSessionRecordEntity>
+        : null;
       if (session) {
-        const sessionTask = asTaskRecord(this.recordsById.get(session.taskId));
+        const sessionTask = session.taskId ? asTaskRecord(this.recordsById.get(session.taskId)) : null;
         const sessionSeries = session.seriesId ? asTaskSeriesRecord(this.recordsById.get(session.seriesId)) : null;
         const taskInvalid = !sessionTask;
         const seriesInvalid = Boolean(session.seriesId) && !sessionSeries;

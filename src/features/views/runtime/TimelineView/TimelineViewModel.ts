@@ -1,4 +1,4 @@
-import type { RecordViewItem, TimelineTask, ViewInstance } from '@core/types/public';
+import type { RecordViewItem, TimelineTask } from '@core/types/public';
 import type { TimelineViewConfig } from '@core/view/public';
 import { TIMELINE_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import {
@@ -42,7 +42,13 @@ export interface TimelineRenderModel {
   totalSummaryHours: number;
 }
 
-export function resolveTimelineConfig(module: ViewInstance): TimelineViewConfig {
+export interface TimelineViewModuleLike {
+  /** Persisted view config is intentionally partial and may come from older settings. */
+  viewConfig?: Record<string, unknown>;
+}
+
+export function resolveTimelineConfig(module: TimelineViewModuleLike, injectedModel?: { config?: TimelineViewConfig }): TimelineViewConfig {
+  if (injectedModel?.config) return injectedModel.config;
   const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG)) as TimelineViewConfig;
   const userConfig = (module?.viewConfig || {}) as Partial<TimelineViewConfig>;
   return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
@@ -83,20 +89,21 @@ export function buildTimelineSummaryData(args: {
 export function buildTimelineRenderModel(args: {
   items: RecordViewItem[];
   records?: RecordViewItem[];
-  module: ViewInstance;
+  module: TimelineViewModuleLike;
   dateRange: [Date, Date];
   currentView: TimelineCurrentView;
+  injectedModel?: Partial<Pick<TimelineRenderModel, 'config' | 'timelineTasks' | 'dailyViewData' | 'summaryCategoryHours' | 'summaryData'>>;
 }): TimelineRenderModel {
-  const { items, records = items, module, dateRange, currentView } = args;
-  const config = resolveTimelineConfig(module);
-  const timelineTasks = resolveTimelineTasks(items, records);
+  const { items, records = items, module, dateRange, currentView, injectedModel } = args;
+  const config = resolveTimelineConfig(module, injectedModel?.config ? { config: injectedModel.config } : undefined);
+  const timelineTasks = injectedModel?.timelineTasks ?? resolveTimelineTasks(items, records);
   const colorMap = buildTimelineColorMap(config);
   const isSummaryView = currentView === '年' || currentView === '季';
 
-  const summaryData = buildTimelineSummaryData({ timelineTasks, dateRange, config, isSummaryView });
+  const summaryData = injectedModel?.summaryData ?? buildTimelineSummaryData({ timelineTasks, dateRange, config, isSummaryView });
 
-  const summaryCategoryHours = isSummaryView ? {} : (buildSummaryCategoryHours(timelineTasks, dateRange, config) || {});
-  const dailyViewData = isSummaryView ? null : buildDailyViewData(timelineTasks, dateRange);
+  const summaryCategoryHours = injectedModel?.summaryCategoryHours ?? (isSummaryView ? {} : (buildSummaryCategoryHours(timelineTasks, dateRange, config) || {}));
+  const dailyViewData = injectedModel?.dailyViewData ?? (isSummaryView ? null : buildDailyViewData(timelineTasks, dateRange));
   const totalSummaryHours = Object.values(summaryCategoryHours).reduce((sum, hours) => sum + Number(hours || 0), 0);
 
   return { config, colorMap, timelineTasks, dailyViewData, isSummaryView, summaryData, summaryCategoryHours, totalSummaryHours };

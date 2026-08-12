@@ -71,12 +71,10 @@ export function mergeDefaultValues(
   const themePath = normalizeThemePath(draft.themePath) || readThemePathFromFields(draft.fields);
   if (themePath) {
     result.themePath = themePath;
-    result['主题'] = themePath;
   }
   const icon = compactText(themeIcon) || readIconFromFields(draft.fields);
   if (icon) {
     result.icon = icon;
-    result['图标'] = icon;
   }
   return result;
 }

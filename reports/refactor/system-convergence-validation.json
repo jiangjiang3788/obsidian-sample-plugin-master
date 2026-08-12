@@ -1,0 +1,28 @@
+{
+  "date": "2026-08-12",
+  "project": "think-os",
+  "version": "1.0.35",
+  "baseline": {
+    "typecheckErrors": 97,
+    "typecheckFiles": 44,
+    "buildWasReportedSuccessful": true
+  },
+  "governanceGates": {
+    "product": "pass",
+    "architecture": "pass",
+    "records": "pass",
+    "taskSession": "pass",
+    "energy": "pass",
+    "uiRuntime": "pass",
+    "quality": "pass",
+    "stability": "pass",
+    "cssBoundary": "pass"
+  },
+  "directModelRegressions": {
+    "passed": 12,
+    "failed": 0
+  },
+  "fullNpmTypecheckExecuted": false,
+  "fullJestExecuted": false,
+  "limitation": "Complete npm dependencies could not be installed in the sandbox; temporary offline type stubs were used only for contract discovery and were removed before packaging."
+}

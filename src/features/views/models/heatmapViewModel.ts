@@ -169,7 +169,8 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined, goals: GoalD
         const coreBlockId = firstText(template.coreBlockId) || firstText(template.blockId);
         const variantId = firstText(template.variantId) || 'default';
         const defaults = template.defaultValues || {};
-        const goalPath = goalPathById.get(goalId) || firstText(defaults.goalPath) || firstText(defaults['目标']) || goalId;
+        const goalPath = goalPathById.get(goalId);
+        if (!goalId || !goalPath) continue;
         const goalLabel = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
         const rawThemePath = firstText(defaults.themePath);
         const themePath = rawThemePath && !rawThemePath.includes('{{')
@@ -324,8 +325,8 @@ export function buildHeatmapViewModel(params: {
         if (!preset && filterByTheme && themePath !== '__default__' && !trackedThemeSet.has(themePath)) continue;
 
         const explicitGoalPath = getItemGoalKey(item, goals);
-        // 结构规则：能匹配到目标预设时，预设身份是主索引；历史记录里 `目标:: #X` / `目标:: X`
-        // 甚至空 `目标ID` 都不能把同一个预设拆成两个目标组。
+        // 结构规则：能匹配到目标预设时，预设身份是主索引；Goal identity 只认 goalId。
+        // goalPath 只用于可读分组标签，不参与身份猜测。
         const goalPath = preset?.goalPath || (explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : UNASSIGNED_GOAL_KEY);
         const goalLabel = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
 

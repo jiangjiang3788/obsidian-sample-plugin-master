@@ -109,7 +109,7 @@ function historyDurationMaps(records: RecordViewItem[]): { byGoalTheme: Map<stri
     const task = byId.get(session.taskId);
     const theme = text(session.themePath || task?.themePath || task?.theme);
     if (!theme) continue;
-    const goal = text(session.goalId || session.goalPath || task?.goalId || task?.goalPath);
+    const goal = text(session.goalId || task?.goalId);
     const themeKey = theme.toLowerCase();
     const goalThemeKey = `${goal.toLowerCase()}|${themeKey}`;
     themeRows.set(themeKey, [...(themeRows.get(themeKey) || []), duration]);
@@ -134,7 +134,7 @@ function inferredDuration(item: RecordViewItem, history: ReturnType<typeof histo
   if (direct != null) return Math.max(10, Math.min(240, Math.round(direct)));
   const theme = text(item.themePath || item.theme).toLowerCase();
   if (!theme) return undefined;
-  const goal = text(item.goalId || item.goalPath).toLowerCase();
+  const goal = text(item.goalId).toLowerCase();
   return (goal ? history.byGoalTheme.get(`${goal}|${theme}`) : undefined) || history.byTheme.get(theme);
 }
 
@@ -297,7 +297,7 @@ export function buildEnergyActionCandidateResult(items: RecordViewItem[], option
     if (source === 'plan') diagnostics.eligiblePlans += 1;
     if (source === 'habit') diagnostics.eligibleHabits += 1;
 
-    const dedupeKey = `${source}|${normalizedLabel(title)}|${text(item.goalId || item.goalPath).toLowerCase()}|${text(item.themePath || item.theme).toLowerCase()}`;
+    const dedupeKey = `${source}|${normalizedLabel(title)}|${text(item.goalId).toLowerCase()}|${text(item.themePath || item.theme).toLowerCase()}`;
     if (seen.has(dedupeKey)) continue;
     seen.add(dedupeKey);
 

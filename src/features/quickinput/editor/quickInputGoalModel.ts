@@ -1,12 +1,12 @@
 import type { GoalDefinition } from '@core/goal/public';
 import type { ThinkSettings } from '@core/types/public';
 import { asUnknownRecord, readNumber } from '@core/utils/public';
-import { getGoalTemplates, splitGoalPath } from '@core/goal/public';
+import { getGoalTemplates, normalizeGoalPath, splitGoalPath } from '@core/goal/public';
 
 import type { GoalSelectorOption } from "./components/GoalSelector";
 import type { QuickInputFieldSource, QuickInputFieldSourceMap, QuickInputFormData } from "./model/types";
 import { isMeaningfulValue } from "./quickInputFieldSourceModel";
-import { cleanDisplayPath, cleanDisplaySegment, getGoalPath, makeGoalIdFromPath } from "./quickInputPathModel";
+import { getGoalPath } from "./quickInputPathModel";
 
 function getOrderedGoalIndex(
   goal: GoalDefinition | null,
@@ -90,14 +90,14 @@ export function buildQuickInputGoalOptions(
 
   const result: GoalSelectorOption[] = [];
   for (const [index, goal] of sourceGoals.entries()) {
-    const normalized = cleanDisplayPath(goal.goalPath || goal.title);
+    const normalized = normalizeGoalPath(goal.goalPath || goal.title);
     if (!normalized || seen.has(normalized)) continue;
     seen.add(normalized);
     const leaf = normalized.split("/").filter(Boolean).pop() || normalized;
     result.push({
-      id: goal.id || makeGoalIdFromPath(normalized),
+      id: goal.id,
       value: normalized,
-      label: cleanDisplaySegment(goal.title) || leaf,
+      label: String(goal.title || '').trim() || leaf,
       order: index,
       goal,
       themePath: goal.themePath ?? null,
@@ -120,13 +120,9 @@ export function applyQuickInputGoalSelection(params: {
 }) {
   const { formData, fieldSources, option } = params;
   const goal = option.goal || null;
-  const goalPath =
-    cleanDisplayPath(goal?.goalPath || option.value) || option.value;
-  const goalId =
-    goal?.id ||
-    (option.id && !String(option.id).startsWith("goal:")
-      ? option.id
-      : makeGoalIdFromPath(goalPath));
+  const goalPath = normalizeGoalPath(goal?.goalPath || option.value);
+  const goalId = goal?.id || option.id || null;
+  if (!goalPath || !goalId) throw new Error('QuickInput Goal selection requires a canonical Goal entity.');
   const themePath = goal?.themePath || option.themePath || null;
   const nextFormData = { ...formData };
   const nextFieldSources: QuickInputFieldSourceMap = { ...fieldSources };
@@ -148,7 +144,7 @@ export function applyQuickInputGoalSelection(params: {
   assign("目标ID", goalId);
   assign("goalPath", goalPath);
   assign("目标", goalPath);
-  const parts = splitGoalPath(cleanDisplayPath(goalPath) || "");
+  const parts = splitGoalPath(goalPath);
   assign("rootGoal", parts.rootGoal || "", "goal_context");
   assign("leafGoal", parts.leafGoal || "", "goal_context");
   if (themePath) {

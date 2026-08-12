@@ -103,9 +103,9 @@ export interface NaturalRecordCommand {
     categoryKey?: string;
     /** 主题路径或主题 ID。保留用于表单默认主题，不再决定模板。 */
     themeId?: string;
-    /** 目标路径，例如 #照顾好自己 或 照顾好自己/睡眠。 */
+    /** Canonical 目标路径，例如 照顾好自己 或 照顾好自己/睡眠；Goal 不使用 # 语法。 */
     goalPath?: string;
-    /** 目标 ID；通常由应用根据 goalPath 兜底，不要求模型必须返回。 */
+    /** 目标 ID；目标身份真源。AI 可省略，应用只允许根据当前 GoalDefinition 精确匹配 canonical goalPath 补齐。 */
     goalId?: string;
     /** 目标 × Block 下的预设变体 ID。 */
     templateVariantId?: string;

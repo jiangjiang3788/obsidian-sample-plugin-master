@@ -1,8 +1,7 @@
 import type { GoalDefinition } from '@core/goal/public';
 import type { RecordViewItem, ViewInstance } from '@core/types/public';
 import type { GroupNode } from '@core/utils/public';
-import { executeRecordQuery } from '@core/view/public';
-import { normalizeDisplayFields } from '@core/view/public';
+import { executeRecordQuery, normalizeDisplayFields, normalizeViewGroupFields } from '@core/view/public';
 import { readField } from '@core/types/public';
 import { dayjs } from '@core/utils/public';
 
@@ -17,6 +16,10 @@ export interface EventTimelineRenderModel {
   displayFields: string[];
   groupFields: string[];
   viewConfig: EventTimelineViewConfig;
+  timeField: string;
+  titleField: string;
+  contentField: string;
+  maxContentLength: number;
   filteredItems: RecordViewItem[];
   groupedTree: GroupNode[] | null;
 }
@@ -26,7 +29,7 @@ export function buildEventTimelineDisplayFields(module: ViewInstance): string[] 
 }
 
 export function buildEventTimelineGroupFields(module: ViewInstance): string[] {
-  return normalizeDisplayFields(module.groupFields || []);
+  return normalizeViewGroupFields(module.groupFields || []);
 }
 
 export function buildEventTimelineViewConfig(module: ViewInstance): EventTimelineViewConfig {
@@ -50,8 +53,10 @@ export function filterEventTimelineItemsByDateRange(args: {
   items: RecordViewItem[];
   dateRange: [Date, Date];
   timeField: string;
+  injectedFilteredItems?: RecordViewItem[];
 }): RecordViewItem[] {
-  const { items, dateRange, timeField } = args;
+  const { items, dateRange, timeField, injectedFilteredItems } = args;
+  if (injectedFilteredItems) return injectedFilteredItems;
   return executeRecordQuery(items, {
     date: { range: dateRange, field: timeField, mode: 'strict', precision: 'minute' },
     sort: [{ field: timeField, dir: 'asc' }],
@@ -113,5 +118,5 @@ export function buildEventTimelineRenderModel(args: {
   });
   const groupedTree = buildEventTimelineGroupedTree({ filteredItems, groupFields, goals });
 
-  return { displayFields, groupFields, viewConfig, filteredItems, groupedTree };
+  return { displayFields, groupFields, viewConfig, ...viewConfig, filteredItems, groupedTree };
 }

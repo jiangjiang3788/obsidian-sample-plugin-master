@@ -9,7 +9,7 @@ import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
 import { DataStore } from '@core/services/public';
 import { InputService } from '@core/services/public';
-import { toCurrentThinkSettings, type ThinkSettings } from '@core/types/public';
+import { toCurrentThinkSettings, toPersistedThinkSettings, type ThinkSettings } from '@core/types/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer } from '@core/bootstrap/public';
 import { setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/ai/public';
@@ -204,7 +204,7 @@ export default class ThinkPlugin extends Plugin {
 
 
     private sanitizeSettingsForPersistence(settings: ThinkSettings): ThinkSettings {
-        const cloned = JSON.parse(JSON.stringify(settings ?? {})) as ThinkSettings;
+        const cloned = toPersistedThinkSettings(settings) as unknown as ThinkSettings;
         const aiSettings = (cloned as any).aiSettings;
         if (aiSettings && typeof aiSettings === 'object' && aiSettings.persistApiKey !== true) {
             aiSettings.apiKey = '';
@@ -215,7 +215,7 @@ export default class ThinkPlugin extends Plugin {
     async saveSettings() {
         if (isDisposed()) return;
         // P0-1: 使用 SettingsRepository 替代 appStore
-        await this.saveData(this.serviceManager.settingsRepository.getSettings());
+        await this.saveData(this.sanitizeSettingsForPersistence(this.serviceManager.settingsRepository.getSettings()));
     }
 
     // 提供服务访问方法（P0-1: 已移除 appStore getter）

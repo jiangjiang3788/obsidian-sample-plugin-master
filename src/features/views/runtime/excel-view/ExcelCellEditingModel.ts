@@ -72,7 +72,7 @@ export function buildExcelSingleCellEditPlan(cell: ExcelCellModel, nextEditorVal
   const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
   return {
     key,
-    validationMessage,
+    validationMessage: validationMessage ?? undefined,
     nextValue: validationMessage ? undefined : parseExcelEditorValue(cell, nextEditorValue),
   };
 }
@@ -83,7 +83,7 @@ export function prepareExcelCellBatchEdit(edit: ExcelCellBatchEdit): ExcelPrepar
   return {
     ...edit,
     key,
-    validationMessage,
+    validationMessage: validationMessage ?? undefined,
     editable: canInlineEditExcelCell(edit.cell),
     nextValue: validationMessage ? undefined : parseExcelEditorValue(edit.cell, edit.editorValue),
   };

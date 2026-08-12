@@ -1,6 +1,6 @@
 import { readFirstString, readRecord } from '@core/utils/public';
 
-import { cleanDisplayPath } from '../quickInputPathModel';
+import { normalizeGoalPath } from '@core/goal/public';
 import type { QuickInputContext, QuickInputFormData, QuickInputInitialSelection } from './types';
 
 export function deriveQuickInputInitialSelection(
@@ -14,7 +14,7 @@ export function deriveQuickInputInitialSelection(
       readFirstString(context, ['goalId', '目标ID']) ??
       readFirstString(goalContext, ['goalId']) ??
       null,
-    selectedGoalPath: cleanDisplayPath(
+    selectedGoalPath: normalizeGoalPath(
       readFirstString(initialFormData, ['goalPath', '目标']) ??
         readFirstString(context, ['goalPath', '目标']) ??
         readFirstString(goalContext, ['goalPath']) ??

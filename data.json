@@ -16,7 +16,7 @@
     "configCacheTTLSeconds": 300,
     "customPrompt": "完成的任务状态使用 done\n未开始的任务状态使用 open；如果表达开始日期，写入开始日期\n未完成的任务状态使用 open；有截止日期时写入截止日期\n上午8点到12点工作 其中9点到十点写总结 这个应该断成三节 十点到九点工作 九点到十点写总结 十点到十二点工作\n时长只能是分钟为单位，只记录数字\n\n“通勤15分钟中午吃饭45分钟玩手机70分钟 睡觉20分钟”认为是一件事接着一件事记录时间"
   },
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "groups": [
     {
       "id": "group_memc1a9ofen88",
@@ -33,42 +33,10 @@
   ],
   "viewInstances": [
     {
-      "id": "vi_statistics_goal_mvp12",
-      "title": "目标统计",
-      "viewType": "StatisticsView",
-      "parentId": null,
-      "collapsed": true,
-      "fields": [
-        "goalPath",
-        "themePath",
-        "coreBlock",
-        "date",
-        "content"
-      ],
-      "group": "goalPath",
-      "groupFields": [
-        "coreBlock"
-      ],
-      "viewConfig": {
-        "groupBy": "goal",
-        "metric": "recordCount",
-        "chartType": "bar",
-        "topN": 10,
-        "usePeriodField": false
-      },
-      "filters": [],
-      "sort": [
-        {
-          "field": "date",
-          "dir": "desc"
-        }
-      ]
-    },
-    {
       "id": "vi_mm9z0oe1cvlr53c",
       "parentId": null,
       "title": "时间轴",
-      "viewType": "ProgressView",
+      "viewType": "EnergyView",
       "viewConfig": {
         "categories": {
           "0": {
@@ -142,7 +110,7 @@
       "id": "vi_mmeolydjaga6z6u",
       "parentId": null,
       "title": "打卡",
-      "viewType": "HeatmapView",
+      "viewType": "StatisticsView",
       "viewConfig": {
         "categories": [
           {
@@ -192,13 +160,7 @@
         "content"
       ],
       "groupFields": [],
-      "filters": [
-        {
-          "field": "coreBlock",
-          "op": "=",
-          "value": "habit"
-        }
-      ],
+      "filters": [],
       "sort": [],
       "collapsed": false
     },
@@ -241,7 +203,8 @@
         "themePath",
         "image",
         "date",
-        "content"
+        "content",
+        "extra.精力值"
       ],
       "groupFields": [
         "coreBlock",
@@ -291,7 +254,7 @@
       "id": "vi_mno1upgdwpv72oj",
       "parentId": null,
       "title": "时间轴2",
-      "viewType": "TimelineView",
+      "viewType": "ProgressView",
       "viewConfig": {
         "categories": {
           "健康": {
@@ -338,23 +301,13 @@
           "电脑",
           "工作"
         ],
-        "topN": 50
+        "topN": 50,
+        "rowField": "rootGoal",
+        "colField": "content"
       },
       "fields": [],
       "groupFields": [],
-      "filters": [
-        {
-          "field": "coreBlock",
-          "op": "=",
-          "value": "task",
-          "logic": "and"
-        },
-        {
-          "field": "status",
-          "op": "=",
-          "value": "done"
-        }
-      ],
+      "filters": [],
       "sort": [],
       "collapsed": false
     },
@@ -362,7 +315,7 @@
       "id": "vi_mnztlf3wxrrqd8i",
       "parentId": null,
       "title": "完成任务",
-      "viewType": "TableView",
+      "viewType": "EventTimelineView",
       "viewConfig": {
         "categories": [
           {
@@ -448,7 +401,7 @@
         "coreBlock",
         "themePath",
         "content",
-        "extra.目标",
+        "goalPath",
         "date",
         "icon"
       ],
@@ -476,7 +429,6 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "vi_statistics_goal_mvp12",
         "vi_mmeolydjaga6z6u",
         "vi_mn9o962553qwhzp",
         "vi_mmijitbq47u10wu",
@@ -492,7 +444,25 @@
       "isOverviewMode": false,
       "initialDate": "2025-02-26",
       "useFieldGranularity": false,
-      "globalFilters": []
+      "globalFilters": [],
+      "viewPlacements": {
+        "vi_mm9z0oe1cvlr53c": {
+          "x": 704,
+          "y": 816,
+          "width": 720,
+          "height": 620,
+          "zIndex": 6,
+          "collapsed": true
+        },
+        "vi_mmeolydjaga6z6u": {
+          "x": 464,
+          "y": 880,
+          "width": 520,
+          "height": 360,
+          "zIndex": 8,
+          "collapsed": true
+        }
+      }
     },
     {
       "id": "layout_mpi3dfhyn14bsio",
@@ -508,557 +478,6 @@
     }
   ],
   "inputSettings": {
-    "blocks": [
-      {
-        "id": "core.habit",
-        "name": "打卡",
-        "categoryKey": "打卡",
-        "coreBlockId": "core.habit",
-        "fields": [
-          {
-            "id": "field_mewjpsd5",
-            "key": "评分",
-            "label": "评分",
-            "type": "rating",
-            "options": [
-              {
-                "value": "✅",
-                "label": "1"
-              }
-            ]
-          },
-          {
-            "id": "field_mewk7o3j",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "{{goal.themePath}}"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true
-          },
-          {
-            "id": "field_mewjqtxg",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon"
-          }
-        ],
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{goalPath}}"
-      },
-      {
-        "id": "core.task",
-        "name": "任务",
-        "categoryKey": "任务",
-        "coreBlockId": "core.task",
-        "fields": [
-          {
-            "id": "core.task.content",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea",
-            "semantic": "body"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "{{goal.themePath}}"
-          },
-          {
-            "id": "core.task.scheduledDate",
-            "key": "scheduledDate",
-            "label": "计划日期",
-            "type": "date"
-          },
-          {
-            "id": "core.task.startDate",
-            "key": "startDate",
-            "label": "开始日期",
-            "type": "date"
-          },
-          {
-            "id": "core.task.dueDate",
-            "key": "dueDate",
-            "label": "截止日期",
-            "type": "date"
-          },
-          {
-            "id": "core.task.expectedDuration",
-            "key": "expectedDurationMinutes",
-            "label": "预计时长",
-            "type": "number",
-            "min": 1
-          },
-          {
-            "id": "core.task.priority",
-            "key": "priority",
-            "label": "优先级",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "lowest",
-                "label": "最低"
-              },
-              {
-                "value": "low",
-                "label": "低"
-              },
-              {
-                "value": "medium",
-                "label": "中"
-              },
-              {
-                "value": "high",
-                "label": "高"
-              },
-              {
-                "value": "highest",
-                "label": "最高"
-              }
-            ]
-          },
-          {
-            "id": "core.task.energyDemand",
-            "key": "energyDemand",
-            "label": "精力要求",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "low",
-                "label": "低"
-              },
-              {
-                "value": "medium",
-                "label": "中"
-              },
-              {
-                "value": "high",
-                "label": "高"
-              }
-            ]
-          },
-          {
-            "id": "core.task.brainDemand",
-            "key": "brainDemand",
-            "label": "脑力要求",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "low",
-                "label": "低"
-              },
-              {
-                "value": "medium",
-                "label": "中"
-              },
-              {
-                "value": "high",
-                "label": "高"
-              }
-            ]
-          },
-          {
-            "id": "core.task.physicalDemand",
-            "key": "physicalDemand",
-            "label": "体力要求",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "low",
-                "label": "低"
-              },
-              {
-                "value": "medium",
-                "label": "中"
-              },
-              {
-                "value": "high",
-                "label": "高"
-              }
-            ]
-          },
-          {
-            "id": "core.task.recurrenceUnit",
-            "key": "recurrenceUnit",
-            "label": "重复单位",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "day",
-                "label": "天"
-              },
-              {
-                "value": "week",
-                "label": "周"
-              },
-              {
-                "value": "month",
-                "label": "月"
-              },
-              {
-                "value": "quarter",
-                "label": "季"
-              },
-              {
-                "value": "year",
-                "label": "年"
-              }
-            ]
-          },
-          {
-            "id": "core.task.recurrenceInterval",
-            "key": "recurrenceInterval",
-            "label": "重复间隔",
-            "type": "number",
-            "min": 1,
-            "defaultValue": "1"
-          },
-          {
-            "id": "core.task.recurrenceAnchor",
-            "key": "recurrenceAnchor",
-            "label": "重复锚点",
-            "type": "singleSelect",
-            "defaultValue": "scheduled",
-            "options": [
-              {
-                "value": "scheduled",
-                "label": "计划日期"
-              },
-              {
-                "value": "start",
-                "label": "开始日期"
-              },
-              {
-                "value": "due",
-                "label": "截止日期"
-              },
-              {
-                "value": "completion",
-                "label": "完成日期"
-              }
-            ]
-          }
-        ],
-        "targetFile": "01/2-0其他.md",
-        "appendUnderHeader": "## {{goalPath}}"
-      },
-      {
-        "id": "core.evidence",
-        "name": "事件",
-        "categoryKey": "事件",
-        "coreBlockId": "core.evidence",
-        "fields": [
-          {
-            "id": "field_mewkyug9",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "{{goal.themePath}}"
-          },
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon"
-          }
-        ],
-        "targetFile": "01/目标事件.md",
-        "appendUnderHeader": "## {{goalPath}}"
-      },
-      {
-        "id": "core.thought",
-        "name": "思考",
-        "categoryKey": "思考",
-        "coreBlockId": "core.thought",
-        "fields": [
-          {
-            "id": "field_mewkyug9",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "{{goal.themePath}}"
-          },
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon"
-          }
-        ],
-        "targetFile": "01/目标思考.md",
-        "appendUnderHeader": "## {{goalPath}}"
-      },
-      {
-        "id": "core.review",
-        "name": "总结",
-        "categoryKey": "总结",
-        "coreBlockId": "core.review",
-        "fields": [
-          {
-            "id": "field_mer983il",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "{{goal.themePath}}"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true
-          },
-          {
-            "id": "field_mer989rn",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon"
-          }
-        ],
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{goalPath}}"
-      },
-      {
-        "id": "core.plan",
-        "name": "计划",
-        "categoryKey": "计划",
-        "coreBlockId": "core.plan",
-        "fields": [
-          {
-            "id": "field_mer94wbx",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "{{goal.themePath}}"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true
-          },
-          {
-            "id": "field_mer95h6l",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon"
-          }
-        ],
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{goalPath}}"
-      },
-      {
-        "id": "core.blocker",
-        "name": "阻碍项",
-        "categoryKey": "阻碍项",
-        "coreBlockId": "core.blocker",
-        "fields": [
-          {
-            "id": "core.blocker.date",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "{{goal.themePath}}"
-          },
-          {
-            "id": "core.blocker.content",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon"
-          }
-        ],
-        "targetFile": "01/阻碍.md",
-        "appendUnderHeader": "## {{goalPath}}"
-      },
-      {
-        "id": "core.milestone",
-        "name": "里程碑",
-        "categoryKey": "里程碑",
-        "coreBlockId": "core.milestone",
-        "fields": [
-          {
-            "id": "core.milestone.date",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "{{goal.themePath}}"
-          },
-          {
-            "id": "core.milestone.content",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon"
-          }
-        ],
-        "targetFile": "01/里程碑.md",
-        "appendUnderHeader": "## {{goalPath}}"
-      }
-    ],
     "themes": [
       {
         "id": "thm_mejsim4o4c2mw",
@@ -1347,22 +766,9 @@
   "goalSettings": {
     "goals": [
       {
-        "id": "goal.情绪",
-        "title": "#1️⃣情绪",
-        "goalPath": "#1️⃣情绪",
-        "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-19T02:47:02.748Z",
-        "updatedAt": "2026-06-19T02:48:07.339Z",
-        "order": 1,
-        "sortOrder": 1
-      },
-      {
         "id": "goal.照顾好自己",
-        "title": "#照顾好自己",
-        "goalPath": "#照顾好自己",
+        "title": "照顾好自己",
+        "goalPath": "照顾好自己",
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
@@ -1374,8 +780,8 @@
       },
       {
         "id": "goal.我若安好便是晴天",
-        "title": "#我若安好便是晴天",
-        "goalPath": "#我若安好便是晴天",
+        "title": "我若安好便是晴天",
+        "goalPath": "我若安好便是晴天",
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
@@ -1387,8 +793,8 @@
       },
       {
         "id": "goal.仪容仪表",
-        "title": "#仪容仪表",
-        "goalPath": "#仪容仪表",
+        "title": "仪容仪表",
+        "goalPath": "仪容仪表",
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
@@ -1399,22 +805,9 @@
         "sortOrder": 4
       },
       {
-        "id": "goal.3️⃣能力",
-        "title": "#3️⃣能力",
-        "goalPath": "#3️⃣能力",
-        "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-19T02:47:36.144Z",
-        "updatedAt": "2026-06-19T02:47:36.144Z",
-        "order": 5,
-        "sortOrder": 5
-      },
-      {
         "id": "goal.了解自我",
-        "title": "#了解自我",
-        "goalPath": "#了解自我",
+        "title": "了解自我",
+        "goalPath": "了解自我",
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
@@ -1426,8 +819,8 @@
       },
       {
         "id": "goal.了解世界",
-        "title": "#了解世界",
-        "goalPath": "#了解世界",
+        "title": "了解世界",
+        "goalPath": "了解世界",
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
@@ -1439,8 +832,8 @@
       },
       {
         "id": "goal.工作能力",
-        "title": "#工作能力",
-        "goalPath": "#工作能力",
+        "title": "工作能力",
+        "goalPath": "工作能力",
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
@@ -1452,8 +845,8 @@
       },
       {
         "id": "goal.爱好能力",
-        "title": "#爱好能力",
-        "goalPath": "#爱好能力",
+        "title": "爱好能力",
+        "goalPath": "爱好能力",
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
@@ -1465,8 +858,8 @@
       },
       {
         "id": "goal.武装大脑",
-        "title": "#武装大脑",
-        "goalPath": "#武装大脑",
+        "title": "武装大脑",
+        "goalPath": "武装大脑",
         "status": "active",
         "parentGoalId": null,
         "themePath": null,
@@ -1492,16 +885,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -1535,9 +918,7 @@
         ],
         "defaultValues": {
           "themePath": "健康",
-          "主题": "健康",
-          "icon": "💤",
-          "图标": "💤"
+          "icon": "💤"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -1556,16 +937,6 @@
         "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -1599,9 +970,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/身体",
-          "主题": "健康/身体",
-          "icon": "🔋",
-          "图标": "🔋"
+          "icon": "🔋"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -1620,16 +989,6 @@
         "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -1663,9 +1022,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/睡眠",
-          "主题": "健康/睡眠",
-          "icon": "💤",
-          "图标": "💤"
+          "icon": "💤"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -1684,16 +1041,6 @@
         "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -1727,9 +1074,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/瑜伽",
-          "主题": "健康/瑜伽",
-          "icon": "🧘",
-          "图标": "🧘"
+          "icon": "🧘"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -1748,16 +1093,6 @@
         "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -1791,9 +1126,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/运动",
-          "主题": "健康/运动",
-          "icon": "💪",
-          "图标": "💪"
+          "icon": "💪"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -1812,16 +1145,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -1855,9 +1178,7 @@
         ],
         "defaultValues": {
           "themePath": "健康",
-          "主题": "健康",
-          "icon": "💤",
-          "图标": "💤"
+          "icon": "💤"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -1876,16 +1197,6 @@
         "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -1919,9 +1230,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/身体",
-          "主题": "健康/身体",
-          "icon": "🔋",
-          "图标": "🔋"
+          "icon": "🔋"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -1940,16 +1249,6 @@
         "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -1983,9 +1282,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/睡眠",
-          "主题": "健康/睡眠",
-          "icon": "💤",
-          "图标": "💤"
+          "icon": "💤"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -2004,16 +1301,6 @@
         "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -2047,9 +1334,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/三餐",
-          "主题": "健康/三餐",
-          "icon": "🍱",
-          "图标": "🍱"
+          "icon": "🍱"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -2068,16 +1353,6 @@
         "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -2111,9 +1386,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/瑜伽",
-          "主题": "健康/瑜伽",
-          "icon": "🧘",
-          "图标": "🧘"
+          "icon": "🧘"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -2132,16 +1405,6 @@
         "sortOrder": 60,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -2175,9 +1438,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/运动",
-          "主题": "健康/运动",
-          "icon": "💪",
-          "图标": "💪"
+          "icon": "💪"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -2235,16 +1496,6 @@
             "auxKey": "image"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -2277,9 +1528,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/心情",
-          "主题": "健康/心情",
-          "icon": "😄",
-          "图标": "😄"
+          "icon": "😄"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -2325,16 +1574,6 @@
             "auxKey": "image"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -2367,9 +1606,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/身体",
-          "主题": "健康/身体",
-          "icon": "🔋",
-          "图标": "🔋"
+          "icon": "🔋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -2397,16 +1634,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
           },
           {
             "id": "core.field.themePath",
@@ -2441,9 +1668,7 @@
         ],
         "defaultValues": {
           "themePath": "思考/专注",
-          "主题": "思考/专注",
-          "icon": "⏰",
-          "图标": "⏰"
+          "icon": "⏰"
         },
         "createdAt": "2026-06-22T07:30:14.776Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -2501,16 +1726,6 @@
             "auxKey": "image"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -2543,9 +1758,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/睡眠",
-          "主题": "健康/睡眠",
-          "icon": "💤",
-          "图标": "💤"
+          "icon": "💤"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -2573,16 +1786,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
           },
           {
             "id": "core.field.themePath",
@@ -2617,9 +1820,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/早餐",
-          "主题": "健康/早餐",
-          "icon": "🥚",
-          "图标": "🥚"
+          "icon": "🥚"
         },
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -2647,16 +1848,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
           },
           {
             "id": "core.field.themePath",
@@ -2691,9 +1882,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/午餐",
-          "主题": "健康/午餐",
-          "icon": "🍱",
-          "图标": "🍱"
+          "icon": "🍱"
         },
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -2721,16 +1910,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
           },
           {
             "id": "core.field.themePath",
@@ -2765,9 +1944,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/晚餐",
-          "主题": "健康/晚餐",
-          "icon": "🥣",
-          "图标": "🥣"
+          "icon": "🥣"
         },
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -2795,16 +1972,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
           },
           {
             "id": "core.field.themePath",
@@ -2839,9 +2006,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/姨妈",
-          "主题": "健康/姨妈",
-          "icon": "🩸",
-          "图标": "🩸"
+          "icon": "🩸"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -2893,22 +2058,6 @@
             "defaultValue": "健康/粑粑"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "options": [
-              {
-                "value": "#身体健康",
-                "label": "#身体健康"
-              }
-            ],
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "field_mewjqtxg",
             "key": "内容",
             "label": "内容",
@@ -2925,9 +2074,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/粑粑",
-          "主题": "健康/粑粑",
-          "icon": "💩",
-          "图标": "💩"
+          "icon": "💩"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -2979,16 +2126,6 @@
             "defaultValue": "健康/运动"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "field_mewjqtxg",
             "key": "内容",
             "label": "内容",
@@ -3005,9 +2142,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/运动",
-          "主题": "健康/运动",
-          "icon": "💪",
-          "图标": "💪"
+          "icon": "💪"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:30:33.724Z"
@@ -3033,13 +2168,6 @@
                 "label": "1"
               }
             ]
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "defaultValue": "#照顾好自己"
           },
           {
             "id": "core.field.themePath",
@@ -3070,9 +2198,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/喝水",
-          "主题": "健康/喝水",
-          "icon": "💧",
-          "图标": "💧"
+          "icon": "💧"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-26T01:46:24.467Z"
@@ -3088,9 +2214,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "健康/身体",
-          "主题": "健康/身体",
-          "icon": "🔋",
-          "图标": "🔋"
+          "icon": "🔋"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z",
@@ -3108,10 +2232,7 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/专注",
-          "主题": "思考/专注",
-          "icon": "⏰",
-          "图标": "⏰",
-          "目标": "#照顾好自己"
+          "icon": "⏰"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3128,11 +2249,8 @@
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/睡眠",
-          "主题": "健康/睡眠",
           "icon": "💤",
-          "图标": "💤",
-          "任务内容": "睡觉",
-          "目标": "#照顾好自己"
+          "任务内容": "睡觉"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3149,11 +2267,8 @@
         "targetFile": "01/2-2三餐.md",
         "defaultValues": {
           "themePath": "健康/早餐",
-          "主题": "健康/早餐",
           "icon": "🥚",
-          "图标": "🥚",
-          "任务内容": "早餐",
-          "目标": "#照顾好自己"
+          "任务内容": "早餐"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3170,11 +2285,8 @@
         "targetFile": "01/2-2三餐.md",
         "defaultValues": {
           "themePath": "健康/午餐",
-          "主题": "健康/午餐",
           "icon": "🍱",
-          "图标": "🍱",
-          "任务内容": "午餐",
-          "目标": "#照顾好自己"
+          "任务内容": "午餐"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3191,11 +2303,8 @@
         "targetFile": "01/2-2三餐.md",
         "defaultValues": {
           "themePath": "健康/晚餐",
-          "主题": "健康/晚餐",
           "icon": "🥣",
-          "图标": "🥣",
-          "任务内容": "晚餐",
-          "目标": "#照顾好自己"
+          "任务内容": "晚餐"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3212,10 +2321,7 @@
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康",
-          "主题": "健康",
-          "icon": "💤",
-          "图标": "💤",
-          "目标": "#照顾好自己"
+          "icon": "💤"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3232,11 +2338,8 @@
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/粑粑",
-          "主题": "健康/粑粑",
           "icon": "💩",
-          "图标": "💩",
-          "任务内容": "拉粑粑",
-          "目标": "#照顾好自己"
+          "任务内容": "拉粑粑"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3253,11 +2356,8 @@
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/运动",
-          "主题": "健康/运动",
           "icon": "💪",
-          "图标": "💪",
-          "任务内容": "八段锦",
-          "目标": "#照顾好自己"
+          "任务内容": "八段锦"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3274,10 +2374,7 @@
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/习惯",
-          "主题": "健康/习惯",
-          "icon": "💊",
-          "图标": "💊",
-          "目标": "#照顾好自己"
+          "icon": "💊"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3294,10 +2391,7 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/健康",
-          "主题": "思考/健康",
-          "icon": "🔋",
-          "图标": "🔋",
-          "目标": "#照顾好自己"
+          "icon": "🔋"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -3330,16 +2424,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -3367,9 +2451,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康/身体",
-          "主题": "健康/身体",
-          "icon": "🔋",
-          "图标": "🔋"
+          "icon": "🔋"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3402,16 +2484,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -3439,9 +2511,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康/睡眠",
-          "主题": "健康/睡眠",
-          "icon": "💤",
-          "图标": "💤"
+          "icon": "💤"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3474,16 +2544,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -3511,9 +2571,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康/瑜伽",
-          "主题": "健康/瑜伽",
-          "icon": "🧘",
-          "图标": "🧘"
+          "icon": "🧘"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3546,16 +2604,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -3583,9 +2631,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康",
-          "主题": "健康",
-          "icon": "💤",
-          "图标": "💤"
+          "icon": "💤"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3618,16 +2664,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -3655,9 +2691,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康/习惯",
-          "主题": "健康/习惯",
-          "icon": "💊",
-          "图标": "💊"
+          "icon": "💊"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3690,16 +2724,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -3727,9 +2751,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康/心情",
-          "主题": "健康/心情",
-          "icon": "😄",
-          "图标": "😄"
+          "icon": "😄"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3744,16 +2766,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -3782,9 +2794,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康/身体",
-          "主题": "健康/身体",
-          "icon": "🔋",
-          "图标": "🔋"
+          "icon": "🔋"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3799,16 +2809,6 @@
         "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -3837,9 +2837,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康/瑜伽",
-          "主题": "健康/瑜伽",
-          "icon": "🧘",
-          "图标": "🧘"
+          "icon": "🧘"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3854,16 +2852,6 @@
         "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -3892,9 +2880,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康/睡眠",
-          "主题": "健康/睡眠",
-          "icon": "💤",
-          "图标": "💤"
+          "icon": "💤"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3909,16 +2895,6 @@
         "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -3947,9 +2923,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康/运动",
-          "主题": "健康/运动",
-          "icon": "💪",
-          "图标": "💪"
+          "icon": "💪"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -3964,16 +2938,6 @@
         "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#照顾好自己"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -4002,9 +2966,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "健康",
-          "主题": "健康",
-          "icon": "💤",
-          "图标": "💤"
+          "icon": "💤"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -4023,16 +2985,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#我若安好便是晴天"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -4066,9 +3018,7 @@
         ],
         "defaultValues": {
           "themePath": "生活",
-          "主题": "生活",
-          "icon": "✨",
-          "图标": "✨"
+          "icon": "✨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -4087,16 +3037,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#我若安好便是晴天"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -4130,9 +3070,7 @@
         ],
         "defaultValues": {
           "themePath": "生活",
-          "主题": "生活",
-          "icon": "✨",
-          "图标": "✨"
+          "icon": "✨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -4164,16 +3102,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#我若安好便是晴天"
           },
           {
             "id": "core.field.themePath",
@@ -4208,9 +3136,7 @@
         ],
         "defaultValues": {
           "themePath": "生活/车车",
-          "主题": "生活/车车",
-          "icon": "🚗",
-          "图标": "🚗"
+          "icon": "🚗"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
@@ -4227,10 +3153,7 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活",
-          "主题": "生活",
-          "icon": "✨",
-          "图标": "✨",
-          "目标": "#我若安好便是晴天"
+          "icon": "✨"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4247,11 +3170,8 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活/娱乐",
-          "主题": "生活/娱乐",
           "icon": "📺",
-          "图标": "📺",
-          "任务内容": "玩手机",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "玩手机"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4268,11 +3188,8 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活/车车",
-          "主题": "生活/车车",
           "icon": "🚗",
-          "图标": "🚗",
-          "任务内容": "听小说",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "听小说"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4289,10 +3206,7 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活/高级生活",
-          "主题": "生活/高级生活",
-          "icon": "🔆",
-          "图标": "🔆",
-          "目标": "#我若安好便是晴天"
+          "icon": "🔆"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4309,11 +3223,8 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活/小手机",
-          "主题": "生活/小手机",
           "icon": "🍓",
-          "图标": "🍓",
-          "任务内容": "小手机",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "小手机"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4330,11 +3241,8 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活/家务",
-          "主题": "生活/家务",
           "icon": "🧹",
-          "图标": "🧹",
-          "任务内容": "打扫卫生",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "打扫卫生"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4351,11 +3259,8 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活/整理",
-          "主题": "生活/整理",
           "icon": "📦",
-          "图标": "📦",
-          "任务内容": "整理家",
-          "目标": "#我若安好便是晴天"
+          "任务内容": "整理家"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4372,10 +3277,7 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活/收纳",
-          "主题": "生活/收纳",
-          "icon": "📦",
-          "图标": "📦",
-          "目标": "#我若安好便是晴天"
+          "icon": "📦"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4392,10 +3294,7 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活/开车",
-          "主题": "生活/开车",
-          "icon": "🚗",
-          "图标": "🚗",
-          "目标": "#我若安好便是晴天"
+          "icon": "🚗"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4428,16 +3327,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#我若安好便是晴天"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -4465,9 +3354,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "生活",
-          "主题": "生活",
-          "icon": "✨",
-          "图标": "✨"
+          "icon": "✨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -4483,16 +3370,6 @@
         "enabled": true,
         "fields": [
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#我若安好便是晴天"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -4520,9 +3397,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "生活",
-          "主题": "生活",
-          "icon": "✨",
-          "图标": "✨"
+          "icon": "✨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -4554,16 +3429,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#仪容仪表"
           },
           {
             "id": "core.field.themePath",
@@ -4598,9 +3463,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/剪指甲",
-          "主题": "健康/剪指甲",
-          "icon": "✋",
-          "图标": "✋"
+          "icon": "✋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:13:09.089Z"
@@ -4628,16 +3491,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#仪容仪表"
           },
           {
             "id": "core.field.themePath",
@@ -4672,9 +3525,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/剪头发",
-          "主题": "健康/剪头发",
-          "icon": "✂",
-          "图标": "✂"
+          "icon": "✂"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-22T07:13:09.089Z"
@@ -4702,16 +3553,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#仪容仪表"
           },
           {
             "id": "core.field.themePath",
@@ -4746,9 +3587,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/卫生",
-          "主题": "健康/卫生",
-          "icon": "🛁",
-          "图标": "🛁"
+          "icon": "🛁"
         },
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-22T07:13:09.089Z"
@@ -4776,16 +3615,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#仪容仪表"
           },
           {
             "id": "core.field.themePath",
@@ -4820,9 +3649,7 @@
         ],
         "defaultValues": {
           "themePath": "健康/洗澡",
-          "主题": "健康/洗澡",
-          "icon": "🛁",
-          "图标": "🛁"
+          "icon": "🛁"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -4839,10 +3666,7 @@
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/剪指甲",
-          "主题": "健康/剪指甲",
-          "icon": "✋",
-          "图标": "✋",
-          "目标": "#仪容仪表"
+          "icon": "✋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4859,10 +3683,7 @@
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/剪头发",
-          "主题": "健康/剪头发",
-          "icon": "✂",
-          "图标": "✂",
-          "目标": "#仪容仪表"
+          "icon": "✂"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4879,11 +3700,8 @@
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/卫生",
-          "主题": "健康/卫生",
           "icon": "🛁",
-          "图标": "🛁",
-          "任务内容": "洗漱",
-          "目标": "#仪容仪表"
+          "任务内容": "洗漱"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4900,10 +3718,7 @@
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/洗澡",
-          "主题": "健康/洗澡",
-          "icon": "🛁",
-          "图标": "🛁",
-          "目标": "#仪容仪表"
+          "icon": "🛁"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4922,16 +3737,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#了解自我"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -4965,9 +3770,7 @@
         ],
         "defaultValues": {
           "themePath": "思考/自我",
-          "主题": "思考/自我",
-          "icon": "🐈",
-          "图标": "🐈"
+          "icon": "🐈"
         },
         "createdAt": "2026-06-22T07:15:42.626Z",
         "updatedAt": "2026-06-22T07:15:42.626Z"
@@ -4984,10 +3787,7 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/自我",
-          "主题": "思考/自我",
-          "icon": "🐈",
-          "图标": "🐈",
-          "目标": "#了解自我"
+          "icon": "🐈"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -5020,16 +3820,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#了解自我"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -5057,9 +3847,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "思考/自我",
-          "主题": "思考/自我",
-          "icon": "🐈",
-          "图标": "🐈"
+          "icon": "🐈"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5075,16 +3863,6 @@
         "enabled": true,
         "fields": [
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#了解自我"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -5112,9 +3890,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "思考/自我",
-          "主题": "思考/自我",
-          "icon": "🐈",
-          "图标": "🐈"
+          "icon": "🐈"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5132,9 +3908,7 @@
         "appendUnderHeader": "## {goalPath}",
         "defaultValues": {
           "themePath": "思考/自我",
-          "主题": "思考/自我",
-          "icon": "🐈",
-          "图标": "🐈"
+          "icon": "🐈"
         },
         "createdAt": "2026-06-22T07:14:15.154Z",
         "updatedAt": "2026-06-22T07:14:15.154Z"
@@ -5151,9 +3925,7 @@
         "appendUnderHeader": "## {goalPath}",
         "defaultValues": {
           "themePath": "思考/自我",
-          "主题": "思考/自我",
-          "icon": "🐈",
-          "图标": "🐈"
+          "icon": "🐈"
         },
         "createdAt": "2026-06-22T07:15:08.871Z",
         "updatedAt": "2026-06-22T07:15:08.871Z"
@@ -5173,9 +3945,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/婆婆",
-          "主题": "思考/婆婆",
-          "icon": "🧓",
-          "图标": "🧓"
+          "icon": "🧓"
         },
         "createdAt": "2026-06-25T09:00:24.047Z",
         "updatedAt": "2026-06-25T09:00:24.048Z"
@@ -5195,9 +3965,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/垚垚",
-          "主题": "思考/垚垚",
-          "icon": "👶",
-          "图标": "👶"
+          "icon": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5217,9 +3985,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/芦苇",
-          "主题": "思考/芦苇",
-          "icon": "🌿",
-          "图标": "🌿"
+          "icon": "🌿"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5239,9 +4005,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/婆婆",
-          "主题": "思考/婆婆",
-          "icon": "🧓",
-          "图标": "🧓"
+          "icon": "🧓"
         },
         "createdAt": "2026-06-25T09:00:21.051Z",
         "updatedAt": "2026-06-25T09:00:21.051Z"
@@ -5261,9 +4025,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/阳阳",
-          "主题": "思考/阳阳",
-          "icon": "👨",
-          "图标": "👨"
+          "icon": "👨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5283,9 +4045,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/垚垚",
-          "主题": "思考/垚垚",
-          "icon": "👶",
-          "图标": "👶"
+          "icon": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5305,9 +4065,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/家庭",
-          "主题": "思考/家庭",
-          "icon": "👪",
-          "图标": "👪"
+          "icon": "👪"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5327,9 +4085,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/芦苇",
-          "主题": "思考/芦苇",
-          "icon": "🌿",
-          "图标": "🌿"
+          "icon": "🌿"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5346,11 +4102,8 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/时间整理",
-          "主题": "思考/时间整理",
           "icon": "🧠",
-          "图标": "🧠",
-          "任务内容": "时间整理",
-          "目标": "#了解世界"
+          "任务内容": "时间整理"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -5367,11 +4120,8 @@
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
           "themePath": "生活/垚垚",
-          "主题": "生活/垚垚",
           "icon": "👶",
-          "图标": "👶",
-          "任务内容": "和垚垚玩",
-          "目标": "#了解世界"
+          "任务内容": "和垚垚玩"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -5388,10 +4138,7 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/阳阳",
-          "主题": "思考/阳阳",
-          "icon": "👨",
-          "图标": "👨",
-          "目标": "#了解世界"
+          "icon": "👨"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -5408,10 +4155,7 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/婆婆",
-          "主题": "思考/婆婆",
-          "icon": "🧓",
-          "图标": "🧓",
-          "目标": "#了解世界"
+          "icon": "🧓"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -5428,10 +4172,7 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/家庭",
-          "主题": "思考/家庭",
-          "icon": "👪",
-          "图标": "👪",
-          "目标": "#了解世界"
+          "icon": "👪"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -5447,9 +4188,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/婆婆",
-          "主题": "思考/婆婆",
-          "icon": "🧓",
-          "图标": "🧓"
+          "icon": "🧓"
         },
         "createdAt": "2026-06-25T09:00:17.897Z",
         "updatedAt": "2026-06-25T09:00:17.897Z"
@@ -5465,9 +4204,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/阳阳",
-          "主题": "思考/阳阳",
-          "icon": "👨",
-          "图标": "👨"
+          "icon": "👨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5483,9 +4220,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/家庭",
-          "主题": "思考/家庭",
-          "icon": "👪",
-          "图标": "👪"
+          "icon": "👪"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5501,9 +4236,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/芦苇",
-          "主题": "思考/芦苇",
-          "icon": "🌿",
-          "图标": "🌿"
+          "icon": "🌿"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5519,9 +4252,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/垚垚",
-          "主题": "思考/垚垚",
-          "icon": "👶",
-          "图标": "👶"
+          "icon": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5537,9 +4268,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/婆婆",
-          "主题": "思考/婆婆",
-          "icon": "🧓",
-          "图标": "🧓"
+          "icon": "🧓"
         },
         "createdAt": "2026-06-25T09:00:14.867Z",
         "updatedAt": "2026-06-25T09:00:14.868Z"
@@ -5555,9 +4284,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/垚垚",
-          "主题": "思考/垚垚",
-          "icon": "👶",
-          "图标": "👶"
+          "icon": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5573,9 +4300,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/阳阳",
-          "主题": "思考/阳阳",
-          "icon": "👨",
-          "图标": "👨"
+          "icon": "👨"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5591,9 +4316,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/芦苇",
-          "主题": "思考/芦苇",
-          "icon": "🌿",
-          "图标": "🌿"
+          "icon": "🌿"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5609,9 +4332,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "生活/垚垚",
-          "主题": "生活/垚垚",
-          "icon": "👶",
-          "图标": "👶"
+          "icon": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5627,9 +4348,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/时间整理",
-          "主题": "思考/时间整理",
-          "icon": "🧠",
-          "图标": "🧠"
+          "icon": "🧠"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5645,9 +4364,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/婆婆",
-          "主题": "思考/婆婆",
-          "icon": "🧓",
-          "图标": "🧓"
+          "icon": "🧓"
         },
         "createdAt": "2026-06-25T09:00:27.034Z",
         "updatedAt": "2026-06-25T09:00:27.034Z"
@@ -5663,9 +4380,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/婆婆",
-          "主题": "思考/婆婆",
-          "icon": "🧓",
-          "图标": "🧓"
+          "icon": "🧓"
         },
         "createdAt": "2026-06-25T09:00:29.998Z",
         "updatedAt": "2026-06-25T09:00:29.998Z"
@@ -5685,16 +4400,6 @@
         "enabled": true,
         "fields": [
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -5727,9 +4432,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/其他",
-          "主题": "工作/其他",
-          "icon": "📋",
-          "图标": "📋"
+          "icon": "📋"
         },
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5749,16 +4452,6 @@
         "enabled": true,
         "fields": [
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -5791,9 +4484,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/手续、对账",
-          "主题": "工作/手续、对账",
-          "icon": "📋",
-          "图标": "📋"
+          "icon": "📋"
         },
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5812,16 +4503,6 @@
         "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -5855,9 +4536,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/投标",
-          "主题": "工作/投标",
-          "icon": "🎟",
-          "图标": "🎟"
+          "icon": "🎟"
         },
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5876,16 +4555,6 @@
         "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -5919,9 +4588,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/设计",
-          "主题": "工作/设计",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-07T09:28:22.587Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5940,16 +4607,6 @@
         "sortOrder": 90,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -5971,9 +4628,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/通勤",
-          "主题": "工作/通勤",
-          "icon": "🛵",
-          "图标": "🛵"
+          "icon": "🛵"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -5992,16 +4647,6 @@
         "sortOrder": 100,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -6035,9 +4680,7 @@
         ],
         "defaultValues": {
           "themePath": "工作",
-          "主题": "工作",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6056,16 +4699,6 @@
         "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -6099,9 +4732,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/设计",
-          "主题": "工作/设计",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6120,16 +4751,6 @@
         "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -6163,9 +4784,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/投标",
-          "主题": "工作/投标",
-          "icon": "🎟",
-          "图标": "🎟"
+          "icon": "🎟"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6184,16 +4803,6 @@
         "sortOrder": 60,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -6227,9 +4836,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/手续、对账",
-          "主题": "工作/手续、对账",
-          "icon": "📋",
-          "图标": "📋"
+          "icon": "📋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6248,16 +4855,6 @@
         "sortOrder": 70,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -6291,9 +4888,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/其他",
-          "主题": "工作/其他",
-          "icon": "📋",
-          "图标": "📋"
+          "icon": "📋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6312,16 +4907,6 @@
         "sortOrder": 90,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -6343,9 +4928,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/通勤",
-          "主题": "工作/通勤",
-          "icon": "🛵",
-          "图标": "🛵"
+          "icon": "🛵"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6364,16 +4947,6 @@
         "sortOrder": 100,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -6407,9 +4980,7 @@
         ],
         "defaultValues": {
           "themePath": "工作",
-          "主题": "工作",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6426,10 +4997,7 @@
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
           "themePath": "工作/老板任务",
-          "主题": "工作/老板任务",
-          "icon": "💥",
-          "图标": "💥",
-          "目标": "#工作能力"
+          "icon": "💥"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -6446,10 +5014,7 @@
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
           "themePath": "工作/其他",
-          "主题": "工作/其他",
-          "icon": "📋",
-          "图标": "📋",
-          "目标": "#工作能力"
+          "icon": "📋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -6466,10 +5031,7 @@
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
           "themePath": "工作/手续、对账",
-          "主题": "工作/手续、对账",
-          "icon": "📋",
-          "图标": "📋",
-          "目标": "#工作能力"
+          "icon": "📋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -6486,10 +5048,7 @@
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
           "themePath": "工作/投标",
-          "主题": "工作/投标",
-          "icon": "🎟",
-          "图标": "🎟",
-          "目标": "#工作能力"
+          "icon": "🎟"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -6506,11 +5065,8 @@
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
           "themePath": "工作/设计",
-          "主题": "工作/设计",
           "icon": "🖥",
-          "图标": "🖥",
-          "任务内容": "设计",
-          "目标": "#工作能力"
+          "任务内容": "设计"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -6527,10 +5083,7 @@
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
           "themePath": "工作",
-          "主题": "工作",
-          "icon": "🖥",
-          "图标": "🖥",
-          "目标": "#工作能力"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -6547,12 +5100,9 @@
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
           "themePath": "工作/通勤",
-          "主题": "工作/通勤",
           "icon": "🛵",
-          "图标": "🛵",
           "任务内容": "通勤",
           "时长": "15",
-          "目标": "#工作能力",
           "expectedDurationMinutes": "15"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
@@ -6586,16 +5136,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -6623,9 +5163,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作/设计",
-          "主题": "工作/设计",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6658,16 +5196,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -6695,9 +5223,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作/投标",
-          "主题": "工作/投标",
-          "icon": "🎟",
-          "图标": "🎟"
+          "icon": "🎟"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6730,16 +5256,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -6767,9 +5283,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作/手续、对账",
-          "主题": "工作/手续、对账",
-          "icon": "📋",
-          "图标": "📋"
+          "icon": "📋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6802,16 +5316,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -6839,9 +5343,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作/其他",
-          "主题": "工作/其他",
-          "icon": "📋",
-          "图标": "📋"
+          "icon": "📋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6856,16 +5358,6 @@
         "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -6887,9 +5379,7 @@
         ],
         "defaultValues": {
           "themePath": "工作/通勤",
-          "主题": "工作/通勤",
-          "icon": "🛵",
-          "图标": "🛵"
+          "icon": "🛵"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6922,16 +5412,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -6959,9 +5439,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作",
-          "主题": "工作",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6976,16 +5454,6 @@
         "sortOrder": 0,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7014,9 +5482,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作/设计",
-          "主题": "工作/设计",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7031,16 +5497,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7069,9 +5525,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作/投标",
-          "主题": "工作/投标",
-          "icon": "🎟",
-          "图标": "🎟"
+          "icon": "🎟"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7086,16 +5540,6 @@
         "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7124,9 +5568,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作/手续、对账",
-          "主题": "工作/手续、对账",
-          "icon": "📋",
-          "图标": "📋"
+          "icon": "📋"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7141,16 +5583,6 @@
         "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7179,9 +5611,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作/老板任务",
-          "主题": "工作/老板任务",
-          "icon": "💥",
-          "图标": "💥"
+          "icon": "💥"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7196,16 +5626,6 @@
         "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#工作能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7234,9 +5654,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "工作",
-          "主题": "工作",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7256,16 +5674,6 @@
         "enabled": true,
         "fields": [
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -7298,9 +5706,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑/ob基础",
-          "主题": "电脑/ob基础",
-          "icon": "🎚",
-          "图标": "🎚"
+          "icon": "🎚"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7320,16 +5726,6 @@
         "enabled": true,
         "fields": [
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -7362,9 +5758,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑/笔记系统",
-          "主题": "电脑/笔记系统",
-          "icon": "📕",
-          "图标": "📕"
+          "icon": "📕"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7383,16 +5777,6 @@
         "sortOrder": 70,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7426,9 +5810,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑/记录系统",
-          "主题": "电脑/记录系统",
-          "icon": "🎴",
-          "图标": "🎴"
+          "icon": "🎴"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7447,16 +5829,6 @@
         "sortOrder": 80,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7490,9 +5862,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑/整理",
-          "主题": "电脑/整理",
-          "icon": "✒",
-          "图标": "✒"
+          "icon": "✒"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7511,16 +5881,6 @@
         "sortOrder": 90,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7554,9 +5914,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑",
-          "主题": "电脑",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7575,16 +5933,6 @@
         "sortOrder": 0,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7618,9 +5966,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑/整理",
-          "主题": "电脑/整理",
-          "icon": "✒",
-          "图标": "✒"
+          "icon": "✒"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7639,16 +5985,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7682,9 +6018,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑/记录系统",
-          "主题": "电脑/记录系统",
-          "icon": "🎴",
-          "图标": "🎴"
+          "icon": "🎴"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7703,16 +6037,6 @@
         "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7746,9 +6070,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑/笔记系统",
-          "主题": "电脑/笔记系统",
-          "icon": "📕",
-          "图标": "📕"
+          "icon": "📕"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7767,16 +6089,6 @@
         "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7810,9 +6122,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑/ob基础",
-          "主题": "电脑/ob基础",
-          "icon": "🎚",
-          "图标": "🎚"
+          "icon": "🎚"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7831,16 +6141,6 @@
         "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7874,9 +6174,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑",
-          "主题": "电脑",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7895,16 +6193,6 @@
         "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -7938,9 +6226,7 @@
         ],
         "defaultValues": {
           "themePath": "电脑/AI",
-          "主题": "电脑/AI",
-          "icon": "🤖",
-          "图标": "🤖"
+          "icon": "🤖"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -7956,10 +6242,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "电脑",
-          "主题": "电脑",
-          "icon": "🖥",
-          "图标": "🖥",
-          "目标": "#爱好能力"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z",
@@ -7976,11 +6259,8 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "电脑/ob基础",
-          "主题": "电脑/ob基础",
           "icon": "🎚",
-          "图标": "🎚",
-          "任务内容": "ob",
-          "目标": "#爱好能力"
+          "任务内容": "ob"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z",
@@ -7997,11 +6277,8 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "电脑/笔记系统",
-          "主题": "电脑/笔记系统",
           "icon": "📕",
-          "图标": "📕",
-          "任务内容": "笔记系统",
-          "目标": "#爱好能力"
+          "任务内容": "笔记系统"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z",
@@ -8018,11 +6295,8 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "电脑/记录系统",
-          "主题": "电脑/记录系统",
           "icon": "🎴",
-          "图标": "🎴",
-          "任务内容": "插件",
-          "目标": "#爱好能力"
+          "任务内容": "插件"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z",
@@ -8039,10 +6313,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "电脑/整理",
-          "主题": "电脑/整理",
-          "icon": "✒",
-          "图标": "✒",
-          "目标": "#爱好能力"
+          "icon": "✒"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z",
@@ -8059,9 +6330,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "电脑/AI",
-          "主题": "电脑/AI",
-          "icon": "🤖",
-          "图标": "🤖"
+          "icon": "🤖"
         },
         "createdAt": "2026-06-07T12:30:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z",
@@ -8078,10 +6347,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "电脑/MediaPro",
-          "主题": "电脑/MediaPro",
-          "icon": "📢",
-          "图标": "📢",
-          "目标": "#爱好能力"
+          "icon": "📢"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z",
@@ -8098,10 +6364,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "电脑/点读",
-          "主题": "电脑/点读",
-          "icon": "🔊",
-          "图标": "🔊",
-          "目标": "#爱好能力"
+          "icon": "🔊"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z",
@@ -8135,16 +6398,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -8172,9 +6425,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "电脑",
-          "主题": "电脑",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8207,16 +6458,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -8244,9 +6485,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "电脑/AI",
-          "主题": "电脑/AI",
-          "icon": "🤖",
-          "图标": "🤖"
+          "icon": "🤖"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8279,16 +6518,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -8316,9 +6545,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "电脑/记录系统",
-          "主题": "电脑/记录系统",
-          "icon": "🎴",
-          "图标": "🎴"
+          "icon": "🎴"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8333,16 +6560,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -8371,9 +6588,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "电脑",
-          "主题": "电脑",
-          "icon": "🖥",
-          "图标": "🖥"
+          "icon": "🖥"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8388,16 +6603,6 @@
         "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -8426,9 +6631,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "电脑/记录系统",
-          "主题": "电脑/记录系统",
-          "icon": "🎴",
-          "图标": "🎴"
+          "icon": "🎴"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8443,16 +6646,6 @@
         "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#爱好能力"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -8481,9 +6674,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "电脑/AI",
-          "主题": "电脑/AI",
-          "icon": "🤖",
-          "图标": "🤖"
+          "icon": "🤖"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8503,9 +6694,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考/思路整理",
-          "主题": "思考/思路整理",
-          "icon": "🧠",
-          "图标": "🧠"
+          "icon": "🧠"
         },
         "createdAt": "2026-06-07T12:30:00.000Z",
         "updatedAt": "2026-06-07T12:30:00.000Z"
@@ -8525,9 +6714,7 @@
         "enabled": true,
         "defaultValues": {
           "themePath": "思考",
-          "主题": "思考",
-          "icon": "🧠",
-          "图标": "🧠"
+          "icon": "🧠"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8546,16 +6733,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#武装大脑"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -8589,9 +6766,7 @@
         ],
         "defaultValues": {
           "themePath": "思考",
-          "主题": "思考",
-          "icon": "🧠",
-          "图标": "🧠"
+          "icon": "🧠"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8619,16 +6794,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#武装大脑"
           },
           {
             "id": "core.field.themePath",
@@ -8663,9 +6828,7 @@
         ],
         "defaultValues": {
           "themePath": "思考/读书",
-          "主题": "思考/读书",
-          "icon": "📚",
-          "图标": "📚"
+          "icon": "📚"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-07T09:28:22.588Z"
@@ -8682,11 +6845,8 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/思路整理",
-          "主题": "思考/思路整理",
           "icon": "🧠",
-          "图标": "🧠",
-          "任务内容": "思路整理",
-          "目标": "#武装大脑"
+          "任务内容": "思路整理"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -8703,11 +6863,8 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/复盘整理",
-          "主题": "思考/复盘整理",
           "icon": "🧠",
-          "图标": "🧠",
-          "任务内容": "复盘整理",
-          "目标": "#武装大脑"
+          "任务内容": "复盘整理"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -8724,10 +6881,7 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/读书",
-          "主题": "思考/读书",
-          "icon": "📚",
-          "图标": "📚",
-          "目标": "#武装大脑"
+          "icon": "📚"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -8744,10 +6898,7 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考",
-          "主题": "思考",
-          "icon": "🧠",
-          "图标": "🧠",
-          "目标": "#武装大脑"
+          "icon": "🧠"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -8764,11 +6915,8 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/整理笔记",
-          "主题": "思考/整理笔记",
           "icon": "🧠",
-          "图标": "🧠",
-          "任务内容": "思路整理",
-          "目标": "#武装大脑"
+          "任务内容": "思路整理"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -8785,11 +6933,8 @@
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
           "themePath": "思考/整理复盘",
-          "主题": "思考/整理复盘",
           "icon": "🧠",
-          "图标": "🧠",
-          "任务内容": "思路整理",
-          "目标": "#武装大脑"
+          "任务内容": "思路整理"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -8822,16 +6967,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#武装大脑"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -8859,9 +6994,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "思考",
-          "主题": "思考",
-          "icon": "🧠",
-          "图标": "🧠"
+          "icon": "🧠"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8894,16 +7027,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#武装大脑"
-          },
-          {
             "id": "core.field.themePath",
             "key": "themePath",
             "label": "主题",
@@ -8931,9 +7054,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "思考/思路整理",
-          "主题": "思考/思路整理",
-          "icon": "🧠",
-          "图标": "🧠"
+          "icon": "🧠"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -8948,16 +7069,6 @@
         "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#武装大脑"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -8986,9 +7097,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "思考",
-          "主题": "思考",
-          "icon": "🧠",
-          "图标": "🧠"
+          "icon": "🧠"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -9003,16 +7112,6 @@
         "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#武装大脑"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -9041,9 +7140,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "思考/思路整理",
-          "主题": "思考/思路整理",
-          "icon": "🧠",
-          "图标": "🧠"
+          "icon": "🧠"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -9058,16 +7155,6 @@
         "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.goalPath",
-            "key": "目标",
-            "label": "目标",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "goalPath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "#武装大脑"
-          },
           {
             "id": "core.field.themePath",
             "key": "themePath",
@@ -9096,9 +7183,7 @@
         "targetFile": "01/闪念.md",
         "defaultValues": {
           "themePath": "思考/读书",
-          "主题": "思考/读书",
-          "icon": "📚",
-          "图标": "📚"
+          "icon": "📚"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -9119,10 +7204,10 @@
     "patches": []
   },
   "energySettings": {
-    "defaultGoalId": "",
+    "defaultGoalId": "goal.我若安好便是晴天",
     "defaultThemePath": ""
   },
-  "floatingTimerEnabled": false,
+  "floatingTimerEnabled": true,
   "activeThemePaths": [
     "思考",
     "思考/时间整理",

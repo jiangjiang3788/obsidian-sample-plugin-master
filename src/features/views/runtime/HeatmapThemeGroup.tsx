@@ -1,7 +1,8 @@
 /** @jsxImportSource preact */
 import type { RecordViewItem } from '@core/types/public';
 import { dayjs } from '@core/utils/public';
-import type { ResolveResourcePathHandler } from '@shared/types/public';
+import type { OpenRecordOriginHandler, ResolveResourcePathHandler } from '@shared/types/public';
+import { isKeyboardActivation, stopInteractionEvent } from '@shared/ui/public';
 import { HeatmapCell } from './components/heatmap/HeatmapCell';
 import { getThemeLeafLabel, type HeatmapPresetContext } from './HeatmapViewModel';
 
@@ -12,6 +13,7 @@ interface HeatmapThemeGroupProps {
     dateRange: [Date, Date];
     config: any;
     resolveResourcePath?: ResolveResourcePathHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
     verticalLayouts: Set<string>;
     collapsedThemes: Set<string>;
     headerRefs: { current: Map<string, HTMLElement> };
@@ -32,6 +34,7 @@ export function HeatmapThemeGroup({
     dateRange,
     config,
     resolveResourcePath,
+    onOpenRecordOrigin,
     verticalLayouts,
     collapsedThemes,
     headerRefs,
@@ -72,6 +75,7 @@ export function HeatmapThemeGroup({
                     config={config}
                     ratingMapping={themeRatingMapping}
                     resolveResourcePath={resolveResourcePath}
+                    onOpenRecordOrigin={onOpenRecordOrigin}
                     onCellClick={(clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)}
                 />
             );
@@ -104,6 +108,7 @@ export function HeatmapThemeGroup({
                         config={config}
                         ratingMapping={themeRatingMapping}
                         resolveResourcePath={resolveResourcePath}
+                        onOpenRecordOrigin={onOpenRecordOrigin}
                         onCellClick={(clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)}
                     />,
                 ];
@@ -125,6 +130,7 @@ export function HeatmapThemeGroup({
                             config={config}
                             ratingMapping={themeRatingMapping}
                             resolveResourcePath={resolveResourcePath}
+                        onOpenRecordOrigin={onOpenRecordOrigin}
                             onCellClick={(clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)}
                         />
                     );
@@ -161,8 +167,15 @@ export function HeatmapThemeGroup({
                 {theme !== '__default__' && (
                     <div
                         class={`heatmap-header-info ${normalizedCurrentView === '年' ? 'is-clickable' : ''}`}
+                        role={normalizedCurrentView === '年' ? 'button' : undefined}
+                        tabIndex={normalizedCurrentView === '年' ? 0 : undefined}
                         onClick={() => {
                             if (normalizedCurrentView === '年') onToggleThemeCollapsed(rowKey);
+                        }}
+                        onKeyDown={(event: KeyboardEvent) => {
+                            if (normalizedCurrentView !== '年' || !isKeyboardActivation(event)) return;
+                            stopInteractionEvent(event);
+                            onToggleThemeCollapsed(rowKey);
                         }}
                     >
                         <div class="heatmap-header-info-left">

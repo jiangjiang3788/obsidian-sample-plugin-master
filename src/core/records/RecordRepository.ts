@@ -29,7 +29,7 @@ const PATCH_FIELDS: Record<string, { label: string; aliases: string[] }> = {
   status: { label: '状态', aliases: ['状态', 'status'] },
   content: { label: '内容', aliases: ['内容', 'content'] },
   goalId: { label: '目标ID', aliases: ['目标ID', 'goalId'] },
-  goalPath: { label: '目标', aliases: ['目标', 'goalPath', 'goalPaths'] },
+  goalPath: { label: '目标', aliases: ['目标', 'goalPath'] },
   themePath: { label: '主题', aliases: ['主题', 'theme', 'themePath'] },
   createdAt: { label: '创建于', aliases: ['创建于', 'createdAt'] },
   scheduledDate: { label: '计划日期', aliases: ['计划日期', 'scheduledDate'] },
@@ -93,24 +93,36 @@ function resolvePatchField(rawKey: string): { label: string; aliases: string[] }
 export function patchRecordBlockMarkdown(markdown: string, patch: RecordPatch): string {
   const lines = markdown.split(/\r?\n/);
   const protectedKeys = new Set(['记录id','recordid','id','记录版本','recordversion','schemaversion','核心block','coreblock']);
+
   for (const [rawKey, value] of Object.entries(patch)) {
     const key = rawKey.trim();
     if (!key || protectedKeys.has(key.toLowerCase())) continue;
     const definition = resolvePatchField(key);
-    const aliases = definition.aliases.map(alias => escapeRegex(alias)).join('|');
-    const re = new RegExp(`^\\s*(?:${aliases})\\s*[:：]{1,2}`, 'i');
-    const index = lines.findIndex((line, i) => i > 0 && i < lines.length - 1 && re.test(line));
     const encoded = scalar(value);
+    const contentIndex = lines.findIndex((line, i) => i > 0 && /^\s*(?:内容|content)\s*::/i.test(line));
+    const metadataEnd = contentIndex >= 0 ? contentIndex : lines.length - 1;
+
+    // Grammar V5 body is terminal. Replacing content replaces the whole body,
+    // never just its first line, and metadata searches never enter body text.
+    if (definition.label === '内容') {
+      if (contentIndex >= 0) lines.splice(contentIndex, lines.length - 1 - contentIndex);
+      if (encoded) {
+        const bodyLines = encoded.replace(/\r\n/g, '\n').split('\n');
+        lines.splice(lines.length - 1, 0, `内容:: ${bodyLines.shift() || ''}`, ...bodyLines);
+      }
+      continue;
+    }
+
+    const aliases = definition.aliases.map(alias => escapeRegex(alias)).join('|');
+    const re = new RegExp(`^\\s*(?:${aliases})\\s*::`, 'i');
+    const index = lines.findIndex((line, i) => i > 0 && i < metadataEnd && re.test(line));
     if (!encoded) {
       if (index >= 0) lines.splice(index, 1);
       continue;
     }
-    const nextLine = `${definition.label}:: ${encoded}`;
+    const nextLine = `${definition.label}:: ${encoded.replace(/\r?\n/g, '\\n')}`;
     if (index >= 0) lines[index] = nextLine;
-    else {
-      const contentIndex = lines.findIndex((line, i) => i > 0 && /^\s*(?:内容|content)\s*[:：]{1,2}/i.test(line));
-      lines.splice(contentIndex >= 0 ? contentIndex : lines.length - 1, 0, nextLine);
-    }
+    else lines.splice(metadataEnd, 0, nextLine);
   }
   return lines.join('\n');
 }

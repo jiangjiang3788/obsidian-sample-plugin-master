@@ -168,6 +168,7 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
 
     const goalPresets = getGoalTemplates(goalSettings)
         .filter((preset) => preset.enabled !== false)
+        .filter((preset) => goalPathById.has(preset.goalId))
         .filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId))
         .map((preset) => {
             const block = blockByCoreId.get(preset.coreBlockId) || blockById.get(preset.coreBlockId);
@@ -178,7 +179,7 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
             return {
                 id: preset.id,
                 goalId: preset.goalId,
-                goalPath: goalPathById.get(preset.goalId) || preset.goalId,
+                goalPath: goalPathById.get(preset.goalId)!,
                 blockId: preset.coreBlockId,
                 categoryKey: block?.categoryKey || preset.coreBlockId,
                 variantId: preset.variantId || 'default',

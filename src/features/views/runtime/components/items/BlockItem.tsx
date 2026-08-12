@@ -49,7 +49,8 @@ export const BlockItem = ({ item, fields, isNarrow, resolveResourcePath, onOpenR
                             item={item} 
                             fieldKey={fieldKey} 
                             resolveResourcePath={resolveResourcePath} 
-                            allThemes={allThemes} 
+                            allThemes={allThemes}
+                            onOpenRecordOrigin={onOpenRecordOrigin}
                         />
                     ))}
                 </div>

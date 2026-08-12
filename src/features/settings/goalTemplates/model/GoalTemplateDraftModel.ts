@@ -8,6 +8,7 @@ import {
   normalizePeriodPolicyGranularity,
 } from '@core/goal/public';
 import type { GoalTemplateDraftState } from './GoalTemplateEditorTypes';
+
 import { cloneValue, compactText, ensureThemeField, mergeDefaultValues, normalizeThemePath, readThemePathFromFields, readThemePathFromTemplate, themeLeafLabel } from './GoalTemplateThemeModel';
 import { deriveRequiredFields } from './GoalTemplateFieldModel';
 

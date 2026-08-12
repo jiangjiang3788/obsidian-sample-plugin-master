@@ -8,6 +8,7 @@ import {
 } from './FieldValueCodec';
 import { RECORD_SCHEMA_VERSION } from '@/core/records/RecordId';
 import type { RecordDraft } from '@/core/records/RecordDraft';
+import { getRecordFieldContract, getRecordSchemaDefinition } from '@/core/records/schema';
 
 export interface ParsedRecordMetadata {
   recordId?: string;
@@ -25,7 +26,7 @@ export interface ParsedRecordMetadata {
   skippedAt?: string;
   createdAt?: string;
   tags: string[];
-  goalPaths: string[];
+  goalPath?: string;
   goalId?: string;
   cycleId?: string;
   coreBlock?: string;
@@ -110,7 +111,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   let categoryKey: string | null = null;
   let date: string | undefined;
   const tags: string[] = [];
-  const goalPaths: string[] = [];
+  let goalPath: string | undefined;
   const extra: ParsedRecordMetadata['extra'] = {};
   let content = '';
   let contentStarted = false;
@@ -161,12 +162,25 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   let brainDelta: number | undefined;
   let physicalDelta: number | undefined;
 
+  // Grammar V5: discover the Record kind from the strict envelope first.
+  // Only ASCII double-colon is Record metadata; single-colon prose is never a field.
+  const envelopeCoreBlock = contentLines
+    .map((rawLine) => rawLine.trim().match(/^([^:\r\n]{1,64})::\s*(.*)$/))
+    .find((match) => match && ['核心block', 'coreblock'].includes(normalizeMetaKey(match[1])))?.[2]?.trim();
+  if (envelopeCoreBlock) coreBlock = envelopeCoreBlock;
+  const recordSchema = getRecordSchemaDefinition(coreBlock);
+  const supportsCustomFields = Boolean(recordSchema?.capabilities.customFields);
+  const supportsBody = Boolean(recordSchema && getRecordFieldContract(recordSchema.coreBlock, '内容'));
+
   for (const rawLine of contentLines) {
+    if (contentStarted) {
+      content += (content ? '\n' : '') + rawLine;
+      continue;
+    }
+
     const line = rawLine.trim();
-    if (!contentStarted) {
-      if (line === '') continue;
-      const kv = line.match(/^([^:：]{1,32})[:：]{1,2}\s*(.*)$/);
-      if (kv) {
+    const kv = line.match(/^([^:\r\n]{1,64})::\s*(.*)$/);
+    if (kv) {
         const rawKey = kv[1].trim();
         const value = kv[2] || '';
         const key = normalizeMetaKey(rawKey);
@@ -223,7 +237,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         else if (coreBlock === 'task-session' && ['体力变化', 'physicaldelta'].includes(key)) physicalDelta = decodeMarkdownNumber(value);
         else if (['核心block', 'coreblock'].includes(key)) coreBlock = value.trim();
         else if (['状态', 'status'].includes(key)) status = value.trim().toLowerCase();
-        else if (key === '目标') goalPaths.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths) as string[]));
+        else if (key === '目标') goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
         else if (['日期', 'date'].includes(key)) date = parseDate(value);
         else if (['计划日期', 'scheduleddate'].includes(key)) scheduledDate = parseDate(value);
         else if (['开始日期', 'startdate'].includes(key)) startDate = parseDate(value);
@@ -255,21 +269,26 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         }
         else if (['图标', 'icon'].includes(key)) icon = value.trim();
         else if (['评图', 'pintu', '图片', 'image'].includes(key)) { image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image); pintu = image; }
-        else if (['内容', 'content'].includes(key)) { contentStarted = true; content = value; }
-        else extra[rawKey] = decodeUnknownMarkdownKvValue(value);
-      } else {
-        contentStarted = true;
-        content = rawLine;
-      }
-    } else content += (content ? '\n' : '') + rawLine;
+        else if (['内容', 'content', '任务内容'].includes(key)) {
+          if (supportsBody) {
+            contentStarted = true;
+            content = value;
+          }
+        }
+        else if (supportsCustomFields) extra[rawKey] = decodeUnknownMarkdownKvValue(value);
+    } else {
+      // V5 does not guess metadata or body from arbitrary prose. A body starts only
+      // at the schema-owned 内容:: marker. This is what prevents '晚上：...' and
+      // '7:30 ...' from becoming fields.
+      continue;
+    }
   }
 
   const finalTags = unique(tags);
-  const finalGoalPaths = unique(goalPaths);
   return {
     recordId, schemaVersion, title: buildTitle(content, finalTags), content: content.trim(),
     categoryKey: categoryKey || '', status, date, scheduledDate, startDate, dueDate,
-    completedAt, cancelledAt, skippedAt, createdAt, tags: finalTags, goalPaths: finalGoalPaths,
+    completedAt, cancelledAt, skippedAt, createdAt, tags: finalTags, goalPath,
     goalId, cycleId, coreBlock, recordSubtype, extra, icon, period, rating, image, pintu, theme, templateId,
     templateSourceType, priority, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, seriesId,
     recurrenceUnit, recurrenceInterval, recurrenceAnchor, seriesStartDate, currentTaskId, rolloverPolicy,
@@ -286,19 +305,18 @@ function markdownScalar(value: unknown): string {
 }
 
 const TASK_FIELD_ORDER: Array<[string, string[]]> = [
-  ['状态', ['状态','status']], ['目标ID', ['目标ID','goalId']], ['目标', ['目标','goalPath','goalPaths']],
+  ['状态', ['状态','status']], ['目标ID', ['目标ID','goalId']], ['目标', ['目标','goalPath']],
   ['主题', ['主题','themePath']], ['创建于', ['创建于','createdAt']], ['优先级', ['优先级','priority']],
   ['预计时长', ['预计时长','expectedDurationMinutes']], ['精力要求', ['精力要求','energyDemand']],
   ['脑力要求', ['脑力要求','brainDemand']], ['体力要求', ['体力要求','physicalDemand']],
   ['计划日期', ['计划日期','scheduledDate']], ['开始日期', ['开始日期','startDate']], ['截止日期', ['截止日期','dueDate']],
   ['完成于', ['完成于','completedAt']], ['取消于', ['取消于','cancelledAt']], ['跳过于', ['跳过于','skippedAt']],
   ['系列ID', ['系列ID','seriesId']], ['模板ID', ['模板ID','templateId']], ['模板来源', ['模板来源','templateSourceType']],
-  ['内容', ['内容','content','正文','title']],
 ];
 
 const TASK_SESSION_FIELD_ORDER: Array<[string, string[]]> = [
   ['任务ID', ['任务ID','taskId']], ['系列ID', ['系列ID','seriesId']], ['目标ID', ['目标ID','goalId']],
-  ['目标', ['目标','goalPath','goalPaths']], ['主题', ['主题','themePath']],
+  ['目标', ['目标','goalPath']], ['主题', ['主题','themePath']],
   ['开始于', ['开始于','sessionStartedAt']], ['结束于', ['结束于','sessionEndedAt']],
   ['时长', ['时长','sessionDurationMinutes']], ['结果', ['结果','sessionResult']], ['来源', ['来源','sessionSource']],
   ['建议时长', ['建议时长','suggestedDurationMinutes']], ['开始精力记录ID', ['开始精力记录ID','startEnergyRecordId']],
@@ -307,12 +325,12 @@ const TASK_SESSION_FIELD_ORDER: Array<[string, string[]]> = [
 ];
 
 const TASK_SERIES_FIELD_ORDER: Array<[string, string[]]> = [
-  ['状态', ['状态','status']], ['目标ID', ['目标ID','goalId']], ['目标', ['目标','goalPath','goalPaths']],
+  ['状态', ['状态','status']], ['目标ID', ['目标ID','goalId']], ['目标', ['目标','goalPath']],
   ['主题', ['主题','themePath']], ['优先级', ['优先级','priority']], ['预计时长', ['预计时长','expectedDurationMinutes']],
   ['精力要求', ['精力要求','energyDemand']], ['脑力要求', ['脑力要求','brainDemand']], ['体力要求', ['体力要求','physicalDemand']],
   ['重复单位', ['重复单位','recurrenceUnit']], ['重复间隔', ['重复间隔','recurrenceInterval']],
   ['重复锚点', ['重复锚点','recurrenceAnchor']], ['系列开始日期', ['系列开始日期','seriesStartDate']],
-  ['当前任务ID', ['当前任务ID','currentTaskId']], ['滚动策略', ['滚动策略','rolloverPolicy']], ['内容', ['内容','content','正文','title']],
+  ['当前任务ID', ['当前任务ID','currentTaskId']], ['滚动策略', ['滚动策略','rolloverPolicy']],
 ];
 
 function firstValue(fields: Record<string, unknown>, keys: string[]): string {
@@ -323,7 +341,26 @@ function firstValue(fields: Record<string, unknown>, keys: string[]): string {
   return '';
 }
 
-/** Canonical Record v2 encoder. Task is encoded as an ordinary Record Block using canonical fields only. */
+const BODY_FIELD_ALIASES = ['内容', 'content', '正文', 'title', '任务内容', '阻碍', '里程碑'];
+
+function bodyValue(fields: Record<string, unknown>): string {
+  for (const key of BODY_FIELD_ALIASES) {
+    const value = fields[key];
+    if (value === undefined || value === null) continue;
+    if (typeof value === 'object') continue;
+    return String(value).replace(/\r\n/g, '\n').trim();
+  }
+  return '';
+}
+
+function emitBody(lines: string[], body: string): void {
+  if (!body) return;
+  const parts = body.split('\n');
+  lines.push(`内容:: ${parts.shift() || ''}`);
+  lines.push(...parts);
+}
+
+/** Canonical Record v2 encoder. Grammar V5 always emits custom metadata before an optional terminal body. */
 export function encodeRecordBlock(document: RecordDocument): string {
   const schemaVersion = document.schemaVersion ?? RECORD_SCHEMA_VERSION;
   const fields = document.fields || {};
@@ -338,10 +375,11 @@ export function encodeRecordBlock(document: RecordDocument): string {
       if (value) { lines.push(`${label}:: ${value}`); keys.forEach(key => emitted.add(key)); }
     }
     for (const [key, raw] of Object.entries(fields)) {
-      if (emitted.has(key) || ['记录ID','recordId','id','记录版本','schemaVersion','核心Block','coreBlock'].includes(key)) continue;
+      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ['记录ID','recordId','id','记录版本','schemaVersion','核心Block','coreBlock'].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
+    emitBody(lines, bodyValue(fields));
   } else if (document.coreBlock === 'task-session') {
     for (const [label, keys] of TASK_SESSION_FIELD_ORDER) {
       const value = firstValue(fields, keys);
@@ -356,12 +394,17 @@ export function encodeRecordBlock(document: RecordDocument): string {
       if (label === '滚动策略' && !value) value = 'carry';
       if (value) lines.push(`${label}:: ${value}`);
     }
+    emitBody(lines, bodyValue(fields));
   } else {
+    const schema = getRecordSchemaDefinition(document.coreBlock);
+    const supportsBody = Boolean(schema && getRecordFieldContract(schema.coreBlock, '内容'));
     for (const [key, raw] of Object.entries(fields)) {
+      if (supportsBody && BODY_FIELD_ALIASES.includes(key)) continue;
       if (['记录ID','recordId','id','记录版本','schemaVersion','核心Block','coreBlock'].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
+    if (supportsBody) emitBody(lines, bodyValue(fields));
   }
 
   lines.push('<!-- end -->');
@@ -385,6 +428,6 @@ export function ensureRecordEnvelope(markdown: string, input: { recordId: string
   if (lines[0]?.trim() !== '<!-- start -->' || lines[lines.length - 1]?.trim() !== '<!-- end -->') {
     throw new Error('Record Foundation v2 只允许写入 Markdown Record Block。');
   }
-  const body = lines.slice(1, -1).filter(line => !/^\s*(?:记录ID|recordId|记录版本|schemaVersion|核心Block|coreBlock)\s*[:：]{1,2}/i.test(line));
+  const body = lines.slice(1, -1).filter(line => !/^\s*(?:记录ID|recordId|记录版本|schemaVersion|核心Block|coreBlock)\s*::/i.test(line));
   return ['<!-- start -->', `记录ID:: ${input.recordId}`, `记录版本:: ${input.schemaVersion ?? RECORD_SCHEMA_VERSION}`, `核心Block:: ${input.coreBlock}`, ...body, '<!-- end -->'].join('\n');
 }

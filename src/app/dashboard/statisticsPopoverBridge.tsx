@@ -65,6 +65,7 @@ export const openStatisticsPopover: OpenStatisticsPopoverHandler = (request) => 
         blocks={request.blocks}
         module={request.module}
         timerService={request.timerService}
+        onMarkDone={request.onMarkDone}
         timers={request.timers}
         allThemes={request.allThemes}
         messageRenderPort={request.messageRenderPort}

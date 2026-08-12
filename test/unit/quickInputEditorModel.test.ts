@@ -65,8 +65,8 @@ describe('QuickInputEditorModel', () => {
     const hydrated = hydrateQuickInputTemplateDefaults({
       template: {
         fields: [
-          { key: '内容', type: 'text', defaultValue: '默认内容' },
-          { key: '状态', type: 'select', options: [{ value: 'todo', label: '待办' }] },
+          { id: 'field-content', key: '内容', label: '内容', type: 'text', defaultValue: '默认内容' },
+          { id: 'field-status', key: '状态', label: '状态', type: 'select', options: [{ value: 'todo', label: '待办' }] },
         ],
       },
       current: { 内容: '用户输入' },

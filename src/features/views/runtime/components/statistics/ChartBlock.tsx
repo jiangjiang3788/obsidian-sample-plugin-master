@@ -5,6 +5,8 @@ import type { RecordViewItem } from '@core/types/public';
 import type { PeriodData } from '@core/utils/public';
 import type { CategoryConfig } from '@core/view/public';
 import { getBasePath } from '@core/utils/public';
+import type { OpenRecordOriginHandler } from '@shared/types/public';
+import { hasPlatformModifier, isKeyboardActivation, stopInteractionEvent } from '@shared/ui/public';
 
 interface ChartBlockProps {
     data: PeriodData;
@@ -17,6 +19,7 @@ interface ChartBlockProps {
     displayMode?: 'smart' | 'linear' | 'logarithmic';
     minVisibleHeight?: number;
     bucketAccessor?: (item: RecordViewItem) => string;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
 
@@ -60,19 +63,21 @@ export function ChartBlock({
     isNarrow = false,
     displayMode = 'smart', 
     minVisibleHeight = 15,
+    onOpenRecordOrigin,
     bucketAccessor = (item: RecordViewItem) => getBasePath(item.categoryKey)
 }: ChartBlockProps) {
     const counts = data.counts as Record<string, number>;
     const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-    
-    // 计算所有分类的高度
-    const allCounts = categories.map(cat => counts[cat.name] || 0);
+    // Statistics keeps a stable comparison frame. A zero-count goal still owns its
+    // column so time periods remain comparable instead of collapsing into blank space.
+    const chartCategories = categories;
+    const allCounts = chartCategories.map(cat => counts[cat.name] || 0);
     const categoryHeights = useMemo(() => {
-        return categories.map(cat => {
+        return chartCategories.map(cat => {
             const count = counts[cat.name] || 0;
             return calculateSmartHeight(count, allCounts, displayMode, minVisibleHeight);
         });
-    }, [counts, categories, displayMode, minVisibleHeight, allCounts]);
+    }, [counts, chartCategories, displayMode, minVisibleHeight, allCounts]);
     
     const containerClasses = [
         'sv-chart-block',
@@ -81,25 +86,51 @@ export function ChartBlock({
         total === 0 ? 'is-empty' : '',
     ].filter(Boolean).join(' ');
 
+    const openBlocks = (event: MouseEvent | KeyboardEvent, blocks: RecordViewItem[], identifier: unknown, title: string) => {
+        stopInteractionEvent(event);
+        if (blocks.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
+            void onOpenRecordOrigin(blocks[0]);
+            return;
+        }
+        onCellClick(identifier, event.currentTarget as HTMLElement, blocks, title);
+    };
+
+    const openAll = (event: MouseEvent | KeyboardEvent) => {
+        openBlocks(event, data.blocks, cellIdentifier('全部'), `${label} · 全部`);
+    };
+
+    const openCategory = (event: MouseEvent | KeyboardEvent, name: string, displayName: string) => {
+        const blocks = data.blocks.filter((block: RecordViewItem) => bucketAccessor(block) === name);
+        openBlocks(event, blocks, cellIdentifier(name), `${label} · ${displayName}`);
+    };
+
     return (
         <div 
-            class={containerClasses} 
-            onClick={(e) => onCellClick(cellIdentifier('全部'), e.currentTarget as HTMLElement, data.blocks, `${label} · 全部`)}
+            class={containerClasses}
+            role="button"
+            tabIndex={0}
+            title={data.blocks.length === 1 && onOpenRecordOrigin ? `${label} · Ctrl/⌘+点击打开原文` : label}
+            onClick={openAll}
+            onKeyDown={(event: KeyboardEvent) => {
+                if (!isKeyboardActivation(event)) return;
+                openAll(event);
+            }}
         >
             <div class="sv-chart-label">{label}</div>
             <div class="sv-chart-content">
                 <div class="sv-chart-numbers">
-                    {categories.map(({ name }) => {
+                    {chartCategories.map(({ name }) => {
                         const count = counts[name] || 0;
+                        const displayName = categories.find((category) => category.name === name)?.alias || name;
                         return (
-                            <div key={`num-${name}`} class="sv-chart-number">
-                                {count > 0 ? count : ''}
+                            <div key={`num-${name}`} class="sv-chart-number" onClick={(event) => openCategory(event, name, displayName)}>
+                                {count}
                             </div>
                         );
                     })}
                 </div>
                 <div class="sv-chart-bars-container">
-                    {categories.map(({ name, color, alias }, index) => {
+                    {chartCategories.map(({ name, color, alias }, index) => {
                         const count = counts[name] || 0;
                         const height = categoryHeights[index];
                         const displayName = alias || name;
@@ -107,16 +138,14 @@ export function ChartBlock({
                         return (
                             <div 
                                 key={name} 
-                                class="sv-vbar-wrapper" 
+                                class="sv-vbar-wrapper"
+                                role="button"
+                                tabIndex={0}
                                 title={`${displayName}: ${count}`}
-                                onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    onCellClick(
-                                        cellIdentifier(name), 
-                                        e.currentTarget as HTMLElement, 
-                                        data.blocks.filter((b: RecordViewItem) => bucketAccessor(b) === name), 
-                                        `${label} · ${displayName}`
-                                    ); 
+                                onClick={(event) => openCategory(event, name, displayName)}
+                                onKeyDown={(event: KeyboardEvent) => {
+                                    if (!isKeyboardActivation(event)) return;
+                                    openCategory(event, name, displayName);
                                 }}
                             >
                                 <div 
@@ -131,13 +160,14 @@ export function ChartBlock({
                     })}
                 </div>
                 <div class="sv-chart-categories">
-                    {categories.map(({ name, alias }) => {
+                    {chartCategories.map(({ name, alias }) => {
                         const displayName = alias || name;
                         return (
                             <div 
                                 key={`cat-${name}`} 
                                 class="sv-chart-category" 
                                 title={`${displayName}${alias ? ` (${name})` : ''}`}
+                                onClick={(event) => openCategory(event, name, displayName)}
                             >
                                 {displayName}
                             </div>

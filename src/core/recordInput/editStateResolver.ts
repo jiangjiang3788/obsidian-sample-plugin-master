@@ -1,4 +1,4 @@
-import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
+import type { InputSettings, RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { PreparedEditRecord } from "@/core/types/recordInput";
@@ -8,6 +8,7 @@ import { buildParsedRecordSnapshot } from "@/core/types/recordSnapshot";
 import { recordDebugLog } from "@/core/recordInput/debug";
 import {
   findThemeIdByPath,
+  normalizeRecordInputSettingsEnvelope,
   resolveRecordDependencies,
 } from "./dependencyResolver";
 import { buildInitialEditFormData } from "./EditBackfillMapper";
@@ -16,7 +17,7 @@ import { asUnknownRecord, readFirstString } from "@/core/utils/unknownRecord";
 import { normalizeFieldToken } from "@/core/fields/fieldTokenSemantics";
 
 export interface BuildEditStateInput {
-  settings: ThinkSettings;
+  settings: ThinkSettings | InputSettings;
   item: RecordViewItem;
   preferredBlockId?: string | null;
   preferredThemeId?: string | null;
@@ -226,8 +227,11 @@ export function buildEditRecordState(
   input: BuildEditStateInput,
 ): PreparedEditRecord {
   const { settings, item, preferredBlockId, preferredThemeId } = input;
-  const inputSettings = settings.inputSettings;
-  const runtimeBlocks = getEffectiveCoreBlocks(settings);
+  const fullSettings = normalizeRecordInputSettingsEnvelope(settings);
+  const inputSettings = fullSettings.inputSettings;
+  const canonicalBlocks = getEffectiveCoreBlocks(fullSettings);
+  // Current-only V5: edit discovery uses canonical CoreBlock definitions only.
+  const runtimeBlocks = canonicalBlocks;
   const resolvedBlock = resolveBlockForEdit(
     runtimeBlocks,
     item,
@@ -251,7 +255,7 @@ export function buildEditRecordState(
     reason: resolvedBlock.debugReason,
   });
   const resolvedDependencies = resolveRecordDependencies({
-    settings,
+    settings: fullSettings,
     blockId: resolvedBlock.blockId,
     themeId: resolvedThemeId,
     item,
@@ -269,26 +273,28 @@ export function buildEditRecordState(
       initialFormData,
     },
   );
-  const snapshot = buildEditableRecordSnapshot({
-    mode: "edit",
-    item,
-    blockId: resolvedDependencies.blockId,
-    themeId: resolvedDependencies.themeId,
-    fields: initialFormData,
-    template: resolvedDependencies.template,
-    theme: resolvedDependencies.theme,
-    templateMeta: {
-      templateId:
-        resolvedDependencies.meta.templateId ??
-        resolvedDependencies.template?.id ??
-        null,
-      templateSourceType:
-        resolvedDependencies.meta.templateSourceType ?? "core-block",
-    },
-  });
+  const snapshot = resolvedDependencies.template && resolvedDependencies.errors.length === 0
+    ? buildEditableRecordSnapshot({
+        mode: "edit",
+        item,
+        blockId: resolvedDependencies.blockId,
+        themeId: resolvedDependencies.themeId,
+        fields: initialFormData,
+        template: resolvedDependencies.template,
+        theme: resolvedDependencies.theme,
+        templateMeta: {
+          templateId:
+            resolvedDependencies.meta.templateId ??
+            resolvedDependencies.template?.id ??
+            null,
+          templateSourceType:
+            resolvedDependencies.meta.templateSourceType ?? "core-block",
+        },
+      })
+    : null;
 
-  const warnings = [...resolvedDependencies.warnings];
-  if (snapshot.persistencePlan.pathChanged) {
+  const warnings = [...resolvedDependencies.warnings, ...resolvedDependencies.errors];
+  if (snapshot?.persistencePlan.pathChanged) {
     warnings.push({
       code: "record_target_path_changed",
       message: `当前模板/主题推导出的目标文件为 ${snapshot.outputPlan.targetFilePath}，与原文件 ${snapshot.persistencePlan.originalPath} 不同。当前仍按原位置更新；后续步骤会接入迁移保存。`,
@@ -302,11 +308,13 @@ export function buildEditRecordState(
     template: resolvedDependencies.template,
     initialFormData,
     snapshot,
-    outputPlan: snapshot.outputPlan,
-    persistencePlan: snapshot.persistencePlan,
+    outputPlan: snapshot?.outputPlan,
+    persistencePlan: snapshot?.persistencePlan,
     inferred: {
       usedFallbackBlock: resolvedBlock.usedFallbackBlock,
       usedFallbackTheme: resolvedDependencies.meta.usedFallbackTheme,
+      canonicalBlockId: resolvedDependencies.meta.canonicalBlockId,
+      compatibilityMode: resolvedDependencies.meta.compatibilityMode,
       templateSourceType: resolvedDependencies.meta.templateSourceType,
       resolvedBy: resolvedBlock.resolvedBy,
     },

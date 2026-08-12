@@ -9,7 +9,7 @@ import type {
   QuickInputOptionLike,
   TimeDirection,
 } from "./model/types";
-import { cleanDisplayPath, makeGoalIdFromPath } from "./quickInputPathModel";
+import { normalizeGoalPath } from '@core/goal/public';
 
 /** 将“时间/结束/时长”字段收敛成最终数据，并去掉编辑态元字段。 */
 export function finalizeQuickInputFormData(formData: QuickInputFormData) {
@@ -32,7 +32,7 @@ export function applyQuickInputLinkedTimeChanges(
   const changes = computeLinkedTimeChanges(
     draft,
     { startKey: "时间", endKey: "结束", durationKey: "时长" },
-    draft.lastChanged,
+    typeof draft.lastChanged === 'string' ? draft.lastChanged : undefined,
     {
       durationOutput: "number",
       direction,
@@ -80,7 +80,7 @@ export function applyQuickInputFieldUpdate(
       : undefined;
   const nextGoalPath =
     key === "goalPath" || key === "目标" || key === "目标路径"
-      ? cleanDisplayPath(String(rawValue ?? ""))
+      ? normalizeGoalPath(String(rawValue ?? ""))
       : undefined;
 
   return {
@@ -88,12 +88,9 @@ export function applyQuickInputFieldUpdate(
     fieldSources: nextSources,
     nextThemePath,
     nextGoalPath,
-    nextGoalId:
-      nextGoalPath === undefined
-        ? undefined
-        : nextGoalPath
-          ? makeGoalIdFromPath(nextGoalPath)
-          : null,
+    // Goal identity only comes from GoalSelector / GoalDefinition. A manual path
+    // edit invalidates the selected entity instead of fabricating an id from text.
+    nextGoalId: nextGoalPath === undefined ? undefined : null,
   };
 }
 

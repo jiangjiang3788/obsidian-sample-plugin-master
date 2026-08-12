@@ -21,6 +21,11 @@ export interface RecordCaptureTemplate {
   coreBlockId?: string;
   periodPolicy?: PeriodPolicy;
   appendUnderHeader?: string;
+  /**
+   * Legacy read-only metadata for pre-R10 templates. The canonical Record codec owns
+   * Markdown grammar; submit/output code must ignore this field.
+   */
+  readonly outputTemplate?: string;
 }
 
 export interface InputSettings {

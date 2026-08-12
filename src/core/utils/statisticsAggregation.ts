@@ -12,6 +12,14 @@ export interface PeriodData {
 
 export type StatisticsBucketAccessor = (item: RecordViewItem) => string;
 
+export function getPeriodDataTotal(data: PeriodData): number {
+    return Object.values(data.counts || {}).reduce((sum, count) => sum + Number(count || 0), 0);
+}
+
+export function hasPeriodData(data: PeriodData): boolean {
+    return getPeriodDataTotal(data) > 0 || data.blocks.length > 0;
+}
+
 function defaultBucketAccessor(item: RecordViewItem): string {
     return getBaseCategory(item.categoryKey);
 }

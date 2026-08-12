@@ -8,14 +8,14 @@ describe('AI domain normalization', () => {
       { id: 'core.habit', name: '打卡', categoryKey: '打卡' },
     ],
     goals: [
-      { id: 'goal.self', path: '#照顾好自己', title: '#照顾好自己', themePath: '健康/身体' },
+      { id: 'goal.self', path: '照顾好自己', title: '照顾好自己', themePath: '健康/身体' },
     ],
     goalPresets: [
       {
         id: 'goal-template.goal.self.core.habit.sleep',
         goalTemplateId: 'goal-template.goal.self.core.habit.sleep',
         goalId: 'goal.self',
-        goalPath: '#照顾好自己',
+        goalPath: '照顾好自己',
         blockId: 'core.habit',
         categoryKey: '打卡',
         variantId: 'sleep',
@@ -29,7 +29,7 @@ describe('AI domain normalization', () => {
     expect(cleanAiFieldValues({
       内容: '睡觉 8 小时',
       goalId: 'goal.self',
-      目标: '#照顾好自己',
+      目标: '照顾好自己',
       templateId: 'legacy',
       周期: '本周',
       themePath: '健康/睡眠',
@@ -40,7 +40,7 @@ describe('AI domain normalization', () => {
     const batch: NaturalRecordBatch = {
       items: [{
         rawText: '',
-        target: { blockId: 'core.habit', categoryKey: '打卡', goalPath: '#照顾好自己' },
+        target: { blockId: 'core.habit', categoryKey: '打卡', goalPath: '照顾好自己' },
         fieldValues: { 内容: '睡觉 8 小时', goalId: 'bad' },
       }],
     };
@@ -60,7 +60,7 @@ describe('AI domain normalization', () => {
     const batch: NaturalRecordBatch = {
       items: [{
         rawText: '',
-        target: { blockId: 'core.habit', goalPath: '#照顾好自己' },
+        target: { blockId: 'core.habit', goalPath: '照顾好自己' },
         fieldValues: { 内容: '喝水' },
       }],
     };
@@ -71,11 +71,11 @@ describe('AI domain normalization', () => {
     expect(normalized.items[0].target.goalTemplateId).toBe('goal-template.goal.self.core.habit.sleep');
   });
 
-  it('still recovers blockId from legacy categoryKey-only AI output', () => {
+  it('still recovers blockId from categoryKey-only AI output', () => {
     const batch = {
       items: [{
         rawText: '',
-        target: { categoryKey: '打卡', goalPath: '#照顾好自己' },
+        target: { categoryKey: '打卡', goalPath: '照顾好自己' },
         fieldValues: { 内容: '喝水' },
       }],
     } as any as NaturalRecordBatch;

@@ -12,7 +12,8 @@ export type GoalId = string;
 
 export type GoalStatus = 'active' | 'paused' | 'completed' | 'archived';
 export type CycleGranularity = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
-export type { PeriodGranularity, PeriodPolicy } from '@/core/period/PeriodPolicy';
+import type { PeriodGranularity, PeriodPolicy } from '@/core/period/PeriodPolicy';
+export type { PeriodGranularity, PeriodPolicy };
 import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 
 export type GoalMetricDirection = 'increase' | 'decrease' | 'maintain' | 'boolean';

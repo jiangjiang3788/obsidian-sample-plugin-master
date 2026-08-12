@@ -58,24 +58,24 @@ describe('DataStore theme semantics', () => {
     const items = await store.scanFileByPath('daily.md');
     expect(items).toHaveLength(4);
 
-    const implicitTask = items.find((item) => item.content.includes('没有显式主题的任务'))!;
+    const implicitTask = items.find((item) => item.id === 'task.01J00000000000000000000051')!;
     expect(implicitTask.header).toBe('学习/英语');
     expect(implicitTask.theme).toBeUndefined();
     expect(implicitTask.themePath).toBeUndefined();
 
-    const explicitTask = items.find((item) => item.content.includes('有显式主题的任务'))!;
+    const explicitTask = items.find((item) => item.id === 'task.01J00000000000000000000052')!;
     expect(explicitTask.header).toBe('学习/英语');
     expect(explicitTask.theme).toBe('学习/英语');
     expect(explicitTask.themePath).toBe('学习/英语');
     expect(explicitTask.rootTheme).toBe('学习');
     expect(explicitTask.leafTheme).toBe('英语');
 
-    const implicitBlock = items.find((item) => item.content.includes('没有显式主题的块'))!;
+    const implicitBlock = items.find((item) => item.id === 'rec.01J00000000000000000000053')!;
     expect(implicitBlock.header).toBe('学习/英语');
     expect(implicitBlock.theme).toBeUndefined();
     expect(implicitBlock.themePath).toBeUndefined();
 
-    const explicitBlock = items.find((item) => item.content.includes('有显式主题的块'))!;
+    const explicitBlock = items.find((item) => item.id === 'rec.01J00000000000000000000054')!;
     expect(explicitBlock.header).toBe('学习/英语');
     expect(explicitBlock.theme).toBe('学习/英语');
     expect(explicitBlock.themePath).toBe('学习/英语');

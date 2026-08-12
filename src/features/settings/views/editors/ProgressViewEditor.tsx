@@ -21,7 +21,7 @@ export function ProgressViewEditor({ value, onChange }: ViewEditorProps) {
   return (
     <Stack spacing={2}>
       <Typography variant="body2" color="text.secondary">
-        ProgressView 只按目标展示大技能经验条；主题作为小技能纵向列表。时间和筛选统一走控制栏与视图筛选，不展示完成率和掉队提醒。
+        ProgressView 只按目标展示成长列表：目标作为一级行，小技能作为二级行。时间和筛选统一走外部视图系统，不在本视图内自建工具栏或周期切换。
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField size="small" type="number" label="显示目标数量" value={config.topN} onChange={(e) => onChange({ mode: 'goal', topN: Number((e.target as HTMLInputElement).value) || 20 })} />

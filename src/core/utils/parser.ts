@@ -52,7 +52,7 @@ export function parseRecordBlock(
     editableText: parsed.content,
     status: parsed.status,
     tags: parsed.tags,
-    goalPaths: parsed.goalPaths,
+    goalPath: parsed.goalPath,
     recurrenceInfo: recurrenceInfo || undefined,
     created: 0,
     modified: 0,
@@ -62,6 +62,10 @@ export function parseRecordBlock(
     theme: parsed.theme,
     coreBlock: parsed.coreBlock,
     priority: parsed.priority,
+    createdAt: parsed.createdAt,
+    energyDemand: parsed.energyDemand,
+    brainDemand: parsed.brainDemand,
+    physicalDemand: parsed.physicalDemand,
     scheduledDate: parsed.scheduledDate,
     startDate: parsed.startDate,
     dueDate: parsed.dueDate,
@@ -90,10 +94,7 @@ export function parseRecordBlock(
     date: canonicalDate,
   };
 
-  if (parsed.goalId) {
-    item.goalId = parsed.goalId;
-    item.goalIds = [parsed.goalId];
-  }
+  if (parsed.goalId) item.goalId = parsed.goalId;
   if (parsed.cycleId) item.cycleId = parsed.cycleId;
   if (parsed.templateId) item.templateId = parsed.templateId;
   if (parsed.templateSourceType) item.templateSourceType = parsed.templateSourceType;
@@ -106,10 +107,6 @@ export function parseRecordBlock(
   if (parsed.expectedDurationMinutes !== undefined) {
     item.expectedDurationMinutes = parsed.expectedDurationMinutes;
   }
-  if (parsed.energyDemand) item.extra['精力要求'] = parsed.energyDemand;
-  if (parsed.brainDemand) item.extra['脑力要求'] = parsed.brainDemand;
-  if (parsed.physicalDemand) item.extra['体力要求'] = parsed.physicalDemand;
-  if (parsed.createdAt) item.extra['创建于'] = parsed.createdAt;
 
   item.startISO = parsed.sessionStartedAt || parsed.startDate || parsed.scheduledDate || parsed.dueDate || parsed.date;
   item.endISO = parsed.sessionEndedAt || parsed.completedAt || parsed.cancelledAt || parsed.dueDate || item.startISO;

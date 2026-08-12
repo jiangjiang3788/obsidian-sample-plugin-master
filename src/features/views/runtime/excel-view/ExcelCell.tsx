@@ -11,6 +11,7 @@ import {
   resolveExcelCellKeyAction,
 } from './ExcelCellModel';
 import type { ExcelCellProps } from './types';
+import { hasPlatformModifier } from '@shared/ui/public';
 
 export function ExcelCell({
   cell,
@@ -36,7 +37,7 @@ export function ExcelCell({
   onMoveFillDrag,
   onFinishFillDrag,
   onCancelFillDrag,
-  onOpenRecord,
+  onOpenRecordOrigin,
 }: ExcelCellProps) {
   const { item, field, editorValue, policy } = cell;
   const [draft, setDraft] = useState(editorValue);
@@ -51,7 +52,7 @@ export function ExcelCell({
     if (!editing) return;
     const input = inputRef.current;
     input?.focus?.();
-    input?.select?.();
+    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) input.select();
   }, [editing]);
 
   const commit = (nextValue: string = draft) => {
@@ -61,7 +62,11 @@ export function ExcelCell({
 
   const handleCellClick = (event: MouseEvent) => {
     if (fillDragging) return;
-    if (event.metaKey || event.ctrlKey) return onOpenRecord?.(item);
+    if (hasPlatformModifier(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return onOpenRecordOrigin?.(item);
+    }
     onSelect?.(cell);
   };
 
@@ -127,7 +132,7 @@ export function ExcelCell({
       data-save-state={ui.saveState}
       class={ui.className}
       style={style}
-      title={ui.title}
+      title={onOpenRecordOrigin ? `${ui.title} · Ctrl/⌘+点击打开原文` : ui.title}
       tabIndex={0}
       aria-readonly={ui.readonly ? 'true' : 'false'}
       aria-invalid={error ? 'true' : 'false'}

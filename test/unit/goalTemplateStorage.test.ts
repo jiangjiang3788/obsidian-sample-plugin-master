@@ -27,7 +27,7 @@ const planBlock = DEFAULT_CORE_BLOCKS.find((block) => block.id === 'core.plan')!
 const goal: GoalDefinition = {
   id: 'goal.plugin',
   title: '插件',
-  goalPath: '#插件',
+  goalPath: '插件',
   status: 'active',
   themePath: '电脑/记录系统',
   metrics: [],
@@ -45,7 +45,6 @@ describe('Template Variant differential storage', () => {
       name: '默认任务',
       enabled: true,
       fields: taskBlock.fields as any,
-      outputTemplate: taskBlock.outputTemplate,
       targetFile: taskBlock.targetFile,
       appendUnderHeader: taskBlock.appendUnderHeader,
       defaultValues: {
@@ -64,7 +63,7 @@ describe('Template Variant differential storage', () => {
     const compacted = compactGoalTemplateForStorage(template, { coreBlock: taskBlock, goal });
 
     expect(compacted.fields).toBeUndefined();
-    expect(compacted.outputTemplate).toBeUndefined();
+    expect((compacted as any).outputTemplate).toBeUndefined();
     expect(compacted.targetFile).toBeUndefined();
     expect(compacted.appendUnderHeader).toBeUndefined();
     expect(compacted.requiredFields).toBeUndefined();

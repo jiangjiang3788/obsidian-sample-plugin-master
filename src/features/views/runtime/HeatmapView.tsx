@@ -4,7 +4,7 @@
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { RecordViewItem, ViewInstance, InputSettings } from '@core/types/public';
 import { devLog, buildHeatmapRatingMapping } from '@core/utils/public';
-import type { OpenCheckinManagerHandler, OpenHeatmapCreateHandler, ResolveResourcePathHandler } from '@shared/types/public';
+import type { OpenCheckinManagerHandler, OpenHeatmapCreateHandler, OpenRecordOriginHandler, ResolveResourcePathHandler } from '@shared/types/public';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import { dayjs } from '@core/utils/public';
 import {
@@ -35,6 +35,7 @@ interface HeatmapViewProps {
 
     onOpenHeatmapCreate?: OpenHeatmapCreateHandler;
     onOpenCheckinManager?: OpenCheckinManagerHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
     onNotice?: (message: string) => void;
     goals?: GoalDefinition[];
     goalSettings?: GoalSettings;
@@ -50,6 +51,7 @@ export function HeatmapView({
     inputSettings,
     onOpenHeatmapCreate,
     onOpenCheckinManager,
+    onOpenRecordOrigin,
     onNotice,
     goals = [],
     goalSettings,
@@ -59,6 +61,8 @@ export function HeatmapView({
         () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }),
         [module.viewConfig]
     );
+
+    const ratingMappingsCache = useMemo(() => new RatingMappingCache(), []);
 
     const normalizedCurrentView = currentView === '日' || currentView === 'day' ? '天' : currentView;
     const isDayView = normalizedCurrentView === '天';
@@ -210,6 +214,7 @@ export function HeatmapView({
                 dateRange={dateRange}
                 config={config}
                 resolveResourcePath={resolveResourcePath}
+                onOpenRecordOrigin={onOpenRecordOrigin}
                 goalGroupsToDisplay={goalGroupsToDisplay}
                 themesToTrack={themesToTrack}
                 dataByThemeAndDate={dataByThemeAndDate}

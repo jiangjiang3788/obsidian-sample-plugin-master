@@ -1,16 +1,9 @@
 /**
  * Central hierarchy path semantics.
  *
- * This module is the internal source of truth for slash-separated hierarchy
- * paths. Domain-specific wrappers (goal/theme/field/file helpers) should adapt
- * to this module instead of each re-implementing split/normalize/leaf/parent
- * rules.
+ * Slash-separated hierarchy only. This module deliberately has no knowledge of
+ * tags or `#` markers. Tag syntax is owned exclusively by tagSemantics.ts.
  */
-export interface NormalizeHierarchyPathOptions {
-  /** Remove a leading # / ＃ marker from each segment. Useful for goal/tag-like paths. */
-  stripLeadingHashes?: boolean;
-}
-
 export interface HierarchyPathParts {
   path: string | null;
   parts: string[];
@@ -24,38 +17,25 @@ export interface HierarchyPathSegment {
   depth: number;
 }
 
-function normalizeSegment(value: unknown, options: NormalizeHierarchyPathOptions = {}): string {
-  let segment = String(value ?? '').trim();
-  if (options.stripLeadingHashes) {
-    segment = segment.replace(/^[#＃]+\s*/, '').trim();
-  }
-  return segment;
+function normalizeSegment(value: unknown): string {
+  return String(value ?? '').trim();
 }
 
-export function normalizeHierarchyPathParts(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): string[] {
-  if (Array.isArray(value)) return value.flatMap((entry) => normalizeHierarchyPathParts(entry, options));
+export function normalizeHierarchyPathParts(value: unknown): string[] {
+  if (Array.isArray(value)) return value.flatMap((entry) => normalizeHierarchyPathParts(entry));
   return String(value ?? '')
     .split('/')
-    .map((part) => normalizeSegment(part, options))
+    .map(normalizeSegment)
     .filter(Boolean);
 }
 
-export function normalizeHierarchyPathValue(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): string | null {
-  const parts = normalizeHierarchyPathParts(value, options);
+export function normalizeHierarchyPathValue(value: unknown): string | null {
+  const parts = normalizeHierarchyPathParts(value);
   return parts.length ? parts.join('/') : null;
 }
 
-export function splitHierarchyPathValue(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): HierarchyPathParts {
-  const parts = normalizeHierarchyPathParts(value, options);
+export function splitHierarchyPathValue(value: unknown): HierarchyPathParts {
+  const parts = normalizeHierarchyPathParts(value);
   const path = parts.length ? parts.join('/') : null;
   return {
     path,
@@ -65,40 +45,25 @@ export function splitHierarchyPathValue(
   };
 }
 
-export function getHierarchyPathBase(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): string {
-  return splitHierarchyPathValue(value, options).root ?? '';
+export function getHierarchyPathBase(value: unknown): string {
+  return splitHierarchyPathValue(value).root ?? '';
 }
 
-export function getHierarchyPathLeaf(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): string {
-  return splitHierarchyPathValue(value, options).leaf ?? '';
+export function getHierarchyPathLeaf(value: unknown): string {
+  return splitHierarchyPathValue(value).leaf ?? '';
 }
 
-export function getHierarchyPathParent(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): string {
-  const parts = normalizeHierarchyPathParts(value, options);
+export function getHierarchyPathParent(value: unknown): string {
+  const parts = normalizeHierarchyPathParts(value);
   return parts.length > 1 ? parts.slice(0, -1).join('/') : '';
 }
 
-export function getHierarchyPathDepth(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): number {
-  return normalizeHierarchyPathParts(value, options).length;
+export function getHierarchyPathDepth(value: unknown): number {
+  return normalizeHierarchyPathParts(value).length;
 }
 
-export function buildHierarchyPathSegments(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): HierarchyPathSegment[] {
-  const parts = normalizeHierarchyPathParts(value, options);
+export function buildHierarchyPathSegments(value: unknown): HierarchyPathSegment[] {
+  const parts = normalizeHierarchyPathParts(value);
   return parts.map((name, depth) => ({
     name,
     fullPath: parts.slice(0, depth + 1).join('/'),
@@ -106,46 +71,32 @@ export function buildHierarchyPathSegments(
   }));
 }
 
-export function buildHierarchyPathList(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): string[] {
-  return buildHierarchyPathSegments(value, options).map((segment) => segment.fullPath);
+export function buildHierarchyPathList(value: unknown): string[] {
+  return buildHierarchyPathSegments(value).map((segment) => segment.fullPath);
 }
 
-export function isChildHierarchyPath(
-  childPath: unknown,
-  parentPath: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): boolean {
-  const child = normalizeHierarchyPathValue(childPath, options);
-  const parent = normalizeHierarchyPathValue(parentPath, options);
+export function isChildHierarchyPath(childPath: unknown, parentPath: unknown): boolean {
+  const child = normalizeHierarchyPathValue(childPath);
+  const parent = normalizeHierarchyPathValue(parentPath);
   return !!child && !!parent && child.startsWith(`${parent}/`);
 }
 
-export function isDirectChildHierarchyPath(
-  childPath: unknown,
-  parentPath: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): boolean {
-  if (!isChildHierarchyPath(childPath, parentPath, options)) return false;
-  return getHierarchyPathDepth(childPath, options) === getHierarchyPathDepth(parentPath, options) + 1;
+export function isDirectChildHierarchyPath(childPath: unknown, parentPath: unknown): boolean {
+  if (!isChildHierarchyPath(childPath, parentPath)) return false;
+  return getHierarchyPathDepth(childPath) === getHierarchyPathDepth(parentPath) + 1;
 }
 
-export function getCommonHierarchyParentPath(
-  paths: unknown[],
-  options: NormalizeHierarchyPathOptions = {},
-): string | null {
+export function getCommonHierarchyParentPath(paths: unknown[]): string | null {
   const normalized = paths
-    .map((entry) => normalizeHierarchyPathValue(entry, options))
+    .map((entry) => normalizeHierarchyPathValue(entry))
     .filter((entry): entry is string => !!entry);
   if (normalized.length === 0) return null;
   if (normalized.length === 1) {
-    const parent = getHierarchyPathParent(normalized[0], options);
+    const parent = getHierarchyPathParent(normalized[0]);
     return parent || null;
   }
 
-  const segments = normalized.map((entry) => normalizeHierarchyPathParts(entry, options));
+  const segments = normalized.map((entry) => normalizeHierarchyPathParts(entry));
   const minLength = Math.min(...segments.map((entry) => entry.length));
   const common: string[] = [];
   for (let index = 0; index < minLength; index += 1) {
@@ -156,33 +107,22 @@ export function getCommonHierarchyParentPath(
   return common.length ? common.join('/') : null;
 }
 
-export function getRelativeHierarchyPath(
-  fullPath: unknown,
-  basePath: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): string {
-  const full = normalizeHierarchyPathValue(fullPath, options) ?? '';
-  const base = normalizeHierarchyPathValue(basePath, options) ?? '';
+export function getRelativeHierarchyPath(fullPath: unknown, basePath: unknown): string {
+  const full = normalizeHierarchyPathValue(fullPath) ?? '';
+  const base = normalizeHierarchyPathValue(basePath) ?? '';
   if (!full || !base || full === base) return full === base ? '' : full;
   return full.startsWith(`${base}/`) ? full.slice(base.length + 1) : full;
 }
 
-export function compareHierarchyPathsForSort(
-  left: unknown,
-  right: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): number {
-  const leftPath = normalizeHierarchyPathValue(left, options) ?? '';
-  const rightPath = normalizeHierarchyPathValue(right, options) ?? '';
-  const byDepth = getHierarchyPathDepth(leftPath, options) - getHierarchyPathDepth(rightPath, options);
+export function compareHierarchyPathsForSort(left: unknown, right: unknown): number {
+  const leftPath = normalizeHierarchyPathValue(left) ?? '';
+  const rightPath = normalizeHierarchyPathValue(right) ?? '';
+  const byDepth = getHierarchyPathDepth(leftPath) - getHierarchyPathDepth(rightPath);
   return byDepth !== 0 ? byDepth : leftPath.localeCompare(rightPath, 'zh-CN');
 }
 
-export function buildHierarchyPathOption(
-  value: unknown,
-  options: NormalizeHierarchyPathOptions = {},
-): { label: string; value: string } | null {
-  const path = normalizeHierarchyPathValue(value, options);
+export function buildHierarchyPathOption(value: unknown): { label: string; value: string } | null {
+  const path = normalizeHierarchyPathValue(value);
   if (!path) return null;
-  return { value: path, label: getHierarchyPathLeaf(path, options) || path };
+  return { value: path, label: getHierarchyPathLeaf(path) || path };
 }

@@ -20,7 +20,7 @@ export interface ViewFieldOrderContext {
  */
 export function isGoalOrderField(field?: string | null): boolean {
     const canonical = getCanonicalFieldKey(String(field || '').trim());
-    return ['goalPath', 'goalPaths', 'rootGoal', 'leafGoal', 'goalId', 'goalIds'].includes(canonical);
+    return ['goalPath', 'rootGoal', 'leafGoal', 'goalId'].includes(canonical);
 }
 
 function normalizeText(value: unknown): string {
@@ -44,7 +44,7 @@ function firstText(value: unknown): string {
 function normalizeGoalComparable(value: unknown): string {
     const text = firstText(value);
     if (!text) return '';
-    return splitGoalPath(text).goalPath || text.replace(/^#+/, '').trim();
+    return splitGoalPath(text).goalPath || '';
 }
 
 function buildGoalPathById(goals: GoalDefinition[] = []): Map<string, string> {
@@ -60,7 +60,7 @@ function resolveGoalFieldComparable(field: string, rawValue: unknown, context?: 
     const canonical = getCanonicalFieldKey(String(field || '').trim());
     const goals = context?.goals || [];
 
-    if (canonical === 'goalId' || canonical === 'goalIds') {
+    if (canonical === 'goalId') {
         const id = firstText(rawValue);
         return buildGoalPathById(goals).get(id) || id || '';
     }
@@ -87,10 +87,10 @@ export function compareFieldValuesByViewOrder(field: string, left: unknown, righ
 function readOrderedFieldValue(item: RecordViewItem, field: string, context?: ViewFieldOrderContext): unknown {
     const canonical = getCanonicalFieldKey(String(field || '').trim());
     if (isGoalOrderField(canonical)) {
-        if (canonical === 'goalId' || canonical === 'goalIds') {
+        if (canonical === 'goalId') {
             return firstText((item as any)[canonical]) || readField(item, canonical);
         }
-        return (item as any).goalPath || (item as any).goalPaths || readField(item, canonical) || readField(item, 'goalPath') || readField(item, '目标');
+        return item.goalPath || readField(item, canonical) || readField(item, 'goalPath');
     }
     return readField(item, canonical);
 }
@@ -168,7 +168,8 @@ export function getSortedGroupKeys(grouped: Record<string, RecordViewItem[]>, fi
  * 多字段层级分组用的节点结构
  */
 export interface GroupNode {
-    key: string;           // 当前层的分组 key（字段值）
+    key: string;
+    label?: string;           // 当前层的分组 key（字段值）
     field: string;         // 当前层使用的字段名
     items?: RecordViewItem[];        // 叶子节点：具体 items
     children?: GroupNode[];// 中间节点：子分组
@@ -184,6 +185,7 @@ export function groupItemsByFields(items: RecordViewItem[], fields: string[], co
         // 不分组时，返回一个虚拟根节点，方便视图统一处理
         return [{
             key: '__all__',
+            label: '__all__',
             field: '__all__',
             items,
         }];
@@ -202,6 +204,7 @@ export function groupItemsByFields(items: RecordViewItem[], fields: string[], co
                 // 最后一层：叶子节点，挂 items
                 return {
                     key,
+                    label: key,
                     field,
                     items: bucket,
                 } as GroupNode;
@@ -209,6 +212,7 @@ export function groupItemsByFields(items: RecordViewItem[], fields: string[], co
                 // 中间层：子节点继续按下一字段分组
                 return {
                     key,
+                    label: key,
                     field,
                     children: groupLevel(bucket, level + 1),
                 } as GroupNode;

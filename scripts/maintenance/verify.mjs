@@ -15,7 +15,8 @@ const commandSets = {
     ['npm', ['run', 'test:unit']],
   ],
   full: [
-    ['npm', ['run', 'typecheck:src']],
+    // Full/CI verification checks source, unit/integration test fixtures, and E2E typings.
+    ['npm', ['run', 'typecheck']],
     ['npm', ['run', 'gate']],
     ['npm', ['run', 'test:unit']],
     ['npm', ['run', 'test:integration']],

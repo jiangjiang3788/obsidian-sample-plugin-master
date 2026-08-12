@@ -29,9 +29,9 @@ function fieldCodecDefinition(field: TemplateField): FieldCodecDefinition {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
   return {
-    type: semantic === 'tags' || semantic === 'goals'
+    valueType: semantic === 'tags'
       ? 'tags'
-      : semantic === 'themePath' || semantic === 'categoryPath' || inputType === 'path' || inputType === 'multiPath'
+      : semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath' || inputType === 'path' || inputType === 'multiPath'
         ? 'path'
         : semantic === 'image' || inputType === 'image' || inputType === 'multiImage'
           ? 'image'
@@ -41,7 +41,7 @@ function fieldCodecDefinition(field: TemplateField): FieldCodecDefinition {
     inputType,
     semantic,
     cardinality: field.cardinality || (['multiSelect', 'multiPath', 'multiTag', 'multiImage'].includes(inputType) ? 'multi' : 'single'),
-    hierarchical: field.hierarchical || semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'tags' || semantic === 'goals',
+    hierarchical: field.hierarchical || semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath' || semantic === 'tags',
   };
 }
 
@@ -109,8 +109,10 @@ function readSemanticFieldValue(field: TemplateField, item: RecordViewItem, snap
       return snapshot.semantic.period || readPeriodFromLegacyCategory(field, item, snapshot);
     case 'tags':
       return parseTagList(snapshot.semantic.tags);
-    case 'goals':
-      return parseTagList(snapshot.semantic.goalPaths);
+    case 'goalId':
+      return snapshot.semantic.goalId;
+    case 'goalPath':
+      return snapshot.semantic.goalPath;
     case 'startTime':
       return snapshot.semantic.startTime;
     case 'endTime':
@@ -160,6 +162,12 @@ function normalizeBackfillValue(field: TemplateField, rawValue: unknown): unknow
   if (isTemplateRatingPairField(field) && isOptionObject(rawValue)) return rawValue;
 
   const decoded = decodeMarkdownFieldValue(rawValue, fieldCodecDefinition(field));
+  // Historical text tag fields were persisted as compact comma-separated text.
+  // Keep that representation only at the edit-backfill boundary; canonical multiTag
+  // fields continue to use arrays everywhere else.
+  if (getTemplateFieldSemantic(field) === 'tags' && getTemplateFieldInputType(field) === 'text') {
+    return parseTagList(decoded).join(',');
+  }
   const normalized = normalizeTemplateFieldValue(field, decoded);
   return matchTemplateFieldOptionValue(field, normalized);
 }

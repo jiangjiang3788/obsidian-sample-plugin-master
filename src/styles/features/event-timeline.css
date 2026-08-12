@@ -6,6 +6,8 @@
     gap: 16px;
     padding: 8px 4px;
     font-family: var(--font-interface);
+    color: var(--think-text-primary);
+    container-type: inline-size;
 }
 
 .event-timeline-empty {
@@ -19,22 +21,21 @@
 .et-ungrouped {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
 }
 
+.et-group-content {
+    gap: 0;
+}
 
 /* 单个事件 - 三栏 Grid 布局 */
 .et-event {
     display: grid;
-    grid-template-columns: 120px auto 1fr;
+    grid-template-columns: 120px 28px 1fr;
     gap: 12px;
-    align-items: start;
-    margin-bottom: 0;
-    transition: transform var(--think-duration-normal) var(--think-ease-standard);
-}
-
-.et-event:hover {
-    transform: translateX(2px);
+    align-items: stretch;
+    margin: 0;
+    padding: 0;
 }
 
 /* 左侧：日期和时间 */
@@ -42,6 +43,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    margin: 6px 0;
     padding: 8px 12px;
     text-align: right;
     min-height: 60px;
@@ -52,7 +54,7 @@
 .et-date-label {
     font-size: 0.85rem;
     color: var(--think-text-primary);
-    font-weight: 600; /* 加粗日期显示 */
+    font-weight: 600;
     margin-bottom: 2px;
     white-space: nowrap;
 }
@@ -64,68 +66,69 @@
     white-space: nowrap;
 }
 
-/* 中间：时间线 - 连续线条效果 */
+/* 中间：时间线主轴。
+   轴线由每行撑满自身高度，行与行之间不留 gap；首行从圆点向下、末行从上方到圆点，
+   因此视觉上是一根连续主轴，而不是很多短线段。 */
 .et-line {
     position: relative;
-    width: 3px;
-    background: linear-gradient(to bottom, var(--think-accent), var(--think-accent-hover));
-    border-radius: 2px;
-    min-height: 60px;
+    width: 28px;
+    min-height: 72px;
     display: flex;
     align-items: center;
     justify-content: center;
     align-self: stretch;
 }
 
-/* 同一分组内的时间线连续效果 */
-.et-group-content .et-event:not(:last-child) .et-line::after {
+.et-line::before {
     content: '';
     position: absolute;
-    top: 100%;
+    top: 0;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 3px;
-    height: 8px;
-    background: linear-gradient(to bottom, var(--think-accent), var(--think-accent-hover));
-    z-index: 0;
+    border-radius: 2px;
+    background: var(--think-accent);
 }
 
-.et-ungrouped .et-event:not(:last-child) .et-line::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 8px;
-    background: linear-gradient(to bottom, var(--think-accent), var(--think-accent-hover));
-    z-index: 0;
+.et-event--first .et-line::before {
+    top: 50%;
+}
+
+.et-event--last .et-line::before {
+    bottom: 50%;
+}
+
+.et-event--first.et-event--last .et-line::before {
+    top: 50%;
+    bottom: 50%;
 }
 
 .et-dot {
+    position: relative;
     width: 12px;
     height: 12px;
     border-radius: 50%;
     border: 3px solid var(--think-accent);
     background-color: var(--think-bg-canvas);
     z-index: 1;
-    transition: all var(--think-duration-normal) var(--think-ease-standard);
+    transition: border-color var(--think-duration-normal) var(--think-ease-standard), box-shadow var(--think-duration-normal) var(--think-ease-standard);
     flex-shrink: 0;
 }
 
 .et-event:hover .et-dot {
     border-color: var(--think-accent-hover);
-    transform: scale(1.2);
     box-shadow: 0 0 8px var(--think-accent);
 }
 
 /* 右侧：内容卡片 */
 .et-event-card {
+    margin: 6px 0;
     background: var(--think-bg-surface-1);
     border-radius: 8px;
     padding: 12px;
     border: 1px solid var(--think-border-subtle);
-    transition: all var(--think-duration-normal) var(--think-ease-standard);
+    transition: background-color var(--think-duration-normal) var(--think-ease-standard), border-color var(--think-duration-normal) var(--think-ease-standard), box-shadow var(--think-duration-normal) var(--think-ease-standard);
     position: relative;
     min-height: 60px;
 }
@@ -170,16 +173,18 @@
         align-items: flex-start;
         text-align: left;
         min-height: auto;
+        margin: 0;
         padding: 0;
         flex-direction: row;
         gap: 8px;
     }
 
     .et-line {
-        display: none; /* 小屏幕隐藏时间线 */
+        display: none;
     }
 
     .et-event-card {
+        margin: 0;
         background: transparent;
         border: none;
         padding: 0;
@@ -212,7 +217,6 @@
     border-right-color: var(--think-bg-surface-1);
 }
 
-
 /* 无障碍访问 */
 .et-event-card:focus {
     outline: 2px solid var(--think-accent);
@@ -238,7 +242,6 @@
     margin: 0;
 }
 
-
 /* 日期缺失时的左侧间距保持 */
 .et-event-date:empty {
     min-height: 20px;
@@ -251,18 +254,6 @@
     }
 }
 
-.event-timeline-view {
-    color: var(--think-text-primary);
-    container-type: inline-size;
-}
-
 .et-event-card {
     border-color: var(--think-border-subtle);
-    border-radius: var(--think-radius-md);
-    background: var(--think-bg-canvas);
-}
-
-.et-event-card:hover {
-    border-color: var(--think-border-strong);
-    background: var(--think-bg-hover);
 }

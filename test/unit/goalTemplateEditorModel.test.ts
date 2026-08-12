@@ -38,11 +38,11 @@ const goal = {
 describe('GoalTemplateEditorModel', () => {
   it('normalizes theme path and variant id in pure model helpers', () => {
     expect(makeVariantId('学习 英语')).toBe('学习-英语');
-    expect(readThemePathFromFields([{ id: 'themePath', key: 'themePath', label: '主题', type: 'path', defaultValue: '#学习/英语' } as any])).toBe('学习/英语');
+    expect(readThemePathFromFields([{ id: 'themePath', key: 'themePath', label: '主题', type: 'path', defaultValue: '学习/英语' } as any])).toBe('学习/英语');
   });
 
   it('builds a new draft from goal theme without relying on modal state', () => {
-    const draft = makeNewDraft(goal, block, [], [{ path: '学习/英语', icon: '📘' }]);
+    const draft = makeNewDraft(goal, block, [], [{ id: 'theme-english', path: '学习/英语', icon: '📘' }]);
     expect(draft.themePath).toBe('学习/英语');
     expect(draft.name).toBe('英语');
     expect(draft.defaultValues.themePath).toBe('学习/英语');
@@ -62,7 +62,6 @@ describe('GoalTemplateEditorModel', () => {
     const draft = makeDraftFromTemplate({ id: 'tpl', goalId: 'goal-1', coreBlockId: 'core.habit', variantId: '英语', enabled: true, fields: [] } as any, block, []);
     const inherited = buildInheritedDraft(draft, block);
     expect(inherited.fields.length).toBe(block.fields.length);
-    expect(inherited.outputTemplate).toBe(block.outputTemplate);
     expect(inherited.targetFile).toBe(block.targetFile);
   });
 
@@ -71,7 +70,7 @@ describe('GoalTemplateEditorModel', () => {
     const patch = buildTemplatePatchFromDraft({ goal, block, draft: { ...draft, name: '英语听力', themePath: '听力', defaultValues: { themePath: '听力' } }, selectedTemplate: null, themeIcon: '🎧' });
     expect(patch.name).toBe('英语听力');
     expect(patch.defaultValues?.themePath).toBe('听力');
-    expect(patch.outputTemplate).toBeUndefined();
+    expect((patch as any).outputTemplate).toBeUndefined();
   });
 
   it('sorts variants by sortOrder while preserving input order for ties', () => {

@@ -8,7 +8,7 @@ import {
   normalizeThemePath,
 } from '@/features/settings/goalTemplates/GoalTemplateEditorModel';
 
-const block: CoreBlockDefinition = {
+const block = {
   id: 'core.habit',
   key: 'habit',
   system: true,
@@ -22,7 +22,7 @@ const block: CoreBlockDefinition = {
   outputTemplate: '内容:: {{内容}}',
   targetFile: '01/打卡.md',
   appendUnderHeader: '## {{goalPath}}',
-} as CoreBlockDefinition;
+} as unknown as CoreBlockDefinition;
 
 const goal: GoalDefinition = {
   id: 'goal-1',
@@ -35,13 +35,13 @@ const goal: GoalDefinition = {
 } as GoalDefinition;
 
 const themes: ThemeDefinition[] = [
-  { id: 'theme-1', name: '英语', path: '学习/英语', icon: '📘', order: 1 },
-  { id: 'theme-2', name: '运动', path: '健康/运动', icon: '🏃', order: 2 },
-] as ThemeDefinition[];
+  { id: 'theme-1', path: '学习/英语', icon: '📘', order: 1 },
+  { id: 'theme-2', path: '健康/运动', icon: '🏃', order: 2 },
+];
 
 describe('GoalTemplateEditorModel split facade', () => {
   it('keeps draft/theme/variant helpers available through the stable facade', () => {
-    expect(normalizeThemePath('#学习/英语')).toBe('学习/英语');
+    expect(normalizeThemePath('学习/英语')).toBe('学习/英语');
 
     const draft = makeNewDraft(goal, block, [], themes);
     expect(draft.themePath).toBe('学习/英语');
@@ -53,7 +53,7 @@ describe('GoalTemplateEditorModel split facade', () => {
 
     expect(buildThemeOptions(themes).map((option) => option.value)).toEqual(['', '学习/英语', '健康/运动']);
 
-    const copied = createCopiedDraft(makeDraftFromTemplate(null, block, []), null, [{ variantId: 'default-copy' }]);
+    const copied = createCopiedDraft(makeDraftFromTemplate(null, block, []), null, [{ id: 'copy', goalId: goal.id, coreBlockId: block.id, enabled: true, variantId: 'default-copy' }]);
     expect(copied.variantId).toBe('default-copy-2');
   });
 });

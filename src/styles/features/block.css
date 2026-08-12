@@ -5,23 +5,27 @@
 .bv-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 4px;
+    gap: 0;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
 }
 
 /* 分组样式已提取到 common-group.css */
 
 /* --- 条目通用样式 --- */
 .bv-item {
-    padding: 8px;
-    border-radius: 6px;
-    background-color: var(--think-bg-canvas);
-    transition: all var(--think-duration-normal) var(--think-ease-standard);
+    padding: var(--think-space-3) 0;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 68%, transparent);
+    border-radius: 0;
+    background: transparent;
+    transition: background-color var(--think-duration-normal) var(--think-ease-standard);
     font-size: 1rem;
 }
 
 .bv-item:hover {
-    background-color: var(--think-bg-hover);
+    background: color-mix(in srgb, var(--think-bg-hover) 44%, transparent);
 }
 
 /* --- BlockView 核心布局 (合并了 TS 中的响应式逻辑) --- */
@@ -160,8 +164,8 @@
 .bv-item--task {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px;
+    gap: 6px;
+    padding: 2px 0;
 }
 
 .bv-task-checkbox-wrapper {
@@ -193,13 +197,15 @@
     container-type: inline-size;
 }
 
-.bv-item {
-    border-color: var(--think-border-subtle);
-    border-radius: var(--think-radius-md);
-    background: var(--think-bg-canvas);
+.bv-container > .task-row,
+.bv-group-content > .task-row {
+    width: 100%;
+    min-height: 32px;
+    padding: var(--think-space-2) 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 68%, transparent);
 }
 
-.bv-item:hover {
-    border-color: var(--think-border-strong);
-    background: var(--think-bg-hover);
+.bv-container > :is(.bv-item, .task-row):last-child,
+.bv-group-content > :is(.bv-item, .task-row):last-child {
+    border-bottom: 0;
 }

@@ -4,7 +4,7 @@ import type { DataStore } from '@/core/services/DataStore';
 import type { RecordRepository } from '@/core/records/RecordRepository';
 
 function record(id: string, coreBlock: string, extra: Partial<RecordViewItem> = {}): RecordViewItem {
-  return { id, coreBlock, title: id, content: id, tags: [], goalPaths: [], categoryKey: coreBlock, created: 1, modified: 1, extra: {}, ...extra } as RecordViewItem;
+  return { id, coreBlock, title: id, content: id, tags: [], categoryKey: coreBlock, created: 1, modified: 1, extra: {}, ...extra } as RecordViewItem;
 }
 
 describe('Task Series deterministic repair', () => {

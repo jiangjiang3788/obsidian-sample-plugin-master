@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "isolatedModules": true,
+    "types": [
+      "node",
+      "@wdio/globals/types",
+      "@wdio/mocha-framework"
+    ]
+  },
+  "include": [
+    "test/specs/**/*.ts",
+    "test/configs/wdio.conf.mts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

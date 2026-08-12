@@ -34,7 +34,7 @@ export type {
       GoalTemplateStorageRow,
     GoalSettings,
 } from './goal';
-export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath, getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder, makeStableGoalIdFromPath, resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy, DEFAULT_TEMPLATE_VARIANT_ID, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, normalizeTemplateVariantId, isDefaultTemplateVariant, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage, getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon, readGoalTemplateThemePath, goalTemplateHasCustomOverrides, inferGoalTemplateEditMode, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, getItemThemeKey, getItemThemeLabel, buildGoalThemeBreakdown, buildGoalBuckets } from './goal';
+export { DEFAULT_GOAL_SETTINGS, assertCanonicalGoalSettings, normalizeGoalPath, requireGoalPath, splitGoalPath, getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder, makeStableGoalIdFromPath, resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy, DEFAULT_TEMPLATE_VARIANT_ID, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, normalizeTemplateVariantId, isDefaultTemplateVariant, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage, getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon, readGoalTemplateThemePath, goalTemplateHasCustomOverrides, inferGoalTemplateEditMode, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, getItemThemeKey, getItemThemeLabel, buildGoalThemeBreakdown, buildGoalBuckets } from './goal';
 export type { GoalPathParts, GoalOrderIndex, DerivedPeriod, TemplateVariantId, TemplateVariantIdentity, GoalTemplate, PeriodGranularity, PeriodPolicy, GoalBucket, GoalThemeBreakdownRow, CompactGoalTemplateOptions, GoalTemplateDisplayInfo, GoalTemplateEditMode } from './goal';
 
 export { ThemeMetadataResolver } from './themeMetadata';
@@ -275,21 +275,19 @@ export {
 } from './recordInput/submitResult';
 export { applyRecordRefreshPlan, finalizeRecordSubmitResult } from './recordInput/refreshCoordinator';
 export { isRecordConflictError } from './recordInput/mutationErrors';
+export { createRecordInputDraftSnapshot, initializeRecordInputSession } from './recordInput/session/initialize';
+export { getRecordInputSessionDraft, reduceRecordInputSession } from './recordInput/session/reducer';
 export {
     RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS,
     RECORD_INPUT_GOAL_CONTEXT_KEYS,
     clearRecordInputGoalContext,
-    createRecordInputDraftSnapshot,
-    getRecordInputSessionDraft,
-    initializeRecordInputSession,
     isRecordInputMeaningfulValue,
     isRecordInputOptionLike,
     isRecordInputRefreshableSource,
     isRecordInputSameValue,
     preserveRecordInputBlockSwitchState,
     readRecordInputString,
-    reduceRecordInputSession,
-} from './recordInput/session';
+} from './recordInput/session/policy';
 export type {
     InitializeRecordInputSessionInput,
     RecordInputDraftSnapshot,
@@ -301,7 +299,7 @@ export type {
     RecordInputSessionSelection,
     RecordInputSessionState,
     RecordInputTimeDirection,
-} from './recordInput/session';
+} from './recordInput/session/types';
 
 // -------------------- Core Ports（Phase2: platform 边界） --------------------
 // 说明：core 层只定义接口（Port）；平台层实现并在组合根注册。

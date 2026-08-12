@@ -61,6 +61,18 @@ export interface GoalEnergyEffectsModel {
   byDuration: GoalEnergyEffectRowModel[];
 }
 
+export interface GoalEnergyTimelineCoverageModel {
+  sampledDays: number;
+  missingDays: number;
+  totalSamples: number;
+}
+
+export interface GoalEnergyTimelineModel {
+  startDate: string;
+  endDate: string;
+  coverage: GoalEnergyTimelineCoverageModel;
+}
+
 export interface GoalEnergySummaryModel {
   count: number;
   latestScore: number;
@@ -71,6 +83,7 @@ export interface GoalEnergySummaryModel {
   latestDate?: string | null;
   latestTime?: string | null;
   recentSamples: GoalEnergySampleModel[];
+  timeline?: GoalEnergyTimelineModel;
   effects?: GoalEnergyEffectsModel | null;
 }
 
@@ -124,6 +137,30 @@ function buildGoalEnergyEffects(evidenceRecords: RecordViewItem[]): GoalEnergyEf
   };
 }
 
+
+function buildSevenDayEnergyTimeline(rows: Array<GoalEnergySampleModel & { occurrenceKey: string }>): GoalEnergyTimelineModel | undefined {
+  const endDate = rows.find((row) => row.date)?.date || null;
+  if (!endDate) return undefined;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(endDate);
+  if (!match) return undefined;
+  const end = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const start = new Date(end);
+  start.setDate(start.getDate() - 6);
+  const dateText = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const startDate = dateText(start);
+  const windowRows = rows.filter((row) => !!row.date && row.date >= startDate && row.date <= endDate);
+  const sampledDays = new Set(windowRows.map((row) => row.date).filter(Boolean)).size;
+  return {
+    startDate,
+    endDate,
+    coverage: {
+      sampledDays,
+      missingDays: Math.max(0, 7 - sampledDays),
+      totalSamples: windowRows.length,
+    },
+  };
+}
+
 export function buildGoalEnergySummary(
   items: RecordViewItem[],
   limit: number = 5,
@@ -165,6 +202,7 @@ export function buildGoalEnergySummary(
     latestDate: latest.date || null,
     latestTime: latest.time || null,
     recentSamples,
+    timeline: buildSevenDayEnergyTimeline(ordered),
     effects: buildGoalEnergyEffects(effectRecords),
   };
 }

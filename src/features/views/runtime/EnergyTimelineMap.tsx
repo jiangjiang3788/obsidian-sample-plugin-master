@@ -5,11 +5,14 @@ import type { EnergyPeriodRenderModel, EnergyPeriodSampleModel } from '../models
 import { EnergyDot } from './EnergyDot';
 import { buildEnergyDotVisual, energyDotStyle } from './EnergyVisualEncoding';
 import type { EnergyMapSelection } from './EnergyMapTypes';
+import type { OpenRecordOriginHandler } from '@shared/types/public';
+import { hasPlatformModifier, stopInteractionEvent } from '@shared/ui/public';
 
 interface Props {
   period: EnergyPeriodRenderModel;
   selectedKey?: string | null;
   onSelect?: (selection: EnergyMapSelection) => void;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
 const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -53,7 +56,7 @@ function sampleVisual(sample: EnergyPeriodSampleModel) {
   });
 }
 
-export function EnergyDayMap({ period, selectedKey, onSelect }: Props) {
+export function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin }: Props) {
   const day = period.days[0];
   return (
     <section class="think-energy-period-map think-energy-day-map" aria-label="日精力地图">
@@ -74,8 +77,15 @@ export function EnergyDayMap({ period, selectedKey, onSelect }: Props) {
               selected={selectedKey === sample.id}
               className="think-energy-map-dot"
               style={energyDotStyle(visual, { '--think-energy-x': `${(sample.minuteOfDay / 1440) * 100}%` })}
-              title={sampleTitle(sample)}
-              onClick={() => onSelect?.({ kind: 'sample', sample })}
+              title={`${sampleTitle(sample)}${onOpenRecordOrigin ? ' · Ctrl/⌘+点击打开原文' : ''}`}
+              onClick={(event) => {
+                if (hasPlatformModifier(event) && onOpenRecordOrigin) {
+                  stopInteractionEvent(event);
+                  void onOpenRecordOrigin(sample.item);
+                  return;
+                }
+                onSelect?.({ kind: 'sample', sample });
+              }}
             />
           );
         })}
@@ -86,7 +96,7 @@ export function EnergyDayMap({ period, selectedKey, onSelect }: Props) {
   );
 }
 
-export function EnergyDateTimeMap({ period, selectedKey, onSelect }: Props) {
+export function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordOrigin }: Props) {
   const isMonth = period.currentView === '月';
   return (
     <section class="think-energy-period-map think-energy-date-map" aria-label={`${period.currentView}精力地图`}>
@@ -121,8 +131,15 @@ export function EnergyDateTimeMap({ period, selectedKey, onSelect }: Props) {
                         selected={selectedKey === sample.id}
                         className="think-energy-map-dot"
                         style={energyDotStyle(visual, { '--think-energy-y': `${(sample.minuteOfDay / 1440) * 100}%` })}
-                        title={sampleTitle(sample)}
-                        onClick={() => onSelect?.({ kind: 'sample', sample })}
+                        title={`${sampleTitle(sample)}${onOpenRecordOrigin ? ' · Ctrl/⌘+点击打开原文' : ''}`}
+                        onClick={(event) => {
+                if (hasPlatformModifier(event) && onOpenRecordOrigin) {
+                  stopInteractionEvent(event);
+                  void onOpenRecordOrigin(sample.item);
+                  return;
+                }
+                onSelect?.({ kind: 'sample', sample });
+              }}
                       />
                     );
                   })}

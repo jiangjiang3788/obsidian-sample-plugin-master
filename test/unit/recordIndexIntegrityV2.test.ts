@@ -8,7 +8,6 @@ function item(id: string, coreBlock: string, extra: Partial<RecordViewItem> = {}
     title: id,
     content: id,
     tags: [],
-    goalPaths: [],
     categoryKey: coreBlock,
     created: 1,
     modified: 1,

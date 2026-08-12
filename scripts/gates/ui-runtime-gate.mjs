@@ -6,5 +6,8 @@ runGateGroup("ui-runtime", [
   "ui-compatibility-gate.mjs",
   "freeform-layout-boundary-gate.mjs",
   "css-boundary-gate.mjs",
-  "settings-view-runtime-gate.mjs"
+  "list-hierarchy-convergence-gate.mjs",
+  "settings-view-runtime-gate.mjs",
+  "settings-field-view-convergence-gate.mjs",
+  "view-interaction-convergence-gate.mjs"
 ]);

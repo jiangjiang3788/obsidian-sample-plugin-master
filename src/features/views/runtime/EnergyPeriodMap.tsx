@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { EnergyPeriodRenderModel } from '../models/energyViewModel';
+import type { OpenRecordOriginHandler } from '@shared/types/public';
 import { EnergyCalendarMap } from './EnergyCalendarMap';
 import { EnergyDateTimeMap, EnergyDayMap } from './EnergyTimelineMap';
 
@@ -11,6 +12,7 @@ interface Props {
   period?: EnergyPeriodRenderModel | null;
   selectedKey?: string | null;
   onSelect?: (selection: EnergyMapSelection) => void;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
 export function EnergyPeriodMap(props: Props) {

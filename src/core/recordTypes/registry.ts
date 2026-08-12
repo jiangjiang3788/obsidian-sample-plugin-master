@@ -8,7 +8,10 @@ import {
 } from '@/core/records/schema';
 
 export const ENERGY_RECORD_TYPE_ID = RECORD_TYPE_IDS.ENERGY;
-export const ENERGY_RECORD_TYPE = ENERGY_DEFINITION;
+export const ENERGY_RECORD_TYPE = {
+  ...ENERGY_DEFINITION,
+  get goalBindable() { return ENERGY_DEFINITION.capabilities.goalBindable; },
+} as const;
 
 /** User-capturable default record types; internal history definitions stay hidden. */
 export const DEFAULT_RECORD_TYPES: RecordSchemaDefinition[] = RECORD_SCHEMA_DEFINITIONS

@@ -64,7 +64,6 @@ export type FieldSemantic =
   | 'categoryPath'
   | 'themePath'
   | 'tags'
-  | 'goals'
   | 'goalId'
   | 'goalPath'
   | 'cycleId'

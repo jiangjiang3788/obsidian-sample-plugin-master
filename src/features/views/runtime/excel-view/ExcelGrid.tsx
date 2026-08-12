@@ -44,7 +44,7 @@ export function ExcelGrid({
   onCancelFillDrag,
   onColumnWidthDraftChange,
   onColumnWidthCommit,
-  onOpenRecord,
+  onOpenRecordOrigin,
 }: ExcelGridProps) {
   const tableRef = useRef<HTMLTableElement | null>(null);
 
@@ -174,7 +174,7 @@ export function ExcelGrid({
                   onMoveFillDrag={onMoveFillDrag}
                   onFinishFillDrag={finishFillDrag}
                   onCancelFillDrag={onCancelFillDrag}
-                  onOpenRecord={onOpenRecord}
+                  onOpenRecordOrigin={onOpenRecordOrigin}
                   style={buildExcelColumnWidthStyle(width) as any}
                 />
               );

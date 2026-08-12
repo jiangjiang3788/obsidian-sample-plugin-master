@@ -17,89 +17,90 @@
 
 import * as Mui from '@mui/material';
 
-// Using `any` here is deliberate: it isolates the interop boundary and prevents
-// `@ts-ignore` from spreading through the codebase.
-type AnyMuiComponent = any;
+// Preserve MUI's prop types at the compatibility boundary.  Erasing components to
+// `any` also erases JSX contextual typing, which turns every UI callback into an
+// implicit-any error after strict refactors.  React is mapped to preact/compat by
+// tsconfig, so the component's own public prop contract is the correct boundary.
 
 // Commonly used components in Preact-based UI code.
-export const Box = Mui.Box as AnyMuiComponent;
-export const Stack = Mui.Stack as AnyMuiComponent;
-export const Typography = Mui.Typography as AnyMuiComponent;
-export const TextField = Mui.TextField as AnyMuiComponent;
-export const Button = Mui.Button as AnyMuiComponent;
-export const IconButton = Mui.IconButton as AnyMuiComponent;
-export const Tooltip = Mui.Tooltip as AnyMuiComponent;
-export const Divider = Mui.Divider as AnyMuiComponent;
+export const Box = Mui.Box;
+export const Stack = Mui.Stack;
+export const Typography = Mui.Typography;
+export const TextField = Mui.TextField;
+export const Button = Mui.Button;
+export const IconButton = Mui.IconButton;
+export const Tooltip = Mui.Tooltip;
+export const Divider = Mui.Divider;
 
-export const Checkbox = Mui.Checkbox as AnyMuiComponent;
-export const FormControlLabel = Mui.FormControlLabel as AnyMuiComponent;
-export const FormGroup = Mui.FormGroup as AnyMuiComponent;
-export const Chip = Mui.Chip as AnyMuiComponent;
-export const Popover = Mui.Popover as AnyMuiComponent;
+export const Checkbox = Mui.Checkbox;
+export const FormControlLabel = Mui.FormControlLabel;
+export const FormGroup = Mui.FormGroup;
+export const Chip = Mui.Chip;
+export const Popover = Mui.Popover;
 
-export const Paper = Mui.Paper as AnyMuiComponent;
+export const Paper = Mui.Paper;
 
-export const List = Mui.List as AnyMuiComponent;
+export const List = Mui.List;
 
-export const ListItemButton = Mui.ListItemButton as AnyMuiComponent;
+export const ListItemButton = Mui.ListItemButton;
 
-export const Collapse = Mui.Collapse as AnyMuiComponent;
+export const Collapse = Mui.Collapse;
 
-export const InputAdornment = Mui.InputAdornment as AnyMuiComponent;
+export const InputAdornment = Mui.InputAdornment;
 
-export const Popper = Mui.Popper as AnyMuiComponent;
+export const Popper = Mui.Popper;
 
-export const ClickAwayListener = Mui.ClickAwayListener as AnyMuiComponent;
+export const ClickAwayListener = Mui.ClickAwayListener;
 
-export const Dialog = Mui.Dialog as AnyMuiComponent;
+export const Dialog = Mui.Dialog;
 
-export const DialogTitle = Mui.DialogTitle as AnyMuiComponent;
+export const DialogTitle = Mui.DialogTitle;
 
-export const DialogContent = Mui.DialogContent as AnyMuiComponent;
+export const DialogContent = Mui.DialogContent;
 
-export const DialogActions = Mui.DialogActions as AnyMuiComponent;
+export const DialogActions = Mui.DialogActions;
 
-export const CircularProgress = Mui.CircularProgress as AnyMuiComponent;
+export const CircularProgress = Mui.CircularProgress;
 
-export const ListItemIcon = Mui.ListItemIcon as AnyMuiComponent;
+export const ListItemIcon = Mui.ListItemIcon;
 
-export const ListItemText = Mui.ListItemText as AnyMuiComponent;
+export const ListItemText = Mui.ListItemText;
 
-export const ThemeProvider = Mui.ThemeProvider as AnyMuiComponent;
+export const ThemeProvider = Mui.ThemeProvider;
 
-export const CssBaseline = Mui.CssBaseline as AnyMuiComponent;
-export const ScopedCssBaseline = Mui.ScopedCssBaseline as AnyMuiComponent;
+export const CssBaseline = Mui.CssBaseline;
+export const ScopedCssBaseline = Mui.ScopedCssBaseline;
 
-export const Tabs = Mui.Tabs as AnyMuiComponent;
+export const Tabs = Mui.Tabs;
 
-export const Tab = Mui.Tab as AnyMuiComponent;
+export const Tab = Mui.Tab;
 
-export const FormControl = Mui.FormControl as AnyMuiComponent;
-export const InputLabel = Mui.InputLabel as AnyMuiComponent;
-export const MenuItem = Mui.MenuItem as AnyMuiComponent;
-export const Select = Mui.Select as AnyMuiComponent;
-export const Switch = Mui.Switch as AnyMuiComponent;
+export const FormControl = Mui.FormControl;
+export const InputLabel = Mui.InputLabel;
+export const MenuItem = Mui.MenuItem;
+export const Select = Mui.Select;
+export const Switch = Mui.Switch;
 
-export const Accordion = Mui.Accordion as AnyMuiComponent;
-export const AccordionSummary = Mui.AccordionSummary as AnyMuiComponent;
-export const AccordionDetails = Mui.AccordionDetails as AnyMuiComponent;
+export const Accordion = Mui.Accordion;
+export const AccordionSummary = Mui.AccordionSummary;
+export const AccordionDetails = Mui.AccordionDetails;
 
-export const Alert = Mui.Alert as AnyMuiComponent;
-export const Radio = Mui.Radio as AnyMuiComponent;
-export const RadioGroup = Mui.RadioGroup as AnyMuiComponent;
-export const FormLabel = Mui.FormLabel as AnyMuiComponent;
-export const Autocomplete = Mui.Autocomplete as AnyMuiComponent;
-export const Menu = Mui.Menu as AnyMuiComponent;
+export const Alert = Mui.Alert;
+export const Radio = Mui.Radio;
+export const RadioGroup = Mui.RadioGroup;
+export const FormLabel = Mui.FormLabel;
+export const Autocomplete = Mui.Autocomplete;
+export const Menu = Mui.Menu;
 
-export const TableRow = Mui.TableRow as AnyMuiComponent;
-export const TableCell = Mui.TableCell as AnyMuiComponent;
+export const TableRow = Mui.TableRow;
+export const TableCell = Mui.TableCell;
 
-export const Slider = Mui.Slider as AnyMuiComponent;
-export const LinearProgress = Mui.LinearProgress as AnyMuiComponent;
-export const Grid = Mui.Grid as AnyMuiComponent;
-export const Card = Mui.Card as AnyMuiComponent;
-export const CardContent = Mui.CardContent as AnyMuiComponent;
-export const TableHead = Mui.TableHead as AnyMuiComponent;
-export const TableBody = Mui.TableBody as AnyMuiComponent;
-export const ListItem = Mui.ListItem as AnyMuiComponent;
-export const Table = Mui.Table as AnyMuiComponent;
+export const Slider = Mui.Slider;
+export const LinearProgress = Mui.LinearProgress;
+export const Grid = Mui.Grid;
+export const Card = Mui.Card;
+export const CardContent = Mui.CardContent;
+export const TableHead = Mui.TableHead;
+export const TableBody = Mui.TableBody;
+export const ListItem = Mui.ListItem;
+export const Table = Mui.Table;

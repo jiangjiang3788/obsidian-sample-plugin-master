@@ -50,6 +50,11 @@ describe('field semantics on Record Foundation v2', () => {
     expect(fields).not.toContain('theme');
     expect(getFieldLabel('themePath')).toBe('主题路径');
     expect(getFieldLabel('theme')).toBe('主题路径');
+    expect(fields.length).toBeLessThanOrEqual(36);
+    expect(fields).not.toContain('id');
+    expect(fields).not.toContain('fullData');
+    expect(fields).not.toContain('cycleId');
+    expect(fields).not.toContain('displayCount');
   });
 
   it('field registry groups unknown Record KV as custom fields', () => {

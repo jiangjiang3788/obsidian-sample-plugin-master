@@ -1,11 +1,12 @@
-import type { QuickInputModal } from '@/app/ui/modals/QuickInputModal';
 import type { RecordInputSource } from '@core/recordInput/public';
 import type { ActionService } from '@core/services/public';
 import type { RecordViewItem, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
 import type { Dayjs } from '@core/utils/public';
 import type { UiPort } from '@core/ports/public';
 
-export type QuickInputApp = ConstructorParameters<typeof QuickInputModal>[0];
+// Application actions only carry an opaque UI host. The concrete Obsidian App type is
+// adapted at the modal construction boundary so unit/model callers do not depend on platform shape.
+export type QuickInputApp = object;
 
 export type QuickCreateSource = Extract<RecordInputSource, 'quickinput' | 'view_quick_create'>;
 

@@ -12,7 +12,8 @@ export type {
   GoalSettings,
 } from './types';
 export { DEFAULT_GOAL_SETTINGS } from './types';
-export { getGoalPathCandidates, makeStableGoalIdFromPath, normalizeGoalPath, splitGoalPath } from './path';
+export { assertCanonicalGoalSettings } from './invariants';
+export { getGoalPathCandidates, makeStableGoalIdFromPath, normalizeGoalPath, requireGoalPath, splitGoalPath } from './path';
 export { getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder } from './order';
 export type { GoalOrderIndex } from './order';
 export type { GoalPathParts } from './path';

@@ -1,229 +1,355 @@
-/* Progress view visual contract. Static skin lives here; only percentages stay inline. */
+/* Progress / 成长视图：纯列表系统。
+   目标 -> 主题 -> 复用 BlockView/TaskRow 的真实记录；不建立卡片、白底或目标统计胶囊。
+   Goal / Theme 共用同一列系统，确保等级与进度条严格纵向对齐。 */
 .think-progress-view {
-  display: grid;
-  gap: var(--think-space-6);
-  justify-items: stretch;
-  width: min(100%, 780px);
+  --think-progress-chevron-col: 12px;
+  --think-progress-icon-col: 24px;
+  --think-progress-level-col: 54px;
+  --think-progress-tail-col: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .think-progress-view__empty {
-  padding: var(--think-space-6);
-  border: 1px dashed var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
+  padding: var(--think-space-5) 0;
   color: var(--think-text-secondary);
   text-align: center;
 }
 
-.think-progress-card {
-  display: grid;
-  gap: var(--think-space-6);
-  width: min(100%, 760px);
-  padding: var(--think-space-6);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
-  background: linear-gradient(135deg, var(--think-bg-elevated), var(--think-bg-surface-1));
-  box-shadow: var(--think-shadow-none);
+.think-progress-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-bottom: 1px solid var(--think-border-subtle);
 }
 
-.think-progress-card__trigger {
+.think-os .think-progress-section__trigger,
+.think-os .think-progress-skill {
   appearance: none;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--think-space-6);
-  align-items: center;
-  width: 100%;
-  min-height: 0;
-  padding: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
+  box-shadow: none;
   color: inherit;
   text-align: left;
+}
+
+.think-os .think-progress-section__trigger:is(:hover, :focus, :active),
+.think-os .think-progress-skill:is(:hover, :focus, :active) {
+  border: 0;
+  background: color-mix(in srgb, var(--think-bg-hover) 35%, transparent);
+  box-shadow: none;
+}
+
+/* 一级：目标。
+   展开符 | 图标 | 名称 | 等级 | 进度 | 百分比 */
+.think-progress-section__trigger,
+.think-progress-skill {
+  grid-template-columns:
+    var(--think-progress-chevron-col)
+    var(--think-progress-icon-col)
+    minmax(120px, 1fr)
+    var(--think-progress-level-col)
+    minmax(120px, 1.35fr)
+    var(--think-progress-tail-col);
+}
+
+.think-progress-section__trigger {
+  display: grid;
+  gap: var(--think-space-2);
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: var(--think-space-1) 0;
   cursor: pointer;
 }
 
-.think-progress-card__icon {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
-  background: var(--think-bg-surface-2);
-  font-size: var(--think-font-size-3xl);
+.think-progress-section__chevron,
+.think-progress-skill__chevron {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-md);
+  line-height: 1;
 }
 
-.think-progress-card__main {
-  display: flex;
-  align-items: center;
-  gap: var(--think-space-6);
-  min-width: 0;
-}
-
-.think-progress-card__title {
-  max-width: 280px;
-  overflow: hidden;
-  color: var(--think-text-primary);
-  font-size: var(--think-font-size-2xl);
-  font-weight: var(--think-font-weight-bold);
-  letter-spacing: -0.025em;
-  line-height: var(--think-line-height-tight);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.think-progress-card__level {
+.think-progress-section__icon {
   display: inline-flex;
   align-items: center;
-  gap: var(--think-space-4);
-  padding: var(--think-space-4) var(--think-space-5);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-pill);
-  background: var(--think-bg-surface-1);
-  white-space: nowrap;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: calc(var(--think-font-size-lg) + 1px);
+  line-height: 1;
 }
 
-.think-progress-card__level-icon { font-size: var(--think-font-size-xl); }
-.think-progress-card__level-value { color: var(--think-data-5); font-size: var(--think-font-size-lg); }
-.think-progress-card__level-title { color: var(--think-text-primary); font-size: var(--think-font-size-sm); }
-
-.think-progress-bar {
-  width: min(100%, 260px);
-  height: 9px;
+.think-progress-section__name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--think-space-2);
+  min-width: 0;
   overflow: hidden;
-  border-radius: var(--think-radius-pill);
-  background: var(--think-bg-surface-2);
 }
 
-.think-progress-bar--goal { height: 10px; }
-.think-progress-bar--compact { width: 180px; }
-
-.think-progress-bar__fill {
-  width: var(--think-progress-ratio, 0%);
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--think-data-1), var(--think-data-5), var(--think-data-3));
-  transition: width var(--think-duration-normal) var(--think-ease-standard);
-}
-
-.think-progress-bar--skill .think-progress-bar__fill {
-  background: linear-gradient(90deg, var(--think-data-2), color-mix(in srgb, var(--think-data-2) 35%, var(--think-bg-surface-1)));
-}
-
-.think-progress-skills,
-.think-progress-records {
-  display: grid;
-  gap: var(--think-space-5);
-}
-
-.think-progress-skill {
-  display: grid;
-  grid-template-columns: minmax(120px, 220px) 64px minmax(140px, 260px);
-  gap: var(--think-space-6);
-  align-items: center;
-  padding: var(--think-space-5) var(--think-space-6);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
-  background: var(--think-bg-surface-1);
-}
-
-.think-progress-skill__title {
+.think-progress-section__title {
+  min-width: 0;
   overflow: hidden;
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-md);
+  font-size: calc(var(--think-font-size-lg) + 1px);
   font-weight: var(--think-font-weight-bold);
+  letter-spacing: -0.015em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.think-progress-section__level,
 .think-progress-skill__level {
+  justify-self: start;
   color: var(--think-data-5);
   font-weight: var(--think-font-weight-bold);
   white-space: nowrap;
 }
 
-.think-progress-empty-skill {
-  padding: var(--think-space-5) var(--think-space-6);
-  border: 1px dashed var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
-  background: var(--think-bg-surface-1);
-  color: var(--think-text-secondary);
+.think-progress-section__level {
+  font-size: var(--think-font-size-md);
 }
 
-.think-progress-details {
-  display: grid;
-  gap: var(--think-space-5);
-  padding-top: var(--think-space-6);
-  border-top: 1px solid var(--think-border-subtle);
-}
-
-.think-progress-details__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--think-space-4);
-}
-
-.think-progress-details__chip {
-  padding: var(--think-space-3) var(--think-space-5);
-  border-radius: var(--think-radius-pill);
-  background: var(--think-bg-surface-2);
+.think-progress-section__level-title {
+  flex: 0 0 auto;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-medium);
+  white-space: nowrap;
 }
 
-.think-progress-records__title {
-  color: var(--think-text-primary);
+.think-progress-section__percent {
+  justify-self: end;
+  color: var(--think-data-2);
+  font-size: var(--think-font-size-lg);
   font-weight: var(--think-font-weight-bold);
+  text-align: right;
+  white-space: nowrap;
 }
 
-.think-progress-record {
-  appearance: none;
+.think-progress-section__body {
+  min-width: 0;
+  padding-left: 0;
+}
+
+.think-progress-bar {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--think-radius-pill);
+  background: color-mix(in srgb, var(--think-border-subtle) 45%, transparent);
+}
+
+.think-progress-bar--goal { height: 7px; }
+
+.think-progress-bar__fill {
+  display: block;
+  width: var(--think-progress-ratio, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--think-data-2), color-mix(in srgb, var(--think-data-2) 42%, var(--think-data-3)));
+  transition: width var(--think-duration-normal) var(--think-ease-standard);
+}
+
+.think-progress-bar--skill .think-progress-bar__fill {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--think-data-2) 88%, white), color-mix(in srgb, var(--think-data-2) 45%, white));
+}
+
+.think-progress-skills {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--think-space-5);
+  gap: 0;
+  min-width: 0;
+}
+
+.think-progress-skill-group {
+  display: grid;
+  min-width: 0;
+  border-top: 1px solid color-mix(in srgb, var(--think-border-subtle) 72%, transparent);
+}
+
+/* 二级：主题。与目标完全共用列宽，只在图标列 + 名称列制造轻微缩进。
+   这样缩进不会推动 Lv / progress / meta 三列。 */
+.think-progress-skill {
+  display: grid;
+  gap: var(--think-space-2);
   align-items: center;
   width: 100%;
-  padding: var(--think-space-4) var(--think-space-5);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
-  background: var(--think-bg-elevated);
-  color: inherit;
-  text-align: left;
+  min-width: 0;
+  min-height: 40px;
+  padding: var(--think-space-1) 0;
+  cursor: pointer;
 }
 
-.think-progress-record:not(:disabled) { cursor: pointer; }
-.think-progress-record:not(:disabled):hover { background: var(--think-bg-hover); }
+.think-progress-skill__bullet {
+  grid-column: 2;
+  justify-self: center;
+  color: var(--think-data-5);
+  font-size: var(--think-font-size-sm);
+  text-align: center;
+}
 
-.think-progress-record__title {
+.think-progress-skill__title {
+  grid-column: 3;
+  min-width: 0;
   overflow: hidden;
+  padding-left: var(--think-space-1);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.think-progress-record__date {
+.think-progress-skill__level {
+  grid-column: 4;
+  font-size: var(--think-font-size-sm);
+}
+
+.think-progress-skill > .think-progress-bar {
+  grid-column: 5;
+}
+
+.think-progress-skill__tail {
+  grid-column: 6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+
+.think-progress-skill__meta {
+  min-width: 0;
+  overflow: hidden;
   color: var(--think-text-secondary);
-  font-size: var(--think-font-size-xs);
+  font-size: var(--think-font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.think-progress-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--think-space-5);
+.think-progress-empty-skill,
+.think-progress-theme-records__empty {
+  padding: var(--think-space-3) 0;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
 }
 
-.think-progress-summary__card {
-  padding: var(--think-space-6);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-lg);
+/* 主题展开后直接复用 Statistics 使用的 BlockView 渲染链。
+   记录内容从主题名称起点再内缩一层，不影响主列表列对齐。 */
+.think-progress-theme-records {
+  min-width: 0;
+  margin-left: calc(
+    var(--think-progress-chevron-col) +
+    var(--think-progress-icon-col) +
+    var(--think-space-3)
+  );
+  padding: 0 0 var(--think-space-2) var(--think-space-3);
+  border-left: 2px solid color-mix(in srgb, var(--think-data-5) 28%, transparent);
 }
 
-.think-progress-summary__label { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
-.think-progress-summary__value { margin-top: var(--think-space-2); font-size: var(--think-font-size-3xl); font-weight: var(--think-font-weight-bold); }
+.think-progress-theme-records .bv-container {
+  gap: 0;
+  padding: 0;
+  background: transparent;
+}
 
-@container (max-width: 560px) {
-  .think-progress-card__trigger { grid-template-columns: auto minmax(0, 1fr); }
-  .think-progress-card__level { grid-column: 1 / -1; justify-self: start; }
-  .think-progress-card__main { align-items: flex-start; flex-direction: column; gap: var(--think-space-4); }
-  .think-progress-bar--compact { width: min(100%, 220px); }
-  .think-progress-skill { grid-template-columns: minmax(0, 1fr) auto; }
-  .think-progress-skill .think-progress-bar { grid-column: 1 / -1; width: 100%; }
+.think-progress-theme-records .bv-item {
+  margin: 0;
+  padding: var(--think-space-1) 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 65%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.think-progress-theme-records .bv-item:hover {
+  border-color: color-mix(in srgb, var(--think-border-subtle) 65%, transparent);
+  background: color-mix(in srgb, var(--think-bg-hover) 30%, transparent);
+}
+
+.think-progress-theme-records .task-row {
+  width: 100%;
+  min-height: 34px;
+}
+
+.think-progress-theme-records .bv-block-main { gap: 0; }
+
+.think-progress-theme-records .bv-block-content,
+.think-progress-theme-records .bv-block-title {
+  font-size: var(--think-font-size-sm);
+}
+
+/* 小屏仍然共用同一列系统：缩列但不改变列语义，所以 Lv / progress 始终对齐。 */
+@container (max-width: 760px) {
+  .think-progress-view {
+    --think-progress-chevron-col: 10px;
+    --think-progress-icon-col: 20px;
+    --think-progress-level-col: 38px;
+    --think-progress-tail-col: 76px;
+  }
+
+  .think-progress-section__trigger,
+  .think-progress-skill {
+    grid-template-columns:
+      var(--think-progress-chevron-col)
+      var(--think-progress-icon-col)
+      minmax(62px, 1fr)
+      var(--think-progress-level-col)
+      minmax(64px, 1fr)
+      var(--think-progress-tail-col);
+    gap: var(--think-space-2);
+  }
+
+  .think-progress-section__icon {
+    width: 20px;
+    height: 20px;
+    font-size: var(--think-font-size-md);
+  }
+
+  .think-progress-section__title { font-size: var(--think-font-size-lg); }
+  .think-progress-section__level-title { display: none; }
+  .think-progress-section__level { font-size: var(--think-font-size-sm); }
+  .think-progress-section__percent { font-size: var(--think-font-size-md); }
+  .think-progress-skill__title { padding-left: var(--think-space-2); font-size: var(--think-font-size-xs); }
+  .think-progress-skill__meta { font-size: var(--think-font-size-xs); }
+}
+
+@container (max-width: 500px) {
+  .think-progress-view {
+    --think-progress-chevron-col: 8px;
+    --think-progress-icon-col: 18px;
+    --think-progress-level-col: 32px;
+    --think-progress-tail-col: 62px;
+  }
+
+  .think-progress-section__trigger,
+  .think-progress-skill {
+    grid-template-columns:
+      var(--think-progress-chevron-col)
+      var(--think-progress-icon-col)
+      minmax(50px, 1fr)
+      var(--think-progress-level-col)
+      minmax(44px, .85fr)
+      var(--think-progress-tail-col);
+    gap: var(--think-space-1);
+  }
+
+  .think-progress-section__trigger { min-height: 44px; }
+  .think-progress-section__icon { width: 18px; height: 18px; font-size: var(--think-font-size-sm); }
+  .think-progress-section__title { font-size: var(--think-font-size-md); }
+  .think-progress-section__level,
+  .think-progress-section__percent,
+  .think-progress-skill__level,
+  .think-progress-skill__meta { font-size: var(--think-font-size-2xs); }
+  .think-progress-skill__title { padding-left: var(--think-space-1); }
+  .think-progress-skill__bullet { font-size: var(--think-font-size-xs); }
 }

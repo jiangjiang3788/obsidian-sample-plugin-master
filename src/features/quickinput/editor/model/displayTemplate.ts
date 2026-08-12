@@ -9,15 +9,15 @@ export function buildQuickInputDisplayTemplate(
   effectiveBlockId: string | null | undefined,
   availableThemes: ThemeDefinition[],
   goalFieldOptions: Array<{ value: string; label: string }>,
-) {
-  if (!rawTemplate?.fields?.length) return rawTemplate;
+): QuickInputTemplateLike | null {
+  if (!rawTemplate?.fields?.length) return rawTemplate ?? null;
   const themeFieldOptions = themeOptions(availableThemes);
   return {
     ...rawTemplate,
     coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
     fields: rawTemplate.fields.map((field: TemplateField) => {
       const semantic = getTemplateFieldSemantic(field);
-      if (semantic === 'goals') return { ...field, options: goalFieldOptions };
+      if (semantic === 'goalPath') return { ...field, options: goalFieldOptions };
       if (semantic === 'themePath') {
         return {
           ...field,
@@ -38,7 +38,10 @@ export function shouldShowQuickInputTimeDirectionControl(
   return keys.has('时间') && keys.has('结束') && keys.has('时长');
 }
 
-export function buildQuickInputPeriodUi(currentPeriod: QuickInputPeriodLike | null) {
+export function buildQuickInputPeriodUi(currentPeriod: QuickInputPeriodLike | null): {
+  fields: QuickInputFormData;
+  options: Record<string, Array<{ value: string; label: string }>>;
+} {
   return {
     fields: currentPeriod
       ? {

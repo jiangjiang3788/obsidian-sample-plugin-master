@@ -2748,164 +2748,6 @@ function currentImpl(value) {
 }
 var immer = new Immer2();
 var produce = immer.produce;
-var __getOwnPropDesc$e = Object.getOwnPropertyDescriptor;
-var __decorateClass$e = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$e(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$d = (index, decorator) => (target, key) => decorator(target, key, index);
-const SETTINGS_PERSISTENCE_TOKEN = "SettingsPersistence";
-let SettingsRepository = class {
-  constructor(persistence) {
-    this.persistence = persistence;
-  }
-  persistence;
-  currentSettings = null;
-  listeners = /* @__PURE__ */ new Set();
-  /**
-   * 订阅设置变化
-   * @param listener 变化时调用的回调
-   * @returns 取消订阅函数
-   */
-  subscribe(listener) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-  /**
-   * 通知所有订阅者
-   */
-  notify() {
-    if (this.currentSettings) {
-      this.listeners.forEach((listener) => listener(this.currentSettings));
-    }
-  }
-  /**
-   * 加载设置
-   * @returns 当前设置（如果未加载过会从持久化层读取）
-   */
-  async load() {
-    if (this.currentSettings) {
-      return this.currentSettings;
-    }
-    const loaded = await this.persistence.loadData();
-    if (loaded) {
-      this.currentSettings = loaded;
-      this.notify();
-      return loaded;
-    }
-    throw new Error("SettingsRepository: 无法加载设置，请确保已初始化");
-  }
-  /**
-   * 获取当前设置（同步，必须先调用 load）
-   */
-  getSettings() {
-    if (!this.currentSettings) {
-      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
-    }
-    return this.currentSettings;
-  }
-  /**
-   * 获取当前设置快照（getSettings 的别名，符合 S2 规范）
-   * @returns 当前设置的不可变快照
-   */
-  getSnapshot() {
-    return this.getSettings();
-  }
-  /**
-   * 设置初始值（用于首次加载或重置）
-   */
-  setInitialSettings(settings) {
-    this.currentSettings = settings;
-    this.notify();
-  }
-  /**
-   * 保存设置
-   * @param settings 新设置
-   * @param meta 可选的动作元数据（用于 dev 日志）
-   */
-  async save(settings, meta) {
-    const before = this.currentSettings;
-    this.currentSettings = settings;
-    await this.persistence.saveData(settings);
-    logSettingsWrite(meta, before, settings);
-  }
-  /**
-   * 使用 immer 更新设置
-   * @param mutator 修改函数，接收 draft 参数进行修改
-   * @param meta 可选的动作元数据（用于 dev 日志）
-   * @returns 更新后的设置
-   */
-  async update(mutator, meta) {
-    if (!this.currentSettings) {
-      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
-    }
-    const before = this.currentSettings;
-    const newSettings = produce(this.currentSettings, mutator);
-    if (newSettings !== this.currentSettings) {
-      this.currentSettings = newSettings;
-      await this.persistence.saveData(newSettings);
-      this.notify();
-      logSettingsWrite(meta, before, newSettings);
-    }
-    return newSettings;
-  }
-};
-SettingsRepository = __decorateClass$e([
-  singleton(),
-  __decorateParam$d(0, inject(SETTINGS_PERSISTENCE_TOKEN))
-], SettingsRepository);
-var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
-var __decorateClass$d = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
-let RepositorySettingsProvider = class {
-  constructor(settingsRepository) {
-    this.settingsRepository = settingsRepository;
-  }
-  settingsRepository;
-  getSettings() {
-    return this.settingsRepository.getSettings();
-  }
-};
-RepositorySettingsProvider = __decorateClass$d([
-  singleton(),
-  __decorateParam$c(0, inject(SettingsRepository))
-], RepositorySettingsProvider);
-function setupCoreContainer(app, settings) {
-  instance.register(AppToken, { useValue: app });
-  instance.register(SETTINGS_TOKEN, { useValue: settings });
-  instance.register(STORAGE_TOKEN, { useClass: VaultFileStorage });
-  instance.registerSingleton(SettingsRepository);
-  instance.registerSingleton(RepositorySettingsProvider);
-  instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
-}
-const CODEBLOCK_LANG = "think";
-const EMPTY_LABEL = "无日期";
-const LOCAL_STORAGE_KEYS = {
-  SETTINGS_TABS: "think-settings-active-tab"
-};
-const DEFAULT_NAMES = {
-  NEW_LAYOUT: "新布局"
-};
-let _activeCategoryColors = {};
-function updateCategoryColorMap(userColors) {
-  _activeCategoryColors = { ...userColors };
-}
-function getActiveCategoryColors() {
-  return { ..._activeCategoryColors };
-}
-function getCategoryColor(categoryKey) {
-  const base = (categoryKey || "").split("/")[0] || "";
-  return _activeCategoryColors[base] || "#e0e0e0";
-}
 const DEFAULT_AI_SETTINGS = {
   enabled: false,
   provider: "openai_compat",
@@ -2948,7 +2790,7 @@ const ENVELOPE = [
 ];
 const GOAL = [
   f$3("目标ID", "canonical-reference", "target", "goal-id", "Stable Goal reference and business truth.", { aliases: ["goalId"] }),
-  f$3("目标", "human-snapshot", "target", "string", "Human-readable Goal snapshot; never used as identity.", { aliases: ["goalPath", "goalPaths"] })
+  f$3("目标", "human-snapshot", "target", "string", "Human-readable Goal snapshot; never used as identity.", { aliases: ["goalPath"] })
 ];
 const THEME = f$3("主题", "business-history", "target", "string", "Historical theme-path snapshot. May reference a theme no longer present in current settings.", { aliases: ["theme", "themePath"] });
 const DATE$1 = f$3("日期", "business-fact", "target", "date", "Record occurrence/business date.", { aliases: ["date"] });
@@ -3322,7 +3164,7 @@ const DEFAULT_ENERGY_SETTINGS = {
   defaultGoalId: "",
   defaultThemePath: ""
 };
-const THINK_SETTINGS_SCHEMA_VERSION = 3;
+const THINK_SETTINGS_SCHEMA_VERSION = 5;
 const DEFAULT_SETTINGS = {
   schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
   groups: [],
@@ -3337,353 +3179,72 @@ const DEFAULT_SETTINGS = {
   aiSettings: DEFAULT_AI_SETTINGS,
   devConsoleStackEnabled: false
 };
-const VIEW_OPTIONS = [
-  "BlockView",
-  "TableView",
-  "ExcelView",
-  "TimelineView",
-  "StatisticsView",
-  "HeatmapView",
-  "EventTimelineView",
-  "ProgressView",
-  "EnergyView"
-];
-function normalizeSegment(value, options = {}) {
-  let segment = String(value ?? "").trim();
-  if (options.stripLeadingHashes) {
-    segment = segment.replace(/^[#＃]+\s*/, "").trim();
-  }
-  return segment;
-}
-function normalizeHierarchyPathParts(value, options = {}) {
-  if (Array.isArray(value)) return value.flatMap((entry) => normalizeHierarchyPathParts(entry, options));
-  return String(value ?? "").split("/").map((part) => normalizeSegment(part, options)).filter(Boolean);
-}
-function normalizeHierarchyPathValue(value, options = {}) {
-  const parts = normalizeHierarchyPathParts(value, options);
-  return parts.length ? parts.join("/") : null;
-}
-function splitHierarchyPathValue(value, options = {}) {
-  const parts = normalizeHierarchyPathParts(value, options);
-  const path = parts.length ? parts.join("/") : null;
-  return {
-    path,
-    parts,
-    root: parts[0] ?? null,
-    leaf: parts.length ? parts[parts.length - 1] : null
-  };
-}
-function getHierarchyPathBase(value, options = {}) {
-  return splitHierarchyPathValue(value, options).root ?? "";
-}
-function getHierarchyPathLeaf(value, options = {}) {
-  return splitHierarchyPathValue(value, options).leaf ?? "";
-}
-function getHierarchyPathParent(value, options = {}) {
-  const parts = normalizeHierarchyPathParts(value, options);
-  return parts.length > 1 ? parts.slice(0, -1).join("/") : "";
-}
-function buildHierarchyPathSegments(value, options = {}) {
-  const parts = normalizeHierarchyPathParts(value, options);
-  return parts.map((name, depth) => ({
-    name,
-    fullPath: parts.slice(0, depth + 1).join("/"),
-    depth
-  }));
-}
-function buildHierarchyPathOption(value, options = {}) {
-  const path = normalizeHierarchyPathValue(value, options);
-  if (!path) return null;
-  return { value: path, label: getHierarchyPathLeaf(path, options) || path };
-}
-function cleanThemePath(value) {
-  return splitHierarchyPathValue(value).path;
-}
-function splitThemePath$1(themePath) {
-  const parts = splitHierarchyPathValue(themePath);
-  return {
-    themePath: parts.path,
-    rootTheme: parts.root,
-    leafTheme: parts.leaf
-  };
-}
-function normalizeExplicitTheme(rawTheme, matcher) {
-  const explicitTheme = cleanThemePath(rawTheme);
-  if (!explicitTheme) return void 0;
-  const matched = matcher?.findThemeByPartialMatch(explicitTheme);
-  return cleanThemePath(matched) || explicitTheme;
-}
-function readExplicitThemePath(item) {
-  const normalized2 = cleanThemePath(item?.themePath);
-  if (normalized2) return normalized2;
-  const cached2 = cleanThemePath(item?.themePathNormalized);
-  if (cached2) return cached2;
-  return cleanThemePath(item?.theme) || void 0;
-}
-function readExplicitThemeParts(item) {
-  return splitThemePath$1(readExplicitThemePath(item));
-}
-function applyExplicitThemeViewFields(item) {
-  const parts = readExplicitThemeParts(item);
-  item.themePath = parts.themePath || void 0;
-  item.rootTheme = parts.rootTheme || void 0;
-  item.leafTheme = parts.leafTheme || void 0;
-  item.themePathNormalized = parts.themePath || void 0;
-  return item;
-}
-const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
-function isImageLikeValue(value) {
-  const raw = String(value ?? "").trim();
-  return !!raw && (/^https?:\/\//i.test(raw) || /^!\[\[.+\]\]$/.test(raw) || IMAGE_EXT_RE.test(raw));
-}
-function normalizeImageValue(value) {
-  if (value && typeof value === "object" && "src" in value) {
-    const image = value;
-    const src2 = String(image.src || "").trim();
-    if (!src2) return void 0;
-    return {
-      src: src2,
-      kind: inferImageKind(src2),
-      alt: typeof image.alt === "string" ? image.alt : void 0,
-      caption: typeof image.caption === "string" ? image.caption : void 0
-    };
-  }
-  const raw = String(value ?? "").trim();
-  if (!raw) return void 0;
-  const wikilink = raw.match(/^!\[\[(.+?)\]\]$/);
-  const src = wikilink ? wikilink[1].trim() : raw;
-  return { src, kind: inferImageKind(raw) };
-}
-function inferImageKind(src) {
-  if (/^https?:\/\//i.test(src)) return "url";
-  if (/^!\[\[.+\]\]$/.test(src)) return "wikilink";
-  if (src.includes("/") || IMAGE_EXT_RE.test(src)) return "vault";
-  return "unknown";
-}
-function isImageFieldDefinition(def) {
-  return !!def && (def.valueType === "image" || def.inputType === "image" || def.inputType === "multiImage" || def.semantic === "image");
-}
-const FIELD_CATEGORY_LABELS = {
-  core: "核心字段",
-  file: "文件字段",
-  custom: "自定义字段"
+const ENERGY_QUICK_LEVEL_LABELS = {
+  20: "很低",
+  40: "偏低",
+  60: "一般",
+  80: "较高",
+  100: "充沛"
 };
-const FIELD_CATEGORY_ORDER = ["core", "file", "custom"];
-const text$3 = (partial2) => ({
-  valueType: "string",
-  ...partial2
-});
-const FIELD_REGISTRY = {
-  // --- 核心字段 ---
-  id: text$3({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
-  title: text$3({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录标题或主要摘要" }),
-  content: text$3({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与其他 Record 统一为用户正文，不包含存储层元数据" }),
-  editableText: text$3({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
-  rawSource: text$3({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
-  fullData: text$3({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整 Record Block，仅用于调试/导出，不作为业务语义真源。" }),
-  // --- 内置核心业务字段 ---
-  categoryKey: text$3({ key: "categoryKey", label: "分类路径", valueType: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
-  tags: { key: "tags", label: "标签", valueType: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tag", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
-  goalId: text$3({ key: "goalId", label: "目标ID", category: "core", source: "item", semantic: "goalId", inputType: "text", aliases: ["目标ID", "goalId"] }),
-  goalIds: { key: "goalIds", label: "目标ID列表", valueType: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "goalId", cardinality: "multi", hierarchical: false, hiddenByDefault: true },
-  goalPath: text$3({ key: "goalPath", label: "目标路径", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标路径", "goalPath"] }),
-  goalPaths: { key: "goalPaths", label: "目标", valueType: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "goals", cardinality: "multi", hierarchical: true, description: "目标路径字段，例如 产品化/QuickInput、个人成长/写作", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
-  rootGoal: text$3({ key: "rootGoal", label: "根目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
-  leafGoal: text$3({ key: "leafGoal", label: "叶目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
-  cycleId: text$3({ key: "cycleId", label: "周期ID", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
-  "period.id": text$3({ key: "period.id", label: "周期ID", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
-  "period.label": text$3({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
-  "period.granularity": text$3({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
-  coreBlock: text$3({ key: "coreBlock", label: "核心Block", category: "core", source: "item", semantic: "coreBlock", inputType: "text", aliases: ["核心Block", "coreBlock"] }),
-  recordSubtype: text$3({ key: "recordSubtype", label: "记录子类型", category: "core", source: "item", semantic: "recordSubtype", inputType: "singleSelect", aliases: ["记录子类型", "subtype", "recordSubtype"], description: "Record 类型内部的可选子类型，例如 Thought 的 感受/思考。" }),
-  status: text$3({ key: "status", label: "状态", category: "core", source: "item", semantic: "status", inputType: "singleSelect", aliases: ["状态", "status"], description: "实体显式状态；Task 使用 open/done/cancelled/skipped。" }),
-  cadence: text$3({ key: "cadence", label: "任务周期", category: "core", source: "derived", semantic: "recurrence", inputType: "singleSelect", aliases: ["任务周期", "cadence"], description: "由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。" }),
-  date: { key: "date", label: "日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
-  priority: text$3({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
-  icon: { key: "icon", label: "图标", valueType: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
-  recurrence: text$3({ key: "recurrence", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", description: "Task Series 结构化 recurrence 的只读展示投影。" }),
-  period: text$3({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
-  startTime: { key: "startTime", label: "开始时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
-  endTime: { key: "endTime", label: "结束时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
-  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDuration", "expectedDurationMinutes"], description: "Task 的用户声明预计时长；实际工作时长只来自 TaskSession。" },
-  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用/历史时长字段；Task 应使用 expectedDurationMinutes，执行历史使用 TaskSession。" },
-  rating: { key: "rating", label: "评分", valueType: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
-  image: { key: "image", label: "图片", valueType: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image", "评图", "pintu"], description: "通用图片字段；当前兼容读取旧 pintu/评图 数据" },
-  // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
-  themePath: text$3({ key: "themePath", label: "主题", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "themePath"], description: "主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段" }),
-  rootTheme: text$3({ key: "rootTheme", label: "根主题", valueType: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["根主题", "themeRoot"] }),
-  leafTheme: text$3({ key: "leafTheme", label: "叶主题", valueType: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["叶主题", "themeLeaf"] }),
-  // --- 分类派生 ---
-  baseCategory: text$3({ key: "baseCategory", label: "根分类", valueType: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["根分类", "rootCategory", "分类根"] }),
-  leafCategory: text$3({ key: "leafCategory", label: "叶分类", valueType: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["叶分类", "leafCategory"] }),
-  // --- 文件字段 ---
-  "file.path": text$3({ key: "file.path", label: "文件路径", category: "file", source: "file", semantic: "filePath", aliases: ["文件路径", "filepath", "filePath", "path"] }),
-  "file.basename": text$3({ key: "file.basename", label: "文件名", category: "file", source: "file", semantic: "fileName", aliases: ["文件名", "filename", "basename"] }),
-  "file.name": text$3({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
-  "file.folder": text$3({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
-  folder: text$3({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
-  header: text$3({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示位置，绝不作为主题" }),
-  // --- 时间/统计派生 ---
-  startISO: { key: "startISO", label: "开始日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
-  endISO: { key: "endISO", label: "结束日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
-  periodCount: { key: "periodCount", label: "粒度序号", valueType: "number", category: "core", source: "derived", semantic: "period" },
-  displayCount: { key: "displayCount", label: "显示次数", valueType: "number", category: "core", source: "item" },
-  levelCount: { key: "levelCount", label: "等级次数", valueType: "number", category: "core", source: "item" },
-  countForLevel: { key: "countForLevel", label: "计入等级", valueType: "boolean", category: "core", source: "item" },
-  manuallyEdited: { key: "manuallyEdited", label: "手动编辑", valueType: "boolean", category: "core", source: "item" }
-};
-const HIDDEN_EXTRA_ALIAS_KEYS = [
-  "正文",
-  "内容",
-  "任务内容",
-  "记录内容",
-  "editableText"
-];
-const HIDDEN_EXTRA_ALIAS_SET$1 = new Set(HIDDEN_EXTRA_ALIAS_KEYS);
-function isVisibleExtraField(_item, key) {
-  return !HIDDEN_EXTRA_ALIAS_SET$1.has(key);
+function normalizeEnergyScore(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(Math.min(100, Math.max(0, value)));
 }
-function inferExtraFieldType(value) {
-  if (typeof value === "number") return "number";
-  if (typeof value === "boolean") return "boolean";
-  if (isImageLikeValue(value)) return "image";
-  return "string";
+function toEnergyQuickLevel(value) {
+  const score = normalizeEnergyScore(value);
+  return ENERGY_QUICK_LEVELS.reduce((best, candidate) => Math.abs(candidate - score) < Math.abs(best - score) ? candidate : best, ENERGY_QUICK_LEVELS[0]);
 }
-function getAvailableFields(items) {
-  const allFields = /* @__PURE__ */ new Map();
-  const registeredLabels = /* @__PURE__ */ new Set();
-  Object.values(FIELD_REGISTRY).forEach((def) => {
-    if (def.hiddenByDefault) return;
-    allFields.set(def.key, def);
-    registeredLabels.add(def.label);
-  });
-  items.forEach((it) => {
-    Object.keys(it.extra || {}).forEach((key) => {
-      if (!isVisibleExtraField(it, key)) return;
-      if (registeredLabels.has(key)) return;
-      const fullKey = "extra." + key;
-      if (!allFields.has(fullKey)) {
-        const value = it.extra[key];
-        const inferredType = inferExtraFieldType(value);
-        allFields.set(fullKey, {
-          key: fullKey,
-          label: key,
-          valueType: inferredType,
-          inputType: inferredType === "image" ? "image" : inferredType === "boolean" ? "boolean" : inferredType === "number" ? "number" : "text",
-          semantic: inferredType === "image" ? "image" : "none",
-          category: "custom",
-          source: "extra",
-          cardinality: "single",
-          description: "从 Markdown 中显式未知 KV 解析出的自定义字段"
-        });
-      }
-    });
-  });
-  return Array.from(allFields.values()).sort((a2, b2) => a2.label.localeCompare(b2.label, "zh"));
+function isEnergyQuickLevel(value) {
+  return ENERGY_QUICK_LEVELS.includes(value);
 }
-function getFieldCategory(key) {
-  const def = getFieldDefinition(key);
-  if (!def) return key.startsWith("extra.") ? "custom" : "core";
-  return FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
+function calculateDetailedEnergyScore(brainScore, physicalScore) {
+  const brain = normalizeEnergyScore(brainScore);
+  const physical = normalizeEnergyScore(physicalScore);
+  return normalizeEnergyScore((brain + physical) / 2);
 }
-function getFieldCategoryLabel(key) {
-  return FIELD_CATEGORY_LABELS[getFieldCategory(key)];
-}
-function getFieldPickerOptions(fields) {
-  const seen = /* @__PURE__ */ new Set();
-  const options = [];
-  for (const field of fields || []) {
-    const value = getCanonicalFieldKey(field);
-    if (!value || seen.has(value)) continue;
-    seen.add(value);
-    const def = getFieldDefinition(value);
-    const category = def?.category && FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
-    options.push({
-      value,
-      label: def?.label || getFieldLabel(value),
-      category,
-      group: FIELD_CATEGORY_LABELS[category],
-      description: def?.description
-    });
+const RECORD_SCHEMA_VERSION = 2;
+const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+function encodeTime(time2, length2 = 10) {
+  let value = Math.max(0, Math.floor(time2));
+  let output = "";
+  for (let i2 = 0; i2 < length2; i2++) {
+    output = CROCKFORD[value % 32] + output;
+    value = Math.floor(value / 32);
   }
-  return options.sort((a2, b2) => {
-    const byCategory = FIELD_CATEGORY_ORDER.indexOf(a2.category) - FIELD_CATEGORY_ORDER.indexOf(b2.category);
-    if (byCategory !== 0) return byCategory;
-    return a2.label.localeCompare(b2.label, "zh-CN");
-  });
+  return output;
 }
-const FIELD_ALIAS_MAP = {};
-for (const def of Object.values(FIELD_REGISTRY)) {
-  FIELD_ALIAS_MAP[def.key] = def.key;
-  FIELD_ALIAS_MAP[def.label] = def.key;
-  (def.aliases || []).forEach((alias) => {
-    FIELD_ALIAS_MAP[alias] = def.key;
-  });
-}
-function getCanonicalFieldKey(key) {
-  const raw = String(key || "").trim();
-  if (!raw) return raw;
-  if (raw.startsWith("extra.") || raw.startsWith("file.")) return raw;
-  return FIELD_ALIAS_MAP[raw] || raw;
-}
-function getFieldDefinition(key) {
-  const canonical = getCanonicalFieldKey(key);
-  if (FIELD_REGISTRY[canonical]) return FIELD_REGISTRY[canonical];
-  if (canonical.startsWith("extra.")) {
-    const label = canonical.slice(6);
-    return { key: canonical, label, valueType: "custom", inputType: "text", semantic: "none", category: "custom", source: "extra" };
+function randomChars(length2) {
+  const values2 = new Uint8Array(length2);
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.getRandomValues) {
+    cryptoApi.getRandomValues(values2);
+  } else {
+    for (let i2 = 0; i2 < values2.length; i2++) values2[i2] = Math.floor(Math.random() * 256);
   }
-  return void 0;
+  let output = "";
+  for (const value of values2) output += CROCKFORD[value % 32];
+  return output;
 }
-const FIELD_LABEL_ALIASES = {
-  filename: "文件名",
-  basename: "文件名",
-  filepath: "文件路径",
-  filePath: "文件路径",
-  path: "路径",
-  themeRoot: "根主题",
-  themeLeaf: "叶主题",
-  rootCategory: "根分类",
-  leafCategory: "叶分类",
-  主题路径: "主题路径",
-  完整主题: "主题路径"
-};
-function getFieldLabel(key) {
-  const def = getFieldDefinition(key);
-  if (def) return def.label;
-  if (FIELD_LABEL_ALIASES[key]) return FIELD_LABEL_ALIASES[key];
-  if (key.startsWith("extra.")) return key.slice(6);
-  if (key.startsWith("file.")) {
-    const tail = key.slice(5);
-    return FIELD_LABEL_ALIASES[tail] || `文件.${tail}`;
+function recordIdPrefixForCoreBlock(coreBlock) {
+  switch (String(coreBlock || "").trim().toLowerCase()) {
+    case "task":
+      return "task";
+    case "task-series":
+      return "taskseries";
+    case "task-session":
+      return "tasksession";
+    case "energy":
+      return "energy";
+    default:
+      return "rec";
   }
-  return key;
 }
-function normalizeHierarchyPath(value) {
-  return normalizeHierarchyPathValue(value, { stripLeadingHashes: true }) || void 0;
+function createRecordId(coreBlock, now2 = Date.now()) {
+  const prefix2 = recordIdPrefixForCoreBlock(coreBlock);
+  return `${prefix2}.${encodeTime(now2)}${randomChars(16)}`;
 }
-function splitHierarchyPath(value) {
-  const parts = splitHierarchyPathValue(value, { stripLeadingHashes: true });
-  return {
-    path: parts.path || void 0,
-    parts: parts.parts,
-    root: parts.root || void 0,
-    leaf: parts.leaf || void 0
-  };
-}
-function normalizeTagPath(value) {
-  const raw = String(value ?? "").trim();
-  if (!raw) return void 0;
-  const parts = raw.split("/").map((part) => part.trim()).filter(Boolean);
-  return parts.length ? parts.join("/") : void 0;
-}
-function normalizeTag(value) {
-  return normalizeTagPath(value);
-}
-function parseTagList(value) {
-  const rawValues = Array.isArray(value) ? value : String(value ?? "").split(/[,，]/);
-  const tags2 = rawValues.map(normalizeTag).filter((tag) => !!tag);
-  return Array.from(new Set(tags2));
+function isStableRecordId(value) {
+  return /^(?:rec|task|taskseries|tasksession|energy)\.[0-9A-HJKMNP-TV-Z]{26}$/.test(String(value || "").trim());
 }
 var SECONDS_A_MINUTE = 60;
 var SECONDS_A_HOUR = SECONDS_A_MINUTE * 60;
@@ -3707,7 +3268,7 @@ var DATE = "date";
 var FORMAT_DEFAULT = "YYYY-MM-DDTHH:mm:ssZ";
 var INVALID_DATE_STRING = "Invalid Date";
 var REGEX_PARSE = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/;
-var REGEX_FORMAT = /\[([^\]]+)]|YYYY|YY|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
+var REGEX_FORMAT = /\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
 const en$1 = {
   name: "en",
   weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),
@@ -4690,344 +4251,107 @@ function getPeriodCount(period, date2) {
       return void 0;
   }
 }
-const RECURRENCE_UNITS = /* @__PURE__ */ new Set(["day", "week", "month", "quarter", "year"]);
-const RECURRENCE_ANCHORS = /* @__PURE__ */ new Set(["scheduled", "start", "due", "completion"]);
-function normalizeRecurrenceInfo(value) {
-  if (!value) return null;
-  const unit = String(value.unit || "").trim().toLowerCase();
-  const anchor = String(value.anchor || "").trim().toLowerCase();
-  const interval = Number(value.interval);
-  if (!RECURRENCE_UNITS.has(unit)) return null;
-  if (!RECURRENCE_ANCHORS.has(anchor)) return null;
-  if (!Number.isInteger(interval) || interval < 1) return null;
-  return { unit, interval, anchor };
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
+function isImageLikeValue(value) {
+  const raw = String(value ?? "").trim();
+  return !!raw && (/^https?:\/\//i.test(raw) || /^!\[\[.+\]\]$/.test(raw) || IMAGE_EXT_RE.test(raw));
 }
-function getTaskRecurrenceInfo(item) {
-  return normalizeRecurrenceInfo(item.recurrenceInfo);
-}
-function isTaskRecurring(item) {
-  return Boolean(String(item.seriesId || "").trim());
-}
-function formatTaskRecurrence(info) {
-  const recurrence = normalizeRecurrenceInfo(info);
-  if (!recurrence) return "";
-  const interval = recurrence.interval === 1 ? "" : `${recurrence.interval} `;
-  return `every ${interval}${recurrence.unit}${recurrence.interval === 1 ? "" : "s"}`;
-}
-function addRecurrenceToDate(baseDateISO, recurrence) {
-  const normalizedBase = normalizeDateStr(baseDateISO) || baseDateISO;
-  const base = dayjs(normalizedBase, ["YYYY-MM-DD", "YYYY/MM/DD"]);
-  if (!base.isValid()) throw new Error(`task_recurrence_invalid_base_date:${baseDateISO}`);
-  const next2 = recurrence.unit === "quarter" ? base.add(recurrence.interval * 3, "month") : base.add(recurrence.interval, recurrence.unit);
-  return next2.format("YYYY-MM-DD");
-}
-function getTaskRecurrenceBaseDate(task, recurrence, completedAtISO) {
-  const completionDate = normalizeDateStr(completedAtISO) || String(completedAtISO || "").slice(0, 10);
-  if (recurrence.anchor === "completion") return completionDate;
-  if (recurrence.anchor === "start") return task.startDate || task.scheduledDate || task.dueDate || completionDate;
-  if (recurrence.anchor === "due") return task.dueDate || task.scheduledDate || task.startDate || completionDate;
-  return task.scheduledDate || task.startDate || task.dueDate || completionDate;
-}
-function buildNextOccurrenceDates(task, recurrence, completedAtISO) {
-  const baseDate = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
-  const nextAnchorDate = addRecurrenceToDate(baseDate, recurrence);
-  const result = {};
-  const shift = (value) => {
-    if (!value) return void 0;
-    return addRecurrenceToDate(value, recurrence);
-  };
-  if (recurrence.anchor === "scheduled") result.scheduledDate = nextAnchorDate;
-  else result.scheduledDate = shift(task.scheduledDate);
-  if (recurrence.anchor === "start") result.startDate = nextAnchorDate;
-  else result.startDate = shift(task.startDate);
-  if (recurrence.anchor === "due") result.dueDate = nextAnchorDate;
-  else result.dueDate = shift(task.dueDate);
-  if (recurrence.anchor === "completion" && !result.scheduledDate && !result.startDate && !result.dueDate) {
-    result.scheduledDate = nextAnchorDate;
+function normalizeImageValue(value) {
+  if (value && typeof value === "object" && "src" in value) {
+    const image = value;
+    const src2 = String(image.src || "").trim();
+    if (!src2) return void 0;
+    return {
+      src: src2,
+      kind: inferImageKind(src2),
+      alt: typeof image.alt === "string" ? image.alt : void 0,
+      caption: typeof image.caption === "string" ? image.caption : void 0
+    };
   }
-  return result;
+  const raw = String(value ?? "").trim();
+  if (!raw) return void 0;
+  const wikilink = raw.match(/^!\[\[(.+?)\]\]$/);
+  const src = wikilink ? wikilink[1].trim() : raw;
+  return { src, kind: inferImageKind(raw) };
 }
-const TASK_CADENCE_ORDER = ["routine", "day", "week", "month", "quarter", "year"];
-const TASK_CADENCE_META = {
-  routine: { label: "日常任务", emoji: "🌿" },
-  day: { label: "天任务", emoji: "☀️" },
-  week: { label: "周任务", emoji: "📅" },
-  month: { label: "月任务", emoji: "🗓️" },
-  quarter: { label: "季任务", emoji: "🍂" },
-  year: { label: "年任务", emoji: "🧭" }
-};
-function getTaskCadence(item) {
-  const recurrence = getTaskRecurrenceInfo(item);
-  if (!recurrence) return "routine";
-  if (recurrence.unit === "day") return "day";
-  if (recurrence.unit === "week") return "week";
-  if (recurrence.unit === "year") return "year";
-  if (recurrence.unit === "quarter") return "quarter";
-  return "month";
+function inferImageKind(src) {
+  if (/^https?:\/\//i.test(src)) return "url";
+  if (/^!\[\[.+\]\]$/.test(src)) return "wikilink";
+  if (src.includes("/") || IMAGE_EXT_RE.test(src)) return "vault";
+  return "unknown";
 }
-function isUnknownRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function isImageFieldDefinition(def) {
+  return !!def && (def.valueType === "image" || def.inputType === "image" || def.inputType === "multiImage" || def.semantic === "image");
 }
-function asUnknownRecord(value) {
-  return isUnknownRecord(value) ? value : void 0;
+function normalizeSegment(value) {
+  return String(value ?? "").trim();
 }
-function readUnknown(record, key) {
-  return record?.[key];
+function normalizeHierarchyPathParts(value) {
+  if (Array.isArray(value)) return value.flatMap((entry) => normalizeHierarchyPathParts(entry));
+  return String(value ?? "").split("/").map(normalizeSegment).filter(Boolean);
 }
-function readString(record, key) {
-  const value = readUnknown(record, key);
-  return typeof value === "string" ? value : void 0;
+function normalizeHierarchyPathValue(value) {
+  const parts = normalizeHierarchyPathParts(value);
+  return parts.length ? parts.join("/") : null;
 }
-function readTrimmedString(record, key) {
-  const value = readString(record, key)?.trim();
-  return value ? value : void 0;
-}
-function readNumber$1(record, key) {
-  const value = readUnknown(record, key);
-  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-}
-function readStringArray(record, key) {
-  const value = readUnknown(record, key);
-  if (!Array.isArray(value)) return [];
-  return value.filter((item) => typeof item === "string");
-}
-function readRecord(record, key) {
-  return asUnknownRecord(readUnknown(record, key));
-}
-function readRecordArray(record, key) {
-  const value = readUnknown(record, key);
-  if (!Array.isArray(value)) return [];
-  return value.filter(isUnknownRecord);
-}
-function readFirstString$1(record, keys) {
-  for (const key of keys) {
-    const value = readTrimmedString(record, key);
-    if (value) return value;
-  }
-  return void 0;
-}
-function normalizeFieldKey(field) {
-  return getCanonicalFieldKey(field);
-}
-function readFileField(item, field) {
-  const file = item.file;
-  const fileRecord = asUnknownRecord(file);
-  const key = field.slice("file.".length);
-  if (key === "name" || key === "basename") {
-    return file?.basename ?? item.fileName ?? item.filename;
-  }
-  if (key === "folder") {
-    return file?.folder ?? item.folder;
-  }
-  return readUnknown(fileRecord, key);
-}
-function readCategoryPath(item) {
-  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).path;
-}
-function readRootCategory(item) {
-  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).root;
-}
-function readLeafCategory(item) {
-  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).leaf;
-}
-function readImageField(item) {
-  return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? item.extra?.["评图"] ?? item.extra?.["pintu"]);
-}
-function readCanonicalField(item, canonicalField) {
-  if (canonicalField.startsWith("extra.")) {
-    return item.extra?.[canonicalField.slice("extra.".length)];
-  }
-  if (canonicalField.startsWith("file.")) {
-    return readFileField(item, canonicalField);
-  }
-  if (canonicalField === "categoryKey") {
-    return readCategoryPath(item);
-  }
-  if (canonicalField === "baseCategory") {
-    return readRootCategory(item);
-  }
-  if (canonicalField === "leafCategory") {
-    return readLeafCategory(item);
-  }
-  if (canonicalField === "themePath") {
-    return readExplicitThemeParts(item).themePath ?? void 0;
-  }
-  if (canonicalField === "rootTheme") {
-    return readExplicitThemeParts(item).rootTheme ?? void 0;
-  }
-  if (canonicalField === "leafTheme") {
-    return readExplicitThemeParts(item).leafTheme ?? void 0;
-  }
-  if (canonicalField === "status") return item.status;
-  if (canonicalField === "cadence") return item.coreBlock === "task" ? getTaskCadence(item) : void 0;
-  if (canonicalField === "recurrence") return formatTaskRecurrence(item.recurrenceInfo);
-  if (canonicalField === "period.id") {
-    return readFirstString$1(asUnknownRecord(item), ["cycleId", "periodId"]);
-  }
-  if (canonicalField === "period.label") {
-    return readFirstString$1(asUnknownRecord(item), ["period", "周期"]);
-  }
-  if (canonicalField === "period.granularity") {
-    return readFirstString$1(asUnknownRecord(item), ["periodGranularity", "goalGranularity"]);
-  }
-  if (canonicalField === "tags") {
-    return parseTagList(item.tags || []);
-  }
-  if (canonicalField === "goalPaths") {
-    return parseTagList(item.goalPaths?.length ? item.goalPaths : readStringArray(asUnknownRecord(item), "goalPaths"));
-  }
-  if (canonicalField === "fullData") {
-    return item.rawSource || item.fullData || item.content || "";
-  }
-  if (canonicalField === "image") {
-    return readImageField(item);
-  }
-  if (canonicalField === "time") {
-    return item.startTime;
-  }
-  if (canonicalField === "filename" || canonicalField === "fileName") {
-    return item.file?.basename ?? item.fileName ?? item.filename;
-  }
-  if (canonicalField === "pintu") {
-    return item.pintu;
-  }
-  return readUnknown(asUnknownRecord(item), canonicalField);
-}
-function resolveFieldValue(item, field) {
-  const canonicalField = normalizeFieldKey(field);
-  const def = getFieldDefinition(canonicalField);
-  const value = readCanonicalField(item, canonicalField);
-  const source = def?.source || "unknown";
+function splitHierarchyPathValue(value) {
+  const parts = normalizeHierarchyPathParts(value);
+  const path = parts.length ? parts.join("/") : null;
   return {
-    requestedField: field,
-    field: canonicalField,
-    value,
-    source,
-    derived: source === "derived",
-    legacy: source === "legacy" || !!def?.deprecated
+    path,
+    parts,
+    root: parts[0] ?? null,
+    leaf: parts.length ? parts[parts.length - 1] : null
   };
 }
-function readFieldValue(item, field) {
-  return resolveFieldValue(item, field).value;
+function getHierarchyPathBase(value) {
+  return splitHierarchyPathValue(value).root ?? "";
 }
-function getAllFields(items) {
-  return getAvailableFields(items).map((field) => field.key);
+function getHierarchyPathLeaf(value) {
+  return splitHierarchyPathValue(value).leaf ?? "";
 }
-function readField(item, field) {
-  return readFieldValue(item, field);
+function getHierarchyPathParent(value) {
+  const parts = normalizeHierarchyPathParts(value);
+  return parts.length > 1 ? parts.slice(0, -1).join("/") : "";
 }
-const THEME_MATCHER_TOKEN = /* @__PURE__ */ Symbol("IThemeMatcher");
-function isActiveTimerState(timer) {
-  return !!timer && (timer.status === "running" || timer.status === "paused");
+function buildHierarchyPathSegments(value) {
+  const parts = normalizeHierarchyPathParts(value);
+  return parts.map((name, depth) => ({
+    name,
+    fullPath: parts.slice(0, depth + 1).join("/"),
+    depth
+  }));
 }
-function splitThemePath(themePath) {
-  return splitThemePath$1(themePath);
+function buildHierarchyPathOption(value) {
+  const path = normalizeHierarchyPathValue(value);
+  if (!path) return null;
+  return { value: path, label: getHierarchyPathLeaf(path) || path };
 }
-function pickEditableText(item) {
-  if (item.editableText?.trim()) return item.editableText.trim();
-  const extraBody = item.extra?.["正文"];
-  if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
-  return item.content?.trim() || item.title || null;
+function normalizeHierarchyPath(value) {
+  return normalizeHierarchyPathValue(value) || void 0;
 }
-function buildParsedRecordSnapshot(item) {
-  const path = item.source?.path ?? item.file?.path ?? null;
-  const line2 = item.source?.startLine ?? (typeof item.file?.line === "number" ? item.file.line : null);
-  const editableText = pickEditableText(item);
-  const themeParts = readExplicitThemeParts(item);
+function splitHierarchyPath(value) {
+  const parts = splitHierarchyPathValue(value);
   return {
-    itemId: item.id,
-    entryKind: item.coreBlock === "task" ? "task" : "block",
-    locator: { path, line: line2 },
-    raw: { sourceText: item.rawSource || item.content || "" },
-    semantic: {
-      title: item.title || null,
-      editableText,
-      content: item.content || null,
-      date: item.date || item.createdDate || null,
-      period: item.period || null,
-      tags: [...item.tags || []],
-      goalPaths: [...item.goalPaths || []],
-      startTime: item.startTime || null,
-      endTime: item.endTime || null,
-      duration: item.duration ?? null,
-      themePath: themeParts.themePath,
-      rootTheme: themeParts.rootTheme,
-      leafTheme: themeParts.leafTheme,
-      categoryKey: item.categoryKey || null
-    },
-    templateHint: {
-      templateId: item.templateId || null,
-      templateSourceType: item.templateSourceType || null
-    },
-    extra: { ...item.extra || {} }
+    path: parts.path || void 0,
+    parts: parts.parts,
+    root: parts.root || void 0,
+    leaf: parts.leaf || void 0
   };
 }
-const ENERGY_QUICK_LEVEL_LABELS = {
-  20: "很低",
-  40: "偏低",
-  60: "一般",
-  80: "较高",
-  100: "充沛"
-};
-function normalizeEnergyScore(value) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.round(Math.min(100, Math.max(0, value)));
+function normalizeTagPath(value) {
+  const raw = String(value ?? "").trim().replace(/^#+/, "");
+  if (!raw) return void 0;
+  const parts = raw.split("/").map((part) => part.trim()).filter(Boolean);
+  return parts.length ? parts.join("/") : void 0;
 }
-function toEnergyQuickLevel(value) {
-  const score = normalizeEnergyScore(value);
-  return ENERGY_QUICK_LEVELS.reduce((best, candidate) => Math.abs(candidate - score) < Math.abs(best - score) ? candidate : best, ENERGY_QUICK_LEVELS[0]);
+function normalizeTag(value) {
+  return normalizeTagPath(value);
 }
-function isEnergyQuickLevel(value) {
-  return ENERGY_QUICK_LEVELS.includes(value);
-}
-function calculateDetailedEnergyScore(brainScore, physicalScore) {
-  const brain = normalizeEnergyScore(brainScore);
-  const physical = normalizeEnergyScore(physicalScore);
-  return normalizeEnergyScore((brain + physical) / 2);
-}
-const RECORD_SCHEMA_VERSION = 2;
-const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-function encodeTime(time2, length2 = 10) {
-  let value = Math.max(0, Math.floor(time2));
-  let output = "";
-  for (let i2 = 0; i2 < length2; i2++) {
-    output = CROCKFORD[value % 32] + output;
-    value = Math.floor(value / 32);
-  }
-  return output;
-}
-function randomChars(length2) {
-  const values2 = new Uint8Array(length2);
-  const cryptoApi = globalThis.crypto;
-  if (cryptoApi?.getRandomValues) {
-    cryptoApi.getRandomValues(values2);
-  } else {
-    for (let i2 = 0; i2 < values2.length; i2++) values2[i2] = Math.floor(Math.random() * 256);
-  }
-  let output = "";
-  for (const value of values2) output += CROCKFORD[value % 32];
-  return output;
-}
-function recordIdPrefixForCoreBlock(coreBlock) {
-  switch (String(coreBlock || "").trim().toLowerCase()) {
-    case "task":
-      return "task";
-    case "task-series":
-      return "taskseries";
-    case "task-session":
-      return "tasksession";
-    case "energy":
-      return "energy";
-    default:
-      return "rec";
-  }
-}
-function createRecordId(coreBlock, now2 = Date.now()) {
-  const prefix2 = recordIdPrefixForCoreBlock(coreBlock);
-  return `${prefix2}.${encodeTime(now2)}${randomChars(16)}`;
-}
-function isStableRecordId(value) {
-  return /^(?:rec|task|taskseries|tasksession|energy)\.[0-9A-HJKMNP-TV-Z]{26}$/.test(String(value || "").trim());
+function parseTagList(value) {
+  const rawValues = Array.isArray(value) ? value : String(value ?? "").split(/[,，]/);
+  const tags2 = rawValues.map(normalizeTag).filter((tag) => !!tag);
+  return Array.from(new Set(tags2));
 }
 function compactText(value) {
   return String(value ?? "").trim();
@@ -5035,19 +4359,54 @@ function compactText(value) {
 function normalizeTextToken(value) {
   return compactText(value).toLowerCase();
 }
+function containsTagMarker(value) {
+  return value.includes("#") || value.includes("＃");
+}
+function normalizeGoalPath(path) {
+  const normalized2 = splitHierarchyPathValue(path).path;
+  if (!normalized2 || containsTagMarker(normalized2)) return null;
+  return normalized2;
+}
+function requireGoalPath(path) {
+  const normalized2 = normalizeGoalPath(path);
+  if (!normalized2) throw new Error("Invalid Goal path: Goal paths must be slash-separated text without # markers.");
+  return normalized2;
+}
+function splitGoalPath(path) {
+  const normalized2 = normalizeGoalPath(path);
+  const parts = splitHierarchyPathValue(normalized2);
+  return {
+    goalPath: parts.path,
+    rootGoal: parts.root,
+    leafGoal: parts.leaf
+  };
+}
+function getGoalPathCandidates(path) {
+  const normalized2 = normalizeGoalPath(path);
+  if (!normalized2) return [];
+  const parts = splitHierarchyPathValue(normalized2).parts;
+  const result = [];
+  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
+  return result;
+}
+function makeStableGoalIdFromPath(path) {
+  const normalized2 = requireGoalPath(path);
+  const safe = normalized2.toLowerCase().replace(/[\/\s]+/g, "-").replace(/[^a-z0-9\-_.\u4e00-\u9fa5]/gi, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return `goal.${safe || "untitled"}`;
+}
 const DEFAULT_MULTI_SEPARATOR = ", ";
 function isFieldCodecMultiValue(def) {
   const inputType = def?.inputType;
   return def?.cardinality === "multi" || inputType === "multiSelect" || inputType === "multiPath" || inputType === "multiTag" || inputType === "multiImage";
 }
 function isFieldCodecPath(def) {
-  return def?.type === "path" || def?.inputType === "path" || def?.inputType === "multiPath" || def?.semantic === "themePath" || def?.semantic === "categoryPath";
+  return def?.valueType === "path" || def?.inputType === "path" || def?.inputType === "multiPath" || def?.semantic === "themePath" || def?.semantic === "categoryPath" || def?.semantic === "goalPath";
 }
 function isFieldCodecTag(def) {
-  return def?.type === "tags" || def?.inputType === "tag" || def?.inputType === "multiTag" || def?.semantic === "tags" || def?.semantic === "goals";
+  return def?.valueType === "tags" || def?.inputType === "tag" || def?.inputType === "multiTag" || def?.semantic === "tags";
 }
 function isFieldCodecImage(def) {
-  return def?.type === "image" || def?.inputType === "image" || def?.inputType === "multiImage" || def?.semantic === "image";
+  return def?.valueType === "image" || def?.inputType === "image" || def?.inputType === "multiImage" || def?.semantic === "image";
 }
 function splitMarkdownMultiValue(value) {
   if (Array.isArray(value)) return value.flatMap(splitMarkdownMultiValue);
@@ -5081,7 +4440,7 @@ function decodeImageValue(value) {
   return normalizeImageValue(value);
 }
 function valueKind(def) {
-  return def?.type;
+  return def?.valueType;
 }
 function semanticKind(def) {
   return def?.semantic;
@@ -5100,7 +4459,10 @@ function decodeMarkdownFieldValue(value, def) {
   }
   if (isFieldCodecTag(def)) return parseTagList(value);
   if (isFieldCodecImage(def)) return decodeImageValue(value);
-  if (isFieldCodecPath(def)) return normalizeHierarchyPath(value) || void 0;
+  if (isFieldCodecPath(def)) {
+    if (semanticKind(def) === "goalPath") return normalizeGoalPath(String(value ?? "")) || void 0;
+    return normalizeHierarchyPath(value) || void 0;
+  }
   if (valueKind(def) === "number" || semanticKind(def) === "duration" || semanticKind(def) === "rating") {
     return decodeNumberValue(value);
   }
@@ -5129,19 +4491,26 @@ function encodeFieldValueForMarkdown(value, def, options = {}) {
     if ("label" in objectValue) return String(objectValue.label ?? "").trim();
   }
   if (typeof value === "boolean") return value ? "true" : "false";
+  if (semanticKind(def) === "goalPath") {
+    const raw = String(value).trim();
+    if (!raw) return "";
+    const canonical = normalizeGoalPath(raw);
+    if (!canonical) throw new Error("Invalid Goal path: Goal is not Tag and cannot contain # markers.");
+    return canonical;
+  }
   return String(value).trim();
 }
 function formatFieldValueForTemplate(value, def) {
   return encodeFieldValueForMarkdown(value, def, { multiSeparator: ", " });
 }
 const FIELD_CODEC_PRESETS = {
-  themePath: { type: "path", inputType: "path", semantic: "themePath", hierarchical: true },
-  categoryPath: { type: "path", inputType: "path", semantic: "categoryPath", hierarchical: true },
-  tags: { type: "tags", inputType: "multiTag", semantic: "tags", cardinality: "multi" },
-  goalPaths: { type: "tags", inputType: "multiTag", semantic: "goals", cardinality: "multi" },
-  image: { type: "image", inputType: "image", semantic: "image" },
-  number: { type: "number", inputType: "number" },
-  text: { type: "string", inputType: "text" }
+  themePath: { valueType: "path", inputType: "path", semantic: "themePath", hierarchical: true },
+  categoryPath: { valueType: "path", inputType: "path", semantic: "categoryPath", hierarchical: true },
+  tags: { valueType: "tags", inputType: "multiTag", semantic: "tags", cardinality: "multi" },
+  goalPath: { valueType: "path", inputType: "hierarchicalSingleSelect", semantic: "goalPath", cardinality: "single", hierarchical: true },
+  image: { valueType: "image", inputType: "image", semantic: "image" },
+  number: { valueType: "number", inputType: "number" },
+  text: { valueType: "string", inputType: "text" }
 };
 function decodeMarkdownString(value, preset = FIELD_CODEC_PRESETS.text) {
   const decoded = decodeMarkdownFieldValue(value, preset);
@@ -5174,7 +4543,7 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
   let categoryKey = null;
   let date2;
   const tags2 = [];
-  const goalPaths = [];
+  let goalPath;
   const extra = {};
   let content = "";
   let contentStarted = false;
@@ -5224,105 +4593,111 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
   let energyDelta;
   let brainDelta;
   let physicalDelta;
+  const envelopeCoreBlock = contentLines.map((rawLine) => rawLine.trim().match(/^([^:\r\n]{1,64})::\s*(.*)$/)).find((match5) => match5 && ["核心block", "coreblock"].includes(normalizeMetaKey(match5[1])))?.[2]?.trim();
+  if (envelopeCoreBlock) coreBlock = envelopeCoreBlock;
+  const recordSchema = getRecordSchemaDefinition(coreBlock);
+  const supportsCustomFields = Boolean(recordSchema?.capabilities.customFields);
+  const supportsBody = Boolean(recordSchema && getRecordFieldContract(recordSchema.coreBlock, "内容"));
   for (const rawLine of contentLines) {
+    if (contentStarted) {
+      content += (content ? "\n" : "") + rawLine;
+      continue;
+    }
     const line2 = rawLine.trim();
-    if (!contentStarted) {
-      if (line2 === "") continue;
-      const kv = line2.match(/^([^:：]{1,32})[:：]{1,2}\s*(.*)$/);
-      if (kv) {
-        const rawKey = kv[1].trim();
-        const value = kv[2] || "";
-        const key = normalizeMetaKey(rawKey);
-        if (["记录id", "recordid"].includes(key)) recordId = value.trim() || void 0;
-        else if (["记录版本", "recordversion", "schemaversion"].includes(key)) {
-          const parsed = Number.parseInt(value.trim(), 10);
-          if (Number.isFinite(parsed)) schemaVersion = parsed;
-        } else if (["分类", "类别", "category", "categorypath", "分类路径"].includes(key)) categoryKey = decodeMarkdownString(value, FIELD_CODEC_PRESETS.categoryPath) || "";
-        else if (["记录子类型", "recordsubtype", "subtype"].includes(key)) recordSubtype = value.trim() || void 0;
-        else if (["模板id", "templateid"].includes(key)) templateId = value.trim();
-        else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
-          const source = value.trim();
-          if (["core-block", "goal-template"].includes(source)) templateSourceType = source;
-        } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
-        else if (["标签", "tag", "tags"].includes(key)) tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
-        else if (["目标id", "goalid"].includes(key)) goalId = value.trim();
-        else if (["周期id", "cycleid"].includes(key)) cycleId = value.trim();
-        else if (["系列id", "seriesid"].includes(key)) seriesId = value.trim();
-        else if (["重复单位", "recurrenceunit"].includes(key)) {
-          const unit = value.trim().toLowerCase();
-          if (["day", "week", "month", "quarter", "year"].includes(unit)) recurrenceUnit = unit;
-        } else if (["重复间隔", "recurrenceinterval"].includes(key)) {
-          const interval = Number.parseInt(value.trim(), 10);
-          if (Number.isInteger(interval) && interval > 0) recurrenceInterval = interval;
-        } else if (["重复锚点", "recurrenceanchor"].includes(key)) {
-          const anchor = value.trim().toLowerCase();
-          if (["scheduled", "start", "due", "completion"].includes(anchor)) recurrenceAnchor = anchor;
-        } else if (["系列开始日期", "seriesstartdate"].includes(key)) seriesStartDate = parseDate$1(value);
-        else if (["当前任务id", "currenttaskid"].includes(key)) currentTaskId = value.trim() || void 0;
-        else if (["滚动策略", "rolloverpolicy"].includes(key)) {
-          if (value.trim().toLowerCase() === "carry") rolloverPolicy = "carry";
-        } else if (coreBlock === "task-session" && ["任务id", "taskid"].includes(key)) taskId = value.trim() || void 0;
-        else if (coreBlock === "task-session" && ["开始于", "sessionstartedat"].includes(key)) sessionStartedAt = value.trim() || void 0;
-        else if (coreBlock === "task-session" && ["结束于", "sessionendedat"].includes(key)) sessionEndedAt = value.trim() || void 0;
-        else if (coreBlock === "task-session" && ["时长", "sessiondurationminutes"].includes(key)) sessionDurationMinutes = decodeMarkdownNumber(value);
-        else if (coreBlock === "task-session" && ["结果", "sessionresult"].includes(key)) {
-          const result = value.trim().toLowerCase();
-          if (["work-block-ended", "task-completed"].includes(result)) sessionResult = result;
-        } else if (coreBlock === "task-session" && ["来源", "sessionsource"].includes(key)) {
-          const source = value.trim().toLowerCase();
-          if (["timer", "energy-view", "unknown"].includes(source)) sessionSource = source;
-        } else if (coreBlock === "task-session" && ["建议时长", "suggesteddurationminutes"].includes(key)) suggestedDurationMinutes = decodeMarkdownNumber(value);
-        else if (coreBlock === "task-session" && ["开始精力记录id", "startenergyrecordid"].includes(key)) startEnergyRecordId = value.trim() || void 0;
-        else if (coreBlock === "task-session" && ["结束精力记录id", "endenergyrecordid"].includes(key)) endEnergyRecordId = value.trim() || void 0;
-        else if (coreBlock === "task-session" && ["精力变化", "energydelta"].includes(key)) energyDelta = decodeMarkdownNumber(value);
-        else if (coreBlock === "task-session" && ["脑力变化", "braindelta"].includes(key)) brainDelta = decodeMarkdownNumber(value);
-        else if (coreBlock === "task-session" && ["体力变化", "physicaldelta"].includes(key)) physicalDelta = decodeMarkdownNumber(value);
-        else if (["核心block", "coreblock"].includes(key)) coreBlock = value.trim();
-        else if (["状态", "status"].includes(key)) status = value.trim().toLowerCase();
-        else if (key === "目标") goalPaths.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths));
-        else if (["日期", "date"].includes(key)) date2 = parseDate$1(value);
-        else if (["计划日期", "scheduleddate"].includes(key)) scheduledDate = parseDate$1(value);
-        else if (["开始日期", "startdate"].includes(key)) startDate = parseDate$1(value);
-        else if (["截止日期", "duedate"].includes(key)) dueDate = parseDate$1(value);
-        else if (["创建于", "createdat"].includes(key)) createdAt = value.trim() || void 0;
-        else if (["完成于", "completedat"].includes(key)) completedAt = value.trim() || void 0;
-        else if (["取消于", "cancelledat"].includes(key)) cancelledAt = value.trim() || void 0;
-        else if (["跳过于", "skippedat"].includes(key)) skippedAt = value.trim() || void 0;
-        else if (["优先级", "priority"].includes(key)) {
-          const p2 = value.trim().toLowerCase();
-          if (["lowest", "low", "medium", "high", "highest"].includes(p2)) priority = p2;
-        } else if (["预计时长", "expectedduration", "expecteddurationminutes"].includes(key)) expectedDurationMinutes = decodeMarkdownNumber(value);
-        else if (["精力要求", "energydemand"].includes(key)) energyDemand = value.trim().toLowerCase() || void 0;
-        else if (["脑力要求", "braindemand"].includes(key)) brainDemand = value.trim().toLowerCase() || void 0;
-        else if (["体力要求", "physicaldemand"].includes(key)) physicalDemand = value.trim().toLowerCase() || void 0;
-        else if (["周期", "period"].includes(key)) period = decodeMarkdownString(value);
-        else if (["评分", "rating"].includes(key)) {
-          const decodedRating = decodeMarkdownNumber(value);
-          if (decodedRating !== void 0) rating = decodedRating;
-          else {
-            const visualRating = String(value || "").trim();
-            if (visualRating) {
-              extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
-              if (!pintu) pintu = visualRating;
-              if (!image) image = visualRating;
-            }
+    const kv = line2.match(/^([^:\r\n]{1,64})::\s*(.*)$/);
+    if (kv) {
+      const rawKey = kv[1].trim();
+      const value = kv[2] || "";
+      const key = normalizeMetaKey(rawKey);
+      if (["记录id", "recordid"].includes(key)) recordId = value.trim() || void 0;
+      else if (["记录版本", "recordversion", "schemaversion"].includes(key)) {
+        const parsed = Number.parseInt(value.trim(), 10);
+        if (Number.isFinite(parsed)) schemaVersion = parsed;
+      } else if (["分类", "类别", "category", "categorypath", "分类路径"].includes(key)) categoryKey = decodeMarkdownString(value, FIELD_CODEC_PRESETS.categoryPath) || "";
+      else if (["记录子类型", "recordsubtype", "subtype"].includes(key)) recordSubtype = value.trim() || void 0;
+      else if (["模板id", "templateid"].includes(key)) templateId = value.trim();
+      else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
+        const source = value.trim();
+        if (["core-block", "goal-template"].includes(source)) templateSourceType = source;
+      } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
+      else if (["标签", "tag", "tags"].includes(key)) tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
+      else if (["目标id", "goalid"].includes(key)) goalId = value.trim();
+      else if (["周期id", "cycleid"].includes(key)) cycleId = value.trim();
+      else if (["系列id", "seriesid"].includes(key)) seriesId = value.trim();
+      else if (["重复单位", "recurrenceunit"].includes(key)) {
+        const unit = value.trim().toLowerCase();
+        if (["day", "week", "month", "quarter", "year"].includes(unit)) recurrenceUnit = unit;
+      } else if (["重复间隔", "recurrenceinterval"].includes(key)) {
+        const interval = Number.parseInt(value.trim(), 10);
+        if (Number.isInteger(interval) && interval > 0) recurrenceInterval = interval;
+      } else if (["重复锚点", "recurrenceanchor"].includes(key)) {
+        const anchor = value.trim().toLowerCase();
+        if (["scheduled", "start", "due", "completion"].includes(anchor)) recurrenceAnchor = anchor;
+      } else if (["系列开始日期", "seriesstartdate"].includes(key)) seriesStartDate = parseDate$1(value);
+      else if (["当前任务id", "currenttaskid"].includes(key)) currentTaskId = value.trim() || void 0;
+      else if (["滚动策略", "rolloverpolicy"].includes(key)) {
+        if (value.trim().toLowerCase() === "carry") rolloverPolicy = "carry";
+      } else if (coreBlock === "task-session" && ["任务id", "taskid"].includes(key)) taskId = value.trim() || void 0;
+      else if (coreBlock === "task-session" && ["开始于", "sessionstartedat"].includes(key)) sessionStartedAt = value.trim() || void 0;
+      else if (coreBlock === "task-session" && ["结束于", "sessionendedat"].includes(key)) sessionEndedAt = value.trim() || void 0;
+      else if (coreBlock === "task-session" && ["时长", "sessiondurationminutes"].includes(key)) sessionDurationMinutes = decodeMarkdownNumber(value);
+      else if (coreBlock === "task-session" && ["结果", "sessionresult"].includes(key)) {
+        const result = value.trim().toLowerCase();
+        if (["work-block-ended", "task-completed"].includes(result)) sessionResult = result;
+      } else if (coreBlock === "task-session" && ["来源", "sessionsource"].includes(key)) {
+        const source = value.trim().toLowerCase();
+        if (["timer", "energy-view", "unknown"].includes(source)) sessionSource = source;
+      } else if (coreBlock === "task-session" && ["建议时长", "suggesteddurationminutes"].includes(key)) suggestedDurationMinutes = decodeMarkdownNumber(value);
+      else if (coreBlock === "task-session" && ["开始精力记录id", "startenergyrecordid"].includes(key)) startEnergyRecordId = value.trim() || void 0;
+      else if (coreBlock === "task-session" && ["结束精力记录id", "endenergyrecordid"].includes(key)) endEnergyRecordId = value.trim() || void 0;
+      else if (coreBlock === "task-session" && ["精力变化", "energydelta"].includes(key)) energyDelta = decodeMarkdownNumber(value);
+      else if (coreBlock === "task-session" && ["脑力变化", "braindelta"].includes(key)) brainDelta = decodeMarkdownNumber(value);
+      else if (coreBlock === "task-session" && ["体力变化", "physicaldelta"].includes(key)) physicalDelta = decodeMarkdownNumber(value);
+      else if (["核心block", "coreblock"].includes(key)) coreBlock = value.trim();
+      else if (["状态", "status"].includes(key)) status = value.trim().toLowerCase();
+      else if (key === "目标") goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
+      else if (["日期", "date"].includes(key)) date2 = parseDate$1(value);
+      else if (["计划日期", "scheduleddate"].includes(key)) scheduledDate = parseDate$1(value);
+      else if (["开始日期", "startdate"].includes(key)) startDate = parseDate$1(value);
+      else if (["截止日期", "duedate"].includes(key)) dueDate = parseDate$1(value);
+      else if (["创建于", "createdat"].includes(key)) createdAt = value.trim() || void 0;
+      else if (["完成于", "completedat"].includes(key)) completedAt = value.trim() || void 0;
+      else if (["取消于", "cancelledat"].includes(key)) cancelledAt = value.trim() || void 0;
+      else if (["跳过于", "skippedat"].includes(key)) skippedAt = value.trim() || void 0;
+      else if (["优先级", "priority"].includes(key)) {
+        const p2 = value.trim().toLowerCase();
+        if (["lowest", "low", "medium", "high", "highest"].includes(p2)) priority = p2;
+      } else if (["预计时长", "expectedduration", "expecteddurationminutes"].includes(key)) expectedDurationMinutes = decodeMarkdownNumber(value);
+      else if (["精力要求", "energydemand"].includes(key)) energyDemand = value.trim().toLowerCase() || void 0;
+      else if (["脑力要求", "braindemand"].includes(key)) brainDemand = value.trim().toLowerCase() || void 0;
+      else if (["体力要求", "physicaldemand"].includes(key)) physicalDemand = value.trim().toLowerCase() || void 0;
+      else if (["周期", "period"].includes(key)) period = decodeMarkdownString(value);
+      else if (["评分", "rating"].includes(key)) {
+        const decodedRating = decodeMarkdownNumber(value);
+        if (decodedRating !== void 0) rating = decodedRating;
+        else {
+          const visualRating = String(value || "").trim();
+          if (visualRating) {
+            extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
+            if (!pintu) pintu = visualRating;
+            if (!image) image = visualRating;
           }
-        } else if (["图标", "icon"].includes(key)) icon = value.trim();
-        else if (["评图", "pintu", "图片", "image"].includes(key)) {
-          image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
-          pintu = image;
-        } else if (["内容", "content"].includes(key)) {
+        }
+      } else if (["图标", "icon"].includes(key)) icon = value.trim();
+      else if (["评图", "pintu", "图片", "image"].includes(key)) {
+        image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
+        pintu = image;
+      } else if (["内容", "content", "任务内容"].includes(key)) {
+        if (supportsBody) {
           contentStarted = true;
           content = value;
-        } else extra[rawKey] = decodeUnknownMarkdownKvValue(value);
-      } else {
-        contentStarted = true;
-        content = rawLine;
-      }
-    } else content += (content ? "\n" : "") + rawLine;
+        }
+      } else if (supportsCustomFields) extra[rawKey] = decodeUnknownMarkdownKvValue(value);
+    } else {
+      continue;
+    }
   }
   const finalTags = unique$1(tags2);
-  const finalGoalPaths = unique$1(goalPaths);
   return {
     recordId,
     schemaVersion,
@@ -5339,7 +4714,7 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
     skippedAt,
     createdAt,
     tags: finalTags,
-    goalPaths: finalGoalPaths,
+    goalPath,
     goalId,
     cycleId,
     coreBlock,
@@ -5388,7 +4763,7 @@ function markdownScalar(value) {
 const TASK_FIELD_ORDER = [
   ["状态", ["状态", "status"]],
   ["目标ID", ["目标ID", "goalId"]],
-  ["目标", ["目标", "goalPath", "goalPaths"]],
+  ["目标", ["目标", "goalPath"]],
   ["主题", ["主题", "themePath"]],
   ["创建于", ["创建于", "createdAt"]],
   ["优先级", ["优先级", "priority"]],
@@ -5404,14 +4779,13 @@ const TASK_FIELD_ORDER = [
   ["跳过于", ["跳过于", "skippedAt"]],
   ["系列ID", ["系列ID", "seriesId"]],
   ["模板ID", ["模板ID", "templateId"]],
-  ["模板来源", ["模板来源", "templateSourceType"]],
-  ["内容", ["内容", "content", "正文", "title"]]
+  ["模板来源", ["模板来源", "templateSourceType"]]
 ];
 const TASK_SESSION_FIELD_ORDER = [
   ["任务ID", ["任务ID", "taskId"]],
   ["系列ID", ["系列ID", "seriesId"]],
   ["目标ID", ["目标ID", "goalId"]],
-  ["目标", ["目标", "goalPath", "goalPaths"]],
+  ["目标", ["目标", "goalPath"]],
   ["主题", ["主题", "themePath"]],
   ["开始于", ["开始于", "sessionStartedAt"]],
   ["结束于", ["结束于", "sessionEndedAt"]],
@@ -5428,7 +4802,7 @@ const TASK_SESSION_FIELD_ORDER = [
 const TASK_SERIES_FIELD_ORDER = [
   ["状态", ["状态", "status"]],
   ["目标ID", ["目标ID", "goalId"]],
-  ["目标", ["目标", "goalPath", "goalPaths"]],
+  ["目标", ["目标", "goalPath"]],
   ["主题", ["主题", "themePath"]],
   ["优先级", ["优先级", "priority"]],
   ["预计时长", ["预计时长", "expectedDurationMinutes"]],
@@ -5440,8 +4814,7 @@ const TASK_SERIES_FIELD_ORDER = [
   ["重复锚点", ["重复锚点", "recurrenceAnchor"]],
   ["系列开始日期", ["系列开始日期", "seriesStartDate"]],
   ["当前任务ID", ["当前任务ID", "currentTaskId"]],
-  ["滚动策略", ["滚动策略", "rolloverPolicy"]],
-  ["内容", ["内容", "content", "正文", "title"]]
+  ["滚动策略", ["滚动策略", "rolloverPolicy"]]
 ];
 function firstValue(fields, keys) {
   for (const key of keys) {
@@ -5449,6 +4822,22 @@ function firstValue(fields, keys) {
     if (value) return value;
   }
   return "";
+}
+const BODY_FIELD_ALIASES = ["内容", "content", "正文", "title", "任务内容", "阻碍", "里程碑"];
+function bodyValue(fields) {
+  for (const key of BODY_FIELD_ALIASES) {
+    const value = fields[key];
+    if (value === void 0 || value === null) continue;
+    if (typeof value === "object") continue;
+    return String(value).replace(/\r\n/g, "\n").trim();
+  }
+  return "";
+}
+function emitBody(lines, body) {
+  if (!body) return;
+  const parts = body.split("\n");
+  lines.push(`内容:: ${parts.shift() || ""}`);
+  lines.push(...parts);
 }
 function encodeRecordBlock(document2) {
   const schemaVersion = document2.schemaVersion ?? RECORD_SCHEMA_VERSION;
@@ -5466,10 +4855,11 @@ function encodeRecordBlock(document2) {
       }
     }
     for (const [key, raw] of Object.entries(fields)) {
-      if (emitted.has(key) || ["记录ID", "recordId", "id", "记录版本", "schemaVersion", "核心Block", "coreBlock"].includes(key)) continue;
+      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ["记录ID", "recordId", "id", "记录版本", "schemaVersion", "核心Block", "coreBlock"].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
+    emitBody(lines, bodyValue(fields));
   } else if (document2.coreBlock === "task-session") {
     for (const [label, keys] of TASK_SESSION_FIELD_ORDER) {
       const value = firstValue(fields, keys);
@@ -5484,12 +4874,17 @@ function encodeRecordBlock(document2) {
       if (label === "滚动策略" && !value) value = "carry";
       if (value) lines.push(`${label}:: ${value}`);
     }
+    emitBody(lines, bodyValue(fields));
   } else {
+    const schema = getRecordSchemaDefinition(document2.coreBlock);
+    const supportsBody = Boolean(schema && getRecordFieldContract(schema.coreBlock, "内容"));
     for (const [key, raw] of Object.entries(fields)) {
+      if (supportsBody && BODY_FIELD_ALIASES.includes(key)) continue;
       if (["记录ID", "recordId", "id", "记录版本", "schemaVersion", "核心Block", "coreBlock"].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
+    if (supportsBody) emitBody(lines, bodyValue(fields));
   }
   lines.push("<!-- end -->");
   return lines.join("\n");
@@ -5613,7 +5008,7 @@ function resolveEnergyCaptureGoal(goals, defaultGoalId) {
   }
   return available.find((goal) => goal.status === "active") || available[0] || null;
 }
-function readNumber(value) {
+function readNumber$1(value) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const text2 = String(value ?? "").trim();
   if (!text2) return void 0;
@@ -5625,7 +5020,7 @@ function readText$1(value) {
   return text2 || void 0;
 }
 function readScore(value) {
-  const parsed = readNumber(value);
+  const parsed = readNumber$1(value);
   if (parsed == null || parsed < 0 || parsed > 100) return void 0;
   return Math.round(parsed);
 }
@@ -5640,7 +5035,7 @@ function readEnergyItemSnapshot(item) {
   const extra = item.extra || {};
   const score = readScore(extra["精力值"]);
   if (score == null) return null;
-  const explicitQuick = readNumber(extra["精力档位"]);
+  const explicitQuick = readNumber$1(extra["精力档位"]);
   const quickLevel = explicitQuick != null && isEnergyQuickLevel(explicitQuick) ? explicitQuick : toEnergyQuickLevel(score);
   const modeText = readText$1(extra["评分模式"]);
   const scoreMode = modeText === "quick" || modeText === "detailed" || modeText === "percent" ? modeText : void 0;
@@ -5682,7 +5077,7 @@ function buildTaskSessionFields(task, input) {
     taskId: task.id,
     seriesId: task.seriesId,
     goalId: task.goalId,
-    goalPath: task.goalPath || task.goalPaths?.[0],
+    goalPath: task.goalPath,
     themePath: task.themePath || task.theme,
     sessionStartedAt: input.startedAt,
     sessionEndedAt: input.endedAt,
@@ -5918,6 +5313,63 @@ function nextTaskStatus(command) {
   if (command === "skip") return "skipped";
   return "open";
 }
+const RECURRENCE_UNITS = /* @__PURE__ */ new Set(["day", "week", "month", "quarter", "year"]);
+const RECURRENCE_ANCHORS = /* @__PURE__ */ new Set(["scheduled", "start", "due", "completion"]);
+function normalizeRecurrenceInfo(value) {
+  if (!value) return null;
+  const unit = String(value.unit || "").trim().toLowerCase();
+  const anchor = String(value.anchor || "").trim().toLowerCase();
+  const interval = Number(value.interval);
+  if (!RECURRENCE_UNITS.has(unit)) return null;
+  if (!RECURRENCE_ANCHORS.has(anchor)) return null;
+  if (!Number.isInteger(interval) || interval < 1) return null;
+  return { unit, interval, anchor };
+}
+function getTaskRecurrenceInfo(item) {
+  return normalizeRecurrenceInfo(item.recurrenceInfo);
+}
+function isTaskRecurring(item) {
+  return Boolean(String(item.seriesId || "").trim());
+}
+function formatTaskRecurrence(info) {
+  const recurrence = normalizeRecurrenceInfo(info);
+  if (!recurrence) return "";
+  const interval = recurrence.interval === 1 ? "" : `${recurrence.interval} `;
+  return `every ${interval}${recurrence.unit}${recurrence.interval === 1 ? "" : "s"}`;
+}
+function addRecurrenceToDate(baseDateISO, recurrence) {
+  const normalizedBase = normalizeDateStr(baseDateISO) || baseDateISO;
+  const base = dayjs(normalizedBase, ["YYYY-MM-DD", "YYYY/MM/DD"]);
+  if (!base.isValid()) throw new Error(`task_recurrence_invalid_base_date:${baseDateISO}`);
+  const next2 = recurrence.unit === "quarter" ? base.add(recurrence.interval * 3, "month") : base.add(recurrence.interval, recurrence.unit);
+  return next2.format("YYYY-MM-DD");
+}
+function getTaskRecurrenceBaseDate(task, recurrence, completedAtISO) {
+  const completionDate = normalizeDateStr(completedAtISO) || String(completedAtISO || "").slice(0, 10);
+  if (recurrence.anchor === "completion") return completionDate;
+  if (recurrence.anchor === "start") return task.startDate || task.scheduledDate || task.dueDate || completionDate;
+  if (recurrence.anchor === "due") return task.dueDate || task.scheduledDate || task.startDate || completionDate;
+  return task.scheduledDate || task.startDate || task.dueDate || completionDate;
+}
+function buildNextOccurrenceDates(task, recurrence, completedAtISO) {
+  const baseDate = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
+  const nextAnchorDate = addRecurrenceToDate(baseDate, recurrence);
+  const result = {};
+  const shift = (value) => {
+    if (!value) return void 0;
+    return addRecurrenceToDate(value, recurrence);
+  };
+  if (recurrence.anchor === "scheduled") result.scheduledDate = nextAnchorDate;
+  else result.scheduledDate = shift(task.scheduledDate);
+  if (recurrence.anchor === "start") result.startDate = nextAnchorDate;
+  else result.startDate = shift(task.startDate);
+  if (recurrence.anchor === "due") result.dueDate = nextAnchorDate;
+  else result.dueDate = shift(task.dueDate);
+  if (recurrence.anchor === "completion" && !result.scheduledDate && !result.startDate && !result.dueDate) {
+    result.scheduledDate = nextAnchorDate;
+  }
+  return result;
+}
 const DEFAULT_HIGH_BEFORE_GAP = 60;
 const DEFAULT_HIGH_AFTER_GAP = 30;
 const DEFAULT_MINIMUM_TREND_SAMPLES = 3;
@@ -6125,12 +5577,12 @@ function buildEnergyEffects(items, options = {}) {
     byDuration: aggregateEffectRows(samples, "duration", (sample) => sample.durationBucket, minimumTrendSamples, supportedTrendSamples)
   };
 }
-function text$2(value) {
+function text$3(value) {
   return String(value ?? "").trim();
 }
 function bool(value) {
   if (typeof value === "boolean") return value;
-  const raw = text$2(value).toLowerCase();
+  const raw = text$3(value).toLowerCase();
   if (!raw) return void 0;
   if (["true", "1", "yes", "y", "是", "启用"].includes(raw)) return true;
   if (["false", "0", "no", "n", "否", "禁用"].includes(raw)) return false;
@@ -6138,13 +5590,13 @@ function bool(value) {
 }
 function number$2(value) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
-  const raw = text$2(value);
+  const raw = text$3(value);
   if (!raw) return void 0;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : void 0;
 }
 function normalizedBlock(item) {
-  return text$2(item.coreBlock || item.extra?.["核心Block"]).replace(/^core\./i, "").toLowerCase();
+  return text$3(item.coreBlock || item.extra?.["核心Block"]).replace(/^core\./i, "").toLowerCase();
 }
 function sourceFor(item) {
   const block = normalizedBlock(item);
@@ -6154,7 +5606,7 @@ function sourceFor(item) {
   return null;
 }
 function load(value) {
-  const raw = text$2(value).toLowerCase();
+  const raw = text$3(value).toLowerCase();
   if (!raw) return void 0;
   if (["low", "低", "轻", "轻量"].includes(raw)) return "low";
   if (["medium", "mid", "中", "中等"].includes(raw)) return "medium";
@@ -6178,9 +5630,9 @@ function historyDurationMaps(records) {
     const duration2 = number$2(session.sessionDurationMinutes);
     if (!duration2 || duration2 <= 0) continue;
     const task = byId.get(session.taskId);
-    const theme = text$2(session.themePath || task?.themePath || task?.theme);
+    const theme = text$3(session.themePath || task?.themePath || task?.theme);
     if (!theme) continue;
-    const goal = text$2(session.goalId || session.goalPath || task?.goalId || task?.goalPath);
+    const goal = text$3(session.goalId || task?.goalId);
     const themeKey = theme.toLowerCase();
     const goalThemeKey = `${goal.toLowerCase()}|${themeKey}`;
     themeRows.set(themeKey, [...themeRows.get(themeKey) || [], duration2]);
@@ -6202,9 +5654,9 @@ function inferredDuration(item, history) {
   const canonical = number$2(item.expectedDurationMinutes);
   const direct = explicit && explicit > 0 ? explicit : canonical && canonical > 0 ? canonical : void 0;
   if (direct != null) return Math.max(10, Math.min(240, Math.round(direct)));
-  const theme = text$2(item.themePath || item.theme).toLowerCase();
+  const theme = text$3(item.themePath || item.theme).toLowerCase();
   if (!theme) return void 0;
-  const goal = text$2(item.goalId || item.goalPath).toLowerCase();
+  const goal = text$3(item.goalId).toLowerCase();
   return (goal ? history.byGoalTheme.get(`${goal}|${theme}`) : void 0) || history.byTheme.get(theme);
 }
 function priorityValue(item) {
@@ -6225,7 +5677,7 @@ function parseDayDiff(value, today) {
   return Math.round((valueMs - todayMs) / 864e5);
 }
 function dueBonus(item, today) {
-  const due = text$2(item.dueDate).slice(0, 10);
+  const due = text$3(item.dueDate).slice(0, 10);
   const days = parseDayDiff(due, today);
   if (days == null) return 0;
   if (days < -30) return 0;
@@ -6236,17 +5688,17 @@ function dueBonus(item, today) {
   return 0;
 }
 function scheduleBonus(item, today) {
-  const date2 = text$2(item.scheduledDate || item.startDate).slice(0, 10);
+  const date2 = text$3(item.scheduledDate || item.startDate).slice(0, 10);
   const diff = parseDayDiff(date2, today);
   return diff === 0 ? 8 : 0;
 }
 function futureTask(item, today) {
-  const date2 = text$2(item.startDate || item.scheduledDate).slice(0, 10);
+  const date2 = text$3(item.startDate || item.scheduledDate).slice(0, 10);
   const diff = parseDayDiff(date2, today);
   return diff != null && diff > 0;
 }
 function candidateTitle(item) {
-  return text$2(item.content || item.editableText || item.title).slice(0, 120);
+  return text$3(item.content || item.editableText || item.title).slice(0, 120);
 }
 function normalizedLabel(value) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
@@ -6332,7 +5784,7 @@ function buildEnergyActionCandidateResult(items, options = {}) {
     if (source === "task") diagnostics.eligibleTasks += 1;
     if (source === "plan") diagnostics.eligiblePlans += 1;
     if (source === "habit") diagnostics.eligibleHabits += 1;
-    const dedupeKey = `${source}|${normalizedLabel(title)}|${text$2(item.goalId || item.goalPath).toLowerCase()}|${text$2(item.themePath || item.theme).toLowerCase()}`;
+    const dedupeKey = `${source}|${normalizedLabel(title)}|${text$3(item.goalId).toLowerCase()}|${text$3(item.themePath || item.theme).toLowerCase()}`;
     if (seen.has(dedupeKey)) continue;
     seen.add(dedupeKey);
     const sharedLoad = load(item.extra?.["精力要求"] ?? item.extra?.["energyLoad"]);
@@ -6344,7 +5796,7 @@ function buildEnergyActionCandidateResult(items, options = {}) {
       goalId: item.goalId,
       goalPath: item.goalPath,
       seriesId: item.seriesId,
-      theme: text$2(item.themePath || item.theme) || void 0,
+      theme: text$3(item.themePath || item.theme) || void 0,
       activityLabel: classifyEnergyActivity(item),
       durationMinutes: inferredDuration(item, history),
       brainLoad: load(item.extra?.["脑力要求"] ?? item.extra?.["brainLoad"]) || sharedLoad,
@@ -6364,11 +5816,11 @@ function attachEnergyRecommendationEvidence(candidates, management) {
     return historicalEffect ? { ...candidate, historicalEffect } : candidate;
   });
 }
-function text$1(value) {
+function text$2(value) {
   return String(value ?? "").trim();
 }
 function normalized(value) {
-  return text$1(value).toLowerCase().replace(/\s+/g, " ");
+  return text$2(value).toLowerCase().replace(/\s+/g, " ");
 }
 function finiteNumber$1(value) {
   const n2 = Number(value);
@@ -6411,7 +5863,7 @@ function buildFeedbackRows(items) {
     const delta = finiteNumber$1(session.energyDelta);
     if (delta == null) continue;
     const task = byId.get(session.taskId);
-    const theme = text$1(session.themePath || task?.themePath || task?.theme) || void 0;
+    const theme = text$2(session.themePath || task?.themePath || task?.theme) || void 0;
     const activity = task ? classifyEnergyActivity(task) : theme || "未分类活动";
     rows.push({
       taskId: session.taskId,
@@ -6534,62 +5986,37 @@ function buildEnergyDataQuality(items, options) {
     gaps
   };
 }
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+const GOAL_DEFAULT_KEYS = /* @__PURE__ */ new Set(["goalId", "目标ID", "goalPath", "目标", "目标路径"]);
+function hasHash(value) {
+  const text2 = String(value ?? "");
+  return text2.includes("#") || text2.includes("＃");
 }
-function normalizeInputSettings(value) {
-  const raw = isRecord(value) ? value : {};
-  return {
-    ...DEFAULT_SETTINGS.inputSettings,
-    ...raw,
-    blocks: Array.isArray(raw.blocks) ? raw.blocks : [],
-    themes: Array.isArray(raw.themes) ? raw.themes : []
-  };
+function assertGoal(goal) {
+  if (!goal.id || !String(goal.id).startsWith("goal.")) throw new Error(`Invalid Goal id: ${goal.id || "<empty>"}`);
+  if (!goal.title?.trim() || hasHash(goal.title)) throw new Error(`Invalid Goal title for ${goal.id}: Goal title must not contain #.`);
+  const normalized2 = normalizeGoalPath(goal.goalPath || goal.title);
+  if (!normalized2 || normalized2 !== String(goal.goalPath || "").trim()) {
+    throw new Error(`Invalid Goal path for ${goal.id}: expected canonical slash path without #.`);
+  }
 }
-function assertCurrentSchemaVersion(raw) {
-  if (Object.keys(raw).length === 0) return;
-  if (raw.schemaVersion === THINK_SETTINGS_SCHEMA_VERSION) return;
-  throw new Error(
-    `Think OS settings schema mismatch: expected current schemaVersion ${THINK_SETTINGS_SCHEMA_VERSION}. This single-user build does not run legacy settings migrations. Update data.json to the current shape or remove it to start fresh.`
-  );
+function assertTemplate(template, goalIds) {
+  if (!goalIds.has(template.goalId)) throw new Error(`GoalTemplate ${template.id} references missing Goal (${template.goalId}).`);
+  for (const key of Object.keys(template.defaultValues || {})) {
+    if (GOAL_DEFAULT_KEYS.has(key)) throw new Error(`GoalTemplate ${template.id} must not persist Goal defaults (${key}).`);
+  }
+  for (const field of template.fields || []) {
+    const semantic = String(field.semantic || "").trim();
+    const key = String(field.key || field.label || "").trim();
+    if ((semantic === "goalId" || semantic === "goalPath" || GOAL_DEFAULT_KEYS.has(key)) && field.defaultValue != null) {
+      throw new Error(`GoalTemplate ${template.id} must not persist Goal field defaultValue (${key || semantic}).`);
+    }
+  }
 }
-function toCurrentThinkSettings(rawValue) {
-  const raw = isRecord(rawValue) ? rawValue : {};
-  assertCurrentSchemaVersion(raw);
-  const partial2 = raw;
-  return {
-    ...DEFAULT_SETTINGS,
-    ...partial2,
-    schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
-    groups: Array.isArray(partial2.groups) ? partial2.groups : [],
-    viewInstances: Array.isArray(partial2.viewInstances) ? partial2.viewInstances : [],
-    layouts: Array.isArray(partial2.layouts) ? partial2.layouts : [],
-    inputSettings: normalizeInputSettings(partial2.inputSettings),
-    energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...isRecord(partial2.energySettings) ? partial2.energySettings : {} },
-    activeThemePaths: Array.isArray(partial2.activeThemePaths) ? partial2.activeThemePaths : []
-  };
-}
-function normalizeGoalPath$1(path) {
-  return splitHierarchyPathValue(path, { stripLeadingHashes: true }).path;
-}
-function splitGoalPath(path) {
-  const parts = splitHierarchyPathValue(path, { stripLeadingHashes: true });
-  return {
-    goalPath: parts.path,
-    rootGoal: parts.root,
-    leafGoal: parts.leaf
-  };
-}
-function getGoalPathCandidates(path) {
-  const parts = splitHierarchyPathValue(path, { stripLeadingHashes: true }).parts;
-  const result = [];
-  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
-  return result;
-}
-function makeStableGoalIdFromPath(path) {
-  const normalized2 = splitGoalPath(path).goalPath || String(path || "").trim();
-  const safe = normalized2.toLowerCase().replace(/[\/\s]+/g, "-").replace(/[^a-z0-9\-_.\u4e00-\u9fa5]/gi, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
-  return `goal.${safe || "untitled"}`;
+function assertCanonicalGoalSettings(goalSettings) {
+  const goals = goalSettings?.goals || [];
+  for (const goal of goals) assertGoal(goal);
+  const goalIds = new Set(goals.map((goal) => goal.id));
+  for (const template of goalSettings?.goalTemplates || []) assertTemplate(template, goalIds);
 }
 const UNKNOWN_GOAL_RANK = Number.MAX_SAFE_INTEGER - 1e3;
 const UNASSIGNED_GOAL_RANK = Number.MAX_SAFE_INTEGER;
@@ -6598,11 +6025,11 @@ function finiteNumber(value, fallback) {
   return Number.isFinite(numeric) ? numeric : fallback;
 }
 function normalizeOrderPath(value) {
-  return splitGoalPath(String(value ?? "")).goalPath || String(value ?? "").trim();
+  return splitGoalPath(String(value ?? "")).goalPath || "";
 }
 function leafGoalLabel(value) {
   const parsed = splitGoalPath(String(value ?? ""));
-  return parsed.leafGoal || parsed.goalPath || String(value ?? "").trim();
+  return parsed.leafGoal || parsed.goalPath || "";
 }
 function getGoalOrderPath(goal) {
   if (!goal) return "";
@@ -6738,7 +6165,7 @@ function isoWeekInfo(date2) {
 function normalizePeriodGranularity(value) {
   const text2 = String(value || "").trim().toLowerCase();
   if (text2 === "day" || text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
-  return "day";
+  return "week";
 }
 function resolveDerivedPeriod(dateValue, granularityValue) {
   const granularity = normalizePeriodGranularity(granularityValue);
@@ -6807,8 +6234,6 @@ const SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET = new Set(SYSTEM_RECORD_CONTEXT_FIELD_
 const SYSTEM_RECORD_CONTEXT_SEMANTICS = /* @__PURE__ */ new Set([
   "goalId",
   "goalPath",
-  "goalPaths",
-  "goals",
   "coreBlock",
   "templateId",
   "templateSourceType",
@@ -7011,32 +6436,26 @@ function cleanupGoalTemplateStorage(goalSettings) {
     }
   };
 }
-const DEFAULT_THEME_PATH_OPTIONS = {
-  stripLeadingHashes: true
-};
-function themePathOptions(options = {}) {
-  return { ...DEFAULT_THEME_PATH_OPTIONS, ...options };
+function normalizeThemePath(value) {
+  return normalizeHierarchyPathValue(value) || "";
 }
-function normalizeThemePath(value, options = {}) {
-  return normalizeHierarchyPathValue(value, themePathOptions(options)) || "";
+function normalizeThemePathOrNull(value) {
+  return normalizeHierarchyPathValue(value);
 }
-function normalizeThemePathOrNull(value, options = {}) {
-  return normalizeHierarchyPathValue(value, themePathOptions(options));
-}
-function getThemePathCandidates(value, options = {}) {
-  const parts = normalizeHierarchyPathParts(value, themePathOptions(options));
+function getThemePathCandidates(value) {
+  const parts = normalizeHierarchyPathParts(value);
   const result = [];
   for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
   return result;
 }
-function getThemePathLeaf(value, options = {}) {
-  return getHierarchyPathLeaf(value, themePathOptions(options)) || normalizeThemePath(value, options);
+function getThemePathLeaf(value) {
+  return getHierarchyPathLeaf(value) || normalizeThemePath(value);
 }
-function getThemePathParent(value, options = {}) {
-  return getHierarchyPathParent(value, themePathOptions(options));
+function getThemePathParent(value) {
+  return getHierarchyPathParent(value);
 }
-function buildThemePathMap(themes, options = {}) {
-  return new Map((themes || []).map((theme) => [normalizeThemePath(theme.path, options), theme]).filter(([path]) => !!path));
+function buildThemePathMap(themes) {
+  return new Map((themes || []).map((theme) => [normalizeThemePath(theme.path), theme]).filter(([path]) => !!path));
 }
 function templateFieldTokenSources(field) {
   if (!field) return [];
@@ -7173,7 +6592,8 @@ function getGoalTemplateDisplayInfo(template, goal, fallbackIcon) {
     isGeneratedName: !rawName || isGeneratedGoalTemplateName(rawName)
   };
 }
-const ALLOWED_SYSTEM_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
+const ALLOWED_SYSTEM_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "icon"]);
+const GOAL_CONTEXT_FIELD_KEYS = /* @__PURE__ */ new Set(["goalId", "目标ID", "goalPath", "目标", "目标路径", "rootGoal", "leafGoal"]);
 const FORBIDDEN_DEFAULT_KEYS = /* @__PURE__ */ new Set([
   "legacyOverrideId",
   "legacyThemePath",
@@ -7197,6 +6617,16 @@ const FORBIDDEN_DEFAULT_KEYS = /* @__PURE__ */ new Set([
   "周期粒度",
   "goalGranularity"
 ]);
+function isGoalContextField(field) {
+  const source = field;
+  const semantic = compactText(source.semantic || source.semanticType);
+  const key = compactText(source.key || source.label);
+  return semantic === "goalId" || semantic === "goalPath" || GOAL_CONTEXT_FIELD_KEYS.has(key);
+}
+function stripGoalContextFields(fields) {
+  const result = (fields || []).filter((field) => !isGoalContextField(field));
+  return result.length ? result : void 0;
+}
 function stableJson$1(value) {
   const seen = /* @__PURE__ */ new WeakSet();
   const normalize = (input) => {
@@ -7253,12 +6683,13 @@ function compactDefaultValues(values2, baseFields, goal) {
   const baseDefaults = getFieldDefaultMap$1(baseFields);
   const goalThemePath = compactText(goal?.themePath);
   const result = {};
-  Object.entries(values2 || {}).forEach(([key, raw]) => {
+  Object.entries(values2 || {}).forEach(([rawKey, raw]) => {
+    const key = rawKey === "主题" ? "themePath" : rawKey === "图标" ? "icon" : rawKey;
     if (FORBIDDEN_DEFAULT_KEYS.has(key)) return;
     const value = compactText(raw);
     if (!value) return;
     if (isSystemRecordContextField(key) && !ALLOWED_SYSTEM_DEFAULT_KEYS.has(key)) return;
-    if ((key === "themePath" || key === "主题") && (value === goalThemePath || value === "{{goal.themePath}}")) return;
+    if (key === "themePath" && (value === goalThemePath || value === "{{goal.themePath}}")) return;
     if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
     result[key] = raw;
   });
@@ -7275,20 +6706,18 @@ function normalizePeriodPolicyForTemplate(template) {
 function compactGoalTemplateForStorage(template, options = {}) {
   const coreBlock = options.coreBlock || null;
   const baseFields = coreBlock?.fields;
-  const next2 = {
-    ...template
-  };
+  const next2 = { ...template, fields: stripGoalContextFields(template.fields) };
   if (!isPeriodAwareCoreBlock(template.coreBlockId)) {
     next2.periodPolicy = void 0;
   } else {
     next2.periodPolicy = normalizePeriodPolicyForTemplate(template);
   }
   if (coreBlock) {
-    if (fieldsHaveSameStructure$1(template.fields, baseFields)) next2.fields = void 0;
+    if (fieldsHaveSameStructure$1(next2.fields, stripGoalContextFields(baseFields))) next2.fields = void 0;
     if (compactText(template.targetFile) === compactText(coreBlock.targetFile)) next2.targetFile = void 0;
     if (compactText(template.appendUnderHeader) === compactText(coreBlock.appendUnderHeader)) next2.appendUnderHeader = void 0;
-    const explicitRequired = template.requiredFields && template.requiredFields.length ? template.requiredFields : deriveRequiredFields$1(template.fields);
-    const baseRequired = deriveRequiredFields$1(baseFields);
+    const explicitRequired = (template.requiredFields && template.requiredFields.length ? template.requiredFields : deriveRequiredFields$1(template.fields)).filter((key) => !GOAL_CONTEXT_FIELD_KEYS.has(compactText(key)));
+    const baseRequired = deriveRequiredFields$1(baseFields).filter((key) => !GOAL_CONTEXT_FIELD_KEYS.has(compactText(key)));
     next2.requiredFields = equalStringSet$1(explicitRequired || [], baseRequired) ? void 0 : (explicitRequired || []).filter(Boolean);
   } else if (next2.requiredFields && !next2.requiredFields.length) {
     next2.requiredFields = void 0;
@@ -7321,27 +6750,475 @@ function inferGoalTemplateEditMode(template, coreBlock, goal) {
   if (template?.enabled === false) return "disabled";
   return goalTemplateHasCustomOverrides(template, coreBlock, goal) ? "override" : "inherit";
 }
-const UNASSIGNED_GOAL_KEY = "未归属目标";
-function firstString(value) {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const candidate = firstString(item);
-      if (candidate) return candidate;
-    }
-    return "";
-  }
-  if (typeof value === "string") {
-    const text2 = value.trim();
-    if (!text2) return "";
-    return text2.split(",").map((part) => part.trim()).filter(Boolean)[0] || "";
-  }
-  if (value == null) return "";
-  return String(value).trim();
+function cleanThemePath(value) {
+  return splitHierarchyPathValue(value).path;
 }
+function splitThemePath$1(themePath) {
+  const parts = splitHierarchyPathValue(themePath);
+  return {
+    themePath: parts.path,
+    rootTheme: parts.root,
+    leafTheme: parts.leaf
+  };
+}
+function normalizeExplicitTheme(rawTheme, matcher) {
+  const explicitTheme = cleanThemePath(rawTheme);
+  if (!explicitTheme) return void 0;
+  const matched = matcher?.findThemeByPartialMatch(explicitTheme);
+  return cleanThemePath(matched) || explicitTheme;
+}
+function readExplicitThemePath(item) {
+  const normalized2 = cleanThemePath(item?.themePath);
+  if (normalized2) return normalized2;
+  const cached2 = cleanThemePath(item?.themePathNormalized);
+  if (cached2) return cached2;
+  return cleanThemePath(item?.theme) || void 0;
+}
+function readExplicitThemeParts(item) {
+  return splitThemePath$1(readExplicitThemePath(item));
+}
+function applyExplicitThemeViewFields(item) {
+  const parts = readExplicitThemeParts(item);
+  item.themePath = parts.themePath || void 0;
+  item.rootTheme = parts.rootTheme || void 0;
+  item.leafTheme = parts.leafTheme || void 0;
+  item.themePathNormalized = parts.themePath || void 0;
+  return item;
+}
+const FIELD_CATEGORY_LABELS = {
+  core: "核心字段",
+  file: "文件字段",
+  custom: "自定义字段"
+};
+const FIELD_CATEGORY_ORDER = ["core", "file", "custom"];
+const text$1 = (partial2) => ({
+  valueType: "string",
+  ...partial2
+});
+const FIELD_REGISTRY = {
+  // --- 核心字段 ---
+  id: text$1({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
+  title: text$1({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录标题或主要摘要" }),
+  content: text$1({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与其他 Record 统一为用户正文，不包含存储层元数据" }),
+  editableText: text$1({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
+  rawSource: text$1({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
+  fullData: text$1({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整 Record Block，仅用于调试/导出，不作为业务语义真源。" }),
+  // --- 内置核心业务字段 ---
+  categoryKey: text$1({ key: "categoryKey", label: "分类路径", valueType: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
+  tags: { key: "tags", label: "标签", valueType: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tag", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
+  goalId: text$1({ key: "goalId", label: "目标ID", category: "core", source: "item", semantic: "goalId", inputType: "text", aliases: ["目标ID", "goalId"] }),
+  goalPath: text$1({ key: "goalPath", label: "目标", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标", "目标路径", "goalPath"], description: "单值 Goal 路径；Goal 是独立实体，不使用 Tag 语义。" }),
+  rootGoal: text$1({ key: "rootGoal", label: "根目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
+  leafGoal: text$1({ key: "leafGoal", label: "叶目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
+  cycleId: text$1({ key: "cycleId", label: "周期ID", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
+  "period.id": text$1({ key: "period.id", label: "周期ID", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
+  "period.label": text$1({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
+  "period.granularity": text$1({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
+  coreBlock: text$1({ key: "coreBlock", label: "核心Block", category: "core", source: "item", semantic: "coreBlock", inputType: "text", aliases: ["核心Block", "coreBlock"] }),
+  recordSubtype: text$1({ key: "recordSubtype", label: "记录子类型", category: "core", source: "item", semantic: "recordSubtype", inputType: "singleSelect", aliases: ["记录子类型", "subtype", "recordSubtype"], description: "Record 类型内部的可选子类型，例如 Thought 的 感受/思考。" }),
+  status: text$1({ key: "status", label: "状态", category: "core", source: "item", semantic: "status", inputType: "singleSelect", aliases: ["状态", "status"], description: "实体显式状态；Task 使用 open/done/cancelled/skipped。" }),
+  cadence: text$1({ key: "cadence", label: "任务周期", category: "core", source: "derived", semantic: "recurrence", inputType: "singleSelect", aliases: ["任务周期", "cadence"], description: "由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。" }),
+  date: { key: "date", label: "日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
+  priority: text$1({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
+  icon: { key: "icon", label: "图标", valueType: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
+  recurrence: text$1({ key: "recurrence", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", description: "Task Series 结构化 recurrence 的只读展示投影。" }),
+  period: text$1({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
+  startTime: { key: "startTime", label: "开始时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
+  endTime: { key: "endTime", label: "结束时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
+  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDuration", "expectedDurationMinutes"], description: "Task 的用户声明预计时长；实际工作时长只来自 TaskSession。" },
+  scheduledDate: { key: "scheduledDate", label: "计划日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["计划日期", "scheduledDate"] },
+  startDate: { key: "startDate", label: "开始日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["开始日期", "startDate"] },
+  dueDate: { key: "dueDate", label: "截止日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["截止日期", "dueDate"] },
+  completedAt: text$1({ key: "completedAt", label: "完成时间", category: "core", source: "item", semantic: "date", aliases: ["完成于", "completedAt"] }),
+  createdAt: text$1({ key: "createdAt", label: "创建时间", category: "core", source: "item", semantic: "date", aliases: ["创建于", "createdAt"], hiddenByDefault: true }),
+  energyDemand: text$1({ key: "energyDemand", label: "精力要求", category: "core", source: "item", semantic: "none", aliases: ["精力要求", "energyDemand"] }),
+  brainDemand: text$1({ key: "brainDemand", label: "脑力要求", category: "core", source: "item", semantic: "none", aliases: ["脑力要求", "brainDemand"] }),
+  physicalDemand: text$1({ key: "physicalDemand", label: "体力要求", category: "core", source: "item", semantic: "none", aliases: ["体力要求", "physicalDemand"] }),
+  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用/历史时长字段；Task 应使用 expectedDurationMinutes，执行历史使用 TaskSession。" },
+  rating: { key: "rating", label: "评分", valueType: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
+  image: { key: "image", label: "图片", valueType: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image", "评图", "pintu"], description: "通用图片字段；当前兼容读取旧 pintu/评图 数据" },
+  // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
+  themePath: text$1({ key: "themePath", label: "主题路径", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "theme", "themePath"], description: "主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段" }),
+  rootTheme: text$1({ key: "rootTheme", label: "根主题", valueType: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["根主题", "themeRoot"] }),
+  leafTheme: text$1({ key: "leafTheme", label: "叶主题", valueType: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["叶主题", "themeLeaf"] }),
+  // --- 分类派生 ---
+  baseCategory: text$1({ key: "baseCategory", label: "根分类", valueType: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["根分类", "rootCategory", "分类根"] }),
+  leafCategory: text$1({ key: "leafCategory", label: "叶分类", valueType: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["叶分类", "leafCategory"] }),
+  // --- 文件字段 ---
+  "file.path": text$1({ key: "file.path", label: "文件路径", category: "file", source: "file", semantic: "filePath", aliases: ["文件路径", "filepath", "filePath", "path"] }),
+  "file.basename": text$1({ key: "file.basename", label: "文件名", category: "file", source: "file", semantic: "fileName", aliases: ["文件名", "filename", "basename"] }),
+  "file.name": text$1({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
+  "file.folder": text$1({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
+  folder: text$1({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
+  header: text$1({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示位置，绝不作为主题" }),
+  // --- 时间/统计派生 ---
+  startISO: { key: "startISO", label: "开始日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
+  endISO: { key: "endISO", label: "结束日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
+  periodCount: { key: "periodCount", label: "粒度序号", valueType: "number", category: "core", source: "derived", semantic: "period" },
+  displayCount: { key: "displayCount", label: "显示次数", valueType: "number", category: "core", source: "item" },
+  levelCount: { key: "levelCount", label: "等级次数", valueType: "number", category: "core", source: "item" },
+  countForLevel: { key: "countForLevel", label: "计入等级", valueType: "boolean", category: "core", source: "item" },
+  manuallyEdited: { key: "manuallyEdited", label: "手动编辑", valueType: "boolean", category: "core", source: "item" }
+};
+const VIEW_FIELD_PICKER_KEYS = /* @__PURE__ */ new Set([
+  "title",
+  "content",
+  "categoryKey",
+  "tags",
+  "goalPath",
+  "rootGoal",
+  "leafGoal",
+  "coreBlock",
+  "recordSubtype",
+  "status",
+  "cadence",
+  "date",
+  "scheduledDate",
+  "startDate",
+  "dueDate",
+  "completedAt",
+  "priority",
+  "expectedDurationMinutes",
+  "energyDemand",
+  "brainDemand",
+  "physicalDemand",
+  "rating",
+  "image",
+  "icon",
+  "themePath",
+  "rootTheme",
+  "leafTheme",
+  "period.label",
+  "recurrence",
+  "file.path",
+  "file.basename",
+  "file.folder",
+  "header"
+]);
+const FIELD_PICKER_KEY_ORDER = new Map(
+  Array.from(VIEW_FIELD_PICKER_KEYS).map((key, index) => [String(key), index])
+);
+function getFieldPickerKeyRank(key) {
+  return FIELD_PICKER_KEY_ORDER.get(key) ?? Number.MAX_SAFE_INTEGER;
+}
+function compareFieldDefinitionsForPicker(a2, b2) {
+  const aCategory = FIELD_CATEGORY_ORDER.includes(a2.category) ? a2.category : "custom";
+  const bCategory = FIELD_CATEGORY_ORDER.includes(b2.category) ? b2.category : "custom";
+  const byCategory = FIELD_CATEGORY_ORDER.indexOf(aCategory) - FIELD_CATEGORY_ORDER.indexOf(bCategory);
+  if (byCategory !== 0) return byCategory;
+  const byRank = getFieldPickerKeyRank(a2.key) - getFieldPickerKeyRank(b2.key);
+  if (byRank !== 0 && Number.isFinite(byRank)) return byRank;
+  return a2.label.localeCompare(b2.label, "zh-CN");
+}
+const HIDDEN_EXTRA_ALIAS_KEYS = [
+  "正文",
+  "内容",
+  "任务内容",
+  "记录内容",
+  "editableText"
+];
+const HIDDEN_EXTRA_ALIAS_SET$1 = new Set(HIDDEN_EXTRA_ALIAS_KEYS);
+function isVisibleExtraField(_item, key) {
+  return !HIDDEN_EXTRA_ALIAS_SET$1.has(key);
+}
+function inferExtraFieldType(value) {
+  if (typeof value === "number") return "number";
+  if (typeof value === "boolean") return "boolean";
+  if (isImageLikeValue(value)) return "image";
+  return "string";
+}
+function getAvailableFields(items) {
+  const allFields = /* @__PURE__ */ new Map();
+  const registeredLabels = /* @__PURE__ */ new Set();
+  Object.values(FIELD_REGISTRY).forEach((def) => {
+    registeredLabels.add(def.label);
+    registeredLabels.add(def.key);
+    (def.aliases || []).forEach((alias) => registeredLabels.add(alias));
+    if (def.hiddenByDefault || !VIEW_FIELD_PICKER_KEYS.has(def.key)) return;
+    allFields.set(def.key, def);
+  });
+  items.forEach((it) => {
+    Object.keys(it.extra || {}).forEach((key) => {
+      if (!isVisibleExtraField(it, key)) return;
+      if (!key || key.length > 64 || /[\r\n:：]/.test(key)) return;
+      if (registeredLabels.has(key)) return;
+      const fullKey = "extra." + key;
+      if (!allFields.has(fullKey)) {
+        const value = it.extra[key];
+        const inferredType = inferExtraFieldType(value);
+        allFields.set(fullKey, {
+          key: fullKey,
+          label: key,
+          valueType: inferredType,
+          inputType: inferredType === "image" ? "image" : inferredType === "boolean" ? "boolean" : inferredType === "number" ? "number" : "text",
+          semantic: inferredType === "image" ? "image" : "none",
+          category: "custom",
+          source: "extra",
+          cardinality: "single",
+          description: "从 Markdown 中显式未知 KV 解析出的自定义字段"
+        });
+      }
+    });
+  });
+  return Array.from(allFields.values()).sort(compareFieldDefinitionsForPicker);
+}
+function getFieldCategory(key) {
+  const def = getFieldDefinition(key);
+  if (!def) {
+    if (key.startsWith("file.")) return "file";
+    return "custom";
+  }
+  return FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
+}
+function getFieldCategoryLabel(key) {
+  return FIELD_CATEGORY_LABELS[getFieldCategory(key)];
+}
+function getFieldPickerOptions(fields) {
+  const seen = /* @__PURE__ */ new Set();
+  const options = [];
+  for (const field of fields || []) {
+    const value = getCanonicalFieldKey(field);
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    const def = getFieldDefinition(value);
+    const category = def?.category && FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
+    options.push({
+      value,
+      label: def?.label || getFieldLabel(value),
+      category,
+      group: FIELD_CATEGORY_LABELS[category],
+      description: def?.description
+    });
+  }
+  return options.sort((a2, b2) => {
+    const byCategory = FIELD_CATEGORY_ORDER.indexOf(a2.category) - FIELD_CATEGORY_ORDER.indexOf(b2.category);
+    if (byCategory !== 0) return byCategory;
+    const byRank = getFieldPickerKeyRank(a2.value) - getFieldPickerKeyRank(b2.value);
+    if (byRank !== 0 && Number.isFinite(byRank)) return byRank;
+    return a2.label.localeCompare(b2.label, "zh-CN");
+  });
+}
+const FIELD_ALIAS_MAP = {};
+for (const def of Object.values(FIELD_REGISTRY)) {
+  FIELD_ALIAS_MAP[def.key] = def.key;
+  FIELD_ALIAS_MAP[def.label] = def.key;
+  (def.aliases || []).forEach((alias) => {
+    FIELD_ALIAS_MAP[alias] = def.key;
+  });
+}
+function getCanonicalFieldKey(key) {
+  const raw = String(key || "").trim();
+  if (!raw) return raw;
+  if (raw.startsWith("extra.") || raw.startsWith("file.")) return raw;
+  return FIELD_ALIAS_MAP[raw] || raw;
+}
+function getFieldDefinition(key) {
+  const canonical = getCanonicalFieldKey(key);
+  if (FIELD_REGISTRY[canonical]) return FIELD_REGISTRY[canonical];
+  if (canonical.startsWith("extra.")) {
+    const label = canonical.slice(6);
+    return { key: canonical, label, valueType: "custom", inputType: "text", semantic: "none", category: "custom", source: "extra" };
+  }
+  return void 0;
+}
+const FIELD_LABEL_ALIASES = {
+  filename: "文件名",
+  basename: "文件名",
+  filepath: "文件路径",
+  filePath: "文件路径",
+  path: "路径",
+  themeRoot: "根主题",
+  themeLeaf: "叶主题",
+  rootCategory: "根分类",
+  leafCategory: "叶分类",
+  主题路径: "主题路径",
+  完整主题: "主题路径"
+};
+function getFieldLabel(key) {
+  const def = getFieldDefinition(key);
+  if (def) return def.label;
+  if (FIELD_LABEL_ALIASES[key]) return FIELD_LABEL_ALIASES[key];
+  if (key.startsWith("extra.")) return key.slice(6);
+  if (key.startsWith("file.")) {
+    const tail = key.slice(5);
+    return FIELD_LABEL_ALIASES[tail] || `文件.${tail}`;
+  }
+  return key;
+}
+const TASK_CADENCE_ORDER = ["routine", "day", "week", "month", "quarter", "year"];
+const TASK_CADENCE_META = {
+  routine: { label: "日常任务", emoji: "🌿" },
+  day: { label: "天任务", emoji: "☀️" },
+  week: { label: "周任务", emoji: "📅" },
+  month: { label: "月任务", emoji: "🗓️" },
+  quarter: { label: "季任务", emoji: "🍂" },
+  year: { label: "年任务", emoji: "🧭" }
+};
+function getTaskCadence(item) {
+  const recurrence = getTaskRecurrenceInfo(item);
+  if (!recurrence) return "routine";
+  if (recurrence.unit === "day") return "day";
+  if (recurrence.unit === "week") return "week";
+  if (recurrence.unit === "year") return "year";
+  if (recurrence.unit === "quarter") return "quarter";
+  return "month";
+}
+function isUnknownRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function asUnknownRecord(value) {
+  return isUnknownRecord(value) ? value : void 0;
+}
+function readUnknown(record, key) {
+  return record?.[key];
+}
+function readString(record, key) {
+  const value = readUnknown(record, key);
+  return typeof value === "string" ? value : void 0;
+}
+function readTrimmedString(record, key) {
+  const value = readString(record, key)?.trim();
+  return value ? value : void 0;
+}
+function readNumber(record, key) {
+  const value = readUnknown(record, key);
+  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+}
+function readStringArray(record, key) {
+  const value = readUnknown(record, key);
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => typeof item === "string");
+}
+function readRecord(record, key) {
+  return asUnknownRecord(readUnknown(record, key));
+}
+function readRecordArray(record, key) {
+  const value = readUnknown(record, key);
+  if (!Array.isArray(value)) return [];
+  return value.filter(isUnknownRecord);
+}
+function readFirstString$1(record, keys) {
+  for (const key of keys) {
+    const value = readTrimmedString(record, key);
+    if (value) return value;
+  }
+  return void 0;
+}
+function normalizeFieldKey(field) {
+  return getCanonicalFieldKey(field);
+}
+function readFileField(item, field) {
+  const file = item.file;
+  const fileRecord = asUnknownRecord(file);
+  const key = field.slice("file.".length);
+  if (key === "name" || key === "basename") {
+    return file?.basename ?? item.fileName ?? item.filename;
+  }
+  if (key === "folder") {
+    return file?.folder ?? item.folder;
+  }
+  return readUnknown(fileRecord, key);
+}
+function readCategoryPath(item) {
+  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).path;
+}
+function readRootCategory(item) {
+  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).root;
+}
+function readLeafCategory(item) {
+  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).leaf;
+}
+function readImageField(item) {
+  return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? item.extra?.["评图"] ?? item.extra?.["pintu"]);
+}
+function readCanonicalField(item, canonicalField) {
+  if (canonicalField.startsWith("extra.")) {
+    return item.extra?.[canonicalField.slice("extra.".length)];
+  }
+  if (canonicalField.startsWith("file.")) {
+    return readFileField(item, canonicalField);
+  }
+  if (canonicalField === "categoryKey") {
+    return readCategoryPath(item);
+  }
+  if (canonicalField === "baseCategory") {
+    return readRootCategory(item);
+  }
+  if (canonicalField === "leafCategory") {
+    return readLeafCategory(item);
+  }
+  if (canonicalField === "themePath") {
+    return readExplicitThemeParts(item).themePath ?? void 0;
+  }
+  if (canonicalField === "rootTheme") {
+    return readExplicitThemeParts(item).rootTheme ?? void 0;
+  }
+  if (canonicalField === "leafTheme") {
+    return readExplicitThemeParts(item).leafTheme ?? void 0;
+  }
+  if (canonicalField === "status") return item.status;
+  if (canonicalField === "cadence") return item.coreBlock === "task" ? getTaskCadence(item) : void 0;
+  if (canonicalField === "recurrence") return formatTaskRecurrence(item.recurrenceInfo);
+  if (canonicalField === "period.id") {
+    return readFirstString$1(asUnknownRecord(item), ["cycleId", "periodId"]);
+  }
+  if (canonicalField === "period.label") {
+    return readFirstString$1(asUnknownRecord(item), ["period", "周期"]);
+  }
+  if (canonicalField === "period.granularity") {
+    return readFirstString$1(asUnknownRecord(item), ["periodGranularity", "goalGranularity"]);
+  }
+  if (canonicalField === "tags") {
+    return parseTagList(item.tags || []);
+  }
+  if (canonicalField === "fullData") {
+    return item.rawSource || item.fullData || item.content || "";
+  }
+  if (canonicalField === "image") {
+    return readImageField(item);
+  }
+  if (canonicalField === "time") {
+    return item.startTime;
+  }
+  if (canonicalField === "filename" || canonicalField === "fileName") {
+    return item.file?.basename ?? item.fileName ?? item.filename;
+  }
+  if (canonicalField === "pintu") {
+    return item.pintu;
+  }
+  return readUnknown(asUnknownRecord(item), canonicalField);
+}
+function resolveFieldValue(item, field) {
+  const canonicalField = normalizeFieldKey(field);
+  const def = getFieldDefinition(canonicalField);
+  let value = readCanonicalField(item, canonicalField);
+  if (value === void 0) {
+    const injectedFields = asUnknownRecord(readUnknown(asUnknownRecord(item), "fields"));
+    value = readUnknown(injectedFields, canonicalField);
+    if (value === void 0 && field !== canonicalField) value = readUnknown(injectedFields, field);
+  }
+  const source = def?.source || "unknown";
+  return {
+    requestedField: field,
+    field: canonicalField,
+    value,
+    source,
+    derived: source === "derived",
+    legacy: source === "legacy" || !!def?.deprecated
+  };
+}
+function readFieldValue(item, field) {
+  return resolveFieldValue(item, field).value;
+}
+function getAllFields(items) {
+  return getAvailableFields(items).map((field) => field.key);
+}
+function readField(item, field) {
+  return readFieldValue(item, field);
+}
+const UNASSIGNED_GOAL_KEY = "未归属目标";
 function normalizeItemGoalPath(value) {
-  const raw = firstString(value);
-  if (!raw) return "";
-  return normalizeGoalPath$1(raw) || raw;
+  return normalizeGoalPath(String(value ?? "").trim()) || "";
 }
 function buildGoalPathById$1(goals = []) {
   const map = /* @__PURE__ */ new Map();
@@ -7357,20 +7234,11 @@ function findGoalByPath(goals = [], goalPath) {
   return goals.find((goal) => normalizeItemGoalPath(goal.goalPath || goal.title) === normalized2) || null;
 }
 function getItemGoalKey(item, goals = []) {
-  const directPath = normalizeItemGoalPath(item.goalPath);
-  if (directPath) return directPath;
-  const directPaths = normalizeItemGoalPath(item.goalPaths);
-  if (directPaths) return directPaths;
-  const fieldPath = normalizeItemGoalPath(readField(item, "goalPath")) || normalizeItemGoalPath(readField(item, "目标路径")) || normalizeItemGoalPath(readField(item, "目标"));
-  if (fieldPath) return fieldPath;
-  const fieldPaths = normalizeItemGoalPath(readField(item, "goalPaths"));
-  if (fieldPaths) return fieldPaths;
-  const byId = buildGoalPathById$1(goals);
-  const directId = firstString(item.goalId) || firstString(readField(item, "goalId")) || firstString(readField(item, "目标ID"));
-  if (directId && byId.has(directId)) return byId.get(directId) || UNASSIGNED_GOAL_KEY;
-  const directIds = firstString(item.goalIds);
-  if (directIds && byId.has(directIds)) return byId.get(directIds) || UNASSIGNED_GOAL_KEY;
-  return UNASSIGNED_GOAL_KEY;
+  const goalId = String(item.goalId || "").trim();
+  if (!goalId) return UNASSIGNED_GOAL_KEY;
+  const currentPath = buildGoalPathById$1(goals).get(goalId);
+  if (currentPath) return currentPath;
+  return normalizeItemGoalPath(item.goalPath) || UNASSIGNED_GOAL_KEY;
 }
 function getItemGoalLabel(item, goals = []) {
   const key = getItemGoalKey(item, goals);
@@ -7472,6 +7340,279 @@ function getEffectiveCoreBlocks(settings) {
 function getCoreBlockById(settings, blockId) {
   return getEffectiveCoreBlocks(settings).find((block) => block.id === blockId) || null;
 }
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function normalizeInputSettings(value) {
+  const raw = isRecord(value) ? value : {};
+  return {
+    ...DEFAULT_SETTINGS.inputSettings,
+    ...raw,
+    // Settings Compact V5: blocks are runtime projections of canonical CoreBlock definitions, never persisted user data.
+    blocks: [],
+    themes: Array.isArray(raw.themes) ? raw.themes : []
+  };
+}
+function assertCurrentSchemaVersion(raw) {
+  if (Object.keys(raw).length === 0) return;
+  if (raw.schemaVersion === THINK_SETTINGS_SCHEMA_VERSION) return;
+  throw new Error(
+    `Think OS settings schema mismatch: expected current schemaVersion ${THINK_SETTINGS_SCHEMA_VERSION}. This single-user build does not run legacy settings migrations. Update data.json to the current shape or remove it to start fresh.`
+  );
+}
+function toCurrentThinkSettings(rawValue) {
+  const raw = isRecord(rawValue) ? rawValue : {};
+  assertCurrentSchemaVersion(raw);
+  const partial2 = raw;
+  assertCanonicalGoalSettings(partial2.goalSettings);
+  const current2 = {
+    ...DEFAULT_SETTINGS,
+    ...partial2,
+    schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
+    groups: Array.isArray(partial2.groups) ? partial2.groups : [],
+    viewInstances: Array.isArray(partial2.viewInstances) ? partial2.viewInstances : [],
+    layouts: Array.isArray(partial2.layouts) ? partial2.layouts : [],
+    inputSettings: normalizeInputSettings(partial2.inputSettings),
+    energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...isRecord(partial2.energySettings) ? partial2.energySettings : {} },
+    activeThemePaths: Array.isArray(partial2.activeThemePaths) ? partial2.activeThemePaths : []
+  };
+  current2.inputSettings.blocks = getEffectiveCoreBlocks(current2);
+  return current2;
+}
+function toPersistedThinkSettings(settings) {
+  const out = JSON.parse(JSON.stringify(settings ?? {}));
+  if (isRecord(out.inputSettings)) delete out.inputSettings.blocks;
+  const templates = out.goalSettings?.goalTemplates;
+  if (Array.isArray(templates)) {
+    for (const template of templates) {
+      if (!isRecord(template) || !isRecord(template.defaultValues)) continue;
+      const defaults = template.defaultValues;
+      if (defaults.themePath === void 0 && defaults["主题"] !== void 0) defaults.themePath = defaults["主题"];
+      if (defaults.icon === void 0 && defaults["图标"] !== void 0) defaults.icon = defaults["图标"];
+      delete defaults["主题"];
+      delete defaults["图标"];
+      if (Object.keys(defaults).length === 0) delete template.defaultValues;
+    }
+  }
+  return out;
+}
+var __getOwnPropDesc$e = Object.getOwnPropertyDescriptor;
+var __decorateClass$e = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$e(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$d = (index, decorator) => (target, key) => decorator(target, key, index);
+const SETTINGS_PERSISTENCE_TOKEN = "SettingsPersistence";
+let SettingsRepository = class {
+  constructor(persistence) {
+    this.persistence = persistence;
+  }
+  persistence;
+  currentSettings = null;
+  listeners = /* @__PURE__ */ new Set();
+  /**
+   * 订阅设置变化
+   * @param listener 变化时调用的回调
+   * @returns 取消订阅函数
+   */
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+  /**
+   * 通知所有订阅者
+   */
+  notify() {
+    if (this.currentSettings) {
+      this.listeners.forEach((listener) => listener(this.currentSettings));
+    }
+  }
+  /**
+   * 加载设置
+   * @returns 当前设置（如果未加载过会从持久化层读取）
+   */
+  async load() {
+    if (this.currentSettings) {
+      return this.currentSettings;
+    }
+    const loaded = await this.persistence.loadData();
+    const settings = toCurrentThinkSettings(loaded);
+    this.currentSettings = settings;
+    this.notify();
+    return settings;
+  }
+  /**
+   * 获取当前设置（同步，必须先调用 load）
+   */
+  getSettings() {
+    if (!this.currentSettings) {
+      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
+    }
+    return this.currentSettings;
+  }
+  /**
+   * 获取当前设置快照（getSettings 的别名，符合 S2 规范）
+   * @returns 当前设置的不可变快照
+   */
+  getSnapshot() {
+    return this.getSettings();
+  }
+  /**
+   * 设置初始值（用于首次加载或重置）
+   */
+  setInitialSettings(settings) {
+    assertCanonicalGoalSettings(settings.goalSettings);
+    this.currentSettings = settings;
+    this.notify();
+  }
+  /**
+   * 保存设置
+   * @param settings 新设置
+   * @param meta 可选的动作元数据（用于 dev 日志）
+   */
+  async save(settings, meta) {
+    assertCanonicalGoalSettings(settings.goalSettings);
+    const before = this.currentSettings;
+    this.currentSettings = settings;
+    await this.persistence.saveData(settings);
+    logSettingsWrite(meta, before, settings);
+  }
+  /**
+   * 使用 immer 更新设置
+   * @param mutator 修改函数，接收 draft 参数进行修改
+   * @param meta 可选的动作元数据（用于 dev 日志）
+   * @returns 更新后的设置
+   */
+  async update(mutator, meta) {
+    if (!this.currentSettings) {
+      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
+    }
+    const before = this.currentSettings;
+    const newSettings = produce(this.currentSettings, mutator);
+    if (newSettings !== this.currentSettings) {
+      assertCanonicalGoalSettings(newSettings.goalSettings);
+      this.currentSettings = newSettings;
+      await this.persistence.saveData(newSettings);
+      this.notify();
+      logSettingsWrite(meta, before, newSettings);
+    }
+    return newSettings;
+  }
+};
+SettingsRepository = __decorateClass$e([
+  singleton(),
+  __decorateParam$d(0, inject(SETTINGS_PERSISTENCE_TOKEN))
+], SettingsRepository);
+var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
+var __decorateClass$d = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
+let RepositorySettingsProvider = class {
+  constructor(settingsRepository) {
+    this.settingsRepository = settingsRepository;
+  }
+  settingsRepository;
+  getSettings() {
+    return this.settingsRepository.getSettings();
+  }
+};
+RepositorySettingsProvider = __decorateClass$d([
+  singleton(),
+  __decorateParam$c(0, inject(SettingsRepository))
+], RepositorySettingsProvider);
+function setupCoreContainer(app, settings) {
+  instance.register(AppToken, { useValue: app });
+  instance.register(SETTINGS_TOKEN, { useValue: settings });
+  instance.register(STORAGE_TOKEN, { useClass: VaultFileStorage });
+  instance.registerSingleton(SettingsRepository);
+  instance.registerSingleton(RepositorySettingsProvider);
+  instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
+}
+const CODEBLOCK_LANG = "think";
+const EMPTY_LABEL = "无日期";
+const LOCAL_STORAGE_KEYS = {
+  SETTINGS_TABS: "think-settings-active-tab"
+};
+const DEFAULT_NAMES = {
+  NEW_LAYOUT: "新布局"
+};
+let _activeCategoryColors = {};
+function updateCategoryColorMap(userColors) {
+  _activeCategoryColors = { ...userColors };
+}
+function getActiveCategoryColors() {
+  return { ..._activeCategoryColors };
+}
+function getCategoryColor(categoryKey) {
+  const base = (categoryKey || "").split("/")[0] || "";
+  return _activeCategoryColors[base] || "#e0e0e0";
+}
+const VIEW_OPTIONS = [
+  "BlockView",
+  "TableView",
+  "ExcelView",
+  "TimelineView",
+  "StatisticsView",
+  "HeatmapView",
+  "EventTimelineView",
+  "ProgressView",
+  "EnergyView"
+];
+const THEME_MATCHER_TOKEN = /* @__PURE__ */ Symbol("IThemeMatcher");
+function isActiveTimerState(timer) {
+  return !!timer && (timer.status === "running" || timer.status === "paused");
+}
+function splitThemePath(themePath) {
+  return splitThemePath$1(themePath);
+}
+function pickEditableText(item) {
+  if (item.editableText?.trim()) return item.editableText.trim();
+  const extraBody = item.extra?.["正文"];
+  if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
+  return item.content?.trim() || item.title || null;
+}
+function buildParsedRecordSnapshot(item) {
+  const path = item.source?.path ?? item.file?.path ?? null;
+  const line2 = item.source?.startLine ?? (typeof item.file?.line === "number" ? item.file.line : null);
+  const editableText = pickEditableText(item);
+  const themeParts = readExplicitThemeParts(item);
+  return {
+    itemId: item.id,
+    entryKind: item.coreBlock === "task" ? "task" : "block",
+    locator: { path, line: line2 },
+    raw: { sourceText: item.rawSource || item.content || "" },
+    semantic: {
+      title: item.title || null,
+      editableText,
+      content: item.content || null,
+      date: item.date || item.createdDate || null,
+      period: item.period || null,
+      tags: [...item.tags || []],
+      goalId: item.goalId || null,
+      goalPath: item.goalPath || null,
+      startTime: item.startTime || null,
+      endTime: item.endTime || null,
+      duration: item.duration ?? null,
+      themePath: themeParts.themePath,
+      rootTheme: themeParts.rootTheme,
+      leafTheme: themeParts.leafTheme,
+      categoryKey: item.categoryKey || null
+    },
+    templateHint: {
+      templateId: item.templateId || null,
+      templateSourceType: item.templateSourceType || null
+    },
+    extra: { ...item.extra || {} }
+  };
+}
 function getEffectiveTemplate(settings, blockId, themeId) {
   const templates = [...settings.blocks || [], ...DEFAULT_CORE_BLOCKS.filter((block) => !(settings.blocks || []).some((existing) => existing.id === block.id))];
   const template = templates.find((block) => block.id === blockId) ?? null;
@@ -7518,7 +7659,7 @@ const CORE_FIELD_GUIDE_KEYS = [
   "categoryKey",
   "themePath",
   "tags",
-  "goalPaths",
+  "goalPath",
   "date",
   "image",
   "rating"
@@ -7576,7 +7717,7 @@ const CORE_INPUT_ALIAS_TARGETS = {
   tags: "tags",
   "标签": "tags",
   // 目标：只支持中文字段名，不开放 goal/target 等别名。
-  "目标": "goalPaths",
+  "目标": "goalPath",
   // 图片
   image: "image",
   pic: "image",
@@ -7744,12 +7885,9 @@ const DEFAULT_VALUE_FIELD_TYPES = /* @__PURE__ */ new Set([
   "time",
   "datetime",
   "singleSelect",
-  "multiSelect",
   "path",
   "hierarchicalSingleSelect",
-  "multiPath",
   "tag",
-  "multiTag",
   "image",
   "file",
   "rating"
@@ -7865,7 +8003,6 @@ const KNOWN_SEMANTICS = /* @__PURE__ */ new Set([
   "categoryPath",
   "themePath",
   "tags",
-  "goals",
   "goalId",
   "goalPath",
   "cycleId",
@@ -7901,20 +8038,20 @@ function getTemplateFieldSemantic(field) {
   if (semanticType === "ratingpair") return "rating";
   if (semanticType === "path") {
     if (templateFieldMatches(field, ["主题", "theme", "themePath", "完整主题", "主题路径"])) return "themePath";
-    if (templateFieldMatches(field, ["分类", "类别", "category", "categoryPath", "分类路径"])) return "categoryPath";
+    if (templateFieldMatches(field, ["分类", "类别", "思考分类", "闪念分类", "category", "categoryPath", "分类路径"])) return "categoryPath";
     return "none";
   }
   if (templateFieldMatches(field, ["标题", "title", "名称", "name"])) return "title";
   if (templateFieldMatches(field, ["正文", "内容", "任务内容", "记录内容", "body", "content", "text"])) return "body";
   if (templateFieldMatches(field, ["主题", "theme", "themePath", "完整主题", "主题路径"])) return "themePath";
-  if (templateFieldMatches(field, ["分类", "类别", "category", "categoryPath", "分类路径"])) return "categoryPath";
+  if (templateFieldMatches(field, ["分类", "类别", "思考分类", "闪念分类", "category", "categoryPath", "分类路径"])) return "categoryPath";
   if (templateFieldMatches(field, ["标签", "tag", "tags"])) return "tags";
   if (templateFieldMatches(field, ["目标ID", "goalId"])) return "goalId";
   if (templateFieldMatches(field, ["目标路径", "goalPath"])) return "goalPath";
   if (templateFieldMatches(field, ["周期ID", "cycleId"])) return "cycleId";
   if (templateFieldMatches(field, ["核心Block", "coreBlock"])) return "coreBlock";
   if (templateFieldMatches(field, ["记录子类型", "recordSubtype", "subtype"])) return "recordSubtype";
-  if (templateFieldMatches(field, ["目标"])) return "goals";
+  if (templateFieldMatches(field, ["目标"])) return "goalPath";
   if (templateFieldMatches(field, ["状态", "status"])) return "status";
   if (templateFieldMatches(field, ["日期", "date"])) return "date";
   if (templateFieldMatches(field, ["时间", "开始", "开始时间", "time", "start", "startTime"])) return "startTime";
@@ -7933,7 +8070,7 @@ function getTemplateFieldInputType(field) {
   const semantic = getTemplateFieldSemantic(field);
   if (semantic === "body") return "textarea";
   if (semantic === "themePath" || semantic === "categoryPath" || semantic === "goalPath") return "hierarchicalSingleSelect";
-  if (semantic === "tags" || semantic === "goals") return "multiTag";
+  if (semantic === "tags") return "multiTag";
   if (semantic === "image") return "image";
   if (semantic === "rating") return "rating";
   if (semantic === "date") return "date";
@@ -7959,7 +8096,7 @@ function isTemplatePathField(field) {
 function isTemplateTagField(field) {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
-  return inputType === "tag" || inputType === "multiTag" || semantic === "tags" || semantic === "goals";
+  return inputType === "tag" || inputType === "multiTag" || semantic === "tags";
 }
 function isTemplateImageField(field) {
   const inputType = getTemplateFieldInputType(field);
@@ -8071,16 +8208,14 @@ function applyCoreTemplateAliases(data, field, value) {
     const goalId = singleTemplateValueToString(value);
     if (goalId) {
       data.goalId = goalId;
-      data.goalIds = [goalId];
     }
     return;
   }
   if (semantic === "goalPath") {
-    const path = normalizeHierarchyPath(singleTemplateValueToString(value));
+    const path = normalizeGoalPath(singleTemplateValueToString(value));
     if (!path) return;
     const parts = splitHierarchyPath(path);
     data.goalPath = path;
-    data.goalPaths = [path];
     data.rootGoal = parts.root || "";
     data.leafGoal = parts.leaf || "";
     return;
@@ -8093,17 +8228,6 @@ function applyCoreTemplateAliases(data, field, value) {
   if (semantic === "coreBlock") {
     const coreBlock = singleTemplateValueToString(value);
     if (coreBlock) data.coreBlock = coreBlock;
-    return;
-  }
-  if (semantic === "goals") {
-    const goals = parseTagList(value);
-    if (goals.length) {
-      data.goalPaths = goals;
-      data.goalPath = goals[0];
-      const parts = splitHierarchyPath(goals[0]);
-      data.rootGoal = parts.root || "";
-      data.leafGoal = parts.leaf || "";
-    }
     return;
   }
   if (semantic === "image") {
@@ -8274,14 +8398,14 @@ function buildAiConfigSnapshot(input, ai, goalSettings) {
     themePath: goal.themePath || null
   }));
   const goalPathById = new Map(goals.map((goal) => [goal.id, goal.path]));
-  const goalPresets = getGoalTemplates(goalSettings).filter((preset) => preset.enabled !== false).filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId)).map((preset) => {
+  const goalPresets = getGoalTemplates(goalSettings).filter((preset) => preset.enabled !== false).filter((preset) => goalPathById.has(preset.goalId)).filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId)).map((preset) => {
     const block = blockByCoreId.get(preset.coreBlockId) || blockById.get(preset.coreBlockId);
     const fields = (preset.fields?.length ? preset.fields : block?.fields || []).filter(isAiVisibleField).map(normalizeField);
     const defaultThemePath = readThemePath(preset.defaultValues?.themePath) || readThemePath(preset.defaultValues?.["主题"]) || fields.map((field) => readThemePath(field.defaultValue)).find(Boolean);
     return {
       id: preset.id,
       goalId: preset.goalId,
-      goalPath: goalPathById.get(preset.goalId) || preset.goalId,
+      goalPath: goalPathById.get(preset.goalId),
       blockId: preset.coreBlockId,
       categoryKey: block?.categoryKey || preset.coreBlockId,
       variantId: preset.variantId || "default",
@@ -8760,11 +8884,11 @@ function buildAiSystemPrompt(snapshot, customPrompt) {
     "8. For 计划/总结, do not invent 周期 fields. The app derives period from the selected preset periodPolicy and 日期.",
     "",
     "=== EXAMPLE ===",
-    'If user says "记录今天运动 30 分钟" and goal/preset include "#强健身体 × core.habit → 运动打卡(健康/运动)":',
+    'If user says "记录今天运动 30 分钟" and goal/preset include "强健身体 × core.habit → 运动打卡(健康/运动)":',
     "{",
     '  "items": [{',
     '    "rawText": "记录今天运动 30 分钟",',
-    '    "target": { "blockId": "core.habit", "categoryKey": "打卡", "goalPath": "#强健身体", "goalTemplateId": "goal-template.goal.health.core.habit.running", "templateVariantId": "running", "themeId": "健康/运动" },',
+    '    "target": { "blockId": "core.habit", "categoryKey": "打卡", "goalPath": "强健身体", "goalTemplateId": "goal-template.goal.health.core.habit.running", "templateVariantId": "running", "themeId": "健康/运动" },',
     '    "fieldValues": { "日期": "2024-01-15", "内容": "运动 30 分钟" },',
     '    "meta": { "confidence": 0.95 }',
     "  }]",
@@ -8811,7 +8935,7 @@ function buildAiUserPrompt(text2, nowIso2, maxResults, snapshot) {
 }
 function buildAiFastUserPrompt(text2, nowIso2, maxResults, snapshot) {
   const themePaths = (snapshot.themes ?? []).map((theme) => theme.path).filter(Boolean);
-  const goalPaths = (snapshot.goals ?? []).map((goal) => goal.path).filter(Boolean);
+  const availableGoalPaths = (snapshot.goals ?? []).map((goal) => goal.path).filter(Boolean);
   const compactPresets = (snapshot.goalPresets ?? []).map((preset) => ({
     goalPath: preset.goalPath,
     blockId: preset.blockId,
@@ -8833,7 +8957,7 @@ function buildAiFastUserPrompt(text2, nowIso2, maxResults, snapshot) {
     "Fast mode: prefer the simplest correct parse. Return compact JSON only.",
     "",
     "Goals:",
-    goalPaths.join(" | "),
+    availableGoalPaths.join(" | "),
     "",
     "Goal presets:",
     JSON.stringify(compactPresets),
@@ -13753,7 +13877,7 @@ function toRecordViewItem(record) {
 }
 const METADATA_PORT_TOKEN = "MetadataPort";
 const FILESTAT_PORT_TOKEN = "FileStatPort";
-const CURRENT_CACHE_SCHEMA_VERSION = 12;
+const CURRENT_CACHE_SCHEMA_VERSION = 13;
 function toCachedItem(it) {
   return {
     id: it.id,
@@ -13772,7 +13896,6 @@ function toCachedItem(it) {
     tags: [...it.tags || []],
     goalId: it.goalId,
     goalPath: it.goalPath,
-    goalPaths: [...it.goalPaths || []],
     theme: it.theme,
     themePath: it.themePath,
     rootTheme: it.rootTheme,
@@ -13815,8 +13938,7 @@ function toCachedItem(it) {
     extra: it.extra || {},
     titleLower: it.titleLower ?? it.title?.toLowerCase(),
     contentLower: it.contentLower ?? it.content?.toLowerCase(),
-    tagsLower: it.tagsLower ?? (it.tags || []).map((t3) => t3.toLowerCase()),
-    goalPathsLower: it.goalPathsLower ?? (it.goalPaths || []).map((t3) => t3.toLowerCase())
+    tagsLower: it.tagsLower ?? (it.tags || []).map((t3) => t3.toLowerCase())
   };
 }
 function fromCachedItem(c2) {
@@ -13834,8 +13956,6 @@ function fromCachedItem(c2) {
     tags: [...c2.tags || []],
     goalId: c2.goalId,
     goalPath: c2.goalPath,
-    goalIds: c2.goalId ? [c2.goalId] : [],
-    goalPaths: [...c2.goalPaths || []],
     theme: c2.theme,
     themePath: c2.themePath,
     rootTheme: c2.rootTheme,
@@ -13889,7 +14009,6 @@ function fromCachedItem(c2) {
   it.titleLower = c2.titleLower ?? c2.title?.toLowerCase() ?? "";
   it.contentLower = c2.contentLower ?? c2.content?.toLowerCase() ?? "";
   it.tagsLower = c2.tagsLower ?? (c2.tags || []).map((t3) => t3.toLowerCase());
-  it.goalPathsLower = c2.goalPathsLower ?? (c2.goalPaths || []).map((t3) => t3.toLowerCase());
   return it;
 }
 const DATASTORE_CACHE_PATH = "Think/cache.json";
@@ -14011,7 +14130,7 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
     editableText: parsed.content,
     status: parsed.status,
     tags: parsed.tags,
-    goalPaths: parsed.goalPaths,
+    goalPath: parsed.goalPath,
     recurrenceInfo: recurrenceInfo || void 0,
     created: 0,
     modified: 0,
@@ -14021,6 +14140,10 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
     theme: parsed.theme,
     coreBlock: parsed.coreBlock,
     priority: parsed.priority,
+    createdAt: parsed.createdAt,
+    energyDemand: parsed.energyDemand,
+    brainDemand: parsed.brainDemand,
+    physicalDemand: parsed.physicalDemand,
     scheduledDate: parsed.scheduledDate,
     startDate: parsed.startDate,
     dueDate: parsed.dueDate,
@@ -14048,10 +14171,7 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
     cancelledDate: parsed.cancelledAt,
     date: canonicalDate
   };
-  if (parsed.goalId) {
-    item.goalId = parsed.goalId;
-    item.goalIds = [parsed.goalId];
-  }
+  if (parsed.goalId) item.goalId = parsed.goalId;
   if (parsed.cycleId) item.cycleId = parsed.cycleId;
   if (parsed.templateId) item.templateId = parsed.templateId;
   if (parsed.templateSourceType) item.templateSourceType = parsed.templateSourceType;
@@ -14064,10 +14184,6 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
   if (parsed.expectedDurationMinutes !== void 0) {
     item.expectedDurationMinutes = parsed.expectedDurationMinutes;
   }
-  if (parsed.energyDemand) item.extra["精力要求"] = parsed.energyDemand;
-  if (parsed.brainDemand) item.extra["脑力要求"] = parsed.brainDemand;
-  if (parsed.physicalDemand) item.extra["体力要求"] = parsed.physicalDemand;
-  if (parsed.createdAt) item.extra["创建于"] = parsed.createdAt;
   item.startISO = parsed.sessionStartedAt || parsed.startDate || parsed.scheduledDate || parsed.dueDate || parsed.date;
   item.endISO = parsed.sessionEndedAt || parsed.completedAt || parsed.cancelledAt || parsed.dueDate || item.startISO;
   if (item.startISO) item.startMs = Date.parse(item.startISO);
@@ -14129,13 +14245,15 @@ function normalizeRecordItem(item, context) {
     item.header = context.header;
   }
   item.tags = unique([...context.sectionTags || [], ...item.tags || []]);
-  item.goalIds = unique([item.goalId, ...item.goalIds || []]);
-  item.goalPaths = unique([item.goalPath, ...item.goalPaths || []]);
-  item.goalPath = item.goalPaths[0] || item.goalPath;
+  item.goalId = String(item.goalId || "").trim() || void 0;
+  const rawGoalPath = String(item.goalPath || "").trim();
+  const canonicalGoalPath = rawGoalPath ? normalizeGoalPath(rawGoalPath) : null;
+  if (rawGoalPath && !canonicalGoalPath) throw new Error(`invalid_record_goal_path:${item.id}`);
+  item.goalPath = canonicalGoalPath || void 0;
+  if (Boolean(item.goalId) !== Boolean(item.goalPath)) throw new Error(`invalid_record_goal_identity:${item.id}`);
   const goalParts = splitGoalPath(item.goalPath || null);
-  item.goalPath = goalParts.goalPath || item.goalPath;
-  item.rootGoal = goalParts.rootGoal || item.rootGoal;
-  item.leafGoal = goalParts.leafGoal || item.leafGoal;
+  item.rootGoal = goalParts.rootGoal || void 0;
+  item.leafGoal = goalParts.leafGoal || void 0;
   item.theme = normalizeExplicitTheme(item.theme, context.themeMatcher);
   applyExplicitThemeViewFields(toRecordViewItem(item));
   if (!item.extra) item.extra = {};
@@ -14147,8 +14265,6 @@ function normalizeRecordItem(item, context) {
   indexedItem.contentLower = normalizeSearchText$1(item.content);
   indexedItem.fullDataLower = normalizeSearchText$1(item.fullData);
   indexedItem.tagsLower = (item.tags || []).map((tag) => normalizeSearchText$1(tag));
-  indexedItem.goalPathsLower = (item.goalPaths || []).map((goal) => normalizeSearchText$1(goal));
-  indexedItem.goalIdsLower = (item.goalIds || []).map((goalId) => normalizeSearchText$1(goalId));
   indexedItem.goalPathLower = normalizeSearchText$1(item.goalPath);
   indexedItem.rootGoalLower = normalizeSearchText$1(item.rootGoal);
   indexedItem.leafGoalLower = normalizeSearchText$1(item.leafGoal);
@@ -14341,8 +14457,8 @@ function matchRule(item, rule) {
   } else if (canonicalField === "fullData") {
     v1 = readString(itemRecord, "fullDataLower") ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
-  } else if (canonicalField === "tags" || canonicalField === "goalPaths") {
-    const listLower = canonicalField === "tags" ? readStringArray(itemRecord, "tagsLower").length ? readStringArray(itemRecord, "tagsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [] : readStringArray(itemRecord, "goalPathsLower").length ? readStringArray(itemRecord, "goalPathsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [];
+  } else if (canonicalField === "tags") {
+    const listLower = readStringArray(itemRecord, "tagsLower").length ? readStringArray(itemRecord, "tagsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [];
     const needle = String(v2 ?? "").toLowerCase();
     if (rule.op === "includes" || rule.op === "=") {
       return listLower.includes(needle);
@@ -14416,9 +14532,10 @@ function filterByKeyword(items, kw) {
     const itemRecord = asUnknownRecord(it);
     const titleLower = readString(itemRecord, "titleLower") ?? (it.title || "").toLowerCase();
     const contentLower = readString(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
+    const fullDataLower = readString(itemRecord, "fullDataLower") ?? (it.fullData || it.rawSource || "").toLowerCase();
     const tagsLower = (it.tags || []).join(" ").toLowerCase();
     const semanticText = [it.goalPath, it.themePath, it.coreBlock, it.status].filter(Boolean).join(" ").toLowerCase();
-    return (titleLower + " " + contentLower + " " + tagsLower + " " + semanticText).includes(s2);
+    return (titleLower + " " + contentLower + " " + fullDataLower + " " + tagsLower + " " + semanticText).includes(s2);
   });
 }
 function filterByPeriod(items, period) {
@@ -14444,7 +14561,7 @@ function buildPathOption(path) {
 }
 function isGoalOrderField(field) {
   const canonical = getCanonicalFieldKey(String(field || "").trim());
-  return ["goalPath", "goalPaths", "rootGoal", "leafGoal", "goalId", "goalIds"].includes(canonical);
+  return ["goalPath", "rootGoal", "leafGoal", "goalId"].includes(canonical);
 }
 function normalizeText(value) {
   if (value === null || value === void 0) return "";
@@ -14465,7 +14582,7 @@ function firstText$1(value) {
 function normalizeGoalComparable(value) {
   const text2 = firstText$1(value);
   if (!text2) return "";
-  return splitGoalPath(text2).goalPath || text2.replace(/^#+/, "").trim();
+  return splitGoalPath(text2).goalPath || "";
 }
 function buildGoalPathById(goals = []) {
   const result = /* @__PURE__ */ new Map();
@@ -14478,7 +14595,7 @@ function buildGoalPathById(goals = []) {
 function resolveGoalFieldComparable(field, rawValue, context) {
   const canonical = getCanonicalFieldKey(String(field || "").trim());
   const goals = context?.goals || [];
-  if (canonical === "goalId" || canonical === "goalIds") {
+  if (canonical === "goalId") {
     const id = firstText$1(rawValue);
     return buildGoalPathById(goals).get(id) || id || "";
   }
@@ -14498,10 +14615,10 @@ function compareFieldValuesByViewOrder(field, left2, right2, context) {
 function readOrderedFieldValue(item, field, context) {
   const canonical = getCanonicalFieldKey(String(field || "").trim());
   if (isGoalOrderField(canonical)) {
-    if (canonical === "goalId" || canonical === "goalIds") {
+    if (canonical === "goalId") {
       return firstText$1(item[canonical]) || readField(item, canonical);
     }
-    return item.goalPath || item.goalPaths || readField(item, canonical) || readField(item, "goalPath") || readField(item, "目标");
+    return item.goalPath || readField(item, canonical) || readField(item, "goalPath");
   }
   return readField(item, canonical);
 }
@@ -14557,6 +14674,7 @@ function groupItemsByFields(items, fields, context) {
   if (!fields || fields.length === 0) {
     return [{
       key: "__all__",
+      label: "__all__",
       field: "__all__",
       items
     }];
@@ -14570,12 +14688,14 @@ function groupItemsByFields(items, fields, context) {
       if (level === fields.length - 1) {
         return {
           key,
+          label: key,
           field,
           items: bucket
         };
       } else {
         return {
           key,
+          label: key,
           field,
           children: groupLevel(bucket, level + 1)
         };
@@ -14626,6 +14746,9 @@ function isClosedTask(item) {
   if (item.coreBlock !== "task") return false;
   return item.status === "done" || item.status === "cancelled" || item.status === "skipped";
 }
+function isOpenTask(item) {
+  return item.coreBlock === "task" && !isClosedTask(item);
+}
 function itemGranularity(item) {
   return String(readField(item, "period") || "天");
 }
@@ -14658,6 +14781,7 @@ function applyOverviewDateConstraint(items, constraint) {
   const contextDate = dayjs(constraint.range[1]);
   const field = constraint.field || "date";
   return items.filter((item) => {
+    if (field === "date" && isOpenTask(item)) return true;
     const rawDate = readField(item, field);
     if (!rawDate) return field === "date" ? !isClosedTask(item) : false;
     const itemDate = dayjs(rawDate);
@@ -14686,6 +14810,7 @@ function applyStandardDateConstraint(items, constraint) {
   const period = constraint.periodValue ?? (constraint.useFieldGranularity ? constraint.granularity : void 0);
   if (period != null && String(period).trim()) result = filterByPeriod(result, String(period));
   return result.filter((item) => {
+    if (isOpenTask(item)) return true;
     const rawDate = readField(item, field);
     if (!rawDate) return !isClosedTask(item);
     const parsed = dayjs(rawDate);
@@ -14802,9 +14927,9 @@ class RecordIndex {
           task.recurrenceInfo = series2.recurrenceInfo;
         }
       }
-      const session = asTaskSessionRecord(record);
+      const session = record.coreBlock === "task-session" ? record : null;
       if (session) {
-        const sessionTask = asTaskRecord(this.recordsById.get(session.taskId));
+        const sessionTask = session.taskId ? asTaskRecord(this.recordsById.get(session.taskId)) : null;
         const sessionSeries = session.seriesId ? asTaskSeriesRecord(this.recordsById.get(session.seriesId)) : null;
         const taskInvalid = !sessionTask;
         const seriesInvalid = Boolean(session.seriesId) && !sessionSeries;
@@ -15249,7 +15374,7 @@ function readSearchResultText(sr, key) {
   return normalizeRetrievalText(readUnknown(getSearchResultRecord(sr), key));
 }
 function readSearchResultNumber(sr, key) {
-  return readNumber$1(getSearchResultRecord(sr), key);
+  return readNumber(getSearchResultRecord(sr), key);
 }
 function tokenizeRetrievalText(text2) {
   if (!text2) return [];
@@ -15287,9 +15412,10 @@ function matchesThemePath(sr, item, filters) {
   return filters.themePaths.some((tp) => itemThemePath === tp || itemThemePath.startsWith(tp + "/"));
 }
 function matchesCoreBlock(sr, item, filters) {
-  if (!filters.coreBlocks?.length) return true;
+  const requestedCoreBlocks = filters.coreBlocks?.length ? filters.coreBlocks : filters.types;
+  if (!requestedCoreBlocks?.length) return true;
   const coreBlock = normalizeRetrievalText(item?.coreBlock ?? readSearchResultText(sr, "coreBlock"));
-  return !!coreBlock && filters.coreBlocks.map(normalizeRetrievalText).includes(coreBlock);
+  return !!coreBlock && requestedCoreBlocks.map(normalizeRetrievalText).includes(coreBlock);
 }
 function matchesRecordCaptureTemplateId(sr, item, filters) {
   if (!filters.blockTemplateIds?.length) return true;
@@ -18014,7 +18140,7 @@ function formatTaskItem(item) {
     ["记录ID", item.id],
     ["状态", status],
     ["目标ID", item.goalId],
-    ["目标", item.goalPath || item.goalPaths?.[0]],
+    ["目标", item.goalPath],
     ["主题", item.themePath || item.theme],
     ["优先级", item.priority],
     ["预计时长", item.expectedDurationMinutes ?? item.duration],
@@ -18140,6 +18266,32 @@ function buildThemesByPathMap(themes) {
   const map = /* @__PURE__ */ new Map();
   themes.forEach((t3) => map.set(t3.path, t3));
   return map;
+}
+function getEffectiveHeatmapTemplate(settings, blockId, themeId) {
+  return settings.blocks.find((block) => block.id === blockId) ?? null;
+}
+function buildRatingMapping(inputSettings, blockId, themeId) {
+  const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, blockId);
+  const ratingField = effectiveTemplate?.fields.find((f2) => f2.type === "rating");
+  return new Map(
+    ratingField?.options?.filter((opt) => opt.value).map((opt) => [opt.label || "", opt.value]) || []
+  );
+}
+class RatingMappingCache {
+  cache = /* @__PURE__ */ new Map();
+  clear() {
+    this.cache.clear();
+  }
+  get(inputSettings, blockId, themePath, themesByPath) {
+    themePath && themePath !== "__default__" && themesByPath ? themesByPath.get(themePath)?.id : void 0;
+    const cacheKey = `${blockId}:${themePath || "default"}`;
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+    const mapping = buildRatingMapping(inputSettings, blockId);
+    this.cache.set(cacheKey, mapping);
+    return mapping;
+  }
 }
 function firstNonEmptyText$1(...values2) {
   for (const value of values2) {
@@ -19271,8 +19423,7 @@ function candidateForField(coreBlock, field, renderData) {
     case "目标": {
       const explicit = first(renderData, ["目标", "goalPath"]);
       if (nonEmpty(explicit)) return explicit;
-      const paths = renderData.goalPaths;
-      return Array.isArray(paths) ? paths[0] : void 0;
+      return void 0;
     }
     case "日期":
       return first(renderData, ["日期", "date"]);
@@ -19322,7 +19473,6 @@ function contractForCaptureField(coreBlock, field) {
     tags: "标签",
     goalId: "目标ID",
     goalPath: "目标",
-    goals: "目标",
     date: "日期",
     recordSubtype: "记录子类型",
     rating: "评分",
@@ -19330,13 +19480,12 @@ function contractForCaptureField(coreBlock, field) {
     icon: "图标",
     period: "周期粒度"
   };
-  if (semantic === "categoryPath" && coreBlock === "thought") return getRecordFieldContract(coreBlock, "分类");
+  if (semantic === "categoryPath" && coreBlock === "thought") return getRecordFieldContract(coreBlock, "记录子类型");
   const key = keyBySemantic[semantic];
   return key ? getRecordFieldContract(coreBlock, key) : null;
 }
 function targetContract(coreBlock, contract) {
   if (contract.persistence === "target" || contract.persistence === "omit-default") return contract;
-  if (contract.persistence === "transitional" && contract.targetKey) return getRecordFieldContract(coreBlock, contract.targetKey);
   return null;
 }
 function putCanonical(fields, coreBlock, contract, renderData) {
@@ -19415,11 +19564,13 @@ function buildRenderData(template, formData, theme, templateMeta) {
   const categoryPartsValue = splitHierarchyPathValue(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? null);
   const categoryPath = categoryPartsValue.path || "";
   const categoryParts = categoryPartsValue.parts;
-  const explicitGoalValue = Array.isArray(normalizedData.goalPaths) ? normalizedData.goalPaths[0] : normalizedData.goalPath ?? normalizedData["目标"];
-  const goalPartsValue = splitHierarchyPathValue(explicitGoalValue, { stripLeadingHashes: true });
-  const goalPath = goalPartsValue.path || "";
-  const goalParts = goalPartsValue.parts;
+  const rawGoalPath = String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
+  const goalPath = rawGoalPath ? requireGoalPath(rawGoalPath) : "";
+  const goalParts = goalPath ? goalPath.split("/").filter(Boolean) : [];
   const goalId = String(normalizedData.goalId ?? normalizedData["目标ID"] ?? "").trim();
+  if (goalId && !goalPath || !goalId && goalPath) {
+    throw new Error("Goal context must contain both goalId and canonical goalPath, or neither.");
+  }
   const coreBlock = String(normalizedData.coreBlock ?? normalizedData["核心Block"] ?? template.coreBlockId ?? template.id ?? "").trim();
   const recordDate = String(normalizedData["日期"] ?? normalizedData.date ?? "").trim();
   const periodPolicy = resolveTemplatePeriodPolicy(template);
@@ -19454,7 +19605,6 @@ function buildRenderData(template, formData, theme, templateMeta) {
     },
     goalId,
     goalPath,
-    goalPaths: goalPath ? [goalPath] : normalizedData.goalPaths || [],
     rootGoal: goalParts[0] || "",
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
     coreBlock,
@@ -19979,7 +20129,7 @@ function nextTaskFields(task, series, completedAt, nextDates) {
     // as the authority for future occurrences after a Series update.
     content: series.content || task.content,
     goalId: series.goalId,
-    goalPath: series.goalPath || series.goalPaths?.[0],
+    goalPath: series.goalPath,
     themePath: series.themePath || series.theme,
     createdAt: completedAt,
     priority: series.priority,
@@ -20213,7 +20363,7 @@ const PATCH_FIELDS = {
   status: { label: "状态", aliases: ["状态", "status"] },
   content: { label: "内容", aliases: ["内容", "content"] },
   goalId: { label: "目标ID", aliases: ["目标ID", "goalId"] },
-  goalPath: { label: "目标", aliases: ["目标", "goalPath", "goalPaths"] },
+  goalPath: { label: "目标", aliases: ["目标", "goalPath"] },
   themePath: { label: "主题", aliases: ["主题", "theme", "themePath"] },
   createdAt: { label: "创建于", aliases: ["创建于", "createdAt"] },
   scheduledDate: { label: "计划日期", aliases: ["计划日期", "scheduledDate"] },
@@ -20277,20 +20427,27 @@ function patchRecordBlockMarkdown(markdown, patch) {
     const key = rawKey.trim();
     if (!key || protectedKeys.has(key.toLowerCase())) continue;
     const definition = resolvePatchField(key);
-    const aliases2 = definition.aliases.map((alias) => escapeRegex(alias)).join("|");
-    const re = new RegExp(`^\\s*(?:${aliases2})\\s*[:：]{1,2}`, "i");
-    const index = lines.findIndex((line2, i2) => i2 > 0 && i2 < lines.length - 1 && re.test(line2));
     const encoded = scalar(value);
+    const contentIndex = lines.findIndex((line2, i2) => i2 > 0 && /^\s*(?:内容|content)\s*::/i.test(line2));
+    const metadataEnd = contentIndex >= 0 ? contentIndex : lines.length - 1;
+    if (definition.label === "内容") {
+      if (contentIndex >= 0) lines.splice(contentIndex, lines.length - 1 - contentIndex);
+      if (encoded) {
+        const bodyLines = encoded.replace(/\r\n/g, "\n").split("\n");
+        lines.splice(lines.length - 1, 0, `内容:: ${bodyLines.shift() || ""}`, ...bodyLines);
+      }
+      continue;
+    }
+    const aliases2 = definition.aliases.map((alias) => escapeRegex(alias)).join("|");
+    const re = new RegExp(`^\\s*(?:${aliases2})\\s*::`, "i");
+    const index = lines.findIndex((line2, i2) => i2 > 0 && i2 < metadataEnd && re.test(line2));
     if (!encoded) {
       if (index >= 0) lines.splice(index, 1);
       continue;
     }
-    const nextLine = `${definition.label}:: ${encoded}`;
+    const nextLine = `${definition.label}:: ${encoded.replace(/\r?\n/g, "\\n")}`;
     if (index >= 0) lines[index] = nextLine;
-    else {
-      const contentIndex = lines.findIndex((line2, i2) => i2 > 0 && /^\s*(?:内容|content)\s*[:：]{1,2}/i.test(line2));
-      lines.splice(contentIndex >= 0 ? contentIndex : lines.length - 1, 0, nextLine);
-    }
+    else lines.splice(metadataEnd, 0, nextLine);
   }
   return lines.join("\n");
 }
@@ -20810,7 +20967,7 @@ const createStoreImpl = (createState) => {
   return api;
 };
 const createStore = ((createState) => createState ? createStoreImpl(createState) : createStoreImpl);
-var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, a$1, s$1, h$1, p$1, v$1, y$1, d$1 = {}, w$2 = [], _$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, g$2 = Array.isArray;
+var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, s$1, a$1, h$1, p$1, v$1, y$1, d$1 = {}, w$2 = [], _$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, g$2 = Array.isArray;
 function m$1(n2, l2) {
   for (var u3 in l2) n2[u3] = l2[u3];
   return n2;
@@ -20863,15 +21020,15 @@ function H$1() {
     i$1.length = H$1.__r = 0;
   }
 }
-function L$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, a2) {
-  var s2, h2, p2, v2, y2, _2, g2, m2 = t3 && t3.__k || w$2, b2 = l2.length;
-  for (f2 = T$2(u3, l2, m2, f2, b2), s2 = 0; s2 < b2; s2++) null != (p2 = u3.__k[s2]) && (h2 = -1 != p2.__i && m2[p2.__i] || d$1, p2.__i = s2, _2 = q$2(n2, p2, h2, i2, r2, o2, e2, f2, c2, a2), v2 = p2.__e, p2.ref && h2.ref != p2.ref && (h2.ref && J$1(h2.ref, null, p2), a2.push(p2.ref, p2.__c || v2, p2)), null == y2 && null != v2 && (y2 = v2), (g2 = !!(4 & p2.__u)) || h2.__k === p2.__k ? (f2 = j$2(p2, f2, n2, g2), g2 && h2.__e && (h2.__e = null)) : "function" == typeof p2.type && void 0 !== _2 ? f2 = _2 : v2 && (f2 = v2.nextSibling), p2.__u &= -7);
+function L$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, _2, g2, m2 = t3 && t3.__k || w$2, b2 = l2.length;
+  for (f2 = T$2(u3, l2, m2, f2, b2), a2 = 0; a2 < b2; a2++) null != (p2 = u3.__k[a2]) && (h2 = -1 != p2.__i && m2[p2.__i] || d$1, p2.__i = a2, _2 = q$2(n2, p2, h2, i2, r2, o2, e2, f2, c2, s2), v2 = p2.__e, p2.ref && h2.ref != p2.ref && (h2.ref && J$1(h2.ref, null, p2), s2.push(p2.ref, p2.__c || v2, p2)), null == y2 && null != v2 && (y2 = v2), (g2 = !!(4 & p2.__u)) || h2.__k === p2.__k ? (f2 = j$2(p2, f2, n2, g2), g2 && h2.__e && (h2.__e = null)) : "function" == typeof p2.type && void 0 !== _2 ? f2 = _2 : v2 && (f2 = v2.nextSibling), p2.__u &= -7);
   return u3.__e = y2, f2;
 }
 function T$2(n2, l2, u3, t3, i2) {
-  var r2, o2, e2, f2, c2, a2 = u3.length, s2 = a2, h2 = 0;
-  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? ("string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? o2 = n2.__k[r2] = x$2(null, o2, null, null, null) : g$2(o2) ? o2 = n2.__k[r2] = x$2(S, { children: o2 }, null, null, null) : void 0 === o2.constructor && o2.__b > 0 ? o2 = n2.__k[r2] = x$2(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : n2.__k[r2] = o2, f2 = r2 + h2, o2.__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = O$1(o2, u3, f2, s2)) && (s2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > a2 ? h2-- : i2 < a2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
-  if (s2) for (r2 = 0; r2 < a2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = $$1(e2)), K$1(e2, e2));
+  var r2, o2, e2, f2, c2, s2 = u3.length, a2 = s2, h2 = 0;
+  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? ("string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? o2 = n2.__k[r2] = x$2(null, o2, null, null, null) : g$2(o2) ? o2 = n2.__k[r2] = x$2(S, { children: o2 }, null, null, null) : void 0 === o2.constructor && o2.__b > 0 ? o2 = n2.__k[r2] = x$2(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : n2.__k[r2] = o2, f2 = r2 + h2, o2.__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = O$1(o2, u3, f2, a2)) && (a2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > s2 ? h2-- : i2 < s2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
+  if (a2) for (r2 = 0; r2 < s2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = $$1(e2)), K$1(e2, e2));
   return t3;
 }
 function j$2(n2, l2, u3, t3) {
@@ -20892,9 +21049,9 @@ function F$2(n2, l2) {
   }) : l2.push(n2)), l2;
 }
 function O$1(n2, l2, u3, t3) {
-  var i2, r2, o2, e2 = n2.key, f2 = n2.type, c2 = l2[u3], a2 = null != c2 && 0 == (2 & c2.__u);
-  if (null === c2 && null == e2 || a2 && e2 == c2.key && f2 == c2.type) return u3;
-  if (t3 > (a2 ? 1 : 0)) {
+  var i2, r2, o2, e2 = n2.key, f2 = n2.type, c2 = l2[u3], s2 = null != c2 && 0 == (2 & c2.__u);
+  if (null === c2 && null == e2 || s2 && e2 == c2.key && f2 == c2.type) return u3;
+  if (t3 > (s2 ? 1 : 0)) {
     for (i2 = u3 - 1, r2 = u3 + 1; i2 >= 0 || r2 < l2.length; ) if (null != (c2 = l2[o2 = i2 >= 0 ? i2-- : r2++]) && 0 == (2 & c2.__u) && e2 == c2.key && f2 == c2.type) return o2;
   }
   return -1;
@@ -20909,7 +21066,7 @@ function N$1(n2, l2, u3, t3, i2) {
     if ("string" == typeof t3 && (n2.style.cssText = t3 = ""), t3) for (l2 in t3) u3 && l2 in u3 || z$2(n2.style, l2, "");
     if (u3) for (l2 in u3) t3 && u3[l2] == t3[l2] || z$2(n2.style, l2, u3[l2]);
   }
-  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(s$1, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3[a$1] = t3[a$1] : (u3[a$1] = h$1, n2.addEventListener(l2, r2 ? v$1 : p$1, r2)) : n2.removeEventListener(l2, r2 ? v$1 : p$1, r2);
+  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(a$1, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3[s$1] = t3[s$1] : (u3[s$1] = h$1, n2.addEventListener(l2, r2 ? v$1 : p$1, r2)) : n2.removeEventListener(l2, r2 ? v$1 : p$1, r2);
   else {
     if ("http://www.w3.org/2000/svg" == i2) l2 = l2.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
     else if ("width" != l2 && "height" != l2 && "href" != l2 && "list" != l2 && "form" != l2 && "tabIndex" != l2 && "download" != l2 && "rowSpan" != l2 && "colSpan" != l2 && "role" != l2 && "popover" != l2 && l2 in n2) try {
@@ -20925,48 +21082,46 @@ function V$1(n2) {
     if (this.l) {
       var t3 = this.l[u3.type + n2];
       if (null == u3[c$1]) u3[c$1] = h$1++;
-      else if (u3[c$1] < t3[a$1]) return;
+      else if (u3[c$1] < t3[s$1]) return;
       return t3(l$1.event ? l$1.event(u3) : u3);
     }
   };
 }
-function q$2(n2, u3, t3, i2, r2, o2, e2, f2, c2, a2) {
-  var s2, h2, p2, v2, y2, d2, _2, k2, x2, M2, $2, I2, P2, A2, H2, T2, j2 = u3.type;
+function q$2(n2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, d2, _2, k2, x2, M2, $2, I2, P2, A2, H2, T2 = u3.type;
   if (void 0 !== u3.constructor) return null;
-  128 & t3.__u && (c2 = !!(32 & t3.__u), o2 = [f2 = u3.__e = t3.__e]), (s2 = l$1.__b) && s2(u3);
-  n: if ("function" == typeof j2) {
-    h2 = e2.length;
-    try {
-      if (x2 = u3.props, M2 = j2.prototype && j2.prototype.render, $2 = (s2 = j2.contextType) && i2[s2.__c], I2 = s2 ? $2 ? $2.props.value : s2.__ : i2, t3.__c ? k2 = (p2 = u3.__c = t3.__c).__ = p2.__E : (M2 ? u3.__c = p2 = new j2(x2, I2) : (u3.__c = p2 = new C$2(x2, I2), p2.constructor = j2, p2.render = Q$1), $2 && $2.sub(p2), p2.state || (p2.state = {}), p2.__n = i2, v2 = p2.__d = true, p2.__h = [], p2._sb = []), M2 && null == p2.__s && (p2.__s = p2.state), M2 && null != j2.getDerivedStateFromProps && (p2.__s == p2.state && (p2.__s = m$1({}, p2.__s)), m$1(p2.__s, j2.getDerivedStateFromProps(x2, p2.__s))), y2 = p2.props, d2 = p2.state, p2.__v = u3, v2) M2 && null == j2.getDerivedStateFromProps && null != p2.componentWillMount && p2.componentWillMount(), M2 && null != p2.componentDidMount && p2.__h.push(p2.componentDidMount);
-      else {
-        if (M2 && null == j2.getDerivedStateFromProps && x2 !== y2 && null != p2.componentWillReceiveProps && p2.componentWillReceiveProps(x2, I2), u3.__v == t3.__v || !p2.__e && null != p2.shouldComponentUpdate && false === p2.shouldComponentUpdate(x2, p2.__s, I2)) {
-          u3.__v != t3.__v && (p2.props = x2, p2.state = p2.__s, p2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
-            n3 && (n3.__ = u3);
-          }), w$2.push.apply(p2.__h, p2._sb), p2._sb = [], p2.__h.length && e2.push(p2);
-          break n;
-        }
-        null != p2.componentWillUpdate && p2.componentWillUpdate(x2, p2.__s, I2), M2 && null != p2.componentDidUpdate && p2.__h.push(function() {
-          p2.componentDidUpdate(y2, d2, _2);
-        });
+  128 & t3.__u && (c2 = !!(32 & t3.__u), o2 = [f2 = u3.__e = t3.__e]), (a2 = l$1.__b) && a2(u3);
+  n: if ("function" == typeof T2) try {
+    if (k2 = u3.props, x2 = T2.prototype && T2.prototype.render, M2 = (a2 = T2.contextType) && i2[a2.__c], $2 = a2 ? M2 ? M2.props.value : a2.__ : i2, t3.__c ? _2 = (h2 = u3.__c = t3.__c).__ = h2.__E : (x2 ? u3.__c = h2 = new T2(k2, $2) : (u3.__c = h2 = new C$2(k2, $2), h2.constructor = T2, h2.render = Q$1), M2 && M2.sub(h2), h2.state || (h2.state = {}), h2.__n = i2, p2 = h2.__d = true, h2.__h = [], h2._sb = []), x2 && null == h2.__s && (h2.__s = h2.state), x2 && null != T2.getDerivedStateFromProps && (h2.__s == h2.state && (h2.__s = m$1({}, h2.__s)), m$1(h2.__s, T2.getDerivedStateFromProps(k2, h2.__s))), v2 = h2.props, y2 = h2.state, h2.__v = u3, p2) x2 && null == T2.getDerivedStateFromProps && null != h2.componentWillMount && h2.componentWillMount(), x2 && null != h2.componentDidMount && h2.__h.push(h2.componentDidMount);
+    else {
+      if (x2 && null == T2.getDerivedStateFromProps && k2 !== v2 && null != h2.componentWillReceiveProps && h2.componentWillReceiveProps(k2, $2), u3.__v == t3.__v || !h2.__e && null != h2.shouldComponentUpdate && false === h2.shouldComponentUpdate(k2, h2.__s, $2)) {
+        u3.__v != t3.__v && (h2.props = k2, h2.state = h2.__s, h2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
+          n3 && (n3.__ = u3);
+        }), w$2.push.apply(h2.__h, h2._sb), h2._sb = [], h2.__h.length && e2.push(h2);
+        break n;
       }
-      if (p2.context = I2, p2.props = x2, p2.__P = n2, p2.__e = false, P2 = l$1.__r, A2 = 0, M2) p2.state = p2.__s, p2.__d = false, P2 && P2(u3), s2 = p2.render(p2.props, p2.state, p2.context), w$2.push.apply(p2.__h, p2._sb), p2._sb = [];
-      else do {
-        p2.__d = false, P2 && P2(u3), s2 = p2.render(p2.props, p2.state, p2.context), p2.state = p2.__s;
-      } while (p2.__d && ++A2 < 25);
-      p2.state = p2.__s, null != p2.getChildContext && (i2 = m$1(m$1({}, i2), p2.getChildContext())), M2 && !v2 && null != p2.getSnapshotBeforeUpdate && (_2 = p2.getSnapshotBeforeUpdate(y2, d2)), H2 = null != s2 && s2.type === S && null == s2.key ? E$1(s2.props.children) : s2, f2 = L$1(n2, g$2(H2) ? H2 : [H2], u3, t3, i2, r2, o2, e2, f2, c2, a2), p2.base = u3.__e, u3.__u &= -161, p2.__h.length && e2.push(p2), k2 && (p2.__E = p2.__ = null);
-    } catch (n3) {
-      if (e2.length = h2, u3.__v = null, c2 || null != o2) if (n3.then) {
-        for (u3.__u |= c2 ? 160 : 128; f2 && 8 == f2.nodeType && f2.nextSibling; ) f2 = f2.nextSibling;
-        null != o2 && (o2[o2.indexOf(f2)] = null), u3.__e = f2;
-      } else {
-        if (null != o2) for (T2 = o2.length; T2--; ) b$1(o2[T2]);
-        B$2(u3);
-      }
-      else u3.__e = t3.__e, !u3.__k && t3.__k && (u3.__k = t3.__k), n3.then || B$2(u3);
-      l$1.__e(n3, u3, t3);
+      null != h2.componentWillUpdate && h2.componentWillUpdate(k2, h2.__s, $2), x2 && null != h2.componentDidUpdate && h2.__h.push(function() {
+        h2.componentDidUpdate(v2, y2, d2);
+      });
     }
-  } else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = G$1(t3.__e, u3, t3, i2, r2, o2, e2, c2, a2);
-  return (s2 = l$1.diffed) && s2(u3), 128 & u3.__u ? void 0 : f2;
+    if (h2.context = $2, h2.props = k2, h2.__P = n2, h2.__e = false, I2 = l$1.__r, P2 = 0, x2) h2.state = h2.__s, h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), w$2.push.apply(h2.__h, h2._sb), h2._sb = [];
+    else do {
+      h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), h2.state = h2.__s;
+    } while (h2.__d && ++P2 < 25);
+    h2.state = h2.__s, null != h2.getChildContext && (i2 = m$1(m$1({}, i2), h2.getChildContext())), x2 && !p2 && null != h2.getSnapshotBeforeUpdate && (d2 = h2.getSnapshotBeforeUpdate(v2, y2)), A2 = null != a2 && a2.type === S && null == a2.key ? E$1(a2.props.children) : a2, f2 = L$1(n2, g$2(A2) ? A2 : [A2], u3, t3, i2, r2, o2, e2, f2, c2, s2), h2.base = u3.__e, u3.__u &= -161, h2.__h.length && e2.push(h2), _2 && (h2.__E = h2.__ = null);
+  } catch (n3) {
+    if (u3.__v = null, c2 || null != o2) if (n3.then) {
+      for (u3.__u |= c2 ? 160 : 128; f2 && 8 == f2.nodeType && f2.nextSibling; ) f2 = f2.nextSibling;
+      o2[o2.indexOf(f2)] = null, u3.__e = f2;
+    } else {
+      for (H2 = o2.length; H2--; ) b$1(o2[H2]);
+      B$2(u3);
+    }
+    else u3.__e = t3.__e, u3.__k = t3.__k, n3.then || B$2(u3);
+    l$1.__e(n3, u3, t3);
+  }
+  else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = G$1(t3.__e, u3, t3, i2, r2, o2, e2, c2, s2);
+  return (a2 = l$1.diffed) && a2(u3), 128 & u3.__u ? void 0 : f2;
 }
 function B$2(n2) {
   n2 && (n2.__c && (n2.__c.__e = true), n2.__k && n2.__k.some(B$2));
@@ -20984,13 +21139,13 @@ function D$2(n2, u3, t3) {
   });
 }
 function E$1(n2) {
-  return "object" != typeof n2 || null == n2 || n2.__b > 0 ? n2 : g$2(n2) ? n2.map(E$1) : void 0 !== n2.constructor ? null : m$1({}, n2);
+  return "object" != typeof n2 || null == n2 || n2.__b > 0 ? n2 : g$2(n2) ? n2.map(E$1) : m$1({}, n2);
 }
-function G$1(u3, t3, i2, r2, o2, e2, f2, c2, a2) {
-  var s2, h2, p2, v2, y2, w2, _2, m2 = i2.props || d$1, k2 = t3.props, x2 = t3.type;
+function G$1(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, w2, _2, m2 = i2.props || d$1, k2 = t3.props, x2 = t3.type;
   if ("svg" == x2 ? o2 = "http://www.w3.org/2000/svg" : "math" == x2 ? o2 = "http://www.w3.org/1998/Math/MathML" : o2 || (o2 = "http://www.w3.org/1999/xhtml"), null != e2) {
-    for (s2 = 0; s2 < e2.length; s2++) if ((y2 = e2[s2]) && "setAttribute" in y2 == !!x2 && (x2 ? y2.localName == x2 : 3 == y2.nodeType)) {
-      u3 = y2, e2[s2] = null;
+    for (a2 = 0; a2 < e2.length; a2++) if ((y2 = e2[a2]) && "setAttribute" in y2 == !!x2 && (x2 ? y2.localName == x2 : 3 == y2.nodeType)) {
+      u3 = y2, e2[a2] = null;
       break;
     }
   }
@@ -21000,12 +21155,12 @@ function G$1(u3, t3, i2, r2, o2, e2, f2, c2, a2) {
   }
   if (null == x2) m2 === k2 || c2 && u3.data == k2 || (u3.data = k2);
   else {
-    if (e2 = "textarea" == x2 && null != k2.defaultValue ? null : e2 && n.call(u3.childNodes), !c2 && null != e2) for (m2 = {}, s2 = 0; s2 < u3.attributes.length; s2++) m2[(y2 = u3.attributes[s2]).name] = y2.value;
-    for (s2 in m2) y2 = m2[s2], "dangerouslySetInnerHTML" == s2 ? p2 = y2 : "children" == s2 || s2 in k2 || "value" == s2 && "defaultValue" in k2 || "checked" == s2 && "defaultChecked" in k2 || N$1(u3, s2, null, y2, o2);
-    for (s2 in k2) y2 = k2[s2], "children" == s2 ? v2 = y2 : "dangerouslySetInnerHTML" == s2 ? h2 = y2 : "value" == s2 ? w2 = y2 : "checked" == s2 ? _2 = y2 : c2 && "function" != typeof y2 || m2[s2] === y2 || N$1(u3, s2, y2, m2[s2], o2);
+    if (e2 = e2 && n.call(u3.childNodes), !c2 && null != e2) for (m2 = {}, a2 = 0; a2 < u3.attributes.length; a2++) m2[(y2 = u3.attributes[a2]).name] = y2.value;
+    for (a2 in m2) y2 = m2[a2], "dangerouslySetInnerHTML" == a2 ? p2 = y2 : "children" == a2 || a2 in k2 || "value" == a2 && "defaultValue" in k2 || "checked" == a2 && "defaultChecked" in k2 || N$1(u3, a2, null, y2, o2);
+    for (a2 in k2) y2 = k2[a2], "children" == a2 ? v2 = y2 : "dangerouslySetInnerHTML" == a2 ? h2 = y2 : "value" == a2 ? w2 = y2 : "checked" == a2 ? _2 = y2 : c2 && "function" != typeof y2 || m2[a2] === y2 || N$1(u3, a2, y2, m2[a2], o2);
     if (h2) c2 || p2 && (h2.__html == p2.__html || h2.__html == u3.innerHTML) || (u3.innerHTML = h2.__html), t3.__k = [];
-    else if (p2 && (u3.innerHTML = ""), L$1("template" == t3.type ? u3.content : u3, g$2(v2) ? v2 : [v2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && $$1(i2, 0), c2, a2), null != e2) for (s2 = e2.length; s2--; ) b$1(e2[s2]);
-    c2 && "textarea" != x2 || (s2 = "value", "progress" == x2 && null == w2 ? u3.removeAttribute("value") : null != w2 && (w2 !== u3[s2] || "progress" == x2 && !w2 || "option" == x2 && w2 != m2[s2]) && N$1(u3, s2, w2, m2[s2], o2), s2 = "checked", null != _2 && _2 != u3[s2] && N$1(u3, s2, _2, m2[s2], o2));
+    else if (p2 && (u3.innerHTML = ""), L$1("template" == t3.type ? u3.content : u3, g$2(v2) ? v2 : [v2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && $$1(i2, 0), c2, s2), null != e2) for (a2 = e2.length; a2--; ) b$1(e2[a2]);
+    c2 || (a2 = "value", "progress" == x2 && null == w2 ? u3.removeAttribute("value") : null != w2 && (w2 !== u3[a2] || "progress" == x2 && !w2 || "option" == x2 && w2 != m2[a2]) && N$1(u3, a2, w2, m2[a2], o2), a2 = "checked", null != _2 && _2 != u3[a2] && N$1(u3, a2, _2, m2[a2], o2));
   }
   return u3;
 }
@@ -21027,7 +21182,7 @@ function K$1(n2, u3, t3) {
     } catch (n3) {
       l$1.__e(n3, u3);
     }
-    i2.base = i2.__P = i2.__n = null;
+    i2.base = i2.__P = null;
   }
   if (i2 = n2.__k) for (r2 = 0; r2 < i2.length; r2++) i2[r2] && K$1(i2[r2], u3, t3 || "function" != typeof n2.type);
   t3 || b$1(n2.__e), n2.__c = n2.__ = n2.__e = void 0;
@@ -21037,7 +21192,7 @@ function Q$1(n2, l2, u3) {
 }
 function R$1(u3, t3, i2) {
   var r2, o2, e2, f2;
-  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], q$2(t3, u3 = (!r2 && i2 || t3).__k = k$2(S, null, [u3]), o2 || d$1, d$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), D$2(e2, u3, f2), u3.props.children = null;
+  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], q$2(t3, u3 = (!r2 && i2 || t3).__k = k$2(S, null, [u3]), o2 || d$1, d$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), D$2(e2, u3, f2);
 }
 function U$1(n2, l2) {
   R$1(n2, l2, U$1);
@@ -21084,36 +21239,37 @@ n = w$2.slice, l$1 = { __e: function(n2, l2, u3, t3) {
   this.__v && (this.__e = true, n2 && this.__h.push(n2), A$2(this));
 }, C$2.prototype.render = S, i$1 = [], o$1 = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, e$1 = function(n2, l2) {
   return n2.__v.__b - l2.__v.__b;
-}, H$1.__r = 0, f$2 = Math.random().toString(8), c$1 = "__d" + f$2, a$1 = "__a" + f$2, s$1 = /(PointerCapture)$|Capture$/i, h$1 = 0, p$1 = V$1(false), v$1 = V$1(true), y$1 = 0;
-var t2, r$1, u$1, i, o = 0, f$1 = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, p = c.__;
-function s(n2, t3) {
+}, H$1.__r = 0, f$2 = Math.random().toString(8), c$1 = "__d" + f$2, s$1 = "__a" + f$2, a$1 = /(PointerCapture)$|Capture$/i, h$1 = 0, p$1 = V$1(false), v$1 = V$1(true), y$1 = 0;
+var t2, r$1, u$1, i, o = 0, f$1 = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, s = c.__;
+function p(n2, t3) {
   c.__h && c.__h(r$1, n2, o || t3), o = 0;
   var u3 = r$1.__H || (r$1.__H = { __: [], __h: [] });
   return n2 >= u3.__.length && u3.__.push({}), u3.__[n2];
 }
 function d(n2) {
-  return o = 1, y(D$1, n2);
+  return o = 1, h(D$1, n2);
 }
-function y(n2, u3, i2) {
-  var o2 = s(t2++, 2);
+function h(n2, u3, i2) {
+  var o2 = p(t2++, 2);
   if (o2.t = n2, !o2.__c && (o2.__ = [i2 ? i2(u3) : D$1(void 0, u3), function(n3) {
     var t3 = o2.__N ? o2.__N[0] : o2.__[0], r2 = o2.t(t3, n3);
     t3 !== r2 && (o2.__N = [r2, o2.__[1]], o2.__c.setState({}));
   }], o2.__c = r$1, !r$1.__f)) {
     var f2 = function(n3, t3, r2) {
       if (!o2.__c.__H) return true;
-      var u4 = false, i3 = o2.__c.props !== n3;
-      if (o2.__c.__H.__.some(function(n4) {
+      var u4 = o2.__c.__H.__.filter(function(n4) {
+        return n4.__c;
+      });
+      if (u4.every(function(n4) {
+        return !n4.__N;
+      })) return !c2 || c2.call(this, n3, t3, r2);
+      var i3 = o2.__c.props !== n3;
+      return u4.some(function(n4) {
         if (n4.__N) {
-          u4 = true;
           var t4 = n4.__[0];
           n4.__ = n4.__N, n4.__N = void 0, t4 !== n4.__[0] && (i3 = true);
         }
-      }), c2) {
-        var f3 = c2.call(this, n3, t3, r2);
-        return u4 ? f3 || i3 : f3;
-      }
-      return !u4 || i3;
+      }), c2 && c2.call(this, n3, t3, r2) || i3;
     };
     r$1.__f = true;
     var c2 = r$1.shouldComponentUpdate, e2 = r$1.componentWillUpdate;
@@ -21127,12 +21283,12 @@ function y(n2, u3, i2) {
   }
   return o2.__N || o2.__;
 }
-function h(n2, u3) {
-  var i2 = s(t2++, 3);
+function y(n2, u3) {
+  var i2 = p(t2++, 3);
   !c.__s && C$1(i2.__H, u3) && (i2.__ = n2, i2.u = u3, r$1.__H.__h.push(i2));
 }
 function _(n2, u3) {
-  var i2 = s(t2++, 4);
+  var i2 = p(t2++, 4);
   !c.__s && C$1(i2.__H, u3) && (i2.__ = n2, i2.u = u3, r$1.__h.push(i2));
 }
 function A$1(n2) {
@@ -21154,7 +21310,7 @@ function F$1(n2, t3, r2) {
   }, null == r2 ? r2 : r2.concat(n2));
 }
 function T$1(n2, r2) {
-  var u3 = s(t2++, 7);
+  var u3 = p(t2++, 7);
   return C$1(u3.__H, r2) && (u3.__ = n2(), u3.__H = r2, u3.__h = n2), u3.__;
 }
 function q$1(n2, t3) {
@@ -21163,14 +21319,14 @@ function q$1(n2, t3) {
   }, t3);
 }
 function x$1(n2) {
-  var u3 = r$1.context[n2.__c], i2 = s(t2++, 9);
+  var u3 = r$1.context[n2.__c], i2 = p(t2++, 9);
   return i2.c = n2, u3 ? (null == i2.__ && (i2.__ = true, u3.sub(r$1)), u3.props.value) : n2.__;
 }
 function P$1(n2, t3) {
   c.useDebugValue && c.useDebugValue(t3 ? t3(n2) : n2);
 }
 function b(n2) {
-  var u3 = s(t2++, 10), i2 = d();
+  var u3 = p(t2++, 10), i2 = d();
   return u3.__ = n2, r$1.componentDidCatch || (r$1.componentDidCatch = function(n3, t3) {
     u3.__ && u3.__(n3, t3), i2[1](n3);
   }), [i2[0], function() {
@@ -21178,7 +21334,7 @@ function b(n2) {
   }];
 }
 function g$1() {
-  var n2 = s(t2++, 11);
+  var n2 = p(t2++, 11);
   if (!n2.__) {
     for (var u3 = r$1.__v; null !== u3 && !u3.__m && null !== u3.__; ) u3 = u3.__;
     var i2 = u3.__m || (u3.__m = [0, 0]);
@@ -21199,18 +21355,18 @@ function j$1() {
 c.__b = function(n2) {
   r$1 = null, e && e(n2);
 }, c.__ = function(n2, t3) {
-  n2 && t3.__k && t3.__k.__m && (n2.__m = t3.__k.__m), p && p(n2, t3);
+  n2 && t3.__k && t3.__k.__m && (n2.__m = t3.__k.__m), s && s(n2, t3);
 }, c.__r = function(n2) {
   a && a(n2), t2 = 0;
   var i2 = (r$1 = n2.__c).__H;
   i2 && (u$1 === r$1 ? (i2.__h = [], r$1.__h = [], i2.__.some(function(n3) {
     n3.__N && (n3.__ = n3.__N), n3.u = n3.__N = void 0;
-  })) : (i2.__h.length && j$1(), t2 = 0)), u$1 = r$1;
+  })) : (i2.__h.some(z$1), i2.__h.some(B$1), i2.__h = [], t2 = 0)), u$1 = r$1;
 }, c.diffed = function(n2) {
   v && v(n2);
   var t3 = n2.__c;
   t3 && t3.__H && (t3.__H.__h.length && (1 !== f$1.push(t3) && i === c.requestAnimationFrame || ((i = c.requestAnimationFrame) || w$1)(j$1)), t3.__H.__.some(function(n3) {
-    n3.u && (n3.__H = n3.u, n3.u = void 0);
+    n3.u && (n3.__H = n3.u), n3.u = void 0;
   })), u$1 = r$1 = null;
 }, c.__c = function(n2, t3) {
   t3.some(function(n3) {
@@ -21271,7 +21427,7 @@ function C(n2, t3) {
   var e2 = t3(), r2 = d({ t: { __: e2, u: t3 } }), u3 = r2[0].t, o2 = r2[1];
   return _(function() {
     u3.__ = e2, u3.u = t3, R(u3) && o2({ t: u3 });
-  }, [n2, e2, t3]), h(function() {
+  }, [n2, e2, t3]), y(function() {
     return R(u3) && o2({ t: u3 }), n2(function() {
       R(u3) && o2({ t: u3 });
     });
@@ -21381,12 +21537,12 @@ l$1.unmount = function(n2) {
   var e2 = t3.__c, r2 = this;
   null == r2.o && (r2.o = []), r2.o.push(e2);
   var u3 = j(r2.__v), o2 = false, i2 = function() {
-    o2 || r2.__z || (o2 = true, e2.__R = null, u3 ? u3(f2) : f2());
+    o2 || r2.__z || (o2 = true, e2.__R = null, u3 ? u3(c2) : c2());
   };
   e2.__R = i2;
   var l2 = e2.__P;
   e2.__P = null;
-  var f2 = function() {
+  var c2 = function() {
     if (!--r2.__u) {
       if (r2.state.__a) {
         var n3 = r2.state.__a;
@@ -21400,20 +21556,15 @@ l$1.unmount = function(n2) {
 }, P.prototype.componentWillUnmount = function() {
   this.o = [];
 }, P.prototype.render = function(n2, e2) {
-  var r2 = this.__v;
-  if (!r2.__m) {
-    for (var o2 = r2; o2.__; ) o2 = o2.__;
-    o2 = o2.__m || (o2.__m = [0, 0]), r2.__m = [o2[1]++, 0];
-  }
   if (this.__b) {
-    if (r2.__k) {
-      var i2 = document.createElement("div"), l2 = r2.__k[0].__c;
-      r2.__k[0] = V(this.__b, i2, l2.__O = l2.__P);
+    if (this.__v.__k) {
+      var r2 = document.createElement("div"), o2 = this.__v.__k[0].__c;
+      this.__v.__k[0] = V(this.__b, r2, o2.__O = o2.__P);
     }
     this.__b = null;
   }
-  var f2 = e2.__a && k$2(S, null, n2.fallback);
-  return f2 && (f2.__u &= -33), [k$2(S, null, e2.__a ? null : n2.children), f2];
+  var i2 = e2.__a && k$2(S, null, n2.fallback);
+  return i2 && (i2.__u &= -33), [k$2(S, null, e2.__a ? null : n2.children), i2];
 };
 var H = function(n2, t3, e2) {
   if (++e2[1] === e2[0] && n2.l.delete(t3), n2.props.revealOrder && ("t" !== n2.props.revealOrder[0] || !n2.l.size)) for (e2 = n2.i; e2; ) {
@@ -21428,23 +21579,23 @@ function Z(n2) {
   }, n2.children;
 }
 function Y(n2) {
-  var e2 = this, r2 = n2.v;
+  var e2 = this, r2 = n2.h;
   if (e2.componentWillUnmount = function() {
-    R$1(null, e2.h), e2.h = null, e2.v = null;
-  }, e2.v && e2.v !== r2 && e2.componentWillUnmount(), !e2.h) {
+    R$1(null, e2.v), e2.v = null, e2.h = null;
+  }, e2.h && e2.h !== r2 && e2.componentWillUnmount(), !e2.v) {
     for (var u3 = e2.__v; null !== u3 && !u3.__m && null !== u3.__; ) u3 = u3.__;
-    e2.v = r2, e2.h = { nodeType: 1, parentNode: r2, childNodes: [], __k: { __m: u3.__m }, contains: function() {
+    e2.h = r2, e2.v = { nodeType: 1, parentNode: r2, childNodes: [], __k: { __m: u3.__m }, contains: function() {
       return true;
     }, namespaceURI: r2.namespaceURI, insertBefore: function(n3, t3) {
-      this.childNodes.push(n3), e2.v.insertBefore(n3, t3);
+      this.childNodes.push(n3), e2.h.insertBefore(n3, t3);
     }, removeChild: function(n3) {
-      this.childNodes.splice(this.childNodes.indexOf(n3) >>> 1, 1), e2.v.removeChild(n3);
+      this.childNodes.splice(this.childNodes.indexOf(n3) >>> 1, 1), e2.h.removeChild(n3);
     } };
   }
-  R$1(k$2(Z, { context: e2.context }, n2.__v), e2.h);
+  R$1(k$2(Z, { context: e2.context }, n2.__v), e2.v);
 }
 function $(n2, e2) {
-  var r2 = k$2(Y, { __v: n2, v: e2 });
+  var r2 = k$2(Y, { __v: n2, h: e2 });
   return r2.containerInfo = e2, r2;
 }
 (B.prototype = new C$2()).__a = function(n2) {
@@ -21501,8 +21652,8 @@ l$1.vnode = function(n2) {
     for (var i2 in t3) {
       var l2 = t3[i2];
       if (!("value" === i2 && "defaultValue" in t3 && null == l2 || Q && "children" === i2 && "noscript" === e2 || "class" === i2 || "className" === i2)) {
-        var f2 = i2.toLowerCase();
-        "defaultValue" === i2 && "value" in t3 && null == t3.value ? i2 = "value" : "download" === i2 && true === l2 ? l2 = "" : "translate" === f2 && "no" === l2 ? l2 = false : "o" === f2[0] && "n" === f2[1] ? "ondoubleclick" === f2 ? i2 = "ondblclick" : "onchange" !== f2 || "input" !== e2 && "textarea" !== e2 || X(t3.type) ? "onfocus" === f2 ? i2 = "onfocusin" : "onblur" === f2 ? i2 = "onfocusout" : J.test(i2) && (i2 = f2) : f2 = i2 = "oninput" : o2 && G.test(i2) ? i2 = i2.replace(K, "-$&").toLowerCase() : null === l2 && (l2 = void 0), "oninput" === f2 && u3[i2 = f2] && (i2 = "oninputCapture"), u3[i2] = l2;
+        var c2 = i2.toLowerCase();
+        "defaultValue" === i2 && "value" in t3 && null == t3.value ? i2 = "value" : "download" === i2 && true === l2 ? l2 = "" : "translate" === c2 && "no" === l2 ? l2 = false : "o" === c2[0] && "n" === c2[1] ? "ondoubleclick" === c2 ? i2 = "ondblclick" : "onchange" !== c2 || "input" !== e2 && "textarea" !== e2 || X(t3.type) ? "onfocus" === c2 ? i2 = "onfocusin" : "onblur" === c2 ? i2 = "onfocusout" : J.test(i2) && (i2 = c2) : c2 = i2 = "oninput" : o2 && G.test(i2) ? i2 = i2.replace(K, "-$&").toLowerCase() : null === l2 && (l2 = void 0), "oninput" === c2 && u3[i2 = c2] && (i2 = "oninputCapture"), u3[i2] = l2;
       }
     }
     "select" == e2 && (u3.multiple && Array.isArray(u3.value) && (u3.value = F$2(t3.children).forEach(function(n4) {
@@ -21516,29 +21667,29 @@ var ln = l$1.__r;
 l$1.__r = function(n2) {
   ln && ln(n2), rn = n2.__c;
 };
-var fn = l$1.diffed;
+var cn = l$1.diffed;
 l$1.diffed = function(n2) {
-  fn && fn(n2);
+  cn && cn(n2);
   var t3 = n2.props, e2 = n2.__e;
   null != e2 && "textarea" === n2.type && "value" in t3 && t3.value !== e2.value && (e2.value = null == t3.value ? "" : t3.value), rn = null;
 };
-var an = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
+var fn = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
   return rn.__n[n2.__c].props.value;
-}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: h, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: y, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, cn = "18.3.1";
+}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: y, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: h, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, an = "18.3.1";
 function sn(n2) {
   return k$2.bind(null, n2);
 }
-function vn(n2) {
+function hn(n2) {
   return !!n2 && n2.$$typeof === q;
 }
-function hn(n2) {
-  return vn(n2) && n2.type === S;
+function vn(n2) {
+  return hn(n2) && n2.type === S;
 }
 function dn(n2) {
   return !!n2 && "string" == typeof n2.displayName && 0 == n2.displayName.indexOf("Memo(");
 }
 function mn(n2) {
-  return vn(n2) ? W$1.apply(null, arguments) : n2;
+  return hn(n2) ? W$1.apply(null, arguments) : n2;
 }
 function pn(n2) {
   return !!n2.__k && (R$1(null, n2), true);
@@ -21555,7 +21706,7 @@ var _n = function(n2, t3) {
   };
   var u3 = n2(t3);
   return l$1.debounceRendering = r2, u3;
-}, Sn = vn, gn = { useState: d, useId: g$1, useReducer: y, useEffect: h, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: vn, isElement: Sn, isFragment: hn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: an };
+}, Sn = hn, gn = { useState: d, useId: g$1, useReducer: h, useEffect: y, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: hn, isElement: Sn, isFragment: vn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn };
 const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   Children: L,
@@ -21565,7 +21716,7 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   StrictMode: S,
   Suspense: P,
   SuspenseList: B,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: an,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn,
   cloneElement: mn,
   createContext: X$1,
   createElement: k$2,
@@ -21578,9 +21729,9 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   forwardRef: D,
   hydrate: tn,
   isElement: Sn,
-  isFragment: hn,
+  isFragment: vn,
   isMemo: dn,
-  isValidElement: vn,
+  isValidElement: hn,
   lazy: z,
   memo: N,
   render: nn,
@@ -21591,19 +21742,19 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   useContext: x$1,
   useDebugValue: P$1,
   useDeferredValue: w,
-  useEffect: h,
+  useEffect: y,
   useErrorBoundary: b,
   useId: g$1,
   useImperativeHandle: F$1,
   useInsertionEffect: I,
   useLayoutEffect: _,
   useMemo: T$1,
-  useReducer: y,
+  useReducer: h,
   useRef: A$1,
   useState: d,
   useSyncExternalStore: C,
   useTransition: k,
-  version: cn
+  version: an
 }, Symbol.toStringTag, { value: "Module" }));
 const identity = (arg2) => arg2;
 function useStore(api, selector = identity) {
@@ -23522,7 +23673,7 @@ const MEDIUM_RISK_FIELDS = /* @__PURE__ */ new Set([
   "categoryKey",
   "theme",
   "tags",
-  "goalPaths"
+  "goalPath"
 ]);
 const HIGH_RISK_FIELDS = /* @__PURE__ */ new Set([
   "file.path",
@@ -23840,7 +23991,7 @@ function useTimelineZoom(options) {
   const [hourHeight, setHourHeight] = d(defaultHeight);
   const initialPinchDistanceRef = A$1(null);
   const initialHourHeightRef = A$1(null);
-  h(() => {
+  y(() => {
     setHourHeight(defaultHeight);
   }, [defaultHeight]);
   const handleWheel = q$1((e2) => {
@@ -24729,15 +24880,10 @@ class ThemeMetadataResolver {
     };
   }
 }
-function findGoal(goalSettings, goalId, goalPath) {
-  const goals = goalSettings?.goals || [];
-  if (goalId) {
-    const byId = goals.find((goal) => goal.id === goalId);
-    if (byId) return byId;
-  }
-  const normalizedPath = splitGoalPath(goalPath || null).goalPath;
-  if (!normalizedPath) return null;
-  return goals.find((goal) => splitGoalPath(goal.goalPath || goal.title).goalPath === normalizedPath) || null;
+function findGoal(goalSettings, goalId) {
+  const id = String(goalId || "").trim();
+  if (!id) return null;
+  return (goalSettings?.goals || []).find((goal) => goal.id === id) || null;
 }
 function mergeTemplate(base, patch) {
   const required2 = new Set(patch.requiredFields || []);
@@ -24771,7 +24917,7 @@ class GoalTemplateResolver {
   static resolve(input) {
     const { settings, blockId } = input;
     const effectiveBlockId = blockId;
-    const goal = findGoal(settings.goalSettings, input.goalId, input.goalPath);
+    const goal = findGoal(settings.goalSettings, input.goalId);
     const themePathFromId = input.themeId ? settings.inputSettings?.themes?.find((candidate) => candidate.id === input.themeId)?.path ?? null : null;
     const effectiveThemePath = input.themePath || goal?.themePath || themePathFromId || null;
     const theme = ThemeMetadataResolver.resolveThemeForRender(settings, effectiveThemePath);
@@ -24845,8 +24991,7 @@ function extractGoalContext(input) {
     context["目标ID"],
     nested2.goalId,
     nested2["目标ID"],
-    item?.goalId,
-    item?.goalIds
+    item?.goalId
   );
   const goalPath = readFirstString(
     context.goalPath,
@@ -24855,8 +25000,7 @@ function extractGoalContext(input) {
     nested2.goalPath,
     nested2["目标"],
     nested2["目标路径"],
-    item?.goalPath,
-    item?.goalPaths
+    item?.goalPath
   );
   const themePath = readFirstString(
     context.themePath,
@@ -24884,7 +25028,7 @@ function extractGoalContext(input) {
   );
   return { goalId, goalPath, themePath, templateVariantId };
 }
-function normalizeDependencySettings(settings) {
+function normalizeRecordInputSettingsEnvelope(settings) {
   const maybeFull = settings;
   if (maybeFull?.inputSettings) return maybeFull;
   return {
@@ -24893,21 +25037,18 @@ function normalizeDependencySettings(settings) {
 }
 function buildEffectiveInputSettings(settings) {
   return {
-    ...settings,
-    blocks: [
-      ...settings.blocks || [],
-      ...DEFAULT_CORE_BLOCKS.filter((coreBlock) => !(settings.blocks || []).some((block) => block.id === coreBlock.id))
-    ]
+    ...settings.inputSettings,
+    blocks: getEffectiveCoreBlocks(settings)
   };
 }
 function resolveRecordDependencies(input) {
   const warnings = [];
   const errors = [];
-  const fullSettings = normalizeDependencySettings(input.settings);
-  const inputSettings = fullSettings.inputSettings;
+  const fullSettings = normalizeRecordInputSettingsEnvelope(input.settings);
+  fullSettings.inputSettings;
   const requestedBlockId = input.blockId ?? null;
   const effectiveBlockId = requestedBlockId ? String(requestedBlockId) : null;
-  const effectiveSettings = buildEffectiveInputSettings(inputSettings);
+  const effectiveSettings = buildEffectiveInputSettings(fullSettings);
   const goalContext = extractGoalContext(input);
   const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, goalContext.themePath ?? input.item?.themePath ?? input.item?.theme ?? null);
   let resolvedThemeId = inferredThemeId ?? null;
@@ -24956,24 +25097,37 @@ function resolveRecordDependencies(input) {
     settings: fullSettings,
     blockId: effectiveBlockId || requestedBlockId,
     goalId: goalContext.goalId,
-    goalPath: goalContext.goalPath,
     themeId: resolvedThemeId ?? void 0,
     themePath: goalContext.themePath,
     templateVariantId: goalContext.templateVariantId
   });
-  if (!resolved.template) {
-    errors.push(issue$2("record_template_missing", "No effective Goal + Block template is available for this record.", "blockId"));
+  if (resolved.template) {
+    return {
+      blockId: resolved.effectiveBlockId || effectiveBlockId || requestedBlockId,
+      themeId: resolvedThemeId,
+      template: resolved.template,
+      theme: resolved.theme,
+      warnings,
+      errors,
+      meta: {
+        templateId: resolved.templateId,
+        templateSourceType: resolved.templateSourceType,
+        usedFallbackBlock: false,
+        usedFallbackTheme
+      }
+    };
   }
+  errors.push(issue$2("record_template_missing", "No effective Goal + Block template is available for this record.", "blockId"));
   return {
-    blockId: resolved.effectiveBlockId || effectiveBlockId || requestedBlockId,
+    blockId: effectiveBlockId || requestedBlockId,
     themeId: resolvedThemeId,
-    template: resolved.template,
+    template: null,
     theme: resolved.theme,
     warnings,
     errors,
     meta: {
-      templateId: resolved.templateId,
-      templateSourceType: resolved.templateSourceType,
+      templateId: null,
+      templateSourceType: null,
       usedFallbackBlock: false,
       usedFallbackTheme
     }
@@ -25180,11 +25334,11 @@ function fieldCodecDefinition(field) {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
   return {
-    type: semantic === "tags" || semantic === "goals" ? "tags" : semantic === "themePath" || semantic === "categoryPath" || inputType === "path" || inputType === "multiPath" ? "path" : semantic === "image" || inputType === "image" || inputType === "multiImage" ? "image" : semantic === "rating" || inputType === "number" ? "number" : "string",
+    valueType: semantic === "tags" ? "tags" : semantic === "themePath" || semantic === "categoryPath" || semantic === "goalPath" || inputType === "path" || inputType === "multiPath" ? "path" : semantic === "image" || inputType === "image" || inputType === "multiImage" ? "image" : semantic === "rating" || inputType === "number" ? "number" : "string",
     inputType,
     semantic,
     cardinality: field.cardinality || (["multiSelect", "multiPath", "multiTag", "multiImage"].includes(inputType) ? "multi" : "single"),
-    hierarchical: field.hierarchical || semantic === "themePath" || semantic === "categoryPath" || semantic === "tags" || semantic === "goals"
+    hierarchical: field.hierarchical || semantic === "themePath" || semantic === "categoryPath" || semantic === "goalPath" || semantic === "tags"
   };
 }
 function readExtraByAlias(item, aliases2) {
@@ -25241,8 +25395,10 @@ function readSemanticFieldValue(field, item, snapshot) {
       return snapshot.semantic.period || readPeriodFromLegacyCategory(field, item, snapshot);
     case "tags":
       return parseTagList(snapshot.semantic.tags);
-    case "goals":
-      return parseTagList(snapshot.semantic.goalPaths);
+    case "goalId":
+      return snapshot.semantic.goalId;
+    case "goalPath":
+      return snapshot.semantic.goalPath;
     case "startTime":
       return snapshot.semantic.startTime;
     case "endTime":
@@ -25286,6 +25442,9 @@ function normalizeBackfillValue(field, rawValue) {
   if (!isPresent(rawValue)) return void 0;
   if (isTemplateRatingPairField(field) && isOptionObject(rawValue)) return rawValue;
   const decoded = decodeMarkdownFieldValue(rawValue, fieldCodecDefinition(field));
+  if (getTemplateFieldSemantic(field) === "tags" && getTemplateFieldInputType(field) === "text") {
+    return parseTagList(decoded).join(",");
+  }
   const normalized2 = normalizeTemplateFieldValue(field, decoded);
   return matchTemplateFieldOptionValue(field, normalized2);
 }
@@ -25454,8 +25613,10 @@ function buildInitialFormData(template, item, snapshot = buildParsedRecordSnapsh
 }
 function buildEditRecordState(input) {
   const { settings, item, preferredBlockId, preferredThemeId } = input;
-  const inputSettings = settings.inputSettings;
-  const runtimeBlocks = getEffectiveCoreBlocks(settings);
+  const fullSettings = normalizeRecordInputSettingsEnvelope(settings);
+  const inputSettings = fullSettings.inputSettings;
+  const canonicalBlocks = getEffectiveCoreBlocks(fullSettings);
+  const runtimeBlocks = canonicalBlocks;
   const resolvedBlock = resolveBlockForEdit(
     runtimeBlocks,
     item,
@@ -25475,7 +25636,7 @@ function buildEditRecordState(input) {
     reason: resolvedBlock.debugReason
   });
   const resolvedDependencies = resolveRecordDependencies({
-    settings,
+    settings: fullSettings,
     blockId: resolvedBlock.blockId,
     themeId: resolvedThemeId,
     item
@@ -25490,7 +25651,7 @@ function buildEditRecordState(input) {
       initialFormData
     }
   );
-  const snapshot = buildEditableRecordSnapshot({
+  const snapshot = resolvedDependencies.template && resolvedDependencies.errors.length === 0 ? buildEditableRecordSnapshot({
     mode: "edit",
     item,
     blockId: resolvedDependencies.blockId,
@@ -25502,9 +25663,9 @@ function buildEditRecordState(input) {
       templateId: resolvedDependencies.meta.templateId ?? resolvedDependencies.template?.id ?? null,
       templateSourceType: resolvedDependencies.meta.templateSourceType ?? "core-block"
     }
-  });
-  const warnings = [...resolvedDependencies.warnings];
-  if (snapshot.persistencePlan.pathChanged) {
+  }) : null;
+  const warnings = [...resolvedDependencies.warnings, ...resolvedDependencies.errors];
+  if (snapshot?.persistencePlan.pathChanged) {
     warnings.push({
       code: "record_target_path_changed",
       message: `当前模板/主题推导出的目标文件为 ${snapshot.outputPlan.targetFilePath}，与原文件 ${snapshot.persistencePlan.originalPath} 不同。当前仍按原位置更新；后续步骤会接入迁移保存。`,
@@ -25517,11 +25678,13 @@ function buildEditRecordState(input) {
     template: resolvedDependencies.template,
     initialFormData,
     snapshot,
-    outputPlan: snapshot.outputPlan,
-    persistencePlan: snapshot.persistencePlan,
+    outputPlan: snapshot?.outputPlan,
+    persistencePlan: snapshot?.persistencePlan,
     inferred: {
       usedFallbackBlock: resolvedBlock.usedFallbackBlock,
       usedFallbackTheme: resolvedDependencies.meta.usedFallbackTheme,
+      canonicalBlockId: resolvedDependencies.meta.canonicalBlockId,
+      compatibilityMode: resolvedDependencies.meta.compatibilityMode,
       templateSourceType: resolvedDependencies.meta.templateSourceType,
       resolvedBy: resolvedBlock.resolvedBy
     },
@@ -25720,23 +25883,10 @@ function normalizeCoreBlock(item) {
 function isHabitLike(item) {
   return normalizeCoreBlock(item) === "habit";
 }
-function normalizeGoalPath(value) {
-  return String(value ?? "").trim().replace(/^#/, "");
-}
-function itemGoalIds(item) {
-  return [item.goalId, ...item.goalIds || []].map((value) => String(value || "").trim()).filter(Boolean);
-}
-function itemGoalPaths(item) {
-  return [item.goalPath, ...item.goalPaths || []].map(normalizeGoalPath).filter(Boolean);
-}
 function matchesEnergyGoal(energyItem, candidate) {
-  const energyIds = itemGoalIds(energyItem);
-  const candidateIds = itemGoalIds(candidate);
-  if (energyIds.length > 0) return candidateIds.some((id) => energyIds.includes(id));
-  const energyPaths = itemGoalPaths(energyItem);
-  if (energyPaths.length === 0) return true;
-  const candidatePaths = itemGoalPaths(candidate);
-  return candidatePaths.some((path) => energyPaths.includes(path));
+  const energyGoalId = String(energyItem.goalId || "").trim();
+  if (!energyGoalId) return true;
+  return String(candidate.goalId || "").trim() === energyGoalId;
 }
 function occurrenceDate(item) {
   if (item.coreBlock === "task-session" && item.sessionStartedAt) {
@@ -27035,8 +27185,9 @@ function ensureGoalSettings(settings) {
   };
 }
 function normalizeGoalInput(input) {
-  const goalPath = splitGoalPath(input.goalPath || input.title).goalPath || input.title.trim();
-  const title = input.title.trim() || goalPath.split("/").filter(Boolean).pop() || goalPath;
+  const goalPath = requireGoalPath(input.goalPath || input.title);
+  const title = String(input.title || "").trim() || goalPath.split("/").filter(Boolean).pop() || goalPath;
+  if (title.includes("#") || title.includes("＃")) throw new Error("Goal title must not contain # markers.");
   const timestamp = nowIso();
   return {
     id: makeStableGoalIdFromPath(goalPath),
@@ -27052,7 +27203,7 @@ function normalizeGoalInput(input) {
   };
 }
 function normalizeStoredGoalPath(goal) {
-  return splitGoalPath(goal.goalPath || goal.title).goalPath || String(goal.goalPath || goal.title || "").trim();
+  return requireGoalPath(goal.goalPath || goal.title);
 }
 function collectGoalCascadeIds(goals, id) {
   const target = goals.find((goal) => goal.id === id);
@@ -27076,7 +27227,7 @@ class GoalUseCase {
       const goal = normalizeGoalInput(input);
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const exists = draft.goalSettings.goals.some((item) => item.id === goal.id || splitGoalPath(item.goalPath || item.title).goalPath === goal.goalPath);
+        const exists = draft.goalSettings.goals.some((item) => item.id === goal.id || normalizeStoredGoalPath(item) === goal.goalPath);
         if (!exists) draft.goalSettings.goals.push(goal);
       });
       return goal;
@@ -27096,9 +27247,12 @@ class GoalUseCase {
         const target = draft.goalSettings.goals.find((goal) => goal.id === id);
         if (!target) return;
         Object.assign(target, safePatch, { updatedAt: nowIso() });
-        if (safePatch.goalPath || safePatch.title) {
-          target.goalPath = splitGoalPath(target.goalPath || target.title).goalPath || target.goalPath;
+        if (safePatch.title !== void 0) {
+          const title = String(target.title || "").trim();
+          if (!title || title.includes("#") || title.includes("＃")) throw new Error("Goal title must not contain # markers.");
+          target.title = title;
         }
+        if (safePatch.goalPath || safePatch.title) target.goalPath = requireGoalPath(target.goalPath || target.title);
       });
     } catch (error) {
       devError("[GoalUseCase] updateGoal failed:", error);
@@ -27380,12 +27534,22 @@ function useMessageRenderPort() {
   }
   return port;
 }
+function hasPlatformModifier(event) {
+  return Boolean(event?.ctrlKey || event?.metaKey);
+}
+function stopInteractionEvent(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+}
+function isKeyboardActivation(event) {
+  return event?.key === "Enter" || event?.key === " ";
+}
 function GroupedContainer(props) {
   const {
     nodes,
     renderLeaf,
     classNames = {},
-    enableCtrlToggleAll = true,
+    enableModifierToggleAll = true,
     defaultCollapsed = false
   } = props;
   const allGroupPaths = T$1(() => {
@@ -27393,6 +27557,7 @@ function GroupedContainer(props) {
     const makeGroupPath2 = (chain) => chain.map((n2) => `${n2.field}=${n2.key}`).join("|");
     const collectPaths = (nodes2, parentChain = []) => {
       for (const node2 of nodes2) {
+        if (countItemsInGroup(node2) === 0) continue;
         const chain = [...parentChain, { field: node2.field, key: node2.key }];
         const path = makeGroupPath2(chain);
         paths.push(path);
@@ -27426,7 +27591,7 @@ function GroupedContainer(props) {
     });
   };
   const onGroupTitleClick = (path, evt) => {
-    if (enableCtrlToggleAll && evt.ctrlKey) {
+    if (enableModifierToggleAll && hasPlatformModifier(evt)) {
       const anyExpanded = allGroupPaths.some((p2) => {
         const has2 = Object.prototype.hasOwnProperty.call(collapsedGroups, p2);
         const val = has2 ? collapsedGroups[p2] : defaultCollapsed;
@@ -27437,7 +27602,7 @@ function GroupedContainer(props) {
       toggleSingleGroup(path);
     }
   };
-  const countItemsInGroup = (node2) => {
+  function countItemsInGroup(node2) {
     const n2 = node2;
     if (n2.items) return n2.items.length;
     if (!n2.children) return 0;
@@ -27445,7 +27610,7 @@ function GroupedContainer(props) {
       (sum, child) => sum + countItemsInGroup(child),
       0
     );
-  };
+  }
   const {
     root: rootClass = "",
     group: groupClass = "",
@@ -27455,7 +27620,7 @@ function GroupedContainer(props) {
     label: labelClass = ""
   } = classNames;
   const renderGroupNodes = (nodes2, level, parentChain = []) => {
-    return nodes2.map((node2) => {
+    return nodes2.filter((node2) => countItemsInGroup(node2) > 0).map((node2) => {
       const n2 = node2;
       const items = n2.items;
       const children = n2.children || [];
@@ -27465,20 +27630,26 @@ function GroupedContainer(props) {
       const isCollapsed = hasKey ? collapsedGroups[path] : defaultCollapsed;
       const hasChildren = children && children.length > 0;
       const isLeaf = !!items && items.length > 0;
-      const indentStyle = { paddingLeft: `${12 + level * 24}px` };
-      const levelClass = groupClass ? `${groupClass}--level-${level}` : "";
-      return /* @__PURE__ */ u2("div", { class: `${groupClass} ${levelClass}`, children: [
+      const baseGroupClass = groupClass.split(/\s+/).filter(Boolean)[0] || "";
+      const levelClass = baseGroupClass ? `${baseGroupClass}--level-${level}` : "";
+      return /* @__PURE__ */ u2("div", { class: `${groupClass} ${levelClass}`, "data-group-level": level, children: [
         /* @__PURE__ */ u2(
           "h5",
           {
             class: titleClass,
-            style: indentStyle,
+            role: "button",
+            tabIndex: 0,
             onClick: (e2) => onGroupTitleClick(path, e2),
-            title: "点击折叠/展开（Ctrl+点击：全部折叠/展开）",
+            onKeyDown: (e2) => {
+              if (!isKeyboardActivation(e2)) return;
+              stopInteractionEvent(e2);
+              onGroupTitleClick(path, e2);
+            },
+            title: "点击折叠/展开（Ctrl/⌘+点击：全部折叠/展开）",
             children: [
               /* @__PURE__ */ u2("span", { class: toggleIconClass, children: isCollapsed ? "▶" : "▼" }),
               /* @__PURE__ */ u2("span", { class: labelClass, children: [
-                node2.key,
+                node2.label || node2.key,
                 " (",
                 isLeaf ? items.length : countItemsInGroup(node2),
                 ")"
@@ -29212,7 +29383,7 @@ function isPlainObject(item) {
   return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in item) && !(Symbol.iterator in item);
 }
 function deepClone(source) {
-  if (/* @__PURE__ */ vn(source) || reactIsExports.isValidElementType(source) || !isPlainObject(source)) {
+  if (/* @__PURE__ */ hn(source) || reactIsExports.isValidElementType(source) || !isPlainObject(source)) {
     return source;
   }
   const output = {};
@@ -29229,7 +29400,7 @@ function deepmerge(target, source, options = {
   } : target;
   if (isPlainObject(target) && isPlainObject(source)) {
     Object.keys(source).forEach((key) => {
-      if (/* @__PURE__ */ vn(source[key]) || reactIsExports.isValidElementType(source[key])) {
+      if (/* @__PURE__ */ hn(source[key]) || reactIsExports.isValidElementType(source[key])) {
         output[key] = source[key];
       } else if (isPlainObject(source[key]) && // Avoid prototype pollution
       Object.prototype.hasOwnProperty.call(target, key) && isPlainObject(target[key])) {
@@ -30878,7 +31049,7 @@ function useThemeProps({
     props
   });
 }
-const useEnhancedEffect = typeof window !== "undefined" ? _ : h;
+const useEnhancedEffect = typeof window !== "undefined" ? _ : y;
 function clamp(val, min2 = Number.MIN_SAFE_INTEGER, max2 = Number.MAX_SAFE_INTEGER) {
   return Math.max(min2, Math.min(val, max2));
 }
@@ -31166,7 +31337,7 @@ let globalId = 0;
 function useGlobalId(idOverride) {
   const [defaultId, setDefaultId] = d(idOverride);
   const id = idOverride || defaultId;
-  h(() => {
+  y(() => {
     if (defaultId == null) {
       globalId += 1;
       setDefaultId(`mui-${globalId}`);
@@ -31481,7 +31652,7 @@ function useCurrentColorScheme(options) {
     };
   });
   const [isClient, setIsClient] = d(noSsr || !isMultiSchemes);
-  h(() => {
+  y(() => {
     setIsClient(true);
   }, []);
   const colorScheme = getColorScheme(state);
@@ -31574,7 +31745,7 @@ function useCurrentColorScheme(options) {
   }, [state.mode]);
   const mediaListener = A$1(handleMediaQuery);
   mediaListener.current = handleMediaQuery;
-  h(() => {
+  y(() => {
     if (typeof window.matchMedia !== "function" || !isMultiSchemes) {
       return void 0;
     }
@@ -31586,7 +31757,7 @@ function useCurrentColorScheme(options) {
       media.removeListener(handler);
     };
   }, [isMultiSchemes]);
-  h(() => {
+  y(() => {
     if (isMultiSchemes) {
       const unsubscribeMode = modeStorage?.subscribe((value) => {
         if (!value || ["light", "dark", "system"].includes(value)) {
@@ -31787,7 +31958,7 @@ function createCssVarsProvider(options) {
         }
       }
     }, [colorScheme, colorSchemeSelector, colorSchemeNode, allColorSchemes]);
-    h(() => {
+    y(() => {
       let timer;
       if (disableTransitionOnChange && hasMounted.current && documentNode) {
         const css2 = documentNode.createElement("style");
@@ -31802,7 +31973,7 @@ function createCssVarsProvider(options) {
         clearTimeout(timer);
       };
     }, [colorScheme, disableTransitionOnChange, documentNode]);
-    h(() => {
+    y(() => {
       hasMounted.current = true;
       return () => {
         hasMounted.current = false;
@@ -32147,7 +32318,7 @@ function composeClasses(slots, getUtilityClass, classes = void 0) {
   return output;
 }
 function isMuiElement(element, muiNames) {
-  return /* @__PURE__ */ vn(element) && muiNames.indexOf(
+  return /* @__PURE__ */ hn(element) && muiNames.indexOf(
     // For server components `muiName` is available in element.type._payload.value.muiName
     // relevant info - https://github.com/facebook/react/blob/2807d781a08db8e9873687fccc25c0f12b4fb3d4/packages/react/src/ReactLazy.js#L45
     // eslint-disable-next-line no-underscore-dangle
@@ -33733,7 +33904,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
     viewBox = "0 0 24 24",
     ...other
   } = props;
-  const hasSvgAsChild = /* @__PURE__ */ vn(children) && children.type === "svg";
+  const hasSvgAsChild = /* @__PURE__ */ hn(children) && children.type === "svg";
   const ownerState = {
     ...props,
     color: color2,
@@ -34226,7 +34397,7 @@ function _assertThisInitialized(e2) {
 }
 function getChildMapping(children, mapFn) {
   var mapper = function mapper2(child) {
-    return mapFn && vn(child) ? mapFn(child) : child;
+    return mapFn && hn(child) ? mapFn(child) : child;
   };
   var result = /* @__PURE__ */ Object.create(null);
   if (children) L.map(children, function(c2) {
@@ -34289,11 +34460,11 @@ function getNextChildMapping(nextProps, prevChildMapping, onExited) {
   var children = mergeChildMappings(prevChildMapping, nextChildMapping);
   Object.keys(children).forEach(function(key) {
     var child = children[key];
-    if (!vn(child)) return;
+    if (!hn(child)) return;
     var hasPrev = key in prevChildMapping;
     var hasNext = key in nextChildMapping;
     var prevChild = prevChildMapping[key];
-    var isLeaving = vn(prevChild) && !prevChild.props.in;
+    var isLeaving = hn(prevChild) && !prevChild.props.in;
     if (hasNext && (!hasPrev || isLeaving)) {
       children[key] = mn(child, {
         onExited: onExited.bind(null, child),
@@ -34305,7 +34476,7 @@ function getNextChildMapping(nextProps, prevChildMapping, onExited) {
       children[key] = mn(child, {
         in: false
       });
-    } else if (hasNext && hasPrev && vn(prevChild)) {
+    } else if (hasNext && hasPrev && hn(prevChild)) {
       children[key] = mn(child, {
         onExited: onExited.bind(null, child),
         in: prevChild.props.in,
@@ -34407,7 +34578,7 @@ function useLazyRef(init, initArg) {
 }
 const EMPTY = [];
 function useOnMount(fn3) {
-  h(fn3, EMPTY);
+  y(fn3, EMPTY);
 }
 class Timeout {
   static create() {
@@ -35310,7 +35481,7 @@ class LazyRipple {
     const [shouldMount, setShouldMount] = d(false);
     ripple.shouldMount = shouldMount;
     ripple.setShouldMount = setShouldMount;
-    h(ripple.mountEffect, [shouldMount]);
+    y(ripple.mountEffect, [shouldMount]);
     return ripple;
   }
   constructor() {
@@ -35387,7 +35558,7 @@ function Ripple(props) {
   if (!inProp && !leaving) {
     setLeaving(true);
   }
-  h(() => {
+  y(() => {
     if (!inProp && onExited != null) {
       const timeoutId = setTimeout(onExited, timeout);
       return () => {
@@ -35523,7 +35694,7 @@ const TouchRipple = /* @__PURE__ */ D(function TouchRipple2(inProps, ref) {
   const [ripples, setRipples] = d([]);
   const nextKey = A$1(0);
   const rippleCallback = A$1(null);
-  h(() => {
+  y(() => {
     if (rippleCallback.current) {
       rippleCallback.current();
       rippleCallback.current = null;
@@ -35787,7 +35958,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     }
   }), []);
   const enableTouchRipple = ripple.shouldMount && !disableRipple && !disabled;
-  h(() => {
+  y(() => {
     if (focusVisible && focusRipple && !disableRipple) {
       ripple.pulsate();
     }
@@ -37022,7 +37193,7 @@ function contains$1(parent, child) {
 }
 function usePreviousProps(value) {
   const ref = A$1({});
-  h(() => {
+  y(() => {
     ref.current = value;
   });
   return ref.current;
@@ -37224,7 +37395,7 @@ function useAutocomplete(props) {
     value,
     inputValue
   });
-  h(() => {
+  y(() => {
     const valueChange = value !== previousProps.value;
     if (focused && !valueChange) {
       return;
@@ -37243,7 +37414,7 @@ function useAutocomplete(props) {
       anchorEl.querySelector(`[${indexType}="${itemToFocus}"]`).focus();
     }
   });
-  h(() => {
+  y(() => {
     if (multiple && focusedItem > value.length - 1) {
       setFocusedItem(-1);
       focusItem(-1);
@@ -37509,12 +37680,12 @@ function useAutocomplete(props) {
     }
     syncHighlightedIndex();
   });
-  h(() => {
+  y(() => {
     if (filteredOptionsChanged || popupOpen && !disableCloseOnSelect) {
       syncHighlightedIndex();
     }
   }, [syncHighlightedIndex, filteredOptionsChanged, popupOpen, disableCloseOnSelect]);
-  h(() => {
+  y(() => {
     if (typeof window === "undefined") {
       return void 0;
     }
@@ -39453,7 +39624,7 @@ function useSlotProps(parameters) {
   return props;
 }
 function getReactElementRef(element) {
-  if (parseInt(cn, 10) >= 19) {
+  if (parseInt(an, 10) >= 19) {
     return element?.props?.ref || null;
   }
   return element?.ref || null;
@@ -39468,7 +39639,7 @@ const Portal = /* @__PURE__ */ D(function Portal2(props, forwardedRef) {
     disablePortal = false
   } = props;
   const [mountNode, setMountNode] = d(null);
-  const handleRef = useForkRef(/* @__PURE__ */ vn(children) ? getReactElementRef(children) : null, forwardedRef);
+  const handleRef = useForkRef(/* @__PURE__ */ hn(children) ? getReactElementRef(children) : null, forwardedRef);
   useEnhancedEffect(() => {
     if (!disablePortal) {
       setMountNode(getContainer$1(container) || document.body);
@@ -39484,7 +39655,7 @@ const Portal = /* @__PURE__ */ D(function Portal2(props, forwardedRef) {
     return void 0;
   }, [forwardedRef, mountNode, disablePortal]);
   if (disablePortal) {
-    if (/* @__PURE__ */ vn(children)) {
+    if (/* @__PURE__ */ hn(children)) {
       const newProps = {
         ref: handleRef
       };
@@ -39562,12 +39733,12 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
   const rtlPlacement = flipPlacement(initialPlacement, direction);
   const [placement, setPlacement] = d(rtlPlacement);
   const [resolvedAnchorElement, setResolvedAnchorElement] = d(resolveAnchorEl$1(anchorEl));
-  h(() => {
+  y(() => {
     if (popperRef.current) {
       popperRef.current.forceUpdate();
     }
   });
-  h(() => {
+  y(() => {
     if (anchorEl) {
       setResolvedAnchorElement(resolveAnchorEl$1(anchorEl));
     }
@@ -40286,7 +40457,7 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
     disabled,
     size,
     color: color2,
-    iconColor: /* @__PURE__ */ vn(iconProp) ? iconProp.props.color || color2 : color2,
+    iconColor: /* @__PURE__ */ hn(iconProp) ? iconProp.props.color || color2 : color2,
     onDelete: !!onDelete,
     clickable,
     variant
@@ -40301,7 +40472,7 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
   } : {};
   let deleteIcon = null;
   if (onDelete) {
-    deleteIcon = deleteIconProp && /* @__PURE__ */ vn(deleteIconProp) ? /* @__PURE__ */ mn(deleteIconProp, {
+    deleteIcon = deleteIconProp && /* @__PURE__ */ hn(deleteIconProp) ? /* @__PURE__ */ mn(deleteIconProp, {
       className: clsx(deleteIconProp.props.className, classes.deleteIcon),
       onClick: handleDeleteIconClick
     }) : /* @__PURE__ */ u2(CancelIcon, {
@@ -40310,13 +40481,13 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
     });
   }
   let avatar = null;
-  if (avatarProp && /* @__PURE__ */ vn(avatarProp)) {
+  if (avatarProp && /* @__PURE__ */ hn(avatarProp)) {
     avatar = /* @__PURE__ */ mn(avatarProp, {
       className: clsx(classes.avatar, avatarProp.props.className)
     });
   }
   let icon = null;
-  if (iconProp && /* @__PURE__ */ vn(iconProp)) {
+  if (iconProp && /* @__PURE__ */ hn(iconProp)) {
     icon = /* @__PURE__ */ mn(iconProp, {
       className: clsx(classes.icon, iconProp.props.className)
     });
@@ -40867,7 +41038,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     states: ["color", "disabled", "error", "hiddenLabel", "size", "required", "filled"]
   });
   fcs.focused = muiFormControl ? muiFormControl.focused : focused;
-  h(() => {
+  y(() => {
     if (!muiFormControl && disabled && focused) {
       setFocused(false);
       if (onBlur) {
@@ -40957,7 +41128,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
       onChange(event, ...args);
     }
   };
-  h(() => {
+  y(() => {
     checkDirty(inputRef.current);
   }, []);
   const handleClick = (event) => {
@@ -40993,7 +41164,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
       value: "x"
     });
   };
-  h(() => {
+  y(() => {
     if (muiFormControl) {
       muiFormControl.setAdornedStart(Boolean(startAdornment));
     }
@@ -41572,7 +41743,7 @@ const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
     componentName: "Autocomplete"
   });
   const forceRenderOnResize = useForcedRerendering();
-  h(() => {
+  y(() => {
     if (!popupOpen || !anchorEl || typeof ResizeObserver === "undefined") {
       return void 0;
     }
@@ -43047,7 +43218,7 @@ function ClickAwayListener$1(props) {
   const nodeRef = A$1(null);
   const activatedRef = A$1(false);
   const syntheticEventRef = A$1(false);
-  h(() => {
+  y(() => {
     setTimeout(() => {
       activatedRef.current = true;
     }, 0);
@@ -43090,7 +43261,7 @@ function ClickAwayListener$1(props) {
   if (touchEvent !== false) {
     childrenProps[touchEvent] = createHandleSynthetic(touchEvent);
   }
-  h(() => {
+  y(() => {
     if (touchEvent !== false) {
       const mappedTouchEvent = mapEventPropToEvent(touchEvent);
       const doc = ownerDocument(nodeRef.current);
@@ -43109,7 +43280,7 @@ function ClickAwayListener$1(props) {
   if (mouseEvent !== false) {
     childrenProps[mouseEvent] = createHandleSynthetic(mouseEvent);
   }
-  h(() => {
+  y(() => {
     if (mouseEvent !== false) {
       const mappedMouseEvent = mapEventPropToEvent(mouseEvent);
       const doc = ownerDocument(nodeRef.current);
@@ -43386,13 +43557,13 @@ function FocusTrap(props) {
   const rootRef = A$1(null);
   const handleRef = useForkRef(getReactElementRef(children), rootRef);
   const lastKeydown = A$1(null);
-  h(() => {
+  y(() => {
     if (!open || !rootRef.current) {
       return;
     }
     activated.current = !disableAutoFocus;
   }, [disableAutoFocus, open]);
-  h(() => {
+  y(() => {
     ignoreNextEnforceFocus.current = false;
     if (!open || !rootRef.current) {
       return;
@@ -43418,7 +43589,7 @@ function FocusTrap(props) {
       }
     };
   }, [open]);
-  h(() => {
+  y(() => {
     if (!open || !rootRef.current) {
       return;
     }
@@ -43595,12 +43766,12 @@ function useModal(parameters) {
   const handleClose = q$1(() => {
     manager.remove(getModal(), ariaHiddenProp);
   }, [ariaHiddenProp]);
-  h(() => {
+  y(() => {
     return () => {
       handleClose();
     };
   }, [handleClose]);
-  h(() => {
+  y(() => {
     if (open) {
       handleOpen();
     } else if (!hasTransition || !closeAfterTransition) {
@@ -43740,7 +43911,7 @@ const ModalBackdrop = styled(Backdrop, {
 })({
   zIndex: -1
 });
-const Modal = /* @__PURE__ */ D(function Modal2(inProps, ref) {
+const Modal$1 = /* @__PURE__ */ D(function Modal(inProps, ref) {
   const props = useDefaultProps({
     name: "MuiModal",
     props: inProps
@@ -43907,7 +44078,7 @@ const useUtilityClasses$C = (ownerState) => {
   };
   return composeClasses(slots, getDialogUtilityClass, classes);
 };
-const DialogRoot = styled(Modal, {
+const DialogRoot = styled(Modal$1, {
   name: "MuiDialog",
   slot: "Root"
 })({
@@ -46843,7 +47014,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
   const handleRef = useForkRef(listRef, ref);
   let activeItemIndex = -1;
   L.forEach(children, (child, index) => {
-    if (!/* @__PURE__ */ vn(child)) {
+    if (!/* @__PURE__ */ hn(child)) {
       if (activeItemIndex === index) {
         activeItemIndex += 1;
         if (activeItemIndex >= children.length) {
@@ -46931,7 +47102,7 @@ const useUtilityClasses$k = (ownerState) => {
   };
   return composeClasses(slots, getPopoverUtilityClass, classes);
 };
-const PopoverRoot = styled(Modal, {
+const PopoverRoot = styled(Modal$1, {
   name: "MuiPopover",
   slot: "Root"
 })({});
@@ -47079,7 +47250,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
     element.style.transformOrigin = positioning.transformOrigin;
     setIsPositioned(true);
   }, [getPositioningStyle]);
-  h(() => {
+  y(() => {
     if (disableScrollLock) {
       window.addEventListener("scroll", setPositioningStyles);
     }
@@ -47091,7 +47262,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
   const handleExited = () => {
     setIsPositioned(false);
   };
-  h(() => {
+  y(() => {
     if (open) {
       setPositioningStyles();
     }
@@ -47101,7 +47272,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
       setPositioningStyles();
     }
   } : null, [open, setPositioningStyles]);
-  h(() => {
+  y(() => {
     if (!open) {
       return void 0;
     }
@@ -47315,7 +47486,7 @@ const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
   };
   let activeItemIndex = -1;
   L.map(children, (child, index) => {
-    if (!/* @__PURE__ */ vn(child)) {
+    if (!/* @__PURE__ */ hn(child)) {
       return;
     }
     if (!child.props.disabled) {
@@ -47769,7 +47940,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     value
   }), [value]);
   const open = displayNode !== null && openState;
-  h(() => {
+  y(() => {
     if (!open || !anchorElement || autoWidth) {
       return void 0;
     }
@@ -47784,18 +47955,18 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
       observer.disconnect();
     };
   }, [open, anchorElement, autoWidth]);
-  h(() => {
+  y(() => {
     if (defaultOpen && openState && displayNode && !isOpenControlled) {
       setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
       displayRef.current.focus();
     }
   }, [displayNode, autoWidth]);
-  h(() => {
+  y(() => {
     if (autoFocus) {
       displayRef.current.focus();
     }
   }, [autoFocus]);
-  h(() => {
+  y(() => {
     if (!labelId) {
       return void 0;
     }
@@ -47935,7 +48106,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     }
   }
   const items = childrenArray.map((child) => {
-    if (!/* @__PURE__ */ vn(child)) {
+    if (!/* @__PURE__ */ hn(child)) {
       return null;
     }
     let selected;
@@ -49610,7 +49781,7 @@ function useSlider(parameters) {
     doc.removeEventListener("touchmove", handleTouchMove);
     doc.removeEventListener("touchend", handleTouchEnd);
   }, [handleTouchEnd, handleTouchMove]);
-  h(() => {
+  y(() => {
     const {
       current: slider
     } = sliderRef;
@@ -49622,7 +49793,7 @@ function useSlider(parameters) {
       stopListening();
     };
   }, [stopListening, handleTouchStart]);
-  h(() => {
+  y(() => {
     if (disabled) {
       stopListening();
     }
@@ -50892,7 +51063,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
     TransitionProps,
     ...other
   } = props;
-  const children = /* @__PURE__ */ vn(childrenProp) ? childrenProp : /* @__PURE__ */ u2("span", {
+  const children = /* @__PURE__ */ hn(childrenProp) ? childrenProp : /* @__PURE__ */ u2("span", {
     children: childrenProp
   });
   const theme = useTheme();
@@ -50921,7 +51092,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
     }
     touchTimer.clear();
   });
-  h(() => stopTouchInteraction, [stopTouchInteraction]);
+  y(() => stopTouchInteraction, [stopTouchInteraction]);
   const handleOpen = (event) => {
     hystersisTimer.clear();
     hystersisOpen = true;
@@ -51024,7 +51195,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
       handleClose(event);
     });
   };
-  h(() => {
+  y(() => {
     if (!open) {
       return void 0;
     }
@@ -51712,7 +51883,7 @@ const Tab$1 = /* @__PURE__ */ D(function Tab(inProps, ref) {
     wrapped
   };
   const classes = useUtilityClasses$8(ownerState);
-  const icon = iconProp && label && /* @__PURE__ */ vn(iconProp) ? /* @__PURE__ */ mn(iconProp, {
+  const icon = iconProp && label && /* @__PURE__ */ hn(iconProp) ? /* @__PURE__ */ mn(iconProp, {
     className: clsx(classes.icon, iconProp.props.className)
   }) : iconProp;
   const handleClick = (event) => {
@@ -52285,7 +52456,7 @@ function ScrollbarSize(props) {
       containerWindow.removeEventListener("resize", handleResize);
     };
   }, [onChange]);
-  h(() => {
+  y(() => {
     setMeasurements();
     onChange(scrollbarHeight.current);
   }, [onChange]);
@@ -52906,7 +53077,7 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
       setUpdateScrollObserver(!updateScrollObserver);
     }
   });
-  h(() => {
+  y(() => {
     const handleResize = debounce$1(() => {
       if (tabsRef.current) {
         updateIndicatorState();
@@ -52947,7 +53118,7 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
       resizeObserver?.disconnect();
     };
   }, [updateIndicatorState, updateScrollButtonState]);
-  h(() => {
+  y(() => {
     const tabListChildren = Array.from(tabListRef.current.children);
     const length2 = tabListChildren.length;
     if (typeof IntersectionObserver !== "undefined" && length2 > 0 && scrollable && scrollButtons !== false) {
@@ -52974,13 +53145,13 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
     }
     return void 0;
   }, [scrollable, scrollButtons, updateScrollObserver, childrenProp?.length]);
-  h(() => {
+  y(() => {
     setMounted(true);
   }, []);
-  h(() => {
+  y(() => {
     updateIndicatorState();
   });
-  h(() => {
+  y(() => {
     scrollSelectedIntoView(defaultIndicatorStyle !== indicatorStyle);
   }, [scrollSelectedIntoView, indicatorStyle]);
   F$1(action, () => ({
@@ -53001,7 +53172,7 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
   });
   let childIndex = 0;
   const children = L.map(childrenProp, (child) => {
-    if (!/* @__PURE__ */ vn(child)) {
+    if (!/* @__PURE__ */ hn(child)) {
       return null;
     }
     const childValue = child.props.value === void 0 ? childIndex : child.props.value;
@@ -53419,47 +53590,185 @@ function ThinkIconButton({
     }
   );
 }
+function useClickOutside(ref, handler) {
+  y(() => {
+    const listener = (event) => {
+      if (event.target instanceof Node && ref.current && !ref.current.contains(event.target)) {
+        handler(event);
+      }
+    };
+    document.addEventListener("mousedown", listener);
+    return () => {
+      document.removeEventListener("mousedown", listener);
+    };
+  }, [ref, handler]);
+}
+function Modal2({
+  isOpen,
+  onClose,
+  title,
+  children,
+  footer,
+  size = "medium",
+  closeOnClickOutside = true,
+  closeOnEscape = true,
+  showCloseButton = true,
+  className = "",
+  onSave,
+  saveButtonText = "保存",
+  showSaveButton = true,
+  onBeforeClose
+}) {
+  const modalRef = A$1(null);
+  const deviceProfileAttrs = T$1(() => getThinkDeviceProfileAttributes(), []);
+  const [isSaving, setIsSaving] = d(false);
+  useClickOutside(modalRef, () => {
+    if (closeOnClickOutside && isOpen) {
+      handleClose();
+    }
+  });
+  y(() => {
+    if (!closeOnEscape || !isOpen) return;
+    const handleEscape = (e2) => {
+      if (e2.key === "Escape") {
+        handleClose();
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [closeOnEscape, isOpen, onClose, onBeforeClose]);
+  y(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+  const handleClose = () => {
+    if (onBeforeClose && !onBeforeClose()) {
+      return;
+    }
+    onClose();
+  };
+  const handleSave = async () => {
+    if (!onSave || isSaving) return;
+    try {
+      setIsSaving(true);
+      await onSave();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  if (!isOpen) return null;
+  const modalClasses = [
+    "think-modal",
+    `think-modal--${size}`,
+    className
+  ].filter(Boolean).join(" ");
+  const defaultFooter = /* @__PURE__ */ u2("div", { className: "think-modal__footer", children: [
+    /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", onClick: handleClose, children: "取消" }),
+    onSave && showSaveButton && /* @__PURE__ */ u2(
+      ThinkButton,
+      {
+        variant: "primary",
+        onClick: handleSave,
+        disabled: isSaving,
+        loading: isSaving,
+        children: isSaving ? "保存中..." : saveButtonText
+      }
+    )
+  ] });
+  return /* @__PURE__ */ u2("div", { className: "think-os think-os--modal think-modal-overlay", ...deviceProfileAttrs, children: /* @__PURE__ */ u2("div", { className: modalClasses, ref: modalRef, children: [
+    (title || showCloseButton) && /* @__PURE__ */ u2("div", { className: "think-modal__header", children: [
+      title && /* @__PURE__ */ u2("h2", { className: "think-modal__title", children: title }),
+      showCloseButton && /* @__PURE__ */ u2(
+        ThinkIconButton,
+        {
+          className: "think-modal__close",
+          label: "关闭",
+          icon: "×",
+          size: "sm",
+          onClick: handleClose
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-modal__body", children }),
+    footer !== void 0 ? footer : defaultFooter
+  ] }) });
+}
+const RECORD_GESTURE_MULTI_ACTIVATION_MS = 320;
+const RECORD_GESTURE_HINT = "点击编辑；Ctrl/⌘+点击或双击打开原文";
 function createRecordGestureHandlers(params) {
   let lastTouchAt = 0;
   let suppressClickUntil = 0;
+  let pendingPrimary = null;
+  const cancelPendingPrimary = () => {
+    if (pendingPrimary !== null) {
+      clearTimeout(pendingPrimary);
+      pendingPrimary = null;
+    }
+  };
+  const openPrimary = () => {
+    params.onPrimary?.();
+  };
   const openOrigin = () => {
-    void params.onOpenOrigin?.(params.item);
+    if (params.onOpenOrigin) {
+      void params.onOpenOrigin(params.item);
+      return;
+    }
+    openPrimary();
+  };
+  const schedulePrimary = () => {
+    cancelPendingPrimary();
+    if (!params.onOpenOrigin) {
+      openPrimary();
+      return;
+    }
+    pendingPrimary = setTimeout(() => {
+      pendingPrimary = null;
+      openPrimary();
+    }, RECORD_GESTURE_MULTI_ACTIVATION_MS);
   };
   return {
     onClick: (event) => {
-      if (Date.now() < suppressClickUntil) {
-        event?.preventDefault?.();
-        event?.stopPropagation?.();
-        return;
-      }
-      if (event?.ctrlKey || event?.metaKey) {
-        event?.preventDefault?.();
-        event?.stopPropagation?.();
+      stopInteractionEvent(event);
+      if (Date.now() < suppressClickUntil) return;
+      if (hasPlatformModifier(event)) {
+        cancelPendingPrimary();
         openOrigin();
         return;
       }
-      event?.preventDefault?.();
-      event?.stopPropagation?.();
-      params.onPrimary?.();
+      schedulePrimary();
     },
     onDblClick: (event) => {
-      event?.preventDefault?.();
-      event?.stopPropagation?.();
-      suppressClickUntil = Date.now() + 400;
+      stopInteractionEvent(event);
+      cancelPendingPrimary();
+      suppressClickUntil = Date.now() + RECORD_GESTURE_MULTI_ACTIVATION_MS;
       openOrigin();
     },
     onTouchEnd: (event) => {
       const now2 = Date.now();
-      if (lastTouchAt && now2 - lastTouchAt <= 350) {
+      if (lastTouchAt && now2 - lastTouchAt <= RECORD_GESTURE_MULTI_ACTIVATION_MS) {
         lastTouchAt = 0;
-        suppressClickUntil = now2 + 400;
-        event?.preventDefault?.();
-        event?.stopPropagation?.();
+        cancelPendingPrimary();
+        suppressClickUntil = now2 + RECORD_GESTURE_MULTI_ACTIVATION_MS;
+        stopInteractionEvent(event);
         openOrigin();
         return;
       }
       lastTouchAt = now2;
-    }
+    },
+    onKeyDown: (event) => {
+      if (!isKeyboardActivation(event)) return;
+      stopInteractionEvent(event);
+      cancelPendingPrimary();
+      if (hasPlatformModifier(event)) openOrigin();
+      else openPrimary();
+    },
+    cancelPendingPrimary
   };
 }
 const colorTokenMap = {
@@ -54255,7 +54564,7 @@ function detectObsidianColorMode(doc = document) {
 }
 function ThinkMuiThemeProvider({ children }) {
   const [mode, setMode] = d(() => detectObsidianColorMode());
-  h(() => {
+  y(() => {
     const updateMode = () => setMode(detectObsidianColorMode());
     const observer = new MutationObserver(updateMode);
     const targets = [document.documentElement, document.body].filter(Boolean);
@@ -54275,7 +54584,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, cl
   const [isOpen, setIsOpen] = d(false);
   const wrapperRef = A$1(null);
   const selectedLabel = options.find((option) => option.value === value)?.label || value;
-  h(() => {
+  y(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) setIsOpen(false);
     }
@@ -54512,19 +54821,34 @@ function TaskCheckbox({ done, onMarkDone }) {
     }
   );
 }
-function TaskSendToTimerButton({ taskId, timerStatus, onStart }) {
-  if (timerStatus) {
+function TaskSendToTimerButton({ timerStatus, onStart }) {
+  if (timerStatus === "running") {
     return /* @__PURE__ */ u2(
       IconAction,
       {
-        label: `该任务已在计时面板中 (${timerStatus})`,
+        label: "正在计时",
         color: "primary",
         sx: { cursor: "default" },
         icon: /* @__PURE__ */ u2(HourglassTopIcon, { fontSize: "small" })
       }
     );
   }
-  return /* @__PURE__ */ u2(IconAction, { label: "添加并开始计时", onClick: onStart, icon: /* @__PURE__ */ u2(PlayArrowIcon, { fontSize: "small" }) });
+  if (timerStatus === "paused") {
+    return /* @__PURE__ */ u2(
+      IconAction,
+      {
+        label: "继续计时",
+        color: "primary",
+        onClick: () => {
+          void onStart();
+        },
+        icon: /* @__PURE__ */ u2(PlayArrowIcon, { fontSize: "small" })
+      }
+    );
+  }
+  return /* @__PURE__ */ u2(IconAction, { label: "添加并开始计时", onClick: () => {
+    void onStart();
+  }, icon: /* @__PURE__ */ u2(PlayArrowIcon, { fontSize: "small" }) });
 }
 function addAtEnd(list, item) {
   return [...list, item];
@@ -54594,7 +54918,7 @@ function MarkdownContent({
   onTouchEnd
 }) {
   const elRef = A$1(null);
-  h(() => {
+  y(() => {
     const containerEl = elRef.current;
     if (!containerEl) return;
     let disposed2 = false;
@@ -55270,7 +55594,7 @@ function registerSettingsPersistence(plugin) {
     }).passthrough().optional()
   }).passthrough();
   const sanitizeForPersistence = (settings) => {
-    const cloned = JSON.parse(JSON.stringify(settings ?? {}));
+    const cloned = toPersistedThinkSettings(settings);
     const parsed = persistedSettingsGuard.safeParse(cloned);
     const out = parsed.success ? parsed.data : cloned;
     if (out?.aiSettings && typeof out.aiSettings === "object") {
@@ -55301,6 +55625,9 @@ function registerSettingsPersistence(plugin) {
   instance.register(THEME_MATCHER_TOKEN, { useToken: ThemeManager });
 }
 const ENERGY_RECORD_TYPE_ID = RECORD_TYPE_IDS.ENERGY;
+({
+  ...ENERGY_DEFINITION
+});
 RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.captureMode !== "internal");
 function getEffectiveRecordTypes(settings) {
   return [...getEffectiveCoreBlocks(settings), ENERGY_DEFINITION];
@@ -55337,7 +55664,7 @@ function SelectablePill({
   );
 }
 function cleanLabel(value) {
-  return String(value || "").replace(/^[#＃]+\s*/, "").trim();
+  return String(value || "").trim();
 }
 function leafLabel(path) {
   return cleanLabel(getLeafPath(path) || path);
@@ -55995,7 +56322,7 @@ function QuickInputNativeFieldRenderer({
     {
       ...commonProps,
       rows: dense ? 4 : 5,
-      enterKeyHint: isMobileLike ? "enter" : "done",
+      enterkeyhint: isMobileLike ? "enter" : "done",
       ref: (el) => setTextareaAutoHeight(el, minHeight2)
     }
   ) : /* @__PURE__ */ u2(
@@ -56005,7 +56332,7 @@ function QuickInputNativeFieldRenderer({
       type: inputType === "text" ? "text" : inputType,
       min: field.min,
       max: field.max,
-      enterKeyHint: isMobileLike ? "enter" : "done",
+      enterkeyhint: isMobileLike ? "enter" : "done",
       className: isQuickInputTimeField(field) ? `${commonProps.className} think-qif-time-input` : commonProps.className
     }
   );
@@ -56119,8 +56446,8 @@ function QuickInputEditorFields({
 }
 function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense = false }) {
   const [draftGoalPath, setDraftGoalPath] = d("");
-  const normalizedDraft = normalizeGoalPath$1(draftGoalPath) || "";
-  const existing = T$1(() => new Set((goals || []).map((goal) => normalizeGoalPath$1(goal.value) || "")), [goals]);
+  const normalizedDraft = normalizeGoalPath(draftGoalPath) || "";
+  const existing = T$1(() => new Set((goals || []).map((goal) => normalizeGoalPath(goal.value) || "")), [goals]);
   const canCreate = !!onCreateGoal && !!normalizedDraft && !existing.has(normalizedDraft);
   return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: dense ? 1 : 1.2 }, children: [
     /* @__PURE__ */ u2(
@@ -56314,7 +56641,6 @@ function resolveQuickInputRecordTypeRuntime(input) {
     settings: input.settings,
     blockId: input.currentBlockId,
     goalId: input.selectedGoal?.id || input.selectedGoalId,
-    goalPath: input.selectedGoalPath,
     themeId: input.selectedThemeId || void 0,
     templateVariantId: input.selectedTemplateVariantId || void 0
   });
@@ -56427,7 +56753,7 @@ function hydrateQuickInputTemplateDefaults({
     changed = true;
   };
   const assignValue = (key, value, source) => assignQuickInputDefaultValue({ next: next2, nextSources, key, value, source, markChanged: markChanged2 });
-  template.fields.forEach((field) => {
+  (template.fields || []).forEach((field) => {
     const key = field.key;
     const existingValue = next2[key];
     const existingSource = nextSources[key];
@@ -56481,47 +56807,11 @@ function hydrateQuickInputTemplateDefaults({
   });
   return { changed: true, formData: next2, fieldSources: nextSources };
 }
-function cleanDisplaySegment(value) {
-  return String(value ?? "").replace(/^[#＃]+\s*/, "").trim();
-}
-function cleanDisplayPath(value) {
-  return normalizeGoalPath$1(value);
-}
-const splitThemePathParts = (path) => {
-  const parts = splitHierarchyPath(path);
-  return {
-    themePath: parts.path || null,
-    rootTheme: parts.root || null,
-    leafTheme: parts.leaf || null
-  };
-};
-const splitPathParts = (path) => {
-  const parts = splitHierarchyPath(path);
-  return {
-    path: parts.path || null,
-    root: parts.root || null,
-    leaf: parts.leaf || null
-  };
-};
-function getGoalPath(goal) {
-  if (!goal) return null;
-  return cleanDisplayPath(goal.goalPath || goal.title);
-}
-function makeGoalIdFromPath(path) {
-  return `goal:${path}`;
-}
-function themeOptions(themes) {
-  return (themes || []).map((theme) => ({
-    value: theme.path,
-    label: cleanDisplaySegment(getLeafPath(theme.path) || theme.path),
-    icon: theme.icon
-  }));
-}
 function deriveQuickInputInitialSelection(initialFormData, context) {
   const goalContext = readRecord(context, "__goalContext");
   return {
     selectedGoalId: readFirstString$1(initialFormData, ["goalId", "目标ID"]) ?? readFirstString$1(context, ["goalId", "目标ID"]) ?? readFirstString$1(goalContext, ["goalId"]) ?? null,
-    selectedGoalPath: cleanDisplayPath(
+    selectedGoalPath: normalizeGoalPath(
       readFirstString$1(initialFormData, ["goalPath", "目标"]) ?? readFirstString$1(context, ["goalPath", "目标"]) ?? readFirstString$1(goalContext, ["goalPath"]) ?? ""
     ),
     selectedTemplateVariantId: readFirstString$1(initialFormData, [
@@ -56548,6 +56838,33 @@ function resolveQuickInputThemeSelectionOnClick(params) {
   if (selectedThemeId !== themeId) return themeId;
   const parentPath = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
   return parentPath ? pathToIdMap.get(parentPath) ?? null : null;
+}
+const splitThemePathParts = (path) => {
+  const parts = splitHierarchyPath(path);
+  return {
+    themePath: parts.path || null,
+    rootTheme: parts.root || null,
+    leafTheme: parts.leaf || null
+  };
+};
+const splitPathParts = (path) => {
+  const parts = splitHierarchyPath(path);
+  return {
+    path: parts.path || null,
+    root: parts.root || null,
+    leaf: parts.leaf || null
+  };
+};
+function getGoalPath(goal) {
+  if (!goal) return null;
+  return normalizeGoalPath(goal.goalPath || goal.title);
+}
+function themeOptions(themes) {
+  return (themes || []).map((theme) => ({
+    value: theme.path,
+    label: getLeafPath(theme.path) || theme.path,
+    icon: theme.icon
+  }));
 }
 function buildQuickInputEditorState(input) {
   const currentTheme = input.selectedThemeId ? input.themeIdMap.get(input.selectedThemeId) ?? input.theme ?? null : input.theme ?? null;
@@ -56587,14 +56904,14 @@ function buildQuickInputEditorState(input) {
   };
 }
 function buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions) {
-  if (!rawTemplate?.fields?.length) return rawTemplate;
+  if (!rawTemplate?.fields?.length) return rawTemplate ?? null;
   const themeFieldOptions = themeOptions(availableThemes);
   return {
     ...rawTemplate,
     coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
     fields: rawTemplate.fields.map((field) => {
       const semantic = getTemplateFieldSemantic(field);
-      if (semantic === "goals") return { ...field, options: goalFieldOptions };
+      if (semantic === "goalPath") return { ...field, options: goalFieldOptions };
       if (semantic === "themePath") {
         return {
           ...field,
@@ -56632,7 +56949,7 @@ function applyQuickInputLinkedTimeChanges(draft, direction) {
   const changes = computeLinkedTimeChanges(
     draft,
     { startKey: "时间", endKey: "结束", durationKey: "时长" },
-    draft.lastChanged,
+    typeof draft.lastChanged === "string" ? draft.lastChanged : void 0,
     {
       durationOutput: "number",
       direction
@@ -56669,13 +56986,15 @@ function applyQuickInputFieldUpdate(input) {
     if (autoKey !== key) nextSources[autoKey] = "system_auto";
   });
   const nextThemePath = key === "themePath" || key === "主题" ? String(rawValue ?? "").trim() || null : void 0;
-  const nextGoalPath = key === "goalPath" || key === "目标" || key === "目标路径" ? cleanDisplayPath(String(rawValue ?? "")) : void 0;
+  const nextGoalPath = key === "goalPath" || key === "目标" || key === "目标路径" ? normalizeGoalPath(String(rawValue ?? "")) : void 0;
   return {
     formData: linked.formData,
     fieldSources: nextSources,
     nextThemePath,
     nextGoalPath,
-    nextGoalId: nextGoalPath === void 0 ? void 0 : nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null
+    // Goal identity only comes from GoalSelector / GoalDefinition. A manual path
+    // edit invalidates the selected entity instead of fabricating an id from text.
+    nextGoalId: nextGoalPath === void 0 ? void 0 : null
   };
 }
 function applyQuickInputTimeDirectionChange(input) {
@@ -56701,7 +57020,7 @@ function applyQuickInputTimeDirectionChange(input) {
 }
 function getOrderedGoalIndex(goal, originalIndex) {
   if (!goal) return Number.MAX_SAFE_INTEGER;
-  const order2 = readNumber$1(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
+  const order2 = readNumber(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
   return Number.isFinite(order2) ? order2 : originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
 }
 function getGoalByDisplayPath(goals, path) {
@@ -56751,14 +57070,14 @@ function buildQuickInputGoalOptions(fullSettings, coreBlockId, options = {}) {
   ]).filter((goal) => goal.status !== "archived").filter((goal) => !requirePreset || goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId));
   const result = [];
   for (const [index, goal] of sourceGoals.entries()) {
-    const normalized2 = cleanDisplayPath(goal.goalPath || goal.title);
+    const normalized2 = normalizeGoalPath(goal.goalPath || goal.title);
     if (!normalized2 || seen.has(normalized2)) continue;
     seen.add(normalized2);
     const leaf2 = normalized2.split("/").filter(Boolean).pop() || normalized2;
     result.push({
-      id: goal.id || makeGoalIdFromPath(normalized2),
+      id: goal.id,
       value: normalized2,
-      label: cleanDisplaySegment(goal.title) || leaf2,
+      label: String(goal.title || "").trim() || leaf2,
       order: index,
       goal,
       themePath: goal.themePath ?? null
@@ -56772,8 +57091,9 @@ function resolveQuickInputCoreBlockId(_fullSettings, blockId) {
 function applyQuickInputGoalSelection(params) {
   const { formData, fieldSources, option } = params;
   const goal = option.goal || null;
-  const goalPath = cleanDisplayPath(goal?.goalPath || option.value) || option.value;
-  const goalId = goal?.id || (option.id && !String(option.id).startsWith("goal:") ? option.id : makeGoalIdFromPath(goalPath));
+  const goalPath = normalizeGoalPath(goal?.goalPath || option.value);
+  const goalId = goal?.id || option.id || null;
+  if (!goalPath || !goalId) throw new Error("QuickInput Goal selection requires a canonical Goal entity.");
   const themePath = goal?.themePath || option.themePath || null;
   const nextFormData = { ...formData };
   const nextFieldSources = { ...fieldSources };
@@ -56789,7 +57109,7 @@ function applyQuickInputGoalSelection(params) {
   assign2("目标ID", goalId);
   assign2("goalPath", goalPath);
   assign2("目标", goalPath);
-  const parts = splitGoalPath(cleanDisplayPath(goalPath) || "");
+  const parts = splitGoalPath(goalPath);
   assign2("rootGoal", parts.rootGoal || "", "goal_context");
   assign2("leafGoal", parts.leafGoal || "", "goal_context");
   if (themePath) {
@@ -56846,7 +57166,7 @@ function EnergyQuickCapturePanel({
   const [retrospectiveDate, setRetrospectiveDate] = d(() => dayjs().format("YYYY-MM-DD"));
   const [retrospectiveTime, setRetrospectiveTime] = d("");
   const [showTargetEditor, setShowTargetEditor] = d(false);
-  h(() => {
+  y(() => {
     if (selectedGoalPath || goals.length === 0) return;
     onSelectGoal(resolveQuickInputEnergyDefaultGoal(goals, defaultGoalId));
   }, [defaultGoalId, goals, onSelectGoal, selectedGoalPath]);
@@ -57111,7 +57431,7 @@ function QuickInputEditor({
   const settings = fullSettings.inputSettings;
   const initialFieldSource = recordInputMode === "create" ? "context" : "edit_backfill";
   const recordInputModeRef = A$1(recordInputMode);
-  const [session, dispatchSession] = y(
+  const [session, dispatchSession] = h(
     reduceRecordInputSession,
     initializeRecordInputSession({
       mode: recordInputMode,
@@ -57132,7 +57452,7 @@ function QuickInputEditor({
     fieldSources,
     timeDirection
   } = session;
-  h(() => {
+  y(() => {
     const modeForReset = recordInputModeRef.current;
     const sourceForReset = modeForReset === "create" ? "context" : "edit_backfill";
     dispatchSession({
@@ -57147,7 +57467,7 @@ function QuickInputEditor({
       }
     });
   }, [initialBlockId, initialThemeId, context]);
-  h(() => {
+  y(() => {
     recordInputModeRef.current = recordInputMode;
     dispatchSession({ type: "setMode", mode: recordInputMode });
   }, [recordInputMode]);
@@ -57167,8 +57487,8 @@ function QuickInputEditor({
   }, [themes]);
   const selectedGoal = T$1(() => {
     const goals = fullSettings.goalSettings?.goals || [];
-    return (selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) : null) || (selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) : null) || null;
-  }, [fullSettings.goalSettings?.goals, selectedGoalId, selectedGoalPath]);
+    return selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) || null : null;
+  }, [fullSettings.goalSettings?.goals, selectedGoalId]);
   const currentEffectiveBlockIdForTemplates = T$1(
     () => isEnergyDirect ? "" : resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
     [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId, isEnergyDirect]
@@ -57178,7 +57498,7 @@ function QuickInputEditor({
     if (!goal || !currentEffectiveBlockIdForTemplates) return [];
     return getGoalTemplateVariants(fullSettings.goalSettings, goal, currentEffectiveBlockIdForTemplates);
   }, [fullSettings.goalSettings, selectedGoal, currentEffectiveBlockIdForTemplates]);
-  h(() => {
+  y(() => {
     if (!goalTemplateVariants.length) {
       if (selectedTemplateVariantId) dispatchSession({ type: "selectTemplateVariant", variantId: null });
       return;
@@ -57190,23 +57510,23 @@ function QuickInputEditor({
     }
   }, [goalTemplateVariants, selectedTemplateVariantId]);
   const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = T$1(
-    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedGoalPath, selectedThemeId, selectedTemplateVariantId }),
-    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedGoalPath, selectedThemeId, selectedTemplateVariantId]
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedThemeId, selectedTemplateVariantId }),
+    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedThemeId, selectedTemplateVariantId]
   );
   const goalOptions = T$1(
     () => buildQuickInputGoalOptions(fullSettings, currentEffectiveBlockIdForTemplates, { requirePreset: !isEnergyDirect }),
     [fullSettings, currentEffectiveBlockIdForTemplates, isEnergyDirect]
   );
-  const goalFieldOptions = T$1(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label })), [goalOptions]);
-  h(() => {
-    const selectedPath = cleanDisplayPath(selectedGoal?.goalPath || selectedGoalPath || null);
+  const goalFieldOptions = T$1(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label || goal.value })), [goalOptions]);
+  y(() => {
+    const selectedPath = getGoalPath(selectedGoal) || selectedGoalPath || null;
     if (!selectedPath) return;
-    const stillVisible = goalOptions.some((option) => cleanDisplayPath(option.value) === selectedPath);
+    const stillVisible = goalOptions.some((option) => option.value === selectedPath);
     if (stillVisible) return;
     dispatchSession({ type: "clearGoalContext" });
   }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
-  const currentGoalTitle = cleanDisplaySegment(selectedGoal?.title || resolvedGoal?.title || "") || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
+  const currentGoalTitle = String(selectedGoal?.title || resolvedGoal?.title || "").trim() || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData["日期"] ?? formData.date ?? dayjs().format("YYYY-MM-DD")).trim();
   const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(rawTemplate);
@@ -57219,7 +57539,7 @@ function QuickInputEditor({
     [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions, isEnergyDirect]
   );
   const showTimeDirectionControl = T$1(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
-  h(() => {
+  y(() => {
     if (isEnergyDirect || !template) return;
     const hydrated = hydrateQuickInputTemplateDefaults({
       template,
@@ -57241,7 +57561,7 @@ function QuickInputEditor({
       fieldSources: hydrated.fieldSources
     });
   }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources, isEnergyDirect]);
-  h(() => {
+  y(() => {
     const presetThemePath = String(formData.themePath ?? formData["主题"] ?? "").trim();
     if (!presetThemePath) return;
     const nextThemeId = pathToIdMap.get(presetThemePath) ?? null;
@@ -57269,7 +57589,7 @@ function QuickInputEditor({
     templateSourceType,
     fieldSources: sourceOverride
   });
-  h(() => {
+  y(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
   }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
   const handleUpdateField = (key, value, isOptionObject2 = false) => {
@@ -57716,10 +58036,10 @@ function useQuickInputSubmitController({
   const pendingActionRef = A$1(null);
   const submitTriggeredRef = A$1(false);
   const submitLatestRef = A$1(createTakeLatest("quick-input-submit"));
-  h(() => {
+  y(() => {
     pendingActionRef.current = pendingAction;
   }, [pendingAction]);
-  h(() => () => submitLatestRef.current.dispose(), []);
+  y(() => () => submitLatestRef.current.dispose(), []);
   const buildCreateDraft = q$1(() => buildRecordCreateDraftFromEditorState({
     state: getCurrentState(),
     context,
@@ -57940,7 +58260,7 @@ function QuickInputModalContent({
   const isMobileLike = T$1(() => isMobileLikeEnvironment(), []);
   const editIdentity = `${mode}:${editItem?.id ?? ""}`;
   const previousEditIdentityRef = A$1(editIdentity);
-  h(() => {
+  y(() => {
     if (previousEditIdentityRef.current === editIdentity) return;
     previousEditIdentityRef.current = editIdentity;
     setEditOperationMode("edit");
@@ -58368,9 +58688,10 @@ class QuickInputModal extends obsidian.Modal {
     unmountPreact(this.contentEl);
   }
 }
-function openCreateModal(app, config2, source = "view_quick_create") {
+function openCreateModal(app, config2, source = "view_quick_create", options = {}) {
   if (!config2?.blockId) return false;
-  new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, true, {
+  const modalApp = app;
+  new QuickInputModal(modalApp, config2.blockId, config2.context, config2.themeId, void 0, options.allowBlockSwitch ?? true, {
     mode: "create",
     source
   }).open();
@@ -58449,7 +58770,7 @@ function buildTimelineCreateConfig(params) {
   };
 }
 function openCreateFromTimeline(params) {
-  return openCreateModal(params.app, buildTimelineCreateConfig(params), "view_quick_create");
+  return openCreateModal(params.app, buildTimelineCreateConfig(params), "view_quick_create", { allowBlockSwitch: false });
 }
 function resolveHeatmapThemeId(themesByPath, themePath, item) {
   if (!themesByPath) return void 0;
@@ -58696,7 +59017,8 @@ function openEditFromItem(params) {
       entry: deriveEntryContext(params.item, params.openedFrom ?? "unknown")
     }
   };
-  new QuickInputModal(params.app, params.item.templateId || params.item.categoryKey || "", editContext, void 0, void 0, false, {
+  const modalApp = params.app;
+  new QuickInputModal(modalApp, params.item.templateId || params.item.categoryKey || "", editContext, void 0, void 0, false, {
     mode: "edit",
     editItem: params.item
   }).open();
@@ -58872,6 +59194,7 @@ async function commitExcelCellFromView(params) {
     params.uiPort.notice(message2);
     return { ok: false, message: message2 };
   }
+  const blockId = prepared.blockId;
   const templateField = resolveTemplateFieldForExcelCommit(prepared.template?.fields, canonicalField);
   if (templateField && getTemplateFieldInputType(templateField).toLowerCase().includes("path")) {
     const message2 = "路径类模板字段不能在 Excel 视图中修改。";
@@ -58887,7 +59210,7 @@ async function commitExcelCellFromView(params) {
   const { ok, message } = await runUiRecordAction(
     () => params.useCases.recordInput.submitUpdateRecord({
       item: params.item,
-      blockId: prepared.blockId,
+      blockId,
       themeId: prepared.themeId,
       formData,
       source: "quickinput"
@@ -59193,7 +59516,7 @@ function buildAiBatchConfirmRecordItems({
       cmd,
       blockId: block?.id || "",
       themeId,
-      goalLabel: goalDisplayName(goal, goalPath),
+      goalLabel: goalDisplayName(goal, goalPath ?? void 0),
       presetLabel: presetDisplayName(preset),
       themePath,
       formData: normalizeRecordInputFormDataForTemplate(initialTemplate ?? void 0, initialFormData),
@@ -59522,7 +59845,7 @@ function useLocalStorage(key, initialValue) {
 }
 function useIsMounted() {
   const ref = A$1(true);
-  h(() => {
+  y(() => {
     ref.current = true;
     return () => {
       ref.current = false;
@@ -59789,7 +60112,7 @@ function useFloatingPanelInteractions(args) {
   return { onDragStart, onResizeStart, onPanelPointerDown };
 }
 function useFloatingPanelRegistration({ id, visible, register, unregister }) {
-  h(() => {
+  y(() => {
     if (!visible) {
       unregister(id);
       return;
@@ -59800,7 +60123,7 @@ function useFloatingPanelRegistration({ id, visible, register, unregister }) {
 }
 function useFloatingPanelViewportClamp(args) {
   const { size, position: position2, clampSize, clampPosition, setSize, setPosition } = args;
-  h(() => {
+  y(() => {
     const clampedSize = clampSize(size);
     if (clampedSize.width !== size.width || clampedSize.height !== size.height) {
       setSize(clampedSize);
@@ -59820,7 +60143,7 @@ function useFloatingPanelViewportClamp(args) {
 }
 function useFloatingPanelCloseHandlers(args) {
   const { id, activeId, visible, onClose, closeOnOutsideClick, closeOnEscape, rootRef } = args;
-  h(() => {
+  y(() => {
     if (!onClose || !closeOnOutsideClick || !visible) return;
     const ignoreFirstClick = { current: true };
     const handler = (event) => {
@@ -59844,7 +60167,7 @@ function useFloatingPanelCloseHandlers(args) {
       document.removeEventListener("touchstart", toDomListener(handler));
     };
   }, [onClose, closeOnOutsideClick, visible, rootRef]);
-  h(() => {
+  y(() => {
     if (!onClose || !closeOnEscape || !visible) return;
     const onKeyDown = (event) => {
       if (event.key !== "Escape") return;
@@ -59857,10 +60180,10 @@ function useFloatingPanelCloseHandlers(args) {
 }
 function useFloatingPanelPersistence(args) {
   const { position: position2, size, resizable, setStoredPosition, setStoredSize } = args;
-  h(() => {
+  y(() => {
     setStoredPosition(position2);
   }, [position2, setStoredPosition]);
-  h(() => {
+  y(() => {
     if (!resizable) return;
     setStoredSize(size);
   }, [size, resizable, setStoredSize]);
@@ -60025,7 +60348,7 @@ function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOr
   const [elapsedSeconds, setElapsedSeconds] = d(() => elapsedSecondsAt(timer, Date.now()));
   const taskItem = dataStore.queryItems().find((i2) => i2.id === timer.taskId);
   const recurringTask = taskItem ? isTaskRecurring(taskItem) : false;
-  h(() => {
+  y(() => {
     let interval = null;
     const update = () => setElapsedSeconds(elapsedSecondsAt(timer, Date.now()));
     update();
@@ -60049,7 +60372,7 @@ function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOr
       "min"
     ] }) : null,
     /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: "8px", width: "100%" }, children: [
-      /* @__PURE__ */ u2(Tooltip2, { title: taskItem ? `点击编辑；Ctrl/⌘+点击或双击打开原文：${taskItem?.title}` : "任务已不存在", children: /* @__PURE__ */ u2(
+      /* @__PURE__ */ u2(Tooltip2, { title: taskItem ? `${RECORD_GESTURE_HINT}：${taskItem?.title}` : "任务已不存在", children: /* @__PURE__ */ u2(
         "div",
         {
           style: {
@@ -60062,9 +60385,12 @@ function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOr
             textOverflow: "ellipsis",
             cursor: taskItem ? "pointer" : "default"
           },
+          role: taskItem ? "button" : void 0,
+          tabIndex: taskItem ? 0 : void 0,
           onClick: titleGesture ? titleGesture.onClick : void 0,
           onDblClick: titleGesture ? titleGesture.onDblClick : void 0,
           onTouchEnd: titleGesture ? titleGesture.onTouchEnd : void 0,
+          onKeyDown: titleGesture ? titleGesture.onKeyDown : void 0,
           children: /* @__PURE__ */ u2(Typography2, { variant: "body2", noWrap: true, children: taskItem?.title || "任务已不存在" })
         }
       ) }),
@@ -60333,7 +60659,14 @@ function ModulePanel({
       "header",
       {
         class: `module-header${layoutEditing ? " is-layout-editing" : ""}${layoutSelected ? " is-layout-selected" : ""}`,
+        role: "button",
+        tabIndex: 0,
         onClick: onHeaderClick,
+        onKeyDown: (event) => {
+          if (event.target !== event.currentTarget || !isKeyboardActivation(event)) return;
+          stopInteractionEvent(event);
+          onToggle?.(event);
+        },
         title: layoutEditing ? "点击选中；拖动左侧手柄移动；点击标题区域折叠或展开" : "点击折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开",
         children: [
           /* @__PURE__ */ u2("div", { class: "module-header-main", children: [
@@ -61119,7 +61452,7 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
 function ProgressViewEditor({ value, onChange }) {
   const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...value };
   return /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "ProgressView 只按目标展示大技能经验条；主题作为小技能纵向列表。时间和筛选统一走控制栏与视图筛选，不展示完成率和掉队提醒。" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "ProgressView 只按目标展示成长列表：目标作为一级行，小技能作为二级行。时间和筛选统一走外部视图系统，不在本视图内自建工具栏或周期切换。" }),
     /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
       /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "显示目标数量", value: config2.topN, onChange: (e2) => onChange({ mode: "goal", topN: Number(e2.target.value) || 20 }) }),
       /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "每条记录 XP", value: config2.basePoints, onChange: (e2) => onChange({ mode: "goal", basePoints: Number(e2.target.value) || 1 }) }),
@@ -61244,17 +61577,21 @@ function formatRuleValue(rule) {
   }
   return String(rule.value ?? "");
 }
+function stableRuleFieldLabel(field) {
+  const label = getFieldLabel(field);
+  return label === field ? field : `${label} (${field})`;
+}
 function buildRuleLabel(mode, rule) {
   if (mode === "filter") {
     const filterRule = rule;
-    if (filterRule.op === "empty") return `${getFieldLabel(filterRule.field)} 为空`;
-    if (filterRule.op === "notEmpty") return `${getFieldLabel(filterRule.field)} 非空`;
+    if (filterRule.op === "empty") return `${stableRuleFieldLabel(filterRule.field)} 为空`;
+    if (filterRule.op === "notEmpty") return `${stableRuleFieldLabel(filterRule.field)} 非空`;
     const valueText = formatRuleValue(filterRule);
     const opText = filterRule.op === "in" ? "属于任一" : filterRule.op === "notIn" ? "不属于任一" : filterRule.op;
-    return `${getFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
+    return `${stableRuleFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
   }
   const sortRule = rule;
-  return `${getFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
+  return `${stableRuleFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
 }
 function normalizeFilterPatch(patch, current2) {
   const nextOp = patch.op ?? current2?.op;
@@ -61595,7 +61932,6 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
 }
 const DEFAULT_QUICK_FILTER_FIELDS = [
   { field: "goalPath", label: "目标", help: "目标中心主筛选字段，优先用目标路径聚合任务/计划/总结/打卡。", placeholder: "选择目标" },
-  { field: "goalPaths", label: "目标列表", placeholder: "选择目标" },
   { field: "goalId", label: "目标ID", help: "稳定目标 ID，适合目标实体化后的精确筛选。", placeholder: "输入目标ID" },
   { field: "coreBlock", label: "记录类型", help: "Goal × Block 主链字段，按 task/plan/review/thought/habit/evidence/blocker/milestone 筛选。旧分类筛选会自动归一到 coreBlock。", placeholder: "选择记录类型" },
   { field: "themePath", label: "主题", help: "主题已降级为表单层级单选字段，但仍可用于上下文筛选。", placeholder: "选择主题" },
@@ -61706,10 +62042,11 @@ function CommonFilterPanel({
         display: "flex",
         flexDirection: "column",
         gap: compact ? 1 : 1.5,
-        p: compact ? 1.25 : 1.5,
-        border: "1px solid var(--background-modifier-border)",
-        borderRadius: "10px",
-        background: "var(--background-secondary)"
+        pb: compact ? 1 : 1.25,
+        border: 0,
+        borderBottom: "1px solid var(--background-modifier-border)",
+        borderRadius: 0,
+        background: "transparent"
       },
       children: [
         /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }, children: [
@@ -61793,7 +62130,7 @@ function ViewInstanceEditor({ vi }) {
     const labels = { ProgressView: "成长", EnergyView: "精力" };
     return VIEW_OPTIONS.map((v2) => ({ value: v2, label: labels[v2] || v2.replace("View", "") }));
   }, []);
-  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "status", "cadence", "priority", "period.label"], []);
+  const commonFilterFields = T$1(() => ["goalPath", "goalId", "coreBlock", "themePath", "status", "cadence", "priority", "period.label"], []);
   const hasAdvancedFilters = T$1(() => (currentVi.filters || []).some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [currentVi.filters, commonFilterFields]);
   const handleFieldsChange = (fields) => {
     handleUpdate({ fields: normalizeDisplayFields(fields, { includeUnknown: true }) });
@@ -62277,6 +62614,8 @@ function LayoutEditorPanel({ layoutId, useCases }) {
   const [autocompleteOpen, setAutocompleteOpen] = d(false);
   const inputRef = A$1(null);
   const [contextMenu, setContextMenu] = d(null);
+  const [renameTarget, setRenameTarget] = d(null);
+  const [renameValue, setRenameValue] = d("");
   const handleUpdate = q$1(
     (updates) => {
       if (!layout) return;
@@ -62371,14 +62710,25 @@ function LayoutEditorPanel({ layoutId, useCases }) {
     if (view) openModuleSettingsWidget(view);
     handleContextMenuClose();
   }, [contextMenu, allViews, handleContextMenuClose]);
+  const openViewRename = q$1((viewId, viewTitle) => {
+    setRenameTarget({ viewId, viewTitle });
+    setRenameValue(viewTitle);
+  }, []);
   const handleViewRename = q$1(() => {
     if (!contextMenu) return;
-    const newName = prompt("请输入新的视图名称", contextMenu.viewTitle);
-    if (newName && newName.trim()) {
-      _useCases.viewInstance.updateView(contextMenu.viewId, { title: newName.trim() });
-    }
+    openViewRename(contextMenu.viewId, contextMenu.viewTitle);
     handleContextMenuClose();
-  }, [contextMenu, _useCases, handleContextMenuClose]);
+  }, [contextMenu, openViewRename, handleContextMenuClose]);
+  const handleRenameSave = q$1(async () => {
+    if (!renameTarget) return;
+    const title = renameValue.trim();
+    if (!title || title === renameTarget.viewTitle) {
+      setRenameTarget(null);
+      return;
+    }
+    await _useCases.viewInstance.updateView(renameTarget.viewId, { title });
+    setRenameTarget(null);
+  }, [renameTarget, renameValue, _useCases.viewInstance]);
   const handleViewRemove = q$1(() => {
     if (!contextMenu) return;
     removeViewFromLayout(contextMenu.viewId);
@@ -62519,6 +62869,33 @@ function LayoutEditorPanel({ layoutId, useCases }) {
           /* @__PURE__ */ u2("button", { onClick: handleViewRemove, children: "从布局移除" })
         ] })
       }
+    ),
+    /* @__PURE__ */ u2(
+      Modal2,
+      {
+        isOpen: Boolean(renameTarget),
+        onClose: () => setRenameTarget(null),
+        title: "重命名视图",
+        size: "small",
+        onSave: handleRenameSave,
+        saveButtonText: "重命名",
+        children: /* @__PURE__ */ u2(
+          TextField2,
+          {
+            fullWidth: true,
+            autoFocus: true,
+            label: "视图名称",
+            value: renameValue,
+            onInput: (event) => setRenameValue(event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void handleRenameSave();
+              }
+            }
+          }
+        )
+      }
     )
   ] });
 }
@@ -62577,7 +62954,7 @@ function DataFilterPanel({
   const activeCount = filters.length;
   const sourceItems = items ?? dataStore.queryItems();
   const fieldOptions = T$1(() => getAllFields(sourceItems), [sourceItems]);
-  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "baseCategory", "status", "cadence", "priority", "period"], []);
+  const commonFilterFields = T$1(() => ["goalPath", "goalId", "coreBlock", "themePath", "baseCategory", "status", "cadence", "priority", "period"], []);
   const hasAdvancedFilters = T$1(() => filters.some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [filters, commonFilterFields]);
   const handleOpen = () => {
     setAdvancedOpen(hasAdvancedFilters);
@@ -62642,7 +63019,7 @@ function DataFilterPanel({
             ] })
           ] }) }),
           /* @__PURE__ */ u2(Divider2, {}),
-          /* @__PURE__ */ u2(DialogContent2, { sx: { p: 2.5, overflow: "auto" }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+          /* @__PURE__ */ u2(DialogContent2, { sx: { p: 2.5, overflow: "auto", background: "var(--background-primary)" }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
             /* @__PURE__ */ u2(
               CommonFilterPanel,
               {
@@ -62661,10 +63038,17 @@ function DataFilterPanel({
                 expanded: advancedOpen,
                 onChange: (_2, expanded) => setAdvancedOpen(expanded),
                 disableGutters: true,
+                elevation: 0,
                 sx: {
-                  border: "1px solid var(--background-modifier-border)",
-                  borderRadius: "10px",
-                  "&:before": { display: "none" }
+                  border: 0,
+                  borderTop: "1px solid var(--background-modifier-border)",
+                  borderRadius: 0,
+                  background: "transparent",
+                  boxShadow: "none",
+                  "&:before": { display: "none" },
+                  "& .MuiAccordionSummary-root": { px: 0, minHeight: "48px" },
+                  "& .MuiAccordionSummary-content": { my: 1 },
+                  "& .MuiAccordionDetails-root": { px: 0, pb: 0 }
                 },
                 children: [
                   /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
@@ -62698,33 +63082,48 @@ function DataFilterPanel({
     )
   ] });
 }
-function FieldPill({ item, fieldKey, resolveResourcePath, allThemes }) {
+function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOpenRecordOrigin }) {
   const value = readField(item, fieldKey);
   if (value === null || value === void 0 || value === "" || Array.isArray(value) && value.length === 0) {
     return null;
   }
   const label = getFieldLabel(fieldKey);
+  const originProps = onOpenRecordOrigin ? {
+    role: "button",
+    tabIndex: 0,
+    onClick: (event) => {
+      if (!hasPlatformModifier(event)) return;
+      stopInteractionEvent(event);
+      void onOpenRecordOrigin(item);
+    },
+    onKeyDown: (event) => {
+      if (!hasPlatformModifier(event) || !isKeyboardActivation(event)) return;
+      stopInteractionEvent(event);
+      void onOpenRecordOrigin(item);
+    }
+  } : {};
+  const originTitle = "Ctrl/⌘+点击打开原文";
   if (fieldKey === "tags") {
-    return /* @__PURE__ */ u2(TagsRenderer, { tags: value, allThemes });
+    return /* @__PURE__ */ u2("span", { ...originProps, title: originTitle, children: /* @__PURE__ */ u2(TagsRenderer, { tags: value, allThemes }) });
   }
   if ((fieldKey === "themePath" || fieldKey === "theme" || fieldKey === "rootTheme" || fieldKey === "leafTheme") && typeof value === "string") {
     const fullPath = value;
     const labelText = getLeafPath(fullPath) || fullPath;
-    return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${fullPath}`, style: { backgroundColor: getCategoryColor(fullPath) }, children: labelText });
+    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${fullPath} · ${originTitle}`, style: { backgroundColor: getCategoryColor(fullPath) }, children: labelText });
   }
   if (fieldKey === "categoryKey") {
     const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
-    return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${value}`, style: { backgroundColor: getCategoryColor(item.categoryKey) }, children: baseCategory });
+    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${value} · ${originTitle}`, style: { backgroundColor: getCategoryColor(item.categoryKey) }, children: baseCategory });
   }
   const fieldDef = getFieldDefinition(fieldKey);
   if (isImageFieldDefinition(fieldDef)) {
     const image = normalizeImageValue(value);
     if (!image) return null;
     const src = image.kind === "url" ? image.src : resolveResourcePath?.(image.src) || image.src;
-    return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${image.src}`, children: /* @__PURE__ */ u2("img", { src, alt: image.alt || label }) });
+    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${image.src} · ${originTitle}`, children: /* @__PURE__ */ u2("img", { src, alt: image.alt || label }) });
   }
   const displayValue = Array.isArray(value) ? value.join(", ") : String(value);
-  return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${displayValue}`, children: displayValue });
+  return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${displayValue} · ${originTitle}`, children: displayValue });
 }
 function TaskRow({
   item,
@@ -62749,7 +63148,7 @@ function TaskRow({
     /* @__PURE__ */ u2("div", { class: "task-row-checkbox-wrapper", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(TaskCheckbox, { done, onMarkDone: () => onMarkDone(item.id) }) }),
     /* @__PURE__ */ u2("div", { class: "task-row-content", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, children: [
       /* @__PURE__ */ u2("div", { class: "task-row-main", children: [
-        /* @__PURE__ */ u2("button", { type: "button", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, class: `task-row-title ${done ? "task-done" : ""}`, children: [
+        /* @__PURE__ */ u2("button", { type: "button", title: RECORD_GESTURE_HINT, onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, onKeyDown: gesture.onKeyDown, class: `task-row-title ${done ? "task-done" : ""}`, children: [
           item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
           visibleTitle
         ] }),
@@ -62768,7 +63167,8 @@ function TaskRow({
           item,
           fieldKey,
           resolveResourcePath,
-          allThemes
+          allThemes,
+          onOpenRecordOrigin
         },
         fieldKey
       )) })
@@ -62787,9 +63187,13 @@ function ItemLink({ item, className = "", showIcon = true, onOpenRecord, onOpenR
     "span",
     {
       class: `item-link ${className}`,
+      role: "button",
+      tabIndex: 0,
       onClick: gesture.onClick,
       onDblClick: gesture.onDblClick,
       onTouchEnd: gesture.onTouchEnd,
+      onKeyDown: gesture.onKeyDown,
+      title: RECORD_GESTURE_HINT,
       style: { cursor: "pointer" },
       children: [
         showIcon && item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
@@ -62821,7 +63225,8 @@ const BlockItem = ({ item, fields, isNarrow, resolveResourcePath, onOpenRecordOr
         item,
         fieldKey,
         resolveResourcePath,
-        allThemes
+        allThemes,
+        onOpenRecordOrigin
       },
       fieldKey
     )) }) }),
@@ -62855,18 +63260,19 @@ const BlockItem = ({ item, fields, isNarrow, resolveResourcePath, onOpenRecordOr
     ] })
   ] });
 };
-function resolveBlockViewGroupFields(groupField, groupFields) {
-  if (groupFields && groupFields.length > 0) return groupFields;
-  if (groupField) return [groupField];
+function resolveBlockViewGroupFields(input = {}) {
+  if (input.effectiveGroupFields?.length) return [...input.effectiveGroupFields];
+  if (input.groupFields?.length) return [...input.groupFields];
+  if (input.groupField) return [input.groupField];
   return [];
 }
 function buildBlockViewRenderModel(input) {
-  const effectiveGroupFields = resolveBlockViewGroupFields(input.groupField, input.groupFields);
+  const effectiveGroupFields = resolveBlockViewGroupFields(input);
   const isGrouped = effectiveGroupFields.length > 0;
-  const groupTree = isGrouped ? executeRecordQuery(input.items, {
+  const groupTree = !isGrouped ? [] : input.groupTree ?? (executeRecordQuery(input.items, {
     groupBy: effectiveGroupFields,
     groupContext: { goals: input.goals ?? [] }
-  }).groupTree ?? [] : [];
+  }).groupTree ?? []);
   return { effectiveGroupFields, groupTree, isGrouped };
 }
 function findBlockViewTimer(timers, itemId) {
@@ -62875,7 +63281,7 @@ function findBlockViewTimer(timers, itemId) {
 function buildBlockViewGroupClassNames() {
   return {
     root: "",
-    group: "bv-group bv-group--level-0",
+    group: "bv-group",
     title: "bv-group-title",
     content: "bv-group-content",
     toggleIcon: "bv-group-toggle-icon",
@@ -62948,7 +63354,7 @@ function BlockView(props) {
   } = props;
   const containerRef = A$1(null);
   const [isNarrow, setIsNarrow] = d(false);
-  h(() => {
+  y(() => {
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) setIsNarrow(entry.contentRect.width < 450);
     });
@@ -63127,12 +63533,14 @@ const generateTaskBlockTitle = (block) => {
     const startFormat = startDateTime.format("HH:mm");
     const endFormat = endDateTime.format("HH:mm");
     return `任务: ${block.pureText}
-时间: ${startFormat} - ${endFormat}`;
+时间: ${startFormat} - ${endFormat}
+${RECORD_GESTURE_HINT}`;
   } else {
     const startTime = formatTimeMinute(block.startMinute);
     const endTime = formatTimeMinute(block.endMinute);
     return `任务: ${block.pureText}
-时间: ${startTime} - ${endTime}`;
+时间: ${startTime} - ${endTime}
+${RECORD_GESTURE_HINT}`;
   }
 };
 function DayColumnBody({
@@ -63247,9 +63655,12 @@ function DayColumnBody({
                 "a",
                 {
                   class: "timeline-task-link",
+                  role: "button",
+                  tabIndex: 0,
                   onClick: blockGesture.onClick,
                   onDblClick: blockGesture.onDblClick,
                   onTouchEnd: blockGesture.onTouchEnd,
+                  onKeyDown: blockGesture.onKeyDown,
                   children: [
                     /* @__PURE__ */ u2("div", { class: "timeline-task-indicator", style: { background: color2 } }),
                     /* @__PURE__ */ u2("div", { class: "timeline-task-content", style: { background: hexToRgba(color2) }, children: [
@@ -63503,7 +63914,8 @@ function processItemsToTimelineTasks(records) {
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
 dayjs.extend(isBetween);
-function resolveTimelineConfig(module2) {
+function resolveTimelineConfig(module2, injectedModel) {
+  if (injectedModel?.config) return injectedModel.config;
   const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
   const userConfig = module2?.viewConfig || {};
   return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
@@ -63529,14 +63941,14 @@ function buildTimelineSummaryData(args) {
   return buildMonthlyAndWeeklySummary(tasksInRange, args.config);
 }
 function buildTimelineRenderModel(args) {
-  const { items, records = items, module: module2, dateRange, currentView } = args;
-  const config2 = resolveTimelineConfig(module2);
-  const timelineTasks = resolveTimelineTasks(items, records);
+  const { items, records = items, module: module2, dateRange, currentView, injectedModel } = args;
+  const config2 = resolveTimelineConfig(module2, injectedModel?.config ? { config: injectedModel.config } : void 0);
+  const timelineTasks = injectedModel?.timelineTasks ?? resolveTimelineTasks(items, records);
   const colorMap = buildTimelineColorMap(config2);
   const isSummaryView = currentView === "年" || currentView === "季";
-  const summaryData = buildTimelineSummaryData({ timelineTasks, dateRange, config: config2, isSummaryView });
-  const summaryCategoryHours = isSummaryView ? {} : buildSummaryCategoryHours(timelineTasks, dateRange, config2) || {};
-  const dailyViewData = isSummaryView ? null : buildDailyViewData(timelineTasks, dateRange);
+  const summaryData = injectedModel?.summaryData ?? buildTimelineSummaryData({ timelineTasks, dateRange, config: config2, isSummaryView });
+  const summaryCategoryHours = injectedModel?.summaryCategoryHours ?? (isSummaryView ? {} : buildSummaryCategoryHours(timelineTasks, dateRange, config2) || {});
+  const dailyViewData = injectedModel?.dailyViewData ?? (isSummaryView ? null : buildDailyViewData(timelineTasks, dateRange));
   const totalSummaryHours = Object.values(summaryCategoryHours).reduce((sum, hours) => sum + Number(hours || 0), 0);
   return { config: config2, colorMap, timelineTasks, dailyViewData, isSummaryView, summaryData, summaryCategoryHours, totalSummaryHours };
 }
@@ -63603,7 +64015,7 @@ function buildEventTimelineDisplayFields(module2) {
   return normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
 }
 function buildEventTimelineGroupFields(module2) {
-  return normalizeDisplayFields(module2.groupFields || []);
+  return normalizeViewGroupFields(module2.groupFields || []);
 }
 function buildEventTimelineViewConfig(module2) {
   const viewConfig = module2.viewConfig || {};
@@ -63621,7 +64033,8 @@ function getEventTimelineItemTime(item, timeField) {
   return parsed.isValid() ? parsed : null;
 }
 function filterEventTimelineItemsByDateRange(args) {
-  const { items, dateRange, timeField } = args;
+  const { items, dateRange, timeField, injectedFilteredItems } = args;
+  if (injectedFilteredItems) return injectedFilteredItems;
   return executeRecordQuery(items, {
     date: { range: dateRange, field: timeField, mode: "strict", precision: "minute" },
     sort: [{ field: timeField, dir: "asc" }]
@@ -63659,7 +64072,7 @@ function buildEventTimelineRenderModel(args) {
     timeField: viewConfig.timeField
   });
   const groupedTree = buildEventTimelineGroupedTree({ filteredItems, groupFields, goals });
-  return { displayFields, groupFields, viewConfig, filteredItems, groupedTree };
+  return { displayFields, groupFields, viewConfig, ...viewConfig, filteredItems, groupedTree };
 }
 function EventTimelineEventList(props) {
   const {
@@ -63687,7 +64100,7 @@ function EventTimelineEventList(props) {
     if (showDate) lastDate = dateLabel;
     const titleForKey = readField(item, titleField) || readField(item, "title") || "";
     const taskDisplayTitle = item.coreBlock === "task" ? getEventTimelineTaskDisplayTitle({ item, titleField, contentField: contentField2, maxContentLength }) : "";
-    return /* @__PURE__ */ u2("div", { class: "et-event", children: [
+    return /* @__PURE__ */ u2("div", { class: `et-event ${index === 0 ? "et-event--first" : ""} ${index === items.length - 1 ? "et-event--last" : ""}`, children: [
       /* @__PURE__ */ u2("div", { class: "et-event-date", children: [
         showDate && t3 && /* @__PURE__ */ u2("div", { class: "et-date-label", children: dateLabel }),
         item.coreBlock === "task" && /* @__PURE__ */ u2("div", { class: "et-time-label", children: timeLabel })
@@ -63939,7 +64352,8 @@ function generateCellTooltip(date2, items, displayCount = 0, levelCount = 0, was
     latestItem.rating !== void 0 ? `⭐ 最后评分: ${latestItem.rating}` : "",
     latestItem.content ? `💭 最后内容: ${latestItem.content}` : "",
     "",
-    "💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增"
+    "💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增",
+    items.length === 1 ? "⌨️ Ctrl/⌘+点击：打开该条记录原文" : ""
   ].filter(Boolean).join("\n");
 }
 function getVisualValue(items, ratingMapping) {
@@ -63952,6 +64366,7 @@ function HeatmapCell({
   ratingMapping,
   resolveResourcePath,
   onCellClick,
+  onOpenRecordOrigin,
   highlightToday = true,
   emptyLabel
 }) {
@@ -63994,7 +64409,25 @@ function HeatmapCell({
       class: `heatmap-cell ${isToday ? "current-day" : ""} ${item ? "has-data" : "empty"}`,
       style: cellStyle,
       title,
-      onClick: () => onCellClick(date2, items),
+      role: "button",
+      tabIndex: 0,
+      onClick: (event) => {
+        if (items?.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
+          stopInteractionEvent(event);
+          void onOpenRecordOrigin(items[0]);
+          return;
+        }
+        onCellClick(date2, items);
+      },
+      onKeyDown: (event) => {
+        if (!isKeyboardActivation(event)) return;
+        stopInteractionEvent(event);
+        if (items?.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
+          void onOpenRecordOrigin(items[0]);
+          return;
+        }
+        onCellClick(date2, items);
+      },
       children: /* @__PURE__ */ u2("div", { class: "heatmap-cell-content", children: cellContent })
     }
   );
@@ -64006,6 +64439,7 @@ function HeatmapDayView({
   dataByThemeAndDate,
   config: config2,
   resolveResourcePath,
+  onOpenRecordOrigin,
   onCellClick,
   resolveCellRatingMapping
 }) {
@@ -64032,6 +64466,7 @@ function HeatmapDayView({
             config: config2,
             ratingMapping: themeRatingMapping,
             resolveResourcePath,
+            onOpenRecordOrigin,
             highlightToday: false,
             emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
             onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, presetContext)
@@ -64054,6 +64489,7 @@ function HeatmapDayView({
           config: config2,
           ratingMapping: themeRatingMapping,
           resolveResourcePath,
+          onOpenRecordOrigin,
           highlightToday: false,
           emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
           onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath)
@@ -64069,6 +64505,7 @@ function HeatmapThemeGroup({
   dateRange,
   config: config2,
   resolveResourcePath,
+  onOpenRecordOrigin,
   verticalLayouts,
   collapsedThemes,
   headerRefs,
@@ -64107,6 +64544,7 @@ function HeatmapThemeGroup({
             config: config2,
             ratingMapping: themeRatingMapping,
             resolveResourcePath,
+            onOpenRecordOrigin,
             onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
           },
           dateStr
@@ -64137,6 +64575,7 @@ function HeatmapThemeGroup({
               config: config2,
               ratingMapping: themeRatingMapping,
               resolveResourcePath,
+              onOpenRecordOrigin,
               onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
             },
             dateStr
@@ -64160,6 +64599,7 @@ function HeatmapThemeGroup({
                 config: config2,
                 ratingMapping: themeRatingMapping,
                 resolveResourcePath,
+                onOpenRecordOrigin,
                 onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
               },
               `${theme}-${dateStr}`
@@ -64198,8 +64638,15 @@ function HeatmapThemeGroup({
           "div",
           {
             class: `heatmap-header-info ${normalizedCurrentView === "年" ? "is-clickable" : ""}`,
+            role: normalizedCurrentView === "年" ? "button" : void 0,
+            tabIndex: normalizedCurrentView === "年" ? 0 : void 0,
             onClick: () => {
               if (normalizedCurrentView === "年") onToggleThemeCollapsed(rowKey);
+            },
+            onKeyDown: (event) => {
+              if (normalizedCurrentView !== "年" || !isKeyboardActivation(event)) return;
+              stopInteractionEvent(event);
+              onToggleThemeCollapsed(rowKey);
             },
             children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
               normalizedCurrentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
@@ -64219,6 +64666,7 @@ function HeatmapViewContent({
   dateRange,
   config: config2,
   resolveResourcePath,
+  onOpenRecordOrigin,
   goalGroupsToDisplay,
   themesToTrack,
   dataByThemeAndDate,
@@ -64237,6 +64685,7 @@ function HeatmapViewContent({
       dateRange,
       config: config2,
       resolveResourcePath,
+      onOpenRecordOrigin,
       verticalLayouts,
       collapsedThemes,
       headerRefs,
@@ -64255,6 +64704,7 @@ function HeatmapViewContent({
         dataByThemeAndDate,
         config: config2,
         resolveResourcePath,
+        onOpenRecordOrigin,
         onCellClick,
         resolveCellRatingMapping
       }
@@ -64371,15 +64821,16 @@ function buildPresetLookups(goalSettings, goals) {
     const coreBlockId = firstText(template.coreBlockId) || firstText(template.blockId);
     const variantId = firstText(template.variantId) || "default";
     const defaults = template.defaultValues || {};
-    const goalPath = goalPathById.get(goalId) || firstText(defaults.goalPath) || firstText(defaults["目标"]) || goalId;
-    const goalLabel2 = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
+    const goalPath = goalPathById.get(goalId);
+    if (!goalId || !goalPath) continue;
+    const goalLabel = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
     const rawThemePath = firstText(defaults.themePath);
     const themePath = rawThemePath && !rawThemePath.includes("{{") ? rawThemePath : firstText(defaults["主题"]);
     const label = firstText(template.name) || themeLeaf(themePath) || variantId;
     const key = id || `${goalId}:${coreBlockId}:${variantId}`;
     const ratingOptions = extractRatingOptions(template);
     const presetSortOrder = Number.isFinite(Number(template.sortOrder)) ? Number(template.sortOrder) : presetOriginalIndex;
-    const meta = { key, id, goalId, goalPath, goalLabel: goalLabel2, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
+    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
     allPresets.push(meta);
     if (id) byTemplateId.set(id, meta);
     if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\0${coreBlockId}\0${variantId}`, meta);
@@ -64412,11 +64863,11 @@ function buildHeatmapViewModel(params) {
   const lookups = buildPresetLookups(goalSettings, goals);
   const goalOrder = createGoalOrderIndex(goals);
   function ensureGoalGroup(goalPath, label) {
-    const normalizedGoalPath2 = goalPath || UNASSIGNED_GOAL_KEY;
-    let goalGroup = goalMap.get(normalizedGoalPath2);
+    const normalizedGoalPath = goalPath || UNASSIGNED_GOAL_KEY;
+    let goalGroup = goalMap.get(normalizedGoalPath);
     if (!goalGroup) {
-      goalGroup = { goalPath: normalizedGoalPath2, label: label || normalizedGoalPath2, count: 0, entries: [] };
-      goalMap.set(normalizedGoalPath2, goalGroup);
+      goalGroup = { goalPath: normalizedGoalPath, label: label || normalizedGoalPath, count: 0, entries: [] };
+      goalMap.set(normalizedGoalPath, goalGroup);
     }
     return goalGroup;
   }
@@ -64487,8 +64938,8 @@ function buildHeatmapViewModel(params) {
     if (!preset && filterByTheme && themePath !== "__default__" && !trackedThemeSet.has(themePath)) continue;
     const explicitGoalPath = getItemGoalKey(item, goals);
     const goalPath = preset?.goalPath || (explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : UNASSIGNED_GOAL_KEY);
-    const goalLabel2 = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
-    const goalGroup = ensureGoalGroup(goalPath, goalLabel2);
+    const goalLabel = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
+    const goalGroup = ensureGoalGroup(goalPath, goalLabel);
     goalGroup.count += 1;
     const presetKey = preset?.key || `${goalPath}\0${themePath}\0${itemCoreBlock(item) || "habit"}`;
     const label = preset?.label || themeLeaf(themePath);
@@ -64533,6 +64984,7 @@ function HeatmapView({
   inputSettings,
   onOpenHeatmapCreate,
   onOpenCheckinManager,
+  onOpenRecordOrigin,
   onNotice,
   goals = [],
   goalSettings
@@ -64541,6 +64993,7 @@ function HeatmapView({
     () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module2.viewConfig }),
     [module2.viewConfig]
   );
+  const ratingMappingsCache = T$1(() => new RatingMappingCache(), []);
   const normalizedCurrentView = currentView === "日" || currentView === "day" ? "天" : currentView;
   const isDayView = normalizedCurrentView === "天";
   const dataModel = T$1(() => buildHeatmapViewModel({
@@ -64634,7 +65087,7 @@ function HeatmapView({
     if (needsVertical === null) return;
     setVerticalLayouts((prev2) => applyHeatmapVerticalLayout(prev2, theme, needsVertical));
   };
-  h(() => {
+  y(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       entries.forEach((entry) => {
         const element = entry.target;
@@ -64662,6 +65115,7 @@ function HeatmapView({
       dateRange,
       config: config2,
       resolveResourcePath,
+      onOpenRecordOrigin,
       goalGroupsToDisplay,
       themesToTrack,
       dataByThemeAndDate,
@@ -64673,35 +65127,6 @@ function HeatmapView({
       resolveCellRatingMapping
     }
   ) });
-}
-function getStatisticsGoalThemeSummaryRows(summaries, limit = 6) {
-  return (summaries || []).filter((row) => row.themes.length > 0).slice(0, limit);
-}
-function getStatisticsGoalThemeSummaryLabel(goalPath) {
-  return goalPath.split("/").filter(Boolean).pop() || goalPath;
-}
-function getStatisticsGoalThemeSummaryTitle(row) {
-  return `${row.goalPath}: ${row.themes.map((theme) => `${theme.themePath} ${theme.count}`).join(" / ")}`;
-}
-function getStatisticsGoalThemeSummaryText(row) {
-  return row.themes.map((theme) => `${theme.label}${theme.count}`).join(" / ");
-}
-function StatisticsGoalThemeSummaryStrip({ summaries }) {
-  const visible = getStatisticsGoalThemeSummaryRows(summaries);
-  if (visible.length === 0) return null;
-  return /* @__PURE__ */ u2("div", { class: "sv-goal-summary-strip", children: visible.map((row) => /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "sv-goal-summary-chip",
-      title: getStatisticsGoalThemeSummaryTitle(row),
-      children: [
-        /* @__PURE__ */ u2("span", { class: "sv-goal-summary-label", children: getStatisticsGoalThemeSummaryLabel(row.goalPath) }),
-        /* @__PURE__ */ u2("span", { children: " · " }),
-        /* @__PURE__ */ u2("span", { children: getStatisticsGoalThemeSummaryText(row) })
-      ]
-    },
-    row.goalPath
-  )) });
 }
 function calculateSmartHeight(count, allCounts, _displayMode, minVisibleHeight) {
   if (count === 0) return 0;
@@ -64724,36 +65149,61 @@ function ChartBlock({
   isNarrow = false,
   displayMode = "smart",
   minVisibleHeight = 15,
+  onOpenRecordOrigin,
   bucketAccessor = (item) => getBasePath(item.categoryKey)
 }) {
   const counts = data.counts;
   const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-  const allCounts = categories.map((cat) => counts[cat.name] || 0);
+  const chartCategories = categories;
+  const allCounts = chartCategories.map((cat) => counts[cat.name] || 0);
   const categoryHeights = T$1(() => {
-    return categories.map((cat) => {
+    return chartCategories.map((cat) => {
       const count = counts[cat.name] || 0;
       return calculateSmartHeight(count, allCounts, displayMode, minVisibleHeight);
     });
-  }, [counts, categories, displayMode, minVisibleHeight, allCounts]);
+  }, [counts, chartCategories, displayMode, minVisibleHeight, allCounts]);
   const containerClasses = [
     "sv-chart-block",
     isCompact ? "is-compact" : "",
     isNarrow ? "is-narrow" : "",
     total === 0 ? "is-empty" : ""
   ].filter(Boolean).join(" ");
+  const openBlocks = (event, blocks, identifier2, title) => {
+    stopInteractionEvent(event);
+    if (blocks.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
+      void onOpenRecordOrigin(blocks[0]);
+      return;
+    }
+    onCellClick(identifier2, event.currentTarget, blocks, title);
+  };
+  const openAll = (event) => {
+    openBlocks(event, data.blocks, cellIdentifier("全部"), `${label} · 全部`);
+  };
+  const openCategory = (event, name, displayName) => {
+    const blocks = data.blocks.filter((block) => bucketAccessor(block) === name);
+    openBlocks(event, blocks, cellIdentifier(name), `${label} · ${displayName}`);
+  };
   return /* @__PURE__ */ u2(
     "div",
     {
       class: containerClasses,
-      onClick: (e2) => onCellClick(cellIdentifier("全部"), e2.currentTarget, data.blocks, `${label} · 全部`),
+      role: "button",
+      tabIndex: 0,
+      title: data.blocks.length === 1 && onOpenRecordOrigin ? `${label} · Ctrl/⌘+点击打开原文` : label,
+      onClick: openAll,
+      onKeyDown: (event) => {
+        if (!isKeyboardActivation(event)) return;
+        openAll(event);
+      },
       children: [
         /* @__PURE__ */ u2("div", { class: "sv-chart-label", children: label }),
         /* @__PURE__ */ u2("div", { class: "sv-chart-content", children: [
-          /* @__PURE__ */ u2("div", { class: "sv-chart-numbers", children: categories.map(({ name }) => {
+          /* @__PURE__ */ u2("div", { class: "sv-chart-numbers", children: chartCategories.map(({ name }) => {
             const count = counts[name] || 0;
-            return /* @__PURE__ */ u2("div", { class: "sv-chart-number", children: count > 0 ? count : "" }, `num-${name}`);
+            const displayName = categories.find((category) => category.name === name)?.alias || name;
+            return /* @__PURE__ */ u2("div", { class: "sv-chart-number", onClick: (event) => openCategory(event, name, displayName), children: count }, `num-${name}`);
           }) }),
-          /* @__PURE__ */ u2("div", { class: "sv-chart-bars-container", children: categories.map(({ name, color: color2, alias }, index) => {
+          /* @__PURE__ */ u2("div", { class: "sv-chart-bars-container", children: chartCategories.map(({ name, color: color2, alias }, index) => {
             const count = counts[name] || 0;
             const height2 = categoryHeights[index];
             const displayName = alias || name;
@@ -64761,15 +65211,13 @@ function ChartBlock({
               "div",
               {
                 class: "sv-vbar-wrapper",
+                role: "button",
+                tabIndex: 0,
                 title: `${displayName}: ${count}`,
-                onClick: (e2) => {
-                  e2.stopPropagation();
-                  onCellClick(
-                    cellIdentifier(name),
-                    e2.currentTarget,
-                    data.blocks.filter((b2) => bucketAccessor(b2) === name),
-                    `${label} · ${displayName}`
-                  );
+                onClick: (event) => openCategory(event, name, displayName),
+                onKeyDown: (event) => {
+                  if (!isKeyboardActivation(event)) return;
+                  openCategory(event, name, displayName);
                 },
                 children: /* @__PURE__ */ u2(
                   "div",
@@ -64785,13 +65233,14 @@ function ChartBlock({
               name
             );
           }) }),
-          /* @__PURE__ */ u2("div", { class: "sv-chart-categories", children: categories.map(({ name, alias }) => {
+          /* @__PURE__ */ u2("div", { class: "sv-chart-categories", children: chartCategories.map(({ name, alias }) => {
             const displayName = alias || name;
             return /* @__PURE__ */ u2(
               "div",
               {
                 class: "sv-chart-category",
                 title: `${displayName}${alias ? ` (${name})` : ""}`,
+                onClick: (event) => openCategory(event, name, displayName),
                 children: displayName
               },
               `cat-${name}`
@@ -64809,7 +65258,8 @@ function DayStatisticsView({
   onCellClick,
   displayMode,
   minVisibleHeight,
-  bucketAccessor
+  bucketAccessor,
+  onOpenRecordOrigin
 }) {
   const data = aggregateByDay(items, categories, selectedDate, bucketAccessor);
   return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
@@ -64822,7 +65272,8 @@ function DayStatisticsView({
       cellIdentifier: (goal) => ({ type: "day", date: selectedDate.format("YYYY-MM-DD"), goal }),
       displayMode,
       minVisibleHeight,
-      bucketAccessor
+      bucketAccessor,
+      onOpenRecordOrigin
     }
   ) }) }) });
 }
@@ -64833,7 +65284,8 @@ function WeekStatisticsView({
   onCellClick,
   displayMode,
   minVisibleHeight,
-  bucketAccessor
+  bucketAccessor,
+  onOpenRecordOrigin
 }) {
   const weekStart = weekDate.startOf("isoWeek");
   const weekEnd = weekDate.endOf("isoWeek");
@@ -64853,7 +65305,8 @@ function WeekStatisticsView({
       }),
       displayMode,
       minVisibleHeight,
-      bucketAccessor
+      bucketAccessor,
+      onOpenRecordOrigin
     }
   ) }) }) });
 }
@@ -65019,32 +65472,34 @@ function buildYearStatisticsRenderModel(input) {
   };
 }
 function PeriodStatisticsView(props) {
-  const { gridClassName, gridStyle, summary, blocks = [], columns = [], categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor } = props;
-  const renderChart = (block) => /* @__PURE__ */ u2(ChartBlock, { data: block.data, label: block.label, categories, onCellClick, cellIdentifier: block.identifier, isCompact: block.isCompact, displayMode, minVisibleHeight, bucketAccessor }, block.key);
-  const renderBlock = (block) => /* @__PURE__ */ u2("div", { class: block.wrapperClassName, style: block.style, children: renderChart(block) }, block.key);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: gridClassName, style: gridStyle, children: [
+  const { gridClassName, gridStyle, summary, blocks = [], columns = [], categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin } = props;
+  const visibleBlocks = blocks;
+  const visibleColumns = columns;
+  const levelClass = (level = 0) => `sv-period-level sv-period-level--${Math.max(0, level)}`;
+  const flowStyle = (style2) => style2;
+  const effectiveGridStyle = gridStyle;
+  const renderChart = (block) => /* @__PURE__ */ u2(ChartBlock, { data: block.data, label: block.label, categories, onCellClick, cellIdentifier: block.identifier, isCompact: block.isCompact, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin }, block.key);
+  const renderBlock = (block) => /* @__PURE__ */ u2("div", { class: `${block.wrapperClassName || ""} ${levelClass(block.level)}`, style: flowStyle(block.style), children: renderChart(block) }, block.key);
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: `${gridClassName} sv-period-hierarchy`, style: effectiveGridStyle, children: [
     renderBlock(summary),
-    blocks.map(renderBlock),
-    columns.map((column2) => /* @__PURE__ */ u2("div", { class: column2.wrapperClassName, style: column2.style, children: [
-      column2.blocks.map(renderChart),
-      Array.from({ length: column2.placeholderCount ?? 0 }, (_2, index) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${index}`))
-    ] }, column2.key))
+    visibleBlocks.map(renderBlock),
+    visibleColumns.map((column2) => /* @__PURE__ */ u2("div", { class: `${column2.wrapperClassName} ${levelClass(column2.level)}`, style: flowStyle(column2.style), children: column2.blocks.map(renderChart) }, column2.key))
   ] }) });
 }
 function MonthStatisticsView(props) {
   const { items, categories, monthDate, usePeriod, bucketAccessor, ...common2 } = props;
   const model = buildMonthStatisticsRenderModel({ items, categories, monthDate, usePeriod, bucketAccessor });
-  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-month-grid", gridStyle: { gridTemplateColumns: model.gridTemplateColumns }, summary: { wrapperClassName: "sv-month-grid-summary", data: model.monthData, label: model.monthLabel, identifier: model.monthIdentifier }, blocks: model.weeks.map((week) => ({ key: week.key, wrapperClassName: "sv-month-grid-week", style: { gridColumn: week.gridColumn }, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) });
+  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-month-grid", gridStyle: { gridTemplateColumns: model.gridTemplateColumns }, summary: { wrapperClassName: "sv-month-grid-summary", level: 0, data: model.monthData, label: model.monthLabel, identifier: model.monthIdentifier }, blocks: model.weeks.map((week) => ({ key: week.key, wrapperClassName: "sv-month-grid-week", level: 1, style: { gridColumn: week.gridColumn }, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) });
 }
 function QuarterStatisticsView(props) {
   const { items, categories, quarterDate, usePeriod, bucketAccessor, ...common2 } = props;
   const model = buildQuarterStatisticsRenderModel({ items, categories, quarterDate, usePeriod, bucketAccessor });
-  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-quarter-grid", summary: { wrapperClassName: "sv-quarter-grid-summary", data: model.quarterData, label: model.quarterLabel, identifier: model.quarterIdentifier }, blocks: model.months.map((month) => ({ key: month.key, wrapperClassName: "sv-quarter-grid-month", style: { gridColumn: month.gridColumn }, data: month.data, label: month.label, identifier: month.identifier })), columns: model.months.map((month) => ({ key: `w-col-${month.key}`, wrapperClassName: "sv-quarter-grid-week-col", style: { gridColumn: month.gridColumn }, blocks: month.weeks.map((week) => ({ key: week.key, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })), placeholderCount: month.placeholderCount })) });
+  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-quarter-grid", summary: { wrapperClassName: "sv-quarter-grid-summary", level: 0, data: model.quarterData, label: model.quarterLabel, identifier: model.quarterIdentifier }, blocks: model.months.map((month) => ({ key: month.key, wrapperClassName: "sv-quarter-grid-month", level: 1, style: { gridColumn: month.gridColumn }, data: month.data, label: month.label, identifier: month.identifier })), columns: model.months.map((month) => ({ key: `w-col-${month.key}`, wrapperClassName: "sv-quarter-grid-week-col", level: 2, style: { gridColumn: month.gridColumn }, blocks: month.weeks.map((week) => ({ key: week.key, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) })) });
 }
 function YearStatisticsView(props) {
   const { year, categories, processedData, yearlyWeekStructure, bucketAccessor, ...common2 } = props;
   const model = buildYearStatisticsRenderModel({ year, categories, processedData, yearlyWeekStructure });
-  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-year-grid", summary: { wrapperClassName: "sv-year-grid-year", data: processedData.yearData, label: model.yearLabel, identifier: model.yearIdentifier }, blocks: [...model.quarters.map((quarter) => ({ key: quarter.key, wrapperClassName: "sv-year-grid-quarter", style: { gridColumn: quarter.gridColumn }, data: quarter.data, label: quarter.label, identifier: quarter.identifier })), ...model.months.map((month) => ({ key: month.key, wrapperClassName: month.className, style: { gridColumn: month.gridColumn }, data: month.data, label: month.label, identifier: month.identifier }))], columns: model.weekColumns.map((column2) => ({ key: column2.key, wrapperClassName: column2.className, style: { gridColumn: column2.gridColumn }, blocks: column2.weeks.map((week) => ({ key: week.key, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })), placeholderCount: column2.placeholderCount })) });
+  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-year-grid", summary: { wrapperClassName: "sv-year-grid-year", level: 0, data: processedData.yearData, label: model.yearLabel, identifier: model.yearIdentifier }, blocks: [...model.quarters.map((quarter) => ({ key: quarter.key, wrapperClassName: "sv-year-grid-quarter", level: 1, style: { gridColumn: quarter.gridColumn }, data: quarter.data, label: quarter.label, identifier: quarter.identifier })), ...model.months.map((month) => ({ key: month.key, wrapperClassName: month.className, level: 2, style: { gridColumn: month.gridColumn }, data: month.data, label: month.label, identifier: month.identifier }))], columns: model.weekColumns.map((column2) => ({ key: column2.key, wrapperClassName: column2.className, level: 3, style: { gridColumn: column2.gridColumn }, blocks: column2.weeks.map((week) => ({ key: week.key, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) })) });
 }
 function StatisticsViewView({
   items,
@@ -65060,50 +65515,35 @@ function StatisticsViewView({
   yearlyWeekStructure,
   processedData,
   bucketAccessor,
-  goalThemeSummaries = []
+  goalThemeSummaries = [],
+  onOpenRecordOrigin
 }) {
   if (!categories || categories.length === 0) {
     return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder", children: "暂无目标统计数据。" });
   }
-  const themeStrip = /* @__PURE__ */ u2(StatisticsGoalThemeSummaryStrip, { summaries: goalThemeSummaries });
-  const sharedProps = { categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor };
+  const sharedProps = { categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin };
   switch (currentView) {
     case "天":
-      return /* @__PURE__ */ u2(S, { children: [
-        themeStrip,
-        /* @__PURE__ */ u2(DayStatisticsView, { items, selectedDate: startDate, ...sharedProps })
-      ] });
+      return /* @__PURE__ */ u2(DayStatisticsView, { items, selectedDate: startDate, ...sharedProps });
     case "周":
-      return /* @__PURE__ */ u2(S, { children: [
-        themeStrip,
-        /* @__PURE__ */ u2(WeekStatisticsView, { items, weekDate: startDate, ...sharedProps })
-      ] });
+      return /* @__PURE__ */ u2(WeekStatisticsView, { items, weekDate: startDate, ...sharedProps });
     case "月":
-      return /* @__PURE__ */ u2(S, { children: [
-        themeStrip,
-        /* @__PURE__ */ u2(MonthStatisticsView, { items, monthDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps })
-      ] });
+      return /* @__PURE__ */ u2(MonthStatisticsView, { items, monthDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps });
     case "季":
-      return /* @__PURE__ */ u2(S, { children: [
-        themeStrip,
-        /* @__PURE__ */ u2(QuarterStatisticsView, { items, quarterDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps })
-      ] });
+      return /* @__PURE__ */ u2(QuarterStatisticsView, { items, quarterDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps });
     case "年":
     default:
-      return /* @__PURE__ */ u2(S, { children: [
-        themeStrip,
-        /* @__PURE__ */ u2(
-          YearStatisticsView,
-          {
-            year,
-            processedData,
-            yearlyWeekStructure,
-            usePeriod,
-            onToggleUsePeriod,
-            ...sharedProps
-          }
-        )
-      ] });
+      return /* @__PURE__ */ u2(
+        YearStatisticsView,
+        {
+          year,
+          processedData,
+          yearlyWeekStructure,
+          usePeriod,
+          onToggleUsePeriod,
+          ...sharedProps
+        }
+      );
   }
 }
 function buildStatisticsViewConfig(module2) {
@@ -65135,7 +65575,7 @@ function resolveYearlyWeekStructure(input) {
   return buildYearlyWeekStructure(input.year, input.isYearView);
 }
 function buildStatisticsGoalBuckets(args) {
-  const buckets = buildGoalBuckets(args.items, args.goals || [], { includeUnassigned: true, includeKnownGoals: false, themes: args.themes || [] });
+  const buckets = buildGoalBuckets(args.items, args.goals || [], { includeUnassigned: true, includeKnownGoals: true, themes: args.themes || [] });
   const topN = Math.max(0, Number(args.topN) || 0);
   return topN > 0 ? buckets.slice(0, topN) : buckets;
 }
@@ -65204,6 +65644,7 @@ function StatisticsView({
   onCategoryColorsChange,
   selectedCategories: _selectedCategories,
   timerService,
+  onMarkDone,
   timers,
   allThemes,
   goals = [],
@@ -65271,6 +65712,7 @@ function StatisticsView({
       blocks,
       module: module2,
       timerService,
+      onMarkDone,
       timers,
       allThemes,
       messageRenderPort,
@@ -65303,7 +65745,8 @@ function StatisticsView({
       yearlyWeekStructure,
       processedData,
       bucketAccessor,
-      goalThemeSummaries
+      goalThemeSummaries,
+      onOpenRecordOrigin
     }
   );
 }
@@ -65311,6 +65754,7 @@ function PopoverContent({
   blocks,
   module: module2,
   timerService,
+  onMarkDone,
   timers,
   allThemes,
   messageRenderPort,
@@ -65324,10 +65768,9 @@ function PopoverContent({
       items: blocks,
       resolveResourcePath,
       onOpenRecordOrigin,
-      fields: module2.fields || ["title", "content", "categoryKey", "goalPaths", "date", "period"],
+      fields: module2.fields || ["title", "content", "categoryKey", "goalPath", "date", "period"],
       groupFields: module2.groupFields,
-      onMarkDone: () => {
-      },
+      onMarkDone,
       timerService,
       timers,
       allThemes,
@@ -65393,256 +65836,6 @@ function computeProgression(items, options) {
     themeBreakdown: toSortedRows(themeMap, topN)
   };
 }
-const PROGRESS_BLOCK_KEY_ALIASES = {
-  "任务": "task",
-  "计划": "plan",
-  "总结": "review",
-  "打卡": "habit",
-  "阻碍项": "blocker",
-  "里程碑": "milestone",
-  "思考": "thought",
-  "事件": "evidence"
-};
-function normalizeProgressBlockKey(item) {
-  const raw = String(item.coreBlock || "").replace(/^core\./, "").trim();
-  if (!raw) return "unknown";
-  return PROGRESS_BLOCK_KEY_ALIASES[raw] || raw.split("/")[0] || raw;
-}
-function progressItemDate(item) {
-  return String(item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || "");
-}
-function buildProgressRecentRecords(items, limit = 5) {
-  return [...items].sort((left2, right2) => progressItemDate(right2).localeCompare(progressItemDate(left2))).slice(0, limit).map((item) => ({
-    id: item.id,
-    title: item.title || item.content || item.file?.basename || item.filename || "未命名记录",
-    date: progressItemDate(item) || null,
-    item
-  }));
-}
-function buildProgressViewRenderModel(args) {
-  const { items, module: module2, goals = [], themes = [] } = args;
-  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {}, mode: "goal", metric: "recordCount" };
-  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
-  const levelStep = Math.max(1, Number(config2.levelStep) || 20);
-  const cards = buckets.map((bucket) => {
-    const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
-    const progressItems = goalItems.filter((item) => !isEnergyItem(item));
-    const progression = computeProgression(progressItems, {
-      basePoints: config2.basePoints,
-      levelStep,
-      includedCategories: config2.includedCategories,
-      ratingBonusThreshold: config2.ratingBonusThreshold,
-      ratingBonusPoints: config2.ratingBonusPoints,
-      topN: config2.topN
-    });
-    const blockCounts = {};
-    for (const item of progressItems) {
-      const key = normalizeProgressBlockKey(item);
-      blockCounts[key] = (blockCounts[key] || 0) + 1;
-    }
-    const dates = progressItems.map(progressItemDate).filter(Boolean).sort();
-    return {
-      key: bucket.name,
-      title: bucket.alias || bucket.name,
-      goalPath: bucket.goalPath || bucket.name,
-      icon: bucket.icon || null,
-      itemCount: progressItems.length,
-      totalPoints: progression.totalPoints,
-      level: progression.level,
-      currentLevelPoints: progression.currentLevelPoints,
-      nextLevelPoints: progression.nextLevelPoints,
-      levelStep,
-      progressRatio: progression.progressRatio,
-      matchedCount: progression.matchedCount,
-      latestDate: dates.length ? dates[dates.length - 1] : null,
-      blockCounts,
-      categoryBreakdown: progression.categoryBreakdown,
-      themeBreakdown: progression.themeBreakdown,
-      recentRecords: buildProgressRecentRecords(progressItems)
-    };
-  });
-  const topN = Math.max(0, Number(config2.topN) || 0);
-  const goalCards = topN > 0 ? cards.slice(0, topN) : cards;
-  return {
-    config: config2,
-    mode: "goal",
-    goalCards,
-    summary: {
-      goalCount: goalCards.length,
-      totalPoints: goalCards.reduce((sum, card) => sum + card.totalPoints, 0),
-      totalItems: goalCards.reduce((sum, card) => sum + card.itemCount, 0)
-    },
-    result: null
-  };
-}
-const PROGRESS_BLOCK_LABELS = {
-  task: "任务",
-  plan: "计划",
-  review: "总结",
-  habit: "打卡",
-  blocker: "阻碍项",
-  milestone: "里程碑",
-  thought: "思考",
-  evidence: "事件",
-  unknown: "未分类"
-};
-const PROGRESS_LEVEL_META = [
-  { level: 1, icon: "🌱", title: "入门" },
-  { level: 2, icon: "🔰", title: "练习" },
-  { level: 3, icon: "🧩", title: "熟悉" },
-  { level: 4, icon: "⚙️", title: "稳定" },
-  { level: 5, icon: "🔥", title: "熟练" },
-  { level: 6, icon: "🛠️", title: "进阶" },
-  { level: 7, icon: "🧠", title: "专精" },
-  { level: 8, icon: "🏔️", title: "高阶" },
-  { level: 9, icon: "💎", title: "精通" },
-  { level: 10, icon: "👑", title: "大师" }
-];
-const EXPANDED_BLOCK_ORDER = ["task", "plan", "review", "habit", "blocker", "milestone", "thought", "evidence"];
-function clampProgressRatio(value) {
-  return Math.max(0, Math.min(1, Number(value) || 0));
-}
-function progressBarWidth(value) {
-  return `${Math.round(clampProgressRatio(value) * 100)}%`;
-}
-function getProgressLeafLabel(path) {
-  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
-  return parts[parts.length - 1] || path || "未设置主题";
-}
-function getGoalProgressTitle(card) {
-  return card.title || card.goalPath || "未命名目标";
-}
-function getProgressDisplayLevel(level) {
-  const normalized2 = Math.max(1, Math.floor(Number(level) || 1));
-  return Math.min(10, normalized2);
-}
-function getProgressLevelMeta(level) {
-  return PROGRESS_LEVEL_META[getProgressDisplayLevel(level) - 1] || PROGRESS_LEVEL_META[0];
-}
-function buildProgressSkillRows(card) {
-  return getVisibleProgressThemeBreakdown(card.themeBreakdown).map((row) => {
-    const safeLevelStep = Math.max(1, Number(card.levelStep || 1));
-    const level = Math.floor(Number(row.points || 0) / safeLevelStep) + 1;
-    const currentLevelPoints = Number(row.points || 0) - (level - 1) * safeLevelStep;
-    return {
-      key: row.key,
-      title: getProgressLeafLabel(row.key),
-      points: Number(row.points || 0),
-      count: Number(row.count || 0),
-      level,
-      levelMeta: getProgressLevelMeta(level),
-      progressRatio: clampProgressRatio(currentLevelPoints / safeLevelStep)
-    };
-  });
-}
-function getVisibleProgressThemeBreakdown(rows) {
-  return (rows || []).filter((row) => row.count > 0).slice(0, 8);
-}
-function buildProgressBlockCountRows(counts) {
-  return EXPANDED_BLOCK_ORDER.map((key) => ({ key, label: PROGRESS_BLOCK_LABELS[key] || key, count: Number(counts?.[key] || 0) })).filter((row) => row.count > 0);
-}
-function ExperienceBar({ ratio: ratio2, tone = "goal", compact = false }) {
-  const style2 = { "--think-progress-ratio": progressBarWidth(ratio2) };
-  const classes = [
-    "think-progress-bar",
-    `think-progress-bar--${tone}`,
-    compact ? "think-progress-bar--compact" : ""
-  ].filter(Boolean).join(" ");
-  return /* @__PURE__ */ u2("div", { class: classes, "aria-label": `进度 ${progressBarWidth(ratio2)}`, children: /* @__PURE__ */ u2("div", { class: "think-progress-bar__fill", style: style2 }) });
-}
-function SmallSkillRow({ row }) {
-  return /* @__PURE__ */ u2("div", { class: "think-progress-skill", title: row.key, children: [
-    /* @__PURE__ */ u2("div", { class: "think-progress-skill__title", children: row.title }),
-    /* @__PURE__ */ u2("div", { class: "think-progress-skill__level", children: [
-      "Lv.",
-      row.levelMeta.level
-    ] }),
-    /* @__PURE__ */ u2(ExperienceBar, { ratio: row.progressRatio, tone: "skill" })
-  ] });
-}
-function SkillList({ card }) {
-  const rows = buildProgressSkillRows(card);
-  if (rows.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-empty-skill", children: "暂无小技能" });
-  return /* @__PURE__ */ u2("div", { class: "think-progress-skills", children: rows.map((row) => /* @__PURE__ */ u2(SmallSkillRow, { row }, row.key)) });
-}
-function ExpandedRecords({ records, onOpenRecord }) {
-  if (!records?.length) return null;
-  return /* @__PURE__ */ u2("div", { class: "think-progress-records", children: [
-    /* @__PURE__ */ u2("div", { class: "think-progress-records__title", children: "记录入口" }),
-    records.map((record) => /* @__PURE__ */ u2(
-      "button",
-      {
-        type: "button",
-        disabled: !onOpenRecord,
-        onClick: (event) => {
-          event.stopPropagation();
-          onOpenRecord?.(record.item);
-        },
-        class: "think-progress-record",
-        children: [
-          /* @__PURE__ */ u2("span", { class: "think-progress-record__title", children: record.title || "未命名记录" }),
-          /* @__PURE__ */ u2("span", { class: "think-progress-record__date", children: record.date || "无日期" })
-        ]
-      },
-      record.id
-    ))
-  ] });
-}
-function ExpandedFacts({ card, onOpenRecord }) {
-  const blockRows = buildProgressBlockCountRows(card.blockCounts || {});
-  return /* @__PURE__ */ u2("div", { class: "think-progress-details", children: [
-    blockRows.length > 0 && /* @__PURE__ */ u2("div", { class: "think-progress-details__chips", children: blockRows.map((row) => /* @__PURE__ */ u2("span", { class: "think-progress-details__chip", children: [
-      row.label,
-      " ",
-      row.count
-    ] }, row.key)) }),
-    /* @__PURE__ */ u2(ExpandedRecords, { records: card.recentRecords, onOpenRecord })
-  ] });
-}
-function GoalProgressCard({ card, expanded, onToggle, onOpenRecord }) {
-  const title = getGoalProgressTitle(card);
-  const levelMeta = getProgressLevelMeta(card.level);
-  return /* @__PURE__ */ u2("article", { class: "think-card think-progress-card", children: [
-    /* @__PURE__ */ u2("button", { type: "button", onClick: onToggle, "aria-expanded": expanded, class: "think-progress-card__trigger", children: [
-      /* @__PURE__ */ u2("div", { class: "think-progress-card__icon", children: card.icon || "🧩" }),
-      /* @__PURE__ */ u2("div", { class: "think-progress-card__main", children: [
-        /* @__PURE__ */ u2("div", { class: "think-progress-card__title", children: title }),
-        /* @__PURE__ */ u2(ExperienceBar, { ratio: card.progressRatio, compact: true })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "think-progress-card__level", children: [
-        /* @__PURE__ */ u2("span", { class: "think-progress-card__level-icon", children: levelMeta.icon }),
-        /* @__PURE__ */ u2("strong", { class: "think-progress-card__level-value", children: [
-          "Lv.",
-          levelMeta.level
-        ] }),
-        /* @__PURE__ */ u2("strong", { class: "think-progress-card__level-title", children: levelMeta.title })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(SkillList, { card }),
-    expanded && /* @__PURE__ */ u2(ExpandedFacts, { card, onOpenRecord })
-  ] });
-}
-function ProgressView({ module: module2, items, goals = [], inputSettings, onOpenRecord }) {
-  const progressModel = T$1(() => buildProgressViewRenderModel({
-    items,
-    module: module2,
-    goals,
-    themes: inputSettings?.themes || []
-  }), [items, module2, goals, inputSettings?.themes]);
-  const cards = progressModel.goalCards || [];
-  const [expandedKeys, setExpandedKeys] = d({});
-  if (cards.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-view__empty", children: "暂无目标技能经验" });
-  return /* @__PURE__ */ u2("div", { class: "think-progress-view", children: cards.map((card) => /* @__PURE__ */ u2(
-    GoalProgressCard,
-    {
-      card,
-      expanded: !!expandedKeys[card.key],
-      onToggle: () => setExpandedKeys((prev2) => ({ ...prev2, [card.key]: !prev2[card.key] })),
-      onOpenRecord
-    },
-    card.key
-  )) });
-}
 function buildGoalEnergyContext(item, goalItems) {
   const context = resolveEnergyContext(item, goalItems);
   if (!context) return null;
@@ -65691,6 +65884,28 @@ function buildGoalEnergyEffects(evidenceRecords) {
     byDuration: mapRows(effects.byDuration)
   };
 }
+function buildSevenDayEnergyTimeline(rows) {
+  const endDate = rows.find((row) => row.date)?.date || null;
+  if (!endDate) return void 0;
+  const match5 = /^(\d{4})-(\d{2})-(\d{2})$/.exec(endDate);
+  if (!match5) return void 0;
+  const end2 = new Date(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3]));
+  const start2 = new Date(end2);
+  start2.setDate(start2.getDate() - 6);
+  const dateText2 = (date2) => `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
+  const startDate = dateText2(start2);
+  const windowRows = rows.filter((row) => !!row.date && row.date >= startDate && row.date <= endDate);
+  const sampledDays = new Set(windowRows.map((row) => row.date).filter(Boolean)).size;
+  return {
+    startDate,
+    endDate,
+    coverage: {
+      sampledDays,
+      missingDays: Math.max(0, 7 - sampledDays),
+      totalSamples: windowRows.length
+    }
+  };
+}
 function buildGoalEnergySummary(items, limit = 5, options = {}) {
   const contextRecords = options.contextRecords || items;
   const effectRecords = options.effectRecords || contextRecords;
@@ -65727,8 +65942,340 @@ function buildGoalEnergySummary(items, limit = 5, options = {}) {
     latestDate: latest2.date || null,
     latestTime: latest2.time || null,
     recentSamples,
+    timeline: buildSevenDayEnergyTimeline(ordered),
     effects: buildGoalEnergyEffects(effectRecords)
   };
+}
+const PROGRESS_BLOCK_KEY_ALIASES = {
+  "任务": "task",
+  "计划": "plan",
+  "总结": "review",
+  "打卡": "habit",
+  "阻碍项": "blocker",
+  "里程碑": "milestone",
+  "思考": "thought",
+  "事件": "evidence"
+};
+function normalizeProgressBlockKey(item) {
+  const raw = String(item.coreBlock || "").replace(/^core\./, "").trim();
+  if (!raw) return "unknown";
+  return PROGRESS_BLOCK_KEY_ALIASES[raw] || raw.split("/")[0] || raw;
+}
+function progressDateSource(item) {
+  return item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || "";
+}
+function parseProgressDate(value) {
+  if (value == null || value === "") return null;
+  if (value instanceof Date) {
+    const parsed2 = dayjs(value);
+    return parsed2.isValid() ? parsed2 : null;
+  }
+  if (typeof value === "number") {
+    const millis = Math.abs(value) < 1e12 ? value * 1e3 : value;
+    const parsed2 = dayjs(millis);
+    return parsed2.isValid() ? parsed2 : null;
+  }
+  const text2 = String(value).trim();
+  if (!text2) return null;
+  if (/^-?\d+(?:\.\d+)?$/.test(text2)) {
+    const numeric = Number(text2);
+    const millis = Math.abs(numeric) < 1e12 ? numeric * 1e3 : numeric;
+    const parsed2 = dayjs(millis);
+    return parsed2.isValid() ? parsed2 : null;
+  }
+  const parsed = dayjs(text2);
+  return parsed.isValid() ? parsed : null;
+}
+function formatProgressRecordDate(value) {
+  const parsed = parseProgressDate(value);
+  return parsed ? parsed.format("YYYY-MM-DD") : "";
+}
+function progressItemDate(item) {
+  return formatProgressRecordDate(progressDateSource(item));
+}
+function progressItemTime(item) {
+  return parseProgressDate(progressDateSource(item))?.valueOf() || 0;
+}
+function buildProgressRecentRecords(items, limit = 5) {
+  return [...items].sort((left2, right2) => progressItemTime(right2) - progressItemTime(left2)).slice(0, limit).map((item) => ({
+    id: item.id,
+    title: item.title || item.content || item.file?.basename || item.filename || "未命名记录",
+    date: progressItemDate(item) || null,
+    item
+  }));
+}
+function buildProgressViewRenderModel(args) {
+  const { items, module: module2, goals = [], themes = [] } = args;
+  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {}, mode: "goal", metric: "recordCount" };
+  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
+  const levelStep = Math.max(1, Number(config2.levelStep) || 20);
+  const cards = buckets.map((bucket) => {
+    const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
+    const progressItems = goalItems.filter((item) => !isEnergyItem(item));
+    const progression = computeProgression(progressItems, {
+      basePoints: config2.basePoints,
+      levelStep,
+      includedCategories: config2.includedCategories,
+      ratingBonusThreshold: config2.ratingBonusThreshold,
+      ratingBonusPoints: config2.ratingBonusPoints,
+      topN: config2.topN
+    });
+    const blockCounts = {};
+    for (const item of goalItems) {
+      const key = normalizeProgressBlockKey(item);
+      blockCounts[key] = (blockCounts[key] || 0) + 1;
+    }
+    const dates = progressItems.map(progressItemDate).filter(Boolean).sort();
+    return {
+      key: bucket.name,
+      title: bucket.alias || bucket.name,
+      goalPath: bucket.goalPath || bucket.name,
+      icon: bucket.icon || null,
+      itemCount: progressItems.length,
+      totalPoints: progression.totalPoints,
+      level: progression.level,
+      currentLevelPoints: progression.currentLevelPoints,
+      nextLevelPoints: progression.nextLevelPoints,
+      levelStep,
+      progressRatio: progression.progressRatio,
+      matchedCount: progression.matchedCount,
+      latestDate: dates.length ? dates[dates.length - 1] : null,
+      blockCounts,
+      categoryBreakdown: progression.categoryBreakdown,
+      themeBreakdown: progression.themeBreakdown,
+      themeRecentRecords: Object.fromEntries(
+        progression.themeBreakdown.map((row) => [
+          row.key,
+          buildProgressRecentRecords(progressItems.filter((item) => getItemThemeKey(item) === row.key), 5)
+        ])
+      ),
+      energySummary: buildGoalEnergySummary(goalItems.filter(isEnergyItem), 5, { contextRecords: items, effectRecords: items })
+    };
+  });
+  const topN = Math.max(0, Number(config2.topN) || 0);
+  const goalCards = topN > 0 ? cards.slice(0, topN) : cards;
+  return {
+    config: config2,
+    mode: "goal",
+    goalCards,
+    summary: {
+      goalCount: goalCards.length,
+      totalPoints: goalCards.reduce((sum, card) => sum + card.totalPoints, 0),
+      totalItems: goalCards.reduce((sum, card) => sum + card.itemCount, 0)
+    },
+    result: null
+  };
+}
+const PROGRESS_LEVEL_META = [
+  { level: 1, icon: "🌱", title: "入门" },
+  { level: 2, icon: "🔰", title: "练习" },
+  { level: 3, icon: "🧩", title: "熟悉" },
+  { level: 4, icon: "⚙️", title: "稳定" },
+  { level: 5, icon: "🔥", title: "熟练" },
+  { level: 6, icon: "🛠️", title: "进阶" },
+  { level: 7, icon: "🧠", title: "专精" },
+  { level: 8, icon: "🏔️", title: "高阶" },
+  { level: 9, icon: "💎", title: "精通" },
+  { level: 10, icon: "👑", title: "大师" }
+];
+function clampProgressRatio(value) {
+  return Math.max(0, Math.min(1, Number(value) || 0));
+}
+function ratioPercent(value) {
+  return `${Math.round(clampProgressRatio(value) * 100)}%`;
+}
+function progressBarWidth(value) {
+  return `${Math.round(clampProgressRatio(value) * 100)}%`;
+}
+function getProgressLeafLabel(path) {
+  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
+  return parts[parts.length - 1] || path || "未设置主题";
+}
+function getGoalProgressTitle(card) {
+  return card.title || card.goalPath || "未命名目标";
+}
+function getProgressDisplayLevel(level) {
+  const normalized2 = Math.max(1, Math.floor(Number(level) || 1));
+  return Math.min(10, normalized2);
+}
+function getProgressLevelMeta(level) {
+  return PROGRESS_LEVEL_META[getProgressDisplayLevel(level) - 1] || PROGRESS_LEVEL_META[0];
+}
+function buildProgressSkillRows(card) {
+  return getVisibleProgressThemeBreakdown(card.themeBreakdown).map((row) => {
+    const safeLevelStep = Math.max(1, Number(card.levelStep || 1));
+    const level = Math.floor(Number(row.points || 0) / safeLevelStep) + 1;
+    const currentLevelPoints = Number(row.points || 0) - (level - 1) * safeLevelStep;
+    return {
+      key: row.key,
+      title: getProgressLeafLabel(row.key),
+      points: Number(row.points || 0),
+      count: Number(row.count || 0),
+      level,
+      levelMeta: getProgressLevelMeta(level),
+      progressRatio: clampProgressRatio(currentLevelPoints / safeLevelStep),
+      recentRecords: card.themeRecentRecords?.[row.key] || []
+    };
+  });
+}
+function getVisibleProgressThemeBreakdown(rows) {
+  return (rows || []).filter((row) => row.count > 0).slice(0, 8);
+}
+function ExperienceBar({ ratio: ratio2, tone = "goal" }) {
+  const style2 = { "--think-progress-ratio": progressBarWidth(ratio2) };
+  return /* @__PURE__ */ u2("span", { class: `think-progress-bar think-progress-bar--${tone}`, "aria-label": `进度 ${progressBarWidth(ratio2)}`, children: /* @__PURE__ */ u2("span", { class: "think-progress-bar__fill", style: style2 }) });
+}
+function ThemeRecords({ records, runtime }) {
+  if (!records.length) return /* @__PURE__ */ u2("div", { class: "think-progress-theme-records__empty", children: "该主题暂无记录" });
+  const fields = runtime.module.fields?.length ? runtime.module.fields : ["title", "content"];
+  return /* @__PURE__ */ u2("div", { class: "think-progress-theme-records", "aria-label": "主题记录", children: /* @__PURE__ */ u2(
+    BlockView,
+    {
+      items: records.map((record) => record.item),
+      fields,
+      onMarkDone: runtime.onMarkDone,
+      timerService: runtime.timerService,
+      timers: runtime.timers,
+      allThemes: runtime.allThemes,
+      goals: runtime.goals,
+      resolveResourcePath: runtime.resolveResourcePath,
+      onOpenRecordOrigin: runtime.onOpenRecordOrigin,
+      messageRenderPort: runtime.messageRenderPort,
+      onOpenRecord: runtime.onOpenRecord
+    }
+  ) });
+}
+function SkillList({ card, runtime }) {
+  const rows = buildProgressSkillRows(card);
+  const [openKey, setOpenKey] = d(null);
+  if (rows.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-empty-skill", children: "暂无主题成长记录" });
+  return /* @__PURE__ */ u2("div", { class: "think-progress-skills", role: "list", children: rows.map((row) => {
+    const open = openKey === row.key;
+    return /* @__PURE__ */ u2("div", { class: `think-progress-skill-group ${open ? "is-open" : ""}`, role: "listitem", children: [
+      /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: "think-progress-skill",
+          onClick: () => setOpenKey(open ? null : row.key),
+          "aria-expanded": open,
+          title: `${row.title} · ${row.points} XP · ${row.count} 条记录`,
+          children: [
+            /* @__PURE__ */ u2("span", { class: "think-progress-skill__bullet", "aria-hidden": "true", children: "•" }),
+            /* @__PURE__ */ u2("span", { class: "think-progress-skill__title", children: row.title }),
+            /* @__PURE__ */ u2("span", { class: "think-progress-skill__level", children: [
+              "Lv.",
+              row.levelMeta.level
+            ] }),
+            /* @__PURE__ */ u2(ExperienceBar, { ratio: row.progressRatio, tone: "skill" }),
+            /* @__PURE__ */ u2("span", { class: "think-progress-skill__tail", children: [
+              /* @__PURE__ */ u2("span", { class: "think-progress-skill__meta", children: [
+                row.points,
+                " XP · ",
+                row.count,
+                " 条"
+              ] }),
+              /* @__PURE__ */ u2("span", { class: "think-progress-skill__chevron", "aria-hidden": "true", children: open ? "⌄" : "›" })
+            ] })
+          ]
+        }
+      ),
+      open && /* @__PURE__ */ u2(ThemeRecords, { records: row.recentRecords, runtime })
+    ] }, row.key);
+  }) });
+}
+function GoalProgressCard(props) {
+  const {
+    card,
+    expanded,
+    onToggle,
+    module: module2,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    resolveResourcePath,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    goals
+  } = props;
+  const title = getGoalProgressTitle(card);
+  const levelMeta = getProgressLevelMeta(card.level);
+  const runtime = {
+    module: module2,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    resolveResourcePath,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    goals
+  };
+  return /* @__PURE__ */ u2("section", { class: "think-progress-section think-progress-card", role: "listitem", children: [
+    /* @__PURE__ */ u2("button", { type: "button", onClick: onToggle, "aria-expanded": expanded, class: "think-progress-section__trigger", children: [
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__chevron", "aria-hidden": "true", children: expanded ? "⌄" : "›" }),
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__icon", children: card.icon || "🧩" }),
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__name", children: [
+        /* @__PURE__ */ u2("span", { class: "think-progress-section__title", children: title }),
+        /* @__PURE__ */ u2("span", { class: "think-progress-section__level-title", children: [
+          levelMeta.icon,
+          " ",
+          levelMeta.title
+        ] })
+      ] }),
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__level", children: [
+        "Lv.",
+        levelMeta.level
+      ] }),
+      /* @__PURE__ */ u2(ExperienceBar, { ratio: card.progressRatio, tone: "goal" }),
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__percent", children: ratioPercent(card.progressRatio) })
+    ] }),
+    expanded && /* @__PURE__ */ u2("div", { class: "think-progress-section__body", children: /* @__PURE__ */ u2(SkillList, { card, runtime }) })
+  ] });
+}
+function ProgressView({
+  module: module2,
+  items,
+  goals = [],
+  inputSettings,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  resolveResourcePath,
+  messageRenderPort,
+  onMarkDone,
+  timerService,
+  timers = [],
+  allThemes = []
+}) {
+  const progressModel = T$1(() => buildProgressViewRenderModel({ items, module: module2, goals, themes: inputSettings?.themes || allThemes }), [items, module2, goals, inputSettings?.themes, allThemes]);
+  const cards = progressModel.goalCards || [];
+  const [collapsedKeys, setCollapsedKeys] = d({});
+  if (cards.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-view__empty", children: "暂无目标成长记录" });
+  return /* @__PURE__ */ u2("div", { class: "think-progress-view", role: "list", "aria-label": "成长视图", children: cards.map((card) => {
+    const expanded = collapsedKeys[card.key] !== true;
+    return /* @__PURE__ */ u2(
+      GoalProgressCard,
+      {
+        card,
+        module: module2,
+        expanded,
+        onToggle: () => setCollapsedKeys((prev2) => ({ ...prev2, [card.key]: expanded })),
+        onOpenRecord,
+        onOpenRecordOrigin,
+        resolveResourcePath,
+        messageRenderPort,
+        onMarkDone,
+        timerService,
+        timers,
+        allThemes,
+        goals
+      },
+      card.key
+    );
+  }) });
 }
 function text(value) {
   return String(value ?? "").trim();
@@ -65737,50 +66284,51 @@ function taskTitle(item) {
   const raw = text(item.editableText || item.content || item.title);
   return raw || text(item.title) || "未命名任务";
 }
-function normalizedGoalPath(item) {
-  return text(item.goalPath || item.goalPaths?.[0] || item.goalId);
+function buildGoalMap(goals) {
+  return new Map((goals || []).map((goal) => [goal.id, goal]));
 }
-function goalLabel(item) {
-  return normalizedGoalPath(item) || "未分目标";
+function resolveTaskGoal(item, goalsById) {
+  const goalId = text(item.goalId);
+  if (!goalId) return { key: "__unassigned__", label: "未分目标" };
+  const goal = goalsById.get(goalId);
+  const path = text(goal?.goalPath || item.goalPath) || void 0;
+  const label = text(goal?.title || path) || "未分目标";
+  return { key: goalId, path, label };
+}
+function completionIdentity(item) {
+  const seriesId = text(item.seriesId);
+  return seriesId ? `series:${seriesId}` : `task:${item.id}`;
 }
 function recurrenceText(item) {
   return text(formatTaskRecurrence(item.recurrenceInfo));
 }
-function aggregateKey(item) {
-  return [taskTitle(item).toLowerCase(), goalLabel(item).toLowerCase(), recurrenceText(item).toLowerCase()].join("::");
-}
-function localSessionDate(value) {
+function localCompletionDate(value) {
   const date2 = new Date(value);
   if (!Number.isFinite(date2.getTime())) return "";
   return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
 }
-function localSessionTime(value) {
+function localCompletionTime(value) {
   const date2 = new Date(value);
   if (!Number.isFinite(date2.getTime())) return "";
   return `${String(date2.getHours()).padStart(2, "0")}:${String(date2.getMinutes()).padStart(2, "0")}`;
 }
-function historyMap(records, today) {
-  const start2 = dayjs(today).subtract(365, "day").startOf("day");
-  const end2 = dayjs(today).endOf("day");
-  const byId = new Map(records.map((record) => [record.id, record]));
+function completionHistoryMap(records, dateRange) {
+  const start2 = dayjs(dateRange[0]);
+  const end2 = dayjs(dateRange[1]);
   const map = /* @__PURE__ */ new Map();
-  for (const record of records) {
-    const session = asTaskSessionRecord(record);
-    if (!session) continue;
-    const task = byId.get(session.taskId);
-    if (!task || task.coreBlock !== "task") continue;
-    const dateText2 = localSessionDate(session.sessionStartedAt);
-    const occurred = dayjs(dateText2);
-    if (!dateText2 || !occurred.isValid() || occurred.isBefore(start2) || occurred.isAfter(end2)) continue;
-    const key = aggregateKey(task);
+  for (const item of records) {
+    if (item.coreBlock !== "task" || item.status !== "done") continue;
+    const completedAt = text(item.completedAt || item.doneDate);
+    if (!completedAt) continue;
+    const occurred = dayjs(completedAt);
+    if (!occurred.isValid() || occurred.isBefore(start2) || occurred.isAfter(end2)) continue;
+    const key = completionIdentity(item);
     const rows = map.get(key) || [];
-    const startTime = localSessionTime(session.sessionStartedAt);
-    const endTime = localSessionTime(session.sessionEndedAt);
     rows.push({
-      id: session.id,
-      doneDate: dateText2,
-      timeLabel: [startTime, endTime].filter(Boolean).join("–"),
-      item: task
+      id: item.id,
+      doneDate: localCompletionDate(completedAt),
+      timeLabel: localCompletionTime(completedAt),
+      item
     });
     map.set(key, rows);
   }
@@ -65793,11 +66341,11 @@ function emptyCadenceMap() {
   return new Map(TASK_CADENCE_ORDER.map((key) => [key, []]));
 }
 function buildEnergyTaskListModel(args) {
-  const { items, historyItems, management, goals = [], today } = args;
+  const { items, historyItems, management, goals = [], today, dateRange } = args;
   const openTasks = items.filter((item) => item.coreBlock === "task" && isTaskOpen(item));
   const visibleItems = openTasks;
   const visibleIds = new Set(visibleItems.map((item) => item.id));
-  const records = historyMap(historyItems, today);
+  const completionHistory = completionHistoryMap(historyItems, dateRange);
   const candidateBuild = buildEnergyActionCandidateResult(items, {
     today,
     maximumCandidates: 1e3,
@@ -65832,14 +66380,15 @@ function buildEnergyTaskListModel(args) {
     }).sort((left2, right2) => right2.fitScore - left2.fitScore).slice(0, 5);
     for (const row of matchable) energyMatchedIds.add(row.candidate.id);
   }
+  const goalsById = buildGoalMap(goals);
   const goalBuckets = /* @__PURE__ */ new Map();
   for (const item of visibleItems) {
-    const goalPath = normalizedGoalPath(item) || void 0;
-    const label = goalLabel(item);
-    const goalKey = goalPath || "__unassigned__";
+    const resolvedGoal = resolveTaskGoal(item, goalsById);
+    const goalPath = resolvedGoal.path;
+    const label = resolvedGoal.label;
+    const goalKey = resolvedGoal.key;
     const cadence = getTaskCadence(item);
-    const key = aggregateKey(item);
-    const history = records.get(key) || [];
+    const history = completionHistory.get(completionIdentity(item)) || [];
     const action = actionById.get(item.id);
     const candidate = candidateById.get(item.id);
     let bucket = goalBuckets.get(goalKey);
@@ -65874,16 +66423,21 @@ function buildEnergyTaskListModel(args) {
     }
   }
   const goalOrder = createGoalOrderIndex(goals);
-  const goalModels = Array.from(goalBuckets.entries()).sort(([, left2], [, right2]) => goalOrder.compareGoalPaths(left2.goalPath || left2.label, right2.goalPath || right2.label)).map(([key, bucket]) => ({
-    key,
-    label: bucket.label,
-    goalPath: bucket.goalPath,
-    rows: TASK_CADENCE_ORDER.flatMap((cadence) => {
-      const tasks = bucket.rows.get(cadence) || [];
-      return tasks.length > 0 ? [{ key: cadence, ...TASK_CADENCE_META[cadence], tasks }] : [];
-    }),
-    taskCount: Array.from(bucket.rows.values()).reduce((sum, tasks) => sum + tasks.length, 0)
-  }));
+  const goalModels = Array.from(goalBuckets.entries()).sort(([, left2], [, right2]) => goalOrder.compareGoalPaths(left2.goalPath || left2.label, right2.goalPath || right2.label)).map(([key, bucket]) => {
+    const rows = TASK_CADENCE_ORDER.map((cadence) => ({
+      key: cadence,
+      ...TASK_CADENCE_META[cadence],
+      tasks: bucket.rows.get(cadence) || []
+    })).filter((row) => row.tasks.length > 0);
+    const taskCount = rows.reduce((sum, row) => sum + row.tasks.length, 0);
+    return {
+      key,
+      label: bucket.label,
+      goalPath: bucket.goalPath,
+      rows,
+      taskCount
+    };
+  }).filter((goal) => goal.taskCount > 0);
   return {
     goals: goalModels,
     latestEnergy: management?.latest ? {
@@ -65901,7 +66455,7 @@ function buildEnergyTaskListModel(args) {
   };
 }
 function normalizedGoalFilter(value) {
-  return normalizeGoalPath$1(String(value || "").trim()) || String(value || "").trim().replace(/^#/, "");
+  return normalizeGoalPath(String(value || "").trim()) || "";
 }
 function dateText(value) {
   return dayjs(value).format("YYYY-MM-DD");
@@ -66087,7 +66641,8 @@ function buildEnergyViewModel(args) {
     historyItems: records,
     management: globalManagement,
     goals,
-    today
+    today,
+    dateRange
   });
   return {
     config: config2,
@@ -66102,7 +66657,7 @@ function buildEnergyViewModel(args) {
 function EnergyDot({ visual, selected = false, title, className = "", style: style2, onClick, cell = false }) {
   const label = title || (visual.capture === "retrospective" ? "补录精力点" : "实时精力点");
   const interactive = Boolean(onClick);
-  const activate = () => onClick?.();
+  const activate = (event) => onClick?.(event);
   return /* @__PURE__ */ u2(
     "svg",
     {
@@ -66112,12 +66667,12 @@ function EnergyDot({ visual, selected = false, title, className = "", style: sty
       "aria-label": label,
       class: `think-energy-dot ${cell ? "is-cell" : "is-plot"} is-${visual.capture} is-band-${visual.band} ${selected ? "is-selected" : ""} ${className}`.trim(),
       style: style2,
-      onClick: activate,
+      onClick: (event) => activate(event),
       onKeyDown: (event) => {
         if (!interactive) return;
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          activate();
+          activate(event);
         }
       },
       children: [
@@ -66187,7 +66742,7 @@ function dayCaptureLabel(day) {
   if (retrospective > 0) return `含 ${retrospective} 次补录`;
   return "实时";
 }
-function EnergyCalendarMap({ period, selectedKey, onSelect }) {
+function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
   const months = /* @__PURE__ */ new Map();
   for (const day of period.days) {
     const key = monthKey(day.date);
@@ -66228,8 +66783,15 @@ function EnergyCalendarMap({ period, selectedKey, onSelect }) {
                 selected: selectedKey === keyValue,
                 className: "think-energy-daily-dot",
                 style: energyDotStyle(visual),
-                title: `${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}`,
-                onClick: () => onSelect?.({ kind: "day", day })
+                title: `${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}${day.samples.length === 1 && onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
+                onClick: (event) => {
+                  if (day.samples.length === 1 && hasPlatformModifier(event) && onOpenRecordOrigin) {
+                    stopInteractionEvent(event);
+                    void onOpenRecordOrigin(day.samples[0].item);
+                    return;
+                  }
+                  onSelect?.({ kind: "day", day });
+                }
               }
             ) }, day.date);
           })
@@ -66272,7 +66834,7 @@ function sampleVisual(sample) {
     density: "timeline"
   });
 }
-function EnergyDayMap({ period, selectedKey, onSelect }) {
+function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
   const day = period.days[0];
   return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-day-map", "aria-label": "日精力地图", children: [
     /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: period.label }) }),
@@ -66293,8 +66855,15 @@ function EnergyDayMap({ period, selectedKey, onSelect }) {
             selected: selectedKey === sample.id,
             className: "think-energy-map-dot",
             style: energyDotStyle(visual, { "--think-energy-x": `${sample.minuteOfDay / 1440 * 100}%` }),
-            title: sampleTitle(sample),
-            onClick: () => onSelect?.({ kind: "sample", sample })
+            title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
+            onClick: (event) => {
+              if (hasPlatformModifier(event) && onOpenRecordOrigin) {
+                stopInteractionEvent(event);
+                void onOpenRecordOrigin(sample.item);
+                return;
+              }
+              onSelect?.({ kind: "sample", sample });
+            }
           },
           sample.id
         );
@@ -66304,7 +66873,7 @@ function EnergyDayMap({ period, selectedKey, onSelect }) {
     /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低" })
   ] });
 }
-function EnergyDateTimeMap({ period, selectedKey, onSelect }) {
+function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
   const isMonth = period.currentView === "月";
   return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-date-map", "aria-label": `${period.currentView}精力地图`, children: [
     /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: [
@@ -66339,8 +66908,15 @@ function EnergyDateTimeMap({ period, selectedKey, onSelect }) {
                 selected: selectedKey === sample.id,
                 className: "think-energy-map-dot",
                 style: energyDotStyle(visual, { "--think-energy-y": `${sample.minuteOfDay / 1440 * 100}%` }),
-                title: sampleTitle(sample),
-                onClick: () => onSelect?.({ kind: "sample", sample })
+                title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
+                onClick: (event) => {
+                  if (hasPlatformModifier(event) && onOpenRecordOrigin) {
+                    stopInteractionEvent(event);
+                    void onOpenRecordOrigin(sample.item);
+                    return;
+                  }
+                  onSelect?.({ kind: "sample", sample });
+                }
               },
               sample.id
             );
@@ -66370,6 +66946,26 @@ function EnergyPeriodReview({ periodLabel: periodLabel2, lines }) {
     ] }, `${line2.key}-${line2.text}`)) })
   ] });
 }
+function RecordAction({ item, label, className = "think-energy-detail__open", onOpenRecord, onOpenRecordOrigin }) {
+  const gesture = createRecordGestureHandlers({
+    item,
+    onPrimary: () => void onOpenRecord?.(item),
+    onOpenOrigin: onOpenRecordOrigin
+  });
+  return /* @__PURE__ */ u2(
+    "button",
+    {
+      type: "button",
+      class: className,
+      title: RECORD_GESTURE_HINT,
+      onClick: gesture.onClick,
+      onDblClick: gesture.onDblClick,
+      onTouchEnd: gesture.onTouchEnd,
+      onKeyDown: gesture.onKeyDown,
+      children: label
+    }
+  );
+}
 function barStyle(value) {
   return { "--think-energy-detail-value": `${Math.max(0, Math.min(100, value ?? 0))}%` };
 }
@@ -66386,7 +66982,7 @@ function impactText(selection, management) {
   const delta = Math.round(candidate.meanDelta);
   return `${label} · 预计 ${delta > 0 ? "+" : ""}${delta}`;
 }
-function SampleDetail({ selection, management, onBack, onOpenRecord }) {
+function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecordOrigin }) {
   const point = selection.sample;
   const activity = point.context?.activity;
   const signals = signalsText(selection);
@@ -66430,10 +67026,10 @@ function SampleDetail({ selection, management, onBack, onOpenRecord }) {
       /* @__PURE__ */ u2("span", { children: "活动影响" }),
       /* @__PURE__ */ u2("strong", { children: impact })
     ] }),
-    onOpenRecord && /* @__PURE__ */ u2("button", { type: "button", class: "think-energy-detail__open", onClick: () => onOpenRecord(point.item), children: "打开原记录 →" })
+    onOpenRecord && /* @__PURE__ */ u2(RecordAction, { item: point.item, label: "打开记录 →", onOpenRecord, onOpenRecordOrigin })
   ] });
 }
-function DayDetail({ selection, onBack, onOpenRecord }) {
+function DayDetail({ selection, onBack, onOpenRecord, onOpenRecordOrigin }) {
   const { day } = selection;
   const latest2 = day.samples[day.samples.length - 1];
   return /* @__PURE__ */ u2("aside", { class: "think-energy-detail", "aria-label": "每日精力详情", children: [
@@ -66461,13 +67057,9 @@ function DayDetail({ selection, onBack, onOpenRecord }) {
     ] }),
     /* @__PURE__ */ u2("div", { class: "think-energy-detail__section", children: [
       /* @__PURE__ */ u2("strong", { children: "当天记录" }),
-      day.samples.map((sample) => /* @__PURE__ */ u2("p", { children: [
-        sample.time,
-        "　综合 ",
-        sample.score
-      ] }, sample.id))
+      day.samples.map((sample) => /* @__PURE__ */ u2(RecordAction, { item: sample.item, label: `${sample.time}　综合 ${sample.score}`, className: "think-energy-detail__record-row", onOpenRecord, onOpenRecordOrigin }, sample.id))
     ] }),
-    latest2 && onOpenRecord && /* @__PURE__ */ u2("button", { type: "button", class: "think-energy-detail__open", onClick: () => onOpenRecord(latest2.item), children: "打开最后一条记录 →" })
+    latest2 && onOpenRecord && /* @__PURE__ */ u2(RecordAction, { item: latest2.item, label: "打开最后一条记录 →", onOpenRecord, onOpenRecordOrigin })
   ] });
 }
 function EnergySampleDetail(props) {
@@ -66483,9 +67075,29 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
     void onOpenRecord?.(task.item);
     onClose();
   };
+  const taskGesture = createRecordGestureHandlers({
+    item: task.item,
+    onPrimary: editTask,
+    onOpenOrigin: onOpenRecordOrigin ? (originItem) => {
+      void onOpenRecordOrigin(originItem);
+      onClose();
+    } : void 0
+  });
   return /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu", ref: menuRef, style: `left:${menu.x}px;top:${menu.y}px;`, children: [
     /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-title", children: task.title }),
-    /* @__PURE__ */ u2("button", { type: "button", class: "think-energy-task-list__menu-action", onClick: editTask, children: "编辑任务" }),
+    /* @__PURE__ */ u2(
+      "button",
+      {
+        type: "button",
+        class: "think-energy-task-list__menu-action",
+        title: RECORD_GESTURE_HINT,
+        onClick: taskGesture.onClick,
+        onDblClick: taskGesture.onDblClick,
+        onTouchEnd: taskGesture.onTouchEnd,
+        onKeyDown: taskGesture.onKeyDown,
+        children: "编辑任务"
+      }
+    ),
     /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-meta", children: [
       currentView,
       "内完成 ",
@@ -66496,7 +67108,10 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
     /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-records", children: task.records.length > 0 ? task.records.map((record) => {
       const gesture = createRecordGestureHandlers({
         item: record.item,
-        onOpenOrigin: onOpenRecordOrigin,
+        onOpenOrigin: onOpenRecordOrigin ? (originItem) => {
+          void onOpenRecordOrigin(originItem);
+          onClose();
+        } : void 0,
         onPrimary: () => {
           void onOpenRecord?.(record.item);
           onClose();
@@ -66507,15 +67122,11 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
         {
           class: "think-energy-task-list__menu-record",
           href: "#",
-          onClick: (event) => {
-            gesture.onClick(event);
-            onClose();
-          },
-          onDblClick: (event) => {
-            gesture.onDblClick(event);
-            onClose();
-          },
-          onTouchEnd: (event) => gesture.onTouchEnd(event),
+          title: RECORD_GESTURE_HINT,
+          onClick: gesture.onClick,
+          onDblClick: gesture.onDblClick,
+          onTouchEnd: gesture.onTouchEnd,
+          onKeyDown: gesture.onKeyDown,
           children: recordLabel(record)
         },
         record.id
@@ -66536,7 +67147,7 @@ function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, onOpenR
     return map;
   }, [model]);
   const selectedTask = menu ? taskMap.get(menu.taskId) || null : null;
-  h(() => {
+  y(() => {
     const onDown = (event) => {
       if (!menuRef.current || menuRef.current.contains(event.target)) return;
       setMenu(null);
@@ -66552,21 +67163,29 @@ function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, onOpenR
     };
   }, []);
   return /* @__PURE__ */ u2("section", { class: "think-energy-task-list", "aria-label": "任务", children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__title", children: "任务" }),
     /* @__PURE__ */ u2("div", { class: "think-energy-task-list__goals", children: model.goals.length > 0 ? model.goals.map((goal) => /* @__PURE__ */ u2("section", { class: "think-energy-task-list__goal-group", children: [
       /* @__PURE__ */ u2("div", { class: "think-energy-task-list__goal-title", children: goal.label }),
       /* @__PURE__ */ u2("div", { class: "think-energy-task-list__rows", children: goal.rows.map((row) => /* @__PURE__ */ u2("div", { class: `think-energy-task-list__row think-energy-task-list__row--${row.key}`, children: [
-        /* @__PURE__ */ u2("div", { class: "think-energy-task-list__row-label", children: [
-          /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: row.emoji }),
-          /* @__PURE__ */ u2("span", { children: row.label })
-        ] }),
+        /* @__PURE__ */ u2("div", { class: "think-energy-task-list__row-label", title: row.label, "aria-label": row.label, children: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: row.emoji }) }),
         /* @__PURE__ */ u2("div", { class: "think-energy-task-list__items", children: row.tasks.map((task) => /* @__PURE__ */ u2(
           "button",
           {
             type: "button",
             class: `think-energy-task-list__item think-energy-task-list__item--${task.cadence}`,
-            title: task.title,
-            onClick: () => onStartTask?.(task),
+            title: `${task.title} · 点击开始/继续计时 · Ctrl/⌘+点击打开原文 · 右键更多`,
+            onClick: (event) => {
+              if (hasPlatformModifier(event) && onOpenRecordOrigin) {
+                stopInteractionEvent(event);
+                void onOpenRecordOrigin(task.item);
+                return;
+              }
+              void onStartTask?.(task);
+            },
+            onKeyDown: (event) => {
+              if (!onOpenRecordOrigin || !hasPlatformModifier(event) || !isKeyboardActivation(event)) return;
+              stopInteractionEvent(event);
+              void onOpenRecordOrigin(task.item);
+            },
             onContextMenu: (event) => {
               event.preventDefault();
               setMenu({ x: event.clientX, y: event.clientY, taskId: task.itemId });
@@ -66602,17 +67221,18 @@ function selectionKey(selection) {
   if (!selection) return null;
   return selection.kind === "sample" ? selection.sample.id : `day:${selection.day.date}`;
 }
-function GoalEnergyPanel({ panel, model, onOpenRecord }) {
+function GoalEnergyPanel({ panel, model, onOpenRecord, onOpenRecordOrigin }) {
   const [selection, setSelection] = d(null);
   return /* @__PURE__ */ u2("section", { class: "think-energy-view__goal", children: /* @__PURE__ */ u2("div", { class: "think-energy-view__primary", children: [
-    model.config.showTimeline ? /* @__PURE__ */ u2(EnergyPeriodMap, { period: panel.period, selectedKey: selectionKey(selection), onSelect: setSelection }) : /* @__PURE__ */ u2("div", { class: "think-energy-view__timeline-off", children: "精力地图已关闭。" }),
+    model.config.showTimeline ? /* @__PURE__ */ u2(EnergyPeriodMap, { period: panel.period, selectedKey: selectionKey(selection), onSelect: setSelection, onOpenRecordOrigin }) : /* @__PURE__ */ u2("div", { class: "think-energy-view__timeline-off", children: "精力地图已关闭。" }),
     selection ? /* @__PURE__ */ u2(
       EnergySampleDetail,
       {
         selection,
         management: model.config.showManagement ? panel.management : null,
         onBack: () => setSelection(null),
-        onOpenRecord
+        onOpenRecord,
+        onOpenRecordOrigin
       }
     ) : /* @__PURE__ */ u2(EnergyPeriodReview, { periodLabel: model.periodLabel, lines: panel.reviewLines })
   ] }) });
@@ -66650,7 +67270,7 @@ function EnergyView({ items, records = items, module: module2, dateRange, curren
   };
   const [firstPanel, ...otherPanels] = energyModel.goalPanels;
   return /* @__PURE__ */ u2("div", { class: "think-energy-view", children: /* @__PURE__ */ u2("div", { class: "think-energy-view__goals", children: [
-    firstPanel ? /* @__PURE__ */ u2(GoalEnergyPanel, { panel: firstPanel, model: energyModel, onOpenRecord }) : /* @__PURE__ */ u2(EmptyEnergyPanel, {}),
+    firstPanel ? /* @__PURE__ */ u2(GoalEnergyPanel, { panel: firstPanel, model: energyModel, onOpenRecord, onOpenRecordOrigin }) : /* @__PURE__ */ u2(EmptyEnergyPanel, {}),
     /* @__PURE__ */ u2(
       EnergyTaskList,
       {
@@ -66661,7 +67281,7 @@ function EnergyView({ items, records = items, module: module2, dateRange, curren
         onOpenRecordOrigin
       }
     ),
-    otherPanels.map((panel) => /* @__PURE__ */ u2(GoalEnergyPanel, { panel, model: energyModel, onOpenRecord }, panel.key))
+    otherPanels.map((panel) => /* @__PURE__ */ u2(GoalEnergyPanel, { panel, model: energyModel, onOpenRecord, onOpenRecordOrigin }, panel.key))
   ] }) });
 }
 function isTableViewConfigured(rowField, colField) {
@@ -67152,20 +67772,20 @@ function ExcelCell({
   onMoveFillDrag,
   onFinishFillDrag,
   onCancelFillDrag,
-  onOpenRecord
+  onOpenRecordOrigin
 }) {
   const { item, field, editorValue, policy } = cell;
   const [draft, setDraft] = d(editorValue);
   const inputRef = A$1(null);
   const ui = buildExcelCellUiState({ cell, selected, editing, pending, saved, error, canCommit, fillSource, fillTarget, contentDisplayMode });
-  h(() => {
+  y(() => {
     if (editing) setDraft(editorValue);
   }, [editing, editorValue]);
-  h(() => {
+  y(() => {
     if (!editing) return;
     const input = inputRef.current;
     input?.focus?.();
-    input?.select?.();
+    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) input.select();
   }, [editing]);
   const commit = (nextValue = draft) => {
     if (!editing || pending) return;
@@ -67173,7 +67793,11 @@ function ExcelCell({
   };
   const handleCellClick = (event) => {
     if (fillDragging) return;
-    if (event.metaKey || event.ctrlKey) return onOpenRecord?.(item);
+    if (hasPlatformModifier(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return onOpenRecordOrigin?.(item);
+    }
     onSelect?.(cell);
   };
   const handleDoubleClick = (event) => {
@@ -67232,7 +67856,7 @@ function ExcelCell({
       "data-save-state": ui.saveState,
       class: ui.className,
       style: style2,
-      title: ui.title,
+      title: onOpenRecordOrigin ? `${ui.title} · Ctrl/⌘+点击打开原文` : ui.title,
       tabIndex: 0,
       "aria-readonly": ui.readonly ? "true" : "false",
       "aria-invalid": error ? "true" : "false",
@@ -67411,7 +68035,7 @@ function ExcelGrid({
   onCancelFillDrag,
   onColumnWidthDraftChange,
   onColumnWidthCommit,
-  onOpenRecord
+  onOpenRecordOrigin
 }) {
   const tableRef = A$1(null);
   const makeCell = (item, columnKey) => buildExcelGridCell(item, columnKey, valueOverrides);
@@ -67525,7 +68149,7 @@ function ExcelGrid({
           onMoveFillDrag,
           onFinishFillDrag: finishFillDrag,
           onCancelFillDrag,
-          onOpenRecord,
+          onOpenRecordOrigin,
           style: buildExcelColumnWidthStyle(width2)
         },
         column2.key
@@ -67573,7 +68197,7 @@ function buildExcelSingleCellEditPlan(cell, nextEditorValue) {
   const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
   return {
     key,
-    validationMessage,
+    validationMessage: validationMessage ?? void 0,
     nextValue: validationMessage ? void 0 : parseExcelEditorValue(cell, nextEditorValue)
   };
 }
@@ -67583,7 +68207,7 @@ function prepareExcelCellBatchEdit(edit) {
   return {
     ...edit,
     key,
-    validationMessage,
+    validationMessage: validationMessage ?? void 0,
     editable: canInlineEditExcelCell(edit.cell),
     nextValue: validationMessage ? void 0 : parseExcelEditorValue(edit.cell, edit.editorValue)
   };
@@ -67635,7 +68259,7 @@ function useExcelCellEditing(options) {
   const commitQueueRef = A$1(Promise.resolve());
   const [fillDragSourceCell, setFillDragSourceCell] = d(null);
   const [fillDragTargetCellKey, setFillDragTargetCellKey] = d(null);
-  h(() => () => {
+  y(() => () => {
     for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
     saveFlashTimers.current = {};
   }, []);
@@ -68096,7 +68720,7 @@ function ExcelViewToolbar({
           ]
         }
       ),
-      /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "双击/Enter/F2 编辑；方向键/Tab 导航；支持多行多列粘贴；内容字段可切换预览或全文 Markdown。" })
+      /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "单击选中；双击/Enter/F2 编辑；Ctrl/⌘+点击打开完整记录；方向键/Tab 导航；支持多行多列粘贴。" })
     ] }),
     /* @__PURE__ */ u2(
       ExcelColumnToolbar,
@@ -68188,7 +68812,7 @@ function ExcelView({
   onFieldsChange,
   onExcelConfigChange,
   onCellCommit,
-  onOpenRecord,
+  onOpenRecordOrigin,
   messageRenderPort
 }) {
   const renderModel = T$1(() => buildExcelViewRenderModel({
@@ -68211,13 +68835,13 @@ function ExcelView({
     excelConfigSaving,
     isFullMarkdownContent
   });
-  h(() => {
+  y(() => {
     resetTransientState();
   }, [renderModel.itemSignature, resetTransientState]);
-  h(() => {
+  y(() => {
     setLocalColumnWidths(renderModel.persistedColumnWidths);
   }, [renderModel.persistedColumnWidths]);
-  h(() => {
+  y(() => {
     setLocalContentDisplayMode(renderModel.persistedContentDisplayMode);
   }, [renderModel.persistedContentDisplayMode]);
   const handleFieldsChange = q$1(async (nextFields) => {
@@ -68331,7 +68955,7 @@ function ExcelView({
             onCancelFillDrag: editing.cancelFillDrag,
             onColumnWidthDraftChange: handleColumnWidthDraftChange,
             onColumnWidthCommit: handleColumnWidthCommit,
-            onOpenRecord
+            onOpenRecordOrigin
           }
         )
       ]
@@ -68592,7 +69216,7 @@ function ThemeTreeSelectPanel({
   const [searchTerm, setSearchTerm] = d("");
   const [expandedIds, setExpandedIds] = d(() => new Set(defaultExpandedIds));
   const themeTree = T$1(() => (buildThemeTree(themes || []) || []).filter(Boolean), [themes]);
-  h(() => {
+  y(() => {
     if (!expandToSelected) return;
     const pathsToExpand = [];
     if (multiSelect && selectedPaths.length > 0) {
@@ -68611,7 +69235,7 @@ function ThemeTreeSelectPanel({
       });
     }
   }, [expandToSelected, multiSelect, selectedPaths, selectedThemeId, themes]);
-  h(() => {
+  y(() => {
     if (!defaultExpandAll || themeTree.length === 0) return;
     const allIds = [];
     const collect = (nodes) => {
@@ -69020,7 +69644,7 @@ const VIEW_REGISTRY = {
 const DashboardViewComponents = VIEW_REGISTRY;
 function useLayoutItems({ dataStore, layout }) {
   const [allItems, setAllItems] = d(() => dataStore.queryItems());
-  h(() => {
+  y(() => {
     const readAllItems = () => {
       const startedAt = performance.now();
       const nextItems = dataStore.queryItems();
@@ -69049,7 +69673,7 @@ function useExpandedViewRendering({
 }) {
   const [expandedState, setExpandedState] = d({});
   const [isStateInitialized, setIsStateInitialized] = d(false);
-  h(() => {
+  y(() => {
     const initialState = {};
     layout.viewInstanceIds.forEach((viewId) => {
       const view = allViews.find((v2) => v2.id === viewId);
@@ -69060,7 +69684,7 @@ function useExpandedViewRendering({
     setExpandedState(initialState);
     setIsStateInitialized(true);
   }, [layout.id]);
-  h(() => {
+  y(() => {
     if (!isStateInitialized) return;
     setExpandedState((prevState) => {
       const newState = { ...prevState };
@@ -69080,7 +69704,7 @@ function useExpandedViewRendering({
   const expandedViewSignature = expandedViewIds.join("|");
   const [renderedExpandedCount, setRenderedExpandedCount] = d(INITIAL_RENDERED_EXPANDED_VIEWS);
   const renderedBatchLayoutIdRef = A$1(null);
-  h(() => {
+  y(() => {
     setRenderedExpandedCount((current2) => {
       const firstBatchSize = Math.min(expandedViewIds.length, INITIAL_RENDERED_EXPANDED_VIEWS);
       if (renderedBatchLayoutIdRef.current !== layout.id) {
@@ -69090,7 +69714,7 @@ function useExpandedViewRendering({
       return Math.min(expandedViewIds.length, Math.max(current2, INITIAL_RENDERED_EXPANDED_VIEWS));
     });
   }, [expandedViewSignature, expandedViewIds.length, layout.id]);
-  h(() => {
+  y(() => {
     if (renderedExpandedCount >= expandedViewIds.length) return;
     const requestIdle = window.requestIdleCallback;
     const cancelIdle = window.cancelIdleCallback;
@@ -69150,7 +69774,7 @@ function useViewData({
   const sort = viewInstance?.sort || [];
   const sourceName = viewInstance?.title || "未知视图";
   const [localItems, setLocalItems] = d(() => sourceItems ?? dataStore.queryItems());
-  h(() => {
+  y(() => {
     if (sourceItems) return;
     const listener = () => {
       setLocalItems(dataStore.queryItems());
@@ -69233,6 +69857,7 @@ const openStatisticsPopover = (request) => {
           blocks: request.blocks,
           module: request.module,
           timerService: request.timerService,
+          onMarkDone: request.onMarkDone,
           timers: request.timers,
           allThemes: request.allThemes,
           messageRenderPort: request.messageRenderPort,
@@ -69474,7 +70099,7 @@ function ViewContent({
   });
   const selectedLayoutCategories = T$1(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
   const excelAvailableFields = T$1(() => getAllFields(allItems), [allItems]);
-  h(() => {
+  y(() => {
     onDataLoaded(viewItems);
   }, [viewItems, onDataLoaded]);
   const ViewComponent = DashboardViewComponents[normalizedViewInstance.viewType];
@@ -69524,7 +70149,8 @@ function useLayoutModuleActions({
   allViews,
   modulesDataCache,
   ui,
-  useCases
+  useCases,
+  timerService
 }) {
   const handleExport = q$1((viewId, viewTitle) => {
     const items = modulesDataCache.current?.[viewId];
@@ -69558,6 +70184,10 @@ function useLayoutModuleActions({
   }, [actionService, app, layoutDate, layoutView]);
   const handleMarkItemDone = q$1((itemId) => {
     void (async () => {
+      if (timerService.completeTask) {
+        await timerService.completeTask(itemId);
+        return;
+      }
       await completeFromView({
         uiPort: ui,
         useCases,
@@ -69565,13 +70195,15 @@ function useLayoutModuleActions({
         source: "layout_renderer"
       });
     })();
-  }, [ui, useCases]);
+  }, [timerService, ui, useCases]);
   const handleSettingsClick = q$1((viewInstance) => {
     openModuleSettingsWidget(viewInstance);
   }, []);
   const handleDeleteViewInstance = q$1((viewInstanceId) => {
+    const view = allViews.find((candidate) => candidate.id === viewInstanceId);
+    if (!window.confirm(`确认删除视图“${view?.title || viewInstanceId}”吗？它会从配置和所有布局中移除。`)) return;
     void useCases.viewInstance.deleteView(viewInstanceId);
-  }, [useCases.viewInstance]);
+  }, [allViews, useCases.viewInstance]);
   const handleGlobalFiltersChange = q$1((filters) => {
     void useCases.layout.updateLayout(layout.id, {
       globalFilters: filters
@@ -69653,7 +70285,7 @@ function getOwnerDocument(target) {
   }
   return document;
 }
-const useIsomorphicLayoutEffect = canUseDOM ? _ : h;
+const useIsomorphicLayoutEffect = canUseDOM ? _ : y;
 function useEvent(handler) {
   const handlerRef = A$1(handler);
   useIsomorphicLayoutEffect(() => {
@@ -69720,7 +70352,7 @@ function useNodeRef(onChange) {
 }
 function usePrevious(value) {
   const ref = A$1();
-  h(() => {
+  y(() => {
     ref.current = value;
   }, [value]);
   return ref.current;
@@ -69915,7 +70547,7 @@ function useAnnouncement() {
 const DndMonitorContext = /* @__PURE__ */ X$1(null);
 function useDndMonitor(listener) {
   const registerListener = x$1(DndMonitorContext);
-  h(() => {
+  y(() => {
     if (!registerListener) {
       throw new Error("useDndMonitor must be used within a children of <DndContext>");
     }
@@ -69991,7 +70623,7 @@ function Accessibility(_ref) {
   } = useAnnouncement();
   const liveRegionId = useUniqueId("DndLiveRegion");
   const [mounted, setMounted] = d(false);
-  h(() => {
+  y(() => {
     setMounted(true);
   }, []);
   useDndMonitor(T$1(() => ({
@@ -71308,7 +71940,7 @@ function useAutoScroller(_ref) {
     scrollContainer.scrollBy(scrollLeft, scrollTop);
   }, []);
   const sortedScrollableAncestors = T$1(() => order2 === TraversalOrder.TreeOrder ? [...scrollableAncestors].reverse() : scrollableAncestors, [order2, scrollableAncestors]);
-  h(
+  y(
     () => {
       if (!enabled2 || !scrollableAncestors.length || !rect) {
         clearAutoScrollInterval();
@@ -71498,10 +72130,10 @@ function useDroppableMeasuring(containers, _ref) {
     }
     return previousValue;
   }, [containers, queue, dragging, disabled, measure]);
-  h(() => {
+  y(() => {
     containersRef.current = containers;
   }, [containers]);
-  h(
+  y(
     () => {
       if (disabled) {
         return;
@@ -71511,7 +72143,7 @@ function useDroppableMeasuring(containers, _ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [dragging, disabled]
   );
-  h(
+  y(
     () => {
       if (queue && queue.length > 0) {
         setQueue(null);
@@ -71520,7 +72152,7 @@ function useDroppableMeasuring(containers, _ref) {
     //eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(queue)]
   );
-  h(
+  y(
     () => {
       if (disabled || typeof frequency !== "number" || timeoutId.current !== null) {
         return;
@@ -71578,7 +72210,7 @@ function useMutationObserver(_ref) {
     } = window;
     return new MutationObserver2(handleMutations);
   }, [handleMutations, disabled]);
-  h(() => {
+  y(() => {
     return () => mutationObserver == null ? void 0 : mutationObserver.disconnect();
   }, [mutationObserver]);
   return mutationObserver;
@@ -71602,7 +72234,7 @@ function useResizeObserver(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [disabled]
   );
-  h(() => {
+  y(() => {
     return () => resizeObserver == null ? void 0 : resizeObserver.disconnect();
   }, [resizeObserver]);
   return resizeObserver;
@@ -71682,7 +72314,7 @@ function useScrollableAncestors(node2) {
     }
     return getScrollableAncestors(node2);
   }, [node2]);
-  h(() => {
+  y(() => {
     previousNode.current = node2;
   }, [node2]);
   return ancestors;
@@ -71703,7 +72335,7 @@ function useScrollOffsets(elements) {
       return new Map(scrollCoordinates2);
     });
   }, []);
-  h(() => {
+  y(() => {
     const previousElements = prevElements.current;
     if (elements !== previousElements) {
       cleanup2(previousElements);
@@ -71743,14 +72375,14 @@ function useScrollOffsetsDelta(scrollOffsets, dependencies) {
     dependencies = [];
   }
   const initialScrollOffsets = A$1(null);
-  h(
+  y(
     () => {
       initialScrollOffsets.current = null;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     dependencies
   );
-  h(() => {
+  y(() => {
     const hasScrollOffsets = scrollOffsets !== defaultCoordinates;
     if (hasScrollOffsets && !initialScrollOffsets.current) {
       initialScrollOffsets.current = scrollOffsets;
@@ -71762,7 +72394,7 @@ function useScrollOffsetsDelta(scrollOffsets, dependencies) {
   return initialScrollOffsets.current ? subtract(scrollOffsets, initialScrollOffsets.current) : defaultCoordinates;
 }
 function useSensorSetup(sensors) {
-  h(
+  y(
     () => {
       if (!canUseDOM) {
         return;
@@ -72102,7 +72734,7 @@ function RestoreFocus(_ref) {
   } = x$1(InternalContext);
   const previousActivatorEvent = usePrevious(activatorEvent);
   const previousActiveId = usePrevious(active == null ? void 0 : active.id);
-  h(() => {
+  y(() => {
     if (disabled) {
       return;
     }
@@ -72244,7 +72876,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
     modifiers,
     ...props
   } = _ref;
-  const store = y(reducer, void 0, getInitialState);
+  const store = h(reducer, void 0, getInitialState);
   const [state, dispatch] = store;
   const [dispatchMonitorEvent, registerMonitorListener] = useDndMonitorProvider();
   const [status, setStatus] = d(Status.Uninitialized);
@@ -72553,7 +73185,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
       setStatus(Status.Initialized);
     }
   }, [activeNodeRect, status]);
-  h(
+  y(
     () => {
       const {
         onDragMove
@@ -72588,7 +73220,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [scrollAdjustedTranslate.x, scrollAdjustedTranslate.y]
   );
-  h(
+  y(
     () => {
       const {
         active: active2,
@@ -72871,7 +73503,7 @@ function useDroppable(_ref) {
   }, [resizeObserver]);
   const [nodeRef, setNodeRef] = useNodeRef(handleNodeChange);
   const dataRef = useLatestValue(data);
-  h(() => {
+  y(() => {
     if (!resizeObserver || !nodeRef.current) {
       return;
     }
@@ -72879,7 +73511,7 @@ function useDroppable(_ref) {
     resizeObserverConnected.current = false;
     resizeObserver.observe(nodeRef.current);
   }, [nodeRef, resizeObserver]);
-  h(
+  y(
     () => {
       dispatch({
         type: Action.RegisterDroppable,
@@ -72901,7 +73533,7 @@ function useDroppable(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [id]
   );
-  h(() => {
+  y(() => {
     if (disabled !== previous.current.disabled) {
       dispatch({
         type: Action.SetDroppableDisabled,
@@ -72960,10 +73592,10 @@ function FreeformLayoutItem({
   const [isResizing, setIsResizing] = d(false);
   const resizeSessionRef = A$1(null);
   const onResizePreviewRef = A$1(onResizePreview);
-  h(() => {
+  y(() => {
     onResizePreviewRef.current = onResizePreview;
   }, [onResizePreview]);
-  h(() => () => {
+  y(() => () => {
     resizeSessionRef.current = null;
     onResizePreviewRef.current(null);
   }, []);
@@ -73152,7 +73784,7 @@ function FreeformCanvas({
     [layout.freeformConfig]
   );
   const keyboardStep = config2.snapToGrid ? config2.gridSize : 8;
-  h(() => {
+  y(() => {
     const host = hostRef.current;
     if (!host) return;
     const updateWidth = () => {
@@ -73171,25 +73803,25 @@ function FreeformCanvas({
     observer.observe(host);
     return () => observer.disconnect();
   }, [config2.minCanvasWidth]);
-  h(() => {
+  y(() => {
     setSelectedViewId(null);
     setLocalOverrides({});
     setResizePreviews({});
     setDragPreview(null);
     previousPersistedPlacementsRef.current = layout.viewPlacements;
   }, [layout.id]);
-  h(() => {
+  y(() => {
     if (previousPersistedPlacementsRef.current === layout.viewPlacements) return;
     previousPersistedPlacementsRef.current = layout.viewPlacements;
     setLocalOverrides({});
   }, [layout.viewPlacements]);
-  h(() => {
+  y(() => {
     if (editing) return;
     setSelectedViewId(null);
     setResizePreviews({});
     setDragPreview(null);
   }, [editing]);
-  h(() => {
+  y(() => {
     if (selectedViewId && !layout.viewInstanceIds.includes(selectedViewId)) {
       setSelectedViewId(null);
     }
@@ -73359,7 +73991,7 @@ function getLayoutInitialDate(layout) {
 }
 function useCompactFreeformFallback() {
   const [compact, setCompact] = d(false);
-  h(() => {
+  y(() => {
     if (typeof window === "undefined") return;
     const media = window.matchMedia?.("(max-width: 760px), (hover: none) and (pointer: coarse)");
     const update = () => {
@@ -73412,14 +74044,14 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     () => allViews.filter((view) => !layout.viewInstanceIds.includes(view.id)),
     [allViews, layout.viewInstanceIds]
   );
-  h(() => {
+  y(() => {
     setLayoutDate(getLayoutInitialDate(layout));
     setLayoutView(layout.initialView || "月");
   }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
-  h(() => {
+  y(() => {
     if (layout.displayMode !== "freeform" || compactFreeformFallback) setIsFreeformEditing(false);
   }, [compactFreeformFallback, layout.displayMode]);
-  h(() => {
+  y(() => {
     if (viewToAdd && !availableViews.some((view) => view.id === viewToAdd)) {
       setViewToAdd("");
     }
@@ -73440,7 +74072,8 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     allViews,
     modulesDataCache,
     ui,
-    useCases
+    useCases,
+    timerService
   });
   const handlePlacementChange = (viewId, placement) => {
     void useCases.layout.updateViewPlacement(layout.id, viewId, placement);
@@ -73828,6 +74461,37 @@ class TimerService {
     });
     this.ui.notice("任务已开始");
   }
+  /**
+   * Single completion boundary used by every Task surface.
+   * If the Task owns an active/paused Timer, completion persists the final
+   * TaskSession and clears runtime state through stopAndApply(). Otherwise
+   * it performs a normal Task completion without fabricating a Session.
+   */
+  async completeTask(taskId) {
+    const taskItem = this.dataStore.getRecordById(taskId);
+    if (!taskItem || taskItem.coreBlock !== "task" || taskItem.status !== "open") {
+      this.ui.notice("找不到可完成的未完成任务");
+      return false;
+    }
+    const timer = this.useCases.timer.getTimers().find((entry) => entry.taskId === taskId);
+    if (timer) return this.stopAndApply(timer.id);
+    try {
+      const result = await this.useCases.recordInput.submitCompleteRecord({
+        itemId: taskId,
+        source: "layout_renderer"
+      });
+      if (result.status !== "success") {
+        if (result.status !== "cancelled") this.ui.notice(readResultMessage(result, "完成任务失败"));
+        return false;
+      }
+      this.ui.notice(result.feedback?.notice || "任务已完成。");
+      return true;
+    } catch (error) {
+      this.ui.notice(`完成任务失败：${error.message}`);
+      devError("TimerService completeTask Error:", error);
+      return false;
+    }
+  }
   async pause(timerId) {
     const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
     if (timer && timer.status === "running") {
@@ -74181,7 +74845,8 @@ class ObsidianAiHttpTransport {
     const status = response.status ?? 200;
     const text2 = typeof response.text === "string" ? response.text : "";
     const headers = makeHeadersLike(response.headers);
-    const statusText = typeof response.statusText === "string" ? response.statusText : "";
+    const responseRecord = response;
+    const statusText = typeof responseRecord.statusText === "string" ? responseRecord.statusText : "";
     return {
       ok: status >= 200 && status < 300,
       status,
@@ -74617,7 +75282,7 @@ function MessageBubble({ message }) {
     }
   };
   const contentType = message.contentType ?? (message.role === "user" ? "plain" : "markdown");
-  h(() => {
+  y(() => {
     if (!contentRef.current) return;
     renderPort.renderMessage({
       containerEl: contentRef.current,
@@ -74933,7 +75598,7 @@ function AiChatModalContainer({ closeModal, services }) {
     const list = sessionStore.getRecentSessions(20);
     setSessions(list);
   };
-  h(() => {
+  y(() => {
     loadSessions();
     const unsubscribe = sessionStore.subscribe(() => {
       loadSessions();
@@ -74953,14 +75618,14 @@ function AiChatModalContainer({ closeModal, services }) {
       takeLatestRef.current.dispose();
     };
   }, []);
-  h(() => {
+  y(() => {
     if (currentSessionId) {
       setMessages(sessionStore.getMessages(currentSessionId));
     } else {
       setMessages([]);
     }
   }, [currentSessionId]);
-  h(() => {
+  y(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   const handleNewSession = async () => {
@@ -75185,9 +75850,13 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onD
         "div",
         {
           class: "think-checkin-modal__item",
+          title: RECORD_GESTURE_HINT,
+          role: "button",
+          tabIndex: 0,
           onClick: gesture.onClick,
           onDblClick: gesture.onDblClick,
           onTouchEnd: gesture.onTouchEnd,
+          onKeyDown: gesture.onKeyDown,
           children: [
             /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-main", children: [
               /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-content", children: item.content || item.title || "无内容" }),
@@ -75624,7 +76293,7 @@ function SortableContext(_ref) {
       measureDroppableContainers(items);
     }
   }, [itemsHaveChanged, items, isDragging, measureDroppableContainers]);
-  h(() => {
+  y(() => {
     previousItemsRef.current = items;
   }, [items]);
   const contextValue = T$1(
@@ -75722,7 +76391,7 @@ function useDerivedTransform(_ref) {
       previousIndex.current = index;
     }
   }, [disabled, index, node2, rect]);
-  h(() => {
+  y(() => {
     if (derivedTransform) {
       setDerivedtransform(null);
     }
@@ -75844,7 +76513,7 @@ function useSortable(_ref) {
     node: node2,
     rect
   });
-  h(() => {
+  y(() => {
     if (isSorting && previous.current.newIndex !== newIndex) {
       previous.current.newIndex = newIndex;
     }
@@ -75855,7 +76524,7 @@ function useSortable(_ref) {
       previous.current.items = items;
     }
   }, [isSorting, newIndex, containerId, items]);
-  h(() => {
+  y(() => {
     if (activeId === previous.current.activeId) {
       return;
     }
@@ -76523,7 +77192,7 @@ function AiSettings(_props) {
   const [saveStatusSeverity, setSaveStatusSeverity] = d("info");
   const isMountedRef = useIsMounted();
   const takeLatestRef = A$1(createTakeLatest());
-  h(() => {
+  y(() => {
     return () => {
       takeLatestRef.current.dispose();
     };
@@ -76897,7 +77566,7 @@ function OptionRow({
   const renderCountRef = A$1(0);
   const previousOptionRef = A$1(null);
   renderCountRef.current += 1;
-  h(() => {
+  y(() => {
     logRenderDiagnostic("FieldsEditor/OptionRow", {
       renderCount: renderCountRef.current,
       fieldType,
@@ -76908,7 +77577,7 @@ function OptionRow({
     });
     previousOptionRef.current = option;
   });
-  h(() => {
+  y(() => {
     setLocalOption(option);
   }, [option]);
   const commitOption = (nextOption, reason) => {
@@ -77002,7 +77671,7 @@ function FieldRow({
   const renderCountRef = A$1(0);
   const previousFieldRef = A$1(null);
   renderCountRef.current += 1;
-  h(() => {
+  y(() => {
     logRenderDiagnostic("FieldsEditor/FieldRow", {
       renderCount: renderCountRef.current,
       fieldId: field.id,
@@ -77018,10 +77687,10 @@ function FieldRow({
     });
     previousFieldRef.current = field;
   });
-  h(() => {
+  y(() => {
     if (!isEditing) setLocalName(field.label || field.key);
   }, [field.label, field.key, isEditing]);
-  h(() => {
+  y(() => {
     setLocalDefaultValue(field.defaultValue || "");
   }, [field.defaultValue, field.id]);
   const handleNameBlur = () => {
@@ -77228,7 +77897,7 @@ function FieldsEditor({
   const previousFieldsRef = A$1(null);
   const [draggingIndex, setDraggingIndex] = d(null);
   renderCountRef.current += 1;
-  h(() => {
+  y(() => {
     logRenderDiagnostic("FieldsEditor", {
       renderCount: renderCountRef.current,
       disabled,
@@ -77321,7 +77990,7 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
 }
 function BlockEditor({ block, useCases }) {
   const [localBlock, setLocalBlock] = d(block);
-  h(() => {
+  y(() => {
     setLocalBlock(block);
   }, [block]);
   const handleUpdate = (updates) => {
@@ -77589,12 +78258,10 @@ function mergeDefaultValues(draft, themeIcon) {
   const themePath = normalizeThemePath(draft.themePath) || readThemePathFromFields(draft.fields);
   if (themePath) {
     result.themePath = themePath;
-    result["主题"] = themePath;
   }
   const icon = compactText(themeIcon) || readIconFromFields(draft.fields);
   if (icon) {
     result.icon = icon;
-    result["图标"] = icon;
   }
   return result;
 }
@@ -77756,7 +78423,7 @@ function cleanDefaultValuesOverride(draft, block, goal, themeIcon) {
   const merged = mergeDefaultValues(draft, themeIcon);
   const baseDefaults = getFieldDefaultMap(block?.fields);
   const result = {};
-  const allowSystemDefault = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
+  const allowSystemDefault = /* @__PURE__ */ new Set(["themePath", "icon"]);
   const forbiddenKeys = /* @__PURE__ */ new Set([
     "legacyOverrideId",
     "legacyThemePath",
@@ -77786,18 +78453,16 @@ function cleanDefaultValuesOverride(draft, block, goal, themeIcon) {
     const value = compactText(raw);
     if (!value) return;
     if (isSystemRecordContextField(key) && !allowSystemDefault.has(key)) return;
-    if ((key === "themePath" || key === "主题") && value === goalThemePath) return;
-    if ((key === "themePath" || key === "主题") && value === "{{goal.themePath}}") return;
+    if (key === "themePath" && value === goalThemePath) return;
+    if (key === "themePath" && value === "{{goal.themePath}}") return;
     if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
     result[key] = value;
   });
   if (draft.themePath && draft.themePath !== goalThemePath) {
     result.themePath = draft.themePath;
-    result["主题"] = draft.themePath;
   }
   if (themeIcon && draft.themePath && draft.themePath !== goalThemePath) {
     result.icon = themeIcon;
-    result["图标"] = themeIcon;
   }
   return Object.keys(result).length ? result : void 0;
 }
@@ -77925,7 +78590,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
     () => sortedVariants.find((template) => (template.variantId || "default") === selectedVariantId) || null,
     [sortedVariants, selectedVariantId]
   );
-  h(() => {
+  y(() => {
     if (!isOpen) return;
     const initial = initialVariantId ? sortedVariants.find((template) => (template.variantId || "default") === initialVariantId || template.id === initialVariantId) || null : null;
     if (initial) {
@@ -77945,7 +78610,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
     draftRef.current = nextDraft;
     setDraft(nextDraft);
   }, [isOpen, goal?.id, goal?.themePath, block?.id, initialVariantId, sortedVariants.length, themes.length]);
-  h(() => {
+  y(() => {
     draftRef.current = draft;
   }, [draft]);
   const updateDraft = (updates) => {
@@ -78302,7 +78967,7 @@ const mutedStyle = {
   whiteSpace: "nowrap"
 };
 function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks, onDeleteTemplate }) {
-  h(() => {
+  y(() => {
     if (!state) return void 0;
     const onKey = (event) => {
       if (event.key === "Escape") onClose();
@@ -78481,7 +79146,7 @@ function GoalPresetCard({
   );
 }
 function cleanPathSegment(value) {
-  return value.trim().replace(/^[#＃]+\s*/, "").trim();
+  return value.trim();
 }
 function getGoalDisplayPath(goal) {
   return getGoalOrderPath(goal) || cleanPathSegment(goal.id);
@@ -78539,7 +79204,7 @@ function normalizeSearchText(value) {
   return String(value || "").toLowerCase().trim();
 }
 function cleanDisplayText(value) {
-  return String(value ?? "").replace(/^[#＃]+\s*/, "").trim();
+  return String(value ?? "").trim();
 }
 function isGeneratedPresetName(value) {
   const text2 = String(value ?? "").trim();
@@ -79037,11 +79702,11 @@ function GoalTemplateMatrix() {
   const [goalDrop, setGoalDrop] = d(null);
   const [draggingPreset, setDraggingPreset] = d(null);
   const [presetDropCell, setPresetDropCell] = d(null);
-  h(() => {
+  y(() => {
     if (!coreBlocks.length) return;
     setActiveBlockIds((previous) => previous.size > 0 ? previous : new Set(coreBlocks.map((block) => block.id)));
   }, [coreBlocks]);
-  h(() => {
+  y(() => {
     setExpandedPaths((previous) => addAllGoalPaths(previous, allGoalPaths));
   }, [allGoalPaths]);
   const isBlockActive = (blockId) => activeBlockIds.size === 0 || activeBlockIds.has(blockId);
@@ -80882,7 +81547,7 @@ class ThinkPlugin extends obsidian.Plugin {
     return toCurrentThinkSettings(await this.loadData());
   }
   sanitizeSettingsForPersistence(settings) {
-    const cloned = JSON.parse(JSON.stringify(settings ?? {}));
+    const cloned = toPersistedThinkSettings(settings);
     const aiSettings = cloned.aiSettings;
     if (aiSettings && typeof aiSettings === "object" && aiSettings.persistApiKey !== true) {
       aiSettings.apiKey = "";
@@ -80891,7 +81556,7 @@ class ThinkPlugin extends obsidian.Plugin {
   }
   async saveSettings() {
     if (isDisposed()) return;
-    await this.saveData(this.serviceManager.settingsRepository.getSettings());
+    await this.saveData(this.sanitizeSettingsForPersistence(this.serviceManager.settingsRepository.getSettings()));
   }
   // 提供服务访问方法（P0-1: 已移除 appStore getter）
   get dataStore() {

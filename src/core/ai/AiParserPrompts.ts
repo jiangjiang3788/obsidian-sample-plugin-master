@@ -88,11 +88,11 @@ export function buildAiSystemPrompt(snapshot: AiParserSnapshot, customPrompt: st
         '8. For 计划/总结, do not invent 周期 fields. The app derives period from the selected preset periodPolicy and 日期.',
         '',
         '=== EXAMPLE ===',
-        'If user says "记录今天运动 30 分钟" and goal/preset include "#强健身体 × core.habit → 运动打卡(健康/运动)":',
+        'If user says "记录今天运动 30 分钟" and goal/preset include "强健身体 × core.habit → 运动打卡(健康/运动)":',
         '{',
         '  "items": [{',
         '    "rawText": "记录今天运动 30 分钟",',
-        '    "target": { "blockId": "core.habit", "categoryKey": "打卡", "goalPath": "#强健身体", "goalTemplateId": "goal-template.goal.health.core.habit.running", "templateVariantId": "running", "themeId": "健康/运动" },',
+        '    "target": { "blockId": "core.habit", "categoryKey": "打卡", "goalPath": "强健身体", "goalTemplateId": "goal-template.goal.health.core.habit.running", "templateVariantId": "running", "themeId": "健康/运动" },',
         '    "fieldValues": { "日期": "2024-01-15", "内容": "运动 30 分钟" },',
         '    "meta": { "confidence": 0.95 }',
         '  }]',
@@ -148,7 +148,7 @@ export function buildAiUserPrompt(text: string, nowIso: string, maxResults: numb
 /** 快速模式用户提示：只保留必要字段，减少请求体积和模型推理负担。 */
 export function buildAiFastUserPrompt(text: string, nowIso: string, maxResults: number, snapshot: AiParserSnapshot): string {
     const themePaths = (snapshot.themes ?? []).map((theme) => theme.path).filter(Boolean);
-    const goalPaths = (snapshot.goals ?? []).map((goal) => goal.path).filter(Boolean);
+    const availableGoalPaths = (snapshot.goals ?? []).map((goal) => goal.path).filter(Boolean);
     const compactPresets = (snapshot.goalPresets ?? []).map((preset) => ({
         goalPath: preset.goalPath,
         blockId: preset.blockId,
@@ -171,7 +171,7 @@ export function buildAiFastUserPrompt(text: string, nowIso: string, maxResults: 
         'Fast mode: prefer the simplest correct parse. Return compact JSON only.',
         '',
         'Goals:',
-        goalPaths.join(' | '),
+        availableGoalPaths.join(' | '),
         '',
         'Goal presets:',
         JSON.stringify(compactPresets),

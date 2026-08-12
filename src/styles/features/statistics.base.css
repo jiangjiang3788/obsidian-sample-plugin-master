@@ -4,9 +4,10 @@
  * --- StatisticsView & Popover 样式 ---
  */
 .statistics-view {
-    padding: 8px;
-    background: var(--think-panel-bg);
-    border-radius: 8px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
     box-sizing: border-box;
 }
 .statistics-view-placeholder {

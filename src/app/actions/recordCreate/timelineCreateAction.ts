@@ -63,5 +63,5 @@ function buildTimelineCreateConfig(params: TimelineCreateParams): QuickInputConf
 }
 
 export function openCreateFromTimeline(params: TimelineCreateParams): boolean {
-  return openCreateModal(params.app, buildTimelineCreateConfig(params), 'view_quick_create');
+  return openCreateModal(params.app, buildTimelineCreateConfig(params), 'view_quick_create', { allowBlockSwitch: false });
 }

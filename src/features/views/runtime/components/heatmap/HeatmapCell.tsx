@@ -1,10 +1,11 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RecordViewItem } from '@core/types/public';
-import type { ResolveResourcePathHandler } from '@shared/types/public';
+import type { OpenRecordOriginHandler, ResolveResourcePathHandler } from '@shared/types/public';
 import { dayjs } from '@core/utils/public';
 import { getEffectiveDisplayCount, getEffectiveLevelCount, getLatestHeatmapVisualValue } from '@core/utils/public';
 import { isImagePath, isHexColor } from '@core/utils/public';
+import { hasPlatformModifier, isKeyboardActivation, stopInteractionEvent } from '@shared/ui/public';
 
 interface HeatmapCellProps {
     date: string;
@@ -12,6 +13,7 @@ interface HeatmapCellProps {
     config: any;
     resolveResourcePath?: ResolveResourcePathHandler;
     onCellClick: (date: string, items?: RecordViewItem[]) => void;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
     ratingMapping: Map<string, string>;
     highlightToday?: boolean;
     emptyLabel?: string;
@@ -35,7 +37,8 @@ export function generateCellTooltip(date: string, items?: RecordViewItem[], disp
         latestItem.rating !== undefined ? `⭐ 最后评分: ${latestItem.rating}` : '',
         latestItem.content ? `💭 最后内容: ${latestItem.content}` : '',
         '',
-        '💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增'
+        '💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增',
+        items.length === 1 ? '⌨️ Ctrl/⌘+点击：打开该条记录原文' : ''
     ].filter(Boolean).join('\n');
 }
 
@@ -56,6 +59,7 @@ export function HeatmapCell({
     ratingMapping, 
     resolveResourcePath,
     onCellClick,
+    onOpenRecordOrigin,
     highlightToday = true,
     emptyLabel
 }: HeatmapCellProps) {
@@ -126,7 +130,25 @@ export function HeatmapCell({
             class={`heatmap-cell ${isToday ? 'current-day' : ''} ${item ? 'has-data' : 'empty'}`}
             style={cellStyle}
             title={title}
-            onClick={() => onCellClick(date, items)}
+            role="button"
+            tabIndex={0}
+            onClick={(event: MouseEvent) => {
+                if (items?.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
+                    stopInteractionEvent(event);
+                    void onOpenRecordOrigin(items[0]);
+                    return;
+                }
+                onCellClick(date, items);
+            }}
+            onKeyDown={(event: KeyboardEvent) => {
+                if (!isKeyboardActivation(event)) return;
+                stopInteractionEvent(event);
+                if (items?.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
+                    void onOpenRecordOrigin(items[0]);
+                    return;
+                }
+                onCellClick(date, items);
+            }}
         >
             <div class="heatmap-cell-content">
                 {cellContent}

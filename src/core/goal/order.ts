@@ -11,15 +11,15 @@ function finiteNumber(value: unknown, fallback: number): number {
 }
 
 function normalizeOrderPath(value: unknown): string {
-  return splitGoalPath(String(value ?? '')).goalPath || String(value ?? '').trim();
+  return splitGoalPath(String(value ?? '')).goalPath || '';
 }
 
 function leafGoalLabel(value: unknown): string {
   const parsed = splitGoalPath(String(value ?? ''));
-  return parsed.leafGoal || parsed.goalPath || String(value ?? '').trim();
+  return parsed.leafGoal || parsed.goalPath || '';
 }
 
-/** 目标在所有视图里的规范显示路径：去掉开头 #，保留层级。 */
+/** 目标在所有视图里的规范显示路径：canonical slash path。 */
 export function getGoalOrderPath(goal: GoalDefinition | null | undefined): string {
   if (!goal) return '';
   return normalizeOrderPath(goal.goalPath || goal.title || goal.id);

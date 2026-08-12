@@ -11,7 +11,8 @@ export interface CompactGoalTemplateOptions {
   goal?: Pick<GoalDefinition, 'themePath'> | null;
 }
 
-const ALLOWED_SYSTEM_DEFAULT_KEYS = new Set(['themePath', '主题', 'icon', '图标']);
+const ALLOWED_SYSTEM_DEFAULT_KEYS = new Set(['themePath', 'icon']);
+const GOAL_CONTEXT_FIELD_KEYS = new Set(['goalId', '目标ID', 'goalPath', '目标', '目标路径', 'rootGoal', 'leafGoal']);
 const FORBIDDEN_DEFAULT_KEYS = new Set([
   'legacyOverrideId',
   'legacyThemePath',
@@ -36,6 +37,19 @@ const FORBIDDEN_DEFAULT_KEYS = new Set([
   'goalGranularity',
 ]);
 
+
+
+function isGoalContextField(field: TemplateField): boolean {
+  const source = field as any;
+  const semantic = compactText(source.semantic || source.semanticType);
+  const key = compactText(source.key || source.label);
+  return semantic === 'goalId' || semantic === 'goalPath' || GOAL_CONTEXT_FIELD_KEYS.has(key);
+}
+
+function stripGoalContextFields(fields?: TemplateField[]): TemplateField[] | undefined {
+  const result = (fields || []).filter((field) => !isGoalContextField(field));
+  return result.length ? result : undefined;
+}
 
 function stableJson(value: unknown): string {
   const seen = new WeakSet<object>();
@@ -107,12 +121,13 @@ function compactDefaultValues(
   const goalThemePath = compactText(goal?.themePath);
   const result: Record<string, unknown> = {};
 
-  Object.entries(values || {}).forEach(([key, raw]) => {
+  Object.entries(values || {}).forEach(([rawKey, raw]) => {
+    const key = rawKey === '主题' ? 'themePath' : rawKey === '图标' ? 'icon' : rawKey;
     if (FORBIDDEN_DEFAULT_KEYS.has(key)) return;
     const value = compactText(raw);
     if (!value) return;
     if (isSystemRecordContextField(key) && !ALLOWED_SYSTEM_DEFAULT_KEYS.has(key)) return;
-    if ((key === 'themePath' || key === '主题') && (value === goalThemePath || value === '{{goal.themePath}}')) return;
+    if (key === 'themePath' && (value === goalThemePath || value === '{{goal.themePath}}')) return;
     if (baseDefaults[key] !== undefined && baseDefaults[key] === value) return;
     result[key] = raw;
   });
@@ -136,9 +151,7 @@ function normalizePeriodPolicyForTemplate(template: GoalTemplate): PeriodPolicy 
 export function compactGoalTemplateForStorage(template: GoalTemplate, options: CompactGoalTemplateOptions = {}): GoalTemplate {
   const coreBlock = options.coreBlock || null;
   const baseFields = coreBlock?.fields as TemplateField[] | undefined;
-  const next: GoalTemplate = {
-    ...template,
-  };
+  const next: GoalTemplate = { ...template, fields: stripGoalContextFields(template.fields) };
 
   if (!isPeriodAwareCoreBlock(template.coreBlockId)) {
     next.periodPolicy = undefined;
@@ -147,12 +160,12 @@ export function compactGoalTemplateForStorage(template: GoalTemplate, options: C
   }
 
   if (coreBlock) {
-    if (fieldsHaveSameStructure(template.fields, baseFields)) next.fields = undefined;
+    if (fieldsHaveSameStructure(next.fields, stripGoalContextFields(baseFields))) next.fields = undefined;
     if (compactText(template.targetFile) === compactText(coreBlock.targetFile)) next.targetFile = undefined;
     if (compactText(template.appendUnderHeader) === compactText(coreBlock.appendUnderHeader)) next.appendUnderHeader = undefined;
 
-    const explicitRequired = template.requiredFields && template.requiredFields.length ? template.requiredFields : deriveRequiredFields(template.fields);
-    const baseRequired = deriveRequiredFields(baseFields);
+    const explicitRequired = (template.requiredFields && template.requiredFields.length ? template.requiredFields : deriveRequiredFields(template.fields)).filter((key) => !GOAL_CONTEXT_FIELD_KEYS.has(compactText(key)));
+    const baseRequired = deriveRequiredFields(baseFields).filter((key) => !GOAL_CONTEXT_FIELD_KEYS.has(compactText(key)));
     next.requiredFields = equalStringSet(explicitRequired || [], baseRequired) ? undefined : (explicitRequired || []).filter(Boolean);
   } else if (next.requiredFields && !next.requiredFields.length) {
     next.requiredFields = undefined;

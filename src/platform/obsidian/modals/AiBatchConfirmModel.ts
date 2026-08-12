@@ -142,7 +142,7 @@ export function buildAiBatchConfirmRecordItems({
       cmd,
       blockId: block?.id || '',
       themeId,
-      goalLabel: goalDisplayName(goal, goalPath),
+      goalLabel: goalDisplayName(goal, goalPath ?? undefined),
       presetLabel: presetDisplayName(preset),
       themePath,
       formData: normalizeRecordInputFormDataForTemplate(initialTemplate ?? undefined, initialFormData),

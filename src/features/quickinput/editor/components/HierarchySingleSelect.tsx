@@ -30,7 +30,7 @@ export interface HierarchySingleSelectProps {
 
 
 function cleanLabel(value: string): string {
-  return String(value || '').replace(/^[#＃]+\s*/, '').trim();
+  return String(value || '').trim();
 }
 
 function leafLabel(path: string): string {

@@ -5,6 +5,8 @@ export interface RetrievalFilters {
     themePaths?: string[];
     /** Canonical business type filter (RecordViewItem.coreBlock). */
     coreBlocks?: string[];
+    /** @deprecated R6 compatibility alias. New callers use coreBlocks. */
+    types?: string[];
     /** Block 模板 ID 过滤（通过 item.templateId/templateId 匹配） */
     blockTemplateIds?: string[];
     /** Block 模板名称过滤（通过 categoryKey/root category 匹配） */

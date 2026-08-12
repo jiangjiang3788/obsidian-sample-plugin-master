@@ -87,7 +87,7 @@ const MEDIUM_RISK_FIELDS = new Set<string>([
   'categoryKey',
   'theme',
   'tags',
-  'goalPaths',
+  'goalPath',
 ]);
 
 const HIGH_RISK_FIELDS = new Set<string>([

@@ -65,7 +65,7 @@ export function DataFilterPanel({
   const activeCount = filters.length;
   const sourceItems = items ?? dataStore.queryItems();
   const fieldOptions = useMemo(() => getAllFields(sourceItems), [sourceItems]);
-  const commonFilterFields = useMemo(() => ['goalPath', 'goalPaths', 'goalId', 'coreBlock', 'themePath', 'baseCategory', 'status', 'cadence', 'priority', 'period'], []);
+  const commonFilterFields = useMemo(() => ['goalPath', 'goalId', 'coreBlock', 'themePath', 'baseCategory', 'status', 'cadence', 'priority', 'period'], []);
   const hasAdvancedFilters = useMemo(() => filters.some(rule => (
     rule.op !== 'in' || !commonFilterFields.includes(rule.field)
   )), [filters, commonFilterFields]);
@@ -139,7 +139,7 @@ export function DataFilterPanel({
 
         <Divider />
 
-        <DialogContent sx={{ p: 2.5, overflow: 'auto' }}>
+        <DialogContent sx={{ p: 2.5, overflow: 'auto', background: 'var(--background-primary)' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <CommonFilterPanel
               title="常用筛选"
@@ -155,10 +155,17 @@ export function DataFilterPanel({
               expanded={advancedOpen}
               onChange={(_, expanded: boolean) => setAdvancedOpen(expanded)}
               disableGutters
+              elevation={0}
               sx={{
-                border: '1px solid var(--background-modifier-border)',
-                borderRadius: '10px',
+                border: 0,
+                borderTop: '1px solid var(--background-modifier-border)',
+                borderRadius: 0,
+                background: 'transparent',
+                boxShadow: 'none',
                 '&:before': { display: 'none' },
+                '& .MuiAccordionSummary-root': { px: 0, minHeight: '48px' },
+                '& .MuiAccordionSummary-content': { my: 1 },
+                '& .MuiAccordionDetails-root': { px: 0, pb: 0 },
               }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>

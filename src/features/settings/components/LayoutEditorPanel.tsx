@@ -9,7 +9,7 @@
 import { h } from 'preact';
 import { useMemo, useCallback, useState, useRef } from 'preact/hooks';
 import { useUseCases, useSelector } from '@/app/public';
-import { ArrowBackIosNewIcon, ArrowForwardIosIcon, IconAction } from '@shared/ui/public';
+import { ArrowBackIosNewIcon, ArrowForwardIosIcon, IconAction, Modal } from '@shared/ui/public';
 import type { UseCases } from '@/app/public';
 import type { Layout, ViewInstance } from '@core/types/public';
 
@@ -40,6 +40,8 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
   const [contextMenu, setContextMenu] = useState<
     { mouseX: number; mouseY: number; viewId: string; viewTitle: string } | null
   >(null);
+  const [renameTarget, setRenameTarget] = useState<{ viewId: string; viewTitle: string } | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const handleUpdate = useCallback(
     (updates: Partial<Layout>) => {
@@ -156,14 +158,27 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     handleContextMenuClose();
   }, [contextMenu, allViews, handleContextMenuClose]);
 
+  const openViewRename = useCallback((viewId: string, viewTitle: string) => {
+    setRenameTarget({ viewId, viewTitle });
+    setRenameValue(viewTitle);
+  }, []);
+
   const handleViewRename = useCallback(() => {
     if (!contextMenu) return;
-    const newName = prompt('请输入新的视图名称', contextMenu.viewTitle);
-    if (newName && newName.trim()) {
-      _useCases.viewInstance.updateView(contextMenu.viewId, { title: newName.trim() });
-    }
+    openViewRename(contextMenu.viewId, contextMenu.viewTitle);
     handleContextMenuClose();
-  }, [contextMenu, _useCases, handleContextMenuClose]);
+  }, [contextMenu, openViewRename, handleContextMenuClose]);
+
+  const handleRenameSave = useCallback(async () => {
+    if (!renameTarget) return;
+    const title = renameValue.trim();
+    if (!title || title === renameTarget.viewTitle) {
+      setRenameTarget(null);
+      return;
+    }
+    await _useCases.viewInstance.updateView(renameTarget.viewId, { title });
+    setRenameTarget(null);
+  }, [renameTarget, renameValue, _useCases.viewInstance]);
 
   const handleViewRemove = useCallback(() => {
     if (!contextMenu) return;
@@ -305,6 +320,29 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={Boolean(renameTarget)}
+        onClose={() => setRenameTarget(null)}
+        title="重命名视图"
+        size="small"
+        onSave={handleRenameSave}
+        saveButtonText="重命名"
+      >
+        <TextField
+          fullWidth
+          autoFocus
+          label="视图名称"
+          value={renameValue}
+          onInput={(event: Event) => setRenameValue((event.target as HTMLInputElement).value)}
+          onKeyDown={(event: KeyboardEvent) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              void handleRenameSave();
+            }
+          }}
+        />
+      </Modal>
     </Stack>
   );
 }

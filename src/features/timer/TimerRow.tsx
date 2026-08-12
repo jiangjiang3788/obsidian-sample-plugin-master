@@ -14,6 +14,7 @@ import {
   Tooltip,
   Typography,
   createRecordGestureHandlers,
+  RECORD_GESTURE_HINT,
 } from '@shared/ui/public';
 import type { DataStore } from '@core/services/public';
 import type { RecordViewItem } from '@core/types/public';
@@ -68,7 +69,7 @@ export function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenR
                 </div>
             ) : null}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-                <Tooltip title={taskItem ? `\u70b9\u51fb\u7f16\u8f91\uff1bCtrl/\u2318+\u70b9\u51fb\u6216\u53cc\u51fb\u6253\u5f00\u539f\u6587\uff1a${taskItem?.title}` : '\u4efb\u52a1\u5df2\u4e0d\u5b58\u5728'}>
+                <Tooltip title={taskItem ? `${RECORD_GESTURE_HINT}：${taskItem?.title}` : '\u4efb\u52a1\u5df2\u4e0d\u5b58\u5728'}>
                     <div
                         style={{
                             flexGrow: 1,
@@ -80,9 +81,12 @@ export function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenR
                             textOverflow: 'ellipsis',
                             cursor: taskItem ? 'pointer' : 'default'
                         }}
+                        role={taskItem ? 'button' : undefined}
+                        tabIndex={taskItem ? 0 : undefined}
                         onClick={titleGesture ? (titleGesture.onClick as any) : undefined}
                         onDblClick={titleGesture ? (titleGesture.onDblClick as any) : undefined}
                         onTouchEnd={titleGesture ? (titleGesture.onTouchEnd as any) : undefined}
+                        onKeyDown={titleGesture ? (titleGesture.onKeyDown as any) : undefined}
                     >
                         <Typography variant="body2" noWrap>{taskItem?.title || '\u4efb\u52a1\u5df2\u4e0d\u5b58\u5728'}</Typography>
                     </div>

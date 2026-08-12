@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useRef } from 'preact/hooks';
 import type { TaskBlock } from '@core/types/public';
-import { createRecordGestureHandlers } from '@shared/ui/public';
+import { createRecordGestureHandlers, RECORD_GESTURE_HINT } from '@shared/ui/public';
 import { mapTaskToCategory } from '@core/utils/public';
 import { dayjs } from '@core/utils/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
@@ -48,11 +48,11 @@ const generateTaskBlockTitle = (block: TaskBlock): string => {
         const endDateTime = startDateTime.add(block.duration, 'minute');
         const startFormat = startDateTime.format('HH:mm');
         const endFormat = endDateTime.format('HH:mm');
-        return `任务: ${block.pureText}\n时间: ${startFormat} - ${endFormat}`;
+        return `任务: ${block.pureText}\n时间: ${startFormat} - ${endFormat}\n${RECORD_GESTURE_HINT}`;
     } else {
         const startTime = formatTimeMinute(block.startMinute);
         const endTime = formatTimeMinute(block.endMinute);
-        return `任务: ${block.pureText}\n时间: ${startTime} - ${endTime}`;
+        return `任务: ${block.pureText}\n时间: ${startTime} - ${endTime}\n${RECORD_GESTURE_HINT}`;
     }
 };
 
@@ -187,9 +187,12 @@ export function DayColumnBody({
                     >
                         <a 
                             class="timeline-task-link"
+                            role="button"
+                            tabIndex={0}
                             onClick={blockGesture.onClick as any}
                             onDblClick={blockGesture.onDblClick as any}
                             onTouchEnd={blockGesture.onTouchEnd as any}
+                            onKeyDown={blockGesture.onKeyDown as any}
                         >
                             <div class="timeline-task-indicator" style={{ background: color }}></div>
                             <div class="timeline-task-content" style={{ background: hexToRgba(color) }}>

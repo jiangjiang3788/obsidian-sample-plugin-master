@@ -33,7 +33,7 @@ function session(id: string, duration: number, startedAt: string): RecordViewIte
     sessionResult: 'work-block-ended',
     sessionSource: 'timer',
     extra: {},
-  } as RecordViewItem;
+  } as unknown as RecordViewItem;
 }
 
 describe('Energy action policy', () => {

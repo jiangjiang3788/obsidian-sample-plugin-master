@@ -1,91 +1,94 @@
-/* Statistics chart blocks, bars and labels. */
-/* 图表块样式 */
+/* Statistics chart rows: charts remain charts, but the shell is a flat list surface.
+ * Period hierarchy is expressed by indentation/separators in statistics.grids.css.
+ */
 .sv-chart-block {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    border-radius: 6px;
-    background: var(--think-bg-canvas);
-    cursor: pointer;
-    transition: all var(--think-duration-normal) var(--think-ease-standard);
-    padding: 8px;
-    height: 180px;
+    gap: var(--think-space-1);
+    height: 120px;
     min-width: 0;
+    padding: var(--think-space-2) 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color var(--think-duration-normal) var(--think-ease-standard);
 }
 
 .sv-chart-block.is-compact {
-    height: 110px;
-    padding: 6px;
-    gap: 3px;
+    height: 84px;
+    padding: var(--think-space-2) 0;
+    gap: var(--think-space-1);
 }
 
 .sv-chart-block:hover {
-    border-color: var(--think-accent);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-s);
+    background: color-mix(in srgb, var(--think-bg-hover) 42%, transparent);
+    box-shadow: none;
+    transform: none;
 }
 
-.sv-chart-block.is-empty .sv-chart-label {
+.sv-chart-block.is-empty .sv-chart-label,
+.sv-chart-block.is-empty .sv-chart-number,
+.sv-chart-block.is-empty .sv-chart-category {
     color: var(--think-text-subtle);
 }
 
-/* 图表标题 */
-.sv-chart-label {
-    /* font-size: 13px; -> 使用工具类: think-text-chart-title */
-    font-weight: 600;
-    color: var(--think-text-primary);
-    text-align: center;
-    flex-shrink: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.sv-chart-block.is-empty .sv-vbar-bar {
+    opacity: 0.28;
 }
 
-/* 图表内容容器 */
+.sv-chart-label {
+    flex-shrink: 0;
+    overflow: hidden;
+    color: var(--think-text-primary);
+    font-weight: var(--think-font-weight-semibold);
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .sv-chart-content {
     display: flex;
-    flex-direction: column;
-    gap: 3px;
     flex-grow: 1;
+    flex-direction: column;
+    gap: var(--think-space-1);
     min-height: 0;
 }
 
-/* 数字标签行 */
 .sv-chart-numbers {
     display: flex;
-    gap: 2px;
-    justify-content: space-between;
     align-items: center;
-    min-height: 14px;
+    justify-content: space-between;
+    gap: 2px;
+    min-height: 12px;
 }
 
 .sv-chart-number {
     flex: 1;
-    text-align: center;
-    /* font-size: 12px; -> 使用工具类: think-text-chart-value */
+    min-height: 12px;
     color: var(--think-text-secondary);
-    font-weight: 600;
+    font-weight: var(--think-font-weight-semibold);
+    line-height: 12px;
+    text-align: center;
     white-space: nowrap;
-    min-height: 14px;
-    line-height: 14px;
 }
 
-/* 柱状图容器 */
 .sv-chart-bars-container {
     display: flex;
-    gap: 3px;
     flex-grow: 1;
     align-items: flex-end;
-    min-height: 40px;
+    gap: 2px;
+    min-height: 32px;
+    border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 72%, transparent);
 }
 
 .sv-vbar-wrapper {
+    display: flex;
     flex: 1;
+    align-items: flex-end;
+    justify-content: center;
     min-width: 0;
     height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
     cursor: pointer;
 }
 
@@ -95,30 +98,28 @@
 
 .sv-vbar-bar {
     width: 100%;
+    min-height: 2px;
     border-radius: 3px 3px 0 0;
     background: var(--think-data-neutral);
-    min-height: 2px;
-    transition: all 0.3s ease;
+    transition: height var(--think-duration-normal) var(--think-ease-standard);
 }
 
-/* 分类标签行 */
 .sv-chart-categories {
     display: flex;
-    gap: 2px;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    gap: 2px;
     min-height: 14px;
 }
 
 .sv-chart-category {
     flex: 1;
-    text-align: center;
-    /* font-size: 11px; -> 使用工具类: think-text-chart-value */
-    color: var(--think-text-secondary);
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     min-height: 14px;
-    line-height: 14px;
+    overflow: hidden;
+    color: var(--think-text-secondary);
+    font-weight: var(--think-font-weight-medium);
+    line-height: 12px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

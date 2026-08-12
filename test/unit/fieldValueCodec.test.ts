@@ -29,3 +29,10 @@ describe('FieldValueCodec', () => {
     expect(decodeUnknownMarkdownKvValue('项目/插件')).toBe('项目/插件');
   });
 });
+
+it('keeps Goal path separate from Tag syntax', () => {
+  expect(decodeMarkdownFieldValue('照顾好自己/睡眠', FIELD_CODEC_PRESETS.goalPath)).toBe('照顾好自己/睡眠');
+  expect(decodeMarkdownFieldValue('#照顾好自己', FIELD_CODEC_PRESETS.goalPath)).toBeUndefined();
+  expect(encodeFieldValueForMarkdown('照顾好自己', FIELD_CODEC_PRESETS.goalPath)).toBe('照顾好自己');
+  expect(() => encodeFieldValueForMarkdown('#照顾好自己', FIELD_CODEC_PRESETS.goalPath)).toThrow(/Goal is not Tag/);
+});

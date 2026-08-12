@@ -9,7 +9,7 @@ interface Props {
   title?: string;
   className?: string;
   style?: JSX.CSSProperties;
-  onClick?: () => void;
+  onClick?: (event?: MouseEvent | KeyboardEvent) => void;
   cell?: boolean;
 }
 
@@ -25,7 +25,7 @@ interface Props {
 export function EnergyDot({ visual, selected = false, title, className = '', style, onClick, cell = false }: Props) {
   const label = title || (visual.capture === 'retrospective' ? '补录精力点' : '实时精力点');
   const interactive = Boolean(onClick);
-  const activate = () => onClick?.();
+  const activate = (event?: MouseEvent | KeyboardEvent) => onClick?.(event);
 
   return (
     <svg
@@ -35,12 +35,12 @@ export function EnergyDot({ visual, selected = false, title, className = '', sty
       aria-label={label}
       class={`think-energy-dot ${cell ? 'is-cell' : 'is-plot'} is-${visual.capture} is-band-${visual.band} ${selected ? 'is-selected' : ''} ${className}`.trim()}
       style={style}
-      onClick={activate}
+      onClick={(event) => activate(event)}
       onKeyDown={(event) => {
         if (!interactive) return;
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          activate();
+          activate(event);
         }
       }}
     >

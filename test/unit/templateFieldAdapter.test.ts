@@ -32,7 +32,7 @@ describe('TemplateFieldAdapter', () => {
     expect(normalizeTemplateFieldValue(imageField, '![[a.png]]')).toBe('a.png');
 
     const template = {
-      fields: [{ key: 'score', label: '评分', type: 'rating', semanticType: 'ratingPair', auxKey: 'pintu' }],
+      fields: [{ id: 'score', key: 'score', label: '评分', type: 'rating', semanticType: 'ratingPair', auxKey: 'pintu' }],
     } satisfies Pick<RecordCaptureTemplate, 'fields'>;
     const data = normalizeTemplateRenderData(template, {
       score: { label: '不错', value: 'icons/good.png' },

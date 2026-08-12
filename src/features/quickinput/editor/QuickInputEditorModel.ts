@@ -37,10 +37,7 @@ export {
   preserveQuickInputBlockSwitchState,
 } from './quickInputFieldSourceModel';
 export {
-  cleanDisplayPath,
-  cleanDisplaySegment,
   getGoalPath,
-  makeGoalIdFromPath,
   splitPathParts,
   splitThemePathParts,
   themeOptions,

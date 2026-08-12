@@ -23,6 +23,7 @@ export interface StatisticsPopoverRequest {
   blocks: RecordViewItem[];
   module: ViewInstance;
   timerService: TimerController;
+  onMarkDone: MarkDoneHandler;
   timers: any[];
   allThemes: ThemeDefinition[];
   messageRenderPort?: MessageRenderPort;
@@ -84,6 +85,8 @@ export type OpenCheckinManagerHandler = (request: OpenCheckinManagerRequest) => 
  */
 export interface TimerController {
   startOrResume(taskId: string): Promise<void>;
+  /** Complete through the single Task runtime boundary. Active Timer sessions are persisted and cleared atomically. */
+  completeTask?(taskId: string): Promise<boolean>;
   /** Starts a task with the current Energy baseline; Timer remains the execution UI. */
   startEnergyTask?(taskId: string, context: EnergyTaskExecutionStart): Promise<void>;
 }

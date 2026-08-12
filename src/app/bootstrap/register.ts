@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { SETTINGS_PERSISTENCE_TOKEN, type ISettingsPersistence } from '@core/services/public';
 import { THEME_MATCHER_TOKEN } from '@core/types/public';
 import { devWarn } from '@core/utils/public';
+import { toPersistedThinkSettings } from '@core/types/public';
 
 import { diDebug } from '@/app/diagnostics/diDiagnostics';
 
@@ -34,7 +35,7 @@ export function registerSettingsPersistence(plugin: PluginHost): void {
 
     const sanitizeForPersistence = (settings: any) => {
         // 仅用于保存，避免影响内存中的当前设置
-        const cloned = JSON.parse(JSON.stringify(settings ?? {}));
+        const cloned = toPersistedThinkSettings(settings);
         const parsed = persistedSettingsGuard.safeParse(cloned);
         const out: any = parsed.success ? parsed.data : cloned;
 

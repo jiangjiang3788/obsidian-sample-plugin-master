@@ -122,8 +122,7 @@ function candidateForField(
     case '目标': {
       const explicit = first(renderData, ['目标', 'goalPath']);
       if (nonEmpty(explicit)) return explicit;
-      const paths = renderData.goalPaths;
-      return Array.isArray(paths) ? paths[0] : undefined;
+      return undefined;
     }
     case '日期':
       return first(renderData, ['日期', 'date']);
@@ -171,17 +170,16 @@ function contractForCaptureField(coreBlock: RecordCoreBlock, field: TemplateFiel
   }
   const semantic = getTemplateFieldSemantic(field);
   const keyBySemantic: Partial<Record<typeof semantic, string>> = {
-    body: '内容', themePath: '主题', tags: '标签', goalId: '目标ID', goalPath: '目标', goals: '目标',
+    body: '内容', themePath: '主题', tags: '标签', goalId: '目标ID', goalPath: '目标',
     date: '日期', recordSubtype: '记录子类型', rating: '评分', image: '图片', icon: '图标', period: '周期粒度',
   };
-  if (semantic === 'categoryPath' && coreBlock === 'thought') return getRecordFieldContract(coreBlock, '分类');
+  if (semantic === 'categoryPath' && coreBlock === 'thought') return getRecordFieldContract(coreBlock, '记录子类型');
   const key = keyBySemantic[semantic];
   return key ? getRecordFieldContract(coreBlock, key) : null;
 }
 
 function targetContract(coreBlock: RecordCoreBlock, contract: RecordFieldContract): RecordFieldContract | null {
   if (contract.persistence === 'target' || contract.persistence === 'omit-default') return contract;
-  if (contract.persistence === 'transitional' && contract.targetKey) return getRecordFieldContract(coreBlock, contract.targetKey);
   return null;
 }
 

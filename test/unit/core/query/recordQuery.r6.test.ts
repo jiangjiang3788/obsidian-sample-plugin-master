@@ -22,6 +22,7 @@ describe('RecordQuery R6', () => {
     record({ id: 'b', title: 'Beta', coreBlock: 'thought', themePath: '工作/A', date: '2026-08-12', extra: { 清晰度: 2, 发生时间: '2026-08-11T08:00:00' } }),
     record({ id: 'c', title: 'Closed undated', coreBlock: 'task', status: 'done', themePath: '生活/B' }),
     record({ id: 'd', title: 'Open undated', coreBlock: 'task', status: 'open', themePath: '生活/B' }),
+    record({ id: 'e', title: 'Open backlog', coreBlock: 'task', status: 'open', themePath: '生活/B', date: '2026-03-23', dueDate: '2026-03-23' }),
   ];
 
   test('filter groups are ANDed while each group preserves FilterRule logic', () => {
@@ -38,7 +39,15 @@ describe('RecordQuery R6', () => {
     const result = queryRecordItems(items, {
       date: { range: [new Date('2026-08-11'), new Date('2026-08-12')], mode: 'standard' },
     });
-    expect(result.map(item => item.id)).toEqual(['a', 'b', 'd']);
+    expect(result.map(item => item.id)).toEqual(['a', 'b', 'd', 'e']);
+  });
+
+
+  test('strict task-date queries remain date-bound even though default layout date keeps open backlog', () => {
+    const result = queryRecordItems(items, {
+      date: { range: [new Date('2026-08-11'), new Date('2026-08-12')], field: 'dueDate', mode: 'strict' },
+    });
+    expect(result.map(item => item.id)).toEqual([]);
   });
 
   test('strict custom-field date query excludes missing values and sorts by that field', () => {

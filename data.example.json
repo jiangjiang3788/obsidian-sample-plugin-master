@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "aiSettings": {
+    "enabled": false,
+    "apiEndpoint": "",
+    "apiKey": "",
+    "model": "",
+    "persistApiKey": false
+  }
+}

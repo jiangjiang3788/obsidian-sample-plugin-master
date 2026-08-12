@@ -54,6 +54,6 @@ describe('FieldBehavior', () => {
     const tags = field({ key: 'tags', type: 'multiTag' });
 
     expect(normalizeFieldValueByBehavior(paths, '学习 / 英语, 生活/健康')).toEqual(['学习/英语', '生活/健康']);
-    expect(normalizeFieldValueByBehavior(tags, ' #todo, 学习/英语, #todo ')).toEqual(['#todo', '学习/英语']);
+    expect(normalizeFieldValueByBehavior(tags, ' #todo, 学习/英语, #todo ')).toEqual(['todo', '学习/英语']);
   });
 });

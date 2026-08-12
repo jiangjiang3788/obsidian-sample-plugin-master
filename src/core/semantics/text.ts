@@ -11,7 +11,3 @@ export function compactText(value: unknown): string {
 export function normalizeTextToken(value: unknown): string {
   return compactText(value).toLowerCase();
 }
-
-export function compactTextWithoutLeadingHashes(value: unknown): string {
-  return compactText(value).replace(/^[#＃]+\s*/, '').trim();
-}

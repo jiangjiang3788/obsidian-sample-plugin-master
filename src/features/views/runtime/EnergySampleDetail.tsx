@@ -3,6 +3,8 @@ import { h } from 'preact';
 import type { JSX } from 'preact';
 import { classifyEnergyActivity, type EnergyManagementModel } from '@core/energy/public';
 import type { RecordViewItem } from '@core/types/public';
+import type { OpenRecordOriginHandler } from '@shared/types/public';
+import { createRecordGestureHandlers, RECORD_GESTURE_HINT } from '@shared/ui/public';
 import type { EnergyMapSelection } from './EnergyMapTypes';
 
 interface Props {
@@ -10,6 +12,33 @@ interface Props {
   management?: EnergyManagementModel | null;
   onBack?: () => void;
   onOpenRecord?: (item: RecordViewItem) => void;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
+}
+
+
+function RecordAction({ item, label, className = 'think-energy-detail__open', onOpenRecord, onOpenRecordOrigin }: {
+  item: RecordViewItem;
+  label: string;
+  className?: string;
+  onOpenRecord?: (item: RecordViewItem) => void;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
+}) {
+  const gesture = createRecordGestureHandlers({
+    item,
+    onPrimary: () => void onOpenRecord?.(item),
+    onOpenOrigin: onOpenRecordOrigin,
+  });
+  return (
+    <button
+      type="button"
+      class={className}
+      title={RECORD_GESTURE_HINT}
+      onClick={gesture.onClick}
+      onDblClick={gesture.onDblClick}
+      onTouchEnd={gesture.onTouchEnd}
+      onKeyDown={gesture.onKeyDown}
+    >{label}</button>
+  );
 }
 
 function barStyle(value?: number): JSX.CSSProperties {
@@ -32,7 +61,7 @@ function impactText(selection: Extract<EnergyMapSelection, { kind: 'sample' }>, 
   return `${label} · 预计 ${delta > 0 ? '+' : ''}${delta}`;
 }
 
-function SampleDetail({ selection, management, onBack, onOpenRecord }: Props & { selection: Extract<EnergyMapSelection, { kind: 'sample' }> }) {
+function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecordOrigin }: Props & { selection: Extract<EnergyMapSelection, { kind: 'sample' }> }) {
   const point = selection.sample;
   const activity = point.context?.activity;
   const signals = signalsText(selection);
@@ -60,12 +89,12 @@ function SampleDetail({ selection, management, onBack, onOpenRecord }: Props & {
       </div>
 
       {impact && <div class="think-energy-detail__impact"><span>活动影响</span><strong>{impact}</strong></div>}
-      {onOpenRecord && <button type="button" class="think-energy-detail__open" onClick={() => onOpenRecord(point.item)}>打开原记录 →</button>}
+      {onOpenRecord && <RecordAction item={point.item} label="打开记录 →" onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />}
     </aside>
   );
 }
 
-function DayDetail({ selection, onBack, onOpenRecord }: Props & { selection: Extract<EnergyMapSelection, { kind: 'day' }> }) {
+function DayDetail({ selection, onBack, onOpenRecord, onOpenRecordOrigin }: Props & { selection: Extract<EnergyMapSelection, { kind: 'day' }> }) {
   const { day } = selection;
   const latest = day.samples[day.samples.length - 1];
   return (
@@ -81,9 +110,9 @@ function DayDetail({ selection, onBack, onOpenRecord }: Props & { selection: Ext
       )}
       <div class="think-energy-detail__section">
         <strong>当天记录</strong>
-        {day.samples.map((sample) => <p key={sample.id}>{sample.time}　综合 {sample.score}</p>)}
+        {day.samples.map((sample) => <RecordAction key={sample.id} item={sample.item} label={`${sample.time}　综合 ${sample.score}`} className="think-energy-detail__record-row" onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />)}
       </div>
-      {latest && onOpenRecord && <button type="button" class="think-energy-detail__open" onClick={() => onOpenRecord(latest.item)}>打开最后一条记录 →</button>}
+      {latest && onOpenRecord && <RecordAction item={latest.item} label="打开最后一条记录 →" onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />}
     </aside>
   );
 }

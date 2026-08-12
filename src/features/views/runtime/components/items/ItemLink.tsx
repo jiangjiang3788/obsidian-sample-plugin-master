@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RecordViewItem } from '@core/types/public';
-import { createRecordGestureHandlers } from '@shared/ui/public';
+import { createRecordGestureHandlers, RECORD_GESTURE_HINT } from '@shared/ui/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
 
 interface ItemLinkProps {
@@ -27,9 +27,13 @@ export function ItemLink({ item, className = '', showIcon = true, onOpenRecord, 
     return (
         <span
             class={`item-link ${className}`}
+            role="button"
+            tabIndex={0}
             onClick={gesture.onClick as any}
             onDblClick={gesture.onDblClick as any}
             onTouchEnd={gesture.onTouchEnd as any}
+            onKeyDown={gesture.onKeyDown as any}
+            title={RECORD_GESTURE_HINT}
             style={{ cursor: 'pointer' }}
         >
             {showIcon && item.icon && <span class="icon mr-1">{item.icon}</span>}

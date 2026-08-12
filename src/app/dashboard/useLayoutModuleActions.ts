@@ -1,6 +1,7 @@
 import { useCallback } from 'preact/hooks';
 import type { ActionService } from '@core/services/public';
 import type { FilterRule, RecordViewItem, Layout, ViewInstance } from '@core/types/public';
+import type { TimerController } from '@shared/types/public';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/public';
 import { completeFromView, openCreateFromViewHeader } from '@/app/actions/recordUiActions';
 import { openModuleSettingsWidget } from '@features/settings/layout/ModuleSettingsModal';
@@ -15,6 +16,7 @@ export interface UseLayoutModuleActionsParams {
   modulesDataCache: { current: Record<string, RecordViewItem[]> };
   ui: any;
   useCases: any;
+  timerService: TimerController;
 }
 
 export function useLayoutModuleActions({
@@ -27,6 +29,7 @@ export function useLayoutModuleActions({
   modulesDataCache,
   ui,
   useCases,
+  timerService,
 }: UseLayoutModuleActionsParams) {
   const handleExport = useCallback((viewId: string, viewTitle: string) => {
     const items = modulesDataCache.current?.[viewId];
@@ -68,6 +71,10 @@ export function useLayoutModuleActions({
 
   const handleMarkItemDone = useCallback((itemId: string) => {
     void (async () => {
+      if (timerService.completeTask) {
+        await timerService.completeTask(itemId);
+        return;
+      }
       await completeFromView({
         uiPort: ui,
         useCases,
@@ -75,15 +82,17 @@ export function useLayoutModuleActions({
         source: 'layout_renderer',
       });
     })();
-  }, [ui, useCases]);
+  }, [timerService, ui, useCases]);
 
   const handleSettingsClick = useCallback((viewInstance: ViewInstance) => {
     openModuleSettingsWidget(viewInstance);
   }, []);
 
   const handleDeleteViewInstance = useCallback((viewInstanceId: string) => {
+    const view = allViews.find((candidate) => candidate.id === viewInstanceId);
+    if (!window.confirm(`确认删除视图“${view?.title || viewInstanceId}”吗？它会从配置和所有布局中移除。`)) return;
     void useCases.viewInstance.deleteView(viewInstanceId);
-  }, [useCases.viewInstance]);
+  }, [allViews, useCases.viewInstance]);
 
   const handleGlobalFiltersChange = useCallback((filters: FilterRule[]) => {
     void useCases.layout.updateLayout(layout.id, {

@@ -43,6 +43,10 @@ function isClosedTask(item: RecordViewItem): boolean {
   return item.status === 'done' || item.status === 'cancelled' || item.status === 'skipped';
 }
 
+function isOpenTask(item: RecordViewItem): boolean {
+  return item.coreBlock === 'task' && !isClosedTask(item);
+}
+
 function itemGranularity(item: RecordViewItem): string {
   return String(readField(item, 'period') || '天');
 }
@@ -87,6 +91,10 @@ function applyOverviewDateConstraint(
   const field = constraint.field || 'date';
 
   return items.filter((item) => {
+    // The default layout period describes Record occurrence history. An open Task is
+    // a live entity, so a past scheduled/start/due date must not make it disappear.
+    // Explicit task-date queries still use strict mode and therefore remain date-bound.
+    if (field === 'date' && isOpenTask(item)) return true;
     const rawDate = readField(item, field);
     if (!rawDate) return field === 'date' ? !isClosedTask(item) : false;
 
@@ -119,6 +127,7 @@ function applyStandardDateConstraint(
   if (period != null && String(period).trim()) result = filterByPeriod(result, String(period));
 
   return result.filter((item) => {
+    if (isOpenTask(item)) return true;
     const rawDate = readField(item, field);
     if (!rawDate) return !isClosedTask(item);
     const parsed = dayjs(rawDate as string | number | Date);

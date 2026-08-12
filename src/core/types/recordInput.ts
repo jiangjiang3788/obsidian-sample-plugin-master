@@ -106,6 +106,9 @@ export interface PreparedEditRecord {
   inferred: {
     usedFallbackBlock: boolean;
     usedFallbackTheme: boolean;
+    /** Canonical Record identity after any legacy-template compatibility projection. */
+    canonicalBlockId?: string | null;
+    compatibilityMode?: 'legacy-template' | null;
     templateSourceType?: 'core-block' | 'goal-template' | null;
     resolvedBy?: 'exact' | 'inferred' | 'fallback';
   };
@@ -196,6 +199,9 @@ export interface ResolveDependenciesResult {
     templateSourceType?: 'core-block' | 'goal-template' | null;
     usedFallbackBlock: boolean;
     usedFallbackTheme: boolean;
+    /** Canonical Record identity after any legacy-template compatibility projection. */
+    canonicalBlockId?: string | null;
+    compatibilityMode?: 'legacy-template' | null;
   };
 }
 

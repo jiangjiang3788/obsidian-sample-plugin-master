@@ -11,10 +11,13 @@
   },
   "include": [
     "src",
-    "test"
+    "test/unit",
+    "test/integration",
+    "test/configs/jest.config.js"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "test/specs"
   ]
 }

@@ -3,6 +3,7 @@ import { RetrievalService } from '../../src/core/ai/RetrievalService';
 
 const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'item-1',
+  schemaVersion: 2,
   title: '记录',
   content: '记录',
   tags: [],

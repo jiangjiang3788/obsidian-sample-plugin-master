@@ -9,10 +9,10 @@ import { buildQuarterStatisticsRenderModel, buildQuarterMonthWeekStarts } from '
 import { buildYearStatisticsRenderModel, getYearStatisticsMaxWeeksInMonth } from '@/features/views/runtime/StatisticsView/views/YearStatisticsViewModel';
 
 const goalItems: any[] = [
-  { id:'1', title:'A', categoryKey:'任务', coreBlock:'task', goalPaths:['项目/目标A'], goalPath:'项目/目标A', date:'2026-01-05', extra:{}, tags:[], content:'', created:0, modified:0 },
-  { id:'2', title:'B', categoryKey:'事件', coreBlock:'evidence', goalPaths:['项目/目标B'], goalPath:'项目/目标B', date:'2026-01-06', extra:{}, tags:[], content:'', created:0, modified:0 },
+  { id:'1', title:'A', categoryKey:'任务', coreBlock:'task', goalId:'goal.a', goalPath:'项目/目标A', date:'2026-01-05', extra:{}, tags:[], content:'', created:0, modified:0 },
+  { id:'2', title:'B', categoryKey:'事件', coreBlock:'evidence', goalId:'goal.b', goalPath:'项目/目标B', date:'2026-01-06', extra:{}, tags:[], content:'', created:0, modified:0 },
 ];
-const categories=[{name:'目标'}] as any[];
+const categories=[{name:'目标',color:'#000000',files:[]}];
 const emptyYearData={ yearData:createPeriodData(categories), quartersData:Array.from({length:4},()=>createPeriodData(categories)), monthsData:Array.from({length:12},()=>createPeriodData(categories)), weeksData:Array.from({length:53},()=>createPeriodData(categories)) };
 
 describe('Statistics view models', () => {
@@ -26,7 +26,7 @@ describe('Statistics view models', () => {
     expect(isStatisticsYearView('年')).toBe(true); expect(isStatisticsYearView('月')).toBe(false); expect(resolveStatisticsYear({year:()=>2026} as any)).toBe(2026);
     expect(getStatisticsPopoverWidgetId('abc')).toBe('stats-popover-abc'); expect(isSameStatisticsCell({a:1},{a:1})).toBe(true);
     expect(buildYearlyWeekStructure(2026,false)).toEqual([]); expect(buildYearlyWeekStructure(2026,true).flatMap(m=>m.weeks).length).toBeGreaterThan(50);
-    const processed=buildStatisticsProcessedData({isYearView:false,items:[],year:2026,filteredCategories:[{name:'目标'}],usePeriod:false});
+    const processed=buildStatisticsProcessedData({isYearView:false,items:[],year:2026,filteredCategories:categories,usePeriod:false});
     expect(processed.quartersData).toEqual([]); expect(processed.monthsData).toEqual([]); expect(processed.weeksData).toEqual([]);
   });
   it('keeps goal/theme summary helpers together', () => {

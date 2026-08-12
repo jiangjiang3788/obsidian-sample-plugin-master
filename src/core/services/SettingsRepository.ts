@@ -23,6 +23,8 @@
 import { singleton, inject } from 'tsyringe';
 import { produce } from 'immer';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
+import { toCurrentThinkSettings } from '@/core/settings/currentSettingsSchema';
+import { assertCanonicalGoalSettings } from '@/core/goal';
 import type { ActionMeta } from '@/core/types/actionMeta';
 import { logSettingsWrite } from '@/core/utils/devLogger';
 
@@ -33,7 +35,7 @@ import { logSettingsWrite } from '@/core/utils/devLogger';
  * 抽象 Obsidian Plugin 的 loadData/saveData
  */
 export interface ISettingsPersistence {
-    loadData(): Promise<ThinkSettings | null>;
+    loadData(): Promise<unknown>;
     saveData(settings: ThinkSettings): Promise<void>;
 }
 
@@ -79,14 +81,10 @@ export class SettingsRepository {
         }
 
         const loaded = await this.persistence.loadData();
-        if (loaded) {
-            this.currentSettings = loaded;
-            this.notify();
-            return loaded;
-        }
-
-        // 如果持久化层没有数据，应该由调用方提供默认值
-        throw new Error('SettingsRepository: 无法加载设置，请确保已初始化');
+        const settings = toCurrentThinkSettings(loaded);
+        this.currentSettings = settings;
+        this.notify();
+        return settings;
     }
 
     /**
@@ -111,6 +109,7 @@ export class SettingsRepository {
      * 设置初始值（用于首次加载或重置）
      */
     setInitialSettings(settings: ThinkSettings): void {
+        assertCanonicalGoalSettings(settings.goalSettings);
         this.currentSettings = settings;
         this.notify();
     }
@@ -121,6 +120,7 @@ export class SettingsRepository {
      * @param meta 可选的动作元数据（用于 dev 日志）
      */
     async save(settings: ThinkSettings, meta?: ActionMeta): Promise<void> {
+        assertCanonicalGoalSettings(settings.goalSettings);
         const before = this.currentSettings;
         this.currentSettings = settings;
         await this.persistence.saveData(settings);
@@ -145,8 +145,10 @@ export class SettingsRepository {
         // 使用 immer 进行不可变更新
         const newSettings = produce(this.currentSettings, mutator);
         
-        // 只有真正发生变化时才保存并通知
+        // 只有真正发生变化时才保存并通知。Goal invariant 在真正写盘前强制检查，
+        // 防止任何 UI/usecase 绕过 canonical Goal 边界。
         if (newSettings !== this.currentSettings) {
+            assertCanonicalGoalSettings(newSettings.goalSettings);
             this.currentSettings = newSettings;
             await this.persistence.saveData(newSettings);
             this.notify();

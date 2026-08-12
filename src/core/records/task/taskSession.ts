@@ -23,7 +23,7 @@ export function buildTaskSessionFields(task: TaskRecordEntity, input: TaskSessio
     taskId: task.id,
     seriesId: task.seriesId,
     goalId: task.goalId,
-    goalPath: task.goalPath || task.goalPaths?.[0],
+    goalPath: task.goalPath,
     themePath: task.themePath || task.theme,
     sessionStartedAt: input.startedAt,
     sessionEndedAt: input.endedAt,

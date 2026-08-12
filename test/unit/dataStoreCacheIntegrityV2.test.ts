@@ -5,7 +5,7 @@ import type { IPluginStorage } from '@/core/services/StorageService';
 function storageHarness() {
   let persisted: unknown = null;
   const storage: IPluginStorage = {
-    readJSON: jest.fn(async <T>() => persisted as T | null),
+    readJSON: async <T>() => persisted as T | null,
     writeJSON: jest.fn(async (_path, value) => { persisted = value; }),
     remove: jest.fn(async () => { persisted = null; }),
   };

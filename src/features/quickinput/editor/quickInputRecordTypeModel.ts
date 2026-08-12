@@ -9,7 +9,6 @@ export interface ResolveQuickInputRecordTypeRuntimeInput {
   currentBlockId: string;
   selectedGoal: GoalDefinition | null;
   selectedGoalId: string | null;
-  selectedGoalPath: string | null;
   selectedThemeId: string | null;
   selectedTemplateVariantId: string | null;
 }
@@ -21,7 +20,7 @@ export function resolveQuickInputRecordTypeRuntime(input: ResolveQuickInputRecor
       theme: null,
       goal: input.selectedGoal,
       templateId: null,
-      templateSourceType: null as const,
+      templateSourceType: null,
       effectiveBlockId: ENERGY_RECORD_TYPE_ID,
       templateVariantId: null,
     };
@@ -31,7 +30,6 @@ export function resolveQuickInputRecordTypeRuntime(input: ResolveQuickInputRecor
     settings: input.settings,
     blockId: input.currentBlockId,
     goalId: input.selectedGoal?.id || input.selectedGoalId,
-    goalPath: input.selectedGoalPath,
     themeId: input.selectedThemeId || undefined,
     templateVariantId: input.selectedTemplateVariantId || undefined,
   });

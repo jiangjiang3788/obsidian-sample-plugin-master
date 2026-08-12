@@ -57,6 +57,9 @@ describe('buildEditRecordState category backfill', () => {
     });
 
     expect(prepared.initialFormData['思考分类']).toEqual({ value: '闪念/感受', label: '感受' });
+    expect(prepared.template?.id).toBe('blk-flash');
+    expect(prepared.template?.coreBlockId).toBe('core.thought');
+    expect(prepared.snapshot?.outputPlan.coreBlock).toBe('thought');
   });
 
   it('backfills period fields for plan records, including legacy duplicate category output', () => {
@@ -110,6 +113,7 @@ describe('buildEditRecordState category backfill', () => {
     });
 
     expect(prepared.initialFormData['周期']).toEqual({ value: '月', label: '月' });
+    expect(prepared.template?.coreBlockId).toBe('core.plan');
   });
 
   it('backfills tags fields from parsed item tags', () => {

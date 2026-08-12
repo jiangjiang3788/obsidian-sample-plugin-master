@@ -110,9 +110,6 @@ function readCanonicalField(item: RecordViewItem, canonicalField: string): unkno
     return parseTagList(item.tags || []);
   }
 
-  if (canonicalField === 'goalPaths') {
-    return parseTagList(item.goalPaths?.length ? item.goalPaths : readStringArray(asUnknownRecord(item), 'goalPaths'));
-  }
 
   if (canonicalField === 'fullData') {
     return item.rawSource || item.fullData || item.content || '';
@@ -138,7 +135,12 @@ function readCanonicalField(item: RecordViewItem, canonicalField: string): unkno
 export function resolveFieldValue(item: RecordViewItem, field: string): FieldValueResolution {
   const canonicalField = normalizeFieldKey(field);
   const def = getFieldDefinition(canonicalField);
-  const value = readCanonicalField(item, canonicalField);
+  let value = readCanonicalField(item, canonicalField);
+  if (value === undefined) {
+    const injectedFields = asUnknownRecord(readUnknown(asUnknownRecord(item), 'fields'));
+    value = readUnknown(injectedFields, canonicalField);
+    if (value === undefined && field !== canonicalField) value = readUnknown(injectedFields, field);
+  }
   const source = def?.source || 'unknown';
 
   return {

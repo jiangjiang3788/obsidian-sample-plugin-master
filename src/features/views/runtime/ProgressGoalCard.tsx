@@ -1,114 +1,167 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { JSX } from 'preact';
-import type { RecordViewItem } from '@core/types/public';
+import { useState } from 'preact/hooks';
+import type { GoalDefinition } from '@core/goal/public';
+import type { MessageRenderPort } from '@core/ports/public';
+import type { RecordViewItem, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type {
+  MarkDoneHandler,
+  OpenRecordHandler,
+  OpenRecordOriginHandler,
+  ResolveResourcePathHandler,
+  TimerController,
+} from '@shared/types/public';
+import { BlockView } from './BlockView';
 import {
-  buildProgressBlockCountRows,
   buildProgressSkillRows,
   getGoalProgressTitle,
   getProgressLevelMeta,
   progressBarWidth,
+  ratioPercent,
   type GoalProgressCardModel,
   type ProgressRecentRecordModel,
   type ProgressSkillRowModel,
 } from './ProgressViewModel';
 
-interface GoalProgressCardProps {
+interface ProgressRecordRuntimeProps {
+  module: ViewInstance;
+  onOpenRecord?: OpenRecordHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
+  resolveResourcePath?: ResolveResourcePathHandler;
+  messageRenderPort?: MessageRenderPort;
+  onMarkDone: MarkDoneHandler;
+  timerService: TimerController;
+  timers: any[];
+  allThemes: ThemeDefinition[];
+  goals: GoalDefinition[];
+}
+
+interface GoalProgressCardProps extends ProgressRecordRuntimeProps {
   card: GoalProgressCardModel;
   expanded: boolean;
   onToggle: () => void;
-  onOpenRecord?: (item: RecordViewItem) => void;
 }
 
-function ExperienceBar({ ratio, tone = 'goal', compact = false }: { ratio: number; tone?: 'goal' | 'skill'; compact?: boolean }) {
+function ExperienceBar({ ratio, tone = 'goal' }: { ratio: number; tone?: 'goal' | 'skill' }) {
   const style = { '--think-progress-ratio': progressBarWidth(ratio) } as JSX.CSSProperties;
-  const classes = [
-    'think-progress-bar',
-    `think-progress-bar--${tone}`,
-    compact ? 'think-progress-bar--compact' : '',
-  ].filter(Boolean).join(' ');
   return (
-    <div class={classes} aria-label={`进度 ${progressBarWidth(ratio)}`}>
-      <div class="think-progress-bar__fill" style={style} />
+    <span class={`think-progress-bar think-progress-bar--${tone}`} aria-label={`进度 ${progressBarWidth(ratio)}`}>
+      <span class="think-progress-bar__fill" style={style} />
+    </span>
+  );
+}
+
+function ThemeRecords({ records, runtime }: {
+  records: ProgressRecentRecordModel[];
+  runtime: ProgressRecordRuntimeProps;
+}) {
+  if (!records.length) return <div class="think-progress-theme-records__empty">该主题暂无记录</div>;
+  const fields = runtime.module.fields?.length ? runtime.module.fields : ['title', 'content'];
+  return (
+    <div class="think-progress-theme-records" aria-label="主题记录">
+      <BlockView
+        items={records.map((record) => record.item)}
+        fields={fields}
+        onMarkDone={runtime.onMarkDone}
+        timerService={runtime.timerService}
+        timers={runtime.timers}
+        allThemes={runtime.allThemes}
+        goals={runtime.goals}
+        resolveResourcePath={runtime.resolveResourcePath}
+        onOpenRecordOrigin={runtime.onOpenRecordOrigin}
+        messageRenderPort={runtime.messageRenderPort}
+        onOpenRecord={runtime.onOpenRecord}
+      />
     </div>
   );
 }
 
-function SmallSkillRow({ row }: { row: ProgressSkillRowModel }) {
-  return (
-    <div class="think-progress-skill" title={row.key}>
-      <div class="think-progress-skill__title">{row.title}</div>
-      <div class="think-progress-skill__level">Lv.{row.levelMeta.level}</div>
-      <ExperienceBar ratio={row.progressRatio} tone="skill" />
-    </div>
-  );
-}
-
-function SkillList({ card }: { card: GoalProgressCardModel }) {
+function SkillList({ card, runtime }: { card: GoalProgressCardModel; runtime: ProgressRecordRuntimeProps }) {
   const rows = buildProgressSkillRows(card);
-  if (rows.length === 0) return <div class="think-progress-empty-skill">暂无小技能</div>;
-  return <div class="think-progress-skills">{rows.map((row) => <SmallSkillRow key={row.key} row={row} />)}</div>;
-}
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  if (rows.length === 0) return <div class="think-progress-empty-skill">暂无主题成长记录</div>;
 
-function ExpandedRecords({ records, onOpenRecord }: { records?: ProgressRecentRecordModel[]; onOpenRecord?: (item: RecordViewItem) => void }) {
-  if (!records?.length) return null;
   return (
-    <div class="think-progress-records">
-      <div class="think-progress-records__title">记录入口</div>
-      {records.map((record) => (
-        <button
-          key={record.id}
-          type="button"
-          disabled={!onOpenRecord}
-          onClick={(event) => {
-            event.stopPropagation();
-            onOpenRecord?.(record.item);
-          }}
-          class="think-progress-record"
-        >
-          <span class="think-progress-record__title">{record.title || '未命名记录'}</span>
-          <span class="think-progress-record__date">{record.date || '无日期'}</span>
-        </button>
-      ))}
+    <div class="think-progress-skills" role="list">
+      {rows.map((row: ProgressSkillRowModel) => {
+        const open = openKey === row.key;
+        return (
+          <div class={`think-progress-skill-group ${open ? 'is-open' : ''}`} key={row.key} role="listitem">
+            <button
+              type="button"
+              class="think-progress-skill"
+              onClick={() => setOpenKey(open ? null : row.key)}
+              aria-expanded={open}
+              title={`${row.title} · ${row.points} XP · ${row.count} 条记录`}
+            >
+              <span class="think-progress-skill__bullet" aria-hidden="true">•</span>
+              <span class="think-progress-skill__title">{row.title}</span>
+              <span class="think-progress-skill__level">Lv.{row.levelMeta.level}</span>
+              <ExperienceBar ratio={row.progressRatio} tone="skill" />
+              <span class="think-progress-skill__tail">
+                <span class="think-progress-skill__meta">{row.points} XP · {row.count} 条</span>
+                <span class="think-progress-skill__chevron" aria-hidden="true">{open ? '⌄' : '›'}</span>
+              </span>
+            </button>
+            {open && <ThemeRecords records={row.recentRecords} runtime={runtime} />}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function ExpandedFacts({ card, onOpenRecord }: { card: GoalProgressCardModel; onOpenRecord?: (item: RecordViewItem) => void }) {
-  const blockRows = buildProgressBlockCountRows(card.blockCounts || {});
-  return (
-    <div class="think-progress-details">
-      {blockRows.length > 0 && (
-        <div class="think-progress-details__chips">
-          {blockRows.map((row) => <span key={row.key} class="think-progress-details__chip">{row.label} {row.count}</span>)}
-        </div>
-      )}
-      <ExpandedRecords records={card.recentRecords} onOpenRecord={onOpenRecord} />
-    </div>
-  );
-}
-
-export function GoalProgressCard({ card, expanded, onToggle, onOpenRecord }: GoalProgressCardProps) {
+export function GoalProgressCard(props: GoalProgressCardProps) {
+  const {
+    card,
+    expanded,
+    onToggle,
+    module,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    resolveResourcePath,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    goals,
+  } = props;
   const title = getGoalProgressTitle(card);
   const levelMeta = getProgressLevelMeta(card.level);
+  const runtime: ProgressRecordRuntimeProps = {
+    module,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    resolveResourcePath,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    goals,
+  };
 
   return (
-    <article class="think-card think-progress-card">
-      <button type="button" onClick={onToggle} aria-expanded={expanded} class="think-progress-card__trigger">
-        <div class="think-progress-card__icon">{card.icon || '🧩'}</div>
-        <div class="think-progress-card__main">
-          <div class="think-progress-card__title">{title}</div>
-          <ExperienceBar ratio={card.progressRatio} compact />
-        </div>
-        <div class="think-progress-card__level">
-          <span class="think-progress-card__level-icon">{levelMeta.icon}</span>
-          <strong class="think-progress-card__level-value">Lv.{levelMeta.level}</strong>
-          <strong class="think-progress-card__level-title">{levelMeta.title}</strong>
-        </div>
+    <section class="think-progress-section think-progress-card" role="listitem">
+      <button type="button" onClick={onToggle} aria-expanded={expanded} class="think-progress-section__trigger">
+        <span class="think-progress-section__chevron" aria-hidden="true">{expanded ? '⌄' : '›'}</span>
+        <span class="think-progress-section__icon">{card.icon || '🧩'}</span>
+        <span class="think-progress-section__name">
+          <span class="think-progress-section__title">{title}</span>
+          <span class="think-progress-section__level-title">{levelMeta.icon} {levelMeta.title}</span>
+        </span>
+        <span class="think-progress-section__level">Lv.{levelMeta.level}</span>
+        <ExperienceBar ratio={card.progressRatio} tone="goal" />
+        <span class="think-progress-section__percent">{ratioPercent(card.progressRatio)}</span>
       </button>
 
-      <SkillList card={card} />
-      {expanded && <ExpandedFacts card={card} onOpenRecord={onOpenRecord} />}
-    </article>
+      {expanded && (
+        <div class="think-progress-section__body">
+          <SkillList card={card} runtime={runtime} />
+        </div>
+      )}
+    </section>
   );
 }

@@ -5,6 +5,7 @@ import type { CategoryConfig } from '@core/view/public';
 import { aggregateByDay } from '@core/utils/public';
 import { ChartBlock } from '../../components/statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
+import type { OpenRecordOriginHandler } from '@shared/types/public';
 
 export function DayStatisticsView({
   items,
@@ -14,6 +15,7 @@ export function DayStatisticsView({
   displayMode,
   minVisibleHeight,
   bucketAccessor,
+  onOpenRecordOrigin,
 }: {
   items: RecordViewItem[];
   categories: CategoryConfig[];
@@ -22,9 +24,11 @@ export function DayStatisticsView({
   displayMode: 'smart' | 'linear' | 'logarithmic';
   minVisibleHeight: number;
   bucketAccessor?: (item: RecordViewItem) => string;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
 }) {
   // 天视图：显示选定日期的统计数据
   const data = aggregateByDay(items, categories, selectedDate, bucketAccessor);
+
 
   return (
     <div class="statistics-view">
@@ -39,6 +43,7 @@ export function DayStatisticsView({
             displayMode={displayMode}
             minVisibleHeight={minVisibleHeight}
             bucketAccessor={bucketAccessor}
+            onOpenRecordOrigin={onOpenRecordOrigin}
           />
         </div>
       </div>

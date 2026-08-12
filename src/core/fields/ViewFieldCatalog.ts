@@ -3,7 +3,7 @@ import { readFieldValue } from './FieldValueResolver';
 import { getAvailableFields } from './FieldRegistry';
 
 export const CORE_FIELDS = [
-  'id', 'schemaVersion', 'title', 'content', 'categoryKey', 'tags', 'goalId', 'goalIds', 'goalPath', 'goalPaths', 'coreBlock', 'status', 'cycleId',
+  'id', 'schemaVersion', 'title', 'content', 'categoryKey', 'tags', 'goalId', 'goalPath', 'coreBlock', 'status', 'cycleId',
   'icon', 'priority', 'expectedDurationMinutes', 'date', 'startTime', 'endTime', 'duration',
   'period', 'rating', 'image', 'folder', 'periodCount',
 ] as const;

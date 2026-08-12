@@ -214,7 +214,7 @@ function formatTaskItem(item: RecordViewItem): string {
         ['记录ID', item.id],
         ['状态', status],
         ['目标ID', item.goalId],
-        ['目标', item.goalPath || item.goalPaths?.[0]],
+        ['目标', item.goalPath],
         ['主题', item.themePath || item.theme],
         ['优先级', item.priority],
         ['预计时长', item.expectedDurationMinutes ?? item.duration],

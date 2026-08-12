@@ -1,8 +1,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import type { InputSettings, RecordViewItem, ViewInstance } from '@core/types/public';
+import type { InputSettings, RecordViewItem, ThemeDefinition, ViewInstance } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
+import type { MessageRenderPort } from '@core/ports/public';
+import type { MarkDoneHandler, OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
 import { GoalProgressCard } from './ProgressGoalCard';
 import { buildProgressViewRenderModel } from './ProgressViewModel';
 
@@ -11,29 +13,59 @@ interface ProgressViewProps {
   items: RecordViewItem[];
   goals?: GoalDefinition[];
   inputSettings?: InputSettings;
-  onOpenRecord?: (item: RecordViewItem) => void;
+  onOpenRecord?: OpenRecordHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
+  resolveResourcePath?: ResolveResourcePathHandler;
+  messageRenderPort?: MessageRenderPort;
+  onMarkDone: MarkDoneHandler;
+  timerService: TimerController;
+  timers: any[];
+  allThemes: ThemeDefinition[];
 }
 
-export function ProgressView({ module, items, goals = [], inputSettings, onOpenRecord }: ProgressViewProps) {
-  const progressModel = useMemo(() => buildProgressViewRenderModel({
-    items, module, goals, themes: inputSettings?.themes || [],
-  }), [items, module, goals, inputSettings?.themes]);
+export function ProgressView({
+  module,
+  items,
+  goals = [],
+  inputSettings,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  resolveResourcePath,
+  messageRenderPort,
+  onMarkDone,
+  timerService,
+  timers = [],
+  allThemes = [],
+}: ProgressViewProps) {
+  const progressModel = useMemo(() => buildProgressViewRenderModel({ items, module, goals, themes: inputSettings?.themes || allThemes }), [items, module, goals, inputSettings?.themes, allThemes]);
   const cards = progressModel.goalCards || [];
-  const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
+  const [collapsedKeys, setCollapsedKeys] = useState<Record<string, boolean>>({});
 
-  if (cards.length === 0) return <div class="think-progress-view__empty">暂无目标技能经验</div>;
+  if (cards.length === 0) return <div class="think-progress-view__empty">暂无目标成长记录</div>;
 
   return (
-    <div class="think-progress-view">
-      {cards.map((card) => (
-        <GoalProgressCard
-          key={card.key}
-          card={card}
-          expanded={!!expandedKeys[card.key]}
-          onToggle={() => setExpandedKeys((prev) => ({ ...prev, [card.key]: !prev[card.key] }))}
-          onOpenRecord={onOpenRecord}
-        />
-      ))}
+    <div class="think-progress-view" role="list" aria-label="成长视图">
+      {cards.map((card) => {
+        const expanded = collapsedKeys[card.key] !== true;
+        return (
+          <GoalProgressCard
+            key={card.key}
+            card={card}
+            module={module}
+            expanded={expanded}
+            onToggle={() => setCollapsedKeys((prev) => ({ ...prev, [card.key]: expanded }))}
+            onOpenRecord={onOpenRecord}
+            onOpenRecordOrigin={onOpenRecordOrigin}
+            resolveResourcePath={resolveResourcePath}
+            messageRenderPort={messageRenderPort}
+            onMarkDone={onMarkDone}
+            timerService={timerService}
+            timers={timers}
+            allThemes={allThemes}
+            goals={goals}
+          />
+        );
+      })}
     </div>
   );
 }

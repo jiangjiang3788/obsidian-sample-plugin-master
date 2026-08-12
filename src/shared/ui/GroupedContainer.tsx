@@ -3,6 +3,7 @@ import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import type { RecordViewItem } from '@core/types/public';
 import type { GroupNode } from '@core/utils/public';
+import { hasPlatformModifier, isKeyboardActivation, stopInteractionEvent } from './utils/interaction';
 
 export type GroupPath = string;
 
@@ -26,9 +27,9 @@ export interface GroupedContainerProps {
      */
     classNames?: GroupedContainerClassNames;
     /**
-     * 是否启用 Ctrl+点击 全部折叠/展开
+     * 是否启用 Ctrl/⌘+点击 全部折叠/展开
      */
-    enableCtrlToggleAll?: boolean;
+    enableModifierToggleAll?: boolean;
     /**
      * 初始是否全部折叠
      */
@@ -46,7 +47,7 @@ export function GroupedContainer(props: GroupedContainerProps) {
         nodes,
         renderLeaf,
         classNames = {},
-        enableCtrlToggleAll = true,
+        enableModifierToggleAll = true,
         defaultCollapsed = false,
     } = props;
 
@@ -57,6 +58,7 @@ export function GroupedContainer(props: GroupedContainerProps) {
             chain.map(n => `${n.field}=${n.key}`).join('|');
         const collectPaths = (nodes: GroupNode[], parentChain: { field: string; key: string }[] = []) => {
             for (const node of nodes) {
+                if (countItemsInGroup(node) === 0) continue;
                 const chain = [...parentChain, { field: node.field, key: node.key }];
                 const path = makeGroupPath(chain);
                 paths.push(path);
@@ -96,7 +98,7 @@ export function GroupedContainer(props: GroupedContainerProps) {
     };
 
     const onGroupTitleClick = (path: GroupPath, evt: MouseEvent) => {
-        if (enableCtrlToggleAll && evt.ctrlKey) {
+        if (enableModifierToggleAll && hasPlatformModifier(evt)) {
             const anyExpanded = allGroupPaths.some(p => {
                 const has = Object.prototype.hasOwnProperty.call(collapsedGroups, p);
                 const val = has ? collapsedGroups[p] : defaultCollapsed;
@@ -108,7 +110,7 @@ export function GroupedContainer(props: GroupedContainerProps) {
         }
     };
 
-    const countItemsInGroup = (node: GroupNode): number => {
+    function countItemsInGroup(node: GroupNode): number {
         const n: any = node as any;
         if (n.items) return n.items.length;
         if (!n.children) return 0;
@@ -116,7 +118,7 @@ export function GroupedContainer(props: GroupedContainerProps) {
             (sum: number, child: GroupNode) => sum + countItemsInGroup(child),
             0
         );
-    };
+    }
 
     const {
         root: rootClass = '',
@@ -132,7 +134,7 @@ export function GroupedContainer(props: GroupedContainerProps) {
         level: number,
         parentChain: { field: string; key: string }[] = [],
     ): preact.VNode[] => {
-        return nodes.map(node => {
+        return nodes.filter(node => countItemsInGroup(node) > 0).map(node => {
             const n: any = node as any;
             const items = n.items as RecordViewItem[] | undefined;
             const children = (n.children as GroupNode[]) || [];
@@ -143,25 +145,29 @@ export function GroupedContainer(props: GroupedContainerProps) {
             const hasChildren = children && children.length > 0;
             const isLeaf = !!items && items.length > 0;
 
-            // 默认标题缩进策略：基础 12px + 层级 * 24px
-            const indentStyle = { paddingLeft: `${12 + level * 24}px` };
-
-            // 追加层级 class，例如：et-group et-group--level-0 / bv-group bv-group--level-1
-            const levelClass = groupClass ? `${groupClass}--level-${level}` : '';
+            // 层级只作为结构信息输出；具体缩进由各视图 CSS 决定。
+            const baseGroupClass = groupClass.split(/\s+/).filter(Boolean)[0] || '';
+            const levelClass = baseGroupClass ? `${baseGroupClass}--level-${level}` : '';
 
             return (
-                <div class={`${groupClass} ${levelClass}`} key={path}>
+                <div class={`${groupClass} ${levelClass}`} data-group-level={level} key={path}>
                     <h5
                         class={titleClass}
-                        style={indentStyle}
+                        role="button"
+                        tabIndex={0}
                         onClick={e => onGroupTitleClick(path, e as any)}
-                        title="点击折叠/展开（Ctrl+点击：全部折叠/展开）"
+                        onKeyDown={(e: KeyboardEvent) => {
+                            if (!isKeyboardActivation(e)) return;
+                            stopInteractionEvent(e);
+                            onGroupTitleClick(path, e as any);
+                        }}
+                        title="点击折叠/展开（Ctrl/⌘+点击：全部折叠/展开）"
                     >
                         <span class={toggleIconClass}>
                             {isCollapsed ? '▶' : '▼'}
                         </span>
                         <span class={labelClass}>
-                            {node.key} ({isLeaf ? items!.length : countItemsInGroup(node)})
+                            {node.label || node.key} ({isLeaf ? items!.length : countItemsInGroup(node)})
                         </span>
                     </h5>
 

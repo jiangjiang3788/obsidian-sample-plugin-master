@@ -1,7 +1,7 @@
 /* 1.0.33: tasks are grouped by Goal, then by cadence. Energy only ranks within the real task system. */
 .think-os .think-energy-task-list {
   display: grid;
-  gap: var(--think-space-3);
+  gap: var(--think-space-4);
   padding-top: var(--think-space-4);
   border-top: 1px solid var(--think-border-subtle);
 }
@@ -19,20 +19,30 @@
 
 .think-os .think-energy-task-list__goal-group {
   display: grid;
-  gap: var(--think-space-2);
+  gap: var(--think-space-1);
 }
 
 /* Desktop UX final: Goal is the stable first-level boundary. */
 .think-os .think-energy-task-list__goal-group + .think-energy-task-list__goal-group {
-  margin-top: var(--think-space-4);
-  padding-top: var(--think-space-4);
+  margin-top: var(--think-space-3);
+  padding-top: var(--think-space-3);
   border-top: 1px solid var(--think-border-subtle);
 }
 
 .think-os .think-energy-task-list__goal-title {
-  color: var(--think-text-primary);
-  font-size: var(--think-font-size-md);
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: var(--think-control-height-sm);
+  padding: var(--think-space-1) var(--think-space-3);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--think-text-accent);
+  font-size: var(--think-font-size-lg);
   font-weight: var(--think-font-weight-bold);
+  letter-spacing: -0.01em;
 }
 
 .think-os .think-energy-task-list__rows {
@@ -42,7 +52,7 @@
 
 .think-os .think-energy-task-list__row {
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
+  grid-template-columns: 32px minmax(0, 1fr);
   gap: var(--think-space-3);
   align-items: start;
 }
@@ -50,10 +60,11 @@
 .think-os .think-energy-task-list__row-label {
   display: inline-flex;
   align-items: center;
-  gap: var(--think-space-2);
+  justify-content: center;
+  width: 32px;
   min-height: var(--think-control-height-sm);
   color: var(--think-text-secondary);
-  font-size: var(--think-font-size-sm);
+  font-size: var(--think-font-size-md);
   font-weight: var(--think-font-weight-semibold);
 }
 
@@ -130,7 +141,11 @@
 
 @container think-view (max-width: 620px) {
   .think-os .think-energy-task-list__row { grid-template-columns: 1fr; gap: var(--think-space-1); }
-  .think-os .think-energy-task-list__row-label { min-height: auto; }
+  .think-os .think-energy-task-list__row-label {
+    width: auto;
+    justify-content: flex-start;
+    min-height: auto;
+  }
 }
 
 /* 1.0.34 Desktop UX final: Energy match is a visible but lightweight badge.

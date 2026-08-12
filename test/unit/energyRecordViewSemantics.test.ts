@@ -72,6 +72,7 @@ import type { RecordViewItem } from '@core/types/public';
 function energy(id: string, date: string, time: string, score: number, brain?: number, physical?: number): RecordViewItem {
   return {
     id,
+    schemaVersion: 2,
     title: 'energy',
     content: '',
     tags: [],

@@ -3,6 +3,7 @@ import {
   buildProgressBlockCountRows,
   buildProgressCollapsedFacts,
   buildProgressSkillRows,
+  formatProgressRecordDate,
   getProgressLevelMeta,
   buildProgressSummary,
   getGoalProgressRemainingPoints,
@@ -15,10 +16,10 @@ import {
 } from '@/features/views/runtime/ProgressViewModel';
 
 const items: any[] = [
-  { id: '1', title: 'A', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
-  { id: '2', title: 'B', categoryKey: '打卡', coreBlock: 'habit', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
-  { id: '3', title: 'C', categoryKey: '事件', coreBlock: 'evidence', goalPaths: ['项目/目标B'], goalPath: '项目/目标B', extra: {}, tags: [], content: '', created: 0, modified: 0 },
-  { id: '4', title: '', categoryKey: '精力', coreBlock: 'energy', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '14:35', '精力值': 80, '精力档位': 80, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
+  { id: '1', title: 'A', categoryKey: '任务', coreBlock: 'task', goalId: 'goal.a', goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '2', title: 'B', categoryKey: '打卡', coreBlock: 'habit', goalId: 'goal.a', goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '3', title: 'C', categoryKey: '事件', coreBlock: 'evidence', goalId: 'goal.b', goalPath: '项目/目标B', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '4', title: '', categoryKey: '精力', coreBlock: 'energy', goalId: 'goal.a', goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '14:35', '精力值': 80, '精力档位': 80, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
 ];
 
 describe('ProgressView goal mode', () => {
@@ -43,12 +44,28 @@ describe('ProgressView goal mode', () => {
     expect(model.goalCards).toHaveLength(1);
   });
 
+  it('owns recent records at theme level instead of goal level', () => {
+    const themedItems: any[] = [
+      { id: 'sleep-1', title: '昨晚睡眠', coreBlock: 'habit', categoryKey: '打卡', goalId: 'goal.self', goalPath: '照顾好自己', themePath: '照顾好自己/睡眠', date: '2026-08-12', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'sleep-2', title: '午休记录', coreBlock: 'habit', categoryKey: '打卡', goalId: 'goal.self', goalPath: '照顾好自己', themePath: '照顾好自己/睡眠', date: '2026-08-11', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'sport-1', title: '跑步', coreBlock: 'task', categoryKey: '任务', goalId: 'goal.self', goalPath: '照顾好自己', themePath: '照顾好自己/运动', date: '2026-08-10', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+    ];
+    const model = buildProgressViewRenderModel({ items: themedItems, module: { viewConfig: { topN: 8 } }, goals: [] });
+    const card = model.goalCards[0];
+    const rows = buildProgressSkillRows(card);
+    expect((card as any).recentRecords).toBeUndefined();
+    expect(rows.find((row) => row.title === '睡眠')?.recentRecords.map((record) => record.id)).toEqual(['sleep-1', 'sleep-2']);
+    expect(rows.find((row) => row.title === '运动')?.recentRecords.map((record) => record.id)).toEqual(['sport-1']);
+  });
+
+
   it('attaches reliable nearby activity and same-day health signals to recent Energy samples', () => {
     const contextItems: any[] = [
-      { id: 'task', title: '写代码', categoryKey: '任务', coreBlock: 'task', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', startTime: '14:00', endTime: '15:30', duration: 90, extra: {}, tags: [], content: '', created: 0, modified: 0 },
-      { id: 'sleep', title: '睡眠', categoryKey: '打卡', coreBlock: 'habit', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', rating: 40, extra: {}, tags: [], content: '', created: 0, modified: 0 },
-      { id: 'body', title: '身体状态', categoryKey: '打卡', coreBlock: 'habit', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', rating: 60, extra: {}, tags: [], content: '', created: 0, modified: 0 },
-      { id: 'energy', title: '', categoryKey: '精力', coreBlock: 'energy', goalPaths: ['项目/目标A'], goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '15:38', '精力值': 20, '精力档位': 20, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'task', title: '写代码', categoryKey: '任务', coreBlock: 'task', goalId: 'goal.a', goalPath: '项目/目标A', extra: {}, tags: [], content: '写代码', created: 0, modified: 0 },
+      { id: 'session', title: '', categoryKey: '', coreBlock: 'task-session', taskId: 'task', sessionStartedAt: '2026-08-10T14:00:00', sessionEndedAt: '2026-08-10T15:30:00', sessionDurationMinutes: 90, sessionResult: 'work-block-ended', sessionSource: 'timer', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'sleep', title: '睡眠', categoryKey: '打卡', coreBlock: 'habit', goalId: 'goal.a', goalPath: '项目/目标A', date: '2026-08-10', rating: 40, extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'body', title: '身体状态', categoryKey: '打卡', coreBlock: 'habit', goalId: 'goal.a', goalPath: '项目/目标A', date: '2026-08-10', rating: 60, extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'energy', title: '', categoryKey: '精力', coreBlock: 'energy', goalId: 'goal.a', goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '15:38', '精力值': 20, '精力档位': 20, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
     ];
     const model = buildProgressViewRenderModel({ items: contextItems, module: { viewConfig: {} }, goals: [] });
     const sample = model.goalCards[0]?.energySummary?.recentSamples[0];
@@ -82,6 +99,12 @@ const card = {
 };
 
 describe('ProgressViewModel', () => {
+  it('formats epoch seconds/milliseconds as readable dates instead of raw numbers', () => {
+    expect(formatProgressRecordDate(1786458278)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(formatProgressRecordDate(1786458278000)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(formatProgressRecordDate(1786458278)).not.toBe('1786458278');
+  });
+
   it('normalizes percent display and progress width', () => {
     expect(ratioPercent(1.4)).toBe('100%');
     expect(ratioPercent(-1)).toBe('0%');

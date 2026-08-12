@@ -20,8 +20,6 @@ import {
   buildQuickInputDisplayTemplate,
   buildQuickInputGoalOptions,
   buildQuickInputPeriodUi,
-  cleanDisplayPath,
-  cleanDisplaySegment,
   deriveQuickInputInitialSelection,
   getGoalPath,
   hydrateQuickInputTemplateDefaults,
@@ -118,10 +116,8 @@ export function QuickInputEditor({
 
   const selectedGoal = useMemo(() => {
     const goals = fullSettings.goalSettings?.goals || [];
-    return (selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) : null)
-      || (selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) : null)
-      || null;
-  }, [fullSettings.goalSettings?.goals, selectedGoalId, selectedGoalPath]);
+    return selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) || null : null;
+  }, [fullSettings.goalSettings?.goals, selectedGoalId]);
 
   const currentEffectiveBlockIdForTemplates = useMemo(
     () => isEnergyDirect ? '' : resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
@@ -147,8 +143,8 @@ export function QuickInputEditor({
   }, [goalTemplateVariants, selectedTemplateVariantId]);
 
   const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = useMemo(
-    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedGoalPath, selectedThemeId, selectedTemplateVariantId }),
-    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedGoalPath, selectedThemeId, selectedTemplateVariantId],
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedThemeId, selectedTemplateVariantId }),
+    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedThemeId, selectedTemplateVariantId],
   );
 
   const goalOptions = useMemo<GoalSelectorOption[]>(
@@ -156,18 +152,18 @@ export function QuickInputEditor({
     [fullSettings, currentEffectiveBlockIdForTemplates, isEnergyDirect]
   );
 
-  const goalFieldOptions = useMemo(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label })), [goalOptions]);
+  const goalFieldOptions = useMemo(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label || goal.value })), [goalOptions]);
 
   useEffect(() => {
-    const selectedPath = cleanDisplayPath(selectedGoal?.goalPath || selectedGoalPath || null);
+    const selectedPath = getGoalPath(selectedGoal) || selectedGoalPath || null;
     if (!selectedPath) return;
-    const stillVisible = goalOptions.some((option) => cleanDisplayPath(option.value) === selectedPath);
+    const stillVisible = goalOptions.some((option) => option.value === selectedPath);
     if (stillVisible) return;
     dispatchSession({ type: 'clearGoalContext' });
   }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
 
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
-  const currentGoalTitle = cleanDisplaySegment(selectedGoal?.title || resolvedGoal?.title || '') || (currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null);
+  const currentGoalTitle = String(selectedGoal?.title || resolvedGoal?.title || '').trim() || (currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null);
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData['日期'] ?? formData.date ?? dayjs().format('YYYY-MM-DD')).trim();
   const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(rawTemplate as any);

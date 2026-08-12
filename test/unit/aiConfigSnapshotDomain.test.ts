@@ -11,8 +11,8 @@ describe('AI config snapshot domain model', () => {
   const goalSettings: GoalSettings = {
     goals: [{
       id: 'goal.self',
-      title: '#照顾好自己',
-      goalPath: '#照顾好自己',
+      title: '照顾好自己',
+      goalPath: '照顾好自己',
       status: 'active',
       themePath: '健康/睡眠',
       metrics: [],
@@ -26,7 +26,7 @@ describe('AI config snapshot domain model', () => {
       variantId: 'sleep',
       name: '睡眠打卡',
       enabled: true,
-      defaultValues: { themePath: '健康/睡眠', goalId: 'goal.self' },
+      defaultValues: { themePath: '健康/睡眠' },
       createdAt: '2026-06-23T00:00:00.000Z',
       updatedAt: '2026-06-23T00:00:00.000Z',
     }],
@@ -45,7 +45,7 @@ describe('AI config snapshot domain model', () => {
     expect(allFieldKeys).not.toContain('themePath');
     expect(snapshot.goalPresets[0]).toMatchObject({
       goalTemplateId: 'goal-template.goal.self.core.habit.sleep',
-      goalPath: '#照顾好自己',
+      goalPath: '照顾好自己',
       blockId: 'core.habit',
       themePath: '健康/睡眠',
     });

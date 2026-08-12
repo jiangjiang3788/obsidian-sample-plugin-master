@@ -34,9 +34,7 @@ export interface RecordEntity {
   templateSourceType?: 'core-block' | 'goal-template';
 
   goalId?: string;
-  goalIds?: string[];
   goalPath?: string;
-  goalPaths?: string[];
   rootGoal?: string;
   leafGoal?: string;
 
@@ -118,6 +116,10 @@ export interface TaskRecordEntity extends RecordEntity {
   recurrenceInfo?: RecurrenceInfo;
   priority?: RecordTaskPriority;
   expectedDurationMinutes?: number;
+  energyDemand?: string;
+  brainDemand?: string;
+  physicalDemand?: string;
+  createdAt?: string;
   createdDate?: string;
   scheduledDate?: string;
   startDate?: string;
@@ -135,6 +137,9 @@ export interface TaskSeriesRecordEntity extends RecordEntity {
   recurrenceInfo: RecurrenceInfo;
   priority?: RecordTaskPriority;
   expectedDurationMinutes?: number;
+  energyDemand?: string;
+  brainDemand?: string;
+  physicalDemand?: string;
   seriesStartDate?: string;
   currentTaskId?: string;
   rolloverPolicy?: 'carry';
@@ -189,6 +194,10 @@ export interface RecordViewItem extends RecordEntity {
   rolloverPolicy?: 'carry';
   priority?: RecordTaskPriority;
   expectedDurationMinutes?: number;
+  energyDemand?: string;
+  brainDemand?: string;
+  physicalDemand?: string;
+  createdAt?: string;
   createdDate?: string;
   scheduledDate?: string;
   startDate?: string;

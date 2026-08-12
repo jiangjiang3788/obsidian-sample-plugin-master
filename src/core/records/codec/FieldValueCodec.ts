@@ -5,10 +5,11 @@ import { normalizeImageValue, type ImageFieldValue } from '@/core/fields/imageSe
 import { normalizeHierarchyPath } from '@/core/fields/pathSemantics';
 import { parseTagList } from '@/core/fields/tagSemantics';
 import { normalizeTextToken } from '@/core/semantics/text';
+import { normalizeGoalPath } from '@/core/goal/path';
 
 export type FieldCodecDefinition = Partial<Pick<
   FieldDefinition,
-  'type' | 'inputType' | 'semantic' | 'cardinality' | 'hierarchical'
+  'valueType' | 'inputType' | 'semantic' | 'cardinality' | 'hierarchical'
 >>;
 
 export interface FieldValueCodecOptions {
@@ -30,23 +31,23 @@ export function isFieldCodecMultiValue(def?: FieldCodecDefinition | null): boole
 }
 
 export function isFieldCodecPath(def?: FieldCodecDefinition | null): boolean {
-  return def?.type === 'path'
+  return def?.valueType === 'path'
     || def?.inputType === 'path'
     || def?.inputType === 'multiPath'
     || def?.semantic === 'themePath'
-    || def?.semantic === 'categoryPath';
+    || def?.semantic === 'categoryPath'
+    || def?.semantic === 'goalPath';
 }
 
 export function isFieldCodecTag(def?: FieldCodecDefinition | null): boolean {
-  return def?.type === 'tags'
+  return def?.valueType === 'tags'
     || def?.inputType === 'tag'
     || def?.inputType === 'multiTag'
-    || def?.semantic === 'tags'
-    || def?.semantic === 'goals';
+    || def?.semantic === 'tags';
 }
 
 export function isFieldCodecImage(def?: FieldCodecDefinition | null): boolean {
-  return def?.type === 'image'
+  return def?.valueType === 'image'
     || def?.inputType === 'image'
     || def?.inputType === 'multiImage'
     || def?.semantic === 'image';
@@ -92,7 +93,7 @@ function decodeImageValue(value: unknown): ImageFieldValue | undefined {
 }
 
 function valueKind(def?: FieldCodecDefinition | null): FieldValueType | undefined {
-  return def?.type;
+  return def?.valueType;
 }
 
 function semanticKind(def?: FieldCodecDefinition | null): FieldSemantic | undefined {
@@ -119,7 +120,10 @@ export function decodeMarkdownFieldValue(value: unknown, def?: FieldCodecDefinit
 
   if (isFieldCodecTag(def)) return parseTagList(value);
   if (isFieldCodecImage(def)) return decodeImageValue(value);
-  if (isFieldCodecPath(def)) return normalizeHierarchyPath(value) || undefined;
+  if (isFieldCodecPath(def)) {
+    if (semanticKind(def) === 'goalPath') return normalizeGoalPath(String(value ?? '')) || undefined;
+    return normalizeHierarchyPath(value) || undefined;
+  }
 
   if (valueKind(def) === 'number' || semanticKind(def) === 'duration' || semanticKind(def) === 'rating') {
     return decodeNumberValue(value);
@@ -161,6 +165,13 @@ export function encodeFieldValueForMarkdown(value: unknown, def?: FieldCodecDefi
   }
 
   if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (semanticKind(def) === 'goalPath') {
+    const raw = String(value).trim();
+    if (!raw) return '';
+    const canonical = normalizeGoalPath(raw);
+    if (!canonical) throw new Error('Invalid Goal path: Goal is not Tag and cannot contain # markers.');
+    return canonical;
+  }
   return String(value).trim();
 }
 
@@ -170,12 +181,12 @@ export function formatFieldValueForTemplate(value: unknown, def?: FieldCodecDefi
 }
 
 export const FIELD_CODEC_PRESETS = {
-  themePath: { type: 'path', inputType: 'path', semantic: 'themePath', hierarchical: true } satisfies FieldCodecDefinition,
-  categoryPath: { type: 'path', inputType: 'path', semantic: 'categoryPath', hierarchical: true } satisfies FieldCodecDefinition,
-  tags: { type: 'tags', inputType: 'multiTag', semantic: 'tags', cardinality: 'multi', hierarchical: true } satisfies FieldCodecDefinition,
-  goalPaths: { type: 'tags', inputType: 'multiTag', semantic: 'goals', cardinality: 'multi', hierarchical: true } satisfies FieldCodecDefinition,
-  image: { type: 'image', inputType: 'image', semantic: 'image' } satisfies FieldCodecDefinition,
-  number: { type: 'number', inputType: 'number' } satisfies FieldCodecDefinition,
-  boolean: { type: 'boolean', inputType: 'boolean' } satisfies FieldCodecDefinition,
-  text: { type: 'string', inputType: 'text' } satisfies FieldCodecDefinition,
+  themePath: { valueType: 'path', inputType: 'path', semantic: 'themePath', hierarchical: true } satisfies FieldCodecDefinition,
+  categoryPath: { valueType: 'path', inputType: 'path', semantic: 'categoryPath', hierarchical: true } satisfies FieldCodecDefinition,
+  tags: { valueType: 'tags', inputType: 'multiTag', semantic: 'tags', cardinality: 'multi', hierarchical: true } satisfies FieldCodecDefinition,
+  goalPath: { valueType: 'path', inputType: 'hierarchicalSingleSelect', semantic: 'goalPath', cardinality: 'single', hierarchical: true } satisfies FieldCodecDefinition,
+  image: { valueType: 'image', inputType: 'image', semantic: 'image' } satisfies FieldCodecDefinition,
+  number: { valueType: 'number', inputType: 'number' } satisfies FieldCodecDefinition,
+  boolean: { valueType: 'boolean', inputType: 'boolean' } satisfies FieldCodecDefinition,
+  text: { valueType: 'string', inputType: 'text' } satisfies FieldCodecDefinition,
 } as const;

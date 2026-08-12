@@ -2,6 +2,8 @@ import { DEFAULT_SETTINGS, THINK_SETTINGS_SCHEMA_VERSION } from '@/core/settings
 import type { InputSettings } from '@/core/recordInput/CaptureTemplate';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { DEFAULT_ENERGY_SETTINGS } from '@/core/energy';
+import { assertCanonicalGoalSettings } from '@/core/goal';
+import { getEffectiveCoreBlocks } from '@/core/blocks';
 
 export const THINK_SETTINGS_SCHEMA_POLICY = 'current-only' as const;
 
@@ -26,7 +28,8 @@ function normalizeInputSettings(value: unknown): InputSettings {
   return {
     ...DEFAULT_SETTINGS.inputSettings,
     ...(raw as Partial<InputSettings>),
-    blocks: Array.isArray(raw.blocks) ? raw.blocks as InputSettings['blocks'] : [],
+    // Settings Compact V5: blocks are runtime projections of canonical CoreBlock definitions, never persisted user data.
+    blocks: [],
     themes: Array.isArray(raw.themes) ? raw.themes as InputSettings['themes'] : [],
   };
 }
@@ -55,7 +58,8 @@ export function toCurrentThinkSettings(rawValue: unknown): ThinkSettings {
   assertCurrentSchemaVersion(raw);
 
   const partial = raw as Partial<ThinkSettings>;
-  return {
+  assertCanonicalGoalSettings(partial.goalSettings);
+  const current: ThinkSettings = {
     ...DEFAULT_SETTINGS,
     ...partial,
     schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
@@ -66,8 +70,34 @@ export function toCurrentThinkSettings(rawValue: unknown): ThinkSettings {
     energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...(isRecord(partial.energySettings) ? partial.energySettings : {}) },
     activeThemePaths: Array.isArray(partial.activeThemePaths) ? partial.activeThemePaths : [],
   };
+  current.inputSettings.blocks = getEffectiveCoreBlocks(current);
+  return current;
 }
 
 export function isCurrentThinkSettings(value: unknown): value is ThinkSettings {
   return isRecord(value) && value.schemaVersion === THINK_SETTINGS_SCHEMA_VERSION;
+}
+
+/**
+ * Settings Compact V5 persistence DTO. Runtime inputSettings.blocks is a computed
+ * CoreBlock projection and must never be written to data.json. GoalTemplate
+ * defaultValues persist canonical keys only; Chinese labels belong to Markdown/UI.
+ */
+export function toPersistedThinkSettings(settings: ThinkSettings): Record<string, unknown> {
+  const out = JSON.parse(JSON.stringify(settings ?? {})) as Record<string, any>;
+  if (isRecord(out.inputSettings)) delete out.inputSettings.blocks;
+
+  const templates = out.goalSettings?.goalTemplates;
+  if (Array.isArray(templates)) {
+    for (const template of templates) {
+      if (!isRecord(template) || !isRecord(template.defaultValues)) continue;
+      const defaults = template.defaultValues as Record<string, unknown>;
+      if (defaults.themePath === undefined && defaults['主题'] !== undefined) defaults.themePath = defaults['主题'];
+      if (defaults.icon === undefined && defaults['图标'] !== undefined) defaults.icon = defaults['图标'];
+      delete defaults['主题'];
+      delete defaults['图标'];
+      if (Object.keys(defaults).length === 0) delete template.defaultValues;
+    }
+  }
+  return out;
 }

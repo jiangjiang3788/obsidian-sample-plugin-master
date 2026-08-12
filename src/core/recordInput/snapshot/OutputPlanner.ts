@@ -4,7 +4,7 @@ import type { RecordOutputPlan, RecordPersistencePlan } from '@/core/types/recor
 import { splitThemePath } from '@/core/types/recordSnapshot';
 import { renderTemplate } from '@/core/utils/templateUtils';
 import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter';
-import { resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@/core/goal';
+import { requireGoalPath, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@/core/goal';
 import { readOptionText } from '@/core/semantics/option';
 import { createRecordId, RECORD_SCHEMA_VERSION } from '@/core/records/RecordId';
 import { encodeRecordBlock, encodeRecordDraft } from '@/core/records/codec';
@@ -47,11 +47,13 @@ function buildRenderData(
   const categoryPartsValue = splitHierarchyPathValue(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? null);
   const categoryPath = categoryPartsValue.path || '';
   const categoryParts = categoryPartsValue.parts;
-  const explicitGoalValue = Array.isArray(normalizedData.goalPaths) ? normalizedData.goalPaths[0] : (normalizedData.goalPath ?? normalizedData['目标']);
-  const goalPartsValue = splitHierarchyPathValue(explicitGoalValue, { stripLeadingHashes: true });
-  const goalPath = goalPartsValue.path || '';
-  const goalParts = goalPartsValue.parts;
+  const rawGoalPath = String(normalizedData.goalPath ?? normalizedData['目标'] ?? '').trim();
+  const goalPath = rawGoalPath ? requireGoalPath(rawGoalPath) : '';
+  const goalParts = goalPath ? goalPath.split('/').filter(Boolean) : [];
   const goalId = String(normalizedData.goalId ?? normalizedData['目标ID'] ?? '').trim();
+  if ((goalId && !goalPath) || (!goalId && goalPath)) {
+    throw new Error('Goal context must contain both goalId and canonical goalPath, or neither.');
+  }
   const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
   const recordDate = String(normalizedData['日期'] ?? normalizedData.date ?? '').trim();
   const periodPolicy = resolveTemplatePeriodPolicy(template as any);
@@ -87,7 +89,6 @@ function buildRenderData(
     },
     goalId,
     goalPath,
-    goalPaths: goalPath ? [goalPath] : (normalizedData.goalPaths || []),
     rootGoal: goalParts[0] || '',
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
     coreBlock,

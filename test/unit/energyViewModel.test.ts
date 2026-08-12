@@ -1,5 +1,5 @@
 import type { GoalDefinition } from '@core/goal/public';
-import type { RecordViewItem, ViewInstance } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyViewModel } from '@/features/views/models/energyViewModel';
 
 function base(overrides: Partial<RecordViewItem>): RecordViewItem {
@@ -33,7 +33,7 @@ describe('buildEnergyViewModel', () => {
 
   const module = {
     id: 'vi.energy', title: '精力', viewType: 'EnergyView', viewConfig: { windowDays: 7, recentSampleLimit: 5, maxGoals: 0 },
-  } as ViewInstance;
+  };
   const currentView = '周' as const;
   const dateRange: [Date, Date] = [new Date('2026-08-04T00:00:00'), new Date('2026-08-10T23:59:59')];
 

@@ -18,7 +18,6 @@ export interface CachedItem {
   tags: string[];
   goalId?: string;
   goalPath?: string;
-  goalPaths?: string[];
   theme?: string;
   themePath?: string;
   rootTheme?: string;
@@ -62,7 +61,6 @@ export interface CachedItem {
   titleLower?: string;
   contentLower?: string;
   tagsLower?: string[];
-  goalPathsLower?: string[];
 }
 
 export interface CachedRecordIntegrityIssue {
@@ -83,7 +81,7 @@ export interface CacheV1 {
 }
 
 // v12: persist scanner integrity diagnostics so warm-start cannot hide malformed/missing-ID records.
-export const CURRENT_CACHE_SCHEMA_VERSION = 12;
+export const CURRENT_CACHE_SCHEMA_VERSION = 13;
 
 export function toCachedItem(it: RecordViewItem): CachedItem {
   return {
@@ -103,7 +101,6 @@ export function toCachedItem(it: RecordViewItem): CachedItem {
     tags: [...(it.tags || [])],
     goalId: it.goalId,
     goalPath: it.goalPath,
-    goalPaths: [...(it.goalPaths || [])],
     theme: it.theme,
     themePath: it.themePath,
     rootTheme: it.rootTheme,
@@ -147,7 +144,6 @@ export function toCachedItem(it: RecordViewItem): CachedItem {
     titleLower: (it as any).titleLower ?? it.title?.toLowerCase(),
     contentLower: (it as any).contentLower ?? it.content?.toLowerCase(),
     tagsLower: (it as any).tagsLower ?? (it.tags || []).map(t => t.toLowerCase()),
-    goalPathsLower: (it as any).goalPathsLower ?? (it.goalPaths || []).map(t => t.toLowerCase()),
   };
 }
 
@@ -166,8 +162,6 @@ export function fromCachedItem(c: CachedItem): RecordViewItem {
     tags: [...(c.tags || [])],
     goalId: c.goalId,
     goalPath: c.goalPath,
-    goalIds: c.goalId ? [c.goalId] : [],
-    goalPaths: [...(c.goalPaths || [])],
     theme: c.theme,
     themePath: c.themePath,
     rootTheme: c.rootTheme,
@@ -221,6 +215,5 @@ export function fromCachedItem(c: CachedItem): RecordViewItem {
   it.titleLower = c.titleLower ?? c.title?.toLowerCase() ?? '';
   it.contentLower = c.contentLower ?? c.content?.toLowerCase() ?? '';
   it.tagsLower = c.tagsLower ?? (c.tags || []).map(t => t.toLowerCase());
-  it.goalPathsLower = c.goalPathsLower ?? (c.goalPaths || []).map(t => t.toLowerCase());
   return it;
 }

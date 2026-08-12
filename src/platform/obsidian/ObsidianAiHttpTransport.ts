@@ -132,9 +132,8 @@ export class ObsidianAiHttpTransport implements AiHttpTransport {
         const status = response.status ?? 200;
         const text = typeof response.text === 'string' ? response.text : '';
         const headers = makeHeadersLike(response.headers);
-        const statusText = typeof (response as { statusText?: unknown }).statusText === 'string'
-            ? (response as { statusText: string }).statusText
-            : '';
+        const responseRecord = response as unknown as Record<string, unknown>;
+        const statusText = typeof responseRecord.statusText === 'string' ? responseRecord.statusText : '';
 
         return {
             ok: status >= 200 && status < 300,

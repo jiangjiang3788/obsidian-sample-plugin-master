@@ -126,6 +126,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     modulesDataCache,
     ui,
     useCases,
+    timerService,
   });
 
   const handlePlacementChange = (viewId: string, placement: ViewPlacement) => {

@@ -6,19 +6,21 @@ import { getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeIma
 import { getCategoryColor } from '@core/types/public';
 import { TagsRenderer } from '@shared/ui/public';
 import { getBaseCategory, getLeafPath } from '@core/utils/public';
-import type { ResolveResourcePathHandler } from '@shared/types/public';
+import type { OpenRecordOriginHandler, ResolveResourcePathHandler } from '@shared/types/public';
+import { hasPlatformModifier, isKeyboardActivation, stopInteractionEvent } from '@shared/ui/public';
 
 interface FieldPillProps {
     item: RecordViewItem;
     fieldKey: string;
     resolveResourcePath?: ResolveResourcePathHandler;
     allThemes: ThemeDefinition[];
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
 /**
  * 通用字段渲染组件 - 可在多个视图间复用
  */
-export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes }: FieldPillProps) {
+export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOpenRecordOrigin }: FieldPillProps) {
     const value = readField(item, fieldKey);
     
     // 检查字段值是否为空
@@ -27,10 +29,25 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes }: Fi
     }
     
     const label = getFieldLabel(fieldKey);
+    const originProps = onOpenRecordOrigin ? {
+        role: 'button',
+        tabIndex: 0,
+        onClick: (event: MouseEvent) => {
+            if (!hasPlatformModifier(event)) return;
+            stopInteractionEvent(event);
+            void onOpenRecordOrigin(item);
+        },
+        onKeyDown: (event: KeyboardEvent) => {
+            if (!hasPlatformModifier(event) || !isKeyboardActivation(event)) return;
+            stopInteractionEvent(event);
+            void onOpenRecordOrigin(item);
+        },
+    } : {};
+    const originTitle = 'Ctrl/⌘+点击打开原文';
     
     // Tags 字段特殊处理
     if (fieldKey === 'tags') {
-        return <TagsRenderer tags={value} allThemes={allThemes} />;
+        return <span {...originProps} title={originTitle}><TagsRenderer tags={value} allThemes={allThemes} /></span>;
     }
 
     // Theme 字段特殊处理：默认展示 themePath，旧 theme 仍兼容。
@@ -38,7 +55,7 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes }: Fi
         const fullPath = value;
         const labelText = getLeafPath(fullPath) || fullPath;
         return (
-            <span class="tag-pill" title={`${label}: ${fullPath}`} style={{ backgroundColor: getCategoryColor(fullPath) }}>
+            <span {...originProps} class="tag-pill" title={`${label}: ${fullPath} · ${originTitle}`} style={{ backgroundColor: getCategoryColor(fullPath) }}>
                 {labelText}
             </span>
         );
@@ -48,7 +65,7 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes }: Fi
     if (fieldKey === 'categoryKey') {
         const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
         return (
-            <span class="tag-pill" title={`${label}: ${value}`} style={{ backgroundColor: getCategoryColor(item.categoryKey) }}>
+            <span {...originProps} class="tag-pill" title={`${label}: ${value} · ${originTitle}`} style={{ backgroundColor: getCategoryColor(item.categoryKey) }}>
                 {baseCategory}
             </span>
         );
@@ -61,7 +78,7 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes }: Fi
         if (!image) return null;
         const src = image.kind === 'url' ? image.src : (resolveResourcePath?.(image.src) || image.src);
         return (
-            <span class="tag-pill" title={`${label}: ${image.src}`}>
+            <span {...originProps} class="tag-pill" title={`${label}: ${image.src} · ${originTitle}`}>
                 <img src={src} alt={image.alt || label} />
             </span>
         );
@@ -71,7 +88,7 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes }: Fi
     const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
 
     return (
-        <span class="tag-pill" title={`${label}: ${displayValue}`}>
+        <span {...originProps} class="tag-pill" title={`${label}: ${displayValue} · ${originTitle}`}>
             {displayValue}
         </span>
     );

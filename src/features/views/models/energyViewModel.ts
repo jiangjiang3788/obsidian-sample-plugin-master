@@ -80,7 +80,7 @@ interface EnergyViewModuleLike {
 }
 
 function normalizedGoalFilter(value: unknown): string {
-  return normalizeGoalPath(String(value || '').trim()) || String(value || '').trim().replace(/^#/, '');
+  return normalizeGoalPath(String(value || '').trim()) || '';
 }
 
 function dateText(value: Date): string {
@@ -314,6 +314,7 @@ export function buildEnergyViewModel(args: {
     management: globalManagement,
     goals,
     today,
+    dateRange,
   });
 
   return {

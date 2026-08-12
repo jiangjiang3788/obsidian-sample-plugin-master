@@ -1,26 +1,5 @@
 /* Statistics V4 summary and container normalization. */
 /* CSS V4 unified summary and popover helpers. */
-.sv-goal-summary-strip {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--think-space-4);
-    margin-bottom: var(--think-space-5);
-}
-
-.sv-goal-summary-chip {
-    padding: var(--think-space-3) var(--think-space-4);
-    border: 1px solid var(--think-row-emphasis-border);
-    border-radius: var(--think-radius-pill);
-    background: var(--think-row-emphasis-bg);
-    color: var(--think-text-primary);
-    font-size: var(--think-font-size-xs);
-    font-weight: var(--think-font-weight-medium);
-}
-
-.sv-goal-summary-label {
-    color: var(--think-text-primary);
-    font-weight: var(--think-font-weight-semibold);
-}
 
 .sv-popover-heading {
     display: flex;
@@ -29,19 +8,20 @@
 }
 
 .statistics-view {
-    padding: var(--think-space-4);
-    border: 1px solid var(--think-section-border);
-    border-radius: var(--think-radius-md);
-    background: var(--think-panel-bg);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     container-type: inline-size;
 }
 
 .sv-top-controls {
     gap: var(--think-space-5);
     margin-bottom: var(--think-space-5);
-    padding: var(--think-space-5);
-    border: 1px solid var(--think-border-subtle);
-    background: var(--think-bg-surface-1);
+    padding: 0 0 var(--think-space-4);
+    border: 0;
+    border-bottom: 1px solid var(--think-border-subtle);
+    background: transparent;
 }
 
 .sv-filter-btn,

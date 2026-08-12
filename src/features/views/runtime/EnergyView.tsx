@@ -30,17 +30,18 @@ function selectionKey(selection: EnergyMapSelection | null): string | null {
   return selection.kind === 'sample' ? selection.sample.id : `day:${selection.day.date}`;
 }
 
-function GoalEnergyPanel({ panel, model, onOpenRecord }: {
+function GoalEnergyPanel({ panel, model, onOpenRecord, onOpenRecordOrigin }: {
   panel: EnergyViewRenderModel['goalPanels'][number];
   model: EnergyViewRenderModel;
   onOpenRecord?: (item: RecordViewItem) => void;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
 }) {
   const [selection, setSelection] = useState<EnergyMapSelection | null>(null);
   return (
     <section class="think-energy-view__goal">
       <div class="think-energy-view__primary">
         {model.config.showTimeline ? (
-          <EnergyPeriodMap period={panel.period} selectedKey={selectionKey(selection)} onSelect={setSelection} />
+          <EnergyPeriodMap period={panel.period} selectedKey={selectionKey(selection)} onSelect={setSelection} onOpenRecordOrigin={onOpenRecordOrigin} />
         ) : <div class="think-energy-view__timeline-off">精力地图已关闭。</div>}
 
         {selection ? (
@@ -49,6 +50,7 @@ function GoalEnergyPanel({ panel, model, onOpenRecord }: {
             management={model.config.showManagement ? panel.management : null}
             onBack={() => setSelection(null)}
             onOpenRecord={onOpenRecord}
+            onOpenRecordOrigin={onOpenRecordOrigin}
           />
         ) : (
           <EnergyPeriodReview periodLabel={model.periodLabel} lines={panel.reviewLines} />
@@ -103,7 +105,7 @@ export function EnergyView({ items, records = items, module, dateRange, currentV
     <div class="think-energy-view">
       <div class="think-energy-view__goals">
         {firstPanel
-          ? <GoalEnergyPanel panel={firstPanel} model={energyModel} onOpenRecord={onOpenRecord} />
+          ? <GoalEnergyPanel panel={firstPanel} model={energyModel} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />
           : <EmptyEnergyPanel />}
 
         <EnergyTaskList
@@ -115,7 +117,7 @@ export function EnergyView({ items, records = items, module, dateRange, currentV
         />
 
         {otherPanels.map((panel) => (
-          <GoalEnergyPanel key={panel.key} panel={panel} model={energyModel} onOpenRecord={onOpenRecord} />
+          <GoalEnergyPanel key={panel.key} panel={panel} model={energyModel} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />
         ))}
       </div>
     </div>

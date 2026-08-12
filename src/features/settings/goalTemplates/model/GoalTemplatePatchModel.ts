@@ -22,7 +22,7 @@ function cleanDefaultValuesOverride(
   const merged = mergeDefaultValues(draft, themeIcon);
   const baseDefaults = getFieldDefaultMap(block?.fields as TemplateField[] | undefined);
   const result: Record<string, unknown> = {};
-  const allowSystemDefault = new Set(['themePath', '主题', 'icon', '图标']);
+  const allowSystemDefault = new Set(['themePath', 'icon']);
   const forbiddenKeys = new Set([
     'legacyOverrideId', 'legacyThemePath', 'goalId', '目标ID', 'goalPath', '目标', 'templateId', '模板ID',
     'templateSourceType', '模板来源', 'templateVariantId', 'goalTemplateVariantId', '变体ID', '记录预设',
@@ -35,19 +35,17 @@ function cleanDefaultValuesOverride(
     const value = compactText(raw);
     if (!value) return;
     if (isSystemRecordContextField(key) && !allowSystemDefault.has(key)) return;
-    if ((key === 'themePath' || key === '主题') && value === goalThemePath) return;
-    if ((key === 'themePath' || key === '主题') && value === '{{goal.themePath}}') return;
+    if (key === 'themePath' && value === goalThemePath) return;
+    if (key === 'themePath' && value === '{{goal.themePath}}') return;
     if (baseDefaults[key] !== undefined && baseDefaults[key] === value) return;
     result[key] = value;
   });
 
   if (draft.themePath && draft.themePath !== goalThemePath) {
     result.themePath = draft.themePath;
-    result['主题'] = draft.themePath;
   }
   if (themeIcon && draft.themePath && draft.themePath !== goalThemePath) {
     result.icon = themeIcon;
-    result['图标'] = themeIcon;
   }
 
   return Object.keys(result).length ? result : undefined;

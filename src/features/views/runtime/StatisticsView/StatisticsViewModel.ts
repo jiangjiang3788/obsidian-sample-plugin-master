@@ -82,7 +82,7 @@ export function buildStatisticsGoalBuckets(args: {
   themes?: ThemeDefinition[];
   topN?: number;
 }): CategoryConfig[] {
-  const buckets = buildGoalBuckets(args.items, args.goals || [], { includeUnassigned: true, includeKnownGoals: false, themes: args.themes || [] });
+  const buckets = buildGoalBuckets(args.items, args.goals || [], { includeUnassigned: true, includeKnownGoals: true, themes: args.themes || [] });
   const topN = Math.max(0, Number(args.topN) || 0);
   return topN > 0 ? buckets.slice(0, topN) : buckets;
 }

@@ -4,7 +4,7 @@ import { toRecordViewItem } from './RecordEntity';
 import { applyExplicitThemeViewFields, normalizeExplicitTheme } from '@/core/theme/themeSemantics';
 import { normalizeItemDates } from '@/core/utils/normalize';
 import type { RecordNormalizeContext } from './RecordEntity';
-import { splitGoalPath } from '@/core/goal';
+import { normalizeGoalPath, splitGoalPath } from '@/core/goal';
 
 function unique(values: Array<string | undefined | null>): string[] {
   return Array.from(new Set(values.map(value => String(value ?? '').trim()).filter(Boolean)));
@@ -19,8 +19,6 @@ type SearchIndexedItem = RecordEntity & {
   contentLower?: string;
   fullDataLower?: string;
   tagsLower?: string[];
-  goalPathsLower?: string[];
-  goalIdsLower?: string[];
   goalPathLower?: string;
   rootGoalLower?: string;
   leafGoalLower?: string;
@@ -51,13 +49,15 @@ export function normalizeRecordItem(item: RecordEntity, context: RecordNormalize
   }
 
   item.tags = unique([...(context.sectionTags || []), ...(item.tags || [])]);
-  item.goalIds = unique([item.goalId, ...(item.goalIds || [])]);
-  item.goalPaths = unique([item.goalPath, ...(item.goalPaths || [])]);
-  item.goalPath = item.goalPaths[0] || item.goalPath;
+  item.goalId = String(item.goalId || '').trim() || undefined;
+  const rawGoalPath = String(item.goalPath || '').trim();
+  const canonicalGoalPath = rawGoalPath ? normalizeGoalPath(rawGoalPath) : null;
+  if (rawGoalPath && !canonicalGoalPath) throw new Error(`invalid_record_goal_path:${item.id}`);
+  item.goalPath = canonicalGoalPath || undefined;
+  if (Boolean(item.goalId) !== Boolean(item.goalPath)) throw new Error(`invalid_record_goal_identity:${item.id}`);
   const goalParts = splitGoalPath(item.goalPath || null);
-  item.goalPath = goalParts.goalPath || item.goalPath;
-  item.rootGoal = goalParts.rootGoal || item.rootGoal;
-  item.leafGoal = goalParts.leafGoal || item.leafGoal;
+  item.rootGoal = goalParts.rootGoal || undefined;
+  item.leafGoal = goalParts.leafGoal || undefined;
 
   // 主题只允许来自显式元数据。normalizeExplicitTheme 只做清洗/匹配，不会读取 header。
   item.theme = normalizeExplicitTheme(item.theme, context.themeMatcher);
@@ -77,8 +77,6 @@ export function normalizeRecordItem(item: RecordEntity, context: RecordNormalize
   indexedItem.contentLower = normalizeSearchText(item.content);
   indexedItem.fullDataLower = normalizeSearchText(item.fullData);
   indexedItem.tagsLower = (item.tags || []).map(tag => normalizeSearchText(tag));
-  indexedItem.goalPathsLower = (item.goalPaths || []).map(goal => normalizeSearchText(goal));
-  indexedItem.goalIdsLower = (item.goalIds || []).map(goalId => normalizeSearchText(goalId));
   indexedItem.goalPathLower = normalizeSearchText(item.goalPath);
   indexedItem.rootGoalLower = normalizeSearchText(item.rootGoal);
   indexedItem.leafGoalLower = normalizeSearchText(item.leafGoal);

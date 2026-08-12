@@ -99,6 +99,40 @@ export class TimerService {
         this.ui.notice('任务已开始');
     }
 
+    /**
+     * Single completion boundary used by every Task surface.
+     * If the Task owns an active/paused Timer, completion persists the final
+     * TaskSession and clears runtime state through stopAndApply(). Otherwise
+     * it performs a normal Task completion without fabricating a Session.
+     */
+    public async completeTask(taskId: string): Promise<boolean> {
+        const taskItem = this.dataStore.getRecordById(taskId);
+        if (!taskItem || taskItem.coreBlock !== 'task' || taskItem.status !== 'open') {
+            this.ui.notice('找不到可完成的未完成任务');
+            return false;
+        }
+
+        const timer = this.useCases.timer.getTimers().find((entry) => entry.taskId === taskId);
+        if (timer) return this.stopAndApply(timer.id);
+
+        try {
+            const result = await this.useCases.recordInput.submitCompleteRecord({
+                itemId: taskId,
+                source: 'layout_renderer',
+            });
+            if (result.status !== 'success') {
+                if (result.status !== 'cancelled') this.ui.notice(readResultMessage(result, '完成任务失败'));
+                return false;
+            }
+            this.ui.notice(result.feedback?.notice || '任务已完成。');
+            return true;
+        } catch (error: any) {
+            this.ui.notice(`完成任务失败：${error.message}`);
+            devError('TimerService completeTask Error:', error);
+            return false;
+        }
+    }
+
     public async pause(timerId: string): Promise<void> {
         const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
         if (timer && timer.status === 'running') {

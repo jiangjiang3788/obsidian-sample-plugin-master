@@ -24,22 +24,24 @@
 }
 
 .think-os--settings .think-rule-builder__row-grid {
-  padding: var(--think-space-4);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
-  background: var(--think-bg-surface-1);
+  padding: var(--think-space-3) 0;
+  border: 0;
+  border-top: 1px solid var(--think-border-subtle);
+  border-radius: 0;
+  background: transparent;
 }
 
 .think-os--settings .think-rule-builder__column-head {
-  padding-inline: var(--think-space-4);
+  padding-inline: 0;
   color: var(--think-text-secondary);
 }
 
 .think-os--settings .think-rule-builder__add-grid {
-  padding: var(--think-space-5);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
-  background: var(--think-bg-surface-2);
+  padding: var(--think-space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--think-border-subtle);
+  border-radius: 0;
+  background: transparent;
 }
 
 .think-os--settings .think-rule-builder__end-label {

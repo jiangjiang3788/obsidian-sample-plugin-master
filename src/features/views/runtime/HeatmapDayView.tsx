@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import type { RecordViewItem } from '@core/types/public';
-import type { ResolveResourcePathHandler } from '@shared/types/public';
+import type { OpenRecordOriginHandler, ResolveResourcePathHandler } from '@shared/types/public';
 import { HeatmapCell } from './components/heatmap/HeatmapCell';
 import {
     buildDayThemeGroups,
@@ -16,6 +16,7 @@ interface HeatmapDayViewProps {
     dataByThemeAndDate: Map<string, Map<string, RecordViewItem[]>>;
     config: any;
     resolveResourcePath?: ResolveResourcePathHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
     onCellClick: (date: string, dayItems: RecordViewItem[] | undefined, themePath?: string, goalPath?: string, presetContext?: HeatmapPresetContext) => void;
     resolveCellRatingMapping: (themePath: string, presetContext?: HeatmapPresetContext) => Map<string, string>;
 }
@@ -27,6 +28,7 @@ export function HeatmapDayView({
     dataByThemeAndDate,
     config,
     resolveResourcePath,
+    onOpenRecordOrigin,
     onCellClick,
     resolveCellRatingMapping,
 }: HeatmapDayViewProps) {
@@ -53,6 +55,7 @@ export function HeatmapDayView({
                                             config={config}
                                             ratingMapping={themeRatingMapping}
                                             resolveResourcePath={resolveResourcePath}
+                                        onOpenRecordOrigin={onOpenRecordOrigin}
                                             highlightToday={false}
                                             emptyLabel={!dayItems || dayItems.length === 0 ? entry.label : undefined}
                                             onCellClick={(clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, presetContext)}
@@ -87,6 +90,7 @@ export function HeatmapDayView({
                                         config={config}
                                         ratingMapping={themeRatingMapping}
                                         resolveResourcePath={resolveResourcePath}
+                                        onOpenRecordOrigin={onOpenRecordOrigin}
                                         highlightToday={false}
                                         emptyLabel={!dayItems || dayItems.length === 0 ? entry.label : undefined}
                                         onCellClick={(clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath)}

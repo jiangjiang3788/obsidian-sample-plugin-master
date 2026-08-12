@@ -1,7 +1,7 @@
 import type { RecordViewItem, TimerState } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
 import { createGoalOrderIndex } from '@core/goal/public';
-import { asTaskSessionRecord, getTaskCadence, TASK_CADENCE_META, TASK_CADENCE_ORDER, type TaskCadenceKey } from '@core/records/public';
+import { getTaskCadence, TASK_CADENCE_META, TASK_CADENCE_ORDER, type TaskCadenceKey } from '@core/records/public';
 import { isTaskOpen, dayjs } from '@core/utils/public';
 import { formatTaskRecurrence } from '@core/records/public';
 import {
@@ -81,59 +81,72 @@ function taskTitle(item: RecordViewItem): string {
   return raw || text(item.title) || '未命名任务';
 }
 
-function normalizedGoalPath(item: RecordViewItem): string {
-  return text(item.goalPath || item.goalPaths?.[0] || item.goalId);
+function buildGoalMap(goals: GoalDefinition[]): Map<string, GoalDefinition> {
+  return new Map((goals || []).map((goal) => [goal.id, goal] as const));
 }
 
-function goalLabel(item: RecordViewItem): string {
-  return normalizedGoalPath(item) || '未分目标';
+function resolveTaskGoal(item: RecordViewItem, goalsById: Map<string, GoalDefinition>): { key: string; path?: string; label: string } {
+  const goalId = text(item.goalId);
+  if (!goalId) return { key: '__unassigned__', label: '未分目标' };
+  const goal = goalsById.get(goalId);
+  const path = text(goal?.goalPath || item.goalPath) || undefined;
+  const label = text(goal?.title || path) || '未分目标';
+  return { key: goalId, path, label };
+}
+
+function completionIdentity(item: RecordViewItem): string {
+  const seriesId = text(item.seriesId);
+  return seriesId ? `series:${seriesId}` : `task:${item.id}`;
 }
 
 function recurrenceText(item: RecordViewItem): string {
   return text(formatTaskRecurrence(item.recurrenceInfo));
 }
 
-function aggregateKey(item: RecordViewItem): string {
-  return [taskTitle(item).toLowerCase(), goalLabel(item).toLowerCase(), recurrenceText(item).toLowerCase()].join('::');
-}
-
-function localSessionDate(value: string): string {
+function localCompletionDate(value: string): string {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return '';
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-function localSessionTime(value: string): string {
+function localCompletionTime(value: string): string {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return '';
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
-function historyMap(records: RecordViewItem[], today: string): Map<string, EnergyTaskRecordVM[]> {
-  const start = dayjs(today).subtract(365, 'day').startOf('day');
-  const end = dayjs(today).endOf('day');
-  const byId = new Map(records.map((record) => [record.id, record] as const));
+/**
+ * Energy task history is completion history, not execution-session history.
+ * - current layout dateRange owns the visible count
+ * - recurring identity is stable seriesId
+ * - TaskSession remains execution evidence for Energy learning elsewhere
+ */
+function completionHistoryMap(
+  records: RecordViewItem[],
+  dateRange: [Date, Date],
+): Map<string, EnergyTaskRecordVM[]> {
+  const start = dayjs(dateRange[0]);
+  const end = dayjs(dateRange[1]);
   const map = new Map<string, EnergyTaskRecordVM[]>();
-  for (const record of records) {
-    const session = asTaskSessionRecord(record);
-    if (!session) continue;
-    const task = byId.get(session.taskId);
-    if (!task || task.coreBlock !== 'task') continue;
-    const dateText = localSessionDate(session.sessionStartedAt);
-    const occurred = dayjs(dateText);
-    if (!dateText || !occurred.isValid() || occurred.isBefore(start) || occurred.isAfter(end)) continue;
-    const key = aggregateKey(task);
+
+  for (const item of records) {
+    if (item.coreBlock !== 'task' || item.status !== 'done') continue;
+    const completedAt = text(item.completedAt || item.doneDate);
+    if (!completedAt) continue;
+    const occurred = dayjs(completedAt);
+    if (!occurred.isValid() || occurred.isBefore(start) || occurred.isAfter(end)) continue;
+
+    const key = completionIdentity(item);
     const rows = map.get(key) || [];
-    const startTime = localSessionTime(session.sessionStartedAt);
-    const endTime = localSessionTime(session.sessionEndedAt);
     rows.push({
-      id: session.id,
-      doneDate: dateText,
-      timeLabel: [startTime, endTime].filter(Boolean).join('–'),
-      item: task,
+      id: item.id,
+      doneDate: localCompletionDate(completedAt),
+      timeLabel: localCompletionTime(completedAt),
+      item,
     });
     map.set(key, rows);
   }
+
   for (const rows of map.values()) {
     rows.sort((a, b) => `${b.doneDate || ''} ${b.timeLabel}`.localeCompare(`${a.doneDate || ''} ${a.timeLabel}`, 'zh-CN'));
   }
@@ -151,12 +164,13 @@ export function buildEnergyTaskListModel(args: {
   management: EnergyManagementModel | null;
   goals?: GoalDefinition[];
   today: string;
+  dateRange: [Date, Date];
 }): EnergyTaskListModel {
-  const { items, historyItems, management, goals = [], today } = args;
+  const { items, historyItems, management, goals = [], today, dateRange } = args;
   const openTasks = items.filter((item) => item.coreBlock === 'task' && isTaskOpen(item));
   const visibleItems = openTasks;
   const visibleIds = new Set(visibleItems.map((item) => item.id));
-  const records = historyMap(historyItems, today);
+  const completionHistory = completionHistoryMap(historyItems, dateRange);
 
   const candidateBuild = buildEnergyActionCandidateResult(items, {
     today,
@@ -202,6 +216,7 @@ export function buildEnergyTaskListModel(args: {
     for (const row of matchable) energyMatchedIds.add(row.candidate.id);
   }
 
+  const goalsById = buildGoalMap(goals);
   const goalBuckets = new Map<string, {
     label: string;
     goalPath?: string;
@@ -209,12 +224,12 @@ export function buildEnergyTaskListModel(args: {
   }>();
 
   for (const item of visibleItems) {
-    const goalPath = normalizedGoalPath(item) || undefined;
-    const label = goalLabel(item);
-    const goalKey = goalPath || '__unassigned__';
+    const resolvedGoal = resolveTaskGoal(item, goalsById);
+    const goalPath = resolvedGoal.path;
+    const label = resolvedGoal.label;
+    const goalKey = resolvedGoal.key;
     const cadence = getTaskCadence(item);
-    const key = aggregateKey(item);
-    const history = records.get(key) || [];
+    const history = completionHistory.get(completionIdentity(item)) || [];
     const action = actionById.get(item.id);
     const candidate = candidateById.get(item.id);
     let bucket = goalBuckets.get(goalKey);
@@ -256,16 +271,24 @@ export function buildEnergyTaskListModel(args: {
   const goalOrder = createGoalOrderIndex(goals);
   const goalModels: EnergyTaskGoalVM[] = Array.from(goalBuckets.entries())
     .sort(([, left], [, right]) => goalOrder.compareGoalPaths(left.goalPath || left.label, right.goalPath || right.label))
-    .map(([key, bucket]) => ({
-      key,
-      label: bucket.label,
-      goalPath: bucket.goalPath,
-      rows: TASK_CADENCE_ORDER.flatMap((cadence) => {
-        const tasks = bucket.rows.get(cadence) || [];
-        return tasks.length > 0 ? [{ key: cadence, ...TASK_CADENCE_META[cadence], tasks }] : [];
-      }),
-      taskCount: Array.from(bucket.rows.values()).reduce((sum, tasks) => sum + tasks.length, 0),
-    }));
+    .map(([key, bucket]) => {
+      const rows = TASK_CADENCE_ORDER
+        .map((cadence) => ({
+          key: cadence,
+          ...TASK_CADENCE_META[cadence],
+          tasks: bucket.rows.get(cadence) || [],
+        }))
+        .filter((row) => row.tasks.length > 0);
+      const taskCount = rows.reduce((sum, row) => sum + row.tasks.length, 0);
+      return {
+        key,
+        label: bucket.label,
+        goalPath: bucket.goalPath,
+        rows,
+        taskCount,
+      };
+    })
+    .filter((goal) => goal.taskCount > 0);
 
   return {
     goals: goalModels,

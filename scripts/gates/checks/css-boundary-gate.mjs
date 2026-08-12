@@ -316,8 +316,9 @@ for (const [file, contract] of v5Contracts) {
 }
 
 const finalBudget = {
-  cssFiles: 65,
-  cssLines: 7300,
+  // R12 splits monolithic feature CSS behind thin facade imports.
+  cssFiles: 72,
+  cssLines: 8500,
   important: 12,
   hardcodedColorsOutsideTokens: 0,
   duplicateClassesAcrossFiles: 90,

@@ -11,6 +11,7 @@ export * from './primitives/Modal';
 export * from './primitives/Button';
 export * from './primitives/IconButton';
 export * from './utils/recordOrigin';
+export * from './utils/interaction';
 export * from './components/FilterPopover';
 export * from './components/IconAction';
 export * from './components/ModalHeader';

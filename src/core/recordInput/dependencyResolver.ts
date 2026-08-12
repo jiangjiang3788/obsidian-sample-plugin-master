@@ -2,7 +2,7 @@ import type { InputSettings } from '@/core/recordInput/CaptureTemplate';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { GoalTemplateResolver } from '@/core/services/GoalTemplateResolver';
-import { DEFAULT_CORE_BLOCKS } from '@/core/blocks';
+import { getEffectiveCoreBlocks } from '@/core/blocks';
 import type { RecordSubmitIssue, ResolveDependenciesResult } from '@/core/types/recordInput';
 
 export interface DependencyResolverInput {
@@ -65,7 +65,6 @@ function extractGoalContext(input: DependencyResolverInput): {
     nested.goalId,
     nested['目标ID'],
     item?.goalId,
-    item?.goalIds,
   );
   const goalPath = readFirstString(
     context.goalPath,
@@ -75,7 +74,6 @@ function extractGoalContext(input: DependencyResolverInput): {
     nested['目标'],
     nested['目标路径'],
     item?.goalPath,
-    item?.goalPaths,
   );
   const themePath = readFirstString(
     context.themePath,
@@ -105,7 +103,7 @@ function extractGoalContext(input: DependencyResolverInput): {
 }
 
 
-function normalizeDependencySettings(settings: ThinkSettings | InputSettings): ThinkSettings {
+export function normalizeRecordInputSettingsEnvelope(settings: ThinkSettings | InputSettings): ThinkSettings {
   const maybeFull = settings as ThinkSettings;
   if (maybeFull?.inputSettings) return maybeFull;
   return {
@@ -113,24 +111,21 @@ function normalizeDependencySettings(settings: ThinkSettings | InputSettings): T
   } as ThinkSettings;
 }
 
-function buildEffectiveInputSettings(settings: InputSettings): InputSettings {
+function buildEffectiveInputSettings(settings: ThinkSettings): InputSettings {
   return {
-    ...settings,
-    blocks: [
-      ...(settings.blocks || []),
-      ...DEFAULT_CORE_BLOCKS.filter((coreBlock) => !(settings.blocks || []).some((block) => block.id === coreBlock.id)),
-    ],
+    ...settings.inputSettings,
+    blocks: getEffectiveCoreBlocks(settings),
   };
 }
 
 export function resolveRecordDependencies(input: DependencyResolverInput): ResolveDependenciesResult {
   const warnings: RecordSubmitIssue[] = [];
   const errors: RecordSubmitIssue[] = [];
-  const fullSettings = normalizeDependencySettings(input.settings);
+  const fullSettings = normalizeRecordInputSettingsEnvelope(input.settings);
   const inputSettings = fullSettings.inputSettings;
   const requestedBlockId = input.blockId ?? null;
   const effectiveBlockId = requestedBlockId ? String(requestedBlockId) : null;
-  const effectiveSettings = buildEffectiveInputSettings(inputSettings);
+  const effectiveSettings = buildEffectiveInputSettings(fullSettings);
   const goalContext = extractGoalContext(input);
   const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, goalContext.themePath ?? input.item?.themePath ?? input.item?.theme ?? null);
   let resolvedThemeId = inferredThemeId ?? null;
@@ -183,26 +178,39 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
     settings: fullSettings,
     blockId: effectiveBlockId || requestedBlockId,
     goalId: goalContext.goalId,
-    goalPath: goalContext.goalPath,
     themeId: resolvedThemeId ?? undefined,
     themePath: goalContext.themePath,
     templateVariantId: goalContext.templateVariantId,
   });
 
-  if (!resolved.template) {
-    errors.push(issue('record_template_missing', 'No effective Goal + Block template is available for this record.', 'blockId'));
+  if (resolved.template) {
+    return {
+      blockId: resolved.effectiveBlockId || effectiveBlockId || requestedBlockId,
+      themeId: resolvedThemeId,
+      template: resolved.template,
+      theme: resolved.theme,
+      warnings,
+      errors,
+      meta: {
+        templateId: resolved.templateId,
+        templateSourceType: resolved.templateSourceType,
+        usedFallbackBlock: false,
+        usedFallbackTheme,
+      },
+    };
   }
 
+  errors.push(issue('record_template_missing', 'No effective Goal + Block template is available for this record.', 'blockId'));
   return {
-    blockId: resolved.effectiveBlockId || effectiveBlockId || requestedBlockId,
+    blockId: effectiveBlockId || requestedBlockId,
     themeId: resolvedThemeId,
-    template: resolved.template,
+    template: null,
     theme: resolved.theme,
     warnings,
     errors,
     meta: {
-      templateId: resolved.templateId,
-      templateSourceType: resolved.templateSourceType,
+      templateId: null,
+      templateSourceType: null,
       usedFallbackBlock: false,
       usedFallbackTheme,
     },

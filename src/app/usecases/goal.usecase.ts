@@ -22,6 +22,7 @@ import {
   compactGoalTemplateForStorage,
   cleanupGoalTemplateStorage,
   makeStableGoalIdFromPath,
+  requireGoalPath,
   splitGoalPath,
 } from '@core/goal/public';
 import { getCoreBlockById } from '@core/blocks/public';
@@ -64,8 +65,9 @@ function ensureGoalSettings(settings?: GoalSettings): GoalSettings {
 }
 
 function normalizeGoalInput(input: AddGoalInput): GoalDefinition {
-  const goalPath = splitGoalPath(input.goalPath || input.title).goalPath || input.title.trim();
-  const title = input.title.trim() || goalPath.split('/').filter(Boolean).pop() || goalPath;
+  const goalPath = requireGoalPath(input.goalPath || input.title);
+  const title = String(input.title || '').trim() || goalPath.split('/').filter(Boolean).pop() || goalPath;
+  if (title.includes('#') || title.includes('＃')) throw new Error('Goal title must not contain # markers.');
   const timestamp = nowIso();
   return {
     id: makeStableGoalIdFromPath(goalPath),
@@ -82,8 +84,9 @@ function normalizeGoalInput(input: AddGoalInput): GoalDefinition {
 }
 
 function normalizeStoredGoalPath(goal: Pick<GoalDefinition, 'goalPath' | 'title'>): string {
-  return splitGoalPath(goal.goalPath || goal.title).goalPath || String(goal.goalPath || goal.title || '').trim();
+  return requireGoalPath(goal.goalPath || goal.title);
 }
+
 
 function collectGoalCascadeIds(goals: GoalDefinition[], id: string): string[] {
   const target = goals.find((goal) => goal.id === id);
@@ -108,7 +111,7 @@ export class GoalUseCase {
       const goal = normalizeGoalInput(input);
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const exists = draft.goalSettings.goals.some((item) => item.id === goal.id || splitGoalPath(item.goalPath || item.title).goalPath === goal.goalPath);
+        const exists = draft.goalSettings.goals.some((item) => item.id === goal.id || normalizeStoredGoalPath(item) === goal.goalPath);
         if (!exists) draft.goalSettings.goals.push(goal);
       });
       return goal;
@@ -129,9 +132,12 @@ export class GoalUseCase {
         const target = draft.goalSettings.goals.find((goal) => goal.id === id);
         if (!target) return;
         Object.assign(target, safePatch, { updatedAt: nowIso() });
-        if (safePatch.goalPath || safePatch.title) {
-          target.goalPath = splitGoalPath(target.goalPath || target.title).goalPath || target.goalPath;
+        if (safePatch.title !== undefined) {
+          const title = String(target.title || '').trim();
+          if (!title || title.includes('#') || title.includes('＃')) throw new Error('Goal title must not contain # markers.');
+          target.title = title;
         }
+        if (safePatch.goalPath || safePatch.title) target.goalPath = requireGoalPath(target.goalPath || target.title);
       });
     } catch (error) {
       devError('[GoalUseCase] updateGoal failed:', error);

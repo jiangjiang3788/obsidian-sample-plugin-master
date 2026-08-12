@@ -7,6 +7,8 @@ import {
   IosShareIcon,
   SettingsIcon,
   ThinkIconButton,
+  isKeyboardActivation,
+  stopInteractionEvent,
 } from '@shared/ui/public';
 
 export interface ModulePanelProps {
@@ -56,7 +58,14 @@ export function ModulePanel({
         <section class="think-module">
             <header
                 class={`module-header${layoutEditing ? ' is-layout-editing' : ''}${layoutSelected ? ' is-layout-selected' : ''}`}
+                role="button"
+                tabIndex={0}
                 onClick={onHeaderClick as any}
+                onKeyDown={(event: KeyboardEvent) => {
+                    if (event.target !== event.currentTarget || !isKeyboardActivation(event)) return;
+                    stopInteractionEvent(event);
+                    onToggle?.(event as any);
+                }}
                 title={layoutEditing
                     ? '点击选中；拖动左侧手柄移动；点击标题区域折叠或展开'
                     : '点击折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开'}

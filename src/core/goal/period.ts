@@ -63,7 +63,7 @@ function isoWeekInfo(date: Date): { year: number; week: number } {
 export function normalizePeriodGranularity(value?: string | null): Exclude<CycleGranularity, 'custom'> {
   const text = String(value || '').trim().toLowerCase();
   if (text === 'day' || text === 'week' || text === 'month' || text === 'quarter' || text === 'year') return text;
-  return 'day';
+  return 'week';
 }
 
 export function resolveDerivedPeriod(dateValue?: string | null, granularityValue?: string | null): DerivedPeriod {

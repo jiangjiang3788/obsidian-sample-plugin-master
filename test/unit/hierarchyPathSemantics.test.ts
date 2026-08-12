@@ -6,7 +6,7 @@ import {
   normalizeHierarchyPathValue,
   splitHierarchyPathValue,
 } from '@/core/semantics/path';
-import { normalizeGoalPath, splitGoalPath } from '@/core/goal/path';
+import { normalizeGoalPath, requireGoalPath, splitGoalPath } from '@/core/goal/path';
 import { splitHierarchyPath } from '@/core/fields/pathSemantics';
 import { splitThemePath } from '@/core/theme/themeSemantics';
 
@@ -23,17 +23,19 @@ describe('hierarchy path semantics', () => {
     });
   });
 
-  it('lets goal and field wrappers strip leading hash markers explicitly', () => {
-    expect(normalizeGoalPath(' #学习 / #英语 ')).toBe('学习/英语');
-    expect(splitGoalPath('#学习/听力')).toEqual({
+  it('keeps Goal separate from Tag syntax and rejects hash markers', () => {
+    expect(normalizeGoalPath(' 学习 / 英语 ')).toBe('学习/英语');
+    expect(normalizeGoalPath('#学习/英语')).toBeNull();
+    expect(() => requireGoalPath('#学习/英语')).toThrow(/without #/);
+    expect(splitGoalPath('学习/听力')).toEqual({
       goalPath: '学习/听力',
       rootGoal: '学习',
       leafGoal: '听力',
     });
     expect(splitHierarchyPath('#项目/插件')).toEqual({
-      path: '项目/插件',
-      parts: ['项目', '插件'],
-      root: '项目',
+      path: '#项目/插件',
+      parts: ['#项目', '插件'],
+      root: '#项目',
       leaf: '插件',
     });
   });

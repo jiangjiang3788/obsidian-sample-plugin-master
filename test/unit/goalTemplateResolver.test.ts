@@ -4,6 +4,7 @@ import { GoalTemplateResolver } from '@/core/services/GoalTemplateResolver';
 
 function baseSettings(): ThinkSettings {
   return {
+    schemaVersion: 5,
     groups: [],
     viewInstances: [],
     layouts: [],
@@ -19,7 +20,6 @@ function baseSettings(): ThinkSettings {
           goalPath: '产品化/目标中心',
           status: 'active',
           themePath: '工作/插件',
-          granularity: 'week',
           metrics: [],
           createdAt: '2026-06-06T00:00:00.000Z',
           updatedAt: '2026-06-06T00:00:00.000Z',
@@ -52,7 +52,7 @@ describe('GoalTemplateResolver', () => {
       goalId: 'goal.plugin',
       coreBlockId: 'core.task',
       enabled: true,
-      outputTemplate: '目标模板',
+      defaultValues: { themePath: '工作/插件' },
       createdAt: '2026-06-06T00:00:00.000Z',
       updatedAt: '2026-06-06T00:00:00.000Z',
     });
@@ -60,9 +60,10 @@ describe('GoalTemplateResolver', () => {
     const result = GoalTemplateResolver.resolve({
       settings,
       blockId: 'core.task',
-      goalPath: '产品化/目标中心',
+      goalId: 'goal.plugin',
     });
     expect(result.templateSourceType).toBe('goal-template');
-    expect(result.template?.outputTemplate).toBe('目标模板');
+    expect(result.template?.fields.find((field) => field.key === 'themePath')?.defaultValue).toBe('工作/插件');
+    expect(result.template?.fields.length).toBeGreaterThan(0);
   });
 });

@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import type { RecordViewItem } from '@core/types/public';
-import type { ResolveResourcePathHandler } from '@shared/types/public';
+import type { OpenRecordOriginHandler, ResolveResourcePathHandler } from '@shared/types/public';
 import { HeatmapDayView } from './HeatmapDayView';
 import { HeatmapThemeGroup } from './HeatmapThemeGroup';
 import {
@@ -16,6 +16,7 @@ interface HeatmapViewContentProps {
     dateRange: [Date, Date];
     config: any;
     resolveResourcePath?: ResolveResourcePathHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
     goalGroupsToDisplay: GoalHeatmapGroup[];
     themesToTrack: string[];
     dataByThemeAndDate: Map<string, Map<string, RecordViewItem[]>>;
@@ -34,6 +35,7 @@ export function HeatmapViewContent({
     dateRange,
     config,
     resolveResourcePath,
+    onOpenRecordOrigin,
     goalGroupsToDisplay,
     themesToTrack,
     dataByThemeAndDate,
@@ -59,6 +61,7 @@ export function HeatmapViewContent({
             dateRange={dateRange}
             config={config}
             resolveResourcePath={resolveResourcePath}
+            onOpenRecordOrigin={onOpenRecordOrigin}
             verticalLayouts={verticalLayouts}
             collapsedThemes={collapsedThemes}
             headerRefs={headerRefs}
@@ -77,6 +80,7 @@ export function HeatmapViewContent({
                 dataByThemeAndDate={dataByThemeAndDate}
                 config={config}
                 resolveResourcePath={resolveResourcePath}
+                onOpenRecordOrigin={onOpenRecordOrigin}
                 onCellClick={onCellClick}
                 resolveCellRatingMapping={resolveCellRatingMapping}
             />

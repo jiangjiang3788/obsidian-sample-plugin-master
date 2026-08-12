@@ -5,7 +5,7 @@ import type { InputSettings, RecordViewItem, ViewInstance } from '@core/types/pu
 import type { GoalDefinition } from '@core/goal/public';
 import type { MessageRenderPort } from '@core/ports/public';
 import { exportItemsToMarkdown, getExportConfigByViewType, devLog } from '@core/utils/public';
-import type { CategoryColorMap, CloseStatisticsPopoverHandler, NoticeHandler, OpenQuickCreateHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenStatisticsPopoverHandler, ResolveResourcePathHandler, TimerController, UpdateCategoryColorsHandler } from '@shared/types/public';
+import type { CategoryColorMap, CloseStatisticsPopoverHandler, MarkDoneHandler, NoticeHandler, OpenQuickCreateHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenStatisticsPopoverHandler, ResolveResourcePathHandler, TimerController, UpdateCategoryColorsHandler } from '@shared/types/public';
 import { StatisticsViewView } from './StatisticsViewView';
 import {
   buildStatisticsGoalBuckets,
@@ -36,6 +36,7 @@ interface StatisticsViewProps {
   onCategoryColorsChange?: UpdateCategoryColorsHandler;
   selectedCategories?: string[];
   timerService: TimerController;
+  onMarkDone: MarkDoneHandler;
   timers: any[];
   allThemes: any[];
   goals?: GoalDefinition[];
@@ -64,6 +65,7 @@ export function StatisticsView({
   onCategoryColorsChange,
   selectedCategories: _selectedCategories,
   timerService,
+  onMarkDone,
   timers,
   allThemes,
   goals = [],
@@ -138,6 +140,7 @@ export function StatisticsView({
       blocks,
       module,
       timerService,
+      onMarkDone,
       timers,
       allThemes,
       messageRenderPort,
@@ -172,6 +175,7 @@ export function StatisticsView({
       processedData={processedData}
       bucketAccessor={bucketAccessor}
       goalThemeSummaries={goalThemeSummaries}
+      onOpenRecordOrigin={onOpenRecordOrigin}
     />
   );
 }

@@ -5,6 +5,7 @@ import type { CategoryConfig } from '@core/view/public';
 import { aggregateByWeek } from '@core/utils/public';
 import { ChartBlock } from '../../components/statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
+import type { OpenRecordOriginHandler } from '@shared/types/public';
 
 export function WeekStatisticsView({
   items,
@@ -14,6 +15,7 @@ export function WeekStatisticsView({
   displayMode,
   minVisibleHeight,
   bucketAccessor,
+  onOpenRecordOrigin,
 }: {
   items: RecordViewItem[];
   categories: CategoryConfig[];
@@ -22,11 +24,13 @@ export function WeekStatisticsView({
   displayMode: 'smart' | 'linear' | 'logarithmic';
   minVisibleHeight: number;
   bucketAccessor?: (item: RecordViewItem) => string;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
 }) {
   // 周视图：显示选定周的整体统计数据
   const weekStart = weekDate.startOf('isoWeek');
   const weekEnd = weekDate.endOf('isoWeek');
   const data = aggregateByWeek(items, categories, weekStart, false, bucketAccessor);
+
 
   return (
     <div class="statistics-view">
@@ -46,6 +50,7 @@ export function WeekStatisticsView({
             displayMode={displayMode}
             minVisibleHeight={minVisibleHeight}
             bucketAccessor={bucketAccessor}
+            onOpenRecordOrigin={onOpenRecordOrigin}
           />
         </div>
       </div>

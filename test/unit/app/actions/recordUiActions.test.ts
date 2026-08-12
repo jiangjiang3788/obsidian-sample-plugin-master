@@ -1,6 +1,6 @@
 const modalOpenMock = jest.fn();
 
-jest.mock('@/app/public', () => ({
+jest.mock('@/app/ui/modals/QuickInputModal', () => ({
   QuickInputModal: jest.fn().mockImplementation(() => ({
     open: modalOpenMock,
   })),
@@ -38,7 +38,7 @@ import {
   openEditFromItem,
   updateTimeFromView,
 } from '@/app/actions/recordUiActions';
-import { QuickInputModal } from '@/app/public';
+import { QuickInputModal } from '@/app/ui/modals/QuickInputModal';
 
 describe('recordUiActions', () => {
   beforeEach(() => {
@@ -113,6 +113,7 @@ describe('recordUiActions', () => {
       id: 'item-1',
       templateId: 'task-block',
       categoryKey: 'Task',
+      coreBlock: 'task',
       path: 'Daily/2026-05-13.md',
       line: 8,
     } as any;
@@ -129,7 +130,7 @@ describe('recordUiActions', () => {
           entry: expect.objectContaining({
             entryId: 'item-1',
             openedFrom: 'timer',
-            supportsTaskTimeEditing: true,
+            entryKind: 'task',
           }),
         }),
       }),

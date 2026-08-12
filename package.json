@@ -1,6 +1,6 @@
 {
   "name": "think-os",
-  "version": "1.0.35",
+  "version": "1.0.42",
   "scripts": {
     "dev": "vite",
     "check": "npm run lint && npm run typecheck && npm run gate",
@@ -16,7 +16,7 @@
     "check:boundaries": "npx ts-node --project scripts/tsconfig.json scripts/audit/check-boundaries.ts",
     "refactor:metrics": "node scripts/audit/refactor-metrics.mjs --output reports/refactor/refactor-metrics.json --markdown reports/refactor/refactor-metrics.md",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "typecheck": "npm run typecheck:src && npm run typecheck:test && npm run typecheck:e2e",
     "knip": "npx --yes knip",
     "jscpd": "npx --yes jscpd",
     "arch:audit": "node scripts/audit/arch-audit.mjs",
@@ -48,7 +48,8 @@
     "gate:energy": "node scripts/gates/energy-gate.mjs",
     "gate:ui-runtime": "node scripts/gates/ui-runtime-gate.mjs",
     "gate:quality": "node scripts/gates/quality-gate.mjs",
-    "gate:stability": "node scripts/gates/stability-gate.mjs"
+    "gate:stability": "node scripts/gates/stability-gate.mjs",
+    "typecheck:e2e": "tsc -p tsconfig.e2e.json --noEmit"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -31,9 +31,10 @@ function matchesThemePath(sr: SearchResult, item: RecordViewItem | undefined, fi
 }
 
 function matchesCoreBlock(sr: SearchResult, item: RecordViewItem | undefined, filters: RetrievalFilters): boolean {
-    if (!filters.coreBlocks?.length) return true;
+    const requestedCoreBlocks = filters.coreBlocks?.length ? filters.coreBlocks : filters.types;
+    if (!requestedCoreBlocks?.length) return true;
     const coreBlock = normalizeRetrievalText(item?.coreBlock ?? readSearchResultText(sr, 'coreBlock'));
-    return !!coreBlock && filters.coreBlocks.map(normalizeRetrievalText).includes(coreBlock);
+    return !!coreBlock && requestedCoreBlocks.map(normalizeRetrievalText).includes(coreBlock);
 }
 
 

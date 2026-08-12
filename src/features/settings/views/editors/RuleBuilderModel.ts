@@ -73,17 +73,22 @@ export function formatRuleValue(rule: FilterRule): string {
   return String(rule.value ?? '');
 }
 
+function stableRuleFieldLabel(field: string): string {
+  const label = getFieldLabel(field);
+  return label === field ? field : `${label} (${field})`;
+}
+
 export function buildRuleLabel(mode: RuleBuilderMode, rule: RuleBuilderRule): string {
   if (mode === 'filter') {
     const filterRule = rule as FilterRule;
-    if (filterRule.op === 'empty') return `${getFieldLabel(filterRule.field)} 为空`;
-    if (filterRule.op === 'notEmpty') return `${getFieldLabel(filterRule.field)} 非空`;
+    if (filterRule.op === 'empty') return `${stableRuleFieldLabel(filterRule.field)} 为空`;
+    if (filterRule.op === 'notEmpty') return `${stableRuleFieldLabel(filterRule.field)} 非空`;
     const valueText = formatRuleValue(filterRule);
     const opText = filterRule.op === 'in' ? '属于任一' : filterRule.op === 'notIn' ? '不属于任一' : filterRule.op;
-    return `${getFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
+    return `${stableRuleFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
   }
   const sortRule = rule as SortRule;
-  return `${getFieldLabel(sortRule.field)} ${sortRule.dir === 'asc' ? '升序' : '降序'}`;
+  return `${stableRuleFieldLabel(sortRule.field)} ${sortRule.dir === 'asc' ? '升序' : '降序'}`;
 }
 
 export function normalizeFilterPatch(patch: Partial<FilterRule>, current?: FilterRule): Partial<FilterRule> {

@@ -18,7 +18,7 @@ describe('integration: template -> Record -> query', () => {
   it('round-trips canonical and custom Thought fields through the real codec/parser/query chain', () => {
     const draft = buildGenericRecordDraft('thought', {
       goalId: 'goal.self',
-      goalPath: '#了解自我',
+      goalPath: '了解自我',
       记录子类型: '感受',
       情绪: '紧张',
       清晰度: '4',

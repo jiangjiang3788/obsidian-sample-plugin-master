@@ -5,7 +5,7 @@ import { App, Modal, Notice } from 'obsidian';
 import { RecordViewItem } from '@core/types/public';
 import { dayjs } from '@core/utils/public';
 import { openEditFromItem, openRecordOrigin } from '@/app/public';
-import { createRecordGestureHandlers } from '@shared/ui/public';
+import { createRecordGestureHandlers, RECORD_GESTURE_HINT } from '@shared/ui/public';
 import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 
 export interface CheckinManagerData {
@@ -84,9 +84,13 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRe
                             <div
                                 key={item.id}
                                 class="think-checkin-modal__item"
+                                title={RECORD_GESTURE_HINT}
+                                role="button"
+                                tabIndex={0}
                                 onClick={gesture.onClick as any}
                                 onDblClick={gesture.onDblClick as any}
                                 onTouchEnd={gesture.onTouchEnd as any}
+                                onKeyDown={gesture.onKeyDown as any}
                             >
                                 <div class="think-checkin-modal__item-main">
                                     <div class="think-checkin-modal__item-content">{item.content || item.title || '无内容'}</div>

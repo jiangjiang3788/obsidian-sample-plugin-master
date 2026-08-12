@@ -18,7 +18,7 @@ function energy(id: string, date: string, time: string, mode: 'realtime' | 'retr
       时间精度: precision,
       ...(detailed ? { 评分模式: 'detailed', 脑力精力: 70, 体力精力: 50 } : { 评分模式: 'quick' }),
     },
-  } as RecordViewItem;
+  } as unknown as RecordViewItem;
 }
 
 describe('buildEnergyDataQuality', () => {

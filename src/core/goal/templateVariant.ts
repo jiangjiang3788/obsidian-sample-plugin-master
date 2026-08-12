@@ -56,8 +56,6 @@ const SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET = new Set<string>(SYSTEM_RECORD_CONTEX
 const SYSTEM_RECORD_CONTEXT_SEMANTICS = new Set<string>([
   'goalId',
   'goalPath',
-  'goalPaths',
-  'goals',
   'coreBlock',
   'templateId',
   'templateSourceType',

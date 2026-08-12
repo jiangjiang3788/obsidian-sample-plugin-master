@@ -80,7 +80,7 @@ export function QuickInputNativeFieldRenderer({
     <textarea
       {...commonProps}
       rows={dense ? 4 : 5}
-      enterKeyHint={isMobileLike ? 'enter' : 'done'}
+      enterkeyhint={isMobileLike ? 'enter' : 'done'}
       ref={(el: HTMLTextAreaElement | null) => setTextareaAutoHeight(el, minHeight)}
     />
   ) : (
@@ -89,7 +89,7 @@ export function QuickInputNativeFieldRenderer({
       type={inputType === 'text' ? 'text' : inputType}
       min={field.min}
       max={field.max}
-      enterKeyHint={isMobileLike ? 'enter' : 'done'}
+      enterkeyhint={isMobileLike ? 'enter' : 'done'}
       className={isQuickInputTimeField(field) ? `${commonProps.className} think-qif-time-input` : commonProps.className}
     />
   );

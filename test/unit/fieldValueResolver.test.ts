@@ -4,6 +4,8 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 function makeItem(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: 'rec.01J00000000000000000000061',
+    schemaVersion: 2,
+    coreBlock: 'thought',
     title: '标题',
     content: '内容',
     tags: [],

@@ -125,10 +125,10 @@ function matchRule(item: RecordViewItem, rule: FilterRule): boolean {
   } else if (canonicalField === 'fullData') {
     v1 = readString(itemRecord, 'fullDataLower') ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
-  } else if (canonicalField === 'tags' || canonicalField === 'goalPaths') {
-    const listLower: string[] = canonicalField === 'tags'
-      ? (readStringArray(itemRecord, 'tagsLower').length ? readStringArray(itemRecord, 'tagsLower') : (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []))
-      : (readStringArray(itemRecord, 'goalPathsLower').length ? readStringArray(itemRecord, 'goalPathsLower') : (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []));
+  } else if (canonicalField === 'tags') {
+    const listLower: string[] = readStringArray(itemRecord, 'tagsLower').length
+      ? readStringArray(itemRecord, 'tagsLower')
+      : (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []);
     const needle = String(v2 ?? '').toLowerCase();
     if (rule.op === 'includes' || rule.op === '=') {
       return listLower.includes(needle);
@@ -242,9 +242,12 @@ export function filterByKeyword(items: RecordViewItem[], kw: string) {
     const itemRecord = asUnknownRecord(it);
     const titleLower = readString(itemRecord, 'titleLower') ?? (it.title || '').toLowerCase();
     const contentLower = readString(itemRecord, 'contentLower') ?? (it.content || '').toLowerCase();
+    const fullDataLower = readString(itemRecord, 'fullDataLower') ?? (it.fullData || it.rawSource || '').toLowerCase();
     const tagsLower = (it.tags || []).join(' ').toLowerCase();
     const semanticText = [it.goalPath, it.themePath, it.coreBlock, it.status].filter(Boolean).join(' ').toLowerCase();
-    return (titleLower + ' ' + contentLower + ' ' + tagsLower + ' ' + semanticText).includes(s);
+    // Global keyword search is intentionally broader than the canonical `content` field:
+    // it may discover explicit Record KV/custom fields through fullData without polluting clean content semantics.
+    return (titleLower + ' ' + contentLower + ' ' + fullDataLower + ' ' + tagsLower + ' ' + semanticText).includes(s);
   });
 }
 

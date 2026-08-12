@@ -24,7 +24,7 @@ export function ExcelView({
   onFieldsChange,
   onExcelConfigChange,
   onCellCommit,
-  onOpenRecord,
+  onOpenRecordOrigin,
   messageRenderPort,
 }: ExcelViewProps) {
   const renderModel = useMemo(() => buildExcelViewRenderModel({
@@ -176,7 +176,7 @@ export function ExcelView({
         onCancelFillDrag={editing.cancelFillDrag}
         onColumnWidthDraftChange={handleColumnWidthDraftChange}
         onColumnWidthCommit={handleColumnWidthCommit}
-        onOpenRecord={onOpenRecord}
+        onOpenRecordOrigin={onOpenRecordOrigin}
       />
     </div>
   );

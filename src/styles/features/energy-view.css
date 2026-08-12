@@ -190,3 +190,26 @@
   font-size: var(--font-ui-small);
 }
 
+
+/* Record rows inside Energy details are real record surfaces, not decorative text.
+ * Keep them visually flat while sharing the global Record interaction contract. */
+.think-energy-detail__record-row {
+  appearance: none;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--font-ui-smaller);
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+
+.think-energy-detail__record-row:hover,
+.think-energy-detail__record-row:focus-visible {
+  color: var(--text-accent);
+  text-decoration: underline;
+}

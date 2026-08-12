@@ -22,7 +22,7 @@ export interface CoreInputFieldPreset {
   /** 推荐的基础字段类型。用户仍然可以在 UI 里改类型。 */
   type: FieldInputType;
   /** 内部核心字段目标。只用于归一化和模板渲染，不暴露成 UI 配置项。 */
-  target: 'themePath' | 'categoryKey' | 'recordSubtype' | 'tags' | 'goalPaths' | 'image' | 'title' | 'content' | 'date' | 'rating' | 'startTime' | 'endTime' | 'duration';
+  target: 'themePath' | 'categoryKey' | 'recordSubtype' | 'tags' | 'goalPath' | 'image' | 'title' | 'content' | 'date' | 'rating' | 'startTime' | 'endTime' | 'duration';
   description: string;
 }
 
@@ -32,7 +32,7 @@ const CORE_FIELD_GUIDE_KEYS = [
   'categoryKey',
   'themePath',
   'tags',
-  'goalPaths',
+  'goalPath',
   'date',
   'image',
   'rating',
@@ -81,7 +81,7 @@ const CORE_INPUT_FIELD_PRESETS: CoreInputFieldPreset[] = [
   { label: '分类', type: 'path', target: 'categoryKey', description: '历史兼容输入。Canonical Record 新写入不再把分类作为类型真源。' },
   { label: '主题', type: 'path', target: 'themePath', description: '写入显式主题路径；不会从 heading 推导主题。' },
   { label: '标签', type: 'multiTag', target: 'tags', description: '多标签字段，可填写多个标签。' },
-  { label: '目标', type: 'multiTag', target: 'goalPaths', description: '目标字段，可填写多个目标路径。' },
+  { label: '目标', type: 'hierarchicalSingleSelect', target: 'goalPath', description: '单值目标路径。Goal 是独立实体，不使用标签语义。' },
   { label: '图片', type: 'image', target: 'image', description: '通用图片字段，兼容旧 pintu/评图。' },
   { label: '内容', type: 'textarea', target: 'content', description: '记录正文输入字段。' },
   { label: '标题', type: 'text', target: 'title', description: '记录标题输入字段。' },
@@ -112,7 +112,7 @@ const CORE_INPUT_ALIAS_TARGETS: Record<string, CoreInputFieldPreset['target']> =
   tags: 'tags',
   '标签': 'tags',
   // 目标：只支持中文字段名，不开放 goal/target 等别名。
-  '目标': 'goalPaths',
+  '目标': 'goalPath',
   // 图片
   image: 'image',
   pic: 'image',

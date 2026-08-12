@@ -1,9 +1,11 @@
 import type { RecordViewItem, ThemeDefinition, ViewInstance } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
-import { buildGoalBuckets, getItemGoalKey } from '@core/goal/public';
+import { buildGoalBuckets, getItemGoalKey, getItemThemeKey } from '@core/goal/public';
 import { computeProgression } from '@core/progression/public';
 import { isEnergyItem } from '@core/energy/public';
 import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
+import { dayjs } from '@core/utils/public';
+import { buildGoalEnergySummary, type GoalEnergySummaryModel } from '../models/energySummaryModel';
 
 export interface ProgressBreakdownLike {
   key: string;
@@ -35,7 +37,8 @@ export interface GoalProgressCardModel {
   blockCounts: Record<string, number>;
   categoryBreakdown?: ProgressBreakdownLike[];
   themeBreakdown?: ProgressBreakdownLike[];
-  recentRecords?: ProgressRecentRecordModel[];
+  themeRecentRecords?: Record<string, ProgressRecentRecordModel[]>;
+  energySummary?: GoalEnergySummaryModel | null;
 }
 
 export interface ProgressSummaryModel {
@@ -50,6 +53,13 @@ export interface ProgressViewRenderModel {
   goalCards?: GoalProgressCardModel[];
   summary?: ProgressSummaryModel;
   result?: unknown;
+}
+
+/** Goal-mode builder contract. Unlike the legacy union, these fields always exist. */
+export interface ProgressGoalViewRenderModel extends ProgressViewRenderModel {
+  mode: 'goal';
+  goalCards: GoalProgressCardModel[];
+  summary: ProgressSummaryModel;
 }
 
 export interface ProgressBlockCountRow {
@@ -78,6 +88,7 @@ export interface ProgressSkillRowModel {
   level: number;
   levelMeta: ProgressLevelMeta;
   progressRatio: number;
+  recentRecords: ProgressRecentRecordModel[];
 }
 
 
@@ -92,13 +103,49 @@ function normalizeProgressBlockKey(item: RecordViewItem): string {
   return PROGRESS_BLOCK_KEY_ALIASES[raw] || raw.split('/')[0] || raw;
 }
 
+function progressDateSource(item: RecordViewItem): unknown {
+  return item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || '';
+}
+
+function parseProgressDate(value: unknown) {
+  if (value == null || value === '') return null;
+  if (value instanceof Date) {
+    const parsed = dayjs(value);
+    return parsed.isValid() ? parsed : null;
+  }
+  if (typeof value === 'number') {
+    const millis = Math.abs(value) < 1_000_000_000_000 ? value * 1000 : value;
+    const parsed = dayjs(millis);
+    return parsed.isValid() ? parsed : null;
+  }
+  const text = String(value).trim();
+  if (!text) return null;
+  if (/^-?\d+(?:\.\d+)?$/.test(text)) {
+    const numeric = Number(text);
+    const millis = Math.abs(numeric) < 1_000_000_000_000 ? numeric * 1000 : numeric;
+    const parsed = dayjs(millis);
+    return parsed.isValid() ? parsed : null;
+  }
+  const parsed = dayjs(text);
+  return parsed.isValid() ? parsed : null;
+}
+
+export function formatProgressRecordDate(value: unknown): string {
+  const parsed = parseProgressDate(value);
+  return parsed ? parsed.format('YYYY-MM-DD') : '';
+}
+
 function progressItemDate(item: RecordViewItem): string {
-  return String(item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || '');
+  return formatProgressRecordDate(progressDateSource(item));
+}
+
+function progressItemTime(item: RecordViewItem): number {
+  return parseProgressDate(progressDateSource(item))?.valueOf() || 0;
 }
 
 function buildProgressRecentRecords(items: RecordViewItem[], limit = 5): ProgressRecentRecordModel[] {
   return [...items]
-    .sort((left, right) => progressItemDate(right).localeCompare(progressItemDate(left)))
+    .sort((left, right) => progressItemTime(right) - progressItemTime(left))
     .slice(0, limit)
     .map((item) => ({
       id: item.id,
@@ -113,7 +160,7 @@ export function buildProgressViewRenderModel(args: {
   module: Pick<ViewInstance, 'viewConfig'>;
   goals?: GoalDefinition[];
   themes?: ThemeDefinition[];
-}): ProgressViewRenderModel {
+}): ProgressGoalViewRenderModel {
   const { items, module, goals = [], themes = [] } = args;
   const config = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...(module?.viewConfig || {}), mode: 'goal' as const, metric: 'recordCount' as const };
   const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
@@ -131,7 +178,7 @@ export function buildProgressViewRenderModel(args: {
       topN: config.topN,
     });
     const blockCounts: Record<string, number> = {};
-    for (const item of progressItems) {
+    for (const item of goalItems) {
       const key = normalizeProgressBlockKey(item);
       blockCounts[key] = (blockCounts[key] || 0) + 1;
     }
@@ -153,7 +200,13 @@ export function buildProgressViewRenderModel(args: {
       blockCounts,
       categoryBreakdown: progression.categoryBreakdown,
       themeBreakdown: progression.themeBreakdown,
-      recentRecords: buildProgressRecentRecords(progressItems),
+      themeRecentRecords: Object.fromEntries(
+        progression.themeBreakdown.map((row) => [
+          row.key,
+          buildProgressRecentRecords(progressItems.filter((item) => getItemThemeKey(item) === row.key), 5),
+        ]),
+      ),
+      energySummary: buildGoalEnergySummary(goalItems.filter(isEnergyItem), 5, { contextRecords: items, effectRecords: items }),
     };
   });
   const topN = Math.max(0, Number(config.topN) || 0);
@@ -180,6 +233,7 @@ export const PROGRESS_BLOCK_LABELS: Record<string, string> = {
   milestone: '里程碑',
   thought: '思考',
   evidence: '事件',
+  energy: '精力',
   unknown: '未分类',
 };
 
@@ -197,7 +251,7 @@ export const PROGRESS_LEVEL_META: ProgressLevelMeta[] = [
 ];
 
 const DEFAULT_COLLAPSED_BLOCKS = ['task', 'habit', 'blocker', 'milestone'];
-const EXPANDED_BLOCK_ORDER = ['task', 'plan', 'review', 'habit', 'blocker', 'milestone', 'thought', 'evidence'];
+const EXPANDED_BLOCK_ORDER = ['task', 'plan', 'review', 'habit', 'blocker', 'milestone', 'thought', 'evidence', 'energy'];
 const TRACK_SEGMENT_COUNT = 10;
 
 export function clampProgressRatio(value: number): number {
@@ -251,6 +305,7 @@ export function buildProgressSkillRows(card: GoalProgressCardModel): ProgressSki
       level,
       levelMeta: getProgressLevelMeta(level),
       progressRatio: clampProgressRatio(currentLevelPoints / safeLevelStep),
+      recentRecords: card.themeRecentRecords?.[row.key] || [],
     };
   });
 }

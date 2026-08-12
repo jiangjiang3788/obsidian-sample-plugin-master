@@ -1,4 +1,5 @@
 import {
+  buildEventTimelineGroupFields,
   buildEventTimelineGroupedTree,
   buildEventTimelineRenderModel,
   buildEventTimelineViewConfig,
@@ -6,12 +7,20 @@ import {
   filterEventTimelineItemsByDateRange,
   getEventTimelineTaskDisplayTitle,
 } from '@/features/views/runtime/EventTimelineView/EventTimelineViewModel';
-import type { RecordViewItem, ViewInstance } from '@core/public';
+import type { RecordViewItem } from '@core/public';
 
 const task = (id: string, date: string, content = '') => ({
   id,
-  title: `任务${id}`,
-  fields: { date, content, title: `字段标题${id}`, category: '工作' },
+  title: `字段标题${id}`,
+  content,
+  date,
+  categoryKey: '工作',
+  coreBlock: 'task',
+  status: 'open',
+  tags: [],
+  extra: {},
+  created: 0,
+  modified: 0,
 });
 function recordItem(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
@@ -21,8 +30,8 @@ function recordItem(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
     tags: [], categoryKey: '任务', coreBlock: 'task', status: 'open', date: '2026-06-04T09:00:00', created: 1, modified: 2, extra: {}, ...overrides,
   } as RecordViewItem;
 }
-function moduleConfig(viewConfig: Record<string, any> = {}): ViewInstance {
-  return { id: 'view-1', title: '事件时间线', viewType: 'EventTimelineView', fields: ['title','content'], groupFields: [], filters: [], sort: [], collapsed: false, viewConfig } as ViewInstance;
+function moduleConfig(viewConfig: Record<string, any> = {}) {
+  return { id: 'view-1', title: '事件时间线', viewType: 'EventTimelineView', fields: ['title','content'], groupFields: [], filters: [], sort: [], collapsed: false, viewConfig } as any;
 }
 
 describe('EventTimelineViewModel', () => {
@@ -40,9 +49,10 @@ describe('EventTimelineViewModel', () => {
   it('builds grouped tree and render model', () => {
     const items=[task('1','2026-06-01T10:00:00')] as any[];
     expect(buildEventTimelineGroupedTree({ filteredItems: items, groupFields: [] })).toBeNull();
-    expect(buildEventTimelineGroupedTree({ filteredItems: items, groupFields: ['category'] })?.[0]?.label).toBe('工作');
-    const model=buildEventTimelineRenderModel({ items, dateRange:[new Date('2026-06-01T00:00:00'),new Date('2026-06-01T23:59:59')], module:{ fields:['title'], groupFields:['category'], viewConfig:{ maxContentLength:20 } } as any });
-    expect(model.filteredItems).toHaveLength(1); expect(model.groupedTree?.[0]?.label).toBe('工作'); expect(model.displayFields).toEqual(['title']);
+    expect(buildEventTimelineGroupedTree({ filteredItems: items, groupFields: ['categoryKey'] })?.[0]?.label).toBe('工作');
+    expect(buildEventTimelineGroupFields({ groupFields:['categoryKey','模板来源'] } as any)).toEqual(['coreBlock']);
+    const model=buildEventTimelineRenderModel({ items, dateRange:[new Date('2026-06-01T00:00:00'),new Date('2026-06-01T23:59:59')], module:{ fields:['title'], groupFields:['categoryKey'], viewConfig:{ maxContentLength:20 } } as any });
+    expect(model.filteredItems).toHaveLength(1); expect(model.groupFields).toEqual(['coreBlock']); expect(model.displayFields).toEqual(['title']);
   });
   it('derives task display title from content then fallback title', () => {
     expect(getEventTimelineTaskDisplayTitle({ item: task('1','2026-06-01T10:00:00','正文标题') as any, titleField:'title', contentField:'content', maxContentLength:20 })).toBe('正文标题');

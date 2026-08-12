@@ -37,7 +37,6 @@ interface CommonFilterPanelProps {
 
 const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
   { field: 'goalPath', label: '目标', help: '目标中心主筛选字段，优先用目标路径聚合任务/计划/总结/打卡。', placeholder: '选择目标' },
-  { field: 'goalPaths', label: '目标列表', placeholder: '选择目标' },
   { field: 'goalId', label: '目标ID', help: '稳定目标 ID，适合目标实体化后的精确筛选。', placeholder: '输入目标ID' },
   { field: 'coreBlock', label: '记录类型', help: 'Goal × Block 主链字段，按 task/plan/review/thought/habit/evidence/blocker/milestone 筛选。旧分类筛选会自动归一到 coreBlock。', placeholder: '选择记录类型' },
   { field: 'themePath', label: '主题', help: '主题已降级为表单层级单选字段，但仍可用于上下文筛选。', placeholder: '选择主题' },
@@ -170,10 +169,11 @@ export function CommonFilterPanel({
         display: 'flex',
         flexDirection: 'column',
         gap: compact ? 1 : 1.5,
-        p: compact ? 1.25 : 1.5,
-        border: '1px solid var(--background-modifier-border)',
-        borderRadius: '10px',
-        background: 'var(--background-secondary)',
+        pb: compact ? 1 : 1.25,
+        border: 0,
+        borderBottom: '1px solid var(--background-modifier-border)',
+        borderRadius: 0,
+        background: 'transparent',
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>

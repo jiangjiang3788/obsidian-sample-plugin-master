@@ -78,7 +78,7 @@ export interface ExcelViewProps {
   excelConfig?: ExcelViewDisplayConfig;
   onExcelConfigChange?: ExcelDisplayConfigChangeHandler;
   onCellCommit?: ExcelCellCommitHandler;
-  onOpenRecord?: ExcelOpenRecordHandler;
+  onOpenRecordOrigin?: ExcelOpenRecordHandler;
   messageRenderPort?: MessageRenderPort;
 }
 
@@ -108,7 +108,7 @@ export interface ExcelGridProps {
   onCancelFillDrag?: () => void;
   onColumnWidthDraftChange?: (field: string, width: number) => void;
   onColumnWidthCommit?: (field: string, width: number) => void;
-  onOpenRecord?: ExcelOpenRecordHandler;
+  onOpenRecordOrigin?: ExcelOpenRecordHandler;
 }
 
 export interface ExcelCellProps {
@@ -137,7 +137,7 @@ export interface ExcelCellProps {
   onCancelFillDrag?: () => void;
   onColumnWidthDraftChange?: (field: string, width: number) => void;
   onColumnWidthCommit?: (field: string, width: number) => void;
-  onOpenRecord?: ExcelOpenRecordHandler;
+  onOpenRecordOrigin?: ExcelOpenRecordHandler;
 }
 
 export interface ExcelCellEditingState {

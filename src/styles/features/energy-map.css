@@ -260,26 +260,34 @@
 
 /* quarter/year: one day = one strongly encoded dot */
 .think-energy-daily-dots__months {
+  --think-energy-gap-minor: var(--think-space-4);
+  --think-energy-gap-major: var(--think-space-6);
   display: grid;
-  gap: var(--think-space-4);
+  gap: var(--think-energy-gap-major);
+  row-gap: var(--think-energy-gap-major);
   padding-top: var(--think-space-3);
 }
 
 .think-energy-daily-dots__months.is-quarter {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: calc(var(--think-energy-gap-major) + var(--think-space-1));
 }
 
 .think-energy-daily-dots__months.is-year {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: calc(var(--think-energy-gap-major) + var(--think-space-2));
+  row-gap: calc(var(--think-energy-gap-major) + var(--think-space-1));
 }
 
 .think-energy-daily-dots__month {
   min-width: 0;
+  display: grid;
+  gap: var(--think-energy-gap-minor);
 }
 
 .think-energy-daily-dots__month > strong {
   display: block;
-  margin-bottom: var(--think-space-2);
+  margin-bottom: 0;
   font-size: var(--font-ui-small);
 }
 

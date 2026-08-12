@@ -1,66 +1,89 @@
-/* Statistics year, quarter, month and row grids. */
-/* 时间轴容器 */
+/* Statistics time hierarchy. No nested cards: levels use indentation and guide lines. */
 .sv-timeline {
+    --sv-gap-minor: var(--think-space-2);
+    --sv-gap-major: var(--think-space-5);
+    --sv-gap-section: var(--think-space-6);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0;
 }
 
-/* =============== 年视图统一 12 列网格 =============== */
-.sv-year-grid {
+.sv-year-grid,
+.sv-quarter-grid,
+.sv-month-grid {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 6px;
-    column-gap: 6px;
-    row-gap: 12px;
+    gap: var(--sv-gap-minor);
+    row-gap: var(--sv-gap-major);
+    min-width: 0;
 }
 
-/* 年度汇总行 - 跨全部12列 */
-.sv-year-grid-year {
+.sv-year-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--sv-gap-minor); row-gap: var(--sv-gap-section); }
+.sv-quarter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--sv-gap-major); }
+.sv-month-grid { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); column-gap: var(--sv-gap-major); }
+
+.sv-period-level {
+    min-width: 0;
+    box-sizing: border-box;
+    background: transparent;
+    border-radius: 0;
+}
+
+.sv-period-level--0 {
+    padding: 0 0 var(--think-space-4);
+    border-bottom: 1px solid var(--think-border-subtle);
+}
+
+.sv-period-level--1 {
+    padding-left: var(--think-space-2);
+    border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 80%, transparent);
+}
+
+.sv-period-level--2 {
+    padding-left: var(--think-space-3);
+    border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 66%, transparent);
+}
+
+.sv-period-level--3 {
+    padding-left: var(--think-space-4);
+    border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 52%, transparent);
+}
+
+/* Summary rows span the current grid; child levels flow into the remaining cells.
+ * Empty periods are removed by PeriodStatisticsView, so the grid naturally compacts.
+ */
+.sv-year-grid-year,
+.sv-quarter-grid-summary,
+.sv-month-grid-summary {
     grid-column: 1 / -1;
-    padding: 8px 10px 12px;
-    background: color-mix(in srgb, var(--think-accent) 8%, var(--think-bg-canvas));
-    border-radius: 10px;
 }
 
-/* 季度 - 每个跨3列（通过 inline style 设置 grid-column） */
 .sv-year-grid-quarter {
+    grid-column: span 3;
+}
+
+.sv-year-grid-month,
+.sv-quarter-grid-month,
+.sv-month-grid-week {
     min-width: 0;
 }
 
-/* 月份 - 每个占1列 */
-.sv-year-grid-month {
-    min-width: 0;
-    padding: 8px 8px 10px;
-    background: color-mix(in srgb, var(--think-bg-hover) 55%, var(--think-bg-canvas));
-    border-radius: 8px;
-}
-
-/* 季度边界 - 在季度末尾列增加右侧间距，形成视觉分隔 */
-.sv-quarter-end {
-    margin-right: 10px;
-}
-
-/* 周列 - 每月占1列，内部周竖排 */
-.sv-year-grid-week-col {
+.sv-year-grid-week-col,
+.sv-quarter-grid-week-col {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--sv-gap-minor);
     min-width: 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--think-border-strong);
+    padding-top: var(--think-space-3);
+    border-top: 1px solid var(--think-border-subtle);
 }
 
-/* 周占位块 - 确保所有月列等高 */
-.sv-week-placeholder {
-    height: 110px; /* 与 is-compact 高度一致 */
-    flex-shrink: 0;
-}
+/* Historical placeholder cells are intentionally unused in the flat hierarchy. */
+.sv-week-placeholder { display: none; }
+.sv-quarter-end { margin-right: 0; }
 
-/* 年视图内周图表块：柱子变细、文字省略 */
 .sv-year-grid-week-col .sv-chart-block {
-    padding: 4px;
-    gap: 3px;
+    padding: var(--think-space-1) 0;
+    gap: var(--think-space-1);
 }
 
 .sv-year-grid-week-col .sv-vbar-bar {
@@ -68,190 +91,90 @@
     margin: 0 auto;
 }
 
-.sv-year-grid-week-col .sv-chart-label {
-    font-size: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
+.sv-year-grid-week-col .sv-chart-label { font-size: 10px; }
 .sv-year-grid-week-col .sv-chart-number {
-    font-size: 9px;
     min-height: 12px;
+    font-size: 9px;
     line-height: 12px;
 }
-
 .sv-year-grid-week-col .sv-chart-category {
-    font-size: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     min-height: 14px;
+    overflow: hidden;
+    font-size: 8px;
     line-height: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-
 .sv-year-grid-week-col .sv-chart-bars-container {
     min-height: 40px;
     gap: 2px;
 }
 
-/* =============== 季度视图统一 3 列网格 =============== */
-.sv-quarter-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    row-gap: 12px;
-}
-
-/* 季度汇总 - 跨全部3列 */
-.sv-quarter-grid-summary {
-    grid-column: 1 / -1;
-    padding: 8px 10px 12px;
-    background: color-mix(in srgb, var(--think-accent) 8%, var(--think-bg-canvas));
-    border-radius: 10px;
-}
-
-/* 月份 - 每个占1列 */
-.sv-quarter-grid-month {
-    min-width: 0;
-    padding: 8px 8px 10px;
-    background: color-mix(in srgb, var(--think-bg-hover) 55%, var(--think-bg-canvas));
-    border-radius: 8px;
-}
-
-/* 周列 - 每月占1列，内部周竖排 */
-.sv-quarter-grid-week-col {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--think-border-strong);
-}
-
-/* =============== 月视图 N 列网格 =============== */
-.sv-month-grid {
-    display: grid;
-    gap: 6px;
-    row-gap: 12px;
-}
-
-/* 月度汇总 - 跨全部列 */
-.sv-month-grid-summary {
-    grid-column: 1 / -1;
-    padding: 8px 10px 12px;
-    background: color-mix(in srgb, var(--think-accent) 8%, var(--think-bg-canvas));
-    border-radius: 10px;
-}
-
-/* 周 - 每个占1列 */
-.sv-month-grid-week {
-    min-width: 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--think-border-strong);
-}
-
-/* 年视图内月份图表块也稍微紧凑 */
 .sv-year-grid-month .sv-chart-block {
-    padding: 6px;
-    gap: 4px;
+    padding: var(--think-space-2) 0;
+    gap: var(--sv-gap-minor);
 }
-
 .sv-year-grid-month .sv-vbar-bar {
     max-width: 14px;
     margin: 0 auto;
 }
-
-.sv-year-grid-month .sv-chart-label {
-    font-size: 11px;
-}
-
-.sv-year-grid-month .sv-chart-number {
-    font-size: 10px;
-}
-
+.sv-year-grid-month .sv-chart-label { font-size: 11px; }
+.sv-year-grid-month .sv-chart-number { font-size: 10px; }
 .sv-year-grid-month .sv-chart-category {
-    font-size: 9px;
-    white-space: nowrap;
     overflow: hidden;
+    font-size: 9px;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
-
 
 .sv-row {
     display: grid;
-    gap: 8px;
+    gap: var(--think-space-3);
+    padding-top: var(--think-space-3);
     border-top: 1px solid var(--think-border-subtle);
-    padding-top: 12px;
 }
-
 .sv-row:first-child {
-    border-top: none;
     padding-top: 0;
+    border-top: 0;
 }
 
-/* 视图网格样式 */
-.sv-row-quarters { 
-    grid-template-columns: repeat(4, 1fr); 
-}
-
-.sv-row-months { 
-    grid-template-columns: repeat(12, 1fr); 
-}
-
+.sv-row-quarters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sv-row-months { grid-template-columns: repeat(12, minmax(0, 1fr)); }
 .sv-row-weeks {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 4px;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--sv-gap-minor);
+    padding-top: var(--think-space-3);
     border-top: 1px solid var(--think-border-subtle);
-    padding-top: 12px;
 }
+.sv-row-week-days { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.sv-row-month-weeks { display: flex; gap: var(--think-space-3); width: 100%; }
+.sv-row-quarter-months { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
-.sv-row-week-days {
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-}
-
-.sv-row-month-weeks {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-}
-
-.sv-row-quarter-months {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-}
-
-/* 季度视图的月份周视图部分 */
 .sv-month-weeks-section {
-    border-top: 1px solid var(--think-border-strong);
-    padding-top: 12px;
+    padding-top: var(--think-space-3);
+    border-top: 1px solid var(--think-border-subtle);
 }
-
 .sv-month-header {
-    font-weight: 600;
-    margin-bottom: 8px;
-    text-align: center;
+    margin-bottom: var(--think-space-2);
     color: var(--think-text-primary);
-    /* font-size: 14px; -> 使用工具类: think-text-lg */
+    font-weight: var(--think-font-weight-semibold);
+    text-align: left;
 }
-
-.sv-month-col {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
+.sv-month-col { display: flex; flex-direction: column; gap: var(--think-space-1); }
 .sv-month-col-header {
-    text-align: center;
-    /* font-size: 11px; -> 使用工具类: think-text-sm */
-    font-weight: 500;
     color: var(--think-text-subtle);
+    font-weight: var(--think-font-weight-medium);
+    text-align: left;
 }
+.sv-month-col-weeks { display: flex; flex-direction: column; gap: var(--think-space-1); }
 
-.sv-month-col-weeks {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
+.sv-year-grid-year > .sv-chart-block { height: 128px; }
+.sv-year-grid-quarter > .sv-chart-block,
+.sv-quarter-grid-summary > .sv-chart-block,
+.sv-month-grid-summary > .sv-chart-block { height: 116px; }
+.sv-year-grid-month > .sv-chart-block,
+.sv-quarter-grid-month > .sv-chart-block { height: 96px; }
+.sv-year-grid-week-col .sv-chart-block,
+.sv-quarter-grid-week-col .sv-chart-block,
+.sv-month-grid-week > .sv-chart-block { height: 82px; }

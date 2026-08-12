@@ -36,7 +36,7 @@ function nextTaskFields(task: TaskRecord, series: TaskSeriesRecord, completedAt:
     // as the authority for future occurrences after a Series update.
     content: series.content || task.content,
     goalId: series.goalId,
-    goalPath: series.goalPath || series.goalPaths?.[0],
+    goalPath: series.goalPath,
     themePath: series.themePath || series.theme,
     createdAt: completedAt,
     priority: series.priority,

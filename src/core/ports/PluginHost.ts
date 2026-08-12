@@ -10,11 +10,11 @@
  */
 export interface PluginHost {
   app: any;
-  manifest: { id: string; [key: string]: unknown };
+  manifest: { id: string };
   addCommand(command: unknown): unknown;
   register(callback: unknown): unknown;
   addSettingTab(tab: unknown): unknown;
-  registerView(type: string, creator: (leaf: unknown) => unknown): unknown;
+  registerView(type: string, creator: (leaf: any) => unknown): unknown;
   registerMarkdownCodeBlockProcessor(language: string, processor: (...args: unknown[]) => unknown): unknown;
   loadData(): Promise<unknown>;
   saveData(data: unknown): Promise<unknown>;

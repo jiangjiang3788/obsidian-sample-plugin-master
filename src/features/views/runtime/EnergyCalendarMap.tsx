@@ -4,11 +4,14 @@ import type { EnergyPeriodDayModel, EnergyPeriodRenderModel } from '../models/en
 import { EnergyDot } from './EnergyDot';
 import { buildEnergyDotVisual, energyDotStyle } from './EnergyVisualEncoding';
 import type { EnergyMapSelection } from './EnergyMapTypes';
+import type { OpenRecordOriginHandler } from '@shared/types/public';
+import { hasPlatformModifier, stopInteractionEvent } from '@shared/ui/public';
 
 interface Props {
   period: EnergyPeriodRenderModel;
   selectedKey?: string | null;
   onSelect?: (selection: EnergyMapSelection) => void;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
 function monthKey(date: string): string {
@@ -40,7 +43,7 @@ function dayCaptureLabel(day: EnergyPeriodDayModel): string {
   return '实时';
 }
 
-export function EnergyCalendarMap({ period, selectedKey, onSelect }: Props) {
+export function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordOrigin }: Props) {
   const months = new Map<string, EnergyPeriodDayModel[]>();
   for (const day of period.days) {
     const key = monthKey(day.date);
@@ -74,8 +77,15 @@ export function EnergyCalendarMap({ period, selectedKey, onSelect }: Props) {
                         selected={selectedKey === keyValue}
                         className="think-energy-daily-dot"
                         style={energyDotStyle(visual)}
-                        title={`${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}`}
-                        onClick={() => onSelect?.({ kind: 'day', day })}
+                        title={`${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}${day.samples.length === 1 && onOpenRecordOrigin ? ' · Ctrl/⌘+点击打开原文' : ''}`}
+                        onClick={(event) => {
+                          if (day.samples.length === 1 && hasPlatformModifier(event) && onOpenRecordOrigin) {
+                            stopInteractionEvent(event);
+                            void onOpenRecordOrigin(day.samples[0].item);
+                            return;
+                          }
+                          onSelect?.({ kind: 'day', day });
+                        }}
                       />
                     </div>
                   );
