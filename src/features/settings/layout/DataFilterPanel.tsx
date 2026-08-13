@@ -4,15 +4,15 @@ import { useMemo, useState } from 'preact/hooks';
 import {
   Modal,
   ThinkButton,
-  ThinkDisclosure,
   ThinkIcon,
 } from '@shared/ui/public';
 import { DataStore } from '@core/services/public';
 import { getAllFields } from '@core/types/public';
 import { getFieldLabel } from '@core/fields/public';
 import type { FilterRule, RecordViewItem } from '@core/types/public';
+import { normalizeViewFilters } from '@core/view/public';
 import { RuleBuilder } from '@features/settings/views/editors/RuleBuilder';
-import { CommonFilterPanel } from '@features/settings/views/editors/CommonFilterPanel';
+import { CommonFilterPanel, splitDefaultQuickFilterRules } from '@features/settings/views/editors/CommonFilterPanel';
 
 interface DataFilterPanelProps {
   dataStore: DataStore;
@@ -44,21 +44,16 @@ function describeRule(rule: FilterRule): string {
 
 export function DataFilterPanel({ dataStore, filters, items, onChange }: DataFilterPanelProps) {
   const [open, setOpen] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
   const activeCount = filters.length;
   const sourceItems = items ?? dataStore.queryItems();
   const fieldOptions = useMemo(() => getAllFields(sourceItems), [sourceItems]);
-  const commonFilterFields = useMemo(() => ['goalPath', 'goalId', 'coreBlock', 'themePath', 'baseCategory', 'status', 'cadence', 'priority', 'period'], []);
-  const hasAdvancedFilters = useMemo(() => filters.some(rule => (
-    rule.op !== 'in' || !commonFilterFields.includes(rule.field)
-  )), [filters, commonFilterFields]);
+  const { quickRules, advancedRules } = useMemo(() => splitDefaultQuickFilterRules(filters), [filters]);
+  const advancedFilterCount = advancedRules.length;
 
-  const handleOpen = () => {
-    setAdvancedOpen(hasAdvancedFilters);
-    setOpen(true);
-  };
+  const handleOpen = () => setOpen(true);
   const handleClear = () => onChange([]);
   const handleDeleteRule = (index: number) => onChange(filters.filter((_, currentIndex) => currentIndex !== index));
+  const handleAdvancedChange = (rows: FilterRule[]) => onChange(normalizeViewFilters([...quickRules, ...rows]));
 
   return (
     <div class="tp-toolbar-data-filter">
@@ -110,31 +105,29 @@ export function DataFilterPanel({ dataStore, filters, items, onChange }: DataFil
           </div>
 
           <CommonFilterPanel
-            title="常用筛选"
             dataStore={dataStore}
             filters={filters}
             items={sourceItems}
             fieldOptions={fieldOptions}
             onChange={onChange}
+            showHeader={false}
           />
 
-          <ThinkDisclosure
-            title="高级筛选"
-            meta={`${activeCount} 条`}
-            open={advancedOpen}
-            onOpenChange={setAdvancedOpen}
-          >
+          <div className="think-filter-rule-section">
+            <div className="think-filter-rule-section__head">
+              <span>高级规则</span>
+              <span className="think-filter-rule-section__meta">{advancedFilterCount} 条</span>
+            </div>
             <RuleBuilder
               title="筛选"
               mode="filter"
-              rows={filters}
+              rows={advancedRules}
               fieldOptions={fieldOptions}
-              onChange={(rows) => onChange(rows as FilterRule[])}
+              onChange={(rows) => handleAdvancedChange(rows as FilterRule[])}
               dataStore={dataStore}
-              variant="panel"
               showHeader={false}
             />
-          </ThinkDisclosure>
+          </div>
         </div>
       </Modal>
     </div>

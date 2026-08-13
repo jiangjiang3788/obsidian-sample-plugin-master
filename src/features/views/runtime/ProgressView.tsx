@@ -44,7 +44,7 @@ export function ProgressView({
   if (cards.length === 0) return <div class="think-progress-view__empty">暂无目标成长记录</div>;
 
   return (
-    <div class="think-progress-view" role="list" aria-label="成长视图">
+    <div class="think-progress-view think-list" role="list" aria-label="成长视图">
       {cards.map((card) => {
         const expanded = collapsedKeys[card.key] !== true;
         return (

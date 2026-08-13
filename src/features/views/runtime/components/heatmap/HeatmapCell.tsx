@@ -96,13 +96,6 @@ export function HeatmapCell({
             );
         }
 
-        // 如果有多次打卡，使用更明显的描边代替数字
-        if (displayCount > 1) {
-            const colors = ['#4A90E2', '#E74C3C', '#F39C12', '#27AE60']; // Blue, Red, Orange, Green for 2, 3, 4, 5+
-            const colorIndex = Math.min(displayCount - 2, colors.length - 1);
-            cellStyle.boxShadow = `0 0 0 1px ${colors[colorIndex]} inset`;
-            cellStyle.border = `1px solid ${colors[colorIndex]}`;
-        }
     } else {
         // 没有评分/图片时，显示纯次数
         if (displayCount > 0) {
@@ -125,9 +118,11 @@ export function HeatmapCell({
     
     const title = generateCellTooltip(date, items, displayCount, levelCount, wasEdited);
 
+    const countLevelClass = displayCount > 1 ? ` heatmap-count-level-${Math.min(displayCount, 5)}` : '';
+
     return (
         <div 
-            class={`heatmap-cell ${isToday ? 'current-day' : ''} ${item ? 'has-data' : 'empty'}`}
+            class={`heatmap-cell ${isToday ? 'current-day' : ''} ${item ? 'has-data' : 'empty'}${countLevelClass}`}
             style={cellStyle}
             title={title}
             role="button"

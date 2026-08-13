@@ -21,6 +21,8 @@ interface TaskRowProps {
     compact?: boolean;
     /** 可选展示标题。用于 EventTimelineView 等视图按配置字段展示任务正文，而不改变 item.title 真值。 */
     displayTitle?: string;
+    /** Render as a full-width runtime list row instead of an inline table/timeline cell item. */
+    listRow?: boolean;
 }
 
 
@@ -35,7 +37,8 @@ export function TaskRow({
     showFields = [],
     compact = false,
     displayTitle,
-    onOpenRecord
+    onOpenRecord,
+    listRow = false
 }: TaskRowProps) {
     const done = isItemDone(item);
     const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? '').trim() || item.title;
@@ -49,7 +52,7 @@ export function TaskRow({
     const gesture = createRecordGestureHandlers({ item, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => openEdit() });
     
     return (
-        <div class={`task-row ${compact ? 'task-row--compact' : ''} ${done ? 'task-row--done' : ''}`}>
+        <div class={`task-row ${listRow ? 'think-list-row think-list-row--task think-list-row--interactive' : ''} ${compact ? `task-row--compact ${listRow ? 'think-list-row--compact' : ''}` : ''} ${done ? 'task-row--done' : ''}`}>
             <div class="task-row-checkbox-wrapper" onClick={(e) => e.stopPropagation()}>
                 <TaskCheckbox done={done} onMarkDone={() => onMarkDone(item.id)} />
             </div>
@@ -63,7 +66,6 @@ export function TaskRow({
                     {!done && (
                         <div class="task-row-timer-action" onClick={(e) => e.stopPropagation()}>
                             <TaskSendToTimerButton 
-                                taskId={item.id} 
                                 timerStatus={timer?.status}
                                 onStart={() => timerService?.startOrResume(item.id)}
                             />

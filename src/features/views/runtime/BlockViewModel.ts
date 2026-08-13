@@ -55,7 +55,7 @@ export function buildBlockViewGroupClassNames(): BlockViewGroupClassNames {
   return {
     root: '',
     group: 'bv-group',
-    title: 'bv-group-title',
+    title: 'bv-group-title think-list-disclosure-row',
     content: 'bv-group-content',
     toggleIcon: 'bv-group-toggle-icon',
     label: 'bv-group-label',

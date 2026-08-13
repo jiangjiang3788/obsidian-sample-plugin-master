@@ -10,7 +10,6 @@ import { useMemo } from 'preact/hooks';
 import {
   ThinkButton,
   ThinkCheckbox,
-  ThinkDisclosure,
 } from '@shared/ui/public';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/types/public';
 import { getFieldLabel, getFieldCategoryLabel } from '@core/fields/public';
@@ -26,7 +25,7 @@ import {
 } from '@shared/ui/public';
 import { useSaveHandler } from '@shared/patterns/public';
 import { RuleBuilder } from '@features/settings/views/editors/RuleBuilder';
-import { CommonFilterPanel } from '@features/settings/views/editors/CommonFilterPanel';
+import { CommonFilterPanel, splitDefaultQuickFilterRules } from '@features/settings/views/editors/CommonFilterPanel';
 import { FloatingPanel } from '@/app/public';
 import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
 
@@ -62,10 +61,11 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
         return VIEW_OPTIONS.map(v => ({ value: v, label: labels[v] || v.replace('View', '') }));
     }, []);
 
-    const commonFilterFields = useMemo(() => ['goalPath', 'goalId', 'coreBlock', 'themePath', 'status', 'cadence', 'priority', 'period.label'], []);
-    const hasAdvancedFilters = useMemo(() => (currentVi.filters || []).some((rule: any) => (
-        rule.op !== 'in' || !commonFilterFields.includes(rule.field)
-    )), [currentVi.filters, commonFilterFields]);
+    const { quickRules, advancedRules } = useMemo(
+        () => splitDefaultQuickFilterRules(currentVi.filters || []),
+        [currentVi.filters]
+    );
+    const advancedFilterCount = advancedRules.length;
 
     // 字段更新处理 - 显示字段
     const handleFieldsChange = (fields: string[]) => {
@@ -125,34 +125,35 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
             </section>
 
             <section className="think-module-settings__section">
-                <h4 className="think-module-settings__section-title">筛选与排序</h4>
+                <h4 className="think-module-settings__section-title">筛选</h4>
                 <CommonFilterPanel
-                    title="常用筛选"
                     dataStore={dataStore}
                     filters={currentVi.filters || []}
                     fieldOptions={fieldOptions}
                     onChange={(rows: FilterRule[]) => handleUpdate({ filters: normalizeViewFilters(rows) })}
                     compact
+                    showHeader={false}
                 />
 
-                <ThinkDisclosure
-                    title="高级筛选"
-                    meta={`${(currentVi.filters || []).length} 条`}
-                    open={hasAdvancedFilters || undefined}
-                    className="think-module-settings__advanced"
-                >
+                <div className="think-filter-rule-section">
+                    <div className="think-filter-rule-section__head">
+                        <span>高级规则</span>
+                        <span className="think-filter-rule-section__meta">{advancedFilterCount} 条</span>
+                    </div>
                     <RuleBuilder
                         title="筛选"
                         mode="filter"
-                        rows={currentVi.filters || []}
+                        rows={advancedRules}
                         fieldOptions={fieldOptions}
-                        onChange={(rows: any) => handleUpdate({ filters: normalizeViewFilters(rows) })}
+                        onChange={(rows: any) => handleUpdate({ filters: normalizeViewFilters([...quickRules, ...rows]) })}
                         dataStore={dataStore}
-                        variant="panel"
                         showHeader={false}
                     />
-                </ThinkDisclosure>
+                </div>
+            </section>
 
+            <section className="think-module-settings__section">
+                <h4 className="think-module-settings__section-title">排序</h4>
                 <RuleBuilder
                     title="排序"
                     mode="sort"
@@ -160,14 +161,12 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                     fieldOptions={fieldOptions}
                     onChange={(rows: any) => handleUpdate({ sort: normalizeViewSort(rows) })}
                     dataStore={dataStore}
+                    showHeader={false}
                 />
             </section>
 
             {EditorComponent && (
-                <section className="think-module-settings__section">
-                    <h4 className="think-module-settings__section-title">
-                        {currentVi.viewType.replace('View', '')} 配置
-                    </h4>
+                <section className="think-module-settings__section think-module-settings__section--view-editor">
                     <EditorComponent
                         module={currentVi}
                         value={correctedViewConfig}

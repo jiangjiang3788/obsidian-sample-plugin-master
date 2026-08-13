@@ -1,34 +1,59 @@
-/* Rule builder panel and compact rows. */
-.think-os .think-rule-builder__chips, .think-os .think-rule-builder__chip-row,
-.think-os .think-rule-builder__compact-add { display: flex; align-items: center; flex-wrap: wrap; gap: var(--think-space-2); }
-.think-os .think-rule-builder__panel-rows, .think-os .think-rule-builder__row-shell { display: grid; gap: 0; min-width: 0; }
-.think-os .think-rule-builder__row-grid, .think-os .think-rule-builder__column-head,
-.think-os .think-rule-builder__add-grid { display: grid; gap: var(--think-space-3); align-items: center; min-width: 0; }
+/* RuleBuilder uses one compact interaction for both filters and sorting:
+ * existing rules are removable chips; the final row adds a new rule.
+ */
+.think-os .think-rule-builder__chips,
+.think-os .think-rule-builder__chip-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+}
 
-.think-os .think-rule-builder__row-grid.is-filter.is-with-value,
-.think-os .think-rule-builder__column-head.is-filter.is-with-value { grid-template-columns: minmax(240px, 1.2fr) minmax(150px, .6fr) minmax(260px, 1.2fr) minmax(96px, .35fr) 40px; }
-.think-os .think-rule-builder__row-grid.is-filter.is-no-value { grid-template-columns: minmax(240px, 1.2fr) minmax(150px, .6fr) minmax(96px, .35fr) 40px; }
-.think-os .think-rule-builder__row-grid.is-sort,
-.think-os .think-rule-builder__column-head.is-sort { grid-template-columns: minmax(240px, 1.2fr) minmax(150px, .6fr) minmax(96px, .35fr) 40px; }
-.think-os .think-rule-builder__add-grid.is-filter.is-with-value { grid-template-columns: minmax(260px, 1.4fr) minmax(150px, .6fr) minmax(260px, 1.3fr) auto; }
-.think-os .think-rule-builder__add-grid.is-filter.is-no-value,
-.think-os .think-rule-builder__add-grid.is-sort { grid-template-columns: minmax(260px, 1.4fr) minmax(150px, .6fr) auto; }
-.think-os .think-rule-builder__row-grid {
-  padding: var(--think-space-3) 0; border-top: 1px solid var(--think-border-subtle); background: transparent;
+.think-os .think-rule-builder__compact-add {
+  display: grid;
+  gap: var(--think-space-2);
+  align-items: center;
+  min-width: 0;
 }
-.think-os .think-rule-builder__column-head { padding: 0 0 var(--think-space-1); color: var(--think-text-secondary); }
-.think-os .think-rule-builder__add-grid {
-  padding: var(--think-space-3) 0 0; border-top: 1px solid var(--think-border-subtle); background: transparent;
+
+.think-os .think-rule-builder__compact-add.is-filter.is-with-value {
+  grid-template-columns: minmax(180px, 1fr) minmax(110px, .55fr) minmax(180px, 1fr) auto;
 }
-.think-os .think-rule-builder__empty {
-  min-height: var(--think-control-height-sm); display: flex; align-items: center; color: var(--think-text-secondary);
+
+.think-os .think-rule-builder__compact-add.is-filter.is-no-value,
+.think-os .think-rule-builder__compact-add.is-sort {
+  grid-template-columns: minmax(180px, 1fr) minmax(110px, .55fr) auto;
 }
-.think-os .think-rule-builder__end-label { text-align: center; }
-.think-os .think-rule-builder__compact { display: flex; flex-direction: row; gap: var(--think-space-5); min-width: 0; }
+
+.think-os .think-rule-builder__compact {
+  display: flex;
+  flex-direction: row;
+  gap: var(--think-space-5);
+  min-width: 0;
+}
+
 .think-os .think-rule-builder__compact-body {
-  flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--think-space-3); min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-3);
+  min-width: 0;
 }
-.think-os .think-common-filter__clear { flex: 0 0 auto; white-space: nowrap; }
+
+.think-os .think-common-filter__clear {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 @media (max-width: 700px) {
-  .think-os .think-rule-builder__compact { flex-direction: column; gap: var(--think-space-2); }
+  .think-os .think-rule-builder__compact {
+    flex-direction: column;
+    gap: var(--think-space-2);
+  }
+
+  .think-os .think-rule-builder__compact-add.is-filter.is-with-value,
+  .think-os .think-rule-builder__compact-add.is-filter.is-no-value,
+  .think-os .think-rule-builder__compact-add.is-sort {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

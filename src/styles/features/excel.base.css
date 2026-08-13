@@ -1,42 +1,58 @@
-/* Excel view shell and legend base. */
-/* Excel view feature contract. */
-/* ExcelView inline editing UX */
+/* Excel view shell and compact runtime toolbar. */
 .excel-view-shell {
-    overflow-x: auto;
+    width: 100%;
+    min-width: 0;
+    overflow: auto;
 }
 
 .excel-view-toolbar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
-    margin: 0 0 8px;
+    gap: var(--think-space-2);
+    margin: 0;
+    padding: var(--think-space-3) var(--think-space-4);
+    border-bottom: 1px solid var(--think-data-grid-border);
     color: var(--think-text-secondary);
-    font-size: 12px;
+    font-size: var(--think-font-size-xs);
     user-select: none;
 }
 
-.excel-view-legend-chip {
+.excel-view-legend-item {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    border: 1px solid var(--think-border-subtle);
-    border-radius: 999px;
-    padding: 2px 8px;
-    background: var(--think-bg-surface-2);
-    line-height: 1.5;
-}
-
-.excel-view-legend-chip.is-editable {
-    color: var(--think-text-accent);
-    border-color: var(--think-accent);
-}
-
-.excel-view-legend-chip.is-readonly {
-    color: var(--think-text-subtle);
-    background: var(--think-bg-surface-1);
-}
-
-.excel-view-legend-note {
+    min-height: var(--think-control-height-sm);
     color: var(--think-text-secondary);
+}
+
+.excel-view-legend-item.is-editable {
+    color: var(--think-text-accent);
+}
+
+.excel-view-legend-separator {
+    color: var(--think-border-strong);
+}
+
+.excel-view-content-mode-button {
+    margin-inline-start: var(--think-space-2);
+}
+
+/* Single Excel workspace surface; child toolbars remain flat sections. */
+.excel-view-shell {
+    border: 1px solid var(--think-data-grid-border);
+    border-radius: var(--think-radius-md);
+    background: var(--think-bg-canvas);
+    container-type: inline-size;
+}
+
+.excel-view-table th {
+    background: var(--think-data-grid-header-bg);
+    color: var(--think-text-primary);
+}
+
+.excel-column-context-menu {
+    z-index: var(--think-z-popover);
+    border-radius: var(--think-radius-md);
+    background: var(--think-bg-elevated);
+    box-shadow: var(--think-shadow-overlay);
 }

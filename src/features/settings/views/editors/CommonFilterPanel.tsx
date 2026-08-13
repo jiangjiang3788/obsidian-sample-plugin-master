@@ -27,9 +27,10 @@ interface CommonFilterPanelProps {
   title?: string;
   fields?: QuickFilterField[];
   compact?: boolean;
+  showHeader?: boolean;
 }
 
-const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
+export const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
   { field: 'goalPath', label: '目标', placeholder: '选择目标' },
   { field: 'goalId', label: '目标ID', placeholder: '输入目标ID' },
   { field: 'coreBlock', label: '记录类型', placeholder: '选择记录类型' },
@@ -39,6 +40,21 @@ const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
   { field: 'priority', label: '优先级', placeholder: '选择优先级' },
   { field: 'period.label', label: '周期', placeholder: '选择周期' },
 ];
+
+const DEFAULT_QUICK_FILTER_FIELD_SET = new Set(
+  DEFAULT_QUICK_FILTER_FIELDS.map(config => normalizeViewFieldKey(config.field))
+);
+
+export function isDefaultQuickFilterRule(rule: FilterRule): boolean {
+  return rule.op === 'in' && DEFAULT_QUICK_FILTER_FIELD_SET.has(normalizeViewFieldKey(rule.field));
+}
+
+export function splitDefaultQuickFilterRules(filters: FilterRule[]): { quickRules: FilterRule[]; advancedRules: FilterRule[] } {
+  const quickRules: FilterRule[] = [];
+  const advancedRules: FilterRule[] = [];
+  filters.forEach(rule => (isDefaultQuickFilterRule(rule) ? quickRules : advancedRules).push(rule));
+  return { quickRules, advancedRules };
+}
 
 
 function collectFieldValues(items: RecordViewItem[], fields: string[]): Record<string, string[]> {
@@ -125,6 +141,7 @@ export function CommonFilterPanel({
   title = '常用筛选',
   fields = DEFAULT_QUICK_FILTER_FIELDS,
   compact = false,
+  showHeader = true,
 }: CommonFilterPanelProps) {
   const sourceItems = useMemo(() => items ?? dataStore.queryItems(), [items, dataStore]);
   const availableFields = useMemo(() => new Set((fieldOptions ?? getAllFields(sourceItems)).map(normalizeViewFieldKey)), [fieldOptions, sourceItems]);
@@ -144,19 +161,21 @@ export function CommonFilterPanel({
 
   return (
     <div className={`think-common-filter${compact ? ' think-common-filter--compact' : ''}`}>
-      <div className="think-common-filter__header">
-        <span className="think-common-filter__title">{title}</span>
-        <ThinkButton
-          size="sm"
-          variant="secondary"
-          leadingIcon={<ThinkIcon name="rotate-ccw" />}
-          onClick={() => onChange(clearQuickFilters(filters, quickFields))}
-          disabled={!hasQuickFilters}
-          className="think-common-filter__clear"
-        >
-          清空
-        </ThinkButton>
-      </div>
+      {showHeader && (
+        <div className="think-common-filter__header">
+          <span className="think-common-filter__title">{title}</span>
+          <ThinkButton
+            size="sm"
+            variant="secondary"
+            leadingIcon={<ThinkIcon name="rotate-ccw" />}
+            onClick={() => onChange(clearQuickFilters(filters, quickFields))}
+            disabled={!hasQuickFilters}
+            className="think-common-filter__clear"
+          >
+            清空
+          </ThinkButton>
+        </div>
+      )}
 
       <div className="think-common-filter__grid">
         {quickFields.map(config => {

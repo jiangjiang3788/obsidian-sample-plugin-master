@@ -1,12 +1,125 @@
-/* Shared task row used by table, block and event-timeline views. */
+/* Shared list / hierarchy contract for Block, Progress and Energy runtime views.
+ * Features own their data columns and hierarchy meaning; this file owns ordinary
+ * row density, dividers, hover, metadata rhythm and flat disclosure behavior.
+ */
+.think-os {
+  --think-list-row-min-height: var(--think-control-height-md);
+  --think-list-row-min-height-compact: calc(var(--think-control-height-sm) - var(--think-space-2));
+  --think-list-row-padding-block: var(--think-space-2);
+  --think-list-row-gap: var(--think-space-3);
+  --think-list-divider: color-mix(in srgb, var(--think-border-subtle) 70%, transparent);
+  --think-list-hover-bg: color-mix(in srgb, var(--think-bg-hover) 36%, transparent);
+  --think-list-guide: color-mix(in srgb, var(--think-border-subtle) 72%, transparent);
+  --think-list-indent-step: var(--think-space-5);
+}
+
+.think-os .think-list {
+  width: 100%;
+  min-width: 0;
+}
+
+.think-os .think-list-row {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--think-list-row-min-height);
+  padding-block: var(--think-list-row-padding-block);
+  border: 0;
+  border-bottom: 1px solid var(--think-list-divider);
+  border-radius: 0;
+  background: transparent;
+  color: var(--think-text-primary);
+  box-shadow: none;
+  font-family: var(--think-font-interface);
+  font-size: var(--think-font-size-sm);
+  line-height: var(--think-line-height-normal);
+}
+
+.think-os button.think-list-row {
+  appearance: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.think-os .think-list-row--compact {
+  min-height: var(--think-list-row-min-height-compact);
+  padding-block: var(--think-space-1);
+}
+
+.think-os .think-list-row--interactive:hover,
+.think-os button.think-list-row:hover {
+  background: var(--think-list-hover-bg);
+}
+
+.think-os .think-list-row--selected,
+.think-os .think-list-row[aria-selected="true"] {
+  background: var(--think-bg-selected);
+  box-shadow: inset 2px 0 0 var(--think-accent);
+}
+
+.think-os .think-list-disclosure-row {
+  display: flex;
+  align-items: center;
+  gap: var(--think-list-row-gap);
+  min-width: 0;
+  min-height: var(--think-list-row-min-height);
+  padding-block: var(--think-list-row-padding-block);
+  color: var(--think-text-primary);
+  cursor: pointer;
+}
+
+.think-os .think-list-meta {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-list-empty {
+  padding: var(--think-space-4) 0;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+
+/* Record metadata is shared by BlockView, TaskRow and any list that reuses them.
+ * It must not live in a feature stylesheet because shared TagsRenderer consumes it.
+ */
+.think-os .tag-pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 20px;
+  padding: 1px var(--think-space-3);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--think-radius-xs);
+  background: var(--think-bg-hover);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.think-os .tag-pill img {
+  width: 1.15em;
+  height: 1.15em;
+  border-radius: 2px;
+  object-fit: contain;
+}
+/* Shared task content structure used by table, block and event-timeline views.
+ * Inline contexts keep their compact geometry; Block/Progress opt into the
+ * shared list-system row skin with the think-list-row class.
+ */
 .think-os .task-row {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
-  gap: var(--think-space-4);
+  gap: var(--think-space-3);
   max-width: 100%;
+  line-height: var(--think-line-height-tight);
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .think-os .task-row-checkbox-wrapper,
@@ -18,8 +131,24 @@
 }
 
 .think-os .task-row-checkbox-wrapper {
-  min-height: var(--think-control-height-sm);
+  height: var(--think-list-row-min-height-compact);
+  min-height: var(--think-list-row-min-height-compact);
   padding-top: 0;
+}
+
+/* Obsidian themes commonly add checkbox margins/vertical offsets. Task rows own
+ * the alignment, so normalize only the shared task checkbox instead of every
+ * checkbox in the plugin. */
+.think-os .task-checkbox {
+  position: static;
+  inset: auto;
+  flex: 0 0 auto;
+  align-self: center;
+  width: var(--checkbox-size, 16px);
+  height: var(--checkbox-size, 16px);
+  margin: 0;
+  transform: none;
+  vertical-align: middle;
 }
 
 .think-os .task-row-content {
@@ -43,13 +172,14 @@
 }
 
 .think-os .task-row-main {
-  gap: var(--think-space-4);
+  gap: var(--think-space-3);
   min-height: var(--think-control-height-sm);
 }
 
 .think-os .task-row-title {
   flex: 0 1 auto;
   gap: var(--think-space-2);
+  min-height: var(--think-control-height-sm);
   padding: 0;
   border: 0;
   background: transparent;
@@ -73,29 +203,72 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
-  gap: var(--think-space-3);
+  gap: var(--think-space-2);
   min-width: 0;
   margin-top: 0;
 }
 
-.think-os .task-row-timer-action :is(button, .MuiButtonBase-root, .MuiIconButton-root) {
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.think-os .task-row-timer-action :is(button, .MuiButtonBase-root, .MuiIconButton-root):is(:hover, :focus, :active) {
-  background: transparent;
-  box-shadow: none;
-}
-
-.think-os .think-table :is(th, td) { white-space: nowrap; }
-
-.think-os .think-table td > .think-table-cell-item {
+/* Full-width runtime list variant: BlockView and Progress theme records. */
+.think-os .task-row.think-list-row {
   display: flex;
+  gap: var(--think-list-row-gap);
+  width: 100%;
+}
+
+.think-os .task-row.think-list-row--compact {
+  padding-block: 0;
+}
+
+.think-os .task-row.think-list-row .task-row-content {
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+.think-os .task-row.think-list-row .task-row-main {
+  width: auto;
+  max-width: 100%;
+  min-height: var(--think-list-row-min-height-compact);
+}
+
+.think-os .task-row.think-list-row .task-row-title {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.think-os .task-row.think-list-row .task-row-timer-action {
+  margin-inline-start: 0;
+  min-height: var(--think-list-row-min-height-compact);
+}
+
+.think-os .task-row-timer-action .task-timer-button {
+  border-color: transparent;
+  color: var(--think-text-secondary);
+}
+
+.think-os .task-row-timer-action .task-timer-button.is-running {
+  cursor: default;
+}
+
+.think-os .task-row--done .task-row-title {
+  color: var(--think-text-secondary);
+  text-decoration: line-through;
+}
+
+.think-os .task-row--compact :is(.task-row-checkbox-wrapper, .task-row-main, .task-row-title) {
+  min-height: var(--think-list-row-min-height-compact);
+}
+
+.think-os .task-row--compact .task-row-checkbox-wrapper {
+  height: var(--think-list-row-min-height-compact);
+}
+
+/* Shared cell-item contract: TaskRow / ItemLink keep one alignment baseline when
+ * embedded by TableView. Data-grid owns the surrounding cell borders/density. */
+.think-os .think-table-cell-item {
+  display: flex;
+  align-items: center;
   justify-content: flex-start;
+  min-width: 0;
   text-align: left;
 }
-
-.think-os .think-table td > .think-table-cell-item,
-.think-os .think-table td > .think-table-cell-item * { white-space: nowrap; }

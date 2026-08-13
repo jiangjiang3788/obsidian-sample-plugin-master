@@ -96,7 +96,7 @@ export function ExcelColumnToolbar({
             placeholder={availableOptions.length ? '+ 添加字段' : '所有字段已显示'}
             disabled={busy || !availableOptions.length}
             onChange={addField}
-            sx={{ minWidth: '150px' }}
+            className="excel-column-add-select"
           />
         </div>
       ) : (

@@ -13,8 +13,10 @@ export type ThinkIconName =
   | 'file-plus'
   | 'filter'
   | 'grip-vertical'
+  | 'hourglass'
   | 'lock'
   | 'pencil'
+  | 'play'
   | 'plus'
   | 'rotate-ccw'
   | 'settings'
@@ -46,6 +48,8 @@ function renderIcon(name: ThinkIconName) {
       return <><circle cx="9" cy="6" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="18" r="1" /></>;
     case 'arrow-up':
       return <><path d="m5 12 7-7 7 7" /><path d="M12 19V5" /></>;
+    case 'hourglass':
+      return <><path d="M6 2h12M6 22h12M7 2v4c0 2 2 4 5 6-3 2-5 4-5 6v4M17 2v4c0 2-2 4-5 6 3 2 5 4 5 6v4" /></>;
     case 'lock':
       return <><rect x="4" y="10" width="16" height="12" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>;
     case 'unlock':
@@ -60,6 +64,8 @@ function renderIcon(name: ThinkIconName) {
       return <path d="m5 12 4 4L19 6" />;
     case 'pencil':
       return <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" /></>;
+    case 'play':
+      return <path d="m8 5 11 7-11 7Z" />;
     case 'rotate-ccw':
       return <><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></>;
     case 'file-plus':

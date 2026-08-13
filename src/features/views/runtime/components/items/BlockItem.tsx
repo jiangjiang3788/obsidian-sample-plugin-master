@@ -11,7 +11,6 @@ import { createRecordGestureHandlers } from '@shared/ui/public';
 interface BlockItemProps {
     item: RecordViewItem;
     fields: string[];
-    isNarrow: boolean;
     resolveResourcePath?: ResolveResourcePathHandler;
     onOpenRecordOrigin?: OpenRecordOriginHandler;
     messageRenderPort?: MessageRenderPort;
@@ -19,13 +18,11 @@ interface BlockItemProps {
     onOpenRecord?: OpenRecordHandler;
 }
 
-export const BlockItem = ({ item, fields, isNarrow, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }: BlockItemProps) => {
+export const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }: BlockItemProps) => {
     const metadataFields = fields.filter(f => f !== 'title' && f !== 'content');
     const showTitle = fields.includes('title') && item.title;
     const effectiveContent = (item.content && item.content.trim().length > 0) ? item.content : item.title;
     const showContent = fields.includes('content') && effectiveContent;
-    const narrowClass = isNarrow ? 'is-narrow' : '';
-
 
     const gesture = createRecordGestureHandlers({
         item,
@@ -40,7 +37,7 @@ export const BlockItem = ({ item, fields, isNarrow, resolveResourcePath, onOpenR
     });
 
     return (
-        <div class={`bv-item bv-item--block ${narrowClass}`}>
+        <div class="bv-item bv-item--block think-list-row think-list-row--interactive">
             <div class="bv-block-metadata">
                 <div class="bv-fields-list-wrapper">
                     {metadataFields.map(fieldKey => (

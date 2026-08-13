@@ -1,82 +1,75 @@
-/* CSS V4 migrated from event-timeline.css. */
-/* Event Timeline View Styles - 三栏布局：[左侧日期] - [中间时间线] - [右侧内容卡片] */
+/* Event Timeline: date | axis | time | content.
+ * The axis is the visual structure; event content stays flat instead of becoming a card.
+ */
 .event-timeline-view {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 8px 4px;
-    font-family: var(--font-interface);
+    gap: var(--think-space-3);
+    padding: var(--think-space-2) var(--think-space-1);
     color: var(--think-text-primary);
+    font-family: var(--think-font-interface);
     container-type: inline-size;
 }
 
 .event-timeline-empty {
-    padding: 20px;
-    text-align: center;
+    padding: var(--think-space-5) 0;
     color: var(--think-text-secondary);
-    font-size: 0.9rem;
+    font-size: var(--think-font-size-sm);
+    text-align: center;
 }
 
-/* 无分组容器 */
-.et-ungrouped {
+.et-ungrouped,
+.et-group-content {
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
-.et-group-content {
-    gap: 0;
-}
-
-/* 单个事件 - 三栏 Grid 布局 */
 .et-event {
     display: grid;
-    grid-template-columns: 120px 28px 1fr;
-    gap: 12px;
+    grid-template-columns: 112px 24px 52px minmax(0, 1fr);
+    gap: var(--think-space-3);
     align-items: stretch;
-    margin: 0;
-    padding: 0;
+    min-width: 0;
 }
 
-/* 左侧：日期和时间 */
 .et-event-date {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin: 6px 0;
-    padding: 8px 12px;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 52px;
+    padding-block: var(--think-space-2);
+    color: var(--think-text-primary);
     text-align: right;
-    min-height: 60px;
-    justify-content: center;
-    align-self: stretch;
 }
 
 .et-date-label {
-    font-size: 0.85rem;
     color: var(--think-text-primary);
-    font-weight: 600;
-    margin-bottom: 2px;
+    font-size: var(--think-font-size-sm);
+    font-weight: var(--think-font-weight-semibold);
     white-space: nowrap;
 }
 
 .et-time-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--think-text-primary);
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding-block: var(--think-space-2);
+    color: var(--think-text-secondary);
+    font-size: var(--think-font-size-sm);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--think-font-weight-medium);
     white-space: nowrap;
 }
 
-/* 中间：时间线主轴。
-   轴线由每行撑满自身高度，行与行之间不留 gap；首行从圆点向下、末行从上方到圆点，
-   因此视觉上是一根连续主轴，而不是很多短线段。 */
 .et-line {
     position: relative;
-    width: 28px;
-    min-height: 72px;
     display: flex;
     align-items: center;
     justify-content: center;
     align-self: stretch;
+    width: 24px;
+    min-height: 52px;
 }
 
 .et-line::before {
@@ -85,175 +78,73 @@
     top: 0;
     bottom: 0;
     left: 50%;
+    width: 2px;
+    border-radius: var(--think-radius-pill);
+    background: color-mix(in srgb, var(--think-accent) 72%, var(--think-border-subtle));
     transform: translateX(-50%);
-    width: 3px;
-    border-radius: 2px;
-    background: var(--think-accent);
 }
 
-.et-event--first .et-line::before {
-    top: 50%;
-}
-
-.et-event--last .et-line::before {
-    bottom: 50%;
-}
-
-.et-event--first.et-event--last .et-line::before {
-    top: 50%;
-    bottom: 50%;
-}
+.et-event--first .et-line::before { top: 50%; }
+.et-event--last .et-line::before { bottom: 50%; }
+.et-event--first.et-event--last .et-line::before { top: 50%; bottom: 50%; }
 
 .et-dot {
     position: relative;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 3px solid var(--think-accent);
-    background-color: var(--think-bg-canvas);
     z-index: 1;
-    transition: border-color var(--think-duration-normal) var(--think-ease-standard), box-shadow var(--think-duration-normal) var(--think-ease-standard);
-    flex-shrink: 0;
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--think-accent);
+    border-radius: 50%;
+    background: var(--think-bg-canvas);
+    transition: border-color var(--think-duration-fast) var(--think-ease-standard), transform var(--think-duration-fast) var(--think-ease-standard);
 }
 
 .et-event:hover .et-dot {
     border-color: var(--think-accent-hover);
-    box-shadow: 0 0 8px var(--think-accent);
+    transform: scale(1.12);
 }
 
-/* 右侧：内容卡片 */
-.et-event-card {
-    margin: 6px 0;
-    background: var(--think-bg-surface-1);
-    border-radius: 8px;
-    padding: 12px;
-    border: 1px solid var(--think-border-subtle);
-    transition: background-color var(--think-duration-normal) var(--think-ease-standard), border-color var(--think-duration-normal) var(--think-ease-standard), box-shadow var(--think-duration-normal) var(--think-ease-standard);
-    position: relative;
-    min-height: 60px;
+.et-event-content {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 52px;
+    padding-block: var(--think-space-2);
+    border: 0;
+    background: transparent;
 }
 
-.et-event-card:hover {
-    background: var(--think-bg-surface-2);
-    border-color: var(--think-accent);
-    box-shadow: 0 2px 8px var(--background-modifier-box-shadow);
+.et-event-content .bv-item,
+.et-event-content .task-row {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
 }
 
-/* 卡片左侧小箭头 */
-.et-event-card::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 20px;
-    width: 0;
-    height: 0;
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-right: 8px solid var(--think-bg-surface-1);
-    transition: border-right-color var(--think-duration-normal) var(--think-ease-standard);
-}
+.et-event-date:empty { min-height: 52px; }
 
-.et-event-card:hover::before {
-    border-right-color: var(--think-bg-surface-2);
-}
-
-/* 响应式设计 - 小屏幕时改为竖向布局 */
-@media (max-width: 768px) {
+@container (max-width: 620px) {
     .et-event {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-        gap: 8px;
-        padding: 12px;
-        background: var(--think-bg-surface-1);
-        border-radius: 8px;
-        border: 1px solid var(--think-border-subtle);
+        grid-template-columns: 82px 20px 44px minmax(0, 1fr);
+        gap: var(--think-space-2);
     }
 
-    .et-event-date {
-        align-items: flex-start;
-        text-align: left;
-        min-height: auto;
-        margin: 0;
-        padding: 0;
-        flex-direction: row;
-        gap: 8px;
-    }
+    .et-event-date,
+    .et-time-label,
+    .et-event-content,
+    .et-line { min-height: 44px; }
 
-    .et-line {
-        display: none;
-    }
-
-    .et-event-card {
-        margin: 0;
-        background: transparent;
-        border: none;
-        padding: 0;
-        box-shadow: none;
-        min-height: auto;
-    }
-
-    .et-event-card::before {
-        display: none;
-    }
-
+    .et-date-label,
+    .et-time-label { font-size: var(--think-font-size-xs); }
 }
 
-/* 暗色主题适配 */
-.theme-dark .et-event-card {
-    background: var(--think-bg-elevated);
-    border-color: var(--think-border-strong);
-}
-
-.theme-dark .et-event-card:hover {
-    background: var(--think-bg-surface-1);
-    border-color: var(--think-accent);
-}
-
-.theme-dark .et-event-card::before {
-    border-right-color: var(--think-bg-elevated);
-}
-
-.theme-dark .et-event-card:hover::before {
-    border-right-color: var(--think-bg-surface-1);
-}
-
-/* 无障碍访问 */
-.et-event-card:focus {
-    outline: 2px solid var(--think-accent);
-    outline-offset: 2px;
-}
-
-.et-event-card[tabindex] {
-    cursor: pointer;
-}
-
-/* TaskRow 和 BlockItem 在时间线中的样式调整 */
-.et-event-card .bv-item {
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin: 0;
-}
-
-.et-event-card .task-row {
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin: 0;
-}
-
-/* 日期缺失时的左侧间距保持 */
-.et-event-date:empty {
-    min-height: 20px;
-}
-
-/* 优化移动端的分组标题 */
-@media (max-width: 768px) {
-    .et-date-label {
-        font-size: 0.8rem;
-    }
-}
-
-.et-event-card {
-    border-color: var(--think-border-subtle);
+@container (max-width: 440px) {
+    .et-event { grid-template-columns: 20px 42px minmax(0, 1fr); }
+    .et-event-date { display: none; }
+    .et-time-label { grid-column: 2; }
+    .et-event-content { grid-column: 3; }
 }

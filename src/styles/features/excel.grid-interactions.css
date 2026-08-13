@@ -12,8 +12,8 @@
     position: sticky;
     top: 0;
     z-index: 6;
-    height: 42px;
-    line-height: 1.2;
+    height: var(--think-data-grid-header-height);
+    line-height: var(--think-line-height-tight);
     vertical-align: middle;
     overflow: visible;
     user-select: none;
@@ -36,10 +36,9 @@
 }
 
 .excel-view-header-stack {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
+    display: flex;
     align-items: center;
-    gap: 2px;
+    gap: var(--think-space-2);
     min-width: 0;
     padding-right: 8px;
 }
@@ -50,11 +49,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-weight: 700;
+    font-weight: var(--think-font-weight-semibold);
 }
 
 .excel-view-header-badge {
-    justify-self: start;
+    flex: 0 0 auto;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -107,19 +106,19 @@ body.excel-view-is-resizing-column * {
     z-index: 9999;
     min-width: 168px;
     max-width: 260px;
-    padding: 6px;
+    padding: var(--think-space-2);
     border: 1px solid var(--think-border-subtle);
-    border-radius: 10px;
+    border-radius: var(--think-radius-md);
     background: var(--think-bg-canvas);
     color: var(--think-text-primary);
     box-shadow: var(--think-shadow-md);
 }
 
 .excel-column-context-menu-title {
-    padding: 4px 8px 6px;
+    padding: var(--think-space-2) var(--think-space-3) var(--think-space-3);
     color: var(--think-text-secondary);
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--think-font-size-xs);
+    font-weight: var(--think-font-weight-semibold);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -129,13 +128,14 @@ body.excel-view-is-resizing-column * {
     display: block;
     width: 100%;
     margin: 0;
-    padding: 6px 8px;
+    min-height: var(--think-control-height-sm);
+    padding: 0 var(--think-space-3);
     border: none;
-    border-radius: 6px;
+    border-radius: var(--think-radius-xs);
     background: transparent;
     color: var(--think-text-primary);
     font: inherit;
-    font-size: 12px;
+    font-size: var(--think-font-size-xs);
     text-align: left;
     cursor: pointer;
 }
@@ -151,11 +151,11 @@ body.excel-view-is-resizing-column * {
 }
 
 .excel-column-context-info {
-    margin-top: 4px;
-    padding: 6px 8px;
+    margin-top: var(--think-space-2);
+    padding: var(--think-space-3);
     border-top: 1px solid var(--think-border-subtle);
     color: var(--think-text-secondary);
-    font-size: 11px;
+    font-size: var(--think-font-size-2xs);
 }
 
 .excel-column-context-info div {

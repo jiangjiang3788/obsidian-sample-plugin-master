@@ -3,7 +3,16 @@ import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { RefObject } from 'preact';
 import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
-import { createRecordGestureHandlers, hasPlatformModifier, isKeyboardActivation, RECORD_GESTURE_HINT, stopInteractionEvent } from '@shared/ui/public';
+import {
+  createRecordGestureHandlers,
+  hasPlatformModifier,
+  isKeyboardActivation,
+  RECORD_GESTURE_HINT,
+  SimpleSelect,
+  stopInteractionEvent,
+  ThinkButton,
+  ThinkIcon,
+} from '@shared/ui/public';
 import type { EnergyTaskListItemVM, EnergyTaskListModel } from '../models/energyTaskListModel';
 
 type EnergyTaskContext = EnergyTaskListModel['currentContext'];
@@ -78,15 +87,16 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
   return (
     <div class="think-energy-task-list__menu" ref={menuRef} style={`left:${menu.x}px;top:${menu.y}px;`}>
       <div class="think-energy-task-list__menu-title">{task.title}</div>
-      <button
-        type="button"
-        class="think-energy-task-list__menu-action"
+      <ThinkButton
+        variant="link"
+        size="sm"
+        className="think-energy-task-list__menu-action"
         title={RECORD_GESTURE_HINT}
-        onClick={taskGesture.onClick}
-        onDblClick={taskGesture.onDblClick}
-        onTouchEnd={taskGesture.onTouchEnd}
-        onKeyDown={taskGesture.onKeyDown}
-      >编辑任务</button>
+        onClick={taskGesture.onClick as any}
+        onDblClick={taskGesture.onDblClick as any}
+        onTouchEnd={taskGesture.onTouchEnd as any}
+        onKeyDown={taskGesture.onKeyDown as any}
+      >编辑任务</ThinkButton>
       <div class="think-energy-task-list__menu-meta">{currentView}内完成 {task.count} 次</div>
       {task.recurrenceLabel && <div class="think-energy-task-list__menu-meta">{task.recurrenceLabel}</div>}
       <div class="think-energy-task-list__menu-records">
@@ -171,16 +181,15 @@ export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, 
               <span>记录当前精力后生成推荐</span>
             )}
           </div>
-          <label class="think-energy-task-list__context">
+          <div class="think-energy-task-list__context">
             <span>场景</span>
-            <select
+            <SimpleSelect
               value={model.currentContext}
-              aria-label={`当前场景：${contextLabel}`}
-              onChange={(event) => void onContextChange?.((event.currentTarget as HTMLSelectElement).value as EnergyTaskContext)}
-            >
-              {CONTEXT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
-          </label>
+              options={CONTEXT_OPTIONS}
+              className="think-energy-task-list__context-select"
+              onChange={(value) => void onContextChange?.(value as EnergyTaskContext)}
+            />
+          </div>
         </div>
         {model.latestEnergy ? (
           model.recommendations.length > 0 ? (
@@ -190,7 +199,7 @@ export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, 
                   key={`recommendation:${task.itemId}`}
                   type="button"
                   role="listitem"
-                  class="think-energy-task-list__recommendation"
+                  class="think-energy-task-list__recommendation think-list-row think-list-row--interactive"
                   title={taskHover(task)}
                   onClick={(event) => activateTask(task, event as MouseEvent)}
                   onKeyDown={(event: KeyboardEvent) => {
@@ -204,12 +213,12 @@ export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, 
                   <span class="think-energy-task-list__recommendation-rank">{task.recommendationRank || index + 1}</span>
                   <span class="think-energy-task-list__recommendation-title">{task.title}</span>
                   <span class="think-energy-task-list__recommendation-duration">{durationClock(task.suggestedDurationMinutes)}</span>
-                  <span class="think-energy-task-list__recommendation-play" aria-hidden="true">▶</span>
+                  <span class="think-energy-task-list__recommendation-play" aria-hidden="true"><ThinkIcon name="play" /></span>
                 </button>
               ))}
             </div>
           ) : (
-            <div class="think-energy-task-list__recommendation-empty">当前“{contextLabel}”场景没有可推荐任务。</div>
+            <div class="think-energy-task-list__recommendation-empty think-list-empty">当前“{contextLabel}”场景没有可推荐任务。</div>
           )
         ) : null}
       </div>
@@ -249,7 +258,7 @@ export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, 
               ))}
             </div>
           </section>
-        )) : <div class="think-energy-task-list__empty-state">当前没有未完成任务。</div>}
+        )) : <div class="think-energy-task-list__empty-state think-list-empty">当前没有未完成任务。</div>}
       </div>
       {menu && selectedTask && (
         <TaskMenu

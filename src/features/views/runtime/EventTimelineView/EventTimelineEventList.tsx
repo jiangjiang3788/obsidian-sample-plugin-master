@@ -64,14 +64,15 @@ export function EventTimelineEventList(props: EventTimelineEventListProps) {
           <div class={`et-event ${index === 0 ? 'et-event--first' : ''} ${index === items.length - 1 ? 'et-event--last' : ''}`} key={`${dateLabel}-${timeLabel}-${titleForKey}-${index}`}>
             <div class="et-event-date">
               {showDate && t && <div class="et-date-label">{dateLabel}</div>}
-              {item.coreBlock === 'task' && <div class="et-time-label">{timeLabel}</div>}
             </div>
 
             <div class="et-line">
               <div class="et-dot" />
             </div>
 
-            <div class="et-event-card">
+            <div class="et-time-label">{t ? timeLabel : ''}</div>
+
+            <div class="et-event-content">
               {item.coreBlock === 'task' ? (
                 <TaskRow
                   item={item}

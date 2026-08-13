@@ -26,37 +26,39 @@ export function TableView({ items, rowField, colField, onMarkDone, resolveResour
     const renderModel = buildTableViewRenderModel({ items, rowField, colField, goals });
 
     if (!renderModel.isConfigured) {
-        return <div>{renderModel.emptyMessage}</div>;
+        return <div class="think-data-grid-empty">{renderModel.emptyMessage}</div>;
     }
 
     return (
-        <table class="think-table">
-            <thead>
-                <tr>
-                    <th>{rowField}</th>
-                    {renderModel.sortedCols.map(col => (<th key={col}>{col}</th>))}
-                </tr>
-            </thead>
-            <tbody>
-                {renderModel.sortedRows.map(row => (
-                    <tr key={row}>
-                        <td><strong>{row}</strong></td>
-                        {renderModel.sortedCols.map(col => (
-                            <TableViewCell
-                                key={col}
-                                items={renderModel.matrix[row]?.[col] || []}
-                                onMarkDone={onMarkDone}
-                                resolveResourcePath={resolveResourcePath}
-                                onOpenRecordOrigin={onOpenRecordOrigin}
-                                timerService={timerService}
-                                timers={timers}
-                                allThemes={allThemes}
-                                onOpenRecord={onOpenRecord}
-                            />
-                        ))}
+        <div class="think-data-grid-scroll">
+            <table class="think-table think-data-grid think-data-grid--matrix">
+                <thead>
+                    <tr>
+                        <th>{rowField}</th>
+                        {renderModel.sortedCols.map(col => (<th key={col}>{col}</th>))}
                     </tr>
-                ))}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {renderModel.sortedRows.map(row => (
+                        <tr key={row}>
+                            <td><strong>{row}</strong></td>
+                            {renderModel.sortedCols.map(col => (
+                                <TableViewCell
+                                    key={col}
+                                    items={renderModel.matrix[row]?.[col] || []}
+                                    onMarkDone={onMarkDone}
+                                    resolveResourcePath={resolveResourcePath}
+                                    onOpenRecordOrigin={onOpenRecordOrigin}
+                                    timerService={timerService}
+                                    timers={timers}
+                                    allThemes={allThemes}
+                                    onOpenRecord={onOpenRecord}
+                                />
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 }

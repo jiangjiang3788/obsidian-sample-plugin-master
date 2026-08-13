@@ -4,6 +4,7 @@ import { useMemo, useState } from 'preact/hooks';
 import type { RecordViewItem } from '@core/types/public';
 import type { GroupNode } from '@core/utils/public';
 import { hasPlatformModifier, isKeyboardActivation, stopInteractionEvent } from './utils/interaction';
+import { ThinkIcon } from './primitives/Icon';
 
 export type GroupPath = string;
 
@@ -164,7 +165,7 @@ export function GroupedContainer(props: GroupedContainerProps) {
                         title="点击折叠/展开（Ctrl/⌘+点击：全部折叠/展开）"
                     >
                         <span class={toggleIconClass}>
-                            {isCollapsed ? '▶' : '▼'}
+                            <ThinkIcon name={isCollapsed ? 'chevron-right' : 'chevron-down'} />
                         </span>
                         <span class={labelClass}>
                             {node.label || node.key} ({isLeaf ? items!.length : countItemsInGroup(node)})

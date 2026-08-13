@@ -3278,7 +3278,7 @@ var DATE = "date";
 var FORMAT_DEFAULT = "YYYY-MM-DDTHH:mm:ssZ";
 var INVALID_DATE_STRING = "Invalid Date";
 var REGEX_PARSE = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/;
-var REGEX_FORMAT = /\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
+var REGEX_FORMAT = /\[([^\]]+)]|YYYY|YY|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
 const en$1 = {
   name: "en",
   weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),
@@ -21068,7 +21068,7 @@ const createStoreImpl = (createState) => {
   return api;
 };
 const createStore = ((createState) => createState ? createStoreImpl(createState) : createStoreImpl);
-var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, s$1, a$1, h$1, p$1, v$1, y$1, d$1 = {}, w$2 = [], _$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, g$2 = Array.isArray;
+var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, a$1, s$1, h$1, p$1, v$1, y$1, d$1 = {}, w$2 = [], _$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, g$2 = Array.isArray;
 function m$1(n2, l2) {
   for (var u3 in l2) n2[u3] = l2[u3];
   return n2;
@@ -21121,24 +21121,24 @@ function H$1() {
     i$1.length = H$1.__r = 0;
   }
 }
-function L$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
-  var a2, h2, p2, v2, y2, _2, g2, m2 = t3 && t3.__k || w$2, b2 = l2.length;
-  for (f2 = T$2(u3, l2, m2, f2, b2), a2 = 0; a2 < b2; a2++) null != (p2 = u3.__k[a2]) && (h2 = -1 != p2.__i && m2[p2.__i] || d$1, p2.__i = a2, _2 = q$2(n2, p2, h2, i2, r2, o2, e2, f2, c2, s2), v2 = p2.__e, p2.ref && h2.ref != p2.ref && (h2.ref && J$1(h2.ref, null, p2), s2.push(p2.ref, p2.__c || v2, p2)), null == y2 && null != v2 && (y2 = v2), (g2 = !!(4 & p2.__u)) || h2.__k === p2.__k ? (f2 = j$2(p2, f2, n2, g2), g2 && h2.__e && (h2.__e = null)) : "function" == typeof p2.type && void 0 !== _2 ? f2 = _2 : v2 && (f2 = v2.nextSibling), p2.__u &= -7);
+function L$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, a2) {
+  var s2, h2, p2, v2, y2, _2, g2 = t3 && t3.__k || w$2, m2 = l2.length;
+  for (f2 = T$2(u3, l2, g2, f2, m2), s2 = 0; s2 < m2; s2++) null != (p2 = u3.__k[s2]) && (h2 = -1 != p2.__i && g2[p2.__i] || d$1, p2.__i = s2, _2 = q$2(n2, p2, h2, i2, r2, o2, e2, f2, c2, a2), v2 = p2.__e, p2.ref && h2.ref != p2.ref && (h2.ref && J$1(h2.ref, null, p2), a2.push(p2.ref, p2.__c || v2, p2)), null == y2 && null != v2 && (y2 = v2), 4 & p2.__u ? (f2 = j$2(p2, f2, n2), h2.__e && (h2.__e = null)) : "function" == typeof p2.type && void 0 !== _2 ? f2 = _2 : v2 && (f2 = v2.nextSibling), p2.__u &= -7);
   return u3.__e = y2, f2;
 }
 function T$2(n2, l2, u3, t3, i2) {
-  var r2, o2, e2, f2, c2, s2 = u3.length, a2 = s2, h2 = 0;
-  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? ("string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? o2 = n2.__k[r2] = x$2(null, o2, null, null, null) : g$2(o2) ? o2 = n2.__k[r2] = x$2(S, { children: o2 }, null, null, null) : void 0 === o2.constructor && o2.__b > 0 ? o2 = n2.__k[r2] = x$2(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : n2.__k[r2] = o2, f2 = r2 + h2, o2.__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = O$1(o2, u3, f2, a2)) && (a2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > s2 ? h2-- : i2 < s2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
-  if (a2) for (r2 = 0; r2 < s2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = $$1(e2)), K$1(e2, e2));
+  var r2, o2, e2, f2, c2, a2 = u3.length, s2 = a2, h2 = 0;
+  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? ("string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? o2 = n2.__k[r2] = x$2(null, o2, null, null, null) : g$2(o2) ? o2 = n2.__k[r2] = x$2(S, { children: o2 }, null, null, null) : void 0 === o2.constructor && o2.__b > 0 ? o2 = n2.__k[r2] = x$2(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : n2.__k[r2] = o2, f2 = r2 + h2, o2.__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = O$1(o2, u3, f2, s2)) && (s2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > a2 ? h2-- : i2 < a2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
+  if (s2) for (r2 = 0; r2 < a2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = $$1(e2)), K$1(e2, e2));
   return t3;
 }
-function j$2(n2, l2, u3, t3) {
-  var i2, r2;
+function j$2(n2, l2, u3) {
+  var t3, i2;
   if ("function" == typeof n2.type) {
-    for (i2 = n2.__k, r2 = 0; i2 && r2 < i2.length; r2++) i2[r2] && (i2[r2].__ = n2, l2 = j$2(i2[r2], l2, u3, t3));
+    for (t3 = n2.__k, i2 = 0; t3 && i2 < t3.length; i2++) t3[i2] && (t3[i2].__ = n2, l2 = j$2(t3[i2], l2, u3));
     return l2;
   }
-  n2.__e != l2 && (t3 && (l2 && n2.type && !l2.parentNode && (l2 = $$1(n2)), u3.insertBefore(n2.__e, l2 || null)), l2 = n2.__e);
+  n2.__e != l2 && (l2 && n2.type && !l2.parentNode && (l2 = $$1(n2)), l2 = u3.insertBefore(n2.__e, l2 || null));
   do {
     l2 = l2 && l2.nextSibling;
   } while (null != l2 && 8 == l2.nodeType);
@@ -21150,9 +21150,9 @@ function F$2(n2, l2) {
   }) : l2.push(n2)), l2;
 }
 function O$1(n2, l2, u3, t3) {
-  var i2, r2, o2, e2 = n2.key, f2 = n2.type, c2 = l2[u3], s2 = null != c2 && 0 == (2 & c2.__u);
-  if (null === c2 && null == e2 || s2 && e2 == c2.key && f2 == c2.type) return u3;
-  if (t3 > (s2 ? 1 : 0)) {
+  var i2, r2, o2, e2 = n2.key, f2 = n2.type, c2 = l2[u3], a2 = null != c2 && 0 == (2 & c2.__u);
+  if (null === c2 && null == e2 || a2 && e2 == c2.key && f2 == c2.type) return u3;
+  if (t3 > (a2 ? 1 : 0)) {
     for (i2 = u3 - 1, r2 = u3 + 1; i2 >= 0 || r2 < l2.length; ) if (null != (c2 = l2[o2 = i2 >= 0 ? i2-- : r2++]) && 0 == (2 & c2.__u) && e2 == c2.key && f2 == c2.type) return o2;
   }
   return -1;
@@ -21167,7 +21167,7 @@ function N$1(n2, l2, u3, t3, i2) {
     if ("string" == typeof t3 && (n2.style.cssText = t3 = ""), t3) for (l2 in t3) u3 && l2 in u3 || z$2(n2.style, l2, "");
     if (u3) for (l2 in u3) t3 && u3[l2] == t3[l2] || z$2(n2.style, l2, u3[l2]);
   }
-  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(a$1, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3[s$1] = t3[s$1] : (u3[s$1] = h$1, n2.addEventListener(l2, r2 ? v$1 : p$1, r2)) : n2.removeEventListener(l2, r2 ? v$1 : p$1, r2);
+  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(s$1, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3[a$1] = t3[a$1] : (u3[a$1] = h$1, n2.addEventListener(l2, r2 ? v$1 : p$1, r2)) : n2.removeEventListener(l2, r2 ? v$1 : p$1, r2);
   else {
     if ("http://www.w3.org/2000/svg" == i2) l2 = l2.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
     else if ("width" != l2 && "height" != l2 && "href" != l2 && "list" != l2 && "form" != l2 && "tabIndex" != l2 && "download" != l2 && "rowSpan" != l2 && "colSpan" != l2 && "role" != l2 && "popover" != l2 && l2 in n2) try {
@@ -21183,46 +21183,46 @@ function V$1(n2) {
     if (this.l) {
       var t3 = this.l[u3.type + n2];
       if (null == u3[c$1]) u3[c$1] = h$1++;
-      else if (u3[c$1] < t3[s$1]) return;
+      else if (u3[c$1] < t3[a$1]) return;
       return t3(l$1.event ? l$1.event(u3) : u3);
     }
   };
 }
-function q$2(n2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
-  var a2, h2, p2, v2, y2, d2, _2, k2, x2, M2, $2, I2, P2, A2, H2, T2 = u3.type;
+function q$2(n2, u3, t3, i2, r2, o2, e2, f2, c2, a2) {
+  var s2, h2, p2, v2, y2, d2, _2, k2, x2, M2, I2, P2, A2, H2, T2, j2, F2 = u3.type;
   if (void 0 !== u3.constructor) return null;
-  128 & t3.__u && (c2 = !!(32 & t3.__u), o2 = [f2 = u3.__e = t3.__e]), (a2 = l$1.__b) && a2(u3);
-  n: if ("function" == typeof T2) try {
-    if (k2 = u3.props, x2 = T2.prototype && T2.prototype.render, M2 = (a2 = T2.contextType) && i2[a2.__c], $2 = a2 ? M2 ? M2.props.value : a2.__ : i2, t3.__c ? _2 = (h2 = u3.__c = t3.__c).__ = h2.__E : (x2 ? u3.__c = h2 = new T2(k2, $2) : (u3.__c = h2 = new C$2(k2, $2), h2.constructor = T2, h2.render = Q$1), M2 && M2.sub(h2), h2.state || (h2.state = {}), h2.__n = i2, p2 = h2.__d = true, h2.__h = [], h2._sb = []), x2 && null == h2.__s && (h2.__s = h2.state), x2 && null != T2.getDerivedStateFromProps && (h2.__s == h2.state && (h2.__s = m$1({}, h2.__s)), m$1(h2.__s, T2.getDerivedStateFromProps(k2, h2.__s))), v2 = h2.props, y2 = h2.state, h2.__v = u3, p2) x2 && null == T2.getDerivedStateFromProps && null != h2.componentWillMount && h2.componentWillMount(), x2 && null != h2.componentDidMount && h2.__h.push(h2.componentDidMount);
-    else {
-      if (x2 && null == T2.getDerivedStateFromProps && k2 !== v2 && null != h2.componentWillReceiveProps && h2.componentWillReceiveProps(k2, $2), u3.__v == t3.__v || !h2.__e && null != h2.shouldComponentUpdate && false === h2.shouldComponentUpdate(k2, h2.__s, $2)) {
-        u3.__v != t3.__v && (h2.props = k2, h2.state = h2.__s, h2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
-          n3 && (n3.__ = u3);
-        }), w$2.push.apply(h2.__h, h2._sb), h2._sb = [], h2.__h.length && e2.push(h2);
-        break n;
+  128 & t3.__u && (c2 = !!(32 & t3.__u), o2 = [f2 = u3.__e = t3.__e]), (s2 = l$1.__b) && s2(u3);
+  n: if ("function" == typeof F2) {
+    h2 = e2.length;
+    try {
+      if (x2 = u3.props, M2 = F2.prototype && F2.prototype.render, I2 = (s2 = F2.contextType) && i2[s2.__c], P2 = s2 ? I2 ? I2.props.value : s2.__ : i2, t3.__c ? k2 = (p2 = u3.__c = t3.__c).__ = p2.__E : (M2 ? u3.__c = p2 = new F2(x2, P2) : (u3.__c = p2 = new C$2(x2, P2), p2.constructor = F2, p2.render = Q$1), I2 && I2.sub(p2), p2.state || (p2.state = {}), p2.__n = i2, v2 = p2.__d = true, p2.__h = [], p2._sb = []), M2 && null == p2.__s && (p2.__s = p2.state), M2 && null != F2.getDerivedStateFromProps && (p2.__s == p2.state && (p2.__s = m$1({}, p2.__s)), m$1(p2.__s, F2.getDerivedStateFromProps(x2, p2.__s))), y2 = p2.props, d2 = p2.state, p2.__v = u3, v2) M2 && null == F2.getDerivedStateFromProps && null != p2.componentWillMount && p2.componentWillMount(), M2 && null != p2.componentDidMount && p2.__h.push(p2.componentDidMount);
+      else {
+        if (M2 && null == F2.getDerivedStateFromProps && x2 !== y2 && null != p2.componentWillReceiveProps && p2.componentWillReceiveProps(x2, P2), u3.__v == t3.__v || !p2.__e && null != p2.shouldComponentUpdate && false === p2.shouldComponentUpdate(x2, p2.__s, P2)) {
+          u3.__v != t3.__v && (p2.props = x2, p2.state = p2.__s, p2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
+            n3 && (n3.__ = u3);
+          }), w$2.push.apply(p2.__h, p2._sb), p2._sb = [], p2.__h.length && e2.push(p2), f2 = $$1(t3);
+          break n;
+        }
+        null != p2.componentWillUpdate && p2.componentWillUpdate(x2, p2.__s, P2), M2 && null != p2.componentDidUpdate && p2.__h.push(function() {
+          p2.componentDidUpdate(y2, d2, _2);
+        });
       }
-      null != h2.componentWillUpdate && h2.componentWillUpdate(k2, h2.__s, $2), x2 && null != h2.componentDidUpdate && h2.__h.push(function() {
-        h2.componentDidUpdate(v2, y2, d2);
-      });
+      if (p2.context = P2, p2.props = x2, p2.__P = n2, p2.__e = false, A2 = l$1.__r, H2 = 0, M2) p2.state = p2.__s, p2.__d = false, A2 && A2(u3), s2 = p2.render(p2.props, p2.state, p2.context), w$2.push.apply(p2.__h, p2._sb), p2._sb = [];
+      else do {
+        p2.__d = false, A2 && A2(u3), s2 = p2.render(p2.props, p2.state, p2.context), p2.state = p2.__s;
+      } while (p2.__d && ++H2 < 25);
+      p2.state = p2.__s, null != p2.getChildContext && (i2 = m$1(m$1({}, i2), p2.getChildContext())), M2 && !v2 && null != p2.getSnapshotBeforeUpdate && (_2 = p2.getSnapshotBeforeUpdate(y2, d2)), T2 = null != s2 && s2.type === S && null == s2.key ? E$1(s2.props.children) : s2, f2 = L$1(n2, g$2(T2) ? T2 : [T2], u3, t3, i2, r2, o2, e2, f2, c2, a2), p2.base = u3.__e, u3.__u &= -161, p2.__h.length && e2.push(p2), k2 && (p2.__E = p2.__ = null);
+    } catch (n3) {
+      if (e2.length = h2, u3.__v = null, c2 || null != o2) {
+        if (n3.then) {
+          for (u3.__u |= c2 ? 160 : 128; f2 && 8 == f2.nodeType && f2.nextSibling; ) f2 = f2.nextSibling;
+          null != o2 && (o2[o2.indexOf(f2)] = null), u3.__e = f2;
+        } else if (null != o2) for (j2 = o2.length; j2--; ) b$1(o2[j2]);
+      } else u3.__e = t3.__e;
+      null == u3.__k && (u3.__k = t3.__k || []), n3.then || B$2(u3), l$1.__e(n3, u3, t3);
     }
-    if (h2.context = $2, h2.props = k2, h2.__P = n2, h2.__e = false, I2 = l$1.__r, P2 = 0, x2) h2.state = h2.__s, h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), w$2.push.apply(h2.__h, h2._sb), h2._sb = [];
-    else do {
-      h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), h2.state = h2.__s;
-    } while (h2.__d && ++P2 < 25);
-    h2.state = h2.__s, null != h2.getChildContext && (i2 = m$1(m$1({}, i2), h2.getChildContext())), x2 && !p2 && null != h2.getSnapshotBeforeUpdate && (d2 = h2.getSnapshotBeforeUpdate(v2, y2)), A2 = null != a2 && a2.type === S && null == a2.key ? E$1(a2.props.children) : a2, f2 = L$1(n2, g$2(A2) ? A2 : [A2], u3, t3, i2, r2, o2, e2, f2, c2, s2), h2.base = u3.__e, u3.__u &= -161, h2.__h.length && e2.push(h2), _2 && (h2.__E = h2.__ = null);
-  } catch (n3) {
-    if (u3.__v = null, c2 || null != o2) if (n3.then) {
-      for (u3.__u |= c2 ? 160 : 128; f2 && 8 == f2.nodeType && f2.nextSibling; ) f2 = f2.nextSibling;
-      o2[o2.indexOf(f2)] = null, u3.__e = f2;
-    } else {
-      for (H2 = o2.length; H2--; ) b$1(o2[H2]);
-      B$2(u3);
-    }
-    else u3.__e = t3.__e, u3.__k = t3.__k, n3.then || B$2(u3);
-    l$1.__e(n3, u3, t3);
-  }
-  else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = G$1(t3.__e, u3, t3, i2, r2, o2, e2, c2, s2);
-  return (a2 = l$1.diffed) && a2(u3), 128 & u3.__u ? void 0 : f2;
+  } else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = G$1(t3.__e, u3, t3, i2, r2, o2, e2, c2, a2);
+  return (s2 = l$1.diffed) && s2(u3), 128 & u3.__u ? void 0 : f2;
 }
 function B$2(n2) {
   n2 && (n2.__c && (n2.__c.__e = true), n2.__k && n2.__k.some(B$2));
@@ -21240,13 +21240,13 @@ function D$2(n2, u3, t3) {
   });
 }
 function E$1(n2) {
-  return "object" != typeof n2 || null == n2 || n2.__b > 0 ? n2 : g$2(n2) ? n2.map(E$1) : m$1({}, n2);
+  return "object" != typeof n2 || null == n2 || n2.__b > 0 ? n2 : g$2(n2) ? n2.map(E$1) : void 0 !== n2.constructor ? null : m$1({}, n2);
 }
-function G$1(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
-  var a2, h2, p2, v2, y2, w2, _2, m2 = i2.props || d$1, k2 = t3.props, x2 = t3.type;
+function G$1(u3, t3, i2, r2, o2, e2, f2, c2, a2) {
+  var s2, h2, p2, v2, y2, w2, _2, m2 = i2.props || d$1, k2 = t3.props, x2 = t3.type;
   if ("svg" == x2 ? o2 = "http://www.w3.org/2000/svg" : "math" == x2 ? o2 = "http://www.w3.org/1998/Math/MathML" : o2 || (o2 = "http://www.w3.org/1999/xhtml"), null != e2) {
-    for (a2 = 0; a2 < e2.length; a2++) if ((y2 = e2[a2]) && "setAttribute" in y2 == !!x2 && (x2 ? y2.localName == x2 : 3 == y2.nodeType)) {
-      u3 = y2, e2[a2] = null;
+    for (s2 = 0; s2 < e2.length; s2++) if ((y2 = e2[s2]) && "setAttribute" in y2 == !!x2 && (x2 ? y2.localName == x2 : 3 == y2.nodeType)) {
+      u3 = y2, e2[s2] = null;
       break;
     }
   }
@@ -21256,12 +21256,12 @@ function G$1(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
   }
   if (null == x2) m2 === k2 || c2 && u3.data == k2 || (u3.data = k2);
   else {
-    if (e2 = e2 && n.call(u3.childNodes), !c2 && null != e2) for (m2 = {}, a2 = 0; a2 < u3.attributes.length; a2++) m2[(y2 = u3.attributes[a2]).name] = y2.value;
-    for (a2 in m2) y2 = m2[a2], "dangerouslySetInnerHTML" == a2 ? p2 = y2 : "children" == a2 || a2 in k2 || "value" == a2 && "defaultValue" in k2 || "checked" == a2 && "defaultChecked" in k2 || N$1(u3, a2, null, y2, o2);
-    for (a2 in k2) y2 = k2[a2], "children" == a2 ? v2 = y2 : "dangerouslySetInnerHTML" == a2 ? h2 = y2 : "value" == a2 ? w2 = y2 : "checked" == a2 ? _2 = y2 : c2 && "function" != typeof y2 || m2[a2] === y2 || N$1(u3, a2, y2, m2[a2], o2);
+    if (e2 = "textarea" == x2 && null != k2.defaultValue ? null : e2 && n.call(u3.childNodes), !c2 && null != e2) for (m2 = {}, s2 = 0; s2 < u3.attributes.length; s2++) m2[(y2 = u3.attributes[s2]).name] = y2.value;
+    for (s2 in m2) y2 = m2[s2], "dangerouslySetInnerHTML" == s2 ? p2 = y2 : "children" == s2 || s2 in k2 || "value" == s2 && "defaultValue" in k2 || "checked" == s2 && "defaultChecked" in k2 || N$1(u3, s2, null, y2, o2);
+    for (s2 in k2) y2 = k2[s2], "children" == s2 ? v2 = y2 : "dangerouslySetInnerHTML" == s2 ? h2 = y2 : "value" == s2 ? w2 = y2 : "checked" == s2 ? _2 = y2 : c2 && "function" != typeof y2 || m2[s2] === y2 || N$1(u3, s2, y2, m2[s2], o2);
     if (h2) c2 || p2 && (h2.__html == p2.__html || h2.__html == u3.innerHTML) || (u3.innerHTML = h2.__html), t3.__k = [];
-    else if (p2 && (u3.innerHTML = ""), L$1("template" == t3.type ? u3.content : u3, g$2(v2) ? v2 : [v2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && $$1(i2, 0), c2, s2), null != e2) for (a2 = e2.length; a2--; ) b$1(e2[a2]);
-    c2 || (a2 = "value", "progress" == x2 && null == w2 ? u3.removeAttribute("value") : null != w2 && (w2 !== u3[a2] || "progress" == x2 && !w2 || "option" == x2 && w2 != m2[a2]) && N$1(u3, a2, w2, m2[a2], o2), a2 = "checked", null != _2 && _2 != u3[a2] && N$1(u3, a2, _2, m2[a2], o2));
+    else if (p2 && (u3.innerHTML = ""), L$1("template" == t3.type ? u3.content : u3, g$2(v2) ? v2 : [v2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && $$1(i2, 0), c2, a2), null != e2) for (s2 = e2.length; s2--; ) b$1(e2[s2]);
+    c2 && "textarea" != x2 || (s2 = "value", "progress" == x2 && null == w2 ? u3.removeAttribute("value") : null != w2 && (w2 !== u3[s2] || "progress" == x2 && !w2 || "option" == x2 && w2 != m2[s2]) && N$1(u3, s2, w2, m2[s2], o2), s2 = "checked", null != _2 && _2 != u3[s2] && N$1(u3, s2, _2, m2[s2], o2));
   }
   return u3;
 }
@@ -21283,7 +21283,7 @@ function K$1(n2, u3, t3) {
     } catch (n3) {
       l$1.__e(n3, u3);
     }
-    i2.base = i2.__P = null;
+    i2.base = i2.__P = i2.__n = null;
   }
   if (i2 = n2.__k) for (r2 = 0; r2 < i2.length; r2++) i2[r2] && K$1(i2[r2], u3, t3 || "function" != typeof n2.type);
   t3 || b$1(n2.__e), n2.__c = n2.__ = n2.__e = void 0;
@@ -21293,7 +21293,7 @@ function Q$1(n2, l2, u3) {
 }
 function R$1(u3, t3, i2) {
   var r2, o2, e2, f2;
-  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], q$2(t3, u3 = (!r2 && i2 || t3).__k = k$2(S, null, [u3]), o2 || d$1, d$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), D$2(e2, u3, f2);
+  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], q$2(t3, u3 = (!r2 && i2 || t3).__k = k$2(S, null, [u3]), o2 || d$1, d$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), D$2(e2, u3, f2), u3.props.children = null;
 }
 function U$1(n2, l2) {
   R$1(n2, l2, U$1);
@@ -21340,37 +21340,36 @@ n = w$2.slice, l$1 = { __e: function(n2, l2, u3, t3) {
   this.__v && (this.__e = true, n2 && this.__h.push(n2), A$2(this));
 }, C$2.prototype.render = S, i$1 = [], o$1 = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, e$1 = function(n2, l2) {
   return n2.__v.__b - l2.__v.__b;
-}, H$1.__r = 0, f$2 = Math.random().toString(8), c$1 = "__d" + f$2, s$1 = "__a" + f$2, a$1 = /(PointerCapture)$|Capture$/i, h$1 = 0, p$1 = V$1(false), v$1 = V$1(true), y$1 = 0;
-var t2, r$1, u$1, i, o = 0, f$1 = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, s = c.__;
-function p(n2, t3) {
+}, H$1.__r = 0, f$2 = Math.random().toString(8), c$1 = "__d" + f$2, a$1 = "__a" + f$2, s$1 = /(PointerCapture)$|Capture$/i, h$1 = 0, p$1 = V$1(false), v$1 = V$1(true), y$1 = 0;
+var t2, r$1, u$1, i, o = 0, f$1 = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, p = c.__;
+function s(n2, t3) {
   c.__h && c.__h(r$1, n2, o || t3), o = 0;
   var u3 = r$1.__H || (r$1.__H = { __: [], __h: [] });
   return n2 >= u3.__.length && u3.__.push({}), u3.__[n2];
 }
 function d(n2) {
-  return o = 1, h(D$1, n2);
+  return o = 1, y(D$1, n2);
 }
-function h(n2, u3, i2) {
-  var o2 = p(t2++, 2);
+function y(n2, u3, i2) {
+  var o2 = s(t2++, 2);
   if (o2.t = n2, !o2.__c && (o2.__ = [i2 ? i2(u3) : D$1(void 0, u3), function(n3) {
     var t3 = o2.__N ? o2.__N[0] : o2.__[0], r2 = o2.t(t3, n3);
     t3 !== r2 && (o2.__N = [r2, o2.__[1]], o2.__c.setState({}));
   }], o2.__c = r$1, !r$1.__f)) {
     var f2 = function(n3, t3, r2) {
       if (!o2.__c.__H) return true;
-      var u4 = o2.__c.__H.__.filter(function(n4) {
-        return n4.__c;
-      });
-      if (u4.every(function(n4) {
-        return !n4.__N;
-      })) return !c2 || c2.call(this, n3, t3, r2);
-      var i3 = o2.__c.props !== n3;
-      return u4.some(function(n4) {
+      var u4 = false, i3 = o2.__c.props !== n3;
+      if (o2.__c.__H.__.some(function(n4) {
         if (n4.__N) {
+          u4 = true;
           var t4 = n4.__[0];
           n4.__ = n4.__N, n4.__N = void 0, t4 !== n4.__[0] && (i3 = true);
         }
-      }), c2 && c2.call(this, n3, t3, r2) || i3;
+      }), c2) {
+        var f3 = c2.call(this, n3, t3, r2);
+        return u4 ? f3 || i3 : f3;
+      }
+      return !u4 || i3;
     };
     r$1.__f = true;
     var c2 = r$1.shouldComponentUpdate, e2 = r$1.componentWillUpdate;
@@ -21384,12 +21383,12 @@ function h(n2, u3, i2) {
   }
   return o2.__N || o2.__;
 }
-function y(n2, u3) {
-  var i2 = p(t2++, 3);
+function h(n2, u3) {
+  var i2 = s(t2++, 3);
   !c.__s && C$1(i2.__H, u3) && (i2.__ = n2, i2.u = u3, r$1.__H.__h.push(i2));
 }
 function _(n2, u3) {
-  var i2 = p(t2++, 4);
+  var i2 = s(t2++, 4);
   !c.__s && C$1(i2.__H, u3) && (i2.__ = n2, i2.u = u3, r$1.__h.push(i2));
 }
 function A$1(n2) {
@@ -21411,7 +21410,7 @@ function F$1(n2, t3, r2) {
   }, null == r2 ? r2 : r2.concat(n2));
 }
 function T$1(n2, r2) {
-  var u3 = p(t2++, 7);
+  var u3 = s(t2++, 7);
   return C$1(u3.__H, r2) && (u3.__ = n2(), u3.__H = r2, u3.__h = n2), u3.__;
 }
 function q$1(n2, t3) {
@@ -21420,14 +21419,14 @@ function q$1(n2, t3) {
   }, t3);
 }
 function x$1(n2) {
-  var u3 = r$1.context[n2.__c], i2 = p(t2++, 9);
+  var u3 = r$1.context[n2.__c], i2 = s(t2++, 9);
   return i2.c = n2, u3 ? (null == i2.__ && (i2.__ = true, u3.sub(r$1)), u3.props.value) : n2.__;
 }
 function P$1(n2, t3) {
   c.useDebugValue && c.useDebugValue(t3 ? t3(n2) : n2);
 }
 function b(n2) {
-  var u3 = p(t2++, 10), i2 = d();
+  var u3 = s(t2++, 10), i2 = d();
   return u3.__ = n2, r$1.componentDidCatch || (r$1.componentDidCatch = function(n3, t3) {
     u3.__ && u3.__(n3, t3), i2[1](n3);
   }), [i2[0], function() {
@@ -21435,7 +21434,7 @@ function b(n2) {
   }];
 }
 function g$1() {
-  var n2 = p(t2++, 11);
+  var n2 = s(t2++, 11);
   if (!n2.__) {
     for (var u3 = r$1.__v; null !== u3 && !u3.__m && null !== u3.__; ) u3 = u3.__;
     var i2 = u3.__m || (u3.__m = [0, 0]);
@@ -21456,7 +21455,7 @@ function j$1() {
 c.__b = function(n2) {
   r$1 = null, e && e(n2);
 }, c.__ = function(n2, t3) {
-  n2 && t3.__k && t3.__k.__m && (n2.__m = t3.__k.__m), s && s(n2, t3);
+  n2 && t3.__k && t3.__k.__m && (n2.__m = t3.__k.__m), p && p(n2, t3);
 }, c.__r = function(n2) {
   a && a(n2), t2 = 0;
   var i2 = (r$1 = n2.__c).__H;
@@ -21467,7 +21466,7 @@ c.__b = function(n2) {
   v && v(n2);
   var t3 = n2.__c;
   t3 && t3.__H && (t3.__H.__h.length && (1 !== f$1.push(t3) && i === c.requestAnimationFrame || ((i = c.requestAnimationFrame) || w$1)(j$1)), t3.__H.__.some(function(n3) {
-    n3.u && (n3.__H = n3.u), n3.u = void 0;
+    n3.u && (n3.__H = n3.u, n3.u = void 0);
   })), u$1 = r$1 = null;
 }, c.__c = function(n2, t3) {
   t3.some(function(n3) {
@@ -21528,7 +21527,7 @@ function C(n2, t3) {
   var e2 = t3(), r2 = d({ t: { __: e2, u: t3 } }), u3 = r2[0].t, o2 = r2[1];
   return _(function() {
     u3.__ = e2, u3.u = t3, R(u3) && o2({ t: u3 });
-  }, [n2, e2, t3]), y(function() {
+  }, [n2, e2, t3]), h(function() {
     return R(u3) && o2({ t: u3 }), n2(function() {
       R(u3) && o2({ t: u3 });
     });
@@ -21591,7 +21590,7 @@ var F = function(n2, t3) {
 }, toArray: F$2 }, O = l$1.__e;
 l$1.__e = function(n2, t3, e2, r2) {
   if (n2.then) {
-    for (var u3, o2 = t3; o2 = o2.__; ) if ((u3 = o2.__c) && u3.__c) return null == t3.__e && (t3.__e = e2.__e, t3.__k = e2.__k), u3.__c(n2, t3);
+    for (var u3, o2 = t3; o2 = o2.__; ) if ((u3 = o2.__c) && u3.__c) return null == t3.__e && (t3.__e = e2.__e, t3.__k = e2.__k || []), u3.__c(n2, t3);
   }
   O(n2, t3, e2, r2);
 };
@@ -21638,12 +21637,12 @@ l$1.unmount = function(n2) {
   var e2 = t3.__c, r2 = this;
   null == r2.o && (r2.o = []), r2.o.push(e2);
   var u3 = j(r2.__v), o2 = false, i2 = function() {
-    o2 || r2.__z || (o2 = true, e2.__R = null, u3 ? u3(c2) : c2());
+    o2 || r2.__z || (o2 = true, e2.__R = null, u3 ? u3(f2) : f2());
   };
   e2.__R = i2;
   var l2 = e2.__P;
   e2.__P = null;
-  var c2 = function() {
+  var f2 = function() {
     if (!--r2.__u) {
       if (r2.state.__a) {
         var n3 = r2.state.__a;
@@ -21753,8 +21752,8 @@ l$1.vnode = function(n2) {
     for (var i2 in t3) {
       var l2 = t3[i2];
       if (!("value" === i2 && "defaultValue" in t3 && null == l2 || Q && "children" === i2 && "noscript" === e2 || "class" === i2 || "className" === i2)) {
-        var c2 = i2.toLowerCase();
-        "defaultValue" === i2 && "value" in t3 && null == t3.value ? i2 = "value" : "download" === i2 && true === l2 ? l2 = "" : "translate" === c2 && "no" === l2 ? l2 = false : "o" === c2[0] && "n" === c2[1] ? "ondoubleclick" === c2 ? i2 = "ondblclick" : "onchange" !== c2 || "input" !== e2 && "textarea" !== e2 || X(t3.type) ? "onfocus" === c2 ? i2 = "onfocusin" : "onblur" === c2 ? i2 = "onfocusout" : J.test(i2) && (i2 = c2) : c2 = i2 = "oninput" : o2 && G.test(i2) ? i2 = i2.replace(K, "-$&").toLowerCase() : null === l2 && (l2 = void 0), "oninput" === c2 && u3[i2 = c2] && (i2 = "oninputCapture"), u3[i2] = l2;
+        var f2 = i2.toLowerCase();
+        "defaultValue" === i2 && "value" in t3 && null == t3.value ? i2 = "value" : "download" === i2 && true === l2 ? l2 = "" : "translate" === f2 && "no" === l2 ? l2 = false : "o" === f2[0] && "n" === f2[1] ? "ondoubleclick" === f2 ? i2 = "ondblclick" : "onchange" !== f2 || "input" !== e2 && "textarea" !== e2 || X(t3.type) ? "onfocus" === f2 ? i2 = "onfocusin" : "onblur" === f2 ? i2 = "onfocusout" : J.test(i2) && (i2 = f2) : f2 = i2 = "oninput" : o2 && G.test(i2) ? i2 = i2.replace(K, "-$&").toLowerCase() : null === l2 && (l2 = void 0), "oninput" === f2 && u3[i2 = f2] && (i2 = "oninputCapture"), u3[i2] = l2;
       }
     }
     "select" == e2 && (u3.multiple && Array.isArray(u3.value) && (u3.value = F$2(t3.children).forEach(function(n4) {
@@ -21768,15 +21767,15 @@ var ln = l$1.__r;
 l$1.__r = function(n2) {
   ln && ln(n2), rn = n2.__c;
 };
-var cn = l$1.diffed;
+var fn = l$1.diffed;
 l$1.diffed = function(n2) {
-  cn && cn(n2);
+  fn && fn(n2);
   var t3 = n2.props, e2 = n2.__e;
   null != e2 && "textarea" === n2.type && "value" in t3 && t3.value !== e2.value && (e2.value = null == t3.value ? "" : t3.value), rn = null;
 };
-var fn = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
+var an = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
   return rn.__n[n2.__c].props.value;
-}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: y, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: h, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, an = "18.3.1";
+}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: h, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: y, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, cn = "18.3.1";
 function sn(n2) {
   return k$2.bind(null, n2);
 }
@@ -21801,13 +21800,17 @@ function yn(n2) {
 var _n = function(n2, t3) {
   return n2(t3);
 }, bn = function(n2, t3) {
-  var r2 = l$1.debounceRendering;
+  var r2, u3 = l$1.debounceRendering;
   l$1.debounceRendering = function(n3) {
-    return n3();
+    r2 = n3;
   };
-  var u3 = n2(t3);
-  return l$1.debounceRendering = r2, u3;
-}, Sn = hn, gn = { useState: d, useId: g$1, useReducer: h, useEffect: y, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: hn, isElement: Sn, isFragment: vn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn };
+  try {
+    var o2 = n2(t3);
+    return r2 && r2(), o2;
+  } finally {
+    l$1.debounceRendering = u3;
+  }
+}, Sn = hn, gn = { useState: d, useId: g$1, useReducer: y, useEffect: h, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: hn, isElement: Sn, isFragment: vn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: an };
 const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   Children: L,
@@ -21817,7 +21820,7 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   StrictMode: S,
   Suspense: P,
   SuspenseList: B,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: an,
   cloneElement: mn,
   createContext: X$1,
   createElement: k$2,
@@ -21843,19 +21846,19 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   useContext: x$1,
   useDebugValue: P$1,
   useDeferredValue: w,
-  useEffect: y,
+  useEffect: h,
   useErrorBoundary: b,
   useId: g$1,
   useImperativeHandle: F$1,
   useInsertionEffect: I,
   useLayoutEffect: _,
   useMemo: T$1,
-  useReducer: h,
+  useReducer: y,
   useRef: A$1,
   useState: d,
   useSyncExternalStore: C,
   useTransition: k,
-  version: an
+  version: cn
 }, Symbol.toStringTag, { value: "Module" }));
 const identity = (arg2) => arg2;
 function useStore(api, selector = identity) {
@@ -24092,7 +24095,7 @@ function useTimelineZoom(options) {
   const [hourHeight, setHourHeight] = d(defaultHeight);
   const initialPinchDistanceRef = A$1(null);
   const initialHourHeightRef = A$1(null);
-  y(() => {
+  h(() => {
     setHourHeight(defaultHeight);
   }, [defaultHeight]);
   const handleWheel = q$1((e2) => {
@@ -27725,6 +27728,111 @@ function stopInteractionEvent(event) {
 function isKeyboardActivation(event) {
   return event?.key === "Enter" || event?.key === " ";
 }
+function renderIcon(name) {
+  switch (name) {
+    case "chevron-left":
+      return /* @__PURE__ */ u2("path", { d: "m15 18-6-6 6-6" });
+    case "chevron-right":
+      return /* @__PURE__ */ u2("path", { d: "m9 18 6-6-6-6" });
+    case "chevron-down":
+      return /* @__PURE__ */ u2("path", { d: "m6 9 6 6 6-6" });
+    case "chevron-up":
+      return /* @__PURE__ */ u2("path", { d: "m18 15-6-6-6 6" });
+    case "copy":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2" }),
+        /* @__PURE__ */ u2("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
+      ] });
+    case "calendar":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("path", { d: "M8 2v4M16 2v4M3 10h18" }),
+        /* @__PURE__ */ u2("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2" })
+      ] });
+    case "filter":
+      return /* @__PURE__ */ u2("path", { d: "M22 3H2l8 9.5V19l4 2v-8.5L22 3Z" });
+    case "grip-vertical":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("circle", { cx: "9", cy: "6", r: "1" }),
+        /* @__PURE__ */ u2("circle", { cx: "15", cy: "6", r: "1" }),
+        /* @__PURE__ */ u2("circle", { cx: "9", cy: "12", r: "1" }),
+        /* @__PURE__ */ u2("circle", { cx: "15", cy: "12", r: "1" }),
+        /* @__PURE__ */ u2("circle", { cx: "9", cy: "18", r: "1" }),
+        /* @__PURE__ */ u2("circle", { cx: "15", cy: "18", r: "1" })
+      ] });
+    case "arrow-up":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("path", { d: "m5 12 7-7 7 7" }),
+        /* @__PURE__ */ u2("path", { d: "M12 19V5" })
+      ] });
+    case "hourglass":
+      return /* @__PURE__ */ u2(S, { children: /* @__PURE__ */ u2("path", { d: "M6 2h12M6 22h12M7 2v4c0 2 2 4 5 6-3 2-5 4-5 6v4M17 2v4c0 2-2 4-5 6 3 2 5 4 5 6v4" }) });
+    case "lock":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("rect", { x: "4", y: "10", width: "16", height: "12", rx: "2" }),
+        /* @__PURE__ */ u2("path", { d: "M8 10V7a4 4 0 0 1 8 0v3" })
+      ] });
+    case "unlock":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("rect", { x: "4", y: "10", width: "16", height: "12", rx: "2" }),
+        /* @__PURE__ */ u2("path", { d: "M8 10V7a4 4 0 0 1 7.6-1.8" })
+      ] });
+    case "trash-2":
+      return /* @__PURE__ */ u2(S, { children: /* @__PURE__ */ u2("path", { d: "M3 6h18M8 6V4h8v2M19 6l-1 16H6L5 6M10 11v6M14 11v6" }) });
+    case "upload":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("path", { d: "M12 16V3M7 8l5-5 5 5" }),
+        /* @__PURE__ */ u2("path", { d: "M5 21h14a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2" })
+      ] });
+    case "plus":
+      return /* @__PURE__ */ u2("path", { d: "M12 5v14M5 12h14" });
+    case "check":
+      return /* @__PURE__ */ u2("path", { d: "m5 12 4 4L19 6" });
+    case "pencil":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("path", { d: "M12 20h9" }),
+        /* @__PURE__ */ u2("path", { d: "M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" })
+      ] });
+    case "play":
+      return /* @__PURE__ */ u2("path", { d: "m8 5 11 7-11 7Z" });
+    case "rotate-ccw":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("path", { d: "M3 12a9 9 0 1 0 3-6.7L3 8" }),
+        /* @__PURE__ */ u2("path", { d: "M3 3v5h5" })
+      ] });
+    case "file-plus":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" }),
+        /* @__PURE__ */ u2("path", { d: "M14 2v6h6M12 11v6M9 14h6" })
+      ] });
+    case "settings":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("path", { d: "M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5" }),
+        /* @__PURE__ */ u2("circle", { cx: "16", cy: "6", r: "2" }),
+        /* @__PURE__ */ u2("circle", { cx: "8", cy: "12", r: "2" }),
+        /* @__PURE__ */ u2("circle", { cx: "13", cy: "18", r: "2" })
+      ] });
+    default:
+      return null;
+  }
+}
+function ThinkIcon({ name, className, ...svgProps }) {
+  return /* @__PURE__ */ u2(
+    "svg",
+    {
+      ...svgProps,
+      className: ["think-lucide-icon", className].filter(Boolean).join(" "),
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      "aria-hidden": "true",
+      focusable: "false",
+      children: renderIcon(name)
+    }
+  );
+}
 function GroupedContainer(props) {
   const {
     nodes,
@@ -27828,7 +27936,7 @@ function GroupedContainer(props) {
             },
             title: "点击折叠/展开（Ctrl/⌘+点击：全部折叠/展开）",
             children: [
-              /* @__PURE__ */ u2("span", { class: toggleIconClass, children: isCollapsed ? "▶" : "▼" }),
+              /* @__PURE__ */ u2("span", { class: toggleIconClass, children: /* @__PURE__ */ u2(ThinkIcon, { name: isCollapsed ? "chevron-right" : "chevron-down" }) }),
               /* @__PURE__ */ u2("span", { class: labelClass, children: [
                 node2.label || node2.key,
                 " (",
@@ -31230,7 +31338,7 @@ function useThemeProps({
     props
   });
 }
-const useEnhancedEffect = typeof window !== "undefined" ? _ : y;
+const useEnhancedEffect = typeof window !== "undefined" ? _ : h;
 function clamp(val, min2 = Number.MIN_SAFE_INTEGER, max2 = Number.MAX_SAFE_INTEGER) {
   return Math.max(min2, Math.min(val, max2));
 }
@@ -31518,7 +31626,7 @@ let globalId = 0;
 function useGlobalId(idOverride) {
   const [defaultId, setDefaultId] = d(idOverride);
   const id = idOverride || defaultId;
-  y(() => {
+  h(() => {
     if (defaultId == null) {
       globalId += 1;
       setDefaultId(`mui-${globalId}`);
@@ -31833,7 +31941,7 @@ function useCurrentColorScheme(options) {
     };
   });
   const [isClient, setIsClient] = d(noSsr || !isMultiSchemes);
-  y(() => {
+  h(() => {
     setIsClient(true);
   }, []);
   const colorScheme = getColorScheme(state);
@@ -31926,7 +32034,7 @@ function useCurrentColorScheme(options) {
   }, [state.mode]);
   const mediaListener = A$1(handleMediaQuery);
   mediaListener.current = handleMediaQuery;
-  y(() => {
+  h(() => {
     if (typeof window.matchMedia !== "function" || !isMultiSchemes) {
       return void 0;
     }
@@ -31938,7 +32046,7 @@ function useCurrentColorScheme(options) {
       media.removeListener(handler);
     };
   }, [isMultiSchemes]);
-  y(() => {
+  h(() => {
     if (isMultiSchemes) {
       const unsubscribeMode = modeStorage?.subscribe((value) => {
         if (!value || ["light", "dark", "system"].includes(value)) {
@@ -32139,7 +32247,7 @@ function createCssVarsProvider(options) {
         }
       }
     }, [colorScheme, colorSchemeSelector, colorSchemeNode, allColorSchemes]);
-    y(() => {
+    h(() => {
       let timer;
       if (disableTransitionOnChange && hasMounted.current && documentNode) {
         const css2 = documentNode.createElement("style");
@@ -32154,7 +32262,7 @@ function createCssVarsProvider(options) {
         clearTimeout(timer);
       };
     }, [colorScheme, disableTransitionOnChange, documentNode]);
-    y(() => {
+    h(() => {
       hasMounted.current = true;
       return () => {
         hasMounted.current = false;
@@ -34759,7 +34867,7 @@ function useLazyRef(init, initArg) {
 }
 const EMPTY = [];
 function useOnMount(fn3) {
-  y(fn3, EMPTY);
+  h(fn3, EMPTY);
 }
 class Timeout {
   static create() {
@@ -35396,7 +35504,7 @@ class LazyRipple {
     const [shouldMount, setShouldMount] = d(false);
     ripple.shouldMount = shouldMount;
     ripple.setShouldMount = setShouldMount;
-    y(ripple.mountEffect, [shouldMount]);
+    h(ripple.mountEffect, [shouldMount]);
     return ripple;
   }
   constructor() {
@@ -35473,7 +35581,7 @@ function Ripple(props) {
   if (!inProp && !leaving) {
     setLeaving(true);
   }
-  y(() => {
+  h(() => {
     if (!inProp && onExited != null) {
       const timeoutId = setTimeout(onExited, timeout);
       return () => {
@@ -35609,7 +35717,7 @@ const TouchRipple = /* @__PURE__ */ D(function TouchRipple2(inProps, ref) {
   const [ripples, setRipples] = d([]);
   const nextKey = A$1(0);
   const rippleCallback = A$1(null);
-  y(() => {
+  h(() => {
     if (rippleCallback.current) {
       rippleCallback.current();
       rippleCallback.current = null;
@@ -35873,7 +35981,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     }
   }), []);
   const enableTouchRipple = ripple.shouldMount && !disableRipple && !disabled;
-  y(() => {
+  h(() => {
     if (focusVisible && focusRipple && !disableRipple) {
       ripple.pulsate();
     }
@@ -38037,7 +38145,7 @@ function useSlotProps(parameters) {
   return props;
 }
 function getReactElementRef(element) {
-  if (parseInt(an, 10) >= 19) {
+  if (parseInt(cn, 10) >= 19) {
     return element?.props?.ref || null;
   }
   return element?.ref || null;
@@ -38146,12 +38254,12 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
   const rtlPlacement = flipPlacement(initialPlacement, direction);
   const [placement, setPlacement] = d(rtlPlacement);
   const [resolvedAnchorElement, setResolvedAnchorElement] = d(resolveAnchorEl$1(anchorEl));
-  y(() => {
+  h(() => {
     if (popperRef.current) {
       popperRef.current.forceUpdate();
     }
   });
-  y(() => {
+  h(() => {
     if (anchorEl) {
       setResolvedAnchorElement(resolveAnchorEl$1(anchorEl));
     }
@@ -39340,7 +39448,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     states: ["color", "disabled", "error", "hiddenLabel", "size", "required", "filled"]
   });
   fcs.focused = muiFormControl ? muiFormControl.focused : focused;
-  y(() => {
+  h(() => {
     if (!muiFormControl && disabled && focused) {
       setFocused(false);
       if (onBlur) {
@@ -39430,7 +39538,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
       onChange(event, ...args);
     }
   };
-  y(() => {
+  h(() => {
     checkDirty(inputRef.current);
   }, []);
   const handleClick = (event) => {
@@ -39466,7 +39574,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
       value: "x"
     });
   };
-  y(() => {
+  h(() => {
     if (muiFormControl) {
       muiFormControl.setAdornedStart(Boolean(startAdornment));
     }
@@ -40758,7 +40866,7 @@ function ClickAwayListener$1(props) {
   const nodeRef = A$1(null);
   const activatedRef = A$1(false);
   const syntheticEventRef = A$1(false);
-  y(() => {
+  h(() => {
     setTimeout(() => {
       activatedRef.current = true;
     }, 0);
@@ -40801,7 +40909,7 @@ function ClickAwayListener$1(props) {
   if (touchEvent !== false) {
     childrenProps[touchEvent] = createHandleSynthetic(touchEvent);
   }
-  y(() => {
+  h(() => {
     if (touchEvent !== false) {
       const mappedTouchEvent = mapEventPropToEvent(touchEvent);
       const doc = ownerDocument(nodeRef.current);
@@ -40820,7 +40928,7 @@ function ClickAwayListener$1(props) {
   if (mouseEvent !== false) {
     childrenProps[mouseEvent] = createHandleSynthetic(mouseEvent);
   }
-  y(() => {
+  h(() => {
     if (mouseEvent !== false) {
       const mappedMouseEvent = mapEventPropToEvent(mouseEvent);
       const doc = ownerDocument(nodeRef.current);
@@ -41097,13 +41205,13 @@ function FocusTrap(props) {
   const rootRef = A$1(null);
   const handleRef = useForkRef(getReactElementRef(children), rootRef);
   const lastKeydown = A$1(null);
-  y(() => {
+  h(() => {
     if (!open || !rootRef.current) {
       return;
     }
     activated.current = !disableAutoFocus;
   }, [disableAutoFocus, open]);
-  y(() => {
+  h(() => {
     ignoreNextEnforceFocus.current = false;
     if (!open || !rootRef.current) {
       return;
@@ -41129,7 +41237,7 @@ function FocusTrap(props) {
       }
     };
   }, [open]);
-  y(() => {
+  h(() => {
     if (!open || !rootRef.current) {
       return;
     }
@@ -41306,12 +41414,12 @@ function useModal(parameters) {
   const handleClose = q$1(() => {
     manager.remove(getModal(), ariaHiddenProp);
   }, [ariaHiddenProp]);
-  y(() => {
+  h(() => {
     return () => {
       handleClose();
     };
   }, [handleClose]);
-  y(() => {
+  h(() => {
     if (open) {
       handleOpen();
     } else if (!hasTransition || !closeAfterTransition) {
@@ -44273,7 +44381,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
     element.style.transformOrigin = positioning.transformOrigin;
     setIsPositioned(true);
   }, [getPositioningStyle]);
-  y(() => {
+  h(() => {
     if (disableScrollLock) {
       window.addEventListener("scroll", setPositioningStyles);
     }
@@ -44285,7 +44393,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
   const handleExited = () => {
     setIsPositioned(false);
   };
-  y(() => {
+  h(() => {
     if (open) {
       setPositioningStyles();
     }
@@ -44295,7 +44403,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
       setPositioningStyles();
     }
   } : null, [open, setPositioningStyles]);
-  y(() => {
+  h(() => {
     if (!open) {
       return void 0;
     }
@@ -44963,7 +45071,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     value
   }), [value]);
   const open = displayNode !== null && openState;
-  y(() => {
+  h(() => {
     if (!open || !anchorElement || autoWidth) {
       return void 0;
     }
@@ -44978,18 +45086,18 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
       observer.disconnect();
     };
   }, [open, anchorElement, autoWidth]);
-  y(() => {
+  h(() => {
     if (defaultOpen && openState && displayNode && !isOpenControlled) {
       setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
       displayRef.current.focus();
     }
   }, [displayNode, autoWidth]);
-  y(() => {
+  h(() => {
     if (autoFocus) {
       displayRef.current.focus();
     }
   }, [autoFocus]);
-  y(() => {
+  h(() => {
     if (!labelId) {
       return void 0;
     }
@@ -46338,7 +46446,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
     }
     touchTimer.clear();
   });
-  y(() => stopTouchInteraction, [stopTouchInteraction]);
+  h(() => stopTouchInteraction, [stopTouchInteraction]);
   const handleOpen = (event) => {
     hystersisTimer.clear();
     hystersisOpen = true;
@@ -46441,7 +46549,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
       handleClose(event);
     });
   };
-  y(() => {
+  h(() => {
     if (!open) {
       return void 0;
     }
@@ -47246,7 +47354,7 @@ function ScrollbarSize(props) {
       containerWindow.removeEventListener("resize", handleResize);
     };
   }, [onChange]);
-  y(() => {
+  h(() => {
     setMeasurements();
     onChange(scrollbarHeight.current);
   }, [onChange]);
@@ -47867,7 +47975,7 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
       setUpdateScrollObserver(!updateScrollObserver);
     }
   });
-  y(() => {
+  h(() => {
     const handleResize = debounce$1(() => {
       if (tabsRef.current) {
         updateIndicatorState();
@@ -47908,7 +48016,7 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
       resizeObserver?.disconnect();
     };
   }, [updateIndicatorState, updateScrollButtonState]);
-  y(() => {
+  h(() => {
     const tabListChildren = Array.from(tabListRef.current.children);
     const length2 = tabListChildren.length;
     if (typeof IntersectionObserver !== "undefined" && length2 > 0 && scrollable && scrollButtons !== false) {
@@ -47935,13 +48043,13 @@ const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
     }
     return void 0;
   }, [scrollable, scrollButtons, updateScrollObserver, childrenProp?.length]);
-  y(() => {
+  h(() => {
     setMounted(true);
   }, []);
-  y(() => {
+  h(() => {
     updateIndicatorState();
   });
-  y(() => {
+  h(() => {
     scrollSelectedIntoView(defaultIndicatorStyle !== indicatorStyle);
   }, [scrollSelectedIntoView, indicatorStyle]);
   F$1(action, () => ({
@@ -48364,7 +48472,7 @@ function ThinkIconButton({
   );
 }
 function useClickOutside(ref, handler) {
-  y(() => {
+  h(() => {
     const listener = (event) => {
       if (event.target instanceof Node && ref.current && !ref.current.contains(event.target)) {
         handler(event);
@@ -48400,7 +48508,7 @@ function Modal2({
       handleClose();
     }
   });
-  y(() => {
+  h(() => {
     if (!closeOnEscape || !isOpen) return;
     const handleEscape = (e2) => {
       if (e2.key === "Escape") {
@@ -48410,7 +48518,7 @@ function Modal2({
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [closeOnEscape, isOpen, onClose, onBeforeClose]);
-  y(() => {
+  h(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -48471,107 +48579,6 @@ function Modal2({
     /* @__PURE__ */ u2("div", { className: "think-modal__body", children }),
     footer !== void 0 ? footer : defaultFooter
   ] }) });
-}
-function renderIcon(name) {
-  switch (name) {
-    case "chevron-left":
-      return /* @__PURE__ */ u2("path", { d: "m15 18-6-6 6-6" });
-    case "chevron-right":
-      return /* @__PURE__ */ u2("path", { d: "m9 18 6-6-6-6" });
-    case "chevron-down":
-      return /* @__PURE__ */ u2("path", { d: "m6 9 6 6 6-6" });
-    case "chevron-up":
-      return /* @__PURE__ */ u2("path", { d: "m18 15-6-6-6 6" });
-    case "copy":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2" }),
-        /* @__PURE__ */ u2("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
-      ] });
-    case "calendar":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("path", { d: "M8 2v4M16 2v4M3 10h18" }),
-        /* @__PURE__ */ u2("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2" })
-      ] });
-    case "filter":
-      return /* @__PURE__ */ u2("path", { d: "M22 3H2l8 9.5V19l4 2v-8.5L22 3Z" });
-    case "grip-vertical":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("circle", { cx: "9", cy: "6", r: "1" }),
-        /* @__PURE__ */ u2("circle", { cx: "15", cy: "6", r: "1" }),
-        /* @__PURE__ */ u2("circle", { cx: "9", cy: "12", r: "1" }),
-        /* @__PURE__ */ u2("circle", { cx: "15", cy: "12", r: "1" }),
-        /* @__PURE__ */ u2("circle", { cx: "9", cy: "18", r: "1" }),
-        /* @__PURE__ */ u2("circle", { cx: "15", cy: "18", r: "1" })
-      ] });
-    case "arrow-up":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("path", { d: "m5 12 7-7 7 7" }),
-        /* @__PURE__ */ u2("path", { d: "M12 19V5" })
-      ] });
-    case "lock":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("rect", { x: "4", y: "10", width: "16", height: "12", rx: "2" }),
-        /* @__PURE__ */ u2("path", { d: "M8 10V7a4 4 0 0 1 8 0v3" })
-      ] });
-    case "unlock":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("rect", { x: "4", y: "10", width: "16", height: "12", rx: "2" }),
-        /* @__PURE__ */ u2("path", { d: "M8 10V7a4 4 0 0 1 7.6-1.8" })
-      ] });
-    case "trash-2":
-      return /* @__PURE__ */ u2(S, { children: /* @__PURE__ */ u2("path", { d: "M3 6h18M8 6V4h8v2M19 6l-1 16H6L5 6M10 11v6M14 11v6" }) });
-    case "upload":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("path", { d: "M12 16V3M7 8l5-5 5 5" }),
-        /* @__PURE__ */ u2("path", { d: "M5 21h14a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2" })
-      ] });
-    case "plus":
-      return /* @__PURE__ */ u2("path", { d: "M12 5v14M5 12h14" });
-    case "check":
-      return /* @__PURE__ */ u2("path", { d: "m5 12 4 4L19 6" });
-    case "pencil":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("path", { d: "M12 20h9" }),
-        /* @__PURE__ */ u2("path", { d: "M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" })
-      ] });
-    case "rotate-ccw":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("path", { d: "M3 12a9 9 0 1 0 3-6.7L3 8" }),
-        /* @__PURE__ */ u2("path", { d: "M3 3v5h5" })
-      ] });
-    case "file-plus":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" }),
-        /* @__PURE__ */ u2("path", { d: "M14 2v6h6M12 11v6M9 14h6" })
-      ] });
-    case "settings":
-      return /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2("path", { d: "M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5" }),
-        /* @__PURE__ */ u2("circle", { cx: "16", cy: "6", r: "2" }),
-        /* @__PURE__ */ u2("circle", { cx: "8", cy: "12", r: "2" }),
-        /* @__PURE__ */ u2("circle", { cx: "13", cy: "18", r: "2" })
-      ] });
-    default:
-      return null;
-  }
-}
-function ThinkIcon({ name, className, ...svgProps }) {
-  return /* @__PURE__ */ u2(
-    "svg",
-    {
-      ...svgProps,
-      className: ["think-lucide-icon", className].filter(Boolean).join(" "),
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "2",
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      "aria-hidden": "true",
-      focusable: "false",
-      children: renderIcon(name)
-    }
-  );
 }
 function ThinkSegmentedControl({
   label,
@@ -48963,7 +48970,6 @@ const DeleteIcon = makeIcon("−", "delete");
 const DragIndicatorIcon = makeIcon("⋮⋮", "drag");
 const EditIcon = makeIcon("✎", "edit");
 const ExpandMoreIcon = makeIcon("⌄", "expand");
-const HourglassTopIcon = makeIcon("⏳", "timer");
 const IosShareIcon = makeIcon("⇧", "share");
 const PauseIcon = makeIcon("Ⅱ", "pause");
 const PlayArrowIcon = makeIcon("▶", "play");
@@ -49530,7 +49536,7 @@ function detectObsidianColorMode(doc = document) {
 }
 function ThinkMuiThemeProvider({ children }) {
   const [mode, setMode] = d(() => detectObsidianColorMode());
-  y(() => {
+  h(() => {
     const updateMode = () => setMode(detectObsidianColorMode());
     const observer = new MutationObserver(updateMode);
     const targets = [document.documentElement, document.body].filter(Boolean);
@@ -49550,7 +49556,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, classN
   const [isOpen, setIsOpen] = d(false);
   const wrapperRef = A$1(null);
   const selectedLabel = options.find((option) => option.value === value)?.label || value;
-  y(() => {
+  h(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) setIsOpen(false);
     }
@@ -49659,7 +49665,7 @@ function ThinkCombobox({
   const selectedLabel = T$1(() => options.find((option) => option.value === value)?.label || value, [options, value]);
   const [query, setQuery] = d(selectedLabel);
   const [open, setOpen] = d(false);
-  y(() => setQuery(selectedLabel), [selectedLabel]);
+  h(() => setQuery(selectedLabel), [selectedLabel]);
   const filtered = T$1(() => filterOptions(options, query), [options, query]);
   return /* @__PURE__ */ u2("div", { className: ["think-combobox", className].filter(Boolean).join(" "), children: [
     /* @__PURE__ */ u2("div", { className: "think-combobox-control", children: [
@@ -49938,31 +49944,43 @@ function TaskCheckbox({ done, onMarkDone }) {
 function TaskSendToTimerButton({ timerStatus, onStart }) {
   if (timerStatus === "running") {
     return /* @__PURE__ */ u2(
-      IconAction,
+      ThinkIconButton,
       {
         label: "正在计时",
-        color: "primary",
-        sx: { cursor: "default" },
-        icon: /* @__PURE__ */ u2(HourglassTopIcon, { fontSize: "small" })
+        size: "sm",
+        pressed: true,
+        className: "task-timer-button is-running",
+        tabIndex: -1,
+        icon: /* @__PURE__ */ u2(ThinkIcon, { name: "hourglass" })
       }
     );
   }
   if (timerStatus === "paused") {
     return /* @__PURE__ */ u2(
-      IconAction,
+      ThinkIconButton,
       {
         label: "继续计时",
-        color: "primary",
+        size: "sm",
+        className: "task-timer-button",
         onClick: () => {
           void onStart();
         },
-        icon: /* @__PURE__ */ u2(PlayArrowIcon, { fontSize: "small" })
+        icon: /* @__PURE__ */ u2(ThinkIcon, { name: "play" })
       }
     );
   }
-  return /* @__PURE__ */ u2(IconAction, { label: "添加并开始计时", onClick: () => {
-    void onStart();
-  }, icon: /* @__PURE__ */ u2(PlayArrowIcon, { fontSize: "small" }) });
+  return /* @__PURE__ */ u2(
+    ThinkIconButton,
+    {
+      label: "添加并开始计时",
+      size: "sm",
+      className: "task-timer-button",
+      onClick: () => {
+        void onStart();
+      },
+      icon: /* @__PURE__ */ u2(ThinkIcon, { name: "play" })
+    }
+  );
 }
 function addAtEnd(list, item) {
   return [...list, item];
@@ -50032,7 +50050,7 @@ function MarkdownContent({
   onTouchEnd
 }) {
   const elRef = A$1(null);
-  y(() => {
+  h(() => {
     const containerEl = elRef.current;
     if (!containerEl) return;
     let disposed2 = false;
@@ -52235,7 +52253,7 @@ function EnergyQuickCapturePanel({
   const [retrospectiveDate, setRetrospectiveDate] = d(() => dayjs().format("YYYY-MM-DD"));
   const [retrospectiveTime, setRetrospectiveTime] = d("");
   const [showTargetEditor, setShowTargetEditor] = d(false);
-  y(() => {
+  h(() => {
     if (selectedGoalPath || goals.length === 0) return;
     onSelectGoal(resolveQuickInputEnergyDefaultGoal(goals, defaultGoalId));
   }, [defaultGoalId, goals, onSelectGoal, selectedGoalPath]);
@@ -52500,7 +52518,7 @@ function QuickInputEditor({
   const settings = fullSettings.inputSettings;
   const initialFieldSource = recordInputMode === "create" ? "context" : "edit_backfill";
   const recordInputModeRef = A$1(recordInputMode);
-  const [session, dispatchSession] = h(
+  const [session, dispatchSession] = y(
     reduceRecordInputSession,
     initializeRecordInputSession({
       mode: recordInputMode,
@@ -52521,7 +52539,7 @@ function QuickInputEditor({
     fieldSources,
     timeDirection
   } = session;
-  y(() => {
+  h(() => {
     const modeForReset = recordInputModeRef.current;
     const sourceForReset = modeForReset === "create" ? "context" : "edit_backfill";
     dispatchSession({
@@ -52536,7 +52554,7 @@ function QuickInputEditor({
       }
     });
   }, [initialBlockId, initialThemeId, context]);
-  y(() => {
+  h(() => {
     recordInputModeRef.current = recordInputMode;
     dispatchSession({ type: "setMode", mode: recordInputMode });
   }, [recordInputMode]);
@@ -52567,7 +52585,7 @@ function QuickInputEditor({
     if (!goal || !currentEffectiveBlockIdForTemplates) return [];
     return getGoalTemplateVariants(fullSettings.goalSettings, goal, currentEffectiveBlockIdForTemplates);
   }, [fullSettings.goalSettings, selectedGoal, currentEffectiveBlockIdForTemplates]);
-  y(() => {
+  h(() => {
     if (!goalTemplateVariants.length) {
       if (selectedTemplateVariantId) dispatchSession({ type: "selectTemplateVariant", variantId: null });
       return;
@@ -52587,7 +52605,7 @@ function QuickInputEditor({
     [fullSettings, currentEffectiveBlockIdForTemplates, isEnergyDirect]
   );
   const goalFieldOptions = T$1(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label || goal.value })), [goalOptions]);
-  y(() => {
+  h(() => {
     const selectedPath = getGoalPath(selectedGoal) || selectedGoalPath || null;
     if (!selectedPath) return;
     const stillVisible = goalOptions.some((option) => option.value === selectedPath);
@@ -52608,7 +52626,7 @@ function QuickInputEditor({
     [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions, isEnergyDirect]
   );
   const showTimeDirectionControl = T$1(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
-  y(() => {
+  h(() => {
     if (isEnergyDirect || !template) return;
     const hydrated = hydrateQuickInputTemplateDefaults({
       template,
@@ -52630,7 +52648,7 @@ function QuickInputEditor({
       fieldSources: hydrated.fieldSources
     });
   }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources, isEnergyDirect]);
-  y(() => {
+  h(() => {
     const presetThemePath = String(formData.themePath ?? formData["主题"] ?? "").trim();
     if (!presetThemePath) return;
     const nextThemeId = pathToIdMap.get(presetThemePath) ?? null;
@@ -52658,7 +52676,7 @@ function QuickInputEditor({
     templateSourceType,
     fieldSources: sourceOverride
   });
-  y(() => {
+  h(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
   }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
   const handleUpdateField = (key, value, isOptionObject2 = false) => {
@@ -53105,10 +53123,10 @@ function useQuickInputSubmitController({
   const pendingActionRef = A$1(null);
   const submitTriggeredRef = A$1(false);
   const submitLatestRef = A$1(createTakeLatest("quick-input-submit"));
-  y(() => {
+  h(() => {
     pendingActionRef.current = pendingAction;
   }, [pendingAction]);
-  y(() => () => submitLatestRef.current.dispose(), []);
+  h(() => () => submitLatestRef.current.dispose(), []);
   const buildCreateDraft = q$1(() => buildRecordCreateDraftFromEditorState({
     state: getCurrentState(),
     context,
@@ -53329,7 +53347,7 @@ function QuickInputModalContent({
   const isMobileLike = T$1(() => isMobileLikeEnvironment(), []);
   const editIdentity = `${mode}:${editItem?.id ?? ""}`;
   const previousEditIdentityRef = A$1(editIdentity);
-  y(() => {
+  h(() => {
     if (previousEditIdentityRef.current === editIdentity) return;
     previousEditIdentityRef.current = editIdentity;
     setEditOperationMode("edit");
@@ -54914,7 +54932,7 @@ function useLocalStorage(key, initialValue) {
 }
 function useIsMounted() {
   const ref = A$1(true);
-  y(() => {
+  h(() => {
     ref.current = true;
     return () => {
       ref.current = false;
@@ -55181,7 +55199,7 @@ function useFloatingPanelInteractions(args) {
   return { onDragStart, onResizeStart, onPanelPointerDown };
 }
 function useFloatingPanelRegistration({ id, visible, register, unregister }) {
-  y(() => {
+  h(() => {
     if (!visible) {
       unregister(id);
       return;
@@ -55192,7 +55210,7 @@ function useFloatingPanelRegistration({ id, visible, register, unregister }) {
 }
 function useFloatingPanelViewportClamp(args) {
   const { size, position: position2, clampSize, clampPosition, setSize, setPosition } = args;
-  y(() => {
+  h(() => {
     const clampedSize = clampSize(size);
     if (clampedSize.width !== size.width || clampedSize.height !== size.height) {
       setSize(clampedSize);
@@ -55212,7 +55230,7 @@ function useFloatingPanelViewportClamp(args) {
 }
 function useFloatingPanelCloseHandlers(args) {
   const { id, activeId, visible, onClose, closeOnOutsideClick, closeOnEscape, rootRef } = args;
-  y(() => {
+  h(() => {
     if (!onClose || !closeOnOutsideClick || !visible) return;
     const ignoreFirstClick = { current: true };
     const handler = (event) => {
@@ -55236,7 +55254,7 @@ function useFloatingPanelCloseHandlers(args) {
       document.removeEventListener("touchstart", toDomListener(handler));
     };
   }, [onClose, closeOnOutsideClick, visible, rootRef]);
-  y(() => {
+  h(() => {
     if (!onClose || !closeOnEscape || !visible) return;
     const onKeyDown = (event) => {
       if (event.key !== "Escape") return;
@@ -55249,10 +55267,10 @@ function useFloatingPanelCloseHandlers(args) {
 }
 function useFloatingPanelPersistence(args) {
   const { position: position2, size, resizable, setStoredPosition, setStoredSize } = args;
-  y(() => {
+  h(() => {
     setStoredPosition(position2);
   }, [position2, setStoredPosition]);
-  y(() => {
+  h(() => {
     if (!resizable) return;
     setStoredSize(size);
   }, [size, resizable, setStoredSize]);
@@ -55429,7 +55447,7 @@ function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOr
   const taskItem = dataStore.queryItems().find((i2) => i2.id === timer.taskId);
   const recurringTask = taskItem ? isTaskRecurring(taskItem) : false;
   const clock = timerClock(timer, elapsedSeconds);
-  y(() => {
+  h(() => {
     let interval = null;
     const update = () => setElapsedSeconds(elapsedSecondsAt(timer, Date.now()));
     update();
@@ -55876,8878 +55894,6 @@ function ModulePanel({
     !collapsed && /* @__PURE__ */ u2("div", { class: "module-content", children })
   ] });
 }
-function FieldPickerAutocomplete({
-  value = "",
-  options,
-  onChange,
-  placeholder = "搜索 / 选择字段",
-  helperText,
-  allowCustom = true,
-  className
-}) {
-  const pickerOptions = T$1(() => getFieldPickerOptions(options).map((option) => ({
-    value: option.value,
-    label: option.label || option.value,
-    group: option.group || "其他字段"
-  })), [options]);
-  return /* @__PURE__ */ u2(
-    ThinkCombobox,
-    {
-      value,
-      options: pickerOptions,
-      onChange,
-      placeholder,
-      helperText,
-      allowCustom,
-      className
-    }
-  );
-}
-function ViewEditorShell({ title, description, children, className = "think-view-editor-shell" }) {
-  return /* @__PURE__ */ u2("div", { className, children: [
-    (title || description) && /* @__PURE__ */ u2("header", { className: "think-view-editor-shell__header", children: [
-      title && /* @__PURE__ */ u2("div", { className: "think-view-editor-shell__title", children: title }),
-      description && /* @__PURE__ */ u2("div", { className: "think-view-editor-shell__description", children: description })
-    ] }),
-    children
-  ] });
-}
-function ConfigSection({ title, description, children, className, titleClassName, descriptionClassName }) {
-  const sectionClass = ["think-view-editor-section", className].filter(Boolean).join(" ");
-  const titleClass = ["think-view-editor-section__title", titleClassName].filter(Boolean).join(" ");
-  const descriptionClass = ["think-view-editor-section__description", descriptionClassName].filter(Boolean).join(" ");
-  return /* @__PURE__ */ u2("section", { className: sectionClass, children: [
-    (title || description) && /* @__PURE__ */ u2("header", { className: "think-view-editor-section__header", children: [
-      title && /* @__PURE__ */ u2("div", { className: titleClass, children: title }),
-      description && /* @__PURE__ */ u2("div", { className: descriptionClass, children: description })
-    ] }),
-    children
-  ] });
-}
-function ConfigFieldRow({ label, description, children, alignItems = "center" }) {
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      className: ["think-view-editor-field-row", alignItems === "flex-start" ? "think-view-editor-field-row--top" : ""].filter(Boolean).join(" "),
-      children: [
-        /* @__PURE__ */ u2("div", { className: "think-view-editor-field-row__label", children: label }),
-        /* @__PURE__ */ u2("div", { className: "think-view-editor-field-row__control", children: [
-          children,
-          description && /* @__PURE__ */ u2("div", { className: "think-view-editor-field-row__description", children: description })
-        ] })
-      ]
-    }
-  );
-}
-function ReadonlyViewEditorNotice({ title, description }) {
-  return /* @__PURE__ */ u2(ViewEditorShell, { title, description });
-}
-function TableViewEditor({ value, onChange, fieldOptions }) {
-  return /* @__PURE__ */ u2(ViewEditorShell, { title: "交叉表（TableView）", children: /* @__PURE__ */ u2(ConfigSection, { title: "字段映射", children: [
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "行字段", children: /* @__PURE__ */ u2(FieldPickerAutocomplete, { options: fieldOptions, value: value.rowField ?? "", onChange: (v2) => onChange({ rowField: v2 ?? "" }) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "列字段", children: /* @__PURE__ */ u2(FieldPickerAutocomplete, { options: fieldOptions, value: value.colField ?? "", onChange: (v2) => onChange({ colField: v2 ?? "" }) }) })
-  ] }) });
-}
-function BlockViewEditor() {
-  return /* @__PURE__ */ u2(
-    ReadonlyViewEditorNotice,
-    {
-      title: "块视图（BlockView）"
-    }
-  );
-}
-function ExcelViewEditor() {
-  return /* @__PURE__ */ u2(
-    ReadonlyViewEditorNotice,
-    {
-      title: "数据表格（ExcelView）"
-    }
-  );
-}
-function normalizeProgressOrder(categories, progressOrder) {
-  const seen = /* @__PURE__ */ new Set();
-  const unique2 = progressOrder.filter((name) => Boolean(categories[name]) && !seen.has(name) && Boolean(seen.add(name)));
-  for (const key of Object.keys(categories)) if (!seen.has(key)) unique2.push(key);
-  return unique2;
-}
-function stripInlineName(config2) {
-  const { name: _inlineName, ...rest } = config2;
-  return { name: config2.name, ...rest };
-}
-function nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig) {
-  const normalizedOrder = normalizeProgressOrder(categories, progressOrder);
-  const finalName = (newName || oldName).trim();
-  const targetName = finalName !== oldName && Boolean(categories[finalName]) ? oldName : finalName;
-  const merged = { ...categories[oldName] || { name: oldName, color: "#cccccc", files: [] }, ...newConfig, name: targetName };
-  const nextCats = {};
-  for (const key of normalizedOrder) {
-    if (key === oldName) nextCats[targetName] = stripInlineName(merged);
-    else if (categories[key]) nextCats[key] = categories[key];
-  }
-  if (!nextCats[targetName]) nextCats[targetName] = stripInlineName(merged);
-  const nextOrder = normalizedOrder.map((key) => key === oldName ? targetName : key);
-  return { categories: nextCats, progressOrder: normalizeProgressOrder(nextCats, nextOrder) };
-}
-function CategoriesEditor({ categories, progressOrder, fileOptions, onPatch }) {
-  const handleCategoryChange = (oldName, newConfig) => {
-    const newName = (newConfig.name || oldName).trim();
-    onPatch(nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig));
-  };
-  const addCategory = () => {
-    let newName = "新分类";
-    let i2 = 1;
-    while (categories[newName]) newName = `新分类${i2++}`;
-    onPatch({ categories: { ...categories, [newName]: { name: newName, color: "#60a5fa", files: [] } }, progressOrder: [...progressOrder, newName] });
-  };
-  const removeCategory = (nameToRemove) => {
-    const { [nameToRemove]: _removed, ...rest } = categories;
-    onPatch({ categories: rest, progressOrder: normalizeProgressOrder(rest, progressOrder.filter((name) => name !== nameToRemove)) });
-  };
-  const moveCategory = (index, direction) => {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= progressOrder.length) return;
-    const next2 = [...progressOrder];
-    [next2[index], next2[targetIndex]] = [next2[targetIndex], next2[index]];
-    onPatch({ progressOrder: normalizeProgressOrder(categories, next2) });
-  };
-  return /* @__PURE__ */ u2(ConfigSection, { title: "分类配置", children: [
-    /* @__PURE__ */ u2("div", { className: "think-timeline-category-list", children: progressOrder.map((name, index) => {
-      const catConfig = categories[name];
-      if (!catConfig) return null;
-      const availableFileOptions = fileOptions.filter((file) => !(catConfig.files || []).includes(file)).map((file) => ({ value: file, label: file }));
-      return /* @__PURE__ */ u2("div", { className: "think-timeline-category-row", children: [
-        /* @__PURE__ */ u2("div", { className: "think-timeline-category-row__order", children: [
-          /* @__PURE__ */ u2(ThinkIconButton, { label: "上移", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-up" }), size: "sm", disabled: index === 0, onClick: () => moveCategory(index, -1) }),
-          /* @__PURE__ */ u2(ThinkIconButton, { label: "下移", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-down" }), size: "sm", disabled: index === progressOrder.length - 1, onClick: () => moveCategory(index, 1) })
-        ] }),
-        /* @__PURE__ */ u2("input", { className: "think-category-color", type: "color", value: catConfig.color || "#cccccc", "aria-label": `${name} 颜色`, onChange: (event) => handleCategoryChange(name, { color: event.currentTarget.value }) }),
-        /* @__PURE__ */ u2(ThinkInput, { defaultValue: name, "aria-label": "分类名称", onBlur: (event) => handleCategoryChange(name, { name: event.currentTarget.value.trim() }) }),
-        /* @__PURE__ */ u2("div", { className: "think-timeline-category-row__files", children: [
-          (catConfig.files || []).map((file) => /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", title: "移除关键词", onClick: () => handleCategoryChange(name, { files: (catConfig.files || []).filter((item) => item !== file) }), children: [
-            /* @__PURE__ */ u2("span", { className: "think-chip__label", children: file }),
-            /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
-          ] }, file)),
-          availableFileOptions.length > 0 && /* @__PURE__ */ u2(SimpleSelect, { value: "", options: availableFileOptions, placeholder: "+ 关键词", onChange: (file) => handleCategoryChange(name, { files: [...catConfig.files || [], file] }) })
-        ] }),
-        /* @__PURE__ */ u2(ThinkIconButton, { label: "删除分类", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }), size: "sm", tone: "danger", onClick: () => removeCategory(name) })
-      ] }, name);
-    }) }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), size: "sm", variant: "secondary", onClick: addCategory, children: "添加分类" }) })
-  ] });
-}
-function TimelineViewEditor({ value, onChange, dataStore }) {
-  const viewConfig = { ...TIMELINE_VIEW_DEFAULT_CONFIG, ...value };
-  const categories = viewConfig.categories || {};
-  const progressOrder = normalizeProgressOrder(categories, viewConfig.progressOrder || []);
-  const fileOptions = T$1(() => dataStore ? collectFileNames(dataStore.queryItems()) : [], [dataStore]);
-  const handlePatch = (patch) => onChange(patch);
-  return /* @__PURE__ */ u2(ViewEditorShell, { title: "时间线视图", children: [
-    /* @__PURE__ */ u2(ConfigSection, { children: /* @__PURE__ */ u2(ConfigFieldRow, { label: "小时高度", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 20, max: 200, value: viewConfig.defaultHourHeight, onInput: (event) => handlePatch({ defaultHourHeight: Number(event.currentTarget.value) }) }) }) }),
-    /* @__PURE__ */ u2(CategoriesEditor, { categories, progressOrder, fileOptions, onPatch: handlePatch })
-  ] });
-}
-function uniqueFields(fields) {
-  const seen = /* @__PURE__ */ new Set();
-  const result = [];
-  for (const field of fields) {
-    if (!field || seen.has(field)) continue;
-    seen.add(field);
-    result.push(field);
-  }
-  return result;
-}
-function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
-  const config2 = {
-    ...EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
-    ...value || {}
-  };
-  const selectableFields = T$1(() => uniqueFields([
-    CONTENT_FIELD_KEY,
-    FULL_DATA_FIELD_KEY,
-    "title",
-    "date",
-    "startTime",
-    ...fieldOptions
-  ]), [fieldOptions]);
-  const fieldSelectOptions = T$1(() => selectableFields.map((field) => ({
-    value: field,
-    label: getFieldLabel(field),
-    group: getFieldCategoryLabel(field)
-  })), [selectableFields]);
-  const patch = (partial2) => onChange(partial2);
-  return /* @__PURE__ */ u2(
-    ViewEditorShell,
-    {
-      title: "事件时间线视图",
-      children: /* @__PURE__ */ u2(ConfigSection, { title: "字段映射", children: [
-        /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
-          /* @__PURE__ */ u2(ConfigFieldRow, { label: "时间字段", children: /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: config2.timeField || "date",
-              options: fieldSelectOptions,
-              onChange: (field) => patch({ timeField: field }),
-              fullWidth: true
-            }
-          ) }),
-          /* @__PURE__ */ u2(ConfigFieldRow, { label: "标题字段", children: /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: config2.titleField || "title",
-              options: fieldSelectOptions,
-              onChange: (field) => patch({ titleField: field }),
-              fullWidth: true
-            }
-          ) }),
-          /* @__PURE__ */ u2(ConfigFieldRow, { label: "内容字段", children: /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: config2.contentField || CONTENT_FIELD_KEY,
-              options: fieldSelectOptions,
-              onChange: (field) => patch({ contentField: field }),
-              fullWidth: true
-            }
-          ) }),
-          /* @__PURE__ */ u2(ConfigFieldRow, { label: "最大长度", description: "0 表示不截断", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", min: 0, max: 2e3, value: config2.maxContentLength ?? 160, onInput: (event) => patch({ maxContentLength: Number(event.currentTarget.value) || 0 }) }) })
-        ] }),
-        /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: [
-          /* @__PURE__ */ u2(
-            ThinkButton,
-            {
-              size: "sm",
-              variant: "secondary",
-              onClick: () => patch({ contentField: CONTENT_FIELD_KEY, titleField: "title", timeField: "date", maxContentLength: 160 }),
-              children: "使用推荐字段"
-            }
-          ),
-          /* @__PURE__ */ u2(
-            ThinkButton,
-            {
-              size: "sm",
-              variant: "secondary",
-              onClick: () => patch({ contentField: FULL_DATA_FIELD_KEY }),
-              children: "内容改为完整数据调试"
-            }
-          )
-        ] })
-      ] })
-    }
-  );
-}
-const DISPLAY_MODE_OPTIONS$1 = [
-  { value: "smart", label: "智能" },
-  { value: "linear", label: "线性" },
-  { value: "logarithmic", label: "对数" }
-];
-function StatisticsViewEditor({ value, onChange }) {
-  const config2 = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...value };
-  return /* @__PURE__ */ u2(ViewEditorShell, { className: "think-statistics-editor", children: /* @__PURE__ */ u2(ConfigSection, { className: "think-statistics-editor__section", title: "目标统计视图", titleClassName: "think-statistics-editor__title", children: [
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "显示目标数量", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 1, value: config2.topN || 10, onInput: (event) => onChange({ groupBy: "goal", topN: Number(event.currentTarget.value) || 10 }) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "柱状高度模式", children: /* @__PURE__ */ u2(SimpleSelect, { value: config2.displayMode || "smart", options: DISPLAY_MODE_OPTIONS$1, onChange: (displayMode) => onChange({ groupBy: "goal", displayMode }) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "最小可见高度", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 1, max: 100, value: config2.minVisibleHeight || 15, onInput: (event) => onChange({ groupBy: "goal", minVisibleHeight: Number(event.currentTarget.value) || 15 }) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "周期字段", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: !!config2.usePeriodField, onChange: (event) => onChange({ groupBy: "goal", usePeriodField: event.currentTarget.checked }), label: "默认按照周期显示", compact: true }) })
-  ] }) });
-}
-function normalizeHeatmapConfig(value) {
-  const base = HEATMAP_VIEW_DEFAULT_CONFIG;
-  const v2 = value ?? {};
-  return {
-    displayMode: v2.displayMode === "habit" || v2.displayMode === "count" ? v2.displayMode : base.displayMode,
-    sourceBlockId: typeof v2.sourceBlockId === "string" ? v2.sourceBlockId : base.sourceBlockId,
-    themePaths: Array.isArray(v2.themePaths) ? v2.themePaths.filter((x2) => typeof x2 === "string") : base.themePaths,
-    maxDailyChecks: typeof v2.maxDailyChecks === "number" ? v2.maxDailyChecks : base.maxDailyChecks,
-    allowManualEdit: typeof v2.allowManualEdit === "boolean" ? v2.allowManualEdit : base.allowManualEdit
-  };
-}
-function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
-  const ui = useUiPort();
-  const config2 = normalizeHeatmapConfig(value);
-  const allBlocks = useSelector(selectInputBlocks);
-  const blockOptions = T$1(
-    () => allBlocks.map((b2) => ({ value: b2.id, label: b2.name })),
-    [allBlocks]
-  );
-  const handleScanThemes = () => {
-    if (!config2.sourceBlockId) {
-      ui.notice("请先选择源 Block 模板。");
-      return;
-    }
-    if (!module2) {
-      ui.notice("无法扫描：缺少视图上下文（module）。");
-      return;
-    }
-    const dataSource = module2;
-    const sourceBlock = allBlocks.find((b2) => b2.id === config2.sourceBlockId);
-    if (!sourceBlock) {
-      ui.notice("找不到所选的 Block 模板。");
-      return;
-    }
-    const items = dataStore.queryItems();
-    const sortedThemes = collectThemePathsForHeatmap({
-      items,
-      dataSource,
-      sourceBlock
-    });
-    onChange({ themePaths: sortedThemes });
-    ui.notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径（来自分类 "${sourceBlock.name}"）。`);
-  };
-  return /* @__PURE__ */ u2(
-    ViewEditorShell,
-    {
-      title: "打卡视图",
-      children: [
-        /* @__PURE__ */ u2(ConfigSection, { title: "数据来源", children: /* @__PURE__ */ u2(
-          ConfigFieldRow,
-          {
-            label: "源 Block",
-            description: "视图将从此 Block 模板的评分字段中读取 Emoji/图片/颜色映射。",
-            children: /* @__PURE__ */ u2(
-              SimpleSelect,
-              {
-                value: config2.sourceBlockId,
-                options: blockOptions,
-                onChange: (val) => onChange({ sourceBlockId: val }),
-                placeholder: "-- 请选择用于打卡的 Block 模板 --"
-              }
-            )
-          }
-        ) }),
-        /* @__PURE__ */ u2(ConfigSection, { title: "主题范围", children: /* @__PURE__ */ u2(
-          ConfigFieldRow,
-          {
-            label: "主题路径",
-            description: "在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。",
-            alignItems: "flex-start",
-            children: [
-              /* @__PURE__ */ u2(
-                ListEditor,
-                {
-                  value: config2.themePaths,
-                  onChange: (val) => onChange({ themePaths: val }),
-                  placeholder: "例如: 生活/健康, 工作/项目"
-                }
-              ),
-              /* @__PURE__ */ u2(ThinkButton, { onClick: handleScanThemes, size: "sm", variant: "secondary", children: "从数据源扫描并添加主题" })
-            ]
-          }
-        ) }),
-        /* @__PURE__ */ u2(ConfigSection, { title: "交互", children: /* @__PURE__ */ u2(ConfigFieldRow, { label: "手动编辑", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: !!config2.allowManualEdit, onChange: (event) => onChange({ allowManualEdit: event.currentTarget.checked }), label: "允许查看当天记录并新增", compact: true }) }) })
-      ]
-    }
-  );
-}
-function ProgressViewEditor({ value, onChange }) {
-  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...value };
-  const numberPatch = (key, fallback) => (event) => onChange({ mode: "goal", [key]: Number(event.currentTarget.value) || fallback });
-  return /* @__PURE__ */ u2(ViewEditorShell, { title: "进度视图", children: /* @__PURE__ */ u2(ConfigSection, { children: [
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标数量", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.topN, onInput: numberPatch("topN", 20) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每条记录 XP", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.basePoints, onInput: numberPatch("basePoints", 1) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每级 XP", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.levelStep, onInput: numberPatch("levelStep", 20) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "评分阈值", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.ratingBonusThreshold, onInput: numberPatch("ratingBonusThreshold", 4) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "评分额外积分", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.ratingBonusPoints, onInput: numberPatch("ratingBonusPoints", 0) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "展开统计", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: config2.showCategoryBreakdown !== false, onChange: (event) => onChange({ mode: "goal", showCategoryBreakdown: event.currentTarget.checked }), label: "显示 Block 统计", compact: true }) })
-  ] }) });
-}
-function EnergyViewEditor({ value, onChange }) {
-  const config2 = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...value };
-  return /* @__PURE__ */ u2(ViewEditorShell, { title: "精力视图", children: /* @__PURE__ */ u2(ConfigSection, { children: [
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "最近记录", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 1, max: 20, value: config2.recentSampleLimit, onInput: (e2) => onChange({ recentSampleLimit: Math.max(1, Math.min(20, Number(e2.currentTarget.value) || 5)) }) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标上限", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 0, max: 20, value: config2.maxGoals, onInput: (e2) => onChange({ maxGoals: Math.max(0, Math.min(20, Number(e2.currentTarget.value) || 0)) }) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "分析窗口", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 7, max: 90, value: config2.analysisWindowDays, onInput: (e2) => onChange({ analysisWindowDays: Math.max(7, Math.min(90, Number(e2.currentTarget.value) || 30)) }) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标路径", children: /* @__PURE__ */ u2(ThinkInput, { value: config2.goalPath, placeholder: "留空 = 所有有精力记录的目标", onInput: (e2) => onChange({ goalPath: e2.currentTarget.value }) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "当前场景", children: /* @__PURE__ */ u2(SimpleSelect, { value: config2.currentContext, options: [{ value: "any", label: "任意" }, { value: "work", label: "工作" }, { value: "home", label: "家" }, { value: "commute", label: "通勤" }, { value: "out", label: "外出" }], onChange: (currentContext) => onChange({ currentContext }), fullWidth: true }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "精力地图", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: config2.showTimeline !== false, onChange: (e2) => onChange({ showTimeline: e2.currentTarget.checked }), label: "显示", compact: true }) })
-  ] }) });
-}
-const VIEW_INFO_REGISTRY = {
-  TableView: { component: TableViewEditor, defaultConfig: TABLE_VIEW_DEFAULT_CONFIG },
-  BlockView: { component: BlockViewEditor, defaultConfig: BLOCK_VIEW_DEFAULT_CONFIG },
-  ExcelView: { component: ExcelViewEditor, defaultConfig: EXCEL_VIEW_DEFAULT_CONFIG },
-  TimelineView: { component: TimelineViewEditor, defaultConfig: TIMELINE_VIEW_DEFAULT_CONFIG },
-  EventTimelineView: { component: EventTimelineViewEditor, defaultConfig: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG },
-  StatisticsView: { component: StatisticsViewEditor, defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG },
-  HeatmapView: { component: HeatmapViewEditor, defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG },
-  ProgressView: { component: ProgressViewEditor, defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG },
-  EnergyView: { component: EnergyViewEditor, defaultConfig: ENERGY_VIEW_DEFAULT_CONFIG }
-};
-const VIEW_EDITORS = Object.fromEntries(
-  Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.component])
-);
-Object.fromEntries(
-  Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.defaultConfig])
-);
-function useSaveHandler(saveAction, options = {}) {
-  const {
-    successMessage = "保存成功",
-    errorMessage = "保存失败",
-    onSuccess,
-    onError
-  } = options;
-  return async () => {
-    try {
-      await saveAction();
-      options.uiPort?.notice(`✅ ${successMessage}`);
-      onSuccess?.();
-    } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
-      const message = errorObj.message || "未知错误";
-      options.uiPort?.notice(`❌ ${errorMessage}: ${message}`);
-      devError(`${errorMessage}:`, errorObj);
-      onError?.(errorObj);
-    }
-  };
-}
-const DEFAULT_FILTER_RULE = { field: "", op: "=", value: "" };
-const DEFAULT_SORT_RULE = { field: "", dir: "asc" };
-const RULE_OPERATOR_OPTIONS = [
-  { value: "=", label: "=" },
-  { value: "!=", label: "!=" },
-  { value: "includes", label: "包含" },
-  { value: "regex", label: "正则" },
-  { value: ">", label: ">" },
-  { value: "<", label: "<" },
-  { value: "in", label: "属于任一" },
-  { value: "notIn", label: "不属于任一" },
-  { value: "between", label: "区间" },
-  { value: "empty", label: "为空" },
-  { value: "notEmpty", label: "非空" }
-];
-const RULE_DIRECTION_OPTIONS = [
-  { value: "asc", label: "升序" },
-  { value: "desc", label: "降序" }
-];
-const RULE_LOGIC_OPTIONS = [
-  { value: "and", label: "且" },
-  { value: "or", label: "或" }
-];
-function cloneRule(rule) {
-  return { ...rule };
-}
-function makeDefaultRule(mode) {
-  return mode === "filter" ? { ...DEFAULT_FILTER_RULE } : { ...DEFAULT_SORT_RULE };
-}
-function operatorNeedsValue(op) {
-  return !["empty", "notEmpty"].includes(op);
-}
-function isMultiValueOperator(op) {
-  return op === "in" || op === "notIn";
-}
-function getRuleValuePlaceholder(op) {
-  if (op === "between") return "输入区间，如 1~5 或 2026-01-01~2026-01-31";
-  if (isMultiValueOperator(op)) return "选择或输入多个值，回车确认";
-  return "输入值";
-}
-function normalizeMultiValue(value) {
-  return normalizeViewMultiValue(value);
-}
-function formatRuleValue(rule) {
-  if (!operatorNeedsValue(rule.op)) return "";
-  if (isMultiValueOperator(rule.op)) {
-    const values2 = normalizeMultiValue(rule.value);
-    return values2.length > 0 ? values2.join("、") : "未选择";
-  }
-  if (rule.op === "between" && Array.isArray(rule.value)) {
-    return rule.value.map((v2) => String(v2)).join(" ~ ");
-  }
-  return String(rule.value ?? "");
-}
-function stableRuleFieldLabel(field) {
-  const label = getFieldLabel(field);
-  return label === field ? field : `${label} (${field})`;
-}
-function buildRuleLabel(mode, rule) {
-  if (mode === "filter") {
-    const filterRule = rule;
-    if (filterRule.op === "empty") return `${stableRuleFieldLabel(filterRule.field)} 为空`;
-    if (filterRule.op === "notEmpty") return `${stableRuleFieldLabel(filterRule.field)} 非空`;
-    const valueText = formatRuleValue(filterRule);
-    const opText = filterRule.op === "in" ? "属于任一" : filterRule.op === "notIn" ? "不属于任一" : filterRule.op;
-    return `${stableRuleFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
-  }
-  const sortRule = rule;
-  return `${stableRuleFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
-}
-function normalizeFilterPatch(patch, current2) {
-  const nextOp = patch.op ?? current2?.op;
-  const normalized2 = { ...patch };
-  if (nextOp && !operatorNeedsValue(nextOp)) {
-    return { ...normalized2, value: "" };
-  }
-  if (patch.field !== void 0 && patch.field !== current2?.field) {
-    normalized2.value = nextOp && isMultiValueOperator(nextOp) ? [] : "";
-  }
-  if (nextOp && isMultiValueOperator(nextOp)) {
-    if ("value" in normalized2 || patch.op !== void 0) {
-      normalized2.value = normalizeMultiValue(normalized2.value ?? current2?.value);
-    }
-  } else if (current2 && isMultiValueOperator(current2.op) && patch.op !== void 0) {
-    normalized2.value = normalizeMultiValue(current2.value).join(",");
-  }
-  return normalized2;
-}
-function patchRule(mode, rule, patch) {
-  const nextPatch = mode === "filter" ? normalizeFilterPatch(patch, rule) : patch;
-  return { ...rule, ...nextPatch };
-}
-function patchRuleRows(mode, rows, index, patch) {
-  return rows.map((row, rowIndex) => rowIndex === index ? patchRule(mode, row, patch) : cloneRule(row));
-}
-function patchRuleLogic(rows, index, logic, isFilterMode) {
-  return rows.map((row, rowIndex) => {
-    if (rowIndex !== index || !isFilterMode) return cloneRule(row);
-    return { ...row, logic };
-  });
-}
-function removeRuleAt(rows, index) {
-  return rows.filter((_2, rowIndex) => rowIndex !== index).map(cloneRule);
-}
-function appendRule(mode, rows, newRule) {
-  const updatedRows = rows.map(cloneRule);
-  const ruleToAdd = cloneRule(newRule);
-  if (mode === "filter" && updatedRows.length > 0) {
-    const lastIndex = updatedRows.length - 1;
-    const lastRule = updatedRows[lastIndex];
-    if (!lastRule.logic) {
-      updatedRows[lastIndex] = {
-        ...lastRule,
-        logic: "and"
-      };
-    }
-  }
-  updatedRows.push(ruleToAdd);
-  return updatedRows;
-}
-function shouldShowRuleValueInput(mode, rule) {
-  return mode !== "filter" || operatorNeedsValue(rule.op);
-}
-function buildUniqueFieldValues(dataStore) {
-  if (!dataStore) return {};
-  const items = dataStore.queryItems();
-  const allKnownFields = new Set(getAllFields(items));
-  const valueMap = {};
-  allKnownFields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
-  for (const item of items) {
-    for (const field of allKnownFields) {
-      const value = readField(item, field);
-      if (value === null || value === void 0 || String(value).trim() === "") continue;
-      const values2 = Array.isArray(value) ? value : [value];
-      values2.forEach((v2) => {
-        const strV = String(v2).trim();
-        if (strV) valueMap[field].add(strV);
-      });
-    }
-  }
-  const result = {};
-  for (const field in valueMap) {
-    if (valueMap[field].size > 0) {
-      result[field] = Array.from(valueMap[field]).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-    }
-  }
-  return result;
-}
-function RuleBuilderValueInput({ rule, uniqueFieldValues, onValueChange }) {
-  if (!operatorNeedsValue(rule.op)) return null;
-  const options = (uniqueFieldValues[rule.field] || []).map((value) => ({ value, label: value }));
-  if (isMultiValueOperator(rule.op)) {
-    return /* @__PURE__ */ u2(
-      ThinkMultiCombobox,
-      {
-        values: normalizeMultiValue(rule.value),
-        options: uniqueFieldValues[rule.field] || [],
-        onChange: (newValues) => onValueChange(normalizeMultiValue(newValues)),
-        placeholder: getRuleValuePlaceholder(rule.op)
-      }
-    );
-  }
-  return /* @__PURE__ */ u2(
-    ThinkCombobox,
-    {
-      value: String(rule.value ?? ""),
-      options,
-      onChange: (newValue) => onValueChange(newValue || ""),
-      placeholder: getRuleValuePlaceholder(rule.op),
-      allowCustom: true
-    }
-  );
-}
-function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = "compact", showHeader = true }) {
-  const isFilterMode = mode === "filter";
-  const [newRule, setNewRule] = d(makeDefaultRule(mode));
-  const uniqueFieldValues = T$1(() => buildUniqueFieldValues(dataStore), [dataStore]);
-  const shouldShowValueInput = shouldShowRuleValueInput(mode, newRule);
-  const remove2 = (index) => onChange(removeRuleAt(rows, index));
-  const updateNewRule = (patch) => setNewRule((current2) => patchRule(mode, current2, patch));
-  const updateRow = (index, patch) => onChange(patchRuleRows(mode, rows, index, patch));
-  const updateLogic = (index, logic) => onChange(patchRuleLogic(rows, index, logic, isFilterMode));
-  const handleAddRule = () => {
-    if (!newRule.field) return;
-    onChange(appendRule(mode, rows, newRule));
-    setNewRule(makeDefaultRule(mode));
-  };
-  const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => /* @__PURE__ */ u2(FieldPickerAutocomplete, { value: field, options: fieldOptions, onChange: onFieldChange, placeholder });
-  const renderValueInput = (rule, onValueChange) => /* @__PURE__ */ u2(RuleBuilderValueInput, { rule, uniqueFieldValues, onValueChange });
-  const existingRules = /* @__PURE__ */ u2("div", { className: "think-rule-builder__chips", children: rows.map((rule, index) => {
-    const isLast = index === rows.length - 1;
-    const filterRule = rule;
-    const label = buildRuleLabel(mode, rule);
-    return /* @__PURE__ */ u2("div", { className: "think-rule-builder__chip-row", children: [
-      /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", title: `点击删除规则: ${label}`, onClick: () => remove2(index), children: [
-        /* @__PURE__ */ u2("span", { className: "think-chip__label", children: label }),
-        /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
-      ] }),
-      isFilterMode && !isLast && /* @__PURE__ */ u2(
-        SimpleSelect,
-        {
-          value: filterRule.logic || "and",
-          options: RULE_LOGIC_OPTIONS,
-          onChange: (val) => updateLogic(index, val),
-          className: "think-rule-builder__logic"
-        }
-      )
-    ] }, index);
-  }) });
-  const panelRuleRows = /* @__PURE__ */ u2("div", { className: "think-rule-builder__panel-rows", children: rows.map((rule, index) => {
-    const filterRule = rule;
-    const sortRule = rule;
-    const isLast = index === rows.length - 1;
-    const showValueInput = isFilterMode && operatorNeedsValue(filterRule.op);
-    return /* @__PURE__ */ u2("div", { className: "think-rule-builder__row-shell", children: /* @__PURE__ */ u2("div", { className: `think-rule-builder__row-grid ${isFilterMode ? showValueInput ? "is-filter is-with-value" : "is-filter is-no-value" : "is-sort"}`, children: [
-      renderFieldInput(rule.field, (field) => updateRow(index, { field })),
-      isFilterMode ? /* @__PURE__ */ u2(S, { children: [
-        /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: filterRule.op,
-            options: RULE_OPERATOR_OPTIONS,
-            onChange: (val) => updateRow(index, { op: val }),
-            className: "think-rule-builder__field"
-          }
-        ),
-        renderValueInput(filterRule, (value) => updateRow(index, { value }))
-      ] }) : /* @__PURE__ */ u2(
-        SimpleSelect,
-        {
-          value: sortRule.dir,
-          options: RULE_DIRECTION_OPTIONS,
-          onChange: (val) => updateRow(index, { dir: val }),
-          className: "think-rule-builder__operator"
-        }
-      ),
-      isFilterMode && !isLast ? /* @__PURE__ */ u2(
-        SimpleSelect,
-        {
-          value: filterRule.logic || "and",
-          options: RULE_LOGIC_OPTIONS,
-          onChange: (val) => updateLogic(index, val),
-          className: "think-rule-builder__value"
-        }
-      ) : /* @__PURE__ */ u2("span", { className: "think-rule-builder__end-label", children: isFilterMode ? "末尾" : "" }),
-      /* @__PURE__ */ u2(
-        ThinkIconButton,
-        {
-          label: "删除规则",
-          icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }),
-          onClick: () => remove2(index),
-          size: "sm",
-          tone: "danger"
-        }
-      )
-    ] }) }, index);
-  }) });
-  if (variant === "panel") {
-    return /* @__PURE__ */ u2("div", { className: "think-rule-builder", children: [
-      showHeader && /* @__PURE__ */ u2("div", { className: "think-editor-header", children: /* @__PURE__ */ u2("span", { className: "think-settings-label-strong", children: [
-        title,
-        "规则"
-      ] }) }),
-      rows.length > 0 ? /* @__PURE__ */ u2("div", { className: "think-rule-builder__rules", children: [
-        /* @__PURE__ */ u2("div", { className: `think-rule-builder__column-head ${isFilterMode ? "is-filter is-with-value" : "is-sort"}`, children: [
-          /* @__PURE__ */ u2("span", { children: "字段" }),
-          /* @__PURE__ */ u2("span", { children: isFilterMode ? "条件" : "排序" }),
-          isFilterMode && /* @__PURE__ */ u2("span", { children: "值" }),
-          /* @__PURE__ */ u2("span", { children: "连接" }),
-          /* @__PURE__ */ u2("span", { children: "操作" })
-        ] }),
-        panelRuleRows
-      ] }) : /* @__PURE__ */ u2("span", { className: "think-rule-builder__empty", children: "暂无规则" }),
-      /* @__PURE__ */ u2("div", { className: `think-rule-builder__add-grid ${isFilterMode ? shouldShowValueInput ? "is-filter is-with-value" : "is-filter is-no-value" : "is-sort"}`, children: [
-        renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
-        isFilterMode ? /* @__PURE__ */ u2(S, { children: [
-          /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: newRule.op,
-              options: RULE_OPERATOR_OPTIONS,
-              onChange: (val) => updateNewRule({ op: val }),
-              className: "think-rule-builder__field"
-            }
-          ),
-          shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
-        ] }) : /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: newRule.dir,
-            options: RULE_DIRECTION_OPTIONS,
-            onChange: (val) => updateNewRule({ dir: val }),
-            className: "think-rule-builder__operator"
-          }
-        ),
-        /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddRule, disabled: !newRule.field, className: "think-rule-builder__add", children: "添加规则" })
-      ] })
-    ] });
-  }
-  return /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact", children: [
-    /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: title }),
-    /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact-body", children: [
-      existingRules,
-      /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact-add", children: [
-        renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
-        isFilterMode ? /* @__PURE__ */ u2(S, { children: [
-          /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: newRule.op,
-              options: RULE_OPERATOR_OPTIONS,
-              onChange: (val) => updateNewRule({ op: val }),
-              className: "think-rule-builder__operator"
-            }
-          ),
-          shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
-        ] }) : /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: newRule.dir,
-            options: RULE_DIRECTION_OPTIONS,
-            onChange: (val) => updateNewRule({ dir: val }),
-            className: "think-rule-builder__operator"
-          }
-        ),
-        /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddRule, disabled: !newRule.field, children: "添加" })
-      ] })
-    ] })
-  ] });
-}
-const DEFAULT_QUICK_FILTER_FIELDS = [
-  { field: "goalPath", label: "目标", placeholder: "选择目标" },
-  { field: "goalId", label: "目标ID", placeholder: "输入目标ID" },
-  { field: "coreBlock", label: "记录类型", placeholder: "选择记录类型" },
-  { field: "themePath", label: "主题", placeholder: "选择主题" },
-  { field: "status", label: "状态", placeholder: "选择状态" },
-  { field: "cadence", label: "任务周期", placeholder: "选择任务周期" },
-  { field: "priority", label: "优先级", placeholder: "选择优先级" },
-  { field: "period.label", label: "周期", placeholder: "选择周期" }
-];
-function collectFieldValues(items, fields) {
-  const valueMap = {};
-  fields.forEach((field) => valueMap[normalizeViewFieldKey(field)] = /* @__PURE__ */ new Set());
-  for (const item of items) {
-    for (const rawField of fields) {
-      const field = normalizeViewFieldKey(rawField);
-      const value = readField(item, field);
-      if (value === null || value === void 0 || String(value).trim() === "") continue;
-      const values2 = Array.isArray(value) ? value : [value];
-      values2.forEach((v2) => {
-        const strV = String(v2).trim();
-        if (strV) valueMap[field].add(strV);
-      });
-    }
-  }
-  const result = {};
-  fields.forEach((rawField) => {
-    const field = normalizeViewFieldKey(rawField);
-    result[field] = Array.from(valueMap[field] || []).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-  });
-  return result;
-}
-function cleanupRuleLinks(rules) {
-  return rules.map((rule, index) => {
-    const nextRule = { ...rule };
-    if (index === rules.length - 1) {
-      delete nextRule.logic;
-    } else if (!nextRule.logic) {
-      nextRule.logic = "and";
-    }
-    return nextRule;
-  });
-}
-function getQuickRule(filters, field) {
-  const normalizedField = normalizeViewFieldKey(field);
-  return filters.find((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
-}
-function upsertQuickRule(filters, field, values2) {
-  const cleanValues = normalizeViewMultiValue(values2);
-  const normalizedField = normalizeViewFieldKey(field);
-  const existingIndex = filters.findIndex((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
-  if (cleanValues.length === 0) {
-    if (existingIndex < 0) return cleanupRuleLinks(filters);
-    return cleanupRuleLinks(filters.filter((_2, index) => index !== existingIndex));
-  }
-  if (existingIndex >= 0) {
-    return cleanupRuleLinks(filters.map((rule, index) => index === existingIndex ? { ...rule, field: normalizedField, value: cleanValues } : { ...rule }));
-  }
-  return cleanupRuleLinks([
-    ...filters.map((rule) => ({ ...rule })),
-    { field: normalizedField, op: "in", value: cleanValues }
-  ]);
-}
-function hasAnyQuickFilter(filters, fields) {
-  const fieldSet = new Set(fields.map((f2) => normalizeViewFieldKey(f2.field)));
-  return filters.some((rule) => fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in" && normalizeViewMultiValue(rule.value).length > 0);
-}
-function clearQuickFilters(filters, fields) {
-  const fieldSet = new Set(fields.map((f2) => normalizeViewFieldKey(f2.field)));
-  return cleanupRuleLinks(filters.filter((rule) => !(fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in")));
-}
-function CommonFilterPanel({
-  dataStore,
-  filters,
-  onChange,
-  items,
-  fieldOptions,
-  title = "常用筛选",
-  fields = DEFAULT_QUICK_FILTER_FIELDS,
-  compact = false
-}) {
-  const sourceItems = T$1(() => items ?? dataStore.queryItems(), [items, dataStore]);
-  const availableFields = T$1(() => new Set((fieldOptions ?? getAllFields(sourceItems)).map(normalizeViewFieldKey)), [fieldOptions, sourceItems]);
-  const quickFields = T$1(
-    () => fields.map((config2) => ({ ...config2, field: normalizeViewFieldKey(config2.field) })).filter((config2, index, array2) => config2.field && availableFields.has(config2.field) && array2.findIndex((item) => item.field === config2.field) === index),
-    [fields, availableFields]
-  );
-  const valueOptions = T$1(
-    () => collectFieldValues(sourceItems, quickFields.map((config2) => config2.field)),
-    [sourceItems, quickFields]
-  );
-  const hasQuickFilters = hasAnyQuickFilter(filters, quickFields);
-  if (quickFields.length === 0) return null;
-  return /* @__PURE__ */ u2("div", { className: `think-common-filter${compact ? " think-common-filter--compact" : ""}`, children: [
-    /* @__PURE__ */ u2("div", { className: "think-common-filter__header", children: [
-      /* @__PURE__ */ u2("span", { className: "think-common-filter__title", children: title }),
-      /* @__PURE__ */ u2(
-        ThinkButton,
-        {
-          size: "sm",
-          variant: "secondary",
-          leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "rotate-ccw" }),
-          onClick: () => onChange(clearQuickFilters(filters, quickFields)),
-          disabled: !hasQuickFilters,
-          className: "think-common-filter__clear",
-          children: "清空"
-        }
-      )
-    ] }),
-    /* @__PURE__ */ u2("div", { className: "think-common-filter__grid", children: quickFields.map((config2) => {
-      const label = config2.label || getFieldLabel(config2.field);
-      const rule = getQuickRule(filters, config2.field);
-      const values2 = normalizeViewMultiValue(rule?.value);
-      return /* @__PURE__ */ u2("div", { className: "think-common-filter__field", children: [
-        /* @__PURE__ */ u2("span", { className: "think-common-filter__label", children: label }),
-        /* @__PURE__ */ u2(
-          ThinkMultiCombobox,
-          {
-            values: values2,
-            options: valueOptions[normalizeViewFieldKey(config2.field)] || [],
-            onChange: (newValues) => onChange(upsertQuickRule(filters, config2.field, newValues)),
-            placeholder: config2.placeholder || `选择${label}`
-          }
-        )
-      ] }, config2.field);
-    }) })
-  ] });
-}
-function ViewInstanceEditor({ vi }) {
-  const dataStore = useDataStore();
-  const useCases = useUseCases();
-  const currentVi = useSelector(makeSelectViewInstanceById(vi.id)) || vi;
-  const fieldOptions = T$1(() => getAllFields(dataStore?.queryItems() || []), [dataStore]);
-  const EditorComponent = VIEW_EDITORS[currentVi.viewType];
-  const correctedViewConfig = T$1(() => {
-    if (currentVi.viewConfig && typeof currentVi.viewConfig.categories === "object") return currentVi.viewConfig;
-    if (currentVi.viewConfig && currentVi.viewConfig.viewConfig) return currentVi.viewConfig.viewConfig;
-    return currentVi.viewConfig || {};
-  }, [currentVi.viewConfig]);
-  const handleUpdate = (updates) => {
-    useCases.viewInstance.updateView(currentVi.id, updates);
-  };
-  const viewTypeOptions = T$1(() => {
-    const labels = { ProgressView: "成长", EnergyView: "精力" };
-    return VIEW_OPTIONS.map((v2) => ({ value: v2, label: labels[v2] || v2.replace("View", "") }));
-  }, []);
-  const commonFilterFields = T$1(() => ["goalPath", "goalId", "coreBlock", "themePath", "status", "cadence", "priority", "period.label"], []);
-  const hasAdvancedFilters = T$1(() => (currentVi.filters || []).some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [currentVi.filters, commonFilterFields]);
-  const handleFieldsChange = (fields) => {
-    handleUpdate({ fields: normalizeDisplayFields(fields, { includeUnknown: true }) });
-  };
-  const handleGroupFieldsChange = (groupFields) => {
-    handleUpdate({ groupFields: normalizeViewGroupFields(groupFields) });
-  };
-  return /* @__PURE__ */ u2("div", { className: "think-module-settings", children: [
-    /* @__PURE__ */ u2("section", { className: "think-module-settings__section", children: [
-      /* @__PURE__ */ u2("h4", { className: "think-module-settings__section-title", children: "基础设置" }),
-      /* @__PURE__ */ u2("div", { className: "think-module-settings__fields", children: [
-        /* @__PURE__ */ u2(FormField, { label: "视图类型", children: /* @__PURE__ */ u2("div", { className: "think-module-settings__inline", children: [
-          /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: currentVi.viewType,
-              options: viewTypeOptions,
-              onChange: (val) => handleUpdate({ viewType: val }),
-              fullWidth: true,
-              className: "think-module-settings__view-type"
-            }
-          ),
-          /* @__PURE__ */ u2(
-            ThinkCheckbox,
-            {
-              checked: !!currentVi.collapsed,
-              onChange: (e2) => handleUpdate({ collapsed: e2.currentTarget.checked }),
-              label: "默认折叠",
-              compact: true
-            }
-          )
-        ] }) }),
-        /* @__PURE__ */ u2(FormField, { label: "显示字段", children: /* @__PURE__ */ u2(
-          FieldManager,
-          {
-            fields: currentVi.fields || [],
-            availableFields: fieldOptions,
-            onFieldsChange: handleFieldsChange,
-            placeholder: "添加字段…",
-            getFieldLabel,
-            getFieldGroupLabel: getFieldCategoryLabel
-          }
-        ) }),
-        /* @__PURE__ */ u2(FormField, { label: "分组字段", children: /* @__PURE__ */ u2(
-          FieldManager,
-          {
-            fields: currentVi.groupFields || [],
-            availableFields: fieldOptions,
-            onFieldsChange: handleGroupFieldsChange,
-            placeholder: "选择分组字段…",
-            getFieldLabel,
-            getFieldGroupLabel: getFieldCategoryLabel
-          }
-        ) })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2("section", { className: "think-module-settings__section", children: [
-      /* @__PURE__ */ u2("h4", { className: "think-module-settings__section-title", children: "筛选与排序" }),
-      /* @__PURE__ */ u2(
-        CommonFilterPanel,
-        {
-          title: "常用筛选",
-          dataStore,
-          filters: currentVi.filters || [],
-          fieldOptions,
-          onChange: (rows) => handleUpdate({ filters: normalizeViewFilters(rows) }),
-          compact: true
-        }
-      ),
-      /* @__PURE__ */ u2(
-        ThinkDisclosure,
-        {
-          title: "高级筛选",
-          meta: `${(currentVi.filters || []).length} 条`,
-          open: hasAdvancedFilters || void 0,
-          className: "think-module-settings__advanced",
-          children: /* @__PURE__ */ u2(
-            RuleBuilder,
-            {
-              title: "筛选",
-              mode: "filter",
-              rows: currentVi.filters || [],
-              fieldOptions,
-              onChange: (rows) => handleUpdate({ filters: normalizeViewFilters(rows) }),
-              dataStore,
-              variant: "panel",
-              showHeader: false
-            }
-          )
-        }
-      ),
-      /* @__PURE__ */ u2(
-        RuleBuilder,
-        {
-          title: "排序",
-          mode: "sort",
-          rows: currentVi.sort || [],
-          fieldOptions,
-          onChange: (rows) => handleUpdate({ sort: normalizeViewSort(rows) }),
-          dataStore
-        }
-      )
-    ] }),
-    EditorComponent && /* @__PURE__ */ u2("section", { className: "think-module-settings__section", children: [
-      /* @__PURE__ */ u2("h4", { className: "think-module-settings__section-title", children: [
-        currentVi.viewType.replace("View", ""),
-        " 配置"
-      ] }),
-      /* @__PURE__ */ u2(
-        EditorComponent,
-        {
-          module: currentVi,
-          value: correctedViewConfig,
-          onChange: (patch) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } }),
-          fieldOptions,
-          dataStore
-        }
-      )
-    ] })
-  ] });
-}
-function ModuleSettingsPanel({ module: module2, onClose }) {
-  const currentModule = useSelector(makeSelectViewInstanceById(module2.id)) || module2;
-  const handleSave = useSaveHandler(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    onClose();
-  }, {
-    successMessage: `已保存视图 "${module2.title}" 的设置`,
-    errorMessage: "保存设置失败"
-  });
-  return /* @__PURE__ */ u2("div", { className: "think-os think-os--settings think-module-settings-panel", children: [
-    /* @__PURE__ */ u2("div", { className: "think-module-settings-panel__body", children: /* @__PURE__ */ u2(ViewInstanceEditor, { vi: currentModule }) }),
-    /* @__PURE__ */ u2("div", { className: "think-module-settings-panel__actions", children: [
-      /* @__PURE__ */ u2(ThinkButton, { onClick: onClose, variant: "secondary", size: "sm", children: "关闭" }),
-      /* @__PURE__ */ u2(ThinkButton, { onClick: handleSave, variant: "primary", size: "sm", children: "保存设置" })
-    ] })
-  ] });
-}
-function openModuleSettingsWidget(module2) {
-  const widgetId = `module-settings-${module2.id}`;
-  return openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(
-    FloatingPanel,
-    {
-      id: widgetId,
-      title: `视图设置: ${module2.title}`,
-      defaultPosition: { x: window.innerWidth / 2 - 340, y: window.innerHeight / 2 - 260 },
-      minWidth: 520,
-      maxWidth: "90vw",
-      maxHeight: "85vh",
-      width: 720,
-      height: 640,
-      resizable: true,
-      bodyPadding: 0,
-      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      onClose: () => closeFloatingWidget(widgetId),
-      children: /* @__PURE__ */ u2(ModuleSettingsPanel, { module: module2, onClose: () => closeFloatingWidget(widgetId) })
-    }
-  ));
-}
-const PERIOD_OPTIONS = ["年", "季", "月", "周", "天"].map((value) => ({ value, label: value }));
-const FREEFORM_TEMPLATE_OPTIONS = [
-  { value: "balanced", label: "均衡排布" },
-  { value: "focus", label: "焦点 + 网格" }
-];
-const DISPLAY_MODE_OPTIONS = [
-  { value: "list", label: "列表" },
-  { value: "grid", label: "网格" },
-  { value: "freeform", label: "自由布局" }
-];
-function SettingsRow({ label, children, top: top2 = false }) {
-  return /* @__PURE__ */ u2("div", { className: `think-settings-row think-layout-editor__control-row${top2 ? " think-settings-row--top" : ""}`, children: [
-    /* @__PURE__ */ u2("span", { className: `think-settings-row__label${top2 ? " think-settings-row__label--top" : ""}`, children: label }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children })
-  ] });
-}
-function SettingsSegmentedRow({
-  label,
-  options,
-  selectedValue,
-  onChange
-}) {
-  return /* @__PURE__ */ u2(SettingsRow, { label, children: /* @__PURE__ */ u2(
-    ThinkSegmentedControl,
-    {
-      label,
-      value: selectedValue,
-      options,
-      onChange,
-      size: "sm",
-      className: "think-layout-editor__segmented"
-    }
-  ) });
-}
-function LayoutGeneralSettings({ layout, onUpdate }) {
-  return /* @__PURE__ */ u2("div", { className: "think-layout-editor__general", children: [
-    /* @__PURE__ */ u2(SettingsRow, { label: "布局名称", children: /* @__PURE__ */ u2(
-      ThinkInput,
-      {
-        "aria-label": "布局名称",
-        value: layout.name || "",
-        onInput: (event) => onUpdate({ name: event.currentTarget.value })
-      }
-    ) }),
-    /* @__PURE__ */ u2(SettingsRow, { label: "工具栏", children: /* @__PURE__ */ u2(
-      ThinkCheckbox,
-      {
-        checked: !layout.hideToolbar,
-        onChange: (event) => onUpdate({ hideToolbar: !event.currentTarget.checked }),
-        label: "显示工具栏 / 导航器",
-        compact: true
-      }
-    ) }),
-    /* @__PURE__ */ u2(SettingsRow, { label: "初始日期", children: /* @__PURE__ */ u2("div", { className: "think-layout-editor__inline-controls", children: [
-      /* @__PURE__ */ u2(
-        ThinkInput,
-        {
-          "aria-label": "初始日期",
-          type: "date",
-          disabled: !!layout.initialDateFollowsNow,
-          value: layout.initialDate || "",
-          onInput: (event) => onUpdate({ initialDate: event.currentTarget.value }),
-          className: "think-settings-field--date"
-        }
-      ),
-      /* @__PURE__ */ u2(
-        ThinkCheckbox,
-        {
-          checked: !!layout.initialDateFollowsNow,
-          onChange: (event) => onUpdate({ initialDateFollowsNow: event.currentTarget.checked }),
-          label: "跟随今日",
-          compact: true
-        }
-      )
-    ] }) }),
-    /* @__PURE__ */ u2(
-      SettingsSegmentedRow,
-      {
-        label: "初始视图",
-        options: PERIOD_OPTIONS,
-        selectedValue: layout.initialView || "月",
-        onChange: (value) => onUpdate({ initialView: value })
-      }
-    ),
-    /* @__PURE__ */ u2(
-      SettingsSegmentedRow,
-      {
-        label: "排列方式",
-        options: DISPLAY_MODE_OPTIONS,
-        selectedValue: layout.displayMode || "list",
-        onChange: (value) => onUpdate({ displayMode: value })
-      }
-    ),
-    layout.displayMode === "grid" && /* @__PURE__ */ u2(SettingsRow, { label: "网格列数", children: /* @__PURE__ */ u2(
-      ThinkInput,
-      {
-        "aria-label": "网格列数",
-        type: "number",
-        value: layout.gridConfig?.columns || 2,
-        onInput: (event) => onUpdate({ gridConfig: { columns: parseInt(event.currentTarget.value, 10) || 2 } }),
-        className: "think-settings-field--xs"
-      }
-    ) })
-  ] });
-}
-function LayoutFreeformSettings({
-  layout,
-  onUpdate,
-  onResetFreeformLayout
-}) {
-  if (layout.displayMode !== "freeform") return null;
-  const updateFreeform = (patch) => onUpdate({
-    freeformConfig: { ...layout.freeformConfig || {}, ...patch }
-  });
-  return /* @__PURE__ */ u2("div", { className: "think-layout-editor__freeform", children: [
-    /* @__PURE__ */ u2(
-      SettingsSegmentedRow,
-      {
-        label: "默认模板",
-        options: FREEFORM_TEMPLATE_OPTIONS,
-        selectedValue: layout.freeformConfig?.defaultTemplate || "balanced",
-        onChange: (value) => {
-          const hasSavedPlacement = Object.keys(layout.viewPlacements || {}).length > 0;
-          if (hasSavedPlacement && !confirm("切换模板会重置当前自由布局的位置、尺寸、层级、锁定和折叠状态，是否继续？")) return;
-          onUpdate({
-            freeformConfig: {
-              ...layout.freeformConfig || {},
-              defaultTemplate: value
-            },
-            viewPlacements: {}
-          });
-        }
-      }
-    ),
-    /* @__PURE__ */ u2(SettingsRow, { label: "吸附网格", children: /* @__PURE__ */ u2(
-      ThinkCheckbox,
-      {
-        checked: layout.freeformConfig?.snapToGrid ?? true,
-        onChange: (event) => updateFreeform({ snapToGrid: event.currentTarget.checked }),
-        label: "启用",
-        compact: true
-      }
-    ) }),
-    /* @__PURE__ */ u2(SettingsRow, { label: "网格大小", children: /* @__PURE__ */ u2(
-      ThinkInput,
-      {
-        "aria-label": "网格大小",
-        type: "number",
-        value: layout.freeformConfig?.gridSize || 16,
-        onInput: (event) => updateFreeform({ gridSize: Math.max(4, parseInt(event.currentTarget.value, 10) || 16) }),
-        className: "think-settings-field--sm"
-      }
-    ) }),
-    /* @__PURE__ */ u2(SettingsRow, { label: "最小宽度", children: /* @__PURE__ */ u2(
-      ThinkInput,
-      {
-        "aria-label": "最小宽度",
-        type: "number",
-        value: layout.freeformConfig?.minItemWidth || 280,
-        onInput: (event) => updateFreeform({ minItemWidth: Math.max(160, parseInt(event.currentTarget.value, 10) || 280) }),
-        className: "think-settings-field--sm"
-      }
-    ) }),
-    /* @__PURE__ */ u2(SettingsRow, { label: "最小高度", children: /* @__PURE__ */ u2(
-      ThinkInput,
-      {
-        "aria-label": "最小高度",
-        type: "number",
-        value: layout.freeformConfig?.minItemHeight || 180,
-        onInput: (event) => updateFreeform({ minItemHeight: Math.max(120, parseInt(event.currentTarget.value, 10) || 180) }),
-        className: "think-settings-field--sm"
-      }
-    ) }),
-    /* @__PURE__ */ u2(SettingsRow, { label: "画布最小宽度", children: /* @__PURE__ */ u2(
-      ThinkInput,
-      {
-        "aria-label": "画布最小宽度",
-        type: "number",
-        value: layout.freeformConfig?.minCanvasWidth || 720,
-        onInput: (event) => updateFreeform({ minCanvasWidth: Math.max(320, parseInt(event.currentTarget.value, 10) || 720) }),
-        className: "think-settings-field--md"
-      }
-    ) }),
-    /* @__PURE__ */ u2(SettingsRow, { label: "布局位置", children: /* @__PURE__ */ u2(
-      ThinkButton,
-      {
-        size: "sm",
-        variant: "secondary",
-        onClick: () => {
-          if (confirm("确认重置当前布局的自由布局位置吗？")) onResetFreeformLayout();
-        },
-        children: "按模板重排"
-      }
-    ) })
-  ] });
-}
-const CREATE_PREFIX = "__create_view__:";
-function LayoutEditorPanel({ layoutId, useCases }) {
-  const _useCases = useCases ?? useUseCases();
-  const layout = useSelector((s2) => (s2.settings.layouts || []).find((l2) => l2.id === layoutId));
-  const allViews = useSelector((s2) => s2.settings.viewInstances);
-  const [inputValue, setInputValue] = d("");
-  const [pickerOpen, setPickerOpen] = d(false);
-  const [contextMenu, setContextMenu] = d(null);
-  const [renameTarget, setRenameTarget] = d(null);
-  const [renameValue, setRenameValue] = d("");
-  const handleUpdate = q$1((updates) => {
-    if (!layout) return;
-    _useCases.layout.updateLayout(layout.id, updates);
-  }, [layout, _useCases]);
-  const selectedViews = T$1(() => (layout?.viewInstanceIds || []).map((id) => allViews.find((v2) => v2.id === id)).filter(Boolean), [layout?.viewInstanceIds, allViews]);
-  const availableViews = T$1(() => allViews.filter((v2) => !(layout?.viewInstanceIds || []).includes(v2.id)), [layout?.viewInstanceIds, allViews]);
-  const addView = q$1(async (viewId) => {
-    if (!layout || !viewId || layout.viewInstanceIds.includes(viewId)) return;
-    await _useCases.layout.addViewInstanceToLayout(layout.id, viewId);
-  }, [layout, _useCases.layout]);
-  const removeViewFromLayout = q$1((viewId) => {
-    if (!layout) return;
-    void _useCases.layout.removeViewInstanceFromLayout(layout.id, viewId);
-  }, [layout, _useCases.layout]);
-  const moveView = q$1((viewId, direction) => {
-    if (!layout) return;
-    const currentIds = [...layout.viewInstanceIds];
-    const index = currentIds.indexOf(viewId);
-    const targetIndex = index + direction;
-    if (index < 0 || targetIndex < 0 || targetIndex >= currentIds.length) return;
-    const [moved] = currentIds.splice(index, 1);
-    currentIds.splice(targetIndex, 0, moved);
-    void _useCases.layout.reorderViewInstancesInLayout(layout.id, currentIds);
-  }, [layout, _useCases.layout]);
-  const pickerOptions = T$1(() => {
-    const options = availableViews.map((view) => ({ value: view.id, label: view.title }));
-    const name = inputValue.trim();
-    if (name && !availableViews.some((view) => view.title.toLowerCase().includes(name.toLowerCase()))) {
-      options.push({ value: `${CREATE_PREFIX}${name}`, label: `+ 创建新视图：“${name}”` });
-    }
-    return options;
-  }, [availableViews, inputValue]);
-  const handleCreateNewView = q$1(async (viewTitle) => {
-    const newView = await _useCases.viewInstance.createView(viewTitle);
-    if (!newView) return;
-    await addView(newView.id);
-  }, [_useCases.viewInstance, addView]);
-  const handlePickerSelect = q$1(async (value) => {
-    if (value.startsWith(CREATE_PREFIX)) {
-      await handleCreateNewView(value.slice(CREATE_PREFIX.length));
-    } else {
-      await addView(value);
-    }
-    setInputValue("");
-    setPickerOpen(true);
-  }, [addView, handleCreateNewView]);
-  const handleChipRightClick = q$1((event, view) => {
-    event.preventDefault();
-    setContextMenu({ mouseX: event.clientX - 2, mouseY: event.clientY - 4, viewId: view.id, viewTitle: view.title });
-  }, []);
-  const handleContextMenuClose = q$1(() => setContextMenu(null), []);
-  const handleViewSettings = q$1(() => {
-    if (!contextMenu) return;
-    const view = allViews.find((v2) => v2.id === contextMenu.viewId);
-    if (view) openModuleSettingsWidget(view);
-    handleContextMenuClose();
-  }, [contextMenu, allViews, handleContextMenuClose]);
-  const openViewRename = q$1((viewId, viewTitle) => {
-    setRenameTarget({ viewId, viewTitle });
-    setRenameValue(viewTitle);
-  }, []);
-  const handleViewRename = q$1(() => {
-    if (!contextMenu) return;
-    openViewRename(contextMenu.viewId, contextMenu.viewTitle);
-    handleContextMenuClose();
-  }, [contextMenu, openViewRename, handleContextMenuClose]);
-  const handleRenameSave = q$1(async () => {
-    if (!renameTarget) return;
-    const title = renameValue.trim();
-    if (title && title !== renameTarget.viewTitle) await _useCases.viewInstance.updateView(renameTarget.viewId, { title });
-    setRenameTarget(null);
-  }, [renameTarget, renameValue, _useCases.viewInstance]);
-  const handleViewRemove = q$1(() => {
-    if (!contextMenu) return;
-    removeViewFromLayout(contextMenu.viewId);
-    handleContextMenuClose();
-  }, [contextMenu, removeViewFromLayout, handleContextMenuClose]);
-  const handleMoveLeftFromMenu = q$1(() => {
-    if (!contextMenu) return;
-    moveView(contextMenu.viewId, -1);
-    handleContextMenuClose();
-  }, [contextMenu, moveView, handleContextMenuClose]);
-  const handleMoveRightFromMenu = q$1(() => {
-    if (!contextMenu) return;
-    moveView(contextMenu.viewId, 1);
-    handleContextMenuClose();
-  }, [contextMenu, moveView, handleContextMenuClose]);
-  if (!layout) return /* @__PURE__ */ u2("div", { className: "think-settings-section", children: "未找到布局（可能已被删除）。" });
-  return /* @__PURE__ */ u2("div", { className: "think-layout-editor", children: [
-    /* @__PURE__ */ u2(LayoutGeneralSettings, { layout, onUpdate: handleUpdate }),
-    /* @__PURE__ */ u2(LayoutFreeformSettings, { layout, onUpdate: handleUpdate, onResetFreeformLayout: () => void _useCases.layout.resetFreeformLayout(layout.id) }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "包含视图" }),
-      /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-layout-editor__views-body", children: [
-        /* @__PURE__ */ u2("div", { className: "think-layout-editor__views", children: selectedViews.map((view, index) => /* @__PURE__ */ u2("div", { className: "think-layout-editor__view-item", children: [
-          /* @__PURE__ */ u2(
-            ThinkIconButton,
-            {
-              label: "前移",
-              icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-left" }),
-              size: "sm",
-              disabled: index === 0,
-              onClick: () => moveView(view.id, -1),
-              className: "think-layout-editor__move-action"
-            }
-          ),
-          /* @__PURE__ */ u2(
-            "button",
-            {
-              type: "button",
-              className: "think-chip think-layout-editor__view-chip",
-              title: "左键移除，右键更多选项",
-              onClick: () => removeViewFromLayout(view.id),
-              onContextMenu: (event) => handleChipRightClick(event, view),
-              children: /* @__PURE__ */ u2("span", { className: "think-chip__label", children: view.title })
-            }
-          ),
-          /* @__PURE__ */ u2(
-            ThinkIconButton,
-            {
-              label: "后移",
-              icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-right" }),
-              size: "sm",
-              disabled: index === selectedViews.length - 1,
-              onClick: () => moveView(view.id, 1),
-              className: "think-layout-editor__move-action"
-            }
-          )
-        ] }, view.id)) }),
-        /* @__PURE__ */ u2(
-          ThinkSearchPicker,
-          {
-            query: inputValue,
-            options: pickerOptions,
-            onQueryChange: (value) => {
-              setInputValue(value);
-              setPickerOpen(true);
-            },
-            onSelect: (value) => void handlePickerSelect(value),
-            placeholder: "添加或创建视图…",
-            open: pickerOpen,
-            onOpenChange: setPickerOpen,
-            className: "think-settings-search"
-          }
-        )
-      ] })
-    ] }),
-    contextMenu && /* @__PURE__ */ u2(
-      "div",
-      {
-        className: "think-layout-editor__context-menu",
-        style: { position: "fixed", top: contextMenu.mouseY, left: contextMenu.mouseX, zIndex: 99999 },
-        onMouseLeave: handleContextMenuClose,
-        children: /* @__PURE__ */ u2("div", { className: "think-layout-editor__context-actions", children: [
-          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: handleViewSettings, children: "设置…" }),
-          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: handleMoveLeftFromMenu, children: "向前移动" }),
-          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: handleMoveRightFromMenu, children: "向后移动" }),
-          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: handleViewRename, children: "重命名…" }),
-          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "danger", onClick: handleViewRemove, children: "从布局移除" })
-        ] })
-      }
-    ),
-    /* @__PURE__ */ u2(
-      Modal2,
-      {
-        isOpen: Boolean(renameTarget),
-        onClose: () => setRenameTarget(null),
-        title: "重命名视图",
-        size: "small",
-        onSave: handleRenameSave,
-        saveButtonText: "重命名",
-        children: /* @__PURE__ */ u2(
-          ThinkInput,
-          {
-            autoFocus: true,
-            "aria-label": "视图名称",
-            value: renameValue,
-            onInput: (event) => setRenameValue(event.currentTarget.value),
-            onKeyDown: (event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                void handleRenameSave();
-              }
-            }
-          }
-        )
-      }
-    )
-  ] });
-}
-function LayoutSettingsWidgetInner({ layoutId, widgetId }) {
-  const layout = useSelector((s2) => (s2.settings.layouts || []).find((l2) => l2.id === layoutId));
-  return /* @__PURE__ */ u2(
-    FloatingPanel,
-    {
-      id: widgetId,
-      title: `布局设置: ${layout?.name ?? layoutId}`,
-      defaultPosition: { x: window.innerWidth / 2 - 420, y: window.innerHeight / 2 - 300 },
-      minWidth: 620,
-      maxWidth: "92vw",
-      maxHeight: "88vh",
-      width: 760,
-      height: 620,
-      resizable: true,
-      bodyPadding: 0,
-      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      onClose: () => closeFloatingWidget(widgetId),
-      children: /* @__PURE__ */ u2("div", { className: "think-os--settings think-layout-settings-widget", children: /* @__PURE__ */ u2(LayoutEditorPanel, { layoutId }) })
-    }
-  );
-}
-function openLayoutSettingsWidget(layoutId) {
-  const widgetId = `layout-settings-${layoutId}`;
-  return openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(LayoutSettingsWidgetInner, { layoutId, widgetId }));
-}
-function asDisplayList(value) {
-  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean);
-  if (value === null || value === void 0) return [];
-  return String(value).split(/[,，\n]/).map((v2) => v2.trim()).filter(Boolean);
-}
-function describeRule(rule) {
-  if (rule.op === "empty") return `${getFieldLabel(rule.field)} 为空`;
-  if (rule.op === "notEmpty") return `${getFieldLabel(rule.field)} 非空`;
-  if (rule.op === "in" || rule.op === "notIn") {
-    const values2 = asDisplayList(rule.value);
-    const opText = rule.op === "in" ? "属于任一" : "不属于任一";
-    return `${getFieldLabel(rule.field)} ${opText} ${values2.join("、") || "未选择"}`;
-  }
-  if (rule.op === "between") {
-    const values2 = asDisplayList(rule.value);
-    return `${getFieldLabel(rule.field)} 区间 ${values2.join(" ~ ") || String(rule.value ?? "")}`;
-  }
-  return `${getFieldLabel(rule.field)} ${rule.op} ${String(rule.value ?? "")}`;
-}
-function DataFilterPanel({ dataStore, filters, items, onChange }) {
-  const [open, setOpen] = d(false);
-  const [advancedOpen, setAdvancedOpen] = d(false);
-  const activeCount = filters.length;
-  const sourceItems = items ?? dataStore.queryItems();
-  const fieldOptions = T$1(() => getAllFields(sourceItems), [sourceItems]);
-  const commonFilterFields = T$1(() => ["goalPath", "goalId", "coreBlock", "themePath", "baseCategory", "status", "cadence", "priority", "period"], []);
-  const hasAdvancedFilters = T$1(() => filters.some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [filters, commonFilterFields]);
-  const handleOpen = () => {
-    setAdvancedOpen(hasAdvancedFilters);
-    setOpen(true);
-  };
-  const handleClear = () => onChange([]);
-  const handleDeleteRule = (index) => onChange(filters.filter((_2, currentIndex) => currentIndex !== index));
-  return /* @__PURE__ */ u2("div", { class: "tp-toolbar-data-filter", children: [
-    /* @__PURE__ */ u2(
-      ThinkButton,
-      {
-        size: "sm",
-        variant: "secondary",
-        "aria-pressed": activeCount > 0,
-        leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "filter" }),
-        onClick: handleOpen,
-        children: [
-          "数据筛选",
-          activeCount > 0 ? ` (${activeCount})` : ""
-        ]
-      }
-    ),
-    activeCount > 0 && /* @__PURE__ */ u2("div", { class: "think-filter-popover__selected-chips", "aria-label": "当前筛选", children: [
-      filters.slice(0, 3).map((rule, index) => /* @__PURE__ */ u2(
-        "button",
-        {
-          type: "button",
-          className: "think-chip",
-          onClick: () => handleDeleteRule(index),
-          title: "移除此筛选",
-          children: [
-            /* @__PURE__ */ u2("span", { className: "think-chip__label", children: describeRule(rule) }),
-            /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
-          ]
-        },
-        `${rule.field}-${rule.op}-${index}`
-      )),
-      filters.length > 3 && /* @__PURE__ */ u2("span", { className: "think-chip", children: [
-        "+",
-        filters.length - 3
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(
-      Modal2,
-      {
-        isOpen: open,
-        onClose: () => setOpen(false),
-        title: "全局数据筛选",
-        size: "large",
-        className: "think-os--settings think-data-filter-dialog",
-        footer: /* @__PURE__ */ u2("div", { className: "think-data-filter-dialog__actions", children: [
-          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: handleClear, disabled: activeCount === 0, children: "清空全部" }),
-          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "primary", onClick: () => setOpen(false), children: "完成" })
-        ] }),
-        children: /* @__PURE__ */ u2("div", { className: "think-data-filter-dialog__content", children: [
-          /* @__PURE__ */ u2("div", { className: "think-data-filter-dialog__meta-line", children: [
-            /* @__PURE__ */ u2("span", { children: [
-              fieldOptions.length,
-              " 个字段"
-            ] }),
-            /* @__PURE__ */ u2("span", { children: [
-              activeCount,
-              " 条规则"
-            ] })
-          ] }),
-          /* @__PURE__ */ u2(
-            CommonFilterPanel,
-            {
-              title: "常用筛选",
-              dataStore,
-              filters,
-              items: sourceItems,
-              fieldOptions,
-              onChange
-            }
-          ),
-          /* @__PURE__ */ u2(
-            ThinkDisclosure,
-            {
-              title: "高级筛选",
-              meta: `${activeCount} 条`,
-              open: advancedOpen,
-              onOpenChange: setAdvancedOpen,
-              children: /* @__PURE__ */ u2(
-                RuleBuilder,
-                {
-                  title: "筛选",
-                  mode: "filter",
-                  rows: filters,
-                  fieldOptions,
-                  onChange: (rows) => onChange(rows),
-                  dataStore,
-                  variant: "panel",
-                  showHeader: false
-                }
-              )
-            }
-          )
-        ] })
-      }
-    )
-  ] });
-}
-function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOpenRecordOrigin }) {
-  const value = readField(item, fieldKey);
-  if (value === null || value === void 0 || value === "" || Array.isArray(value) && value.length === 0) {
-    return null;
-  }
-  const label = getFieldLabel(fieldKey);
-  const originProps = onOpenRecordOrigin ? {
-    role: "button",
-    tabIndex: 0,
-    onClick: (event) => {
-      if (!hasPlatformModifier(event)) return;
-      stopInteractionEvent(event);
-      void onOpenRecordOrigin(item);
-    },
-    onKeyDown: (event) => {
-      if (!hasPlatformModifier(event) || !isKeyboardActivation(event)) return;
-      stopInteractionEvent(event);
-      void onOpenRecordOrigin(item);
-    }
-  } : {};
-  const originTitle = "Ctrl/⌘+点击打开原文";
-  if (fieldKey === "tags") {
-    return /* @__PURE__ */ u2("span", { ...originProps, title: originTitle, children: /* @__PURE__ */ u2(TagsRenderer, { tags: value, allThemes }) });
-  }
-  if ((fieldKey === "themePath" || fieldKey === "theme" || fieldKey === "rootTheme" || fieldKey === "leafTheme") && typeof value === "string") {
-    const fullPath = value;
-    const labelText = getLeafPath(fullPath) || fullPath;
-    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${fullPath} · ${originTitle}`, style: { backgroundColor: getCategoryColor(fullPath) }, children: labelText });
-  }
-  if (fieldKey === "categoryKey") {
-    const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
-    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${value} · ${originTitle}`, style: { backgroundColor: getCategoryColor(item.categoryKey) }, children: baseCategory });
-  }
-  const fieldDef = getFieldDefinition(fieldKey);
-  if (isImageFieldDefinition(fieldDef)) {
-    const image = normalizeImageValue(value);
-    if (!image) return null;
-    const src = image.kind === "url" ? image.src : resolveResourcePath?.(image.src) || image.src;
-    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${image.src} · ${originTitle}`, children: /* @__PURE__ */ u2("img", { src, alt: image.alt || label }) });
-  }
-  const displayValue = Array.isArray(value) ? value.join(", ") : String(value);
-  return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${displayValue} · ${originTitle}`, children: displayValue });
-}
-function TaskRow({
-  item,
-  onMarkDone,
-  resolveResourcePath,
-  onOpenRecordOrigin,
-  timerService,
-  timer,
-  allThemes,
-  showFields = [],
-  compact = false,
-  displayTitle,
-  onOpenRecord
-}) {
-  const done = isItemDone(item);
-  const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? "").trim() || item.title;
-  const openEdit = (evt) => {
-    void onOpenRecord?.(item);
-  };
-  const gesture = createRecordGestureHandlers({ item, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => openEdit() });
-  return /* @__PURE__ */ u2("div", { class: `task-row ${compact ? "task-row--compact" : ""} ${done ? "task-row--done" : ""}`, children: [
-    /* @__PURE__ */ u2("div", { class: "task-row-checkbox-wrapper", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(TaskCheckbox, { done, onMarkDone: () => onMarkDone(item.id) }) }),
-    /* @__PURE__ */ u2("div", { class: "task-row-content", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, children: [
-      /* @__PURE__ */ u2("div", { class: "task-row-main", children: [
-        /* @__PURE__ */ u2("button", { type: "button", title: RECORD_GESTURE_HINT, onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, onKeyDown: gesture.onKeyDown, class: `task-row-title ${done ? "task-done" : ""}`, children: [
-          item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
-          visibleTitle
-        ] }),
-        !done && /* @__PURE__ */ u2("div", { class: "task-row-timer-action", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(
-          TaskSendToTimerButton,
-          {
-            taskId: item.id,
-            timerStatus: timer?.status,
-            onStart: () => timerService?.startOrResume(item.id)
-          }
-        ) })
-      ] }),
-      !compact && showFields.length > 0 && /* @__PURE__ */ u2("div", { class: "task-row-fields", onClick: (e2) => e2.stopPropagation(), children: showFields.map((fieldKey) => /* @__PURE__ */ u2(
-        FieldPill,
-        {
-          item,
-          fieldKey,
-          resolveResourcePath,
-          allThemes,
-          onOpenRecordOrigin
-        },
-        fieldKey
-      )) })
-    ] })
-  ] });
-}
-function ItemLink({ item, className = "", showIcon = true, onOpenRecord, onOpenRecordOrigin }) {
-  const gesture = createRecordGestureHandlers({
-    item,
-    onOpenOrigin: onOpenRecordOrigin,
-    onPrimary: () => {
-      void onOpenRecord?.(item);
-    }
-  });
-  return /* @__PURE__ */ u2(
-    "span",
-    {
-      class: `item-link ${className}`,
-      role: "button",
-      tabIndex: 0,
-      onClick: gesture.onClick,
-      onDblClick: gesture.onDblClick,
-      onTouchEnd: gesture.onTouchEnd,
-      onKeyDown: gesture.onKeyDown,
-      title: RECORD_GESTURE_HINT,
-      style: { cursor: "pointer" },
-      children: [
-        showIcon && item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
-        item.title
-      ]
-    }
-  );
-}
-const BlockItem = ({ item, fields, isNarrow, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }) => {
-  const metadataFields = fields.filter((f2) => f2 !== "title" && f2 !== "content");
-  const showTitle = fields.includes("title") && item.title;
-  const effectiveContent = item.content && item.content.trim().length > 0 ? item.content : item.title;
-  const showContent = fields.includes("content") && effectiveContent;
-  const narrowClass = isNarrow ? "is-narrow" : "";
-  const gesture = createRecordGestureHandlers({
-    item,
-    onOpenOrigin: onOpenRecordOrigin,
-    onPrimary: () => {
-      try {
-        void onOpenRecord?.(item);
-      } catch {
-      }
-    }
-  });
-  return /* @__PURE__ */ u2("div", { class: `bv-item bv-item--block ${narrowClass}`, children: [
-    /* @__PURE__ */ u2("div", { class: "bv-block-metadata", children: /* @__PURE__ */ u2("div", { class: "bv-fields-list-wrapper", children: metadataFields.map((fieldKey) => /* @__PURE__ */ u2(
-      FieldPill,
-      {
-        item,
-        fieldKey,
-        resolveResourcePath,
-        allThemes,
-        onOpenRecordOrigin
-      },
-      fieldKey
-    )) }) }),
-    /* @__PURE__ */ u2("div", { class: "bv-block-main", children: [
-      showTitle && /* @__PURE__ */ u2("div", { class: "bv-block-title", children: /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin }) }),
-      showContent && /* @__PURE__ */ u2("div", { class: "bv-block-content", children: /* @__PURE__ */ u2(
-        MarkdownContent,
-        {
-          renderPort: messageRenderPort,
-          content: effectiveContent || "",
-          contentType: "markdown",
-          sourcePath: item.file?.path || "",
-          className: "bv-block-md",
-          onClick: (evt) => {
-            const target = evt?.target;
-            if (target?.closest("a")) return;
-            gesture.onClick(evt);
-          },
-          onDblClick: (evt) => {
-            const target = evt?.target;
-            if (target?.closest("a")) return;
-            gesture.onDblClick(evt);
-          },
-          onTouchEnd: (evt) => {
-            const target = evt?.target;
-            if (target?.closest("a")) return;
-            gesture.onTouchEnd(evt);
-          }
-        }
-      ) })
-    ] })
-  ] });
-};
-function resolveBlockViewGroupFields(input = {}) {
-  if (input.effectiveGroupFields?.length) return [...input.effectiveGroupFields];
-  if (input.groupFields?.length) return [...input.groupFields];
-  if (input.groupField) return [input.groupField];
-  return [];
-}
-function buildBlockViewRenderModel(input) {
-  const effectiveGroupFields = resolveBlockViewGroupFields(input);
-  const isGrouped = effectiveGroupFields.length > 0;
-  const groupTree = !isGrouped ? [] : input.groupTree ?? (executeRecordQuery(input.items, {
-    groupBy: effectiveGroupFields,
-    groupContext: { goals: input.goals ?? [] }
-  }).groupTree ?? []);
-  return { effectiveGroupFields, groupTree, isGrouped };
-}
-function findBlockViewTimer(timers, itemId) {
-  return (timers ?? []).find((timer) => timer?.taskId === itemId);
-}
-function buildBlockViewGroupClassNames() {
-  return {
-    root: "",
-    group: "bv-group",
-    title: "bv-group-title",
-    content: "bv-group-content",
-    toggleIcon: "bv-group-toggle-icon",
-    label: "bv-group-label"
-  };
-}
-function BlockViewItemList(props) {
-  const {
-    items,
-    fields,
-    isNarrow,
-    resolveResourcePath,
-    onOpenRecordOrigin,
-    messageRenderPort,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes,
-    onOpenRecord
-  } = props;
-  return /* @__PURE__ */ u2(S, { children: items.map((item) => {
-    if (item.coreBlock === "task") {
-      return /* @__PURE__ */ u2(
-        TaskRow,
-        {
-          item,
-          onMarkDone,
-          resolveResourcePath,
-          onOpenRecordOrigin,
-          timerService,
-          timer: findBlockViewTimer(timers, item.id),
-          allThemes,
-          onOpenRecord,
-          showFields: []
-        },
-        item.id
-      );
-    }
-    return /* @__PURE__ */ u2(
-      BlockItem,
-      {
-        item,
-        fields,
-        isNarrow,
-        resolveResourcePath,
-        onOpenRecordOrigin,
-        messageRenderPort,
-        allThemes,
-        onOpenRecord
-      },
-      item.id
-    );
-  }) });
-}
-function BlockView(props) {
-  const {
-    items,
-    groupField,
-    groupFields,
-    fields = [],
-    resolveResourcePath,
-    onOpenRecordOrigin,
-    messageRenderPort,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes,
-    goals = [],
-    onOpenRecord
-  } = props;
-  const containerRef = A$1(null);
-  const [isNarrow, setIsNarrow] = d(false);
-  y(() => {
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) setIsNarrow(entry.contentRect.width < 450);
-    });
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
-  const renderModel = T$1(() => buildBlockViewRenderModel({
-    items,
-    groupField,
-    groupFields,
-    goals
-  }), [items, groupField, groupFields, goals]);
-  const itemListProps = {
-    fields,
-    isNarrow,
-    resolveResourcePath,
-    onOpenRecordOrigin,
-    messageRenderPort,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes,
-    onOpenRecord
-  };
-  if (!renderModel.isGrouped) {
-    return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: /* @__PURE__ */ u2(BlockViewItemList, { items, ...itemListProps }) });
-  }
-  return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: /* @__PURE__ */ u2(
-    GroupedContainer,
-    {
-      nodes: renderModel.groupTree,
-      classNames: buildBlockViewGroupClassNames(),
-      renderLeaf: (leafItems) => /* @__PURE__ */ u2(BlockViewItemList, { items: leafItems, ...itemListProps })
-    }
-  ) });
-}
-function ProgressBlock({
-  categoryHours,
-  order: order2,
-  totalHours,
-  colorMap,
-  untrackedLabel
-}) {
-  const sortedCategories = T$1(() => {
-    const orderToUse = Array.isArray(order2) ? order2 : [];
-    const presentCategories = /* @__PURE__ */ new Set();
-    orderToUse.forEach((cat) => {
-      if ((categoryHours[cat] || 0) > 0.01) {
-        presentCategories.add(cat);
-      }
-    });
-    Object.keys(categoryHours).forEach((cat) => {
-      if ((categoryHours[cat] || 0) > 0.01) {
-        presentCategories.add(cat);
-      }
-    });
-    return Array.from(presentCategories);
-  }, [categoryHours, order2, untrackedLabel]);
-  if (sortedCategories.length === 0) return null;
-  return /* @__PURE__ */ u2("div", { class: "progress-block-container", children: sortedCategories.map((category) => {
-    const hours = categoryHours[category];
-    const percent = totalHours > 0 ? hours / totalHours * 100 : 0;
-    if (percent < 0.1 && hours < 0.01) return null;
-    const color2 = colorMap[category] || "#cccccc";
-    const displayPercent = Math.max(percent, 0.5);
-    return /* @__PURE__ */ u2(
-      "div",
-      {
-        title: `${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`,
-        class: "progress-block-item",
-        children: [
-          /* @__PURE__ */ u2(
-            "div",
-            {
-              class: "progress-block-bar",
-              style: { background: color2, width: `${displayPercent}%` }
-            }
-          ),
-          /* @__PURE__ */ u2(
-            "span",
-            {
-              class: `progress-block-text ${displayPercent > 50 ? "progress-block-text-light" : "progress-block-text-dark"}`,
-              children: `${category} ${hours.toFixed(1)}h`
-            }
-          )
-        ]
-      },
-      category
-    );
-  }) });
-}
-function TimelineSummaryTable({
-  summaryData,
-  colorMap,
-  progressOrder,
-  untrackedLabel
-}) {
-  if (!summaryData || summaryData.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "此时间范围内无数据可供总结。" });
-  }
-  return /* @__PURE__ */ u2("table", { class: "timeline-summary-table", children: [
-    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("th", { children: "月份" }),
-      /* @__PURE__ */ u2("th", { children: "月度总结" }),
-      /* @__PURE__ */ u2("th", { children: "W1" }),
-      /* @__PURE__ */ u2("th", { children: "W2" }),
-      /* @__PURE__ */ u2("th", { children: "W3" }),
-      /* @__PURE__ */ u2("th", { children: "W4" }),
-      /* @__PURE__ */ u2("th", { children: "W5" })
-    ] }) }),
-    /* @__PURE__ */ u2("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: monthData.month }) }),
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2(
-        ProgressBlock,
-        {
-          categoryHours: monthData.monthlySummary,
-          order: progressOrder,
-          totalHours: monthData.totalMonthHours,
-          colorMap,
-          untrackedLabel
-        }
-      ) }),
-      monthData.weeklySummaries.map((weekData, index) => /* @__PURE__ */ u2("td", { children: weekData ? /* @__PURE__ */ u2(
-        ProgressBlock,
-        {
-          categoryHours: weekData.summary,
-          order: progressOrder,
-          totalHours: weekData.totalHours,
-          colorMap,
-          untrackedLabel
-        }
-      ) : null }, index))
-    ] }, monthData.month)) })
-  ] });
-}
-function DayColumnHeader({
-  day,
-  blocks,
-  categoriesConfig,
-  colorMap,
-  untrackedLabel,
-  progressOrder
-}) {
-  const { categoryHours, totalDayHours } = T$1(() => {
-    return buildDailyCategoryHours(blocks, categoriesConfig, untrackedLabel);
-  }, [blocks, categoriesConfig, untrackedLabel]);
-  return /* @__PURE__ */ u2("div", { class: "day-column-header", children: [
-    /* @__PURE__ */ u2("div", { class: "day-header-title", children: dayjs(day).format("MM-DD ddd") }),
-    /* @__PURE__ */ u2("div", { class: "daily-progress-bar", children: /* @__PURE__ */ u2(
-      ProgressBlock,
-      {
-        categoryHours,
-        order: progressOrder,
-        totalHours: totalDayHours,
-        colorMap,
-        untrackedLabel
-      }
-    ) })
-  ] });
-}
-const hexToRgba = (hex, alpha2 = 0.35) => {
-  const h2 = hex.replace("#", "");
-  const bigint = parseInt(h2, 16);
-  return `rgba(${bigint >> 16 & 255},${bigint >> 8 & 255},${bigint & 255},${alpha2})`;
-};
-const formatTimeMinute = (minute) => {
-  const h2 = Math.floor(minute / 60);
-  const m2 = minute % 60;
-  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
-};
-const generateTaskBlockTitle = (block) => {
-  const isCrossNight = block.startMinute % 1440 + block.duration > 1440;
-  if (isCrossNight) {
-    const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, "minute");
-    const endDateTime = startDateTime.add(block.duration, "minute");
-    const startFormat = startDateTime.format("HH:mm");
-    const endFormat = endDateTime.format("HH:mm");
-    return `任务: ${block.pureText}
-时间: ${startFormat} - ${endFormat}
-${RECORD_GESTURE_HINT}`;
-  } else {
-    const startTime = formatTimeMinute(block.startMinute);
-    const endTime = formatTimeMinute(block.endMinute);
-    return `任务: ${block.pureText}
-时间: ${startTime} - ${endTime}
-${RECORD_GESTURE_HINT}`;
-  }
-};
-function DayColumnBody({
-  day,
-  blocks,
-  hourHeight,
-  categoriesConfig,
-  colorMap,
-  maxHours,
-  onColumnClick,
-  onUpdateTaskTime,
-  onOpenRecord,
-  onOpenRecordOrigin,
-  onNotice,
-  onEditTask,
-  onAlignPrev,
-  onAlignNext
-}) {
-  const lastTouchRef = A$1(null);
-  const suppressClickUntilRef = A$1(0);
-  const tryUpdateTaskTime = async (taskId, updates) => {
-    if (!onUpdateTaskTime) {
-      onNotice?.("未提供保存处理器，无法更新工作 Session 时间");
-      return;
-    }
-    try {
-      await onUpdateTaskTime(taskId, updates);
-    } catch (e2) {
-      onNotice?.("更新工作 Session 时间失败");
-    }
-  };
-  const handleEdit = (block) => {
-    if (onEditTask) {
-      onEditTask(block);
-      return;
-    }
-    void onOpenRecord?.({ ...block, id: block.taskRecordId });
-  };
-  const handleAlignToPrev = (block, prevBlock) => {
-    if (onAlignPrev) {
-      onAlignPrev(block, prevBlock);
-    } else {
-      if (!prevBlock) return;
-      const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
-      const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
-      const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
-      void tryUpdateTaskTime(block.id, { time: newStartTimeString });
-    }
-  };
-  const handleAlignToNext = (block, nextBlock) => {
-    if (onAlignNext) {
-      onAlignNext(block, nextBlock);
-    } else {
-      if (!nextBlock) return;
-      const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
-      const newDuration = block.duration + deltaDuration;
-      if (newDuration <= 0) {
-        onNotice?.("无法对齐：任务时长将变为负数或零");
-        return;
-      }
-      void tryUpdateTaskTime(block.id, { duration: newDuration });
-    }
-  };
-  const handleBodyClick = (event) => {
-    if (Date.now() < suppressClickUntilRef.current) return;
-    onColumnClick(day, event);
-  };
-  const handleBodyTouchEnd = (event) => {
-    const touch = event.changedTouches?.[0];
-    if (!touch) return;
-    const now2 = Date.now();
-    const previous = lastTouchRef.current;
-    const isDoubleTap = !!previous && now2 - previous.time <= 350 && Math.abs(previous.x - touch.clientX) <= 24 && Math.abs(previous.y - touch.clientY) <= 24;
-    lastTouchRef.current = {
-      time: now2,
-      x: touch.clientX,
-      y: touch.clientY
-    };
-    suppressClickUntilRef.current = now2 + 450;
-    if (!isDoubleTap) return;
-    event.preventDefault();
-    onColumnClick(day, event);
-    lastTouchRef.current = null;
-  };
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "day-column-body",
-      style: { height: `${maxHours * hourHeight}px` },
-      onClick: (e2) => handleBodyClick(e2),
-      onTouchEnd: (e2) => handleBodyTouchEnd(e2),
-      children: blocks.map((block, index) => {
-        const top2 = block.blockStartMinute / 60 * hourHeight;
-        const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
-        const category = mapTaskToCategory(block.fileName || "", categoriesConfig);
-        const color2 = colorMap[category] || "#ccc";
-        const prevBlock = index > 0 ? blocks[index - 1] : null;
-        const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
-        const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
-        const blockGesture = createRecordGestureHandlers({ item: { ...block, id: block.taskRecordId }, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block) });
-        return /* @__PURE__ */ u2(
-          "div",
-          {
-            class: "timeline-task-block",
-            title: generateTaskBlockTitle(block),
-            style: { top: `${top2}px`, height: `${Math.max(height2, 2)}px` },
-            onClick: (e2) => e2.stopPropagation(),
-            onTouchStart: (e2) => e2.stopPropagation(),
-            onTouchEnd: (e2) => e2.stopPropagation(),
-            children: [
-              /* @__PURE__ */ u2(
-                "a",
-                {
-                  class: "timeline-task-link",
-                  role: "button",
-                  tabIndex: 0,
-                  onClick: blockGesture.onClick,
-                  onDblClick: blockGesture.onDblClick,
-                  onTouchEnd: blockGesture.onTouchEnd,
-                  onKeyDown: blockGesture.onKeyDown,
-                  children: [
-                    /* @__PURE__ */ u2("div", { class: "timeline-task-indicator", style: { background: color2 } }),
-                    /* @__PURE__ */ u2("div", { class: "timeline-task-content", style: { background: hexToRgba(color2) }, children: [
-                      block.icon ? /* @__PURE__ */ u2("span", { class: "timeline-task-icon", children: block.icon }) : null,
-                      /* @__PURE__ */ u2("span", { class: "timeline-task-title", children: block.title || block.pureText })
-                    ] })
-                  ]
-                }
-              ),
-              /* @__PURE__ */ u2("div", { class: "task-buttons", children: [
-                /* @__PURE__ */ u2(
-                  "button",
-                  {
-                    class: "task-button",
-                    title: "向前对齐",
-                    disabled: !prevBlock,
-                    onClick: () => handleAlignToPrev(block, prevBlock),
-                    children: "⇡"
-                  }
-                ),
-                /* @__PURE__ */ u2(
-                  "button",
-                  {
-                    class: "task-button",
-                    title: "向后对齐",
-                    disabled: !canAlignToNext,
-                    onClick: () => handleAlignToNext(block, nextBlock),
-                    children: "⇣"
-                  }
-                ),
-                /* @__PURE__ */ u2(
-                  "button",
-                  {
-                    class: "task-button",
-                    title: "精确编辑",
-                    onClick: () => handleEdit(block),
-                    children: "✎"
-                  }
-                )
-              ] })
-            ]
-          },
-          block.id + block.day
-        );
-      })
-    }
-  );
-}
-function buildTimelineDayColumns(dailyViewData) {
-  return dailyViewData.dateRangeDays.map((day) => {
-    const dayStr = day.format("YYYY-MM-DD");
-    return {
-      day: dayStr,
-      blocks: dailyViewData.blocksByDay[dayStr] || []
-    };
-  });
-}
-function buildTimelineTimeAxisRows(maxHours, hourHeight) {
-  return Array.from({ length: Math.max(0, maxHours) + 1 }, (_2, hour) => ({
-    hour,
-    label: hour > 0 && hour % 2 === 0 ? `${hour}:00` : "",
-    height: `${hourHeight}px`
-  }));
-}
-function TimelineDailyView({
-  zoomHandlers,
-  timeAxisWidth,
-  summaryCategoryHours,
-  totalSummaryHours,
-  dailyViewData,
-  categoriesConfig,
-  hourHeight,
-  maxHours,
-  colorMap,
-  progressOrder,
-  untrackedLabel,
-  onOpenRecordOrigin,
-  onUpdateTaskTime,
-  onOpenRecord,
-  onNotice,
-  onColumnClick
-}) {
-  const dayColumns = buildTimelineDayColumns(dailyViewData);
-  const timeAxisRows = buildTimelineTimeAxisRows(maxHours, hourHeight);
-  return /* @__PURE__ */ u2("div", { class: "timeline-view-wrapper", ...zoomHandlers, children: [
-    /* @__PURE__ */ u2("div", { class: "timeline-sticky-header", children: [
-      /* @__PURE__ */ u2("div", { class: "summary-progress-container", style: { flex: `0 0 ${timeAxisWidth}px` }, children: [
-        /* @__PURE__ */ u2("div", { class: "summary-title", children: "总结" }),
-        /* @__PURE__ */ u2("div", { class: "summary-content", children: totalSummaryHours > 0 && /* @__PURE__ */ u2(
-          ProgressBlock,
-          {
-            categoryHours: summaryCategoryHours,
-            order: progressOrder,
-            totalHours: totalSummaryHours,
-            colorMap,
-            untrackedLabel
-          }
-        ) })
-      ] }),
-      dayColumns.map(({ day, blocks }) => /* @__PURE__ */ u2(
-        DayColumnHeader,
-        {
-          day,
-          blocks,
-          categoriesConfig,
-          colorMap,
-          untrackedLabel,
-          progressOrder
-        },
-        day
-      ))
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "timeline-scrollable-body", children: [
-      /* @__PURE__ */ u2("div", { class: "time-axis", style: { flex: `0 0 ${timeAxisWidth}px` }, children: timeAxisRows.map((row) => /* @__PURE__ */ u2("div", { class: "time-axis-hour", style: { height: row.height }, children: row.label }, row.hour)) }),
-      dayColumns.map(({ day, blocks }) => /* @__PURE__ */ u2(
-        DayColumnBody,
-        {
-          onOpenRecordOrigin,
-          day,
-          blocks,
-          hourHeight,
-          categoriesConfig,
-          colorMap,
-          maxHours,
-          onUpdateTaskTime,
-          onOpenRecord,
-          onNotice,
-          onColumnClick
-        },
-        day
-      ))
-    ] })
-  ] });
-}
-function TimelineViewView(props) {
-  const {
-    timelineTasksCount,
-    isSummaryView,
-    summaryData,
-    colorMap,
-    progressOrder,
-    untrackedLabel,
-    zoomHandlers,
-    timeAxisWidth,
-    summaryCategoryHours,
-    totalSummaryHours,
-    dailyViewData,
-    categoriesConfig,
-    hourHeight,
-    maxHours,
-    onOpenRecordOrigin,
-    onUpdateTaskTime,
-    onOpenRecord,
-    onNotice,
-    onColumnClick
-  } = props;
-  if (timelineTasksCount === 0) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
-  }
-  if (isSummaryView) {
-    return /* @__PURE__ */ u2(
-      TimelineSummaryTable,
-      {
-        summaryData,
-        colorMap,
-        progressOrder,
-        untrackedLabel
-      }
-    );
-  }
-  if (!dailyViewData) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
-  }
-  return /* @__PURE__ */ u2(
-    TimelineDailyView,
-    {
-      zoomHandlers,
-      timeAxisWidth,
-      summaryCategoryHours,
-      totalSummaryHours,
-      dailyViewData,
-      categoriesConfig,
-      hourHeight,
-      maxHours,
-      colorMap,
-      progressOrder,
-      untrackedLabel,
-      onOpenRecordOrigin,
-      onUpdateTaskTime,
-      onOpenRecord,
-      onNotice,
-      onColumnClick
-    }
-  );
-}
-function localDate(value) {
-  const date2 = new Date(value);
-  if (!Number.isFinite(date2.getTime())) return null;
-  const y2 = date2.getFullYear();
-  const m2 = String(date2.getMonth() + 1).padStart(2, "0");
-  const d2 = String(date2.getDate()).padStart(2, "0");
-  return `${y2}-${m2}-${d2}`;
-}
-function localMinute(value) {
-  const date2 = new Date(value);
-  if (!Number.isFinite(date2.getTime())) return null;
-  return date2.getHours() * 60 + date2.getMinutes() + date2.getSeconds() / 60;
-}
-function displayText(task) {
-  return String(task.content || task.editableText || task.title || "").trim();
-}
-function processItemsToTimelineTasks(records) {
-  const byId = new Map(records.map((record) => [record.id, record]));
-  const timelineTasks = [];
-  for (const record of records) {
-    const session = asTaskSessionRecord(record);
-    if (!session) continue;
-    const task = byId.get(session.taskId);
-    if (!task || task.coreBlock !== "task") continue;
-    const startedMs = Date.parse(session.sessionStartedAt);
-    const endedMs = Date.parse(session.sessionEndedAt);
-    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs < startedMs) continue;
-    const actualStartDate = localDate(session.sessionStartedAt);
-    const startMinute = localMinute(session.sessionStartedAt);
-    if (!actualStartDate || startMinute == null) continue;
-    const duration2 = Number(session.sessionDurationMinutes);
-    if (!Number.isFinite(duration2) || duration2 < 0) continue;
-    const endMinute = startMinute + duration2;
-    const fileName = task.file?.basename || task.filename || "";
-    if (!fileName) continue;
-    timelineTasks.push({
-      ...task,
-      // A Timeline row represents an execution fact, so its identity is the Session identity.
-      id: session.id,
-      sessionRecordId: session.id,
-      taskRecordId: task.id,
-      date: actualStartDate,
-      doneDate: actualStartDate,
-      startTime: new Date(startedMs).toTimeString().slice(0, 5),
-      endTime: new Date(endedMs).toTimeString().slice(0, 5),
-      duration: duration2,
-      startMinute,
-      endMinute,
-      pureText: displayText(task),
-      fileName,
-      actualStartDate
-    });
-  }
-  return timelineTasks;
-}
-dayjs.extend(weekOfYear);
-dayjs.extend(isoWeek);
-dayjs.extend(isBetween);
-function resolveTimelineConfig(module2, injectedModel) {
-  if (injectedModel?.config) return injectedModel.config;
-  const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
-  const userConfig = module2?.viewConfig || {};
-  return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
-}
-function buildTimelineColorMap(config2) {
-  const colorMap = {};
-  for (const categoryName in config2.categories || {}) {
-    colorMap[categoryName] = config2.categories[categoryName].color;
-  }
-  colorMap[config2.UNTRACKED_LABEL] = "#9ca3af";
-  return colorMap;
-}
-function resolveTimelineTasks(items, records = items) {
-  const visibleTaskIds = new Set(items.filter((item) => item.coreBlock === "task").map((item) => item.id));
-  const timelineRecords = records.filter((record) => record.coreBlock === "task" && visibleTaskIds.has(record.id) || record.coreBlock === "task-session" && !!record.taskId && visibleTaskIds.has(record.taskId));
-  return processItemsToTimelineTasks(timelineRecords);
-}
-function buildTimelineSummaryData(args) {
-  if (!args.isSummaryView) return [];
-  const viewStart = dayjs(args.dateRange[0]);
-  const viewEnd = dayjs(args.dateRange[1]);
-  const tasksInRange = args.timelineTasks.filter((task) => dayjs(task.doneDate).isBetween(viewStart, viewEnd, "day", "[]"));
-  return buildMonthlyAndWeeklySummary(tasksInRange, args.config);
-}
-function buildTimelineRenderModel(args) {
-  const { items, records = items, module: module2, dateRange, currentView, injectedModel } = args;
-  const config2 = resolveTimelineConfig(module2, injectedModel?.config ? { config: injectedModel.config } : void 0);
-  const timelineTasks = injectedModel?.timelineTasks ?? resolveTimelineTasks(items, records);
-  const colorMap = buildTimelineColorMap(config2);
-  const isSummaryView = currentView === "年" || currentView === "季";
-  const summaryData = injectedModel?.summaryData ?? buildTimelineSummaryData({ timelineTasks, dateRange, config: config2, isSummaryView });
-  const summaryCategoryHours = injectedModel?.summaryCategoryHours ?? (isSummaryView ? {} : buildSummaryCategoryHours(timelineTasks, dateRange, config2) || {});
-  const dailyViewData = injectedModel?.dailyViewData ?? (isSummaryView ? null : buildDailyViewData(timelineTasks, dateRange));
-  const totalSummaryHours = Object.values(summaryCategoryHours).reduce((sum, hours) => sum + Number(hours || 0), 0);
-  return { config: config2, colorMap, timelineTasks, dailyViewData, isSummaryView, summaryData, summaryCategoryHours, totalSummaryHours };
-}
-const TIME_AXIS_WIDTH = 90;
-function TimelineView({
-  items,
-  dateRange,
-  module: module2,
-  currentView,
-  onOpenRecordOrigin,
-  onUpdateTaskTime,
-  onCreateFromTimeline,
-  onOpenRecord,
-  onNotice,
-  inputSettings,
-  records
-}) {
-  const inputBlocks = inputSettings?.blocks || [];
-  const renderModel = T$1(
-    () => buildTimelineRenderModel({ items, records, dateRange, module: module2, currentView }),
-    [items, records, dateRange, module2, currentView]
-  );
-  const { hourHeight, zoomHandlers } = useTimelineZoom({
-    defaultHeight: renderModel.config.defaultHourHeight
-  });
-  const handleColumnClick = q$1(
-    (day, e2) => {
-      onCreateFromTimeline?.({
-        day,
-        event: e2,
-        inputBlocks,
-        hourHeight,
-        dayBlocks: renderModel.dailyViewData?.blocksByDay[day] || []
-      });
-    },
-    [onCreateFromTimeline, inputBlocks, hourHeight, renderModel.dailyViewData]
-  );
-  return /* @__PURE__ */ u2(
-    TimelineViewView,
-    {
-      timelineTasksCount: renderModel.timelineTasks.length,
-      isSummaryView: renderModel.isSummaryView,
-      summaryData: renderModel.summaryData,
-      colorMap: renderModel.colorMap,
-      progressOrder: renderModel.config.progressOrder,
-      untrackedLabel: renderModel.config.UNTRACKED_LABEL,
-      zoomHandlers,
-      timeAxisWidth: TIME_AXIS_WIDTH,
-      summaryCategoryHours: renderModel.summaryCategoryHours,
-      totalSummaryHours: renderModel.totalSummaryHours,
-      dailyViewData: renderModel.dailyViewData,
-      categoriesConfig: renderModel.config.categories,
-      hourHeight,
-      maxHours: renderModel.config.MAX_HOURS_PER_DAY,
-      onOpenRecordOrigin,
-      onUpdateTaskTime,
-      onOpenRecord,
-      onNotice,
-      onColumnClick: handleColumnClick
-    }
-  );
-}
-function buildEventTimelineDisplayFields(module2) {
-  return normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
-}
-function buildEventTimelineGroupFields(module2) {
-  return normalizeViewGroupFields(module2.groupFields || []);
-}
-function buildEventTimelineViewConfig(module2) {
-  const viewConfig = module2.viewConfig || {};
-  return {
-    timeField: viewConfig.timeField || "date",
-    titleField: viewConfig.titleField || "title",
-    contentField: viewConfig.contentField || "content",
-    maxContentLength: Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160
-  };
-}
-function getEventTimelineItemTime(item, timeField) {
-  const raw = readField(item, timeField);
-  if (!raw) return null;
-  const parsed = dayjs(raw);
-  return parsed.isValid() ? parsed : null;
-}
-function filterEventTimelineItemsByDateRange(args) {
-  const { items, dateRange, timeField, injectedFilteredItems } = args;
-  if (injectedFilteredItems) return injectedFilteredItems;
-  return executeRecordQuery(items, {
-    date: { range: dateRange, field: timeField, mode: "strict", precision: "minute" },
-    sort: [{ field: timeField, dir: "asc" }]
-  }).items;
-}
-function buildEventTimelineGroupedTree(args) {
-  const { filteredItems, groupFields, goals = [] } = args;
-  if (!groupFields.length) return null;
-  return executeRecordQuery(filteredItems, {
-    groupBy: groupFields,
-    groupContext: { goals }
-  }).groupTree;
-}
-function cleanEventTimelineDisplayText(value, maxContentLength) {
-  const text2 = String(value ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-  if (!text2) return "";
-  const compact = text2.replace(/\s+/g, " ").trim();
-  if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
-  return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
-}
-function getEventTimelineTaskDisplayTitle(args) {
-  const { item, titleField, contentField: contentField2, maxContentLength } = args;
-  const fromContent = cleanEventTimelineDisplayText(readField(item, contentField2), maxContentLength);
-  if (fromContent) return fromContent;
-  return cleanEventTimelineDisplayText(readField(item, "content"), maxContentLength) || cleanEventTimelineDisplayText(readField(item, titleField), maxContentLength) || item.title || "";
-}
-function buildEventTimelineRenderModel(args) {
-  const { items, dateRange, module: module2, goals = [] } = args;
-  const displayFields = buildEventTimelineDisplayFields(module2);
-  const groupFields = buildEventTimelineGroupFields(module2);
-  const viewConfig = buildEventTimelineViewConfig(module2);
-  const filteredItems = filterEventTimelineItemsByDateRange({
-    items,
-    dateRange,
-    timeField: viewConfig.timeField
-  });
-  const groupedTree = buildEventTimelineGroupedTree({ filteredItems, groupFields, goals });
-  return { displayFields, groupFields, viewConfig, ...viewConfig, filteredItems, groupedTree };
-}
-function EventTimelineEventList(props) {
-  const {
-    items,
-    displayFields,
-    getItemTime,
-    titleField,
-    contentField: contentField2,
-    maxContentLength,
-    resolveResourcePath,
-    onOpenRecordOrigin,
-    messageRenderPort,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes,
-    onOpenRecord
-  } = props;
-  let lastDate = "";
-  return /* @__PURE__ */ u2(S, { children: items.map((item, index) => {
-    const t3 = getItemTime(item);
-    const dateLabel = t3 ? t3.format("YYYY-MM-DD") : "";
-    const timeLabel = t3 ? t3.format("HH:mm") : "";
-    const showDate = dateLabel !== lastDate;
-    if (showDate) lastDate = dateLabel;
-    const titleForKey = readField(item, titleField) || readField(item, "title") || "";
-    const taskDisplayTitle = item.coreBlock === "task" ? getEventTimelineTaskDisplayTitle({ item, titleField, contentField: contentField2, maxContentLength }) : "";
-    return /* @__PURE__ */ u2("div", { class: `et-event ${index === 0 ? "et-event--first" : ""} ${index === items.length - 1 ? "et-event--last" : ""}`, children: [
-      /* @__PURE__ */ u2("div", { class: "et-event-date", children: [
-        showDate && t3 && /* @__PURE__ */ u2("div", { class: "et-date-label", children: dateLabel }),
-        item.coreBlock === "task" && /* @__PURE__ */ u2("div", { class: "et-time-label", children: timeLabel })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "et-line", children: /* @__PURE__ */ u2("div", { class: "et-dot" }) }),
-      /* @__PURE__ */ u2("div", { class: "et-event-card", children: item.coreBlock === "task" ? /* @__PURE__ */ u2(
-        TaskRow,
-        {
-          item,
-          onMarkDone: (id) => onMarkDone?.(id),
-          resolveResourcePath,
-          onOpenRecordOrigin,
-          timerService,
-          timer: timers.find((timer) => timer.taskId === item.id),
-          allThemes,
-          displayTitle: taskDisplayTitle,
-          showFields: [],
-          onOpenRecord
-        }
-      ) : /* @__PURE__ */ u2(
-        BlockItem,
-        {
-          item,
-          fields: displayFields,
-          isNarrow: false,
-          resolveResourcePath,
-          onOpenRecordOrigin,
-          messageRenderPort,
-          allThemes,
-          onOpenRecord
-        }
-      ) })
-    ] }, `${dateLabel}-${timeLabel}-${titleForKey}-${index}`);
-  }) });
-}
-function EventTimelineViewView(props) {
-  const {
-    filteredItems,
-    groupedTree,
-    resolveResourcePath,
-    onOpenRecordOrigin,
-    displayFields,
-    getItemTime,
-    titleField,
-    contentField: contentField2,
-    maxContentLength,
-    messageRenderPort,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes,
-    onOpenRecord
-  } = props;
-  const renderEventList = (items) => /* @__PURE__ */ u2(
-    EventTimelineEventList,
-    {
-      items,
-      displayFields,
-      getItemTime,
-      titleField,
-      contentField: contentField2,
-      maxContentLength,
-      resolveResourcePath,
-      onOpenRecordOrigin,
-      messageRenderPort,
-      onMarkDone,
-      timerService,
-      timers,
-      allThemes,
-      onOpenRecord
-    }
-  );
-  if (filteredItems.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "event-timeline-empty", children: "当前时间范围内没有事件记录。" });
-  }
-  if (!groupedTree) {
-    return /* @__PURE__ */ u2("div", { class: "event-timeline-view", children: /* @__PURE__ */ u2("div", { class: "et-ungrouped", children: renderEventList(filteredItems) }) });
-  }
-  return /* @__PURE__ */ u2(
-    GroupedContainer,
-    {
-      nodes: groupedTree,
-      classNames: {
-        root: "event-timeline-view",
-        group: "et-group",
-        title: "et-group-title",
-        content: "et-group-content",
-        toggleIcon: "et-group-toggle-icon",
-        label: "et-group-label"
-      },
-      renderLeaf: (leafItems) => renderEventList(leafItems)
-    }
-  );
-}
-function EventTimelineView(props) {
-  const {
-    items,
-    resolveResourcePath,
-    onOpenRecordOrigin,
-    dateRange,
-    module: module2,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes,
-    goals = [],
-    messageRenderPort,
-    onOpenRecord
-  } = props;
-  const renderModel = T$1(
-    () => buildEventTimelineRenderModel({
-      items,
-      dateRange,
-      module: module2,
-      goals
-    }),
-    [items, dateRange, module2, goals]
-  );
-  const readItemTime = T$1(
-    () => (item) => getEventTimelineItemTime(item, renderModel.viewConfig.timeField),
-    [renderModel.viewConfig.timeField]
-  );
-  return /* @__PURE__ */ u2(
-    EventTimelineViewView,
-    {
-      filteredItems: renderModel.filteredItems,
-      groupedTree: renderModel.groupedTree,
-      resolveResourcePath,
-      onOpenRecordOrigin,
-      displayFields: renderModel.displayFields,
-      getItemTime: readItemTime,
-      titleField: renderModel.viewConfig.titleField,
-      contentField: renderModel.viewConfig.contentField,
-      maxContentLength: renderModel.viewConfig.maxContentLength,
-      messageRenderPort,
-      onMarkDone,
-      timerService,
-      timers,
-      allThemes,
-      onOpenRecord
-    }
-  );
-}
-function getThemeLeafLabel(themePath) {
-  if (!themePath || themePath === "__default__") return "未分类";
-  const segments = parsePath(themePath);
-  const leaf2 = segments[segments.length - 1];
-  return leaf2?.name || themePath;
-}
-function getThemeGroupTitle(themePath) {
-  if (!themePath || themePath === "__default__") return "未分类";
-  const segments = parsePath(themePath);
-  return segments[0]?.name || themePath;
-}
-function filterGoalHeatmapGroups(groups) {
-  return (groups || []).filter((group) => group && Array.isArray(group.entries) && group.entries.length > 0);
-}
-function normalizeHeatmapBlockId(params) {
-  const { candidate, inputSettings, configuredSourceBlockId } = params;
-  const value = String(candidate || "").trim();
-  if (!value) return "";
-  const byId = inputSettings.blocks.find((block) => block.id === value);
-  if (byId) return byId.id;
-  const byCore = inputSettings.blocks.find((block) => block.coreBlockId === value);
-  if (byCore) return byCore.id;
-  const byCategory = inputSettings.blocks.find((block) => block.categoryKey === value || block.name === value);
-  if (byCategory) return byCategory.id;
-  if (configuredSourceBlockId && value === configuredSourceBlockId) {
-    const habit = inputSettings.blocks.find((block) => block.coreBlockId === "core.habit" || block.categoryKey === "打卡" || block.name === "打卡");
-    if (habit) return habit.id;
-  }
-  return value;
-}
-function inferHeatmapBlockIdByTheme(items) {
-  const result = /* @__PURE__ */ new Map();
-  const counts = /* @__PURE__ */ new Map();
-  for (const item of items) {
-    const themePath = getItemThemePath(item);
-    const themeKey = themePath || "__default__";
-    const blockId = typeof item?.templateId === "string" && item.templateId.trim().length > 0 ? item.templateId : typeof item?.categoryKey === "string" && item.categoryKey.trim().length > 0 ? item.categoryKey : "";
-    if (!blockId) continue;
-    if (!counts.has(themeKey)) counts.set(themeKey, /* @__PURE__ */ new Map());
-    const themeCounts = counts.get(themeKey);
-    themeCounts.set(blockId, (themeCounts.get(blockId) || 0) + 1);
-  }
-  counts.forEach((themeCounts, themeKey) => {
-    let bestBlockId = "";
-    let bestCount = -1;
-    themeCounts.forEach((count, blockId) => {
-      if (count > bestCount) {
-        bestCount = count;
-        bestBlockId = blockId;
-      }
-    });
-    if (bestBlockId) result.set(themeKey, bestBlockId);
-  });
-  return result;
-}
-function resolveHeatmapCreateBlockId(params) {
-  const { themePath, item, sourceBlockId, heatmapSourceBlockId, inferredBlockIdByTheme, normalizeBlockId } = params;
-  const rowBlock = normalizeBlockId(sourceBlockId);
-  const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
-  return rowBlock || normalizeBlockId(heatmapSourceBlockId) || normalizeBlockId(itemBlock) || normalizeBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeBlockId(inferredBlockIdByTheme.get("__default__")) || "";
-}
-function buildDayThemeGroups(params) {
-  const { themesToTrack, dataByThemeAndDate } = params;
-  const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-  const groups = [];
-  const groupMap = /* @__PURE__ */ new Map();
-  themesToDisplay.forEach((themePath) => {
-    const title = getThemeGroupTitle(themePath);
-    const label = getThemeLeafLabel(themePath);
-    const entry = {
-      themePath,
-      label,
-      dataForTheme: dataByThemeAndDate.get(themePath) || /* @__PURE__ */ new Map()
-    };
-    const existingGroup = groupMap.get(title);
-    if (existingGroup) {
-      existingGroup.entries.push(entry);
-      return;
-    }
-    const newGroup = { title, entries: [entry] };
-    groupMap.set(title, newGroup);
-    groups.push(newGroup);
-  });
-  return groups;
-}
-function createHeatmapPresetContext(entry) {
-  return {
-    sourceBlockId: entry.sourceBlockId,
-    goalId: entry.goalId,
-    templateId: entry.templateId,
-    templateVariantId: entry.templateVariantId,
-    ratingOptions: entry.ratingOptions
-  };
-}
-function generateCellTooltip(date2, items, displayCount = 0, levelCount = 0, wasEdited = false) {
-  if (!items || items.length === 0) {
-    return `📅 ${date2}
-无记录`;
-  }
-  const latestItem = items[items.length - 1];
-  return [
-    `📅 ${date2}`,
-    `👆 打卡次数: ${displayCount}`,
-    levelCount !== displayCount ? `🏆 等级次数: ${levelCount}` : "",
-    wasEdited ? `✏️ 包含手动编辑` : "",
-    latestItem.rating !== void 0 ? `⭐ 最后评分: ${latestItem.rating}` : "",
-    latestItem.content ? `💭 最后内容: ${latestItem.content}` : "",
-    "",
-    "💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增",
-    items.length === 1 ? "⌨️ Ctrl/⌘+点击：打开该条记录原文" : ""
-  ].filter(Boolean).join("\n");
-}
-function getVisualValue(items, ratingMapping) {
-  return getLatestHeatmapVisualValue(items, ratingMapping);
-}
-function HeatmapCell({
-  date: date2,
-  items,
-  config: config2,
-  ratingMapping,
-  resolveResourcePath,
-  onCellClick,
-  onOpenRecordOrigin,
-  highlightToday = true,
-  emptyLabel
-}) {
-  const today = dayjs().format("YYYY-MM-DD");
-  const isToday = highlightToday && date2 === today;
-  let cellContent = "";
-  let cellStyle = {};
-  const displayCount = items ? items.reduce((sum, i2) => sum + getEffectiveDisplayCount(i2), 0) : 0;
-  const levelCount = items ? items.reduce((sum, i2) => sum + getEffectiveLevelCount(i2), 0) : 0;
-  const wasEdited = items ? items.some((i2) => i2.manuallyEdited) : false;
-  const visualValue = getVisualValue(items || [], ratingMapping);
-  const item = items && items.length > 0 ? items[items.length - 1] : void 0;
-  if (visualValue) {
-    if (isHexColor(visualValue)) {
-      cellStyle.backgroundColor = visualValue;
-    } else if (isImagePath(visualValue)) {
-      const imageUrl = resolveResourcePath?.(visualValue) || visualValue;
-      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-image", children: /* @__PURE__ */ u2("img", { src: imageUrl, alt: "", class: "heatmap-cell-image" }) });
-    } else {
-      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-text", children: /* @__PURE__ */ u2("span", { class: "visual-content", children: visualValue }) });
-    }
-    if (displayCount > 1) {
-      const colors = ["#4A90E2", "#E74C3C", "#F39C12", "#27AE60"];
-      const colorIndex = Math.min(displayCount - 2, colors.length - 1);
-      cellStyle.boxShadow = `0 0 0 1px ${colors[colorIndex]} inset`;
-      cellStyle.border = `1px solid ${colors[colorIndex]}`;
-    }
-  } else {
-    if (displayCount > 0) {
-      const sizeClass = displayCount > 99 ? "large" : displayCount > 9 ? "medium" : "small";
-      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-count", children: /* @__PURE__ */ u2("span", { class: `pure-count ${sizeClass}`, children: displayCount > 999 ? "999+" : displayCount }) });
-    } else if (emptyLabel) {
-      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-empty-label", children: /* @__PURE__ */ u2("span", { class: "empty-label-text", children: emptyLabel }) });
-    }
-  }
-  const title = generateCellTooltip(date2, items, displayCount, levelCount, wasEdited);
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: `heatmap-cell ${isToday ? "current-day" : ""} ${item ? "has-data" : "empty"}`,
-      style: cellStyle,
-      title,
-      role: "button",
-      tabIndex: 0,
-      onClick: (event) => {
-        if (items?.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
-          stopInteractionEvent(event);
-          void onOpenRecordOrigin(items[0]);
-          return;
-        }
-        onCellClick(date2, items);
-      },
-      onKeyDown: (event) => {
-        if (!isKeyboardActivation(event)) return;
-        stopInteractionEvent(event);
-        if (items?.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
-          void onOpenRecordOrigin(items[0]);
-          return;
-        }
-        onCellClick(date2, items);
-      },
-      children: /* @__PURE__ */ u2("div", { class: "heatmap-cell-content", children: cellContent })
-    }
-  );
-}
-function HeatmapDayView({
-  dayDateStr,
-  goalGroupsToDisplay,
-  themesToTrack,
-  dataByThemeAndDate,
-  config: config2,
-  resolveResourcePath,
-  onOpenRecordOrigin,
-  onCellClick,
-  resolveCellRatingMapping
-}) {
-  if (goalGroupsToDisplay.length > 0) {
-    return /* @__PURE__ */ u2("div", { class: "heatmap-goal-day-view", children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section heatmap-day-section", children: [
-      /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
-        /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: goalGroup.label }),
-        /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
-          goalGroup.entries.length,
-          " 个打卡 · ",
-          goalGroup.count,
-          " 条记录"
-        ] })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: goalGroup.entries.map((entry) => {
-        const presetContext = createHeatmapPresetContext(entry);
-        const themeRatingMapping = resolveCellRatingMapping(entry.themePath, presetContext);
-        const dayItems = entry.dataForTheme.get(dayDateStr);
-        return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", title: `${goalGroup.label} · ${entry.label} · ${entry.themePath}`, children: /* @__PURE__ */ u2(
-          HeatmapCell,
-          {
-            date: dayDateStr,
-            items: dayItems,
-            config: config2,
-            ratingMapping: themeRatingMapping,
-            resolveResourcePath,
-            onOpenRecordOrigin,
-            highlightToday: false,
-            emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
-            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, presetContext)
-          }
-        ) }, `${goalGroup.goalPath}:${entry.presetKey || entry.themePath}`);
-      }) })
-    ] }, goalGroup.goalPath)) });
-  }
-  const dayGroups = buildDayThemeGroups({ themesToTrack, dataByThemeAndDate });
-  return /* @__PURE__ */ u2("div", { class: "heatmap-day-view", children: dayGroups.map((group) => /* @__PURE__ */ u2("section", { class: "heatmap-day-section", children: [
-    /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: group.title }),
-    /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: group.entries.map((entry) => {
-      const themeRatingMapping = resolveCellRatingMapping(entry.themePath);
-      const dayItems = entry.dataForTheme.get(dayDateStr);
-      return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", children: /* @__PURE__ */ u2(
-        HeatmapCell,
-        {
-          date: dayDateStr,
-          items: dayItems,
-          config: config2,
-          ratingMapping: themeRatingMapping,
-          resolveResourcePath,
-          onOpenRecordOrigin,
-          highlightToday: false,
-          emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
-          onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath)
-        }
-      ) }, entry.themePath);
-    }) })
-  ] }, group.title)) });
-}
-function HeatmapThemeGroup({
-  normalizedCurrentView,
-  theme,
-  dataForTheme,
-  dateRange,
-  config: config2,
-  resolveResourcePath,
-  onOpenRecordOrigin,
-  verticalLayouts,
-  collapsedThemes,
-  headerRefs,
-  goalPath,
-  keyPrefix = "",
-  entryKey,
-  label,
-  presetContext,
-  onToggleThemeCollapsed,
-  onCellClick,
-  resolveCellRatingMapping
-}) {
-  const rowKey = `${keyPrefix}${entryKey || theme}`;
-  const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
-  const isVertical = normalizedCurrentView === "周" ? false : verticalLayouts.has(rowKey);
-  const isCollapsed = normalizedCurrentView === "年" && collapsedThemes.has(rowKey);
-  const leafLabel2 = label || getThemeLeafLabel(theme);
-  const renderMonthGrid = (monthDate) => {
-    const startOfMonth = monthDate.startOf("month");
-    const endOfMonth = monthDate.endOf("month");
-    const firstWeekday = startOfMonth.isoWeekday();
-    const themeRatingMapping = resolveCellRatingMapping(theme, presetContext);
-    const days = [];
-    for (let i2 = 1; i2 < firstWeekday; i2++) {
-      days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
-    }
-    for (let i2 = 1; i2 <= endOfMonth.date(); i2++) {
-      const dateStr = startOfMonth.clone().date(i2).format("YYYY-MM-DD");
-      const dayItems = dataForTheme.get(dateStr);
-      days.push(
-        /* @__PURE__ */ u2(
-          HeatmapCell,
-          {
-            date: dateStr,
-            items: dayItems,
-            config: config2,
-            ratingMapping: themeRatingMapping,
-            resolveResourcePath,
-            onOpenRecordOrigin,
-            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
-          },
-          dateStr
-        )
-      );
-    }
-    return /* @__PURE__ */ u2("div", { class: "month-section", children: [
-      /* @__PURE__ */ u2("div", { class: "month-label", children: monthDate.format("M月") }),
-      /* @__PURE__ */ u2("div", { class: "heatmap-row calendar", children: days })
-    ] }, monthDate.format("YYYY-MM"));
-  };
-  const renderHeaderCells = () => {
-    const start2 = dayjs(dateRange[0]);
-    const end2 = dayjs(dateRange[1]);
-    const themeRatingMapping = resolveCellRatingMapping(theme, presetContext);
-    switch (normalizedCurrentView) {
-      case "天":
-      case "日":
-      case "day": {
-        const dateStr = start2.format("YYYY-MM-DD");
-        const dayItems = dataForTheme.get(dateStr);
-        return [
-          /* @__PURE__ */ u2(
-            HeatmapCell,
-            {
-              date: dateStr,
-              items: dayItems,
-              config: config2,
-              ratingMapping: themeRatingMapping,
-              resolveResourcePath,
-              onOpenRecordOrigin,
-              onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
-            },
-            dateStr
-          )
-        ];
-      }
-      case "周":
-      case "月": {
-        const cells = [];
-        let currentDate = normalizedCurrentView === "周" ? start2.startOf("isoWeek") : start2.startOf("month");
-        const endDate = normalizedCurrentView === "周" ? start2.endOf("isoWeek") : start2.endOf("month");
-        while (currentDate.isSameOrBefore(endDate, "day")) {
-          const dateStr = currentDate.format("YYYY-MM-DD");
-          const dayItems = dataForTheme.get(dateStr);
-          cells.push(
-            /* @__PURE__ */ u2(
-              HeatmapCell,
-              {
-                date: dateStr,
-                items: dayItems,
-                config: config2,
-                ratingMapping: themeRatingMapping,
-                resolveResourcePath,
-                onOpenRecordOrigin,
-                onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
-              },
-              `${theme}-${dateStr}`
-            )
-          );
-          currentDate = currentDate.add(1, "day");
-        }
-        return cells;
-      }
-      case "年":
-      case "季": {
-        const months = [];
-        let currentMonth = start2.clone().startOf("month");
-        while (currentMonth.isSameOrBefore(end2, "month")) {
-          months.push(renderMonthGrid(currentMonth));
-          currentMonth = currentMonth.add(1, "month");
-        }
-        return months;
-      }
-      default:
-        return [];
-    }
-  };
-  return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${normalizedCurrentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
-    "div",
-    {
-      class: `heatmap-theme-header ${isRowLayout ? "row-inline-layout week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
-      "data-theme": rowKey,
-      ref: (el) => {
-        if (el && theme !== "__default__") {
-          headerRefs.current.set(rowKey, el);
-        }
-      },
-      children: [
-        theme !== "__default__" && /* @__PURE__ */ u2(
-          "div",
-          {
-            class: `heatmap-header-info ${normalizedCurrentView === "年" ? "is-clickable" : ""}`,
-            role: normalizedCurrentView === "年" ? "button" : void 0,
-            tabIndex: normalizedCurrentView === "年" ? 0 : void 0,
-            onClick: () => {
-              if (normalizedCurrentView === "年") onToggleThemeCollapsed(rowKey);
-            },
-            onKeyDown: (event) => {
-              if (normalizedCurrentView !== "年" || !isKeyboardActivation(event)) return;
-              stopInteractionEvent(event);
-              onToggleThemeCollapsed(rowKey);
-            },
-            children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
-              normalizedCurrentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
-              /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel2 })
-            ] })
-          }
-        ),
-        !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells() })
-      ]
-    }
-  ) }, rowKey);
-}
-function HeatmapViewContent({
-  isDayView,
-  normalizedCurrentView,
-  dateRangeStart,
-  dateRange,
-  config: config2,
-  resolveResourcePath,
-  onOpenRecordOrigin,
-  goalGroupsToDisplay,
-  themesToTrack,
-  dataByThemeAndDate,
-  verticalLayouts,
-  collapsedThemes,
-  headerRefs,
-  onToggleThemeCollapsed,
-  onCellClick,
-  resolveCellRatingMapping
-}) {
-  const renderThemeGroup = (params) => /* @__PURE__ */ u2(
-    HeatmapThemeGroup,
-    {
-      ...params,
-      normalizedCurrentView,
-      dateRange,
-      config: config2,
-      resolveResourcePath,
-      onOpenRecordOrigin,
-      verticalLayouts,
-      collapsedThemes,
-      headerRefs,
-      onToggleThemeCollapsed,
-      onCellClick,
-      resolveCellRatingMapping
-    }
-  );
-  if (isDayView) {
-    return /* @__PURE__ */ u2(
-      HeatmapDayView,
-      {
-        dayDateStr: dateRangeStart,
-        goalGroupsToDisplay,
-        themesToTrack,
-        dataByThemeAndDate,
-        config: config2,
-        resolveResourcePath,
-        onOpenRecordOrigin,
-        onCellClick,
-        resolveCellRatingMapping
-      }
-    );
-  }
-  const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
-  const wrapperClass = isRowLayout ? "layout-row" : "layout-grid";
-  if (goalGroupsToDisplay.length > 0) {
-    return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper heatmap-goal-view-wrapper ${wrapperClass}`, children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section", children: [
-      /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
-        /* @__PURE__ */ u2("h3", { class: "heatmap-goal-title", children: goalGroup.label }),
-        /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
-          goalGroup.entries.length,
-          " 个打卡 · ",
-          goalGroup.count,
-          " 条记录"
-        ] })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "heatmap-goal-theme-list", children: goalGroup.entries.map((entry) => renderThemeGroup({
-        theme: entry.themePath,
-        dataForTheme: entry.dataForTheme,
-        goalPath: goalGroup.goalPath,
-        keyPrefix: `${goalGroup.goalPath}\0`,
-        entryKey: entry.presetKey || entry.themePath,
-        label: entry.label,
-        presetContext: createHeatmapPresetContext(entry)
-      })) })
-    ] }, goalGroup.goalPath)) });
-  }
-  const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-  return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme) => renderThemeGroup({
-    theme,
-    dataForTheme: dataByThemeAndDate.get(theme) || /* @__PURE__ */ new Map()
-  })) });
-}
-function shouldSkipHeatmapVerticalLayout(theme, normalizedCurrentView) {
-  if (!theme || theme === "__default__") return true;
-  if (["年", "季"].includes(normalizedCurrentView)) return true;
-  return normalizedCurrentView === "周";
-}
-function resolveHeatmapVerticalLayout(args) {
-  const { theme, normalizedCurrentView, isDayView, containerWidth } = args;
-  if (shouldSkipHeatmapVerticalLayout(theme, normalizedCurrentView)) return null;
-  const threshold = isDayView ? 320 : 600;
-  return containerWidth < threshold;
-}
-function applyHeatmapVerticalLayout(prev2, theme, needsVertical) {
-  const next2 = new Set(prev2);
-  if (needsVertical) next2.add(theme);
-  else next2.delete(theme);
-  return next2;
-}
-function toggleHeatmapCollapsedTheme(prev2, theme) {
-  const next2 = new Set(prev2);
-  if (next2.has(theme)) next2.delete(theme);
-  else next2.add(theme);
-  return next2;
-}
-function themeLeaf(path) {
-  const value = String(path || "").trim();
-  if (!value || value === "__default__") return "未设置主题";
-  const parts = value.split("/").map((part) => part.trim()).filter(Boolean);
-  return parts[parts.length - 1] || value;
-}
-function firstText(value) {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const text2 = firstText(item);
-      if (text2) return text2;
-    }
-    return "";
-  }
-  if (value == null) return "";
-  return String(value).trim();
-}
-function readExtraText(item, key) {
-  return firstText(item.extra?.[key]);
-}
-function itemTemplateId(item) {
-  return firstText(item.templateId) || readExtraText(item, "模板ID") || readExtraText(item, "templateId");
-}
-function itemTemplateVariantId(item) {
-  const heatmapItem = item;
-  return firstText(heatmapItem.templateVariantId) || firstText(heatmapItem.goalTemplateVariantId) || readExtraText(item, "templateVariantId") || readExtraText(item, "goalTemplateVariantId") || readExtraText(item, "预设ID");
-}
-function itemCoreBlock(item) {
-  const raw = firstText(item.coreBlock) || readExtraText(item, "核心Block") || firstText(item.categoryKey) || "";
-  if (raw === "habit" || raw === "打卡") return "core.habit";
-  if (raw === "task" || raw === "任务") return "core.task";
-  if (raw.startsWith("core.")) return raw;
-  return raw;
-}
-function extractRatingOptions(template) {
-  const fields = Array.isArray(template?.fields) ? template.fields : [];
-  const ratingField = fields.find((field) => field?.type === "rating" || field?.semantic === "rating" || field?.key === "评分" || field?.label === "评分");
-  return Array.isArray(ratingField?.options) ? ratingField.options.map((option) => ({ value: option?.value, label: option?.label })).filter((option) => option.value !== void 0 || option.label !== void 0) : [];
-}
-function buildPresetLookups(goalSettings, goals) {
-  const goalPathById = /* @__PURE__ */ new Map();
-  const goalLabelById = /* @__PURE__ */ new Map();
-  for (const goal of goals || []) {
-    const normalized2 = splitGoalPath(goal.goalPath || goal.title || goal.id).goalPath || goal.goalPath || goal.title || goal.id;
-    goalPathById.set(goal.id, normalized2);
-    goalLabelById.set(goal.id, goal.title || splitGoalPath(normalized2).leafGoal || normalized2);
-  }
-  const byTemplateId = /* @__PURE__ */ new Map();
-  const byGoalBlockVariant = /* @__PURE__ */ new Map();
-  const byGoalBlockTheme = /* @__PURE__ */ new Map();
-  const allPresets = [];
-  for (const [presetOriginalIndex, raw] of (goalSettings?.goalTemplates || []).entries()) {
-    const template = raw;
-    const id = firstText(template.id);
-    const goalId = firstText(template.goalId);
-    const coreBlockId = firstText(template.coreBlockId) || firstText(template.blockId);
-    const variantId = firstText(template.variantId) || "default";
-    const defaults = template.defaultValues || {};
-    const goalPath = goalPathById.get(goalId);
-    if (!goalId || !goalPath) continue;
-    const goalLabel = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
-    const rawThemePath = firstText(defaults.themePath);
-    const themePath = rawThemePath && !rawThemePath.includes("{{") ? rawThemePath : firstText(defaults["主题"]);
-    const label = firstText(template.name) || themeLeaf(themePath) || variantId;
-    const key = id || `${goalId}:${coreBlockId}:${variantId}`;
-    const ratingOptions = extractRatingOptions(template);
-    const presetSortOrder = Number.isFinite(Number(template.sortOrder)) ? Number(template.sortOrder) : presetOriginalIndex;
-    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
-    allPresets.push(meta);
-    if (id) byTemplateId.set(id, meta);
-    if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\0${coreBlockId}\0${variantId}`, meta);
-    if (goalId && coreBlockId && themePath) byGoalBlockTheme.set(`${goalId}\0${coreBlockId}\0${themePath}`, meta);
-  }
-  return { byTemplateId, byGoalBlockVariant, byGoalBlockTheme, goalPathById, goalLabelById, allPresets };
-}
-function dateKeyOf(item) {
-  return String(item.date || "").trim();
-}
-function buildHeatmapViewModel(params) {
-  const { items, module: module2, inputSettings, goals = [], goalSettings } = params;
-  const config2 = module2.viewConfig || {};
-  const themesByPath = buildThemesByPathMap(inputSettings.themes);
-  const inferredThemePaths = (() => {
-    const set2 = /* @__PURE__ */ new Set();
-    for (const it of items) {
-      const themePath = getItemThemePath(it);
-      if (themePath) {
-        set2.add(themePath);
-      }
-    }
-    return Array.from(set2);
-  })();
-  const themesToTrack = Array.isArray(config2.themePaths) && config2.themePaths.length > 0 ? config2.themePaths.map((value) => String(value)).filter(Boolean) : inferredThemePaths;
-  const dataByThemeAndDate = buildThemeDataMap(items, themesToTrack);
-  const trackedThemeSet = new Set(themesToTrack || []);
-  const filterByTheme = trackedThemeSet.size > 0;
-  const goalMap = /* @__PURE__ */ new Map();
-  const lookups = buildPresetLookups(goalSettings, goals);
-  const goalOrder = createGoalOrderIndex(goals);
-  function ensureGoalGroup(goalPath, label) {
-    const normalizedGoalPath = goalPath || UNASSIGNED_GOAL_KEY;
-    let goalGroup = goalMap.get(normalizedGoalPath);
-    if (!goalGroup) {
-      goalGroup = { goalPath: normalizedGoalPath, label: label || normalizedGoalPath, count: 0, entries: [] };
-      goalMap.set(normalizedGoalPath, goalGroup);
-    }
-    return goalGroup;
-  }
-  function ensurePresetEntry(goalGroup, meta) {
-    let entry = goalGroup.entries.find((candidate) => candidate.presetKey === meta.presetKey);
-    if (!entry) {
-      entry = {
-        presetKey: meta.presetKey,
-        templateId: meta.templateId,
-        templateVariantId: meta.templateVariantId,
-        sourceBlockId: meta.sourceBlockId,
-        goalId: meta.goalId,
-        ratingOptions: meta.ratingOptions || [],
-        themePath: meta.themePath || "__default__",
-        label: meta.label || themeLeaf(meta.themePath),
-        presetSortOrder: meta.presetSortOrder,
-        presetOriginalIndex: meta.presetOriginalIndex,
-        count: 0,
-        dataForTheme: /* @__PURE__ */ new Map()
-      };
-      goalGroup.entries.push(entry);
-    }
-    if (meta.templateId && !entry.templateId) entry.templateId = meta.templateId;
-    if (meta.templateVariantId && !entry.templateVariantId) entry.templateVariantId = meta.templateVariantId;
-    if (meta.sourceBlockId && !entry.sourceBlockId) entry.sourceBlockId = meta.sourceBlockId;
-    if (meta.goalId && !entry.goalId) entry.goalId = meta.goalId;
-    if (meta.ratingOptions?.length && (!entry.ratingOptions || entry.ratingOptions.length === 0)) entry.ratingOptions = meta.ratingOptions;
-    if (meta.presetSortOrder !== void 0 && entry.presetSortOrder === void 0) entry.presetSortOrder = meta.presetSortOrder;
-    if (meta.presetOriginalIndex !== void 0 && entry.presetOriginalIndex === void 0) entry.presetOriginalIndex = meta.presetOriginalIndex;
-    return entry;
-  }
-  for (const preset of lookups.allPresets) {
-    if (preset.coreBlockId !== "core.habit") continue;
-    const goalGroup = ensureGoalGroup(preset.goalPath, preset.goalLabel);
-    ensurePresetEntry(goalGroup, {
-      presetKey: preset.key,
-      templateId: preset.id,
-      templateVariantId: preset.variantId,
-      sourceBlockId: preset.coreBlockId,
-      goalId: preset.goalId,
-      ratingOptions: preset.ratingOptions,
-      presetSortOrder: preset.presetSortOrder,
-      presetOriginalIndex: preset.presetOriginalIndex,
-      themePath: preset.themePath || "__default__",
-      label: preset.label || themeLeaf(preset.themePath)
-    });
-  }
-  function resolvePresetMeta(item) {
-    const templateId = itemTemplateId(item);
-    if (templateId) {
-      const direct = lookups.byTemplateId.get(templateId);
-      if (direct) return direct;
-    }
-    const goalId = firstText(item.goalId) || readExtraText(item, "目标ID");
-    const coreBlockId = itemCoreBlock(item);
-    const variantId = itemTemplateVariantId(item) || "default";
-    const themePath = getItemThemePath(item);
-    if (goalId && coreBlockId) {
-      return lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0${variantId}`) || (themePath ? lookups.byGoalBlockTheme.get(`${goalId}\0${coreBlockId}\0${themePath}`) : null) || lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0default`) || null;
-    }
-    return null;
-  }
-  for (const item of items || []) {
-    const date2 = dateKeyOf(item);
-    if (!date2) continue;
-    const preset = resolvePresetMeta(item);
-    const themePath = preset?.themePath || getItemThemePath(item) || "__default__";
-    if (!preset && filterByTheme && themePath !== "__default__" && !trackedThemeSet.has(themePath)) continue;
-    const explicitGoalPath = getItemGoalKey(item, goals);
-    const goalPath = preset?.goalPath || (explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : UNASSIGNED_GOAL_KEY);
-    const goalLabel = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
-    const goalGroup = ensureGoalGroup(goalPath, goalLabel);
-    goalGroup.count += 1;
-    const presetKey = preset?.key || `${goalPath}\0${themePath}\0${itemCoreBlock(item) || "habit"}`;
-    const label = preset?.label || themeLeaf(themePath);
-    const entry = ensurePresetEntry(goalGroup, {
-      presetKey,
-      templateId: preset?.id,
-      templateVariantId: preset?.variantId,
-      sourceBlockId: preset?.coreBlockId,
-      goalId: preset?.goalId,
-      ratingOptions: preset?.ratingOptions,
-      presetSortOrder: preset?.presetSortOrder,
-      presetOriginalIndex: preset?.presetOriginalIndex,
-      themePath,
-      label
-    });
-    entry.count += 1;
-    const dayItems = entry.dataForTheme.get(date2) || [];
-    entry.dataForTheme.set(date2, [...dayItems, item]);
-  }
-  const compareEntriesByPresetOrder = (a2, b2) => {
-    const aHasPresetOrder = a2.presetSortOrder !== void 0 || a2.presetOriginalIndex !== void 0 || Boolean(a2.templateId);
-    const bHasPresetOrder = b2.presetSortOrder !== void 0 || b2.presetOriginalIndex !== void 0 || Boolean(b2.templateId);
-    if (aHasPresetOrder !== bHasPresetOrder) return aHasPresetOrder ? -1 : 1;
-    const byPresetSort = (a2.presetSortOrder ?? Number.MAX_SAFE_INTEGER) - (b2.presetSortOrder ?? Number.MAX_SAFE_INTEGER);
-    if (byPresetSort !== 0) return byPresetSort;
-    const byOriginal = (a2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER) - (b2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER);
-    if (byOriginal !== 0) return byOriginal;
-    return a2.label.localeCompare(b2.label, "zh-CN");
-  };
-  const goalGroups = Array.from(goalMap.values()).map((group) => ({
-    ...group,
-    entries: group.entries.sort(compareEntriesByPresetOrder)
-  })).sort((a2, b2) => goalOrder.compareGoalPaths(a2.goalPath, b2.goalPath));
-  return { themesByPath, themesToTrack, dataByThemeAndDate, goalGroups };
-}
-function HeatmapView({
-  items,
-  resolveResourcePath,
-  dateRange,
-  module: module2,
-  currentView,
-  inputSettings,
-  onOpenHeatmapCreate,
-  onOpenCheckinManager,
-  onOpenRecordOrigin,
-  onNotice,
-  goals = [],
-  goalSettings
-}) {
-  const config2 = T$1(
-    () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module2.viewConfig }),
-    [module2.viewConfig]
-  );
-  const ratingMappingsCache = T$1(() => new RatingMappingCache(), []);
-  const normalizedCurrentView = currentView === "日" || currentView === "day" ? "天" : currentView;
-  const isDayView = normalizedCurrentView === "天";
-  const dataModel = T$1(() => buildHeatmapViewModel({
-    items,
-    module: module2,
-    inputSettings,
-    goals,
-    goalSettings
-  }), [items, module2, inputSettings, goals, goalSettings]);
-  const themesByPath = dataModel.themesByPath;
-  const themesToTrack = dataModel.themesToTrack;
-  const dataByThemeAndDate = dataModel.dataByThemeAndDate;
-  const goalGroupsToDisplay = T$1(() => filterGoalHeatmapGroups(dataModel.goalGroups), [dataModel.goalGroups]);
-  const resolveBlockId = (candidate) => normalizeHeatmapBlockId({
-    candidate,
-    inputSettings,
-    configuredSourceBlockId: config2.sourceBlockId
-  });
-  const heatmapSourceBlockId = resolveBlockId(config2.sourceBlockId);
-  const resolveCellRatingMapping = (themePath, presetContext) => {
-    if (presetContext?.ratingOptions?.length) {
-      return buildHeatmapRatingMapping(presetContext.ratingOptions);
-    }
-    return ratingMappingsCache.get(
-      inputSettings,
-      heatmapSourceBlockId || "",
-      themePath,
-      themesByPath
-    );
-  };
-  const inferredBlockIdByTheme = T$1(() => inferHeatmapBlockIdByTheme(items), [items]);
-  const resolveCreateBlockId = (themePath, item, sourceBlockId) => {
-    return resolveHeatmapCreateBlockId({
-      themePath,
-      item,
-      sourceBlockId,
-      heatmapSourceBlockId,
-      inferredBlockIdByTheme,
-      normalizeBlockId: resolveBlockId
-    });
-  };
-  const openQuickCreate = (date2, item, themePath, goalPath, presetContext) => {
-    if (!onOpenHeatmapCreate) {
-      onNotice?.("未提供创建处理器，无法创建记录");
-      return;
-    }
-    onOpenHeatmapCreate({
-      sourceBlockId: resolveCreateBlockId(themePath, item, presetContext?.sourceBlockId),
-      date: date2,
-      item,
-      themePath,
-      goalPath,
-      goalId: presetContext?.goalId,
-      templateId: presetContext?.templateId,
-      templateVariantId: presetContext?.templateVariantId,
-      themesByPath
-    });
-  };
-  const openCellRecordManager = (date2, itemsForDay, themePath, goalPath, presetContext) => {
-    if (!onOpenCheckinManager) {
-      onNotice?.("未提供记录管理处理器，无法打开记录列表");
-      return;
-    }
-    onOpenCheckinManager({
-      date: date2,
-      items: itemsForDay,
-      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath, goalPath, presetContext)
-    });
-  };
-  const handleCellClick = (date2, dayItems, themePath, goalPath, presetContext) => {
-    const itemsForDay = dayItems || [];
-    if (itemsForDay.length === 0) {
-      openQuickCreate(date2, void 0, themePath, goalPath, presetContext);
-      return;
-    }
-    openCellRecordManager(date2, itemsForDay, themePath, goalPath, presetContext);
-  };
-  const [verticalLayouts, setVerticalLayouts] = d(/* @__PURE__ */ new Set());
-  const [collapsedThemes, setCollapsedThemes] = d(/* @__PURE__ */ new Set());
-  const headerRefs = A$1(/* @__PURE__ */ new Map());
-  const toggleThemeCollapsed = (theme) => {
-    setCollapsedThemes((prev2) => toggleHeatmapCollapsedTheme(prev2, theme));
-  };
-  const checkLayout = (theme, headerElement) => {
-    const needsVertical = resolveHeatmapVerticalLayout({
-      theme,
-      normalizedCurrentView,
-      isDayView,
-      containerWidth: headerElement?.clientWidth ?? 0
-    });
-    if (needsVertical === null) return;
-    setVerticalLayouts((prev2) => applyHeatmapVerticalLayout(prev2, theme, needsVertical));
-  };
-  y(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
-      entries.forEach((entry) => {
-        const element = entry.target;
-        const theme = element.dataset.theme;
-        if (theme) {
-          checkLayout(theme, element);
-        }
-      });
-    });
-    headerRefs.current.forEach((element, theme) => {
-      resizeObserver.observe(element);
-      checkLayout(theme, element);
-    });
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [themesToTrack, normalizedCurrentView]);
-  const dateRangeStart = T$1(() => dayjs(dateRange[0]).format("YYYY-MM-DD"), [dateRange]);
-  return /* @__PURE__ */ u2("div", { class: "heatmap-container", children: /* @__PURE__ */ u2(
-    HeatmapViewContent,
-    {
-      isDayView,
-      normalizedCurrentView,
-      dateRangeStart,
-      dateRange,
-      config: config2,
-      resolveResourcePath,
-      onOpenRecordOrigin,
-      goalGroupsToDisplay,
-      themesToTrack,
-      dataByThemeAndDate,
-      verticalLayouts,
-      collapsedThemes,
-      headerRefs,
-      onToggleThemeCollapsed: toggleThemeCollapsed,
-      onCellClick: handleCellClick,
-      resolveCellRatingMapping
-    }
-  ) });
-}
-function calculateSmartHeight(count, allCounts, _displayMode, minVisibleHeight) {
-  if (count === 0) return 0;
-  const nonZeroCounts = allCounts.filter((c2) => c2 > 0);
-  if (nonZeroCounts.length === 0) return 0;
-  const maxCount = Math.max(...nonZeroCounts);
-  let height2 = count / maxCount * 100;
-  if (height2 > 0 && height2 < minVisibleHeight) {
-    height2 = minVisibleHeight;
-  }
-  return Math.min(height2, 100);
-}
-function ChartBlock({
-  data,
-  label,
-  onCellClick,
-  categories,
-  cellIdentifier,
-  isCompact = false,
-  isNarrow = false,
-  displayMode = "smart",
-  minVisibleHeight = 15,
-  onOpenRecordOrigin,
-  bucketAccessor = (item) => getBasePath(item.categoryKey)
-}) {
-  const counts = data.counts;
-  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-  const chartCategories = categories;
-  const allCounts = chartCategories.map((cat) => counts[cat.name] || 0);
-  const categoryHeights = T$1(() => {
-    return chartCategories.map((cat) => {
-      const count = counts[cat.name] || 0;
-      return calculateSmartHeight(count, allCounts, displayMode, minVisibleHeight);
-    });
-  }, [counts, chartCategories, displayMode, minVisibleHeight, allCounts]);
-  const containerClasses = [
-    "sv-chart-block",
-    isCompact ? "is-compact" : "",
-    isNarrow ? "is-narrow" : "",
-    total === 0 ? "is-empty" : ""
-  ].filter(Boolean).join(" ");
-  const openBlocks = (event, blocks, identifier2, title) => {
-    stopInteractionEvent(event);
-    if (blocks.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
-      void onOpenRecordOrigin(blocks[0]);
-      return;
-    }
-    onCellClick(identifier2, event.currentTarget, blocks, title);
-  };
-  const openAll = (event) => {
-    openBlocks(event, data.blocks, cellIdentifier("全部"), `${label} · 全部`);
-  };
-  const openCategory = (event, name, displayName) => {
-    const blocks = data.blocks.filter((block) => bucketAccessor(block) === name);
-    openBlocks(event, blocks, cellIdentifier(name), `${label} · ${displayName}`);
-  };
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: containerClasses,
-      role: "button",
-      tabIndex: 0,
-      title: data.blocks.length === 1 && onOpenRecordOrigin ? `${label} · Ctrl/⌘+点击打开原文` : label,
-      onClick: openAll,
-      onKeyDown: (event) => {
-        if (!isKeyboardActivation(event)) return;
-        openAll(event);
-      },
-      children: [
-        /* @__PURE__ */ u2("div", { class: "sv-chart-label", children: label }),
-        /* @__PURE__ */ u2("div", { class: "sv-chart-content", children: [
-          /* @__PURE__ */ u2("div", { class: "sv-chart-numbers", children: chartCategories.map(({ name }) => {
-            const count = counts[name] || 0;
-            const displayName = categories.find((category) => category.name === name)?.alias || name;
-            return /* @__PURE__ */ u2("div", { class: "sv-chart-number", onClick: (event) => openCategory(event, name, displayName), children: count }, `num-${name}`);
-          }) }),
-          /* @__PURE__ */ u2("div", { class: "sv-chart-bars-container", children: chartCategories.map(({ name, color: color2, alias }, index) => {
-            const count = counts[name] || 0;
-            const height2 = categoryHeights[index];
-            const displayName = alias || name;
-            return /* @__PURE__ */ u2(
-              "div",
-              {
-                class: "sv-vbar-wrapper",
-                role: "button",
-                tabIndex: 0,
-                title: `${displayName}: ${count}`,
-                onClick: (event) => openCategory(event, name, displayName),
-                onKeyDown: (event) => {
-                  if (!isKeyboardActivation(event)) return;
-                  openCategory(event, name, displayName);
-                },
-                children: /* @__PURE__ */ u2(
-                  "div",
-                  {
-                    class: "sv-vbar-bar",
-                    style: {
-                      height: `${height2}%`,
-                      backgroundColor: color2 || "var(--think-data-neutral)"
-                    }
-                  }
-                )
-              },
-              name
-            );
-          }) }),
-          /* @__PURE__ */ u2("div", { class: "sv-chart-categories", children: chartCategories.map(({ name, alias }) => {
-            const displayName = alias || name;
-            return /* @__PURE__ */ u2(
-              "div",
-              {
-                class: "sv-chart-category",
-                title: `${displayName}${alias ? ` (${name})` : ""}`,
-                onClick: (event) => openCategory(event, name, displayName),
-                children: displayName
-              },
-              `cat-${name}`
-            );
-          }) })
-        ] })
-      ]
-    }
-  );
-}
-function DayStatisticsView({
-  items,
-  categories,
-  selectedDate,
-  onCellClick,
-  displayMode,
-  minVisibleHeight,
-  bucketAccessor,
-  onOpenRecordOrigin
-}) {
-  const data = aggregateByDay(items, categories, selectedDate, bucketAccessor);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
-    ChartBlock,
-    {
-      data,
-      label: selectedDate.format("YYYY年MM月DD日 dddd"),
-      categories,
-      onCellClick,
-      cellIdentifier: (goal) => ({ type: "day", date: selectedDate.format("YYYY-MM-DD"), goal }),
-      displayMode,
-      minVisibleHeight,
-      bucketAccessor,
-      onOpenRecordOrigin
-    }
-  ) }) }) });
-}
-function WeekStatisticsView({
-  items,
-  categories,
-  weekDate,
-  onCellClick,
-  displayMode,
-  minVisibleHeight,
-  bucketAccessor,
-  onOpenRecordOrigin
-}) {
-  const weekStart = weekDate.startOf("isoWeek");
-  const weekEnd = weekDate.endOf("isoWeek");
-  const data = aggregateByWeek(items, categories, weekStart, false, bucketAccessor);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
-    ChartBlock,
-    {
-      data,
-      label: `${weekStart.format("YYYY年MM月DD日")} ~ ${weekEnd.format("MM月DD日")} (第${weekStart.isoWeek()}周)`,
-      categories,
-      onCellClick,
-      cellIdentifier: (goal) => ({
-        type: "week",
-        week: weekStart.isoWeek(),
-        year: weekStart.isoWeekYear(),
-        goal
-      }),
-      displayMode,
-      minVisibleHeight,
-      bucketAccessor,
-      onOpenRecordOrigin
-    }
-  ) }) }) });
-}
-function buildMonthWeekMeta(monthDate) {
-  const monthStart = monthDate.startOf("month");
-  const monthEnd = monthDate.endOf("month");
-  const weeksMeta = [];
-  let weekCursor = monthStart.startOf("isoWeek");
-  while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
-    const weekStart = weekCursor;
-    const weekEnd = weekStart.endOf("isoWeek");
-    weeksMeta.push({
-      weekStart,
-      label: `${weekStart.format("MM-DD")} ~ ${weekEnd.format("MM-DD")}`
-    });
-    weekCursor = weekCursor.add(1, "week");
-  }
-  return weeksMeta;
-}
-function buildMonthStatisticsRenderModel(input) {
-  const { items, categories, monthDate, usePeriod, bucketAccessor } = input;
-  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod, bucketAccessor);
-  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod, bucketAccessor);
-  const weeksMeta = buildMonthWeekMeta(monthDate);
-  const weeks = monthWeeksData.flatMap((data, index) => {
-    const meta = weeksMeta[index];
-    if (!meta) return [];
-    const { weekStart } = meta;
-    return [{
-      key: weekStart.format("YYYY-MM-DD"),
-      gridColumn: `${index + 1}`,
-      label: `W${weekStart.isoWeek()}`,
-      data,
-      identifier: (goal) => ({
-        type: "week",
-        week: weekStart.isoWeek(),
-        year: weekStart.isoWeekYear(),
-        goal
-      })
-    }];
-  });
-  return {
-    monthData,
-    monthLabel: monthDate.format("YYYY年MM月"),
-    monthIdentifier: (goal) => ({
-      type: "month",
-      month: monthDate.month() + 1,
-      year: monthDate.year(),
-      goal
-    }),
-    gridTemplateColumns: `repeat(${monthWeeksData.length}, 1fr)`,
-    weeks
-  };
-}
-function buildQuarterMonthWeekStarts(month) {
-  const monthStart = month.startOf("month");
-  const monthEnd = month.endOf("month");
-  const weeksMeta = [];
-  let weekCursor = monthStart.startOf("isoWeek");
-  while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
-    weeksMeta.push(weekCursor);
-    weekCursor = weekCursor.add(1, "week");
-  }
-  return weeksMeta;
-}
-function buildQuarterStatisticsRenderModel(input) {
-  const { items, categories, quarterDate, usePeriod, bucketAccessor } = input;
-  const quarterStart = quarterDate.startOf("quarter");
-  const rawMonths = Array.from({ length: 3 }, (_2, index) => {
-    const month = quarterStart.add(index, "month");
-    const weeksData = getMonthWeeksData(items, categories, month, usePeriod, bucketAccessor);
-    const weekStarts = buildQuarterMonthWeekStarts(month);
-    return {
-      month,
-      data: aggregateByMonth(items, categories, month, usePeriod, bucketAccessor),
-      weeksData,
-      weekStarts
-    };
-  });
-  const maxWeeks = Math.max(...rawMonths.map((month) => month.weeksData.length), 1);
-  return {
-    quarterData: aggregateByQuarter(items, categories, quarterDate, usePeriod, bucketAccessor),
-    quarterLabel: `${quarterDate.format("YYYY年")} 第${quarterDate.quarter()}季度`,
-    quarterIdentifier: (goal) => ({
-      type: "quarter",
-      quarter: quarterDate.quarter(),
-      year: quarterDate.year(),
-      goal
-    }),
-    months: rawMonths.map(({ month, data, weeksData, weekStarts }, index) => ({
-      key: month.format("YYYY-MM"),
-      gridColumn: `${index + 1}`,
-      label: month.format("MM月"),
-      data,
-      identifier: (goal) => ({
-        type: "month",
-        month: month.month() + 1,
-        year: month.year(),
-        goal
-      }),
-      weeks: weeksData.flatMap((weekData, weekIndex) => {
-        const weekStart = weekStarts[weekIndex];
-        if (!weekStart) return [];
-        return [{
-          key: weekStart.format("YYYY-MM-DD"),
-          label: `W${weekStart.isoWeek()}`,
-          data: weekData,
-          identifier: (goal) => ({
-            type: "week",
-            week: weekStart.isoWeek(),
-            year: weekStart.isoWeekYear(),
-            goal
-          })
-        }];
-      }),
-      placeholderCount: Math.max(maxWeeks - weeksData.length, 0)
-    }))
-  };
-}
-function getYearStatisticsMaxWeeksInMonth(yearlyWeekStructure) {
-  return Math.max(...yearlyWeekStructure.map(({ weeks }) => weeks.length), 1);
-}
-function buildYearStatisticsRenderModel(input) {
-  const { year, categories, processedData, yearlyWeekStructure } = input;
-  const maxWeeksInMonth = getYearStatisticsMaxWeeksInMonth(yearlyWeekStructure);
-  return {
-    yearLabel: `${year}年`,
-    yearIdentifier: (goal) => ({ type: "year", year, goal }),
-    quarters: processedData.quartersData.map((data, index) => ({
-      key: `q${index}`,
-      gridColumn: `${index * 3 + 1} / ${index * 3 + 4}`,
-      label: `Q${index + 1}`,
-      data,
-      identifier: (goal) => ({ type: "quarter", year, quarter: index + 1, goal })
-    })),
-    months: processedData.monthsData.map((data, index) => ({
-      key: `m${index}`,
-      className: `sv-year-grid-month${index % 3 === 2 && index < 11 ? " sv-quarter-end" : ""}`,
-      gridColumn: `${index + 1}`,
-      label: `${index + 1}月`,
-      data,
-      identifier: (goal) => ({ type: "month", year, month: index + 1, goal })
-    })),
-    weekColumns: yearlyWeekStructure.map(({ month, weeks }) => {
-      const isQuarterEnd = month % 3 === 0 && month < 12;
-      return {
-        key: `w-col-${month}`,
-        className: `sv-year-grid-week-col${isQuarterEnd ? " sv-quarter-end" : ""}`,
-        gridColumn: `${month}`,
-        weeks: weeks.map((week) => {
-          const weekIndex = week - 1;
-          const data = processedData.weeksData[weekIndex] || createPeriodData(categories);
-          return {
-            key: `${week}`,
-            label: `${week}W`,
-            data,
-            identifier: (goal) => ({ type: "week", year, week, goal })
-          };
-        }),
-        placeholderCount: Math.max(maxWeeksInMonth - weeks.length, 0)
-      };
-    })
-  };
-}
-function PeriodStatisticsView(props) {
-  const { gridClassName, gridStyle, summary, blocks = [], columns = [], categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin } = props;
-  const visibleBlocks = blocks;
-  const visibleColumns = columns;
-  const levelClass = (level = 0) => `sv-period-level sv-period-level--${Math.max(0, level)}`;
-  const flowStyle = (style2) => style2;
-  const effectiveGridStyle = gridStyle;
-  const renderChart = (block) => /* @__PURE__ */ u2(ChartBlock, { data: block.data, label: block.label, categories, onCellClick, cellIdentifier: block.identifier, isCompact: block.isCompact, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin }, block.key);
-  const renderBlock = (block) => /* @__PURE__ */ u2("div", { class: `${block.wrapperClassName || ""} ${levelClass(block.level)}`, style: flowStyle(block.style), children: renderChart(block) }, block.key);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: `${gridClassName} sv-period-hierarchy`, style: effectiveGridStyle, children: [
-    renderBlock(summary),
-    visibleBlocks.map(renderBlock),
-    visibleColumns.map((column2) => /* @__PURE__ */ u2("div", { class: `${column2.wrapperClassName} ${levelClass(column2.level)}`, style: flowStyle(column2.style), children: column2.blocks.map(renderChart) }, column2.key))
-  ] }) });
-}
-function MonthStatisticsView(props) {
-  const { items, categories, monthDate, usePeriod, bucketAccessor, ...common2 } = props;
-  const model = buildMonthStatisticsRenderModel({ items, categories, monthDate, usePeriod, bucketAccessor });
-  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-month-grid", gridStyle: { gridTemplateColumns: model.gridTemplateColumns }, summary: { wrapperClassName: "sv-month-grid-summary", level: 0, data: model.monthData, label: model.monthLabel, identifier: model.monthIdentifier }, blocks: model.weeks.map((week) => ({ key: week.key, wrapperClassName: "sv-month-grid-week", level: 1, style: { gridColumn: week.gridColumn }, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) });
-}
-function QuarterStatisticsView(props) {
-  const { items, categories, quarterDate, usePeriod, bucketAccessor, ...common2 } = props;
-  const model = buildQuarterStatisticsRenderModel({ items, categories, quarterDate, usePeriod, bucketAccessor });
-  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-quarter-grid", summary: { wrapperClassName: "sv-quarter-grid-summary", level: 0, data: model.quarterData, label: model.quarterLabel, identifier: model.quarterIdentifier }, blocks: model.months.map((month) => ({ key: month.key, wrapperClassName: "sv-quarter-grid-month", level: 1, style: { gridColumn: month.gridColumn }, data: month.data, label: month.label, identifier: month.identifier })), columns: model.months.map((month) => ({ key: `w-col-${month.key}`, wrapperClassName: "sv-quarter-grid-week-col", level: 2, style: { gridColumn: month.gridColumn }, blocks: month.weeks.map((week) => ({ key: week.key, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) })) });
-}
-function YearStatisticsView(props) {
-  const { year, categories, processedData, yearlyWeekStructure, bucketAccessor, ...common2 } = props;
-  const model = buildYearStatisticsRenderModel({ year, categories, processedData, yearlyWeekStructure });
-  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-year-grid", summary: { wrapperClassName: "sv-year-grid-year", level: 0, data: processedData.yearData, label: model.yearLabel, identifier: model.yearIdentifier }, blocks: [...model.quarters.map((quarter) => ({ key: quarter.key, wrapperClassName: "sv-year-grid-quarter", level: 1, style: { gridColumn: quarter.gridColumn }, data: quarter.data, label: quarter.label, identifier: quarter.identifier })), ...model.months.map((month) => ({ key: month.key, wrapperClassName: month.className, level: 2, style: { gridColumn: month.gridColumn }, data: month.data, label: month.label, identifier: month.identifier }))], columns: model.weekColumns.map((column2) => ({ key: column2.key, wrapperClassName: column2.className, level: 3, style: { gridColumn: column2.gridColumn }, blocks: column2.weeks.map((week) => ({ key: week.key, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) })) });
-}
-function StatisticsViewView({
-  items,
-  currentView,
-  categories,
-  startDate,
-  usePeriod,
-  onToggleUsePeriod,
-  onCellClick,
-  displayMode,
-  minVisibleHeight,
-  year,
-  yearlyWeekStructure,
-  processedData,
-  bucketAccessor,
-  goalThemeSummaries = [],
-  onOpenRecordOrigin
-}) {
-  if (!categories || categories.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder", children: "暂无目标统计数据。" });
-  }
-  const sharedProps = { categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin };
-  switch (currentView) {
-    case "天":
-      return /* @__PURE__ */ u2(DayStatisticsView, { items, selectedDate: startDate, ...sharedProps });
-    case "周":
-      return /* @__PURE__ */ u2(WeekStatisticsView, { items, weekDate: startDate, ...sharedProps });
-    case "月":
-      return /* @__PURE__ */ u2(MonthStatisticsView, { items, monthDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps });
-    case "季":
-      return /* @__PURE__ */ u2(QuarterStatisticsView, { items, quarterDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps });
-    case "年":
-    default:
-      return /* @__PURE__ */ u2(
-        YearStatisticsView,
-        {
-          year,
-          processedData,
-          yearlyWeekStructure,
-          usePeriod,
-          onToggleUsePeriod,
-          ...sharedProps
-        }
-      );
-  }
-}
-function buildStatisticsViewConfig(module2) {
-  return { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...module2.viewConfig, groupBy: "goal" };
-}
-function resolveStatisticsStartDate(dateRange) {
-  return dayjs(dateRange[0]);
-}
-function isStatisticsYearView(currentView) {
-  return currentView === "年";
-}
-function resolveStatisticsYear(startDate) {
-  return startDate.year();
-}
-function resolveStatisticsBucketAccessor(goals = []) {
-  return (item) => getItemGoalKey(item, goals);
-}
-function buildYearlyWeekStructure(year, enabled2 = true) {
-  if (!enabled2) return [];
-  const months = Array.from({ length: 12 }, (_2, i2) => ({ month: i2 + 1, weeks: [] }));
-  const totalWeeks = getWeeksInYear(year);
-  for (let week = 1; week <= totalWeeks; week++) {
-    const thursdayOfWeek = dayjs().year(year).isoWeek(week).day(4);
-    months[thursdayOfWeek.month()]?.weeks.push(week);
-  }
-  return months;
-}
-function resolveYearlyWeekStructure(input) {
-  return buildYearlyWeekStructure(input.year, input.isYearView);
-}
-function buildStatisticsGoalBuckets(args) {
-  const buckets = buildGoalBuckets(args.items, args.goals || [], { includeUnassigned: true, includeKnownGoals: true, themes: args.themes || [] });
-  const topN = Math.max(0, Number(args.topN) || 0);
-  return topN > 0 ? buckets.slice(0, topN) : buckets;
-}
-function buildStatisticsGoalThemeSummaries(items, categories, goals = []) {
-  const bucketAccessor = resolveStatisticsBucketAccessor(goals);
-  const counts = /* @__PURE__ */ new Map();
-  for (const item of items) {
-    const goalKey = bucketAccessor(item);
-    const themeKey = getItemThemeKey(item);
-    const inner = counts.get(goalKey) || /* @__PURE__ */ new Map();
-    inner.set(themeKey, (inner.get(themeKey) || 0) + 1);
-    counts.set(goalKey, inner);
-  }
-  return categories.map((category) => ({
-    goalPath: category.name,
-    themes: Array.from((counts.get(category.name) || /* @__PURE__ */ new Map()).entries()).map(([themePath, count]) => {
-      const parts = String(themePath || "").split("/").filter(Boolean);
-      return { themePath, label: parts[parts.length - 1] || themePath || "未设置主题", count };
-    }).sort((a2, b2) => b2.count - a2.count || a2.themePath.localeCompare(b2.themePath, "zh-CN")).slice(0, 3)
-  }));
-}
-function buildStatisticsProcessedData(input) {
-  const bucketAccessor = input.bucketAccessor || getItemGoalKey;
-  if (!input.isYearView) {
-    return {
-      yearData: createPeriodData(input.filteredCategories),
-      quartersData: [],
-      monthsData: [],
-      weeksData: []
-    };
-  }
-  const totalWeeks = getWeeksInYear(input.year);
-  const targetDate = dayjs().year(input.year);
-  const yearData = aggregateByYear(input.items, input.filteredCategories, targetDate, input.usePeriod, bucketAccessor);
-  const quartersData = [];
-  for (let q2 = 1; q2 <= 4; q2++) {
-    quartersData.push(aggregateByQuarter(input.items, input.filteredCategories, targetDate.quarter(q2), input.usePeriod, bucketAccessor));
-  }
-  const monthsData = [];
-  for (let m2 = 0; m2 < 12; m2++) {
-    monthsData.push(aggregateByMonth(input.items, input.filteredCategories, targetDate.month(m2), input.usePeriod, bucketAccessor));
-  }
-  const weeksData = [];
-  for (let w2 = 1; w2 <= totalWeeks; w2++) {
-    weeksData.push(aggregateByWeek(input.items, input.filteredCategories, targetDate.isoWeek(w2), input.usePeriod, bucketAccessor));
-  }
-  return { yearData, quartersData, monthsData, weeksData };
-}
-function getStatisticsPopoverWidgetId(moduleId) {
-  return `stats-popover-${moduleId}`;
-}
-function isSameStatisticsCell(left2, right2) {
-  return JSON.stringify(left2) === JSON.stringify(right2);
-}
-function StatisticsView({
-  items,
-  resolveResourcePath,
-  dateRange,
-  module: module2,
-  currentView,
-  onQuickCreate: _onQuickCreate,
-  onNotice,
-  onOpenStatisticsPopover,
-  onCloseStatisticsPopover,
-  categoryColors = {},
-  onCategoryColorsChange,
-  selectedCategories: _selectedCategories,
-  timerService,
-  onMarkDone,
-  timers,
-  allThemes,
-  goals = [],
-  inputSettings,
-  messageRenderPort,
-  onOpenRecord,
-  onOpenRecordOrigin
-}) {
-  const viewConfig = buildStatisticsViewConfig(module2);
-  const { displayMode = "smart", minVisibleHeight = 15 } = viewConfig;
-  const filteredCategories = T$1(() => buildStatisticsGoalBuckets({
-    items,
-    goals,
-    themes: inputSettings?.themes || [],
-    topN: viewConfig.topN
-  }), [items, goals, inputSettings?.themes, viewConfig.topN]);
-  const bucketAccessor = T$1(() => resolveStatisticsBucketAccessor(goals), [goals]);
-  const goalThemeSummaries = T$1(() => buildStatisticsGoalThemeSummaries(items, filteredCategories, goals), [items, filteredCategories, goals]);
-  const [selectedCell, setSelectedCell] = d(null);
-  const [popover, setPopover] = d(null);
-  const openLockRef = A$1(false);
-  const [usePeriod, setUsePeriod] = d(Boolean(viewConfig.usePeriodField));
-  const startDate = T$1(() => resolveStatisticsStartDate(dateRange), [dateRange]);
-  const isYearView = isStatisticsYearView(currentView);
-  const year = resolveStatisticsYear(startDate);
-  const yearlyWeekStructure = T$1(() => resolveYearlyWeekStructure({ year, isYearView }), [isYearView, year]);
-  const processedData = T$1(() => buildStatisticsProcessedData({
-    isYearView,
-    items,
-    year,
-    filteredCategories,
-    usePeriod,
-    bucketAccessor
-  }), [bucketAccessor, filteredCategories, isYearView, items, usePeriod, year]);
-  const handleCellClick = (cellIdentifier, _target, blocks, title) => {
-    devLog("点击单元格:", { cellIdentifier, title, blocksCount: blocks.length, blocks });
-    if (openLockRef.current) return;
-    const widgetId = getStatisticsPopoverWidgetId(module2.id);
-    if (popover && isSameStatisticsCell(selectedCell, cellIdentifier)) {
-      onCloseStatisticsPopover?.(widgetId);
-      setPopover(null);
-      setSelectedCell(null);
-      return;
-    }
-    onCloseStatisticsPopover?.(widgetId);
-    setSelectedCell(cellIdentifier);
-    setPopover({ blocks, title });
-    const handleClose = () => {
-      onCloseStatisticsPopover?.(widgetId);
-      setPopover(null);
-      setSelectedCell(null);
-    };
-    const handleExport = () => {
-      if (blocks.length === 0) {
-        onNotice?.("没有内容可导出");
-        return;
-      }
-      const exportConfig = getExportConfigByViewType("StatisticsView");
-      navigator.clipboard.writeText(exportItemsToMarkdown(blocks, exportConfig));
-      onNotice?.(`"${title}" 的内容已复制到剪贴板！`);
-    };
-    onOpenStatisticsPopover?.({
-      widgetId,
-      title,
-      blocks,
-      module: module2,
-      timerService,
-      onMarkDone,
-      timers,
-      allThemes,
-      messageRenderPort,
-      onOpenRecord,
-      onOpenRecordOrigin,
-      resolveResourcePath,
-      onClose: handleClose,
-      onExport: handleExport,
-      onQuickCreate: void 0,
-      canQuickCreate: false
-    });
-    openLockRef.current = true;
-    setTimeout(() => {
-      openLockRef.current = false;
-    }, 300);
-  };
-  return /* @__PURE__ */ u2(
-    StatisticsViewView,
-    {
-      items,
-      currentView,
-      categories: filteredCategories,
-      startDate,
-      usePeriod,
-      onToggleUsePeriod: setUsePeriod,
-      onCellClick: handleCellClick,
-      displayMode,
-      minVisibleHeight,
-      year,
-      yearlyWeekStructure,
-      processedData,
-      bucketAccessor,
-      goalThemeSummaries,
-      onOpenRecordOrigin
-    }
-  );
-}
-function PopoverContent({
-  blocks,
-  module: module2,
-  timerService,
-  onMarkDone,
-  timers,
-  allThemes,
-  messageRenderPort,
-  onOpenRecord,
-  onOpenRecordOrigin,
-  resolveResourcePath
-}) {
-  return /* @__PURE__ */ u2("div", { className: "sv-popover-content", children: blocks.length === 0 ? /* @__PURE__ */ u2("div", { class: "sv-popover-empty", children: "无内容" }) : /* @__PURE__ */ u2(
-    BlockView,
-    {
-      items: blocks,
-      resolveResourcePath,
-      onOpenRecordOrigin,
-      fields: module2.fields || ["title", "content", "categoryKey", "goalPath", "date", "period"],
-      groupFields: module2.groupFields,
-      onMarkDone,
-      timerService,
-      timers,
-      allThemes,
-      messageRenderPort,
-      onOpenRecord
-    }
-  ) });
-}
-function clampProgress(value) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(1, value));
-}
-function toSortedRows(map, topN) {
-  return Array.from(map.entries()).map(([key, v2]) => ({ key, points: v2.points, count: v2.count })).sort((a2, b2) => b2.points - a2.points || b2.count - a2.count || a2.key.localeCompare(b2.key, "zh-CN")).slice(0, topN);
-}
-function computeProgression(items, options) {
-  const {
-    basePoints = 1,
-    levelStep = 20,
-    includedCategories = [],
-    ratingBonusThreshold = 4,
-    ratingBonusPoints = 1,
-    topN = 5
-  } = options;
-  const allowed = new Set((includedCategories || []).filter(Boolean));
-  const categoryMap = /* @__PURE__ */ new Map();
-  const themeMap = /* @__PURE__ */ new Map();
-  let totalPoints = 0;
-  let matchedCount = 0;
-  for (const item of items) {
-    const category = (item.categoryKey || "").split("/")[0] || item.categoryKey || "未分类";
-    if (allowed.size > 0 && !allowed.has(category)) continue;
-    let points = basePoints;
-    if (typeof item.rating === "number" && item.rating >= ratingBonusThreshold) {
-      points += ratingBonusPoints;
-    }
-    totalPoints += points;
-    matchedCount += 1;
-    const catRow = categoryMap.get(category) || { points: 0, count: 0 };
-    catRow.points += points;
-    catRow.count += 1;
-    categoryMap.set(category, catRow);
-    const theme = getItemThemeKey(item);
-    const themeRow = themeMap.get(theme) || { points: 0, count: 0 };
-    themeRow.points += points;
-    themeRow.count += 1;
-    themeMap.set(theme, themeRow);
-  }
-  const safeLevelStep = Math.max(1, levelStep);
-  const level = Math.floor(totalPoints / safeLevelStep) + 1;
-  const currentLevelStart = (level - 1) * safeLevelStep;
-  const nextLevelPoints = level * safeLevelStep;
-  const currentLevelPoints = totalPoints - currentLevelStart;
-  const progressRatio = clampProgress(currentLevelPoints / safeLevelStep);
-  return {
-    totalPoints,
-    level,
-    currentLevelPoints,
-    nextLevelPoints,
-    progressRatio,
-    matchedCount,
-    categoryBreakdown: toSortedRows(categoryMap, topN),
-    themeBreakdown: toSortedRows(themeMap, topN)
-  };
-}
-function buildGoalEnergyContext(item, goalItems) {
-  const context = resolveEnergyContext(item, goalItems);
-  if (!context) return null;
-  return {
-    activity: context.primaryActivity ? {
-      id: context.primaryActivity.itemId,
-      title: context.primaryActivity.title,
-      relation: context.primaryActivity.relation,
-      confidence: context.primaryActivity.confidence,
-      gapMinutes: context.primaryActivity.gapMinutes,
-      durationMinutes: context.primaryActivity.durationMinutes,
-      item: context.primaryActivity.item
-    } : void 0,
-    dailySignals: context.dailySignals.map((signal) => ({
-      id: signal.itemId,
-      kind: signal.kind,
-      label: signal.label,
-      value: signal.value,
-      item: signal.item
-    }))
-  };
-}
-function buildGoalEnergyEffects(evidenceRecords) {
-  const effects = buildEnergyEffects(evidenceRecords);
-  if (!effects) return null;
-  const mapRows = (rows) => rows.slice(0, 6).map((row) => ({
-    key: row.key,
-    label: row.label,
-    sampleCount: row.sampleCount,
-    meanDelta: row.meanDelta,
-    medianDelta: row.medianDelta,
-    meanBrainDelta: row.meanBrainDelta,
-    meanPhysicalDelta: row.meanPhysicalDelta,
-    meanDurationMinutes: row.meanDurationMinutes,
-    trend: row.trend,
-    evidence: row.evidence
-  }));
-  return {
-    eligibleActivityCount: effects.eligibleActivityCount,
-    pairedActivityCount: effects.pairedActivityCount,
-    highConfidencePairCount: effects.highConfidencePairCount,
-    mediumConfidencePairCount: effects.mediumConfidencePairCount,
-    excludedActivityCount: effects.excludedActivityCount,
-    byActivity: mapRows(effects.byActivity),
-    byTheme: mapRows(effects.byTheme),
-    byDuration: mapRows(effects.byDuration)
-  };
-}
-function buildSevenDayEnergyTimeline(rows) {
-  const endDate = rows.find((row) => row.date)?.date || null;
-  if (!endDate) return void 0;
-  const match5 = /^(\d{4})-(\d{2})-(\d{2})$/.exec(endDate);
-  if (!match5) return void 0;
-  const end2 = new Date(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3]));
-  const start2 = new Date(end2);
-  start2.setDate(start2.getDate() - 6);
-  const dateText2 = (date2) => `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
-  const startDate = dateText2(start2);
-  const windowRows = rows.filter((row) => !!row.date && row.date >= startDate && row.date <= endDate);
-  const sampledDays = new Set(windowRows.map((row) => row.date).filter(Boolean)).size;
-  return {
-    startDate,
-    endDate,
-    coverage: {
-      sampledDays,
-      missingDays: Math.max(0, 7 - sampledDays),
-      totalSamples: windowRows.length
-    }
-  };
-}
-function buildGoalEnergySummary(items, limit = 5, options = {}) {
-  const contextRecords = options.contextRecords || items;
-  const effectRecords = options.effectRecords || contextRecords;
-  const ordered = items.reduce((rows, item) => {
-    const snapshot = readEnergyItemSnapshot(item);
-    if (!snapshot) return rows;
-    rows.push({
-      id: item.id,
-      score: snapshot.score,
-      quickLevel: snapshot.quickLevel,
-      brainScore: snapshot.brainScore,
-      physicalScore: snapshot.physicalScore,
-      scoreMode: snapshot.scoreMode,
-      date: snapshot.date || null,
-      time: snapshot.time || null,
-      item,
-      occurrenceKey: energySnapshotOccurrenceKey(snapshot)
-    });
-    return rows;
-  }, []).sort((left2, right2) => right2.occurrenceKey.localeCompare(left2.occurrenceKey));
-  if (ordered.length === 0) return null;
-  const recentSamples = ordered.slice(0, limit).map(({ occurrenceKey: _occurrenceKey, ...row }) => ({
-    ...row,
-    context: buildGoalEnergyContext(row.item, contextRecords)
-  }));
-  const latest2 = recentSamples[0];
-  return {
-    count: ordered.length,
-    latestScore: latest2.score,
-    latestQuickLevel: latest2.quickLevel,
-    latestBrainScore: latest2.brainScore,
-    latestPhysicalScore: latest2.physicalScore,
-    latestScoreMode: latest2.scoreMode,
-    latestDate: latest2.date || null,
-    latestTime: latest2.time || null,
-    recentSamples,
-    timeline: buildSevenDayEnergyTimeline(ordered),
-    effects: buildGoalEnergyEffects(effectRecords)
-  };
-}
-const PROGRESS_BLOCK_KEY_ALIASES = {
-  "任务": "task",
-  "计划": "plan",
-  "总结": "review",
-  "打卡": "habit",
-  "阻碍项": "blocker",
-  "里程碑": "milestone",
-  "思考": "thought",
-  "事件": "evidence"
-};
-function normalizeProgressBlockKey(item) {
-  const raw = String(item.coreBlock || "").replace(/^core\./, "").trim();
-  if (!raw) return "unknown";
-  return PROGRESS_BLOCK_KEY_ALIASES[raw] || raw.split("/")[0] || raw;
-}
-function progressDateSource(item) {
-  return item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || "";
-}
-function parseProgressDate(value) {
-  if (value == null || value === "") return null;
-  if (value instanceof Date) {
-    const parsed2 = dayjs(value);
-    return parsed2.isValid() ? parsed2 : null;
-  }
-  if (typeof value === "number") {
-    const millis = Math.abs(value) < 1e12 ? value * 1e3 : value;
-    const parsed2 = dayjs(millis);
-    return parsed2.isValid() ? parsed2 : null;
-  }
-  const text2 = String(value).trim();
-  if (!text2) return null;
-  if (/^-?\d+(?:\.\d+)?$/.test(text2)) {
-    const numeric = Number(text2);
-    const millis = Math.abs(numeric) < 1e12 ? numeric * 1e3 : numeric;
-    const parsed2 = dayjs(millis);
-    return parsed2.isValid() ? parsed2 : null;
-  }
-  const parsed = dayjs(text2);
-  return parsed.isValid() ? parsed : null;
-}
-function formatProgressRecordDate(value) {
-  const parsed = parseProgressDate(value);
-  return parsed ? parsed.format("YYYY-MM-DD") : "";
-}
-function progressItemDate(item) {
-  return formatProgressRecordDate(progressDateSource(item));
-}
-function progressItemTime(item) {
-  return parseProgressDate(progressDateSource(item))?.valueOf() || 0;
-}
-function buildProgressRecentRecords(items, limit = 5) {
-  return [...items].sort((left2, right2) => progressItemTime(right2) - progressItemTime(left2)).slice(0, limit).map((item) => ({
-    id: item.id,
-    title: item.title || item.content || item.file?.basename || item.filename || "未命名记录",
-    date: progressItemDate(item) || null,
-    item
-  }));
-}
-function buildProgressViewRenderModel(args) {
-  const { items, module: module2, goals = [], themes = [] } = args;
-  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {}, mode: "goal", metric: "recordCount" };
-  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
-  const levelStep = Math.max(1, Number(config2.levelStep) || 20);
-  const cards = buckets.map((bucket) => {
-    const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
-    const progressItems = goalItems.filter((item) => !isEnergyItem(item));
-    const progression = computeProgression(progressItems, {
-      basePoints: config2.basePoints,
-      levelStep,
-      includedCategories: config2.includedCategories,
-      ratingBonusThreshold: config2.ratingBonusThreshold,
-      ratingBonusPoints: config2.ratingBonusPoints,
-      topN: config2.topN
-    });
-    const blockCounts = {};
-    for (const item of goalItems) {
-      const key = normalizeProgressBlockKey(item);
-      blockCounts[key] = (blockCounts[key] || 0) + 1;
-    }
-    const dates = progressItems.map(progressItemDate).filter(Boolean).sort();
-    return {
-      key: bucket.name,
-      title: bucket.alias || bucket.name,
-      goalPath: bucket.goalPath || bucket.name,
-      icon: bucket.icon || null,
-      itemCount: progressItems.length,
-      totalPoints: progression.totalPoints,
-      level: progression.level,
-      currentLevelPoints: progression.currentLevelPoints,
-      nextLevelPoints: progression.nextLevelPoints,
-      levelStep,
-      progressRatio: progression.progressRatio,
-      matchedCount: progression.matchedCount,
-      latestDate: dates.length ? dates[dates.length - 1] : null,
-      blockCounts,
-      categoryBreakdown: progression.categoryBreakdown,
-      themeBreakdown: progression.themeBreakdown,
-      themeRecentRecords: Object.fromEntries(
-        progression.themeBreakdown.map((row) => [
-          row.key,
-          buildProgressRecentRecords(progressItems.filter((item) => getItemThemeKey(item) === row.key), 5)
-        ])
-      ),
-      energySummary: buildGoalEnergySummary(goalItems.filter(isEnergyItem), 5, { contextRecords: items, effectRecords: items })
-    };
-  });
-  const topN = Math.max(0, Number(config2.topN) || 0);
-  const goalCards = topN > 0 ? cards.slice(0, topN) : cards;
-  return {
-    config: config2,
-    mode: "goal",
-    goalCards,
-    summary: {
-      goalCount: goalCards.length,
-      totalPoints: goalCards.reduce((sum, card) => sum + card.totalPoints, 0),
-      totalItems: goalCards.reduce((sum, card) => sum + card.itemCount, 0)
-    },
-    result: null
-  };
-}
-const PROGRESS_LEVEL_META = [
-  { level: 1, icon: "🌱", title: "入门" },
-  { level: 2, icon: "🔰", title: "练习" },
-  { level: 3, icon: "🧩", title: "熟悉" },
-  { level: 4, icon: "⚙️", title: "稳定" },
-  { level: 5, icon: "🔥", title: "熟练" },
-  { level: 6, icon: "🛠️", title: "进阶" },
-  { level: 7, icon: "🧠", title: "专精" },
-  { level: 8, icon: "🏔️", title: "高阶" },
-  { level: 9, icon: "💎", title: "精通" },
-  { level: 10, icon: "👑", title: "大师" }
-];
-function clampProgressRatio(value) {
-  return Math.max(0, Math.min(1, Number(value) || 0));
-}
-function ratioPercent(value) {
-  return `${Math.round(clampProgressRatio(value) * 100)}%`;
-}
-function progressBarWidth(value) {
-  return `${Math.round(clampProgressRatio(value) * 100)}%`;
-}
-function getProgressLeafLabel(path) {
-  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
-  return parts[parts.length - 1] || path || "未设置主题";
-}
-function getGoalProgressTitle(card) {
-  return card.title || card.goalPath || "未命名目标";
-}
-function getProgressDisplayLevel(level) {
-  const normalized2 = Math.max(1, Math.floor(Number(level) || 1));
-  return Math.min(10, normalized2);
-}
-function getProgressLevelMeta(level) {
-  return PROGRESS_LEVEL_META[getProgressDisplayLevel(level) - 1] || PROGRESS_LEVEL_META[0];
-}
-function buildProgressSkillRows(card) {
-  return getVisibleProgressThemeBreakdown(card.themeBreakdown).map((row) => {
-    const safeLevelStep = Math.max(1, Number(card.levelStep || 1));
-    const level = Math.floor(Number(row.points || 0) / safeLevelStep) + 1;
-    const currentLevelPoints = Number(row.points || 0) - (level - 1) * safeLevelStep;
-    return {
-      key: row.key,
-      title: getProgressLeafLabel(row.key),
-      points: Number(row.points || 0),
-      count: Number(row.count || 0),
-      level,
-      levelMeta: getProgressLevelMeta(level),
-      progressRatio: clampProgressRatio(currentLevelPoints / safeLevelStep),
-      recentRecords: card.themeRecentRecords?.[row.key] || []
-    };
-  });
-}
-function getVisibleProgressThemeBreakdown(rows) {
-  return (rows || []).filter((row) => row.count > 0).slice(0, 8);
-}
-function ExperienceBar({ ratio: ratio2, tone = "goal" }) {
-  const style2 = { "--think-progress-ratio": progressBarWidth(ratio2) };
-  return /* @__PURE__ */ u2("span", { class: `think-progress-bar think-progress-bar--${tone}`, "aria-label": `进度 ${progressBarWidth(ratio2)}`, children: /* @__PURE__ */ u2("span", { class: "think-progress-bar__fill", style: style2 }) });
-}
-function ThemeRecords({ records, runtime }) {
-  if (!records.length) return /* @__PURE__ */ u2("div", { class: "think-progress-theme-records__empty", children: "该主题暂无记录" });
-  const fields = runtime.module.fields?.length ? runtime.module.fields : ["title", "content"];
-  return /* @__PURE__ */ u2("div", { class: "think-progress-theme-records", "aria-label": "主题记录", children: /* @__PURE__ */ u2(
-    BlockView,
-    {
-      items: records.map((record) => record.item),
-      fields,
-      onMarkDone: runtime.onMarkDone,
-      timerService: runtime.timerService,
-      timers: runtime.timers,
-      allThemes: runtime.allThemes,
-      goals: runtime.goals,
-      resolveResourcePath: runtime.resolveResourcePath,
-      onOpenRecordOrigin: runtime.onOpenRecordOrigin,
-      messageRenderPort: runtime.messageRenderPort,
-      onOpenRecord: runtime.onOpenRecord
-    }
-  ) });
-}
-function SkillList({ card, runtime }) {
-  const rows = buildProgressSkillRows(card);
-  const [openKey, setOpenKey] = d(null);
-  if (rows.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-empty-skill", children: "暂无主题成长记录" });
-  return /* @__PURE__ */ u2("div", { class: "think-progress-skills", role: "list", children: rows.map((row) => {
-    const open = openKey === row.key;
-    return /* @__PURE__ */ u2("div", { class: `think-progress-skill-group ${open ? "is-open" : ""}`, role: "listitem", children: [
-      /* @__PURE__ */ u2(
-        "button",
-        {
-          type: "button",
-          class: "think-progress-skill",
-          onClick: () => setOpenKey(open ? null : row.key),
-          "aria-expanded": open,
-          title: `${row.title} · ${row.points} XP · ${row.count} 条记录`,
-          children: [
-            /* @__PURE__ */ u2("span", { class: "think-progress-skill__bullet", "aria-hidden": "true", children: "•" }),
-            /* @__PURE__ */ u2("span", { class: "think-progress-skill__title", children: row.title }),
-            /* @__PURE__ */ u2("span", { class: "think-progress-skill__level", children: [
-              "Lv.",
-              row.levelMeta.level
-            ] }),
-            /* @__PURE__ */ u2(ExperienceBar, { ratio: row.progressRatio, tone: "skill" }),
-            /* @__PURE__ */ u2("span", { class: "think-progress-skill__tail", children: [
-              /* @__PURE__ */ u2("span", { class: "think-progress-skill__meta", children: [
-                row.points,
-                " XP · ",
-                row.count,
-                " 条"
-              ] }),
-              /* @__PURE__ */ u2("span", { class: "think-progress-skill__chevron", "aria-hidden": "true", children: open ? "⌄" : "›" })
-            ] })
-          ]
-        }
-      ),
-      open && /* @__PURE__ */ u2(ThemeRecords, { records: row.recentRecords, runtime })
-    ] }, row.key);
-  }) });
-}
-function GoalProgressCard(props) {
-  const {
-    card,
-    expanded,
-    onToggle,
-    module: module2,
-    onOpenRecord,
-    onOpenRecordOrigin,
-    resolveResourcePath,
-    messageRenderPort,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes,
-    goals
-  } = props;
-  const title = getGoalProgressTitle(card);
-  const levelMeta = getProgressLevelMeta(card.level);
-  const runtime = {
-    module: module2,
-    onOpenRecord,
-    onOpenRecordOrigin,
-    resolveResourcePath,
-    messageRenderPort,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes,
-    goals
-  };
-  return /* @__PURE__ */ u2("section", { class: "think-progress-section think-progress-card", role: "listitem", children: [
-    /* @__PURE__ */ u2("button", { type: "button", onClick: onToggle, "aria-expanded": expanded, class: "think-progress-section__trigger", children: [
-      /* @__PURE__ */ u2("span", { class: "think-progress-section__chevron", "aria-hidden": "true", children: expanded ? "⌄" : "›" }),
-      /* @__PURE__ */ u2("span", { class: "think-progress-section__icon", children: card.icon || "🧩" }),
-      /* @__PURE__ */ u2("span", { class: "think-progress-section__name", children: [
-        /* @__PURE__ */ u2("span", { class: "think-progress-section__title", children: title }),
-        /* @__PURE__ */ u2("span", { class: "think-progress-section__level-title", children: [
-          levelMeta.icon,
-          " ",
-          levelMeta.title
-        ] })
-      ] }),
-      /* @__PURE__ */ u2("span", { class: "think-progress-section__level", children: [
-        "Lv.",
-        levelMeta.level
-      ] }),
-      /* @__PURE__ */ u2(ExperienceBar, { ratio: card.progressRatio, tone: "goal" }),
-      /* @__PURE__ */ u2("span", { class: "think-progress-section__percent", children: ratioPercent(card.progressRatio) })
-    ] }),
-    expanded && /* @__PURE__ */ u2("div", { class: "think-progress-section__body", children: /* @__PURE__ */ u2(SkillList, { card, runtime }) })
-  ] });
-}
-function ProgressView({
-  module: module2,
-  items,
-  goals = [],
-  inputSettings,
-  onOpenRecord,
-  onOpenRecordOrigin,
-  resolveResourcePath,
-  messageRenderPort,
-  onMarkDone,
-  timerService,
-  timers = [],
-  allThemes = []
-}) {
-  const progressModel = T$1(() => buildProgressViewRenderModel({ items, module: module2, goals, themes: inputSettings?.themes || allThemes }), [items, module2, goals, inputSettings?.themes, allThemes]);
-  const cards = progressModel.goalCards || [];
-  const [collapsedKeys, setCollapsedKeys] = d({});
-  if (cards.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-view__empty", children: "暂无目标成长记录" });
-  return /* @__PURE__ */ u2("div", { class: "think-progress-view", role: "list", "aria-label": "成长视图", children: cards.map((card) => {
-    const expanded = collapsedKeys[card.key] !== true;
-    return /* @__PURE__ */ u2(
-      GoalProgressCard,
-      {
-        card,
-        module: module2,
-        expanded,
-        onToggle: () => setCollapsedKeys((prev2) => ({ ...prev2, [card.key]: expanded })),
-        onOpenRecord,
-        onOpenRecordOrigin,
-        resolveResourcePath,
-        messageRenderPort,
-        onMarkDone,
-        timerService,
-        timers,
-        allThemes,
-        goals
-      },
-      card.key
-    );
-  }) });
-}
-function text(value) {
-  return String(value ?? "").trim();
-}
-function taskTitle(item) {
-  const raw = text(item.editableText || item.content || item.title);
-  return raw || text(item.title) || "未命名任务";
-}
-function buildGoalMap(goals) {
-  return new Map((goals || []).map((goal) => [goal.id, goal]));
-}
-function resolveTaskGoal(item, goalsById) {
-  const goalId = text(item.goalId);
-  if (!goalId) return { key: "__unassigned__", label: "未分目标" };
-  const goal = goalsById.get(goalId);
-  const path = text(goal?.goalPath || item.goalPath) || void 0;
-  const label = text(goal?.title || path) || "未分目标";
-  return { key: goalId, path, label };
-}
-function completionIdentity(item) {
-  const seriesId = text(item.seriesId);
-  return seriesId ? `series:${seriesId}` : `task:${item.id}`;
-}
-function recurrenceText(item) {
-  return text(formatTaskRecurrence(item.recurrenceInfo));
-}
-function localCompletionDate(value) {
-  const date2 = new Date(value);
-  if (!Number.isFinite(date2.getTime())) return "";
-  return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
-}
-function localCompletionTime(value) {
-  const date2 = new Date(value);
-  if (!Number.isFinite(date2.getTime())) return "";
-  return `${String(date2.getHours()).padStart(2, "0")}:${String(date2.getMinutes()).padStart(2, "0")}`;
-}
-function completionHistoryMap(records, dateRange) {
-  const start2 = dayjs(dateRange[0]);
-  const end2 = dayjs(dateRange[1]);
-  const map = /* @__PURE__ */ new Map();
-  for (const item of records) {
-    if (item.coreBlock !== "task" || item.status !== "done") continue;
-    const completedAt = text(item.completedAt || item.doneDate);
-    if (!completedAt) continue;
-    const occurred = dayjs(completedAt);
-    if (!occurred.isValid() || occurred.isBefore(start2) || occurred.isAfter(end2)) continue;
-    const key = completionIdentity(item);
-    const rows = map.get(key) || [];
-    rows.push({
-      id: item.id,
-      doneDate: localCompletionDate(completedAt),
-      timeLabel: localCompletionTime(completedAt),
-      item
-    });
-    map.set(key, rows);
-  }
-  for (const rows of map.values()) {
-    rows.sort((a2, b2) => `${b2.doneDate || ""} ${b2.timeLabel}`.localeCompare(`${a2.doneDate || ""} ${a2.timeLabel}`, "zh-CN"));
-  }
-  return map;
-}
-function emptyCadenceMap() {
-  return new Map(TASK_CADENCE_ORDER.map((key) => [key, []]));
-}
-function fallbackEnergyWorkBlockMinutes(score) {
-  if (score == null || !Number.isFinite(score)) return 45;
-  if (score <= ENERGY_RECOMMENDATION_LOW_THRESHOLD) return 30;
-  if (score >= ENERGY_RECOMMENDATION_HIGH_THRESHOLD) return 60;
-  return 45;
-}
-function resolveSuggestedDurationMinutes(item, action, candidate, management) {
-  const recommended = Number(action?.suggestedDurationMinutes);
-  if (Number.isFinite(recommended) && recommended > 0) return Math.max(1, Math.min(240, Math.round(recommended)));
-  const learned = Number(candidate?.durationMinutes);
-  if (Number.isFinite(learned) && learned > 0) return Math.max(1, Math.min(240, Math.round(learned)));
-  const declared = Number(item.expectedDurationMinutes);
-  if (Number.isFinite(declared) && declared > 0) return Math.max(1, Math.min(240, Math.round(declared)));
-  return fallbackEnergyWorkBlockMinutes(management?.latest?.score);
-}
-function buildEnergyTaskListModel(args) {
-  const { items, historyItems, management, goals = [], today, dateRange, currentContext = "any" } = args;
-  const openTasks = items.filter((item) => item.coreBlock === "task" && isTaskOpen(item));
-  const visibleItems = openTasks;
-  const visibleIds = new Set(visibleItems.map((item) => item.id));
-  const completionHistory = completionHistoryMap(historyItems, dateRange);
-  const candidateBuild = buildEnergyActionCandidateResult(items, {
-    today,
-    maximumCandidates: 1e3,
-    includeRecurringTasks: true,
-    includeFutureTasks: false,
-    currentContext,
-    historyRecords: historyItems
-  });
-  const taskCandidates = candidateBuild.candidates.filter((candidate) => candidate.source === "task" && visibleIds.has(candidate.id));
-  const learning = buildEnergyRecommendationLearning(historyItems);
-  const learned = attachEnergyRecommendationLearning(taskCandidates, learning);
-  const enriched = attachEnergyRecommendationEvidence(learned, management);
-  let rankedIds = enriched.map((candidate) => candidate.id);
-  let recommendationStateLabel;
-  const actionById = /* @__PURE__ */ new Map();
-  if (management?.latest && enriched.length > 0) {
-    const ranked = buildEnergyActionRecommendations({
-      score: management.latest.score,
-      brainScore: management.latest.brainScore,
-      physicalScore: management.latest.physicalScore,
-      maximumRecommendations: Math.min(500, enriched.length),
-      actionPolicy: buildEnergyActionPolicyContext(historyItems, management, today)
-    }, enriched);
-    recommendationStateLabel = ranked.stateLabel;
-    rankedIds = ranked.recommendations.map((row) => row.candidate.id);
-    for (const row of ranked.recommendations) actionById.set(row.candidate.id, row);
-  }
-  const rank = new Map(rankedIds.map((id, index) => [id, index]));
-  const candidateById = new Map(enriched.map((candidate) => [candidate.id, candidate]));
-  const energyMatchedIds = /* @__PURE__ */ new Set();
-  if (management?.latest) {
-    const matchable = Array.from(actionById.values()).filter((row) => {
-      const candidate = row.candidate;
-      return !!candidate.brainLoad || !!candidate.physicalLoad || !!candidate.historicalEffect;
-    }).sort((left2, right2) => right2.fitScore - left2.fitScore).slice(0, 5);
-    for (const row of matchable) energyMatchedIds.add(row.candidate.id);
-  }
-  const goalsById = buildGoalMap(goals);
-  const goalBuckets = /* @__PURE__ */ new Map();
-  for (const item of visibleItems) {
-    const resolvedGoal = resolveTaskGoal(item, goalsById);
-    const goalPath = resolvedGoal.path;
-    const label = resolvedGoal.label;
-    const goalKey = resolvedGoal.key;
-    const cadence = getTaskCadence(item);
-    const history = completionHistory.get(completionIdentity(item)) || [];
-    const action = actionById.get(item.id);
-    const candidate = candidateById.get(item.id);
-    let bucket = goalBuckets.get(goalKey);
-    if (!bucket) {
-      bucket = { label, goalPath, rows: emptyCadenceMap() };
-      goalBuckets.set(goalKey, bucket);
-    }
-    bucket.rows.get(cadence).push({
-      key: item.id,
-      itemId: item.id,
-      title: taskTitle(item),
-      goalLabel: label,
-      goalPath,
-      cadence,
-      recurring: cadence !== "routine",
-      recurrenceLabel: recurrenceText(item),
-      count: history.length,
-      records: history,
-      suggestedDurationMinutes: resolveSuggestedDurationMinutes(item, action, candidate, management),
-      energyFitScore: action?.fitScore,
-      recommendationRank: action?.rank,
-      recommendationReason: action?.reason,
-      energyMatched: energyMatchedIds.has(item.id),
-      item
-    });
-  }
-  for (const bucket of goalBuckets.values()) {
-    for (const tasks of bucket.rows.values()) {
-      tasks.sort((left2, right2) => {
-        const leftRank = rank.get(left2.itemId) ?? Number.MAX_SAFE_INTEGER;
-        const rightRank = rank.get(right2.itemId) ?? Number.MAX_SAFE_INTEGER;
-        return leftRank - rightRank || left2.title.localeCompare(right2.title, "zh-CN");
-      });
-    }
-  }
-  const goalOrder = createGoalOrderIndex(goals);
-  const goalModels = Array.from(goalBuckets.entries()).sort(([, left2], [, right2]) => goalOrder.compareGoalPaths(left2.goalPath || left2.label, right2.goalPath || right2.label)).map(([key, bucket]) => {
-    const rows = TASK_CADENCE_ORDER.map((cadence) => ({
-      key: cadence,
-      ...TASK_CADENCE_META[cadence],
-      tasks: bucket.rows.get(cadence) || []
-    })).filter((row) => row.tasks.length > 0);
-    const taskCount = rows.reduce((sum, row) => sum + row.tasks.length, 0);
-    return {
-      key,
-      label: bucket.label,
-      goalPath: bucket.goalPath,
-      rows,
-      taskCount
-    };
-  }).filter((goal) => goal.taskCount > 0);
-  const taskVmById = /* @__PURE__ */ new Map();
-  for (const goal of goalModels) for (const row of goal.rows) for (const task of row.tasks) taskVmById.set(task.itemId, task);
-  const recommendations = Array.from(actionById.values()).sort((left2, right2) => (left2.rank || Number.MAX_SAFE_INTEGER) - (right2.rank || Number.MAX_SAFE_INTEGER)).slice(0, 3).flatMap((action) => {
-    const task = taskVmById.get(action.candidate.id);
-    return task ? [task] : [];
-  });
-  return {
-    goals: goalModels,
-    recommendations,
-    recommendationStateLabel,
-    currentContext,
-    latestEnergy: management?.latest ? {
-      itemId: management.latest.itemId,
-      score: management.latest.score,
-      brainScore: management.latest.brainScore,
-      physicalScore: management.latest.physicalScore,
-      date: management.latest.date,
-      time: management.latest.time
-    } : void 0,
-    diagnostics: {
-      openTaskCount: openTasks.length,
-      visibleTaskCount: goalModels.reduce((sum, goal) => sum + goal.taskCount, 0),
-      goalCount: goalModels.length
-    }
-  };
-}
-function normalizedGoalFilter(value) {
-  return normalizeGoalPath(String(value || "").trim()) || "";
-}
-function dateText(value) {
-  return dayjs(value).format("YYYY-MM-DD");
-}
-function periodLabel(currentView, dateRange) {
-  const start2 = dayjs(dateRange[0]);
-  const end2 = dayjs(dateRange[1]);
-  if (currentView === "天") return `${start2.format("YYYY-MM-DD")}`;
-  if (currentView === "周") return `${start2.format("MM-DD")} — ${end2.format("MM-DD")}`;
-  if (currentView === "月") return start2.format("YYYY-MM");
-  if (currentView === "季") return `${start2.year()} Q${start2.quarter()}`;
-  return start2.format("YYYY");
-}
-function periodRenderModel(period, goalItems, label, contextRecords) {
-  if (!period) return null;
-  return {
-    ...period,
-    label,
-    days: period.days.map((day) => ({
-      ...day,
-      samples: day.samples.map((sample) => ({
-        id: sample.itemId,
-        date: sample.date,
-        time: sample.time,
-        minuteOfDay: sample.minuteOfDay,
-        score: sample.score,
-        brainScore: sample.brainScore,
-        physicalScore: sample.physicalScore,
-        captureMode: sample.captureMode,
-        context: buildGoalEnergyContext(sample.item, contextRecords),
-        item: sample.item
-      }))
-    }))
-  };
-}
-function signed(value) {
-  const rounded = Math.round(value);
-  return `${rounded > 0 ? "+" : ""}${rounded}`;
-}
-function compactReviewLines(args) {
-  const { periodItems, patterns, management, quality } = args;
-  const lines = [];
-  if (quality.level === "limited") {
-    lines.push({ key: "data", label: "数据", text: quality.message });
-  }
-  const dayparts = (patterns?.dayparts || []).filter((row) => row.sampleCount >= 3 && row.meanScore != null);
-  if (dayparts.length >= 2) {
-    const best = [...dayparts].sort((a2, b2) => (b2.meanScore || 0) - (a2.meanScore || 0))[0];
-    const low = [...dayparts].sort((a2, b2) => (a2.meanScore || 0) - (b2.meanScore || 0))[0];
-    const gap2 = Math.abs((best.meanScore || 0) - (low.meanScore || 0));
-    if (best.key !== low.key && gap2 >= 10) {
-      lines.push({ key: "overall", label: "状态", text: `${best.label}相对较高（${Math.round(best.meanScore || 0)}，N=${best.sampleCount}），${low.label}相对较低（${Math.round(low.meanScore || 0)}，N=${low.sampleCount}）。` });
-    }
-  }
-  const recovery = management?.recoveryCandidates?.[0];
-  if (recovery) {
-    const prefix2 = recovery.evidence === "supported" ? "" : "初步观察：";
-    lines.push({ key: "recovery", label: "恢复", text: `${prefix2}${recovery.label}后偏回升（平均 ${signed(recovery.meanDelta)}，N=${recovery.sampleCount}）。` });
-  }
-  const depletion = management?.cautionCandidates?.[0];
-  if (depletion) {
-    const prefix2 = depletion.evidence === "supported" ? "" : "初步观察：";
-    lines.push({ key: "depletion", label: "消耗", text: `${prefix2}${depletion.label}后偏下降（平均 ${signed(depletion.meanDelta)}，N=${depletion.sampleCount}）。` });
-  }
-  const stop = patterns?.stopProxy;
-  if (stop && stop.followedByWorkCount >= 3 && stop.evidence !== "insufficient" && (stop.longContinuationRatio || 0) >= 0.5) {
-    lines.push({ key: "attention", label: "注意", text: `高精力后继续工作过久的情况较多（N=${stop.followedByWorkCount}），先定停止点更合适。` });
-  }
-  if (lines.length === 0 && periodItems.some(isEnergyItem)) {
-    lines.push({ key: "overall", label: "状态", text: "本周期已有记录，但暂时没有达到最小重复样本的稳定模式。" });
-  }
-  return lines.slice(0, 5);
-}
-function recordOccurrenceDate(item) {
-  if (item.coreBlock === "task-session" && item.sessionStartedAt) {
-    const date2 = new Date(item.sessionStartedAt);
-    if (Number.isFinite(date2.getTime())) {
-      return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
-    }
-  }
-  return String(item.date || item.doneDate || item.startDate || item.scheduledDate || item.createdDate || "").slice(0, 10);
-}
-function recordAtOrBefore(item, today, nowTime) {
-  const itemDate = recordOccurrenceDate(item);
-  if (!itemDate) return true;
-  if (itemDate < today) return true;
-  if (itemDate > today) return false;
-  if (item.coreBlock === "task-session" && item.sessionEndedAt) return Date.parse(item.sessionEndedAt) <= Date.now();
-  if (!isEnergyItem(item)) return true;
-  const itemTime = String(item.startTime || item.extra?.["时间"] || "00:00").slice(0, 5);
-  return itemTime <= nowTime;
-}
-function evidenceRecordsForGoal(records, goalKey, goals, startDate, endDate) {
-  const goalTaskIds = new Set(records.filter((item) => item.coreBlock === "task" && getItemGoalKey(item, goals) === goalKey).map((item) => item.id));
-  const sessions = records.filter((item) => {
-    if (item.coreBlock !== "task-session") return false;
-    if (getItemGoalKey(item, goals) !== goalKey && !goalTaskIds.has(String(item.taskId || ""))) return false;
-    if (!startDate || !endDate) return true;
-    const date2 = recordOccurrenceDate(item);
-    return Boolean(date2 && date2 >= startDate && date2 <= endDate);
-  });
-  const requiredIds = /* @__PURE__ */ new Set();
-  for (const session of sessions) {
-    for (const value of [session.id, session.taskId, session.startEnergyRecordId, session.endEnergyRecordId]) {
-      const id = String(value || "").trim();
-      if (id) requiredIds.add(id);
-    }
-  }
-  return records.filter((item) => requiredIds.has(item.id));
-}
-function itemInRange(item, startDate, endDate) {
-  const date2 = recordOccurrenceDate(item);
-  return Boolean(date2 && date2 >= startDate && date2 <= endDate);
-}
-function buildEnergyViewModel(args) {
-  const { items = [], records = items, module: module2, goals = [], themes = [], currentView, dateRange } = args;
-  const rawConfig = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {} };
-  const config2 = {
-    ...rawConfig,
-    windowDays: Math.max(1, Math.min(31, Math.floor(Number(rawConfig.windowDays) || 7))),
-    recentSampleLimit: Math.max(1, Math.min(20, Math.floor(Number(rawConfig.recentSampleLimit) || 5))),
-    maxGoals: Math.max(0, Math.min(20, Math.floor(Number(rawConfig.maxGoals) || 0))),
-    goalPath: String(rawConfig.goalPath || "").trim(),
-    analysisWindowDays: Math.max(7, Math.min(90, Math.floor(Number(rawConfig.analysisWindowDays) || 30))),
-    currentContext: ["any", "work", "home", "commute", "out"].includes(String(rawConfig.currentContext || "")) ? rawConfig.currentContext : "any"
-  };
-  const startDate = dateText(dateRange[0]);
-  const endDate = dateText(dateRange[1]);
-  const now2 = dayjs();
-  const today = now2.format("YYYY-MM-DD");
-  const nowTime = now2.format("HH:mm");
-  const displayPeriodLabel = periodLabel(currentView, dateRange);
-  const requestedGoal = normalizedGoalFilter(config2.goalPath);
-  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
-  const panels = [];
-  for (const bucket of buckets) {
-    const bucketPath = normalizedGoalFilter(bucket.goalPath || bucket.name);
-    if (requestedGoal && bucketPath !== requestedGoal && normalizedGoalFilter(bucket.name) !== requestedGoal) continue;
-    const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
-    if (!goalItems.some(isEnergyItem)) continue;
-    const periodItems = goalItems.filter((item) => itemInRange(item, startDate, endDate));
-    const allGoalEvidenceRecords = evidenceRecordsForGoal(records, bucket.name, goals);
-    const periodEvidenceRecords = evidenceRecordsForGoal(records, bucket.name, goals, startDate, endDate);
-    const currentEvidenceRecords = allGoalEvidenceRecords.filter((item) => recordAtOrBefore(item, today, nowTime));
-    const summary = buildGoalEnergySummary(goalItems, config2.recentSampleLimit, {
-      contextRecords: records,
-      effectRecords: allGoalEvidenceRecords
-    });
-    if (!summary) continue;
-    const patterns = buildEnergyPatterns(periodItems, { activityRecords: periodEvidenceRecords, analysisWindowDays: Math.max(7, Math.min(config2.analysisWindowDays, 90)) });
-    const currentHistoryItems = goalItems.filter((item) => recordAtOrBefore(item, today, nowTime));
-    const management = buildEnergyManagement(currentHistoryItems, { evidenceRecords: currentEvidenceRecords, analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: ENERGY_RECOMMENDATION_HIGH_THRESHOLD });
-    const periodManagement = buildEnergyManagement(periodItems, { evidenceRecords: periodEvidenceRecords, analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: ENERGY_RECOMMENDATION_HIGH_THRESHOLD });
-    const quality = buildEnergyDataQuality(periodItems, { startDate, endDate, effectRecords: periodEvidenceRecords });
-    const period = periodRenderModel(buildEnergyPeriod(goalItems, { currentView, startDate, endDate }), goalItems, displayPeriodLabel, records);
-    panels.push({
-      key: bucket.name,
-      title: bucket.alias || bucket.name,
-      goalPath: bucket.goalPath || bucket.name,
-      icon: bucket.icon || null,
-      summary,
-      period,
-      reviewLines: compactReviewLines({ periodItems, patterns, management: periodManagement, quality }),
-      quality,
-      patterns,
-      management
-    });
-  }
-  panels.sort((left2, right2) => {
-    const leftKey = `${left2.summary.latestDate || ""} ${left2.summary.latestTime || ""}`;
-    const rightKey = `${right2.summary.latestDate || ""} ${right2.summary.latestTime || ""}`;
-    return rightKey.localeCompare(leftKey);
-  });
-  const visible = config2.maxGoals > 0 ? panels.slice(0, config2.maxGoals) : panels;
-  const globalCurrentHistoryItems = items.filter((item) => recordAtOrBefore(item, today, nowTime));
-  const globalEvidenceRecords = records.filter((item) => recordAtOrBefore(item, today, nowTime));
-  const globalManagement = buildEnergyManagement(globalCurrentHistoryItems, {
-    evidenceRecords: globalEvidenceRecords,
-    analysisWindowDays: config2.analysisWindowDays,
-    highEnergyThreshold: ENERGY_RECOMMENDATION_HIGH_THRESHOLD
-  });
-  const taskList = buildEnergyTaskListModel({
-    items,
-    historyItems: records,
-    management: globalManagement,
-    goals,
-    today,
-    dateRange,
-    currentContext: config2.currentContext
-  });
-  return {
-    config: config2,
-    currentView,
-    periodLabel: displayPeriodLabel,
-    goalPanels: visible,
-    totalEnergySamples: visible.reduce((sum, panel) => sum + (panel.period?.totalSamples || 0), 0),
-    sampledGoalCount: visible.length,
-    taskList
-  };
-}
-function EnergyDot({ visual, selected = false, title, className = "", style: style2, onClick, cell = false }) {
-  const label = title || (visual.capture === "retrospective" ? "补录精力点" : "实时精力点");
-  const interactive = Boolean(onClick);
-  const activate = (event) => onClick?.(event);
-  return /* @__PURE__ */ u2(
-    "svg",
-    {
-      viewBox: "0 0 100 100",
-      role: interactive ? "button" : "img",
-      tabIndex: interactive ? 0 : void 0,
-      "aria-label": label,
-      class: `think-energy-dot ${cell ? "is-cell" : "is-plot"} is-${visual.capture} is-band-${visual.band} ${selected ? "is-selected" : ""} ${className}`.trim(),
-      style: style2,
-      onClick: (event) => activate(event),
-      onKeyDown: (event) => {
-        if (!interactive) return;
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          activate(event);
-        }
-      },
-      children: [
-        /* @__PURE__ */ u2("title", { children: label }),
-        /* @__PURE__ */ u2("circle", { class: "think-energy-dot__selection", cx: "50", cy: "50", r: "47" }),
-        /* @__PURE__ */ u2("circle", { class: "think-energy-dot__shape", cx: "50", cy: "50", r: "41" })
-      ]
-    }
-  );
-}
-const TIMELINE_SIZES = {
-  1: 10,
-  2: 16,
-  3: 23,
-  4: 31,
-  5: 40
-};
-const CALENDAR_SIZES = {
-  1: 7,
-  2: 11,
-  3: 15,
-  4: 20,
-  5: 27
-};
-function energyScoreBand(score) {
-  const value = Math.max(0, Math.min(100, Number(score) || 0));
-  if (value < 30) return 1;
-  if (value < 50) return 2;
-  if (value < 70) return 3;
-  if (value < 90) return 4;
-  return 5;
-}
-function buildEnergyDotVisual(args) {
-  const score = Math.max(0, Math.min(100, Number(args.score) || 0));
-  const band = energyScoreBand(score);
-  const sizes = args.density === "calendar" ? CALENDAR_SIZES : TIMELINE_SIZES;
-  return {
-    score,
-    band,
-    sizePx: sizes[band],
-    capture: args.capture
-  };
-}
-function energyDotStyle(visual, extra = {}) {
-  return {
-    "--think-energy-dot-size": `${visual.sizePx}px`,
-    ...extra
-  };
-}
-function monthKey(date2) {
-  return date2.slice(0, 7);
-}
-function monthLabel(key) {
-  return `${Number(key.slice(5, 7))}月`;
-}
-function mondayIndex(date2) {
-  const parsed = /* @__PURE__ */ new Date(`${date2}T12:00:00`);
-  if (Number.isNaN(parsed.getTime())) return 0;
-  return (parsed.getDay() + 6) % 7;
-}
-function dayCaptureMode(day) {
-  return day.samples.length > 0 && day.samples.every((sample) => sample.captureMode === "retrospective") ? "retrospective" : "realtime";
-}
-function dayCaptureLabel(day) {
-  const retrospective = day.samples.filter((sample) => sample.captureMode === "retrospective").length;
-  if (retrospective === day.samples.length) return "仅补录";
-  if (retrospective > 0) return `含 ${retrospective} 次补录`;
-  return "实时";
-}
-function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
-  const months = /* @__PURE__ */ new Map();
-  for (const day of period.days) {
-    const key = monthKey(day.date);
-    const rows = months.get(key) || [];
-    rows.push(day);
-    months.set(key, rows);
-  }
-  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-daily-dots", "aria-label": `${period.currentView}每日精力`, children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: [
-      period.label,
-      " · 一天一个点"
-    ] }) }),
-    /* @__PURE__ */ u2("div", { class: `think-energy-daily-dots__months is-${period.currentView === "年" ? "year" : "quarter"}`, children: [...months.entries()].map(([key, days]) => {
-      const blanks = days.length ? mondayIndex(days[0].date) : 0;
-      return /* @__PURE__ */ u2("div", { class: "think-energy-daily-dots__month", children: [
-        /* @__PURE__ */ u2("strong", { children: monthLabel(key) }),
-        /* @__PURE__ */ u2("div", { class: "think-energy-daily-dots__weekdays", children: [
-          /* @__PURE__ */ u2("span", { children: "一" }),
-          /* @__PURE__ */ u2("span", { children: "二" }),
-          /* @__PURE__ */ u2("span", { children: "三" }),
-          /* @__PURE__ */ u2("span", { children: "四" }),
-          /* @__PURE__ */ u2("span", { children: "五" }),
-          /* @__PURE__ */ u2("span", { children: "六" }),
-          /* @__PURE__ */ u2("span", { children: "日" })
-        ] }),
-        /* @__PURE__ */ u2("div", { class: "think-energy-daily-dots__grid", children: [
-          Array.from({ length: blanks }).map((_2, index) => /* @__PURE__ */ u2("i", {}, `blank-${index}`)),
-          days.map((day) => {
-            const score = day.dailyScore;
-            const keyValue = `day:${day.date}`;
-            if (score == null) return /* @__PURE__ */ u2("div", { class: "think-energy-daily-dot-cell is-missing" }, day.date);
-            const visual = buildEnergyDotVisual({ score, capture: dayCaptureMode(day), density: "calendar" });
-            return /* @__PURE__ */ u2("div", { class: "think-energy-daily-dot-cell", children: /* @__PURE__ */ u2(
-              EnergyDot,
-              {
-                visual,
-                cell: true,
-                selected: selectedKey === keyValue,
-                className: "think-energy-daily-dot",
-                style: energyDotStyle(visual),
-                title: `${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}${day.samples.length === 1 && onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
-                onClick: (event) => {
-                  if (day.samples.length === 1 && hasPlatformModifier(event) && onOpenRecordOrigin) {
-                    stopInteractionEvent(event);
-                    void onOpenRecordOrigin(day.samples[0].item);
-                    return;
-                  }
-                  onSelect?.({ kind: "day", day });
-                }
-              }
-            ) }, day.date);
-          })
-        ] })
-      ] }, key);
-    }) }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝当天含实时记录 · 空心＝当天仅补录 · 5 档尺寸＝日均精力 · Missing 留白" })
-  ] });
-}
-const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-const TIME_TICKS = [0, 360, 720, 1080, 1440];
-function weekday(date2) {
-  const parsed = /* @__PURE__ */ new Date(`${date2}T12:00:00`);
-  return Number.isNaN(parsed.getTime()) ? "" : WEEKDAYS[parsed.getDay()];
-}
-function shortDate(date2) {
-  const match5 = date2.match(/^\d{4}-(\d{2})-(\d{2})$/);
-  return match5 ? `${match5[1]}-${match5[2]}` : date2;
-}
-function dayNumber(date2) {
-  return date2.slice(-2);
-}
-function axisStyle(name, percent) {
-  return { [name]: `${percent}%` };
-}
-function dayCountStyle(count) {
-  return { "--think-energy-day-count": String(count) };
-}
-function sampleTitle(sample) {
-  const parts = [`${sample.date} ${sample.time}`, `综合 ${sample.score}`];
-  if (sample.brainScore != null) parts.push(`脑力 ${sample.brainScore}`);
-  if (sample.physicalScore != null) parts.push(`体力 ${sample.physicalScore}`);
-  parts.push(sample.captureMode === "retrospective" ? "补录" : "实时");
-  return parts.join(" · ");
-}
-function sampleVisual(sample) {
-  return buildEnergyDotVisual({
-    score: sample.score,
-    capture: sample.captureMode,
-    density: "timeline"
-  });
-}
-function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
-  const day = period.days[0];
-  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-day-map", "aria-label": "日精力地图", children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: period.label }) }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-day-map__track", children: [
-      TIME_TICKS.map((tick) => /* @__PURE__ */ u2("span", { class: "think-energy-day-map__guide", style: axisStyle("--think-energy-x", tick / 1440 * 100), children: [
-        /* @__PURE__ */ u2("i", {}),
-        /* @__PURE__ */ u2("b", { children: [
-          String(Math.floor(tick / 60)).padStart(2, "0"),
-          ":00"
-        ] })
-      ] }, tick)),
-      day?.samples.map((sample) => {
-        const visual = sampleVisual(sample);
-        return /* @__PURE__ */ u2(
-          EnergyDot,
-          {
-            visual,
-            selected: selectedKey === sample.id,
-            className: "think-energy-map-dot",
-            style: energyDotStyle(visual, { "--think-energy-x": `${sample.minuteOfDay / 1440 * 100}%` }),
-            title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
-            onClick: (event) => {
-              if (hasPlatformModifier(event) && onOpenRecordOrigin) {
-                stopInteractionEvent(event);
-                void onOpenRecordOrigin(sample.item);
-                return;
-              }
-              onSelect?.({ kind: "sample", sample });
-            }
-          },
-          sample.id
-        );
-      }),
-      !day?.sampled && /* @__PURE__ */ u2("span", { class: "think-energy-day-map__empty", children: "当天未记录" })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低" })
-  ] });
-}
-function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
-  const isMonth = period.currentView === "月";
-  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-date-map", "aria-label": `${period.currentView}精力地图`, children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: [
-      period.label,
-      " · ",
-      period.sampledDays,
-      "/",
-      period.days.length,
-      " 天有记录"
-    ] }) }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-date-map__scroll", children: /* @__PURE__ */ u2("div", { class: `think-energy-date-map__chart ${isMonth ? "is-month" : "is-week"}`, children: [
-      /* @__PURE__ */ u2("div", { class: "think-energy-date-map__axis", children: [
-        /* @__PURE__ */ u2("div", { class: "think-energy-date-map__axis-head" }),
-        /* @__PURE__ */ u2("div", { class: "think-energy-date-map__axis-track", children: TIME_TICKS.map((tick) => /* @__PURE__ */ u2("span", { style: axisStyle("--think-energy-y", tick / 1440 * 100), children: [
-          String(Math.floor(tick / 60)).padStart(2, "0"),
-          ":00"
-        ] }, tick)) })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "think-energy-date-map__days", style: dayCountStyle(period.days.length), children: period.days.map((day) => /* @__PURE__ */ u2("div", { class: `think-energy-date-map__day ${day.sampled ? "" : "is-missing"}`, children: [
-        /* @__PURE__ */ u2("div", { class: "think-energy-date-map__day-head", children: [
-          !isMonth && /* @__PURE__ */ u2("strong", { children: weekday(day.date) }),
-          /* @__PURE__ */ u2("span", { children: isMonth ? dayNumber(day.date) : shortDate(day.date) })
-        ] }),
-        /* @__PURE__ */ u2("div", { class: "think-energy-date-map__lane", children: [
-          TIME_TICKS.map((tick) => /* @__PURE__ */ u2("i", { class: "think-energy-date-map__guide", style: axisStyle("--think-energy-y", tick / 1440 * 100) }, tick)),
-          day.samples.map((sample) => {
-            const visual = sampleVisual(sample);
-            return /* @__PURE__ */ u2(
-              EnergyDot,
-              {
-                visual,
-                selected: selectedKey === sample.id,
-                className: "think-energy-map-dot",
-                style: energyDotStyle(visual, { "--think-energy-y": `${sample.minuteOfDay / 1440 * 100}%` }),
-                title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
-                onClick: (event) => {
-                  if (hasPlatformModifier(event) && onOpenRecordOrigin) {
-                    stopInteractionEvent(event);
-                    void onOpenRecordOrigin(sample.item);
-                    return;
-                  }
-                  onSelect?.({ kind: "sample", sample });
-                }
-              },
-              sample.id
-            );
-          })
-        ] })
-      ] }, day.date)) })
-    ] }) }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低 · Missing 留白" })
-  ] });
-}
-function EnergyPeriodMap(props) {
-  const { period } = props;
-  if (!period) return /* @__PURE__ */ u2("div", { class: "think-energy-period-map think-energy-period-map--empty", children: "本周期没有精力记录。" });
-  if (period.mode === "day-horizontal") return /* @__PURE__ */ u2(EnergyDayMap, { ...props, period });
-  if (period.mode === "date-time") return /* @__PURE__ */ u2(EnergyDateTimeMap, { ...props, period });
-  return /* @__PURE__ */ u2(EnergyCalendarMap, { ...props, period });
-}
-function EnergyPeriodReview({ periodLabel: periodLabel2, lines }) {
-  return /* @__PURE__ */ u2("aside", { class: "think-energy-review", "aria-label": "本周期精力复盘", children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-review__head", children: [
-      /* @__PURE__ */ u2("strong", { children: "本周期" }),
-      /* @__PURE__ */ u2("span", { children: periodLabel2 })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-review__list", children: lines.map((line2) => /* @__PURE__ */ u2("div", { class: "think-energy-review__row", children: [
-      /* @__PURE__ */ u2("span", { children: line2.label }),
-      /* @__PURE__ */ u2("p", { children: line2.text })
-    ] }, `${line2.key}-${line2.text}`)) })
-  ] });
-}
-function RecordAction({ item, label, className = "think-energy-detail__open", onOpenRecord, onOpenRecordOrigin }) {
-  const gesture = createRecordGestureHandlers({
-    item,
-    onPrimary: () => void onOpenRecord?.(item),
-    onOpenOrigin: onOpenRecordOrigin
-  });
-  return /* @__PURE__ */ u2(
-    "button",
-    {
-      type: "button",
-      class: className,
-      title: RECORD_GESTURE_HINT,
-      onClick: gesture.onClick,
-      onDblClick: gesture.onDblClick,
-      onTouchEnd: gesture.onTouchEnd,
-      onKeyDown: gesture.onKeyDown,
-      children: label
-    }
-  );
-}
-function barStyle(value) {
-  return { "--think-energy-detail-value": `${Math.max(0, Math.min(100, value ?? 0))}%` };
-}
-function signalsText(selection) {
-  const signals = selection.sample.context?.dailySignals || [];
-  return signals.map((signal) => `${signal.label}${signal.value != null ? ` ${signal.value}` : ""}`).join(" · ");
-}
-function impactText(selection, management) {
-  const activity = selection.sample.context?.activity;
-  if (!activity) return null;
-  const label = classifyEnergyActivity(activity.item);
-  const candidate = [...management?.recoveryCandidates || [], ...management?.cautionCandidates || []].find((row) => row.label === label);
-  if (!candidate) return null;
-  const delta = Math.round(candidate.meanDelta);
-  return `${label} · 预计 ${delta > 0 ? "+" : ""}${delta}`;
-}
-function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecordOrigin }) {
-  const point = selection.sample;
-  const activity = point.context?.activity;
-  const signals = signalsText(selection);
-  const impact = impactText(selection, management);
-  return /* @__PURE__ */ u2("aside", { class: "think-energy-detail", "aria-label": "精力记录详情", children: [
-    /* @__PURE__ */ u2("button", { type: "button", class: "think-energy-detail__back", onClick: onBack, children: "‹ 返回本周期" }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-detail__head", children: [
-      /* @__PURE__ */ u2("div", { children: [
-        /* @__PURE__ */ u2("strong", { children: point.date }),
-        /* @__PURE__ */ u2("span", { children: point.time })
-      ] }),
-      /* @__PURE__ */ u2("span", { class: `think-energy-detail__mode ${point.captureMode === "retrospective" ? "is-retrospective" : ""}`, children: point.captureMode === "retrospective" ? "补录" : "实时" })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-detail__total", children: [
-      /* @__PURE__ */ u2("strong", { children: point.score }),
-      /* @__PURE__ */ u2("span", { children: "综合" })
-    ] }),
-    (point.brainScore != null || point.physicalScore != null) && /* @__PURE__ */ u2("div", { class: "think-energy-detail__bars", children: [
-      point.brainScore != null && /* @__PURE__ */ u2("div", { title: `脑力 ${point.brainScore}`, children: [
-        /* @__PURE__ */ u2("span", { children: "脑力" }),
-        /* @__PURE__ */ u2("i", { style: barStyle(point.brainScore), children: /* @__PURE__ */ u2("b", {}) })
-      ] }),
-      point.physicalScore != null && /* @__PURE__ */ u2("div", { title: `体力 ${point.physicalScore}`, children: [
-        /* @__PURE__ */ u2("span", { children: "体力" }),
-        /* @__PURE__ */ u2("i", { style: barStyle(point.physicalScore), children: /* @__PURE__ */ u2("b", {}) })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-detail__section", children: [
-      /* @__PURE__ */ u2("strong", { children: "当时" }),
-      activity ? /* @__PURE__ */ u2("p", { children: [
-        "前后活动　",
-        activity.title,
-        activity.durationMinutes ? ` · ${activity.durationMinutes}min` : ""
-      ] }) : /* @__PURE__ */ u2("p", { children: "附近没有可靠活动" }),
-      signals && /* @__PURE__ */ u2("p", { children: [
-        "当天　　　",
-        signals
-      ] })
-    ] }),
-    impact && /* @__PURE__ */ u2("div", { class: "think-energy-detail__impact", children: [
-      /* @__PURE__ */ u2("span", { children: "活动影响" }),
-      /* @__PURE__ */ u2("strong", { children: impact })
-    ] }),
-    onOpenRecord && /* @__PURE__ */ u2(RecordAction, { item: point.item, label: "打开记录 →", onOpenRecord, onOpenRecordOrigin })
-  ] });
-}
-function DayDetail({ selection, onBack, onOpenRecord, onOpenRecordOrigin }) {
-  const { day } = selection;
-  const latest2 = day.samples[day.samples.length - 1];
-  return /* @__PURE__ */ u2("aside", { class: "think-energy-detail", "aria-label": "每日精力详情", children: [
-    /* @__PURE__ */ u2("button", { type: "button", class: "think-energy-detail__back", onClick: onBack, children: "‹ 返回本周期" }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-detail__head", children: /* @__PURE__ */ u2("div", { children: [
-      /* @__PURE__ */ u2("strong", { children: day.date }),
-      /* @__PURE__ */ u2("span", { children: [
-        day.samples.length,
-        " 次记录"
-      ] })
-    ] }) }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-detail__total", children: [
-      /* @__PURE__ */ u2("strong", { children: day.dailyScore ?? "—" }),
-      /* @__PURE__ */ u2("span", { children: "当日平均" })
-    ] }),
-    (day.dailyBrainScore != null || day.dailyPhysicalScore != null) && /* @__PURE__ */ u2("div", { class: "think-energy-detail__bars", children: [
-      day.dailyBrainScore != null && /* @__PURE__ */ u2("div", { title: `脑力日均 ${day.dailyBrainScore}`, children: [
-        /* @__PURE__ */ u2("span", { children: "脑力" }),
-        /* @__PURE__ */ u2("i", { style: barStyle(day.dailyBrainScore), children: /* @__PURE__ */ u2("b", {}) })
-      ] }),
-      day.dailyPhysicalScore != null && /* @__PURE__ */ u2("div", { title: `体力日均 ${day.dailyPhysicalScore}`, children: [
-        /* @__PURE__ */ u2("span", { children: "体力" }),
-        /* @__PURE__ */ u2("i", { style: barStyle(day.dailyPhysicalScore), children: /* @__PURE__ */ u2("b", {}) })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-detail__section", children: [
-      /* @__PURE__ */ u2("strong", { children: "当天记录" }),
-      day.samples.map((sample) => /* @__PURE__ */ u2(RecordAction, { item: sample.item, label: `${sample.time}　综合 ${sample.score}`, className: "think-energy-detail__record-row", onOpenRecord, onOpenRecordOrigin }, sample.id))
-    ] }),
-    latest2 && onOpenRecord && /* @__PURE__ */ u2(RecordAction, { item: latest2.item, label: "打开最后一条记录 →", onOpenRecord, onOpenRecordOrigin })
-  ] });
-}
-function EnergySampleDetail(props) {
-  if (!props.selection) return null;
-  if (props.selection.kind === "day") return /* @__PURE__ */ u2(DayDetail, { ...props, selection: props.selection });
-  return /* @__PURE__ */ u2(SampleDetail, { ...props, selection: props.selection });
-}
-function recordLabel(record) {
-  return record.timeLabel || record.doneDate || "查看记录";
-}
-const CONTEXT_OPTIONS = [
-  { value: "any", label: "任意" },
-  { value: "work", label: "工作" },
-  { value: "home", label: "家" },
-  { value: "commute", label: "通勤" },
-  { value: "out", label: "外出" }
-];
-function durationClock(minutes) {
-  const totalSeconds = Math.max(60, Math.round(Math.max(1, minutes) * 60));
-  const hours = Math.floor(totalSeconds / 3600);
-  const mins = Math.floor(totalSeconds % 3600 / 60);
-  const seconds = totalSeconds % 60;
-  if (hours > 0) return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  return `${String(mins).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-function taskHover(task) {
-  return [
-    task.recommendationReason || task.title,
-    `倒计时 ${durationClock(task.suggestedDurationMinutes)}`,
-    "点击开始/继续计时",
-    "Ctrl/⌘+点击打开原文",
-    "右键更多"
-  ].filter(Boolean).join(" · ");
-}
-function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecordOrigin, onClose }) {
-  const editTask = () => {
-    void onOpenRecord?.(task.item);
-    onClose();
-  };
-  const taskGesture = createRecordGestureHandlers({
-    item: task.item,
-    onPrimary: editTask,
-    onOpenOrigin: onOpenRecordOrigin ? (originItem) => {
-      void onOpenRecordOrigin(originItem);
-      onClose();
-    } : void 0
-  });
-  return /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu", ref: menuRef, style: `left:${menu.x}px;top:${menu.y}px;`, children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-title", children: task.title }),
-    /* @__PURE__ */ u2(
-      "button",
-      {
-        type: "button",
-        class: "think-energy-task-list__menu-action",
-        title: RECORD_GESTURE_HINT,
-        onClick: taskGesture.onClick,
-        onDblClick: taskGesture.onDblClick,
-        onTouchEnd: taskGesture.onTouchEnd,
-        onKeyDown: taskGesture.onKeyDown,
-        children: "编辑任务"
-      }
-    ),
-    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-meta", children: [
-      currentView,
-      "内完成 ",
-      task.count,
-      " 次"
-    ] }),
-    task.recurrenceLabel && /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-meta", children: task.recurrenceLabel }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-records", children: task.records.length > 0 ? task.records.map((record) => {
-      const gesture = createRecordGestureHandlers({
-        item: record.item,
-        onOpenOrigin: onOpenRecordOrigin ? (originItem) => {
-          void onOpenRecordOrigin(originItem);
-          onClose();
-        } : void 0,
-        onPrimary: () => {
-          void onOpenRecord?.(record.item);
-          onClose();
-        }
-      });
-      return /* @__PURE__ */ u2(
-        "a",
-        {
-          class: "think-energy-task-list__menu-record",
-          href: "#",
-          title: RECORD_GESTURE_HINT,
-          onClick: gesture.onClick,
-          onDblClick: gesture.onDblClick,
-          onTouchEnd: gesture.onTouchEnd,
-          onKeyDown: gesture.onKeyDown,
-          children: recordLabel(record)
-        },
-        record.id
-      );
-    }) : /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-empty", children: "暂无历史记录" }) })
-  ] });
-}
-function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, onOpenRecordOrigin, onContextChange }) {
-  const [menu, setMenu] = d(null);
-  const menuRef = A$1(null);
-  const taskMap = T$1(() => {
-    const map = /* @__PURE__ */ new Map();
-    for (const goal of model.goals) {
-      for (const row of goal.rows) {
-        for (const task of row.tasks) map.set(task.itemId, task);
-      }
-    }
-    return map;
-  }, [model]);
-  const selectedTask = menu ? taskMap.get(menu.taskId) || null : null;
-  y(() => {
-    const onDown = (event) => {
-      if (!menuRef.current || menuRef.current.contains(event.target)) return;
-      setMenu(null);
-    };
-    const onEsc = (event) => {
-      if (event.key === "Escape") setMenu(null);
-    };
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onEsc);
-    return () => {
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onEsc);
-    };
-  }, []);
-  const activateTask = (task, event) => {
-    if (event && hasPlatformModifier(event) && onOpenRecordOrigin) {
-      stopInteractionEvent(event);
-      void onOpenRecordOrigin(task.item);
-      return;
-    }
-    void onStartTask?.(task);
-  };
-  const contextLabel = CONTEXT_OPTIONS.find((option) => option.value === model.currentContext)?.label || "任意";
-  return /* @__PURE__ */ u2("section", { class: "think-energy-task-list", "aria-label": "任务", children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendation-shell", "aria-label": "当前推荐", children: [
-      /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendation-head", children: [
-        /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendation-heading", children: [
-          /* @__PURE__ */ u2("strong", { children: "现在适合" }),
-          model.latestEnergy ? /* @__PURE__ */ u2("span", { children: [
-            model.recommendationStateLabel || "当前精力",
-            " · ",
-            model.latestEnergy.score
-          ] }) : /* @__PURE__ */ u2("span", { children: "记录当前精力后生成推荐" })
-        ] }),
-        /* @__PURE__ */ u2("label", { class: "think-energy-task-list__context", children: [
-          /* @__PURE__ */ u2("span", { children: "场景" }),
-          /* @__PURE__ */ u2(
-            "select",
-            {
-              value: model.currentContext,
-              "aria-label": `当前场景：${contextLabel}`,
-              onChange: (event) => void onContextChange?.(event.currentTarget.value),
-              children: CONTEXT_OPTIONS.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
-            }
-          )
-        ] })
-      ] }),
-      model.latestEnergy ? model.recommendations.length > 0 ? /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendations", role: "list", children: model.recommendations.map((task, index) => /* @__PURE__ */ u2(
-        "button",
-        {
-          type: "button",
-          role: "listitem",
-          class: "think-energy-task-list__recommendation",
-          title: taskHover(task),
-          onClick: (event) => activateTask(task, event),
-          onKeyDown: (event) => {
-            if (hasPlatformModifier(event) && isKeyboardActivation(event)) activateTask(task, event);
-          },
-          onContextMenu: (event) => {
-            event.preventDefault();
-            setMenu({ x: event.clientX, y: event.clientY, taskId: task.itemId });
-          },
-          children: [
-            /* @__PURE__ */ u2("span", { class: "think-energy-task-list__recommendation-rank", children: task.recommendationRank || index + 1 }),
-            /* @__PURE__ */ u2("span", { class: "think-energy-task-list__recommendation-title", children: task.title }),
-            /* @__PURE__ */ u2("span", { class: "think-energy-task-list__recommendation-duration", children: durationClock(task.suggestedDurationMinutes) }),
-            /* @__PURE__ */ u2("span", { class: "think-energy-task-list__recommendation-play", "aria-hidden": "true", children: "▶" })
-          ]
-        },
-        `recommendation:${task.itemId}`
-      )) }) : /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendation-empty", children: [
-        "当前“",
-        contextLabel,
-        "”场景没有可推荐任务。"
-      ] }) : null
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__all-head", children: "全部任务" }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__goals", children: model.goals.length > 0 ? model.goals.map((goal) => /* @__PURE__ */ u2("section", { class: "think-energy-task-list__goal-group", children: [
-      /* @__PURE__ */ u2("div", { class: "think-energy-task-list__goal-title", children: goal.label }),
-      /* @__PURE__ */ u2("div", { class: "think-energy-task-list__rows", children: goal.rows.map((row) => /* @__PURE__ */ u2("div", { class: `think-energy-task-list__row think-energy-task-list__row--${row.key}`, children: [
-        /* @__PURE__ */ u2("div", { class: "think-energy-task-list__row-label", title: row.label, "aria-label": row.label, children: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: row.emoji }) }),
-        /* @__PURE__ */ u2("div", { class: "think-energy-task-list__items", children: row.tasks.map((task) => /* @__PURE__ */ u2(
-          "button",
-          {
-            type: "button",
-            class: `think-energy-task-list__item think-energy-task-list__item--${task.cadence}`,
-            title: taskHover(task),
-            onClick: (event) => activateTask(task, event),
-            onKeyDown: (event) => {
-              if (hasPlatformModifier(event) && isKeyboardActivation(event)) activateTask(task, event);
-            },
-            onContextMenu: (event) => {
-              event.preventDefault();
-              setMenu({ x: event.clientX, y: event.clientY, taskId: task.itemId });
-            },
-            children: [
-              /* @__PURE__ */ u2("span", { class: "think-energy-task-list__task", children: task.title }),
-              task.recurring && task.count > 0 && /* @__PURE__ */ u2("span", { class: "think-energy-task-list__count", children: [
-                "·",
-                task.count
-              ] }),
-              task.energyMatched && /* @__PURE__ */ u2("span", { class: "think-energy-task-list__energy-match", "aria-label": "当前精力更匹配", title: "当前精力更匹配", children: "★" })
-            ]
-          },
-          task.itemId
-        )) })
-      ] }, row.key)) })
-    ] }, goal.key)) : /* @__PURE__ */ u2("div", { class: "think-energy-task-list__empty-state", children: "当前没有未完成任务。" }) }),
-    menu && selectedTask && /* @__PURE__ */ u2(
-      TaskMenu,
-      {
-        menu,
-        task: selectedTask,
-        currentView,
-        menuRef,
-        onOpenRecord,
-        onOpenRecordOrigin,
-        onClose: () => setMenu(null)
-      }
-    )
-  ] });
-}
-function selectionKey(selection) {
-  if (!selection) return null;
-  return selection.kind === "sample" ? selection.sample.id : `day:${selection.day.date}`;
-}
-function GoalEnergyPanel({ panel, model, onOpenRecord, onOpenRecordOrigin }) {
-  const [selection, setSelection] = d(null);
-  return /* @__PURE__ */ u2("section", { class: "think-energy-view__goal", children: /* @__PURE__ */ u2("div", { class: "think-energy-view__primary", children: [
-    model.config.showTimeline ? /* @__PURE__ */ u2(EnergyPeriodMap, { period: panel.period, selectedKey: selectionKey(selection), onSelect: setSelection, onOpenRecordOrigin }) : /* @__PURE__ */ u2("div", { class: "think-energy-view__timeline-off", children: "精力地图已关闭。" }),
-    selection ? /* @__PURE__ */ u2(
-      EnergySampleDetail,
-      {
-        selection,
-        management: model.config.showManagement ? panel.management : null,
-        onBack: () => setSelection(null),
-        onOpenRecord,
-        onOpenRecordOrigin
-      }
-    ) : /* @__PURE__ */ u2(EnergyPeriodReview, { periodLabel: model.periodLabel, lines: panel.reviewLines })
-  ] }) });
-}
-function EmptyEnergyPanel() {
-  return /* @__PURE__ */ u2("section", { class: "think-energy-view__goal think-energy-view__goal--empty", children: /* @__PURE__ */ u2("div", { class: "think-energy-view think-energy-view--empty", children: [
-    /* @__PURE__ */ u2("strong", { children: "还没有可展示的精力记录" }),
-    /* @__PURE__ */ u2("span", { children: "任务仍可直接从下方开始；精力记录可继续使用现有快捷入口。" })
-  ] }) });
-}
-function EnergyView({ items, records = items, module: module2, dateRange, currentView, goals = [], inputSettings, timers = [], onOpenRecord, onOpenRecordOrigin, timerService, onEnergyContextChange }) {
-  const energyModel = T$1(() => buildEnergyViewModel({
-    items,
-    records,
-    module: module2,
-    dateRange,
-    currentView,
-    goals,
-    themes: inputSettings?.themes || []
-  }), [items, records, module2, dateRange, currentView, goals, inputSettings?.themes, timers]);
-  const startTask = async (task) => {
-    const baseline = energyModel.taskList.latestEnergy;
-    if (baseline && timerService?.startEnergyTask) {
-      await timerService.startEnergyTask(task.itemId, {
-        baselineScore: baseline.score,
-        baselineBrainScore: baseline.brainScore,
-        baselinePhysicalScore: baseline.physicalScore,
-        baselineDate: baseline.date,
-        baselineTime: baseline.time,
-        baselineEnergyItemId: baseline.itemId,
-        suggestedDurationMinutes: task.suggestedDurationMinutes
-      });
-      return;
-    }
-    await timerService?.startOrResume(task.itemId);
-  };
-  const [firstPanel, ...otherPanels] = energyModel.goalPanels;
-  return /* @__PURE__ */ u2("div", { class: "think-energy-view", children: /* @__PURE__ */ u2("div", { class: "think-energy-view__goals", children: [
-    firstPanel ? /* @__PURE__ */ u2(GoalEnergyPanel, { panel: firstPanel, model: energyModel, onOpenRecord, onOpenRecordOrigin }) : /* @__PURE__ */ u2(EmptyEnergyPanel, {}),
-    /* @__PURE__ */ u2(
-      EnergyTaskList,
-      {
-        model: energyModel.taskList,
-        currentView: energyModel.currentView,
-        onStartTask: timerService ? startTask : void 0,
-        onOpenRecord,
-        onOpenRecordOrigin,
-        onContextChange: onEnergyContextChange
-      }
-    ),
-    otherPanels.map((panel) => /* @__PURE__ */ u2(GoalEnergyPanel, { panel, model: energyModel, onOpenRecord, onOpenRecordOrigin }, panel.key))
-  ] }) });
-}
-function isTableViewConfigured(rowField, colField) {
-  return Boolean(rowField && colField);
-}
-function getTableViewEmptyMessage() {
-  return '（表格视图需要配置"行字段"和"列字段"）';
-}
-function buildTableViewRenderModel(input) {
-  if (!isTableViewConfigured(input.rowField, input.colField)) {
-    return {
-      isConfigured: false,
-      emptyMessage: getTableViewEmptyMessage(),
-      matrix: {},
-      sortedRows: [],
-      sortedCols: []
-    };
-  }
-  const { matrix, sortedRows, sortedCols } = buildTableMatrix(input.items, input.rowField, input.colField, { goals: input.goals ?? [] });
-  return {
-    isConfigured: true,
-    emptyMessage: "",
-    matrix,
-    sortedRows,
-    sortedCols
-  };
-}
-function findTableViewTimer(timers, itemId) {
-  return (timers ?? []).find((timer) => timer?.taskId === itemId);
-}
-function TableViewCell(props) {
-  const {
-    items,
-    onMarkDone,
-    resolveResourcePath,
-    onOpenRecordOrigin,
-    timerService,
-    timers,
-    allThemes,
-    onOpenRecord
-  } = props;
-  if (!items.length) return /* @__PURE__ */ u2("td", { class: "empty" });
-  return /* @__PURE__ */ u2("td", { children: items.map((item) => /* @__PURE__ */ u2("div", { class: "think-table-cell-item", children: item.coreBlock === "task" ? /* @__PURE__ */ u2(
-    TaskRow,
-    {
-      item,
-      onMarkDone,
-      resolveResourcePath,
-      onOpenRecordOrigin,
-      timerService,
-      timer: findTableViewTimer(timers, item.id),
-      allThemes,
-      compact: true,
-      onOpenRecord
-    }
-  ) : /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin }) }, item.id)) });
-}
-function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], goals = [], onOpenRecord }) {
-  const renderModel = buildTableViewRenderModel({ items, rowField, colField, goals });
-  if (!renderModel.isConfigured) {
-    return /* @__PURE__ */ u2("div", { children: renderModel.emptyMessage });
-  }
-  return /* @__PURE__ */ u2("table", { class: "think-table", children: [
-    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("th", { children: rowField }),
-      renderModel.sortedCols.map((col) => /* @__PURE__ */ u2("th", { children: col }, col))
-    ] }) }),
-    /* @__PURE__ */ u2("tbody", { children: renderModel.sortedRows.map((row) => /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: row }) }),
-      renderModel.sortedCols.map((col) => /* @__PURE__ */ u2(
-        TableViewCell,
-        {
-          items: renderModel.matrix[row]?.[col] || [],
-          onMarkDone,
-          resolveResourcePath,
-          onOpenRecordOrigin,
-          timerService,
-          timers,
-          allThemes,
-          onOpenRecord
-        },
-        col
-      ))
-    ] }, row)) })
-  ] });
-}
-function isOptionLikeValue(value) {
-  return !!value && typeof value === "object" && ("value" in value || "label" in value);
-}
-function formatExcelCellValue(value) {
-  if (Array.isArray(value)) return value.map(formatExcelCellValue).filter(Boolean).join(", ");
-  if (isOptionLikeValue(value)) return String(value.label ?? value.value ?? "");
-  if (value === true) return "true";
-  if (value === false) return "false";
-  return value == null ? "" : String(value);
-}
-function toDateInputValue(value) {
-  const text2 = formatExcelCellValue(value).trim();
-  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})/);
-  return match5 ? match5[1] : text2;
-}
-function toTimeInputValue(value) {
-  const text2 = formatExcelCellValue(value).trim();
-  const match5 = text2.match(/^(\d{1,2}:\d{2})/);
-  return match5 ? match5[1].padStart(5, "0") : text2;
-}
-function toDateTimeInputValue(value) {
-  const text2 = formatExcelCellValue(value).trim();
-  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})/);
-  return match5 ? `${match5[1]}T${match5[2]}` : text2;
-}
-function isValidDateInput(value) {
-  return !value || /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-function isValidTimeInput(value) {
-  return !value || /^\d{1,2}:\d{2}$/.test(value);
-}
-function isValidDateTimeInput(value) {
-  return !value || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
-}
-function truncateExcelCellText(text2, maxLength = 20) {
-  if (text2.length <= maxLength) return text2;
-  return text2.substring(0, maxLength) + "...";
-}
-function normalizeExcelColumnKey(field) {
-  return normalizeEditableFieldKey(field);
-}
-function buildExcelColumns(fields) {
-  const seen = /* @__PURE__ */ new Set();
-  const columns = [];
-  for (const field of fields) {
-    const key = normalizeExcelColumnKey(field);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    const policy = getFieldEditPolicy(key);
-    columns.push({
-      key,
-      canonicalField: policy.canonicalField,
-      label: getFieldLabel(key) || key,
-      editable: policy.editable && policy.commitMode === "inline",
-      editorKind: policy.editorKind,
-      commitMode: policy.commitMode,
-      dangerLevel: policy.dangerLevel,
-      readonlyReason: policy.editable ? void 0 : policy.reason
-    });
-  }
-  return columns;
-}
-function buildExcelCellModel(item, field, valueOverride) {
-  const sourceValue = readField(item, field);
-  const hasOverride = valueOverride !== void 0;
-  const value = hasOverride ? valueOverride : sourceValue;
-  const policy = getFieldEditPolicy(field, value);
-  return {
-    item,
-    itemId: item.id,
-    field,
-    canonicalField: policy.canonicalField,
-    value,
-    displayValue: formatExcelCellValue(value),
-    editorValue: formatExcelEditorValue(value, policy.editorKind),
-    policy
-  };
-}
-function formatExcelEditorValue(value, editorKind) {
-  if (editorKind === "date") return toDateInputValue(value);
-  if (editorKind === "time") return toTimeInputValue(value);
-  if (editorKind === "datetime") return toDateTimeInputValue(value);
-  if (editorKind === "boolean") return value === true ? "true" : value === false ? "false" : formatExcelCellValue(value);
-  if (editorKind === "select" && isOptionLikeValue(value)) return String(value.value ?? value.label ?? "");
-  return formatExcelCellValue(value);
-}
-function getExcelEditorOptions(cell) {
-  if (cell.policy.editorKind === "boolean") {
-    return [
-      { value: "", label: "空" },
-      { value: "true", label: "是" },
-      { value: "false", label: "否" }
-    ];
-  }
-  const options = cell.policy.definition?.options;
-  if (!Array.isArray(options) || !options.length) {
-    return cell.editorValue ? [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }] : [{ value: "", label: "空" }];
-  }
-  const normalized2 = options.map((option) => ({
-    value: String(option?.value ?? ""),
-    label: String(option?.label ?? option?.value ?? "")
-  })).filter((option) => option.value || option.label);
-  if (cell.editorValue && !normalized2.some((option) => option.value === cell.editorValue)) {
-    return [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }, ...normalized2];
-  }
-  return normalized2;
-}
-function validateExcelEditorValue(cell, editorValue) {
-  const trimmed = editorValue.trim();
-  switch (cell.policy.editorKind) {
-    case "number":
-    case "rating":
-      return trimmed && !Number.isFinite(Number(trimmed)) ? "请输入有效数字" : null;
-    case "date":
-      return isValidDateInput(trimmed) ? null : "日期格式应为 YYYY-MM-DD";
-    case "time":
-      return isValidTimeInput(trimmed) ? null : "时间格式应为 HH:mm";
-    case "datetime":
-      return isValidDateTimeInput(trimmed) ? null : "日期时间格式应为 YYYY-MM-DDTHH:mm";
-    case "select": {
-      const options = getExcelEditorOptions(cell);
-      return options.length && trimmed && !options.some((option) => option.value === trimmed) ? "请选择有效选项" : null;
-    }
-    default:
-      return null;
-  }
-}
-function parseExcelEditorValue(cell, editorValue) {
-  const raw = editorValue;
-  const trimmed = raw.trim();
-  switch (cell.policy.editorKind) {
-    case "number":
-    case "rating": {
-      if (!trimmed) return null;
-      const numeric = Number(trimmed);
-      return Number.isFinite(numeric) ? numeric : raw;
-    }
-    case "boolean": {
-      const lower = trimmed.toLowerCase();
-      if (["true", "1", "yes", "y", "是"].includes(lower)) return true;
-      if (["false", "0", "no", "n", "否"].includes(lower)) return false;
-      return null;
-    }
-    case "date":
-    case "time":
-    case "datetime":
-    case "select":
-      return trimmed;
-    case "tags":
-      return trimmed.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
-    default:
-      return raw;
-  }
-}
-function areExcelCellValuesEqual(left2, right2) {
-  return formatExcelCellValue(left2) === formatExcelCellValue(right2);
-}
-function ExcelCellContent({
-  cell,
-  contentText,
-  showFullMarkdownContent,
-  messageRenderPort,
-  onMarkdownClick,
-  onMarkdownDoubleClick
-}) {
-  if (showFullMarkdownContent) {
-    return /* @__PURE__ */ u2(
-      MarkdownContent,
-      {
-        renderPort: messageRenderPort,
-        content: contentText,
-        contentType: "markdown",
-        sourcePath: cell.item.file?.path || "",
-        className: "excel-view-cell-md",
-        onClick: onMarkdownClick,
-        onDblClick: onMarkdownDoubleClick
-      }
-    );
-  }
-  if (cell.canonicalField === "content" && contentText) {
-    return /* @__PURE__ */ u2("span", { class: "excel-view-content-link", children: truncateExcelCellText(contentText) });
-  }
-  return /* @__PURE__ */ u2("span", { class: "excel-view-cell-value", children: cell.displayValue });
-}
-function getExcelCellKey(itemId, field) {
-  return `${itemId}::${field}`;
-}
-function canInlineEditExcelCell(cell, canCommit = true) {
-  return !!canCommit && cell.policy.editable && cell.policy.commitMode === "inline";
-}
-function getExcelEditorDescriptor(kind) {
-  if (kind === "textarea") return { tag: "textarea", hint: "Enter 保存 · Shift+Enter 换行 · Esc 取消" };
-  if (kind === "number") return { tag: "input", type: "number", hint: "数字编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "rating") return { tag: "input", type: "number", hint: "评分编辑器：输入数字，Enter 保存 · Esc 取消" };
-  if (kind === "date") return { tag: "input", type: "date", hint: "日期编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "time") return { tag: "input", type: "time", hint: "时间编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "datetime") return { tag: "input", type: "datetime-local", hint: "日期时间编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "boolean") return { tag: "select", hint: "布尔编辑器：选择 是 / 否，Enter 保存 · Esc 取消" };
-  if (kind === "select") return { tag: "select", hint: "选项编辑器：选择后 Enter 保存 · Esc 取消" };
-  if (kind === "tags") return { tag: "input", type: "text", hint: "标签编辑器：逗号/换行分隔，# 会保留" };
-  return { tag: "input", type: "text", hint: "Enter 保存 · Esc 取消" };
-}
-function readExcelKeyboardValue(event) {
-  const target = event.currentTarget;
-  return target.value;
-}
-function getExcelReadonlyTitle(policyReason) {
-  return policyReason || "该字段不可在 Excel 单元格中直接编辑";
-}
-function getExcelTypedInputProps(kind) {
-  if (kind === "number") return { step: "any" };
-  if (kind === "rating") return { step: 1, min: 0, max: 5 };
-  return {};
-}
-function isExcelMarkdownInteractiveTarget(target) {
-  if (!(target instanceof HTMLElement)) return false;
-  return !!target.closest("a, button, input, textarea, select, .internal-link, .external-link, .tag");
-}
-function buildExcelCellTitle(params) {
-  const { error, editable, policyReason } = params;
-  if (error) return error;
-  return editable ? "双击/F2/Enter 编辑；方向键/Tab 移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getExcelReadonlyTitle(policyReason)}；Ctrl/⌘ 点击可打开完整编辑`;
-}
-function buildExcelCellClassName(params) {
-  const {
-    editable,
-    policyEditable,
-    dangerLevel,
-    isContentCell,
-    showFullMarkdownContent,
-    selected,
-    editing,
-    pending,
-    saved,
-    error,
-    fillSource,
-    fillTarget
-  } = params;
-  return [
-    "excel-view-cell",
-    editable ? "is-inline-editable" : "is-readonly",
-    policyEditable ? "is-policy-editable" : "is-policy-readonly",
-    dangerLevel === "medium" ? "is-medium-risk" : "",
-    dangerLevel === "high" ? "is-high-risk" : "",
-    isContentCell ? "is-content-cell" : "",
-    showFullMarkdownContent ? "is-content-expanded" : "",
-    selected ? "is-selected" : "",
-    editing ? "is-editing" : "",
-    pending ? "is-pending" : "",
-    saved && !pending && !error ? "is-saved" : "",
-    error ? "has-error" : "",
-    fillSource ? "is-fill-source" : "",
-    fillTarget ? "is-fill-target" : ""
-  ].filter(Boolean).join(" ");
-}
-function getExcelCellSaveState(params) {
-  if (params.pending) return "pending";
-  if (params.error) return "error";
-  if (params.saved) return "saved";
-  return "idle";
-}
-function buildExcelCellUiState(params) {
-  const {
-    cell,
-    selected = false,
-    editing = false,
-    pending = false,
-    saved = false,
-    error,
-    canCommit = false,
-    fillSource = false,
-    fillTarget = false,
-    contentDisplayMode = "previewText"
-  } = params;
-  const editable = canInlineEditExcelCell(cell, canCommit);
-  const descriptor = getExcelEditorDescriptor(cell.policy.editorKind);
-  const isContentCell = cell.canonicalField === "content";
-  const contentText = typeof cell.value === "string" ? cell.value : "";
-  const showFullMarkdownContent = isContentCell && contentDisplayMode === "fullMarkdown" && !!contentText.trim();
-  const title = buildExcelCellTitle({ error, editable, policyReason: cell.policy.reason });
-  return {
-    editable,
-    readonly: !editable,
-    descriptor,
-    editorOptions: getExcelEditorOptions(cell),
-    cellKey: getExcelCellKey(cell.itemId, cell.canonicalField),
-    isContentCell,
-    contentText,
-    showFullMarkdownContent,
-    title,
-    className: buildExcelCellClassName({
-      editable,
-      policyEditable: cell.policy.editable,
-      dangerLevel: cell.policy.dangerLevel,
-      isContentCell,
-      showFullMarkdownContent,
-      selected,
-      editing,
-      pending,
-      saved,
-      error,
-      fillSource,
-      fillTarget
-    }),
-    saveState: getExcelCellSaveState({ pending, saved, error })
-  };
-}
-function resolveExcelCellEditorKeyAction(params) {
-  if (params.key === "Escape") return "cancel-edit";
-  if (params.key === "Enter" && !(params.descriptorTag === "textarea" && params.shiftKey)) return "commit-edit";
-  return "none";
-}
-function resolveExcelCellKeyAction(params) {
-  const { key, shiftKey, editing, editable, fillDragging } = params;
-  if (key === "Escape" && fillDragging) return { type: "cancel-fill-drag" };
-  if (editing) return { type: "none" };
-  if (key === "ArrowUp") return { type: "navigate", direction: "up" };
-  if (key === "ArrowDown") return { type: "navigate", direction: "down" };
-  if (key === "ArrowLeft") return { type: "navigate", direction: "left" };
-  if (key === "ArrowRight") return { type: "navigate", direction: "right" };
-  if (key === "Tab") return { type: "navigate", direction: shiftKey ? "previous" : "next" };
-  if ((key === "Enter" || key === "F2") && editable) return { type: "start-edit" };
-  return { type: "none" };
-}
-function readEditorValue(event) {
-  const target = event.currentTarget;
-  return target?.value ?? "";
-}
-function ExcelCellEditor({
-  descriptor,
-  editorOptions,
-  editorKind,
-  draft,
-  pending,
-  inputRef,
-  onDraftChange,
-  onKeyDown,
-  onBlur
-}) {
-  return /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-wrap", children: [
-    descriptor.tag === "textarea" ? /* @__PURE__ */ u2(
-      "textarea",
-      {
-        ref: inputRef,
-        class: "excel-view-cell-editor excel-view-cell-editor-textarea",
-        value: draft,
-        disabled: pending,
-        onInput: (event) => onDraftChange(readEditorValue(event)),
-        onKeyDown: (event) => onKeyDown(event),
-        onBlur
-      }
-    ) : descriptor.tag === "select" ? /* @__PURE__ */ u2(
-      "select",
-      {
-        ref: inputRef,
-        class: "excel-view-cell-editor excel-view-cell-editor-select",
-        value: draft,
-        disabled: pending,
-        onChange: (event) => onDraftChange(readEditorValue(event)),
-        onKeyDown: (event) => onKeyDown(event),
-        onBlur,
-        children: editorOptions.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
-      }
-    ) : /* @__PURE__ */ u2(
-      "input",
-      {
-        ref: inputRef,
-        class: "excel-view-cell-editor",
-        type: descriptor.type || "text",
-        value: draft,
-        disabled: pending,
-        ...getExcelTypedInputProps(editorKind),
-        onInput: (event) => onDraftChange(readEditorValue(event)),
-        onKeyDown: (event) => onKeyDown(event),
-        onBlur
-      }
-    ),
-    /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-hint", children: descriptor.hint })
-  ] });
-}
-function ExcelCell({
-  cell,
-  selected = false,
-  editing = false,
-  pending = false,
-  saved = false,
-  error,
-  canCommit = false,
-  style: style2,
-  fillDragging = false,
-  fillSource = false,
-  fillTarget = false,
-  contentDisplayMode = "previewText",
-  messageRenderPort,
-  onSelect,
-  onStartEdit,
-  onCancelEdit,
-  onCommitEdit,
-  onNavigate,
-  onPasteText,
-  onStartFillDrag,
-  onMoveFillDrag,
-  onFinishFillDrag,
-  onCancelFillDrag,
-  onOpenRecordOrigin
-}) {
-  const { item, field, editorValue, policy } = cell;
-  const [draft, setDraft] = d(editorValue);
-  const inputRef = A$1(null);
-  const ui = buildExcelCellUiState({ cell, selected, editing, pending, saved, error, canCommit, fillSource, fillTarget, contentDisplayMode });
-  y(() => {
-    if (editing) setDraft(editorValue);
-  }, [editing, editorValue]);
-  y(() => {
-    if (!editing) return;
-    const input = inputRef.current;
-    input?.focus?.();
-    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) input.select();
-  }, [editing]);
-  const commit = (nextValue = draft) => {
-    if (!editing || pending) return;
-    onCommitEdit?.(cell, nextValue);
-  };
-  const handleCellClick = (event) => {
-    if (fillDragging) return;
-    if (hasPlatformModifier(event)) {
-      event.preventDefault();
-      event.stopPropagation();
-      return onOpenRecordOrigin?.(item);
-    }
-    onSelect?.(cell);
-  };
-  const handleDoubleClick = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (ui.editable) onStartEdit?.(cell);
-    else onSelect?.(cell);
-  };
-  const handleMarkdownClick = (event) => {
-    if (isExcelMarkdownInteractiveTarget(event.target)) event.stopPropagation();
-  };
-  const handleMarkdownDoubleClick = (event) => {
-    if (isExcelMarkdownInteractiveTarget(event.target)) event.stopPropagation();
-  };
-  const handleFillMouseDown = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!ui.editable || pending || editing) return;
-    onStartFillDrag?.(cell);
-  };
-  const handleEditorKeyDown = (event) => {
-    const action = resolveExcelCellEditorKeyAction({ key: event.key, shiftKey: event.shiftKey, descriptorTag: ui.descriptor.tag });
-    if (action === "none") return;
-    event.preventDefault();
-    if (action === "cancel-edit") return onCancelEdit?.();
-    commit(readExcelKeyboardValue(event));
-  };
-  const handleCellKeyDown = (event) => {
-    const action = resolveExcelCellKeyAction({ key: event.key, shiftKey: event.shiftKey, editing, editable: ui.editable, fillDragging });
-    if (action.type === "none") return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (action.type === "cancel-fill-drag") return onCancelFillDrag?.();
-    if (action.type === "start-edit") return onStartEdit?.(cell);
-    onNavigate?.(cell, action.direction);
-  };
-  const handlePaste = (event) => {
-    if (editing) return;
-    const text2 = event.clipboardData?.getData("text/plain") || "";
-    if (!text2) return;
-    event.preventDefault();
-    event.stopPropagation();
-    onPasteText?.(cell, text2);
-  };
-  return /* @__PURE__ */ u2(
-    "td",
-    {
-      "data-excel-cell-key": ui.cellKey,
-      "data-field": field,
-      "data-canonical-field": policy.canonicalField,
-      "data-editable": ui.editable ? "true" : "false",
-      "data-policy-editable": policy.editable ? "true" : "false",
-      "data-editor-kind": policy.editorKind,
-      "data-danger-level": policy.dangerLevel,
-      "data-content-display-mode": ui.isContentCell ? contentDisplayMode : void 0,
-      "data-save-state": ui.saveState,
-      class: ui.className,
-      style: style2,
-      title: onOpenRecordOrigin ? `${ui.title} · Ctrl/⌘+点击打开原文` : ui.title,
-      tabIndex: 0,
-      "aria-readonly": ui.readonly ? "true" : "false",
-      "aria-invalid": error ? "true" : "false",
-      onClick: handleCellClick,
-      onDblClick: handleDoubleClick,
-      onMouseEnter: () => fillDragging && onMoveFillDrag?.(cell),
-      onMouseUp: () => fillDragging && onFinishFillDrag?.(cell),
-      onKeyDown: handleCellKeyDown,
-      onPaste: handlePaste,
-      children: [
-        editing ? /* @__PURE__ */ u2(
-          ExcelCellEditor,
-          {
-            descriptor: ui.descriptor,
-            editorOptions: ui.editorOptions,
-            editorKind: policy.editorKind,
-            draft,
-            pending,
-            inputRef,
-            onDraftChange: setDraft,
-            onKeyDown: handleEditorKeyDown,
-            onBlur: () => commit()
-          }
-        ) : /* @__PURE__ */ u2(
-          ExcelCellContent,
-          {
-            cell,
-            contentText: ui.contentText,
-            showFullMarkdownContent: ui.showFullMarkdownContent,
-            messageRenderPort,
-            onMarkdownClick: handleMarkdownClick,
-            onMarkdownDoubleClick: handleMarkdownDoubleClick
-          }
-        ),
-        !editing && selected ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-affordance", "aria-hidden": "true", children: ui.editable ? "✎" : "🔒" }) : null,
-        selected && ui.editable && !editing && !pending ? /* @__PURE__ */ u2("span", { class: "excel-view-fill-handle", "aria-label": "拖动覆盖同列", title: "拖动覆盖同列单元格", onMouseDown: handleFillMouseDown }) : null,
-        pending ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status", "aria-label": "保存中", children: "…" }) : null,
-        saved && !pending && !error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status is-saved", "aria-label": "已保存", children: "✓" }) : null,
-        error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-error", "aria-label": error, children: "!" }) : null
-      ]
-    }
-  );
-}
-function getExcelGridCellKey(cell) {
-  return getExcelCellKey(cell.itemId, cell.canonicalField);
-}
-function getExcelColumnBadge(column2, canCommitCells) {
-  if (!column2.editable || !canCommitCells) return "只读";
-  if (column2.dangerLevel === "medium") return "谨慎";
-  return "可编辑";
-}
-function getExcelColumnTitle(column2, canCommitCells) {
-  if (!canCommitCells) return "当前视图未配置保存处理器，所有字段暂不可编辑";
-  if (!column2.editable) return column2.readonlyReason || "该字段不可在 Excel 单元格内直接编辑";
-  if (column2.dangerLevel === "medium") return "可编辑字段，但会影响时间、标签等结构化内容，请谨慎修改";
-  return "可编辑字段：双击单元格可编辑；拖动表头右侧边缘可调整列宽";
-}
-function getExcelColumnWidth(column2, width2) {
-  if (Number.isFinite(width2) && width2) return Math.max(80, Math.min(640, Math.round(width2)));
-  if (column2.canonicalField === "content") return 240;
-  if (column2.canonicalField === "title") return 180;
-  if (column2.editorKind === "date" || column2.editorKind === "time") return 128;
-  if (column2.editorKind === "number" || column2.editorKind === "rating") return 104;
-  return 150;
-}
-function buildExcelColumnWidthStyle(width2) {
-  const text2 = `${width2}px`;
-  return { width: text2, minWidth: text2, maxWidth: text2 };
-}
-function normalizeExcelClipboardText(text2) {
-  return String(text2 || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-}
-function parseExcelClipboardMatrix(text2) {
-  const normalized2 = normalizeExcelClipboardText(text2);
-  const withoutFinalNewline = normalized2.endsWith("\n") ? normalized2.slice(0, -1) : normalized2;
-  if (!withoutFinalNewline) return [[""]];
-  return withoutFinalNewline.split("\n").map((row) => row.split("	"));
-}
-function focusExcelCellElement(table, cellKey) {
-  if (!table || !cellKey) return;
-  const escaped = cellKey.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  window.requestAnimationFrame(() => {
-    const element = table.querySelector(`[data-excel-cell-key="${escaped}"]`);
-    element?.focus?.();
-  });
-}
-function buildExcelGridCell(item, columnKey, valueOverrides) {
-  const optimisticKey = getExcelCellKey(item.id, columnKey);
-  const cell = buildExcelCellModel(item, columnKey, valueOverrides?.[optimisticKey]);
-  const canonicalKey = getExcelCellKey(cell.itemId, cell.canonicalField);
-  if (valueOverrides?.[canonicalKey] !== void 0 && canonicalKey !== optimisticKey) {
-    return buildExcelCellModel(item, columnKey, valueOverrides[canonicalKey]);
-  }
-  return cell;
-}
-function findExcelGridCellPosition(items, columns, cell) {
-  return {
-    rowIndex: items.findIndex((item) => item.id === cell.itemId),
-    colIndex: columns.findIndex((column2) => column2.canonicalField === cell.canonicalField)
-  };
-}
-function resolveExcelNavigationPosition(position2, direction, rowCount, columnCount) {
-  const { rowIndex, colIndex } = position2;
-  if (rowIndex < 0 || colIndex < 0 || rowCount <= 0 || columnCount <= 0) return null;
-  if (direction === "up") return { rowIndex: rowIndex - 1, colIndex };
-  if (direction === "down") return { rowIndex: rowIndex + 1, colIndex };
-  if (direction === "left") return { rowIndex, colIndex: colIndex - 1 };
-  if (direction === "right") return { rowIndex, colIndex: colIndex + 1 };
-  const linearIndex = rowIndex * columnCount + colIndex + (direction === "previous" ? -1 : 1);
-  const bounded = Math.max(0, Math.min(rowCount * columnCount - 1, linearIndex));
-  return { rowIndex: Math.floor(bounded / columnCount), colIndex: bounded % columnCount };
-}
-function selectExcelCellByPosition(params) {
-  const { items, columns, valueOverrides } = params;
-  if (!items.length || !columns.length) return null;
-  const rowIndex = Math.max(0, Math.min(items.length - 1, params.rowIndex));
-  const colIndex = Math.max(0, Math.min(columns.length - 1, params.colIndex));
-  const cell = buildExcelGridCell(items[rowIndex], columns[colIndex].key, valueOverrides);
-  return { cell, cellKey: getExcelGridCellKey(cell) };
-}
-function buildExcelFillRange(params) {
-  const { items, source, target, valueOverrides } = params;
-  if (!source) return [];
-  if (source.canonicalField !== target.canonicalField) return [];
-  if (!canInlineEditExcelCell(source) || !canInlineEditExcelCell(target)) return [];
-  const sourceIndex = items.findIndex((item) => item.id === source.itemId);
-  const targetIndex = items.findIndex((item) => item.id === target.itemId);
-  if (sourceIndex < 0 || targetIndex < 0) return [];
-  const from2 = Math.min(sourceIndex, targetIndex);
-  const to = Math.max(sourceIndex, targetIndex);
-  return items.slice(from2, to + 1).map((item) => buildExcelGridCell(item, source.field, valueOverrides));
-}
-function buildExcelPastePlan(params) {
-  const { items, columns, startCell, text: text2, canCommitCells, valueOverrides } = params;
-  const { rowIndex, colIndex } = findExcelGridCellPosition(items, columns, startCell);
-  if (rowIndex < 0 || colIndex < 0) return { edits: [], lastCell: null };
-  const matrix = parseExcelClipboardMatrix(text2);
-  const edits = [];
-  let lastCell = null;
-  for (let rowOffset = 0; rowOffset < matrix.length; rowOffset += 1) {
-    for (let colOffset = 0; colOffset < matrix[rowOffset].length; colOffset += 1) {
-      const targetRow = rowIndex + rowOffset;
-      const targetCol = colIndex + colOffset;
-      if (targetRow >= items.length || targetCol >= columns.length) continue;
-      const targetCell = buildExcelGridCell(items[targetRow], columns[targetCol].key, valueOverrides);
-      lastCell = targetCell;
-      if (!canInlineEditExcelCell(targetCell, canCommitCells)) continue;
-      edits.push({ cell: targetCell, editorValue: matrix[rowOffset][colOffset] });
-    }
-  }
-  return { edits, lastCell };
-}
-function ExcelGrid({
-  items,
-  columns,
-  selectedCellKey,
-  editingCellKey,
-  pendingCellKeys,
-  savedCellKeys,
-  cellErrors,
-  valueOverrides,
-  canCommitCells = false,
-  columnWidths,
-  contentDisplayMode = "previewText",
-  messageRenderPort,
-  fillDragSourceCell,
-  fillDragTargetCellKey,
-  onSelectCell,
-  onStartEdit,
-  onCancelEdit,
-  onCommitEdit,
-  onCommitBatchEdits,
-  onStartFillDrag,
-  onMoveFillDrag,
-  onFinishFillDrag,
-  onCancelFillDrag,
-  onColumnWidthDraftChange,
-  onColumnWidthCommit,
-  onOpenRecordOrigin
-}) {
-  const tableRef = A$1(null);
-  const makeCell = (item, columnKey) => buildExcelGridCell(item, columnKey, valueOverrides);
-  const selectByPosition = (rowIndex, colIndex) => {
-    const selection = selectExcelCellByPosition({ items, columns, rowIndex, colIndex, valueOverrides });
-    if (!selection) return;
-    onSelectCell?.(selection.cell);
-    focusExcelCellElement(tableRef.current, selection.cellKey);
-  };
-  const navigateCell = (cell, direction) => {
-    const position2 = findExcelGridCellPosition(items, columns, cell);
-    const nextPosition = resolveExcelNavigationPosition(position2, direction, items.length, columns.length);
-    if (!nextPosition) return;
-    selectByPosition(nextPosition.rowIndex, nextPosition.colIndex);
-  };
-  const pasteFromCell = (startCell, text2) => {
-    if (!onCommitBatchEdits || !canCommitCells) return;
-    const plan = buildExcelPastePlan({ items, columns, startCell, text: text2, canCommitCells, valueOverrides });
-    if (plan.lastCell) {
-      onSelectCell?.(plan.lastCell);
-      focusExcelCellElement(tableRef.current, getExcelGridCellKey(plan.lastCell));
-    }
-    if (plan.edits.length) onCommitBatchEdits(plan.edits, "paste");
-  };
-  const finishFillDrag = (target) => {
-    onFinishFillDrag?.(buildExcelFillRange({ items, source: fillDragSourceCell, target, valueOverrides }));
-  };
-  const startColumnResize = (event, column2) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const th = event.currentTarget.closest("th");
-    const startX = event.clientX;
-    const startWidth = getExcelColumnWidth(column2, columnWidths?.[column2.key]) || th?.offsetWidth || 150;
-    const move = (moveEvent) => {
-      onColumnWidthDraftChange?.(column2.key, startWidth + (moveEvent.clientX - startX));
-    };
-    const up = (upEvent) => {
-      window.removeEventListener("mousemove", move, true);
-      window.removeEventListener("mouseup", up, true);
-      document.body.classList.remove("excel-view-is-resizing-column");
-      onColumnWidthCommit?.(column2.key, startWidth + (upEvent.clientX - startX));
-    };
-    document.body.classList.add("excel-view-is-resizing-column");
-    window.addEventListener("mousemove", move, true);
-    window.addEventListener("mouseup", up, true);
-  };
-  return /* @__PURE__ */ u2("table", { ref: tableRef, class: "think-table excel-view-table", children: [
-    /* @__PURE__ */ u2("colgroup", { children: columns.map((column2) => {
-      const width2 = getExcelColumnWidth(column2, columnWidths?.[column2.key]);
-      return /* @__PURE__ */ u2("col", { "data-field": column2.key, style: { width: `${width2}px` } }, column2.key);
-    }) }),
-    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: columns.map((column2) => {
-      const width2 = getExcelColumnWidth(column2, columnWidths?.[column2.key]);
-      const columnEditable = column2.editable && canCommitCells;
-      return /* @__PURE__ */ u2(
-        "th",
-        {
-          "data-field": column2.key,
-          "data-canonical-field": column2.canonicalField,
-          "data-editable": columnEditable ? "true" : "false",
-          "data-editor-kind": column2.editorKind,
-          "data-danger-level": column2.dangerLevel,
-          title: getExcelColumnTitle(column2, canCommitCells),
-          style: buildExcelColumnWidthStyle(width2),
-          children: [
-            /* @__PURE__ */ u2("span", { class: "excel-view-header-stack", children: [
-              /* @__PURE__ */ u2("span", { class: "excel-view-header-label", children: column2.label }),
-              /* @__PURE__ */ u2("span", { class: "excel-view-header-badge", children: getExcelColumnBadge(column2, canCommitCells) })
-            ] }),
-            /* @__PURE__ */ u2(
-              "span",
-              {
-                class: "excel-view-column-resize-handle",
-                role: "separator",
-                "aria-orientation": "vertical",
-                title: "拖动调整列宽",
-                onMouseDown: (event) => startColumnResize(event, column2)
-              }
-            )
-          ]
-        },
-        column2.key
-      );
-    }) }) }),
-    /* @__PURE__ */ u2("tbody", { children: items.map((item) => /* @__PURE__ */ u2("tr", { "data-item-id": item.id, children: columns.map((column2) => {
-      const cell = makeCell(item, column2.key);
-      const cellKey = getExcelGridCellKey(cell);
-      const width2 = getExcelColumnWidth(column2, columnWidths?.[column2.key]);
-      return /* @__PURE__ */ u2(
-        ExcelCell,
-        {
-          cell,
-          selected: selectedCellKey === cellKey,
-          editing: editingCellKey === cellKey,
-          pending: pendingCellKeys?.has(cellKey),
-          saved: savedCellKeys?.has(cellKey),
-          error: cellErrors?.[cellKey],
-          canCommit: canCommitCells,
-          fillDragging: !!fillDragSourceCell,
-          fillSource: fillDragSourceCell ? getExcelGridCellKey(fillDragSourceCell) === cellKey : false,
-          fillTarget: fillDragTargetCellKey === cellKey && fillDragSourceCell?.canonicalField === cell.canonicalField,
-          contentDisplayMode,
-          messageRenderPort,
-          onSelect: onSelectCell,
-          onStartEdit,
-          onCancelEdit,
-          onCommitEdit,
-          onNavigate: navigateCell,
-          onPasteText: pasteFromCell,
-          onStartFillDrag,
-          onMoveFillDrag,
-          onFinishFillDrag: finishFillDrag,
-          onCancelFillDrag,
-          onOpenRecordOrigin,
-          style: buildExcelColumnWidthStyle(width2)
-        },
-        column2.key
-      );
-    }) }, item.id)) })
-  ] });
-}
-function addExcelSetValue(source, key) {
-  const next2 = new Set(source);
-  next2.add(key);
-  return next2;
-}
-function addExcelSetValues(source, keys) {
-  const next2 = new Set(source);
-  for (const key of keys) next2.add(key);
-  return next2;
-}
-function removeExcelSetValue(source, key) {
-  const next2 = new Set(source);
-  next2.delete(key);
-  return next2;
-}
-function removeExcelSetValues(source, keys) {
-  const next2 = new Set(source);
-  for (const key of keys) next2.delete(key);
-  return next2;
-}
-function uniqueExcelKeys(keys) {
-  return Array.from(new Set(keys));
-}
-function getExcelCellCommitFailureMessage(resultMessage) {
-  return resultMessage || "保存失败";
-}
-function getExcelCellCommitExceptionMessage(error) {
-  return error instanceof Error ? error.message : "保存失败";
-}
-function getExcelCellNoCommitHandlerMessage() {
-  return "当前视图没有配置保存处理器";
-}
-function getExcelCellReadonlyMessage(cell) {
-  return cell.policy.reason || "该字段不可内联编辑";
-}
-function buildExcelSingleCellEditPlan(cell, nextEditorValue) {
-  const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-  const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
-  return {
-    key,
-    validationMessage: validationMessage ?? void 0,
-    nextValue: validationMessage ? void 0 : parseExcelEditorValue(cell, nextEditorValue)
-  };
-}
-function prepareExcelCellBatchEdit(edit) {
-  const key = getExcelCellKey(edit.cell.itemId, edit.cell.canonicalField);
-  const validationMessage = validateExcelEditorValue(edit.cell, edit.editorValue);
-  return {
-    ...edit,
-    key,
-    validationMessage: validationMessage ?? void 0,
-    editable: canInlineEditExcelCell(edit.cell),
-    nextValue: validationMessage ? void 0 : parseExcelEditorValue(edit.cell, edit.editorValue)
-  };
-}
-function buildExcelCellCommitPlan(edits, reason) {
-  const prepared = edits.map(prepareExcelCellBatchEdit);
-  const invalid = prepared.filter((edit) => edit.validationMessage);
-  const valid = prepared.filter((edit) => !edit.validationMessage && edit.editable);
-  return {
-    prepared,
-    invalid,
-    valid,
-    keys: uniqueExcelKeys(valid.map((edit) => edit.key)),
-    reason
-  };
-}
-function buildExcelCellValidationErrors(current2, invalid) {
-  const next2 = { ...current2 };
-  for (const edit of invalid) next2[edit.key] = edit.validationMessage || "字段值无效";
-  return next2;
-}
-function clearExcelCellErrors(current2, keys) {
-  const next2 = { ...current2 };
-  for (const key of keys) next2[key] = void 0;
-  return next2;
-}
-function getExcelCommittedValue(nextValue, normalizedValue) {
-  return normalizedValue !== void 0 ? normalizedValue : nextValue;
-}
-function shouldSkipExcelCommit(cell, nextValue) {
-  return areExcelCellValuesEqual(cell.value, nextValue);
-}
-function getExcelFillDragTargetCells(source, cells) {
-  if (!source || !cells.length) return [];
-  return cells.filter((cell) => cell.itemId !== source.itemId && cell.canonicalField === source.canonicalField && canInlineEditExcelCell(cell));
-}
-function buildExcelFillDragBatchEdits(source, cells) {
-  return getExcelFillDragTargetCells(source, cells).map((cell) => ({ cell, editorValue: source?.editorValue || "" }));
-}
-function useExcelCellEditing(options) {
-  const { onCellCommit } = options;
-  const [selectedCellKey, setSelectedCellKey] = d(null);
-  const [editingCellKey, setEditingCellKey] = d(null);
-  const [pendingCellKeys, setPendingCellKeys] = d(() => /* @__PURE__ */ new Set());
-  const [cellErrors, setCellErrors] = d({});
-  const [valueOverrides, setValueOverrides] = d({});
-  const [savedCellKeys, setSavedCellKeys] = d(() => /* @__PURE__ */ new Set());
-  const saveFlashTimers = A$1({});
-  const commitQueueRef = A$1(Promise.resolve());
-  const [fillDragSourceCell, setFillDragSourceCell] = d(null);
-  const [fillDragTargetCellKey, setFillDragTargetCellKey] = d(null);
-  y(() => () => {
-    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
-    saveFlashTimers.current = {};
-  }, []);
-  const enqueueCommitTask = q$1(async (task) => {
-    const run = commitQueueRef.current.then(task, task);
-    commitQueueRef.current = run.catch(() => void 0);
-    await run;
-  }, []);
-  const flashSavedKey = q$1((key) => {
-    const existing = saveFlashTimers.current[key];
-    if (existing) clearTimeout(existing);
-    setSavedCellKeys((prev2) => addExcelSetValue(prev2, key));
-    saveFlashTimers.current[key] = setTimeout(() => {
-      setSavedCellKeys((prev2) => removeExcelSetValue(prev2, key));
-      delete saveFlashTimers.current[key];
-    }, 1200);
-  }, []);
-  const selectCell = q$1((cell) => {
-    setSelectedCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
-  }, []);
-  const startEdit = q$1((cell) => {
-    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-    setSelectedCellKey(key);
-    if (!onCellCommit) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellNoCommitHandlerMessage() }));
-      return;
-    }
-    if (!canInlineEditExcelCell(cell)) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellReadonlyMessage(cell) }));
-      return;
-    }
-    setEditingCellKey(key);
-    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
-  }, [onCellCommit]);
-  const cancelEdit = q$1(() => {
-    setEditingCellKey(null);
-  }, []);
-  const commitCellValue = q$1(async (cell, nextValue, reason) => {
-    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-    if (!onCellCommit) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellNoCommitHandlerMessage() }));
-      return false;
-    }
-    if (!canInlineEditExcelCell(cell)) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellReadonlyMessage(cell) }));
-      return false;
-    }
-    if (shouldSkipExcelCommit(cell, nextValue)) return true;
-    try {
-      const result = await onCellCommit({
-        item: cell.item,
-        itemId: cell.itemId,
-        field: cell.field,
-        canonicalField: cell.canonicalField,
-        oldValue: cell.value,
-        nextValue,
-        reason
-      });
-      if (!result?.ok) {
-        setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellCommitFailureMessage(result?.message) }));
-        return false;
-      }
-      setValueOverrides((prev2) => ({ ...prev2, [key]: getExcelCommittedValue(nextValue, result.normalizedValue) }));
-      setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
-      flashSavedKey(key);
-      return true;
-    } catch (error) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellCommitExceptionMessage(error) }));
-      return false;
-    }
-  }, [flashSavedKey, onCellCommit]);
-  const commitBatchEdits = q$1(async (edits, reason) => {
-    if (!edits.length) return;
-    const plan = buildExcelCellCommitPlan(edits, reason);
-    if (plan.invalid.length) {
-      setCellErrors((prev2) => buildExcelCellValidationErrors(prev2, plan.invalid));
-    }
-    if (!plan.valid.length) return;
-    setEditingCellKey(null);
-    setSelectedCellKey(plan.valid[plan.valid.length - 1].key);
-    setPendingCellKeys((prev2) => addExcelSetValues(prev2, plan.keys));
-    setCellErrors((prev2) => clearExcelCellErrors(prev2, plan.keys));
-    try {
-      await enqueueCommitTask(async () => {
-        for (const edit of plan.valid) {
-          await commitCellValue(edit.cell, edit.nextValue, plan.reason);
-        }
-      });
-    } finally {
-      setPendingCellKeys((prev2) => removeExcelSetValues(prev2, plan.keys));
-    }
-  }, [commitCellValue, enqueueCommitTask]);
-  const commitEdit = q$1(async (cell, nextEditorValue) => {
-    const plan = buildExcelSingleCellEditPlan(cell, nextEditorValue);
-    if (plan.validationMessage) {
-      setSelectedCellKey(plan.key);
-      setCellErrors((prev2) => ({ ...prev2, [plan.key]: plan.validationMessage }));
-      return;
-    }
-    setSelectedCellKey(plan.key);
-    setEditingCellKey(null);
-    setCellErrors((prev2) => ({ ...prev2, [plan.key]: void 0 }));
-    setPendingCellKeys((prev2) => addExcelSetValue(prev2, plan.key));
-    try {
-      await enqueueCommitTask(async () => {
-        await commitCellValue(cell, plan.nextValue, "inline-edit");
-      });
-    } finally {
-      setPendingCellKeys((prev2) => removeExcelSetValue(prev2, plan.key));
-    }
-  }, [commitCellValue, enqueueCommitTask]);
-  const startFillDrag = q$1((cell) => {
-    if (!onCellCommit || !canInlineEditExcelCell(cell)) return;
-    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-    setSelectedCellKey(key);
-    setFillDragSourceCell(cell);
-    setFillDragTargetCellKey(key);
-    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
-  }, [onCellCommit]);
-  const moveFillDrag = q$1((cell) => {
-    setFillDragTargetCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
-  }, []);
-  const cancelFillDrag = q$1(() => {
-    setFillDragSourceCell(null);
-    setFillDragTargetCellKey(null);
-  }, []);
-  const finishFillDrag = q$1(async (cells) => {
-    const batchEdits = buildExcelFillDragBatchEdits(fillDragSourceCell, cells);
-    setFillDragSourceCell(null);
-    setFillDragTargetCellKey(null);
-    if (!batchEdits.length) return;
-    await commitBatchEdits(batchEdits, "fill-drag");
-  }, [commitBatchEdits, fillDragSourceCell]);
-  const resetTransientState = q$1(() => {
-    setSelectedCellKey(null);
-    setEditingCellKey(null);
-    setPendingCellKeys(/* @__PURE__ */ new Set());
-    setCellErrors({});
-    setValueOverrides({});
-    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
-    saveFlashTimers.current = {};
-    setSavedCellKeys(/* @__PURE__ */ new Set());
-    setFillDragSourceCell(null);
-    setFillDragTargetCellKey(null);
-  }, []);
-  return {
-    selectedCellKey,
-    editingCellKey,
-    pendingCellKeys,
-    cellErrors,
-    valueOverrides,
-    savedCellKeys,
-    fillDragSourceCell,
-    fillDragTargetCellKey,
-    selectCell,
-    startEdit,
-    cancelEdit,
-    commitEdit,
-    commitBatchEdits,
-    startFillDrag,
-    moveFillDrag,
-    finishFillDrag,
-    cancelFillDrag,
-    resetTransientState
-  };
-}
-function ExcelColumnChipList({
-  fields,
-  canEdit,
-  busy,
-  draggedField,
-  getFieldLabel: getFieldLabel2,
-  onOpenMenu,
-  onRemoveField,
-  onDragStart,
-  onDragEnd,
-  onDropField
-}) {
-  return /* @__PURE__ */ u2("div", { class: "excel-column-chip-list", role: "list", "aria-label": "当前显示字段顺序", children: fields.map((field) => {
-    const label = getFieldLabel2(field);
-    const canRemove = canEdit && !busy && fields.length > 1;
-    return /* @__PURE__ */ u2(
-      "span",
-      {
-        class: `excel-column-chip ${draggedField === field ? "is-dragging" : ""}`,
-        role: "listitem",
-        draggable: canEdit && !busy,
-        title: canEdit ? canRemove ? "拖动调整列顺序；双击隐藏该列；右键更多操作" : "至少保留一个显示字段" : "当前字段配置不可直接编辑",
-        onContextMenu: (event) => onOpenMenu(event, field),
-        onDblClick: (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (canRemove) onRemoveField(field);
-        },
-        onDragStart: (event) => {
-          if (!canEdit || busy) return;
-          onDragStart(field);
-          event.dataTransfer?.setData("text/plain", field);
-          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
-        },
-        onDragEnd,
-        onDragOver: (event) => {
-          if (!canEdit || busy || !draggedField) return;
-          event.preventDefault();
-          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-        },
-        onDrop: (event) => {
-          event.preventDefault();
-          if (!canEdit || busy) return;
-          onDropField(field);
-        },
-        children: [
-          /* @__PURE__ */ u2("span", { class: "excel-column-chip-handle", "aria-hidden": "true", children: "⋮⋮" }),
-          /* @__PURE__ */ u2("span", { class: "excel-column-chip-label", children: label })
-        ]
-      },
-      field
-    );
-  }) });
-}
-function ExcelColumnContextMenu({
-  menu,
-  menuModel,
-  onRemoveField,
-  onMoveFieldToStart,
-  onMoveFieldToEnd,
-  onToggleInfo
-}) {
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "excel-column-context-menu",
-      style: { left: `${menu.x}px`, top: `${menu.y}px` },
-      role: "menu",
-      onMouseDown: (event) => event.stopPropagation(),
-      onClick: (event) => event.stopPropagation(),
-      children: [
-        /* @__PURE__ */ u2("div", { class: "excel-column-context-menu-title", children: menuModel.label }),
-        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !menuModel.canRemove, onClick: () => onRemoveField(menuModel.field), children: "隐藏此列" }),
-        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !menuModel.canMoveToStart, onClick: () => onMoveFieldToStart(menuModel.field), children: "移到最前" }),
-        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !menuModel.canMoveToEnd, onClick: () => onMoveFieldToEnd(menuModel.field), children: "移到最后" }),
-        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", onClick: onToggleInfo, children: "查看字段说明" }),
-        menu.showInfo ? /* @__PURE__ */ u2("div", { class: "excel-column-context-info", children: [
-          /* @__PURE__ */ u2("div", { children: [
-            /* @__PURE__ */ u2("span", { children: "名称" }),
-            /* @__PURE__ */ u2("strong", { children: menuModel.label })
-          ] }),
-          menuModel.group ? /* @__PURE__ */ u2("div", { children: [
-            /* @__PURE__ */ u2("span", { children: "分组" }),
-            /* @__PURE__ */ u2("strong", { children: menuModel.group })
-          ] }) : null,
-          /* @__PURE__ */ u2("div", { children: [
-            /* @__PURE__ */ u2("span", { children: "字段键" }),
-            /* @__PURE__ */ u2("code", { children: menuModel.field })
-          ] })
-        ] }) : null
-      ]
-    }
-  );
-}
-function moveExcelColumnField(fields, fromIndex, toIndex) {
-  if (fromIndex === toIndex) return fields;
-  if (fromIndex < 0 || fromIndex >= fields.length) return fields;
-  if (toIndex < 0 || toIndex >= fields.length) return fields;
-  const next2 = [...fields];
-  const [moved] = next2.splice(fromIndex, 1);
-  next2.splice(toIndex, 0, moved);
-  return next2;
-}
-function buildExcelColumnAvailableOptions(fields, availableFields, getFieldLabel2, getFieldGroupLabel) {
-  const selected = new Set(fields);
-  return availableFields.filter((field) => !selected.has(field)).map((field) => ({
-    value: field,
-    label: getFieldLabel2(field),
-    group: getFieldGroupLabel?.(field)
-  }));
-}
-function canEditExcelColumnFields(canEdit, busy) {
-  return canEdit && !busy;
-}
-function canRemoveExcelColumnField(fields, canEdit, busy) {
-  return canEditExcelColumnFields(canEdit, busy) && fields.length > 1;
-}
-function addExcelColumnField(fields, field) {
-  if (!field || fields.includes(field)) return fields;
-  return [...fields, field];
-}
-function removeExcelColumnField(fields, field) {
-  if (fields.length <= 1) return fields;
-  return fields.filter((item) => item !== field);
-}
-function moveExcelColumnFieldToStart(fields, field) {
-  const index = fields.indexOf(field);
-  if (index <= 0) return fields;
-  return moveExcelColumnField(fields, index, 0);
-}
-function moveExcelColumnFieldToEnd(fields, field) {
-  const index = fields.indexOf(field);
-  if (index < 0 || index === fields.length - 1) return fields;
-  return moveExcelColumnField(fields, index, fields.length - 1);
-}
-function reorderExcelColumnFieldsByDrop(fields, sourceField, targetField) {
-  if (!sourceField || sourceField === targetField) return fields;
-  return moveExcelColumnField(fields, fields.indexOf(sourceField), fields.indexOf(targetField));
-}
-function buildExcelColumnMenuModel(menu, fields, canEdit, busy, getFieldLabel2, getFieldGroupLabel) {
-  if (!menu?.field) return null;
-  const index = fields.indexOf(menu.field);
-  return {
-    field: menu.field,
-    label: getFieldLabel2(menu.field),
-    group: getFieldGroupLabel?.(menu.field),
-    index,
-    canRemove: canRemoveExcelColumnField(fields, canEdit, busy),
-    canMoveToStart: canEditExcelColumnFields(canEdit, busy) && index > 0,
-    canMoveToEnd: canEditExcelColumnFields(canEdit, busy) && index >= 0 && index < fields.length - 1
-  };
-}
-function ExcelColumnToolbar({
-  fields,
-  availableFields,
-  disabled = false,
-  saving = false,
-  error,
-  getFieldLabel: getFieldLabel2 = (field) => field,
-  getFieldGroupLabel,
-  onFieldsChange
-}) {
-  const [draggedField, setDraggedField] = d(null);
-  const [menu, setMenu] = d(null);
-  const canEdit = !!onFieldsChange && !disabled;
-  const busy = saving || disabled;
-  const availableOptions = T$1(
-    () => buildExcelColumnAvailableOptions(fields, availableFields, getFieldLabel2, getFieldGroupLabel),
-    [availableFields, fields, getFieldGroupLabel, getFieldLabel2]
-  );
-  const menuModel = T$1(
-    () => buildExcelColumnMenuModel(menu, fields, canEdit, busy, getFieldLabel2, getFieldGroupLabel),
-    [busy, canEdit, fields, getFieldGroupLabel, getFieldLabel2, menu]
-  );
-  const emit2 = (nextFields) => {
-    if (!canEdit || busy || nextFields === fields) return;
-    onFieldsChange?.(nextFields);
-  };
-  const closeMenu = () => setMenu(null);
-  const addField = (field) => emit2(addExcelColumnField(fields, field));
-  const removeField = (field) => {
-    emit2(removeExcelColumnField(fields, field));
-    closeMenu();
-  };
-  const moveFieldToStart = (field) => {
-    emit2(moveExcelColumnFieldToStart(fields, field));
-    closeMenu();
-  };
-  const moveFieldToEnd = (field) => {
-    emit2(moveExcelColumnFieldToEnd(fields, field));
-    closeMenu();
-  };
-  const dropField = (targetField) => {
-    emit2(reorderExcelColumnFieldsByDrop(fields, draggedField, targetField));
-    setDraggedField(null);
-  };
-  const openMenu = (event, field) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setMenu({ field, x: event.clientX, y: event.clientY });
-  };
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "excel-column-toolbar",
-      "data-editable": canEdit ? "true" : "false",
-      "aria-label": "Excel 显示字段编辑",
-      onClick: () => menu ? closeMenu() : void 0,
-      children: [
-        /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-title", children: "显示字段" }),
-        /* @__PURE__ */ u2(
-          ExcelColumnChipList,
-          {
-            fields,
-            canEdit,
-            busy,
-            draggedField,
-            getFieldLabel: getFieldLabel2,
-            onOpenMenu: openMenu,
-            onRemoveField: removeField,
-            onDragStart: setDraggedField,
-            onDragEnd: () => setDraggedField(null),
-            onDropField: dropField
-          }
-        ),
-        canEdit ? /* @__PURE__ */ u2("div", { class: "excel-column-add-field", children: /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: "",
-            options: availableOptions,
-            placeholder: availableOptions.length ? "+ 添加字段" : "所有字段已显示",
-            disabled: busy || !availableOptions.length,
-            onChange: addField,
-            sx: { minWidth: "150px" }
-          }
-        ) }) : /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-readonly", children: "字段配置只读" }),
-        saving ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-status", children: "保存字段设置中…" }) : null,
-        error ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-error", title: error, children: error }) : null,
-        menu && menuModel ? /* @__PURE__ */ u2(
-          ExcelColumnContextMenu,
-          {
-            menu,
-            menuModel,
-            onRemoveField: removeField,
-            onMoveFieldToStart: moveFieldToStart,
-            onMoveFieldToEnd: moveFieldToEnd,
-            onToggleInfo: () => setMenu((prev2) => prev2 ? { ...prev2, showInfo: !prev2.showInfo } : prev2)
-          }
-        ) : null
-      ]
-    }
-  );
-}
-function ExcelViewToolbar({
-  editableColumnCount,
-  readonlyColumnCount,
-  displayFields,
-  availableFields,
-  fieldConfigSaving,
-  fieldConfigError,
-  fieldsChangeDisabled,
-  excelConfigSaving,
-  contentDisplayMode,
-  hasContentColumn,
-  contentModeButtonTitle,
-  onFieldsChange,
-  onContentDisplayToggle
-}) {
-  const isFullMarkdownContent = contentDisplayMode === "fullMarkdown";
-  return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "Excel 视图编辑说明", children: [
-      /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-editable", children: [
-        "可编辑 ",
-        editableColumnCount
-      ] }),
-      /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-readonly", children: [
-        "只读 ",
-        readonlyColumnCount
-      ] }),
-      /* @__PURE__ */ u2(
-        "button",
-        {
-          type: "button",
-          class: `excel-view-content-mode-button ${isFullMarkdownContent ? "is-active" : ""} ${excelConfigSaving ? "is-saving" : ""}`,
-          "aria-pressed": isFullMarkdownContent ? "true" : "false",
-          title: contentModeButtonTitle,
-          disabled: !hasContentColumn || excelConfigSaving,
-          onClick: onContentDisplayToggle,
-          children: [
-            "内容：",
-            excelConfigSaving ? "保存中…" : isFullMarkdownContent ? "全文 Markdown" : "预览"
-          ]
-        }
-      ),
-      /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "单击选中；双击/Enter/F2 编辑；Ctrl/⌘+点击打开完整记录；方向键/Tab 导航；支持多行多列粘贴。" })
-    ] }),
-    /* @__PURE__ */ u2(
-      ExcelColumnToolbar,
-      {
-        fields: displayFields,
-        availableFields,
-        saving: fieldConfigSaving,
-        error: fieldConfigError,
-        disabled: fieldsChangeDisabled,
-        getFieldLabel,
-        getFieldGroupLabel: getFieldCategoryLabel,
-        onFieldsChange
-      }
-    )
-  ] });
-}
-function normalizeExcelColumnWidth(width2) {
-  if (!Number.isFinite(width2)) return 160;
-  return Math.max(80, Math.min(640, Math.round(width2)));
-}
-function normalizeExcelColumnWidths(widths) {
-  if (!widths) return {};
-  const next2 = {};
-  for (const [field, width2] of Object.entries(widths)) {
-    if (!field) continue;
-    next2[field] = normalizeExcelColumnWidth(Number(width2));
-  }
-  return next2;
-}
-function normalizeExcelContentDisplayMode(mode) {
-  return mode === "fullMarkdown" ? "fullMarkdown" : "previewText";
-}
-function getNextExcelContentDisplayMode(mode) {
-  return mode === "fullMarkdown" ? "previewText" : "fullMarkdown";
-}
-function buildExcelContentModeButtonTitle(input) {
-  if (!input.hasContentColumn) return "当前表格未显示内容字段，请先在字段栏添加 content/内容字段";
-  if (input.excelConfigSaving) return "正在保存 Excel 视图配置";
-  return input.isFullMarkdownContent ? "当前：内容字段显示完整 Markdown；点击切回短文本预览" : "当前：内容字段短文本预览；点击显示完整 Markdown";
-}
-function buildExcelViewRenderModel({
-  items,
-  goals = [],
-  fields,
-  availableFields,
-  excelConfig
-}) {
-  const discoveredFields = getAllFields(items);
-  const normalizedAvailableFields = normalizeDisplayFields(
-    availableFields?.length ? availableFields : discoveredFields,
-    { includeUnknown: false }
-  );
-  const displayFields = normalizeDisplayFields(
-    fields && fields.length ? fields : normalizedAvailableFields,
-    {
-      availableFields: normalizedAvailableFields,
-      includeUnknown: true,
-      fallbackFields: normalizedAvailableFields
-    }
-  );
-  const columns = buildExcelColumns(displayFields);
-  const orderedItems = orderItemsByDisplayedGoalField(items, displayFields, { goals });
-  const itemSignature = orderedItems.map((item) => `${item.id}:${item.modified ?? ""}`).join("|");
-  const persistedColumnWidths = normalizeExcelColumnWidths(excelConfig?.columnWidths);
-  const persistedContentDisplayMode = normalizeExcelContentDisplayMode(excelConfig?.contentDisplayMode);
-  const editableColumnCount = columns.filter((column2) => column2.editable).length;
-  const readonlyColumnCount = Math.max(0, columns.length - editableColumnCount);
-  const hasContentColumn = columns.some((column2) => column2.canonicalField === "content");
-  return {
-    discoveredFields,
-    normalizedAvailableFields,
-    displayFields,
-    columns,
-    orderedItems,
-    itemSignature,
-    persistedColumnWidths,
-    persistedContentDisplayMode,
-    editableColumnCount,
-    readonlyColumnCount,
-    hasContentColumn
-  };
-}
-function ExcelView({
-  items,
-  goals = [],
-  fields,
-  availableFields,
-  excelConfig,
-  onFieldsChange,
-  onExcelConfigChange,
-  onCellCommit,
-  onOpenRecordOrigin,
-  messageRenderPort
-}) {
-  const renderModel = T$1(() => buildExcelViewRenderModel({
-    items,
-    goals,
-    fields,
-    availableFields,
-    excelConfig
-  }), [availableFields, excelConfig, fields, goals, items]);
-  const editing = useExcelCellEditing({ onCellCommit });
-  const resetTransientState = editing.resetTransientState;
-  const [fieldConfigSaving, setFieldConfigSaving] = d(false);
-  const [fieldConfigError, setFieldConfigError] = d(null);
-  const [excelConfigSaving, setExcelConfigSaving] = d(false);
-  const [localColumnWidths, setLocalColumnWidths] = d(renderModel.persistedColumnWidths);
-  const [localContentDisplayMode, setLocalContentDisplayMode] = d(renderModel.persistedContentDisplayMode);
-  const isFullMarkdownContent = localContentDisplayMode === "fullMarkdown";
-  const contentModeButtonTitle = buildExcelContentModeButtonTitle({
-    hasContentColumn: renderModel.hasContentColumn,
-    excelConfigSaving,
-    isFullMarkdownContent
-  });
-  y(() => {
-    resetTransientState();
-  }, [renderModel.itemSignature, resetTransientState]);
-  y(() => {
-    setLocalColumnWidths(renderModel.persistedColumnWidths);
-  }, [renderModel.persistedColumnWidths]);
-  y(() => {
-    setLocalContentDisplayMode(renderModel.persistedContentDisplayMode);
-  }, [renderModel.persistedContentDisplayMode]);
-  const handleFieldsChange = q$1(async (nextFields) => {
-    if (!onFieldsChange || fieldConfigSaving) return;
-    const normalizedNextFields = normalizeDisplayFields(nextFields, {
-      availableFields: renderModel.normalizedAvailableFields,
-      includeUnknown: true,
-      fallbackFields: renderModel.displayFields
-    });
-    setFieldConfigSaving(true);
-    setFieldConfigError(null);
-    try {
-      await onFieldsChange(normalizedNextFields);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "字段设置保存失败";
-      setFieldConfigError(message);
-    } finally {
-      setFieldConfigSaving(false);
-    }
-  }, [fieldConfigSaving, onFieldsChange, renderModel.displayFields, renderModel.normalizedAvailableFields]);
-  const persistExcelConfig = q$1(async (nextConfig, rollback) => {
-    if (!onExcelConfigChange) return;
-    setExcelConfigSaving(true);
-    try {
-      await onExcelConfigChange(nextConfig);
-    } catch (error) {
-      diagnosticError("[ExcelView] 保存 Excel 视图配置失败", error);
-      rollback?.();
-    } finally {
-      setExcelConfigSaving(false);
-    }
-  }, [onExcelConfigChange]);
-  const handleColumnWidthDraftChange = q$1((field, width2) => {
-    const nextWidth = normalizeExcelColumnWidth(width2);
-    setLocalColumnWidths((prev2) => ({ ...prev2, [field]: nextWidth }));
-  }, []);
-  const handleColumnWidthCommit = q$1(async (field, width2) => {
-    const nextWidth = normalizeExcelColumnWidth(width2);
-    const nextColumnWidths = { ...localColumnWidths, [field]: nextWidth };
-    setLocalColumnWidths(nextColumnWidths);
-    await persistExcelConfig({
-      ...excelConfig || {},
-      columnWidths: nextColumnWidths,
-      contentDisplayMode: localContentDisplayMode
-    }, () => setLocalColumnWidths(renderModel.persistedColumnWidths));
-  }, [excelConfig, localColumnWidths, localContentDisplayMode, persistExcelConfig, renderModel.persistedColumnWidths]);
-  const handleContentDisplayToggle = q$1(async () => {
-    if (!renderModel.hasContentColumn || excelConfigSaving) return;
-    const nextMode = getNextExcelContentDisplayMode(localContentDisplayMode);
-    const previousMode = localContentDisplayMode;
-    setLocalContentDisplayMode(nextMode);
-    await persistExcelConfig({
-      ...excelConfig || {},
-      columnWidths: localColumnWidths,
-      contentDisplayMode: nextMode
-    }, () => setLocalContentDisplayMode(previousMode));
-  }, [excelConfig, excelConfigSaving, localColumnWidths, localContentDisplayMode, persistExcelConfig, renderModel.hasContentColumn]);
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "excel-view-shell",
-      "data-inline-edit": onCellCommit ? "enabled" : "disabled",
-      "data-column-config": onFieldsChange ? "enabled" : "disabled",
-      "data-excel-config-saving": excelConfigSaving ? "true" : "false",
-      "data-content-display-mode": localContentDisplayMode,
-      ...getObsidianEventBoundaryProps(),
-      children: [
-        /* @__PURE__ */ u2(
-          ExcelViewToolbar,
-          {
-            editableColumnCount: renderModel.editableColumnCount,
-            readonlyColumnCount: renderModel.readonlyColumnCount,
-            displayFields: renderModel.displayFields,
-            availableFields: renderModel.normalizedAvailableFields,
-            fieldConfigSaving,
-            fieldConfigError,
-            fieldsChangeDisabled: !onFieldsChange,
-            excelConfigSaving,
-            contentDisplayMode: localContentDisplayMode,
-            hasContentColumn: renderModel.hasContentColumn,
-            contentModeButtonTitle,
-            onFieldsChange: handleFieldsChange,
-            onContentDisplayToggle: handleContentDisplayToggle
-          }
-        ),
-        /* @__PURE__ */ u2(
-          ExcelGrid,
-          {
-            items: renderModel.orderedItems,
-            columns: renderModel.columns,
-            selectedCellKey: editing.selectedCellKey,
-            editingCellKey: editing.editingCellKey,
-            pendingCellKeys: editing.pendingCellKeys,
-            savedCellKeys: editing.savedCellKeys,
-            cellErrors: editing.cellErrors,
-            valueOverrides: editing.valueOverrides,
-            canCommitCells: !!onCellCommit,
-            columnWidths: localColumnWidths,
-            contentDisplayMode: localContentDisplayMode,
-            messageRenderPort,
-            fillDragSourceCell: editing.fillDragSourceCell,
-            fillDragTargetCellKey: editing.fillDragTargetCellKey,
-            onSelectCell: editing.selectCell,
-            onStartEdit: editing.startEdit,
-            onCancelEdit: editing.cancelEdit,
-            onCommitEdit: editing.commitEdit,
-            onCommitBatchEdits: editing.commitBatchEdits,
-            onStartFillDrag: editing.startFillDrag,
-            onMoveFillDrag: editing.moveFillDrag,
-            onFinishFillDrag: editing.finishFillDrag,
-            onCancelFillDrag: editing.cancelFillDrag,
-            onColumnWidthDraftChange: handleColumnWidthDraftChange,
-            onColumnWidthCommit: handleColumnWidthCommit,
-            onOpenRecordOrigin
-          }
-        )
-      ]
-    }
-  );
-}
-function ThemeTreeSelectTrigger({
-  open,
-  onToggleOpen,
-  displayText: displayText2,
-  hasSelection,
-  allowClear,
-  disabled,
-  size,
-  onClear,
-  anchorRef
-}) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      ref: anchorRef,
-      onClick: () => !disabled && onToggleOpen(),
-      sx: {
-        display: "flex",
-        alignItems: "center",
-        gap: 0.5,
-        px: 1.5,
-        py: size === "small" ? 0.5 : 1,
-        border: "1px solid var(--background-modifier-border)",
-        borderRadius: 1,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        bgcolor: "background.paper",
-        "&:hover": disabled ? {} : {
-          borderColor: "primary.main"
-        }
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          Typography2,
-          {
-            variant: "body2",
-            sx: {
-              flex: 1,
-              color: hasSelection ? "text.primary" : "text.secondary",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap"
-            },
-            children: displayText2
-          }
-        ),
-        allowClear && hasSelection && !disabled && /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: onClear, sx: { p: 0.25 }, children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }),
-        /* @__PURE__ */ u2(IconButton2, { size: "small", sx: { p: 0.25 }, children: open ? /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ChevronRightIcon, { fontSize: "small" }) })
-      ]
-    }
-  );
-}
-function SearchBox({ value, onChange }) {
-  return /* @__PURE__ */ u2(Box, { sx: { p: 1, borderBottom: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(
-    TextField2,
-    {
-      fullWidth: true,
-      size: "small",
-      placeholder: "搜索主题...",
-      value,
-      onChange: (e2) => onChange(e2.target.value),
-      InputProps: {
-        startAdornment: /* @__PURE__ */ u2(InputAdornment2, { position: "start", children: /* @__PURE__ */ u2(SearchIcon, { fontSize: "small" }) }),
-        endAdornment: value && /* @__PURE__ */ u2(InputAdornment2, { position: "end", children: /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: () => onChange(""), children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }) })
-      },
-      onKeyDown: (e2) => e2.stopPropagation()
-    }
-  ) });
-}
-function MultiSelectToolbar({ themeTree, onSelectMultiple }) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        display: "flex",
-        gap: 1,
-        p: 1,
-        borderBottom: "1px solid var(--background-modifier-border)"
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            size: "small",
-            onClick: () => {
-              const allPaths = ThemeTreeBuilder.getLeafNodes(themeTree).map((n2) => n2.path);
-              onSelectMultiple?.(allPaths);
-            },
-            children: "全选"
-          }
-        ),
-        /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onSelectMultiple?.([]), children: "清空" })
-      ]
-    }
-  );
-}
-function SelectedPathsChips({
-  selectedPaths,
-  onRemovePath,
-  maxVisible = 3
-}) {
-  if (selectedPaths.length === 0) return null;
-  const visible = selectedPaths.slice(0, maxVisible);
-  const restCount = selectedPaths.length - visible.length;
-  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }, children: [
-    visible.map((path) => /* @__PURE__ */ u2(
-      Chip2,
-      {
-        size: "small",
-        label: path.split("/").pop(),
-        onDelete: onRemovePath ? () => {
-          onRemovePath(path);
-        } : void 0,
-        sx: { height: 22 }
-      },
-      path
-    )),
-    restCount > 0 && /* @__PURE__ */ u2(Chip2, { size: "small", label: `+${restCount}`, sx: { height: 22 } })
-  ] });
-}
-function ThemeTreeNodeItem({
-  node: node2,
-  expandedIds,
-  selectedPaths,
-  selectedThemeId,
-  multiSelect,
-  onToggleExpand,
-  onSingleSelect,
-  onMultiSelect,
-  onSelectWithChildren,
-  renderLabel
-}) {
-  if (!node2) return null;
-  const children = node2.children || [];
-  const hasChildren = children.length > 0;
-  const isExpanded = expandedIds.has(node2.id);
-  const isSelected = multiSelect ? selectedPaths.includes(node2.path) : node2.themeId === selectedThemeId;
-  const handleClick = () => {
-    if (multiSelect) {
-      onMultiSelect(node2);
-    } else {
-      if (node2.themeId) {
-        onSingleSelect(node2);
-      } else if (hasChildren) {
-        onToggleExpand(node2.id);
-      }
-    }
-  };
-  return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(
-      ListItemButton2,
-      {
-        onClick: handleClick,
-        selected: isSelected,
-        sx: {
-          // 缩进逻辑统一下沉到 ThemeTreeNodeLabel
-          pl: 0,
-          py: 0.5,
-          minHeight: 32
-        },
-        children: /* @__PURE__ */ u2(
-          ThemeTreeNodeLabel,
-          {
-            depth: node2.depth,
-            hasChildren,
-            expanded: isExpanded,
-            onToggleExpand: (e2) => onToggleExpand(node2.id, e2),
-            placeholderWidthPx: 24,
-            basePadding: 1,
-            indentUnit: 2,
-            sx: { width: "100%" },
-            children: [
-              multiSelect && /* @__PURE__ */ u2(
-                Checkbox2,
-                {
-                  size: "small",
-                  checked: isSelected,
-                  onClick: (e2) => e2.stopPropagation(),
-                  onChange: () => onMultiSelect(node2),
-                  sx: { p: 0.25, mr: 0.5 }
-                }
-              ),
-              /* @__PURE__ */ u2(
-                Typography2,
-                {
-                  variant: "body2",
-                  sx: {
-                    flex: 1,
-                    fontWeight: node2.themeId ? 400 : 500,
-                    // 虚节点加粗
-                    color: node2.themeId ? "text.primary" : "text.secondary"
-                  },
-                  children: renderLabel ? renderLabel(node2) : node2.label
-                }
-              ),
-              multiSelect && hasChildren && /* @__PURE__ */ u2(
-                IconButton2,
-                {
-                  size: "small",
-                  onClick: (e2) => {
-                    e2.stopPropagation();
-                    onSelectWithChildren(node2);
-                  },
-                  sx: { p: 0.25, opacity: 0.6, "&:hover": { opacity: 1 } },
-                  title: "包含子主题",
-                  children: /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" })
-                }
-              )
-            ]
-          }
-        )
-      }
-    ),
-    hasChildren && /* @__PURE__ */ u2(Collapse2, { in: isExpanded, children: children.filter(Boolean).map((child) => /* @__PURE__ */ u2(
-      ThemeTreeNodeItem,
-      {
-        node: child,
-        expandedIds,
-        selectedPaths,
-        selectedThemeId,
-        multiSelect,
-        onToggleExpand,
-        onSingleSelect,
-        onMultiSelect,
-        onSelectWithChildren,
-        renderLabel
-      },
-      child.id
-    )) })
-  ] });
-}
-function ThemeTreeSelectPanel({
-  themes,
-  selectedThemeId,
-  selectedPaths = [],
-  onSelect,
-  onSelectMultiple,
-  multiSelect = false,
-  searchable = true,
-  showToolbar = true,
-  showSelectedChips = true,
-  defaultExpandedIds = [],
-  defaultExpandAll = false,
-  expandToSelected = true,
-  renderLabel,
-  maxHeight: maxHeight2 = 300,
-  sx = {},
-  selectChildrenOnCollapsedParent = false,
-  onRequestClose,
-  disabled = false
-}) {
-  const [searchTerm, setSearchTerm] = d("");
-  const [expandedIds, setExpandedIds] = d(() => new Set(defaultExpandedIds));
-  const themeTree = T$1(() => (buildThemeTree(themes || []) || []).filter(Boolean), [themes]);
-  y(() => {
-    if (!expandToSelected) return;
-    const pathsToExpand = [];
-    if (multiSelect && selectedPaths.length > 0) {
-      selectedPaths.forEach((p2) => pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(p2)));
-    } else if (selectedThemeId) {
-      const theme = themes.find((t3) => t3.id === selectedThemeId);
-      if (theme?.path) {
-        pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(theme.path));
-      }
-    }
-    if (pathsToExpand.length > 0) {
-      setExpandedIds((prev2) => {
-        const next2 = new Set(prev2);
-        pathsToExpand.forEach((p2) => next2.add(p2));
-        return next2;
-      });
-    }
-  }, [expandToSelected, multiSelect, selectedPaths, selectedThemeId, themes]);
-  y(() => {
-    if (!defaultExpandAll || themeTree.length === 0) return;
-    const allIds = [];
-    const collect = (nodes) => {
-      nodes.forEach((n2) => {
-        if (!n2) return;
-        allIds.push(n2.id);
-        collect(n2.children || []);
-      });
-    };
-    collect(themeTree);
-    setExpandedIds(new Set(allIds));
-  }, [defaultExpandAll, themeTree]);
-  const filteredTree = T$1(() => {
-    if (!searchTerm.trim()) return themeTree;
-    return (searchThemeTree(themeTree, searchTerm) || []).filter(Boolean);
-  }, [themeTree, searchTerm]);
-  const toggleExpand = q$1((nodeId, e2) => {
-    e2?.stopPropagation();
-    setExpandedIds((prev2) => {
-      const next2 = new Set(prev2);
-      if (next2.has(nodeId)) next2.delete(nodeId);
-      else next2.add(nodeId);
-      return next2;
-    });
-  }, []);
-  const handleSingleSelect = q$1(
-    (node2) => {
-      if (disabled) return;
-      if (onSelect) onSelect(node2.themeId, node2.path);
-      onRequestClose?.();
-    },
-    [disabled, onSelect, onRequestClose]
-  );
-  const handleSelectWithChildren = q$1(
-    (node2) => {
-      if (disabled) return;
-      if (!onSelectMultiple) return;
-      const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
-      const allPaths = [node2.path, ...descendantPaths].filter(Boolean);
-      const hasAll = allPaths.every((p2) => selectedPaths.includes(p2));
-      if (hasAll) {
-        const toRemove = new Set(allPaths);
-        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
-      } else {
-        onSelectMultiple([.../* @__PURE__ */ new Set([...selectedPaths, ...allPaths])]);
-      }
-    },
-    [disabled, onSelectMultiple, selectedPaths]
-  );
-  const handleMultiSelect = q$1(
-    (node2) => {
-      if (disabled) return;
-      if (!onSelectMultiple) return;
-      const hasChildren = (node2.children || []).length > 0;
-      const isCollapsed = hasChildren && !expandedIds.has(node2.id);
-      if (selectChildrenOnCollapsedParent && isCollapsed) {
-        handleSelectWithChildren(node2);
-        return;
-      }
-      const path = node2.path;
-      const isSelected = selectedPaths.includes(path);
-      if (isSelected) {
-        const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
-        const toRemove = /* @__PURE__ */ new Set([path, ...descendantPaths]);
-        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
-      } else {
-        onSelectMultiple([...selectedPaths, path]);
-      }
-    },
-    [
-      disabled,
-      expandedIds,
-      handleSelectWithChildren,
-      onSelectMultiple,
-      selectedPaths,
-      selectChildrenOnCollapsedParent
-    ]
-  );
-  return /* @__PURE__ */ u2(Box, { sx: { ...sx }, children: [
-    searchable && /* @__PURE__ */ u2(SearchBox, { value: searchTerm, onChange: setSearchTerm }),
-    multiSelect && showToolbar && /* @__PURE__ */ u2(MultiSelectToolbar, { themeTree, onSelectMultiple }),
-    /* @__PURE__ */ u2(Box, { sx: { maxHeight: maxHeight2, overflow: "auto" }, children: filteredTree.length === 0 ? /* @__PURE__ */ u2(Box, { sx: { p: 2, textAlign: "center" }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: themes.length === 0 ? "暂无主题" : "无匹配结果" }) }) : /* @__PURE__ */ u2(List2, { dense: true, disablePadding: true, children: filteredTree.map((node2) => /* @__PURE__ */ u2(
-      ThemeTreeNodeItem,
-      {
-        node: node2,
-        expandedIds,
-        selectedPaths: multiSelect ? selectedPaths : [],
-        selectedThemeId: multiSelect ? null : selectedThemeId,
-        multiSelect,
-        onToggleExpand: toggleExpand,
-        onSingleSelect: handleSingleSelect,
-        onMultiSelect: handleMultiSelect,
-        onSelectWithChildren: handleSelectWithChildren,
-        renderLabel
-      },
-      node2.id
-    )) }) }),
-    multiSelect && showSelectedChips && /* @__PURE__ */ u2(
-      SelectedPathsChips,
-      {
-        selectedPaths,
-        onRemovePath: (path) => onSelectMultiple?.(selectedPaths.filter((p2) => p2 !== path))
-      }
-    )
-  ] });
-}
-function ThemeTreeSelect({
-  themes,
-  selectedThemeId,
-  selectedPaths = [],
-  onSelect,
-  onSelectMultiple,
-  multiSelect = false,
-  allowClear = true,
-  searchable = true,
-  showToolbar = true,
-  showSelectedChips = true,
-  defaultExpandedIds = [],
-  defaultExpandAll = false,
-  expandToSelected = true,
-  renderLabel,
-  placeholder = "选择主题",
-  disabled = false,
-  size = "small",
-  sx = {},
-  maxDropdownHeight = 300,
-  selectChildrenOnCollapsedParent = false
-}) {
-  const [open, setOpen] = d(false);
-  const anchorRef = A$1(null);
-  const hasSelection = multiSelect ? selectedPaths.length > 0 : !!selectedThemeId;
-  const displayText2 = T$1(() => {
-    if (multiSelect) {
-      if (selectedPaths.length === 0) return placeholder;
-      if (selectedPaths.length === 1) {
-        const p2 = selectedPaths[0];
-        return p2.split("/").pop() || p2;
-      }
-      return `${selectedPaths.length} 个主题`;
-    }
-    if (!selectedThemeId) return placeholder;
-    const theme = themes.find((t3) => t3.id === selectedThemeId);
-    if (!theme) return placeholder;
-    const name = theme.path.split("/").pop() || theme.path;
-    return theme.icon ? `${theme.icon} ${name}` : name;
-  }, [multiSelect, placeholder, selectedPaths, selectedThemeId, themes]);
-  const handleClear = q$1(
-    (e2) => {
-      e2.stopPropagation();
-      if (disabled) return;
-      if (multiSelect) {
-        onSelectMultiple?.([]);
-      } else {
-        onSelect?.(null, null);
-      }
-    },
-    [disabled, multiSelect, onSelect, onSelectMultiple]
-  );
-  const handleClose = q$1(() => setOpen(false), []);
-  const panelProps = {
-    themes,
-    selectedThemeId,
-    selectedPaths,
-    onSelect,
-    onSelectMultiple,
-    multiSelect,
-    searchable,
-    showToolbar,
-    showSelectedChips,
-    defaultExpandedIds,
-    defaultExpandAll,
-    expandToSelected,
-    renderLabel,
-    maxHeight: maxDropdownHeight,
-    selectChildrenOnCollapsedParent,
-    disabled,
-    // 单选时：选中即关闭（多选保持打开）
-    onRequestClose: multiSelect ? void 0 : handleClose
-  };
-  return /* @__PURE__ */ u2(Box, { sx: { position: "relative", ...sx }, children: [
-    /* @__PURE__ */ u2(
-      ThemeTreeSelectTrigger,
-      {
-        anchorRef,
-        open,
-        onToggleOpen: () => !disabled && setOpen(!open),
-        displayText: displayText2,
-        hasSelection,
-        allowClear,
-        disabled,
-        size,
-        onClear: handleClear
-      }
-    ),
-    /* @__PURE__ */ u2(
-      Popper3,
-      {
-        open,
-        anchorEl: anchorRef.current,
-        placement: "bottom-start",
-        sx: { zIndex: 1300, minWidth: anchorRef.current?.offsetWidth },
-        children: /* @__PURE__ */ u2(ClickAwayListener, { onClickAway: handleClose, children: /* @__PURE__ */ u2(
-          Paper2,
-          {
-            sx: {
-              mt: 0.5,
-              border: "1px solid var(--background-modifier-border)",
-              boxShadow: 2
-            },
-            children: /* @__PURE__ */ u2(ThemeTreeSelectPanel, { ...panelProps })
-          }
-        ) })
-      }
-    )
-  ] });
-}
-function ThemeFilter({ selectedThemes, onSelectionChange, themes }) {
-  const allThemePaths = T$1(() => themes.map((t3) => t3.path), [themes]);
-  return /* @__PURE__ */ u2(
-    FilterPopover,
-    {
-      label: "主题筛选",
-      popoverTitle: "选择要显示的主题",
-      selectedKeys: selectedThemes,
-      totalCount: allThemePaths.length,
-      getChipLabel: (themePath) => {
-        const theme = themes.find((t3) => t3.path === themePath);
-        return theme ? getLeafPath(theme.path) || theme.path : themePath;
-      },
-      onDeleteKey: (themePath) => {
-        onSelectionChange(selectedThemes.filter((t3) => t3 !== themePath));
-      },
-      onSelectAll: () => onSelectionChange(allThemePaths),
-      onClearAll: () => onSelectionChange([]),
-      isEmpty: themes.length === 0,
-      emptyText: "暂无主题",
-      children: /* @__PURE__ */ u2(
-        ThemeTreeSelectPanel,
-        {
-          themes,
-          selectedPaths: selectedThemes,
-          onSelectMultiple: onSelectionChange,
-          multiSelect: true,
-          searchable: true,
-          showToolbar: false,
-          showSelectedChips: false,
-          maxHeight: 360,
-          selectChildrenOnCollapsedParent: true,
-          sx: { minWidth: 320 }
-        }
-      )
-    }
-  );
-}
-function CategoryFilter({
-  selectedCategories,
-  onSelectionChange,
-  viewInstances,
-  predefinedCategories = []
-}) {
-  const allCategories = T$1(() => {
-    return collectCategoriesFromViews(viewInstances, predefinedCategories);
-  }, [viewInstances, predefinedCategories]);
-  const handleToggleCategory = (categoryName) => {
-    const newSelection = selectedCategories.includes(categoryName) ? selectedCategories.filter((c2) => c2 !== categoryName) : [...selectedCategories, categoryName];
-    onSelectionChange(newSelection);
-  };
-  return /* @__PURE__ */ u2(
-    FilterPopover,
-    {
-      label: "分类筛选",
-      popoverTitle: "选择要显示的分类",
-      selectedKeys: selectedCategories,
-      totalCount: allCategories.length,
-      getChipLabel: (k2) => k2,
-      onDeleteKey: handleToggleCategory,
-      onSelectAll: () => onSelectionChange(allCategories),
-      onClearAll: () => onSelectionChange([]),
-      isEmpty: allCategories.length === 0,
-      emptyText: "暂无分类",
-      children: /* @__PURE__ */ u2(FormGroup2, { children: allCategories.map((cat) => /* @__PURE__ */ u2(
-        FormControlLabel2,
-        {
-          control: /* @__PURE__ */ u2(Checkbox2, { size: "small", checked: selectedCategories.includes(cat), onChange: () => handleToggleCategory(cat) }),
-          label: /* @__PURE__ */ u2("span", { class: "text-md", children: cat })
-        },
-        cat
-      )) })
-    }
-  );
-}
-function ViewToolbarDateControls({
-  dateLabel,
-  onPrevious,
-  onNext,
-  onToday
-}) {
-  return /* @__PURE__ */ u2("div", { class: "tp-toolbar__date-group", "aria-label": "时间范围导航", children: [
-    /* @__PURE__ */ u2(
-      "span",
-      {
-        class: "tp-toolbar-date-display",
-        role: "status",
-        "aria-live": "polite",
-        title: "当前时间范围",
-        children: dateLabel
-      }
-    ),
-    /* @__PURE__ */ u2("div", { class: "tp-toolbar__date-actions", children: [
-      /* @__PURE__ */ u2(
-        ThinkIconButton,
-        {
-          size: "sm",
-          label: "上一时间范围",
-          icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-left" }),
-          onClick: onPrevious
-        }
-      ),
-      /* @__PURE__ */ u2(
-        ThinkIconButton,
-        {
-          size: "sm",
-          label: "下一时间范围",
-          icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-right" }),
-          onClick: onNext
-        }
-      ),
-      /* @__PURE__ */ u2(
-        ThinkIconButton,
-        {
-          size: "sm",
-          label: "回到今天",
-          icon: /* @__PURE__ */ u2(ThinkIcon, { name: "calendar" }),
-          onClick: onToday
-        }
-      )
-    ] })
-  ] });
-}
-const VIEW_TOOLBAR_OPTIONS = ["年", "季", "月", "周", "天"];
-function getViewToolbarUnit(view) {
-  return {
-    年: "year",
-    季: "quarter",
-    月: "month",
-    周: "week",
-    天: "day"
-  }[view] || "day";
-}
-function buildViewToolbarDateLabel(currentDate, currentView) {
-  return formatDateForView(currentDate, currentView);
-}
-function buildViewToolbarDateTargets(currentDate, currentView, today = dayjs()) {
-  const unit = getViewToolbarUnit(currentView);
-  return {
-    previous: currentDate.clone().subtract(1, unit),
-    next: currentDate.clone().add(1, unit),
-    today
-  };
-}
-function shouldRenderViewToolbarFallbackFilters(args) {
-  return !args.hasFilterSlot && (args.canSelectThemes || args.canSelectCategories);
-}
-const VIEW_SEGMENTS = VIEW_TOOLBAR_OPTIONS.map((value) => ({ value, label: value }));
-function ViewToolbar({
-  currentView,
-  currentDate,
-  onViewChange,
-  onDateChange,
-  filterSlot,
-  selectedThemes = [],
-  selectedCategories = [],
-  onThemeSelectionChange,
-  onCategorySelectionChange,
-  viewInstances,
-  themes,
-  predefinedCategories,
-  hideToolbar = false,
-  onLayoutSettingsClick
-}) {
-  const dateLabel = T$1(() => buildViewToolbarDateLabel(currentDate, currentView), [currentDate, currentView]);
-  const dateTargets = T$1(() => buildViewToolbarDateTargets(currentDate, currentView), [currentDate, currentView]);
-  const fallbackFilters = shouldRenderViewToolbarFallbackFilters({
-    hasFilterSlot: Boolean(filterSlot),
-    canSelectThemes: Boolean(onThemeSelectionChange),
-    canSelectCategories: Boolean(onCategorySelectionChange)
-  });
-  if (hideToolbar) return null;
-  return /* @__PURE__ */ u2("div", { class: "tp-toolbar think-toolbar think-toolbar--compact", ...getObsidianEventBoundaryProps(), children: [
-    /* @__PURE__ */ u2(ThinkSegmentedControl, { label: "时间粒度", value: currentView, options: VIEW_SEGMENTS, onChange: onViewChange, size: "sm", className: "tp-toolbar__view-switcher" }),
-    /* @__PURE__ */ u2(
-      ViewToolbarDateControls,
-      {
-        dateLabel,
-        onPrevious: () => onDateChange(dateTargets.previous),
-        onNext: () => onDateChange(dateTargets.next),
-        onToday: () => onDateChange(dateTargets.today)
-      }
-    ),
-    /* @__PURE__ */ u2("span", { class: "tp-toolbar__spacer", "aria-hidden": "true" }),
-    (filterSlot || fallbackFilters) && /* @__PURE__ */ u2("div", { class: "tp-toolbar__filters", children: filterSlot || /* @__PURE__ */ u2(S, { children: [
-      onThemeSelectionChange && /* @__PURE__ */ u2(ThemeFilter, { selectedThemes, onSelectionChange: onThemeSelectionChange, themes }),
-      onCategorySelectionChange && /* @__PURE__ */ u2(CategoryFilter, { selectedCategories, onSelectionChange: onCategorySelectionChange, viewInstances, predefinedCategories })
-    ] }) }),
-    onLayoutSettingsClick && /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", className: "tp-toolbar-layout-settings", label: "布局设置", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "settings" }), onClick: onLayoutSettingsClick })
-  ] });
-}
-const VIEW_REGISTRY = {
-  TableView,
-  BlockView,
-  TimelineView,
-  EventTimelineView,
-  ExcelView,
-  StatisticsView,
-  HeatmapView,
-  ProgressView,
-  EnergyView
-};
-const DashboardViewComponents = VIEW_REGISTRY;
-function useLayoutItems({ dataStore, layout }) {
-  const [allItems, setAllItems] = d(() => dataStore.queryItems());
-  y(() => {
-    const readAllItems = () => {
-      const startedAt = performance.now();
-      const nextItems = dataStore.queryItems();
-      const durationMs2 = Math.round((performance.now() - startedAt) * 100) / 100;
-      devLog("[ThinkPlugin] layout shared query", {
-        layoutId: layout.id,
-        viewCount: layout.viewInstanceIds.length,
-        itemCount: nextItems.length,
-        durationMs: durationMs2
-      });
-      setAllItems(nextItems);
-    };
-    const listener = () => readAllItems();
-    dataStore.subscribe(listener);
-    readAllItems();
-    return () => dataStore.unsubscribe(listener);
-  }, [dataStore, layout.id, layout.viewInstanceIds.length]);
-  return allItems;
-}
-const INITIAL_RENDERED_EXPANDED_VIEWS = 3;
-const EXPANDED_VIEW_RENDER_BATCH_SIZE = 2;
-const EXPANDED_VIEW_RENDER_DELAY_MS = 80;
-function useExpandedViewRendering({
-  layout,
-  allViews
-}) {
-  const [expandedState, setExpandedState] = d({});
-  const [isStateInitialized, setIsStateInitialized] = d(false);
-  y(() => {
-    const initialState = {};
-    layout.viewInstanceIds.forEach((viewId) => {
-      const view = allViews.find((v2) => v2.id === viewId);
-      if (view) {
-        initialState[viewId] = !view.collapsed;
-      }
-    });
-    setExpandedState(initialState);
-    setIsStateInitialized(true);
-  }, [layout.id]);
-  y(() => {
-    if (!isStateInitialized) return;
-    setExpandedState((prevState) => {
-      const newState = { ...prevState };
-      layout.viewInstanceIds.forEach((viewId) => {
-        const view = allViews.find((v2) => v2.id === viewId);
-        if (view && !(viewId in prevState)) {
-          newState[viewId] = !view.collapsed;
-        }
-      });
-      return newState;
-    });
-  }, [allViews, isStateInitialized, layout.viewInstanceIds]);
-  const expandedViewIds = T$1(() => {
-    if (!isStateInitialized) return [];
-    return layout.viewInstanceIds.filter((viewId) => !!expandedState[viewId]);
-  }, [expandedState, isStateInitialized, layout.viewInstanceIds]);
-  const expandedViewSignature = expandedViewIds.join("|");
-  const [renderedExpandedCount, setRenderedExpandedCount] = d(INITIAL_RENDERED_EXPANDED_VIEWS);
-  const renderedBatchLayoutIdRef = A$1(null);
-  y(() => {
-    setRenderedExpandedCount((current2) => {
-      const firstBatchSize = Math.min(expandedViewIds.length, INITIAL_RENDERED_EXPANDED_VIEWS);
-      if (renderedBatchLayoutIdRef.current !== layout.id) {
-        renderedBatchLayoutIdRef.current = layout.id;
-        return firstBatchSize;
-      }
-      return Math.min(expandedViewIds.length, Math.max(current2, INITIAL_RENDERED_EXPANDED_VIEWS));
-    });
-  }, [expandedViewSignature, expandedViewIds.length, layout.id]);
-  y(() => {
-    if (renderedExpandedCount >= expandedViewIds.length) return;
-    const requestIdle = window.requestIdleCallback;
-    const cancelIdle = window.cancelIdleCallback;
-    let timeoutId = null;
-    let idleHandle = null;
-    const renderNextBatch = () => {
-      setRenderedExpandedCount((current2) => Math.min(
-        expandedViewIds.length,
-        current2 + EXPANDED_VIEW_RENDER_BATCH_SIZE
-      ));
-    };
-    if (requestIdle) {
-      idleHandle = requestIdle(renderNextBatch, { timeout: EXPANDED_VIEW_RENDER_DELAY_MS * 2 });
-    } else {
-      timeoutId = setTimeout(renderNextBatch, EXPANDED_VIEW_RENDER_DELAY_MS);
-    }
-    return () => {
-      if (idleHandle !== null && cancelIdle) cancelIdle(idleHandle);
-      if (timeoutId !== null) clearTimeout(timeoutId);
-    };
-  }, [expandedViewIds.length, expandedViewSignature, renderedExpandedCount]);
-  const handleToggle = q$1((viewId, event) => {
-    const isToggleAll = event?.metaKey || event?.ctrlKey;
-    if (isToggleAll) {
-      setExpandedState((currentState) => {
-        const shouldExpandAll = !currentState[viewId];
-        const newState = {};
-        for (const id in currentState) {
-          newState[id] = shouldExpandAll;
-        }
-        return newState;
-      });
-    } else {
-      setExpandedState((prev2) => ({ ...prev2, [viewId]: !prev2[viewId] }));
-    }
-  }, []);
-  return {
-    expandedState,
-    expandedViewIds,
-    renderedExpandedCount,
-    isStateInitialized,
-    handleToggle
-  };
-}
-function useViewData({
-  dataStore,
-  sourceItems,
-  viewInstance,
-  dateRange,
-  keyword,
-  layoutView,
-  isOverviewMode,
-  useFieldGranularity = false,
-  layoutFilters = []
-}) {
-  const filters = viewInstance?.filters || [];
-  const sort = viewInstance?.sort || [];
-  const sourceName = viewInstance?.title || "未知视图";
-  const [localItems, setLocalItems] = d(() => sourceItems ?? dataStore.queryItems());
-  y(() => {
-    if (sourceItems) return;
-    const listener = () => {
-      setLocalItems(dataStore.queryItems());
-    };
-    dataStore.subscribe(listener);
-    return () => dataStore.unsubscribe(listener);
-  }, [dataStore, sourceItems, sourceName]);
-  const allItems = sourceItems ?? localItems;
-  const processedItems = T$1(() => {
-    devTime(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
-    if (!viewInstance) {
-      devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
-      return [];
-    }
-    const finalResult = queryViewRecords({
-      items: allItems,
-      layoutFilters,
-      viewFilters: filters,
-      sort,
-      keyword,
-      dateRange,
-      layoutView,
-      isOverviewMode: !!isOverviewMode,
-      useFieldGranularity
-    });
-    devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
-    return finalResult;
-  }, [allItems, layoutFilters, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, sourceName, viewInstance]);
-  return processedItems;
-}
-const AnyIconButton = IconButton2;
-const closeStatisticsPopover = (widgetId) => {
-  closeFloatingWidget(widgetId);
-};
-const openStatisticsPopover = (request) => {
-  openFloatingWidget(request.widgetId, () => /* @__PURE__ */ u2(
-    FloatingPanel,
-    {
-      id: request.widgetId,
-      title: request.title,
-      defaultPosition: { x: window.innerWidth / 2 - 320, y: window.innerHeight / 2 - 240 },
-      minWidth: 520,
-      maxWidth: "90vw",
-      maxHeight: "85vh",
-      width: 760,
-      height: 640,
-      resizable: true,
-      bodyPadding: 0,
-      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      onClose: request.onClose,
-      headerActions: /* @__PURE__ */ u2("div", { class: "sv-popover-heading", children: [
-        /* @__PURE__ */ u2(Tooltip2, { title: "导出为 Markdown", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
-          AnyIconButton,
-          {
-            size: "small",
-            onClick: (e2) => {
-              e2.stopPropagation();
-              request.onExport();
-            },
-            sx: { padding: "4px" },
-            children: /* @__PURE__ */ u2(IosShareIcon, { sx: { fontSize: "1rem" } })
-          }
-        ) }),
-        request.canQuickCreate && request.onQuickCreate ? /* @__PURE__ */ u2(Tooltip2, { title: "按当前分类创建", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
-          AnyIconButton,
-          {
-            size: "small",
-            onClick: (e2) => {
-              e2.stopPropagation();
-              request.onQuickCreate?.();
-            },
-            sx: { padding: "4px" },
-            children: /* @__PURE__ */ u2(AddCircleOutlineIcon, { sx: { fontSize: "1rem" } })
-          }
-        ) }) : null
-      ] }),
-      children: /* @__PURE__ */ u2(
-        PopoverContent,
-        {
-          blocks: request.blocks,
-          module: request.module,
-          timerService: request.timerService,
-          onMarkDone: request.onMarkDone,
-          timers: request.timers,
-          allThemes: request.allThemes,
-          messageRenderPort: request.messageRenderPort,
-          onOpenRecord: request.onOpenRecord,
-          onOpenRecordOrigin: request.onOpenRecordOrigin,
-          resolveResourcePath: request.resolveResourcePath
-        }
-      )
-    }
-  ));
-};
-function useViewRuntimeHandlers({
-  app,
-  actionService,
-  viewInstance,
-  dateRange,
-  layoutView,
-  excelAvailableFields
-}) {
-  const useCases = useUseCases();
-  const ui = useUiPort();
-  const modal = useModalPort();
-  const onUpdateTaskTime = q$1(
-    async (taskId, updates) => {
-      const ok = await updateTimeFromView({
-        uiPort: ui,
-        useCases,
-        itemId: taskId,
-        updates: {
-          time: updates.time,
-          endTime: updates.endTime,
-          duration: updates.duration
-        },
-        source: "unknown"
-      });
-      if (!ok) throw new Error("更新工作 Session 时间失败");
-    },
-    [ui, useCases]
-  );
-  const onQuickCreate = q$1((payload) => {
-    openCreateFromStatistics({
-      app,
-      actionService,
-      uiPort: ui,
-      viewInstance,
-      currentView: layoutView,
-      fallbackDate: dayjs(dateRange[0]),
-      payload
-    });
-  }, [actionService, app, dateRange, layoutView, ui, viewInstance]);
-  const onCategoryColorsChange = q$1((nextColors) => {
-    void useCases.settings.updateCategoryColors(nextColors);
-  }, [useCases.settings]);
-  const onOpenRecord = q$1((item) => {
-    openEditFromItem({ app, item });
-  }, [app]);
-  const onOpenRecordOrigin = q$1((item) => {
-    openRecordOrigin({ app, item });
-  }, [app]);
-  const resolveResourcePath = q$1((path) => {
-    return resolveVaultResourcePath(app, path);
-  }, [app]);
-  const onCreateFromTimeline = q$1((payload) => {
-    openCreateFromTimeline({
-      app,
-      uiPort: ui,
-      inputBlocks: payload.inputBlocks,
-      hourHeight: payload.hourHeight,
-      dayBlocks: payload.dayBlocks,
-      day: payload.day,
-      event: payload.event
-    });
-  }, [app, ui]);
-  const onOpenHeatmapCreate = q$1((request) => {
-    openCreateFromHeatmap({
-      app,
-      sourceBlockId: request.sourceBlockId,
-      date: request.date,
-      item: request.item,
-      themePath: request.themePath,
-      goalPath: request.goalPath,
-      goalId: request.goalId,
-      templateId: request.templateId,
-      templateVariantId: request.templateVariantId,
-      themesByPath: request.themesByPath,
-      notice: (message) => ui.notice(message)
-    });
-  }, [app, ui]);
-  const onOpenCheckinManager = q$1((request) => {
-    modal.openCheckinManager({
-      date: request.date,
-      items: request.items,
-      onAddRecord: request.onAddRecord,
-      onDeleteRecord: async (item) => {
-        if (!window.confirm("确认删除这条打卡记录吗？")) return false;
-        const result = await useCases.recordInput.submitDeleteRecord({
-          item,
-          source: "unknown"
-        });
-        const presentation = buildRecordSubmitFeedbackPresentation(result, "删除失败");
-        if (presentation.message) {
-          ui.notice(presentation.message);
-        }
-        return result.status === "success" || result.status === "partial_success";
-      }
-    });
-  }, [modal, ui, useCases]);
-  const onExcelCellCommit = q$1(async (request) => {
-    return await commitExcelCellFromView({
-      uiPort: ui,
-      useCases,
-      item: request.item,
-      field: request.field,
-      canonicalField: request.canonicalField,
-      oldValue: request.oldValue,
-      nextValue: request.nextValue,
-      showSuccessNotice: false
-    });
-  }, [ui, useCases]);
-  const onExcelFieldsChange = q$1(async (nextFields) => {
-    await useCases.viewInstance.setDisplayFields(viewInstance.id, nextFields, excelAvailableFields);
-  }, [excelAvailableFields, useCases, viewInstance.id]);
-  const onExcelConfigChange = q$1(async (nextExcelConfig) => {
-    await useCases.viewInstance.updateExcelViewConfig(viewInstance.id, nextExcelConfig);
-  }, [useCases, viewInstance.id]);
-  const onEnergyContextChange = q$1(async (currentContext) => {
-    await useCases.viewInstance.updateViewConfig(viewInstance.id, { currentContext });
-  }, [useCases, viewInstance.id]);
-  return {
-    onUpdateTaskTime,
-    onQuickCreate,
-    onCategoryColorsChange,
-    onOpenRecord,
-    onOpenRecordOrigin,
-    resolveResourcePath,
-    onCreateFromTimeline,
-    onOpenHeatmapCreate,
-    onOpenCheckinManager,
-    onExcelCellCommit,
-    onExcelFieldsChange,
-    onExcelConfigChange,
-    onEnergyContextChange,
-    onNotice: ui.notice
-  };
-}
-function buildViewProps({
-  viewInstance,
-  viewItems,
-  dateRange,
-  layoutView,
-  useFieldGranularity,
-  excelAvailableFields,
-  onMarkDone,
-  handlers,
-  onOpenStatisticsPopover,
-  onCloseStatisticsPopover,
-  timerService,
-  timers,
-  allThemes,
-  inputSettings,
-  goals = [],
-  selectedLayoutCategories,
-  categoryColors,
-  messageRenderPort,
-  allItems,
-  allRecords,
-  goalSettings
-}) {
-  const viewType = viewInstance.viewType;
-  return {
-    items: viewType === "EnergyView" ? allItems : viewItems,
-    records: viewType === "TimelineView" || viewType === "EnergyView" ? allRecords : void 0,
-    dateRange,
-    module: viewInstance,
-    currentView: layoutView,
-    useFieldGranularity,
-    ...viewInstance.viewConfig,
-    groupField: viewInstance.group,
-    groupFields: viewInstance.groupFields,
-    fields: viewInstance.fields,
-    availableFields: viewType === "ExcelView" ? excelAvailableFields : void 0,
-    excelConfig: viewType === "ExcelView" ? viewInstance.viewConfig?.excel : void 0,
-    onFieldsChange: viewType === "ExcelView" ? handlers.onExcelFieldsChange : void 0,
-    onExcelConfigChange: viewType === "ExcelView" ? handlers.onExcelConfigChange : void 0,
-    onEnergyContextChange: viewType === "EnergyView" ? handlers.onEnergyContextChange : void 0,
-    onMarkDone,
-    onUpdateTaskTime: handlers.onUpdateTaskTime,
-    onOpenStatisticsPopover: viewType === "StatisticsView" ? onOpenStatisticsPopover : void 0,
-    onCloseStatisticsPopover: viewType === "StatisticsView" ? onCloseStatisticsPopover : void 0,
-    categoryColors: viewType === "StatisticsView" ? categoryColors : void 0,
-    onCategoryColorsChange: viewType === "StatisticsView" ? handlers.onCategoryColorsChange : void 0,
-    onOpenRecord: handlers.onOpenRecord,
-    onOpenRecordOrigin: handlers.onOpenRecordOrigin,
-    resolveResourcePath: handlers.resolveResourcePath,
-    onNotice: handlers.onNotice,
-    onCreateFromTimeline: viewType === "TimelineView" ? handlers.onCreateFromTimeline : void 0,
-    onOpenHeatmapCreate: viewType === "HeatmapView" ? handlers.onOpenHeatmapCreate : void 0,
-    onOpenCheckinManager: viewType === "HeatmapView" ? handlers.onOpenCheckinManager : void 0,
-    onCellCommit: viewType === "ExcelView" ? handlers.onExcelCellCommit : void 0,
-    timerService,
-    timers,
-    allThemes,
-    inputSettings,
-    goals,
-    goalSettings,
-    selectedCategories: selectedLayoutCategories,
-    messageRenderPort
-  };
-}
-function ViewContent({
-  viewInstance,
-  dataStore,
-  dateRange,
-  keyword,
-  layoutView,
-  isOverviewMode,
-  useFieldGranularity,
-  layoutFilters,
-  app,
-  onMarkDone,
-  actionService,
-  timerService,
-  timers,
-  allThemes,
-  allItems,
-  allRecords,
-  inputSettings,
-  onDataLoaded
-}) {
-  const messageRenderPort = useMessageRenderPort();
-  const categoryColors = useSelector(selectCategoryColors);
-  const settings = useSelector(selectSettings);
-  const normalizedViewInstance = viewInstance;
-  const viewItems = useViewData({
-    dataStore,
-    sourceItems: allItems,
-    viewInstance: normalizedViewInstance,
-    dateRange,
-    keyword,
-    layoutView,
-    isOverviewMode: !!isOverviewMode,
-    useFieldGranularity,
-    layoutFilters
-  });
-  const selectedLayoutCategories = T$1(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
-  const excelAvailableFields = T$1(() => getAllFields(allItems), [allItems]);
-  y(() => {
-    onDataLoaded(viewItems);
-  }, [viewItems, onDataLoaded]);
-  const ViewComponent = DashboardViewComponents[normalizedViewInstance.viewType];
-  if (!ViewComponent) return /* @__PURE__ */ u2("div", { children: [
-    "未知视图: ",
-    normalizedViewInstance.viewType
-  ] });
-  const handlers = useViewRuntimeHandlers({
-    app,
-    actionService,
-    viewInstance: normalizedViewInstance,
-    dateRange,
-    layoutView,
-    excelAvailableFields
-  });
-  const viewProps = buildViewProps({
-    viewInstance: normalizedViewInstance,
-    viewItems,
-    dateRange,
-    layoutView,
-    useFieldGranularity,
-    excelAvailableFields,
-    onMarkDone,
-    handlers,
-    onOpenStatisticsPopover: openStatisticsPopover,
-    onCloseStatisticsPopover: closeStatisticsPopover,
-    timerService,
-    timers,
-    allThemes,
-    inputSettings,
-    goals: settings.goalSettings?.goals || [],
-    selectedLayoutCategories,
-    categoryColors,
-    messageRenderPort,
-    allItems,
-    allRecords,
-    goalSettings: settings.goalSettings
-  });
-  return /* @__PURE__ */ u2(ViewComponent, { ...viewProps });
-}
-function useLayoutModuleActions({
-  app,
-  actionService,
-  layout,
-  layoutDate,
-  layoutView,
-  allViews,
-  modulesDataCache,
-  ui,
-  useCases,
-  timerService
-}) {
-  const handleExport = q$1((viewId, viewTitle) => {
-    const items = modulesDataCache.current?.[viewId];
-    if (!items || items.length === 0) {
-      ui.notice("没有内容可导出");
-      return;
-    }
-    const viewInstance = allViews.find((v2) => v2.id === viewId);
-    let exportConfig = viewInstance ? getExportConfigByViewType(viewInstance.viewType) : void 0;
-    if (viewInstance && exportConfig) {
-      const dynamicGroupFields = viewInstance.groupFields && viewInstance.groupFields.length > 0 ? viewInstance.groupFields : viewInstance.group ? [viewInstance.group] : void 0;
-      if (dynamicGroupFields) {
-        exportConfig = {
-          ...exportConfig,
-          groupFields: dynamicGroupFields
-        };
-      }
-    }
-    const markdownContent = exportItemsToMarkdown(items, exportConfig);
-    void navigator.clipboard.writeText(markdownContent);
-    ui.notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
-  }, [allViews, modulesDataCache, ui]);
-  const handleQuickInputAction = q$1((viewInstance) => {
-    openCreateFromViewHeader({
-      app,
-      actionService,
-      viewInstance,
-      dateContext: layoutDate,
-      periodContext: layoutView
-    });
-  }, [actionService, app, layoutDate, layoutView]);
-  const handleMarkItemDone = q$1((itemId) => {
-    void (async () => {
-      if (timerService.completeTask) {
-        await timerService.completeTask(itemId);
-        return;
-      }
-      await completeFromView({
-        uiPort: ui,
-        useCases,
-        itemId,
-        source: "layout_renderer"
-      });
-    })();
-  }, [timerService, ui, useCases]);
-  const handleSettingsClick = q$1((viewInstance) => {
-    openModuleSettingsWidget(viewInstance);
-  }, []);
-  const handleDeleteViewInstance = q$1((viewInstanceId) => {
-    const view = allViews.find((candidate) => candidate.id === viewInstanceId);
-    if (!window.confirm(`确认删除视图“${view?.title || viewInstanceId}”吗？它会从配置和所有布局中移除。`)) return;
-    void useCases.viewInstance.deleteView(viewInstanceId);
-  }, [allViews, useCases.viewInstance]);
-  const handleGlobalFiltersChange = q$1((filters) => {
-    void useCases.layout.updateLayout(layout.id, {
-      globalFilters: filters
-    });
-  }, [layout.id, useCases.layout]);
-  return {
-    handleExport,
-    handleQuickInputAction,
-    handleMarkItemDone,
-    handleSettingsClick,
-    handleDeleteViewInstance,
-    handleGlobalFiltersChange
-  };
-}
 function useCombinedRefs() {
   for (var _len = arguments.length, refs = new Array(_len), _key = 0; _key < _len; _key++) {
     refs[_key] = arguments[_key];
@@ -64815,7 +55961,7 @@ function getOwnerDocument(target) {
   }
   return document;
 }
-const useIsomorphicLayoutEffect = canUseDOM ? _ : y;
+const useIsomorphicLayoutEffect = canUseDOM ? _ : h;
 function useEvent(handler) {
   const handlerRef = A$1(handler);
   useIsomorphicLayoutEffect(() => {
@@ -64882,7 +56028,7 @@ function useNodeRef(onChange) {
 }
 function usePrevious(value) {
   const ref = A$1();
-  y(() => {
+  h(() => {
     ref.current = value;
   }, [value]);
   return ref.current;
@@ -65077,7 +56223,7 @@ function useAnnouncement() {
 const DndMonitorContext = /* @__PURE__ */ X$1(null);
 function useDndMonitor(listener) {
   const registerListener = x$1(DndMonitorContext);
-  y(() => {
+  h(() => {
     if (!registerListener) {
       throw new Error("useDndMonitor must be used within a children of <DndContext>");
     }
@@ -65153,7 +56299,7 @@ function Accessibility(_ref) {
   } = useAnnouncement();
   const liveRegionId = useUniqueId("DndLiveRegion");
   const [mounted, setMounted] = d(false);
-  y(() => {
+  h(() => {
     setMounted(true);
   }, []);
   useDndMonitor(T$1(() => ({
@@ -66470,7 +57616,7 @@ function useAutoScroller(_ref) {
     scrollContainer.scrollBy(scrollLeft, scrollTop);
   }, []);
   const sortedScrollableAncestors = T$1(() => order2 === TraversalOrder.TreeOrder ? [...scrollableAncestors].reverse() : scrollableAncestors, [order2, scrollableAncestors]);
-  y(
+  h(
     () => {
       if (!enabled2 || !scrollableAncestors.length || !rect) {
         clearAutoScrollInterval();
@@ -66660,10 +57806,10 @@ function useDroppableMeasuring(containers, _ref) {
     }
     return previousValue;
   }, [containers, queue, dragging, disabled, measure]);
-  y(() => {
+  h(() => {
     containersRef.current = containers;
   }, [containers]);
-  y(
+  h(
     () => {
       if (disabled) {
         return;
@@ -66673,7 +57819,7 @@ function useDroppableMeasuring(containers, _ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [dragging, disabled]
   );
-  y(
+  h(
     () => {
       if (queue && queue.length > 0) {
         setQueue(null);
@@ -66682,7 +57828,7 @@ function useDroppableMeasuring(containers, _ref) {
     //eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(queue)]
   );
-  y(
+  h(
     () => {
       if (disabled || typeof frequency !== "number" || timeoutId.current !== null) {
         return;
@@ -66740,7 +57886,7 @@ function useMutationObserver(_ref) {
     } = window;
     return new MutationObserver2(handleMutations);
   }, [handleMutations, disabled]);
-  y(() => {
+  h(() => {
     return () => mutationObserver == null ? void 0 : mutationObserver.disconnect();
   }, [mutationObserver]);
   return mutationObserver;
@@ -66764,7 +57910,7 @@ function useResizeObserver(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [disabled]
   );
-  y(() => {
+  h(() => {
     return () => resizeObserver == null ? void 0 : resizeObserver.disconnect();
   }, [resizeObserver]);
   return resizeObserver;
@@ -66844,7 +57990,7 @@ function useScrollableAncestors(node2) {
     }
     return getScrollableAncestors(node2);
   }, [node2]);
-  y(() => {
+  h(() => {
     previousNode.current = node2;
   }, [node2]);
   return ancestors;
@@ -66865,7 +58011,7 @@ function useScrollOffsets(elements) {
       return new Map(scrollCoordinates2);
     });
   }, []);
-  y(() => {
+  h(() => {
     const previousElements = prevElements.current;
     if (elements !== previousElements) {
       cleanup2(previousElements);
@@ -66905,14 +58051,14 @@ function useScrollOffsetsDelta(scrollOffsets, dependencies) {
     dependencies = [];
   }
   const initialScrollOffsets = A$1(null);
-  y(
+  h(
     () => {
       initialScrollOffsets.current = null;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     dependencies
   );
-  y(() => {
+  h(() => {
     const hasScrollOffsets = scrollOffsets !== defaultCoordinates;
     if (hasScrollOffsets && !initialScrollOffsets.current) {
       initialScrollOffsets.current = scrollOffsets;
@@ -66924,7 +58070,7 @@ function useScrollOffsetsDelta(scrollOffsets, dependencies) {
   return initialScrollOffsets.current ? subtract(scrollOffsets, initialScrollOffsets.current) : defaultCoordinates;
 }
 function useSensorSetup(sensors) {
-  y(
+  h(
     () => {
       if (!canUseDOM) {
         return;
@@ -67264,7 +58410,7 @@ function RestoreFocus(_ref) {
   } = x$1(InternalContext);
   const previousActivatorEvent = usePrevious(activatorEvent);
   const previousActiveId = usePrevious(active == null ? void 0 : active.id);
-  y(() => {
+  h(() => {
     if (disabled) {
       return;
     }
@@ -67406,7 +58552,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
     modifiers,
     ...props
   } = _ref;
-  const store = h(reducer, void 0, getInitialState);
+  const store = y(reducer, void 0, getInitialState);
   const [state, dispatch] = store;
   const [dispatchMonitorEvent, registerMonitorListener] = useDndMonitorProvider();
   const [status, setStatus] = d(Status.Uninitialized);
@@ -67715,7 +58861,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
       setStatus(Status.Initialized);
     }
   }, [activeNodeRect, status]);
-  y(
+  h(
     () => {
       const {
         onDragMove
@@ -67750,7 +58896,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [scrollAdjustedTranslate.x, scrollAdjustedTranslate.y]
   );
-  y(
+  h(
     () => {
       const {
         active: active2,
@@ -68033,7 +59179,7 @@ function useDroppable(_ref) {
   }, [resizeObserver]);
   const [nodeRef, setNodeRef] = useNodeRef(handleNodeChange);
   const dataRef = useLatestValue(data);
-  y(() => {
+  h(() => {
     if (!resizeObserver || !nodeRef.current) {
       return;
     }
@@ -68041,7 +59187,7 @@ function useDroppable(_ref) {
     resizeObserverConnected.current = false;
     resizeObserver.observe(nodeRef.current);
   }, [nodeRef, resizeObserver]);
-  y(
+  h(
     () => {
       dispatch({
         type: Action.RegisterDroppable,
@@ -68063,7 +59209,7 @@ function useDroppable(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [id]
   );
-  y(() => {
+  h(() => {
     if (disabled !== previous.current.disabled) {
       dispatch({
         type: Action.SetDroppableDisabled,
@@ -68081,6 +59227,9259 @@ function useDroppable(_ref) {
     node: nodeRef,
     over,
     setNodeRef
+  };
+}
+function arrayMove(array2, from2, to) {
+  const newArray = array2.slice();
+  newArray.splice(to < 0 ? newArray.length + to : to, 0, newArray.splice(from2, 1)[0]);
+  return newArray;
+}
+function getSortedRects(items, rects) {
+  return items.reduce((accumulator, id, index) => {
+    const rect = rects.get(id);
+    if (rect) {
+      accumulator[index] = rect;
+    }
+    return accumulator;
+  }, Array(items.length));
+}
+function isValidIndex(index) {
+  return index !== null && index >= 0;
+}
+function itemsEqual(a2, b2) {
+  if (a2 === b2) {
+    return true;
+  }
+  if (a2.length !== b2.length) {
+    return false;
+  }
+  for (let i2 = 0; i2 < a2.length; i2++) {
+    if (a2[i2] !== b2[i2]) {
+      return false;
+    }
+  }
+  return true;
+}
+function normalizeDisabled(disabled) {
+  if (typeof disabled === "boolean") {
+    return {
+      draggable: disabled,
+      droppable: disabled
+    };
+  }
+  return disabled;
+}
+const rectSortingStrategy = (_ref) => {
+  let {
+    rects,
+    activeIndex,
+    overIndex,
+    index
+  } = _ref;
+  const newRects = arrayMove(rects, overIndex, activeIndex);
+  const oldRect = rects[index];
+  const newRect = newRects[index];
+  if (!newRect || !oldRect) {
+    return null;
+  }
+  return {
+    x: newRect.left - oldRect.left,
+    y: newRect.top - oldRect.top,
+    scaleX: newRect.width / oldRect.width,
+    scaleY: newRect.height / oldRect.height
+  };
+};
+const defaultScale$1 = {
+  scaleX: 1,
+  scaleY: 1
+};
+const verticalListSortingStrategy = (_ref) => {
+  var _rects$activeIndex;
+  let {
+    activeIndex,
+    activeNodeRect: fallbackActiveRect,
+    index,
+    rects,
+    overIndex
+  } = _ref;
+  const activeNodeRect = (_rects$activeIndex = rects[activeIndex]) != null ? _rects$activeIndex : fallbackActiveRect;
+  if (!activeNodeRect) {
+    return null;
+  }
+  if (index === activeIndex) {
+    const overIndexRect = rects[overIndex];
+    if (!overIndexRect) {
+      return null;
+    }
+    return {
+      x: 0,
+      y: activeIndex < overIndex ? overIndexRect.top + overIndexRect.height - (activeNodeRect.top + activeNodeRect.height) : overIndexRect.top - activeNodeRect.top,
+      ...defaultScale$1
+    };
+  }
+  const itemGap = getItemGap$1(rects, index, activeIndex);
+  if (index > activeIndex && index <= overIndex) {
+    return {
+      x: 0,
+      y: -activeNodeRect.height - itemGap,
+      ...defaultScale$1
+    };
+  }
+  if (index < activeIndex && index >= overIndex) {
+    return {
+      x: 0,
+      y: activeNodeRect.height + itemGap,
+      ...defaultScale$1
+    };
+  }
+  return {
+    x: 0,
+    y: 0,
+    ...defaultScale$1
+  };
+};
+function getItemGap$1(clientRects, index, activeIndex) {
+  const currentRect = clientRects[index];
+  const previousRect = clientRects[index - 1];
+  const nextRect = clientRects[index + 1];
+  if (!currentRect) {
+    return 0;
+  }
+  if (activeIndex < index) {
+    return previousRect ? currentRect.top - (previousRect.top + previousRect.height) : nextRect ? nextRect.top - (currentRect.top + currentRect.height) : 0;
+  }
+  return nextRect ? nextRect.top - (currentRect.top + currentRect.height) : previousRect ? currentRect.top - (previousRect.top + previousRect.height) : 0;
+}
+const ID_PREFIX = "Sortable";
+const Context = /* @__PURE__ */ gn.createContext({
+  activeIndex: -1,
+  containerId: ID_PREFIX,
+  disableTransforms: false,
+  items: [],
+  overIndex: -1,
+  useDragOverlay: false,
+  sortedRects: [],
+  strategy: rectSortingStrategy,
+  disabled: {
+    draggable: false,
+    droppable: false
+  }
+});
+function SortableContext(_ref) {
+  let {
+    children,
+    id,
+    items: userDefinedItems,
+    strategy = rectSortingStrategy,
+    disabled: disabledProp = false
+  } = _ref;
+  const {
+    active,
+    dragOverlay,
+    droppableRects,
+    over,
+    measureDroppableContainers
+  } = useDndContext();
+  const containerId = useUniqueId(ID_PREFIX, id);
+  const useDragOverlay = Boolean(dragOverlay.rect !== null);
+  const items = T$1(() => userDefinedItems.map((item) => typeof item === "object" && "id" in item ? item.id : item), [userDefinedItems]);
+  const isDragging = active != null;
+  const activeIndex = active ? items.indexOf(active.id) : -1;
+  const overIndex = over ? items.indexOf(over.id) : -1;
+  const previousItemsRef = A$1(items);
+  const itemsHaveChanged = !itemsEqual(items, previousItemsRef.current);
+  const disableTransforms = overIndex !== -1 && activeIndex === -1 || itemsHaveChanged;
+  const disabled = normalizeDisabled(disabledProp);
+  useIsomorphicLayoutEffect(() => {
+    if (itemsHaveChanged && isDragging) {
+      measureDroppableContainers(items);
+    }
+  }, [itemsHaveChanged, items, isDragging, measureDroppableContainers]);
+  h(() => {
+    previousItemsRef.current = items;
+  }, [items]);
+  const contextValue = T$1(
+    () => ({
+      activeIndex,
+      containerId,
+      disabled,
+      disableTransforms,
+      items,
+      overIndex,
+      useDragOverlay,
+      sortedRects: getSortedRects(items, droppableRects),
+      strategy
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeIndex, containerId, disabled.draggable, disabled.droppable, disableTransforms, items, overIndex, droppableRects, useDragOverlay, strategy]
+  );
+  return gn.createElement(Context.Provider, {
+    value: contextValue
+  }, children);
+}
+const defaultNewIndexGetter = (_ref) => {
+  let {
+    id,
+    items,
+    activeIndex,
+    overIndex
+  } = _ref;
+  return arrayMove(items, activeIndex, overIndex).indexOf(id);
+};
+const defaultAnimateLayoutChanges = (_ref2) => {
+  let {
+    containerId,
+    isSorting,
+    wasDragging,
+    index,
+    items,
+    newIndex,
+    previousItems,
+    previousContainerId,
+    transition
+  } = _ref2;
+  if (!transition || !wasDragging) {
+    return false;
+  }
+  if (previousItems !== items && index === newIndex) {
+    return false;
+  }
+  if (isSorting) {
+    return true;
+  }
+  return newIndex !== index && containerId === previousContainerId;
+};
+const defaultTransition = {
+  duration: 200,
+  easing: "ease"
+};
+const transitionProperty = "transform";
+const disabledTransition = /* @__PURE__ */ CSS.Transition.toString({
+  property: transitionProperty,
+  duration: 0,
+  easing: "linear"
+});
+const defaultAttributes = {
+  roleDescription: "sortable"
+};
+function useDerivedTransform(_ref) {
+  let {
+    disabled,
+    index,
+    node: node2,
+    rect
+  } = _ref;
+  const [derivedTransform, setDerivedtransform] = d(null);
+  const previousIndex = A$1(index);
+  useIsomorphicLayoutEffect(() => {
+    if (!disabled && index !== previousIndex.current && node2.current) {
+      const initial = rect.current;
+      if (initial) {
+        const current2 = getClientRect(node2.current, {
+          ignoreTransform: true
+        });
+        const delta = {
+          x: initial.left - current2.left,
+          y: initial.top - current2.top,
+          scaleX: initial.width / current2.width,
+          scaleY: initial.height / current2.height
+        };
+        if (delta.x || delta.y) {
+          setDerivedtransform(delta);
+        }
+      }
+    }
+    if (index !== previousIndex.current) {
+      previousIndex.current = index;
+    }
+  }, [disabled, index, node2, rect]);
+  h(() => {
+    if (derivedTransform) {
+      setDerivedtransform(null);
+    }
+  }, [derivedTransform]);
+  return derivedTransform;
+}
+function useSortable(_ref) {
+  let {
+    animateLayoutChanges = defaultAnimateLayoutChanges,
+    attributes: userDefinedAttributes,
+    disabled: localDisabled,
+    data: customData,
+    getNewIndex = defaultNewIndexGetter,
+    id,
+    strategy: localStrategy,
+    resizeObserverConfig,
+    transition = defaultTransition
+  } = _ref;
+  const {
+    items,
+    containerId,
+    activeIndex,
+    disabled: globalDisabled,
+    disableTransforms,
+    sortedRects,
+    overIndex,
+    useDragOverlay,
+    strategy: globalStrategy
+  } = x$1(Context);
+  const disabled = normalizeLocalDisabled(localDisabled, globalDisabled);
+  const index = items.indexOf(id);
+  const data = T$1(() => ({
+    sortable: {
+      containerId,
+      index,
+      items
+    },
+    ...customData
+  }), [containerId, customData, index, items]);
+  const itemsAfterCurrentSortable = T$1(() => items.slice(items.indexOf(id)), [items, id]);
+  const {
+    rect,
+    node: node2,
+    isOver,
+    setNodeRef: setDroppableNodeRef
+  } = useDroppable({
+    id,
+    data,
+    disabled: disabled.droppable,
+    resizeObserverConfig: {
+      updateMeasurementsFor: itemsAfterCurrentSortable,
+      ...resizeObserverConfig
+    }
+  });
+  const {
+    active,
+    activatorEvent,
+    activeNodeRect,
+    attributes,
+    setNodeRef: setDraggableNodeRef,
+    listeners,
+    isDragging,
+    over,
+    setActivatorNodeRef,
+    transform: transform2
+  } = useDraggable({
+    id,
+    data,
+    attributes: {
+      ...defaultAttributes,
+      ...userDefinedAttributes
+    },
+    disabled: disabled.draggable
+  });
+  const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
+  const isSorting = Boolean(active);
+  const displaceItem = isSorting && !disableTransforms && isValidIndex(activeIndex) && isValidIndex(overIndex);
+  const shouldDisplaceDragSource = !useDragOverlay && isDragging;
+  const dragSourceDisplacement = shouldDisplaceDragSource && displaceItem ? transform2 : null;
+  const strategy = localStrategy != null ? localStrategy : globalStrategy;
+  const finalTransform = displaceItem ? dragSourceDisplacement != null ? dragSourceDisplacement : strategy({
+    rects: sortedRects,
+    activeNodeRect,
+    activeIndex,
+    overIndex,
+    index
+  }) : null;
+  const newIndex = isValidIndex(activeIndex) && isValidIndex(overIndex) ? getNewIndex({
+    id,
+    items,
+    activeIndex,
+    overIndex
+  }) : index;
+  const activeId = active == null ? void 0 : active.id;
+  const previous = A$1({
+    activeId,
+    items,
+    newIndex,
+    containerId
+  });
+  const itemsHaveChanged = items !== previous.current.items;
+  const shouldAnimateLayoutChanges = animateLayoutChanges({
+    active,
+    containerId,
+    isDragging,
+    isSorting,
+    id,
+    index,
+    items,
+    newIndex: previous.current.newIndex,
+    previousItems: previous.current.items,
+    previousContainerId: previous.current.containerId,
+    transition,
+    wasDragging: previous.current.activeId != null
+  });
+  const derivedTransform = useDerivedTransform({
+    disabled: !shouldAnimateLayoutChanges,
+    index,
+    node: node2,
+    rect
+  });
+  h(() => {
+    if (isSorting && previous.current.newIndex !== newIndex) {
+      previous.current.newIndex = newIndex;
+    }
+    if (containerId !== previous.current.containerId) {
+      previous.current.containerId = containerId;
+    }
+    if (items !== previous.current.items) {
+      previous.current.items = items;
+    }
+  }, [isSorting, newIndex, containerId, items]);
+  h(() => {
+    if (activeId === previous.current.activeId) {
+      return;
+    }
+    if (activeId != null && previous.current.activeId == null) {
+      previous.current.activeId = activeId;
+      return;
+    }
+    const timeoutId = setTimeout(() => {
+      previous.current.activeId = activeId;
+    }, 50);
+    return () => clearTimeout(timeoutId);
+  }, [activeId]);
+  return {
+    active,
+    activeIndex,
+    attributes,
+    data,
+    rect,
+    index,
+    newIndex,
+    items,
+    isOver,
+    isSorting,
+    isDragging,
+    listeners,
+    node: node2,
+    overIndex,
+    over,
+    setNodeRef,
+    setActivatorNodeRef,
+    setDroppableNodeRef,
+    setDraggableNodeRef,
+    transform: derivedTransform != null ? derivedTransform : finalTransform,
+    transition: getTransition()
+  };
+  function getTransition() {
+    if (
+      // Temporarily disable transitions for a single frame to set up derived transforms
+      derivedTransform || // Or to prevent items jumping to back to their "new" position when items change
+      itemsHaveChanged && previous.current.newIndex === index
+    ) {
+      return disabledTransition;
+    }
+    if (shouldDisplaceDragSource && !isKeyboardEvent(activatorEvent) || !transition) {
+      return void 0;
+    }
+    if (isSorting || shouldAnimateLayoutChanges) {
+      return CSS.Transition.toString({
+        ...transition,
+        property: transitionProperty
+      });
+    }
+    return void 0;
+  }
+}
+function normalizeLocalDisabled(localDisabled, globalDisabled) {
+  var _localDisabled$dragga, _localDisabled$droppa;
+  if (typeof localDisabled === "boolean") {
+    return {
+      draggable: localDisabled,
+      // Backwards compatibility
+      droppable: false
+    };
+  }
+  return {
+    draggable: (_localDisabled$dragga = localDisabled == null ? void 0 : localDisabled.draggable) != null ? _localDisabled$dragga : globalDisabled.draggable,
+    droppable: (_localDisabled$droppa = localDisabled == null ? void 0 : localDisabled.droppable) != null ? _localDisabled$droppa : globalDisabled.droppable
+  };
+}
+[KeyboardCode.Down, KeyboardCode.Right, KeyboardCode.Up, KeyboardCode.Left];
+function FieldPickerAutocomplete({
+  value = "",
+  options,
+  onChange,
+  placeholder = "搜索 / 选择字段",
+  helperText,
+  allowCustom = true,
+  className
+}) {
+  const pickerOptions = T$1(() => getFieldPickerOptions(options).map((option) => ({
+    value: option.value,
+    label: option.label || option.value,
+    group: option.group || "其他字段"
+  })), [options]);
+  return /* @__PURE__ */ u2(
+    ThinkCombobox,
+    {
+      value,
+      options: pickerOptions,
+      onChange,
+      placeholder,
+      helperText,
+      allowCustom,
+      className
+    }
+  );
+}
+function ViewEditorShell({ title, description, children, className = "think-view-editor-shell" }) {
+  return /* @__PURE__ */ u2("div", { className, children: [
+    (title || description) && /* @__PURE__ */ u2("header", { className: "think-view-editor-shell__header", children: [
+      title && /* @__PURE__ */ u2("div", { className: "think-view-editor-shell__title", children: title }),
+      description && /* @__PURE__ */ u2("div", { className: "think-view-editor-shell__description", children: description })
+    ] }),
+    children
+  ] });
+}
+function ConfigSection({ title, description, children, className, titleClassName, descriptionClassName }) {
+  const sectionClass = ["think-view-editor-section", className].filter(Boolean).join(" ");
+  const titleClass = ["think-view-editor-section__title", titleClassName].filter(Boolean).join(" ");
+  const descriptionClass = ["think-view-editor-section__description", descriptionClassName].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2("section", { className: sectionClass, children: [
+    (title || description) && /* @__PURE__ */ u2("header", { className: "think-view-editor-section__header", children: [
+      title && /* @__PURE__ */ u2("div", { className: titleClass, children: title }),
+      description && /* @__PURE__ */ u2("div", { className: descriptionClass, children: description })
+    ] }),
+    children
+  ] });
+}
+function ConfigFieldRow({ label, description, children, alignItems = "center" }) {
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      className: ["think-view-editor-field-row", alignItems === "flex-start" ? "think-view-editor-field-row--top" : ""].filter(Boolean).join(" "),
+      children: [
+        /* @__PURE__ */ u2("div", { className: "think-view-editor-field-row__label", children: label }),
+        /* @__PURE__ */ u2("div", { className: "think-view-editor-field-row__control", children: [
+          children,
+          description && /* @__PURE__ */ u2("div", { className: "think-view-editor-field-row__description", children: description })
+        ] })
+      ]
+    }
+  );
+}
+function ReadonlyViewEditorNotice({ title, description }) {
+  return /* @__PURE__ */ u2(ViewEditorShell, { title, description });
+}
+function TableViewEditor({ value, onChange, fieldOptions }) {
+  return /* @__PURE__ */ u2(ViewEditorShell, { title: "表格", children: [
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "行字段", children: /* @__PURE__ */ u2(FieldPickerAutocomplete, { options: fieldOptions, value: value.rowField ?? "", onChange: (v2) => onChange({ rowField: v2 ?? "" }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "列字段", children: /* @__PURE__ */ u2(FieldPickerAutocomplete, { options: fieldOptions, value: value.colField ?? "", onChange: (v2) => onChange({ colField: v2 ?? "" }) }) })
+  ] });
+}
+function BlockViewEditor() {
+  return /* @__PURE__ */ u2(
+    ReadonlyViewEditorNotice,
+    {
+      title: "块视图（BlockView）"
+    }
+  );
+}
+function ExcelViewEditor() {
+  return /* @__PURE__ */ u2(
+    ReadonlyViewEditorNotice,
+    {
+      title: "数据表格（ExcelView）"
+    }
+  );
+}
+function normalizeProgressOrder(categories, progressOrder) {
+  const seen = /* @__PURE__ */ new Set();
+  const unique2 = progressOrder.filter((name) => Boolean(categories[name]) && !seen.has(name) && Boolean(seen.add(name)));
+  for (const key of Object.keys(categories)) if (!seen.has(key)) unique2.push(key);
+  return unique2;
+}
+function stripInlineName(config2) {
+  const { name: _inlineName, ...rest } = config2;
+  return { name: config2.name, ...rest };
+}
+function nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig) {
+  const normalizedOrder = normalizeProgressOrder(categories, progressOrder);
+  const finalName = (newName || oldName).trim();
+  const targetName = finalName !== oldName && Boolean(categories[finalName]) ? oldName : finalName;
+  const merged = { ...categories[oldName] || { name: oldName, color: "#cccccc", files: [] }, ...newConfig, name: targetName };
+  const nextCats = {};
+  for (const key of normalizedOrder) {
+    if (key === oldName) nextCats[targetName] = stripInlineName(merged);
+    else if (categories[key]) nextCats[key] = categories[key];
+  }
+  if (!nextCats[targetName]) nextCats[targetName] = stripInlineName(merged);
+  const nextOrder = normalizedOrder.map((key) => key === oldName ? targetName : key);
+  return { categories: nextCats, progressOrder: normalizeProgressOrder(nextCats, nextOrder) };
+}
+function CategoriesEditor({ categories, progressOrder, fileOptions, onPatch }) {
+  const handleCategoryChange = (oldName, newConfig) => {
+    const newName = (newConfig.name || oldName).trim();
+    onPatch(nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig));
+  };
+  const addCategory = () => {
+    let newName = "新分类";
+    let i2 = 1;
+    while (categories[newName]) newName = `新分类${i2++}`;
+    onPatch({ categories: { ...categories, [newName]: { name: newName, color: "#60a5fa", files: [] } }, progressOrder: [...progressOrder, newName] });
+  };
+  const removeCategory = (nameToRemove) => {
+    const { [nameToRemove]: _removed, ...rest } = categories;
+    onPatch({ categories: rest, progressOrder: normalizeProgressOrder(rest, progressOrder.filter((name) => name !== nameToRemove)) });
+  };
+  const moveCategory = (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= progressOrder.length) return;
+    const next2 = [...progressOrder];
+    [next2[index], next2[targetIndex]] = [next2[targetIndex], next2[index]];
+    onPatch({ progressOrder: normalizeProgressOrder(categories, next2) });
+  };
+  return /* @__PURE__ */ u2(ConfigSection, { title: "分类配置", children: [
+    /* @__PURE__ */ u2("div", { className: "think-timeline-category-list", children: progressOrder.map((name, index) => {
+      const catConfig = categories[name];
+      if (!catConfig) return null;
+      const availableFileOptions = fileOptions.filter((file) => !(catConfig.files || []).includes(file)).map((file) => ({ value: file, label: file }));
+      return /* @__PURE__ */ u2("div", { className: "think-timeline-category-row", children: [
+        /* @__PURE__ */ u2("div", { className: "think-timeline-category-row__order", children: [
+          /* @__PURE__ */ u2(ThinkIconButton, { label: "上移", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-up" }), size: "sm", disabled: index === 0, onClick: () => moveCategory(index, -1) }),
+          /* @__PURE__ */ u2(ThinkIconButton, { label: "下移", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-down" }), size: "sm", disabled: index === progressOrder.length - 1, onClick: () => moveCategory(index, 1) })
+        ] }),
+        /* @__PURE__ */ u2("input", { className: "think-category-color", type: "color", value: catConfig.color || "#cccccc", "aria-label": `${name} 颜色`, onChange: (event) => handleCategoryChange(name, { color: event.currentTarget.value }) }),
+        /* @__PURE__ */ u2(ThinkInput, { defaultValue: name, "aria-label": "分类名称", onBlur: (event) => handleCategoryChange(name, { name: event.currentTarget.value.trim() }) }),
+        /* @__PURE__ */ u2("div", { className: "think-timeline-category-row__files", children: [
+          (catConfig.files || []).map((file) => /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", title: "移除关键词", onClick: () => handleCategoryChange(name, { files: (catConfig.files || []).filter((item) => item !== file) }), children: [
+            /* @__PURE__ */ u2("span", { className: "think-chip__label", children: file }),
+            /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
+          ] }, file)),
+          availableFileOptions.length > 0 && /* @__PURE__ */ u2(SimpleSelect, { value: "", options: availableFileOptions, placeholder: "+ 关键词", onChange: (file) => handleCategoryChange(name, { files: [...catConfig.files || [], file] }) })
+        ] }),
+        /* @__PURE__ */ u2(ThinkIconButton, { label: "删除分类", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }), size: "sm", tone: "danger", onClick: () => removeCategory(name) })
+      ] }, name);
+    }) }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), size: "sm", variant: "secondary", onClick: addCategory, children: "添加分类" }) })
+  ] });
+}
+function TimelineViewEditor({ value, onChange, dataStore }) {
+  const viewConfig = { ...TIMELINE_VIEW_DEFAULT_CONFIG, ...value };
+  const categories = viewConfig.categories || {};
+  const progressOrder = normalizeProgressOrder(categories, viewConfig.progressOrder || []);
+  const fileOptions = T$1(() => dataStore ? collectFileNames(dataStore.queryItems()) : [], [dataStore]);
+  const handlePatch = (patch) => onChange(patch);
+  return /* @__PURE__ */ u2(ViewEditorShell, { title: "时间线视图", children: [
+    /* @__PURE__ */ u2(ConfigSection, { children: /* @__PURE__ */ u2(ConfigFieldRow, { label: "小时高度", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 20, max: 200, value: viewConfig.defaultHourHeight, onInput: (event) => handlePatch({ defaultHourHeight: Number(event.currentTarget.value) }) }) }) }),
+    /* @__PURE__ */ u2(CategoriesEditor, { categories, progressOrder, fileOptions, onPatch: handlePatch })
+  ] });
+}
+function uniqueFields(fields) {
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const field of fields) {
+    if (!field || seen.has(field)) continue;
+    seen.add(field);
+    result.push(field);
+  }
+  return result;
+}
+function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
+  const config2 = {
+    ...EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
+    ...value || {}
+  };
+  const selectableFields = T$1(() => uniqueFields([
+    CONTENT_FIELD_KEY,
+    FULL_DATA_FIELD_KEY,
+    "title",
+    "date",
+    "startTime",
+    ...fieldOptions
+  ]), [fieldOptions]);
+  const fieldSelectOptions = T$1(() => selectableFields.map((field) => ({
+    value: field,
+    label: getFieldLabel(field),
+    group: getFieldCategoryLabel(field)
+  })), [selectableFields]);
+  const patch = (partial2) => onChange(partial2);
+  return /* @__PURE__ */ u2(
+    ViewEditorShell,
+    {
+      title: "事件时间线视图",
+      children: /* @__PURE__ */ u2(ConfigSection, { title: "字段映射", children: [
+        /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+          /* @__PURE__ */ u2(ConfigFieldRow, { label: "时间字段", children: /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.timeField || "date",
+              options: fieldSelectOptions,
+              onChange: (field) => patch({ timeField: field }),
+              fullWidth: true
+            }
+          ) }),
+          /* @__PURE__ */ u2(ConfigFieldRow, { label: "标题字段", children: /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.titleField || "title",
+              options: fieldSelectOptions,
+              onChange: (field) => patch({ titleField: field }),
+              fullWidth: true
+            }
+          ) }),
+          /* @__PURE__ */ u2(ConfigFieldRow, { label: "内容字段", children: /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.contentField || CONTENT_FIELD_KEY,
+              options: fieldSelectOptions,
+              onChange: (field) => patch({ contentField: field }),
+              fullWidth: true
+            }
+          ) }),
+          /* @__PURE__ */ u2(ConfigFieldRow, { label: "最大长度", description: "0 表示不截断", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", min: 0, max: 2e3, value: config2.maxContentLength ?? 160, onInput: (event) => patch({ maxContentLength: Number(event.currentTarget.value) || 0 }) }) })
+        ] }),
+        /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: [
+          /* @__PURE__ */ u2(
+            ThinkButton,
+            {
+              size: "sm",
+              variant: "secondary",
+              onClick: () => patch({ contentField: CONTENT_FIELD_KEY, titleField: "title", timeField: "date", maxContentLength: 160 }),
+              children: "使用推荐字段"
+            }
+          ),
+          /* @__PURE__ */ u2(
+            ThinkButton,
+            {
+              size: "sm",
+              variant: "secondary",
+              onClick: () => patch({ contentField: FULL_DATA_FIELD_KEY }),
+              children: "内容改为完整数据调试"
+            }
+          )
+        ] })
+      ] })
+    }
+  );
+}
+const DISPLAY_MODE_OPTIONS$1 = [
+  { value: "smart", label: "智能" },
+  { value: "linear", label: "线性" },
+  { value: "logarithmic", label: "对数" }
+];
+function StatisticsViewEditor({ value, onChange }) {
+  const config2 = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...value };
+  return /* @__PURE__ */ u2(ViewEditorShell, { className: "think-statistics-editor", children: /* @__PURE__ */ u2(ConfigSection, { className: "think-statistics-editor__section", title: "目标统计视图", titleClassName: "think-statistics-editor__title", children: [
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "显示目标数量", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 1, value: config2.topN || 10, onInput: (event) => onChange({ groupBy: "goal", topN: Number(event.currentTarget.value) || 10 }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "柱状高度模式", children: /* @__PURE__ */ u2(SimpleSelect, { value: config2.displayMode || "smart", options: DISPLAY_MODE_OPTIONS$1, onChange: (displayMode) => onChange({ groupBy: "goal", displayMode }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "最小可见高度", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 1, max: 100, value: config2.minVisibleHeight || 15, onInput: (event) => onChange({ groupBy: "goal", minVisibleHeight: Number(event.currentTarget.value) || 15 }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "周期字段", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: !!config2.usePeriodField, onChange: (event) => onChange({ groupBy: "goal", usePeriodField: event.currentTarget.checked }), label: "默认按照周期显示", compact: true }) })
+  ] }) });
+}
+function normalizeHeatmapConfig(value) {
+  const base = HEATMAP_VIEW_DEFAULT_CONFIG;
+  const v2 = value ?? {};
+  return {
+    displayMode: v2.displayMode === "habit" || v2.displayMode === "count" ? v2.displayMode : base.displayMode,
+    sourceBlockId: typeof v2.sourceBlockId === "string" ? v2.sourceBlockId : base.sourceBlockId,
+    themePaths: Array.isArray(v2.themePaths) ? v2.themePaths.filter((x2) => typeof x2 === "string") : base.themePaths,
+    maxDailyChecks: typeof v2.maxDailyChecks === "number" ? v2.maxDailyChecks : base.maxDailyChecks,
+    allowManualEdit: typeof v2.allowManualEdit === "boolean" ? v2.allowManualEdit : base.allowManualEdit
+  };
+}
+function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
+  const ui = useUiPort();
+  const config2 = normalizeHeatmapConfig(value);
+  const allBlocks = useSelector(selectInputBlocks);
+  const blockOptions = T$1(
+    () => allBlocks.map((b2) => ({ value: b2.id, label: b2.name })),
+    [allBlocks]
+  );
+  const handleScanThemes = () => {
+    if (!config2.sourceBlockId) {
+      ui.notice("请先选择源 Block 模板。");
+      return;
+    }
+    if (!module2) {
+      ui.notice("无法扫描：缺少视图上下文（module）。");
+      return;
+    }
+    const dataSource = module2;
+    const sourceBlock = allBlocks.find((b2) => b2.id === config2.sourceBlockId);
+    if (!sourceBlock) {
+      ui.notice("找不到所选的 Block 模板。");
+      return;
+    }
+    const items = dataStore.queryItems();
+    const sortedThemes = collectThemePathsForHeatmap({
+      items,
+      dataSource,
+      sourceBlock
+    });
+    onChange({ themePaths: sortedThemes });
+    ui.notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径（来自分类 "${sourceBlock.name}"）。`);
+  };
+  return /* @__PURE__ */ u2(
+    ViewEditorShell,
+    {
+      title: "打卡视图",
+      children: [
+        /* @__PURE__ */ u2(ConfigSection, { title: "数据来源", children: /* @__PURE__ */ u2(
+          ConfigFieldRow,
+          {
+            label: "源 Block",
+            description: "视图将从此 Block 模板的评分字段中读取 Emoji/图片/颜色映射。",
+            children: /* @__PURE__ */ u2(
+              SimpleSelect,
+              {
+                value: config2.sourceBlockId,
+                options: blockOptions,
+                onChange: (val) => onChange({ sourceBlockId: val }),
+                placeholder: "-- 请选择用于打卡的 Block 模板 --"
+              }
+            )
+          }
+        ) }),
+        /* @__PURE__ */ u2(ConfigSection, { title: "主题范围", children: /* @__PURE__ */ u2(
+          ConfigFieldRow,
+          {
+            label: "主题路径",
+            description: "在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。",
+            alignItems: "flex-start",
+            children: [
+              /* @__PURE__ */ u2(
+                ListEditor,
+                {
+                  value: config2.themePaths,
+                  onChange: (val) => onChange({ themePaths: val }),
+                  placeholder: "例如: 生活/健康, 工作/项目"
+                }
+              ),
+              /* @__PURE__ */ u2(ThinkButton, { onClick: handleScanThemes, size: "sm", variant: "secondary", children: "从数据源扫描并添加主题" })
+            ]
+          }
+        ) }),
+        /* @__PURE__ */ u2(ConfigSection, { title: "交互", children: /* @__PURE__ */ u2(ConfigFieldRow, { label: "手动编辑", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: !!config2.allowManualEdit, onChange: (event) => onChange({ allowManualEdit: event.currentTarget.checked }), label: "允许查看当天记录并新增", compact: true }) }) })
+      ]
+    }
+  );
+}
+function ProgressViewEditor({ value, onChange }) {
+  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...value };
+  const numberPatch = (key, fallback) => (event) => onChange({ mode: "goal", [key]: Number(event.currentTarget.value) || fallback });
+  return /* @__PURE__ */ u2(ViewEditorShell, { title: "进度视图", children: /* @__PURE__ */ u2(ConfigSection, { children: [
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标数量", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.topN, onInput: numberPatch("topN", 20) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每条记录 XP", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.basePoints, onInput: numberPatch("basePoints", 1) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每级 XP", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.levelStep, onInput: numberPatch("levelStep", 20) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "评分阈值", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.ratingBonusThreshold, onInput: numberPatch("ratingBonusThreshold", 4) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "评分额外积分", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.ratingBonusPoints, onInput: numberPatch("ratingBonusPoints", 0) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "展开统计", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: config2.showCategoryBreakdown !== false, onChange: (event) => onChange({ mode: "goal", showCategoryBreakdown: event.currentTarget.checked }), label: "显示 Block 统计", compact: true }) })
+  ] }) });
+}
+function EnergyViewEditor({ value, onChange }) {
+  const config2 = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...value };
+  return /* @__PURE__ */ u2(ViewEditorShell, { title: "精力视图", children: /* @__PURE__ */ u2(ConfigSection, { children: [
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "最近记录", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 1, max: 20, value: config2.recentSampleLimit, onInput: (e2) => onChange({ recentSampleLimit: Math.max(1, Math.min(20, Number(e2.currentTarget.value) || 5)) }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标上限", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 0, max: 20, value: config2.maxGoals, onInput: (e2) => onChange({ maxGoals: Math.max(0, Math.min(20, Number(e2.currentTarget.value) || 0)) }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "分析窗口", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 7, max: 90, value: config2.analysisWindowDays, onInput: (e2) => onChange({ analysisWindowDays: Math.max(7, Math.min(90, Number(e2.currentTarget.value) || 30)) }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标路径", children: /* @__PURE__ */ u2(ThinkInput, { value: config2.goalPath, placeholder: "留空 = 所有有精力记录的目标", onInput: (e2) => onChange({ goalPath: e2.currentTarget.value }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "当前场景", children: /* @__PURE__ */ u2(SimpleSelect, { value: config2.currentContext, options: [{ value: "any", label: "任意" }, { value: "work", label: "工作" }, { value: "home", label: "家" }, { value: "commute", label: "通勤" }, { value: "out", label: "外出" }], onChange: (currentContext) => onChange({ currentContext }), fullWidth: true }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "精力地图", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: config2.showTimeline !== false, onChange: (e2) => onChange({ showTimeline: e2.currentTarget.checked }), label: "显示", compact: true }) })
+  ] }) });
+}
+const VIEW_INFO_REGISTRY = {
+  TableView: { component: TableViewEditor, defaultConfig: TABLE_VIEW_DEFAULT_CONFIG },
+  BlockView: { component: BlockViewEditor, defaultConfig: BLOCK_VIEW_DEFAULT_CONFIG },
+  ExcelView: { component: ExcelViewEditor, defaultConfig: EXCEL_VIEW_DEFAULT_CONFIG },
+  TimelineView: { component: TimelineViewEditor, defaultConfig: TIMELINE_VIEW_DEFAULT_CONFIG },
+  EventTimelineView: { component: EventTimelineViewEditor, defaultConfig: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG },
+  StatisticsView: { component: StatisticsViewEditor, defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG },
+  HeatmapView: { component: HeatmapViewEditor, defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG },
+  ProgressView: { component: ProgressViewEditor, defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG },
+  EnergyView: { component: EnergyViewEditor, defaultConfig: ENERGY_VIEW_DEFAULT_CONFIG }
+};
+const VIEW_EDITORS = Object.fromEntries(
+  Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.component])
+);
+Object.fromEntries(
+  Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.defaultConfig])
+);
+function useSaveHandler(saveAction, options = {}) {
+  const {
+    successMessage = "保存成功",
+    errorMessage = "保存失败",
+    onSuccess,
+    onError
+  } = options;
+  return async () => {
+    try {
+      await saveAction();
+      options.uiPort?.notice(`✅ ${successMessage}`);
+      onSuccess?.();
+    } catch (error) {
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+      const message = errorObj.message || "未知错误";
+      options.uiPort?.notice(`❌ ${errorMessage}: ${message}`);
+      devError(`${errorMessage}:`, errorObj);
+      onError?.(errorObj);
+    }
+  };
+}
+const DEFAULT_FILTER_RULE = { field: "", op: "=", value: "" };
+const DEFAULT_SORT_RULE = { field: "", dir: "asc" };
+const RULE_OPERATOR_OPTIONS = [
+  { value: "=", label: "=" },
+  { value: "!=", label: "!=" },
+  { value: "includes", label: "包含" },
+  { value: "regex", label: "正则" },
+  { value: ">", label: ">" },
+  { value: "<", label: "<" },
+  { value: "in", label: "属于任一" },
+  { value: "notIn", label: "不属于任一" },
+  { value: "between", label: "区间" },
+  { value: "empty", label: "为空" },
+  { value: "notEmpty", label: "非空" }
+];
+const RULE_DIRECTION_OPTIONS = [
+  { value: "asc", label: "升序" },
+  { value: "desc", label: "降序" }
+];
+const RULE_LOGIC_OPTIONS = [
+  { value: "and", label: "且" },
+  { value: "or", label: "或" }
+];
+function cloneRule(rule) {
+  return { ...rule };
+}
+function makeDefaultRule(mode) {
+  return mode === "filter" ? { ...DEFAULT_FILTER_RULE } : { ...DEFAULT_SORT_RULE };
+}
+function operatorNeedsValue(op) {
+  return !["empty", "notEmpty"].includes(op);
+}
+function isMultiValueOperator(op) {
+  return op === "in" || op === "notIn";
+}
+function getRuleValuePlaceholder(op) {
+  if (op === "between") return "输入区间，如 1~5 或 2026-01-01~2026-01-31";
+  if (isMultiValueOperator(op)) return "选择或输入多个值，回车确认";
+  return "输入值";
+}
+function normalizeMultiValue(value) {
+  return normalizeViewMultiValue(value);
+}
+function formatRuleValue(rule) {
+  if (!operatorNeedsValue(rule.op)) return "";
+  if (isMultiValueOperator(rule.op)) {
+    const values2 = normalizeMultiValue(rule.value);
+    return values2.length > 0 ? values2.join("、") : "未选择";
+  }
+  if (rule.op === "between" && Array.isArray(rule.value)) {
+    return rule.value.map((v2) => String(v2)).join(" ~ ");
+  }
+  return String(rule.value ?? "");
+}
+function stableRuleFieldLabel(field) {
+  const label = getFieldLabel(field);
+  return label === field ? field : `${label} (${field})`;
+}
+function buildRuleLabel(mode, rule) {
+  if (mode === "filter") {
+    const filterRule = rule;
+    if (filterRule.op === "empty") return `${stableRuleFieldLabel(filterRule.field)} 为空`;
+    if (filterRule.op === "notEmpty") return `${stableRuleFieldLabel(filterRule.field)} 非空`;
+    const valueText = formatRuleValue(filterRule);
+    const opText = filterRule.op === "in" ? "属于任一" : filterRule.op === "notIn" ? "不属于任一" : filterRule.op;
+    return `${stableRuleFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
+  }
+  const sortRule = rule;
+  return `${stableRuleFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
+}
+function normalizeFilterPatch(patch, current2) {
+  const nextOp = patch.op ?? current2?.op;
+  const normalized2 = { ...patch };
+  if (nextOp && !operatorNeedsValue(nextOp)) {
+    return { ...normalized2, value: "" };
+  }
+  if (patch.field !== void 0 && patch.field !== current2?.field) {
+    normalized2.value = nextOp && isMultiValueOperator(nextOp) ? [] : "";
+  }
+  if (nextOp && isMultiValueOperator(nextOp)) {
+    if ("value" in normalized2 || patch.op !== void 0) {
+      normalized2.value = normalizeMultiValue(normalized2.value ?? current2?.value);
+    }
+  } else if (current2 && isMultiValueOperator(current2.op) && patch.op !== void 0) {
+    normalized2.value = normalizeMultiValue(current2.value).join(",");
+  }
+  return normalized2;
+}
+function patchRule(mode, rule, patch) {
+  const nextPatch = mode === "filter" ? normalizeFilterPatch(patch, rule) : patch;
+  return { ...rule, ...nextPatch };
+}
+function patchRuleLogic(rows, index, logic, isFilterMode) {
+  return rows.map((row, rowIndex) => {
+    if (rowIndex !== index || !isFilterMode) return cloneRule(row);
+    return { ...row, logic };
+  });
+}
+function removeRuleAt(rows, index) {
+  return rows.filter((_2, rowIndex) => rowIndex !== index).map(cloneRule);
+}
+function appendRule(mode, rows, newRule) {
+  const updatedRows = rows.map(cloneRule);
+  const ruleToAdd = cloneRule(newRule);
+  if (mode === "filter" && updatedRows.length > 0) {
+    const lastIndex = updatedRows.length - 1;
+    const lastRule = updatedRows[lastIndex];
+    if (!lastRule.logic) {
+      updatedRows[lastIndex] = {
+        ...lastRule,
+        logic: "and"
+      };
+    }
+  }
+  updatedRows.push(ruleToAdd);
+  return updatedRows;
+}
+function shouldShowRuleValueInput(mode, rule) {
+  return mode !== "filter" || operatorNeedsValue(rule.op);
+}
+function buildUniqueFieldValues(dataStore) {
+  if (!dataStore) return {};
+  const items = dataStore.queryItems();
+  const allKnownFields = new Set(getAllFields(items));
+  const valueMap = {};
+  allKnownFields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
+  for (const item of items) {
+    for (const field of allKnownFields) {
+      const value = readField(item, field);
+      if (value === null || value === void 0 || String(value).trim() === "") continue;
+      const values2 = Array.isArray(value) ? value : [value];
+      values2.forEach((v2) => {
+        const strV = String(v2).trim();
+        if (strV) valueMap[field].add(strV);
+      });
+    }
+  }
+  const result = {};
+  for (const field in valueMap) {
+    if (valueMap[field].size > 0) {
+      result[field] = Array.from(valueMap[field]).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+    }
+  }
+  return result;
+}
+function RuleBuilderValueInput({ rule, uniqueFieldValues, onValueChange }) {
+  if (!operatorNeedsValue(rule.op)) return null;
+  const options = (uniqueFieldValues[rule.field] || []).map((value) => ({ value, label: value }));
+  if (isMultiValueOperator(rule.op)) {
+    return /* @__PURE__ */ u2(
+      ThinkMultiCombobox,
+      {
+        values: normalizeMultiValue(rule.value),
+        options: uniqueFieldValues[rule.field] || [],
+        onChange: (newValues) => onValueChange(normalizeMultiValue(newValues)),
+        placeholder: getRuleValuePlaceholder(rule.op)
+      }
+    );
+  }
+  return /* @__PURE__ */ u2(
+    ThinkCombobox,
+    {
+      value: String(rule.value ?? ""),
+      options,
+      onChange: (newValue) => onValueChange(newValue || ""),
+      placeholder: getRuleValuePlaceholder(rule.op),
+      allowCustom: true
+    }
+  );
+}
+function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, showHeader = true }) {
+  const isFilterMode = mode === "filter";
+  const [newRule, setNewRule] = d(makeDefaultRule(mode));
+  const uniqueFieldValues = T$1(() => buildUniqueFieldValues(dataStore), [dataStore]);
+  const shouldShowValueInput = shouldShowRuleValueInput(mode, newRule);
+  const remove2 = (index) => onChange(removeRuleAt(rows, index));
+  const updateNewRule = (patch) => setNewRule((current2) => patchRule(mode, current2, patch));
+  const updateLogic = (index, logic) => onChange(patchRuleLogic(rows, index, logic, isFilterMode));
+  const handleAddRule = () => {
+    if (!newRule.field) return;
+    onChange(appendRule(mode, rows, newRule));
+    setNewRule(makeDefaultRule(mode));
+  };
+  const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => /* @__PURE__ */ u2(FieldPickerAutocomplete, { value: field, options: fieldOptions, onChange: onFieldChange, placeholder });
+  const renderValueInput = (rule, onValueChange) => /* @__PURE__ */ u2(RuleBuilderValueInput, { rule, uniqueFieldValues, onValueChange });
+  const existingRules = /* @__PURE__ */ u2("div", { className: "think-rule-builder__chips", children: rows.map((rule, index) => {
+    const isLast = index === rows.length - 1;
+    const filterRule = rule;
+    const label = buildRuleLabel(mode, rule);
+    return /* @__PURE__ */ u2("div", { className: "think-rule-builder__chip-row", children: [
+      /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", title: `点击删除规则: ${label}`, onClick: () => remove2(index), children: [
+        /* @__PURE__ */ u2("span", { className: "think-chip__label", children: label }),
+        /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
+      ] }),
+      isFilterMode && !isLast && /* @__PURE__ */ u2(
+        SimpleSelect,
+        {
+          value: filterRule.logic || "and",
+          options: RULE_LOGIC_OPTIONS,
+          onChange: (val) => updateLogic(index, val),
+          className: "think-rule-builder__logic"
+        }
+      )
+    ] }, index);
+  }) });
+  const compactBody = /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact-body", children: [
+    existingRules,
+    /* @__PURE__ */ u2("div", { className: `think-rule-builder__compact-add ${isFilterMode ? shouldShowValueInput ? "is-filter is-with-value" : "is-filter is-no-value" : "is-sort"}`, children: [
+      renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
+      isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2(
+          SimpleSelect,
+          {
+            value: newRule.op,
+            options: RULE_OPERATOR_OPTIONS,
+            onChange: (val) => updateNewRule({ op: val }),
+            className: "think-rule-builder__operator"
+          }
+        ),
+        shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
+      ] }) : /* @__PURE__ */ u2(
+        SimpleSelect,
+        {
+          value: newRule.dir,
+          options: RULE_DIRECTION_OPTIONS,
+          onChange: (val) => updateNewRule({ dir: val }),
+          className: "think-rule-builder__operator"
+        }
+      ),
+      /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddRule, disabled: !newRule.field, children: "添加" })
+    ] })
+  ] });
+  if (!showHeader) return compactBody;
+  return /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact", children: [
+    /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: title }),
+    compactBody
+  ] });
+}
+const DEFAULT_QUICK_FILTER_FIELDS = [
+  { field: "goalPath", label: "目标", placeholder: "选择目标" },
+  { field: "goalId", label: "目标ID", placeholder: "输入目标ID" },
+  { field: "coreBlock", label: "记录类型", placeholder: "选择记录类型" },
+  { field: "themePath", label: "主题", placeholder: "选择主题" },
+  { field: "status", label: "状态", placeholder: "选择状态" },
+  { field: "cadence", label: "任务周期", placeholder: "选择任务周期" },
+  { field: "priority", label: "优先级", placeholder: "选择优先级" },
+  { field: "period.label", label: "周期", placeholder: "选择周期" }
+];
+const DEFAULT_QUICK_FILTER_FIELD_SET = new Set(
+  DEFAULT_QUICK_FILTER_FIELDS.map((config2) => normalizeViewFieldKey(config2.field))
+);
+function isDefaultQuickFilterRule(rule) {
+  return rule.op === "in" && DEFAULT_QUICK_FILTER_FIELD_SET.has(normalizeViewFieldKey(rule.field));
+}
+function splitDefaultQuickFilterRules(filters) {
+  const quickRules = [];
+  const advancedRules = [];
+  filters.forEach((rule) => (isDefaultQuickFilterRule(rule) ? quickRules : advancedRules).push(rule));
+  return { quickRules, advancedRules };
+}
+function collectFieldValues(items, fields) {
+  const valueMap = {};
+  fields.forEach((field) => valueMap[normalizeViewFieldKey(field)] = /* @__PURE__ */ new Set());
+  for (const item of items) {
+    for (const rawField of fields) {
+      const field = normalizeViewFieldKey(rawField);
+      const value = readField(item, field);
+      if (value === null || value === void 0 || String(value).trim() === "") continue;
+      const values2 = Array.isArray(value) ? value : [value];
+      values2.forEach((v2) => {
+        const strV = String(v2).trim();
+        if (strV) valueMap[field].add(strV);
+      });
+    }
+  }
+  const result = {};
+  fields.forEach((rawField) => {
+    const field = normalizeViewFieldKey(rawField);
+    result[field] = Array.from(valueMap[field] || []).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+  });
+  return result;
+}
+function cleanupRuleLinks(rules) {
+  return rules.map((rule, index) => {
+    const nextRule = { ...rule };
+    if (index === rules.length - 1) {
+      delete nextRule.logic;
+    } else if (!nextRule.logic) {
+      nextRule.logic = "and";
+    }
+    return nextRule;
+  });
+}
+function getQuickRule(filters, field) {
+  const normalizedField = normalizeViewFieldKey(field);
+  return filters.find((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
+}
+function upsertQuickRule(filters, field, values2) {
+  const cleanValues = normalizeViewMultiValue(values2);
+  const normalizedField = normalizeViewFieldKey(field);
+  const existingIndex = filters.findIndex((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
+  if (cleanValues.length === 0) {
+    if (existingIndex < 0) return cleanupRuleLinks(filters);
+    return cleanupRuleLinks(filters.filter((_2, index) => index !== existingIndex));
+  }
+  if (existingIndex >= 0) {
+    return cleanupRuleLinks(filters.map((rule, index) => index === existingIndex ? { ...rule, field: normalizedField, value: cleanValues } : { ...rule }));
+  }
+  return cleanupRuleLinks([
+    ...filters.map((rule) => ({ ...rule })),
+    { field: normalizedField, op: "in", value: cleanValues }
+  ]);
+}
+function hasAnyQuickFilter(filters, fields) {
+  const fieldSet = new Set(fields.map((f2) => normalizeViewFieldKey(f2.field)));
+  return filters.some((rule) => fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in" && normalizeViewMultiValue(rule.value).length > 0);
+}
+function clearQuickFilters(filters, fields) {
+  const fieldSet = new Set(fields.map((f2) => normalizeViewFieldKey(f2.field)));
+  return cleanupRuleLinks(filters.filter((rule) => !(fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in")));
+}
+function CommonFilterPanel({
+  dataStore,
+  filters,
+  onChange,
+  items,
+  fieldOptions,
+  title = "常用筛选",
+  fields = DEFAULT_QUICK_FILTER_FIELDS,
+  compact = false,
+  showHeader = true
+}) {
+  const sourceItems = T$1(() => items ?? dataStore.queryItems(), [items, dataStore]);
+  const availableFields = T$1(() => new Set((fieldOptions ?? getAllFields(sourceItems)).map(normalizeViewFieldKey)), [fieldOptions, sourceItems]);
+  const quickFields = T$1(
+    () => fields.map((config2) => ({ ...config2, field: normalizeViewFieldKey(config2.field) })).filter((config2, index, array2) => config2.field && availableFields.has(config2.field) && array2.findIndex((item) => item.field === config2.field) === index),
+    [fields, availableFields]
+  );
+  const valueOptions = T$1(
+    () => collectFieldValues(sourceItems, quickFields.map((config2) => config2.field)),
+    [sourceItems, quickFields]
+  );
+  const hasQuickFilters = hasAnyQuickFilter(filters, quickFields);
+  if (quickFields.length === 0) return null;
+  return /* @__PURE__ */ u2("div", { className: `think-common-filter${compact ? " think-common-filter--compact" : ""}`, children: [
+    showHeader && /* @__PURE__ */ u2("div", { className: "think-common-filter__header", children: [
+      /* @__PURE__ */ u2("span", { className: "think-common-filter__title", children: title }),
+      /* @__PURE__ */ u2(
+        ThinkButton,
+        {
+          size: "sm",
+          variant: "secondary",
+          leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "rotate-ccw" }),
+          onClick: () => onChange(clearQuickFilters(filters, quickFields)),
+          disabled: !hasQuickFilters,
+          className: "think-common-filter__clear",
+          children: "清空"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-common-filter__grid", children: quickFields.map((config2) => {
+      const label = config2.label || getFieldLabel(config2.field);
+      const rule = getQuickRule(filters, config2.field);
+      const values2 = normalizeViewMultiValue(rule?.value);
+      return /* @__PURE__ */ u2("div", { className: "think-common-filter__field", children: [
+        /* @__PURE__ */ u2("span", { className: "think-common-filter__label", children: label }),
+        /* @__PURE__ */ u2(
+          ThinkMultiCombobox,
+          {
+            values: values2,
+            options: valueOptions[normalizeViewFieldKey(config2.field)] || [],
+            onChange: (newValues) => onChange(upsertQuickRule(filters, config2.field, newValues)),
+            placeholder: config2.placeholder || `选择${label}`
+          }
+        )
+      ] }, config2.field);
+    }) })
+  ] });
+}
+function ViewInstanceEditor({ vi }) {
+  const dataStore = useDataStore();
+  const useCases = useUseCases();
+  const currentVi = useSelector(makeSelectViewInstanceById(vi.id)) || vi;
+  const fieldOptions = T$1(() => getAllFields(dataStore?.queryItems() || []), [dataStore]);
+  const EditorComponent = VIEW_EDITORS[currentVi.viewType];
+  const correctedViewConfig = T$1(() => {
+    if (currentVi.viewConfig && typeof currentVi.viewConfig.categories === "object") return currentVi.viewConfig;
+    if (currentVi.viewConfig && currentVi.viewConfig.viewConfig) return currentVi.viewConfig.viewConfig;
+    return currentVi.viewConfig || {};
+  }, [currentVi.viewConfig]);
+  const handleUpdate = (updates) => {
+    useCases.viewInstance.updateView(currentVi.id, updates);
+  };
+  const viewTypeOptions = T$1(() => {
+    const labels = { ProgressView: "成长", EnergyView: "精力" };
+    return VIEW_OPTIONS.map((v2) => ({ value: v2, label: labels[v2] || v2.replace("View", "") }));
+  }, []);
+  const { quickRules, advancedRules } = T$1(
+    () => splitDefaultQuickFilterRules(currentVi.filters || []),
+    [currentVi.filters]
+  );
+  const advancedFilterCount = advancedRules.length;
+  const handleFieldsChange = (fields) => {
+    handleUpdate({ fields: normalizeDisplayFields(fields, { includeUnknown: true }) });
+  };
+  const handleGroupFieldsChange = (groupFields) => {
+    handleUpdate({ groupFields: normalizeViewGroupFields(groupFields) });
+  };
+  return /* @__PURE__ */ u2("div", { className: "think-module-settings", children: [
+    /* @__PURE__ */ u2("section", { className: "think-module-settings__section", children: [
+      /* @__PURE__ */ u2("h4", { className: "think-module-settings__section-title", children: "基础设置" }),
+      /* @__PURE__ */ u2("div", { className: "think-module-settings__fields", children: [
+        /* @__PURE__ */ u2(FormField, { label: "视图类型", children: /* @__PURE__ */ u2("div", { className: "think-module-settings__inline", children: [
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: currentVi.viewType,
+              options: viewTypeOptions,
+              onChange: (val) => handleUpdate({ viewType: val }),
+              fullWidth: true,
+              className: "think-module-settings__view-type"
+            }
+          ),
+          /* @__PURE__ */ u2(
+            ThinkCheckbox,
+            {
+              checked: !!currentVi.collapsed,
+              onChange: (e2) => handleUpdate({ collapsed: e2.currentTarget.checked }),
+              label: "默认折叠",
+              compact: true
+            }
+          )
+        ] }) }),
+        /* @__PURE__ */ u2(FormField, { label: "显示字段", children: /* @__PURE__ */ u2(
+          FieldManager,
+          {
+            fields: currentVi.fields || [],
+            availableFields: fieldOptions,
+            onFieldsChange: handleFieldsChange,
+            placeholder: "添加字段…",
+            getFieldLabel,
+            getFieldGroupLabel: getFieldCategoryLabel
+          }
+        ) }),
+        /* @__PURE__ */ u2(FormField, { label: "分组字段", children: /* @__PURE__ */ u2(
+          FieldManager,
+          {
+            fields: currentVi.groupFields || [],
+            availableFields: fieldOptions,
+            onFieldsChange: handleGroupFieldsChange,
+            placeholder: "选择分组字段…",
+            getFieldLabel,
+            getFieldGroupLabel: getFieldCategoryLabel
+          }
+        ) })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("section", { className: "think-module-settings__section", children: [
+      /* @__PURE__ */ u2("h4", { className: "think-module-settings__section-title", children: "筛选" }),
+      /* @__PURE__ */ u2(
+        CommonFilterPanel,
+        {
+          dataStore,
+          filters: currentVi.filters || [],
+          fieldOptions,
+          onChange: (rows) => handleUpdate({ filters: normalizeViewFilters(rows) }),
+          compact: true,
+          showHeader: false
+        }
+      ),
+      /* @__PURE__ */ u2("div", { className: "think-filter-rule-section", children: [
+        /* @__PURE__ */ u2("div", { className: "think-filter-rule-section__head", children: [
+          /* @__PURE__ */ u2("span", { children: "高级规则" }),
+          /* @__PURE__ */ u2("span", { className: "think-filter-rule-section__meta", children: [
+            advancedFilterCount,
+            " 条"
+          ] })
+        ] }),
+        /* @__PURE__ */ u2(
+          RuleBuilder,
+          {
+            title: "筛选",
+            mode: "filter",
+            rows: advancedRules,
+            fieldOptions,
+            onChange: (rows) => handleUpdate({ filters: normalizeViewFilters([...quickRules, ...rows]) }),
+            dataStore,
+            showHeader: false
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("section", { className: "think-module-settings__section", children: [
+      /* @__PURE__ */ u2("h4", { className: "think-module-settings__section-title", children: "排序" }),
+      /* @__PURE__ */ u2(
+        RuleBuilder,
+        {
+          title: "排序",
+          mode: "sort",
+          rows: currentVi.sort || [],
+          fieldOptions,
+          onChange: (rows) => handleUpdate({ sort: normalizeViewSort(rows) }),
+          dataStore,
+          showHeader: false
+        }
+      )
+    ] }),
+    EditorComponent && /* @__PURE__ */ u2("section", { className: "think-module-settings__section think-module-settings__section--view-editor", children: /* @__PURE__ */ u2(
+      EditorComponent,
+      {
+        module: currentVi,
+        value: correctedViewConfig,
+        onChange: (patch) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } }),
+        fieldOptions,
+        dataStore
+      }
+    ) })
+  ] });
+}
+function ModuleSettingsPanel({ module: module2, onClose }) {
+  const currentModule = useSelector(makeSelectViewInstanceById(module2.id)) || module2;
+  const handleSave = useSaveHandler(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    onClose();
+  }, {
+    successMessage: `已保存视图 "${module2.title}" 的设置`,
+    errorMessage: "保存设置失败"
+  });
+  return /* @__PURE__ */ u2("div", { className: "think-os think-os--settings think-module-settings-panel", children: [
+    /* @__PURE__ */ u2("div", { className: "think-module-settings-panel__body", children: /* @__PURE__ */ u2(ViewInstanceEditor, { vi: currentModule }) }),
+    /* @__PURE__ */ u2("div", { className: "think-module-settings-panel__actions", children: [
+      /* @__PURE__ */ u2(ThinkButton, { onClick: onClose, variant: "secondary", size: "sm", children: "关闭" }),
+      /* @__PURE__ */ u2(ThinkButton, { onClick: handleSave, variant: "primary", size: "sm", children: "保存设置" })
+    ] })
+  ] });
+}
+function openModuleSettingsWidget(module2) {
+  const widgetId = `module-settings-${module2.id}`;
+  return openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(
+    FloatingPanel,
+    {
+      id: widgetId,
+      title: `视图设置: ${module2.title}`,
+      defaultPosition: { x: window.innerWidth / 2 - 340, y: window.innerHeight / 2 - 260 },
+      minWidth: 520,
+      maxWidth: "90vw",
+      maxHeight: "85vh",
+      width: 720,
+      height: 640,
+      resizable: true,
+      bodyPadding: 0,
+      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
+      onClose: () => closeFloatingWidget(widgetId),
+      children: /* @__PURE__ */ u2(ModuleSettingsPanel, { module: module2, onClose: () => closeFloatingWidget(widgetId) })
+    }
+  ));
+}
+const PERIOD_OPTIONS = ["年", "季", "月", "周", "天"].map((value) => ({ value, label: value }));
+const FREEFORM_TEMPLATE_OPTIONS = [
+  { value: "balanced", label: "均衡排布" },
+  { value: "focus", label: "焦点 + 网格" }
+];
+const DISPLAY_MODE_OPTIONS = [
+  { value: "list", label: "列表" },
+  { value: "grid", label: "网格" },
+  { value: "freeform", label: "自由布局" }
+];
+function SettingsRow({ label, children, top: top2 = false }) {
+  return /* @__PURE__ */ u2("div", { className: `think-settings-row think-layout-editor__control-row${top2 ? " think-settings-row--top" : ""}`, children: [
+    /* @__PURE__ */ u2("span", { className: `think-settings-row__label${top2 ? " think-settings-row__label--top" : ""}`, children: label }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children })
+  ] });
+}
+function SettingsSegmentedRow({
+  label,
+  options,
+  selectedValue,
+  onChange
+}) {
+  return /* @__PURE__ */ u2(SettingsRow, { label, children: /* @__PURE__ */ u2(
+    ThinkSegmentedControl,
+    {
+      label,
+      value: selectedValue,
+      options,
+      onChange,
+      size: "sm",
+      className: "think-layout-editor__segmented"
+    }
+  ) });
+}
+function LayoutGeneralSettings({ layout, onUpdate }) {
+  return /* @__PURE__ */ u2("div", { className: "think-layout-editor__general", children: [
+    /* @__PURE__ */ u2(SettingsRow, { label: "布局名称", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "布局名称",
+        value: layout.name || "",
+        onInput: (event) => onUpdate({ name: event.currentTarget.value })
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "工具栏", children: /* @__PURE__ */ u2(
+      ThinkCheckbox,
+      {
+        checked: !layout.hideToolbar,
+        onChange: (event) => onUpdate({ hideToolbar: !event.currentTarget.checked }),
+        label: "显示工具栏 / 导航器",
+        compact: true
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "初始日期", children: /* @__PURE__ */ u2("div", { className: "think-layout-editor__inline-controls", children: [
+      /* @__PURE__ */ u2(
+        ThinkInput,
+        {
+          "aria-label": "初始日期",
+          type: "date",
+          disabled: !!layout.initialDateFollowsNow,
+          value: layout.initialDate || "",
+          onInput: (event) => onUpdate({ initialDate: event.currentTarget.value }),
+          className: "think-settings-field--date"
+        }
+      ),
+      /* @__PURE__ */ u2(
+        ThinkCheckbox,
+        {
+          checked: !!layout.initialDateFollowsNow,
+          onChange: (event) => onUpdate({ initialDateFollowsNow: event.currentTarget.checked }),
+          label: "跟随今日",
+          compact: true
+        }
+      )
+    ] }) }),
+    /* @__PURE__ */ u2(
+      SettingsSegmentedRow,
+      {
+        label: "初始视图",
+        options: PERIOD_OPTIONS,
+        selectedValue: layout.initialView || "月",
+        onChange: (value) => onUpdate({ initialView: value })
+      }
+    ),
+    /* @__PURE__ */ u2(
+      SettingsSegmentedRow,
+      {
+        label: "排列方式",
+        options: DISPLAY_MODE_OPTIONS,
+        selectedValue: layout.displayMode || "list",
+        onChange: (value) => onUpdate({ displayMode: value })
+      }
+    ),
+    layout.displayMode === "grid" && /* @__PURE__ */ u2(SettingsRow, { label: "网格列数", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "网格列数",
+        type: "number",
+        value: layout.gridConfig?.columns || 2,
+        onInput: (event) => onUpdate({ gridConfig: { columns: parseInt(event.currentTarget.value, 10) || 2 } }),
+        className: "think-settings-field--xs"
+      }
+    ) })
+  ] });
+}
+function LayoutFreeformSettings({
+  layout,
+  onUpdate,
+  onResetFreeformLayout
+}) {
+  if (layout.displayMode !== "freeform") return null;
+  const updateFreeform = (patch) => onUpdate({
+    freeformConfig: { ...layout.freeformConfig || {}, ...patch }
+  });
+  return /* @__PURE__ */ u2("div", { className: "think-layout-editor__freeform", children: [
+    /* @__PURE__ */ u2(
+      SettingsSegmentedRow,
+      {
+        label: "默认模板",
+        options: FREEFORM_TEMPLATE_OPTIONS,
+        selectedValue: layout.freeformConfig?.defaultTemplate || "balanced",
+        onChange: (value) => {
+          const hasSavedPlacement = Object.keys(layout.viewPlacements || {}).length > 0;
+          if (hasSavedPlacement && !confirm("切换模板会重置当前自由布局的位置、尺寸、层级、锁定和折叠状态，是否继续？")) return;
+          onUpdate({
+            freeformConfig: {
+              ...layout.freeformConfig || {},
+              defaultTemplate: value
+            },
+            viewPlacements: {}
+          });
+        }
+      }
+    ),
+    /* @__PURE__ */ u2(SettingsRow, { label: "吸附网格", children: /* @__PURE__ */ u2(
+      ThinkCheckbox,
+      {
+        checked: layout.freeformConfig?.snapToGrid ?? true,
+        onChange: (event) => updateFreeform({ snapToGrid: event.currentTarget.checked }),
+        label: "启用",
+        compact: true
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "网格大小", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "网格大小",
+        type: "number",
+        value: layout.freeformConfig?.gridSize || 16,
+        onInput: (event) => updateFreeform({ gridSize: Math.max(4, parseInt(event.currentTarget.value, 10) || 16) }),
+        className: "think-settings-field--sm"
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "最小宽度", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "最小宽度",
+        type: "number",
+        value: layout.freeformConfig?.minItemWidth || 280,
+        onInput: (event) => updateFreeform({ minItemWidth: Math.max(160, parseInt(event.currentTarget.value, 10) || 280) }),
+        className: "think-settings-field--sm"
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "最小高度", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "最小高度",
+        type: "number",
+        value: layout.freeformConfig?.minItemHeight || 180,
+        onInput: (event) => updateFreeform({ minItemHeight: Math.max(120, parseInt(event.currentTarget.value, 10) || 180) }),
+        className: "think-settings-field--sm"
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "画布最小宽度", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "画布最小宽度",
+        type: "number",
+        value: layout.freeformConfig?.minCanvasWidth || 720,
+        onInput: (event) => updateFreeform({ minCanvasWidth: Math.max(320, parseInt(event.currentTarget.value, 10) || 720) }),
+        className: "think-settings-field--md"
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "布局位置", children: /* @__PURE__ */ u2(
+      ThinkButton,
+      {
+        size: "sm",
+        variant: "secondary",
+        onClick: () => {
+          if (confirm("确认重置当前布局的自由布局位置吗？")) onResetFreeformLayout();
+        },
+        children: "按模板重排"
+      }
+    ) })
+  ] });
+}
+const CREATE_PREFIX = "__create_view__:";
+function SortableLayoutViewItem({ view, onOpenSettings, onRemove, onContextMenu }) {
+  const { attributes, listeners, setNodeRef, transform: transform2, transition, isDragging } = useSortable({ id: view.id });
+  const style2 = { transform: CSS.Transform.toString(transform2), transition };
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      ref: setNodeRef,
+      style: style2,
+      className: `think-layout-editor__view-item${isDragging ? " is-dragging" : ""}`,
+      onContextMenu: (event) => onContextMenu(event, view),
+      children: [
+        /* @__PURE__ */ u2(
+          "button",
+          {
+            type: "button",
+            ...{ ...attributes, ...listeners },
+            className: "think-layout-editor__view-drag",
+            "aria-label": `拖动 ${view.title} 排序`,
+            title: "拖动排序",
+            children: /* @__PURE__ */ u2(ThinkIcon, { name: "grip-vertical" })
+          }
+        ),
+        /* @__PURE__ */ u2(
+          "button",
+          {
+            type: "button",
+            className: "think-layout-editor__view-chip",
+            title: "打开视图设置；右键更多",
+            onClick: () => onOpenSettings(view),
+            children: /* @__PURE__ */ u2("span", { className: "think-chip__label", children: view.title })
+          }
+        ),
+        /* @__PURE__ */ u2(
+          ThinkIconButton,
+          {
+            label: `从布局移除 ${view.title}`,
+            icon: /* @__PURE__ */ u2(ThinkIcon, { name: "x" }),
+            size: "sm",
+            onClick: () => onRemove(view.id),
+            className: "think-layout-editor__view-remove"
+          }
+        )
+      ]
+    }
+  );
+}
+function LayoutEditorPanel({ layoutId, useCases }) {
+  const _useCases = useCases ?? useUseCases();
+  const layout = useSelector((s2) => (s2.settings.layouts || []).find((l2) => l2.id === layoutId));
+  const allViews = useSelector((s2) => s2.settings.viewInstances);
+  const [inputValue, setInputValue] = d("");
+  const [pickerOpen, setPickerOpen] = d(false);
+  const [contextMenu, setContextMenu] = d(null);
+  const [renameTarget, setRenameTarget] = d(null);
+  const [renameValue, setRenameValue] = d("");
+  const handleUpdate = q$1((updates) => {
+    if (!layout) return;
+    _useCases.layout.updateLayout(layout.id, updates);
+  }, [layout, _useCases]);
+  const selectedViews = T$1(() => (layout?.viewInstanceIds || []).map((id) => allViews.find((v2) => v2.id === id)).filter(Boolean), [layout?.viewInstanceIds, allViews]);
+  const availableViews = T$1(() => allViews.filter((v2) => !(layout?.viewInstanceIds || []).includes(v2.id)), [layout?.viewInstanceIds, allViews]);
+  const addView = q$1(async (viewId) => {
+    if (!layout || !viewId || layout.viewInstanceIds.includes(viewId)) return;
+    await _useCases.layout.addViewInstanceToLayout(layout.id, viewId);
+  }, [layout, _useCases.layout]);
+  const removeViewFromLayout = q$1((viewId) => {
+    if (!layout) return;
+    void _useCases.layout.removeViewInstanceFromLayout(layout.id, viewId);
+  }, [layout, _useCases.layout]);
+  const handleViewDragEnd = q$1((event) => {
+    if (!layout) return;
+    const { active, over } = event;
+    if (!active || !over || active.id === over.id) return;
+    const oldIndex = layout.viewInstanceIds.indexOf(String(active.id));
+    const newIndex = layout.viewInstanceIds.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    void _useCases.layout.reorderViewInstancesInLayout(layout.id, arrayMove$1(layout.viewInstanceIds, oldIndex, newIndex));
+  }, [layout, _useCases.layout]);
+  const handleOpenViewSettings = q$1((view) => {
+    openModuleSettingsWidget(view);
+  }, []);
+  const pickerOptions = T$1(() => {
+    const options = availableViews.map((view) => ({ value: view.id, label: view.title }));
+    const name = inputValue.trim();
+    if (name && !availableViews.some((view) => view.title.toLowerCase().includes(name.toLowerCase()))) {
+      options.push({ value: `${CREATE_PREFIX}${name}`, label: `+ 创建新视图：“${name}”` });
+    }
+    return options;
+  }, [availableViews, inputValue]);
+  const handleCreateNewView = q$1(async (viewTitle) => {
+    const newView = await _useCases.viewInstance.createView(viewTitle);
+    if (!newView) return;
+    await addView(newView.id);
+  }, [_useCases.viewInstance, addView]);
+  const handlePickerSelect = q$1(async (value) => {
+    if (value.startsWith(CREATE_PREFIX)) {
+      await handleCreateNewView(value.slice(CREATE_PREFIX.length));
+    } else {
+      await addView(value);
+    }
+    setInputValue("");
+    setPickerOpen(true);
+  }, [addView, handleCreateNewView]);
+  const handleChipRightClick = q$1((event, view) => {
+    event.preventDefault();
+    setContextMenu({ mouseX: event.clientX - 2, mouseY: event.clientY - 4, viewId: view.id, viewTitle: view.title });
+  }, []);
+  const handleContextMenuClose = q$1(() => setContextMenu(null), []);
+  const handleViewSettings = q$1(() => {
+    if (!contextMenu) return;
+    const view = allViews.find((v2) => v2.id === contextMenu.viewId);
+    if (view) openModuleSettingsWidget(view);
+    handleContextMenuClose();
+  }, [contextMenu, allViews, handleContextMenuClose]);
+  const openViewRename = q$1((viewId, viewTitle) => {
+    setRenameTarget({ viewId, viewTitle });
+    setRenameValue(viewTitle);
+  }, []);
+  const handleViewRename = q$1(() => {
+    if (!contextMenu) return;
+    openViewRename(contextMenu.viewId, contextMenu.viewTitle);
+    handleContextMenuClose();
+  }, [contextMenu, openViewRename, handleContextMenuClose]);
+  const handleRenameSave = q$1(async () => {
+    if (!renameTarget) return;
+    const title = renameValue.trim();
+    if (title && title !== renameTarget.viewTitle) await _useCases.viewInstance.updateView(renameTarget.viewId, { title });
+    setRenameTarget(null);
+  }, [renameTarget, renameValue, _useCases.viewInstance]);
+  const handleViewRemove = q$1(() => {
+    if (!contextMenu) return;
+    removeViewFromLayout(contextMenu.viewId);
+    handleContextMenuClose();
+  }, [contextMenu, removeViewFromLayout, handleContextMenuClose]);
+  if (!layout) return /* @__PURE__ */ u2("div", { className: "think-settings-section", children: "未找到布局（可能已被删除）。" });
+  return /* @__PURE__ */ u2("div", { className: "think-layout-editor", children: [
+    /* @__PURE__ */ u2(LayoutGeneralSettings, { layout, onUpdate: handleUpdate }),
+    /* @__PURE__ */ u2(LayoutFreeformSettings, { layout, onUpdate: handleUpdate, onResetFreeformLayout: () => void _useCases.layout.resetFreeformLayout(layout.id) }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "包含视图" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-layout-editor__views-body", children: [
+        /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleViewDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: selectedViews.map((view) => view.id), strategy: rectSortingStrategy, children: /* @__PURE__ */ u2("div", { className: "think-layout-editor__views", children: selectedViews.map((view) => /* @__PURE__ */ u2(
+          SortableLayoutViewItem,
+          {
+            view,
+            onOpenSettings: handleOpenViewSettings,
+            onRemove: removeViewFromLayout,
+            onContextMenu: handleChipRightClick
+          },
+          view.id
+        )) }) }) }),
+        /* @__PURE__ */ u2(
+          ThinkSearchPicker,
+          {
+            query: inputValue,
+            options: pickerOptions,
+            onQueryChange: (value) => {
+              setInputValue(value);
+              setPickerOpen(true);
+            },
+            onSelect: (value) => void handlePickerSelect(value),
+            placeholder: "添加或创建视图…",
+            open: pickerOpen,
+            onOpenChange: setPickerOpen,
+            className: "think-settings-search"
+          }
+        )
+      ] })
+    ] }),
+    contextMenu && /* @__PURE__ */ u2(
+      "div",
+      {
+        className: "think-layout-editor__context-menu",
+        style: { position: "fixed", top: contextMenu.mouseY, left: contextMenu.mouseX, zIndex: 99999 },
+        onMouseLeave: handleContextMenuClose,
+        children: /* @__PURE__ */ u2("div", { className: "think-layout-editor__context-actions", children: [
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: handleViewSettings, children: "设置…" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: handleViewRename, children: "重命名…" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "danger", onClick: handleViewRemove, children: "从布局移除" })
+        ] })
+      }
+    ),
+    /* @__PURE__ */ u2(
+      Modal2,
+      {
+        isOpen: Boolean(renameTarget),
+        onClose: () => setRenameTarget(null),
+        title: "重命名视图",
+        size: "small",
+        onSave: handleRenameSave,
+        saveButtonText: "重命名",
+        children: /* @__PURE__ */ u2(
+          ThinkInput,
+          {
+            autoFocus: true,
+            "aria-label": "视图名称",
+            value: renameValue,
+            onInput: (event) => setRenameValue(event.currentTarget.value),
+            onKeyDown: (event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void handleRenameSave();
+              }
+            }
+          }
+        )
+      }
+    )
+  ] });
+}
+function LayoutSettingsWidgetInner({ layoutId, widgetId }) {
+  const layout = useSelector((s2) => (s2.settings.layouts || []).find((l2) => l2.id === layoutId));
+  return /* @__PURE__ */ u2(
+    FloatingPanel,
+    {
+      id: widgetId,
+      title: `布局设置: ${layout?.name ?? layoutId}`,
+      defaultPosition: { x: window.innerWidth / 2 - 420, y: window.innerHeight / 2 - 300 },
+      minWidth: 620,
+      maxWidth: "92vw",
+      maxHeight: "88vh",
+      width: 760,
+      height: 620,
+      resizable: true,
+      bodyPadding: 0,
+      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
+      onClose: () => closeFloatingWidget(widgetId),
+      children: /* @__PURE__ */ u2("div", { className: "think-os--settings think-layout-settings-widget", children: /* @__PURE__ */ u2(LayoutEditorPanel, { layoutId }) })
+    }
+  );
+}
+function openLayoutSettingsWidget(layoutId) {
+  const widgetId = `layout-settings-${layoutId}`;
+  return openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(LayoutSettingsWidgetInner, { layoutId, widgetId }));
+}
+function asDisplayList(value) {
+  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean);
+  if (value === null || value === void 0) return [];
+  return String(value).split(/[,，\n]/).map((v2) => v2.trim()).filter(Boolean);
+}
+function describeRule(rule) {
+  if (rule.op === "empty") return `${getFieldLabel(rule.field)} 为空`;
+  if (rule.op === "notEmpty") return `${getFieldLabel(rule.field)} 非空`;
+  if (rule.op === "in" || rule.op === "notIn") {
+    const values2 = asDisplayList(rule.value);
+    const opText = rule.op === "in" ? "属于任一" : "不属于任一";
+    return `${getFieldLabel(rule.field)} ${opText} ${values2.join("、") || "未选择"}`;
+  }
+  if (rule.op === "between") {
+    const values2 = asDisplayList(rule.value);
+    return `${getFieldLabel(rule.field)} 区间 ${values2.join(" ~ ") || String(rule.value ?? "")}`;
+  }
+  return `${getFieldLabel(rule.field)} ${rule.op} ${String(rule.value ?? "")}`;
+}
+function DataFilterPanel({ dataStore, filters, items, onChange }) {
+  const [open, setOpen] = d(false);
+  const activeCount = filters.length;
+  const sourceItems = items ?? dataStore.queryItems();
+  const fieldOptions = T$1(() => getAllFields(sourceItems), [sourceItems]);
+  const { quickRules, advancedRules } = T$1(() => splitDefaultQuickFilterRules(filters), [filters]);
+  const advancedFilterCount = advancedRules.length;
+  const handleOpen = () => setOpen(true);
+  const handleClear = () => onChange([]);
+  const handleDeleteRule = (index) => onChange(filters.filter((_2, currentIndex) => currentIndex !== index));
+  const handleAdvancedChange = (rows) => onChange(normalizeViewFilters([...quickRules, ...rows]));
+  return /* @__PURE__ */ u2("div", { class: "tp-toolbar-data-filter", children: [
+    /* @__PURE__ */ u2(
+      ThinkButton,
+      {
+        size: "sm",
+        variant: "secondary",
+        "aria-pressed": activeCount > 0,
+        leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "filter" }),
+        onClick: handleOpen,
+        children: [
+          "数据筛选",
+          activeCount > 0 ? ` (${activeCount})` : ""
+        ]
+      }
+    ),
+    activeCount > 0 && /* @__PURE__ */ u2("div", { class: "think-filter-popover__selected-chips", "aria-label": "当前筛选", children: [
+      filters.slice(0, 3).map((rule, index) => /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          className: "think-chip",
+          onClick: () => handleDeleteRule(index),
+          title: "移除此筛选",
+          children: [
+            /* @__PURE__ */ u2("span", { className: "think-chip__label", children: describeRule(rule) }),
+            /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
+          ]
+        },
+        `${rule.field}-${rule.op}-${index}`
+      )),
+      filters.length > 3 && /* @__PURE__ */ u2("span", { className: "think-chip", children: [
+        "+",
+        filters.length - 3
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(
+      Modal2,
+      {
+        isOpen: open,
+        onClose: () => setOpen(false),
+        title: "全局数据筛选",
+        size: "large",
+        className: "think-os--settings think-data-filter-dialog",
+        footer: /* @__PURE__ */ u2("div", { className: "think-data-filter-dialog__actions", children: [
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: handleClear, disabled: activeCount === 0, children: "清空全部" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "primary", onClick: () => setOpen(false), children: "完成" })
+        ] }),
+        children: /* @__PURE__ */ u2("div", { className: "think-data-filter-dialog__content", children: [
+          /* @__PURE__ */ u2("div", { className: "think-data-filter-dialog__meta-line", children: [
+            /* @__PURE__ */ u2("span", { children: [
+              fieldOptions.length,
+              " 个字段"
+            ] }),
+            /* @__PURE__ */ u2("span", { children: [
+              activeCount,
+              " 条规则"
+            ] })
+          ] }),
+          /* @__PURE__ */ u2(
+            CommonFilterPanel,
+            {
+              dataStore,
+              filters,
+              items: sourceItems,
+              fieldOptions,
+              onChange,
+              showHeader: false
+            }
+          ),
+          /* @__PURE__ */ u2("div", { className: "think-filter-rule-section", children: [
+            /* @__PURE__ */ u2("div", { className: "think-filter-rule-section__head", children: [
+              /* @__PURE__ */ u2("span", { children: "高级规则" }),
+              /* @__PURE__ */ u2("span", { className: "think-filter-rule-section__meta", children: [
+                advancedFilterCount,
+                " 条"
+              ] })
+            ] }),
+            /* @__PURE__ */ u2(
+              RuleBuilder,
+              {
+                title: "筛选",
+                mode: "filter",
+                rows: advancedRules,
+                fieldOptions,
+                onChange: (rows) => handleAdvancedChange(rows),
+                dataStore,
+                showHeader: false
+              }
+            )
+          ] })
+        ] })
+      }
+    )
+  ] });
+}
+function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOpenRecordOrigin }) {
+  const value = readField(item, fieldKey);
+  if (value === null || value === void 0 || value === "" || Array.isArray(value) && value.length === 0) {
+    return null;
+  }
+  const label = getFieldLabel(fieldKey);
+  const originProps = onOpenRecordOrigin ? {
+    role: "button",
+    tabIndex: 0,
+    onClick: (event) => {
+      if (!hasPlatformModifier(event)) return;
+      stopInteractionEvent(event);
+      void onOpenRecordOrigin(item);
+    },
+    onKeyDown: (event) => {
+      if (!hasPlatformModifier(event) || !isKeyboardActivation(event)) return;
+      stopInteractionEvent(event);
+      void onOpenRecordOrigin(item);
+    }
+  } : {};
+  const originTitle = "Ctrl/⌘+点击打开原文";
+  if (fieldKey === "tags") {
+    return /* @__PURE__ */ u2("span", { ...originProps, title: originTitle, children: /* @__PURE__ */ u2(TagsRenderer, { tags: value, allThemes }) });
+  }
+  if ((fieldKey === "themePath" || fieldKey === "theme" || fieldKey === "rootTheme" || fieldKey === "leafTheme") && typeof value === "string") {
+    const fullPath = value;
+    const labelText = getLeafPath(fullPath) || fullPath;
+    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${fullPath} · ${originTitle}`, style: { backgroundColor: getCategoryColor(fullPath) }, children: labelText });
+  }
+  if (fieldKey === "categoryKey") {
+    const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
+    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${value} · ${originTitle}`, style: { backgroundColor: getCategoryColor(item.categoryKey) }, children: baseCategory });
+  }
+  const fieldDef = getFieldDefinition(fieldKey);
+  if (isImageFieldDefinition(fieldDef)) {
+    const image = normalizeImageValue(value);
+    if (!image) return null;
+    const src = image.kind === "url" ? image.src : resolveResourcePath?.(image.src) || image.src;
+    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${image.src} · ${originTitle}`, children: /* @__PURE__ */ u2("img", { src, alt: image.alt || label }) });
+  }
+  const displayValue = Array.isArray(value) ? value.join(", ") : String(value);
+  return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${displayValue} · ${originTitle}`, children: displayValue });
+}
+function TaskRow({
+  item,
+  onMarkDone,
+  resolveResourcePath,
+  onOpenRecordOrigin,
+  timerService,
+  timer,
+  allThemes,
+  showFields = [],
+  compact = false,
+  displayTitle,
+  onOpenRecord,
+  listRow = false
+}) {
+  const done = isItemDone(item);
+  const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? "").trim() || item.title;
+  const openEdit = (evt) => {
+    void onOpenRecord?.(item);
+  };
+  const gesture = createRecordGestureHandlers({ item, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => openEdit() });
+  return /* @__PURE__ */ u2("div", { class: `task-row ${listRow ? "think-list-row think-list-row--task think-list-row--interactive" : ""} ${compact ? `task-row--compact ${listRow ? "think-list-row--compact" : ""}` : ""} ${done ? "task-row--done" : ""}`, children: [
+    /* @__PURE__ */ u2("div", { class: "task-row-checkbox-wrapper", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(TaskCheckbox, { done, onMarkDone: () => onMarkDone(item.id) }) }),
+    /* @__PURE__ */ u2("div", { class: "task-row-content", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, children: [
+      /* @__PURE__ */ u2("div", { class: "task-row-main", children: [
+        /* @__PURE__ */ u2("button", { type: "button", title: RECORD_GESTURE_HINT, onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, onKeyDown: gesture.onKeyDown, class: `task-row-title ${done ? "task-done" : ""}`, children: [
+          item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
+          visibleTitle
+        ] }),
+        !done && /* @__PURE__ */ u2("div", { class: "task-row-timer-action", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(
+          TaskSendToTimerButton,
+          {
+            timerStatus: timer?.status,
+            onStart: () => timerService?.startOrResume(item.id)
+          }
+        ) })
+      ] }),
+      !compact && showFields.length > 0 && /* @__PURE__ */ u2("div", { class: "task-row-fields", onClick: (e2) => e2.stopPropagation(), children: showFields.map((fieldKey) => /* @__PURE__ */ u2(
+        FieldPill,
+        {
+          item,
+          fieldKey,
+          resolveResourcePath,
+          allThemes,
+          onOpenRecordOrigin
+        },
+        fieldKey
+      )) })
+    ] })
+  ] });
+}
+function ItemLink({ item, className = "", showIcon = true, onOpenRecord, onOpenRecordOrigin }) {
+  const gesture = createRecordGestureHandlers({
+    item,
+    onOpenOrigin: onOpenRecordOrigin,
+    onPrimary: () => {
+      void onOpenRecord?.(item);
+    }
+  });
+  return /* @__PURE__ */ u2(
+    "span",
+    {
+      class: `item-link ${className}`,
+      role: "button",
+      tabIndex: 0,
+      onClick: gesture.onClick,
+      onDblClick: gesture.onDblClick,
+      onTouchEnd: gesture.onTouchEnd,
+      onKeyDown: gesture.onKeyDown,
+      title: RECORD_GESTURE_HINT,
+      style: { cursor: "pointer" },
+      children: [
+        showIcon && item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
+        item.title
+      ]
+    }
+  );
+}
+const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }) => {
+  const metadataFields = fields.filter((f2) => f2 !== "title" && f2 !== "content");
+  const showTitle = fields.includes("title") && item.title;
+  const effectiveContent = item.content && item.content.trim().length > 0 ? item.content : item.title;
+  const showContent = fields.includes("content") && effectiveContent;
+  const gesture = createRecordGestureHandlers({
+    item,
+    onOpenOrigin: onOpenRecordOrigin,
+    onPrimary: () => {
+      try {
+        void onOpenRecord?.(item);
+      } catch {
+      }
+    }
+  });
+  return /* @__PURE__ */ u2("div", { class: "bv-item bv-item--block think-list-row think-list-row--interactive", children: [
+    /* @__PURE__ */ u2("div", { class: "bv-block-metadata", children: /* @__PURE__ */ u2("div", { class: "bv-fields-list-wrapper", children: metadataFields.map((fieldKey) => /* @__PURE__ */ u2(
+      FieldPill,
+      {
+        item,
+        fieldKey,
+        resolveResourcePath,
+        allThemes,
+        onOpenRecordOrigin
+      },
+      fieldKey
+    )) }) }),
+    /* @__PURE__ */ u2("div", { class: "bv-block-main", children: [
+      showTitle && /* @__PURE__ */ u2("div", { class: "bv-block-title", children: /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin }) }),
+      showContent && /* @__PURE__ */ u2("div", { class: "bv-block-content", children: /* @__PURE__ */ u2(
+        MarkdownContent,
+        {
+          renderPort: messageRenderPort,
+          content: effectiveContent || "",
+          contentType: "markdown",
+          sourcePath: item.file?.path || "",
+          className: "bv-block-md",
+          onClick: (evt) => {
+            const target = evt?.target;
+            if (target?.closest("a")) return;
+            gesture.onClick(evt);
+          },
+          onDblClick: (evt) => {
+            const target = evt?.target;
+            if (target?.closest("a")) return;
+            gesture.onDblClick(evt);
+          },
+          onTouchEnd: (evt) => {
+            const target = evt?.target;
+            if (target?.closest("a")) return;
+            gesture.onTouchEnd(evt);
+          }
+        }
+      ) })
+    ] })
+  ] });
+};
+function resolveBlockViewGroupFields(input = {}) {
+  if (input.effectiveGroupFields?.length) return [...input.effectiveGroupFields];
+  if (input.groupFields?.length) return [...input.groupFields];
+  if (input.groupField) return [input.groupField];
+  return [];
+}
+function buildBlockViewRenderModel(input) {
+  const effectiveGroupFields = resolveBlockViewGroupFields(input);
+  const isGrouped = effectiveGroupFields.length > 0;
+  const groupTree = !isGrouped ? [] : input.groupTree ?? (executeRecordQuery(input.items, {
+    groupBy: effectiveGroupFields,
+    groupContext: { goals: input.goals ?? [] }
+  }).groupTree ?? []);
+  return { effectiveGroupFields, groupTree, isGrouped };
+}
+function findBlockViewTimer(timers, itemId) {
+  return (timers ?? []).find((timer) => timer?.taskId === itemId);
+}
+function buildBlockViewGroupClassNames() {
+  return {
+    root: "",
+    group: "bv-group",
+    title: "bv-group-title think-list-disclosure-row",
+    content: "bv-group-content",
+    toggleIcon: "bv-group-toggle-icon",
+    label: "bv-group-label"
+  };
+}
+function BlockViewItemList(props) {
+  const {
+    items,
+    fields,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  } = props;
+  return /* @__PURE__ */ u2(S, { children: items.map((item) => {
+    if (item.coreBlock === "task") {
+      return /* @__PURE__ */ u2(
+        TaskRow,
+        {
+          item,
+          onMarkDone,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          timerService,
+          timer: findBlockViewTimer(timers, item.id),
+          allThemes,
+          onOpenRecord,
+          showFields: [],
+          compact: true,
+          listRow: true
+        },
+        item.id
+      );
+    }
+    return /* @__PURE__ */ u2(
+      BlockItem,
+      {
+        item,
+        fields,
+        resolveResourcePath,
+        onOpenRecordOrigin,
+        messageRenderPort,
+        allThemes,
+        onOpenRecord
+      },
+      item.id
+    );
+  }) });
+}
+function BlockView(props) {
+  const {
+    items,
+    groupField,
+    groupFields,
+    fields = [],
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    goals = [],
+    onOpenRecord
+  } = props;
+  const renderModel = T$1(() => buildBlockViewRenderModel({
+    items,
+    groupField,
+    groupFields,
+    goals
+  }), [items, groupField, groupFields, goals]);
+  const itemListProps = {
+    fields,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  };
+  if (!renderModel.isGrouped) {
+    return /* @__PURE__ */ u2("div", { class: "bv-container think-list", children: /* @__PURE__ */ u2(BlockViewItemList, { items, ...itemListProps }) });
+  }
+  return /* @__PURE__ */ u2("div", { class: "bv-container think-list", children: /* @__PURE__ */ u2(
+    GroupedContainer,
+    {
+      nodes: renderModel.groupTree,
+      classNames: buildBlockViewGroupClassNames(),
+      renderLeaf: (leafItems) => /* @__PURE__ */ u2(BlockViewItemList, { items: leafItems, ...itemListProps })
+    }
+  ) });
+}
+function ProgressBlock({
+  categoryHours,
+  order: order2,
+  totalHours,
+  colorMap,
+  untrackedLabel
+}) {
+  const sortedCategories = T$1(() => {
+    const orderToUse = Array.isArray(order2) ? order2 : [];
+    const presentCategories = /* @__PURE__ */ new Set();
+    orderToUse.forEach((cat) => {
+      if ((categoryHours[cat] || 0) > 0.01) {
+        presentCategories.add(cat);
+      }
+    });
+    Object.keys(categoryHours).forEach((cat) => {
+      if ((categoryHours[cat] || 0) > 0.01) {
+        presentCategories.add(cat);
+      }
+    });
+    return Array.from(presentCategories);
+  }, [categoryHours, order2, untrackedLabel]);
+  if (sortedCategories.length === 0) return null;
+  return /* @__PURE__ */ u2("div", { class: "progress-block-container", children: sortedCategories.map((category) => {
+    const hours = categoryHours[category];
+    const percent = totalHours > 0 ? hours / totalHours * 100 : 0;
+    if (percent < 0.1 && hours < 0.01) return null;
+    const color2 = colorMap[category] || "#cccccc";
+    const displayPercent = Math.max(percent, 0.5);
+    return /* @__PURE__ */ u2(
+      "div",
+      {
+        title: `${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`,
+        class: "progress-block-item",
+        children: [
+          /* @__PURE__ */ u2(
+            "div",
+            {
+              class: "progress-block-bar",
+              style: { background: color2, width: `${displayPercent}%` }
+            }
+          ),
+          /* @__PURE__ */ u2(
+            "span",
+            {
+              class: `progress-block-text ${displayPercent > 50 ? "progress-block-text-light" : "progress-block-text-dark"}`,
+              children: `${category} ${hours.toFixed(1)}h`
+            }
+          )
+        ]
+      },
+      category
+    );
+  }) });
+}
+function TimelineSummaryTable({
+  summaryData,
+  colorMap,
+  progressOrder,
+  untrackedLabel
+}) {
+  if (!summaryData || summaryData.length === 0) {
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "此时间范围内无数据可供总结。" });
+  }
+  return /* @__PURE__ */ u2("table", { class: "timeline-summary-table", children: [
+    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("th", { children: "月份" }),
+      /* @__PURE__ */ u2("th", { children: "月度总结" }),
+      /* @__PURE__ */ u2("th", { children: "W1" }),
+      /* @__PURE__ */ u2("th", { children: "W2" }),
+      /* @__PURE__ */ u2("th", { children: "W3" }),
+      /* @__PURE__ */ u2("th", { children: "W4" }),
+      /* @__PURE__ */ u2("th", { children: "W5" })
+    ] }) }),
+    /* @__PURE__ */ u2("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: monthData.month }) }),
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2(
+        ProgressBlock,
+        {
+          categoryHours: monthData.monthlySummary,
+          order: progressOrder,
+          totalHours: monthData.totalMonthHours,
+          colorMap,
+          untrackedLabel
+        }
+      ) }),
+      monthData.weeklySummaries.map((weekData, index) => /* @__PURE__ */ u2("td", { children: weekData ? /* @__PURE__ */ u2(
+        ProgressBlock,
+        {
+          categoryHours: weekData.summary,
+          order: progressOrder,
+          totalHours: weekData.totalHours,
+          colorMap,
+          untrackedLabel
+        }
+      ) : null }, index))
+    ] }, monthData.month)) })
+  ] });
+}
+function DayColumnHeader({
+  day,
+  blocks,
+  categoriesConfig,
+  colorMap,
+  untrackedLabel,
+  progressOrder
+}) {
+  const { categoryHours, totalDayHours } = T$1(() => {
+    return buildDailyCategoryHours(blocks, categoriesConfig, untrackedLabel);
+  }, [blocks, categoriesConfig, untrackedLabel]);
+  return /* @__PURE__ */ u2("div", { class: "day-column-header", children: [
+    /* @__PURE__ */ u2("div", { class: "day-header-title", children: dayjs(day).format("MM-DD ddd") }),
+    /* @__PURE__ */ u2("div", { class: "daily-progress-bar", children: /* @__PURE__ */ u2(
+      ProgressBlock,
+      {
+        categoryHours,
+        order: progressOrder,
+        totalHours: totalDayHours,
+        colorMap,
+        untrackedLabel
+      }
+    ) })
+  ] });
+}
+const hexToRgba = (hex, alpha2 = 0.35) => {
+  const h2 = hex.replace("#", "");
+  const bigint = parseInt(h2, 16);
+  return `rgba(${bigint >> 16 & 255},${bigint >> 8 & 255},${bigint & 255},${alpha2})`;
+};
+const formatTimeMinute = (minute) => {
+  const h2 = Math.floor(minute / 60);
+  const m2 = minute % 60;
+  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
+};
+const generateTaskBlockTitle = (block) => {
+  const isCrossNight = block.startMinute % 1440 + block.duration > 1440;
+  if (isCrossNight) {
+    const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, "minute");
+    const endDateTime = startDateTime.add(block.duration, "minute");
+    const startFormat = startDateTime.format("HH:mm");
+    const endFormat = endDateTime.format("HH:mm");
+    return `任务: ${block.pureText}
+时间: ${startFormat} - ${endFormat}
+${RECORD_GESTURE_HINT}`;
+  } else {
+    const startTime = formatTimeMinute(block.startMinute);
+    const endTime = formatTimeMinute(block.endMinute);
+    return `任务: ${block.pureText}
+时间: ${startTime} - ${endTime}
+${RECORD_GESTURE_HINT}`;
+  }
+};
+function DayColumnBody({
+  day,
+  blocks,
+  hourHeight,
+  categoriesConfig,
+  colorMap,
+  maxHours,
+  onColumnClick,
+  onUpdateTaskTime,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  onNotice,
+  onEditTask,
+  onAlignPrev,
+  onAlignNext
+}) {
+  const lastTouchRef = A$1(null);
+  const suppressClickUntilRef = A$1(0);
+  const tryUpdateTaskTime = async (taskId, updates) => {
+    if (!onUpdateTaskTime) {
+      onNotice?.("未提供保存处理器，无法更新工作 Session 时间");
+      return;
+    }
+    try {
+      await onUpdateTaskTime(taskId, updates);
+    } catch (e2) {
+      onNotice?.("更新工作 Session 时间失败");
+    }
+  };
+  const handleEdit = (block) => {
+    if (onEditTask) {
+      onEditTask(block);
+      return;
+    }
+    void onOpenRecord?.({ ...block, id: block.taskRecordId });
+  };
+  const handleAlignToPrev = (block, prevBlock) => {
+    if (onAlignPrev) {
+      onAlignPrev(block, prevBlock);
+    } else {
+      if (!prevBlock) return;
+      const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
+      const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
+      const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
+      void tryUpdateTaskTime(block.id, { time: newStartTimeString });
+    }
+  };
+  const handleAlignToNext = (block, nextBlock) => {
+    if (onAlignNext) {
+      onAlignNext(block, nextBlock);
+    } else {
+      if (!nextBlock) return;
+      const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
+      const newDuration = block.duration + deltaDuration;
+      if (newDuration <= 0) {
+        onNotice?.("无法对齐：任务时长将变为负数或零");
+        return;
+      }
+      void tryUpdateTaskTime(block.id, { duration: newDuration });
+    }
+  };
+  const handleBodyClick = (event) => {
+    if (Date.now() < suppressClickUntilRef.current) return;
+    onColumnClick(day, event);
+  };
+  const handleBodyTouchEnd = (event) => {
+    const touch = event.changedTouches?.[0];
+    if (!touch) return;
+    const now2 = Date.now();
+    const previous = lastTouchRef.current;
+    const isDoubleTap = !!previous && now2 - previous.time <= 350 && Math.abs(previous.x - touch.clientX) <= 24 && Math.abs(previous.y - touch.clientY) <= 24;
+    lastTouchRef.current = {
+      time: now2,
+      x: touch.clientX,
+      y: touch.clientY
+    };
+    suppressClickUntilRef.current = now2 + 450;
+    if (!isDoubleTap) return;
+    event.preventDefault();
+    onColumnClick(day, event);
+    lastTouchRef.current = null;
+  };
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "day-column-body",
+      style: { height: `${maxHours * hourHeight}px` },
+      onClick: (e2) => handleBodyClick(e2),
+      onTouchEnd: (e2) => handleBodyTouchEnd(e2),
+      children: blocks.map((block, index) => {
+        const top2 = block.blockStartMinute / 60 * hourHeight;
+        const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
+        const category = mapTaskToCategory(block.fileName || "", categoriesConfig);
+        const color2 = colorMap[category] || "#ccc";
+        const prevBlock = index > 0 ? blocks[index - 1] : null;
+        const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
+        const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
+        const blockGesture = createRecordGestureHandlers({ item: { ...block, id: block.taskRecordId }, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block) });
+        return /* @__PURE__ */ u2(
+          "div",
+          {
+            class: "timeline-task-block",
+            title: generateTaskBlockTitle(block),
+            style: { top: `${top2}px`, height: `${Math.max(height2, 2)}px` },
+            onClick: (e2) => e2.stopPropagation(),
+            onTouchStart: (e2) => e2.stopPropagation(),
+            onTouchEnd: (e2) => e2.stopPropagation(),
+            children: [
+              /* @__PURE__ */ u2(
+                "a",
+                {
+                  class: "timeline-task-link",
+                  role: "button",
+                  tabIndex: 0,
+                  onClick: blockGesture.onClick,
+                  onDblClick: blockGesture.onDblClick,
+                  onTouchEnd: blockGesture.onTouchEnd,
+                  onKeyDown: blockGesture.onKeyDown,
+                  children: [
+                    /* @__PURE__ */ u2("div", { class: "timeline-task-indicator", style: { background: color2 } }),
+                    /* @__PURE__ */ u2("div", { class: "timeline-task-content", style: { background: hexToRgba(color2) }, children: [
+                      block.icon ? /* @__PURE__ */ u2("span", { class: "timeline-task-icon", children: block.icon }) : null,
+                      /* @__PURE__ */ u2("span", { class: "timeline-task-title", children: block.title || block.pureText })
+                    ] })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ u2("div", { class: "task-buttons", children: [
+                /* @__PURE__ */ u2(
+                  "button",
+                  {
+                    class: "task-button",
+                    title: "向前对齐",
+                    disabled: !prevBlock,
+                    onClick: () => handleAlignToPrev(block, prevBlock),
+                    children: "⇡"
+                  }
+                ),
+                /* @__PURE__ */ u2(
+                  "button",
+                  {
+                    class: "task-button",
+                    title: "向后对齐",
+                    disabled: !canAlignToNext,
+                    onClick: () => handleAlignToNext(block, nextBlock),
+                    children: "⇣"
+                  }
+                ),
+                /* @__PURE__ */ u2(
+                  "button",
+                  {
+                    class: "task-button",
+                    title: "精确编辑",
+                    onClick: () => handleEdit(block),
+                    children: "✎"
+                  }
+                )
+              ] })
+            ]
+          },
+          block.id + block.day
+        );
+      })
+    }
+  );
+}
+function buildTimelineDayColumns(dailyViewData) {
+  return dailyViewData.dateRangeDays.map((day) => {
+    const dayStr = day.format("YYYY-MM-DD");
+    return {
+      day: dayStr,
+      blocks: dailyViewData.blocksByDay[dayStr] || []
+    };
+  });
+}
+function buildTimelineTimeAxisRows(maxHours, hourHeight) {
+  return Array.from({ length: Math.max(0, maxHours) + 1 }, (_2, hour) => ({
+    hour,
+    label: hour > 0 && hour % 2 === 0 ? `${hour}:00` : "",
+    height: `${hourHeight}px`
+  }));
+}
+function TimelineDailyView({
+  zoomHandlers,
+  timeAxisWidth,
+  summaryCategoryHours,
+  totalSummaryHours,
+  dailyViewData,
+  categoriesConfig,
+  hourHeight,
+  maxHours,
+  colorMap,
+  progressOrder,
+  untrackedLabel,
+  onOpenRecordOrigin,
+  onUpdateTaskTime,
+  onOpenRecord,
+  onNotice,
+  onColumnClick
+}) {
+  const dayColumns = buildTimelineDayColumns(dailyViewData);
+  const timeAxisRows = buildTimelineTimeAxisRows(maxHours, hourHeight);
+  return /* @__PURE__ */ u2("div", { class: "timeline-view-wrapper", ...zoomHandlers, children: [
+    /* @__PURE__ */ u2("div", { class: "timeline-sticky-header", children: [
+      /* @__PURE__ */ u2("div", { class: "summary-progress-container", style: { flex: `0 0 ${timeAxisWidth}px` }, children: [
+        /* @__PURE__ */ u2("div", { class: "summary-title", children: "总结" }),
+        /* @__PURE__ */ u2("div", { class: "summary-content", children: totalSummaryHours > 0 && /* @__PURE__ */ u2(
+          ProgressBlock,
+          {
+            categoryHours: summaryCategoryHours,
+            order: progressOrder,
+            totalHours: totalSummaryHours,
+            colorMap,
+            untrackedLabel
+          }
+        ) })
+      ] }),
+      dayColumns.map(({ day, blocks }) => /* @__PURE__ */ u2(
+        DayColumnHeader,
+        {
+          day,
+          blocks,
+          categoriesConfig,
+          colorMap,
+          untrackedLabel,
+          progressOrder
+        },
+        day
+      ))
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "timeline-scrollable-body", children: [
+      /* @__PURE__ */ u2("div", { class: "time-axis", style: { flex: `0 0 ${timeAxisWidth}px` }, children: timeAxisRows.map((row) => /* @__PURE__ */ u2("div", { class: "time-axis-hour", style: { height: row.height }, children: row.label }, row.hour)) }),
+      dayColumns.map(({ day, blocks }) => /* @__PURE__ */ u2(
+        DayColumnBody,
+        {
+          onOpenRecordOrigin,
+          day,
+          blocks,
+          hourHeight,
+          categoriesConfig,
+          colorMap,
+          maxHours,
+          onUpdateTaskTime,
+          onOpenRecord,
+          onNotice,
+          onColumnClick
+        },
+        day
+      ))
+    ] })
+  ] });
+}
+function TimelineViewView(props) {
+  const {
+    timelineTasksCount,
+    isSummaryView,
+    summaryData,
+    colorMap,
+    progressOrder,
+    untrackedLabel,
+    zoomHandlers,
+    timeAxisWidth,
+    summaryCategoryHours,
+    totalSummaryHours,
+    dailyViewData,
+    categoriesConfig,
+    hourHeight,
+    maxHours,
+    onOpenRecordOrigin,
+    onUpdateTaskTime,
+    onOpenRecord,
+    onNotice,
+    onColumnClick
+  } = props;
+  if (timelineTasksCount === 0) {
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
+  }
+  if (isSummaryView) {
+    return /* @__PURE__ */ u2(
+      TimelineSummaryTable,
+      {
+        summaryData,
+        colorMap,
+        progressOrder,
+        untrackedLabel
+      }
+    );
+  }
+  if (!dailyViewData) {
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
+  }
+  return /* @__PURE__ */ u2(
+    TimelineDailyView,
+    {
+      zoomHandlers,
+      timeAxisWidth,
+      summaryCategoryHours,
+      totalSummaryHours,
+      dailyViewData,
+      categoriesConfig,
+      hourHeight,
+      maxHours,
+      colorMap,
+      progressOrder,
+      untrackedLabel,
+      onOpenRecordOrigin,
+      onUpdateTaskTime,
+      onOpenRecord,
+      onNotice,
+      onColumnClick
+    }
+  );
+}
+function localDate(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return null;
+  const y2 = date2.getFullYear();
+  const m2 = String(date2.getMonth() + 1).padStart(2, "0");
+  const d2 = String(date2.getDate()).padStart(2, "0");
+  return `${y2}-${m2}-${d2}`;
+}
+function localMinute(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return null;
+  return date2.getHours() * 60 + date2.getMinutes() + date2.getSeconds() / 60;
+}
+function displayText(task) {
+  return String(task.content || task.editableText || task.title || "").trim();
+}
+function processItemsToTimelineTasks(records) {
+  const byId = new Map(records.map((record) => [record.id, record]));
+  const timelineTasks = [];
+  for (const record of records) {
+    const session = asTaskSessionRecord(record);
+    if (!session) continue;
+    const task = byId.get(session.taskId);
+    if (!task || task.coreBlock !== "task") continue;
+    const startedMs = Date.parse(session.sessionStartedAt);
+    const endedMs = Date.parse(session.sessionEndedAt);
+    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs < startedMs) continue;
+    const actualStartDate = localDate(session.sessionStartedAt);
+    const startMinute = localMinute(session.sessionStartedAt);
+    if (!actualStartDate || startMinute == null) continue;
+    const duration2 = Number(session.sessionDurationMinutes);
+    if (!Number.isFinite(duration2) || duration2 < 0) continue;
+    const endMinute = startMinute + duration2;
+    const fileName = task.file?.basename || task.filename || "";
+    if (!fileName) continue;
+    timelineTasks.push({
+      ...task,
+      // A Timeline row represents an execution fact, so its identity is the Session identity.
+      id: session.id,
+      sessionRecordId: session.id,
+      taskRecordId: task.id,
+      date: actualStartDate,
+      doneDate: actualStartDate,
+      startTime: new Date(startedMs).toTimeString().slice(0, 5),
+      endTime: new Date(endedMs).toTimeString().slice(0, 5),
+      duration: duration2,
+      startMinute,
+      endMinute,
+      pureText: displayText(task),
+      fileName,
+      actualStartDate
+    });
+  }
+  return timelineTasks;
+}
+dayjs.extend(weekOfYear);
+dayjs.extend(isoWeek);
+dayjs.extend(isBetween);
+function resolveTimelineConfig(module2, injectedModel) {
+  if (injectedModel?.config) return injectedModel.config;
+  const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
+  const userConfig = module2?.viewConfig || {};
+  return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
+}
+function buildTimelineColorMap(config2) {
+  const colorMap = {};
+  for (const categoryName in config2.categories || {}) {
+    colorMap[categoryName] = config2.categories[categoryName].color;
+  }
+  colorMap[config2.UNTRACKED_LABEL] = "#9ca3af";
+  return colorMap;
+}
+function resolveTimelineTasks(items, records = items) {
+  const visibleTaskIds = new Set(items.filter((item) => item.coreBlock === "task").map((item) => item.id));
+  const timelineRecords = records.filter((record) => record.coreBlock === "task" && visibleTaskIds.has(record.id) || record.coreBlock === "task-session" && !!record.taskId && visibleTaskIds.has(record.taskId));
+  return processItemsToTimelineTasks(timelineRecords);
+}
+function buildTimelineSummaryData(args) {
+  if (!args.isSummaryView) return [];
+  const viewStart = dayjs(args.dateRange[0]);
+  const viewEnd = dayjs(args.dateRange[1]);
+  const tasksInRange = args.timelineTasks.filter((task) => dayjs(task.doneDate).isBetween(viewStart, viewEnd, "day", "[]"));
+  return buildMonthlyAndWeeklySummary(tasksInRange, args.config);
+}
+function buildTimelineRenderModel(args) {
+  const { items, records = items, module: module2, dateRange, currentView, injectedModel } = args;
+  const config2 = resolveTimelineConfig(module2, injectedModel?.config ? { config: injectedModel.config } : void 0);
+  const timelineTasks = injectedModel?.timelineTasks ?? resolveTimelineTasks(items, records);
+  const colorMap = buildTimelineColorMap(config2);
+  const isSummaryView = currentView === "年" || currentView === "季";
+  const summaryData = injectedModel?.summaryData ?? buildTimelineSummaryData({ timelineTasks, dateRange, config: config2, isSummaryView });
+  const summaryCategoryHours = injectedModel?.summaryCategoryHours ?? (isSummaryView ? {} : buildSummaryCategoryHours(timelineTasks, dateRange, config2) || {});
+  const dailyViewData = injectedModel?.dailyViewData ?? (isSummaryView ? null : buildDailyViewData(timelineTasks, dateRange));
+  const totalSummaryHours = Object.values(summaryCategoryHours).reduce((sum, hours) => sum + Number(hours || 0), 0);
+  return { config: config2, colorMap, timelineTasks, dailyViewData, isSummaryView, summaryData, summaryCategoryHours, totalSummaryHours };
+}
+const TIME_AXIS_WIDTH = 90;
+function TimelineView({
+  items,
+  dateRange,
+  module: module2,
+  currentView,
+  onOpenRecordOrigin,
+  onUpdateTaskTime,
+  onCreateFromTimeline,
+  onOpenRecord,
+  onNotice,
+  inputSettings,
+  records
+}) {
+  const inputBlocks = inputSettings?.blocks || [];
+  const renderModel = T$1(
+    () => buildTimelineRenderModel({ items, records, dateRange, module: module2, currentView }),
+    [items, records, dateRange, module2, currentView]
+  );
+  const { hourHeight, zoomHandlers } = useTimelineZoom({
+    defaultHeight: renderModel.config.defaultHourHeight
+  });
+  const handleColumnClick = q$1(
+    (day, e2) => {
+      onCreateFromTimeline?.({
+        day,
+        event: e2,
+        inputBlocks,
+        hourHeight,
+        dayBlocks: renderModel.dailyViewData?.blocksByDay[day] || []
+      });
+    },
+    [onCreateFromTimeline, inputBlocks, hourHeight, renderModel.dailyViewData]
+  );
+  return /* @__PURE__ */ u2(
+    TimelineViewView,
+    {
+      timelineTasksCount: renderModel.timelineTasks.length,
+      isSummaryView: renderModel.isSummaryView,
+      summaryData: renderModel.summaryData,
+      colorMap: renderModel.colorMap,
+      progressOrder: renderModel.config.progressOrder,
+      untrackedLabel: renderModel.config.UNTRACKED_LABEL,
+      zoomHandlers,
+      timeAxisWidth: TIME_AXIS_WIDTH,
+      summaryCategoryHours: renderModel.summaryCategoryHours,
+      totalSummaryHours: renderModel.totalSummaryHours,
+      dailyViewData: renderModel.dailyViewData,
+      categoriesConfig: renderModel.config.categories,
+      hourHeight,
+      maxHours: renderModel.config.MAX_HOURS_PER_DAY,
+      onOpenRecordOrigin,
+      onUpdateTaskTime,
+      onOpenRecord,
+      onNotice,
+      onColumnClick: handleColumnClick
+    }
+  );
+}
+function buildEventTimelineDisplayFields(module2) {
+  return normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
+}
+function buildEventTimelineGroupFields(module2) {
+  return normalizeViewGroupFields(module2.groupFields || []);
+}
+function buildEventTimelineViewConfig(module2) {
+  const viewConfig = module2.viewConfig || {};
+  return {
+    timeField: viewConfig.timeField || "date",
+    titleField: viewConfig.titleField || "title",
+    contentField: viewConfig.contentField || "content",
+    maxContentLength: Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160
+  };
+}
+function getEventTimelineItemTime(item, timeField) {
+  const raw = readField(item, timeField);
+  if (!raw) return null;
+  const parsed = dayjs(raw);
+  return parsed.isValid() ? parsed : null;
+}
+function filterEventTimelineItemsByDateRange(args) {
+  const { items, dateRange, timeField, injectedFilteredItems } = args;
+  if (injectedFilteredItems) return injectedFilteredItems;
+  return executeRecordQuery(items, {
+    date: { range: dateRange, field: timeField, mode: "strict", precision: "minute" },
+    sort: [{ field: timeField, dir: "asc" }]
+  }).items;
+}
+function buildEventTimelineGroupedTree(args) {
+  const { filteredItems, groupFields, goals = [] } = args;
+  if (!groupFields.length) return null;
+  return executeRecordQuery(filteredItems, {
+    groupBy: groupFields,
+    groupContext: { goals }
+  }).groupTree;
+}
+function cleanEventTimelineDisplayText(value, maxContentLength) {
+  const text2 = String(value ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+  if (!text2) return "";
+  const compact = text2.replace(/\s+/g, " ").trim();
+  if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
+  return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
+}
+function getEventTimelineTaskDisplayTitle(args) {
+  const { item, titleField, contentField: contentField2, maxContentLength } = args;
+  const fromContent = cleanEventTimelineDisplayText(readField(item, contentField2), maxContentLength);
+  if (fromContent) return fromContent;
+  return cleanEventTimelineDisplayText(readField(item, "content"), maxContentLength) || cleanEventTimelineDisplayText(readField(item, titleField), maxContentLength) || item.title || "";
+}
+function buildEventTimelineRenderModel(args) {
+  const { items, dateRange, module: module2, goals = [] } = args;
+  const displayFields = buildEventTimelineDisplayFields(module2);
+  const groupFields = buildEventTimelineGroupFields(module2);
+  const viewConfig = buildEventTimelineViewConfig(module2);
+  const filteredItems = filterEventTimelineItemsByDateRange({
+    items,
+    dateRange,
+    timeField: viewConfig.timeField
+  });
+  const groupedTree = buildEventTimelineGroupedTree({ filteredItems, groupFields, goals });
+  return { displayFields, groupFields, viewConfig, ...viewConfig, filteredItems, groupedTree };
+}
+function EventTimelineEventList(props) {
+  const {
+    items,
+    displayFields,
+    getItemTime,
+    titleField,
+    contentField: contentField2,
+    maxContentLength,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  } = props;
+  let lastDate = "";
+  return /* @__PURE__ */ u2(S, { children: items.map((item, index) => {
+    const t3 = getItemTime(item);
+    const dateLabel = t3 ? t3.format("YYYY-MM-DD") : "";
+    const timeLabel = t3 ? t3.format("HH:mm") : "";
+    const showDate = dateLabel !== lastDate;
+    if (showDate) lastDate = dateLabel;
+    const titleForKey = readField(item, titleField) || readField(item, "title") || "";
+    const taskDisplayTitle = item.coreBlock === "task" ? getEventTimelineTaskDisplayTitle({ item, titleField, contentField: contentField2, maxContentLength }) : "";
+    return /* @__PURE__ */ u2("div", { class: `et-event ${index === 0 ? "et-event--first" : ""} ${index === items.length - 1 ? "et-event--last" : ""}`, children: [
+      /* @__PURE__ */ u2("div", { class: "et-event-date", children: showDate && t3 && /* @__PURE__ */ u2("div", { class: "et-date-label", children: dateLabel }) }),
+      /* @__PURE__ */ u2("div", { class: "et-line", children: /* @__PURE__ */ u2("div", { class: "et-dot" }) }),
+      /* @__PURE__ */ u2("div", { class: "et-time-label", children: t3 ? timeLabel : "" }),
+      /* @__PURE__ */ u2("div", { class: "et-event-content", children: item.coreBlock === "task" ? /* @__PURE__ */ u2(
+        TaskRow,
+        {
+          item,
+          onMarkDone: (id) => onMarkDone?.(id),
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          timerService,
+          timer: timers.find((timer) => timer.taskId === item.id),
+          allThemes,
+          displayTitle: taskDisplayTitle,
+          showFields: [],
+          onOpenRecord
+        }
+      ) : /* @__PURE__ */ u2(
+        BlockItem,
+        {
+          item,
+          fields: displayFields,
+          isNarrow: false,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          messageRenderPort,
+          allThemes,
+          onOpenRecord
+        }
+      ) })
+    ] }, `${dateLabel}-${timeLabel}-${titleForKey}-${index}`);
+  }) });
+}
+function EventTimelineViewView(props) {
+  const {
+    filteredItems,
+    groupedTree,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    displayFields,
+    getItemTime,
+    titleField,
+    contentField: contentField2,
+    maxContentLength,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  } = props;
+  const renderEventList = (items) => /* @__PURE__ */ u2(
+    EventTimelineEventList,
+    {
+      items,
+      displayFields,
+      getItemTime,
+      titleField,
+      contentField: contentField2,
+      maxContentLength,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      messageRenderPort,
+      onMarkDone,
+      timerService,
+      timers,
+      allThemes,
+      onOpenRecord
+    }
+  );
+  if (filteredItems.length === 0) {
+    return /* @__PURE__ */ u2("div", { class: "event-timeline-empty", children: "当前时间范围内没有事件记录。" });
+  }
+  if (!groupedTree) {
+    return /* @__PURE__ */ u2("div", { class: "event-timeline-view", children: /* @__PURE__ */ u2("div", { class: "et-ungrouped", children: renderEventList(filteredItems) }) });
+  }
+  return /* @__PURE__ */ u2(
+    GroupedContainer,
+    {
+      nodes: groupedTree,
+      classNames: {
+        root: "event-timeline-view",
+        group: "et-group",
+        title: "et-group-title",
+        content: "et-group-content",
+        toggleIcon: "et-group-toggle-icon",
+        label: "et-group-label"
+      },
+      renderLeaf: (leafItems) => renderEventList(leafItems)
+    }
+  );
+}
+function EventTimelineView(props) {
+  const {
+    items,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    dateRange,
+    module: module2,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    goals = [],
+    messageRenderPort,
+    onOpenRecord
+  } = props;
+  const renderModel = T$1(
+    () => buildEventTimelineRenderModel({
+      items,
+      dateRange,
+      module: module2,
+      goals
+    }),
+    [items, dateRange, module2, goals]
+  );
+  const readItemTime = T$1(
+    () => (item) => getEventTimelineItemTime(item, renderModel.viewConfig.timeField),
+    [renderModel.viewConfig.timeField]
+  );
+  return /* @__PURE__ */ u2(
+    EventTimelineViewView,
+    {
+      filteredItems: renderModel.filteredItems,
+      groupedTree: renderModel.groupedTree,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      displayFields: renderModel.displayFields,
+      getItemTime: readItemTime,
+      titleField: renderModel.viewConfig.titleField,
+      contentField: renderModel.viewConfig.contentField,
+      maxContentLength: renderModel.viewConfig.maxContentLength,
+      messageRenderPort,
+      onMarkDone,
+      timerService,
+      timers,
+      allThemes,
+      onOpenRecord
+    }
+  );
+}
+function getThemeLeafLabel(themePath) {
+  if (!themePath || themePath === "__default__") return "未分类";
+  const segments = parsePath(themePath);
+  const leaf2 = segments[segments.length - 1];
+  return leaf2?.name || themePath;
+}
+function getThemeGroupTitle(themePath) {
+  if (!themePath || themePath === "__default__") return "未分类";
+  const segments = parsePath(themePath);
+  return segments[0]?.name || themePath;
+}
+function filterGoalHeatmapGroups(groups) {
+  return (groups || []).filter((group) => group && Array.isArray(group.entries) && group.entries.length > 0);
+}
+function normalizeHeatmapBlockId(params) {
+  const { candidate, inputSettings, configuredSourceBlockId } = params;
+  const value = String(candidate || "").trim();
+  if (!value) return "";
+  const byId = inputSettings.blocks.find((block) => block.id === value);
+  if (byId) return byId.id;
+  const byCore = inputSettings.blocks.find((block) => block.coreBlockId === value);
+  if (byCore) return byCore.id;
+  const byCategory = inputSettings.blocks.find((block) => block.categoryKey === value || block.name === value);
+  if (byCategory) return byCategory.id;
+  if (configuredSourceBlockId && value === configuredSourceBlockId) {
+    const habit = inputSettings.blocks.find((block) => block.coreBlockId === "core.habit" || block.categoryKey === "打卡" || block.name === "打卡");
+    if (habit) return habit.id;
+  }
+  return value;
+}
+function inferHeatmapBlockIdByTheme(items) {
+  const result = /* @__PURE__ */ new Map();
+  const counts = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    const themePath = getItemThemePath(item);
+    const themeKey = themePath || "__default__";
+    const blockId = typeof item?.templateId === "string" && item.templateId.trim().length > 0 ? item.templateId : typeof item?.categoryKey === "string" && item.categoryKey.trim().length > 0 ? item.categoryKey : "";
+    if (!blockId) continue;
+    if (!counts.has(themeKey)) counts.set(themeKey, /* @__PURE__ */ new Map());
+    const themeCounts = counts.get(themeKey);
+    themeCounts.set(blockId, (themeCounts.get(blockId) || 0) + 1);
+  }
+  counts.forEach((themeCounts, themeKey) => {
+    let bestBlockId = "";
+    let bestCount = -1;
+    themeCounts.forEach((count, blockId) => {
+      if (count > bestCount) {
+        bestCount = count;
+        bestBlockId = blockId;
+      }
+    });
+    if (bestBlockId) result.set(themeKey, bestBlockId);
+  });
+  return result;
+}
+function resolveHeatmapCreateBlockId(params) {
+  const { themePath, item, sourceBlockId, heatmapSourceBlockId, inferredBlockIdByTheme, normalizeBlockId } = params;
+  const rowBlock = normalizeBlockId(sourceBlockId);
+  const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
+  return rowBlock || normalizeBlockId(heatmapSourceBlockId) || normalizeBlockId(itemBlock) || normalizeBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeBlockId(inferredBlockIdByTheme.get("__default__")) || "";
+}
+function buildDayThemeGroups(params) {
+  const { themesToTrack, dataByThemeAndDate } = params;
+  const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
+  const groups = [];
+  const groupMap = /* @__PURE__ */ new Map();
+  themesToDisplay.forEach((themePath) => {
+    const title = getThemeGroupTitle(themePath);
+    const label = getThemeLeafLabel(themePath);
+    const entry = {
+      themePath,
+      label,
+      dataForTheme: dataByThemeAndDate.get(themePath) || /* @__PURE__ */ new Map()
+    };
+    const existingGroup = groupMap.get(title);
+    if (existingGroup) {
+      existingGroup.entries.push(entry);
+      return;
+    }
+    const newGroup = { title, entries: [entry] };
+    groupMap.set(title, newGroup);
+    groups.push(newGroup);
+  });
+  return groups;
+}
+function createHeatmapPresetContext(entry) {
+  return {
+    sourceBlockId: entry.sourceBlockId,
+    goalId: entry.goalId,
+    templateId: entry.templateId,
+    templateVariantId: entry.templateVariantId,
+    ratingOptions: entry.ratingOptions
+  };
+}
+function generateCellTooltip(date2, items, displayCount = 0, levelCount = 0, wasEdited = false) {
+  if (!items || items.length === 0) {
+    return `📅 ${date2}
+无记录`;
+  }
+  const latestItem = items[items.length - 1];
+  return [
+    `📅 ${date2}`,
+    `👆 打卡次数: ${displayCount}`,
+    levelCount !== displayCount ? `🏆 等级次数: ${levelCount}` : "",
+    wasEdited ? `✏️ 包含手动编辑` : "",
+    latestItem.rating !== void 0 ? `⭐ 最后评分: ${latestItem.rating}` : "",
+    latestItem.content ? `💭 最后内容: ${latestItem.content}` : "",
+    "",
+    "💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增",
+    items.length === 1 ? "⌨️ Ctrl/⌘+点击：打开该条记录原文" : ""
+  ].filter(Boolean).join("\n");
+}
+function getVisualValue(items, ratingMapping) {
+  return getLatestHeatmapVisualValue(items, ratingMapping);
+}
+function HeatmapCell({
+  date: date2,
+  items,
+  config: config2,
+  ratingMapping,
+  resolveResourcePath,
+  onCellClick,
+  onOpenRecordOrigin,
+  highlightToday = true,
+  emptyLabel
+}) {
+  const today = dayjs().format("YYYY-MM-DD");
+  const isToday = highlightToday && date2 === today;
+  let cellContent = "";
+  let cellStyle = {};
+  const displayCount = items ? items.reduce((sum, i2) => sum + getEffectiveDisplayCount(i2), 0) : 0;
+  const levelCount = items ? items.reduce((sum, i2) => sum + getEffectiveLevelCount(i2), 0) : 0;
+  const wasEdited = items ? items.some((i2) => i2.manuallyEdited) : false;
+  const visualValue = getVisualValue(items || [], ratingMapping);
+  const item = items && items.length > 0 ? items[items.length - 1] : void 0;
+  if (visualValue) {
+    if (isHexColor(visualValue)) {
+      cellStyle.backgroundColor = visualValue;
+    } else if (isImagePath(visualValue)) {
+      const imageUrl = resolveResourcePath?.(visualValue) || visualValue;
+      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-image", children: /* @__PURE__ */ u2("img", { src: imageUrl, alt: "", class: "heatmap-cell-image" }) });
+    } else {
+      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-text", children: /* @__PURE__ */ u2("span", { class: "visual-content", children: visualValue }) });
+    }
+  } else {
+    if (displayCount > 0) {
+      const sizeClass = displayCount > 99 ? "large" : displayCount > 9 ? "medium" : "small";
+      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-count", children: /* @__PURE__ */ u2("span", { class: `pure-count ${sizeClass}`, children: displayCount > 999 ? "999+" : displayCount }) });
+    } else if (emptyLabel) {
+      cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-empty-label", children: /* @__PURE__ */ u2("span", { class: "empty-label-text", children: emptyLabel }) });
+    }
+  }
+  const title = generateCellTooltip(date2, items, displayCount, levelCount, wasEdited);
+  const countLevelClass = displayCount > 1 ? ` heatmap-count-level-${Math.min(displayCount, 5)}` : "";
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: `heatmap-cell ${isToday ? "current-day" : ""} ${item ? "has-data" : "empty"}${countLevelClass}`,
+      style: cellStyle,
+      title,
+      role: "button",
+      tabIndex: 0,
+      onClick: (event) => {
+        if (items?.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
+          stopInteractionEvent(event);
+          void onOpenRecordOrigin(items[0]);
+          return;
+        }
+        onCellClick(date2, items);
+      },
+      onKeyDown: (event) => {
+        if (!isKeyboardActivation(event)) return;
+        stopInteractionEvent(event);
+        if (items?.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
+          void onOpenRecordOrigin(items[0]);
+          return;
+        }
+        onCellClick(date2, items);
+      },
+      children: /* @__PURE__ */ u2("div", { class: "heatmap-cell-content", children: cellContent })
+    }
+  );
+}
+function HeatmapDayView({
+  dayDateStr,
+  goalGroupsToDisplay,
+  themesToTrack,
+  dataByThemeAndDate,
+  config: config2,
+  resolveResourcePath,
+  onOpenRecordOrigin,
+  onCellClick,
+  resolveCellRatingMapping
+}) {
+  if (goalGroupsToDisplay.length > 0) {
+    return /* @__PURE__ */ u2("div", { class: "heatmap-goal-day-view", children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section heatmap-day-section", children: [
+      /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
+        /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: goalGroup.label }),
+        /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
+          goalGroup.entries.length,
+          " 个打卡 · ",
+          goalGroup.count,
+          " 条记录"
+        ] })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: goalGroup.entries.map((entry) => {
+        const presetContext = createHeatmapPresetContext(entry);
+        const themeRatingMapping = resolveCellRatingMapping(entry.themePath, presetContext);
+        const dayItems = entry.dataForTheme.get(dayDateStr);
+        return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", title: `${goalGroup.label} · ${entry.label} · ${entry.themePath}`, children: /* @__PURE__ */ u2(
+          HeatmapCell,
+          {
+            date: dayDateStr,
+            items: dayItems,
+            config: config2,
+            ratingMapping: themeRatingMapping,
+            resolveResourcePath,
+            onOpenRecordOrigin,
+            highlightToday: false,
+            emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
+            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, presetContext)
+          }
+        ) }, `${goalGroup.goalPath}:${entry.presetKey || entry.themePath}`);
+      }) })
+    ] }, goalGroup.goalPath)) });
+  }
+  const dayGroups = buildDayThemeGroups({ themesToTrack, dataByThemeAndDate });
+  return /* @__PURE__ */ u2("div", { class: "heatmap-day-view", children: dayGroups.map((group) => /* @__PURE__ */ u2("section", { class: "heatmap-day-section", children: [
+    /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: group.title }),
+    /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: group.entries.map((entry) => {
+      const themeRatingMapping = resolveCellRatingMapping(entry.themePath);
+      const dayItems = entry.dataForTheme.get(dayDateStr);
+      return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", children: /* @__PURE__ */ u2(
+        HeatmapCell,
+        {
+          date: dayDateStr,
+          items: dayItems,
+          config: config2,
+          ratingMapping: themeRatingMapping,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          highlightToday: false,
+          emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
+          onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath)
+        }
+      ) }, entry.themePath);
+    }) })
+  ] }, group.title)) });
+}
+function HeatmapThemeGroup({
+  normalizedCurrentView,
+  theme,
+  dataForTheme,
+  dateRange,
+  config: config2,
+  resolveResourcePath,
+  onOpenRecordOrigin,
+  verticalLayouts,
+  collapsedThemes,
+  headerRefs,
+  goalPath,
+  keyPrefix = "",
+  entryKey,
+  label,
+  presetContext,
+  onToggleThemeCollapsed,
+  onCellClick,
+  resolveCellRatingMapping
+}) {
+  const rowKey = `${keyPrefix}${entryKey || theme}`;
+  const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
+  const isVertical = normalizedCurrentView === "周" ? false : verticalLayouts.has(rowKey);
+  const isCollapsed = normalizedCurrentView === "年" && collapsedThemes.has(rowKey);
+  const leafLabel2 = label || getThemeLeafLabel(theme);
+  const renderMonthGrid = (monthDate) => {
+    const startOfMonth = monthDate.startOf("month");
+    const endOfMonth = monthDate.endOf("month");
+    const firstWeekday = startOfMonth.isoWeekday();
+    const themeRatingMapping = resolveCellRatingMapping(theme, presetContext);
+    const days = [];
+    for (let i2 = 1; i2 < firstWeekday; i2++) {
+      days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
+    }
+    for (let i2 = 1; i2 <= endOfMonth.date(); i2++) {
+      const dateStr = startOfMonth.clone().date(i2).format("YYYY-MM-DD");
+      const dayItems = dataForTheme.get(dateStr);
+      days.push(
+        /* @__PURE__ */ u2(
+          HeatmapCell,
+          {
+            date: dateStr,
+            items: dayItems,
+            config: config2,
+            ratingMapping: themeRatingMapping,
+            resolveResourcePath,
+            onOpenRecordOrigin,
+            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
+          },
+          dateStr
+        )
+      );
+    }
+    return /* @__PURE__ */ u2("div", { class: "month-section", children: [
+      /* @__PURE__ */ u2("div", { class: "month-label", children: monthDate.format("M月") }),
+      /* @__PURE__ */ u2("div", { class: "heatmap-row calendar", children: days })
+    ] }, monthDate.format("YYYY-MM"));
+  };
+  const renderHeaderCells = () => {
+    const start2 = dayjs(dateRange[0]);
+    const end2 = dayjs(dateRange[1]);
+    const themeRatingMapping = resolveCellRatingMapping(theme, presetContext);
+    switch (normalizedCurrentView) {
+      case "天":
+      case "日":
+      case "day": {
+        const dateStr = start2.format("YYYY-MM-DD");
+        const dayItems = dataForTheme.get(dateStr);
+        return [
+          /* @__PURE__ */ u2(
+            HeatmapCell,
+            {
+              date: dateStr,
+              items: dayItems,
+              config: config2,
+              ratingMapping: themeRatingMapping,
+              resolveResourcePath,
+              onOpenRecordOrigin,
+              onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
+            },
+            dateStr
+          )
+        ];
+      }
+      case "周":
+      case "月": {
+        const cells = [];
+        let currentDate = normalizedCurrentView === "周" ? start2.startOf("isoWeek") : start2.startOf("month");
+        const endDate = normalizedCurrentView === "周" ? start2.endOf("isoWeek") : start2.endOf("month");
+        while (currentDate.isSameOrBefore(endDate, "day")) {
+          const dateStr = currentDate.format("YYYY-MM-DD");
+          const dayItems = dataForTheme.get(dateStr);
+          cells.push(
+            /* @__PURE__ */ u2(
+              HeatmapCell,
+              {
+                date: dateStr,
+                items: dayItems,
+                config: config2,
+                ratingMapping: themeRatingMapping,
+                resolveResourcePath,
+                onOpenRecordOrigin,
+                onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
+              },
+              `${theme}-${dateStr}`
+            )
+          );
+          currentDate = currentDate.add(1, "day");
+        }
+        return cells;
+      }
+      case "年":
+      case "季": {
+        const months = [];
+        let currentMonth = start2.clone().startOf("month");
+        while (currentMonth.isSameOrBefore(end2, "month")) {
+          months.push(renderMonthGrid(currentMonth));
+          currentMonth = currentMonth.add(1, "month");
+        }
+        return months;
+      }
+      default:
+        return [];
+    }
+  };
+  return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${normalizedCurrentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
+    "div",
+    {
+      class: `heatmap-theme-header ${isRowLayout ? "row-inline-layout week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
+      "data-theme": rowKey,
+      ref: (el) => {
+        if (el && theme !== "__default__") {
+          headerRefs.current.set(rowKey, el);
+        }
+      },
+      children: [
+        theme !== "__default__" && /* @__PURE__ */ u2(
+          "div",
+          {
+            class: `heatmap-header-info ${normalizedCurrentView === "年" ? "is-clickable" : ""}`,
+            role: normalizedCurrentView === "年" ? "button" : void 0,
+            tabIndex: normalizedCurrentView === "年" ? 0 : void 0,
+            onClick: () => {
+              if (normalizedCurrentView === "年") onToggleThemeCollapsed(rowKey);
+            },
+            onKeyDown: (event) => {
+              if (normalizedCurrentView !== "年" || !isKeyboardActivation(event)) return;
+              stopInteractionEvent(event);
+              onToggleThemeCollapsed(rowKey);
+            },
+            children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
+              normalizedCurrentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
+              /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel2 })
+            ] })
+          }
+        ),
+        !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells() })
+      ]
+    }
+  ) }, rowKey);
+}
+function HeatmapViewContent({
+  isDayView,
+  normalizedCurrentView,
+  dateRangeStart,
+  dateRange,
+  config: config2,
+  resolveResourcePath,
+  onOpenRecordOrigin,
+  goalGroupsToDisplay,
+  themesToTrack,
+  dataByThemeAndDate,
+  verticalLayouts,
+  collapsedThemes,
+  headerRefs,
+  onToggleThemeCollapsed,
+  onCellClick,
+  resolveCellRatingMapping
+}) {
+  const renderThemeGroup = (params) => /* @__PURE__ */ u2(
+    HeatmapThemeGroup,
+    {
+      ...params,
+      normalizedCurrentView,
+      dateRange,
+      config: config2,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      verticalLayouts,
+      collapsedThemes,
+      headerRefs,
+      onToggleThemeCollapsed,
+      onCellClick,
+      resolveCellRatingMapping
+    }
+  );
+  if (isDayView) {
+    return /* @__PURE__ */ u2(
+      HeatmapDayView,
+      {
+        dayDateStr: dateRangeStart,
+        goalGroupsToDisplay,
+        themesToTrack,
+        dataByThemeAndDate,
+        config: config2,
+        resolveResourcePath,
+        onOpenRecordOrigin,
+        onCellClick,
+        resolveCellRatingMapping
+      }
+    );
+  }
+  const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
+  const wrapperClass = isRowLayout ? "layout-row" : "layout-grid";
+  if (goalGroupsToDisplay.length > 0) {
+    return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper heatmap-goal-view-wrapper ${wrapperClass}`, children: goalGroupsToDisplay.map((goalGroup) => /* @__PURE__ */ u2("section", { class: "heatmap-goal-section", children: [
+      /* @__PURE__ */ u2("div", { class: "heatmap-goal-title-row", children: [
+        /* @__PURE__ */ u2("h3", { class: "heatmap-goal-title", children: goalGroup.label }),
+        /* @__PURE__ */ u2("span", { class: "heatmap-goal-meta", children: [
+          goalGroup.entries.length,
+          " 个打卡 · ",
+          goalGroup.count,
+          " 条记录"
+        ] })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "heatmap-goal-theme-list", children: goalGroup.entries.map((entry) => renderThemeGroup({
+        theme: entry.themePath,
+        dataForTheme: entry.dataForTheme,
+        goalPath: goalGroup.goalPath,
+        keyPrefix: `${goalGroup.goalPath}\0`,
+        entryKey: entry.presetKey || entry.themePath,
+        label: entry.label,
+        presetContext: createHeatmapPresetContext(entry)
+      })) })
+    ] }, goalGroup.goalPath)) });
+  }
+  const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
+  return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme) => renderThemeGroup({
+    theme,
+    dataForTheme: dataByThemeAndDate.get(theme) || /* @__PURE__ */ new Map()
+  })) });
+}
+function shouldSkipHeatmapVerticalLayout(theme, normalizedCurrentView) {
+  if (!theme || theme === "__default__") return true;
+  if (["年", "季"].includes(normalizedCurrentView)) return true;
+  return normalizedCurrentView === "周";
+}
+function resolveHeatmapVerticalLayout(args) {
+  const { theme, normalizedCurrentView, isDayView, containerWidth } = args;
+  if (shouldSkipHeatmapVerticalLayout(theme, normalizedCurrentView)) return null;
+  const threshold = isDayView ? 320 : 600;
+  return containerWidth < threshold;
+}
+function applyHeatmapVerticalLayout(prev2, theme, needsVertical) {
+  const next2 = new Set(prev2);
+  if (needsVertical) next2.add(theme);
+  else next2.delete(theme);
+  return next2;
+}
+function toggleHeatmapCollapsedTheme(prev2, theme) {
+  const next2 = new Set(prev2);
+  if (next2.has(theme)) next2.delete(theme);
+  else next2.add(theme);
+  return next2;
+}
+function themeLeaf(path) {
+  const value = String(path || "").trim();
+  if (!value || value === "__default__") return "未设置主题";
+  const parts = value.split("/").map((part) => part.trim()).filter(Boolean);
+  return parts[parts.length - 1] || value;
+}
+function firstText(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const text2 = firstText(item);
+      if (text2) return text2;
+    }
+    return "";
+  }
+  if (value == null) return "";
+  return String(value).trim();
+}
+function readExtraText(item, key) {
+  return firstText(item.extra?.[key]);
+}
+function itemTemplateId(item) {
+  return firstText(item.templateId) || readExtraText(item, "模板ID") || readExtraText(item, "templateId");
+}
+function itemTemplateVariantId(item) {
+  const heatmapItem = item;
+  return firstText(heatmapItem.templateVariantId) || firstText(heatmapItem.goalTemplateVariantId) || readExtraText(item, "templateVariantId") || readExtraText(item, "goalTemplateVariantId") || readExtraText(item, "预设ID");
+}
+function itemCoreBlock(item) {
+  const raw = firstText(item.coreBlock) || readExtraText(item, "核心Block") || firstText(item.categoryKey) || "";
+  if (raw === "habit" || raw === "打卡") return "core.habit";
+  if (raw === "task" || raw === "任务") return "core.task";
+  if (raw.startsWith("core.")) return raw;
+  return raw;
+}
+function extractRatingOptions(template) {
+  const fields = Array.isArray(template?.fields) ? template.fields : [];
+  const ratingField = fields.find((field) => field?.type === "rating" || field?.semantic === "rating" || field?.key === "评分" || field?.label === "评分");
+  return Array.isArray(ratingField?.options) ? ratingField.options.map((option) => ({ value: option?.value, label: option?.label })).filter((option) => option.value !== void 0 || option.label !== void 0) : [];
+}
+function buildPresetLookups(goalSettings, goals) {
+  const goalPathById = /* @__PURE__ */ new Map();
+  const goalLabelById = /* @__PURE__ */ new Map();
+  for (const goal of goals || []) {
+    const normalized2 = splitGoalPath(goal.goalPath || goal.title || goal.id).goalPath || goal.goalPath || goal.title || goal.id;
+    goalPathById.set(goal.id, normalized2);
+    goalLabelById.set(goal.id, goal.title || splitGoalPath(normalized2).leafGoal || normalized2);
+  }
+  const byTemplateId = /* @__PURE__ */ new Map();
+  const byGoalBlockVariant = /* @__PURE__ */ new Map();
+  const byGoalBlockTheme = /* @__PURE__ */ new Map();
+  const allPresets = [];
+  for (const [presetOriginalIndex, raw] of (goalSettings?.goalTemplates || []).entries()) {
+    const template = raw;
+    const id = firstText(template.id);
+    const goalId = firstText(template.goalId);
+    const coreBlockId = firstText(template.coreBlockId) || firstText(template.blockId);
+    const variantId = firstText(template.variantId) || "default";
+    const defaults = template.defaultValues || {};
+    const goalPath = goalPathById.get(goalId);
+    if (!goalId || !goalPath) continue;
+    const goalLabel = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
+    const rawThemePath = firstText(defaults.themePath);
+    const themePath = rawThemePath && !rawThemePath.includes("{{") ? rawThemePath : firstText(defaults["主题"]);
+    const label = firstText(template.name) || themeLeaf(themePath) || variantId;
+    const key = id || `${goalId}:${coreBlockId}:${variantId}`;
+    const ratingOptions = extractRatingOptions(template);
+    const presetSortOrder = Number.isFinite(Number(template.sortOrder)) ? Number(template.sortOrder) : presetOriginalIndex;
+    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
+    allPresets.push(meta);
+    if (id) byTemplateId.set(id, meta);
+    if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\0${coreBlockId}\0${variantId}`, meta);
+    if (goalId && coreBlockId && themePath) byGoalBlockTheme.set(`${goalId}\0${coreBlockId}\0${themePath}`, meta);
+  }
+  return { byTemplateId, byGoalBlockVariant, byGoalBlockTheme, goalPathById, goalLabelById, allPresets };
+}
+function dateKeyOf(item) {
+  return String(item.date || "").trim();
+}
+function buildHeatmapViewModel(params) {
+  const { items, module: module2, inputSettings, goals = [], goalSettings } = params;
+  const config2 = module2.viewConfig || {};
+  const themesByPath = buildThemesByPathMap(inputSettings.themes);
+  const inferredThemePaths = (() => {
+    const set2 = /* @__PURE__ */ new Set();
+    for (const it of items) {
+      const themePath = getItemThemePath(it);
+      if (themePath) {
+        set2.add(themePath);
+      }
+    }
+    return Array.from(set2);
+  })();
+  const themesToTrack = Array.isArray(config2.themePaths) && config2.themePaths.length > 0 ? config2.themePaths.map((value) => String(value)).filter(Boolean) : inferredThemePaths;
+  const dataByThemeAndDate = buildThemeDataMap(items, themesToTrack);
+  const trackedThemeSet = new Set(themesToTrack || []);
+  const filterByTheme = trackedThemeSet.size > 0;
+  const goalMap = /* @__PURE__ */ new Map();
+  const lookups = buildPresetLookups(goalSettings, goals);
+  const goalOrder = createGoalOrderIndex(goals);
+  function ensureGoalGroup(goalPath, label) {
+    const normalizedGoalPath = goalPath || UNASSIGNED_GOAL_KEY;
+    let goalGroup = goalMap.get(normalizedGoalPath);
+    if (!goalGroup) {
+      goalGroup = { goalPath: normalizedGoalPath, label: label || normalizedGoalPath, count: 0, entries: [] };
+      goalMap.set(normalizedGoalPath, goalGroup);
+    }
+    return goalGroup;
+  }
+  function ensurePresetEntry(goalGroup, meta) {
+    let entry = goalGroup.entries.find((candidate) => candidate.presetKey === meta.presetKey);
+    if (!entry) {
+      entry = {
+        presetKey: meta.presetKey,
+        templateId: meta.templateId,
+        templateVariantId: meta.templateVariantId,
+        sourceBlockId: meta.sourceBlockId,
+        goalId: meta.goalId,
+        ratingOptions: meta.ratingOptions || [],
+        themePath: meta.themePath || "__default__",
+        label: meta.label || themeLeaf(meta.themePath),
+        presetSortOrder: meta.presetSortOrder,
+        presetOriginalIndex: meta.presetOriginalIndex,
+        count: 0,
+        dataForTheme: /* @__PURE__ */ new Map()
+      };
+      goalGroup.entries.push(entry);
+    }
+    if (meta.templateId && !entry.templateId) entry.templateId = meta.templateId;
+    if (meta.templateVariantId && !entry.templateVariantId) entry.templateVariantId = meta.templateVariantId;
+    if (meta.sourceBlockId && !entry.sourceBlockId) entry.sourceBlockId = meta.sourceBlockId;
+    if (meta.goalId && !entry.goalId) entry.goalId = meta.goalId;
+    if (meta.ratingOptions?.length && (!entry.ratingOptions || entry.ratingOptions.length === 0)) entry.ratingOptions = meta.ratingOptions;
+    if (meta.presetSortOrder !== void 0 && entry.presetSortOrder === void 0) entry.presetSortOrder = meta.presetSortOrder;
+    if (meta.presetOriginalIndex !== void 0 && entry.presetOriginalIndex === void 0) entry.presetOriginalIndex = meta.presetOriginalIndex;
+    return entry;
+  }
+  for (const preset of lookups.allPresets) {
+    if (preset.coreBlockId !== "core.habit") continue;
+    const goalGroup = ensureGoalGroup(preset.goalPath, preset.goalLabel);
+    ensurePresetEntry(goalGroup, {
+      presetKey: preset.key,
+      templateId: preset.id,
+      templateVariantId: preset.variantId,
+      sourceBlockId: preset.coreBlockId,
+      goalId: preset.goalId,
+      ratingOptions: preset.ratingOptions,
+      presetSortOrder: preset.presetSortOrder,
+      presetOriginalIndex: preset.presetOriginalIndex,
+      themePath: preset.themePath || "__default__",
+      label: preset.label || themeLeaf(preset.themePath)
+    });
+  }
+  function resolvePresetMeta(item) {
+    const templateId = itemTemplateId(item);
+    if (templateId) {
+      const direct = lookups.byTemplateId.get(templateId);
+      if (direct) return direct;
+    }
+    const goalId = firstText(item.goalId) || readExtraText(item, "目标ID");
+    const coreBlockId = itemCoreBlock(item);
+    const variantId = itemTemplateVariantId(item) || "default";
+    const themePath = getItemThemePath(item);
+    if (goalId && coreBlockId) {
+      return lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0${variantId}`) || (themePath ? lookups.byGoalBlockTheme.get(`${goalId}\0${coreBlockId}\0${themePath}`) : null) || lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0default`) || null;
+    }
+    return null;
+  }
+  for (const item of items || []) {
+    const date2 = dateKeyOf(item);
+    if (!date2) continue;
+    const preset = resolvePresetMeta(item);
+    const themePath = preset?.themePath || getItemThemePath(item) || "__default__";
+    if (!preset && filterByTheme && themePath !== "__default__" && !trackedThemeSet.has(themePath)) continue;
+    const explicitGoalPath = getItemGoalKey(item, goals);
+    const goalPath = preset?.goalPath || (explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : UNASSIGNED_GOAL_KEY);
+    const goalLabel = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
+    const goalGroup = ensureGoalGroup(goalPath, goalLabel);
+    goalGroup.count += 1;
+    const presetKey = preset?.key || `${goalPath}\0${themePath}\0${itemCoreBlock(item) || "habit"}`;
+    const label = preset?.label || themeLeaf(themePath);
+    const entry = ensurePresetEntry(goalGroup, {
+      presetKey,
+      templateId: preset?.id,
+      templateVariantId: preset?.variantId,
+      sourceBlockId: preset?.coreBlockId,
+      goalId: preset?.goalId,
+      ratingOptions: preset?.ratingOptions,
+      presetSortOrder: preset?.presetSortOrder,
+      presetOriginalIndex: preset?.presetOriginalIndex,
+      themePath,
+      label
+    });
+    entry.count += 1;
+    const dayItems = entry.dataForTheme.get(date2) || [];
+    entry.dataForTheme.set(date2, [...dayItems, item]);
+  }
+  const compareEntriesByPresetOrder = (a2, b2) => {
+    const aHasPresetOrder = a2.presetSortOrder !== void 0 || a2.presetOriginalIndex !== void 0 || Boolean(a2.templateId);
+    const bHasPresetOrder = b2.presetSortOrder !== void 0 || b2.presetOriginalIndex !== void 0 || Boolean(b2.templateId);
+    if (aHasPresetOrder !== bHasPresetOrder) return aHasPresetOrder ? -1 : 1;
+    const byPresetSort = (a2.presetSortOrder ?? Number.MAX_SAFE_INTEGER) - (b2.presetSortOrder ?? Number.MAX_SAFE_INTEGER);
+    if (byPresetSort !== 0) return byPresetSort;
+    const byOriginal = (a2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER) - (b2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER);
+    if (byOriginal !== 0) return byOriginal;
+    return a2.label.localeCompare(b2.label, "zh-CN");
+  };
+  const goalGroups = Array.from(goalMap.values()).map((group) => ({
+    ...group,
+    entries: group.entries.sort(compareEntriesByPresetOrder)
+  })).sort((a2, b2) => goalOrder.compareGoalPaths(a2.goalPath, b2.goalPath));
+  return { themesByPath, themesToTrack, dataByThemeAndDate, goalGroups };
+}
+function HeatmapView({
+  items,
+  resolveResourcePath,
+  dateRange,
+  module: module2,
+  currentView,
+  inputSettings,
+  onOpenHeatmapCreate,
+  onOpenCheckinManager,
+  onOpenRecordOrigin,
+  onNotice,
+  goals = [],
+  goalSettings
+}) {
+  const config2 = T$1(
+    () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module2.viewConfig }),
+    [module2.viewConfig]
+  );
+  const ratingMappingsCache = T$1(() => new RatingMappingCache(), []);
+  const normalizedCurrentView = currentView === "日" || currentView === "day" ? "天" : currentView;
+  const isDayView = normalizedCurrentView === "天";
+  const dataModel = T$1(() => buildHeatmapViewModel({
+    items,
+    module: module2,
+    inputSettings,
+    goals,
+    goalSettings
+  }), [items, module2, inputSettings, goals, goalSettings]);
+  const themesByPath = dataModel.themesByPath;
+  const themesToTrack = dataModel.themesToTrack;
+  const dataByThemeAndDate = dataModel.dataByThemeAndDate;
+  const goalGroupsToDisplay = T$1(() => filterGoalHeatmapGroups(dataModel.goalGroups), [dataModel.goalGroups]);
+  const resolveBlockId = (candidate) => normalizeHeatmapBlockId({
+    candidate,
+    inputSettings,
+    configuredSourceBlockId: config2.sourceBlockId
+  });
+  const heatmapSourceBlockId = resolveBlockId(config2.sourceBlockId);
+  const resolveCellRatingMapping = (themePath, presetContext) => {
+    if (presetContext?.ratingOptions?.length) {
+      return buildHeatmapRatingMapping(presetContext.ratingOptions);
+    }
+    return ratingMappingsCache.get(
+      inputSettings,
+      heatmapSourceBlockId || "",
+      themePath,
+      themesByPath
+    );
+  };
+  const inferredBlockIdByTheme = T$1(() => inferHeatmapBlockIdByTheme(items), [items]);
+  const resolveCreateBlockId = (themePath, item, sourceBlockId) => {
+    return resolveHeatmapCreateBlockId({
+      themePath,
+      item,
+      sourceBlockId,
+      heatmapSourceBlockId,
+      inferredBlockIdByTheme,
+      normalizeBlockId: resolveBlockId
+    });
+  };
+  const openQuickCreate = (date2, item, themePath, goalPath, presetContext) => {
+    if (!onOpenHeatmapCreate) {
+      onNotice?.("未提供创建处理器，无法创建记录");
+      return;
+    }
+    onOpenHeatmapCreate({
+      sourceBlockId: resolveCreateBlockId(themePath, item, presetContext?.sourceBlockId),
+      date: date2,
+      item,
+      themePath,
+      goalPath,
+      goalId: presetContext?.goalId,
+      templateId: presetContext?.templateId,
+      templateVariantId: presetContext?.templateVariantId,
+      themesByPath
+    });
+  };
+  const openCellRecordManager = (date2, itemsForDay, themePath, goalPath, presetContext) => {
+    if (!onOpenCheckinManager) {
+      onNotice?.("未提供记录管理处理器，无法打开记录列表");
+      return;
+    }
+    onOpenCheckinManager({
+      date: date2,
+      items: itemsForDay,
+      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath, goalPath, presetContext)
+    });
+  };
+  const handleCellClick = (date2, dayItems, themePath, goalPath, presetContext) => {
+    const itemsForDay = dayItems || [];
+    if (itemsForDay.length === 0) {
+      openQuickCreate(date2, void 0, themePath, goalPath, presetContext);
+      return;
+    }
+    openCellRecordManager(date2, itemsForDay, themePath, goalPath, presetContext);
+  };
+  const [verticalLayouts, setVerticalLayouts] = d(/* @__PURE__ */ new Set());
+  const [collapsedThemes, setCollapsedThemes] = d(/* @__PURE__ */ new Set());
+  const headerRefs = A$1(/* @__PURE__ */ new Map());
+  const toggleThemeCollapsed = (theme) => {
+    setCollapsedThemes((prev2) => toggleHeatmapCollapsedTheme(prev2, theme));
+  };
+  const checkLayout = (theme, headerElement) => {
+    const needsVertical = resolveHeatmapVerticalLayout({
+      theme,
+      normalizedCurrentView,
+      isDayView,
+      containerWidth: headerElement?.clientWidth ?? 0
+    });
+    if (needsVertical === null) return;
+    setVerticalLayouts((prev2) => applyHeatmapVerticalLayout(prev2, theme, needsVertical));
+  };
+  h(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        const element = entry.target;
+        const theme = element.dataset.theme;
+        if (theme) {
+          checkLayout(theme, element);
+        }
+      });
+    });
+    headerRefs.current.forEach((element, theme) => {
+      resizeObserver.observe(element);
+      checkLayout(theme, element);
+    });
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [themesToTrack, normalizedCurrentView]);
+  const dateRangeStart = T$1(() => dayjs(dateRange[0]).format("YYYY-MM-DD"), [dateRange]);
+  return /* @__PURE__ */ u2("div", { class: "heatmap-container", children: /* @__PURE__ */ u2(
+    HeatmapViewContent,
+    {
+      isDayView,
+      normalizedCurrentView,
+      dateRangeStart,
+      dateRange,
+      config: config2,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      goalGroupsToDisplay,
+      themesToTrack,
+      dataByThemeAndDate,
+      verticalLayouts,
+      collapsedThemes,
+      headerRefs,
+      onToggleThemeCollapsed: toggleThemeCollapsed,
+      onCellClick: handleCellClick,
+      resolveCellRatingMapping
+    }
+  ) });
+}
+function calculateSmartHeight(count, allCounts, _displayMode, minVisibleHeight) {
+  if (count === 0) return 0;
+  const nonZeroCounts = allCounts.filter((c2) => c2 > 0);
+  if (nonZeroCounts.length === 0) return 0;
+  const maxCount = Math.max(...nonZeroCounts);
+  let height2 = count / maxCount * 100;
+  if (height2 > 0 && height2 < minVisibleHeight) {
+    height2 = minVisibleHeight;
+  }
+  return Math.min(height2, 100);
+}
+function ChartBlock({
+  data,
+  label,
+  onCellClick,
+  categories,
+  cellIdentifier,
+  isCompact = false,
+  isNarrow = false,
+  displayMode = "smart",
+  minVisibleHeight = 15,
+  onOpenRecordOrigin,
+  bucketAccessor = (item) => getBasePath(item.categoryKey)
+}) {
+  const counts = data.counts;
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+  const chartCategories = categories;
+  const allCounts = chartCategories.map((cat) => counts[cat.name] || 0);
+  const categoryHeights = T$1(() => {
+    return chartCategories.map((cat) => {
+      const count = counts[cat.name] || 0;
+      return calculateSmartHeight(count, allCounts, displayMode, minVisibleHeight);
+    });
+  }, [counts, chartCategories, displayMode, minVisibleHeight, allCounts]);
+  const containerClasses = [
+    "sv-chart-block",
+    isCompact ? "is-compact" : "",
+    isNarrow ? "is-narrow" : "",
+    total === 0 ? "is-empty" : ""
+  ].filter(Boolean).join(" ");
+  const openBlocks = (event, blocks, identifier2, title) => {
+    stopInteractionEvent(event);
+    if (blocks.length === 1 && onOpenRecordOrigin && hasPlatformModifier(event)) {
+      void onOpenRecordOrigin(blocks[0]);
+      return;
+    }
+    onCellClick(identifier2, event.currentTarget, blocks, title);
+  };
+  const openAll = (event) => {
+    openBlocks(event, data.blocks, cellIdentifier("全部"), `${label} · 全部`);
+  };
+  const openCategory = (event, name, displayName) => {
+    const blocks = data.blocks.filter((block) => bucketAccessor(block) === name);
+    openBlocks(event, blocks, cellIdentifier(name), `${label} · ${displayName}`);
+  };
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: containerClasses,
+      role: "button",
+      tabIndex: 0,
+      title: data.blocks.length === 1 && onOpenRecordOrigin ? `${label} · Ctrl/⌘+点击打开原文` : label,
+      onClick: openAll,
+      onKeyDown: (event) => {
+        if (!isKeyboardActivation(event)) return;
+        openAll(event);
+      },
+      children: [
+        /* @__PURE__ */ u2("div", { class: "sv-chart-label", children: label }),
+        /* @__PURE__ */ u2("div", { class: "sv-chart-content", children: [
+          /* @__PURE__ */ u2("div", { class: "sv-chart-numbers", children: chartCategories.map(({ name }) => {
+            const count = counts[name] || 0;
+            const displayName = categories.find((category) => category.name === name)?.alias || name;
+            return /* @__PURE__ */ u2("div", { class: "sv-chart-number", onClick: (event) => openCategory(event, name, displayName), children: count }, `num-${name}`);
+          }) }),
+          /* @__PURE__ */ u2("div", { class: "sv-chart-bars-container", children: chartCategories.map(({ name, color: color2, alias }, index) => {
+            const count = counts[name] || 0;
+            const height2 = categoryHeights[index];
+            const displayName = alias || name;
+            return /* @__PURE__ */ u2(
+              "div",
+              {
+                class: "sv-vbar-wrapper",
+                role: "button",
+                tabIndex: 0,
+                title: `${displayName}: ${count}`,
+                onClick: (event) => openCategory(event, name, displayName),
+                onKeyDown: (event) => {
+                  if (!isKeyboardActivation(event)) return;
+                  openCategory(event, name, displayName);
+                },
+                children: /* @__PURE__ */ u2(
+                  "div",
+                  {
+                    class: "sv-vbar-bar",
+                    style: {
+                      height: `${height2}%`,
+                      backgroundColor: color2 || "var(--think-data-neutral)"
+                    }
+                  }
+                )
+              },
+              name
+            );
+          }) }),
+          /* @__PURE__ */ u2("div", { class: "sv-chart-categories", children: chartCategories.map(({ name, alias }) => {
+            const displayName = alias || name;
+            return /* @__PURE__ */ u2(
+              "div",
+              {
+                class: "sv-chart-category",
+                title: `${displayName}${alias ? ` (${name})` : ""}`,
+                onClick: (event) => openCategory(event, name, displayName),
+                children: displayName
+              },
+              `cat-${name}`
+            );
+          }) })
+        ] })
+      ]
+    }
+  );
+}
+function DayStatisticsView({
+  items,
+  categories,
+  selectedDate,
+  onCellClick,
+  displayMode,
+  minVisibleHeight,
+  bucketAccessor,
+  onOpenRecordOrigin
+}) {
+  const data = aggregateByDay(items, categories, selectedDate, bucketAccessor);
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
+    ChartBlock,
+    {
+      data,
+      label: selectedDate.format("YYYY年MM月DD日 dddd"),
+      categories,
+      onCellClick,
+      cellIdentifier: (goal) => ({ type: "day", date: selectedDate.format("YYYY-MM-DD"), goal }),
+      displayMode,
+      minVisibleHeight,
+      bucketAccessor,
+      onOpenRecordOrigin
+    }
+  ) }) }) });
+}
+function WeekStatisticsView({
+  items,
+  categories,
+  weekDate,
+  onCellClick,
+  displayMode,
+  minVisibleHeight,
+  bucketAccessor,
+  onOpenRecordOrigin
+}) {
+  const weekStart = weekDate.startOf("isoWeek");
+  const weekEnd = weekDate.endOf("isoWeek");
+  const data = aggregateByWeek(items, categories, weekStart, false, bucketAccessor);
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
+    ChartBlock,
+    {
+      data,
+      label: `${weekStart.format("YYYY年MM月DD日")} ~ ${weekEnd.format("MM月DD日")} (第${weekStart.isoWeek()}周)`,
+      categories,
+      onCellClick,
+      cellIdentifier: (goal) => ({
+        type: "week",
+        week: weekStart.isoWeek(),
+        year: weekStart.isoWeekYear(),
+        goal
+      }),
+      displayMode,
+      minVisibleHeight,
+      bucketAccessor,
+      onOpenRecordOrigin
+    }
+  ) }) }) });
+}
+function buildMonthWeekMeta(monthDate) {
+  const monthStart = monthDate.startOf("month");
+  const monthEnd = monthDate.endOf("month");
+  const weeksMeta = [];
+  let weekCursor = monthStart.startOf("isoWeek");
+  while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
+    const weekStart = weekCursor;
+    const weekEnd = weekStart.endOf("isoWeek");
+    weeksMeta.push({
+      weekStart,
+      label: `${weekStart.format("MM-DD")} ~ ${weekEnd.format("MM-DD")}`
+    });
+    weekCursor = weekCursor.add(1, "week");
+  }
+  return weeksMeta;
+}
+function buildMonthStatisticsRenderModel(input) {
+  const { items, categories, monthDate, usePeriod, bucketAccessor } = input;
+  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod, bucketAccessor);
+  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod, bucketAccessor);
+  const weeksMeta = buildMonthWeekMeta(monthDate);
+  const weeks = monthWeeksData.flatMap((data, index) => {
+    const meta = weeksMeta[index];
+    if (!meta) return [];
+    const { weekStart } = meta;
+    return [{
+      key: weekStart.format("YYYY-MM-DD"),
+      gridColumn: `${index + 1}`,
+      label: `W${weekStart.isoWeek()}`,
+      data,
+      identifier: (goal) => ({
+        type: "week",
+        week: weekStart.isoWeek(),
+        year: weekStart.isoWeekYear(),
+        goal
+      })
+    }];
+  });
+  return {
+    monthData,
+    monthLabel: monthDate.format("YYYY年MM月"),
+    monthIdentifier: (goal) => ({
+      type: "month",
+      month: monthDate.month() + 1,
+      year: monthDate.year(),
+      goal
+    }),
+    gridTemplateColumns: `repeat(${monthWeeksData.length}, 1fr)`,
+    weeks
+  };
+}
+function buildQuarterMonthWeekStarts(month) {
+  const monthStart = month.startOf("month");
+  const monthEnd = month.endOf("month");
+  const weeksMeta = [];
+  let weekCursor = monthStart.startOf("isoWeek");
+  while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
+    weeksMeta.push(weekCursor);
+    weekCursor = weekCursor.add(1, "week");
+  }
+  return weeksMeta;
+}
+function buildQuarterStatisticsRenderModel(input) {
+  const { items, categories, quarterDate, usePeriod, bucketAccessor } = input;
+  const quarterStart = quarterDate.startOf("quarter");
+  const rawMonths = Array.from({ length: 3 }, (_2, index) => {
+    const month = quarterStart.add(index, "month");
+    const weeksData = getMonthWeeksData(items, categories, month, usePeriod, bucketAccessor);
+    const weekStarts = buildQuarterMonthWeekStarts(month);
+    return {
+      month,
+      data: aggregateByMonth(items, categories, month, usePeriod, bucketAccessor),
+      weeksData,
+      weekStarts
+    };
+  });
+  const maxWeeks = Math.max(...rawMonths.map((month) => month.weeksData.length), 1);
+  return {
+    quarterData: aggregateByQuarter(items, categories, quarterDate, usePeriod, bucketAccessor),
+    quarterLabel: `${quarterDate.format("YYYY年")} 第${quarterDate.quarter()}季度`,
+    quarterIdentifier: (goal) => ({
+      type: "quarter",
+      quarter: quarterDate.quarter(),
+      year: quarterDate.year(),
+      goal
+    }),
+    months: rawMonths.map(({ month, data, weeksData, weekStarts }, index) => ({
+      key: month.format("YYYY-MM"),
+      gridColumn: `${index + 1}`,
+      label: month.format("MM月"),
+      data,
+      identifier: (goal) => ({
+        type: "month",
+        month: month.month() + 1,
+        year: month.year(),
+        goal
+      }),
+      weeks: weeksData.flatMap((weekData, weekIndex) => {
+        const weekStart = weekStarts[weekIndex];
+        if (!weekStart) return [];
+        return [{
+          key: weekStart.format("YYYY-MM-DD"),
+          label: `W${weekStart.isoWeek()}`,
+          data: weekData,
+          identifier: (goal) => ({
+            type: "week",
+            week: weekStart.isoWeek(),
+            year: weekStart.isoWeekYear(),
+            goal
+          })
+        }];
+      }),
+      placeholderCount: Math.max(maxWeeks - weeksData.length, 0)
+    }))
+  };
+}
+function getYearStatisticsMaxWeeksInMonth(yearlyWeekStructure) {
+  return Math.max(...yearlyWeekStructure.map(({ weeks }) => weeks.length), 1);
+}
+function buildYearStatisticsRenderModel(input) {
+  const { year, categories, processedData, yearlyWeekStructure } = input;
+  const maxWeeksInMonth = getYearStatisticsMaxWeeksInMonth(yearlyWeekStructure);
+  return {
+    yearLabel: `${year}年`,
+    yearIdentifier: (goal) => ({ type: "year", year, goal }),
+    quarters: processedData.quartersData.map((data, index) => ({
+      key: `q${index}`,
+      gridColumn: `${index * 3 + 1} / ${index * 3 + 4}`,
+      label: `Q${index + 1}`,
+      data,
+      identifier: (goal) => ({ type: "quarter", year, quarter: index + 1, goal })
+    })),
+    months: processedData.monthsData.map((data, index) => ({
+      key: `m${index}`,
+      className: `sv-year-grid-month${index % 3 === 2 && index < 11 ? " sv-quarter-end" : ""}`,
+      gridColumn: `${index + 1}`,
+      label: `${index + 1}月`,
+      data,
+      identifier: (goal) => ({ type: "month", year, month: index + 1, goal })
+    })),
+    weekColumns: yearlyWeekStructure.map(({ month, weeks }) => {
+      const isQuarterEnd = month % 3 === 0 && month < 12;
+      return {
+        key: `w-col-${month}`,
+        className: `sv-year-grid-week-col${isQuarterEnd ? " sv-quarter-end" : ""}`,
+        gridColumn: `${month}`,
+        weeks: weeks.map((week) => {
+          const weekIndex = week - 1;
+          const data = processedData.weeksData[weekIndex] || createPeriodData(categories);
+          return {
+            key: `${week}`,
+            label: `${week}W`,
+            data,
+            identifier: (goal) => ({ type: "week", year, week, goal })
+          };
+        }),
+        placeholderCount: Math.max(maxWeeksInMonth - weeks.length, 0)
+      };
+    })
+  };
+}
+function PeriodStatisticsView(props) {
+  const { gridClassName, gridStyle, summary, blocks = [], columns = [], categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin } = props;
+  const visibleBlocks = blocks;
+  const visibleColumns = columns;
+  const levelClass = (level = 0) => `sv-period-level sv-period-level--${Math.max(0, level)}`;
+  const flowStyle = (style2) => style2;
+  const effectiveGridStyle = gridStyle;
+  const renderChart = (block) => /* @__PURE__ */ u2(ChartBlock, { data: block.data, label: block.label, categories, onCellClick, cellIdentifier: block.identifier, isCompact: block.isCompact, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin }, block.key);
+  const renderBlock = (block) => /* @__PURE__ */ u2("div", { class: `${block.wrapperClassName || ""} ${levelClass(block.level)}`, style: flowStyle(block.style), children: renderChart(block) }, block.key);
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: `${gridClassName} sv-period-hierarchy`, style: effectiveGridStyle, children: [
+    renderBlock(summary),
+    visibleBlocks.map(renderBlock),
+    visibleColumns.map((column2) => /* @__PURE__ */ u2("div", { class: `${column2.wrapperClassName} ${levelClass(column2.level)}`, style: flowStyle(column2.style), children: column2.blocks.map(renderChart) }, column2.key))
+  ] }) });
+}
+function MonthStatisticsView(props) {
+  const { items, categories, monthDate, usePeriod, bucketAccessor, ...common2 } = props;
+  const model = buildMonthStatisticsRenderModel({ items, categories, monthDate, usePeriod, bucketAccessor });
+  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-month-grid", gridStyle: { gridTemplateColumns: model.gridTemplateColumns }, summary: { wrapperClassName: "sv-month-grid-summary", level: 0, data: model.monthData, label: model.monthLabel, identifier: model.monthIdentifier }, blocks: model.weeks.map((week) => ({ key: week.key, wrapperClassName: "sv-month-grid-week", level: 1, style: { gridColumn: week.gridColumn }, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) });
+}
+function QuarterStatisticsView(props) {
+  const { items, categories, quarterDate, usePeriod, bucketAccessor, ...common2 } = props;
+  const model = buildQuarterStatisticsRenderModel({ items, categories, quarterDate, usePeriod, bucketAccessor });
+  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-quarter-grid", summary: { wrapperClassName: "sv-quarter-grid-summary", level: 0, data: model.quarterData, label: model.quarterLabel, identifier: model.quarterIdentifier }, blocks: model.months.map((month) => ({ key: month.key, wrapperClassName: "sv-quarter-grid-month", level: 1, style: { gridColumn: month.gridColumn }, data: month.data, label: month.label, identifier: month.identifier })), columns: model.months.map((month) => ({ key: `w-col-${month.key}`, wrapperClassName: "sv-quarter-grid-week-col", level: 2, style: { gridColumn: month.gridColumn }, blocks: month.weeks.map((week) => ({ key: week.key, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) })) });
+}
+function YearStatisticsView(props) {
+  const { year, categories, processedData, yearlyWeekStructure, bucketAccessor, ...common2 } = props;
+  const model = buildYearStatisticsRenderModel({ year, categories, processedData, yearlyWeekStructure });
+  return /* @__PURE__ */ u2(PeriodStatisticsView, { ...common2, categories, bucketAccessor, gridClassName: "sv-year-grid", summary: { wrapperClassName: "sv-year-grid-year", level: 0, data: processedData.yearData, label: model.yearLabel, identifier: model.yearIdentifier }, blocks: [...model.quarters.map((quarter) => ({ key: quarter.key, wrapperClassName: "sv-year-grid-quarter", level: 1, style: { gridColumn: quarter.gridColumn }, data: quarter.data, label: quarter.label, identifier: quarter.identifier })), ...model.months.map((month) => ({ key: month.key, wrapperClassName: month.className, level: 2, style: { gridColumn: month.gridColumn }, data: month.data, label: month.label, identifier: month.identifier }))], columns: model.weekColumns.map((column2) => ({ key: column2.key, wrapperClassName: column2.className, level: 3, style: { gridColumn: column2.gridColumn }, blocks: column2.weeks.map((week) => ({ key: week.key, data: week.data, label: week.label, identifier: week.identifier, isCompact: true })) })) });
+}
+function StatisticsViewView({
+  items,
+  currentView,
+  categories,
+  startDate,
+  usePeriod,
+  onToggleUsePeriod,
+  onCellClick,
+  displayMode,
+  minVisibleHeight,
+  year,
+  yearlyWeekStructure,
+  processedData,
+  bucketAccessor,
+  goalThemeSummaries = [],
+  onOpenRecordOrigin
+}) {
+  if (!categories || categories.length === 0) {
+    return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder", children: "暂无目标统计数据。" });
+  }
+  const sharedProps = { categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin };
+  switch (currentView) {
+    case "天":
+      return /* @__PURE__ */ u2(DayStatisticsView, { items, selectedDate: startDate, ...sharedProps });
+    case "周":
+      return /* @__PURE__ */ u2(WeekStatisticsView, { items, weekDate: startDate, ...sharedProps });
+    case "月":
+      return /* @__PURE__ */ u2(MonthStatisticsView, { items, monthDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps });
+    case "季":
+      return /* @__PURE__ */ u2(QuarterStatisticsView, { items, quarterDate: startDate, usePeriod, onToggleUsePeriod, ...sharedProps });
+    case "年":
+    default:
+      return /* @__PURE__ */ u2(
+        YearStatisticsView,
+        {
+          year,
+          processedData,
+          yearlyWeekStructure,
+          usePeriod,
+          onToggleUsePeriod,
+          ...sharedProps
+        }
+      );
+  }
+}
+function buildStatisticsViewConfig(module2) {
+  return { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...module2.viewConfig, groupBy: "goal" };
+}
+function resolveStatisticsStartDate(dateRange) {
+  return dayjs(dateRange[0]);
+}
+function isStatisticsYearView(currentView) {
+  return currentView === "年";
+}
+function resolveStatisticsYear(startDate) {
+  return startDate.year();
+}
+function resolveStatisticsBucketAccessor(goals = []) {
+  return (item) => getItemGoalKey(item, goals);
+}
+function buildYearlyWeekStructure(year, enabled2 = true) {
+  if (!enabled2) return [];
+  const months = Array.from({ length: 12 }, (_2, i2) => ({ month: i2 + 1, weeks: [] }));
+  const totalWeeks = getWeeksInYear(year);
+  for (let week = 1; week <= totalWeeks; week++) {
+    const thursdayOfWeek = dayjs().year(year).isoWeek(week).day(4);
+    months[thursdayOfWeek.month()]?.weeks.push(week);
+  }
+  return months;
+}
+function resolveYearlyWeekStructure(input) {
+  return buildYearlyWeekStructure(input.year, input.isYearView);
+}
+function buildStatisticsGoalBuckets(args) {
+  const buckets = buildGoalBuckets(args.items, args.goals || [], { includeUnassigned: true, includeKnownGoals: true, themes: args.themes || [] });
+  const topN = Math.max(0, Number(args.topN) || 0);
+  return topN > 0 ? buckets.slice(0, topN) : buckets;
+}
+function buildStatisticsGoalThemeSummaries(items, categories, goals = []) {
+  const bucketAccessor = resolveStatisticsBucketAccessor(goals);
+  const counts = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    const goalKey = bucketAccessor(item);
+    const themeKey = getItemThemeKey(item);
+    const inner = counts.get(goalKey) || /* @__PURE__ */ new Map();
+    inner.set(themeKey, (inner.get(themeKey) || 0) + 1);
+    counts.set(goalKey, inner);
+  }
+  return categories.map((category) => ({
+    goalPath: category.name,
+    themes: Array.from((counts.get(category.name) || /* @__PURE__ */ new Map()).entries()).map(([themePath, count]) => {
+      const parts = String(themePath || "").split("/").filter(Boolean);
+      return { themePath, label: parts[parts.length - 1] || themePath || "未设置主题", count };
+    }).sort((a2, b2) => b2.count - a2.count || a2.themePath.localeCompare(b2.themePath, "zh-CN")).slice(0, 3)
+  }));
+}
+function buildStatisticsProcessedData(input) {
+  const bucketAccessor = input.bucketAccessor || getItemGoalKey;
+  if (!input.isYearView) {
+    return {
+      yearData: createPeriodData(input.filteredCategories),
+      quartersData: [],
+      monthsData: [],
+      weeksData: []
+    };
+  }
+  const totalWeeks = getWeeksInYear(input.year);
+  const targetDate = dayjs().year(input.year);
+  const yearData = aggregateByYear(input.items, input.filteredCategories, targetDate, input.usePeriod, bucketAccessor);
+  const quartersData = [];
+  for (let q2 = 1; q2 <= 4; q2++) {
+    quartersData.push(aggregateByQuarter(input.items, input.filteredCategories, targetDate.quarter(q2), input.usePeriod, bucketAccessor));
+  }
+  const monthsData = [];
+  for (let m2 = 0; m2 < 12; m2++) {
+    monthsData.push(aggregateByMonth(input.items, input.filteredCategories, targetDate.month(m2), input.usePeriod, bucketAccessor));
+  }
+  const weeksData = [];
+  for (let w2 = 1; w2 <= totalWeeks; w2++) {
+    weeksData.push(aggregateByWeek(input.items, input.filteredCategories, targetDate.isoWeek(w2), input.usePeriod, bucketAccessor));
+  }
+  return { yearData, quartersData, monthsData, weeksData };
+}
+function getStatisticsPopoverWidgetId(moduleId) {
+  return `stats-popover-${moduleId}`;
+}
+function isSameStatisticsCell(left2, right2) {
+  return JSON.stringify(left2) === JSON.stringify(right2);
+}
+function StatisticsView({
+  items,
+  resolveResourcePath,
+  dateRange,
+  module: module2,
+  currentView,
+  onQuickCreate: _onQuickCreate,
+  onNotice,
+  onOpenStatisticsPopover,
+  onCloseStatisticsPopover,
+  categoryColors = {},
+  onCategoryColorsChange,
+  selectedCategories: _selectedCategories,
+  timerService,
+  onMarkDone,
+  timers,
+  allThemes,
+  goals = [],
+  inputSettings,
+  messageRenderPort,
+  onOpenRecord,
+  onOpenRecordOrigin
+}) {
+  const viewConfig = buildStatisticsViewConfig(module2);
+  const { displayMode = "smart", minVisibleHeight = 15 } = viewConfig;
+  const filteredCategories = T$1(() => buildStatisticsGoalBuckets({
+    items,
+    goals,
+    themes: inputSettings?.themes || [],
+    topN: viewConfig.topN
+  }), [items, goals, inputSettings?.themes, viewConfig.topN]);
+  const bucketAccessor = T$1(() => resolveStatisticsBucketAccessor(goals), [goals]);
+  const goalThemeSummaries = T$1(() => buildStatisticsGoalThemeSummaries(items, filteredCategories, goals), [items, filteredCategories, goals]);
+  const [selectedCell, setSelectedCell] = d(null);
+  const [popover, setPopover] = d(null);
+  const openLockRef = A$1(false);
+  const [usePeriod, setUsePeriod] = d(Boolean(viewConfig.usePeriodField));
+  const startDate = T$1(() => resolveStatisticsStartDate(dateRange), [dateRange]);
+  const isYearView = isStatisticsYearView(currentView);
+  const year = resolveStatisticsYear(startDate);
+  const yearlyWeekStructure = T$1(() => resolveYearlyWeekStructure({ year, isYearView }), [isYearView, year]);
+  const processedData = T$1(() => buildStatisticsProcessedData({
+    isYearView,
+    items,
+    year,
+    filteredCategories,
+    usePeriod,
+    bucketAccessor
+  }), [bucketAccessor, filteredCategories, isYearView, items, usePeriod, year]);
+  const handleCellClick = (cellIdentifier, _target, blocks, title) => {
+    devLog("点击单元格:", { cellIdentifier, title, blocksCount: blocks.length, blocks });
+    if (openLockRef.current) return;
+    const widgetId = getStatisticsPopoverWidgetId(module2.id);
+    if (popover && isSameStatisticsCell(selectedCell, cellIdentifier)) {
+      onCloseStatisticsPopover?.(widgetId);
+      setPopover(null);
+      setSelectedCell(null);
+      return;
+    }
+    onCloseStatisticsPopover?.(widgetId);
+    setSelectedCell(cellIdentifier);
+    setPopover({ blocks, title });
+    const handleClose = () => {
+      onCloseStatisticsPopover?.(widgetId);
+      setPopover(null);
+      setSelectedCell(null);
+    };
+    const handleExport = () => {
+      if (blocks.length === 0) {
+        onNotice?.("没有内容可导出");
+        return;
+      }
+      const exportConfig = getExportConfigByViewType("StatisticsView");
+      navigator.clipboard.writeText(exportItemsToMarkdown(blocks, exportConfig));
+      onNotice?.(`"${title}" 的内容已复制到剪贴板！`);
+    };
+    onOpenStatisticsPopover?.({
+      widgetId,
+      title,
+      blocks,
+      module: module2,
+      timerService,
+      onMarkDone,
+      timers,
+      allThemes,
+      messageRenderPort,
+      onOpenRecord,
+      onOpenRecordOrigin,
+      resolveResourcePath,
+      onClose: handleClose,
+      onExport: handleExport,
+      onQuickCreate: void 0,
+      canQuickCreate: false
+    });
+    openLockRef.current = true;
+    setTimeout(() => {
+      openLockRef.current = false;
+    }, 300);
+  };
+  return /* @__PURE__ */ u2(
+    StatisticsViewView,
+    {
+      items,
+      currentView,
+      categories: filteredCategories,
+      startDate,
+      usePeriod,
+      onToggleUsePeriod: setUsePeriod,
+      onCellClick: handleCellClick,
+      displayMode,
+      minVisibleHeight,
+      year,
+      yearlyWeekStructure,
+      processedData,
+      bucketAccessor,
+      goalThemeSummaries,
+      onOpenRecordOrigin
+    }
+  );
+}
+function PopoverContent({
+  blocks,
+  module: module2,
+  timerService,
+  onMarkDone,
+  timers,
+  allThemes,
+  messageRenderPort,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  resolveResourcePath
+}) {
+  return /* @__PURE__ */ u2("div", { className: "sv-popover-content", children: blocks.length === 0 ? /* @__PURE__ */ u2("div", { class: "sv-popover-empty", children: "无内容" }) : /* @__PURE__ */ u2(
+    BlockView,
+    {
+      items: blocks,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      fields: module2.fields || ["title", "content", "categoryKey", "goalPath", "date", "period"],
+      groupFields: module2.groupFields,
+      onMarkDone,
+      timerService,
+      timers,
+      allThemes,
+      messageRenderPort,
+      onOpenRecord
+    }
+  ) });
+}
+function clampProgress(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(1, value));
+}
+function toSortedRows(map, topN) {
+  return Array.from(map.entries()).map(([key, v2]) => ({ key, points: v2.points, count: v2.count })).sort((a2, b2) => b2.points - a2.points || b2.count - a2.count || a2.key.localeCompare(b2.key, "zh-CN")).slice(0, topN);
+}
+function computeProgression(items, options) {
+  const {
+    basePoints = 1,
+    levelStep = 20,
+    includedCategories = [],
+    ratingBonusThreshold = 4,
+    ratingBonusPoints = 1,
+    topN = 5
+  } = options;
+  const allowed = new Set((includedCategories || []).filter(Boolean));
+  const categoryMap = /* @__PURE__ */ new Map();
+  const themeMap = /* @__PURE__ */ new Map();
+  let totalPoints = 0;
+  let matchedCount = 0;
+  for (const item of items) {
+    const category = (item.categoryKey || "").split("/")[0] || item.categoryKey || "未分类";
+    if (allowed.size > 0 && !allowed.has(category)) continue;
+    let points = basePoints;
+    if (typeof item.rating === "number" && item.rating >= ratingBonusThreshold) {
+      points += ratingBonusPoints;
+    }
+    totalPoints += points;
+    matchedCount += 1;
+    const catRow = categoryMap.get(category) || { points: 0, count: 0 };
+    catRow.points += points;
+    catRow.count += 1;
+    categoryMap.set(category, catRow);
+    const theme = getItemThemeKey(item);
+    const themeRow = themeMap.get(theme) || { points: 0, count: 0 };
+    themeRow.points += points;
+    themeRow.count += 1;
+    themeMap.set(theme, themeRow);
+  }
+  const safeLevelStep = Math.max(1, levelStep);
+  const level = Math.floor(totalPoints / safeLevelStep) + 1;
+  const currentLevelStart = (level - 1) * safeLevelStep;
+  const nextLevelPoints = level * safeLevelStep;
+  const currentLevelPoints = totalPoints - currentLevelStart;
+  const progressRatio = clampProgress(currentLevelPoints / safeLevelStep);
+  return {
+    totalPoints,
+    level,
+    currentLevelPoints,
+    nextLevelPoints,
+    progressRatio,
+    matchedCount,
+    categoryBreakdown: toSortedRows(categoryMap, topN),
+    themeBreakdown: toSortedRows(themeMap, topN)
+  };
+}
+function buildGoalEnergyContext(item, goalItems) {
+  const context = resolveEnergyContext(item, goalItems);
+  if (!context) return null;
+  return {
+    activity: context.primaryActivity ? {
+      id: context.primaryActivity.itemId,
+      title: context.primaryActivity.title,
+      relation: context.primaryActivity.relation,
+      confidence: context.primaryActivity.confidence,
+      gapMinutes: context.primaryActivity.gapMinutes,
+      durationMinutes: context.primaryActivity.durationMinutes,
+      item: context.primaryActivity.item
+    } : void 0,
+    dailySignals: context.dailySignals.map((signal) => ({
+      id: signal.itemId,
+      kind: signal.kind,
+      label: signal.label,
+      value: signal.value,
+      item: signal.item
+    }))
+  };
+}
+function buildGoalEnergyEffects(evidenceRecords) {
+  const effects = buildEnergyEffects(evidenceRecords);
+  if (!effects) return null;
+  const mapRows = (rows) => rows.slice(0, 6).map((row) => ({
+    key: row.key,
+    label: row.label,
+    sampleCount: row.sampleCount,
+    meanDelta: row.meanDelta,
+    medianDelta: row.medianDelta,
+    meanBrainDelta: row.meanBrainDelta,
+    meanPhysicalDelta: row.meanPhysicalDelta,
+    meanDurationMinutes: row.meanDurationMinutes,
+    trend: row.trend,
+    evidence: row.evidence
+  }));
+  return {
+    eligibleActivityCount: effects.eligibleActivityCount,
+    pairedActivityCount: effects.pairedActivityCount,
+    highConfidencePairCount: effects.highConfidencePairCount,
+    mediumConfidencePairCount: effects.mediumConfidencePairCount,
+    excludedActivityCount: effects.excludedActivityCount,
+    byActivity: mapRows(effects.byActivity),
+    byTheme: mapRows(effects.byTheme),
+    byDuration: mapRows(effects.byDuration)
+  };
+}
+function buildSevenDayEnergyTimeline(rows) {
+  const endDate = rows.find((row) => row.date)?.date || null;
+  if (!endDate) return void 0;
+  const match5 = /^(\d{4})-(\d{2})-(\d{2})$/.exec(endDate);
+  if (!match5) return void 0;
+  const end2 = new Date(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3]));
+  const start2 = new Date(end2);
+  start2.setDate(start2.getDate() - 6);
+  const dateText2 = (date2) => `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
+  const startDate = dateText2(start2);
+  const windowRows = rows.filter((row) => !!row.date && row.date >= startDate && row.date <= endDate);
+  const sampledDays = new Set(windowRows.map((row) => row.date).filter(Boolean)).size;
+  return {
+    startDate,
+    endDate,
+    coverage: {
+      sampledDays,
+      missingDays: Math.max(0, 7 - sampledDays),
+      totalSamples: windowRows.length
+    }
+  };
+}
+function buildGoalEnergySummary(items, limit = 5, options = {}) {
+  const contextRecords = options.contextRecords || items;
+  const effectRecords = options.effectRecords || contextRecords;
+  const ordered = items.reduce((rows, item) => {
+    const snapshot = readEnergyItemSnapshot(item);
+    if (!snapshot) return rows;
+    rows.push({
+      id: item.id,
+      score: snapshot.score,
+      quickLevel: snapshot.quickLevel,
+      brainScore: snapshot.brainScore,
+      physicalScore: snapshot.physicalScore,
+      scoreMode: snapshot.scoreMode,
+      date: snapshot.date || null,
+      time: snapshot.time || null,
+      item,
+      occurrenceKey: energySnapshotOccurrenceKey(snapshot)
+    });
+    return rows;
+  }, []).sort((left2, right2) => right2.occurrenceKey.localeCompare(left2.occurrenceKey));
+  if (ordered.length === 0) return null;
+  const recentSamples = ordered.slice(0, limit).map(({ occurrenceKey: _occurrenceKey, ...row }) => ({
+    ...row,
+    context: buildGoalEnergyContext(row.item, contextRecords)
+  }));
+  const latest2 = recentSamples[0];
+  return {
+    count: ordered.length,
+    latestScore: latest2.score,
+    latestQuickLevel: latest2.quickLevel,
+    latestBrainScore: latest2.brainScore,
+    latestPhysicalScore: latest2.physicalScore,
+    latestScoreMode: latest2.scoreMode,
+    latestDate: latest2.date || null,
+    latestTime: latest2.time || null,
+    recentSamples,
+    timeline: buildSevenDayEnergyTimeline(ordered),
+    effects: buildGoalEnergyEffects(effectRecords)
+  };
+}
+const PROGRESS_BLOCK_KEY_ALIASES = {
+  "任务": "task",
+  "计划": "plan",
+  "总结": "review",
+  "打卡": "habit",
+  "阻碍项": "blocker",
+  "里程碑": "milestone",
+  "思考": "thought",
+  "事件": "evidence"
+};
+function normalizeProgressBlockKey(item) {
+  const raw = String(item.coreBlock || "").replace(/^core\./, "").trim();
+  if (!raw) return "unknown";
+  return PROGRESS_BLOCK_KEY_ALIASES[raw] || raw.split("/")[0] || raw;
+}
+function progressDateSource(item) {
+  return item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || "";
+}
+function parseProgressDate(value) {
+  if (value == null || value === "") return null;
+  if (value instanceof Date) {
+    const parsed2 = dayjs(value);
+    return parsed2.isValid() ? parsed2 : null;
+  }
+  if (typeof value === "number") {
+    const millis = Math.abs(value) < 1e12 ? value * 1e3 : value;
+    const parsed2 = dayjs(millis);
+    return parsed2.isValid() ? parsed2 : null;
+  }
+  const text2 = String(value).trim();
+  if (!text2) return null;
+  if (/^-?\d+(?:\.\d+)?$/.test(text2)) {
+    const numeric = Number(text2);
+    const millis = Math.abs(numeric) < 1e12 ? numeric * 1e3 : numeric;
+    const parsed2 = dayjs(millis);
+    return parsed2.isValid() ? parsed2 : null;
+  }
+  const parsed = dayjs(text2);
+  return parsed.isValid() ? parsed : null;
+}
+function formatProgressRecordDate(value) {
+  const parsed = parseProgressDate(value);
+  return parsed ? parsed.format("YYYY-MM-DD") : "";
+}
+function progressItemDate(item) {
+  return formatProgressRecordDate(progressDateSource(item));
+}
+function progressItemTime(item) {
+  return parseProgressDate(progressDateSource(item))?.valueOf() || 0;
+}
+function buildProgressRecentRecords(items, limit = 5) {
+  return [...items].sort((left2, right2) => progressItemTime(right2) - progressItemTime(left2)).slice(0, limit).map((item) => ({
+    id: item.id,
+    title: item.title || item.content || item.file?.basename || item.filename || "未命名记录",
+    date: progressItemDate(item) || null,
+    item
+  }));
+}
+function buildProgressViewRenderModel(args) {
+  const { items, module: module2, goals = [], themes = [] } = args;
+  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {}, mode: "goal", metric: "recordCount" };
+  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
+  const levelStep = Math.max(1, Number(config2.levelStep) || 20);
+  const cards = buckets.map((bucket) => {
+    const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
+    const progressItems = goalItems.filter((item) => !isEnergyItem(item));
+    const progression = computeProgression(progressItems, {
+      basePoints: config2.basePoints,
+      levelStep,
+      includedCategories: config2.includedCategories,
+      ratingBonusThreshold: config2.ratingBonusThreshold,
+      ratingBonusPoints: config2.ratingBonusPoints,
+      topN: config2.topN
+    });
+    const blockCounts = {};
+    for (const item of goalItems) {
+      const key = normalizeProgressBlockKey(item);
+      blockCounts[key] = (blockCounts[key] || 0) + 1;
+    }
+    const dates = progressItems.map(progressItemDate).filter(Boolean).sort();
+    return {
+      key: bucket.name,
+      title: bucket.alias || bucket.name,
+      goalPath: bucket.goalPath || bucket.name,
+      icon: bucket.icon || null,
+      itemCount: progressItems.length,
+      totalPoints: progression.totalPoints,
+      level: progression.level,
+      currentLevelPoints: progression.currentLevelPoints,
+      nextLevelPoints: progression.nextLevelPoints,
+      levelStep,
+      progressRatio: progression.progressRatio,
+      matchedCount: progression.matchedCount,
+      latestDate: dates.length ? dates[dates.length - 1] : null,
+      blockCounts,
+      categoryBreakdown: progression.categoryBreakdown,
+      themeBreakdown: progression.themeBreakdown,
+      themeRecentRecords: Object.fromEntries(
+        progression.themeBreakdown.map((row) => [
+          row.key,
+          buildProgressRecentRecords(progressItems.filter((item) => getItemThemeKey(item) === row.key), 5)
+        ])
+      ),
+      energySummary: buildGoalEnergySummary(goalItems.filter(isEnergyItem), 5, { contextRecords: items, effectRecords: items })
+    };
+  });
+  const topN = Math.max(0, Number(config2.topN) || 0);
+  const goalCards = topN > 0 ? cards.slice(0, topN) : cards;
+  return {
+    config: config2,
+    mode: "goal",
+    goalCards,
+    summary: {
+      goalCount: goalCards.length,
+      totalPoints: goalCards.reduce((sum, card) => sum + card.totalPoints, 0),
+      totalItems: goalCards.reduce((sum, card) => sum + card.itemCount, 0)
+    },
+    result: null
+  };
+}
+const PROGRESS_LEVEL_META = [
+  { level: 1, icon: "🌱", title: "入门" },
+  { level: 2, icon: "🔰", title: "练习" },
+  { level: 3, icon: "🧩", title: "熟悉" },
+  { level: 4, icon: "⚙️", title: "稳定" },
+  { level: 5, icon: "🔥", title: "熟练" },
+  { level: 6, icon: "🛠️", title: "进阶" },
+  { level: 7, icon: "🧠", title: "专精" },
+  { level: 8, icon: "🏔️", title: "高阶" },
+  { level: 9, icon: "💎", title: "精通" },
+  { level: 10, icon: "👑", title: "大师" }
+];
+function clampProgressRatio(value) {
+  return Math.max(0, Math.min(1, Number(value) || 0));
+}
+function ratioPercent(value) {
+  return `${Math.round(clampProgressRatio(value) * 100)}%`;
+}
+function progressBarWidth(value) {
+  return `${Math.round(clampProgressRatio(value) * 100)}%`;
+}
+function getProgressLeafLabel(path) {
+  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
+  return parts[parts.length - 1] || path || "未设置主题";
+}
+function getGoalProgressTitle(card) {
+  return card.title || card.goalPath || "未命名目标";
+}
+function getProgressDisplayLevel(level) {
+  const normalized2 = Math.max(1, Math.floor(Number(level) || 1));
+  return Math.min(10, normalized2);
+}
+function getProgressLevelMeta(level) {
+  return PROGRESS_LEVEL_META[getProgressDisplayLevel(level) - 1] || PROGRESS_LEVEL_META[0];
+}
+function buildProgressSkillRows(card) {
+  return getVisibleProgressThemeBreakdown(card.themeBreakdown).map((row) => {
+    const safeLevelStep = Math.max(1, Number(card.levelStep || 1));
+    const level = Math.floor(Number(row.points || 0) / safeLevelStep) + 1;
+    const currentLevelPoints = Number(row.points || 0) - (level - 1) * safeLevelStep;
+    return {
+      key: row.key,
+      title: getProgressLeafLabel(row.key),
+      points: Number(row.points || 0),
+      count: Number(row.count || 0),
+      level,
+      levelMeta: getProgressLevelMeta(level),
+      progressRatio: clampProgressRatio(currentLevelPoints / safeLevelStep),
+      recentRecords: card.themeRecentRecords?.[row.key] || []
+    };
+  });
+}
+function getVisibleProgressThemeBreakdown(rows) {
+  return (rows || []).filter((row) => row.count > 0).slice(0, 8);
+}
+function ExperienceBar({ ratio: ratio2, tone = "goal" }) {
+  const style2 = { "--think-progress-ratio": progressBarWidth(ratio2) };
+  return /* @__PURE__ */ u2("span", { class: `think-progress-bar think-progress-bar--${tone}`, "aria-label": `进度 ${progressBarWidth(ratio2)}`, children: /* @__PURE__ */ u2("span", { class: "think-progress-bar__fill", style: style2 }) });
+}
+function ThemeRecords({ records, runtime }) {
+  if (!records.length) return /* @__PURE__ */ u2("div", { class: "think-progress-theme-records__empty", children: "该主题暂无记录" });
+  const fields = runtime.module.fields?.length ? runtime.module.fields : ["title", "content"];
+  return /* @__PURE__ */ u2("div", { class: "think-progress-theme-records", "aria-label": "主题记录", children: /* @__PURE__ */ u2(
+    BlockView,
+    {
+      items: records.map((record) => record.item),
+      fields,
+      onMarkDone: runtime.onMarkDone,
+      timerService: runtime.timerService,
+      timers: runtime.timers,
+      allThemes: runtime.allThemes,
+      goals: runtime.goals,
+      resolveResourcePath: runtime.resolveResourcePath,
+      onOpenRecordOrigin: runtime.onOpenRecordOrigin,
+      messageRenderPort: runtime.messageRenderPort,
+      onOpenRecord: runtime.onOpenRecord
+    }
+  ) });
+}
+function SkillList({ card, runtime }) {
+  const rows = buildProgressSkillRows(card);
+  const [openKey, setOpenKey] = d(null);
+  if (rows.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-empty-skill", children: "暂无主题成长记录" });
+  return /* @__PURE__ */ u2("div", { class: "think-progress-skills", role: "list", children: rows.map((row) => {
+    const open = openKey === row.key;
+    return /* @__PURE__ */ u2("div", { class: `think-progress-skill-group ${open ? "is-open" : ""}`, role: "listitem", children: [
+      /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: "think-progress-skill think-list-row think-list-row--interactive",
+          onClick: () => setOpenKey(open ? null : row.key),
+          "aria-expanded": open,
+          title: `${row.title} · ${row.points} XP · ${row.count} 条记录`,
+          children: [
+            /* @__PURE__ */ u2("span", { class: "think-progress-skill__bullet", "aria-hidden": "true", children: "•" }),
+            /* @__PURE__ */ u2("span", { class: "think-progress-skill__title", children: row.title }),
+            /* @__PURE__ */ u2("span", { class: "think-progress-skill__level", children: [
+              "Lv.",
+              row.levelMeta.level
+            ] }),
+            /* @__PURE__ */ u2(ExperienceBar, { ratio: row.progressRatio, tone: "skill" }),
+            /* @__PURE__ */ u2("span", { class: "think-progress-skill__tail", children: [
+              /* @__PURE__ */ u2("span", { class: "think-progress-skill__meta", children: [
+                row.points,
+                " XP · ",
+                row.count,
+                " 条"
+              ] }),
+              /* @__PURE__ */ u2("span", { class: "think-progress-skill__chevron", "aria-hidden": "true", children: /* @__PURE__ */ u2(ThinkIcon, { name: open ? "chevron-down" : "chevron-right" }) })
+            ] })
+          ]
+        }
+      ),
+      open && /* @__PURE__ */ u2(ThemeRecords, { records: row.recentRecords, runtime })
+    ] }, row.key);
+  }) });
+}
+function GoalProgressCard(props) {
+  const {
+    card,
+    expanded,
+    onToggle,
+    module: module2,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    resolveResourcePath,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    goals
+  } = props;
+  const title = getGoalProgressTitle(card);
+  const levelMeta = getProgressLevelMeta(card.level);
+  const runtime = {
+    module: module2,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    resolveResourcePath,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    goals
+  };
+  return /* @__PURE__ */ u2("section", { class: "think-progress-section think-progress-card", role: "listitem", children: [
+    /* @__PURE__ */ u2("button", { type: "button", onClick: onToggle, "aria-expanded": expanded, class: "think-progress-section__trigger think-list-row think-list-row--interactive", children: [
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__chevron", "aria-hidden": "true", children: /* @__PURE__ */ u2(ThinkIcon, { name: expanded ? "chevron-down" : "chevron-right" }) }),
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__icon", children: card.icon || "🧩" }),
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__name", children: [
+        /* @__PURE__ */ u2("span", { class: "think-progress-section__title", children: title }),
+        /* @__PURE__ */ u2("span", { class: "think-progress-section__level-title", children: [
+          levelMeta.icon,
+          " ",
+          levelMeta.title
+        ] })
+      ] }),
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__level", children: [
+        "Lv.",
+        levelMeta.level
+      ] }),
+      /* @__PURE__ */ u2(ExperienceBar, { ratio: card.progressRatio, tone: "goal" }),
+      /* @__PURE__ */ u2("span", { class: "think-progress-section__percent", children: ratioPercent(card.progressRatio) })
+    ] }),
+    expanded && /* @__PURE__ */ u2("div", { class: "think-progress-section__body", children: /* @__PURE__ */ u2(SkillList, { card, runtime }) })
+  ] });
+}
+function ProgressView({
+  module: module2,
+  items,
+  goals = [],
+  inputSettings,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  resolveResourcePath,
+  messageRenderPort,
+  onMarkDone,
+  timerService,
+  timers = [],
+  allThemes = []
+}) {
+  const progressModel = T$1(() => buildProgressViewRenderModel({ items, module: module2, goals, themes: inputSettings?.themes || allThemes }), [items, module2, goals, inputSettings?.themes, allThemes]);
+  const cards = progressModel.goalCards || [];
+  const [collapsedKeys, setCollapsedKeys] = d({});
+  if (cards.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-view__empty", children: "暂无目标成长记录" });
+  return /* @__PURE__ */ u2("div", { class: "think-progress-view think-list", role: "list", "aria-label": "成长视图", children: cards.map((card) => {
+    const expanded = collapsedKeys[card.key] !== true;
+    return /* @__PURE__ */ u2(
+      GoalProgressCard,
+      {
+        card,
+        module: module2,
+        expanded,
+        onToggle: () => setCollapsedKeys((prev2) => ({ ...prev2, [card.key]: expanded })),
+        onOpenRecord,
+        onOpenRecordOrigin,
+        resolveResourcePath,
+        messageRenderPort,
+        onMarkDone,
+        timerService,
+        timers,
+        allThemes,
+        goals
+      },
+      card.key
+    );
+  }) });
+}
+function text(value) {
+  return String(value ?? "").trim();
+}
+function taskTitle(item) {
+  const raw = text(item.editableText || item.content || item.title);
+  return raw || text(item.title) || "未命名任务";
+}
+function buildGoalMap(goals) {
+  return new Map((goals || []).map((goal) => [goal.id, goal]));
+}
+function resolveTaskGoal(item, goalsById) {
+  const goalId = text(item.goalId);
+  if (!goalId) return { key: "__unassigned__", label: "未分目标" };
+  const goal = goalsById.get(goalId);
+  const path = text(goal?.goalPath || item.goalPath) || void 0;
+  const label = text(goal?.title || path) || "未分目标";
+  return { key: goalId, path, label };
+}
+function completionIdentity(item) {
+  const seriesId = text(item.seriesId);
+  return seriesId ? `series:${seriesId}` : `task:${item.id}`;
+}
+function recurrenceText(item) {
+  return text(formatTaskRecurrence(item.recurrenceInfo));
+}
+function localCompletionDate(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return "";
+  return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
+}
+function localCompletionTime(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return "";
+  return `${String(date2.getHours()).padStart(2, "0")}:${String(date2.getMinutes()).padStart(2, "0")}`;
+}
+function completionHistoryMap(records, dateRange) {
+  const start2 = dayjs(dateRange[0]);
+  const end2 = dayjs(dateRange[1]);
+  const map = /* @__PURE__ */ new Map();
+  for (const item of records) {
+    if (item.coreBlock !== "task" || item.status !== "done") continue;
+    const completedAt = text(item.completedAt || item.doneDate);
+    if (!completedAt) continue;
+    const occurred = dayjs(completedAt);
+    if (!occurred.isValid() || occurred.isBefore(start2) || occurred.isAfter(end2)) continue;
+    const key = completionIdentity(item);
+    const rows = map.get(key) || [];
+    rows.push({
+      id: item.id,
+      doneDate: localCompletionDate(completedAt),
+      timeLabel: localCompletionTime(completedAt),
+      item
+    });
+    map.set(key, rows);
+  }
+  for (const rows of map.values()) {
+    rows.sort((a2, b2) => `${b2.doneDate || ""} ${b2.timeLabel}`.localeCompare(`${a2.doneDate || ""} ${a2.timeLabel}`, "zh-CN"));
+  }
+  return map;
+}
+function emptyCadenceMap() {
+  return new Map(TASK_CADENCE_ORDER.map((key) => [key, []]));
+}
+function fallbackEnergyWorkBlockMinutes(score) {
+  if (score == null || !Number.isFinite(score)) return 45;
+  if (score <= ENERGY_RECOMMENDATION_LOW_THRESHOLD) return 30;
+  if (score >= ENERGY_RECOMMENDATION_HIGH_THRESHOLD) return 60;
+  return 45;
+}
+function resolveSuggestedDurationMinutes(item, action, candidate, management) {
+  const recommended = Number(action?.suggestedDurationMinutes);
+  if (Number.isFinite(recommended) && recommended > 0) return Math.max(1, Math.min(240, Math.round(recommended)));
+  const learned = Number(candidate?.durationMinutes);
+  if (Number.isFinite(learned) && learned > 0) return Math.max(1, Math.min(240, Math.round(learned)));
+  const declared = Number(item.expectedDurationMinutes);
+  if (Number.isFinite(declared) && declared > 0) return Math.max(1, Math.min(240, Math.round(declared)));
+  return fallbackEnergyWorkBlockMinutes(management?.latest?.score);
+}
+function buildEnergyTaskListModel(args) {
+  const { items, historyItems, management, goals = [], today, dateRange, currentContext = "any" } = args;
+  const openTasks = items.filter((item) => item.coreBlock === "task" && isTaskOpen(item));
+  const visibleItems = openTasks;
+  const visibleIds = new Set(visibleItems.map((item) => item.id));
+  const completionHistory = completionHistoryMap(historyItems, dateRange);
+  const candidateBuild = buildEnergyActionCandidateResult(items, {
+    today,
+    maximumCandidates: 1e3,
+    includeRecurringTasks: true,
+    includeFutureTasks: false,
+    currentContext,
+    historyRecords: historyItems
+  });
+  const taskCandidates = candidateBuild.candidates.filter((candidate) => candidate.source === "task" && visibleIds.has(candidate.id));
+  const learning = buildEnergyRecommendationLearning(historyItems);
+  const learned = attachEnergyRecommendationLearning(taskCandidates, learning);
+  const enriched = attachEnergyRecommendationEvidence(learned, management);
+  let rankedIds = enriched.map((candidate) => candidate.id);
+  let recommendationStateLabel;
+  const actionById = /* @__PURE__ */ new Map();
+  if (management?.latest && enriched.length > 0) {
+    const ranked = buildEnergyActionRecommendations({
+      score: management.latest.score,
+      brainScore: management.latest.brainScore,
+      physicalScore: management.latest.physicalScore,
+      maximumRecommendations: Math.min(500, enriched.length),
+      actionPolicy: buildEnergyActionPolicyContext(historyItems, management, today)
+    }, enriched);
+    recommendationStateLabel = ranked.stateLabel;
+    rankedIds = ranked.recommendations.map((row) => row.candidate.id);
+    for (const row of ranked.recommendations) actionById.set(row.candidate.id, row);
+  }
+  const rank = new Map(rankedIds.map((id, index) => [id, index]));
+  const candidateById = new Map(enriched.map((candidate) => [candidate.id, candidate]));
+  const energyMatchedIds = /* @__PURE__ */ new Set();
+  if (management?.latest) {
+    const matchable = Array.from(actionById.values()).filter((row) => {
+      const candidate = row.candidate;
+      return !!candidate.brainLoad || !!candidate.physicalLoad || !!candidate.historicalEffect;
+    }).sort((left2, right2) => right2.fitScore - left2.fitScore).slice(0, 5);
+    for (const row of matchable) energyMatchedIds.add(row.candidate.id);
+  }
+  const goalsById = buildGoalMap(goals);
+  const goalBuckets = /* @__PURE__ */ new Map();
+  for (const item of visibleItems) {
+    const resolvedGoal = resolveTaskGoal(item, goalsById);
+    const goalPath = resolvedGoal.path;
+    const label = resolvedGoal.label;
+    const goalKey = resolvedGoal.key;
+    const cadence = getTaskCadence(item);
+    const history = completionHistory.get(completionIdentity(item)) || [];
+    const action = actionById.get(item.id);
+    const candidate = candidateById.get(item.id);
+    let bucket = goalBuckets.get(goalKey);
+    if (!bucket) {
+      bucket = { label, goalPath, rows: emptyCadenceMap() };
+      goalBuckets.set(goalKey, bucket);
+    }
+    bucket.rows.get(cadence).push({
+      key: item.id,
+      itemId: item.id,
+      title: taskTitle(item),
+      goalLabel: label,
+      goalPath,
+      cadence,
+      recurring: cadence !== "routine",
+      recurrenceLabel: recurrenceText(item),
+      count: history.length,
+      records: history,
+      suggestedDurationMinutes: resolveSuggestedDurationMinutes(item, action, candidate, management),
+      energyFitScore: action?.fitScore,
+      recommendationRank: action?.rank,
+      recommendationReason: action?.reason,
+      energyMatched: energyMatchedIds.has(item.id),
+      item
+    });
+  }
+  for (const bucket of goalBuckets.values()) {
+    for (const tasks of bucket.rows.values()) {
+      tasks.sort((left2, right2) => {
+        const leftRank = rank.get(left2.itemId) ?? Number.MAX_SAFE_INTEGER;
+        const rightRank = rank.get(right2.itemId) ?? Number.MAX_SAFE_INTEGER;
+        return leftRank - rightRank || left2.title.localeCompare(right2.title, "zh-CN");
+      });
+    }
+  }
+  const goalOrder = createGoalOrderIndex(goals);
+  const goalModels = Array.from(goalBuckets.entries()).sort(([, left2], [, right2]) => goalOrder.compareGoalPaths(left2.goalPath || left2.label, right2.goalPath || right2.label)).map(([key, bucket]) => {
+    const rows = TASK_CADENCE_ORDER.map((cadence) => ({
+      key: cadence,
+      ...TASK_CADENCE_META[cadence],
+      tasks: bucket.rows.get(cadence) || []
+    })).filter((row) => row.tasks.length > 0);
+    const taskCount = rows.reduce((sum, row) => sum + row.tasks.length, 0);
+    return {
+      key,
+      label: bucket.label,
+      goalPath: bucket.goalPath,
+      rows,
+      taskCount
+    };
+  }).filter((goal) => goal.taskCount > 0);
+  const taskVmById = /* @__PURE__ */ new Map();
+  for (const goal of goalModels) for (const row of goal.rows) for (const task of row.tasks) taskVmById.set(task.itemId, task);
+  const recommendations = Array.from(actionById.values()).sort((left2, right2) => (left2.rank || Number.MAX_SAFE_INTEGER) - (right2.rank || Number.MAX_SAFE_INTEGER)).slice(0, 3).flatMap((action) => {
+    const task = taskVmById.get(action.candidate.id);
+    return task ? [task] : [];
+  });
+  return {
+    goals: goalModels,
+    recommendations,
+    recommendationStateLabel,
+    currentContext,
+    latestEnergy: management?.latest ? {
+      itemId: management.latest.itemId,
+      score: management.latest.score,
+      brainScore: management.latest.brainScore,
+      physicalScore: management.latest.physicalScore,
+      date: management.latest.date,
+      time: management.latest.time
+    } : void 0,
+    diagnostics: {
+      openTaskCount: openTasks.length,
+      visibleTaskCount: goalModels.reduce((sum, goal) => sum + goal.taskCount, 0),
+      goalCount: goalModels.length
+    }
+  };
+}
+function normalizedGoalFilter(value) {
+  return normalizeGoalPath(String(value || "").trim()) || "";
+}
+function dateText(value) {
+  return dayjs(value).format("YYYY-MM-DD");
+}
+function periodLabel(currentView, dateRange) {
+  const start2 = dayjs(dateRange[0]);
+  const end2 = dayjs(dateRange[1]);
+  if (currentView === "天") return `${start2.format("YYYY-MM-DD")}`;
+  if (currentView === "周") return `${start2.format("MM-DD")} — ${end2.format("MM-DD")}`;
+  if (currentView === "月") return start2.format("YYYY-MM");
+  if (currentView === "季") return `${start2.year()} Q${start2.quarter()}`;
+  return start2.format("YYYY");
+}
+function periodRenderModel(period, goalItems, label, contextRecords) {
+  if (!period) return null;
+  return {
+    ...period,
+    label,
+    days: period.days.map((day) => ({
+      ...day,
+      samples: day.samples.map((sample) => ({
+        id: sample.itemId,
+        date: sample.date,
+        time: sample.time,
+        minuteOfDay: sample.minuteOfDay,
+        score: sample.score,
+        brainScore: sample.brainScore,
+        physicalScore: sample.physicalScore,
+        captureMode: sample.captureMode,
+        context: buildGoalEnergyContext(sample.item, contextRecords),
+        item: sample.item
+      }))
+    }))
+  };
+}
+function signed(value) {
+  const rounded = Math.round(value);
+  return `${rounded > 0 ? "+" : ""}${rounded}`;
+}
+function compactReviewLines(args) {
+  const { periodItems, patterns, management, quality } = args;
+  const lines = [];
+  if (quality.level === "limited") {
+    lines.push({ key: "data", label: "数据", text: quality.message });
+  }
+  const dayparts = (patterns?.dayparts || []).filter((row) => row.sampleCount >= 3 && row.meanScore != null);
+  if (dayparts.length >= 2) {
+    const best = [...dayparts].sort((a2, b2) => (b2.meanScore || 0) - (a2.meanScore || 0))[0];
+    const low = [...dayparts].sort((a2, b2) => (a2.meanScore || 0) - (b2.meanScore || 0))[0];
+    const gap2 = Math.abs((best.meanScore || 0) - (low.meanScore || 0));
+    if (best.key !== low.key && gap2 >= 10) {
+      lines.push({ key: "overall", label: "状态", text: `${best.label}相对较高（${Math.round(best.meanScore || 0)}，N=${best.sampleCount}），${low.label}相对较低（${Math.round(low.meanScore || 0)}，N=${low.sampleCount}）。` });
+    }
+  }
+  const recovery = management?.recoveryCandidates?.[0];
+  if (recovery) {
+    const prefix2 = recovery.evidence === "supported" ? "" : "初步观察：";
+    lines.push({ key: "recovery", label: "恢复", text: `${prefix2}${recovery.label}后偏回升（平均 ${signed(recovery.meanDelta)}，N=${recovery.sampleCount}）。` });
+  }
+  const depletion = management?.cautionCandidates?.[0];
+  if (depletion) {
+    const prefix2 = depletion.evidence === "supported" ? "" : "初步观察：";
+    lines.push({ key: "depletion", label: "消耗", text: `${prefix2}${depletion.label}后偏下降（平均 ${signed(depletion.meanDelta)}，N=${depletion.sampleCount}）。` });
+  }
+  const stop = patterns?.stopProxy;
+  if (stop && stop.followedByWorkCount >= 3 && stop.evidence !== "insufficient" && (stop.longContinuationRatio || 0) >= 0.5) {
+    lines.push({ key: "attention", label: "注意", text: `高精力后继续工作过久的情况较多（N=${stop.followedByWorkCount}），先定停止点更合适。` });
+  }
+  if (lines.length === 0 && periodItems.some(isEnergyItem)) {
+    lines.push({ key: "overall", label: "状态", text: "本周期已有记录，但暂时没有达到最小重复样本的稳定模式。" });
+  }
+  return lines.slice(0, 5);
+}
+function recordOccurrenceDate(item) {
+  if (item.coreBlock === "task-session" && item.sessionStartedAt) {
+    const date2 = new Date(item.sessionStartedAt);
+    if (Number.isFinite(date2.getTime())) {
+      return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
+    }
+  }
+  return String(item.date || item.doneDate || item.startDate || item.scheduledDate || item.createdDate || "").slice(0, 10);
+}
+function recordAtOrBefore(item, today, nowTime) {
+  const itemDate = recordOccurrenceDate(item);
+  if (!itemDate) return true;
+  if (itemDate < today) return true;
+  if (itemDate > today) return false;
+  if (item.coreBlock === "task-session" && item.sessionEndedAt) return Date.parse(item.sessionEndedAt) <= Date.now();
+  if (!isEnergyItem(item)) return true;
+  const itemTime = String(item.startTime || item.extra?.["时间"] || "00:00").slice(0, 5);
+  return itemTime <= nowTime;
+}
+function evidenceRecordsForGoal(records, goalKey, goals, startDate, endDate) {
+  const goalTaskIds = new Set(records.filter((item) => item.coreBlock === "task" && getItemGoalKey(item, goals) === goalKey).map((item) => item.id));
+  const sessions = records.filter((item) => {
+    if (item.coreBlock !== "task-session") return false;
+    if (getItemGoalKey(item, goals) !== goalKey && !goalTaskIds.has(String(item.taskId || ""))) return false;
+    if (!startDate || !endDate) return true;
+    const date2 = recordOccurrenceDate(item);
+    return Boolean(date2 && date2 >= startDate && date2 <= endDate);
+  });
+  const requiredIds = /* @__PURE__ */ new Set();
+  for (const session of sessions) {
+    for (const value of [session.id, session.taskId, session.startEnergyRecordId, session.endEnergyRecordId]) {
+      const id = String(value || "").trim();
+      if (id) requiredIds.add(id);
+    }
+  }
+  return records.filter((item) => requiredIds.has(item.id));
+}
+function itemInRange(item, startDate, endDate) {
+  const date2 = recordOccurrenceDate(item);
+  return Boolean(date2 && date2 >= startDate && date2 <= endDate);
+}
+function buildEnergyViewModel(args) {
+  const { items = [], records = items, module: module2, goals = [], themes = [], currentView, dateRange } = args;
+  const rawConfig = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {} };
+  const config2 = {
+    ...rawConfig,
+    windowDays: Math.max(1, Math.min(31, Math.floor(Number(rawConfig.windowDays) || 7))),
+    recentSampleLimit: Math.max(1, Math.min(20, Math.floor(Number(rawConfig.recentSampleLimit) || 5))),
+    maxGoals: Math.max(0, Math.min(20, Math.floor(Number(rawConfig.maxGoals) || 0))),
+    goalPath: String(rawConfig.goalPath || "").trim(),
+    analysisWindowDays: Math.max(7, Math.min(90, Math.floor(Number(rawConfig.analysisWindowDays) || 30))),
+    currentContext: ["any", "work", "home", "commute", "out"].includes(String(rawConfig.currentContext || "")) ? rawConfig.currentContext : "any"
+  };
+  const startDate = dateText(dateRange[0]);
+  const endDate = dateText(dateRange[1]);
+  const now2 = dayjs();
+  const today = now2.format("YYYY-MM-DD");
+  const nowTime = now2.format("HH:mm");
+  const displayPeriodLabel = periodLabel(currentView, dateRange);
+  const requestedGoal = normalizedGoalFilter(config2.goalPath);
+  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
+  const panels = [];
+  for (const bucket of buckets) {
+    const bucketPath = normalizedGoalFilter(bucket.goalPath || bucket.name);
+    if (requestedGoal && bucketPath !== requestedGoal && normalizedGoalFilter(bucket.name) !== requestedGoal) continue;
+    const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
+    if (!goalItems.some(isEnergyItem)) continue;
+    const periodItems = goalItems.filter((item) => itemInRange(item, startDate, endDate));
+    const allGoalEvidenceRecords = evidenceRecordsForGoal(records, bucket.name, goals);
+    const periodEvidenceRecords = evidenceRecordsForGoal(records, bucket.name, goals, startDate, endDate);
+    const currentEvidenceRecords = allGoalEvidenceRecords.filter((item) => recordAtOrBefore(item, today, nowTime));
+    const summary = buildGoalEnergySummary(goalItems, config2.recentSampleLimit, {
+      contextRecords: records,
+      effectRecords: allGoalEvidenceRecords
+    });
+    if (!summary) continue;
+    const patterns = buildEnergyPatterns(periodItems, { activityRecords: periodEvidenceRecords, analysisWindowDays: Math.max(7, Math.min(config2.analysisWindowDays, 90)) });
+    const currentHistoryItems = goalItems.filter((item) => recordAtOrBefore(item, today, nowTime));
+    const management = buildEnergyManagement(currentHistoryItems, { evidenceRecords: currentEvidenceRecords, analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: ENERGY_RECOMMENDATION_HIGH_THRESHOLD });
+    const periodManagement = buildEnergyManagement(periodItems, { evidenceRecords: periodEvidenceRecords, analysisWindowDays: config2.analysisWindowDays, highEnergyThreshold: ENERGY_RECOMMENDATION_HIGH_THRESHOLD });
+    const quality = buildEnergyDataQuality(periodItems, { startDate, endDate, effectRecords: periodEvidenceRecords });
+    const period = periodRenderModel(buildEnergyPeriod(goalItems, { currentView, startDate, endDate }), goalItems, displayPeriodLabel, records);
+    panels.push({
+      key: bucket.name,
+      title: bucket.alias || bucket.name,
+      goalPath: bucket.goalPath || bucket.name,
+      icon: bucket.icon || null,
+      summary,
+      period,
+      reviewLines: compactReviewLines({ periodItems, patterns, management: periodManagement, quality }),
+      quality,
+      patterns,
+      management
+    });
+  }
+  panels.sort((left2, right2) => {
+    const leftKey = `${left2.summary.latestDate || ""} ${left2.summary.latestTime || ""}`;
+    const rightKey = `${right2.summary.latestDate || ""} ${right2.summary.latestTime || ""}`;
+    return rightKey.localeCompare(leftKey);
+  });
+  const visible = config2.maxGoals > 0 ? panels.slice(0, config2.maxGoals) : panels;
+  const globalCurrentHistoryItems = items.filter((item) => recordAtOrBefore(item, today, nowTime));
+  const globalEvidenceRecords = records.filter((item) => recordAtOrBefore(item, today, nowTime));
+  const globalManagement = buildEnergyManagement(globalCurrentHistoryItems, {
+    evidenceRecords: globalEvidenceRecords,
+    analysisWindowDays: config2.analysisWindowDays,
+    highEnergyThreshold: ENERGY_RECOMMENDATION_HIGH_THRESHOLD
+  });
+  const taskList = buildEnergyTaskListModel({
+    items,
+    historyItems: records,
+    management: globalManagement,
+    goals,
+    today,
+    dateRange,
+    currentContext: config2.currentContext
+  });
+  return {
+    config: config2,
+    currentView,
+    periodLabel: displayPeriodLabel,
+    goalPanels: visible,
+    totalEnergySamples: visible.reduce((sum, panel) => sum + (panel.period?.totalSamples || 0), 0),
+    sampledGoalCount: visible.length,
+    taskList
+  };
+}
+function EnergyDot({ visual, selected = false, title, className = "", style: style2, onClick, cell = false }) {
+  const label = title || (visual.capture === "retrospective" ? "补录精力点" : "实时精力点");
+  const interactive = Boolean(onClick);
+  const activate = (event) => onClick?.(event);
+  return /* @__PURE__ */ u2(
+    "svg",
+    {
+      viewBox: "0 0 100 100",
+      role: interactive ? "button" : "img",
+      tabIndex: interactive ? 0 : void 0,
+      "aria-label": label,
+      class: `think-energy-dot ${cell ? "is-cell" : "is-plot"} is-${visual.capture} is-band-${visual.band} ${selected ? "is-selected" : ""} ${className}`.trim(),
+      style: style2,
+      onClick: (event) => activate(event),
+      onKeyDown: (event) => {
+        if (!interactive) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activate(event);
+        }
+      },
+      children: [
+        /* @__PURE__ */ u2("title", { children: label }),
+        /* @__PURE__ */ u2("circle", { class: "think-energy-dot__selection", cx: "50", cy: "50", r: "47" }),
+        /* @__PURE__ */ u2("circle", { class: "think-energy-dot__shape", cx: "50", cy: "50", r: "41" })
+      ]
+    }
+  );
+}
+const TIMELINE_SIZES = {
+  1: 10,
+  2: 16,
+  3: 23,
+  4: 31,
+  5: 40
+};
+const CALENDAR_SIZES = {
+  1: 7,
+  2: 11,
+  3: 15,
+  4: 20,
+  5: 27
+};
+function energyScoreBand(score) {
+  const value = Math.max(0, Math.min(100, Number(score) || 0));
+  if (value < 30) return 1;
+  if (value < 50) return 2;
+  if (value < 70) return 3;
+  if (value < 90) return 4;
+  return 5;
+}
+function buildEnergyDotVisual(args) {
+  const score = Math.max(0, Math.min(100, Number(args.score) || 0));
+  const band = energyScoreBand(score);
+  const sizes = args.density === "calendar" ? CALENDAR_SIZES : TIMELINE_SIZES;
+  return {
+    score,
+    band,
+    sizePx: sizes[band],
+    capture: args.capture
+  };
+}
+function energyDotStyle(visual, extra = {}) {
+  return {
+    "--think-energy-dot-size": `${visual.sizePx}px`,
+    ...extra
+  };
+}
+function monthKey(date2) {
+  return date2.slice(0, 7);
+}
+function monthLabel(key) {
+  return `${Number(key.slice(5, 7))}月`;
+}
+function mondayIndex(date2) {
+  const parsed = /* @__PURE__ */ new Date(`${date2}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return 0;
+  return (parsed.getDay() + 6) % 7;
+}
+function dayCaptureMode(day) {
+  return day.samples.length > 0 && day.samples.every((sample) => sample.captureMode === "retrospective") ? "retrospective" : "realtime";
+}
+function dayCaptureLabel(day) {
+  const retrospective = day.samples.filter((sample) => sample.captureMode === "retrospective").length;
+  if (retrospective === day.samples.length) return "仅补录";
+  if (retrospective > 0) return `含 ${retrospective} 次补录`;
+  return "实时";
+}
+function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
+  const months = /* @__PURE__ */ new Map();
+  for (const day of period.days) {
+    const key = monthKey(day.date);
+    const rows = months.get(key) || [];
+    rows.push(day);
+    months.set(key, rows);
+  }
+  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-daily-dots", "aria-label": `${period.currentView}每日精力`, children: [
+    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: [
+      period.label,
+      " · 一天一个点"
+    ] }) }),
+    /* @__PURE__ */ u2("div", { class: `think-energy-daily-dots__months is-${period.currentView === "年" ? "year" : "quarter"}`, children: [...months.entries()].map(([key, days]) => {
+      const blanks = days.length ? mondayIndex(days[0].date) : 0;
+      return /* @__PURE__ */ u2("div", { class: "think-energy-daily-dots__month", children: [
+        /* @__PURE__ */ u2("strong", { children: monthLabel(key) }),
+        /* @__PURE__ */ u2("div", { class: "think-energy-daily-dots__weekdays", children: [
+          /* @__PURE__ */ u2("span", { children: "一" }),
+          /* @__PURE__ */ u2("span", { children: "二" }),
+          /* @__PURE__ */ u2("span", { children: "三" }),
+          /* @__PURE__ */ u2("span", { children: "四" }),
+          /* @__PURE__ */ u2("span", { children: "五" }),
+          /* @__PURE__ */ u2("span", { children: "六" }),
+          /* @__PURE__ */ u2("span", { children: "日" })
+        ] }),
+        /* @__PURE__ */ u2("div", { class: "think-energy-daily-dots__grid", children: [
+          Array.from({ length: blanks }).map((_2, index) => /* @__PURE__ */ u2("i", {}, `blank-${index}`)),
+          days.map((day) => {
+            const score = day.dailyScore;
+            const keyValue = `day:${day.date}`;
+            if (score == null) return /* @__PURE__ */ u2("div", { class: "think-energy-daily-dot-cell is-missing" }, day.date);
+            const visual = buildEnergyDotVisual({ score, capture: dayCaptureMode(day), density: "calendar" });
+            return /* @__PURE__ */ u2("div", { class: "think-energy-daily-dot-cell", children: /* @__PURE__ */ u2(
+              EnergyDot,
+              {
+                visual,
+                cell: true,
+                selected: selectedKey === keyValue,
+                className: "think-energy-daily-dot",
+                style: energyDotStyle(visual),
+                title: `${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}${day.samples.length === 1 && onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
+                onClick: (event) => {
+                  if (day.samples.length === 1 && hasPlatformModifier(event) && onOpenRecordOrigin) {
+                    stopInteractionEvent(event);
+                    void onOpenRecordOrigin(day.samples[0].item);
+                    return;
+                  }
+                  onSelect?.({ kind: "day", day });
+                }
+              }
+            ) }, day.date);
+          })
+        ] })
+      ] }, key);
+    }) }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝当天含实时记录 · 空心＝当天仅补录 · 5 档尺寸＝日均精力 · Missing 留白" })
+  ] });
+}
+const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+const TIME_TICKS = [0, 360, 720, 1080, 1440];
+function weekday(date2) {
+  const parsed = /* @__PURE__ */ new Date(`${date2}T12:00:00`);
+  return Number.isNaN(parsed.getTime()) ? "" : WEEKDAYS[parsed.getDay()];
+}
+function shortDate(date2) {
+  const match5 = date2.match(/^\d{4}-(\d{2})-(\d{2})$/);
+  return match5 ? `${match5[1]}-${match5[2]}` : date2;
+}
+function dayNumber(date2) {
+  return date2.slice(-2);
+}
+function axisStyle(name, percent) {
+  return { [name]: `${percent}%` };
+}
+function dayCountStyle(count) {
+  return { "--think-energy-day-count": String(count) };
+}
+function sampleTitle(sample) {
+  const parts = [`${sample.date} ${sample.time}`, `综合 ${sample.score}`];
+  if (sample.brainScore != null) parts.push(`脑力 ${sample.brainScore}`);
+  if (sample.physicalScore != null) parts.push(`体力 ${sample.physicalScore}`);
+  parts.push(sample.captureMode === "retrospective" ? "补录" : "实时");
+  return parts.join(" · ");
+}
+function sampleVisual(sample) {
+  return buildEnergyDotVisual({
+    score: sample.score,
+    capture: sample.captureMode,
+    density: "timeline"
+  });
+}
+function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
+  const day = period.days[0];
+  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-day-map", "aria-label": "日精力地图", children: [
+    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: period.label }) }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-day-map__track", children: [
+      TIME_TICKS.map((tick) => /* @__PURE__ */ u2("span", { class: "think-energy-day-map__guide", style: axisStyle("--think-energy-x", tick / 1440 * 100), children: [
+        /* @__PURE__ */ u2("i", {}),
+        /* @__PURE__ */ u2("b", { children: [
+          String(Math.floor(tick / 60)).padStart(2, "0"),
+          ":00"
+        ] })
+      ] }, tick)),
+      day?.samples.map((sample) => {
+        const visual = sampleVisual(sample);
+        return /* @__PURE__ */ u2(
+          EnergyDot,
+          {
+            visual,
+            selected: selectedKey === sample.id,
+            className: "think-energy-map-dot",
+            style: energyDotStyle(visual, { "--think-energy-x": `${sample.minuteOfDay / 1440 * 100}%` }),
+            title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
+            onClick: (event) => {
+              if (hasPlatformModifier(event) && onOpenRecordOrigin) {
+                stopInteractionEvent(event);
+                void onOpenRecordOrigin(sample.item);
+                return;
+              }
+              onSelect?.({ kind: "sample", sample });
+            }
+          },
+          sample.id
+        );
+      }),
+      !day?.sampled && /* @__PURE__ */ u2("span", { class: "think-energy-day-map__empty", children: "当天未记录" })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低" })
+  ] });
+}
+function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
+  const isMonth = period.currentView === "月";
+  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-date-map", "aria-label": `${period.currentView}精力地图`, children: [
+    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: [
+      period.label,
+      " · ",
+      period.sampledDays,
+      "/",
+      period.days.length,
+      " 天有记录"
+    ] }) }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-date-map__scroll", children: /* @__PURE__ */ u2("div", { class: `think-energy-date-map__chart ${isMonth ? "is-month" : "is-week"}`, children: [
+      /* @__PURE__ */ u2("div", { class: "think-energy-date-map__axis", children: [
+        /* @__PURE__ */ u2("div", { class: "think-energy-date-map__axis-head" }),
+        /* @__PURE__ */ u2("div", { class: "think-energy-date-map__axis-track", children: TIME_TICKS.map((tick) => /* @__PURE__ */ u2("span", { style: axisStyle("--think-energy-y", tick / 1440 * 100), children: [
+          String(Math.floor(tick / 60)).padStart(2, "0"),
+          ":00"
+        ] }, tick)) })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "think-energy-date-map__days", style: dayCountStyle(period.days.length), children: period.days.map((day) => /* @__PURE__ */ u2("div", { class: `think-energy-date-map__day ${day.sampled ? "" : "is-missing"}`, children: [
+        /* @__PURE__ */ u2("div", { class: "think-energy-date-map__day-head", children: [
+          !isMonth && /* @__PURE__ */ u2("strong", { children: weekday(day.date) }),
+          /* @__PURE__ */ u2("span", { children: isMonth ? dayNumber(day.date) : shortDate(day.date) })
+        ] }),
+        /* @__PURE__ */ u2("div", { class: "think-energy-date-map__lane", children: [
+          TIME_TICKS.map((tick) => /* @__PURE__ */ u2("i", { class: "think-energy-date-map__guide", style: axisStyle("--think-energy-y", tick / 1440 * 100) }, tick)),
+          day.samples.map((sample) => {
+            const visual = sampleVisual(sample);
+            return /* @__PURE__ */ u2(
+              EnergyDot,
+              {
+                visual,
+                selected: selectedKey === sample.id,
+                className: "think-energy-map-dot",
+                style: energyDotStyle(visual, { "--think-energy-y": `${sample.minuteOfDay / 1440 * 100}%` }),
+                title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
+                onClick: (event) => {
+                  if (hasPlatformModifier(event) && onOpenRecordOrigin) {
+                    stopInteractionEvent(event);
+                    void onOpenRecordOrigin(sample.item);
+                    return;
+                  }
+                  onSelect?.({ kind: "sample", sample });
+                }
+              },
+              sample.id
+            );
+          })
+        ] })
+      ] }, day.date)) })
+    ] }) }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低 · Missing 留白" })
+  ] });
+}
+function EnergyPeriodMap(props) {
+  const { period } = props;
+  if (!period) return /* @__PURE__ */ u2("div", { class: "think-energy-period-map think-energy-period-map--empty", children: "本周期没有精力记录。" });
+  if (period.mode === "day-horizontal") return /* @__PURE__ */ u2(EnergyDayMap, { ...props, period });
+  if (period.mode === "date-time") return /* @__PURE__ */ u2(EnergyDateTimeMap, { ...props, period });
+  return /* @__PURE__ */ u2(EnergyCalendarMap, { ...props, period });
+}
+function EnergyPeriodReview({ periodLabel: periodLabel2, lines }) {
+  return /* @__PURE__ */ u2("aside", { class: "think-energy-review", "aria-label": "本周期精力复盘", children: [
+    /* @__PURE__ */ u2("div", { class: "think-energy-review__head", children: [
+      /* @__PURE__ */ u2("strong", { children: "本周期" }),
+      /* @__PURE__ */ u2("span", { children: periodLabel2 })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-review__list", children: lines.map((line2) => /* @__PURE__ */ u2("div", { class: "think-energy-review__row", children: [
+      /* @__PURE__ */ u2("span", { children: line2.label }),
+      /* @__PURE__ */ u2("p", { children: line2.text })
+    ] }, `${line2.key}-${line2.text}`)) })
+  ] });
+}
+function RecordAction({ item, label, className = "think-energy-detail__open", onOpenRecord, onOpenRecordOrigin }) {
+  const gesture = createRecordGestureHandlers({
+    item,
+    onPrimary: () => void onOpenRecord?.(item),
+    onOpenOrigin: onOpenRecordOrigin
+  });
+  return /* @__PURE__ */ u2(
+    "button",
+    {
+      type: "button",
+      class: className,
+      title: RECORD_GESTURE_HINT,
+      onClick: gesture.onClick,
+      onDblClick: gesture.onDblClick,
+      onTouchEnd: gesture.onTouchEnd,
+      onKeyDown: gesture.onKeyDown,
+      children: label
+    }
+  );
+}
+function barStyle(value) {
+  return { "--think-energy-detail-value": `${Math.max(0, Math.min(100, value ?? 0))}%` };
+}
+function signalsText(selection) {
+  const signals = selection.sample.context?.dailySignals || [];
+  return signals.map((signal) => `${signal.label}${signal.value != null ? ` ${signal.value}` : ""}`).join(" · ");
+}
+function impactText(selection, management) {
+  const activity = selection.sample.context?.activity;
+  if (!activity) return null;
+  const label = classifyEnergyActivity(activity.item);
+  const candidate = [...management?.recoveryCandidates || [], ...management?.cautionCandidates || []].find((row) => row.label === label);
+  if (!candidate) return null;
+  const delta = Math.round(candidate.meanDelta);
+  return `${label} · 预计 ${delta > 0 ? "+" : ""}${delta}`;
+}
+function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecordOrigin }) {
+  const point = selection.sample;
+  const activity = point.context?.activity;
+  const signals = signalsText(selection);
+  const impact = impactText(selection, management);
+  return /* @__PURE__ */ u2("aside", { class: "think-energy-detail", "aria-label": "精力记录详情", children: [
+    /* @__PURE__ */ u2("button", { type: "button", class: "think-energy-detail__back", onClick: onBack, children: "‹ 返回本周期" }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-detail__head", children: [
+      /* @__PURE__ */ u2("div", { children: [
+        /* @__PURE__ */ u2("strong", { children: point.date }),
+        /* @__PURE__ */ u2("span", { children: point.time })
+      ] }),
+      /* @__PURE__ */ u2("span", { class: `think-energy-detail__mode ${point.captureMode === "retrospective" ? "is-retrospective" : ""}`, children: point.captureMode === "retrospective" ? "补录" : "实时" })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-detail__total", children: [
+      /* @__PURE__ */ u2("strong", { children: point.score }),
+      /* @__PURE__ */ u2("span", { children: "综合" })
+    ] }),
+    (point.brainScore != null || point.physicalScore != null) && /* @__PURE__ */ u2("div", { class: "think-energy-detail__bars", children: [
+      point.brainScore != null && /* @__PURE__ */ u2("div", { title: `脑力 ${point.brainScore}`, children: [
+        /* @__PURE__ */ u2("span", { children: "脑力" }),
+        /* @__PURE__ */ u2("i", { style: barStyle(point.brainScore), children: /* @__PURE__ */ u2("b", {}) })
+      ] }),
+      point.physicalScore != null && /* @__PURE__ */ u2("div", { title: `体力 ${point.physicalScore}`, children: [
+        /* @__PURE__ */ u2("span", { children: "体力" }),
+        /* @__PURE__ */ u2("i", { style: barStyle(point.physicalScore), children: /* @__PURE__ */ u2("b", {}) })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-detail__section", children: [
+      /* @__PURE__ */ u2("strong", { children: "当时" }),
+      activity ? /* @__PURE__ */ u2("p", { children: [
+        "前后活动　",
+        activity.title,
+        activity.durationMinutes ? ` · ${activity.durationMinutes}min` : ""
+      ] }) : /* @__PURE__ */ u2("p", { children: "附近没有可靠活动" }),
+      signals && /* @__PURE__ */ u2("p", { children: [
+        "当天　　　",
+        signals
+      ] })
+    ] }),
+    impact && /* @__PURE__ */ u2("div", { class: "think-energy-detail__impact", children: [
+      /* @__PURE__ */ u2("span", { children: "活动影响" }),
+      /* @__PURE__ */ u2("strong", { children: impact })
+    ] }),
+    onOpenRecord && /* @__PURE__ */ u2(RecordAction, { item: point.item, label: "打开记录 →", onOpenRecord, onOpenRecordOrigin })
+  ] });
+}
+function DayDetail({ selection, onBack, onOpenRecord, onOpenRecordOrigin }) {
+  const { day } = selection;
+  const latest2 = day.samples[day.samples.length - 1];
+  return /* @__PURE__ */ u2("aside", { class: "think-energy-detail", "aria-label": "每日精力详情", children: [
+    /* @__PURE__ */ u2("button", { type: "button", class: "think-energy-detail__back", onClick: onBack, children: "‹ 返回本周期" }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-detail__head", children: /* @__PURE__ */ u2("div", { children: [
+      /* @__PURE__ */ u2("strong", { children: day.date }),
+      /* @__PURE__ */ u2("span", { children: [
+        day.samples.length,
+        " 次记录"
+      ] })
+    ] }) }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-detail__total", children: [
+      /* @__PURE__ */ u2("strong", { children: day.dailyScore ?? "—" }),
+      /* @__PURE__ */ u2("span", { children: "当日平均" })
+    ] }),
+    (day.dailyBrainScore != null || day.dailyPhysicalScore != null) && /* @__PURE__ */ u2("div", { class: "think-energy-detail__bars", children: [
+      day.dailyBrainScore != null && /* @__PURE__ */ u2("div", { title: `脑力日均 ${day.dailyBrainScore}`, children: [
+        /* @__PURE__ */ u2("span", { children: "脑力" }),
+        /* @__PURE__ */ u2("i", { style: barStyle(day.dailyBrainScore), children: /* @__PURE__ */ u2("b", {}) })
+      ] }),
+      day.dailyPhysicalScore != null && /* @__PURE__ */ u2("div", { title: `体力日均 ${day.dailyPhysicalScore}`, children: [
+        /* @__PURE__ */ u2("span", { children: "体力" }),
+        /* @__PURE__ */ u2("i", { style: barStyle(day.dailyPhysicalScore), children: /* @__PURE__ */ u2("b", {}) })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-detail__section", children: [
+      /* @__PURE__ */ u2("strong", { children: "当天记录" }),
+      day.samples.map((sample) => /* @__PURE__ */ u2(RecordAction, { item: sample.item, label: `${sample.time}　综合 ${sample.score}`, className: "think-energy-detail__record-row", onOpenRecord, onOpenRecordOrigin }, sample.id))
+    ] }),
+    latest2 && onOpenRecord && /* @__PURE__ */ u2(RecordAction, { item: latest2.item, label: "打开最后一条记录 →", onOpenRecord, onOpenRecordOrigin })
+  ] });
+}
+function EnergySampleDetail(props) {
+  if (!props.selection) return null;
+  if (props.selection.kind === "day") return /* @__PURE__ */ u2(DayDetail, { ...props, selection: props.selection });
+  return /* @__PURE__ */ u2(SampleDetail, { ...props, selection: props.selection });
+}
+function recordLabel(record) {
+  return record.timeLabel || record.doneDate || "查看记录";
+}
+const CONTEXT_OPTIONS = [
+  { value: "any", label: "任意" },
+  { value: "work", label: "工作" },
+  { value: "home", label: "家" },
+  { value: "commute", label: "通勤" },
+  { value: "out", label: "外出" }
+];
+function durationClock(minutes) {
+  const totalSeconds = Math.max(60, Math.round(Math.max(1, minutes) * 60));
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor(totalSeconds % 3600 / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  return `${String(mins).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+function taskHover(task) {
+  return [
+    task.recommendationReason || task.title,
+    `倒计时 ${durationClock(task.suggestedDurationMinutes)}`,
+    "点击开始/继续计时",
+    "Ctrl/⌘+点击打开原文",
+    "右键更多"
+  ].filter(Boolean).join(" · ");
+}
+function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecordOrigin, onClose }) {
+  const editTask = () => {
+    void onOpenRecord?.(task.item);
+    onClose();
+  };
+  const taskGesture = createRecordGestureHandlers({
+    item: task.item,
+    onPrimary: editTask,
+    onOpenOrigin: onOpenRecordOrigin ? (originItem) => {
+      void onOpenRecordOrigin(originItem);
+      onClose();
+    } : void 0
+  });
+  return /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu", ref: menuRef, style: `left:${menu.x}px;top:${menu.y}px;`, children: [
+    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-title", children: task.title }),
+    /* @__PURE__ */ u2(
+      ThinkButton,
+      {
+        variant: "link",
+        size: "sm",
+        className: "think-energy-task-list__menu-action",
+        title: RECORD_GESTURE_HINT,
+        onClick: taskGesture.onClick,
+        onDblClick: taskGesture.onDblClick,
+        onTouchEnd: taskGesture.onTouchEnd,
+        onKeyDown: taskGesture.onKeyDown,
+        children: "编辑任务"
+      }
+    ),
+    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-meta", children: [
+      currentView,
+      "内完成 ",
+      task.count,
+      " 次"
+    ] }),
+    task.recurrenceLabel && /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-meta", children: task.recurrenceLabel }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-records", children: task.records.length > 0 ? task.records.map((record) => {
+      const gesture = createRecordGestureHandlers({
+        item: record.item,
+        onOpenOrigin: onOpenRecordOrigin ? (originItem) => {
+          void onOpenRecordOrigin(originItem);
+          onClose();
+        } : void 0,
+        onPrimary: () => {
+          void onOpenRecord?.(record.item);
+          onClose();
+        }
+      });
+      return /* @__PURE__ */ u2(
+        "a",
+        {
+          class: "think-energy-task-list__menu-record",
+          href: "#",
+          title: RECORD_GESTURE_HINT,
+          onClick: gesture.onClick,
+          onDblClick: gesture.onDblClick,
+          onTouchEnd: gesture.onTouchEnd,
+          onKeyDown: gesture.onKeyDown,
+          children: recordLabel(record)
+        },
+        record.id
+      );
+    }) : /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-empty", children: "暂无历史记录" }) })
+  ] });
+}
+function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, onOpenRecordOrigin, onContextChange }) {
+  const [menu, setMenu] = d(null);
+  const menuRef = A$1(null);
+  const taskMap = T$1(() => {
+    const map = /* @__PURE__ */ new Map();
+    for (const goal of model.goals) {
+      for (const row of goal.rows) {
+        for (const task of row.tasks) map.set(task.itemId, task);
+      }
+    }
+    return map;
+  }, [model]);
+  const selectedTask = menu ? taskMap.get(menu.taskId) || null : null;
+  h(() => {
+    const onDown = (event) => {
+      if (!menuRef.current || menuRef.current.contains(event.target)) return;
+      setMenu(null);
+    };
+    const onEsc = (event) => {
+      if (event.key === "Escape") setMenu(null);
+    };
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onEsc);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onEsc);
+    };
+  }, []);
+  const activateTask = (task, event) => {
+    if (event && hasPlatformModifier(event) && onOpenRecordOrigin) {
+      stopInteractionEvent(event);
+      void onOpenRecordOrigin(task.item);
+      return;
+    }
+    void onStartTask?.(task);
+  };
+  const contextLabel = CONTEXT_OPTIONS.find((option) => option.value === model.currentContext)?.label || "任意";
+  return /* @__PURE__ */ u2("section", { class: "think-energy-task-list", "aria-label": "任务", children: [
+    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendation-shell", "aria-label": "当前推荐", children: [
+      /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendation-head", children: [
+        /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendation-heading", children: [
+          /* @__PURE__ */ u2("strong", { children: "现在适合" }),
+          model.latestEnergy ? /* @__PURE__ */ u2("span", { children: [
+            model.recommendationStateLabel || "当前精力",
+            " · ",
+            model.latestEnergy.score
+          ] }) : /* @__PURE__ */ u2("span", { children: "记录当前精力后生成推荐" })
+        ] }),
+        /* @__PURE__ */ u2("div", { class: "think-energy-task-list__context", children: [
+          /* @__PURE__ */ u2("span", { children: "场景" }),
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: model.currentContext,
+              options: CONTEXT_OPTIONS,
+              className: "think-energy-task-list__context-select",
+              onChange: (value) => void onContextChange?.(value)
+            }
+          )
+        ] })
+      ] }),
+      model.latestEnergy ? model.recommendations.length > 0 ? /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendations", role: "list", children: model.recommendations.map((task, index) => /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          role: "listitem",
+          class: "think-energy-task-list__recommendation think-list-row think-list-row--interactive",
+          title: taskHover(task),
+          onClick: (event) => activateTask(task, event),
+          onKeyDown: (event) => {
+            if (hasPlatformModifier(event) && isKeyboardActivation(event)) activateTask(task, event);
+          },
+          onContextMenu: (event) => {
+            event.preventDefault();
+            setMenu({ x: event.clientX, y: event.clientY, taskId: task.itemId });
+          },
+          children: [
+            /* @__PURE__ */ u2("span", { class: "think-energy-task-list__recommendation-rank", children: task.recommendationRank || index + 1 }),
+            /* @__PURE__ */ u2("span", { class: "think-energy-task-list__recommendation-title", children: task.title }),
+            /* @__PURE__ */ u2("span", { class: "think-energy-task-list__recommendation-duration", children: durationClock(task.suggestedDurationMinutes) }),
+            /* @__PURE__ */ u2("span", { class: "think-energy-task-list__recommendation-play", "aria-hidden": "true", children: /* @__PURE__ */ u2(ThinkIcon, { name: "play" }) })
+          ]
+        },
+        `recommendation:${task.itemId}`
+      )) }) : /* @__PURE__ */ u2("div", { class: "think-energy-task-list__recommendation-empty think-list-empty", children: [
+        "当前“",
+        contextLabel,
+        "”场景没有可推荐任务。"
+      ] }) : null
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__all-head", children: "全部任务" }),
+    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__goals", children: model.goals.length > 0 ? model.goals.map((goal) => /* @__PURE__ */ u2("section", { class: "think-energy-task-list__goal-group", children: [
+      /* @__PURE__ */ u2("div", { class: "think-energy-task-list__goal-title", children: goal.label }),
+      /* @__PURE__ */ u2("div", { class: "think-energy-task-list__rows", children: goal.rows.map((row) => /* @__PURE__ */ u2("div", { class: `think-energy-task-list__row think-energy-task-list__row--${row.key}`, children: [
+        /* @__PURE__ */ u2("div", { class: "think-energy-task-list__row-label", title: row.label, "aria-label": row.label, children: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: row.emoji }) }),
+        /* @__PURE__ */ u2("div", { class: "think-energy-task-list__items", children: row.tasks.map((task) => /* @__PURE__ */ u2(
+          "button",
+          {
+            type: "button",
+            class: `think-energy-task-list__item think-energy-task-list__item--${task.cadence}`,
+            title: taskHover(task),
+            onClick: (event) => activateTask(task, event),
+            onKeyDown: (event) => {
+              if (hasPlatformModifier(event) && isKeyboardActivation(event)) activateTask(task, event);
+            },
+            onContextMenu: (event) => {
+              event.preventDefault();
+              setMenu({ x: event.clientX, y: event.clientY, taskId: task.itemId });
+            },
+            children: [
+              /* @__PURE__ */ u2("span", { class: "think-energy-task-list__task", children: task.title }),
+              task.recurring && task.count > 0 && /* @__PURE__ */ u2("span", { class: "think-energy-task-list__count", children: [
+                "·",
+                task.count
+              ] }),
+              task.energyMatched && /* @__PURE__ */ u2("span", { class: "think-energy-task-list__energy-match", "aria-label": "当前精力更匹配", title: "当前精力更匹配", children: "★" })
+            ]
+          },
+          task.itemId
+        )) })
+      ] }, row.key)) })
+    ] }, goal.key)) : /* @__PURE__ */ u2("div", { class: "think-energy-task-list__empty-state think-list-empty", children: "当前没有未完成任务。" }) }),
+    menu && selectedTask && /* @__PURE__ */ u2(
+      TaskMenu,
+      {
+        menu,
+        task: selectedTask,
+        currentView,
+        menuRef,
+        onOpenRecord,
+        onOpenRecordOrigin,
+        onClose: () => setMenu(null)
+      }
+    )
+  ] });
+}
+function selectionKey(selection) {
+  if (!selection) return null;
+  return selection.kind === "sample" ? selection.sample.id : `day:${selection.day.date}`;
+}
+function GoalEnergyPanel({ panel, model, onOpenRecord, onOpenRecordOrigin }) {
+  const [selection, setSelection] = d(null);
+  return /* @__PURE__ */ u2("section", { class: "think-energy-view__goal", children: /* @__PURE__ */ u2("div", { class: "think-energy-view__primary", children: [
+    model.config.showTimeline ? /* @__PURE__ */ u2(EnergyPeriodMap, { period: panel.period, selectedKey: selectionKey(selection), onSelect: setSelection, onOpenRecordOrigin }) : /* @__PURE__ */ u2("div", { class: "think-energy-view__timeline-off", children: "精力地图已关闭。" }),
+    selection ? /* @__PURE__ */ u2(
+      EnergySampleDetail,
+      {
+        selection,
+        management: model.config.showManagement ? panel.management : null,
+        onBack: () => setSelection(null),
+        onOpenRecord,
+        onOpenRecordOrigin
+      }
+    ) : /* @__PURE__ */ u2(EnergyPeriodReview, { periodLabel: model.periodLabel, lines: panel.reviewLines })
+  ] }) });
+}
+function EmptyEnergyPanel() {
+  return /* @__PURE__ */ u2("section", { class: "think-energy-view__goal think-energy-view__goal--empty", children: /* @__PURE__ */ u2("div", { class: "think-energy-view think-energy-view--empty", children: [
+    /* @__PURE__ */ u2("strong", { children: "还没有可展示的精力记录" }),
+    /* @__PURE__ */ u2("span", { children: "任务仍可直接从下方开始；精力记录可继续使用现有快捷入口。" })
+  ] }) });
+}
+function EnergyView({ items, records = items, module: module2, dateRange, currentView, goals = [], inputSettings, timers = [], onOpenRecord, onOpenRecordOrigin, timerService, onEnergyContextChange }) {
+  const energyModel = T$1(() => buildEnergyViewModel({
+    items,
+    records,
+    module: module2,
+    dateRange,
+    currentView,
+    goals,
+    themes: inputSettings?.themes || []
+  }), [items, records, module2, dateRange, currentView, goals, inputSettings?.themes, timers]);
+  const startTask = async (task) => {
+    const baseline = energyModel.taskList.latestEnergy;
+    if (baseline && timerService?.startEnergyTask) {
+      await timerService.startEnergyTask(task.itemId, {
+        baselineScore: baseline.score,
+        baselineBrainScore: baseline.brainScore,
+        baselinePhysicalScore: baseline.physicalScore,
+        baselineDate: baseline.date,
+        baselineTime: baseline.time,
+        baselineEnergyItemId: baseline.itemId,
+        suggestedDurationMinutes: task.suggestedDurationMinutes
+      });
+      return;
+    }
+    await timerService?.startOrResume(task.itemId);
+  };
+  const [firstPanel, ...otherPanels] = energyModel.goalPanels;
+  return /* @__PURE__ */ u2("div", { class: "think-energy-view", children: /* @__PURE__ */ u2("div", { class: "think-energy-view__goals", children: [
+    firstPanel ? /* @__PURE__ */ u2(GoalEnergyPanel, { panel: firstPanel, model: energyModel, onOpenRecord, onOpenRecordOrigin }) : /* @__PURE__ */ u2(EmptyEnergyPanel, {}),
+    /* @__PURE__ */ u2(
+      EnergyTaskList,
+      {
+        model: energyModel.taskList,
+        currentView: energyModel.currentView,
+        onStartTask: timerService ? startTask : void 0,
+        onOpenRecord,
+        onOpenRecordOrigin,
+        onContextChange: onEnergyContextChange
+      }
+    ),
+    otherPanels.map((panel) => /* @__PURE__ */ u2(GoalEnergyPanel, { panel, model: energyModel, onOpenRecord, onOpenRecordOrigin }, panel.key))
+  ] }) });
+}
+function isTableViewConfigured(rowField, colField) {
+  return Boolean(rowField && colField);
+}
+function getTableViewEmptyMessage() {
+  return '（表格视图需要配置"行字段"和"列字段"）';
+}
+function buildTableViewRenderModel(input) {
+  if (!isTableViewConfigured(input.rowField, input.colField)) {
+    return {
+      isConfigured: false,
+      emptyMessage: getTableViewEmptyMessage(),
+      matrix: {},
+      sortedRows: [],
+      sortedCols: []
+    };
+  }
+  const { matrix, sortedRows, sortedCols } = buildTableMatrix(input.items, input.rowField, input.colField, { goals: input.goals ?? [] });
+  return {
+    isConfigured: true,
+    emptyMessage: "",
+    matrix,
+    sortedRows,
+    sortedCols
+  };
+}
+function findTableViewTimer(timers, itemId) {
+  return (timers ?? []).find((timer) => timer?.taskId === itemId);
+}
+function TableViewCell(props) {
+  const {
+    items,
+    onMarkDone,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  } = props;
+  if (!items.length) return /* @__PURE__ */ u2("td", { class: "empty" });
+  return /* @__PURE__ */ u2("td", { children: items.map((item) => /* @__PURE__ */ u2("div", { class: "think-table-cell-item", children: item.coreBlock === "task" ? /* @__PURE__ */ u2(
+    TaskRow,
+    {
+      item,
+      onMarkDone,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      timerService,
+      timer: findTableViewTimer(timers, item.id),
+      allThemes,
+      compact: true,
+      onOpenRecord
+    }
+  ) : /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin }) }, item.id)) });
+}
+function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], goals = [], onOpenRecord }) {
+  const renderModel = buildTableViewRenderModel({ items, rowField, colField, goals });
+  if (!renderModel.isConfigured) {
+    return /* @__PURE__ */ u2("div", { class: "think-data-grid-empty", children: renderModel.emptyMessage });
+  }
+  return /* @__PURE__ */ u2("div", { class: "think-data-grid-scroll", children: /* @__PURE__ */ u2("table", { class: "think-table think-data-grid think-data-grid--matrix", children: [
+    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("th", { children: rowField }),
+      renderModel.sortedCols.map((col) => /* @__PURE__ */ u2("th", { children: col }, col))
+    ] }) }),
+    /* @__PURE__ */ u2("tbody", { children: renderModel.sortedRows.map((row) => /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: row }) }),
+      renderModel.sortedCols.map((col) => /* @__PURE__ */ u2(
+        TableViewCell,
+        {
+          items: renderModel.matrix[row]?.[col] || [],
+          onMarkDone,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          timerService,
+          timers,
+          allThemes,
+          onOpenRecord
+        },
+        col
+      ))
+    ] }, row)) })
+  ] }) });
+}
+function isOptionLikeValue(value) {
+  return !!value && typeof value === "object" && ("value" in value || "label" in value);
+}
+function formatExcelCellValue(value) {
+  if (Array.isArray(value)) return value.map(formatExcelCellValue).filter(Boolean).join(", ");
+  if (isOptionLikeValue(value)) return String(value.label ?? value.value ?? "");
+  if (value === true) return "true";
+  if (value === false) return "false";
+  return value == null ? "" : String(value);
+}
+function toDateInputValue(value) {
+  const text2 = formatExcelCellValue(value).trim();
+  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match5 ? match5[1] : text2;
+}
+function toTimeInputValue(value) {
+  const text2 = formatExcelCellValue(value).trim();
+  const match5 = text2.match(/^(\d{1,2}:\d{2})/);
+  return match5 ? match5[1].padStart(5, "0") : text2;
+}
+function toDateTimeInputValue(value) {
+  const text2 = formatExcelCellValue(value).trim();
+  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})/);
+  return match5 ? `${match5[1]}T${match5[2]}` : text2;
+}
+function isValidDateInput(value) {
+  return !value || /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+function isValidTimeInput(value) {
+  return !value || /^\d{1,2}:\d{2}$/.test(value);
+}
+function isValidDateTimeInput(value) {
+  return !value || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
+}
+function truncateExcelCellText(text2, maxLength = 20) {
+  if (text2.length <= maxLength) return text2;
+  return text2.substring(0, maxLength) + "...";
+}
+function normalizeExcelColumnKey(field) {
+  return normalizeEditableFieldKey(field);
+}
+function buildExcelColumns(fields) {
+  const seen = /* @__PURE__ */ new Set();
+  const columns = [];
+  for (const field of fields) {
+    const key = normalizeExcelColumnKey(field);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    const policy = getFieldEditPolicy(key);
+    columns.push({
+      key,
+      canonicalField: policy.canonicalField,
+      label: getFieldLabel(key) || key,
+      editable: policy.editable && policy.commitMode === "inline",
+      editorKind: policy.editorKind,
+      commitMode: policy.commitMode,
+      dangerLevel: policy.dangerLevel,
+      readonlyReason: policy.editable ? void 0 : policy.reason
+    });
+  }
+  return columns;
+}
+function buildExcelCellModel(item, field, valueOverride) {
+  const sourceValue = readField(item, field);
+  const hasOverride = valueOverride !== void 0;
+  const value = hasOverride ? valueOverride : sourceValue;
+  const policy = getFieldEditPolicy(field, value);
+  return {
+    item,
+    itemId: item.id,
+    field,
+    canonicalField: policy.canonicalField,
+    value,
+    displayValue: formatExcelCellValue(value),
+    editorValue: formatExcelEditorValue(value, policy.editorKind),
+    policy
+  };
+}
+function formatExcelEditorValue(value, editorKind) {
+  if (editorKind === "date") return toDateInputValue(value);
+  if (editorKind === "time") return toTimeInputValue(value);
+  if (editorKind === "datetime") return toDateTimeInputValue(value);
+  if (editorKind === "boolean") return value === true ? "true" : value === false ? "false" : formatExcelCellValue(value);
+  if (editorKind === "select" && isOptionLikeValue(value)) return String(value.value ?? value.label ?? "");
+  return formatExcelCellValue(value);
+}
+function getExcelEditorOptions(cell) {
+  if (cell.policy.editorKind === "boolean") {
+    return [
+      { value: "", label: "空" },
+      { value: "true", label: "是" },
+      { value: "false", label: "否" }
+    ];
+  }
+  const options = cell.policy.definition?.options;
+  if (!Array.isArray(options) || !options.length) {
+    return cell.editorValue ? [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }] : [{ value: "", label: "空" }];
+  }
+  const normalized2 = options.map((option) => ({
+    value: String(option?.value ?? ""),
+    label: String(option?.label ?? option?.value ?? "")
+  })).filter((option) => option.value || option.label);
+  if (cell.editorValue && !normalized2.some((option) => option.value === cell.editorValue)) {
+    return [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }, ...normalized2];
+  }
+  return normalized2;
+}
+function validateExcelEditorValue(cell, editorValue) {
+  const trimmed = editorValue.trim();
+  switch (cell.policy.editorKind) {
+    case "number":
+    case "rating":
+      return trimmed && !Number.isFinite(Number(trimmed)) ? "请输入有效数字" : null;
+    case "date":
+      return isValidDateInput(trimmed) ? null : "日期格式应为 YYYY-MM-DD";
+    case "time":
+      return isValidTimeInput(trimmed) ? null : "时间格式应为 HH:mm";
+    case "datetime":
+      return isValidDateTimeInput(trimmed) ? null : "日期时间格式应为 YYYY-MM-DDTHH:mm";
+    case "select": {
+      const options = getExcelEditorOptions(cell);
+      return options.length && trimmed && !options.some((option) => option.value === trimmed) ? "请选择有效选项" : null;
+    }
+    default:
+      return null;
+  }
+}
+function parseExcelEditorValue(cell, editorValue) {
+  const raw = editorValue;
+  const trimmed = raw.trim();
+  switch (cell.policy.editorKind) {
+    case "number":
+    case "rating": {
+      if (!trimmed) return null;
+      const numeric = Number(trimmed);
+      return Number.isFinite(numeric) ? numeric : raw;
+    }
+    case "boolean": {
+      const lower = trimmed.toLowerCase();
+      if (["true", "1", "yes", "y", "是"].includes(lower)) return true;
+      if (["false", "0", "no", "n", "否"].includes(lower)) return false;
+      return null;
+    }
+    case "date":
+    case "time":
+    case "datetime":
+    case "select":
+      return trimmed;
+    case "tags":
+      return trimmed.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+    default:
+      return raw;
+  }
+}
+function areExcelCellValuesEqual(left2, right2) {
+  return formatExcelCellValue(left2) === formatExcelCellValue(right2);
+}
+function ExcelCellContent({
+  cell,
+  contentText,
+  showFullMarkdownContent,
+  messageRenderPort,
+  onMarkdownClick,
+  onMarkdownDoubleClick
+}) {
+  if (showFullMarkdownContent) {
+    return /* @__PURE__ */ u2(
+      MarkdownContent,
+      {
+        renderPort: messageRenderPort,
+        content: contentText,
+        contentType: "markdown",
+        sourcePath: cell.item.file?.path || "",
+        className: "excel-view-cell-md",
+        onClick: onMarkdownClick,
+        onDblClick: onMarkdownDoubleClick
+      }
+    );
+  }
+  if (cell.canonicalField === "content" && contentText) {
+    return /* @__PURE__ */ u2("span", { class: "excel-view-content-link", children: truncateExcelCellText(contentText) });
+  }
+  return /* @__PURE__ */ u2("span", { class: "excel-view-cell-value", children: cell.displayValue });
+}
+function getExcelCellKey(itemId, field) {
+  return `${itemId}::${field}`;
+}
+function canInlineEditExcelCell(cell, canCommit = true) {
+  return !!canCommit && cell.policy.editable && cell.policy.commitMode === "inline";
+}
+function getExcelEditorDescriptor(kind) {
+  if (kind === "textarea") return { tag: "textarea", hint: "Enter 保存 · Shift+Enter 换行 · Esc 取消" };
+  if (kind === "number") return { tag: "input", type: "number", hint: "数字编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "rating") return { tag: "input", type: "number", hint: "评分编辑器：输入数字，Enter 保存 · Esc 取消" };
+  if (kind === "date") return { tag: "input", type: "date", hint: "日期编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "time") return { tag: "input", type: "time", hint: "时间编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "datetime") return { tag: "input", type: "datetime-local", hint: "日期时间编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "boolean") return { tag: "select", hint: "布尔编辑器：选择 是 / 否，Enter 保存 · Esc 取消" };
+  if (kind === "select") return { tag: "select", hint: "选项编辑器：选择后 Enter 保存 · Esc 取消" };
+  if (kind === "tags") return { tag: "input", type: "text", hint: "标签编辑器：逗号/换行分隔，# 会保留" };
+  return { tag: "input", type: "text", hint: "Enter 保存 · Esc 取消" };
+}
+function readExcelKeyboardValue(event) {
+  const target = event.currentTarget;
+  return target.value;
+}
+function getExcelReadonlyTitle(policyReason) {
+  return policyReason || "该字段不可在 Excel 单元格中直接编辑";
+}
+function getExcelTypedInputProps(kind) {
+  if (kind === "number") return { step: "any" };
+  if (kind === "rating") return { step: 1, min: 0, max: 5 };
+  return {};
+}
+function isExcelMarkdownInteractiveTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  return !!target.closest("a, button, input, textarea, select, .internal-link, .external-link, .tag");
+}
+function buildExcelCellTitle(params) {
+  const { error, editable, policyReason } = params;
+  if (error) return error;
+  return editable ? "双击/F2/Enter 编辑；方向键/Tab 移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getExcelReadonlyTitle(policyReason)}；Ctrl/⌘ 点击可打开完整编辑`;
+}
+function buildExcelCellClassName(params) {
+  const {
+    editable,
+    policyEditable,
+    dangerLevel,
+    isContentCell,
+    showFullMarkdownContent,
+    selected,
+    editing,
+    pending,
+    saved,
+    error,
+    fillSource,
+    fillTarget
+  } = params;
+  return [
+    "excel-view-cell",
+    editable ? "is-inline-editable" : "is-readonly",
+    policyEditable ? "is-policy-editable" : "is-policy-readonly",
+    dangerLevel === "medium" ? "is-medium-risk" : "",
+    dangerLevel === "high" ? "is-high-risk" : "",
+    isContentCell ? "is-content-cell" : "",
+    showFullMarkdownContent ? "is-content-expanded" : "",
+    selected ? "is-selected" : "",
+    editing ? "is-editing" : "",
+    pending ? "is-pending" : "",
+    saved && !pending && !error ? "is-saved" : "",
+    error ? "has-error" : "",
+    fillSource ? "is-fill-source" : "",
+    fillTarget ? "is-fill-target" : ""
+  ].filter(Boolean).join(" ");
+}
+function getExcelCellSaveState(params) {
+  if (params.pending) return "pending";
+  if (params.error) return "error";
+  if (params.saved) return "saved";
+  return "idle";
+}
+function buildExcelCellUiState(params) {
+  const {
+    cell,
+    selected = false,
+    editing = false,
+    pending = false,
+    saved = false,
+    error,
+    canCommit = false,
+    fillSource = false,
+    fillTarget = false,
+    contentDisplayMode = "previewText"
+  } = params;
+  const editable = canInlineEditExcelCell(cell, canCommit);
+  const descriptor = getExcelEditorDescriptor(cell.policy.editorKind);
+  const isContentCell = cell.canonicalField === "content";
+  const contentText = typeof cell.value === "string" ? cell.value : "";
+  const showFullMarkdownContent = isContentCell && contentDisplayMode === "fullMarkdown" && !!contentText.trim();
+  const title = buildExcelCellTitle({ error, editable, policyReason: cell.policy.reason });
+  return {
+    editable,
+    readonly: !editable,
+    descriptor,
+    editorOptions: getExcelEditorOptions(cell),
+    cellKey: getExcelCellKey(cell.itemId, cell.canonicalField),
+    isContentCell,
+    contentText,
+    showFullMarkdownContent,
+    title,
+    className: buildExcelCellClassName({
+      editable,
+      policyEditable: cell.policy.editable,
+      dangerLevel: cell.policy.dangerLevel,
+      isContentCell,
+      showFullMarkdownContent,
+      selected,
+      editing,
+      pending,
+      saved,
+      error,
+      fillSource,
+      fillTarget
+    }),
+    saveState: getExcelCellSaveState({ pending, saved, error })
+  };
+}
+function resolveExcelCellEditorKeyAction(params) {
+  if (params.key === "Escape") return "cancel-edit";
+  if (params.key === "Enter" && !(params.descriptorTag === "textarea" && params.shiftKey)) return "commit-edit";
+  return "none";
+}
+function resolveExcelCellKeyAction(params) {
+  const { key, shiftKey, editing, editable, fillDragging } = params;
+  if (key === "Escape" && fillDragging) return { type: "cancel-fill-drag" };
+  if (editing) return { type: "none" };
+  if (key === "ArrowUp") return { type: "navigate", direction: "up" };
+  if (key === "ArrowDown") return { type: "navigate", direction: "down" };
+  if (key === "ArrowLeft") return { type: "navigate", direction: "left" };
+  if (key === "ArrowRight") return { type: "navigate", direction: "right" };
+  if (key === "Tab") return { type: "navigate", direction: shiftKey ? "previous" : "next" };
+  if ((key === "Enter" || key === "F2") && editable) return { type: "start-edit" };
+  return { type: "none" };
+}
+function readEditorValue(event) {
+  const target = event.currentTarget;
+  return target?.value ?? "";
+}
+function ExcelCellEditor({
+  descriptor,
+  editorOptions,
+  editorKind,
+  draft,
+  pending,
+  inputRef,
+  onDraftChange,
+  onKeyDown,
+  onBlur
+}) {
+  return /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-wrap", children: [
+    descriptor.tag === "textarea" ? /* @__PURE__ */ u2(
+      "textarea",
+      {
+        ref: inputRef,
+        class: "excel-view-cell-editor excel-view-cell-editor-textarea",
+        value: draft,
+        disabled: pending,
+        onInput: (event) => onDraftChange(readEditorValue(event)),
+        onKeyDown: (event) => onKeyDown(event),
+        onBlur
+      }
+    ) : descriptor.tag === "select" ? /* @__PURE__ */ u2(
+      "select",
+      {
+        ref: inputRef,
+        class: "excel-view-cell-editor excel-view-cell-editor-select",
+        value: draft,
+        disabled: pending,
+        onChange: (event) => onDraftChange(readEditorValue(event)),
+        onKeyDown: (event) => onKeyDown(event),
+        onBlur,
+        children: editorOptions.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
+      }
+    ) : /* @__PURE__ */ u2(
+      "input",
+      {
+        ref: inputRef,
+        class: "excel-view-cell-editor",
+        type: descriptor.type || "text",
+        value: draft,
+        disabled: pending,
+        ...getExcelTypedInputProps(editorKind),
+        onInput: (event) => onDraftChange(readEditorValue(event)),
+        onKeyDown: (event) => onKeyDown(event),
+        onBlur
+      }
+    ),
+    /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-hint", children: descriptor.hint })
+  ] });
+}
+function ExcelCell({
+  cell,
+  selected = false,
+  editing = false,
+  pending = false,
+  saved = false,
+  error,
+  canCommit = false,
+  style: style2,
+  fillDragging = false,
+  fillSource = false,
+  fillTarget = false,
+  contentDisplayMode = "previewText",
+  messageRenderPort,
+  onSelect,
+  onStartEdit,
+  onCancelEdit,
+  onCommitEdit,
+  onNavigate,
+  onPasteText,
+  onStartFillDrag,
+  onMoveFillDrag,
+  onFinishFillDrag,
+  onCancelFillDrag,
+  onOpenRecordOrigin
+}) {
+  const { item, field, editorValue, policy } = cell;
+  const [draft, setDraft] = d(editorValue);
+  const inputRef = A$1(null);
+  const ui = buildExcelCellUiState({ cell, selected, editing, pending, saved, error, canCommit, fillSource, fillTarget, contentDisplayMode });
+  h(() => {
+    if (editing) setDraft(editorValue);
+  }, [editing, editorValue]);
+  h(() => {
+    if (!editing) return;
+    const input = inputRef.current;
+    input?.focus?.();
+    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) input.select();
+  }, [editing]);
+  const commit = (nextValue = draft) => {
+    if (!editing || pending) return;
+    onCommitEdit?.(cell, nextValue);
+  };
+  const handleCellClick = (event) => {
+    if (fillDragging) return;
+    if (hasPlatformModifier(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return onOpenRecordOrigin?.(item);
+    }
+    onSelect?.(cell);
+  };
+  const handleDoubleClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (ui.editable) onStartEdit?.(cell);
+    else onSelect?.(cell);
+  };
+  const handleMarkdownClick = (event) => {
+    if (isExcelMarkdownInteractiveTarget(event.target)) event.stopPropagation();
+  };
+  const handleMarkdownDoubleClick = (event) => {
+    if (isExcelMarkdownInteractiveTarget(event.target)) event.stopPropagation();
+  };
+  const handleFillMouseDown = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!ui.editable || pending || editing) return;
+    onStartFillDrag?.(cell);
+  };
+  const handleEditorKeyDown = (event) => {
+    const action = resolveExcelCellEditorKeyAction({ key: event.key, shiftKey: event.shiftKey, descriptorTag: ui.descriptor.tag });
+    if (action === "none") return;
+    event.preventDefault();
+    if (action === "cancel-edit") return onCancelEdit?.();
+    commit(readExcelKeyboardValue(event));
+  };
+  const handleCellKeyDown = (event) => {
+    const action = resolveExcelCellKeyAction({ key: event.key, shiftKey: event.shiftKey, editing, editable: ui.editable, fillDragging });
+    if (action.type === "none") return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (action.type === "cancel-fill-drag") return onCancelFillDrag?.();
+    if (action.type === "start-edit") return onStartEdit?.(cell);
+    onNavigate?.(cell, action.direction);
+  };
+  const handlePaste = (event) => {
+    if (editing) return;
+    const text2 = event.clipboardData?.getData("text/plain") || "";
+    if (!text2) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onPasteText?.(cell, text2);
+  };
+  return /* @__PURE__ */ u2(
+    "td",
+    {
+      "data-excel-cell-key": ui.cellKey,
+      "data-field": field,
+      "data-canonical-field": policy.canonicalField,
+      "data-editable": ui.editable ? "true" : "false",
+      "data-policy-editable": policy.editable ? "true" : "false",
+      "data-editor-kind": policy.editorKind,
+      "data-danger-level": policy.dangerLevel,
+      "data-content-display-mode": ui.isContentCell ? contentDisplayMode : void 0,
+      "data-save-state": ui.saveState,
+      class: ui.className,
+      style: style2,
+      title: onOpenRecordOrigin ? `${ui.title} · Ctrl/⌘+点击打开原文` : ui.title,
+      tabIndex: 0,
+      "aria-readonly": ui.readonly ? "true" : "false",
+      "aria-invalid": error ? "true" : "false",
+      onClick: handleCellClick,
+      onDblClick: handleDoubleClick,
+      onMouseEnter: () => fillDragging && onMoveFillDrag?.(cell),
+      onMouseUp: () => fillDragging && onFinishFillDrag?.(cell),
+      onKeyDown: handleCellKeyDown,
+      onPaste: handlePaste,
+      children: [
+        editing ? /* @__PURE__ */ u2(
+          ExcelCellEditor,
+          {
+            descriptor: ui.descriptor,
+            editorOptions: ui.editorOptions,
+            editorKind: policy.editorKind,
+            draft,
+            pending,
+            inputRef,
+            onDraftChange: setDraft,
+            onKeyDown: handleEditorKeyDown,
+            onBlur: () => commit()
+          }
+        ) : /* @__PURE__ */ u2(
+          ExcelCellContent,
+          {
+            cell,
+            contentText: ui.contentText,
+            showFullMarkdownContent: ui.showFullMarkdownContent,
+            messageRenderPort,
+            onMarkdownClick: handleMarkdownClick,
+            onMarkdownDoubleClick: handleMarkdownDoubleClick
+          }
+        ),
+        !editing && selected ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-affordance", "aria-hidden": "true", children: ui.editable ? "✎" : "🔒" }) : null,
+        selected && ui.editable && !editing && !pending ? /* @__PURE__ */ u2("span", { class: "excel-view-fill-handle", "aria-label": "拖动覆盖同列", title: "拖动覆盖同列单元格", onMouseDown: handleFillMouseDown }) : null,
+        pending ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status", "aria-label": "保存中", children: "…" }) : null,
+        saved && !pending && !error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status is-saved", "aria-label": "已保存", children: "✓" }) : null,
+        error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-error", "aria-label": error, children: "!" }) : null
+      ]
+    }
+  );
+}
+function getExcelGridCellKey(cell) {
+  return getExcelCellKey(cell.itemId, cell.canonicalField);
+}
+function getExcelColumnBadge(column2, canCommitCells) {
+  if (!column2.editable || !canCommitCells) return "只读";
+  if (column2.dangerLevel === "medium") return "谨慎";
+  return "可编辑";
+}
+function getExcelColumnTitle(column2, canCommitCells) {
+  if (!canCommitCells) return "当前视图未配置保存处理器，所有字段暂不可编辑";
+  if (!column2.editable) return column2.readonlyReason || "该字段不可在 Excel 单元格内直接编辑";
+  if (column2.dangerLevel === "medium") return "可编辑字段，但会影响时间、标签等结构化内容，请谨慎修改";
+  return "可编辑字段：双击单元格可编辑；拖动表头右侧边缘可调整列宽";
+}
+function getExcelColumnWidth(column2, width2) {
+  if (Number.isFinite(width2) && width2) return Math.max(80, Math.min(640, Math.round(width2)));
+  if (column2.canonicalField === "content") return 240;
+  if (column2.canonicalField === "title") return 180;
+  if (column2.editorKind === "date" || column2.editorKind === "time") return 128;
+  if (column2.editorKind === "number" || column2.editorKind === "rating") return 104;
+  return 150;
+}
+function buildExcelColumnWidthStyle(width2) {
+  const text2 = `${width2}px`;
+  return { width: text2, minWidth: text2, maxWidth: text2 };
+}
+function normalizeExcelClipboardText(text2) {
+  return String(text2 || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+}
+function parseExcelClipboardMatrix(text2) {
+  const normalized2 = normalizeExcelClipboardText(text2);
+  const withoutFinalNewline = normalized2.endsWith("\n") ? normalized2.slice(0, -1) : normalized2;
+  if (!withoutFinalNewline) return [[""]];
+  return withoutFinalNewline.split("\n").map((row) => row.split("	"));
+}
+function focusExcelCellElement(table, cellKey) {
+  if (!table || !cellKey) return;
+  const escaped = cellKey.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  window.requestAnimationFrame(() => {
+    const element = table.querySelector(`[data-excel-cell-key="${escaped}"]`);
+    element?.focus?.();
+  });
+}
+function buildExcelGridCell(item, columnKey, valueOverrides) {
+  const optimisticKey = getExcelCellKey(item.id, columnKey);
+  const cell = buildExcelCellModel(item, columnKey, valueOverrides?.[optimisticKey]);
+  const canonicalKey = getExcelCellKey(cell.itemId, cell.canonicalField);
+  if (valueOverrides?.[canonicalKey] !== void 0 && canonicalKey !== optimisticKey) {
+    return buildExcelCellModel(item, columnKey, valueOverrides[canonicalKey]);
+  }
+  return cell;
+}
+function findExcelGridCellPosition(items, columns, cell) {
+  return {
+    rowIndex: items.findIndex((item) => item.id === cell.itemId),
+    colIndex: columns.findIndex((column2) => column2.canonicalField === cell.canonicalField)
+  };
+}
+function resolveExcelNavigationPosition(position2, direction, rowCount, columnCount) {
+  const { rowIndex, colIndex } = position2;
+  if (rowIndex < 0 || colIndex < 0 || rowCount <= 0 || columnCount <= 0) return null;
+  if (direction === "up") return { rowIndex: rowIndex - 1, colIndex };
+  if (direction === "down") return { rowIndex: rowIndex + 1, colIndex };
+  if (direction === "left") return { rowIndex, colIndex: colIndex - 1 };
+  if (direction === "right") return { rowIndex, colIndex: colIndex + 1 };
+  const linearIndex = rowIndex * columnCount + colIndex + (direction === "previous" ? -1 : 1);
+  const bounded = Math.max(0, Math.min(rowCount * columnCount - 1, linearIndex));
+  return { rowIndex: Math.floor(bounded / columnCount), colIndex: bounded % columnCount };
+}
+function selectExcelCellByPosition(params) {
+  const { items, columns, valueOverrides } = params;
+  if (!items.length || !columns.length) return null;
+  const rowIndex = Math.max(0, Math.min(items.length - 1, params.rowIndex));
+  const colIndex = Math.max(0, Math.min(columns.length - 1, params.colIndex));
+  const cell = buildExcelGridCell(items[rowIndex], columns[colIndex].key, valueOverrides);
+  return { cell, cellKey: getExcelGridCellKey(cell) };
+}
+function buildExcelFillRange(params) {
+  const { items, source, target, valueOverrides } = params;
+  if (!source) return [];
+  if (source.canonicalField !== target.canonicalField) return [];
+  if (!canInlineEditExcelCell(source) || !canInlineEditExcelCell(target)) return [];
+  const sourceIndex = items.findIndex((item) => item.id === source.itemId);
+  const targetIndex = items.findIndex((item) => item.id === target.itemId);
+  if (sourceIndex < 0 || targetIndex < 0) return [];
+  const from2 = Math.min(sourceIndex, targetIndex);
+  const to = Math.max(sourceIndex, targetIndex);
+  return items.slice(from2, to + 1).map((item) => buildExcelGridCell(item, source.field, valueOverrides));
+}
+function buildExcelPastePlan(params) {
+  const { items, columns, startCell, text: text2, canCommitCells, valueOverrides } = params;
+  const { rowIndex, colIndex } = findExcelGridCellPosition(items, columns, startCell);
+  if (rowIndex < 0 || colIndex < 0) return { edits: [], lastCell: null };
+  const matrix = parseExcelClipboardMatrix(text2);
+  const edits = [];
+  let lastCell = null;
+  for (let rowOffset = 0; rowOffset < matrix.length; rowOffset += 1) {
+    for (let colOffset = 0; colOffset < matrix[rowOffset].length; colOffset += 1) {
+      const targetRow = rowIndex + rowOffset;
+      const targetCol = colIndex + colOffset;
+      if (targetRow >= items.length || targetCol >= columns.length) continue;
+      const targetCell = buildExcelGridCell(items[targetRow], columns[targetCol].key, valueOverrides);
+      lastCell = targetCell;
+      if (!canInlineEditExcelCell(targetCell, canCommitCells)) continue;
+      edits.push({ cell: targetCell, editorValue: matrix[rowOffset][colOffset] });
+    }
+  }
+  return { edits, lastCell };
+}
+function ExcelGrid({
+  items,
+  columns,
+  selectedCellKey,
+  editingCellKey,
+  pendingCellKeys,
+  savedCellKeys,
+  cellErrors,
+  valueOverrides,
+  canCommitCells = false,
+  columnWidths,
+  contentDisplayMode = "previewText",
+  messageRenderPort,
+  fillDragSourceCell,
+  fillDragTargetCellKey,
+  onSelectCell,
+  onStartEdit,
+  onCancelEdit,
+  onCommitEdit,
+  onCommitBatchEdits,
+  onStartFillDrag,
+  onMoveFillDrag,
+  onFinishFillDrag,
+  onCancelFillDrag,
+  onColumnWidthDraftChange,
+  onColumnWidthCommit,
+  onOpenRecordOrigin
+}) {
+  const tableRef = A$1(null);
+  const makeCell = (item, columnKey) => buildExcelGridCell(item, columnKey, valueOverrides);
+  const selectByPosition = (rowIndex, colIndex) => {
+    const selection = selectExcelCellByPosition({ items, columns, rowIndex, colIndex, valueOverrides });
+    if (!selection) return;
+    onSelectCell?.(selection.cell);
+    focusExcelCellElement(tableRef.current, selection.cellKey);
+  };
+  const navigateCell = (cell, direction) => {
+    const position2 = findExcelGridCellPosition(items, columns, cell);
+    const nextPosition = resolveExcelNavigationPosition(position2, direction, items.length, columns.length);
+    if (!nextPosition) return;
+    selectByPosition(nextPosition.rowIndex, nextPosition.colIndex);
+  };
+  const pasteFromCell = (startCell, text2) => {
+    if (!onCommitBatchEdits || !canCommitCells) return;
+    const plan = buildExcelPastePlan({ items, columns, startCell, text: text2, canCommitCells, valueOverrides });
+    if (plan.lastCell) {
+      onSelectCell?.(plan.lastCell);
+      focusExcelCellElement(tableRef.current, getExcelGridCellKey(plan.lastCell));
+    }
+    if (plan.edits.length) onCommitBatchEdits(plan.edits, "paste");
+  };
+  const finishFillDrag = (target) => {
+    onFinishFillDrag?.(buildExcelFillRange({ items, source: fillDragSourceCell, target, valueOverrides }));
+  };
+  const startColumnResize = (event, column2) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const th = event.currentTarget.closest("th");
+    const startX = event.clientX;
+    const startWidth = getExcelColumnWidth(column2, columnWidths?.[column2.key]) || th?.offsetWidth || 150;
+    const move = (moveEvent) => {
+      onColumnWidthDraftChange?.(column2.key, startWidth + (moveEvent.clientX - startX));
+    };
+    const up = (upEvent) => {
+      window.removeEventListener("mousemove", move, true);
+      window.removeEventListener("mouseup", up, true);
+      document.body.classList.remove("excel-view-is-resizing-column");
+      onColumnWidthCommit?.(column2.key, startWidth + (upEvent.clientX - startX));
+    };
+    document.body.classList.add("excel-view-is-resizing-column");
+    window.addEventListener("mousemove", move, true);
+    window.addEventListener("mouseup", up, true);
+  };
+  return /* @__PURE__ */ u2("table", { ref: tableRef, class: "think-table think-data-grid think-data-grid--excel excel-view-table", children: [
+    /* @__PURE__ */ u2("colgroup", { children: columns.map((column2) => {
+      const width2 = getExcelColumnWidth(column2, columnWidths?.[column2.key]);
+      return /* @__PURE__ */ u2("col", { "data-field": column2.key, style: { width: `${width2}px` } }, column2.key);
+    }) }),
+    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: columns.map((column2) => {
+      const width2 = getExcelColumnWidth(column2, columnWidths?.[column2.key]);
+      const columnEditable = column2.editable && canCommitCells;
+      return /* @__PURE__ */ u2(
+        "th",
+        {
+          "data-field": column2.key,
+          "data-canonical-field": column2.canonicalField,
+          "data-editable": columnEditable ? "true" : "false",
+          "data-editor-kind": column2.editorKind,
+          "data-danger-level": column2.dangerLevel,
+          title: getExcelColumnTitle(column2, canCommitCells),
+          style: buildExcelColumnWidthStyle(width2),
+          children: [
+            /* @__PURE__ */ u2("span", { class: "excel-view-header-stack", children: [
+              /* @__PURE__ */ u2("span", { class: "excel-view-header-label", children: column2.label }),
+              /* @__PURE__ */ u2("span", { class: "excel-view-header-badge", children: getExcelColumnBadge(column2, canCommitCells) })
+            ] }),
+            /* @__PURE__ */ u2(
+              "span",
+              {
+                class: "excel-view-column-resize-handle",
+                role: "separator",
+                "aria-orientation": "vertical",
+                title: "拖动调整列宽",
+                onMouseDown: (event) => startColumnResize(event, column2)
+              }
+            )
+          ]
+        },
+        column2.key
+      );
+    }) }) }),
+    /* @__PURE__ */ u2("tbody", { children: items.map((item) => /* @__PURE__ */ u2("tr", { "data-item-id": item.id, children: columns.map((column2) => {
+      const cell = makeCell(item, column2.key);
+      const cellKey = getExcelGridCellKey(cell);
+      const width2 = getExcelColumnWidth(column2, columnWidths?.[column2.key]);
+      return /* @__PURE__ */ u2(
+        ExcelCell,
+        {
+          cell,
+          selected: selectedCellKey === cellKey,
+          editing: editingCellKey === cellKey,
+          pending: pendingCellKeys?.has(cellKey),
+          saved: savedCellKeys?.has(cellKey),
+          error: cellErrors?.[cellKey],
+          canCommit: canCommitCells,
+          fillDragging: !!fillDragSourceCell,
+          fillSource: fillDragSourceCell ? getExcelGridCellKey(fillDragSourceCell) === cellKey : false,
+          fillTarget: fillDragTargetCellKey === cellKey && fillDragSourceCell?.canonicalField === cell.canonicalField,
+          contentDisplayMode,
+          messageRenderPort,
+          onSelect: onSelectCell,
+          onStartEdit,
+          onCancelEdit,
+          onCommitEdit,
+          onNavigate: navigateCell,
+          onPasteText: pasteFromCell,
+          onStartFillDrag,
+          onMoveFillDrag,
+          onFinishFillDrag: finishFillDrag,
+          onCancelFillDrag,
+          onOpenRecordOrigin,
+          style: buildExcelColumnWidthStyle(width2)
+        },
+        column2.key
+      );
+    }) }, item.id)) })
+  ] });
+}
+function addExcelSetValue(source, key) {
+  const next2 = new Set(source);
+  next2.add(key);
+  return next2;
+}
+function addExcelSetValues(source, keys) {
+  const next2 = new Set(source);
+  for (const key of keys) next2.add(key);
+  return next2;
+}
+function removeExcelSetValue(source, key) {
+  const next2 = new Set(source);
+  next2.delete(key);
+  return next2;
+}
+function removeExcelSetValues(source, keys) {
+  const next2 = new Set(source);
+  for (const key of keys) next2.delete(key);
+  return next2;
+}
+function uniqueExcelKeys(keys) {
+  return Array.from(new Set(keys));
+}
+function getExcelCellCommitFailureMessage(resultMessage) {
+  return resultMessage || "保存失败";
+}
+function getExcelCellCommitExceptionMessage(error) {
+  return error instanceof Error ? error.message : "保存失败";
+}
+function getExcelCellNoCommitHandlerMessage() {
+  return "当前视图没有配置保存处理器";
+}
+function getExcelCellReadonlyMessage(cell) {
+  return cell.policy.reason || "该字段不可内联编辑";
+}
+function buildExcelSingleCellEditPlan(cell, nextEditorValue) {
+  const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+  const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
+  return {
+    key,
+    validationMessage: validationMessage ?? void 0,
+    nextValue: validationMessage ? void 0 : parseExcelEditorValue(cell, nextEditorValue)
+  };
+}
+function prepareExcelCellBatchEdit(edit) {
+  const key = getExcelCellKey(edit.cell.itemId, edit.cell.canonicalField);
+  const validationMessage = validateExcelEditorValue(edit.cell, edit.editorValue);
+  return {
+    ...edit,
+    key,
+    validationMessage: validationMessage ?? void 0,
+    editable: canInlineEditExcelCell(edit.cell),
+    nextValue: validationMessage ? void 0 : parseExcelEditorValue(edit.cell, edit.editorValue)
+  };
+}
+function buildExcelCellCommitPlan(edits, reason) {
+  const prepared = edits.map(prepareExcelCellBatchEdit);
+  const invalid = prepared.filter((edit) => edit.validationMessage);
+  const valid = prepared.filter((edit) => !edit.validationMessage && edit.editable);
+  return {
+    prepared,
+    invalid,
+    valid,
+    keys: uniqueExcelKeys(valid.map((edit) => edit.key)),
+    reason
+  };
+}
+function buildExcelCellValidationErrors(current2, invalid) {
+  const next2 = { ...current2 };
+  for (const edit of invalid) next2[edit.key] = edit.validationMessage || "字段值无效";
+  return next2;
+}
+function clearExcelCellErrors(current2, keys) {
+  const next2 = { ...current2 };
+  for (const key of keys) next2[key] = void 0;
+  return next2;
+}
+function getExcelCommittedValue(nextValue, normalizedValue) {
+  return normalizedValue !== void 0 ? normalizedValue : nextValue;
+}
+function shouldSkipExcelCommit(cell, nextValue) {
+  return areExcelCellValuesEqual(cell.value, nextValue);
+}
+function getExcelFillDragTargetCells(source, cells) {
+  if (!source || !cells.length) return [];
+  return cells.filter((cell) => cell.itemId !== source.itemId && cell.canonicalField === source.canonicalField && canInlineEditExcelCell(cell));
+}
+function buildExcelFillDragBatchEdits(source, cells) {
+  return getExcelFillDragTargetCells(source, cells).map((cell) => ({ cell, editorValue: source?.editorValue || "" }));
+}
+function useExcelCellEditing(options) {
+  const { onCellCommit } = options;
+  const [selectedCellKey, setSelectedCellKey] = d(null);
+  const [editingCellKey, setEditingCellKey] = d(null);
+  const [pendingCellKeys, setPendingCellKeys] = d(() => /* @__PURE__ */ new Set());
+  const [cellErrors, setCellErrors] = d({});
+  const [valueOverrides, setValueOverrides] = d({});
+  const [savedCellKeys, setSavedCellKeys] = d(() => /* @__PURE__ */ new Set());
+  const saveFlashTimers = A$1({});
+  const commitQueueRef = A$1(Promise.resolve());
+  const [fillDragSourceCell, setFillDragSourceCell] = d(null);
+  const [fillDragTargetCellKey, setFillDragTargetCellKey] = d(null);
+  h(() => () => {
+    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
+    saveFlashTimers.current = {};
+  }, []);
+  const enqueueCommitTask = q$1(async (task) => {
+    const run = commitQueueRef.current.then(task, task);
+    commitQueueRef.current = run.catch(() => void 0);
+    await run;
+  }, []);
+  const flashSavedKey = q$1((key) => {
+    const existing = saveFlashTimers.current[key];
+    if (existing) clearTimeout(existing);
+    setSavedCellKeys((prev2) => addExcelSetValue(prev2, key));
+    saveFlashTimers.current[key] = setTimeout(() => {
+      setSavedCellKeys((prev2) => removeExcelSetValue(prev2, key));
+      delete saveFlashTimers.current[key];
+    }, 1200);
+  }, []);
+  const selectCell = q$1((cell) => {
+    setSelectedCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
+  }, []);
+  const startEdit = q$1((cell) => {
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    setSelectedCellKey(key);
+    if (!onCellCommit) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellNoCommitHandlerMessage() }));
+      return;
+    }
+    if (!canInlineEditExcelCell(cell)) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellReadonlyMessage(cell) }));
+      return;
+    }
+    setEditingCellKey(key);
+    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+  }, [onCellCommit]);
+  const cancelEdit = q$1(() => {
+    setEditingCellKey(null);
+  }, []);
+  const commitCellValue = q$1(async (cell, nextValue, reason) => {
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    if (!onCellCommit) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellNoCommitHandlerMessage() }));
+      return false;
+    }
+    if (!canInlineEditExcelCell(cell)) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellReadonlyMessage(cell) }));
+      return false;
+    }
+    if (shouldSkipExcelCommit(cell, nextValue)) return true;
+    try {
+      const result = await onCellCommit({
+        item: cell.item,
+        itemId: cell.itemId,
+        field: cell.field,
+        canonicalField: cell.canonicalField,
+        oldValue: cell.value,
+        nextValue,
+        reason
+      });
+      if (!result?.ok) {
+        setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellCommitFailureMessage(result?.message) }));
+        return false;
+      }
+      setValueOverrides((prev2) => ({ ...prev2, [key]: getExcelCommittedValue(nextValue, result.normalizedValue) }));
+      setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+      flashSavedKey(key);
+      return true;
+    } catch (error) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: getExcelCellCommitExceptionMessage(error) }));
+      return false;
+    }
+  }, [flashSavedKey, onCellCommit]);
+  const commitBatchEdits = q$1(async (edits, reason) => {
+    if (!edits.length) return;
+    const plan = buildExcelCellCommitPlan(edits, reason);
+    if (plan.invalid.length) {
+      setCellErrors((prev2) => buildExcelCellValidationErrors(prev2, plan.invalid));
+    }
+    if (!plan.valid.length) return;
+    setEditingCellKey(null);
+    setSelectedCellKey(plan.valid[plan.valid.length - 1].key);
+    setPendingCellKeys((prev2) => addExcelSetValues(prev2, plan.keys));
+    setCellErrors((prev2) => clearExcelCellErrors(prev2, plan.keys));
+    try {
+      await enqueueCommitTask(async () => {
+        for (const edit of plan.valid) {
+          await commitCellValue(edit.cell, edit.nextValue, plan.reason);
+        }
+      });
+    } finally {
+      setPendingCellKeys((prev2) => removeExcelSetValues(prev2, plan.keys));
+    }
+  }, [commitCellValue, enqueueCommitTask]);
+  const commitEdit = q$1(async (cell, nextEditorValue) => {
+    const plan = buildExcelSingleCellEditPlan(cell, nextEditorValue);
+    if (plan.validationMessage) {
+      setSelectedCellKey(plan.key);
+      setCellErrors((prev2) => ({ ...prev2, [plan.key]: plan.validationMessage }));
+      return;
+    }
+    setSelectedCellKey(plan.key);
+    setEditingCellKey(null);
+    setCellErrors((prev2) => ({ ...prev2, [plan.key]: void 0 }));
+    setPendingCellKeys((prev2) => addExcelSetValue(prev2, plan.key));
+    try {
+      await enqueueCommitTask(async () => {
+        await commitCellValue(cell, plan.nextValue, "inline-edit");
+      });
+    } finally {
+      setPendingCellKeys((prev2) => removeExcelSetValue(prev2, plan.key));
+    }
+  }, [commitCellValue, enqueueCommitTask]);
+  const startFillDrag = q$1((cell) => {
+    if (!onCellCommit || !canInlineEditExcelCell(cell)) return;
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    setSelectedCellKey(key);
+    setFillDragSourceCell(cell);
+    setFillDragTargetCellKey(key);
+    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+  }, [onCellCommit]);
+  const moveFillDrag = q$1((cell) => {
+    setFillDragTargetCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
+  }, []);
+  const cancelFillDrag = q$1(() => {
+    setFillDragSourceCell(null);
+    setFillDragTargetCellKey(null);
+  }, []);
+  const finishFillDrag = q$1(async (cells) => {
+    const batchEdits = buildExcelFillDragBatchEdits(fillDragSourceCell, cells);
+    setFillDragSourceCell(null);
+    setFillDragTargetCellKey(null);
+    if (!batchEdits.length) return;
+    await commitBatchEdits(batchEdits, "fill-drag");
+  }, [commitBatchEdits, fillDragSourceCell]);
+  const resetTransientState = q$1(() => {
+    setSelectedCellKey(null);
+    setEditingCellKey(null);
+    setPendingCellKeys(/* @__PURE__ */ new Set());
+    setCellErrors({});
+    setValueOverrides({});
+    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
+    saveFlashTimers.current = {};
+    setSavedCellKeys(/* @__PURE__ */ new Set());
+    setFillDragSourceCell(null);
+    setFillDragTargetCellKey(null);
+  }, []);
+  return {
+    selectedCellKey,
+    editingCellKey,
+    pendingCellKeys,
+    cellErrors,
+    valueOverrides,
+    savedCellKeys,
+    fillDragSourceCell,
+    fillDragTargetCellKey,
+    selectCell,
+    startEdit,
+    cancelEdit,
+    commitEdit,
+    commitBatchEdits,
+    startFillDrag,
+    moveFillDrag,
+    finishFillDrag,
+    cancelFillDrag,
+    resetTransientState
+  };
+}
+function ExcelColumnChipList({
+  fields,
+  canEdit,
+  busy,
+  draggedField,
+  getFieldLabel: getFieldLabel2,
+  onOpenMenu,
+  onRemoveField,
+  onDragStart,
+  onDragEnd,
+  onDropField
+}) {
+  return /* @__PURE__ */ u2("div", { class: "excel-column-chip-list", role: "list", "aria-label": "当前显示字段顺序", children: fields.map((field) => {
+    const label = getFieldLabel2(field);
+    const canRemove = canEdit && !busy && fields.length > 1;
+    return /* @__PURE__ */ u2(
+      "span",
+      {
+        class: `excel-column-chip ${draggedField === field ? "is-dragging" : ""}`,
+        role: "listitem",
+        draggable: canEdit && !busy,
+        title: canEdit ? canRemove ? "拖动调整列顺序；双击隐藏该列；右键更多操作" : "至少保留一个显示字段" : "当前字段配置不可直接编辑",
+        onContextMenu: (event) => onOpenMenu(event, field),
+        onDblClick: (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (canRemove) onRemoveField(field);
+        },
+        onDragStart: (event) => {
+          if (!canEdit || busy) return;
+          onDragStart(field);
+          event.dataTransfer?.setData("text/plain", field);
+          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+        },
+        onDragEnd,
+        onDragOver: (event) => {
+          if (!canEdit || busy || !draggedField) return;
+          event.preventDefault();
+          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        },
+        onDrop: (event) => {
+          event.preventDefault();
+          if (!canEdit || busy) return;
+          onDropField(field);
+        },
+        children: [
+          /* @__PURE__ */ u2("span", { class: "excel-column-chip-handle", "aria-hidden": "true", children: "⋮⋮" }),
+          /* @__PURE__ */ u2("span", { class: "excel-column-chip-label", children: label })
+        ]
+      },
+      field
+    );
+  }) });
+}
+function ExcelColumnContextMenu({
+  menu,
+  menuModel,
+  onRemoveField,
+  onMoveFieldToStart,
+  onMoveFieldToEnd,
+  onToggleInfo
+}) {
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "excel-column-context-menu",
+      style: { left: `${menu.x}px`, top: `${menu.y}px` },
+      role: "menu",
+      onMouseDown: (event) => event.stopPropagation(),
+      onClick: (event) => event.stopPropagation(),
+      children: [
+        /* @__PURE__ */ u2("div", { class: "excel-column-context-menu-title", children: menuModel.label }),
+        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !menuModel.canRemove, onClick: () => onRemoveField(menuModel.field), children: "隐藏此列" }),
+        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !menuModel.canMoveToStart, onClick: () => onMoveFieldToStart(menuModel.field), children: "移到最前" }),
+        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !menuModel.canMoveToEnd, onClick: () => onMoveFieldToEnd(menuModel.field), children: "移到最后" }),
+        /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", onClick: onToggleInfo, children: "查看字段说明" }),
+        menu.showInfo ? /* @__PURE__ */ u2("div", { class: "excel-column-context-info", children: [
+          /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2("span", { children: "名称" }),
+            /* @__PURE__ */ u2("strong", { children: menuModel.label })
+          ] }),
+          menuModel.group ? /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2("span", { children: "分组" }),
+            /* @__PURE__ */ u2("strong", { children: menuModel.group })
+          ] }) : null,
+          /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2("span", { children: "字段键" }),
+            /* @__PURE__ */ u2("code", { children: menuModel.field })
+          ] })
+        ] }) : null
+      ]
+    }
+  );
+}
+function moveExcelColumnField(fields, fromIndex, toIndex) {
+  if (fromIndex === toIndex) return fields;
+  if (fromIndex < 0 || fromIndex >= fields.length) return fields;
+  if (toIndex < 0 || toIndex >= fields.length) return fields;
+  const next2 = [...fields];
+  const [moved] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved);
+  return next2;
+}
+function buildExcelColumnAvailableOptions(fields, availableFields, getFieldLabel2, getFieldGroupLabel) {
+  const selected = new Set(fields);
+  return availableFields.filter((field) => !selected.has(field)).map((field) => ({
+    value: field,
+    label: getFieldLabel2(field),
+    group: getFieldGroupLabel?.(field)
+  }));
+}
+function canEditExcelColumnFields(canEdit, busy) {
+  return canEdit && !busy;
+}
+function canRemoveExcelColumnField(fields, canEdit, busy) {
+  return canEditExcelColumnFields(canEdit, busy) && fields.length > 1;
+}
+function addExcelColumnField(fields, field) {
+  if (!field || fields.includes(field)) return fields;
+  return [...fields, field];
+}
+function removeExcelColumnField(fields, field) {
+  if (fields.length <= 1) return fields;
+  return fields.filter((item) => item !== field);
+}
+function moveExcelColumnFieldToStart(fields, field) {
+  const index = fields.indexOf(field);
+  if (index <= 0) return fields;
+  return moveExcelColumnField(fields, index, 0);
+}
+function moveExcelColumnFieldToEnd(fields, field) {
+  const index = fields.indexOf(field);
+  if (index < 0 || index === fields.length - 1) return fields;
+  return moveExcelColumnField(fields, index, fields.length - 1);
+}
+function reorderExcelColumnFieldsByDrop(fields, sourceField, targetField) {
+  if (!sourceField || sourceField === targetField) return fields;
+  return moveExcelColumnField(fields, fields.indexOf(sourceField), fields.indexOf(targetField));
+}
+function buildExcelColumnMenuModel(menu, fields, canEdit, busy, getFieldLabel2, getFieldGroupLabel) {
+  if (!menu?.field) return null;
+  const index = fields.indexOf(menu.field);
+  return {
+    field: menu.field,
+    label: getFieldLabel2(menu.field),
+    group: getFieldGroupLabel?.(menu.field),
+    index,
+    canRemove: canRemoveExcelColumnField(fields, canEdit, busy),
+    canMoveToStart: canEditExcelColumnFields(canEdit, busy) && index > 0,
+    canMoveToEnd: canEditExcelColumnFields(canEdit, busy) && index >= 0 && index < fields.length - 1
+  };
+}
+function ExcelColumnToolbar({
+  fields,
+  availableFields,
+  disabled = false,
+  saving = false,
+  error,
+  getFieldLabel: getFieldLabel2 = (field) => field,
+  getFieldGroupLabel,
+  onFieldsChange
+}) {
+  const [draggedField, setDraggedField] = d(null);
+  const [menu, setMenu] = d(null);
+  const canEdit = !!onFieldsChange && !disabled;
+  const busy = saving || disabled;
+  const availableOptions = T$1(
+    () => buildExcelColumnAvailableOptions(fields, availableFields, getFieldLabel2, getFieldGroupLabel),
+    [availableFields, fields, getFieldGroupLabel, getFieldLabel2]
+  );
+  const menuModel = T$1(
+    () => buildExcelColumnMenuModel(menu, fields, canEdit, busy, getFieldLabel2, getFieldGroupLabel),
+    [busy, canEdit, fields, getFieldGroupLabel, getFieldLabel2, menu]
+  );
+  const emit2 = (nextFields) => {
+    if (!canEdit || busy || nextFields === fields) return;
+    onFieldsChange?.(nextFields);
+  };
+  const closeMenu = () => setMenu(null);
+  const addField = (field) => emit2(addExcelColumnField(fields, field));
+  const removeField = (field) => {
+    emit2(removeExcelColumnField(fields, field));
+    closeMenu();
+  };
+  const moveFieldToStart = (field) => {
+    emit2(moveExcelColumnFieldToStart(fields, field));
+    closeMenu();
+  };
+  const moveFieldToEnd = (field) => {
+    emit2(moveExcelColumnFieldToEnd(fields, field));
+    closeMenu();
+  };
+  const dropField = (targetField) => {
+    emit2(reorderExcelColumnFieldsByDrop(fields, draggedField, targetField));
+    setDraggedField(null);
+  };
+  const openMenu = (event, field) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setMenu({ field, x: event.clientX, y: event.clientY });
+  };
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "excel-column-toolbar",
+      "data-editable": canEdit ? "true" : "false",
+      "aria-label": "Excel 显示字段编辑",
+      onClick: () => menu ? closeMenu() : void 0,
+      children: [
+        /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-title", children: "显示字段" }),
+        /* @__PURE__ */ u2(
+          ExcelColumnChipList,
+          {
+            fields,
+            canEdit,
+            busy,
+            draggedField,
+            getFieldLabel: getFieldLabel2,
+            onOpenMenu: openMenu,
+            onRemoveField: removeField,
+            onDragStart: setDraggedField,
+            onDragEnd: () => setDraggedField(null),
+            onDropField: dropField
+          }
+        ),
+        canEdit ? /* @__PURE__ */ u2("div", { class: "excel-column-add-field", children: /* @__PURE__ */ u2(
+          SimpleSelect,
+          {
+            value: "",
+            options: availableOptions,
+            placeholder: availableOptions.length ? "+ 添加字段" : "所有字段已显示",
+            disabled: busy || !availableOptions.length,
+            onChange: addField,
+            className: "excel-column-add-select"
+          }
+        ) }) : /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-readonly", children: "字段配置只读" }),
+        saving ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-status", children: "保存字段设置中…" }) : null,
+        error ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-error", title: error, children: error }) : null,
+        menu && menuModel ? /* @__PURE__ */ u2(
+          ExcelColumnContextMenu,
+          {
+            menu,
+            menuModel,
+            onRemoveField: removeField,
+            onMoveFieldToStart: moveFieldToStart,
+            onMoveFieldToEnd: moveFieldToEnd,
+            onToggleInfo: () => setMenu((prev2) => prev2 ? { ...prev2, showInfo: !prev2.showInfo } : prev2)
+          }
+        ) : null
+      ]
+    }
+  );
+}
+function ExcelViewToolbar({
+  editableColumnCount,
+  readonlyColumnCount,
+  displayFields,
+  availableFields,
+  fieldConfigSaving,
+  fieldConfigError,
+  fieldsChangeDisabled,
+  excelConfigSaving,
+  contentDisplayMode,
+  hasContentColumn,
+  contentModeButtonTitle,
+  onFieldsChange,
+  onContentDisplayToggle
+}) {
+  const isFullMarkdownContent = contentDisplayMode === "fullMarkdown";
+  return /* @__PURE__ */ u2(S, { children: [
+    /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "Excel 视图工具栏", children: [
+      /* @__PURE__ */ u2("span", { class: "excel-view-legend-item is-editable", children: [
+        "可编辑 ",
+        editableColumnCount
+      ] }),
+      /* @__PURE__ */ u2("span", { class: "excel-view-legend-separator", "aria-hidden": "true", children: "|" }),
+      /* @__PURE__ */ u2("span", { class: "excel-view-legend-item is-readonly", children: [
+        "只读 ",
+        readonlyColumnCount
+      ] }),
+      /* @__PURE__ */ u2(
+        ThinkButton,
+        {
+          size: "sm",
+          variant: "secondary",
+          className: "excel-view-content-mode-button",
+          "aria-pressed": isFullMarkdownContent ? "true" : "false",
+          title: contentModeButtonTitle,
+          disabled: !hasContentColumn || excelConfigSaving,
+          loading: excelConfigSaving,
+          onClick: onContentDisplayToggle,
+          children: [
+            "内容：",
+            isFullMarkdownContent ? "全文" : "预览"
+          ]
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2(
+      ExcelColumnToolbar,
+      {
+        fields: displayFields,
+        availableFields,
+        saving: fieldConfigSaving,
+        error: fieldConfigError,
+        disabled: fieldsChangeDisabled,
+        getFieldLabel,
+        getFieldGroupLabel: getFieldCategoryLabel,
+        onFieldsChange
+      }
+    )
+  ] });
+}
+function normalizeExcelColumnWidth(width2) {
+  if (!Number.isFinite(width2)) return 160;
+  return Math.max(80, Math.min(640, Math.round(width2)));
+}
+function normalizeExcelColumnWidths(widths) {
+  if (!widths) return {};
+  const next2 = {};
+  for (const [field, width2] of Object.entries(widths)) {
+    if (!field) continue;
+    next2[field] = normalizeExcelColumnWidth(Number(width2));
+  }
+  return next2;
+}
+function normalizeExcelContentDisplayMode(mode) {
+  return mode === "fullMarkdown" ? "fullMarkdown" : "previewText";
+}
+function getNextExcelContentDisplayMode(mode) {
+  return mode === "fullMarkdown" ? "previewText" : "fullMarkdown";
+}
+function buildExcelContentModeButtonTitle(input) {
+  if (!input.hasContentColumn) return "当前表格未显示内容字段，请先在字段栏添加 content/内容字段";
+  if (input.excelConfigSaving) return "正在保存 Excel 视图配置";
+  return input.isFullMarkdownContent ? "当前：内容字段显示完整 Markdown；点击切回短文本预览" : "当前：内容字段短文本预览；点击显示完整 Markdown";
+}
+function buildExcelViewRenderModel({
+  items,
+  goals = [],
+  fields,
+  availableFields,
+  excelConfig
+}) {
+  const discoveredFields = getAllFields(items);
+  const normalizedAvailableFields = normalizeDisplayFields(
+    availableFields?.length ? availableFields : discoveredFields,
+    { includeUnknown: false }
+  );
+  const displayFields = normalizeDisplayFields(
+    fields && fields.length ? fields : normalizedAvailableFields,
+    {
+      availableFields: normalizedAvailableFields,
+      includeUnknown: true,
+      fallbackFields: normalizedAvailableFields
+    }
+  );
+  const columns = buildExcelColumns(displayFields);
+  const orderedItems = orderItemsByDisplayedGoalField(items, displayFields, { goals });
+  const itemSignature = orderedItems.map((item) => `${item.id}:${item.modified ?? ""}`).join("|");
+  const persistedColumnWidths = normalizeExcelColumnWidths(excelConfig?.columnWidths);
+  const persistedContentDisplayMode = normalizeExcelContentDisplayMode(excelConfig?.contentDisplayMode);
+  const editableColumnCount = columns.filter((column2) => column2.editable).length;
+  const readonlyColumnCount = Math.max(0, columns.length - editableColumnCount);
+  const hasContentColumn = columns.some((column2) => column2.canonicalField === "content");
+  return {
+    discoveredFields,
+    normalizedAvailableFields,
+    displayFields,
+    columns,
+    orderedItems,
+    itemSignature,
+    persistedColumnWidths,
+    persistedContentDisplayMode,
+    editableColumnCount,
+    readonlyColumnCount,
+    hasContentColumn
+  };
+}
+function ExcelView({
+  items,
+  goals = [],
+  fields,
+  availableFields,
+  excelConfig,
+  onFieldsChange,
+  onExcelConfigChange,
+  onCellCommit,
+  onOpenRecordOrigin,
+  messageRenderPort
+}) {
+  const renderModel = T$1(() => buildExcelViewRenderModel({
+    items,
+    goals,
+    fields,
+    availableFields,
+    excelConfig
+  }), [availableFields, excelConfig, fields, goals, items]);
+  const editing = useExcelCellEditing({ onCellCommit });
+  const resetTransientState = editing.resetTransientState;
+  const [fieldConfigSaving, setFieldConfigSaving] = d(false);
+  const [fieldConfigError, setFieldConfigError] = d(null);
+  const [excelConfigSaving, setExcelConfigSaving] = d(false);
+  const [localColumnWidths, setLocalColumnWidths] = d(renderModel.persistedColumnWidths);
+  const [localContentDisplayMode, setLocalContentDisplayMode] = d(renderModel.persistedContentDisplayMode);
+  const isFullMarkdownContent = localContentDisplayMode === "fullMarkdown";
+  const contentModeButtonTitle = buildExcelContentModeButtonTitle({
+    hasContentColumn: renderModel.hasContentColumn,
+    excelConfigSaving,
+    isFullMarkdownContent
+  });
+  h(() => {
+    resetTransientState();
+  }, [renderModel.itemSignature, resetTransientState]);
+  h(() => {
+    setLocalColumnWidths(renderModel.persistedColumnWidths);
+  }, [renderModel.persistedColumnWidths]);
+  h(() => {
+    setLocalContentDisplayMode(renderModel.persistedContentDisplayMode);
+  }, [renderModel.persistedContentDisplayMode]);
+  const handleFieldsChange = q$1(async (nextFields) => {
+    if (!onFieldsChange || fieldConfigSaving) return;
+    const normalizedNextFields = normalizeDisplayFields(nextFields, {
+      availableFields: renderModel.normalizedAvailableFields,
+      includeUnknown: true,
+      fallbackFields: renderModel.displayFields
+    });
+    setFieldConfigSaving(true);
+    setFieldConfigError(null);
+    try {
+      await onFieldsChange(normalizedNextFields);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "字段设置保存失败";
+      setFieldConfigError(message);
+    } finally {
+      setFieldConfigSaving(false);
+    }
+  }, [fieldConfigSaving, onFieldsChange, renderModel.displayFields, renderModel.normalizedAvailableFields]);
+  const persistExcelConfig = q$1(async (nextConfig, rollback) => {
+    if (!onExcelConfigChange) return;
+    setExcelConfigSaving(true);
+    try {
+      await onExcelConfigChange(nextConfig);
+    } catch (error) {
+      diagnosticError("[ExcelView] 保存 Excel 视图配置失败", error);
+      rollback?.();
+    } finally {
+      setExcelConfigSaving(false);
+    }
+  }, [onExcelConfigChange]);
+  const handleColumnWidthDraftChange = q$1((field, width2) => {
+    const nextWidth = normalizeExcelColumnWidth(width2);
+    setLocalColumnWidths((prev2) => ({ ...prev2, [field]: nextWidth }));
+  }, []);
+  const handleColumnWidthCommit = q$1(async (field, width2) => {
+    const nextWidth = normalizeExcelColumnWidth(width2);
+    const nextColumnWidths = { ...localColumnWidths, [field]: nextWidth };
+    setLocalColumnWidths(nextColumnWidths);
+    await persistExcelConfig({
+      ...excelConfig || {},
+      columnWidths: nextColumnWidths,
+      contentDisplayMode: localContentDisplayMode
+    }, () => setLocalColumnWidths(renderModel.persistedColumnWidths));
+  }, [excelConfig, localColumnWidths, localContentDisplayMode, persistExcelConfig, renderModel.persistedColumnWidths]);
+  const handleContentDisplayToggle = q$1(async () => {
+    if (!renderModel.hasContentColumn || excelConfigSaving) return;
+    const nextMode = getNextExcelContentDisplayMode(localContentDisplayMode);
+    const previousMode = localContentDisplayMode;
+    setLocalContentDisplayMode(nextMode);
+    await persistExcelConfig({
+      ...excelConfig || {},
+      columnWidths: localColumnWidths,
+      contentDisplayMode: nextMode
+    }, () => setLocalContentDisplayMode(previousMode));
+  }, [excelConfig, excelConfigSaving, localColumnWidths, localContentDisplayMode, persistExcelConfig, renderModel.hasContentColumn]);
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "excel-view-shell",
+      "data-inline-edit": onCellCommit ? "enabled" : "disabled",
+      "data-column-config": onFieldsChange ? "enabled" : "disabled",
+      "data-excel-config-saving": excelConfigSaving ? "true" : "false",
+      "data-content-display-mode": localContentDisplayMode,
+      ...getObsidianEventBoundaryProps(),
+      children: [
+        /* @__PURE__ */ u2(
+          ExcelViewToolbar,
+          {
+            editableColumnCount: renderModel.editableColumnCount,
+            readonlyColumnCount: renderModel.readonlyColumnCount,
+            displayFields: renderModel.displayFields,
+            availableFields: renderModel.normalizedAvailableFields,
+            fieldConfigSaving,
+            fieldConfigError,
+            fieldsChangeDisabled: !onFieldsChange,
+            excelConfigSaving,
+            contentDisplayMode: localContentDisplayMode,
+            hasContentColumn: renderModel.hasContentColumn,
+            contentModeButtonTitle,
+            onFieldsChange: handleFieldsChange,
+            onContentDisplayToggle: handleContentDisplayToggle
+          }
+        ),
+        /* @__PURE__ */ u2(
+          ExcelGrid,
+          {
+            items: renderModel.orderedItems,
+            columns: renderModel.columns,
+            selectedCellKey: editing.selectedCellKey,
+            editingCellKey: editing.editingCellKey,
+            pendingCellKeys: editing.pendingCellKeys,
+            savedCellKeys: editing.savedCellKeys,
+            cellErrors: editing.cellErrors,
+            valueOverrides: editing.valueOverrides,
+            canCommitCells: !!onCellCommit,
+            columnWidths: localColumnWidths,
+            contentDisplayMode: localContentDisplayMode,
+            messageRenderPort,
+            fillDragSourceCell: editing.fillDragSourceCell,
+            fillDragTargetCellKey: editing.fillDragTargetCellKey,
+            onSelectCell: editing.selectCell,
+            onStartEdit: editing.startEdit,
+            onCancelEdit: editing.cancelEdit,
+            onCommitEdit: editing.commitEdit,
+            onCommitBatchEdits: editing.commitBatchEdits,
+            onStartFillDrag: editing.startFillDrag,
+            onMoveFillDrag: editing.moveFillDrag,
+            onFinishFillDrag: editing.finishFillDrag,
+            onCancelFillDrag: editing.cancelFillDrag,
+            onColumnWidthDraftChange: handleColumnWidthDraftChange,
+            onColumnWidthCommit: handleColumnWidthCommit,
+            onOpenRecordOrigin
+          }
+        )
+      ]
+    }
+  );
+}
+function ThemeTreeSelectTrigger({
+  open,
+  onToggleOpen,
+  displayText: displayText2,
+  hasSelection,
+  allowClear,
+  disabled,
+  size,
+  onClear,
+  anchorRef
+}) {
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      ref: anchorRef,
+      onClick: () => !disabled && onToggleOpen(),
+      sx: {
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        px: 1.5,
+        py: size === "small" ? 0.5 : 1,
+        border: "1px solid var(--background-modifier-border)",
+        borderRadius: 1,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+        bgcolor: "background.paper",
+        "&:hover": disabled ? {} : {
+          borderColor: "primary.main"
+        }
+      },
+      children: [
+        /* @__PURE__ */ u2(
+          Typography2,
+          {
+            variant: "body2",
+            sx: {
+              flex: 1,
+              color: hasSelection ? "text.primary" : "text.secondary",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap"
+            },
+            children: displayText2
+          }
+        ),
+        allowClear && hasSelection && !disabled && /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: onClear, sx: { p: 0.25 }, children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }),
+        /* @__PURE__ */ u2(IconButton2, { size: "small", sx: { p: 0.25 }, children: open ? /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ChevronRightIcon, { fontSize: "small" }) })
+      ]
+    }
+  );
+}
+function SearchBox({ value, onChange }) {
+  return /* @__PURE__ */ u2(Box, { sx: { p: 1, borderBottom: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(
+    TextField2,
+    {
+      fullWidth: true,
+      size: "small",
+      placeholder: "搜索主题...",
+      value,
+      onChange: (e2) => onChange(e2.target.value),
+      InputProps: {
+        startAdornment: /* @__PURE__ */ u2(InputAdornment2, { position: "start", children: /* @__PURE__ */ u2(SearchIcon, { fontSize: "small" }) }),
+        endAdornment: value && /* @__PURE__ */ u2(InputAdornment2, { position: "end", children: /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: () => onChange(""), children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }) })
+      },
+      onKeyDown: (e2) => e2.stopPropagation()
+    }
+  ) });
+}
+function MultiSelectToolbar({ themeTree, onSelectMultiple }) {
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      sx: {
+        display: "flex",
+        gap: 1,
+        p: 1,
+        borderBottom: "1px solid var(--background-modifier-border)"
+      },
+      children: [
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            onClick: () => {
+              const allPaths = ThemeTreeBuilder.getLeafNodes(themeTree).map((n2) => n2.path);
+              onSelectMultiple?.(allPaths);
+            },
+            children: "全选"
+          }
+        ),
+        /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onSelectMultiple?.([]), children: "清空" })
+      ]
+    }
+  );
+}
+function SelectedPathsChips({
+  selectedPaths,
+  onRemovePath,
+  maxVisible = 3
+}) {
+  if (selectedPaths.length === 0) return null;
+  const visible = selectedPaths.slice(0, maxVisible);
+  const restCount = selectedPaths.length - visible.length;
+  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }, children: [
+    visible.map((path) => /* @__PURE__ */ u2(
+      Chip2,
+      {
+        size: "small",
+        label: path.split("/").pop(),
+        onDelete: onRemovePath ? () => {
+          onRemovePath(path);
+        } : void 0,
+        sx: { height: 22 }
+      },
+      path
+    )),
+    restCount > 0 && /* @__PURE__ */ u2(Chip2, { size: "small", label: `+${restCount}`, sx: { height: 22 } })
+  ] });
+}
+function ThemeTreeNodeItem({
+  node: node2,
+  expandedIds,
+  selectedPaths,
+  selectedThemeId,
+  multiSelect,
+  onToggleExpand,
+  onSingleSelect,
+  onMultiSelect,
+  onSelectWithChildren,
+  renderLabel
+}) {
+  if (!node2) return null;
+  const children = node2.children || [];
+  const hasChildren = children.length > 0;
+  const isExpanded = expandedIds.has(node2.id);
+  const isSelected = multiSelect ? selectedPaths.includes(node2.path) : node2.themeId === selectedThemeId;
+  const handleClick = () => {
+    if (multiSelect) {
+      onMultiSelect(node2);
+    } else {
+      if (node2.themeId) {
+        onSingleSelect(node2);
+      } else if (hasChildren) {
+        onToggleExpand(node2.id);
+      }
+    }
+  };
+  return /* @__PURE__ */ u2(S, { children: [
+    /* @__PURE__ */ u2(
+      ListItemButton2,
+      {
+        onClick: handleClick,
+        selected: isSelected,
+        sx: {
+          // 缩进逻辑统一下沉到 ThemeTreeNodeLabel
+          pl: 0,
+          py: 0.5,
+          minHeight: 32
+        },
+        children: /* @__PURE__ */ u2(
+          ThemeTreeNodeLabel,
+          {
+            depth: node2.depth,
+            hasChildren,
+            expanded: isExpanded,
+            onToggleExpand: (e2) => onToggleExpand(node2.id, e2),
+            placeholderWidthPx: 24,
+            basePadding: 1,
+            indentUnit: 2,
+            sx: { width: "100%" },
+            children: [
+              multiSelect && /* @__PURE__ */ u2(
+                Checkbox2,
+                {
+                  size: "small",
+                  checked: isSelected,
+                  onClick: (e2) => e2.stopPropagation(),
+                  onChange: () => onMultiSelect(node2),
+                  sx: { p: 0.25, mr: 0.5 }
+                }
+              ),
+              /* @__PURE__ */ u2(
+                Typography2,
+                {
+                  variant: "body2",
+                  sx: {
+                    flex: 1,
+                    fontWeight: node2.themeId ? 400 : 500,
+                    // 虚节点加粗
+                    color: node2.themeId ? "text.primary" : "text.secondary"
+                  },
+                  children: renderLabel ? renderLabel(node2) : node2.label
+                }
+              ),
+              multiSelect && hasChildren && /* @__PURE__ */ u2(
+                IconButton2,
+                {
+                  size: "small",
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    onSelectWithChildren(node2);
+                  },
+                  sx: { p: 0.25, opacity: 0.6, "&:hover": { opacity: 1 } },
+                  title: "包含子主题",
+                  children: /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" })
+                }
+              )
+            ]
+          }
+        )
+      }
+    ),
+    hasChildren && /* @__PURE__ */ u2(Collapse2, { in: isExpanded, children: children.filter(Boolean).map((child) => /* @__PURE__ */ u2(
+      ThemeTreeNodeItem,
+      {
+        node: child,
+        expandedIds,
+        selectedPaths,
+        selectedThemeId,
+        multiSelect,
+        onToggleExpand,
+        onSingleSelect,
+        onMultiSelect,
+        onSelectWithChildren,
+        renderLabel
+      },
+      child.id
+    )) })
+  ] });
+}
+function ThemeTreeSelectPanel({
+  themes,
+  selectedThemeId,
+  selectedPaths = [],
+  onSelect,
+  onSelectMultiple,
+  multiSelect = false,
+  searchable = true,
+  showToolbar = true,
+  showSelectedChips = true,
+  defaultExpandedIds = [],
+  defaultExpandAll = false,
+  expandToSelected = true,
+  renderLabel,
+  maxHeight: maxHeight2 = 300,
+  sx = {},
+  selectChildrenOnCollapsedParent = false,
+  onRequestClose,
+  disabled = false
+}) {
+  const [searchTerm, setSearchTerm] = d("");
+  const [expandedIds, setExpandedIds] = d(() => new Set(defaultExpandedIds));
+  const themeTree = T$1(() => (buildThemeTree(themes || []) || []).filter(Boolean), [themes]);
+  h(() => {
+    if (!expandToSelected) return;
+    const pathsToExpand = [];
+    if (multiSelect && selectedPaths.length > 0) {
+      selectedPaths.forEach((p2) => pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(p2)));
+    } else if (selectedThemeId) {
+      const theme = themes.find((t3) => t3.id === selectedThemeId);
+      if (theme?.path) {
+        pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(theme.path));
+      }
+    }
+    if (pathsToExpand.length > 0) {
+      setExpandedIds((prev2) => {
+        const next2 = new Set(prev2);
+        pathsToExpand.forEach((p2) => next2.add(p2));
+        return next2;
+      });
+    }
+  }, [expandToSelected, multiSelect, selectedPaths, selectedThemeId, themes]);
+  h(() => {
+    if (!defaultExpandAll || themeTree.length === 0) return;
+    const allIds = [];
+    const collect = (nodes) => {
+      nodes.forEach((n2) => {
+        if (!n2) return;
+        allIds.push(n2.id);
+        collect(n2.children || []);
+      });
+    };
+    collect(themeTree);
+    setExpandedIds(new Set(allIds));
+  }, [defaultExpandAll, themeTree]);
+  const filteredTree = T$1(() => {
+    if (!searchTerm.trim()) return themeTree;
+    return (searchThemeTree(themeTree, searchTerm) || []).filter(Boolean);
+  }, [themeTree, searchTerm]);
+  const toggleExpand = q$1((nodeId, e2) => {
+    e2?.stopPropagation();
+    setExpandedIds((prev2) => {
+      const next2 = new Set(prev2);
+      if (next2.has(nodeId)) next2.delete(nodeId);
+      else next2.add(nodeId);
+      return next2;
+    });
+  }, []);
+  const handleSingleSelect = q$1(
+    (node2) => {
+      if (disabled) return;
+      if (onSelect) onSelect(node2.themeId, node2.path);
+      onRequestClose?.();
+    },
+    [disabled, onSelect, onRequestClose]
+  );
+  const handleSelectWithChildren = q$1(
+    (node2) => {
+      if (disabled) return;
+      if (!onSelectMultiple) return;
+      const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
+      const allPaths = [node2.path, ...descendantPaths].filter(Boolean);
+      const hasAll = allPaths.every((p2) => selectedPaths.includes(p2));
+      if (hasAll) {
+        const toRemove = new Set(allPaths);
+        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
+      } else {
+        onSelectMultiple([.../* @__PURE__ */ new Set([...selectedPaths, ...allPaths])]);
+      }
+    },
+    [disabled, onSelectMultiple, selectedPaths]
+  );
+  const handleMultiSelect = q$1(
+    (node2) => {
+      if (disabled) return;
+      if (!onSelectMultiple) return;
+      const hasChildren = (node2.children || []).length > 0;
+      const isCollapsed = hasChildren && !expandedIds.has(node2.id);
+      if (selectChildrenOnCollapsedParent && isCollapsed) {
+        handleSelectWithChildren(node2);
+        return;
+      }
+      const path = node2.path;
+      const isSelected = selectedPaths.includes(path);
+      if (isSelected) {
+        const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
+        const toRemove = /* @__PURE__ */ new Set([path, ...descendantPaths]);
+        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
+      } else {
+        onSelectMultiple([...selectedPaths, path]);
+      }
+    },
+    [
+      disabled,
+      expandedIds,
+      handleSelectWithChildren,
+      onSelectMultiple,
+      selectedPaths,
+      selectChildrenOnCollapsedParent
+    ]
+  );
+  return /* @__PURE__ */ u2(Box, { sx: { ...sx }, children: [
+    searchable && /* @__PURE__ */ u2(SearchBox, { value: searchTerm, onChange: setSearchTerm }),
+    multiSelect && showToolbar && /* @__PURE__ */ u2(MultiSelectToolbar, { themeTree, onSelectMultiple }),
+    /* @__PURE__ */ u2(Box, { sx: { maxHeight: maxHeight2, overflow: "auto" }, children: filteredTree.length === 0 ? /* @__PURE__ */ u2(Box, { sx: { p: 2, textAlign: "center" }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: themes.length === 0 ? "暂无主题" : "无匹配结果" }) }) : /* @__PURE__ */ u2(List2, { dense: true, disablePadding: true, children: filteredTree.map((node2) => /* @__PURE__ */ u2(
+      ThemeTreeNodeItem,
+      {
+        node: node2,
+        expandedIds,
+        selectedPaths: multiSelect ? selectedPaths : [],
+        selectedThemeId: multiSelect ? null : selectedThemeId,
+        multiSelect,
+        onToggleExpand: toggleExpand,
+        onSingleSelect: handleSingleSelect,
+        onMultiSelect: handleMultiSelect,
+        onSelectWithChildren: handleSelectWithChildren,
+        renderLabel
+      },
+      node2.id
+    )) }) }),
+    multiSelect && showSelectedChips && /* @__PURE__ */ u2(
+      SelectedPathsChips,
+      {
+        selectedPaths,
+        onRemovePath: (path) => onSelectMultiple?.(selectedPaths.filter((p2) => p2 !== path))
+      }
+    )
+  ] });
+}
+function ThemeTreeSelect({
+  themes,
+  selectedThemeId,
+  selectedPaths = [],
+  onSelect,
+  onSelectMultiple,
+  multiSelect = false,
+  allowClear = true,
+  searchable = true,
+  showToolbar = true,
+  showSelectedChips = true,
+  defaultExpandedIds = [],
+  defaultExpandAll = false,
+  expandToSelected = true,
+  renderLabel,
+  placeholder = "选择主题",
+  disabled = false,
+  size = "small",
+  sx = {},
+  maxDropdownHeight = 300,
+  selectChildrenOnCollapsedParent = false
+}) {
+  const [open, setOpen] = d(false);
+  const anchorRef = A$1(null);
+  const hasSelection = multiSelect ? selectedPaths.length > 0 : !!selectedThemeId;
+  const displayText2 = T$1(() => {
+    if (multiSelect) {
+      if (selectedPaths.length === 0) return placeholder;
+      if (selectedPaths.length === 1) {
+        const p2 = selectedPaths[0];
+        return p2.split("/").pop() || p2;
+      }
+      return `${selectedPaths.length} 个主题`;
+    }
+    if (!selectedThemeId) return placeholder;
+    const theme = themes.find((t3) => t3.id === selectedThemeId);
+    if (!theme) return placeholder;
+    const name = theme.path.split("/").pop() || theme.path;
+    return theme.icon ? `${theme.icon} ${name}` : name;
+  }, [multiSelect, placeholder, selectedPaths, selectedThemeId, themes]);
+  const handleClear = q$1(
+    (e2) => {
+      e2.stopPropagation();
+      if (disabled) return;
+      if (multiSelect) {
+        onSelectMultiple?.([]);
+      } else {
+        onSelect?.(null, null);
+      }
+    },
+    [disabled, multiSelect, onSelect, onSelectMultiple]
+  );
+  const handleClose = q$1(() => setOpen(false), []);
+  const panelProps = {
+    themes,
+    selectedThemeId,
+    selectedPaths,
+    onSelect,
+    onSelectMultiple,
+    multiSelect,
+    searchable,
+    showToolbar,
+    showSelectedChips,
+    defaultExpandedIds,
+    defaultExpandAll,
+    expandToSelected,
+    renderLabel,
+    maxHeight: maxDropdownHeight,
+    selectChildrenOnCollapsedParent,
+    disabled,
+    // 单选时：选中即关闭（多选保持打开）
+    onRequestClose: multiSelect ? void 0 : handleClose
+  };
+  return /* @__PURE__ */ u2(Box, { sx: { position: "relative", ...sx }, children: [
+    /* @__PURE__ */ u2(
+      ThemeTreeSelectTrigger,
+      {
+        anchorRef,
+        open,
+        onToggleOpen: () => !disabled && setOpen(!open),
+        displayText: displayText2,
+        hasSelection,
+        allowClear,
+        disabled,
+        size,
+        onClear: handleClear
+      }
+    ),
+    /* @__PURE__ */ u2(
+      Popper3,
+      {
+        open,
+        anchorEl: anchorRef.current,
+        placement: "bottom-start",
+        sx: { zIndex: 1300, minWidth: anchorRef.current?.offsetWidth },
+        children: /* @__PURE__ */ u2(ClickAwayListener, { onClickAway: handleClose, children: /* @__PURE__ */ u2(
+          Paper2,
+          {
+            sx: {
+              mt: 0.5,
+              border: "1px solid var(--background-modifier-border)",
+              boxShadow: 2
+            },
+            children: /* @__PURE__ */ u2(ThemeTreeSelectPanel, { ...panelProps })
+          }
+        ) })
+      }
+    )
+  ] });
+}
+function ThemeFilter({ selectedThemes, onSelectionChange, themes }) {
+  const allThemePaths = T$1(() => themes.map((t3) => t3.path), [themes]);
+  return /* @__PURE__ */ u2(
+    FilterPopover,
+    {
+      label: "主题筛选",
+      popoverTitle: "选择要显示的主题",
+      selectedKeys: selectedThemes,
+      totalCount: allThemePaths.length,
+      getChipLabel: (themePath) => {
+        const theme = themes.find((t3) => t3.path === themePath);
+        return theme ? getLeafPath(theme.path) || theme.path : themePath;
+      },
+      onDeleteKey: (themePath) => {
+        onSelectionChange(selectedThemes.filter((t3) => t3 !== themePath));
+      },
+      onSelectAll: () => onSelectionChange(allThemePaths),
+      onClearAll: () => onSelectionChange([]),
+      isEmpty: themes.length === 0,
+      emptyText: "暂无主题",
+      children: /* @__PURE__ */ u2(
+        ThemeTreeSelectPanel,
+        {
+          themes,
+          selectedPaths: selectedThemes,
+          onSelectMultiple: onSelectionChange,
+          multiSelect: true,
+          searchable: true,
+          showToolbar: false,
+          showSelectedChips: false,
+          maxHeight: 360,
+          selectChildrenOnCollapsedParent: true,
+          sx: { minWidth: 320 }
+        }
+      )
+    }
+  );
+}
+function CategoryFilter({
+  selectedCategories,
+  onSelectionChange,
+  viewInstances,
+  predefinedCategories = []
+}) {
+  const allCategories = T$1(() => {
+    return collectCategoriesFromViews(viewInstances, predefinedCategories);
+  }, [viewInstances, predefinedCategories]);
+  const handleToggleCategory = (categoryName) => {
+    const newSelection = selectedCategories.includes(categoryName) ? selectedCategories.filter((c2) => c2 !== categoryName) : [...selectedCategories, categoryName];
+    onSelectionChange(newSelection);
+  };
+  return /* @__PURE__ */ u2(
+    FilterPopover,
+    {
+      label: "分类筛选",
+      popoverTitle: "选择要显示的分类",
+      selectedKeys: selectedCategories,
+      totalCount: allCategories.length,
+      getChipLabel: (k2) => k2,
+      onDeleteKey: handleToggleCategory,
+      onSelectAll: () => onSelectionChange(allCategories),
+      onClearAll: () => onSelectionChange([]),
+      isEmpty: allCategories.length === 0,
+      emptyText: "暂无分类",
+      children: /* @__PURE__ */ u2(FormGroup2, { children: allCategories.map((cat) => /* @__PURE__ */ u2(
+        FormControlLabel2,
+        {
+          control: /* @__PURE__ */ u2(Checkbox2, { size: "small", checked: selectedCategories.includes(cat), onChange: () => handleToggleCategory(cat) }),
+          label: /* @__PURE__ */ u2("span", { class: "text-md", children: cat })
+        },
+        cat
+      )) })
+    }
+  );
+}
+function ViewToolbarDateControls({
+  dateLabel,
+  onPrevious,
+  onNext,
+  onToday
+}) {
+  return /* @__PURE__ */ u2("div", { class: "tp-toolbar__date-group", "aria-label": "时间范围导航", children: [
+    /* @__PURE__ */ u2(
+      "span",
+      {
+        class: "tp-toolbar-date-display",
+        role: "status",
+        "aria-live": "polite",
+        title: "当前时间范围",
+        children: dateLabel
+      }
+    ),
+    /* @__PURE__ */ u2("div", { class: "tp-toolbar__date-actions", children: [
+      /* @__PURE__ */ u2(
+        ThinkIconButton,
+        {
+          size: "sm",
+          label: "上一时间范围",
+          icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-left" }),
+          onClick: onPrevious
+        }
+      ),
+      /* @__PURE__ */ u2(
+        ThinkIconButton,
+        {
+          size: "sm",
+          label: "下一时间范围",
+          icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-right" }),
+          onClick: onNext
+        }
+      ),
+      /* @__PURE__ */ u2(
+        ThinkIconButton,
+        {
+          size: "sm",
+          label: "回到今天",
+          icon: /* @__PURE__ */ u2(ThinkIcon, { name: "calendar" }),
+          onClick: onToday
+        }
+      )
+    ] })
+  ] });
+}
+const VIEW_TOOLBAR_OPTIONS = ["年", "季", "月", "周", "天"];
+function getViewToolbarUnit(view) {
+  return {
+    年: "year",
+    季: "quarter",
+    月: "month",
+    周: "week",
+    天: "day"
+  }[view] || "day";
+}
+function buildViewToolbarDateLabel(currentDate, currentView) {
+  return formatDateForView(currentDate, currentView);
+}
+function buildViewToolbarDateTargets(currentDate, currentView, today = dayjs()) {
+  const unit = getViewToolbarUnit(currentView);
+  return {
+    previous: currentDate.clone().subtract(1, unit),
+    next: currentDate.clone().add(1, unit),
+    today
+  };
+}
+function shouldRenderViewToolbarFallbackFilters(args) {
+  return !args.hasFilterSlot && (args.canSelectThemes || args.canSelectCategories);
+}
+const VIEW_SEGMENTS = VIEW_TOOLBAR_OPTIONS.map((value) => ({ value, label: value }));
+function ViewToolbar({
+  currentView,
+  currentDate,
+  onViewChange,
+  onDateChange,
+  filterSlot,
+  selectedThemes = [],
+  selectedCategories = [],
+  onThemeSelectionChange,
+  onCategorySelectionChange,
+  viewInstances,
+  themes,
+  predefinedCategories,
+  hideToolbar = false,
+  onLayoutSettingsClick
+}) {
+  const dateLabel = T$1(() => buildViewToolbarDateLabel(currentDate, currentView), [currentDate, currentView]);
+  const dateTargets = T$1(() => buildViewToolbarDateTargets(currentDate, currentView), [currentDate, currentView]);
+  const fallbackFilters = shouldRenderViewToolbarFallbackFilters({
+    hasFilterSlot: Boolean(filterSlot),
+    canSelectThemes: Boolean(onThemeSelectionChange),
+    canSelectCategories: Boolean(onCategorySelectionChange)
+  });
+  if (hideToolbar) return null;
+  return /* @__PURE__ */ u2("div", { class: "tp-toolbar think-toolbar think-toolbar--compact", ...getObsidianEventBoundaryProps(), children: [
+    /* @__PURE__ */ u2(ThinkSegmentedControl, { label: "时间粒度", value: currentView, options: VIEW_SEGMENTS, onChange: onViewChange, size: "sm", className: "tp-toolbar__view-switcher" }),
+    /* @__PURE__ */ u2(
+      ViewToolbarDateControls,
+      {
+        dateLabel,
+        onPrevious: () => onDateChange(dateTargets.previous),
+        onNext: () => onDateChange(dateTargets.next),
+        onToday: () => onDateChange(dateTargets.today)
+      }
+    ),
+    /* @__PURE__ */ u2("span", { class: "tp-toolbar__spacer", "aria-hidden": "true" }),
+    (filterSlot || fallbackFilters) && /* @__PURE__ */ u2("div", { class: "tp-toolbar__filters", children: filterSlot || /* @__PURE__ */ u2(S, { children: [
+      onThemeSelectionChange && /* @__PURE__ */ u2(ThemeFilter, { selectedThemes, onSelectionChange: onThemeSelectionChange, themes }),
+      onCategorySelectionChange && /* @__PURE__ */ u2(CategoryFilter, { selectedCategories, onSelectionChange: onCategorySelectionChange, viewInstances, predefinedCategories })
+    ] }) }),
+    onLayoutSettingsClick && /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", className: "tp-toolbar-layout-settings", label: "布局设置", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "settings" }), onClick: onLayoutSettingsClick })
+  ] });
+}
+const VIEW_REGISTRY = {
+  TableView,
+  BlockView,
+  TimelineView,
+  EventTimelineView,
+  ExcelView,
+  StatisticsView,
+  HeatmapView,
+  ProgressView,
+  EnergyView
+};
+const DashboardViewComponents = VIEW_REGISTRY;
+function useLayoutItems({ dataStore, layout }) {
+  const [allItems, setAllItems] = d(() => dataStore.queryItems());
+  h(() => {
+    const readAllItems = () => {
+      const startedAt = performance.now();
+      const nextItems = dataStore.queryItems();
+      const durationMs2 = Math.round((performance.now() - startedAt) * 100) / 100;
+      devLog("[ThinkPlugin] layout shared query", {
+        layoutId: layout.id,
+        viewCount: layout.viewInstanceIds.length,
+        itemCount: nextItems.length,
+        durationMs: durationMs2
+      });
+      setAllItems(nextItems);
+    };
+    const listener = () => readAllItems();
+    dataStore.subscribe(listener);
+    readAllItems();
+    return () => dataStore.unsubscribe(listener);
+  }, [dataStore, layout.id, layout.viewInstanceIds.length]);
+  return allItems;
+}
+const INITIAL_RENDERED_EXPANDED_VIEWS = 3;
+const EXPANDED_VIEW_RENDER_BATCH_SIZE = 2;
+const EXPANDED_VIEW_RENDER_DELAY_MS = 80;
+function useExpandedViewRendering({
+  layout,
+  allViews
+}) {
+  const [expandedState, setExpandedState] = d({});
+  const [isStateInitialized, setIsStateInitialized] = d(false);
+  h(() => {
+    const initialState = {};
+    layout.viewInstanceIds.forEach((viewId) => {
+      const view = allViews.find((v2) => v2.id === viewId);
+      if (view) {
+        initialState[viewId] = !view.collapsed;
+      }
+    });
+    setExpandedState(initialState);
+    setIsStateInitialized(true);
+  }, [layout.id]);
+  h(() => {
+    if (!isStateInitialized) return;
+    setExpandedState((prevState) => {
+      const newState = { ...prevState };
+      layout.viewInstanceIds.forEach((viewId) => {
+        const view = allViews.find((v2) => v2.id === viewId);
+        if (view && !(viewId in prevState)) {
+          newState[viewId] = !view.collapsed;
+        }
+      });
+      return newState;
+    });
+  }, [allViews, isStateInitialized, layout.viewInstanceIds]);
+  const expandedViewIds = T$1(() => {
+    if (!isStateInitialized) return [];
+    return layout.viewInstanceIds.filter((viewId) => !!expandedState[viewId]);
+  }, [expandedState, isStateInitialized, layout.viewInstanceIds]);
+  const expandedViewSignature = expandedViewIds.join("|");
+  const [renderedExpandedCount, setRenderedExpandedCount] = d(INITIAL_RENDERED_EXPANDED_VIEWS);
+  const renderedBatchLayoutIdRef = A$1(null);
+  h(() => {
+    setRenderedExpandedCount((current2) => {
+      const firstBatchSize = Math.min(expandedViewIds.length, INITIAL_RENDERED_EXPANDED_VIEWS);
+      if (renderedBatchLayoutIdRef.current !== layout.id) {
+        renderedBatchLayoutIdRef.current = layout.id;
+        return firstBatchSize;
+      }
+      return Math.min(expandedViewIds.length, Math.max(current2, INITIAL_RENDERED_EXPANDED_VIEWS));
+    });
+  }, [expandedViewSignature, expandedViewIds.length, layout.id]);
+  h(() => {
+    if (renderedExpandedCount >= expandedViewIds.length) return;
+    const requestIdle = window.requestIdleCallback;
+    const cancelIdle = window.cancelIdleCallback;
+    let timeoutId = null;
+    let idleHandle = null;
+    const renderNextBatch = () => {
+      setRenderedExpandedCount((current2) => Math.min(
+        expandedViewIds.length,
+        current2 + EXPANDED_VIEW_RENDER_BATCH_SIZE
+      ));
+    };
+    if (requestIdle) {
+      idleHandle = requestIdle(renderNextBatch, { timeout: EXPANDED_VIEW_RENDER_DELAY_MS * 2 });
+    } else {
+      timeoutId = setTimeout(renderNextBatch, EXPANDED_VIEW_RENDER_DELAY_MS);
+    }
+    return () => {
+      if (idleHandle !== null && cancelIdle) cancelIdle(idleHandle);
+      if (timeoutId !== null) clearTimeout(timeoutId);
+    };
+  }, [expandedViewIds.length, expandedViewSignature, renderedExpandedCount]);
+  const handleToggle = q$1((viewId, event) => {
+    const isToggleAll = event?.metaKey || event?.ctrlKey;
+    if (isToggleAll) {
+      setExpandedState((currentState) => {
+        const shouldExpandAll = !currentState[viewId];
+        const newState = {};
+        for (const id in currentState) {
+          newState[id] = shouldExpandAll;
+        }
+        return newState;
+      });
+    } else {
+      setExpandedState((prev2) => ({ ...prev2, [viewId]: !prev2[viewId] }));
+    }
+  }, []);
+  return {
+    expandedState,
+    expandedViewIds,
+    renderedExpandedCount,
+    isStateInitialized,
+    handleToggle
+  };
+}
+function useViewData({
+  dataStore,
+  sourceItems,
+  viewInstance,
+  dateRange,
+  keyword,
+  layoutView,
+  isOverviewMode,
+  useFieldGranularity = false,
+  layoutFilters = []
+}) {
+  const filters = viewInstance?.filters || [];
+  const sort = viewInstance?.sort || [];
+  const sourceName = viewInstance?.title || "未知视图";
+  const [localItems, setLocalItems] = d(() => sourceItems ?? dataStore.queryItems());
+  h(() => {
+    if (sourceItems) return;
+    const listener = () => {
+      setLocalItems(dataStore.queryItems());
+    };
+    dataStore.subscribe(listener);
+    return () => dataStore.unsubscribe(listener);
+  }, [dataStore, sourceItems, sourceName]);
+  const allItems = sourceItems ?? localItems;
+  const processedItems = T$1(() => {
+    devTime(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
+    if (!viewInstance) {
+      devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
+      return [];
+    }
+    const finalResult = queryViewRecords({
+      items: allItems,
+      layoutFilters,
+      viewFilters: filters,
+      sort,
+      keyword,
+      dateRange,
+      layoutView,
+      isOverviewMode: !!isOverviewMode,
+      useFieldGranularity
+    });
+    devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
+    return finalResult;
+  }, [allItems, layoutFilters, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, sourceName, viewInstance]);
+  return processedItems;
+}
+const AnyIconButton = IconButton2;
+const closeStatisticsPopover = (widgetId) => {
+  closeFloatingWidget(widgetId);
+};
+const openStatisticsPopover = (request) => {
+  openFloatingWidget(request.widgetId, () => /* @__PURE__ */ u2(
+    FloatingPanel,
+    {
+      id: request.widgetId,
+      title: request.title,
+      defaultPosition: { x: window.innerWidth / 2 - 320, y: window.innerHeight / 2 - 240 },
+      minWidth: 520,
+      maxWidth: "90vw",
+      maxHeight: "85vh",
+      width: 760,
+      height: 640,
+      resizable: true,
+      bodyPadding: 0,
+      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
+      onClose: request.onClose,
+      headerActions: /* @__PURE__ */ u2("div", { class: "sv-popover-heading", children: [
+        /* @__PURE__ */ u2(Tooltip2, { title: "导出为 Markdown", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
+          AnyIconButton,
+          {
+            size: "small",
+            onClick: (e2) => {
+              e2.stopPropagation();
+              request.onExport();
+            },
+            sx: { padding: "4px" },
+            children: /* @__PURE__ */ u2(IosShareIcon, { sx: { fontSize: "1rem" } })
+          }
+        ) }),
+        request.canQuickCreate && request.onQuickCreate ? /* @__PURE__ */ u2(Tooltip2, { title: "按当前分类创建", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
+          AnyIconButton,
+          {
+            size: "small",
+            onClick: (e2) => {
+              e2.stopPropagation();
+              request.onQuickCreate?.();
+            },
+            sx: { padding: "4px" },
+            children: /* @__PURE__ */ u2(AddCircleOutlineIcon, { sx: { fontSize: "1rem" } })
+          }
+        ) }) : null
+      ] }),
+      children: /* @__PURE__ */ u2(
+        PopoverContent,
+        {
+          blocks: request.blocks,
+          module: request.module,
+          timerService: request.timerService,
+          onMarkDone: request.onMarkDone,
+          timers: request.timers,
+          allThemes: request.allThemes,
+          messageRenderPort: request.messageRenderPort,
+          onOpenRecord: request.onOpenRecord,
+          onOpenRecordOrigin: request.onOpenRecordOrigin,
+          resolveResourcePath: request.resolveResourcePath
+        }
+      )
+    }
+  ));
+};
+function useViewRuntimeHandlers({
+  app,
+  actionService,
+  viewInstance,
+  dateRange,
+  layoutView,
+  excelAvailableFields
+}) {
+  const useCases = useUseCases();
+  const ui = useUiPort();
+  const modal = useModalPort();
+  const onUpdateTaskTime = q$1(
+    async (taskId, updates) => {
+      const ok = await updateTimeFromView({
+        uiPort: ui,
+        useCases,
+        itemId: taskId,
+        updates: {
+          time: updates.time,
+          endTime: updates.endTime,
+          duration: updates.duration
+        },
+        source: "unknown"
+      });
+      if (!ok) throw new Error("更新工作 Session 时间失败");
+    },
+    [ui, useCases]
+  );
+  const onQuickCreate = q$1((payload) => {
+    openCreateFromStatistics({
+      app,
+      actionService,
+      uiPort: ui,
+      viewInstance,
+      currentView: layoutView,
+      fallbackDate: dayjs(dateRange[0]),
+      payload
+    });
+  }, [actionService, app, dateRange, layoutView, ui, viewInstance]);
+  const onCategoryColorsChange = q$1((nextColors) => {
+    void useCases.settings.updateCategoryColors(nextColors);
+  }, [useCases.settings]);
+  const onOpenRecord = q$1((item) => {
+    openEditFromItem({ app, item });
+  }, [app]);
+  const onOpenRecordOrigin = q$1((item) => {
+    openRecordOrigin({ app, item });
+  }, [app]);
+  const resolveResourcePath = q$1((path) => {
+    return resolveVaultResourcePath(app, path);
+  }, [app]);
+  const onCreateFromTimeline = q$1((payload) => {
+    openCreateFromTimeline({
+      app,
+      uiPort: ui,
+      inputBlocks: payload.inputBlocks,
+      hourHeight: payload.hourHeight,
+      dayBlocks: payload.dayBlocks,
+      day: payload.day,
+      event: payload.event
+    });
+  }, [app, ui]);
+  const onOpenHeatmapCreate = q$1((request) => {
+    openCreateFromHeatmap({
+      app,
+      sourceBlockId: request.sourceBlockId,
+      date: request.date,
+      item: request.item,
+      themePath: request.themePath,
+      goalPath: request.goalPath,
+      goalId: request.goalId,
+      templateId: request.templateId,
+      templateVariantId: request.templateVariantId,
+      themesByPath: request.themesByPath,
+      notice: (message) => ui.notice(message)
+    });
+  }, [app, ui]);
+  const onOpenCheckinManager = q$1((request) => {
+    modal.openCheckinManager({
+      date: request.date,
+      items: request.items,
+      onAddRecord: request.onAddRecord,
+      onDeleteRecord: async (item) => {
+        if (!window.confirm("确认删除这条打卡记录吗？")) return false;
+        const result = await useCases.recordInput.submitDeleteRecord({
+          item,
+          source: "unknown"
+        });
+        const presentation = buildRecordSubmitFeedbackPresentation(result, "删除失败");
+        if (presentation.message) {
+          ui.notice(presentation.message);
+        }
+        return result.status === "success" || result.status === "partial_success";
+      }
+    });
+  }, [modal, ui, useCases]);
+  const onExcelCellCommit = q$1(async (request) => {
+    return await commitExcelCellFromView({
+      uiPort: ui,
+      useCases,
+      item: request.item,
+      field: request.field,
+      canonicalField: request.canonicalField,
+      oldValue: request.oldValue,
+      nextValue: request.nextValue,
+      showSuccessNotice: false
+    });
+  }, [ui, useCases]);
+  const onExcelFieldsChange = q$1(async (nextFields) => {
+    await useCases.viewInstance.setDisplayFields(viewInstance.id, nextFields, excelAvailableFields);
+  }, [excelAvailableFields, useCases, viewInstance.id]);
+  const onExcelConfigChange = q$1(async (nextExcelConfig) => {
+    await useCases.viewInstance.updateExcelViewConfig(viewInstance.id, nextExcelConfig);
+  }, [useCases, viewInstance.id]);
+  const onEnergyContextChange = q$1(async (currentContext) => {
+    await useCases.viewInstance.updateViewConfig(viewInstance.id, { currentContext });
+  }, [useCases, viewInstance.id]);
+  return {
+    onUpdateTaskTime,
+    onQuickCreate,
+    onCategoryColorsChange,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    resolveResourcePath,
+    onCreateFromTimeline,
+    onOpenHeatmapCreate,
+    onOpenCheckinManager,
+    onExcelCellCommit,
+    onExcelFieldsChange,
+    onExcelConfigChange,
+    onEnergyContextChange,
+    onNotice: ui.notice
+  };
+}
+function buildViewProps({
+  viewInstance,
+  viewItems,
+  dateRange,
+  layoutView,
+  useFieldGranularity,
+  excelAvailableFields,
+  onMarkDone,
+  handlers,
+  onOpenStatisticsPopover,
+  onCloseStatisticsPopover,
+  timerService,
+  timers,
+  allThemes,
+  inputSettings,
+  goals = [],
+  selectedLayoutCategories,
+  categoryColors,
+  messageRenderPort,
+  allItems,
+  allRecords,
+  goalSettings
+}) {
+  const viewType = viewInstance.viewType;
+  return {
+    items: viewType === "EnergyView" ? allItems : viewItems,
+    records: viewType === "TimelineView" || viewType === "EnergyView" ? allRecords : void 0,
+    dateRange,
+    module: viewInstance,
+    currentView: layoutView,
+    useFieldGranularity,
+    ...viewInstance.viewConfig,
+    groupField: viewInstance.group,
+    groupFields: viewInstance.groupFields,
+    fields: viewInstance.fields,
+    availableFields: viewType === "ExcelView" ? excelAvailableFields : void 0,
+    excelConfig: viewType === "ExcelView" ? viewInstance.viewConfig?.excel : void 0,
+    onFieldsChange: viewType === "ExcelView" ? handlers.onExcelFieldsChange : void 0,
+    onExcelConfigChange: viewType === "ExcelView" ? handlers.onExcelConfigChange : void 0,
+    onEnergyContextChange: viewType === "EnergyView" ? handlers.onEnergyContextChange : void 0,
+    onMarkDone,
+    onUpdateTaskTime: handlers.onUpdateTaskTime,
+    onOpenStatisticsPopover: viewType === "StatisticsView" ? onOpenStatisticsPopover : void 0,
+    onCloseStatisticsPopover: viewType === "StatisticsView" ? onCloseStatisticsPopover : void 0,
+    categoryColors: viewType === "StatisticsView" ? categoryColors : void 0,
+    onCategoryColorsChange: viewType === "StatisticsView" ? handlers.onCategoryColorsChange : void 0,
+    onOpenRecord: handlers.onOpenRecord,
+    onOpenRecordOrigin: handlers.onOpenRecordOrigin,
+    resolveResourcePath: handlers.resolveResourcePath,
+    onNotice: handlers.onNotice,
+    onCreateFromTimeline: viewType === "TimelineView" ? handlers.onCreateFromTimeline : void 0,
+    onOpenHeatmapCreate: viewType === "HeatmapView" ? handlers.onOpenHeatmapCreate : void 0,
+    onOpenCheckinManager: viewType === "HeatmapView" ? handlers.onOpenCheckinManager : void 0,
+    onCellCommit: viewType === "ExcelView" ? handlers.onExcelCellCommit : void 0,
+    timerService,
+    timers,
+    allThemes,
+    inputSettings,
+    goals,
+    goalSettings,
+    selectedCategories: selectedLayoutCategories,
+    messageRenderPort
+  };
+}
+function ViewContent({
+  viewInstance,
+  dataStore,
+  dateRange,
+  keyword,
+  layoutView,
+  isOverviewMode,
+  useFieldGranularity,
+  layoutFilters,
+  app,
+  onMarkDone,
+  actionService,
+  timerService,
+  timers,
+  allThemes,
+  allItems,
+  allRecords,
+  inputSettings,
+  onDataLoaded
+}) {
+  const messageRenderPort = useMessageRenderPort();
+  const categoryColors = useSelector(selectCategoryColors);
+  const settings = useSelector(selectSettings);
+  const normalizedViewInstance = viewInstance;
+  const viewItems = useViewData({
+    dataStore,
+    sourceItems: allItems,
+    viewInstance: normalizedViewInstance,
+    dateRange,
+    keyword,
+    layoutView,
+    isOverviewMode: !!isOverviewMode,
+    useFieldGranularity,
+    layoutFilters
+  });
+  const selectedLayoutCategories = T$1(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
+  const excelAvailableFields = T$1(() => getAllFields(allItems), [allItems]);
+  h(() => {
+    onDataLoaded(viewItems);
+  }, [viewItems, onDataLoaded]);
+  const ViewComponent = DashboardViewComponents[normalizedViewInstance.viewType];
+  if (!ViewComponent) return /* @__PURE__ */ u2("div", { children: [
+    "未知视图: ",
+    normalizedViewInstance.viewType
+  ] });
+  const handlers = useViewRuntimeHandlers({
+    app,
+    actionService,
+    viewInstance: normalizedViewInstance,
+    dateRange,
+    layoutView,
+    excelAvailableFields
+  });
+  const viewProps = buildViewProps({
+    viewInstance: normalizedViewInstance,
+    viewItems,
+    dateRange,
+    layoutView,
+    useFieldGranularity,
+    excelAvailableFields,
+    onMarkDone,
+    handlers,
+    onOpenStatisticsPopover: openStatisticsPopover,
+    onCloseStatisticsPopover: closeStatisticsPopover,
+    timerService,
+    timers,
+    allThemes,
+    inputSettings,
+    goals: settings.goalSettings?.goals || [],
+    selectedLayoutCategories,
+    categoryColors,
+    messageRenderPort,
+    allItems,
+    allRecords,
+    goalSettings: settings.goalSettings
+  });
+  return /* @__PURE__ */ u2(ViewComponent, { ...viewProps });
+}
+function useLayoutModuleActions({
+  app,
+  actionService,
+  layout,
+  layoutDate,
+  layoutView,
+  allViews,
+  modulesDataCache,
+  ui,
+  useCases,
+  timerService
+}) {
+  const handleExport = q$1((viewId, viewTitle) => {
+    const items = modulesDataCache.current?.[viewId];
+    if (!items || items.length === 0) {
+      ui.notice("没有内容可导出");
+      return;
+    }
+    const viewInstance = allViews.find((v2) => v2.id === viewId);
+    let exportConfig = viewInstance ? getExportConfigByViewType(viewInstance.viewType) : void 0;
+    if (viewInstance && exportConfig) {
+      const dynamicGroupFields = viewInstance.groupFields && viewInstance.groupFields.length > 0 ? viewInstance.groupFields : viewInstance.group ? [viewInstance.group] : void 0;
+      if (dynamicGroupFields) {
+        exportConfig = {
+          ...exportConfig,
+          groupFields: dynamicGroupFields
+        };
+      }
+    }
+    const markdownContent = exportItemsToMarkdown(items, exportConfig);
+    void navigator.clipboard.writeText(markdownContent);
+    ui.notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
+  }, [allViews, modulesDataCache, ui]);
+  const handleQuickInputAction = q$1((viewInstance) => {
+    openCreateFromViewHeader({
+      app,
+      actionService,
+      viewInstance,
+      dateContext: layoutDate,
+      periodContext: layoutView
+    });
+  }, [actionService, app, layoutDate, layoutView]);
+  const handleMarkItemDone = q$1((itemId) => {
+    void (async () => {
+      if (timerService.completeTask) {
+        await timerService.completeTask(itemId);
+        return;
+      }
+      await completeFromView({
+        uiPort: ui,
+        useCases,
+        itemId,
+        source: "layout_renderer"
+      });
+    })();
+  }, [timerService, ui, useCases]);
+  const handleSettingsClick = q$1((viewInstance) => {
+    openModuleSettingsWidget(viewInstance);
+  }, []);
+  const handleDeleteViewInstance = q$1((viewInstanceId) => {
+    const view = allViews.find((candidate) => candidate.id === viewInstanceId);
+    if (!window.confirm(`确认删除视图“${view?.title || viewInstanceId}”吗？它会从配置和所有布局中移除。`)) return;
+    void useCases.viewInstance.deleteView(viewInstanceId);
+  }, [allViews, useCases.viewInstance]);
+  const handleGlobalFiltersChange = q$1((filters) => {
+    void useCases.layout.updateLayout(layout.id, {
+      globalFilters: filters
+    });
+  }, [layout.id, useCases.layout]);
+  return {
+    handleExport,
+    handleQuickInputAction,
+    handleMarkItemDone,
+    handleSettingsClick,
+    handleDeleteViewInstance,
+    handleGlobalFiltersChange
   };
 }
 function hasSizeChanged(a2, b2) {
@@ -68122,10 +68521,10 @@ function FreeformLayoutItem({
   const [isResizing, setIsResizing] = d(false);
   const resizeSessionRef = A$1(null);
   const onResizePreviewRef = A$1(onResizePreview);
-  y(() => {
+  h(() => {
     onResizePreviewRef.current = onResizePreview;
   }, [onResizePreview]);
-  y(() => () => {
+  h(() => () => {
     resizeSessionRef.current = null;
     onResizePreviewRef.current(null);
   }, []);
@@ -68314,7 +68713,7 @@ function FreeformCanvas({
     [layout.freeformConfig]
   );
   const keyboardStep = config2.snapToGrid ? config2.gridSize : 8;
-  y(() => {
+  h(() => {
     const host = hostRef.current;
     if (!host) return;
     const updateWidth = () => {
@@ -68333,25 +68732,25 @@ function FreeformCanvas({
     observer.observe(host);
     return () => observer.disconnect();
   }, [config2.minCanvasWidth]);
-  y(() => {
+  h(() => {
     setSelectedViewId(null);
     setLocalOverrides({});
     setResizePreviews({});
     setDragPreview(null);
     previousPersistedPlacementsRef.current = layout.viewPlacements;
   }, [layout.id]);
-  y(() => {
+  h(() => {
     if (previousPersistedPlacementsRef.current === layout.viewPlacements) return;
     previousPersistedPlacementsRef.current = layout.viewPlacements;
     setLocalOverrides({});
   }, [layout.viewPlacements]);
-  y(() => {
+  h(() => {
     if (editing) return;
     setSelectedViewId(null);
     setResizePreviews({});
     setDragPreview(null);
   }, [editing]);
-  y(() => {
+  h(() => {
     if (selectedViewId && !layout.viewInstanceIds.includes(selectedViewId)) {
       setSelectedViewId(null);
     }
@@ -68595,7 +68994,7 @@ function getLayoutInitialDate(layout) {
 }
 function useCompactFreeformFallback() {
   const [compact, setCompact] = d(false);
-  y(() => {
+  h(() => {
     if (typeof window === "undefined") return;
     const media = window.matchMedia?.("(max-width: 760px), (hover: none) and (pointer: coarse)");
     const update = () => {
@@ -68648,14 +69047,14 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     () => allViews.filter((view) => !layout.viewInstanceIds.includes(view.id)),
     [allViews, layout.viewInstanceIds]
   );
-  y(() => {
+  h(() => {
     setLayoutDate(getLayoutInitialDate(layout));
     setLayoutView(layout.initialView || "月");
   }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
-  y(() => {
+  h(() => {
     if (layout.displayMode !== "freeform" || compactFreeformFallback) setIsFreeformEditing(false);
   }, [compactFreeformFallback, layout.displayMode]);
-  y(() => {
+  h(() => {
     if (viewToAdd && !availableViews.some((view) => view.id === viewToAdd)) {
       setViewToAdd("");
     }
@@ -69866,7 +70265,7 @@ function MessageBubble({ message }) {
     }
   };
   const contentType = message.contentType ?? (message.role === "user" ? "plain" : "markdown");
-  y(() => {
+  h(() => {
     if (!contentRef.current) return;
     renderPort.renderMessage({
       containerEl: contentRef.current,
@@ -70182,7 +70581,7 @@ function AiChatModalContainer({ closeModal, services }) {
     const list = sessionStore.getRecentSessions(20);
     setSessions(list);
   };
-  y(() => {
+  h(() => {
     loadSessions();
     const unsubscribe = sessionStore.subscribe(() => {
       loadSessions();
@@ -70202,14 +70601,14 @@ function AiChatModalContainer({ closeModal, services }) {
       takeLatestRef.current.dispose();
     };
   }, []);
-  y(() => {
+  h(() => {
     if (currentSessionId) {
       setMessages(sessionStore.getMessages(currentSessionId));
     } else {
       setMessages([]);
     }
   }, [currentSessionId]);
-  y(() => {
+  h(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   const handleNewSession = async () => {
@@ -70711,474 +71110,6 @@ ObsidianVaultPort = __decorateClass([
   singleton(),
   __decorateParam(0, inject(AppToken))
 ], ObsidianVaultPort);
-function arrayMove(array2, from2, to) {
-  const newArray = array2.slice();
-  newArray.splice(to < 0 ? newArray.length + to : to, 0, newArray.splice(from2, 1)[0]);
-  return newArray;
-}
-function getSortedRects(items, rects) {
-  return items.reduce((accumulator, id, index) => {
-    const rect = rects.get(id);
-    if (rect) {
-      accumulator[index] = rect;
-    }
-    return accumulator;
-  }, Array(items.length));
-}
-function isValidIndex(index) {
-  return index !== null && index >= 0;
-}
-function itemsEqual(a2, b2) {
-  if (a2 === b2) {
-    return true;
-  }
-  if (a2.length !== b2.length) {
-    return false;
-  }
-  for (let i2 = 0; i2 < a2.length; i2++) {
-    if (a2[i2] !== b2[i2]) {
-      return false;
-    }
-  }
-  return true;
-}
-function normalizeDisabled(disabled) {
-  if (typeof disabled === "boolean") {
-    return {
-      draggable: disabled,
-      droppable: disabled
-    };
-  }
-  return disabled;
-}
-const rectSortingStrategy = (_ref) => {
-  let {
-    rects,
-    activeIndex,
-    overIndex,
-    index
-  } = _ref;
-  const newRects = arrayMove(rects, overIndex, activeIndex);
-  const oldRect = rects[index];
-  const newRect = newRects[index];
-  if (!newRect || !oldRect) {
-    return null;
-  }
-  return {
-    x: newRect.left - oldRect.left,
-    y: newRect.top - oldRect.top,
-    scaleX: newRect.width / oldRect.width,
-    scaleY: newRect.height / oldRect.height
-  };
-};
-const defaultScale$1 = {
-  scaleX: 1,
-  scaleY: 1
-};
-const verticalListSortingStrategy = (_ref) => {
-  var _rects$activeIndex;
-  let {
-    activeIndex,
-    activeNodeRect: fallbackActiveRect,
-    index,
-    rects,
-    overIndex
-  } = _ref;
-  const activeNodeRect = (_rects$activeIndex = rects[activeIndex]) != null ? _rects$activeIndex : fallbackActiveRect;
-  if (!activeNodeRect) {
-    return null;
-  }
-  if (index === activeIndex) {
-    const overIndexRect = rects[overIndex];
-    if (!overIndexRect) {
-      return null;
-    }
-    return {
-      x: 0,
-      y: activeIndex < overIndex ? overIndexRect.top + overIndexRect.height - (activeNodeRect.top + activeNodeRect.height) : overIndexRect.top - activeNodeRect.top,
-      ...defaultScale$1
-    };
-  }
-  const itemGap = getItemGap$1(rects, index, activeIndex);
-  if (index > activeIndex && index <= overIndex) {
-    return {
-      x: 0,
-      y: -activeNodeRect.height - itemGap,
-      ...defaultScale$1
-    };
-  }
-  if (index < activeIndex && index >= overIndex) {
-    return {
-      x: 0,
-      y: activeNodeRect.height + itemGap,
-      ...defaultScale$1
-    };
-  }
-  return {
-    x: 0,
-    y: 0,
-    ...defaultScale$1
-  };
-};
-function getItemGap$1(clientRects, index, activeIndex) {
-  const currentRect = clientRects[index];
-  const previousRect = clientRects[index - 1];
-  const nextRect = clientRects[index + 1];
-  if (!currentRect) {
-    return 0;
-  }
-  if (activeIndex < index) {
-    return previousRect ? currentRect.top - (previousRect.top + previousRect.height) : nextRect ? nextRect.top - (currentRect.top + currentRect.height) : 0;
-  }
-  return nextRect ? nextRect.top - (currentRect.top + currentRect.height) : previousRect ? currentRect.top - (previousRect.top + previousRect.height) : 0;
-}
-const ID_PREFIX = "Sortable";
-const Context = /* @__PURE__ */ gn.createContext({
-  activeIndex: -1,
-  containerId: ID_PREFIX,
-  disableTransforms: false,
-  items: [],
-  overIndex: -1,
-  useDragOverlay: false,
-  sortedRects: [],
-  strategy: rectSortingStrategy,
-  disabled: {
-    draggable: false,
-    droppable: false
-  }
-});
-function SortableContext(_ref) {
-  let {
-    children,
-    id,
-    items: userDefinedItems,
-    strategy = rectSortingStrategy,
-    disabled: disabledProp = false
-  } = _ref;
-  const {
-    active,
-    dragOverlay,
-    droppableRects,
-    over,
-    measureDroppableContainers
-  } = useDndContext();
-  const containerId = useUniqueId(ID_PREFIX, id);
-  const useDragOverlay = Boolean(dragOverlay.rect !== null);
-  const items = T$1(() => userDefinedItems.map((item) => typeof item === "object" && "id" in item ? item.id : item), [userDefinedItems]);
-  const isDragging = active != null;
-  const activeIndex = active ? items.indexOf(active.id) : -1;
-  const overIndex = over ? items.indexOf(over.id) : -1;
-  const previousItemsRef = A$1(items);
-  const itemsHaveChanged = !itemsEqual(items, previousItemsRef.current);
-  const disableTransforms = overIndex !== -1 && activeIndex === -1 || itemsHaveChanged;
-  const disabled = normalizeDisabled(disabledProp);
-  useIsomorphicLayoutEffect(() => {
-    if (itemsHaveChanged && isDragging) {
-      measureDroppableContainers(items);
-    }
-  }, [itemsHaveChanged, items, isDragging, measureDroppableContainers]);
-  y(() => {
-    previousItemsRef.current = items;
-  }, [items]);
-  const contextValue = T$1(
-    () => ({
-      activeIndex,
-      containerId,
-      disabled,
-      disableTransforms,
-      items,
-      overIndex,
-      useDragOverlay,
-      sortedRects: getSortedRects(items, droppableRects),
-      strategy
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeIndex, containerId, disabled.draggable, disabled.droppable, disableTransforms, items, overIndex, droppableRects, useDragOverlay, strategy]
-  );
-  return gn.createElement(Context.Provider, {
-    value: contextValue
-  }, children);
-}
-const defaultNewIndexGetter = (_ref) => {
-  let {
-    id,
-    items,
-    activeIndex,
-    overIndex
-  } = _ref;
-  return arrayMove(items, activeIndex, overIndex).indexOf(id);
-};
-const defaultAnimateLayoutChanges = (_ref2) => {
-  let {
-    containerId,
-    isSorting,
-    wasDragging,
-    index,
-    items,
-    newIndex,
-    previousItems,
-    previousContainerId,
-    transition
-  } = _ref2;
-  if (!transition || !wasDragging) {
-    return false;
-  }
-  if (previousItems !== items && index === newIndex) {
-    return false;
-  }
-  if (isSorting) {
-    return true;
-  }
-  return newIndex !== index && containerId === previousContainerId;
-};
-const defaultTransition = {
-  duration: 200,
-  easing: "ease"
-};
-const transitionProperty = "transform";
-const disabledTransition = /* @__PURE__ */ CSS.Transition.toString({
-  property: transitionProperty,
-  duration: 0,
-  easing: "linear"
-});
-const defaultAttributes = {
-  roleDescription: "sortable"
-};
-function useDerivedTransform(_ref) {
-  let {
-    disabled,
-    index,
-    node: node2,
-    rect
-  } = _ref;
-  const [derivedTransform, setDerivedtransform] = d(null);
-  const previousIndex = A$1(index);
-  useIsomorphicLayoutEffect(() => {
-    if (!disabled && index !== previousIndex.current && node2.current) {
-      const initial = rect.current;
-      if (initial) {
-        const current2 = getClientRect(node2.current, {
-          ignoreTransform: true
-        });
-        const delta = {
-          x: initial.left - current2.left,
-          y: initial.top - current2.top,
-          scaleX: initial.width / current2.width,
-          scaleY: initial.height / current2.height
-        };
-        if (delta.x || delta.y) {
-          setDerivedtransform(delta);
-        }
-      }
-    }
-    if (index !== previousIndex.current) {
-      previousIndex.current = index;
-    }
-  }, [disabled, index, node2, rect]);
-  y(() => {
-    if (derivedTransform) {
-      setDerivedtransform(null);
-    }
-  }, [derivedTransform]);
-  return derivedTransform;
-}
-function useSortable(_ref) {
-  let {
-    animateLayoutChanges = defaultAnimateLayoutChanges,
-    attributes: userDefinedAttributes,
-    disabled: localDisabled,
-    data: customData,
-    getNewIndex = defaultNewIndexGetter,
-    id,
-    strategy: localStrategy,
-    resizeObserverConfig,
-    transition = defaultTransition
-  } = _ref;
-  const {
-    items,
-    containerId,
-    activeIndex,
-    disabled: globalDisabled,
-    disableTransforms,
-    sortedRects,
-    overIndex,
-    useDragOverlay,
-    strategy: globalStrategy
-  } = x$1(Context);
-  const disabled = normalizeLocalDisabled(localDisabled, globalDisabled);
-  const index = items.indexOf(id);
-  const data = T$1(() => ({
-    sortable: {
-      containerId,
-      index,
-      items
-    },
-    ...customData
-  }), [containerId, customData, index, items]);
-  const itemsAfterCurrentSortable = T$1(() => items.slice(items.indexOf(id)), [items, id]);
-  const {
-    rect,
-    node: node2,
-    isOver,
-    setNodeRef: setDroppableNodeRef
-  } = useDroppable({
-    id,
-    data,
-    disabled: disabled.droppable,
-    resizeObserverConfig: {
-      updateMeasurementsFor: itemsAfterCurrentSortable,
-      ...resizeObserverConfig
-    }
-  });
-  const {
-    active,
-    activatorEvent,
-    activeNodeRect,
-    attributes,
-    setNodeRef: setDraggableNodeRef,
-    listeners,
-    isDragging,
-    over,
-    setActivatorNodeRef,
-    transform: transform2
-  } = useDraggable({
-    id,
-    data,
-    attributes: {
-      ...defaultAttributes,
-      ...userDefinedAttributes
-    },
-    disabled: disabled.draggable
-  });
-  const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
-  const isSorting = Boolean(active);
-  const displaceItem = isSorting && !disableTransforms && isValidIndex(activeIndex) && isValidIndex(overIndex);
-  const shouldDisplaceDragSource = !useDragOverlay && isDragging;
-  const dragSourceDisplacement = shouldDisplaceDragSource && displaceItem ? transform2 : null;
-  const strategy = localStrategy != null ? localStrategy : globalStrategy;
-  const finalTransform = displaceItem ? dragSourceDisplacement != null ? dragSourceDisplacement : strategy({
-    rects: sortedRects,
-    activeNodeRect,
-    activeIndex,
-    overIndex,
-    index
-  }) : null;
-  const newIndex = isValidIndex(activeIndex) && isValidIndex(overIndex) ? getNewIndex({
-    id,
-    items,
-    activeIndex,
-    overIndex
-  }) : index;
-  const activeId = active == null ? void 0 : active.id;
-  const previous = A$1({
-    activeId,
-    items,
-    newIndex,
-    containerId
-  });
-  const itemsHaveChanged = items !== previous.current.items;
-  const shouldAnimateLayoutChanges = animateLayoutChanges({
-    active,
-    containerId,
-    isDragging,
-    isSorting,
-    id,
-    index,
-    items,
-    newIndex: previous.current.newIndex,
-    previousItems: previous.current.items,
-    previousContainerId: previous.current.containerId,
-    transition,
-    wasDragging: previous.current.activeId != null
-  });
-  const derivedTransform = useDerivedTransform({
-    disabled: !shouldAnimateLayoutChanges,
-    index,
-    node: node2,
-    rect
-  });
-  y(() => {
-    if (isSorting && previous.current.newIndex !== newIndex) {
-      previous.current.newIndex = newIndex;
-    }
-    if (containerId !== previous.current.containerId) {
-      previous.current.containerId = containerId;
-    }
-    if (items !== previous.current.items) {
-      previous.current.items = items;
-    }
-  }, [isSorting, newIndex, containerId, items]);
-  y(() => {
-    if (activeId === previous.current.activeId) {
-      return;
-    }
-    if (activeId != null && previous.current.activeId == null) {
-      previous.current.activeId = activeId;
-      return;
-    }
-    const timeoutId = setTimeout(() => {
-      previous.current.activeId = activeId;
-    }, 50);
-    return () => clearTimeout(timeoutId);
-  }, [activeId]);
-  return {
-    active,
-    activeIndex,
-    attributes,
-    data,
-    rect,
-    index,
-    newIndex,
-    items,
-    isOver,
-    isSorting,
-    isDragging,
-    listeners,
-    node: node2,
-    overIndex,
-    over,
-    setNodeRef,
-    setActivatorNodeRef,
-    setDroppableNodeRef,
-    setDraggableNodeRef,
-    transform: derivedTransform != null ? derivedTransform : finalTransform,
-    transition: getTransition()
-  };
-  function getTransition() {
-    if (
-      // Temporarily disable transitions for a single frame to set up derived transforms
-      derivedTransform || // Or to prevent items jumping to back to their "new" position when items change
-      itemsHaveChanged && previous.current.newIndex === index
-    ) {
-      return disabledTransition;
-    }
-    if (shouldDisplaceDragSource && !isKeyboardEvent(activatorEvent) || !transition) {
-      return void 0;
-    }
-    if (isSorting || shouldAnimateLayoutChanges) {
-      return CSS.Transition.toString({
-        ...transition,
-        property: transitionProperty
-      });
-    }
-    return void 0;
-  }
-}
-function normalizeLocalDisabled(localDisabled, globalDisabled) {
-  var _localDisabled$dragga, _localDisabled$droppa;
-  if (typeof localDisabled === "boolean") {
-    return {
-      draggable: localDisabled,
-      // Backwards compatibility
-      droppable: false
-    };
-  }
-  return {
-    draggable: (_localDisabled$dragga = localDisabled == null ? void 0 : localDisabled.draggable) != null ? _localDisabled$dragga : globalDisabled.draggable,
-    droppable: (_localDisabled$droppa = localDisabled == null ? void 0 : localDisabled.droppable) != null ? _localDisabled$droppa : globalDisabled.droppable
-  };
-}
-[KeyboardCode.Down, KeyboardCode.Right, KeyboardCode.Up, KeyboardCode.Left];
 function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: layout.id });
   const style2 = { transform: transform2 ? `translate3d(${transform2.x}px, ${transform2.y}px, 0)` : void 0, transition };
@@ -71472,7 +71403,7 @@ function AiSettings(_props) {
   const [saveStatusSeverity, setSaveStatusSeverity] = d("info");
   const isMountedRef = useIsMounted();
   const takeLatestRef = A$1(createTakeLatest());
-  y(() => {
+  h(() => {
     return () => {
       takeLatestRef.current.dispose();
     };
@@ -71825,11 +71756,11 @@ function OptionRow({ option, onChange, onRemove, fieldType, disabled = false }) 
   const renderCountRef = A$1(0);
   const previousOptionRef = A$1(null);
   renderCountRef.current += 1;
-  y(() => {
+  h(() => {
     logRenderDiagnostic("FieldsEditor/OptionRow", { renderCount: renderCountRef.current, fieldType, disabled, optionRefChanged: previousOptionRef.current !== null && previousOptionRef.current !== option, option, localOption });
     previousOptionRef.current = option;
   });
-  y(() => setLocalOption(option), [option]);
+  h(() => setLocalOption(option), [option]);
   const commitOption = (nextOption) => {
     if ((nextOption.label || "") === (option.label || "") && nextOption.value === option.value) return;
     onChange(nextOption);
@@ -71866,14 +71797,14 @@ function FieldRow({ field, disabled = false, isDragging = false, onUpdate, onRem
   const renderCountRef = A$1(0);
   const previousFieldRef = A$1(null);
   renderCountRef.current += 1;
-  y(() => {
+  h(() => {
     logRenderDiagnostic("FieldsEditor/FieldRow", { renderCount: renderCountRef.current, fieldId: field.id, fieldKey: field.key, fieldType: field.type, disabled, isEditing, isDragging, fieldRefChanged: previousFieldRef.current !== null && previousFieldRef.current !== field, localName, localDefaultValue, incomingDefaultValue: field.defaultValue });
     previousFieldRef.current = field;
   });
-  y(() => {
+  h(() => {
     if (!isEditing) setLocalName(field.label || field.key);
   }, [field.label, field.key, isEditing]);
-  y(() => setLocalDefaultValue(field.defaultValue || ""), [field.defaultValue, field.id]);
+  h(() => setLocalDefaultValue(field.defaultValue || ""), [field.defaultValue, field.id]);
   const handleNameBlur = () => {
     const trimmedName = localName.trim();
     if (trimmedName && trimmedName !== (field.label || field.key)) onUpdate({ key: trimmedName, label: trimmedName });
@@ -71941,7 +71872,7 @@ function FieldsEditor({ fields = [], disabled = false, onChange }) {
   const previousFieldsRef = A$1(null);
   const [draggingIndex, setDraggingIndex] = d(null);
   renderCountRef.current += 1;
-  y(() => {
+  h(() => {
     logRenderDiagnostic("FieldsEditor", { renderCount: renderCountRef.current, disabled, fieldsRefChanged: previousFieldsRef.current !== null && previousFieldsRef.current !== fields, fieldsCount: fields.length, fieldIds: fields.map((field) => field.id) });
     previousFieldsRef.current = fields;
   });
@@ -71997,7 +71928,7 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
 }
 function BlockEditor({ block, useCases }) {
   const [localBlock, setLocalBlock] = d(block);
-  y(() => {
+  h(() => {
     setLocalBlock(block);
   }, [block]);
   const handleUpdate = (updates) => {
@@ -72525,7 +72456,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
     () => sortedVariants.find((template) => (template.variantId || "default") === selectedVariantId) || null,
     [sortedVariants, selectedVariantId]
   );
-  y(() => {
+  h(() => {
     if (!isOpen) return;
     const initial = initialVariantId ? sortedVariants.find((template) => (template.variantId || "default") === initialVariantId || template.id === initialVariantId) || null : null;
     if (initial) {
@@ -72545,7 +72476,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
     draftRef.current = nextDraft;
     setDraft(nextDraft);
   }, [isOpen, goal?.id, goal?.themePath, block?.id, initialVariantId, sortedVariants.length, themes.length]);
-  y(() => {
+  h(() => {
     draftRef.current = draft;
   }, [draft]);
   const updateDraft = (updates) => {
@@ -72872,7 +72803,7 @@ function MenuItem2({ label, meta, danger = false, disabled = false, emphasized =
   );
 }
 function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks, onDeleteTemplate }) {
-  y(() => {
+  h(() => {
     if (!state) return void 0;
     const onKey = (event) => {
       if (event.key === "Escape") onClose();
@@ -73465,11 +73396,11 @@ function GoalTemplateMatrix() {
   const [goalDrop, setGoalDrop] = d(null);
   const [draggingPreset, setDraggingPreset] = d(null);
   const [presetDropCell, setPresetDropCell] = d(null);
-  y(() => {
+  h(() => {
     if (!coreBlocks.length) return;
     setActiveBlockIds((previous) => previous.size > 0 ? previous : new Set(coreBlocks.map((block) => block.id)));
   }, [coreBlocks]);
-  y(() => {
+  h(() => {
     setExpandedPaths((previous) => addAllGoalPaths(previous, allGoalPaths));
   }, [allGoalPaths]);
   const isBlockActive = (blockId) => activeBlockIds.size === 0 || activeBlockIds.has(blockId);
@@ -73851,7 +73782,7 @@ function ThemeMetadataManager() {
   const [icon, setIcon] = d("");
   const [message, setMessage] = d("");
   const [query, setQuery] = d("");
-  y(() => {
+  h(() => {
     if (!message) return void 0;
     const timer = window.setTimeout(() => setMessage(""), 2200);
     return () => window.clearTimeout(timer);

@@ -39,6 +39,7 @@
 @import "./components/simple-select.css";
 @import "./components/native-controls.css";
 @import "./components/task-row.css";
+@import "./components/data-grid.css";
 @import "./components/grouped-container.css";
 @import "./features/settings.css";
 @import "./features/settings-structural.css";

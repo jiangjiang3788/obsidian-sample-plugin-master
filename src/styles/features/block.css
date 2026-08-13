@@ -15,17 +15,7 @@
 
 /* --- 条目通用样式 --- */
 .bv-item {
-    padding: var(--think-space-3) 0;
-    border: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 68%, transparent);
-    border-radius: 0;
-    background: transparent;
-    transition: background-color var(--think-duration-normal) var(--think-ease-standard);
-    font-size: 1rem;
-}
-
-.bv-item:hover {
-    background: color-mix(in srgb, var(--think-bg-hover) 44%, transparent);
+    font-size: var(--think-font-size-sm);
 }
 
 /* --- BlockView 核心布局 (合并了 TS 中的响应式逻辑) --- */
@@ -33,7 +23,7 @@
 /* 整体容器：默认是flex双栏 */
 .bv-item--block {
     display: flex;
-    gap: 12px;
+    gap: var(--think-list-row-gap);
     align-items: flex-start;
 }
 
@@ -43,7 +33,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: var(--think-space-2);
 }
 
 /* 右侧主内容栏：弹性增长，占据所有剩余空间 */
@@ -52,22 +42,13 @@
     min-width: 0; /* 关键：允许此容器收缩，并使其内部文本正确换行 */
     display: flex;
     flex-direction: column;
-    gap: 6px;
-}
-
-/* [重要] 窄屏下的响应式切换：当容器宽度过小时，JS会添加 .is-narrow 类 */
-.bv-item--block.is-narrow {
-    flex-direction: column; /* 切换为垂直堆叠 */
-    gap: 8px;
-}
-.bv-item--block.is-narrow .bv-block-metadata {
-    width: 100%; /* 元数据栏宽度变为100% */
+    gap: var(--think-space-3);
 }
 
 /* --- 标题和内容样式 --- */
 .bv-block-title {
-    font-weight: 600;
-    font-size: 1rem;
+    font-weight: var(--think-font-weight-semibold);
+    font-size: var(--think-font-size-sm);
 }
 .bv-block-title a {
     color: var(--think-text-primary);
@@ -79,8 +60,8 @@
 }
 
 .bv-block-content {
-    font-size: 0.9rem;
-    color: var(--think-text-primary);
+    font-size: var(--think-font-size-sm);
+    color: var(--think-text-secondary);
     cursor: pointer;
 }
 
@@ -99,12 +80,12 @@
 /* Block 内容现在支持 Markdown 渲染（复用 MessageRenderPort） */
 .bv-block-content .md-content {
     white-space: normal;
-    line-height: 1.6;
+    line-height: var(--think-line-height-normal);
     color: var(--think-text-secondary);
-    font-size: 0.9em;
+    font-size: inherit;
 }
 .bv-block-content .md-content p {
-    margin: 0.35em 0;
+    margin: 0 0 var(--think-space-2);
 }
 .bv-block-content .md-content p:first-child {
     margin-top: 0;
@@ -114,82 +95,28 @@
 }
 .bv-block-content .md-content pre {
     overflow: auto;
-    padding: 0.5em;
-    border-radius: 6px;
+    padding: var(--think-space-4);
+    border-radius: var(--think-radius-sm);
     background: var(--think-bg-hover);
 }
 .bv-block-content .md-content code {
     background: var(--think-bg-hover);
-    padding: 0.1em 0.3em;
-    border-radius: 4px;
+    padding: 1px var(--think-space-2);
+    border-radius: var(--think-radius-xs);
 }
 
 .bv-block-content .bv-block-plain {
     white-space: pre-wrap;
 }
 
-/* --- 胶囊容器与胶囊本身样式 --- */
+/* --- 元数据容器 --- */
 .bv-fields-list-wrapper,
 .bv-fields-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--think-space-2);
     align-items: center;
-    margin-top: 4px;
-}
-
-.tag-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background-color: var(--think-bg-hover);
-    color: var(--think-text-secondary);
-    border: none;
-    white-space: nowrap;
-    line-height: 1.5;
-    font-size: 0.75rem;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.tag-pill img {
-    height: 1.2em;
-    width: 1.2em;
-    object-fit: contain;
-    border-radius: 2px;
-}
-
-/* --- 任务项样式 (TaskItem) --- */
-.bv-item--task {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 2px 0;
-}
-
-.bv-task-checkbox-wrapper {
-    flex-shrink: 0;
-}
-
-.bv-task-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.bv-task-title {
-    color: var(--think-text-primary);
-    line-height: 1.5;
-    text-decoration: none;
-    display: inline-block;
-}
-.bv-task-title:hover {
-    text-decoration: underline;
-    color: var(--think-accent);
-}
-.bv-task-title.task-done {
-    color: var(--think-text-secondary);
-    text-decoration: line-through;
+    margin-top: var(--think-space-1);
 }
 
 .bv-container {
@@ -197,12 +124,21 @@
     container-type: inline-size;
 }
 
-.bv-container > .task-row,
-.bv-group-content > .task-row {
-    width: 100%;
-    min-height: 32px;
-    padding: var(--think-space-2) 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 68%, transparent);
+
+@container (max-width: 450px) {
+    .bv-item--block {
+        flex-direction: column;
+        gap: var(--think-space-2);
+    }
+
+    .bv-item--block .bv-block-metadata {
+        width: 100%;
+    }
+}
+
+/* Block hierarchy is communicated by indentation + vertical guides, not row separators. */
+.bv-container .think-list-row {
+    border-bottom: 0;
 }
 
 .bv-container > :is(.bv-item, .task-row):last-child,

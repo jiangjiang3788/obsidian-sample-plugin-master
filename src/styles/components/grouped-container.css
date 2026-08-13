@@ -79,7 +79,6 @@
 .think-os .et-group--level-3 .et-group-title {
   background: var(--think-border-subtle);
   color: var(--think-text-secondary);
-  font-size: var(--think-font-size-2xs);
   font-weight: var(--think-font-weight-regular);
 }
 
@@ -88,7 +87,7 @@
  * never by nesting another bordered surface inside the parent.
  */
 .think-os .bv-group {
-  --think-bv-indent-step: var(--think-space-4);
+  --think-bv-indent-step: var(--think-list-indent-step);
   --think-bv-guide-offset: 6px;
   margin: 0;
   overflow: visible;
@@ -98,18 +97,14 @@
 }
 
 .think-os .bv-group + .bv-group {
-  margin-top: var(--think-space-2);
-  padding-top: var(--think-space-2);
-  border-top: 1px solid color-mix(in srgb, var(--think-border-subtle) 82%, transparent);
+  margin-top: var(--think-space-3);
 }
 
 .think-os .bv-group-title {
   display: flex;
   align-items: center;
-  gap: var(--think-space-2);
-  min-height: calc(var(--think-control-height-sm) - 2px);
+  gap: var(--think-list-row-gap);
   margin: 0;
-  padding: var(--think-space-1) 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -133,7 +128,11 @@
   align-items: center;
   justify-content: center;
   color: var(--think-text-secondary);
-  font-size: var(--think-font-size-2xs);
+}
+
+.think-os .bv-group-toggle-icon .think-lucide-icon {
+  width: var(--think-icon-size-sm);
+  height: var(--think-icon-size-sm);
 }
 
 .think-os .bv-group-label {
@@ -150,7 +149,7 @@
   min-width: 0;
   margin-left: var(--think-bv-guide-offset);
   padding: 0 0 0 var(--think-bv-indent-step);
-  border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 70%, transparent);
+  border-left: 1px solid var(--think-list-guide);
 }
 
 .think-os .bv-group--level-1 > .bv-group-title {
@@ -159,7 +158,7 @@
 }
 
 .think-os .bv-group--level-1 > .bv-group-content {
-  --think-bv-indent-step: var(--think-space-4);
+  --think-bv-indent-step: var(--think-list-indent-step);
 }
 
 .think-os .bv-group--level-2 > .bv-group-content,
@@ -184,3 +183,4 @@
 .think-os .think-disclosure__icon { width: var(--think-icon-size-sm); height: var(--think-icon-size-sm); transition: transform var(--think-duration-fast) var(--think-ease-standard); }
 .think-os .think-disclosure[open] .think-disclosure__icon { transform: rotate(180deg); }
 .think-os .think-disclosure__body { padding: 0 0 var(--think-space-5); }
+

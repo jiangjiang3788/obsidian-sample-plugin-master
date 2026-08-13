@@ -15,10 +15,58 @@ import {
 } from '@shared/ui/public';
 import type { UseCases } from '@/app/public';
 import type { Layout, ViewInstance } from '@core/types/public';
+import { arrayMove } from '@core/utils/public';
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { openModuleSettingsWidget } from '@features/settings/layout/ModuleSettingsModal';
 import { LayoutFreeformSettings, LayoutGeneralSettings } from './LayoutEditorControls';
 
 const CREATE_PREFIX = '__create_view__:';
+
+function SortableLayoutViewItem({ view, onOpenSettings, onRemove, onContextMenu }: {
+  view: ViewInstance;
+  onOpenSettings: (view: ViewInstance) => void;
+  onRemove: (viewId: string) => void;
+  onContextMenu: (event: MouseEvent, view: ViewInstance) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: view.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <div
+      ref={setNodeRef as any}
+      style={style}
+      className={`think-layout-editor__view-item${isDragging ? ' is-dragging' : ''}`}
+      onContextMenu={(event) => onContextMenu(event as any, view)}
+    >
+      <button
+        type="button"
+        {...({ ...attributes, ...listeners } as any)}
+        className="think-layout-editor__view-drag"
+        aria-label={`拖动 ${view.title} 排序`}
+        title="拖动排序"
+      >
+        <ThinkIcon name="grip-vertical" />
+      </button>
+      <button
+        type="button"
+        className="think-layout-editor__view-chip"
+        title="打开视图设置；右键更多"
+        onClick={() => onOpenSettings(view)}
+      >
+        <span className="think-chip__label">{view.title}</span>
+      </button>
+      <ThinkIconButton
+        label={`从布局移除 ${view.title}`}
+        icon={<ThinkIcon name="x" />}
+        size="sm"
+        onClick={() => onRemove(view.id)}
+        className="think-layout-editor__view-remove"
+      />
+    </div>
+  );
+}
 
 export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; useCases?: UseCases }) {
   const _useCases = useCases ?? useUseCases();
@@ -52,16 +100,19 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     void _useCases.layout.removeViewInstanceFromLayout(layout.id, viewId);
   }, [layout, _useCases.layout]);
 
-  const moveView = useCallback((viewId: string, direction: -1 | 1) => {
+  const handleViewDragEnd = useCallback((event: any) => {
     if (!layout) return;
-    const currentIds = [...layout.viewInstanceIds];
-    const index = currentIds.indexOf(viewId);
-    const targetIndex = index + direction;
-    if (index < 0 || targetIndex < 0 || targetIndex >= currentIds.length) return;
-    const [moved] = currentIds.splice(index, 1);
-    currentIds.splice(targetIndex, 0, moved);
-    void _useCases.layout.reorderViewInstancesInLayout(layout.id, currentIds);
+    const { active, over } = event;
+    if (!active || !over || active.id === over.id) return;
+    const oldIndex = layout.viewInstanceIds.indexOf(String(active.id));
+    const newIndex = layout.viewInstanceIds.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    void _useCases.layout.reorderViewInstancesInLayout(layout.id, arrayMove(layout.viewInstanceIds, oldIndex, newIndex));
   }, [layout, _useCases.layout]);
+
+  const handleOpenViewSettings = useCallback((view: ViewInstance) => {
+    openModuleSettingsWidget(view);
+  }, []);
 
   const pickerOptions = useMemo(() => {
     const options = availableViews.map((view) => ({ value: view.id, label: view.title }));
@@ -125,18 +176,6 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     handleContextMenuClose();
   }, [contextMenu, removeViewFromLayout, handleContextMenuClose]);
 
-  const handleMoveLeftFromMenu = useCallback(() => {
-    if (!contextMenu) return;
-    moveView(contextMenu.viewId, -1);
-    handleContextMenuClose();
-  }, [contextMenu, moveView, handleContextMenuClose]);
-
-  const handleMoveRightFromMenu = useCallback(() => {
-    if (!contextMenu) return;
-    moveView(contextMenu.viewId, 1);
-    handleContextMenuClose();
-  }, [contextMenu, moveView, handleContextMenuClose]);
-
   if (!layout) return <div className="think-settings-section">未找到布局（可能已被删除）。</div>;
 
   return (
@@ -147,37 +186,21 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
       <div className="think-settings-row think-settings-row--top">
         <span className="think-settings-row__label think-settings-row__label--top">包含视图</span>
         <div className="think-settings-row__body think-layout-editor__views-body">
-          <div className="think-layout-editor__views">
-            {selectedViews.map((view, index) => (
-              <div key={view.id} className="think-layout-editor__view-item">
-                <ThinkIconButton
-                  label="前移"
-                  icon={<ThinkIcon name="chevron-left" />}
-                  size="sm"
-                  disabled={index === 0}
-                  onClick={() => moveView(view.id, -1)}
-                  className="think-layout-editor__move-action"
-                />
-                <button
-                  type="button"
-                  className="think-chip think-layout-editor__view-chip"
-                  title="左键移除，右键更多选项"
-                  onClick={() => removeViewFromLayout(view.id)}
-                  onContextMenu={(event) => handleChipRightClick(event as any, view)}
-                >
-                  <span className="think-chip__label">{view.title}</span>
-                </button>
-                <ThinkIconButton
-                  label="后移"
-                  icon={<ThinkIcon name="chevron-right" />}
-                  size="sm"
-                  disabled={index === selectedViews.length - 1}
-                  onClick={() => moveView(view.id, 1)}
-                  className="think-layout-editor__move-action"
-                />
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleViewDragEnd}>
+            <SortableContext items={selectedViews.map((view) => view.id)} strategy={rectSortingStrategy}>
+              <div className="think-layout-editor__views">
+                {selectedViews.map((view) => (
+                  <SortableLayoutViewItem
+                    key={view.id}
+                    view={view}
+                    onOpenSettings={handleOpenViewSettings}
+                    onRemove={removeViewFromLayout}
+                    onContextMenu={handleChipRightClick}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
 
           <ThinkSearchPicker
             query={inputValue}
@@ -200,8 +223,6 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
         >
           <div className="think-layout-editor__context-actions">
             <ThinkButton size="sm" variant="secondary" onClick={handleViewSettings}>设置…</ThinkButton>
-            <ThinkButton size="sm" variant="ghost" onClick={handleMoveLeftFromMenu}>向前移动</ThinkButton>
-            <ThinkButton size="sm" variant="ghost" onClick={handleMoveRightFromMenu}>向后移动</ThinkButton>
             <ThinkButton size="sm" variant="ghost" onClick={handleViewRename}>重命名…</ThinkButton>
             <ThinkButton size="sm" variant="danger" onClick={handleViewRemove}>从布局移除</ThinkButton>
           </div>

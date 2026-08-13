@@ -1,0 +1,113 @@
+/* Shared data-grid contract for Table / Excel / Heatmap.
+ * Features own data semantics; this layer owns density, border rhythm, typography,
+ * row hover and selection language so data-heavy views feel like one system.
+ */
+.think-os {
+  --think-data-grid-font-size: var(--think-font-size-sm);
+  --think-data-grid-header-height: var(--think-control-height-md);
+  --think-data-grid-row-height: var(--think-control-height-sm);
+  --think-data-grid-cell-padding-block: var(--think-space-2);
+  --think-data-grid-cell-padding-inline: var(--think-space-3);
+  --think-data-grid-border: color-mix(in srgb, var(--think-border-subtle) 82%, transparent);
+  --think-data-grid-header-bg: var(--think-bg-surface-1);
+  --think-data-grid-hover-bg: color-mix(in srgb, var(--think-bg-hover) 48%, transparent);
+  --think-data-grid-selected-bg: color-mix(in srgb, var(--think-accent) 8%, transparent);
+  --think-data-grid-heatmap-cell-size: 36px;
+}
+
+.think-os .think-data-grid-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid var(--think-data-grid-border);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-canvas);
+}
+
+.think-os .think-data-grid {
+  width: 100%;
+  min-width: 100%;
+  margin: 0;
+  border: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: transparent;
+  color: var(--think-text-primary);
+  font-family: var(--think-font-interface);
+  font-size: var(--think-data-grid-font-size);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-data-grid :is(th, td) {
+  box-sizing: border-box;
+  min-height: var(--think-data-grid-row-height);
+  padding: var(--think-data-grid-cell-padding-block) var(--think-data-grid-cell-padding-inline);
+  border: 0;
+  border-inline-end: 1px solid var(--think-data-grid-border);
+  border-block-end: 1px solid var(--think-data-grid-border);
+  vertical-align: middle;
+  text-align: left;
+}
+
+.think-os .think-data-grid :is(th, td):last-child {
+  border-inline-end: 0;
+}
+
+.think-os .think-data-grid tbody tr:last-child > td {
+  border-block-end: 0;
+}
+
+.think-os .think-data-grid th {
+  height: var(--think-data-grid-header-height);
+  background: var(--think-data-grid-header-bg);
+  color: var(--think-text-primary);
+  font-weight: var(--think-font-weight-semibold);
+  white-space: nowrap;
+}
+
+.think-os .think-data-grid td {
+  background: var(--think-bg-canvas);
+}
+
+.think-os .think-data-grid tbody tr:hover > td {
+  background: var(--think-data-grid-hover-bg);
+}
+
+.think-os .think-data-grid td[aria-selected="true"],
+.think-os .think-data-grid td.is-selected {
+  background: var(--think-data-grid-selected-bg);
+  box-shadow: inset 0 0 0 2px var(--think-accent);
+}
+
+.think-os .think-data-grid-empty {
+  padding: var(--think-space-4);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+
+/* Runtime matrix table: multiple task/link items can share a cell. */
+.think-os .think-data-grid--matrix :is(th, td) {
+  white-space: nowrap;
+}
+
+.think-os .think-data-grid--matrix td > .think-table-cell-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: var(--think-data-grid-row-height);
+  text-align: left;
+}
+
+.think-os .think-data-grid--matrix td > .think-table-cell-item + .think-table-cell-item {
+  margin-top: var(--think-space-1);
+}
+
+.think-os .think-data-grid--matrix .task-row {
+  align-items: center;
+  gap: var(--think-space-3);
+}
+
+.think-os .think-data-grid--matrix td > .think-table-cell-item,
+.think-os .think-data-grid--matrix td > .think-table-cell-item * {
+  white-space: nowrap;
+}

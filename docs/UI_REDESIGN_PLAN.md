@@ -1,8 +1,8 @@
 # Think OS UI Redesign Plan
 
-> Current target: Obsidian-native + Compact + Framed + Low-noise
-> Current release: 1.0.49
-> Progress: Phase 0-4 accepted; Phase 5 code convergence complete, awaiting visual acceptance
+> Target: Obsidian-native + Compact + Framed + Low-noise  
+> Current release: 1.0.54  
+> Progress: Phase 7 Grid / Data convergence complete; Phase 8 is next
 
 ## Progress
 
@@ -12,23 +12,49 @@
 | 1 | Obsidian Host Bridge | DONE | 1.0.44 |
 | 2 | Dashboard Module Frame | DONE | 1.0.44 |
 | 3 | Toolbar / Actions / Icons | DONE | 1.0.45 |
-| 4 | Settings: Data Management -> Theme pilot | DONE | 1.0.46 |
-| 5 | Settings system convergence | IN REVIEW | 1.0.49 |
-| 6 | List / hierarchy views | BLOCKED until Phase 5 visual acceptance | later |
-| 7 | Grid / data views | TODO | later |
-| 8 | Visualization views | TODO | later |
+| 4 | Settings: Theme pilot | DONE | 1.0.46 |
+| 5 | Settings system convergence | DONE + refined | 1.0.47-1.0.53 |
+| 6 | List / hierarchy views | DONE + refined | 1.0.51-1.0.54 |
+| 7 | Grid / data views | DONE | 1.0.54 |
+| 8 | Visualization views | NEXT (targeted fixes already landed) | 1.0.52 + 1.0.55 |
 | 9 | Modal / Quick Input / AI | TODO | later |
 | 10 | Visual regression + UI gates | TODO | later |
 
 ## Phase contracts
 
+### 1.0.54 grid / data convergence
+- Block/Table task checkbox alignment is normalized in the shared TaskRow contract; theme-provided checkbox offsets are not repaired per View.
+- Task timer actions stay next to the task label in list and matrix contexts instead of being pushed to the far edge by flex growth.
+- Table and Excel consume one shared data-grid density contract for typography, header height, cell padding, borders, row hover, selection and empty-state rhythm.
+- Table owns a single scroll/frame boundary around its matrix instead of inheriting host table styling unpredictably.
+- Excel keeps its editable spreadsheet behavior but flattens nested toolbar cards, removes persistent instructional prose, and uses Think controls for ordinary actions.
+- Excel column headers use one compact line with lightweight editability metadata instead of a tall two-line badge header.
+- Heatmap consumes the same data-view font/border/density tokens, uses container queries for Obsidian Leaf width, and moves repeated-count border colors from TSX hardcoding into data-color CSS tokens.
+
+### 1.0.53 density / interaction correction
+- Block task rows use the shared dense row contract; removing dividers must not create oversized whitespace.
+- Shared TaskCheckbox alignment is normalized once so Block and Table do not repeatedly drift under Obsidian/community theme checkbox margins.
+- Runtime Table receives an explicit matrix-table density class; Excel remains isolated until the Grid/Data phase.
+- Energy task separators use text-rhythm `|` separators instead of full-height 1px borders; group rows are tighter and no longer rely on repeated horizontal rules.
+- Advanced filter rules are permanently visible and use the same compact add-row interaction as sorting.
+- Quick filters and advanced rules are split in code, so a quick-filter rule is not duplicated in the advanced-rule editor.
+
+
+### 1.0.52 corrective refinement
+- Block rows suppress horizontal dividers; hierarchy is expressed by indentation and vertical guides.
+- Progress uses the shared wide content measure so ultra-wide leaves do not pull labels, bars and percentages too far apart.
+- EventTimeline adopts `date | axis | time | content` and removes per-event card surfaces.
+- Energy task groups use flat text items separated by hairlines instead of cadence-colored background chips.
+- Global/View filters hide redundant common-filter headings; advanced rules use a borderless lightweight disclosure and muted empty state.
+- View Settings section hierarchy uses whitespace rather than repeated horizontal rules; Table editor removes duplicate nested headings.
+
+
 ### Phase 0 - baseline
-- Inventory all major views and current CSS ownership.
+- Inventory major views and CSS ownership.
 - Keep representative light/dark and narrow/wide screenshots for comparison.
 
 ### Phase 1 - host bridge
-- Feature CSS consumes Think semantic tokens.
-- Think semantic tokens inherit Obsidian colors, typography, radius, focus and control density.
+- Feature CSS consumes Think semantic tokens derived from Obsidian.
 - Accent is state, not a persistent surface color.
 
 ### Phase 2 - module frame
@@ -37,37 +63,35 @@
 - Module shell has one authoritative CSS owner.
 
 ### Phase 3 - toolbar / actions / icons
-- Time granularity uses one segmented-control primitive.
-- Date navigation and layout actions use shared icon buttons.
-- Filter triggers use shared buttons.
-- Dashboard feature code does not own raw button skins.
-- Icon shapes use one Lucide-style SVG language while respecting the existing platform boundary.
-- Responsive behavior follows leaf/container width rather than browser viewport alone.
+- Toolbar actions share one control height, border and no-shadow language.
+- Icon shapes use the shared Lucide-style ThinkIcon primitive.
+- Responsive behavior follows leaf/container width.
 
 ### Phase 4 - Settings Theme pilot
-- Redesign only Data Management -> Theme first.
-- Remove decorative nested cards while preserving true interaction boundaries.
-- Use flat sections, hairline dividers and compact rows instead of card-inside-card grouping.
-- Routine explanatory prose is removed from the daily-use surface; persistent helper text is reserved for constraints, side effects, errors and genuinely non-obvious behavior.
-- Establish page title, section, field row, search, status and list-row contracts.
-- Do not spread to all Settings until the pilot is visually accepted.
+- Replace nested decorative cards with flat sections, dividers and compact rows.
+- High-frequency Settings do not permanently show obvious instructional prose.
 
 ### Phase 5 - Settings system
-- Apply the accepted Theme pilot language to Goal, Record Type, Metric, General, Layout, AI and View Editors.
-- Converge RuleBuilder, CommonFilterPanel, FieldPicker and floating Settings surfaces.
-- Settings rows use a stable label-left / control-right contract (112px semantic label column; collapse only at very narrow widths).
-- Feature-level Settings code must not import or render raw MUI controls; ordinary controls are consumed through Think primitives.
-- Filters use one visual boundary per field/control. Input-inside-card and card-inside-card patterns are rejected.
-- Toolbar actions remain single-line and consistently framed; narrow workspace leaves scroll horizontally instead of wrapping controls onto a second row.
-- Phase 5 cannot be marked DONE from code gates alone; representative Settings screenshots must be visually accepted first.
+- Apply the pilot language to Goal, Record Type, Metric, General, Layout, AI and View Editors.
+- Settings feature code no longer directly imports MUI controls.
+- Settings rows default to left label + right control; only very narrow containers stack.
+- RuleBuilder / CommonFilter / FieldPicker use one visual boundary rather than wrapper-on-wrapper controls.
+- Layout view ordering uses drag-and-drop rather than forward/back button pairs.
 
 ### Phase 6 - list / hierarchy views
-- Converge Block, Progress and Energy task/list families.
-- Standardize row height, indentation, checkbox, metadata, action, hover and selection.
+- Block, Progress and Energy list families consume the shared `list-system.css` contract.
+- Shared row contract owns ordinary row height, divider, hover, selected state, metadata rhythm and hierarchy guide color.
+- Block hierarchy remains flat: indentation + guide line, never nested cards.
+- Block responsive layout uses CSS container queries instead of JS width state.
+- TaskRow opts into list-row skin only in list contexts so Table/EventTimeline inline rendering is not changed accidentally.
+- Progress goal/theme rows use shared list density and ThinkIcon chevrons.
+- Energy recommendation rows use shared list behavior and shared controls; native feature-owned select skin is removed.
+- Task timer actions use ThinkIconButton directly instead of the legacy MUI-backed IconAction wrapper.
 
 ### Phase 7 - grid / data views
-- Converge Table, Excel and Heatmap shell behavior.
-- Standardize toolbar, header, cell density, border, selection and empty state without forcing identical visualizations.
+- Table, Excel and Heatmap share the data-view density/border/selection contract.
+- Feature code keeps its own data geometry and editing semantics; ordinary grid surface decisions are centralized.
+- Table and Excel use the same compact header/cell rhythm without forcing Heatmap into a literal HTML table.
 
 ### Phase 8 - visualization views
 - Converge Timeline, Event Timeline, Statistics and Energy visualization typography and interaction states.
@@ -87,11 +111,7 @@
 2. Settings section is not framed by default because it is information hierarchy, not an independent widget.
 3. Border, background and radius appear only when they communicate a real boundary.
 4. Obsidian host semantics are the source of base colors, typography, focus and density.
-5. Feature code owns layout and visualization geometry; primitives own ordinary control appearance.
+5. Feature code owns layout and visualization geometry; shared primitives/components own ordinary control and row appearance.
 6. Container width is the primary responsive signal inside Obsidian workspace leaves.
-7. High-frequency Settings do not read like documentation: obvious instructional prose is hidden or removed; only decision-relevant help, errors, warnings and state remain visible.
-
-8. Settings field rows are left/right by default; stacked labels are a narrow-width fallback, not the normal desktop layout.
-9. High-frequency filter/edit forms use one visual boundary per control; no nested field/card frames.
-10. Settings feature code consumes Think primitives rather than raw MUI controls. MUI may remain an implementation detail outside the migrated Settings surface until later phases.
-11. Toolbar actions are all framed consistently and stay on one line; no special unframed exception for period/date/filter/settings actions.
+7. High-frequency Settings do not read like documentation.
+8. A visual convergence is not complete if each feature still owns a separate implementation of the same ordinary UI pattern.

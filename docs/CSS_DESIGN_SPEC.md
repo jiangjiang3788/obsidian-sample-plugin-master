@@ -1,6 +1,6 @@
 # Think OS CSS 与界面元素设计规范
 
-> 版本：1.0.49（Settings primitive / filter convergence）  
+> 版本：1.0.54（Grid / Data convergence）  
 > 适用范围：Think OS Obsidian 插件所有 Settings、Modal、Layout、View、共享组件  
 > 目标：建立统一、克制、高信息密度、主题友好、可访问、可维护的视觉系统  
 > 编码：UTF-8
@@ -35,16 +35,6 @@ Think OS 的界面应表现为：
 - 为动态坐标生成大量 CSS class；
 - 只考虑默认浅色主题；
 - 用大面积 accent 填充普通 Module Header；accent 只用于选中、焦点和关键状态。
-
-### 1.3 Settings 强制布局契约
-
-- Settings 默认采用“左标签 / 右控件”，共享标签列为 112px；只有容器极窄时才退化为上下布局。
-- 高频设置页只保留决策相关说明；明显功能不常驻展示教程型文字。
-- 普通字段和筛选控件只允许一个视觉边界：外层是边界时，内部 input 必须无第二层边框。
-- CommonFilter / RuleBuilder / FieldPicker 必须消费 Think primitive；`src/features/settings` 禁止直接引入 MUI 控件。
-- Settings section 通过标题、行距和 divider 分层；不得用 Card -> Card -> Field Card 表达普通信息层级。
-- 浮动 Settings 与设置页共享同一 row/control 体系，并保留独立内容 padding，不允许内容贴窗体边缘。
-- Dashboard Toolbar 的周期、日期、前后、日历、筛选、设置均采用同一 framed action language，且不得因 Leaf 变窄自动换成第二行。
 
 ---
 
@@ -127,6 +117,58 @@ src/styles/
 ```
 
 ---
+
+## 2.3 List / Hierarchy ownership
+
+Block、Progress、Energy 等记录列表必须消费共享 `components/task-row.css` 中的 list contract。
+
+共享层负责：
+
+- 普通列表行最小高度与垂直密度；
+- divider、hover、selected；
+- metadata 字号与节奏；
+- hierarchy guide / indent 的基础 token；
+- 共享 record metadata pill。
+
+Feature 层只负责自身的数据列、业务缩进语义和特殊可视化。`TaskRow` 这类跨 Table/List 使用的组件必须显式选择 list 模式，不能用全局 skin 误伤其他 View。
+
+补充规则：
+
+- divider 是可选层级信号，不是列表默认装饰；Block 已有 vertical guide 时不再叠加横向 divider。
+- 去掉 divider 后必须同步检查 row density；不能用更大的空白替代原来的线。Block 的任务行使用 shared dense row contract。
+- `TaskCheckbox` 的 margin / 首行对齐属于共享 TaskRow contract，Feature 不允许各自用 top/translate 修复复选框位置。
+- TableView 必须通过显式 matrix-table class 调整密度，不能用 `.think-table` 全局规则误伤 Excel。
+- 超宽 Leaf 中，Progress 等可扫描数据列表应使用 `--think-content-width-lg` 约束有效阅读宽度，避免信息列被无意义拉散。
+- EventTimeline 的时间轴本身就是边界：事件内容保持 flat，默认结构为 `日期 | 轴 | 时间 | 内容`，不再给每条事件套 Card。
+- Energy 任务 cadence 可以保留语义，但普通任务项不再使用 cadence 背景色块；同组任务使用与正文同节奏的文本 `|` separator，不使用整行高的 hairline border。
+- Settings 的高级筛选不再折叠；筛选与排序统一使用“已有规则 + 紧凑添加行”的交互模型。
+- Quick filter 与 advanced rule 必须在数据层拆分，不能因为共用 `filters[]` 而在两个 UI 区域重复展示同一规则。
+
+## 2.4 Grid / Data ownership
+
+Table、Excel、Heatmap 属于同一个 data-view family，但不要求长成同一种组件。
+
+共享层负责：
+
+- data-view 正文字号、header 高度和 cell padding；
+- grid border / row hover / selected state；
+- Table / Excel 的普通表头与空状态节奏；
+- Heatmap cell 的普通 border、radius、focus 和容器密度 token。
+
+Feature 层负责：
+
+- Table 的行列字段语义；
+- Excel 的 sticky、列宽、编辑器、填充柄和风险策略；
+- Heatmap 的日历几何、数据颜色、评分/图片内容。
+
+规则：
+
+- Data View 不使用大面积 accent header；header 使用 Obsidian surface，accent 只表达选中/编辑状态。
+- 普通 grid toolbar 不再套 Card；一个 View 外框内部只允许 flat toolbar / column toolbar / grid 三层语义。
+- Excel 的教学说明不常驻显示；快捷键等信息使用 title/帮助入口，而不是每天占据一整行。
+- Excel editable/readonly metadata 可以保留，但不得通过第二层 pill + 高表头制造视觉重量。
+- Heatmap 响应式使用 container query，不使用 viewport 宽度推断 Obsidian Leaf 宽度。
+- Heatmap 动态十六进制值允许作为记录数据写入 inline background；固定分类/次数颜色必须来自 `tokens/data-colors.css`。
 
 ## 3. Root Scope 与命名
 

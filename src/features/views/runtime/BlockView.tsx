@@ -1,7 +1,7 @@
 // src/features/dashboard/ui/BlockView.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useMemo } from 'preact/hooks';
 import type { GoalDefinition } from '@core/goal/public';
 import type { RecordViewItem, ThemeDefinition } from '@core/types/public';
 import type { MessageRenderPort } from '@core/ports/public';
@@ -42,17 +42,6 @@ export function BlockView(props: BlockViewProps) {
         goals = [],
         onOpenRecord,
     } = props;
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [isNarrow, setIsNarrow] = useState(false);
-
-    useEffect(() => {
-        const observer = new ResizeObserver(entries => {
-            for (const entry of entries) setIsNarrow(entry.contentRect.width < 450);
-        });
-        if (containerRef.current) observer.observe(containerRef.current);
-        return () => observer.disconnect();
-    }, []);
-
     const renderModel = useMemo(() => buildBlockViewRenderModel({
         items,
         groupField,
@@ -62,7 +51,6 @@ export function BlockView(props: BlockViewProps) {
 
     const itemListProps = {
         fields,
-        isNarrow,
         resolveResourcePath,
         onOpenRecordOrigin,
         messageRenderPort,
@@ -75,14 +63,14 @@ export function BlockView(props: BlockViewProps) {
 
     if (!renderModel.isGrouped) {
         return (
-            <div class="bv-container" ref={containerRef}>
+            <div class="bv-container think-list">
                 <BlockViewItemList items={items} {...itemListProps} />
             </div>
         );
     }
 
     return (
-        <div class="bv-container" ref={containerRef}>
+        <div class="bv-container think-list">
             <GroupedContainer
                 nodes={renderModel.groupTree}
                 classNames={buildBlockViewGroupClassNames()}

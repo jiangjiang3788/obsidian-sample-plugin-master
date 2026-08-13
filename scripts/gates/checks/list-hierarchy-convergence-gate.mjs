@@ -11,6 +11,14 @@ const periodView = read('src/features/views/runtime/StatisticsView/views/PeriodS
 const chart = read('src/features/views/runtime/components/statistics/ChartBlock.tsx');
 const grids = read('src/styles/features/statistics.grids.css');
 
+const listSystemCss = read('src/styles/components/task-row.css');
+const blockView = read('src/features/views/runtime/BlockView.tsx');
+const blockItem = read('src/features/views/runtime/components/items/BlockItem.tsx');
+const taskRow = read('src/features/views/runtime/components/items/TaskRow.tsx');
+const progressCard = read('src/features/views/runtime/ProgressGoalCard.tsx');
+const energyTasks = read('src/features/views/runtime/EnergyTaskList.tsx');
+const taskTimerAction = read('src/shared/ui/composites/TaskSendToTimerButton.tsx');
+
 if (!grouped.includes('nodes.filter(node => countItemsInGroup(node) > 0)')) {
   failures.push('GroupedContainer must drop zero-item groups before rendering');
 }
@@ -39,10 +47,33 @@ if (!grids.includes('.sv-period-level--1') || !grids.includes('border-left: 1px 
   failures.push('Statistics period hierarchy must use indentation/guide lines');
 }
 
+
+if (!listSystemCss.includes('--think-list-row-min-height') || !listSystemCss.includes('.think-os .think-list-row')) {
+  failures.push('List-family row density and hover must be owned by the shared task/list component stylesheet');
+}
+if (!blockView.includes('bv-container think-list') || blockView.includes('ResizeObserver')) {
+  failures.push('BlockView must use the shared list system and CSS container queries instead of JS width state');
+}
+if (!blockItem.includes('think-list-row think-list-row--interactive')) {
+  failures.push('Block record rows must consume the shared list-row contract');
+}
+if (!taskRow.includes('listRow?: boolean') || !taskRow.includes("listRow ? 'think-list-row")) {
+  failures.push('TaskRow must opt into list-row skin contextually so table/timeline inline usages are not restyled');
+}
+if (!progressCard.includes('think-list-row think-list-row--interactive') || !progressCard.includes('<ThinkIcon')) {
+  failures.push('Progress goal/theme rows must share list-row density and the shared icon language');
+}
+if (!energyTasks.includes('SimpleSelect') || energyTasks.includes('<select') || !energyTasks.includes('think-list-row think-list-row--interactive')) {
+  failures.push('Energy task list must use shared controls and list-row recommendation behavior');
+}
+if (!taskTimerAction.includes('ThinkIconButton') || taskTimerAction.includes('IconAction')) {
+  failures.push('Task-row timer action must use the native Think icon-button primitive instead of the legacy MUI wrapper');
+}
+
 if (failures.length) {
   console.error('List hierarchy convergence gate failed:');
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
 
-console.log('List hierarchy convergence gate passed (flat Block hierarchy; Statistics zero-data time skeleton preserved).');
+console.log('List hierarchy convergence gate passed (shared list-row system; flat Block hierarchy; Statistics time skeleton preserved).');

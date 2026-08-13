@@ -10,7 +10,6 @@ import { findBlockViewTimer } from './BlockViewModel';
 export interface BlockViewItemListProps {
   items: RecordViewItem[];
   fields: string[];
-  isNarrow: boolean;
   resolveResourcePath?: ResolveResourcePathHandler;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
   messageRenderPort?: MessageRenderPort;
@@ -25,7 +24,6 @@ export function BlockViewItemList(props: BlockViewItemListProps) {
   const {
     items,
     fields,
-    isNarrow,
     resolveResourcePath,
     onOpenRecordOrigin,
     messageRenderPort,
@@ -52,6 +50,8 @@ export function BlockViewItemList(props: BlockViewItemListProps) {
               allThemes={allThemes}
               onOpenRecord={onOpenRecord}
               showFields={[]}
+              compact
+              listRow
             />
           );
         }
@@ -61,7 +61,6 @@ export function BlockViewItemList(props: BlockViewItemListProps) {
             key={item.id}
             item={item}
             fields={fields}
-            isNarrow={isNarrow}
             resolveResourcePath={resolveResourcePath}
             onOpenRecordOrigin={onOpenRecordOrigin}
             messageRenderPort={messageRenderPort}

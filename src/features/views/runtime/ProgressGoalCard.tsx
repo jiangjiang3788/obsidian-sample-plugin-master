@@ -12,6 +12,7 @@ import type {
   ResolveResourcePathHandler,
   TimerController,
 } from '@shared/types/public';
+import { ThinkIcon } from '@shared/ui/public';
 import { BlockView } from './BlockView';
 import {
   buildProgressSkillRows,
@@ -90,7 +91,7 @@ function SkillList({ card, runtime }: { card: GoalProgressCardModel; runtime: Pr
           <div class={`think-progress-skill-group ${open ? 'is-open' : ''}`} key={row.key} role="listitem">
             <button
               type="button"
-              class="think-progress-skill"
+              class="think-progress-skill think-list-row think-list-row--interactive"
               onClick={() => setOpenKey(open ? null : row.key)}
               aria-expanded={open}
               title={`${row.title} · ${row.points} XP · ${row.count} 条记录`}
@@ -101,7 +102,7 @@ function SkillList({ card, runtime }: { card: GoalProgressCardModel; runtime: Pr
               <ExperienceBar ratio={row.progressRatio} tone="skill" />
               <span class="think-progress-skill__tail">
                 <span class="think-progress-skill__meta">{row.points} XP · {row.count} 条</span>
-                <span class="think-progress-skill__chevron" aria-hidden="true">{open ? '⌄' : '›'}</span>
+                <span class="think-progress-skill__chevron" aria-hidden="true"><ThinkIcon name={open ? 'chevron-down' : 'chevron-right'} /></span>
               </span>
             </button>
             {open && <ThemeRecords records={row.recentRecords} runtime={runtime} />}
@@ -145,8 +146,8 @@ export function GoalProgressCard(props: GoalProgressCardProps) {
 
   return (
     <section class="think-progress-section think-progress-card" role="listitem">
-      <button type="button" onClick={onToggle} aria-expanded={expanded} class="think-progress-section__trigger">
-        <span class="think-progress-section__chevron" aria-hidden="true">{expanded ? '⌄' : '›'}</span>
+      <button type="button" onClick={onToggle} aria-expanded={expanded} class="think-progress-section__trigger think-list-row think-list-row--interactive">
+        <span class="think-progress-section__chevron" aria-hidden="true"><ThinkIcon name={expanded ? 'chevron-down' : 'chevron-right'} /></span>
         <span class="think-progress-section__icon">{card.icon || '🧩'}</span>
         <span class="think-progress-section__name">
           <span class="think-progress-section__title">{title}</span>

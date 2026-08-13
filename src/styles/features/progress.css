@@ -9,7 +9,8 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: 100%;
+  width: min(100%, var(--think-content-width-lg));
+  max-width: var(--think-content-width-lg);
   min-width: 0;
 }
 
@@ -23,25 +24,13 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border-bottom: 1px solid var(--think-border-subtle);
+  border-bottom: 0;
 }
 
 .think-os .think-progress-section__trigger,
 .think-os .think-progress-skill {
-  appearance: none;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
   color: inherit;
   text-align: left;
-}
-
-.think-os .think-progress-section__trigger:is(:hover, :focus, :active),
-.think-os .think-progress-skill:is(:hover, :focus, :active) {
-  border: 0;
-  background: color-mix(in srgb, var(--think-bg-hover) 35%, transparent);
-  box-shadow: none;
 }
 
 /* 一级：目标。
@@ -63,8 +52,7 @@
   align-items: center;
   width: 100%;
   min-width: 0;
-  min-height: 50px;
-  padding: var(--think-space-1) 0;
+  min-height: calc(var(--think-list-row-min-height) + var(--think-space-4));
   cursor: pointer;
 }
 
@@ -73,6 +61,12 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-md);
   line-height: 1;
+}
+
+.think-progress-section__chevron .think-lucide-icon,
+.think-progress-skill__chevron .think-lucide-icon {
+  width: var(--think-icon-size-sm);
+  height: var(--think-icon-size-sm);
 }
 
 .think-progress-section__icon {
@@ -172,7 +166,7 @@
 .think-progress-skill-group {
   display: grid;
   min-width: 0;
-  border-top: 1px solid color-mix(in srgb, var(--think-border-subtle) 72%, transparent);
+  border-top: 0;
 }
 
 /* 二级：主题。与目标完全共用列宽，只在图标列 + 名称列制造轻微缩进。
@@ -183,8 +177,7 @@
   align-items: center;
   width: 100%;
   min-width: 0;
-  min-height: 40px;
-  padding: var(--think-space-1) 0;
+  min-height: calc(var(--think-list-row-min-height) + var(--think-space-1));
   cursor: pointer;
 }
 
@@ -261,24 +254,8 @@
   background: transparent;
 }
 
-.think-progress-theme-records .bv-item {
-  margin: 0;
-  padding: var(--think-space-1) 0;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 65%, transparent);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.think-progress-theme-records .bv-item:hover {
-  border-color: color-mix(in srgb, var(--think-border-subtle) 65%, transparent);
-  background: color-mix(in srgb, var(--think-bg-hover) 30%, transparent);
-}
-
-.think-progress-theme-records .task-row {
-  width: 100%;
-  min-height: 34px;
+.think-progress-theme-records :is(.bv-item, .task-row) {
+  min-height: var(--think-list-row-min-height-compact);
 }
 
 .think-progress-theme-records .bv-block-main { gap: 0; }
@@ -343,7 +320,7 @@
     gap: var(--think-space-1);
   }
 
-  .think-progress-section__trigger { min-height: 44px; }
+  .think-progress-section__trigger { min-height: calc(var(--think-list-row-min-height) + var(--think-space-3)); }
   .think-progress-section__icon { width: 18px; height: 18px; font-size: var(--think-font-size-sm); }
   .think-progress-section__title { font-size: var(--think-font-size-md); }
   .think-progress-section__level,

@@ -1,56 +1,48 @@
-/* Migrated heatmap feature styles. */
-/*
- * --- HeatmapView 样式 ---
- */
+/* Heatmap consumes the shared data-grid density while keeping its calendar semantics. */
 .heatmap-container {
-    --heatmap-cell-size: 40px;
+    --heatmap-cell-size: var(--think-data-grid-heatmap-cell-size);
     width: 100%;
-    padding: 8px;
-    font-size: 14px;
+    min-width: 0;
+    padding: var(--think-space-3);
+    font-size: var(--think-data-grid-font-size);
+    container-type: inline-size;
 }
-.heatmap-view-wrapper {
+
+.heatmap-view-wrapper,
+.heatmap-day-view,
+.heatmap-goal-day-view {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--think-space-4);
 }
 
-.heatmap-view-wrapper.layout-row {
-    flex-direction: column;
-}
-
-.heatmap-view-wrapper.layout-grid {
-    flex-direction: column;
-}
 .heatmap-theme-group {
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--think-border-subtle);
+    padding: var(--think-space-2) 0;
+    border-bottom: 1px solid var(--think-data-grid-border);
 }
 
 .heatmap-theme-group:last-child {
-    border-bottom: none;
+    border-bottom: 0;
 }
 
 .heatmap-theme-header {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 0;
-    padding: 2px 0;
-    background-color: transparent;
-    border-radius: 0;
-    border: none;
-    transition: all var(--think-duration-normal) var(--think-ease-standard);
+    gap: var(--think-space-3);
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
 }
 
-.heatmap-theme-header.week-inline-layout,
-.heatmap-theme-header.row-inline-layout {
+.heatmap-theme-header:is(.week-inline-layout, .row-inline-layout) {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+    gap: var(--think-space-4);
 }
 
 .heatmap-theme-header.vertical-layout {
@@ -58,12 +50,15 @@
     align-items: stretch;
 }
 
-.heatmap-header-info {
+.heatmap-header-info,
+.heatmap-header-info-left {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex: 0 0 auto;
     min-width: 0;
+}
+
+.heatmap-header-info {
+    flex: 0 0 auto;
 }
 
 .heatmap-header-info.is-clickable {
@@ -71,174 +66,170 @@
 }
 
 .heatmap-header-info-left {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex: 0 0 auto;
-    min-width: 0;
-}
-
-.heatmap-header-info-right {
-    flex: 1 1 auto;
-    margin: 0 16px;
-    min-width: 100px;
-}
-
-.heatmap-header-cells {
-    display: flex;
-    gap: 3px;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    width: 100%;
+    gap: var(--think-space-2);
 }
 
 .heatmap-collapse-arrow {
-    font-size: 12px;
-    color: var(--think-text-secondary);
-    transition: transform var(--think-duration-normal) var(--think-ease-standard);
     flex: 0 0 auto;
+    color: var(--think-text-secondary);
+    font-size: var(--think-font-size-xs);
+    transition: transform var(--think-duration-fast) var(--think-ease-standard);
 }
 
 .heatmap-collapse-arrow.is-collapsed {
     transform: rotate(-90deg);
 }
 
-.heatmap-theme-header.week-inline-layout .heatmap-header-cells,
-.heatmap-theme-header.row-inline-layout .heatmap-header-cells {
-    width: auto;
-    flex: 1 1 auto;
+.theme-name {
+    max-width: 180px;
     min-width: 0;
-    align-items: center;
+    overflow: hidden;
+    color: var(--think-text-primary);
+    font-size: var(--think-font-size-sm);
+    font-weight: var(--think-font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.heatmap-theme-header.row-inline-layout .heatmap-header-info {
-    flex: 0 0 auto;
-    max-width: 160px;
+.heatmap-header-cells {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--think-space-1);
+    width: 100%;
+    min-width: 0;
+}
+
+.heatmap-theme-header:is(.week-inline-layout, .row-inline-layout) .heatmap-header-cells {
+    width: auto;
 }
 
 .heatmap-theme-header.row-inline-layout .heatmap-header-cells {
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
-    padding-bottom: 2px;
 }
 
 .heatmap-header-cells.grid-view {
-    gap: 26px;
-}
-.heatmap-day-view {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+    gap: var(--think-space-6);
 }
 
-.heatmap-day-section {
+.heatmap-day-section,
+.heatmap-goal-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--think-space-3);
 }
 
+.heatmap-goal-section {
+    padding: var(--think-space-3) 0 var(--think-space-4);
+    border-bottom: 1px solid var(--think-data-grid-border);
+}
+
+.heatmap-goal-section:last-child {
+    border-bottom: 0;
+}
+
+.heatmap-goal-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--think-space-3);
+}
+
+.heatmap-goal-title,
 .heatmap-day-section-title {
     margin: 0;
-    font-size: 22px;
-    line-height: 1.25;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    color: var(--think-text-accent);
+    color: var(--think-text-primary);
+    font-size: var(--think-font-size-md);
+    font-weight: var(--think-font-weight-semibold);
+    line-height: var(--think-line-height-tight);
+}
+
+.heatmap-goal-meta {
+    color: var(--think-text-secondary);
+    font-size: var(--think-font-size-xs);
+}
+
+.heatmap-goal-theme-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--think-space-1);
 }
 
 .heatmap-day-section-grid {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 10px 28px;
+    gap: var(--think-space-3) var(--think-space-5);
 }
 
 .heatmap-day-item {
     display: inline-flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    min-width: 0;
     flex: 0 0 auto;
-}
-
-.heatmap-day-item-label {
+    align-items: center;
     min-width: 0;
-    flex: 0 1 auto;
-    color: var(--think-text-primary);
-    line-height: 1.4;
-    white-space: nowrap;
 }
 
 .heatmap-cell {
     position: relative;
-    width: var(--heatmap-cell-size);
-    height: var(--heatmap-cell-size);
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: var(--think-heatmap-0);
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    font-size: calc(var(--heatmap-cell-size) * 0.7);
-    transition: transform var(--think-duration-fast) var(--think-ease-standard), background-color var(--think-duration-fast) var(--think-ease-standard);
-    flex-shrink: 0;
-    box-sizing: border-box;
+    width: var(--heatmap-cell-size);
+    height: var(--heatmap-cell-size);
+    overflow: hidden;
+    border: 1px solid var(--think-data-grid-border);
+    border-radius: var(--think-radius-xs);
+    background: var(--think-heatmap-0);
+    color: var(--think-text-primary);
+    font-size: calc(var(--heatmap-cell-size) * 0.48);
+    cursor: pointer;
+    transition:
+        border-color var(--think-duration-fast) var(--think-ease-standard),
+        background-color var(--think-duration-fast) var(--think-ease-standard);
 }
 
 .heatmap-cell:hover {
-    transform: scale(1.04);
-    z-index: 10;
+    z-index: 1;
+    border-color: var(--think-border-strong);
+}
+
+.heatmap-cell:focus-visible {
+    outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
+    outline-offset: var(--think-focus-ring-offset);
+}
+
+.heatmap-cell.current-day {
+    box-shadow: inset 0 0 0 1px var(--think-accent);
+}
+
+.heatmap-cell.empty {
+    background: var(--think-heatmap-0);
+    cursor: default;
 }
 
 .heatmap-cell.grid-spacer {
     visibility: hidden;
-    pointer-events: none;
+    border: 0;
     background: transparent;
     box-shadow: none;
-    border: none;
+    pointer-events: none;
 }
 
-.heatmap-cell.current-day {
-    opacity: 1;
-    z-index: 5;
-}
+.heatmap-cell.heatmap-count-level-2 { border-color: var(--think-data-1); }
+.heatmap-cell.heatmap-count-level-3 { border-color: var(--think-data-4); }
+.heatmap-cell.heatmap-count-level-4 { border-color: var(--think-data-3); }
+.heatmap-cell.heatmap-count-level-5 { border-color: var(--think-data-2); }
 
-.heatmap-cell.empty {
-    background-color: var(--think-heatmap-0);
-    cursor: default;
-    opacity: 1;
-}
-
-.heatmap-cell.has-data {
-    /* 有数据的单元格样式 */
-}
-
-.heatmap-cell-content {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.cell-with-image {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cell-with-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.cell-with-text {
+.heatmap-cell-content,
+.cell-with-image,
+.cell-with-text,
+.cell-with-count,
+.cell-with-empty-label {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -247,232 +238,75 @@
 }
 
 .cell-with-empty-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: 4px;
+    padding: var(--think-space-1);
     text-align: center;
 }
 
+.heatmap-cell-image,
+.cell-with-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .empty-label-text {
-    color: var(--text-muted, var(--think-text-secondary));
-    font-size: 12px;
-    line-height: 1.2;
-    font-weight: 500;
+    color: var(--think-text-secondary);
+    font-size: var(--think-font-size-2xs);
+    font-weight: var(--think-font-weight-medium);
+    line-height: var(--think-line-height-tight);
     word-break: break-word;
 }
 
-.visual-content {
-    /* 视觉内容样式 */
-}
-
 .pure-count {
-    font-weight: bold;
-    color: var(--text-on-accent);
-    text-shadow: 1px 1px 1px var(--think-shadow-sm);
+    color: var(--think-text-primary);
+    font-size: var(--think-font-size-xs);
+    font-weight: var(--think-font-weight-semibold);
+    line-height: 1;
 }
 
-.pure-count.small {
-    font-size: 12px;
-}
-
-.pure-count.medium {
-    font-size: 10px;
-}
-
-.pure-count.large {
-    font-size: 8px;
-}
-
-.month-section {
-    /* 月份区块样式 */
-}
+.pure-count.medium { font-size: var(--think-font-size-2xs); }
+.pure-count.large { font-size: 9px; }
 
 .month-label {
-    font-size: 12px;
-    margin-bottom: 4px;
+    margin-bottom: var(--think-space-2);
     color: var(--think-text-secondary);
+    font-size: var(--think-font-size-xs);
     text-align: center;
 }
 
 .heatmap-row.calendar {
     display: grid;
     grid-template-columns: repeat(7, var(--heatmap-cell-size));
-    gap: 3px;
-}
-
-.theme-name {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--think-text-primary);
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
-}
-
-.text-16 { font-size: 16px; }
-.text-14 { font-size: 14px; }
-.text-13 { font-size: 13px; }
-.text-12 { font-size: 12px; }
-
-body.theme-dark .heatmap-cell {
-    background-color: color-mix(in srgb, var(--think-data-5) 18%, transparent);
+    gap: var(--think-space-1);
 }
 
 body.theme-dark .heatmap-cell.empty {
-    background-color: color-mix(in srgb, var(--think-data-5) 18%, transparent);
+    background: color-mix(in srgb, var(--think-data-5) 14%, transparent);
 }
 
-@media (max-width: 768px) {
+@container (max-width: 560px) {
     .heatmap-container {
-        --heatmap-cell-size: 36px;
-        padding: 4px;
+        --heatmap-cell-size: 32px;
+        padding: var(--think-space-2);
     }
 
-    .heatmap-theme-header {
-        padding: 0;
-        margin-bottom: 0;
-    }
-
-    .heatmap-header-info {
+    .heatmap-theme-header.row-inline-layout {
         flex-direction: column;
         align-items: flex-start;
-        gap: 8px;
     }
 
-    .heatmap-header-info-right {
-        margin: 8px 0 0 0;
+    .heatmap-theme-header.row-inline-layout .heatmap-header-cells {
         width: 100%;
     }
 
     .heatmap-day-section-grid {
-        gap: 8px 16px;
-    }
-
-    .heatmap-theme-group {
-        padding: 4px 0;
-    }
-
-    .heatmap-theme-header.week-inline-layout,
-    .heatmap-theme-header.row-inline-layout {
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .heatmap-theme-header.week-inline-layout .heatmap-header-info,
-    .heatmap-theme-header.row-inline-layout .heatmap-header-info {
-        flex-direction: row;
-        align-items: center;
-    }
-
-    .heatmap-theme-header.week-inline-layout .heatmap-header-cells,
-    .heatmap-theme-header.row-inline-layout .heatmap-header-cells {
-        width: auto;
-        flex: 1 1 auto;
+        gap: var(--think-space-2) var(--think-space-4);
     }
 }
 
-@media (max-width: 480px) {
-    .heatmap-container {
-        --heatmap-cell-size: 34px;
-    }
-
+@container (max-width: 400px) {
+    .heatmap-container { --heatmap-cell-size: 30px; }
     .heatmap-view-wrapper,
-    .heatmap-day-view {
-        gap: 12px;
-    }
-
-    .heatmap-day-section-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-}
-
-/* Goal-first heatmap layout: 目标是主线，主题/预设是二级打卡维度。 */
-.heatmap-goal-view-wrapper {
-    gap: 18px;
-}
-
-.heatmap-goal-section {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px 0 14px;
-    border-bottom: 1px solid var(--think-border-subtle);
-}
-
-.heatmap-goal-section:last-child {
-    border-bottom: none;
-}
-
-.heatmap-goal-title-row {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 2px;
-}
-
-.heatmap-goal-title {
-    margin: 0;
-    font-size: 20px;
-    line-height: 1.3;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    color: var(--think-text-accent);
-}
-
-.heatmap-goal-meta {
-    font-size: 12px;
-    color: var(--think-text-secondary);
-}
-
-.heatmap-goal-theme-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.heatmap-goal-day-view {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-.heatmap-cell-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.heatmap-container {
-    padding: var(--think-space-4);
-    container-type: inline-size;
-}
-
-.heatmap-theme-group {
-    padding: var(--think-space-3) 0 var(--think-space-5);
-    border-color: var(--think-border-subtle);
-}
-
-.heatmap-cell {
-    border: 1px solid color-mix(in srgb, var(--think-border-subtle) 80%, transparent);
-    border-radius: var(--think-radius-md);
-    background: var(--think-heatmap-0);
-}
-
-.heatmap-cell:focus-visible {
-    outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
-    outline-offset: var(--think-focus-ring-offset);
-}
-
-@container (max-width: 560px) {
-    .heatmap-container { --heatmap-cell-size: 34px; }
-    .heatmap-theme-header.row-inline-layout { align-items: flex-start; flex-direction: column; }
-    .heatmap-theme-header.row-inline-layout .heatmap-header-cells { width: 100%; }
+    .heatmap-day-view,
+    .heatmap-goal-day-view { gap: var(--think-space-3); }
 }

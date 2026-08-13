@@ -26,10 +26,10 @@
 .think-os .think-field-manager__select { width: 100%; }
 .think-os .think-field-manager__status { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
 
-.think-os .think-module-settings { display: grid; gap: var(--think-space-6); min-width: 0; }
+.think-os .think-module-settings { display: grid; gap: var(--think-space-5); min-width: 0; }
 .think-os .think-module-settings__section { display: grid; gap: var(--think-space-4); min-width: 0; }
-.think-os .think-module-settings__section + .think-module-settings__section { padding-top: var(--think-space-5); border-top: 1px solid var(--think-border-subtle); }
-.think-os .think-module-settings__section-title { margin: 0; color: var(--think-text-primary); font-size: var(--think-font-size-md); font-weight: var(--think-font-weight-semibold); line-height: var(--think-line-height-tight); }
+.think-os .think-module-settings__section + .think-module-settings__section { padding-top: var(--think-space-2); }
+.think-os .think-module-settings__section-title { margin: 0; color: var(--think-text-primary); font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-semibold); line-height: var(--think-line-height-tight); }
 .think-os .think-module-settings__fields { display: grid; gap: var(--think-space-3); }
 .think-os .think-module-settings__inline, .think-os .think-module-settings__advanced-title { display: flex; align-items: center; gap: var(--think-space-4); min-width: 0; }
 .think-os .think-module-settings__view-type { flex: 1 1 260px; }
@@ -53,11 +53,32 @@
 }
 .think-os .think-common-filter__label { min-width: 0; color: var(--think-text-primary); font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-medium); line-height: var(--think-line-height-tight); }
 
+/* Advanced filters are always visible and use the same add-row language as
+ * sorting. The heading is informational, not another collapsible container. */
+.think-os .think-filter-rule-section {
+  display: grid;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+.think-os .think-filter-rule-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--think-space-2);
+  min-height: 0;
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+}
+.think-os .think-filter-rule-section__meta {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-regular);
+}
+
 .think-data-filter-dialog { width: min(920px, calc(100vw - 32px)); max-width: calc(100vw - 32px); max-height: min(760px, calc(100vh - 48px)); }
 .think-os--modal .think-data-filter-dialog .think-modal__body { padding: var(--think-space-6); }
-.think-data-filter-dialog__content { display: grid; gap: var(--think-space-5); padding: 0; background: transparent; }
+.think-data-filter-dialog__content { display: grid; gap: var(--think-space-4); padding: 0; background: transparent; }
 .think-data-filter-dialog__meta-line { display: flex; justify-content: flex-end; gap: var(--think-space-4); color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
-.think-data-filter-dialog .think-disclosure { border-top: 1px solid var(--think-border-subtle); }
 .think-data-filter-dialog__actions { display: flex; justify-content: space-between; gap: var(--think-space-3); padding: var(--think-space-4) var(--think-space-6); border-top: 1px solid var(--think-border-subtle); background: var(--think-bg-surface-1); }
 
 @media (max-width: 420px) {

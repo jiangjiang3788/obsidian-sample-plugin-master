@@ -105,7 +105,7 @@ export function ExcelGrid({
   };
 
   return (
-    <table ref={tableRef as any} class="think-table excel-view-table">
+    <table ref={tableRef as any} class="think-table think-data-grid think-data-grid--excel excel-view-table">
       <colgroup>
         {columns.map(column => {
           const width = getExcelColumnWidth(column, columnWidths?.[column.key]);
