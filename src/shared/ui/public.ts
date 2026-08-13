@@ -10,6 +10,8 @@ export * from './muiCompat';
 export * from './primitives/Modal';
 export * from './primitives/Button';
 export * from './primitives/IconButton';
+export * from './primitives/Icon';
+export * from './primitives/SegmentedControl';
 export * from './utils/recordOrigin';
 export * from './utils/interaction';
 export * from './components/FilterPopover';

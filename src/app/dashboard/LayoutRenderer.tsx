@@ -22,6 +22,7 @@ import { useExpandedViewRendering } from './useExpandedViewRendering';
 import { ViewContent } from './ViewContent';
 import { useLayoutModuleActions } from '@/app/dashboard/useLayoutModuleActions';
 import { FreeformCanvas } from './FreeformCanvas';
+import { FreeformLayoutToolbar } from './FreeformLayoutToolbar';
 import type { FreeformLayoutItemRenderProps } from './FreeformLayoutItem';
 
 function getLayoutInitialDate(layout: any) {
@@ -268,46 +269,17 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
       />
 
       {isFreeform && (
-        <div class="think-freeform-toolbar">
-          <button
-            type="button"
-            class={isFreeformEditing ? 'mod-cta' : ''}
-            disabled={compactFreeformFallback}
-            onClick={() => setIsFreeformEditing((editing) => !editing)}
-          >
-            {isFreeformEditing ? '完成布局编辑' : '编辑自由布局'}
-          </button>
-          <button
-            type="button"
-            disabled={!isFreeformEditing}
-            onClick={handleResetFreeformLayout}
-          >
-            重置模板
-          </button>
-          {isFreeformEditing && (
-            <div class="think-freeform-add-controls">
-              <select
-                aria-label="选择要加入当前布局的视图"
-                value={viewToAdd}
-                onChange={(event) => setViewToAdd((event.target as HTMLSelectElement).value)}
-              >
-                <option value="">添加已有视图…</option>
-                {availableViews.map((view: ViewInstance) => (
-                  <option key={view.id} value={view.id}>{view.title}</option>
-                ))}
-              </select>
-              <button type="button" disabled={!viewToAdd} onClick={handleAddExistingView}>添加</button>
-              <button type="button" onClick={handleCreateAndAddView}>新建视图</button>
-            </div>
-          )}
-          <span class="think-freeform-toolbar-hint">
-            {compactFreeformFallback
-              ? '当前为窄屏或触控设备，已自动降级为只读列表；桌面宽屏可编辑自由布局。'
-              : isFreeformEditing
-                ? '点击卡片选中；方向键移动，Shift+方向键缩放，PageUp 置顶，L 锁定，C 折叠，Esc 取消选择。'
-                : '查看模式下不会误拖动；折叠状态按当前布局独立保存。'}
-          </span>
-        </div>
+        <FreeformLayoutToolbar
+          editing={isFreeformEditing}
+          compactFallback={compactFreeformFallback}
+          viewToAdd={viewToAdd}
+          availableViews={availableViews}
+          onToggleEditing={() => setIsFreeformEditing((editing) => !editing)}
+          onReset={handleResetFreeformLayout}
+          onViewToAddChange={setViewToAdd}
+          onAddExistingView={handleAddExistingView}
+          onCreateAndAddView={handleCreateAndAddView}
+        />
       )}
 
       {isStateInitialized && (

@@ -1,15 +1,15 @@
 /* Think OS toolbar, section and empty-state primitives. */
 .think-os .think-toolbar {
-  min-height: 40px;
+  min-height: var(--think-control-height-lg);
   display: flex;
   align-items: center;
-  gap: var(--think-space-4);
+  gap: var(--think-space-3);
   min-width: 0;
 }
 
 .think-os .think-toolbar--compact {
-  min-height: 36px;
-  gap: var(--think-space-3);
+  min-height: var(--think-control-height-md);
+  gap: var(--think-space-2);
 }
 
 .think-os .think-toolbar--wrap {
@@ -98,3 +98,26 @@
     display: none;
   }
 }
+
+/* Compact single-boundary segmented control. */
+.think-os .think-segmented-control {
+  --think-segment-height: var(--think-control-height-md); --think-segment-font-size: var(--think-font-size-sm);
+  min-width: 0; min-height: var(--think-segment-height); display: inline-flex; align-items: stretch;
+  padding: 1px; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+}
+.think-os .think-segmented-control--sm {
+  --think-segment-height: var(--think-control-height-sm); --think-segment-font-size: var(--think-font-size-xs);
+}
+.think-os .think-segmented-control__item {
+  min-width: var(--think-segment-height); min-height: calc(var(--think-segment-height) - 4px);
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 var(--think-space-3);
+  border: 0; border-radius: calc(var(--think-radius-sm) - 2px); background: transparent; box-shadow: none; appearance: none;
+  color: var(--think-text-secondary); font: inherit; font-family: var(--think-font-interface);
+  font-size: var(--think-segment-font-size); font-weight: var(--think-font-weight-medium); line-height: 1;
+  cursor: pointer; user-select: none;
+  transition: background-color var(--think-duration-fast) var(--think-ease-standard), color var(--think-duration-fast) var(--think-ease-standard);
+}
+.think-os .think-segmented-control__item:hover:not(:disabled) { background: var(--think-bg-hover); color: var(--think-text-primary); }
+.think-os .think-segmented-control__item[aria-pressed="true"] { background: var(--think-accent-muted); color: var(--think-text-accent); font-weight: var(--think-font-weight-semibold); }
+.think-os .think-segmented-control__item:disabled { color: var(--think-text-disabled); cursor: not-allowed; opacity: 0.56; }

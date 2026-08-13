@@ -17,14 +17,3 @@
 .think-os--settings .think-goal-template-editor__output-heading {
   margin-bottom: var(--think-space-3);
 }
-
-.think-os--settings .think-theme-metadata__entry {
-  grid-template-columns: 56px minmax(220px, 1fr) 110px minmax(150px, 1fr) 120px auto;
-  border-top: 1px solid var(--think-border-strong);
-}
-
-@container think-settings (max-width: 840px) {
-  .think-os--settings .think-theme-metadata__entry {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-}

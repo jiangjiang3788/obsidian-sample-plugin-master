@@ -4,10 +4,11 @@ import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 
 import { Box, Button, Chip, Popover, Typography } from '../muiCompat';
-import { FilterListIcon } from '../icons';
+import { ThinkIcon } from '../primitives/Icon';
+import { ThinkButton } from '../primitives/Button';
 
 export interface FilterPopoverProps {
-  label: string; // 按钮文案前缀：如“分类筛选”
+  label: string;
   popoverTitle: string;
   selectedKeys: string[];
   totalCount: number;
@@ -39,27 +40,25 @@ export function FilterPopover({
   const open = Boolean(anchorEl);
   const selectedCount = selectedKeys.length;
 
-  // 说明：MUI 的 onClick 事件类型在 React/Preact 环境下可能略有差异，这里显式 any
-  // 避免因为事件类型不兼容导致 UI 组件被迫关闭整文件类型检查。
   const handleClick = (event: any) => setAnchorEl((event?.currentTarget ?? null) as HTMLElement | null);
   const handleClose = () => setAnchorEl(null);
 
   const showPartial = selectedCount > 0 && selectedCount < totalCount;
 
   return (
-    <div className="filter-popover-container">
-      <Button
-        size="small"
-        variant={showPartial ? 'contained' : 'outlined'}
-        startIcon={<FilterListIcon />}
+    <div className="think-filter-popover">
+      <ThinkButton
+        size="sm"
+        variant="secondary"
+        aria-pressed={showPartial}
+        leadingIcon={<ThinkIcon name="filter" />}
         onClick={handleClick}
-        sx={{ textTransform: 'none' }}
       >
         {label} {showPartial && `(${selectedCount}/${totalCount})`}
-      </Button>
+      </ThinkButton>
 
       {showPartial && (
-        <div className="filter-popover-selected-chips">
+        <div className="think-filter-popover__selected-chips">
           {selectedKeys.slice(0, chipLimit).map((key) => (
             <Chip
               key={key}

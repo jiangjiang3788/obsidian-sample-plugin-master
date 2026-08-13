@@ -16,6 +16,8 @@
   border: 1px solid transparent;
   border-radius: var(--think-radius-sm);
   background: transparent;
+  box-shadow: none;
+  appearance: none;
   color: var(--think-text-primary);
   font: inherit;
   font-family: var(--think-font-interface);
@@ -138,3 +140,8 @@
 @keyframes think-button-spin {
   to { transform: rotate(1turn); }
 }
+
+.think-os .think-button[aria-pressed="true"]:not(.think-button--primary, .think-button--danger) { background: var(--think-accent-muted); border-color: var(--think-accent); color: var(--think-text-accent); }
+
+
+.think-os .think-button__icon > svg { width: var(--think-button-icon-size); height: var(--think-button-icon-size); }

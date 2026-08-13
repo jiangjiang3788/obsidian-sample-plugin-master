@@ -1,6 +1,6 @@
 # Think OS CSS 与界面元素设计规范
 
-> 版本：1.0 Final（CSS V5）  
+> 版本：1.0.46（Obsidian-native Settings pilot）  
 > 适用范围：Think OS Obsidian 插件所有 Settings、Modal、Layout、View、共享组件  
 > 目标：建立统一、克制、高信息密度、主题友好、可访问、可维护的视觉系统  
 > 编码：UTF-8
@@ -16,9 +16,10 @@ Think OS 的界面应表现为：
 - 冷静：不过度使用品牌色和强烈阴影；
 - 克制：主操作突出，但普通信息不争夺注意力；
 - 高信息密度：在 Obsidian 侧栏和分栏中保持效率；
-- 内容优先：卡片外壳弱化，数据和记录内容优先；
+- 内容优先：减少装饰性 Card；Dashboard 的独立 View 保留清晰边框，数据和记录内容优先；
 - 层级明确：通过表面、边框、文字层级和间距建立结构；
-- 主题友好：尊重 Obsidian 主题，不制造孤立的白色或深色岛屿；
+- Obsidian-native：颜色、字体、圆角、控件密度优先继承 Obsidian 语义变量与当前社区主题；
+- 主题友好：不制造孤立的白色、深色或固定品牌色岛屿；
 - 可预测：相同元素在任何 View 中拥有相同尺寸、状态和交互。
 
 ### 1.2 禁止原则
@@ -32,7 +33,8 @@ Think OS 的界面应表现为：
 - 在 TSX `style` 或 MUI `sx` 中重复整套静态组件皮肤；
 - 将图表数据颜色用于按钮、边框和页面表面；
 - 为动态坐标生成大量 CSS class；
-- 只考虑默认浅色主题。
+- 只考虑默认浅色主题；
+- 用大面积 accent 填充普通 Module Header；accent 只用于选中、焦点和关键状态。
 
 ---
 
@@ -349,6 +351,32 @@ Token 不直接定义“紫色按钮”，而表达语义：
 仅动画：颜色、透明度、轻微 transform、展开高度。拖动期间不使用慢 transition。
 
 ---
+
+## 4.10 Dashboard Module Frame
+
+Dashboard 中一个 Module 代表一个独立 View，因此必须保留完整边界。它不是 SaaS Card，而是 Obsidian workspace panel：
+
+- 外框：1px `--think-panel-border`；
+- 圆角：`--think-radius-md`，由 Obsidian `--radius-m` 映射；
+- Header：使用 Obsidian secondary/hover surface，不使用常驻 accent 填充；
+- Header 与 Content：仅一条 subtle divider；
+- Content：与页面主 surface 同背景；
+- Selected：只改变边框/状态，不整条染色；
+- 默认无 shadow；
+- Module Shell 的基础皮肤只能由 `view-shell.modules.css` 定义，normalization 文件不得再次覆盖同一组基础 selector。
+
+## 4.11 Settings 高频工作区
+
+Settings 是日常工作区，不是说明文档：
+
+- 普通 Section 默认 flat，不使用 border + background + radius 三件套；
+- Section 之间优先使用标题、12–16px 间距和 1px subtle divider；
+- 列表行使用 hairline 分隔，不把每一行做成 Card；
+- 只有独立交互区域、危险区域、预览器、复杂 Rule Builder 等真实边界才允许使用容器框；
+- 明显的教学型说明默认不常驻显示；
+- Helper text 只用于输入约束、保存副作用、不可逆行为、错误/警告和真正不直观的业务语义；
+- 可选解释优先进入 tooltip、help icon 或按需展开区域；
+- 成功状态应短暂、低噪声，不用长期占位的大型 Alert。
 
 ## 5. 元素设计规范
 

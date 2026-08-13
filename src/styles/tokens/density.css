@@ -1,4 +1,4 @@
-/* Think OS spacing and density tokens. */
+/* Think OS spacing and density tokens. Obsidian uses a compact desktop UI; keep the grid small. */
 .think-os {
   --think-space-0: 0;
   --think-space-1: 2px;
@@ -10,9 +10,11 @@
   --think-space-7: 24px;
   --think-space-8: 32px;
 
-  --think-control-height-sm: 28px;
-  --think-control-height-md: 32px;
-  --think-control-height-lg: 36px;
+  /* Prefer the host input height so community themes can tune control density. */
+  --think-host-control-height: var(--input-height, 32px);
+  --think-control-height-sm: calc(var(--think-host-control-height) - 4px);
+  --think-control-height-md: var(--think-host-control-height);
+  --think-control-height-lg: calc(var(--think-host-control-height) + 4px);
   --think-touch-target: 40px;
 
   --think-icon-size-sm: 14px;
@@ -26,6 +28,7 @@
 }
 
 .think-os[data-think-density="compact"] {
+  --think-control-height-sm: 26px;
   --think-control-height-md: 28px;
   --think-control-height-lg: 32px;
   --think-space-5: 10px;
@@ -41,4 +44,9 @@
   }
 }
 
-.think-os[data-think-pointer="coarse"] { --think-control-height-sm: 36px; --think-control-height-md: 40px; --think-control-height-lg: 44px; --think-touch-target: 44px; }
+.think-os[data-think-pointer="coarse"] {
+  --think-control-height-sm: 36px;
+  --think-control-height-md: 40px;
+  --think-control-height-lg: 44px;
+  --think-touch-target: 44px;
+}

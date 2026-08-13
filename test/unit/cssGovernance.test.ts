@@ -87,8 +87,50 @@ describe('CSS governance', () => {
     expect(read('src/styles/overrides/quick-input-modal.css')).not.toContain('.keyboard-detected');
   });
 
+  it('keeps the dashboard module shell Obsidian-native and single-owned', () => {
+    const semantic = read('src/styles/tokens/semantic.css');
+    const modules = read('src/styles/features/view-shell.modules.css');
+    const normalization = read('src/styles/features/view-shell.normalization.css');
+
+    expect(semantic).toContain('--think-panel-header-bg: var(--background-secondary');
+    expect(semantic).not.toContain('--think-panel-header-bg: var(--think-accent');
+    expect(modules).toContain('.think-os .think-module.is-layout-selected');
+    expect(modules).toContain('border: 1px solid var(--think-panel-border)');
+    expect(modules).not.toContain('module-action-plus');
+    expect(normalization).not.toMatch(/\.module-header\s*\{/);
+    expect(normalization).not.toMatch(/\.think-module\s*\{/);
+  });
+
   it('ships the current CSS design contract', () => {
     expect(read('docs/CSS_DESIGN_SPEC.md')).toContain('Button');
     expect(read('docs/CSS_DESIGN_SPEC.md')).toContain('src/styles');
+  });
+});
+
+describe('UI redesign convergence', () => {
+  it('keeps dashboard toolbar and actions primitive-owned', () => {
+    const toolbarRuntime = read('src/features/views/runtime/ViewToolbar.tsx');
+    const toolbarCss = read('src/styles/features/view-shell.toolbar.css');
+    const normalization = read('src/styles/features/view-shell.normalization.css');
+    const modulePanel = read('src/app/dashboard/ModulePanel.tsx');
+    const layoutRenderer = read('src/app/dashboard/LayoutRenderer.tsx');
+    const iconPrimitive = read('src/shared/ui/primitives/Icon.tsx');
+
+    expect(toolbarRuntime).toContain('ThinkSegmentedControl');
+    expect(toolbarRuntime).toContain('ThinkIconButton');
+    expect(toolbarRuntime).toContain('ThinkIcon');
+    expect(toolbarRuntime).not.toMatch(/<button\b/);
+    expect(modulePanel).not.toMatch(/<button\b/);
+    expect(layoutRenderer).not.toMatch(/<button\b/);
+    expect(toolbarCss).toContain('@container');
+    expect(normalization).not.toMatch(/\.tp-toolbar\s*\{/);
+    expect(iconPrimitive).not.toContain("from 'obsidian'");
+  });
+
+  it('keeps implementation reports under docs', () => {
+    const rootMarkdown = fs.readdirSync(ROOT).filter((name) => name.endsWith('.md')).sort();
+    expect(rootMarkdown).toEqual(['README.md']);
+    expect(fs.existsSync(path.join(ROOT, 'docs/reports'))).toBe(true);
+    expect(read('docs/UI_REDESIGN_PLAN.md')).toContain('Phase 3');
   });
 });

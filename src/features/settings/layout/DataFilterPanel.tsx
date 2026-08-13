@@ -14,8 +14,10 @@ import {
   DialogTitle,
   Divider,
   Typography,
+  ThinkIcon,
+  ThinkButton,
 } from '@shared/ui/public';
-import { ExpandMoreIcon, FilterListIcon } from '@shared/ui/public';
+import { ExpandMoreIcon } from '@shared/ui/public';
 import { DataStore } from '@core/services/public';
 import { getAllFields } from '@core/types/public';
 import { getFieldLabel } from '@core/fields/public';
@@ -82,18 +84,18 @@ export function DataFilterPanel({
 
   return (
     <div class="tp-toolbar-data-filter">
-      <Button
-        size="small"
-        variant={activeCount > 0 ? 'contained' : 'outlined'}
-        startIcon={<FilterListIcon />}
+      <ThinkButton
+        size="sm"
+        variant="secondary"
+        aria-pressed={activeCount > 0}
+        leadingIcon={<ThinkIcon name="filter" />}
         onClick={handleOpen}
-        sx={{ textTransform: 'none' }}
       >
         数据筛选{activeCount > 0 ? ` (${activeCount})` : ''}
-      </Button>
+      </ThinkButton>
 
       {activeCount > 0 && (
-        <div class="filter-popover-selected-chips">
+        <div class="think-filter-popover__selected-chips">
           {filters.slice(0, 3).map((rule, index) => (
             <Chip
               key={`${rule.field}-${rule.op}-${index}`}

@@ -1,9 +1,9 @@
 /*
  * Think OS semantic design tokens.
  *
- * These variables deliberately map to Obsidian semantic variables instead of
- * defining a standalone light/dark palette. Feature CSS must consume Think OS
- * tokens; only this bridge should know about host theme variable names.
+ * Think OS is an Obsidian plugin, not a standalone web app. This file is the
+ * only visual host bridge: feature CSS consumes Think tokens while these
+ * tokens inherit Obsidian semantics with safe fallbacks for older app/themes.
  */
 .think-os {
   color-scheme: inherit;
@@ -34,14 +34,15 @@
   --think-focus-ring-width: 2px;
   --think-focus-ring-offset: 2px;
 
-  /* View shell hierarchy */
+  /* View shell hierarchy: framed workspace panel, not accent-filled card. */
   --think-panel-bg: var(--think-bg-canvas);
-  --think-panel-header-bg: var(--think-accent-hover, var(--think-accent));
-  --think-panel-header-hover-bg: var(--think-accent);
-  --think-panel-header-border: var(--think-accent);
-  --think-panel-header-accent: var(--think-text-on-accent);
-  --think-panel-border: var(--think-border-strong);
-  --think-panel-title: var(--think-text-on-accent);
+  --think-panel-header-bg: var(--background-secondary, var(--think-bg-canvas));
+  --think-panel-header-hover-bg: var(--background-modifier-hover, var(--think-panel-header-bg));
+  --think-panel-header-border: var(--think-border-subtle);
+  --think-panel-header-accent: var(--interactive-accent);
+  --think-panel-border: var(--think-border-subtle);
+  --think-panel-selected-border: var(--interactive-accent);
+  --think-panel-title: var(--think-text-primary);
   --think-section-bg: var(--think-bg-surface-1);
   --think-section-border: var(--think-border-strong);
   --think-row-emphasis-bg: var(--background-modifier-hover, var(--think-bg-surface-2));
@@ -62,32 +63,32 @@
   --think-info: var(--text-accent, var(--interactive-accent));
   --think-info-bg: var(--background-modifier-hover);
 
-  /* Typography scale */
+  /* Typography scale. Prefer Obsidian UI sizes where the host exposes them. */
   --think-font-interface: var(--font-interface);
   --think-font-text: var(--font-text, var(--font-interface));
   --think-font-monospace: var(--font-monospace);
   --think-font-size-2xs: 11px;
-  --think-font-size-xs: 12px;
-  --think-font-size-sm: 13px;
-  --think-font-size-md: 14px;
-  --think-font-size-lg: 16px;
+  --think-font-size-xs: var(--font-ui-smaller, 12px);
+  --think-font-size-sm: var(--font-ui-small, 13px);
+  --think-font-size-md: var(--font-ui-medium, 14px);
+  --think-font-size-lg: var(--font-ui-large, 16px);
   --think-font-size-xl: 18px;
   --think-font-size-2xl: 22px;
   --think-font-size-3xl: 28px;
-  --think-line-height-tight: 1.25;
-  --think-line-height-normal: 1.5;
+  --think-line-height-tight: var(--line-height-tight, 1.25);
+  --think-line-height-normal: var(--line-height-normal, 1.5);
   --think-line-height-relaxed: 1.7;
-  --think-font-weight-regular: 400;
-  --think-font-weight-medium: 500;
-  --think-font-weight-semibold: 600;
-  --think-font-weight-bold: 700;
+  --think-font-weight-regular: var(--font-normal, 400);
+  --think-font-weight-medium: var(--font-medium, 500);
+  --think-font-weight-semibold: var(--font-semibold, 600);
+  --think-font-weight-bold: var(--font-bold, 700);
 
-  /* Radius */
-  --think-radius-xs: 4px;
-  --think-radius-sm: 6px;
-  --think-radius-md: 8px;
-  --think-radius-lg: 12px;
-  --think-radius-pill: 999px;
+  /* Radius. Let the active Obsidian theme define the visual character. */
+  --think-radius-xs: var(--radius-s, 4px);
+  --think-radius-sm: var(--button-radius, var(--radius-s, 4px));
+  --think-radius-md: var(--radius-m, 8px);
+  --think-radius-lg: var(--radius-l, 12px);
+  --think-radius-pill: var(--radius-round, 999px);
 
   /* Elevation */
   --think-shadow-none: none;
@@ -116,7 +117,6 @@
 
 @supports (color: color-mix(in srgb, white 50%, black)) {
   .think-os {
-    --think-panel-header-hover-bg: color-mix(in srgb, var(--think-accent) 82%, var(--think-accent-hover));
     --think-row-emphasis-bg: color-mix(in srgb, var(--think-text-primary) 6%, var(--think-bg-surface-1));
     --think-empty-state-bg: color-mix(in srgb, var(--think-bg-surface-1) 78%, var(--think-bg-canvas));
   }

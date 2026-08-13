@@ -1,81 +1,121 @@
-/* Shared module panel shell. */
-/* Shared view shell, toolbar and freeform layout contract. */
 /*
- * ===================================================================
- * Layout Styles
- * -------------------------------------------------------------------
- * Styles for main layout containers, modules, and toolbars.
- * ===================================================================
+ * ModulePanel is the single authoritative workspace-view frame.
+ *
+ * A dashboard view is intentionally framed so neighbouring views remain
+ * distinct. The frame follows Obsidian surfaces/borders; accent is reserved
+ * for state (selection/focus), never used as a persistent header fill.
  */
-
-/* 模块面板 (ModulePanel) 容器 */
-.think-module {
-    border-radius: 8px;
-    margin-bottom: 16px;
+.think-os .think-module {
+    min-width: 0;
+    margin-bottom: var(--think-space-6);
     overflow: hidden;
     border: 1px solid var(--think-panel-border);
+    border-radius: var(--think-radius-md);
+    background: var(--think-panel-bg);
+    box-shadow: var(--think-shadow-none);
+    container-type: inline-size;
 }
-/* 模块面板头部 */
-.module-header {
+
+.think-os .think-module.is-layout-selected {
+    border-color: var(--think-panel-selected-border);
+}
+
+.think-os .module-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-width: 0;
+    min-height: var(--think-control-height-md);
+    padding: var(--think-space-1) var(--think-space-4);
     position: relative;
-    padding: 5px 12px;
-    cursor: pointer;
+    gap: var(--think-space-4);
     border-bottom: 1px solid var(--think-panel-header-border);
     background: var(--think-panel-header-bg);
     color: var(--think-panel-title);
-    box-shadow: inset 0 -1px 0 var(--think-panel-header-border);
+    cursor: pointer;
+    transition:
+        background-color var(--think-duration-fast) var(--think-ease-standard),
+        border-color var(--think-duration-fast) var(--think-ease-standard);
 }
 
-.module-header:hover {
+.think-os .think-module.is-collapsed .module-header {
+    border-bottom-color: transparent;
+}
+
+.think-os .module-header:hover,
+.think-os .module-header.is-layout-selected {
     background: var(--think-panel-header-hover-bg);
 }
-.module-title {
-    font-weight: 600;
-    font-size: 0.875rem; /* 14px */
-    color: var(--think-panel-title);
-}
-.module-header-controls {
+
+.think-os .module-header-main {
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-.module-action-plus {
-    font-size: 1.25rem; /* 20px */
-    font-weight: 500;
-    line-height: 1;
-    color: inherit;
-    opacity: 0.6;
-    padding: 0 4px;
-    border-radius: 4px;
-    cursor: pointer;
-    user-select: none;
-}
-.module-action-plus:hover {
-    opacity: 1;
-    background-color: color-mix(in srgb, var(--think-text-on-accent) 18%, transparent);
-}
-.module-toggle {
-    font-size: 0.875rem; /* 14px */
-    line-height: 1;
-    opacity: 0.7;
+    min-width: 0;
+    gap: var(--think-space-3);
 }
 
-/* 模块面板内容区域 */
-.module-content {
-    padding: 12px;
+.think-os .module-title {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--think-panel-title);
+    font-size: var(--think-font-size-sm);
+    font-weight: var(--think-font-weight-semibold);
+    line-height: var(--think-line-height-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.think-os .module-header-controls,
+.think-os .module-header-actions {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: var(--think-space-2);
+}
+
+.think-os .module-header-icon {
+    font-size: var(--think-icon-size-md);
+}
+
+.think-os .module-content {
+    min-width: 0;
+    padding: var(--think-space-4);
     overflow-x: auto;
+    background: var(--think-panel-bg);
+    container-type: inline-size;
 }
-.module-deferred-placeholder {
+
+.think-os .module-deferred-placeholder {
+    padding: var(--think-space-4) 0;
     color: var(--think-text-secondary);
-    font-size: 0.8125rem;
-    padding: 8px 0;
+    font-size: var(--think-font-size-sm);
 }
-.module-content a,
-.module-content a:visited,
-.module-content a:hover {
+
+.think-os .module-content a,
+.think-os .module-content a:visited,
+.think-os .module-content a:hover {
     text-decoration: none;
     box-shadow: none;
+}
+
+@container (max-width: 560px) {
+    .think-os .module-header {
+        align-items: flex-start;
+        padding-inline: var(--think-space-3);
+    }
+
+    .think-os .module-header-controls {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .think-os .module-layout-actions {
+        order: 2;
+        flex-basis: 100%;
+        justify-content: flex-end;
+    }
+
+    .think-os .module-content {
+        padding: var(--think-space-3);
+    }
 }

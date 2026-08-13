@@ -1,13 +1,17 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { dayjs } from '@core/utils/public';
+import type { ThemeDefinition, ViewInstance } from '@core/types/public';
+import {
+    getObsidianEventBoundaryProps,
+    ThinkIcon,
+    ThinkIconButton,
+    ThinkSegmentedControl,
+} from '@shared/ui/public';
 import { ThemeFilter } from './ThemeFilter';
 import { CategoryFilter } from './CategoryFilter';
-import { getObsidianEventBoundaryProps } from '@shared/ui/public';
-import type { ViewInstance } from '@core/types/public';
-import type { ThemeDefinition } from '@core/types/public';
+import { ViewToolbarDateControls } from './ViewToolbarDateControls';
 import {
     buildViewToolbarDateLabel,
     buildViewToolbarDateTargets,
@@ -32,88 +36,46 @@ export interface ViewToolbarProps {
     onLayoutSettingsClick?: () => void;
 }
 
+const VIEW_SEGMENTS = VIEW_TOOLBAR_OPTIONS.map((value) => ({ value, label: value }));
+
 export function ViewToolbar({
-    currentView,
-    currentDate,
-    onViewChange,
-    onDateChange,
-    filterSlot,
-    selectedThemes = [],
-    selectedCategories = [],
-    onThemeSelectionChange,
-    onCategorySelectionChange,
-    viewInstances,
-    themes,
-    predefinedCategories,
-    hideToolbar = false,
-    onLayoutSettingsClick
+    currentView, currentDate, onViewChange, onDateChange, filterSlot,
+    selectedThemes = [], selectedCategories = [], onThemeSelectionChange,
+    onCategorySelectionChange, viewInstances, themes, predefinedCategories,
+    hideToolbar = false, onLayoutSettingsClick,
 }: ViewToolbarProps) {
     const dateLabel = useMemo(() => buildViewToolbarDateLabel(currentDate, currentView), [currentDate, currentView]);
     const dateTargets = useMemo(() => buildViewToolbarDateTargets(currentDate, currentView), [currentDate, currentView]);
-    const shouldRenderFallbackFilters = shouldRenderViewToolbarFallbackFilters({
+    const fallbackFilters = shouldRenderViewToolbarFallbackFilters({
         hasFilterSlot: Boolean(filterSlot),
         canSelectThemes: Boolean(onThemeSelectionChange),
         canSelectCategories: Boolean(onCategorySelectionChange),
     });
 
-    if (hideToolbar) {
-        return null;
-    }
+    if (hideToolbar) return null;
 
     return (
-        <div class="tp-toolbar" {...getObsidianEventBoundaryProps()}>
-            {VIEW_TOOLBAR_OPTIONS.map((viewOption) => (
-                <button
-                    key={viewOption}
-                    onClick={() => onViewChange(viewOption)}
-                    class={viewOption === currentView ? 'active' : ''}
-                >
-                    {viewOption}
-                </button>
-            ))}
-
-            <span
-                class="tp-toolbar-date-display"
-                role="status"
-                aria-live="polite"
-                title="当前时间范围"
-            >
-                {dateLabel}
-            </span>
-
-            <button onClick={() => onDateChange(dateTargets.previous)}>←</button>
-            <button onClick={() => onDateChange(dateTargets.next)}>→</button>
-            <button onClick={() => onDateChange(dateTargets.today)}>＝</button>
-
-            {filterSlot || (shouldRenderFallbackFilters && (
-                <>
-                    {onThemeSelectionChange && (
-                        <ThemeFilter
-                            selectedThemes={selectedThemes}
-                            onSelectionChange={onThemeSelectionChange}
-                            themes={themes}
-                        />
+        <div class="tp-toolbar think-toolbar think-toolbar--compact" {...getObsidianEventBoundaryProps()}>
+            <ThinkSegmentedControl label="时间粒度" value={currentView} options={VIEW_SEGMENTS} onChange={onViewChange} size="sm" className="tp-toolbar__view-switcher" />
+            <ViewToolbarDateControls
+                dateLabel={dateLabel}
+                onPrevious={() => onDateChange(dateTargets.previous)}
+                onNext={() => onDateChange(dateTargets.next)}
+                onToday={() => onDateChange(dateTargets.today)}
+            />
+            <span class="tp-toolbar__spacer" aria-hidden="true" />
+            {(filterSlot || fallbackFilters) && (
+                <div class="tp-toolbar__filters">
+                    {filterSlot || (
+                        <>
+                            {onThemeSelectionChange && <ThemeFilter selectedThemes={selectedThemes} onSelectionChange={onThemeSelectionChange} themes={themes} />}
+                            {onCategorySelectionChange && <CategoryFilter selectedCategories={selectedCategories} onSelectionChange={onCategorySelectionChange} viewInstances={viewInstances} predefinedCategories={predefinedCategories} />}
+                        </>
                     )}
-
-                    {onCategorySelectionChange && (
-                        <CategoryFilter
-                            selectedCategories={selectedCategories}
-                            onSelectionChange={onCategorySelectionChange}
-                            viewInstances={viewInstances}
-                            predefinedCategories={predefinedCategories}
-                        />
-                    )}
-                </>
-            ))}
-
+                </div>
+            )}
             {onLayoutSettingsClick && (
-                <button
-                    class="tp-toolbar-layout-settings"
-                    title="布局设置"
-                    onClick={() => onLayoutSettingsClick()}
-                >
-                    ⚙
-                </button>
+                <ThinkIconButton size="sm" className="tp-toolbar-layout-settings" label="布局设置" icon={<ThinkIcon name="settings" />} onClick={onLayoutSettingsClick} />
             )}
         </div>
     );

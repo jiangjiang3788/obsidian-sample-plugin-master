@@ -2,21 +2,14 @@
 /* ===================================================================
  * Freeform Layout v1
  * =================================================================== */
-.module-header-main {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    gap: 6px;
-}
-
 .module-drag-handle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    flex: 0 0 24px;
-    border-radius: 4px;
+    width: var(--think-control-height-sm);
+    height: var(--think-control-height-sm);
+    flex: 0 0 var(--think-control-height-sm);
+    border-radius: var(--think-radius-sm);
     cursor: grab;
     user-select: none;
     touch-action: none;
@@ -36,21 +29,18 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
-    margin: 4px 0 10px;
-    padding: 8px;
-    border: 1px solid var(--think-border-subtle);
-    border-radius: 8px;
-    background: var(--think-bg-surface-1);
+    gap: var(--think-space-2);
+    margin: var(--think-space-2) 0 var(--think-space-5);
+    padding: 0;
+    border: 0;
+    background: transparent;
 }
 
-.think-freeform-toolbar button {
-    font-size: 0.8125rem;
-}
 
 .think-freeform-toolbar-hint {
     color: var(--think-text-secondary);
-    font-size: 0.8125rem;
+    font-size: var(--think-font-size-xs);
+    line-height: var(--think-line-height-normal);
 }
 
 .think-freeform-host {
@@ -65,8 +55,10 @@
     min-width: 720px;
     box-sizing: border-box;
     border: 1px solid transparent;
-    border-radius: 8px;
-    transition: border-color 120ms ease, background-color 120ms ease;
+    border-radius: var(--think-radius-md);
+    transition:
+        border-color var(--think-duration-fast) var(--think-ease-standard),
+        background-color var(--think-duration-fast) var(--think-ease-standard);
 }
 
 .think-freeform-canvas.is-editing {
@@ -83,7 +75,7 @@
     box-sizing: border-box;
     min-width: 280px;
     min-height: 180px;
-    transition: box-shadow 120ms ease;
+    transition: box-shadow var(--think-duration-fast) var(--think-ease-standard);
 }
 
 .think-freeform-item .think-module {
@@ -115,7 +107,7 @@
     box-shadow: 0 12px 32px color-mix(in srgb, var(--think-text-primary) 24%, transparent);
 }
 
-@media (max-width: 760px) {
+@container (max-width: 760px) {
     .think-freeform-toolbar-hint {
         flex-basis: 100%;
     }

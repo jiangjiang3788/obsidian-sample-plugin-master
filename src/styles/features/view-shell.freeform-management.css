@@ -14,12 +14,12 @@
 }
 
 .think-freeform-item.is-collapsed {
-    min-height: 40px;
+    min-height: var(--think-control-height-md);
 }
 
 .think-freeform-item.is-collapsed .think-module,
 .think-freeform-item.is-collapsed .module-header {
-    min-height: 40px;
+    min-height: var(--think-control-height-md);
 }
 
 .module-drag-handle.is-disabled {
@@ -45,47 +45,26 @@
 .module-layout-actions {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding-right: 4px;
-    border-right: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    gap: var(--think-space-1);
+    padding-inline-end: var(--think-space-2);
+    border-inline-end: 1px solid var(--think-border-subtle);
 }
 
-.module-layout-actions button {
-    min-height: 24px;
-    padding: 2px 6px;
-    border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--think-bg-canvas) 75%, transparent);
-    color: inherit;
-    font-size: 11px;
-    line-height: 1.2;
-    cursor: pointer;
-}
-
-.module-layout-actions button:hover,
-.module-layout-actions button:focus-visible {
-    border-color: var(--think-accent);
-    background: color-mix(in srgb, var(--think-accent) 16%, var(--think-bg-canvas));
-    outline: none;
-}
 
 .think-freeform-add-controls {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--think-space-2);
     flex-wrap: wrap;
 }
 
-.think-freeform-add-controls select {
+.think-freeform-view-select {
+    width: auto;
     min-width: 150px;
     max-width: 240px;
-    height: 30px;
-    padding: 2px 8px;
-    border: 1px solid var(--think-border-subtle);
-    border-radius: var(--button-radius, 4px);
-    background: var(--think-bg-canvas);
-    color: var(--think-text-primary);
-    font-size: 0.8125rem;
+    min-height: var(--think-control-height-sm);
+    height: var(--think-control-height-sm);
+    font-size: var(--think-font-size-xs);
 }
 
 .think-freeform-mobile-fallback {
@@ -97,14 +76,11 @@
     max-width: 100%;
 }
 
-@media (max-width: 900px) {
+@container (max-width: 900px) {
     .module-header-controls {
-        gap: 4px;
+        gap: var(--think-space-2);
     }
 
-    .module-layout-actions button {
-        padding-inline: 4px;
-    }
 }
 
 /* ===================================================================
@@ -120,9 +96,6 @@
     outline-style: double;
 }
 
-.think-freeform-toolbar-hint {
-    line-height: 1.45;
-}
 
 @media (prefers-reduced-motion: reduce) {
     .think-freeform-canvas,

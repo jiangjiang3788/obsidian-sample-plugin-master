@@ -14,6 +14,8 @@
   border: 1px solid transparent;
   border-radius: var(--think-radius-sm);
   background: transparent;
+  box-shadow: none;
+  appearance: none;
   color: var(--think-text-secondary);
   line-height: 1;
   cursor: pointer;
@@ -65,3 +67,6 @@
   height: var(--think-icon-button-glyph);
   font-size: var(--think-icon-button-glyph);
 }
+
+
+.think-os .think-lucide-icon { width: 1em; height: 1em; display: inline-block; flex: 0 0 auto; vertical-align: -0.125em; }

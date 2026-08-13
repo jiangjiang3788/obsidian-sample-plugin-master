@@ -1,7 +1,7 @@
 {
   "id": "think-os",
   "name": "Think OS",
-  "version": "1.0.43",
+  "version": "1.0.46",
   "minAppVersion": "0.15.0",
   "description": "A privacy-conscious Obsidian dashboard and quick-input plugin.",
   "author": "臂展两米八",

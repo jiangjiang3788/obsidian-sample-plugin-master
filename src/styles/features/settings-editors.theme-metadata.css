@@ -1,30 +1,82 @@
-/* Theme metadata editor list and preview. */
-.think-os--settings .think-theme-metadata {
-  width: min(100%, 1040px);
-  margin-inline: auto;
-  display: grid;
-  gap: var(--think-space-6);
+/* Phase 4 Settings pilot: flat, compact, high-frequency theme metadata workspace. */
+.think-os--settings .think-theme-metadata__section {
+  padding-top: var(--think-space-5);
+  border-top: 1px solid var(--think-border-subtle);
 }
 
-.think-os--settings .think-theme-metadata__preview,
-.think-os--settings .think-theme-metadata__list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--think-space-4);
+.think-os--settings .think-theme-metadata__preview-icon {
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
+}
+
+.think-os--settings .think-theme-metadata__ellipsis,
+.think-os--settings .think-theme-metadata__source {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.think-os--settings .think-theme-metadata__columns,
+.think-os--settings .think-theme-metadata__entry {
+  display: grid;
+  grid-template-columns: 64px minmax(220px, 1fr) minmax(150px, 0.7fr) 108px 28px;
+  align-items: center;
+  gap: var(--think-space-3);
+  min-width: 0;
+}
+
+.think-os--settings .think-theme-metadata__columns {
+  padding: 0 var(--think-space-2) var(--think-space-2);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-medium);
 }
 
 .think-os--settings .think-theme-metadata__entries {
-  display: grid;
-  gap: var(--think-space-3);
+  min-width: 0;
+  border-top: 1px solid var(--think-border-subtle);
 }
 
 .think-os--settings .think-theme-metadata__entry {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--think-space-4);
-  align-items: center;
-  padding: var(--think-space-4);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-sm);
-  background: var(--think-bg-surface-1);
+  padding: var(--think-space-2);
+  border-bottom: 1px solid var(--think-border-subtle);
+  background: transparent;
+}
+
+.think-os--settings .think-theme-metadata__entry:hover {
+  background: var(--think-bg-hover);
+}
+
+.think-os--settings .think-theme-metadata__source {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-normal);
+}
+
+.think-os--settings .think-theme-metadata__empty {
+  margin: 0;
+  padding-block: var(--think-space-6);
+  text-align: center;
+}
+
+@container think-settings (max-width: 760px) {
+  .think-os--settings .think-data-management-nav { width: 100%; }
+  .think-os--settings .think-data-management-nav .think-segmented-control__item { flex: 1 1 0; }
+  .think-os--settings .think-theme-metadata__columns { display: none; }
+  .think-os--settings .think-theme-metadata__entry { grid-template-columns: 64px minmax(0, 1fr) 108px 28px; }
+  .think-os--settings .think-theme-metadata__source { grid-column: 2 / -1; grid-row: 2; }
+  .think-os--settings .think-theme-metadata__status { grid-column: 3; grid-row: 1; }
+  .think-os--settings .think-theme-metadata__delete { grid-column: 4; grid-row: 1; }
+}
+
+@container think-settings (max-width: 520px) {
+  .think-os--settings .think-editor-grid--metadata { grid-template-columns: minmax(0, 1fr) 84px; }
+  .think-os--settings .think-editor-grid--metadata .think-button { grid-column: 1 / -1; justify-self: start; }
+  .think-os--settings .think-editor-grid--list-toolbar { grid-template-columns: 1fr; }
+  .think-os--settings .think-settings-search { width: 100%; max-width: none; }
+  .think-os--settings .think-theme-metadata__entry { grid-template-columns: 56px minmax(0, 1fr) 28px; }
+  .think-os--settings .think-theme-metadata__status { grid-column: 2; grid-row: 2; }
+  .think-os--settings .think-theme-metadata__source { grid-column: 2 / -1; grid-row: 3; }
+  .think-os--settings .think-theme-metadata__delete { grid-column: 3; grid-row: 1; }
 }

@@ -1,57 +1,53 @@
-/* Dashboard toolbar and theme filter shell. */
-/* Dashboard 工具栏 (tp-toolbar) */
+/* Dashboard toolbar: one compact Obsidian-native action language. */
 .tp-toolbar {
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px;
+    width: 100%; min-width: 0; margin-bottom: var(--think-space-4);
+    gap: var(--think-space-2); container-type: inline-size;
 }
-
-.tp-toolbar button {
-    border: 1px solid transparent;
-    background-color: var(--think-bg-surface-1);
-    transition: all 0.2s ease;
-    font-size: 0.875rem; /* 14px */
-    padding: 4px 10px;
+.tp-toolbar__view-switcher { flex: 0 0 auto; }
+.tp-toolbar__date-group,
+.tp-toolbar__date-actions,
+.tp-toolbar__filters,
+.tp-toolbar-data-filter,
+.tp-toolbar .think-filter-popover,
+.tp-toolbar .think-filter-popover__selected-chips {
+    min-width: 0; display: inline-flex; align-items: center;
 }
-.tp-toolbar button:hover {
-    border-color: var(--think-border-strong);
-    background-color: var(--think-bg-hover);
-}
-.tp-toolbar button.active {
-    border: 1px solid var(--think-accent);
-    background-color: var(--think-accent-hover);
-    color: var(--think-text-on-accent);
-    font-weight: 600;
-}
-
+.tp-toolbar__date-group { gap: var(--think-space-2); }
+.tp-toolbar__date-actions { gap: var(--think-space-1); }
 .tp-toolbar-date-display {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 28px;
-    padding: 4px 10px;
-    margin: 0 4px;
-    border: 1px solid transparent;
-    border-radius: var(--button-radius, 4px);
-    background: var(--think-bg-canvas);
-    color: var(--think-text-primary);
-    font-size: 0.875rem;
-    font-weight: bold;
-    line-height: 1.2;
-    text-align: center;
-    white-space: nowrap;
-    user-select: none;
+    min-height: var(--think-control-height-sm); display: inline-flex;
+    align-items: center; justify-content: center; padding-inline: var(--think-space-2);
+    color: var(--think-text-primary); font-size: var(--think-font-size-sm);
+    font-weight: var(--think-font-weight-semibold); line-height: var(--think-line-height-tight);
+    text-align: center; white-space: nowrap; user-select: none;
 }
-
-/* 主题和分类筛选器样式 */
-.theme-filter-container,
-.theme-filter {
-    white-space: nowrap;
+.tp-toolbar__spacer { min-width: var(--think-space-2); flex: 1 1 auto; }
+.tp-toolbar__filters { flex: 0 1 auto; gap: var(--think-space-2); overflow: hidden; }
+.tp-toolbar-data-filter,
+.tp-toolbar .think-filter-popover { gap: var(--think-space-2); }
+.tp-toolbar .think-filter-popover__selected-chips {
+    max-width: 360px; gap: var(--think-space-1); overflow: hidden;
 }
+.tp-toolbar-layout-settings { flex: 0 0 auto; }
+.tp-toolbar .theme-filter-container,
+.tp-toolbar .theme-filter { white-space: nowrap; }
+.tp-toolbar .theme-filter-selected-chips { flex-wrap: nowrap; overflow: hidden; }
 
-.theme-filter-selected-chips {
-    flex-wrap: nowrap;
-    overflow: hidden;
+@container (max-width: 700px) {
+    .tp-toolbar__spacer { display: none; }
+    .tp-toolbar__filters { flex: 1 1 auto; }
+    .tp-toolbar .think-filter-popover__selected-chips { max-width: 240px; }
+}
+@container (max-width: 520px) {
+    .tp-toolbar__date-group { flex: 1 1 auto; }
+    .tp-toolbar__filters {
+        flex-basis: calc(100% - var(--think-control-height-sm) - var(--think-space-2)); order: 3;
+    }
+    .tp-toolbar-layout-settings { margin-inline-start: auto; }
+    .tp-toolbar .think-filter-popover__selected-chips { display: none; }
+}
+@container (max-width: 390px) {
+    .tp-toolbar__view-switcher { width: 100%; }
+    .tp-toolbar__view-switcher .think-segmented-control__item { flex: 1 1 0; }
+    .tp-toolbar__date-group { justify-content: space-between; }
 }
