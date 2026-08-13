@@ -5,8 +5,8 @@
 .think-os {
   --think-list-row-min-height: var(--think-control-height-md);
   --think-list-row-min-height-compact: calc(var(--think-control-height-sm) - var(--think-space-2));
-  --think-list-row-padding-block: var(--think-space-2);
-  --think-list-row-gap: var(--think-space-3);
+  --think-list-row-padding-block: var(--think-rhythm-inline);
+  --think-list-row-gap: var(--think-rhythm-row);
   --think-list-divider: color-mix(in srgb, var(--think-border-subtle) 70%, transparent);
   --think-list-hover-bg: color-mix(in srgb, var(--think-bg-hover) 36%, transparent);
   --think-list-guide: color-mix(in srgb, var(--think-border-subtle) 72%, transparent);
@@ -25,7 +25,6 @@
   min-height: var(--think-list-row-min-height);
   padding-block: var(--think-list-row-padding-block);
   border: 0;
-  border-bottom: 1px solid var(--think-list-divider);
   border-radius: 0;
   background: transparent;
   color: var(--think-text-primary);
@@ -54,7 +53,7 @@
 
 .think-os .think-list-row--selected,
 .think-os .think-list-row[aria-selected="true"] {
-  background: var(--think-bg-selected);
+  background: var(--think-surface-selection);
   box-shadow: inset 2px 0 0 var(--think-accent);
 }
 
@@ -76,7 +75,7 @@
 }
 
 .think-os .think-list-empty {
-  padding: var(--think-space-4) 0;
+  padding: var(--think-rhythm-related) 0;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-sm);
 }

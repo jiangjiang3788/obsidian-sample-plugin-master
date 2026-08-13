@@ -1,9 +1,9 @@
 /* Think OS surfaces and card primitive. */
 .think-os .think-surface,
 .think-os .think-card {
-  background: var(--think-bg-surface-1);
+  background: var(--think-object-bg);
   color: var(--think-text-primary);
-  border: 1px solid var(--think-border-subtle);
+  border: 1px solid var(--think-object-border);
 }
 
 .think-os .think-surface--0 {
@@ -25,7 +25,7 @@
   flex-direction: column;
   min-width: 0;
   border-radius: var(--think-radius-md);
-  padding: var(--think-space-6);
+  padding: var(--think-object-padding);
   transition:
     background-color var(--think-duration-fast) var(--think-ease-standard),
     border-color var(--think-duration-fast) var(--think-ease-standard),
@@ -44,8 +44,8 @@
 
 .think-os .think-card--selected,
 .think-os .think-card[aria-selected="true"] {
-  background: var(--think-accent-muted);
-  border-color: var(--think-accent);
+  background: var(--think-surface-selection);
+  border-color: var(--think-border-selection);
 }
 
 .think-os .think-card--locked,
@@ -68,8 +68,8 @@
 }
 
 .think-os .think-card__header {
-  gap: var(--think-space-4);
-  margin-bottom: var(--think-space-5);
+  gap: var(--think-rhythm-related);
+  margin-bottom: var(--think-rhythm-group);
 }
 
 .think-os .think-card__body {
@@ -78,6 +78,6 @@
 
 .think-os .think-card__footer {
   justify-content: flex-end;
-  gap: var(--think-space-4);
-  margin-top: var(--think-space-6);
+  gap: var(--think-rhythm-related);
+  margin-top: var(--think-rhythm-section);
 }

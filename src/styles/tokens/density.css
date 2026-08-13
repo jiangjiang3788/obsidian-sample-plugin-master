@@ -10,6 +10,17 @@
   --think-space-7: 24px;
   --think-space-8: 32px;
 
+  /* Rhythm roles. Features consume semantic relationships instead of inventing
+   * local margin/gap values. The scale stays compact for an Obsidian workspace. */
+  --think-rhythm-inline: var(--think-space-2);
+  --think-rhythm-row: var(--think-space-3);
+  --think-rhythm-related: var(--think-space-4);
+  --think-rhythm-group: var(--think-space-5);
+  --think-rhythm-section: var(--think-space-6);
+  --think-rhythm-major: var(--think-space-7);
+  --think-object-padding: var(--think-space-5);
+  --think-object-gap: var(--think-space-5);
+
   /* Prefer the host input height so community themes can tune control density. */
   --think-host-control-height: var(--input-height, 32px);
   --think-control-height-sm: calc(var(--think-host-control-height) - 4px);

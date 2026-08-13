@@ -1,50 +1,58 @@
 // src/shared/ui/components/ModalHeader.tsx
 /** @jsxImportSource preact */
-import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 
-import { Box } from '../muiCompat';
 import { CloseIcon } from '../icons';
+import { ThinkIconButton } from '../primitives/IconButton';
 
-import { IconAction } from './IconAction';
+export interface ModalHeaderProps {
+  left: ComponentChildren;
+  onClose?: () => void;
+  /** 右侧自定义操作；关闭按钮始终由 onClose 单独控制。 */
+  right?: ComponentChildren;
+  /** 兼容旧调用：0=flush，<=1.5=compact，其余=normal。 */
+  padding?: number;
+  borderBottom?: boolean;
+  className?: string;
+}
 
-/**
- * ModalHeader
- *
- * 统一 Modal 顶部“左侧标题/内容 + 右侧关闭按钮”的样式结构，减少重复样板。
- */
+/** Shared header contract for Obsidian-hosted modals and Think overlays. */
 export function ModalHeader({
   left,
   onClose,
   right,
   padding = 1.5,
   borderBottom = true,
-}: {
-  left: ComponentChildren;
-  onClose?: () => void;
-  /** 右侧自定义区域；不传则默认渲染关闭按钮 */
-  right?: ComponentChildren;
-  padding?: number;
-  borderBottom?: boolean;
-}) {
-  return (
-    <Box
-      sx={{
-        p: padding,
-        ...(borderBottom ? { borderBottom: '1px solid var(--background-modifier-border)' } : {}),
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 1,
-      }}
-    >
-      <Box sx={{ minWidth: 0, flex: 1 }}>{left}</Box>
+  className,
+}: ModalHeaderProps) {
+  const densityClass = padding === 0
+    ? 'think-modal-header--flush'
+    : padding <= 1.5
+      ? 'think-modal-header--compact'
+      : 'think-modal-header--normal';
+  const classes = [
+    'think-modal-header',
+    densityClass,
+    borderBottom ? '' : 'think-modal-header--borderless',
+    className,
+  ].filter(Boolean).join(' ');
 
-      {right ??
-        (onClose ? (
-          <IconAction label="关闭" onClick={onClose} icon={<CloseIcon />} />
-        ) : null)}
-    </Box>
+  return (
+    <div className={classes}>
+      <div className="think-modal-header__left">{left}</div>
+      <div className="think-modal-header__right">
+        {right}
+        {onClose ? (
+          <ThinkIconButton
+            label="关闭"
+            size="sm"
+            className="think-modal-header__close"
+            onClick={onClose}
+            icon={<CloseIcon fontSize="small" />}
+          />
+        ) : null}
+      </div>
+    </div>
   );
 }
 

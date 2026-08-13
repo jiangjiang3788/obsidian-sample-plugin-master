@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Box, Button, Typography } from '@shared/ui/public';
+import { ThinkButton } from '@shared/ui/public';
 import { selectAiSettings, selectInputSettings, useSelector } from '@/app/public';
 import type { OpenAIChatMessage, ChatMessage, ChatSession, SessionFilters } from '@core/ai/public';
 import { devError, devLog } from '@core/utils/public';
@@ -215,15 +215,11 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     // AI 未启用提示
     if (!aiSettings?.enabled) {
         return (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="h6" gutterBottom>
-                    AI 功能未启用
-                </Typography>
-                <Typography color="text.secondary">请在设置中启用 AI 功能并配置 API 密钥</Typography>
-                <Button variant="outlined" onClick={closeModal} sx={{ mt: 2 }}>
-                    关闭
-                </Button>
-            </Box>
+            <div className="think-ai-chat-unavailable">
+                <strong>AI 功能未启用</strong>
+                <span>请在设置中启用 AI 并配置 API 密钥。</span>
+                <ThinkButton size="sm" onClick={closeModal}>关闭</ThinkButton>
+            </div>
         );
     }
 

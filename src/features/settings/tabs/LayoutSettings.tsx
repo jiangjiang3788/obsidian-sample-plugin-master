@@ -29,7 +29,7 @@ function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }: {
   const dragHandleProps = { ...attributes, ...listeners } as any;
 
   return (
-    <div ref={setNodeRef as any} style={style} className="think-layout-list__item">
+    <div ref={setNodeRef as any} style={style} className="think-layout-list__item think-object-frame">
       <div className="think-layout-list__item-header">
         <button type="button" {...dragHandleProps} className="think-layout-list__drag-handle" aria-label="拖动排序">
           <ThinkIcon name="grip-vertical" />
@@ -68,7 +68,6 @@ export function LayoutSettings({ app }: { app: any }) {
   return (
     <div className="think-layout-list">
       <header className="think-layout-list__header">
-        <h2 className="think-settings-page__title">管理布局</h2>
         <ThinkButton onClick={onAddLayout} leadingIcon={<ThinkIcon name="plus" />} variant="secondary" size="sm">添加布局</ThinkButton>
       </header>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

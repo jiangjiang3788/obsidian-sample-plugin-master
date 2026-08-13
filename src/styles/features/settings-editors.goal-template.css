@@ -2,28 +2,27 @@
 .think-os--settings .think-goal-template-editor {
   min-height: 0;
   box-sizing: border-box;
-  padding: var(--think-space-6);
+  padding: var(--think-rhythm-section);
   overflow-y: auto;
 }
 .think-os--settings .think-goal-template-editor__stack,
 .think-os--settings .think-goal-template-editor__fields,
 .think-os--settings .think-goal-template-editor__form-fields {
   display: grid;
-  gap: var(--think-space-4);
+  gap: var(--think-rhythm-related);
   min-width: 0;
 }
 .think-os--settings .think-goal-template-editor__identity { min-width: 0; }
 .think-os--settings .think-goal-template-editor__fields {
-  padding-block: var(--think-space-4);
-  border-top: 1px solid var(--think-border-subtle);
-  border-bottom: 1px solid var(--think-border-subtle);
+  padding-block: var(--think-rhythm-related);
+  border: 0;
 }
 .think-os--settings .think-goal-template-mode-row .think-segmented-control { width: max-content; max-width: 100%; }
 .think-os--settings .think-goal-template-editor__form-fields { gap: var(--think-space-3); }
 .think-os--settings .think-goal-template-editor__section-heading {
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-sm);
-  font-weight: var(--think-font-weight-semibold);
+  font-size: var(--think-type-subsection-size);
+  font-weight: var(--think-type-subsection-weight);
 }
 .think-os--settings .think-goal-template-editor__textarea { min-height: 120px; }
 
@@ -37,7 +36,7 @@
 }
 .think-os--settings .think-goal-template-matrix th {
   padding: var(--think-space-2) var(--think-space-3);
-  border-bottom: 1px solid var(--think-border-subtle);
+  border-bottom: 1px solid var(--think-border-divider);
   background: var(--think-bg-surface-1);
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
@@ -111,7 +110,8 @@
   border-radius: var(--think-radius-sm);
 }
 .think-os--settings .think-goal-template-matrix__preset-cell.is-drop-target { outline: 2px dashed var(--think-accent); outline-offset: -2px; }
-.think-os--settings .think-goal-template-matrix__add { width: 100%; justify-content: center; border: 1px dashed var(--think-border-subtle); }
+.think-os--settings .think-goal-template-matrix__add { width: 100%; min-height: 30px; justify-content: center; border: 1px solid transparent; color: var(--think-text-secondary); }
+.think-os--settings .think-goal-template-matrix__add:hover { border-color: var(--think-border-subtle); }
 .think-os--settings .think-goal-preset {
   width: 100%;
   min-height: 30px;
@@ -149,8 +149,8 @@
   box-shadow: var(--think-shadow-overlay);
   color: var(--think-text-primary);
 }
-.think-goal-template-menu__header { display: grid; gap: var(--think-space-1); padding: var(--think-space-2) var(--think-space-3) var(--think-space-3); border-bottom: 1px solid var(--think-border-subtle); }
-.think-goal-template-menu__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-semibold); }
+.think-goal-template-menu__header { display: grid; gap: var(--think-space-1); padding: var(--think-space-2) var(--think-space-3) var(--think-space-3); border-bottom: 1px solid var(--think-border-divider); }
+.think-goal-template-menu__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-type-subsection-size); font-weight: var(--think-type-subsection-weight); }
 .think-goal-template-menu__description,
 .think-goal-template-menu__meta { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
 .think-goal-template-menu__group { display: grid; gap: var(--think-space-1); padding-block: var(--think-space-2); }
@@ -173,6 +173,6 @@
   cursor: pointer;
 }
 .think-goal-template-menu__item:hover:not(:disabled) { background: var(--think-bg-hover); }
-.think-goal-template-menu__item.is-emphasized { background: var(--think-bg-selected); }
+.think-goal-template-menu__item.is-emphasized { background: var(--think-surface-selection); }
 .think-goal-template-menu__item.is-danger { color: var(--think-danger); }
 .think-goal-template-menu__item:disabled { opacity: 0.5; cursor: not-allowed; }

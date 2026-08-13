@@ -18,3 +18,8 @@ Rules:
 10. Large changes require real behavior tests; static gates alone are insufficient.
 11. When a file grows beyond roughly 300 lines, inspect cohesion before splitting; do not split merely to satisfy a line-number aesthetic.
 12. When deleting legacy architecture, delete obsolete tests/gates/docs with it instead of preserving history as runtime governance.
+13. Ordinary sibling sections/rows must use shared rhythm tokens before adding dividers; dividers must encode a real structural boundary.
+14. Independent UI objects use the shared object-frame contract; feature-local cards/borders require a distinct semantic reason.
+15. Visual hierarchy and rhythm/boundary convergence gates are product contracts, not optional cleanup checks.
+16. Settings primary navigation is a left rail on desktop and secondary navigation belongs to the active content area; do not reintroduce top-level MUI tabs or segmented controls as navigation.
+17. Data-management pages must use shared list/matrix management patterns and must not repeat active navigation labels as competing page headings.

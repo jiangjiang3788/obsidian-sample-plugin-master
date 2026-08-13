@@ -109,18 +109,6 @@ export function GoalTemplateMatrixCell(props: GoalTemplateMatrixCellProps) {
       }}
       onDrop={(event: DragEvent) => handlePresetDropOnCell(event, goal, block)}
     >
-      <ThinkButton
-        size="sm"
-        variant="ghost"
-        className="think-goal-template-matrix__add"
-        leadingIcon={<ThinkIcon name="plus" />}
-        onClick={(event: MouseEvent) => {
-          event.stopPropagation();
-          openEditor(goal, block);
-        }}
-      >
-        添加
-      </ThinkButton>
       {!collapsed && presets.map((template) => (
         <PresetCard
           key={goalTemplateKey(template)}
@@ -135,6 +123,18 @@ export function GoalTemplateMatrixCell(props: GoalTemplateMatrixCellProps) {
           openPresetContextMenu={openPresetContextMenu}
         />
       ))}
+      <ThinkButton
+        size="sm"
+        variant="ghost"
+        className="think-goal-template-matrix__add"
+        leadingIcon={<ThinkIcon name="plus" />}
+        onClick={(event: MouseEvent) => {
+          event.stopPropagation();
+          openEditor(goal, block);
+        }}
+      >
+        添加
+      </ThinkButton>
     </div>
   );
 }

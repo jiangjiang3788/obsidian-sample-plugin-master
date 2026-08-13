@@ -24,7 +24,11 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border-bottom: 0;
+  border: 0;
+}
+
+.think-progress-section + .think-progress-section {
+  margin-top: var(--think-rhythm-group);
 }
 
 .think-os .think-progress-section__trigger,
@@ -52,7 +56,7 @@
   align-items: center;
   width: 100%;
   min-width: 0;
-  min-height: calc(var(--think-list-row-min-height) + var(--think-space-4));
+  min-height: calc(var(--think-list-row-min-height) + var(--think-rhythm-inline));
   cursor: pointer;
 }
 
@@ -75,7 +79,7 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  font-size: calc(var(--think-font-size-lg) + 1px);
+  font-size: var(--think-type-section-size);
   line-height: 1;
 }
 
@@ -91,8 +95,8 @@
   min-width: 0;
   overflow: hidden;
   color: var(--think-text-primary);
-  font-size: calc(var(--think-font-size-lg) + 1px);
-  font-weight: var(--think-font-weight-bold);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
   letter-spacing: -0.015em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -102,7 +106,7 @@
 .think-progress-skill__level {
   justify-self: start;
   color: var(--think-data-5);
-  font-weight: var(--think-font-weight-bold);
+  font-weight: var(--think-type-section-weight);
   white-space: nowrap;
 }
 
@@ -121,8 +125,8 @@
 .think-progress-section__percent {
   justify-self: end;
   color: var(--think-data-2);
-  font-size: var(--think-font-size-lg);
-  font-weight: var(--think-font-weight-bold);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
   text-align: right;
   white-space: nowrap;
 }
@@ -177,7 +181,7 @@
   align-items: center;
   width: 100%;
   min-width: 0;
-  min-height: calc(var(--think-list-row-min-height) + var(--think-space-1));
+  min-height: var(--think-list-row-min-height);
   cursor: pointer;
 }
 
@@ -195,8 +199,8 @@
   overflow: hidden;
   padding-left: var(--think-space-1);
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-sm);
-  font-weight: var(--think-font-weight-semibold);
+  font-size: var(--think-type-body-size);
+  font-weight: var(--think-type-label-weight);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -292,7 +296,7 @@
     font-size: var(--think-font-size-md);
   }
 
-  .think-progress-section__title { font-size: var(--think-font-size-lg); }
+  .think-progress-section__title { font-size: var(--think-type-section-size); }
   .think-progress-section__level-title { display: none; }
   .think-progress-section__level { font-size: var(--think-font-size-sm); }
   .think-progress-section__percent { font-size: var(--think-font-size-md); }
@@ -322,7 +326,7 @@
 
   .think-progress-section__trigger { min-height: calc(var(--think-list-row-min-height) + var(--think-space-3)); }
   .think-progress-section__icon { width: 18px; height: 18px; font-size: var(--think-font-size-sm); }
-  .think-progress-section__title { font-size: var(--think-font-size-md); }
+  .think-progress-section__title { font-size: var(--think-type-section-size); }
   .think-progress-section__level,
   .think-progress-section__percent,
   .think-progress-skill__level,

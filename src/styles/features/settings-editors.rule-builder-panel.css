@@ -6,12 +6,12 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--think-space-2);
+  gap: var(--think-rhythm-inline);
 }
 
 .think-os .think-rule-builder__compact-add {
   display: grid;
-  gap: var(--think-space-2);
+  gap: var(--think-rhythm-inline);
   align-items: center;
   min-width: 0;
 }
@@ -28,7 +28,7 @@
 .think-os .think-rule-builder__compact {
   display: flex;
   flex-direction: row;
-  gap: var(--think-space-5);
+  gap: var(--think-rhythm-group);
   min-width: 0;
 }
 
@@ -36,7 +36,7 @@
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--think-space-3);
+  gap: var(--think-rhythm-row);
   min-width: 0;
 }
 
@@ -48,7 +48,7 @@
 @media (max-width: 700px) {
   .think-os .think-rule-builder__compact {
     flex-direction: column;
-    gap: var(--think-space-2);
+    gap: var(--think-rhythm-inline);
   }
 
   .think-os .think-rule-builder__compact-add.is-filter.is-with-value,

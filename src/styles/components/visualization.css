@@ -1,0 +1,70 @@
+/* Shared visualization contract for Timeline / EventTimeline / Statistics / Energy.
+ * Features own geometry and data colors; this layer owns typography, guide/track
+ * contrast, hover/focus language, empty states and compact visualization rhythm.
+ */
+.think-os {
+  --think-viz-font-axis: var(--think-font-size-2xs);
+  --think-viz-font-meta: var(--think-type-meta-size);
+  --think-viz-font-label: var(--think-type-body-size);
+  --think-viz-font-value: var(--think-type-data-emphasis-size);
+  --think-viz-font-title: var(--think-type-subsection-size);
+  --think-viz-row-height-sm: 24px;
+  --think-viz-row-height-md: 32px;
+  --think-viz-plot-height-sm: 112px;
+  --think-viz-plot-height-md: 300px;
+  --think-viz-guide: color-mix(in srgb, var(--think-border-subtle) 58%, transparent);
+  --think-viz-guide-strong: color-mix(in srgb, var(--think-border-strong) 72%, transparent);
+  --think-viz-track: color-mix(in srgb, var(--think-bg-surface-2) 72%, var(--think-bg-canvas));
+  --think-viz-hover: color-mix(in srgb, var(--think-bg-hover) 44%, transparent);
+  --think-viz-selection: color-mix(in srgb, var(--think-accent) 10%, transparent);
+}
+.think-os .think-viz-surface {
+  min-width: 0;
+  color: var(--think-text-primary);
+  font-family: var(--think-font-interface);
+  font-size: var(--think-viz-font-label);
+  line-height: var(--think-line-height-tight);
+  container-type: inline-size;
+}
+
+.think-os .think-viz-axis-label {
+  color: var(--think-text-subtle);
+  font-size: var(--think-viz-font-axis);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--think-font-weight-regular);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-viz-meta {
+  color: var(--think-text-secondary);
+  font-size: var(--think-viz-font-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+.think-os .think-viz-label {
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-label);
+  font-weight: var(--think-type-label-weight);
+}
+
+.think-os .think-viz-value {
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-value);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--think-type-data-emphasis-weight);
+}
+
+
+
+.think-os .think-viz-empty {
+  display: grid;
+  place-items: center;
+  min-height: 88px;
+  padding: var(--think-space-5);
+  border: 0;
+  background: transparent;
+  color: var(--think-text-secondary);
+  font-size: var(--think-viz-font-meta);
+  text-align: center;
+}
+

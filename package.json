@@ -1,6 +1,6 @@
 {
   "name": "think-os",
-  "version": "1.0.54",
+  "version": "1.0.59",
   "scripts": {
     "dev": "vite",
     "check": "npm run lint && npm run typecheck && npm run gate",

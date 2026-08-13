@@ -53,8 +53,8 @@ export function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordO
   }
 
   return (
-    <section class="think-energy-period-map think-energy-daily-dots" aria-label={`${period.currentView}每日精力`}>
-      <div class="think-energy-period-map__heading"><span>{period.label} · 一天一个点</span></div>
+    <section class="think-energy-period-map think-energy-daily-dots think-viz-surface" aria-label={`${period.currentView}每日精力`}>
+      <div class="think-energy-period-map__heading think-viz-meta"><span>{period.label}</span></div>
       <div class={`think-energy-daily-dots__months is-${period.currentView === '年' ? 'year' : 'quarter'}`}>
         {[...months.entries()].map(([key, days]) => {
           const blanks = days.length ? mondayIndex(days[0].date) : 0;
@@ -95,7 +95,6 @@ export function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordO
           );
         })}
       </div>
-      <div class="think-energy-period-map__hint">实心＝当天含实时记录 · 空心＝当天仅补录 · 5 档尺寸＝日均精力 · Missing 留白</div>
     </section>
   );
 }

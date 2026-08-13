@@ -4,7 +4,7 @@ import type { JSX } from 'preact';
 import { classifyEnergyActivity, type EnergyManagementModel } from '@core/energy/public';
 import type { RecordViewItem } from '@core/types/public';
 import type { OpenRecordOriginHandler } from '@shared/types/public';
-import { createRecordGestureHandlers, RECORD_GESTURE_HINT } from '@shared/ui/public';
+import { createRecordGestureHandlers, RECORD_GESTURE_HINT, ThinkButton, ThinkIcon } from '@shared/ui/public';
 import type { EnergyMapSelection } from './EnergyMapTypes';
 
 interface Props {
@@ -29,15 +29,16 @@ function RecordAction({ item, label, className = 'think-energy-detail__open', on
     onOpenOrigin: onOpenRecordOrigin,
   });
   return (
-    <button
-      type="button"
-      class={className}
+    <ThinkButton
+      variant="link"
+      size="sm"
+      className={className}
       title={RECORD_GESTURE_HINT}
       onClick={gesture.onClick}
       onDblClick={gesture.onDblClick}
       onTouchEnd={gesture.onTouchEnd}
       onKeyDown={gesture.onKeyDown}
-    >{label}</button>
+    >{label}</ThinkButton>
   );
 }
 
@@ -68,7 +69,7 @@ function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecor
   const impact = impactText(selection, management);
   return (
     <aside class="think-energy-detail" aria-label="精力记录详情">
-      <button type="button" class="think-energy-detail__back" onClick={onBack}>‹ 返回本周期</button>
+      <ThinkButton variant="link" size="sm" className="think-energy-detail__back" leadingIcon={<ThinkIcon name="chevron-left" />} onClick={onBack}>返回本周期</ThinkButton>
       <div class="think-energy-detail__head">
         <div><strong>{point.date}</strong><span>{point.time}</span></div>
         <span class={`think-energy-detail__mode ${point.captureMode === 'retrospective' ? 'is-retrospective' : ''}`}>{point.captureMode === 'retrospective' ? '补录' : '实时'}</span>
@@ -99,7 +100,7 @@ function DayDetail({ selection, onBack, onOpenRecord, onOpenRecordOrigin }: Prop
   const latest = day.samples[day.samples.length - 1];
   return (
     <aside class="think-energy-detail" aria-label="每日精力详情">
-      <button type="button" class="think-energy-detail__back" onClick={onBack}>‹ 返回本周期</button>
+      <ThinkButton variant="link" size="sm" className="think-energy-detail__back" leadingIcon={<ThinkIcon name="chevron-left" />} onClick={onBack}>返回本周期</ThinkButton>
       <div class="think-energy-detail__head"><div><strong>{day.date}</strong><span>{day.samples.length} 次记录</span></div></div>
       <div class="think-energy-detail__total"><strong>{day.dailyScore ?? '—'}</strong><span>当日平均</span></div>
       {(day.dailyBrainScore != null || day.dailyPhysicalScore != null) && (

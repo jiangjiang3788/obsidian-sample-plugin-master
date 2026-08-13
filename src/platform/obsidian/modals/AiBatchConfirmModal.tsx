@@ -15,7 +15,6 @@ import type { NaturalRecordCommand } from '@core/types/public';
 import type { RecordSubmitResult } from '@core/recordInput/public';
 import { readRecordSubmitMessage } from '@core/utils/public';
 
-import { Box } from '@shared/ui/public';
 import { QuickInputEditor } from '@/app/public';
 
 import { AiBatchConfirmFooter } from './AiBatchConfirmFooter';
@@ -196,10 +195,10 @@ function AiBatchConfirmForm({
     closeModal();
   };
 
-  if (!currentRecord) return <div>没有可处理的记录</div>;
+  if (!currentRecord) return <div className="think-overlay-empty">没有可处理的记录</div>;
 
   return (
-    <Box sx={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+    <div className="think-ai-batch">
       <AiBatchConfirmSidebar
         records={records}
         blocks={blocks}
@@ -210,10 +209,9 @@ function AiBatchConfirmForm({
         onSaveAll={handleSaveAll}
       />
 
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <section className="think-ai-batch__main">
         <AiBatchConfirmRecordHeader title={title} currentIndex={currentIndex} record={currentRecord} onClose={closeModal} />
-
-        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        <div className="think-overlay-body think-ai-batch__editor">
           <QuickInputEditor
             key={currentRecord.id}
             getResourcePath={resolveResourcePath}
@@ -231,7 +229,7 @@ function AiBatchConfirmForm({
               })
             }
           />
-        </Box>
+        </div>
 
         <AiBatchConfirmFooter
           saved={currentRecord.saved}
@@ -240,7 +238,7 @@ function AiBatchConfirmForm({
           onSave={handleSaveCurrent}
           onComplete={handleComplete}
         />
-      </Box>
-    </Box>
+      </section>
+    </div>
   );
 }

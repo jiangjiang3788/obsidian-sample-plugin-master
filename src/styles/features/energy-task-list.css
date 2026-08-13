@@ -2,20 +2,20 @@
 /* Cadence surface tokens (including --think-task-cadence-year-bg) remain available for compatibility, but task rows no longer paint cadence background blocks. */
 .think-os .think-energy-task-list {
   display: grid;
-  gap: var(--think-space-4);
-  padding-top: var(--think-space-4);
-  border-top: 1px solid var(--think-border-subtle);
+  gap: var(--think-rhythm-related);
+  padding-top: 0;
+  border: 0;
 }
 
 .think-os .think-energy-task-list__title {
-  color: var(--think-text-accent);
-  font-size: var(--think-font-size-xl);
-  font-weight: var(--think-font-weight-bold);
+  color: var(--think-text-primary);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
 }
 
 .think-os .think-energy-task-list__goals {
   display: grid;
-  gap: 0;
+  gap: var(--think-rhythm-group);
 }
 
 .think-os .think-energy-task-list__goal-group {
@@ -26,9 +26,9 @@
 /* Goal title provides the boundary. Avoid a second full-width line between
  * every group; the task list is intentionally text-first and dense. */
 .think-os .think-energy-task-list__goal-group + .think-energy-task-list__goal-group {
-  margin-top: var(--think-space-3);
+  margin-top: 0;
   padding-top: 0;
-  border-top: 0;
+  border: 0;
 }
 
 .think-os .think-energy-task-list__goal-title {
@@ -42,8 +42,8 @@
   border-radius: 0;
   background: transparent;
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-md);
-  font-weight: var(--think-font-weight-semibold);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
   letter-spacing: -0.01em;
 }
 
@@ -139,7 +139,7 @@
   box-shadow: var(--think-shadow-overlay);
 }
 
-.think-os .think-energy-task-list__menu-title { margin-bottom: var(--think-space-2); font-weight: var(--think-font-weight-bold); }
+.think-os .think-energy-task-list__menu-title { margin-bottom: var(--think-space-2); font-weight: var(--think-type-subsection-weight); }
 .think-os .think-energy-task-list__menu-action {
   padding: 0;
   border: 0;
@@ -180,10 +180,10 @@
  */
 .think-os .think-energy-task-list__recommendation-shell {
   display: grid;
-  gap: var(--think-space-2);
+  gap: var(--think-rhythm-inline);
   min-width: 0;
-  padding-bottom: var(--think-space-3);
-  border-bottom: 1px solid var(--think-border-subtle);
+  padding-bottom: 0;
+  border: 0;
 }
 
 .think-os .think-energy-task-list__recommendation-head {
@@ -204,7 +204,7 @@
 .think-os .think-energy-task-list__recommendation-heading > strong {
   color: var(--think-text-accent);
   font-size: var(--think-font-size-md);
-  font-weight: var(--think-font-weight-bold);
+  font-weight: var(--think-type-subsection-weight);
 }
 
 .think-os .think-energy-task-list__recommendation-heading > span,
@@ -250,7 +250,7 @@
 .think-os .think-energy-task-list__recommendation-rank {
   color: var(--think-text-accent);
   font-size: var(--think-font-size-xs);
-  font-weight: var(--think-font-weight-bold);
+  font-weight: var(--think-type-subsection-weight);
   text-align: center;
 }
 

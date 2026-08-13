@@ -13,8 +13,8 @@
 .modal.think-quick-input-modal .think-quick-input-energy-section__title {
   margin-bottom: var(--think-space-2);
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-sm);
-  font-weight: var(--think-font-weight-bold);
+  font-size: var(--think-type-subsection-size);
+  font-weight: var(--think-type-subsection-weight);
   line-height: var(--think-line-height-tight);
 }
 
@@ -36,8 +36,8 @@
 }
 
 .modal.think-quick-input-modal .think-quick-input-energy-level__score {
-  font-size: var(--think-font-size-md);
-  font-weight: var(--think-font-weight-bold);
+  font-size: var(--think-type-data-emphasis-size);
+  font-weight: var(--think-type-data-emphasis-weight);
   line-height: 1;
 }
 
@@ -62,7 +62,7 @@
 
 .modal.think-quick-input-modal .think-quick-input-energy-detail-toggle,
 .modal.think-quick-input-modal .think-quick-input-energy-save-detailed {
-  border: 1px solid var(--think-border-subtle);
+  border: 1px solid var(--think-border-control);
   border-radius: var(--think-radius-sm);
   background: var(--think-bg-surface-1);
   color: var(--think-text-primary);
@@ -117,7 +117,7 @@
   align-items: baseline;
   gap: var(--think-space-2);
   padding: var(--think-space-3);
-  border: 1px solid var(--think-border-subtle);
+  border: 1px solid var(--think-border-control);
   border-radius: var(--think-radius-sm);
   background: var(--think-bg-surface-1);
 }
@@ -134,7 +134,7 @@
 .modal.think-quick-input-modal .think-quick-input-energy-save-detailed {
   min-height: 40px;
   padding: var(--think-space-2) var(--think-space-4);
-  font-weight: var(--think-font-weight-bold);
+  font-weight: var(--think-type-label-weight);
 }
 
 .modal.think-quick-input-modal .think-quick-input-energy-detail-toggle:disabled,
@@ -152,7 +152,7 @@
 
 .modal.think-quick-input-modal .think-quick-input-energy-capture-mode__button {
   min-height: 36px;
-  border: 1px solid var(--think-border-subtle);
+  border: 1px solid var(--think-border-control);
   border-radius: var(--think-radius-sm);
   background: var(--think-bg-surface-1);
   color: var(--think-text-primary);
@@ -163,7 +163,7 @@
 .modal.think-quick-input-modal .think-quick-input-energy-capture-mode__button.is-active {
   border-color: var(--interactive-accent);
   background: var(--background-modifier-hover);
-  font-weight: var(--think-font-weight-bold);
+  font-weight: var(--think-type-label-weight);
 }
 
 .modal.think-quick-input-modal .think-quick-input-energy-retrospective-time {

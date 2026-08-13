@@ -116,14 +116,14 @@ export function ChartBlock({
                 openAll(event);
             }}
         >
-            <div class="sv-chart-label">{label}</div>
+            <div class="sv-chart-label think-viz-label">{label}</div>
             <div class="sv-chart-content">
                 <div class="sv-chart-numbers">
                     {chartCategories.map(({ name }) => {
                         const count = counts[name] || 0;
                         const displayName = categories.find((category) => category.name === name)?.alias || name;
                         return (
-                            <div key={`num-${name}`} class="sv-chart-number" onClick={(event) => openCategory(event, name, displayName)}>
+                            <div key={`num-${name}`} class="sv-chart-number think-viz-value" onClick={(event) => openCategory(event, name, displayName)}>
                                 {count}
                             </div>
                         );
@@ -165,7 +165,7 @@ export function ChartBlock({
                         return (
                             <div 
                                 key={`cat-${name}`} 
-                                class="sv-chart-category" 
+                                class="sv-chart-category think-viz-axis-label" 
                                 title={`${displayName}${alias ? ` (${name})` : ''}`}
                                 onClick={(event) => openCategory(event, name, displayName)}
                             >

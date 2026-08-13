@@ -90,7 +90,7 @@ export function useExpandedViewRendering({
     };
   }, [expandedViewIds.length, expandedViewSignature, renderedExpandedCount]);
 
-  const handleToggle = useCallback((viewId: string, event?: MouseEvent) => {
+  const handleToggle = useCallback((viewId: string, event?: MouseEvent | KeyboardEvent) => {
     const isToggleAll = event?.metaKey || event?.ctrlKey;
 
     if (isToggleAll) {

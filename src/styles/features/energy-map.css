@@ -1,54 +1,46 @@
+/* Energy visualization geometry. Labels, guides, empty states and interaction
+ * contrast consume the shared visualization contract; score/capture encoding
+ * stays feature-owned.
+ */
 .think-energy-period-map {
   min-width: 0;
 }
 
-.think-energy-period-map--empty {
-  display: grid;
-  place-items: center;
-  min-height: 220px;
-  color: var(--text-muted);
-}
 
 .think-energy-period-map__heading {
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
-  gap: var(--think-space-3);
-  padding-bottom: var(--think-space-3);
-  border-bottom: 1px solid var(--background-modifier-border);
+  min-height: var(--think-viz-row-height-sm);
+  padding-bottom: var(--think-space-2);
 }
 
 .think-energy-period-map__heading > strong {
-  font-size: var(--font-ui-medium);
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-title);
+  font-weight: var(--think-font-weight-semibold);
 }
 
-.think-energy-period-map__heading > span,
-.think-energy-period-map__hint {
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
-}
-
-.think-energy-period-map__hint {
-  padding-top: var(--think-space-2);
-  text-align: right;
+.think-energy-period-map__heading > span {
+  color: var(--think-text-secondary);
+  font-size: var(--think-viz-font-meta);
 }
 
 .think-energy-dot {
-  --think-energy-dot-size: 23px;
+  --think-energy-dot-size: 22px;
   display: block;
   width: var(--think-energy-dot-size);
   height: var(--think-energy-dot-size);
   min-width: var(--think-energy-dot-size);
   min-height: var(--think-energy-dot-size);
   overflow: visible;
-  color: var(--interactive-accent);
+  color: var(--think-accent);
   cursor: pointer;
   outline: none;
-  transition: transform 120ms ease;
+  transition: transform var(--think-duration-fast) var(--think-ease-standard);
   user-select: none;
 }
 
-/* SVG owns the geometry. No native button box, background or theme chrome exists. */
 .think-energy-dot__shape,
 .think-energy-dot__selection {
   transform-box: fill-box;
@@ -62,59 +54,50 @@
   opacity: 0;
 }
 
-.think-energy-dot__shape {
-  opacity: 1;
-}
+.think-energy-dot__shape { opacity: 1; }
 
-/* Realtime = unmistakably filled disk. */
 .think-energy-dot.is-realtime .think-energy-dot__shape {
   fill: currentColor;
   stroke: currentColor;
   stroke-width: 0;
 }
 
-/* Retrospective = unmistakably hollow ring. The center stays transparent. */
 .think-energy-dot.is-retrospective .think-energy-dot__shape {
   fill: none;
   stroke: currentColor;
   stroke-width: 1.35;
 }
 
-.think-energy-dot.is-plot {
-  transform: translate(-50%, -50%);
-}
-
-.think-energy-dot.is-cell {
-  transform: none;
-}
+.think-energy-dot.is-plot { transform: translate(-50%, -50%); }
+.think-energy-dot.is-cell { transform: none; }
 
 .think-energy-dot.is-plot:hover,
 .think-energy-dot.is-plot.is-selected,
 .think-energy-dot.is-plot:focus-visible {
   z-index: 4;
-  transform: translate(-50%, -50%) scale(1.12);
+  transform: translate(-50%, -50%) scale(1.1);
 }
 
 .think-energy-dot.is-cell:hover,
 .think-energy-dot.is-cell.is-selected,
 .think-energy-dot.is-cell:focus-visible {
   z-index: 4;
-  transform: scale(1.12);
+  transform: scale(1.1);
 }
 
 .think-energy-dot:hover .think-energy-dot__selection,
 .think-energy-dot.is-selected .think-energy-dot__selection,
 .think-energy-dot:focus-visible .think-energy-dot__selection {
   stroke-width: 3;
-  opacity: 0.24;
+  opacity: 0.22;
 }
 
 /* day: horizontal time */
 .think-energy-day-map__track {
   position: relative;
-  height: 138px;
-  margin: var(--think-space-3) var(--think-space-2) 0;
-  border-bottom: 1px solid var(--background-modifier-border);
+  height: var(--think-viz-plot-height-sm);
+  margin: var(--think-space-2) var(--think-space-2) var(--think-space-4);
+  border-bottom: 1px solid var(--think-viz-guide-strong);
 }
 
 .think-energy-day-map__guide {
@@ -129,23 +112,24 @@
 .think-energy-day-map__guide > i {
   position: absolute;
   inset: 0;
-  border-left: 1px dashed color-mix(in srgb, var(--background-modifier-border) 75%, transparent);
+  border-left: 1px dashed var(--think-viz-guide);
 }
 
 .think-energy-day-map__guide > b {
   position: absolute;
-  bottom: -24px;
+  bottom: calc(-1 * var(--think-space-6));
   left: 0;
-  color: var(--text-faint);
-  font-size: 10px;
-  font-weight: normal;
+  color: var(--think-text-subtle);
+  font-size: var(--think-viz-font-axis);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--think-font-weight-regular);
   transform: translateX(-50%);
 }
 
 .think-energy-day-map__track > .think-energy-dot {
   --think-energy-x: 0%;
   position: absolute;
-  top: 54%;
+  top: 52%;
   left: var(--think-energy-x);
 }
 
@@ -153,8 +137,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  color: var(--text-faint);
-  font-size: var(--font-ui-smaller);
+  color: var(--think-text-subtle);
+  font-size: var(--think-viz-font-meta);
   transform: translate(-50%, -50%);
 }
 
@@ -162,64 +146,52 @@
 .think-energy-date-map__scroll {
   overflow-x: auto;
   overflow-y: hidden;
-  padding-top: var(--think-space-3);
+  padding-top: var(--think-space-2);
 }
 
 .think-energy-date-map__chart {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
 }
 
-.think-energy-date-map__chart.is-week {
-  min-width: 700px;
-}
+.think-energy-date-map__chart.is-week { min-width: 640px; }
+.think-energy-date-map__chart.is-month { min-width: 1120px; }
 
-.think-energy-date-map__chart.is-month {
-  min-width: 1280px;
-}
-
-.think-energy-date-map__axis {
+.think-energy-date-map__axis,
+.think-energy-date-map__day {
   display: grid;
-  grid-template-rows: 42px 360px;
+  grid-template-rows: var(--think-viz-row-height-md) var(--think-viz-plot-height-md);
 }
 
-.think-energy-date-map__axis-track {
-  position: relative;
-}
+.think-energy-date-map__axis-track { position: relative; }
 
 .think-energy-date-map__axis-track > span {
   --think-energy-y: 0%;
   position: absolute;
   top: var(--think-energy-y);
   right: var(--think-space-2);
-  color: var(--text-faint);
-  font-size: 10px;
+  color: var(--think-text-subtle);
+  font-size: var(--think-viz-font-axis);
+  font-variant-numeric: tabular-nums;
   transform: translateY(-50%);
 }
 
-.think-energy-date-map__axis-track > span:first-child {
-  transform: translateY(0);
-}
-
-.think-energy-date-map__axis-track > span:last-child {
-  transform: translateY(-100%);
-}
+.think-energy-date-map__axis-track > span:first-child { transform: translateY(0); }
+.think-energy-date-map__axis-track > span:last-child { transform: translateY(-100%); }
 
 .think-energy-date-map__days {
   --think-energy-day-count: 7;
   display: grid;
-  grid-template-columns: repeat(var(--think-energy-day-count), minmax(38px, 1fr));
+  grid-template-columns: repeat(var(--think-energy-day-count), minmax(36px, 1fr));
 }
 
 .think-energy-date-map__day {
-  display: grid;
-  grid-template-rows: 42px 360px;
-  min-width: 38px;
-  border-left: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+  min-width: 36px;
+  border-left: 1px solid var(--think-viz-guide);
 }
 
 .think-energy-date-map__day.is-missing {
-  background: color-mix(in srgb, var(--background-secondary) 55%, transparent);
+  background: color-mix(in srgb, var(--think-bg-surface-1) 45%, transparent);
 }
 
 .think-energy-date-map__day-head {
@@ -230,17 +202,17 @@
 }
 
 .think-energy-date-map__day-head > strong {
-  font-size: var(--font-ui-smaller);
+  font-size: var(--think-viz-font-meta);
+  font-weight: var(--think-font-weight-semibold);
 }
 
 .think-energy-date-map__day-head > span {
-  color: var(--text-muted);
-  font-size: 10px;
+  color: var(--think-text-secondary);
+  font-size: var(--think-viz-font-axis);
+  font-variant-numeric: tabular-nums;
 }
 
-.think-energy-date-map__lane {
-  position: relative;
-}
+.think-energy-date-map__lane { position: relative; }
 
 .think-energy-date-map__guide {
   --think-energy-y: 0%;
@@ -248,7 +220,7 @@
   top: var(--think-energy-y);
   right: 0;
   left: 0;
-  border-top: 1px dashed color-mix(in srgb, var(--background-modifier-border) 58%, transparent);
+  border-top: 1px dashed var(--think-viz-guide);
 }
 
 .think-energy-date-map__lane > .think-energy-dot {
@@ -258,50 +230,46 @@
   left: 50%;
 }
 
-/* quarter/year: one day = one strongly encoded dot */
+/* quarter/year: one day = one encoded dot */
 .think-energy-daily-dots__months {
-  --think-energy-gap-minor: var(--think-space-4);
-  --think-energy-gap-major: var(--think-space-6);
+  --think-energy-gap-minor: var(--think-space-3);
+  --think-energy-gap-major: var(--think-space-5);
   display: grid;
   gap: var(--think-energy-gap-major);
-  row-gap: var(--think-energy-gap-major);
-  padding-top: var(--think-space-3);
+  padding-top: var(--think-space-2);
 }
 
 .think-energy-daily-dots__months.is-quarter {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: calc(var(--think-energy-gap-major) + var(--think-space-1));
 }
 
 .think-energy-daily-dots__months.is-year {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  column-gap: calc(var(--think-energy-gap-major) + var(--think-space-2));
-  row-gap: calc(var(--think-energy-gap-major) + var(--think-space-1));
 }
 
 .think-energy-daily-dots__month {
-  min-width: 0;
   display: grid;
   gap: var(--think-energy-gap-minor);
+  min-width: 0;
 }
 
 .think-energy-daily-dots__month > strong {
   display: block;
-  margin-bottom: 0;
-  font-size: var(--font-ui-small);
+  margin: 0;
+  font-size: var(--think-viz-font-label);
+  font-weight: var(--think-font-weight-semibold);
 }
 
 .think-energy-daily-dots__weekdays,
 .think-energy-daily-dots__grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(30px, 1fr));
-  gap: 4px;
+  grid-template-columns: repeat(7, minmax(28px, 1fr));
+  gap: var(--think-space-2);
 }
 
 .think-energy-daily-dots__weekdays {
-  margin-bottom: 4px;
-  color: var(--text-faint);
-  font-size: 9px;
+  color: var(--think-text-subtle);
+  font-size: var(--think-viz-font-axis);
   text-align: center;
 }
 
@@ -309,27 +277,21 @@
 .think-energy-daily-dot-cell {
   display: grid;
   place-items: center;
-  min-width: 30px;
-  min-height: 32px;
+  min-width: 28px;
+  min-height: 30px;
 }
 
-.think-energy-daily-dot-cell.is-missing {
-  background: transparent;
-}
+.think-energy-daily-dot-cell.is-missing { background: transparent; }
+.think-energy-daily-dot { justify-self: center; align-self: center; }
 
-.think-energy-daily-dot {
-  justify-self: center;
-  align-self: center;
-}
-
-@media (max-width: 900px) {
+@container (max-width: 760px) {
   .think-energy-daily-dots__months.is-year,
   .think-energy-daily-dots__months.is-quarter {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 560px) {
+@container (max-width: 480px) {
   .think-energy-daily-dots__months.is-year,
   .think-energy-daily-dots__months.is-quarter {
     grid-template-columns: 1fr;

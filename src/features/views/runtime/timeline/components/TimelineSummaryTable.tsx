@@ -29,11 +29,12 @@ export function TimelineSummaryTable({
     untrackedLabel 
 }: TimelineSummaryTableProps) {
     if (!summaryData || summaryData.length === 0) {
-        return <div class="timeline-empty-state">此时间范围内无数据可供总结。</div>;
+        return <div class="timeline-empty-state think-viz-empty">此时间范围内无数据可供总结。</div>;
     }
     
     return (
-        <table class="timeline-summary-table">
+        <div class="timeline-summary-scroll think-data-grid-scroll">
+        <table class="timeline-summary-table think-data-grid">
             <thead>
                 <tr>
                     <th>月份</th>
@@ -75,5 +76,6 @@ export function TimelineSummaryTable({
                 ))}
             </tbody>
         </table>
+        </div>
     );
 }

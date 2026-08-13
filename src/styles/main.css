@@ -35,11 +35,13 @@
 @import "./primitives/tabs.css";
 
 @import "./components/settings-shell.css";
+@import "./components/rhythm-boundary.css";
 @import "./components/modal.css";
 @import "./components/simple-select.css";
 @import "./components/native-controls.css";
 @import "./components/task-row.css";
 @import "./components/data-grid.css";
+@import "./components/visualization.css";
 @import "./components/grouped-container.css";
 @import "./features/settings.css";
 @import "./features/settings-structural.css";
@@ -57,6 +59,7 @@
 @import "./features/excel.css";
 @import "./features/block.css";
 @import "./features/event-timeline.css";
+@import "./features/overlay-ui.css";
 @import "./features/timer.css";
 @import "./features/quick-input-editor.css";
 

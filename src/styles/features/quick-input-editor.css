@@ -227,7 +227,7 @@
 }
 
 .modal.think-quick-input-modal .think-qif-rating-text {
-  font-size: 18px;
+  font-size: var(--think-type-page-size);
   line-height: 1;
 }
 

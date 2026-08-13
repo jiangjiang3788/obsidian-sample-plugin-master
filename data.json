@@ -1,6 +1,7 @@
 {
   "aiSettings": {
-    "apiKey": "",
+    "apiKey": "sk-2SPzXePSCl9BISBoGzqQoBTd2BDv0mmoRZ3KoSZiMPFWyryn",
+    "persistApiKey": true,
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
@@ -36,7 +37,7 @@
       "id": "vi_mm9z0oe1cvlr53c",
       "parentId": null,
       "title": "时间轴",
-      "viewType": "EnergyView",
+      "viewType": "TimelineView",
       "viewConfig": {
         "categories": {
           "0": {
@@ -110,7 +111,7 @@
       "id": "vi_mmeolydjaga6z6u",
       "parentId": null,
       "title": "打卡",
-      "viewType": "StatisticsView",
+      "viewType": "HeatmapView",
       "viewConfig": {
         "categories": [
           {
@@ -153,25 +154,13 @@
         "presetFirst": false
       },
       "fields": [
-        "goalPath",
-        "themePath",
-        "coreBlock",
-        "date",
-        "content"
+        "date"
       ],
       "groupFields": [
         "coreBlock",
         "goalPath"
       ],
-      "filters": [
-        {
-          "field": "goalPath",
-          "op": "in",
-          "value": [
-            "爱好能力"
-          ]
-        }
-      ],
+      "filters": [],
       "sort": [],
       "collapsed": false
     },
@@ -233,7 +222,7 @@
     {
       "id": "vi_mn9o962553qwhzp",
       "parentId": null,
-      "title": "目标统计",
+      "title": "table",
       "viewType": "TableView",
       "viewConfig": {
         "groupBy": "goal",
@@ -263,8 +252,8 @@
     {
       "id": "vi_mno1upgdwpv72oj",
       "parentId": null,
-      "title": "时间轴2",
-      "viewType": "ProgressView",
+      "title": "Statistics",
+      "viewType": "StatisticsView",
       "viewConfig": {
         "categories": {
           "健康": {
@@ -324,8 +313,8 @@
     {
       "id": "vi_mnztlf3wxrrqd8i",
       "parentId": null,
-      "title": "完成任务",
-      "viewType": "EventTimelineView",
+      "title": "excle",
+      "viewType": "ExcelView",
       "viewConfig": {
         "categories": [
           {
@@ -373,7 +362,7 @@
     {
       "id": "vi_mpi3dydfsejfio8",
       "parentId": null,
-      "title": "excle",
+      "title": "事件时间线",
       "viewType": "EventTimelineView",
       "viewConfig": {
         "categories": [
@@ -432,6 +421,42 @@
         }
       ],
       "collapsed": false
+    },
+    {
+      "id": "vi_msr6vmhhiraq7b0",
+      "parentId": null,
+      "title": "1",
+      "viewType": "StatisticsView",
+      "viewConfig": {},
+      "fields": [],
+      "groupFields": [],
+      "filters": [],
+      "sort": [],
+      "collapsed": false
+    },
+    {
+      "id": "vi_msr6vrojamvaf1t",
+      "parentId": null,
+      "title": "成长",
+      "viewType": "ProgressView",
+      "viewConfig": {},
+      "fields": [],
+      "groupFields": [],
+      "filters": [],
+      "sort": [],
+      "collapsed": false
+    },
+    {
+      "id": "vi_msr6vt761p1ns9e",
+      "parentId": null,
+      "title": "精力",
+      "viewType": "EnergyView",
+      "viewConfig": {},
+      "fields": [],
+      "groupFields": [],
+      "filters": [],
+      "sort": [],
+      "collapsed": false
     }
   ],
   "layouts": [
@@ -439,11 +464,15 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "vi_mn9o962553qwhzp",
         "vi_mmijitbq47u10wu",
+        "vi_mn9o962553qwhzp",
         "vi_mnztlf3wxrrqd8i",
         "vi_mm9z0oe1cvlr53c",
-        "vi_mno1upgdwpv72oj"
+        "vi_mno1upgdwpv72oj",
+        "vi_mmeolydjaga6z6u",
+        "vi_mpi3dydfsejfio8",
+        "vi_msr6vrojamvaf1t",
+        "vi_msr6vt761p1ns9e"
       ],
       "displayMode": "list",
       "initialView": "天",
@@ -2213,13 +2242,13 @@
         "description": "由主题收敛为记录预设：健康/身体",
         "sortOrder": 10,
         "enabled": true,
+        "targetFile": "01/2-1健康.md",
         "defaultValues": {
           "themePath": "健康/身体",
           "icon": "🔋"
         },
         "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-1健康.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.照顾好自己.core.task.专注",
@@ -2316,15 +2345,15 @@
         "coreBlockId": "core.task",
         "variantId": "健康",
         "name": "健康",
-        "description": "由主题收敛为记录预设：健康",
-        "sortOrder": 70,
+        "description": "按历史 md 主题补齐的目标预设：思考/健康（历史记录 1 条）",
+        "sortOrder": 110,
         "enabled": true,
-        "targetFile": "01/2-1健康.md",
+        "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "健康",
-          "icon": "💤"
+          "themePath": "思考/健康",
+          "icon": "🔋"
         },
-        "createdAt": "2026-06-07T09:28:22.589Z",
+        "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
@@ -2376,23 +2405,6 @@
         "defaultValues": {
           "themePath": "健康/习惯",
           "icon": "💊"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
-      },
-      {
-        "id": "goal-template.goal.照顾好自己.core.task.健康-2",
-        "goalId": "goal.照顾好自己",
-        "coreBlockId": "core.task",
-        "variantId": "健康",
-        "name": "健康",
-        "description": "按历史 md 主题补齐的目标预设：思考/健康（历史记录 1 条）",
-        "sortOrder": 110,
-        "enabled": true,
-        "targetFile": "01/2-4思考.md",
-        "defaultValues": {
-          "themePath": "思考/健康",
-          "icon": "🔋"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T09:47:01.117Z"
@@ -4280,11 +4292,11 @@
         "coreBlockId": "core.evidence",
         "variantId": "垚垚",
         "name": "垚垚",
-        "description": "按历史 md 主题补齐的目标预设：思考/垚垚（历史记录 37 条）",
-        "sortOrder": 10,
+        "description": "按历史 md 主题补齐的目标预设：生活/垚垚（历史记录 3 条）",
+        "sortOrder": 40,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/垚垚",
+          "themePath": "生活/垚垚",
           "icon": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
@@ -4318,22 +4330,6 @@
         "defaultValues": {
           "themePath": "思考/芦苇",
           "icon": "🌿"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
-      },
-      {
-        "id": "goal-template.goal.了解世界.core.evidence.垚垚-2",
-        "goalId": "goal.了解世界",
-        "coreBlockId": "core.evidence",
-        "variantId": "垚垚",
-        "name": "垚垚",
-        "description": "按历史 md 主题补齐的目标预设：生活/垚垚（历史记录 3 条）",
-        "sortOrder": 40,
-        "enabled": true,
-        "defaultValues": {
-          "themePath": "生活/垚垚",
-          "icon": "👶"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
         "updatedAt": "2026-06-25T00:00:00.000Z"
@@ -6241,13 +6237,13 @@
         "description": "由主题收敛为记录预设：电脑",
         "sortOrder": 60,
         "enabled": true,
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑",
           "icon": "🖥"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.ob基础",
@@ -6258,14 +6254,14 @@
         "description": "由主题收敛为记录预设：电脑/ob基础",
         "sortOrder": 70,
         "enabled": true,
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/ob基础",
           "icon": "🎚",
           "任务内容": "ob"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.笔记系统",
@@ -6276,14 +6272,14 @@
         "description": "由主题收敛为记录预设：电脑/笔记系统",
         "sortOrder": 80,
         "enabled": true,
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/笔记系统",
           "icon": "📕",
           "任务内容": "笔记系统"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.记录系统",
@@ -6294,14 +6290,14 @@
         "description": "由主题收敛为记录预设：电脑/记录系统",
         "sortOrder": 90,
         "enabled": true,
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/记录系统",
           "icon": "🎴",
           "任务内容": "插件"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.整理",
@@ -6312,13 +6308,13 @@
         "description": "由主题收敛为记录预设：电脑/整理",
         "sortOrder": 100,
         "enabled": true,
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/整理",
           "icon": "✒"
         },
         "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.AI",
@@ -6329,13 +6325,13 @@
         "description": "由旧记录补充迁移：电脑/AI",
         "sortOrder": 999,
         "enabled": true,
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/AI",
           "icon": "🤖"
         },
         "createdAt": "2026-06-07T12:30:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.MediaPro",
@@ -6346,13 +6342,13 @@
         "description": "按历史 md 主题补齐的目标预设：电脑/MediaPro（历史记录 24 条）",
         "sortOrder": 1009,
         "enabled": true,
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/MediaPro",
           "icon": "📢"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.task.点读",
@@ -6363,13 +6359,13 @@
         "description": "按历史 md 主题补齐的目标预设：电脑/点读（历史记录 7 条）",
         "sortOrder": 1019,
         "enabled": true,
+        "targetFile": "01/2-5电脑.md",
         "defaultValues": {
           "themePath": "电脑/点读",
           "icon": "🔊"
         },
         "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z",
-        "targetFile": "01/2-5电脑.md"
+        "updatedAt": "2026-06-25T09:47:01.117Z"
       },
       {
         "id": "goal-template.goal.爱好能力.core.thought.电脑",

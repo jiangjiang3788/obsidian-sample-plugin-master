@@ -3,8 +3,9 @@
 import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { useSelector, selectInputBlocks, useUseCases } from '@/app/public';
-import { ThinkButton, ThinkDisclosure, ThinkIcon, ThinkIconButton, ThinkInput } from '@shared/ui/public';
+import { ThinkButton, ThinkIcon, ThinkIconButton, ThinkInput } from '@shared/ui/public';
 import { FieldsEditor } from './FieldsEditor';
+import { EnergyRecordTypeSettings } from './EnergyRecordTypeSettings';
 import type { RecordCaptureTemplate } from '@core/types/public';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -47,6 +48,8 @@ function BlockEditor({ block, useCases }: { block: RecordCaptureTemplate; useCas
   );
 }
 
+const ENERGY_RECORD_TYPE_ID = '__energy-record-type__';
+
 export function BlockManager() {
   const blocks = useSelector(selectInputBlocks); const [openId, setOpenId] = useState<string | null>(null); const useCases = useUseCases();
   const handleAdd = async () => { const newBlock = await useCases.blocks.addBlock(`新记录类型 ${blocks.length + 1}`); if (newBlock) setOpenId(newBlock.id); };
@@ -55,12 +58,26 @@ export function BlockManager() {
   const handleDragEnd = (event: any) => { const { active, over } = event; if (active && over && active.id !== over.id) useCases.blocks.reorderBlocks(active.id, over.id); };
   return (
     <section className="think-block-manager think-settings-section">
-      <div className="think-settings-section__header"><h2 className="think-settings-section__title">记录类型</h2><ThinkButton size="sm" variant="secondary" leadingIcon={<ThinkIcon name="plus" />} onClick={handleAdd}>新增</ThinkButton></div>
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={blocks.map((block) => block.id)} strategy={verticalListSortingStrategy}>
-          <div className="think-block-manager__list">{blocks.map((block) => <SortableBlockItem key={block.id} block={block} openId={openId} setOpenId={setOpenId} handleDelete={handleDelete} handleDuplicate={handleDuplicate} useCases={useCases} />)}</div>
-        </SortableContext>
-      </DndContext>
+      <div className="think-management-toolbar think-block-manager__toolbar">
+        <span className="think-settings-caption">{blocks.length + 1} 个记录类型</span>
+        <ThinkButton size="sm" variant="secondary" leadingIcon={<ThinkIcon name="plus" />} onClick={handleAdd}>新增记录类型</ThinkButton>
+      </div>
+      <div className="think-block-manager__list">
+        <div className="think-block-accordion think-block-accordion--builtin">
+          <div className="think-block-accordion__summary">
+            <span className="think-block-accordion__drag think-block-accordion__drag--placeholder" aria-hidden="true"><ThinkIcon name="grip-vertical" /></span>
+            <button type="button" className="think-block-accordion__title" onClick={() => setOpenId(openId === ENERGY_RECORD_TYPE_ID ? null : ENERGY_RECORD_TYPE_ID)}>精力</button>
+            <span className="think-block-accordion__meta">直接记录</span>
+            <ThinkIconButton label={openId === ENERGY_RECORD_TYPE_ID ? '收起' : '展开'} icon={<ThinkIcon name={openId === ENERGY_RECORD_TYPE_ID ? 'chevron-up' : 'chevron-down'} />} size="sm" onClick={() => setOpenId(openId === ENERGY_RECORD_TYPE_ID ? null : ENERGY_RECORD_TYPE_ID)} />
+          </div>
+          {openId === ENERGY_RECORD_TYPE_ID && <div className="think-block-accordion__details"><EnergyRecordTypeSettings /></div>}
+        </div>
+        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={blocks.map((block) => block.id)} strategy={verticalListSortingStrategy}>
+            {blocks.map((block) => <SortableBlockItem key={block.id} block={block} openId={openId} setOpenId={setOpenId} handleDelete={handleDelete} handleDuplicate={handleDuplicate} useCases={useCases} />)}
+          </SortableContext>
+        </DndContext>
+      </div>
     </section>
   );
 }

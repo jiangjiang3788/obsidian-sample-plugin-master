@@ -1,10 +1,15 @@
 /* Block manager and block editor: flat rows, one boundary per record type. */
 .think-os--settings .think-block-manager { width: min(100%, 980px); margin-inline: auto; }
 .think-os--settings .think-block-manager__header { margin-bottom: var(--think-space-3); }
-.think-os--settings .think-block-manager__list { display: grid; gap: 0; border-top: 1px solid var(--think-border-subtle); }
-.think-os--settings .think-block-accordion { border-bottom: 1px solid var(--think-border-subtle); background: transparent; }
-.think-os--settings .think-block-accordion__summary { width: 100%; min-height: var(--think-control-height-lg); display: grid; grid-template-columns: auto minmax(0,1fr) auto auto auto; align-items: center; gap: var(--think-space-2); padding: var(--think-space-2) 0; }
+.think-os--settings .think-block-manager__list { display: grid; gap: var(--think-rhythm-related); border: 0; }
+.think-os--settings .think-block-accordion { border: 0; background: transparent; }
+.think-os--settings .think-block-accordion__summary { width: 100%; min-height: var(--think-control-height-lg); display: grid; grid-template-columns: auto minmax(0,1fr) auto auto auto; align-items: center; gap: var(--think-space-2); padding: var(--think-rhythm-row) 0; }
 .think-os--settings .think-block-accordion__drag { width: var(--think-control-height-sm); height: var(--think-control-height-sm); display: inline-grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--think-text-disabled); cursor: grab; }
 .think-os--settings .think-block-accordion__title { min-width: 0; padding: 0; border: 0; background: transparent; color: var(--think-text-primary); font: inherit; font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-medium); text-align: left; cursor: pointer; }
-.think-os--settings .think-block-accordion__details { padding: var(--think-space-4) 0 var(--think-space-5) calc(var(--think-control-height-sm) + var(--think-space-2)); border-top: 1px solid var(--think-border-subtle); background: transparent; }
-.think-os--settings .think-block-editor { display: grid; gap: var(--think-space-3); }
+.think-os--settings .think-block-accordion__details { padding: var(--think-rhythm-related) 0 var(--think-rhythm-group) calc(var(--think-control-height-sm) + var(--think-rhythm-inline)); border: 0; background: transparent; }
+.think-os--settings .think-block-editor { display: grid; gap: var(--think-rhythm-row); }
+
+.think-os--settings .think-block-manager__toolbar { margin-bottom: var(--think-rhythm-related); }
+.think-os--settings .think-block-accordion__drag--placeholder { visibility: hidden; cursor: default; }
+.think-os--settings .think-block-accordion__meta { color: var(--think-text-secondary); font-size: var(--think-type-meta-size); white-space: nowrap; }
+.think-os--settings .think-block-accordion--builtin .think-block-accordion__summary { grid-template-columns: auto minmax(0, 1fr) auto auto; }

@@ -165,7 +165,6 @@ export function AiSettings(_props: AiSettingsProps) {
 
     return (
         <div className="think-settings-page">
-            <h2 className="think-settings-page__title">AI 自然语言快速记录</h2>
             <div className="think-settings-row">
                 <span className="think-settings-row__label">AI 快速记录</span>
                 <div className="think-settings-row__body"><ThinkToggle checked={localSettings.enabled} onChange={(e) => updateLocal({ enabled: (e.currentTarget as HTMLInputElement).checked })} label="启用" /></div>

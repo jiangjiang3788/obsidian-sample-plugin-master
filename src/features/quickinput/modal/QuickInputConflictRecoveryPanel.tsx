@@ -1,7 +1,5 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
-import { Button } from '@shared/ui/public';
-
+import { ThinkButton } from '@shared/ui/public';
 import type { RecordSubmitRecoveryPresentation } from '@core/utils/public';
 
 export interface QuickInputConflictRecoveryPanelProps {
@@ -14,56 +12,22 @@ export interface QuickInputConflictRecoveryPanelProps {
   onDismiss: () => void;
 }
 
-export function QuickInputConflictRecoveryPanel({
-  recovery,
-  isBusy,
-  isRescanning,
-  onOpenOriginal,
-  onRescan,
-  onRetry,
-  onDismiss,
-}: QuickInputConflictRecoveryPanelProps) {
+export function QuickInputConflictRecoveryPanel({ recovery, isBusy, isRescanning, onOpenOriginal, onRescan, onRetry, onDismiss }: QuickInputConflictRecoveryPanelProps) {
   if (!recovery.shouldShow) return null;
-
+  const disabled = isBusy || isRescanning;
   return (
-    <div
-      class="think-quick-input-recovery"
-      role="alert"
-      style={{
-        border: '1px solid var(--background-modifier-error)',
-        borderRadius: '10px',
-        padding: '10px 12px',
-        margin: '8px 0 10px 0',
-        background: 'var(--background-modifier-error-hover)',
-        color: 'var(--text-normal)',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'flex-start' }}>
-        <div>
-          <div style={{ fontWeight: 700, marginBottom: '4px' }}>{recovery.title}</div>
-          <div style={{ fontSize: '0.9em', lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{recovery.message}</div>
-          <div style={{ fontSize: '0.86em', lineHeight: 1.45, marginTop: '6px', color: 'var(--text-muted)' }}>{recovery.advice}</div>
-          {recovery.paths.length > 0 ? (
-            <div style={{ fontSize: '0.82em', lineHeight: 1.4, marginTop: '6px', color: 'var(--text-faint)', wordBreak: 'break-all' }}>
-              将重新扫描：{recovery.paths.join('、')}
-            </div>
-          ) : null}
-        </div>
-        <Button size="small" onClick={onDismiss} disabled={isBusy || isRescanning}>隐藏</Button>
+    <div className="think-quick-input-recovery" role="alert">
+      <div className="think-quick-input-recovery__text">
+        <strong>{recovery.title}</strong>
+        <span>{recovery.message}</span>
+        <span className="think-quick-input-recovery__advice">{recovery.advice}</span>
+        {recovery.paths.length ? <span className="think-quick-input-recovery__paths">将重新扫描：{recovery.paths.join('、')}</span> : null}
       </div>
-
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
-        {recovery.canOpenOriginal ? (
-          <Button size="small" variant="outlined" onClick={onOpenOriginal} disabled={isBusy || isRescanning}>打开原文</Button>
-        ) : null}
-        {recovery.canRescan ? (
-          <Button size="small" variant="outlined" onClick={onRescan} disabled={isBusy || isRescanning}>
-            {isRescanning ? '扫描中...' : '重新扫描'}
-          </Button>
-        ) : null}
-        {recovery.canRetry ? (
-          <Button size="small" variant="contained" onClick={onRetry} disabled={isBusy || isRescanning}>重试保存</Button>
-        ) : null}
+      <div className="think-quick-input-recovery__actions">
+        {recovery.canOpenOriginal ? <ThinkButton size="sm" onClick={onOpenOriginal} disabled={disabled}>打开原文</ThinkButton> : null}
+        {recovery.canRescan ? <ThinkButton size="sm" onClick={onRescan} disabled={disabled}>{isRescanning ? '扫描中…' : '重新扫描'}</ThinkButton> : null}
+        {recovery.canRetry ? <ThinkButton size="sm" variant="primary" onClick={onRetry} disabled={disabled}>重试保存</ThinkButton> : null}
+        <ThinkButton size="sm" variant="ghost" onClick={onDismiss} disabled={disabled}>隐藏</ThinkButton>
       </div>
     </div>
   );

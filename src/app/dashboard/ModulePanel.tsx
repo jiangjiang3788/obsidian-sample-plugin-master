@@ -1,14 +1,14 @@
 // src/app/dashboard/ModulePanel.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { ThinkIcon, ThinkIconButton } from '@shared/ui/public';
+import { isKeyboardActivation, ThinkIcon, ThinkIconButton } from '@shared/ui/public';
 
 export interface ModulePanelProps {
     title: string;
     collapsed?: boolean;
     children: any;
     onActionClick?: () => void;
-    onToggle?: (e: MouseEvent) => void;
+    onToggle?: (e: MouseEvent | KeyboardEvent) => void;
     onExport?: () => void;
     onSettingsClick?: () => void;
     onRemove?: () => void;
@@ -41,8 +41,18 @@ export function ModulePanel({
     onLayoutToggleLock,
     onLayoutToggleCollapsed,
 }: ModulePanelProps) {
+    const isHeaderActionTarget = (target: EventTarget | null) =>
+        target instanceof HTMLElement
+        && Boolean(target.closest('.module-header-actions, .module-drag-handle, .module-layout-actions'));
+
     const onHeaderClick = (e: MouseEvent) => {
-        if ((e.target as HTMLElement).closest('.module-header-actions, .module-drag-handle, .module-layout-actions')) return;
+        if (isHeaderActionTarget(e.target)) return;
+        onToggle?.(e);
+    };
+
+    const onHeaderKeyDown = (e: KeyboardEvent) => {
+        if (!isKeyboardActivation(e) || isHeaderActionTarget(e.target)) return;
+        e.preventDefault();
         onToggle?.(e);
     };
 
@@ -57,7 +67,11 @@ export function ModulePanel({
         <section class={moduleClassName} aria-label={`${title} 视图`}>
             <header
                 class={`module-header${layoutEditing ? ' is-layout-editing' : ''}${layoutSelected ? ' is-layout-selected' : ''}`}
+                role="button"
+                tabIndex={0}
+                aria-expanded={!collapsed}
                 onClick={onHeaderClick as any}
+                onKeyDown={(event) => onHeaderKeyDown(event as unknown as KeyboardEvent)}
                 title={layoutEditing
                     ? '点击选中；拖动左侧手柄移动；点击标题区域折叠或展开'
                     : '点击标题区域折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开'}

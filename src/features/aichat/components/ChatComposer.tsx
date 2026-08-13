@@ -1,7 +1,5 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
-import { Box, Button, TextField } from '@shared/ui/public';
-import { SendIcon } from '@shared/ui/public';
+import { SendIcon, ThinkButton, ThinkTextarea } from '@shared/ui/public';
 
 export interface ChatComposerProps {
     inputText: string;
@@ -13,43 +11,27 @@ export interface ChatComposerProps {
     placeholder: string;
 }
 
-export function ChatComposer({
-    inputText,
-    setInputText,
-    onKeyDown,
-    onSend,
-    isLoading,
-    disabled,
-    placeholder,
-}: ChatComposerProps) {
+export function ChatComposer({ inputText, setInputText, onKeyDown, onSend, isLoading, disabled, placeholder }: ChatComposerProps) {
     return (
-        <Box
-            sx={{
-                p: 2,
-                borderTop: '1px solid var(--background-modifier-border)',
-                display: 'flex',
-                gap: 1,
-            }}
-        >
-            <TextField
-                fullWidth
-                multiline
-                maxRows={4}
+        <div className="think-ai-chat-composer">
+            <ThinkTextarea
+                className="think-ai-chat-composer__input"
+                rows={2}
                 placeholder={placeholder}
                 value={inputText}
-                onChange={(e: any) => setInputText(e.target.value)}
-                onKeyDown={onKeyDown}
+                onInput={(event) => setInputText((event.currentTarget as HTMLTextAreaElement).value)}
+                onKeyDown={onKeyDown as any}
                 disabled={isLoading || disabled}
-                size="small"
             />
-            <Button
-                variant="contained"
+            <ThinkButton
+                className="think-ai-chat-composer__send"
+                variant="primary"
+                size="sm"
+                aria-label="发送"
+                leadingIcon={<SendIcon fontSize="small" />}
                 onClick={onSend}
                 disabled={!inputText.trim() || isLoading || disabled}
-                sx={{ minWidth: 'auto', px: 2 }}
-            >
-                <SendIcon />
-            </Button>
-        </Box>
+            >发送</ThinkButton>
+        </div>
     );
 }

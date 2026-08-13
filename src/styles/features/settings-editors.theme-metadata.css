@@ -1,7 +1,7 @@
 /* Phase 4 Settings pilot: flat, compact, high-frequency theme metadata workspace. */
 .think-os--settings .think-theme-metadata__section {
-  padding-top: var(--think-space-5);
-  border-top: 1px solid var(--think-border-subtle);
+  padding-top: 0;
+  border: 0;
 }
 
 .think-os--settings .think-theme-metadata__preview-icon {
@@ -34,14 +34,13 @@
 }
 
 .think-os--settings .think-theme-metadata__entries {
+  display: grid;
+  gap: var(--think-object-gap);
   min-width: 0;
-  border-top: 1px solid var(--think-border-subtle);
 }
 
 .think-os--settings .think-theme-metadata__entry {
-  padding: var(--think-space-2);
-  border-bottom: 1px solid var(--think-border-subtle);
-  background: transparent;
+  padding: var(--think-rhythm-row);
 }
 
 .think-os--settings .think-theme-metadata__entry:hover {
@@ -61,8 +60,6 @@
 }
 
 @container think-settings (max-width: 760px) {
-  .think-os--settings .think-data-management-nav { width: 100%; }
-  .think-os--settings .think-data-management-nav .think-segmented-control__item { flex: 1 1 0; }
   .think-os--settings .think-theme-metadata__columns { display: none; }
   .think-os--settings .think-theme-metadata__entry { grid-template-columns: 64px minmax(0, 1fr) 108px 28px; }
   .think-os--settings .think-theme-metadata__source { grid-column: 2 / -1; grid-row: 2; }

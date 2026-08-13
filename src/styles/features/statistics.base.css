@@ -1,21 +1,10 @@
-/* Statistics view base and empty state. */
-/* CSS V4 migrated from statistics-view.css. */
-/*
- * --- StatisticsView & Popover 样式 ---
- */
+/* Statistics view base. Visualization typography and empty states are shared. */
 .statistics-view {
-    padding: 0;
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    box-sizing: border-box;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
-.statistics-view-placeholder {
-    padding: 40px;
-    text-align: center;
-    color: var(--think-empty-state-text);
-    font-size: 1.1em;
-    border: 1px solid var(--think-section-border);
-    border-radius: var(--think-radius-md);
-    background: var(--think-empty-state-bg);
-}
+

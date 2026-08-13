@@ -1,6 +1,6 @@
 # Think OS CSS 与界面元素设计规范
 
-> 版本：1.0.54（Grid / Data convergence）  
+> 版本：1.0.59（Settings IA convergence）  
 > 适用范围：Think OS Obsidian 插件所有 Settings、Modal、Layout、View、共享组件  
 > 目标：建立统一、克制、高信息密度、主题友好、可访问、可维护的视觉系统  
 > 编码：UTF-8
@@ -37,6 +37,98 @@ Think OS 的界面应表现为：
 - 用大面积 accent 填充普通 Module Header；accent 只用于选中、焦点和关键状态。
 
 ---
+
+
+## 1.3 Visual Hierarchy System（1.0.57）
+
+全插件必须遵循统一视觉重量顺序：
+
+```text
+独立 View Frame  >  Selected / Active  >  Control Boundary  >  Divider  >  Background
+```
+
+这不是“颜色深浅建议”，而是组件职责：
+
+- `--think-border-frame`：只给独立对象边界，例如 Dashboard View；
+- `--think-border-selection` + `--think-surface-selection`：表达当前选中，不得比 View Frame 更抢眼；
+- `--think-border-control`：Input / Select / Button 等普通控件；
+- `--think-border-divider`：最低权重结构线，只在真实结构边界使用；
+- `--think-surface-subtle`：Header / Table Header 等轻表面，不用大面积 accent。
+
+文字只使用语义角色：
+
+| 角色 | 用途 | 默认权重 |
+|---|---|---|
+| Page | Modal/独立页面标题 | semibold |
+| View Title | Dashboard Module / Toolbar 主要信息 | semibold |
+| Section | 页面一级内容分区 | semibold |
+| Subsection | 组标题、Disclosure 标题 | semibold |
+| Body | 普通内容 | regular |
+| Label | 表单标签、轻强调正文 | medium |
+| Meta | 辅助信息 | regular |
+| Table Header | 数据表头 | medium |
+
+Feature CSS 不允许通过“再大一级 / 再粗一级”表达业务重要性；需要提升层级时先确认语义角色是否错误。Table Header 永远不能比 View Title 更重。
+
+## 1.4 Rhythm & Boundary System（1.0.58）
+
+空间层级必须使用语义节奏，而不是由 Feature 自己挑 margin：
+
+```text
+row < related < group < section < major
+```
+
+对应共享 token：
+
+```css
+--think-rhythm-row;
+--think-rhythm-related;
+--think-rhythm-group;
+--think-rhythm-section;
+--think-rhythm-major;
+```
+
+Boundary Ladder：
+
+| 层级 | 表达方式 | 示例 |
+|---|---|---|
+| Independent Object | `think-object-frame` | Dashboard View、保存的 Layout、独立 Theme 对象 |
+| Section | 标题 + whitespace | Settings Section、AI 配置分区 |
+| Group | group rhythm / indentation | Goal group、Rule group |
+| Row | row rhythm | Field row、Task row、普通列表项 |
+| Structural Divider | 低权重结构线 | Header/Body、Footer、Table cell、Axis |
+
+规则：
+
+- 普通 sibling Section/Row 不因为“需要分组感”自动添加横线；先使用 `--think-rhythm-*`。
+- Divider 只表示真实结构边界，使用 `--think-structural-divider`，不得替代空间设计。
+- 普通页面 Section 不创建 Card；真正可独立移动、选择、保存或管理的对象才使用 `think-object-frame`。
+- Object Frame 只有一层边界，默认无阴影，背景使用宿主 canvas/surface 语义。
+- Data Grid 是特殊结构：outer frame 表示独立数据区域，cell line 表示二维关系，因此允许内部结构线。
+- Feature 只选择语义级别，不自行创建 7px/11px/17px 等“视觉修补间距”。
+
+
+## 1.5 Settings IA System（1.0.59）
+
+Settings 的导航层级是信息架构，不是表单控件：
+
+```text
+Desktop
+Primary rail: 数据管理 / 布局 / 通用 / AI
+Content top: 记录类型 / 目标 / 主题 / 指标（仅数据管理）
+Content: 直接进入当前管理对象
+```
+
+规则：
+
+- 桌面一级导航固定在内容左侧；窄 Settings 容器才通过 container query 退化为顶部横向导航。
+- 一级/二级 Settings navigation 使用 `SettingsNavigation`，不得用 MUI Tabs 或 `ThinkSegmentedControl` 冒充导航。
+- 激活的导航名称不在内容区重复为大标题。
+- Data Management 只允许两种主要工作区：Management List 与 Management Matrix。
+- List 页顶部只放搜索、数量/状态和主要新增动作；下面直接进入对象列表。
+- Matrix 页将创建对象与搜索/视图控制分开，矩阵表面不永久铺满筛选胶囊和维护按钮。
+- 特殊记录类型若业务协议不同，仍应进入同一记录类型管理语言；差异只出现在展开后的字段。
+- 高频维护动作不得作为永久主操作暴露；迁移/清理类动作不进入日常管理流。
 
 ## 2. CSS 架构
 
@@ -170,6 +262,33 @@ Feature 层负责：
 - Heatmap 响应式使用 container query，不使用 viewport 宽度推断 Obsidian Leaf 宽度。
 - Heatmap 动态十六进制值允许作为记录数据写入 inline background；固定分类/次数颜色必须来自 `tokens/data-colors.css`。
 
+## 2.5 Visualization ownership
+
+Timeline、EventTimeline、Statistics、Energy 属于同一个 visualization family。它们必须消费 `components/visualization.css`，不能各自重新定义普通的轴文字、meta 字号、空状态、guide/track 对比度和 hover/focus 语言。
+
+共享层负责：
+
+- `--think-viz-font-axis / meta / label / value / title` 有界字号；
+- `--think-viz-row-height-*` 与 plot height 基础密度；
+- guide / track / hover / selection 的普通 UI 对比度；
+- `think-viz-surface / axis-label / meta / label / value / empty` 共享表现。
+
+Feature 层只负责：
+
+- Timeline 的时间坐标和 task block 几何；
+- EventTimeline 的日期/时间轴列布局；
+- Statistics 的 period grid 与柱高；
+- Energy 的点大小、位置和 score/capture 数据编码。
+
+规则：
+
+- 可视化字号不得在 Feature CSS 中重新写 `8px / 9px / 10px / 11px / 14px` 等独立 scale；需要更小的轴文字统一使用 visualization token。
+- Obsidian Leaf 响应使用 container query，不使用 viewport media query 推断 View 宽度。
+- 轴线、baseline、层级引导线属于信息结构；普通记录本体不再额外套 Card 或重复分割线。
+- 数据颜色可以动态 inline；固定 UI 颜色、轨道、边界和 hover 必须走 Think token。
+- 高频可视化不常驻展示“实心代表什么 / 空心代表什么”这类教学说明；保留 `title / aria-label` 等按需信息。
+- Timeline 的普通操作按钮必须使用 Think primitive，不恢复 Unicode 字符按钮。
+
 ## 3. Root Scope 与命名
 
 ### 3.1 Root Scope
@@ -288,16 +407,18 @@ Token 不直接定义“紫色按钮”，而表达语义：
 --think-space-8: 32px;
 ```
 
-推荐：
+推荐优先使用语义 rhythm，而不是直接在 Feature 里选 spacing token：
 
-| 场景 | 间距 |
-|---|---|
-| 图标与文字 | 4–6px |
-| 同组控件 | 8px |
-| 字段标题与输入 | 6px |
-| 卡片内部 | 12–16px |
-| Section 内组之间 | 16px |
-| 大 Section 之间 | 24px |
+| 语义 | Token | 典型用途 |
+|---|---|---|
+| inline | `--think-rhythm-inline` | 图标与文字、紧邻元信息 |
+| row | `--think-rhythm-row` | 同一列表/表单中的普通行节奏 |
+| related | `--think-rhythm-related` | 同一逻辑组内相关字段 |
+| group | `--think-rhythm-group` | sibling group / goal / rule group |
+| section | `--think-rhythm-section` | 页面 Section 之间 |
+| major | `--think-rhythm-major` | 极少数一级区域之间 |
+
+独立对象内部使用 `--think-object-padding`，独立对象之间使用 `--think-object-gap`。
 
 禁止随意新增 7px、11px、13px、17px 等非标准固定间距，除非是像素对齐需要并有注释。
 
@@ -528,14 +649,14 @@ default → hover → active → focus-visible → disabled → loading
 
 ## 5.6 Card / Surface
 
-### 普通 Card
+### Independent Object / Card
 
-- 8px radius；
-- 1px subtle border；
-- 12–16px padding；
-- 默认无重阴影；
-- Header 与 Body 间距 12px；
-- Footer 与 Body 间距 16px。
+- 普通内容 Section 不默认使用 Card；
+- 只有真正独立的对象才使用共享 `think-object-frame`；
+- Frame 为单层 1px 边界，默认无阴影；
+- radius / background 走 Object semantic token；
+- 内边距使用 `--think-object-padding`；
+- 对象之间使用 `--think-object-gap`。
 
 ### 状态
 
@@ -605,11 +726,18 @@ Modal
 
 规范：
 
-- radius 12px；
+- Obsidian Modal host 是唯一外层 surface；普通内容不得再套第二层 Paper/Card；
+- radius / border / shadow 优先继承 Obsidian host bridge；
 - 最大高度约 `min(85vh, available)`；
 - Header/Footer 固定，Body 滚动；
 - 宽度分 sm 420px、md 640px、lg 860px；
 - XS 视口接近全屏并保留安全区；
+- `ModalHeader` 统一标题、右侧动作与关闭按钮；自定义右侧动作不得替代关闭入口；
+- Body 默认只拥有一次 section padding；Feature 不再用 Box/Paper 为普通表单重复制造内层边界；
+- Footer 使用共享 `think-overlay-footer`，次操作在前、主操作在后；
+- 高频 Quick Input / AI / 管理浮层不常驻展示显而易见的快捷键或功能说明；
+- Assistant message 默认按内容流展示，不为每条消息创建 Card；仅用户/错误/系统状态使用克制的语义差异；
+- FloatingPanel 与 Modal 共用 header action / close icon / focus language；
 - Esc 关闭需要遵循未保存确认；
 - 初始焦点、焦点陷阱和关闭后焦点恢复完整；
 - 宿主兼容 `!important` 只能写在 `overrides/obsidian.css`。
@@ -654,11 +782,11 @@ Section Header
 Section Body
 ```
 
-- 页面 Section 间距 24px；
+- 页面 Section 间距使用 `--think-rhythm-section`；
 - 标题 16px/600；
 - Description 12–13px secondary；
 - Actions 不挤压标题；窄容器移到下一行；
-- Section 不默认加卡片边框，只有需要视觉分组时使用 Surface。
+- Section 不默认加卡片边框；视觉分组优先依靠 section rhythm。只有语义上独立的对象才升级为 `think-object-frame`。
 
 ## 5.15 Empty / Loading / Error State
 

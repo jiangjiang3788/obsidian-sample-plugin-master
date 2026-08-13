@@ -1,180 +1,85 @@
-/* Statistics time hierarchy. No nested cards: levels use indentation and guide lines. */
+/* Statistics time hierarchy: spacing + indentation carry hierarchy; repeated
+ * horizontal separators are intentionally avoided because the chart baseline
+ * already provides a strong visual guide.
+ */
 .sv-timeline {
-    --sv-gap-minor: var(--think-space-2);
-    --sv-gap-major: var(--think-space-5);
-    --sv-gap-section: var(--think-space-6);
-    display: flex;
-    flex-direction: column;
-    gap: 0;
+  --sv-gap-minor: var(--think-rhythm-inline);
+  --sv-gap-major: var(--think-rhythm-group);
+  --sv-gap-section: var(--think-rhythm-section);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .sv-year-grid,
 .sv-quarter-grid,
 .sv-month-grid {
-    display: grid;
-    gap: var(--sv-gap-minor);
-    row-gap: var(--sv-gap-major);
-    min-width: 0;
+  display: grid;
+  min-width: 0;
+  column-gap: var(--sv-gap-major);
+  row-gap: var(--sv-gap-major);
 }
 
-.sv-year-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--sv-gap-minor); row-gap: var(--sv-gap-section); }
-.sv-quarter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--sv-gap-major); }
-.sv-month-grid { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); column-gap: var(--sv-gap-major); }
+.sv-year-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--sv-gap-minor);
+  row-gap: var(--sv-gap-section);
+}
+
+.sv-quarter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sv-month-grid { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); }
 
 .sv-period-level {
-    min-width: 0;
-    box-sizing: border-box;
-    background: transparent;
-    border-radius: 0;
+  min-width: 0;
+  box-sizing: border-box;
+  background: transparent;
 }
 
-.sv-period-level--0 {
-    padding: 0 0 var(--think-space-4);
-    border-bottom: 1px solid var(--think-border-subtle);
-}
+.sv-period-level--0 { padding-bottom: var(--think-space-3); }
+.sv-period-level--1 { padding-left: var(--think-space-2); }
+.sv-period-level--2 { padding-left: var(--think-space-3); }
+.sv-period-level--3 { padding-left: var(--think-space-4); }
 
-.sv-period-level--1 {
-    padding-left: var(--think-space-2);
-    border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 80%, transparent);
-}
-
-.sv-period-level--2 {
-    padding-left: var(--think-space-3);
-    border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 66%, transparent);
-}
-
+.sv-period-level--1,
+.sv-period-level--2,
 .sv-period-level--3 {
-    padding-left: var(--think-space-4);
-    border-left: 1px solid color-mix(in srgb, var(--think-border-subtle) 52%, transparent);
+  border-left: 1px solid var(--think-viz-guide-strong);
 }
 
-/* Summary rows span the current grid; child levels flow into the remaining cells.
- * Empty periods are removed by PeriodStatisticsView, so the grid naturally compacts.
- */
 .sv-year-grid-year,
 .sv-quarter-grid-summary,
-.sv-month-grid-summary {
-    grid-column: 1 / -1;
-}
+.sv-month-grid-summary { grid-column: 1 / -1; }
 
-.sv-year-grid-quarter {
-    grid-column: span 3;
-}
-
+.sv-year-grid-quarter { grid-column: span 3; }
 .sv-year-grid-month,
 .sv-quarter-grid-month,
-.sv-month-grid-week {
-    min-width: 0;
-}
+.sv-month-grid-week { min-width: 0; }
 
 .sv-year-grid-week-col,
 .sv-quarter-grid-week-col {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sv-gap-minor);
-    min-width: 0;
-    padding-top: var(--think-space-3);
-    border-top: 1px solid var(--think-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-gap-minor);
+  min-width: 0;
+  padding-top: var(--think-space-2);
 }
 
-/* Historical placeholder cells are intentionally unused in the flat hierarchy. */
-.sv-week-placeholder { display: none; }
 .sv-quarter-end { margin-right: 0; }
 
-.sv-year-grid-week-col .sv-chart-block {
-    padding: var(--think-space-1) 0;
-    gap: var(--think-space-1);
-}
-
-.sv-year-grid-week-col .sv-vbar-bar {
-    max-width: 10px;
-    margin: 0 auto;
-}
-
-.sv-year-grid-week-col .sv-chart-label { font-size: 10px; }
-.sv-year-grid-week-col .sv-chart-number {
-    min-height: 12px;
-    font-size: 9px;
-    line-height: 12px;
-}
-.sv-year-grid-week-col .sv-chart-category {
-    min-height: 14px;
-    overflow: hidden;
-    font-size: 8px;
-    line-height: 14px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.sv-year-grid-week-col .sv-chart-bars-container {
-    min-height: 40px;
-    gap: 2px;
-}
-
-.sv-year-grid-month .sv-chart-block {
-    padding: var(--think-space-2) 0;
-    gap: var(--sv-gap-minor);
-}
-.sv-year-grid-month .sv-vbar-bar {
-    max-width: 14px;
-    margin: 0 auto;
-}
-.sv-year-grid-month .sv-chart-label { font-size: 11px; }
-.sv-year-grid-month .sv-chart-number { font-size: 10px; }
-.sv-year-grid-month .sv-chart-category {
-    overflow: hidden;
-    font-size: 9px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.sv-row {
-    display: grid;
-    gap: var(--think-space-3);
-    padding-top: var(--think-space-3);
-    border-top: 1px solid var(--think-border-subtle);
-}
-.sv-row:first-child {
-    padding-top: 0;
-    border-top: 0;
-}
-
-.sv-row-quarters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.sv-row-months { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-.sv-row-weeks {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: var(--sv-gap-minor);
-    padding-top: var(--think-space-3);
-    border-top: 1px solid var(--think-border-subtle);
-}
-.sv-row-week-days { grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.sv-row-month-weeks { display: flex; gap: var(--think-space-3); width: 100%; }
-.sv-row-quarter-months { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-
-.sv-month-weeks-section {
-    padding-top: var(--think-space-3);
-    border-top: 1px solid var(--think-border-subtle);
-}
-.sv-month-header {
-    margin-bottom: var(--think-space-2);
-    color: var(--think-text-primary);
-    font-weight: var(--think-font-weight-semibold);
-    text-align: left;
-}
-.sv-month-col { display: flex; flex-direction: column; gap: var(--think-space-1); }
-.sv-month-col-header {
-    color: var(--think-text-subtle);
-    font-weight: var(--think-font-weight-medium);
-    text-align: left;
-}
-.sv-month-col-weeks { display: flex; flex-direction: column; gap: var(--think-space-1); }
-
-.sv-year-grid-year > .sv-chart-block { height: 128px; }
+.sv-year-grid-year > .sv-chart-block { --sv-chart-height: 112px; }
 .sv-year-grid-quarter > .sv-chart-block,
 .sv-quarter-grid-summary > .sv-chart-block,
-.sv-month-grid-summary > .sv-chart-block { height: 116px; }
+.sv-month-grid-summary > .sv-chart-block { --sv-chart-height: 96px; }
 .sv-year-grid-month > .sv-chart-block,
-.sv-quarter-grid-month > .sv-chart-block { height: 96px; }
+.sv-quarter-grid-month > .sv-chart-block { --sv-chart-height: 82px; }
 .sv-year-grid-week-col .sv-chart-block,
 .sv-quarter-grid-week-col .sv-chart-block,
-.sv-month-grid-week > .sv-chart-block { height: 82px; }
+.sv-month-grid-week > .sv-chart-block { --sv-chart-height: 66px; }
+
+.sv-year-grid-week-col .sv-vbar-bar { max-width: 9px; }
+.sv-year-grid-month .sv-vbar-bar { max-width: 12px; }
+
+@container (max-width: 700px) {
+  .sv-year-grid { min-width: 720px; }
+  .sv-quarter-grid { min-width: 520px; }
+}

@@ -84,7 +84,7 @@
   background: var(--think-bg-surface-2);
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
-  font-weight: var(--think-font-weight-bold);
+  font-weight: var(--think-type-subsection-weight);
 }
 
 .think-simple-select__group:first-child {
@@ -103,7 +103,7 @@
 }
 
 .think-simple-select__option.is-selected {
-  background: var(--think-bg-selected);
+  background: var(--think-surface-selection);
   font-weight: var(--think-font-weight-medium);
 }
 

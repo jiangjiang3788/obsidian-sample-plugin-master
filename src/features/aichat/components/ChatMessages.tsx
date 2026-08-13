@@ -1,7 +1,5 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
 import type { RefObject } from 'preact';
-import { Box, CircularProgress, Stack, Typography } from '@shared/ui/public';
 import { ChatIcon } from '@shared/ui/public';
 import type { ChatMessage } from '@core/ai/public';
 import { MessageBubble } from './MessageBubble';
@@ -9,49 +7,32 @@ import { MessageBubble } from './MessageBubble';
 export interface ChatMessagesProps {
     messages: ChatMessage[];
     isLoading: boolean;
-    emptyHint: {
-        title: string;
-        retrievalHint?: string;
-    };
+    emptyHint: { title: string; retrievalHint?: string };
     enableRetrieval: boolean;
     messagesEndRef: RefObject<HTMLDivElement>;
 }
 
-export function ChatMessages({
-    messages,
-    isLoading,
-    emptyHint,
-    enableRetrieval,
-    messagesEndRef,
-}: ChatMessagesProps) {
+export function ChatMessages({ messages, isLoading, emptyHint, enableRetrieval, messagesEndRef }: ChatMessagesProps) {
     return (
-        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        <div className="think-ai-chat-messages">
             {messages.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <ChatIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-                    <Typography color="text.secondary">{emptyHint.title}</Typography>
-                    {enableRetrieval && emptyHint.retrievalHint && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                            {emptyHint.retrievalHint}
-                        </Typography>
-                    )}
-                </Box>
+                <div className="think-ai-chat-empty">
+                    <ChatIcon fontSize="large" />
+                    <strong>{emptyHint.title}</strong>
+                    {enableRetrieval && emptyHint.retrievalHint ? <span>{emptyHint.retrievalHint}</span> : null}
+                </div>
             ) : (
-                <Stack spacing={2}>
-                    {messages.map(msg => (
-                        <MessageBubble key={msg.id} message={msg} />
-                    ))}
-                    {isLoading && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CircularProgress size={16} />
-                            <Typography variant="body2" color="text.secondary">
-                                AI 正在思考...
-                            </Typography>
-                        </Box>
-                    )}
-                </Stack>
+                <div className="think-ai-chat-messages__stack">
+                    {messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)}
+                    {isLoading ? (
+                        <div className="think-ai-chat-thinking" role="status">
+                            <span className="think-overlay-spinner" aria-hidden="true" />
+                            <span>AI 正在思考…</span>
+                        </div>
+                    ) : null}
+                </div>
             )}
             <div ref={messagesEndRef} />
-        </Box>
+        </div>
     );
 }

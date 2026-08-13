@@ -3278,7 +3278,7 @@ var DATE = "date";
 var FORMAT_DEFAULT = "YYYY-MM-DDTHH:mm:ssZ";
 var INVALID_DATE_STRING = "Invalid Date";
 var REGEX_PARSE = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/;
-var REGEX_FORMAT = /\[([^\]]+)]|YYYY|YY|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
+var REGEX_FORMAT = /\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
 const en$1 = {
   name: "en",
   weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),
@@ -21068,7 +21068,7 @@ const createStoreImpl = (createState) => {
   return api;
 };
 const createStore = ((createState) => createState ? createStoreImpl(createState) : createStoreImpl);
-var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, a$1, s$1, h$1, p$1, v$1, y$1, d$1 = {}, w$2 = [], _$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, g$2 = Array.isArray;
+var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, s$1, a$1, h$1, p$1, v$1, y$1, d$1 = {}, w$2 = [], _$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, g$2 = Array.isArray;
 function m$1(n2, l2) {
   for (var u3 in l2) n2[u3] = l2[u3];
   return n2;
@@ -21121,24 +21121,24 @@ function H$1() {
     i$1.length = H$1.__r = 0;
   }
 }
-function L$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, a2) {
-  var s2, h2, p2, v2, y2, _2, g2 = t3 && t3.__k || w$2, m2 = l2.length;
-  for (f2 = T$2(u3, l2, g2, f2, m2), s2 = 0; s2 < m2; s2++) null != (p2 = u3.__k[s2]) && (h2 = -1 != p2.__i && g2[p2.__i] || d$1, p2.__i = s2, _2 = q$2(n2, p2, h2, i2, r2, o2, e2, f2, c2, a2), v2 = p2.__e, p2.ref && h2.ref != p2.ref && (h2.ref && J$1(h2.ref, null, p2), a2.push(p2.ref, p2.__c || v2, p2)), null == y2 && null != v2 && (y2 = v2), 4 & p2.__u ? (f2 = j$2(p2, f2, n2), h2.__e && (h2.__e = null)) : "function" == typeof p2.type && void 0 !== _2 ? f2 = _2 : v2 && (f2 = v2.nextSibling), p2.__u &= -7);
+function L$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, _2, g2, m2 = t3 && t3.__k || w$2, b2 = l2.length;
+  for (f2 = T$2(u3, l2, m2, f2, b2), a2 = 0; a2 < b2; a2++) null != (p2 = u3.__k[a2]) && (h2 = -1 != p2.__i && m2[p2.__i] || d$1, p2.__i = a2, _2 = q$2(n2, p2, h2, i2, r2, o2, e2, f2, c2, s2), v2 = p2.__e, p2.ref && h2.ref != p2.ref && (h2.ref && J$1(h2.ref, null, p2), s2.push(p2.ref, p2.__c || v2, p2)), null == y2 && null != v2 && (y2 = v2), (g2 = !!(4 & p2.__u)) || h2.__k === p2.__k ? (f2 = j$2(p2, f2, n2, g2), g2 && h2.__e && (h2.__e = null)) : "function" == typeof p2.type && void 0 !== _2 ? f2 = _2 : v2 && (f2 = v2.nextSibling), p2.__u &= -7);
   return u3.__e = y2, f2;
 }
 function T$2(n2, l2, u3, t3, i2) {
-  var r2, o2, e2, f2, c2, a2 = u3.length, s2 = a2, h2 = 0;
-  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? ("string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? o2 = n2.__k[r2] = x$2(null, o2, null, null, null) : g$2(o2) ? o2 = n2.__k[r2] = x$2(S, { children: o2 }, null, null, null) : void 0 === o2.constructor && o2.__b > 0 ? o2 = n2.__k[r2] = x$2(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : n2.__k[r2] = o2, f2 = r2 + h2, o2.__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = O$1(o2, u3, f2, s2)) && (s2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > a2 ? h2-- : i2 < a2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
-  if (s2) for (r2 = 0; r2 < a2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = $$1(e2)), K$1(e2, e2));
+  var r2, o2, e2, f2, c2, s2 = u3.length, a2 = s2, h2 = 0;
+  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? ("string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? o2 = n2.__k[r2] = x$2(null, o2, null, null, null) : g$2(o2) ? o2 = n2.__k[r2] = x$2(S, { children: o2 }, null, null, null) : void 0 === o2.constructor && o2.__b > 0 ? o2 = n2.__k[r2] = x$2(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : n2.__k[r2] = o2, f2 = r2 + h2, o2.__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = O$1(o2, u3, f2, a2)) && (a2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > s2 ? h2-- : i2 < s2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
+  if (a2) for (r2 = 0; r2 < s2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = $$1(e2)), K$1(e2, e2));
   return t3;
 }
-function j$2(n2, l2, u3) {
-  var t3, i2;
+function j$2(n2, l2, u3, t3) {
+  var i2, r2;
   if ("function" == typeof n2.type) {
-    for (t3 = n2.__k, i2 = 0; t3 && i2 < t3.length; i2++) t3[i2] && (t3[i2].__ = n2, l2 = j$2(t3[i2], l2, u3));
+    for (i2 = n2.__k, r2 = 0; i2 && r2 < i2.length; r2++) i2[r2] && (i2[r2].__ = n2, l2 = j$2(i2[r2], l2, u3, t3));
     return l2;
   }
-  n2.__e != l2 && (l2 && n2.type && !l2.parentNode && (l2 = $$1(n2)), l2 = u3.insertBefore(n2.__e, l2 || null));
+  n2.__e != l2 && (t3 && (l2 && n2.type && !l2.parentNode && (l2 = $$1(n2)), u3.insertBefore(n2.__e, l2 || null)), l2 = n2.__e);
   do {
     l2 = l2 && l2.nextSibling;
   } while (null != l2 && 8 == l2.nodeType);
@@ -21150,9 +21150,9 @@ function F$2(n2, l2) {
   }) : l2.push(n2)), l2;
 }
 function O$1(n2, l2, u3, t3) {
-  var i2, r2, o2, e2 = n2.key, f2 = n2.type, c2 = l2[u3], a2 = null != c2 && 0 == (2 & c2.__u);
-  if (null === c2 && null == e2 || a2 && e2 == c2.key && f2 == c2.type) return u3;
-  if (t3 > (a2 ? 1 : 0)) {
+  var i2, r2, o2, e2 = n2.key, f2 = n2.type, c2 = l2[u3], s2 = null != c2 && 0 == (2 & c2.__u);
+  if (null === c2 && null == e2 || s2 && e2 == c2.key && f2 == c2.type) return u3;
+  if (t3 > (s2 ? 1 : 0)) {
     for (i2 = u3 - 1, r2 = u3 + 1; i2 >= 0 || r2 < l2.length; ) if (null != (c2 = l2[o2 = i2 >= 0 ? i2-- : r2++]) && 0 == (2 & c2.__u) && e2 == c2.key && f2 == c2.type) return o2;
   }
   return -1;
@@ -21167,7 +21167,7 @@ function N$1(n2, l2, u3, t3, i2) {
     if ("string" == typeof t3 && (n2.style.cssText = t3 = ""), t3) for (l2 in t3) u3 && l2 in u3 || z$2(n2.style, l2, "");
     if (u3) for (l2 in u3) t3 && u3[l2] == t3[l2] || z$2(n2.style, l2, u3[l2]);
   }
-  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(s$1, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3[a$1] = t3[a$1] : (u3[a$1] = h$1, n2.addEventListener(l2, r2 ? v$1 : p$1, r2)) : n2.removeEventListener(l2, r2 ? v$1 : p$1, r2);
+  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(a$1, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3[s$1] = t3[s$1] : (u3[s$1] = h$1, n2.addEventListener(l2, r2 ? v$1 : p$1, r2)) : n2.removeEventListener(l2, r2 ? v$1 : p$1, r2);
   else {
     if ("http://www.w3.org/2000/svg" == i2) l2 = l2.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
     else if ("width" != l2 && "height" != l2 && "href" != l2 && "list" != l2 && "form" != l2 && "tabIndex" != l2 && "download" != l2 && "rowSpan" != l2 && "colSpan" != l2 && "role" != l2 && "popover" != l2 && l2 in n2) try {
@@ -21183,46 +21183,46 @@ function V$1(n2) {
     if (this.l) {
       var t3 = this.l[u3.type + n2];
       if (null == u3[c$1]) u3[c$1] = h$1++;
-      else if (u3[c$1] < t3[a$1]) return;
+      else if (u3[c$1] < t3[s$1]) return;
       return t3(l$1.event ? l$1.event(u3) : u3);
     }
   };
 }
-function q$2(n2, u3, t3, i2, r2, o2, e2, f2, c2, a2) {
-  var s2, h2, p2, v2, y2, d2, _2, k2, x2, M2, I2, P2, A2, H2, T2, j2, F2 = u3.type;
+function q$2(n2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, d2, _2, k2, x2, M2, $2, I2, P2, A2, H2, T2 = u3.type;
   if (void 0 !== u3.constructor) return null;
-  128 & t3.__u && (c2 = !!(32 & t3.__u), o2 = [f2 = u3.__e = t3.__e]), (s2 = l$1.__b) && s2(u3);
-  n: if ("function" == typeof F2) {
-    h2 = e2.length;
-    try {
-      if (x2 = u3.props, M2 = F2.prototype && F2.prototype.render, I2 = (s2 = F2.contextType) && i2[s2.__c], P2 = s2 ? I2 ? I2.props.value : s2.__ : i2, t3.__c ? k2 = (p2 = u3.__c = t3.__c).__ = p2.__E : (M2 ? u3.__c = p2 = new F2(x2, P2) : (u3.__c = p2 = new C$2(x2, P2), p2.constructor = F2, p2.render = Q$1), I2 && I2.sub(p2), p2.state || (p2.state = {}), p2.__n = i2, v2 = p2.__d = true, p2.__h = [], p2._sb = []), M2 && null == p2.__s && (p2.__s = p2.state), M2 && null != F2.getDerivedStateFromProps && (p2.__s == p2.state && (p2.__s = m$1({}, p2.__s)), m$1(p2.__s, F2.getDerivedStateFromProps(x2, p2.__s))), y2 = p2.props, d2 = p2.state, p2.__v = u3, v2) M2 && null == F2.getDerivedStateFromProps && null != p2.componentWillMount && p2.componentWillMount(), M2 && null != p2.componentDidMount && p2.__h.push(p2.componentDidMount);
-      else {
-        if (M2 && null == F2.getDerivedStateFromProps && x2 !== y2 && null != p2.componentWillReceiveProps && p2.componentWillReceiveProps(x2, P2), u3.__v == t3.__v || !p2.__e && null != p2.shouldComponentUpdate && false === p2.shouldComponentUpdate(x2, p2.__s, P2)) {
-          u3.__v != t3.__v && (p2.props = x2, p2.state = p2.__s, p2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
-            n3 && (n3.__ = u3);
-          }), w$2.push.apply(p2.__h, p2._sb), p2._sb = [], p2.__h.length && e2.push(p2), f2 = $$1(t3);
-          break n;
-        }
-        null != p2.componentWillUpdate && p2.componentWillUpdate(x2, p2.__s, P2), M2 && null != p2.componentDidUpdate && p2.__h.push(function() {
-          p2.componentDidUpdate(y2, d2, _2);
-        });
+  128 & t3.__u && (c2 = !!(32 & t3.__u), o2 = [f2 = u3.__e = t3.__e]), (a2 = l$1.__b) && a2(u3);
+  n: if ("function" == typeof T2) try {
+    if (k2 = u3.props, x2 = T2.prototype && T2.prototype.render, M2 = (a2 = T2.contextType) && i2[a2.__c], $2 = a2 ? M2 ? M2.props.value : a2.__ : i2, t3.__c ? _2 = (h2 = u3.__c = t3.__c).__ = h2.__E : (x2 ? u3.__c = h2 = new T2(k2, $2) : (u3.__c = h2 = new C$2(k2, $2), h2.constructor = T2, h2.render = Q$1), M2 && M2.sub(h2), h2.state || (h2.state = {}), h2.__n = i2, p2 = h2.__d = true, h2.__h = [], h2._sb = []), x2 && null == h2.__s && (h2.__s = h2.state), x2 && null != T2.getDerivedStateFromProps && (h2.__s == h2.state && (h2.__s = m$1({}, h2.__s)), m$1(h2.__s, T2.getDerivedStateFromProps(k2, h2.__s))), v2 = h2.props, y2 = h2.state, h2.__v = u3, p2) x2 && null == T2.getDerivedStateFromProps && null != h2.componentWillMount && h2.componentWillMount(), x2 && null != h2.componentDidMount && h2.__h.push(h2.componentDidMount);
+    else {
+      if (x2 && null == T2.getDerivedStateFromProps && k2 !== v2 && null != h2.componentWillReceiveProps && h2.componentWillReceiveProps(k2, $2), u3.__v == t3.__v || !h2.__e && null != h2.shouldComponentUpdate && false === h2.shouldComponentUpdate(k2, h2.__s, $2)) {
+        u3.__v != t3.__v && (h2.props = k2, h2.state = h2.__s, h2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
+          n3 && (n3.__ = u3);
+        }), w$2.push.apply(h2.__h, h2._sb), h2._sb = [], h2.__h.length && e2.push(h2);
+        break n;
       }
-      if (p2.context = P2, p2.props = x2, p2.__P = n2, p2.__e = false, A2 = l$1.__r, H2 = 0, M2) p2.state = p2.__s, p2.__d = false, A2 && A2(u3), s2 = p2.render(p2.props, p2.state, p2.context), w$2.push.apply(p2.__h, p2._sb), p2._sb = [];
-      else do {
-        p2.__d = false, A2 && A2(u3), s2 = p2.render(p2.props, p2.state, p2.context), p2.state = p2.__s;
-      } while (p2.__d && ++H2 < 25);
-      p2.state = p2.__s, null != p2.getChildContext && (i2 = m$1(m$1({}, i2), p2.getChildContext())), M2 && !v2 && null != p2.getSnapshotBeforeUpdate && (_2 = p2.getSnapshotBeforeUpdate(y2, d2)), T2 = null != s2 && s2.type === S && null == s2.key ? E$1(s2.props.children) : s2, f2 = L$1(n2, g$2(T2) ? T2 : [T2], u3, t3, i2, r2, o2, e2, f2, c2, a2), p2.base = u3.__e, u3.__u &= -161, p2.__h.length && e2.push(p2), k2 && (p2.__E = p2.__ = null);
-    } catch (n3) {
-      if (e2.length = h2, u3.__v = null, c2 || null != o2) {
-        if (n3.then) {
-          for (u3.__u |= c2 ? 160 : 128; f2 && 8 == f2.nodeType && f2.nextSibling; ) f2 = f2.nextSibling;
-          null != o2 && (o2[o2.indexOf(f2)] = null), u3.__e = f2;
-        } else if (null != o2) for (j2 = o2.length; j2--; ) b$1(o2[j2]);
-      } else u3.__e = t3.__e;
-      null == u3.__k && (u3.__k = t3.__k || []), n3.then || B$2(u3), l$1.__e(n3, u3, t3);
+      null != h2.componentWillUpdate && h2.componentWillUpdate(k2, h2.__s, $2), x2 && null != h2.componentDidUpdate && h2.__h.push(function() {
+        h2.componentDidUpdate(v2, y2, d2);
+      });
     }
-  } else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = G$1(t3.__e, u3, t3, i2, r2, o2, e2, c2, a2);
-  return (s2 = l$1.diffed) && s2(u3), 128 & u3.__u ? void 0 : f2;
+    if (h2.context = $2, h2.props = k2, h2.__P = n2, h2.__e = false, I2 = l$1.__r, P2 = 0, x2) h2.state = h2.__s, h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), w$2.push.apply(h2.__h, h2._sb), h2._sb = [];
+    else do {
+      h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), h2.state = h2.__s;
+    } while (h2.__d && ++P2 < 25);
+    h2.state = h2.__s, null != h2.getChildContext && (i2 = m$1(m$1({}, i2), h2.getChildContext())), x2 && !p2 && null != h2.getSnapshotBeforeUpdate && (d2 = h2.getSnapshotBeforeUpdate(v2, y2)), A2 = null != a2 && a2.type === S && null == a2.key ? E$1(a2.props.children) : a2, f2 = L$1(n2, g$2(A2) ? A2 : [A2], u3, t3, i2, r2, o2, e2, f2, c2, s2), h2.base = u3.__e, u3.__u &= -161, h2.__h.length && e2.push(h2), _2 && (h2.__E = h2.__ = null);
+  } catch (n3) {
+    if (u3.__v = null, c2 || null != o2) if (n3.then) {
+      for (u3.__u |= c2 ? 160 : 128; f2 && 8 == f2.nodeType && f2.nextSibling; ) f2 = f2.nextSibling;
+      o2[o2.indexOf(f2)] = null, u3.__e = f2;
+    } else {
+      for (H2 = o2.length; H2--; ) b$1(o2[H2]);
+      B$2(u3);
+    }
+    else u3.__e = t3.__e, u3.__k = t3.__k, n3.then || B$2(u3);
+    l$1.__e(n3, u3, t3);
+  }
+  else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = G$1(t3.__e, u3, t3, i2, r2, o2, e2, c2, s2);
+  return (a2 = l$1.diffed) && a2(u3), 128 & u3.__u ? void 0 : f2;
 }
 function B$2(n2) {
   n2 && (n2.__c && (n2.__c.__e = true), n2.__k && n2.__k.some(B$2));
@@ -21240,13 +21240,13 @@ function D$2(n2, u3, t3) {
   });
 }
 function E$1(n2) {
-  return "object" != typeof n2 || null == n2 || n2.__b > 0 ? n2 : g$2(n2) ? n2.map(E$1) : void 0 !== n2.constructor ? null : m$1({}, n2);
+  return "object" != typeof n2 || null == n2 || n2.__b > 0 ? n2 : g$2(n2) ? n2.map(E$1) : m$1({}, n2);
 }
-function G$1(u3, t3, i2, r2, o2, e2, f2, c2, a2) {
-  var s2, h2, p2, v2, y2, w2, _2, m2 = i2.props || d$1, k2 = t3.props, x2 = t3.type;
+function G$1(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, w2, _2, m2 = i2.props || d$1, k2 = t3.props, x2 = t3.type;
   if ("svg" == x2 ? o2 = "http://www.w3.org/2000/svg" : "math" == x2 ? o2 = "http://www.w3.org/1998/Math/MathML" : o2 || (o2 = "http://www.w3.org/1999/xhtml"), null != e2) {
-    for (s2 = 0; s2 < e2.length; s2++) if ((y2 = e2[s2]) && "setAttribute" in y2 == !!x2 && (x2 ? y2.localName == x2 : 3 == y2.nodeType)) {
-      u3 = y2, e2[s2] = null;
+    for (a2 = 0; a2 < e2.length; a2++) if ((y2 = e2[a2]) && "setAttribute" in y2 == !!x2 && (x2 ? y2.localName == x2 : 3 == y2.nodeType)) {
+      u3 = y2, e2[a2] = null;
       break;
     }
   }
@@ -21256,12 +21256,12 @@ function G$1(u3, t3, i2, r2, o2, e2, f2, c2, a2) {
   }
   if (null == x2) m2 === k2 || c2 && u3.data == k2 || (u3.data = k2);
   else {
-    if (e2 = "textarea" == x2 && null != k2.defaultValue ? null : e2 && n.call(u3.childNodes), !c2 && null != e2) for (m2 = {}, s2 = 0; s2 < u3.attributes.length; s2++) m2[(y2 = u3.attributes[s2]).name] = y2.value;
-    for (s2 in m2) y2 = m2[s2], "dangerouslySetInnerHTML" == s2 ? p2 = y2 : "children" == s2 || s2 in k2 || "value" == s2 && "defaultValue" in k2 || "checked" == s2 && "defaultChecked" in k2 || N$1(u3, s2, null, y2, o2);
-    for (s2 in k2) y2 = k2[s2], "children" == s2 ? v2 = y2 : "dangerouslySetInnerHTML" == s2 ? h2 = y2 : "value" == s2 ? w2 = y2 : "checked" == s2 ? _2 = y2 : c2 && "function" != typeof y2 || m2[s2] === y2 || N$1(u3, s2, y2, m2[s2], o2);
+    if (e2 = e2 && n.call(u3.childNodes), !c2 && null != e2) for (m2 = {}, a2 = 0; a2 < u3.attributes.length; a2++) m2[(y2 = u3.attributes[a2]).name] = y2.value;
+    for (a2 in m2) y2 = m2[a2], "dangerouslySetInnerHTML" == a2 ? p2 = y2 : "children" == a2 || a2 in k2 || "value" == a2 && "defaultValue" in k2 || "checked" == a2 && "defaultChecked" in k2 || N$1(u3, a2, null, y2, o2);
+    for (a2 in k2) y2 = k2[a2], "children" == a2 ? v2 = y2 : "dangerouslySetInnerHTML" == a2 ? h2 = y2 : "value" == a2 ? w2 = y2 : "checked" == a2 ? _2 = y2 : c2 && "function" != typeof y2 || m2[a2] === y2 || N$1(u3, a2, y2, m2[a2], o2);
     if (h2) c2 || p2 && (h2.__html == p2.__html || h2.__html == u3.innerHTML) || (u3.innerHTML = h2.__html), t3.__k = [];
-    else if (p2 && (u3.innerHTML = ""), L$1("template" == t3.type ? u3.content : u3, g$2(v2) ? v2 : [v2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && $$1(i2, 0), c2, a2), null != e2) for (s2 = e2.length; s2--; ) b$1(e2[s2]);
-    c2 && "textarea" != x2 || (s2 = "value", "progress" == x2 && null == w2 ? u3.removeAttribute("value") : null != w2 && (w2 !== u3[s2] || "progress" == x2 && !w2 || "option" == x2 && w2 != m2[s2]) && N$1(u3, s2, w2, m2[s2], o2), s2 = "checked", null != _2 && _2 != u3[s2] && N$1(u3, s2, _2, m2[s2], o2));
+    else if (p2 && (u3.innerHTML = ""), L$1("template" == t3.type ? u3.content : u3, g$2(v2) ? v2 : [v2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && $$1(i2, 0), c2, s2), null != e2) for (a2 = e2.length; a2--; ) b$1(e2[a2]);
+    c2 || (a2 = "value", "progress" == x2 && null == w2 ? u3.removeAttribute("value") : null != w2 && (w2 !== u3[a2] || "progress" == x2 && !w2 || "option" == x2 && w2 != m2[a2]) && N$1(u3, a2, w2, m2[a2], o2), a2 = "checked", null != _2 && _2 != u3[a2] && N$1(u3, a2, _2, m2[a2], o2));
   }
   return u3;
 }
@@ -21283,7 +21283,7 @@ function K$1(n2, u3, t3) {
     } catch (n3) {
       l$1.__e(n3, u3);
     }
-    i2.base = i2.__P = i2.__n = null;
+    i2.base = i2.__P = null;
   }
   if (i2 = n2.__k) for (r2 = 0; r2 < i2.length; r2++) i2[r2] && K$1(i2[r2], u3, t3 || "function" != typeof n2.type);
   t3 || b$1(n2.__e), n2.__c = n2.__ = n2.__e = void 0;
@@ -21293,7 +21293,7 @@ function Q$1(n2, l2, u3) {
 }
 function R$1(u3, t3, i2) {
   var r2, o2, e2, f2;
-  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], q$2(t3, u3 = (!r2 && i2 || t3).__k = k$2(S, null, [u3]), o2 || d$1, d$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), D$2(e2, u3, f2), u3.props.children = null;
+  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], q$2(t3, u3 = (!r2 && i2 || t3).__k = k$2(S, null, [u3]), o2 || d$1, d$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), D$2(e2, u3, f2);
 }
 function U$1(n2, l2) {
   R$1(n2, l2, U$1);
@@ -21340,36 +21340,37 @@ n = w$2.slice, l$1 = { __e: function(n2, l2, u3, t3) {
   this.__v && (this.__e = true, n2 && this.__h.push(n2), A$2(this));
 }, C$2.prototype.render = S, i$1 = [], o$1 = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, e$1 = function(n2, l2) {
   return n2.__v.__b - l2.__v.__b;
-}, H$1.__r = 0, f$2 = Math.random().toString(8), c$1 = "__d" + f$2, a$1 = "__a" + f$2, s$1 = /(PointerCapture)$|Capture$/i, h$1 = 0, p$1 = V$1(false), v$1 = V$1(true), y$1 = 0;
-var t2, r$1, u$1, i, o = 0, f$1 = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, p = c.__;
-function s(n2, t3) {
+}, H$1.__r = 0, f$2 = Math.random().toString(8), c$1 = "__d" + f$2, s$1 = "__a" + f$2, a$1 = /(PointerCapture)$|Capture$/i, h$1 = 0, p$1 = V$1(false), v$1 = V$1(true), y$1 = 0;
+var t2, r$1, u$1, i, o = 0, f$1 = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, s = c.__;
+function p(n2, t3) {
   c.__h && c.__h(r$1, n2, o || t3), o = 0;
   var u3 = r$1.__H || (r$1.__H = { __: [], __h: [] });
   return n2 >= u3.__.length && u3.__.push({}), u3.__[n2];
 }
 function d(n2) {
-  return o = 1, y(D$1, n2);
+  return o = 1, h(D$1, n2);
 }
-function y(n2, u3, i2) {
-  var o2 = s(t2++, 2);
+function h(n2, u3, i2) {
+  var o2 = p(t2++, 2);
   if (o2.t = n2, !o2.__c && (o2.__ = [i2 ? i2(u3) : D$1(void 0, u3), function(n3) {
     var t3 = o2.__N ? o2.__N[0] : o2.__[0], r2 = o2.t(t3, n3);
     t3 !== r2 && (o2.__N = [r2, o2.__[1]], o2.__c.setState({}));
   }], o2.__c = r$1, !r$1.__f)) {
     var f2 = function(n3, t3, r2) {
       if (!o2.__c.__H) return true;
-      var u4 = false, i3 = o2.__c.props !== n3;
-      if (o2.__c.__H.__.some(function(n4) {
+      var u4 = o2.__c.__H.__.filter(function(n4) {
+        return n4.__c;
+      });
+      if (u4.every(function(n4) {
+        return !n4.__N;
+      })) return !c2 || c2.call(this, n3, t3, r2);
+      var i3 = o2.__c.props !== n3;
+      return u4.some(function(n4) {
         if (n4.__N) {
-          u4 = true;
           var t4 = n4.__[0];
           n4.__ = n4.__N, n4.__N = void 0, t4 !== n4.__[0] && (i3 = true);
         }
-      }), c2) {
-        var f3 = c2.call(this, n3, t3, r2);
-        return u4 ? f3 || i3 : f3;
-      }
-      return !u4 || i3;
+      }), c2 && c2.call(this, n3, t3, r2) || i3;
     };
     r$1.__f = true;
     var c2 = r$1.shouldComponentUpdate, e2 = r$1.componentWillUpdate;
@@ -21383,12 +21384,12 @@ function y(n2, u3, i2) {
   }
   return o2.__N || o2.__;
 }
-function h(n2, u3) {
-  var i2 = s(t2++, 3);
+function y(n2, u3) {
+  var i2 = p(t2++, 3);
   !c.__s && C$1(i2.__H, u3) && (i2.__ = n2, i2.u = u3, r$1.__H.__h.push(i2));
 }
 function _(n2, u3) {
-  var i2 = s(t2++, 4);
+  var i2 = p(t2++, 4);
   !c.__s && C$1(i2.__H, u3) && (i2.__ = n2, i2.u = u3, r$1.__h.push(i2));
 }
 function A$1(n2) {
@@ -21410,7 +21411,7 @@ function F$1(n2, t3, r2) {
   }, null == r2 ? r2 : r2.concat(n2));
 }
 function T$1(n2, r2) {
-  var u3 = s(t2++, 7);
+  var u3 = p(t2++, 7);
   return C$1(u3.__H, r2) && (u3.__ = n2(), u3.__H = r2, u3.__h = n2), u3.__;
 }
 function q$1(n2, t3) {
@@ -21419,14 +21420,14 @@ function q$1(n2, t3) {
   }, t3);
 }
 function x$1(n2) {
-  var u3 = r$1.context[n2.__c], i2 = s(t2++, 9);
+  var u3 = r$1.context[n2.__c], i2 = p(t2++, 9);
   return i2.c = n2, u3 ? (null == i2.__ && (i2.__ = true, u3.sub(r$1)), u3.props.value) : n2.__;
 }
 function P$1(n2, t3) {
   c.useDebugValue && c.useDebugValue(t3 ? t3(n2) : n2);
 }
 function b(n2) {
-  var u3 = s(t2++, 10), i2 = d();
+  var u3 = p(t2++, 10), i2 = d();
   return u3.__ = n2, r$1.componentDidCatch || (r$1.componentDidCatch = function(n3, t3) {
     u3.__ && u3.__(n3, t3), i2[1](n3);
   }), [i2[0], function() {
@@ -21434,7 +21435,7 @@ function b(n2) {
   }];
 }
 function g$1() {
-  var n2 = s(t2++, 11);
+  var n2 = p(t2++, 11);
   if (!n2.__) {
     for (var u3 = r$1.__v; null !== u3 && !u3.__m && null !== u3.__; ) u3 = u3.__;
     var i2 = u3.__m || (u3.__m = [0, 0]);
@@ -21455,7 +21456,7 @@ function j$1() {
 c.__b = function(n2) {
   r$1 = null, e && e(n2);
 }, c.__ = function(n2, t3) {
-  n2 && t3.__k && t3.__k.__m && (n2.__m = t3.__k.__m), p && p(n2, t3);
+  n2 && t3.__k && t3.__k.__m && (n2.__m = t3.__k.__m), s && s(n2, t3);
 }, c.__r = function(n2) {
   a && a(n2), t2 = 0;
   var i2 = (r$1 = n2.__c).__H;
@@ -21466,7 +21467,7 @@ c.__b = function(n2) {
   v && v(n2);
   var t3 = n2.__c;
   t3 && t3.__H && (t3.__H.__h.length && (1 !== f$1.push(t3) && i === c.requestAnimationFrame || ((i = c.requestAnimationFrame) || w$1)(j$1)), t3.__H.__.some(function(n3) {
-    n3.u && (n3.__H = n3.u, n3.u = void 0);
+    n3.u && (n3.__H = n3.u), n3.u = void 0;
   })), u$1 = r$1 = null;
 }, c.__c = function(n2, t3) {
   t3.some(function(n3) {
@@ -21527,7 +21528,7 @@ function C(n2, t3) {
   var e2 = t3(), r2 = d({ t: { __: e2, u: t3 } }), u3 = r2[0].t, o2 = r2[1];
   return _(function() {
     u3.__ = e2, u3.u = t3, R(u3) && o2({ t: u3 });
-  }, [n2, e2, t3]), h(function() {
+  }, [n2, e2, t3]), y(function() {
     return R(u3) && o2({ t: u3 }), n2(function() {
       R(u3) && o2({ t: u3 });
     });
@@ -21590,7 +21591,7 @@ var F = function(n2, t3) {
 }, toArray: F$2 }, O = l$1.__e;
 l$1.__e = function(n2, t3, e2, r2) {
   if (n2.then) {
-    for (var u3, o2 = t3; o2 = o2.__; ) if ((u3 = o2.__c) && u3.__c) return null == t3.__e && (t3.__e = e2.__e, t3.__k = e2.__k || []), u3.__c(n2, t3);
+    for (var u3, o2 = t3; o2 = o2.__; ) if ((u3 = o2.__c) && u3.__c) return null == t3.__e && (t3.__e = e2.__e, t3.__k = e2.__k), u3.__c(n2, t3);
   }
   O(n2, t3, e2, r2);
 };
@@ -21637,12 +21638,12 @@ l$1.unmount = function(n2) {
   var e2 = t3.__c, r2 = this;
   null == r2.o && (r2.o = []), r2.o.push(e2);
   var u3 = j(r2.__v), o2 = false, i2 = function() {
-    o2 || r2.__z || (o2 = true, e2.__R = null, u3 ? u3(f2) : f2());
+    o2 || r2.__z || (o2 = true, e2.__R = null, u3 ? u3(c2) : c2());
   };
   e2.__R = i2;
   var l2 = e2.__P;
   e2.__P = null;
-  var f2 = function() {
+  var c2 = function() {
     if (!--r2.__u) {
       if (r2.state.__a) {
         var n3 = r2.state.__a;
@@ -21752,8 +21753,8 @@ l$1.vnode = function(n2) {
     for (var i2 in t3) {
       var l2 = t3[i2];
       if (!("value" === i2 && "defaultValue" in t3 && null == l2 || Q && "children" === i2 && "noscript" === e2 || "class" === i2 || "className" === i2)) {
-        var f2 = i2.toLowerCase();
-        "defaultValue" === i2 && "value" in t3 && null == t3.value ? i2 = "value" : "download" === i2 && true === l2 ? l2 = "" : "translate" === f2 && "no" === l2 ? l2 = false : "o" === f2[0] && "n" === f2[1] ? "ondoubleclick" === f2 ? i2 = "ondblclick" : "onchange" !== f2 || "input" !== e2 && "textarea" !== e2 || X(t3.type) ? "onfocus" === f2 ? i2 = "onfocusin" : "onblur" === f2 ? i2 = "onfocusout" : J.test(i2) && (i2 = f2) : f2 = i2 = "oninput" : o2 && G.test(i2) ? i2 = i2.replace(K, "-$&").toLowerCase() : null === l2 && (l2 = void 0), "oninput" === f2 && u3[i2 = f2] && (i2 = "oninputCapture"), u3[i2] = l2;
+        var c2 = i2.toLowerCase();
+        "defaultValue" === i2 && "value" in t3 && null == t3.value ? i2 = "value" : "download" === i2 && true === l2 ? l2 = "" : "translate" === c2 && "no" === l2 ? l2 = false : "o" === c2[0] && "n" === c2[1] ? "ondoubleclick" === c2 ? i2 = "ondblclick" : "onchange" !== c2 || "input" !== e2 && "textarea" !== e2 || X(t3.type) ? "onfocus" === c2 ? i2 = "onfocusin" : "onblur" === c2 ? i2 = "onfocusout" : J.test(i2) && (i2 = c2) : c2 = i2 = "oninput" : o2 && G.test(i2) ? i2 = i2.replace(K, "-$&").toLowerCase() : null === l2 && (l2 = void 0), "oninput" === c2 && u3[i2 = c2] && (i2 = "oninputCapture"), u3[i2] = l2;
       }
     }
     "select" == e2 && (u3.multiple && Array.isArray(u3.value) && (u3.value = F$2(t3.children).forEach(function(n4) {
@@ -21767,15 +21768,15 @@ var ln = l$1.__r;
 l$1.__r = function(n2) {
   ln && ln(n2), rn = n2.__c;
 };
-var fn = l$1.diffed;
+var cn = l$1.diffed;
 l$1.diffed = function(n2) {
-  fn && fn(n2);
+  cn && cn(n2);
   var t3 = n2.props, e2 = n2.__e;
   null != e2 && "textarea" === n2.type && "value" in t3 && t3.value !== e2.value && (e2.value = null == t3.value ? "" : t3.value), rn = null;
 };
-var an = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
+var fn = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
   return rn.__n[n2.__c].props.value;
-}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: h, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: y, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, cn = "18.3.1";
+}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: y, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: h, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, an = "18.3.1";
 function sn(n2) {
   return k$2.bind(null, n2);
 }
@@ -21800,17 +21801,13 @@ function yn(n2) {
 var _n = function(n2, t3) {
   return n2(t3);
 }, bn = function(n2, t3) {
-  var r2, u3 = l$1.debounceRendering;
+  var r2 = l$1.debounceRendering;
   l$1.debounceRendering = function(n3) {
-    r2 = n3;
+    return n3();
   };
-  try {
-    var o2 = n2(t3);
-    return r2 && r2(), o2;
-  } finally {
-    l$1.debounceRendering = u3;
-  }
-}, Sn = hn, gn = { useState: d, useId: g$1, useReducer: y, useEffect: h, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: hn, isElement: Sn, isFragment: vn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: an };
+  var u3 = n2(t3);
+  return l$1.debounceRendering = r2, u3;
+}, Sn = hn, gn = { useState: d, useId: g$1, useReducer: h, useEffect: y, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: hn, isElement: Sn, isFragment: vn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn };
 const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   Children: L,
@@ -21820,7 +21817,7 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   StrictMode: S,
   Suspense: P,
   SuspenseList: B,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: an,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn,
   cloneElement: mn,
   createContext: X$1,
   createElement: k$2,
@@ -21846,19 +21843,19 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   useContext: x$1,
   useDebugValue: P$1,
   useDeferredValue: w,
-  useEffect: h,
+  useEffect: y,
   useErrorBoundary: b,
   useId: g$1,
   useImperativeHandle: F$1,
   useInsertionEffect: I,
   useLayoutEffect: _,
   useMemo: T$1,
-  useReducer: y,
+  useReducer: h,
   useRef: A$1,
   useState: d,
   useSyncExternalStore: C,
   useTransition: k,
-  version: cn
+  version: an
 }, Symbol.toStringTag, { value: "Module" }));
 const identity = (arg2) => arg2;
 function useStore(api, selector = identity) {
@@ -24095,7 +24092,7 @@ function useTimelineZoom(options) {
   const [hourHeight, setHourHeight] = d(defaultHeight);
   const initialPinchDistanceRef = A$1(null);
   const initialHourHeightRef = A$1(null);
-  h(() => {
+  y(() => {
     setHourHeight(defaultHeight);
   }, [defaultHeight]);
   const handleWheel = q$1((e2) => {
@@ -31338,7 +31335,7 @@ function useThemeProps({
     props
   });
 }
-const useEnhancedEffect = typeof window !== "undefined" ? _ : h;
+const useEnhancedEffect = typeof window !== "undefined" ? _ : y;
 function clamp(val, min2 = Number.MIN_SAFE_INTEGER, max2 = Number.MAX_SAFE_INTEGER) {
   return Math.max(min2, Math.min(val, max2));
 }
@@ -31626,7 +31623,7 @@ let globalId = 0;
 function useGlobalId(idOverride) {
   const [defaultId, setDefaultId] = d(idOverride);
   const id = idOverride || defaultId;
-  h(() => {
+  y(() => {
     if (defaultId == null) {
       globalId += 1;
       setDefaultId(`mui-${globalId}`);
@@ -31941,7 +31938,7 @@ function useCurrentColorScheme(options) {
     };
   });
   const [isClient, setIsClient] = d(noSsr || !isMultiSchemes);
-  h(() => {
+  y(() => {
     setIsClient(true);
   }, []);
   const colorScheme = getColorScheme(state);
@@ -32034,7 +32031,7 @@ function useCurrentColorScheme(options) {
   }, [state.mode]);
   const mediaListener = A$1(handleMediaQuery);
   mediaListener.current = handleMediaQuery;
-  h(() => {
+  y(() => {
     if (typeof window.matchMedia !== "function" || !isMultiSchemes) {
       return void 0;
     }
@@ -32046,7 +32043,7 @@ function useCurrentColorScheme(options) {
       media.removeListener(handler);
     };
   }, [isMultiSchemes]);
-  h(() => {
+  y(() => {
     if (isMultiSchemes) {
       const unsubscribeMode = modeStorage?.subscribe((value) => {
         if (!value || ["light", "dark", "system"].includes(value)) {
@@ -32247,7 +32244,7 @@ function createCssVarsProvider(options) {
         }
       }
     }, [colorScheme, colorSchemeSelector, colorSchemeNode, allColorSchemes]);
-    h(() => {
+    y(() => {
       let timer;
       if (disableTransitionOnChange && hasMounted.current && documentNode) {
         const css2 = documentNode.createElement("style");
@@ -32262,7 +32259,7 @@ function createCssVarsProvider(options) {
         clearTimeout(timer);
       };
     }, [colorScheme, disableTransitionOnChange, documentNode]);
-    h(() => {
+    y(() => {
       hasMounted.current = true;
       return () => {
         hasMounted.current = false;
@@ -34069,7 +34066,7 @@ function getSvgIconUtilityClass(slot) {
   return generateUtilityClass("MuiSvgIcon", slot);
 }
 generateUtilityClasses("MuiSvgIcon", ["root", "colorPrimary", "colorSecondary", "colorAction", "colorError", "colorDisabled", "fontSizeInherit", "fontSizeSmall", "fontSizeMedium", "fontSizeLarge"]);
-const useUtilityClasses$F = (ownerState) => {
+const useUtilityClasses$x = (ownerState) => {
   const {
     color: color2,
     fontSize,
@@ -34208,7 +34205,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
   if (!inheritViewBox) {
     more.viewBox = viewBox;
   }
-  const classes = useUtilityClasses$F(ownerState);
+  const classes = useUtilityClasses$x(ownerState);
   return /* @__PURE__ */ u2(SvgIconRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -34867,7 +34864,7 @@ function useLazyRef(init, initArg) {
 }
 const EMPTY = [];
 function useOnMount(fn3) {
-  h(fn3, EMPTY);
+  y(fn3, EMPTY);
 }
 class Timeout {
   static create() {
@@ -35089,7 +35086,7 @@ function getCollapseUtilityClass(slot) {
   return generateUtilityClass("MuiCollapse", slot);
 }
 generateUtilityClasses("MuiCollapse", ["root", "horizontal", "vertical", "entered", "hidden", "wrapper", "wrapperInner"]);
-const useUtilityClasses$E = (ownerState) => {
+const useUtilityClasses$w = (ownerState) => {
   const {
     orientation,
     classes
@@ -35217,7 +35214,7 @@ const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
     orientation,
     collapsedSize: collapsedSizeProp
   };
-  const classes = useUtilityClasses$E(ownerState);
+  const classes = useUtilityClasses$w(ownerState);
   const theme = useTheme();
   const timer = useTimeout();
   const wrapperRef = A$1(null);
@@ -35390,7 +35387,7 @@ function getPaperUtilityClass(slot) {
   return generateUtilityClass("MuiPaper", slot);
 }
 generateUtilityClasses("MuiPaper", ["root", "rounded", "outlined", "elevation", "elevation0", "elevation1", "elevation2", "elevation3", "elevation4", "elevation5", "elevation6", "elevation7", "elevation8", "elevation9", "elevation10", "elevation11", "elevation12", "elevation13", "elevation14", "elevation15", "elevation16", "elevation17", "elevation18", "elevation19", "elevation20", "elevation21", "elevation22", "elevation23", "elevation24"]);
-const useUtilityClasses$D = (ownerState) => {
+const useUtilityClasses$v = (ownerState) => {
   const {
     square,
     elevation,
@@ -35462,7 +35459,7 @@ const Paper$1 = /* @__PURE__ */ D(function Paper(inProps, ref) {
     square,
     variant
   };
-  const classes = useUtilityClasses$D(ownerState);
+  const classes = useUtilityClasses$v(ownerState);
   return /* @__PURE__ */ u2(PaperRoot, {
     as: component,
     ownerState,
@@ -35504,7 +35501,7 @@ class LazyRipple {
     const [shouldMount, setShouldMount] = d(false);
     ripple.shouldMount = shouldMount;
     ripple.setShouldMount = setShouldMount;
-    h(ripple.mountEffect, [shouldMount]);
+    y(ripple.mountEffect, [shouldMount]);
     return ripple;
   }
   constructor() {
@@ -35581,7 +35578,7 @@ function Ripple(props) {
   if (!inProp && !leaving) {
     setLeaving(true);
   }
-  h(() => {
+  y(() => {
     if (!inProp && onExited != null) {
       const timeoutId = setTimeout(onExited, timeout);
       return () => {
@@ -35717,7 +35714,7 @@ const TouchRipple = /* @__PURE__ */ D(function TouchRipple2(inProps, ref) {
   const [ripples, setRipples] = d([]);
   const nextKey = A$1(0);
   const rippleCallback = A$1(null);
-  h(() => {
+  y(() => {
     if (rippleCallback.current) {
       rippleCallback.current();
       rippleCallback.current = null;
@@ -35871,7 +35868,7 @@ function getButtonBaseUtilityClass(slot) {
   return generateUtilityClass("MuiButtonBase", slot);
 }
 const buttonBaseClasses = generateUtilityClasses("MuiButtonBase", ["root", "disabled", "focusVisible"]);
-const useUtilityClasses$C = (ownerState) => {
+const useUtilityClasses$u = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -35981,7 +35978,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     }
   }), []);
   const enableTouchRipple = ripple.shouldMount && !disableRipple && !disabled;
-  h(() => {
+  y(() => {
     if (focusVisible && focusRipple && !disableRipple) {
       ripple.pulsate();
     }
@@ -36094,7 +36091,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     tabIndex,
     focusVisible
   };
-  const classes = useUtilityClasses$C(ownerState);
+  const classes = useUtilityClasses$u(ownerState);
   return /* @__PURE__ */ u2(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -36188,7 +36185,7 @@ const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
 const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
         animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
       ` : null;
-const useUtilityClasses$B = (ownerState) => {
+const useUtilityClasses$t = (ownerState) => {
   const {
     classes,
     variant,
@@ -36295,7 +36292,7 @@ const CircularProgressTrack = styled("circle", {
   stroke: "currentColor",
   opacity: (theme.vars || theme).palette.action.activatedOpacity
 })));
-const CircularProgress$1 = /* @__PURE__ */ D(function CircularProgress(inProps, ref) {
+const CircularProgress = /* @__PURE__ */ D(function CircularProgress2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiCircularProgress"
@@ -36322,7 +36319,7 @@ const CircularProgress$1 = /* @__PURE__ */ D(function CircularProgress(inProps, 
     variant,
     enableTrackSlot
   };
-  const classes = useUtilityClasses$B(ownerState);
+  const classes = useUtilityClasses$t(ownerState);
   const circleStyle = {};
   const rootStyle = {};
   const rootProps = {};
@@ -36376,7 +36373,7 @@ function getIconButtonUtilityClass(slot) {
   return generateUtilityClass("MuiIconButton", slot);
 }
 const iconButtonClasses = generateUtilityClasses("MuiIconButton", ["root", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorError", "colorInfo", "colorSuccess", "colorWarning", "edgeStart", "edgeEnd", "sizeSmall", "sizeMedium", "sizeLarge", "loading", "loadingIndicator", "loadingWrapper"]);
-const useUtilityClasses$A = (ownerState) => {
+const useUtilityClasses$s = (ownerState) => {
   const {
     classes,
     disabled,
@@ -36546,7 +36543,7 @@ const IconButton$1 = /* @__PURE__ */ D(function IconButton(inProps, ref) {
     ...other
   } = props;
   const loadingId = useId(idProp);
-  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u2(CircularProgress$1, {
+  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u2(CircularProgress, {
     "aria-labelledby": loadingId,
     color: "inherit",
     size: 16
@@ -36561,7 +36558,7 @@ const IconButton$1 = /* @__PURE__ */ D(function IconButton(inProps, ref) {
     loadingIndicator,
     size
   };
-  const classes = useUtilityClasses$A(ownerState);
+  const classes = useUtilityClasses$s(ownerState);
   return /* @__PURE__ */ u2(IconButtonRoot, {
     id: loading ? loadingId : idProp,
     className: clsx(classes.root, className),
@@ -36588,7 +36585,7 @@ const IconButton$1 = /* @__PURE__ */ D(function IconButton(inProps, ref) {
 function getTypographyUtilityClass(slot) {
   return generateUtilityClass("MuiTypography", slot);
 }
-const typographyClasses = generateUtilityClasses("MuiTypography", ["root", "h1", "h2", "h3", "h4", "h5", "h6", "subtitle1", "subtitle2", "body1", "body2", "inherit", "button", "caption", "overline", "alignLeft", "alignRight", "alignCenter", "alignJustify", "noWrap", "gutterBottom", "paragraph"]);
+generateUtilityClasses("MuiTypography", ["root", "h1", "h2", "h3", "h4", "h5", "h6", "subtitle1", "subtitle2", "body1", "body2", "inherit", "button", "caption", "overline", "alignLeft", "alignRight", "alignCenter", "alignJustify", "noWrap", "gutterBottom", "paragraph"]);
 const v6Colors = {
   primary: true,
   secondary: true,
@@ -36601,7 +36598,7 @@ const v6Colors = {
   textDisabled: true
 };
 const extendSxProp = internal_createExtendSxProp();
-const useUtilityClasses$z = (ownerState) => {
+const useUtilityClasses$r = (ownerState) => {
   const {
     align,
     gutterBottom,
@@ -36741,7 +36738,7 @@ const Typography$1 = /* @__PURE__ */ D(function Typography(inProps, ref) {
     variantMapping
   };
   const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$z(ownerState);
+  const classes = useUtilityClasses$r(ownerState);
   return /* @__PURE__ */ u2(TypographyRoot, {
     as: Component,
     ref,
@@ -38145,7 +38142,7 @@ function useSlotProps(parameters) {
   return props;
 }
 function getReactElementRef(element) {
-  if (parseInt(cn, 10) >= 19) {
+  if (parseInt(an, 10) >= 19) {
     return element?.props?.ref || null;
   }
   return element?.ref || null;
@@ -38213,7 +38210,7 @@ function resolveAnchorEl$1(anchorEl) {
 function isHTMLElement$1(element) {
   return element.nodeType !== void 0;
 }
-const useUtilityClasses$y = (ownerState) => {
+const useUtilityClasses$q = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -38254,12 +38251,12 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
   const rtlPlacement = flipPlacement(initialPlacement, direction);
   const [placement, setPlacement] = d(rtlPlacement);
   const [resolvedAnchorElement, setResolvedAnchorElement] = d(resolveAnchorEl$1(anchorEl));
-  h(() => {
+  y(() => {
     if (popperRef.current) {
       popperRef.current.forceUpdate();
     }
   });
-  h(() => {
+  y(() => {
     if (anchorEl) {
       setResolvedAnchorElement(resolveAnchorEl$1(anchorEl));
     }
@@ -38330,7 +38327,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
   if (TransitionProps !== null) {
     childProps.TransitionProps = TransitionProps;
   }
-  const classes = useUtilityClasses$y(props);
+  const classes = useUtilityClasses$q(props);
   const Root = slots.root ?? "div";
   const rootProps = useSlotProps({
     elementType: Root,
@@ -38480,7 +38477,7 @@ function getChipUtilityClass(slot) {
   return generateUtilityClass("MuiChip", slot);
 }
 const chipClasses = generateUtilityClasses("MuiChip", ["root", "sizeSmall", "sizeMedium", "colorDefault", "colorError", "colorInfo", "colorPrimary", "colorSecondary", "colorSuccess", "colorWarning", "disabled", "clickable", "clickableColorPrimary", "clickableColorSecondary", "deletable", "deletableColorPrimary", "deletableColorSecondary", "outlined", "filled", "outlinedPrimary", "outlinedSecondary", "filledPrimary", "filledSecondary", "avatar", "avatarSmall", "avatarMedium", "avatarColorPrimary", "avatarColorSecondary", "icon", "iconSmall", "iconMedium", "iconColorPrimary", "iconColorSecondary", "label", "labelSmall", "labelMedium", "deleteIcon", "deleteIconSmall", "deleteIconMedium", "deleteIconColorPrimary", "deleteIconColorSecondary", "deleteIconOutlinedColorPrimary", "deleteIconOutlinedColorSecondary", "deleteIconFilledColorPrimary", "deleteIconFilledColorSecondary", "focusVisible"]);
-const useUtilityClasses$x = (ownerState) => {
+const useUtilityClasses$p = (ownerState) => {
   const {
     classes,
     disabled,
@@ -38872,7 +38869,7 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
     clickable,
     variant
   };
-  const classes = useUtilityClasses$x(ownerState);
+  const classes = useUtilityClasses$p(ownerState);
   const moreProps = component === ButtonBase ? {
     component: ComponentProp || "div",
     focusVisibleClassName: classes.focusVisible,
@@ -38956,7 +38953,7 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
 function getStyleValue(value) {
   return parseInt(value, 10) || 0;
 }
-const styles$3 = {
+const styles$2 = {
   shadow: {
     // Visibility needed to hide the extra text area on iPads
     visibility: "hidden",
@@ -39123,7 +39120,7 @@ const TextareaAutosize = /* @__PURE__ */ D(function TextareaAutosize2(props, for
       ref: hiddenTextareaRef,
       tabIndex: -1,
       style: {
-        ...styles$3.shadow,
+        ...styles$2.shadow,
         ...style2,
         paddingTop: 0,
         paddingBottom: 0
@@ -39185,7 +39182,7 @@ const inputOverridesResolver = (props, styles2) => {
   } = props;
   return [styles2.input, ownerState.size === "small" && styles2.inputSizeSmall, ownerState.multiline && styles2.inputMultiline, ownerState.type === "search" && styles2.inputTypeSearch, ownerState.startAdornment && styles2.inputAdornedStart, ownerState.endAdornment && styles2.inputAdornedEnd, ownerState.hiddenLabel && styles2.inputHiddenLabel];
 };
-const useUtilityClasses$w = (ownerState) => {
+const useUtilityClasses$o = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -39448,7 +39445,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     states: ["color", "disabled", "error", "hiddenLabel", "size", "required", "filled"]
   });
   fcs.focused = muiFormControl ? muiFormControl.focused : focused;
-  h(() => {
+  y(() => {
     if (!muiFormControl && disabled && focused) {
       setFocused(false);
       if (onBlur) {
@@ -39538,7 +39535,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
       onChange(event, ...args);
     }
   };
-  h(() => {
+  y(() => {
     checkDirty(inputRef.current);
   }, []);
   const handleClick = (event) => {
@@ -39574,7 +39571,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
       value: "x"
     });
   };
-  h(() => {
+  y(() => {
     if (muiFormControl) {
       muiFormControl.setAdornedStart(Boolean(startAdornment));
     }
@@ -39594,7 +39591,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     startAdornment,
     type
   };
-  const classes = useUtilityClasses$w(ownerState);
+  const classes = useUtilityClasses$o(ownerState);
   const Root = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input3 = slots.input || components.Input || InputBaseInput;
@@ -39682,7 +39679,7 @@ const filledInputClasses = {
 const ArrowDropDownIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M7 10l5 5 5-5z"
 }));
-const styles$2 = {
+const styles$1 = {
   entering: {
     opacity: 1
   },
@@ -39782,7 +39779,7 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
       ownerState,
       ...restChildProps
     }) => {
-      const childStyle = getTransitionChildStyle(state, inProp, styles$2, hiddenStyles$2, style2, children.props.style);
+      const childStyle = getTransitionChildStyle(state, inProp, styles$1, hiddenStyles$2, style2, children.props.style);
       return /* @__PURE__ */ mn(children, {
         style: childStyle,
         ref: handleRef,
@@ -39795,7 +39792,7 @@ function getBackdropUtilityClass(slot) {
   return generateUtilityClass("MuiBackdrop", slot);
 }
 generateUtilityClasses("MuiBackdrop", ["root", "invisible"]);
-const useUtilityClasses$v = (ownerState) => {
+const useUtilityClasses$n = (ownerState) => {
   const {
     classes,
     invisible
@@ -39858,7 +39855,7 @@ const Backdrop = /* @__PURE__ */ D(function Backdrop2(inProps, ref) {
     component,
     invisible
   };
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$n(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     root: components.Root,
@@ -39911,7 +39908,7 @@ function getButtonUtilityClass(slot) {
 const buttonClasses = generateUtilityClasses("MuiButton", ["root", "text", "textInherit", "textPrimary", "textSecondary", "textSuccess", "textError", "textInfo", "textWarning", "outlined", "outlinedInherit", "outlinedPrimary", "outlinedSecondary", "outlinedSuccess", "outlinedError", "outlinedInfo", "outlinedWarning", "contained", "containedInherit", "containedPrimary", "containedSecondary", "containedSuccess", "containedError", "containedInfo", "containedWarning", "disableElevation", "focusVisible", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorSuccess", "colorError", "colorInfo", "colorWarning", "textSizeSmall", "textSizeMedium", "textSizeLarge", "outlinedSizeSmall", "outlinedSizeMedium", "outlinedSizeLarge", "containedSizeSmall", "containedSizeMedium", "containedSizeLarge", "sizeMedium", "sizeSmall", "sizeLarge", "fullWidth", "startIcon", "endIcon", "icon", "iconSizeSmall", "iconSizeMedium", "iconSizeLarge", "loading", "loadingWrapper", "loadingIconPlaceholder", "loadingIndicator", "loadingPositionCenter", "loadingPositionStart", "loadingPositionEnd"]);
 const ButtonGroupContext = /* @__PURE__ */ X$1({});
 const ButtonGroupButtonContext = /* @__PURE__ */ X$1(void 0);
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$m = (ownerState) => {
   const {
     color: color2,
     disableElevation,
@@ -40402,7 +40399,7 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
     ...other
   } = props;
   const loadingId = useId(idProp);
-  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u2(CircularProgress$1, {
+  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u2(CircularProgress, {
     "aria-labelledby": loadingId,
     color: "inherit",
     size: 16
@@ -40422,7 +40419,7 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
     type,
     variant
   };
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$m(ownerState);
   const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ u2(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -40477,7 +40474,7 @@ function getSwitchBaseUtilityClass(slot) {
   return generateUtilityClass("PrivateSwitchBase", slot);
 }
 generateUtilityClasses("PrivateSwitchBase", ["root", "checked", "disabled", "input", "edgeStart", "edgeEnd"]);
-const useUtilityClasses$t = (ownerState) => {
+const useUtilityClasses$l = (ownerState) => {
   const {
     classes,
     checked,
@@ -40617,7 +40614,7 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     disableFocusRipple,
     edge
   };
-  const classes = useUtilityClasses$t(ownerState);
+  const classes = useUtilityClasses$l(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -40703,7 +40700,7 @@ function getCheckboxUtilityClass(slot) {
   return generateUtilityClass("MuiCheckbox", slot);
 }
 const checkboxClasses = generateUtilityClasses("MuiCheckbox", ["root", "checked", "disabled", "indeterminate", "colorPrimary", "colorSecondary", "sizeSmall", "sizeMedium"]);
-const useUtilityClasses$s = (ownerState) => {
+const useUtilityClasses$k = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -40812,7 +40809,7 @@ const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
     indeterminate,
     size
   };
-  const classes = useUtilityClasses$s(ownerState);
+  const classes = useUtilityClasses$k(ownerState);
   const externalInputProps = slotProps.input ?? inputProps;
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
@@ -40866,7 +40863,7 @@ function ClickAwayListener$1(props) {
   const nodeRef = A$1(null);
   const activatedRef = A$1(false);
   const syntheticEventRef = A$1(false);
-  h(() => {
+  y(() => {
     setTimeout(() => {
       activatedRef.current = true;
     }, 0);
@@ -40909,7 +40906,7 @@ function ClickAwayListener$1(props) {
   if (touchEvent !== false) {
     childrenProps[touchEvent] = createHandleSynthetic(touchEvent);
   }
-  h(() => {
+  y(() => {
     if (touchEvent !== false) {
       const mappedTouchEvent = mapEventPropToEvent(touchEvent);
       const doc = ownerDocument(nodeRef.current);
@@ -40928,7 +40925,7 @@ function ClickAwayListener$1(props) {
   if (mouseEvent !== false) {
     childrenProps[mouseEvent] = createHandleSynthetic(mouseEvent);
   }
-  h(() => {
+  y(() => {
     if (mouseEvent !== false) {
       const mappedMouseEvent = mapEventPropToEvent(mouseEvent);
       const doc = ownerDocument(nodeRef.current);
@@ -41205,13 +41202,13 @@ function FocusTrap(props) {
   const rootRef = A$1(null);
   const handleRef = useForkRef(getReactElementRef(children), rootRef);
   const lastKeydown = A$1(null);
-  h(() => {
+  y(() => {
     if (!open || !rootRef.current) {
       return;
     }
     activated.current = !disableAutoFocus;
   }, [disableAutoFocus, open]);
-  h(() => {
+  y(() => {
     ignoreNextEnforceFocus.current = false;
     if (!open || !rootRef.current) {
       return;
@@ -41237,7 +41234,7 @@ function FocusTrap(props) {
       }
     };
   }, [open]);
-  h(() => {
+  y(() => {
     if (!open || !rootRef.current) {
       return;
     }
@@ -41414,12 +41411,12 @@ function useModal(parameters) {
   const handleClose = q$1(() => {
     manager.remove(getModal(), ariaHiddenProp);
   }, [ariaHiddenProp]);
-  h(() => {
+  y(() => {
     return () => {
       handleClose();
     };
   }, [handleClose]);
-  h(() => {
+  y(() => {
     if (open) {
       handleOpen();
     } else if (!hasTransition || !closeAfterTransition) {
@@ -41514,7 +41511,7 @@ function getModalUtilityClass(slot) {
   return generateUtilityClass("MuiModal", slot);
 }
 generateUtilityClasses("MuiModal", ["root", "hidden", "backdrop"]);
-const useUtilityClasses$r = (ownerState) => {
+const useUtilityClasses$j = (ownerState) => {
   const {
     open,
     exited,
@@ -41621,7 +41618,7 @@ const Modal$1 = /* @__PURE__ */ D(function Modal(inProps, ref) {
     ...propsWithDefaults,
     exited
   };
-  const classes = useUtilityClasses$r(ownerState);
+  const classes = useUtilityClasses$j(ownerState);
   const childProps = {};
   if (children.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -41698,244 +41695,7 @@ const Modal$1 = /* @__PURE__ */ D(function Modal(inProps, ref) {
     })
   });
 });
-function getDividerUtilityClass(slot) {
-  return generateUtilityClass("MuiDivider", slot);
-}
-const dividerClasses = generateUtilityClasses("MuiDivider", ["root", "absolute", "fullWidth", "inset", "middle", "flexItem", "light", "vertical", "withChildren", "withChildrenVertical", "textAlignRight", "textAlignLeft", "wrapper", "wrapperVertical"]);
-const useUtilityClasses$q = (ownerState) => {
-  const {
-    absolute,
-    children,
-    classes,
-    flexItem,
-    light: light2,
-    orientation,
-    textAlign,
-    variant
-  } = ownerState;
-  const slots = {
-    root: ["root", absolute && "absolute", variant, light2 && "light", orientation === "vertical" && "vertical", flexItem && "flexItem", children && "withChildren", children && orientation === "vertical" && "withChildrenVertical", textAlign === "right" && orientation !== "vertical" && "textAlignRight", textAlign === "left" && orientation !== "vertical" && "textAlignLeft"],
-    wrapper: ["wrapper", orientation === "vertical" && "wrapperVertical"]
-  };
-  return composeClasses(slots, getDividerUtilityClass, classes);
-};
-const DividerRoot = styled("div", {
-  name: "MuiDivider",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.absolute && styles2.absolute, styles2[ownerState.variant], ownerState.light && styles2.light, ownerState.orientation === "vertical" && styles2.vertical, ownerState.flexItem && styles2.flexItem, ownerState.children && styles2.withChildren, ownerState.children && ownerState.orientation === "vertical" && styles2.withChildrenVertical, ownerState.textAlign === "right" && ownerState.orientation !== "vertical" && styles2.textAlignRight, ownerState.textAlign === "left" && ownerState.orientation !== "vertical" && styles2.textAlignLeft];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  margin: 0,
-  // Reset browser default style.
-  flexShrink: 0,
-  borderWidth: 0,
-  borderStyle: "solid",
-  borderColor: (theme.vars || theme).palette.divider,
-  borderBottomWidth: "thin",
-  variants: [{
-    props: {
-      absolute: true
-    },
-    style: {
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      width: "100%"
-    }
-  }, {
-    props: {
-      light: true
-    },
-    style: {
-      borderColor: theme.alpha((theme.vars || theme).palette.divider, 0.08)
-    }
-  }, {
-    props: {
-      variant: "inset"
-    },
-    style: {
-      marginLeft: 72
-    }
-  }, {
-    props: {
-      variant: "middle",
-      orientation: "horizontal"
-    },
-    style: {
-      marginLeft: theme.spacing(2),
-      marginRight: theme.spacing(2)
-    }
-  }, {
-    props: {
-      variant: "middle",
-      orientation: "vertical"
-    },
-    style: {
-      marginTop: theme.spacing(1),
-      marginBottom: theme.spacing(1)
-    }
-  }, {
-    props: {
-      orientation: "vertical"
-    },
-    style: {
-      height: "100%",
-      borderBottomWidth: 0,
-      borderRightWidth: "thin"
-    }
-  }, {
-    props: {
-      flexItem: true
-    },
-    style: {
-      alignSelf: "stretch",
-      height: "auto"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !!ownerState.children,
-    style: {
-      display: "flex",
-      textAlign: "center",
-      border: 0,
-      borderTopStyle: "solid",
-      borderLeftStyle: "solid",
-      "&::before, &::after": {
-        content: '""',
-        alignSelf: "center"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.children && ownerState.orientation !== "vertical",
-    style: {
-      "&::before, &::after": {
-        width: "100%",
-        borderTop: `thin solid ${(theme.vars || theme).palette.divider}`,
-        borderTopStyle: "inherit"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.orientation === "vertical" && ownerState.children,
-    style: {
-      flexDirection: "column",
-      "&::before, &::after": {
-        height: "100%",
-        borderLeft: `thin solid ${(theme.vars || theme).palette.divider}`,
-        borderLeftStyle: "inherit"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.textAlign === "right" && ownerState.orientation !== "vertical",
-    style: {
-      "&::before": {
-        width: "90%"
-      },
-      "&::after": {
-        width: "10%"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.textAlign === "left" && ownerState.orientation !== "vertical",
-    style: {
-      "&::before": {
-        width: "10%"
-      },
-      "&::after": {
-        width: "90%"
-      }
-    }
-  }]
-})));
-const DividerWrapper = styled("span", {
-  name: "MuiDivider",
-  slot: "Wrapper",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.wrapper, ownerState.orientation === "vertical" && styles2.wrapperVertical];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  display: "inline-block",
-  paddingLeft: `calc(${theme.spacing(1)} * 1.2)`,
-  paddingRight: `calc(${theme.spacing(1)} * 1.2)`,
-  whiteSpace: "nowrap",
-  variants: [{
-    props: {
-      orientation: "vertical"
-    },
-    style: {
-      paddingTop: `calc(${theme.spacing(1)} * 1.2)`,
-      paddingBottom: `calc(${theme.spacing(1)} * 1.2)`
-    }
-  }]
-})));
-const Divider$1 = /* @__PURE__ */ D(function Divider(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiDivider"
-  });
-  const {
-    absolute = false,
-    children,
-    className,
-    orientation = "horizontal",
-    component = children || orientation === "vertical" ? "div" : "hr",
-    flexItem = false,
-    light: light2 = false,
-    role = component !== "hr" ? "separator" : void 0,
-    textAlign = "center",
-    variant = "fullWidth",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    absolute,
-    component,
-    flexItem,
-    light: light2,
-    orientation,
-    role,
-    textAlign,
-    variant
-  };
-  const classes = useUtilityClasses$q(ownerState);
-  return /* @__PURE__ */ u2(DividerRoot, {
-    as: component,
-    className: clsx(classes.root, className),
-    role,
-    ref,
-    ownerState,
-    "aria-orientation": role === "separator" && (component !== "hr" || orientation === "vertical") ? orientation : void 0,
-    ...other,
-    children: children ? /* @__PURE__ */ u2(DividerWrapper, {
-      className: classes.wrapper,
-      ownerState,
-      children
-    }) : null
-  });
-});
-if (Divider$1) {
-  Divider$1.muiSkipListHighlight = true;
-}
-const useUtilityClasses$p = (ownerState) => {
+const useUtilityClasses$i = (ownerState) => {
   const {
     classes,
     disableUnderline,
@@ -42214,7 +41974,7 @@ const FilledInput = /* @__PURE__ */ D(function FilledInput2(inProps, ref) {
     multiline,
     type
   };
-  const classes = useUtilityClasses$p(props);
+  const classes = useUtilityClasses$i(props);
   const filledInputComponentsProps = {
     root: {
       ownerState
@@ -42246,7 +42006,7 @@ function getFormControlUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControl", slot);
 }
 generateUtilityClasses("MuiFormControl", ["root", "marginNone", "marginNormal", "marginDense", "fullWidth", "disabled"]);
-const useUtilityClasses$o = (ownerState) => {
+const useUtilityClasses$h = (ownerState) => {
   const {
     classes,
     margin: margin2,
@@ -42302,7 +42062,7 @@ const FormControlRoot = styled("div", {
     }
   }]
 });
-const FormControl$1 = /* @__PURE__ */ D(function FormControl(inProps, ref) {
+const FormControl = /* @__PURE__ */ D(function FormControl2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiFormControl"
@@ -42336,7 +42096,7 @@ const FormControl$1 = /* @__PURE__ */ D(function FormControl(inProps, ref) {
     size,
     variant
   };
-  const classes = useUtilityClasses$o(ownerState);
+  const classes = useUtilityClasses$h(ownerState);
   const [adornedStart, setAdornedStart] = d(() => {
     let initialAdornedStart = false;
     if (children) {
@@ -42420,7 +42180,7 @@ function getFormControlLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControlLabel", slot);
 }
 const formControlLabelClasses = generateUtilityClasses("MuiFormControlLabel", ["root", "labelPlacementStart", "labelPlacementTop", "labelPlacementBottom", "disabled", "label", "error", "required", "asterisk"]);
-const useUtilityClasses$n = (ownerState) => {
+const useUtilityClasses$g = (ownerState) => {
   const {
     classes,
     disabled,
@@ -42555,7 +42315,7 @@ const FormControlLabel$1 = /* @__PURE__ */ D(function FormControlLabel(inProps, 
     required: required2,
     error: fcs.error
   };
-  const classes = useUtilityClasses$n(ownerState);
+  const classes = useUtilityClasses$g(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -42596,7 +42356,7 @@ function getFormGroupUtilityClass(slot) {
   return generateUtilityClass("MuiFormGroup", slot);
 }
 generateUtilityClasses("MuiFormGroup", ["root", "row", "error"]);
-const useUtilityClasses$m = (ownerState) => {
+const useUtilityClasses$f = (ownerState) => {
   const {
     classes,
     row,
@@ -42650,7 +42410,7 @@ const FormGroup$1 = /* @__PURE__ */ D(function FormGroup(inProps, ref) {
     row,
     error: fcs.error
   };
-  const classes = useUtilityClasses$m(ownerState);
+  const classes = useUtilityClasses$f(ownerState);
   return /* @__PURE__ */ u2(FormGroupRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -42663,7 +42423,7 @@ function getFormHelperTextUtilityClasses(slot) {
 }
 const formHelperTextClasses = generateUtilityClasses("MuiFormHelperText", ["root", "error", "disabled", "sizeSmall", "sizeMedium", "contained", "focused", "filled", "required"]);
 var _span$3;
-const useUtilityClasses$l = (ownerState) => {
+const useUtilityClasses$e = (ownerState) => {
   const {
     classes,
     contained,
@@ -42758,7 +42518,7 @@ const FormHelperText = /* @__PURE__ */ D(function FormHelperText2(inProps, ref) 
     required: fcs.required
   };
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$l(ownerState);
+  const classes = useUtilityClasses$e(ownerState);
   return /* @__PURE__ */ u2(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -42779,7 +42539,7 @@ function getFormLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormLabel", slot);
 }
 const formLabelClasses = generateUtilityClasses("MuiFormLabel", ["root", "colorSecondary", "focused", "disabled", "error", "filled", "required", "asterisk"]);
-const useUtilityClasses$k = (ownerState) => {
+const useUtilityClasses$d = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -42876,7 +42636,7 @@ const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
     focused: fcs.focused,
     required: fcs.required
   };
-  const classes = useUtilityClasses$k(ownerState);
+  const classes = useUtilityClasses$d(ownerState);
   return /* @__PURE__ */ u2(FormLabelRoot, {
     as: component,
     ownerState,
@@ -42894,7 +42654,7 @@ const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
 function getScale(value) {
   return `scale(${value}, ${value ** 2})`;
 }
-const styles$1 = {
+const styles = {
   entering: {
     opacity: 1,
     transform: getScale(1)
@@ -43038,7 +42798,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       ownerState,
       ...restChildProps
     }) => {
-      const childStyle = getTransitionChildStyle(state, inProp, styles$1, hiddenStyles$1, style2, children.props.style);
+      const childStyle = getTransitionChildStyle(state, inProp, styles, hiddenStyles$1, style2, children.props.style);
       return /* @__PURE__ */ mn(children, {
         style: childStyle,
         ref: handleRef,
@@ -43050,7 +42810,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
 if (Grow) {
   Grow.muiSupportAuto = true;
 }
-const useUtilityClasses$j = (ownerState) => {
+const useUtilityClasses$c = (ownerState) => {
   const {
     classes,
     disableUnderline
@@ -43183,7 +42943,7 @@ const Input = /* @__PURE__ */ D(function Input2(inProps, ref) {
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$j(props);
+  const classes = useUtilityClasses$c(props);
   const ownerState = {
     disableUnderline
   };
@@ -43216,13 +42976,13 @@ function getInputAdornmentUtilityClass(slot) {
 }
 const inputAdornmentClasses = generateUtilityClasses("MuiInputAdornment", ["root", "filled", "standard", "outlined", "positionStart", "positionEnd", "disablePointerEvents", "hiddenLabel", "sizeSmall"]);
 var _span$2;
-const overridesResolver$2 = (props, styles2) => {
+const overridesResolver$1 = (props, styles2) => {
   const {
     ownerState
   } = props;
   return [styles2.root, styles2[`position${capitalize(ownerState.position)}`], ownerState.disablePointerEvents === true && styles2.disablePointerEvents, styles2[ownerState.variant]];
 };
-const useUtilityClasses$i = (ownerState) => {
+const useUtilityClasses$b = (ownerState) => {
   const {
     classes,
     disablePointerEvents,
@@ -43239,7 +42999,7 @@ const useUtilityClasses$i = (ownerState) => {
 const InputAdornmentRoot = styled("div", {
   name: "MuiInputAdornment",
   slot: "Root",
-  overridesResolver: overridesResolver$2
+  overridesResolver: overridesResolver$1
 })(memoTheme(({
   theme
 }) => ({
@@ -43309,7 +43069,7 @@ const InputAdornment$1 = /* @__PURE__ */ D(function InputAdornment(inProps, ref)
     position: position2,
     variant
   };
-  const classes = useUtilityClasses$i(ownerState);
+  const classes = useUtilityClasses$b(ownerState);
   return /* @__PURE__ */ u2(FormControlContext.Provider, {
     value: null,
     children: /* @__PURE__ */ u2(InputAdornmentRoot, {
@@ -43338,7 +43098,7 @@ function getInputLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiInputLabel", slot);
 }
 generateUtilityClasses("MuiInputLabel", ["root", "focused", "disabled", "error", "required", "asterisk", "formControl", "sizeSmall", "shrink", "animated", "standard", "filled", "outlined"]);
-const useUtilityClasses$h = (ownerState) => {
+const useUtilityClasses$a = (ownerState) => {
   const {
     classes,
     formControl,
@@ -43494,7 +43254,7 @@ const InputLabelRoot = styled(FormLabel, {
     }
   }]
 })));
-const InputLabel$1 = /* @__PURE__ */ D(function InputLabel(inProps, ref) {
+const InputLabel = /* @__PURE__ */ D(function InputLabel2(inProps, ref) {
   const props = useDefaultProps({
     name: "MuiInputLabel",
     props: inProps
@@ -43527,7 +43287,7 @@ const InputLabel$1 = /* @__PURE__ */ D(function InputLabel(inProps, ref) {
     required: fcs.required,
     focused: fcs.focused
   };
-  const classes = useUtilityClasses$h(ownerState);
+  const classes = useUtilityClasses$a(ownerState);
   return /* @__PURE__ */ u2(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
@@ -43542,7 +43302,7 @@ function getListUtilityClass(slot) {
   return generateUtilityClass("MuiList", slot);
 }
 generateUtilityClasses("MuiList", ["root", "padding", "dense", "subheader"]);
-const useUtilityClasses$g = (ownerState) => {
+const useUtilityClasses$9 = (ownerState) => {
   const {
     classes,
     disablePadding,
@@ -43585,7 +43345,7 @@ const ListRoot = styled("ul", {
     }
   }]
 });
-const List$2 = /* @__PURE__ */ D(function List(inProps, ref) {
+const List$1 = /* @__PURE__ */ D(function List(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiList"
@@ -43608,7 +43368,7 @@ const List$2 = /* @__PURE__ */ D(function List(inProps, ref) {
     dense,
     disablePadding
   };
-  const classes = useUtilityClasses$g(ownerState);
+  const classes = useUtilityClasses$9(ownerState);
   return /* @__PURE__ */ u2(ListContext.Provider, {
     value: context,
     children: /* @__PURE__ */ u2(ListRoot, {
@@ -43625,13 +43385,13 @@ function getListItemButtonUtilityClass(slot) {
   return generateUtilityClass("MuiListItemButton", slot);
 }
 const listItemButtonClasses = generateUtilityClasses("MuiListItemButton", ["root", "focusVisible", "dense", "alignItemsFlexStart", "disabled", "divider", "gutters", "selected"]);
-const overridesResolver$1 = (props, styles2) => {
+const overridesResolver = (props, styles2) => {
   const {
     ownerState
   } = props;
   return [styles2.root, ownerState.dense && styles2.dense, ownerState.alignItems === "flex-start" && styles2.alignItemsFlexStart, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
 };
-const useUtilityClasses$f = (ownerState) => {
+const useUtilityClasses$8 = (ownerState) => {
   const {
     alignItems,
     classes,
@@ -43654,7 +43414,7 @@ const ListItemButtonRoot = styled(ButtonBase, {
   shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
   name: "MuiListItemButton",
   slot: "Root",
-  overridesResolver: overridesResolver$1
+  overridesResolver
 })(memoTheme(({
   theme
 }) => ({
@@ -43772,7 +43532,7 @@ const ListItemButton$1 = /* @__PURE__ */ D(function ListItemButton(inProps, ref)
     divider,
     selected
   };
-  const classes = useUtilityClasses$f(ownerState);
+  const classes = useUtilityClasses$8(ownerState);
   const {
     root,
     ...forwardedClasses
@@ -43793,212 +43553,7 @@ const ListItemButton$1 = /* @__PURE__ */ D(function ListItemButton(inProps, ref)
     })
   });
 });
-function getListItemIconUtilityClass(slot) {
-  return generateUtilityClass("MuiListItemIcon", slot);
-}
-const listItemIconClasses = generateUtilityClasses("MuiListItemIcon", ["root", "alignItemsFlexStart"]);
-const useUtilityClasses$e = (ownerState) => {
-  const {
-    alignItems,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", alignItems === "flex-start" && "alignItemsFlexStart"]
-  };
-  return composeClasses(slots, getListItemIconUtilityClass, classes);
-};
-const ListItemIconRoot = styled("div", {
-  name: "MuiListItemIcon",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.alignItems === "flex-start" && styles2.alignItemsFlexStart];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  minWidth: 56,
-  color: (theme.vars || theme).palette.action.active,
-  flexShrink: 0,
-  display: "inline-flex",
-  variants: [{
-    props: {
-      alignItems: "flex-start"
-    },
-    style: {
-      marginTop: 8
-    }
-  }]
-})));
-const ListItemIcon$1 = /* @__PURE__ */ D(function ListItemIcon(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiListItemIcon"
-  });
-  const {
-    className,
-    ...other
-  } = props;
-  const context = x$1(ListContext);
-  const ownerState = {
-    ...props,
-    alignItems: context.alignItems
-  };
-  const classes = useUtilityClasses$e(ownerState);
-  return /* @__PURE__ */ u2(ListItemIconRoot, {
-    className: clsx(classes.root, className),
-    ownerState,
-    ref,
-    ...other
-  });
-});
-function getListItemTextUtilityClass(slot) {
-  return generateUtilityClass("MuiListItemText", slot);
-}
-const listItemTextClasses = generateUtilityClasses("MuiListItemText", ["root", "multiline", "dense", "inset", "primary", "secondary"]);
-const useUtilityClasses$d = (ownerState) => {
-  const {
-    classes,
-    inset,
-    primary,
-    secondary,
-    dense
-  } = ownerState;
-  const slots = {
-    root: ["root", inset && "inset", dense && "dense", primary && secondary && "multiline"],
-    primary: ["primary"],
-    secondary: ["secondary"]
-  };
-  return composeClasses(slots, getListItemTextUtilityClass, classes);
-};
-const ListItemTextRoot = styled("div", {
-  name: "MuiListItemText",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [{
-      [`& .${listItemTextClasses.primary}`]: styles2.primary
-    }, {
-      [`& .${listItemTextClasses.secondary}`]: styles2.secondary
-    }, styles2.root, ownerState.inset && styles2.inset, ownerState.primary && ownerState.secondary && styles2.multiline, ownerState.dense && styles2.dense];
-  }
-})({
-  flex: "1 1 auto",
-  minWidth: 0,
-  marginTop: 4,
-  marginBottom: 4,
-  // Combine this and the below selector once https://github.com/emotion-js/emotion/issues/3366 is solved
-  [`.${typographyClasses.root}:where(& .${listItemTextClasses.primary})`]: {
-    display: "block"
-  },
-  [`.${typographyClasses.root}:where(& .${listItemTextClasses.secondary})`]: {
-    display: "block"
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.primary && ownerState.secondary,
-    style: {
-      marginTop: 6,
-      marginBottom: 6
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.inset,
-    style: {
-      paddingLeft: 56
-    }
-  }]
-});
-const ListItemText$1 = /* @__PURE__ */ D(function ListItemText(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiListItemText"
-  });
-  const {
-    children,
-    className,
-    disableTypography = false,
-    inset = false,
-    primary: primaryProp,
-    primaryTypographyProps,
-    secondary: secondaryProp,
-    secondaryTypographyProps,
-    slots = {},
-    slotProps = {},
-    ...other
-  } = props;
-  const {
-    dense
-  } = x$1(ListContext);
-  let primary = primaryProp != null ? primaryProp : children;
-  let secondary = secondaryProp;
-  const ownerState = {
-    ...props,
-    disableTypography,
-    inset,
-    primary: !!primary,
-    secondary: !!secondary,
-    dense
-  };
-  const classes = useUtilityClasses$d(ownerState);
-  const externalForwardedProps = {
-    slots,
-    slotProps: {
-      primary: primaryTypographyProps,
-      secondary: secondaryTypographyProps,
-      ...slotProps
-    }
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    className: clsx(classes.root, className),
-    elementType: ListItemTextRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState,
-    ref
-  });
-  const [PrimarySlot, primarySlotProps] = useSlot("primary", {
-    className: classes.primary,
-    elementType: Typography$1,
-    externalForwardedProps,
-    ownerState
-  });
-  const [SecondarySlot, secondarySlotProps] = useSlot("secondary", {
-    className: classes.secondary,
-    elementType: Typography$1,
-    externalForwardedProps,
-    ownerState
-  });
-  if (primary != null && primary.type !== Typography$1 && !disableTypography) {
-    primary = /* @__PURE__ */ u2(PrimarySlot, {
-      variant: dense ? "body2" : "body1",
-      component: primarySlotProps?.variant ? void 0 : "span",
-      ...primarySlotProps,
-      children: primary
-    });
-  }
-  if (secondary != null && secondary.type !== Typography$1 && !disableTypography) {
-    secondary = /* @__PURE__ */ u2(SecondarySlot, {
-      variant: "body2",
-      color: "textSecondary",
-      ...secondarySlotProps,
-      children: secondary
-    });
-  }
-  return /* @__PURE__ */ u2(RootSlot, {
-    ...rootSlotProps,
-    children: [primary, secondary]
-  });
-});
-function nextItem$1(list, item, disableListWrap) {
+function nextItem(list, item, disableListWrap) {
   if (list === item) {
     return list.firstChild;
   }
@@ -44007,7 +43562,7 @@ function nextItem$1(list, item, disableListWrap) {
   }
   return disableListWrap ? null : list.firstChild;
 }
-function previousItem$1(list, item, disableListWrap) {
+function previousItem(list, item, disableListWrap) {
   if (list === item) {
     return disableListWrap ? list.firstChild : list.lastChild;
   }
@@ -44033,7 +43588,7 @@ function textCriteriaMatches(nextFocus, textCriteria) {
   }
   return text2.startsWith(textCriteria.keys.join(""));
 }
-function moveFocus$1(list, currentFocus, disableListWrap, disabledItemsFocusable, traversalFunction, textCriteria) {
+function moveFocus(list, currentFocus, disableListWrap, disabledItemsFocusable, traversalFunction, textCriteria) {
   let wrappedOnce = false;
   let nextFocus = traversalFunction(list, currentFocus, currentFocus ? disableListWrap : false);
   while (nextFocus) {
@@ -44106,16 +43661,16 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
     const currentFocus = activeElement(ownerDocument(list));
     if (key === "ArrowDown") {
       event.preventDefault();
-      moveFocus$1(list, currentFocus, disableListWrap, disabledItemsFocusable, nextItem$1);
+      moveFocus(list, currentFocus, disableListWrap, disabledItemsFocusable, nextItem);
     } else if (key === "ArrowUp") {
       event.preventDefault();
-      moveFocus$1(list, currentFocus, disableListWrap, disabledItemsFocusable, previousItem$1);
+      moveFocus(list, currentFocus, disableListWrap, disabledItemsFocusable, previousItem);
     } else if (key === "Home") {
       event.preventDefault();
-      moveFocus$1(list, null, disableListWrap, disabledItemsFocusable, nextItem$1);
+      moveFocus(list, null, disableListWrap, disabledItemsFocusable, nextItem);
     } else if (key === "End") {
       event.preventDefault();
-      moveFocus$1(list, null, disableListWrap, disabledItemsFocusable, previousItem$1);
+      moveFocus(list, null, disableListWrap, disabledItemsFocusable, previousItem);
     } else if (key.length === 1) {
       const criteria = textCriteriaRef.current;
       const lowerKey = key.toLowerCase();
@@ -44132,7 +43687,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
       criteria.lastTime = currTime;
       criteria.keys.push(lowerKey);
       const keepFocusOnCurrent = currentFocus && !criteria.repeating && textCriteriaMatches(currentFocus, criteria);
-      if (criteria.previousKeyMatched && (keepFocusOnCurrent || moveFocus$1(list, currentFocus, false, disabledItemsFocusable, nextItem$1, criteria))) {
+      if (criteria.previousKeyMatched && (keepFocusOnCurrent || moveFocus(list, currentFocus, false, disabledItemsFocusable, nextItem, criteria))) {
         event.preventDefault();
       } else {
         criteria.previousKeyMatched = false;
@@ -44181,7 +43736,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
     }
     return child;
   });
-  return /* @__PURE__ */ u2(List$2, {
+  return /* @__PURE__ */ u2(List$1, {
     role: "menu",
     ref: handleRef,
     className,
@@ -44223,7 +43778,7 @@ function getTransformOriginValue(transformOrigin) {
 function resolveAnchorEl(anchorEl) {
   return typeof anchorEl === "function" ? anchorEl() : anchorEl;
 }
-const useUtilityClasses$c = (ownerState) => {
+const useUtilityClasses$7 = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -44301,7 +43856,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
     transitionDuration: transitionDurationProp,
     TransitionProps
   };
-  const classes = useUtilityClasses$c(ownerState);
+  const classes = useUtilityClasses$7(ownerState);
   const getAnchorOffset = q$1(() => {
     if (anchorReference === "anchorPosition") {
       return anchorPosition;
@@ -44381,7 +43936,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
     element.style.transformOrigin = positioning.transformOrigin;
     setIsPositioned(true);
   }, [getPositioningStyle]);
-  h(() => {
+  y(() => {
     if (disableScrollLock) {
       window.addEventListener("scroll", setPositioningStyles);
     }
@@ -44393,7 +43948,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
   const handleExited = () => {
     setIsPositioned(false);
   };
-  h(() => {
+  y(() => {
     if (open) {
       setPositioningStyles();
     }
@@ -44403,7 +43958,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
       setPositioningStyles();
     }
   } : null, [open, setPositioningStyles]);
-  h(() => {
+  y(() => {
     if (!open) {
       return void 0;
     }
@@ -44523,7 +44078,7 @@ const LTR_ORIGIN = {
   vertical: "top",
   horizontal: "left"
 };
-const useUtilityClasses$b = (ownerState) => {
+const useUtilityClasses$6 = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -44594,7 +44149,7 @@ const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
     TransitionProps,
     variant
   };
-  const classes = useUtilityClasses$b(ownerState);
+  const classes = useUtilityClasses$6(ownerState);
   const autoFocusItem = autoFocus && !disableAutoFocusItem && open;
   const menuListActionsRef = A$1(null);
   const handleEntering = (element, isAppearing) => {
@@ -44709,15 +44264,11 @@ const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
     })
   });
 });
-function getMenuItemUtilityClass(slot) {
-  return generateUtilityClass("MuiMenuItem", slot);
-}
-const menuItemClasses = generateUtilityClasses("MuiMenuItem", ["root", "focusVisible", "dense", "disabled", "divider", "gutters", "selected"]);
 function getNativeSelectUtilityClasses(slot) {
   return generateUtilityClass("MuiNativeSelect", slot);
 }
 const nativeSelectClasses = generateUtilityClasses("MuiNativeSelect", ["root", "select", "multiple", "filled", "outlined", "standard", "disabled", "icon", "iconOpen", "iconFilled", "iconOutlined", "iconStandard", "nativeInput", "error"]);
-const useUtilityClasses$a = (ownerState) => {
+const useUtilityClasses$5 = (ownerState) => {
   const {
     classes,
     variant,
@@ -44876,7 +44427,7 @@ const NativeSelectInput$1 = /* @__PURE__ */ D(function NativeSelectInput(props, 
     variant,
     error
   };
-  const classes = useUtilityClasses$a(ownerState);
+  const classes = useUtilityClasses$5(ownerState);
   return /* @__PURE__ */ u2(S, {
     children: [/* @__PURE__ */ u2(NativeSelectSelect, {
       ownerState,
@@ -44917,10 +44468,6 @@ function areEqualValues(a2, b2) {
   return String(a2) === String(b2);
 }
 const SelectFocusSourceContext = /* @__PURE__ */ X$1(null);
-function useSelectFocusSource() {
-  const context = x$1(SelectFocusSourceContext);
-  return context;
-}
 const SelectFocusSourceProvider = SelectFocusSourceContext.Provider;
 var _span$1;
 const SelectSelect = styled(StyledSelectSelect, {
@@ -44981,7 +44528,7 @@ const SelectNativeInput = styled("input", {
   width: "100%",
   boxSizing: "border-box"
 });
-const useUtilityClasses$9 = (ownerState) => {
+const useUtilityClasses$4 = (ownerState) => {
   const {
     classes,
     variant,
@@ -45071,7 +44618,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     value
   }), [value]);
   const open = displayNode !== null && openState;
-  h(() => {
+  y(() => {
     if (!open || !anchorElement || autoWidth) {
       return void 0;
     }
@@ -45086,18 +44633,18 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
       observer.disconnect();
     };
   }, [open, anchorElement, autoWidth]);
-  h(() => {
+  y(() => {
     if (defaultOpen && openState && displayNode && !isOpenControlled) {
       setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
       displayRef.current.focus();
     }
   }, [displayNode, autoWidth]);
-  h(() => {
+  y(() => {
     if (autoFocus) {
       displayRef.current.focus();
     }
   }, [autoFocus]);
-  h(() => {
+  y(() => {
     if (!labelId) {
       return void 0;
     }
@@ -45309,7 +44856,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     open,
     error
   };
-  const classes = useUtilityClasses$9(ownerState);
+  const classes = useUtilityClasses$4(ownerState);
   const paperProps = {
     ...MenuProps.PaperProps,
     ...typeof MenuProps.slotProps?.paper === "function" ? MenuProps.slotProps.paper(ownerState) : MenuProps.slotProps?.paper
@@ -45527,7 +45074,7 @@ function NotchedOutline(props) {
     })
   });
 }
-const useUtilityClasses$8 = (ownerState) => {
+const useUtilityClasses$3 = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -45705,7 +45252,7 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$8(props);
+  const classes = useUtilityClasses$3(props);
   const muiFormControl = useFormControl();
   const fcs = formControlState({
     props,
@@ -45765,7 +45312,7 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
   });
 });
 OutlinedInput.muiName = "Input";
-const useUtilityClasses$7 = (ownerState) => {
+const useUtilityClasses$2 = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -45786,7 +45333,7 @@ const styledRootConfig = {
 const StyledInput = styled(Input, styledRootConfig)("");
 const StyledOutlinedInput = styled(OutlinedInput, styledRootConfig)("");
 const StyledFilledInput = styled(FilledInput, styledRootConfig)("");
-const Select$1 = /* @__PURE__ */ D(function Select(inProps, ref) {
+const Select = /* @__PURE__ */ D(function Select2(inProps, ref) {
   const props = useDefaultProps({
     name: "MuiSelect",
     props: inProps
@@ -45828,7 +45375,7 @@ const Select$1 = /* @__PURE__ */ D(function Select(inProps, ref) {
     variant,
     classes: classesProp
   };
-  const classes = useUtilityClasses$7(ownerState);
+  const classes = useUtilityClasses$2(ownerState);
   const {
     root,
     ...restOfClasses
@@ -45893,210 +45440,7 @@ const Select$1 = /* @__PURE__ */ D(function Select(inProps, ref) {
     })
   });
 });
-Select$1.muiName = "Select";
-function focusWithVisible(element, focusSource) {
-  if (focusSource == null) {
-    element.focus();
-    return;
-  }
-  try {
-    element.focus({
-      focusVisible: focusSource === "keyboard"
-    });
-  } catch (error) {
-    element.focus();
-  }
-}
-const overridesResolver = (props, styles2) => {
-  const {
-    ownerState
-  } = props;
-  return [styles2.root, ownerState.dense && styles2.dense, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
-};
-const useUtilityClasses$6 = (ownerState) => {
-  const {
-    disabled,
-    dense,
-    divider,
-    disableGutters,
-    selected,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", dense && "dense", disabled && "disabled", !disableGutters && "gutters", divider && "divider", selected && "selected"]
-  };
-  const composedClasses = composeClasses(slots, getMenuItemUtilityClass, classes);
-  return {
-    ...classes,
-    ...composedClasses
-  };
-};
-const MenuItemRoot = styled(ButtonBase, {
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
-  name: "MuiMenuItem",
-  slot: "Root",
-  overridesResolver
-})(memoTheme(({
-  theme
-}) => ({
-  ...theme.typography.body1,
-  display: "flex",
-  justifyContent: "flex-start",
-  alignItems: "center",
-  position: "relative",
-  textDecoration: "none",
-  minHeight: 48,
-  paddingTop: 6,
-  paddingBottom: 6,
-  boxSizing: "border-box",
-  whiteSpace: "nowrap",
-  "&:hover": {
-    textDecoration: "none",
-    backgroundColor: (theme.vars || theme).palette.action.hover,
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: "transparent"
-    }
-  },
-  [`&.${menuItemClasses.selected}`]: {
-    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity),
-    [`&.${menuItemClasses.focusVisible}`]: {
-      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.focusOpacity}`)
-    }
-  },
-  [`&.${menuItemClasses.selected}:hover`]: {
-    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`),
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity)
-    }
-  },
-  [`&.${menuItemClasses.focusVisible}`]: {
-    backgroundColor: (theme.vars || theme).palette.action.focus
-  },
-  [`&.${menuItemClasses.disabled}`]: {
-    opacity: (theme.vars || theme).palette.action.disabledOpacity
-  },
-  [`& + .${dividerClasses.root}`]: {
-    marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(1)
-  },
-  [`& + .${dividerClasses.inset}`]: {
-    marginLeft: 52
-  },
-  [`& .${listItemTextClasses.root}`]: {
-    marginTop: 0,
-    marginBottom: 0
-  },
-  [`& .${listItemTextClasses.inset}`]: {
-    paddingLeft: 36
-  },
-  [`& .${listItemIconClasses.root}`]: {
-    minWidth: 36
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.disableGutters,
-    style: {
-      paddingLeft: 16,
-      paddingRight: 16
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.divider,
-    style: {
-      borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`,
-      backgroundClip: "padding-box"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.dense,
-    style: {
-      [theme.breakpoints.up("sm")]: {
-        minHeight: "auto"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.dense,
-    style: {
-      minHeight: 32,
-      // https://m2.material.io/components/menus#specs > Dense
-      paddingTop: 4,
-      paddingBottom: 4,
-      ...theme.typography.body2,
-      [`& .${listItemIconClasses.root} svg`]: {
-        fontSize: "1.25rem"
-      }
-    }
-  }]
-})));
-const MenuItem$2 = /* @__PURE__ */ D(function MenuItem(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiMenuItem"
-  });
-  const {
-    autoFocus = false,
-    component = "li",
-    dense = false,
-    divider = false,
-    disableGutters = false,
-    focusVisibleClassName,
-    role = "menuitem",
-    tabIndex: tabIndexProp,
-    className,
-    ...other
-  } = props;
-  const focusSource = useSelectFocusSource();
-  const context = x$1(ListContext);
-  const childContext = T$1(() => ({
-    dense: dense || context.dense || false,
-    disableGutters
-  }), [context.dense, dense, disableGutters]);
-  const menuItemRef = A$1(null);
-  useEnhancedEffect(() => {
-    if (autoFocus) {
-      if (menuItemRef.current) {
-        focusWithVisible(menuItemRef.current, focusSource);
-      }
-    }
-  }, [autoFocus]);
-  const ownerState = {
-    ...props,
-    dense: childContext.dense,
-    divider,
-    disableGutters
-  };
-  const classes = useUtilityClasses$6(props);
-  const handleRef = useForkRef(menuItemRef, ref);
-  const {
-    root,
-    ...forwardedClasses
-  } = classes;
-  let tabIndex;
-  if (!props.disabled) {
-    tabIndex = tabIndexProp !== void 0 ? tabIndexProp : -1;
-  }
-  return /* @__PURE__ */ u2(ListContext.Provider, {
-    value: childContext,
-    children: /* @__PURE__ */ u2(MenuItemRoot, {
-      ref: handleRef,
-      role,
-      tabIndex,
-      component,
-      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
-      className: clsx(classes.root, className),
-      ...other,
-      ownerState,
-      classes: forwardedClasses
-    })
-  });
-});
+Select.muiName = "Select";
 function getTooltipUtilityClass(slot) {
   return generateUtilityClass("MuiTooltip", slot);
 }
@@ -46104,7 +45448,7 @@ const tooltipClasses = generateUtilityClasses("MuiTooltip", ["popper", "popperIn
 function round(value) {
   return Math.round(value * 1e5) / 1e5;
 }
-const useUtilityClasses$5 = (ownerState) => {
+const useUtilityClasses$1 = (ownerState) => {
   const {
     classes,
     disableInteractive,
@@ -46446,7 +45790,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
     }
     touchTimer.clear();
   });
-  h(() => stopTouchInteraction, [stopTouchInteraction]);
+  y(() => stopTouchInteraction, [stopTouchInteraction]);
   const handleOpen = (event) => {
     hystersisTimer.clear();
     hystersisOpen = true;
@@ -46549,7 +45893,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
       handleClose(event);
     });
   };
-  h(() => {
+  y(() => {
     if (!open) {
       return void 0;
     }
@@ -46653,7 +45997,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
       modifiers: tooltipModifiers
     };
   }, [arrowRef, PopperProps.popperOptions, resolvedPopperProps?.popperOptions]);
-  const classes = useUtilityClasses$5(ownerState);
+  const classes = useUtilityClasses$1(ownerState);
   const resolvedTransitionProps = typeof slotProps.transition === "function" ? slotProps.transition(ownerState) : slotProps.transition;
   const externalForwardedProps = {
     slots: {
@@ -46748,1437 +46092,6 @@ const Stack$1 = createStack({
     name: "MuiStack"
   })
 });
-function getSwitchUtilityClass(slot) {
-  return generateUtilityClass("MuiSwitch", slot);
-}
-const switchClasses = generateUtilityClasses("MuiSwitch", ["root", "edgeStart", "edgeEnd", "switchBase", "colorPrimary", "colorSecondary", "sizeSmall", "sizeMedium", "checked", "disabled", "input", "thumb", "track"]);
-const useUtilityClasses$4 = (ownerState) => {
-  const {
-    classes,
-    edge,
-    size,
-    color: color2,
-    checked,
-    disabled
-  } = ownerState;
-  const slots = {
-    root: ["root", edge && `edge${capitalize(edge)}`, `size${capitalize(size)}`],
-    switchBase: ["switchBase", `color${capitalize(color2)}`, checked && "checked", disabled && "disabled"],
-    thumb: ["thumb"],
-    track: ["track"],
-    input: ["input"]
-  };
-  const composedClasses = composeClasses(slots, getSwitchUtilityClass, classes);
-  return {
-    ...classes,
-    // forward the disabled and checked classes to the SwitchBase
-    ...composedClasses
-  };
-};
-const SwitchRoot = styled("span", {
-  name: "MuiSwitch",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.edge && styles2[`edge${capitalize(ownerState.edge)}`], styles2[`size${capitalize(ownerState.size)}`]];
-  }
-})({
-  display: "inline-flex",
-  width: 34 + 12 * 2,
-  height: 14 + 12 * 2,
-  overflow: "hidden",
-  padding: 12,
-  boxSizing: "border-box",
-  position: "relative",
-  flexShrink: 0,
-  zIndex: 0,
-  // Reset the stacking context.
-  verticalAlign: "middle",
-  // For correct alignment with the text.
-  "@media print": {
-    colorAdjust: "exact"
-  },
-  variants: [{
-    props: {
-      edge: "start"
-    },
-    style: {
-      marginLeft: -8
-    }
-  }, {
-    props: {
-      edge: "end"
-    },
-    style: {
-      marginRight: -8
-    }
-  }, {
-    props: {
-      size: "small"
-    },
-    style: {
-      width: 40,
-      height: 24,
-      padding: 7,
-      [`& .${switchClasses.thumb}`]: {
-        width: 16,
-        height: 16
-      },
-      [`& .${switchClasses.switchBase}`]: {
-        padding: 4,
-        [`&.${switchClasses.checked}`]: {
-          transform: "translateX(16px)"
-        }
-      }
-    }
-  }]
-});
-const SwitchSwitchBase = styled(SwitchBase, {
-  name: "MuiSwitch",
-  slot: "SwitchBase",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.switchBase, {
-      [`& .${switchClasses.input}`]: styles2.input
-    }, ownerState.color !== "default" && styles2[`color${capitalize(ownerState.color)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  position: "absolute",
-  top: 0,
-  left: 0,
-  zIndex: 1,
-  // Render above the focus ripple.
-  color: theme.vars ? theme.vars.palette.Switch.defaultColor : `${theme.palette.mode === "light" ? theme.palette.common.white : theme.palette.grey[300]}`,
-  transition: theme.transitions.create(["left", "transform"], {
-    duration: theme.transitions.duration.shortest
-  }),
-  [`&.${switchClasses.checked}`]: {
-    transform: "translateX(20px)"
-  },
-  [`&.${switchClasses.disabled}`]: {
-    color: theme.vars ? theme.vars.palette.Switch.defaultDisabledColor : `${theme.palette.mode === "light" ? theme.palette.grey[100] : theme.palette.grey[600]}`
-  },
-  [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
-    opacity: 0.5
-  },
-  [`&.${switchClasses.disabled} + .${switchClasses.track}`]: {
-    opacity: theme.vars ? theme.vars.opacity.switchTrackDisabled : `${theme.palette.mode === "light" ? 0.12 : 0.2}`
-  },
-  [`& .${switchClasses.input}`]: {
-    left: "-100%",
-    width: "300%"
-  }
-})), memoTheme(({
-  theme
-}) => ({
-  "&:hover": {
-    backgroundColor: theme.alpha((theme.vars || theme).palette.action.active, (theme.vars || theme).palette.action.hoverOpacity),
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: "transparent"
-    }
-  },
-  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
-    props: {
-      color: color2
-    },
-    style: {
-      [`&.${switchClasses.checked}`]: {
-        color: (theme.vars || theme).palette[color2].main,
-        "&:hover": {
-          backgroundColor: theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.hoverOpacity),
-          "@media (hover: none)": {
-            backgroundColor: "transparent"
-          }
-        },
-        [`&.${switchClasses.disabled}`]: {
-          color: theme.vars ? theme.vars.palette.Switch[`${color2}DisabledColor`] : `${theme.palette.mode === "light" ? theme.lighten(theme.palette[color2].main, 0.62) : theme.darken(theme.palette[color2].main, 0.55)}`
-        }
-      },
-      [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
-        backgroundColor: (theme.vars || theme).palette[color2].main
-      }
-    }
-  }))]
-})));
-const SwitchTrack = styled("span", {
-  name: "MuiSwitch",
-  slot: "Track"
-})(memoTheme(({
-  theme
-}) => ({
-  height: "100%",
-  width: "100%",
-  borderRadius: 14 / 2,
-  boxSizing: "border-box",
-  border: "1px solid transparent",
-  zIndex: -1,
-  transition: theme.transitions.create(["opacity", "background-color"], {
-    duration: theme.transitions.duration.shortest
-  }),
-  backgroundColor: theme.vars ? theme.vars.palette.common.onBackground : `${theme.palette.mode === "light" ? theme.palette.common.black : theme.palette.common.white}`,
-  opacity: theme.vars ? theme.vars.opacity.switchTrack : `${theme.palette.mode === "light" ? 0.38 : 0.3}`
-})));
-const SwitchThumb = styled("span", {
-  name: "MuiSwitch",
-  slot: "Thumb"
-})(memoTheme(({
-  theme
-}) => ({
-  boxShadow: (theme.vars || theme).shadows[1],
-  backgroundColor: "currentColor",
-  boxSizing: "border-box",
-  border: "1px solid transparent",
-  width: 20,
-  height: 20,
-  borderRadius: "50%"
-})));
-const Switch$1 = /* @__PURE__ */ D(function Switch(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiSwitch"
-  });
-  const {
-    className,
-    color: color2 = "primary",
-    edge = false,
-    size = "medium",
-    sx,
-    slots = {},
-    slotProps = {},
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    color: color2,
-    edge,
-    size
-  };
-  const classes = useUtilityClasses$4(ownerState);
-  const externalInputProps = slotProps.input;
-  const externalForwardedProps = {
-    slots,
-    slotProps
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    className: clsx(classes.root, className),
-    elementType: SwitchRoot,
-    externalForwardedProps,
-    ownerState,
-    additionalProps: {
-      sx
-    }
-  });
-  const [ThumbSlot, thumbSlotProps] = useSlot("thumb", {
-    className: classes.thumb,
-    elementType: SwitchThumb,
-    externalForwardedProps,
-    ownerState
-  });
-  const icon = /* @__PURE__ */ u2(ThumbSlot, {
-    ...thumbSlotProps
-  });
-  const [TrackSlot, trackSlotProps] = useSlot("track", {
-    className: classes.track,
-    elementType: SwitchTrack,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ u2(RootSlot, {
-    ...rootSlotProps,
-    children: [/* @__PURE__ */ u2(SwitchSwitchBase, {
-      type: "checkbox",
-      icon,
-      checkedIcon: icon,
-      ref,
-      ownerState,
-      ...other,
-      classes: {
-        ...classes,
-        root: classes.switchBase
-      },
-      slots: {
-        ...slots.switchBase && {
-          root: slots.switchBase
-        },
-        ...slots.input && {
-          input: slots.input
-        }
-      },
-      slotProps: {
-        ...slotProps.switchBase && {
-          root: typeof slotProps.switchBase === "function" ? slotProps.switchBase(ownerState) : slotProps.switchBase
-        },
-        input: mergeSlotProps$1(typeof externalInputProps === "function" ? externalInputProps(ownerState) : externalInputProps, {
-          role: "switch"
-        })
-      }
-    }), /* @__PURE__ */ u2(TrackSlot, {
-      ...trackSlotProps
-    })]
-  });
-});
-function getTabUtilityClass(slot) {
-  return generateUtilityClass("MuiTab", slot);
-}
-const tabClasses = generateUtilityClasses("MuiTab", ["root", "labelIcon", "textColorInherit", "textColorPrimary", "textColorSecondary", "selected", "disabled", "fullWidth", "wrapped", "iconWrapper", "icon"]);
-const useUtilityClasses$3 = (ownerState) => {
-  const {
-    classes,
-    textColor,
-    fullWidth,
-    wrapped,
-    icon,
-    label,
-    selected,
-    disabled
-  } = ownerState;
-  const slots = {
-    root: ["root", icon && label && "labelIcon", `textColor${capitalize(textColor)}`, fullWidth && "fullWidth", wrapped && "wrapped", selected && "selected", disabled && "disabled"],
-    icon: ["iconWrapper", "icon"]
-  };
-  return composeClasses(slots, getTabUtilityClass, classes);
-};
-const TabRoot = styled(ButtonBase, {
-  name: "MuiTab",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.label && ownerState.icon && styles2.labelIcon, styles2[`textColor${capitalize(ownerState.textColor)}`], ownerState.fullWidth && styles2.fullWidth, ownerState.wrapped && styles2.wrapped, {
-      [`& .${tabClasses.iconWrapper}`]: styles2.iconWrapper
-    }, {
-      [`& .${tabClasses.icon}`]: styles2.icon
-    }];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  ...theme.typography.button,
-  maxWidth: 360,
-  minWidth: 90,
-  position: "relative",
-  minHeight: 48,
-  flexShrink: 0,
-  padding: "12px 16px",
-  overflow: "hidden",
-  whiteSpace: "normal",
-  textAlign: "center",
-  lineHeight: 1.25,
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.label && (ownerState.iconPosition === "top" || ownerState.iconPosition === "bottom"),
-    style: {
-      flexDirection: "column"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.label && ownerState.iconPosition !== "top" && ownerState.iconPosition !== "bottom",
-    style: {
-      flexDirection: "row"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.icon && ownerState.label,
-    style: {
-      minHeight: 72,
-      paddingTop: 9,
-      paddingBottom: 9
-    }
-  }, {
-    props: ({
-      ownerState,
-      iconPosition
-    }) => ownerState.icon && ownerState.label && iconPosition === "top",
-    style: {
-      [`& > .${tabClasses.icon}`]: {
-        marginBottom: 6
-      }
-    }
-  }, {
-    props: ({
-      ownerState,
-      iconPosition
-    }) => ownerState.icon && ownerState.label && iconPosition === "bottom",
-    style: {
-      [`& > .${tabClasses.icon}`]: {
-        marginTop: 6
-      }
-    }
-  }, {
-    props: ({
-      ownerState,
-      iconPosition
-    }) => ownerState.icon && ownerState.label && iconPosition === "start",
-    style: {
-      [`& > .${tabClasses.icon}`]: {
-        marginRight: theme.spacing(1)
-      }
-    }
-  }, {
-    props: ({
-      ownerState,
-      iconPosition
-    }) => ownerState.icon && ownerState.label && iconPosition === "end",
-    style: {
-      [`& > .${tabClasses.icon}`]: {
-        marginLeft: theme.spacing(1)
-      }
-    }
-  }, {
-    props: {
-      textColor: "inherit"
-    },
-    style: {
-      color: "inherit",
-      opacity: 0.6,
-      // same opacity as theme.palette.text.secondary
-      [`&.${tabClasses.selected}`]: {
-        opacity: 1
-      },
-      [`&.${tabClasses.disabled}`]: {
-        opacity: (theme.vars || theme).palette.action.disabledOpacity
-      }
-    }
-  }, {
-    props: {
-      textColor: "primary"
-    },
-    style: {
-      color: (theme.vars || theme).palette.text.secondary,
-      [`&.${tabClasses.selected}`]: {
-        color: (theme.vars || theme).palette.primary.main
-      },
-      [`&.${tabClasses.disabled}`]: {
-        color: (theme.vars || theme).palette.text.disabled
-      }
-    }
-  }, {
-    props: {
-      textColor: "secondary"
-    },
-    style: {
-      color: (theme.vars || theme).palette.text.secondary,
-      [`&.${tabClasses.selected}`]: {
-        color: (theme.vars || theme).palette.secondary.main
-      },
-      [`&.${tabClasses.disabled}`]: {
-        color: (theme.vars || theme).palette.text.disabled
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.fullWidth,
-    style: {
-      flexShrink: 1,
-      flexGrow: 1,
-      flexBasis: 0,
-      maxWidth: "none"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.wrapped,
-    style: {
-      fontSize: theme.typography.pxToRem(12)
-    }
-  }]
-})));
-const Tab$1 = /* @__PURE__ */ D(function Tab(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiTab"
-  });
-  const {
-    className,
-    disabled = false,
-    disableFocusRipple = false,
-    // eslint-disable-next-line react/prop-types
-    fullWidth,
-    icon: iconProp,
-    iconPosition = "top",
-    // eslint-disable-next-line react/prop-types
-    indicator,
-    label,
-    onChange,
-    onClick,
-    onFocus,
-    // eslint-disable-next-line react/prop-types
-    selected,
-    // eslint-disable-next-line react/prop-types
-    selectionFollowsFocus,
-    // eslint-disable-next-line react/prop-types
-    textColor = "inherit",
-    value,
-    wrapped = false,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    disabled,
-    disableFocusRipple,
-    selected,
-    icon: !!iconProp,
-    iconPosition,
-    label: !!label,
-    fullWidth,
-    textColor,
-    wrapped
-  };
-  const classes = useUtilityClasses$3(ownerState);
-  const icon = iconProp && label && /* @__PURE__ */ hn(iconProp) ? /* @__PURE__ */ mn(iconProp, {
-    className: clsx(classes.icon, iconProp.props.className)
-  }) : iconProp;
-  const handleClick = (event) => {
-    if (!selected && onChange) {
-      onChange(event, value);
-    }
-    if (onClick) {
-      onClick(event);
-    }
-  };
-  const handleFocus = (event) => {
-    if (selectionFollowsFocus && !selected && onChange) {
-      onChange(event, value);
-    }
-    if (onFocus) {
-      onFocus(event);
-    }
-  };
-  return /* @__PURE__ */ u2(TabRoot, {
-    focusRipple: !disableFocusRipple,
-    className: clsx(classes.root, className),
-    ref,
-    role: "tab",
-    "aria-selected": selected,
-    disabled,
-    onClick: handleClick,
-    onFocus: handleFocus,
-    ownerState,
-    tabIndex: selected ? 0 : -1,
-    ...other,
-    children: [iconPosition === "top" || iconPosition === "start" ? /* @__PURE__ */ u2(S, {
-      children: [icon, label]
-    }) : /* @__PURE__ */ u2(S, {
-      children: [label, icon]
-    }), indicator]
-  });
-});
-const KeyboardArrowLeft = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M15.41 16.09l-4.58-4.59 4.58-4.59L14 5.5l-6 6 6 6z"
-}));
-const KeyboardArrowRight = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"
-}));
-function easeInOutSin(time2) {
-  return (1 + Math.sin(Math.PI * time2 - Math.PI / 2)) / 2;
-}
-function animate(property, element, to, options = {}, cb = () => {
-}) {
-  const {
-    ease = easeInOutSin,
-    duration: duration2 = 300
-    // standard
-  } = options;
-  let start2 = null;
-  const from2 = element[property];
-  let cancelled = false;
-  const cancel = () => {
-    cancelled = true;
-  };
-  const step = (timestamp) => {
-    if (cancelled) {
-      cb(new Error("Animation cancelled"));
-      return;
-    }
-    if (start2 === null) {
-      start2 = timestamp;
-    }
-    const time2 = Math.min(1, (timestamp - start2) / duration2);
-    element[property] = ease(time2) * (to - from2) + from2;
-    if (time2 >= 1) {
-      requestAnimationFrame(() => {
-        cb(null);
-      });
-      return;
-    }
-    requestAnimationFrame(step);
-  };
-  if (from2 === to) {
-    cb(new Error("Element already at target position"));
-    return cancel;
-  }
-  requestAnimationFrame(step);
-  return cancel;
-}
-const styles = {
-  width: 99,
-  height: 99,
-  position: "absolute",
-  top: -9999,
-  overflow: "scroll"
-};
-function ScrollbarSize(props) {
-  const {
-    onChange,
-    ...other
-  } = props;
-  const scrollbarHeight = A$1();
-  const nodeRef = A$1(null);
-  const setMeasurements = () => {
-    scrollbarHeight.current = nodeRef.current.offsetHeight - nodeRef.current.clientHeight;
-  };
-  useEnhancedEffect(() => {
-    const handleResize = debounce$1(() => {
-      const prevHeight = scrollbarHeight.current;
-      setMeasurements();
-      if (prevHeight !== scrollbarHeight.current) {
-        onChange(scrollbarHeight.current);
-      }
-    });
-    const containerWindow = ownerWindow(nodeRef.current);
-    containerWindow.addEventListener("resize", handleResize);
-    return () => {
-      handleResize.clear();
-      containerWindow.removeEventListener("resize", handleResize);
-    };
-  }, [onChange]);
-  h(() => {
-    setMeasurements();
-    onChange(scrollbarHeight.current);
-  }, [onChange]);
-  return /* @__PURE__ */ u2("div", {
-    style: styles,
-    ...other,
-    ref: nodeRef
-  });
-}
-function getTabScrollButtonUtilityClass(slot) {
-  return generateUtilityClass("MuiTabScrollButton", slot);
-}
-const tabScrollButtonClasses = generateUtilityClasses("MuiTabScrollButton", ["root", "vertical", "horizontal", "disabled"]);
-const useUtilityClasses$2 = (ownerState) => {
-  const {
-    classes,
-    orientation,
-    disabled
-  } = ownerState;
-  const slots = {
-    root: ["root", orientation, disabled && "disabled"]
-  };
-  return composeClasses(slots, getTabScrollButtonUtilityClass, classes);
-};
-const TabScrollButtonRoot = styled(ButtonBase, {
-  name: "MuiTabScrollButton",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.orientation && styles2[ownerState.orientation]];
-  }
-})({
-  width: 40,
-  flexShrink: 0,
-  opacity: 0.8,
-  [`&.${tabScrollButtonClasses.disabled}`]: {
-    opacity: 0
-  },
-  variants: [{
-    props: {
-      orientation: "vertical"
-    },
-    style: {
-      width: "100%",
-      height: 40,
-      "& svg": {
-        transform: "var(--TabScrollButton-svgRotate)"
-      }
-    }
-  }]
-});
-const TabScrollButton = /* @__PURE__ */ D(function TabScrollButton2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiTabScrollButton"
-  });
-  const {
-    className,
-    slots = {},
-    slotProps = {},
-    direction,
-    orientation,
-    disabled,
-    ...other
-  } = props;
-  const isRtl = useRtl();
-  const ownerState = {
-    isRtl,
-    ...props
-  };
-  const classes = useUtilityClasses$2(ownerState);
-  const StartButtonIcon = slots.StartScrollButtonIcon ?? KeyboardArrowLeft;
-  const EndButtonIcon = slots.EndScrollButtonIcon ?? KeyboardArrowRight;
-  const startButtonIconProps = useSlotProps({
-    elementType: StartButtonIcon,
-    externalSlotProps: slotProps.startScrollButtonIcon,
-    additionalProps: {
-      fontSize: "small"
-    },
-    ownerState
-  });
-  const endButtonIconProps = useSlotProps({
-    elementType: EndButtonIcon,
-    externalSlotProps: slotProps.endScrollButtonIcon,
-    additionalProps: {
-      fontSize: "small"
-    },
-    ownerState
-  });
-  return /* @__PURE__ */ u2(TabScrollButtonRoot, {
-    component: "div",
-    className: clsx(classes.root, className),
-    ref,
-    role: null,
-    ownerState,
-    tabIndex: null,
-    ...other,
-    style: {
-      ...other.style,
-      ...orientation === "vertical" && {
-        "--TabScrollButton-svgRotate": `rotate(${isRtl ? -90 : 90}deg)`
-      }
-    },
-    children: direction === "left" ? /* @__PURE__ */ u2(StartButtonIcon, {
-      ...startButtonIconProps
-    }) : /* @__PURE__ */ u2(EndButtonIcon, {
-      ...endButtonIconProps
-    })
-  });
-});
-function getTabsUtilityClass(slot) {
-  return generateUtilityClass("MuiTabs", slot);
-}
-const tabsClasses = generateUtilityClasses("MuiTabs", ["root", "vertical", "list", "flexContainer", "flexContainerVertical", "centered", "scroller", "fixed", "scrollableX", "scrollableY", "hideScrollbar", "scrollButtons", "scrollButtonsHideMobile", "indicator"]);
-const nextItem = (list, item) => {
-  if (list === item) {
-    return list.firstChild;
-  }
-  if (item && item.nextElementSibling) {
-    return item.nextElementSibling;
-  }
-  return list.firstChild;
-};
-const previousItem = (list, item) => {
-  if (list === item) {
-    return list.lastChild;
-  }
-  if (item && item.previousElementSibling) {
-    return item.previousElementSibling;
-  }
-  return list.lastChild;
-};
-const moveFocus = (list, currentFocus, traversalFunction) => {
-  let wrappedOnce = false;
-  let nextFocus = traversalFunction(list, currentFocus);
-  while (nextFocus) {
-    if (nextFocus === list.firstChild) {
-      if (wrappedOnce) {
-        return;
-      }
-      wrappedOnce = true;
-    }
-    const nextFocusDisabled = nextFocus.disabled || nextFocus.getAttribute("aria-disabled") === "true";
-    if (!nextFocus.hasAttribute("tabindex") || nextFocusDisabled) {
-      nextFocus = traversalFunction(list, nextFocus);
-    } else {
-      nextFocus.focus();
-      return;
-    }
-  }
-};
-const useUtilityClasses$1 = (ownerState) => {
-  const {
-    vertical,
-    fixed,
-    hideScrollbar,
-    scrollableX,
-    scrollableY,
-    centered,
-    scrollButtonsHideMobile,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", vertical && "vertical"],
-    scroller: ["scroller", fixed && "fixed", hideScrollbar && "hideScrollbar", scrollableX && "scrollableX", scrollableY && "scrollableY"],
-    list: ["list", "flexContainer", vertical && "flexContainerVertical", vertical && "vertical", centered && "centered"],
-    indicator: ["indicator"],
-    scrollButtons: ["scrollButtons", scrollButtonsHideMobile && "scrollButtonsHideMobile"],
-    scrollableX: [scrollableX && "scrollableX"],
-    hideScrollbar: [hideScrollbar && "hideScrollbar"]
-  };
-  return composeClasses(slots, getTabsUtilityClass, classes);
-};
-const TabsRoot = styled("div", {
-  name: "MuiTabs",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [{
-      [`& .${tabsClasses.scrollButtons}`]: styles2.scrollButtons
-    }, {
-      [`& .${tabsClasses.scrollButtons}`]: ownerState.scrollButtonsHideMobile && styles2.scrollButtonsHideMobile
-    }, styles2.root, ownerState.vertical && styles2.vertical];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  overflow: "hidden",
-  minHeight: 48,
-  // Add iOS momentum scrolling for iOS < 13.0
-  WebkitOverflowScrolling: "touch",
-  display: "flex",
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.vertical,
-    style: {
-      flexDirection: "column"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.scrollButtonsHideMobile,
-    style: {
-      [`& .${tabsClasses.scrollButtons}`]: {
-        [theme.breakpoints.down("sm")]: {
-          display: "none"
-        }
-      }
-    }
-  }]
-})));
-const TabsScroller = styled("div", {
-  name: "MuiTabs",
-  slot: "Scroller",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.scroller, ownerState.fixed && styles2.fixed, ownerState.hideScrollbar && styles2.hideScrollbar, ownerState.scrollableX && styles2.scrollableX, ownerState.scrollableY && styles2.scrollableY];
-  }
-})({
-  position: "relative",
-  display: "inline-block",
-  flex: "1 1 auto",
-  whiteSpace: "nowrap",
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.fixed,
-    style: {
-      overflowX: "hidden",
-      width: "100%"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.hideScrollbar,
-    style: {
-      // Hide dimensionless scrollbar on macOS
-      scrollbarWidth: "none",
-      // Firefox
-      "&::-webkit-scrollbar": {
-        display: "none"
-        // Safari + Chrome
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.scrollableX,
-    style: {
-      overflowX: "auto",
-      overflowY: "hidden"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.scrollableY,
-    style: {
-      overflowY: "auto",
-      overflowX: "hidden"
-    }
-  }]
-});
-const List$1 = styled("div", {
-  name: "MuiTabs",
-  slot: "List",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.list, styles2.flexContainer, ownerState.vertical && styles2.flexContainerVertical, ownerState.centered && styles2.centered];
-  }
-})({
-  display: "flex",
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.vertical,
-    style: {
-      flexDirection: "column"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.centered,
-    style: {
-      justifyContent: "center"
-    }
-  }]
-});
-const TabsIndicator = styled("span", {
-  name: "MuiTabs",
-  slot: "Indicator"
-})(memoTheme(({
-  theme
-}) => ({
-  position: "absolute",
-  height: 2,
-  bottom: 0,
-  width: "100%",
-  transition: theme.transitions.create(),
-  variants: [{
-    props: {
-      indicatorColor: "primary"
-    },
-    style: {
-      backgroundColor: (theme.vars || theme).palette.primary.main
-    }
-  }, {
-    props: {
-      indicatorColor: "secondary"
-    },
-    style: {
-      backgroundColor: (theme.vars || theme).palette.secondary.main
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.vertical,
-    style: {
-      height: "100%",
-      width: 2,
-      right: 0
-    }
-  }]
-})));
-const TabsScrollbarSize = styled(ScrollbarSize)({
-  overflowX: "auto",
-  overflowY: "hidden",
-  // Hide dimensionless scrollbar on macOS
-  scrollbarWidth: "none",
-  // Firefox
-  "&::-webkit-scrollbar": {
-    display: "none"
-    // Safari + Chrome
-  }
-});
-const defaultIndicatorStyle = {};
-const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiTabs"
-  });
-  const theme = useTheme();
-  const isRtl = useRtl();
-  const {
-    "aria-label": ariaLabel,
-    "aria-labelledby": ariaLabelledBy,
-    action,
-    centered = false,
-    children: childrenProp,
-    className,
-    component = "div",
-    allowScrollButtonsMobile = false,
-    indicatorColor = "primary",
-    onChange,
-    orientation = "horizontal",
-    ScrollButtonComponent,
-    // TODO: remove in v7 (deprecated in v6)
-    scrollButtons = "auto",
-    selectionFollowsFocus,
-    slots = {},
-    slotProps = {},
-    TabIndicatorProps = {},
-    // TODO: remove in v7 (deprecated in v6)
-    TabScrollButtonProps = {},
-    // TODO: remove in v7 (deprecated in v6)
-    textColor = "primary",
-    value,
-    variant = "standard",
-    visibleScrollbar = false,
-    ...other
-  } = props;
-  const scrollable = variant === "scrollable";
-  const vertical = orientation === "vertical";
-  const scrollStart = vertical ? "scrollTop" : "scrollLeft";
-  const start2 = vertical ? "top" : "left";
-  const end2 = vertical ? "bottom" : "right";
-  const clientSize = vertical ? "clientHeight" : "clientWidth";
-  const size = vertical ? "height" : "width";
-  const ownerState = {
-    ...props,
-    component,
-    allowScrollButtonsMobile,
-    indicatorColor,
-    orientation,
-    vertical,
-    scrollButtons,
-    textColor,
-    variant,
-    visibleScrollbar,
-    fixed: !scrollable,
-    hideScrollbar: scrollable && !visibleScrollbar,
-    scrollableX: scrollable && !vertical,
-    scrollableY: scrollable && vertical,
-    centered: centered && !scrollable,
-    scrollButtonsHideMobile: !allowScrollButtonsMobile
-  };
-  const classes = useUtilityClasses$1(ownerState);
-  const startScrollButtonIconProps = useSlotProps({
-    elementType: slots.StartScrollButtonIcon,
-    externalSlotProps: slotProps.startScrollButtonIcon,
-    ownerState
-  });
-  const endScrollButtonIconProps = useSlotProps({
-    elementType: slots.EndScrollButtonIcon,
-    externalSlotProps: slotProps.endScrollButtonIcon,
-    ownerState
-  });
-  const [mounted, setMounted] = d(false);
-  const [indicatorStyle, setIndicatorStyle] = d(defaultIndicatorStyle);
-  const [displayStartScroll, setDisplayStartScroll] = d(false);
-  const [displayEndScroll, setDisplayEndScroll] = d(false);
-  const [updateScrollObserver, setUpdateScrollObserver] = d(false);
-  const [scrollerStyle, setScrollerStyle] = d({
-    overflow: "hidden",
-    scrollbarWidth: 0
-  });
-  const valueToIndex = /* @__PURE__ */ new Map();
-  const tabsRef = A$1(null);
-  const tabListRef = A$1(null);
-  const externalForwardedProps = {
-    slots,
-    slotProps: {
-      indicator: TabIndicatorProps,
-      scrollButtons: TabScrollButtonProps,
-      ...slotProps
-    }
-  };
-  const getTabsMeta = () => {
-    const tabsNode = tabsRef.current;
-    let tabsMeta;
-    if (tabsNode) {
-      const rect = tabsNode.getBoundingClientRect();
-      tabsMeta = {
-        clientWidth: tabsNode.clientWidth,
-        scrollLeft: tabsNode.scrollLeft,
-        scrollTop: tabsNode.scrollTop,
-        scrollWidth: tabsNode.scrollWidth,
-        top: rect.top,
-        bottom: rect.bottom,
-        left: rect.left,
-        right: rect.right
-      };
-    }
-    let tabMeta;
-    if (tabsNode && value !== false) {
-      const children2 = tabListRef.current.children;
-      if (children2.length > 0) {
-        const tab = children2[valueToIndex.get(value)];
-        tabMeta = tab ? tab.getBoundingClientRect() : null;
-      }
-    }
-    return {
-      tabsMeta,
-      tabMeta
-    };
-  };
-  const updateIndicatorState = useEventCallback(() => {
-    const {
-      tabsMeta,
-      tabMeta
-    } = getTabsMeta();
-    let startValue = 0;
-    let startIndicator;
-    if (vertical) {
-      startIndicator = "top";
-      if (tabMeta && tabsMeta) {
-        startValue = tabMeta.top - tabsMeta.top + tabsMeta.scrollTop;
-      }
-    } else {
-      startIndicator = isRtl ? "right" : "left";
-      if (tabMeta && tabsMeta) {
-        startValue = (isRtl ? -1 : 1) * (tabMeta[startIndicator] - tabsMeta[startIndicator] + tabsMeta.scrollLeft);
-      }
-    }
-    const newIndicatorStyle = {
-      [startIndicator]: startValue,
-      // May be wrong until the font is loaded.
-      [size]: tabMeta ? tabMeta[size] : 0
-    };
-    if (typeof indicatorStyle[startIndicator] !== "number" || typeof indicatorStyle[size] !== "number") {
-      setIndicatorStyle(newIndicatorStyle);
-    } else {
-      const dStart = Math.abs(indicatorStyle[startIndicator] - newIndicatorStyle[startIndicator]);
-      const dSize = Math.abs(indicatorStyle[size] - newIndicatorStyle[size]);
-      if (dStart >= 1 || dSize >= 1) {
-        setIndicatorStyle(newIndicatorStyle);
-      }
-    }
-  });
-  const scroll = (scrollValue, {
-    animation = true
-  } = {}) => {
-    if (animation) {
-      animate(scrollStart, tabsRef.current, scrollValue, {
-        duration: theme.transitions.duration.standard
-      });
-    } else {
-      tabsRef.current[scrollStart] = scrollValue;
-    }
-  };
-  const moveTabsScroll = (delta) => {
-    let scrollValue = tabsRef.current[scrollStart];
-    if (vertical) {
-      scrollValue += delta;
-    } else {
-      scrollValue += delta * (isRtl ? -1 : 1);
-    }
-    scroll(scrollValue);
-  };
-  const getScrollSize = () => {
-    const containerSize = tabsRef.current[clientSize];
-    let totalSize = 0;
-    const children2 = Array.from(tabListRef.current.children);
-    for (let i2 = 0; i2 < children2.length; i2 += 1) {
-      const tab = children2[i2];
-      if (totalSize + tab[clientSize] > containerSize) {
-        if (i2 === 0) {
-          totalSize = containerSize;
-        }
-        break;
-      }
-      totalSize += tab[clientSize];
-    }
-    return totalSize;
-  };
-  const handleStartScrollClick = () => {
-    moveTabsScroll(-1 * getScrollSize());
-  };
-  const handleEndScrollClick = () => {
-    moveTabsScroll(getScrollSize());
-  };
-  const [ScrollbarSlot, {
-    onChange: scrollbarOnChange,
-    ...scrollbarSlotProps
-  }] = useSlot("scrollbar", {
-    className: clsx(classes.scrollableX, classes.hideScrollbar),
-    elementType: TabsScrollbarSize,
-    shouldForwardComponentProp: true,
-    externalForwardedProps,
-    ownerState
-  });
-  const handleScrollbarSizeChange = q$1((scrollbarWidth) => {
-    scrollbarOnChange?.(scrollbarWidth);
-    setScrollerStyle({
-      overflow: null,
-      scrollbarWidth
-    });
-  }, [scrollbarOnChange]);
-  const [ScrollButtonsSlot, scrollButtonSlotProps] = useSlot("scrollButtons", {
-    className: clsx(classes.scrollButtons, TabScrollButtonProps.className),
-    elementType: TabScrollButton,
-    externalForwardedProps,
-    ownerState,
-    additionalProps: {
-      orientation,
-      slots: {
-        StartScrollButtonIcon: slots.startScrollButtonIcon || slots.StartScrollButtonIcon,
-        EndScrollButtonIcon: slots.endScrollButtonIcon || slots.EndScrollButtonIcon
-      },
-      slotProps: {
-        startScrollButtonIcon: startScrollButtonIconProps,
-        endScrollButtonIcon: endScrollButtonIconProps
-      }
-    }
-  });
-  const getConditionalElements = () => {
-    const conditionalElements2 = {};
-    conditionalElements2.scrollbarSizeListener = scrollable ? /* @__PURE__ */ u2(ScrollbarSlot, {
-      ...scrollbarSlotProps,
-      onChange: handleScrollbarSizeChange
-    }) : null;
-    const scrollButtonsActive = displayStartScroll || displayEndScroll;
-    const showScrollButtons = scrollable && (scrollButtons === "auto" && scrollButtonsActive || scrollButtons === true);
-    conditionalElements2.scrollButtonStart = showScrollButtons ? /* @__PURE__ */ u2(ScrollButtonsSlot, {
-      direction: isRtl ? "right" : "left",
-      onClick: handleStartScrollClick,
-      disabled: !displayStartScroll,
-      ...scrollButtonSlotProps
-    }) : null;
-    conditionalElements2.scrollButtonEnd = showScrollButtons ? /* @__PURE__ */ u2(ScrollButtonsSlot, {
-      direction: isRtl ? "left" : "right",
-      onClick: handleEndScrollClick,
-      disabled: !displayEndScroll,
-      ...scrollButtonSlotProps
-    }) : null;
-    return conditionalElements2;
-  };
-  const scrollSelectedIntoView = useEventCallback((animation) => {
-    const {
-      tabsMeta,
-      tabMeta
-    } = getTabsMeta();
-    if (!tabMeta || !tabsMeta) {
-      return;
-    }
-    if (tabMeta[start2] < tabsMeta[start2]) {
-      const nextScrollStart = tabsMeta[scrollStart] + (tabMeta[start2] - tabsMeta[start2]);
-      scroll(nextScrollStart, {
-        animation
-      });
-    } else if (tabMeta[end2] > tabsMeta[end2]) {
-      const nextScrollStart = tabsMeta[scrollStart] + (tabMeta[end2] - tabsMeta[end2]);
-      scroll(nextScrollStart, {
-        animation
-      });
-    }
-  });
-  const updateScrollButtonState = useEventCallback(() => {
-    if (scrollable && scrollButtons !== false) {
-      setUpdateScrollObserver(!updateScrollObserver);
-    }
-  });
-  h(() => {
-    const handleResize = debounce$1(() => {
-      if (tabsRef.current) {
-        updateIndicatorState();
-      }
-    });
-    let resizeObserver;
-    const handleMutation = (records) => {
-      records.forEach((record) => {
-        record.removedNodes.forEach((item) => {
-          resizeObserver?.unobserve(item);
-        });
-        record.addedNodes.forEach((item) => {
-          resizeObserver?.observe(item);
-        });
-      });
-      handleResize();
-      updateScrollButtonState();
-    };
-    const win = ownerWindow(tabsRef.current);
-    win.addEventListener("resize", handleResize);
-    let mutationObserver;
-    if (typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(handleResize);
-      Array.from(tabListRef.current.children).forEach((child) => {
-        resizeObserver.observe(child);
-      });
-    }
-    if (typeof MutationObserver !== "undefined") {
-      mutationObserver = new MutationObserver(handleMutation);
-      mutationObserver.observe(tabListRef.current, {
-        childList: true
-      });
-    }
-    return () => {
-      handleResize.clear();
-      win.removeEventListener("resize", handleResize);
-      mutationObserver?.disconnect();
-      resizeObserver?.disconnect();
-    };
-  }, [updateIndicatorState, updateScrollButtonState]);
-  h(() => {
-    const tabListChildren = Array.from(tabListRef.current.children);
-    const length2 = tabListChildren.length;
-    if (typeof IntersectionObserver !== "undefined" && length2 > 0 && scrollable && scrollButtons !== false) {
-      const firstTab = tabListChildren[0];
-      const lastTab = tabListChildren[length2 - 1];
-      const observerOptions = {
-        root: tabsRef.current,
-        threshold: 0.99
-      };
-      const handleScrollButtonStart = (entries) => {
-        setDisplayStartScroll(!entries[0].isIntersecting);
-      };
-      const firstObserver = new IntersectionObserver(handleScrollButtonStart, observerOptions);
-      firstObserver.observe(firstTab);
-      const handleScrollButtonEnd = (entries) => {
-        setDisplayEndScroll(!entries[0].isIntersecting);
-      };
-      const lastObserver = new IntersectionObserver(handleScrollButtonEnd, observerOptions);
-      lastObserver.observe(lastTab);
-      return () => {
-        firstObserver.disconnect();
-        lastObserver.disconnect();
-      };
-    }
-    return void 0;
-  }, [scrollable, scrollButtons, updateScrollObserver, childrenProp?.length]);
-  h(() => {
-    setMounted(true);
-  }, []);
-  h(() => {
-    updateIndicatorState();
-  });
-  h(() => {
-    scrollSelectedIntoView(defaultIndicatorStyle !== indicatorStyle);
-  }, [scrollSelectedIntoView, indicatorStyle]);
-  F$1(action, () => ({
-    updateIndicator: updateIndicatorState,
-    updateScrollButtons: updateScrollButtonState
-  }), [updateIndicatorState, updateScrollButtonState]);
-  const [IndicatorSlot, indicatorSlotProps] = useSlot("indicator", {
-    className: clsx(classes.indicator, TabIndicatorProps.className),
-    elementType: TabsIndicator,
-    externalForwardedProps,
-    ownerState,
-    additionalProps: {
-      style: indicatorStyle
-    }
-  });
-  const indicator = /* @__PURE__ */ u2(IndicatorSlot, {
-    ...indicatorSlotProps
-  });
-  let childIndex = 0;
-  const children = L.map(childrenProp, (child) => {
-    if (!/* @__PURE__ */ hn(child)) {
-      return null;
-    }
-    const childValue = child.props.value === void 0 ? childIndex : child.props.value;
-    valueToIndex.set(childValue, childIndex);
-    const selected = childValue === value;
-    childIndex += 1;
-    return /* @__PURE__ */ mn(child, {
-      fullWidth: variant === "fullWidth",
-      indicator: selected && !mounted && indicator,
-      selected,
-      selectionFollowsFocus,
-      onChange,
-      textColor,
-      value: childValue,
-      ...childIndex === 1 && value === false && !child.props.tabIndex ? {
-        tabIndex: 0
-      } : {}
-    });
-  });
-  const handleKeyDown = (event) => {
-    if (event.altKey || event.shiftKey || event.ctrlKey || event.metaKey) {
-      return;
-    }
-    const list = tabListRef.current;
-    const currentFocus = activeElement(ownerDocument(list));
-    const role = currentFocus?.getAttribute("role");
-    if (role !== "tab") {
-      return;
-    }
-    let previousItemKey = orientation === "horizontal" ? "ArrowLeft" : "ArrowUp";
-    let nextItemKey = orientation === "horizontal" ? "ArrowRight" : "ArrowDown";
-    if (orientation === "horizontal" && isRtl) {
-      previousItemKey = "ArrowRight";
-      nextItemKey = "ArrowLeft";
-    }
-    switch (event.key) {
-      case previousItemKey:
-        event.preventDefault();
-        moveFocus(list, currentFocus, previousItem);
-        break;
-      case nextItemKey:
-        event.preventDefault();
-        moveFocus(list, currentFocus, nextItem);
-        break;
-      case "Home":
-        event.preventDefault();
-        moveFocus(list, null, nextItem);
-        break;
-      case "End":
-        event.preventDefault();
-        moveFocus(list, null, previousItem);
-        break;
-    }
-  };
-  const conditionalElements = getConditionalElements();
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref,
-    className: clsx(classes.root, className),
-    elementType: TabsRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other,
-      component
-    },
-    ownerState
-  });
-  const [ScrollerSlot, scrollerSlotProps] = useSlot("scroller", {
-    ref: tabsRef,
-    className: classes.scroller,
-    elementType: TabsScroller,
-    externalForwardedProps,
-    ownerState,
-    additionalProps: {
-      style: {
-        overflow: scrollerStyle.overflow,
-        [vertical ? `margin${isRtl ? "Left" : "Right"}` : "marginBottom"]: visibleScrollbar ? void 0 : -scrollerStyle.scrollbarWidth
-      }
-    }
-  });
-  const [ListSlot, listSlotProps] = useSlot("list", {
-    ref: tabListRef,
-    className: clsx(classes.list, classes.flexContainer),
-    elementType: List$1,
-    externalForwardedProps,
-    ownerState,
-    getSlotProps: (handlers) => ({
-      ...handlers,
-      onKeyDown: (event) => {
-        handleKeyDown(event);
-        handlers.onKeyDown?.(event);
-      }
-    })
-  });
-  return /* @__PURE__ */ u2(RootSlot, {
-    ...rootSlotProps,
-    children: [conditionalElements.scrollButtonStart, conditionalElements.scrollbarSizeListener, /* @__PURE__ */ u2(ScrollerSlot, {
-      ...scrollerSlotProps,
-      children: [/* @__PURE__ */ u2(ListSlot, {
-        "aria-label": ariaLabel,
-        "aria-labelledby": ariaLabelledBy,
-        "aria-orientation": orientation === "vertical" ? "vertical" : null,
-        role: "tablist",
-        ...listSlotProps,
-        children
-      }), mounted && indicator]
-    }), conditionalElements.scrollButtonEnd]
-  });
-});
 function getTextFieldUtilityClass(slot) {
   return generateUtilityClass("MuiTextField", slot);
 }
@@ -48197,7 +46110,7 @@ const useUtilityClasses = (ownerState) => {
   };
   return composeClasses(slots, getTextFieldUtilityClass, classes);
 };
-const TextFieldRoot = styled(FormControl$1, {
+const TextFieldRoot = styled(FormControl, {
   name: "MuiTextField",
   slot: "Root"
 })({});
@@ -48311,7 +46224,7 @@ const TextField$1 = /* @__PURE__ */ D(function TextField(inProps, ref) {
     ownerState
   });
   const [InputLabelSlot, inputLabelProps] = useSlot("inputLabel", {
-    elementType: InputLabel$1,
+    elementType: InputLabel,
     externalForwardedProps,
     ownerState
   });
@@ -48326,7 +46239,7 @@ const TextField$1 = /* @__PURE__ */ D(function TextField(inProps, ref) {
     ownerState
   });
   const [SelectSlot, selectProps] = useSlot("select", {
-    elementType: Select$1,
+    elementType: Select,
     externalForwardedProps,
     ownerState
   });
@@ -48384,30 +46297,19 @@ const TextField2 = TextField$1;
 const Button2 = Button$1;
 const IconButton2 = IconButton$1;
 const Tooltip2 = Tooltip$1;
-const Divider2 = Divider$1;
 const Checkbox2 = Checkbox$1;
 const FormControlLabel2 = FormControlLabel$1;
 const FormGroup2 = FormGroup$1;
 const Chip2 = Chip$1;
 const Popover2 = Popover$1;
 const Paper2 = Paper$1;
-const List2 = List$2;
+const List2 = List$1;
 const ListItemButton2 = ListItemButton$1;
 const Collapse2 = Collapse$1;
 const InputAdornment2 = InputAdornment$1;
 const Popper3 = Popper$1;
 const ClickAwayListener = ClickAwayListener$1;
-const CircularProgress2 = CircularProgress$1;
-const ListItemIcon2 = ListItemIcon$1;
-const ListItemText2 = ListItemText$1;
 const ThemeProvider = ThemeProvider$1;
-const Tabs2 = Tabs$1;
-const Tab2 = Tab$1;
-const FormControl2 = FormControl$1;
-const InputLabel2 = InputLabel$1;
-const MenuItem$1 = MenuItem$2;
-const Select2 = Select$1;
-const Switch2 = Switch$1;
 function ThinkButton({
   variant = "secondary",
   size = "md",
@@ -48472,7 +46374,7 @@ function ThinkIconButton({
   );
 }
 function useClickOutside(ref, handler) {
-  h(() => {
+  y(() => {
     const listener = (event) => {
       if (event.target instanceof Node && ref.current && !ref.current.contains(event.target)) {
         handler(event);
@@ -48508,7 +46410,7 @@ function Modal2({
       handleClose();
     }
   });
-  h(() => {
+  y(() => {
     if (!closeOnEscape || !isOpen) return;
     const handleEscape = (e2) => {
       if (e2.key === "Escape") {
@@ -48518,7 +46420,7 @@ function Modal2({
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [closeOnEscape, isOpen, onClose, onBeforeClose]);
-  h(() => {
+  y(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -48823,53 +46725,6 @@ function FilterPopover({
     )
   ] });
 }
-function IconAction({
-  label,
-  icon,
-  onClick,
-  disabled,
-  stopPropagation: stopPropagation2 = true,
-  tooltipPlacement = "top",
-  sx,
-  className,
-  size = "small",
-  edge,
-  color: color2,
-  pressed
-}) {
-  const handleClick = (e2) => {
-    if (stopPropagation2) {
-      try {
-        e2.stopPropagation?.();
-      } catch {
-      }
-    }
-    onClick?.(e2);
-  };
-  const primitiveSize = size === "small" ? "think-icon-button--sm" : size === "large" ? "think-icon-button--lg" : "";
-  const classes = [
-    "think-icon-button",
-    primitiveSize,
-    color2 === "error" ? "think-icon-button--danger" : "",
-    className
-  ].filter(Boolean).join(" ");
-  const button = /* @__PURE__ */ u2(
-    IconButton2,
-    {
-      "aria-label": label,
-      "aria-pressed": pressed === void 0 ? void 0 : pressed,
-      onClick: onClick ? handleClick : void 0,
-      disabled,
-      sx,
-      className: classes,
-      size,
-      edge,
-      color: color2,
-      children: icon
-    }
-  );
-  return /* @__PURE__ */ u2(Tooltip2, { title: label, placement: tooltipPlacement, children: disabled ? /* @__PURE__ */ u2("span", { children: button }) : button });
-}
 const colorTokenMap = {
   inherit: "inherit",
   primary: "var(--interactive-accent)",
@@ -48983,25 +46838,32 @@ function ModalHeader({
   onClose,
   right: right2,
   padding: padding2 = 1.5,
-  borderBottom: borderBottom2 = true
+  borderBottom: borderBottom2 = true,
+  className
 }) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        p: padding2,
-        ...borderBottom2 ? { borderBottom: "1px solid var(--background-modifier-border)" } : {},
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 1
-      },
-      children: [
-        /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, flex: 1 }, children: left2 }),
-        right2 ?? (onClose ? /* @__PURE__ */ u2(IconAction, { label: "关闭", onClick: onClose, icon: /* @__PURE__ */ u2(CloseIcon, {}) }) : null)
-      ]
-    }
-  );
+  const densityClass = padding2 === 0 ? "think-modal-header--flush" : padding2 <= 1.5 ? "think-modal-header--compact" : "think-modal-header--normal";
+  const classes = [
+    "think-modal-header",
+    densityClass,
+    borderBottom2 ? "" : "think-modal-header--borderless",
+    className
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2("div", { className: classes, children: [
+    /* @__PURE__ */ u2("div", { className: "think-modal-header__left", children: left2 }),
+    /* @__PURE__ */ u2("div", { className: "think-modal-header__right", children: [
+      right2,
+      onClose ? /* @__PURE__ */ u2(
+        ThinkIconButton,
+        {
+          label: "关闭",
+          size: "sm",
+          className: "think-modal-header__close",
+          onClick: onClose,
+          icon: /* @__PURE__ */ u2(CloseIcon, { fontSize: "small" })
+        }
+      ) : null
+    ] })
+  ] });
 }
 function ThemeTreeNodeLabel({
   depth,
@@ -49536,7 +47398,7 @@ function detectObsidianColorMode(doc = document) {
 }
 function ThinkMuiThemeProvider({ children }) {
   const [mode, setMode] = d(() => detectObsidianColorMode());
-  h(() => {
+  y(() => {
     const updateMode = () => setMode(detectObsidianColorMode());
     const observer = new MutationObserver(updateMode);
     const targets = [document.documentElement, document.body].filter(Boolean);
@@ -49556,7 +47418,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, classN
   const [isOpen, setIsOpen] = d(false);
   const wrapperRef = A$1(null);
   const selectedLabel = options.find((option) => option.value === value)?.label || value;
-  h(() => {
+  y(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) setIsOpen(false);
     }
@@ -49665,7 +47527,7 @@ function ThinkCombobox({
   const selectedLabel = T$1(() => options.find((option) => option.value === value)?.label || value, [options, value]);
   const [query, setQuery] = d(selectedLabel);
   const [open, setOpen] = d(false);
-  h(() => setQuery(selectedLabel), [selectedLabel]);
+  y(() => setQuery(selectedLabel), [selectedLabel]);
   const filtered = T$1(() => filterOptions(options, query), [options, query]);
   return /* @__PURE__ */ u2("div", { className: ["think-combobox", className].filter(Boolean).join(" "), children: [
     /* @__PURE__ */ u2("div", { className: "think-combobox-control", children: [
@@ -50050,7 +47912,7 @@ function MarkdownContent({
   onTouchEnd
 }) {
   const elRef = A$1(null);
-  h(() => {
+  y(() => {
     const containerEl = elRef.current;
     if (!containerEl) return;
     let disposed2 = false;
@@ -50756,7 +48618,7 @@ function registerSettingsPersistence(plugin) {
   instance.registerSingleton(ThemeManager);
   instance.register(THEME_MATCHER_TOKEN, { useToken: ThemeManager });
 }
-const ENERGY_RECORD_TYPE_ID = RECORD_TYPE_IDS.ENERGY;
+const ENERGY_RECORD_TYPE_ID$1 = RECORD_TYPE_IDS.ENERGY;
 ({
   ...ENERGY_DEFINITION
 });
@@ -51292,8 +49154,8 @@ function QuickInputTagFieldRenderer({
     onUpdate(field.key, Array.from(/* @__PURE__ */ new Set([...selected, ...additions])));
     setDraft("");
   };
-  return /* @__PURE__ */ u2(QuickInputFieldFrame, { label, required: field.required, children: /* @__PURE__ */ u2(Box, { className: "think-ob-tag-editor", children: [
-    /* @__PURE__ */ u2(Box, { className: "think-ob-tag-editor__row", children: [
+  return /* @__PURE__ */ u2(QuickInputFieldFrame, { label, required: field.required, children: /* @__PURE__ */ u2("div", { className: "think-ob-tag-editor", children: [
+    /* @__PURE__ */ u2("div", { className: "think-ob-tag-editor__row", children: [
       selected.map((item) => /* @__PURE__ */ u2(
         "button",
         {
@@ -51343,7 +49205,7 @@ function QuickInputTagFieldRenderer({
         }
       )
     ] }),
-    choices.length > 0 && /* @__PURE__ */ u2(Box, { className: "think-ob-tag-suggestions", children: choices.map((choice) => /* @__PURE__ */ u2(
+    choices.length > 0 && /* @__PURE__ */ u2("div", { className: "think-ob-tag-suggestions", children: choices.map((choice) => /* @__PURE__ */ u2(
       "button",
       {
         type: "button",
@@ -51553,7 +49415,7 @@ function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense =
   const normalizedDraft = normalizeGoalPath(draftGoalPath) || "";
   const existing = T$1(() => new Set((goals || []).map((goal) => normalizeGoalPath(goal.value) || "")), [goals]);
   const canCreate = !!onCreateGoal && !!normalizedDraft && !existing.has(normalizedDraft);
-  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: dense ? 1 : 1.2 }, children: [
+  return /* @__PURE__ */ u2("div", { className: `think-quick-input-goal-selector${dense ? " is-dense" : ""}`, children: [
     /* @__PURE__ */ u2(
       HierarchySingleSelect,
       {
@@ -51568,47 +49430,40 @@ function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense =
         showParentLabel: false
       }
     ),
-    onCreateGoal && /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(140px, 1fr) auto", gap: 1, alignItems: "center" }, children: [
+    onCreateGoal ? /* @__PURE__ */ u2("div", { className: "think-quick-input-goal-selector__create", children: [
       /* @__PURE__ */ u2(
-        "input",
+        ThinkInput,
         {
-          className: "think-native-input",
           value: draftGoalPath,
-          onInput: (event) => setDraftGoalPath(event.target.value),
-          placeholder: "快速新建目标：例如 产品化/插件/目标中心"
+          onInput: (event) => setDraftGoalPath(event.currentTarget.value),
+          placeholder: "快速新建目标，例如 产品化/插件/目标中心"
         }
       ),
       /* @__PURE__ */ u2(
-        Button2,
+        ThinkButton,
         {
-          variant: "outlined",
-          size: "small",
+          size: "sm",
           disabled: !canCreate,
           onClick: async () => {
             if (!canCreate) return;
             await onCreateGoal(normalizedDraft);
             setDraftGoalPath("");
           },
-          children: "新建目标"
+          children: "新建"
         }
       )
-    ] }),
-    normalizedDraft && existing.has(normalizedDraft) && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "这个目标已经存在，可以直接在上方选择。" })
+    ] }) : null,
+    normalizedDraft && existing.has(normalizedDraft) ? /* @__PURE__ */ u2("span", { className: "think-quick-input-context-hint", children: "目标已存在，可直接在上方选择。" }) : null
   ] });
 }
-function RecordTypeSwitcher({
-  blocks,
-  currentBlockId,
-  onBlockChange
-}) {
+function RecordTypeSwitcher({ blocks, currentBlockId, onBlockChange }) {
   if (blocks.length <= 1) return null;
-  return /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { class: "think-quick-input-record-type-switcher", role: "tablist", "aria-label": "记录类型", children: blocks.map((block) => {
-    const selected = currentBlockId === block.id;
+  return /* @__PURE__ */ u2("div", { className: "think-quick-input-record-type-switcher", role: "tablist", "aria-label": "记录类型", children: blocks.map((block) => {
     const label = block.name || block.id;
     return /* @__PURE__ */ u2(
       SelectablePill,
       {
-        selected,
+        selected: currentBlockId === block.id,
         onClick: () => onBlockChange(block.id),
         title: label,
         className: "think-quick-input-record-type-switcher__item",
@@ -51616,7 +49471,7 @@ function RecordTypeSwitcher({
       },
       block.id
     );
-  }) }) });
+  }) });
 }
 function ContextRow({ label, children }) {
   return /* @__PURE__ */ u2("div", { className: "think-quick-input-context-row", children: [
@@ -51720,7 +49575,7 @@ function resolveQuickInputRecordTypeRuntime(input) {
       goal: input.selectedGoal,
       templateId: null,
       templateSourceType: null,
-      effectiveBlockId: ENERGY_RECORD_TYPE_ID,
+      effectiveBlockId: ENERGY_RECORD_TYPE_ID$1,
       templateVariantId: null
     };
   }
@@ -52253,7 +50108,7 @@ function EnergyQuickCapturePanel({
   const [retrospectiveDate, setRetrospectiveDate] = d(() => dayjs().format("YYYY-MM-DD"));
   const [retrospectiveTime, setRetrospectiveTime] = d("");
   const [showTargetEditor, setShowTargetEditor] = d(false);
-  h(() => {
+  y(() => {
     if (selectedGoalPath || goals.length === 0) return;
     onSelectGoal(resolveQuickInputEnergyDefaultGoal(goals, defaultGoalId));
   }, [defaultGoalId, goals, onSelectGoal, selectedGoalPath]);
@@ -52518,7 +50373,7 @@ function QuickInputEditor({
   const settings = fullSettings.inputSettings;
   const initialFieldSource = recordInputMode === "create" ? "context" : "edit_backfill";
   const recordInputModeRef = A$1(recordInputMode);
-  const [session, dispatchSession] = y(
+  const [session, dispatchSession] = h(
     reduceRecordInputSession,
     initializeRecordInputSession({
       mode: recordInputMode,
@@ -52539,7 +50394,7 @@ function QuickInputEditor({
     fieldSources,
     timeDirection
   } = session;
-  h(() => {
+  y(() => {
     const modeForReset = recordInputModeRef.current;
     const sourceForReset = modeForReset === "create" ? "context" : "edit_backfill";
     dispatchSession({
@@ -52554,7 +50409,7 @@ function QuickInputEditor({
       }
     });
   }, [initialBlockId, initialThemeId, context]);
-  h(() => {
+  y(() => {
     recordInputModeRef.current = recordInputMode;
     dispatchSession({ type: "setMode", mode: recordInputMode });
   }, [recordInputMode]);
@@ -52563,7 +50418,7 @@ function QuickInputEditor({
     () => blocks.find((recordType) => recordType.id === currentBlockId) || null,
     [blocks, currentBlockId]
   );
-  const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === "direct";
+  const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID$1 && currentRecordType.captureMode === "direct";
   const themes = T$1(() => settings.themes || [], [settings.themes]);
   const { availableThemes, themeIdMap, pathToIdMap } = T$1(() => {
     return {
@@ -52585,7 +50440,7 @@ function QuickInputEditor({
     if (!goal || !currentEffectiveBlockIdForTemplates) return [];
     return getGoalTemplateVariants(fullSettings.goalSettings, goal, currentEffectiveBlockIdForTemplates);
   }, [fullSettings.goalSettings, selectedGoal, currentEffectiveBlockIdForTemplates]);
-  h(() => {
+  y(() => {
     if (!goalTemplateVariants.length) {
       if (selectedTemplateVariantId) dispatchSession({ type: "selectTemplateVariant", variantId: null });
       return;
@@ -52605,7 +50460,7 @@ function QuickInputEditor({
     [fullSettings, currentEffectiveBlockIdForTemplates, isEnergyDirect]
   );
   const goalFieldOptions = T$1(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label || goal.value })), [goalOptions]);
-  h(() => {
+  y(() => {
     const selectedPath = getGoalPath(selectedGoal) || selectedGoalPath || null;
     if (!selectedPath) return;
     const stillVisible = goalOptions.some((option) => option.value === selectedPath);
@@ -52626,7 +50481,7 @@ function QuickInputEditor({
     [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions, isEnergyDirect]
   );
   const showTimeDirectionControl = T$1(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
-  h(() => {
+  y(() => {
     if (isEnergyDirect || !template) return;
     const hydrated = hydrateQuickInputTemplateDefaults({
       template,
@@ -52648,7 +50503,7 @@ function QuickInputEditor({
       fieldSources: hydrated.fieldSources
     });
   }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources, isEnergyDirect]);
-  h(() => {
+  y(() => {
     const presetThemePath = String(formData.themePath ?? formData["主题"] ?? "").trim();
     if (!presetThemePath) return;
     const nextThemeId = pathToIdMap.get(presetThemePath) ?? null;
@@ -52656,7 +50511,7 @@ function QuickInputEditor({
   }, [formData.themePath, formData["主题"], pathToIdMap, selectedThemeId]);
   const makeEditorState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => buildQuickInputEditorState({
     blockId: currentBlockId,
-    effectiveBlockId: isEnergyDirect ? ENERGY_RECORD_TYPE_ID : effectiveBlockId,
+    effectiveBlockId: isEnergyDirect ? ENERGY_RECORD_TYPE_ID$1 : effectiveBlockId,
     selectedGoal,
     selectedGoalId,
     currentGoalPath,
@@ -52676,7 +50531,7 @@ function QuickInputEditor({
     templateSourceType,
     fieldSources: sourceOverride
   });
-  h(() => {
+  y(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
   }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
   const handleUpdateField = (key, value, isOptionObject2 = false) => {
@@ -52779,50 +50634,26 @@ function QuickInputEditor({
     }
   );
 }
-function QuickInputConflictRecoveryPanel({
-  recovery,
-  isBusy,
-  isRescanning,
-  onOpenOriginal,
-  onRescan,
-  onRetry,
-  onDismiss
-}) {
+function QuickInputConflictRecoveryPanel({ recovery, isBusy, isRescanning, onOpenOriginal, onRescan, onRetry, onDismiss }) {
   if (!recovery.shouldShow) return null;
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "think-quick-input-recovery",
-      role: "alert",
-      style: {
-        border: "1px solid var(--background-modifier-error)",
-        borderRadius: "10px",
-        padding: "10px 12px",
-        margin: "8px 0 10px 0",
-        background: "var(--background-modifier-error-hover)",
-        color: "var(--text-normal)"
-      },
-      children: [
-        /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "8px", alignItems: "flex-start" }, children: [
-          /* @__PURE__ */ u2("div", { children: [
-            /* @__PURE__ */ u2("div", { style: { fontWeight: 700, marginBottom: "4px" }, children: recovery.title }),
-            /* @__PURE__ */ u2("div", { style: { fontSize: "0.9em", lineHeight: 1.45, whiteSpace: "pre-wrap" }, children: recovery.message }),
-            /* @__PURE__ */ u2("div", { style: { fontSize: "0.86em", lineHeight: 1.45, marginTop: "6px", color: "var(--text-muted)" }, children: recovery.advice }),
-            recovery.paths.length > 0 ? /* @__PURE__ */ u2("div", { style: { fontSize: "0.82em", lineHeight: 1.4, marginTop: "6px", color: "var(--text-faint)", wordBreak: "break-all" }, children: [
-              "将重新扫描：",
-              recovery.paths.join("、")
-            ] }) : null
-          ] }),
-          /* @__PURE__ */ u2(Button2, { size: "small", onClick: onDismiss, disabled: isBusy || isRescanning, children: "隐藏" })
-        ] }),
-        /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }, children: [
-          recovery.canOpenOriginal ? /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: onOpenOriginal, disabled: isBusy || isRescanning, children: "打开原文" }) : null,
-          recovery.canRescan ? /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: onRescan, disabled: isBusy || isRescanning, children: isRescanning ? "扫描中..." : "重新扫描" }) : null,
-          recovery.canRetry ? /* @__PURE__ */ u2(Button2, { size: "small", variant: "contained", onClick: onRetry, disabled: isBusy || isRescanning, children: "重试保存" }) : null
-        ] })
-      ]
-    }
-  );
+  const disabled = isBusy || isRescanning;
+  return /* @__PURE__ */ u2("div", { className: "think-quick-input-recovery", role: "alert", children: [
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-recovery__text", children: [
+      /* @__PURE__ */ u2("strong", { children: recovery.title }),
+      /* @__PURE__ */ u2("span", { children: recovery.message }),
+      /* @__PURE__ */ u2("span", { className: "think-quick-input-recovery__advice", children: recovery.advice }),
+      recovery.paths.length ? /* @__PURE__ */ u2("span", { className: "think-quick-input-recovery__paths", children: [
+        "将重新扫描：",
+        recovery.paths.join("、")
+      ] }) : null
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-recovery__actions", children: [
+      recovery.canOpenOriginal ? /* @__PURE__ */ u2(ThinkButton, { size: "sm", onClick: onOpenOriginal, disabled, children: "打开原文" }) : null,
+      recovery.canRescan ? /* @__PURE__ */ u2(ThinkButton, { size: "sm", onClick: onRescan, disabled, children: isRescanning ? "扫描中…" : "重新扫描" }) : null,
+      recovery.canRetry ? /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "primary", onClick: onRetry, disabled, children: "重试保存" }) : null,
+      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: onDismiss, disabled, children: "隐藏" })
+    ] })
+  ] });
 }
 function isQuickInputUpdateOperation(mode) {
   return mode === "edit" || mode === "convert";
@@ -52899,28 +50730,29 @@ function QuickInputModalFooter({
   onPreserveDesktopInputFocus
 }) {
   const showDelete = operationMode === "edit" || operationMode === "convert";
-  return /* @__PURE__ */ u2("div", { class: `think-modal__footer think-modal__footer--quick-input${isMobileLike ? " is-mobile-like" : ""}`, children: /* @__PURE__ */ u2("div", { class: "think-quick-input-footer-row", children: [
-    /* @__PURE__ */ u2("div", { class: "think-quick-input-footer-danger-zone", children: showDelete ? /* @__PURE__ */ u2(
-      Button2,
+  return /* @__PURE__ */ u2("div", { className: `think-modal__footer think-modal__footer--quick-input${isMobileLike ? " is-mobile-like" : ""}`, children: /* @__PURE__ */ u2("div", { className: "think-quick-input-footer-row", children: [
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-footer-danger-zone", children: showDelete ? /* @__PURE__ */ u2(
+      ThinkButton,
       {
-        color: "error",
+        variant: "danger",
+        size: "sm",
         onMouseDown: onPreserveDesktopInputFocus,
         onPointerDown: onPreserveDesktopInputFocus,
         onClick: onDelete,
         disabled: isBusy,
-        children: pendingAction === "delete" ? "删除中..." : "删除"
+        children: pendingAction === "delete" ? "删除中…" : "删除"
       }
     ) : null }),
-    /* @__PURE__ */ u2("div", { class: "think-quick-input-footer-actions", children: [
-      /* @__PURE__ */ u2(Button2, { onMouseDown: onPreserveDesktopInputFocus, onPointerDown: onPreserveDesktopInputFocus, onClick: onCancel, disabled: isBusy, children: "取消" }),
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-footer-actions", children: [
+      /* @__PURE__ */ u2(ThinkButton, { onMouseDown: onPreserveDesktopInputFocus, onPointerDown: onPreserveDesktopInputFocus, onClick: onCancel, disabled: isBusy, children: "取消" }),
       /* @__PURE__ */ u2(
-        Button2,
+        ThinkButton,
         {
           "data-submit": "true",
+          variant: "primary",
           onMouseDown: onSubmitPointerDown,
           onPointerDown: onSubmitPointerDown,
           onClick: isMobileLike ? onSubmitClick : void 0,
-          variant: "contained",
           disabled: isBusy,
           children: getQuickInputSubmitLabel(operationMode, pendingAction === "submit")
         }
@@ -52928,15 +50760,11 @@ function QuickInputModalFooter({
     ] })
   ] }) });
 }
-function buildOperationHelpText(mode) {
-  if (mode === "convert") {
-    return "转换会修改原记录的记录类型，并按新模板保存；如果保存位置变化，会先写入新位置，再删除旧记录。";
-  }
-  if (mode === "duplicate") {
-    return "另存会按当前内容创建一条新记录，原记录保持不变。";
-  }
-  return "";
-}
+const operationOptions = [
+  { value: "edit", label: "编辑" },
+  { value: "convert", label: "转换" },
+  { value: "duplicate", label: "另存" }
+];
 function QuickInputModalHeader({
   operationMode,
   currentBlockName,
@@ -52947,19 +50775,18 @@ function QuickInputModalHeader({
   onOriginalTouchEnd,
   onOperationModeChange
 }) {
-  const isEditingExistingRecord = operationMode !== "create";
-  const helpText = buildOperationHelpText(operationMode);
-  return /* @__PURE__ */ u2("div", { class: "think-quick-input-modal-header", children: [
+  const editing = operationMode !== "create";
+  return /* @__PURE__ */ u2("div", { className: "think-quick-input-modal-header", children: [
     /* @__PURE__ */ u2(
       ModalHeader,
       {
         left: /* @__PURE__ */ u2(
           "h3",
           {
-            class: "think-quick-input-modal-title",
+            className: "think-quick-input-modal-title",
             title: originalGestureHint,
-            onClick: isEditingExistingRecord ? onOriginalPointerClick : void 0,
-            onTouchEnd: isEditingExistingRecord ? onOriginalTouchEnd : void 0,
+            onClick: editing ? onOriginalPointerClick : void 0,
+            onTouchEnd: editing ? onOriginalTouchEnd : void 0,
             children: getQuickInputOperationTitle(operationMode, currentBlockName, isTimerCreate)
           }
         ),
@@ -52968,38 +50795,16 @@ function QuickInputModalHeader({
         borderBottom: false
       }
     ),
-    isEditingExistingRecord ? /* @__PURE__ */ u2("div", { class: "think-quick-input-operation-panel", children: [
-      /* @__PURE__ */ u2("div", { class: "think-quick-input-operation-panel__actions", role: "group", "aria-label": "编辑记录操作方式", children: [
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            size: "small",
-            variant: operationMode === "edit" ? "contained" : "outlined",
-            onClick: () => onOperationModeChange("edit"),
-            children: "编辑原记录"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            size: "small",
-            variant: operationMode === "convert" ? "contained" : "outlined",
-            onClick: () => onOperationModeChange("convert"),
-            children: "转换记录类型"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            size: "small",
-            variant: operationMode === "duplicate" ? "contained" : "outlined",
-            onClick: () => onOperationModeChange("duplicate"),
-            children: "另存为新记录"
-          }
-        )
-      ] }),
-      helpText ? /* @__PURE__ */ u2("div", { class: "think-quick-input-operation-panel__hint", children: helpText }) : null
-    ] }) : null
+    editing ? /* @__PURE__ */ u2(
+      ThinkSegmentedControl,
+      {
+        className: "think-quick-input-operation-switcher",
+        label: "编辑记录方式",
+        value: operationMode,
+        options: operationOptions,
+        onChange: (value) => onOperationModeChange(value)
+      }
+    ) : null
   ] });
 }
 function isMobileLikeEnvironment() {
@@ -53123,10 +50928,10 @@ function useQuickInputSubmitController({
   const pendingActionRef = A$1(null);
   const submitTriggeredRef = A$1(false);
   const submitLatestRef = A$1(createTakeLatest("quick-input-submit"));
-  h(() => {
+  y(() => {
     pendingActionRef.current = pendingAction;
   }, [pendingAction]);
-  h(() => () => submitLatestRef.current.dispose(), []);
+  y(() => () => submitLatestRef.current.dispose(), []);
   const buildCreateDraft = q$1(() => buildRecordCreateDraftFromEditorState({
     state: getCurrentState(),
     context,
@@ -53347,7 +51152,7 @@ function QuickInputModalContent({
   const isMobileLike = T$1(() => isMobileLikeEnvironment(), []);
   const editIdentity = `${mode}:${editItem?.id ?? ""}`;
   const previousEditIdentityRef = A$1(editIdentity);
-  h(() => {
+  y(() => {
     if (previousEditIdentityRef.current === editIdentity) return;
     previousEditIdentityRef.current = editIdentity;
     setEditOperationMode("edit");
@@ -53366,7 +51171,7 @@ function QuickInputModalContent({
   const currentBlock = (settings.blocks || []).find((block) => block.id === currentState.blockId);
   const currentRecordType = getRecordTypeById(fullSettings, currentState.blockId);
   const currentBlockName = currentRecordType?.name || currentBlock?.name || currentState.template?.name || currentState.blockId;
-  const isEnergyDirect = mode === "create" && currentState.blockId === ENERGY_RECORD_TYPE_ID;
+  const isEnergyDirect = mode === "create" && currentState.blockId === ENERGY_RECORD_TYPE_ID$1;
   const isTimerCreate = mode === "create" && (source === "timer" || !!onSave);
   const {
     liveOutputPlan,
@@ -53794,7 +51599,7 @@ function openCreateFromViewHeader(params) {
     const goalPath = String(params.viewInstance.viewConfig?.goalPath || "").trim();
     new QuickInputModal(
       params.app,
-      ENERGY_RECORD_TYPE_ID,
+      ENERGY_RECORD_TYPE_ID$1,
       goalPath ? { goalPath } : void 0,
       void 0,
       void 0,
@@ -54365,63 +52170,46 @@ function installBackdropCloseGuard(modal) {
 function AiTextPromptForm({ onSubmit, onCancel, isLoading }) {
   const [text2, setText] = d("");
   const handleSubmit = () => {
-    if (text2.trim()) {
-      onSubmit(text2.trim());
-    }
+    const value = text2.trim();
+    if (value) onSubmit(value);
   };
-  const handleKeyDown = (e2) => {
-    if ((e2.ctrlKey || e2.metaKey) && e2.key === "Enter") {
-      e2.preventDefault();
+  const handleKeyDown = (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault();
       handleSubmit();
     }
-    if (e2.key === "Escape") {
-      e2.preventDefault();
+    if (event.key === "Escape") {
+      event.preventDefault();
       onCancel();
     }
   };
-  return /* @__PURE__ */ u2(Box, { sx: { p: 2, minWidth: 400 }, children: [
+  return /* @__PURE__ */ u2("div", { className: "think-overlay-form think-ai-prompt", children: [
     /* @__PURE__ */ u2(
       ModalHeader,
       {
-        padding: 0,
-        borderBottom: false,
-        left: /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, alignItems: "center", children: [
-          /* @__PURE__ */ u2(SmartToyIcon, { color: "primary" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "AI 自然语言快速记录" })
+        left: /* @__PURE__ */ u2("div", { className: "think-overlay-title-row", children: [
+          /* @__PURE__ */ u2(SmartToyIcon, { fontSize: "small" }),
+          /* @__PURE__ */ u2("span", { children: "AI 快速记录" })
         ] }),
         onClose: onCancel
       }
     ),
-    /* @__PURE__ */ u2(Box, { sx: { mb: 2 } }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "用自然语言描述你想记录的内容，AI 会自动识别并填充相应字段。" }),
-    /* @__PURE__ */ u2(
-      TextField2,
+    /* @__PURE__ */ u2("div", { className: "think-overlay-body think-ai-prompt__body", children: /* @__PURE__ */ u2(
+      ThinkTextarea,
       {
-        fullWidth: true,
-        multiline: true,
-        rows: 4,
-        placeholder: "例如：今天早上9点到11点学习了2小时英语，感觉很好",
-        value: text2,
-        onChange: (e2) => setText(e2.target.value),
-        onKeyDown: handleKeyDown,
         autoFocus: true,
+        rows: 5,
+        value: text2,
         disabled: isLoading,
-        sx: { mb: 2 }
+        className: "think-ai-prompt__input",
+        placeholder: "例如：今天早上 9 点到 11 点学习英语，感觉很好",
+        onInput: (event) => setText(event.currentTarget.value),
+        onKeyDown: handleKeyDown
       }
-    ),
-    /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mb: 2 }, children: "提示：按 Ctrl+Enter 快速提交" }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, justifyContent: "flex-end", children: [
-      /* @__PURE__ */ u2(Button2, { onClick: onCancel, disabled: isLoading, children: "取消" }),
-      /* @__PURE__ */ u2(
-        Button2,
-        {
-          variant: "contained",
-          onClick: handleSubmit,
-          disabled: !text2.trim() || isLoading,
-          startIcon: isLoading ? /* @__PURE__ */ u2(CircularProgress2, { size: 16 }) : void 0,
-          children: isLoading ? "解析中..." : "解析"
-        }
-      )
+    ) }),
+    /* @__PURE__ */ u2("div", { className: "think-overlay-footer", children: [
+      /* @__PURE__ */ u2(ThinkButton, { onClick: onCancel, disabled: isLoading, children: "取消" }),
+      /* @__PURE__ */ u2(ThinkButton, { variant: "primary", loading: isLoading, onClick: handleSubmit, disabled: !text2.trim(), children: isLoading ? "解析中" : "解析" })
     ] })
   ] });
 }
@@ -54432,18 +52220,12 @@ class AiTextPromptModal extends obsidian.Modal {
   constructor(app) {
     super(app);
   }
-  /**
-   * 打开 Modal 并获取用户输入
-   */
   openAndGetValue() {
     return new Promise((resolve) => {
       this.resolvePromise = resolve;
       this.open();
     });
   }
-  /**
-   * 设置加载状态
-   */
   setLoading(loading) {
     this.isLoading = loading;
     this.renderContent();
@@ -54455,60 +52237,39 @@ class AiTextPromptModal extends obsidian.Modal {
   }
   renderContent() {
     this.contentEl.empty();
-    renderModalContent(
-      this.contentEl,
-      /* @__PURE__ */ u2(
-        AiTextPromptForm,
-        {
-          onSubmit: (text2) => {
-            if (this.resolvePromise) {
-              this.resolvePromise(text2);
-              this.resolvePromise = null;
-            }
-            this.close();
-          },
-          onCancel: () => {
-            if (this.resolvePromise) {
-              this.resolvePromise(null);
-              this.resolvePromise = null;
-            }
-            this.close();
-          },
-          isLoading: this.isLoading
-        }
-      )
-    );
+    renderModalContent(this.contentEl, /* @__PURE__ */ u2(
+      AiTextPromptForm,
+      {
+        onSubmit: (text2) => {
+          this.resolvePromise?.(text2);
+          this.resolvePromise = null;
+          this.close();
+        },
+        onCancel: () => {
+          this.resolvePromise?.(null);
+          this.resolvePromise = null;
+          this.close();
+        },
+        isLoading: this.isLoading
+      }
+    ));
   }
   onClose() {
     this.cleanupBackdropCloseGuard?.();
     this.cleanupBackdropCloseGuard = null;
-    if (this.resolvePromise) {
-      this.resolvePromise(null);
-      this.resolvePromise = null;
-    }
+    this.resolvePromise?.(null);
+    this.resolvePromise = null;
     unmountModalContent(this.contentEl);
   }
 }
 function AiBatchConfirmFooter({ saved, skipped, onSkip, onSave, onComplete }) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        p: 2,
-        borderTop: "1px solid var(--background-modifier-border)",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      },
-      children: [
-        /* @__PURE__ */ u2(Button2, { variant: "text", color: "inherit", onClick: onSkip, disabled: saved || skipped, children: "跳过此条" }),
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 1 }, children: [
-          /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: onSave, disabled: saved, children: saved ? "已保存" : "保存此条" }),
-          /* @__PURE__ */ u2(Button2, { variant: "outlined", onClick: onComplete, children: "完成" })
-        ] })
-      ]
-    }
-  );
+  return /* @__PURE__ */ u2("div", { className: "think-overlay-footer think-ai-batch-footer", children: [
+    /* @__PURE__ */ u2(ThinkButton, { variant: "ghost", onClick: onSkip, disabled: saved || skipped, children: "跳过此条" }),
+    /* @__PURE__ */ u2("div", { className: "think-overlay-footer__actions", children: [
+      /* @__PURE__ */ u2(ThinkButton, { variant: "primary", onClick: onSave, disabled: saved, children: saved ? "已保存" : "保存此条" }),
+      /* @__PURE__ */ u2(ThinkButton, { onClick: onComplete, children: "完成" })
+    ] })
+  ] });
 }
 function resolveGoalForAiTarget(goalSettings, target) {
   const goals = goalSettings?.goals || [];
@@ -54646,93 +52407,77 @@ function AiBatchConfirmRecordHeader({ title, currentIndex, record, onClose }) {
   return /* @__PURE__ */ u2(
     ModalHeader,
     {
-      padding: 2,
-      left: /* @__PURE__ */ u2(Box, { children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 600 }, children: [
-          title,
-          " · 编辑第 ",
-          currentIndex + 1,
-          " 条记录"
+      left: /* @__PURE__ */ u2("div", { className: "think-ai-batch-header", children: [
+        /* @__PURE__ */ u2("div", { className: "think-ai-batch-header__title", children: [
+          /* @__PURE__ */ u2("strong", { children: title }),
+          /* @__PURE__ */ u2("span", { children: [
+            "第 ",
+            currentIndex + 1,
+            " 条"
+          ] }),
+          record.saved ? /* @__PURE__ */ u2("span", { className: "is-success", children: "已保存" }) : null,
+          record.skipped ? /* @__PURE__ */ u2("span", { children: "已跳过" }) : null
         ] }),
-        record.saved && /* @__PURE__ */ u2(Chip2, { label: "已保存", color: "success", size: "small", sx: { ml: 1 } }),
-        record.skipped && /* @__PURE__ */ u2(Chip2, { label: "已跳过", color: "default", size: "small", sx: { ml: 1 } }),
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1 }, children: [
-          /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `目标：${shortDisplay(record.goalLabel, "未匹配")}` }),
-          /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `预设：${shortDisplay(record.presetLabel, "CoreBlock 默认")}` }),
-          /* @__PURE__ */ u2(Chip2, { size: "small", variant: "outlined", label: `主题：${shortDisplay(record.themePath, "未指定")}` })
+        /* @__PURE__ */ u2("div", { className: "think-ai-batch-header__meta", children: [
+          /* @__PURE__ */ u2("span", { children: [
+            "目标 ",
+            shortDisplay(record.goalLabel, "未匹配")
+          ] }),
+          /* @__PURE__ */ u2("span", { children: [
+            "预设 ",
+            shortDisplay(record.presetLabel, "默认")
+          ] }),
+          /* @__PURE__ */ u2("span", { children: [
+            "主题 ",
+            shortDisplay(record.themePath, "未指定")
+          ] })
         ] })
       ] }),
       onClose
     }
   );
 }
-function AiBatchConfirmSidebar({
-  records,
-  blocks,
-  currentIndex,
-  savedCount,
-  pendingCount,
-  onSelect,
-  onSaveAll
-}) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        width: "200px",
-        borderRight: "1px solid var(--background-modifier-border)",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0
-      },
-      children: [
-        /* @__PURE__ */ u2(Box, { sx: { p: 1.5, borderBottom: "1px solid var(--background-modifier-border)" }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "AI 识别结果" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
-            "共 ",
-            records.length,
-            " 条 · 已保存 ",
-            savedCount
-          ] })
-        ] }),
-        /* @__PURE__ */ u2(List2, { sx: { flex: 1, overflow: "auto", py: 0 }, children: records.map((record, index) => {
-          const block = blocks.find((entry) => entry.id === record.blockId);
-          const isActive = index === currentIndex;
-          return /* @__PURE__ */ u2(
-            ListItemButton2,
-            {
-              selected: isActive,
-              onClick: () => onSelect(index),
-              sx: { py: 1, opacity: record.skipped ? 0.5 : 1, bgcolor: isActive ? "action.selected" : "transparent" },
-              children: [
-                /* @__PURE__ */ u2(ListItemIcon2, { sx: { minWidth: 32 }, children: record.saved ? /* @__PURE__ */ u2(CheckCircleIcon, { color: "success", fontSize: "small" }) : record.skipped ? /* @__PURE__ */ u2(DeleteIcon, { color: "disabled", fontSize: "small" }) : /* @__PURE__ */ u2(RadioButtonUncheckedIcon, { color: "action", fontSize: "small" }) }),
-                /* @__PURE__ */ u2(
-                  ListItemText2,
-                  {
-                    primary: /* @__PURE__ */ u2(Typography2, { variant: "body2", noWrap: true, sx: { fontWeight: isActive ? 600 : 400 }, children: block?.name || "未知类型" }),
-                    secondary: /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
-                      /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", sx: { display: "block" }, children: [
-                        shortDisplay(record.goalLabel, "未匹配目标", 18),
-                        " · ",
-                        shortDisplay(record.presetLabel, "默认预设", 18)
-                      ] }),
-                      /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", sx: { display: "block" }, children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
-                    ] })
-                  }
-                )
-              ]
-            },
-            record.id
-          );
-        }) }),
-        /* @__PURE__ */ u2(Box, { sx: { p: 1.5, borderTop: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(Button2, { fullWidth: true, variant: "outlined", size: "small", onClick: onSaveAll, disabled: pendingCount === 0, children: [
-          "保存全部 (",
-          pendingCount,
-          ")"
-        ] }) })
-      ]
-    }
-  );
+function AiBatchConfirmSidebar({ records, blocks, currentIndex, savedCount, pendingCount, onSelect, onSaveAll }) {
+  return /* @__PURE__ */ u2("aside", { className: "think-ai-batch-sidebar", children: [
+    /* @__PURE__ */ u2("div", { className: "think-ai-batch-sidebar__header", children: [
+      /* @__PURE__ */ u2("strong", { children: "AI 识别结果" }),
+      /* @__PURE__ */ u2("span", { children: [
+        records.length,
+        " 条 · 已保存 ",
+        savedCount
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-ai-batch-sidebar__list", children: records.map((record, index) => {
+      const block = blocks.find((entry) => entry.id === record.blockId);
+      const active = index === currentIndex;
+      return /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          className: `think-ai-batch-sidebar__item${active ? " is-selected" : ""}${record.skipped ? " is-muted" : ""}`,
+          onClick: () => onSelect(index),
+          children: [
+            /* @__PURE__ */ u2("span", { className: "think-ai-batch-sidebar__status", "aria-hidden": "true", children: record.saved ? /* @__PURE__ */ u2(CheckCircleIcon, { fontSize: "small" }) : record.skipped ? /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(RadioButtonUncheckedIcon, { fontSize: "small" }) }),
+            /* @__PURE__ */ u2("span", { className: "think-ai-batch-sidebar__text", children: [
+              /* @__PURE__ */ u2("strong", { children: block?.name || "未知类型" }),
+              /* @__PURE__ */ u2("span", { children: [
+                shortDisplay(record.goalLabel, "未匹配目标", 18),
+                " · ",
+                shortDisplay(record.presetLabel, "默认预设", 18)
+              ] }),
+              /* @__PURE__ */ u2("span", { children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
+            ] })
+          ]
+        },
+        record.id
+      );
+    }) }),
+    /* @__PURE__ */ u2("div", { className: "think-ai-batch-sidebar__footer", children: /* @__PURE__ */ u2(ThinkButton, { size: "sm", onClick: onSaveAll, disabled: pendingCount === 0, children: [
+      "保存全部 (",
+      pendingCount,
+      ")"
+    ] }) })
+  ] });
 }
 class AiBatchConfirmModal extends obsidian.Modal {
   constructor(app, args) {
@@ -54863,8 +52608,8 @@ function AiBatchConfirmForm({
     onComplete?.();
     closeModal();
   };
-  if (!currentRecord) return /* @__PURE__ */ u2("div", { children: "没有可处理的记录" });
-  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", height: "100%", overflow: "hidden" }, children: [
+  if (!currentRecord) return /* @__PURE__ */ u2("div", { className: "think-overlay-empty", children: "没有可处理的记录" });
+  return /* @__PURE__ */ u2("div", { className: "think-ai-batch", children: [
     /* @__PURE__ */ u2(
       AiBatchConfirmSidebar,
       {
@@ -54877,9 +52622,9 @@ function AiBatchConfirmForm({
         onSaveAll: handleSaveAll
       }
     ),
-    /* @__PURE__ */ u2(Box, { sx: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }, children: [
+    /* @__PURE__ */ u2("section", { className: "think-ai-batch__main", children: [
       /* @__PURE__ */ u2(AiBatchConfirmRecordHeader, { title, currentIndex, record: currentRecord, onClose: closeModal }),
-      /* @__PURE__ */ u2(Box, { sx: { flex: 1, overflow: "auto", p: 2 }, children: /* @__PURE__ */ u2(
+      /* @__PURE__ */ u2("div", { className: "think-overlay-body think-ai-batch__editor", children: /* @__PURE__ */ u2(
         QuickInputEditor,
         {
           getResourcePath: resolveResourcePath,
@@ -54932,7 +52677,7 @@ function useLocalStorage(key, initialValue) {
 }
 function useIsMounted() {
   const ref = A$1(true);
-  h(() => {
+  y(() => {
     ref.current = true;
     return () => {
       ref.current = false;
@@ -54985,7 +52730,7 @@ function FloatingPanelHeader({ inline, title, headerActions, onClose, onDragStar
         onTouchStart: (event) => onDragStart(toTouchEvent(event)),
         className: "think-floating-panel__drag-region",
         children: [
-          !inline && /* @__PURE__ */ u2("div", { className: "think-floating-panel__drag-icon", children: /* @__PURE__ */ u2(DragIndicatorIcon, { fontSize: "inherit" }) }),
+          !inline && /* @__PURE__ */ u2("span", { className: "think-floating-panel__drag-icon", "aria-hidden": "true", children: /* @__PURE__ */ u2(DragIndicatorIcon, { fontSize: "inherit" }) }),
           title && /* @__PURE__ */ u2("div", { className: "think-floating-panel__title", children: title })
         ]
       }
@@ -54993,15 +52738,16 @@ function FloatingPanelHeader({ inline, title, headerActions, onClose, onDragStar
     /* @__PURE__ */ u2("div", { className: "think-floating-panel__actions", children: [
       headerActions,
       onClose && /* @__PURE__ */ u2(
-        "button",
+        ThinkIconButton,
         {
+          label: "关闭",
+          size: "sm",
+          className: "think-floating-panel__close",
+          icon: /* @__PURE__ */ u2(CloseIcon, { fontSize: "small" }),
           onClick: (event) => {
             event.stopPropagation();
             onClose();
-          },
-          className: "think-floating-panel__close",
-          "aria-label": "Close",
-          children: "×"
+          }
         }
       )
     ] })
@@ -55199,7 +52945,7 @@ function useFloatingPanelInteractions(args) {
   return { onDragStart, onResizeStart, onPanelPointerDown };
 }
 function useFloatingPanelRegistration({ id, visible, register, unregister }) {
-  h(() => {
+  y(() => {
     if (!visible) {
       unregister(id);
       return;
@@ -55210,7 +52956,7 @@ function useFloatingPanelRegistration({ id, visible, register, unregister }) {
 }
 function useFloatingPanelViewportClamp(args) {
   const { size, position: position2, clampSize, clampPosition, setSize, setPosition } = args;
-  h(() => {
+  y(() => {
     const clampedSize = clampSize(size);
     if (clampedSize.width !== size.width || clampedSize.height !== size.height) {
       setSize(clampedSize);
@@ -55230,7 +52976,7 @@ function useFloatingPanelViewportClamp(args) {
 }
 function useFloatingPanelCloseHandlers(args) {
   const { id, activeId, visible, onClose, closeOnOutsideClick, closeOnEscape, rootRef } = args;
-  h(() => {
+  y(() => {
     if (!onClose || !closeOnOutsideClick || !visible) return;
     const ignoreFirstClick = { current: true };
     const handler = (event) => {
@@ -55254,7 +53000,7 @@ function useFloatingPanelCloseHandlers(args) {
       document.removeEventListener("touchstart", toDomListener(handler));
     };
   }, [onClose, closeOnOutsideClick, visible, rootRef]);
-  h(() => {
+  y(() => {
     if (!onClose || !closeOnEscape || !visible) return;
     const onKeyDown = (event) => {
       if (event.key !== "Escape") return;
@@ -55267,10 +53013,10 @@ function useFloatingPanelCloseHandlers(args) {
 }
 function useFloatingPanelPersistence(args) {
   const { position: position2, size, resizable, setStoredPosition, setStoredSize } = args;
-  h(() => {
+  y(() => {
     setStoredPosition(position2);
   }, [position2, setStoredPosition]);
-  h(() => {
+  y(() => {
     if (!resizable) return;
     setStoredSize(size);
   }, [size, resizable, setStoredSize]);
@@ -55444,10 +53190,10 @@ function timerClock(timer, elapsedSeconds) {
 }
 function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOrigin }) {
   const [elapsedSeconds, setElapsedSeconds] = d(() => elapsedSecondsAt(timer, Date.now()));
-  const taskItem = dataStore.queryItems().find((i2) => i2.id === timer.taskId);
+  const taskItem = dataStore.queryItems().find((item) => item.id === timer.taskId);
   const recurringTask = taskItem ? isTaskRecurring(taskItem) : false;
   const clock = timerClock(timer, elapsedSeconds);
-  h(() => {
+  y(() => {
     let interval = null;
     const update = () => setElapsedSeconds(elapsedSecondsAt(timer, Date.now()));
     update();
@@ -55459,51 +53205,32 @@ function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOr
   const handleEdit = () => {
     if (taskItem) onOpenRecord(taskItem);
   };
-  const titleGesture = taskItem ? createRecordGestureHandlers({
-    item: taskItem,
-    onOpenOrigin: onOpenRecordOrigin,
-    onPrimary: handleEdit
-  }) : null;
-  return /* @__PURE__ */ u2("div", { class: "think-timer-row", children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: "8px", width: "100%" }, children: [
-    /* @__PURE__ */ u2(Tooltip2, { title: taskItem ? `${RECORD_GESTURE_HINT}：${taskItem?.title}` : "任务已不存在", children: /* @__PURE__ */ u2(
+  const titleGesture = taskItem ? createRecordGestureHandlers({ item: taskItem, onOpenOrigin: onOpenRecordOrigin, onPrimary: handleEdit }) : null;
+  return /* @__PURE__ */ u2("div", { className: "think-timer-row", children: /* @__PURE__ */ u2("div", { className: "think-timer-row__main", children: [
+    /* @__PURE__ */ u2(
       "div",
       {
-        style: {
-          flexGrow: 1,
-          minWidth: 0,
-          textDecoration: "none",
-          color: "inherit",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          cursor: taskItem ? "pointer" : "default"
-        },
+        className: `think-timer-row__title${taskItem ? " is-clickable" : ""}`,
+        title: taskItem ? `${RECORD_GESTURE_HINT}：${taskItem.title}` : "任务已不存在",
         role: taskItem ? "button" : void 0,
         tabIndex: taskItem ? 0 : void 0,
         onClick: titleGesture ? titleGesture.onClick : void 0,
         onDblClick: titleGesture ? titleGesture.onDblClick : void 0,
         onTouchEnd: titleGesture ? titleGesture.onTouchEnd : void 0,
         onKeyDown: titleGesture ? titleGesture.onKeyDown : void 0,
-        children: /* @__PURE__ */ u2(Typography2, { variant: "body2", noWrap: true, children: taskItem?.title || "任务已不存在" })
-      }
-    ) }),
-    /* @__PURE__ */ u2(
-      Typography2,
-      {
-        variant: "body2",
-        title: clock.title,
-        className: clock.countdown ? "think-timer-row__countdown" : void 0,
-        sx: { fontFamily: "monospace", fontVariantNumeric: "tabular-nums" },
-        children: clock.label
+        children: taskItem?.title || "任务已不存在"
       }
     ),
-    timer.status === "running" ? /* @__PURE__ */ u2(IconAction, { label: "暂停", onClick: () => timerService.pause(timer.id), icon: /* @__PURE__ */ u2(PauseIcon, { fontSize: "inherit" }) }) : /* @__PURE__ */ u2(IconAction, { label: "继续", onClick: () => timerService.resume(timer.id), color: "primary", icon: /* @__PURE__ */ u2(PlayArrowIcon, { fontSize: "inherit" }) }),
-    recurringTask ? /* @__PURE__ */ u2(IconAction, { label: "完成本次", onClick: () => timerService.stopAndApply(timer.id), icon: /* @__PURE__ */ u2(StopIcon, { fontSize: "inherit" }) }) : /* @__PURE__ */ u2(S, { children: [
-      /* @__PURE__ */ u2(IconAction, { label: "结束本次", onClick: () => timerService.endWorkBlock(timer.id), icon: /* @__PURE__ */ u2(StopIcon, { fontSize: "inherit" }) }),
-      /* @__PURE__ */ u2(Button2, { size: "small", variant: "text", onClick: () => timerService.stopAndApply(timer.id), children: "完成任务" })
-    ] }),
-    /* @__PURE__ */ u2(IconAction, { label: "编辑任务", onClick: handleEdit, icon: /* @__PURE__ */ u2(EditIcon, { fontSize: "inherit" }) }),
-    /* @__PURE__ */ u2(IconAction, { label: "取消任务", onClick: () => timerService.cancel(timer.id), color: "error", icon: /* @__PURE__ */ u2(DeleteForeverIcon, { fontSize: "inherit" }) })
+    /* @__PURE__ */ u2("span", { className: `think-timer-row__clock${clock.countdown ? " think-timer-row__countdown" : ""}`, title: clock.title, children: clock.label }),
+    /* @__PURE__ */ u2("div", { className: "think-timer-row__actions", children: [
+      timer.status === "running" ? /* @__PURE__ */ u2(ThinkIconButton, { label: "暂停", size: "sm", onClick: () => timerService.pause(timer.id), icon: /* @__PURE__ */ u2(PauseIcon, { fontSize: "small" }) }) : /* @__PURE__ */ u2(ThinkIconButton, { label: "继续", size: "sm", onClick: () => timerService.resume(timer.id), icon: /* @__PURE__ */ u2(PlayArrowIcon, { fontSize: "small" }) }),
+      recurringTask ? /* @__PURE__ */ u2(ThinkIconButton, { label: "完成本次", size: "sm", onClick: () => timerService.stopAndApply(timer.id), icon: /* @__PURE__ */ u2(StopIcon, { fontSize: "small" }) }) : /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2(ThinkIconButton, { label: "结束本次", size: "sm", onClick: () => timerService.endWorkBlock(timer.id), icon: /* @__PURE__ */ u2(StopIcon, { fontSize: "small" }) }),
+        /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: () => timerService.stopAndApply(timer.id), children: "完成任务" })
+      ] }),
+      /* @__PURE__ */ u2(ThinkIconButton, { label: "编辑任务", size: "sm", onClick: handleEdit, icon: /* @__PURE__ */ u2(EditIcon, { fontSize: "small" }) }),
+      /* @__PURE__ */ u2(ThinkIconButton, { label: "取消任务", size: "sm", tone: "danger", onClick: () => timerService.cancel(timer.id), icon: /* @__PURE__ */ u2(DeleteForeverIcon, { fontSize: "small" }) })
+    ] })
   ] }) });
 }
 function TimerViewView({
@@ -55528,8 +53255,8 @@ function TimerViewView({
       visible: isVisible,
       closeOnOutsideClick: false,
       onClose: () => setVisible(false),
-      headerActions: /* @__PURE__ */ u2(Tooltip2, { title: "开始新任务", children: /* @__PURE__ */ u2(Button2, { size: "small", startIcon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}), onClick: onCreateNewTask, children: "新任务" }) }),
-      children: /* @__PURE__ */ u2(Stack, { spacing: 1, sx: { p: "8px", maxHeight: "400px", overflowY: "auto" }, children: timers.length > 0 ? timers.map((timer) => /* @__PURE__ */ u2(
+      headerActions: /* @__PURE__ */ u2(ThinkButton, { size: "sm", leadingIcon: /* @__PURE__ */ u2(AddCircleOutlineIcon, { fontSize: "small" }), onClick: onCreateNewTask, children: "新任务" }),
+      children: /* @__PURE__ */ u2("div", { className: "think-timer-list", children: timers.length > 0 ? timers.map((timer) => /* @__PURE__ */ u2(
         TimerRow,
         {
           timer,
@@ -55539,7 +53266,7 @@ function TimerViewView({
           onOpenRecordOrigin
         },
         timer.id
-      )) : /* @__PURE__ */ u2("div", { class: "think-timer-empty-state", children: "暂无计时任务" }) })
+      )) : /* @__PURE__ */ u2("div", { className: "think-timer-empty-state", children: "暂无计时任务" }) })
     }
   );
 }
@@ -55751,8 +53478,14 @@ function ModulePanel({
   onLayoutToggleLock,
   onLayoutToggleCollapsed
 }) {
+  const isHeaderActionTarget = (target) => target instanceof HTMLElement && Boolean(target.closest(".module-header-actions, .module-drag-handle, .module-layout-actions"));
   const onHeaderClick = (e2) => {
-    if (e2.target.closest(".module-header-actions, .module-drag-handle, .module-layout-actions")) return;
+    if (isHeaderActionTarget(e2.target)) return;
+    onToggle?.(e2);
+  };
+  const onHeaderKeyDown = (e2) => {
+    if (!isKeyboardActivation(e2) || isHeaderActionTarget(e2.target)) return;
+    e2.preventDefault();
     onToggle?.(e2);
   };
   const moduleClassName = [
@@ -55766,7 +53499,11 @@ function ModulePanel({
       "header",
       {
         class: `module-header${layoutEditing ? " is-layout-editing" : ""}${layoutSelected ? " is-layout-selected" : ""}`,
+        role: "button",
+        tabIndex: 0,
+        "aria-expanded": !collapsed,
         onClick: onHeaderClick,
+        onKeyDown: (event) => onHeaderKeyDown(event),
         title: layoutEditing ? "点击选中；拖动左侧手柄移动；点击标题区域折叠或展开" : "点击标题区域折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开",
         children: [
           /* @__PURE__ */ u2("div", { class: "module-header-main", children: [
@@ -55961,7 +53698,7 @@ function getOwnerDocument(target) {
   }
   return document;
 }
-const useIsomorphicLayoutEffect = canUseDOM ? _ : h;
+const useIsomorphicLayoutEffect = canUseDOM ? _ : y;
 function useEvent(handler) {
   const handlerRef = A$1(handler);
   useIsomorphicLayoutEffect(() => {
@@ -56028,7 +53765,7 @@ function useNodeRef(onChange) {
 }
 function usePrevious(value) {
   const ref = A$1();
-  h(() => {
+  y(() => {
     ref.current = value;
   }, [value]);
   return ref.current;
@@ -56223,7 +53960,7 @@ function useAnnouncement() {
 const DndMonitorContext = /* @__PURE__ */ X$1(null);
 function useDndMonitor(listener) {
   const registerListener = x$1(DndMonitorContext);
-  h(() => {
+  y(() => {
     if (!registerListener) {
       throw new Error("useDndMonitor must be used within a children of <DndContext>");
     }
@@ -56299,7 +54036,7 @@ function Accessibility(_ref) {
   } = useAnnouncement();
   const liveRegionId = useUniqueId("DndLiveRegion");
   const [mounted, setMounted] = d(false);
-  h(() => {
+  y(() => {
     setMounted(true);
   }, []);
   useDndMonitor(T$1(() => ({
@@ -57616,7 +55353,7 @@ function useAutoScroller(_ref) {
     scrollContainer.scrollBy(scrollLeft, scrollTop);
   }, []);
   const sortedScrollableAncestors = T$1(() => order2 === TraversalOrder.TreeOrder ? [...scrollableAncestors].reverse() : scrollableAncestors, [order2, scrollableAncestors]);
-  h(
+  y(
     () => {
       if (!enabled2 || !scrollableAncestors.length || !rect) {
         clearAutoScrollInterval();
@@ -57806,10 +55543,10 @@ function useDroppableMeasuring(containers, _ref) {
     }
     return previousValue;
   }, [containers, queue, dragging, disabled, measure]);
-  h(() => {
+  y(() => {
     containersRef.current = containers;
   }, [containers]);
-  h(
+  y(
     () => {
       if (disabled) {
         return;
@@ -57819,7 +55556,7 @@ function useDroppableMeasuring(containers, _ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [dragging, disabled]
   );
-  h(
+  y(
     () => {
       if (queue && queue.length > 0) {
         setQueue(null);
@@ -57828,7 +55565,7 @@ function useDroppableMeasuring(containers, _ref) {
     //eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(queue)]
   );
-  h(
+  y(
     () => {
       if (disabled || typeof frequency !== "number" || timeoutId.current !== null) {
         return;
@@ -57886,7 +55623,7 @@ function useMutationObserver(_ref) {
     } = window;
     return new MutationObserver2(handleMutations);
   }, [handleMutations, disabled]);
-  h(() => {
+  y(() => {
     return () => mutationObserver == null ? void 0 : mutationObserver.disconnect();
   }, [mutationObserver]);
   return mutationObserver;
@@ -57910,7 +55647,7 @@ function useResizeObserver(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [disabled]
   );
-  h(() => {
+  y(() => {
     return () => resizeObserver == null ? void 0 : resizeObserver.disconnect();
   }, [resizeObserver]);
   return resizeObserver;
@@ -57990,7 +55727,7 @@ function useScrollableAncestors(node2) {
     }
     return getScrollableAncestors(node2);
   }, [node2]);
-  h(() => {
+  y(() => {
     previousNode.current = node2;
   }, [node2]);
   return ancestors;
@@ -58011,7 +55748,7 @@ function useScrollOffsets(elements) {
       return new Map(scrollCoordinates2);
     });
   }, []);
-  h(() => {
+  y(() => {
     const previousElements = prevElements.current;
     if (elements !== previousElements) {
       cleanup2(previousElements);
@@ -58051,14 +55788,14 @@ function useScrollOffsetsDelta(scrollOffsets, dependencies) {
     dependencies = [];
   }
   const initialScrollOffsets = A$1(null);
-  h(
+  y(
     () => {
       initialScrollOffsets.current = null;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     dependencies
   );
-  h(() => {
+  y(() => {
     const hasScrollOffsets = scrollOffsets !== defaultCoordinates;
     if (hasScrollOffsets && !initialScrollOffsets.current) {
       initialScrollOffsets.current = scrollOffsets;
@@ -58070,7 +55807,7 @@ function useScrollOffsetsDelta(scrollOffsets, dependencies) {
   return initialScrollOffsets.current ? subtract(scrollOffsets, initialScrollOffsets.current) : defaultCoordinates;
 }
 function useSensorSetup(sensors) {
-  h(
+  y(
     () => {
       if (!canUseDOM) {
         return;
@@ -58410,7 +56147,7 @@ function RestoreFocus(_ref) {
   } = x$1(InternalContext);
   const previousActivatorEvent = usePrevious(activatorEvent);
   const previousActiveId = usePrevious(active == null ? void 0 : active.id);
-  h(() => {
+  y(() => {
     if (disabled) {
       return;
     }
@@ -58552,7 +56289,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
     modifiers,
     ...props
   } = _ref;
-  const store = y(reducer, void 0, getInitialState);
+  const store = h(reducer, void 0, getInitialState);
   const [state, dispatch] = store;
   const [dispatchMonitorEvent, registerMonitorListener] = useDndMonitorProvider();
   const [status, setStatus] = d(Status.Uninitialized);
@@ -58861,7 +56598,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
       setStatus(Status.Initialized);
     }
   }, [activeNodeRect, status]);
-  h(
+  y(
     () => {
       const {
         onDragMove
@@ -58896,7 +56633,7 @@ const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [scrollAdjustedTranslate.x, scrollAdjustedTranslate.y]
   );
-  h(
+  y(
     () => {
       const {
         active: active2,
@@ -59179,7 +56916,7 @@ function useDroppable(_ref) {
   }, [resizeObserver]);
   const [nodeRef, setNodeRef] = useNodeRef(handleNodeChange);
   const dataRef = useLatestValue(data);
-  h(() => {
+  y(() => {
     if (!resizeObserver || !nodeRef.current) {
       return;
     }
@@ -59187,7 +56924,7 @@ function useDroppable(_ref) {
     resizeObserverConnected.current = false;
     resizeObserver.observe(nodeRef.current);
   }, [nodeRef, resizeObserver]);
-  h(
+  y(
     () => {
       dispatch({
         type: Action.RegisterDroppable,
@@ -59209,7 +56946,7 @@ function useDroppable(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [id]
   );
-  h(() => {
+  y(() => {
     if (disabled !== previous.current.disabled) {
       dispatch({
         type: Action.SetDroppableDisabled,
@@ -59395,7 +57132,7 @@ function SortableContext(_ref) {
       measureDroppableContainers(items);
     }
   }, [itemsHaveChanged, items, isDragging, measureDroppableContainers]);
-  h(() => {
+  y(() => {
     previousItemsRef.current = items;
   }, [items]);
   const contextValue = T$1(
@@ -59493,7 +57230,7 @@ function useDerivedTransform(_ref) {
       previousIndex.current = index;
     }
   }, [disabled, index, node2, rect]);
-  h(() => {
+  y(() => {
     if (derivedTransform) {
       setDerivedtransform(null);
     }
@@ -59615,7 +57352,7 @@ function useSortable(_ref) {
     node: node2,
     rect
   });
-  h(() => {
+  y(() => {
     if (isSorting && previous.current.newIndex !== newIndex) {
       previous.current.newIndex = newIndex;
     }
@@ -59626,7 +57363,7 @@ function useSortable(_ref) {
       previous.current.items = items;
     }
   }, [isSorting, newIndex, containerId, items]);
-  h(() => {
+  y(() => {
     if (activeId === previous.current.activeId) {
       return;
     }
@@ -61557,7 +59294,7 @@ function ProgressBlock({
     const hours = categoryHours[category];
     const percent = totalHours > 0 ? hours / totalHours * 100 : 0;
     if (percent < 0.1 && hours < 0.01) return null;
-    const color2 = colorMap[category] || "#cccccc";
+    const color2 = colorMap[category] || "var(--think-data-neutral)";
     const displayPercent = Math.max(percent, 0.5);
     return /* @__PURE__ */ u2(
       "div",
@@ -61569,7 +59306,7 @@ function ProgressBlock({
             "div",
             {
               class: "progress-block-bar",
-              style: { background: color2, width: `${displayPercent}%` }
+              style: { width: `${displayPercent}%`, "--timeline-progress-color": color2 }
             }
           ),
           /* @__PURE__ */ u2(
@@ -61592,9 +59329,9 @@ function TimelineSummaryTable({
   untrackedLabel
 }) {
   if (!summaryData || summaryData.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "此时间范围内无数据可供总结。" });
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state think-viz-empty", children: "此时间范围内无数据可供总结。" });
   }
-  return /* @__PURE__ */ u2("table", { class: "timeline-summary-table", children: [
+  return /* @__PURE__ */ u2("div", { class: "timeline-summary-scroll think-data-grid-scroll", children: /* @__PURE__ */ u2("table", { class: "timeline-summary-table think-data-grid", children: [
     /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
       /* @__PURE__ */ u2("th", { children: "月份" }),
       /* @__PURE__ */ u2("th", { children: "月度总结" }),
@@ -61627,7 +59364,7 @@ function TimelineSummaryTable({
         }
       ) : null }, index))
     ] }, monthData.month)) })
-  ] });
+  ] }) });
 }
 function DayColumnHeader({
   day,
@@ -61654,11 +59391,6 @@ function DayColumnHeader({
     ) })
   ] });
 }
-const hexToRgba = (hex, alpha2 = 0.35) => {
-  const h2 = hex.replace("#", "");
-  const bigint = parseInt(h2, 16);
-  return `rgba(${bigint >> 16 & 255},${bigint >> 8 & 255},${bigint & 255},${alpha2})`;
-};
 const formatTimeMinute = (minute) => {
   const h2 = Math.floor(minute / 60);
   const m2 = minute % 60;
@@ -61775,7 +59507,7 @@ function DayColumnBody({
         const top2 = block.blockStartMinute / 60 * hourHeight;
         const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
         const category = mapTaskToCategory(block.fileName || "", categoriesConfig);
-        const color2 = colorMap[category] || "#ccc";
+        const color2 = colorMap[category] || "var(--think-data-neutral)";
         const prevBlock = index > 0 ? blocks[index - 1] : null;
         const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
         const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
@@ -61785,7 +59517,7 @@ function DayColumnBody({
           {
             class: "timeline-task-block",
             title: generateTaskBlockTitle(block),
-            style: { top: `${top2}px`, height: `${Math.max(height2, 2)}px` },
+            style: { top: `${top2}px`, height: `${Math.max(height2, 2)}px`, "--timeline-task-color": color2 },
             onClick: (e2) => e2.stopPropagation(),
             onTouchStart: (e2) => e2.stopPropagation(),
             onTouchEnd: (e2) => e2.stopPropagation(),
@@ -61801,8 +59533,8 @@ function DayColumnBody({
                   onTouchEnd: blockGesture.onTouchEnd,
                   onKeyDown: blockGesture.onKeyDown,
                   children: [
-                    /* @__PURE__ */ u2("div", { class: "timeline-task-indicator", style: { background: color2 } }),
-                    /* @__PURE__ */ u2("div", { class: "timeline-task-content", style: { background: hexToRgba(color2) }, children: [
+                    /* @__PURE__ */ u2("div", { class: "timeline-task-indicator" }),
+                    /* @__PURE__ */ u2("div", { class: "timeline-task-content", children: [
                       block.icon ? /* @__PURE__ */ u2("span", { class: "timeline-task-icon", children: block.icon }) : null,
                       /* @__PURE__ */ u2("span", { class: "timeline-task-title", children: block.title || block.pureText })
                     ] })
@@ -61811,32 +59543,35 @@ function DayColumnBody({
               ),
               /* @__PURE__ */ u2("div", { class: "task-buttons", children: [
                 /* @__PURE__ */ u2(
-                  "button",
+                  ThinkIconButton,
                   {
-                    class: "task-button",
-                    title: "向前对齐",
+                    className: "timeline-task-action",
+                    size: "sm",
+                    label: "向前对齐",
+                    icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-up" }),
                     disabled: !prevBlock,
-                    onClick: () => handleAlignToPrev(block, prevBlock),
-                    children: "⇡"
+                    onClick: () => handleAlignToPrev(block, prevBlock)
                   }
                 ),
                 /* @__PURE__ */ u2(
-                  "button",
+                  ThinkIconButton,
                   {
-                    class: "task-button",
-                    title: "向后对齐",
+                    className: "timeline-task-action",
+                    size: "sm",
+                    label: "向后对齐",
+                    icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-down" }),
                     disabled: !canAlignToNext,
-                    onClick: () => handleAlignToNext(block, nextBlock),
-                    children: "⇣"
+                    onClick: () => handleAlignToNext(block, nextBlock)
                   }
                 ),
                 /* @__PURE__ */ u2(
-                  "button",
+                  ThinkIconButton,
                   {
-                    class: "task-button",
-                    title: "精确编辑",
-                    onClick: () => handleEdit(block),
-                    children: "✎"
+                    className: "timeline-task-action",
+                    size: "sm",
+                    label: "精确编辑",
+                    icon: /* @__PURE__ */ u2(ThinkIcon, { name: "pencil" }),
+                    onClick: () => handleEdit(block)
                   }
                 )
               ] })
@@ -61884,7 +59619,7 @@ function TimelineDailyView({
 }) {
   const dayColumns = buildTimelineDayColumns(dailyViewData);
   const timeAxisRows = buildTimelineTimeAxisRows(maxHours, hourHeight);
-  return /* @__PURE__ */ u2("div", { class: "timeline-view-wrapper", ...zoomHandlers, children: [
+  return /* @__PURE__ */ u2("div", { class: "timeline-view-wrapper think-viz-surface", ...zoomHandlers, children: [
     /* @__PURE__ */ u2("div", { class: "timeline-sticky-header", children: [
       /* @__PURE__ */ u2("div", { class: "summary-progress-container", style: { flex: `0 0 ${timeAxisWidth}px` }, children: [
         /* @__PURE__ */ u2("div", { class: "summary-title", children: "总结" }),
@@ -61957,7 +59692,7 @@ function TimelineViewView(props) {
     onColumnClick
   } = props;
   if (timelineTasksCount === 0) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state think-viz-empty", children: "当前范围内没有数据。" });
   }
   if (isSummaryView) {
     return /* @__PURE__ */ u2(
@@ -61971,7 +59706,7 @@ function TimelineViewView(props) {
     );
   }
   if (!dailyViewData) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state think-viz-empty", children: "当前范围内没有数据。" });
   }
   return /* @__PURE__ */ u2(
     TimelineDailyView,
@@ -62311,17 +60046,17 @@ function EventTimelineViewView(props) {
     }
   );
   if (filteredItems.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "event-timeline-empty", children: "当前时间范围内没有事件记录。" });
+    return /* @__PURE__ */ u2("div", { class: "event-timeline-empty think-viz-empty", children: "当前时间范围内没有事件记录。" });
   }
   if (!groupedTree) {
-    return /* @__PURE__ */ u2("div", { class: "event-timeline-view", children: /* @__PURE__ */ u2("div", { class: "et-ungrouped", children: renderEventList(filteredItems) }) });
+    return /* @__PURE__ */ u2("div", { class: "event-timeline-view think-viz-surface", children: /* @__PURE__ */ u2("div", { class: "et-ungrouped", children: renderEventList(filteredItems) }) });
   }
   return /* @__PURE__ */ u2(
     GroupedContainer,
     {
       nodes: groupedTree,
       classNames: {
-        root: "event-timeline-view",
+        root: "event-timeline-view think-viz-surface",
         group: "et-group",
         title: "et-group-title",
         content: "et-group-content",
@@ -63219,7 +60954,7 @@ function HeatmapView({
     if (needsVertical === null) return;
     setVerticalLayouts((prev2) => applyHeatmapVerticalLayout(prev2, theme, needsVertical));
   };
-  h(() => {
+  y(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       entries.forEach((entry) => {
         const element = entry.target;
@@ -63328,12 +61063,12 @@ function ChartBlock({
         openAll(event);
       },
       children: [
-        /* @__PURE__ */ u2("div", { class: "sv-chart-label", children: label }),
+        /* @__PURE__ */ u2("div", { class: "sv-chart-label think-viz-label", children: label }),
         /* @__PURE__ */ u2("div", { class: "sv-chart-content", children: [
           /* @__PURE__ */ u2("div", { class: "sv-chart-numbers", children: chartCategories.map(({ name }) => {
             const count = counts[name] || 0;
             const displayName = categories.find((category) => category.name === name)?.alias || name;
-            return /* @__PURE__ */ u2("div", { class: "sv-chart-number", onClick: (event) => openCategory(event, name, displayName), children: count }, `num-${name}`);
+            return /* @__PURE__ */ u2("div", { class: "sv-chart-number think-viz-value", onClick: (event) => openCategory(event, name, displayName), children: count }, `num-${name}`);
           }) }),
           /* @__PURE__ */ u2("div", { class: "sv-chart-bars-container", children: chartCategories.map(({ name, color: color2, alias }, index) => {
             const count = counts[name] || 0;
@@ -63370,7 +61105,7 @@ function ChartBlock({
             return /* @__PURE__ */ u2(
               "div",
               {
-                class: "sv-chart-category",
+                class: "sv-chart-category think-viz-axis-label",
                 title: `${displayName}${alias ? ` (${name})` : ""}`,
                 onClick: (event) => openCategory(event, name, displayName),
                 children: displayName
@@ -63394,7 +61129,7 @@ function DayStatisticsView({
   onOpenRecordOrigin
 }) {
   const data = aggregateByDay(items, categories, selectedDate, bucketAccessor);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2("div", { class: "statistics-view think-viz-surface", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
     ChartBlock,
     {
       data,
@@ -63422,7 +61157,7 @@ function WeekStatisticsView({
   const weekStart = weekDate.startOf("isoWeek");
   const weekEnd = weekDate.endOf("isoWeek");
   const data = aggregateByWeek(items, categories, weekStart, false, bucketAccessor);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2("div", { class: "statistics-view think-viz-surface", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
     ChartBlock,
     {
       data,
@@ -63612,7 +61347,7 @@ function PeriodStatisticsView(props) {
   const effectiveGridStyle = gridStyle;
   const renderChart = (block) => /* @__PURE__ */ u2(ChartBlock, { data: block.data, label: block.label, categories, onCellClick, cellIdentifier: block.identifier, isCompact: block.isCompact, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin }, block.key);
   const renderBlock = (block) => /* @__PURE__ */ u2("div", { class: `${block.wrapperClassName || ""} ${levelClass(block.level)}`, style: flowStyle(block.style), children: renderChart(block) }, block.key);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: `${gridClassName} sv-period-hierarchy`, style: effectiveGridStyle, children: [
+  return /* @__PURE__ */ u2("div", { class: "statistics-view think-viz-surface", children: /* @__PURE__ */ u2("div", { class: `${gridClassName} sv-period-hierarchy`, style: effectiveGridStyle, children: [
     renderBlock(summary),
     visibleBlocks.map(renderBlock),
     visibleColumns.map((column2) => /* @__PURE__ */ u2("div", { class: `${column2.wrapperClassName} ${levelClass(column2.level)}`, style: flowStyle(column2.style), children: column2.blocks.map(renderChart) }, column2.key))
@@ -63651,7 +61386,7 @@ function StatisticsViewView({
   onOpenRecordOrigin
 }) {
   if (!categories || categories.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder", children: "暂无目标统计数据。" });
+    return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder think-viz-empty", children: "暂无目标统计数据。" });
   }
   const sharedProps = { categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin };
   switch (currentView) {
@@ -64914,11 +62649,8 @@ function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordOrigin }
     rows.push(day);
     months.set(key, rows);
   }
-  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-daily-dots", "aria-label": `${period.currentView}每日精力`, children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: [
-      period.label,
-      " · 一天一个点"
-    ] }) }),
+  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-daily-dots think-viz-surface", "aria-label": `${period.currentView}每日精力`, children: [
+    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading think-viz-meta", children: /* @__PURE__ */ u2("span", { children: period.label }) }),
     /* @__PURE__ */ u2("div", { class: `think-energy-daily-dots__months is-${period.currentView === "年" ? "year" : "quarter"}`, children: [...months.entries()].map(([key, days]) => {
       const blanks = days.length ? mondayIndex(days[0].date) : 0;
       return /* @__PURE__ */ u2("div", { class: "think-energy-daily-dots__month", children: [
@@ -64961,8 +62693,7 @@ function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordOrigin }
           })
         ] })
       ] }, key);
-    }) }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝当天含实时记录 · 空心＝当天仅补录 · 5 档尺寸＝日均精力 · Missing 留白" })
+    }) })
   ] });
 }
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
@@ -65000,8 +62731,8 @@ function sampleVisual(sample) {
 }
 function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
   const day = period.days[0];
-  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-day-map", "aria-label": "日精力地图", children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: period.label }) }),
+  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-day-map think-viz-surface", "aria-label": "日精力地图", children: [
+    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading think-viz-meta", children: /* @__PURE__ */ u2("span", { children: period.label }) }),
     /* @__PURE__ */ u2("div", { class: "think-energy-day-map__track", children: [
       TIME_TICKS.map((tick) => /* @__PURE__ */ u2("span", { class: "think-energy-day-map__guide", style: axisStyle("--think-energy-x", tick / 1440 * 100), children: [
         /* @__PURE__ */ u2("i", {}),
@@ -65033,14 +62764,13 @@ function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
         );
       }),
       !day?.sampled && /* @__PURE__ */ u2("span", { class: "think-energy-day-map__empty", children: "当天未记录" })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低" })
+    ] })
   ] });
 }
 function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
   const isMonth = period.currentView === "月";
-  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-date-map", "aria-label": `${period.currentView}精力地图`, children: [
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading", children: /* @__PURE__ */ u2("span", { children: [
+  return /* @__PURE__ */ u2("section", { class: "think-energy-period-map think-energy-date-map think-viz-surface", "aria-label": `${period.currentView}精力地图`, children: [
+    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__heading think-viz-meta", children: /* @__PURE__ */ u2("span", { children: [
       period.label,
       " · ",
       period.sampledDays,
@@ -65087,13 +62817,12 @@ function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordOrigin }
           })
         ] })
       ] }, day.date)) })
-    ] }) }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-period-map__hint", children: "实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低 · Missing 留白" })
+    ] }) })
   ] });
 }
 function EnergyPeriodMap(props) {
   const { period } = props;
-  if (!period) return /* @__PURE__ */ u2("div", { class: "think-energy-period-map think-energy-period-map--empty", children: "本周期没有精力记录。" });
+  if (!period) return /* @__PURE__ */ u2("div", { class: "think-energy-period-map think-energy-period-map--empty think-viz-empty", children: "本周期没有精力记录。" });
   if (period.mode === "day-horizontal") return /* @__PURE__ */ u2(EnergyDayMap, { ...props, period });
   if (period.mode === "date-time") return /* @__PURE__ */ u2(EnergyDateTimeMap, { ...props, period });
   return /* @__PURE__ */ u2(EnergyCalendarMap, { ...props, period });
@@ -65117,10 +62846,11 @@ function RecordAction({ item, label, className = "think-energy-detail__open", on
     onOpenOrigin: onOpenRecordOrigin
   });
   return /* @__PURE__ */ u2(
-    "button",
+    ThinkButton,
     {
-      type: "button",
-      class: className,
+      variant: "link",
+      size: "sm",
+      className,
       title: RECORD_GESTURE_HINT,
       onClick: gesture.onClick,
       onDblClick: gesture.onDblClick,
@@ -65152,7 +62882,7 @@ function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecor
   const signals = signalsText(selection);
   const impact = impactText(selection, management);
   return /* @__PURE__ */ u2("aside", { class: "think-energy-detail", "aria-label": "精力记录详情", children: [
-    /* @__PURE__ */ u2("button", { type: "button", class: "think-energy-detail__back", onClick: onBack, children: "‹ 返回本周期" }),
+    /* @__PURE__ */ u2(ThinkButton, { variant: "link", size: "sm", className: "think-energy-detail__back", leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-left" }), onClick: onBack, children: "返回本周期" }),
     /* @__PURE__ */ u2("div", { class: "think-energy-detail__head", children: [
       /* @__PURE__ */ u2("div", { children: [
         /* @__PURE__ */ u2("strong", { children: point.date }),
@@ -65197,7 +62927,7 @@ function DayDetail({ selection, onBack, onOpenRecord, onOpenRecordOrigin }) {
   const { day } = selection;
   const latest2 = day.samples[day.samples.length - 1];
   return /* @__PURE__ */ u2("aside", { class: "think-energy-detail", "aria-label": "每日精力详情", children: [
-    /* @__PURE__ */ u2("button", { type: "button", class: "think-energy-detail__back", onClick: onBack, children: "‹ 返回本周期" }),
+    /* @__PURE__ */ u2(ThinkButton, { variant: "link", size: "sm", className: "think-energy-detail__back", leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-left" }), onClick: onBack, children: "返回本周期" }),
     /* @__PURE__ */ u2("div", { class: "think-energy-detail__head", children: /* @__PURE__ */ u2("div", { children: [
       /* @__PURE__ */ u2("strong", { children: day.date }),
       /* @__PURE__ */ u2("span", { children: [
@@ -65336,7 +63066,7 @@ function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, onOpenR
     return map;
   }, [model]);
   const selectedTask = menu ? taskMap.get(menu.taskId) || null : null;
-  h(() => {
+  y(() => {
     const onDown = (event) => {
       if (!menuRef.current || menuRef.current.contains(event.target)) return;
       setMenu(null);
@@ -65466,7 +63196,7 @@ function selectionKey(selection) {
 function GoalEnergyPanel({ panel, model, onOpenRecord, onOpenRecordOrigin }) {
   const [selection, setSelection] = d(null);
   return /* @__PURE__ */ u2("section", { class: "think-energy-view__goal", children: /* @__PURE__ */ u2("div", { class: "think-energy-view__primary", children: [
-    model.config.showTimeline ? /* @__PURE__ */ u2(EnergyPeriodMap, { period: panel.period, selectedKey: selectionKey(selection), onSelect: setSelection, onOpenRecordOrigin }) : /* @__PURE__ */ u2("div", { class: "think-energy-view__timeline-off", children: "精力地图已关闭。" }),
+    model.config.showTimeline ? /* @__PURE__ */ u2(EnergyPeriodMap, { period: panel.period, selectedKey: selectionKey(selection), onSelect: setSelection, onOpenRecordOrigin }) : /* @__PURE__ */ u2("div", { class: "think-energy-view__timeline-off think-viz-empty", children: "精力地图已关闭。" }),
     selection ? /* @__PURE__ */ u2(
       EnergySampleDetail,
       {
@@ -65512,7 +63242,7 @@ function EnergyView({ items, records = items, module: module2, dateRange, curren
     await timerService?.startOrResume(task.itemId);
   };
   const [firstPanel, ...otherPanels] = energyModel.goalPanels;
-  return /* @__PURE__ */ u2("div", { class: "think-energy-view", children: /* @__PURE__ */ u2("div", { class: "think-energy-view__goals", children: [
+  return /* @__PURE__ */ u2("div", { class: "think-energy-view think-viz-surface", children: /* @__PURE__ */ u2("div", { class: "think-energy-view__goals", children: [
     firstPanel ? /* @__PURE__ */ u2(GoalEnergyPanel, { panel: firstPanel, model: energyModel, onOpenRecord, onOpenRecordOrigin }) : /* @__PURE__ */ u2(EmptyEnergyPanel, {}),
     /* @__PURE__ */ u2(
       EnergyTaskList,
@@ -66022,10 +63752,10 @@ function ExcelCell({
   const [draft, setDraft] = d(editorValue);
   const inputRef = A$1(null);
   const ui = buildExcelCellUiState({ cell, selected, editing, pending, saved, error, canCommit, fillSource, fillTarget, contentDisplayMode });
-  h(() => {
+  y(() => {
     if (editing) setDraft(editorValue);
   }, [editing, editorValue]);
-  h(() => {
+  y(() => {
     if (!editing) return;
     const input = inputRef.current;
     input?.focus?.();
@@ -66503,7 +64233,7 @@ function useExcelCellEditing(options) {
   const commitQueueRef = A$1(Promise.resolve());
   const [fillDragSourceCell, setFillDragSourceCell] = d(null);
   const [fillDragTargetCellKey, setFillDragTargetCellKey] = d(null);
-  h(() => () => {
+  y(() => () => {
     for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
     saveFlashTimers.current = {};
   }, []);
@@ -67081,13 +64811,13 @@ function ExcelView({
     excelConfigSaving,
     isFullMarkdownContent
   });
-  h(() => {
+  y(() => {
     resetTransientState();
   }, [renderModel.itemSignature, resetTransientState]);
-  h(() => {
+  y(() => {
     setLocalColumnWidths(renderModel.persistedColumnWidths);
   }, [renderModel.persistedColumnWidths]);
-  h(() => {
+  y(() => {
     setLocalContentDisplayMode(renderModel.persistedContentDisplayMode);
   }, [renderModel.persistedContentDisplayMode]);
   const handleFieldsChange = q$1(async (nextFields) => {
@@ -67462,7 +65192,7 @@ function ThemeTreeSelectPanel({
   const [searchTerm, setSearchTerm] = d("");
   const [expandedIds, setExpandedIds] = d(() => new Set(defaultExpandedIds));
   const themeTree = T$1(() => (buildThemeTree(themes || []) || []).filter(Boolean), [themes]);
-  h(() => {
+  y(() => {
     if (!expandToSelected) return;
     const pathsToExpand = [];
     if (multiSelect && selectedPaths.length > 0) {
@@ -67481,7 +65211,7 @@ function ThemeTreeSelectPanel({
       });
     }
   }, [expandToSelected, multiSelect, selectedPaths, selectedThemeId, themes]);
-  h(() => {
+  y(() => {
     if (!defaultExpandAll || themeTree.length === 0) return;
     const allIds = [];
     const collect = (nodes) => {
@@ -67903,7 +65633,7 @@ const VIEW_REGISTRY = {
 const DashboardViewComponents = VIEW_REGISTRY;
 function useLayoutItems({ dataStore, layout }) {
   const [allItems, setAllItems] = d(() => dataStore.queryItems());
-  h(() => {
+  y(() => {
     const readAllItems = () => {
       const startedAt = performance.now();
       const nextItems = dataStore.queryItems();
@@ -67932,7 +65662,7 @@ function useExpandedViewRendering({
 }) {
   const [expandedState, setExpandedState] = d({});
   const [isStateInitialized, setIsStateInitialized] = d(false);
-  h(() => {
+  y(() => {
     const initialState = {};
     layout.viewInstanceIds.forEach((viewId) => {
       const view = allViews.find((v2) => v2.id === viewId);
@@ -67943,7 +65673,7 @@ function useExpandedViewRendering({
     setExpandedState(initialState);
     setIsStateInitialized(true);
   }, [layout.id]);
-  h(() => {
+  y(() => {
     if (!isStateInitialized) return;
     setExpandedState((prevState) => {
       const newState = { ...prevState };
@@ -67963,7 +65693,7 @@ function useExpandedViewRendering({
   const expandedViewSignature = expandedViewIds.join("|");
   const [renderedExpandedCount, setRenderedExpandedCount] = d(INITIAL_RENDERED_EXPANDED_VIEWS);
   const renderedBatchLayoutIdRef = A$1(null);
-  h(() => {
+  y(() => {
     setRenderedExpandedCount((current2) => {
       const firstBatchSize = Math.min(expandedViewIds.length, INITIAL_RENDERED_EXPANDED_VIEWS);
       if (renderedBatchLayoutIdRef.current !== layout.id) {
@@ -67973,7 +65703,7 @@ function useExpandedViewRendering({
       return Math.min(expandedViewIds.length, Math.max(current2, INITIAL_RENDERED_EXPANDED_VIEWS));
     });
   }, [expandedViewSignature, expandedViewIds.length, layout.id]);
-  h(() => {
+  y(() => {
     if (renderedExpandedCount >= expandedViewIds.length) return;
     const requestIdle = window.requestIdleCallback;
     const cancelIdle = window.cancelIdleCallback;
@@ -68033,7 +65763,7 @@ function useViewData({
   const sort = viewInstance?.sort || [];
   const sourceName = viewInstance?.title || "未知视图";
   const [localItems, setLocalItems] = d(() => sourceItems ?? dataStore.queryItems());
-  h(() => {
+  y(() => {
     if (sourceItems) return;
     const listener = () => {
       setLocalItems(dataStore.queryItems());
@@ -68363,7 +66093,7 @@ function ViewContent({
   });
   const selectedLayoutCategories = T$1(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
   const excelAvailableFields = T$1(() => getAllFields(allItems), [allItems]);
-  h(() => {
+  y(() => {
     onDataLoaded(viewItems);
   }, [viewItems, onDataLoaded]);
   const ViewComponent = DashboardViewComponents[normalizedViewInstance.viewType];
@@ -68521,10 +66251,10 @@ function FreeformLayoutItem({
   const [isResizing, setIsResizing] = d(false);
   const resizeSessionRef = A$1(null);
   const onResizePreviewRef = A$1(onResizePreview);
-  h(() => {
+  y(() => {
     onResizePreviewRef.current = onResizePreview;
   }, [onResizePreview]);
-  h(() => () => {
+  y(() => () => {
     resizeSessionRef.current = null;
     onResizePreviewRef.current(null);
   }, []);
@@ -68713,7 +66443,7 @@ function FreeformCanvas({
     [layout.freeformConfig]
   );
   const keyboardStep = config2.snapToGrid ? config2.gridSize : 8;
-  h(() => {
+  y(() => {
     const host = hostRef.current;
     if (!host) return;
     const updateWidth = () => {
@@ -68732,25 +66462,25 @@ function FreeformCanvas({
     observer.observe(host);
     return () => observer.disconnect();
   }, [config2.minCanvasWidth]);
-  h(() => {
+  y(() => {
     setSelectedViewId(null);
     setLocalOverrides({});
     setResizePreviews({});
     setDragPreview(null);
     previousPersistedPlacementsRef.current = layout.viewPlacements;
   }, [layout.id]);
-  h(() => {
+  y(() => {
     if (previousPersistedPlacementsRef.current === layout.viewPlacements) return;
     previousPersistedPlacementsRef.current = layout.viewPlacements;
     setLocalOverrides({});
   }, [layout.viewPlacements]);
-  h(() => {
+  y(() => {
     if (editing) return;
     setSelectedViewId(null);
     setResizePreviews({});
     setDragPreview(null);
   }, [editing]);
-  h(() => {
+  y(() => {
     if (selectedViewId && !layout.viewInstanceIds.includes(selectedViewId)) {
       setSelectedViewId(null);
     }
@@ -68994,7 +66724,7 @@ function getLayoutInitialDate(layout) {
 }
 function useCompactFreeformFallback() {
   const [compact, setCompact] = d(false);
-  h(() => {
+  y(() => {
     if (typeof window === "undefined") return;
     const media = window.matchMedia?.("(max-width: 760px), (hover: none) and (pointer: coarse)");
     const update = () => {
@@ -69047,14 +66777,14 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     () => allViews.filter((view) => !layout.viewInstanceIds.includes(view.id)),
     [allViews, layout.viewInstanceIds]
   );
-  h(() => {
+  y(() => {
     setLayoutDate(getLayoutInitialDate(layout));
     setLayoutView(layout.initialView || "月");
   }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
-  h(() => {
+  y(() => {
     if (layout.displayMode !== "freeform" || compactFreeformFallback) setIsFreeformEditing(false);
   }, [compactFreeformFallback, layout.displayMode]);
-  h(() => {
+  y(() => {
     if (viewToAdd && !availableViews.some((view) => view.id === viewToAdd)) {
       setViewToAdd("");
     }
@@ -70013,46 +67743,34 @@ ObsidianMetadataPort = __decorateClass$3([
   singleton(),
   __decorateParam$2(0, inject(AppToken))
 ], ObsidianMetadataPort);
-function PromptComponent({
-  title,
-  placeholder,
-  ctaText,
-  initialValue,
-  onSubmit,
-  onCancel
-}) {
+function PromptComponent({ title, placeholder, ctaText, initialValue, onSubmit, onCancel }) {
   const [value, setValue] = d(initialValue || "");
-  const handleConfirm = () => {
-    onSubmit(value.trim());
-  };
-  const handleKeyDown = (e2) => {
-    if (e2.key === "Enter") {
-      e2.preventDefault();
+  const handleConfirm = () => onSubmit(value.trim());
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
       handleConfirm();
     }
-    if (e2.key === "Escape") {
-      e2.preventDefault();
+    if (event.key === "Escape") {
+      event.preventDefault();
       onCancel();
     }
   };
-  return /* @__PURE__ */ u2("div", { class: "think-modal", children: [
-    /* @__PURE__ */ u2("h3", { children: title }),
-    /* @__PURE__ */ u2(
-      TextField2,
+  return /* @__PURE__ */ u2("div", { className: "think-overlay-form think-name-prompt", children: [
+    /* @__PURE__ */ u2(ModalHeader, { left: /* @__PURE__ */ u2("span", { children: title }), onClose: onCancel }),
+    /* @__PURE__ */ u2("div", { className: "think-overlay-body think-name-prompt__body", children: /* @__PURE__ */ u2(
+      ThinkInput,
       {
         autoFocus: true,
-        fullWidth: true,
-        variant: "outlined",
-        placeholder,
         value,
-        onChange: (e2) => setValue(e2.target.value),
-        onKeyDown: handleKeyDown,
-        sx: { mt: 2 }
+        placeholder,
+        onInput: (event) => setValue(event.currentTarget.value),
+        onKeyDown: handleKeyDown
       }
-    ),
-    /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: "1.5rem", gap: "8px" }, children: [
-      /* @__PURE__ */ u2(Button2, { onClick: handleConfirm, variant: "contained", children: ctaText || "确认" }),
-      /* @__PURE__ */ u2(Button2, { onClick: onCancel, children: "取消" })
+    ) }),
+    /* @__PURE__ */ u2("div", { className: "think-overlay-footer", children: [
+      /* @__PURE__ */ u2(ThinkButton, { onClick: onCancel, children: "取消" }),
+      /* @__PURE__ */ u2(ThinkButton, { variant: "primary", onClick: handleConfirm, children: ctaText || "确认" })
     ] })
   ] });
 }
@@ -70070,40 +67788,30 @@ class NamePromptModal extends obsidian.Modal {
     });
   }
   onOpen() {
-    prepareThinkModal(this, "think-modal-host--medium");
-    renderModalContent(
-      this.contentEl,
-      /* @__PURE__ */ u2(
-        PromptComponent,
-        {
-          title: this.options.title,
-          placeholder: this.options.placeholder,
-          ctaText: this.options.ctaText,
-          initialValue: this.options.defaultValue,
-          onSubmit: (value) => {
-            const v2 = value.trim();
-            if (this.resolvePromise) {
-              this.resolvePromise(v2 ? v2 : null);
-              this.resolvePromise = null;
-            }
-            this.close();
-          },
-          onCancel: () => {
-            if (this.resolvePromise) {
-              this.resolvePromise(null);
-              this.resolvePromise = null;
-            }
-            this.close();
-          }
+    prepareThinkModal(this, "think-modal-host--medium", "think-name-prompt-modal");
+    renderModalContent(this.contentEl, /* @__PURE__ */ u2(
+      PromptComponent,
+      {
+        title: this.options.title,
+        placeholder: this.options.placeholder,
+        ctaText: this.options.ctaText,
+        initialValue: this.options.defaultValue,
+        onSubmit: (value) => {
+          this.resolvePromise?.(value || null);
+          this.resolvePromise = null;
+          this.close();
+        },
+        onCancel: () => {
+          this.resolvePromise?.(null);
+          this.resolvePromise = null;
+          this.close();
         }
-      )
-    );
+      }
+    ));
   }
   onClose() {
-    if (this.resolvePromise) {
-      this.resolvePromise(null);
-      this.resolvePromise = null;
-    }
+    this.resolvePromise?.(null);
+    this.resolvePromise = null;
     unmountModalContent(this.contentEl);
   }
 }
@@ -70120,134 +67828,87 @@ function FiltersBar({
   setSelectedBlockId,
   indexItemCount
 }) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        p: 1.5,
-        borderBottom: "1px solid var(--background-modifier-border)",
-        display: "flex",
-        alignItems: "center",
-        gap: 2,
-        flexWrap: "wrap"
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          FormControlLabel2,
-          {
-            control: /* @__PURE__ */ u2(
-              Switch2,
-              {
-                checked: enableRetrieval,
-                onChange: (e2) => setEnableRetrieval(e2.target.checked),
-                size: "small"
-              }
-            ),
-            label: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 0.5 }, children: [
-              /* @__PURE__ */ u2(SearchIcon, { fontSize: "small" }),
-              /* @__PURE__ */ u2(Typography2, { variant: "body2", children: "引用上下文" })
-            ] })
-          }
-        ),
-        enableRetrieval && themes.length > 0 && /* @__PURE__ */ u2(
-          ThemeTreeSelect,
-          {
-            themes,
-            selectedPaths: selectedThemes,
-            onSelectMultiple: setSelectedThemes,
-            multiSelect: true,
-            searchable: true,
-            placeholder: "选择主题",
-            size: "small",
-            sx: { minWidth: 150 }
-          }
-        ),
-        enableRetrieval && /* @__PURE__ */ u2(FormControl2, { size: "small", sx: { minWidth: 100 }, children: [
-          /* @__PURE__ */ u2(InputLabel2, { children: "类型" }),
-          /* @__PURE__ */ u2(Select2, { value: selectedType, label: "类型", onChange: (e2) => setSelectedType(e2.target.value), children: [
-            /* @__PURE__ */ u2(MenuItem$1, { value: "", children: "全部" }),
-            /* @__PURE__ */ u2(MenuItem$1, { value: "task", children: "任务" }),
-            /* @__PURE__ */ u2(MenuItem$1, { value: "block", children: "记录" })
-          ] })
-        ] }),
-        enableRetrieval && selectedType === "block" && blocks.length > 0 && /* @__PURE__ */ u2(FormControl2, { size: "small", sx: { minWidth: 120 }, children: [
-          /* @__PURE__ */ u2(InputLabel2, { children: "记录类型" }),
-          /* @__PURE__ */ u2(
-            Select2,
-            {
-              value: selectedBlockId,
-              label: "记录类型",
-              onChange: (e2) => setSelectedBlockId(e2.target.value),
-              children: [
-                /* @__PURE__ */ u2(MenuItem$1, { value: "", children: "全部记录" }),
-                blocks.map((b2) => /* @__PURE__ */ u2(MenuItem$1, { value: b2.id, children: b2.name }, b2.id))
-              ]
-            }
-          )
-        ] }),
-        enableRetrieval && /* @__PURE__ */ u2(Chip2, { size: "small", label: `索引: ${indexItemCount} 条`, variant: "outlined" })
-      ]
-    }
-  );
+  const typeOptions = [
+    { value: "", label: "全部类型" },
+    { value: "task", label: "任务" },
+    { value: "block", label: "记录" }
+  ];
+  const blockOptions = [
+    { value: "", label: "全部记录" },
+    ...blocks.map((block) => ({ value: block.id, label: block.name }))
+  ];
+  return /* @__PURE__ */ u2("div", { className: "think-ai-chat-filters", children: [
+    /* @__PURE__ */ u2(
+      ThinkToggle,
+      {
+        className: "think-ai-chat-filters__toggle",
+        checked: enableRetrieval,
+        onChange: (event) => setEnableRetrieval(event.currentTarget.checked),
+        label: "引用上下文"
+      }
+    ),
+    enableRetrieval && themes.length > 0 ? /* @__PURE__ */ u2("div", { className: "think-ai-chat-filters__theme", children: /* @__PURE__ */ u2(
+      ThemeTreeSelect,
+      {
+        themes,
+        selectedPaths: selectedThemes,
+        onSelectMultiple: setSelectedThemes,
+        multiSelect: true,
+        searchable: true,
+        placeholder: "主题",
+        size: "small"
+      }
+    ) }) : null,
+    enableRetrieval ? /* @__PURE__ */ u2(
+      SimpleSelect,
+      {
+        className: "think-ai-chat-filters__select",
+        value: selectedType,
+        options: typeOptions,
+        onChange: setSelectedType,
+        placeholder: "全部类型"
+      }
+    ) : null,
+    enableRetrieval && selectedType === "block" && blocks.length > 0 ? /* @__PURE__ */ u2(
+      SimpleSelect,
+      {
+        className: "think-ai-chat-filters__select think-ai-chat-filters__select--block",
+        value: selectedBlockId,
+        options: blockOptions,
+        onChange: setSelectedBlockId,
+        placeholder: "全部记录"
+      }
+    ) : null,
+    enableRetrieval ? /* @__PURE__ */ u2("span", { className: "think-ai-chat-filters__index", children: [
+      "索引 ",
+      indexItemCount
+    ] }) : null
+  ] });
 }
-function SessionList({
-  sessions,
-  currentSessionId,
-  onNewSession,
-  onSelectSession,
-  onDeleteSession
-}) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        width: "240px",
-        borderRight: "1px solid var(--background-modifier-border)",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0
-      },
-      children: [
-        /* @__PURE__ */ u2(Box, { sx: { p: 1.5 }, children: /* @__PURE__ */ u2(Button2, { fullWidth: true, variant: "contained", startIcon: /* @__PURE__ */ u2(AddIcon, {}), onClick: onNewSession, size: "small", children: "新建对话" }) }),
-        /* @__PURE__ */ u2(Divider2, {}),
-        /* @__PURE__ */ u2(List2, { sx: { flex: 1, overflow: "auto", py: 0 }, children: sessions.length === 0 ? /* @__PURE__ */ u2(Box, { sx: { p: 2, textAlign: "center" }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无对话记录" }) }) : sessions.map((session) => /* @__PURE__ */ u2(
-          ListItemButton2,
+function SessionList({ sessions, currentSessionId, onNewSession, onSelectSession, onDeleteSession }) {
+  return /* @__PURE__ */ u2("aside", { className: "think-ai-chat-sessions", "aria-label": "AI 对话列表", children: [
+    /* @__PURE__ */ u2("div", { className: "think-ai-chat-sessions__header", children: /* @__PURE__ */ u2(ThinkButton, { size: "sm", leadingIcon: /* @__PURE__ */ u2(AddIcon, { fontSize: "small" }), onClick: onNewSession, children: "新建对话" }) }),
+    /* @__PURE__ */ u2("div", { className: "think-ai-chat-sessions__list", children: sessions.length === 0 ? /* @__PURE__ */ u2("div", { className: "think-overlay-empty", children: "暂无对话" }) : sessions.map((session) => {
+      const selected = currentSessionId === session.id;
+      return /* @__PURE__ */ u2("div", { className: `think-ai-chat-session${selected ? " is-selected" : ""}`, children: [
+        /* @__PURE__ */ u2("button", { type: "button", className: "think-ai-chat-session__select", onClick: () => onSelectSession(session.id), children: [
+          /* @__PURE__ */ u2("span", { className: "think-ai-chat-session__title", children: session.title }),
+          /* @__PURE__ */ u2("span", { className: "think-ai-chat-session__meta", children: dayjs(session.modified).format("MM-DD HH:mm") })
+        ] }),
+        /* @__PURE__ */ u2(
+          ThinkIconButton,
           {
-            selected: currentSessionId === session.id,
-            onClick: () => onSelectSession(session.id),
-            sx: { py: 1, pr: 1 },
-            children: [
-              /* @__PURE__ */ u2(
-                ListItemText2,
-                {
-                  primary: /* @__PURE__ */ u2(
-                    Typography2,
-                    {
-                      variant: "body2",
-                      noWrap: true,
-                      sx: { fontWeight: currentSessionId === session.id ? 600 : 400 },
-                      children: session.title
-                    }
-                  ),
-                  secondary: /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: dayjs(session.modified).format("MM-DD HH:mm") })
-                }
-              ),
-              /* @__PURE__ */ u2(
-                IconButton2,
-                {
-                  size: "small",
-                  onClick: (e2) => onDeleteSession(session.id, e2),
-                  sx: { opacity: 0.5, "&:hover": { opacity: 1 } },
-                  children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" })
-                }
-              )
-            ]
-          },
-          session.id
-        )) })
-      ]
-    }
-  );
+            label: "删除对话",
+            size: "sm",
+            tone: "danger",
+            className: "think-ai-chat-session__delete",
+            icon: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" }),
+            onClick: (event) => onDeleteSession(session.id, event)
+          }
+        )
+      ] }, session.id);
+    }) })
+  ] });
 }
 function MessageBubble({ message }) {
   const isUser = message.role === "user";
@@ -70259,13 +67920,13 @@ function MessageBubble({ message }) {
     try {
       await navigator.clipboard.writeText(message.content);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2e3);
-    } catch (err) {
-      devError("复制失败:", err);
+      window.setTimeout(() => setCopied(false), 2e3);
+    } catch (error) {
+      devError("复制失败:", error);
     }
   };
-  const contentType = message.contentType ?? (message.role === "user" ? "plain" : "markdown");
-  h(() => {
+  const contentType = message.contentType ?? (isUser ? "plain" : "markdown");
+  y(() => {
     if (!contentRef.current) return;
     renderPort.renderMessage({
       containerEl: contentRef.current,
@@ -70273,193 +67934,81 @@ function MessageBubble({ message }) {
       contentType: contentType === "plain" ? "plain" : "markdown",
       sourcePath: "",
       cls: "message-content"
-    }).catch((err) => {
-      devError("MessageBubble: 渲染失败", err);
-    });
+    }).catch((error) => devError("MessageBubble: 渲染失败", error));
     return () => {
-      if (contentRef.current) {
-        renderPort.clear(contentRef.current);
-      }
+      if (contentRef.current) renderPort.clear(contentRef.current);
     };
   }, [message.content, message.id, contentType, renderPort]);
-  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: isUser ? "flex-end" : "flex-start" }, children: /* @__PURE__ */ u2(
-    Paper2,
-    {
-      elevation: 0,
-      sx: {
-        maxWidth: "80%",
-        p: 1.5,
-        borderRadius: 2,
-        bgcolor: isUser ? "primary.main" : isSystem ? "warning.light" : "background.paper",
-        color: isUser ? "primary.contrastText" : "text.primary",
-        border: isUser ? "none" : "1px solid var(--background-modifier-border)",
-        position: "relative",
-        "&:hover .copy-button": { opacity: 1 },
-        // Markdown 渲染样式
-        "& .message-content": {
-          "& p": { margin: "0.5em 0" },
-          "& p:first-of-type": { marginTop: 0 },
-          "& p:last-of-type": { marginBottom: 0 },
-          "& ul, & ol": { margin: "0.5em 0", paddingLeft: "1.5em" },
-          "& li": { margin: "0.25em 0" },
-          "& code": {
-            backgroundColor: "rgba(0,0,0,0.1)",
-            padding: "0.1em 0.3em",
-            borderRadius: "3px",
-            fontSize: "0.9em"
-          },
-          "& pre": {
-            backgroundColor: "rgba(0,0,0,0.1)",
-            padding: "0.5em",
-            borderRadius: "4px",
-            overflow: "auto",
-            margin: "0.5em 0"
-          },
-          "& pre code": {
-            backgroundColor: "transparent",
-            padding: 0
-          },
-          "& blockquote": {
-            borderLeft: "3px solid var(--text-muted)",
-            margin: "0.5em 0",
-            paddingLeft: "0.75em",
-            color: "var(--text-muted)"
-          },
-          "& h1, & h2, & h3, & h4, & h5, & h6": {
-            margin: "0.75em 0 0.5em",
-            fontWeight: 600
-          },
-          "& h1": { fontSize: "1.3em" },
-          "& h2": { fontSize: "1.2em" },
-          "& h3": { fontSize: "1.1em" }
-        }
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          IconAction,
-          {
-            label: copied ? "已复制" : "复制",
-            onClick: handleCopy,
-            icon: copied ? /* @__PURE__ */ u2(CheckIcon, { fontSize: "small", color: "success" }) : /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }),
-            sx: {
-              position: "absolute",
-              top: 4,
-              right: 4,
-              opacity: 0,
-              transition: "opacity 0.2s",
-              bgcolor: "background.paper",
-              boxShadow: 1,
-              "&:hover": { bgcolor: "action.hover" }
-            }
-          }
-        ),
-        /* @__PURE__ */ u2(
-          Box,
-          {
-            ref: contentRef,
-            sx: {
-              wordBreak: "break-word",
-              fontSize: "0.875rem",
-              lineHeight: 1.5,
-              userSelect: "text"
-            }
-          }
-        ),
-        /* @__PURE__ */ u2(
-          Box,
-          {
-            sx: {
-              mt: 0.5,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              opacity: 0.7
-            },
-            children: [
-              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: dayjs(message.created).format("HH:mm") }),
-              message.meta?.retrievalCount !== void 0 && message.meta.retrievalCount > 0 && /* @__PURE__ */ u2(Tooltip2, { title: `基于 ${message.meta.retrievalCount} 条记录回答`, children: /* @__PURE__ */ u2(
-                Chip2,
-                {
-                  size: "small",
-                  label: `📚 ${message.meta.retrievalCount}`,
-                  sx: { height: 18, fontSize: "0.7rem" }
-                }
-              ) })
-            ]
-          }
-        )
-      ]
-    }
-  ) });
+  const classes = [
+    "think-ai-message",
+    isUser ? "is-user" : "",
+    isSystem ? "is-system" : "is-assistant"
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2("div", { className: classes, children: /* @__PURE__ */ u2("div", { className: "think-ai-message__surface", children: [
+    /* @__PURE__ */ u2(
+      ThinkIconButton,
+      {
+        className: "think-ai-message__copy",
+        label: copied ? "已复制" : "复制",
+        size: "sm",
+        icon: copied ? /* @__PURE__ */ u2(CheckIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }),
+        onClick: handleCopy
+      }
+    ),
+    /* @__PURE__ */ u2("div", { ref: contentRef, className: "think-ai-message__content" }),
+    /* @__PURE__ */ u2("div", { className: "think-ai-message__meta", children: [
+      /* @__PURE__ */ u2("time", { children: dayjs(message.created).format("HH:mm") }),
+      message.meta?.retrievalCount && message.meta.retrievalCount > 0 ? /* @__PURE__ */ u2("span", { title: `基于 ${message.meta.retrievalCount} 条记录回答`, children: [
+        "引用 ",
+        message.meta.retrievalCount
+      ] }) : null
+    ] })
+  ] }) });
 }
-function ChatMessages({
-  messages,
-  isLoading,
-  emptyHint,
-  enableRetrieval,
-  messagesEndRef
-}) {
-  return /* @__PURE__ */ u2(Box, { sx: { flex: 1, overflow: "auto", p: 2 }, children: [
-    messages.length === 0 ? /* @__PURE__ */ u2(Box, { sx: { textAlign: "center", py: 4 }, children: [
-      /* @__PURE__ */ u2(ChatIcon, { sx: { fontSize: 48, color: "text.disabled", mb: 2 } }),
-      /* @__PURE__ */ u2(Typography2, { color: "text.secondary", children: emptyHint.title }),
-      enableRetrieval && emptyHint.retrievalHint && /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mt: 1 }, children: emptyHint.retrievalHint })
-    ] }) : /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
+function ChatMessages({ messages, isLoading, emptyHint, enableRetrieval, messagesEndRef }) {
+  return /* @__PURE__ */ u2("div", { className: "think-ai-chat-messages", children: [
+    messages.length === 0 ? /* @__PURE__ */ u2("div", { className: "think-ai-chat-empty", children: [
+      /* @__PURE__ */ u2(ChatIcon, { fontSize: "large" }),
+      /* @__PURE__ */ u2("strong", { children: emptyHint.title }),
+      enableRetrieval && emptyHint.retrievalHint ? /* @__PURE__ */ u2("span", { children: emptyHint.retrievalHint }) : null
+    ] }) : /* @__PURE__ */ u2("div", { className: "think-ai-chat-messages__stack", children: [
       messages.map((msg) => /* @__PURE__ */ u2(MessageBubble, { message: msg }, msg.id)),
-      isLoading && /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
-        /* @__PURE__ */ u2(CircularProgress2, { size: 16 }),
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "AI 正在思考..." })
-      ] })
+      isLoading ? /* @__PURE__ */ u2("div", { className: "think-ai-chat-thinking", role: "status", children: [
+        /* @__PURE__ */ u2("span", { className: "think-overlay-spinner", "aria-hidden": "true" }),
+        /* @__PURE__ */ u2("span", { children: "AI 正在思考…" })
+      ] }) : null
     ] }),
     /* @__PURE__ */ u2("div", { ref: messagesEndRef })
   ] });
 }
-function ChatComposer({
-  inputText,
-  setInputText,
-  onKeyDown,
-  onSend,
-  isLoading,
-  disabled,
-  placeholder
-}) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        p: 2,
-        borderTop: "1px solid var(--background-modifier-border)",
-        display: "flex",
-        gap: 1
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            fullWidth: true,
-            multiline: true,
-            maxRows: 4,
-            placeholder,
-            value: inputText,
-            onChange: (e2) => setInputText(e2.target.value),
-            onKeyDown,
-            disabled: isLoading || disabled,
-            size: "small"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            variant: "contained",
-            onClick: onSend,
-            disabled: !inputText.trim() || isLoading || disabled,
-            sx: { minWidth: "auto", px: 2 },
-            children: /* @__PURE__ */ u2(SendIcon, {})
-          }
-        )
-      ]
-    }
-  );
+function ChatComposer({ inputText, setInputText, onKeyDown, onSend, isLoading, disabled, placeholder }) {
+  return /* @__PURE__ */ u2("div", { className: "think-ai-chat-composer", children: [
+    /* @__PURE__ */ u2(
+      ThinkTextarea,
+      {
+        className: "think-ai-chat-composer__input",
+        rows: 2,
+        placeholder,
+        value: inputText,
+        onInput: (event) => setInputText(event.currentTarget.value),
+        onKeyDown,
+        disabled: isLoading || disabled
+      }
+    ),
+    /* @__PURE__ */ u2(
+      ThinkButton,
+      {
+        className: "think-ai-chat-composer__send",
+        variant: "primary",
+        size: "sm",
+        "aria-label": "发送",
+        leadingIcon: /* @__PURE__ */ u2(SendIcon, { fontSize: "small" }),
+        onClick: onSend,
+        disabled: !inputText.trim() || isLoading || disabled,
+        children: "发送"
+      }
+    )
+  ] });
 }
 function AiChatModalView(props) {
   const {
@@ -70493,7 +68042,7 @@ function AiChatModalView(props) {
     composerPlaceholder,
     emptyHint
   } = props;
-  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", height: "100%", overflow: "hidden" }, children: [
+  return /* @__PURE__ */ u2("div", { className: "think-ai-chat", children: [
     /* @__PURE__ */ u2(
       SessionList,
       {
@@ -70504,14 +68053,13 @@ function AiChatModalView(props) {
         onDeleteSession
       }
     ),
-    /* @__PURE__ */ u2(Box, { sx: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }, children: [
+    /* @__PURE__ */ u2("section", { className: "think-ai-chat__main", children: [
       /* @__PURE__ */ u2(
         ModalHeader,
         {
-          padding: 1.5,
-          left: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
-            /* @__PURE__ */ u2(ChatIcon, { color: "primary" }),
-            /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", sx: { fontWeight: 600 }, children: currentSessionTitle ?? "AI 助手" })
+          left: /* @__PURE__ */ u2("div", { className: "think-ai-chat__title", children: [
+            /* @__PURE__ */ u2(ChatIcon, { fontSize: "small" }),
+            /* @__PURE__ */ u2("span", { children: currentSessionTitle ?? "AI 助手" })
           ] }),
           onClose: closeModal
         }
@@ -70542,7 +68090,7 @@ function AiChatModalView(props) {
           messagesEndRef
         }
       ),
-      error && /* @__PURE__ */ u2(Box, { sx: { px: 2, pb: 1 }, children: /* @__PURE__ */ u2(Typography2, { color: "error", variant: "body2", children: error }) }),
+      error ? /* @__PURE__ */ u2("div", { className: "think-ai-chat__error", role: "alert", children: error }) : null,
       /* @__PURE__ */ u2(
         ChatComposer,
         {
@@ -70581,7 +68129,7 @@ function AiChatModalContainer({ closeModal, services }) {
     const list = sessionStore.getRecentSessions(20);
     setSessions(list);
   };
-  h(() => {
+  y(() => {
     loadSessions();
     const unsubscribe = sessionStore.subscribe(() => {
       loadSessions();
@@ -70601,14 +68149,14 @@ function AiChatModalContainer({ closeModal, services }) {
       takeLatestRef.current.dispose();
     };
   }, []);
-  h(() => {
+  y(() => {
     if (currentSessionId) {
       setMessages(sessionStore.getMessages(currentSessionId));
     } else {
       setMessages([]);
     }
   }, [currentSessionId]);
-  h(() => {
+  y(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   const handleNewSession = async () => {
@@ -70700,10 +68248,10 @@ function AiChatModalContainer({ closeModal, services }) {
   const currentSession = currentSessionId ? sessionStore.getSession(currentSessionId) : null;
   const currentSessionTitle = currentSession?.title ?? null;
   if (!aiSettings?.enabled) {
-    return /* @__PURE__ */ u2(Box, { sx: { p: 4, textAlign: "center" }, children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "AI 功能未启用" }),
-      /* @__PURE__ */ u2(Typography2, { color: "text.secondary", children: "请在设置中启用 AI 功能并配置 API 密钥" }),
-      /* @__PURE__ */ u2(Button2, { variant: "outlined", onClick: closeModal, sx: { mt: 2 }, children: "关闭" })
+    return /* @__PURE__ */ u2("div", { className: "think-ai-chat-unavailable", children: [
+      /* @__PURE__ */ u2("strong", { children: "AI 功能未启用" }),
+      /* @__PURE__ */ u2("span", { children: "请在设置中启用 AI 并配置 API 密钥。" }),
+      /* @__PURE__ */ u2(ThinkButton, { size: "sm", onClick: closeModal, children: "关闭" })
     ] });
   }
   const emptyHint = {
@@ -70763,13 +68311,7 @@ class AiChatModal extends obsidian.Modal {
     return this.aiServices;
   }
   async onOpen() {
-    this.contentEl.empty();
-    this.modalEl.addClass("think-os");
-    this.modalEl.addClass("think-os--modal");
-    this.modalEl.addClass("think-modal-host");
-    this.modalEl.addClass("think-modal-host--wide");
-    this.modalEl.addClass("think-ai-chat-modal");
-    applyThinkDeviceProfileAttributes(this.modalEl);
+    prepareThinkModal(this, "think-modal-host--wide", "think-ai-chat-modal");
     this.keydownStopper = (e2) => {
       e2.stopPropagation();
     };
@@ -70808,22 +68350,24 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onD
     if (!onDeleteRecord) return;
     try {
       const result = await onDeleteRecord(item);
-      if (result !== false) {
-        setManagedItems((prev2) => prev2.filter((candidate) => candidate.id !== item.id));
-      }
+      if (result !== false) setManagedItems((prev2) => prev2.filter((candidate) => candidate.id !== item.id));
     } catch (error) {
       new obsidian.Notice(`删除记录失败: ${error?.message || String(error)}`);
     }
   };
-  return /* @__PURE__ */ u2("div", { class: "think-checkin-modal", children: [
-    /* @__PURE__ */ u2("div", { class: "think-checkin-modal__header", children: [
-      /* @__PURE__ */ u2("div", { children: [
-        /* @__PURE__ */ u2("h3", { style: { margin: 0 }, children: `当天记录 - ${date2}` }),
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px" }, children: sortedItems.length > 0 ? `共 ${sortedItems.length} 条记录` : "当天还没有记录" })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "modal-actions", children: onAddRecord && /* @__PURE__ */ u2("button", { class: "mod-cta", onClick: onAddRecord, children: "新增记录" }) })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "think-checkin-modal__content", children: sortedItems.length === 0 ? /* @__PURE__ */ u2("div", { style: { textAlign: "center", color: "var(--text-muted)", padding: "20px 0" }, children: "点击右上角“新增记录”开始打卡。" }) : /* @__PURE__ */ u2("div", { class: "think-checkin-modal__list", children: sortedItems.map((item) => {
+  return /* @__PURE__ */ u2("div", { className: "think-overlay-form think-checkin-modal", children: [
+    /* @__PURE__ */ u2(
+      ModalHeader,
+      {
+        left: /* @__PURE__ */ u2("div", { className: "think-overlay-title-stack", children: [
+          /* @__PURE__ */ u2("strong", { children: `当天记录 · ${date2}` }),
+          /* @__PURE__ */ u2("span", { children: sortedItems.length ? `${sortedItems.length} 条` : "暂无记录" })
+        ] }),
+        right: onAddRecord ? /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "primary", onClick: onAddRecord, children: "新增记录" }) : null,
+        onClose
+      }
+    ),
+    /* @__PURE__ */ u2("div", { className: "think-overlay-body think-checkin-modal__content", children: sortedItems.length === 0 ? /* @__PURE__ */ u2("div", { className: "think-overlay-empty", children: "暂无当天记录" }) : /* @__PURE__ */ u2("div", { className: "think-checkin-modal__list", children: sortedItems.map((item) => {
       const gesture = createRecordGestureHandlers({
         item,
         onOpenOrigin: (originItem) => openRecordOrigin({ app, item: originItem }),
@@ -70832,7 +68376,7 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onD
       return /* @__PURE__ */ u2(
         "div",
         {
-          class: "think-checkin-modal__item",
+          className: "think-checkin-modal__item",
           title: RECORD_GESTURE_HINT,
           role: "button",
           tabIndex: 0,
@@ -70841,25 +68385,25 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onD
           onTouchEnd: gesture.onTouchEnd,
           onKeyDown: gesture.onKeyDown,
           children: [
-            /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-main", children: [
-              /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-content", children: item.content || item.title || "无内容" }),
-              /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-meta", children: `${dayjs(item.created).format("HH:mm:ss")} · ${item.file?.path || "未知位置"}` })
+            /* @__PURE__ */ u2("div", { className: "think-checkin-modal__item-main", children: [
+              /* @__PURE__ */ u2("div", { className: "think-checkin-modal__item-content", children: item.content || item.title || "无内容" }),
+              /* @__PURE__ */ u2("div", { className: "think-checkin-modal__item-meta", children: `${dayjs(item.created).format("HH:mm:ss")} · ${item.file?.path || "未知位置"}` })
             ] }),
-            /* @__PURE__ */ u2("div", { class: "think-checkin-modal__item-actions", children: onDeleteRecord && /* @__PURE__ */ u2(
-              "button",
+            onDeleteRecord ? /* @__PURE__ */ u2(
+              ThinkButton,
               {
-                class: "think-checkin-modal__item-delete",
-                title: "删除这条记录",
+                size: "sm",
+                variant: "ghost",
+                className: "think-checkin-modal__item-delete",
                 onClick: (event) => handleDeleteRecord(event, item),
                 children: "删除"
               }
-            ) })
+            ) : null
           ]
         },
         item.id
       );
-    }) }) }),
-    /* @__PURE__ */ u2("div", { class: "think-checkin-modal__footer", children: /* @__PURE__ */ u2("button", { onClick: onClose, children: "关闭" }) })
+    }) }) })
   ] });
 }
 class CheckinManagerModal extends obsidian.Modal {
@@ -70878,21 +68422,18 @@ class CheckinManagerModal extends obsidian.Modal {
   onDeleteRecord;
   onOpen() {
     prepareThinkModal(this, "think-modal-host--large", "think-checkin-modal-host");
-    renderModalContent(
-      this.contentEl,
-      /* @__PURE__ */ u2(
-        CheckinManagerForm,
-        {
-          app: this.app,
-          date: this.date,
-          items: this.items,
-          onSave: this.onSave,
-          onClose: () => this.close(),
-          onAddRecord: this.onAddRecord,
-          onDeleteRecord: this.onDeleteRecord
-        }
-      )
-    );
+    renderModalContent(this.contentEl, /* @__PURE__ */ u2(
+      CheckinManagerForm,
+      {
+        app: this.app,
+        date: this.date,
+        items: this.items,
+        onSave: this.onSave,
+        onClose: () => this.close(),
+        onAddRecord: this.onAddRecord,
+        onDeleteRecord: this.onDeleteRecord
+      }
+    ));
   }
   onClose() {
     unmountModalContent(this.contentEl);
@@ -71110,6 +68651,34 @@ ObsidianVaultPort = __decorateClass([
   singleton(),
   __decorateParam(0, inject(AppToken))
 ], ObsidianVaultPort);
+function SettingsNavigation({
+  label,
+  value,
+  options,
+  onChange,
+  variant = "secondary",
+  className
+}) {
+  const classes = [
+    "think-settings-navigation",
+    `think-settings-navigation--${variant}`,
+    className
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2("nav", { className: classes, "aria-label": label, children: options.map((option) => {
+    const active = option.value === value;
+    return /* @__PURE__ */ u2(
+      "button",
+      {
+        type: "button",
+        className: `think-settings-navigation__item${active ? " is-active" : ""}`,
+        "aria-current": active ? "page" : void 0,
+        onClick: () => onChange(option.value),
+        children: option.label
+      },
+      option.value
+    );
+  }) });
+}
 function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: layout.id });
   const style2 = { transform: transform2 ? `translate3d(${transform2.x}px, ${transform2.y}px, 0)` : void 0, transition };
@@ -71123,7 +68692,7 @@ function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }) {
     if (newName?.trim()) void useCases.layout.updateLayout(layout.id, { name: newName.trim() });
   }, [layout.id, layout.name, useCases.layout]);
   const dragHandleProps = { ...attributes, ...listeners };
-  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, className: "think-layout-list__item", children: [
+  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, className: "think-layout-list__item think-object-frame", children: [
     /* @__PURE__ */ u2("div", { className: "think-layout-list__item-header", children: [
       /* @__PURE__ */ u2("button", { type: "button", ...dragHandleProps, className: "think-layout-list__drag-handle", "aria-label": "拖动排序", children: /* @__PURE__ */ u2(ThinkIcon, { name: "grip-vertical" }) }),
       /* @__PURE__ */ u2(ThinkIconButton, { label: isExpanded ? "收起布局" : "展开布局", icon: /* @__PURE__ */ u2(ThinkIcon, { name: isExpanded ? "chevron-up" : "chevron-down" }), size: "sm", onClick: onToggle, className: "think-layout-list__toggle" }),
@@ -71160,10 +68729,7 @@ function LayoutSettings({ app }) {
   }, [layouts, useCases.layout]);
   const layoutIds = T$1(() => layouts.map((layout) => layout.id), [layouts]);
   return /* @__PURE__ */ u2("div", { className: "think-layout-list", children: [
-    /* @__PURE__ */ u2("header", { className: "think-layout-list__header", children: [
-      /* @__PURE__ */ u2("h2", { className: "think-settings-page__title", children: "管理布局" }),
-      /* @__PURE__ */ u2(ThinkButton, { onClick: onAddLayout, leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), variant: "secondary", size: "sm", children: "添加布局" })
-    ] }),
+    /* @__PURE__ */ u2("header", { className: "think-layout-list__header", children: /* @__PURE__ */ u2(ThinkButton, { onClick: onAddLayout, leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), variant: "secondary", size: "sm", children: "添加布局" }) }),
     /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: layoutIds, strategy: verticalListSortingStrategy, children: layouts.map((layout) => /* @__PURE__ */ u2(SortableLayoutItem, { layout, useCases, isExpanded: expandedIds.has(layout.id), onToggle: () => toggleExpand(layout.id) }, layout.id)) }) }),
     layouts.length === 0 && /* @__PURE__ */ u2("div", { className: "think-settings-centered-empty", children: "暂无布局" })
   ] });
@@ -71403,7 +68969,7 @@ function AiSettings(_props) {
   const [saveStatusSeverity, setSaveStatusSeverity] = d("info");
   const isMountedRef = useIsMounted();
   const takeLatestRef = A$1(createTakeLatest());
-  h(() => {
+  y(() => {
     return () => {
       takeLatestRef.current.dispose();
     };
@@ -71501,7 +69067,6 @@ function AiSettings(_props) {
   };
   const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(aiSettings);
   return /* @__PURE__ */ u2("div", { className: "think-settings-page", children: [
-    /* @__PURE__ */ u2("h2", { className: "think-settings-page__title", children: "AI 自然语言快速记录" }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "AI 快速记录" }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: localSettings.enabled, onChange: (e2) => updateLocal({ enabled: e2.currentTarget.checked }), label: "启用" }) })
@@ -71756,11 +69321,11 @@ function OptionRow({ option, onChange, onRemove, fieldType, disabled = false }) 
   const renderCountRef = A$1(0);
   const previousOptionRef = A$1(null);
   renderCountRef.current += 1;
-  h(() => {
+  y(() => {
     logRenderDiagnostic("FieldsEditor/OptionRow", { renderCount: renderCountRef.current, fieldType, disabled, optionRefChanged: previousOptionRef.current !== null && previousOptionRef.current !== option, option, localOption });
     previousOptionRef.current = option;
   });
-  h(() => setLocalOption(option), [option]);
+  y(() => setLocalOption(option), [option]);
   const commitOption = (nextOption) => {
     if ((nextOption.label || "") === (option.label || "") && nextOption.value === option.value) return;
     onChange(nextOption);
@@ -71797,14 +69362,14 @@ function FieldRow({ field, disabled = false, isDragging = false, onUpdate, onRem
   const renderCountRef = A$1(0);
   const previousFieldRef = A$1(null);
   renderCountRef.current += 1;
-  h(() => {
+  y(() => {
     logRenderDiagnostic("FieldsEditor/FieldRow", { renderCount: renderCountRef.current, fieldId: field.id, fieldKey: field.key, fieldType: field.type, disabled, isEditing, isDragging, fieldRefChanged: previousFieldRef.current !== null && previousFieldRef.current !== field, localName, localDefaultValue, incomingDefaultValue: field.defaultValue });
     previousFieldRef.current = field;
   });
-  h(() => {
+  y(() => {
     if (!isEditing) setLocalName(field.label || field.key);
   }, [field.label, field.key, isEditing]);
-  h(() => setLocalDefaultValue(field.defaultValue || ""), [field.defaultValue, field.id]);
+  y(() => setLocalDefaultValue(field.defaultValue || ""), [field.defaultValue, field.id]);
   const handleNameBlur = () => {
     const trimmedName = localName.trim();
     if (trimmedName && trimmedName !== (field.label || field.key)) onUpdate({ key: trimmedName, label: trimmedName });
@@ -71872,7 +69437,7 @@ function FieldsEditor({ fields = [], disabled = false, onChange }) {
   const previousFieldsRef = A$1(null);
   const [draggingIndex, setDraggingIndex] = d(null);
   renderCountRef.current += 1;
-  h(() => {
+  y(() => {
     logRenderDiagnostic("FieldsEditor", { renderCount: renderCountRef.current, disabled, fieldsRefChanged: previousFieldsRef.current !== null && previousFieldsRef.current !== fields, fieldsCount: fields.length, fieldIds: fields.map((field) => field.id) });
     previousFieldsRef.current = fields;
   });
@@ -71912,6 +69477,26 @@ function FieldsEditor({ fields = [], disabled = false, onChange }) {
     /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { onClick: () => emitFields([...fields || [], createEmptyField((fields || []).length + 1)]), disabled, leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), variant: "secondary", size: "sm", children: "添加字段" }) })
   ] });
 }
+function EnergyRecordTypeSettings() {
+  const settings = useSelector(selectSettings);
+  const themes = useSelector(selectInputThemes);
+  const defaultGoalId = useSelector(selectEnergyDefaultGoalId);
+  const defaultThemePath = useSelector(selectEnergyDefaultThemePath);
+  const useCases = useUseCases();
+  const goals = (settings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived");
+  const goalOptions = [{ value: "", label: "自动选择第一个活跃目标" }, ...goals.map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title }))];
+  const themeOptions2 = [{ value: "", label: "不指定默认主题" }, ...themes.filter((theme) => theme.status !== "inactive").map((theme) => ({ value: theme.path, label: `${theme.icon || "•"} ${theme.path}` }))];
+  return /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认目标" }),
+      /* @__PURE__ */ u2(SimpleSelect, { value: defaultGoalId, options: goalOptions, onChange: (value) => void useCases.settings.setEnergyDefaultGoalId(value || null), fullWidth: true })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认主题" }),
+      /* @__PURE__ */ u2(SimpleSelect, { value: defaultThemePath, options: themeOptions2, onChange: (value) => void useCases.settings.setEnergyDefaultThemePath(value || null), fullWidth: true })
+    ] })
+  ] });
+}
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block.id });
   const style2 = { transform: CSS.Transform.toString(transform2), transition };
@@ -71928,7 +69513,7 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
 }
 function BlockEditor({ block, useCases }) {
   const [localBlock, setLocalBlock] = d(block);
-  h(() => {
+  y(() => {
     setLocalBlock(block);
   }, [block]);
   const handleUpdate = (updates) => {
@@ -71960,6 +69545,7 @@ function BlockEditor({ block, useCases }) {
     ] })
   ] });
 }
+const ENERGY_RECORD_TYPE_ID = "__energy-record-type__";
 function BlockManager() {
   const blocks = useSelector(selectInputBlocks);
   const [openId, setOpenId] = d(null);
@@ -71980,11 +69566,25 @@ function BlockManager() {
     if (active && over && active.id !== over.id) useCases.blocks.reorderBlocks(active.id, over.id);
   };
   return /* @__PURE__ */ u2("section", { className: "think-block-manager think-settings-section", children: [
-    /* @__PURE__ */ u2("div", { className: "think-settings-section__header", children: [
-      /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "记录类型" }),
-      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), onClick: handleAdd, children: "新增" })
+    /* @__PURE__ */ u2("div", { className: "think-management-toolbar think-block-manager__toolbar", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-caption", children: [
+        blocks.length + 1,
+        " 个记录类型"
+      ] }),
+      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), onClick: handleAdd, children: "新增记录类型" })
     ] }),
-    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((block) => block.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2("div", { className: "think-block-manager__list", children: blocks.map((block) => /* @__PURE__ */ u2(SortableBlockItem, { block, openId, setOpenId, handleDelete, handleDuplicate, useCases }, block.id)) }) }) })
+    /* @__PURE__ */ u2("div", { className: "think-block-manager__list", children: [
+      /* @__PURE__ */ u2("div", { className: "think-block-accordion think-block-accordion--builtin", children: [
+        /* @__PURE__ */ u2("div", { className: "think-block-accordion__summary", children: [
+          /* @__PURE__ */ u2("span", { className: "think-block-accordion__drag think-block-accordion__drag--placeholder", "aria-hidden": "true", children: /* @__PURE__ */ u2(ThinkIcon, { name: "grip-vertical" }) }),
+          /* @__PURE__ */ u2("button", { type: "button", className: "think-block-accordion__title", onClick: () => setOpenId(openId === ENERGY_RECORD_TYPE_ID ? null : ENERGY_RECORD_TYPE_ID), children: "精力" }),
+          /* @__PURE__ */ u2("span", { className: "think-block-accordion__meta", children: "直接记录" }),
+          /* @__PURE__ */ u2(ThinkIconButton, { label: openId === ENERGY_RECORD_TYPE_ID ? "收起" : "展开", icon: /* @__PURE__ */ u2(ThinkIcon, { name: openId === ENERGY_RECORD_TYPE_ID ? "chevron-up" : "chevron-down" }), size: "sm", onClick: () => setOpenId(openId === ENERGY_RECORD_TYPE_ID ? null : ENERGY_RECORD_TYPE_ID) })
+        ] }),
+        openId === ENERGY_RECORD_TYPE_ID && /* @__PURE__ */ u2("div", { className: "think-block-accordion__details", children: /* @__PURE__ */ u2(EnergyRecordTypeSettings, {}) })
+      ] }),
+      /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((block) => block.id), strategy: verticalListSortingStrategy, children: blocks.map((block) => /* @__PURE__ */ u2(SortableBlockItem, { block, openId, setOpenId, handleDelete, handleDuplicate, useCases }, block.id)) }) })
+    ] })
   ] });
 }
 function GoalTemplateModeSwitch({ mode, blockName, disabled, onInherit, onOverride }) {
@@ -72456,7 +70056,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
     () => sortedVariants.find((template) => (template.variantId || "default") === selectedVariantId) || null,
     [sortedVariants, selectedVariantId]
   );
-  h(() => {
+  y(() => {
     if (!isOpen) return;
     const initial = initialVariantId ? sortedVariants.find((template) => (template.variantId || "default") === initialVariantId || template.id === initialVariantId) || null : null;
     if (initial) {
@@ -72476,7 +70076,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
     draftRef.current = nextDraft;
     setDraft(nextDraft);
   }, [isOpen, goal?.id, goal?.themePath, block?.id, initialVariantId, sortedVariants.length, themes.length]);
-  h(() => {
+  y(() => {
     draftRef.current = draft;
   }, [draft]);
   const updateDraft = (updates) => {
@@ -72783,7 +70383,7 @@ function buildCopiedGoalTemplate(input) {
     reason: "copy"
   });
 }
-function MenuItem2({ label, meta, danger = false, disabled = false, emphasized = false, onClick }) {
+function MenuItem({ label, meta, danger = false, disabled = false, emphasized = false, onClick }) {
   return /* @__PURE__ */ u2(
     "button",
     {
@@ -72803,7 +70403,7 @@ function MenuItem2({ label, meta, danger = false, disabled = false, emphasized =
   );
 }
 function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks, onDeleteTemplate }) {
-  h(() => {
+  y(() => {
     if (!state) return void 0;
     const onKey = (event) => {
       if (event.key === "Escape") onClose();
@@ -72844,16 +70444,16 @@ function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBloc
             ] })
           ] }),
           /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__group", children: [
-            /* @__PURE__ */ u2(MenuItem2, { label: "编辑字段预设", meta: "当前", onClick: () => {
+            /* @__PURE__ */ u2(MenuItem, { label: "编辑字段预设", meta: "当前", onClick: () => {
               onOpenBlock(state.goal, state.block, state.template);
               onClose();
             } }),
-            /* @__PURE__ */ u2(MenuItem2, { label: "补齐全部缺失记录类型", meta: missingCount > 0 ? `创建 ${missingCount}` : "已补齐", emphasized: true, disabled: missingCount <= 0, onClick: () => {
+            /* @__PURE__ */ u2(MenuItem, { label: "补齐全部缺失记录类型", meta: missingCount > 0 ? `创建 ${missingCount}` : "已补齐", emphasized: true, disabled: missingCount <= 0, onClick: () => {
               onCopyMissingBlocks();
               onClose();
             } })
           ] }),
-          onDeleteTemplate ? /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__group", children: /* @__PURE__ */ u2(MenuItem2, { label: "删除当前预设", meta: "仅此主题", danger: true, onClick: () => {
+          onDeleteTemplate ? /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__group", children: /* @__PURE__ */ u2(MenuItem, { label: "删除当前预设", meta: "仅此主题", danger: true, onClick: () => {
             onDeleteTemplate(state.goal, state.block, state.template);
             onClose();
           } }) }) : null,
@@ -72861,7 +70461,7 @@ function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBloc
             const isCurrent = block.id === state.block.id;
             const existing = isCurrent ? state.template : findExistingTemplateForTheme(templates, state.goal, block, state.template);
             return /* @__PURE__ */ u2(
-              MenuItem2,
+              MenuItem,
               {
                 label: block.name,
                 meta: isCurrent ? "当前" : existing ? "已存在，打开" : "创建",
@@ -73055,13 +70655,6 @@ function splitGoalsByRoot(goals) {
   if (current2.length > 0) groups.push(current2);
   return groups;
 }
-function buildNextActiveBlockIds(previous, blockId, coreBlocks) {
-  const next2 = new Set(previous);
-  if (next2.size === 0) coreBlocks.forEach((block) => next2.add(block.id));
-  if (next2.has(blockId) && next2.size > 1) next2.delete(blockId);
-  else next2.add(blockId);
-  return next2;
-}
 function addAllGoalPaths(previous, allGoalPaths) {
   const next2 = new Set(previous);
   allGoalPaths.forEach((path) => next2.add(path));
@@ -73178,20 +70771,6 @@ function GoalTemplateMatrixCell(props) {
       },
       onDrop: (event) => handlePresetDropOnCell(event, goal, block),
       children: [
-        /* @__PURE__ */ u2(
-          ThinkButton,
-          {
-            size: "sm",
-            variant: "ghost",
-            className: "think-goal-template-matrix__add",
-            leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }),
-            onClick: (event) => {
-              event.stopPropagation();
-              openEditor(goal, block);
-            },
-            children: "添加"
-          }
-        ),
         !collapsed && presets.map((template) => /* @__PURE__ */ u2(
           PresetCard,
           {
@@ -73206,7 +70785,21 @@ function GoalTemplateMatrixCell(props) {
             openPresetContextMenu
           },
           goalTemplateKey(template)
-        ))
+        )),
+        /* @__PURE__ */ u2(
+          ThinkButton,
+          {
+            size: "sm",
+            variant: "ghost",
+            className: "think-goal-template-matrix__add",
+            leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }),
+            onClick: (event) => {
+              event.stopPropagation();
+              openEditor(goal, block);
+            },
+            children: "添加"
+          }
+        )
       ]
     }
   );
@@ -73389,26 +70982,19 @@ function GoalTemplateMatrix() {
   const [expandedPaths, setExpandedPaths] = d(() => new Set(Array.from(allGoalPaths)));
   const [collapsedGoalIds, setCollapsedGoalIds] = d(() => /* @__PURE__ */ new Set());
   const [query, setQuery] = d("");
-  const [activeBlockIds, setActiveBlockIds] = d(() => new Set(coreBlocks.map((block) => block.id)));
   const [selected, setSelected] = d(null);
   const [contextMenu, setContextMenu] = d(null);
   const [draggingGoalId, setDraggingGoalId] = d(null);
   const [goalDrop, setGoalDrop] = d(null);
   const [draggingPreset, setDraggingPreset] = d(null);
   const [presetDropCell, setPresetDropCell] = d(null);
-  h(() => {
-    if (!coreBlocks.length) return;
-    setActiveBlockIds((previous) => previous.size > 0 ? previous : new Set(coreBlocks.map((block) => block.id)));
-  }, [coreBlocks]);
-  h(() => {
+  y(() => {
     setExpandedPaths((previous) => addAllGoalPaths(previous, allGoalPaths));
   }, [allGoalPaths]);
-  const isBlockActive = (blockId) => activeBlockIds.size === 0 || activeBlockIds.has(blockId);
-  const visibleBlocks = T$1(() => coreBlocks.filter((block) => isBlockActive(block.id)), [coreBlocks, activeBlockIds]);
+  const visibleBlocks = coreBlocks;
   const visibleGoals = T$1(() => filterVisibleGoalTemplateMatrixGoals({ goals, expandedPaths, query, templates }), [goals, expandedPaths, query, templates]);
   const toggleTreePath = (path) => setExpandedPaths((previous) => toggleGoalPath(previous, path));
   const toggleGoalRow = (goalId) => setCollapsedGoalIds((previous) => toggleGoalCollapsed(previous, goalId));
-  const toggleBlock = (blockId) => setActiveBlockIds((previous) => buildNextActiveBlockIds(previous, blockId, coreBlocks));
   const expandAll = () => {
     setExpandedPaths(new Set(Array.from(allGoalPaths)));
     setCollapsedGoalIds(/* @__PURE__ */ new Set());
@@ -73561,12 +71147,10 @@ function GoalTemplateMatrix() {
     ui.notice(descendants.length > 0 ? `已删除目标及子目标：${count} 个` : `已删除目标：${cleanDisplayText(path)}`);
   };
   return /* @__PURE__ */ u2("div", { className: "think-goal-template-matrix", children: [
-    /* @__PURE__ */ u2("div", { className: "think-goal-template-matrix__toolbar", children: [
-      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-search", placeholder: "搜索目标", value: query, onInput: (event) => setQuery(event.currentTarget.value) }),
-      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: expandAll, children: "展开" }),
-      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: collapseAll, children: "折叠" })
+    /* @__PURE__ */ u2("div", { className: "think-management-toolbar think-goal-template-matrix__toolbar", children: [
+      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-search", placeholder: "搜索目标", value: query, onInput: (event) => setQuery(event.currentTarget.value), "aria-label": "搜索目标" }),
+      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: collapsedGoalIds.size === goals.length && goals.length > 0 ? expandAll : collapseAll, children: collapsedGoalIds.size === goals.length && goals.length > 0 ? "全部展开" : "全部收起" })
     ] }),
-    /* @__PURE__ */ u2("div", { className: "think-goal-template-matrix__block-filter", children: coreBlocks.map((block) => /* @__PURE__ */ u2("button", { type: "button", className: `think-chip${isBlockActive(block.id) ? " is-active" : ""}`, "aria-pressed": isBlockActive(block.id), onClick: () => toggleBlock(block.id), children: /* @__PURE__ */ u2("span", { className: "think-chip__label", children: block.name }) }, block.id)) }),
     goals.length === 0 ? /* @__PURE__ */ u2(ThinkNotice, { children: "还没有目标。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(ThinkNotice, { children: "还没有启用的记录类型。" }) : /* @__PURE__ */ u2(
       GoalTemplateMatrixTable,
       {
@@ -73626,7 +71210,6 @@ function GoalManager() {
   const [goalPath, setGoalPath] = d("");
   const [goalThemePath, setGoalThemePath] = d("");
   const [message, setMessage] = d("");
-  const [cleaning, setCleaning] = d(false);
   const handleAddGoal = async () => {
     const path = goalPath.trim();
     if (!path) return;
@@ -73638,35 +71221,19 @@ function GoalManager() {
       setGoalThemePath("");
     }
   };
-  const handleCleanup = async () => {
-    if (cleaning) return;
-    setCleaning(true);
-    try {
-      const goalUseCase = useCases.goal;
-      if (typeof goalUseCase.cleanupGoalSettings !== "function") {
-        setMessage("当前版本不支持整理预设");
-        return;
-      }
-      const result = await goalUseCase.cleanupGoalSettings();
-      setMessage(result.changed ? `已整理：预设 ${result.beforeTemplateCount} → ${result.afterTemplateCount}` : "预设数据已是干净状态");
-    } finally {
-      setCleaning(false);
-    }
-  };
   return /* @__PURE__ */ u2("div", { className: "think-goal-manager", children: [
-    message && /* @__PURE__ */ u2(ThinkNotice, { children: message }),
-    /* @__PURE__ */ u2("div", { className: "think-goal-manager__create", children: [
-      /* @__PURE__ */ u2(ThinkInput, { "aria-label": "添加目标", value: goalPath, onInput: (event) => setGoalPath(event.currentTarget.value), placeholder: "目标路径，例如 了解自我/情绪" }),
-      /* @__PURE__ */ u2(ThinkInput, { "aria-label": "目标主题", value: goalThemePath, onInput: (event) => setGoalThemePath(event.currentTarget.value), placeholder: "目标主题（可选）" }),
-      /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "添加" })
+    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top think-goal-manager__create-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "新增目标" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: [
+        /* @__PURE__ */ u2("div", { className: "think-goal-manager__create", children: [
+          /* @__PURE__ */ u2(ThinkInput, { "aria-label": "目标路径", value: goalPath, onInput: (event) => setGoalPath(event.currentTarget.value), placeholder: "目标路径，例如 了解自我/情绪" }),
+          /* @__PURE__ */ u2(ThinkInput, { "aria-label": "目标主题", value: goalThemePath, onInput: (event) => setGoalThemePath(event.currentTarget.value), placeholder: "主题（可选）" }),
+          /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "添加" })
+        ] }),
+        message && /* @__PURE__ */ u2("div", { className: "think-settings-caption think-goal-manager__status", role: "status", children: message })
+      ] })
     ] }),
-    /* @__PURE__ */ u2("div", { className: "think-goal-manager__presets", children: [
-      /* @__PURE__ */ u2("div", { className: "think-goal-manager__presets-header", children: [
-        /* @__PURE__ */ u2("h2", { className: "think-goal-manager__title", children: "记录预设" }),
-        /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: handleCleanup, disabled: cleaning, children: cleaning ? "整理中…" : "整理预设" })
-      ] }),
-      /* @__PURE__ */ u2(GoalTemplateMatrix, {})
-    ] })
+    /* @__PURE__ */ u2(GoalTemplateMatrix, {})
   ] });
 }
 function GoalMetricSection() {
@@ -73716,7 +71283,6 @@ function GoalMetricSection() {
     setMessage("已删除指标");
   };
   return /* @__PURE__ */ u2("section", { className: "think-settings-section think-goal-metrics", children: [
-    /* @__PURE__ */ u2("h2", { className: "think-goal-metrics__title", children: "目标指标" }),
     message && /* @__PURE__ */ u2(ThinkNotice, { children: message }),
     /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
@@ -73782,7 +71348,7 @@ function ThemeMetadataManager() {
   const [icon, setIcon] = d("");
   const [message, setMessage] = d("");
   const [query, setQuery] = d("");
-  h(() => {
+  y(() => {
     if (!message) return void 0;
     const timer = window.setTimeout(() => setMessage(""), 2200);
     return () => window.clearTimeout(timer);
@@ -73840,30 +71406,27 @@ function ThemeMetadataManager() {
     setMessage("已删除主题");
   };
   return /* @__PURE__ */ u2("div", { className: "think-theme-metadata think-settings-stack", children: [
-    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--between", children: [
-      /* @__PURE__ */ u2("h2", { className: "think-settings-subheading", children: "主题管理" }),
-      /* @__PURE__ */ u2("span", { className: "think-settings-caption", role: "status", children: message || `${themes.length} 个主题` })
+    /* @__PURE__ */ u2("div", { className: "think-management-toolbar", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-caption", role: "status", children: message || `${themes.length} 个主题` }),
+      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-search", value: query, onInput: (event) => setQuery(event.currentTarget.value), placeholder: "搜索主题", "aria-label": "搜索主题" })
     ] }),
-    /* @__PURE__ */ u2("section", { className: "think-settings-section think-settings-section--flat think-theme-metadata__section", children: [
-      /* @__PURE__ */ u2("h3", { className: "think-settings-subheading", children: "新增 / 更新主题" }),
-      /* @__PURE__ */ u2("div", { className: "think-editor-grid think-editor-grid--metadata", children: [
-        /* @__PURE__ */ u2(ThinkInput, { "aria-label": "主题路径", value: path, onInput: (event) => setPath(event.currentTarget.value), placeholder: "主题路径，例如 电脑/记录系统" }),
-        /* @__PURE__ */ u2(ThinkInput, { "aria-label": "图标", value: icon, onInput: (event) => setIcon(event.currentTarget.value), placeholder: "图标" }),
-        /* @__PURE__ */ u2(ThinkButton, { variant: "primary", onClick: handleAddTheme, disabled: !path.trim(), children: "保存" })
-      ] }),
-      previewThemePath && /* @__PURE__ */ u2("div", { className: "think-editor-inline think-editor-inline--wrap think-settings-caption", role: "status", "aria-live": "polite", children: [
-        /* @__PURE__ */ u2("span", { className: "think-settings-label-strong", children: "图标预览" }),
-        /* @__PURE__ */ u2("span", { className: "think-theme-metadata__ellipsis", children: previewThemePath }),
-        /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "→" }),
-        /* @__PURE__ */ u2("span", { className: "think-theme-metadata__preview-icon", children: previewIcon }),
-        /* @__PURE__ */ u2("span", { children: previewIconInfo.sourcePath ? `来源 ${previewIconInfo.sourcePath}` : "默认图标" })
+    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "新增主题" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
+        /* @__PURE__ */ u2("div", { className: "think-editor-grid think-editor-grid--metadata", children: [
+          /* @__PURE__ */ u2(ThinkInput, { "aria-label": "主题路径", value: path, onInput: (event) => setPath(event.currentTarget.value), placeholder: "主题路径，例如 电脑/记录系统" }),
+          /* @__PURE__ */ u2(ThinkInput, { "aria-label": "图标", value: icon, onInput: (event) => setIcon(event.currentTarget.value), placeholder: "图标" }),
+          /* @__PURE__ */ u2(ThinkButton, { variant: "primary", onClick: handleAddTheme, disabled: !path.trim(), children: "保存" })
+        ] }),
+        previewThemePath && /* @__PURE__ */ u2("div", { className: "think-editor-inline think-editor-inline--wrap think-settings-caption", role: "status", "aria-live": "polite", children: [
+          /* @__PURE__ */ u2("span", { className: "think-theme-metadata__ellipsis", children: previewThemePath }),
+          /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "→" }),
+          /* @__PURE__ */ u2("span", { className: "think-theme-metadata__preview-icon", children: previewIcon }),
+          /* @__PURE__ */ u2("span", { children: previewIconInfo.sourcePath ? `来源 ${previewIconInfo.sourcePath}` : "默认图标" })
+        ] })
       ] })
     ] }),
     /* @__PURE__ */ u2("section", { className: "think-settings-section think-settings-section--flat think-theme-metadata__section", children: [
-      /* @__PURE__ */ u2("div", { className: "think-editor-grid think-editor-grid--list-toolbar", children: [
-        /* @__PURE__ */ u2("h3", { className: "think-settings-subheading", children: "主题列表" }),
-        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-search", value: query, onInput: (event) => setQuery(event.currentTarget.value), placeholder: "搜索主题", "aria-label": "搜索主题" })
-      ] }),
       /* @__PURE__ */ u2("div", { className: "think-theme-metadata__columns", "aria-hidden": "true", children: [
         /* @__PURE__ */ u2("span", { children: "图标" }),
         /* @__PURE__ */ u2("span", { children: "路径" }),
@@ -73874,7 +71437,7 @@ function ThemeMetadataManager() {
       /* @__PURE__ */ u2("div", { className: "think-theme-metadata__entries", children: sortedThemes.length ? sortedThemes.map((theme) => {
         const info = inheritedIconInfo(themes, theme.path);
         const inherited = Boolean(info.sourcePath && info.sourcePath !== theme.path);
-        return /* @__PURE__ */ u2("div", { className: "think-theme-metadata__entry", children: [
+        return /* @__PURE__ */ u2("div", { className: "think-theme-metadata__entry think-object-frame think-object-frame--compact", children: [
           /* @__PURE__ */ u2(ThinkInput, { className: "think-theme-metadata__icon-field", value: theme.icon || "", onInput: (event) => updateThemeIcon(theme.id, event.currentTarget.value), placeholder: info.icon || "🎯", "aria-label": `${theme.path} 图标` }),
           /* @__PURE__ */ u2(ThinkInput, { value: theme.path || "", onChange: (event) => updateThemePath(theme.id, event.currentTarget.value), "aria-label": `${theme.path} 路径` }),
           /* @__PURE__ */ u2("span", { className: "think-theme-metadata__source", children: [
@@ -73908,29 +71471,6 @@ function ThemeMetadataManager() {
     ] })
   ] });
 }
-function EnergySettingsSection() {
-  const settings = useSelector(selectSettings);
-  const themes = useSelector(selectInputThemes);
-  const defaultGoalId = useSelector(selectEnergyDefaultGoalId);
-  const defaultThemePath = useSelector(selectEnergyDefaultThemePath);
-  const useCases = useUseCases();
-  const goals = (settings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived");
-  const goalOptions = [{ value: "", label: "自动选择第一个活跃目标" }, ...goals.map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title }))];
-  const themeOptions2 = [{ value: "", label: "不指定默认主题" }, ...themes.filter((theme) => theme.status !== "inactive").map((theme) => ({ value: theme.path, label: `${theme.icon || "•"} ${theme.path}` }))];
-  return /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
-    /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "精力记录默认值" }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
-      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认目标" }),
-        /* @__PURE__ */ u2(SimpleSelect, { value: defaultGoalId, options: goalOptions, onChange: (value) => void useCases.settings.setEnergyDefaultGoalId(value || null), fullWidth: true })
-      ] }),
-      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认主题" }),
-        /* @__PURE__ */ u2(SimpleSelect, { value: defaultThemePath, options: themeOptions2, onChange: (value) => void useCases.settings.setEnergyDefaultThemePath(value || null), fullWidth: true })
-      ] })
-    ] })
-  ] });
-}
 const sections = [
   { value: "recordTypes", label: "记录类型" },
   { value: "goals", label: "目标" },
@@ -73939,41 +71479,48 @@ const sections = [
 ];
 function DataManagementSettings() {
   const [section, setSection] = d("goals");
-  return /* @__PURE__ */ u2("div", { className: "think-settings-page think-settings-page--wide", children: [
-    /* @__PURE__ */ u2("header", { className: "think-settings-page__header think-settings-full-width", children: [
-      /* @__PURE__ */ u2("h1", { className: "think-settings-page__title", children: "数据管理" }),
-      /* @__PURE__ */ u2(ThinkSegmentedControl, { label: "数据管理分类", value: section, options: sections, onChange: (value) => setSection(value), size: "sm", className: "think-data-management-nav" })
-    ] }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-full-width", children: [
-      section === "recordTypes" && /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-full-width", children: [
-        /* @__PURE__ */ u2(EnergySettingsSection, {}),
-        /* @__PURE__ */ u2(BlockManager, {})
-      ] }),
+  return /* @__PURE__ */ u2("div", { className: "think-settings-page think-settings-page--wide think-data-management", children: [
+    /* @__PURE__ */ u2(
+      SettingsNavigation,
+      {
+        label: "数据管理",
+        variant: "secondary",
+        value: section,
+        options: sections,
+        onChange: setSection,
+        className: "think-data-management-nav"
+      }
+    ),
+    /* @__PURE__ */ u2("div", { className: "think-data-management__content", children: [
+      section === "recordTypes" && /* @__PURE__ */ u2(BlockManager, {}),
       section === "goals" && /* @__PURE__ */ u2(GoalManager, {}),
       section === "themes" && /* @__PURE__ */ u2(ThemeMetadataManager, {}),
       section === "metrics" && /* @__PURE__ */ u2(GoalMetricSection, {})
     ] })
   ] });
 }
-function a11yProps(index) {
-  return { id: `settings-tab-${index}`, "aria-controls": `settings-tabpanel-${index}` };
-}
 function TabPanel(props) {
-  const { children, value, index, ...other } = props;
+  const { children, value, index } = props;
   return /* @__PURE__ */ u2(
-    "div",
+    "section",
     {
       className: "think-settings-panel",
       role: "tabpanel",
       hidden: value !== index,
       id: `settings-tabpanel-${index}`,
-      ...other,
+      "aria-label": ["数据管理", "布局", "通用", "AI"][index],
       children: value === index ? children : null
     }
   );
 }
 const SETTINGS_TABS_NO_QUICK_INPUT_KEY = `${LOCAL_STORAGE_KEYS.SETTINGS_TABS}:data-v2`;
 const SETTINGS_TAB_COUNT = 4;
+const PRIMARY_TABS = [
+  { value: "0", label: "数据管理" },
+  { value: "1", label: "布局" },
+  { value: "2", label: "通用" },
+  { value: "3", label: "AI" }
+];
 function clampTabIndex(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return 0;
@@ -73983,18 +71530,25 @@ function SettingsRoot({ app, variant = "workspace" }) {
   const deviceProfileAttrs = getThinkDeviceProfileAttributes();
   const [storedTabIndex, setStoredTabIndex] = useLocalStorage(SETTINGS_TABS_NO_QUICK_INPUT_KEY, 0);
   const tabIndex = clampTabIndex(storedTabIndex);
-  return /* @__PURE__ */ u2("div", { className: `think-os think-os--settings think-setting-root think-setting-root--${variant}`, ...deviceProfileAttrs, children: [
-    /* @__PURE__ */ u2("div", { className: "think-settings-tabs", children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setStoredTabIndex(clampTabIndex(newValue)), "aria-label": "settings tabs", variant: "scrollable", scrollButtons: "auto", children: [
-      /* @__PURE__ */ u2(Tab2, { label: "数据管理", ...a11yProps(0) }),
-      /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(1) }),
-      /* @__PURE__ */ u2(Tab2, { label: "通用", ...a11yProps(2) }),
-      /* @__PURE__ */ u2(Tab2, { label: "AI", ...a11yProps(3) })
-    ] }) }),
-    /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(DataManagementSettings, {}) }),
-    /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
-    /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, {}) }),
-    /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(AiSettings, {}) })
-  ] });
+  return /* @__PURE__ */ u2("div", { className: `think-os think-os--settings think-setting-root think-setting-root--${variant}`, ...deviceProfileAttrs, children: /* @__PURE__ */ u2("div", { className: "think-settings-workspace", children: [
+    /* @__PURE__ */ u2("aside", { className: "think-settings-workspace__rail", children: /* @__PURE__ */ u2(
+      SettingsNavigation,
+      {
+        label: "Think OS 设置",
+        variant: "primary",
+        value: String(tabIndex),
+        options: PRIMARY_TABS,
+        onChange: (value) => setStoredTabIndex(clampTabIndex(value)),
+        className: "think-settings-primary-nav"
+      }
+    ) }),
+    /* @__PURE__ */ u2("main", { className: "think-settings-workspace__content", children: [
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(DataManagementSettings, {}) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, {}) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(AiSettings, {}) })
+    ] })
+  ] }) });
 }
 const THINK_SETTINGS_VIEW_TYPE = "think-os-settings-view";
 class ThinkSettingsView extends obsidian.ItemView {

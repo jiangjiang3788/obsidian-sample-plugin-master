@@ -1,9 +1,10 @@
 // src/features/settings/views/runtime/components/timeline/DayColumnBody.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import type { JSX } from 'preact';
 import { useRef } from 'preact/hooks';
 import type { TaskBlock } from '@core/types/public';
-import { createRecordGestureHandlers, RECORD_GESTURE_HINT } from '@shared/ui/public';
+import { createRecordGestureHandlers, RECORD_GESTURE_HINT, ThinkIcon, ThinkIconButton } from '@shared/ui/public';
 import { mapTaskToCategory } from '@core/utils/public';
 import { dayjs } from '@core/utils/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
@@ -28,12 +29,6 @@ interface DayColumnBodyProps {
 }
 
 // 辅助函数
-const hexToRgba = (hex: string, alpha = 0.35) => {
-    const h = hex.replace("#", "");
-    const bigint = parseInt(h, 16);
-    return `rgba(${(bigint >> 16) & 255},${(bigint >> 8) & 255},${bigint & 255},${alpha})`;
-};
-
 const formatTimeMinute = (minute: number) => {
     const h = Math.floor(minute / 60);
     const m = minute % 60;
@@ -168,7 +163,7 @@ export function DayColumnBody({
                 const top = (block.blockStartMinute / 60) * hourHeight;
                 const height = ((block.blockEndMinute - block.blockStartMinute) / 60) * hourHeight;
                 const category = mapTaskToCategory(block.fileName || '', categoriesConfig);
-                const color = colorMap[category] || '#ccc';
+                const color = colorMap[category] || 'var(--think-data-neutral)';
                 const prevBlock = index > 0 ? blocks[index - 1] : null;
                 const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
                 const canAlignToNext = nextBlock && (nextBlock.blockStartMinute > block.blockStartMinute);
@@ -180,7 +175,7 @@ export function DayColumnBody({
                         key={block.id + block.day}
                         class="timeline-task-block"
                         title={generateTaskBlockTitle(block)}
-                        style={{ top: `${top}px`, height: `${Math.max(height, 2)}px` }}
+                        style={{ top: `${top}px`, height: `${Math.max(height, 2)}px`, '--timeline-task-color': color } as JSX.CSSProperties}
                         onClick={(e) => e.stopPropagation()}
                         onTouchStart={(e) => e.stopPropagation()}
                         onTouchEnd={(e) => e.stopPropagation()}
@@ -194,36 +189,36 @@ export function DayColumnBody({
                             onTouchEnd={blockGesture.onTouchEnd as any}
                             onKeyDown={blockGesture.onKeyDown as any}
                         >
-                            <div class="timeline-task-indicator" style={{ background: color }}></div>
-                            <div class="timeline-task-content" style={{ background: hexToRgba(color) }}>
+                            <div class="timeline-task-indicator" />
+                            <div class="timeline-task-content">
                                 {block.icon ? <span class="timeline-task-icon">{block.icon}</span> : null}
                                 <span class="timeline-task-title">{block.title || block.pureText}</span>
                             </div>
                         </a>
                         <div class="task-buttons">
-                            <button 
-                                class="task-button" 
-                                title="向前对齐" 
-                                disabled={!prevBlock} 
+                            <ThinkIconButton
+                                className="timeline-task-action"
+                                size="sm"
+                                label="向前对齐"
+                                icon={<ThinkIcon name="chevron-up" />}
+                                disabled={!prevBlock}
                                 onClick={() => handleAlignToPrev(block, prevBlock)}
-                            >
-                                ⇡
-                            </button>
-                            <button 
-                                class="task-button" 
-                                title="向后对齐" 
-                                disabled={!canAlignToNext} 
+                            />
+                            <ThinkIconButton
+                                className="timeline-task-action"
+                                size="sm"
+                                label="向后对齐"
+                                icon={<ThinkIcon name="chevron-down" />}
+                                disabled={!canAlignToNext}
                                 onClick={() => handleAlignToNext(block, nextBlock)}
-                            >
-                                ⇣
-                            </button>
-                            <button 
-                                class="task-button" 
-                                title="精确编辑" 
+                            />
+                            <ThinkIconButton
+                                className="timeline-task-action"
+                                size="sm"
+                                label="精确编辑"
+                                icon={<ThinkIcon name="pencil" />}
                                 onClick={() => handleEdit(block)}
-                            >
-                                ✎
-                            </button>
+                            />
                         </div>
                     </div>
                 );

@@ -1,10 +1,8 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 
 import { normalizeGoalPath, type GoalDefinition } from '@core/goal/public';
-import { Box, Button, Typography } from '@shared/ui/public';
-
+import { ThinkButton, ThinkInput } from '@shared/ui/public';
 import { HierarchySingleSelect, type HierarchySingleSelectOption } from './HierarchySingleSelect';
 
 export interface GoalSelectorOption extends HierarchySingleSelectOption {
@@ -20,7 +18,6 @@ export interface GoalSelectorProps {
   dense?: boolean;
 }
 
-
 export function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense = false }: GoalSelectorProps) {
   const [draftGoalPath, setDraftGoalPath] = useState('');
   const normalizedDraft = normalizeGoalPath(draftGoalPath) || '';
@@ -28,7 +25,7 @@ export function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, 
   const canCreate = !!onCreateGoal && !!normalizedDraft && !existing.has(normalizedDraft);
 
   return (
-    <Box sx={{ display: 'grid', gap: dense ? 1 : 1.2 }}>
+    <div className={`think-quick-input-goal-selector${dense ? ' is-dense' : ''}`}>
       <HierarchySingleSelect
         options={goals}
         selectedValue={selectedGoalPath || null}
@@ -41,32 +38,26 @@ export function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, 
         showParentLabel={false}
       />
 
-      {onCreateGoal && (
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(140px, 1fr) auto', gap: 1, alignItems: 'center' }}>
-          <input
-            className="think-native-input"
+      {onCreateGoal ? (
+        <div className="think-quick-input-goal-selector__create">
+          <ThinkInput
             value={draftGoalPath}
-            onInput={(event: any) => setDraftGoalPath(event.target.value)}
-            placeholder="快速新建目标：例如 产品化/插件/目标中心"
+            onInput={(event) => setDraftGoalPath((event.currentTarget as HTMLInputElement).value)}
+            placeholder="快速新建目标，例如 产品化/插件/目标中心"
           />
-          <Button
-            variant="outlined"
-            size="small"
+          <ThinkButton
+            size="sm"
             disabled={!canCreate}
             onClick={async () => {
               if (!canCreate) return;
               await onCreateGoal(normalizedDraft);
               setDraftGoalPath('');
             }}
-          >
-            新建目标
-          </Button>
-        </Box>
-      )}
+          >新建</ThinkButton>
+        </div>
+      ) : null}
 
-      {normalizedDraft && existing.has(normalizedDraft) && (
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>这个目标已经存在，可以直接在上方选择。</Typography>
-      )}
-    </Box>
+      {normalizedDraft && existing.has(normalizedDraft) ? <span className="think-quick-input-context-hint">目标已存在，可直接在上方选择。</span> : null}
+    </div>
   );
 }

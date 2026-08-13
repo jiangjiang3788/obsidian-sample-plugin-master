@@ -43,8 +43,8 @@
 }
 
 .think-os .think-icon-button[aria-pressed="true"] {
-  background: var(--think-accent-muted);
-  border-color: var(--think-accent);
+  background: var(--think-surface-selection);
+  border-color: var(--think-border-selection);
   color: var(--think-text-accent);
 }
 

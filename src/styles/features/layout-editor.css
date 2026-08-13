@@ -1,10 +1,10 @@
 /* Compact layout settings: rows, dividers and single-boundary controls. */
 .think-os--settings .think-layout-editor {
-  width: 100%; min-width: 0; box-sizing: border-box; display: grid; gap: var(--think-space-4);
-  padding: var(--think-space-3) var(--think-space-5) var(--think-space-5);
+  width: 100%; min-width: 0; box-sizing: border-box; display: grid; gap: var(--think-rhythm-related);
+  padding: var(--think-rhythm-related) var(--think-object-padding) var(--think-object-padding);
 }
 .think-os--settings .think-layout-editor__general,
-.think-os--settings .think-layout-editor__freeform { display: grid; gap: var(--think-space-3); }
+.think-os--settings .think-layout-editor__freeform { display: grid; gap: var(--think-rhythm-row); }
 .think-os--settings .think-layout-editor__control-row { min-height: var(--think-control-height-sm); }
 .think-os--settings .think-layout-editor__control-row--top { align-items: flex-start; }
 .think-os--settings .think-layout-editor__inline-controls,
@@ -33,10 +33,10 @@
   border-radius: var(--think-radius-md); background: var(--think-bg-elevated); box-shadow: var(--think-shadow-overlay);
 }
 .think-os--settings .think-layout-editor__context-actions { display: grid; gap: var(--think-space-2); }
-.think-os--settings .think-layout-list { width: min(100%, 980px); margin-inline: auto; }
-.think-os--settings .think-layout-list__header { margin-bottom: var(--think-space-4); }
-.think-os--settings .think-layout-list__item { border-bottom: 1px solid var(--think-border-subtle); }
-.think-os--settings .think-layout-list__item-header { min-height: var(--think-control-height-lg); padding: var(--think-space-3) 0; }
+.think-os--settings .think-layout-list { width: min(100%, 980px); margin-inline: auto; display: grid; gap: var(--think-object-gap); }
+.think-os--settings .think-layout-list__header { display: flex; justify-content: flex-end; margin: 0; }
+.think-os--settings .think-layout-list__item { overflow: hidden; }
+.think-os--settings .think-layout-list__item-header { min-height: var(--think-control-height-lg); padding: var(--think-rhythm-row) var(--think-object-padding); }
 .think-os--settings .think-layout-list__item-title { flex: 1 1 auto; cursor: pointer; font-weight: var(--think-font-weight-medium); }
 .think-os--settings .think-layout-list__toggle { margin-right: var(--think-space-2); }
 .think-os--settings .think-layout-list__drag-handle {

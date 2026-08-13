@@ -1,24 +1,9 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
-import {
-  Box,
-  Chip,
-  FormControl,
-  FormControlLabel,
-  InputLabel,
-  MenuItem,
-  Select,
-  Switch,
-  Typography,
-} from '@shared/ui/public';
-import { SearchIcon } from '@shared/ui/public';
+import { SimpleSelect, ThinkToggle } from '@shared/ui/public';
 import { ThemeTreeSelect } from '@shared/components/public';
 import type { ThemeDefinition } from '@core/types/public';
 
-export interface BlockDefinition {
-    id: string;
-    name: string;
-}
+export interface BlockDefinition { id: string; name: string }
 
 export interface FiltersBarProps {
     enableRetrieval: boolean;
@@ -47,81 +32,60 @@ export function FiltersBar({
     setSelectedBlockId,
     indexItemCount,
 }: FiltersBarProps) {
+    const typeOptions = [
+        { value: '', label: '全部类型' },
+        { value: 'task', label: '任务' },
+        { value: 'block', label: '记录' },
+    ];
+    const blockOptions = [
+        { value: '', label: '全部记录' },
+        ...blocks.map((block) => ({ value: block.id, label: block.name })),
+    ];
+
     return (
-        <Box
-            sx={{
-                p: 1.5,
-                borderBottom: '1px solid var(--background-modifier-border)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                flexWrap: 'wrap',
-            }}
-        >
-            {/* 上下文检索开关 */}
-            <FormControlLabel
-                control={
-                    <Switch
-                        checked={enableRetrieval}
-                        onChange={(e: any) => setEnableRetrieval(e.target.checked)}
-                        size="small"
-                    />
-                }
-                label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <SearchIcon fontSize="small" />
-                        <Typography variant="body2">引用上下文</Typography>
-                    </Box>
-                }
+        <div className="think-ai-chat-filters">
+            <ThinkToggle
+                className="think-ai-chat-filters__toggle"
+                checked={enableRetrieval}
+                onChange={(event) => setEnableRetrieval((event.currentTarget as HTMLInputElement).checked)}
+                label="引用上下文"
             />
 
-            {/* 主题过滤 - 使用统一的 ThemeTreeSelect 组件 */}
-            {enableRetrieval && themes.length > 0 && (
-                <ThemeTreeSelect
-                    themes={themes}
-                    selectedPaths={selectedThemes}
-                    onSelectMultiple={setSelectedThemes}
-                    multiSelect={true}
-                    searchable={true}
-                    placeholder="选择主题"
-                    size="small"
-                    sx={{ minWidth: 150 }}
+            {enableRetrieval && themes.length > 0 ? (
+                <div className="think-ai-chat-filters__theme">
+                    <ThemeTreeSelect
+                        themes={themes}
+                        selectedPaths={selectedThemes}
+                        onSelectMultiple={setSelectedThemes}
+                        multiSelect
+                        searchable
+                        placeholder="主题"
+                        size="small"
+                    />
+                </div>
+            ) : null}
+
+            {enableRetrieval ? (
+                <SimpleSelect
+                    className="think-ai-chat-filters__select"
+                    value={selectedType}
+                    options={typeOptions}
+                    onChange={setSelectedType}
+                    placeholder="全部类型"
                 />
-            )}
+            ) : null}
 
-            {/* 类型过滤 */}
-            {enableRetrieval && (
-                <FormControl size="small" sx={{ minWidth: 100 }}>
-                    <InputLabel>类型</InputLabel>
-                    <Select value={selectedType} label="类型" onChange={(e: any) => setSelectedType(e.target.value)}>
-                        <MenuItem value="">全部</MenuItem>
-                        <MenuItem value="task">任务</MenuItem>
-                        <MenuItem value="block">记录</MenuItem>
-                    </Select>
-                </FormControl>
-            )}
+            {enableRetrieval && selectedType === 'block' && blocks.length > 0 ? (
+                <SimpleSelect
+                    className="think-ai-chat-filters__select think-ai-chat-filters__select--block"
+                    value={selectedBlockId}
+                    options={blockOptions}
+                    onChange={setSelectedBlockId}
+                    placeholder="全部记录"
+                />
+            ) : null}
 
-            {/* Block 模板过滤 (当选择"记录"类型时显示) */}
-            {enableRetrieval && selectedType === 'block' && blocks.length > 0 && (
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>记录类型</InputLabel>
-                    <Select
-                        value={selectedBlockId}
-                        label="记录类型"
-                        onChange={(e: any) => setSelectedBlockId(e.target.value)}
-                    >
-                        <MenuItem value="">全部记录</MenuItem>
-                        {blocks.map(b => (
-                            <MenuItem key={b.id} value={b.id}>
-                                {b.name}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-            )}
-
-            {/* 索引状态 */}
-            {enableRetrieval && <Chip size="small" label={`索引: ${indexItemCount} 条`} variant="outlined" />}
-        </Box>
+            {enableRetrieval ? <span className="think-ai-chat-filters__index">索引 {indexItemCount}</span> : null}
+        </div>
     );
 }

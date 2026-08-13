@@ -59,8 +59,8 @@ function sampleVisual(sample: EnergyPeriodSampleModel) {
 export function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin }: Props) {
   const day = period.days[0];
   return (
-    <section class="think-energy-period-map think-energy-day-map" aria-label="日精力地图">
-      <div class="think-energy-period-map__heading"><span>{period.label}</span></div>
+    <section class="think-energy-period-map think-energy-day-map think-viz-surface" aria-label="日精力地图">
+      <div class="think-energy-period-map__heading think-viz-meta"><span>{period.label}</span></div>
       <div class="think-energy-day-map__track">
         {TIME_TICKS.map((tick) => (
           <span key={tick} class="think-energy-day-map__guide" style={axisStyle('--think-energy-x', (tick / 1440) * 100)}>
@@ -91,7 +91,6 @@ export function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin
         })}
         {!day?.sampled && <span class="think-energy-day-map__empty">当天未记录</span>}
       </div>
-      <div class="think-energy-period-map__hint">实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低</div>
     </section>
   );
 }
@@ -99,8 +98,8 @@ export function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin
 export function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordOrigin }: Props) {
   const isMonth = period.currentView === '月';
   return (
-    <section class="think-energy-period-map think-energy-date-map" aria-label={`${period.currentView}精力地图`}>
-      <div class="think-energy-period-map__heading"><span>{period.label} · {period.sampledDays}/{period.days.length} 天有记录</span></div>
+    <section class="think-energy-period-map think-energy-date-map think-viz-surface" aria-label={`${period.currentView}精力地图`}>
+      <div class="think-energy-period-map__heading think-viz-meta"><span>{period.label} · {period.sampledDays}/{period.days.length} 天有记录</span></div>
       <div class="think-energy-date-map__scroll">
         <div class={`think-energy-date-map__chart ${isMonth ? 'is-month' : 'is-week'}`}>
           <div class="think-energy-date-map__axis">
@@ -149,7 +148,6 @@ export function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordO
           </div>
         </div>
       </div>
-      <div class="think-energy-period-map__hint">实心＝实时 · 空心＝补录 · 5 档尺寸＝精力高低 · Missing 留白</div>
     </section>
   );
 }

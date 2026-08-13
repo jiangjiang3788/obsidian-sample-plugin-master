@@ -18,7 +18,6 @@ export function GoalMetricSection() {
   const handleRemoveMetric = async (key: string) => { if (!metricGoalId) return; await useCases.goal.updateGoalMetrics(metricGoalId, selectedMetrics.filter((metric) => metric.key !== key)); setMessage('已删除指标'); };
   return (
     <section className="think-settings-section think-goal-metrics">
-      <h2 className="think-goal-metrics__title">目标指标</h2>
       {message && <ThinkNotice>{message}</ThinkNotice>}
       <div className="think-settings-stack think-settings-stack--tight">
         <div className="think-settings-row"><span className="think-settings-row__label">目标</span><SimpleSelect value={metricGoalId} options={activeGoalOptions} onChange={syncMetricDraft} placeholder="选择目标" fullWidth /></div>

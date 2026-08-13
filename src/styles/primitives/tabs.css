@@ -5,7 +5,7 @@
   gap: var(--think-space-2);
   min-width: 0;
   overflow-x: auto;
-  border-bottom: 1px solid var(--think-border-subtle);
+  border-bottom: 1px solid var(--think-border-divider);
   scrollbar-width: thin;
 }
 
@@ -21,8 +21,8 @@
   background: transparent;
   color: var(--think-text-secondary);
   font: inherit;
-  font-size: var(--think-font-size-sm);
-  font-weight: var(--think-font-weight-medium);
+  font-size: var(--think-type-label-size);
+  font-weight: var(--think-type-label-weight);
   white-space: nowrap;
   cursor: pointer;
 }

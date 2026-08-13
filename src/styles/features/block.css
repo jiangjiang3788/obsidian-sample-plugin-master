@@ -47,8 +47,8 @@
 
 /* --- 标题和内容样式 --- */
 .bv-block-title {
-    font-weight: var(--think-font-weight-semibold);
-    font-size: var(--think-font-size-sm);
+    font-weight: var(--think-type-label-weight);
+    font-size: var(--think-type-body-size);
 }
 .bv-block-title a {
     color: var(--think-text-primary);

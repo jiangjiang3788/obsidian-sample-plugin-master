@@ -19,7 +19,6 @@ import {
 } from './goalTemplateCopy';
 import {
   addAllGoalPaths,
-  buildNextActiveBlockIds,
   buildThemeIconMap,
   cleanDisplayText,
   filterVisibleGoalTemplateMatrixGoals,
@@ -59,7 +58,6 @@ export function GoalTemplateMatrix() {
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set(Array.from(allGoalPaths)));
   const [collapsedGoalIds, setCollapsedGoalIds] = useState<Set<string>>(() => new Set());
   const [query, setQuery] = useState('');
-  const [activeBlockIds, setActiveBlockIds] = useState<Set<string>>(() => new Set(coreBlocks.map((block) => block.id)));
   const [selected, setSelected] = useState<{ goal: GoalDefinition; block: CoreBlockDefinition; variantId?: string | null } | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [draggingGoalId, setDraggingGoalId] = useState<string | null>(null);
@@ -68,21 +66,14 @@ export function GoalTemplateMatrix() {
   const [presetDropCell, setPresetDropCell] = useState<PresetDropCellState>(null);
 
   useEffect(() => {
-    if (!coreBlocks.length) return;
-    setActiveBlockIds((previous) => previous.size > 0 ? previous : new Set(coreBlocks.map((block) => block.id)));
-  }, [coreBlocks]);
-
-  useEffect(() => {
     setExpandedPaths((previous) => addAllGoalPaths(previous, allGoalPaths));
   }, [allGoalPaths]);
 
-  const isBlockActive = (blockId: string): boolean => activeBlockIds.size === 0 || activeBlockIds.has(blockId);
-  const visibleBlocks = useMemo(() => coreBlocks.filter((block) => isBlockActive(block.id)), [coreBlocks, activeBlockIds]);
+  const visibleBlocks = coreBlocks;
   const visibleGoals = useMemo(() => filterVisibleGoalTemplateMatrixGoals({ goals, expandedPaths, query, templates }), [goals, expandedPaths, query, templates]);
 
   const toggleTreePath = (path: string) => setExpandedPaths((previous) => toggleGoalPath(previous, path));
   const toggleGoalRow = (goalId: string) => setCollapsedGoalIds((previous) => toggleGoalCollapsed(previous, goalId));
-  const toggleBlock = (blockId: string) => setActiveBlockIds((previous) => buildNextActiveBlockIds(previous, blockId, coreBlocks));
   const expandAll = () => {
     setExpandedPaths(new Set(Array.from(allGoalPaths)));
     setCollapsedGoalIds(new Set());
@@ -252,18 +243,11 @@ export function GoalTemplateMatrix() {
 
   return (
     <div className="think-goal-template-matrix">
-      <div className="think-goal-template-matrix__toolbar">
-        <ThinkInput className="think-settings-search" placeholder="搜索目标" value={query} onInput={(event) => setQuery((event.currentTarget as HTMLInputElement).value)} />
-        <ThinkButton size="sm" variant="secondary" onClick={expandAll}>展开</ThinkButton>
-        <ThinkButton size="sm" variant="secondary" onClick={collapseAll}>折叠</ThinkButton>
-      </div>
-
-      <div className="think-goal-template-matrix__block-filter">
-        {coreBlocks.map((block) => (
-          <button key={block.id} type="button" className={`think-chip${isBlockActive(block.id) ? ' is-active' : ''}`} aria-pressed={isBlockActive(block.id)} onClick={() => toggleBlock(block.id)}>
-            <span className="think-chip__label">{block.name}</span>
-          </button>
-        ))}
+      <div className="think-management-toolbar think-goal-template-matrix__toolbar">
+        <ThinkInput className="think-settings-search" placeholder="搜索目标" value={query} onInput={(event) => setQuery((event.currentTarget as HTMLInputElement).value)} aria-label="搜索目标" />
+        <ThinkButton size="sm" variant="secondary" onClick={collapsedGoalIds.size === goals.length && goals.length > 0 ? expandAll : collapseAll}>
+          {collapsedGoalIds.size === goals.length && goals.length > 0 ? '全部展开' : '全部收起'}
+        </ThinkButton>
       </div>
 
       {goals.length === 0 ? (

@@ -51,7 +51,7 @@ export function StatisticsViewView({
   onOpenRecordOrigin,
 }: StatisticsViewViewProps) {
   if (!categories || categories.length === 0) {
-    return <div class="statistics-view-placeholder">暂无目标统计数据。</div>;
+    return <div class="statistics-view-placeholder think-viz-empty">暂无目标统计数据。</div>;
   }
 
   void goalThemeSummaries;

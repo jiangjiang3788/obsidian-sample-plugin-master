@@ -1,0 +1,47 @@
+/*
+ * Shared rhythm and boundary contract.
+ *
+ * The UI has four spatial relationships: row < related group < section < major.
+ * Borders do not create hierarchy by default. A visible frame is reserved for an
+ * independently managed object (for example a dashboard module or saved layout).
+ */
+.think-os .think-row-flow,
+.think-os .think-group-flow,
+.think-os .think-section-flow,
+.think-os .think-major-flow {
+  display: grid;
+  min-width: 0;
+}
+
+.think-os .think-row-flow { gap: var(--think-rhythm-row); }
+.think-os .think-group-flow { gap: var(--think-rhythm-group); }
+.think-os .think-section-flow { gap: var(--think-rhythm-section); }
+.think-os .think-major-flow { gap: var(--think-rhythm-major); }
+
+.think-os .think-object-frame {
+  min-width: 0;
+  border: 1px solid var(--think-object-border);
+  border-radius: var(--think-radius-md);
+  background: var(--think-object-bg);
+  box-shadow: none;
+}
+
+.think-os .think-object-frame:hover,
+.think-os .think-object-frame:focus-within {
+  border-color: var(--think-object-border-hover);
+}
+
+.think-os .think-object-frame--compact {
+  border-color: var(--think-border-control);
+  border-radius: var(--think-radius-sm);
+}
+
+.think-os .think-object-frame--padded {
+  padding: var(--think-object-padding);
+}
+
+/* A divider is a structural boundary (header/body, sticky footer, table cell),
+ * not a generic way to separate sibling content. */
+.think-os .think-structural-divider {
+  border-color: var(--think-structural-divider);
+}

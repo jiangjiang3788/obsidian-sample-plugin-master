@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 
 import { FloatingPanel } from '@/app/public';
-import { AddCircleOutlineIcon, Button, Stack, Tooltip } from '@shared/ui/public';
+import { AddCircleOutlineIcon, ThinkButton } from '@shared/ui/public';
 import { TimerRow } from './TimerRow';
 import type { DataStore } from '@core/services/public';
 import type { RecordViewItem } from '@core/types/public';
@@ -42,14 +42,12 @@ export function TimerViewView({
             closeOnOutsideClick={false}
             onClose={() => setVisible(false)}
             headerActions={
-                <Tooltip title="开始新任务">
-                    <Button size="small" startIcon={<AddCircleOutlineIcon />} onClick={onCreateNewTask}>
-                        新任务
-                    </Button>
-                </Tooltip>
+                <ThinkButton size="sm" leadingIcon={<AddCircleOutlineIcon fontSize="small" />} onClick={onCreateNewTask}>
+                    新任务
+                </ThinkButton>
             }
         >
-            <Stack spacing={1} sx={{ p: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+            <div className="think-timer-list">
                 {timers.length > 0 ? (
                     timers.map((timer) => (
                         <TimerRow
@@ -62,9 +60,9 @@ export function TimerViewView({
                         />
                     ))
                 ) : (
-                    <div class="think-timer-empty-state">暂无计时任务</div>
+                    <div className="think-timer-empty-state">暂无计时任务</div>
                 )}
-            </Stack>
+            </div>
         </FloatingPanel>
     );
 }

@@ -66,12 +66,12 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
   );
 
   if (filteredItems.length === 0) {
-    return <div class="event-timeline-empty">当前时间范围内没有事件记录。</div>;
+    return <div class="event-timeline-empty think-viz-empty">当前时间范围内没有事件记录。</div>;
   }
 
   if (!groupedTree) {
     return (
-      <div class="event-timeline-view">
+      <div class="event-timeline-view think-viz-surface">
         <div class="et-ungrouped">{renderEventList(filteredItems)}</div>
       </div>
     );
@@ -81,7 +81,7 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
     <GroupedContainer
       nodes={groupedTree}
       classNames={{
-        root: 'event-timeline-view',
+        root: 'event-timeline-view think-viz-surface',
         group: 'et-group',
         title: 'et-group-title',
         content: 'et-group-content',

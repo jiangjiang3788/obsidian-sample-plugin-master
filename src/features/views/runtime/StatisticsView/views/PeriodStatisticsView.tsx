@@ -52,7 +52,7 @@ export function PeriodStatisticsView(props: PeriodStatisticsViewProps) {
   );
 
   return (
-    <div class="statistics-view">
+    <div class="statistics-view think-viz-surface">
       <div class={`${gridClassName} sv-period-hierarchy`} style={effectiveGridStyle}>
         {renderBlock(summary)}
         {visibleBlocks.map(renderBlock)}

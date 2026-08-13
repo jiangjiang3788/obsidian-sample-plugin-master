@@ -46,8 +46,8 @@
 .think-os .think-section__title {
   margin: 0;
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-lg);
-  font-weight: var(--think-font-weight-semibold);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
   line-height: var(--think-line-height-tight);
 }
 
@@ -119,5 +119,5 @@
   transition: background-color var(--think-duration-fast) var(--think-ease-standard), color var(--think-duration-fast) var(--think-ease-standard);
 }
 .think-os .think-segmented-control__item:hover:not(:disabled) { background: var(--think-bg-hover); color: var(--think-text-primary); }
-.think-os .think-segmented-control__item[aria-pressed="true"] { background: var(--think-accent-muted); color: var(--think-text-accent); font-weight: var(--think-font-weight-semibold); }
+.think-os .think-segmented-control__item[aria-pressed="true"] { background: var(--think-surface-selection); color: var(--think-text-accent); font-weight: var(--think-type-label-weight); }
 .think-os .think-segmented-control__item:disabled { color: var(--think-text-disabled); cursor: not-allowed; opacity: 0.56; }

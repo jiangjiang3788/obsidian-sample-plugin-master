@@ -1,32 +1,59 @@
-.think-os .think-type-caption {
+/* Shared semantic typography. Feature views select a role, never a private scale. */
+.think-os .think-type-caption,
+.think-os .think-type-meta {
   color: var(--think-text-secondary);
-  font-size: var(--think-font-size-xs);
+  font-size: var(--think-type-meta-size);
+  font-weight: var(--think-font-weight-regular);
   line-height: var(--think-line-height-normal);
 }
 
 .think-os .think-type-label {
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-sm);
-  font-weight: var(--think-font-weight-medium);
+  font-size: var(--think-type-label-size);
+  font-weight: var(--think-type-label-weight);
   line-height: var(--think-line-height-tight);
 }
 
 .think-os .think-type-body {
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-md);
+  font-size: var(--think-type-body-size);
+  font-weight: var(--think-type-body-weight);
   line-height: var(--think-line-height-normal);
 }
 
-.think-os .think-type-heading-sm {
+.think-os .think-type-view-title {
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-lg);
-  font-weight: var(--think-font-weight-semibold);
+  font-size: var(--think-type-view-title-size);
+  font-weight: var(--think-type-view-title-weight);
   line-height: var(--think-line-height-tight);
 }
 
-.think-os .think-type-heading-md {
+.think-os .think-type-heading-sm,
+.think-os .think-type-section {
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-xl);
-  font-weight: var(--think-font-weight-bold);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-type-subsection {
+  color: var(--think-text-primary);
+  font-size: var(--think-type-subsection-size);
+  font-weight: var(--think-type-subsection-weight);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-type-heading-md,
+.think-os .think-type-page {
+  color: var(--think-text-primary);
+  font-size: var(--think-type-page-size);
+  font-weight: var(--think-type-page-weight);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-type-table-header {
+  color: var(--think-text-secondary);
+  font-size: var(--think-type-table-header-size);
+  font-weight: var(--think-type-table-header-weight);
   line-height: var(--think-line-height-tight);
 }

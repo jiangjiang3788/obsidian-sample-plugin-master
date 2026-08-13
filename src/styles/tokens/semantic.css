@@ -26,22 +26,33 @@
   --think-text-accent: var(--text-accent, var(--interactive-accent));
   --think-text-disabled: var(--text-faint, var(--text-muted));
 
-  /* Borders and focus */
+  /* Borders and focus.
+   * Visual-weight order is deliberate: frame > selected state > control > divider.
+   * Features consume these roles instead of deciding contrast independently. */
   --think-border-subtle: var(--background-modifier-border);
   --think-border-strong: var(--background-modifier-border-hover, var(--background-modifier-border));
+  --think-border-divider: var(--background-modifier-border);
+  --think-border-control: var(--background-modifier-border);
+  --think-border-frame: var(--background-modifier-border-hover, var(--background-modifier-border));
+  --think-border-selection: var(--background-modifier-border-hover, var(--background-modifier-border));
   --think-border-focus: var(--interactive-accent);
   --think-focus-ring-color: var(--interactive-accent);
   --think-focus-ring-width: 2px;
   --think-focus-ring-offset: 2px;
 
+  /* Surfaces follow the same weight ladder: canvas is quiet, selection is visible
+   * but must never visually outweigh the independent view frame. */
+  --think-surface-subtle: var(--background-primary-alt, var(--background-primary));
+  --think-surface-selection: var(--background-modifier-active-hover, var(--background-modifier-hover));
+
   /* View shell hierarchy: framed workspace panel, not accent-filled card. */
   --think-panel-bg: var(--think-bg-canvas);
-  --think-panel-header-bg: var(--background-secondary, var(--think-bg-canvas));
+  --think-panel-header-bg: var(--think-surface-subtle);
   --think-panel-header-hover-bg: var(--background-modifier-hover, var(--think-panel-header-bg));
-  --think-panel-header-border: var(--think-border-subtle);
+  --think-panel-header-border: var(--think-border-divider);
   --think-panel-header-accent: var(--interactive-accent);
-  --think-panel-border: var(--think-border-subtle);
-  --think-panel-selected-border: var(--interactive-accent);
+  --think-panel-border: var(--think-border-frame);
+  --think-panel-selected-border: var(--think-border-selection);
   --think-panel-title: var(--think-text-primary);
   --think-section-bg: var(--think-bg-surface-1);
   --think-section-border: var(--think-border-strong);
@@ -49,6 +60,13 @@
   --think-row-emphasis-border: var(--think-border-strong);
   --think-empty-state-bg: var(--think-bg-surface-1);
   --think-empty-state-text: var(--think-text-secondary);
+
+  /* Boundary roles. A frame marks an independently managed object; ordinary
+   * sections and rows stay flat and use rhythm before separators. */
+  --think-object-bg: var(--think-bg-canvas);
+  --think-object-border: var(--think-border-frame);
+  --think-object-border-hover: var(--think-border-strong);
+  --think-structural-divider: var(--think-border-divider);
 
   /* Interaction and status */
   --think-accent: var(--interactive-accent);
@@ -82,6 +100,26 @@
   --think-font-weight-medium: var(--font-medium, 500);
   --think-font-weight-semibold: var(--font-semibold, 600);
   --think-font-weight-bold: var(--font-bold, 700);
+
+  /* Typography roles. A semantic role owns emphasis; feature views do not
+   * promote themselves by picking a larger size or heavier weight. */
+  --think-type-page-size: var(--think-font-size-lg);
+  --think-type-page-weight: var(--think-font-weight-semibold);
+  --think-type-view-title-size: var(--think-font-size-sm);
+  --think-type-view-title-weight: var(--think-font-weight-semibold);
+  --think-type-section-size: var(--think-font-size-md);
+  --think-type-section-weight: var(--think-font-weight-semibold);
+  --think-type-subsection-size: var(--think-font-size-sm);
+  --think-type-subsection-weight: var(--think-font-weight-semibold);
+  --think-type-body-size: var(--think-font-size-sm);
+  --think-type-body-weight: var(--think-font-weight-regular);
+  --think-type-label-size: var(--think-font-size-sm);
+  --think-type-label-weight: var(--think-font-weight-medium);
+  --think-type-meta-size: var(--think-font-size-xs);
+  --think-type-table-header-size: var(--think-font-size-xs);
+  --think-type-table-header-weight: var(--think-font-weight-medium);
+  --think-type-data-emphasis-size: var(--think-font-size-sm);
+  --think-type-data-emphasis-weight: var(--think-font-weight-semibold);
 
   /* Radius. Let the active Obsidian theme define the visual character. */
   --think-radius-xs: var(--radius-s, 4px);
@@ -117,6 +155,12 @@
 
 @supports (color: color-mix(in srgb, white 50%, black)) {
   .think-os {
+    --think-border-divider: color-mix(in srgb, var(--think-border-subtle) 56%, transparent);
+    --think-border-control: color-mix(in srgb, var(--think-border-subtle) 86%, transparent);
+    --think-border-frame: color-mix(in srgb, var(--think-border-strong) 88%, var(--think-text-secondary) 12%);
+    --think-border-selection: color-mix(in srgb, var(--think-accent) 42%, var(--think-border-strong));
+    --think-surface-subtle: color-mix(in srgb, var(--think-bg-surface-1) 34%, var(--think-bg-canvas));
+    --think-surface-selection: color-mix(in srgb, var(--think-accent) 7%, transparent);
     --think-row-emphasis-bg: color-mix(in srgb, var(--think-text-primary) 6%, var(--think-bg-surface-1));
     --think-empty-state-bg: color-mix(in srgb, var(--think-bg-surface-1) 78%, var(--think-bg-canvas));
   }

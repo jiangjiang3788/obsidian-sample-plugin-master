@@ -1,18 +1,10 @@
 // src/platform/obsidian/modals/AiBatchConfirmSidebar.tsx
 /** @jsxImportSource preact */
-import { h } from 'preact';
-
 import {
-  Box,
-  Button,
   CheckCircleIcon,
   DeleteIcon,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   RadioButtonUncheckedIcon,
-  Typography,
+  ThinkButton,
 } from '@shared/ui/public';
 
 import type { AiBatchConfirmRecordItem } from './AiBatchConfirmModel';
@@ -28,79 +20,39 @@ export interface AiBatchConfirmSidebarProps {
   onSaveAll: () => void;
 }
 
-export function AiBatchConfirmSidebar({
-  records,
-  blocks,
-  currentIndex,
-  savedCount,
-  pendingCount,
-  onSelect,
-  onSaveAll,
-}: AiBatchConfirmSidebarProps) {
+export function AiBatchConfirmSidebar({ records, blocks, currentIndex, savedCount, pendingCount, onSelect, onSaveAll }: AiBatchConfirmSidebarProps) {
   return (
-    <Box
-      sx={{
-        width: '200px',
-        borderRight: '1px solid var(--background-modifier-border)',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-      }}
-    >
-      <Box sx={{ p: 1.5, borderBottom: '1px solid var(--background-modifier-border)' }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-          AI 识别结果
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          共 {records.length} 条 · 已保存 {savedCount}
-        </Typography>
-      </Box>
-      <List sx={{ flex: 1, overflow: 'auto', py: 0 }}>
+    <aside className="think-ai-batch-sidebar">
+      <div className="think-ai-batch-sidebar__header">
+        <strong>AI 识别结果</strong>
+        <span>{records.length} 条 · 已保存 {savedCount}</span>
+      </div>
+      <div className="think-ai-batch-sidebar__list">
         {records.map((record, index) => {
           const block = blocks.find((entry) => entry.id === record.blockId);
-          const isActive = index === currentIndex;
+          const active = index === currentIndex;
           return (
-            <ListItemButton
+            <button
+              type="button"
               key={record.id}
-              selected={isActive}
+              className={`think-ai-batch-sidebar__item${active ? ' is-selected' : ''}${record.skipped ? ' is-muted' : ''}`}
               onClick={() => onSelect(index)}
-              sx={{ py: 1, opacity: record.skipped ? 0.5 : 1, bgcolor: isActive ? 'action.selected' : 'transparent' }}
             >
-              <ListItemIcon sx={{ minWidth: 32 }}>
-                {record.saved ? (
-                  <CheckCircleIcon color="success" fontSize="small" />
-                ) : record.skipped ? (
-                  <DeleteIcon color="disabled" fontSize="small" />
-                ) : (
-                  <RadioButtonUncheckedIcon color="action" fontSize="small" />
-                )}
-              </ListItemIcon>
-              <ListItemText
-                primary={
-                  <Typography variant="body2" noWrap sx={{ fontWeight: isActive ? 600 : 400 }}>
-                    {block?.name || '未知类型'}
-                  </Typography>
-                }
-                secondary={
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="caption" noWrap color="text.secondary" sx={{ display: 'block' }}>
-                      {shortDisplay(record.goalLabel, '未匹配目标', 18)} · {shortDisplay(record.presetLabel, '默认预设', 18)}
-                    </Typography>
-                    <Typography variant="caption" noWrap color="text.secondary" sx={{ display: 'block' }}>
-                      {record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}`}
-                    </Typography>
-                  </Box>
-                }
-              />
-            </ListItemButton>
+              <span className="think-ai-batch-sidebar__status" aria-hidden="true">
+                {record.saved ? <CheckCircleIcon fontSize="small" /> : record.skipped ? <DeleteIcon fontSize="small" /> : <RadioButtonUncheckedIcon fontSize="small" />}
+              </span>
+              <span className="think-ai-batch-sidebar__text">
+                <strong>{block?.name || '未知类型'}</strong>
+                <span>{shortDisplay(record.goalLabel, '未匹配目标', 18)} · {shortDisplay(record.presetLabel, '默认预设', 18)}</span>
+                <span>{record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}`}</span>
+              </span>
+            </button>
           );
         })}
-      </List>
-      <Box sx={{ p: 1.5, borderTop: '1px solid var(--background-modifier-border)' }}>
-        <Button fullWidth variant="outlined" size="small" onClick={onSaveAll} disabled={pendingCount === 0}>
-          保存全部 ({pendingCount})
-        </Button>
-      </Box>
-    </Box>
+      </div>
+      <div className="think-ai-batch-sidebar__footer">
+        <ThinkButton size="sm" onClick={onSaveAll} disabled={pendingCount === 0}>保存全部 ({pendingCount})</ThinkButton>
+      </div>
+    </aside>
   );
 }

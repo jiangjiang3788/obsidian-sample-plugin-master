@@ -1,7 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { Box } from '@shared/ui/public';
 import { templateFieldValueToArray } from '@core/fields/public';
 import { normalizeQuickInputChoices } from '../components/quickInputOptionSelection';
 
@@ -46,8 +45,8 @@ export function QuickInputTagFieldRenderer({
 
   return (
     <QuickInputFieldFrame label={label} required={field.required}>
-      <Box className="think-ob-tag-editor">
-        <Box className="think-ob-tag-editor__row">
+      <div className="think-ob-tag-editor">
+        <div className="think-ob-tag-editor__row">
           {selected.map((item) => (
             <button
               key={`${field.key}-${item}`}
@@ -91,9 +90,9 @@ export function QuickInputTagFieldRenderer({
             }}
             placeholder={selected.length ? '添加...' : `输入${label}，回车添加`}
           />
-        </Box>
+        </div>
         {choices.length > 0 && (
-          <Box className="think-ob-tag-suggestions">
+          <div className="think-ob-tag-suggestions">
             {choices.map((choice) => (
               <button
                 key={`${field.key}-${choice.value}-${choice.label}`}
@@ -105,9 +104,9 @@ export function QuickInputTagFieldRenderer({
                 {choice.label}
               </button>
             ))}
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
     </QuickInputFieldFrame>
   );
 }

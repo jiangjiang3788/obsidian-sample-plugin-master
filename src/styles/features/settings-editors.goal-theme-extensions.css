@@ -5,8 +5,8 @@
 
 .think-os--settings .think-goal-template-editor__section-heading {
   margin-bottom: var(--think-space-3);
-  font-size: 0.95rem;
-  font-weight: var(--think-font-weight-bold);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
 }
 
 .think-os--settings .think-goal-template-editor__section-help {
@@ -20,12 +20,12 @@
 
 /* Phase 5: goal and metric settings follow the flat Settings row language. */
 .think-os--settings .think-goal-manager, .think-os--settings .think-goal-metrics {
-  width: 100%; max-width: 1240px; margin-inline: auto; display: grid; gap: var(--think-space-5);
+  width: 100%; max-width: 1240px; margin-inline: auto; display: grid; gap: var(--think-rhythm-section);
 }
 .think-os--settings .think-goal-manager__create {
   display: grid; grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.55fr) auto; gap: var(--think-space-3); align-items: center;
 }
-.think-os--settings .think-goal-manager__presets { display: grid; gap: var(--think-space-4); padding-top: var(--think-space-5); border-top: 1px solid var(--think-border-subtle); }
+.think-os--settings .think-goal-manager__presets { display: grid; gap: var(--think-rhythm-related); padding-top: 0; border: 0; }
 .think-os--settings .think-goal-manager__presets-header { display: flex; align-items: center; justify-content: space-between; gap: var(--think-space-4); flex-wrap: wrap; }
 .think-os--settings .think-goal-manager__title, .think-os--settings .think-goal-metrics__title { font-weight: var(--think-font-weight-semibold); }
 .think-os--settings .think-goal-metrics__identity, .think-os--settings .think-goal-metrics__target { display: grid; gap: var(--think-space-3); align-items: center; }
@@ -35,3 +35,8 @@
 @container think-settings (max-width: 720px) {
   .think-os--settings .think-goal-manager__create, .think-os--settings .think-goal-metrics__identity, .think-os--settings .think-goal-metrics__target { grid-template-columns: 1fr; }
 }
+
+/* Goal management is one create row followed by one matrix workspace. */
+.think-os--settings .think-goal-manager__create-row { padding-bottom: var(--think-rhythm-related); }
+.think-os--settings .think-goal-manager__status { margin-top: var(--think-rhythm-inline); }
+.think-os--settings .think-goal-template-matrix__toolbar { margin-bottom: var(--think-rhythm-related); }

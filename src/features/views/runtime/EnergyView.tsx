@@ -43,7 +43,7 @@ function GoalEnergyPanel({ panel, model, onOpenRecord, onOpenRecordOrigin }: {
       <div class="think-energy-view__primary">
         {model.config.showTimeline ? (
           <EnergyPeriodMap period={panel.period} selectedKey={selectionKey(selection)} onSelect={setSelection} onOpenRecordOrigin={onOpenRecordOrigin} />
-        ) : <div class="think-energy-view__timeline-off">精力地图已关闭。</div>}
+        ) : <div class="think-energy-view__timeline-off think-viz-empty">精力地图已关闭。</div>}
 
         {selection ? (
           <EnergySampleDetail
@@ -104,7 +104,7 @@ export function EnergyView({ items, records = items, module, dateRange, currentV
 
   const [firstPanel, ...otherPanels] = energyModel.goalPanels;
   return (
-    <div class="think-energy-view">
+    <div class="think-energy-view think-viz-surface">
       <div class="think-energy-view__goals">
         {firstPanel
           ? <GoalEnergyPanel panel={firstPanel} model={energyModel} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />

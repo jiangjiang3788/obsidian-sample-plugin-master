@@ -1,34 +1,14 @@
-.think-timer-row {
-  display: grid;
-  gap: 4px;
-  width: 100%;
-}
-
-.think-timer-row__stop-point {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-inline-start: 4px;
-}
-
-
-/* Namespaced on purpose: Obsidian themes may own a global .empty-state selector.
-   The timer empty body must never cover the floating header / drag / close controls. */
-.think-os .think-timer-empty-state {
-  display: grid;
-  place-items: center;
-  min-height: 44px;
-  padding: var(--think-space-3) var(--think-space-4);
-  color: var(--think-text-tertiary);
-  font-size: var(--think-font-size-sm);
-  line-height: 1.4;
-  pointer-events: none;
-  user-select: none;
-}
-
-.think-timer-row__countdown {
-  min-width: 64px;
-  color: var(--think-text-accent);
-  font-weight: var(--think-font-weight-semibold);
-  text-align: right;
+.think-timer-list { display: grid; gap: var(--think-space-2); max-height: 400px; overflow-y: auto; padding: var(--think-space-3); }
+.think-timer-row { width: 100%; }
+.think-timer-row__main { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--think-space-3); min-height: var(--think-control-height-md); }
+.think-timer-row__title { min-width: 0; overflow: hidden; color: var(--think-text-primary); font-size: var(--think-font-size-sm); text-overflow: ellipsis; white-space: nowrap; }
+.think-timer-row__title.is-clickable { cursor: pointer; }
+.think-timer-row__clock { min-width: 64px; color: var(--think-text-secondary); font-family: var(--think-font-monospace); font-size: var(--think-font-size-xs); font-variant-numeric: tabular-nums; text-align: right; }
+.think-timer-row__countdown { color: var(--think-text-accent); font-weight: var(--think-font-weight-semibold); }
+.think-timer-row__actions { display: flex; align-items: center; gap: var(--think-space-1); }
+.think-timer-row__stop-point { display: flex; align-items: center; gap: var(--think-space-3); padding-inline-start: var(--think-space-2); }
+.think-os .think-timer-empty-state { display: grid; place-items: center; min-height: 44px; padding: var(--think-space-3) var(--think-space-4); color: var(--think-text-secondary); font-size: var(--think-font-size-sm); pointer-events: none; user-select: none; }
+@container (max-width: 440px) {
+  .think-timer-row__main { grid-template-columns: minmax(0, 1fr) auto; }
+  .think-timer-row__actions { grid-column: 1 / -1; justify-content: flex-end; }
 }

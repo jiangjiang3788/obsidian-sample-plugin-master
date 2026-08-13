@@ -1,6 +1,6 @@
 /* View editor shared settings rows: semantic label left, control right. */
 .think-os--settings .think-view-editor-shell {
-  --think-view-editor-gap: var(--think-space-4);
+  --think-view-editor-gap: var(--think-rhythm-related);
   display: grid;
   gap: var(--think-view-editor-gap);
   min-width: 0;
@@ -22,14 +22,14 @@
   font-size: var(--think-font-size-xs);
   line-height: var(--think-line-height-normal);
 }
-.think-os--settings .think-view-editor-section { display: grid; gap: var(--think-space-3); min-width: 0; padding: 0; border: 0; background: transparent; }
-.think-os--settings .think-view-editor-section + .think-view-editor-section { margin-top: var(--think-space-3); padding-top: var(--think-space-1); }
+.think-os--settings .think-view-editor-section { display: grid; gap: var(--think-rhythm-row); min-width: 0; padding: 0; border: 0; background: transparent; }
+.think-os--settings .think-view-editor-section + .think-view-editor-section { margin-top: var(--think-rhythm-section); }
 .think-os--settings .think-view-editor-field-row {
   --think-view-editor-label-width: 112px;
   display: grid;
   grid-template-columns: var(--think-view-editor-label-width) minmax(0, 1fr);
   align-items: center;
-  gap: var(--think-space-5);
+  gap: var(--think-rhythm-group);
   min-width: 0;
 }
 .think-os--settings .think-view-editor-field-row--top { align-items: start; }
@@ -41,11 +41,11 @@
   .think-os--settings .think-view-editor-field-row--top .think-view-editor-field-row__label { padding-top: 0; }
 }
 
-.think-os--settings .think-timeline-category-list { display: grid; gap: 0; min-width: 0; }
+.think-os--settings .think-timeline-category-list { display: grid; gap: var(--think-rhythm-row); min-width: 0; }
 .think-os--settings .think-timeline-category-row {
   display: grid; grid-template-columns: auto auto minmax(120px, 160px) minmax(180px, 1fr) auto;
-  align-items: center; gap: var(--think-space-3); min-width: 0; padding: var(--think-space-3) 0;
-  border-bottom: 1px solid var(--think-border-subtle);
+  align-items: center; gap: var(--think-rhythm-row); min-width: 0; padding: var(--think-rhythm-row) 0;
+  border: 0;
 }
 .think-os--settings .think-timeline-category-row__order,
 .think-os--settings .think-timeline-category-row__files { display: flex; align-items: center; flex-wrap: wrap; gap: var(--think-space-2); min-width: 0; }

@@ -12,7 +12,7 @@
 
 .think-os--settings .think-statistics-editor__title {
   color: var(--think-text-primary);
-  font-weight: var(--think-font-weight-semibold);
+  font-weight: var(--think-type-section-weight);
 }
 
 .think-os--settings .think-statistics-editor__description {
@@ -47,16 +47,16 @@
 
 .think-os--settings .think-category-list {
   display: grid;
-  gap: 0;
+  gap: var(--think-rhythm-row);
 }
 
 .think-os--settings .think-category-row {
   display: flex;
   align-items: center;
-  gap: var(--think-space-5);
+  gap: var(--think-rhythm-group);
   min-width: 0;
-  padding: var(--think-space-3) 0;
-  border-bottom: 1px solid var(--think-border-subtle);
+  padding: var(--think-rhythm-row) 0;
+  border: 0;
   border-radius: 0;
   background: transparent;
 }

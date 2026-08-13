@@ -1,6 +1,7 @@
 // src/features/settings/views/runtime/components/timeline/ProgressBlock.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import type { JSX } from 'preact';
 import { useMemo } from 'preact/hooks';
 
 interface ProgressBlockProps {
@@ -49,7 +50,7 @@ export function ProgressBlock({
                 
                 if (percent < 0.1 && hours < 0.01) return null;
                 
-                const color = colorMap[category] || '#cccccc';
+                const color = colorMap[category] || 'var(--think-data-neutral)';
                 const displayPercent = Math.max(percent, 0.5);
                 
                 return (
@@ -60,7 +61,7 @@ export function ProgressBlock({
                     >
                         <div 
                             class="progress-block-bar" 
-                            style={{ background: color, width: `${displayPercent}%` }} 
+                            style={{ width: `${displayPercent}%`, '--timeline-progress-color': color } as JSX.CSSProperties} 
                         />
                         <span 
                             class={`progress-block-text ${

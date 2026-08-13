@@ -17,7 +17,7 @@ interface Props {
 
 export function EnergyPeriodMap(props: Props) {
   const { period } = props;
-  if (!period) return <div class="think-energy-period-map think-energy-period-map--empty">本周期没有精力记录。</div>;
+  if (!period) return <div class="think-energy-period-map think-energy-period-map--empty think-viz-empty">本周期没有精力记录。</div>;
   if (period.mode === 'day-horizontal') return <EnergyDayMap {...props} period={period} />;
   if (period.mode === 'date-time') return <EnergyDateTimeMap {...props} period={period} />;
   return <EnergyCalendarMap {...props} period={period} />;

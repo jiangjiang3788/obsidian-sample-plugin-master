@@ -48,7 +48,7 @@ export function TimelineDailyView({
   const timeAxisRows = buildTimelineTimeAxisRows(maxHours, hourHeight);
 
   return (
-    <div class="timeline-view-wrapper" {...zoomHandlers}>
+    <div class="timeline-view-wrapper think-viz-surface" {...zoomHandlers}>
       <div class="timeline-sticky-header">
         <div class="summary-progress-container" style={{ flex: `0 0 ${timeAxisWidth}px` }}>
           <div class="summary-title">总结</div>

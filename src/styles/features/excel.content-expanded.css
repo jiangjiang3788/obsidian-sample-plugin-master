@@ -1,8 +1,8 @@
 /* Excel expanded content and markdown cell rendering. */
 /* ExcelView content 字段全文 / Markdown 展示增强 */
 .excel-view-content-mode-button[aria-pressed="true"] {
-    border-color: var(--think-accent);
-    background: var(--think-accent-muted);
+    border-color: var(--think-border-selection);
+    background: var(--think-surface-selection);
     color: var(--think-text-accent);
 }
 

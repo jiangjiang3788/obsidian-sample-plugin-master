@@ -2,7 +2,7 @@
 
 import type { ComponentChildren } from 'preact';
 
-import { DragIndicatorIcon } from '@shared/ui/public';
+import { CloseIcon, DragIndicatorIcon, ThinkIconButton } from '@shared/ui/public';
 
 import { toMouseEvent, toTouchEvent } from './floatingPanelEvents';
 
@@ -22,29 +22,25 @@ export function FloatingPanelHeader({ inline, title, headerActions, onClose, onD
                 onTouchStart={(event) => onDragStart(toTouchEvent(event))}
                 className="think-floating-panel__drag-region"
             >
-                {!inline && <div className="think-floating-panel__drag-icon">
+                {!inline && <span className="think-floating-panel__drag-icon" aria-hidden="true">
                     <DragIndicatorIcon fontSize="inherit" />
-                </div>}
-                {title && (
-                    <div className="think-floating-panel__title">
-                        {title}
-                    </div>
-                )}
+                </span>}
+                {title && <div className="think-floating-panel__title">{title}</div>}
             </div>
 
             <div className="think-floating-panel__actions">
                 {headerActions}
                 {onClose && (
-                    <button
+                    <ThinkIconButton
+                        label="关闭"
+                        size="sm"
+                        className="think-floating-panel__close"
+                        icon={<CloseIcon fontSize="small" />}
                         onClick={(event) => {
                             event.stopPropagation();
                             onClose();
                         }}
-                        className="think-floating-panel__close"
-                        aria-label="Close"
-                    >
-                        ×
-                    </button>
+                    />
                 )}
             </div>
         </div>

@@ -141,7 +141,7 @@
   to { transform: rotate(1turn); }
 }
 
-.think-os .think-button[aria-pressed="true"]:not(.think-button--primary, .think-button--danger) { background: var(--think-accent-muted); border-color: var(--think-accent); color: var(--think-text-accent); }
+.think-os .think-button[aria-pressed="true"]:not(.think-button--primary, .think-button--danger) { background: var(--think-surface-selection); border-color: var(--think-border-selection); color: var(--think-text-accent); }
 
 
 .think-os .think-button__icon > svg { width: var(--think-button-icon-size); height: var(--think-button-icon-size); }

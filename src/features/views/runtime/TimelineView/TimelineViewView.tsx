@@ -66,7 +66,7 @@ export function TimelineViewView(props: TimelineViewViewProps) {
   } = props;
 
   if (timelineTasksCount === 0) {
-    return <div class="timeline-empty-state">当前范围内没有数据。</div>;
+    return <div class="timeline-empty-state think-viz-empty">当前范围内没有数据。</div>;
   }
 
   if (isSummaryView) {
@@ -81,7 +81,7 @@ export function TimelineViewView(props: TimelineViewViewProps) {
   }
 
   if (!dailyViewData) {
-    return <div class="timeline-empty-state">当前范围内没有数据。</div>;
+    return <div class="timeline-empty-state think-viz-empty">当前范围内没有数据。</div>;
   }
 
   return (

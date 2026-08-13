@@ -143,8 +143,8 @@
 .heatmap-day-section-title {
     margin: 0;
     color: var(--think-text-primary);
-    font-size: var(--think-font-size-md);
-    font-weight: var(--think-font-weight-semibold);
+    font-size: var(--think-type-section-size);
+    font-weight: var(--think-type-section-weight);
     line-height: var(--think-line-height-tight);
 }
 

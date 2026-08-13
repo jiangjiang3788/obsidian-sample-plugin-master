@@ -12,7 +12,7 @@
     --think-segment-height: var(--tp-toolbar-control-height);
     gap: 0; height: var(--tp-toolbar-control-height); box-sizing: border-box;
 }
-.tp-toolbar__view-switcher .think-segmented-control__item { min-height: 0; height: 100%; }
+.tp-toolbar__view-switcher .think-segmented-control__item { min-height: 0; height: 100%; font-size: var(--think-type-view-title-size); }
 .tp-toolbar__date-group,
 .tp-toolbar__date-actions,
 .tp-toolbar__filters,
@@ -26,8 +26,8 @@
 .tp-toolbar-date-display {
     height: var(--tp-toolbar-control-height); min-height: 0; box-sizing: border-box; display: inline-flex;
     align-items: center; justify-content: center; padding-inline: var(--think-space-3);
-    color: var(--think-text-primary); font-size: var(--think-font-size-sm);
-    font-weight: var(--think-font-weight-semibold); line-height: 1;
+    color: var(--think-text-primary); font-size: var(--think-type-view-title-size);
+    font-weight: var(--think-type-view-title-weight); line-height: 1;
     text-align: center; white-space: nowrap; user-select: none;
     border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm);
     background: var(--think-bg-surface-1);
@@ -36,7 +36,7 @@
     --think-icon-button-size: var(--tp-toolbar-control-height);
     border-color: var(--think-border-subtle); background: var(--think-bg-surface-1);
 }
-.tp-toolbar .think-button { --think-button-height: var(--tp-toolbar-control-height); }
+.tp-toolbar .think-button { --think-button-height: var(--tp-toolbar-control-height); --think-button-font-size: var(--think-type-view-title-size); }
 .tp-toolbar__spacer { min-width: var(--think-space-2); flex: 1 1 auto; }
 .tp-toolbar__filters { flex: 0 0 auto; gap: var(--think-space-2); }
 .tp-toolbar-data-filter,

@@ -1,21 +1,13 @@
 // src/platform/obsidian/modals/NamePromptModal.tsx
 /** @jsxImportSource preact */
-import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import type { App } from 'obsidian';
 import { Modal } from 'obsidian';
-import { TextField, Button } from '@shared/ui/public';
+import { ModalHeader, ThinkButton, ThinkInput } from '@shared/ui/public';
 import type { NamePromptOptions } from '@core/ports/public';
 import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 
-function PromptComponent({
-  title,
-  placeholder,
-  ctaText,
-  initialValue,
-  onSubmit,
-  onCancel,
-}: {
+function PromptComponent({ title, placeholder, ctaText, initialValue, onSubmit, onCancel }: {
   title: string;
   placeholder?: string;
   ctaText?: string;
@@ -24,56 +16,36 @@ function PromptComponent({
   onCancel: () => void;
 }) {
   const [value, setValue] = useState(initialValue || '');
-
-  const handleConfirm = () => {
-    onSubmit(value.trim());
-  };
-
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleConfirm();
-    }
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      onCancel();
-    }
+  const handleConfirm = () => onSubmit(value.trim());
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter') { event.preventDefault(); handleConfirm(); }
+    if (event.key === 'Escape') { event.preventDefault(); onCancel(); }
   };
 
   return (
-    <div class="think-modal">
-      <h3>{title}</h3>
-      <TextField
-        autoFocus
-        fullWidth
-        variant="outlined"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => setValue((e.target as HTMLInputElement).value)}
-        onKeyDown={handleKeyDown as any}
-        sx={{ mt: 2 }}
-      />
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', gap: '8px' }}>
-        <Button onClick={handleConfirm} variant="contained">
-          {ctaText || '确认'}
-        </Button>
-        <Button onClick={onCancel}>取消</Button>
+    <div className="think-overlay-form think-name-prompt">
+      <ModalHeader left={<span>{title}</span>} onClose={onCancel} />
+      <div className="think-overlay-body think-name-prompt__body">
+        <ThinkInput
+          autoFocus
+          value={value}
+          placeholder={placeholder}
+          onInput={(event) => setValue((event.currentTarget as HTMLInputElement).value)}
+          onKeyDown={handleKeyDown as any}
+        />
+      </div>
+      <div className="think-overlay-footer">
+        <ThinkButton onClick={onCancel}>取消</ThinkButton>
+        <ThinkButton variant="primary" onClick={handleConfirm}>{ctaText || '确认'}</ThinkButton>
       </div>
     </div>
   );
 }
 
-/**
- * NamePromptModal
- * - openAndGetValue(): Promise<string|null>
- * - 点击遮罩/右上角 X / Esc 关闭时也会 resolve(null)，避免 Promise 悬挂
- */
 export class NamePromptModal extends Modal {
   private resolvePromise: ((value: string | null) => void) | null = null;
 
-  constructor(app: App, private options: NamePromptOptions) {
-    super(app);
-  }
+  constructor(app: App, private options: NamePromptOptions) { super(app); }
 
   openAndGetValue(): Promise<string | null> {
     return new Promise((resolve) => {
@@ -83,40 +55,30 @@ export class NamePromptModal extends Modal {
   }
 
   onOpen() {
-    prepareThinkModal(this, 'think-modal-host--medium');
-    renderModalContent(
-      this.contentEl,
+    prepareThinkModal(this, 'think-modal-host--medium', 'think-name-prompt-modal');
+    renderModalContent(this.contentEl, (
       <PromptComponent
         title={this.options.title}
         placeholder={this.options.placeholder}
         ctaText={this.options.ctaText}
         initialValue={this.options.defaultValue}
         onSubmit={(value) => {
-          // 空字符串按取消处理，避免返回无意义值
-          const v = value.trim();
-          if (this.resolvePromise) {
-            this.resolvePromise(v ? v : null);
-            this.resolvePromise = null;
-          }
+          this.resolvePromise?.(value || null);
+          this.resolvePromise = null;
           this.close();
         }}
         onCancel={() => {
-          if (this.resolvePromise) {
-            this.resolvePromise(null);
-            this.resolvePromise = null;
-          }
+          this.resolvePromise?.(null);
+          this.resolvePromise = null;
           this.close();
         }}
       />
-    );
+    ));
   }
 
   onClose() {
-    // 用户直接关闭（点击遮罩/右上角/ESC）也必须 resolve，防止 await 卡死
-    if (this.resolvePromise) {
-      this.resolvePromise(null);
-      this.resolvePromise = null;
-    }
+    this.resolvePromise?.(null);
+    this.resolvePromise = null;
     unmountModalContent(this.contentEl);
   }
 }

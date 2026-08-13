@@ -1,125 +1,114 @@
-/* Statistics chart rows: charts remain charts, but the shell is a flat list surface.
- * Period hierarchy is expressed by indentation/separators in statistics.grids.css.
+/* Statistics chart blocks use the shared visualization scale. Charts remain
+ * feature geometry; ordinary typography / hover / guide contrast is shared.
  */
 .sv-chart-block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--think-space-1);
-    height: 120px;
-    min-width: 0;
-    padding: var(--think-space-2) 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    cursor: pointer;
-    transition: background-color var(--think-duration-normal) var(--think-ease-standard);
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-1);
+  height: var(--sv-chart-height, 104px);
+  min-width: 0;
+  padding: var(--think-space-2) 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--think-duration-fast) var(--think-ease-standard);
 }
 
 .sv-chart-block.is-compact {
-    height: 84px;
-    padding: var(--think-space-2) 0;
-    gap: var(--think-space-1);
+  --sv-chart-height: 68px;
+  padding-block: var(--think-space-1);
 }
 
-.sv-chart-block:hover {
-    background: color-mix(in srgb, var(--think-bg-hover) 42%, transparent);
-    box-shadow: none;
-    transform: none;
+.sv-chart-block:hover,
+.sv-chart-block:focus-visible {
+  background: var(--think-viz-hover);
 }
 
-.sv-chart-block.is-empty .sv-chart-label,
-.sv-chart-block.is-empty .sv-chart-number,
-.sv-chart-block.is-empty .sv-chart-category {
-    color: var(--think-text-subtle);
+.sv-chart-block:focus-visible {
+  outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
+  outline-offset: 1px;
+}
+
+.sv-chart-block.is-empty :is(.sv-chart-label, .sv-chart-number, .sv-chart-category) {
+  color: var(--think-text-subtle);
 }
 
 .sv-chart-block.is-empty .sv-vbar-bar {
-    opacity: 0.28;
+  opacity: 0.28;
 }
 
 .sv-chart-label {
-    flex-shrink: 0;
-    overflow: hidden;
-    color: var(--think-text-primary);
-    font-weight: var(--think-font-weight-semibold);
-    text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sv-chart-content {
-    display: flex;
-    flex-grow: 1;
-    flex-direction: column;
-    gap: var(--think-space-1);
-    min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--think-space-1);
+  min-height: 0;
 }
 
-.sv-chart-numbers {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2px;
-    min-height: 12px;
+.sv-chart-numbers,
+.sv-chart-categories {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-1);
+}
+
+.sv-chart-number,
+.sv-chart-category {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 12px;
+  overflow: hidden;
+  line-height: var(--think-line-height-tight);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sv-chart-number {
-    flex: 1;
-    min-height: 12px;
-    color: var(--think-text-secondary);
-    font-weight: var(--think-font-weight-semibold);
-    line-height: 12px;
-    text-align: center;
-    white-space: nowrap;
-}
-
-.sv-chart-bars-container {
-    display: flex;
-    flex-grow: 1;
-    align-items: flex-end;
-    gap: 2px;
-    min-height: 32px;
-    border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 72%, transparent);
-}
-
-.sv-vbar-wrapper {
-    display: flex;
-    flex: 1;
-    align-items: flex-end;
-    justify-content: center;
-    min-width: 0;
-    height: 100%;
-    cursor: pointer;
-}
-
-.sv-vbar-wrapper:hover {
-    opacity: 0.8;
-}
-
-.sv-vbar-bar {
-    width: 100%;
-    min-height: 2px;
-    border-radius: 3px 3px 0 0;
-    background: var(--think-data-neutral);
-    transition: height var(--think-duration-normal) var(--think-ease-standard);
-}
-
-.sv-chart-categories {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2px;
-    min-height: 14px;
+  font-size: var(--think-viz-font-axis);
+  font-weight: var(--think-font-weight-semibold);
 }
 
 .sv-chart-category {
-    flex: 1;
-    min-height: 14px;
-    overflow: hidden;
-    color: var(--think-text-secondary);
-    font-weight: var(--think-font-weight-medium);
-    line-height: 12px;
-    text-align: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  color: var(--think-text-secondary);
+}
+
+.sv-chart-bars-container {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  gap: var(--think-space-1);
+  min-height: 28px;
+  border-bottom: 1px solid var(--think-viz-guide-strong);
+}
+
+.sv-vbar-wrapper {
+  display: flex;
+  flex: 1 1 0;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 0;
+  height: 100%;
+  cursor: pointer;
+}
+
+.sv-vbar-wrapper:hover {
+  opacity: 0.78;
+}
+
+.sv-vbar-bar {
+  width: min(100%, 14px);
+  min-height: 2px;
+  border-radius: var(--think-radius-xs) var(--think-radius-xs) 0 0;
+  background: var(--think-data-neutral);
+  transition: height var(--think-duration-normal) var(--think-ease-standard);
 }

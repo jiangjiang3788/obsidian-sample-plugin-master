@@ -31,7 +31,7 @@ export function DayStatisticsView({
 
 
   return (
-    <div class="statistics-view">
+    <div class="statistics-view think-viz-surface">
       <div class="sv-timeline">
         <div class="sv-row">
           <ChartBlock

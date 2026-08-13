@@ -1,7 +1,5 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
 import type { RefObject } from 'preact';
-import { Box, Typography } from '@shared/ui/public';
 import { ChatIcon, ModalHeader } from '@shared/ui/public';
 import type { ChatMessage, ChatSession } from '@core/ai/public';
 import type { ThemeDefinition } from '@core/types/public';
@@ -12,16 +10,12 @@ import { ChatComposer } from './components/ChatComposer';
 
 export interface AiChatModalViewProps {
     closeModal: () => void;
-
-    // sessions
     sessions: ChatSession[];
     currentSessionId: string | null;
     currentSessionTitle: string | null;
     onNewSession: () => void;
     onSelectSession: (sessionId: string) => void;
     onDeleteSession: (sessionId: string, e: Event) => void;
-
-    // filters
     enableRetrieval: boolean;
     setEnableRetrieval: (enabled: boolean) => void;
     themes: ThemeDefinition[];
@@ -33,65 +27,29 @@ export interface AiChatModalViewProps {
     selectedBlockId: string;
     setSelectedBlockId: (id: string) => void;
     indexItemCount: number;
-
-    // messages
     messages: ChatMessage[];
     isLoading: boolean;
     messagesEndRef: RefObject<HTMLDivElement>;
-
-    // error
     error: string | null;
-
-    // composer
     inputText: string;
     setInputText: (t: string) => void;
     onKeyDown: (e: KeyboardEvent) => void;
     onSend: () => void;
     composerDisabled: boolean;
     composerPlaceholder: string;
-
-    emptyHint: {
-        title: string;
-        retrievalHint?: string;
-    };
+    emptyHint: { title: string; retrievalHint?: string };
 }
 
 export function AiChatModalView(props: AiChatModalViewProps) {
     const {
-                closeModal,
-        sessions,
-        currentSessionId,
-        currentSessionTitle,
-        onNewSession,
-        onSelectSession,
-        onDeleteSession,
-        enableRetrieval,
-        setEnableRetrieval,
-        themes,
-        selectedThemes,
-        setSelectedThemes,
-        selectedType,
-        setSelectedType,
-        blocks,
-        selectedBlockId,
-        setSelectedBlockId,
-        indexItemCount,
-        messages,
-        isLoading,
-        messagesEndRef,
-        error,
-        inputText,
-        setInputText,
-        onKeyDown,
-        onSend,
-        composerDisabled,
-        composerPlaceholder,
-        emptyHint,
+        closeModal, sessions, currentSessionId, currentSessionTitle, onNewSession, onSelectSession, onDeleteSession,
+        enableRetrieval, setEnableRetrieval, themes, selectedThemes, setSelectedThemes, selectedType, setSelectedType,
+        blocks, selectedBlockId, setSelectedBlockId, indexItemCount, messages, isLoading, messagesEndRef, error,
+        inputText, setInputText, onKeyDown, onSend, composerDisabled, composerPlaceholder, emptyHint,
     } = props;
 
     return (
-        <Box sx={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
-            {/* 左侧：会话列表 */}
+        <div className="think-ai-chat">
             <SessionList
                 sessions={sessions}
                 currentSessionId={currentSessionId}
@@ -100,23 +58,17 @@ export function AiChatModalView(props: AiChatModalViewProps) {
                 onDeleteSession={onDeleteSession}
             />
 
-            {/* 右侧：聊天区域 */}
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                {/* 头部 */}
+            <section className="think-ai-chat__main">
                 <ModalHeader
-                    padding={1.5}
                     left={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <ChatIcon color="primary" />
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                {currentSessionTitle ?? 'AI 助手'}
-                            </Typography>
-                        </Box>
+                        <div className="think-ai-chat__title">
+                            <ChatIcon fontSize="small" />
+                            <span>{currentSessionTitle ?? 'AI 助手'}</span>
+                        </div>
                     }
                     onClose={closeModal}
                 />
 
-                {/* 过滤器栏 */}
                 <FiltersBar
                     enableRetrieval={enableRetrieval}
                     setEnableRetrieval={setEnableRetrieval}
@@ -131,25 +83,16 @@ export function AiChatModalView(props: AiChatModalViewProps) {
                     indexItemCount={indexItemCount}
                 />
 
-                {/* 消息区域 */}
                 <ChatMessages
-                        messages={messages}
+                    messages={messages}
                     isLoading={isLoading}
                     emptyHint={emptyHint}
                     enableRetrieval={enableRetrieval}
                     messagesEndRef={messagesEndRef}
                 />
 
-                {/* 错误提示 */}
-                {error && (
-                    <Box sx={{ px: 2, pb: 1 }}>
-                        <Typography color="error" variant="body2">
-                            {error}
-                        </Typography>
-                    </Box>
-                )}
+                {error ? <div className="think-ai-chat__error" role="alert">{error}</div> : null}
 
-                {/* 输入区域 */}
                 <ChatComposer
                     inputText={inputText}
                     setInputText={setInputText}
@@ -159,7 +102,7 @@ export function AiChatModalView(props: AiChatModalViewProps) {
                     disabled={composerDisabled}
                     placeholder={composerPlaceholder}
                 />
-            </Box>
-        </Box>
+            </section>
+        </div>
     );
 }

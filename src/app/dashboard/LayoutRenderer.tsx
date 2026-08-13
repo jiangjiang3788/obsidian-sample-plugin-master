@@ -183,7 +183,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
         : (expandedIndex >= 0 && expandedIndex < renderedExpandedCount)
     );
 
-    const handlePanelToggle = (event: MouseEvent) => {
+    const handlePanelToggle = (event: MouseEvent | KeyboardEvent) => {
       if (freeformProps) {
         freeformProps.onToggleCollapsed();
       } else {
