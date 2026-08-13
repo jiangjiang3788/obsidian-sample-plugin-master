@@ -47,7 +47,7 @@
 
 .think-os--settings .think-category-list {
   display: grid;
-  gap: var(--think-space-4);
+  gap: 0;
 }
 
 .think-os--settings .think-category-row {
@@ -55,10 +55,10 @@
   align-items: center;
   gap: var(--think-space-5);
   min-width: 0;
-  padding: var(--think-space-4);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-sm);
-  background: var(--think-bg-surface-1);
+  padding: var(--think-space-3) 0;
+  border-bottom: 1px solid var(--think-border-subtle);
+  border-radius: 0;
+  background: transparent;
 }
 
 .think-os--settings .think-category-row__name {
@@ -100,15 +100,6 @@
   display: flex;
   gap: var(--think-space-3);
   flex-wrap: wrap;
-}
-
-.think-os--settings .think-settings-nav .MuiButton-root {
-  border-radius: var(--think-radius-pill);
-}
-
-.think-os--settings .think-settings-description-indent {
-  margin-top: calc(-1 * var(--think-space-5));
-  padding-left: var(--think-space-8);
 }
 
 @container think-settings (max-width: 520px) {

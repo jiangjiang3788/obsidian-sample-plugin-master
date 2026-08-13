@@ -1,82 +1,10 @@
-/* Block manager and block editor composition. */
-.think-os--settings .think-block-manager {
-  width: min(100%, 900px);
-  margin-inline: auto;
-}
-
-.think-os--settings .think-block-manager__header {
-  margin-bottom: var(--think-space-6);
-}
-
-.think-os--settings .think-block-manager__description {
-  margin-bottom: var(--think-space-5);
-}
-
-.think-os--settings .think-block-accordion::before {
-  display: none;
-}
-
-.think-os--settings .think-block-accordion__summary {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.think-os--settings .think-block-accordion__drag {
-  display: flex;
-  align-items: center;
-  color: var(--think-text-disabled);
-  cursor: grab;
-}
-
-.think-os--settings .think-block-accordion__details {
-  border-top: 1px solid var(--think-border-subtle);
-  background: var(--think-bg-surface-2);
-}
-
-.think-os--settings .think-block-editor {
-  display: grid;
-  gap: var(--think-space-7);
-}
-
-.think-os--settings .think-block-editor__field--name {
-  max-width: 400px;
-}
-
-.think-os--settings .think-block-editor__field--category {
-  max-width: 520px;
-}
-
-.think-os--settings .think-block-editor__title {
-  margin-bottom: var(--think-space-4);
-  font-size: var(--think-font-size-lg);
-  font-weight: var(--think-font-weight-semibold);
-}
-
-.think-os--settings .think-block-editor__title--spacious {
-  margin-bottom: var(--think-space-5);
-}
-
-.think-os--settings .think-block-editor__hint {
-  margin-bottom: var(--think-space-5);
-  padding: var(--think-space-5);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
-  background: var(--think-bg-canvas);
-}
-
-.think-os--settings .think-block-editor__template-example {
-  display: block;
-  margin-top: var(--think-space-3);
-  font-family: var(--think-font-monospace);
-}
-
-.think-os--settings .think-block-editor__output-header {
-  margin-bottom: var(--think-space-4);
-}
-
-.think-os--settings .think-block-editor__template textarea {
-  font-family: var(--think-font-monospace);
-  font-size: var(--think-font-size-sm);
-}
+/* Block manager and block editor: flat rows, one boundary per record type. */
+.think-os--settings .think-block-manager { width: min(100%, 980px); margin-inline: auto; }
+.think-os--settings .think-block-manager__header { margin-bottom: var(--think-space-3); }
+.think-os--settings .think-block-manager__list { display: grid; gap: 0; border-top: 1px solid var(--think-border-subtle); }
+.think-os--settings .think-block-accordion { border-bottom: 1px solid var(--think-border-subtle); background: transparent; }
+.think-os--settings .think-block-accordion__summary { width: 100%; min-height: var(--think-control-height-lg); display: grid; grid-template-columns: auto minmax(0,1fr) auto auto auto; align-items: center; gap: var(--think-space-2); padding: var(--think-space-2) 0; }
+.think-os--settings .think-block-accordion__drag { width: var(--think-control-height-sm); height: var(--think-control-height-sm); display: inline-grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--think-text-disabled); cursor: grab; }
+.think-os--settings .think-block-accordion__title { min-width: 0; padding: 0; border: 0; background: transparent; color: var(--think-text-primary); font: inherit; font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-medium); text-align: left; cursor: pointer; }
+.think-os--settings .think-block-accordion__details { padding: var(--think-space-4) 0 var(--think-space-5) calc(var(--think-control-height-sm) + var(--think-space-2)); border-top: 1px solid var(--think-border-subtle); background: transparent; }
+.think-os--settings .think-block-editor { display: grid; gap: var(--think-space-3); }

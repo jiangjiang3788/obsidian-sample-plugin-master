@@ -18,7 +18,7 @@
 }
 
 .think-os .think-settings-panel {
-  padding: var(--think-space-7) var(--think-space-6) var(--think-space-6);
+  padding: var(--think-space-5) var(--think-space-6) var(--think-space-6);
 }
 
 .think-os.think-setting-root--launcher {
@@ -32,20 +32,6 @@
   font-weight: var(--think-font-weight-bold);
 }
 
-.think-os .think-settings-launcher__description {
-  margin: 0 0 var(--think-space-6);
-  color: var(--think-text-secondary);
-  font-size: var(--think-font-size-sm);
-  line-height: var(--think-line-height-relaxed);
-}
-
-.think-os .think-settings-launcher__hint {
-  display: block;
-  margin-top: var(--think-space-5);
-  color: var(--think-text-secondary);
-  font-size: var(--think-font-size-xs);
-}
-
 /* V3: Settings features may use container queries without depending on the viewport. */
 .think-os.think-setting-root {
   container-name: think-settings;
@@ -54,7 +40,7 @@
 
 .think-settings-workspace-view {
   overflow: auto;
-  padding: var(--think-space-5) var(--think-space-6) var(--think-space-8);
+  padding: var(--think-space-5) var(--think-space-6) var(--think-space-7);
 }
 
 .think-setting-root--workspace {

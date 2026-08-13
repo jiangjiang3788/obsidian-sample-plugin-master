@@ -1,15 +1,11 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
+import { h, type ComponentChildren } from 'preact';
 import type { Layout } from '@core/types/public';
 import {
-  Button,
-  Checkbox,
-  FormControlLabel,
-  Radio,
-  RadioGroup as MuiRadioGroup,
-  Stack,
-  TextField,
-  Typography,
+  ThinkButton,
+  ThinkCheckbox,
+  ThinkInput,
+  ThinkSegmentedControl,
 } from '@shared/ui/public';
 
 const PERIOD_OPTIONS = ['年', '季', '月', '周', '天'].map((value) => ({ value, label: value }));
@@ -26,7 +22,16 @@ const DISPLAY_MODE_OPTIONS = [
 type Option = { value: string; label: string };
 type LayoutUpdate = (updates: Partial<Layout>) => void;
 
-function AlignedRadioGroup({
+function SettingsRow({ label, children, top = false }: { label: string; children: ComponentChildren; top?: boolean }) {
+  return (
+    <div className={`think-settings-row think-layout-editor__control-row${top ? ' think-settings-row--top' : ''}`}>
+      <span className={`think-settings-row__label${top ? ' think-settings-row__label--top' : ''}`}>{label}</span>
+      <div className="think-settings-row__body">{children}</div>
+    </div>
+  );
+}
+
+function SettingsSegmentedRow({
   label,
   options,
   selectedValue,
@@ -38,74 +43,66 @@ function AlignedRadioGroup({
   onChange: (value: string) => void;
 }) {
   return (
-    <Stack direction="row" alignItems="center" spacing={2} className="think-settings-row">
-      <Typography className="think-settings-row__label">{label}</Typography>
-      <MuiRadioGroup row value={selectedValue} onChange={(event) => onChange((event.target as HTMLInputElement).value)}>
-        {options.map((option) => (
-          <FormControlLabel key={option.value} value={option.value} control={<Radio size="small" />} label={option.label} />
-        ))}
-      </MuiRadioGroup>
-    </Stack>
+    <SettingsRow label={label}>
+      <ThinkSegmentedControl
+        label={label}
+        value={selectedValue}
+        options={options}
+        onChange={onChange}
+        size="sm"
+        className="think-layout-editor__segmented"
+      />
+    </SettingsRow>
   );
 }
 
 export function LayoutGeneralSettings({ layout, onUpdate }: { layout: Layout; onUpdate: LayoutUpdate }) {
   return (
-    <>
-      <TextField
-        label="布局名称"
-        value={layout.name || ''}
-        onChange={(event) => onUpdate({ name: (event.target as HTMLInputElement).value })}
-        size="small"
-        fullWidth
-      />
-
-      <Stack direction="row" alignItems="center" spacing={2} className="think-settings-row">
-        <Typography className="think-settings-row__label">工具栏</Typography>
-        <FormControlLabel
-          control={
-            <Checkbox
-              size="small"
-              checked={!layout.hideToolbar}
-              onChange={(event) => onUpdate({ hideToolbar: !(event.target as HTMLInputElement).checked })}
-            />
-          }
-          label={<Typography noWrap>显示工具栏/导航器</Typography>}
-          className="think-settings-control-no-shrink"
+    <div className="think-layout-editor__general">
+      <SettingsRow label="布局名称">
+        <ThinkInput
+          aria-label="布局名称"
+          value={layout.name || ''}
+          onInput={(event) => onUpdate({ name: (event.currentTarget as HTMLInputElement).value })}
         />
-      </Stack>
+      </SettingsRow>
 
-      <Stack direction="row" alignItems="center" spacing={2} className="think-settings-row">
-        <Typography className="think-settings-row__label">初始日期</Typography>
-        <TextField
-          type="date"
-          size="small"
-          variant="outlined"
-          disabled={!!layout.initialDateFollowsNow}
-          value={layout.initialDate || ''}
-          onChange={(event) => onUpdate({ initialDate: (event.target as HTMLInputElement).value })}
-          className="think-settings-field--date"
+      <SettingsRow label="工具栏">
+        <ThinkCheckbox
+          checked={!layout.hideToolbar}
+          onChange={(event) => onUpdate({ hideToolbar: !(event.currentTarget as HTMLInputElement).checked })}
+          label="显示工具栏 / 导航器"
+          compact
         />
-        <FormControlLabel
-          control={
-            <Checkbox
-              size="small"
-              checked={!!layout.initialDateFollowsNow}
-              onChange={(event) => onUpdate({ initialDateFollowsNow: (event.target as HTMLInputElement).checked })}
-            />
-          }
-          label={<Typography noWrap>跟随今日</Typography>}
-        />
-      </Stack>
+      </SettingsRow>
 
-      <AlignedRadioGroup
-        label="初始视图（时间窗）"
+      <SettingsRow label="初始日期">
+        <div className="think-layout-editor__inline-controls">
+          <ThinkInput
+            aria-label="初始日期"
+            type="date"
+            disabled={!!layout.initialDateFollowsNow}
+            value={layout.initialDate || ''}
+            onInput={(event) => onUpdate({ initialDate: (event.currentTarget as HTMLInputElement).value })}
+            className="think-settings-field--date"
+          />
+          <ThinkCheckbox
+            checked={!!layout.initialDateFollowsNow}
+            onChange={(event) => onUpdate({ initialDateFollowsNow: (event.currentTarget as HTMLInputElement).checked })}
+            label="跟随今日"
+            compact
+          />
+        </div>
+      </SettingsRow>
+
+      <SettingsSegmentedRow
+        label="初始视图"
         options={PERIOD_OPTIONS}
         selectedValue={layout.initialView || '月'}
         onChange={(value) => onUpdate({ initialView: value })}
       />
 
-      <AlignedRadioGroup
+      <SettingsSegmentedRow
         label="排列方式"
         options={DISPLAY_MODE_OPTIONS}
         selectedValue={layout.displayMode || 'list'}
@@ -113,19 +110,17 @@ export function LayoutGeneralSettings({ layout, onUpdate }: { layout: Layout; on
       />
 
       {layout.displayMode === 'grid' && (
-        <Stack direction="row" alignItems="center" spacing={2} className="think-settings-indent">
-          <TextField
-            label="列数"
+        <SettingsRow label="网格列数">
+          <ThinkInput
+            aria-label="网格列数"
             type="number"
-            size="small"
-            variant="outlined"
             value={layout.gridConfig?.columns || 2}
-            onChange={(event) => onUpdate({ gridConfig: { columns: parseInt((event.target as HTMLInputElement).value, 10) || 2 } })}
+            onInput={(event) => onUpdate({ gridConfig: { columns: parseInt((event.currentTarget as HTMLInputElement).value, 10) || 2 } })}
             className="think-settings-field--xs"
           />
-        </Stack>
+        </SettingsRow>
       )}
-    </>
+    </div>
   );
 }
 
@@ -140,9 +135,13 @@ export function LayoutFreeformSettings({
 }) {
   if (layout.displayMode !== 'freeform') return null;
 
+  const updateFreeform = (patch: Record<string, unknown>) => onUpdate({
+    freeformConfig: { ...(layout.freeformConfig || {}), ...patch },
+  });
+
   return (
-    <Stack spacing={1}>
-      <AlignedRadioGroup
+    <div className="think-layout-editor__freeform">
+      <SettingsSegmentedRow
         label="默认模板"
         options={FREEFORM_TEMPLATE_OPTIONS}
         selectedValue={layout.freeformConfig?.defaultTemplate || 'balanced'}
@@ -158,89 +157,67 @@ export function LayoutFreeformSettings({
           });
         }}
       />
-      <Stack spacing={1} className="think-settings-indent">
-        <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap" useFlexGap>
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                checked={layout.freeformConfig?.snapToGrid ?? true}
-                onChange={(event) => onUpdate({
-                  freeformConfig: {
-                    ...(layout.freeformConfig || {}),
-                    snapToGrid: (event.target as HTMLInputElement).checked,
-                  },
-                })}
-              />
-            }
-            label="拖动时吸附网格"
-          />
-          <TextField
-            label="网格(px)"
-            type="number"
-            size="small"
-            value={layout.freeformConfig?.gridSize || 16}
-            onChange={(event) => onUpdate({
-              freeformConfig: {
-                ...(layout.freeformConfig || {}),
-                gridSize: Math.max(4, parseInt((event.target as HTMLInputElement).value, 10) || 16),
-              },
-            })}
-            className="think-settings-field--sm"
-          />
-          <TextField
-            label="最小宽度"
-            type="number"
-            size="small"
-            value={layout.freeformConfig?.minItemWidth || 280}
-            onChange={(event) => onUpdate({
-              freeformConfig: {
-                ...(layout.freeformConfig || {}),
-                minItemWidth: Math.max(160, parseInt((event.target as HTMLInputElement).value, 10) || 280),
-              },
-            })}
-            className="think-settings-field--sm"
-          />
-          <TextField
-            label="最小高度"
-            type="number"
-            size="small"
-            value={layout.freeformConfig?.minItemHeight || 180}
-            onChange={(event) => onUpdate({
-              freeformConfig: {
-                ...(layout.freeformConfig || {}),
-                minItemHeight: Math.max(120, parseInt((event.target as HTMLInputElement).value, 10) || 180),
-              },
-            })}
-            className="think-settings-field--sm"
-          />
-          <TextField
-            label="画布最小宽度"
-            type="number"
-            size="small"
-            value={layout.freeformConfig?.minCanvasWidth || 720}
-            onChange={(event) => onUpdate({
-              freeformConfig: {
-                ...(layout.freeformConfig || {}),
-                minCanvasWidth: Math.max(320, parseInt((event.target as HTMLInputElement).value, 10) || 720),
-              },
-            })}
-            className="think-settings-field--md"
-          />
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => {
-              if (confirm('确认重置当前布局的自由布局位置吗？')) onResetFreeformLayout();
-            }}
-          >
-            按模板重排
-          </Button>
-        </Stack>
-        <Typography variant="caption" color="text.secondary">
-          “均衡排布”按视图推荐尺寸顺序装箱；“焦点 + 网格”会让第一个视图横跨首行。切换模板或重排会清空已保存的布局状态。
-        </Typography>
-      </Stack>
-    </Stack>
+
+      <SettingsRow label="吸附网格">
+        <ThinkCheckbox
+          checked={layout.freeformConfig?.snapToGrid ?? true}
+          onChange={(event) => updateFreeform({ snapToGrid: (event.currentTarget as HTMLInputElement).checked })}
+          label="启用"
+          compact
+        />
+      </SettingsRow>
+
+      <SettingsRow label="网格大小">
+        <ThinkInput
+          aria-label="网格大小"
+          type="number"
+          value={layout.freeformConfig?.gridSize || 16}
+          onInput={(event) => updateFreeform({ gridSize: Math.max(4, parseInt((event.currentTarget as HTMLInputElement).value, 10) || 16) })}
+          className="think-settings-field--sm"
+        />
+      </SettingsRow>
+
+      <SettingsRow label="最小宽度">
+        <ThinkInput
+          aria-label="最小宽度"
+          type="number"
+          value={layout.freeformConfig?.minItemWidth || 280}
+          onInput={(event) => updateFreeform({ minItemWidth: Math.max(160, parseInt((event.currentTarget as HTMLInputElement).value, 10) || 280) })}
+          className="think-settings-field--sm"
+        />
+      </SettingsRow>
+
+      <SettingsRow label="最小高度">
+        <ThinkInput
+          aria-label="最小高度"
+          type="number"
+          value={layout.freeformConfig?.minItemHeight || 180}
+          onInput={(event) => updateFreeform({ minItemHeight: Math.max(120, parseInt((event.currentTarget as HTMLInputElement).value, 10) || 180) })}
+          className="think-settings-field--sm"
+        />
+      </SettingsRow>
+
+      <SettingsRow label="画布最小宽度">
+        <ThinkInput
+          aria-label="画布最小宽度"
+          type="number"
+          value={layout.freeformConfig?.minCanvasWidth || 720}
+          onInput={(event) => updateFreeform({ minCanvasWidth: Math.max(320, parseInt((event.currentTarget as HTMLInputElement).value, 10) || 720) })}
+          className="think-settings-field--md"
+        />
+      </SettingsRow>
+
+      <SettingsRow label="布局位置">
+        <ThinkButton
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            if (confirm('确认重置当前布局的自由布局位置吗？')) onResetFreeformLayout();
+          }}
+        >
+          按模板重排
+        </ThinkButton>
+      </SettingsRow>
+    </div>
   );
 }

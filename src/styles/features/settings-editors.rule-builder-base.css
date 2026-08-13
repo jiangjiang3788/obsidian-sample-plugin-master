@@ -1,39 +1,28 @@
-/* Settings rule builder base layout. */
-.think-os--settings .think-rule-builder {
+/* Settings rule builder: dense data-entry layout. */
+.think-os--settings .think-rule-builder,
+.think-os .think-module-settings .think-rule-builder {
   display: grid;
-  gap: var(--think-space-6);
+  gap: var(--think-space-3);
+  min-width: 0;
 }
-
 .think-os--settings .think-rule-builder__group,
-.think-os--settings .think-rule-builder__rules {
+.think-os--settings .think-rule-builder__rules,
+.think-os .think-module-settings .think-rule-builder__group,
+.think-os .think-module-settings .think-rule-builder__rules {
   display: grid;
-  gap: var(--think-space-4);
+  gap: var(--think-space-2);
+  min-width: 0;
 }
-
-.think-os--settings .think-rule-builder__row {
+.think-os--settings .think-rule-builder__row,
+.think-os .think-module-settings .think-rule-builder__row {
   display: grid;
   grid-template-columns: minmax(140px, 1.2fr) minmax(120px, 0.9fr) minmax(80px, 1fr) auto;
-  gap: var(--think-space-4);
+  gap: var(--think-space-3);
   align-items: center;
   min-width: 0;
 }
-
-.think-os--settings .think-rule-builder__logic {
-  min-width: 50px;
-}
-
-.think-os--settings .think-rule-builder__operator {
-  min-width: 120px;
-}
-
-.think-os--settings .think-rule-builder__field {
-  min-width: 140px;
-}
-
-.think-os--settings .think-rule-builder__value {
-  min-width: 80px;
-}
-
-.think-os--settings .think-rule-builder__add {
-  white-space: nowrap;
-}
+.think-os .think-rule-builder__logic { min-width: 50px; }
+.think-os .think-rule-builder__operator { min-width: 110px; }
+.think-os .think-rule-builder__field { min-width: 130px; }
+.think-os .think-rule-builder__value { min-width: 80px; }
+.think-os .think-rule-builder__add { white-space: nowrap; }

@@ -4,8 +4,10 @@ import type { JSX } from 'preact';
 export type ThinkIconName =
   | 'arrow-up'
   | 'calendar'
+  | 'copy'
   | 'check'
   | 'chevron-down'
+  | 'chevron-up'
   | 'chevron-left'
   | 'chevron-right'
   | 'file-plus'
@@ -32,6 +34,10 @@ function renderIcon(name: ThinkIconName) {
       return <path d="m9 18 6-6-6-6" />;
     case 'chevron-down':
       return <path d="m6 9 6 6 6-6" />;
+    case 'chevron-up':
+      return <path d="m18 15-6-6-6 6" />;
+    case 'copy':
+      return <><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>;
     case 'calendar':
       return <><path d="M8 2v4M16 2v4M3 10h18" /><rect x="3" y="4" width="18" height="18" rx="2" /></>;
     case 'filter':

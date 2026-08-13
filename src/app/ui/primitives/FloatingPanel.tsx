@@ -10,7 +10,6 @@
 import { useCallback, useMemo, useRef, useState } from 'preact/hooks';
 import { createPortal } from 'preact/compat';
 
-import { Paper } from '@shared/ui/public';
 import { detectThinkDeviceProfile, diagnosticLog, getThinkDeviceProfileAttributes, isThinkMobileLikeProfile } from '@shared/utils/public';
 import { useLocalStorage } from '@shared/hooks/public';
 
@@ -174,8 +173,7 @@ export function FloatingPanel({
 
     const panel = (
         <div ref={rootRef}>
-            <Paper
-                elevation={4}
+            <div
                 className={`think-os think-os--modal think-floating-panel${inline ? ' is-inline' : ''}${mobile ? ' is-mobile' : ''}`}
                 {...deviceProfileAttrs}
                 onMouseDown={onPanelPointerDown}
@@ -200,7 +198,7 @@ export function FloatingPanel({
                     inline={inline}
                     onResizeStart={onResizeStart}
                 />
-            </Paper>
+            </div>
         </div>
     );
 

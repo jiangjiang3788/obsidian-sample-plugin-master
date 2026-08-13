@@ -11,7 +11,6 @@ export function ExcelViewEditor() {
   return (
     <ReadonlyViewEditorNotice
       title="数据表格（ExcelView）"
-      description="没有专属配置项；它会自动展示所有显示字段中指定的列。"
     />
   );
 }

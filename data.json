@@ -163,7 +163,15 @@
         "coreBlock",
         "goalPath"
       ],
-      "filters": [],
+      "filters": [
+        {
+          "field": "goalPath",
+          "op": "in",
+          "value": [
+            "爱好能力"
+          ]
+        }
+      ],
       "sort": [],
       "collapsed": false
     },
@@ -243,13 +251,7 @@
         "content"
       ],
       "groupFields": [],
-      "filters": [
-        {
-          "field": "status",
-          "op": "=",
-          "value": "open"
-        }
-      ],
+      "filters": [],
       "sort": [],
       "collapsed": false
     },
@@ -432,7 +434,6 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "vi_mmeolydjaga6z6u",
         "vi_mn9o962553qwhzp",
         "vi_mmijitbq47u10wu",
         "vi_mnztlf3wxrrqd8i",
@@ -455,14 +456,6 @@
           "width": 720,
           "height": 620,
           "zIndex": 6,
-          "collapsed": true
-        },
-        "vi_mmeolydjaga6z6u": {
-          "x": 464,
-          "y": 880,
-          "width": 520,
-          "height": 360,
-          "zIndex": 8,
           "collapsed": true
         }
       }

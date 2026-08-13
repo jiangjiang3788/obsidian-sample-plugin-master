@@ -136,3 +136,163 @@
   color: var(--think-text-disabled);
   cursor: not-allowed;
 }
+
+/* Selection controls: one Obsidian-native control language for Settings. */
+.think-os .think-selection-control--compact { min-height: var(--think-control-height-sm); }
+.think-os .think-selection-control__text { min-width: 0; display: inline-grid; gap: 1px; }
+.think-os .think-selection-control__label { line-height: var(--think-line-height-tight); }
+.think-os .think-selection-control__description { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); line-height: var(--think-line-height-normal); }
+
+.think-os .think-toggle-control {
+  min-height: var(--think-control-height-sm); display: inline-flex; align-items: center; gap: var(--think-space-4);
+  color: var(--think-text-primary); font-size: var(--think-font-size-sm); cursor: pointer;
+}
+.think-os .think-toggle-control__input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; pointer-events: none; }
+.think-os .think-toggle-control__track {
+  width: 32px; height: 18px; flex: 0 0 auto; display: inline-flex; align-items: center; padding: 2px;
+  border: 1px solid var(--think-border-strong); border-radius: var(--think-radius-pill); background: var(--think-bg-surface-2);
+  transition: background-color var(--think-duration-fast) var(--think-ease-standard), border-color var(--think-duration-fast) var(--think-ease-standard);
+}
+.think-os .think-toggle-control__thumb {
+  width: 12px; height: 12px; border-radius: var(--think-radius-pill); background: var(--think-text-secondary);
+  transform: translateX(0); transition: transform var(--think-duration-fast) var(--think-ease-standard), background-color var(--think-duration-fast) var(--think-ease-standard);
+}
+.think-os .think-toggle-control__input:checked + .think-toggle-control__track { border-color: var(--think-accent); background: var(--think-accent); }
+.think-os .think-toggle-control__input:checked + .think-toggle-control__track .think-toggle-control__thumb { background: var(--think-text-on-accent); transform: translateX(14px); }
+.think-os .think-toggle-control__input:focus-visible + .think-toggle-control__track { outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color); outline-offset: var(--think-focus-ring-offset); }
+.think-os .think-toggle-control:has(input:disabled) { color: var(--think-text-disabled); cursor: not-allowed; opacity: .65; }
+
+/* Compact native range and inline notices used by Settings. */
+.think-os .think-range {
+  width: 100%; min-width: 0; height: var(--think-control-height-sm); margin: 0;
+  accent-color: var(--think-accent); cursor: pointer;
+}
+.think-os .think-notice {
+  padding: var(--think-space-3) var(--think-space-4);
+  border-left: 2px solid var(--think-border-strong);
+  background: transparent;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-normal);
+}
+.think-os .think-notice--success { border-left-color: var(--think-success); color: var(--think-text-primary); }
+.think-os .think-notice--warning { border-left-color: var(--think-warning); color: var(--think-text-primary); }
+.think-os .think-notice--danger { border-left-color: var(--think-danger); color: var(--think-danger); }
+
+/* Shared comboboxes own a single visual boundary; inputs inside are deliberately borderless. */
+.think-os .think-combobox,
+.think-os .think-multi-combobox,
+.think-os .think-search-picker {
+  position: relative;
+  min-width: 0;
+}
+
+.think-os .think-combobox-control {
+  min-height: var(--think-control-height-md);
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  min-width: 0;
+  padding: 0 var(--think-space-3);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+  box-shadow: none;
+}
+
+.think-os .think-combobox-control:focus-within {
+  border-color: var(--think-border-focus);
+  box-shadow: 0 0 0 var(--think-focus-ring-width) color-mix(in srgb, var(--think-focus-ring-color) 28%, transparent);
+}
+
+.think-os .think-combobox-control > .think-combobox-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: calc(var(--think-control-height-md) - 2px);
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--think-text-primary);
+  font: inherit;
+  font-size: var(--think-font-size-sm);
+}
+
+.think-os .think-combobox-control > .think-combobox-input:focus { border: 0; outline: 0; box-shadow: none; }
+.think-os .think-combobox-input::placeholder { color: var(--think-text-subtle); opacity: 1; }
+.think-os .think-combobox-control__icon { flex: 0 0 auto; width: var(--think-icon-size-sm); color: var(--think-text-secondary); }
+
+.think-os .think-combobox-control--multi {
+  min-height: var(--think-control-height-md);
+  flex-wrap: wrap;
+  padding-block: var(--think-space-1);
+}
+.think-os .think-combobox-input--multi { min-width: 90px; flex-basis: 90px; }
+.think-os .think-combobox-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-1);
+  max-width: 180px;
+  min-height: 22px;
+  padding: 0 var(--think-space-2);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-pill);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-tight);
+}
+.think-os .think-combobox-tag > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.think-os .think-combobox-tag__remove {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--think-text-subtle);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+.think-os .think-combobox-tag__remove:hover:not(:disabled) { color: var(--think-text-primary); }
+
+.think-os .think-combobox-menu {
+  position: absolute;
+  inset: calc(100% + var(--think-space-1)) 0 auto;
+  z-index: var(--think-z-popover);
+  max-height: 240px;
+  overflow: auto;
+  padding: var(--think-space-1);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-elevated);
+  box-shadow: var(--think-shadow-overlay);
+}
+.think-os .think-combobox-option {
+  width: 100%;
+  min-height: var(--think-control-height-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+  padding: var(--think-space-2) var(--think-space-3);
+  border: 0;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--think-text-primary);
+  text-align: left;
+  font: inherit;
+  font-size: var(--think-font-size-sm);
+  cursor: pointer;
+}
+.think-os .think-combobox-option:hover { background: var(--think-bg-hover); }
+.think-os .think-combobox-option__group,
+.think-os .think-combobox-option--empty,
+.think-os .think-combobox-helper { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
+.think-os .think-combobox-option--empty { cursor: default; }
+.think-os .think-combobox-helper { margin-top: var(--think-space-1); }

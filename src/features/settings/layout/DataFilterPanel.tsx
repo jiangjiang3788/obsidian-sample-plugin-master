@@ -2,22 +2,11 @@
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Typography,
-  ThinkIcon,
+  Modal,
   ThinkButton,
+  ThinkDisclosure,
+  ThinkIcon,
 } from '@shared/ui/public';
-import { ExpandMoreIcon } from '@shared/ui/public';
 import { DataStore } from '@core/services/public';
 import { getAllFields } from '@core/types/public';
 import { getFieldLabel } from '@core/fields/public';
@@ -35,10 +24,7 @@ interface DataFilterPanelProps {
 function asDisplayList(value: any): string[] {
   if (Array.isArray(value)) return value.map(v => String(v).trim()).filter(Boolean);
   if (value === null || value === undefined) return [];
-  return String(value)
-    .split(/[,，\n]/)
-    .map(v => v.trim())
-    .filter(Boolean);
+  return String(value).split(/[,，\n]/).map(v => v.trim()).filter(Boolean);
 }
 
 function describeRule(rule: FilterRule): string {
@@ -56,12 +42,7 @@ function describeRule(rule: FilterRule): string {
   return `${getFieldLabel(rule.field)} ${rule.op} ${String(rule.value ?? '')}`;
 }
 
-export function DataFilterPanel({
-  dataStore,
-  filters,
-  items,
-  onChange,
-}: DataFilterPanelProps) {
+export function DataFilterPanel({ dataStore, filters, items, onChange }: DataFilterPanelProps) {
   const [open, setOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const activeCount = filters.length;
@@ -76,11 +57,8 @@ export function DataFilterPanel({
     setAdvancedOpen(hasAdvancedFilters);
     setOpen(true);
   };
-  const handleClose = () => setOpen(false);
   const handleClear = () => onChange([]);
-  const handleDeleteRule = (index: number) => {
-    onChange(filters.filter((_, currentIndex) => currentIndex !== index));
-  };
+  const handleDeleteRule = (index: number) => onChange(filters.filter((_, currentIndex) => currentIndex !== index));
 
   return (
     <div class="tp-toolbar-data-filter">
@@ -95,112 +73,70 @@ export function DataFilterPanel({
       </ThinkButton>
 
       {activeCount > 0 && (
-        <div class="think-filter-popover__selected-chips">
+        <div class="think-filter-popover__selected-chips" aria-label="当前筛选">
           {filters.slice(0, 3).map((rule, index) => (
-            <Chip
+            <button
               key={`${rule.field}-${rule.op}-${index}`}
-              label={describeRule(rule)}
-              size="small"
-              onDelete={() => handleDeleteRule(index)}
-              sx={{ height: '20px', fontSize: '0.75rem' }}
-            />
+              type="button"
+              className="think-chip"
+              onClick={() => handleDeleteRule(index)}
+              title="移除此筛选"
+            >
+              <span className="think-chip__label">{describeRule(rule)}</span>
+              <span className="think-chip__remove" aria-hidden="true">×</span>
+            </button>
           ))}
-          {filters.length > 3 && (
-            <Chip label={`+${filters.length - 3}`} size="small" sx={{ height: '20px', fontSize: '0.75rem' }} />
-          )}
+          {filters.length > 3 && <span className="think-chip">+{filters.length - 3}</span>}
         </div>
       )}
 
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        fullWidth
-        maxWidth="lg"
-        PaperProps={{
-          sx: {
-            width: 'min(1180px, calc(100vw - 32px))',
-            maxWidth: 'calc(100vw - 32px)',
-            height: 'min(760px, calc(100vh - 48px))',
-          },
-        }}
+      <Modal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title="全局数据筛选"
+        size="large"
+        className="think-os--settings think-data-filter-dialog"
+        footer={(
+          <div className="think-data-filter-dialog__actions">
+            <ThinkButton size="sm" variant="secondary" onClick={handleClear} disabled={activeCount === 0}>清空全部</ThinkButton>
+            <ThinkButton size="sm" variant="primary" onClick={() => setOpen(false)}>完成</ThinkButton>
+          </div>
+        )}
       >
-        <DialogTitle sx={{ pb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
-            <div>
-              <Typography variant="h6" component="div">全局数据筛选</Typography>
-              <Typography variant="body2" color="text.secondary">
-                这里的规则会作用于当前布局下的所有视图；单个视图自己的筛选仍在模块设置中维护。
-              </Typography>
-            </div>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-              <Chip label={`${fieldOptions.length} 个可筛选字段`} size="small" variant="outlined" />
-              <Chip label={`${activeCount} 条规则`} size="small" color={activeCount > 0 ? 'primary' : 'default'} />
-            </Box>
-          </Box>
-        </DialogTitle>
+        <div className="think-data-filter-dialog__content">
+          <div className="think-data-filter-dialog__meta-line">
+            <span>{fieldOptions.length} 个字段</span>
+            <span>{activeCount} 条规则</span>
+          </div>
 
-        <Divider />
+          <CommonFilterPanel
+            title="常用筛选"
+            dataStore={dataStore}
+            filters={filters}
+            items={sourceItems}
+            fieldOptions={fieldOptions}
+            onChange={onChange}
+          />
 
-        <DialogContent sx={{ p: 2.5, overflow: 'auto', background: 'var(--background-primary)' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <CommonFilterPanel
-              title="常用筛选"
-              description="先用目标、核心Block、主题等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。"
-              dataStore={dataStore}
-              filters={filters}
-              items={sourceItems}
+          <ThinkDisclosure
+            title="高级筛选"
+            meta={`${activeCount} 条`}
+            open={advancedOpen}
+            onOpenChange={setAdvancedOpen}
+          >
+            <RuleBuilder
+              title="筛选"
+              mode="filter"
+              rows={filters}
               fieldOptions={fieldOptions}
-              onChange={onChange}
+              onChange={(rows) => onChange(rows as FilterRule[])}
+              dataStore={dataStore}
+              variant="panel"
+              showHeader={false}
             />
-
-            <Accordion
-              expanded={advancedOpen}
-              onChange={(_, expanded: boolean) => setAdvancedOpen(expanded)}
-              disableGutters
-              elevation={0}
-              sx={{
-                border: 0,
-                borderTop: '1px solid var(--background-modifier-border)',
-                borderRadius: 0,
-                background: 'transparent',
-                boxShadow: 'none',
-                '&:before': { display: 'none' },
-                '& .MuiAccordionSummary-root': { px: 0, minHeight: '48px' },
-                '& .MuiAccordionSummary-content': { my: 1 },
-                '& .MuiAccordionDetails-root': { px: 0, pb: 0 },
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography sx={{ fontWeight: 700 }}>高级筛选规则</Typography>
-                  <Chip label={`${activeCount} 条`} size="small" variant="outlined" />
-                  <Typography variant="body2" color="text.secondary">
-                    需要正则、区间、排除或复杂且/或关系时再展开
-                  </Typography>
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails sx={{ pt: 0 }}>
-                <RuleBuilder
-                  title="筛选"
-                  mode="filter"
-                  rows={filters}
-                  fieldOptions={fieldOptions}
-                  onChange={(rows) => onChange(rows as FilterRule[])}
-                  dataStore={dataStore}
-                  variant="panel"
-                />
-              </AccordionDetails>
-            </Accordion>
-          </Box>
-        </DialogContent>
-
-        <Divider />
-
-        <DialogActions sx={{ px: 2.5, py: 1.5, justifyContent: 'space-between' }}>
-          <Button size="small" onClick={handleClear} disabled={activeCount === 0}>清空全部规则</Button>
-          <Button size="small" variant="contained" onClick={handleClose}>完成</Button>
-        </DialogActions>
-      </Dialog>
+          </ThinkDisclosure>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -172,3 +172,15 @@
   font-size: var(--think-font-size-xs);
   font-weight: var(--think-font-weight-medium);
 }
+/* Flat disclosure: semantic grouping without Card-on-Card visuals. */
+.think-os .think-disclosure { min-width: 0; border: 0; border-top: 1px solid var(--think-border-subtle); background: transparent; }
+.think-os .think-disclosure__summary {
+  min-height: var(--think-control-height-lg); display: flex; align-items: center; gap: var(--think-space-3);
+  padding: var(--think-space-3) 0; list-style: none; color: var(--think-text-primary); cursor: pointer; user-select: none;
+}
+.think-os .think-disclosure__summary::-webkit-details-marker { display: none; }
+.think-os .think-disclosure__title { font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-semibold); }
+.think-os .think-disclosure__meta { margin-inline-start: auto; color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
+.think-os .think-disclosure__icon { width: var(--think-icon-size-sm); height: var(--think-icon-size-sm); transition: transform var(--think-duration-fast) var(--think-ease-standard); }
+.think-os .think-disclosure[open] .think-disclosure__icon { transform: rotate(180deg); }
+.think-os .think-disclosure__body { padding: 0 0 var(--think-space-5); }

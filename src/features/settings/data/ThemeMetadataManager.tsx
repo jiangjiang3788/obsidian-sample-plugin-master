@@ -2,13 +2,11 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import {
-  Box,
   SimpleSelect,
-  TextField,
+  ThinkInput,
   ThinkButton,
   ThinkIcon,
   ThinkIconButton,
-  Typography,
 } from '@shared/ui/public';
 import { selectSettings, useSelector, useUseCases } from '@/app/public';
 import {
@@ -113,87 +111,55 @@ export function ThemeMetadataManager() {
   };
 
   return (
-    <Box className="think-theme-metadata think-settings-stack">
-      <Box className="think-settings-row think-settings-row--between">
-        <Typography className="think-settings-subheading">主题管理</Typography>
+    <div className="think-theme-metadata think-settings-stack">
+      <div className="think-settings-row think-settings-row--between">
+        <h2 className="think-settings-subheading">主题管理</h2>
         <span className="think-settings-caption" role="status">{message || `${themes.length} 个主题`}</span>
-      </Box>
+      </div>
 
       <section className="think-settings-section think-settings-section--flat think-theme-metadata__section">
-        <Typography className="think-settings-subheading">新增 / 更新主题</Typography>
-        <Box className="think-editor-grid think-editor-grid--metadata">
-          <TextField
-            size="small"
-            label="主题路径"
-            value={path}
-            onChange={(event: any) => setPath(event.target.value)}
-            placeholder="电脑/记录系统"
-          />
-          <TextField
-            size="small"
-            label="图标"
-            value={icon}
-            onChange={(event: any) => setIcon(event.target.value)}
-            placeholder="🎯"
-          />
+        <h3 className="think-settings-subheading">新增 / 更新主题</h3>
+        <div className="think-editor-grid think-editor-grid--metadata">
+          <ThinkInput aria-label="主题路径" value={path} onInput={(event) => setPath((event.currentTarget as HTMLInputElement).value)} placeholder="主题路径，例如 电脑/记录系统" />
+          <ThinkInput aria-label="图标" value={icon} onInput={(event) => setIcon((event.currentTarget as HTMLInputElement).value)} placeholder="图标" />
           <ThinkButton variant="primary" onClick={handleAddTheme} disabled={!path.trim()}>
             保存
           </ThinkButton>
-        </Box>
+        </div>
         {previewThemePath && (
-          <Box className="think-editor-inline think-editor-inline--wrap think-settings-caption" role="status" aria-live="polite">
+          <div className="think-editor-inline think-editor-inline--wrap think-settings-caption" role="status" aria-live="polite">
             <span className="think-settings-label-strong">图标预览</span>
             <span className="think-theme-metadata__ellipsis">{previewThemePath}</span>
             <span aria-hidden="true">→</span>
             <span className="think-theme-metadata__preview-icon">{previewIcon}</span>
             <span>{previewIconInfo.sourcePath ? `来源 ${previewIconInfo.sourcePath}` : '默认图标'}</span>
-          </Box>
+          </div>
         )}
       </section>
 
       <section className="think-settings-section think-settings-section--flat think-theme-metadata__section">
-        <Box className="think-editor-grid think-editor-grid--list-toolbar">
-          <Typography className="think-settings-subheading">主题列表</Typography>
-          <TextField
-            className="think-settings-search"
-            size="small"
-            value={query}
-            onChange={(event: any) => setQuery(event.target.value)}
-            placeholder="搜索主题"
-            inputProps={{ 'aria-label': '搜索主题' }}
-          />
-        </Box>
+        <div className="think-editor-grid think-editor-grid--list-toolbar">
+          <h3 className="think-settings-subheading">主题列表</h3>
+          <ThinkInput className="think-settings-search" value={query} onInput={(event) => setQuery((event.currentTarget as HTMLInputElement).value)} placeholder="搜索主题" aria-label="搜索主题" />
+        </div>
 
-        <Box className="think-theme-metadata__columns" aria-hidden="true">
+        <div className="think-theme-metadata__columns" aria-hidden="true">
           <span>图标</span>
           <span>路径</span>
           <span>图标来源</span>
           <span>状态</span>
           <span />
-        </Box>
+        </div>
 
-        <Box className="think-theme-metadata__entries">
+        <div className="think-theme-metadata__entries">
           {sortedThemes.length ? sortedThemes.map((theme) => {
             const info = inheritedIconInfo(themes, theme.path);
             const inherited = Boolean(info.sourcePath && info.sourcePath !== theme.path);
 
             return (
-              <Box key={theme.id} className="think-theme-metadata__entry">
-                <TextField
-                  className="think-theme-metadata__icon-field"
-                  size="small"
-                  value={theme.icon || ''}
-                  onChange={(event: any) => updateThemeIcon(theme.id, event.target.value)}
-                  placeholder={info.icon || '🎯'}
-                  inputProps={{ 'aria-label': `${theme.path} 图标` }}
-                />
-                <TextField
-                  size="small"
-                  value={theme.path || ''}
-                  onChange={(event: any) => updateThemePath(theme.id, event.target.value)}
-                  inputProps={{ 'aria-label': `${theme.path} 路径` }}
-                  fullWidth
-                />
+              <div key={theme.id} className="think-theme-metadata__entry">
+                <ThinkInput className="think-theme-metadata__icon-field" value={theme.icon || ''} onInput={(event) => updateThemeIcon(theme.id, (event.currentTarget as HTMLInputElement).value)} placeholder={info.icon || '🎯'} aria-label={`${theme.path} 图标`} />
+                <ThinkInput value={theme.path || ''} onChange={(event) => updateThemePath(theme.id, (event.currentTarget as HTMLInputElement).value)} aria-label={`${theme.path} 路径`} />
                 <span className="think-theme-metadata__source">
                   {info.icon || '🎯'} {inherited ? `继承 ${info.sourcePath}` : '本主题'}
                 </span>
@@ -212,15 +178,13 @@ export function ThemeMetadataManager() {
                   icon={<ThinkIcon name="trash-2" />}
                   onClick={() => handleDelete(theme.id)}
                 />
-              </Box>
+              </div>
             );
           }) : (
-            <Typography className="think-theme-metadata__empty" variant="body2" color="text.secondary">
-              没有匹配的主题
-            </Typography>
+            <div className="think-theme-metadata__empty">没有匹配的主题</div>
           )}
-        </Box>
+        </div>
       </section>
-    </Box>
+    </div>
   );
 }

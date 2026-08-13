@@ -3,7 +3,7 @@
   width: min(100%, var(--think-content-width-lg));
   margin-inline: auto;
   display: grid;
-  gap: var(--think-space-6);
+  gap: var(--think-space-5);
 }
 
 .think-os--settings .think-settings-page--wide {
@@ -21,8 +21,8 @@
 .think-os--settings .think-settings-page__title {
   margin: 0;
   color: var(--think-text-primary);
-  font-size: var(--think-font-size-2xl);
-  font-weight: var(--think-font-weight-bold);
+  font-size: var(--think-font-size-xl);
+  font-weight: var(--think-font-weight-semibold);
   line-height: var(--think-line-height-tight);
 }
 
@@ -37,12 +37,17 @@
 
 .think-os--settings .think-settings-section {
   display: grid;
-  gap: var(--think-space-5);
+  gap: var(--think-space-4);
   min-width: 0;
-  padding: var(--think-space-6);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-md);
-  background: var(--think-bg-surface-1);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.think-os--settings .think-settings-section + .think-settings-section {
+  padding-top: var(--think-space-6);
+  border-top: 1px solid var(--think-border-subtle);
 }
 
 .think-os--settings .think-settings-section--flat {
@@ -78,41 +83,35 @@
   gap: var(--think-space-3);
 }
 
+/* Settings rows are horizontally aligned by default: semantic label left, control right. */
 .think-os--settings .think-settings-row {
-  display: flex;
+  --think-settings-label-width: 112px;
+  display: grid;
+  grid-template-columns: var(--think-settings-label-width) minmax(0, 1fr);
   align-items: center;
-  gap: var(--think-space-6);
+  column-gap: var(--think-space-5);
+  row-gap: var(--think-space-2);
   min-width: 0;
 }
 
-.think-os--settings .think-settings-row--top {
-  align-items: flex-start;
-}
+.think-os--settings .think-settings-row--top { align-items: start; }
 
-.think-os--settings .think-settings-row--wrap {
-  flex-wrap: wrap;
-}
+.think-os--settings .think-settings-row--wrap .think-settings-row__body { display: flex; flex-wrap: wrap; gap: var(--think-space-3); }
 
-.think-os--settings .think-settings-row--between {
-  justify-content: space-between;
-}
+.think-os--settings .think-settings-row--between { grid-template-columns: minmax(0, 1fr) auto; }
 
 .think-os--settings .think-settings-row__label {
-  width: 80px;
-  flex: 0 0 80px;
+  width: auto;
+  min-width: 0;
   color: var(--think-text-primary);
   font-size: var(--think-font-size-sm);
   font-weight: var(--think-font-weight-medium);
+  line-height: var(--think-line-height-tight);
 }
 
-.think-os--settings .think-settings-row__label--top {
-  padding-top: var(--think-space-3);
-}
+.think-os--settings .think-settings-row__label--top { padding-top: var(--think-space-3); }
 
-.think-os--settings .think-settings-row__body {
-  flex: 1 1 auto;
-  min-width: 0;
-}
+.think-os--settings .think-settings-row__body { min-width: 0; }
 
 .think-os--settings .think-settings-grid {
   display: grid;
@@ -210,44 +209,27 @@
   overflow: auto;
 }
 
-@container think-settings (max-width: 560px) {
+@container think-settings (max-width: 420px) {
   .think-os--settings .think-settings-row {
-    align-items: stretch;
-    flex-direction: column;
-    gap: var(--think-space-3);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--think-space-2);
   }
 
-  .think-os--settings .think-settings-row__label {
-    width: auto;
-    flex-basis: auto;
-  }
-
-  .think-os--settings .think-settings-indent {
-    padding-left: 0;
-  }
+  .think-os--settings .think-settings-row__label { padding-top: 0; }
+  .think-os--settings .think-settings-indent { padding-left: 0; }
 
   .think-os--settings .think-settings-field--date,
   .think-os--settings .think-settings-field--xs,
   .think-os--settings .think-settings-field--sm,
-  .think-os--settings .think-settings-field--md {
-    width: 100%;
-  }
+  .think-os--settings .think-settings-field--md { width: 100%; }
 }
 
 @media (max-width: 560px) {
   .think-os--settings .think-settings-panel {
     padding: var(--think-space-5) var(--think-space-4);
   }
-
-  .think-os--settings .think-settings-section {
-    padding: var(--think-space-5);
-  }
 }
 
-.think-os--settings .think-settings-lead {
-  margin-bottom: var(--think-space-7);
-  color: var(--think-text-secondary);
-}
 
 .think-os--settings .think-settings-alert {
   margin-top: var(--think-space-4);
@@ -256,3 +238,7 @@
 .think-os--settings .think-settings-divider {
   margin-block: var(--think-space-7);
 }
+
+.think-os--settings .think-settings-actions--start { justify-content: flex-start; }
+.think-os--settings .think-ai-scope-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--think-space-2) var(--think-space-5); }
+.think-os--settings .think-ai-settings-footer { display: grid; gap: var(--think-space-3); justify-items: stretch; padding-top: var(--think-space-5); border-top: 1px solid var(--think-border-subtle); }

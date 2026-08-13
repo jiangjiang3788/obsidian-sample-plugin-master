@@ -2,8 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Box, Typography } from '../muiCompat';
-import { ArrowDropDownIcon } from '../icons';
+import { ThinkIcon } from '../primitives/Icon';
 
 export type SimpleSelectOption = { value: string; label: string; group?: string; disabled?: boolean };
 
@@ -19,7 +18,7 @@ type SimpleSelectProps = {
     disabled?: boolean;
 };
 
-export function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, className, disabled = false }: SimpleSelectProps) {
+export function SimpleSelect({ value, options, onChange, placeholder, fullWidth, className, disabled = false }: SimpleSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const selectedLabel = options.find(option => option.value === value)?.label || value;
@@ -39,7 +38,6 @@ export function SimpleSelect({ value, options, onChange, placeholder, fullWidth,
     };
 
     const rootClass = [
-        'think-os',
         'think-simple-select',
         fullWidth ? 'think-simple-select--full' : '',
         isOpen ? 'is-open' : '',
@@ -48,8 +46,8 @@ export function SimpleSelect({ value, options, onChange, placeholder, fullWidth,
     ].filter(Boolean).join(' ');
 
     return (
-        <Box ref={wrapperRef} className={rootClass} sx={sx}>
-            <Box
+        <div ref={wrapperRef} className={rootClass}>
+            <div
                 className="think-simple-select__trigger"
                 role="combobox"
                 aria-expanded={isOpen}
@@ -65,20 +63,20 @@ export function SimpleSelect({ value, options, onChange, placeholder, fullWidth,
                     if (event.key === 'Escape') setIsOpen(false);
                 }}
             >
-                <Typography className={`think-simple-select__value${value ? '' : ' is-placeholder'}`}>
+                <span className={`think-simple-select__value${value ? '' : ' is-placeholder'}`}>
                     {value ? selectedLabel : <em>{placeholder}</em>}
-                </Typography>
-                <ArrowDropDownIcon className="think-simple-select__arrow" />
-            </Box>
+                </span>
+                <ThinkIcon name="chevron-down" className="think-simple-select__arrow" />
+            </div>
 
             {isOpen && (
-                <Box className="think-simple-select__menu" role="listbox">
+                <div className="think-simple-select__menu" role="listbox">
                     {options.map((option, index) => {
                         const showGroupHeader = option.group && option.group !== options[index - 1]?.group;
                         return (
                             <div key={`${option.group || 'default'}-${option.value}`}>
-                                {showGroupHeader && <Box className="think-simple-select__group">{option.group}</Box>}
-                                <Box
+                                {showGroupHeader && <div className="think-simple-select__group">{option.group}</div>}
+                                <div
                                     className={[
                                         'think-simple-select__option',
                                         value === option.value ? 'is-selected' : '',
@@ -90,12 +88,12 @@ export function SimpleSelect({ value, options, onChange, placeholder, fullWidth,
                                     onClick={() => handleOptionClick(option)}
                                 >
                                     {option.label}
-                                </Box>
+                                </div>
                             </div>
                         );
                     })}
-                </Box>
+                </div>
             )}
-        </Box>
+        </div>
     );
 }

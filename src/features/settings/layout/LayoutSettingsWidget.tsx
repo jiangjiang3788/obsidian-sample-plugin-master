@@ -37,7 +37,9 @@ function LayoutSettingsWidgetInner({ layoutId, widgetId }: { layoutId: string; w
       bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
       onClose={() => closeFloatingWidget(widgetId)}
     >
-      <LayoutEditorPanel layoutId={layoutId} />
+      <div className="think-os--settings think-layout-settings-widget">
+        <LayoutEditorPanel layoutId={layoutId} />
+      </div>
     </FloatingPanel>
   );
 }

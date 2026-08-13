@@ -1,6 +1,6 @@
 # Think OS CSS 与界面元素设计规范
 
-> 版本：1.0.46（Obsidian-native Settings pilot）  
+> 版本：1.0.49（Settings primitive / filter convergence）  
 > 适用范围：Think OS Obsidian 插件所有 Settings、Modal、Layout、View、共享组件  
 > 目标：建立统一、克制、高信息密度、主题友好、可访问、可维护的视觉系统  
 > 编码：UTF-8
@@ -35,6 +35,16 @@ Think OS 的界面应表现为：
 - 为动态坐标生成大量 CSS class；
 - 只考虑默认浅色主题；
 - 用大面积 accent 填充普通 Module Header；accent 只用于选中、焦点和关键状态。
+
+### 1.3 Settings 强制布局契约
+
+- Settings 默认采用“左标签 / 右控件”，共享标签列为 112px；只有容器极窄时才退化为上下布局。
+- 高频设置页只保留决策相关说明；明显功能不常驻展示教程型文字。
+- 普通字段和筛选控件只允许一个视觉边界：外层是边界时，内部 input 必须无第二层边框。
+- CommonFilter / RuleBuilder / FieldPicker 必须消费 Think primitive；`src/features/settings` 禁止直接引入 MUI 控件。
+- Settings section 通过标题、行距和 divider 分层；不得用 Card -> Card -> Field Card 表达普通信息层级。
+- 浮动 Settings 与设置页共享同一 row/control 体系，并保留独立内容 padding，不允许内容贴窗体边缘。
+- Dashboard Toolbar 的周期、日期、前后、日历、筛选、设置均采用同一 framed action language，且不得因 Leaf 变窄自动换成第二行。
 
 ---
 

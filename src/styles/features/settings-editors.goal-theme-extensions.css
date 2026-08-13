@@ -17,3 +17,21 @@
 .think-os--settings .think-goal-template-editor__output-heading {
   margin-bottom: var(--think-space-3);
 }
+
+/* Phase 5: goal and metric settings follow the flat Settings row language. */
+.think-os--settings .think-goal-manager, .think-os--settings .think-goal-metrics {
+  width: 100%; max-width: 1240px; margin-inline: auto; display: grid; gap: var(--think-space-5);
+}
+.think-os--settings .think-goal-manager__create {
+  display: grid; grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.55fr) auto; gap: var(--think-space-3); align-items: center;
+}
+.think-os--settings .think-goal-manager__presets { display: grid; gap: var(--think-space-4); padding-top: var(--think-space-5); border-top: 1px solid var(--think-border-subtle); }
+.think-os--settings .think-goal-manager__presets-header { display: flex; align-items: center; justify-content: space-between; gap: var(--think-space-4); flex-wrap: wrap; }
+.think-os--settings .think-goal-manager__title, .think-os--settings .think-goal-metrics__title { font-weight: var(--think-font-weight-semibold); }
+.think-os--settings .think-goal-metrics__identity, .think-os--settings .think-goal-metrics__target { display: grid; gap: var(--think-space-3); align-items: center; }
+.think-os--settings .think-goal-metrics__identity { grid-template-columns: minmax(180px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr); }
+.think-os--settings .think-goal-metrics__target { grid-template-columns: minmax(160px, 1fr) 120px 90px auto; }
+.think-os--settings .think-goal-metrics__items { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
+@container think-settings (max-width: 720px) {
+  .think-os--settings .think-goal-manager__create, .think-os--settings .think-goal-metrics__identity, .think-os--settings .think-goal-metrics__target { grid-template-columns: 1fr; }
+}

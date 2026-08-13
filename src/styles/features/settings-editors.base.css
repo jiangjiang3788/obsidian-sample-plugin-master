@@ -10,7 +10,9 @@
 }
 
 .think-os--settings .think-editor-card--dashed {
-  border-style: dashed;
+  padding: var(--think-space-3) 0;
+  border: 0;
+  border-radius: 0;
   background: transparent;
 }
 

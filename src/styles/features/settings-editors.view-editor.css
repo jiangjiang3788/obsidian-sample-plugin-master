@@ -1,50 +1,56 @@
-/* View editor shared settings rows. */
+/* View editor shared settings rows: semantic label left, control right. */
+.think-os--settings .think-view-editor-shell {
+  --think-view-editor-gap: var(--think-space-4);
+  display: grid;
+  gap: var(--think-view-editor-gap);
+  min-width: 0;
+}
+.think-os--settings .think-view-editor-shell__header,
+.think-os--settings .think-view-editor-section__header { display: grid; gap: var(--think-space-1); }
 .think-os--settings .think-view-editor-shell__title,
 .think-os--settings .think-view-editor-section__title,
 .think-os--settings .think-view-editor-field-row__label {
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-sm);
   font-weight: var(--think-font-weight-semibold);
+  line-height: var(--think-line-height-tight);
 }
-
 .think-os--settings .think-view-editor-shell__description,
 .think-os--settings .think-view-editor-section__description,
 .think-os--settings .think-view-editor-field-row__description {
   color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-normal);
 }
-
-.think-os--settings .think-view-editor-section {
+.think-os--settings .think-view-editor-section { display: grid; gap: var(--think-space-3); min-width: 0; padding: 0; border: 0; background: transparent; }
+.think-os--settings .think-view-editor-section + .think-view-editor-section { margin-top: var(--think-space-2); padding-top: var(--think-space-5); border-top: 1px solid var(--think-border-subtle); }
+.think-os--settings .think-view-editor-field-row {
+  --think-view-editor-label-width: 112px;
   display: grid;
-  gap: var(--think-space-4);
-  padding: var(--think-space-4);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--think-radius-lg);
-}
-
-.think-os--settings .think-view-editor-field-row__label {
-  flex-shrink: 0;
-}
-
-.think-os--settings .think-view-editor-field-row__control {
-  flex-grow: 1;
+  grid-template-columns: var(--think-view-editor-label-width) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--think-space-5);
   min-width: 0;
 }
-
-.think-os--settings .think-view-editor-field-row__description {
-  display: block;
-  margin-top: var(--think-space-2);
+.think-os--settings .think-view-editor-field-row--top { align-items: start; }
+.think-os--settings .think-view-editor-field-row--top .think-view-editor-field-row__label { padding-top: var(--think-space-3); }
+.think-os--settings .think-view-editor-field-row__control { min-width: 0; }
+.think-os--settings .think-view-editor-field-row__description { margin-top: var(--think-space-1); }
+@container think-settings (max-width: 420px) {
+  .think-os--settings .think-view-editor-field-row { grid-template-columns: minmax(0, 1fr); gap: var(--think-space-2); }
+  .think-os--settings .think-view-editor-field-row--top .think-view-editor-field-row__label { padding-top: 0; }
 }
 
-.think-os--settings .think-view-editor-field-row__label {
-  width: 92px;
+.think-os--settings .think-timeline-category-list { display: grid; gap: 0; min-width: 0; }
+.think-os--settings .think-timeline-category-row {
+  display: grid; grid-template-columns: auto auto minmax(120px, 160px) minmax(180px, 1fr) auto;
+  align-items: center; gap: var(--think-space-3); min-width: 0; padding: var(--think-space-3) 0;
+  border-bottom: 1px solid var(--think-border-subtle);
 }
-
-.think-os--settings .think-view-editor-field-row__label--narrow {
-  width: 80px;
-}
-
-.think-os--settings .think-view-editor-field-row__label--wide {
-  width: 104px;
-}
-
-.think-os--settings .think-view-editor-field-row__label--top {
-  padding-top: var(--think-space-2);
+.think-os--settings .think-timeline-category-row__order,
+.think-os--settings .think-timeline-category-row__files { display: flex; align-items: center; flex-wrap: wrap; gap: var(--think-space-2); min-width: 0; }
+.think-os--settings .think-timeline-category-row__order { flex-wrap: nowrap; gap: var(--think-space-1); }
+@container think-settings (max-width: 700px) {
+  .think-os--settings .think-timeline-category-row { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+  .think-os--settings .think-timeline-category-row__files { grid-column: 3 / 5; }
 }

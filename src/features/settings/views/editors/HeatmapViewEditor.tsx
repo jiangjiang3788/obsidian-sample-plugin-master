@@ -2,9 +2,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import {
-  Button,
-  Checkbox,
-  FormControlLabel,
+  ThinkButton,
+  ThinkCheckbox,
   ListEditor,
   SimpleSelect,
 } from '@shared/ui/public';
@@ -78,14 +77,11 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
     return (
         <ViewEditorShell
             title="打卡视图"
-            description="只负责主题 + 日期格子的记录入口：空白日期可新增，有记录日期查看当天记录并继续新增。经验/等级请使用独立的 ProgressView。"
-            spacing={2.5}
         >
             <ConfigSection title="数据来源">
                 <ConfigFieldRow
                     label="源 Block"
                     description="视图将从此 Block 模板的评分字段中读取 Emoji/图片/颜色映射。"
-                    labelWidth={80}
                 >
                     <SimpleSelect
                         value={config.sourceBlockId}
@@ -101,27 +97,20 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
                     label="主题路径"
                     description="在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。"
                     alignItems="flex-start"
-                    labelWidth={80}
                 >
                     <ListEditor
                         value={config.themePaths}
                         onChange={val => onChange({ themePaths: val })}
                         placeholder="例如: 生活/健康, 工作/项目"
                     />
-                    <Button onClick={handleScanThemes} size="small" sx={{ mt: 1 }}>从数据源扫描并添加主题</Button>
+                    <ThinkButton onClick={handleScanThemes} size="sm" variant="secondary">从数据源扫描并添加主题</ThinkButton>
                 </ConfigFieldRow>
             </ConfigSection>
 
             <ConfigSection title="交互">
-                <FormControlLabel
-                    control={(
-                        <Checkbox
-                            checked={!!config.allowManualEdit}
-                            onChange={(event: Event) => onChange({ allowManualEdit: (event.target as HTMLInputElement).checked })}
-                        />
-                    )}
-                    label="允许查看当天记录并新增"
-                />
+                <ConfigFieldRow label="手动编辑">
+                    <ThinkCheckbox checked={!!config.allowManualEdit} onChange={(event) => onChange({ allowManualEdit: (event.currentTarget as HTMLInputElement).checked })} label="允许查看当天记录并新增" compact />
+                </ConfigFieldRow>
             </ConfigSection>
         </ViewEditorShell>
     );

@@ -1,6 +1,7 @@
 // src/features/settings/input/fieldsEditor/nativeControls.tsx
 /** @jsxImportSource preact */
 import type { JSX } from "preact";
+import { ThinkInput, ThinkTextarea } from '@shared/ui/public';
 import { useObsidianInputGuard } from './useObsidianInputGuard';
 
 function fieldClassName(className?: string): string {
@@ -43,7 +44,7 @@ export function NativeTextInput({
   return (
     <label className={fieldClassName(className)} style={style} title={title}>
       {label ? <span className="think-native-field__label">{label}</span> : null}
-      <input
+      <ThinkInput
         className="think-input"
         type={type}
         value={value as any}
@@ -87,7 +88,7 @@ export function NativeTextarea({
   return (
     <label className={fieldClassName(className)} style={style}>
       {label ? <span className="think-native-field__label">{label}</span> : null}
-      <textarea
+      <ThinkTextarea
         className="think-textarea"
         value={value}
         disabled={disabled}

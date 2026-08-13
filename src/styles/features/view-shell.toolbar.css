@@ -1,9 +1,18 @@
-/* Dashboard toolbar: one compact Obsidian-native action language. */
-.tp-toolbar {
+/* Dashboard toolbar: one framed, single-line Obsidian-native action language. */
+.think-os .tp-toolbar {
+    --tp-toolbar-control-height: var(--think-control-height-md);
     width: 100%; min-width: 0; margin-bottom: var(--think-space-4);
     gap: var(--think-space-2); container-type: inline-size;
+    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+    scrollbar-width: none;
 }
+.think-os .tp-toolbar::-webkit-scrollbar { display: none; }
 .tp-toolbar__view-switcher { flex: 0 0 auto; }
+.tp-toolbar__view-switcher.think-segmented-control {
+    --think-segment-height: var(--tp-toolbar-control-height);
+    gap: 0; height: var(--tp-toolbar-control-height); box-sizing: border-box;
+}
+.tp-toolbar__view-switcher .think-segmented-control__item { min-height: 0; height: 100%; }
 .tp-toolbar__date-group,
 .tp-toolbar__date-actions,
 .tp-toolbar__filters,
@@ -12,42 +21,37 @@
 .tp-toolbar .think-filter-popover__selected-chips {
     min-width: 0; display: inline-flex; align-items: center;
 }
-.tp-toolbar__date-group { gap: var(--think-space-2); }
-.tp-toolbar__date-actions { gap: var(--think-space-1); }
+.tp-toolbar__date-group { flex: 0 0 auto; gap: var(--think-space-2); }
+.tp-toolbar__date-actions { flex: 0 0 auto; gap: var(--think-space-1); }
 .tp-toolbar-date-display {
-    min-height: var(--think-control-height-sm); display: inline-flex;
-    align-items: center; justify-content: center; padding-inline: var(--think-space-2);
+    height: var(--tp-toolbar-control-height); min-height: 0; box-sizing: border-box; display: inline-flex;
+    align-items: center; justify-content: center; padding-inline: var(--think-space-3);
     color: var(--think-text-primary); font-size: var(--think-font-size-sm);
-    font-weight: var(--think-font-weight-semibold); line-height: var(--think-line-height-tight);
+    font-weight: var(--think-font-weight-semibold); line-height: 1;
     text-align: center; white-space: nowrap; user-select: none;
+    border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm);
+    background: var(--think-bg-surface-1);
 }
+.tp-toolbar .think-icon-button {
+    --think-icon-button-size: var(--tp-toolbar-control-height);
+    border-color: var(--think-border-subtle); background: var(--think-bg-surface-1);
+}
+.tp-toolbar .think-button { --think-button-height: var(--tp-toolbar-control-height); }
 .tp-toolbar__spacer { min-width: var(--think-space-2); flex: 1 1 auto; }
-.tp-toolbar__filters { flex: 0 1 auto; gap: var(--think-space-2); overflow: hidden; }
+.tp-toolbar__filters { flex: 0 0 auto; gap: var(--think-space-2); }
 .tp-toolbar-data-filter,
 .tp-toolbar .think-filter-popover { gap: var(--think-space-2); }
 .tp-toolbar .think-filter-popover__selected-chips {
-    max-width: 360px; gap: var(--think-space-1); overflow: hidden;
+    max-width: 300px; gap: var(--think-space-1); overflow: hidden;
 }
 .tp-toolbar-layout-settings { flex: 0 0 auto; }
 .tp-toolbar .theme-filter-container,
 .tp-toolbar .theme-filter { white-space: nowrap; }
 .tp-toolbar .theme-filter-selected-chips { flex-wrap: nowrap; overflow: hidden; }
-
 @container (max-width: 700px) {
-    .tp-toolbar__spacer { display: none; }
-    .tp-toolbar__filters { flex: 1 1 auto; }
-    .tp-toolbar .think-filter-popover__selected-chips { max-width: 240px; }
+    .tp-toolbar .think-filter-popover__selected-chips { max-width: 180px; }
 }
-@container (max-width: 520px) {
-    .tp-toolbar__date-group { flex: 1 1 auto; }
-    .tp-toolbar__filters {
-        flex-basis: calc(100% - var(--think-control-height-sm) - var(--think-space-2)); order: 3;
-    }
-    .tp-toolbar-layout-settings { margin-inline-start: auto; }
+@container (max-width: 560px) {
+    .tp-toolbar__spacer { min-width: 0; }
     .tp-toolbar .think-filter-popover__selected-chips { display: none; }
-}
-@container (max-width: 390px) {
-    .tp-toolbar__view-switcher { width: 100%; }
-    .tp-toolbar__view-switcher .think-segmented-control__item { flex: 1 1 0; }
-    .tp-toolbar__date-group { justify-content: space-between; }
 }

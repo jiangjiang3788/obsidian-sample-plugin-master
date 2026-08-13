@@ -6697,20 +6697,20 @@ function stripGoalContextFields(fields) {
 }
 function stableJson$1(value) {
   const seen = /* @__PURE__ */ new WeakSet();
-  const normalize = (input) => {
+  const normalize2 = (input) => {
     if (input === void 0) return void 0;
     if (input === null || typeof input !== "object") return input;
     if (seen.has(input)) return "[Circular]";
     seen.add(input);
-    if (Array.isArray(input)) return input.map(normalize);
+    if (Array.isArray(input)) return input.map(normalize2);
     const out = {};
     Object.keys(input).sort().forEach((key) => {
-      const value2 = normalize(input[key]);
+      const value2 = normalize2(input[key]);
       if (value2 !== void 0) out[key] = value2;
     });
     return out;
   };
-  return JSON.stringify(normalize(value));
+  return JSON.stringify(normalize2(value));
 }
 function compactFieldForStructureCompare$1(field) {
   const source = field;
@@ -6724,8 +6724,8 @@ function compactFieldForStructureCompare$1(field) {
   return out;
 }
 function fieldsHaveSameStructure$1(left2, right2) {
-  const normalize = (fields) => (fields || []).map(compactFieldForStructureCompare$1);
-  return stableJson$1(normalize(left2)) === stableJson$1(normalize(right2));
+  const normalize2 = (fields) => (fields || []).map(compactFieldForStructureCompare$1);
+  return stableJson$1(normalize2(left2)) === stableJson$1(normalize2(right2));
 }
 function deriveRequiredFields$1(fields) {
   return (fields || []).filter((field) => field?.required === true).map((field) => compactText(field.key || field.label)).filter(Boolean);
@@ -8044,9 +8044,9 @@ function sanitizeTemplateField(field, index = 1) {
   return result;
 }
 function makeUniqueCustomFieldName(name, usedNames) {
-  const normalize = (value) => value.trim().replace(/\s+/g, "").toLocaleLowerCase();
+  const normalize2 = (value) => value.trim().replace(/\s+/g, "").toLocaleLowerCase();
   let candidate = name;
-  let normalized2 = normalize(candidate);
+  let normalized2 = normalize2(candidate);
   if (!usedNames.has(normalized2)) {
     usedNames.add(normalized2);
     return candidate;
@@ -8054,7 +8054,7 @@ function makeUniqueCustomFieldName(name, usedNames) {
   let suffix = 2;
   do {
     candidate = `${name}${suffix}`;
-    normalized2 = normalize(candidate);
+    normalized2 = normalize2(candidate);
     suffix += 1;
   } while (usedNames.has(normalized2));
   usedNames.add(normalized2);
@@ -33961,7 +33961,7 @@ function getSvgIconUtilityClass(slot) {
   return generateUtilityClass("MuiSvgIcon", slot);
 }
 generateUtilityClasses("MuiSvgIcon", ["root", "colorPrimary", "colorSecondary", "colorAction", "colorError", "colorDisabled", "fontSizeInherit", "fontSizeSmall", "fontSizeMedium", "fontSizeLarge"]);
-const useUtilityClasses$X = (ownerState) => {
+const useUtilityClasses$F = (ownerState) => {
   const {
     color: color2,
     fontSize,
@@ -34100,7 +34100,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
   if (!inheritViewBox) {
     more.viewBox = viewBox;
   }
-  const classes = useUtilityClasses$X(ownerState);
+  const classes = useUtilityClasses$F(ownerState);
   return /* @__PURE__ */ u2(SvgIconRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -34981,7 +34981,7 @@ function getCollapseUtilityClass(slot) {
   return generateUtilityClass("MuiCollapse", slot);
 }
 generateUtilityClasses("MuiCollapse", ["root", "horizontal", "vertical", "entered", "hidden", "wrapper", "wrapperInner"]);
-const useUtilityClasses$W = (ownerState) => {
+const useUtilityClasses$E = (ownerState) => {
   const {
     orientation,
     classes
@@ -35109,7 +35109,7 @@ const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
     orientation,
     collapsedSize: collapsedSizeProp
   };
-  const classes = useUtilityClasses$W(ownerState);
+  const classes = useUtilityClasses$E(ownerState);
   const theme = useTheme();
   const timer = useTimeout();
   const wrapperRef = A$1(null);
@@ -35282,7 +35282,7 @@ function getPaperUtilityClass(slot) {
   return generateUtilityClass("MuiPaper", slot);
 }
 generateUtilityClasses("MuiPaper", ["root", "rounded", "outlined", "elevation", "elevation0", "elevation1", "elevation2", "elevation3", "elevation4", "elevation5", "elevation6", "elevation7", "elevation8", "elevation9", "elevation10", "elevation11", "elevation12", "elevation13", "elevation14", "elevation15", "elevation16", "elevation17", "elevation18", "elevation19", "elevation20", "elevation21", "elevation22", "elevation23", "elevation24"]);
-const useUtilityClasses$V = (ownerState) => {
+const useUtilityClasses$D = (ownerState) => {
   const {
     square,
     elevation,
@@ -35354,7 +35354,7 @@ const Paper$1 = /* @__PURE__ */ D(function Paper(inProps, ref) {
     square,
     variant
   };
-  const classes = useUtilityClasses$V(ownerState);
+  const classes = useUtilityClasses$D(ownerState);
   return /* @__PURE__ */ u2(PaperRoot, {
     as: component,
     ownerState,
@@ -35373,272 +35373,6 @@ const Paper$1 = /* @__PURE__ */ D(function Paper(inProps, ref) {
       },
       ...other.style
     }
-  });
-});
-const AccordionContext = /* @__PURE__ */ X$1({});
-function getAccordionUtilityClass(slot) {
-  return generateUtilityClass("MuiAccordion", slot);
-}
-const accordionClasses = generateUtilityClasses("MuiAccordion", ["root", "heading", "rounded", "expanded", "disabled", "gutters", "region"]);
-const useUtilityClasses$U = (ownerState) => {
-  const {
-    classes,
-    square,
-    expanded,
-    disabled,
-    disableGutters
-  } = ownerState;
-  const slots = {
-    root: ["root", !square && "rounded", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
-    heading: ["heading"],
-    region: ["region"]
-  };
-  return composeClasses(slots, getAccordionUtilityClass, classes);
-};
-const AccordionRoot = styled(Paper$1, {
-  name: "MuiAccordion",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [{
-      [`& .${accordionClasses.region}`]: styles2.region
-    }, styles2.root, !ownerState.square && styles2.rounded, !ownerState.disableGutters && styles2.gutters];
-  }
-})(memoTheme(({
-  theme
-}) => {
-  const transition = {
-    duration: theme.transitions.duration.shortest
-  };
-  return {
-    position: "relative",
-    transition: theme.transitions.create(["margin"], transition),
-    overflowAnchor: "none",
-    // Keep the same scrolling position
-    "&::before": {
-      position: "absolute",
-      left: 0,
-      top: -1,
-      right: 0,
-      height: 1,
-      content: '""',
-      opacity: 1,
-      backgroundColor: (theme.vars || theme).palette.divider,
-      transition: theme.transitions.create(["opacity", "background-color"], transition)
-    },
-    "&:first-of-type": {
-      "&::before": {
-        display: "none"
-      }
-    },
-    [`&.${accordionClasses.expanded}`]: {
-      "&::before": {
-        opacity: 0
-      },
-      "&:first-of-type": {
-        marginTop: 0
-      },
-      "&:last-of-type": {
-        marginBottom: 0
-      },
-      "& + &": {
-        "&::before": {
-          display: "none"
-        }
-      }
-    },
-    [`&.${accordionClasses.disabled}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.disabledBackground
-    }
-  };
-}), memoTheme(({
-  theme
-}) => ({
-  variants: [{
-    props: (props) => !props.square,
-    style: {
-      borderRadius: 0,
-      "&:first-of-type": {
-        borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
-        borderTopRightRadius: (theme.vars || theme).shape.borderRadius
-      },
-      "&:last-of-type": {
-        borderBottomLeftRadius: (theme.vars || theme).shape.borderRadius,
-        borderBottomRightRadius: (theme.vars || theme).shape.borderRadius,
-        // Fix a rendering issue on Edge
-        "@supports (-ms-ime-align: auto)": {
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0
-        }
-      }
-    }
-  }, {
-    props: (props) => !props.disableGutters,
-    style: {
-      [`&.${accordionClasses.expanded}`]: {
-        margin: "16px 0"
-      }
-    }
-  }]
-})));
-const AccordionHeading = styled("h3", {
-  name: "MuiAccordion",
-  slot: "Heading"
-})({
-  all: "unset"
-});
-const AccordionRegion = styled("div", {
-  name: "MuiAccordion",
-  slot: "Region"
-})({});
-const Accordion$1 = /* @__PURE__ */ D(function Accordion(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordion"
-  });
-  const {
-    children: childrenProp,
-    className,
-    defaultExpanded = false,
-    disabled = false,
-    disableGutters = false,
-    expanded: expandedProp,
-    onChange,
-    slots = {},
-    slotProps = {},
-    TransitionComponent: TransitionComponentProp,
-    TransitionProps: TransitionPropsProp,
-    ...other
-  } = props;
-  const [expanded, setExpandedState] = useControlled({
-    controlled: expandedProp,
-    default: defaultExpanded,
-    name: "Accordion",
-    state: "expanded"
-  });
-  const handleChange = q$1((event) => {
-    setExpandedState(!expanded);
-    if (onChange) {
-      onChange(event, !expanded);
-    }
-  }, [expanded, onChange, setExpandedState]);
-  const [summary, ...children] = L.toArray(childrenProp);
-  const contextValue = T$1(() => ({
-    expanded,
-    disabled,
-    disableGutters,
-    toggle: handleChange
-  }), [expanded, disabled, disableGutters, handleChange]);
-  const ownerState = {
-    ...props,
-    disabled,
-    disableGutters,
-    expanded
-  };
-  const classes = useUtilityClasses$U(ownerState);
-  const backwardCompatibleSlots = {
-    transition: TransitionComponentProp,
-    ...slots
-  };
-  const backwardCompatibleSlotProps = {
-    transition: TransitionPropsProp,
-    ...slotProps
-  };
-  const externalForwardedProps = {
-    slots: backwardCompatibleSlots,
-    slotProps: backwardCompatibleSlotProps
-  };
-  const [RootSlot, rootProps] = useSlot("root", {
-    elementType: AccordionRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    className: clsx(classes.root, className),
-    shouldForwardComponentProp: true,
-    ownerState,
-    ref
-  });
-  const [AccordionHeadingSlot, accordionProps] = useSlot("heading", {
-    elementType: AccordionHeading,
-    externalForwardedProps,
-    className: classes.heading,
-    ownerState
-  });
-  const [TransitionSlot, transitionProps] = useSlot("transition", {
-    elementType: Collapse$1,
-    externalForwardedProps,
-    ownerState
-  });
-  const [AccordionRegionSlot, accordionRegionProps] = useSlot("region", {
-    elementType: AccordionRegion,
-    externalForwardedProps,
-    ownerState,
-    className: classes.region,
-    additionalProps: {
-      "aria-labelledby": summary.props.id,
-      id: summary.props["aria-controls"],
-      role: "region"
-    }
-  });
-  return /* @__PURE__ */ u2(RootSlot, {
-    ...rootProps,
-    children: [/* @__PURE__ */ u2(AccordionHeadingSlot, {
-      ...accordionProps,
-      children: /* @__PURE__ */ u2(AccordionContext.Provider, {
-        value: contextValue,
-        children: summary
-      })
-    }), /* @__PURE__ */ u2(TransitionSlot, {
-      in: expanded,
-      timeout: "auto",
-      ...transitionProps,
-      children: /* @__PURE__ */ u2(AccordionRegionSlot, {
-        ...accordionRegionProps,
-        children
-      })
-    })]
-  });
-});
-function getAccordionDetailsUtilityClass(slot) {
-  return generateUtilityClass("MuiAccordionDetails", slot);
-}
-generateUtilityClasses("MuiAccordionDetails", ["root"]);
-const useUtilityClasses$T = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getAccordionDetailsUtilityClass, classes);
-};
-const AccordionDetailsRoot = styled("div", {
-  name: "MuiAccordionDetails",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => ({
-  padding: theme.spacing(1, 2, 2)
-})));
-const AccordionDetails$1 = /* @__PURE__ */ D(function AccordionDetails(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordionDetails"
-  });
-  const {
-    className,
-    ...other
-  } = props;
-  const ownerState = props;
-  const classes = useUtilityClasses$T(ownerState);
-  return /* @__PURE__ */ u2(AccordionDetailsRoot, {
-    className: clsx(classes.root, className),
-    ref,
-    ownerState,
-    ...other
   });
 });
 function isFocusVisible(element) {
@@ -36029,7 +35763,7 @@ function getButtonBaseUtilityClass(slot) {
   return generateUtilityClass("MuiButtonBase", slot);
 }
 const buttonBaseClasses = generateUtilityClasses("MuiButtonBase", ["root", "disabled", "focusVisible"]);
-const useUtilityClasses$S = (ownerState) => {
+const useUtilityClasses$C = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -36252,7 +35986,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     tabIndex,
     focusVisible
   };
-  const classes = useUtilityClasses$S(ownerState);
+  const classes = useUtilityClasses$C(ownerState);
   return /* @__PURE__ */ u2(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -36293,185 +36027,6 @@ function useRippleHandler(ripple, rippleAction, eventCallback, skipRippleAction 
     return true;
   });
 }
-function getAccordionSummaryUtilityClass(slot) {
-  return generateUtilityClass("MuiAccordionSummary", slot);
-}
-const accordionSummaryClasses = generateUtilityClasses("MuiAccordionSummary", ["root", "expanded", "focusVisible", "disabled", "gutters", "contentGutters", "content", "expandIconWrapper"]);
-const useUtilityClasses$R = (ownerState) => {
-  const {
-    classes,
-    expanded,
-    disabled,
-    disableGutters
-  } = ownerState;
-  const slots = {
-    root: ["root", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
-    focusVisible: ["focusVisible"],
-    content: ["content", expanded && "expanded", !disableGutters && "contentGutters"],
-    expandIconWrapper: ["expandIconWrapper", expanded && "expanded"]
-  };
-  return composeClasses(slots, getAccordionSummaryUtilityClass, classes);
-};
-const AccordionSummaryRoot = styled(ButtonBase, {
-  name: "MuiAccordionSummary",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => {
-  const transition = {
-    duration: theme.transitions.duration.shortest
-  };
-  return {
-    display: "flex",
-    width: "100%",
-    minHeight: 48,
-    padding: theme.spacing(0, 2),
-    transition: theme.transitions.create(["min-height", "background-color"], transition),
-    [`&.${accordionSummaryClasses.focusVisible}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.focus
-    },
-    [`&.${accordionSummaryClasses.disabled}`]: {
-      opacity: (theme.vars || theme).palette.action.disabledOpacity
-    },
-    [`&:hover:not(.${accordionSummaryClasses.disabled})`]: {
-      cursor: "pointer"
-    },
-    variants: [{
-      props: (props) => !props.disableGutters,
-      style: {
-        [`&.${accordionSummaryClasses.expanded}`]: {
-          minHeight: 64
-        }
-      }
-    }]
-  };
-}));
-const AccordionSummaryContent = styled("span", {
-  name: "MuiAccordionSummary",
-  slot: "Content"
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  textAlign: "start",
-  flexGrow: 1,
-  margin: "12px 0",
-  variants: [{
-    props: (props) => !props.disableGutters,
-    style: {
-      transition: theme.transitions.create(["margin"], {
-        duration: theme.transitions.duration.shortest
-      }),
-      [`&.${accordionSummaryClasses.expanded}`]: {
-        margin: "20px 0"
-      }
-    }
-  }]
-})));
-const AccordionSummaryExpandIconWrapper = styled("span", {
-  name: "MuiAccordionSummary",
-  slot: "ExpandIconWrapper"
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  color: (theme.vars || theme).palette.action.active,
-  transform: "rotate(0deg)",
-  transition: theme.transitions.create("transform", {
-    duration: theme.transitions.duration.shortest
-  }),
-  [`&.${accordionSummaryClasses.expanded}`]: {
-    transform: "rotate(180deg)"
-  }
-})));
-const AccordionSummary$1 = /* @__PURE__ */ D(function AccordionSummary(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordionSummary"
-  });
-  const {
-    children,
-    className,
-    expandIcon,
-    focusVisibleClassName,
-    onClick,
-    slots,
-    slotProps,
-    ...other
-  } = props;
-  const {
-    disabled = false,
-    disableGutters,
-    expanded,
-    toggle
-  } = x$1(AccordionContext);
-  const handleChange = (event) => {
-    if (toggle) {
-      toggle(event);
-    }
-    if (onClick) {
-      onClick(event);
-    }
-  };
-  const ownerState = {
-    ...props,
-    expanded,
-    disabled,
-    disableGutters
-  };
-  const classes = useUtilityClasses$R(ownerState);
-  const externalForwardedProps = {
-    slots,
-    slotProps
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref,
-    shouldForwardComponentProp: true,
-    className: clsx(classes.root, className),
-    elementType: AccordionSummaryRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState,
-    additionalProps: {
-      focusRipple: false,
-      disableRipple: true,
-      disabled,
-      "aria-expanded": expanded,
-      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName)
-    },
-    getSlotProps: (handlers) => ({
-      ...handlers,
-      onClick: (event) => {
-        handlers.onClick?.(event);
-        handleChange(event);
-      }
-    })
-  });
-  const [ContentSlot, contentSlotProps] = useSlot("content", {
-    className: classes.content,
-    elementType: AccordionSummaryContent,
-    externalForwardedProps,
-    ownerState
-  });
-  const [ExpandIconWrapperSlot, expandIconWrapperSlotProps] = useSlot("expandIconWrapper", {
-    className: classes.expandIconWrapper,
-    elementType: AccordionSummaryExpandIconWrapper,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ u2(RootSlot, {
-    ...rootSlotProps,
-    children: [/* @__PURE__ */ u2(ContentSlot, {
-      ...contentSlotProps,
-      children
-    }), expandIcon && /* @__PURE__ */ u2(ExpandIconWrapperSlot, {
-      ...expandIconWrapperSlotProps,
-      children: expandIcon
-    })]
-  });
-});
 function hasCorrectMainProperty(obj) {
   return typeof obj.main === "string";
 }
@@ -36489,10 +36044,6 @@ function checkSimplePaletteColorValues(obj, additionalPropertiesToCheck = []) {
 function createSimplePaletteValueFilter(additionalPropertiesToCheck = []) {
   return ([, value]) => value && checkSimplePaletteColorValues(value, additionalPropertiesToCheck);
 }
-function getAlertUtilityClass(slot) {
-  return generateUtilityClass("MuiAlert", slot);
-}
-const alertClasses = generateUtilityClasses("MuiAlert", ["root", "action", "icon", "message", "filled", "colorSuccess", "colorInfo", "colorWarning", "colorError", "filledSuccess", "filledInfo", "filledWarning", "filledError", "outlined", "outlinedSuccess", "outlinedInfo", "outlinedWarning", "outlinedError", "standard", "standardSuccess", "standardInfo", "standardWarning", "standardError"]);
 function getCircularProgressUtilityClass(slot) {
   return generateUtilityClass("MuiCircularProgress", slot);
 }
@@ -36529,7 +36080,7 @@ const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
 const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
         animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
       ` : null;
-const useUtilityClasses$Q = (ownerState) => {
+const useUtilityClasses$B = (ownerState) => {
   const {
     classes,
     variant,
@@ -36663,7 +36214,7 @@ const CircularProgress$1 = /* @__PURE__ */ D(function CircularProgress(inProps, 
     variant,
     enableTrackSlot
   };
-  const classes = useUtilityClasses$Q(ownerState);
+  const classes = useUtilityClasses$B(ownerState);
   const circleStyle = {};
   const rootStyle = {};
   const rootProps = {};
@@ -36717,7 +36268,7 @@ function getIconButtonUtilityClass(slot) {
   return generateUtilityClass("MuiIconButton", slot);
 }
 const iconButtonClasses = generateUtilityClasses("MuiIconButton", ["root", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorError", "colorInfo", "colorSuccess", "colorWarning", "edgeStart", "edgeEnd", "sizeSmall", "sizeMedium", "sizeLarge", "loading", "loadingIndicator", "loadingWrapper"]);
-const useUtilityClasses$P = (ownerState) => {
+const useUtilityClasses$A = (ownerState) => {
   const {
     classes,
     disabled,
@@ -36902,7 +36453,7 @@ const IconButton$1 = /* @__PURE__ */ D(function IconButton(inProps, ref) {
     loadingIndicator,
     size
   };
-  const classes = useUtilityClasses$P(ownerState);
+  const classes = useUtilityClasses$A(ownerState);
   return /* @__PURE__ */ u2(IconButtonRoot, {
     id: loading ? loadingId : idProp,
     className: clsx(classes.root, className),
@@ -36926,256 +36477,6 @@ const IconButton$1 = /* @__PURE__ */ D(function IconButton(inProps, ref) {
     }), children]
   });
 });
-const SuccessOutlinedIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4C12.76,4 13.5,4.11 14.2, 4.31L15.77,2.74C14.61,2.26 13.34,2 12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0, 0 22,12M7.91,10.08L6.5,11.5L11,16L21,6L19.59,4.58L11,13.17L7.91,10.08Z"
-}));
-const ReportProblemOutlinedIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"
-}));
-const ErrorOutlineIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
-}));
-const InfoOutlinedIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20, 12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10, 10 0 0,0 12,2M11,17H13V11H11V17Z"
-}));
-const ClearIcon$1 = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-}));
-const useUtilityClasses$O = (ownerState) => {
-  const {
-    variant,
-    color: color2,
-    severity,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", `color${capitalize(color2 || severity)}`, `${variant}${capitalize(color2 || severity)}`, `${variant}`],
-    icon: ["icon"],
-    message: ["message"],
-    action: ["action"]
-  };
-  return composeClasses(slots, getAlertUtilityClass, classes);
-};
-const AlertRoot = styled(Paper$1, {
-  name: "MuiAlert",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, styles2[ownerState.variant], styles2[`${ownerState.variant}${capitalize(ownerState.color || ownerState.severity)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => {
-  const getColor = theme.palette.mode === "light" ? theme.darken : theme.lighten;
-  const getBackgroundColor = theme.palette.mode === "light" ? theme.lighten : theme.darken;
-  return {
-    ...theme.typography.body2,
-    backgroundColor: "transparent",
-    display: "flex",
-    padding: "6px 16px",
-    variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
-      props: {
-        colorSeverity: color2,
-        variant: "standard"
-      },
-      style: {
-        color: theme.vars ? theme.vars.palette.Alert[`${color2}Color`] : getColor(theme.palette[color2].light, 0.6),
-        backgroundColor: theme.vars ? theme.vars.palette.Alert[`${color2}StandardBg`] : getBackgroundColor(theme.palette[color2].light, 0.9),
-        [`& .${alertClasses.icon}`]: theme.vars ? {
-          color: theme.vars.palette.Alert[`${color2}IconColor`]
-        } : {
-          color: theme.palette[color2].main
-        }
-      }
-    })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
-      props: {
-        colorSeverity: color2,
-        variant: "outlined"
-      },
-      style: {
-        color: theme.vars ? theme.vars.palette.Alert[`${color2}Color`] : getColor(theme.palette[color2].light, 0.6),
-        border: `1px solid ${(theme.vars || theme).palette[color2].light}`,
-        [`& .${alertClasses.icon}`]: theme.vars ? {
-          color: theme.vars.palette.Alert[`${color2}IconColor`]
-        } : {
-          color: theme.palette[color2].main
-        }
-      }
-    })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color2]) => ({
-      props: {
-        colorSeverity: color2,
-        variant: "filled"
-      },
-      style: {
-        fontWeight: theme.typography.fontWeightMedium,
-        ...theme.vars ? {
-          color: theme.vars.palette.Alert[`${color2}FilledColor`],
-          backgroundColor: theme.vars.palette.Alert[`${color2}FilledBg`]
-        } : {
-          backgroundColor: theme.palette.mode === "dark" ? theme.palette[color2].dark : theme.palette[color2].main,
-          color: theme.palette.getContrastText(theme.palette[color2].main)
-        }
-      }
-    }))]
-  };
-}));
-const AlertIcon = styled("div", {
-  name: "MuiAlert",
-  slot: "Icon"
-})({
-  marginRight: 12,
-  padding: "7px 0",
-  display: "flex",
-  fontSize: 22,
-  opacity: 0.9
-});
-const AlertMessage = styled("div", {
-  name: "MuiAlert",
-  slot: "Message"
-})({
-  padding: "8px 0",
-  minWidth: 0,
-  overflow: "auto"
-});
-const AlertAction = styled("div", {
-  name: "MuiAlert",
-  slot: "Action"
-})({
-  display: "flex",
-  alignItems: "flex-start",
-  padding: "4px 0 0 16px",
-  marginLeft: "auto",
-  marginRight: -8
-});
-const defaultIconMapping = {
-  success: /* @__PURE__ */ u2(SuccessOutlinedIcon, {
-    fontSize: "inherit"
-  }),
-  warning: /* @__PURE__ */ u2(ReportProblemOutlinedIcon, {
-    fontSize: "inherit"
-  }),
-  error: /* @__PURE__ */ u2(ErrorOutlineIcon, {
-    fontSize: "inherit"
-  }),
-  info: /* @__PURE__ */ u2(InfoOutlinedIcon, {
-    fontSize: "inherit"
-  })
-};
-const Alert$1 = /* @__PURE__ */ D(function Alert(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAlert"
-  });
-  const {
-    action,
-    children,
-    className,
-    closeText = "Close",
-    color: color2,
-    components = {},
-    componentsProps = {},
-    icon,
-    iconMapping = defaultIconMapping,
-    onClose,
-    role = "alert",
-    severity = "success",
-    slotProps = {},
-    slots = {},
-    variant = "standard",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    color: color2,
-    severity,
-    variant,
-    colorSeverity: color2 || severity
-  };
-  const classes = useUtilityClasses$O(ownerState);
-  const externalForwardedProps = {
-    slots: {
-      closeButton: components.CloseButton,
-      closeIcon: components.CloseIcon,
-      ...slots
-    },
-    slotProps: {
-      ...componentsProps,
-      ...slotProps
-    }
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref,
-    shouldForwardComponentProp: true,
-    className: clsx(classes.root, className),
-    elementType: AlertRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState,
-    additionalProps: {
-      role,
-      elevation: 0
-    }
-  });
-  const [IconSlot, iconSlotProps] = useSlot("icon", {
-    className: classes.icon,
-    elementType: AlertIcon,
-    externalForwardedProps,
-    ownerState
-  });
-  const [MessageSlot, messageSlotProps] = useSlot("message", {
-    className: classes.message,
-    elementType: AlertMessage,
-    externalForwardedProps,
-    ownerState
-  });
-  const [ActionSlot, actionSlotProps] = useSlot("action", {
-    className: classes.action,
-    elementType: AlertAction,
-    externalForwardedProps,
-    ownerState
-  });
-  const [CloseButtonSlot, closeButtonProps] = useSlot("closeButton", {
-    elementType: IconButton$1,
-    externalForwardedProps,
-    ownerState
-  });
-  const [CloseIconSlot, closeIconProps] = useSlot("closeIcon", {
-    elementType: ClearIcon$1,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ u2(RootSlot, {
-    ...rootSlotProps,
-    children: [icon !== false ? /* @__PURE__ */ u2(IconSlot, {
-      ...iconSlotProps,
-      children: icon || iconMapping[severity] || defaultIconMapping[severity]
-    }) : null, /* @__PURE__ */ u2(MessageSlot, {
-      ...messageSlotProps,
-      children
-    }), action != null ? /* @__PURE__ */ u2(ActionSlot, {
-      ...actionSlotProps,
-      children: action
-    }) : null, action == null && onClose ? /* @__PURE__ */ u2(ActionSlot, {
-      ...actionSlotProps,
-      children: /* @__PURE__ */ u2(CloseButtonSlot, {
-        size: "small",
-        "aria-label": closeText,
-        title: closeText,
-        color: "inherit",
-        onClick: onClose,
-        ...closeButtonProps,
-        children: /* @__PURE__ */ u2(CloseIconSlot, {
-          fontSize: "small",
-          ...closeIconProps
-        })
-      })
-    }) : null]
-  });
-});
 function getTypographyUtilityClass(slot) {
   return generateUtilityClass("MuiTypography", slot);
 }
@@ -37192,7 +36493,7 @@ const v6Colors = {
   textDisabled: true
 };
 const extendSxProp = internal_createExtendSxProp();
-const useUtilityClasses$N = (ownerState) => {
+const useUtilityClasses$z = (ownerState) => {
   const {
     align,
     gutterBottom,
@@ -37332,7 +36633,7 @@ const Typography$1 = /* @__PURE__ */ D(function Typography(inProps, ref) {
     variantMapping
   };
   const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$N(ownerState);
+  const classes = useUtilityClasses$z(ownerState);
   return /* @__PURE__ */ u2(TypographyRoot, {
     as: Component,
     ref,
@@ -37347,12 +36648,6 @@ const Typography$1 = /* @__PURE__ */ D(function Typography(inProps, ref) {
     }
   });
 });
-function useForcedRerendering() {
-  const [, setState] = d({});
-  return q$1(() => {
-    setState({});
-  }, []);
-}
 function contains$1(parent, child) {
   if (!parent || !child) {
     return false;
@@ -37371,1069 +36666,6 @@ function contains$1(parent, child) {
     }
   }
   return false;
-}
-function usePreviousProps(value) {
-  const ref = A$1({});
-  y(() => {
-    ref.current = value;
-  });
-  return ref.current;
-}
-function areArraysSame({
-  array1,
-  array2,
-  parser = (value) => value
-}) {
-  return array1 && array2 && array1.length === array2.length && array1.every((prevOption, index) => parser(prevOption) === parser(array2[index]));
-}
-function stripDiacritics(string2) {
-  return string2.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-function createFilterOptions(config2 = {}) {
-  const {
-    ignoreAccents = true,
-    ignoreCase = true,
-    limit,
-    matchFrom = "any",
-    stringify: stringify2,
-    trim: trim2 = false
-  } = config2;
-  return (options, {
-    inputValue,
-    getOptionLabel
-  }) => {
-    let input = trim2 ? inputValue.trim() : inputValue;
-    if (ignoreCase) {
-      input = input.toLowerCase();
-    }
-    if (ignoreAccents) {
-      input = stripDiacritics(input);
-    }
-    const filteredOptions = !input ? options : options.filter((option) => {
-      let candidate = (stringify2 || getOptionLabel)(option);
-      if (ignoreCase) {
-        candidate = candidate.toLowerCase();
-      }
-      if (ignoreAccents) {
-        candidate = stripDiacritics(candidate);
-      }
-      return matchFrom === "start" ? candidate.startsWith(input) : candidate.includes(input);
-    });
-    return typeof limit === "number" ? filteredOptions.slice(0, limit) : filteredOptions;
-  };
-}
-const defaultFilterOptions = createFilterOptions();
-const pageSize = 5;
-const defaultIsActiveElementInListbox = (listboxRef) => listboxRef.current !== null && contains$1(listboxRef.current.parentElement, document.activeElement);
-const defaultIsOptionEqualToValue = (option, value) => option === value;
-const MULTIPLE_DEFAULT_VALUE = [];
-function getInputValue(value, multiple, getOptionLabel, renderValue) {
-  if (multiple || value == null || renderValue) {
-    return "";
-  }
-  const optionLabel = getOptionLabel(value);
-  return typeof optionLabel === "string" ? optionLabel : "";
-}
-function useAutocomplete(props) {
-  const {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    unstable_isActiveElementInListbox = defaultIsActiveElementInListbox,
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    unstable_classNamePrefix = "Mui",
-    autoComplete = false,
-    autoHighlight = false,
-    autoSelect = false,
-    blurOnSelect = false,
-    clearOnBlur = !props.freeSolo,
-    clearOnEscape = false,
-    componentName = "useAutocomplete",
-    defaultValue: defaultValue2 = props.multiple ? MULTIPLE_DEFAULT_VALUE : null,
-    disableClearable = false,
-    disableCloseOnSelect = false,
-    disabled: disabledProp,
-    disabledItemsFocusable = false,
-    disableListWrap = false,
-    filterOptions = defaultFilterOptions,
-    filterSelectedOptions = false,
-    freeSolo = false,
-    getOptionDisabled,
-    getOptionKey,
-    getOptionLabel: getOptionLabelProp = (option) => option.label ?? option,
-    groupBy,
-    handleHomeEndKeys = !props.freeSolo,
-    id: idProp,
-    includeInputInList = false,
-    inputValue: inputValueProp,
-    isOptionEqualToValue = defaultIsOptionEqualToValue,
-    multiple = false,
-    onChange,
-    onClose,
-    onHighlightChange,
-    onInputChange,
-    onOpen,
-    open: openProp,
-    openOnFocus = false,
-    options,
-    readOnly = false,
-    renderValue,
-    selectOnFocus = !props.freeSolo,
-    value: valueProp
-  } = props;
-  const id = useId(idProp);
-  let getOptionLabel = getOptionLabelProp;
-  getOptionLabel = (option) => {
-    const optionLabel = getOptionLabelProp(option);
-    if (typeof optionLabel !== "string") {
-      return String(optionLabel);
-    }
-    return optionLabel;
-  };
-  const ignoreFocus = A$1(false);
-  const firstFocus = A$1(true);
-  const inputRef = A$1(null);
-  const listboxRef = A$1(null);
-  const windowLostFocus = A$1(false);
-  const [anchorEl, setAnchorEl] = d(null);
-  const [focusedItem, setFocusedItem] = d(-1);
-  const defaultHighlighted = autoHighlight ? 0 : -1;
-  const highlightedIndexRef = A$1(defaultHighlighted);
-  const highlightReasonRef = A$1(null);
-  const touchScrolledRef = A$1(false);
-  const isTouchRef = A$1(false);
-  const initialInputValue = A$1(getInputValue(defaultValue2 ?? valueProp, multiple, getOptionLabel)).current;
-  const [value, setValueState] = useControlled({
-    controlled: valueProp,
-    default: defaultValue2,
-    name: componentName
-  });
-  const [inputValue, setInputValueState] = useControlled({
-    controlled: inputValueProp,
-    default: initialInputValue,
-    name: componentName,
-    state: "inputValue"
-  });
-  const [focused, setFocused] = d(false);
-  const resetInputValue = q$1((event, newValue, reason) => {
-    const isOptionSelected2 = multiple ? value.length < newValue.length : newValue !== null;
-    if (!isOptionSelected2 && !clearOnBlur) {
-      return;
-    }
-    const newInputValue = getInputValue(newValue, multiple, getOptionLabel, renderValue);
-    if (inputValue === newInputValue) {
-      return;
-    }
-    setInputValueState(newInputValue);
-    if (onInputChange) {
-      onInputChange(event, newInputValue, reason);
-    }
-  }, [getOptionLabel, inputValue, multiple, onInputChange, setInputValueState, clearOnBlur, value, renderValue]);
-  const [open, setOpenState] = useControlled({
-    controlled: openProp,
-    default: false,
-    name: componentName,
-    state: "open"
-  });
-  const [inputPristine, setInputPristine] = d(true);
-  const inputValueIsSelectedValue = !multiple && value != null && inputValue === getOptionLabel(value);
-  const popupOpen = open && !readOnly;
-  const selectedValues2 = T$1(() => {
-    if (multiple) {
-      return value;
-    }
-    if (value != null) {
-      return [value];
-    }
-    return [];
-  }, [multiple, value]);
-  const selectedValuesSet = T$1(() => {
-    if (isOptionEqualToValue !== defaultIsOptionEqualToValue || selectedValues2.length === 0) {
-      return null;
-    }
-    return new Set(selectedValues2);
-  }, [isOptionEqualToValue, selectedValues2]);
-  const isOptionSelected = q$1((option) => {
-    if (selectedValuesSet) {
-      return selectedValuesSet.has(option);
-    }
-    return selectedValues2.some((value2) => value2 != null && isOptionEqualToValue(option, value2));
-  }, [isOptionEqualToValue, selectedValues2, selectedValuesSet]);
-  const filteredOptions = popupOpen ? filterOptions(
-    options.filter((option) => {
-      if (filterSelectedOptions && isOptionSelected(option)) {
-        return false;
-      }
-      return true;
-    }),
-    // we use the empty string to manipulate `filterOptions` to not filter any options
-    // i.e. the filter predicate always returns true
-    {
-      inputValue: inputValueIsSelectedValue && inputPristine ? "" : inputValue,
-      getOptionLabel
-    }
-  ) : [];
-  const previousProps = usePreviousProps({
-    filteredOptions,
-    value,
-    inputValue
-  });
-  y(() => {
-    const valueChange = value !== previousProps.value;
-    if (focused && !valueChange) {
-      return;
-    }
-    if (freeSolo && !valueChange) {
-      return;
-    }
-    resetInputValue(null, value, "reset");
-  }, [value, resetInputValue, focused, previousProps.value, freeSolo]);
-  const listboxAvailable = open && filteredOptions.length > 0 && !readOnly;
-  const focusItem = useEventCallback((itemToFocus) => {
-    if (itemToFocus === -1) {
-      inputRef.current.focus();
-    } else {
-      const indexType = renderValue ? "data-item-index" : "data-tag-index";
-      anchorEl.querySelector(`[${indexType}="${itemToFocus}"]`).focus();
-    }
-  });
-  y(() => {
-    if (multiple && focusedItem > value.length - 1) {
-      setFocusedItem(-1);
-      focusItem(-1);
-    }
-  }, [value, multiple, focusedItem, focusItem]);
-  function validOptionIndex(index, direction) {
-    if (!listboxRef.current || index < 0 || index >= filteredOptions.length) {
-      return -1;
-    }
-    let nextFocus = index;
-    while (true) {
-      const option = listboxRef.current.querySelector(`[data-option-index="${nextFocus}"]`);
-      const nextFocusDisabled = disabledItemsFocusable ? false : !option || option.disabled || option.getAttribute("aria-disabled") === "true";
-      if (option && option.hasAttribute("tabindex") && !nextFocusDisabled) {
-        return nextFocus;
-      }
-      if (direction === "next") {
-        nextFocus = (nextFocus + 1) % filteredOptions.length;
-      } else {
-        nextFocus = (nextFocus - 1 + filteredOptions.length) % filteredOptions.length;
-      }
-      if (nextFocus === index) {
-        return -1;
-      }
-    }
-  }
-  const syncHighlightedIndexToDOM = useEventCallback(({
-    index,
-    reason,
-    preserveScroll = false
-  }) => {
-    if (index === -1) {
-      inputRef.current.removeAttribute("aria-activedescendant");
-    } else {
-      inputRef.current.setAttribute("aria-activedescendant", `${id}-option-${index}`);
-    }
-    if (!listboxRef.current) {
-      return;
-    }
-    const prev2 = listboxRef.current.querySelector(`[role="option"].${unstable_classNamePrefix}-focused`);
-    if (prev2) {
-      prev2.classList.remove(`${unstable_classNamePrefix}-focused`);
-      prev2.classList.remove(`${unstable_classNamePrefix}-focusVisible`);
-    }
-    let listboxNode = listboxRef.current;
-    if (listboxRef.current.getAttribute("role") !== "listbox") {
-      listboxNode = listboxRef.current.parentElement.querySelector('[role="listbox"]');
-    }
-    if (!listboxNode) {
-      return;
-    }
-    if (index === -1) {
-      if (!preserveScroll) {
-        listboxNode.scrollTop = 0;
-      }
-      return;
-    }
-    const option = listboxRef.current.querySelector(`[data-option-index="${index}"]`);
-    if (!option) {
-      return;
-    }
-    option.classList.add(`${unstable_classNamePrefix}-focused`);
-    if (reason === "keyboard") {
-      option.classList.add(`${unstable_classNamePrefix}-focusVisible`);
-    }
-    if (listboxNode.scrollHeight > listboxNode.clientHeight && reason !== "mouse" && reason !== "touch") {
-      const element = option;
-      const scrollBottom = listboxNode.clientHeight + listboxNode.scrollTop;
-      const elementBottom = element.offsetTop + element.offsetHeight;
-      if (elementBottom > scrollBottom) {
-        listboxNode.scrollTop = elementBottom - listboxNode.clientHeight;
-      } else if (element.offsetTop - element.offsetHeight * (groupBy ? 1.3 : 0) < listboxNode.scrollTop) {
-        listboxNode.scrollTop = element.offsetTop - element.offsetHeight * (groupBy ? 1.3 : 0);
-      }
-    }
-  });
-  const setHighlightedIndex = useEventCallback(({
-    event,
-    index,
-    reason,
-    preserveScroll = false
-  }) => {
-    highlightedIndexRef.current = index;
-    highlightReasonRef.current = reason ?? null;
-    if (onHighlightChange && ["mouse", "keyboard", "touch"].includes(reason)) {
-      onHighlightChange(event, index === -1 ? null : filteredOptions[index], reason);
-    }
-    syncHighlightedIndexToDOM({
-      index,
-      reason,
-      preserveScroll
-    });
-  });
-  const setHighlightedIndexFromSync = useEventCallback(({
-    index
-  }) => {
-    highlightedIndexRef.current = index;
-    syncHighlightedIndexToDOM({
-      index,
-      reason: highlightReasonRef.current
-    });
-  });
-  const changeHighlightedIndex = useEventCallback(({
-    event,
-    diff,
-    direction = "next",
-    reason,
-    preserveScroll
-  }) => {
-    if (!popupOpen) {
-      return;
-    }
-    if (reason === "keyboard") {
-      touchScrolledRef.current = false;
-      isTouchRef.current = false;
-    }
-    const getNextIndex = () => {
-      const maxIndex = filteredOptions.length - 1;
-      if (diff === "reset") {
-        return defaultHighlighted;
-      }
-      if (diff === "start") {
-        return 0;
-      }
-      if (diff === "end") {
-        return maxIndex;
-      }
-      const newIndex = highlightedIndexRef.current + diff;
-      if (newIndex < 0) {
-        if (newIndex === -1 && includeInputInList) {
-          return -1;
-        }
-        if (disableListWrap && highlightedIndexRef.current !== -1 || Math.abs(diff) > 1) {
-          return 0;
-        }
-        return maxIndex;
-      }
-      if (newIndex > maxIndex) {
-        if (newIndex === maxIndex + 1 && includeInputInList) {
-          return -1;
-        }
-        if (disableListWrap || Math.abs(diff) > 1) {
-          return maxIndex;
-        }
-        return 0;
-      }
-      return newIndex;
-    };
-    const nextIndex = validOptionIndex(getNextIndex(), direction);
-    setHighlightedIndex({
-      index: nextIndex,
-      reason,
-      event,
-      preserveScroll
-    });
-    if (autoComplete && diff !== "reset") {
-      if (nextIndex === -1) {
-        inputRef.current.value = inputValue;
-      } else {
-        const option = getOptionLabel(filteredOptions[nextIndex]);
-        inputRef.current.value = option;
-        const index = option.toLowerCase().indexOf(inputValue.toLowerCase());
-        if (index === 0 && inputValue.length > 0) {
-          inputRef.current.setSelectionRange(inputValue.length, option.length);
-        }
-      }
-    }
-  });
-  const filteredOptionsChanged = !areArraysSame({
-    array1: previousProps.filteredOptions,
-    array2: filteredOptions,
-    parser: getOptionLabel
-  });
-  const getPreviousHighlightedOptionIndex = () => {
-    const isSameValue2 = (value1, value2) => {
-      const label1 = value1 ? getOptionLabel(value1) : "";
-      const label2 = value2 ? getOptionLabel(value2) : "";
-      return label1 === label2;
-    };
-    if (highlightedIndexRef.current !== -1 && !areArraysSame({
-      array1: previousProps.filteredOptions,
-      array2: filteredOptions,
-      parser: getOptionLabel
-    }) && previousProps.inputValue === inputValue && (multiple ? value.length === previousProps.value.length && previousProps.value.every((val, i2) => getOptionLabel(value[i2]) === getOptionLabel(val)) : isSameValue2(previousProps.value, value))) {
-      const previousHighlightedOption = previousProps.filteredOptions[highlightedIndexRef.current];
-      if (previousHighlightedOption) {
-        return filteredOptions.findIndex((option) => {
-          return getOptionLabel(option) === getOptionLabel(previousHighlightedOption);
-        });
-      }
-    }
-    return -1;
-  };
-  const syncHighlightedIndex = q$1(() => {
-    if (!popupOpen) {
-      return;
-    }
-    const previousHighlightedOptionIndex = getPreviousHighlightedOptionIndex();
-    if (previousHighlightedOptionIndex !== -1) {
-      setHighlightedIndexFromSync({
-        index: previousHighlightedOptionIndex
-      });
-      return;
-    }
-    const valueItem = multiple ? value[0] : value;
-    if (filteredOptions.length === 0 || valueItem == null) {
-      const isAppendOnly = filteredOptionsChanged && previousProps.inputValue === inputValue && previousProps.filteredOptions?.length > 0 && filteredOptions.length > previousProps.filteredOptions.length && previousProps.filteredOptions.every((option, index) => getOptionLabel(option) === getOptionLabel(filteredOptions[index]));
-      changeHighlightedIndex({
-        diff: "reset",
-        preserveScroll: isAppendOnly
-      });
-      return;
-    }
-    if (!listboxRef.current) {
-      return;
-    }
-    if (valueItem != null) {
-      const currentOption = filteredOptions[highlightedIndexRef.current];
-      if (multiple && currentOption && value.findIndex((val) => isOptionEqualToValue(currentOption, val)) !== -1 && previousProps.filteredOptions?.length > 0) {
-        setHighlightedIndexFromSync({
-          index: highlightedIndexRef.current
-        });
-        return;
-      }
-      const itemIndex = filteredOptions.findIndex((optionItem) => isOptionEqualToValue(optionItem, valueItem));
-      if (itemIndex === -1) {
-        changeHighlightedIndex({
-          diff: "reset"
-        });
-      } else {
-        setHighlightedIndex({
-          index: itemIndex
-        });
-      }
-      return;
-    }
-    if (highlightedIndexRef.current >= filteredOptions.length - 1) {
-      setHighlightedIndex({
-        index: filteredOptions.length - 1
-      });
-      return;
-    }
-    setHighlightedIndex({
-      index: highlightedIndexRef.current
-    });
-  }, [
-    // Only sync the highlighted index when the option switch between empty and not
-    filteredOptions.length,
-    // Don't sync the highlighted index with the value when multiple
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    multiple ? false : value,
-    changeHighlightedIndex,
-    setHighlightedIndex,
-    setHighlightedIndexFromSync,
-    popupOpen,
-    inputValue,
-    multiple
-  ]);
-  const handleListboxRef = useEventCallback((node2) => {
-    setRef(listboxRef, node2);
-    if (!node2) {
-      return;
-    }
-    syncHighlightedIndex();
-  });
-  y(() => {
-    if (filteredOptionsChanged || popupOpen && !disableCloseOnSelect) {
-      syncHighlightedIndex();
-    }
-  }, [syncHighlightedIndex, filteredOptionsChanged, popupOpen, disableCloseOnSelect]);
-  y(() => {
-    if (typeof window === "undefined") {
-      return void 0;
-    }
-    const handleWindowBlur = () => {
-      windowLostFocus.current = true;
-    };
-    window.addEventListener("blur", handleWindowBlur);
-    return () => {
-      window.removeEventListener("blur", handleWindowBlur);
-    };
-  }, []);
-  const handleOpen = (event) => {
-    if (open) {
-      return;
-    }
-    setOpenState(true);
-    setInputPristine(true);
-    isTouchRef.current = false;
-    if (onOpen) {
-      onOpen(event);
-    }
-  };
-  const handleClose = (event, reason) => {
-    if (!open) {
-      return;
-    }
-    setOpenState(false);
-    touchScrolledRef.current = false;
-    highlightReasonRef.current = null;
-    if (onClose) {
-      onClose(event, reason);
-    }
-  };
-  const handleValue = (event, newValue, reason, details) => {
-    if (multiple) {
-      if (value.length === newValue.length && value.every((val, i2) => val === newValue[i2])) {
-        return;
-      }
-    } else if (value === newValue) {
-      return;
-    }
-    if (onChange) {
-      onChange(event, newValue, reason, details);
-    }
-    setValueState(newValue);
-  };
-  const selectNewValue = (event, option, reasonProp = "selectOption", origin = "options") => {
-    let reason = reasonProp;
-    let newValue = option;
-    if (multiple) {
-      newValue = Array.isArray(value) ? value.slice() : [];
-      const itemIndex = newValue.findIndex((valueItem) => isOptionEqualToValue(option, valueItem));
-      if (itemIndex === -1) {
-        newValue.push(option);
-      } else if (origin !== "freeSolo") {
-        newValue.splice(itemIndex, 1);
-        reason = "removeOption";
-      }
-    }
-    resetInputValue(event, newValue, reason);
-    handleValue(event, newValue, reason, {
-      option
-    });
-    if (!disableCloseOnSelect && (!event || !event.ctrlKey && !event.metaKey)) {
-      handleClose(event, reason);
-    }
-    if (blurOnSelect === true || blurOnSelect === "touch" && isTouchRef.current || blurOnSelect === "mouse" && !isTouchRef.current) {
-      inputRef.current.blur();
-    }
-  };
-  function validItemIndex(index, direction) {
-    if (index === -1) {
-      return -1;
-    }
-    let nextFocus = index;
-    while (true) {
-      if (direction === "next" && nextFocus === value.length || direction === "previous" && nextFocus === -1) {
-        return -1;
-      }
-      const indexType = renderValue ? "data-item-index" : "data-tag-index";
-      const option = anchorEl.querySelector(`[${indexType}="${nextFocus}"]`);
-      if (!option || !option.hasAttribute("tabindex") || option.disabled || option.getAttribute("aria-disabled") === "true") {
-        nextFocus += direction === "next" ? 1 : -1;
-      } else {
-        return nextFocus;
-      }
-    }
-  }
-  const handleFocusItem = (event, direction) => {
-    if (!multiple) {
-      return;
-    }
-    if (inputValue === "") {
-      handleClose(event, "toggleInput");
-    }
-    let nextItem2 = focusedItem;
-    if (focusedItem === -1 && direction === "previous") {
-      nextItem2 = value.length - 1;
-      if (freeSolo && inputValue !== "") {
-        setInputValueState("");
-        if (onInputChange) {
-          onInputChange(event, "", "reset");
-        }
-      }
-    } else {
-      nextItem2 += direction === "next" ? 1 : -1;
-      if (nextItem2 < 0) {
-        nextItem2 = 0;
-      }
-      if (nextItem2 === value.length) {
-        nextItem2 = -1;
-      }
-    }
-    nextItem2 = validItemIndex(nextItem2, direction);
-    setFocusedItem(nextItem2);
-    focusItem(nextItem2);
-  };
-  const handleClear = (event) => {
-    ignoreFocus.current = true;
-    setInputValueState("");
-    if (onInputChange) {
-      onInputChange(event, "", "clear");
-    }
-    handleValue(event, multiple ? [] : null, "clear");
-  };
-  const handleKeyDown = (other) => (event) => {
-    if (other.onKeyDown) {
-      other.onKeyDown(event);
-    }
-    if (event.defaultMuiPrevented) {
-      return;
-    }
-    if (focusedItem !== -1 && !["ArrowLeft", "ArrowRight"].includes(event.key)) {
-      setFocusedItem(-1);
-      focusItem(-1);
-    }
-    if (event.which !== 229) {
-      switch (event.key) {
-        case "Home":
-          if (popupOpen && handleHomeEndKeys) {
-            event.preventDefault();
-            changeHighlightedIndex({
-              diff: "start",
-              direction: "next",
-              reason: "keyboard",
-              event
-            });
-          }
-          break;
-        case "End":
-          if (popupOpen && handleHomeEndKeys) {
-            event.preventDefault();
-            changeHighlightedIndex({
-              diff: "end",
-              direction: "previous",
-              reason: "keyboard",
-              event
-            });
-          }
-          break;
-        case "PageUp":
-          event.preventDefault();
-          changeHighlightedIndex({
-            diff: -pageSize,
-            direction: "previous",
-            reason: "keyboard",
-            event
-          });
-          handleOpen(event);
-          break;
-        case "PageDown":
-          event.preventDefault();
-          changeHighlightedIndex({
-            diff: pageSize,
-            direction: "next",
-            reason: "keyboard",
-            event
-          });
-          handleOpen(event);
-          break;
-        case "ArrowDown":
-          event.preventDefault();
-          changeHighlightedIndex({
-            diff: 1,
-            direction: "next",
-            reason: "keyboard",
-            event
-          });
-          handleOpen(event);
-          break;
-        case "ArrowUp":
-          event.preventDefault();
-          changeHighlightedIndex({
-            diff: -1,
-            direction: "previous",
-            reason: "keyboard",
-            event
-          });
-          handleOpen(event);
-          break;
-        case "ArrowLeft": {
-          const input = inputRef.current;
-          const caretAtStart = input && input.selectionStart === 0 && input.selectionEnd === 0;
-          if (!caretAtStart) {
-            return;
-          }
-          if (!multiple && renderValue && value != null) {
-            if (freeSolo && inputValue !== "") {
-              setInputValueState("");
-              if (onInputChange) {
-                onInputChange(event, "", "reset");
-              }
-            }
-            setFocusedItem(0);
-            focusItem(0);
-          } else {
-            handleFocusItem(event, "previous");
-          }
-          break;
-        }
-        case "ArrowRight":
-          if (!multiple && renderValue) {
-            setFocusedItem(-1);
-            focusItem(-1);
-          } else {
-            handleFocusItem(event, "next");
-          }
-          break;
-        case "Enter": {
-          const shouldSelectHighlighted = !freeSolo || inputPristine || highlightReasonRef.current !== null;
-          if (highlightedIndexRef.current !== -1 && popupOpen && shouldSelectHighlighted && // After a touch-scroll the highlight is stale (the user scrolled
-          // past it), so skip selection until the next deliberate interaction.
-          !touchScrolledRef.current) {
-            const option = filteredOptions[highlightedIndexRef.current];
-            const disabled = getOptionDisabled ? getOptionDisabled(option) : false;
-            event.preventDefault();
-            if (disabled) {
-              return;
-            }
-            selectNewValue(event, option, "selectOption");
-            if (autoComplete) {
-              inputRef.current.setSelectionRange(inputRef.current.value.length, inputRef.current.value.length);
-            }
-          } else if (freeSolo && inputValue !== "" && inputValueIsSelectedValue === false) {
-            if (multiple) {
-              event.preventDefault();
-            }
-            selectNewValue(event, inputValue, "createOption", "freeSolo");
-          } else if (popupOpen && touchScrolledRef.current) {
-            event.preventDefault();
-            handleClose(event, "escape");
-          }
-          break;
-        }
-        case "Escape":
-          if (popupOpen) {
-            event.preventDefault();
-            event.stopPropagation();
-            handleClose(event, "escape");
-          } else if (clearOnEscape && (inputValue !== "" || multiple && value.length > 0 || renderValue)) {
-            event.preventDefault();
-            event.stopPropagation();
-            handleClear(event);
-          }
-          break;
-        case "Backspace":
-          if (multiple && !readOnly && inputValue === "" && value.length > 0) {
-            const index = focusedItem === -1 ? value.length - 1 : focusedItem;
-            const newValue = value.slice();
-            newValue.splice(index, 1);
-            handleValue(event, newValue, "removeOption", {
-              option: value[index]
-            });
-          }
-          if (!multiple && renderValue && !readOnly && inputValue === "") {
-            handleValue(event, null, "removeOption", {
-              option: value
-            });
-          }
-          break;
-        case "Delete":
-          if (multiple && !readOnly && inputValue === "" && value.length > 0 && focusedItem !== -1) {
-            const index = focusedItem;
-            const newValue = value.slice();
-            newValue.splice(index, 1);
-            handleValue(event, newValue, "removeOption", {
-              option: value[index]
-            });
-          }
-          if (!multiple && renderValue && !readOnly && inputValue === "") {
-            handleValue(event, null, "removeOption", {
-              option: value
-            });
-          }
-          break;
-      }
-    }
-  };
-  const handleFocus = (event) => {
-    setFocused(true);
-    if (focusedItem !== -1) {
-      setFocusedItem(-1);
-      focusItem(-1);
-    }
-    if (windowLostFocus.current) {
-      windowLostFocus.current = false;
-      return;
-    }
-    if (openOnFocus && !ignoreFocus.current) {
-      handleOpen(event);
-    }
-  };
-  const handleBlur = (event) => {
-    if (unstable_isActiveElementInListbox(listboxRef)) {
-      inputRef.current.focus();
-      return;
-    }
-    setFocused(false);
-    firstFocus.current = true;
-    ignoreFocus.current = false;
-    if (autoSelect && highlightedIndexRef.current !== -1 && popupOpen && highlightReasonRef.current !== "mouse" && highlightReasonRef.current !== "touch") {
-      selectNewValue(event, filteredOptions[highlightedIndexRef.current], "blur");
-    } else if (autoSelect && freeSolo && inputValue !== "") {
-      selectNewValue(event, inputValue, "blur", "freeSolo");
-    } else if (clearOnBlur) {
-      resetInputValue(event, value, "blur");
-    }
-    handleClose(event, "blur");
-  };
-  const handleInputChange = (event) => {
-    const newValue = event.target.value;
-    const valueChanged = inputValue !== newValue;
-    if (valueChanged) {
-      setInputValueState(newValue);
-      touchScrolledRef.current = false;
-      if (onInputChange) {
-        onInputChange(event, newValue, "input");
-      }
-    }
-    if (newValue === "") {
-      if (!disableClearable && !multiple && !renderValue) {
-        handleValue(event, null, "clear");
-      }
-    } else {
-      handleOpen(event);
-    }
-    if (valueChanged) {
-      setInputPristine(false);
-    }
-  };
-  const handleOptionMouseMove = (event) => {
-    const index = Number(event.currentTarget.getAttribute("data-option-index"));
-    if (highlightedIndexRef.current !== index) {
-      setHighlightedIndex({
-        event,
-        index,
-        reason: "mouse"
-      });
-    } else {
-      highlightReasonRef.current = "mouse";
-    }
-    if (!isTouchRef.current) {
-      touchScrolledRef.current = false;
-    }
-  };
-  const handleOptionTouchStart = (event) => {
-    touchScrolledRef.current = false;
-    setHighlightedIndex({
-      event,
-      index: Number(event.currentTarget.getAttribute("data-option-index")),
-      reason: "touch"
-    });
-    isTouchRef.current = true;
-  };
-  const handleOptionClick = (event) => {
-    const index = Number(event.currentTarget.getAttribute("data-option-index"));
-    selectNewValue(event, filteredOptions[index], "selectOption");
-    isTouchRef.current = false;
-  };
-  const handleItemDelete = (index) => (event) => {
-    const newValue = value.slice();
-    newValue.splice(index, 1);
-    handleValue(event, newValue, "removeOption", {
-      option: value[index]
-    });
-  };
-  const handleSingleItemDelete = (event) => {
-    handleValue(event, null, "removeOption", {
-      option: value
-    });
-  };
-  const handlePopupIndicator = (event) => {
-    if (open) {
-      handleClose(event, "toggleInput");
-    } else {
-      handleOpen(event);
-    }
-  };
-  const handleMouseDown = (event) => {
-    if (!contains$1(event.currentTarget, event.target)) {
-      return;
-    }
-    if (anchorEl && !contains$1(anchorEl, event.target)) {
-      return;
-    }
-    if (event.target.getAttribute("id") !== id) {
-      event.preventDefault();
-    }
-  };
-  const handleClick = (event) => {
-    if (!contains$1(event.currentTarget, event.target)) {
-      return;
-    }
-    if (anchorEl && !contains$1(anchorEl, event.target)) {
-      return;
-    }
-    inputRef.current.focus();
-    if (selectOnFocus && firstFocus.current && inputRef.current.selectionEnd - inputRef.current.selectionStart === 0) {
-      inputRef.current.select();
-    }
-    firstFocus.current = false;
-  };
-  const handleInputMouseDown = (event) => {
-    if (!disabledProp && (inputValue === "" || !open)) {
-      handlePopupIndicator(event);
-    }
-  };
-  let dirty = freeSolo && inputValue.length > 0;
-  dirty = dirty || (multiple ? value.length > 0 : value !== null);
-  let groupedOptions = filteredOptions;
-  if (groupBy) {
-    groupedOptions = filteredOptions.reduce((acc, option, index) => {
-      const group = groupBy(option);
-      if (acc.length > 0 && acc[acc.length - 1].group === group) {
-        acc[acc.length - 1].options.push(option);
-      } else {
-        acc.push({
-          key: index,
-          index,
-          group,
-          options: [option]
-        });
-      }
-      return acc;
-    }, []);
-  }
-  if (disabledProp && focused) {
-    handleBlur();
-  }
-  return {
-    getRootProps: (other = {}) => ({
-      ...other,
-      onKeyDown: handleKeyDown(other),
-      onMouseDown: handleMouseDown,
-      onClick: handleClick
-    }),
-    getInputLabelProps: () => ({
-      id: `${id}-label`,
-      htmlFor: id
-    }),
-    getInputProps: () => ({
-      id,
-      value: inputValue,
-      onBlur: handleBlur,
-      onFocus: handleFocus,
-      onChange: handleInputChange,
-      onMouseDown: handleInputMouseDown,
-      // if open then this is handled imperatively so don't let react override
-      // only have an opinion about this when closed
-      "aria-activedescendant": popupOpen ? "" : null,
-      "aria-autocomplete": autoComplete ? "both" : "list",
-      "aria-controls": listboxAvailable ? `${id}-listbox` : void 0,
-      "aria-expanded": listboxAvailable,
-      // Disable browser's suggestion that might overlap with the popup.
-      // Handle autocomplete but not autofill.
-      autoComplete: "off",
-      ref: inputRef,
-      autoCapitalize: "none",
-      spellCheck: "false",
-      role: "combobox",
-      disabled: disabledProp
-    }),
-    getClearProps: () => ({
-      tabIndex: -1,
-      type: "button",
-      onClick: handleClear
-    }),
-    getItemProps: ({
-      index = 0
-    } = {}) => ({
-      ...multiple && {
-        key: index
-      },
-      ...renderValue ? {
-        "data-item-index": index
-      } : {
-        "data-tag-index": index
-      },
-      tabIndex: -1,
-      ...!readOnly && {
-        onDelete: multiple ? handleItemDelete(index) : handleSingleItemDelete
-      }
-    }),
-    getPopupIndicatorProps: () => ({
-      tabIndex: -1,
-      type: "button",
-      onClick: handlePopupIndicator
-    }),
-    // deprecated
-    getTagProps: ({
-      index
-    }) => ({
-      key: index,
-      "data-tag-index": index,
-      tabIndex: -1,
-      ...!readOnly && {
-        onDelete: handleItemDelete(index)
-      }
-    }),
-    getListboxProps: () => ({
-      role: "listbox",
-      id: `${id}-listbox`,
-      "aria-labelledby": `${id}-label`,
-      "aria-multiselectable": multiple || void 0,
-      ref: handleListboxRef,
-      onMouseDown: (event) => {
-        event.preventDefault();
-      },
-      onScroll: () => {
-        if (isTouchRef.current) {
-          touchScrolledRef.current = true;
-        }
-      }
-    }),
-    getOptionProps: ({
-      index,
-      option
-    }) => {
-      const selected = isOptionSelected(option);
-      const disabled = getOptionDisabled ? getOptionDisabled(option) : false;
-      return {
-        key: getOptionKey?.(option) ?? getOptionLabel(option),
-        tabIndex: -1,
-        role: "option",
-        id: `${id}-option-${index}`,
-        onMouseMove: handleOptionMouseMove,
-        onClick: handleOptionClick,
-        onTouchStart: handleOptionTouchStart,
-        "data-option-index": index,
-        "aria-disabled": disabled,
-        "aria-selected": selected
-      };
-    },
-    id,
-    inputValue,
-    value,
-    dirty,
-    expanded: popupOpen && anchorEl,
-    popupOpen,
-    focused: focused || focusedItem !== -1,
-    anchorEl,
-    setAnchorEl,
-    focusedItem,
-    // deprecated
-    focusedTag: focusedItem,
-    groupedOptions
-  };
 }
 var top = "top";
 var bottom = "bottom";
@@ -39873,7 +38105,7 @@ function resolveAnchorEl$1(anchorEl) {
 function isHTMLElement$1(element) {
   return element.nodeType !== void 0;
 }
-const useUtilityClasses$M = (ownerState) => {
+const useUtilityClasses$y = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -39990,7 +38222,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
   if (TransitionProps !== null) {
     childProps.TransitionProps = TransitionProps;
   }
-  const classes = useUtilityClasses$M(props);
+  const classes = useUtilityClasses$y(props);
   const Root = slots.root ?? "div";
   const rootProps = useSlotProps({
     elementType: Root,
@@ -40133,117 +38365,6 @@ const Popper$1 = /* @__PURE__ */ D(function Popper2(inProps, ref) {
     ref
   });
 });
-function getListSubheaderUtilityClass(slot) {
-  return generateUtilityClass("MuiListSubheader", slot);
-}
-generateUtilityClasses("MuiListSubheader", ["root", "colorPrimary", "colorInherit", "gutters", "inset", "sticky"]);
-const useUtilityClasses$L = (ownerState) => {
-  const {
-    classes,
-    color: color2,
-    disableGutters,
-    inset,
-    disableSticky
-  } = ownerState;
-  const slots = {
-    root: ["root", color2 !== "default" && `color${capitalize(color2)}`, !disableGutters && "gutters", inset && "inset", !disableSticky && "sticky"]
-  };
-  return composeClasses(slots, getListSubheaderUtilityClass, classes);
-};
-const ListSubheaderRoot = styled("li", {
-  name: "MuiListSubheader",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.color !== "default" && styles2[`color${capitalize(ownerState.color)}`], !ownerState.disableGutters && styles2.gutters, ownerState.inset && styles2.inset, !ownerState.disableSticky && styles2.sticky];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  boxSizing: "border-box",
-  lineHeight: "48px",
-  listStyle: "none",
-  color: (theme.vars || theme).palette.text.secondary,
-  fontFamily: theme.typography.fontFamily,
-  fontWeight: theme.typography.fontWeightMedium,
-  fontSize: theme.typography.pxToRem(14),
-  variants: [{
-    props: {
-      color: "primary"
-    },
-    style: {
-      color: (theme.vars || theme).palette.primary.main
-    }
-  }, {
-    props: {
-      color: "inherit"
-    },
-    style: {
-      color: "inherit"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.disableGutters,
-    style: {
-      paddingLeft: 16,
-      paddingRight: 16
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.inset,
-    style: {
-      paddingLeft: 72
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.disableSticky,
-    style: {
-      position: "sticky",
-      top: 0,
-      zIndex: 1,
-      backgroundColor: (theme.vars || theme).palette.background.paper
-    }
-  }]
-})));
-const ListSubheader = /* @__PURE__ */ D(function ListSubheader2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiListSubheader"
-  });
-  const {
-    className,
-    color: color2 = "default",
-    component = "li",
-    disableGutters = false,
-    disableSticky = false,
-    inset = false,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    color: color2,
-    component,
-    disableGutters,
-    disableSticky,
-    inset
-  };
-  const classes = useUtilityClasses$L(ownerState);
-  return /* @__PURE__ */ u2(ListSubheaderRoot, {
-    as: component,
-    className: clsx(classes.root, className),
-    ref,
-    ownerState,
-    ...other
-  });
-});
-if (ListSubheader) {
-  ListSubheader.muiSkipListHighlight = true;
-}
 const CancelIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
 }));
@@ -40251,7 +38372,7 @@ function getChipUtilityClass(slot) {
   return generateUtilityClass("MuiChip", slot);
 }
 const chipClasses = generateUtilityClasses("MuiChip", ["root", "sizeSmall", "sizeMedium", "colorDefault", "colorError", "colorInfo", "colorPrimary", "colorSecondary", "colorSuccess", "colorWarning", "disabled", "clickable", "clickableColorPrimary", "clickableColorSecondary", "deletable", "deletableColorPrimary", "deletableColorSecondary", "outlined", "filled", "outlinedPrimary", "outlinedSecondary", "filledPrimary", "filledSecondary", "avatar", "avatarSmall", "avatarMedium", "avatarColorPrimary", "avatarColorSecondary", "icon", "iconSmall", "iconMedium", "iconColorPrimary", "iconColorSecondary", "label", "labelSmall", "labelMedium", "deleteIcon", "deleteIconSmall", "deleteIconMedium", "deleteIconColorPrimary", "deleteIconColorSecondary", "deleteIconOutlinedColorPrimary", "deleteIconOutlinedColorSecondary", "deleteIconFilledColorPrimary", "deleteIconFilledColorSecondary", "focusVisible"]);
-const useUtilityClasses$K = (ownerState) => {
+const useUtilityClasses$x = (ownerState) => {
   const {
     classes,
     disabled,
@@ -40643,7 +38764,7 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
     clickable,
     variant
   };
-  const classes = useUtilityClasses$K(ownerState);
+  const classes = useUtilityClasses$x(ownerState);
   const moreProps = component === ButtonBase ? {
     component: ComponentProp || "div",
     focusVisibleClassName: classes.focusVisible,
@@ -40956,7 +39077,7 @@ const inputOverridesResolver = (props, styles2) => {
   } = props;
   return [styles2.input, ownerState.size === "small" && styles2.inputSizeSmall, ownerState.multiline && styles2.inputMultiline, ownerState.type === "search" && styles2.inputTypeSearch, ownerState.startAdornment && styles2.inputAdornedStart, ownerState.endAdornment && styles2.inputAdornedEnd, ownerState.hiddenLabel && styles2.inputHiddenLabel];
 };
-const useUtilityClasses$J = (ownerState) => {
+const useUtilityClasses$w = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -41365,7 +39486,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     startAdornment,
     type
   };
-  const classes = useUtilityClasses$J(ownerState);
+  const classes = useUtilityClasses$w(ownerState);
   const Root = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input3 = slots.input || components.Input || InputBaseInput;
@@ -41450,771 +39571,9 @@ const filledInputClasses = {
   ...inputBaseClasses,
   ...generateUtilityClasses("MuiFilledInput", ["root", "underline", "input", "adornedStart", "adornedEnd", "sizeSmall", "multiline", "hiddenLabel"])
 };
-const ArrowDropDownIcon$1 = createSvgIcon(/* @__PURE__ */ u2("path", {
+const ArrowDropDownIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M7 10l5 5 5-5z"
 }));
-function getAutocompleteUtilityClass(slot) {
-  return generateUtilityClass("MuiAutocomplete", slot);
-}
-const autocompleteClasses = generateUtilityClasses("MuiAutocomplete", ["root", "expanded", "fullWidth", "focused", "focusVisible", "tag", "tagSizeSmall", "tagSizeMedium", "hasPopupIcon", "hasClearIcon", "inputRoot", "input", "inputFocused", "endAdornment", "clearIndicator", "popupIndicator", "popupIndicatorOpen", "popper", "popperDisablePortal", "paper", "listbox", "loading", "noOptions", "option", "groupLabel", "groupUl"]);
-var _ClearIcon, _ArrowDropDownIcon;
-const useUtilityClasses$I = (ownerState) => {
-  const {
-    classes,
-    disablePortal,
-    expanded,
-    focused,
-    fullWidth,
-    hasClearIcon,
-    hasPopupIcon,
-    inputFocused,
-    popupOpen,
-    size
-  } = ownerState;
-  const slots = {
-    root: ["root", expanded && "expanded", focused && "focused", fullWidth && "fullWidth", hasClearIcon && "hasClearIcon", hasPopupIcon && "hasPopupIcon"],
-    inputRoot: ["inputRoot"],
-    input: ["input", inputFocused && "inputFocused"],
-    tag: ["tag", `tagSize${capitalize(size)}`],
-    endAdornment: ["endAdornment"],
-    clearIndicator: ["clearIndicator"],
-    popupIndicator: ["popupIndicator", popupOpen && "popupIndicatorOpen"],
-    popper: ["popper", disablePortal && "popperDisablePortal"],
-    paper: ["paper"],
-    listbox: ["listbox"],
-    loading: ["loading"],
-    noOptions: ["noOptions"],
-    option: ["option"],
-    groupLabel: ["groupLabel"],
-    groupUl: ["groupUl"]
-  };
-  return composeClasses(slots, getAutocompleteUtilityClass, classes);
-};
-const AutocompleteRoot = styled("div", {
-  name: "MuiAutocomplete",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    const {
-      fullWidth,
-      hasClearIcon,
-      hasPopupIcon,
-      inputFocused,
-      size
-    } = ownerState;
-    return [{
-      [`& .${autocompleteClasses.tag}`]: styles2.tag
-    }, {
-      [`& .${autocompleteClasses.tag}`]: styles2[`tagSize${capitalize(size)}`]
-    }, {
-      [`& .${autocompleteClasses.inputRoot}`]: styles2.inputRoot
-    }, {
-      [`& .${autocompleteClasses.input}`]: styles2.input
-    }, {
-      [`& .${autocompleteClasses.input}`]: inputFocused && styles2.inputFocused
-    }, styles2.root, fullWidth && styles2.fullWidth, hasPopupIcon && styles2.hasPopupIcon, hasClearIcon && styles2.hasClearIcon];
-  }
-})({
-  [`&.${autocompleteClasses.focused} .${autocompleteClasses.clearIndicator}`]: {
-    visibility: "visible"
-  },
-  /* Avoid double tap issue on iOS */
-  "@media (pointer: fine)": {
-    [`&:hover .${autocompleteClasses.clearIndicator}`]: {
-      visibility: "visible"
-    }
-  },
-  [`& .${autocompleteClasses.tag}`]: {
-    margin: 3,
-    maxWidth: "calc(100% - 6px)"
-  },
-  [`& .${autocompleteClasses.inputRoot}`]: {
-    [`.${autocompleteClasses.hasPopupIcon}&, .${autocompleteClasses.hasClearIcon}&`]: {
-      paddingRight: 26 + 4
-    },
-    [`.${autocompleteClasses.hasPopupIcon}.${autocompleteClasses.hasClearIcon}&`]: {
-      paddingRight: 52 + 4
-    },
-    [`& .${autocompleteClasses.input}`]: {
-      width: 0,
-      minWidth: 30
-    }
-  },
-  [`& .${inputClasses.root}`]: {
-    paddingBottom: 1,
-    "& .MuiInput-input": {
-      padding: "4px 4px 4px 0px"
-    }
-  },
-  [`& .${inputClasses.root}.${inputBaseClasses.sizeSmall}`]: {
-    [`& .${inputClasses.input}`]: {
-      padding: "2px 4px 3px 0"
-    }
-  },
-  [`& .${outlinedInputClasses.root}`]: {
-    padding: 9,
-    [`.${autocompleteClasses.hasPopupIcon}&, .${autocompleteClasses.hasClearIcon}&`]: {
-      paddingRight: 26 + 4 + 9
-    },
-    [`.${autocompleteClasses.hasPopupIcon}.${autocompleteClasses.hasClearIcon}&`]: {
-      paddingRight: 52 + 4 + 9
-    },
-    [`& .${autocompleteClasses.input}`]: {
-      padding: "7.5px 4px 7.5px 5px"
-    },
-    [`& .${autocompleteClasses.endAdornment}`]: {
-      right: 9
-    }
-  },
-  [`& .${outlinedInputClasses.root}.${inputBaseClasses.sizeSmall}`]: {
-    // Don't specify paddingRight, as it overrides the default value set when there is only
-    // one of the popup or clear icon as the specificity is equal so the latter one wins
-    paddingTop: 6,
-    paddingBottom: 6,
-    paddingLeft: 6,
-    [`& .${autocompleteClasses.input}`]: {
-      padding: "2.5px 4px 2.5px 8px"
-    }
-  },
-  [`& .${filledInputClasses.root}`]: {
-    paddingTop: 19,
-    paddingLeft: 8,
-    [`.${autocompleteClasses.hasPopupIcon}&, .${autocompleteClasses.hasClearIcon}&`]: {
-      paddingRight: 26 + 4 + 9
-    },
-    [`.${autocompleteClasses.hasPopupIcon}.${autocompleteClasses.hasClearIcon}&`]: {
-      paddingRight: 52 + 4 + 9
-    },
-    [`& .${filledInputClasses.input}`]: {
-      padding: "7px 4px"
-    },
-    [`& .${autocompleteClasses.endAdornment}`]: {
-      right: 9
-    }
-  },
-  [`& .${filledInputClasses.root}.${inputBaseClasses.sizeSmall}`]: {
-    paddingBottom: 1,
-    [`& .${filledInputClasses.input}`]: {
-      padding: "2.5px 4px"
-    }
-  },
-  [`& .${inputBaseClasses.hiddenLabel}`]: {
-    paddingTop: 8
-  },
-  [`& .${filledInputClasses.root}.${inputBaseClasses.hiddenLabel}`]: {
-    paddingTop: 0,
-    paddingBottom: 0,
-    [`& .${autocompleteClasses.input}`]: {
-      paddingTop: 16,
-      paddingBottom: 17
-    }
-  },
-  [`& .${filledInputClasses.root}.${inputBaseClasses.hiddenLabel}.${inputBaseClasses.sizeSmall}`]: {
-    [`& .${autocompleteClasses.input}`]: {
-      paddingTop: 8,
-      paddingBottom: 9
-    }
-  },
-  [`& .${autocompleteClasses.input}`]: {
-    flexGrow: 1,
-    textOverflow: "ellipsis",
-    opacity: 0
-  },
-  variants: [{
-    props: {
-      fullWidth: true
-    },
-    style: {
-      width: "100%"
-    }
-  }, {
-    props: {
-      size: "small"
-    },
-    style: {
-      [`& .${autocompleteClasses.tag}`]: {
-        margin: 2,
-        maxWidth: "calc(100% - 4px)"
-      }
-    }
-  }, {
-    props: {
-      inputFocused: true
-    },
-    style: {
-      [`& .${autocompleteClasses.input}`]: {
-        opacity: 1
-      }
-    }
-  }, {
-    props: {
-      multiple: true
-    },
-    style: {
-      [`& .${autocompleteClasses.inputRoot}`]: {
-        flexWrap: "wrap"
-      }
-    }
-  }]
-});
-const AutocompleteEndAdornment = styled("div", {
-  name: "MuiAutocomplete",
-  slot: "EndAdornment"
-})({
-  // We use a position absolute to support wrapping tags.
-  position: "absolute",
-  right: 0,
-  top: "50%",
-  transform: "translate(0, -50%)"
-});
-const AutocompleteClearIndicator = styled(IconButton$1, {
-  name: "MuiAutocomplete",
-  slot: "ClearIndicator"
-})({
-  marginRight: -2,
-  padding: 4,
-  visibility: "hidden"
-});
-const AutocompletePopupIndicator = styled(IconButton$1, {
-  name: "MuiAutocomplete",
-  slot: "PopupIndicator",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.popupIndicator, ownerState.popupOpen && styles2.popupIndicatorOpen];
-  }
-})({
-  padding: 2,
-  marginRight: -2,
-  variants: [{
-    props: {
-      popupOpen: true
-    },
-    style: {
-      transform: "rotate(180deg)"
-    }
-  }]
-});
-const AutocompletePopper = styled(Popper$1, {
-  name: "MuiAutocomplete",
-  slot: "Popper",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [{
-      [`& .${autocompleteClasses.option}`]: styles2.option
-    }, styles2.popper, ownerState.disablePortal && styles2.popperDisablePortal];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  zIndex: (theme.vars || theme).zIndex.modal,
-  variants: [{
-    props: {
-      disablePortal: true
-    },
-    style: {
-      position: "absolute"
-    }
-  }]
-})));
-const AutocompletePaper = styled(Paper$1, {
-  name: "MuiAutocomplete",
-  slot: "Paper"
-})(memoTheme(({
-  theme
-}) => ({
-  ...theme.typography.body1,
-  overflow: "auto"
-})));
-const AutocompleteLoading = styled("div", {
-  name: "MuiAutocomplete",
-  slot: "Loading"
-})(memoTheme(({
-  theme
-}) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  padding: "14px 16px"
-})));
-const AutocompleteNoOptions = styled("div", {
-  name: "MuiAutocomplete",
-  slot: "NoOptions"
-})(memoTheme(({
-  theme
-}) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  padding: "14px 16px"
-})));
-const AutocompleteListbox = styled("ul", {
-  name: "MuiAutocomplete",
-  slot: "Listbox"
-})(memoTheme(({
-  theme
-}) => ({
-  listStyle: "none",
-  margin: 0,
-  padding: "8px 0",
-  maxHeight: "40vh",
-  overflow: "auto",
-  position: "relative",
-  [`& .${autocompleteClasses.option}`]: {
-    minHeight: 48,
-    display: "flex",
-    overflow: "hidden",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    cursor: "pointer",
-    paddingTop: 6,
-    boxSizing: "border-box",
-    outline: "0",
-    WebkitTapHighlightColor: "transparent",
-    paddingBottom: 6,
-    paddingLeft: 16,
-    paddingRight: 16,
-    [theme.breakpoints.up("sm")]: {
-      minHeight: "auto"
-    },
-    [`&.${autocompleteClasses.focused}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.hover,
-      // Reset on touch devices, it doesn't add specificity
-      "@media (hover: none)": {
-        backgroundColor: "transparent"
-      }
-    },
-    '&[aria-disabled="true"]': {
-      opacity: (theme.vars || theme).palette.action.disabledOpacity,
-      pointerEvents: "none"
-    },
-    [`&.${autocompleteClasses.focusVisible}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.focus
-    },
-    '&[aria-selected="true"]': {
-      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity),
-      [`&.${autocompleteClasses.focused}`]: {
-        backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`),
-        // Reset on touch devices, it doesn't add specificity
-        "@media (hover: none)": {
-          backgroundColor: (theme.vars || theme).palette.action.selected
-        }
-      },
-      [`&.${autocompleteClasses.focusVisible}`]: {
-        backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.focusOpacity}`)
-      }
-    }
-  }
-})));
-const AutocompleteGroupLabel = styled(ListSubheader, {
-  name: "MuiAutocomplete",
-  slot: "GroupLabel"
-})(memoTheme(({
-  theme
-}) => ({
-  backgroundColor: (theme.vars || theme).palette.background.paper,
-  top: -8
-})));
-const AutocompleteGroupUl = styled("ul", {
-  name: "MuiAutocomplete",
-  slot: "GroupUl"
-})({
-  padding: 0,
-  [`& .${autocompleteClasses.option}`]: {
-    paddingLeft: 24
-  }
-});
-const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAutocomplete"
-  });
-  const {
-    autoComplete = false,
-    autoHighlight = false,
-    autoSelect = false,
-    blurOnSelect = false,
-    ChipProps: ChipPropsProp,
-    className,
-    clearIcon = _ClearIcon || (_ClearIcon = /* @__PURE__ */ u2(ClearIcon$1, {
-      fontSize: "small"
-    })),
-    clearOnBlur = !props.freeSolo,
-    clearOnEscape = false,
-    clearText = "Clear",
-    closeText = "Close",
-    componentsProps,
-    defaultValue: defaultValue2 = props.multiple ? [] : null,
-    disableClearable = false,
-    disableCloseOnSelect = false,
-    disabled = false,
-    disabledItemsFocusable = false,
-    disableListWrap = false,
-    disablePortal = false,
-    filterOptions,
-    filterSelectedOptions = false,
-    forcePopupIcon = "auto",
-    freeSolo = false,
-    fullWidth = false,
-    getLimitTagsText = (more) => `+${more}`,
-    getOptionDisabled,
-    getOptionKey,
-    getOptionLabel: getOptionLabelProp,
-    isOptionEqualToValue,
-    groupBy,
-    handleHomeEndKeys = !props.freeSolo,
-    id: idProp,
-    includeInputInList = false,
-    inputValue: inputValueProp,
-    limitTags = -1,
-    ListboxComponent: ListboxComponentProp,
-    ListboxProps: ListboxPropsProp,
-    loading = false,
-    loadingText = "Loading…",
-    multiple = false,
-    noOptionsText = "No options",
-    onChange,
-    onClose,
-    onHighlightChange,
-    onInputChange,
-    onOpen,
-    open,
-    openOnFocus = false,
-    openText = "Open",
-    options,
-    PaperComponent: PaperComponentProp,
-    PopperComponent: PopperComponentProp,
-    popupIcon = _ArrowDropDownIcon || (_ArrowDropDownIcon = /* @__PURE__ */ u2(ArrowDropDownIcon$1, {})),
-    readOnly = false,
-    renderGroup: renderGroupProp,
-    renderInput,
-    renderOption: renderOptionProp,
-    renderTags,
-    renderValue,
-    selectOnFocus = !props.freeSolo,
-    size = "medium",
-    slots = {},
-    slotProps = {},
-    value: valueProp,
-    ...other
-  } = props;
-  const {
-    getRootProps,
-    getInputProps,
-    getInputLabelProps,
-    getPopupIndicatorProps,
-    getClearProps,
-    getItemProps,
-    getListboxProps,
-    getOptionProps,
-    value,
-    dirty,
-    expanded,
-    id,
-    popupOpen,
-    focused,
-    focusedItem,
-    anchorEl,
-    setAnchorEl,
-    inputValue,
-    groupedOptions
-  } = useAutocomplete({
-    ...props,
-    componentName: "Autocomplete"
-  });
-  const forceRenderOnResize = useForcedRerendering();
-  y(() => {
-    if (!popupOpen || !anchorEl || typeof ResizeObserver === "undefined") {
-      return void 0;
-    }
-    let lastWidth = anchorEl.clientWidth;
-    const observer = new ResizeObserver(() => {
-      const newWidth = anchorEl.clientWidth;
-      if (lastWidth !== newWidth) {
-        lastWidth = newWidth;
-        forceRenderOnResize();
-      }
-    });
-    observer.observe(anchorEl);
-    return () => {
-      observer.disconnect();
-    };
-  }, [popupOpen, anchorEl, forceRenderOnResize]);
-  const previousGroupedOptionsRef = A$1([]);
-  const prevPopupOpenRef = A$1(false);
-  const renderedOptions = popupOpen ? groupedOptions : previousGroupedOptionsRef.current;
-  useEnhancedEffect(() => {
-    if (popupOpen && !prevPopupOpenRef.current) {
-      previousGroupedOptionsRef.current = [];
-    }
-    prevPopupOpenRef.current = popupOpen;
-    if (popupOpen && groupedOptions.length > 0) {
-      previousGroupedOptionsRef.current = groupedOptions;
-    }
-  }, [popupOpen, groupedOptions]);
-  const hasClearIcon = !disableClearable && !disabled && dirty && !readOnly;
-  const hasPopupIcon = (!freeSolo || forcePopupIcon === true) && forcePopupIcon !== false;
-  const {
-    onMouseDown: handleInputMouseDown
-  } = getInputProps();
-  const {
-    ref: listboxRef,
-    ...otherListboxProps
-  } = getListboxProps();
-  const defaultGetOptionLabel = (option) => option.label ?? option;
-  const getOptionLabel = getOptionLabelProp || defaultGetOptionLabel;
-  const ownerState = {
-    ...props,
-    disablePortal,
-    expanded,
-    focused,
-    fullWidth,
-    getOptionLabel,
-    hasClearIcon,
-    hasPopupIcon,
-    inputFocused: focusedItem === -1,
-    popupOpen,
-    size
-  };
-  const classes = useUtilityClasses$I(ownerState);
-  const externalForwardedProps = {
-    slots: {
-      paper: PaperComponentProp,
-      popper: PopperComponentProp,
-      ...slots
-    },
-    slotProps: {
-      chip: ChipPropsProp,
-      listbox: ListboxPropsProp,
-      ...componentsProps,
-      ...slotProps
-    }
-  };
-  const [RootSlot, rootProps] = useSlot("root", {
-    ref,
-    className: [classes.root, className],
-    elementType: AutocompleteRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    getSlotProps: getRootProps,
-    ownerState
-  });
-  const [ListboxSlot, listboxProps] = useSlot("listbox", {
-    elementType: AutocompleteListbox,
-    externalForwardedProps,
-    ownerState,
-    className: classes.listbox,
-    additionalProps: otherListboxProps,
-    ref: listboxRef
-  });
-  const [PaperSlot, paperProps] = useSlot("paper", {
-    elementType: Paper$1,
-    externalForwardedProps,
-    ownerState,
-    className: classes.paper
-  });
-  const [PopperSlot, popperProps] = useSlot("popper", {
-    elementType: Popper$1,
-    externalForwardedProps,
-    ownerState,
-    className: classes.popper,
-    additionalProps: {
-      disablePortal,
-      style: {
-        width: anchorEl ? anchorEl.clientWidth : null,
-        // Prevent interaction with stale cached options during exit transitions.
-        // The hook's filteredOptions is [] when popupOpen=false, so clicks on stale
-        // rendered options would pass undefined to selectNewValue.
-        pointerEvents: popupOpen ? void 0 : "none"
-      },
-      role: "presentation",
-      anchorEl,
-      open: popupOpen
-    }
-  });
-  const hasPopupContent = renderedOptions.length > 0 || loading || !freeSolo || popperProps.keepMounted === true;
-  const [ClearIndicatorSlot, clearIndicatorProps] = useSlot("clearIndicator", {
-    elementType: AutocompleteClearIndicator,
-    externalForwardedProps,
-    ownerState,
-    className: classes.clearIndicator,
-    shouldForwardComponentProp: true,
-    additionalProps: {
-      ...getClearProps(),
-      "aria-label": clearText,
-      title: clearText
-    }
-  });
-  const [PopupIndicatorSlot, popupIndicatorProps] = useSlot("popupIndicator", {
-    elementType: AutocompletePopupIndicator,
-    externalForwardedProps,
-    ownerState,
-    className: classes.popupIndicator,
-    shouldForwardComponentProp: true,
-    additionalProps: {
-      ...getPopupIndicatorProps(),
-      disabled,
-      "aria-label": popupOpen ? closeText : openText,
-      title: popupOpen ? closeText : openText
-    }
-  });
-  let startAdornment;
-  const getCustomizedItemProps = (params) => ({
-    className: classes.tag,
-    disabled,
-    ...getItemProps(params)
-  });
-  if (multiple) {
-    if (value.length > 0) {
-      if (renderTags) {
-        startAdornment = renderTags(value, getCustomizedItemProps, ownerState);
-      } else if (renderValue) {
-        startAdornment = renderValue(value, getCustomizedItemProps, ownerState);
-      } else {
-        startAdornment = value.map((option, index) => {
-          const {
-            key,
-            ...customItemProps
-          } = getCustomizedItemProps({
-            index
-          });
-          return /* @__PURE__ */ u2(Chip$1, {
-            label: getOptionLabel(option),
-            size,
-            ...customItemProps,
-            ...externalForwardedProps.slotProps.chip
-          }, key);
-        });
-      }
-    }
-  } else if (renderValue && value != null) {
-    startAdornment = renderValue(value, getCustomizedItemProps, ownerState);
-  }
-  if (limitTags > -1 && Array.isArray(startAdornment)) {
-    const more = startAdornment.length - limitTags;
-    if (!focused && more > 0) {
-      startAdornment = startAdornment.splice(0, limitTags);
-      startAdornment.push(/* @__PURE__ */ u2("span", {
-        className: classes.tag,
-        children: getLimitTagsText(more)
-      }, startAdornment.length));
-    }
-  }
-  const defaultRenderGroup = (params) => /* @__PURE__ */ u2("li", {
-    children: [/* @__PURE__ */ u2(AutocompleteGroupLabel, {
-      className: classes.groupLabel,
-      ownerState,
-      component: "div",
-      children: params.group
-    }), /* @__PURE__ */ u2(AutocompleteGroupUl, {
-      className: classes.groupUl,
-      ownerState,
-      children: params.children
-    })]
-  }, params.key);
-  const renderGroup = renderGroupProp || defaultRenderGroup;
-  const defaultRenderOption = (props2, option) => {
-    const {
-      key,
-      ...otherProps
-    } = props2;
-    return /* @__PURE__ */ u2("li", {
-      ...otherProps,
-      children: getOptionLabel(option)
-    }, key);
-  };
-  const renderOption = renderOptionProp || defaultRenderOption;
-  const renderListOption = (option, index) => {
-    const optionProps = getOptionProps({
-      option,
-      index
-    });
-    return renderOption({
-      ...optionProps,
-      className: classes.option
-    }, option, {
-      selected: optionProps["aria-selected"],
-      index,
-      inputValue
-    }, ownerState);
-  };
-  return /* @__PURE__ */ u2(S, {
-    children: [/* @__PURE__ */ u2(RootSlot, {
-      ...rootProps,
-      children: renderInput({
-        id,
-        disabled,
-        fullWidth: props.fullWidth ?? true,
-        size: size === "small" ? "small" : void 0,
-        InputLabelProps: getInputLabelProps(),
-        InputProps: {
-          ref: setAnchorEl,
-          className: classes.inputRoot,
-          startAdornment,
-          onMouseDown: (event) => {
-            if (event.target === event.currentTarget) {
-              handleInputMouseDown(event);
-            }
-          },
-          ...(hasClearIcon || hasPopupIcon) && {
-            endAdornment: /* @__PURE__ */ u2(AutocompleteEndAdornment, {
-              className: classes.endAdornment,
-              ownerState,
-              children: [hasClearIcon ? /* @__PURE__ */ u2(ClearIndicatorSlot, {
-                ...clearIndicatorProps,
-                children: clearIcon
-              }) : null, hasPopupIcon ? /* @__PURE__ */ u2(PopupIndicatorSlot, {
-                ...popupIndicatorProps,
-                children: popupIcon
-              }) : null]
-            })
-          }
-        },
-        inputProps: {
-          className: classes.input,
-          disabled,
-          readOnly,
-          ...getInputProps()
-        }
-      })
-    }), anchorEl && hasPopupContent ? /* @__PURE__ */ u2(AutocompletePopper, {
-      as: PopperSlot,
-      ...popperProps,
-      children: /* @__PURE__ */ u2(AutocompletePaper, {
-        as: PaperSlot,
-        ...paperProps,
-        children: [loading && renderedOptions.length === 0 ? /* @__PURE__ */ u2(AutocompleteLoading, {
-          className: classes.loading,
-          ownerState,
-          children: loadingText
-        }) : null, renderedOptions.length === 0 && !freeSolo && !loading ? /* @__PURE__ */ u2(AutocompleteNoOptions, {
-          className: classes.noOptions,
-          ownerState,
-          role: "presentation",
-          onMouseDown: (event) => {
-            event.preventDefault();
-          },
-          children: noOptionsText
-        }) : null, renderedOptions.length > 0 ? /* @__PURE__ */ u2(ListboxSlot, {
-          ...listboxProps,
-          children: renderedOptions.map((option, index) => {
-            if (groupBy) {
-              return renderGroup({
-                key: option.key,
-                group: option.group,
-                children: option.options.map((option2, index2) => renderListOption(option2, option.index + index2))
-              });
-            }
-            return renderListOption(option, index);
-          })
-        }) : null]
-      })
-    }) : null]
-  });
-});
 const styles$2 = {
   entering: {
     opacity: 1
@@ -42328,7 +39687,7 @@ function getBackdropUtilityClass(slot) {
   return generateUtilityClass("MuiBackdrop", slot);
 }
 generateUtilityClasses("MuiBackdrop", ["root", "invisible"]);
-const useUtilityClasses$H = (ownerState) => {
+const useUtilityClasses$v = (ownerState) => {
   const {
     classes,
     invisible
@@ -42391,7 +39750,7 @@ const Backdrop = /* @__PURE__ */ D(function Backdrop2(inProps, ref) {
     component,
     invisible
   };
-  const classes = useUtilityClasses$H(ownerState);
+  const classes = useUtilityClasses$v(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     root: components.Root,
@@ -42444,7 +39803,7 @@ function getButtonUtilityClass(slot) {
 const buttonClasses = generateUtilityClasses("MuiButton", ["root", "text", "textInherit", "textPrimary", "textSecondary", "textSuccess", "textError", "textInfo", "textWarning", "outlined", "outlinedInherit", "outlinedPrimary", "outlinedSecondary", "outlinedSuccess", "outlinedError", "outlinedInfo", "outlinedWarning", "contained", "containedInherit", "containedPrimary", "containedSecondary", "containedSuccess", "containedError", "containedInfo", "containedWarning", "disableElevation", "focusVisible", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorSuccess", "colorError", "colorInfo", "colorWarning", "textSizeSmall", "textSizeMedium", "textSizeLarge", "outlinedSizeSmall", "outlinedSizeMedium", "outlinedSizeLarge", "containedSizeSmall", "containedSizeMedium", "containedSizeLarge", "sizeMedium", "sizeSmall", "sizeLarge", "fullWidth", "startIcon", "endIcon", "icon", "iconSizeSmall", "iconSizeMedium", "iconSizeLarge", "loading", "loadingWrapper", "loadingIconPlaceholder", "loadingIndicator", "loadingPositionCenter", "loadingPositionStart", "loadingPositionEnd"]);
 const ButtonGroupContext = /* @__PURE__ */ X$1({});
 const ButtonGroupButtonContext = /* @__PURE__ */ X$1(void 0);
-const useUtilityClasses$G = (ownerState) => {
+const useUtilityClasses$u = (ownerState) => {
   const {
     color: color2,
     disableElevation,
@@ -42955,7 +40314,7 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
     type,
     variant
   };
-  const classes = useUtilityClasses$G(ownerState);
+  const classes = useUtilityClasses$u(ownerState);
   const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ u2(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -43010,7 +40369,7 @@ function getSwitchBaseUtilityClass(slot) {
   return generateUtilityClass("PrivateSwitchBase", slot);
 }
 generateUtilityClasses("PrivateSwitchBase", ["root", "checked", "disabled", "input", "edgeStart", "edgeEnd"]);
-const useUtilityClasses$F = (ownerState) => {
+const useUtilityClasses$t = (ownerState) => {
   const {
     classes,
     checked,
@@ -43150,7 +40509,7 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     disableFocusRipple,
     edge
   };
-  const classes = useUtilityClasses$F(ownerState);
+  const classes = useUtilityClasses$t(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -43236,7 +40595,7 @@ function getCheckboxUtilityClass(slot) {
   return generateUtilityClass("MuiCheckbox", slot);
 }
 const checkboxClasses = generateUtilityClasses("MuiCheckbox", ["root", "checked", "disabled", "indeterminate", "colorPrimary", "colorSecondary", "sizeSmall", "sizeMedium"]);
-const useUtilityClasses$E = (ownerState) => {
+const useUtilityClasses$s = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -43314,8 +40673,8 @@ const CheckboxRoot = styled(SwitchBase, {
     }
   }]
 })));
-const defaultCheckedIcon$1 = /* @__PURE__ */ u2(CheckBoxIcon, {});
-const defaultIcon$1 = /* @__PURE__ */ u2(CheckBoxOutlineBlankIcon, {});
+const defaultCheckedIcon = /* @__PURE__ */ u2(CheckBoxIcon, {});
+const defaultIcon = /* @__PURE__ */ u2(CheckBoxOutlineBlankIcon, {});
 const defaultIndeterminateIcon = /* @__PURE__ */ u2(IndeterminateCheckBoxIcon, {});
 const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
   const props = useDefaultProps({
@@ -43323,9 +40682,9 @@ const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
     name: "MuiCheckbox"
   });
   const {
-    checkedIcon = defaultCheckedIcon$1,
+    checkedIcon = defaultCheckedIcon,
     color: color2 = "primary",
-    icon: iconProp = defaultIcon$1,
+    icon: iconProp = defaultIcon,
     indeterminate = false,
     indeterminateIcon: indeterminateIconProp = defaultIndeterminateIcon,
     inputProps,
@@ -43345,7 +40704,7 @@ const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
     indeterminate,
     size
   };
-  const classes = useUtilityClasses$E(ownerState);
+  const classes = useUtilityClasses$s(ownerState);
   const externalInputProps = slotProps.input ?? inputProps;
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
@@ -44047,7 +41406,7 @@ function getModalUtilityClass(slot) {
   return generateUtilityClass("MuiModal", slot);
 }
 generateUtilityClasses("MuiModal", ["root", "hidden", "backdrop"]);
-const useUtilityClasses$D = (ownerState) => {
+const useUtilityClasses$r = (ownerState) => {
   const {
     open,
     exited,
@@ -44154,7 +41513,7 @@ const Modal$1 = /* @__PURE__ */ D(function Modal(inProps, ref) {
     ...propsWithDefaults,
     exited
   };
-  const classes = useUtilityClasses$D(ownerState);
+  const classes = useUtilityClasses$r(ownerState);
   const childProps = {};
   if (children.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -44231,528 +41590,11 @@ const Modal$1 = /* @__PURE__ */ D(function Modal(inProps, ref) {
     })
   });
 });
-function getDialogUtilityClass(slot) {
-  return generateUtilityClass("MuiDialog", slot);
-}
-const dialogClasses = generateUtilityClasses("MuiDialog", ["root", "backdrop", "scrollPaper", "scrollBody", "container", "paper", "paperScrollPaper", "paperScrollBody", "paperWidthFalse", "paperWidthXs", "paperWidthSm", "paperWidthMd", "paperWidthLg", "paperWidthXl", "paperFullWidth", "paperFullScreen"]);
-const DialogContext = /* @__PURE__ */ X$1({});
-const DialogBackdrop = styled(Backdrop, {
-  name: "MuiDialog",
-  slot: "Backdrop"
-})({
-  // Improve scrollable dialog support.
-  zIndex: -1
-});
-const useUtilityClasses$C = (ownerState) => {
-  const {
-    classes,
-    scroll,
-    maxWidth: maxWidth2,
-    fullWidth,
-    fullScreen
-  } = ownerState;
-  const slots = {
-    root: ["root"],
-    backdrop: ["backdrop"],
-    container: ["container", `scroll${capitalize(scroll)}`],
-    paper: ["paper", `paperScroll${capitalize(scroll)}`, `paperWidth${capitalize(String(maxWidth2))}`, fullWidth && "paperFullWidth", fullScreen && "paperFullScreen"]
-  };
-  return composeClasses(slots, getDialogUtilityClass, classes);
-};
-const DialogRoot = styled(Modal$1, {
-  name: "MuiDialog",
-  slot: "Root"
-})({
-  "@media print": {
-    // Use !important to override the Modal inline-style.
-    position: "absolute !important"
-  }
-});
-const DialogContainer = styled("div", {
-  name: "MuiDialog",
-  slot: "Container",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.container, styles2[`scroll${capitalize(ownerState.scroll)}`]];
-  }
-})({
-  height: "100%",
-  "@media print": {
-    height: "auto"
-  },
-  // We disable the focus ring for mouse, touch and keyboard users.
-  outline: 0,
-  variants: [{
-    props: {
-      scroll: "paper"
-    },
-    style: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center"
-    }
-  }, {
-    props: {
-      scroll: "body"
-    },
-    style: {
-      overflowY: "auto",
-      overflowX: "hidden",
-      textAlign: "center",
-      "&::after": {
-        content: '""',
-        display: "inline-block",
-        verticalAlign: "middle",
-        height: "100%",
-        width: "0"
-      }
-    }
-  }]
-});
-const DialogPaper = styled(Paper$1, {
-  name: "MuiDialog",
-  slot: "Paper",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.paper, styles2[`scrollPaper${capitalize(ownerState.scroll)}`], styles2[`paperWidth${capitalize(String(ownerState.maxWidth))}`], ownerState.fullWidth && styles2.paperFullWidth, ownerState.fullScreen && styles2.paperFullScreen];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  margin: 32,
-  position: "relative",
-  overflowY: "auto",
-  "@media print": {
-    overflowY: "visible",
-    boxShadow: "none"
-  },
-  variants: [{
-    props: {
-      scroll: "paper"
-    },
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      maxHeight: "calc(100% - 64px)"
-    }
-  }, {
-    props: {
-      scroll: "body"
-    },
-    style: {
-      display: "inline-block",
-      verticalAlign: "middle",
-      textAlign: "initial"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.maxWidth,
-    style: {
-      maxWidth: "calc(100% - 64px)"
-    }
-  }, {
-    props: {
-      maxWidth: "xs"
-    },
-    style: {
-      maxWidth: theme.breakpoints.unit === "px" ? Math.max(theme.breakpoints.values.xs, 444) : `max(${theme.breakpoints.values.xs}${theme.breakpoints.unit}, 444px)`,
-      [`&.${dialogClasses.paperScrollBody}`]: {
-        [theme.breakpoints.down(Math.max(theme.breakpoints.values.xs, 444) + 32 * 2)]: {
-          maxWidth: "calc(100% - 64px)"
-        }
-      }
-    }
-  }, ...Object.keys(theme.breakpoints.values).filter((maxWidth2) => maxWidth2 !== "xs").map((maxWidth2) => ({
-    props: {
-      maxWidth: maxWidth2
-    },
-    style: {
-      maxWidth: `${theme.breakpoints.values[maxWidth2]}${theme.breakpoints.unit}`,
-      [`&.${dialogClasses.paperScrollBody}`]: {
-        [theme.breakpoints.down(theme.breakpoints.values[maxWidth2] + 32 * 2)]: {
-          maxWidth: "calc(100% - 64px)"
-        }
-      }
-    }
-  })), {
-    props: ({
-      ownerState
-    }) => ownerState.fullWidth,
-    style: {
-      width: "calc(100% - 64px)"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.fullScreen,
-    style: {
-      margin: 0,
-      width: "100%",
-      maxWidth: "100%",
-      height: "100%",
-      maxHeight: "none",
-      borderRadius: 0,
-      [`&.${dialogClasses.paperScrollBody}`]: {
-        margin: 0,
-        maxWidth: "100%"
-      }
-    }
-  }]
-})));
-const Dialog$1 = /* @__PURE__ */ D(function Dialog(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiDialog"
-  });
-  const theme = useTheme();
-  const defaultTransitionDuration = {
-    enter: theme.transitions.duration.enteringScreen,
-    exit: theme.transitions.duration.leavingScreen
-  };
-  const {
-    "aria-describedby": ariaDescribedby,
-    "aria-labelledby": ariaLabelledbyProp,
-    "aria-modal": ariaModal = true,
-    BackdropComponent,
-    BackdropProps,
-    children,
-    className,
-    disableEscapeKeyDown = false,
-    fullScreen = false,
-    fullWidth = false,
-    maxWidth: maxWidth2 = "sm",
-    onClick,
-    onClose,
-    open,
-    PaperComponent = Paper$1,
-    PaperProps = {},
-    role = "dialog",
-    scroll = "paper",
-    slots = {},
-    slotProps = {},
-    TransitionComponent = Fade,
-    transitionDuration = defaultTransitionDuration,
-    TransitionProps,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    disableEscapeKeyDown,
-    fullScreen,
-    fullWidth,
-    maxWidth: maxWidth2,
-    scroll
-  };
-  const classes = useUtilityClasses$C(ownerState);
-  const backdropClick = A$1();
-  const handleMouseDown = (event) => {
-    backdropClick.current = event.target === event.currentTarget;
-  };
-  const handleBackdropClick = (event) => {
-    if (onClick) {
-      onClick(event);
-    }
-    if (!backdropClick.current) {
-      return;
-    }
-    backdropClick.current = null;
-    if (onClose) {
-      onClose(event, "backdropClick");
-    }
-  };
-  const ariaLabelledby = useId(ariaLabelledbyProp);
-  const dialogContextValue = T$1(() => {
-    return {
-      titleId: ariaLabelledby
-    };
-  }, [ariaLabelledby]);
-  const backwardCompatibleSlots = {
-    transition: TransitionComponent,
-    ...slots
-  };
-  const backwardCompatibleSlotProps = {
-    transition: TransitionProps,
-    paper: PaperProps,
-    backdrop: BackdropProps,
-    ...slotProps
-  };
-  const externalForwardedProps = {
-    slots: backwardCompatibleSlots,
-    slotProps: backwardCompatibleSlotProps
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    elementType: DialogRoot,
-    shouldForwardComponentProp: true,
-    externalForwardedProps,
-    ownerState,
-    className: clsx(classes.root, className),
-    ref
-  });
-  const [BackdropSlot, backdropSlotProps] = useSlot("backdrop", {
-    elementType: DialogBackdrop,
-    shouldForwardComponentProp: true,
-    externalForwardedProps,
-    ownerState,
-    className: classes.backdrop
-  });
-  const [PaperSlot, paperSlotProps] = useSlot("paper", {
-    elementType: DialogPaper,
-    shouldForwardComponentProp: true,
-    externalForwardedProps,
-    ownerState,
-    className: classes.paper,
-    additionalProps: {
-      elevation: 24,
-      role,
-      "aria-describedby": ariaDescribedby,
-      "aria-labelledby": ariaLabelledby,
-      "aria-modal": ariaModal,
-      tabIndex: -1,
-      [FOCUSABLE_ATTRIBUTE]: ""
-    }
-  });
-  const [ContainerSlot, containerSlotProps] = useSlot("container", {
-    elementType: DialogContainer,
-    externalForwardedProps,
-    ownerState,
-    className: classes.container
-  });
-  const [TransitionSlot, transitionSlotProps] = useSlot("transition", {
-    elementType: Fade,
-    externalForwardedProps,
-    ownerState,
-    additionalProps: {
-      appear: true,
-      in: open,
-      timeout: transitionDuration,
-      role: "presentation"
-    }
-  });
-  return /* @__PURE__ */ u2(RootSlot, {
-    closeAfterTransition: true,
-    slots: {
-      backdrop: BackdropSlot
-    },
-    slotProps: {
-      backdrop: {
-        transitionDuration,
-        as: BackdropComponent,
-        ...backdropSlotProps
-      }
-    },
-    disableEscapeKeyDown,
-    onClose,
-    open,
-    onClick: handleBackdropClick,
-    ...rootSlotProps,
-    ...other,
-    children: /* @__PURE__ */ u2(TransitionSlot, {
-      ...transitionSlotProps,
-      children: /* @__PURE__ */ u2(ContainerSlot, {
-        onMouseDown: handleMouseDown,
-        ...containerSlotProps,
-        children: /* @__PURE__ */ u2(PaperSlot, {
-          as: PaperComponent,
-          ...paperSlotProps,
-          children: /* @__PURE__ */ u2(DialogContext.Provider, {
-            value: dialogContextValue,
-            children
-          })
-        })
-      })
-    })
-  });
-});
-function getDialogActionsUtilityClass(slot) {
-  return generateUtilityClass("MuiDialogActions", slot);
-}
-generateUtilityClasses("MuiDialogActions", ["root", "spacing"]);
-const useUtilityClasses$B = (ownerState) => {
-  const {
-    classes,
-    disableSpacing
-  } = ownerState;
-  const slots = {
-    root: ["root", !disableSpacing && "spacing"]
-  };
-  return composeClasses(slots, getDialogActionsUtilityClass, classes);
-};
-const DialogActionsRoot = styled("div", {
-  name: "MuiDialogActions",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, !ownerState.disableSpacing && styles2.spacing];
-  }
-})({
-  display: "flex",
-  alignItems: "center",
-  padding: 8,
-  justifyContent: "flex-end",
-  flex: "0 0 auto",
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.disableSpacing,
-    style: {
-      "& > :not(style) ~ :not(style)": {
-        marginLeft: 8
-      }
-    }
-  }]
-});
-const DialogActions$1 = /* @__PURE__ */ D(function DialogActions(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiDialogActions"
-  });
-  const {
-    className,
-    disableSpacing = false,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    disableSpacing
-  };
-  const classes = useUtilityClasses$B(ownerState);
-  return /* @__PURE__ */ u2(DialogActionsRoot, {
-    className: clsx(classes.root, className),
-    ownerState,
-    ref,
-    ...other
-  });
-});
-function getDialogContentUtilityClass(slot) {
-  return generateUtilityClass("MuiDialogContent", slot);
-}
-generateUtilityClasses("MuiDialogContent", ["root", "dividers"]);
-function getDialogTitleUtilityClass(slot) {
-  return generateUtilityClass("MuiDialogTitle", slot);
-}
-const dialogTitleClasses = generateUtilityClasses("MuiDialogTitle", ["root"]);
-const useUtilityClasses$A = (ownerState) => {
-  const {
-    classes,
-    dividers
-  } = ownerState;
-  const slots = {
-    root: ["root", dividers && "dividers"]
-  };
-  return composeClasses(slots, getDialogContentUtilityClass, classes);
-};
-const DialogContentRoot = styled("div", {
-  name: "MuiDialogContent",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.dividers && styles2.dividers];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  flex: "1 1 auto",
-  // Add iOS momentum scrolling for iOS < 13.0
-  WebkitOverflowScrolling: "touch",
-  overflowY: "auto",
-  padding: "20px 24px",
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.dividers,
-    style: {
-      padding: "16px 24px",
-      borderTop: `1px solid ${(theme.vars || theme).palette.divider}`,
-      borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.dividers,
-    style: {
-      [`.${dialogTitleClasses.root} + &`]: {
-        paddingTop: 0
-      }
-    }
-  }]
-})));
-const DialogContent$1 = /* @__PURE__ */ D(function DialogContent(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiDialogContent"
-  });
-  const {
-    className,
-    dividers = false,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    dividers
-  };
-  const classes = useUtilityClasses$A(ownerState);
-  return /* @__PURE__ */ u2(DialogContentRoot, {
-    className: clsx(classes.root, className),
-    ownerState,
-    ref,
-    ...other
-  });
-});
-const useUtilityClasses$z = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getDialogTitleUtilityClass, classes);
-};
-const DialogTitleRoot = styled(Typography$1, {
-  name: "MuiDialogTitle",
-  slot: "Root"
-})({
-  padding: "16px 24px",
-  flex: "0 0 auto"
-});
-const DialogTitle$1 = /* @__PURE__ */ D(function DialogTitle(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiDialogTitle"
-  });
-  const {
-    className,
-    id: idProp,
-    ...other
-  } = props;
-  const ownerState = props;
-  const classes = useUtilityClasses$z(ownerState);
-  const {
-    titleId = idProp
-  } = x$1(DialogContext);
-  return /* @__PURE__ */ u2(DialogTitleRoot, {
-    component: "h2",
-    className: clsx(classes.root, className),
-    ownerState,
-    ref,
-    variant: "h6",
-    id: idProp ?? titleId,
-    ...other
-  });
-});
 function getDividerUtilityClass(slot) {
   return generateUtilityClass("MuiDivider", slot);
 }
 const dividerClasses = generateUtilityClasses("MuiDivider", ["root", "absolute", "fullWidth", "inset", "middle", "flexItem", "light", "vertical", "withChildren", "withChildrenVertical", "textAlignRight", "textAlignLeft", "wrapper", "wrapperVertical"]);
-const useUtilityClasses$y = (ownerState) => {
+const useUtilityClasses$q = (ownerState) => {
   const {
     absolute,
     children,
@@ -44966,7 +41808,7 @@ const Divider$1 = /* @__PURE__ */ D(function Divider(inProps, ref) {
     textAlign,
     variant
   };
-  const classes = useUtilityClasses$y(ownerState);
+  const classes = useUtilityClasses$q(ownerState);
   return /* @__PURE__ */ u2(DividerRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -44985,7 +41827,7 @@ const Divider$1 = /* @__PURE__ */ D(function Divider(inProps, ref) {
 if (Divider$1) {
   Divider$1.muiSkipListHighlight = true;
 }
-const useUtilityClasses$x = (ownerState) => {
+const useUtilityClasses$p = (ownerState) => {
   const {
     classes,
     disableUnderline,
@@ -45264,7 +42106,7 @@ const FilledInput = /* @__PURE__ */ D(function FilledInput2(inProps, ref) {
     multiline,
     type
   };
-  const classes = useUtilityClasses$x(props);
+  const classes = useUtilityClasses$p(props);
   const filledInputComponentsProps = {
     root: {
       ownerState
@@ -45296,7 +42138,7 @@ function getFormControlUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControl", slot);
 }
 generateUtilityClasses("MuiFormControl", ["root", "marginNone", "marginNormal", "marginDense", "fullWidth", "disabled"]);
-const useUtilityClasses$w = (ownerState) => {
+const useUtilityClasses$o = (ownerState) => {
   const {
     classes,
     margin: margin2,
@@ -45386,7 +42228,7 @@ const FormControl$1 = /* @__PURE__ */ D(function FormControl(inProps, ref) {
     size,
     variant
   };
-  const classes = useUtilityClasses$w(ownerState);
+  const classes = useUtilityClasses$o(ownerState);
   const [adornedStart, setAdornedStart] = d(() => {
     let initialAdornedStart = false;
     if (children) {
@@ -45470,7 +42312,7 @@ function getFormControlLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControlLabel", slot);
 }
 const formControlLabelClasses = generateUtilityClasses("MuiFormControlLabel", ["root", "labelPlacementStart", "labelPlacementTop", "labelPlacementBottom", "disabled", "label", "error", "required", "asterisk"]);
-const useUtilityClasses$v = (ownerState) => {
+const useUtilityClasses$n = (ownerState) => {
   const {
     classes,
     disabled,
@@ -45605,7 +42447,7 @@ const FormControlLabel$1 = /* @__PURE__ */ D(function FormControlLabel(inProps, 
     required: required2,
     error: fcs.error
   };
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$n(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -45646,7 +42488,7 @@ function getFormGroupUtilityClass(slot) {
   return generateUtilityClass("MuiFormGroup", slot);
 }
 generateUtilityClasses("MuiFormGroup", ["root", "row", "error"]);
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$m = (ownerState) => {
   const {
     classes,
     row,
@@ -45700,7 +42542,7 @@ const FormGroup$1 = /* @__PURE__ */ D(function FormGroup(inProps, ref) {
     row,
     error: fcs.error
   };
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$m(ownerState);
   return /* @__PURE__ */ u2(FormGroupRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -45713,7 +42555,7 @@ function getFormHelperTextUtilityClasses(slot) {
 }
 const formHelperTextClasses = generateUtilityClasses("MuiFormHelperText", ["root", "error", "disabled", "sizeSmall", "sizeMedium", "contained", "focused", "filled", "required"]);
 var _span$3;
-const useUtilityClasses$t = (ownerState) => {
+const useUtilityClasses$l = (ownerState) => {
   const {
     classes,
     contained,
@@ -45808,7 +42650,7 @@ const FormHelperText = /* @__PURE__ */ D(function FormHelperText2(inProps, ref) 
     required: fcs.required
   };
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$t(ownerState);
+  const classes = useUtilityClasses$l(ownerState);
   return /* @__PURE__ */ u2(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -45829,7 +42671,7 @@ function getFormLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormLabel", slot);
 }
 const formLabelClasses = generateUtilityClasses("MuiFormLabel", ["root", "colorSecondary", "focused", "disabled", "error", "filled", "required", "asterisk"]);
-const useUtilityClasses$s = (ownerState) => {
+const useUtilityClasses$k = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -45926,7 +42768,7 @@ const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
     focused: fcs.focused,
     required: fcs.required
   };
-  const classes = useUtilityClasses$s(ownerState);
+  const classes = useUtilityClasses$k(ownerState);
   return /* @__PURE__ */ u2(FormLabelRoot, {
     as: component,
     ownerState,
@@ -46100,7 +42942,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
 if (Grow) {
   Grow.muiSupportAuto = true;
 }
-const useUtilityClasses$r = (ownerState) => {
+const useUtilityClasses$j = (ownerState) => {
   const {
     classes,
     disableUnderline
@@ -46233,7 +43075,7 @@ const Input = /* @__PURE__ */ D(function Input2(inProps, ref) {
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$r(props);
+  const classes = useUtilityClasses$j(props);
   const ownerState = {
     disableUnderline
   };
@@ -46272,7 +43114,7 @@ const overridesResolver$2 = (props, styles2) => {
   } = props;
   return [styles2.root, styles2[`position${capitalize(ownerState.position)}`], ownerState.disablePointerEvents === true && styles2.disablePointerEvents, styles2[ownerState.variant]];
 };
-const useUtilityClasses$q = (ownerState) => {
+const useUtilityClasses$i = (ownerState) => {
   const {
     classes,
     disablePointerEvents,
@@ -46359,7 +43201,7 @@ const InputAdornment$1 = /* @__PURE__ */ D(function InputAdornment(inProps, ref)
     position: position2,
     variant
   };
-  const classes = useUtilityClasses$q(ownerState);
+  const classes = useUtilityClasses$i(ownerState);
   return /* @__PURE__ */ u2(FormControlContext.Provider, {
     value: null,
     children: /* @__PURE__ */ u2(InputAdornmentRoot, {
@@ -46388,7 +43230,7 @@ function getInputLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiInputLabel", slot);
 }
 generateUtilityClasses("MuiInputLabel", ["root", "focused", "disabled", "error", "required", "asterisk", "formControl", "sizeSmall", "shrink", "animated", "standard", "filled", "outlined"]);
-const useUtilityClasses$p = (ownerState) => {
+const useUtilityClasses$h = (ownerState) => {
   const {
     classes,
     formControl,
@@ -46577,7 +43419,7 @@ const InputLabel$1 = /* @__PURE__ */ D(function InputLabel(inProps, ref) {
     required: fcs.required,
     focused: fcs.focused
   };
-  const classes = useUtilityClasses$p(ownerState);
+  const classes = useUtilityClasses$h(ownerState);
   return /* @__PURE__ */ u2(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
@@ -46592,7 +43434,7 @@ function getListUtilityClass(slot) {
   return generateUtilityClass("MuiList", slot);
 }
 generateUtilityClasses("MuiList", ["root", "padding", "dense", "subheader"]);
-const useUtilityClasses$o = (ownerState) => {
+const useUtilityClasses$g = (ownerState) => {
   const {
     classes,
     disablePadding,
@@ -46658,7 +43500,7 @@ const List$2 = /* @__PURE__ */ D(function List(inProps, ref) {
     dense,
     disablePadding
   };
-  const classes = useUtilityClasses$o(ownerState);
+  const classes = useUtilityClasses$g(ownerState);
   return /* @__PURE__ */ u2(ListContext.Provider, {
     value: context,
     children: /* @__PURE__ */ u2(ListRoot, {
@@ -46681,7 +43523,7 @@ const overridesResolver$1 = (props, styles2) => {
   } = props;
   return [styles2.root, ownerState.dense && styles2.dense, ownerState.alignItems === "flex-start" && styles2.alignItemsFlexStart, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
 };
-const useUtilityClasses$n = (ownerState) => {
+const useUtilityClasses$f = (ownerState) => {
   const {
     alignItems,
     classes,
@@ -46822,7 +43664,7 @@ const ListItemButton$1 = /* @__PURE__ */ D(function ListItemButton(inProps, ref)
     divider,
     selected
   };
-  const classes = useUtilityClasses$n(ownerState);
+  const classes = useUtilityClasses$f(ownerState);
   const {
     root,
     ...forwardedClasses
@@ -46847,7 +43689,7 @@ function getListItemIconUtilityClass(slot) {
   return generateUtilityClass("MuiListItemIcon", slot);
 }
 const listItemIconClasses = generateUtilityClasses("MuiListItemIcon", ["root", "alignItemsFlexStart"]);
-const useUtilityClasses$m = (ownerState) => {
+const useUtilityClasses$e = (ownerState) => {
   const {
     alignItems,
     classes
@@ -46896,7 +43738,7 @@ const ListItemIcon$1 = /* @__PURE__ */ D(function ListItemIcon(inProps, ref) {
     ...props,
     alignItems: context.alignItems
   };
-  const classes = useUtilityClasses$m(ownerState);
+  const classes = useUtilityClasses$e(ownerState);
   return /* @__PURE__ */ u2(ListItemIconRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -46908,7 +43750,7 @@ function getListItemTextUtilityClass(slot) {
   return generateUtilityClass("MuiListItemText", slot);
 }
 const listItemTextClasses = generateUtilityClasses("MuiListItemText", ["root", "multiline", "dense", "inset", "primary", "secondary"]);
-const useUtilityClasses$l = (ownerState) => {
+const useUtilityClasses$d = (ownerState) => {
   const {
     classes,
     inset,
@@ -46996,7 +43838,7 @@ const ListItemText$1 = /* @__PURE__ */ D(function ListItemText(inProps, ref) {
     secondary: !!secondary,
     dense
   };
-  const classes = useUtilityClasses$l(ownerState);
+  const classes = useUtilityClasses$d(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -47273,7 +44115,7 @@ function getTransformOriginValue(transformOrigin) {
 function resolveAnchorEl(anchorEl) {
   return typeof anchorEl === "function" ? anchorEl() : anchorEl;
 }
-const useUtilityClasses$k = (ownerState) => {
+const useUtilityClasses$c = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -47351,7 +44193,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
     transitionDuration: transitionDurationProp,
     TransitionProps
   };
-  const classes = useUtilityClasses$k(ownerState);
+  const classes = useUtilityClasses$c(ownerState);
   const getAnchorOffset = q$1(() => {
     if (anchorReference === "anchorPosition") {
       return anchorPosition;
@@ -47573,7 +44415,7 @@ const LTR_ORIGIN = {
   vertical: "top",
   horizontal: "left"
 };
-const useUtilityClasses$j = (ownerState) => {
+const useUtilityClasses$b = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -47644,7 +44486,7 @@ const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
     TransitionProps,
     variant
   };
-  const classes = useUtilityClasses$j(ownerState);
+  const classes = useUtilityClasses$b(ownerState);
   const autoFocusItem = autoFocus && !disableAutoFocusItem && open;
   const menuListActionsRef = A$1(null);
   const handleEntering = (element, isAppearing) => {
@@ -47767,7 +44609,7 @@ function getNativeSelectUtilityClasses(slot) {
   return generateUtilityClass("MuiNativeSelect", slot);
 }
 const nativeSelectClasses = generateUtilityClasses("MuiNativeSelect", ["root", "select", "multiple", "filled", "outlined", "standard", "disabled", "icon", "iconOpen", "iconFilled", "iconOutlined", "iconStandard", "nativeInput", "error"]);
-const useUtilityClasses$i = (ownerState) => {
+const useUtilityClasses$a = (ownerState) => {
   const {
     classes,
     variant,
@@ -47926,7 +44768,7 @@ const NativeSelectInput$1 = /* @__PURE__ */ D(function NativeSelectInput(props, 
     variant,
     error
   };
-  const classes = useUtilityClasses$i(ownerState);
+  const classes = useUtilityClasses$a(ownerState);
   return /* @__PURE__ */ u2(S, {
     children: [/* @__PURE__ */ u2(NativeSelectSelect, {
       ownerState,
@@ -47960,7 +44802,7 @@ function getOpenInteractionType(event) {
 function isEmpty(display) {
   return display == null || typeof display === "string" && !display.trim();
 }
-function areEqualValues$1(a2, b2) {
+function areEqualValues(a2, b2) {
   if (typeof b2 === "object" && b2 !== null) {
     return a2 === b2;
   }
@@ -48031,7 +44873,7 @@ const SelectNativeInput = styled("input", {
   width: "100%",
   boxSizing: "border-box"
 });
-const useUtilityClasses$h = (ownerState) => {
+const useUtilityClasses$9 = (ownerState) => {
   const {
     classes,
     variant,
@@ -48295,12 +45137,12 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
       if (!Array.isArray(value)) {
         throw new Error(formatMuiErrorMessage(2));
       }
-      selected = value.some((v2) => areEqualValues$1(v2, child.props.value));
+      selected = value.some((v2) => areEqualValues(v2, child.props.value));
       if (selected && computeDisplay) {
         displayMultiple.push(child.props.children);
       }
     } else {
-      selected = areEqualValues$1(value, child.props.value);
+      selected = areEqualValues(value, child.props.value);
       if (selected && computeDisplay) {
         displaySingle = child.props.children;
       }
@@ -48359,7 +45201,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     open,
     error
   };
-  const classes = useUtilityClasses$h(ownerState);
+  const classes = useUtilityClasses$9(ownerState);
   const paperProps = {
     ...MenuProps.PaperProps,
     ...typeof MenuProps.slotProps?.paper === "function" ? MenuProps.slotProps.paper(ownerState) : MenuProps.slotProps?.paper
@@ -48577,7 +45419,7 @@ function NotchedOutline(props) {
     })
   });
 }
-const useUtilityClasses$g = (ownerState) => {
+const useUtilityClasses$8 = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -48755,7 +45597,7 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$g(props);
+  const classes = useUtilityClasses$8(props);
   const muiFormControl = useFormControl();
   const fcs = formControlState({
     props,
@@ -48815,7 +45657,7 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
   });
 });
 OutlinedInput.muiName = "Input";
-const useUtilityClasses$f = (ownerState) => {
+const useUtilityClasses$7 = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -48848,7 +45690,7 @@ const Select$1 = /* @__PURE__ */ D(function Select(inProps, ref) {
     className,
     defaultOpen = false,
     displayEmpty = false,
-    IconComponent = ArrowDropDownIcon$1,
+    IconComponent = ArrowDropDownIcon,
     id,
     input,
     inputProps,
@@ -48878,7 +45720,7 @@ const Select$1 = /* @__PURE__ */ D(function Select(inProps, ref) {
     variant,
     classes: classesProp
   };
-  const classes = useUtilityClasses$f(ownerState);
+  const classes = useUtilityClasses$7(ownerState);
   const {
     root,
     ...restOfClasses
@@ -48963,7 +45805,7 @@ const overridesResolver = (props, styles2) => {
   } = props;
   return [styles2.root, ownerState.dense && styles2.dense, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
 };
-const useUtilityClasses$e = (ownerState) => {
+const useUtilityClasses$6 = (ownerState) => {
   const {
     disabled,
     dense,
@@ -49085,7 +45927,7 @@ const MenuItemRoot = styled(ButtonBase, {
     }
   }]
 })));
-const MenuItem$1 = /* @__PURE__ */ D(function MenuItem(inProps, ref) {
+const MenuItem$2 = /* @__PURE__ */ D(function MenuItem(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiMenuItem"
@@ -49122,7 +45964,7 @@ const MenuItem$1 = /* @__PURE__ */ D(function MenuItem(inProps, ref) {
     divider,
     disableGutters
   };
-  const classes = useUtilityClasses$e(props);
+  const classes = useUtilityClasses$6(props);
   const handleRef = useForkRef(menuItemRef, ref);
   const {
     root,
@@ -49147,1783 +45989,6 @@ const MenuItem$1 = /* @__PURE__ */ D(function MenuItem(inProps, ref) {
     })
   });
 });
-const RadioButtonUncheckedIcon$1 = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
-}));
-const RadioButtonCheckedIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M8.465 8.465C9.37 7.56 10.62 7 12 7C14.76 7 17 9.24 17 12C17 13.38 16.44 14.63 15.535 15.535C14.63 16.44 13.38 17 12 17C9.24 17 7 14.76 7 12C7 10.62 7.56 9.37 8.465 8.465Z"
-}));
-const RadioButtonIconRoot = styled("span", {
-  name: "MuiRadioButtonIcon",
-  shouldForwardProp: rootShouldForwardProp
-})({
-  position: "relative",
-  display: "flex"
-});
-const RadioButtonIconBackground = styled(RadioButtonUncheckedIcon$1, {
-  name: "MuiRadioButtonIcon"
-})({
-  // Scale applied to prevent dot misalignment in Safari
-  transform: "scale(1)"
-});
-const RadioButtonIconDot = styled(RadioButtonCheckedIcon, {
-  name: "MuiRadioButtonIcon"
-})(memoTheme(({
-  theme
-}) => ({
-  left: 0,
-  position: "absolute",
-  transform: "scale(0)",
-  transition: theme.transitions.create("transform", {
-    easing: theme.transitions.easing.easeIn,
-    duration: theme.transitions.duration.shortest
-  }),
-  variants: [{
-    props: {
-      checked: true
-    },
-    style: {
-      transform: "scale(1)",
-      transition: theme.transitions.create("transform", {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.shortest
-      })
-    }
-  }]
-})));
-function RadioButtonIcon(props) {
-  const {
-    checked = false,
-    classes = {},
-    fontSize
-  } = props;
-  const ownerState = {
-    ...props,
-    checked
-  };
-  return /* @__PURE__ */ u2(RadioButtonIconRoot, {
-    className: classes.root,
-    ownerState,
-    children: [/* @__PURE__ */ u2(RadioButtonIconBackground, {
-      fontSize,
-      className: classes.background,
-      ownerState
-    }), /* @__PURE__ */ u2(RadioButtonIconDot, {
-      fontSize,
-      className: classes.dot,
-      ownerState
-    })]
-  });
-}
-const RadioGroupContext = /* @__PURE__ */ X$1(void 0);
-function useRadioGroup() {
-  return x$1(RadioGroupContext);
-}
-function getRadioUtilityClass(slot) {
-  return generateUtilityClass("MuiRadio", slot);
-}
-const radioClasses = generateUtilityClasses("MuiRadio", ["root", "checked", "disabled", "colorPrimary", "colorSecondary", "sizeSmall"]);
-const useUtilityClasses$d = (ownerState) => {
-  const {
-    classes,
-    color: color2,
-    size
-  } = ownerState;
-  const slots = {
-    root: ["root", `color${capitalize(color2)}`, size !== "medium" && `size${capitalize(size)}`]
-  };
-  return {
-    ...classes,
-    ...composeClasses(slots, getRadioUtilityClass, classes)
-  };
-};
-const RadioRoot = styled(SwitchBase, {
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
-  name: "MuiRadio",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.size !== "medium" && styles2[`size${capitalize(ownerState.size)}`], styles2[`color${capitalize(ownerState.color)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  [`&.${radioClasses.disabled}`]: {
-    color: (theme.vars || theme).palette.action.disabled
-  },
-  variants: [{
-    props: {
-      color: "default",
-      disabled: false,
-      disableRipple: false
-    },
-    style: {
-      "&:hover": {
-        backgroundColor: theme.alpha((theme.vars || theme).palette.action.active, (theme.vars || theme).palette.action.hoverOpacity)
-      }
-    }
-  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
-    props: {
-      color: color2,
-      disabled: false,
-      disableRipple: false
-    },
-    style: {
-      "&:hover": {
-        backgroundColor: theme.alpha((theme.vars || theme).palette[color2].main, (theme.vars || theme).palette.action.hoverOpacity)
-      }
-    }
-  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
-    props: {
-      color: color2,
-      disabled: false
-    },
-    style: {
-      [`&.${radioClasses.checked}`]: {
-        color: (theme.vars || theme).palette[color2].main
-      }
-    }
-  })), {
-    // Should be last to override other colors
-    props: {
-      disableRipple: false
-    },
-    style: {
-      // Reset on touch devices, it doesn't add specificity
-      "&:hover": {
-        "@media (hover: none)": {
-          backgroundColor: "transparent"
-        }
-      }
-    }
-  }]
-})));
-function areEqualValues(a2, b2) {
-  if (typeof b2 === "object" && b2 !== null) {
-    return a2 === b2;
-  }
-  return String(a2) === String(b2);
-}
-const defaultCheckedIcon = /* @__PURE__ */ u2(RadioButtonIcon, {
-  checked: true
-});
-const defaultIcon = /* @__PURE__ */ u2(RadioButtonIcon, {});
-const Radio$1 = /* @__PURE__ */ D(function Radio(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiRadio"
-  });
-  const {
-    checked: checkedProp,
-    checkedIcon = defaultCheckedIcon,
-    color: color2 = "primary",
-    icon = defaultIcon,
-    name: nameProp,
-    onChange: onChangeProp,
-    size = "medium",
-    className,
-    disabled: disabledProp,
-    disableRipple = false,
-    slots = {},
-    slotProps = {},
-    inputProps,
-    ...other
-  } = props;
-  const muiFormControl = useFormControl();
-  let disabled = disabledProp;
-  if (muiFormControl) {
-    if (typeof disabled === "undefined") {
-      disabled = muiFormControl.disabled;
-    }
-  }
-  disabled ??= false;
-  const ownerState = {
-    ...props,
-    disabled,
-    disableRipple,
-    color: color2,
-    size
-  };
-  const classes = useUtilityClasses$d(ownerState);
-  const radioGroup = useRadioGroup();
-  let checked = checkedProp;
-  const onChange = createChainedFunction(onChangeProp, radioGroup && radioGroup.onChange);
-  let name = nameProp;
-  if (radioGroup) {
-    if (typeof checked === "undefined") {
-      checked = areEqualValues(radioGroup.value, props.value);
-    }
-    if (typeof name === "undefined") {
-      name = radioGroup.name;
-    }
-  }
-  const externalInputProps = slotProps.input ?? inputProps;
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref,
-    elementType: RadioRoot,
-    className: clsx(classes.root, className),
-    shouldForwardComponentProp: true,
-    externalForwardedProps: {
-      slots,
-      slotProps,
-      ...other
-    },
-    getSlotProps: (handlers) => ({
-      ...handlers,
-      onChange: (event, ...args) => {
-        handlers.onChange?.(event, ...args);
-        onChange(event, ...args);
-      }
-    }),
-    ownerState,
-    additionalProps: {
-      type: "radio",
-      icon: /* @__PURE__ */ mn(icon, {
-        fontSize: icon.props.fontSize ?? size
-      }),
-      checkedIcon: /* @__PURE__ */ mn(checkedIcon, {
-        fontSize: checkedIcon.props.fontSize ?? size
-      }),
-      disabled,
-      name,
-      checked,
-      slots,
-      slotProps: {
-        // Do not forward `slotProps.root` again because it's already handled by the `RootSlot` in this file.
-        input: typeof externalInputProps === "function" ? externalInputProps(ownerState) : externalInputProps
-      }
-    }
-  });
-  return /* @__PURE__ */ u2(RootSlot, {
-    ...rootSlotProps,
-    classes
-  });
-});
-function getRadioGroupUtilityClass(slot) {
-  return generateUtilityClass("MuiRadioGroup", slot);
-}
-generateUtilityClasses("MuiRadioGroup", ["root", "row", "error"]);
-const useUtilityClasses$c = (props) => {
-  const {
-    classes,
-    row,
-    error
-  } = props;
-  const slots = {
-    root: ["root", row && "row", error && "error"]
-  };
-  return composeClasses(slots, getRadioGroupUtilityClass, classes);
-};
-const RadioGroup$1 = /* @__PURE__ */ D(function RadioGroup(props, ref) {
-  const {
-    // private
-    // eslint-disable-next-line react/prop-types
-    actions,
-    children,
-    className,
-    defaultValue: defaultValue2,
-    name: nameProp,
-    onChange,
-    value: valueProp,
-    ...other
-  } = props;
-  const rootRef = A$1(null);
-  const classes = useUtilityClasses$c(props);
-  const [value, setValueState] = useControlled({
-    controlled: valueProp,
-    default: defaultValue2,
-    name: "RadioGroup"
-  });
-  F$1(actions, () => ({
-    focus: () => {
-      let input = rootRef.current.querySelector("input:not(:disabled):checked");
-      if (!input) {
-        input = rootRef.current.querySelector("input:not(:disabled)");
-      }
-      if (input) {
-        input.focus();
-      }
-    }
-  }), []);
-  const handleRef = useForkRef(ref, rootRef);
-  const name = useId(nameProp);
-  const contextValue = T$1(() => ({
-    name,
-    onChange(event) {
-      setValueState(event.target.value);
-      if (onChange) {
-        onChange(event, event.target.value);
-      }
-    },
-    value
-  }), [name, onChange, setValueState, value]);
-  return /* @__PURE__ */ u2(RadioGroupContext.Provider, {
-    value: contextValue,
-    children: /* @__PURE__ */ u2(FormGroup$1, {
-      role: "radiogroup",
-      ref: handleRef,
-      className: clsx(classes.root, className),
-      ...other,
-      children
-    })
-  });
-});
-const visuallyHidden = {
-  border: 0,
-  clip: "rect(0 0 0 0)",
-  height: "1px",
-  margin: "-1px",
-  overflow: "hidden",
-  padding: 0,
-  position: "absolute",
-  whiteSpace: "nowrap",
-  width: "1px"
-};
-function areArraysEqual(array1, array2, itemComparer = (a2, b2) => a2 === b2) {
-  return array1.length === array2.length && array1.every((value, index) => itemComparer(value, array2[index]));
-}
-const INTENTIONAL_DRAG_COUNT_THRESHOLD = 2;
-function getNewValue(currentValue, step, direction, min2, max2) {
-  return direction === 1 ? Math.min(currentValue + step, max2) : Math.max(currentValue - step, min2);
-}
-function asc(a2, b2) {
-  return a2 - b2;
-}
-function findClosest(values2, currentValue) {
-  const {
-    index: closestIndex
-  } = values2.reduce((acc, value, index) => {
-    const distance = Math.abs(currentValue - value);
-    if (acc === null || distance < acc.distance || distance === acc.distance) {
-      return {
-        distance,
-        index
-      };
-    }
-    return acc;
-  }, null) ?? {};
-  return closestIndex;
-}
-function trackFinger(event, touchId) {
-  if (touchId.current !== void 0 && event.changedTouches) {
-    const touchEvent = event;
-    for (let i2 = 0; i2 < touchEvent.changedTouches.length; i2 += 1) {
-      const touch = touchEvent.changedTouches[i2];
-      if (touch.identifier === touchId.current) {
-        return {
-          x: touch.clientX,
-          y: touch.clientY
-        };
-      }
-    }
-    return false;
-  }
-  return {
-    x: event.clientX,
-    y: event.clientY
-  };
-}
-function valueToPercent(value, min2, max2) {
-  return (value - min2) * 100 / (max2 - min2);
-}
-function percentToValue(percent, min2, max2) {
-  return (max2 - min2) * percent + min2;
-}
-function getDecimalPrecision(num) {
-  if (Math.abs(num) < 1) {
-    const parts = num.toExponential().split("e-");
-    const matissaDecimalPart = parts[0].split(".")[1];
-    return (matissaDecimalPart ? matissaDecimalPart.length : 0) + parseInt(parts[1], 10);
-  }
-  const decimalPart = num.toString().split(".")[1];
-  return decimalPart ? decimalPart.length : 0;
-}
-function roundValueToStep(value, step, min2) {
-  const nearest = Math.round((value - min2) / step) * step + min2;
-  return Number(nearest.toFixed(getDecimalPrecision(step)));
-}
-function setValueIndex({
-  values: values2,
-  newValue,
-  index
-}) {
-  const output = values2.slice();
-  output[index] = newValue;
-  return output.sort(asc);
-}
-function focusThumb({
-  sliderRef,
-  activeIndex,
-  setActive
-}) {
-  const activeElement$1 = activeElement(ownerDocument(sliderRef.current));
-  if (!contains$1(sliderRef.current, activeElement$1) || Number(activeElement$1?.getAttribute("data-index")) !== activeIndex) {
-    sliderRef.current?.querySelector(`[type="range"][data-index="${activeIndex}"]`).focus();
-  }
-  if (setActive) {
-    setActive(activeIndex);
-  }
-}
-function areValuesEqual(newValue, oldValue) {
-  if (typeof newValue === "number" && typeof oldValue === "number") {
-    return newValue === oldValue;
-  }
-  if (typeof newValue === "object" && typeof oldValue === "object") {
-    return areArraysEqual(newValue, oldValue);
-  }
-  return false;
-}
-const axisProps = {
-  horizontal: {
-    offset: (percent) => ({
-      left: `${percent}%`
-    }),
-    leap: (percent) => ({
-      width: `${percent}%`
-    })
-  },
-  "horizontal-reverse": {
-    offset: (percent) => ({
-      right: `${percent}%`
-    }),
-    leap: (percent) => ({
-      width: `${percent}%`
-    })
-  },
-  vertical: {
-    offset: (percent) => ({
-      bottom: `${percent}%`
-    }),
-    leap: (percent) => ({
-      height: `${percent}%`
-    })
-  }
-};
-const Identity$1 = (x2) => x2;
-let cachedSupportsTouchActionNone;
-function doesSupportTouchActionNone() {
-  if (cachedSupportsTouchActionNone === void 0) {
-    if (typeof CSS !== "undefined" && typeof CSS.supports === "function") {
-      cachedSupportsTouchActionNone = CSS.supports("touch-action", "none");
-    } else {
-      cachedSupportsTouchActionNone = true;
-    }
-  }
-  return cachedSupportsTouchActionNone;
-}
-function useSlider(parameters) {
-  const {
-    "aria-labelledby": ariaLabelledby,
-    defaultValue: defaultValue2,
-    disabled = false,
-    disableSwap = false,
-    isRtl = false,
-    marks: marksProp = false,
-    max: max2 = 100,
-    min: min2 = 0,
-    name,
-    onChange,
-    onChangeCommitted,
-    orientation = "horizontal",
-    rootRef: ref,
-    scale = Identity$1,
-    step = 1,
-    shiftStep = 10,
-    tabIndex,
-    value: valueProp
-  } = parameters;
-  const touchId = A$1(void 0);
-  const [active, setActive] = d(-1);
-  const [open, setOpen] = d(-1);
-  const [dragging, setDragging] = d(false);
-  const moveCount = A$1(0);
-  const lastChangedValue = A$1(null);
-  const [valueDerived, setValueState] = useControlled({
-    controlled: valueProp,
-    default: defaultValue2 ?? min2,
-    name: "Slider"
-  });
-  const handleChange = onChange && ((event, value, thumbIndex) => {
-    const nativeEvent = event.nativeEvent || event;
-    const clonedEvent = new nativeEvent.constructor(nativeEvent.type, nativeEvent);
-    Object.defineProperty(clonedEvent, "target", {
-      writable: true,
-      value: {
-        value,
-        name
-      }
-    });
-    lastChangedValue.current = value;
-    onChange(clonedEvent, value, thumbIndex);
-  });
-  const range = Array.isArray(valueDerived);
-  let values2 = range ? valueDerived.slice().sort(asc) : [valueDerived];
-  values2 = values2.map((value) => value == null ? min2 : clamp(value, min2, max2));
-  const marks = marksProp === true && step !== null ? [...Array(Math.floor((max2 - min2) / step) + 1)].map((_2, index) => ({
-    value: min2 + step * index
-  })) : marksProp || [];
-  const marksValues = marks.map((mark) => mark.value);
-  const [focusedThumbIndex, setFocusedThumbIndex] = d(-1);
-  const sliderRef = A$1(null);
-  const handleRef = useForkRef(ref, sliderRef);
-  const createHandleHiddenInputFocus = (otherHandlers) => (event) => {
-    const index = Number(event.currentTarget.getAttribute("data-index"));
-    if (isFocusVisible(event.target)) {
-      setFocusedThumbIndex(index);
-    }
-    setOpen(index);
-    otherHandlers?.onFocus?.(event);
-  };
-  const createHandleHiddenInputBlur = (otherHandlers) => (event) => {
-    if (!isFocusVisible(event.target)) {
-      setFocusedThumbIndex(-1);
-    }
-    setOpen(-1);
-    otherHandlers?.onBlur?.(event);
-  };
-  const changeValue = (event, valueInput) => {
-    const index = Number(event.currentTarget.getAttribute("data-index"));
-    const value = values2[index];
-    const marksIndex = marksValues.indexOf(value);
-    let newValue = valueInput;
-    if (marks && step == null) {
-      const maxMarksValue = marksValues[marksValues.length - 1];
-      if (newValue >= maxMarksValue) {
-        newValue = maxMarksValue;
-      } else if (newValue <= marksValues[0]) {
-        newValue = marksValues[0];
-      } else {
-        newValue = newValue < value ? marksValues[marksIndex - 1] : marksValues[marksIndex + 1];
-      }
-    }
-    newValue = clamp(newValue, min2, max2);
-    if (range) {
-      if (disableSwap) {
-        newValue = clamp(newValue, values2[index - 1] || -Infinity, values2[index + 1] || Infinity);
-      }
-      const previousValue = newValue;
-      newValue = setValueIndex({
-        values: values2,
-        newValue,
-        index
-      });
-      let activeIndex = index;
-      if (!disableSwap) {
-        activeIndex = newValue.indexOf(previousValue);
-      }
-      focusThumb({
-        sliderRef,
-        activeIndex
-      });
-    }
-    setValueState(newValue);
-    setFocusedThumbIndex(index);
-    if (handleChange && !areValuesEqual(newValue, valueDerived)) {
-      handleChange(event, newValue, index);
-    }
-    if (onChangeCommitted) {
-      onChangeCommitted(event, lastChangedValue.current ?? newValue);
-    }
-  };
-  const createHandleHiddenInputKeyDown = (otherHandlers) => (event) => {
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].includes(event.key)) {
-      event.preventDefault();
-      const index = Number(event.currentTarget.getAttribute("data-index"));
-      const value = values2[index];
-      let newValue = null;
-      if (step != null) {
-        const stepSize = event.shiftKey ? shiftStep : step;
-        switch (event.key) {
-          case "ArrowUp":
-            newValue = getNewValue(value, stepSize, 1, min2, max2);
-            break;
-          case "ArrowRight":
-            newValue = getNewValue(value, stepSize, isRtl ? -1 : 1, min2, max2);
-            break;
-          case "ArrowDown":
-            newValue = getNewValue(value, stepSize, -1, min2, max2);
-            break;
-          case "ArrowLeft":
-            newValue = getNewValue(value, stepSize, isRtl ? 1 : -1, min2, max2);
-            break;
-          case "PageUp":
-            newValue = getNewValue(value, shiftStep, 1, min2, max2);
-            break;
-          case "PageDown":
-            newValue = getNewValue(value, shiftStep, -1, min2, max2);
-            break;
-          case "Home":
-            newValue = min2;
-            break;
-          case "End":
-            newValue = max2;
-            break;
-        }
-      } else if (marks) {
-        const maxMarksValue = marksValues[marksValues.length - 1];
-        const currentMarkIndex = marksValues.indexOf(value);
-        const decrementKeys = [isRtl ? "ArrowRight" : "ArrowLeft", "ArrowDown", "PageDown", "Home"];
-        const incrementKeys = [isRtl ? "ArrowLeft" : "ArrowRight", "ArrowUp", "PageUp", "End"];
-        if (decrementKeys.includes(event.key)) {
-          if (currentMarkIndex === 0) {
-            newValue = marksValues[0];
-          } else {
-            newValue = marksValues[currentMarkIndex - 1];
-          }
-        } else if (incrementKeys.includes(event.key)) {
-          if (currentMarkIndex === marksValues.length - 1) {
-            newValue = maxMarksValue;
-          } else {
-            newValue = marksValues[currentMarkIndex + 1];
-          }
-        }
-      }
-      if (newValue != null) {
-        changeValue(event, newValue);
-      }
-    }
-    otherHandlers?.onKeyDown?.(event);
-  };
-  useEnhancedEffect(() => {
-    const activeElement$1 = activeElement(ownerDocument(sliderRef.current));
-    if (disabled && contains$1(sliderRef.current, activeElement$1)) {
-      document.activeElement?.blur();
-    }
-  }, [disabled]);
-  if (disabled && active !== -1) {
-    setActive(-1);
-  }
-  if (disabled && focusedThumbIndex !== -1) {
-    setFocusedThumbIndex(-1);
-  }
-  const createHandleHiddenInputChange = (otherHandlers) => (event) => {
-    otherHandlers.onChange?.(event);
-    changeValue(event, event.target.valueAsNumber);
-  };
-  const previousIndex = A$1(void 0);
-  let axis = orientation;
-  if (isRtl && orientation === "horizontal") {
-    axis += "-reverse";
-  }
-  const getFingerNewValue = ({
-    finger,
-    move = false
-  }) => {
-    const {
-      current: slider
-    } = sliderRef;
-    const {
-      width: width2,
-      height: height2,
-      bottom: bottom2,
-      left: left2
-    } = slider.getBoundingClientRect();
-    let percent;
-    if (axis.startsWith("vertical")) {
-      percent = (bottom2 - finger.y) / height2;
-    } else {
-      percent = (finger.x - left2) / width2;
-    }
-    if (axis.includes("-reverse")) {
-      percent = 1 - percent;
-    }
-    let newValue;
-    newValue = percentToValue(percent, min2, max2);
-    if (step) {
-      newValue = roundValueToStep(newValue, step, min2);
-    } else {
-      const closestIndex = findClosest(marksValues, newValue);
-      newValue = marksValues[closestIndex];
-    }
-    newValue = clamp(newValue, min2, max2);
-    let activeIndex = 0;
-    if (range) {
-      if (!move) {
-        activeIndex = findClosest(values2, newValue);
-      } else {
-        activeIndex = previousIndex.current;
-      }
-      if (disableSwap) {
-        newValue = clamp(newValue, values2[activeIndex - 1] || -Infinity, values2[activeIndex + 1] || Infinity);
-      }
-      const previousValue = newValue;
-      newValue = setValueIndex({
-        values: values2,
-        newValue,
-        index: activeIndex
-      });
-      if (!(disableSwap && move)) {
-        activeIndex = newValue.indexOf(previousValue);
-        previousIndex.current = activeIndex;
-      }
-    }
-    return {
-      newValue,
-      activeIndex
-    };
-  };
-  const handleTouchMove = useEventCallback((nativeEvent) => {
-    const finger = trackFinger(nativeEvent, touchId);
-    if (!finger) {
-      return;
-    }
-    moveCount.current += 1;
-    if (nativeEvent.type === "mousemove" && nativeEvent.buttons === 0) {
-      handleTouchEnd(nativeEvent);
-      return;
-    }
-    const {
-      newValue,
-      activeIndex
-    } = getFingerNewValue({
-      finger,
-      move: true
-    });
-    focusThumb({
-      sliderRef,
-      activeIndex,
-      setActive
-    });
-    setValueState(newValue);
-    if (!dragging && moveCount.current > INTENTIONAL_DRAG_COUNT_THRESHOLD) {
-      setDragging(true);
-    }
-    if (handleChange && !areValuesEqual(newValue, valueDerived)) {
-      handleChange(nativeEvent, newValue, activeIndex);
-    }
-  });
-  const handleTouchEnd = useEventCallback((nativeEvent) => {
-    const finger = trackFinger(nativeEvent, touchId);
-    setDragging(false);
-    if (!finger) {
-      return;
-    }
-    const {
-      newValue
-    } = getFingerNewValue({
-      finger,
-      move: true
-    });
-    setActive(-1);
-    if (nativeEvent.type === "touchend") {
-      setOpen(-1);
-    }
-    if (onChangeCommitted) {
-      onChangeCommitted(nativeEvent, lastChangedValue.current ?? newValue);
-    }
-    touchId.current = void 0;
-    stopListening();
-  });
-  const handleTouchStart = useEventCallback((nativeEvent) => {
-    if (disabled) {
-      return;
-    }
-    if (!doesSupportTouchActionNone()) {
-      nativeEvent.preventDefault();
-    }
-    const touch = nativeEvent.changedTouches[0];
-    if (touch != null) {
-      touchId.current = touch.identifier;
-    }
-    const finger = trackFinger(nativeEvent, touchId);
-    if (finger !== false) {
-      const {
-        newValue,
-        activeIndex
-      } = getFingerNewValue({
-        finger
-      });
-      focusThumb({
-        sliderRef,
-        activeIndex,
-        setActive
-      });
-      setValueState(newValue);
-      if (handleChange && !areValuesEqual(newValue, valueDerived)) {
-        handleChange(nativeEvent, newValue, activeIndex);
-      }
-    }
-    moveCount.current = 0;
-    const doc = ownerDocument(sliderRef.current);
-    doc.addEventListener("touchmove", handleTouchMove, {
-      passive: true
-    });
-    doc.addEventListener("touchend", handleTouchEnd, {
-      passive: true
-    });
-  });
-  const stopListening = q$1(() => {
-    const doc = ownerDocument(sliderRef.current);
-    doc.removeEventListener("mousemove", handleTouchMove);
-    doc.removeEventListener("mouseup", handleTouchEnd);
-    doc.removeEventListener("touchmove", handleTouchMove);
-    doc.removeEventListener("touchend", handleTouchEnd);
-  }, [handleTouchEnd, handleTouchMove]);
-  y(() => {
-    const {
-      current: slider
-    } = sliderRef;
-    slider.addEventListener("touchstart", handleTouchStart, {
-      passive: doesSupportTouchActionNone()
-    });
-    return () => {
-      slider.removeEventListener("touchstart", handleTouchStart);
-      stopListening();
-    };
-  }, [stopListening, handleTouchStart]);
-  y(() => {
-    if (disabled) {
-      stopListening();
-    }
-  }, [disabled, stopListening]);
-  const createHandleMouseDown = (otherHandlers) => (event) => {
-    otherHandlers.onMouseDown?.(event);
-    if (disabled) {
-      return;
-    }
-    if (event.defaultPrevented) {
-      return;
-    }
-    if (event.button !== 0) {
-      return;
-    }
-    event.preventDefault();
-    const finger = trackFinger(event, touchId);
-    if (finger !== false) {
-      const {
-        newValue,
-        activeIndex
-      } = getFingerNewValue({
-        finger
-      });
-      focusThumb({
-        sliderRef,
-        activeIndex,
-        setActive
-      });
-      setValueState(newValue);
-      if (handleChange && !areValuesEqual(newValue, valueDerived)) {
-        handleChange(event, newValue, activeIndex);
-      }
-    }
-    moveCount.current = 0;
-    const doc = ownerDocument(sliderRef.current);
-    doc.addEventListener("mousemove", handleTouchMove, {
-      passive: true
-    });
-    doc.addEventListener("mouseup", handleTouchEnd);
-  };
-  const trackOffset = valueToPercent(range ? values2[0] : min2, min2, max2);
-  const trackLeap = valueToPercent(values2[values2.length - 1], min2, max2) - trackOffset;
-  const getRootProps = (externalProps = {}) => {
-    const externalHandlers = extractEventHandlers(externalProps);
-    const ownEventHandlers = {
-      onMouseDown: createHandleMouseDown(externalHandlers || {})
-    };
-    const mergedEventHandlers = {
-      ...externalHandlers,
-      ...ownEventHandlers
-    };
-    return {
-      ...externalProps,
-      ref: handleRef,
-      ...mergedEventHandlers
-    };
-  };
-  const createHandleMouseOver = (otherHandlers) => (event) => {
-    otherHandlers.onMouseOver?.(event);
-    const index = Number(event.currentTarget.getAttribute("data-index"));
-    setOpen(index);
-  };
-  const createHandleMouseLeave = (otherHandlers) => (event) => {
-    otherHandlers.onMouseLeave?.(event);
-    setOpen(-1);
-  };
-  const getThumbProps = (externalProps = {}) => {
-    const externalHandlers = extractEventHandlers(externalProps);
-    const ownEventHandlers = {
-      onMouseOver: createHandleMouseOver(externalHandlers || {}),
-      onMouseLeave: createHandleMouseLeave(externalHandlers || {})
-    };
-    return {
-      ...externalProps,
-      ...externalHandlers,
-      ...ownEventHandlers
-    };
-  };
-  const getThumbStyle = (index) => {
-    return {
-      // So the non active thumb doesn't show its label on hover.
-      pointerEvents: active !== -1 && active !== index ? "none" : void 0
-    };
-  };
-  let cssWritingMode;
-  if (orientation === "vertical") {
-    cssWritingMode = isRtl ? "vertical-rl" : "vertical-lr";
-  }
-  const getHiddenInputProps = (externalProps = {}) => {
-    const externalHandlers = extractEventHandlers(externalProps);
-    const ownEventHandlers = {
-      onChange: createHandleHiddenInputChange(externalHandlers || {}),
-      onFocus: createHandleHiddenInputFocus(externalHandlers || {}),
-      onBlur: createHandleHiddenInputBlur(externalHandlers || {}),
-      onKeyDown: createHandleHiddenInputKeyDown(externalHandlers || {})
-    };
-    const mergedEventHandlers = {
-      ...externalHandlers,
-      ...ownEventHandlers
-    };
-    return {
-      tabIndex,
-      "aria-labelledby": ariaLabelledby,
-      "aria-orientation": orientation,
-      "aria-valuemax": scale(max2),
-      "aria-valuemin": scale(min2),
-      name,
-      type: "range",
-      min: parameters.min,
-      max: parameters.max,
-      step: parameters.step === null && parameters.marks ? "any" : parameters.step ?? void 0,
-      disabled,
-      ...externalProps,
-      ...mergedEventHandlers,
-      style: {
-        ...visuallyHidden,
-        direction: isRtl ? "rtl" : "ltr",
-        // So that VoiceOver's focus indicator matches the thumb's dimensions
-        width: "100%",
-        height: "100%",
-        writingMode: cssWritingMode
-      }
-    };
-  };
-  return {
-    active,
-    axis,
-    axisProps,
-    dragging,
-    focusedThumbIndex,
-    getHiddenInputProps,
-    getRootProps,
-    getThumbProps,
-    marks,
-    open,
-    range,
-    rootRef: handleRef,
-    trackLeap,
-    trackOffset,
-    values: values2,
-    getThumbStyle
-  };
-}
-const shouldSpreadAdditionalProps = (Slot) => {
-  return !Slot || !isHostComponent(Slot);
-};
-function getSliderUtilityClass(slot) {
-  return generateUtilityClass("MuiSlider", slot);
-}
-const sliderClasses = generateUtilityClasses("MuiSlider", ["root", "active", "colorPrimary", "colorSecondary", "colorError", "colorInfo", "colorSuccess", "colorWarning", "disabled", "dragging", "focusVisible", "mark", "markActive", "marked", "markLabel", "markLabelActive", "rail", "sizeSmall", "thumb", "thumbColorPrimary", "thumbColorSecondary", "thumbColorError", "thumbColorSuccess", "thumbColorInfo", "thumbColorWarning", "track", "trackInverted", "trackFalse", "thumbSizeSmall", "valueLabel", "valueLabelOpen", "valueLabelCircle", "valueLabelLabel", "vertical"]);
-const useValueLabelClasses = (props) => {
-  const {
-    open
-  } = props;
-  const utilityClasses = {
-    offset: clsx(open && sliderClasses.valueLabelOpen),
-    circle: sliderClasses.valueLabelCircle,
-    label: sliderClasses.valueLabelLabel
-  };
-  return utilityClasses;
-};
-function SliderValueLabel$1(props) {
-  const {
-    children,
-    className,
-    value
-  } = props;
-  const classes = useValueLabelClasses(props);
-  if (!children) {
-    return null;
-  }
-  return /* @__PURE__ */ mn(children, {
-    className: children.props.className
-  }, /* @__PURE__ */ u2(S, {
-    children: [children.props.children, /* @__PURE__ */ u2("span", {
-      className: clsx(classes.offset, className),
-      "aria-hidden": true,
-      children: /* @__PURE__ */ u2("span", {
-        className: classes.circle,
-        children: /* @__PURE__ */ u2("span", {
-          className: classes.label,
-          children: value
-        })
-      })
-    })]
-  }));
-}
-function Identity(x2) {
-  return x2;
-}
-const SliderRoot = styled("span", {
-  name: "MuiSlider",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, styles2[`color${capitalize(ownerState.color)}`], ownerState.size !== "medium" && styles2[`size${capitalize(ownerState.size)}`], ownerState.marked && styles2.marked, ownerState.orientation === "vertical" && styles2.vertical, ownerState.track === "inverted" && styles2.trackInverted, ownerState.track === false && styles2.trackFalse];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  borderRadius: 12,
-  boxSizing: "content-box",
-  display: "inline-block",
-  position: "relative",
-  cursor: "pointer",
-  touchAction: "none",
-  WebkitTapHighlightColor: "transparent",
-  "@media print": {
-    colorAdjust: "exact"
-  },
-  [`&.${sliderClasses.disabled}`]: {
-    pointerEvents: "none",
-    cursor: "default",
-    color: (theme.vars || theme).palette.grey[400]
-  },
-  [`&.${sliderClasses.dragging}`]: {
-    [`& .${sliderClasses.thumb}, & .${sliderClasses.track}`]: {
-      transition: "none"
-    }
-  },
-  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
-    props: {
-      color: color2
-    },
-    style: {
-      color: (theme.vars || theme).palette[color2].main
-    }
-  })), {
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      height: 4,
-      width: "100%",
-      padding: "13px 0",
-      // The primary input mechanism of the device includes a pointing device of limited accuracy.
-      "@media (pointer: coarse)": {
-        // Reach 42px touch target, about ~8mm on screen.
-        padding: "20px 0"
-      }
-    }
-  }, {
-    props: {
-      orientation: "horizontal",
-      size: "small"
-    },
-    style: {
-      height: 2
-    }
-  }, {
-    props: {
-      orientation: "horizontal",
-      marked: true
-    },
-    style: {
-      marginBottom: 20
-    }
-  }, {
-    props: {
-      orientation: "vertical"
-    },
-    style: {
-      height: "100%",
-      width: 4,
-      padding: "0 13px",
-      // The primary input mechanism of the device includes a pointing device of limited accuracy.
-      "@media (pointer: coarse)": {
-        // Reach 42px touch target, about ~8mm on screen.
-        padding: "0 20px"
-      }
-    }
-  }, {
-    props: {
-      orientation: "vertical",
-      size: "small"
-    },
-    style: {
-      width: 2
-    }
-  }, {
-    props: {
-      orientation: "vertical",
-      marked: true
-    },
-    style: {
-      marginRight: 44
-    }
-  }]
-})));
-const SliderRail = styled("span", {
-  name: "MuiSlider",
-  slot: "Rail"
-})({
-  display: "block",
-  position: "absolute",
-  borderRadius: "inherit",
-  backgroundColor: "currentColor",
-  opacity: 0.38,
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      width: "100%",
-      height: "inherit",
-      top: "50%",
-      transform: "translateY(-50%)"
-    }
-  }, {
-    props: {
-      orientation: "vertical"
-    },
-    style: {
-      height: "100%",
-      width: "inherit",
-      left: "50%",
-      transform: "translateX(-50%)"
-    }
-  }, {
-    props: {
-      track: "inverted"
-    },
-    style: {
-      opacity: 1
-    }
-  }]
-});
-const SliderTrack = styled("span", {
-  name: "MuiSlider",
-  slot: "Track"
-})(memoTheme(({
-  theme
-}) => {
-  return {
-    display: "block",
-    position: "absolute",
-    borderRadius: "inherit",
-    border: "1px solid currentColor",
-    backgroundColor: "currentColor",
-    transition: theme.transitions.create(["left", "width", "bottom", "height"], {
-      duration: theme.transitions.duration.shortest
-    }),
-    variants: [{
-      props: {
-        size: "small"
-      },
-      style: {
-        border: "none"
-      }
-    }, {
-      props: {
-        orientation: "horizontal"
-      },
-      style: {
-        height: "inherit",
-        top: "50%",
-        transform: "translateY(-50%)"
-      }
-    }, {
-      props: {
-        orientation: "vertical"
-      },
-      style: {
-        width: "inherit",
-        left: "50%",
-        transform: "translateX(-50%)"
-      }
-    }, {
-      props: {
-        track: false
-      },
-      style: {
-        display: "none"
-      }
-    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
-      props: {
-        color: color2,
-        track: "inverted"
-      },
-      style: {
-        ...theme.vars ? {
-          backgroundColor: theme.vars.palette.Slider[`${color2}Track`],
-          borderColor: theme.vars.palette.Slider[`${color2}Track`]
-        } : {
-          backgroundColor: theme.lighten(theme.palette[color2].main, 0.62),
-          borderColor: theme.lighten(theme.palette[color2].main, 0.62),
-          ...theme.applyStyles("dark", {
-            backgroundColor: theme.darken(theme.palette[color2].main, 0.5)
-          }),
-          ...theme.applyStyles("dark", {
-            borderColor: theme.darken(theme.palette[color2].main, 0.5)
-          })
-        }
-      }
-    }))]
-  };
-}));
-const SliderThumb = styled("span", {
-  name: "MuiSlider",
-  slot: "Thumb",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.thumb, styles2[`thumbColor${capitalize(ownerState.color)}`], ownerState.size !== "medium" && styles2[`thumbSize${capitalize(ownerState.size)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  position: "absolute",
-  width: 20,
-  height: 20,
-  boxSizing: "border-box",
-  borderRadius: "50%",
-  outline: 0,
-  backgroundColor: "currentColor",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  transition: theme.transitions.create(["box-shadow", "left", "bottom"], {
-    duration: theme.transitions.duration.shortest
-  }),
-  "&::before": {
-    position: "absolute",
-    content: '""',
-    borderRadius: "inherit",
-    width: "100%",
-    height: "100%",
-    boxShadow: (theme.vars || theme).shadows[2]
-  },
-  "&::after": {
-    position: "absolute",
-    content: '""',
-    borderRadius: "50%",
-    // 42px is the hit target
-    width: 42,
-    height: 42,
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)"
-  },
-  [`&.${sliderClasses.disabled}`]: {
-    "&:hover": {
-      boxShadow: "none"
-    }
-  },
-  variants: [{
-    props: {
-      size: "small"
-    },
-    style: {
-      width: 12,
-      height: 12,
-      "&::before": {
-        boxShadow: "none"
-      }
-    }
-  }, {
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      top: "50%",
-      transform: "translate(-50%, -50%)"
-    }
-  }, {
-    props: {
-      orientation: "vertical"
-    },
-    style: {
-      left: "50%",
-      transform: "translate(-50%, 50%)"
-    }
-  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color2]) => ({
-    props: {
-      color: color2
-    },
-    style: {
-      [`&:hover, &.${sliderClasses.focusVisible}`]: {
-        boxShadow: `0px 0px 0px 8px ${theme.alpha((theme.vars || theme).palette[color2].main, 0.16)}`,
-        "@media (hover: none)": {
-          boxShadow: "none"
-        }
-      },
-      [`&.${sliderClasses.active}`]: {
-        boxShadow: `0px 0px 0px 14px ${theme.alpha((theme.vars || theme).palette[color2].main, 0.16)}`
-      }
-    }
-  }))]
-})));
-const SliderValueLabel = styled(SliderValueLabel$1, {
-  name: "MuiSlider",
-  slot: "ValueLabel"
-})(memoTheme(({
-  theme
-}) => ({
-  zIndex: 1,
-  whiteSpace: "nowrap",
-  ...theme.typography.body2,
-  fontWeight: 500,
-  transition: theme.transitions.create(["transform"], {
-    duration: theme.transitions.duration.shortest
-  }),
-  position: "absolute",
-  backgroundColor: (theme.vars || theme).palette.grey[600],
-  borderRadius: 2,
-  color: (theme.vars || theme).palette.common.white,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "0.25rem 0.75rem",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      transform: "translateY(-100%) scale(0)",
-      top: "-10px",
-      transformOrigin: "bottom center",
-      "&::before": {
-        position: "absolute",
-        content: '""',
-        width: 8,
-        height: 8,
-        transform: "translate(-50%, 50%) rotate(45deg)",
-        backgroundColor: "inherit",
-        bottom: 0,
-        left: "50%"
-      },
-      [`&.${sliderClasses.valueLabelOpen}`]: {
-        transform: "translateY(-100%) scale(1)"
-      }
-    }
-  }, {
-    props: {
-      orientation: "vertical"
-    },
-    style: {
-      transform: "translateY(-50%) scale(0)",
-      right: "30px",
-      top: "50%",
-      transformOrigin: "right center",
-      "&::before": {
-        position: "absolute",
-        content: '""',
-        width: 8,
-        height: 8,
-        transform: "translate(-50%, -50%) rotate(45deg)",
-        backgroundColor: "inherit",
-        right: -8,
-        top: "50%"
-      },
-      [`&.${sliderClasses.valueLabelOpen}`]: {
-        transform: "translateY(-50%) scale(1)"
-      }
-    }
-  }, {
-    props: {
-      size: "small"
-    },
-    style: {
-      fontSize: theme.typography.pxToRem(12),
-      padding: "0.25rem 0.5rem"
-    }
-  }, {
-    props: {
-      orientation: "vertical",
-      size: "small"
-    },
-    style: {
-      right: "20px"
-    }
-  }]
-})));
-const SliderMark = styled("span", {
-  name: "MuiSlider",
-  slot: "Mark",
-  shouldForwardProp: (prop) => slotShouldForwardProp(prop) && prop !== "markActive",
-  overridesResolver: (props, styles2) => {
-    const {
-      markActive
-    } = props;
-    return [styles2.mark, markActive && styles2.markActive];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  position: "absolute",
-  width: 2,
-  height: 2,
-  borderRadius: 1,
-  backgroundColor: "currentColor",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      top: "50%",
-      transform: "translate(-1px, -50%)"
-    }
-  }, {
-    props: {
-      orientation: "vertical"
-    },
-    style: {
-      left: "50%",
-      transform: "translate(-50%, 1px)"
-    }
-  }, {
-    props: {
-      markActive: true
-    },
-    style: {
-      backgroundColor: (theme.vars || theme).palette.background.paper,
-      opacity: 0.8
-    }
-  }]
-})));
-const SliderMarkLabel = styled("span", {
-  name: "MuiSlider",
-  slot: "MarkLabel",
-  shouldForwardProp: (prop) => slotShouldForwardProp(prop) && prop !== "markLabelActive"
-})(memoTheme(({
-  theme
-}) => ({
-  ...theme.typography.body2,
-  color: (theme.vars || theme).palette.text.secondary,
-  position: "absolute",
-  whiteSpace: "nowrap",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      top: 30,
-      transform: "translateX(-50%)",
-      "@media (pointer: coarse)": {
-        top: 40
-      }
-    }
-  }, {
-    props: {
-      orientation: "vertical"
-    },
-    style: {
-      left: 36,
-      transform: "translateY(50%)",
-      "@media (pointer: coarse)": {
-        left: 44
-      }
-    }
-  }, {
-    props: {
-      markLabelActive: true
-    },
-    style: {
-      color: (theme.vars || theme).palette.text.primary
-    }
-  }]
-})));
-const useUtilityClasses$b = (ownerState) => {
-  const {
-    disabled,
-    dragging,
-    marked,
-    orientation,
-    track,
-    classes,
-    color: color2,
-    size
-  } = ownerState;
-  const slots = {
-    root: ["root", disabled && "disabled", dragging && "dragging", marked && "marked", orientation === "vertical" && "vertical", track === "inverted" && "trackInverted", track === false && "trackFalse", color2 && `color${capitalize(color2)}`, size && `size${capitalize(size)}`],
-    rail: ["rail"],
-    track: ["track"],
-    mark: ["mark"],
-    markActive: ["markActive"],
-    markLabel: ["markLabel"],
-    markLabelActive: ["markLabelActive"],
-    valueLabel: ["valueLabel"],
-    thumb: ["thumb", disabled && "disabled", size && `thumbSize${capitalize(size)}`, color2 && `thumbColor${capitalize(color2)}`],
-    active: ["active"],
-    disabled: ["disabled"],
-    focusVisible: ["focusVisible"]
-  };
-  return composeClasses(slots, getSliderUtilityClass, classes);
-};
-const Forward = ({
-  children
-}) => children;
-const Slider$1 = /* @__PURE__ */ D(function Slider(inputProps, ref) {
-  const props = useDefaultProps({
-    props: inputProps,
-    name: "MuiSlider"
-  });
-  const isRtl = useRtl();
-  const {
-    "aria-label": ariaLabel,
-    "aria-valuetext": ariaValuetext,
-    "aria-labelledby": ariaLabelledby,
-    // eslint-disable-next-line react/prop-types
-    component = "span",
-    components = {},
-    componentsProps = {},
-    color: color2 = "primary",
-    classes: classesProp,
-    className,
-    disableSwap = false,
-    disabled = false,
-    getAriaLabel,
-    getAriaValueText,
-    marks: marksProp = false,
-    max: max2 = 100,
-    min: min2 = 0,
-    name,
-    onChange,
-    onChangeCommitted,
-    orientation = "horizontal",
-    shiftStep = 10,
-    size = "medium",
-    step = 1,
-    scale = Identity,
-    slotProps,
-    slots,
-    tabIndex,
-    track = "normal",
-    value: valueProp,
-    valueLabelDisplay = "off",
-    valueLabelFormat = Identity,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    isRtl,
-    max: max2,
-    min: min2,
-    classes: classesProp,
-    disabled,
-    disableSwap,
-    orientation,
-    marks: marksProp,
-    color: color2,
-    size,
-    step,
-    shiftStep,
-    scale,
-    track,
-    valueLabelDisplay,
-    valueLabelFormat
-  };
-  const {
-    axisProps: axisProps2,
-    getRootProps,
-    getHiddenInputProps,
-    getThumbProps,
-    open,
-    active,
-    axis,
-    focusedThumbIndex,
-    range,
-    dragging,
-    marks,
-    values: values2,
-    trackOffset,
-    trackLeap,
-    getThumbStyle
-  } = useSlider({
-    ...ownerState,
-    rootRef: ref
-  });
-  ownerState.marked = marks.length > 0 && marks.some((mark) => mark.label);
-  ownerState.dragging = dragging;
-  ownerState.focusedThumbIndex = focusedThumbIndex;
-  const classes = useUtilityClasses$b(ownerState);
-  const RootSlot = slots?.root ?? components.Root ?? SliderRoot;
-  const RailSlot = slots?.rail ?? components.Rail ?? SliderRail;
-  const TrackSlot = slots?.track ?? components.Track ?? SliderTrack;
-  const ThumbSlot = slots?.thumb ?? components.Thumb ?? SliderThumb;
-  const ValueLabelSlot = slots?.valueLabel ?? components.ValueLabel ?? SliderValueLabel;
-  const MarkSlot = slots?.mark ?? components.Mark ?? SliderMark;
-  const MarkLabelSlot = slots?.markLabel ?? components.MarkLabel ?? SliderMarkLabel;
-  const InputSlot = slots?.input ?? components.Input ?? "input";
-  const rootSlotProps = slotProps?.root ?? componentsProps.root;
-  const railSlotProps = slotProps?.rail ?? componentsProps.rail;
-  const trackSlotProps = slotProps?.track ?? componentsProps.track;
-  const thumbSlotProps = slotProps?.thumb ?? componentsProps.thumb;
-  const valueLabelSlotProps = slotProps?.valueLabel ?? componentsProps.valueLabel;
-  const markSlotProps = slotProps?.mark ?? componentsProps.mark;
-  const markLabelSlotProps = slotProps?.markLabel ?? componentsProps.markLabel;
-  const inputSlotProps = slotProps?.input ?? componentsProps.input;
-  const rootProps = useSlotProps({
-    elementType: RootSlot,
-    getSlotProps: getRootProps,
-    externalSlotProps: rootSlotProps,
-    externalForwardedProps: other,
-    additionalProps: {
-      ...shouldSpreadAdditionalProps(RootSlot) && {
-        as: component
-      }
-    },
-    ownerState: {
-      ...ownerState,
-      ...rootSlotProps?.ownerState
-    },
-    className: [classes.root, className]
-  });
-  const railProps = useSlotProps({
-    elementType: RailSlot,
-    externalSlotProps: railSlotProps,
-    ownerState,
-    className: classes.rail
-  });
-  const trackProps = useSlotProps({
-    elementType: TrackSlot,
-    externalSlotProps: trackSlotProps,
-    additionalProps: {
-      style: {
-        ...axisProps2[axis].offset(trackOffset),
-        ...axisProps2[axis].leap(trackLeap)
-      }
-    },
-    ownerState: {
-      ...ownerState,
-      ...trackSlotProps?.ownerState
-    },
-    className: classes.track
-  });
-  const thumbProps = useSlotProps({
-    elementType: ThumbSlot,
-    getSlotProps: getThumbProps,
-    externalSlotProps: thumbSlotProps,
-    ownerState: {
-      ...ownerState,
-      ...thumbSlotProps?.ownerState
-    },
-    className: classes.thumb
-  });
-  const valueLabelProps = useSlotProps({
-    elementType: ValueLabelSlot,
-    externalSlotProps: valueLabelSlotProps,
-    ownerState: {
-      ...ownerState,
-      ...valueLabelSlotProps?.ownerState
-    },
-    className: classes.valueLabel
-  });
-  const markProps = useSlotProps({
-    elementType: MarkSlot,
-    externalSlotProps: markSlotProps,
-    ownerState,
-    className: classes.mark
-  });
-  const markLabelProps = useSlotProps({
-    elementType: MarkLabelSlot,
-    externalSlotProps: markLabelSlotProps,
-    ownerState,
-    className: classes.markLabel
-  });
-  const inputSliderProps = useSlotProps({
-    elementType: InputSlot,
-    getSlotProps: getHiddenInputProps,
-    externalSlotProps: inputSlotProps,
-    ownerState
-  });
-  return /* @__PURE__ */ u2(RootSlot, {
-    ...rootProps,
-    children: [/* @__PURE__ */ u2(RailSlot, {
-      ...railProps
-    }), /* @__PURE__ */ u2(TrackSlot, {
-      ...trackProps
-    }), marks.filter((mark) => mark.value >= min2 && mark.value <= max2).map((mark, index) => {
-      const percent = valueToPercent(mark.value, min2, max2);
-      const style2 = axisProps2[axis].offset(percent);
-      let markActive;
-      if (track === false) {
-        markActive = values2.includes(mark.value);
-      } else {
-        markActive = track === "normal" && (range ? mark.value >= values2[0] && mark.value <= values2[values2.length - 1] : mark.value <= values2[0]) || track === "inverted" && (range ? mark.value <= values2[0] || mark.value >= values2[values2.length - 1] : mark.value >= values2[0]);
-      }
-      return /* @__PURE__ */ u2(S, {
-        children: [/* @__PURE__ */ u2(MarkSlot, {
-          "data-index": index,
-          ...markProps,
-          ...!isHostComponent(MarkSlot) && {
-            markActive
-          },
-          style: {
-            ...style2,
-            ...markProps.style
-          },
-          className: clsx(markProps.className, markActive && classes.markActive)
-        }), mark.label != null ? /* @__PURE__ */ u2(MarkLabelSlot, {
-          "aria-hidden": true,
-          "data-index": index,
-          ...markLabelProps,
-          ...!isHostComponent(MarkLabelSlot) && {
-            markLabelActive: markActive
-          },
-          style: {
-            ...style2,
-            ...markLabelProps.style
-          },
-          className: clsx(classes.markLabel, markLabelProps.className, markActive && classes.markLabelActive),
-          children: mark.label
-        }) : null]
-      }, index);
-    }), values2.map((value, index) => {
-      const percent = valueToPercent(value, min2, max2);
-      const style2 = axisProps2[axis].offset(percent);
-      const ValueLabelComponent = valueLabelDisplay === "off" ? Forward : ValueLabelSlot;
-      return (
-        /* TODO v6: Change component structure. It will help in avoiding the complicated React.cloneElement API added in SliderValueLabel component. Should be: Thumb -> Input, ValueLabel. Follow Joy UI's Slider structure. */
-        /* @__PURE__ */ u2(ValueLabelComponent, {
-          ...!isHostComponent(ValueLabelComponent) && {
-            valueLabelFormat,
-            valueLabelDisplay,
-            value: typeof valueLabelFormat === "function" ? valueLabelFormat(scale(value), index) : valueLabelFormat,
-            index,
-            open: open === index || active === index || valueLabelDisplay === "on",
-            disabled
-          },
-          ...valueLabelProps,
-          children: /* @__PURE__ */ u2(ThumbSlot, {
-            "data-index": index,
-            ...thumbProps,
-            className: clsx(classes.thumb, thumbProps.className, active === index && classes.active, focusedThumbIndex === index && classes.focusVisible),
-            style: {
-              ...style2,
-              ...getThumbStyle(index),
-              ...thumbProps.style
-            },
-            children: /* @__PURE__ */ u2(InputSlot, {
-              "data-index": index,
-              "aria-label": getAriaLabel ? getAriaLabel(index) : ariaLabel,
-              "aria-valuenow": scale(value),
-              "aria-labelledby": ariaLabelledby,
-              "aria-valuetext": getAriaValueText ? getAriaValueText(scale(value), index) : ariaValuetext,
-              value: values2[index],
-              ...inputSliderProps
-            })
-          })
-        }, index)
-      );
-    })]
-  });
-});
 function getTooltipUtilityClass(slot) {
   return generateUtilityClass("MuiTooltip", slot);
 }
@@ -50931,7 +45996,7 @@ const tooltipClasses = generateUtilityClasses("MuiTooltip", ["popper", "popperIn
 function round(value) {
   return Math.round(value * 1e5) / 1e5;
 }
-const useUtilityClasses$a = (ownerState) => {
+const useUtilityClasses$5 = (ownerState) => {
   const {
     classes,
     disableInteractive,
@@ -51480,7 +46545,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
       modifiers: tooltipModifiers
     };
   }, [arrowRef, PopperProps.popperOptions, resolvedPopperProps?.popperOptions]);
-  const classes = useUtilityClasses$a(ownerState);
+  const classes = useUtilityClasses$5(ownerState);
   const resolvedTransitionProps = typeof slotProps.transition === "function" ? slotProps.transition(ownerState) : slotProps.transition;
   const externalForwardedProps = {
     slots: {
@@ -51579,7 +46644,7 @@ function getSwitchUtilityClass(slot) {
   return generateUtilityClass("MuiSwitch", slot);
 }
 const switchClasses = generateUtilityClasses("MuiSwitch", ["root", "edgeStart", "edgeEnd", "switchBase", "colorPrimary", "colorSecondary", "sizeSmall", "sizeMedium", "checked", "disabled", "input", "thumb", "track"]);
-const useUtilityClasses$9 = (ownerState) => {
+const useUtilityClasses$4 = (ownerState) => {
   const {
     classes,
     edge,
@@ -51787,7 +46852,7 @@ const Switch$1 = /* @__PURE__ */ D(function Switch(inProps, ref) {
     edge,
     size
   };
-  const classes = useUtilityClasses$9(ownerState);
+  const classes = useUtilityClasses$4(ownerState);
   const externalInputProps = slotProps.input;
   const externalForwardedProps = {
     slots,
@@ -51855,7 +46920,7 @@ function getTabUtilityClass(slot) {
   return generateUtilityClass("MuiTab", slot);
 }
 const tabClasses = generateUtilityClasses("MuiTab", ["root", "labelIcon", "textColorInherit", "textColorPrimary", "textColorSecondary", "selected", "disabled", "fullWidth", "wrapped", "iconWrapper", "icon"]);
-const useUtilityClasses$8 = (ownerState) => {
+const useUtilityClasses$3 = (ownerState) => {
   const {
     classes,
     textColor,
@@ -52063,7 +47128,7 @@ const Tab$1 = /* @__PURE__ */ D(function Tab(inProps, ref) {
     textColor,
     wrapped
   };
-  const classes = useUtilityClasses$8(ownerState);
+  const classes = useUtilityClasses$3(ownerState);
   const icon = iconProp && label && /* @__PURE__ */ hn(iconProp) ? /* @__PURE__ */ mn(iconProp, {
     className: clsx(classes.icon, iconProp.props.className)
   }) : iconProp;
@@ -52102,468 +47167,12 @@ const Tab$1 = /* @__PURE__ */ D(function Tab(inProps, ref) {
     }), indicator]
   });
 });
-const TableContext = /* @__PURE__ */ X$1();
-function getTableUtilityClass(slot) {
-  return generateUtilityClass("MuiTable", slot);
-}
-generateUtilityClasses("MuiTable", ["root", "stickyHeader"]);
-const useUtilityClasses$7 = (ownerState) => {
-  const {
-    classes,
-    stickyHeader
-  } = ownerState;
-  const slots = {
-    root: ["root", stickyHeader && "stickyHeader"]
-  };
-  return composeClasses(slots, getTableUtilityClass, classes);
-};
-const TableRoot = styled("table", {
-  name: "MuiTable",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.stickyHeader && styles2.stickyHeader];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  display: "table",
-  width: "100%",
-  borderCollapse: "collapse",
-  borderSpacing: 0,
-  "& caption": {
-    ...theme.typography.body2,
-    padding: theme.spacing(2),
-    color: (theme.vars || theme).palette.text.secondary,
-    textAlign: "left",
-    captionSide: "bottom"
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.stickyHeader,
-    style: {
-      borderCollapse: "separate"
-    }
-  }]
-})));
-const defaultComponent$3 = "table";
-const Table$1 = /* @__PURE__ */ D(function Table(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiTable"
-  });
-  const {
-    className,
-    component = defaultComponent$3,
-    padding: padding2 = "normal",
-    size = "medium",
-    stickyHeader = false,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    component,
-    padding: padding2,
-    size,
-    stickyHeader
-  };
-  const classes = useUtilityClasses$7(ownerState);
-  const table = T$1(() => ({
-    padding: padding2,
-    size,
-    stickyHeader
-  }), [padding2, size, stickyHeader]);
-  return /* @__PURE__ */ u2(TableContext.Provider, {
-    value: table,
-    children: /* @__PURE__ */ u2(TableRoot, {
-      as: component,
-      role: component === defaultComponent$3 ? null : "table",
-      ref,
-      className: clsx(classes.root, className),
-      ownerState,
-      ...other
-    })
-  });
-});
-const Tablelvl2Context = /* @__PURE__ */ X$1();
-function getTableBodyUtilityClass(slot) {
-  return generateUtilityClass("MuiTableBody", slot);
-}
-generateUtilityClasses("MuiTableBody", ["root"]);
-const useUtilityClasses$6 = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getTableBodyUtilityClass, classes);
-};
-const TableBodyRoot = styled("tbody", {
-  name: "MuiTableBody",
-  slot: "Root"
-})({
-  display: "table-row-group"
-});
-const tablelvl2$1 = {
-  variant: "body"
-};
-const defaultComponent$2 = "tbody";
-const TableBody$1 = /* @__PURE__ */ D(function TableBody(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiTableBody"
-  });
-  const {
-    className,
-    component = defaultComponent$2,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    component
-  };
-  const classes = useUtilityClasses$6(ownerState);
-  return /* @__PURE__ */ u2(Tablelvl2Context.Provider, {
-    value: tablelvl2$1,
-    children: /* @__PURE__ */ u2(TableBodyRoot, {
-      className: clsx(classes.root, className),
-      as: component,
-      ref,
-      role: component === defaultComponent$2 ? null : "rowgroup",
-      ownerState,
-      ...other
-    })
-  });
-});
-function getTableCellUtilityClass(slot) {
-  return generateUtilityClass("MuiTableCell", slot);
-}
-const tableCellClasses = generateUtilityClasses("MuiTableCell", ["root", "head", "body", "footer", "sizeSmall", "sizeMedium", "paddingCheckbox", "paddingNone", "alignLeft", "alignCenter", "alignRight", "alignJustify", "stickyHeader"]);
-const useUtilityClasses$5 = (ownerState) => {
-  const {
-    classes,
-    variant,
-    align,
-    padding: padding2,
-    size,
-    stickyHeader
-  } = ownerState;
-  const slots = {
-    root: ["root", variant, stickyHeader && "stickyHeader", align !== "inherit" && `align${capitalize(align)}`, padding2 !== "normal" && `padding${capitalize(padding2)}`, `size${capitalize(size)}`]
-  };
-  return composeClasses(slots, getTableCellUtilityClass, classes);
-};
-const TableCellRoot = styled("td", {
-  name: "MuiTableCell",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, styles2[ownerState.variant], styles2[`size${capitalize(ownerState.size)}`], ownerState.padding !== "normal" && styles2[`padding${capitalize(ownerState.padding)}`], ownerState.align !== "inherit" && styles2[`align${capitalize(ownerState.align)}`], ownerState.stickyHeader && styles2.stickyHeader];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  ...theme.typography.body2,
-  display: "table-cell",
-  verticalAlign: "inherit",
-  // Workaround for a rendering bug with spanned columns in Chrome 62.0.
-  // Removes the alpha (sets it to 1), and lightens or darkens the theme color.
-  borderBottom: theme.vars ? `1px solid ${theme.vars.palette.TableCell.border}` : `1px solid
-    ${theme.palette.mode === "light" ? theme.lighten(theme.alpha(theme.palette.divider, 1), 0.88) : theme.darken(theme.alpha(theme.palette.divider, 1), 0.68)}`,
-  textAlign: "left",
-  padding: 16,
-  variants: [{
-    props: {
-      variant: "head"
-    },
-    style: {
-      color: (theme.vars || theme).palette.text.primary,
-      lineHeight: theme.typography.pxToRem(24),
-      fontWeight: theme.typography.fontWeightMedium
-    }
-  }, {
-    props: {
-      variant: "body"
-    },
-    style: {
-      color: (theme.vars || theme).palette.text.primary
-    }
-  }, {
-    props: {
-      variant: "footer"
-    },
-    style: {
-      color: (theme.vars || theme).palette.text.secondary,
-      lineHeight: theme.typography.pxToRem(21),
-      fontSize: theme.typography.pxToRem(12)
-    }
-  }, {
-    props: {
-      size: "small"
-    },
-    style: {
-      padding: "6px 16px",
-      [`&.${tableCellClasses.paddingCheckbox}`]: {
-        width: 24,
-        // prevent the checkbox column from growing
-        padding: "0 12px 0 16px",
-        "& > *": {
-          padding: 0
-        }
-      }
-    }
-  }, {
-    props: {
-      padding: "checkbox"
-    },
-    style: {
-      width: 48,
-      // prevent the checkbox column from growing
-      padding: "0 0 0 4px"
-    }
-  }, {
-    props: {
-      padding: "none"
-    },
-    style: {
-      padding: 0
-    }
-  }, {
-    props: {
-      align: "left"
-    },
-    style: {
-      textAlign: "left"
-    }
-  }, {
-    props: {
-      align: "center"
-    },
-    style: {
-      textAlign: "center"
-    }
-  }, {
-    props: {
-      align: "right"
-    },
-    style: {
-      textAlign: "right",
-      flexDirection: "row-reverse"
-    }
-  }, {
-    props: {
-      align: "justify"
-    },
-    style: {
-      textAlign: "justify"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.stickyHeader,
-    style: {
-      position: "sticky",
-      top: 0,
-      zIndex: 2,
-      backgroundColor: (theme.vars || theme).palette.background.default
-    }
-  }]
-})));
-const TableCell$1 = /* @__PURE__ */ D(function TableCell(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiTableCell"
-  });
-  const {
-    align = "inherit",
-    className,
-    component: componentProp,
-    padding: paddingProp,
-    scope: scopeProp,
-    size: sizeProp,
-    sortDirection,
-    variant: variantProp,
-    ...other
-  } = props;
-  const table = x$1(TableContext);
-  const tablelvl22 = x$1(Tablelvl2Context);
-  const isHeadCell = tablelvl22 && tablelvl22.variant === "head";
-  let component;
-  if (componentProp) {
-    component = componentProp;
-  } else {
-    component = isHeadCell ? "th" : "td";
-  }
-  let scope = scopeProp;
-  if (component === "td") {
-    scope = void 0;
-  } else if (!scope && isHeadCell) {
-    scope = "col";
-  }
-  const variant = variantProp || tablelvl22 && tablelvl22.variant;
-  const ownerState = {
-    ...props,
-    align,
-    component,
-    padding: paddingProp || (table && table.padding ? table.padding : "normal"),
-    size: sizeProp || (table && table.size ? table.size : "medium"),
-    sortDirection,
-    stickyHeader: variant === "head" && table && table.stickyHeader,
-    variant
-  };
-  const classes = useUtilityClasses$5(ownerState);
-  let ariaSort = null;
-  if (sortDirection) {
-    ariaSort = sortDirection === "asc" ? "ascending" : "descending";
-  }
-  return /* @__PURE__ */ u2(TableCellRoot, {
-    as: component,
-    ref,
-    className: clsx(classes.root, className),
-    "aria-sort": ariaSort,
-    scope,
-    ownerState,
-    ...other
-  });
-});
-function getTableHeadUtilityClass(slot) {
-  return generateUtilityClass("MuiTableHead", slot);
-}
-generateUtilityClasses("MuiTableHead", ["root"]);
-const useUtilityClasses$4 = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getTableHeadUtilityClass, classes);
-};
-const TableHeadRoot = styled("thead", {
-  name: "MuiTableHead",
-  slot: "Root"
-})({
-  display: "table-header-group"
-});
-const tablelvl2 = {
-  variant: "head"
-};
-const defaultComponent$1 = "thead";
-const TableHead$1 = /* @__PURE__ */ D(function TableHead(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiTableHead"
-  });
-  const {
-    className,
-    component = defaultComponent$1,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    component
-  };
-  const classes = useUtilityClasses$4(ownerState);
-  return /* @__PURE__ */ u2(Tablelvl2Context.Provider, {
-    value: tablelvl2,
-    children: /* @__PURE__ */ u2(TableHeadRoot, {
-      as: component,
-      className: clsx(classes.root, className),
-      ref,
-      role: component === defaultComponent$1 ? null : "rowgroup",
-      ownerState,
-      ...other
-    })
-  });
-});
 const KeyboardArrowLeft = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M15.41 16.09l-4.58-4.59 4.58-4.59L14 5.5l-6 6 6 6z"
 }));
 const KeyboardArrowRight = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"
 }));
-function getTableRowUtilityClass(slot) {
-  return generateUtilityClass("MuiTableRow", slot);
-}
-const tableRowClasses = generateUtilityClasses("MuiTableRow", ["root", "selected", "hover", "head", "footer"]);
-const useUtilityClasses$3 = (ownerState) => {
-  const {
-    classes,
-    selected,
-    hover,
-    head,
-    footer
-  } = ownerState;
-  const slots = {
-    root: ["root", selected && "selected", hover && "hover", head && "head", footer && "footer"]
-  };
-  return composeClasses(slots, getTableRowUtilityClass, classes);
-};
-const TableRowRoot = styled("tr", {
-  name: "MuiTableRow",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, ownerState.head && styles2.head, ownerState.footer && styles2.footer];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  color: "inherit",
-  display: "table-row",
-  verticalAlign: "middle",
-  // We disable the focus ring for mouse, touch and keyboard users.
-  outline: 0,
-  [`&.${tableRowClasses.hover}:hover`]: {
-    backgroundColor: (theme.vars || theme).palette.action.hover
-  },
-  [`&.${tableRowClasses.selected}`]: {
-    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity),
-    "&:hover": {
-      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`)
-    }
-  }
-})));
-const defaultComponent = "tr";
-const TableRow$1 = /* @__PURE__ */ D(function TableRow(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiTableRow"
-  });
-  const {
-    className,
-    component = defaultComponent,
-    hover = false,
-    selected = false,
-    ...other
-  } = props;
-  const tablelvl22 = x$1(Tablelvl2Context);
-  const ownerState = {
-    ...props,
-    component,
-    hover,
-    selected,
-    head: tablelvl22 && tablelvl22.variant === "head",
-    footer: tablelvl22 && tablelvl22.variant === "footer"
-  };
-  const classes = useUtilityClasses$3(ownerState);
-  return /* @__PURE__ */ u2(TableRowRoot, {
-    as: component,
-    ref,
-    className: clsx(classes.root, className),
-    role: component === defaultComponent ? null : "row",
-    ownerState,
-    ...other
-  });
-});
 function easeInOutSin(time2) {
   return (1 + Math.sin(Math.PI * time2 - Math.PI / 2)) / 2;
 }
@@ -53680,10 +48289,6 @@ const Collapse2 = Collapse$1;
 const InputAdornment2 = InputAdornment$1;
 const Popper3 = Popper$1;
 const ClickAwayListener = ClickAwayListener$1;
-const Dialog2 = Dialog$1;
-const DialogTitle2 = DialogTitle$1;
-const DialogContent2 = DialogContent$1;
-const DialogActions2 = DialogActions$1;
 const CircularProgress2 = CircularProgress$1;
 const ListItemIcon2 = ListItemIcon$1;
 const ListItemText2 = ListItemText$1;
@@ -53692,22 +48297,9 @@ const Tabs2 = Tabs$1;
 const Tab2 = Tab$1;
 const FormControl2 = FormControl$1;
 const InputLabel2 = InputLabel$1;
-const MenuItem2 = MenuItem$1;
+const MenuItem$1 = MenuItem$2;
 const Select2 = Select$1;
 const Switch2 = Switch$1;
-const Accordion2 = Accordion$1;
-const AccordionSummary2 = AccordionSummary$1;
-const AccordionDetails2 = AccordionDetails$1;
-const Alert2 = Alert$1;
-const Radio2 = Radio$1;
-const RadioGroup2 = RadioGroup$1;
-const Autocomplete2 = Autocomplete$1;
-const TableRow2 = TableRow$1;
-const TableCell2 = TableCell$1;
-const Slider2 = Slider$1;
-const TableHead2 = TableHead$1;
-const TableBody2 = TableBody$1;
-const Table2 = Table$1;
 function ThinkButton({
   variant = "secondary",
   size = "md",
@@ -53888,6 +48480,13 @@ function renderIcon(name) {
       return /* @__PURE__ */ u2("path", { d: "m9 18 6-6-6-6" });
     case "chevron-down":
       return /* @__PURE__ */ u2("path", { d: "m6 9 6 6 6-6" });
+    case "chevron-up":
+      return /* @__PURE__ */ u2("path", { d: "m18 15-6-6-6 6" });
+    case "copy":
+      return /* @__PURE__ */ u2(S, { children: [
+        /* @__PURE__ */ u2("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2" }),
+        /* @__PURE__ */ u2("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
+      ] });
     case "calendar":
       return /* @__PURE__ */ u2(S, { children: [
         /* @__PURE__ */ u2("path", { d: "M8 2v4M16 2v4M3 10h18" }),
@@ -54004,6 +48603,77 @@ function ThinkSegmentedControl({
       option.value
     );
   }) });
+}
+function ThinkInput({ className, invalid, ...props }) {
+  return /* @__PURE__ */ u2(
+    "input",
+    {
+      ...props,
+      className: ["think-input", className].filter(Boolean).join(" "),
+      "aria-invalid": invalid ? "true" : props["aria-invalid"]
+    }
+  );
+}
+function ThinkTextarea({ className, invalid, ...props }) {
+  return /* @__PURE__ */ u2(
+    "textarea",
+    {
+      ...props,
+      className: ["think-textarea", className].filter(Boolean).join(" "),
+      "aria-invalid": invalid ? "true" : props["aria-invalid"]
+    }
+  );
+}
+function ThinkSelect({ className, invalid, ...props }) {
+  return /* @__PURE__ */ u2(
+    "select",
+    {
+      ...props,
+      className: ["think-select", className].filter(Boolean).join(" "),
+      "aria-invalid": invalid ? "true" : props["aria-invalid"]
+    }
+  );
+}
+function ThinkCheckbox({ label, description, compact = false, className, ...inputProps }) {
+  return /* @__PURE__ */ u2("label", { className: ["think-selection-control", compact ? "think-selection-control--compact" : "", className].filter(Boolean).join(" "), children: [
+    /* @__PURE__ */ u2("input", { ...inputProps, type: "checkbox" }),
+    /* @__PURE__ */ u2("span", { className: "think-selection-control__text", children: [
+      /* @__PURE__ */ u2("span", { className: "think-selection-control__label", children: label }),
+      description ? /* @__PURE__ */ u2("span", { className: "think-selection-control__description", children: description }) : null
+    ] })
+  ] });
+}
+function ThinkToggle({ label, className, ...inputProps }) {
+  return /* @__PURE__ */ u2("label", { className: ["think-toggle-control", className].filter(Boolean).join(" "), children: [
+    /* @__PURE__ */ u2("input", { ...inputProps, type: "checkbox", className: "think-toggle-control__input" }),
+    /* @__PURE__ */ u2("span", { className: "think-toggle-control__track", "aria-hidden": "true", children: /* @__PURE__ */ u2("span", { className: "think-toggle-control__thumb" }) }),
+    /* @__PURE__ */ u2("span", { className: "think-toggle-control__label", children: label })
+  ] });
+}
+function ThinkDisclosure({ title, meta, children, open, onOpenChange, className, ...props }) {
+  return /* @__PURE__ */ u2(
+    "details",
+    {
+      ...props,
+      className: ["think-disclosure", className].filter(Boolean).join(" "),
+      open,
+      onToggle: (event) => onOpenChange?.(event.currentTarget.open),
+      children: [
+        /* @__PURE__ */ u2("summary", { className: "think-disclosure__summary", children: [
+          /* @__PURE__ */ u2("span", { className: "think-disclosure__title", children: title }),
+          meta ? /* @__PURE__ */ u2("span", { className: "think-disclosure__meta", children: meta }) : null,
+          /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-down", className: "think-disclosure__icon" })
+        ] }),
+        /* @__PURE__ */ u2("div", { className: "think-disclosure__body", children })
+      ]
+    }
+  );
+}
+function ThinkNotice({ children, tone = "info", className }) {
+  return /* @__PURE__ */ u2("div", { className: ["think-notice", `think-notice--${tone}`, className].filter(Boolean).join(" "), role: tone === "danger" ? "alert" : "status", children });
+}
+function ThinkRange({ className, ...props }) {
+  return /* @__PURE__ */ u2("input", { ...props, type: "range", className: ["think-range", className].filter(Boolean).join(" ") });
 }
 const RECORD_GESTURE_MULTI_ACTIVATION_MS = 320;
 const RECORD_GESTURE_HINT = "点击编辑；Ctrl/⌘+点击或双击打开原文";
@@ -54281,9 +48951,6 @@ function makeIcon(glyph, defaultLabel) {
 }
 const AddCircleOutlineIcon = makeIcon("+", "add");
 const AddIcon = makeIcon("+", "add");
-const ArrowBackIosNewIcon = makeIcon("‹", "back");
-const ArrowDropDownIcon = makeIcon("⌄", "open");
-const ArrowForwardIosIcon = makeIcon("›", "forward");
 const ChatIcon = makeIcon("💬", "chat");
 const CheckCircleIcon = makeIcon("✓", "checked");
 const CheckIcon = makeIcon("✓", "checked");
@@ -54292,20 +48959,15 @@ const ClearIcon = makeIcon("×", "clear");
 const CloseIcon = makeIcon("×", "close");
 const ContentCopyIcon = makeIcon("⧉", "copy");
 const DeleteForeverIcon = makeIcon("🗑", "delete");
-const DeleteForeverOutlinedIcon = makeIcon("🗑", "delete");
 const DeleteIcon = makeIcon("−", "delete");
-const DeleteOutlineIcon = makeIcon("🗑", "delete");
 const DragIndicatorIcon = makeIcon("⋮⋮", "drag");
 const EditIcon = makeIcon("✎", "edit");
-const ExpandLessIcon = makeIcon("⌃", "collapse");
 const ExpandMoreIcon = makeIcon("⌄", "expand");
 const HourglassTopIcon = makeIcon("⏳", "timer");
 const IosShareIcon = makeIcon("⇧", "share");
 const PauseIcon = makeIcon("Ⅱ", "pause");
 const PlayArrowIcon = makeIcon("▶", "play");
 const RadioButtonUncheckedIcon = makeIcon("○", "unchecked");
-const RemoveCircleOutlineIcon = makeIcon("−", "remove");
-const RestartAltIcon = makeIcon("↺", "reset");
 const SearchIcon = makeIcon("⌕", "search");
 const SendIcon = makeIcon("➤", "send");
 const SmartToyIcon = makeIcon("🤖", "ai");
@@ -54884,7 +49546,7 @@ function ThinkMuiThemeProvider({ children }) {
   const muiTheme = T$1(() => createThinkMuiTheme(mode), [mode]);
   return /* @__PURE__ */ u2(ThemeProvider, { theme: muiTheme, children });
 }
-function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, className, disabled = false }) {
+function SimpleSelect({ value, options, onChange, placeholder, fullWidth, className, disabled = false }) {
   const [isOpen, setIsOpen] = d(false);
   const wrapperRef = A$1(null);
   const selectedLabel = options.find((option) => option.value === value)?.label || value;
@@ -54901,16 +49563,15 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, cl
     setIsOpen(false);
   };
   const rootClass = [
-    "think-os",
     "think-simple-select",
     fullWidth ? "think-simple-select--full" : "",
     isOpen ? "is-open" : "",
     disabled ? "is-disabled" : "",
     className
   ].filter(Boolean).join(" ");
-  return /* @__PURE__ */ u2(Box, { ref: wrapperRef, className: rootClass, sx, children: [
+  return /* @__PURE__ */ u2("div", { ref: wrapperRef, className: rootClass, children: [
     /* @__PURE__ */ u2(
-      Box,
+      "div",
       {
         className: "think-simple-select__trigger",
         role: "combobox",
@@ -54929,17 +49590,17 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, cl
           if (event.key === "Escape") setIsOpen(false);
         },
         children: [
-          /* @__PURE__ */ u2(Typography2, { className: `think-simple-select__value${value ? "" : " is-placeholder"}`, children: value ? selectedLabel : /* @__PURE__ */ u2("em", { children: placeholder }) }),
-          /* @__PURE__ */ u2(ArrowDropDownIcon, { className: "think-simple-select__arrow" })
+          /* @__PURE__ */ u2("span", { className: `think-simple-select__value${value ? "" : " is-placeholder"}`, children: value ? selectedLabel : /* @__PURE__ */ u2("em", { children: placeholder }) }),
+          /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-down", className: "think-simple-select__arrow" })
         ]
       }
     ),
-    isOpen && /* @__PURE__ */ u2(Box, { className: "think-simple-select__menu", role: "listbox", children: options.map((option, index) => {
+    isOpen && /* @__PURE__ */ u2("div", { className: "think-simple-select__menu", role: "listbox", children: options.map((option, index) => {
       const showGroupHeader = option.group && option.group !== options[index - 1]?.group;
       return /* @__PURE__ */ u2("div", { children: [
-        showGroupHeader && /* @__PURE__ */ u2(Box, { className: "think-simple-select__group", children: option.group }),
+        showGroupHeader && /* @__PURE__ */ u2("div", { className: "think-simple-select__group", children: option.group }),
         /* @__PURE__ */ u2(
-          Box,
+          "div",
           {
             className: [
               "think-simple-select__option",
@@ -54957,6 +49618,205 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, cl
     }) })
   ] });
 }
+function normalize(value) {
+  return String(value || "").trim().toLocaleLowerCase();
+}
+function filterOptions(options, query) {
+  const needle = normalize(query);
+  if (!needle) return options.slice(0, 80);
+  return options.filter((option) => normalize(option.label).includes(needle) || normalize(option.value).includes(needle) || normalize(option.group || "").includes(needle)).slice(0, 80);
+}
+function closeLater(setOpen) {
+  window.setTimeout(() => setOpen(false), 90);
+}
+function OptionMenu({ options, onSelect, emptyLabel = "无匹配项" }) {
+  return /* @__PURE__ */ u2("div", { className: "think-combobox-menu", role: "listbox", children: options.length ? options.map((option) => /* @__PURE__ */ u2(
+    "button",
+    {
+      type: "button",
+      className: "think-combobox-option",
+      onMouseDown: (event) => event.preventDefault(),
+      onClick: () => onSelect(option),
+      role: "option",
+      children: [
+        /* @__PURE__ */ u2("span", { className: "think-combobox-option__label", children: option.label }),
+        option.group ? /* @__PURE__ */ u2("span", { className: "think-combobox-option__group", children: option.group }) : null
+      ]
+    },
+    `${option.group || ""}:${option.value}`
+  )) : /* @__PURE__ */ u2("div", { className: "think-combobox-option think-combobox-option--empty", children: emptyLabel }) });
+}
+function ThinkCombobox({
+  value = "",
+  options,
+  onChange,
+  placeholder = "搜索 / 选择",
+  helperText,
+  allowCustom = true,
+  className,
+  disabled = false
+}) {
+  const selectedLabel = T$1(() => options.find((option) => option.value === value)?.label || value, [options, value]);
+  const [query, setQuery] = d(selectedLabel);
+  const [open, setOpen] = d(false);
+  y(() => setQuery(selectedLabel), [selectedLabel]);
+  const filtered = T$1(() => filterOptions(options, query), [options, query]);
+  return /* @__PURE__ */ u2("div", { className: ["think-combobox", className].filter(Boolean).join(" "), children: [
+    /* @__PURE__ */ u2("div", { className: "think-combobox-control", children: [
+      /* @__PURE__ */ u2(
+        "input",
+        {
+          className: "think-combobox-input",
+          value: query,
+          disabled,
+          placeholder,
+          onFocus: () => setOpen(true),
+          onBlur: () => closeLater(setOpen),
+          onInput: (event) => {
+            const next2 = event.currentTarget.value;
+            setQuery(next2);
+            setOpen(true);
+            if (allowCustom) onChange(next2.trim());
+          },
+          onKeyDown: (event) => {
+            if (event.key === "Enter" && filtered[0]) {
+              event.preventDefault();
+              setQuery(filtered[0].label);
+              onChange(filtered[0].value);
+              setOpen(false);
+            }
+            if (event.key === "Escape") setOpen(false);
+          },
+          role: "combobox",
+          "aria-expanded": open
+        }
+      ),
+      /* @__PURE__ */ u2(ThinkIcon, { className: "think-combobox-control__icon", name: "chevron-down" })
+    ] }),
+    open && !disabled ? /* @__PURE__ */ u2(OptionMenu, { options: filtered, onSelect: (option) => {
+      setQuery(option.label);
+      onChange(option.value);
+      setOpen(false);
+    } }) : null,
+    helperText ? /* @__PURE__ */ u2("div", { className: "think-combobox-helper", children: helperText }) : null
+  ] });
+}
+function ThinkMultiCombobox({ values: values2, options, onChange, placeholder = "搜索 / 选择", className, disabled = false }) {
+  const [query, setQuery] = d("");
+  const [open, setOpen] = d(false);
+  const normalizedValues = T$1(() => new Set(values2.map(normalize)), [values2]);
+  const filtered = T$1(() => {
+    const needle = normalize(query);
+    return options.filter((option) => !normalizedValues.has(normalize(option))).filter((option) => !needle || normalize(option).includes(needle)).slice(0, 80).map((option) => ({ value: option, label: option }));
+  }, [options, query, normalizedValues]);
+  const addValue = (next2) => {
+    const clean2 = next2.trim();
+    if (!clean2 || normalizedValues.has(normalize(clean2))) return;
+    onChange([...values2, clean2]);
+    setQuery("");
+    setOpen(false);
+  };
+  return /* @__PURE__ */ u2("div", { className: ["think-multi-combobox", className].filter(Boolean).join(" "), children: [
+    /* @__PURE__ */ u2("div", { className: "think-combobox-control think-combobox-control--multi", children: [
+      values2.map((value) => /* @__PURE__ */ u2("span", { className: "think-combobox-tag", children: [
+        /* @__PURE__ */ u2("span", { children: value }),
+        /* @__PURE__ */ u2(
+          "button",
+          {
+            type: "button",
+            className: "think-combobox-tag__remove",
+            "aria-label": `移除 ${value}`,
+            disabled,
+            onMouseDown: (event) => event.preventDefault(),
+            onClick: () => onChange(values2.filter((item) => item !== value)),
+            children: "×"
+          }
+        )
+      ] }, value)),
+      /* @__PURE__ */ u2(
+        "input",
+        {
+          className: "think-combobox-input think-combobox-input--multi",
+          value: query,
+          disabled,
+          placeholder: values2.length ? "" : placeholder,
+          onFocus: () => setOpen(true),
+          onBlur: () => closeLater(setOpen),
+          onInput: (event) => {
+            setQuery(event.currentTarget.value);
+            setOpen(true);
+          },
+          onKeyDown: (event) => {
+            if (event.key === "Enter" || event.key === ",") {
+              event.preventDefault();
+              addValue(filtered[0]?.value || query);
+            } else if (event.key === "Backspace" && !query && values2.length) {
+              onChange(values2.slice(0, -1));
+            } else if (event.key === "Escape") {
+              setOpen(false);
+            }
+          },
+          role: "combobox",
+          "aria-expanded": open
+        }
+      ),
+      /* @__PURE__ */ u2(ThinkIcon, { className: "think-combobox-control__icon", name: "chevron-down" })
+    ] }),
+    open && !disabled ? /* @__PURE__ */ u2(OptionMenu, { options: filtered, onSelect: (option) => addValue(option.value), emptyLabel: query ? "回车添加输入值" : "无可选项" }) : null
+  ] });
+}
+function ThinkSearchPicker({
+  query,
+  options,
+  onQueryChange,
+  onSelect,
+  placeholder = "搜索 / 选择",
+  className,
+  open: controlledOpen,
+  onOpenChange
+}) {
+  const [internalOpen, setInternalOpen] = d(false);
+  const open = controlledOpen ?? internalOpen;
+  const rootRef = A$1(null);
+  const setOpen = (next2) => {
+    setInternalOpen(next2);
+    onOpenChange?.(next2);
+  };
+  const filtered = T$1(() => filterOptions(options, query), [options, query]);
+  return /* @__PURE__ */ u2("div", { ref: rootRef, className: ["think-search-picker", className].filter(Boolean).join(" "), children: [
+    /* @__PURE__ */ u2("div", { className: "think-combobox-control", children: [
+      /* @__PURE__ */ u2(
+        "input",
+        {
+          className: "think-combobox-input",
+          value: query,
+          placeholder,
+          onFocus: () => setOpen(true),
+          onBlur: () => window.setTimeout(() => setOpen(false), 90),
+          onInput: (event) => {
+            onQueryChange(event.currentTarget.value);
+            setOpen(true);
+          },
+          onKeyDown: (event) => {
+            if (event.key === "Enter" && filtered[0]) {
+              event.preventDefault();
+              onSelect(filtered[0].value);
+              setOpen(false);
+            }
+            if (event.key === "Escape") setOpen(false);
+          },
+          role: "combobox",
+          "aria-expanded": open
+        }
+      ),
+      /* @__PURE__ */ u2(ThinkIcon, { className: "think-combobox-control__icon", name: "chevron-down" })
+    ] }),
+    open ? /* @__PURE__ */ u2(OptionMenu, { options: filtered, onSelect: (option) => {
+      onSelect(option.value);
+      setOpen(false);
+    } }) : null
+  ] });
+}
 function FormField({
   label,
   children,
@@ -54964,140 +49824,90 @@ function FormField({
   help,
   error,
   className = "",
-  labelWidth = "80px"
+  labelWidth = "112px"
 }) {
-  const fieldClasses = [
-    "form-field",
-    error ? "form-field--error" : "",
+  const classes = [
+    "think-form-field",
+    error ? "think-form-field--error" : "",
     className
   ].filter(Boolean).join(" ");
-  return /* @__PURE__ */ u2("div", { className: fieldClasses, style: { marginBottom: "1rem" }, children: [
-    /* @__PURE__ */ u2(
-      "div",
-      {
-        style: {
-          display: "flex",
-          alignItems: "flex-start",
-          gap: "1rem"
-        },
-        children: [
-          /* @__PURE__ */ u2(
-            "label",
-            {
-              className: "form-label",
-              style: {
-                width: labelWidth,
-                fontWeight: "bold",
-                paddingTop: "8px",
-                flexShrink: 0
-              },
-              children: [
-                label,
-                required2 && /* @__PURE__ */ u2("span", { className: "required", style: { color: "var(--text-error)" }, children: "*" })
-              ]
-            }
-          ),
-          /* @__PURE__ */ u2("div", { className: "form-control", style: { flex: 1 }, children })
-        ]
-      }
-    ),
-    help && /* @__PURE__ */ u2(
-      "div",
-      {
-        className: "form-help",
-        style: {
-          fontSize: "0.85rem",
-          color: "var(--text-muted)",
-          marginTop: "0.25rem",
-          marginLeft: `calc(${labelWidth} + 1rem)`
-        },
-        children: help
-      }
-    ),
-    error && /* @__PURE__ */ u2(
-      "div",
-      {
-        className: "form-error",
-        style: {
-          fontSize: "0.85rem",
-          color: "var(--text-error)",
-          marginTop: "0.25rem",
-          marginLeft: `calc(${labelWidth} + 1rem)`
-        },
-        children: error
-      }
-    )
-  ] });
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      className: classes,
+      style: { "--think-form-field-label-width": labelWidth },
+      children: [
+        /* @__PURE__ */ u2("label", { className: "think-form-field__label", children: [
+          label,
+          required2 && /* @__PURE__ */ u2("span", { className: "think-form-field__required", children: "*" })
+        ] }),
+        /* @__PURE__ */ u2("div", { className: "think-form-field__control", children }),
+        help && /* @__PURE__ */ u2("div", { className: "think-form-field__help", children: help }),
+        error && /* @__PURE__ */ u2("div", { className: "think-form-field__error", children: error })
+      ]
+    }
+  );
 }
 function FieldManager({
   fields,
   availableFields,
   onFieldsChange,
-  placeholder = "+ 添加字段...",
+  placeholder = "+ 添加字段…",
   disabled = false,
   maxFields,
   className = "",
   getFieldLabel: getFieldLabel2 = (field) => field,
   getFieldGroupLabel
 }) {
-  const availableOptions = T$1(() => {
-    return availableFields.filter((field) => !fields.includes(field)).map((field) => ({
-      value: field,
-      label: getFieldLabel2(field),
-      group: getFieldGroupLabel?.(field)
-    }));
-  }, [availableFields, fields, getFieldLabel2, getFieldGroupLabel]);
+  const availableOptions = T$1(() => availableFields.filter((field) => !fields.includes(field)).map((field) => ({
+    value: field,
+    label: getFieldLabel2(field),
+    group: getFieldGroupLabel?.(field)
+  })), [availableFields, fields, getFieldLabel2, getFieldGroupLabel]);
   const handleAddField = (field) => {
-    if (maxFields !== void 0 && fields.length >= maxFields) {
-      return;
-    }
+    if (!field) return;
+    if (maxFields !== void 0 && fields.length >= maxFields) return;
     onFieldsChange([...fields, field]);
   };
   const handleRemoveField = (field) => {
-    onFieldsChange(fields.filter((f2) => f2 !== field));
+    if (disabled) return;
+    onFieldsChange(fields.filter((item) => item !== field));
   };
   const canAddMore = !disabled && (maxFields === void 0 || fields.length < maxFields);
   const hasAvailableFields = availableOptions.length > 0;
-  return /* @__PURE__ */ u2("div", { className: `field-manager ${className}`, style: { display: "flex", flexDirection: "column", gap: "8px" }, children: [
-    /* @__PURE__ */ u2("div", { className: "field-tags", style: { display: "flex", flexWrap: "wrap", gap: "4px" }, children: fields.map((field) => /* @__PURE__ */ u2(
-      "span",
+  const rootClass = ["think-field-manager", className].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2("div", { className: rootClass, children: [
+    fields.length > 0 && /* @__PURE__ */ u2("div", { className: "think-field-manager__tags", children: fields.map((field) => /* @__PURE__ */ u2(
+      "button",
       {
-        className: "field-tag",
-        onClick: () => !disabled && handleRemoveField(field),
-        title: `点击移除字段: ${getFieldLabel2(field)}（${field}）`,
-        style: {
-          display: "inline-flex",
-          alignItems: "center",
-          padding: "4px 8px",
-          backgroundColor: "var(--background-modifier-form-field)",
-          border: "1px solid var(--background-modifier-border)",
-          borderRadius: "12px",
-          fontSize: "12px",
-          cursor: disabled ? "default" : "pointer",
-          userSelect: "none"
-        },
+        type: "button",
+        className: "think-field-manager__tag",
+        onClick: () => handleRemoveField(field),
+        disabled,
+        title: `移除 ${getFieldLabel2(field)}`,
         children: [
-          getFieldLabel2(field),
-          " ✕"
+          /* @__PURE__ */ u2("span", { children: getFieldLabel2(field) }),
+          /* @__PURE__ */ u2("span", { className: "think-field-manager__tag-remove", "aria-hidden": "true", children: "×" })
         ]
       },
       field
     )) }),
-    canAddMore && hasAvailableFields && /* @__PURE__ */ u2("div", { className: "field-selector", children: /* @__PURE__ */ u2(
+    canAddMore && hasAvailableFields && /* @__PURE__ */ u2(
       SimpleSelect,
       {
         placeholder,
         value: "",
         options: availableOptions,
         onChange: handleAddField,
-        sx: { minWidth: "200px" }
+        fullWidth: true,
+        className: "think-field-manager__select"
       }
-    ) }),
-    !hasAvailableFields && canAddMore && /* @__PURE__ */ u2("div", { style: { fontSize: "12px", color: "var(--text-muted)" }, children: "所有可用字段已添加" }),
-    maxFields !== void 0 && fields.length >= maxFields && /* @__PURE__ */ u2("div", { style: { fontSize: "12px", color: "var(--text-muted)" }, children: [
-      "已达到最大字段数量限制 (",
+    ),
+    canAddMore && !hasAvailableFields && /* @__PURE__ */ u2("span", { className: "think-field-manager__status", children: "已添加全部可用字段" }),
+    maxFields !== void 0 && fields.length >= maxFields && /* @__PURE__ */ u2("span", { className: "think-field-manager__status", children: [
+      "最多 ",
       maxFields,
-      ")"
+      " 个字段"
     ] })
   ] });
 }
@@ -60564,9 +55374,8 @@ function FloatingPanel({
   });
   const bodyMergedStyle = buildFloatingPanelBodyStyle(mobile, bodyPadding, bodyStyle);
   const panel = /* @__PURE__ */ u2("div", { ref: rootRef, children: /* @__PURE__ */ u2(
-    Paper2,
+    "div",
     {
-      elevation: 4,
       className: `think-os think-os--modal think-floating-panel${inline ? " is-inline" : ""}${mobile ? " is-mobile" : ""}`,
       ...deviceProfileAttrs,
       onMouseDown: onPanelPointerDown,
@@ -61067,73 +55876,38 @@ function ModulePanel({
     !collapsed && /* @__PURE__ */ u2("div", { class: "module-content", children })
   ] });
 }
-function getPickerOptionValue(option) {
-  if (!option) return "";
-  return typeof option === "string" ? option : option.value;
-}
-function getPickerOptionLabel(option) {
-  if (typeof option === "string") return getFieldLabel(option);
-  return option.label || getFieldLabel(option.value);
-}
-function getPickerOptionGroup(option) {
-  return typeof option === "string" ? "其他字段" : option.group || "其他字段";
-}
-function normalizePickerValue(value) {
-  return String(value ?? "").trim();
-}
 function FieldPickerAutocomplete({
   value = "",
   options,
   onChange,
-  label,
   placeholder = "搜索 / 选择字段",
   helperText,
-  fullWidth = true,
-  size = "small",
-  disableClearable = true,
   allowCustom = true,
-  sx
+  className
 }) {
-  const pickerOptions = T$1(() => getFieldPickerOptions(options), [options]);
-  const selectedValue = T$1(() => pickerOptions.find((option) => option.value === value) || value || "", [pickerOptions, value]);
+  const pickerOptions = T$1(() => getFieldPickerOptions(options).map((option) => ({
+    value: option.value,
+    label: option.label || option.value,
+    group: option.group || "其他字段"
+  })), [options]);
   return /* @__PURE__ */ u2(
-    Autocomplete2,
+    ThinkCombobox,
     {
-      freeSolo: allowCustom,
-      disablePortal: true,
-      fullWidth,
-      size,
-      disableClearable,
+      value,
       options: pickerOptions,
-      groupBy: getPickerOptionGroup,
-      getOptionLabel: getPickerOptionLabel,
-      isOptionEqualToValue: (option, current2) => getPickerOptionValue(option) === getPickerOptionValue(current2),
-      value: selectedValue,
-      onChange: (_2, nextValue) => onChange(normalizePickerValue(getPickerOptionValue(nextValue))),
-      onInputChange: (_2, nextInput, reason) => {
-        if (!allowCustom) return;
-        if (reason !== "input" && reason !== "clear") return;
-        onChange(normalizePickerValue(nextInput));
-      },
-      sx,
-      renderInput: (params) => /* @__PURE__ */ u2(
-        TextField2,
-        {
-          ...params,
-          label,
-          placeholder,
-          helperText,
-          variant: "outlined"
-        }
-      )
+      onChange,
+      placeholder,
+      helperText,
+      allowCustom,
+      className
     }
   );
 }
-function ViewEditorShell({ title, description, children, className = "think-view-editor-shell", spacing = 2 }) {
-  return /* @__PURE__ */ u2(Stack, { spacing, class: className, children: [
-    (title || description) && /* @__PURE__ */ u2("div", { children: [
-      title && /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", class: "think-view-editor-shell__title", children: title }),
-      description && /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", class: "think-view-editor-shell__description", children: description })
+function ViewEditorShell({ title, description, children, className = "think-view-editor-shell" }) {
+  return /* @__PURE__ */ u2("div", { className, children: [
+    (title || description) && /* @__PURE__ */ u2("header", { className: "think-view-editor-shell__header", children: [
+      title && /* @__PURE__ */ u2("div", { className: "think-view-editor-shell__title", children: title }),
+      description && /* @__PURE__ */ u2("div", { className: "think-view-editor-shell__description", children: description })
     ] }),
     children
   ] });
@@ -61142,65 +55916,43 @@ function ConfigSection({ title, description, children, className, titleClassName
   const sectionClass = ["think-view-editor-section", className].filter(Boolean).join(" ");
   const titleClass = ["think-view-editor-section__title", titleClassName].filter(Boolean).join(" ");
   const descriptionClass = ["think-view-editor-section__description", descriptionClassName].filter(Boolean).join(" ");
-  return /* @__PURE__ */ u2(Box, { class: sectionClass, children: [
-    title && /* @__PURE__ */ u2(Typography2, { class: titleClass, variant: "subtitle2", children: title }),
-    description && /* @__PURE__ */ u2(Typography2, { class: descriptionClass, variant: "body2", color: "text.secondary", children: description }),
+  return /* @__PURE__ */ u2("section", { className: sectionClass, children: [
+    (title || description) && /* @__PURE__ */ u2("header", { className: "think-view-editor-section__header", children: [
+      title && /* @__PURE__ */ u2("div", { className: titleClass, children: title }),
+      description && /* @__PURE__ */ u2("div", { className: descriptionClass, children: description })
+    ] }),
     children
   ] });
 }
-function ConfigFieldRow({ label, description, children, alignItems = "center", labelWidth = 92 }) {
-  const labelClass = [
-    "think-view-editor-field-row__label",
-    labelWidth === 80 ? "think-view-editor-field-row__label--narrow" : "",
-    labelWidth === 104 ? "think-view-editor-field-row__label--wide" : "",
-    alignItems === "flex-start" ? "think-view-editor-field-row__label--top" : ""
-  ].filter(Boolean).join(" ");
-  return /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems, children: [
-    /* @__PURE__ */ u2(Typography2, { class: labelClass, children: label }),
-    /* @__PURE__ */ u2(Box, { class: "think-view-editor-field-row__control", children: [
-      children,
-      description && /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", class: "think-view-editor-field-row__description", children: description })
-    ] })
-  ] });
-}
-function ReadonlyViewEditorNotice({ title, description }) {
-  return /* @__PURE__ */ u2(ViewEditorShell, { title, description, spacing: 1 });
-}
-function TableViewEditor({ value, onChange, fieldOptions }) {
+function ConfigFieldRow({ label, description, children, alignItems = "center" }) {
   return /* @__PURE__ */ u2(
-    ViewEditorShell,
+    "div",
     {
-      title: "交叉表（TableView）",
-      description: "根据两个字段创建二维表格。",
-      children: /* @__PURE__ */ u2(ConfigSection, { title: "字段映射", children: /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, alignItems: "center", children: [
-        /* @__PURE__ */ u2(
-          FieldPickerAutocomplete,
-          {
-            label: "行字段",
-            options: fieldOptions,
-            value: value.rowField ?? "",
-            onChange: (v2) => onChange({ rowField: v2 ?? "" })
-          }
-        ),
-        /* @__PURE__ */ u2(
-          FieldPickerAutocomplete,
-          {
-            label: "列字段",
-            options: fieldOptions,
-            value: value.colField ?? "",
-            onChange: (v2) => onChange({ colField: v2 ?? "" })
-          }
-        )
-      ] }) })
+      className: ["think-view-editor-field-row", alignItems === "flex-start" ? "think-view-editor-field-row--top" : ""].filter(Boolean).join(" "),
+      children: [
+        /* @__PURE__ */ u2("div", { className: "think-view-editor-field-row__label", children: label }),
+        /* @__PURE__ */ u2("div", { className: "think-view-editor-field-row__control", children: [
+          children,
+          description && /* @__PURE__ */ u2("div", { className: "think-view-editor-field-row__description", children: description })
+        ] })
+      ]
     }
   );
+}
+function ReadonlyViewEditorNotice({ title, description }) {
+  return /* @__PURE__ */ u2(ViewEditorShell, { title, description });
+}
+function TableViewEditor({ value, onChange, fieldOptions }) {
+  return /* @__PURE__ */ u2(ViewEditorShell, { title: "交叉表（TableView）", children: /* @__PURE__ */ u2(ConfigSection, { title: "字段映射", children: [
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "行字段", children: /* @__PURE__ */ u2(FieldPickerAutocomplete, { options: fieldOptions, value: value.rowField ?? "", onChange: (v2) => onChange({ rowField: v2 ?? "" }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "列字段", children: /* @__PURE__ */ u2(FieldPickerAutocomplete, { options: fieldOptions, value: value.colField ?? "", onChange: (v2) => onChange({ colField: v2 ?? "" }) }) })
+  ] }) });
 }
 function BlockViewEditor() {
   return /* @__PURE__ */ u2(
     ReadonlyViewEditorNotice,
     {
-      title: "块视图（BlockView）",
-      description: "没有专属配置项；它的行为主要由上方的显示字段和分组字段控制。"
+      title: "块视图（BlockView）"
     }
   );
 }
@@ -61208,22 +55960,14 @@ function ExcelViewEditor() {
   return /* @__PURE__ */ u2(
     ReadonlyViewEditorNotice,
     {
-      title: "数据表格（ExcelView）",
-      description: "没有专属配置项；它会自动展示所有显示字段中指定的列。"
+      title: "数据表格（ExcelView）"
     }
   );
 }
 function normalizeProgressOrder(categories, progressOrder) {
-  const existing = progressOrder.filter((name) => Boolean(categories[name]));
   const seen = /* @__PURE__ */ new Set();
-  const unique2 = existing.filter((name) => {
-    if (seen.has(name)) return false;
-    seen.add(name);
-    return true;
-  });
-  for (const key of Object.keys(categories)) {
-    if (!seen.has(key)) unique2.push(key);
-  }
+  const unique2 = progressOrder.filter((name) => Boolean(categories[name]) && !seen.has(name) && Boolean(seen.add(name)));
+  for (const key of Object.keys(categories)) if (!seen.has(key)) unique2.push(key);
   return unique2;
 }
 function stripInlineName(config2) {
@@ -61233,236 +55977,73 @@ function stripInlineName(config2) {
 function nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig) {
   const normalizedOrder = normalizeProgressOrder(categories, progressOrder);
   const finalName = (newName || oldName).trim();
-  const willCollide = finalName !== oldName && Boolean(categories[finalName]);
-  const targetName = willCollide ? oldName : finalName;
-  const merged = {
-    ...categories[oldName] || { name: oldName, color: "#cccccc", files: [] },
-    ...newConfig,
-    name: targetName
-  };
+  const targetName = finalName !== oldName && Boolean(categories[finalName]) ? oldName : finalName;
+  const merged = { ...categories[oldName] || { name: oldName, color: "#cccccc", files: [] }, ...newConfig, name: targetName };
   const nextCats = {};
   for (const key of normalizedOrder) {
-    if (key === oldName) {
-      nextCats[targetName] = stripInlineName(merged);
-    } else if (categories[key]) {
-      nextCats[key] = categories[key];
-    }
+    if (key === oldName) nextCats[targetName] = stripInlineName(merged);
+    else if (categories[key]) nextCats[key] = categories[key];
   }
-  if (!nextCats[targetName]) {
-    nextCats[targetName] = stripInlineName(merged);
-  }
-  const nextOrder = normalizedOrder.map((k2) => k2 === oldName ? targetName : k2);
+  if (!nextCats[targetName]) nextCats[targetName] = stripInlineName(merged);
+  const nextOrder = normalizedOrder.map((key) => key === oldName ? targetName : key);
   return { categories: nextCats, progressOrder: normalizeProgressOrder(nextCats, nextOrder) };
 }
-function HourHeightSetting(props) {
-  const { hourHeight, onPatch } = props;
-  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography2, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "小时高度" }),
-    /* @__PURE__ */ u2(
-      TextField2,
-      {
-        type: "number",
-        size: "small",
-        variant: "outlined",
-        value: hourHeight,
-        onChange: (e2) => onPatch({ defaultHourHeight: Number(e2.target.value) }),
-        inputProps: { min: 20, max: 200 },
-        sx: { width: "120px" }
-      }
-    )
-  ] });
-}
-function CategoriesEditor(props) {
-  const { categories, progressOrder, fileOptions, onPatch } = props;
+function CategoriesEditor({ categories, progressOrder, fileOptions, onPatch }) {
   const handleCategoryChange = (oldName, newConfig) => {
     const newName = (newConfig.name || oldName).trim();
-    const next2 = nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig);
-    onPatch(next2);
+    onPatch(nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig));
   };
   const addCategory = () => {
-    let newName = `新分类`;
+    let newName = "新分类";
     let i2 = 1;
-    while (categories[newName]) {
-      newName = `新分类${i2++}`;
-    }
-    onPatch({
-      categories: { ...categories, [newName]: { name: newName, color: "#60a5fa", files: [] } },
-      progressOrder: [...progressOrder, newName]
-    });
+    while (categories[newName]) newName = `新分类${i2++}`;
+    onPatch({ categories: { ...categories, [newName]: { name: newName, color: "#60a5fa", files: [] } }, progressOrder: [...progressOrder, newName] });
   };
   const removeCategory = (nameToRemove) => {
     const { [nameToRemove]: _removed, ...rest } = categories;
-    const newProgressOrder = progressOrder.filter((cat) => cat !== nameToRemove);
-    onPatch({ categories: rest, progressOrder: normalizeProgressOrder(rest, newProgressOrder) });
+    onPatch({ categories: rest, progressOrder: normalizeProgressOrder(rest, progressOrder.filter((name) => name !== nameToRemove)) });
   };
   const moveCategory = (index, direction) => {
-    const newOrder = [...progressOrder];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newOrder.length) return;
-    [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
-    onPatch({ progressOrder: normalizeProgressOrder(categories, newOrder) });
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= progressOrder.length) return;
+    const next2 = [...progressOrder];
+    [next2[index], next2[targetIndex]] = [next2[targetIndex], next2[index]];
+    onPatch({ progressOrder: normalizeProgressOrder(categories, next2) });
   };
-  return /* @__PURE__ */ u2(Stack, { spacing: 1, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "分类配置 (可排序)" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1 }, children: "通过 `▲▼` 调整分类在进度条中的显示顺序。" }),
-    progressOrder.map((name, index) => {
+  return /* @__PURE__ */ u2(ConfigSection, { title: "分类配置", children: [
+    /* @__PURE__ */ u2("div", { className: "think-timeline-category-list", children: progressOrder.map((name, index) => {
       const catConfig = categories[name];
       if (!catConfig) return null;
-      const availableFileOptions = fileOptions.filter((f2) => !(catConfig.files || []).includes(f2)).map((f2) => ({ value: f2, label: f2 }));
-      return /* @__PURE__ */ u2(
-        Box,
-        {
-          sx: {
-            display: "grid",
-            gridTemplateColumns: "auto auto 140px 1fr auto",
-            gap: "12px",
-            alignItems: "center",
-            mb: 1
-          },
-          children: [
-            /* @__PURE__ */ u2(Stack, { direction: "row", sx: { gridColumn: "1 / 2" }, children: [
-              /* @__PURE__ */ u2(
-                IconAction,
-                {
-                  label: "上移",
-                  disabled: index === 0,
-                  onClick: () => moveCategory(index, "up"),
-                  sx: { p: "4px", fontSize: "0.9rem" },
-                  icon: /* @__PURE__ */ u2("span", { children: "▲" })
-                }
-              ),
-              /* @__PURE__ */ u2(
-                IconAction,
-                {
-                  label: "下移",
-                  disabled: index === progressOrder.length - 1,
-                  onClick: () => moveCategory(index, "down"),
-                  sx: { p: "4px", fontSize: "0.9rem" },
-                  icon: /* @__PURE__ */ u2("span", { children: "▼" })
-                }
-              )
-            ] }),
-            /* @__PURE__ */ u2(
-              TextField2,
-              {
-                type: "color",
-                size: "small",
-                value: catConfig.color || "#cccccc",
-                onChange: (e2) => handleCategoryChange(name, {
-                  color: e2.target.value
-                }),
-                sx: { p: "2px", gridColumn: "2 / 3" }
-              }
-            ),
-            /* @__PURE__ */ u2(
-              TextField2,
-              {
-                variant: "outlined",
-                size: "small",
-                defaultValue: name,
-                onBlur: (e2) => handleCategoryChange(name, {
-                  name: e2.target.value.trim()
-                }),
-                sx: { gridColumn: "3 / 4" }
-              }
-            ),
-            /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, gridColumn: "4 / 5" }, children: /* @__PURE__ */ u2(
-              Stack,
-              {
-                direction: "row",
-                flexWrap: "wrap",
-                useFlexGap: true,
-                spacing: 0.5,
-                alignItems: "center",
-                children: [
-                  (catConfig.files || []).map((file) => /* @__PURE__ */ u2(Tooltip2, { title: `点击移除关键词: ${file}`, children: /* @__PURE__ */ u2(
-                    Box,
-                    {
-                      onClick: () => handleCategoryChange(name, {
-                        files: (catConfig.files || []).filter(
-                          (f2) => f2 !== file
-                        )
-                      }),
-                      sx: {
-                        bgcolor: "action.hover",
-                        color: "text.primary",
-                        p: "3px 8px",
-                        borderRadius: "16px",
-                        fontSize: "0.8125rem",
-                        cursor: "pointer",
-                        "&:hover": {
-                          bgcolor: "action.disabledBackground",
-                          textDecoration: "line-through"
-                        }
-                      },
-                      children: file
-                    }
-                  ) }, file)),
-                  /* @__PURE__ */ u2(
-                    SimpleSelect,
-                    {
-                      value: "",
-                      options: availableFileOptions,
-                      placeholder: "+ 关键词...",
-                      onChange: (val) => handleCategoryChange(name, {
-                        files: [...catConfig.files || [], val]
-                      }),
-                      sx: { minWidth: 120 }
-                    }
-                  )
-                ]
-              }
-            ) }),
-            /* @__PURE__ */ u2(
-              IconButton2,
-              {
-                onClick: () => removeCategory(name),
-                size: "small",
-                title: "删除此分类",
-                sx: { gridColumn: "5 / 6" },
-                children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" })
-              }
-            )
-          ]
-        },
-        name
-      );
-    }),
-    /* @__PURE__ */ u2(
-      Button2,
-      {
-        startIcon: /* @__PURE__ */ u2(AddIcon, {}),
-        onClick: addCategory,
-        size: "small",
-        sx: { justifyContent: "flex-start", mt: 1 },
-        children: "添加新分类"
-      }
-    )
+      const availableFileOptions = fileOptions.filter((file) => !(catConfig.files || []).includes(file)).map((file) => ({ value: file, label: file }));
+      return /* @__PURE__ */ u2("div", { className: "think-timeline-category-row", children: [
+        /* @__PURE__ */ u2("div", { className: "think-timeline-category-row__order", children: [
+          /* @__PURE__ */ u2(ThinkIconButton, { label: "上移", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-up" }), size: "sm", disabled: index === 0, onClick: () => moveCategory(index, -1) }),
+          /* @__PURE__ */ u2(ThinkIconButton, { label: "下移", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-down" }), size: "sm", disabled: index === progressOrder.length - 1, onClick: () => moveCategory(index, 1) })
+        ] }),
+        /* @__PURE__ */ u2("input", { className: "think-category-color", type: "color", value: catConfig.color || "#cccccc", "aria-label": `${name} 颜色`, onChange: (event) => handleCategoryChange(name, { color: event.currentTarget.value }) }),
+        /* @__PURE__ */ u2(ThinkInput, { defaultValue: name, "aria-label": "分类名称", onBlur: (event) => handleCategoryChange(name, { name: event.currentTarget.value.trim() }) }),
+        /* @__PURE__ */ u2("div", { className: "think-timeline-category-row__files", children: [
+          (catConfig.files || []).map((file) => /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", title: "移除关键词", onClick: () => handleCategoryChange(name, { files: (catConfig.files || []).filter((item) => item !== file) }), children: [
+            /* @__PURE__ */ u2("span", { className: "think-chip__label", children: file }),
+            /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
+          ] }, file)),
+          availableFileOptions.length > 0 && /* @__PURE__ */ u2(SimpleSelect, { value: "", options: availableFileOptions, placeholder: "+ 关键词", onChange: (file) => handleCategoryChange(name, { files: [...catConfig.files || [], file] }) })
+        ] }),
+        /* @__PURE__ */ u2(ThinkIconButton, { label: "删除分类", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }), size: "sm", tone: "danger", onClick: () => removeCategory(name) })
+      ] }, name);
+    }) }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), size: "sm", variant: "secondary", onClick: addCategory, children: "添加分类" }) })
   ] });
 }
 function TimelineViewEditor({ value, onChange, dataStore }) {
   const viewConfig = { ...TIMELINE_VIEW_DEFAULT_CONFIG, ...value };
   const categories = viewConfig.categories || {};
   const progressOrder = normalizeProgressOrder(categories, viewConfig.progressOrder || []);
-  const fileOptions = T$1(() => {
-    if (!dataStore) return [];
-    const items = dataStore.queryItems();
-    return collectFileNames(items);
-  }, [dataStore]);
-  const handlePatch = (patch) => {
-    onChange(patch);
-  };
-  return /* @__PURE__ */ u2(Stack, { spacing: 2.5, children: [
-    /* @__PURE__ */ u2(HourHeightSetting, { hourHeight: viewConfig.defaultHourHeight, onPatch: handlePatch }),
-    /* @__PURE__ */ u2(
-      CategoriesEditor,
-      {
-        categories,
-        progressOrder,
-        fileOptions,
-        onPatch: handlePatch
-      }
-    )
+  const fileOptions = T$1(() => dataStore ? collectFileNames(dataStore.queryItems()) : [], [dataStore]);
+  const handlePatch = (patch) => onChange(patch);
+  return /* @__PURE__ */ u2(ViewEditorShell, { title: "时间线视图", children: [
+    /* @__PURE__ */ u2(ConfigSection, { children: /* @__PURE__ */ u2(ConfigFieldRow, { label: "小时高度", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 20, max: 200, value: viewConfig.defaultHourHeight, onInput: (event) => handlePatch({ defaultHourHeight: Number(event.currentTarget.value) }) }) }) }),
+    /* @__PURE__ */ u2(CategoriesEditor, { categories, progressOrder, fileOptions, onPatch: handlePatch })
   ] });
 }
 function uniqueFields(fields) {
@@ -61498,33 +56079,15 @@ function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
     ViewEditorShell,
     {
       title: "事件时间线视图",
-      description: /* @__PURE__ */ u2("span", { children: [
-        "事件时间线视图按时间顺序纵向展示事件，采用三栏布局：",
-        /* @__PURE__ */ u2("br", {}),
-        /* @__PURE__ */ u2("strong", { children: "[左侧日期] - [中间时间线] - [右侧内容卡片]" }),
-        /* @__PURE__ */ u2("br", {}),
-        /* @__PURE__ */ u2("br", {}),
-        "• ",
-        /* @__PURE__ */ u2("strong", { children: "任务内容语义" }),
-        "：推荐使用 ",
-        /* @__PURE__ */ u2("strong", { children: "内容" }),
-        " 字段显示干净正文；需要排查原始 Markdown 时再切换到 ",
-        /* @__PURE__ */ u2("strong", { children: "完整数据" }),
-        "。",
-        /* @__PURE__ */ u2("br", {}),
-        "• ",
-        /* @__PURE__ */ u2("strong", { children: "视觉保持" }),
-        "：任务仍以 TaskRow 展示，Block 仍使用 BlockItem / Markdown 渲染。"
-      ] }),
       children: /* @__PURE__ */ u2(ConfigSection, { title: "字段映射", children: [
-        /* @__PURE__ */ u2(Stack, { spacing: 1.25, children: [
+        /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
           /* @__PURE__ */ u2(ConfigFieldRow, { label: "时间字段", children: /* @__PURE__ */ u2(
             SimpleSelect,
             {
               value: config2.timeField || "date",
               options: fieldSelectOptions,
               onChange: (field) => patch({ timeField: field }),
-              sx: { minWidth: "220px" }
+              fullWidth: true
             }
           ) }),
           /* @__PURE__ */ u2(ConfigFieldRow, { label: "标题字段", children: /* @__PURE__ */ u2(
@@ -61533,7 +56096,7 @@ function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
               value: config2.titleField || "title",
               options: fieldSelectOptions,
               onChange: (field) => patch({ titleField: field }),
-              sx: { minWidth: "220px" }
+              fullWidth: true
             }
           ) }),
           /* @__PURE__ */ u2(ConfigFieldRow, { label: "内容字段", children: /* @__PURE__ */ u2(
@@ -61542,36 +56105,26 @@ function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
               value: config2.contentField || CONTENT_FIELD_KEY,
               options: fieldSelectOptions,
               onChange: (field) => patch({ contentField: field }),
-              sx: { minWidth: "220px" }
+              fullWidth: true
             }
           ) }),
-          /* @__PURE__ */ u2(ConfigFieldRow, { label: "最大长度", description: "0 表示不截断", children: /* @__PURE__ */ u2(
-            TextField2,
-            {
-              type: "number",
-              size: "small",
-              value: config2.maxContentLength ?? 160,
-              onChange: (event) => patch({ maxContentLength: Number(event.target.value) || 0 }),
-              inputProps: { min: 0, max: 2e3 },
-              sx: { width: "140px" }
-            }
-          ) })
+          /* @__PURE__ */ u2(ConfigFieldRow, { label: "最大长度", description: "0 表示不截断", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", min: 0, max: 2e3, value: config2.maxContentLength ?? 160, onInput: (event) => patch({ maxContentLength: Number(event.currentTarget.value) || 0 }) }) })
         ] }),
-        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mt: 1.5, flexWrap: "wrap", gap: 1 }, children: [
+        /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: [
           /* @__PURE__ */ u2(
-            Button2,
+            ThinkButton,
             {
-              size: "small",
-              variant: "outlined",
+              size: "sm",
+              variant: "secondary",
               onClick: () => patch({ contentField: CONTENT_FIELD_KEY, titleField: "title", timeField: "date", maxContentLength: 160 }),
               children: "使用推荐字段"
             }
           ),
           /* @__PURE__ */ u2(
-            Button2,
+            ThinkButton,
             {
-              size: "small",
-              variant: "outlined",
+              size: "sm",
+              variant: "secondary",
               onClick: () => patch({ contentField: FULL_DATA_FIELD_KEY }),
               children: "内容改为完整数据调试"
             }
@@ -61588,70 +56141,12 @@ const DISPLAY_MODE_OPTIONS$1 = [
 ];
 function StatisticsViewEditor({ value, onChange }) {
   const config2 = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...value };
-  return /* @__PURE__ */ u2(ViewEditorShell, { className: "think-statistics-editor", children: [
-    /* @__PURE__ */ u2(
-      ConfigSection,
-      {
-        className: "think-statistics-editor__section",
-        title: "目标统计视图",
-        titleClassName: "think-statistics-editor__title",
-        descriptionClassName: "think-statistics-editor__description",
-        description: "StatisticsView 只按目标分组。时间范围使用上方控制栏，目标 / Block / 主题等条件使用视图筛选控制；“按照周期显示”只控制年/季/月视图内是否按 period 字段显示对应粒度。",
-        children: /* @__PURE__ */ u2("div", { class: "think-settings-grid think-settings-grid--compact", children: [
-          /* @__PURE__ */ u2(ConfigFieldRow, { label: "显示目标数量", labelWidth: 104, children: /* @__PURE__ */ u2(
-            TextField2,
-            {
-              type: "number",
-              size: "small",
-              value: config2.topN || 10,
-              onChange: (event) => onChange({ groupBy: "goal", topN: Number(event.target.value) || 10 }),
-              inputProps: { min: 1 }
-            }
-          ) }),
-          /* @__PURE__ */ u2(ConfigFieldRow, { label: "柱状高度模式", labelWidth: 104, children: /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: config2.displayMode || "smart",
-              options: DISPLAY_MODE_OPTIONS$1,
-              onChange: (displayMode) => onChange({ groupBy: "goal", displayMode })
-            }
-          ) }),
-          /* @__PURE__ */ u2(ConfigFieldRow, { label: "最小可见高度", labelWidth: 104, children: /* @__PURE__ */ u2(
-            TextField2,
-            {
-              type: "number",
-              size: "small",
-              value: config2.minVisibleHeight || 15,
-              onChange: (event) => onChange({ groupBy: "goal", minVisibleHeight: Number(event.target.value) || 15 }),
-              inputProps: { min: 1, max: 100 }
-            }
-          ) }),
-          /* @__PURE__ */ u2(
-            FormControlLabel2,
-            {
-              class: "think-statistics-editor__period-toggle",
-              control: /* @__PURE__ */ u2(
-                Checkbox2,
-                {
-                  checked: !!config2.usePeriodField,
-                  onChange: (event) => onChange({ groupBy: "goal", usePeriodField: event.target.checked })
-                }
-              ),
-              label: "默认按照周期显示"
-            }
-          )
-        ] })
-      }
-    ),
-    /* @__PURE__ */ u2(
-      ConfigSection,
-      {
-        className: "think-statistics-editor__section",
-        descriptionClassName: "think-statistics-editor__description",
-        description: "该视图不再维护分类配置；分类可继续作为视图筛选条件，但不会作为 Statistics 的主柱状维度。"
-      }
-    )
-  ] });
+  return /* @__PURE__ */ u2(ViewEditorShell, { className: "think-statistics-editor", children: /* @__PURE__ */ u2(ConfigSection, { className: "think-statistics-editor__section", title: "目标统计视图", titleClassName: "think-statistics-editor__title", children: [
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "显示目标数量", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 1, value: config2.topN || 10, onInput: (event) => onChange({ groupBy: "goal", topN: Number(event.currentTarget.value) || 10 }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "柱状高度模式", children: /* @__PURE__ */ u2(SimpleSelect, { value: config2.displayMode || "smart", options: DISPLAY_MODE_OPTIONS$1, onChange: (displayMode) => onChange({ groupBy: "goal", displayMode }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "最小可见高度", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 1, max: 100, value: config2.minVisibleHeight || 15, onInput: (event) => onChange({ groupBy: "goal", minVisibleHeight: Number(event.currentTarget.value) || 15 }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "周期字段", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: !!config2.usePeriodField, onChange: (event) => onChange({ groupBy: "goal", usePeriodField: event.currentTarget.checked }), label: "默认按照周期显示", compact: true }) })
+  ] }) });
 }
 function normalizeHeatmapConfig(value) {
   const base = HEATMAP_VIEW_DEFAULT_CONFIG;
@@ -61700,15 +56195,12 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
     ViewEditorShell,
     {
       title: "打卡视图",
-      description: "只负责主题 + 日期格子的记录入口：空白日期可新增，有记录日期查看当天记录并继续新增。经验/等级请使用独立的 ProgressView。",
-      spacing: 2.5,
       children: [
         /* @__PURE__ */ u2(ConfigSection, { title: "数据来源", children: /* @__PURE__ */ u2(
           ConfigFieldRow,
           {
             label: "源 Block",
             description: "视图将从此 Block 模板的评分字段中读取 Emoji/图片/颜色映射。",
-            labelWidth: 80,
             children: /* @__PURE__ */ u2(
               SimpleSelect,
               {
@@ -61726,7 +56218,6 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
             label: "主题路径",
             description: "在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。",
             alignItems: "flex-start",
-            labelWidth: 80,
             children: [
               /* @__PURE__ */ u2(
                 ListEditor,
@@ -61736,80 +56227,37 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
                   placeholder: "例如: 生活/健康, 工作/项目"
                 }
               ),
-              /* @__PURE__ */ u2(Button2, { onClick: handleScanThemes, size: "small", sx: { mt: 1 }, children: "从数据源扫描并添加主题" })
+              /* @__PURE__ */ u2(ThinkButton, { onClick: handleScanThemes, size: "sm", variant: "secondary", children: "从数据源扫描并添加主题" })
             ]
           }
         ) }),
-        /* @__PURE__ */ u2(ConfigSection, { title: "交互", children: /* @__PURE__ */ u2(
-          FormControlLabel2,
-          {
-            control: /* @__PURE__ */ u2(
-              Checkbox2,
-              {
-                checked: !!config2.allowManualEdit,
-                onChange: (event) => onChange({ allowManualEdit: event.target.checked })
-              }
-            ),
-            label: "允许查看当天记录并新增"
-          }
-        ) })
+        /* @__PURE__ */ u2(ConfigSection, { title: "交互", children: /* @__PURE__ */ u2(ConfigFieldRow, { label: "手动编辑", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: !!config2.allowManualEdit, onChange: (event) => onChange({ allowManualEdit: event.currentTarget.checked }), label: "允许查看当天记录并新增", compact: true }) }) })
       ]
     }
   );
 }
 function ProgressViewEditor({ value, onChange }) {
   const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...value };
-  return /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "ProgressView 只按目标展示成长列表：目标作为一级行，小技能作为二级行。时间和筛选统一走外部视图系统，不在本视图内自建工具栏或周期切换。" }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "显示目标数量", value: config2.topN, onChange: (e2) => onChange({ mode: "goal", topN: Number(e2.target.value) || 20 }) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "每条记录 XP", value: config2.basePoints, onChange: (e2) => onChange({ mode: "goal", basePoints: Number(e2.target.value) || 1 }) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "每级 XP", value: config2.levelStep, onChange: (e2) => onChange({ mode: "goal", levelStep: Number(e2.target.value) || 20 }) })
-    ] }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "评分加分阈值", value: config2.ratingBonusThreshold, onChange: (e2) => onChange({ mode: "goal", ratingBonusThreshold: Number(e2.target.value) || 4 }) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "评分额外积分", value: config2.ratingBonusPoints, onChange: (e2) => onChange({ mode: "goal", ratingBonusPoints: Number(e2.target.value) || 0 }) })
-    ] }),
-    /* @__PURE__ */ u2(
-      FormControlLabel2,
-      {
-        control: /* @__PURE__ */ u2(Checkbox2, { checked: config2.showCategoryBreakdown !== false, onChange: (e2) => onChange({ mode: "goal", showCategoryBreakdown: e2.target.checked }) }),
-        label: "展开卡片时显示 Block 统计"
-      }
-    )
-  ] });
+  const numberPatch = (key, fallback) => (event) => onChange({ mode: "goal", [key]: Number(event.currentTarget.value) || fallback });
+  return /* @__PURE__ */ u2(ViewEditorShell, { title: "进度视图", children: /* @__PURE__ */ u2(ConfigSection, { children: [
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标数量", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.topN, onInput: numberPatch("topN", 20) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每条记录 XP", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.basePoints, onInput: numberPatch("basePoints", 1) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每级 XP", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.levelStep, onInput: numberPatch("levelStep", 20) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "评分阈值", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.ratingBonusThreshold, onInput: numberPatch("ratingBonusThreshold", 4) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "评分额外积分", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.ratingBonusPoints, onInput: numberPatch("ratingBonusPoints", 0) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "展开统计", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: config2.showCategoryBreakdown !== false, onChange: (event) => onChange({ mode: "goal", showCategoryBreakdown: event.currentTarget.checked }), label: "显示 Block 统计", compact: true }) })
+  ] }) });
 }
 function EnergyViewEditor({ value, onChange }) {
   const config2 = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...value };
-  return /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "EnergyView 跟随布局当前的 年 / 季 / 月 / 周 / 天周期。顶部“现在适合”根据当前场景、任务价值、精力负荷、真实时长和个人历史给出轻量 Top 推荐；完整任务列表仍按目标与任务周期稳定分组。" }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "最近原始记录", value: config2.recentSampleLimit, onChange: (e2) => onChange({ recentSampleLimit: Math.max(1, Math.min(20, Number(e2.target.value) || 5)) }) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "最多精力目标数", value: config2.maxGoals, onChange: (e2) => onChange({ maxGoals: Math.max(0, Math.min(20, Number(e2.target.value) || 0)) }) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "历史分析窗口", value: config2.analysisWindowDays, onChange: (e2) => onChange({ analysisWindowDays: Math.max(7, Math.min(90, Number(e2.target.value) || 30)) }) })
-    ] }),
-    /* @__PURE__ */ u2(TextField2, { size: "small", label: "精力目标路径（可选）", value: config2.goalPath, placeholder: "留空 = 所有有精力记录的目标", onChange: (e2) => onChange({ goalPath: e2.target.value }) }),
-    /* @__PURE__ */ u2("div", { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "默认当前场景" }),
-      /* @__PURE__ */ u2(
-        SimpleSelect,
-        {
-          value: config2.currentContext,
-          options: [
-            { value: "any", label: "任意" },
-            { value: "work", label: "工作" },
-            { value: "home", label: "家" },
-            { value: "commute", label: "通勤" },
-            { value: "out", label: "外出" }
-          ],
-          onChange: (value2) => onChange({ currentContext: value2 }),
-          fullWidth: true
-        }
-      )
-    ] }),
-    /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { checked: config2.showTimeline !== false, onChange: (e2) => onChange({ showTimeline: e2.target.checked }) }), label: "显示精力地图" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "推荐原因不占主界面，只在任务悬浮提示中显示；任务从 Energy 启动后按建议时长倒计时，完成后的 TaskSession 与下一次精力记录可继续积累个人化证据。" })
-  ] });
+  return /* @__PURE__ */ u2(ViewEditorShell, { title: "精力视图", children: /* @__PURE__ */ u2(ConfigSection, { children: [
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "最近记录", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 1, max: 20, value: config2.recentSampleLimit, onInput: (e2) => onChange({ recentSampleLimit: Math.max(1, Math.min(20, Number(e2.currentTarget.value) || 5)) }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标上限", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 0, max: 20, value: config2.maxGoals, onInput: (e2) => onChange({ maxGoals: Math.max(0, Math.min(20, Number(e2.currentTarget.value) || 0)) }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "分析窗口", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", min: 7, max: 90, value: config2.analysisWindowDays, onInput: (e2) => onChange({ analysisWindowDays: Math.max(7, Math.min(90, Number(e2.currentTarget.value) || 30)) }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标路径", children: /* @__PURE__ */ u2(ThinkInput, { value: config2.goalPath, placeholder: "留空 = 所有有精力记录的目标", onInput: (e2) => onChange({ goalPath: e2.currentTarget.value }) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "当前场景", children: /* @__PURE__ */ u2(SimpleSelect, { value: config2.currentContext, options: [{ value: "any", label: "任意" }, { value: "work", label: "工作" }, { value: "home", label: "家" }, { value: "commute", label: "通勤" }, { value: "out", label: "外出" }], onChange: (currentContext) => onChange({ currentContext }), fullWidth: true }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "精力地图", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: config2.showTimeline !== false, onChange: (e2) => onChange({ showTimeline: e2.currentTarget.checked }), label: "显示", compact: true }) })
+  ] }) });
 }
 const VIEW_INFO_REGISTRY = {
   TableView: { component: TableViewEditor, defaultConfig: TABLE_VIEW_DEFAULT_CONFIG },
@@ -61972,14 +56420,6 @@ function appendRule(mode, rows, newRule) {
 function shouldShowRuleValueInput(mode, rule) {
   return mode !== "filter" || operatorNeedsValue(rule.op);
 }
-function getPanelRuleGridTemplate(mode, showValueInput) {
-  if (mode !== "filter") return "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px";
-  return showValueInput ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px";
-}
-function getPanelAddRuleGridTemplate(mode, showValueInput) {
-  if (mode !== "filter") return "minmax(260px, 1.4fr) minmax(150px, 0.6fr) auto";
-  return showValueInput ? "minmax(260px, 1.4fr) minmax(150px, 0.6fr) minmax(260px, 1.3fr) auto" : "minmax(260px, 1.4fr) minmax(150px, 0.6fr) auto";
-}
 function buildUniqueFieldValues(dataStore) {
   if (!dataStore) return {};
   const items = dataStore.queryItems();
@@ -62005,102 +56445,56 @@ function buildUniqueFieldValues(dataStore) {
   }
   return result;
 }
-function RuleBuilderValueInput({ rule, uniqueFieldValues, variant, onValueChange }) {
+function RuleBuilderValueInput({ rule, uniqueFieldValues, onValueChange }) {
   if (!operatorNeedsValue(rule.op)) return null;
+  const options = (uniqueFieldValues[rule.field] || []).map((value) => ({ value, label: value }));
   if (isMultiValueOperator(rule.op)) {
     return /* @__PURE__ */ u2(
-      Autocomplete2,
+      ThinkMultiCombobox,
       {
-        multiple: true,
-        freeSolo: true,
-        fullWidth: true,
-        size: "small",
-        disablePortal: true,
+        values: normalizeMultiValue(rule.value),
         options: uniqueFieldValues[rule.field] || [],
-        value: normalizeMultiValue(rule.value),
-        onChange: (_2, newValue) => onValueChange(normalizeMultiValue(newValue)),
-        renderInput: (params) => /* @__PURE__ */ u2(
-          TextField2,
-          {
-            ...params,
-            variant: "outlined",
-            placeholder: getRuleValuePlaceholder(rule.op),
-            helperText: variant === "panel" ? "同一字段内多选表示“或”：匹配其中任一值即可。" : void 0
-          }
-        )
+        onChange: (newValues) => onValueChange(normalizeMultiValue(newValues)),
+        placeholder: getRuleValuePlaceholder(rule.op)
       }
     );
   }
   return /* @__PURE__ */ u2(
-    Autocomplete2,
+    ThinkCombobox,
     {
-      freeSolo: true,
-      fullWidth: true,
-      size: "small",
-      disableClearable: true,
-      disablePortal: true,
-      options: uniqueFieldValues[rule.field] || [],
       value: String(rule.value ?? ""),
-      inputValue: String(rule.value ?? ""),
-      onInputChange: (_2, newValue) => onValueChange(newValue || ""),
-      renderInput: (params) => /* @__PURE__ */ u2(TextField2, { ...params, variant: "outlined", placeholder: getRuleValuePlaceholder(rule.op) })
+      options,
+      onChange: (newValue) => onValueChange(newValue || ""),
+      placeholder: getRuleValuePlaceholder(rule.op),
+      allowCustom: true
     }
   );
 }
-function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = "compact" }) {
+function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = "compact", showHeader = true }) {
   const isFilterMode = mode === "filter";
   const [newRule, setNewRule] = d(makeDefaultRule(mode));
   const uniqueFieldValues = T$1(() => buildUniqueFieldValues(dataStore), [dataStore]);
   const shouldShowValueInput = shouldShowRuleValueInput(mode, newRule);
   const remove2 = (index) => onChange(removeRuleAt(rows, index));
-  const updateNewRule = (patch) => {
-    setNewRule((current2) => patchRule(mode, current2, patch));
-  };
-  const updateRow = (index, patch) => {
-    onChange(patchRuleRows(mode, rows, index, patch));
-  };
-  const updateLogic = (index, logic) => {
-    onChange(patchRuleLogic(rows, index, logic, isFilterMode));
-  };
+  const updateNewRule = (patch) => setNewRule((current2) => patchRule(mode, current2, patch));
+  const updateRow = (index, patch) => onChange(patchRuleRows(mode, rows, index, patch));
+  const updateLogic = (index, logic) => onChange(patchRuleLogic(rows, index, logic, isFilterMode));
   const handleAddRule = () => {
-    if (!newRule.field) {
-      alert("请选择一个字段");
-      return;
-    }
+    if (!newRule.field) return;
     onChange(appendRule(mode, rows, newRule));
     setNewRule(makeDefaultRule(mode));
   };
-  const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => /* @__PURE__ */ u2(
-    FieldPickerAutocomplete,
-    {
-      value: field,
-      options: fieldOptions,
-      onChange: onFieldChange,
-      placeholder,
-      helperText: variant === "panel" ? "字段按核心字段 / 文件字段 / 自定义字段分组。" : void 0
-    }
-  );
-  const renderValueInput = (rule, onValueChange) => /* @__PURE__ */ u2(
-    RuleBuilderValueInput,
-    {
-      rule,
-      uniqueFieldValues,
-      variant,
-      onValueChange
-    }
-  );
+  const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => /* @__PURE__ */ u2(FieldPickerAutocomplete, { value: field, options: fieldOptions, onChange: onFieldChange, placeholder });
+  const renderValueInput = (rule, onValueChange) => /* @__PURE__ */ u2(RuleBuilderValueInput, { rule, uniqueFieldValues, onValueChange });
   const existingRules = /* @__PURE__ */ u2("div", { className: "think-rule-builder__chips", children: rows.map((rule, index) => {
     const isLast = index === rows.length - 1;
     const filterRule = rule;
+    const label = buildRuleLabel(mode, rule);
     return /* @__PURE__ */ u2("div", { className: "think-rule-builder__chip-row", children: [
-      /* @__PURE__ */ u2(Tooltip2, { title: `点击删除规则: ${buildRuleLabel(mode, rule)}`, children: /* @__PURE__ */ u2(
-        Chip2,
-        {
-          label: buildRuleLabel(mode, rule),
-          onClick: () => remove2(index),
-          size: "small"
-        }
-      ) }),
+      /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", title: `点击删除规则: ${label}`, onClick: () => remove2(index), children: [
+        /* @__PURE__ */ u2("span", { className: "think-chip__label", children: label }),
+        /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
+      ] }),
       isFilterMode && !isLast && /* @__PURE__ */ u2(
         SimpleSelect,
         {
@@ -62112,121 +56506,98 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
       )
     ] }, index);
   }) });
-  const panelRuleRows = /* @__PURE__ */ u2(Box, { className: "think-rule-builder__panel-rows", children: rows.map((rule, index) => {
+  const panelRuleRows = /* @__PURE__ */ u2("div", { className: "think-rule-builder__panel-rows", children: rows.map((rule, index) => {
     const filterRule = rule;
     const sortRule = rule;
     const isLast = index === rows.length - 1;
     const showValueInput = isFilterMode && operatorNeedsValue(filterRule.op);
-    return /* @__PURE__ */ u2(Box, { className: "think-rule-builder__row-shell", children: /* @__PURE__ */ u2(
-      Box,
-      {
-        className: "think-rule-builder__row-grid",
-        sx: { gridTemplateColumns: getPanelRuleGridTemplate(mode, showValueInput) },
-        children: [
-          renderFieldInput(rule.field, (field) => updateRow(index, { field })),
-          isFilterMode ? /* @__PURE__ */ u2(S, { children: [
-            /* @__PURE__ */ u2(
-              SimpleSelect,
-              {
-                value: filterRule.op,
-                options: RULE_OPERATOR_OPTIONS,
-                onChange: (val) => updateRow(index, { op: val }),
-                className: "think-rule-builder__field"
-              }
-            ),
-            renderValueInput(filterRule, (value) => updateRow(index, { value }))
-          ] }) : /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: sortRule.dir,
-              options: RULE_DIRECTION_OPTIONS,
-              onChange: (val) => updateRow(index, { dir: val }),
-              className: "think-rule-builder__operator"
-            }
-          ),
-          isFilterMode && !isLast ? /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: filterRule.logic || "and",
-              options: RULE_LOGIC_OPTIONS,
-              onChange: (val) => updateLogic(index, val),
-              className: "think-rule-builder__value"
-            }
-          ) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-rule-builder__end-label", children: isFilterMode ? "末尾" : "" }),
-          /* @__PURE__ */ u2(
-            IconAction,
-            {
-              label: "删除规则",
-              icon: /* @__PURE__ */ u2(DeleteOutlineIcon, { fontSize: "small" }),
-              onClick: () => remove2(index),
-              size: "small"
-            }
-          )
-        ]
-      }
-    ) }, index);
-  }) });
-  if (variant === "panel") {
-    return /* @__PURE__ */ u2(Box, { className: "think-rule-builder", children: [
-      /* @__PURE__ */ u2(Box, { className: "think-editor-header", children: /* @__PURE__ */ u2("div", { children: [
-        /* @__PURE__ */ u2(Typography2, { className: "think-settings-label-strong", children: [
-          title,
-          "规则"
-        ] }),
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "字段支持搜索；已有规则可直接编辑。“属于任一 / 不属于任一”支持多选 chip，也可输入后回车添加；区间用“开始~结束”。" })
-      ] }) }),
-      rows.length > 0 ? /* @__PURE__ */ u2(Box, { className: "think-rule-builder__rules", children: [
+    return /* @__PURE__ */ u2("div", { className: "think-rule-builder__row-shell", children: /* @__PURE__ */ u2("div", { className: `think-rule-builder__row-grid ${isFilterMode ? showValueInput ? "is-filter is-with-value" : "is-filter is-no-value" : "is-sort"}`, children: [
+      renderFieldInput(rule.field, (field) => updateRow(index, { field })),
+      isFilterMode ? /* @__PURE__ */ u2(S, { children: [
         /* @__PURE__ */ u2(
-          Box,
+          SimpleSelect,
           {
-            className: "think-rule-builder__column-head",
-            sx: { gridTemplateColumns: getPanelRuleGridTemplate(mode, isFilterMode) },
-            children: [
-              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "字段" }),
-              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: isFilterMode ? "条件" : "排序" }),
-              isFilterMode && /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "值" }),
-              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "连接" }),
-              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "操作" })
-            ]
+            value: filterRule.op,
+            options: RULE_OPERATOR_OPTIONS,
+            onChange: (val) => updateRow(index, { op: val }),
+            className: "think-rule-builder__field"
           }
         ),
-        panelRuleRows
-      ] }) : /* @__PURE__ */ u2(Box, { className: "think-editor-card think-editor-card--dashed", children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "还没有规则。先在下方选择字段、条件和值，然后添加规则。" }) }),
-      /* @__PURE__ */ u2(
-        Box,
+        renderValueInput(filterRule, (value) => updateRow(index, { value }))
+      ] }) : /* @__PURE__ */ u2(
+        SimpleSelect,
         {
-          className: "think-rule-builder__add-grid",
-          sx: { gridTemplateColumns: getPanelAddRuleGridTemplate(mode, shouldShowValueInput) },
-          children: [
-            renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
-            isFilterMode ? /* @__PURE__ */ u2(S, { children: [
-              /* @__PURE__ */ u2(
-                SimpleSelect,
-                {
-                  value: newRule.op,
-                  options: RULE_OPERATOR_OPTIONS,
-                  onChange: (val) => updateNewRule({ op: val }),
-                  className: "think-rule-builder__field"
-                }
-              ),
-              shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
-            ] }) : /* @__PURE__ */ u2(
-              SimpleSelect,
-              {
-                value: newRule.dir,
-                options: RULE_DIRECTION_OPTIONS,
-                onChange: (val) => updateNewRule({ dir: val }),
-                className: "think-rule-builder__operator"
-              }
-            ),
-            /* @__PURE__ */ u2(Button2, { variant: "contained", size: "small", onClick: handleAddRule, className: "think-rule-builder__add", children: "添加规则" })
-          ]
+          value: sortRule.dir,
+          options: RULE_DIRECTION_OPTIONS,
+          onChange: (val) => updateRow(index, { dir: val }),
+          className: "think-rule-builder__operator"
+        }
+      ),
+      isFilterMode && !isLast ? /* @__PURE__ */ u2(
+        SimpleSelect,
+        {
+          value: filterRule.logic || "and",
+          options: RULE_LOGIC_OPTIONS,
+          onChange: (val) => updateLogic(index, val),
+          className: "think-rule-builder__value"
+        }
+      ) : /* @__PURE__ */ u2("span", { className: "think-rule-builder__end-label", children: isFilterMode ? "末尾" : "" }),
+      /* @__PURE__ */ u2(
+        ThinkIconButton,
+        {
+          label: "删除规则",
+          icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }),
+          onClick: () => remove2(index),
+          size: "sm",
+          tone: "danger"
         }
       )
+    ] }) }, index);
+  }) });
+  if (variant === "panel") {
+    return /* @__PURE__ */ u2("div", { className: "think-rule-builder", children: [
+      showHeader && /* @__PURE__ */ u2("div", { className: "think-editor-header", children: /* @__PURE__ */ u2("span", { className: "think-settings-label-strong", children: [
+        title,
+        "规则"
+      ] }) }),
+      rows.length > 0 ? /* @__PURE__ */ u2("div", { className: "think-rule-builder__rules", children: [
+        /* @__PURE__ */ u2("div", { className: `think-rule-builder__column-head ${isFilterMode ? "is-filter is-with-value" : "is-sort"}`, children: [
+          /* @__PURE__ */ u2("span", { children: "字段" }),
+          /* @__PURE__ */ u2("span", { children: isFilterMode ? "条件" : "排序" }),
+          isFilterMode && /* @__PURE__ */ u2("span", { children: "值" }),
+          /* @__PURE__ */ u2("span", { children: "连接" }),
+          /* @__PURE__ */ u2("span", { children: "操作" })
+        ] }),
+        panelRuleRows
+      ] }) : /* @__PURE__ */ u2("span", { className: "think-rule-builder__empty", children: "暂无规则" }),
+      /* @__PURE__ */ u2("div", { className: `think-rule-builder__add-grid ${isFilterMode ? shouldShowValueInput ? "is-filter is-with-value" : "is-filter is-no-value" : "is-sort"}`, children: [
+        renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
+        isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: newRule.op,
+              options: RULE_OPERATOR_OPTIONS,
+              onChange: (val) => updateNewRule({ op: val }),
+              className: "think-rule-builder__field"
+            }
+          ),
+          shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
+        ] }) : /* @__PURE__ */ u2(
+          SimpleSelect,
+          {
+            value: newRule.dir,
+            options: RULE_DIRECTION_OPTIONS,
+            onChange: (val) => updateNewRule({ dir: val }),
+            className: "think-rule-builder__operator"
+          }
+        ),
+        /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddRule, disabled: !newRule.field, className: "think-rule-builder__add", children: "添加规则" })
+      ] })
     ] });
   }
   return /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact", children: [
-    /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label think-settings-row__label--top", children: title }),
+    /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: title }),
     /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact-body", children: [
       existingRules,
       /* @__PURE__ */ u2("div", { className: "think-rule-builder__compact-add", children: [
@@ -62251,20 +56622,20 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
             className: "think-rule-builder__operator"
           }
         ),
-        /* @__PURE__ */ u2(Button2, { variant: "contained", size: "small", onClick: handleAddRule, children: "添加" })
+        /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddRule, disabled: !newRule.field, children: "添加" })
       ] })
     ] })
   ] });
 }
 const DEFAULT_QUICK_FILTER_FIELDS = [
-  { field: "goalPath", label: "目标", help: "目标中心主筛选字段，优先用目标路径聚合任务/计划/总结/打卡。", placeholder: "选择目标" },
-  { field: "goalId", label: "目标ID", help: "稳定目标 ID，适合目标实体化后的精确筛选。", placeholder: "输入目标ID" },
-  { field: "coreBlock", label: "记录类型", help: "Goal × Block 主链字段，按 task/plan/review/thought/habit/evidence/blocker/milestone 筛选。旧分类筛选会自动归一到 coreBlock。", placeholder: "选择记录类型" },
-  { field: "themePath", label: "主题", help: "主题已降级为表单层级单选字段，但仍可用于上下文筛选。", placeholder: "选择主题" },
-  { field: "status", label: "状态", help: "Task 使用显式 open/done/cancelled/skipped 状态。", placeholder: "选择状态" },
-  { field: "cadence", label: "任务周期", help: "由 Task Series 的结构化 recurrence 派生。", placeholder: "选择任务周期" },
+  { field: "goalPath", label: "目标", placeholder: "选择目标" },
+  { field: "goalId", label: "目标ID", placeholder: "输入目标ID" },
+  { field: "coreBlock", label: "记录类型", placeholder: "选择记录类型" },
+  { field: "themePath", label: "主题", placeholder: "选择主题" },
+  { field: "status", label: "状态", placeholder: "选择状态" },
+  { field: "cadence", label: "任务周期", placeholder: "选择任务周期" },
   { field: "priority", label: "优先级", placeholder: "选择优先级" },
-  { field: "period.label", label: "周期", help: "仅计划 / 总结类记录有周期。", placeholder: "选择周期" }
+  { field: "period.label", label: "周期", placeholder: "选择周期" }
 ];
 function collectFieldValues(items, fields) {
   const valueMap = {};
@@ -62327,16 +56698,6 @@ function clearQuickFilters(filters, fields) {
   const fieldSet = new Set(fields.map((f2) => normalizeViewFieldKey(f2.field)));
   return cleanupRuleLinks(filters.filter((rule) => !(fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in")));
 }
-function describeQuickSummary(filters, fields) {
-  const parts = fields.map((config2) => {
-    const rule = getQuickRule(filters, config2.field);
-    const values2 = normalizeViewMultiValue(rule?.value);
-    if (values2.length === 0) return "";
-    const label = config2.label || getFieldLabel(config2.field);
-    return `${label}为${values2.join("或")}`;
-  }).filter(Boolean);
-  return parts.length > 0 ? `当前显示：${parts.join("，并且")}。` : "未设置常用筛选。";
-}
 function CommonFilterPanel({
   dataStore,
   filters,
@@ -62344,7 +56705,6 @@ function CommonFilterPanel({
   items,
   fieldOptions,
   title = "常用筛选",
-  description = "适合主题路径、分类、目标这类高频筛选；同一字段内是“或”，不同字段之间是“且”。",
   fields = DEFAULT_QUICK_FILTER_FIELDS,
   compact = false
 }) {
@@ -62359,84 +56719,41 @@ function CommonFilterPanel({
     [sourceItems, quickFields]
   );
   const hasQuickFilters = hasAnyQuickFilter(filters, quickFields);
-  const summary = describeQuickSummary(filters, quickFields);
   if (quickFields.length === 0) return null;
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        display: "flex",
-        flexDirection: "column",
-        gap: compact ? 1 : 1.5,
-        pb: compact ? 1 : 1.25,
-        border: 0,
-        borderBottom: "1px solid var(--background-modifier-border)",
-        borderRadius: 0,
-        background: "transparent"
-      },
-      children: [
-        /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }, children: [
-          /* @__PURE__ */ u2("div", { children: [
-            /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: title }),
-            /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: description })
-          ] }),
-          /* @__PURE__ */ u2(
-            Button2,
-            {
-              size: "small",
-              startIcon: /* @__PURE__ */ u2(RestartAltIcon, {}),
-              onClick: () => onChange(clearQuickFilters(filters, quickFields)),
-              disabled: !hasQuickFilters,
-              sx: { whiteSpace: "nowrap" },
-              children: "清空常用"
-            }
-          )
-        ] }),
+  return /* @__PURE__ */ u2("div", { className: `think-common-filter${compact ? " think-common-filter--compact" : ""}`, children: [
+    /* @__PURE__ */ u2("div", { className: "think-common-filter__header", children: [
+      /* @__PURE__ */ u2("span", { className: "think-common-filter__title", children: title }),
+      /* @__PURE__ */ u2(
+        ThinkButton,
+        {
+          size: "sm",
+          variant: "secondary",
+          leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "rotate-ccw" }),
+          onClick: () => onChange(clearQuickFilters(filters, quickFields)),
+          disabled: !hasQuickFilters,
+          className: "think-common-filter__clear",
+          children: "清空"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-common-filter__grid", children: quickFields.map((config2) => {
+      const label = config2.label || getFieldLabel(config2.field);
+      const rule = getQuickRule(filters, config2.field);
+      const values2 = normalizeViewMultiValue(rule?.value);
+      return /* @__PURE__ */ u2("div", { className: "think-common-filter__field", children: [
+        /* @__PURE__ */ u2("span", { className: "think-common-filter__label", children: label }),
         /* @__PURE__ */ u2(
-          Box,
+          ThinkMultiCombobox,
           {
-            sx: {
-              display: "grid",
-              gridTemplateColumns: compact ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: 1.25
-            },
-            children: quickFields.map((config2) => {
-              const label = config2.label || getFieldLabel(config2.field);
-              const rule = getQuickRule(filters, config2.field);
-              const values2 = normalizeViewMultiValue(rule?.value);
-              return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 0.5 }, children: [
-                /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { fontWeight: 600 }, children: label }),
-                /* @__PURE__ */ u2(
-                  Autocomplete2,
-                  {
-                    multiple: true,
-                    freeSolo: true,
-                    fullWidth: true,
-                    size: "small",
-                    disablePortal: true,
-                    options: valueOptions[normalizeViewFieldKey(config2.field)] || [],
-                    value: values2,
-                    onChange: (_2, newValue) => onChange(upsertQuickRule(filters, config2.field, newValue)),
-                    renderTags: (tagValue, getTagProps) => tagValue.map((option, index) => /* @__PURE__ */ k$2(Chip2, { ...getTagProps({ index }), key: `${config2.field}-${option}`, label: option, size: "small" })),
-                    renderInput: (params) => /* @__PURE__ */ u2(
-                      TextField2,
-                      {
-                        ...params,
-                        variant: "outlined",
-                        placeholder: values2.length > 0 ? "" : config2.placeholder || `选择${label}`,
-                        helperText: compact ? void 0 : config2.help
-                      }
-                    )
-                  }
-                )
-              ] }, config2.field);
-            })
+            values: values2,
+            options: valueOptions[normalizeViewFieldKey(config2.field)] || [],
+            onChange: (newValues) => onChange(upsertQuickRule(filters, config2.field, newValues)),
+            placeholder: config2.placeholder || `选择${label}`
           }
-        ),
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: summary })
-      ]
-    }
-  );
+        )
+      ] }, config2.field);
+    }) })
+  ] });
 }
 function ViewInstanceEditor({ vi }) {
   const dataStore = useDataStore();
@@ -62464,170 +56781,106 @@ function ViewInstanceEditor({ vi }) {
   const handleGroupFieldsChange = (groupFields) => {
     handleUpdate({ groupFields: normalizeViewGroupFields(groupFields) });
   };
-  return /* @__PURE__ */ u2("div", { children: [
-    /* @__PURE__ */ u2("div", { style: { marginBottom: "2rem" }, children: [
-      /* @__PURE__ */ u2("h4", { style: {
-        marginBottom: "1rem",
-        color: "var(--text-muted)",
-        fontSize: "1rem",
-        fontWeight: "600"
-      }, children: "基础设置" }),
-      /* @__PURE__ */ u2(FormField, { label: "视图类型", children: /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "1rem" }, children: [
-        /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: currentVi.viewType,
-            options: viewTypeOptions,
-            onChange: (val) => handleUpdate({ viewType: val }),
-            sx: { flex: 1, minWidth: "150px" }
-          }
-        ),
-        /* @__PURE__ */ u2(
-          FormControlLabel2,
-          {
-            control: /* @__PURE__ */ u2(
-              Checkbox2,
-              {
-                size: "small",
-                checked: !!currentVi.collapsed,
-                onChange: (e2) => handleUpdate({ collapsed: e2.target.checked })
-              }
-            ),
-            label: "默认折叠"
-          }
-        )
-      ] }) }),
-      /* @__PURE__ */ u2(
-        FormField,
-        {
-          label: "显示字段",
-          help: "选择要在视图中显示的字段",
-          children: /* @__PURE__ */ u2(
-            FieldManager,
+  return /* @__PURE__ */ u2("div", { className: "think-module-settings", children: [
+    /* @__PURE__ */ u2("section", { className: "think-module-settings__section", children: [
+      /* @__PURE__ */ u2("h4", { className: "think-module-settings__section-title", children: "基础设置" }),
+      /* @__PURE__ */ u2("div", { className: "think-module-settings__fields", children: [
+        /* @__PURE__ */ u2(FormField, { label: "视图类型", children: /* @__PURE__ */ u2("div", { className: "think-module-settings__inline", children: [
+          /* @__PURE__ */ u2(
+            SimpleSelect,
             {
-              fields: currentVi.fields || [],
-              availableFields: fieldOptions,
-              onFieldsChange: handleFieldsChange,
-              placeholder: "+ 添加字段...",
-              getFieldLabel,
-              getFieldGroupLabel: getFieldCategoryLabel
+              value: currentVi.viewType,
+              options: viewTypeOptions,
+              onChange: (val) => handleUpdate({ viewType: val }),
+              fullWidth: true,
+              className: "think-module-settings__view-type"
+            }
+          ),
+          /* @__PURE__ */ u2(
+            ThinkCheckbox,
+            {
+              checked: !!currentVi.collapsed,
+              onChange: (e2) => handleUpdate({ collapsed: e2.currentTarget.checked }),
+              label: "默认折叠",
+              compact: true
             }
           )
-        }
-      ),
-      /* @__PURE__ */ u2(
-        FormField,
-        {
-          label: "分组字段",
-          help: "选择用于分组的字段，顺序即为多级分组层级（A→B→C）",
-          children: /* @__PURE__ */ u2(
-            FieldManager,
-            {
-              fields: currentVi.groupFields || [],
-              availableFields: fieldOptions,
-              onFieldsChange: handleGroupFieldsChange,
-              placeholder: "+ 选择分组字段...",
-              getFieldLabel,
-              getFieldGroupLabel: getFieldCategoryLabel
-            }
-          )
-        }
-      )
+        ] }) }),
+        /* @__PURE__ */ u2(FormField, { label: "显示字段", children: /* @__PURE__ */ u2(
+          FieldManager,
+          {
+            fields: currentVi.fields || [],
+            availableFields: fieldOptions,
+            onFieldsChange: handleFieldsChange,
+            placeholder: "添加字段…",
+            getFieldLabel,
+            getFieldGroupLabel: getFieldCategoryLabel
+          }
+        ) }),
+        /* @__PURE__ */ u2(FormField, { label: "分组字段", children: /* @__PURE__ */ u2(
+          FieldManager,
+          {
+            fields: currentVi.groupFields || [],
+            availableFields: fieldOptions,
+            onFieldsChange: handleGroupFieldsChange,
+            placeholder: "选择分组字段…",
+            getFieldLabel,
+            getFieldGroupLabel: getFieldCategoryLabel
+          }
+        ) })
+      ] })
     ] }),
-    /* @__PURE__ */ u2("div", { style: {
-      borderTop: "1px solid var(--background-modifier-border)",
-      paddingTop: "1.5rem",
-      marginBottom: "1.5rem"
-    }, children: [
-      /* @__PURE__ */ u2("h4", { style: {
-        marginBottom: "1rem",
-        color: "var(--text-muted)",
-        fontSize: "1rem",
-        fontWeight: "600"
-      }, children: "数据筛选与排序" }),
+    /* @__PURE__ */ u2("section", { className: "think-module-settings__section", children: [
+      /* @__PURE__ */ u2("h4", { className: "think-module-settings__section-title", children: "筛选与排序" }),
       /* @__PURE__ */ u2(
-        FormField,
+        CommonFilterPanel,
         {
-          label: "视图筛选",
-          help: "常用筛选适合主题路径、分类、标签多选；高级筛选保留原来的字段/条件/值规则。",
-          children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1.25 }, children: [
-            /* @__PURE__ */ u2(
-              CommonFilterPanel,
-              {
-                title: "常用筛选",
-                description: "同一字段内多选表示“或”，不同字段之间默认表示“且”。",
-                dataStore,
-                filters: currentVi.filters || [],
-                fieldOptions,
-                onChange: (rows) => handleUpdate({ filters: normalizeViewFilters(rows) }),
-                compact: true
-              }
-            ),
-            /* @__PURE__ */ u2(
-              Accordion2,
-              {
-                defaultExpanded: hasAdvancedFilters,
-                disableGutters: true,
-                sx: {
-                  border: "1px solid var(--background-modifier-border)",
-                  borderRadius: "10px",
-                  "&:before": { display: "none" }
-                },
-                children: [
-                  /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: [
-                    /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
-                    /* @__PURE__ */ u2(Chip2, { label: `${(currentVi.filters || []).length} 条`, size: "small", variant: "outlined" }),
-                    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "正则、区间、排除、复杂且/或关系" })
-                  ] }) }),
-                  /* @__PURE__ */ u2(AccordionDetails2, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
-                    RuleBuilder,
-                    {
-                      title: "筛选",
-                      mode: "filter",
-                      rows: currentVi.filters || [],
-                      fieldOptions,
-                      onChange: (rows) => handleUpdate({ filters: normalizeViewFilters(rows) }),
-                      dataStore,
-                      variant: "panel"
-                    }
-                  ) })
-                ]
-              }
-            )
-          ] })
+          title: "常用筛选",
+          dataStore,
+          filters: currentVi.filters || [],
+          fieldOptions,
+          onChange: (rows) => handleUpdate({ filters: normalizeViewFilters(rows) }),
+          compact: true
         }
       ),
       /* @__PURE__ */ u2(
-        FormField,
+        ThinkDisclosure,
         {
-          label: "排序规则",
-          help: "定义数据排序方式",
+          title: "高级筛选",
+          meta: `${(currentVi.filters || []).length} 条`,
+          open: hasAdvancedFilters || void 0,
+          className: "think-module-settings__advanced",
           children: /* @__PURE__ */ u2(
             RuleBuilder,
             {
-              title: "排序规则",
-              mode: "sort",
-              rows: currentVi.sort || [],
+              title: "筛选",
+              mode: "filter",
+              rows: currentVi.filters || [],
               fieldOptions,
-              onChange: (rows) => handleUpdate({ sort: normalizeViewSort(rows) }),
-              dataStore
+              onChange: (rows) => handleUpdate({ filters: normalizeViewFilters(rows) }),
+              dataStore,
+              variant: "panel",
+              showHeader: false
             }
           )
         }
+      ),
+      /* @__PURE__ */ u2(
+        RuleBuilder,
+        {
+          title: "排序",
+          mode: "sort",
+          rows: currentVi.sort || [],
+          fieldOptions,
+          onChange: (rows) => handleUpdate({ sort: normalizeViewSort(rows) }),
+          dataStore
+        }
       )
     ] }),
-    EditorComponent && /* @__PURE__ */ u2("div", { style: {
-      borderTop: "1px solid var(--background-modifier-border)",
-      paddingTop: "1.5rem"
-    }, children: [
-      /* @__PURE__ */ u2("h4", { style: {
-        marginBottom: "1rem",
-        color: "var(--text-muted)",
-        fontSize: "1rem",
-        fontWeight: "600"
-      }, children: [
+    EditorComponent && /* @__PURE__ */ u2("section", { className: "think-module-settings__section", children: [
+      /* @__PURE__ */ u2("h4", { className: "think-module-settings__section-title", children: [
         currentVi.viewType.replace("View", ""),
-        " 专属配置"
+        " 配置"
       ] }),
       /* @__PURE__ */ u2(
         EditorComponent,
@@ -62651,25 +56904,12 @@ function ModuleSettingsPanel({ module: module2, onClose }) {
     successMessage: `已保存视图 "${module2.title}" 的设置`,
     errorMessage: "保存设置失败"
   });
-  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0, width: "100%" }, children: [
-    /* @__PURE__ */ u2("div", { style: { flex: 1, minHeight: 0, overflowY: "auto", padding: 12, boxSizing: "border-box" }, children: /* @__PURE__ */ u2(ViewInstanceEditor, { vi: currentModule }) }),
-    /* @__PURE__ */ u2(
-      "div",
-      {
-        style: {
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 8,
-          padding: "12px 12px 0 12px",
-          marginTop: 0,
-          borderTop: "1px solid var(--background-modifier-border)"
-        },
-        children: [
-          /* @__PURE__ */ u2(Button2, { onClick: handleSave, variant: "contained", children: "保存设置" }),
-          /* @__PURE__ */ u2(Button2, { onClick: onClose, variant: "outlined", children: "关闭" })
-        ]
-      }
-    )
+  return /* @__PURE__ */ u2("div", { className: "think-os think-os--settings think-module-settings-panel", children: [
+    /* @__PURE__ */ u2("div", { className: "think-module-settings-panel__body", children: /* @__PURE__ */ u2(ViewInstanceEditor, { vi: currentModule }) }),
+    /* @__PURE__ */ u2("div", { className: "think-module-settings-panel__actions", children: [
+      /* @__PURE__ */ u2(ThinkButton, { onClick: onClose, variant: "secondary", size: "sm", children: "关闭" }),
+      /* @__PURE__ */ u2(ThinkButton, { onClick: handleSave, variant: "primary", size: "sm", children: "保存设置" })
+    ] })
   ] });
 }
 function openModuleSettingsWidget(module2) {
@@ -62703,87 +56943,82 @@ const DISPLAY_MODE_OPTIONS = [
   { value: "grid", label: "网格" },
   { value: "freeform", label: "自由布局" }
 ];
-function AlignedRadioGroup({
+function SettingsRow({ label, children, top: top2 = false }) {
+  return /* @__PURE__ */ u2("div", { className: `think-settings-row think-layout-editor__control-row${top2 ? " think-settings-row--top" : ""}`, children: [
+    /* @__PURE__ */ u2("span", { className: `think-settings-row__label${top2 ? " think-settings-row__label--top" : ""}`, children: label }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children })
+  ] });
+}
+function SettingsSegmentedRow({
   label,
   options,
   selectedValue,
   onChange
 }) {
-  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, className: "think-settings-row", children: [
-    /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label", children: label }),
-    /* @__PURE__ */ u2(RadioGroup2, { row: true, value: selectedValue, onChange: (event) => onChange(event.target.value), children: options.map((option) => /* @__PURE__ */ u2(FormControlLabel2, { value: option.value, control: /* @__PURE__ */ u2(Radio2, { size: "small" }), label: option.label }, option.value)) })
-  ] });
+  return /* @__PURE__ */ u2(SettingsRow, { label, children: /* @__PURE__ */ u2(
+    ThinkSegmentedControl,
+    {
+      label,
+      value: selectedValue,
+      options,
+      onChange,
+      size: "sm",
+      className: "think-layout-editor__segmented"
+    }
+  ) });
 }
 function LayoutGeneralSettings({ layout, onUpdate }) {
-  return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(
-      TextField2,
+  return /* @__PURE__ */ u2("div", { className: "think-layout-editor__general", children: [
+    /* @__PURE__ */ u2(SettingsRow, { label: "布局名称", children: /* @__PURE__ */ u2(
+      ThinkInput,
       {
-        label: "布局名称",
+        "aria-label": "布局名称",
         value: layout.name || "",
-        onChange: (event) => onUpdate({ name: event.target.value }),
-        size: "small",
-        fullWidth: true
+        onInput: (event) => onUpdate({ name: event.currentTarget.value })
       }
-    ),
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, className: "think-settings-row", children: [
-      /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label", children: "工具栏" }),
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "工具栏", children: /* @__PURE__ */ u2(
+      ThinkCheckbox,
+      {
+        checked: !layout.hideToolbar,
+        onChange: (event) => onUpdate({ hideToolbar: !event.currentTarget.checked }),
+        label: "显示工具栏 / 导航器",
+        compact: true
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "初始日期", children: /* @__PURE__ */ u2("div", { className: "think-layout-editor__inline-controls", children: [
       /* @__PURE__ */ u2(
-        FormControlLabel2,
+        ThinkInput,
         {
-          control: /* @__PURE__ */ u2(
-            Checkbox2,
-            {
-              size: "small",
-              checked: !layout.hideToolbar,
-              onChange: (event) => onUpdate({ hideToolbar: !event.target.checked })
-            }
-          ),
-          label: /* @__PURE__ */ u2(Typography2, { noWrap: true, children: "显示工具栏/导航器" }),
-          className: "think-settings-control-no-shrink"
-        }
-      )
-    ] }),
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, className: "think-settings-row", children: [
-      /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label", children: "初始日期" }),
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
+          "aria-label": "初始日期",
           type: "date",
-          size: "small",
-          variant: "outlined",
           disabled: !!layout.initialDateFollowsNow,
           value: layout.initialDate || "",
-          onChange: (event) => onUpdate({ initialDate: event.target.value }),
+          onInput: (event) => onUpdate({ initialDate: event.currentTarget.value }),
           className: "think-settings-field--date"
         }
       ),
       /* @__PURE__ */ u2(
-        FormControlLabel2,
+        ThinkCheckbox,
         {
-          control: /* @__PURE__ */ u2(
-            Checkbox2,
-            {
-              size: "small",
-              checked: !!layout.initialDateFollowsNow,
-              onChange: (event) => onUpdate({ initialDateFollowsNow: event.target.checked })
-            }
-          ),
-          label: /* @__PURE__ */ u2(Typography2, { noWrap: true, children: "跟随今日" })
+          checked: !!layout.initialDateFollowsNow,
+          onChange: (event) => onUpdate({ initialDateFollowsNow: event.currentTarget.checked }),
+          label: "跟随今日",
+          compact: true
         }
       )
-    ] }),
+    ] }) }),
     /* @__PURE__ */ u2(
-      AlignedRadioGroup,
+      SettingsSegmentedRow,
       {
-        label: "初始视图（时间窗）",
+        label: "初始视图",
         options: PERIOD_OPTIONS,
         selectedValue: layout.initialView || "月",
         onChange: (value) => onUpdate({ initialView: value })
       }
     ),
     /* @__PURE__ */ u2(
-      AlignedRadioGroup,
+      SettingsSegmentedRow,
       {
         label: "排列方式",
         options: DISPLAY_MODE_OPTIONS,
@@ -62791,15 +57026,13 @@ function LayoutGeneralSettings({ layout, onUpdate }) {
         onChange: (value) => onUpdate({ displayMode: value })
       }
     ),
-    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, className: "think-settings-indent", children: /* @__PURE__ */ u2(
-      TextField2,
+    layout.displayMode === "grid" && /* @__PURE__ */ u2(SettingsRow, { label: "网格列数", children: /* @__PURE__ */ u2(
+      ThinkInput,
       {
-        label: "列数",
+        "aria-label": "网格列数",
         type: "number",
-        size: "small",
-        variant: "outlined",
         value: layout.gridConfig?.columns || 2,
-        onChange: (event) => onUpdate({ gridConfig: { columns: parseInt(event.target.value, 10) || 2 } }),
+        onInput: (event) => onUpdate({ gridConfig: { columns: parseInt(event.currentTarget.value, 10) || 2 } }),
         className: "think-settings-field--xs"
       }
     ) })
@@ -62811,9 +57044,12 @@ function LayoutFreeformSettings({
   onResetFreeformLayout
 }) {
   if (layout.displayMode !== "freeform") return null;
-  return /* @__PURE__ */ u2(Stack, { spacing: 1, children: [
+  const updateFreeform = (patch) => onUpdate({
+    freeformConfig: { ...layout.freeformConfig || {}, ...patch }
+  });
+  return /* @__PURE__ */ u2("div", { className: "think-layout-editor__freeform", children: [
     /* @__PURE__ */ u2(
-      AlignedRadioGroup,
+      SettingsSegmentedRow,
       {
         label: "默认模板",
         options: FREEFORM_TEMPLATE_OPTIONS,
@@ -62831,135 +57067,86 @@ function LayoutFreeformSettings({
         }
       }
     ),
-    /* @__PURE__ */ u2(Stack, { spacing: 1, className: "think-settings-indent", children: [
-      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, flexWrap: "wrap", useFlexGap: true, children: [
-        /* @__PURE__ */ u2(
-          FormControlLabel2,
-          {
-            control: /* @__PURE__ */ u2(
-              Checkbox2,
-              {
-                size: "small",
-                checked: layout.freeformConfig?.snapToGrid ?? true,
-                onChange: (event) => onUpdate({
-                  freeformConfig: {
-                    ...layout.freeformConfig || {},
-                    snapToGrid: event.target.checked
-                  }
-                })
-              }
-            ),
-            label: "拖动时吸附网格"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            label: "网格(px)",
-            type: "number",
-            size: "small",
-            value: layout.freeformConfig?.gridSize || 16,
-            onChange: (event) => onUpdate({
-              freeformConfig: {
-                ...layout.freeformConfig || {},
-                gridSize: Math.max(4, parseInt(event.target.value, 10) || 16)
-              }
-            }),
-            className: "think-settings-field--sm"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            label: "最小宽度",
-            type: "number",
-            size: "small",
-            value: layout.freeformConfig?.minItemWidth || 280,
-            onChange: (event) => onUpdate({
-              freeformConfig: {
-                ...layout.freeformConfig || {},
-                minItemWidth: Math.max(160, parseInt(event.target.value, 10) || 280)
-              }
-            }),
-            className: "think-settings-field--sm"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            label: "最小高度",
-            type: "number",
-            size: "small",
-            value: layout.freeformConfig?.minItemHeight || 180,
-            onChange: (event) => onUpdate({
-              freeformConfig: {
-                ...layout.freeformConfig || {},
-                minItemHeight: Math.max(120, parseInt(event.target.value, 10) || 180)
-              }
-            }),
-            className: "think-settings-field--sm"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            label: "画布最小宽度",
-            type: "number",
-            size: "small",
-            value: layout.freeformConfig?.minCanvasWidth || 720,
-            onChange: (event) => onUpdate({
-              freeformConfig: {
-                ...layout.freeformConfig || {},
-                minCanvasWidth: Math.max(320, parseInt(event.target.value, 10) || 720)
-              }
-            }),
-            className: "think-settings-field--md"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            size: "small",
-            variant: "outlined",
-            onClick: () => {
-              if (confirm("确认重置当前布局的自由布局位置吗？")) onResetFreeformLayout();
-            },
-            children: "按模板重排"
-          }
-        )
-      ] }),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "“均衡排布”按视图推荐尺寸顺序装箱；“焦点 + 网格”会让第一个视图横跨首行。切换模板或重排会清空已保存的布局状态。" })
-    ] })
+    /* @__PURE__ */ u2(SettingsRow, { label: "吸附网格", children: /* @__PURE__ */ u2(
+      ThinkCheckbox,
+      {
+        checked: layout.freeformConfig?.snapToGrid ?? true,
+        onChange: (event) => updateFreeform({ snapToGrid: event.currentTarget.checked }),
+        label: "启用",
+        compact: true
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "网格大小", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "网格大小",
+        type: "number",
+        value: layout.freeformConfig?.gridSize || 16,
+        onInput: (event) => updateFreeform({ gridSize: Math.max(4, parseInt(event.currentTarget.value, 10) || 16) }),
+        className: "think-settings-field--sm"
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "最小宽度", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "最小宽度",
+        type: "number",
+        value: layout.freeformConfig?.minItemWidth || 280,
+        onInput: (event) => updateFreeform({ minItemWidth: Math.max(160, parseInt(event.currentTarget.value, 10) || 280) }),
+        className: "think-settings-field--sm"
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "最小高度", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "最小高度",
+        type: "number",
+        value: layout.freeformConfig?.minItemHeight || 180,
+        onInput: (event) => updateFreeform({ minItemHeight: Math.max(120, parseInt(event.currentTarget.value, 10) || 180) }),
+        className: "think-settings-field--sm"
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "画布最小宽度", children: /* @__PURE__ */ u2(
+      ThinkInput,
+      {
+        "aria-label": "画布最小宽度",
+        type: "number",
+        value: layout.freeformConfig?.minCanvasWidth || 720,
+        onInput: (event) => updateFreeform({ minCanvasWidth: Math.max(320, parseInt(event.currentTarget.value, 10) || 720) }),
+        className: "think-settings-field--md"
+      }
+    ) }),
+    /* @__PURE__ */ u2(SettingsRow, { label: "布局位置", children: /* @__PURE__ */ u2(
+      ThinkButton,
+      {
+        size: "sm",
+        variant: "secondary",
+        onClick: () => {
+          if (confirm("确认重置当前布局的自由布局位置吗？")) onResetFreeformLayout();
+        },
+        children: "按模板重排"
+      }
+    ) })
   ] });
 }
+const CREATE_PREFIX = "__create_view__:";
 function LayoutEditorPanel({ layoutId, useCases }) {
   const _useCases = useCases ?? useUseCases();
   const layout = useSelector((s2) => (s2.settings.layouts || []).find((l2) => l2.id === layoutId));
   const allViews = useSelector((s2) => s2.settings.viewInstances);
   const [inputValue, setInputValue] = d("");
-  const [autocompleteOpen, setAutocompleteOpen] = d(false);
-  const inputRef = A$1(null);
+  const [pickerOpen, setPickerOpen] = d(false);
   const [contextMenu, setContextMenu] = d(null);
   const [renameTarget, setRenameTarget] = d(null);
   const [renameValue, setRenameValue] = d("");
-  const handleUpdate = q$1(
-    (updates) => {
-      if (!layout) return;
-      _useCases.layout.updateLayout(layout.id, updates);
-    },
-    [layout, _useCases]
-  );
-  const selectedViews = T$1(
-    () => (layout?.viewInstanceIds || []).map((id) => allViews.find((v2) => v2.id === id)).filter(Boolean),
-    [layout?.viewInstanceIds, allViews]
-  );
-  const availableViews = T$1(
-    () => allViews.filter((v2) => !(layout?.viewInstanceIds || []).includes(v2.id)),
-    [layout?.viewInstanceIds, allViews]
-  );
+  const handleUpdate = q$1((updates) => {
+    if (!layout) return;
+    _useCases.layout.updateLayout(layout.id, updates);
+  }, [layout, _useCases]);
+  const selectedViews = T$1(() => (layout?.viewInstanceIds || []).map((id) => allViews.find((v2) => v2.id === id)).filter(Boolean), [layout?.viewInstanceIds, allViews]);
+  const availableViews = T$1(() => allViews.filter((v2) => !(layout?.viewInstanceIds || []).includes(v2.id)), [layout?.viewInstanceIds, allViews]);
   const addView = q$1(async (viewId) => {
-    if (!layout || !viewId) return;
-    if (layout.viewInstanceIds.includes(viewId)) return;
+    if (!layout || !viewId || layout.viewInstanceIds.includes(viewId)) return;
     await _useCases.layout.addViewInstanceToLayout(layout.id, viewId);
   }, [layout, _useCases.layout]);
   const removeViewFromLayout = q$1((viewId) => {
@@ -62970,64 +57157,37 @@ function LayoutEditorPanel({ layoutId, useCases }) {
     if (!layout) return;
     const currentIds = [...layout.viewInstanceIds];
     const index = currentIds.indexOf(viewId);
-    if (index < 0) return;
     const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= currentIds.length) return;
+    if (index < 0 || targetIndex < 0 || targetIndex >= currentIds.length) return;
     const [moved] = currentIds.splice(index, 1);
     currentIds.splice(targetIndex, 0, moved);
     void _useCases.layout.reorderViewInstancesInLayout(layout.id, currentIds);
   }, [layout, _useCases.layout]);
-  const autocompleteOptions = T$1(() => {
-    const opts = availableViews.map((v2) => ({ value: v2.id, label: v2.title, type: "existing" }));
-    if (inputValue.trim() && !availableViews.some((v2) => v2.title.toLowerCase().includes(inputValue.trim().toLowerCase()))) {
-      opts.push({
-        value: "create",
-        label: `+ 创建新视图："${inputValue.trim()}"`,
-        type: "create",
-        newName: inputValue.trim()
-      });
+  const pickerOptions = T$1(() => {
+    const options = availableViews.map((view) => ({ value: view.id, label: view.title }));
+    const name = inputValue.trim();
+    if (name && !availableViews.some((view) => view.title.toLowerCase().includes(name.toLowerCase()))) {
+      options.push({ value: `${CREATE_PREFIX}${name}`, label: `+ 创建新视图：“${name}”` });
     }
-    return opts;
+    return options;
   }, [availableViews, inputValue]);
-  const reopenAutocomplete = q$1(() => {
-    window.requestAnimationFrame(() => {
-      setAutocompleteOpen(true);
-      inputRef.current?.focus();
-    });
-  }, []);
-  const handleCreateNewView = q$1(
-    async (viewTitle) => {
-      const newView = await _useCases.viewInstance.createView(viewTitle);
-      if (!newView) return;
-      await addView(newView.id);
-      reopenAutocomplete();
-    },
-    [_useCases, addView, reopenAutocomplete]
-  );
-  const handleAutocompleteChange = q$1(
-    async (_event, newValue) => {
-      if (!newValue) return;
-      if (newValue.type === "existing") {
-        await addView(newValue.value);
-        setInputValue("");
-        reopenAutocomplete();
-        return;
-      }
-      if (newValue.type === "create") {
-        setInputValue("");
-        await handleCreateNewView(newValue.newName);
-      }
-    },
-    [addView, handleCreateNewView, reopenAutocomplete]
-  );
+  const handleCreateNewView = q$1(async (viewTitle) => {
+    const newView = await _useCases.viewInstance.createView(viewTitle);
+    if (!newView) return;
+    await addView(newView.id);
+  }, [_useCases.viewInstance, addView]);
+  const handlePickerSelect = q$1(async (value) => {
+    if (value.startsWith(CREATE_PREFIX)) {
+      await handleCreateNewView(value.slice(CREATE_PREFIX.length));
+    } else {
+      await addView(value);
+    }
+    setInputValue("");
+    setPickerOpen(true);
+  }, [addView, handleCreateNewView]);
   const handleChipRightClick = q$1((event, view) => {
     event.preventDefault();
-    setContextMenu({
-      mouseX: event.clientX - 2,
-      mouseY: event.clientY - 4,
-      viewId: view.id,
-      viewTitle: view.title
-    });
+    setContextMenu({ mouseX: event.clientX - 2, mouseY: event.clientY - 4, viewId: view.id, viewTitle: view.title });
   }, []);
   const handleContextMenuClose = q$1(() => setContextMenu(null), []);
   const handleViewSettings = q$1(() => {
@@ -63048,11 +57208,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
   const handleRenameSave = q$1(async () => {
     if (!renameTarget) return;
     const title = renameValue.trim();
-    if (!title || title === renameTarget.viewTitle) {
-      setRenameTarget(null);
-      return;
-    }
-    await _useCases.viewInstance.updateView(renameTarget.viewId, { title });
+    if (title && title !== renameTarget.viewTitle) await _useCases.viewInstance.updateView(renameTarget.viewId, { title });
     setRenameTarget(null);
   }, [renameTarget, renameValue, _useCases.viewInstance]);
   const handleViewRemove = q$1(() => {
@@ -63070,108 +57226,62 @@ function LayoutEditorPanel({ layoutId, useCases }) {
     moveView(contextMenu.viewId, 1);
     handleContextMenuClose();
   }, [contextMenu, moveView, handleContextMenuClose]);
-  if (!layout) {
-    return /* @__PURE__ */ u2("div", { className: "think-settings-section", children: "未找到布局（可能已被删除）。" });
-  }
-  return /* @__PURE__ */ u2(Stack, { spacing: 2, className: "think-layout-editor", children: [
+  if (!layout) return /* @__PURE__ */ u2("div", { className: "think-settings-section", children: "未找到布局（可能已被删除）。" });
+  return /* @__PURE__ */ u2("div", { className: "think-layout-editor", children: [
     /* @__PURE__ */ u2(LayoutGeneralSettings, { layout, onUpdate: handleUpdate }),
-    /* @__PURE__ */ u2(
-      LayoutFreeformSettings,
-      {
-        layout,
-        onUpdate: handleUpdate,
-        onResetFreeformLayout: () => {
-          void _useCases.layout.resetFreeformLayout(layout.id);
-        }
-      }
-    ),
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, className: "think-settings-row think-settings-row--top", children: [
-      /* @__PURE__ */ u2(Typography2, { className: "think-settings-row__label think-settings-row__label--top", children: "包含视图" }),
-      /* @__PURE__ */ u2(Stack, { spacing: 1, className: "think-settings-row__body", children: [
-        /* @__PURE__ */ u2(Box, { className: "think-layout-editor__views", children: selectedViews.map(
-          (view, index) => view ? /* @__PURE__ */ u2(
-            Box,
+    /* @__PURE__ */ u2(LayoutFreeformSettings, { layout, onUpdate: handleUpdate, onResetFreeformLayout: () => void _useCases.layout.resetFreeformLayout(layout.id) }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "包含视图" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-layout-editor__views-body", children: [
+        /* @__PURE__ */ u2("div", { className: "think-layout-editor__views", children: selectedViews.map((view, index) => /* @__PURE__ */ u2("div", { className: "think-layout-editor__view-item", children: [
+          /* @__PURE__ */ u2(
+            ThinkIconButton,
             {
-              className: "think-layout-editor__view-item",
-              children: [
-                /* @__PURE__ */ u2(
-                  IconAction,
-                  {
-                    label: "前移",
-                    icon: /* @__PURE__ */ u2(ArrowBackIosNewIcon, { className: "think-layout-editor__move-icon" }),
-                    size: "small",
-                    disabled: index === 0,
-                    onClick: () => moveView(view.id, -1),
-                    className: "think-layout-editor__move-action",
-                    stopPropagation: false
-                  }
-                ),
-                /* @__PURE__ */ u2(Tooltip2, { title: "左键移除，右键更多选项", children: /* @__PURE__ */ u2(
-                  Chip2,
-                  {
-                    label: view.title,
-                    onClick: () => removeViewFromLayout(view.id),
-                    onContextMenu: (e2) => handleChipRightClick(e2, view),
-                    size: "small",
-                    className: "think-layout-editor__view-chip"
-                  }
-                ) }),
-                /* @__PURE__ */ u2(
-                  IconAction,
-                  {
-                    label: "后移",
-                    icon: /* @__PURE__ */ u2(ArrowForwardIosIcon, { className: "think-layout-editor__move-icon" }),
-                    size: "small",
-                    disabled: index === selectedViews.length - 1,
-                    onClick: () => moveView(view.id, 1),
-                    className: "think-layout-editor__move-action",
-                    stopPropagation: false
-                  }
-                )
-              ]
-            },
-            view.id
-          ) : null
-        ) }),
+              label: "前移",
+              icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-left" }),
+              size: "sm",
+              disabled: index === 0,
+              onClick: () => moveView(view.id, -1),
+              className: "think-layout-editor__move-action"
+            }
+          ),
+          /* @__PURE__ */ u2(
+            "button",
+            {
+              type: "button",
+              className: "think-chip think-layout-editor__view-chip",
+              title: "左键移除，右键更多选项",
+              onClick: () => removeViewFromLayout(view.id),
+              onContextMenu: (event) => handleChipRightClick(event, view),
+              children: /* @__PURE__ */ u2("span", { className: "think-chip__label", children: view.title })
+            }
+          ),
+          /* @__PURE__ */ u2(
+            ThinkIconButton,
+            {
+              label: "后移",
+              icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-right" }),
+              size: "sm",
+              disabled: index === selectedViews.length - 1,
+              onClick: () => moveView(view.id, 1),
+              className: "think-layout-editor__move-action"
+            }
+          )
+        ] }, view.id)) }),
         /* @__PURE__ */ u2(
-          Autocomplete2,
+          ThinkSearchPicker,
           {
-            open: autocompleteOpen,
-            value: null,
-            inputValue,
-            onOpen: () => setAutocompleteOpen(true),
-            onClose: (_2, reason) => {
-              if (reason === "selectOption") return;
-              setAutocompleteOpen(false);
+            query: inputValue,
+            options: pickerOptions,
+            onQueryChange: (value) => {
+              setInputValue(value);
+              setPickerOpen(true);
             },
-            onInputChange: (_2, newInputValue) => {
-              setInputValue(newInputValue);
-              setAutocompleteOpen(true);
-            },
-            options: autocompleteOptions,
-            getOptionLabel: (option) => option ? option.label : "",
-            onChange: handleAutocompleteChange,
-            disableCloseOnSelect: true,
-            blurOnSelect: false,
-            clearOnBlur: false,
-            selectOnFocus: true,
-            renderInput: (params) => /* @__PURE__ */ u2(
-              TextField2,
-              {
-                ...params,
-                variant: "outlined",
-                placeholder: "+ 搜索添加或创建视图...",
-                inputRef: (node2) => {
-                  inputRef.current = node2;
-                  const paramsRef = params.inputProps?.ref;
-                  if (typeof paramsRef === "function") paramsRef(node2);
-                }
-              }
-            ),
-            className: "think-settings-search",
-            size: "small",
-            disablePortal: true,
-            slotProps: { popper: { style: { zIndex: 2e4 } } }
+            onSelect: (value) => void handlePickerSelect(value),
+            placeholder: "添加或创建视图…",
+            open: pickerOpen,
+            onOpenChange: setPickerOpen,
+            className: "think-settings-search"
           }
         )
       ] })
@@ -63180,19 +57290,14 @@ function LayoutEditorPanel({ layoutId, useCases }) {
       "div",
       {
         className: "think-layout-editor__context-menu",
-        style: {
-          position: "fixed",
-          top: contextMenu.mouseY,
-          left: contextMenu.mouseX,
-          zIndex: 99999
-        },
+        style: { position: "fixed", top: contextMenu.mouseY, left: contextMenu.mouseX, zIndex: 99999 },
         onMouseLeave: handleContextMenuClose,
         children: /* @__PURE__ */ u2("div", { className: "think-layout-editor__context-actions", children: [
-          /* @__PURE__ */ u2("button", { className: "mod-cta", onClick: handleViewSettings, children: "设置…" }),
-          /* @__PURE__ */ u2("button", { onClick: handleMoveLeftFromMenu, children: "向前移动" }),
-          /* @__PURE__ */ u2("button", { onClick: handleMoveRightFromMenu, children: "向后移动" }),
-          /* @__PURE__ */ u2("button", { onClick: handleViewRename, children: "重命名…" }),
-          /* @__PURE__ */ u2("button", { onClick: handleViewRemove, children: "从布局移除" })
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: handleViewSettings, children: "设置…" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: handleMoveLeftFromMenu, children: "向前移动" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: handleMoveRightFromMenu, children: "向后移动" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: handleViewRename, children: "重命名…" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "danger", onClick: handleViewRemove, children: "从布局移除" })
         ] })
       }
     ),
@@ -63206,13 +57311,12 @@ function LayoutEditorPanel({ layoutId, useCases }) {
         onSave: handleRenameSave,
         saveButtonText: "重命名",
         children: /* @__PURE__ */ u2(
-          TextField2,
+          ThinkInput,
           {
-            fullWidth: true,
             autoFocus: true,
-            label: "视图名称",
+            "aria-label": "视图名称",
             value: renameValue,
-            onInput: (event) => setRenameValue(event.target.value),
+            onInput: (event) => setRenameValue(event.currentTarget.value),
             onKeyDown: (event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
@@ -63242,7 +57346,7 @@ function LayoutSettingsWidgetInner({ layoutId, widgetId }) {
       bodyPadding: 0,
       bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
       onClose: () => closeFloatingWidget(widgetId),
-      children: /* @__PURE__ */ u2(LayoutEditorPanel, { layoutId })
+      children: /* @__PURE__ */ u2("div", { className: "think-os--settings think-layout-settings-widget", children: /* @__PURE__ */ u2(LayoutEditorPanel, { layoutId }) })
     }
   );
 }
@@ -63269,12 +57373,7 @@ function describeRule(rule) {
   }
   return `${getFieldLabel(rule.field)} ${rule.op} ${String(rule.value ?? "")}`;
 }
-function DataFilterPanel({
-  dataStore,
-  filters,
-  items,
-  onChange
-}) {
+function DataFilterPanel({ dataStore, filters, items, onChange }) {
   const [open, setOpen] = d(false);
   const [advancedOpen, setAdvancedOpen] = d(false);
   const activeCount = filters.length;
@@ -63286,11 +57385,8 @@ function DataFilterPanel({
     setAdvancedOpen(hasAdvancedFilters);
     setOpen(true);
   };
-  const handleClose = () => setOpen(false);
   const handleClear = () => onChange([]);
-  const handleDeleteRule = (index) => {
-    onChange(filters.filter((_2, currentIndex) => currentIndex !== index));
-  };
+  const handleDeleteRule = (index) => onChange(filters.filter((_2, currentIndex) => currentIndex !== index));
   return /* @__PURE__ */ u2("div", { class: "tp-toolbar-data-filter", children: [
     /* @__PURE__ */ u2(
       ThinkButton,
@@ -63306,104 +57402,83 @@ function DataFilterPanel({
         ]
       }
     ),
-    activeCount > 0 && /* @__PURE__ */ u2("div", { class: "think-filter-popover__selected-chips", children: [
+    activeCount > 0 && /* @__PURE__ */ u2("div", { class: "think-filter-popover__selected-chips", "aria-label": "当前筛选", children: [
       filters.slice(0, 3).map((rule, index) => /* @__PURE__ */ u2(
-        Chip2,
+        "button",
         {
-          label: describeRule(rule),
-          size: "small",
-          onDelete: () => handleDeleteRule(index),
-          sx: { height: "20px", fontSize: "0.75rem" }
+          type: "button",
+          className: "think-chip",
+          onClick: () => handleDeleteRule(index),
+          title: "移除此筛选",
+          children: [
+            /* @__PURE__ */ u2("span", { className: "think-chip__label", children: describeRule(rule) }),
+            /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
+          ]
         },
         `${rule.field}-${rule.op}-${index}`
       )),
-      filters.length > 3 && /* @__PURE__ */ u2(Chip2, { label: `+${filters.length - 3}`, size: "small", sx: { height: "20px", fontSize: "0.75rem" } })
+      filters.length > 3 && /* @__PURE__ */ u2("span", { className: "think-chip", children: [
+        "+",
+        filters.length - 3
+      ] })
     ] }),
     /* @__PURE__ */ u2(
-      Dialog2,
+      Modal2,
       {
-        open,
-        onClose: handleClose,
-        fullWidth: true,
-        maxWidth: "lg",
-        PaperProps: {
-          sx: {
-            width: "min(1180px, calc(100vw - 32px))",
-            maxWidth: "calc(100vw - 32px)",
-            height: "min(760px, calc(100vh - 48px))"
-          }
-        },
-        children: [
-          /* @__PURE__ */ u2(DialogTitle2, { sx: { pb: 1 }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }, children: [
-            /* @__PURE__ */ u2("div", { children: [
-              /* @__PURE__ */ u2(Typography2, { variant: "h6", component: "div", children: "全局数据筛选" }),
-              /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "这里的规则会作用于当前布局下的所有视图；单个视图自己的筛选仍在模块设置中维护。" })
+        isOpen: open,
+        onClose: () => setOpen(false),
+        title: "全局数据筛选",
+        size: "large",
+        className: "think-os--settings think-data-filter-dialog",
+        footer: /* @__PURE__ */ u2("div", { className: "think-data-filter-dialog__actions", children: [
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: handleClear, disabled: activeCount === 0, children: "清空全部" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "primary", onClick: () => setOpen(false), children: "完成" })
+        ] }),
+        children: /* @__PURE__ */ u2("div", { className: "think-data-filter-dialog__content", children: [
+          /* @__PURE__ */ u2("div", { className: "think-data-filter-dialog__meta-line", children: [
+            /* @__PURE__ */ u2("span", { children: [
+              fieldOptions.length,
+              " 个字段"
             ] }),
-            /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }, children: [
-              /* @__PURE__ */ u2(Chip2, { label: `${fieldOptions.length} 个可筛选字段`, size: "small", variant: "outlined" }),
-              /* @__PURE__ */ u2(Chip2, { label: `${activeCount} 条规则`, size: "small", color: activeCount > 0 ? "primary" : "default" })
+            /* @__PURE__ */ u2("span", { children: [
+              activeCount,
+              " 条规则"
             ] })
-          ] }) }),
-          /* @__PURE__ */ u2(Divider2, {}),
-          /* @__PURE__ */ u2(DialogContent2, { sx: { p: 2.5, overflow: "auto", background: "var(--background-primary)" }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
-            /* @__PURE__ */ u2(
-              CommonFilterPanel,
-              {
-                title: "常用筛选",
-                description: "先用目标、核心Block、主题等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。",
-                dataStore,
-                filters,
-                items: sourceItems,
-                fieldOptions,
-                onChange
-              }
-            ),
-            /* @__PURE__ */ u2(
-              Accordion2,
-              {
-                expanded: advancedOpen,
-                onChange: (_2, expanded) => setAdvancedOpen(expanded),
-                disableGutters: true,
-                elevation: 0,
-                sx: {
-                  border: 0,
-                  borderTop: "1px solid var(--background-modifier-border)",
-                  borderRadius: 0,
-                  background: "transparent",
-                  boxShadow: "none",
-                  "&:before": { display: "none" },
-                  "& .MuiAccordionSummary-root": { px: 0, minHeight: "48px" },
-                  "& .MuiAccordionSummary-content": { my: 1 },
-                  "& .MuiAccordionDetails-root": { px: 0, pb: 0 }
-                },
-                children: [
-                  /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
-                    /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
-                    /* @__PURE__ */ u2(Chip2, { label: `${activeCount} 条`, size: "small", variant: "outlined" }),
-                    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "需要正则、区间、排除或复杂且/或关系时再展开" })
-                  ] }) }),
-                  /* @__PURE__ */ u2(AccordionDetails2, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
-                    RuleBuilder,
-                    {
-                      title: "筛选",
-                      mode: "filter",
-                      rows: filters,
-                      fieldOptions,
-                      onChange: (rows) => onChange(rows),
-                      dataStore,
-                      variant: "panel"
-                    }
-                  ) })
-                ]
-              }
-            )
-          ] }) }),
-          /* @__PURE__ */ u2(Divider2, {}),
-          /* @__PURE__ */ u2(DialogActions2, { sx: { px: 2.5, py: 1.5, justifyContent: "space-between" }, children: [
-            /* @__PURE__ */ u2(Button2, { size: "small", onClick: handleClear, disabled: activeCount === 0, children: "清空全部规则" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", variant: "contained", onClick: handleClose, children: "完成" })
-          ] })
-        ]
+          ] }),
+          /* @__PURE__ */ u2(
+            CommonFilterPanel,
+            {
+              title: "常用筛选",
+              dataStore,
+              filters,
+              items: sourceItems,
+              fieldOptions,
+              onChange
+            }
+          ),
+          /* @__PURE__ */ u2(
+            ThinkDisclosure,
+            {
+              title: "高级筛选",
+              meta: `${activeCount} 条`,
+              open: advancedOpen,
+              onOpenChange: setAdvancedOpen,
+              children: /* @__PURE__ */ u2(
+                RuleBuilder,
+                {
+                  title: "筛选",
+                  mode: "filter",
+                  rows: filters,
+                  fieldOptions,
+                  onChange: (rows) => onChange(rows),
+                  dataStore,
+                  variant: "panel",
+                  showHeader: false
+                }
+              )
+            }
+          )
+        ] })
       }
     )
   ] });
@@ -70895,7 +64970,7 @@ function getEventCoordinates(event) {
   }
   return null;
 }
-const CSS$1 = /* @__PURE__ */ Object.freeze({
+const CSS = /* @__PURE__ */ Object.freeze({
   Translate: {
     toString(transform2) {
       if (!transform2) {
@@ -70925,7 +65000,7 @@ const CSS$1 = /* @__PURE__ */ Object.freeze({
       if (!transform2) {
         return;
       }
-      return [CSS$1.Translate.toString(transform2), CSS$1.Scale.toString(transform2)].join(" ");
+      return [CSS.Translate.toString(transform2), CSS.Scale.toString(transform2)].join(" ");
     }
   },
   Transition: {
@@ -70965,7 +65040,7 @@ function LiveRegion(_ref) {
     announcement,
     ariaLiveType = "assertive"
   } = _ref;
-  const visuallyHidden2 = {
+  const visuallyHidden = {
     position: "fixed",
     top: 0,
     left: 0,
@@ -70981,7 +65056,7 @@ function LiveRegion(_ref) {
   };
   return gn.createElement("div", {
     id,
-    style: visuallyHidden2,
+    style: visuallyHidden,
     role: "status",
     "aria-live": ariaLiveType,
     "aria-atomic": true
@@ -75691,9 +69766,9 @@ function FiltersBar({
         enableRetrieval && /* @__PURE__ */ u2(FormControl2, { size: "small", sx: { minWidth: 100 }, children: [
           /* @__PURE__ */ u2(InputLabel2, { children: "类型" }),
           /* @__PURE__ */ u2(Select2, { value: selectedType, label: "类型", onChange: (e2) => setSelectedType(e2.target.value), children: [
-            /* @__PURE__ */ u2(MenuItem2, { value: "", children: "全部" }),
-            /* @__PURE__ */ u2(MenuItem2, { value: "task", children: "任务" }),
-            /* @__PURE__ */ u2(MenuItem2, { value: "block", children: "记录" })
+            /* @__PURE__ */ u2(MenuItem$1, { value: "", children: "全部" }),
+            /* @__PURE__ */ u2(MenuItem$1, { value: "task", children: "任务" }),
+            /* @__PURE__ */ u2(MenuItem$1, { value: "block", children: "记录" })
           ] })
         ] }),
         enableRetrieval && selectedType === "block" && blocks.length > 0 && /* @__PURE__ */ u2(FormControl2, { size: "small", sx: { minWidth: 120 }, children: [
@@ -75705,8 +69780,8 @@ function FiltersBar({
               label: "记录类型",
               onChange: (e2) => setSelectedBlockId(e2.target.value),
               children: [
-                /* @__PURE__ */ u2(MenuItem2, { value: "", children: "全部记录" }),
-                blocks.map((b2) => /* @__PURE__ */ u2(MenuItem2, { value: b2.id, children: b2.name }, b2.id))
+                /* @__PURE__ */ u2(MenuItem$1, { value: "", children: "全部记录" }),
+                blocks.map((b2) => /* @__PURE__ */ u2(MenuItem$1, { value: b2.id, children: b2.name }, b2.id))
               ]
             }
           )
@@ -76861,7 +70936,7 @@ const defaultTransition = {
   easing: "ease"
 };
 const transitionProperty = "transform";
-const disabledTransition = /* @__PURE__ */ CSS$1.Transition.toString({
+const disabledTransition = /* @__PURE__ */ CSS.Transition.toString({
   property: transitionProperty,
   duration: 0,
   easing: "linear"
@@ -77081,7 +71156,7 @@ function useSortable(_ref) {
       return void 0;
     }
     if (isSorting || shouldAnimateLayoutChanges) {
-      return CSS$1.Transition.toString({
+      return CSS.Transition.toString({
         ...transition,
         property: transitionProperty
       });
@@ -77104,47 +71179,26 @@ function normalizeLocalDisabled(localDisabled, globalDisabled) {
   };
 }
 [KeyboardCode.Down, KeyboardCode.Right, KeyboardCode.Up, KeyboardCode.Left];
-function SortableLayoutItem({
-  layout,
-  useCases,
-  isExpanded,
-  onToggle
-}) {
+function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: layout.id });
-  const style2 = {
-    transform: transform2 ? `translate3d(${transform2.x}px, ${transform2.y}px, 0)` : void 0,
-    transition
-  };
+  const style2 = { transform: transform2 ? `translate3d(${transform2.x}px, ${transform2.y}px, 0)` : void 0, transition };
   const handleDelete = q$1(() => {
     if (confirm(`确认删除布局 "${layout.name}" 吗？
-相关的引用可能会失效。`)) {
-      void useCases.layout.deleteLayout(layout.id);
-    }
+相关的引用可能会失效。`)) void useCases.layout.deleteLayout(layout.id);
   }, [layout.id, layout.name, useCases.layout]);
-  const handleDuplicate = q$1(() => {
-    void useCases.layout.duplicateLayout(layout.id);
-  }, [layout.id, useCases.layout]);
+  const handleDuplicate = q$1(() => void useCases.layout.duplicateLayout(layout.id), [layout.id, useCases.layout]);
   const handleRename = q$1(() => {
     const newName = prompt("请输入新的布局名称", layout.name);
-    if (newName && newName.trim()) {
-      void useCases.layout.updateLayout(layout.id, { name: newName.trim() });
-    }
+    if (newName?.trim()) void useCases.layout.updateLayout(layout.id, { name: newName.trim() });
   }, [layout.id, layout.name, useCases.layout]);
   const dragHandleProps = { ...attributes, ...listeners };
-  return /* @__PURE__ */ u2(Box, { ref: setNodeRef, style: style2, className: "think-layout-list__item", children: [
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", className: "think-layout-list__item-header", children: [
-      /* @__PURE__ */ u2(
-        "div",
-        {
-          ...dragHandleProps,
-          className: "think-layout-list__drag-handle",
-          children: /* @__PURE__ */ u2(DragIndicatorIcon, { fontSize: "small" })
-        }
-      ),
-      /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: onToggle, className: "think-layout-list__toggle", children: isExpanded ? /* @__PURE__ */ u2(ExpandLessIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) }),
-      /* @__PURE__ */ u2(Typography2, { className: "think-layout-list__item-title", onClick: handleRename, children: layout.name }),
-      /* @__PURE__ */ u2(IconAction, { label: "复制", onClick: handleDuplicate, icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }) }),
-      /* @__PURE__ */ u2(IconAction, { label: "删除", onClick: handleDelete, color: "error", icon: /* @__PURE__ */ u2(DeleteOutlineIcon, { fontSize: "small" }) })
+  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, className: "think-layout-list__item", children: [
+    /* @__PURE__ */ u2("div", { className: "think-layout-list__item-header", children: [
+      /* @__PURE__ */ u2("button", { type: "button", ...dragHandleProps, className: "think-layout-list__drag-handle", "aria-label": "拖动排序", children: /* @__PURE__ */ u2(ThinkIcon, { name: "grip-vertical" }) }),
+      /* @__PURE__ */ u2(ThinkIconButton, { label: isExpanded ? "收起布局" : "展开布局", icon: /* @__PURE__ */ u2(ThinkIcon, { name: isExpanded ? "chevron-up" : "chevron-down" }), size: "sm", onClick: onToggle, className: "think-layout-list__toggle" }),
+      /* @__PURE__ */ u2("button", { type: "button", className: "think-layout-list__item-title", onClick: handleRename, children: layout.name }),
+      /* @__PURE__ */ u2(ThinkIconButton, { label: "复制", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "copy" }), size: "sm", onClick: handleDuplicate }),
+      /* @__PURE__ */ u2(ThinkIconButton, { label: "删除", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }), size: "sm", tone: "danger", onClick: handleDelete })
     ] }),
     isExpanded && /* @__PURE__ */ u2(LayoutEditorPanel, { layoutId: layout.id, useCases })
   ] });
@@ -77154,60 +71208,33 @@ function LayoutSettings({ app }) {
   const layouts = useSelector(selectLayouts);
   const [expandedIds, setExpandedIds] = d(/* @__PURE__ */ new Set());
   const onAddLayout = q$1(() => {
-    const modal = new NamePromptModal(app, {
-      title: "创建新布局",
-      placeholder: "请输入新布局的名称...",
-      defaultValue: DEFAULT_NAMES.NEW_LAYOUT,
-      ctaText: "创建"
-    });
+    const modal = new NamePromptModal(app, { title: "创建新布局", placeholder: "请输入新布局的名称...", defaultValue: DEFAULT_NAMES.NEW_LAYOUT, ctaText: "创建" });
     modal.openAndGetValue().then((newName) => {
-      if (!newName) return;
-      void useCases.layout.addLayout(newName, null);
+      if (newName) void useCases.layout.addLayout(newName, null);
     });
   }, [app, useCases.layout]);
-  const toggleExpand = q$1((id) => {
-    setExpandedIds((previous) => {
-      const next2 = new Set(previous);
-      if (next2.has(id)) next2.delete(id);
-      else next2.add(id);
-      return next2;
-    });
-  }, []);
+  const toggleExpand = q$1((id) => setExpandedIds((previous) => {
+    const next2 = new Set(previous);
+    if (next2.has(id)) next2.delete(id);
+    else next2.add(id);
+    return next2;
+  }), []);
   const handleDragEnd = q$1((event) => {
     const { active, over } = event;
     if (!active || !over || active.id === over.id) return;
     const oldIndex = layouts.findIndex((layout) => layout.id === active.id);
     const newIndex = layouts.findIndex((layout) => layout.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
-    const orderedIds = arrayMove$1(layouts, oldIndex, newIndex).map((layout) => layout.id);
-    void useCases.layout.reorderLayouts(orderedIds);
+    void useCases.layout.reorderLayouts(arrayMove$1(layouts, oldIndex, newIndex).map((layout) => layout.id));
   }, [layouts, useCases.layout]);
   const layoutIds = T$1(() => layouts.map((layout) => layout.id), [layouts]);
-  return /* @__PURE__ */ u2(Box, { className: "think-layout-list", children: [
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", justifyContent: "space-between", className: "think-layout-list__header", children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "管理布局" }),
-      /* @__PURE__ */ u2(
-        Button2,
-        {
-          onClick: onAddLayout,
-          startIcon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}),
-          variant: "outlined",
-          size: "small",
-          children: "添加布局"
-        }
-      )
+  return /* @__PURE__ */ u2("div", { className: "think-layout-list", children: [
+    /* @__PURE__ */ u2("header", { className: "think-layout-list__header", children: [
+      /* @__PURE__ */ u2("h2", { className: "think-settings-page__title", children: "管理布局" }),
+      /* @__PURE__ */ u2(ThinkButton, { onClick: onAddLayout, leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), variant: "secondary", size: "sm", children: "添加布局" })
     ] }),
-    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: layoutIds, strategy: verticalListSortingStrategy, children: layouts.map((layout) => /* @__PURE__ */ u2(
-      SortableLayoutItem,
-      {
-        layout,
-        useCases,
-        isExpanded: expandedIds.has(layout.id),
-        onToggle: () => toggleExpand(layout.id)
-      },
-      layout.id
-    )) }) }),
-    layouts.length === 0 && /* @__PURE__ */ u2(Typography2, { color: "text.secondary", className: "think-settings-centered-empty", children: '暂无布局，点击"添加布局"创建第一个' })
+    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: layoutIds, strategy: verticalListSortingStrategy, children: layouts.map((layout) => /* @__PURE__ */ u2(SortableLayoutItem, { layout, useCases, isExpanded: expandedIds.has(layout.id), onToggle: () => toggleExpand(layout.id) }, layout.id)) }) }),
+    layouts.length === 0 && /* @__PURE__ */ u2("div", { className: "think-settings-centered-empty", children: "暂无布局" })
   ] });
 }
 function GeneralSettings() {
@@ -77216,10 +71243,7 @@ function GeneralSettings() {
   const savedCategoryColors = useSelector(selectCategoryColors);
   const useCases = useUseCases();
   const activeColors = T$1(() => getActiveCategoryColors(), [savedCategoryColors]);
-  const allCategoryNames = T$1(
-    () => Array.from(new Set(Object.keys(savedCategoryColors))),
-    [savedCategoryColors]
-  );
+  const allCategoryNames = T$1(() => Array.from(new Set(Object.keys(savedCategoryColors))), [savedCategoryColors]);
   const [newCategoryName, setNewCategoryName] = d("");
   const [newCategoryColor, setNewCategoryColor] = d("#cccccc");
   const handleColorChange = (name, color2) => {
@@ -77237,419 +71261,166 @@ function GeneralSettings() {
     delete updated[name];
     useCases.settings.updateCategoryColors(updated);
   };
-  return /* @__PURE__ */ u2(Box, { className: "think-settings-page", children: [
+  return /* @__PURE__ */ u2("div", { className: "think-settings-page", children: [
     /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
-      /* @__PURE__ */ u2("div", { className: "think-settings-section__header", children: /* @__PURE__ */ u2("div", { children: [
-        /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "模块开关" }),
-        /* @__PURE__ */ u2("p", { className: "think-settings-help", children: "控制后台功能是否随 Obsidian 一起启动。" })
-      ] }) }),
-      /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-        /* @__PURE__ */ u2(
-          FormControlLabel2,
-          {
-            control: /* @__PURE__ */ u2(
-              Checkbox2,
-              {
-                checked: floatingTimerEnabled,
-                onChange: (event) => useCases.settings.setFloatingTimerEnabled(event.target.checked)
-              }
-            ),
-            label: "启用悬浮计时器"
-          }
-        ),
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-settings-description-indent", children: "关闭后，下次启动 Obsidian 将不再加载悬浮计时器；仍可通过命令面板临时切换可见性。" }),
-        /* @__PURE__ */ u2(
-          FormControlLabel2,
-          {
-            control: /* @__PURE__ */ u2(
-              Checkbox2,
-              {
-                checked: devConsoleStackEnabled,
-                onChange: (event) => useCases.settings.setDevConsoleStackEnabled(event.target.checked)
-              }
-            ),
-            label: "开发模式：错误提示同时输出控制台堆栈"
-          }
-        ),
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-settings-description-indent", children: "开启后 toast 仍会显示，同时 console.error 输出完整 stack；关闭后只显示 toast。" })
+      /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "模块开关" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+        /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+          /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "悬浮计时器" }),
+          /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(
+            ThinkCheckbox,
+            {
+              checked: floatingTimerEnabled,
+              onChange: (event) => useCases.settings.setFloatingTimerEnabled(event.currentTarget.checked),
+              label: "启用",
+              compact: true
+            }
+          ) })
+        ] }),
+        /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
+          /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "开发错误" }),
+          /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(
+            ThinkCheckbox,
+            {
+              checked: devConsoleStackEnabled,
+              onChange: (event) => useCases.settings.setDevConsoleStackEnabled(event.currentTarget.checked),
+              label: "同时输出控制台堆栈",
+              compact: true
+            }
+          ) })
+        ] })
       ] })
     ] }),
     /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
-      /* @__PURE__ */ u2("div", { className: "think-settings-section__header", children: /* @__PURE__ */ u2("div", { children: [
-        /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "分类颜色" }),
-        /* @__PURE__ */ u2("p", { className: "think-settings-help", children: "全局 CategoryKey 基础类别颜色，标签和统计视图统一消费该配置。" })
-      ] }) }),
+      /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "分类颜色" }),
       /* @__PURE__ */ u2("div", { className: "think-category-list", children: allCategoryNames.map((name) => {
         const color2 = activeColors[name] || "#e0e0e0";
         return /* @__PURE__ */ u2("div", { className: "think-category-row", children: [
-          /* @__PURE__ */ u2(
-            "input",
-            {
-              className: "think-category-color",
-              type: "color",
-              value: color2,
-              "aria-label": `${name} 颜色`,
-              onChange: (event) => handleColorChange(name, event.target.value)
-            }
-          ),
-          /* @__PURE__ */ u2(Typography2, { variant: "body1", className: "think-category-row__name", children: name }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: color2 }),
-          /* @__PURE__ */ u2(
-            ThinkButton,
-            {
-              className: "think-category-row__remove",
-              variant: "ghost",
-              size: "sm",
-              onClick: () => handleRemoveCategory(name),
-              children: "删除"
-            }
-          )
+          /* @__PURE__ */ u2("input", { className: "think-category-color", type: "color", value: color2, "aria-label": `${name} 颜色`, onChange: (event) => handleColorChange(name, event.currentTarget.value) }),
+          /* @__PURE__ */ u2("span", { className: "think-category-row__name", children: name }),
+          /* @__PURE__ */ u2("span", { className: "think-settings-caption", children: color2 }),
+          /* @__PURE__ */ u2(ThinkButton, { className: "think-category-row__remove", variant: "ghost", size: "sm", onClick: () => handleRemoveCategory(name), children: "删除" })
         ] }, name);
       }) }),
       /* @__PURE__ */ u2("div", { className: "think-category-add", children: [
-        /* @__PURE__ */ u2(
-          "input",
-          {
-            className: "think-category-color",
-            type: "color",
-            value: newCategoryColor,
-            "aria-label": "新分类颜色",
-            onChange: (event) => setNewCategoryColor(event.target.value)
-          }
-        ),
-        /* @__PURE__ */ u2(
-          "input",
-          {
-            className: "think-input",
-            type: "text",
-            value: newCategoryName,
-            placeholder: "新分类名称",
-            onChange: (event) => setNewCategoryName(event.target.value)
-          }
-        ),
-        /* @__PURE__ */ u2(
-          ThinkButton,
-          {
-            variant: "primary",
-            size: "sm",
-            onClick: handleAddCategory,
-            disabled: !newCategoryName.trim(),
-            children: "添加"
-          }
-        )
+        /* @__PURE__ */ u2("input", { className: "think-category-color", type: "color", value: newCategoryColor, "aria-label": "新分类颜色", onChange: (event) => setNewCategoryColor(event.currentTarget.value) }),
+        /* @__PURE__ */ u2(ThinkInput, { value: newCategoryName, placeholder: "新分类名称", onInput: (event) => setNewCategoryName(event.currentTarget.value) }),
+        /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddCategory, disabled: !newCategoryName.trim(), children: "添加" })
       ] })
     ] })
   ] });
 }
 function AiAdvancedSettingsSection({ settings, onUpdate }) {
   return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(Accordion2, { children: [
-      /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "多结果设置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-        /* @__PURE__ */ u2(
-          FormControlLabel2,
-          {
-            control: /* @__PURE__ */ u2(
-              Switch2,
-              {
-                checked: settings.allowMultipleResults,
-                onChange: (e2) => onUpdate({ allowMultipleResults: e2.target.checked })
-              }
-            ),
-            label: "允许多条结果"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            fullWidth: true,
-            label: "最大结果数量",
-            type: "number",
-            value: settings.maxResults,
-            onChange: (e2) => onUpdate({ maxResults: parseInt(e2.target.value, 10) || 5 }),
-            disabled: !settings.allowMultipleResults
-          }
-        ),
-        /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: [
-          /* @__PURE__ */ u2(InputLabel2, { children: "确认模式" }),
-          /* @__PURE__ */ u2(
-            Select2,
-            {
-              value: settings.confirmMode,
-              label: "确认模式",
-              onChange: (e2) => onUpdate({ confirmMode: e2.target.value }),
-              children: [
-                /* @__PURE__ */ u2(MenuItem2, { value: "single", children: "单条确认" }),
-                /* @__PURE__ */ u2(MenuItem2, { value: "batch", children: "批量确认" })
-              ]
-            }
-          )
-        ] })
-      ] }) })
-    ] }),
-    /* @__PURE__ */ u2(Accordion2, { children: [
-      /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "性能设置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-        /* @__PURE__ */ u2(
-          FormControlLabel2,
-          {
-            control: /* @__PURE__ */ u2(
-              Switch2,
-              {
-                checked: settings.preloadConfigOnStartup,
-                onChange: (e2) => onUpdate({ preloadConfigOnStartup: e2.target.checked })
-              }
-            ),
-            label: "启动时预加载配置"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            fullWidth: true,
-            label: "配置缓存 TTL (秒)",
-            type: "number",
-            value: settings.configCacheTTLSeconds,
-            onChange: (e2) => onUpdate({ configCacheTTLSeconds: parseInt(e2.target.value, 10) || 300 }),
-            helperText: "配置快照的缓存时间，避免每次调用都重新构建"
-          }
-        )
-      ] }) })
-    ] })
-  ] });
-}
-function AiApiConfigSection({
-  settings,
-  onUpdate,
-  readiness,
-  apiKeyPersistenceMessage,
-  testStatus,
-  testMessage,
-  onTestConnection
-}) {
-  return /* @__PURE__ */ u2(Accordion2, { defaultExpanded: true, children: [
-    /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "API 配置" }) }),
-    /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
-          fullWidth: true,
-          label: "API 端点 (baseURL)",
-          placeholder: "https://api.openai.com/v1",
-          value: settings.apiEndpoint,
-          onChange: (e2) => onUpdate({ apiEndpoint: e2.target.value }),
-          helperText: "OpenAI 兼容的 API 端点，例如 https://api.openai.com/v1"
-        }
-      ),
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
-          fullWidth: true,
-          label: "API 密钥",
-          type: "password",
-          value: settings.apiKey,
-          onChange: (e2) => onUpdate({ apiKey: e2.target.value }),
-          helperText: "您的 API 密钥。默认只保存在当前内存中；开启下方开关后才会写入插件数据。"
-        }
-      ),
-      /* @__PURE__ */ u2(
-        FormControlLabel2,
-        {
-          control: /* @__PURE__ */ u2(
-            Switch2,
-            {
-              checked: settings.persistApiKey === true,
-              onChange: (e2) => onUpdate({ persistApiKey: e2.target.checked })
-            }
-          ),
-          label: "保存 API 密钥到设置（不推荐：明文存储，可能被同步）"
-        }
-      ),
-      /* @__PURE__ */ u2(Alert2, { severity: settings.persistApiKey ? "warning" : "info", children: apiKeyPersistenceMessage }),
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
-          fullWidth: true,
-          label: "模型名称",
-          placeholder: "gpt-4",
-          value: settings.model,
-          onChange: (e2) => onUpdate({ model: e2.target.value }),
-          helperText: "要使用的模型，例如 gpt-4, gpt-3.5-turbo"
-        }
-      ),
-      /* @__PURE__ */ u2(Box, { children: [
-        /* @__PURE__ */ u2(Typography2, { gutterBottom: true, children: [
-          "温度 (Temperature): ",
-          settings.temperature
-        ] }),
-        /* @__PURE__ */ u2(
-          Slider2,
-          {
-            value: settings.temperature,
-            onChange: (_2, value) => onUpdate({ temperature: value }),
-            min: 0,
-            max: 2,
-            step: 0.1,
-            marks: [
-              { value: 0, label: "0" },
-              { value: 1, label: "1" },
-              { value: 2, label: "2" }
-            ]
-          }
-        )
+    /* @__PURE__ */ u2(ThinkDisclosure, { title: "多结果设置", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "多条结果" }),
+        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.allowMultipleResults, onChange: (e2) => onUpdate({ allowMultipleResults: e2.currentTarget.checked }), label: "允许" }) })
       ] }),
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
-          fullWidth: true,
-          label: "最大 Token 数",
-          type: "number",
-          value: settings.maxTokens,
-          onChange: (e2) => onUpdate({ maxTokens: parseInt(e2.target.value, 10) || 4096 })
-        }
-      ),
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
-          fullWidth: true,
-          label: "请求超时 (毫秒)",
-          type: "number",
-          value: settings.requestTimeoutMs,
-          onChange: (e2) => onUpdate({ requestTimeoutMs: parseInt(e2.target.value, 10) || 3e4 })
-        }
-      ),
-      /* @__PURE__ */ u2(Box, { children: [
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            variant: "outlined",
-            onClick: onTestConnection,
-            disabled: testStatus === "testing" || !readiness.ready,
-            children: testStatus === "testing" ? "测试中..." : "测试连接"
-          }
-        ),
-        !readiness.ready && /* @__PURE__ */ u2(Alert2, { severity: "info", sx: { mt: 1 }, children: readiness.message }),
-        testStatus !== "idle" && /* @__PURE__ */ u2(
-          Alert2,
-          {
-            severity: testStatus === "success" ? "success" : testStatus === "error" ? "error" : "info",
-            sx: { mt: 1 },
-            children: testMessage
-          }
-        )
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "最大数量" }),
+        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: settings.maxResults, disabled: !settings.allowMultipleResults, onInput: (e2) => onUpdate({ maxResults: parseInt(e2.currentTarget.value, 10) || 5 }) })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "确认模式" }),
+        /* @__PURE__ */ u2(SimpleSelect, { value: settings.confirmMode, options: [{ value: "single", label: "单条确认" }, { value: "batch", label: "批量确认" }], onChange: (confirmMode) => onUpdate({ confirmMode }) })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ u2(ThinkDisclosure, { title: "性能设置", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "预加载" }),
+        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.preloadConfigOnStartup, onChange: (e2) => onUpdate({ preloadConfigOnStartup: e2.currentTarget.checked }), label: "启动时加载配置" }) })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "缓存 TTL" }),
+        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.configCacheTTLSeconds, onInput: (e2) => onUpdate({ configCacheTTLSeconds: parseInt(e2.currentTarget.value, 10) || 300 }) })
       ] })
     ] }) })
   ] });
+}
+function AiApiConfigSection({ settings, onUpdate, readiness, apiKeyPersistenceMessage, testStatus, testMessage, onTestConnection }) {
+  return /* @__PURE__ */ u2(ThinkDisclosure, { title: "API 配置", open: true, children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "API 端点" }),
+      /* @__PURE__ */ u2(ThinkInput, { value: settings.apiEndpoint, placeholder: "https://api.openai.com/v1", onInput: (e2) => onUpdate({ apiEndpoint: e2.currentTarget.value }) })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "API 密钥" }),
+      /* @__PURE__ */ u2(ThinkInput, { type: "password", value: settings.apiKey, onInput: (e2) => onUpdate({ apiKey: e2.currentTarget.value }) })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "保存密钥" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.persistApiKey === true, onChange: (e2) => onUpdate({ persistApiKey: e2.currentTarget.checked }), label: "持久化到设置" }) })
+    ] }),
+    settings.persistApiKey && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: apiKeyPersistenceMessage }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "模型" }),
+      /* @__PURE__ */ u2(ThinkInput, { value: settings.model, placeholder: "gpt-4", onInput: (e2) => onUpdate({ model: e2.currentTarget.value }) })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: [
+        "温度 ",
+        settings.temperature
+      ] }),
+      /* @__PURE__ */ u2(ThinkRange, { value: settings.temperature, onInput: (e2) => onUpdate({ temperature: Number(e2.currentTarget.value) }), min: 0, max: 2, step: 0.1 })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "最大 Token" }),
+      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.maxTokens, onInput: (e2) => onUpdate({ maxTokens: parseInt(e2.currentTarget.value, 10) || 4096 }) })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "超时毫秒" }),
+      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.requestTimeoutMs, onInput: (e2) => onUpdate({ requestTimeoutMs: parseInt(e2.currentTarget.value, 10) || 3e4 }) })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "连接" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
+        /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onTestConnection, disabled: testStatus === "testing" || !readiness.ready, children: testStatus === "testing" ? "测试中..." : "测试连接" }),
+        !readiness.ready && /* @__PURE__ */ u2(ThinkNotice, { children: readiness.message }),
+        testStatus !== "idle" && /* @__PURE__ */ u2(ThinkNotice, { tone: testStatus === "success" ? "success" : testStatus === "error" ? "danger" : "info", children: testMessage })
+      ] })
+    ] })
+  ] }) });
 }
 function AiPromptRulesSection({ settings, onUpdate, onInsertExample }) {
-  return /* @__PURE__ */ u2(Accordion2, { defaultExpanded: true, children: [
-    /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "个性化规则（自定义提示词）" }) }),
-    /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-      /* @__PURE__ */ u2(Alert2, { severity: "info", children: '在这里定义您的个性化映射规则，告诉 AI 如何理解您的输入习惯。 例如：当您说"心情好"时应该用哪个 Block，"写文章"应该归类到哪个主题等。' }),
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
-          fullWidth: true,
-          multiline: true,
-          rows: 8,
-          label: "自定义提示词/规则",
-          placeholder: CUSTOM_PROMPT_EXAMPLES,
-          value: settings.customPrompt ?? "",
-          onChange: (e2) => onUpdate({ customPrompt: e2.target.value }),
-          helperText: "定义您的个性化规则，AI 会根据这些规则来理解您的输入"
-        }
-      ),
-      /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(Button2, { variant: "outlined", size: "small", onClick: onInsertExample, children: "插入示例规则" }) }),
-      /* @__PURE__ */ u2(Alert2, { severity: "warning", children: [
-        "提示：规则越具体，AI 识别越准确。建议包含：",
-        /* @__PURE__ */ u2("ul", { style: { margin: "8px 0", paddingLeft: "20px" }, children: [
-          /* @__PURE__ */ u2("li", { children: "关键词与 Block 类型的对应关系" }),
-          /* @__PURE__ */ u2("li", { children: "特定词汇与主题的对应关系" }),
-          /* @__PURE__ */ u2("li", { children: "字段填写的默认规则" }),
-          /* @__PURE__ */ u2("li", { children: "不确定时的默认行为" })
-        ] })
+  return /* @__PURE__ */ u2(ThinkDisclosure, { title: "个性化规则", open: true, children: /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
+    /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "自定义提示词" }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
+      /* @__PURE__ */ u2(ThinkTextarea, { rows: 8, placeholder: CUSTOM_PROMPT_EXAMPLES, value: settings.customPrompt ?? "", onInput: (e2) => onUpdate({ customPrompt: e2.currentTarget.value }) }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onInsertExample, children: "插入示例" }) })
+    ] })
+  ] }) });
+}
+function AiScopeSection({ settings, blocks, themes, onUpdate, staleEnabledBlockIds = [], onInitAllBlocks, onClearStaleBlockIds, onToggleBlock }) {
+  return /* @__PURE__ */ u2(S, { children: [
+    /* @__PURE__ */ u2(ThinkDisclosure, { title: "Block 参与范围", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+      /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: [
+        /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onInitAllBlocks, children: "全部记录类型" }),
+        staleEnabledBlockIds.length > 0 && onClearStaleBlockIds && /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onClearStaleBlockIds, children: "清理旧 Block ID" })
+      ] }),
+      staleEnabledBlockIds.length > 0 && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: [
+        "AI 范围中有 ",
+        staleEnabledBlockIds.length,
+        " 个已失效 Block ID。"
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-ai-scope-list", children: blocks.map((block) => /* @__PURE__ */ u2(ThinkCheckbox, { checked: (settings.enabledBlockIds ?? []).length === 0 || (settings.enabledBlockIds ?? []).includes(block.id), onChange: () => onToggleBlock(block.id), label: block.name, compact: true }, block.id)) }),
+      blocks.length === 0 && /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "暂无 Block 模板。" })
+    ] }) }),
+    /* @__PURE__ */ u2(ThinkDisclosure, { title: "默认主题", children: /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "主题" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
+        /* @__PURE__ */ u2(SimpleSelect, { value: settings.defaultThemeId ?? "", options: [{ value: "", label: "不设置" }, ...themes.map((theme) => ({ value: theme.path, label: theme.path }))], onChange: (defaultThemeId) => onUpdate({ defaultThemeId: defaultThemeId || void 0 }), fullWidth: true }),
+        themes.length === 0 && /* @__PURE__ */ u2(ThinkNotice, { children: "暂无主题。" })
       ] })
     ] }) })
   ] });
 }
-function AiScopeSection({
-  settings,
-  blocks,
-  themes,
-  onUpdate,
-  staleEnabledBlockIds = [],
-  onInitAllBlocks,
-  onClearStaleBlockIds,
-  onToggleBlock
-}) {
-  return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(Accordion2, { children: [
-      /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "Block 参与范围" }) }),
-      /* @__PURE__ */ u2(AccordionDetails2, { children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "选择哪些记录类型参与 AI 识别。留空表示全部参与；AI 会先选目标，再选记录类型，最后选目标 × Block 记录预设。" }),
-        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mb: 2 }, useFlexGap: true, flexWrap: "wrap", children: [
-          /* @__PURE__ */ u2(Button2, { variant: "outlined", size: "small", onClick: onInitAllBlocks, children: "初始化为全部记录类型" }),
-          staleEnabledBlockIds.length > 0 && onClearStaleBlockIds && /* @__PURE__ */ u2(Button2, { variant: "outlined", size: "small", color: "warning", onClick: onClearStaleBlockIds, children: "清理旧 Block ID" })
-        ] }),
-        staleEnabledBlockIds.length > 0 && /* @__PURE__ */ u2(Alert2, { severity: "warning", sx: { mb: 2 }, children: [
-          "当前 AI 范围里还有 ",
-          staleEnabledBlockIds.length,
-          " 个旧 Block ID，可能来自旧 data。建议清理，否则会影响 AI 快照。"
-        ] }),
-        /* @__PURE__ */ u2(FormGroup2, { children: blocks.map((block) => /* @__PURE__ */ u2(
-          FormControlLabel2,
-          {
-            control: /* @__PURE__ */ u2(
-              Checkbox2,
-              {
-                checked: (settings.enabledBlockIds ?? []).length === 0 || (settings.enabledBlockIds ?? []).includes(block.id),
-                onChange: () => onToggleBlock(block.id)
-              }
-            ),
-            label: block.name
-          },
-          block.id
-        )) }),
-        blocks.length === 0 && /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: '暂无 Block 模板，请先在"快速输入"设置中创建。' })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(Accordion2, { children: [
-      /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "默认主题设置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "当目标和记录预设都没有提供主题时，才使用此默认主题。主题只是上下文字段，不再决定模板。" }),
-        /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: [
-          /* @__PURE__ */ u2(InputLabel2, { children: "默认主题" }),
-          /* @__PURE__ */ u2(
-            Select2,
-            {
-              value: settings.defaultThemeId ?? "",
-              label: "默认主题",
-              onChange: (e2) => onUpdate({ defaultThemeId: e2.target.value || void 0 }),
-              children: [
-                /* @__PURE__ */ u2(MenuItem2, { value: "", children: /* @__PURE__ */ u2("em", { children: "不设置默认主题" }) }),
-                themes.map((theme) => /* @__PURE__ */ u2(MenuItem2, { value: theme.path, children: theme.path }, theme.id))
-              ]
-            }
-          )
-        ] }),
-        themes.length === 0 && /* @__PURE__ */ u2(Alert2, { severity: "info", children: '暂无主题，请先在"快速输入"设置中创建主题。' }),
-        /* @__PURE__ */ u2(Alert2, { severity: "info", children: "提示：AI 优先使用目标 × Block 记录预设里的主题；没有匹配时再使用目标默认主题，最后才使用这里的默认主题。" })
-      ] }) })
-    ] })
-  ] });
-}
-function AiSettingsFooter({
-  hasChanges,
-  isSaving,
-  saveStatusMessage,
-  saveStatusSeverity,
-  onSave
-}) {
-  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1, alignItems: "flex-end" }, children: [
-    saveStatusMessage && /* @__PURE__ */ u2(Alert2, { severity: saveStatusSeverity, sx: { width: "100%" }, children: saveStatusMessage }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 2, justifyContent: "flex-end", alignItems: "center" }, children: [
-      hasChanges && /* @__PURE__ */ u2(Chip2, { label: "有未保存的更改", color: "warning", size: "small" }),
-      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: onSave, disabled: !hasChanges || isSaving, children: isSaving ? "保存中..." : "保存设置" })
+function AiSettingsFooter({ hasChanges, isSaving, saveStatusMessage, saveStatusSeverity, onSave }) {
+  return /* @__PURE__ */ u2("div", { className: "think-ai-settings-footer", children: [
+    saveStatusMessage && /* @__PURE__ */ u2(ThinkNotice, { tone: saveStatusSeverity === "error" ? "danger" : saveStatusSeverity, children: saveStatusMessage }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-actions", children: [
+      hasChanges && /* @__PURE__ */ u2("span", { className: "think-chip", children: "有未保存更改" }),
+      /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: onSave, disabled: !hasChanges || isSaving, children: isSaving ? "保存中..." : "保存设置" })
     ] })
   ] });
 }
@@ -77798,27 +71569,13 @@ function AiSettings(_props) {
     updateLocal({ customPrompt: CUSTOM_PROMPT_EXAMPLES });
   };
   const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(aiSettings);
-  return /* @__PURE__ */ u2(Box, { className: "think-settings-page", children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "AI 自然语言快速记录" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-settings-lead", children: "启用后，可以通过自然语言描述快速创建记录，AI 会自动识别并填充相应字段。" }),
-    /* @__PURE__ */ u2(
-      FormControlLabel2,
-      {
-        control: /* @__PURE__ */ u2(
-          Switch2,
-          {
-            checked: localSettings.enabled,
-            onChange: (e2) => updateLocal({ enabled: e2.target.checked })
-          }
-        ),
-        label: "启用 AI 快速记录"
-      }
-    ),
-    localSettings.enabled && !readiness.ready && /* @__PURE__ */ u2(Alert2, { severity: "warning", className: "think-settings-alert", children: [
-      readiness.message,
-      " 开启开关不会立即发起请求，但实际使用前需要补齐配置。"
+  return /* @__PURE__ */ u2("div", { className: "think-settings-page", children: [
+    /* @__PURE__ */ u2("h2", { className: "think-settings-page__title", children: "AI 自然语言快速记录" }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "AI 快速记录" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: localSettings.enabled, onChange: (e2) => updateLocal({ enabled: e2.currentTarget.checked }), label: "启用" }) })
     ] }),
-    /* @__PURE__ */ u2(Divider2, { className: "think-settings-divider" }),
+    localSettings.enabled && !readiness.ready && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: readiness.message }),
     /* @__PURE__ */ u2(
       AiApiConfigSection,
       {
@@ -77853,7 +71610,6 @@ function AiSettings(_props) {
       }
     ),
     /* @__PURE__ */ u2(AiAdvancedSettingsSection, { settings: localSettings, onUpdate: updateLocal }),
-    /* @__PURE__ */ u2(Divider2, { className: "think-settings-divider" }),
     /* @__PURE__ */ u2(
       AiSettingsFooter,
       {
@@ -78018,7 +71774,7 @@ function NativeTextInput$1({
   return /* @__PURE__ */ u2("label", { className: fieldClassName(className), style: style2, title, children: [
     label ? /* @__PURE__ */ u2("span", { className: "think-native-field__label", children: label }) : null,
     /* @__PURE__ */ u2(
-      "input",
+      ThinkInput,
       {
         className: "think-input",
         type,
@@ -78051,7 +71807,7 @@ function NativeTextarea({
   return /* @__PURE__ */ u2("label", { className: fieldClassName(className), style: style2, children: [
     label ? /* @__PURE__ */ u2("span", { className: "think-native-field__label", children: label }) : null,
     /* @__PURE__ */ u2(
-      "textarea",
+      ThinkTextarea,
       {
         className: "think-textarea",
         value,
@@ -78064,98 +71820,34 @@ function NativeTextarea({
     )
   ] });
 }
-function OptionRow({
-  option,
-  onChange,
-  onRemove,
-  fieldType,
-  disabled = false
-}) {
+function OptionRow({ option, onChange, onRemove, fieldType, disabled = false }) {
   const [localOption, setLocalOption] = d(option);
   const renderCountRef = A$1(0);
   const previousOptionRef = A$1(null);
   renderCountRef.current += 1;
   y(() => {
-    logRenderDiagnostic("FieldsEditor/OptionRow", {
-      renderCount: renderCountRef.current,
-      fieldType,
-      disabled,
-      optionRefChanged: previousOptionRef.current !== null && previousOptionRef.current !== option,
-      option,
-      localOption
-    });
+    logRenderDiagnostic("FieldsEditor/OptionRow", { renderCount: renderCountRef.current, fieldType, disabled, optionRefChanged: previousOptionRef.current !== null && previousOptionRef.current !== option, option, localOption });
     previousOptionRef.current = option;
   });
-  y(() => {
-    setLocalOption(option);
-  }, [option]);
-  const commitOption = (nextOption, reason) => {
-    if ((nextOption.label || "") === (option.label || "") && nextOption.value === option.value)
-      return;
-    logRenderDiagnostic("FieldsEditor/OptionRow/commit", {
-      reason,
-      fieldType,
-      option: nextOption
-    });
+  y(() => setLocalOption(option), [option]);
+  const commitOption = (nextOption) => {
+    if ((nextOption.label || "") === (option.label || "") && nextOption.value === option.value) return;
     onChange(nextOption);
   };
-  const updateLocalOption = (updates, reason) => {
-    setLocalOption((previous) => {
-      const next2 = { ...previous, ...updates };
-      logRenderDiagnostic("FieldsEditor/OptionRow/input", {
-        reason,
-        updates,
-        nextOption: next2
-      });
-      return next2;
-    });
-  };
-  const handleBlur = () => {
-    commitOption(localOption, "选项输入框失焦，提交到字段草稿");
-  };
+  const handleBlur = () => commitOption(localOption);
   const isRating = fieldType === "rating";
-  const labelLabel = isRating ? "评分数值" : "选项标签";
-  const valueLabel = isRating ? "显示内容 (Emoji/图片路径)" : "选项值";
-  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 1.5, children: [
-    /* @__PURE__ */ u2(
-      NativeTextInput$1,
-      {
-        label: labelLabel,
-        value: localOption.label || "",
-        onInput: (value) => {
-          const nextOption = { ...localOption, label: value };
-          updateLocalOption({ label: value }, "编辑选项标签 native onInput");
-          onChange(nextOption);
-        },
-        onBlur: handleBlur,
-        disabled,
-        style: { flex: 1 }
-      }
-    ),
-    /* @__PURE__ */ u2(
-      NativeTextInput$1,
-      {
-        label: valueLabel,
-        value: localOption.value,
-        onInput: (value) => {
-          const nextOption = { ...localOption, value };
-          updateLocalOption({ value }, "编辑选项值 native onInput");
-          onChange(nextOption);
-        },
-        onBlur: handleBlur,
-        disabled,
-        style: { flex: 1 }
-      }
-    ),
-    /* @__PURE__ */ u2(Box, { sx: { pt: 2.5 }, children: /* @__PURE__ */ u2(
-      IconAction,
-      {
-        label: "删除此选项",
-        disabled,
-        onClick: onRemove,
-        icon: /* @__PURE__ */ u2(RemoveCircleOutlineIcon, { fontSize: "small" })
-      }
-    ) })
+  return /* @__PURE__ */ u2("div", { className: "think-field-option-row", children: [
+    /* @__PURE__ */ u2(NativeTextInput$1, { label: isRating ? "评分数值" : "选项标签", value: localOption.label || "", onInput: (value) => {
+      const next2 = { ...localOption, label: value };
+      setLocalOption(next2);
+      onChange(next2);
+    }, onBlur: handleBlur, disabled }),
+    /* @__PURE__ */ u2(NativeTextInput$1, { label: isRating ? "显示内容" : "选项值", value: localOption.value, onInput: (value) => {
+      const next2 = { ...localOption, value };
+      setLocalOption(next2);
+      onChange(next2);
+    }, onBlur: handleBlur, disabled }),
+    /* @__PURE__ */ u2(ThinkIconButton, { label: "删除此选项", disabled, onClick: onRemove, icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }), size: "sm", tone: "danger" })
   ] });
 }
 const fieldTypeOptions = getUserTemplateFieldTypeOptions();
@@ -78166,13 +71858,7 @@ function defaultInputType(uiType) {
   if (uiType === "datetime") return "datetime-local";
   return "text";
 }
-function FieldRow({
-  field,
-  disabled = false,
-  isDragging = false,
-  onUpdate,
-  onRemove
-}) {
+function FieldRow({ field, disabled = false, isDragging = false, onUpdate, onRemove }) {
   const [localName, setLocalName] = d(field.label || field.key);
   const [localDefaultValue, setLocalDefaultValue] = d(field.defaultValue || "");
   const [isEditing, setIsEditing] = d(false);
@@ -78181,321 +71867,133 @@ function FieldRow({
   const previousFieldRef = A$1(null);
   renderCountRef.current += 1;
   y(() => {
-    logRenderDiagnostic("FieldsEditor/FieldRow", {
-      renderCount: renderCountRef.current,
-      fieldId: field.id,
-      fieldKey: field.key,
-      fieldType: field.type,
-      disabled,
-      isEditing,
-      isDragging,
-      fieldRefChanged: previousFieldRef.current !== null && previousFieldRef.current !== field,
-      localName,
-      localDefaultValue,
-      incomingDefaultValue: field.defaultValue
-    });
+    logRenderDiagnostic("FieldsEditor/FieldRow", { renderCount: renderCountRef.current, fieldId: field.id, fieldKey: field.key, fieldType: field.type, disabled, isEditing, isDragging, fieldRefChanged: previousFieldRef.current !== null && previousFieldRef.current !== field, localName, localDefaultValue, incomingDefaultValue: field.defaultValue });
     previousFieldRef.current = field;
   });
   y(() => {
     if (!isEditing) setLocalName(field.label || field.key);
   }, [field.label, field.key, isEditing]);
-  y(() => {
-    setLocalDefaultValue(field.defaultValue || "");
-  }, [field.defaultValue, field.id]);
+  y(() => setLocalDefaultValue(field.defaultValue || ""), [field.defaultValue, field.id]);
   const handleNameBlur = () => {
     const trimmedName = localName.trim();
-    if (trimmedName && trimmedName !== (field.label || field.key)) {
-      onUpdate({ key: trimmedName, label: trimmedName });
-    } else {
-      setLocalName(field.label || field.key);
-    }
+    if (trimmedName && trimmedName !== (field.label || field.key)) onUpdate({ key: trimmedName, label: trimmedName });
+    else setLocalName(field.label || field.key);
     setIsEditing(false);
   };
   const handleOptionChange = (optIndex, newOption) => {
-    const newOptions = [...field.options || []];
-    newOptions[optIndex] = newOption;
-    onUpdate({ options: newOptions });
+    const next2 = [...field.options || []];
+    next2[optIndex] = newOption;
+    onUpdate({ options: next2 });
   };
   const addOption = () => {
-    const newOptions = [...field.options || []];
-    newOptions.push({ value: "新选项", label: String(newOptions.length + 1) });
-    onUpdate({ options: newOptions });
+    const next2 = [...field.options || [], { value: "新选项", label: String((field.options || []).length + 1) }];
+    onUpdate({ options: next2 });
     setDetailsOpen(true);
   };
-  const removeOption = (optIndex) => {
-    const nextOptions = (field.options || []).filter((_2, i2) => i2 !== optIndex);
-    onUpdate({ options: nextOptions });
-  };
   const uiType = normalizeTemplateFieldType(field.type);
-  const customFieldNameWarning = getCustomFieldNameWarning(localName);
+  const warning = getCustomFieldNameWarning(localName);
   const showOptionsEditor = templateFieldTypeUsesOptions(uiType);
   const showDefaultValueEditor = templateFieldTypeSupportsDefaultValue(uiType);
   const showInlineDefaultValue = showDefaultValueEditor && uiType !== "textarea";
   const showDetails = showOptionsEditor || uiType === "textarea" || uiType === "number";
-  return /* @__PURE__ */ u2(Box, { className: `think-field-row${isDragging ? " is-dragging" : ""}`, children: [
-    /* @__PURE__ */ u2(Box, { className: "think-fields-editor__grid", children: [
-      /* @__PURE__ */ u2(
-        Box,
-        {
-          title: "拖动排序",
-          className: `think-field-row__drag${disabled ? " is-disabled" : ""}`,
-          children: /* @__PURE__ */ u2(DragIndicatorIcon, { className: "think-field-row__drag-icon" })
-        }
-      ),
-      /* @__PURE__ */ u2(Box, { className: "think-field-row__cell", children: /* @__PURE__ */ u2(
-        NativeTextInput$1,
-        {
-          label: "",
-          placeholder: "字段名称",
-          value: localName,
-          onInput: (value) => setLocalName(value),
-          onBlur: handleNameBlur,
-          onFocus: () => setIsEditing(true),
-          disabled,
-          className: "think-settings-full-width",
-          title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
-        }
-      ) }),
-      /* @__PURE__ */ u2(Box, { className: "think-field-row__cell", children: /* @__PURE__ */ u2(
-        SimpleSelect,
-        {
-          value: uiType,
-          options: fieldTypeOptions,
-          onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
-          disabled,
-          className: "think-settings-full-width"
-        }
-      ) }),
-      /* @__PURE__ */ u2(Box, { className: "think-field-row__cell", children: showInlineDefaultValue ? /* @__PURE__ */ u2(
-        NativeTextInput$1,
-        {
-          label: "",
-          value: localDefaultValue,
-          type: defaultInputType(uiType),
-          onInput: (value) => {
-            setLocalDefaultValue(value);
-            onUpdate({ defaultValue: value });
-          },
-          onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
-          disabled,
-          placeholder: "可留空",
-          className: "think-settings-full-width"
-        }
-      ) : /* @__PURE__ */ u2(Box, { className: "think-field-row__empty" }) }),
-      /* @__PURE__ */ u2(Box, { className: "think-field-row__required", children: /* @__PURE__ */ u2("label", { className: "think-field-row__required-label", title: "提交时此字段不能为空", children: [
-        /* @__PURE__ */ u2(
-          "input",
-          {
-            type: "checkbox",
-            checked: field.required === true,
-            disabled,
-            onChange: (event) => onUpdate({ required: !!event.target.checked })
-          }
-        ),
-        "必填"
-      ] }) }),
-      /* @__PURE__ */ u2(Box, { className: "think-field-row__details-cell", children: showDetails ? /* @__PURE__ */ u2(
-        "button",
-        {
-          type: "button",
-          disabled: disabled && !showOptionsEditor,
-          onClick: () => setDetailsOpen((open) => !open),
-          className: "think-field-row__details-button",
-          children: detailsOpen ? "收起" : "详情"
-        }
-      ) : /* @__PURE__ */ u2(Box, { className: "think-field-row__empty" }) }),
-      /* @__PURE__ */ u2(Box, { className: "think-field-row__delete-cell", children: /* @__PURE__ */ u2(
-        "button",
-        {
-          type: "button",
-          title: "删除此字段",
-          disabled,
-          onClick: onRemove,
-          className: "think-field-row__delete",
-          children: "−"
-        }
-      ) })
+  return /* @__PURE__ */ u2("div", { className: `think-field-row${isDragging ? " is-dragging" : ""}`, children: [
+    /* @__PURE__ */ u2("div", { className: "think-fields-editor__grid", children: [
+      /* @__PURE__ */ u2("span", { className: `think-field-row__drag${disabled ? " is-disabled" : ""}`, title: "拖动排序", children: /* @__PURE__ */ u2(ThinkIcon, { name: "grip-vertical" }) }),
+      /* @__PURE__ */ u2("div", { className: "think-field-row__cell", children: /* @__PURE__ */ u2(NativeTextInput$1, { label: "", placeholder: "字段名称", value: localName, onInput: setLocalName, onBlur: handleNameBlur, onFocus: () => setIsEditing(true), disabled, className: "think-settings-full-width" }) }),
+      /* @__PURE__ */ u2("div", { className: "think-field-row__cell", children: /* @__PURE__ */ u2(SimpleSelect, { value: uiType, options: fieldTypeOptions, onChange: (value) => onUpdate({ type: normalizeTemplateFieldType(value) }), disabled, className: "think-settings-full-width" }) }),
+      /* @__PURE__ */ u2("div", { className: "think-field-row__cell", children: showInlineDefaultValue ? /* @__PURE__ */ u2(NativeTextInput$1, { label: "", value: localDefaultValue, type: defaultInputType(uiType), onInput: (value) => {
+        setLocalDefaultValue(value);
+        onUpdate({ defaultValue: value });
+      }, onBlur: () => onUpdate({ defaultValue: localDefaultValue }), disabled, placeholder: "可留空", className: "think-settings-full-width" }) : /* @__PURE__ */ u2("span", { className: "think-field-row__empty" }) }),
+      /* @__PURE__ */ u2("div", { className: "think-field-row__required-label", title: "提交时此字段不能为空", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: field.required === true, disabled, compact: true, label: "必填", onChange: (event) => onUpdate({ required: event.currentTarget.checked }) }) }),
+      /* @__PURE__ */ u2("div", { className: "think-field-row__details-cell", children: showDetails ? /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", disabled: disabled && !showOptionsEditor, onClick: () => setDetailsOpen((open) => !open), children: detailsOpen ? "收起" : "详情" }) : null }),
+      /* @__PURE__ */ u2("div", { className: "think-field-row__delete-cell", children: /* @__PURE__ */ u2(ThinkIconButton, { label: "删除字段", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }), size: "sm", tone: "danger", disabled, onClick: onRemove }) })
     ] }),
-    customFieldNameWarning && /* @__PURE__ */ u2(Typography2, { variant: "caption", className: "think-field-row__warning", children: customFieldNameWarning }),
-    /* @__PURE__ */ u2(Collapse2, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box, { className: "think-field-row__details", children: [
-      uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
-        NativeTextarea,
-        {
-          label: "默认值",
-          value: localDefaultValue,
-          rows: 3,
-          onInput: (value) => {
-            setLocalDefaultValue(value);
-            onUpdate({ defaultValue: value });
-          },
-          onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
-          disabled,
-          placeholder: "可留空",
-          className: "think-settings-full-width"
-        }
-      ),
-      uiType === "number" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, className: `think-field-row__number-range${showOptionsEditor ? " has-options" : ""}`, children: [
-        /* @__PURE__ */ u2(
-          NativeTextInput$1,
-          {
-            label: "最小值",
-            type: "number",
-            value: field.min ?? "",
-            onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }),
-            disabled,
-            className: "think-native-field--narrow"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          NativeTextInput$1,
-          {
-            label: "最大值",
-            type: "number",
-            value: field.max ?? "",
-            onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }),
-            disabled,
-            className: "think-native-field--narrow"
-          }
-        )
+    warning && /* @__PURE__ */ u2("div", { className: "think-field-row__warning", children: warning }),
+    detailsOpen && /* @__PURE__ */ u2("div", { className: "think-field-row__details", children: [
+      uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(NativeTextarea, { label: "默认值", value: localDefaultValue, rows: 3, onInput: (value) => {
+        setLocalDefaultValue(value);
+        onUpdate({ defaultValue: value });
+      }, onBlur: () => onUpdate({ defaultValue: localDefaultValue }), disabled, placeholder: "可留空", className: "think-settings-full-width" }),
+      uiType === "number" && /* @__PURE__ */ u2("div", { className: `think-field-row__number-range${showOptionsEditor ? " has-options" : ""}`, children: [
+        /* @__PURE__ */ u2(NativeTextInput$1, { label: "最小值", type: "number", value: field.min ?? "", onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }), disabled, className: "think-native-field--narrow" }),
+        /* @__PURE__ */ u2(NativeTextInput$1, { label: "最大值", type: "number", value: field.max ?? "", onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }), disabled, className: "think-native-field--narrow" })
       ] }),
-      showOptionsEditor && /* @__PURE__ */ u2(Box, { children: [
-        /* @__PURE__ */ u2(Stack, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider2, { flexItem: true, className: "think-field-row__option-divider" }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
-          OptionRow,
-          {
-            option,
-            onChange: (newOpt) => handleOptionChange(optIndex, newOpt),
-            onRemove: () => removeOption(optIndex),
-            fieldType: uiType,
-            disabled
-          },
-          optIndex
-        )) }),
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            onClick: addOption,
-            disabled,
-            startIcon: /* @__PURE__ */ u2(AddIcon, {}),
-            size: "small",
-            className: "think-field-row__add-option",
-            children: "添加选项"
-          }
-        )
+      showOptionsEditor && /* @__PURE__ */ u2("div", { className: "think-field-row__options", children: [
+        /* @__PURE__ */ u2("div", { className: "think-field-row__options-list", children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(OptionRow, { option, onChange: (newOption) => handleOptionChange(optIndex, newOption), onRemove: () => onUpdate({ options: (field.options || []).filter((_2, index) => index !== optIndex) }), fieldType: uiType, disabled }, optIndex)) }),
+        /* @__PURE__ */ u2(ThinkButton, { onClick: addOption, disabled, leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), size: "sm", variant: "secondary", children: "添加选项" })
       ] })
-    ] }) })
+    ] })
   ] });
 }
 function createEmptyField(index) {
   return createCustomTemplateField(index);
 }
 function reorderFields(fields, fromIndex, toIndex) {
-  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= fields.length || toIndex >= fields.length) {
-    return fields;
-  }
+  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= fields.length || toIndex >= fields.length) return fields;
   const next2 = [...fields];
   const [moved] = next2.splice(fromIndex, 1);
   next2.splice(toIndex, 0, moved);
   return next2;
 }
-function FieldsEditor({
-  fields = [],
-  disabled = false,
-  onChange
-}) {
+function FieldsEditor({ fields = [], disabled = false, onChange }) {
   const renderCountRef = A$1(0);
   const previousFieldsRef = A$1(null);
   const [draggingIndex, setDraggingIndex] = d(null);
   renderCountRef.current += 1;
   y(() => {
-    logRenderDiagnostic("FieldsEditor", {
-      renderCount: renderCountRef.current,
-      disabled,
-      fieldsRefChanged: previousFieldsRef.current !== null && previousFieldsRef.current !== fields,
-      fieldsCount: fields.length,
-      fieldIds: fields.map((field) => field.id)
-    });
+    logRenderDiagnostic("FieldsEditor", { renderCount: renderCountRef.current, disabled, fieldsRefChanged: previousFieldsRef.current !== null && previousFieldsRef.current !== fields, fieldsCount: fields.length, fieldIds: fields.map((field) => field.id) });
     previousFieldsRef.current = fields;
   });
-  const emitFields = (nextFields) => {
-    onChange(sanitizeTemplateFields(nextFields));
-  };
+  const emitFields = (nextFields) => onChange(sanitizeTemplateFields(nextFields));
   const handleUpdate = (index, updates) => {
-    const newFields = sanitizeTemplateFields(fields || []);
-    newFields[index] = sanitizeTemplateField({ ...newFields[index], ...updates }, index + 1);
-    emitFields(newFields);
-  };
-  const addField = () => emitFields([...fields || [], createEmptyField((fields || []).length + 1)]);
-  const removeField = (index) => {
-    emitFields((fields || []).filter((_2, i2) => i2 !== index));
+    const next2 = sanitizeTemplateFields(fields || []);
+    next2[index] = sanitizeTemplateField({ ...next2[index], ...updates }, index + 1);
+    emitFields(next2);
   };
   const handleDropOn = (targetIndex) => {
     if (draggingIndex === null || disabled) return;
     emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
     setDraggingIndex(null);
   };
-  return /* @__PURE__ */ u2(Stack, { spacing: 1.25, className: "think-fields-editor", children: [
-    /* @__PURE__ */ u2(Box, { className: "think-fields-editor__grid think-fields-editor__header", children: [
-      /* @__PURE__ */ u2(Box, {}),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "字段名称" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "字段类型" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "默认值" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", className: "think-fields-editor__header-center", children: "必填" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", className: "think-fields-editor__header-center", children: "详情" }),
-      /* @__PURE__ */ u2(Box, {})
+  return /* @__PURE__ */ u2("div", { className: "think-fields-editor", children: [
+    /* @__PURE__ */ u2("div", { className: "think-fields-editor__grid think-fields-editor__header", children: [
+      /* @__PURE__ */ u2("span", {}),
+      /* @__PURE__ */ u2("span", { children: "字段名称" }),
+      /* @__PURE__ */ u2("span", { children: "字段类型" }),
+      /* @__PURE__ */ u2("span", { children: "默认值" }),
+      /* @__PURE__ */ u2("span", { className: "think-fields-editor__header-center", children: "必填" }),
+      /* @__PURE__ */ u2("span", { className: "think-fields-editor__header-center", children: "详情" }),
+      /* @__PURE__ */ u2("span", {})
     ] }),
-    /* @__PURE__ */ u2(Stack, { spacing: 0, divider: /* @__PURE__ */ u2(Divider2, { className: "think-fields-editor__divider" }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
-      Box,
-      {
-        draggable: !disabled,
-        onDragStart: (event) => {
-          if (disabled) return;
-          setDraggingIndex(index);
-          event.dataTransfer?.setData("text/plain", String(index));
-          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
-        },
-        onDragOver: (event) => {
-          if (disabled || draggingIndex === null) return;
-          event.preventDefault();
-          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-        },
-        onDrop: (event) => {
-          event.preventDefault();
-          handleDropOn(index);
-        },
-        onDragEnd: () => setDraggingIndex(null),
-        className: `think-fields-editor__row-wrap${draggingIndex === index ? " is-dragging" : ""}`,
-        children: /* @__PURE__ */ u2(
-          FieldRow,
-          {
-            field,
-            disabled,
-            isDragging: draggingIndex === index,
-            onUpdate: (updates) => handleUpdate(index, updates),
-            onRemove: () => removeField(index)
-          }
-        )
-      },
-      field.id
-    )) }),
-    /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(Button2, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) })
+    /* @__PURE__ */ u2("div", { className: "think-fields-editor__rows", children: (fields || []).map((field, index) => /* @__PURE__ */ u2("div", { draggable: !disabled, onDragStart: (event) => {
+      if (disabled) return;
+      setDraggingIndex(index);
+      event.dataTransfer?.setData("text/plain", String(index));
+      if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+    }, onDragOver: (event) => {
+      if (disabled || draggingIndex === null) return;
+      event.preventDefault();
+    }, onDrop: (event) => {
+      event.preventDefault();
+      handleDropOn(index);
+    }, onDragEnd: () => setDraggingIndex(null), className: `think-fields-editor__row-wrap${draggingIndex === index ? " is-dragging" : ""}`, children: /* @__PURE__ */ u2(FieldRow, { field, disabled, isDragging: draggingIndex === index, onUpdate: (updates) => handleUpdate(index, updates), onRemove: () => emitFields((fields || []).filter((_2, current2) => current2 !== index)) }) }, field.id)) }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { onClick: () => emitFields([...fields || [], createEmptyField((fields || []).length + 1)]), disabled, leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), variant: "secondary", size: "sm", children: "添加字段" }) })
   ] });
 }
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block.id });
-  const style2 = { transform: CSS$1.Transform.toString(transform2), transition };
-  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u2(Accordion2, { expanded: openId === block.id, onChange: () => setOpenId(openId === block.id ? null : block.id), disableGutters: true, elevation: 1, className: "think-block-accordion", children: [
-    /* @__PURE__ */ u2(AccordionSummary2, { children: /* @__PURE__ */ u2(Box, { className: "think-block-accordion__summary", children: [
-      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
-        /* @__PURE__ */ u2(Tooltip2, { title: "拖动排序", children: /* @__PURE__ */ u2(Box, { component: "span", ...attributes, ...listeners, className: "think-block-accordion__drag", children: /* @__PURE__ */ u2(DragIndicatorIcon, {}) }) }),
-        /* @__PURE__ */ u2(Typography2, { fontWeight: 500, children: block.name })
-      ] }),
-      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
-        /* @__PURE__ */ u2(IconAction, { label: "复制", icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }), onClick: () => handleDuplicate(block.id) }),
-        /* @__PURE__ */ u2(IconAction, { label: "删除", icon: /* @__PURE__ */ u2(DeleteForeverOutlinedIcon, {}), onClick: () => handleDelete(block.id, block.name), color: "error" })
-      ] })
-    ] }) }),
-    /* @__PURE__ */ u2(AccordionDetails2, { className: "think-block-accordion__details", children: /* @__PURE__ */ u2(BlockEditor, { block, useCases }) })
-  ] }) });
+  const style2 = { transform: CSS.Transform.toString(transform2), transition };
+  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, className: "think-block-accordion", children: [
+    /* @__PURE__ */ u2("div", { className: "think-block-accordion__summary", children: [
+      /* @__PURE__ */ u2("button", { type: "button", className: "think-block-accordion__drag", ...attributes, ...listeners, "aria-label": "拖动排序", children: /* @__PURE__ */ u2(ThinkIcon, { name: "grip-vertical" }) }),
+      /* @__PURE__ */ u2("button", { type: "button", className: "think-block-accordion__title", onClick: () => setOpenId(openId === block.id ? null : block.id), children: block.name }),
+      /* @__PURE__ */ u2(ThinkIconButton, { label: "复制", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "copy" }), size: "sm", onClick: () => handleDuplicate(block.id) }),
+      /* @__PURE__ */ u2(ThinkIconButton, { label: "删除", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }), tone: "danger", size: "sm", onClick: () => handleDelete(block.id, block.name) }),
+      /* @__PURE__ */ u2(ThinkIconButton, { label: openId === block.id ? "收起" : "展开", icon: /* @__PURE__ */ u2(ThinkIcon, { name: openId === block.id ? "chevron-up" : "chevron-down" }), size: "sm", onClick: () => setOpenId(openId === block.id ? null : block.id) })
+    ] }),
+    openId === block.id && /* @__PURE__ */ u2("div", { className: "think-block-accordion__details", children: /* @__PURE__ */ u2(BlockEditor, { block, useCases }) })
+  ] });
 }
 function BlockEditor({ block, useCases }) {
   const [localBlock, setLocalBlock] = d(block);
@@ -78508,54 +72006,26 @@ function BlockEditor({ block, useCases }) {
   const handleBlur = (key) => {
     if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] });
   };
-  return /* @__PURE__ */ u2(Stack, { spacing: 3, className: "think-block-editor", children: [
-    /* @__PURE__ */ u2(TextField2, { label: "记录类型名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", className: "think-block-editor__field--name" }),
-    /* @__PURE__ */ u2(Divider2, {}),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", className: "think-block-editor__title", children: "核心元数据" }),
-      /* @__PURE__ */ u2(Box, { className: "think-block-editor__hint", children: [
-        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "记录类型是一类记录模板；分类、主题、标签是核心字段。" }),
-        /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", className: "think-block-editor__template-example", children: [
-          "推荐模板行：分类:: ",
-          "{{categoryKey}}",
-          " ｜ 主题:: ",
-          "{{themePath}}",
-          " ｜ 标签:: ",
-          "{{tags}}"
-        ] })
-      ] }),
-      /* @__PURE__ */ u2(
-        TextField2,
-        {
-          label: "默认分类",
-          value: localBlock.categoryKey || "",
-          onChange: (e2) => setLocalBlock((b2) => ({ ...b2, categoryKey: e2.target.value })),
-          onBlur: () => handleBlur("categoryKey"),
-          placeholder: "例如：思考、计划、总结、打卡",
-          helperText: "默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。",
-          variant: "outlined",
-          size: "small",
-          className: "think-block-editor__field--category"
-        }
-      )
+  return /* @__PURE__ */ u2("div", { className: "think-block-editor think-settings-stack think-settings-stack--tight", children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "名称" }),
+      /* @__PURE__ */ u2(ThinkInput, { value: localBlock.name, onInput: (e2) => setLocalBlock((current2) => ({ ...current2, name: e2.currentTarget.value })), onBlur: () => handleBlur("name") })
     ] }),
-    /* @__PURE__ */ u2(Divider2, {}),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", className: "think-block-editor__title", children: "保存位置" }),
-      /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
-        /* @__PURE__ */ u2(TextField2, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{themePath}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
-        /* @__PURE__ */ u2(TextField2, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{themePath}}", variant: "outlined", size: "small" })
-      ] })
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认分类" }),
+      /* @__PURE__ */ u2(ThinkInput, { value: localBlock.categoryKey || "", onInput: (e2) => setLocalBlock((current2) => ({ ...current2, categoryKey: e2.currentTarget.value })), onBlur: () => handleBlur("categoryKey"), placeholder: "例如：思考、计划、总结、打卡" })
     ] }),
-    /* @__PURE__ */ u2(Divider2, {}),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", className: "think-block-editor__title think-block-editor__title--spacious", children: "表单字段" }),
-      /* @__PURE__ */ u2(FieldsEditor, { fields: localBlock.fields, onChange: (newFields) => handleUpdate({ fields: newFields }) })
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "目标文件" }),
+      /* @__PURE__ */ u2(ThinkInput, { value: localBlock.targetFile, onInput: (e2) => setLocalBlock((current2) => ({ ...current2, targetFile: e2.currentTarget.value })), onBlur: () => handleBlur("targetFile"), placeholder: "{{themePath}}/{{标题.value}}.md" })
     ] }),
-    /* @__PURE__ */ u2(Divider2, {}),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", className: "think-block-editor__title", children: "存储格式" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "Canonical Record 的 Markdown Block 由 RecordSchemaDefinition + Record Codec 统一生成；这里仅配置字段、默认值和保存位置。" })
+    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "追加标题" }),
+      /* @__PURE__ */ u2(ThinkInput, { value: localBlock.appendUnderHeader || "", onInput: (e2) => setLocalBlock((current2) => ({ ...current2, appendUnderHeader: e2.currentTarget.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "## {{themePath}}" })
+    ] }),
+    /* @__PURE__ */ u2("section", { className: "think-settings-section think-settings-section--flat", children: [
+      /* @__PURE__ */ u2("h3", { className: "think-settings-subheading", children: "表单字段" }),
+      /* @__PURE__ */ u2(FieldsEditor, { fields: localBlock.fields, onChange: (fields) => handleUpdate({ fields }) })
     ] })
   ] });
 }
@@ -78564,71 +72034,47 @@ function BlockManager() {
   const [openId, setOpenId] = d(null);
   const useCases = useUseCases();
   const handleAdd = async () => {
-    const newName = `新记录类型 ${blocks.length + 1}`;
-    const newBlock = await useCases.blocks.addBlock(newName);
-    if (newBlock) {
-      setOpenId(newBlock.id);
-    }
+    const newBlock = await useCases.blocks.addBlock(`新记录类型 ${blocks.length + 1}`);
+    if (newBlock) setOpenId(newBlock.id);
   };
   const handleDelete = async (id, name) => {
     if (confirm(`确认删除记录类型 "${name}" 吗？
-所有与此记录类型相关的预设会一起删除。`)) {
-      await useCases.blocks.deleteBlock(id);
-    }
+相关预设会一起删除。`)) await useCases.blocks.deleteBlock(id);
   };
   const handleDuplicate = async (id) => {
     await useCases.blocks.duplicateBlock(id);
   };
   const handleDragEnd = (event) => {
     const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      useCases.blocks.reorderBlocks(active.id, over.id);
-    }
+    if (active && over && active.id !== over.id) useCases.blocks.reorderBlocks(active.id, over.id);
   };
-  return /* @__PURE__ */ u2(Box, { className: "think-block-manager", children: [
-    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 1, className: "think-block-manager__header", children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "记录类型" }),
-      /* @__PURE__ */ u2(IconAction, { label: "新增记录类型", onClick: handleAdd, color: "success", icon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}) })
+  return /* @__PURE__ */ u2("section", { className: "think-block-manager think-settings-section", children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-section__header", children: [
+      /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "记录类型" }),
+      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }), onClick: handleAdd, children: "新增" })
     ] }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", className: "think-block-manager__description", children: "定义快速输入可选择的记录类型，例如任务、打卡、总结。可拖动排序。" }),
-    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2(Stack, { spacing: 1, children: blocks.map((block) => /* @__PURE__ */ u2(
-      SortableBlockItem,
-      {
-        block,
-        openId,
-        setOpenId,
-        handleDelete,
-        handleDuplicate,
-        useCases
-      },
-      block.id
-    )) }) }) })
+    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((block) => block.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2("div", { className: "think-block-manager__list", children: blocks.map((block) => /* @__PURE__ */ u2(SortableBlockItem, { block, openId, setOpenId, handleDelete, handleDuplicate, useCases }, block.id)) }) }) })
   ] });
 }
-function modeButtonStyle(active, disabled) {
-  return {
-    border: "none",
-    borderRadius: 999,
-    padding: "5px 12px",
-    cursor: disabled ? "not-allowed" : "pointer",
-    background: active ? "var(--interactive-accent)" : "transparent",
-    color: active ? "var(--text-on-accent)" : "var(--text-muted)",
-    font: "inherit",
-    fontWeight: 700
-  };
-}
-function GoalTemplateModeSwitch({ mode, blockName, disabled = false, onInherit, onOverride }) {
-  const inherited = mode === "inherit";
-  const override = mode === "override";
-  return /* @__PURE__ */ u2(Box, { sx: { border: "1px solid var(--background-modifier-border)", borderRadius: 1.25, p: 1, display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center", flexWrap: "wrap" }, children: [
-    /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: [
-      /* @__PURE__ */ u2(Typography2, { sx: { fontSize: "0.9rem", fontWeight: 800 }, children: "预设模式" }),
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: inherited ? `继承 ${blockName} 的基础字段和输出格式` : "当前主题使用独立字段和输出格式" })
-    ] }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, p: 0.25, border: "1px solid var(--background-modifier-border)", borderRadius: 999, background: "var(--background-secondary)" }, children: [
-      /* @__PURE__ */ u2("button", { type: "button", disabled, onClick: onInherit, style: modeButtonStyle(inherited, disabled), children: "继承" }),
-      /* @__PURE__ */ u2("button", { type: "button", disabled, onClick: onOverride, style: modeButtonStyle(override, disabled), children: "覆盖" })
-    ] })
+function GoalTemplateModeSwitch({ mode, blockName, disabled, onInherit, onOverride }) {
+  const value = mode === "disabled" ? "disabled" : mode;
+  return /* @__PURE__ */ u2("div", { className: "think-settings-row think-goal-template-mode-row", children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-row__label", children: "预设模式" }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(
+      ThinkSegmentedControl,
+      {
+        label: `${blockName} 预设模式`,
+        value,
+        options: [
+          { value: "inherit", label: "继承", disabled },
+          { value: "override", label: "覆盖", disabled }
+        ],
+        onChange: (next2) => {
+          if (next2 === "inherit") onInherit();
+          if (next2 === "override") onOverride();
+        }
+      }
+    ) })
   ] });
 }
 function readInputValue(event) {
@@ -78637,27 +72083,13 @@ function readInputValue(event) {
 function stopEditorEvent(event) {
   event.stopPropagation();
 }
-const nativeControlBaseStyle = {
-  width: "100%",
-  minWidth: 0,
-  boxSizing: "border-box",
-  border: "1px solid var(--background-modifier-border)",
-  borderRadius: 6,
-  background: "var(--background-primary)",
-  color: "var(--text-normal)",
-  padding: "8px 10px",
-  font: "inherit",
-  lineHeight: 1.4,
-  userSelect: "text",
-  WebkitUserSelect: "text",
-  pointerEvents: "auto"
-};
-const nativeLabelStyle = {
-  display: "block",
-  marginBottom: 4,
-  fontSize: "0.75rem",
-  color: "var(--text-muted)"
-};
+function ControlRow({ label, children, top: top2 = false }) {
+  if (!label) return children;
+  return /* @__PURE__ */ u2("div", { className: `think-settings-row${top2 ? " think-settings-row--top" : ""}`, children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-row__label", children: label }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children })
+  ] });
+}
 function NativeTextInput({
   label,
   value,
@@ -78665,24 +72097,21 @@ function NativeTextInput({
   disabled = false,
   placeholder
 }) {
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0 }, children: [
-    /* @__PURE__ */ u2("span", { style: nativeLabelStyle, children: label }),
-    /* @__PURE__ */ u2(
-      "input",
-      {
-        value,
-        disabled,
-        placeholder,
-        onMouseDown: stopEditorEvent,
-        onClick: stopEditorEvent,
-        onDblClick: stopEditorEvent,
-        onKeyDown: stopEditorEvent,
-        onKeyUp: stopEditorEvent,
-        onInput: (event) => onInput(readInputValue(event)),
-        style: { ...nativeControlBaseStyle, opacity: disabled ? 0.6 : 1, cursor: disabled ? "not-allowed" : "text" }
-      }
-    )
-  ] });
+  return /* @__PURE__ */ u2(ControlRow, { label, children: /* @__PURE__ */ u2(
+    ThinkInput,
+    {
+      className: "think-settings-full-width",
+      value,
+      disabled,
+      placeholder,
+      onMouseDown: stopEditorEvent,
+      onClick: stopEditorEvent,
+      onDblClick: stopEditorEvent,
+      onKeyDown: stopEditorEvent,
+      onKeyUp: stopEditorEvent,
+      onInput: (event) => onInput(readInputValue(event))
+    }
+  ) });
 }
 function NativeSelectInput2({
   label,
@@ -78691,24 +72120,21 @@ function NativeSelectInput2({
   onChange,
   disabled = false
 }) {
-  return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0 }, children: [
-    /* @__PURE__ */ u2("span", { style: nativeLabelStyle, children: label }),
-    /* @__PURE__ */ u2(
-      "select",
-      {
-        value,
-        disabled,
-        onMouseDown: stopEditorEvent,
-        onClick: stopEditorEvent,
-        onDblClick: stopEditorEvent,
-        onKeyDown: stopEditorEvent,
-        onKeyUp: stopEditorEvent,
-        onChange: (event) => onChange((event.target || event.currentTarget).value),
-        style: { ...nativeControlBaseStyle, opacity: disabled ? 0.6 : 1 },
-        children: options.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
-      }
-    )
-  ] });
+  return /* @__PURE__ */ u2(ControlRow, { label, children: /* @__PURE__ */ u2(
+    ThinkSelect,
+    {
+      className: "think-settings-full-width",
+      value,
+      disabled,
+      onMouseDown: stopEditorEvent,
+      onClick: stopEditorEvent,
+      onDblClick: stopEditorEvent,
+      onKeyDown: stopEditorEvent,
+      onKeyUp: stopEditorEvent,
+      onChange: (event) => onChange((event.target || event.currentTarget).value),
+      children: options.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
+    }
+  ) });
 }
 const presetGranularityOptions = [
   { value: "week", label: "周" },
@@ -78787,23 +72213,23 @@ function deriveRequiredFields(fields) {
 }
 function stableJson(value) {
   const seen = /* @__PURE__ */ new WeakSet();
-  const normalize = (input) => {
+  const normalize2 = (input) => {
     if (input === void 0) return void 0;
     if (input === null) return null;
     if (typeof input === "string" || typeof input === "number" || typeof input === "boolean") return input;
     if (typeof input !== "object") return compactText(input);
     if (seen.has(input)) return "[Circular]";
     seen.add(input);
-    if (Array.isArray(input)) return input.map(normalize).filter((item) => item !== void 0);
+    if (Array.isArray(input)) return input.map(normalize2).filter((item) => item !== void 0);
     if (!isUnknownRecord(input)) return compactText(input);
     const out = {};
     Object.keys(input).sort().forEach((key) => {
-      const value2 = normalize(input[key]);
+      const value2 = normalize2(input[key]);
       if (value2 !== void 0) out[key] = value2;
     });
     return out;
   };
-  return JSON.stringify(normalize(value));
+  return JSON.stringify(normalize2(value));
 }
 function compactFieldForStructureCompare(field) {
   const source = field;
@@ -78817,8 +72243,8 @@ function compactFieldForStructureCompare(field) {
   return out;
 }
 function fieldsHaveSameStructure(left2, right2) {
-  const normalize = (fields) => (fields || []).map(compactFieldForStructureCompare);
-  return stableJson(normalize(left2)) === stableJson(normalize(right2));
+  const normalize2 = (fields) => (fields || []).map(compactFieldForStructureCompare);
+  return stableJson(normalize2(left2)) === stableJson(normalize2(right2));
 }
 function equalStringSet(left2, right2) {
   const a2 = new Set(left2.map(compactText).filter(Boolean));
@@ -79230,7 +72656,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
     FloatingPanel,
     {
       id: `goal-template-editor-${goal.id}-${block.id}`,
-      title: /* @__PURE__ */ u2(Typography2, { children: [
+      title: /* @__PURE__ */ u2("span", { children: [
         "字段预设：",
         /* @__PURE__ */ u2("strong", { children: currentPresetTitle })
       ] }),
@@ -79248,60 +72674,49 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
       resizable: true,
       bodyPadding: 0,
       bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      children: /* @__PURE__ */ u2(Box, { className: "think-goal-template-editor", children: /* @__PURE__ */ u2(Stack, { spacing: 1.5, children: [
-        /* @__PURE__ */ u2(Box, { className: "think-editor-header", children: [
-          /* @__PURE__ */ u2(Box, { className: "think-goal-template-editor__identity", children: [
-            /* @__PURE__ */ u2(Typography2, { className: "think-settings-title-strong", children: [
+      children: /* @__PURE__ */ u2("div", { className: "think-os--settings think-goal-template-editor", children: /* @__PURE__ */ u2("div", { className: "think-goal-template-editor__stack", children: [
+        /* @__PURE__ */ u2("header", { className: "think-editor-header", children: [
+          /* @__PURE__ */ u2("div", { className: "think-goal-template-editor__identity", children: [
+            /* @__PURE__ */ u2("div", { className: "think-settings-title-strong", children: [
               currentTheme?.icon ? `${currentTheme.icon} ` : "",
               titleTheme
             ] }),
-            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
+            /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: [
               goal.goalPath || goal.title,
               " / ",
               block.name
             ] })
           ] }),
-          /* @__PURE__ */ u2(Box, { className: "think-settings-actions", children: /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", disabled: !selectedTemplate || metadataDisabled, onClick: handleCopyVariant, children: "复制为新预设" }) })
+          /* @__PURE__ */ u2("div", { className: "think-settings-actions", children: /* @__PURE__ */ u2(ThinkButton, { size: "sm", disabled: !selectedTemplate || metadataDisabled, onClick: handleCopyVariant, children: "复制为新预设" }) })
         ] }),
-        mode === "disabled" ? /* @__PURE__ */ u2(Alert2, { severity: "warning", children: [
-          "这个目标下已经隐藏「",
+        mode === "disabled" ? /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: [
+          "「",
           block.name,
-          "」。保存前请先改为普通记录预设，或删除这条隐藏规则。"
+          "」当前已隐藏。保存前请切回普通预设或删除隐藏规则。"
         ] }) : null,
         /* @__PURE__ */ u2(GoalTemplateModeSwitch, { mode, blockName: block.name, disabled: metadataDisabled, onInherit: switchToInherit, onOverride: switchToOverride }),
-        /* @__PURE__ */ u2(Box, { className: "think-goal-template-editor__fields", children: [
-          /* @__PURE__ */ u2(Box, { className: `think-goal-template-editor__primary-grid${supportsPeriod ? "" : " is-two-column"}`, children: [
-            /* @__PURE__ */ u2(NativeTextInput, { label: "名字", value: draft.name, onInput: (value) => updateDraft({ name: value }), disabled: metadataDisabled, placeholder: "例如：心情" }),
-            isExistingTemplate ? /* @__PURE__ */ u2(NativeTextInput, { label: "主题", value: currentTheme?.icon ? `${currentTheme.icon} ${cleanDisplayThemePath(draft.themePath)}` : cleanDisplayThemePath(draft.themePath) || "未指定主题", onInput: () => void 0, disabled: true }) : /* @__PURE__ */ u2(NativeSelectInput2, { label: "主题", value: draft.themePath || "", options: themeOptions2, onChange: (value) => {
-              const themePath = String(value || "");
-              updateThemePath(themePath);
-              const label = themeLeafLabel(themePath);
-              if (label && isGeneratedPresetName$1(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
-            }, disabled: metadataDisabled }),
-            supportsPeriod ? /* @__PURE__ */ u2(NativeSelectInput2, { label: "周期", value: draft.granularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: metadataDisabled }) : null
-          ] }),
-          /* @__PURE__ */ u2(Box, { className: "think-goal-template-editor__secondary-grid", children: [
-            /* @__PURE__ */ u2(NativeTextInput, { label: "保存文件", value: draft.targetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: fieldEditDisabled, placeholder: "例如：01/目标打卡.md" }),
-            /* @__PURE__ */ u2(NativeTextInput, { label: "标题", value: draft.appendUnderHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: fieldEditDisabled, placeholder: "## {{goalPath}}" })
-          ] }),
+        /* @__PURE__ */ u2("section", { className: "think-goal-template-editor__fields", children: [
+          /* @__PURE__ */ u2(NativeTextInput, { label: "名字", value: draft.name, onInput: (value) => updateDraft({ name: value }), disabled: metadataDisabled, placeholder: "例如：心情" }),
+          isExistingTemplate ? /* @__PURE__ */ u2(NativeTextInput, { label: "主题", value: currentTheme?.icon ? `${currentTheme.icon} ${cleanDisplayThemePath(draft.themePath)}` : cleanDisplayThemePath(draft.themePath) || "未指定主题", onInput: () => void 0, disabled: true }) : /* @__PURE__ */ u2(NativeSelectInput2, { label: "主题", value: draft.themePath || "", options: themeOptions2, onChange: (value) => {
+            const themePath = String(value || "");
+            updateThemePath(themePath);
+            const label = themeLeafLabel(themePath);
+            if (label && isGeneratedPresetName$1(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
+          }, disabled: metadataDisabled }),
+          supportsPeriod ? /* @__PURE__ */ u2(NativeSelectInput2, { label: "周期", value: draft.granularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: metadataDisabled }) : null,
+          /* @__PURE__ */ u2(NativeTextInput, { label: "保存文件", value: draft.targetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: fieldEditDisabled, placeholder: "例如：01/目标打卡.md" }),
+          /* @__PURE__ */ u2(NativeTextInput, { label: "标题", value: draft.appendUnderHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: fieldEditDisabled, placeholder: "## {{goalPath}}" }),
           /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: metadataDisabled, placeholder: "可选" }),
-          diffSummary.length ? /* @__PURE__ */ u2(Box, { className: "think-editor-diff-list", children: diffSummary.map((item) => /* @__PURE__ */ u2("span", { className: "think-editor-diff-chip", children: item }, item)) }) : null
+          diffSummary.length ? /* @__PURE__ */ u2("div", { className: "think-editor-diff-list", children: diffSummary.map((item) => /* @__PURE__ */ u2("span", { className: "think-editor-diff-chip", children: item }, item)) }) : null
         ] }),
-        /* @__PURE__ */ u2(Box, { className: fieldEditDisabled ? "think-settings-muted-disabled" : void 0, children: /* @__PURE__ */ u2(Stack, { spacing: 1.5, children: [
-          /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Typography2, { className: "think-goal-template-editor__section-heading", children: "表单字段" }),
-            inheritedMode ? /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", className: "think-goal-template-editor__section-help", children: "当前为继承模式，下面只读展示记录类型基础字段。切到“覆盖”后可单独修改这个主题预设。" }) : null,
-            /* @__PURE__ */ u2(FieldsEditor, { fields: draft.fields || [], disabled: fieldEditDisabled, onChange: (fields) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath }) })
-          ] }),
-          /* @__PURE__ */ u2(Divider2, {}),
-          /* @__PURE__ */ u2(Box, { children: [
-            /* @__PURE__ */ u2(Typography2, { className: "think-goal-template-editor__section-heading", children: "输出格式" }),
-            /* @__PURE__ */ u2(Alert2, { severity: "info", children: "Record 的 Markdown Block 由 RecordSchemaDefinition + Record Codec 统一生成；Goal Template 只定义字段、默认值与保存位置，不覆盖存储 grammar。" })
-          ] })
-        ] }) }),
-        /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", spacing: 1, className: "think-settings-sticky-actions", children: [
-          /* @__PURE__ */ u2(Button2, { onClick: onClose, children: "取消" }),
-          /* @__PURE__ */ u2(Button2, { onClick: handleSave, variant: "contained", disabled: metadataDisabled, children: "保存" })
+        /* @__PURE__ */ u2("section", { className: fieldEditDisabled ? "think-settings-muted-disabled think-goal-template-editor__form-fields" : "think-goal-template-editor__form-fields", children: [
+          /* @__PURE__ */ u2("div", { className: "think-goal-template-editor__section-heading", children: "表单字段" }),
+          inheritedMode ? /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "继承模式下字段只读；切换到“覆盖”后可单独修改。" }) : null,
+          /* @__PURE__ */ u2(FieldsEditor, { fields: draft.fields || [], disabled: fieldEditDisabled, onChange: (fields) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath }) })
+        ] }),
+        /* @__PURE__ */ u2("footer", { className: "think-settings-sticky-actions", children: [
+          /* @__PURE__ */ u2(ThinkButton, { onClick: onClose, children: "取消" }),
+          /* @__PURE__ */ u2(ThinkButton, { onClick: handleSave, variant: "primary", disabled: metadataDisabled, children: "保存" })
         ] })
       ] }) })
     }
@@ -79437,44 +72852,25 @@ function buildCopiedGoalTemplate(input) {
     reason: "copy"
   });
 }
-const backdropStyle = {
-  position: "fixed",
-  inset: 0,
-  zIndex: 999998,
-  background: "transparent"
-};
-const menuStyle = {
-  position: "fixed",
-  zIndex: 999999,
-  minWidth: 250,
-  maxWidth: 320,
-  padding: 8,
-  border: "1px solid var(--background-modifier-border)",
-  borderRadius: 12,
-  background: "var(--background-primary)",
-  boxShadow: "0 12px 34px rgba(0,0,0,.24)",
-  color: "var(--text-normal)"
-};
-const itemStyle = {
-  width: "100%",
-  border: "none",
-  background: "transparent",
-  color: "inherit",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 10,
-  padding: "7px 9px",
-  borderRadius: 8,
-  cursor: "pointer",
-  textAlign: "left",
-  font: "inherit"
-};
-const mutedStyle = {
-  color: "var(--text-muted)",
-  fontSize: "11px",
-  whiteSpace: "nowrap"
-};
+function MenuItem2({ label, meta, danger = false, disabled = false, emphasized = false, onClick }) {
+  return /* @__PURE__ */ u2(
+    "button",
+    {
+      type: "button",
+      className: [
+        "think-goal-template-menu__item",
+        danger ? "is-danger" : "",
+        emphasized ? "is-emphasized" : ""
+      ].filter(Boolean).join(" "),
+      disabled,
+      onClick,
+      children: [
+        /* @__PURE__ */ u2("span", { children: label }),
+        meta ? /* @__PURE__ */ u2("span", { className: "think-goal-template-menu__meta", children: meta }) : null
+      ]
+    }
+  );
+}
 function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks, onDeleteTemplate }) {
   y(() => {
     if (!state) return void 0;
@@ -79491,107 +72887,70 @@ function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBloc
   const missingCount = blocks.filter((block) => block.id !== state.block.id && !findExistingTemplateForTheme(templates, state.goal, block, state.template)).length;
   const left2 = Math.min(state.x, Math.max(12, window.innerWidth - 340));
   const top2 = Math.min(state.y, Math.max(12, window.innerHeight - 420));
-  const menu = /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2("div", { style: backdropStyle, onMouseDown: onClose, onContextMenu: (event) => {
+  const menu = /* @__PURE__ */ u2("div", { className: "think-os think-os--settings think-goal-template-menu-layer", children: [
+    /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__backdrop", onMouseDown: onClose, onContextMenu: (event) => {
       event.preventDefault();
       onClose();
     } }),
     /* @__PURE__ */ u2(
       "div",
       {
-        style: { ...menuStyle, left: left2, top: top2 },
+        className: "think-goal-template-menu",
+        style: { left: left2, top: top2 },
         onMouseDown: (event) => event.stopPropagation(),
         onClick: (event) => event.stopPropagation(),
         onContextMenu: (event) => event.preventDefault(),
         children: [
-          /* @__PURE__ */ u2("div", { style: { padding: "4px 6px 8px", borderBottom: "1px solid var(--background-modifier-border)" }, children: [
-            /* @__PURE__ */ u2("div", { style: { fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: [
+          /* @__PURE__ */ u2("header", { className: "think-goal-template-menu__header", children: [
+            /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__title", children: [
               "记录预设：",
               title
             ] }),
-            /* @__PURE__ */ u2("div", { style: { ...mutedStyle, marginTop: 2, whiteSpace: "normal" }, children: [
+            /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__description", children: [
               themePath || "未设置主题",
-              " · 当前记录类型：",
+              " · ",
               state.block.name
             ] })
           ] }),
-          /* @__PURE__ */ u2(
-            "button",
-            {
-              type: "button",
-              style: { ...itemStyle, marginTop: 6 },
-              onClick: () => {
-                onOpenBlock(state.goal, state.block, state.template);
-                onClose();
-              },
-              children: [
-                /* @__PURE__ */ u2("span", { children: "编辑字段预设" }),
-                /* @__PURE__ */ u2("span", { style: mutedStyle, children: "当前" })
-              ]
-            }
-          ),
-          /* @__PURE__ */ u2(
-            "button",
-            {
-              type: "button",
-              style: { ...itemStyle, marginTop: 6, background: "rgba(124, 60, 255, .10)" },
-              onClick: () => {
-                onCopyMissingBlocks();
-                onClose();
-              },
-              disabled: missingCount <= 0,
-              children: [
-                /* @__PURE__ */ u2("span", { children: "补齐全部缺失记录类型" }),
-                /* @__PURE__ */ u2("span", { style: mutedStyle, children: missingCount > 0 ? `创建 ${missingCount}` : "已补齐" })
-              ]
-            }
-          ),
-          /* @__PURE__ */ u2("div", { style: { margin: "7px 0", height: 1, background: "var(--background-modifier-border)" } }),
-          onDeleteTemplate ? /* @__PURE__ */ u2(
-            "button",
-            {
-              type: "button",
-              style: { ...itemStyle, color: "var(--text-error, #d14)" },
-              onClick: () => {
-                onDeleteTemplate(state.goal, state.block, state.template);
-                onClose();
-              },
-              children: [
-                /* @__PURE__ */ u2("span", { children: "删除当前预设" }),
-                /* @__PURE__ */ u2("span", { style: mutedStyle, children: "仅此主题" })
-              ]
-            }
-          ) : null,
-          /* @__PURE__ */ u2("div", { style: { margin: "7px 0", height: 1, background: "var(--background-modifier-border)" } }),
-          blocks.map((block) => {
+          /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__group", children: [
+            /* @__PURE__ */ u2(MenuItem2, { label: "编辑字段预设", meta: "当前", onClick: () => {
+              onOpenBlock(state.goal, state.block, state.template);
+              onClose();
+            } }),
+            /* @__PURE__ */ u2(MenuItem2, { label: "补齐全部缺失记录类型", meta: missingCount > 0 ? `创建 ${missingCount}` : "已补齐", emphasized: true, disabled: missingCount <= 0, onClick: () => {
+              onCopyMissingBlocks();
+              onClose();
+            } })
+          ] }),
+          onDeleteTemplate ? /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__group", children: /* @__PURE__ */ u2(MenuItem2, { label: "删除当前预设", meta: "仅此主题", danger: true, onClick: () => {
+            onDeleteTemplate(state.goal, state.block, state.template);
+            onClose();
+          } }) }) : null,
+          /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__group", children: blocks.map((block) => {
             const isCurrent = block.id === state.block.id;
             const existing = isCurrent ? state.template : findExistingTemplateForTheme(templates, state.goal, block, state.template);
             return /* @__PURE__ */ u2(
-              "button",
+              MenuItem2,
               {
-                type: "button",
-                style: { ...itemStyle, opacity: isCurrent ? 0.72 : 1 },
+                label: block.name,
+                meta: isCurrent ? "当前" : existing ? "已存在，打开" : "创建",
+                disabled: false,
                 onClick: () => {
                   if (isCurrent) onOpenBlock(state.goal, block, state.template);
                   else if (existing) onOpenBlock(state.goal, block, existing);
                   else onCopyToBlock(block);
                   onClose();
-                },
-                children: [
-                  /* @__PURE__ */ u2("span", { children: block.name }),
-                  /* @__PURE__ */ u2("span", { style: mutedStyle, children: isCurrent ? "当前" : existing ? "已存在，打开" : "创建" })
-                ]
+                }
               },
               block.id
             );
-          })
+          }) })
         ]
       }
     )
   ] });
   return $(menu, document.body);
 }
-const PRESET_CARD_HEIGHT = 30;
 function GoalPresetCard({
   templateKey,
   name,
@@ -79607,48 +72966,35 @@ function GoalPresetCard({
     "div",
     {
       "data-goal-template-key": templateKey,
+      className: `think-goal-preset${isDragging ? " is-dragging" : ""}`,
       role: "button",
       tabIndex: 0,
       title: `${name}${themePath ? ` · ${themePath}` : ""}
-左键：编辑；右键：复制/删除；拖动 ☰：排序或移动到其它目标/记录类型`,
+左键编辑；右键更多；拖动排序或移动`,
       onClick: onOpen,
-      onContextMenu,
-      style: {
-        width: "100%",
-        display: "grid",
-        gridTemplateColumns: "14px 18px minmax(0, 1fr)",
-        alignItems: "center",
-        gap: 4,
-        border: "1px solid var(--background-modifier-border)",
-        borderRadius: 8,
-        background: "var(--background-primary)",
-        color: "var(--text-normal)",
-        minHeight: PRESET_CARD_HEIGHT,
-        height: PRESET_CARD_HEIGHT,
-        padding: "0 6px",
-        cursor: "pointer",
-        font: "inherit",
-        textAlign: "left",
-        opacity: isDragging ? 0.48 : 1,
-        boxShadow: "none",
-        userSelect: "none"
+      onKeyDown: (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen();
+        }
       },
+      onContextMenu,
       children: [
         /* @__PURE__ */ u2(
           "span",
           {
+            className: "think-goal-preset__drag",
             draggable: true,
             onMouseDown: (event) => event.stopPropagation(),
             onClick: (event) => event.stopPropagation(),
             onDragStart,
             onDragEnd,
             title: "拖动预设排序或移动",
-            style: { color: "var(--text-muted)", cursor: "grab", userSelect: "none", textAlign: "center", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", height: "100%" },
-            children: "☰"
+            children: /* @__PURE__ */ u2(ThinkIcon, { name: "grip-vertical" })
           }
         ),
-        /* @__PURE__ */ u2("span", { style: { textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }, children: icon || "◇" }),
-        /* @__PURE__ */ u2("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", fontWeight: 700, lineHeight: 1.2 }, children: name })
+        /* @__PURE__ */ u2("span", { className: "think-goal-preset__icon", children: icon || "◇" }),
+        /* @__PURE__ */ u2("span", { className: "think-goal-preset__name", children: name })
       ]
     },
     templateKey
@@ -79831,40 +73177,6 @@ function reorderPresetTemplatesInCell(input) {
   }
   return next2.map((template, index) => ({ ...template, sortOrder: index * 10 }));
 }
-const ADD_BUTTON_HEIGHT = 36;
-function AddPresetButton(props) {
-  const { goal, block, openEditor } = props;
-  return /* @__PURE__ */ u2(
-    "button",
-    {
-      type: "button",
-      onClick: (event) => {
-        event.stopPropagation();
-        openEditor(goal, block);
-      },
-      title: "添加预设",
-      style: {
-        width: "100%",
-        height: ADD_BUTTON_HEIGHT,
-        minHeight: ADD_BUTTON_HEIGHT,
-        border: "1px dashed var(--background-modifier-border)",
-        borderRadius: 8,
-        background: "var(--background-secondary)",
-        color: "var(--text-muted)",
-        cursor: "pointer",
-        font: "inherit",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 0,
-        margin: 0,
-        boxShadow: "none",
-        lineHeight: 1
-      },
-      children: "＋"
-    }
-  );
-}
 function PresetCard(props) {
   const { goal, block, template, themeIconByPath, draggingPreset, setDraggingPreset, setPresetDropCell, openEditor, openPresetContextMenu } = props;
   const themePath = readGoalTemplateThemePath(template, goal);
@@ -79921,7 +73233,8 @@ function GoalTemplateMatrixCell(props) {
   return /* @__PURE__ */ u2(
     "div",
     {
-      title: "＋ 添加；左键编辑；右键复制；拖动排序或移动",
+      className: `think-goal-template-matrix__preset-cell${isDropCell ? " is-drop-target" : ""}`,
+      title: "添加、编辑或拖动记录预设",
       onDragEnter: (event) => {
         if (!draggingPreset) return;
         event.preventDefault();
@@ -79933,21 +73246,21 @@ function GoalTemplateMatrixCell(props) {
         event.preventDefault();
       },
       onDrop: (event) => handlePresetDropOnCell(event, goal, block),
-      style: {
-        display: "grid",
-        gridAutoRows: "min-content",
-        alignContent: "start",
-        justifyItems: "stretch",
-        gap: 4,
-        minHeight: ADD_BUTTON_HEIGHT + 8,
-        padding: "0 4px 4px",
-        borderRadius: 10,
-        background: "transparent",
-        outline: isDropCell ? "2px dashed #7c3cff" : "none",
-        outlineOffset: isDropCell ? -2 : 0
-      },
       children: [
-        /* @__PURE__ */ u2(AddPresetButton, { goal, block, openEditor }),
+        /* @__PURE__ */ u2(
+          ThinkButton,
+          {
+            size: "sm",
+            variant: "ghost",
+            className: "think-goal-template-matrix__add",
+            leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }),
+            onClick: (event) => {
+              event.stopPropagation();
+              openEditor(goal, block);
+            },
+            children: "添加"
+          }
+        ),
         !collapsed && presets.map((template) => /* @__PURE__ */ u2(
           PresetCard,
           {
@@ -79967,18 +73280,11 @@ function GoalTemplateMatrixCell(props) {
     }
   );
 }
-const MatrixTableRow = TableRow2;
-const MatrixTableCell = TableCell2;
-const MatrixTypography = Typography2;
-const MatrixBox = Box;
-const PATH_COL_WIDTH$1 = 250;
-const BLOCK_COL_WIDTH$1 = 136;
-const SEGMENT_HEIGHT = 36;
-function GoalDragHandle(props) {
-  const { goal, setDraggingGoalId, setGoalDrop } = props;
+function GoalDragHandle({ goal, setDraggingGoalId, setGoalDrop }) {
   return /* @__PURE__ */ u2(
     "span",
     {
+      className: "think-goal-template-matrix__drag-handle",
       draggable: true,
       onClick: (event) => event.stopPropagation(),
       onMouseDown: (event) => event.stopPropagation(),
@@ -79995,54 +73301,23 @@ function GoalDragHandle(props) {
         setGoalDrop(null);
       },
       title: "拖动目标排序",
-      style: { color: "var(--text-muted)", cursor: "grab", userSelect: "none", width: 18, textAlign: "center", flexShrink: 0 },
-      children: "☰"
+      children: /* @__PURE__ */ u2(ThinkIcon, { name: "grip-vertical" })
     }
   );
 }
-function TreeToggle(props) {
-  const { hasChildren, expanded, path, toggleTreePath } = props;
-  if (!hasChildren) return /* @__PURE__ */ u2("span", { style: { display: "inline-block", width: 18, flexShrink: 0 } });
+function TreeToggle({ hasChildren, expanded, path, toggleTreePath }) {
+  if (!hasChildren) return /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__tree-spacer" });
   return /* @__PURE__ */ u2(
-    "button",
+    ThinkIconButton,
     {
-      type: "button",
+      className: "think-goal-template-matrix__tree-toggle",
+      size: "sm",
+      label: expanded ? "折叠子目标" : "展开子目标",
+      icon: /* @__PURE__ */ u2(ThinkIcon, { name: expanded ? "chevron-down" : "chevron-right" }),
       onClick: (event) => {
         event.stopPropagation();
         toggleTreePath(path);
-      },
-      title: "折叠/展开子目标",
-      style: { border: "none", background: "transparent", color: "var(--text-muted)", width: 18, padding: 0, cursor: "pointer", flexShrink: 0 },
-      children: expanded ? "▾" : "▸"
-    }
-  );
-}
-function DeleteGoalButton(props) {
-  const { goal, handleDeleteGoal } = props;
-  return /* @__PURE__ */ u2(
-    "button",
-    {
-      type: "button",
-      title: "删除目标",
-      onClick: (event) => handleDeleteGoal(event, goal),
-      onMouseDown: (event) => event.stopPropagation(),
-      style: {
-        border: "none",
-        background: "transparent",
-        color: "var(--text-muted)",
-        cursor: "pointer",
-        width: 22,
-        height: 22,
-        borderRadius: 6,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        lineHeight: 1,
-        flexShrink: 0,
-        padding: 0,
-        margin: 0
-      },
-      children: "×"
+      }
     }
   );
 }
@@ -80053,29 +73328,31 @@ function GoalPathCell(props) {
   const hasChildren = goalHasChildren(goal, goals);
   const expanded = expandedPaths.has(path);
   const isRoot = depth === 0;
-  const goalCellBg = isRoot ? "rgba(122, 94, 230, 0.18)" : "rgba(122, 94, 230, 0.06)";
-  return /* @__PURE__ */ u2(MatrixTableCell, { sx: { width: PATH_COL_WIDTH$1, px: 0.5, py: 0.35, position: "sticky", left: 0, zIndex: 2, background: "var(--background-primary)", verticalAlign: "top" }, children: /* @__PURE__ */ u2(
-    MatrixBox,
+  return /* @__PURE__ */ u2("td", { className: "think-goal-template-matrix__path-cell", children: /* @__PURE__ */ u2(
+    "div",
     {
+      className: `think-goal-template-matrix__goal${isRoot ? " is-root" : ""}`,
       onClick: () => toggleGoalRow(goal.id),
-      title: "单击折叠/展开本目标；拖动 ☰ 排序",
-      sx: {
-        minHeight: `${SEGMENT_HEIGHT}px`,
-        display: "flex",
-        alignItems: "center",
-        borderRadius: 2,
-        backgroundColor: goalCellBg,
-        px: isRoot ? 1 : 0.75,
-        cursor: "pointer"
-      },
-      children: /* @__PURE__ */ u2(MatrixBox, { sx: { display: "flex", alignItems: "center", gap: 0.75, minWidth: 0, width: "100%" }, children: [
-        /* @__PURE__ */ u2("span", { style: { display: "inline-block", width: depth * 18, flexShrink: 0 } }),
+      title: "单击折叠/展开本目标；拖动排序",
+      children: [
+        /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__indent", style: { "--think-goal-depth": depth } }),
         /* @__PURE__ */ u2(GoalDragHandle, { goal, setDraggingGoalId, setGoalDrop }),
         /* @__PURE__ */ u2(TreeToggle, { hasChildren, expanded, path, toggleTreePath }),
-        /* @__PURE__ */ u2("span", { style: { color: collapsed ? "var(--text-muted)" : "var(--text-faint)", width: 16, textAlign: "center", flexShrink: 0 }, children: collapsed ? "▸" : "▾" }),
-        /* @__PURE__ */ u2(MatrixBox, { sx: { minWidth: 0, flex: 1 }, children: /* @__PURE__ */ u2(MatrixTypography, { sx: { fontWeight: isRoot ? 700 : 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: cleanDisplayText(getGoalDisplayName(goal)) }) }),
-        /* @__PURE__ */ u2(DeleteGoalButton, { goal, handleDeleteGoal })
-      ] })
+        /* @__PURE__ */ u2(ThinkIcon, { className: "think-goal-template-matrix__collapse-state", name: collapsed ? "chevron-right" : "chevron-down" }),
+        /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__goal-name", children: cleanDisplayText(getGoalDisplayName(goal)) }),
+        /* @__PURE__ */ u2(
+          ThinkIconButton,
+          {
+            className: "think-goal-template-matrix__delete",
+            size: "sm",
+            tone: "danger",
+            label: "删除目标",
+            icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }),
+            onClick: (event) => handleDeleteGoal(event, goal),
+            onMouseDown: (event) => event.stopPropagation()
+          }
+        )
+      ]
     }
   ) });
 }
@@ -80084,8 +73361,9 @@ function GoalTemplateMatrixGoalRow(props) {
   const collapsed = collapsedGoalIds.has(goal.id);
   const dropActive = goalDrop?.goalId === goal.id;
   return /* @__PURE__ */ u2(
-    MatrixTableRow,
+    "tr",
     {
+      className: dropActive ? `think-goal-template-matrix__goal-row is-drop-${goalDrop?.position}` : "think-goal-template-matrix__goal-row",
       onDragEnter: (event) => {
         if (!draggingGoalId || draggingGoalId === goal.id) return;
         event.preventDefault();
@@ -80106,7 +73384,6 @@ function GoalTemplateMatrixGoalRow(props) {
         setDraggingGoalId(null);
         setGoalDrop(null);
       },
-      sx: { boxShadow: dropActive ? `inset 0 ${goalDrop?.position === "before" ? "3px" : "-3px"} 0 #7c3cff` : "none" },
       children: [
         /* @__PURE__ */ u2(
           GoalPathCell,
@@ -80122,7 +73399,7 @@ function GoalTemplateMatrixGoalRow(props) {
             handleDeleteGoal
           }
         ),
-        visibleBlocks.map((block) => /* @__PURE__ */ u2(MatrixTableCell, { align: "center", sx: { width: BLOCK_COL_WIDTH$1, minWidth: BLOCK_COL_WIDTH$1, px: 0.35, py: 0.35, verticalAlign: "top" }, children: /* @__PURE__ */ u2(
+        visibleBlocks.map((block) => /* @__PURE__ */ u2("td", { className: "think-goal-template-matrix__block-cell", children: /* @__PURE__ */ u2(
           GoalTemplateMatrixCell,
           {
             goal,
@@ -80149,48 +73426,25 @@ function GoalTemplateMatrixGroupRows(props) {
   const rows = [];
   if (props.groupIndex > 0) {
     rows.push(
-      /* @__PURE__ */ u2(MatrixTableRow, { children: /* @__PURE__ */ u2(MatrixTableCell, { colSpan: props.visibleBlockCount + 1, sx: { border: 0, p: 0, height: 10, background: "transparent" } }) }, `spacer-${props.groupIndex}`)
+      /* @__PURE__ */ u2("tr", { className: "think-goal-template-matrix__spacer-row", children: /* @__PURE__ */ u2("td", { colSpan: props.visibleBlockCount + 1 }) }, `spacer-${props.groupIndex}`)
     );
   }
   props.group.forEach((goal) => rows.push(/* @__PURE__ */ u2(GoalTemplateMatrixGoalRow, { ...props, goal }, goal.id)));
   return rows;
 }
-const AnyTable = Table2;
-const AnyTableHead = TableHead2;
-const AnyTableRow = TableRow2;
-const AnyTableCell = TableCell2;
-const AnyTableBody = TableBody2;
-const PATH_COL_WIDTH = 250;
-const BLOCK_COL_WIDTH = 136;
-function GoalTemplateMatrixHeader(props) {
-  const { visibleBlocks } = props;
-  return /* @__PURE__ */ u2(AnyTableHead, { children: /* @__PURE__ */ u2(AnyTableRow, { children: [
-    /* @__PURE__ */ u2(AnyTableCell, { sx: { fontWeight: "bold", width: PATH_COL_WIDTH, position: "sticky", left: 0, zIndex: 3, backgroundColor: "rgba(124, 60, 255, .18)" }, children: "目标" }),
-    visibleBlocks.map((block) => /* @__PURE__ */ u2(AnyTableCell, { align: "center", sx: { fontWeight: "bold", width: BLOCK_COL_WIDTH, minWidth: BLOCK_COL_WIDTH }, children: block.name }, block.id))
+function GoalTemplateMatrixHeader({ visibleBlocks }) {
+  return /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
+    /* @__PURE__ */ u2("th", { className: "think-goal-template-matrix__path-header", children: "目标" }),
+    visibleBlocks.map((block) => /* @__PURE__ */ u2("th", { className: "think-goal-template-matrix__block-header", children: block.name }, block.id))
   ] }) });
 }
 function GoalTemplateMatrixTable(props) {
   const { visibleGoals, visibleBlocks } = props;
   const activeGroups = splitGoalsByRoot(visibleGoals);
-  return /* @__PURE__ */ u2(Box, { sx: { overflowX: "auto", width: "100%" }, children: /* @__PURE__ */ u2(
-    AnyTable,
-    {
-      size: "small",
-      sx: {
-        tableLayout: "fixed",
-        width: "max-content",
-        minWidth: "100%",
-        borderCollapse: "separate",
-        borderSpacing: "0 0",
-        "& th": { whiteSpace: "nowrap", py: 0.75, px: 0.75, borderBottom: "1px solid", borderColor: "divider", backgroundColor: "rgba(124, 60, 255, .12)" },
-        "& td": { whiteSpace: "nowrap", py: 0, px: 0.5, borderBottom: "none", verticalAlign: "top" }
-      },
-      children: [
-        /* @__PURE__ */ u2(GoalTemplateMatrixHeader, { visibleBlocks }),
-        /* @__PURE__ */ u2(AnyTableBody, { children: activeGroups.length > 0 ? activeGroups.flatMap((group, groupIndex) => GoalTemplateMatrixGroupRows({ ...props, group, groupIndex, visibleBlockCount: visibleBlocks.length })) : /* @__PURE__ */ u2(AnyTableRow, { children: /* @__PURE__ */ u2(AnyTableCell, { colSpan: visibleBlocks.length + 1, sx: { py: 2 }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无匹配目标" }) }) }) })
-      ]
-    }
-  ) });
+  return /* @__PURE__ */ u2("div", { className: "think-goal-template-matrix__scroll", children: /* @__PURE__ */ u2("table", { className: "think-goal-template-matrix", children: [
+    /* @__PURE__ */ u2(GoalTemplateMatrixHeader, { visibleBlocks }),
+    /* @__PURE__ */ u2("tbody", { children: activeGroups.length > 0 ? activeGroups.flatMap((group, groupIndex) => GoalTemplateMatrixGroupRows({ ...props, group, groupIndex, visibleBlockCount: visibleBlocks.length })) : /* @__PURE__ */ u2("tr", { children: /* @__PURE__ */ u2("td", { colSpan: visibleBlocks.length + 1, className: "think-goal-template-matrix__empty", children: "暂无匹配目标" }) }) })
+  ] }) });
 }
 function GoalTemplateMatrix() {
   const settings = useSelector(selectSettings);
@@ -80375,24 +73629,14 @@ function GoalTemplateMatrix() {
     const count = typeof useCases.goal.deleteGoalCascade === "function" ? await useCases.goal.deleteGoalCascade(goal.id) : (await Promise.all(targets.map((target) => useCases.goal.deleteGoal(target.id))), targets.length);
     ui.notice(descendants.length > 0 ? `已删除目标及子目标：${count} 个` : `已删除目标：${cleanDisplayText(path)}`);
   };
-  return /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1.25 }, children: [
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.75, alignItems: "center", flexWrap: "wrap" }, children: [
-      /* @__PURE__ */ u2(TextField2, { size: "small", placeholder: "搜索", value: query, onChange: (event) => setQuery(event.target.value), sx: { minWidth: 220 } }),
-      /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: expandAll, children: "展开" }),
-      /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: collapseAll, children: "折叠" })
-    ] }) }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }, children: coreBlocks.map((block) => /* @__PURE__ */ u2(
-      Chip2,
-      {
-        size: "small",
-        label: block.name,
-        color: isBlockActive(block.id) ? "primary" : "default",
-        variant: isBlockActive(block.id) ? "filled" : "outlined",
-        onClick: () => toggleBlock(block.id)
-      },
-      block.id
-    )) }),
-    goals.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有目标。请先到“目标”新建目标，然后在表格单元格里配置记录预设。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(Alert2, { severity: "info", children: "还没有启用的记录类型。请先在“数据管理 / 记录类型”里启用。" }) : /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2("div", { className: "think-goal-template-matrix", children: [
+    /* @__PURE__ */ u2("div", { className: "think-goal-template-matrix__toolbar", children: [
+      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-search", placeholder: "搜索目标", value: query, onInput: (event) => setQuery(event.currentTarget.value) }),
+      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: expandAll, children: "展开" }),
+      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: collapseAll, children: "折叠" })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-goal-template-matrix__block-filter", children: coreBlocks.map((block) => /* @__PURE__ */ u2("button", { type: "button", className: `think-chip${isBlockActive(block.id) ? " is-active" : ""}`, "aria-pressed": isBlockActive(block.id), onClick: () => toggleBlock(block.id), children: /* @__PURE__ */ u2("span", { className: "think-chip__label", children: block.name }) }, block.id)) }),
+    goals.length === 0 ? /* @__PURE__ */ u2(ThinkNotice, { children: "还没有目标。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(ThinkNotice, { children: "还没有启用的记录类型。" }) : /* @__PURE__ */ u2(
       GoalTemplateMatrixTable,
       {
         visibleGoals,
@@ -80419,31 +73663,8 @@ function GoalTemplateMatrix() {
         openPresetContextMenu
       }
     ),
-    /* @__PURE__ */ u2(
-      GoalTemplateContextMenu,
-      {
-        state: contextMenu,
-        blocks: coreBlocks,
-        templates,
-        onClose: () => setContextMenu(null),
-        onOpenBlock: openEditor,
-        onCopyToBlock: copyContextTemplateToBlock,
-        onCopyMissingBlocks: copyContextTemplateToMissingBlocks,
-        onDeleteTemplate: deletePresetTemplate
-      }
-    ),
-    /* @__PURE__ */ u2(
-      GoalTemplateEditorModal,
-      {
-        isOpen: !!selected,
-        onClose: () => setSelected(null),
-        goal: selected?.goal || null,
-        block: selected?.block || null,
-        variants: selectedVariants,
-        initialVariantId: selected?.variantId || null,
-        useCases
-      }
-    )
+    /* @__PURE__ */ u2(GoalTemplateContextMenu, { state: contextMenu, blocks: coreBlocks, templates, onClose: () => setContextMenu(null), onOpenBlock: openEditor, onCopyToBlock: copyContextTemplateToBlock, onCopyMissingBlocks: copyContextTemplateToMissingBlocks, onDeleteTemplate: deletePresetTemplate }),
+    /* @__PURE__ */ u2(GoalTemplateEditorModal, { isOpen: !!selected, onClose: () => setSelected(null), goal: selected?.goal || null, block: selected?.block || null, variants: selectedVariants, initialVariantId: selected?.variantId || null, useCases })
   ] });
 }
 const metricDirectionOptions = [
@@ -80452,22 +73673,6 @@ const metricDirectionOptions = [
   { value: "maintain", label: "维持目标值" },
   { value: "boolean", label: "是否达成" }
 ];
-function SectionCard({ children }) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        border: "1px solid var(--background-modifier-border)",
-        borderRadius: 2,
-        p: 1.5,
-        display: "grid",
-        gap: 1.25,
-        background: "var(--background-primary)"
-      },
-      children
-    }
-  );
-}
 function pathLeaf(path) {
   return String(path || "").split("/").filter(Boolean).pop() || path;
 }
@@ -80496,7 +73701,7 @@ function GoalManager() {
     if (!path) return;
     const alreadyExists = goals.some((goal2) => String(goal2.goalPath || goal2.title || "").trim() === path);
     const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: goalThemePath.trim() || null });
-    setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加目标：${goal.goalPath || goal.title}` : "目标未添加");
+    setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加：${goal.goalPath || goal.title}` : "目标未添加");
     if (goal && !alreadyExists) {
       setGoalPath("");
       setGoalThemePath("");
@@ -80508,33 +73713,26 @@ function GoalManager() {
     try {
       const goalUseCase = useCases.goal;
       if (typeof goalUseCase.cleanupGoalSettings !== "function") {
-        setMessage("当前版本还没有整理预设数据能力");
+        setMessage("当前版本不支持整理预设");
         return;
       }
       const result = await goalUseCase.cleanupGoalSettings();
-      const parts = [
-        `预设 ${result.beforeTemplateCount} → ${result.afterTemplateCount}`,
-        result.removedDuplicateTemplates ? `去重 ${result.removedDuplicateTemplates}` : ""
-      ].filter(Boolean);
-      setMessage(result.changed ? `已整理：${parts.join("，")}` : "预设数据已经是干净状态");
+      setMessage(result.changed ? `已整理：预设 ${result.beforeTemplateCount} → ${result.afterTemplateCount}` : "预设数据已是干净状态");
     } finally {
       setCleaning(false);
     }
   };
-  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 1240, mx: "auto", width: "100%", display: "grid", gap: 1.25 }, children: [
-    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(260px, 1fr) minmax(180px, 0.55fr) auto" }, gap: 1, alignItems: "center" }, children: [
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "添加目标", value: goalPath, onChange: (event) => setGoalPath(event.target.value), placeholder: "例如：了解自我/情绪" }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标主题", value: goalThemePath, onChange: (event) => setGoalThemePath(event.target.value), placeholder: "可选" }),
-      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "添加" })
+  return /* @__PURE__ */ u2("div", { className: "think-goal-manager", children: [
+    message && /* @__PURE__ */ u2(ThinkNotice, { children: message }),
+    /* @__PURE__ */ u2("div", { className: "think-goal-manager__create", children: [
+      /* @__PURE__ */ u2(ThinkInput, { "aria-label": "添加目标", value: goalPath, onInput: (event) => setGoalPath(event.currentTarget.value), placeholder: "目标路径，例如 了解自我/情绪" }),
+      /* @__PURE__ */ u2(ThinkInput, { "aria-label": "目标主题", value: goalThemePath, onInput: (event) => setGoalThemePath(event.currentTarget.value), placeholder: "目标主题（可选）" }),
+      /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "添加" })
     ] }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gap: 1, border: "1px solid var(--background-modifier-border)", borderRadius: 2, p: 1 }, children: [
-      /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ u2(Box, { children: [
-          /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 800 }, children: "记录预设" }),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "点击某个目标主题预设卡片后，字段编辑页会以悬浮窗打开。" })
-        ] }),
-        /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: handleCleanup, disabled: cleaning, children: cleaning ? "整理中…" : "整理预设" })
+    /* @__PURE__ */ u2("div", { className: "think-goal-manager__presets", children: [
+      /* @__PURE__ */ u2("div", { className: "think-goal-manager__presets-header", children: [
+        /* @__PURE__ */ u2("h2", { className: "think-goal-manager__title", children: "记录预设" }),
+        /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: handleCleanup, disabled: cleaning, children: cleaning ? "整理中…" : "整理预设" })
       ] }),
       /* @__PURE__ */ u2(GoalTemplateMatrix, {})
     ] })
@@ -80577,54 +73775,58 @@ function GoalMetricSection() {
     if (!metricGoalId) return;
     const key = metricKey.trim() || metricPresetKey(metricLabel);
     const label = metricLabel.trim() || key;
-    const metric = {
-      key,
-      label,
-      direction: metricDirection,
-      targetValue: metricTargetValue.trim() === "" ? void 0 : Number(metricTargetValue),
-      unit: metricUnit.trim() || void 0
-    };
-    const nextMetrics = [...selectedMetrics.filter((item) => item.key !== key), metric];
-    await useCases.goal.updateGoalMetrics(metricGoalId, nextMetrics);
-    setMessage(`目标指标已保存：${label}`);
+    const metric = { key, label, direction: metricDirection, targetValue: metricTargetValue.trim() === "" ? void 0 : Number(metricTargetValue), unit: metricUnit.trim() || void 0 };
+    await useCases.goal.updateGoalMetrics(metricGoalId, [...selectedMetrics.filter((item) => item.key !== key), metric]);
+    setMessage(`已保存：${label}`);
   };
   const handleRemoveMetric = async (key) => {
     if (!metricGoalId) return;
     await useCases.goal.updateGoalMetrics(metricGoalId, selectedMetrics.filter((metric) => metric.key !== key));
-    setMessage("目标指标已删除。");
+    setMessage("已删除指标");
   };
-  return /* @__PURE__ */ u2(SectionCard, { children: [
-    /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "目标指标" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "指标只属于目标；视图根据记录里的 记录类型、状态和日期运行时统计。" }),
-    message && /* @__PURE__ */ u2(Alert2, { severity: "info", onClose: () => setMessage(""), children: message }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(180px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)", gap: 1, alignItems: "center" }, children: [
-      /* @__PURE__ */ u2(SimpleSelect, { value: metricGoalId, options: activeGoalOptions, onChange: (value) => syncMetricDraft(value), placeholder: "选择目标", fullWidth: true }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标名称", value: metricLabel, onChange: (event) => {
-        setMetricLabel(event.target.value);
-        if (!metricKey.trim()) setMetricKey(metricPresetKey(event.target.value));
-      } }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "指标 Key", value: metricKey, onChange: (event) => setMetricKey(event.target.value), placeholder: "task.done" })
+  return /* @__PURE__ */ u2("section", { className: "think-settings-section think-goal-metrics", children: [
+    /* @__PURE__ */ u2("h2", { className: "think-goal-metrics__title", children: "目标指标" }),
+    message && /* @__PURE__ */ u2(ThinkNotice, { children: message }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "目标" }),
+        /* @__PURE__ */ u2(SimpleSelect, { value: metricGoalId, options: activeGoalOptions, onChange: syncMetricDraft, placeholder: "选择目标", fullWidth: true })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "指标名称" }),
+        /* @__PURE__ */ u2(ThinkInput, { value: metricLabel, onInput: (event) => {
+          const value = event.currentTarget.value;
+          setMetricLabel(value);
+          if (!metricKey.trim()) setMetricKey(metricPresetKey(value));
+        } })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "指标 Key" }),
+        /* @__PURE__ */ u2(ThinkInput, { value: metricKey, onInput: (event) => setMetricKey(event.currentTarget.value), placeholder: "task.done" })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "方向" }),
+        /* @__PURE__ */ u2(SimpleSelect, { value: metricDirection, options: metricDirectionOptions, onChange: (value) => setMetricDirection(value), fullWidth: true })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "目标值" }),
+        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: metricTargetValue, onInput: (event) => setMetricTargetValue(event.currentTarget.value) })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "单位" }),
+        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", value: metricUnit, onInput: (event) => setMetricUnit(event.currentTarget.value) })
+      ] })
     ] }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(160px, 1fr) 120px 90px auto", gap: 1, alignItems: "center" }, children: [
-      /* @__PURE__ */ u2(SimpleSelect, { value: metricDirection, options: metricDirectionOptions, onChange: (value) => setMetricDirection(value), fullWidth: true }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "目标值", type: "number", value: metricTargetValue, onChange: (event) => setMetricTargetValue(event.target.value) }),
-      /* @__PURE__ */ u2(TextField2, { size: "small", label: "单位", value: metricUnit, onChange: (event) => setMetricUnit(event.target.value) }),
-      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleSaveMetric, disabled: !metricGoalId || !metricLabel.trim(), children: "保存/更新指标" })
-    ] }),
-    selectedMetricGoal && /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
-      "当前目标：",
-      selectedMetricGoal.goalPath || selectedMetricGoal.title
-    ] }),
-    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 0.75 }, children: selectedMetrics.length > 0 ? selectedMetrics.map((metric) => /* @__PURE__ */ u2(
-      Chip2,
-      {
-        size: "small",
-        label: `${metric.label} · ${metric.targetValue ?? "无目标值"}${metric.unit || ""}`,
-        onClick: () => loadMetricDraft(metric),
-        onDelete: () => handleRemoveMetric(metric.key)
-      },
-      metric.key
-    )) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "当前目标还没有指标。" }) })
+    /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleSaveMetric, disabled: !metricGoalId || !metricLabel.trim(), children: "保存指标" }) }),
+    /* @__PURE__ */ u2("div", { className: "think-goal-metrics__items", children: selectedMetrics.length > 0 ? selectedMetrics.map((metric) => /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", onClick: () => loadMetricDraft(metric), title: "点击编辑；双击删除", onDblClick: () => handleRemoveMetric(metric.key), children: [
+      /* @__PURE__ */ u2("span", { className: "think-chip__label", children: [
+        metric.label,
+        " · ",
+        metric.targetValue ?? "—",
+        metric.unit || ""
+      ] }),
+      /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
+    ] }, metric.key)) : /* @__PURE__ */ u2("span", { className: "think-settings-caption", children: "当前目标没有指标" }) })
   ] });
 }
 const statusOptions = [
@@ -80706,37 +73908,19 @@ function ThemeMetadataManager() {
     await useCases.theme.deleteTheme(id);
     setMessage("已删除主题");
   };
-  return /* @__PURE__ */ u2(Box, { className: "think-theme-metadata think-settings-stack", children: [
-    /* @__PURE__ */ u2(Box, { className: "think-settings-row think-settings-row--between", children: [
-      /* @__PURE__ */ u2(Typography2, { className: "think-settings-subheading", children: "主题管理" }),
+  return /* @__PURE__ */ u2("div", { className: "think-theme-metadata think-settings-stack", children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--between", children: [
+      /* @__PURE__ */ u2("h2", { className: "think-settings-subheading", children: "主题管理" }),
       /* @__PURE__ */ u2("span", { className: "think-settings-caption", role: "status", children: message || `${themes.length} 个主题` })
     ] }),
     /* @__PURE__ */ u2("section", { className: "think-settings-section think-settings-section--flat think-theme-metadata__section", children: [
-      /* @__PURE__ */ u2(Typography2, { className: "think-settings-subheading", children: "新增 / 更新主题" }),
-      /* @__PURE__ */ u2(Box, { className: "think-editor-grid think-editor-grid--metadata", children: [
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            size: "small",
-            label: "主题路径",
-            value: path,
-            onChange: (event) => setPath(event.target.value),
-            placeholder: "电脑/记录系统"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            size: "small",
-            label: "图标",
-            value: icon,
-            onChange: (event) => setIcon(event.target.value),
-            placeholder: "🎯"
-          }
-        ),
+      /* @__PURE__ */ u2("h3", { className: "think-settings-subheading", children: "新增 / 更新主题" }),
+      /* @__PURE__ */ u2("div", { className: "think-editor-grid think-editor-grid--metadata", children: [
+        /* @__PURE__ */ u2(ThinkInput, { "aria-label": "主题路径", value: path, onInput: (event) => setPath(event.currentTarget.value), placeholder: "主题路径，例如 电脑/记录系统" }),
+        /* @__PURE__ */ u2(ThinkInput, { "aria-label": "图标", value: icon, onInput: (event) => setIcon(event.currentTarget.value), placeholder: "图标" }),
         /* @__PURE__ */ u2(ThinkButton, { variant: "primary", onClick: handleAddTheme, disabled: !path.trim(), children: "保存" })
       ] }),
-      previewThemePath && /* @__PURE__ */ u2(Box, { className: "think-editor-inline think-editor-inline--wrap think-settings-caption", role: "status", "aria-live": "polite", children: [
+      previewThemePath && /* @__PURE__ */ u2("div", { className: "think-editor-inline think-editor-inline--wrap think-settings-caption", role: "status", "aria-live": "polite", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-label-strong", children: "图标预览" }),
         /* @__PURE__ */ u2("span", { className: "think-theme-metadata__ellipsis", children: previewThemePath }),
         /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "→" }),
@@ -80745,52 +73929,23 @@ function ThemeMetadataManager() {
       ] })
     ] }),
     /* @__PURE__ */ u2("section", { className: "think-settings-section think-settings-section--flat think-theme-metadata__section", children: [
-      /* @__PURE__ */ u2(Box, { className: "think-editor-grid think-editor-grid--list-toolbar", children: [
-        /* @__PURE__ */ u2(Typography2, { className: "think-settings-subheading", children: "主题列表" }),
-        /* @__PURE__ */ u2(
-          TextField2,
-          {
-            className: "think-settings-search",
-            size: "small",
-            value: query,
-            onChange: (event) => setQuery(event.target.value),
-            placeholder: "搜索主题",
-            inputProps: { "aria-label": "搜索主题" }
-          }
-        )
+      /* @__PURE__ */ u2("div", { className: "think-editor-grid think-editor-grid--list-toolbar", children: [
+        /* @__PURE__ */ u2("h3", { className: "think-settings-subheading", children: "主题列表" }),
+        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-search", value: query, onInput: (event) => setQuery(event.currentTarget.value), placeholder: "搜索主题", "aria-label": "搜索主题" })
       ] }),
-      /* @__PURE__ */ u2(Box, { className: "think-theme-metadata__columns", "aria-hidden": "true", children: [
+      /* @__PURE__ */ u2("div", { className: "think-theme-metadata__columns", "aria-hidden": "true", children: [
         /* @__PURE__ */ u2("span", { children: "图标" }),
         /* @__PURE__ */ u2("span", { children: "路径" }),
         /* @__PURE__ */ u2("span", { children: "图标来源" }),
         /* @__PURE__ */ u2("span", { children: "状态" }),
         /* @__PURE__ */ u2("span", {})
       ] }),
-      /* @__PURE__ */ u2(Box, { className: "think-theme-metadata__entries", children: sortedThemes.length ? sortedThemes.map((theme) => {
+      /* @__PURE__ */ u2("div", { className: "think-theme-metadata__entries", children: sortedThemes.length ? sortedThemes.map((theme) => {
         const info = inheritedIconInfo(themes, theme.path);
         const inherited = Boolean(info.sourcePath && info.sourcePath !== theme.path);
-        return /* @__PURE__ */ u2(Box, { className: "think-theme-metadata__entry", children: [
-          /* @__PURE__ */ u2(
-            TextField2,
-            {
-              className: "think-theme-metadata__icon-field",
-              size: "small",
-              value: theme.icon || "",
-              onChange: (event) => updateThemeIcon(theme.id, event.target.value),
-              placeholder: info.icon || "🎯",
-              inputProps: { "aria-label": `${theme.path} 图标` }
-            }
-          ),
-          /* @__PURE__ */ u2(
-            TextField2,
-            {
-              size: "small",
-              value: theme.path || "",
-              onChange: (event) => updateThemePath(theme.id, event.target.value),
-              inputProps: { "aria-label": `${theme.path} 路径` },
-              fullWidth: true
-            }
-          ),
+        return /* @__PURE__ */ u2("div", { className: "think-theme-metadata__entry", children: [
+          /* @__PURE__ */ u2(ThinkInput, { className: "think-theme-metadata__icon-field", value: theme.icon || "", onInput: (event) => updateThemeIcon(theme.id, event.currentTarget.value), placeholder: info.icon || "🎯", "aria-label": `${theme.path} 图标` }),
+          /* @__PURE__ */ u2(ThinkInput, { value: theme.path || "", onChange: (event) => updateThemePath(theme.id, event.currentTarget.value), "aria-label": `${theme.path} 路径` }),
           /* @__PURE__ */ u2("span", { className: "think-theme-metadata__source", children: [
             info.icon || "🎯",
             " ",
@@ -80818,7 +73973,7 @@ function ThemeMetadataManager() {
             }
           )
         ] }, theme.id);
-      }) : /* @__PURE__ */ u2(Typography2, { className: "think-theme-metadata__empty", variant: "body2", color: "text.secondary", children: "没有匹配的主题" }) })
+      }) : /* @__PURE__ */ u2("div", { className: "think-theme-metadata__empty", children: "没有匹配的主题" }) })
     ] })
   ] });
 }
@@ -80829,41 +73984,19 @@ function EnergySettingsSection() {
   const defaultThemePath = useSelector(selectEnergyDefaultThemePath);
   const useCases = useUseCases();
   const goals = (settings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived");
-  const goalOptions = [
-    { value: "", label: "自动选择第一个活跃目标" },
-    ...goals.map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title }))
-  ];
-  const themeOptions2 = [
-    { value: "", label: "不指定默认主题" },
-    ...themes.filter((theme) => theme.status !== "inactive").map((theme) => ({ value: theme.path, label: `${theme.icon || "•"} ${theme.path}` }))
-  ];
+  const goalOptions = [{ value: "", label: "自动选择第一个活跃目标" }, ...goals.map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title }))];
+  const themeOptions2 = [{ value: "", label: "不指定默认主题" }, ...themes.filter((theme) => theme.status !== "inactive").map((theme) => ({ value: theme.path, label: `${theme.icon || "•"} ${theme.path}` }))];
   return /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
-    /* @__PURE__ */ u2("div", { className: "think-settings-section__header", children: /* @__PURE__ */ u2("div", { children: [
-      /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "精力记录默认值" }),
-      /* @__PURE__ */ u2("p", { className: "think-settings-help", children: "属于“记录类型”的默认数据，不属于 EnergyView。桌面快捷记录没有显式上下文时使用这里的目标与主题。" })
-    ] }) }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-field-stack", children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", children: "默认精力目标" }),
-      /* @__PURE__ */ u2(
-        SimpleSelect,
-        {
-          value: defaultGoalId,
-          options: goalOptions,
-          onChange: (value) => void useCases.settings.setEnergyDefaultGoalId(value || null),
-          fullWidth: true
-        }
-      ),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", children: "默认精力主题" }),
-      /* @__PURE__ */ u2(
-        SimpleSelect,
-        {
-          value: defaultThemePath,
-          options: themeOptions2,
-          onChange: (value) => void useCases.settings.setEnergyDefaultThemePath(value || null),
-          fullWidth: true
-        }
-      ),
-      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "优先级：当前明确传入的主题 → 默认精力主题 → 当前目标主题。快捷录入默认不展示目标/主题表单，只在需要时展开目标修改。" })
+    /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "精力记录默认值" }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认目标" }),
+        /* @__PURE__ */ u2(SimpleSelect, { value: defaultGoalId, options: goalOptions, onChange: (value) => void useCases.settings.setEnergyDefaultGoalId(value || null), fullWidth: true })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认主题" }),
+        /* @__PURE__ */ u2(SimpleSelect, { value: defaultThemePath, options: themeOptions2, onChange: (value) => void useCases.settings.setEnergyDefaultThemePath(value || null), fullWidth: true })
+      ] })
     ] })
   ] });
 }
@@ -80875,29 +74008,19 @@ const sections = [
 ];
 function DataManagementSettings() {
   const [section, setSection] = d("goals");
-  return /* @__PURE__ */ u2(Box, { className: "think-settings-page think-settings-page--wide", children: [
-    /* @__PURE__ */ u2(Box, { className: "think-settings-page__header think-settings-full-width", children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "h5", className: "think-settings-page__title", children: "数据管理" }),
-      /* @__PURE__ */ u2(
-        ThinkSegmentedControl,
-        {
-          label: "数据管理分类",
-          value: section,
-          options: sections,
-          onChange: (value) => setSection(value),
-          size: "sm",
-          className: "think-data-management-nav"
-        }
-      )
+  return /* @__PURE__ */ u2("div", { className: "think-settings-page think-settings-page--wide", children: [
+    /* @__PURE__ */ u2("header", { className: "think-settings-page__header think-settings-full-width", children: [
+      /* @__PURE__ */ u2("h1", { className: "think-settings-page__title", children: "数据管理" }),
+      /* @__PURE__ */ u2(ThinkSegmentedControl, { label: "数据管理分类", value: section, options: sections, onChange: (value) => setSection(value), size: "sm", className: "think-data-management-nav" })
     ] }),
-    /* @__PURE__ */ u2(Box, { className: "think-settings-full-width", children: [
-      section === "recordTypes" && /* @__PURE__ */ u2(Box, { className: "think-settings-stack think-settings-full-width", children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-full-width", children: [
+      section === "recordTypes" && /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-full-width", children: [
         /* @__PURE__ */ u2(EnergySettingsSection, {}),
         /* @__PURE__ */ u2(BlockManager, {})
       ] }),
       section === "goals" && /* @__PURE__ */ u2(GoalManager, {}),
       section === "themes" && /* @__PURE__ */ u2(ThemeMetadataManager, {}),
-      section === "metrics" && /* @__PURE__ */ u2(Box, { className: "think-settings-full-width", children: /* @__PURE__ */ u2(GoalMetricSection, {}) })
+      section === "metrics" && /* @__PURE__ */ u2(GoalMetricSection, {})
     ] })
   ] });
 }
@@ -80987,9 +74110,7 @@ function SettingsLauncher({ onOpenWorkspace }) {
   const deviceProfileAttrs = getThinkDeviceProfileAttributes();
   return /* @__PURE__ */ u2("section", { className: "think-os think-os--settings think-setting-root think-setting-root--launcher", ...deviceProfileAttrs, children: [
     /* @__PURE__ */ u2("h2", { className: "think-settings-launcher__title", children: "Think OS 控制台" }),
-    /* @__PURE__ */ u2("p", { className: "think-settings-launcher__description", children: "完整设置已经收敛到 Obsidian 工作区标签页，那里空间更适合管理目标、记录预设、布局和 AI。 原生插件设置页只保留这个入口，避免继续塞入大型表单。" }),
-    /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: onOpenWorkspace, children: "打开 Think OS 控制台" }),
-    /* @__PURE__ */ u2("small", { className: "think-settings-launcher__hint", children: "也可以通过命令面板执行：打开 Think OS 控制台（标签页）。" })
+    /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: onOpenWorkspace, children: "打开 Think OS 控制台" })
   ] });
 }
 class SettingsTab extends obsidian.PluginSettingTab {

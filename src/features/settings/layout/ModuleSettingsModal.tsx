@@ -8,15 +8,9 @@
 
 import { useMemo } from 'preact/hooks';
 import {
-  FormControlLabel,
-  Checkbox,
-  Button,
-  Box,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Typography,
-  Chip,
+  ThinkButton,
+  ThinkCheckbox,
+  ThinkDisclosure,
 } from '@shared/ui/public';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/types/public';
 import { getFieldLabel, getFieldCategoryLabel } from '@core/fields/public';
@@ -25,7 +19,6 @@ import type { FilterRule, ViewInstance } from '@core/types/public';
 import { VIEW_EDITORS } from '@features/settings/views/editors/registry';
 import { useSelector, makeSelectViewInstanceById, useDataStore, useUseCases } from '@/app/public';
 import {
-  ExpandMoreIcon,
   FieldManager,
   FormField,
   Modal,
@@ -85,167 +78,104 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     };
 
     return (
-        <div>
-            {/* 基础设置 */}
-            <div style={{ marginBottom: '2rem' }}>
-                <h4 style={{ 
-                    marginBottom: '1rem', 
-                    color: 'var(--text-muted)',
-                    fontSize: '1rem',
-                    fontWeight: '600'
-                }}>
-                    基础设置
-                </h4>
-                
-                <FormField label="视图类型">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <SimpleSelect 
-                            value={currentVi.viewType} 
-                            options={viewTypeOptions} 
-                            onChange={val => handleUpdate({ viewType: val as ViewName })} 
-                            sx={{ flex: 1, minWidth: '150px' }}
+        <div className="think-module-settings">
+            <section className="think-module-settings__section">
+                <h4 className="think-module-settings__section-title">基础设置</h4>
+                <div className="think-module-settings__fields">
+                    <FormField label="视图类型">
+                        <div className="think-module-settings__inline">
+                            <SimpleSelect
+                                value={currentVi.viewType}
+                                options={viewTypeOptions}
+                                onChange={val => handleUpdate({ viewType: val as ViewName })}
+                                fullWidth
+                                className="think-module-settings__view-type"
+                            />
+                            <ThinkCheckbox
+                                checked={!!currentVi.collapsed}
+                                onChange={e => handleUpdate({ collapsed: (e.currentTarget as HTMLInputElement).checked })}
+                                label="默认折叠"
+                                compact
+                            />
+                        </div>
+                    </FormField>
+
+                    <FormField label="显示字段">
+                        <FieldManager
+                            fields={currentVi.fields || []}
+                            availableFields={fieldOptions}
+                            onFieldsChange={handleFieldsChange}
+                            placeholder="添加字段…"
+                            getFieldLabel={getFieldLabel}
+                            getFieldGroupLabel={getFieldCategoryLabel}
                         />
-                        <FormControlLabel 
-                            control={
-                                <Checkbox 
-                                    size="small" 
-                                    checked={!!currentVi.collapsed} 
-                                    onChange={e => handleUpdate({ collapsed: (e.target as HTMLInputElement).checked })} 
-                                />
-                            } 
-                            label="默认折叠" 
+                    </FormField>
+
+                    <FormField label="分组字段">
+                        <FieldManager
+                            fields={currentVi.groupFields || []}
+                            availableFields={fieldOptions}
+                            onFieldsChange={handleGroupFieldsChange}
+                            placeholder="选择分组字段…"
+                            getFieldLabel={getFieldLabel}
+                            getFieldGroupLabel={getFieldCategoryLabel}
                         />
-                    </div>
-                </FormField>
+                    </FormField>
+                </div>
+            </section>
 
-                <FormField 
-                    label="显示字段" 
-                    help="选择要在视图中显示的字段"
+            <section className="think-module-settings__section">
+                <h4 className="think-module-settings__section-title">筛选与排序</h4>
+                <CommonFilterPanel
+                    title="常用筛选"
+                    dataStore={dataStore}
+                    filters={currentVi.filters || []}
+                    fieldOptions={fieldOptions}
+                    onChange={(rows: FilterRule[]) => handleUpdate({ filters: normalizeViewFilters(rows) })}
+                    compact
+                />
+
+                <ThinkDisclosure
+                    title="高级筛选"
+                    meta={`${(currentVi.filters || []).length} 条`}
+                    open={hasAdvancedFilters || undefined}
+                    className="think-module-settings__advanced"
                 >
-                    <FieldManager 
-                        fields={currentVi.fields || []}
-                        availableFields={fieldOptions}
-                        onFieldsChange={handleFieldsChange}
-                        placeholder="+ 添加字段..."
-                        getFieldLabel={getFieldLabel}
-                        getFieldGroupLabel={getFieldCategoryLabel}
-                    />
-                </FormField>
-
-                <FormField
-                    label="分组字段"
-                    help="选择用于分组的字段，顺序即为多级分组层级（A→B→C）"
-                >
-                    <FieldManager
-                        fields={currentVi.groupFields || []}
-                        availableFields={fieldOptions}
-                        onFieldsChange={handleGroupFieldsChange}
-                        placeholder="+ 选择分组字段..."
-                        getFieldLabel={getFieldLabel}
-                        getFieldGroupLabel={getFieldCategoryLabel}
-                    />
-                </FormField>
-
-            </div>
-
-            {/* 数据筛选和排序 */}
-            <div style={{ 
-                borderTop: '1px solid var(--background-modifier-border)', 
-                paddingTop: '1.5rem', 
-                marginBottom: '1.5rem' 
-            }}>
-                <h4 style={{ 
-                    marginBottom: '1rem', 
-                    color: 'var(--text-muted)',
-                    fontSize: '1rem',
-                    fontWeight: '600'
-                }}>
-                    数据筛选与排序
-                </h4>
-                
-                <FormField
-                    label="视图筛选"
-                    help="常用筛选适合主题路径、分类、标签多选；高级筛选保留原来的字段/条件/值规则。"
-                >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-                        <CommonFilterPanel
-                            title="常用筛选"
-                            description="同一字段内多选表示“或”，不同字段之间默认表示“且”。"
-                            dataStore={dataStore}
-                            filters={currentVi.filters || []}
-                            fieldOptions={fieldOptions}
-                            onChange={(rows: FilterRule[]) => handleUpdate({ filters: normalizeViewFilters(rows) })}
-                            compact
-                        />
-
-                        <Accordion
-                            defaultExpanded={hasAdvancedFilters}
-                            disableGutters
-                            sx={{
-                                border: '1px solid var(--background-modifier-border)',
-                                borderRadius: '10px',
-                                '&:before': { display: 'none' },
-                            }}
-                        >
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                                    <Typography sx={{ fontWeight: 700 }}>高级筛选规则</Typography>
-                                    <Chip label={`${(currentVi.filters || []).length} 条`} size="small" variant="outlined" />
-                                    <Typography variant="body2" color="text.secondary">正则、区间、排除、复杂且/或关系</Typography>
-                                </Box>
-                            </AccordionSummary>
-                            <AccordionDetails sx={{ pt: 0 }}>
-                                <RuleBuilder
-                                    title="筛选"
-                                    mode="filter"
-                                    rows={currentVi.filters || []}
-                                    fieldOptions={fieldOptions}
-                                    onChange={(rows: any) => handleUpdate({ filters: normalizeViewFilters(rows) })}
-                                    dataStore={dataStore}
-                                    variant="panel"
-                                />
-                            </AccordionDetails>
-                        </Accordion>
-                    </Box>
-                </FormField>
-                
-                <FormField 
-                    label="排序规则" 
-                    help="定义数据排序方式"
-                >
-                    <RuleBuilder 
-                        title="排序规则" 
-                        mode="sort" 
-                        rows={currentVi.sort || []} 
-                        fieldOptions={fieldOptions} 
-                        onChange={(rows: any) => handleUpdate({ sort: normalizeViewSort(rows) })} 
+                    <RuleBuilder
+                        title="筛选"
+                        mode="filter"
+                        rows={currentVi.filters || []}
+                        fieldOptions={fieldOptions}
+                        onChange={(rows: any) => handleUpdate({ filters: normalizeViewFilters(rows) })}
                         dataStore={dataStore}
+                        variant="panel"
+                        showHeader={false}
                     />
-                </FormField>
-            </div>
+                </ThinkDisclosure>
 
-            {/* 专属配置 */}
+                <RuleBuilder
+                    title="排序"
+                    mode="sort"
+                    rows={currentVi.sort || []}
+                    fieldOptions={fieldOptions}
+                    onChange={(rows: any) => handleUpdate({ sort: normalizeViewSort(rows) })}
+                    dataStore={dataStore}
+                />
+            </section>
+
             {EditorComponent && (
-                <div style={{ 
-                    borderTop: '1px solid var(--background-modifier-border)', 
-                    paddingTop: '1.5rem' 
-                }}>
-                    <h4 style={{ 
-                        marginBottom: '1rem', 
-                        color: 'var(--text-muted)',
-                        fontSize: '1rem',
-                        fontWeight: '600'
-                    }}>
-                        {currentVi.viewType.replace('View', '')} 专属配置
+                <section className="think-module-settings__section">
+                    <h4 className="think-module-settings__section-title">
+                        {currentVi.viewType.replace('View', '')} 配置
                     </h4>
-                    <EditorComponent 
-                        module={currentVi} 
-                        value={correctedViewConfig} 
-                        onChange={(patch: any) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } })} 
+                    <EditorComponent
+                        module={currentVi}
+                        value={correctedViewConfig}
+                        onChange={(patch: any) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } })}
                         fieldOptions={fieldOptions}
                         dataStore={dataStore}
                     />
-                </div>
+                </section>
             )}
         </div>
     );
@@ -278,6 +208,7 @@ export function ModuleSettingsModal({ isOpen, onClose, module }: Props) {
             isOpen={isOpen}
             onClose={onClose}
             title={`视图设置: ${module.title}`}
+            className="think-os--settings"
             onSave={handleSave}
             saveButtonText="保存设置"
             size="large"
@@ -308,23 +239,13 @@ function ModuleSettingsPanel({ module, onClose }: { module: ViewInstance; onClos
     });
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, width: '100%' }}>
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 12, boxSizing: 'border-box' }}>
+        <div className="think-os think-os--settings think-module-settings-panel">
+            <div className="think-module-settings-panel__body">
                 <ViewInstanceEditor vi={currentModule} />
             </div>
-
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    gap: 8,
-                    padding: '12px 12px 0 12px',
-                    marginTop: 0,
-                    borderTop: '1px solid var(--background-modifier-border)',
-                }}
-            >
-                <Button onClick={handleSave} variant="contained">保存设置</Button>
-                <Button onClick={onClose} variant="outlined">关闭</Button>
+            <div className="think-module-settings-panel__actions">
+                <ThinkButton onClick={onClose} variant="secondary" size="sm">关闭</ThinkButton>
+                <ThinkButton onClick={handleSave} variant="primary" size="sm">保存设置</ThinkButton>
             </div>
         </div>
     );

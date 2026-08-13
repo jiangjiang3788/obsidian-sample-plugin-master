@@ -149,12 +149,13 @@
 }
 
 .think-os--settings .think-field-row__details {
-  margin-top: var(--think-space-5);
+  margin-top: var(--think-space-4);
   margin-left: 36px;
-  padding: var(--think-space-5);
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-sm);
-  background: var(--think-bg-canvas);
+  padding: var(--think-space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--think-border-subtle);
+  border-radius: 0;
+  background: transparent;
 }
 
 .think-os--settings .think-field-row__number-range {
@@ -191,3 +192,11 @@
     grid-column: 2 / -1;
   }
 }
+
+.think-os--settings .think-fields-editor__rows { display: grid; gap: 0; min-width: 0; }
+.think-os--settings .think-fields-editor__row-wrap { border-bottom: 1px solid var(--think-border-subtle); border-radius: 0; }
+.think-os--settings .think-field-row { padding: var(--think-space-3) 0; border-radius: 0; }
+.think-os--settings .think-field-row__required-label input { margin: 0; }
+.think-os--settings .think-field-row__options { display: grid; gap: var(--think-space-3); }
+.think-os--settings .think-field-row__options-list { display: grid; gap: var(--think-space-2); }
+.think-os--settings .think-field-option-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto; align-items: end; gap: var(--think-space-3); }

@@ -1,44 +1,32 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
-import { Box, Typography } from '@shared/ui/public';
-import type { GoalTemplateEditMode } from '@core/goal/public';
+import { ThinkSegmentedControl } from '@shared/ui/public';
+import type { GoalTemplateEditMode } from './GoalTemplateEditorModel';
 
-interface GoalTemplateModeSwitchProps {
+export function GoalTemplateModeSwitch({ mode, blockName, disabled, onInherit, onOverride }: {
   mode: GoalTemplateEditMode;
   blockName: string;
   disabled?: boolean;
   onInherit: () => void;
   onOverride: () => void;
-}
-
-function modeButtonStyle(active: boolean, disabled: boolean) {
-  return {
-    border: 'none',
-    borderRadius: 999,
-    padding: '5px 12px',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    background: active ? 'var(--interactive-accent)' : 'transparent',
-    color: active ? 'var(--text-on-accent)' : 'var(--text-muted)',
-    font: 'inherit',
-    fontWeight: 700,
-  };
-}
-
-export function GoalTemplateModeSwitch({ mode, blockName, disabled = false, onInherit, onOverride }: GoalTemplateModeSwitchProps) {
-  const inherited = mode === 'inherit';
-  const override = mode === 'override';
+}) {
+  const value = mode === 'disabled' ? 'disabled' : mode;
   return (
-    <Box sx={{ border: '1px solid var(--background-modifier-border)', borderRadius: 1.25, p: 1, display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ fontSize: '0.9rem', fontWeight: 800 }}>预设模式</Typography>
-        <Typography variant="caption" color="text.secondary">
-          {inherited ? `继承 ${blockName} 的基础字段和输出格式` : '当前主题使用独立字段和输出格式'}
-        </Typography>
-      </Box>
-      <Box sx={{ display: 'flex', gap: 0.5, p: 0.25, border: '1px solid var(--background-modifier-border)', borderRadius: 999, background: 'var(--background-secondary)' }}>
-        <button type="button" disabled={disabled} onClick={onInherit} style={modeButtonStyle(inherited, disabled)}>继承</button>
-        <button type="button" disabled={disabled} onClick={onOverride} style={modeButtonStyle(override, disabled)}>覆盖</button>
-      </Box>
-    </Box>
+    <div className="think-settings-row think-goal-template-mode-row">
+      <div className="think-settings-row__label">预设模式</div>
+      <div className="think-settings-row__body">
+        <ThinkSegmentedControl
+          label={`${blockName} 预设模式`}
+          value={value}
+          options={[
+            { value: 'inherit', label: '继承', disabled },
+            { value: 'override', label: '覆盖', disabled },
+          ]}
+          onChange={(next) => {
+            if (next === 'inherit') onInherit();
+            if (next === 'override') onOverride();
+          }}
+        />
+      </div>
+    </div>
   );
 }

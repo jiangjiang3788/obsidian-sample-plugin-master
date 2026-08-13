@@ -1,6 +1,5 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box } from '@shared/ui/public';
 import type { CycleGranularity } from '@core/goal/public';
 
 export type GoalGranularity = Exclude<CycleGranularity, 'day' | 'custom'>;
@@ -19,22 +18,6 @@ export const metricDirectionOptions = [
   { value: 'boolean', label: '是否达成' },
 ];
 
-export function SectionCard({ children }: { children: any }) {
-  return (
-    <Box
-      sx={{
-        border: '1px solid var(--background-modifier-border)',
-        borderRadius: 2,
-        p: 1.5,
-        display: 'grid',
-        gap: 1.25,
-        background: 'var(--background-primary)',
-      }}
-    >
-      {children}
-    </Box>
-  );
-}
 
 export function pathLeaf(path: string): string {
   return String(path || '').split('/').filter(Boolean).pop() || path;

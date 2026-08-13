@@ -1,213 +1,66 @@
-// src/features/settings/ui/BlockManager.tsx
-/**
- * BlockManager - 记录类型管理组件
- * 
- * ⚠️ P0 止血改造：
- * - 禁止直接调用 appStore['_updateSettingsAndPersist']
- * - 禁止在 props 中传递 appStore
- * - Block 所有操作必须通过 useCases.blocks.* 执行
- */
+// Canonical Record 的 Markdown Block 由 RecordSchemaDefinition + Record Codec 统一生成
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { useSelector, selectInputBlocks, useUseCases } from '@/app/public';
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Box,
-  Stack,
-  Typography,
-  Tooltip,
-  Divider,
-  TextField,
-} from '@shared/ui/public';
-import {
-  AddCircleOutlineIcon,
-  ContentCopyIcon,
-  DeleteForeverOutlinedIcon,
-  DragIndicatorIcon,
-  IconAction,
-} from '@shared/ui/public';
-import { useState, useEffect } from 'preact/hooks';
+import { ThinkButton, ThinkDisclosure, ThinkIcon, ThinkIconButton, ThinkInput } from '@shared/ui/public';
 import { FieldsEditor } from './FieldsEditor';
 import type { RecordCaptureTemplate } from '@core/types/public';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { UseCases } from '@/app/public';
 
-// P1: 组件 props 接收 useCases
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }: {
-    block: RecordCaptureTemplate;
-    openId: string | null;
-    setOpenId: (id: string | null) => void;
-    handleDelete: (id: string, name: string) => void | Promise<void>;
-    handleDuplicate: (id: string) => void | Promise<void>;
-    useCases: UseCases;
+  block: RecordCaptureTemplate; openId: string | null; setOpenId: (id: string | null) => void;
+  handleDelete: (id: string, name: string) => void | Promise<void>; handleDuplicate: (id: string) => void | Promise<void>; useCases: UseCases;
 }) {
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
-    const style = { transform: CSS.Transform.toString(transform), transition };
-
-    return (
-        <div ref={setNodeRef} style={style}>
-            <Accordion expanded={openId === block.id} onChange={() => setOpenId(openId === block.id ? null : block.id)} disableGutters elevation={1} className="think-block-accordion">
-                <AccordionSummary>
-                    <Box className="think-block-accordion__summary">
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                            <Tooltip title="拖动排序">
-                                <Box component="span" {...(attributes as any)} {...(listeners as any)} className="think-block-accordion__drag">
-                                    <DragIndicatorIcon />
-                                </Box>
-                            </Tooltip>
-                            <Typography fontWeight={500}>{block.name}</Typography>
-                        </Stack>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                            {/* P1: 通过 UseCase 层复制记录类型 */}
-                            <IconAction label="复制" icon={<ContentCopyIcon fontSize="small" />} onClick={() => handleDuplicate(block.id)} />
-                            <IconAction label="删除" icon={<DeleteForeverOutlinedIcon />} onClick={() => handleDelete(block.id, block.name)} color="error" />
-                        </Stack>
-                    </Box>
-                </AccordionSummary>
-                <AccordionDetails className="think-block-accordion__details">
-                    {/* P1: 传递 useCases */}
-                    <BlockEditor block={block} useCases={useCases} />
-                </AccordionDetails>
-            </Accordion>
-        </div>
-    );
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  return (
+    <div ref={setNodeRef} style={style} className="think-block-accordion">
+      <div className="think-block-accordion__summary">
+        <button type="button" className="think-block-accordion__drag" {...(attributes as any)} {...(listeners as any)} aria-label="拖动排序"><ThinkIcon name="grip-vertical" /></button>
+        <button type="button" className="think-block-accordion__title" onClick={() => setOpenId(openId === block.id ? null : block.id)}>{block.name}</button>
+        <ThinkIconButton label="复制" icon={<ThinkIcon name="copy" />} size="sm" onClick={() => handleDuplicate(block.id)} />
+        <ThinkIconButton label="删除" icon={<ThinkIcon name="trash-2" />} tone="danger" size="sm" onClick={() => handleDelete(block.id, block.name)} />
+        <ThinkIconButton label={openId === block.id ? '收起' : '展开'} icon={<ThinkIcon name={openId === block.id ? 'chevron-up' : 'chevron-down'} />} size="sm" onClick={() => setOpenId(openId === block.id ? null : block.id)} />
+      </div>
+      {openId === block.id && <div className="think-block-accordion__details"><BlockEditor block={block} useCases={useCases} /></div>}
+    </div>
+  );
 }
 
-// P1: 组件 props 接收 useCases
-function BlockEditor({ block, useCases }: { block: RecordCaptureTemplate, useCases: UseCases }) {
-    const [localBlock, setLocalBlock] = useState(block);
-    useEffect(() => { setLocalBlock(block); }, [block]);
-    // P1: 通过 UseCase 层更新 Block
-    const handleUpdate = (updates: Partial<RecordCaptureTemplate>) => { useCases.blocks.updateBlock(block.id, updates); };
-    const handleBlur = (key: keyof RecordCaptureTemplate) => {
-        if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] });
-    };
-    return (
-        <Stack spacing={3} className="think-block-editor">
-            <TextField label="记录类型名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" className="think-block-editor__field--name" />
-            <Divider />
-            <Box>
-                <Typography variant="h6" className="think-block-editor__title">核心元数据</Typography>
-                <Box className="think-block-editor__hint">
-                    <Typography variant="body2" color="text.secondary">
-                        记录类型是一类记录模板；分类、主题、标签是核心字段。
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" className="think-block-editor__template-example">
-                        推荐模板行：分类:: {'{{categoryKey}}'} ｜ 主题:: {'{{themePath}}'} ｜ 标签:: {'{{tags}}'}
-                    </Typography>
-                </Box>
-                <TextField
-                    label="默认分类"
-                    value={localBlock.categoryKey || ''}
-                    onChange={e => setLocalBlock(b => ({ ...b, categoryKey: (e.target as HTMLInputElement).value }))}
-                    onBlur={() => handleBlur('categoryKey')}
-                    placeholder="例如：思考、计划、总结、打卡"
-                    helperText="默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。"
-                    variant="outlined"
-                    size="small"
-                    className="think-block-editor__field--category"
-                />
-            </Box>
-            <Divider />
-            <Box>
-                <Typography variant="h6" className="think-block-editor__title">保存位置</Typography>
-                <Stack spacing={2}>
-                    <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{themePath}}/{{标题.value}}.md" variant="outlined" size="small" />
-                    <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader || ''} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{themePath}}" variant="outlined" size="small" />
-                </Stack>
-            </Box>
-            <Divider />
-            <Box>
-                <Typography variant="h6" className="think-block-editor__title think-block-editor__title--spacious">表单字段</Typography>
-                <FieldsEditor fields={localBlock.fields} onChange={(newFields) => handleUpdate({ fields: newFields })} />
-            </Box>
-            <Divider />
-            <Box>
-                <Typography variant="h6" className="think-block-editor__title">存储格式</Typography>
-                <Typography variant="body2" color="text.secondary">Canonical Record 的 Markdown Block 由 RecordSchemaDefinition + Record Codec 统一生成；这里仅配置字段、默认值和保存位置。</Typography>
-            </Box>
-        </Stack>
-    );
+function BlockEditor({ block, useCases }: { block: RecordCaptureTemplate; useCases: UseCases }) {
+  const [localBlock, setLocalBlock] = useState(block);
+  useEffect(() => { setLocalBlock(block); }, [block]);
+  const handleUpdate = (updates: Partial<RecordCaptureTemplate>) => { useCases.blocks.updateBlock(block.id, updates); };
+  const handleBlur = (key: keyof RecordCaptureTemplate) => { if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] }); };
+  return (
+    <div className="think-block-editor think-settings-stack think-settings-stack--tight">
+      <div className="think-settings-row"><span className="think-settings-row__label">名称</span><ThinkInput value={localBlock.name} onInput={(e) => setLocalBlock((current) => ({ ...current, name: (e.currentTarget as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} /></div>
+      <div className="think-settings-row"><span className="think-settings-row__label">默认分类</span><ThinkInput value={localBlock.categoryKey || ''} onInput={(e) => setLocalBlock((current) => ({ ...current, categoryKey: (e.currentTarget as HTMLInputElement).value }))} onBlur={() => handleBlur('categoryKey')} placeholder="例如：思考、计划、总结、打卡" /></div>
+      <div className="think-settings-row"><span className="think-settings-row__label">目标文件</span><ThinkInput value={localBlock.targetFile} onInput={(e) => setLocalBlock((current) => ({ ...current, targetFile: (e.currentTarget as HTMLInputElement).value }))} onBlur={() => handleBlur('targetFile')} placeholder="{{themePath}}/{{标题.value}}.md" /></div>
+      <div className="think-settings-row"><span className="think-settings-row__label">追加标题</span><ThinkInput value={localBlock.appendUnderHeader || ''} onInput={(e) => setLocalBlock((current) => ({ ...current, appendUnderHeader: (e.currentTarget as HTMLInputElement).value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="## {{themePath}}" /></div>
+      <section className="think-settings-section think-settings-section--flat"><h3 className="think-settings-subheading">表单字段</h3><FieldsEditor fields={localBlock.fields} onChange={(fields) => handleUpdate({ fields })} /></section>
+    </div>
+  );
 }
 
-/**
- * BlockManager 组件
- * 
- * P0 止血：所有 Block 操作通过 useCases.blocks 执行
- * ⚠️ 禁止直接调用 appStore 的任何方法
- * ⚠️ 不再接收 appStore 作为 props
- */
 export function BlockManager() {
-    const blocks = useSelector(selectInputBlocks);
-    const [openId, setOpenId] = useState<string | null>(null);
-    
-    // P1: 获取 UseCases
-    const useCases = useUseCases();
-    
-    // P1: 通过 UseCase 层添加 Block
-    const handleAdd = async () => {
-        const newName = `新记录类型 ${blocks.length + 1}`;
-        const newBlock = await useCases.blocks.addBlock(newName);
-        if (newBlock) {
-            setOpenId(newBlock.id);
-        }
-    };
-
-    // P1: 通过 UseCase 层删除 Block
-    const handleDelete = async (id: string, name: string) => {
-        if (confirm(`确认删除记录类型 "${name}" 吗？\n所有与此记录类型相关的预设会一起删除。`)) {
-            await useCases.blocks.deleteBlock(id);
-        }
-    };
-
-    // P1: 通过 UseCase 层复制记录类型
-    const handleDuplicate = async (id: string) => {
-        await useCases.blocks.duplicateBlock(id);
-    };
-
-    /**
-     * P0 止血：拖拽排序处理
-     * 
-     * ⚠️ 禁止：appStore['_updateSettingsAndPersist']
-     * ✅ 改用：useCases.blocks.reorderBlocks
-     */
-    const handleDragEnd = (event: any) => {
-        const { active, over } = event;
-        if (active && over && active.id !== over.id) {
-            // P0: 通过 UseCase 重排序，而非直接操作 appStore 私有方法
-            useCases.blocks.reorderBlocks(active.id, over.id);
-        }
-    };
-
-    return (
-        <Box className="think-block-manager">
-            <Stack direction="row" alignItems="center" spacing={1} className="think-block-manager__header">
-                <Typography variant="h6">记录类型</Typography>
-                <IconAction label="新增记录类型" onClick={handleAdd} color="success" icon={<AddCircleOutlineIcon />} />
-            </Stack>
-            <Typography variant="body2" color="text.secondary" className="think-block-manager__description">定义快速输入可选择的记录类型，例如任务、打卡、总结。可拖动排序。</Typography>
-            
-            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
-                    <Stack spacing={1}>
-                        {blocks.map((block) => (
-                           <SortableBlockItem
-                                key={block.id}
-                                block={block}
-                                openId={openId}
-                                setOpenId={setOpenId}
-                                handleDelete={handleDelete}
-                                handleDuplicate={handleDuplicate}
-                                useCases={useCases}
-                           />
-                        ))}
-                    </Stack>
-                </SortableContext>
-            </DndContext>
-        </Box>
-    );
+  const blocks = useSelector(selectInputBlocks); const [openId, setOpenId] = useState<string | null>(null); const useCases = useUseCases();
+  const handleAdd = async () => { const newBlock = await useCases.blocks.addBlock(`新记录类型 ${blocks.length + 1}`); if (newBlock) setOpenId(newBlock.id); };
+  const handleDelete = async (id: string, name: string) => { if (confirm(`确认删除记录类型 "${name}" 吗？\n相关预设会一起删除。`)) await useCases.blocks.deleteBlock(id); };
+  const handleDuplicate = async (id: string) => { await useCases.blocks.duplicateBlock(id); };
+  const handleDragEnd = (event: any) => { const { active, over } = event; if (active && over && active.id !== over.id) useCases.blocks.reorderBlocks(active.id, over.id); };
+  return (
+    <section className="think-block-manager think-settings-section">
+      <div className="think-settings-section__header"><h2 className="think-settings-section__title">记录类型</h2><ThinkButton size="sm" variant="secondary" leadingIcon={<ThinkIcon name="plus" />} onClick={handleAdd}>新增</ThinkButton></div>
+      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={blocks.map((block) => block.id)} strategy={verticalListSortingStrategy}>
+          <div className="think-block-manager__list">{blocks.map((block) => <SortableBlockItem key={block.id} block={block} openId={openId} setOpenId={setOpenId} handleDelete={handleDelete} handleDuplicate={handleDuplicate} useCases={useCases} />)}</div>
+        </SortableContext>
+      </DndContext>
+    </section>
+  );
 }

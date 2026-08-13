@@ -1,13 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  TextField,
-} from '@shared/ui/public';
+import { ThinkButton, ThinkInput, ThinkNotice } from '@shared/ui/public';
 import { getEffectiveCoreBlocks } from '@core/blocks/public';
 import { getGoalTemplates } from '@core/goal/public';
 import type { CoreBlockDefinition } from '@core/blocks/public';
@@ -257,32 +251,25 @@ export function GoalTemplateMatrix() {
   };
 
   return (
-    <Box sx={{ display: 'grid', gap: 1.25 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-        <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center', flexWrap: 'wrap' }}>
-          <TextField size="small" placeholder="搜索" value={query} onChange={(event: any) => setQuery(event.target.value)} sx={{ minWidth: 220 }} />
-          <Button size="small" variant="outlined" onClick={expandAll}>展开</Button>
-          <Button size="small" variant="outlined" onClick={collapseAll}>折叠</Button>
-        </Box>
-      </Box>
+    <div className="think-goal-template-matrix">
+      <div className="think-goal-template-matrix__toolbar">
+        <ThinkInput className="think-settings-search" placeholder="搜索目标" value={query} onInput={(event) => setQuery((event.currentTarget as HTMLInputElement).value)} />
+        <ThinkButton size="sm" variant="secondary" onClick={expandAll}>展开</ThinkButton>
+        <ThinkButton size="sm" variant="secondary" onClick={collapseAll}>折叠</ThinkButton>
+      </div>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
+      <div className="think-goal-template-matrix__block-filter">
         {coreBlocks.map((block) => (
-          <Chip
-            key={block.id}
-            size="small"
-            label={block.name}
-            color={isBlockActive(block.id) ? 'primary' : 'default'}
-            variant={isBlockActive(block.id) ? 'filled' : 'outlined'}
-            onClick={() => toggleBlock(block.id)}
-          />
+          <button key={block.id} type="button" className={`think-chip${isBlockActive(block.id) ? ' is-active' : ''}`} aria-pressed={isBlockActive(block.id)} onClick={() => toggleBlock(block.id)}>
+            <span className="think-chip__label">{block.name}</span>
+          </button>
         ))}
-      </Box>
+      </div>
 
       {goals.length === 0 ? (
-        <Alert severity="info">还没有目标。请先到“目标”新建目标，然后在表格单元格里配置记录预设。</Alert>
+        <ThinkNotice>还没有目标。</ThinkNotice>
       ) : coreBlocks.length === 0 ? (
-        <Alert severity="info">还没有启用的记录类型。请先在“数据管理 / 记录类型”里启用。</Alert>
+        <ThinkNotice>还没有启用的记录类型。</ThinkNotice>
       ) : (
         <GoalTemplateMatrixTable
           visibleGoals={visibleGoals}
@@ -310,26 +297,8 @@ export function GoalTemplateMatrix() {
         />
       )}
 
-      <GoalTemplateContextMenu
-        state={contextMenu}
-        blocks={coreBlocks}
-        templates={templates}
-        onClose={() => setContextMenu(null)}
-        onOpenBlock={openEditor}
-        onCopyToBlock={copyContextTemplateToBlock}
-        onCopyMissingBlocks={copyContextTemplateToMissingBlocks}
-        onDeleteTemplate={deletePresetTemplate}
-      />
-
-      <GoalTemplateEditorModal
-        isOpen={!!selected}
-        onClose={() => setSelected(null)}
-        goal={selected?.goal || null}
-        block={selected?.block || null}
-        variants={selectedVariants}
-        initialVariantId={selected?.variantId || null}
-        useCases={useCases}
-      />
-    </Box>
+      <GoalTemplateContextMenu state={contextMenu} blocks={coreBlocks} templates={templates} onClose={() => setContextMenu(null)} onOpenBlock={openEditor} onCopyToBlock={copyContextTemplateToBlock} onCopyMissingBlocks={copyContextTemplateToMissingBlocks} onDeleteTemplate={deletePresetTemplate} />
+      <GoalTemplateEditorModal isOpen={!!selected} onClose={() => setSelected(null)} goal={selected?.goal || null} block={selected?.block || null} variants={selectedVariants} initialVariantId={selected?.variantId || null} useCases={useCases} />
+    </div>
   );
 }

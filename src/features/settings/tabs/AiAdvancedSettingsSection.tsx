@@ -1,89 +1,24 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  FormControl,
-  FormControlLabel,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@shared/ui/public';
-import { ExpandMoreIcon } from '@shared/ui/public';
+import { SimpleSelect, ThinkDisclosure, ThinkInput, ThinkToggle } from '@shared/ui/public';
 import type { AiSettingsSectionProps } from './aiSettingsUiTypes';
 
 export function AiAdvancedSettingsSection({ settings, onUpdate }: AiSettingsSectionProps) {
   return (
     <>
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">多结果设置</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={2}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.allowMultipleResults}
-                  onChange={(e) => onUpdate({ allowMultipleResults: (e.target as HTMLInputElement).checked })}
-                />
-              }
-              label="允许多条结果"
-            />
-            <TextField
-              fullWidth
-              label="最大结果数量"
-              type="number"
-              value={settings.maxResults}
-              onChange={(e) => onUpdate({ maxResults: parseInt((e.target as HTMLInputElement).value, 10) || 5 })}
-              disabled={!settings.allowMultipleResults}
-            />
-            <FormControl fullWidth>
-              <InputLabel>确认模式</InputLabel>
-              <Select
-                value={settings.confirmMode}
-                label="确认模式"
-                onChange={(e) => onUpdate({ confirmMode: (e.target as HTMLInputElement).value as 'single' | 'batch' })}
-              >
-                <MenuItem value="single">单条确认</MenuItem>
-                <MenuItem value="batch">批量确认</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
-
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">性能设置</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={2}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.preloadConfigOnStartup}
-                  onChange={(e) => onUpdate({ preloadConfigOnStartup: (e.target as HTMLInputElement).checked })}
-                />
-              }
-              label="启动时预加载配置"
-            />
-            <TextField
-              fullWidth
-              label="配置缓存 TTL (秒)"
-              type="number"
-              value={settings.configCacheTTLSeconds}
-              onChange={(e) => onUpdate({ configCacheTTLSeconds: parseInt((e.target as HTMLInputElement).value, 10) || 300 })}
-              helperText="配置快照的缓存时间，避免每次调用都重新构建"
-            />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
+      <ThinkDisclosure title="多结果设置">
+        <div className="think-settings-stack think-settings-stack--tight">
+          <div className="think-settings-row"><span className="think-settings-row__label">多条结果</span><div className="think-settings-row__body"><ThinkToggle checked={settings.allowMultipleResults} onChange={(e) => onUpdate({ allowMultipleResults: (e.currentTarget as HTMLInputElement).checked })} label="允许" /></div></div>
+          <div className="think-settings-row"><span className="think-settings-row__label">最大数量</span><ThinkInput className="think-settings-field--sm" type="number" value={settings.maxResults} disabled={!settings.allowMultipleResults} onInput={(e) => onUpdate({ maxResults: parseInt((e.currentTarget as HTMLInputElement).value, 10) || 5 })} /></div>
+          <div className="think-settings-row"><span className="think-settings-row__label">确认模式</span><SimpleSelect value={settings.confirmMode} options={[{ value: 'single', label: '单条确认' }, { value: 'batch', label: '批量确认' }]} onChange={(confirmMode) => onUpdate({ confirmMode: confirmMode as 'single' | 'batch' })} /></div>
+        </div>
+      </ThinkDisclosure>
+      <ThinkDisclosure title="性能设置">
+        <div className="think-settings-stack think-settings-stack--tight">
+          <div className="think-settings-row"><span className="think-settings-row__label">预加载</span><div className="think-settings-row__body"><ThinkToggle checked={settings.preloadConfigOnStartup} onChange={(e) => onUpdate({ preloadConfigOnStartup: (e.currentTarget as HTMLInputElement).checked })} label="启动时加载配置" /></div></div>
+          <div className="think-settings-row"><span className="think-settings-row__label">缓存 TTL</span><ThinkInput className="think-settings-field--md" type="number" value={settings.configCacheTTLSeconds} onInput={(e) => onUpdate({ configCacheTTLSeconds: parseInt((e.currentTarget as HTMLInputElement).value, 10) || 300 })} /></div>
+        </div>
+      </ThinkDisclosure>
     </>
   );
 }

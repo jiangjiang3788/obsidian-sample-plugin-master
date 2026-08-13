@@ -1,9 +1,9 @@
 /**
- * FormField - 表单字段组件
- * 提供统一的表单字段布局和样式
+ * FormField - compact settings field row.
+ * Visual rhythm is owned by Settings CSS; only label width remains dynamic.
  */
 
-import { h, ComponentChild } from 'preact';
+import { h, type ComponentChild } from 'preact';
 
 export interface FormFieldProps {
   label: string;
@@ -21,69 +21,29 @@ export function FormField({
   required = false,
   help,
   error,
-  className = "",
-  labelWidth = "80px"
+  className = '',
+  labelWidth = '112px',
 }: FormFieldProps) {
-  const fieldClasses = [
-    'form-field',
-    error ? 'form-field--error' : '',
-    className
+  const classes = [
+    'think-form-field',
+    error ? 'think-form-field--error' : '',
+    className,
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={fieldClasses} style={{ marginBottom: '1rem' }}>
-      <div 
-        style={{ 
-          display: 'flex', 
-          alignItems: 'flex-start', 
-          gap: '1rem' 
-        }}
-      >
-        <label 
-          className="form-label"
-          style={{ 
-            width: labelWidth, 
-            fontWeight: 'bold',
-            paddingTop: '8px',
-            flexShrink: 0
-          }}
-        >
-          {label}
-          {required && <span className="required" style={{ color: 'var(--text-error)' }}>*</span>}
-        </label>
-        
-        <div className="form-control" style={{ flex: 1 }}>
-          {children}
-        </div>
-      </div>
-      
-      {help && (
-        <div 
-          className="form-help" 
-          style={{ 
-            fontSize: '0.85rem', 
-            color: 'var(--text-muted)', 
-            marginTop: '0.25rem',
-            marginLeft: `calc(${labelWidth} + 1rem)`
-          }}
-        >
-          {help}
-        </div>
-      )}
-      
-      {error && (
-        <div 
-          className="form-error" 
-          style={{ 
-            fontSize: '0.85rem', 
-            color: 'var(--text-error)', 
-            marginTop: '0.25rem',
-            marginLeft: `calc(${labelWidth} + 1rem)`
-          }}
-        >
-          {error}
-        </div>
-      )}
+    <div
+      className={classes}
+      style={{ '--think-form-field-label-width': labelWidth } as any}
+    >
+      <label className="think-form-field__label">
+        {label}
+        {required && <span className="think-form-field__required">*</span>}
+      </label>
+
+      <div className="think-form-field__control">{children}</div>
+
+      {help && <div className="think-form-field__help">{help}</div>}
+      {error && <div className="think-form-field__error">{error}</div>}
     </div>
   );
 }

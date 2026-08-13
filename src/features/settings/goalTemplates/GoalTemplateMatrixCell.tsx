@@ -1,5 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import { ThinkButton, ThinkIcon } from '@shared/ui/public';
 import type { CoreBlockDefinition } from '@core/blocks/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { GoalPresetCard } from './GoalPresetCard';
@@ -11,8 +12,6 @@ import {
   sortPresets,
 } from './goalTemplateMatrixModel';
 import type { PresetDragState, PresetDropCellState } from './goalTemplateMatrixModel';
-
-const ADD_BUTTON_HEIGHT = 36;
 
 export interface GoalTemplateMatrixCellProps {
   goal: GoalDefinition;
@@ -28,40 +27,6 @@ export interface GoalTemplateMatrixCellProps {
   handlePresetDropOnCell: (event: DragEvent, goal: GoalDefinition, block: CoreBlockDefinition) => Promise<void>;
   openEditor: (goal: GoalDefinition, block: CoreBlockDefinition, template?: GoalTemplate | null) => void;
   openPresetContextMenu: (event: MouseEvent, goal: GoalDefinition, block: CoreBlockDefinition, template: GoalTemplate) => void;
-}
-
-function AddPresetButton(props: { goal: GoalDefinition; block: CoreBlockDefinition; openEditor: GoalTemplateMatrixCellProps['openEditor'] }) {
-  const { goal, block, openEditor } = props;
-  return (
-    <button
-      type="button"
-      onClick={(event: any) => {
-        event.stopPropagation();
-        openEditor(goal, block);
-      }}
-      title="添加预设"
-      style={{
-        width: '100%',
-        height: ADD_BUTTON_HEIGHT,
-        minHeight: ADD_BUTTON_HEIGHT,
-        border: '1px dashed var(--background-modifier-border)',
-        borderRadius: 8,
-        background: 'var(--background-secondary)',
-        color: 'var(--text-muted)',
-        cursor: 'pointer',
-        font: 'inherit',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 0,
-        margin: 0,
-        boxShadow: 'none',
-        lineHeight: 1,
-      }}
-    >
-      ＋
-    </button>
-  );
 }
 
 function PresetCard(props: {
@@ -130,33 +95,32 @@ export function GoalTemplateMatrixCell(props: GoalTemplateMatrixCellProps) {
 
   return (
     <div
-      title="＋ 添加；左键编辑；右键复制；拖动排序或移动"
-      onDragEnter={(event: any) => {
+      className={`think-goal-template-matrix__preset-cell${isDropCell ? ' is-drop-target' : ''}`}
+      title="添加、编辑或拖动记录预设"
+      onDragEnter={(event: DragEvent) => {
         if (!draggingPreset) return;
         event.preventDefault();
         event.stopPropagation();
         if (!presetDropCell || presetDropCell.goalId !== goal.id || presetDropCell.blockId !== block.id) setPresetDropCell({ goalId: goal.id, blockId: block.id });
       }}
-      onDragOver={(event: any) => {
+      onDragOver={(event: DragEvent) => {
         if (!draggingPreset) return;
         event.preventDefault();
       }}
-      onDrop={(event: any) => handlePresetDropOnCell(event, goal, block)}
-      style={{
-        display: 'grid',
-        gridAutoRows: 'min-content',
-        alignContent: 'start',
-        justifyItems: 'stretch',
-        gap: 4,
-        minHeight: ADD_BUTTON_HEIGHT + 8,
-        padding: '0 4px 4px',
-        borderRadius: 10,
-        background: 'transparent',
-        outline: isDropCell ? '2px dashed #7c3cff' : 'none',
-        outlineOffset: isDropCell ? -2 : 0,
-      }}
+      onDrop={(event: DragEvent) => handlePresetDropOnCell(event, goal, block)}
     >
-      <AddPresetButton goal={goal} block={block} openEditor={openEditor} />
+      <ThinkButton
+        size="sm"
+        variant="ghost"
+        className="think-goal-template-matrix__add"
+        leadingIcon={<ThinkIcon name="plus" />}
+        onClick={(event: MouseEvent) => {
+          event.stopPropagation();
+          openEditor(goal, block);
+        }}
+      >
+        添加
+      </ThinkButton>
       {!collapsed && presets.map((template) => (
         <PresetCard
           key={goalTemplateKey(template)}

@@ -3,13 +3,11 @@
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import {
-  Box,
-  Button,
-  Chip,
-  Tooltip,
-  Typography,
+  SimpleSelect,
+  ThinkButton,
+  ThinkIcon,
+  ThinkIconButton,
 } from '@shared/ui/public';
-import { DeleteOutlineIcon, IconAction, SimpleSelect } from '@shared/ui/public';
 import type { DataStore } from '@core/services/public';
 import type { FilterRule, SortRule } from '@core/types/public';
 import { FieldPickerAutocomplete } from './FieldPickerAutocomplete';
@@ -17,8 +15,6 @@ import {
     appendRule,
     buildRuleLabel,
     buildUniqueFieldValues,
-    getPanelAddRuleGridTemplate,
-    getPanelRuleGridTemplate,
     makeDefaultRule,
     operatorNeedsValue,
     patchRule,
@@ -42,58 +38,32 @@ interface RuleBuilderProps {
     onChange: (rows: RuleBuilderRule[]) => void;
     dataStore: DataStore;
     variant?: RuleBuilderVariant;
+    showHeader?: boolean;
 }
 
-export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = 'compact' }: RuleBuilderProps) {
+export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = 'compact', showHeader = true }: RuleBuilderProps) {
     const isFilterMode = mode === 'filter';
     const [newRule, setNewRule] = useState<RuleBuilderRule>(makeDefaultRule(mode));
     const uniqueFieldValues = useMemo(() => buildUniqueFieldValues(dataStore), [dataStore]);
     const shouldShowValueInput = shouldShowRuleValueInput(mode, newRule);
 
     const remove = (index: number) => onChange(removeRuleAt(rows, index));
-
-    const updateNewRule = (patch: Partial<FilterRule | SortRule>) => {
-        setNewRule(current => patchRule(mode, current, patch as Partial<RuleBuilderRule>));
-    };
-
-    const updateRow = (index: number, patch: Partial<FilterRule | SortRule>) => {
-        onChange(patchRuleRows(mode, rows, index, patch as Partial<RuleBuilderRule>));
-    };
-
-    const updateLogic = (index: number, logic: 'and' | 'or') => {
-        onChange(patchRuleLogic(rows, index, logic, isFilterMode));
-    };
+    const updateNewRule = (patch: Partial<FilterRule | SortRule>) => setNewRule(current => patchRule(mode, current, patch as Partial<RuleBuilderRule>));
+    const updateRow = (index: number, patch: Partial<FilterRule | SortRule>) => onChange(patchRuleRows(mode, rows, index, patch as Partial<RuleBuilderRule>));
+    const updateLogic = (index: number, logic: 'and' | 'or') => onChange(patchRuleLogic(rows, index, logic, isFilterMode));
 
     const handleAddRule = () => {
-        if (!newRule.field) {
-            alert('请选择一个字段');
-            return;
-        }
+        if (!newRule.field) return;
         onChange(appendRule(mode, rows, newRule));
         setNewRule(makeDefaultRule(mode));
     };
 
-    const renderFieldInput = (
-        field: string,
-        onFieldChange: (field: string) => void,
-        placeholder = '搜索 / 选择字段'
-    ) => (
-        <FieldPickerAutocomplete
-            value={field}
-            options={fieldOptions}
-            onChange={onFieldChange}
-            placeholder={placeholder}
-            helperText={variant === 'panel' ? '字段按核心字段 / 文件字段 / 自定义字段分组。' : undefined}
-        />
+    const renderFieldInput = (field: string, onFieldChange: (field: string) => void, placeholder = '搜索 / 选择字段') => (
+        <FieldPickerAutocomplete value={field} options={fieldOptions} onChange={onFieldChange} placeholder={placeholder} />
     );
 
     const renderValueInput = (rule: FilterRule, onValueChange: (value: any) => void) => (
-        <RuleBuilderValueInput
-            rule={rule}
-            uniqueFieldValues={uniqueFieldValues}
-            variant={variant}
-            onValueChange={onValueChange}
-        />
+        <RuleBuilderValueInput rule={rule} uniqueFieldValues={uniqueFieldValues} onValueChange={onValueChange} />
     );
 
     const existingRules = (
@@ -101,17 +71,13 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
             {rows.map((rule: RuleBuilderRule, index: number) => {
                 const isLast = index === rows.length - 1;
                 const filterRule = rule as FilterRule;
-
+                const label = buildRuleLabel(mode, rule);
                 return (
                     <div key={index} className="think-rule-builder__chip-row">
-                        <Tooltip title={`点击删除规则: ${buildRuleLabel(mode, rule)}`}>
-                            <Chip
-                                label={buildRuleLabel(mode, rule)}
-                                onClick={() => remove(index)}
-                                size="small"
-                            />
-                        </Tooltip>
-
+                        <button type="button" className="think-chip" title={`点击删除规则: ${label}`} onClick={() => remove(index)}>
+                            <span className="think-chip__label">{label}</span>
+                            <span className="think-chip__remove" aria-hidden="true">×</span>
+                        </button>
                         {isFilterMode && !isLast && (
                             <SimpleSelect
                                 value={filterRule.logic || 'and'}
@@ -127,19 +93,15 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
     );
 
     const panelRuleRows = (
-        <Box className="think-rule-builder__panel-rows">
+        <div className="think-rule-builder__panel-rows">
             {rows.map((rule: RuleBuilderRule, index: number) => {
                 const filterRule = rule as FilterRule;
                 const sortRule = rule as SortRule;
                 const isLast = index === rows.length - 1;
                 const showValueInput = isFilterMode && operatorNeedsValue(filterRule.op);
-
                 return (
-                    <Box key={index} className="think-rule-builder__row-shell">
-                        <Box
-                            className="think-rule-builder__row-grid"
-                            sx={{ gridTemplateColumns: getPanelRuleGridTemplate(mode, showValueInput) }}
-                        >
+                    <div key={index} className="think-rule-builder__row-shell">
+                        <div className={`think-rule-builder__row-grid ${isFilterMode ? (showValueInput ? 'is-filter is-with-value' : 'is-filter is-no-value') : 'is-sort'}`}>
                             {renderFieldInput(rule.field, (field) => updateRow(index, { field }))}
 
                             {isFilterMode ? (
@@ -169,62 +131,45 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                                     className="think-rule-builder__value"
                                 />
                             ) : (
-                                <Typography variant="body2" color="text.secondary" className="think-rule-builder__end-label">
-                                    {isFilterMode ? '末尾' : ''}
-                                </Typography>
+                                <span className="think-rule-builder__end-label">{isFilterMode ? '末尾' : ''}</span>
                             )}
 
-                            <IconAction
+                            <ThinkIconButton
                                 label="删除规则"
-                                icon={<DeleteOutlineIcon fontSize="small" />}
+                                icon={<ThinkIcon name="trash-2" />}
                                 onClick={() => remove(index)}
-                                size="small"
+                                size="sm"
+                                tone="danger"
                             />
-                        </Box>
-                    </Box>
+                        </div>
+                    </div>
                 );
             })}
-        </Box>
+        </div>
     );
 
     if (variant === 'panel') {
         return (
-            <Box className="think-rule-builder">
-                <Box className="think-editor-header">
-                    <div>
-                        <Typography className="think-settings-label-strong">{title}规则</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            字段支持搜索；已有规则可直接编辑。“属于任一 / 不属于任一”支持多选 chip，也可输入后回车添加；区间用“开始~结束”。
-                        </Typography>
-                    </div>
-                </Box>
+            <div className="think-rule-builder">
+                {showHeader && <div className="think-editor-header"><span className="think-settings-label-strong">{title}规则</span></div>}
 
                 {rows.length > 0 ? (
-                    <Box className="think-rule-builder__rules">
-                        <Box
-                            className="think-rule-builder__column-head"
-                            sx={{ gridTemplateColumns: getPanelRuleGridTemplate(mode, isFilterMode) }}
-                        >
-                            <Typography variant="caption">字段</Typography>
-                            <Typography variant="caption">{isFilterMode ? '条件' : '排序'}</Typography>
-                            {isFilterMode && <Typography variant="caption">值</Typography>}
-                            <Typography variant="caption">连接</Typography>
-                            <Typography variant="caption">操作</Typography>
-                        </Box>
+                    <div className="think-rule-builder__rules">
+                        <div className={`think-rule-builder__column-head ${isFilterMode ? 'is-filter is-with-value' : 'is-sort'}`}>
+                            <span>字段</span>
+                            <span>{isFilterMode ? '条件' : '排序'}</span>
+                            {isFilterMode && <span>值</span>}
+                            <span>连接</span>
+                            <span>操作</span>
+                        </div>
                         {panelRuleRows}
-                    </Box>
+                    </div>
                 ) : (
-                    <Box className="think-editor-card think-editor-card--dashed">
-                        <Typography variant="body2" color="text.secondary">还没有规则。先在下方选择字段、条件和值，然后添加规则。</Typography>
-                    </Box>
+                    <span className="think-rule-builder__empty">暂无规则</span>
                 )}
 
-                <Box
-                    className="think-rule-builder__add-grid"
-                    sx={{ gridTemplateColumns: getPanelAddRuleGridTemplate(mode, shouldShowValueInput) }}
-                >
+                <div className={`think-rule-builder__add-grid ${isFilterMode ? (shouldShowValueInput ? 'is-filter is-with-value' : 'is-filter is-no-value') : 'is-sort'}`}>
                     {renderFieldInput(newRule.field, (field) => updateNewRule({ field }))}
-
                     {isFilterMode ? (
                         <>
                             <SimpleSelect
@@ -243,22 +188,19 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                             className="think-rule-builder__operator"
                         />
                     )}
-
-                    <Button variant="contained" size="small" onClick={handleAddRule} className="think-rule-builder__add">添加规则</Button>
-                </Box>
-            </Box>
+                    <ThinkButton variant="primary" size="sm" onClick={handleAddRule} disabled={!newRule.field} className="think-rule-builder__add">添加规则</ThinkButton>
+                </div>
+            </div>
         );
     }
 
     return (
         <div className="think-rule-builder__compact">
-            <Typography className="think-settings-row__label think-settings-row__label--top">{title}</Typography>
+            <span className="think-settings-row__label think-settings-row__label--top">{title}</span>
             <div className="think-rule-builder__compact-body">
                 {existingRules}
-
                 <div className="think-rule-builder__compact-add">
                     {renderFieldInput(newRule.field, (field) => updateNewRule({ field }))}
-
                     {isFilterMode ? (
                         <>
                             <SimpleSelect
@@ -277,8 +219,7 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                             className="think-rule-builder__operator"
                         />
                     )}
-
-                    <Button variant="contained" size="small" onClick={handleAddRule}>添加</Button>
+                    <ThinkButton variant="primary" size="sm" onClick={handleAddRule} disabled={!newRule.field}>添加</ThinkButton>
                 </div>
             </div>
         </div>

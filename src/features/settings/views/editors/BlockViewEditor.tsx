@@ -11,7 +11,6 @@ export function BlockViewEditor() {
   return (
     <ReadonlyViewEditorNotice
       title="块视图（BlockView）"
-      description="没有专属配置项；它的行为主要由上方的显示字段和分组字段控制。"
     />
   );
 }

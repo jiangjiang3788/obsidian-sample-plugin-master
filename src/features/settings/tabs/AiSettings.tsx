@@ -2,14 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
-import {
-  Alert,
-  Box,
-  Divider,
-  FormControlLabel,
-  Switch,
-  Typography,
-} from '@shared/ui/public';
+import { ThinkNotice, ThinkToggle } from '@shared/ui/public';
 import { useUseCases, selectAiSettings, selectInputSettings, useSelector } from '@/app/public';
 import type { AiSettings as AiSettingsType } from '@core/types/public';
 import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES } from '@core/types/public';
@@ -171,30 +164,15 @@ export function AiSettings(_props: AiSettingsProps) {
     const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(aiSettings);
 
     return (
-        <Box className="think-settings-page">
-            <Typography variant="h6" gutterBottom>
-                AI 自然语言快速记录
-            </Typography>
-            <Typography variant="body2" color="text.secondary" className="think-settings-lead">
-                启用后，可以通过自然语言描述快速创建记录，AI 会自动识别并填充相应字段。
-            </Typography>
-
-            <FormControlLabel
-                control={
-                    <Switch
-                        checked={localSettings.enabled}
-                        onChange={(e) => updateLocal({ enabled: (e.target as HTMLInputElement).checked })}
-                    />
-                }
-                label="启用 AI 快速记录"
-            />
+        <div className="think-settings-page">
+            <h2 className="think-settings-page__title">AI 自然语言快速记录</h2>
+            <div className="think-settings-row">
+                <span className="think-settings-row__label">AI 快速记录</span>
+                <div className="think-settings-row__body"><ThinkToggle checked={localSettings.enabled} onChange={(e) => updateLocal({ enabled: (e.currentTarget as HTMLInputElement).checked })} label="启用" /></div>
+            </div>
             {localSettings.enabled && !readiness.ready && (
-                <Alert severity="warning" className="think-settings-alert">
-                    {readiness.message} 开启开关不会立即发起请求，但实际使用前需要补齐配置。
-                </Alert>
+                <ThinkNotice tone="warning">{readiness.message}</ThinkNotice>
             )}
-
-            <Divider className="think-settings-divider" />
 
             <AiApiConfigSection
                 settings={localSettings}
@@ -222,8 +200,6 @@ export function AiSettings(_props: AiSettingsProps) {
             />
             <AiAdvancedSettingsSection settings={localSettings} onUpdate={updateLocal} />
 
-            <Divider className="think-settings-divider" />
-
             <AiSettingsFooter
                 hasChanges={hasChanges}
                 isSaving={isSaving}
@@ -231,6 +207,6 @@ export function AiSettings(_props: AiSettingsProps) {
                 saveStatusSeverity={saveStatusSeverity}
                 onSave={handleSave}
             />
-        </Box>
+        </div>
     );
 }

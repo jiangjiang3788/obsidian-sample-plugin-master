@@ -1,14 +1,8 @@
+// Goal Template 只定义字段、默认值与保存位置，不覆盖存储 grammar
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import {
-  Alert,
-  Box,
-  Button,
-  Divider,
-  Stack,
-  Typography,
-} from '@shared/ui/public';
+import { ThinkButton, ThinkNotice } from '@shared/ui/public';
 import { diagnosticError } from '@shared/utils/public';
 import { FloatingPanel, selectSettings, useSelector, useUiPort, type UseCases } from '@/app/public';
 import type { CoreBlockDefinition } from '@core/blocks/public';
@@ -216,7 +210,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
   return (
     <FloatingPanel
       id={`goal-template-editor-${goal.id}-${block.id}`}
-      title={<Typography>字段预设：<strong>{currentPresetTitle}</strong></Typography>}
+      title={<span>字段预设：<strong>{currentPresetTitle}</strong></span>}
       onClose={onClose}
       defaultPosition={{ x: Math.max(24, window.innerWidth / 2 - 380), y: 72 }}
       portal={false}
@@ -232,72 +226,60 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants
       bodyPadding={0}
       bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
     >
-      <Box className="think-goal-template-editor">
-        <Stack spacing={1.5}>
-          <Box className="think-editor-header">
-            <Box className="think-goal-template-editor__identity">
-              <Typography className="think-settings-title-strong">{currentTheme?.icon ? `${currentTheme.icon} ` : ''}{titleTheme}</Typography>
-              <Typography variant="caption" color="text.secondary">{goal.goalPath || goal.title} / {block.name}</Typography>
-            </Box>
-            <Box className="think-settings-actions">
-              <Button size="small" variant="outlined" disabled={!selectedTemplate || metadataDisabled} onClick={handleCopyVariant}>复制为新预设</Button>
-            </Box>
-          </Box>
+      <div className="think-os--settings think-goal-template-editor">
+        <div className="think-goal-template-editor__stack">
+          <header className="think-editor-header">
+            <div className="think-goal-template-editor__identity">
+              <div className="think-settings-title-strong">{currentTheme?.icon ? `${currentTheme.icon} ` : ''}{titleTheme}</div>
+              <div className="think-settings-caption">{goal.goalPath || goal.title} / {block.name}</div>
+            </div>
+            <div className="think-settings-actions">
+              <ThinkButton size="sm" disabled={!selectedTemplate || metadataDisabled} onClick={handleCopyVariant}>复制为新预设</ThinkButton>
+            </div>
+          </header>
 
-          {mode === 'disabled' ? <Alert severity="warning">这个目标下已经隐藏「{block.name}」。保存前请先改为普通记录预设，或删除这条隐藏规则。</Alert> : null}
+          {mode === 'disabled' ? (
+            <ThinkNotice tone="warning">「{block.name}」当前已隐藏。保存前请切回普通预设或删除隐藏规则。</ThinkNotice>
+          ) : null}
 
           <GoalTemplateModeSwitch mode={mode} blockName={block.name} disabled={metadataDisabled} onInherit={switchToInherit} onOverride={switchToOverride} />
 
-          <Box className="think-goal-template-editor__fields">
-            <Box className={`think-goal-template-editor__primary-grid${supportsPeriod ? '' : ' is-two-column'}`}> 
-              <NativeTextInput label="名字" value={draft.name} onInput={(value) => updateDraft({ name: value })} disabled={metadataDisabled} placeholder="例如：心情" />
-              {isExistingTemplate ? (
-                <NativeTextInput label="主题" value={currentTheme?.icon ? `${currentTheme.icon} ${cleanDisplayThemePath(draft.themePath)}` : cleanDisplayThemePath(draft.themePath) || '未指定主题'} onInput={() => undefined} disabled />
-              ) : (
-                <NativeSelectInput label="主题" value={draft.themePath || ''} options={themeOptions} onChange={(value) => {
-                  const themePath = String(value || '');
-                  updateThemePath(themePath);
-                  const label = themeLeafLabel(themePath);
-                  if (label && isGeneratedPresetName(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
-                }} disabled={metadataDisabled} />
-              )}
-              {supportsPeriod ? <NativeSelectInput label="周期" value={draft.granularity} options={presetGranularityOptions} onChange={(value) => updateDraft({ granularity: value as GoalTemplateDraftState['granularity'] })} disabled={metadataDisabled} /> : null}
-            </Box>
-
-            <Box className="think-goal-template-editor__secondary-grid">
-              <NativeTextInput label="保存文件" value={draft.targetFile} onInput={(value) => updateDraft({ targetFile: value })} disabled={fieldEditDisabled} placeholder="例如：01/目标打卡.md" />
-              <NativeTextInput label="标题" value={draft.appendUnderHeader} onInput={(value) => updateDraft({ appendUnderHeader: value })} disabled={fieldEditDisabled} placeholder="## {{goalPath}}" />
-            </Box>
+          <section className="think-goal-template-editor__fields">
+            <NativeTextInput label="名字" value={draft.name} onInput={(value) => updateDraft({ name: value })} disabled={metadataDisabled} placeholder="例如：心情" />
+            {isExistingTemplate ? (
+              <NativeTextInput label="主题" value={currentTheme?.icon ? `${currentTheme.icon} ${cleanDisplayThemePath(draft.themePath)}` : cleanDisplayThemePath(draft.themePath) || '未指定主题'} onInput={() => undefined} disabled />
+            ) : (
+              <NativeSelectInput label="主题" value={draft.themePath || ''} options={themeOptions} onChange={(value) => {
+                const themePath = String(value || '');
+                updateThemePath(themePath);
+                const label = themeLeafLabel(themePath);
+                if (label && isGeneratedPresetName(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
+              }} disabled={metadataDisabled} />
+            )}
+            {supportsPeriod ? <NativeSelectInput label="周期" value={draft.granularity} options={presetGranularityOptions} onChange={(value) => updateDraft({ granularity: value as GoalTemplateDraftState['granularity'] })} disabled={metadataDisabled} /> : null}
+            <NativeTextInput label="保存文件" value={draft.targetFile} onInput={(value) => updateDraft({ targetFile: value })} disabled={fieldEditDisabled} placeholder="例如：01/目标打卡.md" />
+            <NativeTextInput label="标题" value={draft.appendUnderHeader} onInput={(value) => updateDraft({ appendUnderHeader: value })} disabled={fieldEditDisabled} placeholder="## {{goalPath}}" />
             <NativeTextInput label="说明" value={draft.description} onInput={(value) => updateDraft({ description: value })} disabled={metadataDisabled} placeholder="可选" />
 
             {diffSummary.length ? (
-              <Box className="think-editor-diff-list">
+              <div className="think-editor-diff-list">
                 {diffSummary.map(item => <span key={item} className="think-editor-diff-chip">{item}</span>)}
-              </Box>
+              </div>
             ) : null}
-          </Box>
+          </section>
 
-          <Box className={fieldEditDisabled ? "think-settings-muted-disabled" : undefined}>
-            <Stack spacing={1.5}>
-              <Box>
-                <Typography className="think-goal-template-editor__section-heading">表单字段</Typography>
-                {inheritedMode ? <Typography variant="caption" color="text.secondary" className="think-goal-template-editor__section-help">当前为继承模式，下面只读展示记录类型基础字段。切到“覆盖”后可单独修改这个主题预设。</Typography> : null}
-                <FieldsEditor fields={draft.fields || []} disabled={fieldEditDisabled} onChange={(fields: TemplateField[]) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath })} />
-              </Box>
-              <Divider />
-              <Box>
-                <Typography className="think-goal-template-editor__section-heading">输出格式</Typography>
-                <Alert severity="info">Record 的 Markdown Block 由 RecordSchemaDefinition + Record Codec 统一生成；Goal Template 只定义字段、默认值与保存位置，不覆盖存储 grammar。</Alert>
-              </Box>
-            </Stack>
-          </Box>
+          <section className={fieldEditDisabled ? 'think-settings-muted-disabled think-goal-template-editor__form-fields' : 'think-goal-template-editor__form-fields'}>
+            <div className="think-goal-template-editor__section-heading">表单字段</div>
+            {inheritedMode ? <div className="think-settings-caption">继承模式下字段只读；切换到“覆盖”后可单独修改。</div> : null}
+            <FieldsEditor fields={draft.fields || []} disabled={fieldEditDisabled} onChange={(fields: TemplateField[]) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath })} />
+          </section>
 
-          <Stack direction="row" justifyContent="space-between" spacing={1} className="think-settings-sticky-actions">
-            <Button onClick={onClose}>取消</Button>
-            <Button onClick={handleSave} variant="contained" disabled={metadataDisabled}>保存</Button>
-          </Stack>
-        </Stack>
-      </Box>
+          <footer className="think-settings-sticky-actions">
+            <ThinkButton onClick={onClose}>取消</ThinkButton>
+            <ThinkButton onClick={handleSave} variant="primary" disabled={metadataDisabled}>保存</ThinkButton>
+          </footer>
+        </div>
+      </div>
     </FloatingPanel>
   );
 }

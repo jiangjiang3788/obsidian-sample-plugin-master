@@ -1,8 +1,8 @@
 # Think OS UI Redesign Plan
 
 > Current target: Obsidian-native + Compact + Framed + Low-noise
-> Current release: 1.0.46
-> Progress: 5 / 11 phases complete (Phase 0-4)
+> Current release: 1.0.49
+> Progress: Phase 0-4 accepted; Phase 5 code convergence complete, awaiting visual acceptance
 
 ## Progress
 
@@ -13,8 +13,8 @@
 | 2 | Dashboard Module Frame | DONE | 1.0.44 |
 | 3 | Toolbar / Actions / Icons | DONE | 1.0.45 |
 | 4 | Settings: Data Management -> Theme pilot | DONE | 1.0.46 |
-| 5 | Settings system convergence | NEXT | 1.0.47 |
-| 6 | List / hierarchy views | TODO | later |
+| 5 | Settings system convergence | IN REVIEW | 1.0.49 |
+| 6 | List / hierarchy views | BLOCKED until Phase 5 visual acceptance | later |
 | 7 | Grid / data views | TODO | later |
 | 8 | Visualization views | TODO | later |
 | 9 | Modal / Quick Input / AI | TODO | later |
@@ -54,7 +54,12 @@
 
 ### Phase 5 - Settings system
 - Apply the accepted Theme pilot language to Goal, Record Type, Metric, General, Layout, AI and View Editors.
-- Converge RuleBuilder, CommonFilterPanel and FieldPicker.
+- Converge RuleBuilder, CommonFilterPanel, FieldPicker and floating Settings surfaces.
+- Settings rows use a stable label-left / control-right contract (112px semantic label column; collapse only at very narrow widths).
+- Feature-level Settings code must not import or render raw MUI controls; ordinary controls are consumed through Think primitives.
+- Filters use one visual boundary per field/control. Input-inside-card and card-inside-card patterns are rejected.
+- Toolbar actions remain single-line and consistently framed; narrow workspace leaves scroll horizontally instead of wrapping controls onto a second row.
+- Phase 5 cannot be marked DONE from code gates alone; representative Settings screenshots must be visually accepted first.
 
 ### Phase 6 - list / hierarchy views
 - Converge Block, Progress and Energy task/list families.
@@ -85,3 +90,8 @@
 5. Feature code owns layout and visualization geometry; primitives own ordinary control appearance.
 6. Container width is the primary responsive signal inside Obsidian workspace leaves.
 7. High-frequency Settings do not read like documentation: obvious instructional prose is hidden or removed; only decision-relevant help, errors, warnings and state remain visible.
+
+8. Settings field rows are left/right by default; stacked labels are a narrow-width fallback, not the normal desktop layout.
+9. High-frequency filter/edit forms use one visual boundary per control; no nested field/card frames.
+10. Settings feature code consumes Think primitives rather than raw MUI controls. MUI may remain an implementation detail outside the migrated Settings surface until later phases.
+11. Toolbar actions are all framed consistently and stay on one line; no special unframed exception for period/date/filter/settings actions.
