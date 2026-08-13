@@ -1,4 +1,4 @@
-import type { RecordViewItem } from '@/core/records/RecordEntity';
+import type { RecordViewItem, TaskAvailabilityContext } from '@/core/records/RecordEntity';
 import { isTaskOpen } from '../records/task/taskStatus';
 import { isTaskRecurring } from '../records/task/taskRecurrence';
 import { asTaskSessionRecord } from '../records/task/taskSession';
@@ -13,6 +13,8 @@ export interface BuildEnergyActionCandidatesOptions {
   includeHabits?: boolean;
   includeRecurringTasks?: boolean;
   includeFutureTasks?: boolean;
+  /** Current execution context is a hard eligibility boundary, not a ranking bonus. */
+  currentContext?: TaskAvailabilityContext;
   /** Internal Record set used for persisted TaskSession duration evidence. */
   historyRecords?: RecordViewItem[];
 }
@@ -23,6 +25,7 @@ export type EnergyCandidateExclusionReason =
   | 'explicitly-disabled'
   | 'recurring-task'
   | 'future-task'
+  | 'context-unavailable'
   | 'plan-not-opted-in'
   | 'habit-not-opted-in'
   | 'missing-title';
@@ -33,6 +36,7 @@ export interface EnergyCandidateDiagnostics {
   openTasks: number;
   recurringOpenTasks: number;
   futureOpenTasks: number;
+  contextUnavailableTasks: number;
   eligibleTasks: number;
   eligiblePlans: number;
   eligibleHabits: number;
@@ -53,8 +57,8 @@ function bool(value: unknown): boolean | undefined {
   if (typeof value === 'boolean') return value;
   const raw = text(value).toLowerCase();
   if (!raw) return undefined;
-  if (['true', '1', 'yes', 'y', '\u662f', '\u542f\u7528'].includes(raw)) return true;
-  if (['false', '0', 'no', 'n', '\u5426', '\u7981\u7528'].includes(raw)) return false;
+  if (['true', '1', 'yes', 'y', '是', '启用'].includes(raw)) return true;
+  if (['false', '0', 'no', 'n', '否', '禁用'].includes(raw)) return false;
   return undefined;
 }
 
@@ -67,7 +71,7 @@ function number(value: unknown): number | undefined {
 }
 
 function normalizedBlock(item: RecordViewItem): string {
-  return text(item.coreBlock || item.extra?.['\u6838\u5fc3Block'])
+  return text(item.coreBlock || item.extra?.['核心Block'])
     .replace(/^core\./i, '')
     .toLowerCase();
 }
@@ -83,59 +87,77 @@ function sourceFor(item: RecordViewItem): EnergyActionSource | null {
 function load(value: unknown): EnergyActionLoad | undefined {
   const raw = text(value).toLowerCase();
   if (!raw) return undefined;
-  if (['low', '\u4f4e', '\u8f7b', '\u8f7b\u91cf'].includes(raw)) return 'low';
-  if (['medium', 'mid', '\u4e2d', '\u4e2d\u7b49'].includes(raw)) return 'medium';
-  if (['high', '\u9ad8', '\u91cd', '\u9ad8\u8d1f\u8377'].includes(raw)) return 'high';
+  if (['low', '低', '轻', '轻量'].includes(raw)) return 'low';
+  if (['medium', 'mid', '中', '中等'].includes(raw)) return 'medium';
+  if (['high', '高', '重', '高负荷'].includes(raw)) return 'high';
   return undefined;
+}
+
+const CONTEXT_ALIASES: Record<string, TaskAvailabilityContext> = {
+  any: 'any', '任意': 'any',
+  work: 'work', '工作': 'work', '公司': 'work',
+  home: 'home', '家': 'home', '居家': 'home',
+  commute: 'commute', '通勤': 'commute',
+  out: 'out', '外出': 'out',
+};
+
+function availabilityContexts(value: unknown): TaskAvailabilityContext[] {
+  const rows = Array.isArray(value) ? value : String(value ?? '').split(/[,，\n]/);
+  const normalized = rows
+    .map((row) => CONTEXT_ALIASES[text(row)] || CONTEXT_ALIASES[text(row).toLowerCase()])
+    .filter((row): row is TaskAvailabilityContext => !!row);
+  return Array.from(new Set(normalized));
+}
+
+function contextAllowed(item: RecordViewItem, currentContext: TaskAvailabilityContext | undefined): boolean {
+  if (!currentContext || currentContext === 'any') return true;
+  const contexts = availabilityContexts(item.availabilityContexts);
+  if (contexts.length === 0 || contexts.includes('any')) return true;
+  return contexts.includes(currentContext);
 }
 
 function median(values: number[]): number | undefined {
   const sorted = values.filter((value) => Number.isFinite(value) && value > 0).sort((a, b) => a - b);
-  if (sorted.length < 3) return undefined;
+  if (sorted.length < 2) return undefined;
   const middle = Math.floor(sorted.length / 2);
   const value = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
-  return Math.max(10, Math.min(240, Math.round(value)));
+  return Math.max(1, Math.min(240, Math.round(value)));
 }
 
-function historyDurationMaps(records: RecordViewItem[]): { byGoalTheme: Map<string, number>; byTheme: Map<string, number> } {
-  const goalThemeRows = new Map<string, number[]>();
-  const themeRows = new Map<string, number[]>();
+function historyDurationMaps(records: RecordViewItem[]): { byTaskId: Map<string, number>; bySeriesId: Map<string, number> } {
+  const taskRows = new Map<string, number[]>();
+  const seriesRows = new Map<string, number[]>();
   const byId = new Map(records.map((record) => [record.id, record] as const));
+
   for (const record of records) {
     const session = asTaskSessionRecord(record);
     if (!session) continue;
     const duration = number(session.sessionDurationMinutes);
     if (!duration || duration <= 0) continue;
+
+    taskRows.set(session.taskId, [...(taskRows.get(session.taskId) || []), duration]);
     const task = byId.get(session.taskId);
-    const theme = text(session.themePath || task?.themePath || task?.theme);
-    if (!theme) continue;
-    const goal = text(session.goalId || task?.goalId);
-    const themeKey = theme.toLowerCase();
-    const goalThemeKey = `${goal.toLowerCase()}|${themeKey}`;
-    themeRows.set(themeKey, [...(themeRows.get(themeKey) || []), duration]);
-    if (goal) goalThemeRows.set(goalThemeKey, [...(goalThemeRows.get(goalThemeKey) || []), duration]);
+    const seriesId = text(session.seriesId || task?.seriesId);
+    if (seriesId) seriesRows.set(seriesId, [...(seriesRows.get(seriesId) || []), duration]);
   }
-  return {
-    byGoalTheme: new Map([...goalThemeRows].flatMap(([key, values]) => {
-      const value = median(values);
-      return value == null ? [] : [[key, value] as const];
-    })),
-    byTheme: new Map([...themeRows].flatMap(([key, values]) => {
-      const value = median(values);
-      return value == null ? [] : [[key, value] as const];
-    })),
-  };
+
+  const build = (rows: Map<string, number[]>) => new Map([...rows].flatMap(([key, values]) => {
+    const value = median(values);
+    return value == null ? [] : [[key, value] as const];
+  }));
+
+  return { byTaskId: build(taskRows), bySeriesId: build(seriesRows) };
 }
 
 function inferredDuration(item: RecordViewItem, history: ReturnType<typeof historyDurationMaps>): number | undefined {
-  const explicit = number(item.extra?.['\u9884\u8ba1\u65f6\u957f'] ?? item.extra?.['expectedDuration'] ?? item.extra?.['expectedDurationMinutes']);
-  const canonical = number(item.expectedDurationMinutes);
-  const direct = explicit && explicit > 0 ? explicit : canonical && canonical > 0 ? canonical : undefined;
-  if (direct != null) return Math.max(10, Math.min(240, Math.round(direct)));
-  const theme = text(item.themePath || item.theme).toLowerCase();
-  if (!theme) return undefined;
-  const goal = text(item.goalId).toLowerCase();
-  return (goal ? history.byGoalTheme.get(`${goal}|${theme}`) : undefined) || history.byTheme.get(theme);
+  const direct = number(item.expectedDurationMinutes);
+  if (direct != null && direct > 0) return Math.max(1, Math.min(240, Math.round(direct)));
+  const seriesId = text(item.seriesId);
+  if (seriesId) {
+    const seriesDuration = history.bySeriesId.get(seriesId);
+    if (seriesDuration != null) return seriesDuration;
+  }
+  return history.byTaskId.get(item.id);
 }
 
 function priorityValue(item: RecordViewItem): number {
@@ -195,13 +217,14 @@ function exclusionReason(
   today: string,
   options: BuildEnergyActionCandidatesOptions,
 ): EnergyCandidateExclusionReason | null {
-  const explicit = bool(item.extra?.['\u53ef\u63a8\u8350'] ?? item.extra?.['recommendable']);
+  const explicit = bool(item.extra?.['可推荐'] ?? item.extra?.['recommendable']);
   if (explicit === false) return 'explicitly-disabled';
 
   if (source === 'task') {
     if (!isTaskOpen(item)) return 'not-open-task';
     if (isTaskRecurring(item) && !options.includeRecurringTasks && explicit !== true) return 'recurring-task';
     if (futureTask(item, today) && options.includeFutureTasks !== true) return 'future-task';
+    if (!contextAllowed(item, options.currentContext)) return 'context-unavailable';
     return null;
   }
 
@@ -239,12 +262,12 @@ function personalEffectFor(candidate: EnergyActionCandidate, management?: Energy
 /**
  * Discovery + eligibility + enrichment pipeline for Energy recommendations.
  *
- * Important invariants:
- * - recurring identity comes from seriesId; non-recurring Tasks have no seriesId;
- * - an old start/scheduled date does not invalidate an open backlog task;
- * - only a future start/scheduled date blocks "do it now";
- * - very old overdue due dates do not receive an urgency bonus forever;
- * - Habit/Plan remain opt-in action sources.
+ * V2 invariants:
+ * - availability is a hard boundary before ranking;
+ * - Task demand fields are read only from canonical Task properties, never extra;
+ * - expected duration is the declared task duration, with Task/Series execution history as fallback;
+ * - duration learning never borrows unrelated Goal/Theme sessions;
+ * - recurring identity comes from seriesId and remains stable across occurrences.
  */
 export function buildEnergyActionCandidateResult(items: RecordViewItem[], options: BuildEnergyActionCandidatesOptions = {}): EnergyActionCandidateBuildResult {
   const today = options.today || new Date().toISOString().slice(0, 10);
@@ -258,6 +281,7 @@ export function buildEnergyActionCandidateResult(items: RecordViewItem[], option
     openTasks: 0,
     recurringOpenTasks: 0,
     futureOpenTasks: 0,
+    contextUnavailableTasks: 0,
     eligibleTasks: 0,
     eligiblePlans: 0,
     eligibleHabits: 0,
@@ -278,6 +302,7 @@ export function buildEnergyActionCandidateResult(items: RecordViewItem[], option
         diagnostics.openTasks += 1;
         if (isTaskRecurring(item)) diagnostics.recurringOpenTasks += 1;
         if (futureTask(item, today)) diagnostics.futureOpenTasks += 1;
+        if (!contextAllowed(item, options.currentContext)) diagnostics.contextUnavailableTasks += 1;
       }
     }
 
@@ -297,12 +322,13 @@ export function buildEnergyActionCandidateResult(items: RecordViewItem[], option
     if (source === 'plan') diagnostics.eligiblePlans += 1;
     if (source === 'habit') diagnostics.eligibleHabits += 1;
 
-    const dedupeKey = `${source}|${normalizedLabel(title)}|${text(item.goalId).toLowerCase()}|${text(item.themePath || item.theme).toLowerCase()}`;
+    const dedupeKey = source === 'task' && item.seriesId ? `series:${item.seriesId}` : `${source}:${item.id}`;
     if (seen.has(dedupeKey)) continue;
     seen.add(dedupeKey);
 
-    const sharedLoad = load(item.extra?.['\u7cbe\u529b\u8981\u6c42'] ?? item.extra?.['energyLoad']);
+    const sharedLoad = load(item.energyDemand);
     const valueScore = Math.max(0, Math.min(100, priorityValue(item) + dueBonus(item, today) + scheduleBonus(item, today)));
+    const contexts = availabilityContexts(item.availabilityContexts);
     candidates.push({
       id: item.id,
       title,
@@ -313,10 +339,11 @@ export function buildEnergyActionCandidateResult(items: RecordViewItem[], option
       theme: text(item.themePath || item.theme) || undefined,
       activityLabel: classifyEnergyActivity(item),
       durationMinutes: inferredDuration(item, history),
-      brainLoad: load(item.extra?.['\u8111\u529b\u8981\u6c42'] ?? item.extra?.['brainLoad']) || sharedLoad,
-      physicalLoad: load(item.extra?.['\u4f53\u529b\u8981\u6c42'] ?? item.extra?.['physicalLoad']) || sharedLoad,
+      brainLoad: load(item.brainDemand) || sharedLoad,
+      physicalLoad: load(item.physicalDemand) || sharedLoad,
       valueScore,
-      recoveryIntent: bool(item.extra?.['\u6062\u590d\u610f\u56fe'] ?? item.extra?.['recoveryIntent']) === true,
+      availabilityContexts: contexts.length ? contexts : undefined,
+      recoveryIntent: item.recoveryIntent === true,
     });
   }
 

@@ -152,7 +152,7 @@ export function buildEnergyRecoveryActionCandidates(
     title: entry.label,
     source: 'activity',
     activityLabel: entry.label,
-    durationMinutes: Math.max(10, Math.min(60, entry.typicalDurationMinutes || 20)),
+    durationMinutes: Math.max(1, Math.min(60, entry.typicalDurationMinutes || 20)),
     valueScore: 45,
     recoveryIntent: true,
     historicalEffect: entry,

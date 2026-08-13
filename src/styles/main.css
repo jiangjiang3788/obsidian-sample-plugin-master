@@ -57,6 +57,7 @@
 @import "./features/block.css";
 @import "./features/event-timeline.css";
 @import "./features/timer.css";
+@import "./features/quick-input-editor.css";
 
 @import "./overrides/mui.css";
 @import "./overrides/obsidian-modal.css";

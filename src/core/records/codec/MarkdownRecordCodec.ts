@@ -45,6 +45,8 @@ export interface ParsedRecordMetadata {
   energyDemand?: string;
   brainDemand?: string;
   physicalDemand?: string;
+  availabilityContexts?: Array<'any' | 'work' | 'home' | 'commute' | 'out'>;
+  recoveryIntent?: boolean;
   seriesId?: string;
   recurrenceUnit?: 'day' | 'week' | 'month' | 'quarter' | 'year';
   recurrenceInterval?: number;
@@ -142,6 +144,8 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   let energyDemand: string | undefined;
   let brainDemand: string | undefined;
   let physicalDemand: string | undefined;
+  let availabilityContexts: ParsedRecordMetadata['availabilityContexts'];
+  let recoveryIntent: boolean | undefined;
   let seriesId: string | undefined;
   let recurrenceUnit: ParsedRecordMetadata['recurrenceUnit'];
   let recurrenceInterval: number | undefined;
@@ -254,6 +258,13 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         else if (['精力要求', 'energydemand'].includes(key)) energyDemand = value.trim().toLowerCase() || undefined;
         else if (['脑力要求', 'braindemand'].includes(key)) brainDemand = value.trim().toLowerCase() || undefined;
         else if (['体力要求', 'physicaldemand'].includes(key)) physicalDemand = value.trim().toLowerCase() || undefined;
+        else if (['可用场景', 'availabilitycontexts'].includes(key)) {
+          const allowed = new Set(['any', 'work', 'home', 'commute', 'out']);
+          const aliases: Record<string, string> = { '任意': 'any', '工作': 'work', '公司': 'work', '家': 'home', '居家': 'home', '通勤': 'commute', '外出': 'out' };
+          const values = String(value || '').split(/[,，\n]/).map(part => part.trim()).filter(Boolean).map(part => aliases[part] || part.toLowerCase()).filter(part => allowed.has(part));
+          availabilityContexts = Array.from(new Set(values)) as ParsedRecordMetadata['availabilityContexts'];
+        }
+        else if (['恢复意图', 'recoveryintent'].includes(key)) recoveryIntent = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.boolean) as boolean | undefined;
         else if (['周期', 'period'].includes(key)) period = decodeMarkdownString(value);
         else if (['评分', 'rating'].includes(key)) {
           const decodedRating = decodeMarkdownNumber(value);
@@ -290,7 +301,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
     categoryKey: categoryKey || '', status, date, scheduledDate, startDate, dueDate,
     completedAt, cancelledAt, skippedAt, createdAt, tags: finalTags, goalPath,
     goalId, cycleId, coreBlock, recordSubtype, extra, icon, period, rating, image, pintu, theme, templateId,
-    templateSourceType, priority, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, seriesId,
+    templateSourceType, priority, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, availabilityContexts, recoveryIntent, seriesId,
     recurrenceUnit, recurrenceInterval, recurrenceAnchor, seriesStartDate, currentTaskId, rolloverPolicy,
     taskId, sessionStartedAt, sessionEndedAt, sessionDurationMinutes, sessionResult, sessionSource,
     suggestedDurationMinutes, startEnergyRecordId, endEnergyRecordId, energyDelta, brainDelta, physicalDelta,
@@ -309,6 +320,7 @@ const TASK_FIELD_ORDER: Array<[string, string[]]> = [
   ['主题', ['主题','themePath']], ['创建于', ['创建于','createdAt']], ['优先级', ['优先级','priority']],
   ['预计时长', ['预计时长','expectedDurationMinutes']], ['精力要求', ['精力要求','energyDemand']],
   ['脑力要求', ['脑力要求','brainDemand']], ['体力要求', ['体力要求','physicalDemand']],
+  ['可用场景', ['可用场景','availabilityContexts']], ['恢复意图', ['恢复意图','recoveryIntent']],
   ['计划日期', ['计划日期','scheduledDate']], ['开始日期', ['开始日期','startDate']], ['截止日期', ['截止日期','dueDate']],
   ['完成于', ['完成于','completedAt']], ['取消于', ['取消于','cancelledAt']], ['跳过于', ['跳过于','skippedAt']],
   ['系列ID', ['系列ID','seriesId']], ['模板ID', ['模板ID','templateId']], ['模板来源', ['模板来源','templateSourceType']],
@@ -328,6 +340,7 @@ const TASK_SERIES_FIELD_ORDER: Array<[string, string[]]> = [
   ['状态', ['状态','status']], ['目标ID', ['目标ID','goalId']], ['目标', ['目标','goalPath']],
   ['主题', ['主题','themePath']], ['优先级', ['优先级','priority']], ['预计时长', ['预计时长','expectedDurationMinutes']],
   ['精力要求', ['精力要求','energyDemand']], ['脑力要求', ['脑力要求','brainDemand']], ['体力要求', ['体力要求','physicalDemand']],
+  ['可用场景', ['可用场景','availabilityContexts']], ['恢复意图', ['恢复意图','recoveryIntent']],
   ['重复单位', ['重复单位','recurrenceUnit']], ['重复间隔', ['重复间隔','recurrenceInterval']],
   ['重复锚点', ['重复锚点','recurrenceAnchor']], ['系列开始日期', ['系列开始日期','seriesStartDate']],
   ['当前任务ID', ['当前任务ID','currentTaskId']], ['滚动策略', ['滚动策略','rolloverPolicy']],

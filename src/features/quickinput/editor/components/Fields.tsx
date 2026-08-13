@@ -2,8 +2,6 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 
-import { Stack } from '@shared/ui/public';
-
 import { QuickInputFieldRenderer } from '../fields/FieldRenderer';
 import { QuickInputTimeFieldsSection } from '../fields/TimeFieldsSection';
 import { groupQuickInputFields } from '../fields/fieldSemantics';
@@ -54,14 +52,14 @@ export function QuickInputEditorFields({
   };
 
   return (
-    <Stack spacing={dense ? 1.7 : 1.9}>
+    <div className={`think-qif-fields-stack${dense ? ' is-dense' : ''}`}>
       {regularFields.map((field) => (
-        <div key={field.id}>
+        <div key={field.id} className="think-qif-fields-stack__item">
           <QuickInputFieldRenderer field={field} {...rendererProps} />
         </div>
       ))}
       {dateFields.map((field) => (
-        <div key={field.id}>
+        <div key={field.id} className="think-qif-fields-stack__item">
           <QuickInputFieldRenderer field={field} {...rendererProps} />
         </div>
       ))}
@@ -72,6 +70,6 @@ export function QuickInputEditorFields({
         showTimeDirectionControl={showTimeDirectionControl}
         {...rendererProps}
       />
-    </Stack>
+    </div>
   );
 }

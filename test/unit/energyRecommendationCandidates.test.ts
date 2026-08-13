@@ -25,7 +25,7 @@ function session(id: string, taskId: string, duration: number, startedAt: string
 describe('Energy recommendation candidate adapter', () => {
   it('uses canonical open Task status and explicit metadata without category/type guessing', () => {
     const rows = buildEnergyActionCandidates([
-      task('task-1', '核心代码', { priority: 'highest', dueDate: '2026-08-10', expectedDurationMinutes: 90, extra: { 精力要求: 'high' } }),
+      task('task-1', '核心代码', { priority: 'highest', dueDate: '2026-08-10', expectedDurationMinutes: 90, energyDemand: 'high', extra: { 精力要求: 'low' } }),
       task('done', '已经完成', { status: 'done', completedAt: '2026-08-09T10:00:00Z' }),
     ], { today: '2026-08-10' });
 
@@ -47,7 +47,7 @@ describe('Energy recommendation candidate adapter', () => {
 
   it('allows explicit opt-in for special Plan/Habit/recurring actions', () => {
     const rows = buildEnergyActionCandidates([
-      item({ id: 'habit', title: '散步', coreBlock: 'habit', extra: { 可推荐: true, 恢复意图: true } }),
+      item({ id: 'habit', title: '散步', coreBlock: 'habit', recoveryIntent: true, extra: { 可推荐: true } }),
       item({ id: 'plan', title: '恢复计划', coreBlock: 'plan', extra: { 可推荐: true } }),
       task('repeat', '瑜伽', { seriesId: 'taskseries.yoga', recurrenceInfo: { unit: 'day', interval: 1, anchor: 'scheduled' }, extra: { 可推荐: true } }),
     ], { today: '2026-08-10', includeHabits: true, includePlans: true });
@@ -76,21 +76,42 @@ describe('Energy recommendation candidate adapter', () => {
     expect(result.diagnostics.candidateCount).toBe(1);
   });
 
-  it('infers a typical duration from TaskSession history in the same goal/theme when N>=3', () => {
-    const base = { goalId: 'goal.a', themePath: '电脑/记录系统' };
+  it('learns duration only from the same TaskSeries instead of borrowing Goal/Theme sessions', () => {
+    const base = { goalId: 'goal.a', themePath: '电脑/记录系统', seriesId: 'taskseries.same' };
     const open = task('open', '新任务', base);
     const h1 = task('h1', '历史1', { ...base, status: 'done' });
     const h2 = task('h2', '历史2', { ...base, status: 'done' });
     const h3 = task('h3', '历史3', { ...base, status: 'done' });
+    const unrelated = task('other', '同主题但不同任务', { goalId: 'goal.a', themePath: '电脑/记录系统', status: 'done' });
     const history = [
-      open, h1, h2, h3,
-      session('s1', h1.id, 30, '2026-08-01T09:00:00.000Z'),
-      session('s2', h2.id, 45, '2026-08-02T09:00:00.000Z'),
-      session('s3', h3.id, 60, '2026-08-03T09:00:00.000Z'),
+      open, h1, h2, h3, unrelated,
+      session('s1', h1.id, 1, '2026-08-01T09:00:00.000Z'),
+      session('s2', h2.id, 2, '2026-08-02T09:00:00.000Z'),
+      session('s3', h3.id, 1, '2026-08-03T09:00:00.000Z'),
+      session('s4', unrelated.id, 90, '2026-08-04T09:00:00.000Z'),
     ];
-    const rows = buildEnergyActionCandidates([open], { today: '2026-08-10', historyRecords: history });
+    const rows = buildEnergyActionCandidates([open], { today: '2026-08-10', historyRecords: history, includeRecurringTasks: true });
     expect(rows).toHaveLength(1);
-    expect(rows[0].durationMinutes).toBe(45);
+    expect(rows[0].durationMinutes).toBe(1);
+  });
+
+  it('treats availability as a hard boundary while unconfigured tasks remain available anywhere', () => {
+    const result = buildEnergyActionCandidateResult([
+      task('home', '整理房间', { availabilityContexts: ['home'] }),
+      task('work', '插件开发', { availabilityContexts: ['work'], brainDemand: 'high' }),
+      task('any', '吃钙片', { expectedDurationMinutes: 1 }),
+    ], { today: '2026-08-10', currentContext: 'work' });
+    expect(result.candidates.map((row) => row.id).sort()).toEqual(['any', 'work']);
+    expect(result.diagnostics.contextUnavailableTasks).toBe(1);
+    expect(result.diagnostics.excludedByReason['context-unavailable']).toBe(1);
+  });
+
+  it('accepts a one-minute declared task duration and ignores legacy demand values in extra', () => {
+    const rows = buildEnergyActionCandidates([
+      task('micro', '吃钙片', { expectedDurationMinutes: 1, brainDemand: 'low', extra: { 脑力要求: 'high' } }),
+    ], { today: '2026-08-10' });
+    expect(rows[0].durationMinutes).toBe(1);
+    expect(rows[0].brainLoad).toBe('low');
   });
 
   it('attaches only exact personal evidence with enough samples', () => {

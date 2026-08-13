@@ -40,7 +40,7 @@ export type { EnergyProtocolParseResult, EnergyCaptureGoal } from './protocol';
 
 export { isEnergyItem, readEnergyItemSnapshot, energySnapshotOccurrenceKey } from './item';
 export type { EnergyItemLike, EnergyItemSnapshot } from './item';
-export { buildEnergyActionRecommendations } from './recommendation';
+export { buildEnergyActionRecommendations, ENERGY_RECOMMENDATION_LOW_THRESHOLD, ENERGY_RECOMMENDATION_HIGH_THRESHOLD } from './recommendation';
 export type {
   EnergyActionCandidate,
   EnergyActionHistoricalEffect,

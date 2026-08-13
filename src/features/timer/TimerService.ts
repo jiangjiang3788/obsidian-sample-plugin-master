@@ -76,7 +76,7 @@ export class TimerService {
         const now = Date.now();
         const energyContext = {
             ...context,
-            suggestedDurationMinutes: Math.max(10, Math.min(240, Math.round(context.suggestedDurationMinutes || 30))),
+            suggestedDurationMinutes: Math.max(1, Math.min(240, Math.round(context.suggestedDurationMinutes || 30))),
             startedAt: now,
         };
         const existing = this.useCases.timer.getTimers().find((timer) => timer.taskId === taskId);
@@ -182,7 +182,11 @@ export class TimerService {
         }
 
         await this.useCases.timer.removeTimer(timerId);
-        this.ui.notice('本次工作已结束；任务保持未完成。');
+        this.ui.notice(
+            timer.source === 'energy-view' && timer.energyContext?.baselineEnergyItemId
+                ? '本次工作已结束；任务保持未完成。可记录一次当前精力，用于后续个性化推荐。'
+                : '本次工作已结束；任务保持未完成。'
+        );
         return true;
     }
 
@@ -208,7 +212,11 @@ export class TimerService {
                 return false;
             }
             await this.useCases.timer.removeTimer(timerId);
-            this.ui.notice(result.feedback?.notice || '任务已完成。');
+            this.ui.notice(
+                timer.source === 'energy-view' && timer.energyContext?.baselineEnergyItemId
+                    ? `${result.feedback?.notice || '任务已完成。'} 可记录一次当前精力，用于后续个性化推荐。`
+                    : (result.feedback?.notice || '任务已完成。')
+            );
             return true;
         } catch (error: any) {
             this.ui.notice(`完成任务失败：${error.message}`);

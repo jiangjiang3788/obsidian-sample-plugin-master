@@ -6,12 +6,15 @@ import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/p
 import { createRecordGestureHandlers, hasPlatformModifier, isKeyboardActivation, RECORD_GESTURE_HINT, stopInteractionEvent } from '@shared/ui/public';
 import type { EnergyTaskListItemVM, EnergyTaskListModel } from '../models/energyTaskListModel';
 
+type EnergyTaskContext = EnergyTaskListModel['currentContext'];
+
 interface Props {
   model: EnergyTaskListModel;
   currentView: string;
   onStartTask?: (task: EnergyTaskListItemVM) => void | Promise<void>;
   onOpenRecord?: OpenRecordHandler;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
+  onContextChange?: (context: EnergyTaskContext) => void | Promise<void>;
 }
 
 interface MenuState {
@@ -22,6 +25,33 @@ interface MenuState {
 
 function recordLabel(record: EnergyTaskListItemVM['records'][number]): string {
   return record.timeLabel || record.doneDate || '查看记录';
+}
+
+const CONTEXT_OPTIONS: Array<{ value: EnergyTaskContext; label: string }> = [
+  { value: 'any', label: '任意' },
+  { value: 'work', label: '工作' },
+  { value: 'home', label: '家' },
+  { value: 'commute', label: '通勤' },
+  { value: 'out', label: '外出' },
+];
+
+function durationClock(minutes: number): string {
+  const totalSeconds = Math.max(60, Math.round(Math.max(1, minutes) * 60));
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  return `${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function taskHover(task: EnergyTaskListItemVM): string {
+  return [
+    task.recommendationReason || task.title,
+    `倒计时 ${durationClock(task.suggestedDurationMinutes)}`,
+    '点击开始/继续计时',
+    'Ctrl/⌘+点击打开原文',
+    '右键更多',
+  ].filter(Boolean).join(' · ');
 }
 
 function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecordOrigin, onClose }: {
@@ -90,7 +120,7 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
   );
 }
 
-export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, onOpenRecordOrigin }: Props) {
+export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, onOpenRecordOrigin, onContextChange }: Props) {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const taskMap = useMemo(() => {
@@ -118,8 +148,73 @@ export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, 
     };
   }, []);
 
+  const activateTask = (task: EnergyTaskListItemVM, event?: MouseEvent | KeyboardEvent) => {
+    if (event && hasPlatformModifier(event) && onOpenRecordOrigin) {
+      stopInteractionEvent(event);
+      void onOpenRecordOrigin(task.item);
+      return;
+    }
+    void onStartTask?.(task);
+  };
+
+  const contextLabel = CONTEXT_OPTIONS.find((option) => option.value === model.currentContext)?.label || '任意';
+
   return (
     <section class="think-energy-task-list" aria-label="任务">
+      <div class="think-energy-task-list__recommendation-shell" aria-label="当前推荐">
+        <div class="think-energy-task-list__recommendation-head">
+          <div class="think-energy-task-list__recommendation-heading">
+            <strong>现在适合</strong>
+            {model.latestEnergy ? (
+              <span>{model.recommendationStateLabel || '当前精力'} · {model.latestEnergy.score}</span>
+            ) : (
+              <span>记录当前精力后生成推荐</span>
+            )}
+          </div>
+          <label class="think-energy-task-list__context">
+            <span>场景</span>
+            <select
+              value={model.currentContext}
+              aria-label={`当前场景：${contextLabel}`}
+              onChange={(event) => void onContextChange?.((event.currentTarget as HTMLSelectElement).value as EnergyTaskContext)}
+            >
+              {CONTEXT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+        </div>
+        {model.latestEnergy ? (
+          model.recommendations.length > 0 ? (
+            <div class="think-energy-task-list__recommendations" role="list">
+              {model.recommendations.map((task, index) => (
+                <button
+                  key={`recommendation:${task.itemId}`}
+                  type="button"
+                  role="listitem"
+                  class="think-energy-task-list__recommendation"
+                  title={taskHover(task)}
+                  onClick={(event) => activateTask(task, event as MouseEvent)}
+                  onKeyDown={(event: KeyboardEvent) => {
+                    if (hasPlatformModifier(event) && isKeyboardActivation(event)) activateTask(task, event);
+                  }}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    setMenu({ x: event.clientX, y: event.clientY, taskId: task.itemId });
+                  }}
+                >
+                  <span class="think-energy-task-list__recommendation-rank">{task.recommendationRank || index + 1}</span>
+                  <span class="think-energy-task-list__recommendation-title">{task.title}</span>
+                  <span class="think-energy-task-list__recommendation-duration">{durationClock(task.suggestedDurationMinutes)}</span>
+                  <span class="think-energy-task-list__recommendation-play" aria-hidden="true">▶</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div class="think-energy-task-list__recommendation-empty">当前“{contextLabel}”场景没有可推荐任务。</div>
+          )
+        ) : null}
+      </div>
+
+      <div class="think-energy-task-list__all-head">全部任务</div>
       <div class="think-energy-task-list__goals">
         {model.goals.length > 0 ? model.goals.map((goal) => (
           <section class="think-energy-task-list__goal-group" key={goal.key}>
@@ -134,19 +229,10 @@ export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, 
                         key={task.itemId}
                         type="button"
                         class={`think-energy-task-list__item think-energy-task-list__item--${task.cadence}`}
-                        title={`${task.title} · 点击开始/继续计时 · Ctrl/⌘+点击打开原文 · 右键更多`}
-                        onClick={(event) => {
-                          if (hasPlatformModifier(event) && onOpenRecordOrigin) {
-                            stopInteractionEvent(event);
-                            void onOpenRecordOrigin(task.item);
-                            return;
-                          }
-                          void onStartTask?.(task);
-                        }}
+                        title={taskHover(task)}
+                        onClick={(event) => activateTask(task, event as MouseEvent)}
                         onKeyDown={(event: KeyboardEvent) => {
-                          if (!onOpenRecordOrigin || !hasPlatformModifier(event) || !isKeyboardActivation(event)) return;
-                          stopInteractionEvent(event);
-                          void onOpenRecordOrigin(task.item);
+                          if (hasPlatformModifier(event) && isKeyboardActivation(event)) activateTask(task, event);
                         }}
                         onContextMenu={(event) => {
                           event.preventDefault();

@@ -66,6 +66,7 @@ function latestState(items: RecordViewItem[], highThreshold: number, dimensionGa
   const state = stateFor(snapshot.score, highThreshold);
   const focus = dimensionFocus(snapshot.brainScore, snapshot.physicalScore, dimensionGap);
   return {
+    itemId: item.id,
     score: snapshot.score,
     brainScore: snapshot.brainScore,
     physicalScore: snapshot.physicalScore,

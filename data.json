@@ -159,7 +159,10 @@
         "date",
         "content"
       ],
-      "groupFields": [],
+      "groupFields": [
+        "coreBlock",
+        "goalPath"
+      ],
       "filters": [],
       "sort": [],
       "collapsed": false

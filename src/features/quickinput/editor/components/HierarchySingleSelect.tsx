@@ -1,9 +1,8 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
+import { h, type ComponentChildren } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 
 import { getLeafPath, normalizePath } from '@core/utils/public';
-import { Box, Typography } from '@shared/ui/public';
 
 import { SelectablePill } from './SelectablePill';
 
@@ -26,8 +25,8 @@ export interface HierarchySingleSelectProps {
   dense?: boolean;
   allowClear?: boolean;
   searchable?: boolean;
+  showParentLabel?: boolean;
 }
-
 
 function cleanLabel(value: string): string {
   return String(value || '').trim();
@@ -97,6 +96,7 @@ export function HierarchySingleSelect({
   dense = false,
   allowClear = true,
   searchable = true,
+  showParentLabel = true,
 }: HierarchySingleSelectProps) {
   const [search, setSearch] = useState('');
   const normalizedSelected = normalizePath(selectedValue);
@@ -107,7 +107,6 @@ export function HierarchySingleSelect({
       ? normalizedSelected.slice(0, normalizedSelected.lastIndexOf('/'))
       : normalizedSelected
     : roots[0]?.value || null;
-  const activeParent = activeParentPath ? byValue.get(activeParentPath) || null : null;
   const children = activeParentPath ? childrenByParent.get(activeParentPath) || [] : [];
   const filtered = search.trim()
     ? Array.from(byValue.values())
@@ -118,7 +117,7 @@ export function HierarchySingleSelect({
     : [];
 
   if (!options || options.length === 0) {
-    return <Typography variant="body2" sx={{ color: 'text.secondary' }}>{emptyLabel}</Typography>;
+    return <div className="think-qif-hierarchy-empty">{emptyLabel}</div>;
   }
 
   const renderPill = (option: HierarchySingleSelectOption, active: boolean) => (
@@ -133,8 +132,15 @@ export function HierarchySingleSelect({
     </SelectablePill>
   );
 
+  const renderLevel = (label: string | null, content: ComponentChildren) => (
+    <div className={`think-qif-hierarchy-level ${label ? 'think-qif-hierarchy-level--labeled' : 'think-qif-hierarchy-level--unlabeled'}${dense ? ' is-dense' : ''}`}>
+      {label ? <div className="think-qif-hierarchy-level__label">{label}</div> : null}
+      <div className="think-qif-hierarchy-level__options">{content}</div>
+    </div>
+  );
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: dense ? 1 : 1.2 }}>
+    <div className={`think-qif-hierarchy${dense ? ' is-dense' : ''}`}>
       {searchable && (
         <input
           className="think-native-input"
@@ -145,38 +151,26 @@ export function HierarchySingleSelect({
       )}
 
       {filtered.length > 0 ? (
-        <Box>
-          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontWeight: 600 }}>
-            搜索结果
-          </Typography>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {filtered.map((option) => renderPill(option, normalizedSelected === option.value))}
-          </div>
-        </Box>
+        renderLevel(
+          '搜索结果',
+          filtered.map((option) => renderPill(option, normalizedSelected === option.value)),
+        )
       ) : (
         <>
-          <Box>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontWeight: 600 }}>
-              {parentLabel}
-            </Typography>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {renderLevel(
+            showParentLabel ? parentLabel : null,
+            <>
               {roots.map((option) => renderPill(option, activeParentPath === option.value || normalizedSelected === option.value))}
               {allowClear && selected && renderPill({ id: '__clear__', value: '', label: '清空' }, false)}
-            </div>
-          </Box>
+            </>,
+          )}
 
-          {children.length > 0 && (
-            <Box>
-              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontWeight: 600 }}>
-                {activeParent ? `${cleanLabel(activeParent.label || leafLabel(activeParent.value))} · ${childLabel}` : childLabel}
-              </Typography>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {children.map((option) => renderPill(option, normalizedSelected === option.value))}
-              </div>
-            </Box>
+          {children.length > 0 && renderLevel(
+            childLabel,
+            children.map((option) => renderPill(option, normalizedSelected === option.value)),
           )}
         </>
       )}
-    </Box>
+    </div>
   );
 }

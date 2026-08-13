@@ -68,6 +68,10 @@ const TASK_FIELDS: TemplateField[] = [
   { id: 'core.task.physicalDemand', key: 'physicalDemand', label: '体力要求', type: 'singleSelect', options: [
     { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' },
   ] },
+  { id: 'core.task.availabilityContexts', key: 'availabilityContexts', label: '可用场景', type: 'multiSelect', options: [
+    { value: 'any', label: '任意' }, { value: 'work', label: '工作' }, { value: 'home', label: '家' }, { value: 'commute', label: '通勤' }, { value: 'out', label: '外出' },
+  ] },
+  { id: 'core.task.recoveryIntent', key: 'recoveryIntent', label: '恢复意图', type: 'boolean' },
   { id: 'core.task.recurrenceUnit', key: 'recurrenceUnit', label: '重复单位', type: 'singleSelect', options: [
     { value: 'day', label: '天' }, { value: 'week', label: '周' }, { value: 'month', label: '月' }, { value: 'quarter', label: '季' }, { value: 'year', label: '年' },
   ] },

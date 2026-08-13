@@ -3,12 +3,14 @@ import type {
   RecordTaskPriority,
   TaskRecordEntity as RuntimeTaskRecord,
   TaskSeriesRecordEntity as RuntimeTaskSeriesRecord,
+  TaskAvailabilityContext,
 } from '@/core/records/RecordEntity';
 import type { TaskRolloverPolicy } from './taskRecurrence';
 import type { TaskStatus } from './taskStatus';
 
 export type TaskPriority = RecordTaskPriority;
 export type TaskDemandLevel = 'low' | 'medium' | 'high';
+export type { TaskAvailabilityContext };
 export type TaskSeriesStatus = 'active' | 'stopped';
 export type TaskRecord = RuntimeTaskRecord;
 export type TaskSeriesRecord = RuntimeTaskSeriesRecord;

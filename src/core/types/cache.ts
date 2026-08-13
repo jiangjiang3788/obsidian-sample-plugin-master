@@ -26,6 +26,11 @@ export interface CachedItem {
   recurrenceInfo?: RecordViewItem['recurrenceInfo'];
   priority?: RecordViewItem['priority'];
   expectedDurationMinutes?: number;
+  energyDemand?: string;
+  brainDemand?: string;
+  physicalDemand?: string;
+  availabilityContexts?: RecordViewItem['availabilityContexts'];
+  recoveryIntent?: boolean;
   createdDate?: string;
   scheduledDate?: string;
   startDate?: string;
@@ -80,8 +85,8 @@ export interface CacheV1 {
   };
 }
 
-// v12: persist scanner integrity diagnostics so warm-start cannot hide malformed/missing-ID records.
-export const CURRENT_CACHE_SCHEMA_VERSION = 13;
+// v14: persist Task recommendation metadata so warm-start and cold scan produce identical Energy recommendations.
+export const CURRENT_CACHE_SCHEMA_VERSION = 14;
 
 export function toCachedItem(it: RecordViewItem): CachedItem {
   return {
@@ -109,6 +114,11 @@ export function toCachedItem(it: RecordViewItem): CachedItem {
     recurrenceInfo: it.recurrenceInfo,
     priority: it.priority,
     expectedDurationMinutes: it.expectedDurationMinutes,
+    energyDemand: it.energyDemand,
+    brainDemand: it.brainDemand,
+    physicalDemand: it.physicalDemand,
+    availabilityContexts: it.availabilityContexts,
+    recoveryIntent: it.recoveryIntent,
     createdDate: it.createdDate,
     scheduledDate: it.scheduledDate,
     startDate: it.startDate,
@@ -170,6 +180,11 @@ export function fromCachedItem(c: CachedItem): RecordViewItem {
     recurrenceInfo: c.recurrenceInfo,
     priority: c.priority,
     expectedDurationMinutes: c.expectedDurationMinutes,
+    energyDemand: c.energyDemand,
+    brainDemand: c.brainDemand,
+    physicalDemand: c.physicalDemand,
+    availabilityContexts: c.availabilityContexts,
+    recoveryIntent: c.recoveryIntent,
     createdDate: c.createdDate,
     scheduledDate: c.scheduledDate,
     startDate: c.startDate,

@@ -11,6 +11,8 @@ import {
   buildEnergyActionPolicyContext,
   buildEnergyActionRecommendations,
   buildEnergyRecommendationLearning,
+  ENERGY_RECOMMENDATION_HIGH_THRESHOLD,
+  ENERGY_RECOMMENDATION_LOW_THRESHOLD,
   type EnergyManagementModel,
 } from '@core/energy/public';
 
@@ -36,6 +38,8 @@ export interface EnergyTaskListItemVM {
   records: EnergyTaskRecordVM[];
   suggestedDurationMinutes: number;
   energyFitScore?: number;
+  recommendationRank?: number;
+  recommendationReason?: string;
   energyMatched: boolean;
   item: RecordViewItem;
 }
@@ -57,7 +61,11 @@ export interface EnergyTaskGoalVM {
 
 export interface EnergyTaskListModel {
   goals: EnergyTaskGoalVM[];
+  recommendations: EnergyTaskListItemVM[];
+  recommendationStateLabel?: string;
+  currentContext: 'any' | 'work' | 'home' | 'commute' | 'out';
   latestEnergy?: {
+    itemId?: string;
     score: number;
     brainScore?: number;
     physicalScore?: number;
@@ -157,6 +165,28 @@ function emptyCadenceMap(): Map<EnergyTaskCadenceKey, EnergyTaskListItemVM[]> {
   return new Map(TASK_CADENCE_ORDER.map((key) => [key, []]));
 }
 
+function fallbackEnergyWorkBlockMinutes(score?: number): number {
+  if (score == null || !Number.isFinite(score)) return 45;
+  if (score <= ENERGY_RECOMMENDATION_LOW_THRESHOLD) return 30;
+  if (score >= ENERGY_RECOMMENDATION_HIGH_THRESHOLD) return 60;
+  return 45;
+}
+
+function resolveSuggestedDurationMinutes(
+  item: RecordViewItem,
+  action: ReturnType<typeof buildEnergyActionRecommendations>['recommendations'][number] | undefined,
+  candidate: ReturnType<typeof buildEnergyActionCandidateResult>['candidates'][number] | undefined,
+  management: EnergyManagementModel | null,
+): number {
+  const recommended = Number(action?.suggestedDurationMinutes);
+  if (Number.isFinite(recommended) && recommended > 0) return Math.max(1, Math.min(240, Math.round(recommended)));
+  const learned = Number(candidate?.durationMinutes);
+  if (Number.isFinite(learned) && learned > 0) return Math.max(1, Math.min(240, Math.round(learned)));
+  const declared = Number(item.expectedDurationMinutes);
+  if (Number.isFinite(declared) && declared > 0) return Math.max(1, Math.min(240, Math.round(declared)));
+  return fallbackEnergyWorkBlockMinutes(management?.latest?.score);
+}
+
 export function buildEnergyTaskListModel(args: {
   items: RecordViewItem[];
   historyItems: RecordViewItem[];
@@ -165,8 +195,9 @@ export function buildEnergyTaskListModel(args: {
   goals?: GoalDefinition[];
   today: string;
   dateRange: [Date, Date];
+  currentContext?: 'any' | 'work' | 'home' | 'commute' | 'out';
 }): EnergyTaskListModel {
-  const { items, historyItems, management, goals = [], today, dateRange } = args;
+  const { items, historyItems, management, goals = [], today, dateRange, currentContext = 'any' } = args;
   const openTasks = items.filter((item) => item.coreBlock === 'task' && isTaskOpen(item));
   const visibleItems = openTasks;
   const visibleIds = new Set(visibleItems.map((item) => item.id));
@@ -176,7 +207,8 @@ export function buildEnergyTaskListModel(args: {
     today,
     maximumCandidates: 1000,
     includeRecurringTasks: true,
-    includeFutureTasks: true,
+    includeFutureTasks: false,
+    currentContext,
     historyRecords: historyItems,
   });
   const taskCandidates = candidateBuild.candidates.filter((candidate) => candidate.source === 'task' && visibleIds.has(candidate.id));
@@ -185,6 +217,7 @@ export function buildEnergyTaskListModel(args: {
   const enriched = attachEnergyRecommendationEvidence(learned, management);
 
   let rankedIds: string[] = enriched.map((candidate) => candidate.id);
+  let recommendationStateLabel: string | undefined;
   const actionById = new Map<string, ReturnType<typeof buildEnergyActionRecommendations>['recommendations'][number]>();
   if (management?.latest && enriched.length > 0) {
     const ranked = buildEnergyActionRecommendations({
@@ -194,6 +227,7 @@ export function buildEnergyTaskListModel(args: {
       maximumRecommendations: Math.min(500, enriched.length),
       actionPolicy: buildEnergyActionPolicyContext(historyItems, management, today),
     }, enriched);
+    recommendationStateLabel = ranked.stateLabel;
     rankedIds = ranked.recommendations.map((row) => row.candidate.id);
     for (const row of ranked.recommendations) actionById.set(row.candidate.id, row);
   }
@@ -248,8 +282,10 @@ export function buildEnergyTaskListModel(args: {
       recurrenceLabel: recurrenceText(item),
       count: history.length,
       records: history,
-      suggestedDurationMinutes: action?.suggestedDurationMinutes || candidate?.durationMinutes || 30,
+      suggestedDurationMinutes: resolveSuggestedDurationMinutes(item, action, candidate, management),
       energyFitScore: action?.fitScore,
+      recommendationRank: action?.rank,
+      recommendationReason: action?.reason,
       energyMatched: energyMatchedIds.has(item.id),
       item,
     });
@@ -290,9 +326,23 @@ export function buildEnergyTaskListModel(args: {
     })
     .filter((goal) => goal.taskCount > 0);
 
+  const taskVmById = new Map<string, EnergyTaskListItemVM>();
+  for (const goal of goalModels) for (const row of goal.rows) for (const task of row.tasks) taskVmById.set(task.itemId, task);
+  const recommendations = Array.from(actionById.values())
+    .sort((left, right) => (left.rank || Number.MAX_SAFE_INTEGER) - (right.rank || Number.MAX_SAFE_INTEGER))
+    .slice(0, 3)
+    .flatMap((action) => {
+      const task = taskVmById.get(action.candidate.id);
+      return task ? [task] : [];
+    });
+
   return {
     goals: goalModels,
+    recommendations,
+    recommendationStateLabel,
+    currentContext,
     latestEnergy: management?.latest ? {
+      itemId: management.latest.itemId,
       score: management.latest.score,
       brainScore: management.latest.brainScore,
       physicalScore: management.latest.physicalScore,

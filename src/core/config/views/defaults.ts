@@ -26,6 +26,7 @@ export const ENERGY_VIEW_DEFAULT_CONFIG: EnergyViewConfig = {
   analysisWindowDays: 30,
   showPatterns: true,
   showManagement: true,
+  currentContext: 'any',
 };
 
 export const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG: EventTimelineViewConfig = {

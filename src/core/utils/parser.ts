@@ -66,6 +66,8 @@ export function parseRecordBlock(
     energyDemand: parsed.energyDemand,
     brainDemand: parsed.brainDemand,
     physicalDemand: parsed.physicalDemand,
+    availabilityContexts: parsed.availabilityContexts,
+    recoveryIntent: parsed.recoveryIntent,
     scheduledDate: parsed.scheduledDate,
     startDate: parsed.startDate,
     dueDate: parsed.dueDate,

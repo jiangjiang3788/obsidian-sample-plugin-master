@@ -113,4 +113,46 @@ describe('buildEnergyTaskListModel', () => {
     expect(rendered.count).toBe(1);
     expect(rendered.records.map((record) => record.id)).toEqual(['done-today']);
   });
+  it('keeps home-only tasks in the full list but excludes them from work-context recommendations', () => {
+    const items = [
+      task('home', '整理房间', { availabilityContexts: ['home'], expectedDurationMinutes: 30, brainDemand: 'low' }),
+      task('work', '插件架构', { availabilityContexts: ['work'], expectedDurationMinutes: 60, brainDemand: 'high', priority: 'highest' }),
+      task('micro', '吃钙片', { expectedDurationMinutes: 1, brainDemand: 'low' }),
+    ];
+    const management = {
+      latest: { itemId: 'energy.1', score: 88, brainScore: 92, physicalScore: 70, state: 'high', stateLabel: '高精力', dimensionFocus: 'balanced' },
+      recoveryCandidates: [], cautionCandidates: [], guardrails: [],
+      readiness: { pairedActivityCount: 0, recoveryCandidateCount: 0, depletionCandidateCount: 0, stopProxySampleCount: 0, sufficientForPersonalSuggestions: false, message: '样本不足' },
+      headline: '', guidance: '', disclaimer: '',
+    } as any;
+    const model = buildEnergyTaskListModel({
+      items,
+      historyItems: items,
+      timers: [],
+      management,
+      currentContext: 'work',
+      today: '2026-08-10',
+      dateRange: dayRange(),
+    });
+    const allIds = model.goals.flatMap((goal) => goal.rows.flatMap((row) => row.tasks)).map((row) => row.itemId);
+    expect(allIds.sort()).toEqual(['home', 'micro', 'work'].sort());
+    expect(model.recommendations.map((row) => row.itemId)).not.toContain('home');
+    expect(model.recommendations[0]?.itemId).toBe('work');
+    expect(model.currentContext).toBe('work');
+  });
+
+  it('keeps a one-minute task as a one-minute Energy countdown', () => {
+    const item = task('micro', '吃钙片', { expectedDurationMinutes: 1, brainDemand: 'low' });
+    const management = {
+      latest: { itemId: 'energy.1', score: 35, brainScore: 30, physicalScore: 45, state: 'low', stateLabel: '低精力', dimensionFocus: 'balanced' },
+      recoveryCandidates: [], cautionCandidates: [], guardrails: [],
+      readiness: { pairedActivityCount: 0, recoveryCandidateCount: 0, depletionCandidateCount: 0, stopProxySampleCount: 0, sufficientForPersonalSuggestions: false, message: '样本不足' },
+      headline: '', guidance: '', disclaimer: '',
+    } as any;
+    const model = buildEnergyTaskListModel({ items: [item], historyItems: [item], timers: [], management, today: '2026-08-10', dateRange: dayRange() });
+    const rendered = model.goals.flatMap((goal) => goal.rows.flatMap((row) => row.tasks))[0];
+    expect(rendered.suggestedDurationMinutes).toBe(1);
+    expect(model.recommendations[0]?.suggestedDurationMinutes).toBe(1);
+  });
+
 });

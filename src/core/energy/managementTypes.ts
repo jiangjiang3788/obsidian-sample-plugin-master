@@ -7,6 +7,8 @@ export type EnergyDimensionFocus = 'balanced' | 'brain-low' | 'physical-low';
 export type EnergyManagementLevel = 'info' | 'caution';
 
 export interface EnergyManagementLatestState {
+  /** Source Energy Record id. Present for real runtime models; optional for injected/test fixtures. */
+  itemId?: string;
   score: number;
   brainScore?: number;
   physicalScore?: number;

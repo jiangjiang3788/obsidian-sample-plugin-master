@@ -1,3 +1,4 @@
+import type { TaskAvailabilityContext } from '@/core/records/RecordEntity';
 export type EnergyRecommendationBand = 'recover' | 'steady' | 'use-capacity';
 export type EnergyActionSource = 'task' | 'plan' | 'habit' | 'activity' | 'manual';
 export type EnergyActionLoad = 'low' | 'medium' | 'high';
@@ -43,6 +44,8 @@ export interface EnergyActionCandidate {
   physicalLoad?: EnergyActionLoad;
   /** 0-100 importance/value supplied by the caller (priority/deadline adapter). */
   valueScore?: number;
+  /** Hard execution-context eligibility metadata. Empty or any means unrestricted. */
+  availabilityContexts?: TaskAvailabilityContext[];
   /** Explicit recovery intent, e.g. a recovery Plan/Habit; not inferred from title in core. */
   recoveryIntent?: boolean;
   historicalEffect?: EnergyActionHistoricalEffect;
@@ -67,6 +70,8 @@ export interface EnergyRecommendedAction {
   suggestedDurationMinutes: number;
   preserveCapacity: boolean;
   stopReason?: string;
+  /** Stable 1-based rank after availability/value/energy/duration/history scoring. */
+  rank?: number;
 }
 
 export interface EnergyRecommendationResult {

@@ -61,18 +61,20 @@ export function getQuickInputSuccessNotice(mode: QuickInputOperationMode, existi
 
 export function getQuickInputOperationTitle(
   mode: QuickInputOperationMode,
-  currentBlockName: string,
+  _currentBlockName: string,
   isTimerCreate: boolean,
 ): string {
+  // The modal title communicates the operation only. Record type belongs to the
+  // form context row, so repeating it here creates two competing sources of state.
   switch (mode) {
     case 'edit':
-      return `编辑记录 · ${currentBlockName}`;
+      return '编辑记录';
     case 'convert':
-      return `转换记录类型 · ${currentBlockName}`;
+      return '转换记录类型';
     case 'duplicate':
-      return `另存为新记录 · ${currentBlockName}`;
+      return '另存为新记录';
     case 'create':
     default:
-      return isTimerCreate ? `开始新任务 · ${currentBlockName}` : `快速录入 · ${currentBlockName}`;
+      return isTimerCreate ? '开始新任务' : '快速录入';
   }
 }

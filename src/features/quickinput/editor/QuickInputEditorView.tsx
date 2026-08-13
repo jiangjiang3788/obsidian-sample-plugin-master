@@ -1,9 +1,7 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
+import { h, type ComponentChildren } from 'preact';
 
 import type { ThemeDefinition } from '@core/types/public';
-
-import { Box, Divider, FormControl, Typography } from '@shared/ui/public';
 
 import { QuickInputEditorFields } from './components/Fields';
 import { GoalSelector, type GoalSelectorOption } from './components/GoalSelector';
@@ -47,20 +45,12 @@ export interface QuickInputEditorViewProps {
   currentPeriodLabel?: string | null;
 }
 
-
-function SectionTitle({ title, compact = false }: { title: string; compact?: boolean }) {
+function ContextRow({ label, children }: { label: string; children: ComponentChildren }) {
   return (
-    <Typography
-      variant="body2"
-      sx={{
-        fontWeight: 700,
-        color: 'text.primary',
-        mb: compact ? 0.75 : 0.9,
-        lineHeight: 1.3,
-      }}
-    >
-      {title}
-    </Typography>
+    <div className="think-quick-input-context-row">
+      <div className="think-quick-input-context-row__label">{label}</div>
+      <div className="think-quick-input-context-row__control">{children}</div>
+    </div>
   );
 }
 
@@ -70,9 +60,6 @@ export function QuickInputEditorView({
   allowBlockSwitch,
   currentBlockId,
   onBlockChange,
-  themes,
-  selectedThemeId,
-  onSelectTheme,
   goals,
   selectedGoalPath,
   onSelectGoal,
@@ -103,59 +90,58 @@ export function QuickInputEditorView({
     && templateVariants.length === 0;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: dense ? 1.75 : 2 }}>
-      {allowBlockSwitch && blocks.length > 1 && (
-        <Box>
-          <SectionTitle title="记录类型" compact />
-          <RecordTypeSwitcher
-            blocks={blocks}
-            currentBlockId={currentBlockId}
-            onBlockChange={onBlockChange}
-          />
-        </Box>
-      )}
+    <div className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
+      <div className="think-quick-input-context-grid">
+          {allowBlockSwitch && blocks.length > 1 && (
+            <ContextRow label="记录类型">
+              <RecordTypeSwitcher
+                blocks={blocks}
+                currentBlockId={currentBlockId}
+                onBlockChange={onBlockChange}
+              />
+            </ContextRow>
+          )}
 
-      <Box>
-        <SectionTitle title="目标" compact />
-        <GoalSelector
-          goals={goals}
-          selectedGoalPath={selectedGoalPath}
-          onSelect={onSelectGoal}
-          onCreateGoal={onCreateGoal}
-          dense={dense}
-        />
-        {shouldShowCoreBlockFallbackHint && (
-          <div class="think-quick-input-context-hint">当前目标没有此记录类型的专属预设，已使用记录类型默认模板。</div>
-        )}
-      </Box>
-
-      {templateVariants.length > 0 && (
-        <Box>
-          <SectionTitle title="记录预设" compact />
-          <FormControl fullWidth>
-            <div class="think-quick-input-pill-row think-quick-input-template-variant-switcher">
-              {templateVariants.map((variant) => {
-                const isSelected = (selectedTemplateVariantId || 'default') === variant.value;
-                return (
-                  <SelectablePill
-                    key={variant.value}
-                    selected={isSelected}
-                    disabled={templateVariants.length <= 1}
-                    onClick={() => templateVariants.length > 1 ? onSelectTemplateVariant?.(variant.value) : undefined}
-                    title={variant.label}
-                  >
-                    {variant.label}
-                  </SelectablePill>
-                );
-              })}
+          <ContextRow label="目标">
+            <div className="think-quick-input-context-row__stack">
+              <GoalSelector
+                goals={goals}
+                selectedGoalPath={selectedGoalPath}
+                onSelect={onSelectGoal}
+                onCreateGoal={onCreateGoal}
+                dense={dense}
+              />
+              {shouldShowCoreBlockFallbackHint && (
+                <div className="think-quick-input-context-hint">当前目标没有此记录类型的专属预设，已使用记录类型默认模板。</div>
+              )}
             </div>
-          </FormControl>
-        </Box>
-      )}
+          </ContextRow>
 
-      {showDivider && <Divider sx={{ my: dense ? 0.1 : 0.2, opacity: 0.55 }} />}
+          {templateVariants.length > 0 && (
+            <ContextRow label="记录预设">
+              <div className="think-quick-input-pill-row think-quick-input-template-variant-switcher">
+                {templateVariants.map((variant) => {
+                  const isSelected = (selectedTemplateVariantId || 'default') === variant.value;
+                  return (
+                    <SelectablePill
+                      key={variant.value}
+                      selected={isSelected}
+                      disabled={templateVariants.length <= 1}
+                      onClick={() => templateVariants.length > 1 ? onSelectTemplateVariant?.(variant.value) : undefined}
+                      title={variant.label}
+                    >
+                      {variant.label}
+                    </SelectablePill>
+                  );
+                })}
+              </div>
+            </ContextRow>
+          )}
+      </div>
 
-      <Box>
+      {showDivider && <div className="think-quick-input-context-divider" aria-hidden="true" />}
+
+      <div className="think-quick-input-fields">
         <QuickInputEditorFields
           getResourcePath={getResourcePath}
           template={template}
@@ -169,7 +155,7 @@ export function QuickInputEditorView({
           isMobileLike={isMobileLike}
           showTimeDirectionControl={showTimeDirectionControl}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

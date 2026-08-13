@@ -105,9 +105,11 @@ export const MILESTONE_SCHEMA = simpleGoalRecord('milestone', '里程碑');
 const TASK_DEMAND_FIELDS = [
   f('优先级', 'domain-fact', 'target', 'enum', 'User-declared Task priority.', { aliases: ['priority'], allowedValues: ['lowest', 'low', 'medium', 'high', 'highest'] }),
   f('预计时长', 'domain-fact', 'target', 'number', 'User-declared expected duration in minutes. Actual execution duration belongs to TaskSession.', { aliases: ['expectedDurationMinutes'] }),
-  f('精力要求', 'domain-fact', 'target', 'string', 'Declared energy demand.', { aliases: ['energyDemand'] }),
-  f('脑力要求', 'domain-fact', 'target', 'string', 'Declared cognitive demand.', { aliases: ['brainDemand'] }),
-  f('体力要求', 'domain-fact', 'target', 'string', 'Declared physical demand.', { aliases: ['physicalDemand'] }),
+  f('精力要求', 'domain-fact', 'target', 'enum', 'Declared overall energy demand.', { aliases: ['energyDemand'], allowedValues: ['low', 'medium', 'high'] }),
+  f('脑力要求', 'domain-fact', 'target', 'enum', 'Declared cognitive demand.', { aliases: ['brainDemand'], allowedValues: ['low', 'medium', 'high'] }),
+  f('体力要求', 'domain-fact', 'target', 'enum', 'Declared physical demand.', { aliases: ['physicalDemand'], allowedValues: ['low', 'medium', 'high'] }),
+  f('可用场景', 'domain-fact', 'target', 'string', 'Execution contexts where the Task can actually be done. Empty or any means unrestricted.', { aliases: ['availabilityContexts'] }),
+  f('恢复意图', 'domain-fact', 'omit-default', 'boolean', 'True when the Task is intentionally recovery-oriented.', { aliases: ['recoveryIntent'], defaultValue: false }),
 ] as const;
 
 

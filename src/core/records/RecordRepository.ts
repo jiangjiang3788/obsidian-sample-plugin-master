@@ -43,6 +43,8 @@ const PATCH_FIELDS: Record<string, { label: string; aliases: string[] }> = {
   energyDemand: { label: '精力要求', aliases: ['精力要求', 'energyDemand'] },
   brainDemand: { label: '脑力要求', aliases: ['脑力要求', 'brainDemand'] },
   physicalDemand: { label: '体力要求', aliases: ['体力要求', 'physicalDemand'] },
+  availabilityContexts: { label: '可用场景', aliases: ['可用场景', 'availabilityContexts'] },
+  recoveryIntent: { label: '恢复意图', aliases: ['恢复意图', 'recoveryIntent'] },
   seriesId: { label: '系列ID', aliases: ['系列ID', 'seriesId'] },
   recurrenceUnit: { label: '重复单位', aliases: ['重复单位', 'recurrenceUnit'] },
   recurrenceInterval: { label: '重复间隔', aliases: ['重复间隔', 'recurrenceInterval'] },

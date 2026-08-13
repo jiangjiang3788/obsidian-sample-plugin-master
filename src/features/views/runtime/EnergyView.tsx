@@ -23,6 +23,7 @@ interface EnergyViewProps {
   onOpenRecord?: (item: RecordViewItem) => void;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
   timerService?: TimerController;
+  onEnergyContextChange?: (context: 'any' | 'work' | 'home' | 'commute' | 'out') => void | Promise<void>;
 }
 
 function selectionKey(selection: EnergyMapSelection | null): string | null {
@@ -72,7 +73,7 @@ function EmptyEnergyPanel() {
 }
 
 
-export function EnergyView({ items, records = items, module, dateRange, currentView, goals = [], inputSettings, timers = [], onOpenRecord, onOpenRecordOrigin, timerService }: EnergyViewProps) {
+export function EnergyView({ items, records = items, module, dateRange, currentView, goals = [], inputSettings, timers = [], onOpenRecord, onOpenRecordOrigin, timerService, onEnergyContextChange }: EnergyViewProps) {
   const energyModel = useMemo(() => buildEnergyViewModel({
     items,
     records,
@@ -93,6 +94,7 @@ export function EnergyView({ items, records = items, module, dateRange, currentV
         baselinePhysicalScore: baseline.physicalScore,
         baselineDate: baseline.date,
         baselineTime: baseline.time,
+        baselineEnergyItemId: baseline.itemId,
         suggestedDurationMinutes: task.suggestedDurationMinutes,
       });
       return;
@@ -114,6 +116,7 @@ export function EnergyView({ items, records = items, module, dateRange, currentV
           onStartTask={timerService ? startTask : undefined}
           onOpenRecord={onOpenRecord}
           onOpenRecordOrigin={onOpenRecordOrigin}
+          onContextChange={onEnergyContextChange}
         />
 
         {otherPanels.map((panel) => (

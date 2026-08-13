@@ -45,6 +45,7 @@ export interface ViewRuntimeHandlers {
   onExcelCellCommit: (request: any) => Promise<unknown>;
   onExcelFieldsChange: (nextFields: string[]) => Promise<void>;
   onExcelConfigChange: (nextExcelConfig: Record<string, any>) => Promise<void>;
+  onEnergyContextChange: (currentContext: 'any' | 'work' | 'home' | 'commute' | 'out') => Promise<void>;
   onNotice: (message: string) => void;
 }
 
@@ -176,6 +177,10 @@ export function useViewRuntimeHandlers({
     await useCases.viewInstance.updateExcelViewConfig(viewInstance.id, nextExcelConfig);
   }, [useCases, viewInstance.id]);
 
+  const onEnergyContextChange = useCallback(async (currentContext: 'any' | 'work' | 'home' | 'commute' | 'out') => {
+    await useCases.viewInstance.updateViewConfig(viewInstance.id, { currentContext });
+  }, [useCases, viewInstance.id]);
+
   return {
     onUpdateTaskTime,
     onQuickCreate,
@@ -189,6 +194,7 @@ export function useViewRuntimeHandlers({
     onExcelCellCommit,
     onExcelFieldsChange,
     onExcelConfigChange,
+    onEnergyContextChange,
     onNotice: ui.notice,
   };
 }

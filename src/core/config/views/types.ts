@@ -59,6 +59,8 @@ export interface EnergyViewConfig {
   showPatterns: boolean;
   /** 当前精力的个人化管理候选与保存力量护栏。 */
   showManagement: boolean;
+  /** Current execution context used as a hard recommendation eligibility boundary. */
+  currentContext: 'any' | 'work' | 'home' | 'commute' | 'out';
   /** 最近一周自动复盘。 */
   /** 轻量 N-of-1 前后比较。 */
 }

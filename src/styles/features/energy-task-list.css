@@ -169,3 +169,148 @@
   filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--background-primary) 75%, transparent));
   pointer-events: none;
 }
+
+/* 1.0.43 Energy Recommendation V2
+ * Recommendation is a flat decision list, not another card surface.
+ * Reason/evidence stays in the native hover title; only task + countdown is visible.
+ */
+.think-os .think-energy-task-list__recommendation-shell {
+  display: grid;
+  gap: var(--think-space-2);
+  min-width: 0;
+  padding-bottom: var(--think-space-3);
+  border-bottom: 1px solid var(--think-border-subtle);
+}
+
+.think-os .think-energy-task-list__recommendation-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-space-3);
+  min-width: 0;
+}
+
+.think-os .think-energy-task-list__recommendation-heading {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+
+.think-os .think-energy-task-list__recommendation-heading > strong {
+  color: var(--think-text-accent);
+  font-size: var(--think-font-size-md);
+  font-weight: var(--think-font-weight-bold);
+}
+
+.think-os .think-energy-task-list__recommendation-heading > span,
+.think-os .think-energy-task-list__recommendation-empty,
+.think-os .think-energy-task-list__all-head {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+
+.think-os .think-energy-task-list__context {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  flex: 0 0 auto;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+
+.think-os .think-energy-task-list__context select {
+  min-height: 26px;
+  padding: 1px 24px 1px 7px;
+  border: 0;
+  border-bottom: 1px solid var(--think-border-subtle);
+  border-radius: 0;
+  background: transparent;
+  color: var(--think-text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.think-os .think-energy-task-list__context select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--think-accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.think-os .think-energy-task-list__recommendations {
+  display: grid;
+  min-width: 0;
+}
+
+.think-os .think-energy-task-list__recommendation {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto 18px;
+  gap: var(--think-space-2);
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: var(--think-space-2) 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 62%, transparent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--think-text-primary);
+  box-shadow: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.think-os .think-energy-task-list__recommendation:last-child { border-bottom: 0; }
+.think-os .think-energy-task-list__recommendation:hover {
+  background: color-mix(in srgb, var(--think-bg-hover) 34%, transparent);
+}
+
+.think-os .think-energy-task-list__recommendation-rank {
+  color: var(--think-text-accent);
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-bold);
+  text-align: center;
+}
+
+.think-os .think-energy-task-list__recommendation-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.think-os .think-energy-task-list__recommendation-duration {
+  color: var(--think-text-accent);
+  font-family: var(--font-monospace);
+  font-size: var(--think-font-size-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--think-font-weight-semibold);
+  white-space: nowrap;
+}
+
+.think-os .think-energy-task-list__recommendation-play {
+  color: var(--think-text-accent);
+  font-size: var(--think-font-size-xs);
+  text-align: right;
+}
+
+.think-os .think-energy-task-list__all-head {
+  padding-top: var(--think-space-1);
+  font-weight: var(--think-font-weight-semibold);
+}
+
+@container think-view (max-width: 620px) {
+  .think-os .think-energy-task-list__recommendation-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--think-space-2);
+  }
+
+  .think-os .think-energy-task-list__recommendation {
+    grid-template-columns: 18px minmax(0, 1fr) auto 16px;
+  }
+}

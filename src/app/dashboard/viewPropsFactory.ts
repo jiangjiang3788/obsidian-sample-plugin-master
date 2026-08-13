@@ -67,6 +67,7 @@ export function buildViewProps({
     excelConfig: viewType === 'ExcelView' ? viewInstance.viewConfig?.excel : undefined,
     onFieldsChange: viewType === 'ExcelView' ? handlers.onExcelFieldsChange : undefined,
     onExcelConfigChange: viewType === 'ExcelView' ? handlers.onExcelConfigChange : undefined,
+    onEnergyContextChange: viewType === 'EnergyView' ? handlers.onEnergyContextChange : undefined,
     onMarkDone,
     onUpdateTaskTime: handlers.onUpdateTaskTime,
     onOpenStatisticsPopover: viewType === 'StatisticsView' ? onOpenStatisticsPopover : undefined,

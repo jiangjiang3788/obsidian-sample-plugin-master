@@ -37,9 +37,15 @@ function activeSeries(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
     rolloverPolicy: 'carry',
     created: 0,
     modified: 0,
-    extra: { 精力要求: 'high' },
+    extra: {},
     goalId: 'goal.series',
-    goalPath: '#Series',
+    goalPath: 'Series',
+    expectedDurationMinutes: 1,
+    energyDemand: 'low',
+    brainDemand: 'low',
+    physicalDemand: 'low',
+    availabilityContexts: ['any'],
+    recoveryIntent: false,
     scheduledDate: undefined,
     ...overrides,
   } as RecordViewItem;
@@ -82,7 +88,7 @@ describe('TaskCompletionMutation v2', () => {
       seriesId,
       scheduledDate: '2026-08-11',
       goalId: 'goal.old',
-      goalPath: '#Old',
+      goalPath: 'Old',
       content: 'Old instance text',
     });
     const series = activeSeries({ priority: 'high' });
@@ -98,6 +104,12 @@ describe('TaskCompletionMutation v2', () => {
     expect(createNext.record.fields.goalId).toBe('goal.series');
     expect(createNext.record.fields.content).toBe('Series default');
     expect(createNext.record.fields.priority).toBe('high');
+    expect(createNext.record.fields.expectedDurationMinutes).toBe(1);
+    expect(createNext.record.fields.energyDemand).toBe('low');
+    expect(createNext.record.fields.brainDemand).toBe('low');
+    expect(createNext.record.fields.physicalDemand).toBe('low');
+    expect(createNext.record.fields.availabilityContexts).toEqual(['any']);
+    expect(createNext.record.fields.recoveryIntent).toBe(false);
     expect(advanceSeries).toMatchObject({ kind: 'update', recordId: seriesId });
     expect(advanceSeries.patch.currentTaskId).toBe(createNext.record.recordId);
   });
@@ -128,15 +140,19 @@ describe('TaskCompletionMutation v2', () => {
       recurrence: { interval: 2 },
       goalId: 'goal.future',
       priority: 'highest',
+      expectedDurationMinutes: 2,
+      brainDemand: 'high',
+      availabilityContexts: ['work'],
+      recoveryIntent: false,
     }, { includeCurrent: true });
 
     expect(batches).toHaveLength(1);
     expect(batches[0][0]).toMatchObject({
       kind: 'update',
       recordId: seriesId,
-      patch: { recurrenceUnit: 'week', recurrenceInterval: 2, recurrenceAnchor: 'scheduled', goalId: 'goal.future', priority: 'highest' },
+      patch: { recurrenceUnit: 'week', recurrenceInterval: 2, recurrenceAnchor: 'scheduled', goalId: 'goal.future', priority: 'highest', expectedDurationMinutes: 2, brainDemand: 'high', availabilityContexts: ['work'], recoveryIntent: false },
     });
-    expect(batches[0][1]).toMatchObject({ kind: 'update', recordId: taskId, patch: { goalId: 'goal.future', priority: 'highest' } });
+    expect(batches[0][1]).toMatchObject({ kind: 'update', recordId: taskId, patch: { goalId: 'goal.future', priority: 'highest', expectedDurationMinutes: 2, brainDemand: 'high', availabilityContexts: ['work'], recoveryIntent: false } });
   });
   it('completes a one-time Task and creates its TaskSession in one batch', async () => {
     const { mutation, updates, batches } = harness(openTask());

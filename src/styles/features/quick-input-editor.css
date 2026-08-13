@@ -1,0 +1,330 @@
+/*
+ * Quick Input editor layout.
+ * One aligned label column is shared by context selectors and template fields.
+ * Host/modal geometry remains in overrides/quick-input-modal.css.
+ */
+
+/*
+ * Quick Input form rhythm
+ * Desktop/tablet uses one fixed label column across context and content rows.
+ * This is the primary layout rule: label on the left, interaction on the right.
+ */
+.modal.think-quick-input-modal .think-quick-input-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-6);
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-quick-input-editor.is-dense {
+  gap: var(--think-space-5);
+}
+
+.modal.think-quick-input-modal .think-quick-input-context-grid {
+  display: grid;
+  gap: var(--think-space-5);
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-quick-input-context-row {
+  display: grid;
+  grid-template-columns: var(--think-qif-label-column) minmax(0, 1fr);
+  column-gap: var(--think-space-5);
+  align-items: start;
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-quick-input-context-row__label,
+.modal.think-quick-input-modal .think-qif-label {
+  padding-top: var(--think-space-3);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+  line-height: var(--think-line-height-normal);
+  white-space: nowrap;
+}
+
+.modal.think-quick-input-modal .think-quick-input-context-row__control,
+.modal.think-quick-input-modal .think-quick-input-context-row__stack {
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-quick-input-context-row__stack {
+  display: grid;
+  gap: var(--think-space-3);
+}
+
+.modal.think-quick-input-modal .think-quick-input-context-divider {
+  height: 1px;
+  background: var(--think-border-subtle);
+  opacity: .72;
+}
+
+.modal.think-quick-input-modal .think-quick-input-context-hint {
+  margin-top: var(--think-space-2);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--think-text-subtle);
+  font-size: var(--think-font-size-xs);
+  line-height: var(--think-line-height-normal);
+}
+
+.modal.think-quick-input-modal .think-qif-fields-stack {
+  display: grid;
+  gap: var(--think-space-5);
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-fields-stack.is-dense {
+  gap: var(--think-space-4);
+}
+
+.modal.think-quick-input-modal .think-qif-fields-stack__item {
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-frame,
+.modal.think-quick-input-modal .think-qif-frame--inline {
+  display: grid;
+  grid-template-columns: var(--think-qif-label-column) minmax(0, 1fr);
+  align-items: start;
+  column-gap: var(--think-space-5);
+  row-gap: var(--think-space-3);
+  width: 100%;
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-frame > .think-qif-label {
+  grid-column: 1;
+}
+
+.modal.think-quick-input-modal .think-qif-frame > :not(.think-qif-label) {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-frame__inline-label {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-frame__inline-label .think-qif-label {
+  display: block;
+}
+
+.modal.think-quick-input-modal .think-qif-frame__inline-control {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-label__required {
+  margin-left: var(--think-space-1);
+  color: var(--text-error);
+}
+
+.modal.think-quick-input-modal .think-qif-choice-row,
+.modal.think-quick-input-modal .think-qif-rating-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+}
+
+.modal.think-quick-input-modal .think-qif-hierarchy {
+  display: grid;
+  gap: var(--think-space-3);
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-hierarchy.is-dense {
+  gap: var(--think-space-2);
+}
+
+.modal.think-quick-input-modal .think-qif-hierarchy-level {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--think-space-3);
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-hierarchy-level--unlabeled {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.modal.think-quick-input-modal .think-qif-hierarchy-level__label {
+  padding-top: var(--think-space-3);
+  color: var(--think-text-subtle);
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-semibold);
+  line-height: var(--think-line-height-normal);
+  white-space: nowrap;
+}
+
+.modal.think-quick-input-modal .think-qif-hierarchy-level__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-hierarchy-empty {
+  padding-top: var(--think-space-3);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  line-height: var(--think-line-height-normal);
+}
+
+.modal.think-quick-input-modal .think-qif-image-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  margin-top: var(--think-space-2);
+}
+
+.modal.think-quick-input-modal .think-qif-image-preview__thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+}
+
+.modal.think-quick-input-modal .think-qif-image-preview__src {
+  overflow-wrap: anywhere;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+}
+
+.modal.think-quick-input-modal .think-qif-rating-button {
+  min-width: 40px;
+  height: 40px;
+  padding: var(--think-space-2);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: transparent;
+  opacity: .8;
+  transition: opacity var(--think-motion-fast), background var(--think-motion-fast), border-color var(--think-motion-fast);
+}
+
+.modal.think-quick-input-modal .think-qif-rating-button:hover,
+.modal.think-quick-input-modal .think-qif-rating-button:focus-visible {
+  background: var(--think-bg-hover);
+  opacity: 1;
+}
+
+.modal.think-quick-input-modal .think-qif-rating-button.is-selected {
+  border: 2px solid var(--interactive-accent);
+  background: var(--background-modifier-hover);
+  opacity: 1;
+}
+
+.modal.think-quick-input-modal .think-qif-rating-image {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.modal.think-quick-input-modal .think-qif-rating-text {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.modal.think-quick-input-modal .think-qif-textarea {
+  min-height: 118px;
+  overflow-y: hidden;
+  resize: none;
+}
+
+.modal.think-quick-input-modal .think-qif-textarea.is-dense {
+  min-height: 96px;
+}
+
+.modal.think-quick-input-modal .think-qif-textarea--short {
+  min-height: 96px;
+}
+
+.modal.think-quick-input-modal .think-qif-textarea--short.is-dense {
+  min-height: 78px;
+}
+
+.modal.think-quick-input-modal .think-qif-time-input {
+  min-height: 42px;
+}
+
+.modal.think-quick-input-modal .think-qif-time-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-3);
+}
+
+.modal.think-quick-input-modal .think-qif-time-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--think-space-5);
+  padding-top: 0;
+}
+
+.modal.think-quick-input-modal .think-qif-time-direction {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 28px;
+  padding-left: calc(var(--think-qif-label-column) + var(--think-space-5));
+}
+
+.modal.think-quick-input-modal .think-qif-time-direction__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .modal.think-quick-input-modal {
+    --think-qif-label-column: 76px;
+  }
+
+  .modal.think-quick-input-modal .think-quick-input-context-row,
+  .modal.think-quick-input-modal .think-qif-frame,
+  .modal.think-quick-input-modal .think-qif-frame--inline {
+    column-gap: var(--think-space-4);
+  }
+
+  .modal.think-quick-input-modal .think-qif-time-direction {
+    padding-left: calc(var(--think-qif-label-column) + var(--think-space-4));
+  }
+}
+
+@media (max-width: 440px) {
+  .modal.think-quick-input-modal .think-quick-input-context-row,
+  .modal.think-quick-input-modal .think-qif-frame,
+  .modal.think-quick-input-modal .think-qif-frame--inline {
+    grid-template-columns: 1fr;
+    row-gap: var(--think-space-2);
+  }
+
+  .modal.think-quick-input-modal .think-quick-input-context-row__label,
+  .modal.think-quick-input-modal .think-qif-label {
+    padding-top: 0;
+  }
+
+  .modal.think-quick-input-modal .think-qif-frame > .think-qif-label,
+  .modal.think-quick-input-modal .think-qif-frame > :not(.think-qif-label),
+  .modal.think-quick-input-modal .think-qif-frame__inline-label,
+  .modal.think-quick-input-modal .think-qif-frame__inline-control {
+    grid-column: 1;
+  }
+
+  .modal.think-quick-input-modal .think-qif-time-direction {
+    justify-content: flex-start;
+    padding-left: 0;
+  }
+
+  .modal.think-quick-input-modal .think-qif-hierarchy-level {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+}

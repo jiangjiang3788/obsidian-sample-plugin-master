@@ -36,10 +36,24 @@ function elapsedSecondsAt(timer: TimerState, now: number): number {
     return timer.elapsedSeconds + Math.max(0, (now - timer.startTime) / 1000);
 }
 
+function timerClock(timer: TimerState, elapsedSeconds: number): { label: string; title: string; countdown: boolean } {
+    const suggestedMinutes = Number(timer.energyContext?.suggestedDurationMinutes);
+    if (!Number.isFinite(suggestedMinutes) || suggestedMinutes <= 0) {
+        return { label: formatSecondsToHHMMSS(elapsedSeconds), title: '已计时', countdown: false };
+    }
+    const targetSeconds = Math.max(60, Math.round(suggestedMinutes * 60));
+    const remaining = targetSeconds - elapsedSeconds;
+    if (remaining >= 0) {
+        return { label: formatSecondsToHHMMSS(remaining), title: `建议倒计时 ${suggestedMinutes} 分钟`, countdown: true };
+    }
+    return { label: `+${formatSecondsToHHMMSS(Math.abs(remaining))}`, title: `已超过建议工作块 ${suggestedMinutes} 分钟`, countdown: true };
+}
+
 export function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOrigin }: TimerRowProps) {
     const [elapsedSeconds, setElapsedSeconds] = useState(() => elapsedSecondsAt(timer, Date.now()));
     const taskItem = dataStore.queryItems().find(i => i.id === timer.taskId);
     const recurringTask = taskItem ? isTaskRecurring(taskItem) : false;
+    const clock = timerClock(timer, elapsedSeconds);
 
     useEffect(() => {
         let interval: number | null = null;
@@ -63,11 +77,6 @@ export function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenR
 
     return (
         <div class="think-timer-row">
-            {timer.energyContext?.suggestedDurationMinutes ? (
-                <div class="think-timer-row__suggested-duration">
-                    建议工作块 {timer.energyContext.suggestedDurationMinutes}min
-                </div>
-            ) : null}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
                 <Tooltip title={taskItem ? `${RECORD_GESTURE_HINT}：${taskItem?.title}` : '\u4efb\u52a1\u5df2\u4e0d\u5b58\u5728'}>
                     <div
@@ -91,7 +100,12 @@ export function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenR
                         <Typography variant="body2" noWrap>{taskItem?.title || '\u4efb\u52a1\u5df2\u4e0d\u5b58\u5728'}</Typography>
                     </div>
                 </Tooltip>
-                <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>{formatSecondsToHHMMSS(elapsedSeconds)}</Typography>
+                <Typography
+                    variant="body2"
+                    title={clock.title}
+                    className={clock.countdown ? 'think-timer-row__countdown' : undefined}
+                    sx={{ fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}
+                >{clock.label}</Typography>
 
                 {timer.status === 'running' ? (
                     <IconAction label={'\u6682\u505c'} onClick={() => timerService.pause(timer.id)} icon={<PauseIcon fontSize="inherit" />} />

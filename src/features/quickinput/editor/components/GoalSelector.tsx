@@ -33,12 +33,12 @@ export function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, 
         options={goals}
         selectedValue={selectedGoalPath || null}
         onSelect={(option) => onSelect(option as GoalSelectorOption | null)}
-        parentLabel="父目标"
         childLabel="子目标"
         emptyLabel="还没有目标。请到目标管理中新建或导入目标。"
         dense={dense}
         allowClear
         searchable={false}
+        showParentLabel={false}
       />
 
       {onCreateGoal && (

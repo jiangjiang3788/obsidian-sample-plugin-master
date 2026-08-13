@@ -22,6 +22,8 @@ export interface TaskSeriesUpdate {
   energyDemand?: TaskDemandLevel | null;
   brainDemand?: TaskDemandLevel | null;
   physicalDemand?: TaskDemandLevel | null;
+  availabilityContexts?: TaskSeriesRecord['availabilityContexts'] | null;
+  recoveryIntent?: boolean | null;
 }
 
 
@@ -41,9 +43,11 @@ function nextTaskFields(task: TaskRecord, series: TaskSeriesRecord, completedAt:
     createdAt: completedAt,
     priority: series.priority,
     expectedDurationMinutes: series.expectedDurationMinutes,
-    energyDemand: series.extra?.['精力要求'],
-    brainDemand: series.extra?.['脑力要求'],
-    physicalDemand: series.extra?.['体力要求'],
+    energyDemand: series.energyDemand,
+    brainDemand: series.brainDemand,
+    physicalDemand: series.physicalDemand,
+    availabilityContexts: series.availabilityContexts,
+    recoveryIntent: series.recoveryIntent,
     scheduledDate: nextDates.scheduledDate,
     startDate: nextDates.startDate,
     dueDate: nextDates.dueDate,
@@ -114,6 +118,8 @@ export class TaskCompletionMutation {
       ['energyDemand', 'energyDemand'],
       ['brainDemand', 'brainDemand'],
       ['physicalDemand', 'physicalDemand'],
+      ['availabilityContexts', 'availabilityContexts'],
+      ['recoveryIntent', 'recoveryIntent'],
     ];
     for (const [sourceKey, patchKey] of sharedFields) {
       if (Object.prototype.hasOwnProperty.call(update, sourceKey)) seriesPatch[patchKey] = update[sourceKey];

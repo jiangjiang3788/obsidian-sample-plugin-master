@@ -6,6 +6,7 @@ import {
   buildEnergyPatterns,
   buildEnergyPeriod,
   isEnergyItem,
+  ENERGY_RECOMMENDATION_HIGH_THRESHOLD,
   type EnergyManagementModel,
   type EnergyDataQualityModel,
   type EnergyPatternAnalytics,
@@ -244,6 +245,7 @@ export function buildEnergyViewModel(args: {
     maxGoals: Math.max(0, Math.min(20, Math.floor(Number(rawConfig.maxGoals) || 0))),
     goalPath: String(rawConfig.goalPath || '').trim(),
     analysisWindowDays: Math.max(7, Math.min(90, Math.floor(Number(rawConfig.analysisWindowDays) || 30))),
+    currentContext: ['any', 'work', 'home', 'commute', 'out'].includes(String(rawConfig.currentContext || '')) ? rawConfig.currentContext : 'any',
   };
 
   const startDate = dateText(dateRange[0]);
@@ -274,8 +276,8 @@ export function buildEnergyViewModel(args: {
     if (!summary) continue;
     const patterns = buildEnergyPatterns(periodItems, { activityRecords: periodEvidenceRecords, analysisWindowDays: Math.max(7, Math.min(config.analysisWindowDays, 90)) });
     const currentHistoryItems = goalItems.filter((item) => recordAtOrBefore(item, today, nowTime));
-    const management = buildEnergyManagement(currentHistoryItems, { evidenceRecords: currentEvidenceRecords, analysisWindowDays: config.analysisWindowDays, highEnergyThreshold: 60 });
-    const periodManagement = buildEnergyManagement(periodItems, { evidenceRecords: periodEvidenceRecords, analysisWindowDays: config.analysisWindowDays, highEnergyThreshold: 60 });
+    const management = buildEnergyManagement(currentHistoryItems, { evidenceRecords: currentEvidenceRecords, analysisWindowDays: config.analysisWindowDays, highEnergyThreshold: ENERGY_RECOMMENDATION_HIGH_THRESHOLD });
+    const periodManagement = buildEnergyManagement(periodItems, { evidenceRecords: periodEvidenceRecords, analysisWindowDays: config.analysisWindowDays, highEnergyThreshold: ENERGY_RECOMMENDATION_HIGH_THRESHOLD });
     const quality = buildEnergyDataQuality(periodItems, { startDate, endDate, effectRecords: periodEvidenceRecords });
     const period = periodRenderModel(buildEnergyPeriod(goalItems, { currentView, startDate, endDate }), goalItems, displayPeriodLabel, records);
 
@@ -305,7 +307,7 @@ export function buildEnergyViewModel(args: {
   const globalManagement = buildEnergyManagement(globalCurrentHistoryItems, {
     evidenceRecords: globalEvidenceRecords,
     analysisWindowDays: config.analysisWindowDays,
-    highEnergyThreshold: 60,
+    highEnergyThreshold: ENERGY_RECOMMENDATION_HIGH_THRESHOLD,
   });
   const taskList = buildEnergyTaskListModel({
     items,
@@ -315,6 +317,7 @@ export function buildEnergyViewModel(args: {
     goals,
     today,
     dateRange,
+    currentContext: config.currentContext,
   });
 
   return {

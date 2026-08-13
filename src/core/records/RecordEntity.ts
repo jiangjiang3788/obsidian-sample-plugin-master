@@ -107,6 +107,7 @@ export interface HabitRecord extends RecordEntity {
 
 export type TaskRecordStatus = 'open' | 'done' | 'cancelled' | 'skipped';
 export type RecordTaskPriority = 'lowest' | 'low' | 'medium' | 'high' | 'highest';
+export type TaskAvailabilityContext = 'any' | 'work' | 'home' | 'commute' | 'out';
 
 export interface TaskRecordEntity extends RecordEntity {
   coreBlock: 'task';
@@ -119,6 +120,8 @@ export interface TaskRecordEntity extends RecordEntity {
   energyDemand?: string;
   brainDemand?: string;
   physicalDemand?: string;
+  availabilityContexts?: TaskAvailabilityContext[];
+  recoveryIntent?: boolean;
   createdAt?: string;
   createdDate?: string;
   scheduledDate?: string;
@@ -140,6 +143,8 @@ export interface TaskSeriesRecordEntity extends RecordEntity {
   energyDemand?: string;
   brainDemand?: string;
   physicalDemand?: string;
+  availabilityContexts?: TaskAvailabilityContext[];
+  recoveryIntent?: boolean;
   seriesStartDate?: string;
   currentTaskId?: string;
   rolloverPolicy?: 'carry';
@@ -197,6 +202,8 @@ export interface RecordViewItem extends RecordEntity {
   energyDemand?: string;
   brainDemand?: string;
   physicalDemand?: string;
+  availabilityContexts?: TaskAvailabilityContext[];
+  recoveryIntent?: boolean;
   createdAt?: string;
   createdDate?: string;
   scheduledDate?: string;

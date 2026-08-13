@@ -8,6 +8,7 @@ function check_energy_recommendation_pipeline_gate() {
   const candidates = fs.readFileSync(path.join(root, 'src/core/energy/recommendationCandidates.ts'), 'utf8');
   const model = fs.readFileSync(path.join(root, 'src/features/views/models/energyTaskListModel.ts'), 'utf8');
   const view = fs.readFileSync(path.join(root, 'src/features/views/runtime/EnergyView.tsx'), 'utf8');
+  const taskView = fs.readFileSync(path.join(root, 'src/features/views/runtime/EnergyTaskList.tsx'), 'utf8');
   const test = fs.readFileSync(path.join(root, 'test/unit/energyRecommendationCandidates.test.ts'), 'utf8');
 
   const failures = [];
@@ -21,7 +22,9 @@ function check_energy_recommendation_pipeline_gate() {
   if (!model.includes('includeRecurringTasks: true')) failures.push('Unified task pool must include recurring tasks');
   if (!model.includes('buildEnergyActionRecommendations')) failures.push('Energy intelligence must rank the unified task pool');
   if (view.includes('goalPath: task.goalPath')) failures.push('Energy execution context must remain global and must not carry Task Goal as an Energy boundary');
-  if (view.includes('EnergyRecommendationList')) failures.push('Recommendation must be ordering, not a second UI list');
+  if (view.includes('EnergyRecommendationList')) failures.push('legacy heavy recommendation component must stay retired');
+  if (!model.includes('recommendations: EnergyTaskListItemVM[]')) failures.push('Energy task model must expose a lightweight Top recommendation projection');
+  if (!taskView.includes('现在适合') || !taskView.includes('model.recommendations')) failures.push('Energy task surface must make Top recommendations perceivable without a card system');
   if (!test.includes("seriesId: 'taskseries.daily'")) failures.push('candidate tests must cover stable recurring series identity');
 
   if (failures.length) {
@@ -143,8 +146,8 @@ function check_energy_task_merge_gate() {
   if (energyView.includes('startRecommended')) failures.push('legacy recommendation-start fallback must be removed');
   if (!timer.includes('endWorkBlock')) failures.push('Timer must support ending a work block without completing the task');
   if (!timerRow.includes('结束本次') || !timerRow.includes('完成任务')) failures.push('ordinary timer UI must expose B semantics');
-  if (!timerRow.includes('建议工作块')) failures.push('Timer must display the suggested work-block length');
-  if (timerRow.includes('停止点已到')) failures.push('suggested duration is display-only and must not become an alarm');
+  if (!timerRow.includes('建议倒计时') || !timerRow.includes('formatSecondsToHHMMSS(remaining)')) failures.push('Energy timer must restore a visible countdown from the suggested duration');
+  if (timerRow.includes('停止点已到')) failures.push('suggested duration must not become an alarm');
 
   if (failures.length) {
     console.error('Energy task merge gate failed:');
@@ -164,7 +167,7 @@ function check_energy_task_match_gate() {
   const taskCss = read('src/styles/features/energy-task-list.css');
 
   const failures = [];
-  if (!recommendation.includes('Math.abs(gap) * 0.35')) failures.push('Energy/task load fit must use distance matching, not affordability-only matching');
+  if (!recommendation.includes('Math.abs(gap)') || !recommendation.includes('gap < -5')) failures.push('Energy/task load fit must use distance matching with an under-capacity penalty');
   if (!taskModel.includes('energyMatched: boolean')) failures.push('task VM must expose lightweight Energy match state');
   if (!taskModel.includes('candidate.brainLoad') || !taskModel.includes('candidate.physicalLoad')) failures.push('star eligibility must require an actual Energy signal');
   if (!taskModel.includes('.slice(0, 5)')) failures.push('Energy match marker must remain sparse');
@@ -181,6 +184,52 @@ function check_energy_task_match_gate() {
 }
 
 check_energy_task_match_gate();
+
+function check_energy_recommendation_v2_gate() {
+  const read = (file) => fs.readFileSync(file, 'utf8');
+  const candidates = read('src/core/energy/recommendationCandidates.ts');
+  const recommendation = read('src/core/energy/recommendation.ts');
+  const policy = read('src/core/energy/actionPolicy.ts');
+  const completion = read('src/core/services/item/TaskCompletionMutation.ts');
+  const energyView = read('src/features/views/runtime/EnergyView.tsx');
+  const taskView = read('src/features/views/runtime/EnergyTaskList.tsx');
+  const timer = read('src/features/timer/TimerService.ts');
+  const updateWorkflow = read('src/app/usecases/recordInput/workflows/UpdateRecordWorkflow.ts');
+  const cache = read('src/core/types/cache.ts');
+  const failures = [];
+
+  for (const field of ['item.energyDemand', 'item.brainDemand', 'item.physicalDemand', 'item.availabilityContexts', 'item.recoveryIntent']) {
+    if (!candidates.includes(field)) failures.push(`candidate pipeline must consume canonical ${field}`);
+  }
+  for (const legacy of ["item.extra?.['精力要求']", "item.extra?.['脑力要求']", "item.extra?.['体力要求']"]) {
+    if (candidates.includes(legacy)) failures.push(`canonical Energy task demand must not fall back to ${legacy}`);
+  }
+  if (!candidates.includes("return 'context-unavailable'")) failures.push('availability context must be a hard candidate boundary');
+  if (!candidates.includes('history.bySeriesId.get(seriesId)')) failures.push('duration learning must be isolated by TaskSeries identity');
+  if (candidates.includes('goalId') && candidates.includes('themePath') && candidates.includes('durationByGoal')) failures.push('duration learning must not borrow unrelated Goal/Theme sessions');
+  if (!policy.includes('Math.max(1')) failures.push('Energy timing must allow one-minute micro tasks');
+  for (const field of ['series.energyDemand', 'series.brainDemand', 'series.physicalDemand', 'series.availabilityContexts', 'series.recoveryIntent']) {
+    if (!completion.includes(field)) failures.push(`next recurring occurrence must inherit canonical ${field}`);
+  }
+  if (!energyView.includes('baselineEnergyItemId: baseline.itemId')) failures.push('Energy start must preserve the source Energy Record id for before/after learning');
+  if (!updateWorkflow.includes('updateTaskSeries(seriesId, taskSeriesDefaults(renderData)')) failures.push('editing a recurring Task must synchronize recommendation defaults back to TaskSeries');
+  if (!timer.includes('Math.max(1, Math.min(240')) failures.push('Timer must preserve one-minute Energy countdowns');
+  if (!taskView.includes('model.recommendations') || !taskView.includes('recommendationReason') || !taskView.includes('title={taskHover(task)}')) failures.push('Top recommendations must be visible while explanation stays in hover text');
+  if (!taskView.includes('onContextChange') || !taskView.includes("value: 'work'") || !taskView.includes("value: 'home'")) failures.push('Energy task surface must expose a lightweight current-context selector');
+  for (const field of ['energyDemand', 'brainDemand', 'physicalDemand', 'availabilityContexts', 'recoveryIntent']) {
+    if (!cache.includes(`${field}:`)) failures.push(`cache must preserve canonical ${field}`);
+  }
+  if (!recommendation.includes('opportunityCostPenalty') || !recommendation.includes("band === 'use-capacity'")) failures.push('high Energy must model opportunity cost instead of always preferring micro tasks');
+
+  if (failures.length) {
+    console.error('Energy Recommendation V2 gate failed:');
+    for (const failure of failures) console.error(`- ${failure}`);
+    process.exit(1);
+  }
+  console.log('Energy Recommendation V2 gate passed (availability -> value -> energy opportunity -> duration -> learning).');
+}
+
+check_energy_recommendation_v2_gate();
 
 function check_energy_architecture_convergence_gate() {
   const read = (f) => fs.readFileSync(f, 'utf8');

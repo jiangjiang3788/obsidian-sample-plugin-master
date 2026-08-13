@@ -77,7 +77,9 @@ export function resolveEnergyActionTiming(
   if ((policy?.dailyTaskMinutes || 0) >= 300 && band !== 'recover') cap = Math.min(cap, 30);
   if (personalDepletion && (policy?.dailyTaskMinutes || 0) >= 180 && band !== 'recover') cap = Math.min(cap, 30);
 
-  const minutes = Math.max(10, Math.round(Math.min(requested ?? cap, cap)));
+  // A declared/learned Task duration is a real task fact and may be a 1-minute micro-task.
+  // The Energy cap only limits long/open work blocks; it must never inflate short tasks.
+  const minutes = Math.max(1, Math.round(Math.min(requested ?? cap, cap)));
   const preserveCapacity = band !== 'recover' && Boolean(policy?.preserveCapacityRisk);
   return {
     minutes,

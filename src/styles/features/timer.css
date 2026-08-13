@@ -4,13 +4,6 @@
   width: 100%;
 }
 
-.think-timer-row__suggested-duration {
-  padding-inline: 4px;
-  color: var(--think-text-secondary);
-  font-size: var(--think-font-size-xs);
-  line-height: 1.35;
-}
-
 .think-timer-row__stop-point {
   display: flex;
   align-items: center;
@@ -31,4 +24,11 @@
   line-height: 1.4;
   pointer-events: none;
   user-select: none;
+}
+
+.think-timer-row__countdown {
+  min-width: 64px;
+  color: var(--think-text-accent);
+  font-weight: var(--think-font-weight-semibold);
+  text-align: right;
 }
